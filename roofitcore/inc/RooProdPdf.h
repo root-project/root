@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.rdl,v 1.10 2001/09/17 18:48:15 verkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.11 2001/09/18 04:13:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -21,6 +21,7 @@
 
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooListProxy.hh"
+#include "RooFitCore/RooAICRegistry.hh"
 
 class RooProdPdf : public RooAbsPdf {
 public:
@@ -36,11 +37,14 @@ public:
 
   Double_t evaluate() const ;
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const ;
-  Double_t analyticalIntegral(Int_t code) const ;
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kTRUE ; }
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet) const ;
+  Double_t analyticalIntegral(Int_t code, const RooArgSet* normSet) const ;
   virtual Bool_t selfNormalized() const { return kTRUE ; }
 
 protected:
+
+  mutable RooAICRegistry _codeReg ;
 
   Double_t _cutOff ;
   RooListProxy _pdfList ;

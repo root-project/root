@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.9 2001/09/18 04:13:48 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.10 2001/09/20 01:40:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -39,7 +39,8 @@ RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
   RooAbsPdf(name,title), 
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
-  _cutOff(cutOff)
+  _cutOff(cutOff),
+  _codeReg(10)
 {
   // Dummy constructor
 }
@@ -50,7 +51,8 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
   RooAbsPdf(name,title), 
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
-  _cutOff(cutOff)
+  _cutOff(cutOff),
+  _codeReg(10)
 {
   // Constructor with 2 PDFs
   addPdf(pdf1) ;
@@ -63,7 +65,8 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, RooArgList& pdfList,
   RooAbsPdf(name,title), 
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
-  _cutOff(cutOff)
+  _cutOff(cutOff),
+  _codeReg(10)
 {
   // Constructor with 2 PDFs
   TIterator* iter = pdfList.createIterator() ;
@@ -84,7 +87,8 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   RooAbsPdf(other,name), 
   _pdfList("_pdfList",this,other._pdfList),
   _pdfIter(_pdfList.createIterator()), 
-  _cutOff(other._cutOff)
+  _cutOff(other._cutOff),
+  _codeReg(other._codeReg)
 {
   // Copy constructor
 }
@@ -138,6 +142,7 @@ Int_t RooProdPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   RooAbsPdf* pdf ;
   Int_t code(0), n(0) ;
   Bool_t allFact(kTRUE) ;
+  Int_t* subCode = new Int_t[_pdfList.getSize()] ;
   while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
     Bool_t fact(kTRUE) ;
     RooArgSet *pdfDepList = pdf->getDependents(normSet) ;
@@ -150,22 +155,34 @@ Int_t RooProdPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
       }
     }
     if (fact) {
-      code |= (1<<n) ;      
+      // Factorize, i.e. drop this component pdf
       analVars.add(*pdfDepList) ;
-    } 
+      cout << "RooProdPdf::getAI(" << GetName() << ") dropping pdf #" << n << " " << pdf->GetName() << endl ;
+      subCode[n] = -1 ;
+    } else {
+      // Determine partial integration code
+      RooArgSet subAnalVars ;
+      subCode[n] = pdf->getAnalyticalIntegral(allVars,subAnalVars,normSet) ;      
+      analVars.add(subAnalVars) ;
+      cout << "RooProdPdf::getAI(" << GetName() << ") subCode(" << n << "," << pdf->GetName() << ") = " << subCode[n] << endl ;
+    }
     delete depIter ;
     delete pdfDepList ;
     n++ ;
   }
 
+  Int_t masterCode = _codeReg.store(subCode,_pdfList.getSize())+1 ;
+  delete[] subCode ;
+
   // This PDF is by construction normalized
-  return allFact?-1:code ;
+  return allFact?-1:masterCode ;
 }
 
 
-Double_t RooProdPdf::analyticalIntegral(Int_t code) const 
+Double_t RooProdPdf::analyticalIntegral(Int_t code, const RooArgSet* normSet) const 
 {
   // Return analytical integral defined by given scenario code
+  //cout << "RooProdPdf::aI(" << GetName() << ") code = " << code << " normSet = " << normSet << endl ;
 
   // No integration scenario
   if (code==0) {
@@ -182,13 +199,12 @@ Double_t RooProdPdf::analyticalIntegral(Int_t code) const
   _pdfIter->Reset() ;
   Int_t n(0) ;
   Double_t value(1) ;
-  const RooArgSet* nset(_pdfList.nset()) ;
+  const Int_t* subCode = _codeReg.retrieve(code-1) ;
 
   // Calculate running product of pdfs, skipping factorized components
   while(pdf=(RooAbsReal*)_pdfIter->Next()) {    
-    if (code & (1<<n)) {
-    } else {
-      value *= pdf->getVal(nset) ;
+    if (subCode[n]>=0) {
+      value *= pdf->analyticalIntegral(subCode[n],normSet) ;
     }
     if (value<_cutOff) break ;
     n++ ;
@@ -196,3 +212,5 @@ Double_t RooProdPdf::analyticalIntegral(Int_t code) const
 
   return value ;
 }
+
+

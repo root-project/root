@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.11 2001/09/06 20:49:16 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.12 2001/09/17 18:48:16 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -24,7 +24,7 @@ RooFormulaVar* RooResolutionModel::_identity(0) ;
 
 RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooRealVar& _x) : 
   RooAbsPdf(name,title), _basis(0), _basisCode(0), x("x","Dependent or convolution variable",this,_x),
-  _ownBasis(kFALSE) 
+  _ownBasis(kFALSE), _normSpecial(0), _lastNormSetSpecial(0)
 {
   if (!_identity) _identity = new RooFormulaVar("identity","1",RooArgSet("")) ;  
 }
@@ -32,7 +32,7 @@ RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooR
 
 RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const char* name) : 
   RooAbsPdf(other,name), _basis(0), _basisCode(other._basisCode), x("x",this,other.x),
-  _ownBasis(kFALSE) 
+  _ownBasis(kFALSE), _normSpecial(0), _lastNormSetSpecial(0)
 {
   if (other._basis) {
     _basis = (RooFormulaVar*) other._basis->Clone() ;
@@ -57,6 +57,8 @@ RooResolutionModel::~RooResolutionModel()
 {
   // Destructor
   if (_ownBasis && _basis) delete _basis ;
+
+  if (_normSpecial) delete _normSpecial ;
 }
 
 
@@ -189,4 +191,32 @@ void RooResolutionModel::normLeafServerList(RooArgSet& list) const
 {
   // Fill list with leaf server nodes of normalization integral 
   _norm->leafNodeServerList(&list) ;
+}
+
+
+
+Double_t RooResolutionModel::getNormSpecial(const RooArgSet* nset) const 
+{
+  if (!nset) return getVal() ;
+
+  if (nset != _lastNormSetSpecial) {
+
+    if (_verboseEval>0) {
+      cout << "RooResolutionModel::getNormSpecial(" << GetName() 
+	   << ") recreating normalization integral(" 
+	   << _lastNormSet << " -> " << nset << "=" ;
+      if (nset) nset->Print("1") ; else cout << "<none>" ;
+      cout << ")" << endl ;
+    }
+
+    if (_normSpecial) delete _normSpecial ;
+
+    TString nname(GetName()) ; nname.Append("NormSpecial") ;
+    TString ntitle(GetTitle()) ; ntitle.Append(" Integral (Special)") ;
+    _normSpecial = new RooRealIntegral(nname.Data(),ntitle.Data(),*this,*(RooArgSet*)nset) ;
+
+    _lastNormSetSpecial = (RooArgSet*)nset ;
+  }
+
+  return _normSpecial->getVal() ;
 }

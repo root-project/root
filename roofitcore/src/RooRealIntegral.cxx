@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.37 2001/09/20 01:40:11 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.38 2001/09/22 00:30:59 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -55,6 +55,16 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 {
   // Save private copy of funcNormSet, if supplied
   _funcNormSet = funcNormSet ? (RooArgSet*)funcNormSet->snapshot(kFALSE) : 0 ;
+  
+  // Delete all factorizing terms from funcNormSet
+  if (_funcNormSet) {
+    TIterator* iter = _funcNormSet->createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      if (!function.dependsOn(*arg)) _funcNormSet->remove(*arg) ;
+    }
+    delete iter ;
+  }
 
   // Constructor
   RooArgSet intDepList ;
@@ -160,7 +170,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     
     // Add server to list of dependents that are OK for analytical integration
     if (depOK) {
-      anIntOKDepList.add(*arg) ;      
+      anIntOKDepList.add(*arg,kTRUE) ;      
     }
   }
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -284,7 +294,7 @@ Bool_t RooRealIntegral::initNumIntegrator() const
   // Bind the appropriate analytic integral (specified by _mode) of our RooRealVar object to
   // those of its arguments that will be integrated out numerically.
   if(_mode != 0) {
-    _numIntegrand= new RooRealAnalytic(_function.arg(),_intList,_mode);
+    _numIntegrand= new RooRealAnalytic(_function.arg(),_intList,_mode,_funcNormSet);
   }
   else {
     _numIntegrand= new RooRealBinding(_function.arg(),_intList,_funcNormSet);
@@ -384,7 +394,7 @@ Double_t RooRealIntegral::evaluate() const
     }
   case Analytic:
     {
-      retVal =  ((RooAbsReal&)_function.arg()).analyticalIntegral(_mode) ;
+      retVal =  ((RooAbsReal&)_function.arg()).analyticalIntegral(_mode,_funcNormSet) ;
       break ;
     }
 
@@ -502,7 +512,7 @@ Double_t RooRealIntegral::integrate() const
 
   if (!_numIntEngine) {
     // Trivial case, fully analytical integration
-    return ((RooAbsReal&)_function.arg()).analyticalIntegral(_mode) ;
+    return ((RooAbsReal&)_function.arg()).analyticalIntegral(_mode,_funcNormSet) ;
   }
   else {
     // Partial or complete numerical integration
@@ -552,6 +562,13 @@ void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent
     _jacList.printToStream(os,Standard,deeper);
     os << indent << "  Factorized arguments are ";
     _facList.printToStream(os,Standard,deeper);
+    os << indent << "  Function normalization set " ;
+    if (_funcNormSet) 
+      _funcNormSet->Print("1") ; 
+    else
+      os << "<none>" ;
+
+    os << endl ;
     return ;
   }
 } 

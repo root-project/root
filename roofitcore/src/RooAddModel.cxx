@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.10 2001/09/19 00:26:00 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.11 2001/09/20 01:40:10 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -335,6 +335,49 @@ Double_t RooAddModel::getNorm(const RooArgSet* nset) const
 }
 
 
+Double_t RooAddModel::getNormSpecial(const RooArgSet* nset) const
+{
+  // Operate as regular PDF if we have no basis function
+  if (!_basis) return RooAbsPdf::getNorm(nset) ;
+
+  // Return sum of component normalizations
+  _coefProxyIter->Reset() ;
+  _modelProxyIter->Reset() ;
+
+  Double_t norm(0) ;
+  Double_t lastCoef(1) ;
+
+  // Do running norm of coef/model pairs, calculate lastCoef.
+  RooRealProxy* coef ;
+  RooResolutionModel* model ;
+  while(coef=(RooRealProxy*)_coefProxyIter->Next()) {
+    model = (RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg() ;
+    if (_verboseEval>1) cout << "RooAddModel::getNormSpecial(" << GetName() << "): norm x coef = " 
+			     << model->getNormSpecial(nset) << " x " << (*coef) << " = " 
+			     << model->getNormSpecial(nset)*(*coef) << endl ;
+
+    norm += model->getNormSpecial(nset)*(*coef) ;
+    lastCoef -= (*coef) ;
+  }
+
+  // Add last model with correct coefficient
+  model = (RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg() ;
+  norm += model->getNormSpecial(nset)*lastCoef ;
+  if (_verboseEval>1) cout << "RooAddModel::getNormSpecial(" << GetName() << "): norm x coef = " 
+			   << model->getNormSpecial(nset) << " x " << lastCoef << " = " 
+			   << model->getNormSpecial(nset)*lastCoef << endl ;
+
+  // Warn about coefficient degeneration
+  if (lastCoef<0 || lastCoef>1) {
+    cout << "RooAddModel::evaluate(" << GetName() 
+	 << " WARNING: sum of model coefficients not in range [0-1], value=" 
+	 << 1-lastCoef << endl ;
+  } 
+
+  return norm ;
+}
+
+
 
 Bool_t RooAddModel::checkDependents(const RooArgSet* set) const 
 {
@@ -378,7 +421,7 @@ Int_t RooAddModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars,
 }
 
 
-Double_t RooAddModel::analyticalIntegral(Int_t code) const 
+Double_t RooAddModel::analyticalIntegral(Int_t code, const RooArgSet* normSet) const 
 {
   // Return analytical integral defined by given scenario code
 

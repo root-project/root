@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: Roo1DTable.cc,v 1.6 2001/08/23 01:21:44 verkerke Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.7 2001/09/12 01:25:43 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -23,7 +23,7 @@
 ClassImp(Roo1DTable)
 
 Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory& cat) : 
-  RooTable(name,title), _nOverflow(0)
+  RooTable(name,title), _nOverflow(0), _total(0)
 {
   // Create an empty table from abstract category. The number of table entries and 
   // their names are taken from the category state labels at the time of construction,
@@ -47,7 +47,8 @@ Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory
 
 
 
-Roo1DTable::Roo1DTable(const Roo1DTable& other) : RooTable(other), _nOverflow(other._nOverflow) 
+Roo1DTable::Roo1DTable(const Roo1DTable& other) : 
+  RooTable(other), _nOverflow(other._nOverflow), _total(other._total)
 {  
   // Copy constructor
 
@@ -83,6 +84,8 @@ void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight)
   // matches no table slot name, the table overflow
   // counter is incremented.
 
+  _total++ ;
+
   Bool_t found(kFALSE) ;
   for (int i=0 ; i<_types.GetEntries() ; i++) {
     RooCatType* entry = (RooCatType*) _types.At(i) ;
@@ -92,7 +95,9 @@ void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight)
     }
   }  
 
-  if (!found) _nOverflow += weight ;
+  if (!found) {
+    _nOverflow += weight ;
+  }
 }
 
 
@@ -142,3 +147,26 @@ void Roo1DTable::printToStream(ostream& os, PrintOption opt, TString indent) con
   os << endl ;
 }
 
+
+Double_t Roo1DTable::get(const char* label, Bool_t silent) const 
+{
+  TObject* cat = _types.FindObject(label) ;
+  if (!cat) {
+    if (!silent) {
+      cout << "Roo1DTable::get: ERROR: no such entry: " << label << endl ;
+    }
+    return 0 ;
+  }
+  return _count[_types.IndexOf(cat)] ;
+}
+
+
+Double_t Roo1DTable::getFrac(const char* label, Bool_t silent) const 
+{
+  if (_total) {
+    return get(label,silent) / _total ;
+  } else {
+    if (!silent) cout << "Roo1DTable::getFrac: WARNING table empty, returning 0" << endl ;
+    return 0. ;
+  }
+}

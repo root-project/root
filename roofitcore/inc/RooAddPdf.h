@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.9 2001/09/17 18:48:12 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.10 2001/09/20 01:40:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -21,8 +21,7 @@
 
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooListProxy.hh"
-
-typedef Int_t* pInt_t ;
+#include "RooFitCore/RooAICRegistry.hh"
 
 class RooAddPdf : public RooAbsPdf {
 public:
@@ -30,6 +29,7 @@ public:
   RooAddPdf(const char *name, const char *title);
   RooAddPdf(const char *name, const char *title,
 	    RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) ;
+  RooAddPdf(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList) ;
   RooAddPdf(const RooAddPdf& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooAddPdf(*this,newname) ; }
   virtual ~RooAddPdf() ;
@@ -41,15 +41,13 @@ public:
   virtual Bool_t checkDependents(const RooArgSet* nset) const ;	
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kTRUE ; }
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet=0) const ;
-  Double_t analyticalIntegral(Int_t code) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet) const ;
+  Double_t analyticalIntegral(Int_t code, const RooArgSet* normSet) const ;
   virtual Bool_t selfNormalized() const { return kTRUE ; }
 
 protected:
 
-  Int_t registerAICodeList(Int_t* codeList) const ;
-  const Int_t* retrieveAICodeList(Int_t masterCode) const ;
-  mutable pInt_t* _clArr ; //! do not persist
+  mutable RooAICRegistry _codeReg ;
 
   RooListProxy _pdfList ;
   RooListProxy _coefList ;

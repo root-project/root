@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.15 2001/09/17 18:48:13 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.16 2001/09/20 01:40:10 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -28,7 +28,8 @@ RooConvolutedPdf::RooConvolutedPdf(const char *name, const char *title,
   RooAbsPdf(name,title), _isCopy(kFALSE),
   _model((RooResolutionModel*)&model), _convVar((RooRealVar*)&convVar),
   _convSet("convSet","Set of resModel X basisFunc convolutions",this),
-  _convNormSet(0), _convSetIter(_convSet.createIterator())
+  _convNormSet(0), _convSetIter(_convSet.createIterator()),
+  _codeReg(10)
 {
   // Constructor
   _convNormSet = new RooArgSet(convVar,"convNormSet") ;
@@ -39,7 +40,8 @@ RooConvolutedPdf::RooConvolutedPdf(const RooConvolutedPdf& other, const char* na
   RooAbsPdf(other,name), _model(0), _convVar(0), _isCopy(kTRUE),
   _convSet("convSet",this,other._convSet),
   _convNormSet(new RooArgSet(*other._convNormSet)),
-  _convSetIter(_convSet.createIterator())
+  _convSetIter(_convSet.createIterator()),
+  _codeReg(other._codeReg)
 {
   // Copy constructor
 }
@@ -102,7 +104,6 @@ Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgSet& pa
   }
   _convSet.add(*conv) ;
 
-  // WVE must store or delete basisFunc 
   return _convSet.index(conv) ;
 }
 
@@ -128,8 +129,6 @@ Double_t RooConvolutedPdf::evaluate() const
   while(conv=(RooAbsPdf*)_convSetIter->Next()) {
     Double_t coef = coefficient(index++) ;
     if (coef!=0.) {
-//       cout << "RooConvPdf::evaluate(" << GetName() << "): conv x coef = " 
-// 	      << conv->getVal(0) << " x " << coef << endl ;
       result += conv->getVal(0)*coef ;
    }
   }
@@ -138,84 +137,149 @@ Double_t RooConvolutedPdf::evaluate() const
 }
 
 
-
-Int_t RooConvolutedPdf::getAnalyticalIntegral(RooArgSet& allVars, 
-					      RooArgSet& analVars, const RooArgSet* normSet) const 
+RooArgSet* RooConvolutedPdf::parseIntegrationRequest(const RooArgSet& intSet, Int_t& coefCode, RooArgSet* analVars) const
 {
-  // Make subset of allVars that excludes dependents of any convolution integral
-  TIterator* varIter  = allVars.createIterator() ;
-  TIterator* convIter = _convSet.createIterator() ;
-  
+  // Split allVars in a list for coefficients and a list for convolutions
   RooArgSet allVarsCoef("allVarsCoef") ;
+  RooArgSet allVarsConv("allVarsConvInt") ;
+
   RooAbsArg* arg ;
   RooAbsArg* conv ;
+
+  TIterator* varIter  = intSet.createIterator() ;
+  TIterator* convIter = _convSet.createIterator() ;
   while(arg=(RooAbsArg*) varIter->Next()) {
     Bool_t ok(kTRUE) ;
     convIter->Reset() ;
     while(conv=(RooAbsArg*) convIter->Next()) {
+      
       if (conv->dependsOn(*arg)) ok=kFALSE ;
     }
-    if (ok) allVarsCoef.add(*arg) ;
+
+    if (ok) {
+      allVarsCoef.add(*arg) ;
+    } else {
+      allVarsConv.add(*arg) ;
+    }
+
   }
   delete varIter ;
   delete convIter ;
-  
-  // Determine integration capability of coefficients
-  Int_t coefCode = getCoefAnalyticalIntegral(allVarsCoef,analVars) ;
-  
-  // Add integrations capability over convolution variable
-  if (matchArgs(allVars,analVars,*_convNormSet)) return 1000+coefCode ;
-  
-  return coefCode ;
+
+  // Get analytical integration code for coefficients
+  if (analVars) {
+    coefCode = getCoefAnalyticalIntegral(allVarsCoef,*analVars) ;
+  } else {
+    RooArgSet tmp ;
+    coefCode = getCoefAnalyticalIntegral(allVarsCoef,tmp) ;
+  }
+
+  // If convolution integration set is empty, return null ptr, otherwise return heap clone of set
+  return allVarsConv.getSize()? new RooArgSet(allVarsConv) : 0 ;
 }
 
 
 
-Double_t RooConvolutedPdf::analyticalIntegral(Int_t code) const 
+Int_t RooConvolutedPdf::getAnalyticalIntegral(RooArgSet& allVars, 
+					      RooArgSet& analVars, const RooArgSet* normSet) const 
 {
-  if (code==0) {
+  // Handle trivial no-integration scenario
+  if (allVars.getSize()==0) return 0 ;
 
-    return getVal(0) ;
+  // Process integration request
+  Int_t intCoefCode(0) ;
+  RooArgSet *intConvSet = parseIntegrationRequest(allVars,intCoefCode,&analVars) ;
 
-  } else if (code>=1000) {
-    
-    // Integration list includes convolution variable
-    Double_t norm(0) ;
-    TIterator* iter = _convSet.createIterator() ;
-    RooAbsPdf* conv ;
-    Int_t index(0) ;
-    while(conv=(RooAbsPdf*)iter->Next()) {
-      Double_t coef = coefAnalyticalIntegral(index++,code-1000) ;
+  // Process normalization if integration request
+  Int_t normCoefCode(0) ;    
+  RooArgSet *normConvSet(0) ;
+  if (normSet) {
+    normConvSet = parseIntegrationRequest(*normSet,normCoefCode) ;
+  }
+  
+  // Optional messaging
+  if (_verboseEval>0) {
+    cout << "RooConvolutedPdf::getAI(" << GetName() << ") coefficients integrate analytically " ; analVars.Print("1") ;
+    cout << "RooConvolutedPdf::getAI(" << GetName() << ") intCoefCode  = " << intCoefCode << endl ;
+    cout << "RooConvolutedPdf::getAI(" << GetName() << ") normCoefCode = " << normCoefCode << endl ;
+    cout << "RooConvolutedPdf::getAI(" << GetName() << ") intConvSet  = " ; 
+    if (intConvSet) intConvSet->Print("1") ; else cout << "<none>" << endl ;
+    cout << "RooConvolutedPdf::getAI(" << GetName() << ") normConvSet  = " ; 
+    if (normConvSet) normConvSet->Print("1") ; else cout << "<none>" << endl ;
+  }
+
+  // Register convolution dependents integrated as analytical
+  analVars.add(*intConvSet) ;
+
+  // Store integration configuration in registry
+  Int_t masterCode(0) ;
+  Int_t tmp[2] ;
+  tmp[0] = intCoefCode ;
+  tmp[1] = normCoefCode ;
+  masterCode = _codeReg.store(tmp,2,intConvSet,normConvSet)+1 ; // takes ownership of intConvSet,normConvSet
+  
+  if (_verboseEval>0) {
+    cout << "RooConvolutedPdf::getAI(" << GetName() << ") masterCode " << masterCode 
+	 << " will integrate analytically " ; analVars.Print("1") ;  
+  }
+  return masterCode  ;
+}
+
+
+
+Double_t RooConvolutedPdf::analyticalIntegral(Int_t code, const RooArgSet* normSet) const 
+{
+  // Handle trivial passthrough scenario
+  if (code==0) return getVal(normSet) ;
+
+  // Unpack master code
+  RooArgSet *intConvSet, *normConvSet ;
+  const Int_t* tmp = _codeReg.retrieve(code-1,intConvSet,normConvSet) ;
+  Int_t intCoefCode = tmp[0] ;
+  Int_t normCoefCode = tmp[1] ;
+  
+  RooResolutionModel* conv ;
+  Int_t index(0) ;
+  Double_t answer(0) ;
+  _convSetIter->Reset() ;
+
+//   cout << "RooConvolutedPdf::aI(" << GetName() << "): intCoefCode = " << intCoefCode << ", normCoefCode = " << normCoefCode << endl ;
+//   cout << "          intConvSet = " ; if (intConvSet) intConvSet->Print("1") ; else cout << "<none>" << endl ;
+//   cout << "         normConvSet = " ; if (normConvSet) normConvSet->Print("1") ; else cout << "<none>" << endl ;
+
+  if (normSet==0) {
+
+    // Integral over unnormalized function
+    Double_t integral(0) ;
+    while(conv=(RooResolutionModel*)_convSetIter->Next()) {
+      Double_t coef = coefAnalyticalIntegral(index++,intCoefCode) ;
       if (coef!=0) {
-	Double_t tmp = conv->getNorm(_convNormSet) ;
-	if (_verboseEval>1) cout << "RooConvolutedPdf::analyticalIntegral(" << GetName() 
-				 << "): norm of '" << conv->GetName() << "' = " << tmp
-				 << " * (coef = " << coef << ") = " << tmp*coef << endl ;
-	norm   += tmp*coef ;
+	integral += coef*conv->getNorm(intConvSet) ;
       }
     }
+    answer = integral ;
     
-    delete iter ;
-    return norm ;       
-
   } else {
 
-    // Integration list doesn't include convolution variable
+    // Integral over normalized function
+    Double_t integral(0) ;
     Double_t norm(0) ;
-    TIterator* iter = _convSet.createIterator() ;
-    RooAbsPdf* conv ;
-    Int_t index(0) ;
-    while(conv=(RooAbsPdf*)iter->Next()) {
-      Double_t coef = coefAnalyticalIntegral(index++,code) ;
-      if (coef!=0) {
-	Double_t tmp = conv->getVal(0) ;
-	norm   += tmp*coef ;
+    while(conv=(RooResolutionModel*)_convSetIter->Next()) {
+
+      Double_t coefInt = coefAnalyticalIntegral(index,intCoefCode) ;
+      if (coefInt!=0) {
+	integral += coefInt*conv->getNormSpecial(intConvSet) ;
       }
+      Double_t coefNorm = (intCoefCode==normCoefCode)?coefInt:coefAnalyticalIntegral(index,normCoefCode) ;
+      if (coefNorm!=0) {
+	norm += coefNorm*conv->getNorm(normConvSet) ; 	
+      }
+      index++ ;
     }
-    
-    delete iter ;
-    return norm ;       
+    answer = integral/norm ;    
   }
+
+  return answer ;
 }
 
 
@@ -230,6 +294,8 @@ Int_t RooConvolutedPdf::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet&
 Double_t RooConvolutedPdf::coefAnalyticalIntegral(Int_t coef, Int_t code) const 
 {
   if (code==0) return coefficient(coef) ;
+  cout << "RooConvolutedPdf::coefAnalyticalIntegral(" << GetName() << ") ERROR: unrecognized integration code: " << code << endl ;
+  assert(0) ;
   return 1 ;
 }
 
@@ -238,28 +304,9 @@ Double_t RooConvolutedPdf::coefAnalyticalIntegral(Int_t coef, Int_t code) const
 Bool_t RooConvolutedPdf::forceAnalyticalInt(const RooAbsArg& dep) const
 {
   // Force 'analytical' integration of whatever is delegated to the convolution integrals
-//   cout << "forceInt(" << dep.GetName() << ") = " 
-//        << (_convNormSet->get()->FindObject(dep.GetName())?"kTRUE":"kFALSE") << endl ;
-  return _convNormSet->find(dep.GetName())?kTRUE:kFALSE ;
+  return kTRUE ;
 }                                                                                                                         
                
-
-
-void RooConvolutedPdf::dump(const RooArgSet* nset) const
-{
-  TIterator* iter = _convSet.createIterator() ;
-  RooAbsPdf* conv ;
-  Int_t index(0) ;
-  while(conv=(RooAbsPdf*)iter->Next()) {
-    Double_t coef = coefficient(index++) ;
-    if (coef!=0) {
-//        cout << "convolution: value = " << conv->getVal(0)*coef 
-//  	   << " norm = " << conv->getNorm(nset)*coef  << endl ;
-    }
-  }
-  
-  delete iter ;
-}
 
 
 

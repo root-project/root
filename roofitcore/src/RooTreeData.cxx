@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.3 2001/09/12 01:25:44 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.4 2001/09/17 18:48:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -459,7 +459,7 @@ const RooArgSet* RooTreeData::get(Int_t index) const {
     _cacheIter->Reset() ;
     while (var=(RooAbsArg*)_cacheIter->Next()) {
       var->setValueDirty()  ; // This triggers recalculation of all clients, but doesn't recalculate self
-      var->clearValueDirty() ; // This triggers recalculation of all clients, but doesn't recalculate self
+      var->clearValueDirty() ; 
     } 
   }
 
@@ -481,10 +481,10 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
   }
 
   // Clone current tree
-  RooTreeData* cloneData = (RooTreeData*) Clone() ; //new RooTreeData(*this) ;       //A
+  RooTreeData* cloneData = (RooTreeData*) Clone() ; //new RooTreeData(*this) ;  
 
   // Clone variable and attach to cloned tree 
-  RooArgSet* newVarCloneList = (RooArgSet*) RooArgSet(newVar).snapshot() ;  //B,C,D!!! after cloning mixState
+  RooArgSet* newVarCloneList = (RooArgSet*) RooArgSet(newVar).snapshot() ;  
   RooAbsArg* newVarClone = newVarCloneList->find(newVar.GetName()) ;
   newVarClone->recursiveRedirectServers(cloneData->_vars,kFALSE) ;
 
@@ -516,7 +516,10 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
 }
 
 
-
+RooPlot *RooTreeData::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions) const 
+{
+  return 0 ;
+}
 
 
 
@@ -563,6 +566,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
 
   return frame;  
 }
+
 
 TH1F* RooTreeData::createHistogram(const RooAbsReal& var, const char* cuts, const char *name) const
 {
@@ -629,7 +633,7 @@ TH1F* RooTreeData::createHistogram(const RooAbsReal& var, const char* cuts, cons
 
 
 
-Roo1DTable* RooTreeData::table(RooAbsCategory& cat, const char* cuts, const char* opts) const
+Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, const char* opts) const
 {
   // Create and fill a 1-dimensional table for given category column
 

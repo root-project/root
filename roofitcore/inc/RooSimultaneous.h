@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.rdl,v 1.7 2001/08/23 01:21:48 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.8 2001/09/11 00:30:32 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -18,8 +18,11 @@
 #include "RooFitCore/RooCategoryProxy.hh"
 #include "RooFitCore/RooSetProxy.hh"
 #include "RooFitCore/RooSimFitContext.hh"
+#include "RooFitCore/RooAICRegistry.hh"
 class RooAbsCategoryLValue ;
 class RooFitResult ;
+class RooPlot ;
+class RooAbsData ;
 
 class RooSimultaneous : public RooAbsPdf {
 public:
@@ -35,9 +38,16 @@ public:
   virtual Bool_t selfNormalized() const { return kTRUE ; }
   Bool_t addPdf(const RooAbsPdf& pdf, const char* catLabel) ;
 
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kTRUE ; }
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet) const ;
+  Double_t analyticalIntegral(Int_t code, const RooArgSet* normSet) const ;
+
   virtual const RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "cpds" ) ;
+  virtual RooPlot *plotOn(RooPlot *frame, RooAbsData* wdata, Option_t* drawOptions="L", Double_t scaleFactor= 1.0) const;
   
 protected:
+
+  mutable RooAICRegistry _codeReg ; 
 
   friend class RooSimFitContext ;
   RooCategoryProxy _indexCat ; // Index category

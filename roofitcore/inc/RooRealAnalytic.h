@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsFunc1D.rdl,v 1.2 2001/05/14 22:54:19 verkerke Exp $
+ *    File: $Id: RooRealAnalytic.rdl,v 1.1 2001/08/03 21:44:57 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -16,8 +16,8 @@
 
 class RooRealAnalytic : public RooRealBinding {
 public:
-  inline RooRealAnalytic(const RooAbsReal &func, const RooArgSet &vars, Int_t code) :
-    RooRealBinding(func,vars), _code(code) { }
+  inline RooRealAnalytic(const RooAbsReal &func, const RooArgSet &vars, Int_t code, const RooArgSet* normSet=0) :
+    RooRealBinding(func,vars,normSet), _code(code) { }
   inline virtual ~RooRealAnalytic() { }
 
   virtual Double_t operator()(const Double_t xvector[]) const;

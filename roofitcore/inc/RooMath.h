@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMath.rdl,v 1.2 2001/07/31 05:54:20 verkerke Exp $
+ *    File: $Id: RooMath.rdl,v 1.3 2001/08/08 23:11:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,6 +17,7 @@
 #include "RooFitCore/RooComplex.hh"
 
 #include <math.h>
+#include <fstream.h>
 
 typedef RooComplex* pRooComplex ;
 typedef Double_t* pDouble_t ;
@@ -48,7 +49,14 @@ public:
   static Double_t ITPComplexErrFuncRe(const RooComplex& z, Int_t nOrder) ;
   static Double_t ITPComplexErrFuncIm(const RooComplex& z, Int_t nOrder) ;
 
+  // Switch to use file cache for CERF lookup table
+  static void cacheCERF(Bool_t flag=kTRUE) { _cacheTable = flag ; }
+
 private:
+
+  static Bool_t loadCache() ;
+  static void storeCache() ;
+  static const char* cacheFileName() ;
 
   // Allocate and initialize CERF lookup grid
   static void initFastCERF(Int_t reBins= 800, Double_t reMin=-4.0, Double_t reMax=4.0, 
@@ -73,6 +81,8 @@ private:
   static Double_t _imMax ;
   static Double_t _imRange ;
   static Double_t _imStep ;
+
+  static Bool_t _cacheTable ;
   
   ClassDef(RooMath,0) // math utility routines
 };

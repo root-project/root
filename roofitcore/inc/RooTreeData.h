@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.rdl,v 1.2 2001/09/12 01:25:44 verkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.3 2001/09/17 18:48:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -63,8 +63,9 @@ public:
   virtual Int_t numEntries(Bool_t useWeights=kFALSE) const { return (Int_t)GetEntries() ; }
   virtual void reset() { Reset() ; }
 
-  virtual Roo1DTable* table(RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
+  virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
   virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P") const;
+  virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions="P") const;
   TH1F* createHistogram(const RooAbsReal& var, const char* cuts="", 
 			const char *name= "hist") const;	 
 

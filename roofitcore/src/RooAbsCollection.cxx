@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.2 2001/09/20 01:40:09 verkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.3 2001/09/22 00:30:56 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -348,7 +348,7 @@ RooAbsCollection* RooAbsCollection::selectByAttrib(const char* name, Bool_t valu
   // Create output set
   TString selName(GetName()) ;
   selName.Append("_selection") ;
-  RooAbsCollection *sel = (RooAbsCollection*) create(selName.Data()) ; //new RooAbsCollection(selName.Data()) ;
+  RooAbsCollection *sel = (RooAbsCollection*) create(selName.Data()) ;
   
   // Scan set contents for matching attribute
   TIterator* iter= createIterator() ;
@@ -361,6 +361,29 @@ RooAbsCollection* RooAbsCollection::selectByAttrib(const char* name, Bool_t valu
 
   return sel ;
 }
+
+
+RooAbsCollection* RooAbsCollection::selectCommon(const RooAbsCollection& refColl) const 
+{
+  // Create a subset of args that is also contained in refColl
+
+  // Create output set
+  TString selName(GetName()) ;
+  selName.Append("_selection") ;
+  RooAbsCollection *sel = (RooAbsCollection*) create(selName.Data()) ; 
+
+  // Scan set contents for matching attribute
+  TIterator* iter= createIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    if (refColl.find(arg->GetName()))
+      sel->add(*arg) ;
+  }
+  delete iter ;
+
+  return sel ;
+}
+
 
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.41 2001/09/20 01:40:09 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.42 2001/09/22 00:30:57 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -124,15 +124,32 @@ Double_t RooAbsReal::traceEval(const RooArgSet* nset) const
 
 Int_t RooAbsReal::getAnalyticalIntegral(RooArgSet& allDeps, RooArgSet& analDeps, const RooArgSet* normSet) const
 {
+  // By default defer to normSet-invariant version
+  return getAnalyticalIntegral(allDeps,analDeps) ;
+}
+
+
+Int_t RooAbsReal::getAnalyticalIntegral(RooArgSet& allDeps, RooArgSet& analDeps) const
+{
   // By default we do not supply any analytical integrals
   return 0 ;
+}
+
+
+Double_t RooAbsReal::analyticalIntegral(Int_t code, const RooArgSet* normSet) const
+{
+  // Implement pass-through scenario, defer other codes to subclass implementations
+  if (code==0) return getVal(normSet) ;
+  return analyticalIntegral(code) ;
 }
 
 
 Double_t RooAbsReal::analyticalIntegral(Int_t code) const
 {
   // By default no analytical integrals are implemented
-  return getVal() ;
+  cout << "RooAbsReal::analyticalIntegral(" << GetName() << ") code " << code << " not implemented" << endl ;
+  assert(0) ;
+  return 0 ;
 }
 
 
@@ -640,7 +657,9 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scal
   clone->recursiveRedirectServers(plotSet);
 
   // normalize ourself to any previous contents in the frame
-  if(frame->getFitRangeNorm() > 0) scaleFactor*= frame->getFitRangeNorm();
+  if(frame->getFitRangeNorm() > 0) {
+    scaleFactor*= frame->getFitRangeNorm();
+  }
   frame->updateNormVars(plotSet);
 
   // create a new curve of our function using the clone to do the evaluations
@@ -654,6 +673,8 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scal
 
   return frame;
 }
+
+
 
 RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset) const {
   // Create an interface adaptor f(vars) that binds us to the specified variables

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.30 2001/09/20 01:40:10 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.31 2001/09/22 00:30:58 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -54,7 +54,9 @@ public:
   RooAbsArg *createFundamental() const;
 
   // Analytical integration support
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet=0) const ;
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const ;
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
+  virtual Double_t analyticalIntegral(Int_t code, const RooArgSet* normSet) const ;
   virtual Double_t analyticalIntegral(Int_t code) const ;
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kFALSE ; }
   
@@ -80,7 +82,7 @@ public:
 
   // Build 1-dimensional plots
   RooPlot *frame() const;
-  RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0) const;
+  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0) const;
 
   // Create empty 1D and 2D histograms
   TH1F *createHistogram(const char *name, const char *yAxisLabel= 0, Int_t bins= 0) const;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMath.cc,v 1.3 2001/08/03 02:04:32 verkerke Exp $
+ *    File: $Id: RooMath.cc,v 1.4 2001/08/08 23:11:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -99,9 +99,8 @@ void RooMath::initFastCERF(Int_t reBins, Double_t reMin, Double_t reMax, Int_t i
   cout << "RooMath::initFastCERF: Allocating Complex Error Function lookup table" << endl
        << "                       Re: " << _reBins << " bins in range (" << _reMin << "," << _reMax << ")" << endl
        << "                       Im: " << _imBins << " bins in range (" << _imMin << "," << _imMax << ")" << endl
-       << "                       Allocation size : " << _reBins*_imBins * 2 * sizeof(Double_t) / 1024 << " kB" << endl
-       << "                       Filling table: |..................................................|\r" 
-       << "                       Filling table: |" ;
+       << "                       Allocation size : " << _reBins*_imBins * 2 * sizeof(Double_t) / 1024 << " kB" << endl ;
+
 
   // Allocate storage matrix for Im(cerf) and Re(cerf) and fill it using ComplexErrFunc()
   Int_t imIdx,reIdx ;
@@ -110,16 +109,29 @@ void RooMath::initFastCERF(Int_t reBins, Double_t reMin, Double_t reMax, Int_t i
   for (imIdx=0 ; imIdx<_imBins ; imIdx++) {
     _reCerfArray[imIdx] = new Double_t[_reBins] ;
     _imCerfArray[imIdx] = new Double_t[_reBins] ;
-    if (imIdx % (_imBins/50) ==0) {
-      cout << ">" ; cout.flush() ;
-    }
-    for (reIdx=0 ; reIdx<_reBins ; reIdx++) {
-      RooComplex val=ComplexErrFunc(_reMin+reIdx*_reStep,_imMin+imIdx*_imStep) ;
-      _reCerfArray[imIdx][reIdx] = val.re();
-      _imCerfArray[imIdx][reIdx] = val.im() ;
-    }
   }
-  cout << endl ;
+  
+  Bool_t cacheLoaded ;
+  if (!_cacheTable || !(cacheLoaded=loadCache())) {
+
+    cout << "                       Filling table: |..................................................|\r" 
+	 << "                       Filling table: |" ;
+    
+    // Allocate storage matrix for Im(cerf) and Re(cerf) and fill it using ComplexErrFunc()
+    for (imIdx=0 ; imIdx<_imBins ; imIdx++) {
+      if (imIdx % (_imBins/50) ==0) {
+	cout << ">" ; cout.flush() ;
+      }
+      for (reIdx=0 ; reIdx<_reBins ; reIdx++) {
+	RooComplex val=ComplexErrFunc(_reMin+reIdx*_reStep,_imMin+imIdx*_imStep) ;
+	_reCerfArray[imIdx][reIdx] = val.re();
+	_imCerfArray[imIdx][reIdx] = val.im() ;
+      }
+    }
+    cout << endl ;
+  } 
+
+  if (_cacheTable && !cacheLoaded) storeCache() ;
 }
 
 
@@ -275,6 +287,57 @@ Double_t RooMath::interpolate(Double_t ya[], Int_t n, Double_t x)
 }
 
 
+Bool_t RooMath::loadCache() 
+{
+  const char* fName = cacheFileName() ;
+  // Open cache file
+  ifstream ifs(fName) ;
+
+  // Return immediately if file doesn't exist
+  if (ifs.fail()) return kFALSE ;
+
+  cout << "                       Filling table from cache file " << fName << endl ;
+
+  // Load data in memory arrays
+  Bool_t ok(kTRUE) ;
+  Int_t i ;
+  for (i=0 ; i<_imBins ; i++) {
+    ifs.read(_imCerfArray[i],_reBins*sizeof(Double_t)) ;
+    if (ifs.fail()) ok=kFALSE ;
+    ifs.read(_reCerfArray[i],_reBins*sizeof(Double_t)) ;
+    if (ifs.fail()) ok=kFALSE ;
+  }  
+
+  // Issue error message on partial read failure
+  if (!ok) {
+    cout << "RooMath::loadCERFCache: error reading file " << cacheFileName() << endl ;
+  }
+  return ok ;
+}
+
+
+void RooMath::storeCache()
+{
+  ofstream ofs(cacheFileName()) ;
+  
+  cout << "                       Writing table to cache file " << cacheFileName() << endl ;
+  Int_t i ;
+  for (i=0 ; i<_imBins ; i++) {
+    ofs.write(_imCerfArray[i],_reBins*sizeof(Double_t)) ;
+    ofs.write(_reCerfArray[i],_reBins*sizeof(Double_t)) ;
+  }
+}
+
+
+
+const char* RooMath::cacheFileName() 
+{
+  static char fileName[1024] ;  
+  sprintf(fileName,"/tmp/RooMath_CERFcache_R%04d_I%04d.dat",_reBins,_imBins) ;
+  return fileName ;
+}
+
+
 
 
 // Instantiation of static members
@@ -290,5 +353,5 @@ Double_t RooMath::_imRange(0) ;
 Double_t RooMath::_imStep(0) ;
 pDouble_t* RooMath::_reCerfArray(0) ;
 pDouble_t* RooMath::_imCerfArray(0) ;
-
+Bool_t RooMath::_cacheTable(kFALSE) ;
 

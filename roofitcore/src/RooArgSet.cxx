@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.36 2001/09/06 20:49:15 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.37 2001/09/17 18:48:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -176,7 +176,7 @@ Bool_t RooArgSet::checkForDup(const RooAbsArg& var, Bool_t silent) const
       if (!silent)
 	// print a warning if this variable is not the same one we
 	// already have
-	cout << ClassName() << "::" << GetName() << "::addClone: cannot add second copy of argument \""
+	cout << ClassName() << "::" << GetName() << "::checkForDup: cannot add second copy of argument \""
 	     << var.GetName() << "\"" << endl;
     }
     // don't add duplicates

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.rdl,v 1.22 2001/09/18 02:03:45 verkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.23 2001/09/22 00:30:59 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -61,12 +61,12 @@ protected:
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE) ;  
 
   // Function pointer and integrands list
-  RooRealProxy       _function ;
   mutable RooSetProxy _sumList ;
   mutable RooSetProxy _intList ;
   mutable RooSetProxy _anaList ;
   mutable RooSetProxy _jacList ;
   mutable RooSetProxy _facList ;
+  RooRealProxy       _function ; // must after set proxies
   RooArgSet*      _funcNormSet ;
   
   void prepareACleanFunc() const ;
