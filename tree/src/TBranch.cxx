@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.38 2002/04/04 06:58:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.39 2002/04/04 07:04:43 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -631,7 +631,8 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
 //  branch->GetEntry(localEntry);
 //
 //  The function returns the number of bytes read from the input buffer.
-//  If entry does not exist or an I/O error occurs, the function returns 0.
+//  If entry does not exist  the function returns 0.
+//  If an I/O error occurs,  the function returns -1.
 //
 //  See IMPORTANT REMARKS in TTree::GetEntry
 
@@ -655,7 +656,7 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
    TBasket *basket = (TBasket*)fBaskets.UncheckedAt(fReadBasket);
    if (!basket) {
       basket = GetBasket(fReadBasket);
-      if (!basket) return 0;
+      if (!basket) return -1;
    }
    TBuffer *buf    = basket->GetBufferRef();
 //     This test necessary to read very old Root files (NvE)

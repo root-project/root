@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.83 2002/04/04 06:58:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.84 2002/04/04 07:04:43 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -562,7 +562,8 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
 //   If entry < 0 reset entry number to 0
 //
 //  The function returns the number of bytes read from the input buffer.
-//  If entry does not exist or an I/O error occurs, the function returns 0.
+//  If entry does not exist  the function returns 0.
+//  If an I/O error occurs,  the function returns -1.
 //
 //  See IMPORTANT REMARKS in TTree::GetEntry
 
@@ -587,9 +588,12 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
       //the user may have cleared the TClonesArray between the 2 GetEntry
       if (fType == 3) nbytes += TBranch::GetEntry(entry, getall);
 
+      Int_t nb;
       for (Int_t i=0;i<nbranches;i++)  {
          TBranch *branch = (TBranch*)fBranches[i];
-         nbytes += branch->GetEntry(entry, getall);
+         nb  = branch->GetEntry(entry, getall);
+         if (nb < 0) return nb;
+         nbytes += nb;
       }
    } else {
       //terminal branch

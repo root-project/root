@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.18 2002/04/04 06:58:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.19 2002/04/04 07:04:43 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -162,8 +162,8 @@ Int_t TBranchObject::GetEntry(Int_t entry, Int_t getall)
 //   If entry < 0 reset entry number to 0
 //
 //  The function returns the number of bytes read from the input buffer.
-//  If entry does not exist or an I/O error occurs, the function returns 0.
-//  if entry is the same as the previous call, the function returns 1.
+//  If entry does not exist  the function returns 0.
+//  If an I/O error occurs,  the function returns -1.
 
    if (TestBit(kDoNotProcess) && !getall) return 0;
    Int_t nbytes;
@@ -184,9 +184,14 @@ Int_t TBranchObject::GetEntry(Int_t entry, Int_t getall)
          }
       }
       nbytes = 0;
+      Int_t nb;
       for (Int_t i=0;i<nbranches;i++)  {
          TBranch *branch = (TBranch*)fBranches[i];
-         if (branch) nbytes += branch->GetEntry(entry, getall);
+         if (branch) {
+            nb = branch->GetEntry(entry, getall);
+            if (nb < 0) return nb;
+            nbytes += nb;
+         }
       }
    } else {
       nbytes = TBranch::GetEntry(entry, getall);

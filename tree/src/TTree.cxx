@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.117 2002/03/20 10:45:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.118 2002/03/27 20:46:11 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2131,7 +2131,8 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
 //     getall = 1 : get all branches
 //
 //  The function returns the number of bytes read from the input buffer.
-//  If entry does not exist or an I/O error occurs, the function returns 0.
+//  If entry does not exist  the function returns 0.
+//  If an I/O error occurs,  the function returns -1.
 //
 //  If the Tree has friends, also read the friends entry
 //
@@ -2217,10 +2218,13 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
    fReadEntry = entry;
    TBranch *branch;
 
-   Int_t nb = fBranches.GetEntriesFast();
-   for (i=0;i<nb;i++)  {
+   Int_t nbranches = fBranches.GetEntriesFast();
+   Int_t nb;
+   for (i=0;i<nbranches;i++)  {
       branch = (TBranch*)fBranches.UncheckedAt(i);
-      nbytes += branch->GetEntry(entry, getall);
+      nb = branch->GetEntry(entry, getall);
+      if (nb < 0) return nb;
+      nbytes += nb;
    }
 
    // GetEntry in list of friends
@@ -2229,7 +2233,11 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
    TFriendElement *fe;
    while ((fe = (TFriendElement*)nextf())) {
       TTree *t = fe->GetTree();
-        if (t) nbytes+=t->GetEntry(entry, getall);
+      if (t) {
+         nb = t->GetEntry(entry, getall);
+         if (nb < 0) return nb;
+         nbytes += nb;
+      }
    }
    return nbytes;
 }
