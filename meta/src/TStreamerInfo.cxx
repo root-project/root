@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.194 2004/01/31 08:59:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.195 2004/02/03 22:19:45 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -545,6 +545,9 @@ void TStreamerInfo::BuildOld()
    Int_t offset = 0;
    TMemberStreamer *streamer = 0;
    Int_t sp = sizeof(void *);
+#if defined(R__SGI64)
+   sp = 8;
+#endif
    int nBaze=0;
    while ((element = (TStreamerElement*)next())) {
       element->SetNewType(element->GetType());
