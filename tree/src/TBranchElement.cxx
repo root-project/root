@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.96 2002/11/25 20:15:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.97 2002/11/26 17:35:18 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1401,7 +1401,9 @@ void TBranchElement::SetAddress(void *add)
    if (nbranches == 0) {
       if (clparent) {
          Int_t *offsets = clm->GetStreamerInfo()->GetOffsets();
-         fObject += clparent->GetDataMemberOffset(GetName() -offsets[fID]);
+         if (clparent != clm) {
+            fObject += clparent->GetDataMemberOffset(GetName()) -offsets[fID];
+         }
       }
       return;
    }
@@ -1415,22 +1417,9 @@ void TBranchElement::SetAddress(void *add)
       TBranchElement *branch = (TBranchElement*)abranch;
       Int_t nb2 = branch->GetListOfBranches()->GetEntries();
       Int_t id = branch->GetID();
-      Int_t btype = branch->GetType();
-      Int_t mOffset = 0;
-      Int_t memberOffset = 0;
       clparent = gROOT->GetClass(branch->GetParentName());
       if (!clparent) clparent = cl;
-      clm = gROOT->GetClass(branch->GetClassName());
       TStreamerInfo *info = branch->GetInfo();
-//printf("i=%d, clm=%s,clparent=%s, branch=%s, btype=%d, nb2=%d, info=%s, uuoff=%d\n",i,clm->GetName(),clparent->GetName(),branch->GetName(),btype,nb2,info->GetName(),cinfo->GetOffsets()[id]);
-
-      if (clparent != clm) {
-         const char *clast = strchr(branch->GetName(),'.');
-         if (clast) {
-            mOffset = clparent->GetDataMemberOffset(clast+1);
-            if (btype == 0 && !clparent->GetBaseClass(clm)) memberOffset = mOffset - info->GetOffsets()[id];;
-         }
-      }
 
       if (nb2 > 0) {
          if (info) {
@@ -1444,7 +1433,7 @@ void TBranchElement::SetAddress(void *add)
             Error("SetAddress","branch=%s, info=0",branch->GetName());
          }
       } else {
-         branch->SetAddress(fObject + memberOffset);
+         branch->SetAddress(fObject);
       }
    }
 }
