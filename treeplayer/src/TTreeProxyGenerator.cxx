@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.6 2004/07/27 12:21:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.7 2004/07/29 18:09:40 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -801,7 +801,8 @@ namespace ROOT {
             while ( (subbranch = (TBranch*)next()) && subbranch!=branch ) {};
 
             Assert( subbranch == branch );
-
+            extraLookedAt -= 1; // Avoid counting the branch itself twice
+            
             do {
                TString subname = subbranch->GetName();
                if ( subname.BeginsWith( brprefix ) ) {

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.1 2004/06/25 18:42:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.2 2004/06/28 16:38:00 brun Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -246,7 +246,8 @@ Bool_t ROOT::TBranchProxy::Setup() {
 
          } else {
 
-            fWhere = ((unsigned char*)fWhere) + fOffset;
+            // fWhere = ((unsigned char*)fWhere) + fOffset;
+            fWhere = ((unsigned char*)be->GetObject()) + fOffset;
 
          }
       } else {
