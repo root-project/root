@@ -1439,13 +1439,23 @@ int *ptagnum;
   
   G__fixedscope=1;
 
-  /* if scope operator found at the beginning of the name, global scope */
+  /* if scope operator found at the beginning of the name, global scope 
+   * or fully qualified scope!
+   */
   if(pc==name) {
     /* strip scope operator, set hash and return */
     strcpy(temp,name+2);
     strcpy(name,temp);
     G__hash(name,(*phash),i)
+#ifndef G__OLDIMPLEMENTATIONxyz
+    /* If we do no have anymore scope operator, we know the request of
+       for the global name space */
+    pc = G__find_first_scope_operator(name);
+    if (pc==0) return(G__GLOBALSCOPE);
+#else    
     return(G__GLOBALSCOPE);
+#endif
+
   }
 
 #ifndef G__STD_NAMESPACE /* ON667 */
