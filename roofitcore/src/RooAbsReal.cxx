@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.95 2003/05/14 02:58:39 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.96 2003/08/27 22:34:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -57,6 +57,10 @@ ClassImp(RooAbsReal)
 ;
 
 RooIntegratorConfig* RooAbsReal::_defaultIntegratorConfig(0) ;
+
+RooAbsReal::RooAbsReal() : _specIntegratorConfig(0)
+{
+}
 
 RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) : 
   RooAbsArg(name,title), _plotMin(0), _plotMax(0), _plotBins(100), 
