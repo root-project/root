@@ -6870,9 +6870,11 @@ int link_stub;
 	if (rf1 == 1) G__struct.rootflag[i] = G__NOSTREAMER;
 	if (rf2 == 1) G__struct.rootflag[i] |= G__NOINPUTOPERATOR;
 	if (rf3 == 1) {
-	  G__struct.rootflag[i] = G__USEBYTECOUNT;
-	  if(rf1 || rf2) 
-	    G__fprinterr(G__serr, "option + mutual exclusive with either - or !\n");
+	  G__struct.rootflag[i] |= G__USEBYTECOUNT;
+	  if(rf1) {
+            G__struct.rootflag[i] &= ~G__NOSTREAMER;
+	    G__fprinterr(G__serr, "option + mutual exclusive with -, + prevails\n");
+          }
 	}
       }
 #endif

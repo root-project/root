@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.33 2001/01/29 09:16:42 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.34 2001/02/13 17:19:08 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -80,7 +80,7 @@
 // A trailing + in the class name tells rootcint to generate an         //
 // automatic Streamer(), i.e. a streamer that let ROOT do automatic     //
 // schema evolution. The + option is mutually exclusive with            //
-// both the - and ! options. For new classes the + option is the        //
+// the - option. For new classes the + option is the                    //
 // preferred option. For legacy reasons it is not yet the default.      //
 // When the linkdef file is not specified a default version exporting   //
 // the classes with the names equal to the include files minus the .h   //
@@ -195,7 +195,7 @@ const char *help =
 "A trailing + in the class name tells rootcint to generate an\n"
 "automatic Streamer(), i.e. a streamer that let ROOT do automatic\n"
 "schema evolution. The + option is mutually exclusive with\n"
-"both the - and ! options. For new classes the + option is the\n"
+"the - option. For new classes the + option is the\n"
 "preferred option. For legacy reasons it is not yet the default.\n"
 "When this linkdef file is not specified a default version exporting\n"
 "the classes with the names equal to the include files minus the .h\n"
@@ -1369,8 +1369,8 @@ void GenerateLinkdef(int *argc, char **argv, int iv)
       }
       if (bcnt) {
          strcpy(trail, "+");
-         if (nostr || noinp)
-            fprintf(stderr, "option + mutual exclusive with either - or !\n");
+         if (nostr)
+            fprintf(stderr, "option + mutual exclusive with -\n");
       }
       char *cls = strrchr(argv[i], '/');
       if (!cls) cls = strrchr(argv[i], '\\');
