@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.4 2001/12/03 12:37:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.5 2002/07/31 21:59:16 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -51,7 +51,7 @@ protected:
 
 public:
    enum {
-      kNoHidden     = BIT(9),  // don't show '.' files and directories
+      kNoHidden     = BIT(9)   // don't show '.' files and directories
    };
      
    TBrowser(const char *name="Browser", const char *title="ROOT Object Browser");
