@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.3 2000/12/11 16:15:31 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.4 2001/04/03 10:40:24 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -108,6 +108,7 @@ private:
 public:
    TThread(void  *(*fn)(void*), void *arg = 0, EPriority pri = kNormalPriority);
    TThread(void   (*fn)(void*), void *arg = 0, EPriority pri = kNormalPriority);
+   TThread(Int_t id = 0);
    TThread(const char *thname, void  *(*fn)(void*), void *arg = 0, EPriority pri = kNormalPriority);
    TThread(const char *thname, void   (*fn)(void*), void *arg = 0, EPriority pri = kNormalPriority);
    virtual ~TThread();

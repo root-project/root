@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.4 2000/09/13 07:58:21 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.5 2001/04/03 10:40:24 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -169,6 +169,24 @@ TThread::TThread(void (*fn)(void*), void *arg, EPriority pri)
    fNamed     = kFALSE;
 }
 
+ 
+//______________________________________________________________________________
+TThread::TThread(Int_t id)
+{
+   // Create a TThread for a already running thread
+
+   fDetached  = kTRUE;
+   fFcnRetn   = 0;
+   fFcnVoid   = 0;
+   fPriority  = kNormalPriority;
+   fThreadArg = NULL;
+   Constructor();
+   fNamed     = kFALSE;
+   fId = (id ? id : SelfId());
+   fState = kRunningState;
+   printf("Thread %s.%ld is running\n",GetName(),fId);
+}
+
 ////////// begin changes (J.A.):
    // additional constructors with own threadname thname
    // as useful for invoking thread with name from compiled program:
@@ -224,8 +242,8 @@ void TThread::Constructor()
    fId = 0;
    if (!fgThreadImp) { // *** Only once ***
       fgThreadImp = gThreadFactory->CreateThreadImp();
-      fgMainMutex = new TMutex;
-      fgXActMutex = new TMutex;
+      fgMainMutex = new TMutex(kTRUE);
+      fgXActMutex = new TMutex(kTRUE);
       new TThreadTimer;
       fgXActCondi = new TCondition;
       gThreadTsd  = &(TThread::Tsd);
@@ -670,8 +688,8 @@ Int_t TThread::XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret)
 //______________________________________________________________________________
 void TThread::XAction()
 {
-   char const acts[] = "PRTF CUPD CANV CDEL";
-   enum {kPRTF=0,kCUPD=5,kCANV=10,kCDEL=15};
+   char const acts[] = "PRTF CUPD CANV CDEL PDCD";
+   enum {kPRTF=0,kCUPD=5,kCANV=10,kCDEL=15,kPDCD=20};
    int iact = strstr(acts,fgXAct) - acts;
 
    switch (iact) {
@@ -691,7 +709,13 @@ void TThread::XAction()
             case 2:
                ((TCanvas*)fgXArr[1])->Constructor();
                break;
-
+ 
+            case 5:
+               ((TCanvas*)fgXArr[1])->Constructor(
+                                (Text_t*)fgXArr[2],
+                                (Text_t*)fgXArr[3],
+                               *((Int_t*)(fgXArr[4])));
+               break;
             case 6:
                ((TCanvas*)fgXArr[1])->Constructor(
                                 (char*)fgXArr[2],
@@ -711,13 +735,21 @@ void TThread::XAction()
                break;
 
          }
-         gSystem->Sleep(10000);
+         //gSystem->Sleep(10000);
          break;
 
       case kCDEL:
          ((TCanvas*)fgXArr[1])->Destructor();
          break;
+ 
+      case kPDCD:
+         ((TPad*) fgXArr[1])->Divide( *((Int_t*)(fgXArr[2])),
+                                  *((Int_t*)(fgXArr[3])),
+                                  *((Float_t*)(fgXArr[4])),
+                                  *((Float_t*)(fgXArr[5])),
+                                  *((Int_t*)(fgXArr[6])));
 
+         break;
       default:
          fprintf(stderr,"TThread::XARequest. Wrong case\n");
    }
