@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGFrame.cxx,v 1.78 2004/09/13 09:10:08 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.1 2004/09/13 12:47:35 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -807,6 +807,7 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
    Event_t ev;
    ev.fCode = kButton1;
    ev.fType = kMotionNotify;
+   ev.fState = 0;
 
    gVirtualX->QueryPointer(gVirtualX->GetDefaultRootWindow(), dum, dum,
                            ev.fXRoot, ev.fYRoot, ev.fX, ev.fY, ev.fState);
@@ -826,7 +827,7 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
    gw = ev.fWindow;
    gstate = ev.fState;
 
-   if (!fDragging && !fMoveWaiting &&
+   if (!fDragging && !fMoveWaiting && !fPimpl->fButtonPressed &&
        ((ev.fState == kButton1Mask) || (ev.fState == kButton3Mask) ||
         (ev.fState == (kButton1Mask | kKeyShiftMask)) ||
         (ev.fState == (kButton1Mask | kKeyControlMask)))) {
@@ -842,6 +843,7 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
 
    if ((fDragging || fMoveWaiting) && (!ev.fState || (ev.fState == kKeyShiftMask)) &&
        fPimpl->fButtonPressed) {
+
       ev.fType = kButtonRelease;
       t->SetTime(100);
 
@@ -869,8 +871,10 @@ Bool_t TGuiBldDragManager::RecognizeGesture(Event_t *event, TGFrame *frame)
 {
    //
 
+   UInt_t estate = event->fState & 0xFF;
+
    if (((event->fCode != kButton1) && (event->fCode != kButton3)) || !frame ||
-       (event->fState && !((event->fState & kKeyShiftMask) || (event->fState & kKeyControlMask)))) {
+       (estate && !((estate & kKeyShiftMask) || (estate & kKeyControlMask)))) {
       return kFALSE;
    }
 
