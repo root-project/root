@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.21 2004/08/18 07:16:34 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.22 2004/08/18 08:40:46 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -63,7 +63,11 @@ void TFitter::Clear(Option_t *)
 
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
    fMinuit->mncler();
-
+   
+   //reset the internal Minuit random generator to its initial state
+   Double_t val = 3;
+   Int_t inseed = 12345;
+   fMinuit->mnrn15(val,inseed);
 }
 
 //______________________________________________________________________________
