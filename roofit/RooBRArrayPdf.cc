@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBRArrayPdf.cc,v 1.5 2001/08/25 22:46:10 bevan Exp $
+ *    File: $Id: RooBRArrayPdf.cc,v 1.6 2001/08/30 18:29:16 chcheng Exp $
  * Authors:
  *   JB, John Back, Queen Mary College, Univ London, jback@slac.stanford.edu
  * History:
@@ -40,7 +40,7 @@ RooBRArrayPdf::RooBRArrayPdf(const char *name, const char *title)
 
 
 RooBRArrayPdf::RooBRArrayPdf(const char *name, const char *title,
-			     const RooArgSet& pdfArray, const RooArgSet& coefArray):
+			     const RooArgList& pdfArray, const RooArgList& coefArray):
   RooAbsPdf(name, title)
 {
   // add the parameters and dependents of all PDFs
@@ -55,8 +55,8 @@ RooBRArrayPdf::RooBRArrayPdf(const char *name, const char *title,
 
   for (i = 0; i < numberOfPdfs; i++) {
 
-    RooAbsPdf* thePdf = (RooAbsPdf*) pdfArray.At(i);
-    RooAbsReal* theCoeff = (RooAbsReal*) coefArray.At(i);
+    RooAbsPdf* thePdf = (RooAbsPdf*) pdfArray.at(i);
+    RooAbsReal* theCoeff = (RooAbsReal*) coefArray.at(i);
 
     if (thePdf != 0 && theCoeff != 0) {
       addPdf(*thePdf, *theCoeff);
@@ -170,7 +170,7 @@ Bool_t RooBRArrayPdf::checkDependents(const RooArgSet* nset) const
 }
 
 
-Int_t RooBRArrayPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const 
+Int_t RooBRArrayPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet) const 
 {
   // Determine which part (if any) of given integral can be performed analytically.
   // If any analytical integration is possible, return integration scenario code

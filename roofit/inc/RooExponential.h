@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooExponential.rdl,v 1.1 2001/08/23 00:47:20 bevan Exp $
+ *    File: $Id: RooExponential.rdl,v 1.2 2001/08/23 01:23:35 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
@@ -28,7 +28,7 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooExponential(*this,newname); }
   inline virtual ~RooExponential() { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet=0) const ;
   Double_t analyticalIntegral(Int_t code) const ;
 
 protected:

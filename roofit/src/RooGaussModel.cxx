@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.8 2001/08/23 01:23:35 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.9 2001/09/19 00:27:32 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -118,7 +118,7 @@ Double_t RooGaussModel::evaluate() const
 
 
 
-Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
 {
   switch(_basisCode) {
 

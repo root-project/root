@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDstD0BG.rdl,v 1.2 2001/08/23 01:34:51 verkerke Exp $
+ *    File: $Id: RooDstD0BG.rdl,v 1.3 2001/08/25 01:23:51 chcheng Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   UE, Ulrik Egede, RAL, U.Egede@rl.ac.uk
@@ -36,7 +36,7 @@ public:
     return new RooDstD0BG(*this,newname); }
   inline virtual ~RooDstD0BG() { };
   
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet=0) const ;
   Double_t analyticalIntegral(Int_t code) const ;
   
 protected:

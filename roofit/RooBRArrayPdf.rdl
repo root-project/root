@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBRArrayPdf.rdl,v 1.4 2001/08/02 21:40:04 verkerke Exp $
+ *    File: $Id: RooBRArrayPdf.rdl,v 1.5 2001/08/23 01:23:34 verkerke Exp $
  * Authors:
  *   JB, John Back, Queen Mary College, Univ London, jback@slac.stanford.edu
  * History:
@@ -13,14 +13,13 @@
 #define ROO_BR_ARRAY_PDF
 
 #include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "TList.h"
+#include "RooFitCore/RooArgList.hh"
 
 class RooBRArrayPdf : public RooAbsPdf {
 public:
   RooBRArrayPdf(const char *name, const char *title);
   RooBRArrayPdf(const char *name, const char *title,
-                const RooArgSet& pdfArray, const RooArgSet& coefArray);
+                const RooArgList& pdfArray, const RooArgList& coefArray);
   RooBRArrayPdf(const RooBRArrayPdf& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooBRArrayPdf(*this,newname) ; }
   virtual ~RooBRArrayPdf() ;
@@ -32,7 +31,7 @@ public:
   virtual Bool_t canBeExtended() const { return kTRUE ;}
   virtual Double_t expectedEvents() const; 
  
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet *normSet=0) const ;
   Double_t analyticalIntegral(Int_t code) const ;
   Bool_t selfNormalized() const { return kTRUE ; }
 
