@@ -58,6 +58,6 @@ GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 -lXmu -lXext -lX11
 X3DLIBEXTRA   = -L/usr/X11R6/lib -lX11
 
-EXTRA_CXXFLAGS= -I./include -I/sw/include
-EXTRA_CFLAGS  = -I./include -I/sw/include
-EXTRA_LDFLAGS = -L/sw/lib
+EXTRA_CXXFLAGS= -I./include $(shell [ -d /sw/include ] && echo -I/sw/include)
+EXTRA_CFLAGS  = -I./include $(shell [ -d /sw/include ] && echo -I/sw/include)
+EXTRA_LDFLAGS = $(shell [ -d /sw/lib ] && echo -L/sw/lib)
