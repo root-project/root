@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: netpar.cxx,v 1.1 2001/02/06 19:12:35 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: netpar.cxx,v 1.2 2001/02/07 11:00:20 rdm Exp $
 // Author: Fons Rademakers   06/02/2001
 
 /*************************************************************************
@@ -92,8 +92,6 @@ int NetParSend(const void *buf, int len)
 
    InitSelect(nsock);
 
-   ErrorInfo("NetParSend: sending %d bytes using %d sockets", len, nsock);
-
    // Send the data on the parallel sockets
    while (len > 0) {
 
@@ -144,8 +142,6 @@ int NetParRecv(void *buf, int len)
    gReadBytesLeft[i-1] += len%nsock;
 
    InitSelect(nsock);
-
-   ErrorInfo("NetParRecv: receiving %d bytes using %d sockets", len, nsock);
 
    // Recieve the data on the parallel sockets
    while (len > 0) {
