@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGaussian.cc,v 1.11 2001/10/03 16:17:56 verkerke Exp $
+ *    File: $Id: RooGaussian.cc,v 1.12 2001/10/08 05:21:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -63,8 +63,8 @@ Double_t RooGaussian::analyticalIntegral(Int_t code) const
 {
   assert(code==1) ;
 
-  static Double_t root2 = sqrt(2) ;
-  static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
+  static const Double_t root2 = sqrt(2) ;
+  static const Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
   
   Double_t xscale = root2*sigma;
   return rootPiBy2*sigma*(erf((x.max()-mean)/xscale)-erf((x.min()-mean)/xscale));
@@ -75,8 +75,7 @@ Double_t RooGaussian::analyticalIntegral(Int_t code) const
 
 Int_t RooGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const
 {
-  //if (matchArgs(directVars,generateVars,x)) return 1 ;  
-  return 0 ;
+  return (matchArgs(directVars,generateVars,x)) ? 1 : 0;
 }
 
 
@@ -88,9 +87,10 @@ void RooGaussian::generateEvent(Int_t code)
     xgen = RooRandom::randomGenerator()->Gaus(mean,sigma);
     if (xgen<x.max() && xgen>x.min()) {
       x = xgen ;
-      return ;
+      break;
     }
   }
+  return;
 }
 
 
