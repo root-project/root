@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.22 2002/07/18 09:48:21 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.23 2002/08/09 13:12:23 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -24,8 +24,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TVirtualProof
+#include "TVirtualProof.h"
 #endif
 #ifndef ROOT_TString
 #include "TString.h"
@@ -39,9 +39,6 @@
 
 #include <map>
 
-typedef long Long64_t;
-
-class TList;
 class TMessage;
 class TSocket;
 class TMonitor;
@@ -53,8 +50,6 @@ class TProofInputHandler;
 class TProofInterruptHandler;
 class TProofPlayer;
 class TProofPlayerRemote;
-class TDSet;
-class TEventList;
 class TPacketizer2;
 
 
@@ -69,7 +64,7 @@ const char* const kPROOF_PackDir  = "packages";    // package dir, under WorkDir
 const char* const kPROOF_LockFile = ".cache.lock"; // lock file, under CacheDir and PackDir
 
 
-class TProof : public TObject {
+class TProof : public TVirtualProof {
 
 friend class TProofServ;
 friend class TProofInputHandler;
@@ -233,12 +228,7 @@ public:
    Bool_t      IsValid() const { return GetNumberOfActiveSlaves() > 0 ? kTRUE : kFALSE; }
    Bool_t      IsParallel() const { return GetParallel() > 1 ? kTRUE : kFALSE; }
 
-   static Bool_t  IsActive();
-   static TProof *This();
-
    ClassDef(TProof,0)  //PROOF control class
 };
-
-R__EXTERN TProof *gProof;
 
 #endif

@@ -1,3 +1,4 @@
+// @(#)root/proof:$Name:$:$Id:$
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -190,7 +191,7 @@ Info("TPacketizer2","Socket added to monitor: %p", s->GetSocket());
 
    mon.DeActivateAll();
 
-   gProof->DeActivateAsyncInput();
+   ((TProof*)gProof)->DeActivateAsyncInput();
 
    while(kTRUE) {
       Bool_t   done = kFALSE;
@@ -313,7 +314,7 @@ Info("TPacketizer2","Select returned: %p", sock);
       }
    }
 
-   gProof->ActivateAsyncInput();
+   ((TProof*)gProof)->ActivateAsyncInput();
 
    // report output from slaves??
 

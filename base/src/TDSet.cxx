@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.11 2002/06/25 23:51:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.12 2002/08/09 13:12:24 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -48,6 +48,7 @@
 #include "TTree.h"
 #include "TKey.h"
 #include "TError.h"
+#include "TVirtualProof.h"
 
 
 ClassImp(TDSetElement)
@@ -180,18 +181,10 @@ Int_t TDSet::Process(const char *selector, Long64_t nentries,
       return -1;
    }
 
-   if (TClassTable::GetDict("TProof")) {
-      if (gROOT->ProcessLineFast("TProof::IsActive()")) {
-         return (Int_t) gROOT->ProcessLineFast(
-            Form("TProof::This()->Process((TDSet *)0x%lx, (const char*) 0x%lx, %ld, %ld, (TEventList *)0x%lx);",
-            (Long_t)this, (Long_t)selector, nentries, first, (Long_t)evl));
-      } else {
-         Error("Process", "no active PROOF session");
-         return -1;
-      }
-   }
+   if (gProof)
+      return gProof->Process(this, selector, nentries, first, evl);
 
-   Error("Process", "PROOF session not started");
+   Error("Process", "no active PROOF session");
    return -1;
 }
 

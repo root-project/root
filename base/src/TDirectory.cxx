@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.30 2002/08/04 21:55:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.31 2002/08/07 11:03:46 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -874,11 +874,17 @@ TObject *TDirectory::Get(const char *namecycle)
    }
    cursav->cd();
 
+#if 0
+   // Feature not used for the time being. If used code will be modified
+   // to not use ProcessLine().
+
    // If we are on a PROOF server try to get object from client
    if (!idcur && TClassTable::GetDict("TProofServ")) {
       if (gROOT->ProcessLineFast("TProofServ::IsActive()"))
          idcur = (TObject *) gROOT->ProcessLineFast(Form("TProofServ::This()->Get(\"%s\")", namecycle));
    }
+#endif
+
    return idcur;
 }
 

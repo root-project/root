@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.5 2002/02/14 16:12:52 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.6 2002/06/16 01:21:55 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -152,5 +152,6 @@
 #pragma link C++ class TTimeStamp+;
 #pragma link C++ class TVirtualMutex;
 #pragma link C++ class TLockGuard;
+#pragma link C++ class TVirtualProof;
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.25 2002/07/17 12:29:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.26 2002/07/18 09:48:21 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -48,9 +48,6 @@
 #include "TDSet.h"
 #include "TEnv.h"
 #include "TProofDebug.h"
-
-
-TProof *gProof = 0;
 
 
 //----- PROOF Interrupt signal handler -----------------------------------------------
@@ -108,7 +105,12 @@ TProof::TProof(const char *masterurl, const char *conffile,
    // (this argument alows you to describe different cluster configurations).
    // The default proof.conf. Confdir is the directory where the config
    // file and other PROOF related files are (like motd and noproof files).
-   // Loglevel is the og level (default = 1).
+   // Loglevel is the log level (default = 1).
+
+   if (!conffile)
+      conffile = kPROOF_ConfFile;
+   if (!confdir)
+      confdir = kPROOF_ConfDir;
 
    // Can have only one PROOF session open at a time.
    if (gProof) {
@@ -1891,22 +1893,3 @@ Int_t TProof::UploadPackage(const char *par, Int_t parallel)
    return 0;
 }
 
-//______________________________________________________________________________
-Bool_t TProof::IsActive()
-{
-   // Static function that returns kTRUE in case a PROOF connection exists
-   // with more than 1 active slave. When only one active slave we run in
-   // sequential mode.
-
-   return gProof ? kTRUE : kFALSE;
-}
-
-//______________________________________________________________________________
-TProof *TProof::This()
-{
-   // Static function returning pointer to global object gProof.
-   // Mainly for use via CINT, where the gProof symbol might be
-   // deleted from the symbol table.
-
-   return gProof;
-}

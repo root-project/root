@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:$:$Id:$
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.32 2002/09/16 00:01:57 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -151,7 +151,7 @@ Plugin.TVirtualPS:          ps  TPostScript  Postscript   "TPostScript()"
 +Plugin.TVirtualPS:         svg TSVG         Postscript   "TSVG()"
 Plugin.TViewerX3D:          *  TViewerX3D    X3d          "TViewerX3D(TVirtualPad*,Option_t*,const char*,UInt_t,UInt_t)"
 Plugin.TMinuitGraph:        *  TGraph        Graf         "TGraph(Int_t,const Double_t*,const Double_t*)"
-Plugin.TProof:              *  TProof        Proof        "TProof(const char*)"
+Plugin.TVirtualProof:       *  TProof        Proof        "TProof(const char*,const char*,const char*,Int_t)"
 Plugin.TPaletteEditor:      *  TASPaletteEditor  ASImage  "TASPaletteEditor(TAttImage*,UInt_t,UInt_t)"
 Plugin.TImage:              *  TASImage          ASImage  "TASImage()"
 Plugin.TVirtualX:    x11       TGX11         GX11         "TGX11(const char*,const char*)"
