@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TAttMarkerCanvas.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   04/07/96
 
 /*************************************************************************
@@ -29,7 +29,7 @@ class TAttMarkerCanvas : public TDialogCanvas {
 
 public:
    TAttMarkerCanvas();
-   TAttMarkerCanvas(const char *name, const char *title, UInt_t ww=400, UInt_t wh=600);
+   TAttMarkerCanvas(const char *name, const char *title, Int_t ww=400, Int_t wh=600);
    virtual        ~TAttMarkerCanvas();
    virtual void   UpdateMarkerAttributes(Int_t col,Int_t sty,Float_t msiz);
 

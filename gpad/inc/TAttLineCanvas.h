@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TAttLineCanvas.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************
@@ -29,7 +29,7 @@ class TAttLineCanvas : public TDialogCanvas {
 
 public:
    TAttLineCanvas();
-   TAttLineCanvas(const char *name, const char *title, UInt_t ww=400, UInt_t wh=600);
+   TAttLineCanvas(const char *name, const char *title, Int_t ww=400, Int_t wh=600);
    virtual        ~TAttLineCanvas();
    virtual void   UpdateLineAttributes(Int_t col, Int_t sty, Int_t width);
 

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TAttFillCanvas.cxx,v 1.2 2001/05/28 06:20:52 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TAttFillCanvas.cxx,v 1.3 2002/04/02 15:26:52 brun Exp $
 // Author: Rene Brun   04/07/96
 // ---------------------------------- AttFillCanvas.C
 
@@ -38,7 +38,7 @@ TAttFillCanvas::TAttFillCanvas() : TDialogCanvas()
 }
 
 //_____________________________________________________________________________
-TAttFillCanvas::TAttFillCanvas(const char *name, const char *title, UInt_t ww, UInt_t wh)
+TAttFillCanvas::TAttFillCanvas(const char *name, const char *title, Int_t ww, Int_t wh)
              : TDialogCanvas(name,title,ww,wh)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*AttFillCanvas constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

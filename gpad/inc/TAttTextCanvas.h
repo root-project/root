@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TAttTextCanvas.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   04/07/96
 
 /*************************************************************************
@@ -29,7 +29,7 @@ class TAttTextCanvas : public TDialogCanvas {
 
 public:
    TAttTextCanvas();
-   TAttTextCanvas(const char *name, const char *title, UInt_t ww=400, UInt_t wh=600);
+   TAttTextCanvas(const char *name, const char *title, Int_t ww=400, Int_t wh=600);
    virtual        ~TAttTextCanvas();
    virtual void   UpdateTextAttributes(Int_t align,Float_t angle,Int_t col,Int_t font,Float_t tsize);
 
