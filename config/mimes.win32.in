@@ -175,11 +175,6 @@ pattern = TBranchElement-leaf
 icon = leaf_s.xpm leaf_t.xpm
 action = ->Browse()
 
-[root/tbranch]
-pattern = TBranch*
-icon = branch_folder_s.xpm branch_folder_t.xpm
-action = ->Browse()
-
 [root/tleaf]
 pattern = TLeaf*
 icon = leaf_s.xpm leaf_t.xpm

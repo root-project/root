@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.49 2003/01/15 18:43:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.50 2003/01/20 08:44:47 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -620,6 +620,16 @@ Seek_t TBranch::GetBasketSeek(Int_t basketnumber) const
    return fBasketSeek[basketnumber];
 }
 
+//______________________________________________________________________________
+const char *TBranch::GetIconName() const
+{
+   // Return icon name depending on type of branch.
+
+   if (IsFolder())
+      return "TBranchElement-folder";
+   else
+      return "TBranchElement-leaf";
+}
 
 //______________________________________________________________________________
 Int_t TBranch::GetEntry(Int_t entry, Int_t getall)

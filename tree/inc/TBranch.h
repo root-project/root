@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.14 2002/04/19 09:36:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.15 2003/01/15 18:43:45 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -110,6 +110,7 @@ public:
     virtual Int_t    GetEntryExport(Int_t entry, Int_t getall, TClonesArray *list, Int_t n);
             Int_t    GetEvent(Int_t entry=0) {return GetEntry(entry);}
             Int_t    GetEntryOffsetLen() const {return fEntryOffsetLen;}
+    const char      *GetIconName() const;
     virtual TLeaf   *GetLeaf(const char *name) const;
             TBasket *GetBasket(Int_t basket);
             Int_t   *GetBasketBytes() const {return fBasketBytes;}
