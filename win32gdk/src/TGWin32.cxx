@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.47 2004/02/04 17:23:00 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.48 2004/02/23 23:50:44 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -5196,8 +5196,15 @@ Pixmap_t TGWin32::CreateBitmap(Drawable_t id, const char *bitmap,
 {
    // Create a bitmap (i.e. pixmap with depth 1) from the bitmap data.
 
-   return (Pixmap_t) gdk_bitmap_create_from_data((GdkWindow *) id,
-                                                 (char *) bitmap, width, height);
+   int siz = width*height;
+   char *ibitmap = new char[siz];
+   for (int i=0; i<siz; i++) {
+      ibitmap[i] = ~bitmap[i];
+   }
+   Pixmap_t ret = (Pixmap_t) gdk_bitmap_create_from_data((GdkWindow *) id,
+                                                 (char *) ibitmap, width, height);
+   delete [] ibitmap;
+   return ret;
 }
 
 //______________________________________________________________________________

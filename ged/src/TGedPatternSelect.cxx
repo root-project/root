@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.3 2004/02/19 14:52:29 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.4 2004/02/22 11:50:29 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 // ****It needs more fixes*****
 /*************************************************************************
@@ -262,8 +262,8 @@ Bool_t TGedPatternFrame::HandleButton(Event_t *event)
 //______________________________________________________________________________
 void TGedPatternFrame::DrawBorder()
 {
-   gVirtualX->DrawRectangle(fId, GetBckgndGC()(), 0, 0, fWidth - 1, fHeight - 1);
-   Draw3dRectangle(kDoubleBorder | kSunkenFrame, 1, 1, fWidth - 2, fHeight - 2);
+   gVirtualX->DrawRectangle(fId, GetBckgndGC()(), 0, 0, fWidth, fHeight);
+   Draw3dRectangle(kDoubleBorder | kSunkenFrame, 0, 0, fWidth, fHeight);
 }
 
 //______________________________________________________________________________
@@ -273,7 +273,7 @@ void TGedPatternFrame::DoRedraw()
 
    if (fPattern > 3000 && fPattern < 3026) {
       SetFillStyle(fgGC, fPattern);
-      gVirtualX->FillRectangle(fId, fgGC->GetGC(), 1, 1, fWidth - 3, fHeight - 3);
+      gVirtualX->FillRectangle(fId, fgGC->GetGC(), 0, 0, fWidth, fHeight);
    }
 }
 
