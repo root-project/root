@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.1 2001/10/01 14:39:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.2 2001/10/03 13:18:04 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -56,10 +56,11 @@ private:
    void  GetCurrentTime(uuid_time_t *timestamp);
    void  GetSystemTime(uuid_time_t *timestamp);
    void  GetRandomInfo(UChar_t seed[16]);
+   void  SetFromString(const char *uuid_str);
 
 public:
    TUUID();
-   TUUID(const char *uuid);
+   TUUID(const char *uuid_str);
 
    const char  *AsString() const;
    Int_t        Compare(const TUUID &u) const;
@@ -67,6 +68,7 @@ public:
    void         Print() const;
    TInetAddress GetHostAddress() const;
    void         GetUUID(UChar_t uuid[16]) const;
+   void         SetUUID(const char *uuid_str);
 
    ClassDef(TUUID,1)  // Universally Unique IDentifier
 };

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.2 2001/10/01 16:03:30 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.3 2001/10/03 13:18:04 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -174,19 +174,10 @@ Int_t TUUID::CmpTime(uuid_time_t *t1, uuid_time_t *t2)
 }
 
 //______________________________________________________________________________
-TUUID::TUUID(const char *uuid)
+void TUUID::SetFromString(const char *uuid)
 {
-   // Initialize a TUUID with uuid (which must be in TUUID::AsString() format).
-
-   fTimeLow               = 0;
-   fTimeMid               = 0;
-   fTimeHiAndVersion      = 0;
-   fClockSeqHiAndReserved = 0;
-   fClockSeqLow           = 0;
-   fNode[0]               = 0;
-
-   if (!uuid || !*uuid)
-      Error("TUUID", "null string not allowed");
+   // Set this UUID to the value specified in uuid ((which must be in
+   // TUUID::AsString() format).
 
    // Format is tttttttt-tttt-cccc-cccc-nnnnnnnnnnnn.
    long    timeLo;
@@ -217,6 +208,24 @@ TUUID::TUUID(const char *uuid)
    fNode[3]               = (UChar_t) node[3];
    fNode[4]               = (UChar_t) node[4];
    fNode[5]               = (UChar_t) node[5];
+}
+
+//______________________________________________________________________________
+TUUID::TUUID(const char *uuid)
+{
+   // Initialize a TUUID with uuid (which must be in TUUID::AsString() format).
+
+   fTimeLow               = 0;
+   fTimeMid               = 0;
+   fTimeHiAndVersion      = 0;
+   fClockSeqHiAndReserved = 0;
+   fClockSeqLow           = 0;
+   fNode[0]               = 0;
+
+   if (!uuid || !*uuid)
+      Error("TUUID", "null string not allowed");
+
+   SetFromString(uuid);
 }
 
 //______________________________________________________________________________
@@ -509,4 +518,16 @@ void TUUID::GetUUID(UChar_t uuid[16]) const
    // Return uuid in specified buffer (16 byte = 128 bits).
 
    memcpy(uuid, &fTimeLow, 16);
+}
+
+//______________________________________________________________________________
+void TUUID::SetUUID(const char *uuid)
+{
+   // Set this UUID to the value specified in uuid ((which must be in
+   // TUUID::AsString() format).
+
+   if (!uuid || !*uuid)
+      Error("SetUUID", "null string not allowed");
+
+   SetFromString(uuid);
 }
