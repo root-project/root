@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.30 2003/02/04 22:04:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.31 2003/02/26 10:11:51 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -185,7 +185,7 @@ TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
          if (i == nbuffers) bufmax = fObjlen -nzip;
          else               bufmax = kMAXBUF;
          R__zip(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout);
-         if (nout == 0) { //this happens when the buffer cannot be compressed
+         if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
             fBufferRef->SetBufferOffset(0);
