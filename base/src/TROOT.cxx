@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.39 2001/05/18 16:56:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.40 2001/05/20 17:34:42 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1075,16 +1075,16 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname)
    else {
       // special case for ROOT classes Txxx
       char *lib, *path;
-#ifdef WIN32
-      lib = Form("lib%s", libname);       // used to be Root_%s
-#else
-      lib = Form("lib%s", libname);
-#endif
       if ((path = gSystem->DynamicPathName(lib, kTRUE))) {
          err = gSystem->Load(path, 0, kTRUE);
          delete [] path;
-      } else
+      } else {
+#ifdef WIN32
+         err = gSystem->Load(lib, 0, kTRUE);
+#else
          err = gSystem->Load(libname, 0, kTRUE);
+#endif
+      }
    }
 
    if (err == 0)

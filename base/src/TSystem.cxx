@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.17 2001/04/23 08:33:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.18 2001/06/06 16:48:33 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -657,7 +657,7 @@ again:
    iter++; c = inp; ier = 0;
    x = out; x[0] = 0;
 
-   for ( ; (c[0]) && c[0] != ' ' ; c++) {
+   for ( ; c[0]; c++) {
 
       p = 0; e = 0;
       if (c[0] == '~' && c[1] == '/') { // ~/ case
@@ -1299,7 +1299,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
   // ======= Get the right file names for the dictionnary and the shared library
   TString library = filename;
-  ExpandFileName( library );
+  ExpandPathName( library );
   if (! IsAbsoluteFileName(library) ) {
     library = ConcatFileName( WorkingDirectory(), library );
   }
@@ -1326,7 +1326,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
     // Use the specified name instead of the default
     libname = BaseName( library_specified );
     library = library_specified;
-    ExpandFileName( library );
+    ExpandPathName( library );
     if (! IsAbsoluteFileName(library) ) {
       library = ConcatFileName( WorkingDirectory(), library );
     }

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.16 2001/06/06 16:48:33 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.17 2001/06/07 10:47:10 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -948,8 +948,7 @@ const char *TWinNTSystem::DirName(const char *pathname)
        char *r = max(rslash, bslash);
        const char *ptr = pathname;
        while (ptr <= r) {
-         if (r == ":")
-         {
+         if (*ptr == ':') {
            // Windows path may contain a drive letter
            // For NTFS ":" may be a "stream" delimiter as well
            pathname =  ptr + 1;
@@ -1192,7 +1191,6 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
    const char *patbuf = (const char *)patbuf0;
    const char *hd, *p;
    char   *cmd = 0;
-   char    stuffedPat[kMAXPATHLEN], name[70];
    char  *q;
    int    ch, i;
 
@@ -1423,44 +1421,6 @@ char *TWinNTSystem::DynamicPathName(const char *lib, Bool_t quiet)
       Error("DynamicPathName",
       "dll does not exist or wrong file extension (.dll)", lib);
 
-#if 0
-    if (!lib || !strlen(lib)) return 0;
-    char *name = 0;
-
-   // Append an extention if any
-
-   if (!strchr(lib, '.')) {
-      name = Form("%s.dll", lib);
-      name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
-   }
-   else {
-       int len = strlen(lib);
-       if (len > 4 && !(strnicmp(lib+len-4, ".dll",4)))
-       {
-           name = gSystem->Which(GetDynamicPath(), lib, kReadPermission);
-       }
-       else {
-           ::Error("TWinNTSystem::DynamicPathName",
-               "DLL library must have extension: .dll", lib);
-           name = 0;
-       }
-   }
-#endif
-#if 0
-   if (name)
-   {
-     char driveletter = DriveName(name);
-     char *dirname    = (char *)DirName(name);
-     delete [] name;  // allocated by Which()
-     if (driveletter) {
-        name = Form("%c:%s",driveletter,dirname);
-        delete [] dirname;
-        return StrDup(name);
-     } else
-        return dirname;
-   }
-   return 0;
-#endif
    return name;
 }
 

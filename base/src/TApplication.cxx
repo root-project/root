@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.12 2001/05/21 11:16:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.13 2001/06/01 16:18:44 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -126,6 +126,7 @@ TApplication::TApplication(const char *appClassName,
       fArgv[i] = StrDup(argv[i]);
 
    GetOptions(argc, argv);
+   if (fArgv) gSystem->SetProgname(fArgv[0]);
 
    fIdleTimer     = 0;
    fIdleCommand   = 0;
@@ -165,8 +166,6 @@ TApplication::TApplication(const char *appClassName,
 
    // Hook for further initializing the WM dependent application environment
    Init();
-
-   if (fArgv) gSystem->SetProgname(fArgv[0]);
 
    // Set default screen factor (if not disabled in rc file)
    if (gEnv->GetValue("Canvas.UseScreenFactor", 1)) {
