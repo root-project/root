@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.7 2001/04/22 16:00:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.8 2001/04/23 08:04:48 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -269,27 +269,30 @@ void TApplication::GetOptions(int *argc, char **argv)
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
          Long_t id, size, flags, modtime;
          char *dir = gSystem->ExpandPathName(argv[i]);
-         if (!gSystem->GetPathInfo(dir, &id, &size, &flags, &modtime) &&
-             (flags & 2)) {  // if directory make it working directory
-            gSystem->ChangeDirectory(dir);
-            TSystemDirectory *workdir = new TSystemDirectory("workdir", gSystem->WorkingDirectory());
-            TObject *w = gROOT->GetListOfBrowsables()->FindObject("workdir");
-            TObjLink *lnk = gROOT->GetListOfBrowsables()->FirstLink();
-            while (lnk) {
-               if (lnk->GetObject() == w) {
-                  lnk->SetObject(workdir);
-                  lnk->SetOption(gSystem->WorkingDirectory());
-                  break;
+         if (!gSystem->GetPathInfo(dir, &id, &size, &flags, &modtime)) {
+            if ((flags & 2)) {
+               // if directory make it working directory
+               gSystem->ChangeDirectory(dir);
+               TSystemDirectory *workdir = new TSystemDirectory("workdir", gSystem->WorkingDirectory());
+               TObject *w = gROOT->GetListOfBrowsables()->FindObject("workdir");
+               TObjLink *lnk = gROOT->GetListOfBrowsables()->FirstLink();
+               while (lnk) {
+                  if (lnk->GetObject() == w) {
+                     lnk->SetObject(workdir);
+                     lnk->SetOption(gSystem->WorkingDirectory());
+                     break;
+                  }
+                  lnk = lnk->Next();
                }
-               lnk = lnk->Next();
+               delete w;
+            } else if (flags == 0) {
+               // if file add to list of files to be processed
+               if (!fFiles) fFiles = new TObjArray;
+               fFiles->Add(new TObjString(argv[i]));
             }
-            delete w;
-            delete [] dir;
-            continue;
+            argv[i] = 0;
          }
          delete [] dir;
-         if (!fFiles) fFiles = new TObjArray;
-         fFiles->Add(new TObjString(argv[i]));
       }
       // ignore unknown options
    }
@@ -352,7 +355,7 @@ void TApplication::InitializeColors()
       new TColor(10,0.999,0.999,0.999,"white");
       new TColor(11,0.754,0.715,0.676,"editcol");
 
-      // The color cwhite above is defined as being nearly white.
+      // The color white above is defined as being nearly white.
       // Sets the associated dark color also to white.
       TColor *c110 = gROOT->GetColor(110);
       c110->SetRGB(0.999,0.999,.999);
