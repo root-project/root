@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.15 2002/12/02 18:50:01 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.16 2003/03/18 14:29:59 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
