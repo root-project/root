@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.2 2001/03/17 03:47:39 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.3 2001/03/19 15:57:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -121,7 +121,7 @@ Bool_t RooAbsCategory::isValidIndex(Int_t index)
 }
 
 
-Bool_t RooAbsCategory::isValidLabel(char* label)
+Bool_t RooAbsCategory::isValidLabel(const char* label)
 {
   return lookupType(label)?kTRUE:kFALSE ;
 }
@@ -167,7 +167,7 @@ Bool_t RooAbsCategory::setOrdinalIndex(Int_t newIndex)
 
 
 
-Bool_t RooAbsCategory::defineType(Int_t index, char* label) 
+Bool_t RooAbsCategory::defineType(Int_t index, const char* label) 
 {
   if (isValidIndex(index)) {
     cout << "RooAbsCategory::defineType(" << GetName() << "): index " << index << " already assigned" << endl ;

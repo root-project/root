@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooStringVar.cc,v 1.1 2001/03/27 01:20:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,7 +28,8 @@ RooStringVar::RooStringVar(const char *name, const char *title, const char* valu
   RooAbsString(name, title)
 {
   if(!isValid(value)) {
-    cout << "RooStringVar::RooStringVar(" << GetName() << "): initial contents too long and ignored" << endl ;
+    cout << "RooStringVar::RooStringVar(" << GetName() 
+	 << "): initial contents too long and ignored" << endl ;
   } else {
     strcpy(_value,value) ;
   }
@@ -114,7 +115,8 @@ Bool_t RooStringVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   Bool_t ret = parser.readString(newValue,kTRUE) ;
   if (!isValid(newValue)) {
     if (verbose) 
-      cout << "RooStringVar::readFromStreeam(" << GetName() << "): new string too long and ignored" << endl ;
+      cout << "RooStringVar::readFromStreeam(" << GetName() 
+	   << "): new string too long and ignored" << endl ;
   } else {
     strcpy(_value,newValue) ;
   }
@@ -144,13 +146,13 @@ void RooStringVar::printToStream(ostream& os, PrintOption opt) {
   switch(opt) {
   case Standard:
   case Verbose:
-    os << fName << " = \"" << getVal() << "\"" ;
+    os << "RooStringVar: " << fName << " = \"" << getVal() << "\"" ;
     printAttribList(os) ;
     os << endl;
     break ;
     
   case Shape:
-    os << fName << ": " << fTitle;
+    os << "RooStringVar: " << fName << ": " << fTitle;
     printAttribList(os) ;
     os << endl;
     break ;

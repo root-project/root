@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.7 2001/03/22 15:31:24 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.8 2001/03/27 01:20:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -73,15 +73,14 @@ protected:
   THashList _attribList ;
   void printAttribList(ostream& os) const;
 
-  // Value and Shape dirty state information mananagement
-  Bool_t _valueDirty ;
-  Bool_t _shapeDirty ;
-  void setValueDirty(Bool_t flag=kTRUE, RooAbsArg* source=0) ; 
-  void setShapeDirty(Bool_t flag=kTRUE, RooAbsArg* source=0) ; 
+  // Dirty state accessor/modifiers
+  // 
+  // The dirty state accessors can be overriden by 
+  // fundamental subclasses to always return false
   virtual Bool_t isValueDirty() const { return _valueDirty ; } 
   virtual Bool_t isShapeDirty() const { return _shapeDirty ; } 
-  void raiseClientValueDirtyFlags(RooAbsArg* source=0) ;
-  void raiseClientShapeDirtyFlags(RooAbsArg* source=0) ;
+  void setValueDirty(Bool_t flag=kTRUE) { setValueDirty(flag,0) ; }
+  void setShapeDirty(Bool_t flag=kTRUE) { setShapeDirty(flag,0) ; } 
 
   // Hooks for RooDataSet interface
   friend class RooDataSet ;
@@ -95,6 +94,14 @@ protected:
   
   // Debug stuff
   static Bool_t _verboseDirty ;
+
+private:
+
+  // Value and Shape dirty state bits
+  void setValueDirty(Bool_t flag, RooAbsArg* source) ; 
+  void setShapeDirty(Bool_t flag, RooAbsArg* source) ; 
+  Bool_t _valueDirty ;
+  Bool_t _shapeDirty ;
 
   ClassDef(RooAbsArg,1) // a real-valued variable and its value
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.4 2001/03/17 00:32:54 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.5 2001/03/17 03:47:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,10 +42,12 @@ public:
   RooDataSet(const char *name, const char *filename, const char *treename, 
 	     const RooArgSet& vars, const char *cuts);
   inline virtual ~RooDataSet() ;
+
   // Read data from a text file and create a dataset from it.
   // The possible options are: (D)ebug, (Q)uiet.
   static RooDataSet *read(const char *filename, RooArgSet &variables,
-			  const char *opts, const char* commonPath="") ;
+			  const char *opts, const char* commonPath="",
+			  const char *indexCatName=0) ;
 
   // Add one ore more rows of data
   void add(const RooArgSet& data);

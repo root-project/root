@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.4 2001/03/21 15:14:21 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.5 2001/03/28 00:21:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -37,8 +37,8 @@ public:
   // Parameter value and error accessors
   virtual operator Double_t&();
   virtual operator Double_t() ;
-  inline Double_t getError() const { return _error; }
   virtual Double_t getVal() { return _value ; } // overrides RooAbsReal::GetVar()
+  inline Double_t getError() const { return _error; }
   virtual void setVal(Double_t value);
   inline void setError(Double_t value) { _error= value; }
   virtual Double_t operator=(Double_t newValue);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.6 2001/03/22 15:31:24 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.7 2001/03/27 01:20:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -245,9 +245,12 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
     RooStreamParser parser(is) ;
     RooAbsArg *next(0);
     while(0 != (next= (RooAbsArg*)iterator->Next())) {
-      if (next->readFromStream(is,kTRUE,verbose)) {
-	parser.zapToEnd() ;
-	return kTRUE ;
+      if (!next->getAttribute("Dynamic")) {
+	if (next->readFromStream(is,kTRUE,verbose)) {
+	  parser.zapToEnd() ;
+	  return kTRUE ;
+	}	
+      } else {
       }
     }
 
@@ -389,11 +392,12 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 	
 	// Interpret the rest as <arg> = <value_expr> 
 	RooAbsArg *arg ;
-	if (arg = find(token)) {
+	if ((arg = find(token)) && !arg->getAttribute("Dynamic")) {
 	  if (parser.expectToken("=",kTRUE)) {
 	    parser.zapToEnd() ;
 	    retVal=kTRUE ;
-	    cout << "RooArgSet::readFromStream(" << GetName() << "): missing '=' sign: " << arg << endl ;
+	    cout << "RooArgSet::readFromStream(" << GetName() 
+		 << "): missing '=' sign: " << arg << endl ;
 	    continue ;
 	  }
 	  retVal |= arg->readFromStream(is,kFALSE,verbose) ;	
