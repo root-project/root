@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGImageMap.h,v 1.1 2000/10/19 10:40:02 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************
@@ -139,7 +139,7 @@ public:
    void SetToolTipText(const char *text, Long_t delayms = 300);
    void SetToolTipText(Int_t id, const char *text, Long_t delayms = 300);
    void SetCursor(ECursor cursor = kHand) { fCursorMouseOver = cursor; }
-   void SetPicture(const TGPicture *new_pic) { } // disabled
+   void SetPicture(const TGPicture * /*new_pic*/) { } // disabled
 
    void RegionClicked(Int_t id); // *SIGNAL*
    void DoubleClicked(Int_t id); // *SIGNAL*
