@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.10 2000/10/19 10:42:31 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.11 2000/10/19 17:26:48 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -1978,7 +1978,10 @@ void TGX11::LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym
    MapEvent(*event, xev);
 
    int n = XLookupString(&xev.xkey, buf, buflen-1, &xkeysym, 0);
-   buf[n] = 0;
+   if (n >= buflen)
+      Error("LookupString", "buf too small, must be at least %d", n+1);
+   else
+      buf[n] = 0;
 
    UInt_t ks, xks = (UInt_t) xkeysym;
    MapKeySym(ks, xks, kFALSE);
