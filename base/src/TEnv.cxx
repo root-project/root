@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.10 2002/01/27 13:41:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.11 2002/07/19 08:28:32 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -417,15 +417,15 @@ const char *TEnv::Getvalue(const char *name)
       haveProgName = kTRUE;
 
    TEnvRec *er = 0;
-   if (haveProgName)
+   if (haveProgName && gSystem && gProgName)
       er = Lookup(Form("%s.%s.%s", gSystem->GetName(), gProgName, name));
-   if (er == 0)
+   if (er == 0 && gSystem && gROOT)
       er = Lookup(Form("%s.%s.%s", gSystem->GetName(), gROOT->GetName(), name));
-   if (er == 0)
+   if (er == 0 && gSystem)
       er = Lookup(Form("%s.*.%s", gSystem->GetName(), name));
-   if (er == 0 && haveProgName)
+   if (er == 0 && haveProgName && gProgName)
       er = Lookup(Form("%s.%s", gProgName, name));
-   if (er == 0)
+   if (er == 0 && gROOT)
       er = Lookup(Form("%s.%s", gROOT->GetName(), name));
    if (er == 0)
       er = Lookup(Form("*.*.%s", name));
