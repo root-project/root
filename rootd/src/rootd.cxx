@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.64 2003/09/27 19:50:10 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.65 2003/10/07 14:03:03 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1977,7 +1977,7 @@ void RootdLoop()
    const int     kMaxBuf = 1024;
    char          recvbuf[kMaxBuf];
    EMessageTypes kind;
-   int           Meth;
+   int           authmeth;
 
    // Set debug level in RPDUtil ...
    RpdSetDebugFlag(gDebug);
@@ -1998,13 +1998,13 @@ void RootdLoop()
          Error(ErrFatal, kErrFatal, "RootdLoop: error receiving message");
 
       if (gDebug > 2 && kind != kROOTD_PASS)
-         ErrorInfo("RootdLoop: kind:%d -- buf:'%s' (len:%d) -- Auth:%d",
+         ErrorInfo("RootdLoop: kind:%d -- buf:'%s' (len:%d) -- auth:%d",
                    kind, recvbuf, strlen(recvbuf), gAuth);
 
       // For gClientProtocol >= 9:
       // if authentication required, check if we accept the method proposed;
       // if not send back the list of accepted methods, if any ...
-      if ((Meth = RpdGetAuthMethod(kind)) != -1) {
+      if ((authmeth = RpdGetAuthMethod(kind)) != -1) {
 
          if (gClientProtocol == 0)
             gClientProtocol = RpdGuessClientProt(recvbuf, kind);
@@ -2012,12 +2012,12 @@ void RootdLoop()
          if (gClientProtocol > 8) {
 
             // Check if accepted ...
-            if (RpdCheckAuthAllow(Meth, gOpenHost)) {
+            if (RpdCheckAuthAllow(authmeth, gOpenHost)) {
                if (gNumAllow > 0) {
                   if (gAuthListSent == 0) {
                      if (gDebug > 0)
                         ErrorInfo("RootdLoop: %s method not accepted from host: %s",
-                                  kAuthMeth[Meth], gOpenHost);
+                                  kAuthMeth[authmeth], gOpenHost);
                      NetSend(kErrNotAllowed, kROOTD_ERR);
                      RpdSendAuthList();
                      gAuthListSent = 1;
@@ -2037,7 +2037,7 @@ void RootdLoop()
 
       if (kind != kROOTD_PASS     && kind != kROOTD_CLEANUP   &&
           kind != kROOTD_PROTOCOL && kind != kROOTD_PROTOCOL2 &&
-          Meth == -1 && gAuth == 0)
+          authmeth == -1 && gAuth == 0)
          Error(ErrFatal, kErrNoUser, "RootdLoop: not authenticated");
 
       switch (kind) {
@@ -2131,17 +2131,17 @@ void RootdLoop()
       }
 
       if (gClientProtocol > 8) {
-         if (gDebug > 2)
-            ErrorInfo("RootdLoop: here we are: kind:%d -- Meth:%d -- gAuth:%d -- gNumLeft:%d", 
-                       kind, Meth, gAuth, gNumLeft);
+         if (gDebug > 2 && (authmeth != -1 || kind == kROOTD_PASS))
+            ErrorInfo("RootdLoop: authentication: kind:%d -- authmeth:%d -- gAuth:%d -- gNumLeft:%d",
+                      kind, authmeth, gAuth, gNumLeft);
          // If authentication failure, check if other methods could be tried ...
-         if ((Meth != -1 || kind==kROOTD_PASS) && gAuth == 0) {
+         if ((authmeth != -1 || kind == kROOTD_PASS) && gAuth == 0) {
             if (gNumLeft > 0) {
                if (gAuthListSent == 0) {
                   RpdSendAuthList();
                   gAuthListSent = 1;
                } else
-                  NetSend(-1,kROOTD_NEGOTIA);
+                  NetSend(-1, kROOTD_NEGOTIA);
             } else
                Error(ErrFatal, kErrFatal, "RootdLoop: authentication failed");
          }
