@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.11 2000/08/18 14:46:31 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.12 2000/08/31 16:59:18 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2215,12 +2215,12 @@ void TPad::ls(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*List all primitives in pad*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                ==========================
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<IsA()->GetName()<<" fXlowNDC=" <<fXlowNDC<<" fYlowNDC="<<fYlowNDC<<" fWNDC="<<GetWNDC()<<" fHNDC="<<GetHNDC()
         <<" Name= "<<GetName()<<" Title= "<<GetTitle()<<" Option="<<option<<endl;
-   TObject::IncreaseDirLevel();
+   TROOT::IncreaseDirLevel();
    fPrimitives->ls(option);
-   TObject::DecreaseDirLevel();
+   TROOT::DecreaseDirLevel();
 }
 
 //______________________________________________________________________________

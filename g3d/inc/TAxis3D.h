@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.2 2000/06/13 12:18:41 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TAxis3D
 #define ROOT_TAxis3D
-// $Id: TAxis3D.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// $Id: TAxis3D.h,v 1.2 2000/06/13 12:18:41 brun Exp $
 // ***********************************************************************
 // * C++ class library to paint axis "arround" TView object
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -97,7 +97,7 @@ public:
     virtual TAxis   *GetXaxis() {return &fAxis[0];}
     virtual TAxis   *GetYaxis() {return &fAxis[1];}
     virtual TAxis   *GetZaxis() {return &fAxis[2];}
-    virtual Bool_t   IsFolder(){ return kTRUE;}
+    virtual Bool_t   IsFolder() const { return kTRUE;}
     virtual void     Paint(Option_t *option="");
             void     PaintAxis(TGaxis *axis, Float_t ang);
     static Double_t *PixeltoXYZ(Double_t px, Double_t py, Double_t *point3D, TView *view =0);
@@ -129,6 +129,11 @@ public:
 inline Bool_t TAxis3D::SwitchZoom(){Bool_t s = fZoomMode; fZoomMode = !fZoomMode; return s;}
 //__________________________________________________________________________
 // $Log: TAxis3D.h,v $
+// Revision 1.2  2000/06/13 12:18:41  brun
+// Upgrade from Float_t to Double_t. The following functions have been modified:
+//     static Double_t *PixeltoXYZ(Double_t px, Double_t py, Double_t *point3D, TView *view =0);
+//     virtual void     SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis="*");
+//
 // Revision 1.1.1.1  2000/05/16 17:00:43  rdm
 // Initial import of ROOT into CVS
 //

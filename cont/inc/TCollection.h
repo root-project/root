@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.2 2000/05/24 10:31:48 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -86,7 +86,7 @@ public:
    virtual Int_t      GrowBy(Int_t delta) const;
    Bool_t             IsArgNull(const char *where, TObject *obj) const;
    virtual Bool_t     IsEmpty() const { return GetSize() <= 0; }
-   Bool_t             IsFolder() { return kTRUE; }
+   Bool_t             IsFolder() const { return kTRUE; }
    virtual void       ls(Option_t *option="");
    virtual TIterator *MakeIterator(Bool_t dir = kIterForward) const = 0;
    virtual TIterator *MakeReverseIterator() const { return MakeIterator(kIterBackward); }

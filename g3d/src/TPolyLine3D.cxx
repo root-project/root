@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.2 2000/06/13 12:21:21 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -416,7 +416,7 @@ void TPolyLine3D::ls(Option_t *option)
 //*-*-*-*-*-*-*-*-*-*List this 3-D polyline with its attributes*-*-*-*-*-*-*
 //*-*                ==========================================
 
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<"PolyLine3D  N=" <<fN<<" Option="<<option<<endl;
 
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.2 2000/06/16 15:23:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.3 2000/07/24 18:21:50 rdm Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -941,7 +941,7 @@ void TMapFile::Print(Option_t *)
 }
 
 //______________________________________________________________________________
-Bool_t TMapFile::IsFolder()
+Bool_t TMapFile::IsFolder() const
 {
    // Returns kTRUE in case object is a folder (i.e. contains browsable lists).
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.2 2000/06/13 11:07:15 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -199,7 +199,7 @@ void TMarker::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this marker with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    ====================================
-   IndentLevel();
+   TROOT::IndentLevel();
    printf("Marker  X=%f Y=%f marker type=%d\n",fX,fY,fMarkerStyle);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.2 2000/06/13 11:32:18 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -224,7 +224,7 @@ public:
    void              HighLight(Color_t col=kRed, Bool_t set=kTRUE);
    virtual Bool_t    IsBatch();
    virtual Bool_t    IsEditable() {return fIsEditable;}
-   Bool_t            IsFolder() {return kTRUE;}
+   Bool_t            IsFolder() const {return kTRUE;}
    Bool_t            IsModified() {return fModified;}
    virtual Bool_t    IsRetained();
    virtual void      ls(Option_t *option="");

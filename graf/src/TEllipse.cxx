@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.2 2000/06/13 10:54:58 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -410,7 +410,7 @@ void TEllipse::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this ellipse with its attributes*-*-*-*-*-*-*-*
 //*-*                    =====================================
-   IndentLevel();
+   TROOT::IndentLevel();
    printf("%s:  X1= %f Y1=%f R1=%f R2=%f\n",GetName(),fX1,fY1,fR1,fR2);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.4 2000/08/05 19:01:59 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.3 2000/08/09 08:41:22 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// $Id: TChair.h,v 1.4 2000/08/05 19:01:59 fisyak Exp $
+// $Id: TChair.h,v 1.3 2000/08/09 08:41:22 brun Exp $
 #ifndef ROOT_TChair
 #define ROOT_TChair
 
@@ -68,8 +68,8 @@ public:
    virtual     void       Fit(const Text_t *formula ,const Text_t *varexp, const Text_t *selection="",Option_t *option="",Option_t *goption="",
                               Int_t nentries=1000000000, Int_t firstentry=0) {
                            GetThisTable()->Fit(formula,varexp,selection,option,goption,nentries,firstentry);}
-   virtual     Long_t     HasData() const { return GetThisTable()->HasData();}
-   virtual     Bool_t     IsFolder()      { return GetThisTable()->IsFolder();}
+   virtual     Long_t     HasData() const  { return GetThisTable()->HasData();}
+   virtual     Bool_t     IsFolder() const { return GetThisTable()->IsFolder();}
    virtual     void       ls(Option_t *option=""){GetThisTable()->ls(option);}
    virtual     void       ls(Int_t deep)  {GetThisTable()->ls(deep);}
                Int_t      NaN()           {return GetThisTable()->NaN();}
@@ -117,6 +117,9 @@ inline const void *TChair::operator[](Int_t i) const
 }
 
 // $Log: TChair.h,v $
+// Revision 1.3  2000/08/09 08:41:22  brun
+// Import new versions of the STAR classes from Valery Fine
+//
 // Revision 1.4  2000/08/05 19:01:59  fisyak
 // Merge
 //

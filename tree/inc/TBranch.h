@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -122,7 +122,7 @@ public:
            TTree   *GetTree() {return fTree;}
     virtual Int_t   GetRow(Int_t row);
     Bool_t          IsAutoDelete();
-    Bool_t          IsFolder();
+    Bool_t          IsFolder() const;
     virtual void    Print(Option_t *option="");
     virtual void    ReadBasket(TBuffer &b);
     virtual void    Reset(Option_t *option="");

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.12 2000/08/10 07:01:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.13 2000/08/17 09:46:59 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -196,7 +196,7 @@ public:
     virtual Stat_t    GetTotBytes() {return fTotBytes;}
     virtual Stat_t    GetZipBytes() {return fZipBytes;}
     virtual void      IncrementTotalBuffers(Int_t nbytes) {fTotalBuffers += nbytes;}
-    Bool_t            IsFolder() {return kTRUE;}
+    Bool_t            IsFolder() const {return kTRUE;}
     virtual Int_t     LoadTree(Int_t entry);
     virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual Int_t     MakeClass(const char *classname=0,Option_t *option="");

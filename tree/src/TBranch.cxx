@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.3 2000/06/14 09:09:26 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.4 2000/07/12 16:32:53 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -665,7 +665,7 @@ Bool_t TBranch::IsAutoDelete()
 
 
 //______________________________________________________________________________
-Bool_t TBranch::IsFolder()
+Bool_t TBranch::IsFolder() const
 {
 //*-*-*-*-*Return TRUE if more than one leaf, FALSE otherwise*-*
 //*-*      ==================================================

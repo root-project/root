@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TColumnView.h,v 1.2 2000/06/05 08:01:03 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TColumnView.h,v 1.1 2000/06/05 08:11:43 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// $Id: TColumnView.h,v 1.2 2000/06/05 08:01:03 brun Exp $
+// $Id: TColumnView.h,v 1.1 2000/06/05 08:11:43 brun Exp $
 #ifndef ROOT_TColumnView
 #define ROOT_TColumnView
  
@@ -29,8 +29,8 @@ public:
    TColumnView(const char *colName="", TTable *table=0); 
    virtual  ~TColumnView();
    virtual   void    Browse(TBrowser *b);
-             TH1 *Histogram(const char *selection=""); //*MENU*
-   virtual     Bool_t     IsFolder();
+             TH1 *Histogram(const char *selection=""); // *MENU*
+   virtual     Bool_t     IsFolder() const;
    ClassDef(TColumnView,0) // Helper to represent one TTable column
 };
 

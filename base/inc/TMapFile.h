@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TMapFile.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -119,7 +119,7 @@ public:
    const char   *GetTitle() const { return fTitle; }
    TMapRec      *GetFirst() const { return (TMapRec*)((Long_t) fFirst + fOffset); }
    TMapRec      *GetLast() const { return (TMapRec*)((Long_t) fLast + fOffset); }
-   Bool_t        IsFolder();
+   Bool_t        IsFolder() const;
    Bool_t        IsWritable() const { return fWritable; }
    void         *OrgAddress(void *addr) const { return (void *)((Long_t)addr - fOffset); }
    void          Print(Option_t *option="");

@@ -1,8 +1,8 @@
 // -*- mode: c++ -*-
 //
-// $Id: TPrincipal.h,v 1.2 2000/08/15 09:49:21 brun Exp $
+// $Id: TPrincipal.h,v 1.3 2000/08/17 09:44:43 brun Exp $
 // $Author: brun $
-// $Date: 2000/08/15 09:49:21 $
+// $Date: 2000/08/17 09:44:43 $
 //
 #ifndef ROOT_TPrincipal
 #define ROOT_TPrincipal
@@ -65,7 +65,7 @@ public:
   const Double_t *GetRow(Int_t row);
   const TVectorD *GetSigmas() const           {return &fSigmas;}
   const TVectorD *GetUserData() const         {return &fUserData;}
-  Bool_t          IsFolder() { return kTRUE;}
+  Bool_t          IsFolder() const { return kTRUE;}
   virtual void    MakeCode(const char *filename ="pca", Option_t *option="");  // *MENU*
   virtual void    MakeHistograms(const char *name = "pca", Option_t *option="epsdx"); // *MENU*
   virtual void    MakeMethods(const char *classname = "PCA", Option_t *option=""); // *MENU*

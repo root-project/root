@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.2 2000/06/13 11:20:32 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.3 2000/08/16 14:33:50 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -393,7 +393,7 @@ void TText::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this text with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    ==================================
-   IndentLevel();
+   TROOT::IndentLevel();
    printf("Text  X=%f Y=%f Text=%s\n",fX,fY,GetTitle());
 }
 

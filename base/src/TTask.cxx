@@ -216,15 +216,15 @@ void TTask::ExecuteTask(Option_t *option) {
    
    if (fBreakin) return;
    if (gDebug > 1) {
-      IndentLevel();
+      TROOT::IndentLevel();
       cout<<"Execute task:"<<GetName()<<" : "<<GetTitle()<<endl;
-      TObject::IncreaseDirLevel();
+      TROOT::IncreaseDirLevel();
    }
    Execute(option);
    fHasExecuted = kTRUE;
    ExecuteTasks(option);
 
-   if (gDebug > 1) TObject::DecreaseDirLevel();
+   if (gDebug > 1) TROOT::DecreaseDirLevel();
    if (fBreakout) return;
 
    if (!fBreakPoint) {
@@ -253,14 +253,14 @@ void TTask::ExecuteTasks(Option_t *option) {
       }
       
       if (gDebug > 1) {
-         IndentLevel();
+         TROOT::IndentLevel();
          cout<<"Execute task:"<<task->GetName()<<" : "<<task->GetTitle()<<endl;
-         TObject::IncreaseDirLevel();
+         TROOT::IncreaseDirLevel();
       }
       task->Execute(option);
       task->fHasExecuted = kTRUE;
       task->ExecuteTasks(option);
-      if (gDebug > 1) TObject::DecreaseDirLevel();
+      if (gDebug > 1) TROOT::DecreaseDirLevel();
       if (task->fBreakout == 1) {
          printf("Break at exit of task: %s\n",task->GetName());
          fBreakPoint = this;
@@ -276,9 +276,9 @@ void TTask::ls(Option_t *option)
 //  list the tree of tasks
 //  Indentation is used to identify the task tree
 //
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<GetName()<<"\t"<<GetTitle()<<endl;
-   TObject::IncreaseDirLevel();
+   TROOT::IncreaseDirLevel();
 
    TString opta = option;
    TString opt  = opta.Strip(TString::kBoth);
@@ -292,5 +292,5 @@ void TTask::ls(Option_t *option)
       if (s.Index(re) == kNPOS) continue;
       obj->ls(option);
    }
-   TObject::DecreaseDirLevel();
+   TROOT::DecreaseDirLevel();
 }

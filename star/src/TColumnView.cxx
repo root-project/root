@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TColumnView.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TColumnView.cxx,v 1.1 2000/06/05 08:11:44 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 //////////////////////////////////////////////////////////////////////////
@@ -41,5 +41,5 @@ TH1 *TColumnView::Histogram(const char *selection){
 }
 
 //______________________________________________________________________________
-Bool_t  TColumnView::IsFolder(){ return kFALSE;}
+Bool_t  TColumnView::IsFolder() const { return kFALSE;}
 

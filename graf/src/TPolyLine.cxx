@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.2 2000/06/13 11:16:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -359,7 +359,7 @@ void TPolyLine::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*List this polyline with its attributes*-*-*-*-*-*-*-*-*
 //*-*                ======================================
-   IndentLevel();
+   TROOT::IndentLevel();
    printf("TPolyLine  N=%d\n",fN);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.2 2000/05/24 10:31:47 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -87,7 +87,7 @@ public:
    virtual Seek_t      GetSeekParent() { return fSeekParent; }
    virtual Seek_t      GetSeekKeys() { return fSeekKeys; }
    virtual const char *GetPath() const;
-   Bool_t              IsFolder() { return kTRUE; }
+   Bool_t              IsFolder() const { return kTRUE; }
    Bool_t              IsModified() { return fModified; }
    Bool_t              IsWritable() { return fWritable; }
    virtual void        ls(Option_t *option="");

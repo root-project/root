@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.2 2000/08/01 23:45:48 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -113,7 +113,7 @@ public:
    ULong_t       Hash() { return fName.Hash(); }
    Bool_t        InheritsFrom(const char *cl) const;
    Bool_t        InheritsFrom(const TClass *cl) const;
-   Bool_t        IsFolder() {return kTRUE;}
+   Bool_t        IsFolder() const {return kTRUE;}
    void         *New();
    void          Destructor(void *obj, Bool_t dtorOnly = kFALSE);
    void          ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }

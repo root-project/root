@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.2 2000/06/05 07:31:21 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.3 2000/06/05 08:01:03 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// $Id: TTable.h,v 1.2 2000/06/05 07:31:21 brun Exp $
+// $Id: TTable.h,v 1.3 2000/06/05 08:01:03 brun Exp $
 #ifndef ROOT_TTable
 #define ROOT_TTable
 
@@ -118,7 +118,7 @@ public:
                               ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
 
    virtual     Long_t     HasData() const { return 1; }
-   virtual     Bool_t     IsFolder();
+   virtual     Bool_t     IsFolder() const;
    virtual     void       ls(Option_t *option="");
    virtual     void       ls(Int_t deep);
                Int_t      NaN();

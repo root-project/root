@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.2 2000/05/24 10:31:47 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -344,7 +344,7 @@ void TKey::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-Bool_t TKey::IsFolder()
+Bool_t TKey::IsFolder() const
 {
     Bool_t ret = kFALSE;
 
@@ -375,7 +375,7 @@ void TKey::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*List Key contents-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =================
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<"KEY: "<<fClassName<<"\t"<<GetName()<<";"<<GetCycle()<<"\t"<<GetTitle()<<endl;
 }
 

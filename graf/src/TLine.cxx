@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.2 2000/06/13 11:04:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -262,7 +262,7 @@ void TLine::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this line with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    ==================================
-   IndentLevel();
+   TROOT::IndentLevel();
    printf("%s  X1= %f Y1=%f X2=%f Y2=%f\n",IsA()->GetName(),fX1,fY1,fX2,fY2);
 }
 

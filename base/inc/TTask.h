@@ -47,7 +47,7 @@ public:
           void  ExecuteTasks(Option_t *option);
           Int_t GetBreakin() {return fBreakin;}
           Int_t GetBreakout() {return fBreakout;}
-         Bool_t IsFolder() { return kTRUE; }
+         Bool_t IsFolder() const { return kTRUE; }
   virtual void  ls(Option_t *option="*");  // *MENU*
           void  SetBreakin(Int_t breakin=1)   {fBreakin = breakin;} // *TOGGLE*
           void  SetBreakout(Int_t breakout=1) {fBreakout=breakout;} // *TOGGLE*

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.3 2000/07/21 06:57:54 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.4 2000/07/24 18:21:50 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -660,11 +660,11 @@ void TFile::ls(Option_t *option)
 //  then objects on the file
 //
 
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<ClassName()<<"**\t\t"<<GetName()<<"\t"<<GetTitle()<<endl;
-   TObject::IncreaseDirLevel();
+   TROOT::IncreaseDirLevel();
    TDirectory::ls(option);
-   TObject::DecreaseDirLevel();
+   TROOT::DecreaseDirLevel();
 }
 
 //______________________________________________________________________________

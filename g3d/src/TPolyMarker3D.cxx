@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.2 2000/06/13 12:22:49 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.3 2000/06/30 12:10:55 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -276,7 +276,7 @@ void TPolyMarker3D::ls(Option_t *option)
 //*-*-*-*-*-*-*-*-*-*-*-*-*List PolyMarker's contents*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ==========================
 
-   IndentLevel();
+   TROOT::IndentLevel();
    cout << "    TPolyMarker3D  N=" << Size() <<" Option="<<option<<endl;
 }
 

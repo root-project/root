@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.5 2000/07/13 09:05:55 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.6 2000/08/23 08:11:59 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1156,11 +1156,11 @@ void TCanvas::ls(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*List all pads*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          =============
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<"Canvas Name=" <<GetName()<<" Title="<<GetTitle()<<" Option="<<option<<endl;
-   TObject::IncreaseDirLevel();
+   TROOT::IncreaseDirLevel();
    TPad::ls(option);
-   TObject::DecreaseDirLevel();
+   TROOT::DecreaseDirLevel();
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -87,7 +87,7 @@ public:
    TRotMatrix     *GetCurrentPosition(Double_t *x,Double_t *y,Double_t *z) const;
    TRotMatrix     *GetCurrentPosition(Float_t *x,Float_t *y,Float_t *z) const;
    Bool_t         GetCurrentReflection() const;
-   Bool_t         IsFolder() {return kTRUE;}
+   Bool_t         IsFolder() const {return kTRUE;}
    virtual void   Local2Master(Double_t *local, Double_t *master);
    virtual void   Local2Master(Float_t *local, Float_t *master);
    virtual void   ls(Option_t *option="rsn2");

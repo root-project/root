@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -90,7 +90,7 @@ void TNamed::ls(Option_t *)
 {
    // List TNamed name and title.
 
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
         << Int_t(TestBit(kCanDelete)) << endl;
 }

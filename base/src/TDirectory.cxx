@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.3 2000/08/10 16:49:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.4 2000/08/27 20:02:31 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -833,9 +833,9 @@ void TDirectory::ls(Option_t *option)
 //  The <regexp> will be used to match the name of the objects.
 //  By default memory and disk objects are listed.
 //
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<ClassName()<<"*\t\t"<<GetName()<<"\t"<<GetTitle()<<endl;
-   TObject::IncreaseDirLevel();
+   TROOT::IncreaseDirLevel();
 
    TString opta = option;
    TString opt  = opta.Strip(TString::kBoth);
@@ -874,7 +874,7 @@ void TDirectory::ls(Option_t *option)
          key->ls();                 //*-* Loop on all the keys
       }
    }
-   TObject::DecreaseDirLevel();
+   TROOT::DecreaseDirLevel();
 }
 
 //______________________________________________________________________________

@@ -1,6 +1,6 @@
-// $Id: TTable.cxx,v 1.2 2000/06/05 08:01:03 brun Exp $
+// $Id: TTable.cxx,v 1.3 2000/06/13 09:31:59 brun Exp $
 //
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.2 2000/06/05 08:01:03 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.3 2000/06/13 09:31:59 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 //
@@ -1197,7 +1197,7 @@ const Char_t *TTable::GetType() const
 }
 
 //______________________________________________________________________________
-Bool_t TTable::IsFolder(){ 
+Bool_t TTable::IsFolder() const { 
   // return Folder flag to be used by TBrowse object
   // The tablke is a folder if
   //  - it has sub-dataset
@@ -1212,30 +1212,30 @@ Bool_t TTable::IsFolder(){
 void TTable::ls(Option_t *option)
 {
   TDataSet::ls(option);
-  IncreaseDirLevel();
-  IndentLevel();
+  TROOT::IncreaseDirLevel();
+  TROOT::IndentLevel();
   cout       <<Path()
              <<"\t --> Allocated rows: "<<fN
              <<"\t Used rows: "<<fMaxIndex
              <<"\t Row size: "      << fSize << " bytes"
       <<endl;
   //  Print();
-  DecreaseDirLevel();
+  TROOT::DecreaseDirLevel();
 }
 
 //_____________________________________________________________________________
 void TTable::ls(Int_t deep)
 {
    TDataSet::ls(deep);
-   IncreaseDirLevel();
-   IndentLevel();
+   TROOT::IncreaseDirLevel();
+   TROOT::IndentLevel();
    cout      <<Path()
              <<"\t --> Allocated rows: "<<fN
              <<"\t Used rows: "<<fMaxIndex
              <<"\t Row size: " << fSize << " bytes"
       <<endl;
    //   Print();
-   DecreaseDirLevel();
+   TROOT::DecreaseDirLevel();
 }
 
 
@@ -1342,7 +1342,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
       if (lenbuf>0) iOut += sprintf(strbuf+iOut," *** Errror ***");
       return strbuf;
   }
-  IndentLevel();
+  TROOT::IndentLevel();
 
   if (lenbuf>0) {
   // cut of the "_st" suffix
@@ -1368,7 +1368,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
 
     G__TypeInfo *t = data.Type();
 
-    IndentLevel();
+    TROOT::IndentLevel();
 
     if (lenbuf>0) {
 //        out << " " << t->Name() << " " << data.Name();
@@ -1395,7 +1395,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
     else
         cout << ";\t//" <<  data.Title() << endl;
   }
-  IndentLevel();
+  TROOT::IndentLevel();
   if (lenbuf>0) {
 //     out << "}";
           iOut += sprintf(strbuf+iOut, "}");

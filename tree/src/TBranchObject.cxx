@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -185,7 +185,7 @@ Int_t TBranchObject::GetEntry(Int_t entry, Int_t getall)
 
 
 //______________________________________________________________________________
-Bool_t TBranchObject::IsFolder()
+Bool_t TBranchObject::IsFolder() const
 {
 //*-*-*-*-*Return TRUE if more than one leaf, FALSE otherwise*-*
 //*-*      ==================================================

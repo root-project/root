@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.2 2000/05/24 10:31:47 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -75,7 +75,7 @@ public:
            Int_t      GetVersion() {return fVersion;}
     virtual Seek_t    GetSeekKey()   {return fSeekKey;}
     virtual Seek_t    GetSeekPdir()  {return fSeekPdir;}
-    Bool_t            IsFolder();
+    Bool_t            IsFolder() const;
     virtual void      Keep();
     virtual void      ls(Option_t *option="");
     virtual void      Print(Option_t *option="");
