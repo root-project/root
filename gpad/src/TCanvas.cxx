@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.29 2001/10/22 16:26:27 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.30 2001/10/25 19:17:01 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -758,6 +758,11 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
    gVirtualX->DrawText(pxt, pyt, 0, 1, atext, TVirtualX::kOpaque);
 #else
    if (!fCanvasImp) return; //this may happen when closing a TAttCanvas
+
+   TVirtualPad* savepad;
+   savepad = gPad;
+   gPad = GetSelectedPad();
+   
    fCanvasImp->SetStatusText(selected->GetTitle(),0);
    fCanvasImp->SetStatusText(selected->GetName(),1);
    if (event == kKeyPress)
@@ -766,6 +771,7 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
       sprintf(atext, "%d,%d", px, py);
    fCanvasImp->SetStatusText(atext,2);
    fCanvasImp->SetStatusText(selected->GetObjectInfo(px,py),3);
+   gPad = savepad;
 #endif
 }
 
