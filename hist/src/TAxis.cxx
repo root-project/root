@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.12 2000/12/02 16:29:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.13 2000/12/13 15:13:51 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -358,11 +358,13 @@ Int_t TAxis::FindBin(Axis_t x)
       if (!fXbins.fN) {        //*-* fix bins
          bin = 1 + int (fNbins*(x-fXmin)/(fXmax-fXmin) );
       } else {                  //*-* variable bin sizes
-         for (bin =1; x >= fXbins.fArray[bin]; bin++);
+         //for (bin =1; x >= fXbins.fArray[bin]; bin++);
+         bin = 1 + TMath::BinarySearch(fXbins.fN,fXbins.fArray,x);
       }
    }
    return bin;
 }
+
 
 //______________________________________________________________________________
 Int_t TAxis::FindFixBin(Axis_t x) const
@@ -378,7 +380,8 @@ Int_t TAxis::FindFixBin(Axis_t x) const
       if (!fXbins.fN) {        //*-* fix bins
          bin = 1 + int (fNbins*(x-fXmin)/(fXmax-fXmin) );
       } else {                  //*-* variable bin sizes
-         for (bin =1; x >= fXbins.fArray[bin]; bin++);
+//         for (bin =1; x >= fXbins.fArray[bin]; bin++);
+         bin = 1 + TMath::BinarySearch(fXbins.fN,fXbins.fArray,x);
       }
    }
    return bin;
