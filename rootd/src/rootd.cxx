@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.22 2001/02/22 13:32:43 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.23 2001/02/22 14:07:40 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -133,7 +133,7 @@
 #if defined(__alpha) && !defined(linux)
 #include <sys/mount.h>
 extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
-#elif linux
+#elif defined(linux) || defined(__hpux)
 #include <sys/vfs.h>
 #else
 #include <sys/statfs.h>
@@ -1286,7 +1286,11 @@ void RootdPutFile(const char *msg)
    // check file system space
    struct statfs statfsbuf;
    if (fstatfs(fd, &statfsbuf) == 0) {
+#if defined(__sgi)
+      double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bfree;
+#else
       double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bavail;
+#endif
       if (space < size - restartat) {
          Error(kErrNoSpace, "RootdPutFile: not enough space to store file %s", file);
          close(fd);
