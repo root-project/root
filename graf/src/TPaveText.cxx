@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.5 2000/11/21 20:27:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.6 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -724,8 +724,10 @@ void TPaveText::SaveLines(ofstream &out, const char *name)
              out<<"   TText *";
          }
          if (!linet->GetX() && !linet->GetY()) {
+            TString s = linet->GetTitle();
+            s.ReplaceAll("\"","\\\"");
             out<<"text = "<<name<<"->AddText("
-               <<quote<<linet->GetTitle()<<quote<<");"<<endl;
+               <<quote<<s.Data()<<quote<<");"<<endl;
          } else {
             out<<"text = "<<name<<"->AddText("
                <<linet->GetX()<<","<<linet->GetY()<<","<<quote<<linet->GetTitle()<<quote<<");"<<endl;
@@ -755,8 +757,10 @@ void TPaveText::SaveLines(ofstream &out, const char *name)
              out<<"   TText *";
          }
          if (!latex->GetX() && !latex->GetY()) {
+            TString sl = latex->GetTitle();
+            sl.ReplaceAll("\"","\\\"");
             out<<"text = "<<name<<"->AddText("
-               <<quote<<latex->GetTitle()<<quote<<");"<<endl;
+               <<quote<<sl.Data()<<quote<<");"<<endl;
          } else {
             out<<"text = "<<name<<"->AddText("
                <<latex->GetX()<<","<<latex->GetY()<<","<<quote<<latex->GetTitle()<<quote<<");"<<endl;

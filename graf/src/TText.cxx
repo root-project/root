@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.6 2000/12/13 15:13:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.7 2000/12/26 14:26:48 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -455,7 +455,9 @@ void TText::SavePrimitive(ofstream &out, Option_t *)
    } else {
        out<<"   TText *";
    }
-   out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<GetTitle()<<quote<<");"<<endl;
+   TString s = GetTitle();
+   s.ReplaceAll("\"","\\\"");
+   out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<endl;
 
    SaveTextAttributes(out,"text",11,0,1,62,1);
 

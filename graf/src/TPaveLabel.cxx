@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.5 2000/12/13 15:13:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.6 2000/12/15 18:07:08 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -192,12 +192,14 @@ void TPaveLabel::SavePrimitive(ofstream &out, Option_t *)
    } else {
        out<<"   TPaveLabel *";
    }
+   TString s = fLabel.Data();
+   s.ReplaceAll("\"","\\\"");
    if (fOption.Contains("NDC")) {
       out<<"pl = new TPaveLabel("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
-         <<","<<quote<<fLabel<<quote<<","<<quote<<fOption<<quote<<");"<<endl;
+         <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<endl;
    } else {
       out<<"pl = new TPaveLabel("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-         <<","<<quote<<fLabel<<quote<<","<<quote<<fOption<<quote<<");"<<endl;
+         <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<endl;
    }
    if (fBorderSize != 3) {
       out<<"   pt->SetBorderSize("<<fBorderSize<<");"<<endl;
