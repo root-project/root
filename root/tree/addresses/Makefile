@@ -1,13 +1,22 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += 
+CLEAN_TARGETS +=  *.log *.$(DllSuf) *.d
 
 #Set the list of target to make while testing
-TEST_TARGETS += headerTest clonesATest EmbeddedTest
+TEST_TARGETS += headerTest clonesATest EmbeddedTest inheritTest
 
 # adjust the location of Rules.mk as needed.
 include ../../Rules.mk
+
+inherit_C.$(DllSuf): inherit.C buildInherit.C
+	$(CMDECHO) root.exe -q -b -l buildInherit.C
+
+inheritTest.log: runInherit.C inherit_C.$(DllSuf)
+	$(CMDECHO) root.exe -q -b -l runInherit.C > inheritTest.log 2>&1
+
+inheritTest: inheritTest.log
+	$(CMDECHO) diff -b inheritTest.log inheritTest.ref
 
 header_h.$(DllSuf): header.h buildHeader.C
 	$(CMDECHO) root.exe -q -b -l buildHeader.C
@@ -16,7 +25,7 @@ headerTest.log: runHeader.C header_h.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l runHeader.C > headerTest.log 2>&1
 
 headerTest: headerTest.log
-	$(CMDECHO) diff headerTest.log headerTest.ref
+	$(CMDECHO) diff -b headerTest.log headerTest.ref
 
 clonesA.log: clonesA_rw.C clonesA_Event.h clonesA_Event.cxx
 	$(CMDECHO) root.exe -q -b -l clonesA_rw.C > clonesA.log 2>&1
@@ -34,7 +43,7 @@ EmbeddedTest.log: Embedded_load_C.$(DllSuf) Embedded.root embread.C
 	$(CMDECHO) root.exe -q -b -l embread.C > EmbeddedTest.log
 
 EmbeddedTest: EmbeddedTest.log
-	$(CMDECHO) diff EmbeddedTest.log EmbeddedTest.ref
+	$(CMDECHO) diff -b EmbeddedTest.log EmbeddedTest.ref
 
 mytest:
 	$(CMDECHO) echo mytest > /dev/null
