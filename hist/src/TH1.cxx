@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.72 2001/12/09 17:32:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.73 2001/12/10 21:14:46 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1876,6 +1876,12 @@ Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 //   - return value nq (<=nprobSum) with the number of quantiles computed
 //   - array q filled with nq quantiles
 //
+//  Note that the Integral of the histogram is automatically recomputed
+//  if the number of entries is different of the number of entries when
+//  the integral was computed last time. In case you do not use the Fill
+//  functions to fill your histogram, but SetBinContent, you must call
+//  TH1::ComputeIntegral before calling this function.
+//
 //  Getting quantiles q from two histograms and storing results in a TGraph,
 //   a so-called QQ-plot
 // 
@@ -1883,6 +1889,32 @@ Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 //     h1->GetQuantiles(nprob,gr->GetX());
 //     h2->GetQuantiles(nprob,gr->GetY());
 //     gr->Draw("alp");
+//
+// Example:
+//     void quantiles() {
+//        // demo for quantiles
+//        const Int_t nq = 20;
+//        TH1F *h = new TH1F("h","demo quantiles",100,-3,3);
+//        h->FillRandom("gaus",5000);
+//        
+//        Double_t xq[nq];  // position where to compute the quantiles in [0,1]
+//        Double_t yq[nq];  // array to contain the quantiles
+//        for (Int_t i=0;i<nq;i++) xq[i] = Float_t(i+1)/nq;
+//        h->GetQuantiles(nq,yq,xq);
+//     
+//        //show the original histogram in the top pad
+//        TCanvas *c1 = new TCanvas("c1","demo quantiles",10,10,700,900);
+//        c1->Divide(1,2);
+//        c1->cd(1);
+//        h->Draw();
+//        
+//        // show the quantiles in the bottom pad
+//        c1->cd(2);
+//        gPad->SetGrid();
+//        TGraph *gr = new TGraph(nq,xq,yq);
+//        gr->SetMarkerStyle(21);
+//        gr->Draw("alp");
+//     }
 
   if (GetDimension() > 1) {
      Error("GetQuantiles","Only available for 1-d histograms");
@@ -1892,9 +1924,10 @@ Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
      Error("GetQuantiles","nprobsum = %d too small (must be >= 2)",nprobSum);
      return 0;
   }
-  if (!fIntegral) ComputeIntegral();
    
   const Int_t nbins = GetXaxis()->GetNbins();
+  if (!fIntegral) ComputeIntegral();
+  if (fIntegral && fIntegral[nbins+1] != fEntries) ComputeIntegral();
 
   Int_t i, ibin;
   Double_t *prob = (Double_t*)probSum;
