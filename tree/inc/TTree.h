@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.57 2003/12/30 13:16:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.58 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -116,6 +116,7 @@ protected:
     TArrayD       fIndexValues;       //  Sorted index values
     TArrayI       fIndex;             //  Index of sorted values
     TList        *fFriends;           //  pointer to list of friend elements
+    TList        *fUserInfo;          //  pointer to a list of user objects associated to this Tree
     TVirtualTreePlayer *fPlayer;      //! Pointer to current Tree player
     TList        *fClones;            //! List of cloned trees which share our addresses
   static Int_t    fgBranchStyle;      //  Old/New branch style
@@ -230,6 +231,7 @@ public:
     virtual TTree    *GetTree() const {return (TTree*)this;}
     virtual Int_t     GetTreeNumber() const {return 0;}
     virtual Int_t     GetUpdate() const {return fUpdate;}
+    virtual TList    *GetUserInfo();
     TTreeFormula     *GetVar1() {return GetPlayer()->GetVar1();}
     TTreeFormula     *GetVar2() {return GetPlayer()->GetVar2();}
     TTreeFormula     *GetVar3() {return GetPlayer()->GetVar3();}
@@ -294,7 +296,7 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     void              UseCurrentStyle();
 
-    ClassDef(TTree,10)  //Tree descriptor (the main ROOT I/O class)
+    ClassDef(TTree,11)  //Tree descriptor (the main ROOT I/O class)
 };
 
 //////////////////////////////////////////////////////////////////////////

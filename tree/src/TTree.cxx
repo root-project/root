@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.178 2004/01/16 07:48:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.179 2004/02/13 07:12:57 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -343,6 +343,7 @@ TTree::TTree(): TNamed()
    fNotify         = 0;
    fFileNumber     = 0;
    fClones         = 0;
+   fUserInfo       = 0;
 }
 
 //______________________________________________________________________________
@@ -387,6 +388,7 @@ TTree::TTree(const char *name,const char *title, Int_t splitlevel)
    fNotify         = 0;
    fFileNumber     = 0;
    fClones         = 0;
+   fUserInfo       = 0;
 
    SetFillColor(gStyle->GetHistFillColor());
    SetFillStyle(gStyle->GetHistFillStyle());
@@ -431,6 +433,11 @@ TTree::~TTree()
       fAliases->Delete();
       delete fAliases;
       fAliases = 0;
+   }
+   if (fUserInfo) {
+      fUserInfo->Delete();
+      delete fUserInfo;
+      fUserInfo = 0;
    }
    if (fClones) {
       TObjLink *lnk = fClones->FirstLink();
@@ -2955,6 +2962,16 @@ TVirtualTreePlayer *TTree::GetPlayer()
    if (fPlayer) return fPlayer;
    fPlayer = TVirtualTreePlayer::TreePlayer(this);
    return fPlayer;
+}
+
+//______________________________________________________________________________
+TList *TTree::GetUserInfo() 
+{
+   // return a pointer to the list containing user objects associated to this Tree
+   // The list is automatically created if it does not exist
+   
+   if (!fUserInfo) fUserInfo = new TList();
+   return fUserInfo;
 }
 
 //______________________________________________________________________________
