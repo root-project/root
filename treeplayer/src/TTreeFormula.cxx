@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.132 2003/12/27 16:14:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.133 2003/12/30 16:32:15 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -170,7 +170,7 @@ public:
       Int_t offset = (id<0)?0:info->GetOffsets()[id];
       char* address = (char*)branch->GetAddress();
       if (address) {
-         Int_t type = (id<0)?0:info->GetTypes()[id];
+         Int_t type = (id<0)?0:info->GetNewTypes()[id];
          switch (type) {
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
@@ -271,7 +271,7 @@ public:
       if (fNext) return fNext->IsString();
       if (!fElement) return kFALSE;
 
-      switch (fElement->GetType()) {
+      switch (fElement->GetNewType()) {
         // basic types
       case kChar_t:
         // This is new in ROOT 3.02/05
@@ -289,7 +289,7 @@ public:
    virtual Bool_t    IsInteger() const {
       if (fNext) return fNext->IsInteger();
       if (!fElement) return kFALSE;
-      switch (fElement->GetType()) {
+      switch (fElement->GetNewType()) {
          // basic types
       case kchar:
       case kChar_t:
@@ -383,7 +383,7 @@ public:
                *current = '\0';
                element = cl->GetStreamerInfo()->GetStreamerElement(work,offset);
                if (element) {
-                  Int_t type = element->GetType();
+                  Int_t type = element->GetNewType();
                   if (type<60) {
                      fOffset += offset;
                   } else if (type == TStreamerInfo::kAny ||
@@ -471,7 +471,7 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
    // returns the address of the value pointed to by the
    // TFormLeafInfo.
 
-   switch (fElement->GetType()) {
+   switch (fElement->GetNewType()) {
          // basic types
       case kChar_t:
       case kUChar_t:
@@ -609,7 +609,7 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
    if (fNext) {
       char *nextobj = thisobj+fOffset;
       Int_t sub_instance = instance;
-      Int_t type = fElement->GetType();
+      Int_t type = fElement->GetNewType();
       if (type==TStreamerInfo::kOffsetL + TStreamerInfo::kObject ||
           type==TStreamerInfo::kOffsetL + TStreamerInfo::kAny) {
          Int_t index;
@@ -625,8 +625,8 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
       }
       return fNext->ReadValue(nextobj,sub_instance);
    }
-   //   return fInfo->ReadValue(thisobj+fOffset,fElement->GetType(),instance,1);
-   switch (fElement->GetType()) {
+   //   return fInfo->ReadValue(thisobj+fOffset,fElement->GetNewType(),instance,1);
+   switch (fElement->GetNewType()) {
          // basic types
       case kChar_t:   return (Double_t)(*(Char_t*)(thisobj+fOffset));
       case kUChar_t:  return (Double_t)(*(UChar_t*)(thisobj+fOffset));
@@ -912,7 +912,7 @@ public:
 
       if (!fNext) return 0;
       char * whereoffset = where+fOffset;
-      switch (fElement->GetType()) {
+      switch (fElement->GetNewType()) {
          // basic types
          case TStreamerInfo::kObjectp:
          case TStreamerInfo::kObjectP:
@@ -1684,7 +1684,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo) {
       ndim = elem->GetArrayDim();
       size = elem->GetMaxIndex(0);
 
-   } else if ( elem->GetType()== TStreamerInfo::kCharStar) {
+   } else if ( elem->GetNewType()== TStreamerInfo::kCharStar) {
 
       // When we implement being able to read the length from
       // strlen, we will have:
@@ -2727,7 +2727,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                }
 
                if (element) {
-                  Int_t type = element->GetType();
+                  Int_t type = element->GetNewType();
                   if (type<60) {
                      // This is a basic type ...
                      if (numberOfVarDim>=1 && type>40) {
@@ -4112,12 +4112,12 @@ Bool_t  TTreeFormula::IsLeafString(Int_t code) const
             Int_t bid = br->GetID();
             if (bid < 0) return kFALSE;
             TStreamerElement * elem = (TStreamerElement*) br->GetInfo()->GetElems()[bid];
-            if (elem->GetType()== TStreamerInfo::kOffsetL +kChar_t) {
+            if (elem->GetNewType()== TStreamerInfo::kOffsetL +kChar_t) {
                // Check whether a specific element of the string is specified!
                if (fIndexes[code][fNdimensions[code]-1] != -1) return kFALSE;
                return kTRUE;
             }
-            if ( elem->GetType()== TStreamerInfo::kCharStar) {
+            if ( elem->GetNewType()== TStreamerInfo::kCharStar) {
                // Check whether a specific element of the string is specified!
                if (fNdimensions[code] && fIndexes[code][fNdimensions[code]-1] != -1) return kFALSE;
                return kTRUE;
