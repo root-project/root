@@ -62,7 +62,7 @@ extern "C" int G__cpp_dllrevlongif() { return(30051515); }
 *********************************************************/
 
 /* G__longlong */
-static int G__longif_28_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__longlong *p=NULL;
    switch(libp->paran) {
    case 1:
@@ -80,7 +80,7 @@ static int G__longif_28_0_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__longlong *p=NULL;
       p=::new((G__longifdOcxx_tag*)G__getgvp()) G__longlong(*(G__longlong*)libp->para[0].ref);
       result7->obj.i = (long)p;
@@ -90,7 +90,7 @@ static int G__longif_28_1_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__longlong *p=NULL;
       p=::new((G__longifdOcxx_tag*)G__getgvp()) G__longlong((const char*)G__int(libp->para[0]));
       result7->obj.i = (long)p;
@@ -100,22 +100,22 @@ static int G__longif_28_2_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_4_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_4_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,108,(long)((G__longlong*)(G__getstructoffset()))->operator long());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_5_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_5_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)((G__longlong*)(G__getstructoffset()))->operator int());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_6_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_6_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letdouble(result7,100,(double)((G__longlong*)(G__getstructoffset()))->operator double());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_7_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_7_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longlong& obj=((G__longlong*)(G__getstructoffset()))->operator++();
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -123,7 +123,7 @@ static int G__longif_28_7_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_8_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_8_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longlong *pobj,xobj=((G__longlong*)(G__getstructoffset()))->operator++((int)G__int(libp->para[0]));
         pobj=new G__longlong(xobj);
@@ -133,7 +133,7 @@ static int G__longif_28_8_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longlong& obj=((G__longlong*)(G__getstructoffset()))->operator--();
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -141,7 +141,7 @@ static int G__longif_28_9_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_0_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_0_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longlong *pobj,xobj=((G__longlong*)(G__getstructoffset()))->operator--((int)G__int(libp->para[0]));
         pobj=new G__longlong(xobj);
@@ -151,7 +151,7 @@ static int G__longif_28_0_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_1_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_1_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longlong& obj=((G__longlong*)(G__getstructoffset()))->operator=((long)G__int(libp->para[0]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -159,7 +159,7 @@ static int G__longif_28_1_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_2_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_2_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longlong& obj=((G__longlong*)(G__getstructoffset()))->operator=(*(G__longlong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -167,7 +167,7 @@ static int G__longif_28_2_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_3_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_3_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longlong& obj=((G__longlong*)(G__getstructoffset()))->operator+=(*(G__longlong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -175,7 +175,7 @@ static int G__longif_28_3_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_4_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_4_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longlong& obj=((G__longlong*)(G__getstructoffset()))->operator-=(*(G__longlong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -183,7 +183,7 @@ static int G__longif_28_4_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_5_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_5_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longlong& obj=((G__longlong*)(G__getstructoffset()))->operator*=(*(G__longlong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -191,7 +191,7 @@ static int G__longif_28_5_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_6_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_6_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longlong& obj=((G__longlong*)(G__getstructoffset()))->operator&=(*(G__longlong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -199,7 +199,7 @@ static int G__longif_28_6_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longlong& obj=((G__longlong*)(G__getstructoffset()))->operator|=(*(G__longlong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -207,7 +207,7 @@ static int G__longif_28_7_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_8_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_8_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longlong& obj=((G__longlong*)(G__getstructoffset()))->operator<<=(*(G__longlong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -215,7 +215,7 @@ static int G__longif_28_8_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_28_9_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_9_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longlong& obj=((G__longlong*)(G__getstructoffset()))->operator>>=(*(G__longlong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -225,7 +225,7 @@ static int G__longif_28_9_1(G__value *result7,G__CONST char *funcname,struct G__
 
 // automatic destructor
 typedef G__longlong G__TG__longlong;
-static int G__longif_28_0_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_36_0_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
@@ -246,7 +246,7 @@ static int G__longif_28_0_2(G__value *result7,G__CONST char *funcname,struct G__
 
 
 /* G__ulonglong */
-static int G__longif_29_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__ulonglong *p=NULL;
    switch(libp->paran) {
    case 1:
@@ -264,7 +264,7 @@ static int G__longif_29_0_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__ulonglong *p=NULL;
       p=::new((G__longifdOcxx_tag*)G__getgvp()) G__ulonglong(*(G__ulonglong*)libp->para[0].ref);
       result7->obj.i = (long)p;
@@ -274,7 +274,7 @@ static int G__longif_29_1_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__ulonglong *p=NULL;
       p=::new((G__longifdOcxx_tag*)G__getgvp()) G__ulonglong((const char*)G__int(libp->para[0]));
       result7->obj.i = (long)p;
@@ -284,17 +284,17 @@ static int G__longif_29_2_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_4_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_4_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,108,(long)((G__ulonglong*)(G__getstructoffset()))->operator long());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_5_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_5_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)((G__ulonglong*)(G__getstructoffset()))->operator int());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_6_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_6_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__ulonglong& obj=((G__ulonglong*)(G__getstructoffset()))->operator++();
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -302,7 +302,7 @@ static int G__longif_29_6_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_7_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_7_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__ulonglong *pobj,xobj=((G__ulonglong*)(G__getstructoffset()))->operator++((int)G__int(libp->para[0]));
         pobj=new G__ulonglong(xobj);
@@ -312,7 +312,7 @@ static int G__longif_29_7_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_8_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_8_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__ulonglong& obj=((G__ulonglong*)(G__getstructoffset()))->operator--();
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -320,7 +320,7 @@ static int G__longif_29_8_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__ulonglong *pobj,xobj=((G__ulonglong*)(G__getstructoffset()))->operator--((int)G__int(libp->para[0]));
         pobj=new G__ulonglong(xobj);
@@ -330,7 +330,7 @@ static int G__longif_29_9_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_0_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_0_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__ulonglong& obj=((G__ulonglong*)(G__getstructoffset()))->operator=((long)G__int(libp->para[0]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -338,7 +338,7 @@ static int G__longif_29_0_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_1_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_1_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__ulonglong& obj=((G__ulonglong*)(G__getstructoffset()))->operator=(*(G__ulonglong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -346,7 +346,7 @@ static int G__longif_29_1_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_2_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_2_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__ulonglong& obj=((G__ulonglong*)(G__getstructoffset()))->operator+=(*(G__ulonglong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -354,7 +354,7 @@ static int G__longif_29_2_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_3_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_3_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__ulonglong& obj=((G__ulonglong*)(G__getstructoffset()))->operator-=(*(G__ulonglong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -362,7 +362,7 @@ static int G__longif_29_3_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_4_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_4_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__ulonglong& obj=((G__ulonglong*)(G__getstructoffset()))->operator*=(*(G__ulonglong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -370,7 +370,7 @@ static int G__longif_29_4_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_5_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_5_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__ulonglong& obj=((G__ulonglong*)(G__getstructoffset()))->operator&=(*(G__ulonglong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -378,7 +378,7 @@ static int G__longif_29_5_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_6_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_6_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__ulonglong& obj=((G__ulonglong*)(G__getstructoffset()))->operator|=(*(G__ulonglong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -386,7 +386,7 @@ static int G__longif_29_6_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__ulonglong& obj=((G__ulonglong*)(G__getstructoffset()))->operator<<=(*(G__ulonglong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -394,7 +394,7 @@ static int G__longif_29_7_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_29_8_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_8_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__ulonglong& obj=((G__ulonglong*)(G__getstructoffset()))->operator>>=(*(G__ulonglong*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -404,7 +404,7 @@ static int G__longif_29_8_1(G__value *result7,G__CONST char *funcname,struct G__
 
 // automatic destructor
 typedef G__ulonglong G__TG__ulonglong;
-static int G__longif_29_9_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_37_9_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
@@ -425,7 +425,7 @@ static int G__longif_29_9_1(G__value *result7,G__CONST char *funcname,struct G__
 
 
 /* G__longdouble */
-static int G__longif_35_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_43_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__longdouble *p=NULL;
    switch(libp->paran) {
    case 1:
@@ -443,7 +443,7 @@ static int G__longif_35_0_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_35_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_43_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__longdouble *p=NULL;
       p=::new((G__longifdOcxx_tag*)G__getgvp()) G__longdouble(*(G__longdouble*)libp->para[0].ref);
       result7->obj.i = (long)p;
@@ -453,12 +453,12 @@ static int G__longif_35_1_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_35_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_43_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letdouble(result7,100,(double)((G__longdouble*)(G__getstructoffset()))->operator double());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_35_4_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_43_4_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longdouble& obj=((G__longdouble*)(G__getstructoffset()))->operator++();
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -466,7 +466,7 @@ static int G__longif_35_4_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_35_5_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_43_5_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longdouble *pobj,xobj=((G__longdouble*)(G__getstructoffset()))->operator++((int)G__int(libp->para[0]));
         pobj=new G__longdouble(xobj);
@@ -476,7 +476,7 @@ static int G__longif_35_5_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_35_6_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_43_6_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longdouble& obj=((G__longdouble*)(G__getstructoffset()))->operator--();
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -484,7 +484,7 @@ static int G__longif_35_6_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_35_7_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_43_7_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longdouble *pobj,xobj=((G__longdouble*)(G__getstructoffset()))->operator--((int)G__int(libp->para[0]));
         pobj=new G__longdouble(xobj);
@@ -494,7 +494,7 @@ static int G__longif_35_7_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_35_8_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_43_8_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longdouble& obj=((G__longdouble*)(G__getstructoffset()))->operator=((double)G__double(libp->para[0]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -502,7 +502,7 @@ static int G__longif_35_8_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_35_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_43_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longdouble& obj=((G__longdouble*)(G__getstructoffset()))->operator=(*(G__longdouble*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -510,7 +510,7 @@ static int G__longif_35_9_0(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_35_0_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_43_0_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longdouble& obj=((G__longdouble*)(G__getstructoffset()))->operator+=(*(G__longdouble*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -518,7 +518,7 @@ static int G__longif_35_0_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_35_1_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_43_1_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longdouble& obj=((G__longdouble*)(G__getstructoffset()))->operator-=(*(G__longdouble*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -526,7 +526,7 @@ static int G__longif_35_1_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_35_2_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_43_2_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longdouble& obj=((G__longdouble*)(G__getstructoffset()))->operator*=(*(G__longdouble*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -534,7 +534,7 @@ static int G__longif_35_2_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif_35_3_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_43_3_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const G__longdouble& obj=((G__longdouble*)(G__getstructoffset()))->operator/=(*(G__longdouble*)libp->para[0].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -544,7 +544,7 @@ static int G__longif_35_3_1(G__value *result7,G__CONST char *funcname,struct G__
 
 // automatic destructor
 typedef G__longdouble G__TG__longdouble;
-static int G__longif_35_4_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif_43_4_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
@@ -565,67 +565,67 @@ static int G__longif_35_4_1(G__value *result7,G__CONST char *funcname,struct G__
 
 
 /* Setting up global function */
-static int G__longif__0_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__4_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval((const char*)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__1_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__5_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval((const void*)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__2_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__6_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval((double)G__double(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__3_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__7_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval((float)G__double(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__4_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__8_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval((char)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__5_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__9_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval((short)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__6_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__0_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval((int)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__7_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__1_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval((long)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__8_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__2_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval((unsigned char)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__9_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__3_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval((unsigned short)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__0_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__4_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval((unsigned int)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__1_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__5_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval((unsigned long)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__2_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__6_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longlong *pobj,xobj=operator+(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref);
         pobj=new G__longlong(xobj);
@@ -635,7 +635,7 @@ static int G__longif__2_3(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__3_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__7_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longlong *pobj,xobj=operator-(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref);
         pobj=new G__longlong(xobj);
@@ -645,7 +645,7 @@ static int G__longif__3_3(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__4_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__8_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longlong *pobj,xobj=operator*(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref);
         pobj=new G__longlong(xobj);
@@ -655,7 +655,7 @@ static int G__longif__4_3(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__5_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__9_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longlong *pobj,xobj=operator/(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref);
         pobj=new G__longlong(xobj);
@@ -665,7 +665,7 @@ static int G__longif__5_3(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__6_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__0_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longlong *pobj,xobj=operator%(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref);
         pobj=new G__longlong(xobj);
@@ -675,7 +675,7 @@ static int G__longif__6_3(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__7_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__1_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longlong *pobj,xobj=operator&(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref);
         pobj=new G__longlong(xobj);
@@ -685,7 +685,7 @@ static int G__longif__7_3(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__8_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__2_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longlong *pobj,xobj=operator|(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref);
         pobj=new G__longlong(xobj);
@@ -695,7 +695,7 @@ static int G__longif__8_3(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__9_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__3_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longlong *pobj,xobj=operator<<(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref);
         pobj=new G__longlong(xobj);
@@ -705,7 +705,7 @@ static int G__longif__9_3(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__0_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__4_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longlong *pobj,xobj=operator>>(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref);
         pobj=new G__longlong(xobj);
@@ -715,47 +715,47 @@ static int G__longif__0_4(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__1_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__5_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator&&(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__2_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__6_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator||(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__3_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__7_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator<(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__4_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__8_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator>(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__5_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__9_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator<=(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__6_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__0_7(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator>=(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__7_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__1_7(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator!=(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__8_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__2_7(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator==(*(G__longlong*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__9_4(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__3_7(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const ostream& obj=operator<<(*(ostream*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -763,7 +763,7 @@ static int G__longif__9_4(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__0_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__4_7(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const istream& obj=operator>>(*(istream*)libp->para[0].ref,*(G__longlong*)libp->para[1].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -771,12 +771,12 @@ static int G__longif__0_5(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__1_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__5_7(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval(*(G__longlong*)libp->para[0].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__2_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__6_7(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__ulonglong *pobj,xobj=operator+(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref);
         pobj=new G__ulonglong(xobj);
@@ -786,7 +786,7 @@ static int G__longif__2_5(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__3_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__7_7(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__ulonglong *pobj,xobj=operator-(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref);
         pobj=new G__ulonglong(xobj);
@@ -796,7 +796,7 @@ static int G__longif__3_5(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__4_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__8_7(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__ulonglong *pobj,xobj=operator*(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref);
         pobj=new G__ulonglong(xobj);
@@ -806,7 +806,7 @@ static int G__longif__4_5(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__5_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__9_7(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__ulonglong *pobj,xobj=operator/(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref);
         pobj=new G__ulonglong(xobj);
@@ -816,7 +816,7 @@ static int G__longif__5_5(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__6_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__0_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__ulonglong *pobj,xobj=operator%(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref);
         pobj=new G__ulonglong(xobj);
@@ -826,7 +826,7 @@ static int G__longif__6_5(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__7_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__1_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__ulonglong *pobj,xobj=operator&(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref);
         pobj=new G__ulonglong(xobj);
@@ -836,7 +836,7 @@ static int G__longif__7_5(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__8_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__2_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__ulonglong *pobj,xobj=operator|(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref);
         pobj=new G__ulonglong(xobj);
@@ -846,7 +846,7 @@ static int G__longif__8_5(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__9_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__3_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__ulonglong *pobj,xobj=operator<<(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref);
         pobj=new G__ulonglong(xobj);
@@ -856,7 +856,7 @@ static int G__longif__9_5(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__0_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__4_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__ulonglong *pobj,xobj=operator>>(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref);
         pobj=new G__ulonglong(xobj);
@@ -866,47 +866,47 @@ static int G__longif__0_6(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__1_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__5_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator&&(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__2_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__6_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator||(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__3_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__7_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator<(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__4_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__8_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator>(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__5_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__9_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator<=(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__6_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__0_9(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator>=(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__7_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__1_9(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator!=(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__8_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__2_9(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator==(*(G__ulonglong*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__9_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__3_9(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const ostream& obj=operator<<(*(ostream*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -914,7 +914,7 @@ static int G__longif__9_6(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__0_7(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__4_9(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const istream& obj=operator>>(*(istream*)libp->para[0].ref,*(G__ulonglong*)libp->para[1].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -922,26 +922,26 @@ static int G__longif__0_7(G__value *result7,G__CONST char *funcname,struct G__pa
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__5_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__9_21(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
       G__printformatll((char*)G__int(libp->para[0]),(const char*)G__int(libp->para[1])
 ,(void*)G__int(libp->para[2]));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__6_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__0_22(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
       G__printformatull((char*)G__int(libp->para[0]),(const char*)G__int(libp->para[1])
 ,(void*)G__int(libp->para[2]));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__7_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__1_22(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval(*(G__ulonglong*)libp->para[0].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__8_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__2_22(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longdouble *pobj,xobj=operator+(*(G__longdouble*)libp->para[0].ref,*(G__longdouble*)libp->para[1].ref);
         pobj=new G__longdouble(xobj);
@@ -951,7 +951,7 @@ static int G__longif__8_19(G__value *result7,G__CONST char *funcname,struct G__p
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__9_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__3_22(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longdouble *pobj,xobj=operator-(*(G__longdouble*)libp->para[0].ref,*(G__longdouble*)libp->para[1].ref);
         pobj=new G__longdouble(xobj);
@@ -961,7 +961,7 @@ static int G__longif__9_19(G__value *result7,G__CONST char *funcname,struct G__p
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__0_20(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__4_22(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longdouble *pobj,xobj=operator*(*(G__longdouble*)libp->para[0].ref,*(G__longdouble*)libp->para[1].ref);
         pobj=new G__longdouble(xobj);
@@ -971,7 +971,7 @@ static int G__longif__0_20(G__value *result7,G__CONST char *funcname,struct G__p
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__1_20(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__5_22(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         G__longdouble *pobj,xobj=operator/(*(G__longdouble*)libp->para[0].ref,*(G__longdouble*)libp->para[1].ref);
         pobj=new G__longdouble(xobj);
@@ -981,37 +981,37 @@ static int G__longif__1_20(G__value *result7,G__CONST char *funcname,struct G__p
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__2_20(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__6_22(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator<(*(G__longdouble*)libp->para[0].ref,*(G__longdouble*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__3_20(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__7_22(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator>(*(G__longdouble*)libp->para[0].ref,*(G__longdouble*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__4_20(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__8_22(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator<=(*(G__longdouble*)libp->para[0].ref,*(G__longdouble*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__5_20(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__9_22(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator>=(*(G__longdouble*)libp->para[0].ref,*(G__longdouble*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__6_20(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__0_23(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator!=(*(G__longdouble*)libp->para[0].ref,*(G__longdouble*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__7_20(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__1_23(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)operator==(*(G__longdouble*)libp->para[0].ref,*(G__longdouble*)libp->para[1].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__8_20(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__2_23(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const ostream& obj=operator<<(*(ostream*)libp->para[0].ref,*(G__longdouble*)libp->para[1].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1019,7 +1019,7 @@ static int G__longif__8_20(G__value *result7,G__CONST char *funcname,struct G__p
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__9_20(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__3_23(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
         const istream& obj=operator>>(*(istream*)libp->para[0].ref,*(G__longdouble*)libp->para[1].ref);
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
@@ -1027,7 +1027,7 @@ static int G__longif__9_20(G__value *result7,G__CONST char *funcname,struct G__p
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__longif__0_21(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__longif__4_23(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__ateval(*(G__longdouble*)libp->para[0].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1137,74 +1137,74 @@ extern "C" void G__cpp_setup_memvarlongif() {
 static void G__setup_memfuncG__longlong(void) {
    /* G__longlong */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__longifLN_G__longlong));
-   G__memfunc_setup("G__longlong",1125,G__longif_28_0_0,105,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,1,1,1,0,"l - - 0 0 l",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("G__longlong",1125,G__longif_28_1_0,105,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("G__longlong",1125,G__longif_28_2_0,105,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,1,1,1,0,"C - - 10 - s",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator long",1340,G__longif_28_4_0,108,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator int",1239,G__longif_28_5_0,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator double",1543,G__longif_28_6_0,100,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator++",962,G__longif_28_7_0,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator++",962,G__longif_28_8_0,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,1,1,1,0,"i - - 0 - dmy",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator--",966,G__longif_28_9_0,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator--",966,G__longif_28_0_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,1,1,1,0,"i - - 0 - dmy",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator=",937,G__longif_28_1_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"l - - 0 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator=",937,G__longif_28_2_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator+=",980,G__longif_28_3_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator-=",982,G__longif_28_4_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator*=",979,G__longif_28_5_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator&=",975,G__longif_28_6_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator|=",1061,G__longif_28_7_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator<<=",1057,G__longif_28_8_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator>>=",1061,G__longif_28_9_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__longlong",1125,G__longif_36_0_0,105,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,1,1,1,0,"l - - 0 0 l",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__longlong",1125,G__longif_36_1_0,105,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__longlong",1125,G__longif_36_2_0,105,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,1,1,1,0,"C - - 10 - s",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator long",1340,G__longif_36_4_0,108,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator int",1239,G__longif_36_5_0,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator double",1543,G__longif_36_6_0,100,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator++",962,G__longif_36_7_0,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator++",962,G__longif_36_8_0,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,1,1,1,0,"i - - 0 - dmy",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator--",966,G__longif_36_9_0,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator--",966,G__longif_36_0_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,1,1,1,0,"i - - 0 - dmy",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator=",937,G__longif_36_1_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"l - - 0 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator=",937,G__longif_36_2_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator+=",980,G__longif_36_3_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator-=",982,G__longif_36_4_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator*=",979,G__longif_36_5_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator&=",975,G__longif_36_6_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator|=",1061,G__longif_36_7_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator<<=",1057,G__longif_36_8_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator>>=",1061,G__longif_36_9_1,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,1,1,1,1,0,"u 'G__longlong' - 11 - x",(char*)NULL,(void*)NULL,0);
    // automatic destructor
-   G__memfunc_setup("~G__longlong",1251,G__longif_28_0_2,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("~G__longlong",1251,G__longif_36_0_2,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
 static void G__setup_memfuncG__ulonglong(void) {
    /* G__ulonglong */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__longifLN_G__ulonglong));
-   G__memfunc_setup("G__ulonglong",1242,G__longif_29_0_0,105,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,1,1,1,0,"l - - 0 0 l",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("G__ulonglong",1242,G__longif_29_1_0,105,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("G__ulonglong",1242,G__longif_29_2_0,105,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,1,1,1,0,"C - - 10 - s",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator long",1340,G__longif_29_4_0,108,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator int",1239,G__longif_29_5_0,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator++",962,G__longif_29_6_0,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator++",962,G__longif_29_7_0,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,1,1,1,0,"i - - 0 - dmy",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator--",966,G__longif_29_8_0,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator--",966,G__longif_29_9_0,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,1,1,1,0,"i - - 0 - dmy",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator=",937,G__longif_29_0_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"l - - 0 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator=",937,G__longif_29_1_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator+=",980,G__longif_29_2_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator-=",982,G__longif_29_3_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator*=",979,G__longif_29_4_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator&=",975,G__longif_29_5_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator|=",1061,G__longif_29_6_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator<<=",1057,G__longif_29_7_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator>>=",1061,G__longif_29_8_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__ulonglong",1242,G__longif_37_0_0,105,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,1,1,1,0,"l - - 0 0 l",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__ulonglong",1242,G__longif_37_1_0,105,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__ulonglong",1242,G__longif_37_2_0,105,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,1,1,1,0,"C - - 10 - s",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator long",1340,G__longif_37_4_0,108,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator int",1239,G__longif_37_5_0,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator++",962,G__longif_37_6_0,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator++",962,G__longif_37_7_0,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,1,1,1,0,"i - - 0 - dmy",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator--",966,G__longif_37_8_0,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator--",966,G__longif_37_9_0,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,1,1,1,0,"i - - 0 - dmy",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator=",937,G__longif_37_0_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"l - - 0 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator=",937,G__longif_37_1_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator+=",980,G__longif_37_2_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator-=",982,G__longif_37_3_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator*=",979,G__longif_37_4_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator&=",975,G__longif_37_5_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator|=",1061,G__longif_37_6_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator<<=",1057,G__longif_37_7_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator>>=",1061,G__longif_37_8_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
    // automatic destructor
-   G__memfunc_setup("~G__ulonglong",1368,G__longif_29_9_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("~G__ulonglong",1368,G__longif_37_9_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
 static void G__setup_memfuncG__longdouble(void) {
    /* G__longdouble */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__longifLN_G__longdouble));
-   G__memfunc_setup("G__longdouble",1328,G__longif_35_0_0,105,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,1,1,1,0,"d - - 0 0 l",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("G__longdouble",1328,G__longif_35_1_0,105,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,1,1,1,0,"u 'G__longdouble' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator double",1543,G__longif_35_3_0,100,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator++",962,G__longif_35_4_0,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator++",962,G__longif_35_5_0,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,1,1,1,0,"i - - 0 - dmy",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator--",966,G__longif_35_6_0,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator--",966,G__longif_35_7_0,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,1,1,1,0,"i - - 0 - dmy",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator=",937,G__longif_35_8_0,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,1,1,1,0,"d - - 0 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator=",937,G__longif_35_9_0,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,1,1,1,0,"u 'G__longdouble' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator+=",980,G__longif_35_0_1,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,1,1,1,0,"u 'G__longdouble' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator-=",982,G__longif_35_1_1,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,1,1,1,0,"u 'G__longdouble' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator*=",979,G__longif_35_2_1,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,1,1,1,0,"u 'G__longdouble' - 11 - x",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator/=",984,G__longif_35_3_1,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,1,1,1,0,"u 'G__longdouble' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__longdouble",1328,G__longif_43_0_0,105,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,1,1,1,0,"d - - 0 0 l",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__longdouble",1328,G__longif_43_1_0,105,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,1,1,1,0,"u 'G__longdouble' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator double",1543,G__longif_43_3_0,100,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator++",962,G__longif_43_4_0,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator++",962,G__longif_43_5_0,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,1,1,1,0,"i - - 0 - dmy",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator--",966,G__longif_43_6_0,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator--",966,G__longif_43_7_0,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,1,1,1,0,"i - - 0 - dmy",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator=",937,G__longif_43_8_0,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,1,1,1,0,"d - - 0 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator=",937,G__longif_43_9_0,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,1,1,1,0,"u 'G__longdouble' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator+=",980,G__longif_43_0_1,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,1,1,1,0,"u 'G__longdouble' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator-=",982,G__longif_43_1_1,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,1,1,1,0,"u 'G__longdouble' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator*=",979,G__longif_43_2_1,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,1,1,1,0,"u 'G__longdouble' - 11 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator/=",984,G__longif_43_3_1,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,1,1,1,1,0,"u 'G__longdouble' - 11 - x",(char*)NULL,(void*)NULL,0);
    // automatic destructor
-   G__memfunc_setup("~G__longdouble",1454,G__longif_35_4_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("~G__longdouble",1454,G__longif_43_4_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -1239,202 +1239,205 @@ extern "C" void G__cpp_setup_globallongif() {
 static void G__cpp_setup_func0() {
    G__lastifuncposition();
 
-   G__memfunc_setup("G__ateval",898,G__longif__0_2,105,-1,-1,0,1,1,1,0,"C - - 10 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__4_4,105,-1,-1,0,1,1,1,0,"C - - 10 - x",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(const char*))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__1_2,105,-1,-1,0,1,1,1,0,"Y - - 10 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__5_4,105,-1,-1,0,1,1,1,0,"Y - - 10 - x",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(const void*))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__2_2,105,-1,-1,0,1,1,1,0,"d - - 0 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__6_4,105,-1,-1,0,1,1,1,0,"d - - 0 - x",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(double))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__3_2,105,-1,-1,0,1,1,1,0,"f - - 0 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__7_4,105,-1,-1,0,1,1,1,0,"f - - 0 - x",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(float))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__4_2,105,-1,-1,0,1,1,1,0,"c - - 0 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__8_4,105,-1,-1,0,1,1,1,0,"c - - 0 - x",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(char))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__5_2,105,-1,-1,0,1,1,1,0,"s - - 0 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__9_4,105,-1,-1,0,1,1,1,0,"s - - 0 - x",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(short))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__6_2,105,-1,-1,0,1,1,1,0,"i - - 0 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__0_5,105,-1,-1,0,1,1,1,0,"i - - 0 - x",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(int))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__7_2,105,-1,-1,0,1,1,1,0,"l - - 0 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__1_5,105,-1,-1,0,1,1,1,0,"l - - 0 - x",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(long))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__8_2,105,-1,-1,0,1,1,1,0,"b - - 0 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__2_5,105,-1,-1,0,1,1,1,0,"b - - 0 - x",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(unsigned char))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__9_2,105,-1,-1,0,1,1,1,0,"r - - 0 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__3_5,105,-1,-1,0,1,1,1,0,"r - - 0 - x",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(unsigned short))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__0_3,105,-1,-1,0,1,1,1,0,"h - - 0 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__4_5,105,-1,-1,0,1,1,1,0,"h - - 0 - x",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(unsigned int))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__1_3,105,-1,-1,0,1,1,1,0,"k - - 0 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__5_5,105,-1,-1,0,1,1,1,0,"k - - 0 - x",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(unsigned long))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("operator+",919,G__longif__2_3,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator+",919,G__longif__6_5,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator-",921,G__longif__3_3,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator-",921,G__longif__7_5,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator*",918,G__longif__4_3,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator*",918,G__longif__8_5,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator/",923,G__longif__5_3,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator/",923,G__longif__9_5,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator%",913,G__longif__6_3,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator%",913,G__longif__0_6,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator&",914,G__longif__7_3,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator&",914,G__longif__1_6,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator|",1000,G__longif__8_3,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator|",1000,G__longif__2_6,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G__longif__9_3,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G__longif__3_6,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G__longif__0_4,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G__longif__4_6,117,G__get_linked_tagnum(&G__longifLN_G__longlong),-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator&&",952,G__longif__1_4,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator&&",952,G__longif__5_6,105,-1,-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator||",1124,G__longif__2_4,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator||",1124,G__longif__6_6,105,-1,-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<",936,G__longif__3_4,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator<",936,G__longif__7_6,105,-1,-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>",938,G__longif__4_4,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator>",938,G__longif__8_6,105,-1,-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<=",997,G__longif__5_4,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator<=",997,G__longif__9_6,105,-1,-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>=",999,G__longif__6_4,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator>=",999,G__longif__0_7,105,-1,-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator!=",970,G__longif__7_4,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator!=",970,G__longif__1_7,105,-1,-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator==",998,G__longif__8_4,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator==",998,G__longif__2_7,105,-1,-1,0,2,1,1,0,
 "u 'G__longlong' - 11 - a u 'G__longlong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G__longif__9_4,117,G__get_linked_tagnum(&G__longifLN_ostream),-1,1,2,1,1,0,
-"u 'ostream' - 1 - ost u 'G__longlong' - 11 - a",(char*)NULL
+   G__memfunc_setup("operator<<",996,G__longif__3_7,117,G__get_linked_tagnum(&G__longifLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+"u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - ost u 'G__longlong' - 11 - a",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G__longif__0_5,117,G__get_linked_tagnum(&G__longifLN_istream),-1,1,2,1,1,0,
-"u 'istream' - 1 - ist u 'G__longlong' - 1 - a",(char*)NULL
+   G__memfunc_setup("operator>>",1000,G__longif__4_7,117,G__get_linked_tagnum(&G__longifLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+"u 'basic_istream<char,char_traits<char> >' 'istream' 1 - ist u 'G__longlong' - 1 - a",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__ateval",898,G__longif__1_5,105,-1,-1,0,1,1,1,0,"u 'G__longlong' - 11 - a",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__5_7,105,-1,-1,0,1,1,1,0,"u 'G__longlong' - 11 - a",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(const G__longlong&))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("operator+",919,G__longif__2_5,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator+",919,G__longif__6_7,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator-",921,G__longif__3_5,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator-",921,G__longif__7_7,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator*",918,G__longif__4_5,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator*",918,G__longif__8_7,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator/",923,G__longif__5_5,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator/",923,G__longif__9_7,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator%",913,G__longif__6_5,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator%",913,G__longif__0_8,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator&",914,G__longif__7_5,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator&",914,G__longif__1_8,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator|",1000,G__longif__8_5,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator|",1000,G__longif__2_8,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G__longif__9_5,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator<<",996,G__longif__3_8,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G__longif__0_6,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
+   G__memfunc_setup("operator>>",1000,G__longif__4_8,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator&&",952,G__longif__1_6,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator&&",952,G__longif__5_8,105,-1,-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator||",1124,G__longif__2_6,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator||",1124,G__longif__6_8,105,-1,-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<",936,G__longif__3_6,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator<",936,G__longif__7_8,105,-1,-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>",938,G__longif__4_6,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator>",938,G__longif__8_8,105,-1,-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<=",997,G__longif__5_6,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator<=",997,G__longif__9_8,105,-1,-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>=",999,G__longif__6_6,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator>=",999,G__longif__0_9,105,-1,-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator!=",970,G__longif__7_6,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator!=",970,G__longif__1_9,105,-1,-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator==",998,G__longif__8_6,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator==",998,G__longif__2_9,105,-1,-1,0,2,1,1,0,
 "u 'G__ulonglong' - 11 - a u 'G__ulonglong' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G__longif__9_6,117,G__get_linked_tagnum(&G__longifLN_ostream),-1,1,2,1,1,0,
-"u 'ostream' - 1 - ost u 'G__ulonglong' - 11 - a",(char*)NULL
+   G__memfunc_setup("operator<<",996,G__longif__3_9,117,G__get_linked_tagnum(&G__longifLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+"u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - ost u 'G__ulonglong' - 11 - a",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G__longif__0_7,117,G__get_linked_tagnum(&G__longifLN_istream),-1,1,2,1,1,0,
-"u 'istream' - 1 - ist u 'G__ulonglong' - 1 - a",(char*)NULL
+   G__memfunc_setup("operator>>",1000,G__longif__4_9,117,G__get_linked_tagnum(&G__longifLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+"u 'basic_istream<char,char_traits<char> >' 'istream' 1 - ist u 'G__ulonglong' - 1 - a",(char*)NULL
 ,(void*)NULL,0);
 }
 
 static void G__cpp_setup_func1() {
-   G__memfunc_setup("G__printformatll",1683,G__longif__5_19,121,-1,-1,0,3,1,1,0,
+}
+
+static void G__cpp_setup_func2() {
+   G__memfunc_setup("G__printformatll",1683,G__longif__9_21,121,-1,-1,0,3,1,1,0,
 "C - - 0 - out C - - 10 - fmt "
 "Y - - 0 - p",(char*)NULL
 #ifndef G__printformatll
@@ -1442,7 +1445,7 @@ static void G__cpp_setup_func1() {
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__printformatull",1800,G__longif__6_19,121,-1,-1,0,3,1,1,0,
+   G__memfunc_setup("G__printformatull",1800,G__longif__0_22,121,-1,-1,0,3,1,1,0,
 "C - - 0 - out C - - 10 - fmt "
 "Y - - 0 - p",(char*)NULL
 #ifndef G__printformatull
@@ -1450,52 +1453,49 @@ static void G__cpp_setup_func1() {
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__7_19,105,-1,-1,0,1,1,1,0,"u 'G__ulonglong' - 11 - a",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__1_22,105,-1,-1,0,1,1,1,0,"u 'G__ulonglong' - 11 - a",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(const G__ulonglong&))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("operator+",919,G__longif__8_19,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,2,1,1,0,
+   G__memfunc_setup("operator+",919,G__longif__2_22,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,2,1,1,0,
 "u 'G__longdouble' - 11 - a u 'G__longdouble' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator-",921,G__longif__9_19,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,2,1,1,0,
+   G__memfunc_setup("operator-",921,G__longif__3_22,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,2,1,1,0,
 "u 'G__longdouble' - 11 - a u 'G__longdouble' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator*",918,G__longif__0_20,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,2,1,1,0,
+   G__memfunc_setup("operator*",918,G__longif__4_22,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,2,1,1,0,
 "u 'G__longdouble' - 11 - a u 'G__longdouble' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator/",923,G__longif__1_20,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,2,1,1,0,
+   G__memfunc_setup("operator/",923,G__longif__5_22,117,G__get_linked_tagnum(&G__longifLN_G__longdouble),-1,0,2,1,1,0,
 "u 'G__longdouble' - 11 - a u 'G__longdouble' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<",936,G__longif__2_20,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator<",936,G__longif__6_22,105,-1,-1,0,2,1,1,0,
 "u 'G__longdouble' - 11 - a u 'G__longdouble' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-}
-
-static void G__cpp_setup_func2() {
-   G__memfunc_setup("operator>",938,G__longif__3_20,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator>",938,G__longif__7_22,105,-1,-1,0,2,1,1,0,
 "u 'G__longdouble' - 11 - a u 'G__longdouble' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<=",997,G__longif__4_20,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator<=",997,G__longif__8_22,105,-1,-1,0,2,1,1,0,
 "u 'G__longdouble' - 11 - a u 'G__longdouble' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>=",999,G__longif__5_20,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator>=",999,G__longif__9_22,105,-1,-1,0,2,1,1,0,
 "u 'G__longdouble' - 11 - a u 'G__longdouble' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator!=",970,G__longif__6_20,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator!=",970,G__longif__0_23,105,-1,-1,0,2,1,1,0,
 "u 'G__longdouble' - 11 - a u 'G__longdouble' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator==",998,G__longif__7_20,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("operator==",998,G__longif__1_23,105,-1,-1,0,2,1,1,0,
 "u 'G__longdouble' - 11 - a u 'G__longdouble' - 11 - b",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G__longif__8_20,117,G__get_linked_tagnum(&G__longifLN_ostream),-1,1,2,1,1,0,
-"u 'ostream' - 1 - ost u 'G__longdouble' - 11 - a",(char*)NULL
+   G__memfunc_setup("operator<<",996,G__longif__2_23,117,G__get_linked_tagnum(&G__longifLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+"u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - ost u 'G__longdouble' - 11 - a",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator>>",1000,G__longif__9_20,117,G__get_linked_tagnum(&G__longifLN_istream),-1,1,2,1,1,0,
-"u 'istream' - 1 - ist u 'G__longdouble' - 1 - a",(char*)NULL
+   G__memfunc_setup("operator>>",1000,G__longif__3_23,117,G__get_linked_tagnum(&G__longifLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
+"u 'basic_istream<char,char_traits<char> >' 'istream' 1 - ist u 'G__longdouble' - 1 - a",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__ateval",898,G__longif__0_21,105,-1,-1,0,1,1,1,0,"u 'G__longdouble' - 11 - a",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__4_23,105,-1,-1,0,1,1,1,0,"u 'G__longdouble' - 11 - a",(char*)NULL
 #ifndef G__ateval
 ,(void*)(int (*)(const G__longdouble&))G__ateval,0);
 #else
@@ -1515,16 +1515,16 @@ extern "C" void G__cpp_setup_funclongif() {
 * Class,struct,union,enum tag information setup
 *********************************************************/
 /* Setup class/struct taginfo */
-G__linked_taginfo G__longifLN_ostream = { "ostream" , 99 , -1 };
-G__linked_taginfo G__longifLN_istream = { "istream" , 99 , -1 };
+G__linked_taginfo G__longifLN_basic_istreamlEcharcOchar_traitslEchargRsPgR = { "basic_istream<char,char_traits<char> >" , 99 , -1 };
+G__linked_taginfo G__longifLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR = { "basic_ostream<char,char_traits<char> >" , 99 , -1 };
 G__linked_taginfo G__longifLN_G__longlong = { "G__longlong" , 99 , -1 };
 G__linked_taginfo G__longifLN_G__ulonglong = { "G__ulonglong" , 99 , -1 };
 G__linked_taginfo G__longifLN_G__longdouble = { "G__longdouble" , 99 , -1 };
 
 /* Reset class/struct taginfo */
 extern "C" void G__cpp_reset_tagtablelongif() {
-  G__longifLN_ostream.tagnum = -1 ;
-  G__longifLN_istream.tagnum = -1 ;
+  G__longifLN_basic_istreamlEcharcOchar_traitslEchargRsPgR.tagnum = -1 ;
+  G__longifLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR.tagnum = -1 ;
   G__longifLN_G__longlong.tagnum = -1 ;
   G__longifLN_G__ulonglong.tagnum = -1 ;
   G__longifLN_G__longdouble.tagnum = -1 ;
@@ -1534,8 +1534,8 @@ extern "C" void G__cpp_reset_tagtablelongif() {
 extern "C" void G__cpp_setup_tagtablelongif() {
 
    /* Setting up class,struct,union tag entry */
-   G__get_linked_tagnum(&G__longifLN_ostream);
-   G__get_linked_tagnum(&G__longifLN_istream);
+   G__get_linked_tagnum(&G__longifLN_basic_istreamlEcharcOchar_traitslEchargRsPgR);
+   G__get_linked_tagnum(&G__longifLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR);
    G__tagtable_setup(G__get_linked_tagnum(&G__longifLN_G__longlong),sizeof(G__longlong),-1,36608,(char*)NULL,G__setup_memvarG__longlong,G__setup_memfuncG__longlong);
    G__tagtable_setup(G__get_linked_tagnum(&G__longifLN_G__ulonglong),sizeof(G__ulonglong),-1,36608,(char*)NULL,G__setup_memvarG__ulonglong,G__setup_memfuncG__ulonglong);
    G__tagtable_setup(G__get_linked_tagnum(&G__longifLN_G__longdouble),sizeof(G__longdouble),-1,3840,(char*)NULL,G__setup_memvarG__longdouble,G__setup_memfuncG__longdouble);

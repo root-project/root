@@ -23,6 +23,7 @@ extern void G__cpp_setup_funclongif();
 extern void G__set_cpp_environmentlongif();
 }
 
+
 /* /% C %/ */
 /***********************************************************************
  * cint (C/C++ interpreter)
@@ -47,6 +48,7 @@ extern void G__set_cpp_environmentlongif();
 #define G__LONGLONG_H
 
 #define IOS
+#define G__NEWSTDHEADER
 
 #ifdef IOS
 #ifdef G__NEWSTDHEADER
@@ -114,6 +116,7 @@ typedef long long G__int64;
 typedef unsigned long long G__uint64;
 
 #endif
+
 
 #ifndef G__OLDIMPLEMENTATION1878
 #ifndef __CINT__
@@ -704,7 +707,6 @@ int G__ateval(unsigned long x) {return(0);}
 
 #endif /* G__LONGLONG_H */
 
-
 /* /% C %/ */
 /***********************************************************************
  * cint (C/C++ interpreter)
@@ -924,8 +926,8 @@ inline int G__ateval(const G__longdouble& a) {
 #ifndef G__MEMFUNCBODY
 #endif
 
-extern G__linked_taginfo G__longifLN_ostream;
-extern G__linked_taginfo G__longifLN_istream;
+extern G__linked_taginfo G__longifLN_basic_istreamlEcharcOchar_traitslEchargRsPgR;
+extern G__linked_taginfo G__longifLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR;
 extern G__linked_taginfo G__longifLN_G__longlong;
 extern G__linked_taginfo G__longifLN_G__ulonglong;
 extern G__linked_taginfo G__longifLN_G__longdouble;
