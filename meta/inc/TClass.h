@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.38 2004/02/13 07:12:57 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.39 2004/02/18 07:28:02 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -258,15 +258,18 @@ namespace ROOT {
       template <typename T> bool IsPointer(const T* /* dummy */) { return false; };
       template <typename T> bool IsPointer(const T** /* dummy */) { return true; };
    #endif
-   
+
+   #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION 
+      // This can only be used when the template overload resolution can distringuish between
+      // T* and T**
+      template <typename T> TClass* GetClass(      T**       /* dummy */) { return GetClass((T*)0); }
+      template <typename T> TClass* GetClass(const T**       /* dummy */) { return GetClass((T*)0); }
+      template <typename T> TClass* GetClass(      T* const* /* dummy */) { return GetClass((T*)0); }
+      template <typename T> TClass* GetClass(const T* const* /* dummy */) { return GetClass((T*)0); }
+   #endif
+
    template <typename T> TClass* GetClass(      T* /* dummy */)        { return GetROOT()->GetClass(typeid(T)); }
    template <typename T> TClass* GetClass(const T* /* dummy */)        { return GetROOT()->GetClass(typeid(T)); }
-
-   template <typename T> TClass* GetClass(      T**       /* dummy */) { return GetClass((T*)0); }
-   template <typename T> TClass* GetClass(const T**       /* dummy */) { return GetClass((T*)0); }
-   template <typename T> TClass* GetClass(      T* const* /* dummy */) { return GetClass((T*)0); }
-   template <typename T> TClass* GetClass(const T* const* /* dummy */) { return GetClass((T*)0); }
-
 
    extern TClass *CreateClass(const char *cname, Version_t id,
                               const char *dfil, const char *ifil,

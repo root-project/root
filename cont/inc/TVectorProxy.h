@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.4 2004/01/27 19:50:31 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.5 2004/02/18 07:28:02 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -139,6 +139,21 @@ namespace ROOT {
       TClass *GetValueClass() { 
          if (fValueClass==0) {
             fValueClass = GetClass((nested*)0);
+#ifdef R__NO_CLASS_TEMPLATE_SPECIALIZATION 
+            // In case where the template mechanism is basically broken. 
+            if (fValueClass==0) {
+               TClass *cl = GetCollectionClass();
+               if (cl==0) return 0;
+
+               std::string shortname = TClassEdit::ShortType(cl->GetName(),
+                                                             TClassEdit::kDropAlloc);
+               std::string inside = TClassEdit::ShortType(shortname.c_str(), 
+                                                          TClassEdit::kInnerClass);
+               inside = TClassEdit::ShortType(inside.c_str(), TClassEdit::kDropTrailStar);
+               fprintf(stderr,"looking up %s\n",inside.c_str() );
+               fValueClass = TClass::GetClass( inside.c_str() );
+            }
+#endif
          }
          return fValueClass; 
       }

@@ -848,7 +848,7 @@ class G__longdouble {
   G__longdouble(const G__longdouble& x) { dat=x.dat; }
   //G__longdouble(long l=0) { dat = (G__double92)l; }
   G__longdouble(const G__longlong& x) { dat=x.dat; }
-  G__longdouble(const G__ulonglong& x) { dat=x.dat; }
+  G__longdouble(const G__ulonglong& x) { dat=(G__int64)x.dat; }
   ~G__longdouble() {  }
 
   // conversion operator
