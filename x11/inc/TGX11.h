@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.9 2001/05/11 17:20:14 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.10 2001/05/16 16:23:22 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -76,6 +76,16 @@ struct XWindow_t {
    Bool_t   shared;               // notify when window is shared
 };
 
+struct XColor_t {
+   ULong_t  pixel;                // color pixel value
+   UShort_t red;                  // red value in range [0,kBIGGEST_RGB_VALUE]
+   UShort_t green;                // green value
+   UShort_t blue;                 // blue value
+   Bool_t   defined;              // true if pixel value is defined
+   XColor_t() { pixel = 0; red = green = blue = 0; defined = kFALSE; }
+};
+
+class TExMap;
 
 
 class TGX11 : public TVirtualX {
@@ -83,6 +93,7 @@ class TGX11 : public TVirtualX {
 private:
    Int_t      fMaxNumberOfWindows;    //Maximum number of windows
    XWindow_t *fWindows;               //List of windows
+   TExMap    *fColors;                //Hash list of colors
    Cursor     fCursors[kNumCursors];  //List of cursors
    XEvent    *fXEvent;                //Current native (X11) event
 
@@ -140,6 +151,7 @@ protected:
    void       QueryColors(Colormap cmap, XColor *colors, Int_t ncolors);
    XWindow_t *GetCurrentWindow() const;
    GC        *GetGC(Int_t which) const;
+   XColor_t  &GetColor(Int_t cid);
 
 public:
    TGX11();
