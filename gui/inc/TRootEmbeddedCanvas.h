@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.5 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.6 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -35,21 +35,20 @@ class TRootEmbeddedCanvas : public TGCanvas {
 
 friend class TRootEmbeddedContainer;
 
-private:
+protected:
    Int_t                   fCWinId;           // window id used by embedded TCanvas
    TRootEmbeddedContainer *fCanvasContainer;  // container in canvas widget
    TCanvas                *fCanvas;           // pointer to TCanvas
+   Bool_t                  fAutoFit;          // canvas container keeps same size as canvas
+   Int_t                   fButton;           // currently pressed button
 
-   Bool_t   fAutoFit;    // when true canvas container keeps same size as canvas
-   Int_t    fButton;     // currently pressed button
-
-   Bool_t   HandleContainerButton(Event_t *ev);
-   Bool_t   HandleContainerDoubleClick(Event_t *ev);
-   Bool_t   HandleContainerConfigure(Event_t *ev);
-   Bool_t   HandleContainerKey(Event_t *ev);
-   Bool_t   HandleContainerMotion(Event_t *ev);
-   Bool_t   HandleContainerExpose(Event_t *ev);
-   Bool_t   HandleContainerCrossing(Event_t *ev);
+   virtual Bool_t HandleContainerButton(Event_t *ev);
+   virtual Bool_t HandleContainerDoubleClick(Event_t *ev);
+   virtual Bool_t HandleContainerConfigure(Event_t *ev);
+   virtual Bool_t HandleContainerKey(Event_t *ev);
+   virtual Bool_t HandleContainerMotion(Event_t *ev);
+   virtual Bool_t HandleContainerExpose(Event_t *ev);
+   virtual Bool_t HandleContainerCrossing(Event_t *ev);
 
 public:
    TRootEmbeddedCanvas(const char *name, const TGWindow *p, UInt_t w,
