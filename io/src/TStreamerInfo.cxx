@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.220 2005/02/10 07:29:46 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.221 2005/03/31 17:52:25 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2080,7 +2080,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype,
    //           len is the number of elements to be printed starting at pointer.
    int j;
 
-   assert(  ! ((kOffsetP + kChar)<=atype && atype<=(kOffsetP + kBool) && count==0) );
+   //assert(  ! ((kOffsetP + kChar)<=atype && atype<=(kOffsetP + kBool) && count==0) );
    switch (atype) {
       // basic types
       case kBool:              {Bool_t    *val = (Bool_t*   )ladd; printf("%d" ,*val);  break;}
