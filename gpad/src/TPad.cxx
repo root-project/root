@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.126 2004/03/20 17:45:48 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.127 2004/04/08 14:05:18 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2553,9 +2553,12 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    TAttFill::Modify();
    Color_t light;
    Color_t dark;
-   if (color <= 50) {
-      light    = color + 150;
-      dark     = color + 100;
+   if (color == 0) { 
+      light = 0;    
+      dark  = 0;             
+   } else if (color <= 50 && color != 0) {
+      light = color + 150;   
+      dark  = color + 100;   
    } else {
       Float_t r, g, b, h, l, s;
       TColor *c = gROOT->GetColor(color);
