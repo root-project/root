@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.18 2002/05/11 08:12:08 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.19 2002/05/18 08:22:00 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -287,8 +287,16 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 //*-*-*-*-*-*-*-*-*-*-*Minuit normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
 
-   fEmpty      = 1;
+   BuildArrays(25);
+
+   fStatus     = 0;
+   fEmpty      = 0;
    fMethodCall = 0;
+   SetMaxIterations();
+
+   mninit(5,6,7);
+   gMinuit = this;
+   gROOT->GetListOfSpecials()->Add(gMinuit);
 
 }
 
