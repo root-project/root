@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.108 2003/01/24 07:04:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.109 2003/01/30 06:40:33 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2803,6 +2803,13 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
 
    TClass *cl = 0;
    TLeafObject* lobj = 0;
+
+   // Since the user does not want this branch to be loaded anyway, we just
+   // skip it.  This prevents us from warning the user that the method might
+   // be on a disable branch.  However, and more usefully, this allows the
+   // user to avoid error messages from branches that can not be currently
+   // read without warnings/errors.
+   if (branch->TestBit(kDoNotProcess)) return kFALSE;
 
    // The following code is used somewhere else, we need to factor it out.
    if (branch->InheritsFrom(TBranchObject::Class()) ) {
