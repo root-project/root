@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.2 2000/10/17 12:26:32 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -90,7 +90,7 @@ public:
    void           SetObject(TObject *object);
    void           SetTime(Long_t milliSec) { fTime = milliSec; }
    void           SetTimerID(UInt_t id = 0) { fTimeID = id; }
-   virtual void   Start(Int_t milliSec, Bool_t singleShot = kFALSE);
+   virtual void   Start(Int_t milliSec = -1, Bool_t singleShot = kFALSE);
    virtual void   Stop() { TurnOff(); }
    virtual void   TurnOn();                         //*SIGNAL*
    virtual void   TurnOff();                        //*SIGNAL*
