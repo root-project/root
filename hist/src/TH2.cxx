@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.16 2001/02/28 08:00:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.17 2001/05/10 07:42:45 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1824,7 +1824,7 @@ TH1 *TH2D::DrawCopy(Option_t *option)
    TH2D *newth2 = (TH2D*)Clone();
    newth2->SetDirectory(0);
    newth2->SetBit(kCanDelete);
-   newth2->AppendPad();
+   newth2->AppendPad(option);
    return newth2;
 }
 
