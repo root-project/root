@@ -82,7 +82,6 @@ char *expression;
   G__CHECK(G__SECURE_MALLOC,1,return(G__null));
 
 #ifndef G__OLDIMPLEMENTATION2087
-  /* TODO , this function aborts bytecode. New implementation is needed */
   if(G__cintv6) {
     return(G__bc_new_operator(expression));
   }
@@ -822,6 +821,14 @@ int isarray;
   int cpplink=0;
 #ifndef G__OLDIMPLEMENTATION864
   int zeroflag=0;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2102
+  if(G__cintv6) {
+    /* THIS CASE IS NEVER USED */
+    G__bc_delete_operator(expression,isarray);
+    return;
+  }
 #endif
   
 

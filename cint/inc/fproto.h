@@ -892,8 +892,9 @@ void G__bc_delete_vtbl G__P((int tagnum)) ;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION2087
-G__value G__bc_new_operator G__P((char *expression)) ;
+G__value G__bc_new_operator G__P((const char *expression)) ;
 #endif
+void G__bc_delete_operator G__P((const char *expression,int isarray)) ;
 
 void G__argtype2param G__P((char *argtype,struct G__param *libp));
 

@@ -273,9 +273,9 @@ G__InterfaceMethod G__MethodInfo::InterfaceMethod()
     ifunc = (struct G__ifunc_table*)handle;
     if(
 #ifndef G__OLDIMPLEMENTATION2012
-       -1==ifunc->pentry[index]->size
+       -1==ifunc->pentry[index]->size /* this means compiled class */
 #else
-       -1==ifunc->pentry[index]->filenum
+       -1==ifunc->pentry[index]->filenum /* this meant compiled class */
 #endif
        ) {
 #ifndef G__OLDIMPLEMENTATION1035

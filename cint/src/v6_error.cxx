@@ -551,7 +551,11 @@ char *message;
   if(G__xrefflag) return(1);
 #endif
 
-  if(G__ASM_FUNC_NOP==G__asm_wholefunction) {
+  if(
+#ifndef G__OLDIMPLEMENTATION2105
+     G__cintv6 ||
+#endif
+     G__ASM_FUNC_NOP==G__asm_wholefunction) {
 #ifndef G__OLDIMPLEMENTATION1103
     if(0==G__const_noerror) {
 #endif

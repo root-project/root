@@ -4219,7 +4219,11 @@ int isnonpublicnew;
 #ifndef G__OLDIMPLEMENTATION598
   if(0>=isdestructor) isdestructor=G__isprivatedestructor(tagnum);
 #endif
-  if(0>=isdestructor && G__struct.type[tagnum]!='n') {
+  if(0>=isdestructor
+#ifndef G__OLDIMPLEMENTATION2104
+     && G__struct.type[tagnum]!='n'
+#endif
+     ) {
     sprintf(funcname,"~%s",G__struct.name[tagnum]);
     fprintf(fp,"// automatic destructor\n");
 
@@ -6776,8 +6780,10 @@ FILE *fp;
 	  if('n'==G__struct.type[i]) isdestructor=1;
 #endif
 	  if(
-#ifndef G__OLDIMPLEMENTATION2045
-	     'n'!=G__struct.type[i]
+#if !defined(G__OLDIMPLEMENTATION2104)
+             'n'!=G__struct.type[i]
+#elif !defined(G__OLDIMPLEMENTATION2045)
+	     1
 #else
 	     0==isdestructor
 #endif
