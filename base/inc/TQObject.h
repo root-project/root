@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.9 2001/04/21 17:20:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.10 2001/12/05 11:18:03 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -60,7 +60,8 @@ protected:
    TList   *GetListOfSignals() const { return fListOfSignals; }
    TList   *GetListOfConnections() const { return fListOfConnections; }
 
-   virtual void *GetSender() { return this; }
+   virtual void       *GetSender() { return this; }
+   virtual const char *GetSenderClassName() const { return ""; }
 
    static Bool_t ConnectToClass(TQObject *sender,
                                 const char *signal,
@@ -73,6 +74,11 @@ protected:
                                 TClass *receiver_class,
                                 void *receiver,
                                 const char *slot);
+
+   static Bool_t CheckConnectArgs(TQObject *sender,
+                                  TClass *sender_class, const char *signal,
+                                  TClass *receiver_class, const char *slot);
+
 public:
    TQObject();
    virtual ~TQObject();
@@ -161,15 +167,18 @@ R__EXTERN void *gTQSender;   // the latest sender object
 class TQObjSender : public TQObject {
 
 protected:
-   void   *fSender;    //delegation object
+   void    *fSender;        //delegation object
+   TString  fSenderClass;   //class name of delegation object
 
-   virtual void *GetSender() { return fSender; }
+   virtual void       *GetSender() { return fSender; }
+   virtual const char *GetSenderClassName() const { return fSenderClass; }
 
 public:
    TQObjSender() : TQObject() { }
    virtual ~TQObjSender() { Disconnect(); }
 
    virtual void SetSender(void *sender) { fSender = sender; }
+   void SetSenderClassName(const char *sclass = "") { fSenderClass = sclass; }
 
    ClassDef(TQObjSender,0) //Used to "delegate" TQObject functionality
                            //to interpreted classes, see also RQ_OBJECT.h
