@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.80 2004/10/26 08:08:35 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.81 2004/10/26 09:38:59 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -100,16 +100,9 @@ ClassImpQ(TCanvas)
 //  Clicking with the right mouse button on an object pops-up
 //  a contextmenu with a complete list of actions possible on this object.
 //
-//  A graphical editor may be started from the canvas "Edit" menu.
-//  Select the "Editor" item. This will show the following editor menu.
-//Begin_Html
-/*
-<img src="gif/editor_menu.gif">
-*/
-//End_Html
-//  For example, to draw a new TText primitive, select the option Text,
-//  then click at the position where you want to draw the text. Type <CR>
-//  when you have finished typing the string.
+//  A graphical editor may be started from the canvas "View" menu.
+//  An interactive HELP is available by clicking on the HELP button
+//  at the top right of the canvas.
 //
 //  A canvas may be automatically divided into pads via TPad::Divide.
 //
