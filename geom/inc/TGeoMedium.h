@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.h,v 1.1 2003/01/06 17:06:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMedium.h,v 1.2 2004/04/13 07:04:42 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************
@@ -43,6 +43,7 @@ public:
    Int_t                    GetId()   const     {return fId;}
    Double_t                 GetParam(Int_t i) const {return fParams[i];}
    TGeoMaterial            *GetMaterial() const {return fMaterial;}
+   void                     SetMaterial(TGeoMaterial *mat) {fMaterial = mat;}
    virtual void             SetCerenkovProperties(TObject* cerenkov) {fMaterial->SetCerenkovProperties(cerenkov);}   
   ClassDef(TGeoMedium, 1)              // tracking medium
 
