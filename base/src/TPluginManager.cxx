@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.1 2002/01/27 13:53:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.2 2002/01/27 15:53:40 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -125,7 +125,7 @@ void TPluginManager::LoadHandlersFromEnv(TEnv *env)
 
    while ((er = (TEnvRec*) next())) {
       char *s;
-      if ((s = strstr(er->GetName(), "Plugin."))) {
+      if ((s = (char*)strstr(er->GetName(), "Plugin."))) {
          const char *val = env->GetValue(er->GetName(), (const char*)0);
          if (val) {
             Int_t cnt = 0;
