@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -233,7 +233,13 @@ void TAttAxis::Streamer(TBuffer &R__b)
    // Stream an object of class TAttAxis.
 
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(); if (R__v) { }
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 3) {
+         TAttAxis::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       R__b >> fNdivisions;
       R__b >> fAxisColor;
       R__b >> fLabelColor;
@@ -251,18 +257,9 @@ void TAttAxis::Streamer(TBuffer &R__b)
          R__b >> fTitleColor;
          R__b >> fTitleFont;
       }
+      //====end of old versions
+      
    } else {
-      R__b.WriteVersion(TAttAxis::IsA());
-      R__b << fNdivisions;
-      R__b << fAxisColor;
-      R__b << fLabelColor;
-      R__b << fLabelFont;
-      R__b << fLabelOffset;
-      R__b << fLabelSize;
-      R__b << fTickLength;
-      R__b << fTitleOffset;
-      R__b << fTitleSize;
-      R__b << fTitleColor;
-      R__b << fTitleFont;
+      TAttAxis::Class()->WriteBuffer(R__b,this);
    }
 }
