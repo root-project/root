@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXPhyConnection.h,v 1.3 2004/08/20 23:26:05 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXPhyConnection.h,v 1.4 2004/12/08 14:34:18 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -38,8 +38,8 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
-#ifndef ROOT_TMutex
-#include "TMutex.h"
+#ifndef ROOT_TCondition
+#include "TCondition.h"
 #endif
 
 #include <time.h> // for time_t data type
@@ -66,16 +66,21 @@ private:
    TMutex              *fRwMutex;     // Lock before using the physical channel
                                       // (for reading and/or writing)
 
+   TMutex              *fMutex;
+
    TThread             *fReaderthreadhandler; // The thread which is going to pump
                                              // out the data from the socket
                                              // in the async mode
    Bool_t              fReaderthreadrunning;
+   Bool_t              fReaderthreadkilled;
 
    TString             fRemoteAddress;
    Int_t               fRemotePort;
    TXSocket           *fSocket;
 
-   void HandleUnsolicited(TXMessage *m);
+   void                HandleUnsolicited(TXMessage *m);
+
+   TCondition         *fReaderCV;
 
 public:
    ERemoteServer       fServer;
@@ -86,6 +91,7 @@ public:
 
    TXMessage     *BuildXMessage(ESendRecvOptions opt, Bool_t IgnoreTimeouts,
                                 Bool_t Enqueue);
+   void           CheckAutoTerm();
    Bool_t         Connect(TString TcpAddress, Int_t TcpPort, Int_t TcpWindowSize);
    void           Disconnect();
    Bool_t         ExpiredTTL();
@@ -95,14 +101,17 @@ public:
    UInt_t         GetSocketBytesSent();
    Long_t         GetTTL() const { return fTTLsec; }
    Bool_t         IsAddress(TString &addr) { return (fRemoteAddress == addr);}
+   Bool_t         ReaderThreadKilled() const { return fReaderthreadkilled;}
    ELoginState    IsLogged() const { return fLogged; }
    Bool_t         IsPort(Int_t port) const { return (fRemotePort == port); };
    Bool_t         IsValid() const { return (fSocket && fSocket->IsValid());}
    void           LockChannel();
+   void           ReaderStarted();
    Int_t          ReadRaw(void *buffer, Int_t BufferLength,
                           ESendRecvOptions opt = kDefault);
    TXMessage     *ReadXMessage(Int_t streamid);
    Bool_t         ReConnect(TString TcpAddress, Int_t TcpPort, Int_t TcpWindowSize);
+   TSocket       *SaveSocket();
    void           SetLogged(ELoginState status) { fLogged = status; }
    inline void    SetTTL(Long_t ttl) { fTTLsec = ttl; }
    void           StartReader();

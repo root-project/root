@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXMessage.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXMessage.cxx,v 1.3 2004/08/20 23:26:05 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -131,7 +131,7 @@ Int_t TXMessage::ReadRaw(TXPhyConnection *phy, ESendRecvOptions opt)
    Int_t bytesread;
    int readLen = sizeof(ServerResponseHeader);
 
-   if (DebugLevel() >= TXDebug::kDUMPDEBUG)
+   if (DebugLevel() >= kDUMPDEBUG)
       Info("TXMessage::ReadRaw", "Reading header (%d bytes) from socket.",
  	   readLen);
 
@@ -140,10 +140,15 @@ Int_t TXMessage::ReadRaw(TXPhyConnection *phy, ESendRecvOptions opt)
       if (bytesread == TXSOCK_ERR_TIMEOUT)
          SetStatusCode(kXMSC_timeout);
       else {
-         Error("TXMessage::ReadRaw", "Error reading %d bytes.", readLen);
-         SetStatusCode(kXMSC_readerr);
+         if (!(phy->ReaderThreadKilled())) {
+            Error("TXMessage::ReadRaw", "Error reading %d bytes", readLen);
+            SetStatusCode(kXMSC_readerr);
+         } else
+            // It is like a timeout
+            SetStatusCode(kXMSC_timeout);
       }
       memset(&fHdr, 0, sizeof(fHdr));
+      return 1;
    }
 
    // the data arrive marshalled from the server (i.e. network byte order)
@@ -151,13 +156,17 @@ Int_t TXMessage::ReadRaw(TXPhyConnection *phy, ESendRecvOptions opt)
    Unmarshall();
 
    if (fHdr.dlen) {
-      if (DebugLevel() >= TXDebug::kDUMPDEBUG)
+      if (DebugLevel() >= kDUMPDEBUG)
          Info("TXMessage::ReadRaw", "Reading data (%d bytes) from socket.",
               fHdr.dlen);
       CreateData();
       if (phy->ReadRaw(fData, fHdr.dlen, opt) < fHdr.dlen) {
-         Error("TXMessage::ReadRaw", "Error reading %d bytes.", fHdr.dlen);
-         SetStatusCode(kXMSC_readerr);
+         if (!(phy->ReaderThreadKilled())) {
+            Error("TXMessage::ReadRaw", "Error reading %d bytes.", fHdr.dlen);
+            SetStatusCode(kXMSC_readerr);
+         } else
+            // It is like a timeout
+            SetStatusCode(kXMSC_timeout);
       }
    }
    return 1;

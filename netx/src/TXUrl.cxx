@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXUrl.cxx,v 1.3 2004/08/20 23:26:05 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXUrl.cxx,v 1.4 2004/09/15 13:50:13 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -85,7 +85,7 @@ TXUrl::TXUrl(TString Urls) : fIsValid(kTRUE)
    while (listOfMachines.BeginsWith(","))
       listOfMachines.Remove(0,1);
 
-   if(DebugLevel() >= TXDebug::kUSERDEBUG)
+   if(DebugLevel() >= kUSERDEBUG)
       Info("TXUrl", "List of servers to connect to is [%s]",
                     listOfMachines.Data());
 
@@ -105,7 +105,7 @@ TXUrl::TXUrl(TString Urls) : fIsValid(kTRUE)
       fIsValid = kFALSE;
    }
 
-   if(DebugLevel() >= TXDebug::kHIDEBUG)
+   if(DebugLevel() >= kHIDEBUG)
       Info("TXUrl", "Remote file to open is [%s]", fPathName.Data());
 
    if (fIsValid) {
@@ -114,7 +114,7 @@ TXUrl::TXUrl(TString Urls) : fIsValid(kTRUE)
       if (fUrlArray.size() <= 0)
 	 fIsValid = kFALSE;
 
-      if(DebugLevel() >= TXDebug::kUSERDEBUG)
+      if(DebugLevel() >= kUSERDEBUG)
 	 ShowUrls();
    }
 
@@ -203,18 +203,18 @@ void TXUrl::CheckPort(TString &machine)
    if(commaPos == kNPOS) {
       // Port not specified
 
-      if(DebugLevel() >= TXDebug::kHIDEBUG)
+      if(DebugLevel() >= kHIDEBUG)
 	 Warning("checkPort",
 		 "TCP port not specified for host %s. Trying to get it from /etc/services...", machine.Data());
 
       Int_t prt = gSystem->GetServiceByName("rootd");
 
       if(prt <= 0) {
-	 if(DebugLevel() >= TXDebug::kHIDEBUG)
+	 if(DebugLevel() >= kHIDEBUG)
 	    Warning("checkPort", "Service %s not specified in /etc/services; using default IANA tcp port 1094", PROTO);
 	 machine += ":1094";
       } else {
-         if (DebugLevel() >= TXDebug::kHIDEBUG)
+         if (DebugLevel() >= kHIDEBUG)
      	    Info("checkPort", "Found tcp port %d in /etc/service", prt);
 
 	 machine += ":";
@@ -259,10 +259,10 @@ Bool_t TXUrl::ConvertSingleDNSAlias(UrlArray& urls, TString hostname,
 
    if(specifiedPort) {
       port = tmp.GetPort();
-      if(DebugLevel() >= TXDebug::kHIDEBUG)
+      if(DebugLevel() >= kHIDEBUG)
 	 Info("ConvertSingleDNSAlias","Resolving %s:%d.", tmp.GetHost(), port);
    } else
-      if(DebugLevel() >= TXDebug::kHIDEBUG)
+      if(DebugLevel() >= kHIDEBUG)
 	 Info("ConvertSingleDNSAlias","Resolving %s.", tmp.GetHost());
 
    TInetAddress iaddr = gSystem->GetHostByName(tmp.GetHost());
@@ -298,7 +298,7 @@ Bool_t TXUrl::ConvertSingleDNSAlias(UrlArray& urls, TString hostname,
       else
 	 tmpaddr += c.GetHostName();
 
-      if(DebugLevel() >= TXDebug::kHIDEBUG)
+      if(DebugLevel() >= kHIDEBUG)
 	 Info("ConvertSingleDNSAlias","Found host %s", tmpaddr.Data() );
 
       if(specifiedPort) {

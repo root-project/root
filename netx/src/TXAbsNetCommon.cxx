@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXAbsNetCommon.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -113,7 +113,7 @@ void TXAbsNetCommon::SetParm(const char *parm, int val)
    parmName = "Root.";
    parmName += parm;
 
-   if (DebugLevel() >= TXDebug::kUSERDEBUG)
+   if (DebugLevel() >= kUSERDEBUG)
       Info("TXAbsNetCommon::SetParm","Setting %s to %d", parmName.Data(), val);
 
    gEnv->SetValue(parmName.Data(), val);
@@ -129,7 +129,7 @@ void TXAbsNetCommon::SetParm(const char *parm, double val)
    parmName = "Root.";
    parmName += parm;
 
-   if (DebugLevel() >= TXDebug::kUSERDEBUG)
+   if (DebugLevel() >= kUSERDEBUG)
       Info("TXAbsNetCommon::SetParm","Setting %s to %f", parmName.Data(), val);
    gEnv->SetValue(parmName.Data(), val);
 }

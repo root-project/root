@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXInbutBuffer.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXInputBuffer.cxx,v 1.1 2004/08/20 23:23:51 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -15,10 +15,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <sys/time.h>
+#include <stdio.h>
 #include "TXInputBuffer.h"
-#include "TXMutexLocker.h"
+#include "TEnv.h"
 #include "TError.h"
-
 
 using namespace std;
 
@@ -30,9 +31,10 @@ Int_t TXInputBuffer::MsgForStreamidCnt(Short_t streamid)
     Int_t cnt = 0;
     TXMessage *m = 0;
 
-    for (fMsgIter = fMsgQue.begin(); fMsgIter != fMsgQue.end(); ++fMsgIter) {
-       m = *fMsgIter;
-       if (m->MatchStreamid(streamid))
+    list<TXMessage *>::iterator i;
+    for (i = fMsgQue.begin(); i != fMsgQue.end(); ++i) {
+       m = *i;
+       if (m && m->MatchStreamid(streamid))
           cnt++;
     }
 
@@ -45,14 +47,14 @@ TCondition *TXInputBuffer::GetSyncObjOrMakeOne(Short_t streamid)
    // Gets the right sync obj to wait for messages for a given streamid
    // If the semaphore is not available, it creates one.
 
-   TCondition *cnd;
+   TCondition *cnd = 0;
    map<Short_t, TCondition *>::iterator iter;
 
    {
-      TXMutexLocker mtx(fMutex);
+      R__LOCKGUARD(fMutex);
       iter = fSyncobjRepo.find(streamid);
       if (iter == fSyncobjRepo.end()) {
-         cnd = new TCondition();
+         cnd = new TCondition(fMutex);
          if (!cnd) {
 	    Error("TXInputBuffer::GetSyncObjOrMakeOne",
 	          "Fatal ERROR *** Object creation with new failed !"
@@ -60,21 +62,24 @@ TCondition *TXInputBuffer::GetSyncObjOrMakeOne(Short_t streamid)
 	    gSystem->Abort();
          }
          fSyncobjRepo[ streamid ] = cnd;
-      } else
+      } else {
          cnd = iter->second;
+      }
+
    }
-
-  return cnd;
+   return cnd;
 }
-
-
 
 //_______________________________________________________________________
 TXInputBuffer::TXInputBuffer()
 {
    // Constructor
 
-   fMutex = new TMutex(kTRUE);
+   // Initialization of data structures mutex
+   if (!(fMutex = new TMutex(kTRUE))) 
+      Error("TXInputBuffer", "can't create mutex for data"
+                               " structures: out of system resources"); 
+   // Reset queue
    fMsgQue.clear();
 }
 
@@ -82,6 +87,12 @@ TXInputBuffer::TXInputBuffer()
 TXInputBuffer::~TXInputBuffer()
 {
    // Destructor
+
+   // Delete all the syncobjs
+   {
+      R__LOCKGUARD(fMutex);
+      fSyncobjRepo.clear();
+   }
 
    SafeDelete(fMutex);
 }
@@ -91,22 +102,28 @@ Int_t TXInputBuffer::PutMsg(TXMessage* m)
 {
    // Put message in the list
 
-   TCondition *cnd;
+   TCondition *cnd = 0;
+   Int_t sz = 0, sid = 0;
 
    {
-      TXMutexLocker mtx(fMutex);
-
+      R__LOCKGUARD(fMutex);
       fMsgQue.push_back(m);
+      sz = MexSize();
 
       // Is anybody sleeping ?
-      cnd = GetSyncObjOrMakeOne( m->HeaderSID() );
+      if (m)
+         cnd = GetSyncObjOrMakeOne( m->HeaderSID() );
+
+      if (m)
+          sid = m->HeaderSID();
    }
 
-   cnd->Signal();
+   // Now we signal to whoever is waiting that we added a new one
+   if (m && cnd)
+      cnd->Signal();
 
-   return MexSize();
+   return sz;
 }
-
 
 //_______________________________________________________________________
 TXMessage *TXInputBuffer::GetMsg(Short_t streamid, Int_t secstimeout)
@@ -115,50 +132,74 @@ TXMessage *TXInputBuffer::GetMsg(Short_t streamid, Int_t secstimeout)
    // If there are no TXMessages for the streamid, it waits for a number
    // of seconds
 
-   TCondition *cv;
-   TXMessage *res, *m;
-   Int_t cond_ret;
+   TCondition *cv = 0;
+   TXMessage *res = 0;
 
-   res = 0;
+   res = RetrieveMsg(streamid);
 
-   {
-      TXMutexLocker mtx(fMutex);
+   if (!res) {
 
-      if (MsgForStreamidCnt(streamid) > 0) {
+      // Find the cond where to wait for a msg
+      cv = GetSyncObjOrMakeOne(streamid);
 
-         // If there are messages to dequeue, we pick the oldest one
-         for (fMsgIter = fMsgQue.begin(); fMsgIter != fMsgQue.end(); ++fMsgIter) {
-            m = *fMsgIter;
-            if (m->MatchStreamid(streamid)) {
-               res = *fMsgIter;
-	       fMsgQue.erase(fMsgIter);
-	       break;
+      for (int k = 0; k < secstimeout; k++) {
+
+         struct timespec timeout;
+         timeout.tv_sec = time(0)+2;
+         timeout.tv_nsec = 0;
+
+         Int_t cr = 0;
+
+         // We have to lock the mtx before going to wait,
+         // to avoid missing a signal from PutMsg.
+         {
+            R__LOCKGUARD(fMutex);
+
+            // Check whether any message arrived in the meantime.
+            res = RetrieveMsg(streamid);
+            // If not, wait for the next (remember: the mtx is 
+            // unlocked internally).
+            if (!res) {
+               cr = cv->TimedWait(timeout.tv_sec);
             }
          }
+
+         // If we found something we are done
+         if (res) break;
+
+         // If we have been awakened, there might be something 
+         if (!cr)
+            res = RetrieveMsg(streamid);
+
+         // If we found something we are done
+         if (res) break;
       }
    }
 
-   if (!res) {
-      {
-         TXMutexLocker mtx(fMutex);
-         cv = GetSyncObjOrMakeOne(streamid);
-      }
+   return res;
+}
 
-      // Remember, the wait primitive internally unlocks the mutex!
-      cond_ret = cv->TimedWait(time(0) + secstimeout, 0);
-      {
-         TXMutexLocker mtx(fMutex);
-         // If there are messages to dequeue, we pick the oldest one
-         for (fMsgIter = fMsgQue.begin(); fMsgIter != fMsgQue.end(); ++fMsgIter) {
-            m = *fMsgIter;
-            if (m->MatchStreamid(streamid)) {
-	       res = *fMsgIter;
-               fMsgQue.erase(fMsgIter);
-	       break;
-            }
-         }
-      }
-  }
+//_______________________________________________________________________
+TXMessage *TXInputBuffer::RetrieveMsg(Short_t streamid)
+{
+   // Gets the first TXMessage from the queue, given a matching streamid.
+   // If there are no TXMessages for the streamid, it waits for a number
+   // of seconds
 
-  return res;
+   TXMessage *res = 0, *m = 0;
+
+   R__LOCKGUARD(fMutex);
+
+   // If there are messages to dequeue, we pick the oldest one
+   list<TXMessage *>::iterator i;
+   for (i = fMsgQue.begin(); i != fMsgQue.end(); ++i) {
+      m = *i;
+      if (m && m->MatchStreamid(streamid)) {
+         res = m;
+         fMsgQue.erase(i);
+         break;
+      }
+   }
+
+   return res;
 }

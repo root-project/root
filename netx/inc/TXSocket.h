@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXSocket.h,v 1.3 2004/09/08 10:21:40 brun Exp $
+// @(#)root/netx:$Name:  $:$Id: TXSocket.h,v 1.4 2004/12/08 14:34:18 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -28,20 +28,11 @@
 #ifndef ROOT_TSocket
 #include "TSocket.h"
 #endif
-#ifndef ROOT_TSemaphore
-#include "TSemaphore.h"
-#endif
 #ifndef ROOT_TSystem
 #include "TSystem.h"
 #endif
-#ifndef ROOT_TMonitor
-#include "TMonitor.h"
-#endif
 #ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TMutex
-#include "TMutex.h"
 #endif
 #ifndef __CINT__
 #include <poll.h>
@@ -65,23 +56,15 @@ struct TXSocketConnectParms {
 
 class TXSocket : public TSocket {
 
+friend class TXPhyConnection;
+
 private:
    Bool_t               fASYNC;
-   TSemaphore          *fConnectSem;
    TXSocketConnectParms fHost2contact;  // status connection thread
    Int_t                fRequestTimeout;
 
-   TMonitor             *fReadMonitor;     // monitor read from socket
-   TMonitor             *fWriteMonitor;    // monitor write on socket
-
-   TMutex               *fMonMutex;
-   Int_t                fReadMonitorActCnt, fWriteMonitorActCnt;
-
-   void ReadMonitorActivate();
-   void ReadMonitorDeactivate();
-   void WriteMonitorActivate();
-   void WriteMonitorDeactivate();
-
+protected:
+   TSocket *ExtractSocket(); // Extract TSocket part
 
 public:
    TXSocket(TString host, Int_t port, Int_t tcpwindowsize = -1);

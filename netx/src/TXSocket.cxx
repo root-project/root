@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXSocket.cxx,v 1.3 2004/08/20 23:26:05 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXSocket.cxx,v 1.4 2004/09/08 10:21:40 brun Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -20,10 +20,8 @@
 #include "TXSocket.h"
 #include "TEnv.h"
 #include "TError.h"
-#include "TROOT.h"
 #include "TException.h"
 #include "TXDebug.h"
-#include "TXMutexLocker.h"
 
 ClassImp(TXSocket);
 
@@ -37,92 +35,16 @@ TXSocket::TXSocket(TString TcpAddress, Int_t TcpPort, Int_t TcpWindowSize)
    fHost2contact.TcpAddress = TcpAddress;
    fHost2contact.TcpPort = TcpPort;
    fHost2contact.TcpWindowSize = TcpWindowSize;
-   fConnectSem = 0;
    fRequestTimeout = gEnv->GetValue("XNet.RequestTimeout",
                                      DFLT_REQUESTTIMEOUT);
    fASYNC = gEnv->GetValue("XNet.GoAsynchronous", DFLT_GOASYNC);
 
-   fMonMutex = new TMutex(kTRUE);
-
-   if (!fMonMutex)
-      Error("TXPhyConnection",
-            "can't create mutex for TMonitor protection: out of system resources");
-
-   fWriteMonitor = 0;
-   fReadMonitor  = 0;
-
-   fReadMonitorActCnt = 0;
-   fWriteMonitorActCnt = 0;
 }
 
 //_____________________________________________________________________________
 TXSocket::~TXSocket()
 {
    // Destructor
-   if (fWriteMonitor)
-      fWriteMonitor->DeActivateAll();
-
-   if (fReadMonitor)
-      fReadMonitor->DeActivateAll();
-
-   SafeDelete( fWriteMonitor );
-   SafeDelete( fReadMonitor );
-
-   SafeDelete( fMonMutex );
-
-}
-
-
-
-
-//_____________________________________________________________________________
-void TXSocket::ReadMonitorActivate() {
-   TXMutexLocker mtx(fMonMutex);
-
-   if (!fReadMonitorActCnt)
-      fReadMonitor->Activate(this);
-
-   fReadMonitorActCnt++;
-
-}
-
-//_____________________________________________________________________________
-void TXSocket::ReadMonitorDeactivate() {
-   TXMutexLocker mtx(fMonMutex);
-
-   if (fReadMonitorActCnt > 0) {
-      fReadMonitorActCnt--;
-
-
-      if (!fReadMonitorActCnt)
-	 fReadMonitor->DeActivateAll();
-   }
-}
-
-//_____________________________________________________________________________
-void TXSocket::WriteMonitorActivate() {
-   TXMutexLocker mtx(fMonMutex);
-
-   if (!fWriteMonitorActCnt)
-      fWriteMonitor->Activate(this);
-
-   fWriteMonitorActCnt++;
-
-}
-
-//_____________________________________________________________________________
-void TXSocket::WriteMonitorDeactivate() {
-   TXMutexLocker mtx(fMonMutex);
-
-
-   if (fWriteMonitorActCnt > 0) {
-      fWriteMonitorActCnt--;
-
-      if (!fWriteMonitorActCnt)
-	 fWriteMonitor->DeActivateAll();
-
-   }
-
 }
 
 //_____________________________________________________________________________
@@ -135,25 +57,18 @@ Int_t TXSocket::RecvRaw(void* buffer, Int_t length, ESendRecvOptions opt)
    Int_t bytesread = 0, n;
 
    SetOption(kNoBlock, 0);
-   if (!fASYNC)
-      ReadMonitorActivate();
 
    // We cycle until we have all the data we are waiting for
    // Or until a timeout occurs
    starttime = time(0);
    while (bytesread < length) {
 
-   TSocket *s = (TSocket *)-1;
-
+      Int_t ReadyToRecv = 0;
       // We cycle on the poll, ignoring the possible interruptions
       do {
          // If too much time has elapsed, then we return an error
          if ((time(0) - starttime) > fRequestTimeout) {
-
-            if (!fASYNC)
-	       ReadMonitorDeactivate();
-
-            if (!fASYNC || (DebugLevel() >= TXDebug::kDUMPDEBUG))
+            if (!fASYNC || (DebugLevel() >= kDUMPDEBUG))
                Error("RecvRaw","Request timed out %d seconds reading %d bytes"
                      " from socket %d (server[%s:%d])",
                      fRequestTimeout, length, fSocket,
@@ -163,30 +78,21 @@ Int_t TXSocket::RecvRaw(void* buffer, Int_t length, ESendRecvOptions opt)
          }
 
          // Wait for a socket ready for receiving
-         s = fReadMonitor->Select(1000);
+         ReadyToRecv = TSocket::Select(TSocket::kRead,1000);
 
-      } while (s == (TSocket *)-1);
+      } while (!ReadyToRecv);
 
-      if (!s->IsValid()) {
-         if (!fASYNC)
-	    ReadMonitorDeactivate();
-
+      if (ReadyToRecv < 0)
          return TXSOCK_ERR;
-      }
 
       n = TSocket::RecvRaw((char *)buffer + bytesread, length - bytesread, opt);
-      if (!n) {
-         if (!fASYNC)
-            ReadMonitorDeactivate();
+      if (!n)
          return (0);
-      }
 
       bytesread += n;
 
    } // while
 
-   if (!fASYNC)
-      ReadMonitorDeactivate();
    return bytesread;
 }
 
@@ -204,14 +110,13 @@ Int_t TXSocket::SendRaw(const void* buffer, Int_t length, ESendRecvOptions opt)
       return TXSOCK_ERR;
 
    SetOption(kNoBlock, 0);
-   WriteMonitorActivate();
 
    // We cycle until we have all the data we are waiting for
    // Or until a timeout occurs
    starttime = time(0);
    while (byteswritten < length) {
 
-      TSocket *s = (TSocket *)-1;
+      Int_t ReadyToWrite = 0;
 
       do {
          // If too much time has elapsed, then we return an error
@@ -220,36 +125,27 @@ Int_t TXSocket::SendRaw(const void* buffer, Int_t length, ESendRecvOptions opt)
                   " from socket %d (server[%s:%d])", fRequestTimeout, length,
                   fSocket, GetInetAddress().GetHostName(), GetPort());
 
-	    //WriteMonitorDeactivate();
-
 	    return TXSOCK_ERR_TIMEOUT;
          }
 
          // Wait for a socket ready for sending
-         s = fWriteMonitor->Select(1000);
+         ReadyToWrite = TSocket::Select(TSocket::kWrite,1000);
 
-      } while (s == (TSocket *)-1);
+      } while (!ReadyToWrite);
 
-      if (!s->IsValid()) {
-	 //WriteMonitorDeactivate();
-
+      if (ReadyToWrite < 0)
          return TXSOCK_ERR;
-      }
 
       n = TSocket::SendRaw((char *)buffer + byteswritten,
                                    length - byteswritten, opt);
-      if (!n) {
-	 //WriteMonitorDeactivate();
+      if (!n)
          return (0);
-      }
 
       byteswritten += n;
 
    } // while
 
-   WriteMonitorDeactivate();
-
-return byteswritten;
+   return byteswritten;
 }
 
 //_____________________________________________________________________________
@@ -282,23 +178,26 @@ void TXSocket::Create(TString host, Int_t port, Int_t tcpwindowsize)
 {
    // Create a connection
 
-   Assert(gROOT);
    Assert(gSystem);
 
-   if (DebugLevel() >= TXDebug::kHIDEBUG)
+   if (DebugLevel() >= kHIDEBUG)
       Info("Create","Setting fService to %s", gSystem->GetServiceByPort(port));
    fService = gSystem->GetServiceByPort(port);
 
    fAddress = gSystem->GetHostByName(host.Data());
 
-   if (DebugLevel() >= TXDebug::kHIDEBUG)
+   if (DebugLevel() >= kHIDEBUG)
       Info("Create","Setting fAddress.fPort to %d", port);
 
    fAddress.fPort = port;
    SetName(fAddress.GetHostName());
    SetTitle(fService);
 
-   if (DebugLevel() >= TXDebug::kHIDEBUG)
+   fUrl = host;
+   fTcpWindowSize = tcpwindowsize;
+   fServType = TSocket::kROOTD;
+
+   if (DebugLevel() >= kHIDEBUG)
       Info("Create","Calling TUnixSystem::OpenConnection with params"
            " %s:%d tcpwin=%d", host.Data(), port, tcpwindowsize);
 
@@ -320,24 +219,26 @@ void TXSocket::Create(TString host, Int_t port, Int_t tcpwindowsize)
 
    if (fSocket == -1) {
       fAddress.fPort = -1;
-      if(DebugLevel() >= TXDebug::kHIDEBUG)
+      if(DebugLevel() >= kHIDEBUG)
          Info("Create","Connection failed. Setting fSocket to -1");
-   }
-   else {
-
-      fWriteMonitor   = new TMonitor;
-      fReadMonitor    = new TMonitor;
-      fWriteMonitor->Add(this, TMonitor::kWrite);
-      fReadMonitor->Add(this, TMonitor::kRead);
-
-      fWriteMonitor->DeActivateAll();
-      fReadMonitor->DeActivateAll();
-
-      fReadMonitorActCnt = 0;
-      fWriteMonitorActCnt = 0;
-
+   } else {
+      // Add to the list
       gROOT->GetListOfSockets()->Add(this);
-      if (fASYNC)
-         ReadMonitorActivate();
    }
+}
+
+//____________________________________________________________________________
+TSocket *TXSocket::ExtractSocket()
+{
+   // Return copy of the underlying TSocket part and set the descriptor
+   // to -1 (so that the connection is not closed when the TXSocket is
+   // deleted).
+   // Used to save an open connection to rootd daemons
+
+   TSocket *sock = 0;
+   if (IsValid()) {
+      sock = new TSocket((const TSocket &)(*this));
+      SetDescriptor(-1);
+   }
+   return sock;
 }

@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetConn.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetConn.h,v 1.3 2004/12/08 14:34:18 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -44,6 +44,8 @@
 #include "TUrl.h"
 #endif
 
+class TXConnectionMgr;
+
 class TXNetConn {
 
 public:
@@ -84,6 +86,7 @@ public:
    Int_t            GetLogConnID() const { return fLogConnID; }
    TUrl            *GetLBSUrl() const { return fLBSUrl; }
    XErrorCode       GetOpenError() const { return fOpenError; }
+   TSocket         *GetRootdSocket() const { return fLastRootdSocket; }
    XReqErrorType    GoToAnotherServer(TString, Int_t, Int_t);
    Bool_t           IsConnected() const { return fConnected; }
    Int_t            LastBytesRecv();
@@ -107,6 +110,8 @@ public:
    void             SetSID(kXR_char *sid);
    inline void      SetUrl(TUrl thisUrl) { fUrl = thisUrl; }
 
+   static void      SetTXConnectionMgr(TXConnectionMgr *connmgr);
+
 private:
 
    TString             fClientHostDomain; // Save the client's domain name
@@ -128,6 +133,11 @@ private:
                                          // (see enum ServerType)
    TUrl                fUrl;
 
+   TSocket            *fLastRootdSocket;  // rootd case: socket of the last open
+                                          // connection
+   Int_t               fLastRootdProto;  // rootd case: remote server protocol
+
+   static TXConnectionMgr *fgConnectionManager; //Connection Manager
 
    Bool_t              CheckErrorStatus(TXMessage *, Short_t &, char *);
    void                CheckPort(Int_t &port);

@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXDebug.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -22,28 +22,15 @@
 #include "TEnv.h"
 #endif
 
-#define DebugLevel() TXDebug::Instance()->GetDebugLevel()
+#define DebugLevel() gXDebugLevel
 
-class TXDebug {
-
-protected:
-   TXDebug();
-   ~TXDebug();
-
-public:
-
-   enum {
-      kNODEBUG   = 0,
-      kUSERDEBUG = 1,
-      kHIDEBUG   = 2,
-      kDUMPDEBUG = 3
-   };
-
-   Short_t         fDbgLevel;
-   static TXDebug *fgInstance;
-
-   Short_t         GetDebugLevel(void) { return fDbgLevel; }
-   static TXDebug* Instance();
+enum EXDebugLevel {
+   kNODEBUG   = 0,
+   kUSERDEBUG = 1,
+   kHIDEBUG   = 2,
+   kDUMPDEBUG = 3
 };
+
+R__EXTERN Short_t gXDebugLevel;
 
 #endif

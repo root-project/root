@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetConn.cxx,v 1.6 2004/09/17 11:12:06 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetConn.cxx,v 1.7 2004/11/05 17:23:47 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -42,6 +42,8 @@ extern TEnv *gEnv;
 static XrdSecProtocol *(*getp)(const struct sockaddr &,
                                const XrdSecParameters &,
                                XrdOucErrInfo*) = 0;
+
+TXConnectionMgr *TXNetConn::fgConnectionManager = 0;
 
 //
 // Implementation of TXPhyConnLocker
@@ -90,7 +92,7 @@ void ParseRedir(TXMessage* xmsg, Int_t &port, TString &host, TString &token)
 
 //_____________________________________________________________________________
 TXNetConn::TXNetConn(): fOpenError((XErrorCode)0), fConnected(kFALSE),
-                        fLastNetopt(0), fLBSUrl(0), fUrl("")
+                        fLastNetopt(0), fLBSUrl(0), fUrl(""), fLastRootdProto(0)
 {
    // Constructor
 
@@ -107,6 +109,10 @@ TXNetConn::TXNetConn(): fOpenError((XErrorCode)0), fConnected(kFALSE),
    fGlobalRedirCnt = 0;
    fMaxGlobalRedirCnt = gEnv->GetValue("XNet.MaxRedirectCount",
                                        DFLT_MAXREDIRECTCOUNT);
+
+   // Init connection manager
+   if (fgConnectionManager)
+      fgConnectionManager->Init();
 }
 
 //_____________________________________________________________________________
@@ -131,9 +137,9 @@ Short_t TXNetConn::Connect(TString Host, Int_t Port, Int_t netopt)
    Short_t logid;
    logid = -1;
 
-   logid = ConnectionManager->Connect(Host.Data(), Port, netopt);
+   logid = fgConnectionManager->Connect(Host.Data(), Port, netopt);
 
-   if (DebugLevel() >= TXDebug::kHIDEBUG)
+   if (DebugLevel() >= kHIDEBUG)
       Info("Connect", "Connect(%s, %d, %d) returned %d",
                       Host.Data(), Port, netopt, logid );
 
@@ -156,7 +162,7 @@ void TXNetConn::Disconnect(Bool_t ForcePhysicalDisc)
 {
    // Disconnect
 
-   ConnectionManager->Disconnect(GetLogConnID(), ForcePhysicalDisc);
+   fgConnectionManager->Disconnect(GetLogConnID(), ForcePhysicalDisc);
    fConnected = kFALSE;
 }
 
@@ -214,7 +220,7 @@ TXMessage *TXNetConn::ClientServerCmd(ClientRequest *req, const void *reqMoreDat
 
       reqtmp = *req;
 
-      if (DebugLevel() >= TXDebug::kDUMPDEBUG)
+      if (DebugLevel() >= kDUMPDEBUG)
          ROOT::smartPrintClientHeader(&reqtmp);
 
       ROOT::clientMarshall(&reqtmp);
@@ -288,7 +294,7 @@ Bool_t TXNetConn::SendGenCommand(ClientRequest *req, const void *reqMoreData,
 
       // Send the cmd, dealing automatically with redirections and
       // redirections on error
-      if (DebugLevel() >= TXDebug::kHIDEBUG)
+      if (DebugLevel() >= kHIDEBUG)
          Info("SendGenCommand","Calling ClientServerCmd...");
 
       TXMessage *cmdrespMex = ClientServerCmd(req, reqMoreData,
@@ -311,7 +317,7 @@ Bool_t TXNetConn::SendGenCommand(ClientRequest *req, const void *reqMoreData,
          // On serious communication error we retry for a number of times,
          // waiting for the server to come back
          if (!cmdrespMex || cmdrespMex->IsError()) {
-            if (DebugLevel() >= TXDebug::kHIDEBUG)
+            if (DebugLevel() >= kHIDEBUG)
                Info("SendGenCommand", "Communication error detected with [%s:%d].",
                      fUrl.GetHost(), fUrl.GetPort());
 
@@ -337,8 +343,14 @@ Bool_t TXNetConn::SendGenCommand(ClientRequest *req, const void *reqMoreData,
 
 	    // If the answer was not (or not totally) positive, we must
             // investigate on the result
-	    if (!resp)
+	    if (!resp) {
                abortcmd = CheckErrorStatus(cmdrespMex, retry, CmdName);
+
+               // An open request which fails for an application reason
+               // like kxr_wait must have its kXR_Refresh bit cleared.
+              if (req->header.requestid == kXR_open)
+                 req->open.options &= (!kXR_refresh);
+            }
 
 	    if (retry > kXR_maxReqRetry) {
                Error("SendGenCommand",
@@ -372,7 +384,7 @@ Bool_t TXNetConn::CheckHostDomain(TString hostToCheck, TString allow, TString de
    // Get the domain for the url to check
    domain = GetDomainToMatch(hostToCheck);
 
-   if (DebugLevel() >= TXDebug::kHIDEBUG)
+   if (DebugLevel() >= kHIDEBUG)
       Info("CheckHostDomain", "Resolved [%s]'s domain name into [%s]",
 	   hostToCheck.Data(), domain.Data());
 
@@ -425,7 +437,7 @@ Bool_t TXNetConn::CheckHostDomain(TString hostToCheck, TString allow, TString de
 
 	 // if the domain matches any regexp for the domains to allow --> access granted
 	 if (domain.Index(reAllow) != kNPOS) {
-	    if (DebugLevel() >= TXDebug::kHIDEBUG)
+	    if (DebugLevel() >= kHIDEBUG)
 	       Info("CheckHostDomain",
                     "Access granted to the domain of [%s] (expr: [%s]).",
 		    hostToCheck.Data(), tmp.Data());
@@ -520,7 +532,7 @@ XReqErrorType TXNetConn::WriteToServer(ClientRequest *reqtmp, ClientRequest *req
    // Also note that the lock is removed at the end of the block (Stroustroup
    // page 365)
    {
-      TXPhyConnLocker pcl(ConnectionManager->GetConnection(fLogConnID)
+      TXPhyConnLocker pcl(fgConnectionManager->GetConnection(fLogConnID)
                                            ->GetPhyConnection());
 
       // Now we write the request to the logical connection through the
@@ -528,7 +540,7 @@ XReqErrorType TXNetConn::WriteToServer(ClientRequest *reqtmp, ClientRequest *req
 
       Short_t len = sizeof(req->header);
 
-      Int_t writeCount = ConnectionManager->WriteRaw(LogConnID, reqtmp, len,
+      Int_t writeCount = fgConnectionManager->WriteRaw(LogConnID, reqtmp, len,
                                                      kDefault);
       fLastDataBytesSent = req->header.dlen;
 
@@ -545,14 +557,14 @@ XReqErrorType TXNetConn::WriteToServer(ClientRequest *reqtmp, ClientRequest *req
       // If we got an error we can safely skip this... no need to get more
       if (req->header.dlen > 0) {
 
-         if (DebugLevel() >= TXDebug::kHIDEBUG)
+         if (DebugLevel() >= kHIDEBUG)
             Info("WriteToServer",
                  "Sending %d bytes of DATA to the server [%s:%d].",
                  req->header.dlen, fUrl.GetHost(), fUrl.GetPort());
 
          // Now we write the data associated to the request. Through the
          //  connection manager
-         writeCount = ConnectionManager->WriteRaw(LogConnID, reqMoreData,
+         writeCount = fgConnectionManager->WriteRaw(LogConnID, reqMoreData,
                                                   req->header.dlen, kDefault);
 
          // A complete communication failure has to be handled later, but we
@@ -607,7 +619,7 @@ Bool_t TXNetConn::CheckErrorStatus(TXMessage *mex, Short_t &Retry, char *CmdName
       body_wait = (struct ServerResponseBody_Wait *)mex->GetData();
 
       if (body_wait) {
-         if (DebugLevel() >= TXDebug::kUSERDEBUG) {
+         if (DebugLevel() >= kUSERDEBUG) {
             if (mex->DataLen() > 4)
                Info("SendGenCommand", "Server [%s:%d] requested %d seconds"
                     " of wait. Server message is %s",
@@ -651,7 +663,7 @@ TXMessage *TXNetConn::ReadPartialAnswer(XReqErrorType &errorType,
    if (errorType == kOK) {
 
       len = sizeof(ServerResponseHeader);
-      if(DebugLevel() >= TXDebug::kHIDEBUG)
+      if(DebugLevel() >= kHIDEBUG)
          Info("ReadPartialAnswer",
               "Reading a TXMessage from the server [%s:%d]...",
               fUrl.GetHost(), fUrl.GetPort());
@@ -661,7 +673,7 @@ TXMessage *TXNetConn::ReadPartialAnswer(XReqErrorType &errorType,
 
       // Beware! Now Xmsg contains ALSO the information about the esit of
       // the communication at low level.
-      Xmsg = ConnectionManager->ReadMsg(fLogConnID, kDefault);
+      Xmsg = fgConnectionManager->ReadMsg(fLogConnID, kDefault);
 
       if(Xmsg)
          fLastDataBytesRecv = Xmsg->DataLen();
@@ -683,7 +695,7 @@ TXMessage *TXNetConn::ReadPartialAnswer(XReqErrorType &errorType,
          Xmsg->Unmarshall();
    }
 
-   if (DebugLevel() >= TXDebug::kDUMPDEBUG)
+   if (DebugLevel() >= kDUMPDEBUG)
       if (Xmsg != 0)
          ROOT::smartPrintServerHeader(&Xmsg->fHdr);
 
@@ -726,7 +738,7 @@ TXMessage *TXNetConn::ReadPartialAnswer(XReqErrorType &errorType,
                      Xmsg->GetData(), Xmsg->DataLen());
 
          // Dump the buffer tmpMoreData
-         if (DebugLevel() >= TXDebug::kDUMPDEBUG) {
+         if (DebugLevel() >= kDUMPDEBUG) {
             Info ("ReadPartialAnswer","Dumping read data...");
             for(Int_t jj = 0; jj < Xmsg->DataLen(); jj++) {
                printf("0x%.2x ", *( ((kXR_char *)Xmsg->GetData()) + jj ) );
@@ -736,7 +748,7 @@ TXMessage *TXNetConn::ReadPartialAnswer(XReqErrorType &errorType,
          TotalBlkSize += Xmsg->DataLen();
 
       } else {
-         if (DebugLevel() >= TXDebug::kHIDEBUG) {
+         if (DebugLevel() >= kHIDEBUG) {
              Info("ReadPartialAnswer",
                  "Server [%s:%d] did not answer OK. Resp status is [%s]",
                  fUrl.GetHost(), fUrl.GetPort(),
@@ -816,7 +828,7 @@ Int_t TXNetConn::LastBytesSent(void)
 {
    // Return number of bytes sent during last transaction
 
-   return ConnectionManager->GetConnection(fLogConnID)->LastBytesSent();
+   return fgConnectionManager->GetConnection(fLogConnID)->LastBytesSent();
 }
 
 //_____________________________________________________________________________
@@ -824,7 +836,7 @@ Int_t TXNetConn::LastBytesRecv(void)
 {
    // Return number of bytes received during last transaction
 
-   return ConnectionManager->GetConnection(fLogConnID)->LastBytesRecv();
+   return fgConnectionManager->GetConnection(fLogConnID)->LastBytesRecv();
 }
 
 //_____________________________________________________________________________
@@ -855,65 +867,81 @@ Bool_t TXNetConn::GetAccessToSrv()
    // level functions.
 
    TXLogConnection *logconn = 0;
+   TXPhyConnection *phyconn = 0;
 
    // Now we are connected and we ask for the kind of the server
-   ConnectionManager->GetConnection(fLogConnID)->GetPhyConnection()->LockChannel();
+   fgConnectionManager->GetConnection(fLogConnID)->GetPhyConnection()->LockChannel();
    SetServerType(DoHandShake(fLogConnID));
-   ConnectionManager->GetConnection(fLogConnID)->GetPhyConnection()->UnlockChannel();
-
-   // Now we can start the reader thread in the phyconn, if needed
-   ConnectionManager->GetConnection(fLogConnID)->GetPhyConnection()->StartReader();
+   fgConnectionManager->GetConnection(fLogConnID)->GetPhyConnection()->UnlockChannel();
 
    switch (GetServerType()) {
    case kSTError:
       Info("GetAccessToSrv", "HandShake failed with server [%s:%d].",
                              fUrl.GetHost(), fUrl.GetPort());
-      ConnectionManager->Disconnect(fLogConnID, kTRUE);
+      fgConnectionManager->Disconnect(fLogConnID, kTRUE);
       return kFALSE;
 
    case TXNetConn::kSTNone:
       Info("GetAccessToSrv", "The server on [%s:%d] is unknown",
                              fUrl.GetHost(), fUrl.GetPort());
-      ConnectionManager->Disconnect(fLogConnID, kTRUE);
+      fgConnectionManager->Disconnect(fLogConnID, kTRUE);
       return kFALSE;
 
    case TXNetConn::kSTRootd:
-      if (DebugLevel() >= TXDebug::kHIDEBUG) {
+      if (DebugLevel() >= kHIDEBUG) {
          Info("GetAccessToSrv","Ok: the server on [%s:%d] is an old rootd."
                                " Turning ON back compatibility mode.",
                                 fUrl.GetHost(), fUrl.GetPort());
       }
-      // Send closing message to rootd (to avoid spurious error messages
-      // on the server side)
-      {
-         char sbuf[2*sizeof(Int_t)];
-         Int_t len = htonl(0);
-         memcpy(sbuf, &len, sizeof(Int_t));
-         Int_t kind = htonl((Int_t)kROOTD_BYE);
-         memcpy(sbuf+sizeof(Int_t), &kind, sizeof(Int_t));
-         ConnectionManager->GetConnection(fLogConnID)
-                          ->GetPhyConnection()->WriteRaw(sbuf, 2*sizeof(Int_t));
+      phyconn = 
+         fgConnectionManager->GetConnection(fLogConnID)->GetPhyConnection();
+      if (fLastRootdProto > 13) {
+         // Remote root supports optmized opening via TXNetFile:
+         // we can reuse the opened socket for TNetFile.
+         // This avoids remote double forking of rootd's.
+         fgConnectionManager->Disconnect(fLogConnID, kFALSE);
+         fLastRootdSocket = phyconn->SaveSocket();
+         fgConnectionManager->GarbageCollect();
+         fLastRootdSocket->SetRemoteProtocol(fLastRootdProto);
+      } else {
+         // We cannot reuse the connection for TNetFile:
+         // so we close it and perform the needed cleanup
+         // (but only if the remote rootd is not too old:
+         // the connection is already closed remotely)
+         if (fLastRootdProto) {
+            Int_t ibuf[2] = {0};
+            ibuf[0] = htonl(sizeof(Int_t));
+            ibuf[1] = htonl((Int_t)kROOTD_BYE);
+            phyconn->WriteRaw(ibuf, 2*sizeof(Int_t));
+         }
+         fgConnectionManager->Disconnect(fLogConnID, kFALSE);
+         fgConnectionManager->GarbageCollect();
       }
-      ConnectionManager->Disconnect(fLogConnID, kTRUE);
       break;
 
    case TXNetConn::kSTBaseXrootd:
-      if (DebugLevel() >= TXDebug::kHIDEBUG)
+      if (DebugLevel() >= kHIDEBUG)
          Info("GetAccessToSrv",
               "Ok: the server on [%s:%d] is a xrootd load balancer.",
               fUrl.GetHost(), fUrl.GetPort());
 
-      logconn = ConnectionManager->GetConnection(fLogConnID);
+      // Now we can start the reader thread in the phyconn, if needed
+      fgConnectionManager->GetConnection(fLogConnID)
+                         ->GetPhyConnection()->StartReader();
+      logconn = fgConnectionManager->GetConnection(fLogConnID);
       logconn->GetPhyConnection()->SetTTL(DLBD_TTL);// = DLBD_TTL;
       logconn->GetPhyConnection()->fServer = kBase;
       break;
 
    case TXNetConn::kSTDataXrootd:
-      if (DebugLevel() >= TXDebug::kHIDEBUG)
+      if (DebugLevel() >= kHIDEBUG)
          Info("GetAccessToSrv",
               "Ok, the server on [%s:%d] is a xrootd data server.",
               fUrl.GetHost(), fUrl.GetPort());
-      logconn = ConnectionManager->GetConnection(fLogConnID);
+      // Now we can start the reader thread in the phyconn, if needed
+      fgConnectionManager->GetConnection(fLogConnID)
+                         ->GetPhyConnection()->StartReader();
+      logconn = fgConnectionManager->GetConnection(fLogConnID);
       logconn->GetPhyConnection()->SetTTL(DATA_TTL);        // = DATA_TTL;
       logconn->GetPhyConnection()->fServer = kData;
       break;
@@ -925,7 +953,7 @@ Bool_t TXNetConn::GetAccessToSrv()
       if (logconn->GetPhyConnection()->IsLogged() == kNo)
          return DoLogin();
       else {
-         if (DebugLevel() >= TXDebug::kHIDEBUG)
+         if (DebugLevel() >= kHIDEBUG)
             Info("GetAccessToSrv", "Client already logged-in using this"
                  " physical channel (server [%s:%d]).",
                  fUrl.GetHost(), fUrl.GetPort());
@@ -953,16 +981,17 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
    initHS.fourth = (kXR_int32)host2net((UInt_t)4);
    initHS.fifth  = (kXR_int32)host2net((UInt_t)2012);
 
-   if (ConnectionManager->GetConnection(log)->GetPhyConnection()->fServer == kBase) {
+   if (fgConnectionManager->GetConnection(log)
+                          ->GetPhyConnection()->fServer == kBase) {
 
-      if (DebugLevel() >= TXDebug::kHIDEBUG)
+      if (DebugLevel() >= kHIDEBUG)
          Info("DoHandShake",
               "The physical channel is already bound to a load balancer"
               " server [%s:%d]. No handshake is needed.",
               fUrl.GetHost(), fUrl.GetPort());
 
       if (!fLBSUrl || !strlen(fLBSUrl->GetUrl())) {
-         if (DebugLevel() >= TXDebug::kHIDEBUG)
+         if (DebugLevel() >= kHIDEBUG)
             Info("DoHandShake", "Setting Load Balancer Server Url = \"%s\".",
                                 fUrl.GetUrl() );
 
@@ -976,9 +1005,10 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
       }
       return kSTBaseXrootd;
    }
-   if (ConnectionManager->GetConnection(log)->GetPhyConnection()->fServer == kData) {
+   if (fgConnectionManager->GetConnection(log)
+                          ->GetPhyConnection()->fServer == kData) {
 
-      if (DebugLevel() >= TXDebug::kHIDEBUG)
+      if (DebugLevel() >= kHIDEBUG)
          Info("DoHandShake",
               "The physical channel is already bound to the data server"
               " [%s:%d]. No handshake is needed.",
@@ -990,12 +1020,12 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
    // kind of server
    len = sizeof(initHS);
 
-   if (DebugLevel() >= TXDebug::kHIDEBUG)
+   if (DebugLevel() >= kHIDEBUG)
       Info("DoHandShake",
            "HandShake step 1: Sending %d bytes to the server [%s:%d].",
            len, fUrl.GetHost(), fUrl.GetPort());
 
-   writeCount = ConnectionManager->WriteRaw(log, &initHS, len, kDefault);
+   writeCount = fgConnectionManager->WriteRaw(log, &initHS, len, kDefault);
 
    if (writeCount != len) {
       Error("DoHandShake", "Error sending %d bytes to the server [%s:%d]",
@@ -1006,7 +1036,7 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
    // Read from server the first 4 bytes
    len = sizeof(type);
 
-   if (DebugLevel() >= TXDebug::kHIDEBUG)
+   if (DebugLevel() >= kHIDEBUG)
       Info("DoHandShake",
            "HandShake step 2: Reading %d bytes from the server [%s:%d]." ,
            len, fUrl.GetHost(), fUrl.GetPort());
@@ -1015,7 +1045,7 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
    // Read returns the return value of TSocket->RecvRaw... that returns the
    // return value of recv (unix low level syscall)
    //
-   readCount = ConnectionManager->ReadRaw(log, &type,
+   readCount = fgConnectionManager->ReadRaw(log, &type,
                                           len, kDefault); // Reads 4(2+2) bytes
 
    if (readCount != len) {
@@ -1032,11 +1062,11 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
    if (type == 0) { // ok, eXtended!
       len = sizeof(xbody);
 
-      if (DebugLevel() >= TXDebug::kHIDEBUG)
+      if (DebugLevel() >= kHIDEBUG)
          Info("DoHandShake", "HandShake step 3: Reading %d bytes from"
               " XRootd on server [%s:%d].", len, fUrl.GetHost(), fUrl.GetPort());
 
-      readCount = ConnectionManager->ReadRaw(log, &xbody,
+      readCount = fgConnectionManager->ReadRaw(log, &xbody,
                                              len, kDefault); // Read 12(4+4+4) bytes
       if (readCount != len) {
          Error("DoHandShake", "Error reading %d bytes from server [%s:%d]",
@@ -1052,19 +1082,19 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
       switch (xbody.msgval) {
       case kXR_DataServer:
          // This is a data server
-         if (DebugLevel() >= TXDebug::kHIDEBUG)
+         if (DebugLevel() >= kHIDEBUG)
             Info("DoHandShake",
                  "Data server found on [%s:%d].", fUrl.GetHost(), fUrl.GetPort());
          return kSTDataXrootd;
 
       case kXR_LBalServer:
          // This is a load balancing server
-         if (DebugLevel() >= TXDebug::kHIDEBUG)
+         if (DebugLevel() >= kHIDEBUG)
             Info("DoHandShake", "Load balancer server found.");
 
          if (!fLBSUrl || !strlen(fLBSUrl->GetUrl())) {
 
-            if (DebugLevel() >= TXDebug::kHIDEBUG)
+            if (DebugLevel() >= kHIDEBUG)
                Info("DoHandShake", "Setting Load Balancer Server Url = \"%s\".",
                     fUrl.GetUrl() );
 
@@ -1085,11 +1115,54 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
    } else {
       // We are here if it wasn't an XRootd
       // and we need to complete the reading
-      if (type == 8)
+      if (type == 8) {
+
+         // Send the client protocol first
+         UInt_t cproto = 0;
+         len = sizeof(cproto);
+         memcpy((char *)&cproto,Form(" %d", TAuthenticate::GetClientProtocol()),len);
+         writeCount = fgConnectionManager->WriteRaw(log, &cproto, len, kDefault);
+         if (writeCount != len) {
+            Error("DoHandShake", "Error sending %d bytes to the server [%s:%d]",
+                  len, fUrl.GetHost(), fUrl.GetPort());
+            return kSTError;
+         }
+
+         // Get the remote protocol
+         Int_t ibuf[2] = {0};
+         len = sizeof(ibuf);
+         readCount = fgConnectionManager->ReadRaw(log, ibuf, len, kDefault);
+         if (readCount != len) {
+            Error("DoHandShake", "Error reading %d bytes from server [%s:%d]",
+                  len, fUrl.GetHost(), fUrl.GetPort());
+            return kSTError;
+         }
+         Int_t kind = net2host(ibuf[0]);
+         if (kind == kROOTD_PROTOCOL) {
+            fLastRootdProto = net2host(ibuf[1]);
+         } else {
+            kind = net2host(ibuf[1]);
+            if (kind == kROOTD_PROTOCOL) {
+               Int_t rproto = 0;
+               len = sizeof(rproto);
+               readCount = fgConnectionManager->ReadRaw(log, &rproto, len, kDefault);
+               if (readCount != len) {
+                  Error("DoHandShake", "Error reading %d bytes from server [%s:%d]",
+                        len, fUrl.GetHost(), fUrl.GetPort());
+                  return kSTError;
+               }
+               fLastRootdProto = net2host(rproto);
+            }
+         }
+         if (DebugLevel() >= kHIDEBUG)
+            Info("DoHandShake", "remote rootd: buf1: %d, buf2: %d rproto: %d",
+                 net2host(ibuf[0]),net2host(ibuf[1]),fLastRootdProto);
          return kSTRootd;
-      else
+
+      } else {
          // We dunno the server type
          return kSTNone;
+      }
    }
 }
 
@@ -1128,12 +1201,12 @@ Bool_t TXNetConn::DoLogin()
    reqhdr.header.dlen = fRedirInternalToken.Length();
 
    // We call SendGenCommand, the function devoted to sending commands.
-   if (DebugLevel() >= TXDebug::kHIDEBUG)
+   if (DebugLevel() >= kHIDEBUG)
       Info("DoLogin", "Logging into the server [%s:%d]. pid=%d uid=%s",
             fUrl.GetHost(), fUrl.GetPort(),
             reqhdr.login.pid, reqhdr.login.username);
 
-   ConnectionManager->GetConnection(fLogConnID)->GetPhyConnection()
+   fgConnectionManager->GetConnection(fLogConnID)->GetPhyConnection()
                                                ->SetLogged(kNo);
 
    // server response header
@@ -1149,14 +1222,14 @@ Bool_t TXNetConn::DoLogin()
       // Terminate server reply
       plist[reshdr.dlen]=0;
 
-      if (DebugLevel() >= TXDebug::kHIDEBUG)
+      if (DebugLevel() >= kHIDEBUG)
          Info("DoLogin","server requires authentication");
       resp = DoAuthentication(User, plist);
    }
 
    // Flag success if everything went ok
    if (resp)
-      ConnectionManager->GetConnection(fLogConnID)->GetPhyConnection()
+      fgConnectionManager->GetConnection(fLogConnID)->GetPhyConnection()
          ->SetLogged(kYes);
    if (plist)
       delete[] plist;
@@ -1174,7 +1247,7 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
    if (!plist || !strlen(plist))
       return kTRUE;
 
-   if (DebugLevel() >= TXDebug::kHIDEBUG)
+   if (DebugLevel() >= kHIDEBUG)
       Info("DoAuthentication", "remote host: %s,"
            " list of available protocols: %s (%d)",
            fUrl.GetHost(), plist, strlen(plist));
@@ -1205,7 +1278,7 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
    // Make sure that we got at least one token
    //
    if (inPList->GetEntries() < 1) {
-      if (DebugLevel() >= TXDebug::kHIDEBUG)
+      if (DebugLevel() >= kHIDEBUG)
          Warning("DoAuthentication", "Protocol list empty");
       return kFALSE;
    }
@@ -1261,7 +1334,7 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
 
          protocol = (*getp)((const struct sockaddr &)netaddr,secToken, 0);
          if (!protocol) {
-            if (DebugLevel() >= TXDebug::kHIDEBUG)
+            if (DebugLevel() >= kHIDEBUG)
                Info("DoAuthentication",
                     "Unable to get protocol object (token: %s)",token.Data());
             continue;
@@ -1274,7 +1347,7 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
       // Extract the protocol name (identifier)
       TString protname = "";
       if (!token.BeginsWith("&P=")) {
-         if (DebugLevel() >= TXDebug::kHIDEBUG)
+         if (DebugLevel() >= kHIDEBUG)
             Warning("DoAuthentication",
                     "Unable to get protocol name (token: %s)",token.Data());
       } else {
@@ -1295,14 +1368,14 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
       //
       credentials = protocol->getCredentials(&secToken);
       if (!credentials) {
-         if (DebugLevel() >= TXDebug::kHIDEBUG)
+         if (DebugLevel() >= kHIDEBUG)
             Info("DoAuthentication",
                  "Cannot obtain credentials (token: %s)",etoken);
          if (etoken)
             delete[] etoken;
          continue;
       } else
-         if (DebugLevel() >= TXDebug::kHIDEBUG)
+         if (DebugLevel() >= kHIDEBUG)
             Info("DoAuthentication", "cred= %s size=%d",
                  credentials->buffer, credentials->size);
       if (etoken)
@@ -1328,7 +1401,7 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
          resp = SendGenCommand(&reqhdr, credentials->buffer,
                                (void **)&srvans, 0, kTRUE,
                                (char *)"TXNetconn::DoAuthentication",&reshdr);
-         if (DebugLevel() >= TXDebug::kHIDEBUG)
+         if (DebugLevel() >= kHIDEBUG)
             Info("DoAuthenticate","Server reply: status: %d dlen: %d",
                                   reshdr.status,reshdr.dlen);
 
@@ -1344,12 +1417,12 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
             //
             credentials = protocol->getCredentials(&secToken);
             if (!credentials) {
-               if (DebugLevel() >= TXDebug::kUSERDEBUG)
+               if (DebugLevel() >= kUSERDEBUG)
                   Info("DoAuthentication",
                        "Cannot obtain credentials (token: %s)", srvans);
                break;
             } else {
-               if (DebugLevel() >= TXDebug::kHIDEBUG)
+               if (DebugLevel() >= kHIDEBUG)
                   Info("DoAuthentication", "cred= %s size=%d",
                        credentials->buffer, credentials->size);
             }
@@ -1382,9 +1455,9 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
    // If there are other logical conns pointing to it, they will get an error,
    // which will be handled
    if ((errorType == kREAD) || (errorType == kWRITE))
-      ConnectionManager->Disconnect(fLogConnID, kTRUE);
+      fgConnectionManager->Disconnect(fLogConnID, kTRUE);
    else
-      ConnectionManager->Disconnect(fLogConnID, kFALSE);
+      fgConnectionManager->Disconnect(fLogConnID, kFALSE);
 
    // We cycle repeatedly trying to ask the dlb for a working redir destination
    do {
@@ -1399,7 +1472,7 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
 
       // Anyway, let's update the counter, we have just been redirected
       fGlobalRedirCnt++;
-      if (DebugLevel() >= TXDebug::kHIDEBUG)
+      if (DebugLevel() >= kHIDEBUG)
          Info("HandleServerError","Redir count=%d", fGlobalRedirCnt);
 
       if ( fGlobalRedirCnt >= fMaxGlobalRedirCnt )
@@ -1434,7 +1507,7 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
          // If we did not meet a dlb before, we consider this as a dlb
          // to return to after an error
          if ((0 == fLBSUrl) || (0 == strlen(fLBSUrl->GetUrl()))) {
-            if (DebugLevel() >= TXDebug::kHIDEBUG)
+            if (DebugLevel() >= kHIDEBUG)
                Info("HandleServerError",
                     "Setting Load Balancer Server Url = \"%s\".", fUrl.GetUrl() );
 
@@ -1465,7 +1538,7 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
 
       if ((newhost.Length() > 0) && newport) {
 
-         if (DebugLevel() >= TXDebug::kUSERDEBUG)
+         if (DebugLevel() >= kUSERDEBUG)
             Info("HandleServerError",
                  "Received redirection to [%s:%d]. Token=[%s].",
                  newhost.Data(), newport, fRedirInternalToken.Data());
@@ -1622,7 +1695,7 @@ TString TXNetConn::GetDomainToMatch(TString hostname) {
       // The looked up address is valid
       // The hostname domain can still be unknown
 
-      if (DebugLevel() >= TXDebug::kHIDEBUG)
+      if (DebugLevel() >= kHIDEBUG)
 	 Info("GetDomainToMatch", "GetHostByName(%s) returned name='%s' addr='%s'"
 	      " port=%d.", hostname.Data(), addr.GetHostName(),
 	      addr.GetHostAddress(), addr.GetPort());
@@ -1635,13 +1708,13 @@ TString TXNetConn::GetDomainToMatch(TString hostname) {
 	 res = addr.GetHostAddress();
 
    } else {
-      if (DebugLevel() >= TXDebug::kHIDEBUG)
+      if (DebugLevel() >= kHIDEBUG)
          Info("GetDomainToMatch", "GetHostByName(%s) returned a non valid address.",
               hostname.Data());
       res = "";
    }
 
-   if (DebugLevel() >= TXDebug::kHIDEBUG)
+   if (DebugLevel() >= kHIDEBUG)
       Info("GetDomainToMatch", "GetDomain(%s) --> '%s'.", hostname.Data(), res.Data());
 
    return res;
@@ -1672,13 +1745,13 @@ void TXNetConn::CheckPort(Int_t &port) {
 
    if(port <= 0) {
 
-      if(DebugLevel() >= TXDebug::kHIDEBUG)
+      if(DebugLevel() >= kHIDEBUG)
 	 Warning("checkPort",
 		 "TCP port not specified. Trying to get it from /etc/services...");
 
       struct servent *S = getservbyname("rootd", "tcp");
       if(!S) {
-	 if(DebugLevel() >= TXDebug::kHIDEBUG)
+	 if(DebugLevel() >= kHIDEBUG)
 	    Warning("checkPort", "Service %s not specified in /etc/services. "
 		    "Using default IANA tcp port 1094", "rootd");
 	 port = 1094;
@@ -1688,4 +1761,13 @@ void TXNetConn::CheckPort(Int_t &port) {
       }
 
    }
+}
+
+//______________________________________________________________________________
+void TXNetConn::SetTXConnectionMgr(TXConnectionMgr *cmgr)
+{
+   // Set hook to the instantiated TXConnectionMgr.
+   // Automatically called when libNetx is loaded.
+
+   fgConnectionManager = cmgr;
 }

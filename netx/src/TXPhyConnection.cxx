@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXPhyConnection.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXPhyConnection.cxx,v 1.3 2004/08/20 23:26:05 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TXMessage.h"
 #include "TString.h"
 #include "TEnv.h"
+#include "TROOT.h"
 #include "TSystem.h"
 #include "TThread.h"
 #include "TApplication.h"
@@ -32,7 +33,7 @@
 ClassImp(TXPhyConnection);
 
 //____________________________________________________________________________
-void *SocketReaderThread(void * arg)
+TThread::VoidFunc_t SocketReaderThread(void * arg)
 {
    // This thread is the base for the async capabilities of TXPhyConnection
    // It repeatedly keeps reading from the socket, while feeding the
@@ -41,30 +42,30 @@ void *SocketReaderThread(void * arg)
 
    TXPhyConnection *thisObj;
 
-   TThread::Lock();
-   if (DebugLevel() >= TXDebug::kHIDEBUG)
-      Info("SocketReaderThread", "Reader Thread starting.");
+   if (DebugLevel() >= kHIDEBUG)
+      Info("SocketReaderThread", "Reader Thread starting");
 
-   TThread::UnLock();
-
-   TThread::SetCancelOn();
+   // It should be possible to cancel the thread as soon as the
+   // cancellation request is received.
    TThread::SetCancelAsynchronous();
+   TThread::SetCancelOn();
 
-   TThread::Lock();
-   if (DebugLevel() >= TXDebug::kHIDEBUG)
-      Info("SocketReaderThread", "Reader Thread started.");
-   TThread::UnLock();
+   if (DebugLevel() >= kHIDEBUG)
+      Info("SocketReaderThread", "Reader Thread started");
 
    thisObj = (TXPhyConnection *)arg;
 
-   while (1) {
-      //TThread::Lock();
+   // Set running state ...
+   thisObj->ReaderStarted();
+
+   while (!(thisObj->ReaderThreadKilled())) {
       thisObj->BuildXMessage(kDefault, kTRUE, kTRUE);
-      //TThread::UnLock();
+      if (!thisObj->ReaderThreadKilled())
+         thisObj->CheckAutoTerm();
    }
 
-
-   TThread::Exit();
+   if (DebugLevel() >= kHIDEBUG)
+      Info("SocketReaderThread","Reader Thread exiting");
    return 0;
 }
 
@@ -73,14 +74,15 @@ TXPhyConnection::TXPhyConnection(TXAbsUnsolicitedMsgHandler *h)
 {
    // Constructor
 
-
    // Initialization of lock mutex
 
-   fRwMutex = new TMutex(kTRUE);
-
-   if (!fRwMutex)
+   if (!(fRwMutex = new TMutex(kTRUE)))
       Error("TXPhyConnection",
             "can't create mutex for read/write: out of system resources");
+
+   if (!(fMutex = new TMutex(kTRUE)))
+      Error("TXPhyConnection",
+            "can't create mutex for local locks: out of system resources");
 
    Touch();
 
@@ -92,6 +94,9 @@ TXPhyConnection::TXPhyConnection(TXAbsUnsolicitedMsgHandler *h)
 
    fReaderthreadhandler = 0;
    fReaderthreadrunning = kFALSE;
+   fReaderthreadkilled = kFALSE;
+
+   fReaderCV = new TCondition();
 }
 
 //____________________________________________________________________________
@@ -102,6 +107,7 @@ TXPhyConnection::~TXPhyConnection()
    Disconnect();
 
    SafeDelete(fRwMutex);
+   SafeDelete(fReaderCV);
 }
 
 //____________________________________________________________________________
@@ -109,8 +115,9 @@ Bool_t TXPhyConnection::Connect(TString TcpAddress, Int_t TcpPort,
                                 Int_t TcpWindowSize)
 {
    // Connect to remote server
+   R__LOCKGUARD(fMutex);
 
-   if (DebugLevel() >= TXDebug::kHIDEBUG)
+   if (DebugLevel() >= kHIDEBUG)
       Info("Connect", "Connecting to [%s:%d]", TcpAddress.Data(), TcpPort);
 
    fSocket = new TXSocket(TcpAddress, TcpPort, TcpWindowSize);
@@ -136,7 +143,7 @@ Bool_t TXPhyConnection::Connect(TString TcpAddress, Int_t TcpPort,
 
    fTTLsec = DATA_TTL;
 
-   if (DebugLevel() >= TXDebug::kHIDEBUG)
+   if (DebugLevel() >= kHIDEBUG)
       Info("Connect", "Connected to host [%s:%d].",
 	   TcpAddress.Data(), TcpPort);
 
@@ -152,31 +159,56 @@ void TXPhyConnection::StartReader()
 {
    // Start reader thread
 
+   bool running;
+   {
+      R__LOCKGUARD(fMutex);
+      running = fReaderthreadrunning;
+   }
+
    // Parametric asynchronous stuff.
    // If we are going Sync, then nothing has to be done,
    // otherwise the reader thread must be started
-   if ( (!fReaderthreadrunning) &&
+   if ( !running &&
          gEnv->GetValue("XNet.GoAsynchronous", DFLT_GOASYNC) ) {
 
-      if (DebugLevel() >= TXDebug::kHIDEBUG)
+      if (DebugLevel() >= kHIDEBUG)
          Info("StartReader", "Starting reader thread...");
 
       // Now we launch  the reader thread
-      fReaderthreadhandler = new TThread((TThread::VoidFunc_t) SocketReaderThread,
-					 this);
+      fReaderthreadhandler =
+         new TThread((TThread::VoidFunc_t) SocketReaderThread, this);
 
       if (!fReaderthreadhandler)
          Info("StartReader",
               "Can't create reader thread: out of system resources");
       else {
-	 // We want this thread to terminate when requested so
-
-
-	 fReaderthreadhandler->Run();
-
-         fReaderthreadrunning = kTRUE;
+         // Start the thread
+         fReaderthreadhandler->Run();
+         // Make sure that it is really running
+         do {
+            {
+               R__LOCKGUARD(fMutex);
+               running = fReaderthreadrunning;
+            }
+            if (!running) {
+               if (DebugLevel() >= kHIDEBUG)
+                  Info("StartReader","Waiting a little bit ...");
+               fReaderCV->TimedWait(100);
+            }
+         } while (!running);
       }
    }
+}
+
+//____________________________________________________________________________
+void TXPhyConnection::ReaderStarted()
+{
+   // Called inside SocketReaderThread to flag the running status 
+   // of the thread   
+
+   R__LOCKGUARD(fMutex);
+   fReaderthreadrunning = kTRUE;
+   fReaderCV->Signal();
 }
 
 //____________________________________________________________________________
@@ -190,42 +222,39 @@ Bool_t TXPhyConnection::ReConnect(TString TcpAddress, Int_t TcpPort,
 }
 
 //____________________________________________________________________________
-void TXPhyConnection::Disconnect()
+TSocket *TXPhyConnection::SaveSocket()
 {
+   // Return copy of the TSocket part of the existing socket
+   // Used to save an open connection to rootd daemons
 
-
-
-   // Parametric asynchronous stuff
-   // If we are going async, we have to terminate the reader thread
-   if (gEnv->GetValue("XNet.GoAsynchronous", DFLT_GOASYNC)) {
-
-
+   TSocket *opensock = 0;
+   if (fSocket) {
 
       if (fReaderthreadrunning) {
-      if (DebugLevel() >= TXDebug::kHIDEBUG)
-         Info("Disconnect", "Terminating reader thread.");
-
-	 fReaderthreadhandler->Kill();
-
-      if (DebugLevel() >= TXDebug::kHIDEBUG)
-         Info("Disconnect", "Waiting for the reader thread termination...");
-
-         fReaderthreadhandler->Join();
-
+         fReaderthreadkilled = kTRUE;
+         fReaderthreadhandler->Kill();
       }
 
-      fReaderthreadrunning = kFALSE;
-      SafeDelete(fReaderthreadhandler);
-      fReaderthreadhandler = 0;
+      // Extract TSocket part of TXSocket
+      opensock = fSocket->ExtractSocket();
+
+      // Signal deactivation
+      fTTLsec = 0;
+   }
+   return opensock;
+}
+
+//____________________________________________________________________________
+void TXPhyConnection::Disconnect()
+{
+   // Terminate connection
+
+   if (fReaderthreadrunning) {
+      fReaderthreadkilled = kTRUE;
+      fReaderthreadhandler->Kill();
    }
 
-   // Disconnect from remote server
-   if (DebugLevel() >= TXDebug::kDUMPDEBUG)
-      Info("Disconnect", "Deleting low level socket...");
-
-   SafeDelete(fSocket);
    fSocket = 0;
-
 }
 
 //____________________________________________________________________________
@@ -233,8 +262,10 @@ void TXPhyConnection::Touch()
 {
    // Set last-use-time to present time
 
+   R__LOCKGUARD(fMutex);
+
    time_t t = time(0);
-   if (DebugLevel() >= TXDebug::kDUMPDEBUG)
+   if (DebugLevel() >= kDUMPDEBUG)
       Info("Touch", "Setting 'fLastUseTimestamp' to current time: %d",t);
 
    fLastUseTimestamp = t;
@@ -252,14 +283,20 @@ Int_t TXPhyConnection::ReadRaw(void *buf, Int_t len, ESendRecvOptions opt)
 
    if (IsValid()) {
 
-      if (DebugLevel() >= TXDebug::kDUMPDEBUG)
+      if (DebugLevel() >= kDUMPDEBUG)
          Info("ReadRaw", "Reading from socket: %d[%s:%d]",
                fSocket->GetDescriptor(), fRemoteAddress.Data(), fRemotePort);
 
       res = fSocket->RecvRaw(buf, len, opt);
 
+      if ((res <= 0) && (res != TXSOCK_ERR_TIMEOUT) && fReaderthreadkilled &&
+          (DebugLevel() >= kHIDEBUG)) {
+         Info("ReadRaw", "Reader thread has been killed");
+         return res;
+      }
+
       if ((res <= 0) && (res != TXSOCK_ERR_TIMEOUT) &&
-          (DebugLevel() >= TXDebug::kHIDEBUG) && (gSystem->GetErrno()) )
+          (DebugLevel() >= kHIDEBUG) && (gSystem->GetErrno()) )
          Info("ReadRaw", "Read error [%s:%d]. Errno %d:'%s'.",
                fRemoteAddress.Data(), fRemotePort, gSystem->GetErrno(),
                gSystem->GetError() );
@@ -269,7 +306,7 @@ Int_t TXPhyConnection::ReadRaw(void *buf, Int_t len, ESendRecvOptions opt)
       if (((res <= 0) && (res != TXSOCK_ERR_TIMEOUT)) ||
           (!fSocket->IsValid())) {
 
-         if (DebugLevel() >= TXDebug::kHIDEBUG)
+         if (DebugLevel() >= kHIDEBUG)
             Info("ReadRaw",
                  "Socket reported a disconnection (server[%s:%d]). Closing.",
                  fRemoteAddress.Data(), fRemotePort);
@@ -282,7 +319,7 @@ Int_t TXPhyConnection::ReadRaw(void *buf, Int_t len, ESendRecvOptions opt)
    }
    else {
       // Socket already destroyed or disconnected
-      if (DebugLevel() >= TXDebug::kDUMPDEBUG)
+      if (DebugLevel() >= kDUMPDEBUG)
          Info("ReadRaw", "Socket is disconnected (server [%s:%d])",
               fRemoteAddress.Data(), fRemotePort);
       return TXSOCK_ERR;
@@ -317,6 +354,8 @@ TXMessage *TXPhyConnection::BuildXMessage(ESendRecvOptions opt,
    }
    m->ReadRaw(this, opt);
 
+   if (fReaderthreadkilled) return (TXMessage *)0;
+
    if (m->IsAttn()) {
 
       // Here we insert the PhyConn-level support for unsolicited responses
@@ -333,15 +372,60 @@ TXMessage *TXPhyConnection::BuildXMessage(ESendRecvOptions opt,
          // If we have to ignore the socket timeouts, then we have not to
          // feed the queue with them. In this case, the newly created TXMessage
          // has to be freed.
-         if ( !IgnoreTimeouts || !m->IsError() )
+         bool waserror;
+         if (IgnoreTimeouts) {
+
+            if (m->GetStatusCode() != TXMessage::kXMSC_timeout) {
+               waserror = m->IsError();
+               fMsgQ.PutMsg(m);
+               if (waserror)
+                  for (int kk=0; kk < 10; kk++)
+                      fMsgQ.PutMsg(0);
+            } else {
+               delete m;
+               m = 0;
+            }
+         } else
             fMsgQ.PutMsg(m);
-         else {
-            delete m;
-            m = 0;
-         }
       }
 
    return m;
+}
+
+//____________________________________________________________________________
+void TXPhyConnection::CheckAutoTerm()
+{
+   // Check if auto-termination is needed
+
+   Bool_t doexit = kFALSE;
+   {
+      R__LOCKGUARD(fMutex);
+
+      // Parametric asynchronous stuff
+      // If we are going async, we might be willing to term ourself
+      if (!IsValid() && gEnv->GetValue("XNet.GoAsynchronous", DFLT_GOASYNC)) {
+         if (TThread::SelfId() == fReaderthreadhandler->GetId()) {
+            // Notify termination, if requested 
+            if (DebugLevel() >= kHIDEBUG)
+               Info("CheckAutoTerm", "self-Cancelling reader thread.");
+            // Reset thread handlers (real termination will be done
+            // at ::Exit() )
+            fReaderthreadhandler = 0;
+            fReaderthreadrunning = kFALSE;
+            // Destroy the socket
+            delete fSocket;
+            fSocket = 0;
+            // We are going to exit
+            doexit = kTRUE;
+         }
+      }
+   }
+
+   // Now exit, if requested
+   if (doexit) {
+      UnlockChannel();
+      TThread::Exit(0);
+   }
 }
 
 //____________________________________________________________________________
@@ -388,21 +472,21 @@ Int_t TXPhyConnection::WriteRaw(const void *buf, Int_t len, ESendRecvOptions opt
 
    if (IsValid()) {
 
-      if (DebugLevel() >= TXDebug::kDUMPDEBUG)
+      if (DebugLevel() >= kDUMPDEBUG)
          Info("WriteRaw", "Writing to socket %d[%s:%d]",
               fSocket->GetDescriptor(), fRemoteAddress.Data(), fRemotePort);
 
       res = fSocket->SendRaw(buf, len, opt);
 
       if ((res <= 0)  && (res != TXSOCK_ERR_TIMEOUT) &&
-          (DebugLevel() >= TXDebug::kHIDEBUG) && (gSystem->GetErrno()))
+          (DebugLevel() >= kHIDEBUG) && (gSystem->GetErrno()))
          Info("WriteRaw", "Write error [%s:%d]. Errno: %d:'%s'.",
               fRemoteAddress.Data(), fRemotePort, gSystem->GetErrno(),
               gSystem->GetError() );
 
       // If a socket error comes, then we disconnect (and destroy the fSocket)
       if ((res < 0) || (!fSocket->IsValid())) {
-         if (DebugLevel() >= TXDebug::kHIDEBUG)
+         if (DebugLevel() >= kHIDEBUG)
             Info("WriteRaw",
                  "Socket reported a disconnection (server[%s:%d]). Closing.",
                  fRemoteAddress.Data(), fRemotePort);
@@ -414,7 +498,7 @@ Int_t TXPhyConnection::WriteRaw(const void *buf, Int_t len, ESendRecvOptions opt
    }
    else {
       // Socket already destroyed or disconnected
-      if (DebugLevel() >= TXDebug::kDUMPDEBUG)
+      if (DebugLevel() >= kDUMPDEBUG)
          Info("WriteRaw", "Socket is disconnected (server [%s:%d])",
               fRemoteAddress.Data(), fRemotePort);
       return TXSOCK_ERR;
@@ -430,7 +514,7 @@ UInt_t TXPhyConnection::GetBytesSent()
       return fSocket->GetBytesSent();
    else {
       // Socket already destroyed or disconnected
-      if (DebugLevel() >= TXDebug::kDUMPDEBUG)
+      if (DebugLevel() >= kDUMPDEBUG)
          Info("GetBytesSent",
               "Socket is disconnected (server [%s:%d])",
               fRemoteAddress.Data(), fRemotePort);
@@ -447,7 +531,7 @@ UInt_t TXPhyConnection::GetBytesRecv()
       return fSocket->GetBytesRecv();
    else {
       // Socket already destroyed or disconnected
-      if(DebugLevel() >= TXDebug::kDUMPDEBUG)
+      if(DebugLevel() >= kDUMPDEBUG)
          Info("GetBytesRecv",
               "Socket is disconnected (server [%s:%d])",
               fRemoteAddress.Data(), fRemotePort);
@@ -464,7 +548,7 @@ UInt_t TXPhyConnection::GetSocketBytesSent()
       return fSocket->GetSocketBytesSent();
    else {
       // Socket already destroyed or disconnected
-      if(DebugLevel() >= TXDebug::kDUMPDEBUG)
+      if(DebugLevel() >= kDUMPDEBUG)
          Info("GetSocketBytesSent",
               "Socket is disconnected (server [%s:%s])",
               fRemoteAddress.Data(), fRemotePort);
@@ -481,7 +565,7 @@ UInt_t TXPhyConnection::GetSocketBytesRecv()
       return fSocket->GetSocketBytesRecv();
    else {
       // Socket already destroyed or disconnected
-      if(DebugLevel() >= TXDebug::kDUMPDEBUG)
+      if(DebugLevel() >= kDUMPDEBUG)
          Info("GetSocketBytesRecv",
               "Socket is disconnected (server [%s:%s])",
               fRemoteAddress.Data(), fRemotePort);

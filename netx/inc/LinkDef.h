@@ -1,4 +1,4 @@
-/* @(#)root/netx:$Name:$:$Id:$ */
+/* @(#)root/netx:$Name:  $:$Id: LinkDef.h,v 1.2 2004/08/20 22:16:33 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -24,8 +24,6 @@
 #pragma link C++ class TXPhyConnection;
 #pragma link C++ class TXInputBuffer;
 
-#pragma link C++ class TXDebug;
-#pragma link C++ class TXMutexLocker;
 #pragma link C++ class TXAbsNetCommon;
 
 #endif

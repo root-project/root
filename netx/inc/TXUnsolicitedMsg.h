@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXUnsolicitedMsg.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -23,12 +23,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TXMessage
-#include "TXMessage.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
 #endif
 
-
 class TXUnsolicitedMsgSender;
+class TXMessage;
 
 // Handler
 
@@ -48,13 +48,23 @@ public:
    // The upper level handler for unsolicited responses
   TXAbsUnsolicitedMsgHandler *UnsolicitedMsgHandler;
 
-  inline void SendUnsolicitedMsg(TXUnsolicitedMsgSender *sender, TXMessage *unsolmsg) {
+  TXUnsolicitedMsgSender();
+  void SendUnsolicitedMsg(TXUnsolicitedMsgSender *sender, TXMessage *unsolmsg);
+};
+
+//________________________________________________________________________
+inline void TXUnsolicitedMsgSender::SendUnsolicitedMsg(TXUnsolicitedMsgSender *sender,
+                                                       TXMessage *unsolmsg)
+{
     // We simply send the event
     if (UnsolicitedMsgHandler)
       UnsolicitedMsgHandler->ProcessUnsolicitedMsg(sender, unsolmsg);
-  }
+}
 
-  inline TXUnsolicitedMsgSender() { UnsolicitedMsgHandler = 0; }
-};
+//________________________________________________________________________
+inline TXUnsolicitedMsgSender::TXUnsolicitedMsgSender()
+{
+     UnsolicitedMsgHandler = 0;
+}
 
 #endif

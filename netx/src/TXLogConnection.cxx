@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXLogConnection.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXLogConnection.cxx,v 1.3 2004/08/20 23:26:05 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -65,7 +65,7 @@ Int_t TXLogConnection::WriteRaw(const void *buffer, Int_t bufferlength,
    // at buffer.
    // Return number of bytes sent.
 
-   if (DebugLevel() >= TXDebug::kDUMPDEBUG)
+   if (DebugLevel() >= kDUMPDEBUG)
       Info("WriteRaw", "Writing %d bytes to physical connection",
            bufferlength);
 
@@ -86,7 +86,7 @@ Int_t TXLogConnection::ReadRaw(void *buffer, Int_t bufferlength,
    // save in buffer.
    // Return number of bytes received.
 
-   if (DebugLevel() >= TXDebug::kDUMPDEBUG)
+   if (DebugLevel() >= kDUMPDEBUG)
       Info("ReadRaw", "Reading %d bytes from physical connection",
            bufferlength);
 

@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXInputBuffer.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
-#include "TObject.h"
-#endif
+
 #ifndef ROOT_TThread
 #include "TThread.h"
 #endif
@@ -39,13 +37,11 @@ class TXInputBuffer {
 
 private:
 
-   list<TXMessage*>            fMsgQue;      // queue for incoming messages
-   list<TXMessage*>::iterator  fMsgIter;     // its iterator
+   list<TXMessage *>           fMsgQue;      // queue for incoming messages
    TMutex                     *fMutex;       // mutex to protect data structures
    map<Short_t, TCondition *>  fSyncobjRepo; // each streamid counts on a condition
                                              // variable to make the caller wait
                                              // until some data is available
-
    TCondition     *GetSyncObjOrMakeOne(Short_t streamid);
    Int_t           MsgForStreamidCnt(Short_t streamid);
 
@@ -55,12 +51,13 @@ public:
 
    inline bool     IsMexEmpty() { return (MexSize() == 0); }
    inline bool     IsSemEmpty() { return (SemSize() == 0); }
-   inline long     MexSize() { return fMsgQue.size(); }
+   inline long     MexSize() { R__LOCKGUARD(fMutex);
+                               return fMsgQue.size();   }
    Int_t           PutMsg(TXMessage *msg);
-   inline long     SemSize() { return fSyncobjRepo.size(); }
+   inline long     SemSize() { R__LOCKGUARD(fMutex);
+                               return fSyncobjRepo.size();  }
    TXMessage      *GetMsg(Short_t streamid, Int_t secstimeout);
+   TXMessage      *RetrieveMsg(Short_t streamid);
 };
-
-
 
 #endif

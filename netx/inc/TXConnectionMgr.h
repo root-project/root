@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXConnectionMgr.h,v 1.3 2004/08/20 23:26:05 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXConnectionMgr.h,v 1.4 2004/12/08 14:34:18 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -55,7 +55,6 @@
 #ifdef __CINT__
 class TXConnectionMgr;
 #endif
-#define ConnectionManager TXConnectionMgr::Instance()
 
 // Maybe we don't want to start the garbage collector
 // But the default must be to start it
@@ -66,7 +65,9 @@ extern "C" void * GarbageCollectorThread(void * arg);
 
 class TXConnectionMgr: public TXAbsUnsolicitedMsgHandler,
                        TXUnsolicitedMsgSender {
+friend class TXNetConn;
 private:
+   Bool_t                    fInitialized;
    vector <TXLogConnection*> fLogVec;
    vector <TXPhyConnection*> fPhyVec;
    TMutex                    *fMutex; // mutex used to protect local variables
@@ -74,18 +75,19 @@ private:
                                       // classes; not used to protect i/o streams
 
    TThread                   *fThreadHandler;
+   Bool_t                     fThreadKilled;
 
-
-   static TXConnectionMgr*   fgInstance;
-
-   void          GarbageCollect();
    friend void * GarbageCollectorThread(void *);
    Bool_t        ProcessUnsolicitedMsg(TXUnsolicitedMsgSender *sender,
                                        TXMessage *unsolmsg);
+   void          RemoveLogConn(TXLogConnection *);
+   void          RemovePhyConn(TXPhyConnection *);
+
 protected:
-   TXConnectionMgr();
+   void          GarbageCollect();
 
 public:
+   TXConnectionMgr();
    virtual ~TXConnectionMgr();
 
    Short_t       Connect(TString RemoteAddress, Int_t TcpPort,
@@ -93,14 +95,14 @@ public:
    void          Disconnect(Short_t LogConnectionID, Bool_t ForcePhysicalDisc);
    TXLogConnection *GetConnection(Short_t LogConnectionID);
    short int     GetPhyConnectionRefCount(TXPhyConnection *PhyConn);
-   TXMessage*    ReadMsg(Short_t LogConnectionID, ESendRecvOptions opt = kDefault);
-   Int_t         ReadRaw(Short_t LogConnectionID, void *buffer, Int_t BufferLength,
+   void          Init();
+   TXMessage*    ReadMsg(Short_t LogConnectionID,
                          ESendRecvOptions opt = kDefault);
+   Int_t         ReadRaw(Short_t LogConnectionID, void *buffer,
+                         Int_t BufferLength, ESendRecvOptions opt = kDefault);
+   Bool_t        ThreadKilled() const { return fThreadKilled; }
    Int_t         WriteRaw(Short_t LogConnectionID, const void *buffer,
                           Int_t BufferLength, ESendRecvOptions opt = kDefault);
-
-   static TXConnectionMgr* Instance();
-   static void             Reset();
 
    ClassDef(TXConnectionMgr, 0); // The Connection Manager
 };
