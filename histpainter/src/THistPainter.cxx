@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.181 2004/07/20 07:23:34 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.182 2004/07/28 09:41:13 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -880,7 +880,7 @@ void THistPainter::Paint(Option_t *option)
 //    "CONT2"  : Draw a contour plot using the same line style for all contours
 //    "CONT3"  : Draw a contour plot using fill area colors
 //    "CONT4"  : Draw a contour plot using surface colors (SURF option at theta = 0)
-//    "CONT5"  : Draw a contour plot using Delaunay triangles
+//    "CONT5"  : (TGraph2D only) Draw a contour plot using Delaunay triangles
 //    "LIST"   : Generate a list of TGraph objects for each contour
 //    "FB"     : With LEGO or SURFACE, suppress the Front-Box
 //    "BB"     : With LEGO or SURFACE, suppress the Back-Box
