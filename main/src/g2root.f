@@ -11,12 +11,15 @@
 *      into a ROOT macro (C++ file).
 *
 *  To use this conversion program (in $ROOTSYS/bin),
-*        g2root [-f <map_names>] <geant_rzfile> <macro_name>
+*        g2root [-f <map_names>] <geant_rzfile> <macro_name> [lrecl]
 *  run g2root without parameters to see the usage info.
 *
 *  for example
 *        g2root na49.geom na49.C
 *  will convert the GEANT RZ file na49.geom into a ROOT macro na49.C
+*
+*  The default value for lrecl is 1024. The parameter lrecl must be specified
+*  if the record length of the Zebra file is greater than 1024.
 *
 *  You can use <map_names> file to rename generated TNode's.
 *  See an example of that file in the commented section below.
@@ -90,7 +93,7 @@
 *
 **********************************************************************
 
-      parameter (nwpaw=1000000)
+      parameter (nwpaw=2000000)
       common/pawc/paw(nwpaw)
 
       character *80 gname
@@ -179,7 +182,7 @@
 **********************************************************************
 *
 *KEEP,HCBOOK.
-      parameter (nwpaw=1000000)
+      parameter (nwpaw=2000000)
       common/pawc/paw(nwpaw)
 
       INTEGER   IQ(2), LQ(8000)
@@ -393,7 +396,7 @@ C----------------------------------------------
 *_______________________________________________________________________
       subroutine volume(cname,qjv)
 *KEEP,HCBOOK.
-      parameter (nwpaw=1000000)
+      parameter (nwpaw=2000000)
       common/pawc/paw(nwpaw)
 
       INTEGER   IQ(2), LQ(8000)
@@ -560,7 +563,7 @@ C
 *
 *             Process one node (volume with contents)
 *KEEP,HCBOOK.
-      parameter (nwpaw=1000000)
+      parameter (nwpaw=2000000)
       common/pawc/paw(nwpaw)
 
       INTEGER   IQ(2), LQ(8000)
@@ -1014,7 +1017,7 @@ C.    *                                                                *
 C.    ******************************************************************
 C.
 *KEEP,HCBOOK.
-      parameter (nwpaw=1000000)
+      parameter (nwpaw=2000000)
       common/pawc/paw(nwpaw)
 
       INTEGER   IQ(2), LQ(8000)
