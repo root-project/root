@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.65 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.66 2002/02/04 23:23:03 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -632,7 +632,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (strstr(chopt,"E")) Hoption.Error =1;
    if (strstr(chopt,"F")) Hoption.Fill =1;
    if (strstr(chopt,"L")) { Hoption.Line =1; Hoption.Hist = -1;}
-   if (strstr(chopt,"P")) { Hoption.Mark =1; Hoption.Hist = 0;}
+   if (strstr(chopt,"P")) { Hoption.Mark =1; Hoption.Hist = -1;}
    if (strstr(chopt,"Z")) Hoption.Zscale =1;
    if (strstr(chopt,"*")) Hoption.Star =1;
    if (strstr(chopt,"+")) Hoption.Plus =1;
@@ -1289,7 +1289,7 @@ void THistPainter::Paint(Option_t *option)
 //    -----
 
 //         test for error bars or option E
-   if (Hoption.Error || Hoption.Mark) {
+   if (Hoption.Error) {
       PaintErrors();
       if (Hoption.Hist == 2) PaintHist();
    }
@@ -2790,6 +2790,9 @@ void THistPainter::PaintHist()
    graph.SetLineColor(fH->GetLineColor());
    graph.SetFillStyle(htype);
    graph.SetFillColor(fH->GetFillColor());
+   graph.SetMarkerStyle(fH->GetMarkerStyle());
+   graph.SetMarkerSize(fH->GetMarkerSize());
+   graph.SetMarkerColor(fH->GetMarkerColor());
    if (fixbin) {
       graph.PaintGrapHist(nbins, keepx, keepy ,chopth);
    }
