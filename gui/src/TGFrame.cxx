@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.10 2001/01/04 13:22:55 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.11 2001/01/08 14:34:53 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1029,6 +1029,11 @@ void TGGroupFrame::SetTitle(TGString *title)
    // Set or change title of the group frame. Titlte TGString is adopted
    // by the TGGroupFrame.
 
+   if (!title) {
+      Error("SetTitle", "title cannot be 0, try \"\"");
+      return;
+   }
+
    delete fText;
 
    fText = title;
@@ -1039,6 +1044,11 @@ void TGGroupFrame::SetTitle(TGString *title)
 void TGGroupFrame::SetTitle(const char *title)
 {
    // Set or change title of the group frame.
+
+   if (!title) {
+      Error("SetTitle", "title cannot be 0, try \"\"");
+      return;
+   }
 
    SetTitle(new TGString(title));
 }
