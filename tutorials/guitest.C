@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.41 2004/09/03 00:25:48 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.42 2004/09/09 00:25:23 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -402,7 +402,7 @@ class TestFileList {
 RQ_OBJECT("TestFileList")
 
 protected:
-   TGMainFrame      *fMain;
+   TGTransientFrame *fMain;
    TGFileContainer  *fContents;
 
    virtual void DisplayFile(const TString &fname);
@@ -1149,13 +1149,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    fMain->Resize();
 
    // position relative to the parent's window
-   Window_t wdum;
-   int ax, ay;
-   gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-             (Int_t)(((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
-             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
-             ax, ay, wdum);
-   fMain->Move(ax, ay);
+   fMain->CenterOnParent();
 
    fMain->SetWindowName("Dialog");
 
@@ -1386,7 +1380,7 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
    fRedTextGC.SetForeground(red);
    //---------------------------------
 
-   int i, ax, ay;
+   int i;
 
    fMain->ChangeOptions((fMain->GetOptions() & ~kVerticalFrame) | kHorizontalFrame);
 
@@ -1494,12 +1488,7 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
    fMain->Resize();
 
    // position relative to the parent's window
-   Window_t wdum;
-   gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-             (Int_t)(((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
-             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
-             ax, ay, wdum);
-   fMain->Move(ax, ay);
+   fMain->CenterOnParent();
 
    fMain->SetWindowName("Message Box Test");
 
@@ -1659,13 +1648,7 @@ TestSliders::TestSliders(const TGWindow *p, const TGWindow *main,
                       kMWMInputModeless);
 
    // position relative to the parent's window
-   Window_t wdummy;
-   int ax, ay;
-   gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-                   (Int_t)(((TGFrame *) main)->GetWidth() - size.fWidth) >> 1,
-                   (Int_t)(((TGFrame *) main)->GetHeight() - size.fHeight) >> 1,
-                   ax, ay, wdummy);
-   fMain->Move(ax, ay);
+   fMain->CenterOnParent();
 
    fMain->MapSubwindows();
    fMain->MapWindow();
@@ -1788,13 +1771,7 @@ TestShutter::TestShutter(const TGWindow *p, const TGWindow *main,
    fMain->Resize(80, 300);
 
    // position relative to the parent's window
-   Window_t wdum;
-   int ax, ay;
-   gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-             (Int_t)(((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
-             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
-             ax, ay, wdum);
-   fMain->Move(ax, ay);
+   fMain->CenterOnParent();
 
    fMain->SetWindowName("Shutter Test");
 
@@ -1881,13 +1858,7 @@ TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
 #endif
 
    // position relative to the parent's window
-   Window_t wdum;
-   int ax, ay;
-   gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-             (Int_t)(((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
-             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
-             ax, ay, wdum);
-   fMain->Move(ax, ay);
+   fMain->CenterOnParent();
 
    fMain->SetWindowName("List Dir Test");
 
@@ -1985,13 +1956,7 @@ TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UI
                       "OnDoubleClick(TGLVEntry*,Int_t)");
 
    // position relative to the parent's window
-   Window_t wdum;
-   int ax, ay;
-   gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-             (Int_t)(((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
-             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
-             ax, ay, wdum);
-   fMain->Move(ax, ay);
+   fMain->CenterOnParent();
 
    fMain->SetWindowName("File List Test");
    fMain->MapSubwindows();
@@ -2167,13 +2132,7 @@ TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
    fMain->Resize(size);
 
    // position relative to the parent's window
-   Window_t wdummy;
-   int ax, ay;
-   gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-                   (Int_t)(((TGFrame *) main)->GetWidth() - size.fWidth) >> 1,
-                   (Int_t)(((TGFrame *) main)->GetHeight() - size.fHeight) >> 1,
-                   ax, ay, wdummy);
-   fMain->Move(ax, ay);
+   fMain->CenterOnParent();
 
    fMain->MapSubwindows();
    fMain->MapWindow();
@@ -2340,24 +2299,7 @@ EntryTestDlg::EntryTestDlg(const TGWindow *p, const TGWindow *main)
    UInt_t width = fMain->GetDefaultWidth();
    UInt_t height = fMain->GetDefaultHeight();
    fMain->Resize(width, height);
-   Int_t ax;
-   Int_t ay;
-   if (main) {
-      Window_t wdum;
-      gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-                                      (Int_t)(((TGFrame *) main)->GetWidth() -
-                                       fMain->GetWidth()) >> 1,
-                                      (Int_t)(((TGFrame *) main)->GetHeight() -
-                                       fMain->GetHeight()) >> 1, ax, ay, wdum);
-   } else {
-      UInt_t root_w, root_h;
-      gVirtualX->GetWindowSize(gClient->GetRoot()->GetId(), ax, ay,
-                               root_w, root_h);
-      ax = (Int_t)(root_w - fMain->GetWidth()) >> 1;
-      ay = (Int_t)(root_h - fMain->GetHeight()) >> 1;
-   }
-   fMain->Move(ax, ay);
-   fMain->SetWMPosition(ax, ay);
+   fMain->CenterOnParent();
    // make the message box non-resizable
    fMain->SetWMSize(width, height);
    fMain->SetWMSizeHints(width, height, width, height, 0, 0);
