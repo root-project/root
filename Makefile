@@ -455,7 +455,7 @@ distsrc:
 
 rebase: $(ALLLIBS) $(ALLEXECS)
 	@echo -n "Rebasing binaries... "
-	@rebase -b 0x60600000 bin/*.exe bin/*.dll
+	@rebase -b 0x71000000 bin/*.exe bin/*.dll
 	@echo done.
 
 debian:
