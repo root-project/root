@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.27 2003/10/14 14:53:23 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.28 2003/10/24 16:48:08 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -175,12 +175,12 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    fOutput = 0; delete fSelector;
    fSelector = TSelector::GetSelector(selector_file);
 
-   Int_t version = fSelector->Version();
-
    if ( !fSelector ) {
       Error("Process", "Cannot load: %s", selector_file );
       return -1;
    }
+
+   Int_t version = fSelector->Version();
 
    SetupFeedback();
 
@@ -359,9 +359,11 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if ( fProof->SendFile(filename) == -1 ) return -1;
 
       if ( filename.EndsWith(".C") ) {
-         filename.ReplaceAll(".C",".h");
-         PDB(kSelector,1) Info("Process", "SendFile: %s", filename.Data() );
-         if ( fProof->SendFile(filename) == -1 ) return -1;
+         filename.Replace(filename.Length()-1,1,"h");
+         if (!gSystem->AccessPathName(filename,kReadPermission)) {
+            PDB(kSelector,1) Info("Process", "SendFile: %s", filename.Data() );
+            if ( fProof->SendFile(filename) == -1 ) return -1;
+         }
       }
    }
 
