@@ -1046,7 +1046,7 @@ char *expression;
 #ifdef G__OLDIMPLEMENTATION1863_YET 
     ebuf=(char*)malloc(strlen(expression)+2); /* Don't know why? t538.cxx */
 #else
-    ebuf=(char*)malloc(strlen(expression)+1);
+    ebuf=(char*)malloc(strlen(expression)+2);
 #endif
   if(!ebuf) {
     G__genericerror("Internal error: malloc, G__getexpr(), ebuf");
