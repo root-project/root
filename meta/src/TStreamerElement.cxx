@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.52 2002/11/01 19:12:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.53 2002/11/26 10:24:25 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -357,7 +357,9 @@ Int_t TStreamerBase::GetSize() const
 {
    //returns size of baseclass in bytes
    
-   return GetClassPointer()->Size();
+   TClass *cl = GetClassPointer();
+   if (cl) return cl->Size();
+   return 0;
 }
 
 //______________________________________________________________________________
