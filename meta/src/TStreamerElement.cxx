@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.32 2001/07/12 17:18:02 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.33 2001/10/01 10:39:54 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -154,6 +154,7 @@ const char *TStreamerElement::GetTypeNameBasic() const
       case 12: return "UShort_t";   
       case 13: return "UInt_t";   
       case 14: return "ULong_t"; 
+      case 15: return "UInt_t"; 
    }
    return "";  
 }
