@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.34 2003/07/10 07:41:01 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.35 2003/07/21 10:40:23 brun Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -1149,6 +1149,7 @@ Bool_t TestDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            if (s == "Tab 5") {
                               fTab->RemoveTab(i);
                               fTab->Layout();
+                              break;
                            }
                         }
                      }

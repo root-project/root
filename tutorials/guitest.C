@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.29 2003/07/10 07:41:01 brun Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.30 2003/07/21 10:47:15 brun Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -1252,6 +1252,7 @@ void TestDialog::HandleButtons(Int_t id)
                if (s == "Tab 5") {
                   fTab->RemoveTab(i);
                   fTab->Layout();
+                  break;
                }
             }
          }
