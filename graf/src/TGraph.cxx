@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.76 2002/07/16 22:29:03 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.77 2002/07/28 06:38:09 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -813,6 +813,17 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       } else {
          fX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(pxold));
          fY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(pyold));
+         if (InheritsFrom("TCutG")) {
+            //make sure first and last point are the same
+            if (ipoint == 0) {
+               fX[fNpoints-1] = fX[0]; 
+               fY[fNpoints-1] = fY[0];
+            }
+            if (ipoint == fNpoints-1) {
+               fX[0] = fX[fNpoints-1]; 
+               fY[0] = fY[fNpoints-1];
+            }
+         }
       }
       BADCASE = kFALSE;
       delete [] x; x = 0;
