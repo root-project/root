@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.53 2001/04/17 16:41:56 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.54 2001/04/18 06:11:06 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -367,7 +367,6 @@ void TStreamerInfo::BuildOld()
    Streamer_t streamer = 0;
    while ((element = (TStreamerElement*)next())) {
       element->SetNewType(element->GetType());
-//element->ls();
       if (element->IsA() == TStreamerBase::Class()) {
          TStreamerBase *base = (TStreamerBase*)element;
          TClass *baseclass = base->GetClassPointer();
@@ -386,7 +385,7 @@ void TStreamerInfo::BuildOld()
       //in principle, we should look rather into TRealData to support the
       //case where a member has been moved to a base class
       TDataMember *dm = (TDataMember*)fClass->GetListOfDataMembers()->FindObject(element->GetName());
-      // may be a fake class
+      // may be a fake class 
       if (!dm && fClass->GetDeclFileLine() < 0) {
          streamer = 0;
          element->SetOffset(offset);
@@ -407,7 +406,6 @@ void TStreamerInfo::BuildOld()
          fClass->BuildRealData();
          streamer = 0;
          offset = GetDataMemberOffset(dm,streamer);
-//printf("offsetA=%d\n",offset);
          element->SetOffset(offset);
          element->Init(fClass);
          element->SetStreamer(streamer);
@@ -1900,7 +1898,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
    }
    //find offset of this class with respect to class in clones
    Int_t baseOffset = clones->GetClass()->GetBaseClassOffset(fClass);
-
+   
    //loop on all active members
    Int_t last;
    if (first < 0) {first = 0; last = fNdata;}
@@ -1910,7 +1908,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
       offset = baseOffset + fOffset[i];
       if (gDebug > 1) {
          TStreamerElement *element = (TStreamerElement*)fElem[i];
-         printf("ReadBufferClones, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, nc=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length(),nc);
+         printf("ReadBufferClones, class:%s, name=%s, fType[%d]=%d, offset=%d,  %s, bufpos=%d, nc=%d\n",fClass->GetName(),element->GetName(),i,fType[i],offset,element->ClassName(),b.Length(),nc);
       }
       switch (fType[i]) {
          // write basic types
