@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.43 2003/04/09 16:32:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.44 2003/04/17 07:55:24 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -53,6 +53,7 @@
 #ifndef ROOT_TArrayD
 #include "TArrayD.h"
 #endif
+#include "Foption.h"
 
 class TF1;
 class TH1D;
@@ -94,7 +95,7 @@ protected:
 private:
     Int_t   AxisChoice(Option_t *axis) const;
     void    Build();
-    Int_t   FitOptionsMake(Option_t *option);
+    Int_t   FitOptionsMake(Option_t *option, Foption_t &Foption);
     TH1(const TH1&); // Intentionally not implemented
 
 protected:

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.142 2003/05/02 10:33:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.143 2003/05/05 10:13:54 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -21,7 +21,6 @@
 #include "TF2.h"
 #include "TF3.h"
 #include "TVirtualPad.h"
-#include "Foption.h"
 #include "TMath.h"
 #include "TRandom.h"
 #include "TVirtualFitter.h"
@@ -419,25 +418,14 @@
 //End_Html
 
 
-Foption_t Foption;
+TF1 *gF1=0;  //left for back compatibility (use TVirtualFitter::GetUserFunc instead)
 
-TAxis *xaxis=0;
-TAxis *yaxis=0;
-TAxis *zaxis=0;
-
-TF1 *gF1=0;
-
-TVirtualFitter *hFitter=0;
 Int_t  TH1::fgBufferSize   = 1000;
 Bool_t TH1::fgAddDirectory = kTRUE;
-
-Int_t hxfirst,hxlast,hyfirst,hylast,hzfirst,hzlast;
 
 extern void H1InitGaus();
 extern void H1InitExpo();
 extern void H1InitPolynom();
-extern void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
-extern void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 extern void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a);
 extern void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail);
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
@@ -1889,6 +1877,24 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //       h.GetFunction("myFunction")->ResetBit(kNotDraw);
 //       h.Draw();  // function is visible again
 //
+//      Access to the Fitter information during fitting
+//      ===============================================
+//     This function calls only the abstract fitter TVirtualFitter.
+//     The default fitter is TFitter (calls TMinuit).
+//     A different fitter can be set via TVirtualFitter::SetDefaultFitter.
+//     For example, to call the "Fumili" fitter instead of "Minuit", do
+//          TVirtualFitter::SetDefaultFitter("Fumili");
+//     During the fitting process, the objective function: 
+//       chisquare, likelihood or any user defined algorithm
+//     is called (see eg in the TFitter class, the static functions
+//       H1FitChisquare, H1FitLikelihood).
+//     This objective function, in turn, calls the user theoretical function.
+//     This user function is a static function called from the TF1 *f1 function.
+//     Inside this user defined theoretical function , one can access:
+//       TVirtualFitter *fitter = TVirtualFitter::GetFitter();  //the current fitter
+//       TH1 *hist = (TH1*)fitter->GetObjectFit(); //the histogram being fitted
+//       TF1 +f1 = (TF1*)fitter->GetUserFunction(); //the user theoretical function
+//
 //     By default, the fitter TMinuit is initialized with a maximum of 25 parameters.
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -1899,6 +1905,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
    Double_t params[100], arglist[100];
    Axis_t xmin, xmax, ymin, ymax, zmin, zmax, binwidx, binwidy, binwidz;
+   Int_t hxfirst, hxlast, hyfirst, hylast, hzfirst, hzlast;
    TF1 *fnew1;
    TF2 *fnew2;
    TF3 *fnew3;
@@ -1918,37 +1925,38 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    binwidz = fZaxis.GetBinWidth(hzlast);
    zmin    = fZaxis.GetBinLowEdge(hzfirst);
    zmax    = fZaxis.GetBinLowEdge(hzlast) +binwidz;
-   xaxis   = &fXaxis;
-   yaxis   = &fYaxis;
-   zaxis   = &fZaxis;
 
 //   - Check if Minuit is initialized and create special functions
-   hFitter = TVirtualFitter::Fitter(this);
+   TVirtualFitter *hFitter = TVirtualFitter::Fitter(this);
    hFitter->Clear();
 
 //   - Get pointer to the function by searching in the list of functions in ROOT
    gF1 = f1;
-   if (!gF1) { Error("Fit", "Pointer to function is null"); return 0; }
-   npar = gF1->GetNpar();
+   hFitter->SetUserFunc(f1);
+   if (!f1) { Error("Fit", "Pointer to function is null"); return 0; }
+   npar = f1->GetNpar();
    if (npar <=0) { Error("Fit", "Illegal number of parameters = %d",npar); return 0; }
 
 //   - Check that function has same dimension as histogram
-   if (gF1->GetNdim() == 1 && GetDimension() > 1) {
+   if (f1->GetNdim() == 1 && GetDimension() > 1) {
       Error("Fit", "Function %s is not 2-D",f1->GetName()); return 0; }
-   if (gF1->GetNdim() == 2 && GetDimension() < 2) {
+   if (f1->GetNdim() == 2 && GetDimension() < 2) {
       Error("Fit", "Function %s is not 1-D",f1->GetName()); return 0; }
-   if (xxmin != xxmax) gF1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
+   if (xxmin != xxmax) f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
 
 //   - Decode list of options into Foption
-   if (!FitOptionsMake(option)) return 0;
+   Foption_t Foption;
+   if (!FitOptionsMake(option,Foption)) return 0;
    if (xxmin != xxmax) {
-      gF1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
+      f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
       Foption.Range = 1;
    }
+   hFitter->SetFitOption(Foption);
+   
 //   - Is a Fit range specified?
    Double_t fxmin, fymin, fzmin, fxmax, fymax, fzmax;
    if (Foption.Range) {
-      gF1->GetRange(fxmin, fymin, fzmin, fxmax, fymax, fzmax);
+      f1->GetRange(fxmin, fymin, fzmin, fxmax, fymax, fzmax);
       if (fxmin > xmin) xmin = fxmin;
       if (fymin > ymin) ymin = fymin;
       if (fzmin > zmin) zmin = fzmin;
@@ -1962,11 +1970,14 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       hzfirst = fZaxis.FindFixBin(zmin); if (hzfirst < 1) hzfirst = 1;
       hzlast  = fZaxis.FindFixBin(zmax); if (hzlast > fZaxis.GetLast()) hzlast = fZaxis.GetLast();
    } else {
-      gF1->SetRange(xmin,ymin,zmin,xmax,ymax,zmax);
+      f1->SetRange(xmin,ymin,zmin,xmax,ymax,zmax);
    }
+   hFitter->SetXfirst(hxfirst); hFitter->SetXlast(hxlast);
+   hFitter->SetYfirst(hyfirst); hFitter->SetYlast(hylast);
+   hFitter->SetZfirst(hzfirst); hFitter->SetZlast(hzlast);
 
 //   - If case of a predefined function, then compute initial values of parameters
-   Int_t special = gF1->GetNumber();
+   Int_t special = f1->GetNumber();
    if (Foption.Bound) special = 0;
    if      (special == 100)      H1InitGaus();
    else if (special == 400)      H1InitGaus();
@@ -1988,17 +1999,17 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //   -  his minimization function via SetFCN.
    arglist[0] = 1;
    if (Foption.Like) {
-      hFitter->SetFCN(H1FitLikelihood);
+      hFitter->SetFitMethod("H1FitLikelihood");
    } else {
-      if (!Foption.User) hFitter->SetFCN(H1FitChisquare);
+      if (!Foption.User) hFitter->SetFitMethod("H1FitChisquare");
    }
    hFitter->ExecuteCommand("SET ERR",arglist,1);
 
 //   - Transfer names and initial values of parameters to Minuit
    Int_t nfixed = 0;
    for (i=0;i<npar;i++) {
-      par = gF1->GetParameter(i);
-      gF1->GetParLimits(i,al,bl);
+      par = f1->GetParameter(i);
+      f1->GetParLimits(i,al,bl);
       if (al*bl != 0 && al >= bl) {
          al = bl = 0;
          arglist[nfixed] = i+1;
@@ -2008,7 +2019,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       if (we == 0) we = 0.3*TMath::Abs(par);
 //      if (we == 0) we = 1000*TMath::Abs(par);
       if (we == 0) we = binwidx;
-      hFitter->SetParameter(i,gF1->GetParName(i),par,we,al,bl);
+      hFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
    }
    if(nfixed > 0)hFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
 
@@ -2061,8 +2072,8 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
          else                         werr = we;
       }
       params[i] = par;
-      gF1->SetParameter(i,par);
-      gF1->SetParError(i,werr);
+      f1->SetParameter(i,par);
+      f1->SetParError(i,werr);
    }
    hFitter->GetStats(amin,edm,errdef,nvpar,nparx);
 
@@ -2073,10 +2084,11 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    }
 
 //     If Log Likelihood, compute an equivalent chisquare
-   if (Foption.Like) H1FitChisquare(npar, params, amin, params, 1);
+   //if (Foption.Like) amin = hFitter->Chisquare(npar, params, amin, params, 1);
+   if (Foption.Like) amin = hFitter->Chisquare(npar, params);
 
-   gF1->SetChisquare(amin);
-   gF1->SetNDF(gF1->GetNumberFitPoints()-npar+nfixed);
+   f1->SetChisquare(amin);
+   f1->SetNDF(f1->GetNumberFitPoints()-npar+nfixed);
 
 //   - Store fitted function in histogram functions list and draw
    if (!Foption.Nostore) {
@@ -2092,7 +2104,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       }
       if (GetDimension() < 2) {
          fnew1 = new TF1();
-         gF1->Copy(*fnew1);
+         f1->Copy(*fnew1);
          fFunctions->Add(fnew1);
          fnew1->SetParent(this);
          fnew1->Save(xmin,xmax,0,0,0,0);
@@ -2100,7 +2112,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
          fnew1->SetBit(TFormula::kNotGlobal);
       } else if (GetDimension() < 3) {
          fnew2 = new TF2();
-         gF1->Copy(*fnew2);
+         f1->Copy(*fnew2);
          fFunctions->Add(fnew2);
          fnew2->SetParent(this);
          fnew2->Save(xmin,xmax,ymin,ymax,0,0);
@@ -2108,7 +2120,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
          fnew2->SetBit(TFormula::kNotGlobal);
       } else {
          fnew3 = new TF3();
-         gF1->Copy(*fnew3);
+         f1->Copy(*fnew3);
          fFunctions->Add(fnew3);
          fnew3->SetParent(this);
          fnew3->SetBit(TFormula::kNotGlobal);
@@ -2354,7 +2366,7 @@ Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 }
 
 //______________________________________________________________________________
-Int_t TH1::FitOptionsMake(Option_t *choptin)
+Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &Foption)
 {
 //   -*-*-*-*-*-*-*Decode string choptin and fill Foption structure*-*-*-*-*-*
 //                 ================================================
@@ -2401,134 +2413,6 @@ Int_t TH1::FitOptionsMake(Option_t *choptin)
 }
 
 //______________________________________________________________________________
-void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
-{
-//           Minimization function for H1s using a Chisquare method
-//           ======================================================
-
-   Double_t cu,eu,fu,fsum;
-   Double_t dersum[100], grad[100];
-   Double_t x[3];
-   Int_t bin,binx,biny,binz,k;
-   Axis_t binlow, binup, binsize;
-
-   Int_t npfits = 0;
-
-   npar = gF1->GetNpar();
-   if (flag == 2) for (k=0;k<npar;k++) dersum[k] = gin[k] = 0;
-
-   TH1 *hfit = (TH1*)hFitter->GetObjectFit();
-   gF1->InitArgs(x,u);
-   f = 0;
-   for (binz=hzfirst;binz<=hzlast;binz++) {
-      x[2]  = zaxis->GetBinCenter(binz);
-      for (biny=hyfirst;biny<=hylast;biny++) {
-         x[1]  = yaxis->GetBinCenter(biny);
-         for (binx=hxfirst;binx<=hxlast;binx++) {
-            x[0]  = xaxis->GetBinCenter(binx);
-            if (!gF1->IsInside(x)) continue;
-            bin = hfit->GetBin(binx,biny,binz);
-            cu  = hfit->GetBinContent(bin);
-            TF1::RejectPoint(kFALSE);
-            if (Foption.Integral) {
-               binlow  = xaxis->GetBinLowEdge(binx);
-               binsize = xaxis->GetBinWidth(binx);
-               binup   = binlow + binsize;
-               fu      = gF1->Integral(binlow,binup,u)/binsize;
-            } else {
-               fu = gF1->EvalPar(x,u);
-            }
-            if (TF1::RejectedPoint()) continue;
-            if (Foption.W1) {
-               eu = 1;
-            } else {
-               eu  = hfit->GetBinError(bin);
-               if (eu <= 0) continue;
-            }
-            if (flag == 2) {
-               for (k=0;k<npar;k++) dersum[k] += 1; //should be the derivative
-            }
-            npfits++;
-            if (flag == 2) {
-               for (k=0;k<npar;k++) grad[k] += dersum[k]*(fu-cu)/eu; dersum[k] = 0;
-            }
-            fsum = (cu-fu)/eu;
-            f += fsum*fsum;
-         }
-      }
-   }
-   gF1->SetNumberFitPoints(npfits);
-}
-
-//______________________________________________________________________________
-void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
-{
-//   -*-*-*-*Minimization function for H1s using a Likelihood method*-*-*-*-*-*
-//           =======================================================
-//     Basically, it forms the likelihood by determining the Poisson
-//     probability that given a number of entries in a particular bin,
-//     the fit would predict it's value.  This is then done for each bin,
-//     and the sum of the logs is taken as the likelihood.
-
-   Double_t cu,fu,fobs,fsub;
-   Double_t dersum[100];
-   Double_t x[3];
-   Int_t bin,binx,biny,binz,k,icu;
-   Axis_t binlow, binup, binsize;
-
-   Int_t npfits = 0;
-
-   npar = gF1->GetNpar();
-   if (flag == 2) for (k=0;k<npar;k++) dersum[k] = gin[k] = 0;
-
-   TH1 *hfit = (TH1*)hFitter->GetObjectFit();
-   gF1->InitArgs(x,u);
-   f = 0;
-   for (binz=hzfirst;binz<=hzlast;binz++) {
-      x[2]  = zaxis->GetBinCenter(binz);
-      for (biny=hyfirst;biny<=hylast;biny++) {
-         x[1]  = yaxis->GetBinCenter(biny);
-         for (binx=hxfirst;binx<=hxlast;binx++) {
-            x[0]  = xaxis->GetBinCenter(binx);
-            if (!gF1->IsInside(x)) continue;
-            TF1::RejectPoint(kFALSE);
-            bin = hfit->GetBin(binx,biny,binz);
-            cu  = hfit->GetBinContent(bin);
-            if (Foption.Integral) {
-               binlow  = xaxis->GetBinLowEdge(binx);
-               binsize = xaxis->GetBinWidth(binx);
-               binup   = binlow + binsize;
-               fu      = gF1->Integral(binlow,binup,u)/binsize;
-            } else {
-               fu = gF1->EvalPar(x,u);
-            }
-            if (TF1::RejectedPoint()) continue;
-            npfits++;
-            if (flag == 2) {
-               for (k=0;k<npar;k++) {
-                  dersum[k] += 1; //should be the derivative
-                  //grad[k] += dersum[k]*(fu-cu)/eu; dersum[k] = 0;
-               }
-            }
-            if (fu < 1.e-9) fu = 1.e-9;
-            if (Foption.Like == 1) {
-               icu  = Int_t(cu);
-               fsub = -fu +icu*TMath::Log(fu);
-               fobs = hFitter->GetSumLog(icu);
-            } else {
-               fsub = -fu +cu*TMath::Log(fu);
-               fobs = TMath::Gamma(cu+1);
-            }
-            fsub -= fobs;
-            f -= fsub;
-         }
-      }
-   }
-   f *= 2;
-   gF1->SetNumberFitPoints(npfits);
-}
-
-//______________________________________________________________________________
 void H1InitGaus()
 {
 //   -*-*-*-*Compute Initial values of parameters for a gaussian*-*-*-*-*-*-*
@@ -2539,7 +2423,10 @@ void H1InitGaus()
    const Double_t sqrtpi = 2.506628;
 
 //   - Compute mean value and RMS of the histogram in the given range
+   TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
    TH1 *curHist = (TH1*)hFitter->GetObjectFit();
+   Int_t hxfirst = hFitter->GetXfirst(); 
+   Int_t hxlast  = hFitter->GetXlast(); 
    Double_t valmax  = curHist->GetBinContent(hxfirst);
    Double_t binwidx = curHist->GetBinWidth(hxfirst);
    allcha = sumx = sumx2 = 0;
@@ -2573,10 +2460,11 @@ void H1InitGaus()
       mean = 0.5*(xmax+xmin);
       rms  = 0.5*(xmax-xmin);
    }
-   gF1->SetParameter(0,constant);
-   gF1->SetParameter(1,mean);
-   gF1->SetParameter(2,rms);
-   gF1->SetParLimits(2,0,10*rms);
+   TF1 *f1 = (TF1*)hFitter->GetUserFunc();
+   f1->SetParameter(0,constant);
+   f1->SetParameter(1,mean);
+   f1->SetParameter(2,rms);
+   f1->SetParLimits(2,0,10*rms);
 }
 
 //______________________________________________________________________________
@@ -2587,12 +2475,16 @@ void H1InitExpo()
 
    Double_t constant, slope;
    Int_t ifail;
-   Int_t nchanx = hxlast - hxfirst + 1;
+   TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
+   Int_t hxfirst = hFitter->GetXfirst(); 
+   Int_t hxlast  = hFitter->GetXlast(); 
+   Int_t nchanx  = hxlast - hxfirst + 1;
 
    H1LeastSquareLinearFit(-nchanx, constant, slope, ifail);
 
-   gF1->SetParameter(0,constant);
-   gF1->SetParameter(1,slope);
+   TF1 *f1 = (TF1*)hFitter->GetUserFunc();
+   f1->SetParameter(0,constant);
+   f1->SetParameter(1,slope);
 
 }
 
@@ -2604,8 +2496,12 @@ void H1InitPolynom()
 
    Double_t fitpar[25];
 
-   Int_t nchanx = hxlast - hxfirst + 1;
-   Int_t npar   = gF1->GetNpar();
+   TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
+   TF1 *f1 = (TF1*)hFitter->GetUserFunc();
+   Int_t hxfirst = hFitter->GetXfirst(); 
+   Int_t hxlast  = hFitter->GetXlast(); 
+   Int_t nchanx  = hxlast - hxfirst + 1;
+   Int_t npar    = f1->GetNpar();
 
    if (nchanx <=1 || npar == 1) {
       TH1 *curHist = (TH1*)hFitter->GetObjectFit();
@@ -2613,7 +2509,7 @@ void H1InitPolynom()
    } else {
       H1LeastSquareFit( nchanx, npar, fitpar);
    }
-   for (Int_t i=0;i<npar;i++) gF1->SetParameter(i, fitpar[i]);
+   for (Int_t i=0;i<npar;i++) f1->SetParameter(i, fitpar[i]);
 }
 
 //______________________________________________________________________________
@@ -2651,7 +2547,10 @@ void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a)
 	b[m + l*20 - 21] = zero;
 	da[l-1]          = zero;
     }
-    TH1 *curHist = (TH1*)hFitter->GetObjectFit();
+    TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
+    TH1 *curHist  = (TH1*)hFitter->GetObjectFit();
+    Int_t hxfirst = hFitter->GetXfirst(); 
+    Int_t hxlast  = hFitter->GetXlast(); 
     for (k = hxfirst; k <= hxlast; ++k) {
 	xk     = curHist->GetBinCenter(k);
 	yk     = curHist->GetBinContent(k);
@@ -2697,8 +2596,11 @@ void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifai
 
     n     = TMath::Abs(ndata);
     ifail = -2;
-    xbar  = ybar = x2bar = xybar = 0;
-    TH1 *curHist = (TH1*)hFitter->GetObjectFit();
+    xbar  = ybar  = x2bar = xybar = 0;
+    TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
+    TH1 *curHist  = (TH1*)hFitter->GetObjectFit();
+    Int_t hxfirst = hFitter->GetXfirst(); 
+    Int_t hxlast  = hFitter->GetXlast(); 
     for (i = hxfirst; i <= hxlast; ++i) {
 	xk = curHist->GetBinCenter(i);
 	yk = curHist->GetBinContent(i);
