@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.0 2004/02/08 06:08:34 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.1 2004/02/08 15:46:38 brun Exp $
 //
 //////////////////////////////////////////////////////////////////////////////
 // 
@@ -94,7 +94,8 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
   Double_t a,slope,fmid,low,flow,high,fhigh,test,ftest,mu0,maximum,target,l,f0;
   Double_t med = 0;
   Double_t maxiter=1000, acc = 0.00001;
-
+  Int_t i;
+  
   if ((mid != 3) && (mid != 5)) bm = (Double_t)y;   
 
   if (x == 0 && bm > 0 ){
@@ -206,7 +207,7 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
      fhigh = Likelihood(high,x,y,z,bm,em,e,mid,sde,sdb,tau,b,m,3);
   }
 
-  for(Int_t i = 0; i < maxiter; i++) {
+  for(i = 0; i < maxiter; i++) {
      l = (target-fhigh)/(flow-fhigh);
      if (l < 0.2) l = 0.2;
      if (l > 0.8) l = 0.8;
