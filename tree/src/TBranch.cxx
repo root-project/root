@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.70 2004/01/07 14:00:14 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.71 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -67,7 +67,7 @@ TBranch::TBranch(): TNamed(), TAttFill(0,1001)
    fCompress       = 0;
    fBasketSize     = 32000;
    fEntryOffsetLen = 1000;
-   fMaxBaskets     = 1000;
+   fMaxBaskets     = 10;
    fReadBasket     = 0;
    fReadEntry      = -1;
    fWriteBasket    = 0;
@@ -148,7 +148,7 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
    if (basketsize < 100) basketsize = 100;
    fBasketSize     = basketsize;
    fEntryOffsetLen = 0;
-   fMaxBaskets     = 1000;
+   fMaxBaskets     = 10;
    fReadBasket     = 0;
    fReadEntry      = -1;
    fWriteBasket    = 0;
