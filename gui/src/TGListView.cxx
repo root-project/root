@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.22 2003/11/07 22:47:53 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.23 2003/12/03 00:25:19 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -88,7 +88,9 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
    fNormGC     = GetDefaultGC()();
 
    Int_t max_ascent, max_descent;
-   fTWidth = gVirtualX->TextWidth(fFontStruct, fName->GetString(), fName->GetLength());
+   fTWidth = gVirtualX->TextWidth(fFontStruct,
+                                  fName ? fName->GetString() : "",
+                                  fName ? fName->GetLength() : 0);
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
 
@@ -109,7 +111,7 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
    fViewMode = (EListViewMode)-1;
    SetViewMode(viewMode);
 
-   if (p->InheritsFrom(TGContainer::Class())) {
+   if (p && p->InheritsFrom(TGContainer::Class())) {
       TGContainer* cont = (TGContainer*)p;
       if (!cont->IsMapSubwindows()) {
          fClient->UnregisterWindow(this);
@@ -125,9 +127,9 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
 {
    // Create a list view item.
    //
-   // name - is name of item
+   // name - is name of item.
    // cname - is name of icon. In most cases this is class name of object
-   //         associated with this item
+   //         associated with this item.
 
    fSelPic = 0;
 
@@ -201,7 +203,7 @@ void TGLVEntry::SetSubnames(const char* n1,const char* n2,const char* n3,
                             const char* n7,const char* n8,const char* n9,
                             const char* n10,const char* n11,const char* n12)
 {
-   // sets new subnames
+   // Sets new subnames.
 
    if (fSubnames) {
       for (Int_t i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
@@ -244,7 +246,7 @@ void TGLVEntry::SetSubnames(const char* n1,const char* n2,const char* n3,
    fSubnames[ncol] = 0;
 
    fCtw = new int[ncol];
-   fCtw[ncol-1] = 0; 
+   fCtw[ncol-1] = 0;
 
    for (int i = 0; i<ncol; i++) {
       fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
@@ -366,7 +368,8 @@ TGDimension TGLVEntry::GetDefaultSize() const
    // Get default size of list item.
 
    TGDimension size;
-   TGDimension isize(fCurrent->GetWidth(), fCurrent->GetHeight());
+   TGDimension isize(fCurrent ? fCurrent->GetWidth() : 0,
+                     fCurrent ? fCurrent->GetHeight() : 0);
    TGDimension lsize(fTWidth, fTHeight+1);
 
    switch (fViewMode) {
