@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.77 2004/05/12 22:43:06 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.78 2004/08/11 07:59:20 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -56,7 +56,7 @@ ClassImp(TFormula)
 //*-*  In the last example above:
 //*-*     gaus(0) is a substitute for [0]*exp(-0.5*((x-[1])/[2])**2)
 //*-*        and (0) means start numbering parameters at 0
-//*-*     gausn(0) is a substitute for [0]*exp(-0.5*((x-[1])/[2])**2)/sqrt(2*pi*[2])
+//*-*     gausn(0) is a substitute for [0]*exp(-0.5*((x-[1])/[2])**2)/(sqrt(2*pi)*[2]))
 //*-*        and (0) means start numbering parameters at 0
 //*-*     expo(3) is a substitute for exp([3]+[4])*x)
 //*-*     pol3(5) is a substitute for par[5]+par[6]*x+par[7]*x**2+par[8]*x**3
@@ -485,7 +485,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*     [0]*exp(-0.5*((x-[1])/[2])**2)
 //*-*   to obtain a standard normalized gaussian, use "gausn" instead of "gaus"
 //*-*   the expression "gausn" is a substitute for
-//*-*     [0]*exp(-0.5*((x-[1])/[2])**2)/sqrt(2*pi*[2])
+//*-*     [0]*exp(-0.5*((x-[1])/[2])**2)/(sqrt(2*pi)*[2]))
 //*-*
 //*-*   boolean optimization (kBoolOptmize) :
 //*-*   =====================================
