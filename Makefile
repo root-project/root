@@ -132,7 +132,7 @@ MAKEINFO      = cint/MAKEINFO
 ##### libCore #####
 
 COREO         = $(BASEO) $(CONTO) $(METAO) $(NETO) $(SYSTEMO) $(ZIPO) $(CLIBO)
-COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO)
+COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 
