@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.191 2004/10/29 18:03:11 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.192 2004/11/02 21:51:10 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1642,15 +1642,31 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
          ElementStreamer(TemplateArg(m,1),"R__t2",rwmode,tcl2);
       }
 
+      /* Need to go from 
+         type R__t;
+         R__t.Stream;
+         vec.push_back(R__t);
+         to
+         vec.push_back(type());
+         R__t_p = &(vec.last());
+         *R__t_p->Stream;
+
+      */
       switch (stltype) {
 
          case kMap:
-         case kMultiMap:
-            fprintf(fp, "            std::pair<const %s,",TemplateArg(m).Name());
+         case kMultiMap: {
+            string keyName( TemplateArg(m).Name() );
+            if ( strncmp(keyName.c_str(),"const ", strlen("const "))==0 ) {
+               fprintf(fp, "            std::pair<%s,",keyName.c_str());
+            } else {
+               fprintf(fp, "            std::pair<const %s,",keyName.c_str());
+            }
             fprintf(fp, "%s> R__t3(R__t,R__t2);\n",TemplateArg(m,1).Name());
             fprintf(fp, "            R__stl.insert(R__t3);\n");
           //fprintf(fp, "            R__stl.insert(%s::value_type(R__t,R__t2));\n",stlType.c_str());
             break;
+         }
          case kSet:
          case kMultiSet:
             fprintf(fp, "            R__stl.insert(R__t);\n");
