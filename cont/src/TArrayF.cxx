@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayF.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayF.cxx,v 1.2 2001/02/28 07:51:23 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -147,7 +147,10 @@ void TArrayF::Streamer(TBuffer &b)
    // Stream a TArrayF object.
 
    if (b.IsReading()) {
-      fN = b.ReadArray(fArray);
+      Int_t n;
+      b >> n;
+      Set(n);
+      b.ReadFastArray(fArray,n);
    } else {
       b.WriteArray(fArray, fN);
    }
