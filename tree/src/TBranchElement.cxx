@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.26 2001/04/24 14:30:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.27 2001/04/24 15:05:30 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -507,7 +507,7 @@ TStreamerInfo *TBranchElement::GetInfo()
    
    if (fInfo) {
       if (!fInfo->GetOffsets()) {
-printf("Branch=%s, recompiling info for class=%s, version=%d\n",GetName(),fInfo->GetName(),fClassVersion);
+//printf("Branch=%s, recompiling info for class=%s, version=%d\n",GetName(),fInfo->GetName(),fClassVersion);
          TStreamerInfo::Optimize(kFALSE);
          fInfo->Compile();
          TStreamerInfo::Optimize(kTRUE);
@@ -519,7 +519,7 @@ printf("Branch=%s, recompiling info for class=%s, version=%d\n",GetName(),fInfo-
       TStreamerInfo::Optimize(kFALSE);
       fInfo = cl->GetStreamerInfo();
       if (fInfo && !fInfo->GetOffsets()) {
-printf("Branch=%s, building info for class=%s, version=%d\n",GetName(),cl->GetName(),fClassVersion);
+//printf("Branch=%s, building info for class=%s, version=%d\n",GetName(),cl->GetName(),fClassVersion);
          fInfo->Compile();
       }
       TStreamerInfo::Optimize(kTRUE);
@@ -744,7 +744,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
      } else if (fType <= 2) {     // branch in split mode
        if (fStreamerType > 40 && fStreamerType < 55) {
           Int_t atype = fStreamerType - 40;
-          Int_t n = (Int_t)((TBranchElement*)fBranchCount)->GetValue(0,0);
+          Int_t n = (Int_t)fBranchCount->GetValue(0,0);
           fNdata = n;
           Char_t isArray; 
           b >> isArray; 
@@ -790,8 +790,11 @@ void TBranchElement::ReadLeaves(TBuffer &b)
     if (!clones) return; 
     fInfo->ReadBufferClones(b,clones,fNdata,fID);
   } else if (fType <= 2) {     // branch in split mode
-    fNdata = 1;
+    if (fBranchCount) fNdata = (Int_t)fBranchCount->GetValue(0,0);
+    else fNdata = 1;
     fInfo->ReadBuffer(b,fObject,fID);
+    if (fStreamerType == 6) fNdata = (Int_t)GetValue(0,0);
+//printf("ReadLeaves:%s, fNdata=%d\n",GetName(),fNdata);
   }   
 }
 
