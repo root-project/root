@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.26 2004/02/05 10:05:06 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.27 2004/02/09 09:50:17 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -212,20 +212,20 @@ void TRint::Run(Bool_t retrn)
 
    // Process shell command line input files
    if (InputFiles()) {
+      Int_t nfile = 0;
       TObjString *file;
       TIter next(InputFiles());
       RETRY {
          while ((file = (TObjString *)next())) {
             char cmd[256];
+            if (!fNcmd)
+               printf("\n");
             if (file->String().EndsWith(".root")) {
                const char *rfile = (const char*)file->String();
-               Printf("\nAttaching file %s...", rfile);
-               char *base = StrDup(gSystem->BaseName(rfile));
-               char *s = strchr(base, '.'); *s = 0;
-               sprintf(cmd, "TFile *%s = TFile::Open(\"%s\")", base, rfile);
-               delete [] base;
+               Printf("Attaching file %s as _file%d...", rfile, nfile);
+               sprintf(cmd, "TFile *_file%d = TFile::Open(\"%s\")", nfile++, rfile);
             } else {
-               Printf("\nProcessing %s...", (const char*)file->String());
+               Printf("Processing %s...", (const char*)file->String());
                sprintf(cmd, ".x %s", (const char*)file->String());
             }
             Getlinem(kCleanUp, 0);
