@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPARA.cxx,v 1.2 2004/08/03 16:01:18 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPARA.cxx,v 1.3 2004/08/09 15:22:28 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -81,7 +81,6 @@ void TPARA::SetPoints(Double_t *buff)
    Double_t TTH = TMath::Tan(theta);
    Double_t TXZ = TTH*TMath::Cos(phi);
    Double_t TYZ = TTH*TMath::Sin(phi);
-   Double_t * rep = buff;
 
    *buff++ = -dz*TXZ-TXY*dy-dx ; *buff++ = -dy-dz*TYZ ; *buff++ = -dz;
    *buff++ = -dz*TXZ+TXY*dy-dx ; *buff++ = +dy-dz*TYZ ; *buff++ = -dz; //3
