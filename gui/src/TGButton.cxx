@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.24 2003/12/16 16:22:56 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.25 2003/12/16 17:00:41 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -889,7 +889,7 @@ void TGCheckButton::DoRedraw()
    }
 
    x = 20;
-   y = 1;
+   y = y0;
 
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
