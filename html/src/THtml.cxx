@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.41 2003/07/10 15:37:34 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.42 2003/07/14 07:52:31 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2326,13 +2326,15 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
          if (!strcasecmp(keyword, "end_html") && *(keyword - 1) != '\"') {
             flag = kFALSE;
             hide = kTRUE;
-            pre_is_open = kFALSE;
+            pre_is_open = kTRUE;
+	    out << endl << "<pre>";
          }
       } else {
          if (!strcasecmp(keyword, "begin_html") && *(keyword - 1) != '\"') {
             flag = kTRUE;
             hide = kTRUE;
-            pre_is_open = kTRUE;
+            pre_is_open = kFALSE;
+	    out << "</pre>" << endl;
          } else {
             *end = c;
             tempEndPtr = end;
