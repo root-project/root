@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooBinning.rdl,v 1.3 2002/09/05 04:33:15 verkerke Exp $
+ *    File: $Id: RooBinning.rdl,v 1.4 2002/09/05 22:29:46 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,6 +37,8 @@ public:
 
   virtual Int_t numBoundaries() const { return _nbins+1 ; }
   virtual Int_t binNumber(Double_t x) const ;
+  virtual Int_t rawBinNumber(Double_t x) const ;
+  virtual Double_t nearestBoundary(Double_t x) const ;
 
   virtual void setRange(Double_t xlo, Double_t xhi) ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooBinning.cc,v 1.6 2002/09/05 22:29:46 verkerke Exp $
+ *    File: $Id: RooBinning.cc,v 1.7 2002/09/07 18:09:07 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -188,6 +188,33 @@ Int_t RooBinning::binNumber(Double_t x) const
     if (val> _xlo && n<_nbins-1) n++ ;
   }
   return n;
+}
+
+
+Int_t RooBinning::rawBinNumber(Double_t x) const 
+{
+  // Determine 'raw' bin number (i.e counting all defined boundaries) for given value
+  Int_t n(0) ;
+  _bIter->Reset() ;
+
+  RooDouble* b ;
+  while(b=(RooDouble*)_bIter->Next()) {
+    Double_t val = (Double_t)*b ;
+    if (x<val) return n>0?n-1:0 ;
+    n++ ;
+  }
+  return n-1;
+}
+
+
+Double_t RooBinning::nearestBoundary(Double_t x) const 
+{
+  Int_t bn = binNumber(x) ;
+  if (fabs(binLow(bn)-x)<fabs(binHigh(bn)-x)) {
+    return binLow(bn) ;
+  } else {
+    return binHigh(bn) ;
+  }
 }
 
 
