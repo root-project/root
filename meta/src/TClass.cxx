@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.102 2002/12/02 18:50:04 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.103 2002/12/05 10:01:51 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -828,7 +828,8 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
          if (element->IsA() == TStreamerBase::Class()) {
             TStreamerBase *base = (TStreamerBase*)element;
             TClass *baseclass = base->GetClassPointer();
-            if (baseclass == cl) return offset;
+            Int_t subOffset = baseclass->GetBaseClassOffset(cl); 
+            if (subOffset != -1) return offset+subOffset;
             offset += baseclass->Size();
          }
       }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.27 2002/11/11 14:45:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.28 2002/11/15 14:40:30 rdm Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -476,7 +476,13 @@ TObject *TKey::ReadObj()
 
    char *pobj = (char*)cl->New();
    Int_t baseOffset = cl->GetBaseClassOffset(TObject::Class());
-   //if (baseOffset==-1) cl does not inherit from TObject (this is NOT possible yet).
+   if (baseOffset==-1) {
+      // cl does not inherit from TObject.
+      // Since this is not possible yet, the only reason we could reach this code
+      // is because something is screw up in the ROOT code.
+      Fatal("ReadObj","Incorrect detection of the inheritance from TObject for class %s.\n",
+            fClassName.Data());
+   }
    tobj = (TObject*)(pobj+baseOffset);
    if (!pobj) {
       Error("ReadObj", "Cannot create new object of class %s", fClassName.Data());
