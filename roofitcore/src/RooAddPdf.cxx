@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.26 2001/11/14 18:42:37 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.27 2001/11/15 08:46:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -662,6 +662,37 @@ RooPlot* RooAddPdf::plotCompOn(RooPlot *frame, const RooArgSet& compSet, Option_
 
   return frame2 ;
 }
+
+
+RooPlot* RooAddPdf::plotCompSliceOn(RooPlot *frame, const RooArgSet& compSet, const RooArgSet& sliceSet,
+				    Option_t* drawOptions, Double_t scaleFactor, ScaleType stype, 
+				    const RooAbsData* projData) const 
+{
+  // Plot ourselves on given frame, as done in plotOn(), except that the variables 
+  // listed in 'sliceSet' are taken out from the default list of projected dimensions created
+  // by plotOn().
+
+  RooArgSet projectedVars ;
+  makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
+  
+  // Take out the sliced variables
+  TIterator* iter = sliceSet.createIterator() ;
+  RooAbsArg* sliceArg ;
+  while(sliceArg=(RooAbsArg*)iter->Next()) {
+    RooAbsArg* arg = projectedVars.find(sliceArg->GetName()) ;
+    if (arg) {
+      projectedVars.remove(*arg) ;
+    } else {
+      cout << "RooAddPdf::plotCompSliceOn(" << GetName() << ") slice variable " 
+	   << sliceArg->GetName() << " was not projected anyway" << endl ;
+    }
+  }
+  delete iter ;
+
+  return plotCompOn(frame,compSet,drawOptions,scaleFactor,stype,projData,&projectedVars) ;
+}
+
+
 
 
 RooAbsGenContext* RooAddPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, Bool_t verbose) const 
