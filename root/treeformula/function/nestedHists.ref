@@ -1,0 +1,9 @@
+
+Processing runnestedHists.C...
+Warning in <TClass::TClass>: no dictionary for class TPlate is available
+Warning in <TClass::TClass>: no dictionary for class TStrip is available
+<TCanvas::MakeDefCanvas>: created default TCanvas with name c1
+Error in <TTreeFormula::DefinedVariable>: Can not call method fHists.GetNbinsX() on class without dictionary (list<TH1F*>)!
+
+*ERROR 31 : 
+ Part of the Variable :  "sectors.fStrips.fHists.GetNbinsX()" exists but some of it is not accessible or useable

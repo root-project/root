@@ -4,7 +4,7 @@
 CLEAN_TARGETS += testFormulaFuncCall.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += testFormulaFuncCall testNestedFunc
+TEST_TARGETS += testFormulaFuncCall testNestedFunc nestedHists
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -26,6 +26,11 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
+prova.root: lista_C.$(DllSuf)
+	$(CMDECHO) root.exe -q -b -l lista.C+ > prova_root.log
+
+nestedHists: nestedHists.log prova.root
+	$(TestDiff)
 
 testNestedFunc: NestedFunc.log
 	$(TestDiff)
