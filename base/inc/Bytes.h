@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.9 2002/07/18 13:53:22 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.10 2003/03/11 14:27:14 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -143,10 +143,10 @@ inline void tobuf(char *&buf, Long_t x)
       buf[7] = sw[0];
    } else {
       if (x < 0) {
-         buf[0] = -1;
-         buf[1] = -1;
-         buf[2] = -1;
-         buf[3] = -1;
+         buf[0] = (char) -1;
+         buf[1] = (char) -1;
+         buf[2] = (char) -1;
+         buf[3] = (char) -1;
       } else {
          buf[0] = 0;
          buf[1] = 0;
@@ -163,10 +163,10 @@ inline void tobuf(char *&buf, Long_t x)
       memcpy(buf, &x, 8);
    } else {
       if (x < 0) {
-         buf[0] = -1;
-         buf[1] = -1;
-         buf[2] = -1;
-         buf[3] = -1;
+         buf[0] = (char) -1;
+         buf[1] = (char) -1;
+         buf[2] = (char) -1;
+         buf[3] = (char) -1;
       } else {
          buf[0] = 0;
          buf[1] = 0;
