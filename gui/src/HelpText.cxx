@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.3 2001/11/28 16:05:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.4 2002/09/10 13:17:42 brun Exp $
 // Author: Fons Rademakers   28/07/97
 
 #include "HelpText.h"
@@ -57,6 +57,9 @@ const char gHelpGLViewer[] = "\
      \tl\t--- to Shift left\n\
      \tj\t--- to Pull the object backward\n\
      \tk\t--- to Push the object foreward\n\n\
+     \tx X\t--- to Rotate about x\n\
+     \ty Y\t--- to Rotate about y\n\
+     \tz Z\t--- to Rotate about z\n\n\
      \t+\t--- to Increase speed to move\n\
      \t-\t--- to Decrease speed to move\n\n\
      \tn\t--- to turn \"SMOOTH\" color mode on\n\
@@ -68,7 +71,7 @@ const char gHelpGLViewer[] = "\
      \tc\t--- to cull-face mode\n\n\
      \ts\t--- to increase the scale factor (clip cube borders)\n\
      \ta\t--- to decrease the scale factor (clip cube borders)\n\n\
-     HOLD the left mouse button and MOVE mouse to ROTATE object\n\n\
+     HOLD the left mouse button and MOVE mouse to ROTATE object\n\
 ";
 
 
