@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.94 2001/10/16 16:28:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.95 2001/10/22 14:22:30 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1026,6 +1026,10 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    
    if (cl == TClonesArray::Class()) {
       TClonesArray *clones = (TClonesArray *)cl;
+      if (!clones->GetClass()) {
+         Error("Bronch","TClonesArray with no class defined in branch: %s",name);
+         return 0;
+      }
       if (splitlevel > 0) {
          if (clones->GetClass()->GetClassInfo()->RootFlag() & 1) 
             Warning("Bronch","Using split mode on a class: %s with a custom Streamer",clones->GetClass()->GetName());
