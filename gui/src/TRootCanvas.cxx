@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.40 2004/05/04 14:41:52 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.41 2004/05/07 13:01:18 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -52,12 +52,6 @@
 #endif
 
 #include "HelpText.h"
-
-#ifdef WIN32
- #include <windows.h>
- #undef SendMessage
-#endif
-
 
 // Canvas menu command ids
 enum ERootCanvasCommands {
@@ -305,7 +299,6 @@ void TRootCanvas::CreateCanvas(const char *name)
    Int_t i;
    fButton    = 0;
    fAutoFit   = kTRUE;   // check also menu entry
-   fLockState = 0;
    fEditor    = 0;
 
    // Create menus
@@ -1119,28 +1112,6 @@ void TRootCanvas::FitCanvas()
       fCanvas->Update();
       fCanvasContainer->ChangeOptions(oopt);
    }
-}
-
-//______________________________________________________________________________
-void TRootCanvas::Lock()
-{
-   // Lock updating canvas.
-
-   if (IsLocked()) return;
-#ifdef WIN32
-   ::InterlockedIncrement(&fLockState);
-#endif
-}
-
-//______________________________________________________________________________
-void TRootCanvas::Unlock()
-{
-   //  Unlock updating canvas.
-
-   if (!IsLocked()) return;
-#ifdef WIN32
-   ::InterlockedDecrement(&fLockState);
-#endif
 }
 
 //______________________________________________________________________________

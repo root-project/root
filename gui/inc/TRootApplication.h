@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootApplication.h,v 1.2 2001/04/22 16:00:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootApplication.h,v 1.3 2001/10/02 09:07:43 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -50,7 +50,7 @@ public:
    void    Show() { }
    void    Hide() { }
    void    Iconify() { }
-   Bool_t  IsCmdThread() { return kTRUE; } // by default (for UNIX) ROOT is a single thread application
+   Bool_t  IsCmdThread();
    void    Init() { }
    void    Open() { }
    void    Raise() { }

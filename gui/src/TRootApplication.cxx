@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootApplication.cxx,v 1.4 2001/10/02 09:07:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootApplication.cxx,v 1.5 2003/10/22 17:20:50 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 #include "TSystem.h"
 #include "TString.h"
 #include "TGClient.h"
-
+#include "TVirtualX.h"
 
 ClassImp(TRootApplication)
 
@@ -56,6 +56,15 @@ TRootApplication::~TRootApplication()
 
    delete fDisplay;
    delete fClient;
+}
+
+//______________________________________________________________________________
+Bool_t TRootApplication::IsCmdThread()
+{
+   // By default (for UNIX) ROOT is a single thread application
+   // For win32gdk returns kTRUE if it's called from inside of server/cmd thread
+
+   return gVirtualX ? gVirtualX->IsCmdThread() : kTRUE;
 }
 
 //______________________________________________________________________________
