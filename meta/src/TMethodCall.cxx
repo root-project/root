@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -320,6 +320,11 @@ EReturnType TMethodCall::ReturnType()
       }
       G__TypedefInfo type(func->GetReturnTypeName());
       const char *name = type.TrueName();
+
+      if (!strcmp("(unknown)",name)) {
+         G__TypeInfo type(func->GetReturnTypeName());
+         name = type.TrueName();
+      }
 
       if (!strcmp("unsigned int", name)   || !strcmp("int", name)     ||
           !strcmp("unsigned long", name)  || !strcmp("long", name)    ||
