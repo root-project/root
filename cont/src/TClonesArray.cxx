@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.31 2002/08/07 15:45:48 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.32 2002/08/10 11:56:17 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -242,11 +242,23 @@ void TClonesArray::Compress()
 }
 
 //______________________________________________________________________________
-void TClonesArray::Clear(Option_t *)
+void TClonesArray::Clear(Option_t *option)
 {
    // Clear the clones array. Only use this routine when your objects don't
    // allocate memory since it will not call the object dtors.
+   // However, if the class in the TClonesArray implements the function Clear(Option_t *option)
+   // and if option = 'C' the function Clear is called for all active objects
+   // in the array. In the function Clear, one can delete objects or dynamic
+   // arrays allocated in the class constructor. This procedure is much faster
+   // than calling TClonesArray::Delete.
 
+   if (option[0] == 'C') {
+      Int_t n = GetEntriesFast();
+      for (Int_t i=0;i<n;i++) {
+         TObject *obj = At(i);
+         if (obj) obj->Clear();
+      }
+   }
    // Protect against erroneously setting of owner bit
    SetOwner(kFALSE);
 
