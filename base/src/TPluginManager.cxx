@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.11 2002/09/09 15:21:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.12 2002/09/10 12:14:29 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -214,7 +214,8 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
       va_list ap;
       va_start(ap, va_(nargs));
 
-      args = new Long_t[nargs];
+      args = new Long_t[nargs+1];
+      args[nargs] = 0;   // sentinel
 
       for (int i = 0; i < nargs; i++) {
          union {
