@@ -61,7 +61,11 @@ relations_read_C.$(DllSuf) : relations.h
 relationsTest.log: relations_load_C.$(DllSuf)  relations_write_C.$(DllSuf)  relations_read_C.$(DllSuf) 
 	$(CMDECHO)  root.exe -q -b -l relationsRun.C > relationsTest.log
 
-relationsTest: relationsTest.log
+remove_relations_fs:
+	$(CMDECHO)sed 's|File  Size =.*\*||g' relationsTest.log > tempfile
+	$(CMDECHO)mv tempfile relationsTest.log
+	
+relationsTest: relationsTest.log remove_relations_fs
 	$(CMDECHO) diff -b relationsTest.log relationsTest.ref
 
 mytest:

@@ -10,6 +10,6 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 offsetTest: TOffset_cxx.$(DllSuf)
 
 TOffset_cxx.$(DllSuf) : TOffset.cxx TOffset.h $(ROOTSYS)/lib/libCore.$(DllSuf)
-	$(CMDECHO) root -q -b -l TOffset.cxx++ > TOffset.log
+	$(CMDECHO) root -q -b -l TOffset.cxx++ >& TOffset.log
 
 

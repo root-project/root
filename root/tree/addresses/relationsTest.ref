@@ -23,7 +23,7 @@ byte written for entry   #9: 62
 values written for entry #9: 90, 9.000000, 198, 66.000000, 396, 132.000000
 ******************************************************************************
 *Tree    :T         : An example of a ROOT tree                              *
-*Entries :       10 : Total =           12657 bytes  File  Size = 2510 *
+*Entries :       10 : Total =           12657 bytes  
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Branch  :B                                                                  *

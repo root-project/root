@@ -71,19 +71,19 @@ Event.$(ObjSuf): Event.h
 MainEvent.$(ObjSuf): Event.h
 
 EventDict.$(SrcSuf): Event.h EventLinkDef.h
-	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+#	$(CMDECHO)echo "Generating dictionary $@..."
+	$(CMDECHO)rootcint -f $@ -c $^
 
 EventDict_2.$(SrcSuf): Event_2.h EventLinkDef.h
-	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+#	$(CMDECHO)echo "Generating dictionary $@..."
+	$(CMDECHO)rootcint -f $@ -c $^
 
 $(EVENTSO):     $(EVENTO)
 ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+		$(CMDECHO)/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+		$(CMDECHO)/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
@@ -103,19 +103,19 @@ endif
 endif
 endif
 endif
-		@echo "$@ done"
+#		$(CMDECHO)echo "$@ done"
 
 $(EVENT):       $(EVENTSO) $(MAINEVENTO)
 		$(CMDECHO) $(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTLIB) $(LIBS) \
 		   $(OutPutOpt)$(EVENT)
-		@echo "$@ done"
+#		$(CMDECHO)echo "$@ done"
 
 $(EVENT2SO):     $(EVENT2O)
 ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+		$(CMDECHO)/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+		$(CMDECHO)/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
@@ -124,8 +124,8 @@ ifeq ($(ARCH),macosx)
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(ARCH),win32)
-		bindexplib $* $^ > $*.def
-		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
+		$(CMDECHO)bindexplib $* $^ > $*.def
+		$(CMDECHO)lib -nologo -MACHINE:IX86 $^ -def:$*.def \
 		   $(OutPutOpt)$(EVENTLIB)
 		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
 		   $(OutPutOpt)$@
@@ -135,10 +135,10 @@ endif
 endif
 endif
 endif
-		@echo "$@ done"
+#		$(CMDECHO)echo "$@ done"
 
 
 Event.root: $(EVENT)
 	$(CMDECHO) ./Event 10 0 7 1 > Event_root.log
-	@echo "$@ done"
+#	$(CMDECHO)echo "$@ done"
 

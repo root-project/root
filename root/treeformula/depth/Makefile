@@ -6,8 +6,10 @@ CLEAN_TARGETS += depth.root create.output
 #Set the list of target to make while testing
 TEST_TARGETS += depthTest
 
-# adjust the location of Rules.mk as needed.
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 ifneq ($(FAIL),)
 depthTest: depth.root

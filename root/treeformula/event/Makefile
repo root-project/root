@@ -19,10 +19,11 @@ bigeventTest: ./Event ./libEvent.$(DllSuf)
 	$(CMDECHO)./Event 10 1 1 20 > Event.read.log
 ifeq ($(FAIL),)
 	$(WarnFailTest)
-	@echo This is due to the problem with loading libraries with stl containers after opening a file
+	$(CMDECHO)echo This is due to the problem with loading libraries with stl containers after opening a file
 else
-	.$(CMDECHO)/DrawTest.sh
+	$(CMDECHO)./DrawTest.sh
 endif
+
 
 Event : MainEvent.o Event.o EventDict.o
 	$(CMDECHO) $(CXX) $(OPT) $(OutPutOpt)Event MainEvent.o Event.o EventDict.o -L$(ROOTSYS)/lib \

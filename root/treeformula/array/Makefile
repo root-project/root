@@ -20,7 +20,7 @@ ifneq ($(FAIL),)
 endif
 
 myTree.root: runFillTree.C fillTree.cxx Data.h Data.cxx 
-	$(CMDECHO) root.exe -q -b -l runFillTree.C > filltree.output
+	$(CMDECHO) root.exe -q -b -l runFillTree.C >& filltree.output
 
 arrayDrawTest.output: runArrayTest.C myTree.root
 	$(CMDECHO) root.exe -q -b -l runArrayTest.C > arrayDrawTest.output 2>&1 
