@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.12 2001/10/29 06:37:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.13 2001/10/31 11:21:22 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -93,6 +93,7 @@ public:
         virtual void     SetNoExponent(Bool_t noExponent=kTRUE);  // *MENU*
         virtual void     SetParent(TObject *obj) {fParent = obj;}
         virtual void     SetRange(Int_t first=0, Int_t last=0);  // *MENU*
+        virtual void     SetRangeUser(Axis_t ufirst, Axis_t ulast);  // *MENU*
         virtual void     SetTimeDisplay(Int_t value) {fTimeDisplay = value;} // *TOGGLE*
         virtual void     SetTimeFormat(const char *format="");  // *MENU*
         virtual void     UnZoom();  // *MENU*

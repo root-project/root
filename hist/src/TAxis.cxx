@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.20 2001/10/29 06:37:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.21 2001/10/31 11:21:26 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -641,8 +641,9 @@ void TAxis::SetNoExponent(Bool_t noExponent)
 //______________________________________________________________________________
 void TAxis::SetRange(Int_t first, Int_t last)
 {
-//          Set the viewing range for the axis from bin first to last
-
+//  Set the viewing range for the axis from bin first to last
+//  To set a range using the axis coordinates, use TAxis::SetRangeUser.
+   
    if (last == 0) last = fNbins;
    if (last > fNbins) last = fNbins;
    if (last  < first) first = 1;
@@ -656,6 +657,16 @@ void TAxis::SetRange(Int_t first, Int_t last)
       fFirst = first;
       fLast  = last;
    }
+}
+
+
+//______________________________________________________________________________
+void TAxis::SetRangeUser(Axis_t ufirst, Axis_t ulast)
+{
+//  Set the viewing range for the axis from ufirst to ulast (in user coordinates)
+//  To set a range using the axis bin numbers, use TAxis::SetRange.
+
+   SetRange(FindBin(ufirst),FindBin(ulast));
 }
 
 //______________________________________________________________________________
