@@ -448,7 +448,7 @@ inline T* value_type(const _Randit<T, Distance>&) {
 
 #if (G__GNUC>=3)
 
-#if (G__GNUC_MINOR>=1) 
+#if (G__GNUC_MINOR>=1 || G__GNUC>=4) 
 
 // vector ///////////////////////////////////////////////////////////////
 template <class T> 

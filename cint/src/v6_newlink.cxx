@@ -18,7 +18,7 @@
  * purpose.  It is provided "as is" without express or implied warranty.
  ************************************************************************/
 
-#define G__OLDIMPLEMENTATION2047
+/* #define G__OLDIMPLEMENTATION2047 */
 #define G__OLDIMPLEMENTATION2044 /* Problem with t980.cxx */
 
 

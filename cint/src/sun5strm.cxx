@@ -1717,7 +1717,7 @@ static int G___operatorgRgR_6_2(G__value *result7,G__CONST char *funcname,struct
 
 static int G___operatorgRgR_7_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
-        istream& obj=operator>>(*(istream*)libp->para[0].ref,*(bool*)G__UCharref(&libp->para[1]));
+        istream& obj=operator>>(*(istream*)libp->para[0].ref,*(bool*)G__Boolref(&libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
       }
    return(1 || funcname || hash || result7 || libp) ;

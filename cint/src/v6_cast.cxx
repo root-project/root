@@ -910,56 +910,56 @@ int reftype;
 #ifndef G__OLDIMPLEMENTATION1726
     if(type!=buf->type) buf->ref = 0; /* questionable */
 #endif
-    G__letint(buf,(char)type ,(unsigned char)G__int(*buf));
+    G__letint(buf,(char)type ,(unsigned char)G__int_cast(*buf));
     break;
   case 'c':
 #ifndef G__OLDIMPLEMENTATION1726
     if(type!=buf->type) buf->ref = 0; /* questionable */
 #endif
-    G__letint(buf,(char)type ,(char)G__int(*buf));
+    G__letint(buf,(char)type ,(char)G__int_cast(*buf));
     break;
   case 'r':
 #ifndef G__OLDIMPLEMENTATION1726
     if(type!=buf->type) buf->ref = 0; /* questionable */
 #endif
-    G__letint(buf,(char)type ,(unsigned short)G__int(*buf));
+    G__letint(buf,(char)type ,(unsigned short)G__int_cast(*buf));
     break;
   case 's':
 #ifndef G__OLDIMPLEMENTATION1726
     if(type!=buf->type) buf->ref = 0; /* questionable */
 #endif
-    G__letint(buf,(char)type ,(short)G__int(*buf));
+    G__letint(buf,(char)type ,(short)G__int_cast(*buf));
     break;
   case 'h':
 #ifndef G__OLDIMPLEMENTATION1726
     if(type!=buf->type) buf->ref = 0; /* questionable */
 #endif
-    G__letint(buf,(char)type ,(unsigned int)G__int(*buf));
+    G__letint(buf,(char)type ,(unsigned int)G__int_cast(*buf));
     break;
   case 'i':
 #ifndef G__OLDIMPLEMENTATION1726
     if(type!=buf->type) buf->ref = 0; /* questionable */
 #endif
-    G__letint(buf,(char)type ,(int)G__int(*buf));
+    G__letint(buf,(char)type ,(int)G__int_cast(*buf));
     break;
   case 'k':
 #ifndef G__OLDIMPLEMENTATION1726
     if(type!=buf->type) buf->ref = 0; /* questionable */
 #endif
-    G__letint(buf,(char)type ,(unsigned long)G__int(*buf));
+    G__letint(buf,(char)type ,(unsigned long)G__int_cast(*buf));
     break;
   case 'l':
 #ifndef G__OLDIMPLEMENTATION1726
     if(type!=buf->type) buf->ref = 0; /* questionable */
 #endif
-    G__letint(buf,(char)type ,(long)G__int(*buf));
+    G__letint(buf,(char)type ,(long)G__int_cast(*buf));
     break;
 #ifndef G__OLDIMPLEMENTATION1604
   case 'g':
 #ifndef G__OLDIMPLEMENTATION1726
     if(type!=buf->type) buf->ref = 0; /* questionable */
 #endif
-    G__letint(buf,(char)type ,(unsigned char)(G__int(*buf)?1:0));
+    G__letint(buf,(char)type ,(unsigned char)(G__int_cast(*buf)?1:0));
     break;
 #endif
   case 'U':

@@ -35,7 +35,7 @@ using namespace std;
 #pragma link C++ class string::iterator;
 #pragma link C++ class string::const_iterator;
 #pragma else
-#pragma if ((G__GNUC>=3 && G__GNUC_MINOR>=1) && !defined(G__INTEL_COMPILER)) 
+#pragma if (G__GNUC_VER>=3001) && !defined(G__INTEL_COMPILER)) 
 #pragma link C++ class string::iterator;
 #pragma else
 #pragma link C++ typedef string::iterator;

@@ -40,12 +40,12 @@ using namespace std;
 #pragma link C++ class vector<void*>;
 #endif
 #pragma link C++ class vector<char*>;
-#pragma link C++ class vector<const char*>;
+// #pragma link C++ class vector<const char*>;
 #if defined(G__STRING_DLL) || defined(G__ROOT)
 #pragma link C++ class vector<string>;
 #endif
 
-#if (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#if (G__GNUC_VER>=3001)
 #ifdef G__OLDIMPLEMENTATION1703
 #pragma link C++ namespace __gnu_cxx;
 #endif
