@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.30 2001/11/21 17:59:10 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.31 2001/11/22 15:05:21 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -56,7 +56,6 @@ private:
    static  Int_t     fgCount;         //Number of TStreamerInfo instances
    static  Bool_t    fgCanDelete;     //True if ReadBuffer can delete object
    static  Bool_t    fgOptimize;      //True if optimization on
-   static  TFile    *fgFile;          //Pointer to current file
    static TStreamerElement *fgElement; //Pointer to current TStreamerElement
    void              BuildUserInfo(const char *info);
 
@@ -80,16 +79,15 @@ public:
    virtual            ~TStreamerInfo();
    void                Build();
    void                BuildCheck();
+   void                BuildFake(TFile *file);
    void                BuildOld();
-   void                BuildFake();
    void                Compile();
    void                ComputeSize();
-   void                ForceWriteInfo();
+   void                ForceWriteInfo(TFile *file);
    Int_t               GenerateHeaderFile(const char *dirname);
    TClass             *GetClass() const {return fClass;}
    UInt_t              GetCheckSum() const {return fCheckSum;}
    Int_t               GetClassVersion() const {return fClassVersion;}
-   static TFile       *GetCurrentFile();
    Int_t               GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) const;
    TObjArray          *GetElements() const {return fElements;}
    ULong_t            *GetElems()   const {return fElem;}
@@ -112,8 +110,7 @@ public:
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
    void                SetClass(TClass *cl) {fClass = cl;}
    void                SetClassVersion(Int_t vers) {fClassVersion=vers;}
-   static void         SetCurrentFile(TFile *file);
-   void                TagFile();
+   void                TagFile(TFile *fFile);
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
 
