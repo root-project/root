@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.3 2000/10/01 15:20:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.4 2000/11/27 10:39:02 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -783,7 +783,7 @@ TBuffer &operator<<(TBuffer &buf, const TString &s)
 {
    // Write string to TBuffer.
 
-   s.Streamer(buf);
+   ((TString&)s).Streamer(buf);
    return buf;
 }
 
