@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.22 2001/12/13 11:47:44 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.26 2002/02/14 18:04:14 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -1370,7 +1370,7 @@ void TPostScript::Initialize()
 
    PrintStr("%%Title: ");
    const char *pstitle = gStyle->GetTitlePS();
-   if (!strlen(pstitle)) pstitle = gPad->GetMother()->GetTitle();
+   if (gPad && !strlen(pstitle)) pstitle = gPad->GetMother()->GetTitle();
    PrintStr(GetName());
    if(!strlen(pstitle) && fMode != 3) {;
       if ( fMode == 1 || fMode == 4) PrintFast(10," (Portrait");
