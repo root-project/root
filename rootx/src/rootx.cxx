@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.12 2004/01/08 23:06:52 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.13 2004/02/13 16:34:41 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -279,6 +279,7 @@ static void PrintUsage(char *pname)
    fprintf(stderr, "\n");
    fprintf(stderr, "  -?      : print usage\n");
    fprintf(stderr, "  -h      : print usage\n");
+   fprintf(stderr, "  --help  : print usage\n");
    fprintf(stderr, "  -config : print ./configure options\n");
    fprintf(stderr, "\n");
 }
@@ -302,7 +303,8 @@ int main(int argc, char **argv)
    bool batch = false, about = false;
    int i;
    for (i = 1; i < argc; i++) {
-      if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2)) {
+      if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
+          !strncmp(argv[i], "--help", 6)) {
          PrintUsage(argv[0]);
          return 1;
       }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.53 2004/02/09 09:50:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.54 2004/02/13 16:34:41 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -250,6 +250,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    // The following help and info arguments are supported:
    //    -?      : print usage
    //    -h      : print usage
+   //    --help  : print usage
    //    -config : print ./configure options
 
 
@@ -263,7 +264,8 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    int i, j;
 
    for (i = 1; i < *argc; i++) {
-      if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2)) {
+      if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
+          !strncmp(argv[i], "--help", 6)) {
          fprintf(stderr, "Usage: %s [-l] [-b] [-n] [-q] [dir] [file1.C ... fileN.C]\n", argv[0]);
          fprintf(stderr, "Options:\n");
          fprintf(stderr, "  -b : run in batch mode without graphics\n");
@@ -274,6 +276,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          fprintf(stderr, "\n");
          fprintf(stderr, "  -?      : print usage\n");
          fprintf(stderr, "  -h      : print usage\n");
+         fprintf(stderr, "  --help  : print usage\n");
          fprintf(stderr, "  -config : print ./configure options\n");
          fprintf(stderr, "\n");
          Terminate(0);
