@@ -23,6 +23,12 @@ using namespace std;
 using namespace stdext;
 #endif
 #endif
+#ifdef R__HPUX
+namespace std {
+  using ::make_pair;
+  using ::pair;
+}
+#endif
 
 #ifdef __CINT__
 template<class a,class b,class c> class hash_map : public map<a,b,c> {};

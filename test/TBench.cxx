@@ -11,6 +11,11 @@
 #include "Riostream.h"
 
 THit hit;
+#ifdef R__HPUX
+namespace std {
+  using ::make_pair;
+}
+#endif
 #ifdef R__WIN32
  const char *demofile = "$TMP/bench.root";
 #else
