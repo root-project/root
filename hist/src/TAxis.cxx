@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.61 2004/09/02 12:21:48 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.62 2004/09/08 08:41:44 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -729,6 +729,10 @@ void TAxis::SaveAttributes(ofstream &out, const char *name, const char *subname)
       while ((obj=(TObjString*)next())) {
          out<<"   "<<name<<subname<<"->SetBinLabel("<<obj->GetUniqueID()<<","<<quote<<obj->GetName()<<quote<<");"<<endl;
       }
+   }
+
+   if (fFirst || fLast) {
+      out<<"   "<<name<<subname<<"->SetRange("<<fFirst<<","<<fLast<<");"<<endl;
    }
 
    if (TestBit(kLabelsHori)) {
