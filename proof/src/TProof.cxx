@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.75 2005/02/08 11:02:24 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.76 2005/02/08 22:40:36 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -448,7 +448,7 @@ Bool_t TProof::StartSlaves()
          // protocol 1 is not supported anymore
          if (fProtocol == 1) {
             Error("StartSlaves", "client and remote protocols not compatible (%d and %d)",
-                  fProtocol, kPROOF_Protocol);
+                  kPROOF_Protocol, fProtocol);
             delete slave;
             return kFALSE;
          }
@@ -3207,7 +3207,7 @@ Bool_t TProofSuperMaster::StartSlaves()
                // protocol 1 is not supported anymore
                if (fProtocol == 1) {
                   Error("StartSlaves", "master and submaster protocols not compatible (%d and %d)",
-                        fProtocol, kPROOF_Protocol);
+                        kPROOF_Protocol, fProtocol);
                   fBadSlaves->Add(slave);
                }
                else {

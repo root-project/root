@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.48 2004/11/24 07:41:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.49 2005/02/07 18:02:37 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -67,6 +67,7 @@ class TDSet;
 // protocol changes:
 // 1 -> 2: new arguments for Process() command, option added
 // 2 -> 3: package manager enabling protocol changed
+// 3 -> 4: introduction of multi-level-master support
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol = 4;             // protocol version number
