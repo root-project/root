@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.22 2001/02/03 10:31:14 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.23 2001/02/09 16:47:52 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -337,8 +337,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
    char scratch[MAXBUF];
    char *current;
 
-   TLeaf *leaf(0), *tmp_leaf(0);
-   TBranch *branch(0), *tmp_branch(0);
+   TLeaf *leaf=0, *tmp_leaf=0;
+   TBranch *branch=0, *tmp_branch=0;
 
    Bool_t final = kFALSE;
    for (i=0, current = &(work[0]); i<=nchname && !final;i++ ) { 
@@ -1010,17 +1010,17 @@ Double_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf) const
 
          char *thisobj = (char*)leaf->GetObject();
          switch (dm->GetDataType()->GetType()) {
-            case kChar_t:   return (Double_t)(*(Char_t*)(thisobj+offset)); break;
-            case kUChar_t:  return (Double_t)(*(UChar_t*)(thisobj+offset)); break;
-            case kShort_t:  return (Double_t)(*(Short_t*)(thisobj+offset)); break;
-            case kUShort_t: return (Double_t)(*(UShort_t*)(thisobj+offset)); break;
-            case kInt_t:    return (Double_t)(*(Int_t*)(thisobj+offset)); break;
-            case kUInt_t:   return (Double_t)(*(UInt_t*)(thisobj+offset)); break;
-            case kLong_t:   return (Double_t)(*(Long_t*)(thisobj+offset)); break;
-            case kULong_t:  return (Double_t)(*(ULong_t*)(thisobj+offset)); break;
-            case kFloat_t:  return (Double_t)(*(Float_t*)(thisobj+offset)); break;
-            case kDouble_t: return (Double_t)(*(Double_t*)(thisobj+offset)); break;
-            case kchar:     return (Double_t)(*(char*)(thisobj+offset)); break;
+            case kChar_t:   return (Double_t)(*(Char_t*)(thisobj+offset));
+            case kUChar_t:  return (Double_t)(*(UChar_t*)(thisobj+offset));
+            case kShort_t:  return (Double_t)(*(Short_t*)(thisobj+offset));
+            case kUShort_t: return (Double_t)(*(UShort_t*)(thisobj+offset));
+            case kInt_t:    return (Double_t)(*(Int_t*)(thisobj+offset)); 
+            case kUInt_t:   return (Double_t)(*(UInt_t*)(thisobj+offset)); 
+            case kLong_t:   return (Double_t)(*(Long_t*)(thisobj+offset));
+            case kULong_t:  return (Double_t)(*(ULong_t*)(thisobj+offset));
+            case kFloat_t:  return (Double_t)(*(Float_t*)(thisobj+offset));
+            case kDouble_t: return (Double_t)(*(Double_t*)(thisobj+offset));
+            case kchar:     return (Double_t)(*(char*)(thisobj+offset));
             case kOther_t:  
             default:        return 0;
          }
