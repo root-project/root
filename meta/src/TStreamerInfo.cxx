@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.24 2000/12/28 21:51:59 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.25 2001/01/13 17:57:10 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -726,7 +726,7 @@ void TStreamerInfo::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer)
+Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
 {
 //  Deserialize information from buffer b into object at pointer
 
@@ -876,7 +876,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer)
    }
 
    //loop on all active members
-   for (Int_t i=0;i<fNdata;i++) {
+   Int_t last;
+   if (first < 0) {first = 0; last = fNdata;}
+   else            last = first+1;
+   for (Int_t i=first;i<last;i++) {
 //#ifdef DEBUG
       if (gDebug > 1) {
          TStreamerElement *element = (TStreamerElement*)fElem[i];
@@ -1144,7 +1147,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer)
 }
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc)
+Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first)
 {
 //  The TClonesArray clones is deserialized from the buffer b
 
@@ -1216,7 +1219,10 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
    }
 
    //loop on all active members
-   for (Int_t i=0;i<fNdata;i++) {
+   Int_t last;
+   if (first < 0) {first = 0; last = fNdata;}
+   else            last = first+1;
+   for (Int_t i=first;i<last;i++) {
       leng   = fLength[i];
       offset = fOffset[i];
       switch (fType[i]) {
@@ -1502,7 +1508,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
 }
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer)
+Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
 {
 //  The object at pointer is serialized to the buffer b
 
@@ -1544,7 +1550,10 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer)
 
 
    //loop on all active members
-   for (Int_t i=0;i<fNdata;i++) {
+   Int_t last;
+   if (first < 0) {first = 0; last = fNdata;}
+   else            last = first+1;
+   for (Int_t i=first;i<last;i++) {
       if (gDebug > 1) {
          TStreamerElement *element = (TStreamerElement*)fElem[i];
          printf("StreamerInfo, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length());
@@ -1676,7 +1685,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer)
 }
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc)
+Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first)
 {
 //  The TClonesArray clones is serialized to the buffer b
 
@@ -1729,7 +1738,10 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 //==========
 
    //loop on all active members
-   for (Int_t i=0;i<fNdata;i++) {
+   Int_t last;
+   if (first < 0) {first = 0; last = fNdata;}
+   else            last = first+1;
+   for (Int_t i=first;i<=last;i++) {
       switch (fType[i]) {
          // write basic types
          case kChar:              WriteCBasicType(Char_t)
