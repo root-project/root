@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.43 2004/09/02 14:22:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.44 2004/09/13 12:27:11 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -486,7 +486,7 @@ void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
      if (fX[i] -fEXlow[i] < xmin) {
         if (gPad && gPad->GetLogx()) {
            if (fEXlow[i] < fX[i]) xmin = fX[i]-fEXlow[i];
-           else                   xmin = fX[i]/3;
+           else                   xmin = TMath::Min(xmin,fX[i]/3);
         } else {
           xmin = fX[i]-fEXlow[i];
         }
@@ -495,7 +495,7 @@ void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
      if (fY[i] -fEYlow[i] < ymin) {
         if (gPad && gPad->GetLogy()) {
            if (fEYlow[i] < fY[i]) ymin = fY[i]-fEYlow[i];
-           else                   ymin = fY[i]/3;
+           else                   ymin = TMath::Min(ymin,fY[i]/3);
         } else {
           ymin = fY[i]-fEYlow[i];
         }

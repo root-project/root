@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.39 2004/09/02 14:22:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.41 2004/09/13 12:27:11 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -264,7 +264,7 @@ void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, 
      if (fX[i] -fEX[i] < xmin) {
         if (gPad && gPad->GetLogx()) {
            if (fEX[i] < fX[i]) xmin = fX[i]-fEX[i];
-           else                xmin = fX[i]/3;
+           else                xmin = TMath::Min(xmin,fX[i]/3);
         } else {
           xmin = fX[i]-fEX[i];
         }
@@ -273,7 +273,7 @@ void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, 
      if (fY[i] -fEY[i] < ymin) {
         if (gPad && gPad->GetLogy()) {
            if (fEY[i] < fY[i]) ymin = fY[i]-fEY[i];
-           else                ymin = fY[i]/3;
+           else                ymin = TMath::Min(ymin,fY[i]/3);
         } else {
           ymin = fY[i]-fEY[i];
         }

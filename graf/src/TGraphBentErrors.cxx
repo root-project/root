@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.8 2004/09/13 12:27:11 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.9 2004/09/14 06:38:44 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -235,7 +235,7 @@ void TGraphBentErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xm
      if (fX[i] -fEXlow[i] < xmin) {
         if (gPad && gPad->GetLogx()) {
            if (fEXlow[i] < fX[i]) xmin = fX[i]-fEXlow[i];
-           else                   xmin = fX[i]/3;
+           else                   xmin = TMath::Min(xmin,fX[i]/3);
         } else {
           xmin = fX[i]-fEXlow[i];
         }
@@ -244,7 +244,7 @@ void TGraphBentErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xm
      if (fY[i] -fEYlow[i] < ymin) {
         if (gPad && gPad->GetLogy()) {
            if (fEYlow[i] < fY[i]) ymin = fY[i]-fEYlow[i];
-           else                   ymin = fY[i]/3;
+           else                   ymin = TMath::Min(ymin,fY[i]/3);
         } else {
           ymin = fY[i]-fEYlow[i];
         }
