@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.8 2000/10/08 14:25:40 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.9 2000/10/13 09:54:28 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -2162,4 +2162,106 @@ void TGX11::Update(Int_t mode)
       XFlush(fDisplay);
    if (mode == 1)
       XSync(fDisplay, False);
+}
+
+//______________________________________________________________________________
+Region_t TGX11::CreateRegion()
+{
+   // Create a new empty region.
+
+   return (Region_t) XCreateRegion();
+}
+
+//______________________________________________________________________________
+void TGX11::DestroyRegion(Region_t reg)
+{
+   // Destroy region.
+
+   XDestroyRegion((Region)reg);
+}
+
+//______________________________________________________________________________
+void TGX11::UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest)
+{
+   // Union of rectangle with a region.
+
+   XRectangle *r = (XRectangle *) rect;   // 1 on 1 mapping
+   XUnionRectWithRegion(r, src, dest);
+}
+
+//______________________________________________________________________________
+Region_t TGX11::PolygonRegion(Point_t *points, Int_t np, Bool_t winding)
+{
+   // Create region for the polygon defined by the points array.
+   // If winding is true use WindingRule else EvenOddRule as fill rule.
+
+   XPoint *p = (XPoint *) points;
+   return (Region_t) XPolygonRegion(p, np, winding ? WindingRule : EvenOddRule);
+}
+
+//______________________________________________________________________________
+void TGX11::UnionRegion(Region_t rega, Region_t regb, Region_t result)
+{
+   // Compute the union of rega and regb and return result region.
+   // The output region may be the same result region.
+
+   XUnionRegion((Region) rega, (Region) regb, (Region) result);
+}
+
+//______________________________________________________________________________
+void TGX11::IntersectRegion(Region_t rega, Region_t regb, Region_t result)
+{
+   // Compute the intersection of rega and regb and return result region.
+   // The output region may be the same as the result region.
+
+   XIntersectRegion((Region) rega, (Region) regb, (Region) result);
+}
+
+//______________________________________________________________________________
+void TGX11::SubtractRegion(Region_t rega, Region_t regb, Region_t result)
+{
+   // Subtract rega from regb.
+
+   XSubtractRegion((Region) rega, (Region) regb, (Region) result);
+}
+
+//______________________________________________________________________________
+void TGX11::XorRegion(Region_t rega, Region_t regb, Region_t result)
+{
+   // Calculate the difference between the union and intersection of
+   // two regions.
+
+   XXorRegion((Region) rega, (Region) regb, (Region) result);
+}
+
+//______________________________________________________________________________
+Bool_t TGX11::EmptyRegion(Region_t reg)
+{
+   // Return true if the region is empty.
+
+   return (Bool_t) XEmptyRegion((Region) reg);
+}
+
+//______________________________________________________________________________
+Bool_t TGX11::PointInRegion(Int_t x, Int_t y, Region_t reg)
+{
+   // Returns true if the point x,y is in the region.
+
+   return (Bool_t) XPointInRegion((Region) reg, x, y);
+}
+
+//______________________________________________________________________________
+Bool_t TGX11::EqualRegion(Region_t rega, Region_t regb)
+{
+   // Returns true if two regions are equal.
+
+   return (Bool_t) XEqualRegion((Region) rega, (Region) regb);
+}
+
+//______________________________________________________________________________
+void TGX11::GetRegionBox(Region_t reg, Rectangle_t *rect)
+{
+   // Return smallest enclosing rectangle.
+
+   XClipBox((Region) reg, (XRectangle*) rect);
 }

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.4 2000/09/07 00:26:06 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.5 2000/10/13 09:54:28 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -321,6 +321,18 @@ public:
    void         SetForeground(GContext_t gc, ULong_t foreground);
    void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    void         Update(Int_t mode = 0);
+   Region_t     CreateRegion();
+   void         DestroyRegion(Region_t reg);
+   void         UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest);
+   Region_t     PolygonRegion(Point_t *points, Int_t np, Bool_t winding);
+   void         UnionRegion(Region_t rega, Region_t regb, Region_t result);
+   void         IntersectRegion(Region_t rega, Region_t regb, Region_t result);
+   void         SubtractRegion(Region_t rega, Region_t regb, Region_t result);
+   void         XorRegion(Region_t rega, Region_t regb, Region_t result);
+   Bool_t       EmptyRegion(Region_t reg);
+   Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg);
+   Bool_t       EqualRegion(Region_t rega, Region_t regb);
+   void         GetRegionBox(Region_t reg, Rectangle_t *);
 
    ClassDef(TGX11,0)  //Interface to X11
 };

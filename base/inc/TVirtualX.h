@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.4 2000/09/07 00:26:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.5 2000/10/13 09:54:28 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -263,6 +263,18 @@ public:
    virtual void         SetForeground(GContext_t gc, ULong_t foreground);
    virtual void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    virtual void         Update(Int_t mode = 0);
+   Region_t             CreateRegion();
+   void                 DestroyRegion(Region_t reg);
+   void                 UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest);
+   Region_t             PolygonRegion(Point_t *points, Int_t np, Bool_t winding);
+   void                 UnionRegion(Region_t rega, Region_t regb, Region_t result);
+   void                 IntersectRegion(Region_t rega, Region_t regb, Region_t result);
+   void                 SubtractRegion(Region_t rega, Region_t regb, Region_t result);
+   void                 XorRegion(Region_t rega, Region_t regb, Region_t result);
+   Bool_t               EmptyRegion(Region_t reg);
+   Bool_t               PointInRegion(Int_t x, Int_t y, Region_t reg);
+   Bool_t               EqualRegion(Region_t rega, Region_t regb);
+   void                 GetRegionBox(Region_t reg, Rectangle_t *rect);
 
    ClassDef(TVirtualX,0)  //ABC defining a generic interface to graphics system
 };
@@ -431,5 +443,17 @@ inline void         TVirtualX::QueryPointer(Window_t, Window_t &rootw, Window_t 
 inline void         TVirtualX::SetForeground(GContext_t, ULong_t) { }
 inline void         TVirtualX::SetClipRectangles(GContext_t, Int_t, Int_t, Rectangle_t *, Int_t) { }
 inline void         TVirtualX::Update(Int_t) { }
+inline Region_t     TVirtualX::CreateRegion() { return 0; }
+inline void         TVirtualX::DestroyRegion(Region_t) { }
+inline void         TVirtualX::UnionRectWithRegion(Rectangle_t *, Region_t, Region_t) { }
+inline Region_t     TVirtualX::PolygonRegion(Point_t *, Int_t, Bool_t) { return 0; }
+inline void         TVirtualX::UnionRegion(Region_t, Region_t, Region_t) { }
+inline void         TVirtualX::IntersectRegion(Region_t, Region_t, Region_t) { }
+inline void         TVirtualX::SubtractRegion(Region_t, Region_t, Region_t) { }
+inline void         TVirtualX::XorRegion(Region_t, Region_t, Region_t) { }
+inline Bool_t       TVirtualX::EmptyRegion(Region_t) { return kFALSE; }
+inline Bool_t       TVirtualX::PointInRegion(Int_t, Int_t, Region_t) { return kFALSE; }
+inline Bool_t       TVirtualX::EqualRegion(Region_t, Region_t) { return kFALSE; }
+inline void         TVirtualX::GetRegionBox(Region_t, Rectangle_t *) { }
 
 #endif

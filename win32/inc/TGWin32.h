@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.3 2000/07/06 16:49:39 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.4 2000/09/07 00:26:06 rdm Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -373,6 +373,18 @@ public:
    virtual void         SetForeground(GContext_t gc, ULong_t foreground);
    virtual void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    virtual void         Update(Int_t mode = 0);
+   Region_t             CreateRegion();
+   void                 DestroyRegion(Region_t reg);
+   void                 UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest);
+   Region_t             PolygonRegion(Point_t *points, Int_t np, Bool_t winding);
+   void                 UnionRegion(Region_t rega, Region_t regb, Region_t result);
+   void                 IntersectRegion(Region_t rega, Region_t regb, Region_t result);
+   void                 SubtractRegion(Region_t rega, Region_t regb, Region_t result);
+   void                 XorRegion(Region_t rega, Region_t regb, Region_t result);
+   Bool_t               EmptyRegion(Region_t reg);
+   Bool_t               PointInRegion(Int_t x, Int_t y, Region_t reg);
+   Bool_t               EqualRegion(Region_t rega, Region_t regb);
+   void                 GetRegionBox(Region_t reg, Rectangle_t *rect);
 
    ClassDef(TGWin32,0)  //Interface to Win32
 };

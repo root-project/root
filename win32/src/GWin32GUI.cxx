@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: GWin32GUI.cxx,v 1.3 2000/07/06 16:49:39 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: GWin32GUI.cxx,v 1.4 2000/09/07 00:26:06 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   09/02/99
 #include "TGWin32.h"
 
@@ -508,3 +508,15 @@ void         TGWin32::FillPolygon(Window_t id, GContext_t gc, Point_t *points, I
  void         TGWin32::SetForeground(GContext_t, ULong_t) { }
  void         TGWin32::SetClipRectangles(GContext_t, Int_t, Int_t, Rectangle_t *, Int_t) { }
  void         TGWin32::Update(Int_t) { }
+ Region_t     TGWin32::CreateRegion() { return 0; }
+ void         TGWin32::DestroyRegion(Region_t) { }
+ void         TGWin32::UnionRectWithRegion(Rectangle_t *, Region_t, Region_t) { }
+ Region_t     TGWin32::PolygonRegion(Point_t *, Int_t, Bool_t) { return 0; }
+ void         TGWin32::UnionRegion(Region_t, Region_t, Region_t) { }
+ void         TGWin32::IntersectRegion(Region_t, Region_t, Region_t) { }
+ void         TGWin32::SubtractRegion(Region_t, Region_t, Region_t) { }
+ void         TGWin32::XorRegion(Region_t, Region_t, Region_t) { }
+ Bool_t       TGWin32::EmptyRegion(Region_t) { return kFALSE; }
+ Bool_t       TGWin32::PointInRegion(Int_t, Int_t, Region_t) { return kFALSE; }
+ Bool_t       TGWin32::EqualRegion(Region_t, Region_t) { return kFALSE; }
+ void         TGWin32::GetRegionBox(Region_t, Rectangle_t *) { }
