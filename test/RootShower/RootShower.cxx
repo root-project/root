@@ -821,6 +821,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
                     case M_SHOW_3D:
                         if(fIsRunning) break;
+                        cA->cd();
                         cA->x3d("ogl");
                         break;
 
