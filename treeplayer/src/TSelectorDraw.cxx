@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.29 2004/05/19 19:41:38 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.30 2004/06/10 19:55:54 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1085,6 +1085,10 @@ void TSelectorDraw::TakeAction()
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());
       pm->SetMarkerSize(fTree->GetMarkerSize());
+      pm->SetLineColor(fTree->GetLineColor());
+      pm->SetLineStyle(fTree->GetLineStyle());
+      pm->SetFillColor(fTree->GetFillColor());
+      pm->SetFillStyle(fTree->GetFillStyle());
 
    if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
       else                                          pm->Draw(fOption.Data());
@@ -1226,6 +1230,10 @@ void TSelectorDraw::TakeEstimate()
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());
       pm->SetMarkerSize(fTree->GetMarkerSize());
+      pm->SetLineColor(fTree->GetLineColor());
+      pm->SetLineStyle(fTree->GetLineStyle());
+      pm->SetFillColor(fTree->GetFillColor());
+      pm->SetFillStyle(fTree->GetFillStyle());
       if (!fDraw && !strstr(fOption.Data(),"goff")) {
          if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
          else                                             pm->Draw(fOption.Data());
