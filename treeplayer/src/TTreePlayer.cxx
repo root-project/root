@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.15 2000/07/18 16:35:01 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.16 2000/07/19 06:55:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1435,7 +1435,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       
 // First loop on all leaves to generate dimension declarations
    Int_t len, lenb,l;
-   char blen[64];
+   char blen[128];
    char *bname;
    for (l=0;l<nleaves;l++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);

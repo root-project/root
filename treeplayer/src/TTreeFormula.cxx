@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.14 2000/06/16 07:36:27 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.15 2000/08/11 20:10:12 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -216,7 +216,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
    char branchname[128];
    char leafname[128];
    static char anumber[10];
-   static char lname[64];
+   static char lname[128];
    static char lmethod[128];
    Int_t i;
    strcpy(lname,name.Data());

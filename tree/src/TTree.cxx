@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.16 2000/07/21 07:00:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.17 2000/08/10 07:01:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -440,7 +440,7 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
    TObjArray *blist = branch->GetListOfBranches();
    const char *rdname;
    const char *dname;
-   char branchname[64];
+   char branchname[128];
    if (!cl->GetListOfRealData()) cl->BuildRealData();
    char **apointer = (char**)(addobj);
    TObject *obj = (TObject*)(*apointer);
@@ -477,7 +477,7 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
          if (dm->IsaPointer()) sprintf(branchname,"%s%s",name,&rdname[1]);
          else                  sprintf(branchname,"%s%s",name,&rdname[0]);
       }
-      char leaflist[64];
+      char leaflist[128];
       Int_t offset    = rd->GetThisOffset();
       char *pointer   = (char*)obj + offset;
       if (dm->IsaPointer()) {
