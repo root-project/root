@@ -1,7 +1,7 @@
 all: tests
 test: tests
 
-SUBDIRS = offset
+SUBDIRS = offset global
 
 include ../Rules.mk
 

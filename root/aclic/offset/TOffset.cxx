@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TOffset.cxx,v 1.1.1.1 2002/08/02 22:25:36 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TOffset.cxx,v 1.2 2002/09/27 17:51:14 pcanal Exp $
 // Author: Victor Perev   08/05/02
 
 
@@ -367,13 +367,12 @@ public:
 TH1F fH1;
 TArrayD fArr;
 };
-
 class myPro3 :public TH1F {
 public:
+  
 virtual ~myPro3(){}
 char fArr;
 };
-
 
 
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TOffset.h,Exp $
+// @(#)root/base:$Name:  $:$Id: TOffset.h,v 1.1.1.1 2002/08/02 22:25:36 pcanal Exp $
 // Author: Victor Perev   08/05/02
 
 #ifdef __CINT__
@@ -106,5 +106,7 @@ private:
    Int_t  fNBase;
    TList *fOffsetList;
 };
-
+#ifdef __CINT__
+#pragma link C++ class TOffset+;
+#endif
 #endif
