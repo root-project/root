@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.59 2004/01/12 11:32:25 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.60 2004/01/12 15:35:52 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2721,7 +2721,16 @@ int TWinNTSystem::WinNTFilestat(const char *path, Long_t *id, Long64_t *size,
    if (size)    *size = 0;
    if (flags)   *flags = 0;
    if (modtime) *modtime = 0;
-   if (path != 0 && _stati64(path, &statbuf) >= 0) {
+
+   // Remove trailing backslashes
+   char *newpath = strdup(path);
+   int l = strlen(newpath);
+   while (l > 1) {
+      if (newpath[--l] != '\\')
+         break;
+      newpath[l] = '\0';
+   }
+   if (newpath != 0 && _stati64(newpath, &statbuf) >= 0) {
       if (id)
          *id = (statbuf.st_dev << 24) + statbuf.st_ino;
       if (size)
@@ -2737,8 +2746,10 @@ int TWinNTSystem::WinNTFilestat(const char *path, Long_t *id, Long64_t *size,
              (statbuf.st_mode & S_IFMT) != S_IFDIR)
             *flags |= 4;
       }
+      delete [] newpath;
       return 0;
    }
+   delete [] newpath;
    return 1;
 }
 
