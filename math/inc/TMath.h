@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.31 2004/02/06 14:30:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.32 2004/04/07 14:11:17 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -465,7 +465,6 @@ extern "C" {
    extern double atan2(double, double);
    extern double sqrt(double);
    extern double exp(double);
-   extern double ldexp(double, int);
    extern double pow(double, double);
    extern double log(double);
    extern double log10(double);
@@ -476,6 +475,9 @@ extern "C" {
 #   if !defined(isnan)
        extern int isnan(double);
 #   endif
+   extern double ldexp(double, int);
+#else
+   _CRTIMP double ldexp(double, int);
 #endif
 }
 #endif
