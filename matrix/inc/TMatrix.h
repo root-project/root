@@ -1,5 +1,5 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.10 2001/12/07 21:58:59 brun Exp $
-// Author: Fons Rademakers   03/11/97
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.11 2002/01/04 08:07:38 brun Exp $
+// Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -41,6 +41,7 @@
 //                                                                      //
 // The implementation is based on original code by                      //
 // Oleg E. Kiselyov (oleg@pobox.com).                                   //
+// Several additions/optimisations by  Eddy Offermann <eddy@rentec.com> //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -107,6 +108,9 @@ public:
    TMatrix() { Invalidate(); }
    TMatrix(Int_t nrows, Int_t ncols);
    TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb);
+   TMatrix(Int_t nrows, Int_t ncols, const Float_t *elements, Option_t *option="");
+   TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb,
+           const Float_t *elements, Option_t *option="");
    TMatrix(const TMatrix &another);
    TMatrix(EMatrixCreatorsOp1 op, const TMatrix &prototype);
    TMatrix(const TMatrix &a, EMatrixCreatorsOp2 op, const TMatrix &b);
@@ -122,13 +126,16 @@ public:
    Bool_t IsValid() const;
    Bool_t IsSymmetric() const;
 
-   Int_t GetRowLwb() const     { return fRowLwb; }
-   Int_t GetRowUpb() const     { return fNrows+fRowLwb-1; }
-   Int_t GetNrows() const      { return fNrows; }
-   Int_t GetColLwb() const     { return fColLwb; }
-   Int_t GetColUpb() const     { return fNcols+fColLwb-1; }
-   Int_t GetNcols() const      { return fNcols; }
-   Int_t GetNoElements() const { return fNelems; }
+   Int_t    GetRowLwb()     const { return fRowLwb; }
+   Int_t    GetRowUpb()     const { return fNrows+fRowLwb-1; }
+   Int_t    GetNrows()      const { return fNrows; }
+   Int_t    GetColLwb()     const { return fColLwb; }
+   Int_t    GetColUpb()     const { return fNcols+fColLwb-1; }
+   Int_t    GetNcols()      const { return fNcols; }
+   Int_t    GetNoElements() const { return fNelems; }
+   Float_t *GetElements()         { return fElements; }
+   void     GetElements(Float_t *elements, Option_t *option="") const;
+   void     SetElements(const Float_t *elements, Option_t *option="");
 
    const Real_t &operator()(Int_t rown, Int_t coln) const;
    Real_t &operator()(Int_t rown, Int_t coln);
@@ -223,6 +230,69 @@ inline TMatrix::TMatrix(Int_t no_rows, Int_t no_cols)
 inline TMatrix::TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb)
 {
    Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
+}
+
+inline TMatrix::TMatrix(Int_t no_rows, Int_t no_cols,
+                        const Float_t *elements, Option_t *option)
+{
+  // option="F": array elements contains the matrix stored column-wise
+  //             like in Fortran, so a[i,j] = elements[i+no_rows*j],
+  // else        it is supposed that array elements are stored row-wise
+  //             a[i,j] = elements[i*no_cols+j]
+
+  Allocate(no_rows, no_cols);
+  SetElements(elements,option);
+}
+
+inline TMatrix::TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb,
+                        const Float_t *elements, Option_t *option)
+{
+  Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
+  SetElements(elements,option);
+}
+
+inline void TMatrix::GetElements(Float_t *elements, Option_t *option) const
+{
+  if (!IsValid()) {
+    Error("GetElements", "matrix is not initialized");
+    return;
+  }
+
+  TString opt = option;
+  opt.ToUpper();
+
+  if (opt.Contains("F"))
+    memcpy(elements,fElements,fNelems*sizeof(Float_t));
+  else
+  {
+    for (Int_t irow = 0; irow < fNrows; irow++)
+    {
+      for (Int_t icol = 0; icol < fNcols; icol++)
+        elements[irow+icol*fNrows] = fElements[irow*fNcols+icol];
+    }
+  }
+}
+
+inline void TMatrix::SetElements(const Float_t *elements, Option_t *option)
+{
+  if (!IsValid()) {
+    Error("SetElements", "matrix is not initialized");
+    return;
+  }
+
+  TString opt = option;
+  opt.ToUpper();
+
+  if (opt.Contains("F"))
+    memcpy(fElements,elements,fNelems*sizeof(Float_t));
+  else
+  {
+    for (Int_t irow = 0; irow < fNrows; irow++)
+    {
+      for (Int_t icol = 0; icol < fNcols; icol++)
+        fElements[irow+icol*fNrows] = elements[irow*fNcols+icol];
+    }
+  }
 }
 
 inline TMatrix::TMatrix(const TLazyMatrix &lazy_constructor)
