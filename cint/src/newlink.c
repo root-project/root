@@ -758,8 +758,19 @@ void G__gen_cpplink()
     int algoflag=0;
     int filen;
     char *fname;
+#ifndef G__OLDIMPLEMENTATION1746
+    int lenstl;
+    char *sysstl;
+    G__getcintsysdir();
+    sysstl=(char*)malloc(strlen(G__cintsysdir)+10);
+    sprintf(sysstl,"%s%sstl%s",G__cintsysdir,G__psep,G__psep);
+    lenstl=strlen(sysstl);
+#endif
     for(filen=0;filen<G__nfile;filen++) {
       fname = G__srcfile[filen].filename;
+#ifndef G__OLDIMPLEMENTATION1746
+      if(strncmp(fname,sysstl,lenstl)==0) fname += lenstl;
+#endif
       if(strcmp(fname,"vector")==0 || strcmp(fname,"list")==0 || 
 	 strcmp(fname,"deque")==0 || strcmp(fname,"map")==0 || 
 	 strcmp(fname,"multimap")==0 || strcmp(fname,"set")==0 || 
@@ -785,6 +796,9 @@ void G__gen_cpplink()
       }
     }
     else if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
+#ifndef G__OLDIMPLEMENTATION1746
+    if(sysstl) free((void*)sysstl);
+#endif
   }
 #endif
 
@@ -1878,10 +1892,12 @@ char *dllid;
   }
 
   G__globalcomp = atoi(mode); /* this is redundant */
+#ifndef G__OLDIMPLEMENTATION1700
   if(abs(G__globalcomp)>=10) {
      G__default_link = abs(G__globalcomp)%10;
      G__globalcomp /= 10;
   }
+#endif
   G__store_globalcomp=G__globalcomp;
 
 #ifndef G__OLDIMPLEMENTATION1098
@@ -4371,12 +4387,16 @@ char *endoffunc;
 #ifndef G__OLDIMPLEMENTATION1496
     case 'u':
 #endif
+#ifndef G__OLDIMPLEMENTATION1738
+      deftyp = typenum;
+#else
 #ifndef G__OLDIMPLEMENTATION1503
 #ifndef G__OLDIMPLEMENTATION1510
       if(-1!=typenum) deftyp = typenum;
       else deftyp = G__struct.defaulttypenum[tagnum];
 #else
       deftyp = G__struct.defaulttypenum[tagnum];
+#endif
 #endif
 #endif
       if(reftype) {
@@ -7012,6 +7032,10 @@ int tagnum;
   G__tagnum = tagnum;
   G__p_ifunc = G__struct.memfunc[G__tagnum];
 
+#ifndef G__OLDIMPLEMENTATION1744
+  while(G__p_ifunc->next) G__p_ifunc=G__p_ifunc->next;
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1664
   --G__p_ifunc->allifunc;
   G__memfunc_next();
@@ -8547,7 +8571,7 @@ int link_stub;
     fpos_t pos;
     int tagflag = 0;
 #endif
-    int ifile;
+    int ifile=0;
     struct stat statBufItem;  
     struct stat statBuf;  
 #ifdef G__WIN32
@@ -8558,7 +8582,11 @@ int link_stub;
     c = G__fgetname(buf,";\n\r");
     if(strcmp(buf,"class")==0||strcmp(buf,"struct")==0||
 	strcmp(buf,"namespace")==0) {
+#ifndef G__OLDIMPLEMENTATION1741
+      if(isspace(c)) c = G__fgetstream_template(buf,";\n\r");
+#else
       if(isspace(c)) c = G__fgetstream_template(buf,";\n\r<>");
+#endif
       tagflag = 1;
     }
     else {
@@ -8600,7 +8628,12 @@ int link_stub;
 		int ifn;
 		while(var) {
 		  for(ifn=0;ifn<var->allvar;ifn++) {
-		    if(var->filenum[ifn]==ifile) {
+		    if(var->filenum[ifn]==ifile
+#define G__OLDIMPLEMENTATION1740
+#ifndef G__OLDIMPLEMENTATION1740
+		       &&G__PUBLIC==var->access[ifn]
+#endif
+		       ) {
 		      var->globalcomp[ifn] = globalcomp;
 		    }
 		  }
@@ -8609,7 +8642,11 @@ int link_stub;
 		ifunc=G__struct.memfunc[i];
 		while(ifunc) {
 		  for(ifn=0;ifn<ifunc->allifunc;ifn++) {
-		    if(ifunc->pentry[ifn]&&ifunc->pentry[ifn]->filenum==ifile) {
+		    if(ifunc->pentry[ifn]&&ifunc->pentry[ifn]->filenum==ifile
+#ifndef G__OLDIMPLEMENTATION1740
+		       &&G__PUBLIC==ifunc->access[ifn]
+#endif
+		       ) {
 		      ifunc->globalcomp[ifn] = globalcomp;
 		    }
 		  }
@@ -8666,16 +8703,27 @@ int link_stub;
 #ifndef G__OLDIMPLEMENTATION1243
     /* #pragma link [C|C++|off] defined_in [class|struct|namespace] name; */
     if(!done) {
+#ifndef G__OLDIMPLEMENTATION1741
+      int parent_tagnum = G__defined_tagname(buf,0);
+#else
       int parent_tagnum = G__defined_tagname(buf,2);
+#endif
       int j,flag;
       if(-1!=parent_tagnum) {
 	for(i=0;i<G__struct.alltag;i++) {
 #ifndef G__OLDIMPLEMENTATION1730
 	  struct G__var_array *var = G__struct.memvar[parent_tagnum];
 	  int ifn;
+#ifndef G__OLDIMPLEMENTATION1741
+	  done = 1;
+#endif
 	  while(var) {
 	    for(ifn=0;ifn<var->allvar;ifn++) {
-	      if(var->filenum[ifn]==ifile) {
+	      if(var->filenum[ifn]==ifile
+#ifndef G__OLDIMPLEMENTATION1740
+		 &&G__PUBLIC==var->access[ifn]
+#endif
+		 ) {
 		var->globalcomp[ifn] = globalcomp;
 	      }
 	    }
@@ -8684,7 +8732,11 @@ int link_stub;
 	  ifunc=G__struct.memfunc[i];
 	  while(ifunc) {
 	    for(ifn=0;ifn<ifunc->allifunc;ifn++) {
-	      if(ifunc->pentry[ifn]&&ifunc->pentry[ifn]->filenum==ifile) {
+	      if(ifunc->pentry[ifn]&&ifunc->pentry[ifn]->filenum==ifile
+#ifndef G__OLDIMPLEMENTATION1740
+		 &&G__PUBLIC==ifunc->access[ifn]
+#endif
+		 ) {
 		ifunc->globalcomp[ifn] = globalcomp;
 	      }
 	    }
@@ -8704,7 +8756,11 @@ int link_stub;
 	    var = G__struct.memvar[i];
 	    while(var) {
 	      for(ifn=0;ifn<var->allvar;ifn++) {
-		if(var->filenum[ifn]==ifile) {
+		if(var->filenum[ifn]==ifile
+#ifndef G__OLDIMPLEMENTATION1730
+		   &&G__PUBLIC==var->access[ifn]
+#endif
+		   ) {
 		  var->globalcomp[ifn] = globalcomp;
 		}
 	      }
@@ -8713,7 +8769,11 @@ int link_stub;
 	    ifunc=G__struct.memfunc[i];
 	    while(ifunc) {
 	      for(ifn=0;ifn<ifunc->allifunc;ifn++) {
-		if(ifunc->pentry[ifn]&&ifunc->pentry[ifn]->filenum==ifile) {
+		if(ifunc->pentry[ifn]&&ifunc->pentry[ifn]->filenum==ifile
+#ifndef G__OLDIMPLEMENTATION1730
+		   &&G__PUBLIC==ifunc->access[ifn]
+#endif
+		   ) {
 		  ifunc->globalcomp[ifn] = globalcomp;
 		}
 	      }

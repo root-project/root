@@ -13,40 +13,76 @@ std::istream& operator>>(std::istream& istr,std::G__CINT_WS& i)
 
 
 std::ostream& operator<<(std::ostream& ostr,std::G__CINT_HEX& i) {
+#pragma ifndef G__TMPLTIOS
   ostr.unsetf(ios::dec);
   ostr.unsetf(ios::oct);
   ostr.setf(ios::hex);
+#pragma else
+  ostr.unsetf(ios_base::dec);
+  ostr.unsetf(ios_base::oct);
+  ostr.setf(ios_base::hex);
+#pragma endif
   return(ostr);
 }
 std::istream& operator>>(std::istream& istr,std::G__CINT_HEX& i) {
+#pragma ifndef G__TMPLTIOS
   istr.unsetf(ios::dec);
   istr.unsetf(ios::oct);
   istr.setf(ios::hex);
+#pragma else
+  istr.unsetf(ios_base::dec);
+  istr.unsetf(ios_base::oct);
+  istr.setf(ios_base::hex);
+#pragma endif
   return(istr);
 }
 
 std::ostream& operator<<(std::ostream& ostr,std::G__CINT_DEC& i) {
+#pragma ifndef G__TMPLTIOS
   ostr.unsetf(ios::hex);
   ostr.unsetf(ios::oct);
   ostr.setf(ios::dec);
+#pragma else
+  ostr.unsetf(ios_base::hex);
+  ostr.unsetf(ios_base::oct);
+  ostr.setf(ios_base::dec);
+#pragma endif
   return(ostr);
 }
 std::istream& operator>>(std::istream& istr,std::G__CINT_DEC& i) {
+#pragma ifndef G__TMPLTIOS
   istr.unsetf(ios::hex);
   istr.unsetf(ios::oct);
   istr.setf(ios::dec);
+#pragma else
+  istr.unsetf(ios_base::hex);
+  istr.unsetf(ios_base::oct);
+  istr.setf(ios_base::dec);
+#pragma endif
   return(istr);
 }
 std::ostream& operator<<(std::ostream& ostr,std::G__CINT_OCT& i) {
+#pragma ifndef G__TMPLTIOS
   ostr.unsetf(ios::hex);
   ostr.unsetf(ios::dec);
   ostr.setf(ios::oct);
+#pragma else
+  ostr.unsetf(ios_base::hex);
+  ostr.unsetf(ios_base::dec);
+  ostr.setf(ios_base::oct);
+#pragma endif
   return(ostr);
 }
 std::istream& operator>>(std::istream& istr,std::G__CINT_OCT& i) {
+#pragma ifndef G__TMPLTIOS
   istr.unsetf(ios::hex);
   istr.unsetf(ios::dec);
   istr.setf(ios::oct);
+#pragma else
+  istr.unsetf(ios_base::hex);
+  istr.unsetf(ios_base::dec);
+  istr.setf(ios_base::oct);
+#pragma endif
   return(istr);
 }
 std::ostream& operator<<(std::ostream& ostr,std::G__CINT_NOSUPPORT& i) {

@@ -1655,6 +1655,12 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	 0==(G__is_operator_newdelete&G__MASK_OPERATOR_DELETE))
 	G__is_operator_newdelete |= G__IS_OPERATOR_DELETE;
     }
+#ifndef G__OLDIMPLEMENTATION1745
+    if(strcmp(G__p_ifunc->funcname[func_now],"operator delete")==0&&
+       0==(G__is_operator_newdelete&G__MASK_OPERATOR_DELETE)) {
+      if(-1!=G__p_ifunc->tagnum) G__p_ifunc->staticalloc[func_now] = 1;
+    }
+#endif
     if(':'==paraname[0] && 0==G__p_ifunc->ansi[func_now]) 
       G__p_ifunc->ansi[func_now]=1;
     if(cin!='{') G__fignorestream("{");
@@ -2619,6 +2625,10 @@ int func_now;
     ifunc->para_p_tagtable[func_now][iin] = tagnum;
     ifunc->para_p_typetable[func_now][iin] = typenum;
     if(isdefault) {
+#ifndef G__OLDIMPLEMENTATION1742
+      int store_def_tagnum = G__def_tagnum;
+      int store_tagdefining = G__tagdefining;
+#endif
 #ifndef G__OLDIMPLEMENTATION1110
       int store_prerun=G__prerun;
       int store_decl=G__decl;
@@ -2700,6 +2710,10 @@ int func_now;
 #else
       *ifunc->para_default[func_now][iin] = G__getexpr(paraname);
 #endif
+#ifndef G__OLDIMPLEMENTATION1742
+      G__def_tagnum = store_def_tagnum;
+      G__tagdefining = store_tagdefining;
+#endif
       if(-1!=G__def_tagnum) {
 	G__tagnum = store_tagnum_default;
 	G__exec_memberfunc=store_exec_memberfunc;
@@ -2707,7 +2721,7 @@ int func_now;
       }
       G__var_type=store_var_type;
     }
-    else {
+    else { /* !isdefault */
       ifunc->para_default[func_now][iin] = (G__value*)NULL;
       ifunc->para_def[func_now][iin] = (char*)NULL;
     }
@@ -5509,6 +5523,7 @@ int isrecursive;
   }
 #endif
 
+#define G__ASM_DBG2
 #ifdef G__ASM_DBG2
   if(G__dispsource) 
     G__display_ambiguous(scopetagnum,funcname,libp,funclist,bestmatch);

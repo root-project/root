@@ -9,7 +9,7 @@
 char CPPSRCPOST[20];
 char CPP[400];
 char FNAME[400];
-char COMMAND[500];
+char COMMAND[5000];
 
 /************************************************************************
 * read MAKEINFO to get CPP and CPPSRCPOST
@@ -47,19 +47,67 @@ void readmakeinfo(void) {
 void iosenumdump(char *item) {
   FILE *fp;
   fp=fopen(FNAME,"w");
+  if(!fp) {
+    fprintf(stderr,"Error: Can not open %s for writing\n",FNAME);
+    return;
+  }
   fprintf(fp,"#include <iostream.h>\n");
-  fprintf(fp,"main() {\n");
+  fprintf(fp,"int main() {\n");
   fprintf(fp,"  cout<<\"static int ios::%s=\"<<ios::%s<<\";\"<<endl;\n"
 	,item,item);
+  fprintf(fp,"  return(0);\n");
   fprintf(fp,"}\n");
   fclose(fp);
 
   if(0==system(COMMAND)) {
     printf("ios::%s exists\n",item);
+#ifdef G__CYGWIN
+    system("./a.exe >> iosenum.h");
+#else
     system("./a.out >> iosenum.h");
+#endif
   }
   else printf("ios::%s does not exist\n",item);
+#ifdef G__CYGWIN
+  remove("a.exe");
+#else
   remove("a.out");
+#endif
+  remove(FNAME);
+}
+
+void iosbaseenumdump(char *item) {
+  FILE *fp;
+  fp=fopen(FNAME,"w");
+  if(!fp) {
+    fprintf(stderr,"Error: Can not open %s for writing\n",FNAME);
+    return;
+  }
+  fprintf(fp,"#include <iostream>\n");
+  fprintf(fp,"#ifndef __hpux\n");
+  fprintf(fp,"using namespace std;\n");
+  fprintf(fp,"#endif\n");
+  fprintf(fp,"int main() {\n");
+  fprintf(fp,"  cout<<\"static ios_base::fmtflags ios_base::%s=\"<<ios_base::%s<<\";\"<<endl;\n"
+	,item,item);
+  fprintf(fp,"  return(0);\n");
+  fprintf(fp,"}\n");
+  fclose(fp);
+
+  if(0==system(COMMAND)) {
+    printf("ios_base::%s exists\n",item);
+#ifdef G__CYGWIN
+    system("./a.exe >> iosenum.h");
+#else
+    system("./a.out >> iosenum.h");
+#endif
+  }
+  else printf("ios_base::%s does not exist\n",item);
+#ifdef G__CYGWIN
+  remove("a.exe");
+#else
+  remove("a.out");
+#endif
   remove(FNAME);
 }
 
@@ -72,6 +120,10 @@ int main() {
 
   FILE* fp;
   fp = fopen("iosenum.h","w");
+  if(!fp) {
+    fprintf(stderr,"Error: Can not open %s for writing\n","iosenum.h");
+    exit(1);
+  }
   fprintf(fp,"/* include/platform/iosenum.h\n");
   fprintf(fp," *  This file contains platform dependent ios enum value.\n");
   fprintf(fp," *  Run 'cint iosenum.cxx' to create this file. It is done\n");
@@ -82,6 +134,7 @@ int main() {
   sprintf(FNAME,"iosenum%s",CPPSRCPOST);
   sprintf(COMMAND,"%s %s 2> /dev/null",CPP,FNAME);
 
+  system("echo '#pragma ifndef G__TMPLTIOS' >> iosenum.h");
   iosenumdump("goodbit");
   iosenumdump("eofbit");
   iosenumdump("failbit");
@@ -118,6 +171,43 @@ int main() {
   iosenumdump("fixed");
   iosenumdump("unitbuf");
   iosenumdump("stdio");
+  system("echo '#pragma else' >> iosenum.h");
+
+  // added for g++3.0
+  iosbaseenumdump("boolalpha");
+  iosbaseenumdump("dec");
+  iosbaseenumdump("fixed");
+  iosbaseenumdump("hex");
+  iosbaseenumdump("internal");
+  iosbaseenumdump("left");
+  iosbaseenumdump("oct");
+  iosbaseenumdump("right");
+  iosbaseenumdump("scientific");
+  iosbaseenumdump("showbase");
+  iosbaseenumdump("showpoint");
+  iosbaseenumdump("showpos");
+  iosbaseenumdump("skipws");
+  iosbaseenumdump("unitbuf");
+  iosbaseenumdump("uppercase");
+  iosbaseenumdump("adjustfield");
+  iosbaseenumdump("basefield");
+  iosbaseenumdump("floatfield");
+  iosbaseenumdump("badbit");
+  iosbaseenumdump("eofbit");
+  iosbaseenumdump("failbit");
+  iosbaseenumdump("goodbit");
+  iosbaseenumdump("openmode");
+  iosbaseenumdump("app");
+  iosbaseenumdump("ate");
+  iosbaseenumdump("binary");
+  iosbaseenumdump("in");
+  iosbaseenumdump("out");
+  iosbaseenumdump("trunc");
+  iosbaseenumdump("beg");
+  iosbaseenumdump("cur");
+  iosbaseenumdump("end");
+  system("echo '#pragma endif' >> iosenum.h");
+  
   exit(0);
 }
 

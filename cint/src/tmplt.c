@@ -338,7 +338,39 @@ struct G__Templatearg *G__read_formal_templatearg()
       if(strcmp(type,"int")==0) p->type = G__TMPLT_INTARG;
       else if(strcmp(type,"size_t")==0) p->type = G__TMPLT_SIZEARG;
       else if(strcmp(type,"unsignedint")==0) p->type = G__TMPLT_UINTARG;
-      else if(strcmp(type,"unsigned")==0) p->type = G__TMPLT_UINTARG;
+      else if(strcmp(type,"unsigned")==0) {
+#ifndef G__OLDIMPLEMENTATION1473
+	fpos_t pos;
+	int linenum;
+	fgetpos(G__ifile.fp,&pos);
+	linenum = G__ifile.line_number;
+	c = G__fgetname(name,",>="); 
+	if(strcmp(name,"int")==0) p->type = G__TMPLT_UINTARG;
+	else if(strcmp(name,"short")==0) p->type = G__TMPLT_USHORTARG;
+	else if(strcmp(name,"char")==0) p->type = G__TMPLT_UCHARARG;
+	else if(strcmp(name,"long")==0) {
+	  p->type = G__TMPLT_ULONGARG;
+	  fgetpos(G__ifile.fp,&pos);
+	  linenum = G__ifile.line_number;
+	  c = G__fgetname(name,",>="); 
+	  if(strcmp(name,"int")==0) {
+	    p->type = G__TMPLT_ULONGARG;
+	  }
+	  else {
+	    p->type = G__TMPLT_ULONGARG;
+	    fsetpos(G__ifile.fp,&pos);
+	    G__ifile.line_number = linenum;
+	  }
+	}
+	else {
+	  p->type = G__TMPLT_UINTARG;
+	  fsetpos(G__ifile.fp,&pos);
+	  G__ifile.line_number = linenum;
+	}
+#else
+	p->type = G__TMPLT_UINTARG;
+#endif
+      }
       else if(strcmp(type,"char")==0) p->type = G__TMPLT_CHARARG;
       else if(strcmp(type,"unsignedchar")==0) p->type = G__TMPLT_UCHARARG;
       else if(strcmp(type,"short")==0) p->type = G__TMPLT_SHORTARG;
@@ -1955,7 +1987,9 @@ char *tagnamein;
   int npara=0;
   int store_tagdefining;
   int store_def_tagnum;
+#ifdef G__OLDIMPLEMENTATION1742
   long dmy_struct_offset=0;
+#endif
   char atom_name[G__LONGLINE];
   int env_tagnum=G__get_envtagnum();
   int scope_tagnum = -1;
@@ -2027,9 +2061,32 @@ char *tagnamein;
 #endif
 
   /* scope operator resolution, A::templatename<int> ... */
+#ifndef G__OLDIMPLEMENTATION1742
+ {
+   char *patom;
+   char *p;
+   strcpy(atom_name,templatename);
+   patom = atom_name;
+   while( (p=G__find_first_scope_operator(patom)) ) patom = p+2;
+   if(patom==atom_name) {
+     scope_tagnum = -1;
+     G__hash(atom_name,hash,temp)
+   }
+   else {
+     *(patom-2) = 0;
+     if(strcmp(atom_name,"::")==0) scope_tagnum = -1;
+     else scope_tagnum = G__defined_tagname(atom_name,0);
+     p = atom_name;
+     while(*patom) *p++ = *patom++;
+     *p = 0;
+     G__hash(atom_name,hash,temp)
+   }
+ }
+#else
   strcpy(atom_name,templatename);
   G__hash(atom_name,hash,temp)
   G__scopeoperator(atom_name,&hash,&dmy_struct_offset,&scope_tagnum);
+#endif
 
   /* search for template class name */
   deftmpclass = &G__definedtemplateclass;

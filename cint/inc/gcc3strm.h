@@ -32,6 +32,10 @@ extern void G__set_cpp_environmentG__stream();
 #ifndef G__MEMFUNCBODY
 #endif
 
+extern G__linked_taginfo G__G__streamLN_mbstate_t;
+extern G__linked_taginfo G__G__streamLN_fposlEmbstate_tgR;
+extern G__linked_taginfo G__G__streamLN_wstreampos;
+extern G__linked_taginfo G__G__streamLN_streamoff;
 extern G__linked_taginfo G__G__streamLN_ios_base;
 extern G__linked_taginfo G__G__streamLN_ios_basecLcLio_state;
 extern G__linked_taginfo G__G__streamLN_ios_basecLcLopen_mode;
@@ -42,11 +46,7 @@ extern G__linked_taginfo G__G__streamLN_ios_basecLcLInit;
 extern G__linked_taginfo G__G__streamLN_char_traitslEchargR;
 extern G__linked_taginfo G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR;
 extern G__linked_taginfo G__G__streamLN_basic_ioslEcharcOchar_traitslEchargRsPgR;
-extern G__linked_taginfo G__G__streamLN_basic_ioslEcharcOchar_traitslEchargRsPgRcLcLoff_type;
-extern G__linked_taginfo G__G__streamLN_basic_ioslEcharcOchar_traitslEchargRsPgRcLcLpos_type;
 extern G__linked_taginfo G__G__streamLN_basic_streambuflEcharcOchar_traitslEchargRsPgR;
-extern G__linked_taginfo G__G__streamLN_basic_streambuflEcharcOchar_traitslEchargRsPgRcLcLpos_type;
-extern G__linked_taginfo G__G__streamLN_basic_streambuflEcharcOchar_traitslEchargRsPgRcLcLoff_type;
 extern G__linked_taginfo G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR;
 extern G__linked_taginfo G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgRcLcLsentry;
 extern G__linked_taginfo G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgRcLcLsentry;
@@ -61,14 +61,11 @@ extern G__linked_taginfo G__G__streamLN_basic_stringstreamlEcharcOchar_traitslEc
 extern G__linked_taginfo G__G__streamLN_basic_iostreamlEcharcOchar_traitslEchargRsPgR;
 
 /* STUB derived class for protected member access */
+typedef fpos<mbstate_t> G__fposlEmbstate_tgR;
 typedef char_traits<char> G__char_traitslEchargR;
 typedef basic_istream<char,char_traits<char> > G__basic_istreamlEcharcOchar_traitslEchargRsPgR;
 typedef basic_ios<char,char_traits<char> > G__basic_ioslEcharcOchar_traitslEchargRsPgR;
-typedef basic_ios<char,char_traits<char> >::off_type G__basic_ioslEcharcOchar_traitslEchargRsPgRcLcLoff_type;
-typedef basic_ios<char,char_traits<char> >::pos_type G__basic_ioslEcharcOchar_traitslEchargRsPgRcLcLpos_type;
 typedef basic_streambuf<char,char_traits<char> > G__basic_streambuflEcharcOchar_traitslEchargRsPgR;
-typedef basic_streambuf<char,char_traits<char> >::pos_type G__basic_streambuflEcharcOchar_traitslEchargRsPgRcLcLpos_type;
-typedef basic_streambuf<char,char_traits<char> >::off_type G__basic_streambuflEcharcOchar_traitslEchargRsPgRcLcLoff_type;
 typedef basic_ostream<char,char_traits<char> > G__basic_ostreamlEcharcOchar_traitslEchargRsPgR;
 typedef basic_ostream<char,char_traits<char> >::sentry G__basic_ostreamlEcharcOchar_traitslEchargRsPgRcLcLsentry;
 typedef basic_istream<char,char_traits<char> >::sentry G__basic_istreamlEcharcOchar_traitslEchargRsPgRcLcLsentry;

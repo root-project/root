@@ -698,7 +698,7 @@ void G__rewinddictionary()
 #endif
     }
     else {
-      G__fprinterr(G__serr,"!!!Dictionary position not recovered because G__unloadfile() is used in the macro!!!\n");
+      G__fprinterr(G__serr,"!!!Dictionary position not recovered because G__unloadfile() is used in a macro!!!\n");
     }
   }
 #ifndef G__OLDIMPLEMENTATION1422
@@ -1315,7 +1315,7 @@ char *pipefile;
   char filename[G__MAXFILENAME];
   int i=0;
   int j=1;
-  int mode; /* 0:stdout, 1:stderr */
+  int mode=0; /* 0:stdout, 1:stderr, 2:stdout+stderr */
 
   redirect=strrchr(com,'>');
   redirectin=strrchr(com,'<');

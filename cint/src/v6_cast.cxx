@@ -327,6 +327,49 @@ G__value result3;
       result3.typenum = -1;
       break;
     }
+#ifndef G__OLDIMPLEMENTATION1739
+    if(strcmp(casttype,"longlong")==0) {
+      char conv[G__ONELINE];
+      int match=0;
+      int store_tagnum = G__tagnum;
+      if(0==G__defined_macro("G__LONGLONG_H")) {
+	int store_def_struct_member = G__def_struct_member;
+	G__def_struct_member = 0;
+	G__decl=0;
+	G__loadfile("long.dll"); /* used to switch case between .dl and .dll */
+	G__decl=1;
+	G__def_struct_member = store_def_struct_member;
+	result3.tagnum = G__defined_tagname("G__longdouble",2);
+	result3.typenum = G__search_typename("long double",'u',result3.tagnum,G__PARANORMAL);
+	result3.tagnum = G__defined_tagname("G__ulonglong",2);
+	result3.typenum = G__search_typename("unsigned long long",'u',result3.tagnum,G__PARANORMAL);
+      }
+      type='u';
+      result3.tagnum = G__defined_tagname("G__longlong",2);
+      result3.typenum = G__search_typename("long long",'u',result3.tagnum,G__PARANORMAL);
+      /* G__castclass(&result3,result3.tagnum,castflag,&type,reftype); */
+      if('h'==type||'k'==type) 
+	sprintf(conv,"G__longlong(%lu)",G__int(result3));
+      else
+	sprintf(conv,"G__longlong(%ld)",G__int(result3));
+      G__tagnum = result3.tagnum;
+      result3=G__getfunction(conv,&match,G__TRYCONSTRUCTOR);
+      G__tagnum = store_tagnum;
+      if(match) {
+	G__store_tempobject(result3);
+#ifdef G__ASM
+	if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: STORETEMP\n",G__asm_cp);
+#endif
+	  G__asm_inst[G__asm_cp]=G__STORETEMP;
+	  G__inc_cp_asm(1,0);
+	}
+#endif
+      }
+      break;
+    }
+#endif
     break;
   case 10:
     if(strcmp(casttype,"longdouble")==0) {

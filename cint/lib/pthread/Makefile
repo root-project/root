@@ -5,9 +5,9 @@
 # Copying $CINTSYSDIR/MAKEINFO #############################
 
 ############################################################
-# platform/linux_RH7.3
+# platform/linux_RH7.3_gcc3
 #  Platform dependent information for LINUX 2.4 RedHatH7.3 or later
-#  Redhat-7.3
+#  using gcc-3.0/3.1/3.2
 ############################################################
 
 # Tools
@@ -17,7 +17,7 @@ AR	    = ar
 AROPT       = clq
 KRCC        = gcc -traditional
 CC          = gcc -fexceptions -Wall
-CPP         = g++ -Wall
+CPP         = g++ -Wall 
 LD          = g++
 CPREP       = gcc -E -C
 CPPPREP     = g++ -E -C
@@ -25,8 +25,9 @@ CPPPREP     = g++ -E -C
 # Compiler and linker option
 CCDLLOPT    = -fPIC
 LDDLLOPT    = -shared
-OPTIMIZE    = -O2
-LDOPT       = -lm -L/usr/lib/termcap -ltermcap -lbsd -ldl -rdynamic
+# gcc-3.00 has a bug in -O2. Use -O instead. -O2 may be OK for later version
+OPTIMIZE    = -O
+LDOPT       = -lm -L/usr/lib/termcap -ltermcap -lbsd -ldl -rdynamic 
 SYSMACRO    = -DG__REGEXP -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI -DG__ERRORCALLBACK
 OTHMACRO    = -DG__P2FCAST -DG__REDIRECTIO -DG__DETECT_NEWDEL -DG__POSIX -DG__STD_EXCEPTION 
 SYSIPATH    =
@@ -37,7 +38,7 @@ CINTLIB     = $(CINTSYSDIR)/src/G__ci.a
 READLINEA   = /usr/lib/libreadline.a
 APIO	    = Api.o Class.o BaseCls.o Type.o DataMbr.o Method.o MethodAr.o CallFunc.o Typedf.o Apiif.o Token.o
 RANLIB	    = /usr/bin/ranlib
-STDLIBS     = libstrm.o stdstrct.o
+STDLIBS     = gcc3strm.o stdstrct.o
 PLATFORM    =
 
 # source code postfix
@@ -52,14 +53,13 @@ DLLPOST     = .dl
 
 
 
-
 # End of $CINTSYSDIR/MAKEINFO ##############################
 
 # Set variables ############################################
 IPATH      = $(SYSIPATH) 
 MACRO      = $(SYSMACRO)\
 		-D_POSIX_C_SOURCE=199506L 
-CINTSYSDIR = /home/gotom/src/cint
+CINTSYSDIR = /home/gotom/src/cint-gcc3.0
 CINTIPATH  = -I$(CINTSYSDIR)
 OBJECT     = pthread.dll
 OPTION     = $(CCDLLOPT)

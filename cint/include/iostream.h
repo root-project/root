@@ -26,9 +26,7 @@
 #pragma setstream
 #pragma ifdef G__IOSTREAM_H
 #pragma ifndef G__KCC
-#pragma ifndef G__TMPLTIOS
 #pragma include <iosenum.h>
-#pragma endif
 #pragma ifndef G__SSTREAM_H
 typedef ostrstream ostringstream;
 typedef istrstream istringstream;

@@ -3,7 +3,7 @@
 *
 *********************************************************************/
 
-#pragma ifndef G__STRSTREAM_H
+#pragma if !defined(G__STRSTREAM_H) && !defined(G__SSTREAM_H)
 
 #include <iostream.h>
 

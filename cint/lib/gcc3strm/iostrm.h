@@ -156,6 +156,25 @@ extern "C" void G__redirectcin(const char* filename) {
 #include <cstdio>
 
 /********************************************************************
+* streampos
+*********************************************************************/
+extern "C" {
+  typedef struct {
+    private:
+     int __fill[6];
+  } mbstate_t;
+}
+
+template<typename _StateT>
+class fpos {
+};
+typedef fpos<mbstate_t> 		streampos;
+
+class wstreampos { };
+class streamoff { };
+
+
+/********************************************************************
 * macro G__MANIP_SUPPORT must be defined to enable true manipulator
 *********************************************************************/
 #define G__MANIP_SUPPORT
@@ -276,9 +295,9 @@ template<class charT, class traits>
 class basic_ios : public ios_base { 
   public:
 #if !(G__GNUC>=3)
-    typedef basic_ios<charT, traits>           ios_type;
-    typedef basic_streambuf<charT, traits>     streambuf_type; 
-    typedef basic_ostream<charT, traits>       ostream_type;
+    typedef basic_ios<charT,traits >           ios_type;
+    typedef basic_streambuf<charT,traits >     streambuf_type; 
+    typedef basic_ostream<charT,traits >       ostream_type;
 #endif
     typedef traits::char_type      char_type;
     typedef traits                 traits_type;
@@ -513,11 +532,9 @@ template<class charT>
 struct char_traits {
     typedef charT                     char_type;
     typedef INT_T                     int_type;
-#ifdef __CINT__
-    //typedef mbstate_t                 state_type;
-    //typedef fpos<state_type>         pos_type;
-    //typedef wstreamoff               off_type;
-#endif 
+    typedef mbstate_t                 state_type;
+    typedef fpos<state_type>         pos_type;
+    typedef wstreamoff               off_type;
     static void assign (char_type& c1, const char_type& c2)   ;
     static char_type to_char_type(const int_type& c);
     static int_type to_int_type(const char_type& c);
@@ -538,7 +555,7 @@ struct char_traits<char> {
     typedef char                      char_type;
     typedef int                       int_type;
     
-#ifndef __CINT__
+#ifdef __CINT__
     typedef streamoff                 off_type; 
     typedef streampos                 pos_type;
     typedef mbstate_t                 state_type;
@@ -563,6 +580,8 @@ struct char_traits<char> {
 typedef basic_istream<char, char_traits<char> >   istream;
 //typedef basic_ostream<char>                     ostream;
 typedef basic_ostream<char, char_traits<char> >   ostream;
+
+typedef basic_streambuf<char,char_traits<char> > streambuf;
 
 extern istream cin ;
 extern ostream cout ;

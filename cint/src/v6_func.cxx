@@ -938,6 +938,9 @@ int memfunc_flag;
   int store_memberfunc_tagnum;
   long store_memberfunc_struct_offset;
   int store_memberfunc_var_type;
+#ifndef G__OLDIMPLEMENTATION1741
+  int store_def_tagnum,store_tagdefining;
+#endif
   int tempstore;
 #ifndef G__OLDIMPLEMENTATION403
   char *pfparam;
@@ -1590,16 +1593,31 @@ int memfunc_flag;
    */
   store_struct_offset=G__store_struct_offset;
   store_tagnum=G__tagnum;
+#ifndef G__OLDIMPLEMENTATION1741
+  store_def_tagnum = G__def_tagnum;
+  store_tagdefining = G__tagdefining;
+#endif
   switch(G__scopeoperator(funcname,&hash,&G__store_struct_offset,&G__tagnum)){
   case G__GLOBALSCOPE: /* global scope */
     G__exec_memberfunc=0;
     memfunc_flag=G__TRYNORMAL;
+#ifndef G__OLDIMPLEMENTATION1741
+    G__def_tagnum = -1;
+    G__tagdefining = -1;
+#endif
     break;
   case G__CLASSSCOPE: /* class scope */
 #ifndef G__OLDIMPLEMENTATION1101
     memfunc_flag=G__CALLSTATICMEMFUNC;
 #else
     memfunc_flag=G__CALLMEMFUNC;
+#endif
+#ifndef G__OLDIMPLEMENTATION1741
+    /* This looks very risky */
+    G__def_tagnum = -1;
+    G__tagdefining = -1;
+    G__exec_memberfunc=1;
+    G__memberfunc_tagnum = G__tagnum;
 #endif
     break;
   }
@@ -1670,6 +1688,10 @@ int memfunc_flag;
 #endif
 	G__store_struct_offset = store_struct_offset;
 	G__tagnum = store_tagnum;
+#ifndef G__OLDIMPLEMENTATION1741
+	G__def_tagnum = store_def_tagnum;
+	G__tagdefining = store_tagdefining;
+#endif
 	G__exec_memberfunc = store_exec_memberfunc;
 	G__memberfunc_tagnum=store_memberfunc_tagnum;
 	G__memberfunc_struct_offset=store_memberfunc_struct_offset;
@@ -1797,6 +1819,10 @@ int memfunc_flag;
 #endif
 	    G__store_struct_offset = store_struct_offset;
 	    G__tagnum = store_tagnum;
+#ifndef G__OLDIMPLEMENTATION1741
+	    G__def_tagnum = store_def_tagnum;
+	    G__tagdefining = store_tagdefining;
+#endif
 #ifndef G__OLDIMPLEMENTATION405
 	    if(nindex&&isupper(result3.type)) {
 	      G__getindexedvalue(&result3,fpara.parameter[nindex]);
@@ -1897,6 +1923,10 @@ int memfunc_flag;
 #endif
 	G__store_struct_offset = store_struct_offset;
 	G__tagnum = store_tagnum;
+#ifndef G__OLDIMPLEMENTATION1741
+	G__def_tagnum = store_def_tagnum;
+	G__tagdefining = store_tagdefining;
+#endif
 	if(fpara.paran && 'u'==fpara.para[0].type&&
 #ifndef G__OLDIMPLEMENTATION1250
 	   (G__TRYCONSTRUCTOR==memfunc_flag||
@@ -4225,8 +4255,27 @@ char *result;
       if(fmtflag==1) {
 	onefmt[ionefmt]='\0';
 	sprintf(fmt,"%%s%s",onefmt);
+#ifndef G__OLDIMPLEMENTATION1739
+	if('u'==libp->para[ipara].type) {
+	  G__value *pval = &libp->para[ipara];
+	  if(strcmp(G__struct.name[pval->tagnum],"G__longlong")==0) {
+	    sprintf(onefmt,fmt ,result,*(long*)G__int(*pval));
+	  }
+	  else if(strcmp(G__struct.name[pval->tagnum],"G__ulonglong")==0) {
+	    sprintf(onefmt,fmt ,result,*(unsigned long*)G__int(*pval));
+	  }
+	  else {
+	    sprintf(onefmt,fmt ,result,G__int(libp->para[ipara++]));
+	  }
+	}
+	else {
+	  sprintf(onefmt,fmt ,result,G__int(libp->para[ipara++]));
+	}
+	strcpy(result,onefmt);
+#else
 	sprintf(onefmt,fmt ,result,G__int(libp->para[ipara++]));
 	strcpy(result,onefmt);
+#endif
 	ionefmt=0;
 	fmtflag=0;
       }
