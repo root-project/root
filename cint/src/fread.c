@@ -1415,10 +1415,37 @@ char *string,*endmark;
   
   return(c);
 }
+
+#ifndef G__OLDIMPLEMENTATION1572
+/***********************************************************************
+ *
+ ***********************************************************************/
+int G__getfullpath(string,pbegin,i)
+char *string;
+char *pbegin;
+int i;
+{
+  int tagnum= -1,typenum;
+  string[i] = '\0';
+  if(0==pbegin[0]) return(i);
+  typenum = G__defined_typename(pbegin);
+  if(-1==typenum) tagnum = G__defined_tagname(pbegin,1);
+  if((-1!=typenum && -1!=G__newtype.parent_tagnum[typenum]) ||
+     (-1!=tagnum  && -1!=G__struct.parent_tagnum[tagnum])) {
+    strcpy(pbegin,G__type2string(0,tagnum,typenum,0,0));
+    i = strlen(string);
+  }
+  return(i);
+}
+#endif
+
 /***********************************************************************
 * G__fdumpstream(string,endmark)
 * char *string       : string until the endmark appears
 * char *endmark      : specify endmark characters
+*
+*  This function is used only for reading pointer to function arguments.
+*    type (*)(....)  type(*p2f)(....)
 ***********************************************************************/
 int G__fdumpstream(string,endmark)
 char *string,*endmark;
@@ -1428,6 +1455,9 @@ char *string,*endmark;
   short nest=0,single_quote=0,double_quote=0,flag=0,ignoreflag;
 #ifndef G__OLDIMPLEMENTATION439
   int commentflag=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1572
+  char *pbegin = string;
 #endif
   
   do {
@@ -1455,7 +1485,15 @@ char *string,*endmark;
 #endif
       if((single_quote==0)&&(double_quote==0)) {
 	c=' ';
-	if(i>0 && isspace(string[i-1])) ignoreflag=1;
+	if(i>0 && isspace(string[i-1])) {
+	  ignoreflag=1;
+	}
+#ifndef G__OLDIMPLEMENTATION1572
+	else {
+	  i = G__getfullpath(string,pbegin,i);
+	}
+	pbegin = string+i+1-ignoreflag;
+#endif
       }
       break;
 	 
@@ -1464,6 +1502,9 @@ char *string,*endmark;
     case '[':
       if((single_quote==0)&&(double_quote==0)) {
 	nest++;
+#ifndef G__OLDIMPLEMENTATION1572
+	pbegin = string+i+1;
+#endif
       }
       break;
     case '}':
@@ -1475,6 +1516,10 @@ char *string,*endmark;
 	  flag=1;
 	  ignoreflag=1;
 	}
+#ifndef G__OLDIMPLEMENTATION1572
+	i = G__getfullpath(string,pbegin,i);
+	pbegin = string+i+1-ignoreflag;
+#endif
       }
       break;
     case '"':
@@ -1533,7 +1578,19 @@ char *string,*endmark;
 	--i;
 	ignoreflag=1;
       }
+#ifndef G__OLDIMPLEMENTATION1572
+      if(ignoreflag==0) i = G__getfullpath(string,pbegin,i);
+      pbegin = string+i+1-ignoreflag;
+#endif
       break;
+
+#ifndef G__OLDIMPLEMENTATION1572
+    case '&':
+    case ',':
+      i = G__getfullpath(string,pbegin,i);
+      pbegin = string+i+1;
+      break;
+#endif
 
     case '#':
       if(single_quote==0&&double_quote==0&&(i==0||string[i-1]!='$')) {

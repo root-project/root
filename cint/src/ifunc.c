@@ -2165,6 +2165,15 @@ int func_now;
 	c=G__fgetspace();
 	break;
       case '(': /* func(type (*)(type,...)) */
+#ifndef G__OLDIMPLEMENTATION1572
+	if((-1!=typenum && -1!=G__newtype.parent_tagnum[typenum]) ||
+	   (-1!=tagnum  && -1!=G__struct.parent_tagnum[tagnum])) {
+	  char *px = strrchr(paraname,' ');
+	  if(px) ++px;
+	  else px = paraname;
+	  strcpy(px,G__type2string(0,tagnum,typenum,0,0));
+	}
+#endif
 	ip=strlen(paraname);
 	if(reftype) paraname[ip++]='&';
 	reftype=0;

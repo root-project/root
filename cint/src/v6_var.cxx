@@ -1784,6 +1784,13 @@ int ig15;
   int known;
   int i;
 
+#define G__OLDIMPLEMENTATION1573
+#ifndef G__OLDIMPLEMENTATION1573
+  if(G__no_exec_compile && G__asm_noverflow && 0==G__asm_wholefunction) {
+    G__abortbytecode();
+    return;
+  }
+#endif
 
   tagnum = var->p_tagtable[ig15];
 
@@ -1872,6 +1879,13 @@ int ig15;
   int i;
   char temp[G__ONELINE];
 
+#ifndef G__OLDIMPLEMENTATION1573
+  if(G__no_exec_compile && G__asm_noverflow && 0==G__asm_wholefunction) {
+    G__abortbytecode();
+    return;
+  }
+#endif
+
   store_no_exec_compile=G__no_exec_compile;
   G__no_exec_compile=1;
   store_tagnum=G__tagnum;
@@ -1946,6 +1960,13 @@ int ig15;
   int store_tagnum;
   int known;
   char temp[G__ONELINE];
+
+#ifndef G__OLDIMPLEMENTATION1573
+  if(G__no_exec_compile && G__asm_noverflow && 0==G__asm_wholefunction) {
+    G__abortbytecode();
+    return;
+  }
+#endif
 
   store_globalvarpointer=G__globalvarpointer;
   G__globalvarpointer=G__PVOID;
