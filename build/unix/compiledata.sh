@@ -41,7 +41,7 @@ if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
    LIBDIR=\$ROOTSYS/lib
 fi
 
-if [ "$ARCH" = "macosx" ]; then
+if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosxxlc" ]; then
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    SOEXT="so"
    if [ $macosx_minor -ge 3 ]; then
