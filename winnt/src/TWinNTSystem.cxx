@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.99 2004/09/13 19:23:53 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.100 2004/09/14 09:57:58 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2122,8 +2122,10 @@ char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mo
    if (IsAbsoluteFileName(exinfile) ) {
       found = exinfile;
    } else {
-      char *exsearch = gSystem->ExpandPathName(search);
-
+      TString exsearch = gSystem->ExpandPathName(search);
+	  // Need to use Windows delimiters
+	  exsearch.ReplaceAll(":",";");
+      
       // Check access
       struct stat finfo;
       if (::SearchPath(exsearch, exinfile, NULL, kMAXPATHLEN, name, &lpFilePart) &&
