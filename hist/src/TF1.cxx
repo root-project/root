@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.3 2000/07/06 15:58:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.4 2000/08/16 07:07:32 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -349,7 +349,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fXmin       = xmin;
    fXmax       = xmax;
    fNpx        = 100;
-   char *funcname = G__p2f2funcname(fcn);
+   char *funcname = G__p2f2funcname((void*)fcn);
    if (funcname) {
       fType       = 2;
       SetTitle(funcname);
