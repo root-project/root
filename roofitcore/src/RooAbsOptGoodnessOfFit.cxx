@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.1 2002/08/21 23:05:50 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -47,9 +47,12 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
     return ;
   }
 
+  RooArgSet obs(*data.get()) ;
+  obs.remove(projDeps,kTRUE,kTRUE) ;
+
   // Check that the PDF is valid for use with this dataset
   // Check if there are any unprotected multiple occurrences of dependents
-  if (pdf.recursiveCheckDependents(data.get())) {
+  if (pdf.recursiveCheckDependents(&obs)) {
     cout << "RooAbsOptGoodnessOfFit: ERROR in PDF dependents, abort" << endl ;
     RooErrorHandler::softAbort() ;
     return ;
