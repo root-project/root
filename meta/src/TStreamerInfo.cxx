@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.37 2001/02/02 11:16:48 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.38 2001/02/07 21:08:36 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -32,7 +32,7 @@ Bool_t  TStreamerInfo::fgOptimize = kTRUE;
 
 const Int_t kRegrouped = TStreamerInfo::kOffsetL;
 
-ClassImp(TStreamerInfo)
+ClassImp(TStreamerInfo) 
 
 //______________________________________________________________________________
 TStreamerInfo::TStreamerInfo()
@@ -122,6 +122,7 @@ void TStreamerInfo::Build()
    //iterate on list of base classes
    while((base = (TBaseClass*)nextb())) {
       clm = gROOT->GetClass(base->GetName());
+      if (!clm) continue;
       clm->GetStreamerInfo();
       offset = fClass->GetBaseClassOffset(clm);
       element = new TStreamerBase(base->GetName(),base->GetTitle(),offset);
