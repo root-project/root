@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.6 2002/01/23 15:48:05 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.7 2004/01/02 09:27:40 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
         virtual Int_t    GetIndex(Int_t entry) const;
         virtual Int_t   *GetList() const { return fList; }
         virtual Int_t    GetN() const { return fN; }
-        virtual Bool_t   GetReapplyCut() { return fReapply; };
+        virtual Bool_t   GetReapplyCut() const { return fReapply; };
         virtual Int_t    GetSize() const { return fSize; }
         virtual Int_t    Merge(TCollection *list);
         virtual void     Print(Option_t *option="") const;
@@ -63,7 +63,7 @@ public:
         virtual void     SetDelta(Int_t delta=100) {fDelta = delta;}
         virtual void     SetDirectory(TDirectory *dir);
         virtual void     SetName(const char *name); // *MENU*
-        virtual void     SetReapplyCut(Bool_t apply = kFALSE) {fReapply = apply;}; // *MENU*
+        virtual void     SetReapplyCut(Bool_t apply = kFALSE) {fReapply = apply;}; // *TOGGLE*
         virtual void     Sort();
         virtual void     Subtract(const TEventList *list);
 
