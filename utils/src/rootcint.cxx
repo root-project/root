@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.32 2001/01/26 16:29:57 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.33 2001/01/29 09:16:42 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -218,7 +218,7 @@ const char *help =
 #include <time.h>
 
 char *autold = "G__autoLinkDef.h";
-enum Estlstype {kNone,kVector, kList,kDeque,kMap,kMultimap,kSet,kMultiset};
+enum ESTLType {kNone, kVector, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 
 FILE *fp;
 
@@ -228,7 +228,7 @@ int IsSTLContainer(G__DataMemberInfo &m)
    // Is this an STL container?
 
    const char *s = m.Type()->TmpltName();
-   if (!s) return 0;
+   if (!s) return kNone;
    char type[512];
    strcpy(type, s);
 
@@ -239,7 +239,7 @@ int IsSTLContainer(G__DataMemberInfo &m)
    if (!strcmp(type, "multimap")) return kMultimap;
    if (!strcmp(type, "set"))      return kSet;
    if (!strcmp(type, "multiset")) return kMultiset;
-   return 0;
+   return kNone;
 }
 
 //______________________________________________________________________________
@@ -306,7 +306,7 @@ void WriteStringOperators(FILE *fd)
    fprintf(fd, "static TBuffer &operator<<(TBuffer &b, string s)\n{\n");
    fprintf(fd, "   // Writing string object.\n\n");
    fprintf(fd, "   Assert(b.IsWriting());\n");
-   fprintf(fd, "   b.WriteString(s.data());\n");
+   fprintf(fd, "   b.WriteString(s.c_str());\n");
    fprintf(fd, "   return b;\n");
    fprintf(fd, "}\n");
 }
@@ -337,9 +337,9 @@ int STLStringStreamer(G__DataMemberInfo &m, int rwmode)
       } else {
          // create write mode
          if (m.Property() & G__BIT_ISPOINTER)
-            fprintf(fp, "      { TString R__str = %s->data(); R__str.Streamer(R__b);}\n", m.Name());
+            fprintf(fp, "      { TString R__str = %s->c_str(); R__str.Streamer(R__b);}\n", m.Name());
          else
-            fprintf(fp, "      { TString R__str = %s.data(); R__str.Streamer(R__b);}\n", m.Name());
+            fprintf(fp, "      { TString R__str = %s.c_str(); R__str.Streamer(R__b);}\n", m.Name());
       }
       return 1;
    }
@@ -361,13 +361,13 @@ int STLContainerArrayStreamer(G__DataMemberInfo &m, int rwmode)
       if (rwmode == 0) {
          // create read code
          fprintf(fp, "      {\n");
-         fprintf(fp, "         for (Int_t l=0;l<%d;l++) {\n",len);
+         fprintf(fp, "         for (Int_t R__l = 0; R__l < %d; R__l++) {\n",len);
          const char *s = TemplateArg(m).Name();
          if (!strncmp(s, "const ", 6)) s += 6;
          if (m.Property() & G__BIT_ISPOINTER)
-            fprintf(fp, "            %s[l] = new %s<%s>;\n", m.Name(), stlc, s);
+            fprintf(fp, "            %s[R__l] = new %s<%s >;\n", m.Name(), stlc, s);
          else
-            fprintf(fp, "            %s[l].clear();\n", m.Name());
+            fprintf(fp, "            %s[R__l].clear();\n", m.Name());
          fprintf(fp, "            int R__i, R__n;\n");
          fprintf(fp, "            R__b >> R__n;\n");
          fprintf(fp, "            for (R__i = 0; R__i < R__n; R__i++) {\n");
@@ -384,9 +384,9 @@ int STLContainerArrayStreamer(G__DataMemberInfo &m, int rwmode)
                fprintf(fp, "               R__t.Streamer(R__b);\n");
             } else {
               if (strcmp(s,"string") == 0) {
-                 fprintf(fp,"               TString s;\n");
-                 fprintf(fp,"               s.Streamer(R__b);\n");
-                 fprintf(fp,"               string = s.Data();\n");
+                 fprintf(fp,"               TString R__str;\n");
+                 fprintf(fp,"               R__str.Streamer(R__b);\n");
+                 fprintf(fp,"               R__t = R__str.Data();\n");
               } else {
                  fprintf(stderr, "*** Datamember %s::%s: template arg %s has no Streamer()"
                           " method (need manual intervention)\n",
@@ -396,26 +396,26 @@ int STLContainerArrayStreamer(G__DataMemberInfo &m, int rwmode)
             }
         }
          if (m.Property() & G__BIT_ISPOINTER)
-            fprintf(fp, "               %s[l]->push_back(R__t);\n", m.Name());
+            fprintf(fp, "               %s[R__l]->push_back(R__t);\n", m.Name());
          else
-            fprintf(fp, "               %s[l].push_back(R__t);\n", m.Name());
+            fprintf(fp, "               %s[R__l].push_back(R__t);\n", m.Name());
          fprintf(fp, "            }\n");
          fprintf(fp, "         }\n");
          fprintf(fp, "      }\n");
       } else {
          // create write code
          fprintf(fp, "      {\n");
-         fprintf(fp, "         for (Int_t l=0;l<%d;l++) {\n",len);
+         fprintf(fp, "         for (Int_t R__l = 0; R__l < %d; R__l++) {\n",len);
          if (m.Property() & G__BIT_ISPOINTER)
-            fprintf(fp, "            R__b << %s[l]->size();\n", m.Name());
+            fprintf(fp, "            R__b << %s[R__l]->size();\n", m.Name());
          else
-            fprintf(fp, "            R__b << %s[l].size();\n", m.Name());
-         fprintf(fp, "            %s<%s>::iterator R__k;\n", stlc, TemplateArg(m).Name());
+            fprintf(fp, "            R__b << %s[R__l].size();\n", m.Name());
+         fprintf(fp, "            %s<%s >::iterator R__k;\n", stlc, TemplateArg(m).Name());
          if (m.Property() & G__BIT_ISPOINTER)
-            fprintf(fp, "            for (R__k = %s[l]->begin(); R__k != %s[l]->end(); ++R__k)\n",
+            fprintf(fp, "            for (R__k = %s[R__l]->begin(); R__k != %s[R__l]->end(); ++R__k)\n",
                     m.Name(), m.Name());
          else
-            fprintf(fp, "            for (R__k = %s[l].begin(); R__k != %s[l].end(); ++R__k)\n",
+            fprintf(fp, "            for (R__k = %s[R__l].begin(); R__k != %s[R__l].end(); ++R__k)\n",
                     m.Name(), m.Name());
          if ((TemplateArg(m).Property() & G__BIT_ISPOINTER) ||
              (TemplateArg(m).Property() & G__BIT_ISFUNDAMENTAL) ||
@@ -481,9 +481,9 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                   fprintf(fp, "            R__b >> R__t;\n");
                } else {
                   if (strcmp(s,"string*") == 0) {
-                     fprintf(fp,"            static TString s;\n");
-                     fprintf(fp,"            s.Streamer(R__b);\n");
-                     fprintf(fp,"            R__t = new string(s.Data());\n");
+                     fprintf(fp, "            static TString R__str;\n");
+                     fprintf(fp, "            R__str.Streamer(R__b);\n");
+                     fprintf(fp, "            R__t = new string(R__str.Data());\n");
                   } else {
                      fprintf(fp, "            R__b >> R__t;\n");
                   }
@@ -494,9 +494,9 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                fprintf(fp, "            R__t.Streamer(R__b);\n");
             } else {
               if (strcmp(s,"string") == 0) {
-                 fprintf(fp,"            static TString s;\n");
-                 fprintf(fp,"            s.Streamer(R__b);\n");
-                 fprintf(fp,"            R__t = s.Data();\n");
+                 fprintf(fp,"            static TString R__str;\n");
+                 fprintf(fp,"            R__str.Streamer(R__b);\n");
+                 fprintf(fp,"            R__t = R__str.Data();\n");
               } else {
                  fprintf(stderr, "*** Datamember %s::%s: template arg %s has no Streamer()"
                          " method (need manual intervention)\n",
@@ -561,11 +561,11 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                   fprintf(fp, "            R__b << *R__k;\n");
                } else {
                   if (strcmp(TemplateArg(m).Name(),"string*") == 0) {
-                     fprintf(fp,"            static TString s = (*R__k)->data();\n");
-                     fprintf(fp,"            s.Streamer(R__b);\n");
+                     fprintf(fp,"            static TString R__str = (*R__k)->c_str();\n");
+                     fprintf(fp,"            R__str.Streamer(R__b);\n");
                   } else {
                      if (strcmp(TemplateArg(m).Name(),"(unknown)") == 0) {
-printf("cannot process template argument1 %s\n",tmparg);
+                        fprintf(stderr, "Cannot process template argument1 %s\n",tmparg);
                         fprintf(fp, "            //R__b << *R__k;\n");
                      } else {
                         fprintf(fp, "            R__b << *R__k;\n");
@@ -584,11 +584,11 @@ printf("cannot process template argument1 %s\n",tmparg);
                }
             } else {
                if (strcmp(TemplateArg(m).Name(),"string") == 0) {
-                  fprintf(fp,"            static TString s = (*R__k).data();\n");
-                  fprintf(fp,"            s.Streamer(R__b);\n");
+                  fprintf(fp,"            static TString R__str = (*R__k).c_str();\n");
+                  fprintf(fp,"            R__str.Streamer(R__b);\n");
                } else {
                   if (strcmp(TemplateArg(m).Name(),"(unknown)") == 0) {
-printf("cannot process template argument2 %s\n",tmparg);
+                    fprintf(stderr, "Cannot process template argument2 %s\n",tmparg);
                     fprintf(fp, "            //(*R__k).Streamer(R__b);\n");
                   } else {
                     fprintf(fp, "            //(*R__k).Streamer(R__b);\n");
@@ -1066,12 +1066,12 @@ void WritePointersSTL(G__ClassInfo &cl)
       if (!strcmp(m.Type()->Name(), "string") || !strcmp(m.Type()->Name(), "string*")) {
          fprintf(fp, "//_______________________________________");
          fprintf(fp, "_______________________________________\n");
-         fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *p, int)\n",clName,m.Name());
+         fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *R__p, int)\n",clName,m.Name());
          fprintf(fp, "{\n");
          if (m.Property() & G__BIT_ISPOINTER) {
-            fprintf(fp, "   %s %s = (%s)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+            fprintf(fp, "   %s %s = (%s)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
          } else {
-            fprintf(fp, "   %s &%s = *(%s *)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+            fprintf(fp, "   %s &%s = *(%s *)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
          }
          fprintf(fp, "   if (R__b.IsReading()) {\n");
          STLStringStreamer(m,0);
@@ -1086,23 +1086,23 @@ void WritePointersSTL(G__ClassInfo &cl)
          fprintf(fp, "//_______________________________________");
          fprintf(fp, "_______________________________________\n");
          if (pCounter) {
-            fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *p, int n)\n",clName,m.Name());
+            fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *R__p, int R__n)\n",clName,m.Name());
          } else {
-            fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *p, int)\n",clName,m.Name());
+            fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *R__p, int)\n",clName,m.Name());
          }
          fprintf(fp, "{\n");
          if (m.Property() & G__BIT_ISARRAY) {
-            fprintf(fp, "   %s* %s = (%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+            fprintf(fp, "   %s* %s = (%s*)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
          } else {
             if (m.Property() & G__BIT_ISPOINTER) {
                if (pCounter) {
-                  fprintf(fp, "   %s* %s = (%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+                  fprintf(fp, "   %s* %s = (%s*)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
                } else {
-                //fprintf(fp, "   %s %s = *(%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
-                  fprintf(fp, "   %s* %s = (%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+                //fprintf(fp, "   %s %s = *(%s*)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+                  fprintf(fp, "   %s* %s = (%s*)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
                }
             } else {
-               fprintf(fp, "   %s &%s = *(%s *)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+               fprintf(fp, "   %s &%s = *(%s *)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
             }
          }
          fprintf(fp, "   if (R__b.IsReading()) {\n");
@@ -1112,37 +1112,41 @@ void WritePointersSTL(G__ClassInfo &cl)
             if (m.Property() & G__BIT_ISARRAY) {
                int len = 1;
                for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
-               fprintf(fp, "      for (Int_t l=0;l<%d;l++) {\n",len);
+               fprintf(fp, "      for (Int_t R__l = 0; R__l < %d; R__l++) {\n",len);
                if (m.Property() & G__BIT_ISPOINTER) {
-                  fprintf(fp, "         R__b >> %s[l];\n",m.Name());
+                  fprintf(fp, "         R__b >> %s[R__l];\n",m.Name());
                } else {
-                  fprintf(fp, "         %s[l].Streamer(R__b);\n",m.Name());
+                  fprintf(fp, "         %s[R__l].Streamer(R__b);\n",m.Name());
                }
                fprintf(fp, "      }\n");
             } else {
                if (m.Property() & G__BIT_ISPOINTER) {
                   if (pCounter == 2) {
                      fprintf(fp, "      delete [] *%s;\n",m.Name());
-                     fprintf(fp, "      if (!n) return;\n");
-                     fprintf(fp, "      *%s = new %s*[n];\n",m.Name(),a);
-                     fprintf(fp, "      %s** s = *%s;\n",a,m.Name());
-                     fprintf(fp, "      for (Int_t l=0;l<n;l++) {\n");
-                     fprintf(fp, "         s[l] = new %s();\n",a);
-                     fprintf(fp, "         s[l]->Streamer(R__b);\n");
+                     fprintf(fp, "      if (!R__n) return;\n");
+                     fprintf(fp, "      *%s = new %s*[R__n];\n",m.Name(),a);
+                     fprintf(fp, "      %s** R__s = *%s;\n",a,m.Name());
+                     fprintf(fp, "      for (Int_t R__l = 0; R__l < R__n; R__l++) {\n");
+                     fprintf(fp, "         R__s[R__l] = new %s();\n",a);
+                     fprintf(fp, "         R__s[R__l]->Streamer(R__b);\n");
                      fprintf(fp, "      }\n");
                   } else if(pCounter == 1) {
                      fprintf(fp, "      delete [] *%s;\n",m.Name());
-                     fprintf(fp, "      if (!n) return;\n");
-                     fprintf(fp, "      *%s = new %s[n];\n",m.Name(),a);
-                     fprintf(fp, "      %s* s = *%s;\n",a,m.Name());
-                     fprintf(fp, "      for (Int_t l=0;l<n;l++) {\n");
-                     fprintf(fp, "         s[l].Streamer(R__b);\n");
+                     fprintf(fp, "      if (!R__n) return;\n");
+                     fprintf(fp, "      *%s = new %s[R__n];\n",m.Name(),a);
+                     fprintf(fp, "      %s* R__s = *%s;\n",a,m.Name());
+                     fprintf(fp, "      for (Int_t R__l = 0; R__l < R__n; R__l++) {\n");
+                     fprintf(fp, "         R__s[R__l].Streamer(R__b);\n");
                      fprintf(fp, "      }\n");
                   } else {
-                     //if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
-                     //else                                fprintf(fp, "      R__b >> %s;\n",m.Name());
-                      if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      (*%s)->Streamer(R__b);\n",m.Name());
-                     else                                fprintf(fp, "      R__b >> *%s;\n",m.Name());
+                     //if (strncmp(m.Title(),"->",2) == 0)
+                     //   fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
+                     //else
+                     //   fprintf(fp, "      R__b >> %s;\n",m.Name());
+                     if (strncmp(m.Title(),"->",2) == 0)
+                        fprintf(fp, "      (*%s)->Streamer(R__b);\n",m.Name());
+                     else
+                        fprintf(fp, "      R__b >> *%s;\n",m.Name());
                  }
                } else {
                   fprintf(fp, "      %s.Streamer(R__b);\n",m.Name());
@@ -1156,33 +1160,39 @@ void WritePointersSTL(G__ClassInfo &cl)
             if (m.Property() & G__BIT_ISARRAY) {
                int len = 1;
                for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
-               fprintf(fp, "      for (Int_t l=0;l<%d;l++) {\n",len);
+               fprintf(fp, "      for (Int_t R__l = 0; R__l < %d; R__l++) {\n",len);
                if (m.Property() & G__BIT_ISPOINTER) {
-                  fprintf(fp, "         R__b << %s[l];\n",m.Name());
+                  fprintf(fp, "         R__b << %s[R__l];\n",m.Name());
                } else {
-                  fprintf(fp, "         %s[l].Streamer(R__b);\n",m.Name());
+                  fprintf(fp, "         %s[R__l].Streamer(R__b);\n",m.Name());
                }
                fprintf(fp, "      }\n");
             } else {
                if (m.Property() & G__BIT_ISPOINTER) {
                   if (pCounter == 2) {
-                     fprintf(fp, "      %s** s = *%s;\n",a,m.Name());
-                     fprintf(fp, "      for (Int_t l=0;l<n;l++) {\n");
-                     fprintf(fp, "         s[l]->Streamer(R__b);\n");
+                     fprintf(fp, "      %s** R__s = *%s;\n",a,m.Name());
+                     fprintf(fp, "      for (Int_t R__l = 0; R__l < R__n; R__l++) {\n");
+                     fprintf(fp, "         R__s[R__l]->Streamer(R__b);\n");
                      fprintf(fp, "      }\n");
                   } else if(pCounter == 1) {
-                     fprintf(fp, "      %s* s = *%s;\n",a,m.Name());
-                     fprintf(fp, "      for (Int_t l=0;l<n;l++) {\n");
-                     fprintf(fp, "         s[l].Streamer(R__b);\n");
+                     fprintf(fp, "      %s* R__s = *%s;\n",a,m.Name());
+                     fprintf(fp, "      for (Int_t R__l = 0; R__l < R__n; R__l++) {\n");
+                     fprintf(fp, "         R__s[R__l].Streamer(R__b);\n");
                      fprintf(fp, "      }\n");
                   } else {
-                     //if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
-                     if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      (*%s)->Streamer(R__b);\n",m.Name());
+                     //if (strncmp(m.Title(),"->",2) == 0)
+                     //   fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
+                     if (strncmp(m.Title(),"->",2) == 0)
+                        fprintf(fp, "      (*%s)->Streamer(R__b);\n",m.Name());
                      else {
-                        //if (m.Type()->IsBase("TObject")) fprintf(fp, "      R__b << (TObject*)%s;\n",m.Name());
-                        //else                             fprintf(fp, "      R__b << %s;\n",m.Name());
-                        if (m.Type()->IsBase("TObject")) fprintf(fp, "      R__b << (TObject*)*%s;\n",m.Name());
-                        else                             fprintf(fp, "      R__b << *%s;\n",m.Name());
+                        //if (m.Type()->IsBase("TObject"))
+                        //   fprintf(fp, "      R__b << (TObject*)%s;\n",m.Name());
+                        //else
+                        //   fprintf(fp, "      R__b << %s;\n",m.Name());
+                        if (m.Type()->IsBase("TObject"))
+                           fprintf(fp, "      R__b << (TObject*)*%s;\n",m.Name());
+                        else
+                           fprintf(fp, "      R__b << *%s;\n",m.Name());
                      }
                   }
                } else {
@@ -1435,7 +1445,7 @@ char *StrDup(const char *str)
 }
 
 //______________________________________________________________________________
-void strcpy_withesc(char *escaped, const char* original)
+void StrcpyWithEsc(char *escaped, const char *original)
 {
    // Copy original into escaped BUT make sure that the \ characters
    // are properly escaped (on Windows temp files have \'s).
@@ -1479,7 +1489,7 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
    }
 
    char esc_bundlename[256];
-   strcpy_withesc(esc_bundlename, bundlename);
+   StrcpyWithEsc(esc_bundlename, bundlename);
 
    char checkline[512];
    sprintf(checkline, "  G__add_compiledheader(\"%s\");", esc_bundlename);
@@ -1746,7 +1756,7 @@ int main(int argc, char **argv)
          return 1;
       }
       if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+' && !il) {
-         strcpy_withesc(esc_arg, argv[i]);
+         StrcpyWithEsc(esc_arg, argv[i]);
          fprintf(bundle,"#include \"%s\"\n", esc_arg);
       } else
          argvv[argcc++] = argv[i];
