@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.192 2004/11/02 21:51:10 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.193 2004/11/05 17:03:01 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1657,12 +1657,8 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
          case kMap:
          case kMultiMap: {
             string keyName( TemplateArg(m).Name() );
-            if ( strncmp(keyName.c_str(),"const ", strlen("const "))==0 ) {
-               fprintf(fp, "            std::pair<%s,",keyName.c_str());
-            } else {
-               fprintf(fp, "            std::pair<const %s,",keyName.c_str());
-            }
-            fprintf(fp, "%s> R__t3(R__t,R__t2);\n",TemplateArg(m,1).Name());
+            fprintf(fp, "            typedef %s Value_t;\n",keyName.c_str());
+            fprintf(fp, "            std::pair<Value_t const, %s> R__t3(R__t,R__t2);\n",TemplateArg(m,1).Name());
             fprintf(fp, "            R__stl.insert(R__t3);\n");
           //fprintf(fp, "            R__stl.insert(%s::value_type(R__t,R__t2));\n",stlType.c_str());
             break;
