@@ -1,4 +1,4 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.16 2004/11/23 21:45:05 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.17 2005/03/04 07:44:11 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
 # Last: 01/04/05
@@ -128,8 +128,11 @@ def _processRootEvents():
    global gSystem
    gSystemProcessEvents = gSystem.ProcessEvents
    while 1:
-      gSystemProcessEvents()
-      time.sleep( 0.01 )
+      try:
+         gSystemProcessEvents()
+         time.sleep( 0.01 )
+      except: # in case gSystem gets destroyed early on exit
+         pass
 
 thread.start_new_thread( _processRootEvents, () )
 

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.1 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -42,14 +42,7 @@ namespace PyROOT {
    PYROOT_BASIC_CONVERTER( LongConverter );
    PYROOT_BASIC_CONVERTER( DoubleConverter );
    PYROOT_BASIC_CONVERTER( VoidConverter );
-
-   class LongLongConverter : public Converter {
-   public:
-      virtual bool SetArg( PyObject*, G__CallFunc* );
-
-   private:
-      Long64_t fBuffer;
-   };
+   PYROOT_BASIC_CONVERTER( LongLongConverter );
 
    class CStringConverter : public Converter {
    public:

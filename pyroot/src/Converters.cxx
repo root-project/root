@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.1 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -48,13 +48,9 @@ bool PyROOT::VoidConverter::SetArg( PyObject*, G__CallFunc* func )
 //____________________________________________________________________________
 bool PyROOT::LongLongConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
-// get value; a buffer is needed as a pointer will be passed
-   fBuffer = PyLong_AsLongLong( pyobject );
+   func->SetArg( PyLong_AsLongLong( pyobject ) );
    if ( PyErr_Occurred() )
       return false;
-
-// set value and declare success
-   func->SetArg( reinterpret_cast< long >( &fBuffer ) );
    return true;
 }
 

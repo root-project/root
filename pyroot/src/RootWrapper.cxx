@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.18 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.19 2005/03/04 19:41:29 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -151,8 +151,7 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
          pycall = new ConstructorHolder( klass, method );
          mtName = "__init__";
          hasConstructor = true;
-      }
-      else                                   // member function
+      } else                                 // member function
          pycall = new MethodHolder( klass, method );
 
    // lookup method dispatcher and store method

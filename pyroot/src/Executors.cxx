@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.1 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -66,8 +66,7 @@ PyObject* PyROOT::VoidExecutor::Execute( G__CallFunc* func, void* self )
 //____________________________________________________________________________
 PyObject* PyROOT::LongLongExecutor::Execute( G__CallFunc* func, void* self )
 {
-   long result = func->ExecInt( self );
-   return PyLong_FromLongLong( *(reinterpret_cast< Long64_t* >( result )) );
+   return PyLong_FromLongLong( (Long64_t)func->ExecDouble( self ) );
 }
 
 //____________________________________________________________________________
