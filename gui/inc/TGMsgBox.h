@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.h,v 1.2 2001/04/03 10:36:21 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.h,v 1.3 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -75,8 +75,7 @@ protected:
    TList               *fMsgList;                    // text (list of TGLabels)
    Int_t               *fRetCode;                    // address to store return code
 
-   void PMsgBox(const TGWindow *main,
-                const char *title, const char *msg, const TGPicture *icon,
+   void PMsgBox(const char *title, const char *msg, const TGPicture *icon,
                 Int_t buttons, Int_t *ret_code);
 
 public:

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.6 2004/06/16 16:45:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.7 2004/09/13 09:10:56 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -47,7 +47,7 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
 {
    // Create a message dialog box.
 
-   PMsgBox(main, title, msg, icon, buttons, ret_code);
+   PMsgBox(title, msg, icon, buttons, ret_code);
 }
 
 //______________________________________________________________________________
@@ -86,13 +86,12 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
          break;
    }
 
-   PMsgBox(main, title, msg, icon_pic, buttons, ret_code);
+   PMsgBox(title, msg, icon_pic, buttons, ret_code);
 }
 
 //______________________________________________________________________________
-void TGMsgBox::PMsgBox(const TGWindow *main, const char *title,
-                       const char *msg, const TGPicture *icon,
-                       Int_t buttons, Int_t *ret_code)
+void TGMsgBox::PMsgBox(const char *title, const char *msg,
+                       const TGPicture *icon, Int_t buttons, Int_t *ret_code)
 {
    // Protected, common message dialog box initialization.
 
