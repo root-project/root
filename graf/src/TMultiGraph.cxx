@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.2 2000/12/13 15:13:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.3 2001/01/30 15:41:17 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -171,25 +171,30 @@ void TMultiGraph::Paint(Option_t *option)
   for (i=0;i<nch;i++) chopt[i] = toupper(option[i]);
   chopt[nch] = 0;
   Double_t *x, *y;
+  TGraph *g;
    
   l = strstr(chopt,"A");
   if (l) {
      *l = ' ';
-     TGraph *g;
      TIter   next(fGraphs);
      Int_t npt = 100;
      Double_t maximum, minimum, rwxmin, rwxmax, rwymin, rwymax, uxmin, uxmax, dx, dy;
+     rwxmin    = gPad->GetUxmin();
+     rwxmax    = gPad->GetUxmax();
+     rwymin    = gPad->GetUymin();
+     rwymax    = gPad->GetUymax();
      if (fHistogram) {
-        rwxmin    = gPad->GetUxmin();
-        rwxmax    = gPad->GetUxmax();
-        rwymin    = gPad->GetUymin();
-        rwymax    = gPad->GetUymax();
-        minimum   = fHistogram->GetMinimumStored();
-        maximum   = fHistogram->GetMaximumStored();
-        if (minimum == -1111) minimum = fHistogram->GetYaxis()->GetXmin();
-        if (maximum == -1111) maximum = fHistogram->GetYaxis()->GetXmax();
-        uxmin     = gPad->PadtoX(rwxmin);
-        uxmax     = gPad->PadtoX(rwxmax);
+        //cleanup in case of a previous unzoom
+        if (fHistogram->GetMinimum() >= fHistogram->GetMaximum()) {
+           delete fHistogram;
+           fHistogram = 0;
+        }
+     }
+     if (fHistogram) {
+        minimum = fHistogram->GetYaxis()->GetXmin();
+        maximum = fHistogram->GetYaxis()->GetXmax();
+        uxmin   = gPad->PadtoX(rwxmin);
+        uxmax   = gPad->PadtoX(rwxmax);
      } else {
         rwxmin = 1e100;
         rwxmax = -rwxmin;
@@ -210,8 +215,8 @@ void TMultiGraph::Paint(Option_t *option)
         }
         if (rwxmin == rwxmax) rwxmax += 1.;
         if (rwymin == rwymax) rwymax += 1.;
-        dx = 0.1*(rwxmax-rwxmin);
-        dy = 0.1*(rwymax-rwymin);
+        dx = 0.05*(rwxmax-rwxmin);
+        dy = 0.05*(rwymax-rwymin);
         uxmin    = rwxmin - dx;
         uxmax    = rwxmax + dx;
         minimum  = rwymin - dy;
@@ -222,19 +227,19 @@ void TMultiGraph::Paint(Option_t *option)
      if (fMaximum != -1111) rwymax = maximum = fMaximum;
      if (uxmin < 0 && rwxmin >= 0) {
         if (gPad->GetLogx()) uxmin = 0.9*rwxmin;
-        else                 uxmin = 0;
+        //else                 uxmin = 0;
      }
      if (uxmax > 0 && rwxmax <= 0) {
         if (gPad->GetLogx()) uxmax = 1.1*rwxmax;
-        else                 uxmax = 0;
+        //else                 uxmax = 0;
      }
      if (minimum < 0 && rwymin >= 0) {
         if(gPad->GetLogy()) minimum = 0.9*rwymin;
-        else                minimum = 0;
+        //else                minimum = 0;
      }
      if (maximum > 0 && rwymax <= 0) {
         if(gPad->GetLogy()) maximum = 1.1*rwymax;
-        else                maximum = 0;
+        //else                maximum = 0;
      }
      if (minimum <= 0 && gPad->GetLogy()) minimum = 0.001*maximum;
      if (uxmin <= 0 && gPad->GetLogx()) {
@@ -244,28 +249,26 @@ void TMultiGraph::Paint(Option_t *option)
      rwymin = minimum;
      rwymax = maximum;
      if (fHistogram) {
-        fHistogram->SetMinimum(rwymin);
-        fHistogram->SetMaximum(rwymax);
+        fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
      }
 
 //*-*-  Create a temporary histogram to draw the axis
-    if (!fHistogram) {
-       // the graph is created with at least as many channels as there are points
-       // to permit zooming on the full range
-       rwxmin = uxmin;
-       rwxmax = uxmax;
-       fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
-       if (!fHistogram) return;
-       fHistogram->SetMinimum(rwymin);
-       fHistogram->SetBit(TH1::kNoStats);
-       fHistogram->SetMaximum(rwymax);
-       fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
-       fHistogram->SetDirectory(0);
-    }
-    fHistogram->Paint();
-  }
+     if (!fHistogram) {
+        // the graph is created with at least as many channels as there are points
+        // to permit zooming on the full range
+        rwxmin = uxmin;
+        rwxmax = uxmax;
+        fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
+        if (!fHistogram) return;
+        fHistogram->SetMinimum(rwymin);
+        fHistogram->SetBit(TH1::kNoStats);
+        fHistogram->SetMaximum(rwymax);
+        fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
+        fHistogram->SetDirectory(0);
+     }
+     fHistogram->Paint();
+   }
   
-   TGraph *g;
    if (fGraphs) {
      TIter   next(fGraphs);
      while ((g = (TGraph*) next())) {
