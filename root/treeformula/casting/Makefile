@@ -8,6 +8,7 @@ endif
 
 SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
 
+include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 $(ROOTSYS)/test/Event:
 	(cd $ROOTSYS/test; gmake Event)
