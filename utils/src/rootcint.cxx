@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.12 2000/11/22 15:47:19 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.13 2000/11/22 20:57:27 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -994,7 +994,11 @@ void WritePointersSTL(G__ClassInfo &cl)
                int len = 1;
                for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
                fprintf(fp, "      for (Int_t l=0;l<%d;l++) {\n",len);
-               fprintf(fp, "         %s[l].Streamer(R__b);\n",m.Name());
+               if (m.Property() & G__BIT_ISPOINTER) {
+                  fprintf(fp, "         %s[l]->Streamer(R__b);\n",m.Name());
+               } else {
+                  fprintf(fp, "         %s[l].Streamer(R__b);\n",m.Name());
+               }
                fprintf(fp, "      }\n");
             } else {
                if (m.Property() & G__BIT_ISPOINTER) {
@@ -1013,7 +1017,11 @@ void WritePointersSTL(G__ClassInfo &cl)
                int len = 1;
                for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
                fprintf(fp, "      for (Int_t l=0;l<%d;l++) {\n",len);
-               fprintf(fp, "         %s[l].Streamer(R__b);\n",m.Name());
+               if (m.Property() & G__BIT_ISPOINTER) {
+                  fprintf(fp, "         %s[l]->Streamer(R__b);\n",m.Name());
+               } else {
+                  fprintf(fp, "         %s[l].Streamer(R__b);\n",m.Name());
+               }
                fprintf(fp, "      }\n");
             } else {
                if (m.Property() & G__BIT_ISPOINTER) {
