@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.157 2004/06/29 17:39:02 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.158 2004/07/08 08:09:06 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -808,8 +808,12 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 
    // Let's see if we have a filename as arguments instead of
    // a TTreeFormula expression.
-
-   if (gSystem->IsFileInIncludePath(varexp0)) {
+   
+   TString possibleFilename = varexp0;
+   if ( possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0 
+       && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0 
+       && possibleFilename.Index("Iteration$")<0 
+       && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
 
       if (selection && strlen(selection) && !gSystem->IsFileInIncludePath(selection)) {
          Error("DrawSelect",
