@@ -176,8 +176,12 @@ namespace ROOT {
             }
             if (fParent) fParent->read();
             else {
+               if (fBranchCount) {
+/*                   fprintf(stderr,"branchcount for %s is %s\n", */
+/*                           fBranch->GetName(),fBranchCount->GetName()); */
+                  // fBranchCount->GetEntry(fDirector->GetReadEntry());
+               }
                fBranch->GetEntry(fDirector->GetReadEntry());
-               if (fBranchCount) fBranchCount->GetEntry(fDirector->GetReadEntry());
             }
             fRead = fDirector->GetReadEntry();
          }

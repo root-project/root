@@ -66,7 +66,12 @@ bool TProxy::setup() {
          
          TLeaf *leaf = (TLeaf*)fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
          if (leaf) leaf = leaf->GetLeafCount();
-         if (leaf) fBranchCount = leaf->GetBranch();
+         if (leaf) {
+             fBranchCount = leaf->GetBranch();
+             fprintf(stderr,"for leaf %s setting up leafcount %s branchcount %s\n",
+                     fBranch->GetName(),leaf->GetName(),fBranchCount->GetName());
+            //fBranchCount->Print();
+         }
          
          fWhere = (double*)fBranch->GetAddress();
 
