@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.4 2003/04/15 09:36:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.5 2003/05/08 09:12:51 brun Exp $
 // Author: Miroslav Morhac   11/04/2003
 
 /////////////////////////////////////////////////////////////////////////////
@@ -141,6 +141,7 @@ const char *TSpectrum2::Background(TH1 * h, int number_of_iterations,
 //   Function parameters:                                                  //
 //   hin:       pointer to the histogram of source spectrum                //
 //   sigma:   sigma of searched peaks, for details we refer to manual      //
+//            Note that sigma is in number of bins                         //
 //                                                                         //
 //   if option is not equal to "goff" (goff is the default), then          //
 //   a polymarker object is created and added to the list of functions of  //
@@ -163,23 +164,25 @@ const char *TSpectrum2::Background(TH1 * h, int number_of_iterations,
    if (dimension == 2) {
       Int_t sizex = hin->GetXaxis()->GetNbins();
       Int_t sizey = hin->GetYaxis()->GetNbins();
-      Int_t i, j, bin, npeaks;
-      Float_t zmax = -1e30;
+      Int_t i, j, binx,biny, npeaks;
       Float_t ** source = new float *[sizex];
       for (i = 0; i < sizex; i++) {
          source[i] = new float[sizey];
          for (j = 0; j < sizey; j++) {
             source[i][j] = (Float_t) hin->GetBinContent(i + 1, j + 1);
-            if (source[i][j] > zmax) zmax = source[i][j];
          }
       }
-      Double_t threshold = zmax/20;
-      if (threshold <5) threshold = 5;
-      npeaks = Search2General(source, sizex, sizey, sigma, threshold, kTRUE, 8);
+      Double_t threshold = 4;
+      npeaks = Search2General(source, sizex, sizey, sigma, threshold, kTRUE, 10);
+
+      //The logic in the loop should be improved to use the fact
+      //that fPositionX,Y give a precise position inside a bin.
+      //The current algorithm takes the center of the bin only.
       for (i = 0; i < npeaks; i++) {
-         bin = 1 + Int_t(fPositionX[i] + 0.5);
-         fPositionX[i] = hin->GetBinCenter(bin);
-         fPositionY[i] = hin->GetBinContent(bin);
+         binx = 1 + Int_t(fPositionX[i] + 0.5);
+         biny = 1 + Int_t(fPositionY[i] + 0.5);
+         fPositionX[i] = hin->GetXaxis()->GetBinCenter(binx);
+         fPositionY[i] = hin->GetYaxis()->GetBinCenter(biny);
       }
       if (strstr(option, "goff"))
          return npeaks;
