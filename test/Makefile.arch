@@ -154,7 +154,7 @@ ifeq ($(ARCH),sgicc)
 # SGI
 CXX           = CC -n32  -I/usr/include/CC.sgi
 CXXFLAGS      = -O
-LD            = CC -n32  -I/usr/include/CC.sgi
+LD            = CC -n32 -LANG:std  -I/usr/include/CC.sgi
 LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
@@ -163,7 +163,7 @@ ifeq ($(ARCH),sgicc64)
 # SGI
 CXX           = CC -64  -I/usr/include/CC.sgi
 CXXFLAGS      = -O
-LD            = CC -64  -I/usr/include/CC.sgi
+LD            = CC -64 -LANG:std -I/usr/include/CC.sgi
 LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
