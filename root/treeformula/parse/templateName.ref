@@ -82,5 +82,5 @@ Error in <TTreeFormula::DefinedVariable>: B is not a datamember of C
 *............................................................................*
 Info in <TTreePlayer::MakeClass>: Files: cmakeclass.h and cmakeclass.C generated from TTree: mytreemk
 Info in <TTreePlayer::DrawScript>: Will process tree/chain using generatedSel.h+
-Warning in <ACLiC>: modified script has already been compiled and loaded
-Warning in <ACLiC>: it will be regenerated and reloaded!
+Info in <ACLiC>: modified script has already been compiled and loaded
+Info in <ACLiC>: it will be regenerated and reloaded!

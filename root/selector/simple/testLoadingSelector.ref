@@ -1,6 +1,6 @@
 
 Processing runtestLoadingSelector.C...
 testSelector result is 1 0 1
-Warning in <ACLiC>: script has already been loaded in interpreted mode
-Warning in <ACLiC>: unloading testSelector.C and compiling it
+Info in <ACLiC>: script has already been loaded in interpreted mode
+Info in <ACLiC>: unloading testSelector.C and compiling it
 testSelector result is 1 524288 1
