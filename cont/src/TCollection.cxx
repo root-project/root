@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.2 2000/05/24 10:31:48 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.3 2000/09/05 08:24:17 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -288,8 +288,9 @@ Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize)
 {
    // Write all objects in this collection. By default all objects in
    // the collection are written individually (each object gets its
-   // own key). To write all objects using one key specify a name and
-   // set option to kSingleKey (i.e. 1).
+   // own key). Note, this is not recursive, collections in the collection
+   // are written with a single key. To write all objects using a single
+   // key specify a name and set option to TObject::kSingleKey (i.e. 1).
 
    if ((option & kSingleKey)) {
       return TObject::Write(name, option, bsize);
