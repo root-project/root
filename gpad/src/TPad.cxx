@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.152 2004/11/04 10:34:04 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.153 2004/11/15 12:35:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2819,10 +2819,18 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
             }
 
             if (style > 3100) {
-               char gifname[32];
-               sprintf(gifname,"gif%d",style);
-               TNamed *gifnamed = (TNamed*)gROOT->GetListOfSpecials()->FindObject(gifname);
-               if (gifnamed) gVirtualX->ReadGIF(px1,py2,gifnamed->GetTitle());
+               Double_t xb[4];
+               Double_t yb[4];
+               xb[0] = x1;
+               xb[1] = x1;
+               xb[2] = x2;
+               xb[3] = x2;
+               yb[0] = y1;
+               yb[1] = y2;
+               yb[2] = y2;
+               yb[3] = y1;
+               PaintFillAreaHatches(4, xb, yb, style);
+               return;
             }
                //special case for TAttFillCanvas
             if (gVirtualX->GetFillColor() == 10) {
@@ -3197,7 +3205,7 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
             }
             if ((yi <= ycur) && (ycur < yip)) {
                nbi++;
-	       if (nbi >= maxnbi) return;
+               if (nbi >= maxnbi) return;
                xli[nbi-1] = xt1;
             }
             continue;
@@ -3207,10 +3215,10 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
          if (yt1 == yt2) {
             if (yt1 == ycur) {
                nbi++;
-	       if (nbi >= maxnbi) return;
+               if (nbi >= maxnbi) return;
                xli[nbi-1] = xt1;
                nbi++;
-	       if (nbi >= maxnbi) return;
+               if (nbi >= maxnbi) return;
                xli[nbi-1] = xt2;
             }
             continue;
@@ -3231,7 +3239,7 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
               (TMath::Min(yt1,yt2) <= ycur) &&
               (ycur < TMath::Max(yt1,yt2))) {
             nbi++;
-	    if (nbi >= maxnbi) return;
+            if (nbi >= maxnbi) return;
             xli[nbi-1] = xin;
          }
       }
