@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.35 2003/02/10 08:58:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.36 2003/02/13 20:57:50 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -393,7 +393,7 @@ if (err==0) {
     if (chaine(i-1,1)=="%" && compt==0 && compt2==0 && modulo==0) {puiss10=0; modulo=i;}
     if (chaine(i-1,1)=="*" && compt==0 && compt2==0 && multi==0)  {puiss10=0; multi=i;}
     if (chaine(j-1,1)=="/" && chaine(j-2,1)!="\\"
-	&& compt4==0 && compt3==0 && divi==0)  
+	&& compt4==0 && compt3==0 && divi==0)
       {
 	puiss10=0; divi=j;
       }
@@ -1961,7 +1961,7 @@ const char *TFormula::GetParName(Int_t ipar) const
 //*-*-*-*-*-*-*-*Return name of one parameter*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            ============================
 
-   if (ipar <0 && ipar >= fNpar) return "";
+   if (ipar <0 || ipar >= fNpar) return "";
    if (fNames[ipar].Length() > 0) return (const char*)fNames[ipar];
    return Form("p%d",ipar);
 }
@@ -1970,6 +1970,9 @@ const char *TFormula::GetParName(Int_t ipar) const
 Int_t TFormula::GetParNumber(const char *parName) const
 {
   // return parameter number by name
+
+   if (!parName)
+      return -1;
 
    for (Int_t i=0; i<fNpar; i++) {
       if (fNames[i] == parName) return i;
