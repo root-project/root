@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.8 2002/03/13 17:00:33 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.9 2002/03/16 08:52:43 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -109,7 +109,6 @@ void TPaveStats::Paint(Option_t *option)
 
    if (!fLines) return;
    Double_t dx = fX2 - fX1;
-   Double_t dy = fY2 - fY1;
    Double_t textsize = GetTextSize();
    Int_t nlines = GetSize();
    if (nlines == 0) nlines = 5;
@@ -175,7 +174,7 @@ void TPaveStats::Paint(Option_t *option)
 
          sl = new char[strlen(latex->GetTitle())+1];
          strcpy(sl, latex->GetTitle());
-	 // Draw all the histogram except the 2D under/overflow 
+	 // Draw all the histogram except the 2D under/overflow
          if (strpbrk(sl, "=") !=0) {
            st = strtok(sl, "=");
            Int_t halign = 12;
