@@ -5,7 +5,7 @@ include ../../root/Rules.mk
 
 
 constTest: const.C
-	echo "gROOT->ProcessLine(\".L const.C\");run()" | root.exe -b -l > output  2>&1
-	echo "gROOT->ProcessLine(\".L const.C++\");run()" | root.exe -b -l >> output 2>&1 
-	diff good.output output
+	$(CMDECHO) echo "gROOT->ProcessLine(\".L const.C\");run()" | root.exe -b -l  2>&1 | grep -v 'Info in <TUnixSystem::ACLiC>' > output  2>&1
+	$(CMDECHO) echo "gROOT->ProcessLine(\".L const.C++\");run()" | root.exe -b -l  2>&1 | grep -v 'Info in <TUnixSystem::ACLiC>' >> output 2>&1 
+	$(CMDECHO) diff good.output output
 

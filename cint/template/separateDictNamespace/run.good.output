@@ -1,0 +1,86 @@
+
+Processing run.C...
+===========================================================================
+class Master::Container
+ size=0xc
+List of base class--------------------------------------------------------
+0x0        public: TObject //Basic ROOT object
+List of member variable---------------------------------------------------
+Defined in Container
+run.C             3 0x0        private: static TClass* fgIsA
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in Container)
+(compiled)        0:0    0 public: Master::Container Container(void);
+(compiled)        0:0    0 public: void Print(Option_t*);
+(compiled)        0:0    0 public: static TClass* Class(void);
+(compiled)        0:0    0 public: static const char* Class_Name(void);
+(compiled)        0:0    0 public: static Version_t Class_Version(void);
+(compiled)        0:0    0 public: static void Dictionary(void);
+(compiled)        0:0    0 public: virtual TClass* IsA(void) const;
+(compiled)        0:0    0 public: virtual void ShowMembers(TMemberInspector& insp,char* parent);
+(compiled)        0:0    0 public: virtual void Streamer(TBuffer& b);
+(compiled)        0:0    0 public: void StreamerNVirtual(TBuffer& b);
+(compiled)        0:0    0 public: static const char* DeclFileName(void);
+(compiled)        0:0    0 public: static int ImplFileLine(void);
+(compiled)        0:0    0 public: static const char* ImplFileName(void);
+(compiled)        0:0    0 public: static int DeclFileLine(void);
+(compiled)        0:0    0 public: Master::Object& func(Master::Object* t);
+(compiled)        0:0    0 public: Master::Container Container(const Master::Container&);
+(compiled)        0:0    0 public: void ~Container(void);
+===========================================================================
+class Master::Container
+ size=0xc
+List of base class--------------------------------------------------------
+0x0        public: TObject //Basic ROOT object
+List of member variable---------------------------------------------------
+Defined in Container
+run.C             3 0x0        private: static TClass* fgIsA
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in Container)
+(compiled)        0:0    0 public: Master::Container Container(void);
+(compiled)        0:0    0 public: void Print(Option_t*);
+(compiled)        0:0    0 public: static TClass* Class(void);
+(compiled)        0:0    0 public: static const char* Class_Name(void);
+(compiled)        0:0    0 public: static Version_t Class_Version(void);
+(compiled)        0:0    0 public: static void Dictionary(void);
+(compiled)        0:0    0 public: virtual TClass* IsA(void) const;
+(compiled)        0:0    0 public: virtual void ShowMembers(TMemberInspector& insp,char* parent);
+(compiled)        0:0    0 public: virtual void Streamer(TBuffer& b);
+(compiled)        0:0    0 public: void StreamerNVirtual(TBuffer& b);
+(compiled)        0:0    0 public: static const char* DeclFileName(void);
+(compiled)        0:0    0 public: static int ImplFileLine(void);
+(compiled)        0:0    0 public: static const char* ImplFileName(void);
+(compiled)        0:0    0 public: static int DeclFileLine(void);
+(compiled)        0:0    0 public: Master::Object& func(Master::Object* t);
+(compiled)        0:0    0 public: Master::Container Container(const Master::Container&);
+(compiled)        0:0    0 public: void ~Container(void);
+(compiled)        0:0    0 public: Slave1::Object& func(Slave1::Object* t);
+===========================================================================
+class Master::Container
+ size=0xc
+List of base class--------------------------------------------------------
+0x0        public: TObject //Basic ROOT object
+List of member variable---------------------------------------------------
+Defined in Container
+run.C             3 0x0        private: static TClass* fgIsA
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in Container)
+(compiled)        0:0    0 public: Master::Container Container(void);
+(compiled)        0:0    0 public: void Print(Option_t*);
+(compiled)        0:0    0 public: static TClass* Class(void);
+(compiled)        0:0    0 public: static const char* Class_Name(void);
+(compiled)        0:0    0 public: static Version_t Class_Version(void);
+(compiled)        0:0    0 public: static void Dictionary(void);
+(compiled)        0:0    0 public: virtual TClass* IsA(void) const;
+(compiled)        0:0    0 public: virtual void ShowMembers(TMemberInspector& insp,char* parent);
+(compiled)        0:0    0 public: virtual void Streamer(TBuffer& b);
+(compiled)        0:0    0 public: void StreamerNVirtual(TBuffer& b);
+(compiled)        0:0    0 public: static const char* DeclFileName(void);
+(compiled)        0:0    0 public: static int ImplFileLine(void);
+(compiled)        0:0    0 public: static const char* ImplFileName(void);
+(compiled)        0:0    0 public: static int DeclFileLine(void);
+(compiled)        0:0    0 public: Master::Object& func(Master::Object* t);
+(compiled)        0:0    0 public: Master::Container Container(const Master::Container&);
+(compiled)        0:0    0 public: void ~Container(void);
+(compiled)        0:0    0 public: Slave1::Object& func(Slave1::Object* t);
+(compiled)        0:0    0 public: Slave2::Object& func(Slave2::Object* t);
