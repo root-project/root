@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.18 2004/09/14 15:15:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.19 2004/09/14 15:56:15 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -84,14 +84,18 @@ TPolyLine3D::TPolyLine3D(Int_t n, Option_t *option)
    // 3-D polyline normal constructor with initialization to 0.
    // If n < 0 the default size (2 points) is set.
 
-   fLastPoint = -1;
-   if (n < 1) fN = 2;  // Set the default size for this object
-   else fN = n;
-
-   fP = new Float_t[3*fN];
-   for (Int_t i=0; i<3*fN; i++) fP[i] = 0;
    fOption = option;
    SetBit(kCanDelete);
+   fLastPoint = -1;
+   if (n <= 0) {
+      fN = 0;
+      fP = 0;
+      return;
+   }
+
+   fN = n;
+   fP = new Float_t[3*fN];
+   for (Int_t i=0; i<3*fN; i++) fP[i] = 0;
 }
 
 //______________________________________________________________________________
@@ -100,9 +104,16 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t *p, Option_t *option)
    // 3-D polyline normal constructor. Polyline is intialized with p.
    // If n < 0 the default size (2 points) is set.
 
-   if (n < 1) fN = 2;  // Set the default size for this object
-   else fN = n;
+   fOption = option;
+   SetBit(kCanDelete);
+   fLastPoint = -1;
+   if (n <= 0) {
+      fN = 0;
+      fP = 0;
+      return;
+   }
 
+   fN = n;
    fP = new Float_t[3*fN];
    if (n > 0) {
       for (Int_t i=0; i<3*n; i++) {
@@ -115,8 +126,6 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t *p, Option_t *option)
       }
       fLastPoint = -1;
    }
-   fOption = option;
-   SetBit(kCanDelete);
 }
 
 //______________________________________________________________________________
@@ -125,9 +134,16 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t *p, Option_t *option)
    // 3-D polyline normal constructor. Polyline is initialized with p
    // (cast to float). If n < 0 the default size (2 points) is set.
 
-   if (n < 1) fN = 2;  // Set the default size for this object
-   else fN = n;
+   fOption = option;
+   SetBit(kCanDelete);
+   fLastPoint = -1;
+   if (n <= 0) {
+      fN = 0;
+      fP = 0;
+      return;
+   }
 
+   fN = n;
    fP = new Float_t[3*fN];
    if (n > 0) {
       for (Int_t i=0; i<3*n; i++) {
@@ -140,8 +156,6 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t *p, Option_t *option)
       }
       fLastPoint = -1;
    }
-   fOption = option;
-   SetBit(kCanDelete);
 }
 
 //______________________________________________________________________________
@@ -150,10 +164,16 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *
    // 3-D polyline normal constructor. Polyline is initialized withe the
    // x, y ,z arrays. If n < 0 the default size (2 points) is set.
 
+   fOption = option;
+   SetBit(kCanDelete);
    fLastPoint = -1;
-   if (n < 1) fN = 2;  // Set the default size for this object
-   else fN = n;
+   if (n <= 0) {
+      fN = 0;
+      fP = 0;
+      return;
+   }
 
+   fN = n;
    fP = new Float_t[3*fN];
    Int_t j = 0;
    if (n > 0) {
@@ -169,8 +189,6 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *
          fP[i] = 0;
       }
    }
-   fOption = option;
-   SetBit(kCanDelete);
 }
 
 //______________________________________________________________________________
@@ -180,10 +198,16 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_
    // x, y, z arrays (which are cast to float).
    // If n < 0 the default size (2 points) is set.
 
+   fOption = option;
+   SetBit(kCanDelete);
    fLastPoint = -1;
-   if (n < 1) fN = 2;  // Set the default size for this object
-   else fN = n;
+   if (n <= 0) {
+      fN = 0;
+      fP = 0;
+      return;
+   }
 
+   fN = n;
    fP = new Float_t[3*fN];
    Int_t j = 0;
    if (n > 0) {
@@ -199,8 +223,6 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_
          fP[i] = 0;
       }
    }
-   fOption = option;
-   SetBit(kCanDelete);
 }
 
 //______________________________________________________________________________
@@ -230,8 +252,12 @@ void TPolyLine3D::Copy(TObject &obj) const
    ((TPolyLine3D&)obj).fN = fN;
    if (((TPolyLine3D&)obj).fP)
       delete [] ((TPolyLine3D&)obj).fP;
-   ((TPolyLine3D&)obj).fP = new Float_t[3*fN];
-   for (Int_t i=0; i<3*fN;i++)  {((TPolyLine3D&)obj).fP[i] = fP[i];}
+   if (fN > 0) {
+      ((TPolyLine3D&)obj).fP = new Float_t[3*fN];
+      for (Int_t i=0; i<3*fN;i++)  {((TPolyLine3D&)obj).fP[i] = fP[i];}
+   } else {
+      ((TPolyLine3D&)obj).fP = 0;
+   }
    ((TPolyLine3D&)obj).fOption = fOption;
    ((TPolyLine3D&)obj).fLastPoint = fLastPoint;
 }
@@ -570,12 +596,20 @@ void TPolyLine3D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
 void TPolyLine3D::SetPolyLine(Int_t n, Option_t *option)
 {
    // Re-initialize polyline with n points (0,0,0).
+   // if n <= 0 the current array of points is deleted.
 
+   fOption = option;
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      delete [] fP;
+      fP = 0;
+      return;
+   }
    fN = n;
    if (fP) delete [] fP;
    fP = new Float_t[3*fN];
    memset(fP,0,3*fN*sizeof(Float_t));
-   fOption = option;
    fLastPoint = fN-1;
 }
 
@@ -583,7 +617,16 @@ void TPolyLine3D::SetPolyLine(Int_t n, Option_t *option)
 void TPolyLine3D::SetPolyLine(Int_t n, Float_t *p, Option_t *option)
 {
    // Re-initialize polyline with n points from p. If p=0 initialize with 0.
+   // if n <= 0 the current array of points is deleted.
 
+   fOption = option;
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      delete [] fP;
+      fP = 0;
+      return;
+   }
    fN = n;
    if (fP) delete [] fP;
    fP = new Float_t[3*fN];
@@ -596,7 +639,6 @@ void TPolyLine3D::SetPolyLine(Int_t n, Float_t *p, Option_t *option)
    } else {
       memset(fP,0,3*fN*sizeof(Float_t));
    }
-   fOption = option;
    fLastPoint = fN-1;
 }
 
@@ -604,7 +646,16 @@ void TPolyLine3D::SetPolyLine(Int_t n, Float_t *p, Option_t *option)
 void TPolyLine3D::SetPolyLine(Int_t n, Double_t *p, Option_t *option)
 {
    // Re-initialize polyline with n points from p. If p=0 initialize with 0.
+   // if n <= 0 the current array of points is deleted.
 
+   fOption = option;
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      delete [] fP;
+      fP = 0;
+      return;
+   }
    fN = n;
    if (fP) delete [] fP;
    fP = new Float_t[3*fN];
@@ -617,7 +668,6 @@ void TPolyLine3D::SetPolyLine(Int_t n, Double_t *p, Option_t *option)
    } else {
       memset(fP,0,3*fN*sizeof(Float_t));
    }
-   fOption = option;
    fLastPoint = fN-1;
 }
 

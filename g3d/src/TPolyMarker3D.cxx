@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.18 2004/09/14 15:15:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.19 2004/09/14 15:56:15 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -70,13 +70,19 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Marker_t marker, Option_t *option)
 {
    // 3-D polymarker normal constructor with initialization to 0.
 
-   fLastPoint = -1;
-   fN = n;
-   fP = new Float_t [kDimension*fN];
-   for (Int_t i = 0; i < kDimension*fN; i++)  fP[i] = 0;
    fOption = option;
    SetMarkerStyle(marker);
    SetBit(kCanDelete);
+   fLastPoint = -1;
+   if (n <= 0) {
+      fN = 0;
+      fP = 0;
+      return;
+   }
+
+   fN = n;
+   fP = new Float_t [kDimension*fN];
+   for (Int_t i = 0; i < kDimension*fN; i++)  fP[i] = 0;
 }
 
 //______________________________________________________________________________
@@ -85,22 +91,24 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Float_t *p, Marker_t marker,
 {
    // 3-D polymarker constructor. Polymarker is initialized with p.
 
-   fLastPoint = -1;
-   fN = 0;
-   fP = 0;
-   if (n > 0) {
-      fN = n;
-      fP = new Float_t [kDimension*fN];
-      if (p) {
-         for (Int_t i = 0; i < kDimension*fN; i++)
-            fP[i] = p[i];
-         fLastPoint = fN-1;
-     } else
-         memset(fP,0,kDimension*fN*sizeof(Float_t));
-   }
    SetMarkerStyle(marker);
    SetBit(kCanDelete);
    fOption = option;
+   fLastPoint = -1;
+   if (n <= 0) {
+      fN = 0;
+      fP = 0;
+      return;
+   }
+
+   fN = n;
+   fP = new Float_t [kDimension*fN];
+   if (p) {
+      for (Int_t i = 0; i < kDimension*fN; i++)
+         fP[i] = p[i];
+      fLastPoint = fN-1;
+   } else
+      memset(fP,0,kDimension*fN*sizeof(Float_t));
 }
 
 //______________________________________________________________________________
@@ -110,22 +118,24 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker,
    // 3-D polymarker constructor. Polymarker is initialized with p
    // (cast to float).
 
-   fLastPoint = -1;
-   fN = 0;
-   fP = 0;
-   if (n > 0) {
-      fN = n;
-      fP = new Float_t [kDimension*fN];
-      if (p) {
-         for (Int_t i = 0; i < kDimension*fN; i++)
-            fP[i] = (Float_t) p[i];
-         fLastPoint = fN-1;
-      } else
-         memset(fP,0,kDimension*fN*sizeof(Float_t));
-   }
    SetMarkerStyle(marker);
    SetBit(kCanDelete);
    fOption = option;
+   fLastPoint = -1;
+   if (n <= 0) {
+      fN = 0;
+      fP = 0;
+      return;
+   }
+
+   fN = n;
+   fP = new Float_t [kDimension*fN];
+   if (p) {
+      for (Int_t i = 0; i < kDimension*fN; i++)
+         fP[i] = (Float_t) p[i];
+      fLastPoint = fN-1;
+   } else
+      memset(fP,0,kDimension*fN*sizeof(Float_t));
 }
 
 //______________________________________________________________________________
@@ -154,8 +164,12 @@ void TPolyMarker3D::Copy(TObject &obj) const
 
    TObject::Copy(obj);
    ((TPolyMarker3D&)obj).fN = fN;
-   ((TPolyMarker3D&)obj).fP = new Float_t [kDimension*fN];
-   for (Int_t i = 0; i < kDimension*fN; i++)  ((TPolyMarker3D&)obj).fP[i] = fP[i];
+   if (fN > 0) {
+      ((TPolyMarker3D&)obj).fP = new Float_t [kDimension*fN];
+      for (Int_t i = 0; i < kDimension*fN; i++)  ((TPolyMarker3D&)obj).fP[i] = fP[i];
+   } else {
+      ((TPolyMarker3D&)obj).fP = 0;
+   }
    ((TPolyMarker3D&)obj).SetMarkerStyle(GetMarkerStyle());
    ((TPolyMarker3D&)obj).fOption = fOption;
    ((TPolyMarker3D&)obj).fLastPoint = fLastPoint;
@@ -486,7 +500,17 @@ void TPolyMarker3D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
 void TPolyMarker3D::SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option)
 {
    // Re-initialize polymarker with n points from p. If p=0 initialize with 0.
+   // if n <= 0 the current array of points is deleted.
 
+   SetMarkerStyle(marker);
+   fOption = option;
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      delete [] fP;
+      fP = 0;
+      return;
+   }
    fN = n;
    if (fP) delete [] fP;
    fP = new Float_t [3*fN];
@@ -499,8 +523,6 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t
          memset(fP,0,kDimension*fN*sizeof(Float_t));
       }
    }
-   SetMarkerStyle(marker);
-   fOption = option;
    fLastPoint = fN-1;
 }
 
@@ -508,7 +530,17 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t
 void TPolyMarker3D::SetPolyMarker(Int_t n, Double_t *p, Marker_t marker, Option_t *option)
 {
    // Re-initialize polymarker with n points from p. If p=0 initialize with 0.
+   // if n <= 0 the current array of points is deleted.
 
+   SetMarkerStyle(marker);
+   fOption = option;
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      delete [] fP;
+      fP = 0;
+      return;
+   }
    fN = n;
    if (fP) delete [] fP;
    fP = new Float_t [3*fN];
@@ -521,8 +553,6 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Double_t *p, Marker_t marker, Option_
          memset(fP,0,kDimension*fN*sizeof(Float_t));
       }
    }
-   SetMarkerStyle(marker);
-   fOption = option;
    fLastPoint = fN-1;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.12 2002/10/31 07:27:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.13 2004/12/13 16:32:00 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -116,9 +116,14 @@ void TPolyMarker::Copy(TObject &obj) const
    TObject::Copy(obj);
    TAttMarker::Copy(((TPolyMarker&)obj));
    ((TPolyMarker&)obj).fN = fN;
-   ((TPolyMarker&)obj).fX = new Double_t [fN];
-   ((TPolyMarker&)obj).fY = new Double_t [fN];
-   for (Int_t i=0; i<fN;i++) { ((TPolyMarker&)obj).fX[i] = fX[i], ((TPolyMarker&)obj).fY[i] = fY[i]; }
+   if (fN > 0) {
+      ((TPolyMarker&)obj).fX = new Double_t [fN];
+      ((TPolyMarker&)obj).fY = new Double_t [fN];
+      for (Int_t i=0; i<fN;i++) { ((TPolyMarker&)obj).fX[i] = fX[i], ((TPolyMarker&)obj).fY[i] = fY[i]; }
+   } else {
+      ((TPolyMarker&)obj).fX = 0;
+      ((TPolyMarker&)obj).fY = 0;
+   }
    ((TPolyMarker&)obj).fOption = fOption;
    ((TPolyMarker&)obj).fLastPoint = fLastPoint;
 }

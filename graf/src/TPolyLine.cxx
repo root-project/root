@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.17 2004/04/30 06:34:58 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.18 2004/12/13 16:32:00 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -132,9 +132,14 @@ void TPolyLine::Copy(TObject &obj) const
    TAttLine::Copy(((TPolyLine&)obj));
    TAttFill::Copy(((TPolyLine&)obj));
    ((TPolyLine&)obj).fN = fN;
-   ((TPolyLine&)obj).fX = new Double_t[fN];
-   ((TPolyLine&)obj).fY = new Double_t[fN];
-   for (Int_t i=0; i<fN;i++)  {((TPolyLine&)obj).fX[i] = fX[i]; ((TPolyLine&)obj).fY[i] = fY[i];}
+   if (fN > 0) {
+      ((TPolyLine&)obj).fX = new Double_t[fN];
+      ((TPolyLine&)obj).fY = new Double_t[fN];
+      for (Int_t i=0; i<fN;i++)  {((TPolyLine&)obj).fX[i] = fX[i]; ((TPolyLine&)obj).fY[i] = fY[i];}
+   } else {
+      ((TPolyLine&)obj).fX = 0;
+      ((TPolyLine&)obj).fY = 0;
+   }
    ((TPolyLine&)obj).fOption = fOption;
    ((TPolyLine&)obj).fLastPoint = fLastPoint;
 }
