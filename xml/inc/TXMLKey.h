@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLKey.h,v 1.2 2004/05/10 23:50:27 rdm Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLKey.h,v 1.3 2004/05/14 14:30:46 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -47,7 +47,7 @@ class TXMLKey : public TKey {
 
       virtual Int_t     Read(TObject*) { return 0; }
       virtual TObject  *ReadObj();
-      virtual void     *ReadObjectAny();
+      virtual void     *ReadObjectAny(const TClass *cl);
       
       virtual void      ReadBuffer(char *&) {}
       virtual void      ReadFile() {}

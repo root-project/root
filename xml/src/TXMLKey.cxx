@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLKey.cxx,v 1.3 2004/05/11 18:52:17 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLKey.cxx,v 1.4 2004/05/14 14:30:46 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -188,7 +188,7 @@ TObject* TXMLKey::ReadObj()
 }
 
 //______________________________________________________________________________
-void* TXMLKey::ReadObjectAny()
+void* TXMLKey::ReadObjectAny(const TClass* /*cl*/)
 {
 // read object of any type    
     
