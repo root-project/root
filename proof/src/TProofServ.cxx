@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name$:$Id$
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -137,7 +137,6 @@ TProofServ::TProofServ(int *argc, char **argv)
 {
    // Create an application environment. The TProofServ environment provides
    // an eventloop via inheritance of TApplication.
-
 
    // Make sure all registered dictionaries have been initialized
    gInterpreter->InitializeDictionaries();
