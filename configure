@@ -61,6 +61,7 @@ confhelp() {
     echo "   cern            CERNLIB usage, build h2root and g2root"
     echo "   mysql           MySQL support, requires libmysqlclient"
     echo "   pgsql           PostgreSQL support, requires libpq"
+    echo "   sapdb           SapDB support, requires libsqlod and libsqlrte"
     echo "   rfio            SHIFT support, requires libshift.a from CERN"
     echo "   srp             SRP support, requires SRP source tree"
     echo "   afs             AFS support, requires AFS libs and objects"
@@ -80,6 +81,8 @@ confhelp() {
     echo "   mysql-libdir    MySQL support, location of libmysqlclient"
     echo "   pgsql-incdir    PostgreSQL support, location of libpq-fe.h"
     echo "   pgsql-libdir    PostgreSQL support, location of libpq"
+    echo "   sapdb-incdir    SapDB support, location of sql.h"
+    echo "   sapdb-libdir    SapDB support, location of libsqlod"
     echo "   pythia-libdir   PYHTIA support, location of libPythia"
     echo "   pythia6-libdir  PYHTIA6 support, location of libPythia6"
     echo "   venus-libdir    VENUS support, location of libVenus"
@@ -147,6 +150,8 @@ if [ $# -gt 0 ]; then
       --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
       --with-pgsql-incdir=*)   pgsqlincdir=$optarg   ; enable_pgsql="yes"   ;;
       --with-pgsql-libdir=*)   pgsqllibdir=$optarg   ; enable_pgsql="yes"   ;;
+      --with-sapdb-incdir=*)   sapdbincdir=$optarg   ; enable_sapdb="yes"   ;;
+      --with-sapdb-libdir=*)   sapdblibdir=$optarg   ; enable_sapdb="yes"   ;;
       --with-pythia-libdir=*)  pythialibdir=$optarg  ; enable_pythia="yes"  ;;
       --with-pythia6-libdir=*) pythia6libdir=$optarg ; enable_pythia6="yes" ;;
       --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
@@ -176,6 +181,8 @@ if [ $# -gt 0 ]; then
       --disable-mysql)        enable_mysql=no       ;;
       --enable-pgsql)         enable_pgsql=yes      ;;
       --disable-pgsql)        enable_pgsql=no       ;;
+      --enable-sapdb)         enable_sapdb=yes      ;;
+      --disable-sapdb)        enable_sapdb=no       ;;
       --enable-rfio)          enable_rfio=yes       ;;
       --disable-rfio)         enable_rfio=no        ;;
       --enable-thread)        enable_thread=yes     ;;
@@ -459,7 +466,7 @@ fi
 #
 # OpenGL Support (Third party libraries)
 #
-# (see mesa.org)
+# (see mesa3dt.org)
 #
 if [ "x$enable_opengl" != "xno" -a "$arch" != "win32" ]; then
     # Check for Mesa OpenGL compatible include and library
@@ -577,7 +584,6 @@ if [ "$arch" = "win32" ]; then
    openglincdir="include"
 fi
 
-
 ######################################################################
 #
 # MySQL Support (Third party libraries)
@@ -585,7 +591,7 @@ fi
 # (See mysql.org)
 #
 # If the user has set the flags "--disable-mysql", we don't check for
-# MySQL in at all.
+# MySQL at all.
 #
 if [ "x$enable_mysql" != "xno" ]; then
 # Check for MySQL include and library
@@ -646,7 +652,7 @@ if [ "x$enable_mysql" != "xno" ]; then
         done
     done
     echo ${mysqllibdir}
-    unset libdirss
+    unset libdirs
     unset libs
 
     if [ "x$mysqlincdir" = "xno" -o "x$mysqllibdir" = "xno" ]; then
@@ -679,7 +685,7 @@ fi
 # (See postgresql.org)
 #
 # If the user has set the flags "--disable-pgsql", we don't check for
-# PostgreSQL in at all.
+# PostgreSQL at all.
 #
 if [ "x$enable_pgsql" != "xno" ]; then
 # Check for PgSQL include and library
@@ -740,7 +746,7 @@ if [ "x$enable_pgsql" != "xno" ]; then
         done
     done
     echo ${pgsqllibdir}
-    unset libdirss
+    unset libdirs
     unset libs
 
     if [ "x$pgsqlincdir" = "xno" -o "x$pgsqllibdir" = "xno" ]; then
@@ -762,6 +768,108 @@ if [ "x$enable_pgsql" != "xno" ]; then
         fi
         if [ "x$pgsqlincdir" = "x/usr/include" ]; then
             pgsqlincdir="include"
+        fi
+    fi
+fi
+
+######################################################################
+#
+# SapDB Support (Third party libraries)
+#
+# (See www.sapdb.org)
+#
+# If the user has set the flags "--disable-sapdb", we don't check for
+# SapDB at all.
+#
+if [ "x$enable_sapdb" != "xno" ]; then
+# Check for SapDB include and library
+    echo $ac_n "Checking for sql.h ... $ac_c"
+    if [ "x$sapdbincdir" != "x" ]; then
+        # If the user has given an explict path, then we check to see if
+        # the sql.h header file really is where it's supposed to be.
+        sapdbincdirs=$sapdbincdir
+    else
+        # Othewise, search canonical paths
+        sapdbincdirs="$SAPDB $SAPDB/include /opt/sapdb/interfaces/odbc/incl \
+                      /usr/sapdb/interfaces/odbc/incl /usr/sapdb/include \
+                      /usr/local/sapdb/interfaces/odbc/incl \
+                      /usr/sapdb/web/incl /usr/include/sapdb \
+                      /usr/local/include/sapdb /usr/local/sapdb/include \
+                      /usr/local/sapdb/web/incl /usr/sapdb \
+                      /usr/local/sapdb /opt/sapdb /opt/sapdb/include \
+                      /opt/sapdb/web/incl"
+    fi
+    sapdbheaders="sql.h"
+    sapdbincdir=no
+    for i in ${sapdbincdirs}; do
+        for j in ${sapdbheaders}; do
+            if [ -r "$i/$j" ]; then
+                 sapdbincdir=$i
+                 break 2
+             fi
+        done
+    done
+    echo $sapdbincdir
+    unset sapdbincdirs
+    unset sapdbheaders
+
+    echo $ac_n "Checking for libsqlod ... $ac_c"
+    if [ "x$sapdblibdir" != "x" ]; then
+        # If the user gave an explicit path, check to see if the client
+        # library really is where it's supposed to be
+        libdirs=$sapdblibdir
+    else
+        libdirs="$SAPDB $SAPDB/lib /opt/sapdb/interfaces/odbc/lib \
+                 /usr/sapdb/interfaces/odbc/lib /usr/spadb/lib \
+                 /usr/local/sapdb/interfaces/odbc/lib /usr/local/sapdb/lib \
+                 /usr/lib/sapdb /usr/local/lib/sapdb /usr/sapdb/lib \
+                 /usr/local/sapdb/lib /usr/sapdb /usr/local/sapdb \
+                 /opt/sapdb /opt/sapdb/lib /usr/sapdb/web/lib \
+                 /usr/local/sapdb/web/lib /opt/sapdb/web/lib"
+    fi
+    # If the "--enable-shared" flag is set, we first look for the
+    # shared library then the static one.
+    if [ "x$enable_shared" != "xno" ]; then
+        libs="libsqlod.so libsqlod.sl libsqlod.a \
+              libsqlod.lib"
+    else
+        libs="libsqlod.a libsqlod.lib"
+    fi
+    sapdblibdir=no
+    for i in $libdirs; do
+        for j in ${libs} ; do
+            if [ -r "$i/$j" ]; then
+                sapdblibdir=$i
+                sapdblib=$j
+                break 2
+            fi
+        done
+    done
+    echo ${sapdblibdir}
+    unset libdirs
+    unset libs
+
+    if [ "x$sapdbincdir" = "xno" -o "x$sapdblibdir" = "xno" ]; then
+        unset sapdblib
+        unset sapdbincdir
+        unset sapdblibdir
+        enable_sapdb="no"
+    else
+        if [ "$arch" = "win32" ];then
+            sapdblib="${sapdblibdir}/${sapdblib} ${sapdblibdir}/libsqlrte.lib"
+            unset sapdblibdir
+        elif [ "x$enable_shared" = "xno" -o \
+               "x$sapdblib" = "xlibsqlod.a" ]; then
+            sapdblib="${sapdblibdir}/${sapdblib} ${sapdblibdir}/libsqlrte.a"
+            unset sapdblibdir
+        else
+            sapdblib1=`echo $sapdblib | sed 's|lib\(.*\)\..*|-l\1|'`
+            sapdblib2=`echo libsqlrte.so | sed 's|lib\(.*\)\..*|-l\1|'`
+            sapdblib="${sapdblib1} ${sapdblib2}"
+            sapdblibdir=-L${sapdblibdir}
+        fi
+        if [ "x$sapdbincdir" = "x/usr/include" ]; then
+            sapdbincdir="include"
         fi
     fi
 fi
@@ -1286,6 +1394,9 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@pgsqlincdir@|$pgsqlincdir|"     \
     -e "s|@pgsqllibdir@|$pgsqllibdir|"     \
     -e "s|@pgsqllib@|$pgsqllib|"           \
+    -e "s|@sapdbincdir@|$sapdbincdir|"     \
+    -e "s|@sapdblibdir@|$sapdblibdir|"     \
+    -e "s|@sapdblib@|$sapdblib|"           \
     -e "s|@cernlibdir@|$cernlibdir|"       \
     -e "s|@cernlibs@|$cernlib|"            \
     -e "s|@shiftlibdir@|$shiftlibdir|"     \

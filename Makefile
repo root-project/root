@@ -62,6 +62,11 @@ ifneq ($(PGSQLCLILIB),)
 MODULES      += pgsql
 endif
 endif
+ifneq ($(SAPDBINCDIR),)
+ifneq ($(SAPDBCLILIB),)
+MODULES      += sapdb
+endif
+endif
 ifneq ($(SHIFTLIB),)
 MODULES      += rfio
 endif
@@ -86,7 +91,7 @@ endif
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 gl rfio thread pythia pythia6 \
-                venus star mysql pgsql srputils x3d rootx rootd proofd
+                venus star mysql pgsql sapdb srputils x3d rootx rootd proofd
 MODULES      := $(sort $(MODULES))  # removes duplicates
 endif
 
@@ -572,6 +577,7 @@ showbuild:
 	@echo "SHIFTLIB           = $(SHIFTLIB)"
 	@echo "MYSQLINCDIR        = $(MYSQLINCDIR)"
 	@echo "PGSQLINCDIR        = $(PGSQLINCDIR)"
+	@echo "SAPDBINCDIR        = $(SAPDBINCDIR)"
 	@echo "SRPDIR             = $(SRPDIR)"
 	@echo "AFSDIR             = $(AFSDIR)"
 	@echo ""
