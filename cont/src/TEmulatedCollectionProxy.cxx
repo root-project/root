@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.1 2004/10/29 18:03:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.2 2004/11/01 12:26:07 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -276,7 +276,7 @@ void TEmulatedCollectionProxy::Resize(UInt_t left, Bool_t force)  {
   if ( fEnv && fEnv->object )   {
     size_t nCurr = Size();
     PCont_t c = PCont_t(fEnv->object);
-    fEnv->start = left>0 ? &(*c->begin()) : 0;
+    fEnv->start = nCurr>0 ? &(*c->begin()) : 0;
     if ( left == nCurr )  {
       return;
     }
