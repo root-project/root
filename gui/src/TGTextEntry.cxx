@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.28 2004/10/28 11:01:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.29 2004/12/01 17:04:41 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -218,6 +218,7 @@ const TGGC   *TGTextEntry::fgDefaultSelectedGC = 0;
 const TGGC   *TGTextEntry::fgDefaultSelectedBackgroundGC = 0;
 const TGGC   *TGTextEntry::fgDefaultGC = 0;
 
+TGTextEntry *gBlinkingEntry = 0;
 
 //______________________________________________________________________________
 class TBlinkTimer : public TTimer {
@@ -1302,25 +1303,6 @@ Bool_t TGTextEntry::HandleCrossing(Event_t *event)
          fTip->Hide();
    }
 
-   // does nothing if the text entry is disabled               
-   if (!IsEnabled()) return kTRUE; 
-
-   // only turn off/on cursor if widget does not have the focus
-   if (gVirtualX->GetInputFocus() != fId) {
-      if (event->fType == kEnterNotify) {
-         SetFocus();
-         fCursorOn = kTRUE;
-         if (!fCurBlink) fCurBlink = new TBlinkTimer(this, 500);
-         fCurBlink->Reset();
-         gSystem->AddTimer(fCurBlink);
-      } else {
-         fCursorOn = kFALSE;
-         // fSelectionOn = kFALSE;        // "netscape location behavior"
-         if (fCurBlink) fCurBlink->Remove();
-      }
-      fClient->NeedRedraw(this);
-   }
-
    return kTRUE;
 }
 
@@ -1383,6 +1365,7 @@ Bool_t TGTextEntry::HandleFocusChange(Event_t *event)
          fCursorOn = kTRUE;
          if (!fCurBlink) fCurBlink = new TBlinkTimer(this, 500);
          fCurBlink->Reset();
+         gBlinkingEntry = this;
          gSystem->AddTimer(fCurBlink);
       } else {
           fCursorOn = kFALSE;
@@ -1549,6 +1532,17 @@ void TGTextEntry::SetToolTipText(const char *text, Long_t delayms)
 
    if (text && strlen(text))
       fTip = new TGToolTip(fClient->GetDefaultRoot(), this, text, delayms);
+}
+
+//______________________________________________________________________________
+void TGTextEntry::SetFocus()
+{
+   // sets focus
+
+   if (gBlinkingEntry && (gBlinkingEntry != this) && gBlinkingEntry->fCurBlink) {
+      gBlinkingEntry->fCurBlink->Remove();
+   }
+   RequestFocus();
 }
 
 //_____________________________________________________________________
