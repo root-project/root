@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.2 2000/07/12 18:51:05 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -716,6 +716,9 @@ TString TTabCom::DetermineClass( const char varName[] )
      file1 >> type; // ignore "class"
 
      // non-class type ==> failure
+     if (type == "const")
+       file1 >> type;
+     
      if( type != "class" && type != "struct" ) {
           type = ""; // empty return string indicates failure.
           goto cleanup; //* RETURN *//
