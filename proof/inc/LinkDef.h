@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.6 2002/04/19 18:23:59 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.7 2002/07/17 12:29:37 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,12 +17,12 @@
 #pragma link C++ global gProof;
 #pragma link C++ global gProofServ;
 
-#pragma link C++ enum   EProofDebugMask;
 #pragma link C++ global gProofDebugMask;
 #pragma link C++ global gProofDebugLevel;
 
 #pragma link C++ class TProof;
 #pragma link C++ class TProofServ;
+#pragma link C++ class TProofDebug;
 #pragma link C++ class TProofLimitsFinder;
 #pragma link C++ class TSlave;
 #pragma link C++ class TProofPlayer+;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TProofDebug.h,v 1.1 2002/07/17 12:29:37 rdm Exp $
 // Author: Maarten Ballintijn 19/6/2002
 
 /*************************************************************************
@@ -25,23 +25,26 @@
 #include "Rtypes.h"
 #endif
 
-enum EProofDebugMask {
-   kNone          = 0,
-   kPacketizer    = 1,
-   kLoop          = 2,
-   kSelector      = 4,
-   kOutput        = 8,
-   kInput         = 16,
-   kGlobal        = 32,
-   kPackage       = 64,
+class TProofDebug {
+public:
+   enum EProofDebugMask {
+      kNone          = 0,
+      kPacketizer    = 1,
+      kLoop          = 2,
+      kSelector      = 4,
+      kOutput        = 8,
+      kInput         = 16,
+      kGlobal        = 32,
+      kPackage       = 64,
 
-   kAll           = 0xFFFFFFFF
+      kAll           = 0xFFFFFFFF
+   };
 };
 
-R__EXTERN EProofDebugMask gProofDebugMask;
-R__EXTERN Int_t           gProofDebugLevel;
+R__EXTERN TProofDebug::EProofDebugMask gProofDebugMask;
+R__EXTERN Int_t gProofDebugLevel;
 
 #define PDB(mask,level) \
-   if ((mask) & gProofDebugMask && (level) >= gProofDebugLevel)
+   if ((_NAME2_(TProofDebug::,mask)) & gProofDebugMask && (level) >= gProofDebugLevel)
 
 #endif
