@@ -1,14 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitCore
- *    File: $Id: RooRealSumPdf.rdl,v 1.1 2002/01/19 01:53:10 verkerke Exp $
- * Authors:
- *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- * History:
- *   17-Jan-2002 WV Created
- *
- * Copyright (C) 2002 University of California
+ * Project: RooFit                                                           *
+ * Package: RooFitCore                                                       *
+ *    File: $Id$                                                             *
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 #ifndef ROO_REAL_SUM_PDF
 #define ROO_REAL_SUM_PDF

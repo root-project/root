@@ -1,14 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.46 2002/08/21 23:06:41 verkerke Exp $
- * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
- *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
- * History:
- *   09-Mar-2001 WV Migrate from RooFitTools and adapt to RooFitCore
- *
- * Copyright (C) 1999 Stanford University
+ * Project: RooFit                                                           *
+ * Package: RooFitCore                                                       *
+ *    File: $Id$                                                             *
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [DATA] --

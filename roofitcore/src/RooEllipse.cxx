@@ -1,13 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitCore
- *    File: $Id: RooEllipse.cc,v 1.2 2002/02/09 02:01:23 davidk Exp $
- * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- * History:
- *   29-Apr-2001 DK Created initial version
- *
- * Copyright (C) 2001 Stanford University
+ * Project: RooFit                                                           *
+ * Package: RooFitCore                                                       *
+ *    File: $Id$                                                             *
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PLOT] --
@@ -25,7 +29,7 @@
 ClassImp(RooEllipse)
 
 static const char rcsid[] =
-"$Id: RooEllipse.cc,v 1.2 2002/02/09 02:01:23 davidk Exp $";
+"$Id: RooEllipse.cc,v 1.3 2002/03/27 19:25:39 davidk Exp $";
 
 RooEllipse::RooEllipse() { }
 

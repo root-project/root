@@ -1,13 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.32 2002/06/12 23:53:26 verkerke Exp $
- * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- * History:
- *   29-Apr-2001 DK Created initial version
- *
- * Copyright (C) 2001 Stanford University
+ * Project: RooFit                                                           *
+ * Package: RooFitCore                                                       *
+ *    File: $Id$                                                             *
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PLOT] --
@@ -41,7 +45,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.32 2002/06/12 23:53:26 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.33 2002/08/27 00:53:23 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();

@@ -1,13 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.28 2002/03/08 04:46:16 verkerke Exp $
- * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- * History:
- *   30-Nov-2000 DK Created initial version
- *
- * Copyright (C) 1999 Stanford University
+ * Project: RooFit                                                           *
+ * Package: RooFitCore                                                       *
+ *    File: $Id$                                                             *
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PLOT] --
@@ -45,7 +49,7 @@ ClassImp(RooPlot)
   ;
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.28 2002/03/08 04:46:16 verkerke Exp $";
+"$Id: RooPlot.cc,v 1.29 2002/04/03 23:37:26 verkerke Exp $";
 
 RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 

@@ -1,13 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitCore
- *    File: $Id: RooRealAnalytic.cc,v 1.4 2001/09/25 01:15:59 verkerke Exp $
- * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- * History:
- *   03-Aug-2001 DK Created initial version
- *
- * Copyright (C) 2001 Stanford University
+ * Project: RooFit                                                           *
+ * Package: RooFitCore                                                       *
+ *    File: $Id$                                                             *
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [AUX] --
@@ -25,7 +29,7 @@ ClassImp(RooRealAnalytic)
 ;
 
 static const char rcsid[] =
-"$Id: RooRealAnalytic.cc,v 1.4 2001/09/25 01:15:59 verkerke Exp $";
+"$Id: RooRealAnalytic.cc,v 1.5 2001/10/08 05:20:20 verkerke Exp $";
 
 Double_t RooRealAnalytic::operator()(const Double_t xvector[]) const {
   // Evaluate our analytic integral at the specified values of the dependents.

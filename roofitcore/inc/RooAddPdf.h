@@ -1,20 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.29 2002/06/19 22:37:09 verkerke Exp $
- * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
- * History:
- *   06-Jan-2000 DK Created initial version
- *   19-Apr-2000 DK Add the printEventStats() method
- *   26-Jun-2000 DK Add support for extended likelihood fits
- *   02-Jul-2000 DK Add support for multiple terms (instead of only 2)
- *   05-Jul-2000 DK Add support for extended maximum likelihood and a
- *                  new method for this: setNPar()
- *   03-May02001 WV Port to RooFitCore/RooFitModels
- *
- * Copyright (C) 2000 Stanford University
+ * Project: RooFit                                                           *
+ * Package: RooFitCore                                                       *
+ *    File: $Id$                                                             *
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 #ifndef ROO_ADD_PDF
 #define ROO_ADD_PDF

@@ -1,13 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitCore
- *    File: $Id: RooList.cc,v 1.2 2001/04/22 18:15:32 david Exp $
- * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- * History:
- *   30-Nov-2000 DK Created initial version
- *
- * Copyright (C) 1999 Stanford University
+ * Project: RooFit                                                           *
+ * Package: RooFitCore                                                       *
+ *    File: $Id$                                                             *
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [AUX] --
@@ -21,7 +25,7 @@
 ClassImp(RooList)
 
 static const char rcsid[] =
-"$Id: RooList.cc,v 1.2 2001/04/22 18:15:32 david Exp $";
+"$Id: RooList.cc,v 1.3 2001/10/08 05:20:17 verkerke Exp $";
 
 TObjOptLink *RooList::findLink(const char *name, const char *caller) const {
   // Find the link corresponding to the named object in this list.
