@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.26 2001/06/29 17:03:25 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.28 2001/10/20 11:46:57 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -167,6 +167,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    // TRootEmbeddedCanvas class.
 
    fSelected     = 0;
+   fSelectedPad  = 0;
    fCanvasID     = winid;
    fWindowTopX   = 0;
    fWindowTopY   = 0;
@@ -402,14 +403,8 @@ void TCanvas::Init()
    // Fill canvas ROOT data structure
    fXsizeUser = 0;
    fYsizeUser = 0;
-   if ( fCw < fCh ) {
-      fYsizeReal = kDefaultCanvasSize;
-      fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
-   }
-   else {
-      fXsizeReal = kDefaultCanvasSize;
-      fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
-   }
+   fXsizeReal = kDefaultCanvasSize;
+   fYsizeReal = kDefaultCanvasSize;
 
    fDISPLAY         = "$DISPLAY";
    fRetained        = 1;
@@ -438,6 +433,8 @@ void TCanvas::Build()
    // fCanvasID is in fact a pointer to the TGWin32 class
    if (fCanvasID  == -1) return;
 #endif
+   if ( fCw < fCh ) fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
+   else             fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
 
    // transient canvases have typically no menubar and should not get
    // by default the event status bar (if set by default)
