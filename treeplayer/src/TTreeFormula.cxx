@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.84 2002/03/07 02:03:47 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.85 2002/03/08 08:09:11 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1759,6 +1759,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       strcat(right,work);
    }
    if (i<nchname) {
+      if (strlen(right) && right[strlen(right)-1]!='.' && cname[i]!='.') {
+         // In some cases we remove a little to fast the period, we added 
+         // it back if we need.  It is assumed that 'right' and the rest of
+         // the name was cut by a delimiter, so this should be safe.
+         strcat(right,".");
+      }
       strcat(right,&cname[i]);
    }
 
@@ -2214,6 +2220,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                      }
                   } else if (type == TStreamerInfo::kAny ||
                              type == TStreamerInfo::kObject ||
+                             type == TStreamerInfo::kOffsetL + TStreamerInfo::kObject ||
                              type == TStreamerInfo::kTString  ||
                              type == TStreamerInfo::kTNamed  ||
                              type == TStreamerInfo::kTObject ) {
@@ -2228,6 +2235,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                              type == TStreamerInfo::kStreamer ||
                              type == TStreamerInfo::kStreamLoop ) {
                      // Unsupported case.
+                     Error("DefinedVariable","%s is a datamember of %s BUT is not yet of a supported type (%d)",
+                           right,cl->GetName(),type);
+                     return -1;
+                  } else {
+                     // Unknown and Unsupported case.
                      Error("DefinedVariable","%s is a datamember of %s BUT is not of a supported type (%d)",
                            right,cl->GetName(),type);
                      return -1;
