@@ -1,6 +1,6 @@
 #include <time.h>
 
-timeonaxis()
+void timeonaxis()
 {
 // This macro illustrates the use of the time mode on the axis
 // with different time intervals and time formats. It's result can
@@ -10,9 +10,7 @@ timeonaxis()
 // begin_html <a href="http://tycho.usno.navy.mil/systime.html">http://tycho.usno.navy.mil/systime.html</a> end_html
 //  or
 // begin_html <a href="http://www.topology.org/sci/time.html">http://www.topology.org/sci/time.html</a> end_html
-
-   gROOT->Reset();
-
+//
 // The start time is : almost NOW (the time at which the script is executed)
 // actualy, the nearest preceeding hour beginning.
 // The time is in general expressed in UTC time with the C time() function
