@@ -83,7 +83,7 @@ D: Class TXTRU and tutorials xtruDraw.C and xtruSamples.C
 
 N: Marc Hemberger
 E: hemberg@clri6a.gsi.de
-D: contributions to the thread classes
+D: contributions to the thread classes, SapDB interface
 
 N: Jacek M. Holeczek
 E: holeczek@us.edu.pl
@@ -155,6 +155,10 @@ D: various contributions to GUI classes
 N: Otto Schaile
 E: Otto.Schaile@Physik.Uni-Muenchen.DE
 D: various contributions to GUI classes
+
+N: Daniel Sigg
+E: sigg_d@ligo.caltech.edu
+D: TGNumberEntry GUI widget
 
 N: Alexandre V. Vaniachine
 E: AVVaniachine@lbl.gov
