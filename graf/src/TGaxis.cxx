@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.23 2001/10/31 11:28:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.24 2001/12/04 14:40:20 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1063,7 +1063,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
             if (!OptionText && !OptionTime) {
 
-//*-*-              Here we have to decide what format to generate
+//*-*-              We have to decide what format to generate
 //*-*-              (for numeric labels only)
 //*-*-              Test the magnitude, decide format
                FLEXE  = kFALSE;
@@ -1152,8 +1152,14 @@ L110:
                else     sprintf(CODED,"%%%d.%df",IF1+1,1);
             }
 
-//*-*-              Here we draw labels
+//*-*-              We draw labels
 
+            sprintf(CHTEMP,"%g",DWlabel);
+            Int_t ndecimals = 0;
+            if (!gStyle->GetStripDecimals()) {
+               char *dot = strchr(CHTEMP,'.');
+               if (dot) ndecimals = CHTEMP + strlen(CHTEMP) -dot;
+            }
             if (OptionM) Nlabels = N1A-1;
             else         Nlabels = N1A;
             wTimeIni = Wlabel;
@@ -1188,12 +1194,14 @@ L110:
                      first = 1; last = strlen(LABEL);
                   }
 
-//*-*-              Here we eliminate the non significiant 0 after '.'
-                  while (LABEL[last] == '0') {
-                     LABEL[last] = 0; last--;
+//*-*-              We eliminate the non significant 0 after '.'
+                  if (ndecimals) {
+                     char *adot = strchr(LABEL,'.');
+                     if (adot) adot[ndecimals] = 0;
+                  } else {
+                     while (LABEL[last] == '0') { LABEL[last] = 0; last--;}
                   }
-
-//*-*-              Here we eliminate the dot, unless dot is forced.
+//*-*-              We eliminate the dot, unless dot is forced.
                   if (LABEL[last] == '.') {
                      if (!OptionDot) { LABEL[last] = 0; last--;}
                   }
@@ -1217,7 +1225,7 @@ L110:
                      sprintf(LABEL,"%7.5f",modf(timed,&tmpdb));
                      tmplast = strlen(LABEL)-1;
 
-//*-*-              Here we eliminate the non significiant 0 after '.'
+//*-*-              We eliminate the non significiant 0 after '.'
                      while (LABEL[tmplast] == '0') {
                         LABEL[tmplast] = 0; tmplast--;
                      }
@@ -1238,7 +1246,7 @@ L110:
                   Wlabel = wTimeIni + (k+1)*DWlabel;
                }
 
-//*-*-              Here we generate labels (numeric or alphanumeric).
+//*-*-              We generate labels (numeric or alphanumeric).
 
                if (OptionNoopt && !OptionInt)
                         Rotate (Xlabel,Ylabel,cosphi,sinphi,X0,Y0,XX,YY);
@@ -1288,7 +1296,7 @@ L110:
                }
             }
 
-//*-*-                Here we use the format x 10 ** n
+//*-*-                We use the format x 10 ** n
 
             if (FLEXE && !OptionText && NEXE)  {
                sprintf(LABEL,"x10^{%d}", NEXE);
@@ -1396,7 +1404,7 @@ L110:
 
          if (!OptionUnlab)  {
 
-//*-*-              Here we generate labels (numeric only).
+//*-*-              We generate labels (numeric only).
             if (LogInteger || noExponent) {
                rlab = TMath::Power(10,labelnumber);
                sprintf(LABEL, "%f", rlab);
