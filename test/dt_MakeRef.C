@@ -171,7 +171,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          if (evmod == 0) refPx->Fill(t->GetPx());
          if (evmod == 0) refPy->Fill(t->GetPy());
          if (evmod == 0) refPz->Fill(t->GetPz());
-         if (evmod == 1) refRandom->Fill(t->GetRandom());
+         if (evmod == 1) refRandom->Fill(t->GetRandom(),3);
          if (evmod == 1) refMass2->Fill(t->GetMass2());
          if (evmod == 1) refBx->Fill(t->GetBx());
          if (evmod == 1) refBy->Fill(t->GetBy());

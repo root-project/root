@@ -87,7 +87,7 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 1, int quietLevel = 0)
    tree->Draw("fTracks.fPx>>hPx","fEvtHdr.fEvtNum%10 == 0","goff");
    tree->Draw("fTracks.fPy>>hPy","fEvtHdr.fEvtNum%10 == 0","goff");
    tree->Draw("fTracks.fPz>>hPz","fEvtHdr.fEvtNum%10 == 0","goff");
-   tree->Draw("fRandom>>hRandom","fEvtHdr.fEvtNum%10 == 1","goff");
+   tree->Draw("fRandom>>hRandom","3*(fEvtHdr.fEvtNum%10 == 1)","goff");
    tree->Draw("fMass2>>hMass2",  "fEvtHdr.fEvtNum%10 == 1","goff");
    tree->Draw("fBx>>hBx",        "fEvtHdr.fEvtNum%10 == 1","goff");
    tree->Draw("fBy>>hBy",        "fEvtHdr.fEvtNum%10 == 1","goff");
