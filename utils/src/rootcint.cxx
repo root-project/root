@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.118 2002/12/13 18:16:08 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.119 2002/12/14 07:14:44 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -559,7 +559,7 @@ string GetNonConstTypeName(G__DataMemberInfo &m, bool fullyQualified = false)
          GetFullyQualifiedName(*(m.Type()), full);
          typeName = full.c_str();
       } else {
-         typeName = type->Name();
+         typeName = type->TrueName();
       }
       static const char *constwd = "const";
       const char *s; int lev=0;
@@ -583,7 +583,7 @@ string GetNonConstTypeName(G__DataMemberInfo &m, bool fullyQualified = false)
          GetFullyQualifiedName(*(m.Type()),typeName);
          return typeName;
       } else {
-         return m.Type()->Name();
+         return m.Type()->TrueName();
       }
    }
 }
@@ -2772,17 +2772,56 @@ int WriteNamespaceHeader(G__ClassInfo &cl)
 //______________________________________________________________________________
 void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
 {
-  GetFullyQualifiedName(cl.Fullname(),fullyQualifiedName);
+   GetFullyQualifiedName(cl.Fullname(),fullyQualifiedName);
 }
 
 //______________________________________________________________________________
 void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName)
 {
-  if (type.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) {
-     GetFullyQualifiedName(type.Name(),fullyQualifiedName);
-  } else {
-     fullyQualifiedName = type.Name();
-  }
+
+   const char *s = type.TmpltName();
+
+   char typeName[512];
+   if (s) strcpy(typeName, s);
+   else typeName[0] = 0;
+
+   if (!strcmp(typeName, "string")) {
+
+      fullyQualifiedName = type.TrueName();
+
+   } else if (!strcmp(typeName, "vector") 
+       ||!strcmp(typeName, "list")
+       ||!strcmp(typeName, "deque")
+       ||!strcmp(typeName, "map")
+       ||!strcmp(typeName, "multimap")
+       ||!strcmp(typeName, "set")
+       ||!strcmp(typeName, "multiset")
+      ) {
+
+      GetFullyQualifiedName(type.Name(),fullyQualifiedName);
+      const char *qual = fullyQualifiedName.c_str();
+      if (!strncmp(qual, "::vector", strlen("::vector")) 
+       ||!strncmp(qual, "::list", strlen("::list"))
+       ||!strncmp(qual, "::deque", strlen("::deque"))
+       ||!strncmp(qual, "::map", strlen("::map"))
+       ||!strncmp(qual, "::multimap", strlen("::multimap"))
+       ||!strncmp(qual, "::set", strlen("::set"))
+       ||!strncmp(qual, "::multiset", strlen("::multiset"))
+      ) {
+
+         fullyQualifiedName.erase(0,2);
+
+      }
+
+   } else if (type.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT))  {
+
+      GetFullyQualifiedName(type.TrueName(),fullyQualifiedName);
+
+   } else {
+
+      fullyQualifiedName = type.TrueName();
+
+   }
 }
 
 //______________________________________________________________________________
@@ -2847,6 +2886,26 @@ void GetFullyQualifiedName(const char *originalName, string &fullyQualifiedName)
                 fullyQualifiedName += current;
             }
             fullyQualifiedName += ", ";
+            //fprintf(stderr,"will copy3: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
+         }
+         break;
+      case ' ':
+      case '&':
+      case '*': 
+         if (nesting==1) {
+            char keep = name[c];
+            name[c] = 0;
+            current = next;
+            if (c+1<len) next = &(name[c+1]);
+            else next = 0;
+            arg.Init(current);
+            if (arg.IsValid()) {
+                GetFullyQualifiedName(arg,subQualifiedName);
+                fullyQualifiedName += subQualifiedName;
+            } else {
+                fullyQualifiedName += current;
+            }
+            fullyQualifiedName += keep;
             //fprintf(stderr,"will copy3: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
          }
          break;
@@ -3716,6 +3775,7 @@ int main(int argc, char **argv)
             clProcessed[ncls] = StrDup(cl.Fullname());
          else
             clProcessed[ncls] = StrDup(request);
+//fprintf(stderr,"DEBUG: request==%s processed==%s\n",request,clProcessed[ncls]);
          ncls++;
          delete [] request;
 
