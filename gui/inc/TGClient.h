@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.18 2004/08/17 15:06:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.19 2004/09/06 14:36:20 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -91,6 +91,7 @@ public:
    void            SetRoot(TGWindow *root = 0);
    Bool_t          IsEditable() const { return fRoot != fDefaultRoot; }
    TGWindow       *GetWindowById(Window_t sw) const;
+   TGWindow       *GetWindowByName(const char *name) const;
 
    FontStruct_t GetFontByName(const char *name, Bool_t fixedDefault = kTRUE) const;
    Bool_t       GetColorByName(const char *name, Pixel_t &pixel) const;

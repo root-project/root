@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.39 2004/08/22 01:43:33 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.40 2004/09/06 14:36:20 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -498,6 +498,24 @@ TGWindow *TGClient::GetWindowById(Window_t wid) const
    TGWindow  wt(wid);
 
    return (TGWindow *) fWlist->FindObject(&wt);
+}
+
+//______________________________________________________________________________
+TGWindow *TGClient::GetWindowByName(const char *name) const
+{
+   // Find a TGWindow via its name (unique name used in TGWindow::SavePrimitive). 
+   // If window is not found return 0.
+
+   TIter next(fWlist);
+
+   TObject *obj;
+   while ((obj = next())) {
+      TString n = obj->GetName();
+      if (n == name) {
+         return (TGWindow*)obj;
+      }
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
