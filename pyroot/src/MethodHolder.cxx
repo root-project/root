@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.6 2004/05/21 18:55:48 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.7 2004/05/22 06:02:31 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -16,10 +16,9 @@
 #include "TGlobal.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
+#include "TClassEdit.h"
 #include "Gtypes.h"
 #include "GuiTypes.h"
-
-#include "TArrayF.h"
 
 // CINT
 #include "Api.h"
@@ -323,9 +322,10 @@ bool PyROOT::MethodHolder::initDispatch_() {
    int iarg = 0;
    TIter nextarg( m_method->GetListOfMethodArgs() );
    while ( TMethodArg* arg = (TMethodArg*)nextarg() ) {
+      G__TypeInfo argType = arg->GetTypeName();
+
       std::string fullType = arg->GetFullTypeName();
-      std::string argType  = arg->GetTypeName();
-      std::string realType = G__TypeInfo( argType.c_str() ).TrueName();
+      std::string realType = argType.TrueName();
 
       if ( isPointer( fullType ) ) {
          Handlers_t::iterator h = theHandlers.find( realType + "*" );
@@ -334,7 +334,7 @@ bool PyROOT::MethodHolder::initDispatch_() {
          }
          m_argsConverters[ iarg ] = h->second;
       }
-      else if ( argType[0] == 'E' || argType.find( "::E" ) != std::string::npos ) {
+      else if ( argType.Property() & G__BIT_ISENUM ) {
          m_argsConverters[ iarg ] = theHandlers.find( "UInt_t" )->second;
       }
       else {
@@ -411,28 +411,29 @@ bool PyROOT::MethodHolder::initialize() {
    if ( ! initDispatch_() )
       return false;
 
-// determine return type
+// determine effective return type
    std::string returnType = m_method->GetReturnTypeName();
-   std::string realType = G__TypeInfo( returnType.c_str() ).TrueName();
+   m_rtShortName = TClassEdit::ShortType( G__TypeInfo( returnType.c_str() ).TrueName(), 1 );
 
    if ( isPointer( returnType ) ) {
-      if ( realType.find( "char" ) != std::string::npos )
+      if ( m_rtShortName == "char" )
          m_returnType = MethodHolder::kString;
-      else if ( realType.find( "double" ) != std::string::npos )
+      else if ( m_rtShortName == "double" )
          m_returnType = MethodHolder::kDoublePtr;
-      else if ( realType.find( "float" ) != std::string::npos )
+      else if ( m_rtShortName == "float" )
          m_returnType = MethodHolder::kFloatPtr;
-      else if ( realType.find( "long" ) != std::string::npos )
+      else if ( m_rtShortName == "long" )
          m_returnType = MethodHolder::kLongPtr;
-      else if ( realType.find( "int" ) != std::string::npos )
+      else if ( m_rtShortName == "int" )
          m_returnType = MethodHolder::kIntPtr;
       else
          m_returnType = MethodHolder::kOther;
    }
-   else if ( realType == "long" || realType == "int" || realType == "short" ||
-             realType == "char" || realType == "bool" )
+   else if ( m_rtShortName == "long" || m_rtShortName == "int" ||
+             m_rtShortName == "short" || m_rtShortName == "char" ||
+             m_rtShortName == "bool" )
       m_returnType = MethodHolder::kLong;
-   else if ( realType == "double" || realType == "float" )
+   else if ( m_rtShortName == "double" || m_rtShortName == "float" )
       m_returnType = MethodHolder::kDouble;
    else m_returnType = MethodHolder::kOther;
 
@@ -455,7 +456,10 @@ bool PyROOT::MethodHolder::setMethodArgs( PyObject* aTuple ) {
    m_methodCall->ResetArg();
 
    int argc = PyTuple_GET_SIZE( aTuple );
-   if ( (int) m_argsBuffer.size() < argc - 1 )
+
+// argc must be between min and max number of arguments
+   if ( argc - 1 < int( m_method->GetNargs() - m_method->GetNargsOpt() ) ||
+        int( m_argsBuffer.size() ) < argc - 1 )
       return false;
 
 // convert the arguments to the method call array
@@ -548,56 +552,37 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
    }
    case MethodHolder::kOther: {
    // get a string representation of the return type
-      std::string rtname = m_method->GetReturnTypeName();
-
-   // scan for class name (ie. stripping const, * and &)
-      std::string::size_type ifirst = std::string::npos, ilast = std::string::npos;
-      for ( int i = 0; i != (int) rtname.length(); ++i ) {
-         if ( isalnum( rtname[i] ) && ifirst == std::string::npos )
-            ifirst = i;
-
-         if ( ! isalnum( rtname[i] ) &&
-              ( ifirst != std::string::npos && ilast == std::string::npos ) ) {
-            ilast = i;
-
-         // may have collected "const"
-            if ( rtname.substr( ifirst, ilast ) == "const" )
-               ifirst = ilast = std::string::npos;   // reset
-            else
-               break;                        // ok, found a class name
-         }
-      }
-
-      if ( ifirst == std::string::npos )
-         ifirst = 0;
-
-      std::string className = rtname.substr( ifirst, ilast );
-
-      TClass* cls = gROOT->GetClass( className.c_str() );
+      TClass* cls = gROOT->GetClass( m_rtShortName.c_str() );
       if ( cls != 0 ) {
          long address;
          execute( obj, address );
 
-      // update to real class for TObject and TGlobal returns
+      // upgrade to real class for TObject and TGlobal returns
          if ( address ) {
-            if ( className == "TObject" )
+            if ( m_rtShortName == "TObject" ) {
+               TClass* clActual = cls->GetActualClass( (void*)address );
+               if ( clActual ) {
+                  int offset = (cls != clActual) ? clActual->GetBaseClassOffset( cls ) : 0;
+                  address -= offset;
+               }
                cls = ((TObject*)address)->IsA();
-            else if ( className == "TGlobal" )
+            }
+            else if ( m_rtShortName == "TGlobal" )
                cls = gROOT->GetClass( ((TGlobal*)address)->GetTypeName() );
          }
 
          return bindRootObject( new ObjectHolder( (void*)address, cls, false ) );
       }
 
-      else if ( rtname == "void*" ) {
+      else if ( m_rtShortName == "void*" ) {
          long address;
          execute( obj, address );
 
          return PyInt_FromLong( address );
       }
 
-      else if ( rtname != "void" )
-         std::cout << "unsupported return type (" << rtname << "), returning void\n";
+      else if ( m_rtShortName != "void" )
+         std::cout << "unsupported return type (" << m_rtShortName << "), returning void\n";
 
       execute( obj );
       Py_INCREF( Py_None );
