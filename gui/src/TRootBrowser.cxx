@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.31 2002/11/20 17:52:39 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.32 2002/11/21 15:27:51 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1434,43 +1434,37 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
 {
    // Open tree item and list in iconbox its contents.
 
-   fListLevel = item;
-
-   if (fListLevel) {
+   if (item) {
       DisplayDirectory();
-      TObject *obj = (TObject *) fListLevel->GetUserData();
+      TObject *obj = (TObject *) item->GetUserData();
 
       if (obj) {
          if (obj->IsA() == TKey::Class()) {
             if (strcmp(((TKey*)obj)->GetClassName(), TDirectory::Class()->GetName()) == 0)
-               Chdir(fListLevel->GetParent());
+               Chdir(item->GetParent());
 
-            //TObject *k_obj = gDirectory->Get(obj->GetName());
             TObject *k_obj = gROOT->FindObject(obj->GetName());
 
             if (k_obj) {
-               TGListTreeItem *parent = fListLevel->GetParent();
-               fLt->DeleteItem(fListLevel);
+               TGListTreeItem *parent = item->GetParent();
+               fLt->DeleteItem(item);
                TGListTreeItem *itm = fLt->AddItem(parent, k_obj->GetName());
                if (itm) {
                   itm->SetUserData(k_obj);
-                  fListLevel = itm;
+                  item = itm;
                   obj = k_obj;
                } else {
-                  fListLevel = parent;
+                  item = parent;
                }
-               fLt->HighlightItem(fListLevel);
             }
          } else if (obj->IsA() == TDirectory::Class())
-            Chdir(fListLevel->GetParent());
+            Chdir(item->GetParent());
 
-         // New TGListTree::AddItem does not allow duplicates if user data
-         // is also specified. So no need to delete children.
-         //if (fListLevel->GetFirstChild())
-         //   fLt->DeleteChildren(fListLevel);
-
-         if (fListLevel->IsActive())
+        if (!fListLevel || !fListLevel->IsActive()) {
+            fListLevel = item;
             BrowseObj(obj);
+            fLt->HighlightItem(fListLevel);
+         }
       }
    }
 }
