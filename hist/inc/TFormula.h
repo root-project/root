@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.7 2001/02/09 10:02:04 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.8 2001/02/14 07:37:27 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -62,7 +62,7 @@ public:
  virtual Double_t   DefinedValue(Int_t code);
  virtual Int_t      DefinedVariable(TString &variable);
  virtual Double_t   Eval(Double_t x, Double_t y=0, Double_t z=0);
- virtual Double_t   EvalPar(Double_t *x, Double_t *params=0);
+ virtual Double_t   EvalPar(const Double_t *x, const Double_t *params=0);
          Int_t      GetNdim() const {return fNdim;}
          Int_t      GetNpar() const {return fNpar;}
          Int_t      GetNumber() const {return fNumber;}
@@ -75,7 +75,7 @@ public:
  virtual void       SetNumber(Int_t number) {fNumber = number;}
  virtual void       SetParameter(const char *name, Double_t parvalue);
  virtual void       SetParameter(Int_t ipar, Double_t parvalue);
- virtual void       SetParameters(Double_t *params);
+ virtual void       SetParameters(const Double_t *params);
  virtual void       SetParameters(Double_t p0,Double_t p1,Double_t p2=0,Double_t p3=0,Double_t p4=0
                        ,Double_t p5=0,Double_t p6=0,Double_t p7=0,Double_t p8=0,Double_t p9=0,Double_t p10=0); // *MENU*
  virtual void       SetParName(Int_t ipar, const char *name) {fNames[ipar] = name;}

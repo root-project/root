@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.4 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.5 2001/01/12 08:27:11 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -82,11 +82,11 @@ protected:
    virtual Double_t    GetZ() const {return fZ;}
    virtual void        ImportShapeAttributes();
    Bool_t              IsFolder() const;
-   virtual void        Local2Master(Double_t *local, Double_t *master);
-   virtual void        Local2Master(Float_t *local, Float_t *master);
+   virtual void        Local2Master(const Double_t *local, Double_t *master);
+   virtual void        Local2Master(const Float_t *local, Float_t *master);
    virtual void        ls(Option_t *option="2") const; // *MENU*
-   virtual void        Master2Local(Double_t *master, Double_t *local);
-   virtual void        Master2Local(Float_t *master, Float_t *local);
+   virtual void        Master2Local(const Double_t *master, Double_t *local);
+   virtual void        Master2Local(const Float_t *master, Float_t *local);
    virtual void        Paint(Option_t *option="");
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        SetMatrix(TRotMatrix *matrix=0) {fMatrix = matrix;}
@@ -97,7 +97,7 @@ protected:
    virtual void        SetVisibility(Int_t vis=1); // *MENU*
    virtual void        Sizeof3D() const;
    virtual void        UpdateMatrix();
-   virtual void        UpdateTempMatrix(Double_t *dx1,Double_t *rmat1,
+   virtual void        UpdateTempMatrix(const Double_t *dx1,const Double_t *rmat1,
                               Double_t x, Double_t y, Double_t z, Double_t *matrix,
                               Double_t *dxnew, Double_t *rmatnew);
 

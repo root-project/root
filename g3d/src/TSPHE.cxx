@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.2 2000/11/21 20:18:22 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -337,7 +337,7 @@ void TSPHE::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TSPHE::SetEllipse(Float_t *factors){
+void TSPHE::SetEllipse(const Float_t *factors){
 
   if (factors[0] > 0) faX = factors[0];
   if (factors[1] > 0) faY = factors[1];

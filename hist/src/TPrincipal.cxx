@@ -657,8 +657,8 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.12 2000/12/13 15:13:51 brun Exp $
-// $Date: 2000/12/13 15:13:51 $
+// $Id: TPrincipal.cxx,v 1.13 2001/01/05 21:07:01 brun Exp $
+// $Date: 2001/01/05 21:07:01 $
 // $Author: brun $
 
 #include "TPrincipal.h"
@@ -762,7 +762,7 @@ TPrincipal::~TPrincipal()
 }
 
 //____________________________________________________________________
-void TPrincipal::AddRow(Double_t *p) 
+void TPrincipal::AddRow(const Double_t *p) 
 {
   // Begin_Html
   /* 
@@ -1907,7 +1907,7 @@ void TPrincipal::MakeTridiagonal()
 }
 
 //____________________________________________________________________
-void TPrincipal::P2X(Double_t *p, Double_t *x, Int_t nTest)
+void TPrincipal::P2X(const Double_t *p, Double_t *x, Int_t nTest)
 {
   // Calculate x as a function of nTest of the most significant
   // principal components p, and return it in x.  
@@ -2010,7 +2010,7 @@ void TPrincipal::Print(Option_t *opt) const
 }
 
 //____________________________________________________________________
-void TPrincipal::SumOfSquareResiduals(Double_t *x, Double_t *s)
+void TPrincipal::SumOfSquareResiduals(const Double_t *x, Double_t *s)
 {
   // PRIVATE METHOD: 
   // Begin_html
@@ -2096,7 +2096,7 @@ void TPrincipal::Test(Option_t *opt)
 }
       
 //____________________________________________________________________
-void TPrincipal::X2P(Double_t *x, Double_t *p)
+void TPrincipal::X2P(const Double_t *x, Double_t *p)
 {
   // Calculate the principal components from the original data vector
   // x, and return it in p. 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.13 2001/02/14 07:37:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.14 2001/02/14 07:45:04 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1537,7 +1537,7 @@ Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z)
 }
 
 //______________________________________________________________________________
-Double_t TFormula::EvalPar(Double_t *x, Double_t *params)
+Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================
@@ -1822,7 +1822,7 @@ void TFormula::SetParameter(Int_t ipar, Double_t value)
 }
 
 //______________________________________________________________________________
-void TFormula::SetParameters(Double_t *params)
+void TFormula::SetParameters(const Double_t *params)
 {
 //*-*-*-*-*-*-*-*Initialize array of all parameters*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            ==================================

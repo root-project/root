@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.h,v 1.2 2000/06/13 10:51:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.h,v 1.3 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -35,8 +35,8 @@ protected:
 public:
    TCutG();
    TCutG(const char *name, Int_t n);
-   TCutG(const char *name, Int_t n, Float_t *x, Float_t *y);
-   TCutG(const char *name, Int_t n, Double_t *x, Double_t *y);
+   TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y);
+   TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y);
    virtual ~TCutG();
    TObject       *GetObjectX() const {return fObjectX;}
    TObject       *GetObjectY() const {return fObjectY;}

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.2 2000/11/24 16:36:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.3 2000/12/13 15:13:51 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -1911,7 +1911,7 @@ TMultiDimFit::~TMultiDimFit()
 
 
 //____________________________________________________________________
-void TMultiDimFit::AddRow(Double_t *x, Double_t D, Double_t E) 
+void TMultiDimFit::AddRow(const Double_t *x, Double_t D, Double_t E) 
 {
   // Add a row consisting of fNVariables independent variables, the
   // known, dependent quantity, and optionally, the square error in
@@ -1990,7 +1990,7 @@ void TMultiDimFit::AddRow(Double_t *x, Double_t D, Double_t E)
 
 
 //____________________________________________________________________
-void TMultiDimFit::AddTestRow(Double_t *x, Double_t D, Double_t E) 
+void TMultiDimFit::AddTestRow(const Double_t *x, Double_t D, Double_t E) 
 {
   // Add a row consisting of fNVariables independent variables, the
   // known, dependent quantity, and optionally, the square error in
@@ -2181,7 +2181,7 @@ void TMultiDimFit::Clear(Option_t *option)
 
 
 //____________________________________________________________________
-Double_t TMultiDimFit::Eval(Double_t *x, Double_t* coeff) 
+Double_t TMultiDimFit::Eval(const Double_t *x, const Double_t* coeff) 
 {
   // Evaluate parameterization at point x. Optional argument coeff is
   // a vector of coefficients for the parameterisation, fNCoefficients
@@ -2208,7 +2208,7 @@ Double_t TMultiDimFit::Eval(Double_t *x, Double_t* coeff)
 
 
 //____________________________________________________________________
-Double_t TMultiDimFit::EvalControl(Int_t *iv) 
+Double_t TMultiDimFit::EvalControl(const Int_t *iv) 
 {
   // PRIVATE METHOD:
   // Calculate the control parameter from the passed powers
@@ -2485,7 +2485,7 @@ void TMultiDimFit::MakeCandidates()
 
 
 //____________________________________________________________________
-Double_t TMultiDimFit::MakeChi2(Double_t* coeff) 
+Double_t TMultiDimFit::MakeChi2(const Double_t* coeff) 
 {
   // Calculate Chi square over either the test sample. The optional
   // argument coeff is a vector of coefficients to use in the
@@ -3533,7 +3533,7 @@ void TMultiDimFit::Print(Option_t *option) const
 
 
 //____________________________________________________________________
-Bool_t TMultiDimFit::Select(Int_t *iv) 
+Bool_t TMultiDimFit::Select(const Int_t *iv) 
 {
   // Selection method. User can override this method for specialized
   // selection of acceptable functions in fit. Default is to select
@@ -3581,7 +3581,7 @@ void TMultiDimFit::SetMinAngle(Double_t ang)
 
 
 //____________________________________________________________________
-void TMultiDimFit::SetPowers(Int_t* powers, Int_t terms) 
+void TMultiDimFit::SetPowers(const Int_t* powers, Int_t terms) 
 {
   // Define a user function. The input array must be of the form 
   // (p11, ..., p1N, ... ,pL1, ..., pLN)
@@ -3611,7 +3611,7 @@ void TMultiDimFit::SetPowerLimit(Double_t limit)
 }
 
 //____________________________________________________________________
-void TMultiDimFit::SetMaxPowers(Int_t* powers) 
+void TMultiDimFit::SetMaxPowers(const Int_t* powers) 
 {
   // Set the maximum power to be considered in the fit for each
   // variable. See also 

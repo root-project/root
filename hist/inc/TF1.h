@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.6 2001/01/19 17:28:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.7 2001/01/21 08:09:26 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -88,7 +88,7 @@ public:
    virtual void     DrawF1(const char *formula, Double_t xmin, Double_t xmax, Option_t *option="");
    virtual void     DrawPanel(); // *MENU*
    virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0);
-   virtual Double_t EvalPar(Double_t *x, Double_t *params=0);
+   virtual Double_t EvalPar(const Double_t *x, const Double_t *params=0);
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
        Double_t     GetChisquare() const {return fChisquare;}
            TH1     *GetHistogram() const;
@@ -105,15 +105,15 @@ public:
    virtual void     GetRange(Double_t &xmin, Double_t &xmax);
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax);
-   virtual Double_t GetSave(Double_t *x);
+   virtual Double_t GetSave(const Double_t *x);
         Double_t    GetXmin() const {return fXmin;}
         Double_t    GetXmax() const {return fXmax;}
-   virtual void     InitArgs(Double_t *x, Double_t *params);
+   virtual void     InitArgs(const Double_t *x, const Double_t *params);
    static  void     InitStandardFunctions();
-   virtual Double_t Integral(Double_t a, Double_t b, Double_t *params=0, Double_t epsilon=0.000001);
+   virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001);
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001);
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001);
-   virtual Double_t IntegralMultiple(Int_t n, Double_t *a, Double_t *b, Double_t epsilon, Double_t &relerr);
+   virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsilon, Double_t &relerr);
    virtual void     Paint(Option_t *option="");
    virtual void     Print(Option_t *option="") const;
    virtual void     Save(Double_t xmin, Double_t xmax);

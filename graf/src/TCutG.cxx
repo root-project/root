@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.6 2000/12/09 18:23:51 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.7 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -105,7 +105,7 @@ TCutG::TCutG(const char *name, Int_t n)
 }
 
 //______________________________________________________________________________
-TCutG::TCutG(const char *name, Int_t n, Float_t *x, Float_t *y)
+TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
       :TGraph(n,x,y)
 {
    fObjectX  = 0;
@@ -137,7 +137,7 @@ TCutG::TCutG(const char *name, Int_t n, Float_t *x, Float_t *y)
 }
 
 //______________________________________________________________________________
-TCutG::TCutG(const char *name, Int_t n, Double_t *x, Double_t *y)
+TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
       :TGraph(n,x,y)
 {
    fObjectX  = 0;

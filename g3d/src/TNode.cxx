@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.6 2001/01/12 08:27:11 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.7 2001/01/12 10:49:11 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -417,7 +417,7 @@ Bool_t TNode::IsFolder() const
 }
 
 //______________________________________________________________________________
-void TNode::Local2Master(Double_t *local, Double_t *master)
+void TNode::Local2Master(const Double_t *local, Double_t *master)
 {
 //*-*-*-*-*Convert one point from local system to master reference system*-*-*
 //*-*      ==============================================================
@@ -452,7 +452,7 @@ void TNode::Local2Master(Double_t *local, Double_t *master)
 }
 
 //______________________________________________________________________________
-void TNode::Local2Master(Float_t *local, Float_t *master)
+void TNode::Local2Master(const Float_t *local, Float_t *master)
 {
 //*-*-*-*-*Convert one point from local system to master reference system*-*-*
 //*-*      ==============================================================
@@ -541,7 +541,7 @@ void TNode::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TNode::Master2Local(Double_t *master, Double_t *local) 
+void TNode::Master2Local(const Double_t *master, Double_t *local) 
 {
 //*-*-*-*-*Convert one point from master system to local reference system*-*-*
 //*-*      ==============================================================
@@ -569,7 +569,7 @@ void TNode::Master2Local(Double_t *master, Double_t *local)
 }
 
 //______________________________________________________________________________
-void TNode::Master2Local(Float_t *master, Float_t *local)
+void TNode::Master2Local(const Float_t *master, Float_t *local)
 {
 //*-*-*-*-*Convert one point from master system to local reference system*-*-*
 //*-*      ==============================================================
@@ -842,7 +842,7 @@ void TNode::UpdateMatrix()
 }
 
 //______________________________________________________________________________
-void TNode::UpdateTempMatrix(Double_t *dx,Double_t *rmat
+void TNode::UpdateTempMatrix(const Double_t *dx,const Double_t *rmat
                          , Double_t x, Double_t y, Double_t z, Double_t *matrix
                          , Double_t *dxnew, Double_t *rmatnew)
 {

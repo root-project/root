@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.11 2000/12/13 15:13:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.12 2001/02/20 11:17:06 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -656,7 +656,7 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z)
 }
 
 //______________________________________________________________________________
-Double_t TF1::EvalPar(Double_t *x, Double_t *params)
+Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 {
 //*-*-*-*-*-*Evaluate function with given coordinates and parameters*-*-*-*-*-*
 //*-*        =======================================================
@@ -681,8 +681,8 @@ Double_t TF1::EvalPar(Double_t *x, Double_t *params)
    Double_t result = 0;
    if (fType == 1)  {
       if (fFunction) {
-         if (params) result = (*fFunction)(x,params);
-         else        result = (*fFunction)(x,fParams);
+         if (params) result = (*fFunction)((Double_t*)x,(Double_t*)params);
+         else        result = (*fFunction)((Double_t*)x,fParams);
       }else          result = GetSave(x);
    }
    if (fType == 2) {
@@ -862,7 +862,7 @@ void TF1::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xma
 
 
 //______________________________________________________________________________
-Double_t TF1::GetSave(Double_t *xx)
+Double_t TF1::GetSave(const Double_t *xx)
 {
     // Get value corresponding to X in array of fSave values
 
@@ -885,7 +885,7 @@ Double_t TF1::GetSave(Double_t *xx)
 }
 
 //______________________________________________________________________________
-void TF1::InitArgs(Double_t *x, Double_t *params)
+void TF1::InitArgs(const Double_t *x, const Double_t *params)
 {
 //*-*-*-*-*-*-*-*-*-*-*Initialize parameters addresses*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===============================
@@ -917,7 +917,7 @@ void TF1::InitStandardFunctions()
 }
 
 //______________________________________________________________________________
-Double_t TF1::Integral(Double_t a, Double_t b, Double_t *params, Double_t epsilon)
+Double_t TF1::Integral(Double_t a, Double_t b, const Double_t *params, Double_t epsilon)
 {
 //*-*-*-*-*-*-*-*-*Return Integral of function between a and b*-*-*-*-*-*-*-*
 //
@@ -1078,7 +1078,7 @@ Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_
 }
 
 //______________________________________________________________________________
-Double_t TF1::IntegralMultiple(Int_t n, Double_t *a, Double_t *b, Double_t eps, Double_t &relerr)
+Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t eps, Double_t &relerr)
 {
 //  Adaptive Quadrature for Multiple Integrals over N-Dimensional
 //  Rectangular Regions

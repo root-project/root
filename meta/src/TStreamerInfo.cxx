@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.46 2001/02/26 07:15:28 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.47 2001/02/28 07:13:03 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1058,8 +1058,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          // array counter //[n]
          case kCounter: { Int_t *x=(Int_t*)(pointer+fOffset[i]);
                           b >> *x;
-                          //Int_t *counter = (Int_t*)fMethod[i];
-                          //*counter = *x;
                           break;
                         }
 
@@ -1176,10 +1174,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                                 }
 
          // skip array counter //[n]
-         case kSkip + kCounter: { //Int_t *counter = (Int_t*)fMethod[i];
-                                  //b >> *counter;
-                                  Int_t dummy; b >> dummy; break;
-                                }
+         case kSkip + kCounter: { Int_t dummy; b >> dummy; break;}
 
          // skip Class    derived from TObject
          case kSkip + kObject:  {

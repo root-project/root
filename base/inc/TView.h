@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.4 2000/06/27 06:41:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.5 2000/11/21 16:23:31 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -62,11 +62,11 @@ protected:
 public:
                 TView();
                 TView(Int_t system);
-                TView(Float_t *rmin, Float_t *rmax, Int_t system = 1);
-                TView(Double_t *rmin, Double_t *rmax, Int_t system = 1);
+                TView(const Float_t *rmin, const Float_t *rmax, Int_t system = 1);
+                TView(const Double_t *rmin, const Double_t *rmax, Int_t system = 1);
 virtual         ~TView();
    virtual void AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t &iy1, Int_t &iy2, Int_t &iz1, Int_t &iz2);
-   virtual void DefineViewDirection(Double_t *s, Double_t *c,
+   virtual void DefineViewDirection(const Double_t *s, const Double_t *c,
                                     Double_t cosphi, Double_t sinphi,
                                     Double_t costhe, Double_t sinthe,
                                     Double_t cospsi, Double_t sinpsi,
@@ -91,23 +91,23 @@ Double_t        *GetTnorm() {return fTnorm;}
    virtual void  FindNormal(Double_t x, Double_t  y, Double_t z, Double_t &zn);
    virtual void  FindPhiSectors(Int_t iopt, Int_t &kphi, Double_t *aphi, Int_t &iphi1, Int_t &iphi2);
    virtual void  FindThetaSectors(Int_t iopt, Double_t phi, Int_t &kth, Double_t *ath, Int_t &ith1, Int_t &ith2);
-   virtual void  NDCtoWC(Float_t *pn, Float_t *pw);
-   virtual void  NDCtoWC(Double_t *pn, Double_t *pw);
-   virtual void  NormalWCtoNDC(Float_t *pw, Float_t *pn);
-   virtual void  NormalWCtoNDC(Double_t *pw, Double_t *pn);
+   virtual void  NDCtoWC(const Float_t *pn, Float_t *pw);
+   virtual void  NDCtoWC(const Double_t *pn, Double_t *pw);
+   virtual void  NormalWCtoNDC(const Float_t *pw, Float_t *pn);
+   virtual void  NormalWCtoNDC(const Double_t *pw, Double_t *pn);
    virtual void  PadRange(Double_t rback);
    virtual void  SetAutoRange(Bool_t autorange=kTRUE) {fAutoRange=autorange;}
-   virtual void  SetAxisNDC(Double_t *x1, Double_t *x2, Double_t *y1, Double_t *y2, Double_t *z1, Double_t *z2);
+   virtual void  SetAxisNDC(const Double_t *x1, const Double_t *x2, const Double_t *y1, const Double_t *y2, const Double_t *z1, const Double_t *z2);
    void          SetLatitude(Double_t latitude) {fLatitude = latitude;}
    void          SetLongitude(Double_t longitude) {fLongitude = longitude;}
    void          SetPsi(Double_t psi) {fPsi = psi;}
    virtual void  SetOutlineToCube();
-   virtual void  SetRange(Double_t *min, Double_t *max);
+   virtual void  SetRange(const Double_t *min, const Double_t *max);
    virtual void  SetRange(Double_t x0, Double_t y0, Double_t z0, Double_t x1, Double_t y1, Double_t z1, Int_t flag=0);
    virtual void  SetSystem(Int_t system) {fSystem = system;}
    virtual void  SetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep);
-   virtual void  WCtoNDC(Float_t *pw, Float_t *pn);
-   virtual void  WCtoNDC(Double_t *pw, Double_t *pn);
+   virtual void  WCtoNDC(const Float_t *pw, Float_t *pn);
+   virtual void  WCtoNDC(const Double_t *pw, Double_t *pn);
 
 //--
     virtual void MoveViewCommand(Char_t chCode, Int_t count=1);

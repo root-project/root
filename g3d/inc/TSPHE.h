@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.h,v 1.2 2000/11/21 20:14:24 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.h,v 1.3 2000/12/13 15:13:46 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -71,7 +71,7 @@ class TSPHE : public TShape {
         virtual Int_t   GetNumberOfDivisions () const {if (fNdiv) return fNdiv; else return 0; /*kDiv;*/}
         virtual void    Paint(Option_t *option);
         virtual void    SetAspectRatio(Float_t factor=1.0){ fAspectRatio = factor; MakeTableOfCoSin();}
-        virtual void    SetEllipse(Float_t *factors);
+        virtual void    SetEllipse(const Float_t *factors);
         virtual void    SetNumberOfDivisions (Int_t p);
         virtual void    SetPoints  (Float_t *buff);
         virtual void    Sizeof3D() const;
