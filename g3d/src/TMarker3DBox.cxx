@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.2 2000/06/13 12:23:30 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.3 2000/11/21 20:16:33 brun Exp $
 // Author: "Valery fine"   31/10/97
 
 
@@ -49,6 +49,17 @@ TMarker3DBox::TMarker3DBox()
 //*-*                      ================================
 
    fRefObject = 0;
+   //just in case of a stupid call to this constructor
+   fDx = 1;
+   fDy = 1;
+   fDz = 1;
+
+   fX  = 0;
+   fY  = 0;
+   fZ  = 0;
+
+   fTheta = 0;
+   fPhi   = 0;
 }
 
 
