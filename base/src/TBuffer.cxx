@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.31 2002/06/05 10:52:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.32 2002/06/18 07:00:33 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1543,7 +1543,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
          MapObject(obj, fMapCount);
 
       // let the object read itself
-      StreamObject(obj,clRef); 
+      StreamObject(obj,clRef);
 
       CheckByteCount(startpos, tag, clRef);
    }
@@ -1559,7 +1559,6 @@ void TBuffer::WriteObject(const TObject *obj)
    TClass *cl = 0;
    if (obj) cl = obj->IsA();
    WriteObject(obj,cl);
-
 }
 
 //______________________________________________________________________________
@@ -1845,7 +1844,7 @@ void TBuffer::StreamObject(void *obj, TClass *cl)
 
 //______________________________________________________________________________
 TClass *TBuffer::GetClass(const type_info &typeinfo)
-{  
+{
    // Forward to TROOT::GetClass
 
    return gROOT->GetClass(typeinfo);
