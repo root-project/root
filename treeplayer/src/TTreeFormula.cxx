@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.2 2000/05/25 09:49:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.3 2000/05/26 06:43:01 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -505,7 +505,7 @@ char *TTreeFormula::PrintValue(Int_t mode)
    } else {
       if (mode == 0) {
          GetNdata();
-         sprintf(value,"%9.5g",EvalInstance(0));
+         sprintf(value,"%9.9g",EvalInstance(0));
       }
    }
    return &value[0];
