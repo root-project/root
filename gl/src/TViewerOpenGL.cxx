@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.3 2004/08/09 22:11:00 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.4 2004/08/09 23:45:26 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -66,7 +66,10 @@ private:
    TGLFaceSet & operator = (const TGLFaceSet &);
 
    Int_t CheckPoints(const Int_t * source, Int_t * dest)const;
-   static Bool_t Eq(const Double_t * p1, const Double_t * p2);
+   static Bool_t Eq(const Double_t * p1, const Double_t * p2)
+    {
+     return *p1 == *p2 && p1[1] == p2[1] && p1[2] == p2[2];
+    }
 public:
    TGLFaceSet(const TBuffer3D & buf_initializer);
 
@@ -169,10 +172,6 @@ Int_t TGLFaceSet::CheckPoints(const Int_t * source, Int_t * dest) const
 }
 
 //______________________________________________________________________________
-inline Bool_t TGLFaceSet::Eq(const Double_t * p1, const Double_t * p2)
-{
-   return *p1 == *p2 && p1[1] == p2[1] && p1[2] == p2[2];
-}
 
 class TGLWidget : public TGCompositeFrame {
 private:
