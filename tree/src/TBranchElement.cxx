@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.22 2001/04/20 21:21:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.23 2001/04/21 08:56:19 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -78,6 +78,11 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    if (id >= 0) {
       element = (TStreamerElement *)elems[id];
       fStreamerType = element->GetType();
+      if (fStreamerType == TStreamerInfo::kObject 
+         || fStreamerType == TStreamerInfo::kObjectp
+         || fStreamerType == TStreamerInfo::kObjectP) {
+         SetBit(kBranchObject);
+      }
       if (element->IsA() == TStreamerBasicPointer::Class()) {
          TStreamerBasicPointer *bp = (TStreamerBasicPointer *)element;
          char countname[kMaxLen];
@@ -87,8 +92,9 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          else countname[0] = 0;
          strcat(countname,bp->GetCountName());
          brcount = (TBranchElement *)fTree->GetBranch(countname);
-         //printf("found pointertobasicpointer: %s[%s]\n",name,countname);
       }
+   } else {
+      if (cl->InheritsFrom(TObject::Class())) SetBit(kBranchObject);
    }
            
    SetName(name);
@@ -332,6 +338,8 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
       return;
    }
 
+   SetBit(kBranchObject);
+   
    TLeaf *leaf     = new TLeafElement(name,fID, fStreamerType);
    leaf->SetBranch(this);
    fNleaves = 1;
@@ -406,6 +414,8 @@ void TBranchElement::FillLeaves(TBuffer &b)
 {
 //  Fill buffers of this branch
          
+  if (TestBit(kBranchObject)) b.MapObject((TObject*)fObject);
+  
   if (fType == 4) {           // STL vector/list of objects
      //printf ("STL split mode not yet implemented\n");
   } else if (fType == 41) {   // sub branch of an STL class
@@ -421,7 +431,6 @@ void TBranchElement::FillLeaves(TBuffer &b)
     Int_t n = clones->GetEntriesFast();
     fInfo->WriteBufferClones(b,clones,n,fID);
   } else if (fType <= 2) {
-    if (fID < 0) b.MapObject((TObject*)fObject);
     fInfo->WriteBuffer(b,fObject,fID);
   }   
 }
@@ -438,7 +447,6 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
 //  If entry does not exist or an I/O error occurs, the function returns 0.
 //  if entry is the same as the previous call, the function returns 1.
 
-   if (TestBit(kDoNotProcess) && !getall) return 0;
    Int_t nbranches = fBranches.GetEntriesFast();
    
    Int_t nbytes = 0;
@@ -616,6 +624,8 @@ void TBranchElement::ReadLeaves(TBuffer &b)
 {
 // Read buffers for this branch
          
+  if (TestBit(kBranchObject)) b.MapObject((TObject*)fObject);
+  
   if (fType == 4) {           // STL vector/list of objects
      //printf ("STL split mode not yet implemented\n");
   } else if (fType == 41) {    // sub branch of an STL class
@@ -636,7 +646,6 @@ void TBranchElement::ReadLeaves(TBuffer &b)
     fInfo->ReadBufferClones(b,clones,n,fID);
   } else if (fType <= 2) {     // branch in split mode
     fNdata = 1;
-    if (fID < 0) b.MapObject((TObject*)fObject);
     fInfo->ReadBuffer(b,fObject,fID);
   }   
 }
