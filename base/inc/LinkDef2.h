@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.18 2002/07/01 22:56:04 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.19 2002/07/09 21:03:17 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -39,6 +39,8 @@
 
 #pragma link C++ function operator==(const TUUID&,const TUUID&);
 #pragma link C++ function operator!=(const TUUID&,const TUUID&);
+#pragma link C++ function operator>>(TBuffer&,TUUID&);
+#pragma link C++ function operator<<(TBuffer&,const TUUID&);
 
 #pragma link C++ function operator==(const TRef&,const TRef&);
 #pragma link C++ function operator!=(const TRef&,const TRef&);
