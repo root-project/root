@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.2 2000/12/13 15:13:52 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.3 2001/02/13 07:27:54 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -20,7 +20,6 @@ TFitter::TFitter(Int_t maxpar)
 //*-*                  ===================
 
    gMinuit = new TMinuit(maxpar);
-   TVirtualFitter::SetFitter(this);
    fNlog = 0;
    fSumLog = 0;
 }

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.3 2002/05/30 13:28:57 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.4 2002/05/31 11:29:24 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -59,9 +59,7 @@ TGrid *TGrid::Connect(const char *grid, const char *uid, const char *pw,
    if ((h = gROOT->GetPluginManager()->FindHandler("TGrid", grid))) {
       if (h->LoadPlugin() == -1)
          return 0;
-      g = (TGrid *) gROOT->ProcessLineFast(Form(
-           "new %s(\"%s\", \"%s\", \"%s\", \"%s\")", h->GetClass(),
-           grid, uid, pw, options));
+      g = (TGrid *) h->ExecPlugin(4, grid, uid, pw, options);
    }
 
    return g;

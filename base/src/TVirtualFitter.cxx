@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -10,50 +10,48 @@
 
 #include "TROOT.h"
 #include "TVirtualFitter.h"
+#include "TPluginManager.h"
+
 
 TVirtualFitter *TVirtualFitter::fgFitter    = 0;
 Int_t           TVirtualFitter::fgMaxpar    = 0;
 Int_t           TVirtualFitter::fgMaxiter   = 5000;
 Double_t        TVirtualFitter::fgPrecision = 1e-6;
 
-ClassImp(TVirtualFitter)
 
-//______________________________________________________________________________
-TVirtualFitter::TVirtualFitter()
-{
-//*-*-*-*-*-*-*-*-*-*-*default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===================
-}
+ClassImp(TVirtualFitter)
 
 //______________________________________________________________________________
 TVirtualFitter::~TVirtualFitter()
 {
-//*-*-*-*-*-*-*-*-*-*-*default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==================
+   // Cleanup virtual fitter.
 
-   fgFitter    = 0;
-   fgMaxpar    = 0;
+   fgFitter = 0;
+   fgMaxpar = 0;
 }
-
 
 //______________________________________________________________________________
 TVirtualFitter *TVirtualFitter::Fitter(TObject *obj, Int_t maxpar)
 {
    // Static function returning a pointer to the current fitter.
-   // If the fitter does not exist, the default TFitter is created
+   // If the fitter does not exist, the default TFitter is created.
 
-   if (!fgFitter) {
-      if (gROOT->LoadClass("TFitter","Minuit")) return 0;
-      gROOT->ProcessLineFast(Form("new TFitter(%d);", maxpar));
-      fgMaxpar = maxpar;
-   }
    if (fgFitter && maxpar > fgMaxpar) {
       delete fgFitter;
-      gROOT->ProcessLineFast(Form("new TFitter(%d);", maxpar));
-      fgMaxpar = maxpar;
+      fgFitter = 0;
    }
 
-   if (fgFitter)  fgFitter->SetObjectFit(obj);
+   if (!fgFitter) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFitter"))) {
+         if (h->LoadPlugin() == -1)
+            return 0;
+         fgFitter = (TVirtualFitter*) h->ExecPlugin(1, maxpar);
+         fgMaxpar = maxpar;
+      }
+   }
+
+   if (fgFitter) fgFitter->SetObjectFit(obj);
    return fgFitter;
 }
 
@@ -62,8 +60,8 @@ void TVirtualFitter::SetFitter(TVirtualFitter *fitter, Int_t maxpar)
 {
    // Static function to set an alternative fitter
 
-   fgFitter    = fitter;
-   fgMaxpar    = maxpar;
+   fgFitter = fitter;
+   fgMaxpar = maxpar;
 }
 
 //______________________________________________________________________________

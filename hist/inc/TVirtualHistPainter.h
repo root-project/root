@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.4 2002/02/07 09:10:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.5 2002/07/15 10:46:45 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -29,30 +29,30 @@ class TH1;
 class TF1;
 class TObjArray;
 
-class TVirtualHistPainter : public TObject {
 
+class TVirtualHistPainter : public TObject {
 
 private:
    static TClass   *fgPainter; //Pointer to class painter
 
 public:
-    TVirtualHistPainter();
-    virtual ~TVirtualHistPainter();
-    virtual Int_t      DistancetoPrimitive(Int_t px, Int_t py) = 0;
-    virtual void       DrawPanel() = 0;
-    virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py) = 0;
-    virtual void       FitPanel() = 0;
-    virtual char      *GetObjectInfo(Int_t px, Int_t py) const = 0;
-    virtual TObjArray *GetStack() const = 0;
-    virtual void       Paint(Option_t *option="") = 0;
-    virtual void       PaintStat(Int_t dostat, TF1 *fit) = 0;
-    virtual void       SetHistogram(TH1 *h) = 0;
-    virtual void       SetStack(TObjArray *stack) = 0;
+   TVirtualHistPainter() { }
+   virtual ~TVirtualHistPainter() { }
+   virtual Int_t      DistancetoPrimitive(Int_t px, Int_t py) = 0;
+   virtual void       DrawPanel() = 0;
+   virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py) = 0;
+   virtual void       FitPanel() = 0;
+   virtual char      *GetObjectInfo(Int_t px, Int_t py) const = 0;
+   virtual TObjArray *GetStack() const = 0;
+   virtual void       Paint(Option_t *option="") = 0;
+   virtual void       PaintStat(Int_t dostat, TF1 *fit) = 0;
+   virtual void       SetHistogram(TH1 *h) = 0;
+   virtual void       SetStack(TObjArray *stack) = 0;
 
-   static  TVirtualHistPainter *HistPainter(TH1 *obj);
-   static void      SetPainter(const char *painter);
+   static TVirtualHistPainter *HistPainter(TH1 *obj);
+   static void                 SetPainter(const char *painter);
 
-    ClassDef(TVirtualHistPainter,0)  //Abstract interface for histogram painters
+   ClassDef(TVirtualHistPainter,0)  //Abstract interface for histogram painters
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   30/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -10,25 +10,12 @@
 
 #include "TROOT.h"
 #include "TVirtualHistPainter.h"
+#include "TPluginManager.h"
 
-TClass  *TVirtualHistPainter::fgPainter = 0;
+TClass *TVirtualHistPainter::fgPainter = 0;
+
 
 ClassImp(TVirtualHistPainter)
-
-//______________________________________________________________________________
-TVirtualHistPainter::TVirtualHistPainter()
-{
-//*-*-*-*-*-*-*-*-*-*-*Histogram painter default constructor*-*-*-*-*-*-*-*-*
-//*-*                  ====================================
-}
-
-//______________________________________________________________________________
-TVirtualHistPainter::~TVirtualHistPainter()
-{
-//*-*-*-*-*-*-*-*-*-*-*Histogram painter default destructor*-*-*-*-*-*-*-*-*
-//*-*                  ====================================
-}
-
 
 //______________________________________________________________________________
 TVirtualHistPainter *TVirtualHistPainter::HistPainter(TH1 *obj)
@@ -39,10 +26,15 @@ TVirtualHistPainter *TVirtualHistPainter::HistPainter(TH1 *obj)
 
    // if no painter set yet, set THistPainter by default
    if (!fgPainter) {
-      if (gROOT->LoadClass("THistPainter","HistPainter")) return 0;
-      TVirtualHistPainter::SetPainter("THistPainter");
-      if (!fgPainter) return 0;
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualHistPainter"))) {
+         if (h->LoadPlugin() == -1)
+            return 0;
+         TVirtualHistPainter::SetPainter(h->GetClass());
+         if (!fgPainter) return 0;
+      }
    }
+
    //create an instance of the histogram painter
    TVirtualHistPainter *p = (TVirtualHistPainter*)fgPainter->New();
    if (p) p->SetHistogram(obj);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.64 2002/05/22 00:48:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.65 2002/07/09 21:07:15 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -420,7 +420,7 @@ void TFile::Init(Bool_t create)
       frombuf(buffer, &fSeekParent);
       frombuf(buffer, &fSeekKeys);
       if (versiondir > 1) fUUID.ReadBuffer(buffer);
-      
+
 //*-*---------read TKey::FillBuffer info
       Int_t nk = sizeof(Int_t) +sizeof(Version_t) +2*sizeof(Int_t)+2*sizeof(Short_t)
                 +2*sizeof(Seek_t);
@@ -1722,8 +1722,7 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    else if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
       if (h->LoadPlugin() == -1)
          return 0;
-      f = (TFile*) gROOT->ProcessLineFast(Form("new %s(\"%s\",\"%s\",\"%s\",%d)",
-                   h->GetClass(), name, option, ftitle, compress));
+      f = (TFile*) h->ExecPlugin(4, name, option, ftitle, compress);
    } else
       f = new TFile(name, option, ftitle, compress);
 
