@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.28 2003/10/13 20:21:32 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.29 2003/11/07 14:56:35 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -617,6 +617,7 @@ static void W32ChangeProperty(HWND w, Atom_t property, Atom_t type,
       }
       sprintf(propName, "#0x%0.4x", atomName);
       _ChangeProperty(w, propName, (char *) data, nelements, type);
+      free(atomName);
    }
 }
 
