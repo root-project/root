@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.117 2002/12/10 02:52:07 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.118 2002/12/13 18:16:08 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -269,6 +269,9 @@ const int kError    =   2000;
 const int kSysError =   3000;
 const int kFatal    =   4000;
 static int gErrorIgnoreLevel = kError;
+void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName);
+void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName);
+void GetFullyQualifiedName(const char *originalName, string &fullyQualifiedName);
 
 //______________________________________________________________________________
 void LevelPrint(bool prefix, int level, const char *location,
@@ -544,13 +547,20 @@ int GetClassVersion(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
-string GetNonConstTypeName(G__DataMemberInfo &m)
+string GetNonConstTypeName(G__DataMemberInfo &m, bool fullyQualified = false)
 {
    // Return the type of the data member, without ANY const keyword
 
    if (m.Property() & (G__BIT_ISCONSTANT|G__BIT_ISPCONSTANT)) {
+      string full;
       G__TypeInfo* type = m.Type();
-      const char *typeName = type->Name();
+      const char *typeName = 0;
+      if (fullyQualified) {
+         GetFullyQualifiedName(*(m.Type()), full);
+         typeName = full.c_str();
+      } else {
+         typeName = type->Name();
+      }
       static const char *constwd = "const";
       const char *s; int lev=0;
       string ret;
@@ -568,7 +578,13 @@ string GetNonConstTypeName(G__DataMemberInfo &m)
       }
       return ret;
    } else {
-      return m.Type()->Name();
+      if (fullyQualified) {
+         string typeName;
+         GetFullyQualifiedName(*(m.Type()),typeName);
+         return typeName;
+      } else {
+         return m.Type()->Name();
+      }
    }
 }
 
@@ -2756,11 +2772,27 @@ int WriteNamespaceHeader(G__ClassInfo &cl)
 //______________________________________________________________________________
 void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
 {
+  GetFullyQualifiedName(cl.Fullname(),fullyQualifiedName);
+}
+
+//______________________________________________________________________________
+void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName)
+{
+  if (type.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) {
+     GetFullyQualifiedName(type.Name(),fullyQualifiedName);
+  } else {
+     fullyQualifiedName = type.Name();
+  }
+}
+
+//______________________________________________________________________________
+void GetFullyQualifiedName(const char *originalName, string &fullyQualifiedName)
+{
    string subQualifiedName = "";
 
    fullyQualifiedName = "::";
 
-   string name = cl.Fullname();
+   string name = originalName; 
    G__ClassInfo arg;
 
    int len = name.length();
@@ -2776,6 +2808,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
             name[c] = 0;
             current = next;
             if (c+1<len) next = &(name[c+1]);
+            else next = 0;
             fullyQualifiedName += current;
             fullyQualifiedName += "< ";
             //fprintf(stderr,"will copy1: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
@@ -2788,6 +2821,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
             name[c] = 0;
             current = next;
             if (c+1<len) next = &(name[c+1]);
+            else next = 0;
             arg.Init(current);
             if (arg.IsValid()) {
                 GetFullyQualifiedName(arg,subQualifiedName);
@@ -2804,6 +2838,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
             name[c] = 0;
             current = next;
             if (c+1<len) next = &(name[c+1]);
+            else next = 0;
             arg.Init(current);
             if (arg.IsValid()) {
                 GetFullyQualifiedName(arg,subQualifiedName);
@@ -2819,6 +2854,10 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
    }
    if (current == &(name[0]) ) {
       fullyQualifiedName += name;
+   } else if ( next ) {
+      for( int i = (next-&(name[0])); i<len; i++ ) {
+         fullyQualifiedName += name[i];
+      }
    }
    //fprintf(stderr,"Calculated: %s\n",fullyQualifiedName.c_str());
 }
@@ -2879,7 +2918,7 @@ void WriteShadowClass(G__ClassInfo &cl)
             fprintf(fp, " public ");
          else
             fprintf(fp, " UNKNOWN inheritance ");
-         string type_name = b.Fullname();
+         string type_name;
          GetFullyQualifiedName(b,type_name);
          fprintf(fp, "%s", type_name.c_str());
       }
@@ -2908,7 +2947,7 @@ void WriteShadowClass(G__ClassInfo &cl)
          if (d.Property() & G__BIT_ISSTATIC) continue;
          if (strcmp("G__virtualinfo",d.Name())==0) continue;
 
-         string type_name = GetNonConstTypeName(d); // .Type()->Name();
+         string type_name = GetNonConstTypeName(d,true); // .Type()->Name();
 
          if ((d.Type()->Property() & G__BIT_ISENUM) &&
              (type_name.length()==0 || type_name=="enum") || type_name.find("::")==type_name.length()-2 ) {
@@ -2921,12 +2960,15 @@ void WriteShadowClass(G__ClassInfo &cl)
                type_name[type_name.length()-1]='*';
             }
             // Add the '::' prefix in the case the datamember's class is nested in the local class or in a namespace.
+            //string memberType;
+            //GetFullyQualifiedName(...,memberType);
             const char *prefix = "";
             if ( (type_name.find(cl.Fullname())==0) || (type_name.find("::")!= string::npos) )
                prefix="::";
             else
                prefix = "";
-            fprintf(fp,"         %s%s %s",prefix, type_name.c_str(),d.Name());
+            //fprintf(fp,"         %s%s %s",prefix, type_name.c_str(),d.Name());
+            fprintf(fp,"         %s %s", type_name.c_str(),d.Name());
          }
 
          for(int dim = 0; dim < d.ArrayDim(); dim++) {
