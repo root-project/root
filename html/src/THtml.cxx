@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.52 2004/01/28 22:31:11 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.53 2004/01/29 07:37:34 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1556,10 +1556,12 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
       out << "<!--INHERITANCE TREE-->" << endl;
   
       // draw class tree into nested tables recursively
-      out << "<table><tr><td width=\"10%\"></td><td width=\"70%\">";
+      out << "<table><tr><td width=\"10%\"></td><td width=\"70%\">Inheritance Chart:</td></tr>";
+      out << "<tr><td width=\"10%\"></td><td width=\"70%\">";
       
-      out << "<table width=\"100%\" border=\"1\" rules=\"none\" ";         
-      out << "cellpadding =\"0\" cellspacing=\"2\"><tr>";
+      out << "<table width=\"100%\" border=\"1\"><tr><td>" << endl;
+      out << "<table width=\"100%\" border=\"0\" ";         
+      out << "cellpadding =\"0\" cellspacing=\"2\"><tr>" << endl;
     } else {
        out << "<table><tr>";
     }
@@ -1677,9 +1679,9 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
       delete[]classNames;
     }   
     
-    out << "</table>" << endl;
+    out << "</tr></table>" << endl;
     if (dir == kBoth) 
-       out << "</td></tr></table>"<<endl;
+       out << "</td></tr></table></td></tr></table>"<<endl;
 }
 
 
@@ -2319,8 +2321,10 @@ void THtml::DescendHierarchy(ofstream & out, TClass* basePtr,
 // loop over all classes and look for classes with base class basePtr
 
    if (maxLines) 
-      if (fHierarchyLines >= maxLines) 
+      if (fHierarchyLines >= maxLines) {
+         out << "<td></td>" << endl;
          return;
+      }
 
    Int_t numClasses=0;
    for (Int_t j = 0; j < numberOfClasses && (!maxLines || fHierarchyLines<maxLines); j++) {
@@ -2383,6 +2387,8 @@ void THtml::DescendHierarchy(ofstream & out, TClass* basePtr,
    }  // loop over all classes
    if (numClasses) 
       out << "</tr></table></td>" << endl;
+   else 
+      out << "<td></td>" << endl;
 } 
 
 
