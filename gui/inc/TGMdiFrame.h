@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.h,v 1.3 2004/09/08 16:03:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.h,v 1.4 2004/09/10 14:00:40 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -62,7 +62,7 @@ protected:
    ULong_t          fMdiHints;
 
    TString GetMdiHintsString() const;
-   
+
 public:
    TGMdiFrame(TGMdiMainFrame *main, Int_t w, Int_t h,
               UInt_t options = 0,

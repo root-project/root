@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.99 2004/10/21 12:07:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.100 2004/10/22 07:31:58 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1361,7 +1361,7 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
          new TGFileDialog(fClient->GetRoot(), this, kFDSave, &fi);
          if (!fi.fFilename) return kTRUE;
          dir = fi.fIniDir;
-         const char *fname = gSystem->BaseName(gSystem->UnixPathName(fi.fFilename));
+         const char *fname = gSystem->UnixPathName(fi.fFilename);
          if (strstr(fname, ".C"))
             main->SaveSource(fname, "");
          else {

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.h,v 1.1 2004/09/13 12:47:35 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.h,v 1.2 2004/10/22 15:21:19 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -43,6 +43,7 @@ public:
 
    void  DoCancel();
    void  DoOK();
+   void  CloseWindow();
 
    ClassDef(TGuiBldTextDialog,0) // text entry dialog
 };

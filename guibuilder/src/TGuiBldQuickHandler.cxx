@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.cxx,v 1.4 2004/10/07 09:56:53 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.cxx,v 1.5 2004/10/22 15:21:19 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -29,7 +29,6 @@
 ClassImp(TGuiBldQuickHandler)
 ClassImp(TGuiBldTextDialog)
 
-TGuiBldTextDialog *gTextDialog = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 //______________________________________________________________________________
@@ -37,9 +36,6 @@ TGuiBldTextDialog::TGuiBldTextDialog(const char *name, const char *setter, const
             TGTransientFrame(gClient->GetDefaultRoot(), gClient->GetRoot(), 1, 1)
 {
    //
-
-   delete gTextDialog;
-   gTextDialog = this;
 
    fEditDisabled = kTRUE;
 
@@ -100,6 +96,9 @@ TGuiBldTextDialog::TGuiBldTextDialog(const char *name, const char *setter, const
    fEntry->Connect("TextChanged(char*)", fSelected->ClassName(), fSelected, setter);
    fCancel->Connect("Pressed()", "TGuiBldTextDialog", this, "DoCancel()");
    fOK->Connect("Pressed()", "TGuiBldTextDialog", this, "DoOK()");
+
+   fClient->WaitForUnmap(this);
+   DeleteWindow();
 }
 
 //______________________________________________________________________________
@@ -107,7 +106,6 @@ TGuiBldTextDialog::~TGuiBldTextDialog()
 {
    //
 
-   gTextDialog = 0;
 }
 
 //______________________________________________________________________________
@@ -116,7 +114,7 @@ void TGuiBldTextDialog::DoCancel()
    //
 
    fEntry->SetText(fSavedText.Data());
-   DeleteWindow();
+   UnmapWindow();
 }
 
 //______________________________________________________________________________
@@ -124,8 +122,17 @@ void TGuiBldTextDialog::DoOK()
 {
    //
 
-   DeleteWindow();
+   UnmapWindow();
 }
+
+//______________________________________________________________________________
+void TGuiBldTextDialog::CloseWindow()
+{
+   //
+
+   UnmapWindow();
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,9 +148,6 @@ TGuiBldQuickHandler::TGuiBldQuickHandler() :  TObject()
 TGuiBldQuickHandler::~TGuiBldQuickHandler()
 {
    //
-
-   delete gTextDialog;
-   gTextDialog = 0;
 
    fSelected = 0;
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.59 2004/10/20 14:25:56 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.60 2004/10/22 15:21:19 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -232,6 +232,7 @@ public:
    Bool_t  HandleCrossing(Event_t *ev)
                 { return fCanvas->HandleContainerCrossing(ev); }
    void    SavePrimitive(ofstream &out, Option_t *);
+   void    SetEditable(Bool_t) {}
 };
 
 //______________________________________________________________________________

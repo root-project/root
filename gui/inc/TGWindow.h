@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.17 2004/09/08 16:03:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.18 2004/10/06 14:38:19 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -97,6 +97,7 @@ public:
    virtual void   SetEditDisabled(Bool_t on = kTRUE) { fEditDisabled = on; }
    virtual void   SetEditable(Bool_t on = kTRUE) 
                   { if (!fEditDisabled) fClient->SetRoot(on ? this : 0); }
+   virtual Int_t  MustCleanup() const { return 0; }
    virtual void   Print(Option_t *option="") const;
 
    virtual void        SetWindowName(const char *name = 0);

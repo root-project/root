@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.6 2004/10/21 10:04:01 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.7 2004/10/21 14:25:30 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -399,6 +399,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act = new TGuiBldAction("TGStatusBar", "Status Bar", kGuiBldCtor);
    act->fAct = "new TGStatusBar()";
    act->fPic = "bld_statusbar.xpm";
+   act->fHints = new TGLayoutHints(kLHintsBottom | kLHintsExpandX);
    AddAction(act, "Display");
 
    act = new TGuiBldAction("TGHProgressBar", "Progress Bar", kGuiBldCtor);
@@ -550,13 +551,13 @@ TGFrame *TRootGuiBuilder::ExecuteAction()
    switch (fAction->fType) {
       case kGuiBldProj:
          NewProject();
+         fAction = 0;
          break;
       default:
          ret = (TGFrame *)gROOT->ProcessLineFast(fAction->fAct.Data());
          break;
    }
 
-   fAction = 0;
    Update();
 
    return ret;
@@ -857,7 +858,7 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
   }
 
    dir = fi.fIniDir;
-   fname = gSystem->BaseName(gSystem->UnixPathName(fi.fFilename));
+   fname = gSystem->UnixPathName(fi.fFilename);
 
    if (strstr(fname, ".C")) {
       NewProject();
@@ -905,7 +906,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
   }
 
    dir = fi.fIniDir;
-   fname = gSystem->BaseName(gSystem->UnixPathName(fi.fFilename));
+   fname = gSystem->UnixPathName(fi.fFilename);
 
    if (strstr(fname, ".C")) {
       TGuiBldSaveFrame *main = new TGuiBldSaveFrame(fClient->GetDefaultRoot(),

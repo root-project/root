@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.45 2004/09/22 12:40:52 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.46 2004/10/18 15:22:13 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -386,7 +386,7 @@ TGTextButton::~TGTextButton()
 {
    // Delete a text button widget.
 
-   if (fHKeycode) {
+   if (fHKeycode && (fParent->MustCleanup() != kDeepCleanup)) {
       const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
       main->RemoveBind(this, fHKeycode, kKeyMod1Mask);
       main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);

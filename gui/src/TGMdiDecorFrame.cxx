@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.8 2004/09/21 11:29:17 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.9 2004/10/21 14:25:30 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -75,6 +75,7 @@ TGMdiDecorFrame::TGMdiDecorFrame(TGMdiMainFrame *main, TGMdiFrame *frame,
    fMinimizedX = fMinimizedY = 0;
    fMinimizedUserPlacement = kFALSE;
    fButtonMask = kMdiDefaultHints;
+   SetCleanup(kDeepCleanup);
 
    SetDecorBorderWidth(kMdiBorderWidth);
 
@@ -136,12 +137,8 @@ TGMdiDecorFrame::TGMdiDecorFrame(TGMdiMainFrame *main, TGMdiFrame *frame,
 //______________________________________________________________________________
 TGMdiDecorFrame::~TGMdiDecorFrame()
 {
-   //
+   // dtor
 
-   if (!MustCleanup()) {
-      delete fLHint;
-      delete fExpandHint;
-   }
    delete fUpperHR;
    delete fLowerHR;
    delete fLeftVR;

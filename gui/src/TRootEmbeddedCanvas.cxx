@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.12 2004/10/14 07:23:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.13 2004/10/22 15:21:19 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -57,6 +57,7 @@ public:
                 { return fCanvas->HandleContainerExpose(ev); }
    Bool_t  HandleCrossing(Event_t *ev)
                 { return fCanvas->HandleContainerCrossing(ev); }
+   void    SetEditable(Bool_t) {}
 };
 
 //______________________________________________________________________________

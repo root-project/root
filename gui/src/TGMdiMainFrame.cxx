@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.10 2004/09/20 14:28:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.11 2004/09/21 16:23:36 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -121,13 +121,17 @@ TGMdiMainFrame::~TGMdiMainFrame()
    if (fFontCurrent) fClient->FreeFont((TGFont *)fFontCurrent);
    if (fFontNotCurrent) fClient->FreeFont((TGFont *)fFontNotCurrent);
    delete fBoxGC;
-   const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
-   if (main) {
-      Int_t keycode = gVirtualX->KeysymToKeycode(kKey_Tab);
-      main->RemoveBind(this, keycode, kKeyControlMask);
-      main->RemoveBind(this, keycode, kKeyControlMask | kKeyShiftMask);
-      keycode = gVirtualX->KeysymToKeycode(kKey_F4);
-      main->RemoveBind(this, keycode, kKeyControlMask);
+
+   if (!MustCleanup()) {
+      const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
+
+      if (main) {
+         Int_t keycode = gVirtualX->KeysymToKeycode(kKey_Tab);
+         main->RemoveBind(this, keycode, kKeyControlMask);
+         main->RemoveBind(this, keycode, kKeyControlMask | kKeyShiftMask);
+         keycode = gVirtualX->KeysymToKeycode(kKey_F4);
+         main->RemoveBind(this, keycode, kKeyControlMask);
+      }
    }
 }
 
@@ -243,7 +247,6 @@ Bool_t TGMdiMainFrame::RemoveMdiFrame(TGMdiFrame *frame)
    UInt_t old_id = frame->GetId();
 
    delete travel->fDecor;
-   delete travel;
 
    fNumberOfFrames--;
 

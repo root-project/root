@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.56 2004/10/06 14:38:19 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.57 2004/10/07 09:56:53 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -255,7 +255,6 @@ public:
    virtual void    SetLayoutBroken(Bool_t = kTRUE) {}
    virtual Bool_t  IsLayoutBroken() const { return kFALSE; }
    virtual void    SetCleanup(Int_t = kLocalCleanup) { /* backward compatebility */ }
-   virtual Bool_t  MustCleanup() const { return kFALSE; }
 
    virtual void    SetDragType(Int_t type);
    virtual void    SetDropType(Int_t type);
@@ -379,7 +378,7 @@ public:
                   { return fLayoutBroken || !fLayoutManager || IsEditable(); }
    virtual void   SetEditDisabled(Bool_t on = kTRUE);
    virtual void   SetCleanup(Int_t mode = kLocalCleanup);
-   virtual Bool_t MustCleanup() const { return (fMustCleanup != kNoCleanup); }
+   virtual Int_t  MustCleanup() const { return fMustCleanup; }
    virtual void   Cleanup();
 
    virtual void   Print(Option_t *option="") const;

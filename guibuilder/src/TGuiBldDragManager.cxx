@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.26 2004/10/21 10:04:01 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.27 2004/10/22 15:21:19 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -945,6 +945,7 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
    ev.fType = kMotionNotify;
    ev.fState = 0;
 
+   gVirtualX->Update(1);
    gVirtualX->QueryPointer(gVirtualX->GetDefaultRootWindow(), dum, dum,
                            ev.fXRoot, ev.fYRoot, ev.fX, ev.fY, ev.fState);
 
@@ -974,9 +975,11 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
       ev.fType = kButtonPress;
       t->SetTime(40);
 
-      if (fPimpl->fPlane) {
+      if (fPimpl->fPlane && fClient->GetWindowById(fPimpl->fPlane->GetId())) {
          fPimpl->fPlane->ChangeOptions(fPimpl->fPlane->GetOptions() & ~kRaisedFrame);
          fClient->NeedRedraw(fPimpl->fPlane, kTRUE);
+      } else {
+         fPimpl->fPlane = 0;
       }
 
       return HandleButtonPress(&ev);
@@ -1001,7 +1004,7 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
    gx = ev.fXRoot;
 
    if (!fMoveWaiting && !fDragging && !ev.fState) {
-      if (!CheckDragResize(&ev)) {
+      if (!CheckDragResize(&ev) && fClient->GetWindowById(ev.fWindow)) {
          HighlightCompositeFrame(ev.fWindow);
       }
    } else if (ev.fState & kButton1Mask) {
@@ -2294,7 +2297,7 @@ Bool_t TGuiBldDragManager::HandleMotion(Event_t *event)
 }
 
 //______________________________________________________________________________
-void TGuiBldDragManager::PlaceFrame(TGFrame *frame)
+void TGuiBldDragManager::PlaceFrame(TGFrame *frame, TGLayoutHints *hints)
 {
    //
 
@@ -2328,7 +2331,7 @@ void TGuiBldDragManager::PlaceFrame(TGFrame *frame)
       frame->MapRaised();
       edit->SetLayoutBroken();
       UInt_t g = GetGridStep()/2;
-      edit->AddFrame(frame, new TGLayoutHints(kLHintsNormal, g, g, g, g));
+      edit->AddFrame(frame, hints ? hints : new TGLayoutHints(kLHintsNormal, g, g, g, g));
    }
    if (fBuilder) {
       TString str = frame->ClassName();
@@ -2494,7 +2497,7 @@ Bool_t TGuiBldDragManager::EndDrag()
               (fDragType == kDragLasso) && !fSelectionIsOn) {
 
       frame = (TGFrame*)fBuilder->ExecuteAction();
-      PlaceFrame(frame);
+      PlaceFrame(frame, fBuilder->GetAction()->fHints);
       ret = kTRUE;
    } else if ((fDragType == kDragLasso) && fSelectionIsOn) {
 
@@ -3242,7 +3245,13 @@ void TGuiBldDragManager::ExecuteQuickAction(Event_t *event)
    if (!fQuickHandler) fQuickHandler = new TGuiBldQuickHandler();
 
    if (!fQuickHandler || !fQuickHandler->HandleEvent(win)) {
-      if (win->IsEditable()) Compact(kTRUE);
+      if (win->IsEditable()) {
+         TGFrame *f = (TGFrame*)win;
+         TGDimension sz = f->GetDefaultSize();
+         if ((sz.fWidth > 10) && (sz.fHeight > 10)) {
+            Compact(kTRUE);
+         }
+      }
    }
 }
 

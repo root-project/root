@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.3 2004/09/20 21:00:40 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.4 2004/10/15 15:36:41 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -53,15 +53,15 @@ friend class TGMainFrame;
 private:
    TGuiBldDragManagerPimpl *fPimpl;    // private data
 
-   TRootGuiBuilder   *fBuilder;            // pointer to gui builder
+   TRootGuiBuilder   *fBuilder;        // pointer to gui builder
    TGuiBldEditor *fEditor;             // frame property editor
    TGuiBldQuickHandler *fQuickHandler; // quick action handler
    Bool_t         fLassoDrawn;         // kTRUE if  lasso drawn
-   TString        fPasteFileName;      // 
+   TString        fPasteFileName;      // paste_clippboard file name 
    Bool_t         fSelectionIsOn;      // selection with Shift key pressed
    TGPopupMenu   *fFrameMenu;          // context menu for frames
    TGPopupMenu   *fLassoMenu;          // context menu for lasso drawn
-   Window_t       fTargetId;           // 
+   Window_t       fTargetId;           // an id of window where drop 
    Bool_t         fDropStatus;         // kTRUE if drop was successfull
 
    void           Init();
@@ -95,7 +95,7 @@ public:
    void           DoResize();
    void           DoMove();
    void           DrawLasso();
-   void           PlaceFrame(TGFrame*);
+   void           PlaceFrame(TGFrame*, TGLayoutHints *);
    void           ReparentFrames(TGFrame *newfr,
                                  TGCompositeFrame *oldfr);
    TGCompositeFrame *FindCompositeFrame(Window_t id);
