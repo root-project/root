@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.18 2001/10/11 15:02:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.19 2001/10/26 16:22:37 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -41,7 +41,6 @@ TAxis::TAxis(): TNamed(), TAttAxis()
    fXmax    = 0;
    fFirst   = 0;
    fLast    = 0;
-   fXlabels = 0;
    fParent  = 0;
    fTimeDisplay = 0;
 }
@@ -69,7 +68,6 @@ TAxis::TAxis(Int_t nbins,const Axis_t *xbins): TNamed(), TAttAxis()
 //______________________________________________________________________________
 TAxis::~TAxis()
 {
-   if (fXlabels) { delete [] fXlabels; fXlabels = 0; }
 }
 
 //______________________________________________________________________________
@@ -184,7 +182,6 @@ void TAxis::Copy(TObject &obj)
    ((TAxis&)obj).fXmax   = fXmax;
    ((TAxis&)obj).fFirst  = fFirst;
    ((TAxis&)obj).fLast   = fLast;
-   ((TAxis&)obj).fXlabels= 0;
    fXbins.Copy(((TAxis&)obj).fXbins);
    ((TAxis&)obj).fTimeFormat   = fTimeFormat;
    ((TAxis&)obj).fTimeDisplay  = fTimeDisplay;
@@ -522,25 +519,6 @@ void TAxis::GetLowEdge(Axis_t *edge)
   Int_t bin;
   for (bin=1; bin<=fNbins; bin++) *(edge + bin-1) = GetBinLowEdge(bin);
 }
-//--------------------------------------------------------------------
-//                     LABELs methods
-//--------------------------------------------------------------------
-//______________________________________________________________________________
-char *TAxis::GetBinLabel(Int_t) const
-{
-//*-*-*-*-*-*-*-*-*-*Return label associated to bin-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                ==============================
-
-   const char *snull = "";
-   return  (char*)snull;
-}
-
-//______________________________________________________________________________
-void TAxis::GetLabel(char *)
-{
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
-}
 
 //___________________________________________________________________________
 void TAxis::RotateTitle(Bool_t rotate)
@@ -580,7 +558,6 @@ void TAxis::Set(Int_t nbins, Axis_t xlow, Axis_t xup)
    fXmax    = xup;
    fFirst   = 0;
    fLast    = 0;
-   fXlabels = 0;
    fTitle   = "";
    char name[64];
    sprintf(name,"%s%s",GetName(),"x");
@@ -606,7 +583,6 @@ void TAxis::Set(Int_t nbins, const Float_t *xbins)
    fXmax      = fXbins.fArray[fNbins];
    fFirst     = 0;
    fLast      = 0;
-   fXlabels   = 0;
    fTitle     = "";
    char name[64];
    sprintf(name,"%s%s","x",GetName());
@@ -632,28 +608,12 @@ void TAxis::Set(Int_t nbins, const Axis_t *xbins)
    fXmax      = fXbins.fArray[fNbins];
    fFirst     = 0;
    fLast      = 0;
-   fXlabels   = 0;
    fTitle     = "";
    char name[64];
    sprintf(name,"%s%s","x",GetName());
    TAttAxis::ResetAttAxis(name);
    fTimeDisplay = 0;
    SetTimeFormat();
-}
-
-//______________________________________________________________________________
-void TAxis::SetLabel(const char *)
-{
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
-}
-
-//______________________________________________________________________________
-void TAxis::SetBinLabel(Int_t, char *)
-{
-//*-*-*-*-*-*-*-*-*Set label associated to bin-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              ===========================
-
 }
 
 //______________________________________________________________________________
