@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.97 2001/10/24 15:56:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.98 2001/10/25 10:33:20 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2512,9 +2512,13 @@ void TTree::Print(Option_t *option) const
      for (l=0;l<nl;l++) {
         leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
         br   = leaf->GetBranch();
-        char *dot = strchr(br->GetName(),'.');
-        if (dot) {count[l] = -1; count[keep] += (Int_t)br->GetZipBytes();}
-        else     {keep = l;      count[keep]  = (Int_t)br->GetZipBytes();} 
+        if (strchr(br->GetName(),'.')) {
+           count[l] = -1; 
+           count[keep] += (Int_t)br->GetZipBytes();
+        } else {
+           keep = l;      
+           count[keep]  = (Int_t)br->GetZipBytes();
+        } 
      }
      for (l=0;l<nl;l++) {
         if (count[l] < 0) continue;
