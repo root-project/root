@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress_vector.cxx,v 1.14 2002/10/25 10:47:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.16 2004/01/25 22:18:18 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -146,13 +146,14 @@ void stress_allocation()
     if (gVerbose)
       cout << "Check that shrinking does not change remaining elements" << endl;
     TVectorD vb(-1,20);
-    for (Int_t i = vb.GetLwb(); i <= vb.GetUpb(); i++)
+    Int_t i;
+    for (i = vb.GetLwb(); i <= vb.GetUpb(); i++)
       vb(i) = i+TMath::Pi();
     TVectorD v = vb;
     ok &= ( v == vb ) ? kTRUE : kFALSE;
     ok &= ( v != 0 ) ? kTRUE : kFALSE;
     v.ResizeTo(0,10);
-    for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
+    for (i = v.GetLwb(); i <= v.GetUpb(); i++)
       ok &= ( v(i) == vb(i) ) ? kTRUE : kFALSE;
     if (gVerbose)
       cout << "Check that expansion expands by zeros" << endl;
@@ -160,11 +161,11 @@ void stress_allocation()
     const Int_t old_lwb    = v.GetLwb();
     v.ResizeTo(vb);
     ok &= ( !(v == vb) ) ? kTRUE : kFALSE;
-    for (Int_t i = old_lwb; i < old_lwb+old_nelems; i++)
+    for (i = old_lwb; i < old_lwb+old_nelems; i++)
       ok &= ( v(i) == vb(i) ) ? kTRUE : kFALSE;
-    for (Int_t i = v.GetLwb(); i < old_lwb; i++)
+    for (i = v.GetLwb(); i < old_lwb; i++)
       ok &= ( v(i) == 0 ) ? kTRUE : kFALSE;
-    for (Int_t i = old_lwb+old_nelems; i <= v.GetUpb(); i++)
+    for (i = old_lwb+old_nelems; i <= v.GetUpb(); i++)
       ok &= ( v(i) == 0 ) ? kTRUE : kFALSE;
   }
 
@@ -533,7 +534,7 @@ void stress_matrix_slices(Int_t vsize)
   TVectorD vr(0,vsize+1);
   TMatrixD m(0,vsize,0,vsize+1);
 
-  Int_t i;
+  Int_t i,j;
   if (gVerbose)
     cout << "\nCheck modifying the matrix column-by-column" << endl;
   m = pattern;
@@ -558,7 +559,7 @@ void stress_matrix_slices(Int_t vsize)
     ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
     {
       TMatrixDColumn mc(m,i);
-      for (Int_t j = m.GetRowLwb(); j <= m.GetRowUpb(); j++)
+      for (j = m.GetRowLwb(); j <= m.GetRowUpb(); j++)
         mc(j) *= 4;
     }
     vc = TMatrixDColumn(m,i);
@@ -592,7 +593,7 @@ void stress_matrix_slices(Int_t vsize)
     ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
     {
       TMatrixDRow mr(m,i);
-      for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
+      for (j = m.GetColLwb(); j <= m.GetColUpb(); j++)
         mr(j) *= 8;
     }
     vr = TMatrixDRow(m,i);
@@ -622,7 +623,7 @@ void stress_matrix_slices(Int_t vsize)
   ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
   {
     TMatrixDDiag md(m);
-    for (Int_t j = 0; j < md.GetNdiags(); j++)
+    for (j = 0; j < md.GetNdiags(); j++)
       md(j) /= 1.5;
   }
   vc = TMatrixDDiag(m);
@@ -654,7 +655,7 @@ void stress_matrix_slices(Int_t vsize)
   ok &= ( !(m1 == pattern+10) ) ? kTRUE : kFALSE;
 
   m *= TMatrixDDiag(m1);
-  for (Int_t i = m.GetColLwb(); i <= m.GetColUpb(); i++) {
+  for (i = m.GetColLwb(); i <= m.GetColUpb(); i++) {
     vc1 = TMatrixDColumn(mm,i);
     vc1 *= vr(i);                    // Do a column-wise multiplication
     vc2 = TMatrixDColumn(m,i);

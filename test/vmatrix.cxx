@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress_matrix.cxx,v 1.15 2002/10/25 10:47:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.17 2004/01/25 22:18:18 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -144,9 +144,10 @@ void stress_allocation()
 
   Bool_t ok = kTRUE;
 
+  Int_t i,j;
   TMatrixD m1(4,20);
-  for (Int_t i = m1.GetRowLwb(); i <= m1.GetRowUpb(); i++)
-    for (Int_t j = m1.GetColLwb(); j <= m1.GetColUpb(); j++)
+  for (i = m1.GetRowLwb(); i <= m1.GetRowUpb(); i++)
+    for (j = m1.GetColLwb(); j <= m1.GetColUpb(); j++)
       m1(i,j) = TMath::Pi()*i+TMath::E()*j;
 
   TMatrixD m2(0,3,0,19);
@@ -178,8 +179,8 @@ void stress_allocation()
   ok &= AreCompatible(m2,m3,gVerbose);
 
   TMatrixD m5(m1.GetNrows()+1,m1.GetNcols()+5);
-  for (Int_t i = m5.GetRowLwb(); i <= m5.GetRowUpb(); i++)
-    for (Int_t j = m5.GetColLwb(); j <= m5.GetColUpb(); j++)
+  for (i = m5.GetRowLwb(); i <= m5.GetRowUpb(); i++)
+    for (j = m5.GetColLwb(); j <= m5.GetColUpb(); j++)
       m5(i,j) = TMath::Pi()*i+TMath::E()*j;
 
   if (gVerbose)
@@ -201,12 +202,12 @@ void stress_allocation()
   if (gVerbose)
     cout << "m8 has to be equal to m7 after stretching and shrinking" << endl;
   TMatrixD m6(4,4);
-  for (Int_t i = m6.GetRowLwb(); i <= m6.GetRowUpb(); i++)
-    for (Int_t j = m6.GetColLwb(); j <= m6.GetColUpb(); j++)
+  for (i = m6.GetRowLwb(); i <= m6.GetRowUpb(); i++)
+    for (j = m6.GetColLwb(); j <= m6.GetColUpb(); j++)
       m6(i,j) = TMath::Pi()*i+TMath::E()*j;
   TMatrixD m8(3,3);
-  for (Int_t i = m8.GetRowLwb(); i <= m8.GetRowUpb(); i++)
-    for (Int_t j = m8.GetColLwb(); j <= m8.GetColUpb(); j++)
+  for (i = m8.GetRowLwb(); i <= m8.GetRowUpb(); i++)
+    for (j = m8.GetColLwb(); j <= m8.GetColUpb(); j++)
       m8(i,j) = TMath::Pi()*i+TMath::E()*j;
   TMatrixD m7(m8);
 
@@ -721,6 +722,7 @@ void stress_special_creation(Int_t dim)
   if (gVerbose)
     cout << "\n---> Check creating some special matrices of dimension " << dim << endl;
 
+  Int_t j;
   Bool_t ok = kTRUE;
   {
     if (gVerbose)
@@ -734,7 +736,7 @@ void stress_special_creation(Int_t dim)
     m1.Apply(mh);
 #else
     for (Int_t i = m1.GetRowLwb(); i <= m1.GetRowUpb(); i++)
-      for (Int_t j = m1.GetColLwb(); j <= m1.GetColUpb(); j++)
+      for (j = m1.GetColLwb(); j <= m1.GetColUpb(); j++)
         m1(i,j) = 1./(i+j+1);
 #endif
     ok &= ( m1 != 0 ) ? kTRUE : kFALSE;
@@ -809,7 +811,7 @@ void stress_special_creation(Int_t dim)
                haar.GetNrows() == haar.GetNcols() ) ? kTRUE : kFALSE;
     TVectorD colj(1<<order);
     TVectorD coll(1<<order);
-    for (Int_t j = haar.GetColLwb(); j <= haar.GetColUpb(); j++) {
+    for (j = haar.GetColLwb(); j <= haar.GetColUpb(); j++) {
       colj = TMatrixDColumn_const(haar,j);
       ok &= (TMath::Abs(colj*colj-1.0) <= 1.0e-15 ) ? kTRUE : kFALSE;
       for (Int_t l = j+1; l <= haar.GetColUpb(); l++) {
@@ -825,7 +827,7 @@ void stress_special_creation(Int_t dim)
     const TMatrixD haar_sub = THaarMatrixD(order,no_sub_cols);
     ok &= ( haar_sub.GetNrows() == (1<<order) &&
                haar_sub.GetNcols() == no_sub_cols ) ? kTRUE : kFALSE;
-    for (Int_t j = haar_sub.GetColLwb(); j <= haar_sub.GetColUpb(); j++) {
+    for (j = haar_sub.GetColLwb(); j <= haar_sub.GetColUpb(); j++) {
       colj = TMatrixDColumn_const(haar,j);
       coll = TMatrixDColumn_const(haar_sub,j);
       ok &= VerifyVectorIdentity(colj,coll,gVerbose);
@@ -1099,6 +1101,7 @@ void stress_mm_multiplications(Int_t msize)
 
   const Double_t epsilon = EPSILON*msize/100;
 
+  Int_t i,j;
   Bool_t ok = kTRUE;
   {
     if (gVerbose)
@@ -1116,14 +1119,14 @@ void stress_mm_multiplications(Int_t msize)
     TMatrixD m = THilbertMatrixD(msize+3,msize);
     m(1,3) = TMath::Pi();
     TVectorD v(msize);
-    for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
+    for (i = v.GetLwb(); i <= v.GetUpb(); i++)
       v(i) = 1+i;
     TMatrixD diag(msize,msize);
     TMatrixDDiag d = TMatrixDDiag(diag);
     d = v;
     TMatrixD eth = m;
-    for (Int_t i = eth.GetRowLwb(); i <= eth.GetRowUpb(); i++)
-      for (Int_t j = eth.GetColLwb(); j <= eth.GetColUpb(); j++)
+    for (i = eth.GetRowLwb(); i <= eth.GetRowUpb(); i++)
+      for (j = eth.GetColLwb(); j <= eth.GetColUpb(); j++)
         eth(i,j) *= v(j);
     m *= diag;
     ok &= VerifyMatrixIdentity(m,eth,gVerbose,epsilon);
@@ -1136,7 +1139,7 @@ void stress_mm_multiplications(Int_t msize)
     m(2,3) = TMath::Pi();
     TMatrixD eth = m;
     TMatrixD p(msize,msize);
-    for (Int_t i = p.GetRowLwb(); i <= p.GetRowUpb(); i++)
+    for (i = p.GetRowLwb(); i <= p.GetRowUpb(); i++)
       p(p.GetRowUpb()+p.GetRowLwb()-i,i) = 1;
     m *= p;
     m *= p;
@@ -1212,6 +1215,7 @@ void stress_sym_mm_multiplications(Int_t msize)
 
   Bool_t ok = kTRUE;
 
+  Int_t i,j;
   const Double_t epsilon = EPSILON*msize/100;
 
   {
@@ -1264,13 +1268,13 @@ void stress_sym_mm_multiplications(Int_t msize)
     m(1,3) = TMath::Pi();
     m(3,1) = TMath::Pi();
     TVectorD v(msize);
-    for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
+    for (i = v.GetLwb(); i <= v.GetUpb(); i++)
       v(i) = 1+i;
     TMatrixDSym diag(msize);
     (TMatrixDDiag)diag = v;
     TMatrixDSym eth = m;
-    for (Int_t i = eth.GetRowLwb(); i <= eth.GetRowUpb(); i++)
-      for (Int_t j = eth.GetColLwb(); j <= eth.GetColUpb(); j++)
+    for (i = eth.GetRowLwb(); i <= eth.GetRowUpb(); i++)
+      for (j = eth.GetColLwb(); j <= eth.GetColUpb(); j++)
         eth(i,j) *= v(j);
     TMatrixD m2 = m * diag;
     ok &= VerifyMatrixIdentity(m2,eth,gVerbose,epsilon);
@@ -1285,7 +1289,7 @@ void stress_sym_mm_multiplications(Int_t msize)
     m(3,2) = TMath::Pi();
     TMatrixDSym eth = m;
     TMatrixDSym p(msize);
-    for (Int_t i = p.GetRowLwb(); i <= p.GetRowUpb(); i++)
+    for (i = p.GetRowLwb(); i <= p.GetRowUpb(); i++)
       p(p.GetRowUpb()+p.GetRowLwb()-i,i) = 1;
     TMatrixD m2 = m * p;
     m2 *= p;

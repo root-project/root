@@ -105,15 +105,16 @@ static void assert_bits_by_int(const TBits &bits,
 
 static void set_bits(TBits &bits,
                      UInt_t nbits) {
-    for (UInt_t i=0;
+    UInt_t i,j;
+    for (i=0;
          i<8;
          ++i) {
-        for (UInt_t j=i*8;
+        for (j=i*8;
              j<i*8+i && j<nbits;
              ++j) {
             bits.SetBitNumber(j);
         }
-        for (UInt_t j=i*8+i;
+        for (j=i*8+i;
              j<i*8+8 && j<nbits;
              ++j) {
             bits.ResetBitNumber(j);
@@ -123,15 +124,16 @@ static void set_bits(TBits &bits,
 
 static void assert_bits(const TBits &bits,
                         UInt_t nbits) {
-    for (UInt_t i=0;
+    UInt_t i,j;
+    for (i=0;
          i<8;
          ++i) {
-        for (UInt_t j=i*8;
+        for (j=i*8;
              j<i*8+i && j<nbits;
              ++j) {
             A(bits.TestBitNumber(j));
         }
-        for (UInt_t j=i*8+i;
+        for (j=i*8+i;
              j<i*8+8 && j<nbits;
              ++j) {
             A(!bits.TestBitNumber(j));
