@@ -147,10 +147,9 @@ N: Oleksandr Grebenyuk
 E: Oleksandr.Grebenyuk@gsi.de
 D: OpenLDAP interface
 
-N: Robert Hatcher
-E: rhatcher@slac.stanford.edu
-D: class TXTRU and tutorials xtruDraw.C and xtruSamples.C
-D: class TTimeStamp
+N: Andrew Haas
+E: haas@yahoo.com
+D: add support for asymmetric errors in the GraphFitChisquare functions
 
 N: Miroslav Helbich
 E: helbich@mail.desy.de
