@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.135 2004/03/18 07:10:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.136 2004/06/09 06:10:21 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -2191,17 +2191,18 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
             if (gDebug > 0) printf("Unrolling object class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
             fBranchPointer += offset;
             if (elem->CannotSplit()) {
-               // In the general case a TClonesArray can be split but here we do not want to split
+
                unroll = -1;
+
             } else if  (clbase->InheritsFrom(TClonesArray::Class())) {
 
-               
                branch = new TBranchElement(branchname,info,jd,fBranchPointer ,basketsize,splitlevel-1,btype);
                branch->SetParentName(cltop->GetName());
                fBranches.Add(branch);
                unroll = 0;
                
             } else {
+
                unroll = Unroll(branchname,cltop,clbase,basketsize,splitlevel-1,btype);
             }
             fBranchPointer = oldPointer;
