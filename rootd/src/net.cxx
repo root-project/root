@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.9 2000/12/19 14:36:09 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.10 2001/01/26 16:44:35 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -315,6 +315,14 @@ int NetOpen(int inetdflag)
    // started by a master daemon, then we must wait for a client's
    // request to arrive.
 
+#if defined(USE_SIZE_T)
+   size_t clilen = sizeof(tcp_cli_addr);
+#elif defined(USE_SOCKLEN_T)
+   socklen_t clilen = sizeof(tcp_cli_addr);
+#else
+   int clilen = sizeof(tcp_cli_addr);
+#endif
+
    if (inetdflag) {
 
       // When we're fired up by inetd, file decriptors 0, 1 and 2
@@ -323,13 +331,6 @@ int NetOpen(int inetdflag)
       gSockFd = 0;
 
       if (gDebug > 0) {
-#if defined(USE_SIZE_T)
-         size_t clilen = sizeof(tcp_cli_addr);
-#elif defined(USE_SOCKLEN_T)
-         socklen_t clilen = sizeof(tcp_cli_addr);
-#else
-         int clilen = sizeof(tcp_cli_addr);
-#endif
          if (!getpeername(gSockFd, (struct sockaddr *)&tcp_cli_addr, &clilen)) {
             struct hostent *hp;
             if ((hp = gethostbyaddr((const char *)&tcp_cli_addr.sin_addr,
@@ -360,13 +361,6 @@ int NetOpen(int inetdflag)
    // (for which we caught the SIGCLD signal).
 
 again:
-#if defined(USE_SIZE_T)
-   size_t clilen = sizeof(tcp_cli_addr);
-#elif defined(USE_SOCKLEN_T)
-   socklen_t clilen = sizeof(tcp_cli_addr);
-#else
-   int clilen = sizeof(tcp_cli_addr);
-#endif
    int newsock = accept(tcp_srv_sock, (struct sockaddr *)&tcp_cli_addr, &clilen);
    if (newsock < 0) {
       if (GetErrno() == EINTR) {
@@ -424,11 +418,12 @@ void NetClose()
    // Close the network connection.
 
    close(gSockFd);
-   gSockFd = -1;
 
    if (gDebug > 0)
       ErrorInfo("NetClose: host = %s, fd = %d, file = %s", openhost, gSockFd,
                 gFile);
+
+   gSockFd = -1;
 }
 
 //______________________________________________________________________________

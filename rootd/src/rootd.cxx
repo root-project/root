@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.18 2001/01/07 15:21:31 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.19 2001/01/26 16:44:35 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -127,6 +127,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <netinet/in.h>
 #include <errno.h>
 
 #if defined(linux)
@@ -1219,7 +1220,7 @@ void RootdGet(const char *msg)
       ErrorFatal(kErrFileGet, "RootdGet: error reading all requested bytes from file %s, got %d of %d",
                  gFile, siz, len);
 
-   NetSend(0, kROOTD_PUT);
+   NetSend(0, kROOTD_GET);
 
    NetSendRaw(buf, len);
 
@@ -1230,6 +1231,26 @@ void RootdGet(const char *msg)
    if (gDebug > 0)
       ErrorInfo("RootdGet: read %d bytes starting at %d from file %s",
                 len, offset, gFile);
+}
+
+//______________________________________________________________________________
+void RootdParallel()
+{
+   // Handle initialization message from remote host. If size > 0 then
+   // so many parallel sockets will be opened to the remote host.
+
+   int buf[3];
+   if (NetRecvRaw(buf, sizeof(buf)) < 0)
+      ErrorFatal(kErrFatal, "RootdParallel: error receiving message");
+
+   int size = ntohl(buf[1]);
+   int port = ntohl(buf[2]);
+
+   if (gDebug > 0)
+      ErrorInfo("RootdParallel: port = %d, size = %d", port, size);
+
+   if (size > 0)
+      NetParOpen(port, size);
 }
 
 //______________________________________________________________________________
@@ -1362,6 +1383,7 @@ int main(int argc, char **argv)
 
    while (1) {
       if (NetOpen(gInetdFlag) == 0) {
+         RootdParallel();  // see if we should use parallel sockets
          RootdLoop();      // child processes client's requests
          NetClose();       // then we are done
          exit(0);
