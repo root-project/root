@@ -71,6 +71,21 @@ rename $CINTDIRI/posix
 rm -f $POSIXDIR/G__c_posix.c $POSIXDIR/G__c_posix.h $POSIXDIR/G__c_posix.o \
       $POSIXDIR/exten.o
 
+
+##### ipc.dll #####
+
+IPCDIR=$CINTDIRL/ipc
+
+$CINT -K -w1 -zipc -n$IPCDIR/G__c_ipc.c -D__MAKECINT__ \
+   -DG__MAKECINT -c-2 -Z0 $IPCDIR/ipcif.h
+$CC $OPT $CINTCFLAGS -I. -o $IPCDIR/G__c_ipc.o -c $IPCDIR/G__c_ipc.c
+$MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" ipc.$SOEXT \
+   $CINTDIRI/sys/ipc.$SOEXT "$IPCDIR/G__c_ipc.o"
+rename $CINTDIRI/sys/ipc
+
+rm -f $IPCDIR/G__c_ipc.c $IPCDIR/G__c_ipc.h $IPCDIR/G__c_ipc.o
+
+
 ##### STL dlls #####
 
 STLDIR=$CINTDIRL/dll_stl
