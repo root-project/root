@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.14 2004/07/12 20:00:41 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.15 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -501,11 +501,10 @@ TMatrixD TDecompQRH::Invert()
   const Int_t rowLwb = GetRowLwb();
   const Int_t colLwb = GetColLwb();
   const Int_t rowUpb = rowLwb+GetNrows()-1;
-  const Int_t colUpb = colLwb+GetNcols()-1;
   TMatrixD inv(rowLwb,rowUpb,colLwb,colLwb+GetNrows()-1);
   inv.UnitMatrix();
   MultiSolve(inv);
-  inv.ResizeTo(rowLwb,rowUpb,colLwb,colUpb);
+  inv.ResizeTo(rowLwb,rowLwb+GetNcols()-1,colLwb,colLwb+GetNrows()-1);
 
   return inv;
 }
