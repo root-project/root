@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.91 2002/10/02 22:13:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.92 2002/10/11 06:54:35 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -834,7 +834,12 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
       TClass *cl = gROOT->GetClass(mother->GetClassName());
       if (fInfo && fInfo->GetOffsets()) fInfo->BuildOld();
       if (!mother || !cl) return 0;
-      if (!mother->GetAddress()) mother->SetAddress(0);
+      if (!mother->GetAddress()) {
+         Bool_t motherStatus = mother->TestBit(kDoNotProcess);
+         mother->ResetBit(kDoNotProcess);
+         mother->SetAddress(0);
+         mother->SetBit(kDoNotProcess,motherStatus);
+      }
    }
 
    if (nbranches) {
@@ -1431,6 +1436,7 @@ void TBranchElement::SetAddress(void *add)
          strcpy(pname,branch->GetName());
          const char *clast = strchr(pname,'.');
          if (clast) {
+            clparent->BuildRealData();
             TRealData *rd = (TRealData*)clparent->GetListOfRealData()->FindObject(clast+1);
             if (rd) mOffset = rd->GetThisOffset();
             if (btype == 0 && !clparent->GetBaseClass(clm)) memberOffset = mOffset - info->GetOffsets()[id];;
