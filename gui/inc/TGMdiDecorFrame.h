@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.41 2004/06/22 16:27:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.h,v 1.1 2004/09/03 00:25:47 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -281,7 +281,7 @@ protected:
 public:
    enum {
       // border width of decorated windows
-      kMdiBorderWidth = 5,
+      kMdiBorderWidth = 5
    };
 
    TGMdiDecorFrame(TGMdiMainFrame *main, TGMdiFrame *frame, Int_t w, Int_t h,
