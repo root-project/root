@@ -4,3 +4,251 @@
 #pragma link C++ class TClaArrayProxy<Float_t>;
 #pragma link C++ class TClaArrayProxy<double>;
 #endif
+
+#include "TLeaf.h"
+
+bool TProxy::setup() {
+
+      // Should we check the type?
+
+      if (!fDirector->fTree) {
+         return false;
+      }
+      if (fParent) {
+
+         TClass *pcl = fParent->GetClass();
+         Assert(pcl);
+         
+         if (pcl==TClonesArray::Class()) {
+            // We always skip the clones array
+
+            Int_t i = fDirector->fEntry;
+            if (i<0)  fDirector->fEntry = 0;
+            fParent->read();
+            if (i<0) fDirector->fEntry = i;
+            
+            TClonesArray *clones;
+            clones = (TClonesArray*)fParent->GetStart();
+            
+            pcl = clones->GetClass();
+         }
+
+         fElement = (TStreamerElement*)pcl->GetStreamerInfo()->GetElements()->FindObject(fDataMember);
+         fIsaPointer = fElement->IsaPointer();
+         fClass = fElement->GetClassPointer();
+         
+         Assert(fElement);
+
+         fIsClone = (fClass==TClonesArray::Class());
+         
+         fOffset = fMemberOffset = fElement->GetOffset();
+
+         fWhere = fParent->fWhere; // not really used ... it is reset by GetStart and GetClStart
+
+         if (fParent->IsaPointer()) {
+            // fprintf(stderr,"non-split pointer de-referencing non implemented yet \n");
+            // nothing to do!
+         } else {
+            // Accumulate offsets.
+            // or not!? fOffset = fMemberOffset = fMemberOffset + fParent->fOffset;
+         }
+
+         // This is not sufficient for following pointers
+
+      } else if (!fBranch) {
+
+         // This does not allow (yet) to precede the branch name with 
+         // its mother's name
+         fBranch = fDirector->fTree->GetBranch(fBranchName.Data());
+         if (!fBranch) return false;
+         
+         TLeaf *leaf = (TLeaf*)fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
+         if (leaf) leaf = leaf->GetLeafCount();
+         if (leaf) fBranchCount = leaf->GetBranch();
+         
+         fWhere = (double*)fBranch->GetAddress();
+
+         if (!fWhere && fBranch->IsA()==TBranchElement::Class()
+             && ((TBranchElement*)fBranch)->GetMother()) {
+            
+            TBranchElement* be = ((TBranchElement*)fBranch);
+
+            be->GetMother()->SetAddress(0);
+            fWhere =  (double*)fBranch->GetAddress();
+
+         }
+         if (!fWhere && fBranch->IsA()==TBranch::Class()) {
+            TLeaf *leaf = (TLeaf*)fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
+            fWhere = leaf->GetValuePointer();
+         }
+
+         if (!fWhere) {
+            fBranch->SetAddress(0);
+            fWhere =  (double*)fBranch->GetAddress();
+         }
+
+
+         if (fWhere && fBranch->IsA()==TBranchElement::Class()) {
+            
+            TBranchElement* be = ((TBranchElement*)fBranch);
+
+            TStreamerInfo * info = be->GetInfo();
+            Int_t id = be->GetID();
+            if (id>=0) {
+               fOffset = info->GetOffsets()[id];
+               fElement = (TStreamerElement*)info->GetElements()->At(id);
+               fIsaPointer = fElement->IsaPointer();
+               fClass = fElement->GetClassPointer();
+
+               if ((fIsMember || be->GetType()!=3) && be->GetType()!=31) {
+
+                  if (fClass==TClonesArray::Class()) {
+                     Int_t i = be->GetTree()->GetReadEntry();
+                     if (i<0) i = 0;
+                     be->GetEntry(i);
+                     
+                     TClonesArray *clones;
+                     if ( fIsMember && be->GetType()==3 ) {
+                        clones = (TClonesArray*)be->GetObject();
+                     } else if (fIsaPointer) {
+                        clones = (TClonesArray*)*(void**)((char*)fWhere+fOffset);
+                     } else {
+                        clones = (TClonesArray*)((char*)fWhere+fOffset);
+                     } 
+                     if (!fIsMember) fIsClone = true;
+                     fClass = clones->GetClass();
+                  }
+
+               }
+               if (fClass) fClassName = fClass->GetName();                  
+            } else {
+               fClassName = be->GetClassName();
+               fClass = gROOT->GetClass(fClassName);
+            }
+            
+            if (be->GetType()==3) {
+               // top level TClonesArray
+
+               if (!fIsMember) fIsClone = true;
+               fIsaPointer = false;
+               fWhere = be->GetObject();
+               
+            } else if (id<0) {
+               // top level object
+               
+               fIsaPointer = false;
+               fWhere = be->GetObject();
+               
+            } else if (be->GetType()==31) {
+
+               fWhere   = be->GetObject();
+               fOffset += be->GetOffset();             
+
+            } else if (be->GetType()==2) {
+               // this might also be the right path for GetType()==1
+
+               fWhere = be->GetObject();
+
+            } else {
+
+               fWhere = ((unsigned char*)fWhere) + fOffset;
+
+            }
+         } else {
+            fClassName = fBranch->GetClassName();
+            fClass = gROOT->GetClass(fClassName);
+         }
+
+         
+         /*
+         fClassName = fBranch->GetClassName(); // What about TClonesArray?
+         if ( fBranch->IsA()==TBranchElement::Class() && 
+              ((TBranchElement*)fBranch)->GetType()==31 ||((TBranchElement*)fBranch)->GetType()==3 ) {
+
+            Int_t id = ((TBranchElement*)fBranch)->GetID();
+            if (id>=0) {
+               
+               fElement = ((TStreamerElement*)(((TBranchElement*)fBranch)->GetInfo())->GetElements()->At(id));
+               fClass = fElement->GetClassPointer();
+               if (fClass) fClassName = fClass->GetName();
+
+            }                        
+         }
+         if (fClass==0 && fClassName.Length()) fClass = gROOT->GetClass(fClassName);
+         */
+         //fprintf(stderr,"For %s fClass is %p which is %s\n",
+         //        fBranchName.Data(),fClass,fClass==0?"not set":fClass->GetName()); 
+
+         if ( fBranch->IsA()==TBranchElement::Class() && 
+              (((TBranchElement*)fBranch)->GetType()==3 || fClass==TClonesArray::Class()) &&
+              !fIsMember ) {
+            fIsClone = true;
+         }
+                                                           
+
+         if (fIsMember) {
+            if ( fBranch->IsA()==TBranchElement::Class() && 
+                 fClass==TClonesArray::Class() && 
+                 (((TBranchElement*)fBranch)->GetType()==31 || ((TBranchElement*)fBranch)->GetType()==3) ) { 
+
+               TBranchElement *bcount = ((TBranchElement*)fBranch)->GetBranchCount();
+               TString member;
+               if (bcount) {
+                  TString bname = fBranch->GetName();
+                  TString bcname = bcount->GetName();
+                  member = bname.Remove(0,bcname.Length()+1);
+               } else {
+                  member = fDataMember;
+               }
+               
+               fMemberOffset = fClass->GetDataMemberOffset(member);
+
+               if (fMemberOffset<0) {
+                  fprintf(stderr,"Negative offset %d for %s in %s",fMemberOffset,fBranch->GetName(),bcount?bcount->GetName():"unknown");
+               }
+
+            } else if (fClass) {
+
+               fElement = (TStreamerElement*)
+                  fClass->GetStreamerInfo()->GetElements()->FindObject(fDataMember);
+               if (fElement) 
+                  fMemberOffset = fElement->GetOffset();
+               else {
+                  // Need to compose the proper sub name 
+
+                  TString member;
+                  
+                  bool forgotWhenThisHappens = false;
+                  Assert(forgotWhenThisHappens);
+
+                  member += fDataMember;
+                  fMemberOffset = fClass->GetDataMemberOffset(member);
+
+               }
+               
+            } else {
+               fprintf(stderr,"missing TClass object for %s\n",fClassName.Data());
+            }
+             
+            if ( fBranch->IsA()==TBranchElement::Class() 
+                 && (((TBranchElement*)fBranch)->GetType()==31 || ((TBranchElement*)fBranch)->GetType()==3) ) { 
+
+               fOffset = fMemberOffset;
+               
+            } else {
+               
+               fWhere = ((unsigned char*)fWhere) + fMemberOffset;
+            }
+            
+         }
+
+      }
+      if (fClass==TClonesArray::Class()) fIsClone = true;
+      if (fWhere!=0) {
+         fLastTree = fDirector->fTree;
+         fInitialized = true;
+         return true;
+      } else {
+         return false;
+      }
+ }

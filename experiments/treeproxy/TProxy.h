@@ -10,6 +10,7 @@ class TBranch;
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "Riostream.h"
+#include "TError.h"
 
 #include <list>
 #include <algorithm>
@@ -67,7 +68,7 @@ public:
       fTree = newtree;
       fEntry = -1;
       //if (fInitialized) fInitialized = setup();
-      fprintf(stderr,"calling SetTree for %p\n",this);
+      //fprintf(stderr,"calling SetTree for %p\n",this);
       std::for_each(fDirected.begin(),fDirected.end(),reset);
       return oldtree;
    }
@@ -75,11 +76,21 @@ public:
 
 class TProxy {
  public:
-   const TString fBranchName; // name of the branch to read
-   const char *fDataName;   // name of the element within the branch
+   const TString fBranchName;  // name of the branch to read
+   TProxy *fParent;             // Proxy to a parent object
+
+   const bool fIsMember;       // true if we proxy an unsplit data member
+   const TString fDataMember;  // name of the (eventual) data member being proxied
+
+   TString fClassName;         // class name of the object pointed to by the branch
+   TClass *fClass;
+   TStreamerElement* fElement; 
+   Int_t fMemberOffset;
+   bool fIsClone;
 
    TProxyDirector *fDirector; // contain pointer to TTree and entry to be read
    TBranch *fBranch;           // branch to read
+   TBranch *fBranchCount;      // eventual auxiliary branch (for example holding the size)
    bool fInitialized;
    sLong64_t fRead;
 
@@ -92,111 +103,83 @@ class TProxy {
       cout << "fBranchName " << fBranchName << endl;
       cout << "fTree " << fDirector->fTree << endl;
       cout << "fBranch " << fBranch << endl;
+      if (fBranchCount) cout << "fBranchCount " << fBranchCount << endl;
    }
 
-   TProxy() : fBranchName(""), fDataName(0), fDirector(0), fBranch(0),
+   TProxy() : fBranchName(""), fParent(0),
+      fIsMember(false), fDataMember(""), fClassName(""), fClass(0), fElement(0), fMemberOffset(0),
+      fIsClone(false),
+      fDirector(0), fBranch(0), fBranchCount(0),
       fInitialized(false), fRead(-1), fLastTree(0), fWhere(0),
       fOffset(0), fIsaPointer(false) {
    };
 
-   TProxy(TProxyDirector* boss, const char* name) : fBranchName(name),
-      fDataName(0), fDirector(boss), fBranch(0),
+   TProxy(TProxyDirector* boss, const char* top, const char* name = 0) : 
+      fBranchName(top), 
+      fParent(0),
+      fIsMember(false), fDataMember(""), fClassName(""), fClass(0), fElement(0), fMemberOffset(0),
+      fIsClone(false),
+      fDirector(boss), fBranch(0), fBranchCount(0),
       fInitialized(false), fRead(-1), fLastTree(0), fWhere(0),
       fOffset(0), fIsaPointer(false)
       {
-         boss->attach(this);
-      }
-   TProxy(TProxyDirector* boss, const char* top, const char* name) : 
-      fBranchName(top),
-      fDataName(0), fDirector(boss), fBranch(0),
-      fInitialized(false), fRead(-1), fLastTree(0), fWhere(0),
-      fOffset(0), fIsaPointer(false)
-      {
-         if (fBranchName.Length() && fBranchName[fBranchName.Length()-1]!='.') {
+         if (fBranchName.Length() && fBranchName[fBranchName.Length()-1]!='.' && name) {
             ((TString&)fBranchName).Append(".");
          }
-         ((TString&)fBranchName).Append(name); 
+         if (name) ((TString&)fBranchName).Append(name); 
          boss->attach(this);
       }
+
+   TProxy(TProxyDirector* boss, const char *top, const char *name, const char *membername) : 
+      fBranchName(top), 
+      fParent(0),
+      fIsMember(true), fDataMember(membername), fClassName(""), fClass(0), fElement(0), fMemberOffset(0),
+      fIsClone(false),
+      fDirector(boss), fBranch(0), fBranchCount(0),
+      fInitialized(false), fRead(-1), fLastTree(0), fWhere(0),
+      fOffset(0), fIsaPointer(false)
+      {
+         if (name && strlen(name)) {
+            if (fBranchName.Length() && fBranchName[fBranchName.Length()-1]!='.') {
+               ((TString&)fBranchName).Append(".");
+            }
+            ((TString&)fBranchName).Append(name);
+         }
+         boss->attach(this);
+      }
+
+    TProxy(TProxyDirector* boss, TProxy *parent, const char* membername) : 
+      fBranchName(""), 
+      fParent(parent),
+      fIsMember(true), fDataMember(membername), fClassName(""), fClass(0), fElement(0), fMemberOffset(0),
+      fIsClone(false),
+      fDirector(boss), fBranch(0), fBranchCount(0),
+      fInitialized(false), fRead(-1), fLastTree(0), fWhere(0),
+      fOffset(0), fIsaPointer(false)
+      {
+         boss->attach(this);
+      }
+  
+
    virtual ~TProxy() {};
+
+   TProxy* proxy() { return this; }
 
    void reset() {
       // fprintf(stderr,"Calling reset for %s\n",fBranchName.Data());
       fWhere = 0;
       fBranch = 0;
+      fBranchCount = 0;
       fRead = -1;
+      fClass = 0;
+      fElement = 0;
+      fMemberOffset = 0;
+      fIsClone = false;
+      fInitialized = false;
+      fLastTree = 0;
    }
 
-   bool setup() {
-      // Should we check the type?
-
-      if (!fDirector->fTree) {
-         return false;
-      }
-      if (!fBranch) {
-         // This does not allow (yet) to precede the branch name with 
-         // its mother's name
-         fBranch = fDirector->fTree->GetBranch(fBranchName.Data());
-         if (!fBranch) return false;
-
-
-         fWhere = (double*)fBranch->GetAddress();
-
-         if (!fWhere && fBranch->IsA()==TBranchElement::Class()
-             && ((TBranchElement*)fBranch)->GetMother()) {
-            
-            TBranchElement* be = ((TBranchElement*)fBranch);
-
-            be->GetMother()->SetAddress(0);
-            fWhere =  (double*)fBranch->GetAddress();
-
-         }
-         if (!fWhere) {
-            fBranch->SetAddress(0);
-            fWhere =  (double*)fBranch->GetAddress();
-         }
-
-
-         if (fWhere && fBranch->IsA()==TBranchElement::Class()) {
-            
-            TBranchElement* be = ((TBranchElement*)fBranch);
-
-            TStreamerInfo * info = be->GetInfo();
-            Int_t id = be->GetID();
-            TStreamerElement *elem;
-            if (id>=0) {
-               fOffset = info->GetOffsets()[id];
-               elem = (TStreamerElement*)info->GetElements()->At(id);
-               fIsaPointer = elem->IsaPointer();
-            }
-            
-            if (be->GetType()==3 || id<0) {
-               // top level TClonesArray or object
-
-               fIsaPointer = false;
-               fWhere = be->GetObject();
-               
-            } else if (be->GetType()==31 || be->GetType()==2) {
-               // this might also be the right path for GetType()==1
-
-               fWhere = be->GetObject();
-
-            } else {
-
-               fWhere = ((unsigned char*)fWhere) + fOffset;
-
-            }
-         }
-
-      }
-      if (fWhere!=0) {
-         fLastTree = fDirector->fTree;
-         fInitialized = true;
-         return true;
-      } else {
-         return false;
-      }
-   }
+   bool setup();
 
    bool IsInitialized() {
       return (fLastTree == fDirector->fTree) && (fLastTree);
@@ -216,14 +199,90 @@ class TProxy {
                return false;
             }
          }
-         fBranch->GetEntry(fDirector->fEntry);
+         if (fParent) fParent->read();
+         else {
+            fBranch->GetEntry(fDirector->fEntry);
+            if (fBranchCount) fBranchCount->GetEntry(fDirector->fEntry);
+         }
          fRead = fDirector->fEntry;
       }
       //fprintf(stderr,"at the end of read where is %p\n",fWhere);
       return IsInitialized();
    }
 
+   TClass *GetClass() {
+      if (fDirector==0) return 0;
+      if (fDirector->fEntry!=fRead) {
+         if (!IsInitialized()) {
+            if (!setup()) {
+               return 0;
+            }
+         }
+      }
+      return fClass;
+   }
 
+   // protected:
+  virtual  void *GetStart(int i=0) {
+     // return the address of the start of the object being proxied. Assumes
+     // that setup() has been called.
+
+     if (fParent) {
+        fWhere = ((unsigned char*)fParent->GetStart()) + fMemberOffset;
+     }
+     if (IsaPointer()) {
+        if (fWhere) return *(void**)fWhere;
+        else return 0;
+     } else {
+        return fWhere;
+     }
+  }
+
+  virtual void *GetClaStart(int i=0) {
+     // return the address of the start of the object being proxied. Assumes
+     // that setup() has been called.  Assumes the object containing this data
+     // member is held in TClonesArray.
+
+     void *tcaloc;
+     char *location;
+
+    if (fIsClone) {
+
+        TClonesArray *tca;
+        tca = (TClonesArray*)GetStart();
+        
+        if (tca->GetLast()<i) return 0;
+
+        location = (char*)tca->At(i);
+
+        return location;
+
+     } else if (fParent) {
+
+        tcaloc = ((unsigned char*)fParent->GetStart());
+        location = (char*)fParent->GetClaStart(i);
+
+     } else {
+
+        tcaloc = fWhere;
+        TClonesArray *tca;
+        tca = (TClonesArray*)tcaloc;
+        
+        if (tca->GetLast()<i) return 0;
+
+        location = (char*)tca->At(i);
+     }
+
+     if (location) location += fOffset;
+     else return 0;
+
+     if (IsaPointer()) {
+        return *(void**)(location);
+     } else {
+        return location;
+     }
+     
+  }
 };
 
 void reset(TProxy*x) {x->reset();} 
@@ -233,24 +292,24 @@ public:
    void Print() {
       TProxy::Print();
       cout << "fWhere " << fWhere << endl;
-      if (fWhere) cout << "value? " << *(unsigned char*)fWhere << endl;
+      if (fWhere) cout << "value? " << *(unsigned char*)GetStart() << endl;
    }
 
    TArrayCharProxy() : TProxy() {}
    TArrayCharProxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
    TArrayCharProxy(TProxyDirector *director, const char *top, const char *name) : 
       TProxy(director,top,name) {};
+   TArrayCharProxy(TProxyDirector *director, const char *top, const char *name, const char *data) : 
+      TProxy(director,top,name,data) {};
+   TArrayCharProxy(TProxyDirector *director, TProxy *parent, const char *name) : TProxy(director,parent, name) {};
    ~TArrayCharProxy() {};
 
    unsigned char at(int i) {
       static unsigned char default_val;
       if (!read()) return default_val;
       // should add out-of bound test
-      if (IsaPointer()) {
-         return (*(( unsigned char**)fWhere))[i];
-      } else {
-         return (( unsigned char*)fWhere)[i];
-      }
+      unsigned char* str = (unsigned char*)GetStart();
+      return str[i];
    }
 
    unsigned char operator [](int i) {
@@ -259,20 +318,12 @@ public:
    
    const char* c_str() {
       if (!read()) return "";
-      if (IsaPointer()) {
-         return *(const char**)fWhere;
-      } else {
-         return (const char*)fWhere;
-      }
+      return (const char*)GetStart();
    }
 
    operator std::string() {
       if (!read()) return "";
-      if (IsaPointer()) {
-         return std::string(*(const char**)fWhere);
-      } else {
-         return std::string((const char*)fWhere);
-      }
+      return std::string((const char*)GetStart());
    }
 
 };
@@ -295,15 +346,14 @@ class TClaProxy : public TProxy {
    TClaProxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
    TClaProxy(TProxyDirector *director, const char *top, const char *name) : 
       TProxy(director,top,name) {};
+   TClaProxy(TProxyDirector *director, const char *top, const char *name, const char *data) : 
+      TProxy(director,top,name,data) {};
+   TClaProxy(TProxyDirector *director, TProxy *parent, const char *name) : TProxy(director,parent, name) {};
    ~TClaProxy() {};
 
    const TClonesArray* ptr() {
       if (!read()) return 0;
-      if (IsaPointer()) {
-         return *(TClonesArray**)fWhere;
-      } else {
-         return (TClonesArray*)fWhere;
-      }
+      return (TClonesArray*)GetStart();
    }   
 
    const TClonesArray* operator->() { return ptr(); }
@@ -316,18 +366,21 @@ class TImpProxy : public TProxy {
    void Print() {
       TProxy::Print();
       cout << "fWhere " << fWhere << endl;
-      if (fWhere) cout << "value? " << *(T*)fWhere << endl;
+      if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
    }
 
    TImpProxy() : TProxy() {}; 
    TImpProxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
    TImpProxy(TProxyDirector *director, const char *top, const char *name) : 
       TProxy(director,top,name) {};
+   TImpProxy(TProxyDirector *director, const char *top, const char *name, const char *data) : 
+      TProxy(director,top,name,data) {};
+   TImpProxy(TProxyDirector *director, TProxy *parent, const char *name) : TProxy(director,parent, name) {};
    ~TImpProxy() {};
 
    operator T() {
       if (!read()) return 0;
-      return *(T*)fWhere;
+      return *(T*)GetStart();
    }
 
 #ifdef private
@@ -350,24 +403,23 @@ class TArrayProxy : public TProxy {
    void Print() {
       TProxy::Print();
       cout << "fWhere " << fWhere << endl;
-      if (fWhere) cout << "value? " << *(T*)fWhere << endl;
+      if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
    }
 
    TArrayProxy() : TProxy() {}
    TArrayProxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
    TArrayProxy(TProxyDirector *director, const char *top, const char *name) : 
       TProxy(director,top,name) {};
+   TArrayProxy(TProxyDirector *director, const char *top, const char *name, const char *data) : 
+      TProxy(director,top,name,data) {};
+   TArrayProxy(TProxyDirector *director, TProxy *parent, const char *name) : TProxy(director,parent, name) {};
    ~TArrayProxy() {};
 
    const T& at(int i) {
       static T default_val;
       if (!read()) return default_val;
       // should add out-of bound test
-      if (IsaPointer()) {
-         return (*((T**)fWhere))[i];
-      } else {
-         return ((T*)fWhere)[i];
-      }
+      return ((T*)GetStart())[i];
    }
 
    const T& operator [](int i) {
@@ -385,25 +437,23 @@ class TArray3Proxy : public TProxy {
    void Print() {
       TProxy::Print();
       cout << "fWhere " << fWhere << endl;
-      if (fWhere) cout << "value? " << *(T*)fWhere << endl;
+      if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
    }
 
    TArray3Proxy() : TProxy() {}
    TArray3Proxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
    TArray3Proxy(TProxyDirector *director, const char *top, const char *name) : 
       TProxy(director,top,name) {};
+   TArray3Proxy(TProxyDirector *director, const char *top, const char *name, const char *data) : 
+      TProxy(director,top,name,data) {};
+   TArray3Proxy(TProxyDirector *director, TProxy *parent, const char *name) : TProxy(director,parent, name) {};
    ~TArray3Proxy() {};
 
    const array_t* at(int i) {
       static array_t default_val;
       if (!read()) return &default_val;
       // should add out-of bound test
-      if (IsaPointer()) {
-         T *temp = *(T**)fWhere;
-         return ((array_t**)temp)[i];
-      } else {
-         return ((array_t**)fWhere)[i];
-      }
+      return ((array_t**)GetStart())[i];
    }
 
    const array_t* operator [](int i) {
@@ -419,26 +469,28 @@ class TClaImpProxy : public TProxy {
    void Print() {
       TProxy::Print();
       cout << "fWhere " << fWhere << endl;
-      if (fWhere) cout << "value? " << *(T*)fWhere << endl;
+      if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
    }
 
    TClaImpProxy() : TProxy() {}; 
    TClaImpProxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
    TClaImpProxy(TProxyDirector *director,  const char *top, const char *name) : 
       TProxy(director,top,name) {};
+   TClaImpProxy(TProxyDirector *director,  const char *top, const char *name, const char *data) : 
+      TProxy(director,top,name,data) {};
+   TClaImpProxy(TProxyDirector *director, TProxy *parent, const char *name) : TProxy(director,parent, name) {};
    ~TClaImpProxy() {};
 
    const T& at(int i) {
       static T default_val;
       if (!read()) return default_val;
       if (fWhere==0) return default_val;
-     
-      TClonesArray *tca = (TClonesArray*)fWhere;
-      
-      if (tca->GetLast()<i) return default_val;
 
-      const char *location = (const char*)tca->At(i);
-      return *(T*)(location+fOffset);
+      T *temp = (T*)GetClaStart(i);
+
+      if (temp) return *temp;
+      else return default_val;
+
    }
 
    const T& operator [](int i) { return at(i); }
@@ -465,13 +517,16 @@ class TClaArrayProxy : public TProxy {
    void Print() {
       TProxy::Print();
       cout << "fWhere " << fWhere << endl;
-      if (fWhere) cout << "value? " << *(T*)fWhere << endl;
+      if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
    }
 
    TClaArrayProxy() : TProxy() {}
    TClaArrayProxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
    TClaArrayProxy(TProxyDirector *director, const char *top, const char *name) : 
       TProxy(director,top,name) {};
+   TClaArrayProxy(TProxyDirector *director, const char *top, const char *name, const char *data) : 
+      TProxy(director,top,name,data) {};
+   TClaArrayProxy(TProxyDirector *director, TProxy *parent, const char *name) : TProxy(director,parent, name) {};
    ~TClaArrayProxy() {};
 
    const array_t at(int i) {
@@ -479,18 +534,7 @@ class TClaArrayProxy : public TProxy {
       if (!read()) return &default_val;
       if (fWhere==0) return &default_val;
      
-      TClonesArray *tca = (TClonesArray*)fWhere;
-      
-      if (tca->GetLast()<i) return &default_val;
-
-      const char *location = (const char*)tca->At(i);
-      location += fOffset;
-
-      if (IsaPointer()) {
-         return (array_t)( *(T**)location );
-      } else {
-         return (array_t)location;
-      }
+      return (array_t)GetClaStart(i);
    }
 
    const array_t operator [](int i) { return at(i); }
@@ -505,33 +549,31 @@ class TClaArray2Proxy : public TProxy {
    void Print() {
       TProxy::Print();
       cout << "fWhere " << fWhere << endl;
-      if (fWhere) cout << "value? " << *(T*)fWhere << endl;
+      if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
    }
 
    TClaArray2Proxy() : TProxy() {}
    TClaArray2Proxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
    TClaArray2Proxy(TProxyDirector *director, const char *top, const char *name) : 
       TProxy(director,top,name) {};
+   TClaArray2Proxy(TProxyDirector *director, const char *top, const char *name, const char *data) : 
+      TProxy(director,top,name,data) {};
+   TClaArray2Proxy(TProxyDirector *director, TProxy *parent, const char *name) : TProxy(director,parent, name) {};
    ~TClaArray2Proxy() {};
 
    const array_t &at(int i) {
+      // might need a second param or something !?
+      
       static array_t default_val;
       if (!read()) return &default_val;
       if (fWhere==0) return &default_val;
      
-      TClonesArray *tca = (TClonesArray*)fWhere;
-      
-      if (tca->GetLast()<i) return &default_val;
+      T *temp = (T*)GetClaStart(i);
+      if (temp) return (array_t)temp;
+      else return default_val;
 
-      const char *location = (const char*)tca->At(i);
-      location += fOffset;
-
-      if (IsaPointer()) {
-         T *temp = *(T**)location;
-         return ((array_t**)temp)[i];
-      } else {
-         return ((array_t**)location)[i];
-      }
+      // T *temp = *(T**)location;
+      // return ((array_t**)temp)[i];
    }
 
    const array_t &operator [](int i) { return at(i); }
@@ -546,33 +588,29 @@ class TClaArray3Proxy : public TProxy {
    void Print() {
       TProxy::Print();
       cout << "fWhere " << fWhere << endl;
-      if (fWhere) cout << "value? " << *(T*)fWhere << endl;
+      if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
    }
 
    TClaArray3Proxy() : TProxy() {}
    TClaArray3Proxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
    TClaArray3Proxy(TProxyDirector *director, const char *top, const char *name) : 
       TProxy(director,top,name) {};
+   TClaArray3Proxy(TProxyDirector *director, const char *top, const char *name, const char *data) : 
+      TProxy(director,top,name,data) {};
+   TClaArray3Proxy(TProxyDirector *director, TProxy *parent, const char *name) : TProxy(director,parent, name) {};
    ~TClaArray3Proxy() {};
 
    const array_t* at(int i) {
       static array_t default_val;
       if (!read()) return &default_val;
       if (fWhere==0) return &default_val;
-     
-      TClonesArray *tca = (TClonesArray*)fWhere;
       
-      if (tca->GetLast()<i) return &default_val;
+      T *temp = (T*)GetClaStart(i);
+      if (temp) return (array_t*)temp;
+      else return default_val;
 
-      const char *location = (const char*)tca->At(i);
-      location += fOffset;
-
-      if (IsaPointer()) {
-         T *temp = *(T**)location;
-         return ((array_t**)temp)[i];
-      } else {
-         return ((array_t**)location)[i];
-      }
+      // T *temp = *(T**)location;
+      // return ((array_t**)temp)[i];
    }
 
    const array_t* operator [](int i) { return at(i); }
@@ -618,4 +656,14 @@ typedef TClaArrayProxy<UShort_t> TClaArrayShortProxy;
 
 #endif // TPROXY_H
 
+#ifdef __MAKECINT__
+#pragma link C++ class TClaImpProxy<unsigned int>;
+
+
+
+#pragma link C++ class TClaArrayProxy<int>;
+#pragma link C++ class TClaArrayProxy<Float_t>;
+#pragma link C++ class TClaArrayProxy<double>;
+
+#endif
 

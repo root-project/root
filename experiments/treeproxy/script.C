@@ -1,4 +1,4 @@
-void script() {
+double script() {
    int ntracks = fNtrack;
    fprintf(stderr,"did run script and found %d tracks\n",ntracks);
 
@@ -49,7 +49,7 @@ void script() {
 #endif
       // new!
       cout << "fTriggerBits nbits " << fTriggerBits->GetNbits() << "==" << fTriggerBits.fNbits<< endl;
-      cout << "fTracks[2].fTriggerBits nbits " << fTracks.fTriggerBits[20]->GetNbits()  << "==" << /* fTriggerBits.fNbits */ "not yet" << endl;
+      cout << "fTracks[2].fTriggerBits.fNbits " << fTracks.fTriggerBits[2]->GetNbits()  << "==" << fTracks.fTriggerBits.fNbits[2]  << endl;
 #ifdef WITH_EVENT
 #ifdef seold_cxx
 #else
@@ -60,5 +60,11 @@ void script() {
 #endif
 
    }
+#ifdef __CINT__
+   // bug in conversions
+   return ntracks;
+#else 
+   return fNtrack;
+#endif
 
 }

@@ -62,4 +62,5 @@ fH->GetMean() 0.615174
 fTracks.fNsp[0]: 1
 fTracks.fPointValue[0][0]: 1
 fLastTrack: 30
+fTracks[2].fTriggerBits.fNbits 64==64
 */

@@ -2,11 +2,12 @@
 #include "TProxy.h"
 #endif
 
-#define InjectProxyInterface() \
-   void reset() { obj.reset(); } \
-   bool setup() { return obj.setup(); } \
-   bool IsInitialized() { return obj.IsInitialized(); } \
-   bool IsaPointer() const { return obj.IsaPointer(); } \
+#define InjectProxyInterface()                           \
+   TProxy *proxy() { return obj.proxy(); }               \
+   void reset() { obj.reset(); }                         \
+   bool setup() { return obj.setup(); }                  \
+   bool IsInitialized() { return obj.IsInitialized(); }  \
+   bool IsaPointer() const { return obj.IsaPointer(); }  \
    bool read() { return obj.read(); } 
 
 template <class T> 
@@ -19,6 +20,9 @@ public:
   TObjProxy(TProxyDirector *director, const char *name) : obj(director,name) {};
   TObjProxy(TProxyDirector *director, const char *top, const char *name) : 
       obj(director,top,name) {};
+  TObjProxy(TProxyDirector *director, const char *top, const char *name, const char *data) : 
+      obj(director,top,name,data) {};
+  TObjProxy(TProxyDirector *director, TProxy *parent, const char *name) : obj(director,parent, name) {};
   ~TObjProxy() {};
 
    void Print() {
@@ -28,20 +32,16 @@ public:
    }
 
    T* ptr() {
-      static T default_val;
-      if (!obj.read()) return &default_val;
-      if (obj.IsaPointer()) {
-         if (obj.fWhere==0 || *(T**)obj.fWhere==0) return &default_val;
-         return *(T**)obj.fWhere;
-      } else {
-         if (obj.fWhere==0) return &default_val;
-         return (T*)obj.fWhere;
-      }
+      //static T default_val;
+      if (!obj.read()) return 0; // &default_val;
+      T *temp = (T*)obj.GetStart();
+      // if (temp==0) return &default_val;
+      return temp;
    }
  
    T* operator->() { return ptr(); }
    operator T*() { return ptr(); }
-   operator T&() { return *ptr(); }
+   // operator T&() { return *ptr(); }
 
 };
 
@@ -55,6 +55,9 @@ class TArray2Proxy {
    TArray2Proxy(TProxyDirector *director, const char *name) : obj(director,name) {};
    TArray2Proxy(TProxyDirector *director, const char *top, const char *name) : 
       obj(director,top,name) {};
+   TArray2Proxy(TProxyDirector *director, const char *top, const char *name, const char *data) : 
+      obj(director,top,name,data) {};
+   TArray2Proxy(TProxyDirector *director, TProxy *parent, const char *name) : obj(director, parent, name) {};
    ~TArray2Proxy() {};
 
    typedef T array_t[d2];
@@ -70,12 +73,9 @@ class TArray2Proxy {
       if (!obj.read()) return default_val;
       // should add out-of bound test
       array_t *arr = 0;
-      if (obj.IsaPointer()) {
-         arr = (array_t*)(*(T**)(obj.fWhere));
-      } else {
-         arr = (array_t*)((T*)(obj.fWhere));
-      }
-      return arr[i];
+      arr = (array_t*)((T*)(obj.GetStart()));
+      if (arr) return arr[i];
+      else return default_val;
    }
 
    const array_t &operator [](int i) { return at(i); }
@@ -98,19 +98,19 @@ class TClaObjProxy  {
    TClaObjProxy(TProxyDirector *director, const char *name) : obj(director,name) {};
    TClaObjProxy(TProxyDirector *director,  const char *top, const char *name) : 
       obj(director,top,name) {};
+   TClaObjProxy(TProxyDirector *director,  const char *top, const char *name, const char *data) : 
+      obj(director,top,name,data) {};
+   TClaObjProxy(TProxyDirector *director, TProxy *parent, const char *name) : obj(director,parent, name) {};
    ~TClaObjProxy() {};
 
    const T* at(int i) {
       static T default_val;
       if (!obj.read()) return &default_val;
       if (obj.fWhere==0) return &default_val;
-     
-      TClonesArray *tca = (TClonesArray*)obj.fWhere;
-      
-      if (tca->GetLast()<i) return &default_val;
 
-      const char *location = (const char*)tca->At(i);
-      return (T*)(location+obj.fOffset);
+      T* temp = (T*)obj.GetClaStart(i);
+      if (temp) return temp;
+      else return &default_val;
    }
 
    const T* operator [](int i) { return at(i); }
