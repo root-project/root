@@ -14,6 +14,11 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 FooDict.cxx : Foo.h
 	$(CMDECHO)rootcint -f FooDict.cxx -c Foo.h+
 
+reader:reader.C
+	$(CMDECHO)$(CXX) -c -g `root-config --cflags` $<  
+	$(CMDECHO)$(CXX) -o $@ reader.o `root-config --libs` \
+                -Wl,-rpath,`root-config --libdir`
+
 Foo.$(ObjSuf): Foo.h
 
 libs : Foo.$(DllSuf)
@@ -21,12 +26,8 @@ libs : Foo.$(DllSuf)
 Foo.$(DllSuf): Foo.$(ObjSuf) FooDict.$(ObjSuf)
 	$(BuildFromObjs) 
 
-reader: reader.$(ObjSuf)
-	$(CMDECHO)g++ -o $@ reader.o `root-config --libs` \
-		-Wl,-rpath,`root-config --libdir`
-
 writer: writer.$(ObjSuf) Foo.$(DllSuf) 
-	$(CMDECHO)g++ -o $@ writer.o Foo.$(DllSuf) `root-config --libs` \
+	$(CMDECHO)$(CXX) -o $@ writer.o Foo.$(DllSuf) `root-config --libs` \
 		-Wl,-rpath,`root-config --libdir` -Wl,-rpath,.
 
 dist:
