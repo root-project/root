@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.14 2000/09/13 10:32:18 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.15 2000/09/29 07:37:44 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -120,7 +120,7 @@ TCanvas::TCanvas(Bool_t build) : TPad()
 {
    // Canvas default constructor.
 
-   if (TClass::IsCallingNew()) {
+   if (!build || TClass::IsCallingNew()) {
       Constructor();
    } else {
       const char *defcanvas = gROOT->GetDefCanvasName();

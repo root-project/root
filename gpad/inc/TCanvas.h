@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.3 2000/09/11 06:18:24 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.4 2000/09/29 07:37:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -104,7 +104,7 @@ protected:
    //-- used by friend TThread class
 
 public:
-   TCanvas(Bool_t build=kFALSE);
+   TCanvas(Bool_t build=kTRUE);
    TCanvas(const char *name, const char *title="", Int_t form=1);
    TCanvas(const char *name, const char *title, Int_t ww, Int_t wh);
    TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy,
