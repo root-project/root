@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGenCategory.cc,v 1.5 2001/08/09 01:02:14 verkerke Exp $
+ *    File: $Id: RooGenCategory.cc,v 1.6 2001/09/17 18:48:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -54,6 +54,7 @@ RooGenCategory::RooGenCategory(const RooGenCategory& other, const char *name) :
   RooAbsCategory(other,name), _superCat(other._superCat), _map(0), _userFuncName(other._userFuncName)
 {
   // Copy constructor
+  removeServer((RooAbsArg&)other._superCat) ;
   initialize() ;
 }
 
@@ -80,8 +81,10 @@ RooGenCategory::~RooGenCategory()
 {
   // Destructor
 
-  // Server no longer exists when RooAbsArg destructor is executing
-  removeServer(_superCat) ;
+  // Server no longer exists when RooAbsArg destructor is executing  
+  if (_serverList.FindObject(&_superCat)) {
+    removeServer(_superCat) ;
+  }
 }
 
 
@@ -123,7 +126,7 @@ void RooGenCategory::updateIndexList()
     if (!type) type = defineType(typeName) ;
 
     // Fill map for this super-state
-    _map[_superCat.getIndex()] = type->getVal() ;
+    _map[superClone->getIndex()] = type->getVal() ;
   }
 
   delete superClone ;
@@ -138,7 +141,14 @@ RooGenCategory::evaluate() const
     const_cast<RooGenCategory*>(this)->updateIndexList() ;
   }
 
-  return *lookupType(_map[_superCat.getIndex()]) ;
+
+  const RooCatType* ret = lookupType(_map[_superCat.getIndex()]) ;
+  if (!ret) {
+    cout << "RooGenCategory::evaluate(" << GetName() << ") ERROR: cannot lookup super index " << _superCat.getIndex() << endl ;
+    assert(0) ;
+  }
+
+  return *ret ;
 }
 
 
