@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -42,7 +42,7 @@ TLegend::TLegend(): TPave(), TAttText()
 }
 
 //____________________________________________________________________________
-TLegend::TLegend( Coord_t x1, Coord_t y1,Coord_t x2, Coord_t y2, const char *header, Option_t *option)
+TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2, const char *header, Option_t *option)
         :TPave(x1,y1,x2,y2,4,option), TAttText(12,0,1,42,0)
 {
   //___________________________________
@@ -231,10 +231,10 @@ TLegendEntry *TLegend::GetEntry()
   if ( fPrimitives ) nEntries = fPrimitives->GetSize();
   if ( nEntries == 0 ) return 0;
 
-  Float_t ymouse = gPad->AbsPixeltoY(gPad->GetEventY());
-  Float_t yspace = (fY2 - fY1)/nEntries;
+  Double_t ymouse = gPad->AbsPixeltoY(gPad->GetEventY());
+  Double_t yspace = (fY2 - fY1)/nEntries;
 
-  Float_t ybottomOfEntry = fY2;  // y-location of bottom of 0th entry
+  Double_t ybottomOfEntry = fY2;  // y-location of bottom of 0th entry
   TIter next(fPrimitives);
   TLegendEntry *entry;
   while (( entry = (TLegendEntry *)next() )) {
@@ -306,16 +306,16 @@ void TLegend::PaintPrimitives()
   // Note: in pixel coords y1 > y2=0, but x2 > x1=0
   //       in NDC          y2 > y1,   and x2 > x1
   //
-  Float_t margin = fMargin*( fX2 - fX1 );
-  Float_t yspace = (fY2 - fY1)/nEntries;
-  Float_t textsize = GetTextSize();
-  Float_t save_textsize = textsize;
+  Double_t margin = fMargin*( fX2 - fX1 );
+  Double_t yspace = (fY2 - fY1)/nEntries;
+  Double_t textsize = GetTextSize();
+  Double_t save_textsize = textsize;
 
   if ( textsize == 0 ) {
     textsize = ( 1. - fEntrySeparation ) * yspace;
 
     // find the max width and height (in pad coords) of one latex entry label
-    Float_t maxentrywidth = 0, maxentryheight = 0;
+    Double_t maxentrywidth = 0, maxentryheight = 0;
     TIter nextsize(fPrimitives);
     TLegendEntry *entrysize;
     while (( entrysize = (TLegendEntry *)nextsize() )) {
@@ -329,13 +329,13 @@ void TLegend::PaintPrimitives()
       }
     }
     // make sure all labels fit in the allotted space
-    Float_t tmpsize_h = textsize * ( textsize/maxentryheight );
-    Float_t tmpsize_w = textsize * ( (fX2 - (fX1+margin))/maxentrywidth);
+    Double_t tmpsize_h = textsize * ( textsize/maxentryheight );
+    Double_t tmpsize_w = textsize * ( (fX2 - (fX1+margin))/maxentrywidth);
     textsize = TMath::Min( textsize, TMath::Min(tmpsize_h,tmpsize_w) );
     SetTextSize( textsize );
   }
 
-  Float_t ytext = fY2 + 0.5*yspace;  // y-location of 0th entry
+  Double_t ytext = fY2 + 0.5*yspace;  // y-location of 0th entry
 
   // iterate over and paint all the TLegendEntries
   TIter next(fPrimitives);
@@ -357,9 +357,9 @@ void TLegend::PaintPrimitives()
     if (tfont  == 0) entry->SetTextFont(GetTextFont());
     if (tsize  == 0) entry->SetTextSize(GetTextSize());
     // set x,y according to the requested alignment
-    Float_t x=0,y=0;
+    Double_t x=0,y=0;
     Int_t halign = entry->GetTextAlign()/10;
-    Float_t entrymargin = margin;
+    Double_t entrymargin = margin;
     // for the header the margin is near zero
     TString opt = entry->GetOption();
     opt.ToLower();
@@ -383,8 +383,8 @@ void TLegend::PaintPrimitives()
     entry->SetTextSize(tsize);
 
     // define x,y as the center of the symbol for this entry
-    Float_t xsym = fX1 + margin/2.;
-    Float_t ysym = ytext;
+    Double_t xsym = fX1 + margin/2.;
+    Double_t ysym = ytext;
 
     if ( entry->GetObject() == 0 ) continue;
 
@@ -406,7 +406,7 @@ void TLegend::PaintPrimitives()
       }
 
       // box total height is yspace*0.7
-      Float_t boxwidth = yspace*
+      Double_t boxwidth = yspace*
         (gPad->GetX2()-gPad->GetX1())/(gPad->GetY2()-gPad->GetY1());
       if ( boxwidth > margin ) boxwidth = margin;
       TBox entrybox(xsym - boxwidth*0.35, ysym - yspace*0.35,
@@ -447,7 +447,7 @@ void TLegend::PaintPrimitives()
       // if the entry is filled, then surround the box with the line instead
       if ( opt.Contains("f") && !opt.Contains("l") && entry->GetObject()->InheritsFrom(TAttFill::Class())) {
         // box total height is yspace*0.7
-        Float_t boxwidth = yspace*
+        Double_t boxwidth = yspace*
           (gPad->GetX2()-gPad->GetX1())/(gPad->GetY2()-gPad->GetY1());
 
         entryline.PaintLine( xsym - boxwidth*0.35, ysym + yspace*0.35,
