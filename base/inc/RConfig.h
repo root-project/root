@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.67 2004/01/31 11:57:34 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.68 2004/02/05 13:16:16 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -264,6 +264,7 @@
 #   define R__UNIX
 #   define R__BYTESWAP
 #   define R__NOSTATS      /* problem using stats with FreeBSD malloc/free */
+#   define R__THROWNEWDELETE  /* new/delete throw exceptions */ 
 #endif
 
 #if defined(__APPLE__)     /* MacOS X support, initially following FreeBSD */
