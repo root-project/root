@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.11 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.12 2003/09/25 14:50:40 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -956,6 +956,7 @@ TGeoCombiTrans::TGeoCombiTrans(Double_t dx, Double_t dy, Double_t dz, TGeoRotati
    SetBit(kGeoCombiTrans);
    SetDefaultName();
    SetTranslation(dx, dy, dz);
+   fRotation = 0;
    SetRotation(rot);
 }
 //-----------------------------------------------------------------------------
@@ -965,6 +966,7 @@ TGeoCombiTrans::TGeoCombiTrans(const char *name, Double_t dx, Double_t dy, Doubl
 // ctor
    SetBit(kGeoCombiTrans);
    SetTranslation(dx, dy, dz);
+   fRotation = 0;
    SetRotation(rot);
 }
 //-----------------------------------------------------------------------------

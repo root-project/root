@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.15 2003/03/14 11:49:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.16 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -43,6 +43,7 @@ class TGeoCacheState : public TObject
 {
 protected:
    Int_t                fLevel;     // level in the current branch
+   Int_t                fIdBranch[30]; // ID branch
    Double_t            *fPoint;     // last point in master frame
    Bool_t               fOverlapping; // overlap flag
 public:
@@ -145,6 +146,8 @@ public:
    virtual void         ClearDaughter(Int_t index);
    virtual void         ClearNode(Int_t nindex);
    virtual void         Compact();
+   void                 FillIdBranch(const Int_t *br) {memcpy(fIdBranch,br,(fLevel+1)*sizeof(Int_t)); fIndex=fIdBranch[fLevel];}
+   const Int_t         *GetIdBranch() const {return fIdBranch;}
    virtual void         DeleteCaches();
    virtual Bool_t       DumpNodes();
    virtual void        *GetBranch() const {return fBranch;}
@@ -168,6 +171,7 @@ public:
    virtual Int_t        GetNodeId() const;
    Int_t                GetSize() const        {return fSize;}
    virtual Int_t        GetUsageCount() const;
+   Bool_t               HasIdArray() const {return (fNodeIdArray)?kTRUE:kFALSE;}
    virtual void         IncreasePool(Int_t size) {fSize+=size;}
    virtual void         IncrementUsageCount();
    Int_t                Index(Int_t nindex) const {return (nindex & 0xFFFFFF);}

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.20 2003/06/24 12:37:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.21 2003/08/08 09:22:18 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -154,6 +154,7 @@ void TGeoNodeCache::BuildIdArray()
    Int_t ifree  = 1;
    Int_t nodeid = 0;
    gGeoManager->GetTopNode()->FillIdArray(ifree, nodeid, fNodeIdArray);
+   fIdBranch[0] = 0;
 }
 
 //_____________________________________________________________________________
@@ -1462,8 +1463,10 @@ void TGeoCacheState::SetState(Int_t level, Bool_t ovlp, Double_t *point)
       fLevel = -1;
       return;
    }   
-   memcpy(fBranch, (Int_t*)gGeoManager->GetCache()->GetBranch(), (level+1)*sizeof(Int_t));
-   memcpy(fMatrices, (Int_t*)gGeoManager->GetCache()->GetMatrices(), (level+1)*sizeof(Int_t));
+   TGeoNodeCache *cache = gGeoManager->GetCache();
+   if (cache->HasIdArray()) memcpy(fIdBranch, cache->GetIdBranch(), (level+1)*sizeof(Int_t));
+   memcpy(fBranch, (Int_t*)cache->GetBranch(), (level+1)*sizeof(Int_t));
+   memcpy(fMatrices, (Int_t*)cache->GetMatrices(), (level+1)*sizeof(Int_t));
    fOverlapping = ovlp;
    if (point) memcpy(fPoint, point, 3*sizeof(Double_t));
 }   
@@ -1476,8 +1479,10 @@ Bool_t TGeoCacheState::GetState(Int_t &level, Double_t *point) const
       level = 0;
       return kFALSE;
    }   
-   memcpy((Int_t*)gGeoManager->GetCache()->GetBranch(), fBranch, (level+1)*sizeof(Int_t));
-   memcpy((Int_t*)gGeoManager->GetCache()->GetMatrices(), fMatrices, (level+1)*sizeof(Int_t));
+   TGeoNodeCache *cache = gGeoManager->GetCache();
+   if (cache->HasIdArray()) cache->FillIdBranch(fIdBranch);
+   memcpy((Int_t*)cache->GetBranch(), fBranch, (level+1)*sizeof(Int_t));
+   memcpy((Int_t*)cache->GetMatrices(), fMatrices, (level+1)*sizeof(Int_t));
    if (point) memcpy(point, fPoint, 3*sizeof(Double_t));
    return fOverlapping;
 }   
@@ -1528,8 +1533,10 @@ TGeoCacheStateDummy::~TGeoCacheStateDummy()
 void TGeoCacheStateDummy::SetState(Int_t level, Bool_t ovlp, Double_t *point)
 {
    fLevel = level;
-   TGeoNode **node_branch = (TGeoNode **) gGeoManager->GetCache()->GetBranch();
-   TGeoHMatrix **mat_branch  = (TGeoHMatrix **) gGeoManager->GetCache()->GetMatrices();
+   TGeoNodeCache *cache = gGeoManager->GetCache();
+   if (cache->HasIdArray()) memcpy(fIdBranch, cache->GetIdBranch(), (level+1)*sizeof(Int_t));
+   TGeoNode **node_branch = (TGeoNode **) cache->GetBranch();
+   TGeoHMatrix **mat_branch  = (TGeoHMatrix **) cache->GetMatrices();
 
    memcpy(fNodeBranch, node_branch, (level+1)*sizeof(TGeoNode *));
    for (Int_t i=0; i<level+1; i++)
@@ -1542,8 +1549,10 @@ void TGeoCacheStateDummy::SetState(Int_t level, Bool_t ovlp, Double_t *point)
 Bool_t TGeoCacheStateDummy::GetState(Int_t &level, Double_t *point) const
 {
    level = fLevel;
-   TGeoNode **node_branch = (TGeoNode **) gGeoManager->GetCache()->GetBranch();
-   TGeoHMatrix **mat_branch  = (TGeoHMatrix **) gGeoManager->GetCache()->GetMatrices();
+   TGeoNodeCache *cache = gGeoManager->GetCache();
+   if (cache->HasIdArray()) cache->FillIdBranch(fIdBranch);
+   TGeoNode **node_branch = (TGeoNode **) cache->GetBranch();
+   TGeoHMatrix **mat_branch  = (TGeoHMatrix **) cache->GetMatrices();
 
    memcpy(node_branch, fNodeBranch, (level+1)*sizeof(TGeoNode *));
    for (Int_t i=0; i<level+1; i++)

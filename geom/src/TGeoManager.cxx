@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.60 2003/08/21 10:17:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.61 2003/09/23 10:33:15 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -777,10 +777,7 @@ void TGeoManager::Matrix(Int_t index, Double_t theta1, Double_t phi1,
 //  theta3   polar angle for axis Z
 //  phi3     azimuthal angle for axis Z
 //  
-   
-   char name[50];
-   sprintf(name,"rot%d",index);
-   TGeoRotation * rot = new TGeoRotation(name,theta1,phi1,theta2,phi2,theta3,phi3);
+   TGeoRotation * rot = new TGeoRotation("",theta1,phi1,theta2,phi2,theta3,phi3);
    rot->SetUniqueID(index);
    rot->RegisterYourself();
 }
