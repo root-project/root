@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.1.1.4 2001/01/22 12:59:38 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.6 2001/03/02 00:45:03 fine Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 //
@@ -1722,7 +1722,7 @@ void TTable::SavePrimitive(ofstream &out, Option_t *)
       int mayBeName = 0;
       if (memberName.Index("name",0,TString::kIgnoreCase)>=0) mayBeName=1999;
       if (memberName.Index("file",0,TString::kIgnoreCase)>=0) mayBeName=1999;
-      int memberSize = (*member).fSize;
+      int typeSize = (*member).fTypeSize;
 
 //              Add the dimensions to "array" members
       Int_t dim = (*member).fDimensions;
@@ -1777,7 +1777,7 @@ void TTable::SavePrimitive(ofstream &out, Option_t *)
 //                      Generate "="
         out << "\t = ";
 
-        pointer = startRow + offset  + indexOffset*memberSize;
+        pointer = startRow + offset  + indexOffset*typeSize;
         
         AsString((void *)pointer,EColumnType((*member).fType),10,out);
 
