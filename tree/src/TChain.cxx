@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.73 2003/07/07 21:08:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.74 2003/07/17 16:34:52 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -188,7 +188,7 @@ Int_t TChain::Add(const char *name, Int_t nentries)
 //       read to read the number of entries in each Tree.
 
    // case with one single file
-   if (strchr(name,'*') == 0) {
+   if (!TString(name).MaybeRegexp()) {
       return AddFile(name,nentries);
    }
 
