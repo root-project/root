@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.26 2004/01/31 08:59:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.27 2004/05/13 11:40:38 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1428,7 +1428,11 @@ TObjArray *TString::Tokenize(const TString &delim) const
 
    start = -1;
    std::list<Int_t>::const_iterator it;
+#ifndef R__HPUX
    for (it = splitIndex.begin(); it != splitIndex.end(); it++) {
+#else
+   for (it = splitIndex.begin(); it != (std::list<Int_t>::const_iterator) splitIndex.end(); it++) {
+#endif
       Int_t stop = *it;
       if (stop - 1 >= start + 1) {
          TString tok = (*this)(start+1, stop-start-1);
