@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.104 2004/10/11 14:35:02 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.105 2004/10/15 16:55:07 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3049,6 +3049,7 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
       TRegexp separator("[^ \\t\\s]+");
       TRegexp user_dll("\\.dll$");
       TRegexp user_lib("\\.lib$");
+      FileStat_t sbuf;
       TString s;
       Ssiz_t start, index, end;
       start = index = end = 0;
@@ -3061,12 +3062,12 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
             s = libs(index, end);
             if (s.Index(user_dll) != kNPOS) {
                s.ReplaceAll(".dll",".lib");
-               if ( GetPathInfo( s, 0, (Long_t*)0, 0, 0 ) != 0 ) {
+               if ( GetPathInfo( s, sbuf ) != 0 ) {
                   s.Replace( 0, s.Last('/')+1, 0, 0);
                   s.Replace( 0, s.Last('\\')+1, 0, 0);
                }
             } else if (s.Index(user_lib) != kNPOS) {
-               if ( GetPathInfo( s, 0, (Long_t*)0, 0, 0 ) != 0 ) {
+               if ( GetPathInfo( s, sbuf ) != 0 ) {
                   s.Replace( 0, s.Last('/')+1, 0, 0);
                   s.Replace( 0, s.Last('\\')+1, 0, 0);
                }
