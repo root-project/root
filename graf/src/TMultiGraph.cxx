@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.10 2002/07/15 15:03:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.11 2002/11/06 21:16:43 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -86,6 +86,9 @@ TMultiGraph::~TMultiGraph()
 void TMultiGraph::Add(TGraph *graph, Option_t *chopt)
 {
    // add a new graph to the list of graphs
+   // note that the graph is now owned by the TMultigraph.
+   // Deleting the TMultiGraph object will automatically delete the graphs.
+   // You should not delete the graphs when the TMultigraph is still active.
 
    if (!fGraphs) fGraphs = new TList();
    graph->SetBit(kMustCleanup);
