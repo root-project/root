@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.12 2004/05/17 17:40:00 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.13 2004/05/19 16:12:58 rdm Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -341,7 +341,7 @@ int main(int argc, char **argv)
    }
 
    if (replace) {
-#if !defined(WIN32) && !defined(__CYGWIN__)
+#if !defined(WIN32) && !defined(__CYGWIN__) && !defined(__FreeBSD__)
       // lock file
       if (lockf(fileno(fp), F_LOCK, (off_t)1) == -1) {
          fprintf(stderr, "rlibmap: error locking output file\n");
@@ -357,7 +357,7 @@ int main(int argc, char **argv)
    LibMap(solib, solibdeps, linkdefs, fullpath, fp);
 
    if (replace) {
-#if !defined(WIN32) && !defined(__CYGWIN__)
+#if !defined(WIN32) && !defined(__CYGWIN__) && !defined(__FreeBSD__)
       // remove lock
       lseek(fileno(fp), 0, SEEK_SET);
       if (lockf(fileno(fp), F_ULOCK, (off_t)1) == -1) {
