@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.204 2004/10/01 16:30:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.205 2004/10/07 10:43:43 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TVectorF.h"
 #include "TVectorD.h"
 #include "TBrowser.h"
+#include "TObjString.h"
 
 //______________________________________________________________________________
 //                     The H I S T O G R A M   Classes
@@ -3483,6 +3484,8 @@ Int_t TH1::Merge(TCollection *list)
 // This function computes the min/max for the x axis,
 // compute a new number of bins, if necessary,
 // add bin contents, errors and statistics.
+// If all histograms have bin labels, bins with identical labels
+// will be merged, no matter what their order is.
 // The function returns the merged number of entries if the merge is
 // successfull, -1 otherwise.
 //
@@ -3526,6 +3529,21 @@ Int_t TH1::Merge(TCollection *list)
    for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
    GetStats(totstats);
    Bool_t same = kTRUE;
+
+   THashList allLabels;
+   THashList* labels=GetXaxis()->GetLabels();
+   Bool_t haveOneLabel=kFALSE;
+   if (labels) {
+      TIter iL(labels);
+      TObjString* lb;
+      while ((lb=(TObjString*)iL())) {
+         haveOneLabel |= (lb && lb->String().Length());
+         if (!allLabels.FindObject(lb))
+            allLabels.Add(lb);
+      }
+   }
+   Bool_t allHaveLabels = haveOneLabel;
+
    while ((h=(TH1*)next())) {
       if (!h->InheritsFrom(TH1::Class())) {
          Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
@@ -3546,29 +3564,57 @@ Int_t TH1::Merge(TCollection *list)
          if (umax > xmax) xmax = umax;
          if (h->GetXaxis()->GetBinWidth(1) > bwix) bwix = h->GetXaxis()->GetBinWidth(1);
       }
+      if (allHaveLabels) {
+         THashList* labels=h->GetXaxis()->GetLabels();
+         Bool_t haveOneLabel=kFALSE;
+         if (labels) {
+            TIter iL(labels);
+            TObjString* lb;
+            while ((lb=(TObjString*)iL())) {
+               haveOneLabel |= (lb && lb->String().Length());
+               if (!allLabels.FindObject(lb)) {
+                  allLabels.Add(lb);
+                  same = kFALSE;
+               }
+            }
+         }
+         allHaveLabels&=(labels && haveOneLabel);
+         if (!allHaveLabels)
+            Warning("Merge","Not all histograms have labels. I will ignore labels, falling back to bin numbering mode.");
+      }
    }
 
    //  if different binning compute best binning
    if (!same) {
-      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > 100) nbix /= 2;
+      if (allHaveLabels)
+         nbix=allLabels.GetSize();
+      else
+         nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > 100) nbix /= 2;
       SetBins(nbix,xmin,xmax);
    }
 
    //merge bin contents and errors
    next.Reset();
-   Int_t ibin, bin, binx, ix;
+   Int_t binx, ix;
    Double_t cu;
    while ((h=(TH1*)next())) {
       nx   = h->GetXaxis()->GetNbins();
       for (binx=0;binx<=nx+1;binx++) {
-         ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
-         bin = binx;
-         ibin = ix;
-         cu  = h->GetBinContent(bin);
-         AddBinContent(ibin,cu);
+         cu  = h->GetBinContent(binx);
+         if (!allHaveLabels || !binx || binx==nx+1) {
+            Bool_t canRebin=TestBit(kCanRebin);
+            ResetBit(kCanRebin); // reset, otherwise getting the under/overflow will rebin
+            ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
+            if (canRebin) SetBit(kCanRebin);
+         } else {
+            const char* label=h->GetXaxis()->GetBinLabel(binx);
+            if (!label) label="";
+            ix = fXaxis.FindBin(label);
+         }
+         AddBinContent(ix,cu);
          if (fSumw2.fN) {
-            Double_t error1 = h->GetBinError(bin);
-            fSumw2.fArray[ibin] += error1*error1;
+            Double_t error1 = h->GetBinError(binx);
+            fSumw2.fArray[ix] += error1*error1;
          }
       }
    }
