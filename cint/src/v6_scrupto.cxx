@@ -93,7 +93,10 @@ struct G__dictposition *dictpos;
 #ifndef G__OLDIMPLEMENTATION2014
   if(0==dictpos->ptype) {
     int i;
-    dictpos->ptype = (char*)malloc(G__struct.alltag+1);
+    dictpos->ptype = (char*)malloc(G__MAXSTRUCT);
+    for(i=0;i<G__struct.alltag;i++) dictpos->ptype[i] = G__struct.type[i];
+  } else if ((char*)G__PVOID!=dictpos->ptype) {
+    int i;
     for(i=0;i<G__struct.alltag;i++) dictpos->ptype[i] = G__struct.type[i];
   }
 #endif
@@ -242,7 +245,7 @@ struct G__dictposition *dictpos;
 #ifndef G__OLDIMPLEMENTATION2014
   if(dictpos->ptype && (char*)G__PVOID!=dictpos->ptype ) {
     int i;
-    for(i=0;i<G__struct.alltag;i++) G__struct.type[i] = dictpos->ptype[i];
+    for(i=0;i<G__struct.alltag && i<dictpos->tagnum;i++) G__struct.type[i] = dictpos->ptype[i];
     free((void*)dictpos->ptype);
     dictpos->ptype = (char*)NULL;
   }

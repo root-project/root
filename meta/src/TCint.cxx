@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.79 2004/02/25 08:45:30 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.80 2004/02/25 15:08:25 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -107,6 +107,9 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
    G__set_autoloading(&TCint_AutoLoadClass);
    G__InitGetSpecialObject(&TCint_FindSpecialObject);
 
+   fDictPos.ptype = 0;
+   fDictPosGlobals.ptype = 0; 
+
    ResetAll();
 #ifndef WIN32
    optind = 1;  // make sure getopt() works in the main program
@@ -126,6 +129,7 @@ TCint::~TCint()
      // G__scratch_all();
      G__close_inputfiles();
    }
+   //G__scratch_all();   
 }
 
 //______________________________________________________________________________
