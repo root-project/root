@@ -213,10 +213,10 @@ char *func;
       fprintf(G__sout,"\n\
 !!!!!!!!!!!!!!   W A R N I N G    !!!!!!!!!!!!!\n\n\
 The internal data structures have been changed.\n\
-Please recompile the setup file which contains\n\
-the definition \"%s\"\n\
+Please regenerate and recompile your dictionary which\n\
+contains the definition \"%s\"\n\
 using CINT version %s.\n\
-library=%d cintbody accepts=%d,%d\n\
+your dictionary=%d. This version accepts=%d-%d\n\
 and creates %d\n\n\
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n",
             func, G__cint_version(),version
@@ -1440,7 +1440,13 @@ FILE *hfp;
   fprintf(fp,"/* Setup class/struct taginfo */\n");
   for(i=0;i<G__struct.alltag;i++) {
     if(G__NOLINK > G__struct.globalcomp[i] &&
-       (G__struct.hash[i] || -1!=G__struct.parent_tagnum[i])) {
+       (
+#ifndef G__OLDIMPLEMENTATION1677
+	(G__struct.hash[i] || 0==G__struct.name[i][0])
+#else
+	G__struct.hash[i] 
+#endif
+	|| -1!=G__struct.parent_tagnum[i])) {
       fprintf(fp,"G__linked_taginfo %s = { \"%s\" , %d , -1 };\n"
 	      ,G__get_link_tagname(i),G__fulltagname(i,0),G__struct.type[i]);
       fprintf(hfp,"extern G__linked_taginfo %s;\n",G__get_link_tagname(i));
@@ -1475,7 +1481,13 @@ FILE *hfp;
   
   for(i=0;i<G__struct.alltag;i++) {
     if(G__NOLINK > G__struct.globalcomp[i] &&
-       (G__struct.hash[i] || -1!=G__struct.parent_tagnum[i])) {
+       (
+#ifndef G__OLDIMPLEMENTATION1677
+	(G__struct.hash[i] || 0==G__struct.name[i][0])
+#else
+	G__struct.hash[i] 
+#endif
+	|| -1!=G__struct.parent_tagnum[i])) {
       fprintf(fp,"  %s.tagnum = -1 ;\n",G__get_link_tagname(i));
     }
   }
@@ -2436,6 +2448,12 @@ FILE *hfp;
 	      continue;
 	    }
 	    else {
+#define G__DEFAULTASSIGNOPR
+#ifdef G__DEFAULTASSIGNOPR
+	      if(strcmp(ifunc->funcname[j],"operator=")==0) {
+		++isassignmentoperator;
+	      }
+#endif
 	      G__cppif_genfunc(fp,hfp,i,j,ifunc);
 	    }
 	  } /* if PUBLIC */
@@ -2458,6 +2476,11 @@ FILE *hfp;
 	    }
 	    else if(strcmp(ifunc->funcname[j],"operator delete")==0) {
 	      ++isdestructor;
+	    }
+#endif
+#ifdef G__DEFAULTASSIGNOPR
+	    else if(strcmp(ifunc->funcname[j],"operator=")==0) {
+	      ++isassignmentoperator;
 	    }
 #endif
 	  }
@@ -3079,6 +3102,7 @@ int iscopy;
 
 #ifndef __CINT__
 static int G__isprivateconstructorclass G__P((int tagnum,int iscopy));
+int G__isprivateconstructor G__P((int tagnum,int iscopy));
 #endif
 /**************************************************************************
 * G__isprivateconstructorvar()
@@ -3130,7 +3154,12 @@ int iscopy;
   if(G__ctordtor_status[tagnum]&t) return(1);
   if(G__ctordtor_status[tagnum]&f) return(0);
   if(G__isprivateconstructorifunc(tagnum,iscopy)||
-     G__isprivateconstructorvar(tagnum,iscopy)) {
+#ifndef G__OLDIMPLEMENTATION1678
+     G__isprivateconstructor(tagnum,iscopy)
+#else
+     G__isprivateconstructorvar(tagnum,iscopy)
+#endif
+     ) {
     G__ctordtor_status[tagnum]|=t;
     return(1);
   }
@@ -3204,6 +3233,7 @@ int tagnum;
 
 #ifndef __CINT__
 static int G__isprivatedestructorclass G__P((int tagnum));
+int G__isprivatedestructor G__P((int tagnum));
 #endif
 /**************************************************************************
 * G__isprivatedestructorvar()
@@ -3246,7 +3276,13 @@ int tagnum;
   f=G__CTORDTOR_NOPRIVATEDTOR;
   if(G__ctordtor_status[tagnum]&t) return(1);
   if(G__ctordtor_status[tagnum]&f) return(0);
-  if(G__isprivatedestructorifunc(tagnum)||G__isprivatedestructorvar(tagnum)) {
+  if(G__isprivatedestructorifunc(tagnum)||
+#ifndef G__OLDIMPLEMENTATION1678
+     G__isprivatedestructor(tagnum)
+#else
+     G__isprivatedestructorvar(tagnum)
+#endif
+     ) {
     G__ctordtor_status[tagnum]|=t;
     return(1);
   }
@@ -3281,6 +3317,111 @@ int tagnum;
   return(0);
 }
 #endif /* ON598 */
+
+#ifdef G__DEFAULTASSIGNOPR
+/**************************************************************************
+* G__isprivateassignoprifunc()
+*
+**************************************************************************/
+static int G__isprivateassignoprifunc(tagnum)
+int tagnum;
+{
+  struct G__ifunc_table *ifunc;
+  int ifn;
+  ifunc=G__struct.memfunc[tagnum];
+  do {
+    for(ifn=0;ifn<ifunc->allifunc;ifn++) {
+      if(strcmp("operator=",ifunc->funcname[ifn])==0) {
+	if(G__PRIVATE==ifunc->access[ifn]||G__PROTECTED==ifunc->access[ifn]) {
+	  return(1);
+	}
+      }
+    }
+    ifunc=ifunc->next;
+  } while(ifunc);
+  return(0);
+}
+
+#ifndef __CINT__
+static int G__isprivateassignoprclass G__P((int tagnum));
+int G__isprivateassignopr G__P((int tagnum));
+#endif
+/**************************************************************************
+* G__isprivateassignoprvar()
+*
+* check if private assignopr exists in this particular class
+**************************************************************************/
+static int G__isprivateassignoprvar(tagnum)
+int tagnum;
+{
+  int ig15;
+  struct G__var_array *var;
+  int memtagnum;
+  var=G__struct.memvar[tagnum];
+  while(var) {
+    for(ig15=0;ig15<var->allvar;ig15++) {
+      if('u'==var->type[ig15] && -1!=(memtagnum=var->p_tagtable[ig15]) &&
+	 'e'!=G__struct.type[memtagnum]
+#ifndef G__OLDIMPLEMENTATION1226
+	 && memtagnum!=tagnum
+#endif
+	 ) {
+	if(G__isprivateassignoprclass(memtagnum)) return(1);
+      }
+    }
+    var=var->next;
+  }
+  return(0);
+}
+
+/**************************************************************************
+* G__isprivateassignoprclass()
+*
+* check if private assignopr exists in this particular class
+**************************************************************************/
+static int G__isprivateassignoprclass(tagnum)
+int tagnum;
+{
+  int t,f;
+  t=G__CTORDTOR_PRIVATEASSIGN;
+  f=G__CTORDTOR_NOPRIVATEASSIGN;
+  if(G__ctordtor_status[tagnum]&t) return(1);
+  if(G__ctordtor_status[tagnum]&f) return(0);
+  if(G__isprivateassignoprifunc(tagnum)||G__isprivateassignopr(tagnum)) {
+    G__ctordtor_status[tagnum]|=t;
+    return(1);
+  }
+  G__ctordtor_status[tagnum]|=f;
+  return(0);
+}
+/**************************************************************************
+* G__isprivateassignopr()
+*
+* check if private assignopr exists in base class or class of member obj
+**************************************************************************/
+int G__isprivateassignopr(tagnum)
+int tagnum;
+{
+  int basen;
+  int basetagnum;
+  struct G__inheritance *baseclass;
+
+  baseclass = G__struct.baseclass[tagnum];
+
+  /* Check base class private assignopr */
+  for(basen=0;basen<baseclass->basen;basen++) {
+    basetagnum = baseclass->basetagnum[basen];
+    if(G__isprivateassignoprclass(basetagnum)) {
+      return(1);
+    }
+  }
+
+  /* Check Data member object */
+  if(G__isprivateassignoprvar(tagnum)) return(1);
+
+  return(0);
+}
+#endif
 
 
 /**************************************************************************
@@ -3648,6 +3789,8 @@ int isnonpublicnew;
   /*********************************************************************
   * assignment operator
   *********************************************************************/
+  if(0==isassignmentoperator) 
+    isassignmentoperator=G__isprivateassignopr(tagnum);
   if(0==isassignmentoperator) {
     sprintf(funcname,"operator=");
     fprintf(fp,"// automatic assignment operator\n");
@@ -4511,7 +4654,12 @@ FILE *hfp;
 
   fprintf(fp,"\n   /* Setting up class,struct,union tag entry */\n");
   for(i=0;i<G__struct.alltag;i++) {
-    if(G__struct.hash[i] &&
+    if(
+#ifndef G__OLDIMPLEMENTATION1677
+       (G__struct.hash[i] || 0==G__struct.name[i][0]) && 
+#else
+       G__struct.hash[i] && 
+#endif
        (G__CPPLINK==G__struct.globalcomp[i]
 	||G__CLINK==G__struct.globalcomp[i]
 	)) {
@@ -4579,6 +4727,24 @@ FILE *hfp;
 		  ,G__struct.isabstract[i]
 #endif
 		  ,buf,mappedtagname,mappedtagname);
+	}
+#endif
+#ifndef G__OLDIMPLEMENTATION1677
+	else if(0==G__struct.name[i][0]) {
+	  strcpy(mappedtagname,G__map_cpp_name(tagname));
+	  fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),%s,%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
+		  ,G__mark_linked_tagnum(i)
+		  ,"0" /* G__type2string('u',i,-1,0,0) */
+		  ,G__globalcomp 
+#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
+		  ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+		  +G__struct.rootflag[i]*0x10000
+#elif !defined(G__OLDIMPLEMENTATION1442)
+		  ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+#else
+		  ,G__struct.isabstract[i]
+#endif
+		  ,buf ,mappedtagname,mappedtagname);
 	}
 #endif
 	else {
@@ -5076,7 +5242,13 @@ FILE *fp;
 	|| G__nestedclass
 #endif
 	)
-       && -1!=G__struct.line_number[i]&&G__struct.hash[i]) {
+       && -1!=G__struct.line_number[i]&&
+#ifndef G__OLDIMPLEMENTATION1677
+       (G__struct.hash[i] || 0==G__struct.name[i][0])
+#else
+       G__struct.hash[i]
+#endif
+       ) {
 
       var = G__struct.memvar[i];
 
@@ -5107,7 +5279,11 @@ FILE *fp;
       fprintf(fp,"   G__tag_memvar_setup(G__get_linked_tagnum(&%s));\n"
 	      ,G__mark_linked_tagnum(i));
 #ifndef G__OLDIMPLEMENTATION1054
-      if('n'==G__struct.type[i]) 
+      if('n'==G__struct.type[i]
+#ifndef G__OLDIMPLEMENTATION1677
+	 || 0==G__struct.name[i][0]
+#endif
+	 ) 
 	fprintf(fp,"   {\n");
       else
 	fprintf(fp,"   { %s *p; p=(%s*)0x1000; if (p) { }\n"
@@ -5158,6 +5334,12 @@ FILE *fp;
 	    else pvoidflag=0;
 	    fprintf(fp,"   G__memvar_setup(");
 	    if(G__PUBLIC==var->access[j] && 0==var->bitfield[j]) {
+#ifndef G__OLDIMPLEMENTATION1677
+	      if(0==G__struct.name[i][0]) {
+		fprintf(fp,"(void*)0,");
+	      }
+	      else
+#endif
 	      if(G__LOCALSTATIC==var->statictype[j]) {
 		if(pvoidflag) fprintf(fp,"(void*)G__PVOID,");
 		else          fprintf(fp,"(void*)(&%s::%s),"
@@ -5328,7 +5510,13 @@ FILE *fp;
 	|| G__nestedclass
 #endif
 	)
-       && -1!=G__struct.line_number[i]&&G__struct.hash[i]&&
+       && -1!=G__struct.line_number[i]&&
+#ifndef G__OLDIMPLEMENTATION1677
+       (G__struct.hash[i] || 0==G__struct.name[i][0])
+#else
+       G__struct.hash[i]
+#endif
+       &&
        '$'!=G__struct.name[i][0] && 'e'!=G__struct.type[i]) {
       ifunc = G__struct.memfunc[i];
       isconstructor=0;
@@ -5353,6 +5541,13 @@ FILE *fp;
 
       fprintf(fp,"   G__tag_memfunc_setup(G__get_linked_tagnum(&%s));\n"
 	      ,G__mark_linked_tagnum(i));
+
+#ifndef G__OLDIMPLEMENTATION1677
+      if(0==G__struct.name[i][0]) {
+	fprintf(fp,"}\n");
+	continue;
+      }
+#endif
 
       while(ifunc) {
 	for(j=0;j<ifunc->allifunc;j++) {
@@ -5414,6 +5609,11 @@ FILE *fp;
 #endif
 	      continue;
 	    }
+#ifdef G__DEFAULTASSIGNOPR
+	    else if(strcmp(ifunc->funcname[j],"operator=")==0) {
+	      ++isassignmentoperator;
+	    }
+#endif
 
 	    /****************************************************************
 	     * setup normal function
@@ -5577,6 +5777,11 @@ FILE *fp;
 	    else if(strcmp(ifunc->funcname[j],"operator delete")==0) {
 	      ++isdestructor;
 	    }
+#ifdef G__DEFAULTASSIGNOPR
+	    else if(strcmp(ifunc->funcname[j],"operator=")==0) {
+	      ++isassignmentoperator;
+	    }
+#endif
 #endif
 	  } /* end of if access not public */
 
@@ -5662,7 +5867,7 @@ FILE *fp;
 	    fprintf(fp,"1,"); /* ansi */
 	    fprintf(fp,"%d,0",G__PUBLIC);
 #ifdef G__TRUEP2F
-	    fprintf(fp,",\"u '%s' - 1 - -\",(char*)NULL,(void*)NULL,%d);\n"
+	    fprintf(fp,",\"u '%s' - 11 - -\",(char*)NULL,(void*)NULL,%d);\n"
 		    ,G__fulltagname(i,0)
 #ifndef G__OLDIMPLEMENTATION898
 		    ,0);
@@ -5670,7 +5875,7 @@ FILE *fp;
 		    ,ifunc->isvirtual[j]+ifunc->ispurevirtual[j]*2);
 #endif
 #else
-	    fprintf(fp,",\"u '%s' - 1 - -\",(char*)NULL);\n"
+	    fprintf(fp,",\"u '%s' - 11 - -\",(char*)NULL);\n"
 		    ,G__fulltagname(i,0));
 #endif
 	    ++j;
@@ -5724,6 +5929,8 @@ FILE *fp;
 	  /****************************************************************
 	   * setup assignment operator
 	   ****************************************************************/
+	  if(0==isassignmentoperator) 
+	    isassignmentoperator=G__isprivateassignopr(i);
 #ifndef G__OLDIMPLEMENTATION1054
 	  if('n'==G__struct.type[i]) isassignmentoperator=1;
 #endif
@@ -5743,7 +5950,7 @@ FILE *fp;
 	    fprintf(fp,"1,"); /* ansi */
 	    fprintf(fp,"%d,0",G__PUBLIC);
 #ifdef G__TRUEP2F
-	    fprintf(fp,",\"u '%s' - 1 - -\",(char*)NULL,(void*)NULL,%d);\n"
+	    fprintf(fp,",\"u '%s' - 11 - -\",(char*)NULL,(void*)NULL,%d);\n"
 		    ,G__fulltagname(i,0)
 #ifndef G__OLDIMPLEMENTATION898
 		    ,0);
@@ -5751,7 +5958,7 @@ FILE *fp;
 		    ,ifunc->isvirtual[j]+ifunc->ispurevirtual[j]*2);
 #endif
 #else
-	    fprintf(fp,",\"u '%s' - 1 - -\",(char*)NULL);\n"
+	    fprintf(fp,",\"u '%s' - 11 - -\",(char*)NULL);\n"
 		    ,G__fulltagname(i,0));
 #endif
 	  }

@@ -2833,7 +2833,7 @@ char **foraction;
     }
 #endif
     result=G__exec_statement();
-#ifndef G__OLDIMPLEMENTATION1673
+#ifdef G__OLDIMPLEMENTATION1673_YET
     if(G__p_tempbuf->level>=G__templevel && G__p_tempbuf->prev) {
       G__free_tempobject();
     }

@@ -847,10 +847,10 @@ int start;
   }
   if(G__more(fout,msg)) return(1);
   sprintf(msg
-	  ," (tagnum=%d,voffset=%d,isabstract=%d,parent=%d,gcomp=%d,d21=~cd=%x)" 
+	  ," (tagnum=%d,voffset=%d,isabstract=%d,parent=%d,gcomp=%d:%d,d21=~cd=%x)" 
 	  ,tagnum ,G__struct.virtual_offset[tagnum]
 	  ,G__struct.isabstract[tagnum] ,G__struct.parent_tagnum[tagnum]
-	  ,G__struct.globalcomp[tagnum]
+	  ,G__struct.globalcomp[tagnum],G__struct.iscpplink[tagnum]
 	  ,G__struct.funcs[tagnum]);
   if(G__more(fout,msg)) return(1);
   if('$'==G__struct.name[tagnum][0]) {
