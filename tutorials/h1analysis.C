@@ -184,11 +184,7 @@ void h1analysis::SlaveBegin(TTree *tree)
 }
 
 //_____________________________________________________________________
-#ifdef __CINT__
-Bool_t h1analysis::Process(Int_t entry)
-#else
 Bool_t h1analysis::Process(Long64_t entry)
-#endif
 {
 // entry is the entry number in the current Tree
 // Selection function to select D* and D0.
