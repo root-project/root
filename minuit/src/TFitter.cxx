@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.4 2002/07/16 13:59:19 rdm Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.5 2002/09/11 13:21:13 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -19,7 +19,7 @@ TFitter::TFitter(Int_t maxpar)
 //*-*-*-*-*-*-*-*-*-*-*default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===================
 
-   gMinuit = new TMinuit(maxpar);
+   fMinuit = new TMinuit(maxpar);
    fNlog = 0;
    fSumLog = 0;
 }
@@ -38,7 +38,7 @@ void TFitter::Clear(Option_t *)
 {
    // reset the fitter environment
 
-   gMinuit->mncler();
+   fMinuit->mncler();
 
 }
 
@@ -50,7 +50,7 @@ Int_t TFitter::ExecuteCommand(const char *command, Double_t *args, Int_t nargs)
    //   args    : list of nargs command arguments
 
    Int_t ierr = 0;
-   gMinuit->mnexcm(command,args,nargs,ierr);
+   fMinuit->mnexcm(command,args,nargs,ierr);
    return ierr;
 }
 
@@ -59,7 +59,7 @@ void TFitter::FixParameter(Int_t ipar)
 {
    // Fix parameter ipar.
 
-   gMinuit->FixParameter(ipar);
+   fMinuit->FixParameter(ipar);
 }
 
 //______________________________________________________________________________
@@ -74,7 +74,7 @@ Int_t TFitter::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t 
 
 
    Int_t ierr = 0;
-   gMinuit->mnerrs(ipar, eplus,eminus,eparab,globcc);
+   fMinuit->mnerrs(ipar, eplus,eminus,eparab,globcc);
    return ierr;
 }
 
@@ -83,7 +83,7 @@ TObject *TFitter::GetObjectFit() const
 {
    // return a pointer to the current object being fitted
 
-   return gMinuit->GetObjectFit();
+   return fMinuit->GetObjectFit();
 }
 
 //______________________________________________________________________________
@@ -99,7 +99,7 @@ Int_t TFitter::GetParameter(Int_t ipar,char *parname,Double_t &value,Double_t &v
 
    Int_t ierr = 0;
    TString pname;
-   gMinuit->mnpout(ipar, pname,value,verr,vlow,vhigh,ierr);
+   fMinuit->mnpout(ipar, pname,value,verr,vlow,vhigh,ierr);
    strcpy(parname,pname.Data());
    return ierr;
 }
@@ -115,7 +115,7 @@ Int_t TFitter::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &
    //   nparx    : total number of parameters
 
    Int_t ierr = 0;
-   gMinuit->mnstat(amin,edm,errdef,nvpar,nparx,ierr);
+   fMinuit->mnstat(amin,edm,errdef,nvpar,nparx,ierr);
    return ierr;
 }
 
@@ -145,7 +145,7 @@ void  TFitter::PrintResults(Int_t level, Double_t amin) const
 {
    // Print fit results
 
-   gMinuit->mnprin(level,amin);
+   fMinuit->mnprin(level,amin);
 }
 
 //______________________________________________________________________________
@@ -153,7 +153,7 @@ void TFitter::ReleaseParameter(Int_t ipar)
 {
    // Release parameter ipar.
 
-   gMinuit->Release(ipar);
+   fMinuit->Release(ipar);
 }
 
 //______________________________________________________________________________
@@ -161,7 +161,7 @@ void TFitter::SetFCN(void *fcn)
 {
    // Specify the address of the fitting algorithm (from the interpreter)
 
-   gMinuit->SetFCN(fcn);
+   fMinuit->SetFCN(fcn);
 }
 
 //______________________________________________________________________________
@@ -169,7 +169,7 @@ void TFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, I
 {
    // Specify the address of the fitting algorithm
 
-   gMinuit->SetFCN(fcn);
+   fMinuit->SetFCN(fcn);
 }
 
 //______________________________________________________________________________
@@ -177,7 +177,7 @@ void TFitter::SetObjectFit(TObject *obj)
 {
    // Specify the current object to be fitted
 
-   gMinuit->SetObjectFit(obj);
+   fMinuit->SetObjectFit(obj);
 }
 
 //______________________________________________________________________________
@@ -192,6 +192,6 @@ Int_t TFitter::SetParameter(Int_t ipar,const char *parname,Double_t value,Double
    //   vhigh    : upper value for the parameter
 
    Int_t ierr = 0;
-   gMinuit->mnparm(ipar,parname,value,verr,vlow,vhigh,ierr);
+   fMinuit->mnparm(ipar,parname,value,verr,vlow,vhigh,ierr);
    return ierr;
 }
