@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.151 2003/02/05 18:11:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.152 2003/02/11 18:22:25 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -3053,7 +3053,6 @@ char *pointer = 0;
                            b.ReadFastArray(*f,len); break;} \
           case kFloat:  {Float_t  **f=(Float_t**)(pointer+fOffset[i]); \
                            /* delete [] *f; */ \
-                           printf("*f1=%x, f=%x\n",*f,f); \
                            if (fNewType[i] > 40 && *f == 0) *f = new Float_t[len]; \
                            b.ReadFastArray(*f,len); break;} \
           case kDouble: {Double_t **f=(Double_t**)(pointer+fOffset[i]); \
