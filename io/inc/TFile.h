@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.19 2002/04/01 17:12:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.20 2002/05/22 00:48:27 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -81,7 +81,8 @@ public:
    // TFile status bits
    enum {
       kHasReferences   = BIT(11),
-      kDevNull         = BIT(12)
+      kDevNull         = BIT(12),
+      kWriteError      = BIT(14) // BIT(13) is taken up by TObject
    };
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
 

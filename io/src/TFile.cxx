@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.66 2002/07/16 13:59:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.67 2002/07/22 17:04:21 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -605,8 +605,11 @@ void TFile::Flush()
    // Synchornize a file's in-core and on-disk states.
 
    if (IsOpen() && fWritable) {
-      if (SysSync(fD) < 0)
+      if (SysSync(fD) < 0) {
+         // Write the system error only once for this file
+         SetBit(kWriteError); fWritable = kFALSE;
          SysError("Flush", "error flushing file %s", GetName());
+      }
    }
 }
 
@@ -1275,6 +1278,8 @@ Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
          ResetErrno();
       gSystem->IgnoreInterrupt(kFALSE);
       if (siz < 0) {
+         // Write the system error only once for this file
+         SetBit(kWriteError); fWritable = kFALSE;
          SysError("WriteBuffer", "error writing to file %s", GetName());
          return kTRUE;
       }
