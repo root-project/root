@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.15 2004/06/25 16:49:09 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.16 2004/10/11 12:34:34 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -764,9 +764,12 @@ int GlobusGetCredHandle(Int_t LocalEnv, Int_t NeedProxy, gss_cred_id_t * CredHan
          // Check if interactive session
          if (isatty(0) && isatty(1)) {
 
-            if (gDebug > 3)
+            if (gDebug > 3) {
+               GlobusError("GlobusNameFromCred: gss_display_name",
+                     MajStat, MinStat, 0);
                Info("GlobusGetCredHandle",
                     "Failed to acquire credentials: trying to initialize proxies ...");
+            }
 
             // Try to get credentials with usual command line ...
             if (!gSystem->Getenv("GLOBUS_LOCATION")) {
