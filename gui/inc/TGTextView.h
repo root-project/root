@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.2 2000/07/03 18:55:32 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -63,11 +63,9 @@ public:
    TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id = -1,
               UInt_t sboptions = 0, ULong_t back = fgWhitePixel);
    TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
-              Int_t id = -1, UInt_t sboptions = 0,
-              ULong_t back = fgWhitePixel);
+              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = fgWhitePixel);
    TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, const char *string,
-              Int_t id = -1, UInt_t sboptions = 0,
-              ULong_t back = fgWhitePixel);
+              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = fgWhitePixel);
 
    virtual ~TGTextView();
 

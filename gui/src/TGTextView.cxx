@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.2 2000/07/03 18:55:32 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -40,9 +40,9 @@ ClassImp(TGTextView)
 
 
 //______________________________________________________________________________
-void TGTextView::Init(ULong_t back)
+void TGTextView::Init(ULong_t /*back*/)
 {
-   // Create a text view widget.
+   // Initialize a text view widget.
 
    // set in TGClient via fgDefaultFontStruct and select font via .rootrc
    fFont      = fgDefaultFontStruct;
