@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.26 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.27 2002/01/24 11:39:29 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -586,6 +586,16 @@ void TAxis::GetLowEdge(Axis_t *edge)
 }
 
 //______________________________________________________________________________
+const char *TAxis::GetTicks() const
+{
+// return the ticks option (see SetTicks)
+   
+   if (TestBit(kTickPlus) && TestBit(kTickMinus)) return "+-";
+   if (TestBit(kTickMinus)) return "-";
+   return "+";
+}
+ 
+//______________________________________________________________________________
 void TAxis::LabelsOption(Option_t *option)
 {
 //  Set option(s) to draw axis with labels
@@ -783,6 +793,20 @@ void TAxis::SetRangeUser(Axis_t ufirst, Axis_t ulast)
    SetRange(FindBin(ufirst),FindBin(ulast));
 }
 
+//______________________________________________________________________________
+void TAxis::SetTicks(Option_t *option)
+{
+//  set ticks orientation
+//  option = "+"  ticks drawn on the "positive side" (default)
+//  option = "-"  ticks drawn on the "negative side" 
+//  option = "+-" ticks drawn on both sides
+   
+   ResetBit(kTickPlus);
+   ResetBit(kTickMinus);
+   if (strchr(option,'+')) SetBit(kTickPlus);
+   if (strchr(option,'-')) SetBit(kTickMinus);
+}
+   
 //______________________________________________________________________________
 void TAxis::SetTimeFormat(const char *tformat)
 {

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.18 2002/01/02 21:43:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.19 2002/01/15 10:34:30 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -60,7 +60,9 @@ public:
                kLabelsVert  = BIT(19),
                kLabelsDown  = BIT(20),
                kLabelsUp    = BIT(21),
-               kIsInteger   = BIT(22)};
+               kIsInteger   = BIT(22),
+               kTickPlus    = BIT(9),
+               kTickMinus   = BIT(10)};
 
         TAxis();
         TAxis(Int_t nbins, Axis_t xmin, Axis_t xmax);
@@ -87,6 +89,7 @@ public:
         virtual void     GetLowEdge(Axis_t *edge);
                 Int_t    GetNbins() const { return fNbins; }
         virtual TObject *GetParent() const {return fParent;}
+        virtual const char  *GetTicks() const;
         virtual Bool_t   GetTimeDisplay() const {return fTimeDisplay;}
         virtual const char  *GetTimeFormat() const {return fTimeFormat.Data();}
          const char     *GetTitle() const {return fTitle.Data();}
@@ -108,6 +111,7 @@ public:
         virtual void     SetParent(TObject *obj) {fParent = obj;}
         virtual void     SetRange(Int_t first=0, Int_t last=0);  // *MENU*
         virtual void     SetRangeUser(Axis_t ufirst, Axis_t ulast);  // *MENU*
+        virtual void     SetTicks(Option_t *option="+"); // *MENU*
         virtual void     SetTimeDisplay(Int_t value) {fTimeDisplay = value;} // *TOGGLE*
         virtual void     SetTimeFormat(const char *format="");  // *MENU*
         virtual void     UnZoom();  // *MENU*
