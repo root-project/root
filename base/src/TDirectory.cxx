@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.12 2001/05/31 08:47:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.13 2001/06/02 10:01:50 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -734,14 +734,20 @@ TObject *TDirectory::Get(const char *namecycle)
 //                        ========================
    TObject *idcur = fList->FindObject(namobj);
    if (idcur) {
-      if (cycle == 9999) {
+      if (idcur==gDirectory && strlen(namobj)!=0) {
+         // The object has the same name has the directory and
+         // that's what we picked-up!  We just need to ignore
+         // it ...
+         idcur = 0;
+      } else if (cycle == 9999) {
          cursav->cd();
          return idcur;
+      } else {
+         if (idcur->InheritsFrom(TCollection::Class()))
+            idcur->Delete();  // delete also list elements
+         delete idcur;
+         idcur = 0;
       }
-      if (idcur->InheritsFrom(TCollection::Class()))
-         idcur->Delete();  // delete also list elements
-      delete idcur;
-      idcur = 0;
    }
 
 //*-*---------------------Case of Key---------------------
