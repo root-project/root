@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.rdl,v 1.15 2002/09/05 04:33:27 verkerke Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.16 2003/09/10 03:58:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -86,6 +86,7 @@ public:
 protected:
   
   friend class RooMinuit ;
+  friend class RooNag ;
   void setConstParList(const RooArgList& list) ;
   void setInitParList(const RooArgList& list) ;
   void setFinalParList(const RooArgList& list) ;
