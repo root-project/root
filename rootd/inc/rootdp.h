@@ -1,4 +1,4 @@
-/* @(#)root/rootd:$Name:  $:$Id: rootdp.h,v 1.4 2001/02/22 09:43:25 rdm Exp $ */
+/* @(#)root/rootd:$Name:  $:$Id: rootdp.h,v 1.5 2001/02/26 02:49:07 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -42,7 +42,7 @@ extern double  gBytesSent;
 extern double  gBytesRecv;
 
 
-void  DaemonStart(int ignsigcld);
+void  DaemonStart(int ignsigcld, int fdkeep);
 
 void  ErrorInit(const char *ident);
 void  ErrorInfo(const char *va_(fmt), ...);
@@ -53,7 +53,7 @@ int   GetErrno();
 void  ResetErrno();
 void  Perror(char *buf);
 
-void  NetInit(const char *service, int port, int tcpwindowsize);
+int   NetInit(const char *service, int port1, int port2, int tcpwindowsize);
 int   NetOpen(int inetdflag);
 void  NetClose();
 char *NetRemoteHost();

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.43 2002/06/25 23:53:26 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.44 2002/06/27 23:58:02 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/* Parts of this file are copied from the MIT krb5 distribution and
+/*
+ * Parts of this file are copied from the MIT krb5 distribution and
  * are subject to the following license:
  *
  * Copyright 1990,1991 by the Massachusetts Institute of Technology.
@@ -33,7 +34,6 @@
  * M.I.T. makes no representations about the suitability of
  * this software for any purpose.  It is provided "as is" without express
  * or implied warranty.
- *
  */
 
 //////////////////////////////////////////////////////////////////////////
@@ -63,14 +63,25 @@
 // rootd -p 5151                                                        //
 //                                                                      //
 // Notice: no & is needed. Rootd will go in background by itself.       //
+// In this case, the port number and process id will be printed, e.g.   //
+//                                                                      //
+// ROOTD_PORT=5151                                                      //
+// ROOTD_PID=14433                                                      //
 //                                                                      //
 // Rootd arguments:                                                     //
 //   -i                says we were started by inetd                    //
-//   -p port#          specifies a different port to listen on          //
+//   -p port#          specifies a different port to listen on.         //
+//                     Use port1-port2 to find first available port in  //
+//                     range. Use 0-N for range relative to service     //
+//                     port.                                            //
 //   -b tcpwindowsize  specifies the tcp window size in bytes (e.g. see //
 //                     http://www.psc.edu/networking/perf_tune.html)    //
 //                     Default is 65535. Only change default for pipes  //
 //                     with a high bandwidth*delay product.             //
+//   -P file           use this password file, instead of .srootdpass   //
+//   -S keytabfile     use this keytab file, instead of the default     //
+//                     (option only supported when compiled with        //
+//                     Kerberos5 support)                               //
 //   -d level          level of debug info written to syslog            //
 //                     0 = no debug (default)                           //
 //                     1 = minimum                                      //
@@ -289,34 +300,37 @@ extern krb5_deltat krb5_clockskew;
 
 //--- Globals ------------------------------------------------------------------
 
+const int  kMAXPATHLEN     = 1024;
 const char kRootdService[] = "rootd";
 const char kRootdTab[]     = "/usr/tmp/rootdtab";
 const char kRootdPass[]    = ".rootdpass";
 const char kSRootdPass[]   = ".srootdpass";
-const int  kMAXPATHLEN     = 1024;
 enum { kBinary, kAscii };
 
-int     gInetdFlag         = 0;
-int     gPort              = 0;
-int     gDebug             = 0;
-int     gSockFd            = -1;
-int     gAuth              = 0;
-int     gAnon              = 0;
-int     gFd                = -1;
-int     gWritable          = 0;
-int     gProtocol          = 6;       // increase when protocol changes
-int     gUploaded          = 0;
-int     gDownloaded        = 0;
-int     gFtp               = 0;
-double  gBytesRead         = 0;
-double  gBytesWritten      = 0;
-char    gUser[64]          = { 0 };
-char    gPasswd[64]        = { 0 };   // only used for anonymous access
-char    gOption[32]        = { 0 };
-char    gFile[kMAXPATHLEN] = { 0 };
+int     gInetdFlag               = 0;
+int     gPort1                   = 0;
+int     gPort2                   = 0;
+int     gDebug                   = 0;
+int     gSockFd                  = -1;
+int     gAuth                    = 0;
+int     gAnon                    = 0;
+int     gAltSRP                  = 0;
+int     gFd                      = -1;
+int     gWritable                = 0;
+int     gProtocol                = 6;       // increase when protocol changes
+int     gUploaded                = 0;
+int     gDownloaded              = 0;
+int     gFtp                     = 0;
+double  gBytesRead               = 0;
+double  gBytesWritten            = 0;
+char    gUser[64]                = { 0 };
+char    gPasswd[64]              = { 0 };   // only used for anonymous access
+char    gOption[32]              = { 0 };
+char    gFile[kMAXPATHLEN]       = { 0 };
+char    gAltSRPPass[kMAXPATHLEN] = { 0 };
 
 #ifdef R__KRB5
-krb5_keytab  gKeytab       = 0;       // to allow specifying on the command line
+krb5_keytab  gKeytab             = 0; // to allow specifying on the command line
 krb5_context gKcontext;
 #endif
 
@@ -996,8 +1010,13 @@ void RootdSRPUser(const char *user)
 
    strcpy(gUser, user);
 
-   sprintf(srootdpass, "%s/%s", pw->pw_dir, kSRootdPass);
-   sprintf(srootdconf, "%s/%s.conf", pw->pw_dir, kSRootdPass);
+   if (!gAltSRP) {
+      sprintf(srootdpass, "%s/%s", pw->pw_dir, kSRootdPass);
+      sprintf(srootdconf, "%s/%s.conf", pw->pw_dir, kSRootdPass);
+   } else {
+      sprintf(srootdpass, "%s", gAltSRPPass);
+      sprintf(srootdconf, "%s.conf", gAltSRPPass);
+   }
 
    FILE *fp1 = fopen(srootdpass, "r");
    if (!fp1) {
@@ -2166,7 +2185,17 @@ int main(int argc, char **argv)
                      fprintf(stderr, "-p requires a port number as argument\n");
                   ErrorFatal(kErrFatal, "-p requires a port number as argument");
                }
-               gPort = atoi(*++argv);
+               char *p;
+               gPort1 = strtol(*++argv, &p, 10);
+               if (*p == '-')
+                  gPort2 = strtol(++p, &p, 10);
+               else if (*p == '\0')
+                  gPort2 = gPort1;
+               if (*p != '\0' || gPort2 < gPort1 || gPort2 < 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "invalid port number or range: %s\n", *argv);
+                  ErrorFatal(kErrFatal, "invalid port number or range: %s", *argv);
+               }
                break;
 
             case 'd':
@@ -2185,6 +2214,16 @@ int main(int argc, char **argv)
                   ErrorFatal(kErrFatal, "-b requires a buffersize in bytes as argument");
                }
                tcpwindowsize = atoi(*++argv);
+               break;
+
+            case 'P':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-P requires a file name for SRP password file\n");
+                  ErrorFatal(kErrFatal, "-P requires a file name for SRP password file");
+               }
+               gAltSRP = 1;
+               sprintf(gAltSRPPass, "%s", *++argv);
                break;
 
 #ifdef R__KRB5
@@ -2213,9 +2252,8 @@ int main(int argc, char **argv)
       // Also initialize the network connection - create the socket
       // and bind our well-know address to it.
 
-      DaemonStart(1);
-
-      NetInit(kRootdService, gPort, tcpwindowsize);
+      int fdkeep = NetInit(kRootdService, gPort1, gPort2, tcpwindowsize);
+      DaemonStart(1, fdkeep);
    }
 
    if (gDebug > 0)

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: daemon.cxx,v 1.3 2001/04/06 14:17:42 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: daemon.cxx,v 1.4 2002/01/22 10:53:29 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -72,7 +72,7 @@ static void SigChild(int)
 #endif
 
 //______________________________________________________________________________
-void DaemonStart(int ignsigcld)
+void DaemonStart(int ignsigcld, int fdkeep)
 {
    // Detach a daemon process from login session context.
 
@@ -84,8 +84,10 @@ void DaemonStart(int ignsigcld)
 
    int fd;
 
-   if (getppid() == 1)
+   if (getppid() == 1) {
+      printf ("ROOTD_PID=%ld\n", (long) getpid());
       goto out;
+   }
 
    // Ignore the terminal stop signals (BSD).
 
@@ -104,10 +106,15 @@ void DaemonStart(int ignsigcld)
    // group leader.
 
    int childpid;
-   if ((childpid = fork()) < 0)
+   if ((childpid = fork()) < 0) {
+      fprintf(stderr,     "DaemonStart: can't fork first child\n");
       ErrorSys(kErrFatal, "DaemonStart: can't fork first child");
-   else if (childpid > 0)
+   } else if (childpid > 0) {
+#ifdef SIGTSTP
+      printf("ROOTD_PID=%d\n", childpid);
+#endif
       exit(0);    // parent
+   }
 
    // First child process...
 
@@ -117,11 +124,13 @@ void DaemonStart(int ignsigcld)
 #ifdef SIGTSTP
 
 #ifdef USE_SETSID
-   if (setsid() == -1)
+   if (setsid() == -1) {
 #else
-   if (setpgrp(0, getpid()) == -1)
+   if (setpgrp(0, getpid()) == -1) {
 #endif
+      fprintf(stderr,     "DaemonStart: can't change process group\n");
       ErrorSys(kErrFatal, "DaemonStart: can't change process group");
+   }
 
    if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
 #if !defined(__hpux) && !defined(__sun)
@@ -132,15 +141,20 @@ void DaemonStart(int ignsigcld)
 
 #else
 
-   if (setpgrp() == -1)
+   if (setpgrp() == -1) {
+      fprintf(stderr,     "DaemonStart: can't change process group\n");
       ErrorSys(kErrFatal, "DaemonStart: can't change process group");
+   }
 
    signal(SIGHUP, SIG_IGN);    // immune from pgrp leader death
 
-   if ((childpid = fork()) < 0)
+   if ((childpid = fork()) < 0) {
+      fprintf(stderr,     "DaemonStart: can't fork second child\n");
       ErrorSys(kErrFatal, "DaemonStart: can't fork second child");
-   else if (childpid > 0)
+   } else if (childpid > 0) {
+      printf("ROOTD_PID=%d\n", childpid);
       exit(0);    // first child
+   }
 
    // Second child process...
 
@@ -151,7 +165,7 @@ out:
    // Close any open file descriptors
 
    for (fd = 0; fd < NOFILE; fd++)
-      close(fd);
+      if (fd != fdkeep) close(fd);
 
    ResetErrno();   // probably got set to EBADF from a close
 

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.14 2002/01/22 10:53:29 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.15 2002/02/06 18:27:40 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -274,7 +274,7 @@ int NetRecv(char *msg, int len, EMessageTypes &kind)
 }
 
 //______________________________________________________________________________
-void NetInit(const char *service, int port, int tcpwindowsize)
+int NetInit(const char *service, int port1, int port2, int tcpwindowsize)
 {
    // Initialize the network connection for the server, when it has *not*
    // been invoked by inetd.
@@ -283,46 +283,56 @@ void NetInit(const char *service, int port, int tcpwindowsize)
    // We have to create a socket ourselves and bind our well-known
    // address to it.
 
-   memset(&tcp_srv_addr, 0, sizeof(tcp_srv_addr));
-   tcp_srv_addr.sin_family      = AF_INET;
-   tcp_srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-   if (service) {
-
-      if (port > 0)
-         tcp_srv_addr.sin_port = htons(port);
-      else {
+   if (port1 <= 0) {
+      if (service) {
          struct servent *sp;
-         if ((sp = getservbyname(service, "tcp")) == 0)
+         if ((sp = getservbyname(service, "tcp")) == 0) {
+            fprintf(stderr,       "NetInit: unknown service: %s/tcp\n", service);
             ErrorFatal(kErrFatal, "NetInit: unknown service: %s/tcp", service);
-         tcp_srv_addr.sin_port = sp->s_port;
-      }
-
-   } else {
-
-      if (port <= 0)
+         }
+         port1 = ntohs(sp->s_port);
+         port2 += port1;   // in this case, port2 is relative to service port
+      } else {
+         fprintf(stderr,       "NetInit: must specify either service or port\n");
          ErrorFatal(kErrFatal, "NetInit: must specify either service or port");
-      tcp_srv_addr.sin_port = htons(port);
-
+      }
    }
 
    // Create the socket and bind our local address so that any client can
    // send to us.
 
-   if ((tcp_srv_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+   if ((tcp_srv_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+      fprintf(stderr,     "NetInit: can't create socket\n");
       ErrorSys(kErrFatal, "NetInit: can't create socket");
+   }
 
    int val = 1;
    if (setsockopt(tcp_srv_sock, SOL_SOCKET, SO_REUSEADDR, (char*) &val,
-                  sizeof(val)) == -1)
+                  sizeof(val)) == -1) {
+      fprintf(stderr,     "NetInit: can't set SO_REUSEADDR socket option\n");
       ErrorSys(kErrFatal, "NetInit: can't set SO_REUSEADDR socket option");
+   }
 
    // Set several general performance network options
    NetSetOptions(tcp_srv_sock, tcpwindowsize);
 
-   if (bind(tcp_srv_sock, (struct sockaddr *) &tcp_srv_addr,
-            sizeof(tcp_srv_addr)) < 0)
-      ErrorSys(kErrFatal, "NetInit: can't bind local address");
+   memset(&tcp_srv_addr, 0, sizeof(tcp_srv_addr));
+   tcp_srv_addr.sin_family      = AF_INET;
+   tcp_srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+   int port;
+   for (port= port1; port <= port2; port++) {
+      tcp_srv_addr.sin_port = htons(port);
+      if (bind(tcp_srv_sock, (struct sockaddr *) &tcp_srv_addr,
+               sizeof(tcp_srv_addr)) == 0) break;
+   }
+
+   if (port > port2) {
+      fprintf(stderr,     "NetInit: can't bind local address to ports %d-%d\n", port1, port2);
+      ErrorSys(kErrFatal, "NetInit: can't bind local address to ports %d-%d", port1, port2);
+   }
+
+   printf("ROOTD_PORT=%d\n", port);
 
    // And set the listen parameter, telling the system that we're
    // ready to accept incoming connection requests.
@@ -332,6 +342,8 @@ void NetInit(const char *service, int port, int tcpwindowsize)
    if (gDebug > 0)
       ErrorInfo("NetInit: socket %d listening on port %d", tcp_srv_sock,
                 ntohs(tcp_srv_addr.sin_port));
+
+   return tcp_srv_sock;
 }
 
 //______________________________________________________________________________
