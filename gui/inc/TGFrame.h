@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.33 2004/01/20 10:41:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.34 2004/02/09 07:24:15 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -427,10 +427,6 @@ public:
    void SetWMSizeHints(UInt_t wmin, UInt_t hmin, UInt_t wmax, UInt_t hmax,
                        UInt_t winc, UInt_t hinc);
    void SetWMState(EInitialState state);
-
-   virtual void MapWindow() { TGWindow::MapWindow(); gVirtualX->SetInputFocus(fId); }
-   virtual void MapRaised() { TGWindow::MapRaised(); gVirtualX->SetInputFocus(fId); }
-   virtual void RaiseWindow() { TGWindow::RaiseWindow(); gVirtualX->SetInputFocus(fId); }
 
    virtual Bool_t BindKey(const TGWindow *w, Int_t keycode, Int_t modifier) const;
    virtual void   RemoveBind(const TGWindow *w, Int_t keycode, Int_t modifier) const;
