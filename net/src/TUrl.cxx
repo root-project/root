@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.2 2000/06/11 12:07:48 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.3 2000/07/29 11:04:37 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -32,8 +32,10 @@ TUrl::TUrl(const char *url)
    //
    // url: [proto://]host[:port]/file.ext[#anchor][?options]
    //
-   // Known protocols: http, root, ftp, news, file, rfio, hpss (default http)
-   // Default ports: http=80, root=1094, ftp=20, news=119.
+   // Known protocols: http, root, proof, ftp, news, file, rfio, hpss
+   // (default http).
+   // Default ports: http=80, root=1094, proof=1093, ftp=20, news=119.
+   // Port #1093 has been assigned by IANA (www.iana.org) to proofd.
    // Port #1094 has been assigned by IANA (www.iana.org) to rootd.
 
    if (!url || !strlen(url)) {
@@ -44,6 +46,7 @@ TUrl::TUrl(const char *url)
    // Set defaults
    fUrl      = "";
    fProtocol = "http";
+   fHost     = "";
    fPort     = 80;
    fFile     = "/";
    fAnchor   = "";
@@ -79,13 +82,20 @@ TUrl::TUrl(const char *url)
    char *u0, *u = StrDup(url);
    u0 = u;
 
-   if ((s = strstr(u, "://"))) {
+   if ((s = strstr(u, ":/"))) {
+      if (*(s+2) != '/') {
+         Error("TUrl", "malformed, URL must contain \"://\"");
+         fPort = -1;
+         goto cleanup;
+      }
       sav = *s;
       *s = 0;
       fProtocol = u;
       *s = sav;
       if (!fProtocol.CompareTo("http"))
          fPort = 80;
+      else if (!fProtocol.CompareTo("proof") || !fProtocol.CompareTo("proofs"))
+         fPort = 1093;
       else if (!fProtocol.CompareTo("root") || !fProtocol.CompareTo("roots"))
          fPort = 1094;
       else if (!fProtocol.CompareTo("ftp"))
@@ -224,11 +234,13 @@ const char *TUrl::GetUrl()
       }
 
       Bool_t deflt = kTRUE;
-      if ((!fProtocol.CompareTo("http")  && fPort != 80)   ||
-          (!fProtocol.CompareTo("root")  && fPort != 1094) ||
-          (!fProtocol.CompareTo("roots") && fPort != 1094) ||
-          (!fProtocol.CompareTo("ftp")   && fPort != 20)   ||
-          (!fProtocol.CompareTo("news")  && fPort != 119))
+      if ((!fProtocol.CompareTo("http")   && fPort != 80)   ||
+          (!fProtocol.CompareTo("proof")  && fPort != 1093) ||
+          (!fProtocol.CompareTo("proofs") && fPort != 1093) ||
+          (!fProtocol.CompareTo("root")   && fPort != 1094) ||
+          (!fProtocol.CompareTo("roots")  && fPort != 1094) ||
+          (!fProtocol.CompareTo("ftp")    && fPort != 20)   ||
+          (!fProtocol.CompareTo("news")   && fPort != 119))
          deflt = kFALSE;
       if (!deflt) {
          char p[10];
