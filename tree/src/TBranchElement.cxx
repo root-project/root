@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.17 2001/04/18 06:29:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.18 2001/04/18 10:23:45 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -594,8 +594,7 @@ void TBranchElement::PrintValue(Int_t len) const
 // Prints leaf value
 
    if (fType == 3) {
-      char **ppointer = (char**)GetAddress();
-      TClonesArray *clones = (TClonesArray*)(*ppointer);
+      TClonesArray *clones = (TClonesArray*)fObject;
       printf(" %-15s = %d",GetTitle(),clones->GetEntriesFast());
    } else if (fType == 31) {
       TClonesArray *clones = (TClonesArray*)fObject;
