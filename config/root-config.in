@@ -173,7 +173,7 @@ linuxkcc)
    auxglibs=${auxlibs}
    ;;
 linuxppcegcs)
-   # MkLinux with egcs/glibc
+   # Linux/ppc with gcc/glibc
    auxcflags="-fsigned-char -I/usr/X11/include"
    auxlibs="-lm -ldl -rdynamic"
    auxglibs=${auxlibs}
