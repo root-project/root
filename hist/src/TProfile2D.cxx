@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.2 2000/06/13 10:36:47 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -180,6 +180,16 @@ TProfile2D::TProfile2D(const TProfile2D &profile)
 
 
 //______________________________________________________________________________
+void TProfile2D::Add(TF1 *, Double_t )
+{
+   // Performs the operation: this = this + c1*f1
+
+   Error("Add","Function not implemented for TProfile2D");
+   return;
+}
+
+
+//______________________________________________________________________________
 void TProfile2D::Add(TH1 *h1, Double_t c1)
 {
    // Performs the operation: this = this + c1*h1
@@ -303,6 +313,16 @@ void TProfile2D::Copy(TObject &obj)
    ((TProfile2D&)obj).fZmin = fZmin;
    ((TProfile2D&)obj).fZmax = fZmax;
    ((TProfile2D&)obj).fErrorMode = fErrorMode;
+}
+
+
+//______________________________________________________________________________
+void TProfile2D::Divide(TF1 *, Double_t )
+{
+   // Performs the operation: this = this/(c1*f1)
+
+   Error("Divide","Function not implemented for TProfile2D");
+   return;
 }
 
 //______________________________________________________________________________
@@ -599,6 +619,16 @@ Option_t *TProfile2D::GetErrorOption() const
    if (fErrorMode == kERRORSPREADI) return "i";
    if (fErrorMode == kERRORSPREADG) return "g";
    return "";
+}
+
+
+//______________________________________________________________________________
+void TProfile2D::Multiply(TF1 *, Double_t )
+{
+   // Performs the operation: this = this*c1*f1
+
+   Error("Multiply","Function not implemented for TProfile2D");
+   return;
 }
 
 //______________________________________________________________________________
