@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.67 2001/11/29 07:24:10 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.68 2001/11/30 19:29:35 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -970,6 +970,9 @@ void RooAbsReal::copyCache(const RooAbsArg* source)
   if (source->getAttribute("FLOAT_TREE_BRANCH")) {
     Float_t& tmp = (Float_t&) other->_value ;
     _value = tmp ;
+  } else if (source->getAttribute("INTEGER_TREE_BRANCH")) {
+    Int_t& tmp = (Int_t&) other->_value ;
+    _value = tmp ;
   } else {
     _value = other->_value ;
   }
@@ -989,10 +992,14 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
     // Determine if existing branch is Float_t or Double_t
     TString typeName(((TLeaf*)branch->GetListOfLeaves()->At(0))->GetTypeName()) ;
     if (!typeName.CompareTo("Float_t")) {
-      cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree branch " << GetName() 
+      cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree Float_t branch " << GetName() 
 	   << " will be converted to double precision" << endl ;
       setAttribute("FLOAT_TREE_BRANCH",kTRUE) ;
-    }
+    } else if (!typeName.CompareTo("Int_t")) {
+      cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree Int_t branch " << GetName() 
+	   << " will be converted to double precision" << endl ;
+      setAttribute("INTEGER_TREE_BRANCH",kTRUE) ;
+    } 
 
     t.SetBranchAddress(cleanName,&_value) ;
 //     cout << "RooAbsReal::attachToTree(" << cleanName << "): branch already exists in tree " 
