@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.6 2000/06/28 15:16:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.7 2000/06/29 08:36:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -682,11 +682,6 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
 //         "O" include Overflows 
 //         "N" include comparison of normalizations
 //         "D" Put out a line of "Debug" printout
-//         "L"=Left:   include x-underflows
-//         "R"=Right:  include x-overflows
-//         "T"=Top:    include y-overflows
-//         "B"=Bottom: include y-underflows
-//   for example: "OB" means x- and y-overflows and y-underflows !!
 //
 //   The returned function value is the probability of test
 //       (much less than one means NOT compatible)
@@ -742,14 +737,10 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
    }
 
    //   Should we include Uflows, Oflows?
-   Int_t ibeg = 1;
-   if (opt.Contains("U") || opt.Contains("L")) ibeg = 0;
-   Int_t iend = ncx1;
-   if (opt.Contains("O") || opt.Contains("R")) iend = ncx1+1;
-   Int_t jbeg = 1;
-   if (opt.Contains("U") || opt.Contains("B")) jbeg = 0;
-   Int_t jend = ncy1;
-   if (opt.Contains("O") || opt.Contains("T")) jend = ncy1+1;
+   Int_t ibeg = 1, jbeg = 1;
+   Int_t iend = ncx1, jend = ncy1;
+   if (opt.Contains("U")) {ibeg = 0; jbeg = 0;}
+   if (opt.Contains("O")) {iend = ncx1+1; jend = ncy1+1;}
    
    Int_t i,j;
    Double_t hsav;
@@ -792,7 +783,7 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
       Warning("KolmogorovTest","Saturation or weighted events for h2=%s, num2=%g, tsum2=%g\n",h2->GetName(),num2,tsum2);
    }
 
-   //   Find first Kolmogorov distance for scatterplots
+   //   Find first Kolmogorov distance
    Double_t s1 = 1/sum1;
    Double_t s2 = 1/sum2;
    Double_t dfmax = 0;
@@ -805,7 +796,7 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
       }
    }
 
-   //   Find second Kolmogorov distance for scatterplots
+   //   Find second Kolmogorov distance 
    Double_t dfmax2 = dfmax = 0;
    rsum1=0, rsum2=0;
    for (j=jbeg;j<=jend;j++) {
@@ -816,7 +807,7 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
       }
    }
 
-   //    Get Kolmogorov probability for scatterplot
+   //    Get Kolmogorov probability
    Double_t factnm;
    if (afunc1)      factnm = dfmax*TMath::Sqrt(sum2);
    else if (afunc2) factnm = dfmax*TMath::Sqrt(sum1);
