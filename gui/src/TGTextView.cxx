@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.12 2001/11/28 16:05:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.13 2002/06/10 18:35:38 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -177,8 +177,13 @@ Bool_t TGTextView::Search(const char *string, Bool_t direction, Bool_t caseSensi
    TGLongPosition pos, pos2;
    pos2.fX = pos2.fY = 0;
    if (fIsMarked) {
-      pos2.fX = fMarkedEnd.fX + 1;
-      pos2.fY = fMarkedEnd.fY;
+      if (!direction) {
+         pos2.fX = fMarkedStart.fX;
+         pos2.fY = fMarkedStart.fY;
+      } else {
+         pos2.fX = fMarkedEnd.fX + 1;
+         pos2.fY = fMarkedEnd.fY;
+      }
    }
    if (!fText->Search(&pos, pos2, string, direction, caseSensitive))
       return kFALSE;
@@ -187,8 +192,6 @@ Bool_t TGTextView::Search(const char *string, Bool_t direction, Bool_t caseSensi
    fMarkedStart.fY = fMarkedEnd.fY = pos.fY;
    fMarkedStart.fX = pos.fX;
    fMarkedEnd.fX = fMarkedStart.fX + strlen(string) - 1;
-   fMarkedEnd.fX++;
-   fMarkedEnd.fX--;
    pos.fY = ToObjYCoord(fVisible.fY);
    if ((fMarkedStart.fY < pos.fY) ||
        (ToScrYCoord(fMarkedStart.fY) >= (Int_t)fCanvas->GetHeight()))
