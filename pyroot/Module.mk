@@ -53,7 +53,7 @@ include/%.h:    $(PYROOTDIRI)/%.h
 $(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(ROOTLIBSDEP) $(ROOTPY) $(ROOTPYC) \
                 $(ROOTPYO)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS) $(ROOTULIBS)" \
-		  "$(SOFLAGS)" $(ROOTULIBS) libPyROOT.$(SOEXT) $@ \
+		  "$(SOFLAGS)" libPyROOT.$(SOEXT) $@ \
 		  "$(PYROOTO) $(PYROOTDO)" \
 		  "$(ROOTLIBS) $(PYTHONLIBDIR) $(PYTHONLIB)" \
 		  "$(PYTHONLIBFLAGS)"
