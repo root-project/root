@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.52 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.53 2005/03/17 00:31:17 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -352,6 +352,7 @@ public:
 
    TDrawFeedback *CreateDrawFeedback();
    void           SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt);
+   void           DeleteDrawFeedback(TDrawFeedback *f);
 
    ClassDef(TProof,0)  //PROOF control class
 };

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TProofChain.cxx,v 1.1 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TProofChain.cxx,v 1.2 2005/03/17 00:31:17 rdm Exp $
 // Author: Marek Biskup   10/3/2005
 
 /*************************************************************************
@@ -881,11 +881,11 @@ void TProofChain::ReleaseProof()
       return;
    fProof->Disconnect("Progress(Long64_t,Long64_t)",
                       this, "Progress(Long64_t,Long64_t)");
-   delete fDrawFeedback;
+   fProof->DeleteDrawFeedback(fDrawFeedback);
    fDrawFeedback = 0;
    fProof = 0;
-
 }
+
 //______________________________________________________________________________
 void TProofChain::ConnectProof(TVirtualProof *proof)
 {
