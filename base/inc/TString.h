@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.10 2001/06/29 17:28:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.11 2001/06/30 13:09:14 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -237,7 +237,6 @@ public:
 
    friend TBuffer &operator<<(TBuffer &b, const TString *obj);
 
-
    // Type conversion
    operator const char*() const { return fData; }
 
@@ -255,6 +254,8 @@ public:
    TString&    operator+=(UInt_t i);
    TString&    operator+=(Long_t i);
    TString&    operator+=(ULong_t i);
+   TString&    operator+=(Float_t f);
+   TString&    operator+=(Double_t f);
 
    // Indexing operators
    char&         operator[](Ssiz_t i);         // Indexing with bounds checking
@@ -431,6 +432,12 @@ inline TString& TString::operator+=(Int_t i)
 
 inline TString& TString::operator+=(UInt_t i)
 { return operator+=((ULong_t) i); }
+
+inline TString& TString::operator+=(Double_t f)
+{ return operator+=(Form("%9.9g", f)); }
+
+inline TString& TString::operator+=(Float_t f)
+{ return operator+=((Double_t) f); }
 
 inline Bool_t TString::BeginsWith(const char* s, ECaseCompare cmp) const
 { return Index(s, strlen(s), (Ssiz_t)0, cmp) == 0; }
