@@ -1,3 +1,5 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
  * TGeoPatternFinder - base finder class for patterns. A pattern is specifying 
@@ -50,14 +52,10 @@ TGeoPatternFinder::~TGeoPatternFinder()
 //   if (fMatrix && (fMatrix!=gGeoIdentity)) delete fMatrix;
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoPatternFinder::GetBasicVolume(Int_t index)
+TGeoVolume *TGeoPatternFinder::GetBasicVolume() const
 {
 // returns the pointer to the volume corresponding to a given division
-// if index=-1 it returns the pointer to the basic cell
-   if (index == -1) return fBasicCell;
-   if (!GetVolume()) return 0;
-   return 0;
-//   return (fVolume->GetNode(index)->GetVolume());
+   return fBasicCell;
 }
 
 /*************************************************************************

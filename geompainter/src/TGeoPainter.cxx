@@ -28,6 +28,8 @@ TGeoPainter::TGeoPainter()
 {
 //*-*-*-*-*-*-*-*-*-*-*Geometry painter default constructor*-*-*-*-*-*-*-*-*
 //*-*                  ====================================
+   TVirtualGeoPainter::SetPainter(this);
+   fNsegments = 20;
    if (gGeoManager) fGeo = gGeoManager;
    else Error("ctor", "No geometry loaded");
 }
@@ -279,7 +281,7 @@ void TGeoPainter::PaintTube(TGeoVolume *vol, Option_t *option)
 {
 // paint tubes
    Int_t i, j;
-   Int_t n = TGeoManager::kGeoDefaultNsegments;
+   Int_t n = fNsegments;
    const Int_t numpoints = 4*n;
 
 //*-* Allocate memory for points *-*
@@ -395,7 +397,7 @@ void TGeoPainter::PaintTubs(TGeoVolume *vol, Option_t *option)
 {
 // paint tubes
    Int_t i, j;
-   const Int_t n = TGeoManager::kGeoDefaultNsegments+1;
+   const Int_t n = fNsegments+1;
    const Int_t numpoints = 4*n;
 
    //*-* Allocate memory for points *-*
@@ -719,7 +721,7 @@ void TGeoPainter::PaintPcon(TGeoVolume *vol, Option_t *option)
 {
 // paint a pcon
    Int_t i, j;
-   const Int_t n = ((TGeoPcon*)vol->GetShape())->GetNsegments()+1;
+   const Int_t n = fNsegments+1;
    Int_t nz = ((TGeoPcon*)vol->GetShape())->GetNz();
    if (nz < 2) return;
    Int_t numpoints =  nz*2*n;

@@ -1,3 +1,7 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   31/01/02
+// TGeoPgon::Contains() implemented by Mihaela Gheata
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,14 +9,12 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author :  Andrei Gheata  - date Thu 31 Jan 2002 01:47:40 PM CET
-// TGeoPgon::Contains() implemented by Mihaela Gheata
 
 #include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
-#include "TGeoPainter.h"
+#include "TVirtualGeoPainter.h"
 #include "TGeoPgon.h"
 
 
@@ -129,7 +131,7 @@ void TGeoPgon::ComputeBBox()
    fDZ = (zmax-zmin)/2;
 }
 //-----------------------------------------------------------------------------
-Bool_t TGeoPgon::Contains(Double_t *point)
+Bool_t TGeoPgon::Contains(Double_t *point) const
 {
 // test if point is inside this shape
    // check total z range
@@ -188,7 +190,7 @@ void TGeoPgon::DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rma
    if (snum==(fNz-1)) ComputeBBox();
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t &isect)
+Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t &isect) const
 {
 // compute distance to outside from a  pgon phi trapezoid
 //   printf("Checking sector : iz=%i isect=%i\n", iz, isect);
@@ -434,7 +436,7 @@ Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_
 //   if (imin==0)
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the polygone
    // first find out in which Z section the point is in
@@ -491,7 +493,7 @@ Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    return dsec;   
 }   
 //-----------------------------------------------------------------------------
-Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the polygone
    // first find in which segment we are
@@ -622,7 +624,7 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t &ipsec, 
-                                UChar_t &bits, Double_t *saf) 
+                                UChar_t &bits, Double_t *saf) const 
 {
    // propagate to next Z plane
    const UChar_t kUp = 0x01;
@@ -761,7 +763,7 @@ Int_t TGeoPgon::DistancetoPrimitive(Int_t px, Int_t py)
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPgon::DistToSurf(Double_t *point, Double_t *dir)
+Double_t TGeoPgon::DistToSurf(Double_t *point, Double_t *dir) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -773,7 +775,7 @@ void TGeoPgon::Draw(Option_t *option)
 // draw this shape according to option
 }
 //-----------------------------------------------------------------------------
-void TGeoPgon::InspectShape()
+void TGeoPgon::InspectShape() const
 {
    printf("*** TGeoPgon parameters ***\n");
    printf("    Nedges = %i\n", fNedges);
@@ -783,19 +785,19 @@ void TGeoPgon::InspectShape()
 void TGeoPgon::Paint(Option_t *option)
 {
 // paint this shape according to option
-   TGeoPainter *painter = (TGeoPainter*)gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintPcon(vol, option);
 }
 //-----------------------------------------------------------------------------
-void TGeoPgon::NextCrossing(TGeoParamCurve *c, Double_t *point)
+void TGeoPgon::NextCrossing(TGeoParamCurve *c, Double_t *point) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPgon::Safety(Double_t *point, Double_t *spoint, Option_t *option)
+Double_t TGeoPgon::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

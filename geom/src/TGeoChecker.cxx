@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   01/11/01
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author :  - date
 
 ////////////////////////////////////////////////////////////////////////////////
 // A simple geometry checker. Points can be randomly generated inside the 

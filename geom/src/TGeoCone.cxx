@@ -1,3 +1,7 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   31/01/02
+// TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,14 +9,12 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author :  Andrei Gheata  - date Thu 31 Jan 2002 01:47:40 PM CET
-// TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
 #include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
-#include "TGeoPainter.h"
+#include "TVirtualGeoPainter.h"
 #include "TGeoCone.h"
 
 
@@ -99,7 +101,7 @@ void TGeoCone::ComputeBBox()
    memset(fOrigin, 0, 3*sizeof(Double_t));
 }   
 //-----------------------------------------------------------------------------
-Bool_t TGeoCone::Contains(Double_t *point)
+Bool_t TGeoCone::Contains(Double_t *point) const
 {
 // test if point is inside this cone
    if (TMath::Abs(point[2]) > fDz) return kFALSE;
@@ -183,7 +185,7 @@ Double_t TGeoCone::DistToOutS(Double_t *point, Double_t *dir, Int_t iact, Double
    return TMath::Min(TMath::Min(sr1, sr2), sz);                   
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoCone::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoCone::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the cone
    Double_t saf[3];
@@ -407,7 +409,7 @@ Double_t TGeoCone::DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, Dou
 }
                              
 //-----------------------------------------------------------------------------
-Double_t TGeoCone::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoCone::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
    Double_t saf[3];
@@ -442,12 +444,12 @@ Double_t TGeoCone::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 Int_t TGeoCone::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute closest distance from point px,py to each corner
-   Int_t n = TGeoManager::kGeoDefaultNsegments;
+   Int_t n = gGeoManager->GetNsegments();
    const Int_t numPoints = 4*n;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoCone::DistToSurf(Double_t *point, Double_t *dir)
+Double_t TGeoCone::DistToSurf(Double_t *point, Double_t *dir) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -487,7 +489,7 @@ TGeoShape *TGeoCone::GetMakeRuntimeShape(TGeoShape *mother) const
    return (new TGeoCone(rmin1, rmax1, rmin2, rmax2, dz));
 }
 //-----------------------------------------------------------------------------
-void TGeoCone::InspectShape()
+void TGeoCone::InspectShape() const
 {
 // print shape parameters
    printf("*** TGeoCone parameters ***\n");
@@ -502,23 +504,23 @@ void TGeoCone::InspectShape()
 void TGeoCone::Paint(Option_t *option)
 {
 // paint this shape according to option
-   TGeoPainter *painter = (TGeoPainter*)gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintTube(vol, option);
 }
 //-----------------------------------------------------------------------------
-void TGeoCone::NextCrossing(TGeoParamCurve *c, Double_t *point)
+void TGeoCone::NextCrossing(TGeoParamCurve *c, Double_t *point) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoCone::Safety(Double_t *point, Double_t *spoint, Option_t *option)
+Double_t TGeoCone::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return 0.0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 void TGeoCone::SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
@@ -586,7 +588,7 @@ void TGeoCone::SetPoints(Double_t *buff) const
     Double_t dz, phi, dphi;
     Int_t j, n;
 
-    n = TGeoManager::kGeoDefaultNsegments;
+    n = gGeoManager->GetNsegments();
     dphi = 360./n;
     dz    = fDz;
     Int_t indx = 0;
@@ -627,7 +629,7 @@ void TGeoCone::SetPoints(Float_t *buff) const
     Double_t dz, phi, dphi;
     Int_t j, n;
 
-    n = TGeoManager::kGeoDefaultNsegments;
+    n = gGeoManager->GetNsegments();
     dphi = 360./n;
     dz    = fDz;
     Int_t indx = 0;
@@ -665,7 +667,7 @@ void TGeoCone::SetPoints(Float_t *buff) const
 void TGeoCone::Sizeof3D() const
 {
 // fill size of this 3-D object
-    Int_t n = TGeoManager::kGeoDefaultNsegments;
+    Int_t n = gGeoManager->GetNsegments();
     gSize3D.numPoints += n*4;
     gSize3D.numSegs   += n*8;
     gSize3D.numPolys  += n*4;
@@ -761,7 +763,7 @@ void TGeoConeSeg::ComputeBBox()
    fDZ = fDz;
 }   
 //-----------------------------------------------------------------------------
-Bool_t TGeoConeSeg::Contains(Double_t *point)
+Bool_t TGeoConeSeg::Contains(Double_t *point) const
 {
 // test if point is inside this sphere
    if (!TGeoCone::Contains(point)) return kFALSE;
@@ -892,7 +894,7 @@ Double_t TGeoConeSeg::DistToOutS(Double_t *point, Double_t *dir, Int_t iact, Dou
    return TMath::Min(TMath::Min(sz,sr), sfmin);      
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoConeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoConeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the tube segment
    Double_t saf[4];
@@ -1216,7 +1218,7 @@ Double_t TGeoConeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, 
    return snxt;               
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoConeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoConeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
    Double_t saf[4];
@@ -1271,12 +1273,12 @@ Double_t TGeoConeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Doubl
 Int_t TGeoConeSeg::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute closest distance from point px,py to each corner
-   Int_t n = TGeoManager::kGeoDefaultNsegments+1;
+   Int_t n = gGeoManager->GetNsegments()+1;
    const Int_t numPoints = 4*n;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoConeSeg::DistToSurf(Double_t *point, Double_t *dir)
+Double_t TGeoConeSeg::DistToSurf(Double_t *point, Double_t *dir) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -1316,7 +1318,7 @@ TGeoShape *TGeoConeSeg::GetMakeRuntimeShape(TGeoShape *mother) const
    return (new TGeoConeSeg(rmin1, rmax1, rmin2, rmax2, dz, fPhi1, fPhi2));
 }
 //-----------------------------------------------------------------------------
-void TGeoConeSeg::InspectShape()
+void TGeoConeSeg::InspectShape() const
 {
 // print shape parameters
    printf("*** TGeoConeSeg parameters ***\n");
@@ -1333,23 +1335,23 @@ void TGeoConeSeg::InspectShape()
 void TGeoConeSeg::Paint(Option_t *option)
 {
 // paint this shape according to option
-   TGeoPainter *painter = (TGeoPainter*)gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintTubs(vol, option);
 }
 //-----------------------------------------------------------------------------
-void TGeoConeSeg::NextCrossing(TGeoParamCurve *c, Double_t *point)
+void TGeoConeSeg::NextCrossing(TGeoParamCurve *c, Double_t *point) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoConeSeg::Safety(Double_t *point, Double_t *spoint, Option_t *option)
+Double_t TGeoConeSeg::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return 0.0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 void TGeoConeSeg::SetConsDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
@@ -1384,7 +1386,7 @@ void TGeoConeSeg::SetPoints(Double_t *buff) const
     Int_t j, n;
     Float_t dphi,phi,phi1, phi2,dz;
 
-    n = TGeoManager::kGeoDefaultNsegments+1;
+    n = gGeoManager->GetNsegments()+1;
     dz    = fDz;
     phi1 = fPhi1;
     phi2 = fPhi2;
@@ -1428,7 +1430,7 @@ void TGeoConeSeg::SetPoints(Float_t *buff) const
     Int_t j, n;
     Float_t dphi,phi,phi1, phi2,dz;
 
-    n = TGeoManager::kGeoDefaultNsegments+1;
+    n = gGeoManager->GetNsegments()+1;
     dz    = fDz;
     phi1 = fPhi1;
     phi2 = fPhi2;
@@ -1469,7 +1471,7 @@ void TGeoConeSeg::SetPoints(Float_t *buff) const
 void TGeoConeSeg::Sizeof3D() const
 {
 // fill size of this 3-D object
-    Int_t n = TGeoManager::kGeoDefaultNsegments+1;
+    Int_t n = gGeoManager->GetNsegments()+1;
 
     gSize3D.numPoints += n*4;
     gSize3D.numSegs   += n*8;

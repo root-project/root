@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   30/05/02
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -42,7 +45,6 @@
 // forward declarations
 class TGeoNode;
 class TGeoShape;
-//class TGeoMaterial;
 class TGeoMatrix;
 class TGeoVoxelFinder;
 class TGeoPatternFinder;
@@ -84,37 +86,20 @@ public:
    // destructor
    virtual ~TGeoVolume();
    // methods
-   virtual void    cd(Int_t inode);
+   virtual void    cd(Int_t inode) const;
    void            Browse(TBrowser *b);
-   void            CheckPoint(); // *MENU*
+   void            CheckPoint() const; // *MENU*
    void            CheckShapes();
    void            ClearNodes() {fNodes = 0;}
    void            ClearShape();
    void            CleanAll();
-   Int_t           CountNodes(Int_t nlevels=1000); // *MENU*
-   Bool_t          Contains(Double_t *point) {return fShape->Contains(point);}
+   Int_t           CountNodes(Int_t nlevels=1000) const; // *MENU*
+   Bool_t          Contains(Double_t *point) const {return fShape->Contains(point);}
    Bool_t          IsFolder() const;
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}
    virtual void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");       // most general case
    void            AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset, Option_t *option="");
    virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");
-// what the TGeoVolume::Divide(..., Option_t *option) will do :
-// 1.compute the basic cell volume if possible. For, X, Y, Z, theta and phi divisions
-// this is possible provided that the mother volume has the corresponding symetry.
-//  - if this is the case, create the basic cell volume and store it (probably as a data
-//    member of TGeoVolume - fBasicCell) if it is specified so in Option_t *option;
-//    If one wants to divide subsequently, he will call the Divide() function of fBasicCell
-//  - if this is not possible (for instance for an X division of a TRD or an R division)
-//    no basic cell will be generated;
-// 2. loop over all division elements (1..Ndiv) and :
-//  - call AddNodeXXX(fBasicCell, ...) if a basic cell is computed. This will create the list 
-//    of special nodes that will reference the same basic cell volume. Note that the 
-//    divided volume will have no extra information of how to optimise tracking based on
-//    the symetry provided by the division so we would have to implement this at the level
-//    of voxels.
-//   - compute the shape and volume for each division element, then supply the volume to
-//    the AddNodeXXX() method to create nodes. If you want to place something in the divided 
-//    volumes or further divide, you will only be able to do it on individual basis.
 
    virtual TGeoVolume *Divide(const char *divname, Int_t ndiv, Option_t *option="");
    virtual TGeoVolume *Divide(const char *divname, Int_t ndiv, Double_t start, Double_t step, Option_t *option="");
@@ -128,34 +113,34 @@ public:
    virtual void    DrawOnly(Option_t *option=""); // *MENU*
    void            DrawPoints(Int_t npoints=100000, Option_t *option=""); // *MENU*
    virtual void    Paint(Option_t *option="");
-   void            PrintNodes();
-   void            PrintVoxels(); // *MENU*
+   void            PrintNodes() const;
+   void            PrintVoxels() const; // *MENU*
    virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
    
    Bool_t          IsValid() const {return fShape->IsValid();} 
    Bool_t          IsVisible() const {return TGeoAtt::IsVisible();}
-   TGeoNode       *FindNode(const char *name);
-   void            FindOverlaps();
+   TGeoNode       *FindNode(const char *name) const;
+   void            FindOverlaps() const;
    TObjArray      *GetNodes() {return fNodes;}
    Int_t           GetNdaughters() const;
-   virtual Int_t   GetByteCount();
-   Double_t        GetUsageCount(Int_t i);
-   TGeoMaterial   *GetMaterial()                     {return fMaterial;}
-   Int_t           GetMedia()                        {return fMaterial->GetMedia();}
-   TObject        *GetField()                        {return fField;}
-   TGeoPatternFinder *GetFinder()                    {return fFinder;}
-   TGeoVoxelFinder   *GetVoxels()                    {return fVoxels;}
-   Int_t           GetIndex(TGeoNode *node);
-   TGeoNode       *GetNode(const char *name);
+   virtual Int_t   GetByteCount() const;
+   Double_t        GetUsageCount(Int_t i) const;
+   TGeoMaterial   *GetMaterial() const               {return fMaterial;}
+   Int_t           GetMedia() const                  {return fMaterial->GetMedia();}
+   TObject        *GetField() const                  {return fField;}
+   TGeoPatternFinder *GetFinder() const              {return fFinder;}
+   TGeoVoxelFinder   *GetVoxels() const              {return fVoxels;}
+   Int_t           GetIndex(TGeoNode *node) const;
+   TGeoNode       *GetNode(const char *name) const;
    TGeoNode       *GetNode(Int_t i) const {return (TGeoNode*)fNodes->At(i);}
-   Int_t           GetNodeIndex(TGeoNode *node, Int_t *check_list, Int_t ncheck);
+   Int_t           GetNodeIndex(TGeoNode *node, Int_t *check_list, Int_t ncheck) const;
    virtual char   *GetObjectInfo(Int_t px, Int_t py) const;
    Option_t       *GetOption() const { return fOption.Data(); }
-   TGeoShape      *GetShape()                        {return fShape;}
+   TGeoShape      *GetShape() const                  {return fShape;}
    void            Gsord(Int_t iaxis)                {;}
-   Bool_t          IsStyleDefault();
-   void            InspectMaterial(); // *MENU*
-   void            InspectShape() {fShape->InspectShape();} // *MENU*
+   Bool_t          IsStyleDefault() const;
+   void            InspectMaterial() const; // *MENU*
+   void            InspectShape() const {fShape->InspectShape();} // *MENU*
    TGeoVolume     *MakeCopyVolume();
    void            MakeCopyNodes(TGeoVolume *other);
    void            RandomRays(Int_t nrays=10000); // *MENU*
@@ -176,13 +161,11 @@ public:
    void            SetFinder(TGeoPatternFinder *finder) {fFinder=finder;}
    virtual void    Sizeof3D() const;
    void            SortNodes();
-   Bool_t          Valid();
+   Bool_t          Valid() const;
    void            VisibleDaughters(Bool_t vis=kTRUE); // *MENU*
    void            Voxelize(Option_t *option);
 
   ClassDef(TGeoVolume, 1)              // geometry volume descriptor
-
-// ***** Need to add class and globals to LinkDef.h *****
 };
 
 /*************************************************************************
@@ -202,7 +185,7 @@ public:
    virtual ~TGeoVolumeMulti();
    
    void            AddVolume(TGeoVolume *vol) {fVolumes->Add(vol);}
-   TGeoVolume     *GetVolume(Int_t id) {return (TGeoVolume*)fVolumes->At(id);}
+   TGeoVolume     *GetVolume(Int_t id) const {return (TGeoVolume*)fVolumes->At(id);}
    virtual void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");       // most general case
    virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");
    virtual TGeoVolume *Divide(const char *divname, Int_t ndiv, Option_t *option="") { return 0;}
@@ -211,7 +194,7 @@ public:
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step);
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Double_t step) {return 0;}
    virtual TGeoVolume *Divide(const char *divname, TObject *userdiv, Double_t *params, Option_t *option="") {return 0;}
-   TGeoShape      *GetLastShape() {return GetVolume(fVolumes->GetEntriesFast()-1)->GetShape();} 
+   TGeoShape      *GetLastShape() const {return GetVolume(fVolumes->GetEntriesFast()-1)->GetShape();} 
    virtual void    SetLineColor(Color_t lcolor);
    virtual void    SetLineStyle(Style_t lstyle);
    virtual void    SetLineWidth(Width_t lwidth);

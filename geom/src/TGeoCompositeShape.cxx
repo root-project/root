@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   31/01/02
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,14 +8,13 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author :  Andrei Gheata  - date Thu 31 Jan 2002 01:47:40 PM CET
 
 #include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoBoolCombinator.h"
 #include "TGeoVolume.h"
-#include "TGeoPainter.h"
+#include "TVirtualGeoPainter.h"
 #include "TGeoCompositeShape.h"
 
 /*************************************************************************
@@ -22,16 +24,6 @@
 
 ClassImp(TGeoCompositeShape)
 
-//-----------------------------------------------------------------------------
-//TGeoCompositeShape::TGeoCompositeShape()
-//{
-// Default constructor
-//   SetBit(TGeoShape::kGeoComb);
-//   fNcomponents = 0;
-//   fShapes      = 0;
-//   fMatrices    = 0;
-//   fCombinator  = 0;
-//}   
 //-----------------------------------------------------------------------------
 TGeoCompositeShape::TGeoCompositeShape()
                    :TGeoBBox(0, 0, 0)
@@ -73,7 +65,7 @@ void TGeoCompositeShape::ComputeBBox()
    if(fCombinator) fCombinator->ComputeBBox();
 }   
 //-----------------------------------------------------------------------------
-Bool_t TGeoCompositeShape::Contains(Double_t *point)
+Bool_t TGeoCompositeShape::Contains(Double_t *point) const
 {
 // test if point is inside this sphere
    if (fCombinator) 
@@ -82,7 +74,7 @@ Bool_t TGeoCompositeShape::Contains(Double_t *point)
       return kFALSE;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoCompositeShape::DistToSurf(Double_t *point, Double_t *dir)
+Double_t TGeoCompositeShape::DistToSurf(Double_t *point, Double_t *dir) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -98,7 +90,7 @@ void TGeoCompositeShape::Draw(Option_t *option)
 // draw this shape according to option
 }
 //-----------------------------------------------------------------------------
-void TGeoCompositeShape::InspectShape()
+void TGeoCompositeShape::InspectShape() const
 {
 // print shape parameters
 }
@@ -108,16 +100,16 @@ void TGeoCompositeShape::Paint(Option_t *option)
 // paint this shape according to option
 }
 //-----------------------------------------------------------------------------
-void TGeoCompositeShape::NextCrossing(TGeoParamCurve *c, Double_t *point)
+void TGeoCompositeShape::NextCrossing(TGeoParamCurve *c, Double_t *point) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoCompositeShape::Safety(Double_t *point, Double_t *spoint, Option_t *option)
+Double_t TGeoCompositeShape::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return 0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 void TGeoCompositeShape::SetPoints(Double_t *buff) const

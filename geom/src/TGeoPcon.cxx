@@ -1,3 +1,7 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   24/10/01
+// TGeoPcon::Contains() implemented by Mihaela Gheata
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,14 +9,12 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author :  Andrei Gheata  - date Thu 31 Jan 2002 01:47:40 PM CET
-// TGeoPcon::Contains() implemented by Mihaela Gheata
 
 #include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
-#include "TGeoPainter.h"
+#include "TVirtualGeoPainter.h"
 #include "TGeoTube.h"
 #include "TGeoCone.h"
 #include "TGeoPcon.h"
@@ -136,7 +138,7 @@ void TGeoPcon::ComputeBBox()
    fDZ = (zmax-zmin)/2;
 }   
 //-----------------------------------------------------------------------------
-Bool_t TGeoPcon::Contains(Double_t *point)
+Bool_t TGeoPcon::Contains(Double_t *point) const
 {
 // test if point is inside this shape
    // check total z range
@@ -178,12 +180,12 @@ Bool_t TGeoPcon::Contains(Double_t *point)
 Int_t TGeoPcon::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute closest distance from point px,py to each corner
-   Int_t n = TGeoManager::kGeoDefaultNsegments+1;
+   Int_t n = gGeoManager->GetNsegments()+1;
    const Int_t numPoints = 2*n*fNz;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the polycone
    Double_t saf[4];
@@ -238,7 +240,7 @@ Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_t c1, Double_t s1, 
-                              Double_t c2, Double_t s2, Double_t cfio, Double_t sfio, Double_t cdfi)
+                              Double_t c2, Double_t s2, Double_t cfio, Double_t sfio, Double_t cdfi) const
 {
 // compute distance to a pcon Z slice. Segment iz must be valid
    Double_t zmin=fZ[iz];
@@ -293,7 +295,7 @@ Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_
    return DistToSegZ(point,dir,iz,c1,s1,c2,s2,cfio,sfio,cdfi);
 }      
 //-----------------------------------------------------------------------------
-Double_t TGeoPcon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoPcon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
    Bool_t cross = kTRUE;
@@ -401,231 +403,9 @@ Double_t TGeoPcon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    // compute distance to boundary
    if (!cross) return kBig;
    return DistToSegZ(point,dir,ifirst, c1,s1,c2,s2,cfio,sfio,cdfi);
-
-/*
-   Double_t snxt=0.;
-   // if outside, propagate to first plane
-   
-   // first find out intersection axial plane normal to dir
-   Double_t calf = 0;
-   if (r!=0) calf=(point[0]*dir[0]+point[1]*dir[1])/r;
-//   Double_t s=kBig;
-   cross = kFALSE;
-   Double_t s=0;
-   if (calf<0) {
-      // ray is getting closer
-      Double_t dcl=-r*calf;
-      if (dir[2]!=0) {
-         s=dcl/TMath::Sqrt(1.0-dir[2]*dir[2]);
-         cross=kTRUE;
-      }
-   }
-   Double_t xi=0,yi=0,zi=0;
-   Int_t icross=-1;
-   Double_t rcross=r;
-   if (cross) {
-      xi = point[0]+s*dir[0];
-      yi = point[1]+s*dir[1];
-      zi = point[2]+s*dir[2];
-      rcross=xi*xi+yi*yi;
-      icross=TMath::BinarySearch(fNz, fZ, zi);
-      if (icross>=(fNz-1)) icross = -1;
-      if (icross>0) {
-         dz=fZ[icross+1]-fZ[icross];
-         dzrat=(point[2]-fZ[icross])/dz;
-         rmax=fRmax[icross]+(fRmax[icross+1]-fRmax[icross])*dzrat;
-         if (rcross>(rmax*rmax)) cross=kFALSE;  
-      }
-//      printf("cross axial plane : rmin=%f ipl=%i xi=%f yi=%f zi=%f\n", TMath::Sqrt(rcross), icross, xi,yi,zi);
-   }
-   // find intersection with phi planes (if any)
-   Int_t iph=-1;
-   Double_t rph=kBig;
-   Double_t rminph=0;
-   Double_t rmaxph=kBig;
-   Bool_t crossph=kFALSE;
-   if (fDphi!=360) {
-      Double_t phi1=fPhi1*kDegRad;
-      Double_t phi2=(fPhi1+fDphi)*kDegRad;
-      Double_t cos1=TMath::Cos(phi1);
-      Double_t sin1=TMath::Sin(phi1);
-      Double_t cos2=TMath::Cos(phi2);
-      Double_t sin2=TMath::Sin(phi2);
-      calf=dir[0]*sin1-dir[1]*cos1;
-      Double_t s1=-safp1/calf;
-      calf=-dir[0]*sin2+dir[1]*cos2;
-      Double_t s2=-safp2/calf;
-      s=-kBig;
-      Bool_t cross1=kFALSE, cross2=kFALSE;
-      if (s1>=0) {
-         xi=point[0]+s1*dir[0];
-         yi=point[1]+s1*dir[1];
-         if ((xi*cos1+yi*sin1)>0) cross1=kTRUE;
-      }   
-      if (s2>=0) {
-         xi=point[0]+s2*dir[0];
-         yi=point[1]+s2*dir[1];
-         if ((xi*cos2+yi*sin2)>0) cross2=kTRUE;
-      }
-      if (cross1) {
-         if (cross2) s=TMath::Min(s1,s2);
-         else        s=s1;
-      } else {
-         if (cross2) s=s2;
-      }        
-      // propagate until cross phi
-      if (s>0) {
-         crossph=kTRUE;
-         xi = point[0]+s*dir[0];
-         yi = point[1]+s*dir[1];
-         zi = point[2]+s*dir[2];
-         rph=xi*xi+yi*yi;
-         iph=TMath::BinarySearch(fNz, fZ, zi);
-         if (iph>=(fNz-1)) iph = -1;
-         if (iph>0) {
-            dz=fZ[iph+1]-fZ[iph];
-            dzrat=(point[2]-fZ[iph])/dz;
-            rminph=fRmin[iph]+(fRmin[iph+1]-fRmin[iph])*dzrat;
-            rmaxph=fRmax[iph]+(fRmax[iph+1]-fRmax[iph])*dzrat;
-//            printf("CROSSPHI\n");
-         }
-      }
-   }      
-   // propagate to next Z plane if point is outside Z range   
-   Double_t dpl=-kBig, phipl=phi, rpl=r;
-   Double_t rminpl=0, rmaxpl=0;
-   if (down) {
-      dpl = ((fZ[0]-point[2])/dir[2]);
-      rminpl=fRmin[0];
-      rmaxpl=fRmax[0];
-   } else {
-      if (up) {         
-         dpl = ((point[2]-fZ[fNz-2])/dir[2]);
-         rminpl=fRmin[fNz-2];
-         rmaxpl=fRmax[fNz-2];
-      }
-   }
-   if (up || down) {
-      xi=point[0]+dpl*dir[0];
-      yi=point[1]+dpl*dir[1];
-      rpl=xi*xi+yi*yi;
-      if ((rminpl>0) && (rpl<rminpl*rminpl)) {
-         if (up) inhole2=kTRUE;
-         else inhole1=kTRUE;
-      }   
-      if (rpl>rmaxpl*rmaxpl) {
-         if (up) outhole2=kTRUE;
-         else outhole1=kTRUE;
-      }   
-      phipl=TMath::ATan2(yi,xi)*kRadDeg;
-      if (phipl<fPhi1) phipl+=360;
-      if ((phipl-fPhi1)<fDphi) {
-         if (up) inphi2=kTRUE;
-         else inphi1=kTRUE;
-      }   
-   }
-    
-   // now find intersections with Z planes
-   Bool_t is_crossing=kFALSE;
-   Int_t icrt=ifirst;
-   
-   while (icrt>=0 && icrt<(fNz-1)) {
-      if (dir[2]==0) {
-         is_crossing=kTRUE;
-         break;
-      }   
-      inext=ifirst+istep;
-      dpl = (fZ[inext]-point[2])/dir[2];
-      if (dpl>0) {
-         xi=point[0]+dpl*dir[0];
-         yi=point[1]+dpl*dir[1];
-         rpl=TMath::Sqrt(xi*xi+yi*yi);
-         if ((fRmin[inext]>0) && (rpl<fRmin[inext])) {
-            if (dir[2]>0) inhole2=kTRUE;
-            else inhole1=kTRUE;
-         }   
-         if (rpl>fRmax[icrt]) {
-            if (dir[2]>0) outhole2=kTRUE;
-            else outhole1=kTRUE;
-         }   
-         phipl=TMath::ATan2(yi,xi)*kRadDeg;
-         if (phipl<fPhi1) phipl+=360;
-         if ((phipl-fPhi1)<fDphi) {
-            if (dir[2]>0) inphi2=kTRUE;
-            else inphi1=kTRUE;
-         }
-         printf("           phi1=%f phi2=%f\n", fPhi1, fPhi1+fDphi); 
-         printf("plane %i : z=%f rmin=%f rmax=%f r=%f phi=%f\n", icrt, fZ[icrt],
-                fRmin[icrt], fRmax[icrt], rpl, phipl);
-      }   
-      // check if ray actually crosses current segment
-      printf("Checking segment %i\n", icrt);
-      printf("point : %f %f %f\n", point[0], point[1], point[2]);
-      printf("dir   : %f %f %f\n", dir[0], dir[1], dir[2]);
-      if (up) printf("---UP\n");
-      if (down) printf("---DOWN\n");
-      printf(" point1 :\n");
-      if (inhole1) printf("---inhole");
-      if (outhole1) printf("---outhole");
-      if (inphi1) printf("---inphi, iph=%i rph=%f\n", iph, rph);
-      printf(" point2 :\n");
-      if (inhole2) printf("---inhole");
-      if (outhole2) printf("---outhole");
-      if (inphi2) printf("---inphi, iph=%i rph=%f\n", iph, rph);
-
-      if (inhole1) {
-         if (!inhole2) {
-            if (inphi2) is_crossing=kTRUE;
-            else {
-               if (inphi1) {
-                  if (crossph) {
-                     if ((iph==icrt) && (rph>rminph)) is_crossing=kTRUE;
-                  }
-               }
-            }
-         }
-      } else {
-         if (inhole2) {
-            if (inphi1) is_crossing=kTRUE;
-            else {
-               if (inphi2) {
-                  if (crossph) {
-                     if ((iph==icrt) && (rph>rminph)) is_crossing=kTRUE;
-                  }
-               }
-            }
-         } else {
-            if (outhole1) {
-               if (outhole2) {
-                  if (cross && (icross==icrt)) {
-                     if ((iph==icrt) && (rph<rmaxph)) is_crossing=kTRUE;
-                  }   
-               } else {
-                  if (inphi1) {
-                     if ((iph==icrt) && (rph<rmaxph)) is_crossing=kTRUE;
-                  }   
-               }
-            } else {
-               if (outhole2) {
-                  if (inphi2) {
-                     if ((iph==icrt) && (rph<rmaxph)) is_crossing=kTRUE;
-                  }
-               }
-            }         
-         }
-      }
-      if (is_crossing) {
-         printf("CROSSING %i\n", icrt);
-         break;
-      }   
-      icrt+=istep;
-      return kBig;               
-   }   
-   return kBig;
-*/
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPcon::DistToSurf(Double_t *point, Double_t *dir)
+Double_t TGeoPcon::DistToSurf(Double_t *point, Double_t *dir) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -646,9 +426,9 @@ void TGeoPcon::DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rma
    if (snum==(fNz-1)) ComputeBBox();
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoPcon::GetNsegments()
+Int_t TGeoPcon::GetNsegments() const
 {
-   return TGeoManager::kGeoDefaultNsegments;
+   return gGeoManager->GetNsegments();
 }
 //-----------------------------------------------------------------------------
 void TGeoPcon::Draw(Option_t *option)
@@ -656,7 +436,7 @@ void TGeoPcon::Draw(Option_t *option)
 // draw this shape according to option
 }
 //-----------------------------------------------------------------------------
-void TGeoPcon::InspectShape()
+void TGeoPcon::InspectShape() const
 {
 // print shape parameters
    printf("*** TGeoPcon parameters ***\n");
@@ -671,23 +451,23 @@ void TGeoPcon::InspectShape()
 void TGeoPcon::Paint(Option_t *option)
 {
 // paint this shape according to option
-   TGeoPainter *painter = (TGeoPainter*)gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintPcon(vol, option);
 }
 //-----------------------------------------------------------------------------
-void TGeoPcon::NextCrossing(TGeoParamCurve *c, Double_t *point)
+void TGeoPcon::NextCrossing(TGeoParamCurve *c, Double_t *point) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPcon::Safety(Double_t *point, Double_t *spoint, Option_t *option)
+Double_t TGeoPcon::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return 0.0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 void TGeoPcon::SetDimensions(Double_t *param)
@@ -706,7 +486,7 @@ void TGeoPcon::SetPoints(Double_t *buff) const
 {
 // create polycone mesh points
     Double_t phi, dphi;
-    Int_t n = TGeoManager::kGeoDefaultNsegments + 1;
+    Int_t n = gGeoManager->GetNsegments() + 1;
     dphi = fDphi/(n-1);
     Int_t i, j;
     Int_t indx = 0;
@@ -736,7 +516,7 @@ void TGeoPcon::SetPoints(Float_t *buff) const
 {
 // create polycone mesh points
     Double_t phi, dphi;
-    Int_t n = TGeoManager::kGeoDefaultNsegments + 1;
+    Int_t n = gGeoManager->GetNsegments() + 1;
     dphi = fDphi/(n-1);
     Int_t i, j;
     Int_t indx = 0;
@@ -767,7 +547,7 @@ void TGeoPcon::Sizeof3D() const
 // fill size of this 3-D object
     Int_t n;
 
-    n = TGeoManager::kGeoDefaultNsegments+1;
+    n = gGeoManager->GetNsegments()+1;
 
     gSize3D.numPoints += fNz*2*n;
     gSize3D.numSegs   += 4*(fNz*n-1+(fDphi == 360));

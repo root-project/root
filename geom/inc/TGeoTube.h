@@ -1,3 +1,6 @@
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.27 2002/07/09 21:13:28 brun Exp $
+// Author: Andrei Gheata   24/10/01
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,8 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author : Andrei Gheata - Wed 24 Oct 2001 05:20:43 PM CEST
-// TGeoShape::Contains implemented by Mihaela Gheata
 
 #ifndef ROOT_TGeoTube
 #define ROOT_TGeoTube
@@ -41,30 +42,30 @@ public:
    // destructor
    virtual ~TGeoTube();
    // methods
-   virtual Int_t         GetByteCount() {return 48;}
+   virtual Int_t         GetByteCount() const {return 48;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
 
    virtual void          ComputeBBox();
-   virtual Bool_t        Contains(Double_t *point);
+   virtual Bool_t        Contains(Double_t *point) const;
    static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Int_t iact,Double_t step, Double_t *safe,
                                     Double_t rmin, Double_t rmax, Double_t dz);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
+                                   Double_t step=0, Double_t *safe=0) const;
    static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
+                                   Double_t step=0, Double_t *safe=0) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir);
+   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual void          Draw(Option_t *option);
 
-   virtual Double_t      GetRmin() {return fRmin;}
-   virtual Double_t      GetRmax() {return fRmax;}
-   virtual Double_t      GetDz()   {return fDz;}
+   virtual Double_t      GetRmin() const {return fRmin;}
+   virtual Double_t      GetRmax() const {return fRmax;}
+   virtual Double_t      GetDz() const   {return fDz;}
    
-   virtual void          InspectShape();
+   virtual void          InspectShape() const;
    virtual void          Paint(Option_t *option);
-   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point);
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option);
+   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
+   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
    void                  SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
@@ -102,28 +103,28 @@ public:
    virtual ~TGeoTubeSeg();
    // methods
    virtual void          ComputeBBox();
-   virtual Bool_t        Contains(Double_t *point);
+   virtual Bool_t        Contains(Double_t *point) const;
 
-   virtual Int_t         GetByteCount() {return 56;}
+   virtual Int_t         GetByteCount() const {return 56;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
-   Double_t              GetPhi1() {return fPhi1;}
-   Double_t              GetPhi2() {return fPhi2;}
+   Double_t              GetPhi1() const {return fPhi1;}
+   Double_t              GetPhi2() const {return fPhi2;}
    
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Int_t iact,Double_t step, Double_t *safe,
                                     Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
+                                   Double_t step=0, Double_t *safe=0) const;
    static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz,
                                    Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cfio, Double_t sfio, Double_t cdfi);
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
-   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir);
+                                   Double_t step=0, Double_t *safe=0) const;
+   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual void          Draw(Option_t *option);
-   virtual void          InspectShape();
+   virtual void          InspectShape() const;
    virtual void          Paint(Option_t *option);
-   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point);
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option);
+   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
+   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
    void                  SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                                        Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param);
@@ -154,32 +155,32 @@ public:
    // constructors
    TGeoCtub();
    TGeoCtub(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
-            Double_t lx, Double_t ly, Double_t lz, Double_t hx, Double_t hy, Double_t hz);
+            Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz);
    TGeoCtub(Double_t *params);
    // destructor
    virtual ~TGeoCtub();
    // methods
    virtual void          ComputeBBox();
-   virtual Bool_t        Contains(Double_t *point);
+   virtual Bool_t        Contains(Double_t *point) const;
 
-   virtual Int_t         GetByteCount() {return 98;}
+   virtual Int_t         GetByteCount() const {return 98;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
-   Double_t             *GetNlow() {return fNlow;}
-   Double_t             *GetNhigh() {return fNhigh;}
+   Double_t             *GetNlow() const {return fNlow;}
+   Double_t             *GetNhigh() const {return fNhigh;}
    Double_t              GetZcoord(Double_t xc, Double_t yc, Double_t zc) const;
    
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
+                                   Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
-   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir);
+                                   Double_t step=0, Double_t *safe=0) const;
+   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual void          Draw(Option_t *option);
-   virtual void          InspectShape();
-   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point);
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option);
+   virtual void          InspectShape() const;
+   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
+   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
    void                  SetCtubDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                                        Double_t phi1, Double_t phi2, Double_t lx, Double_t ly, Double_t lz,
-                                       Double_t hx, Double_t hy, Double_t hz);
+                                       Double_t tx, Double_t ty, Double_t tz);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;

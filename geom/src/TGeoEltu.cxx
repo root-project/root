@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Mihaela Gheata   05/06/02
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,13 +8,11 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author :  Mihaela Gheata  - Fri 05 Jul 2002 03:03:32 PM CEST
 
 #include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
-#include "TGeoPainter.h"
 #include "TGeoEltu.h"
 
 /*************************************************************************
@@ -69,7 +70,7 @@ void TGeoEltu::ComputeBBox()
    fDZ = fDz;
 }   
 //-----------------------------------------------------------------------------
-Bool_t TGeoEltu::Contains(Double_t *point)
+Bool_t TGeoEltu::Contains(Double_t *point) const
 {
 // test if point is inside the elliptical tube
    if (TMath::Abs(point[2]) > fDz) return kFALSE;
@@ -81,12 +82,12 @@ Bool_t TGeoEltu::Contains(Double_t *point)
 Int_t TGeoEltu::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute closest distance from point px,py to each vertex
-   Int_t n = TGeoManager::kGeoDefaultNsegments;
+   Int_t n = gGeoManager->GetNsegments();
    const Int_t numPoints=4*n;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }   
 //-----------------------------------------------------------------------------
-Double_t TGeoEltu::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoEltu::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the tube
    Double_t a2=fRmin*fRmin;
@@ -162,7 +163,7 @@ Double_t TGeoEltu::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    return snxt;      
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoEltu::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoEltu::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube and safe distance
    Double_t snxt=kBig;
@@ -228,7 +229,7 @@ Double_t TGeoEltu::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return snxt;   
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoEltu::DistToSurf(Double_t *point, Double_t *dir)
+Double_t TGeoEltu::DistToSurf(Double_t *point, Double_t *dir) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -257,7 +258,7 @@ TGeoShape *TGeoEltu::GetMakeRuntimeShape(TGeoShape *mother) const
    return (new TGeoEltu(a, b, dz));
 }
 //-----------------------------------------------------------------------------
-void TGeoEltu::InspectShape()
+void TGeoEltu::InspectShape() const
 {
 // print shape parameters
    printf("*** TGeoEltu parameters ***\n");
@@ -267,12 +268,12 @@ void TGeoEltu::InspectShape()
    TGeoBBox::InspectShape();
 }
 //-----------------------------------------------------------------------------
-void TGeoEltu::NextCrossing(TGeoParamCurve *c, Double_t *point)
+void TGeoEltu::NextCrossing(TGeoParamCurve *c, Double_t *point) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoEltu::Safety(Double_t *point, Double_t *spoint, Option_t *option)
+Double_t TGeoEltu::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -303,7 +304,7 @@ void TGeoEltu::SetPoints(Double_t *buff) const
     Double_t dz;
     Int_t j, n;
 
-    n = TGeoManager::kGeoDefaultNsegments;
+    n = gGeoManager->GetNsegments();
     Double_t dphi = 360./n;
     Double_t phi = 0;
     Double_t cph,sph;
@@ -348,7 +349,7 @@ void TGeoEltu::SetPoints(Float_t *buff) const
     Double_t dz;
     Int_t j, n;
 
-    n = TGeoManager::kGeoDefaultNsegments;
+    n = gGeoManager->GetNsegments();
     Double_t dphi = 360./n;
     Double_t phi = 0;
     Double_t cph,sph;

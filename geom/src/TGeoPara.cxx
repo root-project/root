@@ -1,3 +1,7 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   31/01/02
+// TGeoPara::Contains() implemented by Mihaela Gheata
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,8 +9,12 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author :  Andrei Gheata  - date Thu 31 Jan 2002 01:47:40 PM CET
-// TGeoPara::Contains() implemented by Mihaela Gheata
+
+#include "TROOT.h"
+
+#include "TGeoManager.h"
+#include "TGeoVolume.h"
+#include "TGeoPara.h"
 
 /*************************************************************************
  * TGeoPara - parallelipeped class. It has 6 parameters :
@@ -17,12 +25,6 @@
  *                 low and high Z surfaces [deg]
  *
  *************************************************************************/
-#include "TROOT.h"
-
-#include "TGeoManager.h"
-#include "TGeoVolume.h"
-#include "TGeoPainter.h"
-#include "TGeoPara.h"
 
 //Begin_Html
 /*
@@ -100,7 +102,7 @@ void TGeoPara::ComputeBBox()
    memset(fOrigin, 0, 3*sizeof(Double_t));
 }   
 //-----------------------------------------------------------------------------
-Bool_t TGeoPara::Contains(Double_t *point)
+Bool_t TGeoPara::Contains(Double_t *point) const
 {
 // test if point is inside this sphere
    // test Z range
@@ -113,7 +115,7 @@ Bool_t TGeoPara::Contains(Double_t *point)
    return kTRUE;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPara::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoPara::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the para
    Double_t saf[6];
@@ -165,7 +167,7 @@ Double_t TGeoPara::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    return snxt;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPara::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoPara::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the para
 //   Warning("DistToIn", "PARA TOIN");
@@ -253,7 +255,7 @@ Double_t TGeoPara::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return smin;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPara::DistToSurf(Double_t *point, Double_t *dir)
+Double_t TGeoPara::DistToSurf(Double_t *point, Double_t *dir) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -284,7 +286,7 @@ TGeoShape *TGeoPara::GetMakeRuntimeShape(TGeoShape *mother) const
    return (new TGeoPara(dx, dy, dz, fAlpha, fTheta, fPhi));
 }
 //-----------------------------------------------------------------------------
-void TGeoPara::InspectShape()
+void TGeoPara::InspectShape() const
 {
 // print shape parameters
    printf("*** TGeoPara parameters ***\n");
@@ -303,16 +305,16 @@ void TGeoPara::Paint(Option_t *option)
    TGeoBBox::Paint(option);
 }
 //-----------------------------------------------------------------------------
-void TGeoPara::NextCrossing(TGeoParamCurve *c, Double_t *point)
+void TGeoPara::NextCrossing(TGeoParamCurve *c, Double_t *point) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPara::Safety(Double_t *point, Double_t *spoint, Option_t *option)
+Double_t TGeoPara::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return 0.0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 void TGeoPara::SetDimensions(Double_t *param)

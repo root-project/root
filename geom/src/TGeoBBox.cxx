@@ -1,3 +1,8 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   24/10/01
+
+// Contains() and DistToIn/Out() implemented by Mihaela Gheata
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,14 +10,12 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author :  Andrei Gheata  - date Thu 31 Jan 2002 01:47:40 PM CET
-// Contains() and DistToIn/Out() implemented by Mihaela Gheata
 
 #include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
-#include "TGeoPainter.h"
+#include "TVirtualGeoPainter.h"
 #include "TGeoBBox.h"
 
 /*************************************************************************
@@ -81,7 +84,7 @@ TGeoBBox::~TGeoBBox()
 // Destructor
 }
 //-----------------------------------------------------------------------------
-Bool_t TGeoBBox::CouldBeCrossed(Double_t *point, Double_t *dir)
+Bool_t TGeoBBox::CouldBeCrossed(Double_t *point, Double_t *dir) const
 {
 // decide fast if the bounding box could be crossed by a vector
    Double_t rmax2 = fDX*fDX+fDY*fDY+fDZ*fDZ;
@@ -131,7 +134,7 @@ void TGeoBBox::ComputeBBox()
 // compute bounding box - already computed in this case
 }   
 //-----------------------------------------------------------------------------
-Bool_t TGeoBBox::Contains(Double_t *point)
+Bool_t TGeoBBox::Contains(Double_t *point) const
 {
 // test if point is inside this shape
    if (TMath::Abs(point[0]-fOrigin[0]) > fDX) return kFALSE;
@@ -140,7 +143,7 @@ Bool_t TGeoBBox::Contains(Double_t *point)
    return kTRUE;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoBBox::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoBBox::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the box
    Double_t saf[6];
@@ -168,7 +171,7 @@ Double_t TGeoBBox::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    return TMath::Min(s0, TMath::Min(s1,s2));
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the box
    Double_t saf[3];
@@ -213,7 +216,7 @@ Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return smint;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoBBox::DistToSurf(Double_t *point, Double_t *dir)
+Double_t TGeoBBox::DistToSurf(Double_t *point, Double_t *dir) const
 {
 // computes the distance to next surface of the box along a ray
 // starting from given point to the given direction.
@@ -244,7 +247,7 @@ TGeoShape *TGeoBBox::GetMakeRuntimeShape(TGeoShape *mother) const
    return (new TGeoBBox(dx, dy, dz));
 }
 //-----------------------------------------------------------------------------
-void TGeoBBox::InspectShape()
+void TGeoBBox::InspectShape() const
 {
 // print shape parameters
    printf("*** TGeoBBox parameters ***\n");
@@ -257,23 +260,23 @@ void TGeoBBox::InspectShape()
 void TGeoBBox::Paint(Option_t *option)
 {
 // paint this shape according to option
-   TGeoPainter *painter = (TGeoPainter*)gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintBox(vol, option);
 }
 //-----------------------------------------------------------------------------
-void TGeoBBox::NextCrossing(TGeoParamCurve *c, Double_t *point)
+void TGeoBBox::NextCrossing(TGeoParamCurve *c, Double_t *point) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoBBox::Safety(Double_t *point, Double_t *spoint, Option_t *option)
+Double_t TGeoBBox::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return 0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 void TGeoBBox::SetDimensions(Double_t *param)
@@ -296,7 +299,7 @@ void TGeoBBox::SetDimensions(Double_t *param)
    }
 }   
 //-----------------------------------------------------------------------------
-void TGeoBBox::SetBoxPoints(Double_t *buff)
+void TGeoBBox::SetBoxPoints(Double_t *buff) const
 {
    TGeoBBox::SetPoints(buff);
 }

@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   24/10/01
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,8 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author : Andrei Gheata - Wed 24 Oct 2001 05:20:43 PM CEST
-// TGeoShape::Contains implemented by Mihaela Gheata
 
 #ifndef ROOT_TGeoPcon
 #define ROOT_TGeoPcon
@@ -45,33 +46,33 @@ public:
    virtual ~TGeoPcon();
    // methods
    virtual void          ComputeBBox();
-   virtual Bool_t        Contains(Double_t *point);
+   virtual Bool_t        Contains(Double_t *point) const;
 
    virtual void          DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rmax);
    
-   virtual Int_t         GetByteCount() {return 60+12*fNz;}
-   Double_t              GetPhi1() {return fPhi1;}
-   Double_t              GetDphi() {return fDphi;}
-   Int_t                 GetNz()   {return fNz;}
-   virtual Int_t         GetNsegments();
-   Double_t             *GetRmin() {return fRmin;}
-   Double_t             *GetRmax() {return fRmax;}
-   Double_t             *GetZ()    {return fZ;}
+   virtual Int_t         GetByteCount() const {return 60+12*fNz;}
+   Double_t              GetPhi1() const {return fPhi1;}
+   Double_t              GetDphi() const {return fDphi;}
+   Int_t                 GetNz() const   {return fNz;}
+   virtual Int_t         GetNsegments() const;
+   Double_t             *GetRmin() const {return fRmin;}
+   Double_t             *GetRmax() const {return fRmax;}
+   Double_t             *GetZ() const    {return fZ;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const {return 0;}
      
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
+                                   Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
+                                   Double_t step=0, Double_t *safe=0) const;
    Double_t              DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_t c1, Double_t s1,
-                                    Double_t c2, Double_t s2, Double_t cfio, Double_t sfio, Double_t cdfi);
+                                    Double_t c2, Double_t s2, Double_t cfio, Double_t sfio, Double_t cdfi) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir);
+   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual void          Draw(Option_t *option);
-   virtual void          InspectShape();
+   virtual void          InspectShape() const;
    virtual void          Paint(Option_t *option);
-   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point);
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option);
+   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
+   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;

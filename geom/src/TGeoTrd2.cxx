@@ -1,3 +1,7 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   31/01/02
+// TGeoTrd2::Contains() and DistToOut() implemented by Mihaela Gheata
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,14 +9,11 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author :  Andrei Gheata  - date Thu 31 Jan 2002 01:47:40 PM CET
-// TGeoTrd2::Contains() and DistToOut() implemented by Mihaela Gheata
 
 #include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
-#include "TGeoPainter.h"
 #include "TGeoTrd2.h"
 
 
@@ -84,7 +85,7 @@ void TGeoTrd2::ComputeBBox()
    memset(fOrigin, 0, 3*sizeof(Double_t));
 }
 //-----------------------------------------------------------------------------
-Bool_t TGeoTrd2::Contains(Double_t *point)
+Bool_t TGeoTrd2::Contains(Double_t *point) const
 {
 // test if point is inside this shape
    // check Z range
@@ -98,7 +99,7 @@ Bool_t TGeoTrd2::Contains(Double_t *point)
    return kTRUE;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTrd2::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoTrd2::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the trd2
    Double_t snxt = kBig;
@@ -207,7 +208,7 @@ Double_t TGeoTrd2::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 */
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the trd2
    Double_t snxt = kBig;
@@ -246,14 +247,14 @@ Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return snxt;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTrd2::DistToSurf(Double_t *point, Double_t *dir)
+Double_t TGeoTrd2::DistToSurf(Double_t *point, Double_t *dir) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
    return 0.0;
 }
 //-----------------------------------------------------------------------------
-void TGeoTrd2::GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *normals)
+void TGeoTrd2::GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *normals) const
 {
 // get the most visible corner from outside point and the normals
    Double_t fx = 0.5*(fDx1-fDx2)/fDz;
@@ -266,53 +267,55 @@ void TGeoTrd2::GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *nor
    Double_t distx = fDx1-fx*(fDz+point[2]);
    Double_t disty = fDy1-fy*(fDz+point[2]);
    memset(normals, 0, 9*sizeof(Double_t));
+   TGeoTrd2 *trd2 = (TGeoTrd2*)this;
    if (point[0]>distx) {
    // hi x face visible
-      SetBit(kGeoVisX);
+      trd2->SetBit(kGeoVisX);
       normals[0]=calf;
       normals[2]=salf;
    } else {   
-      SetBit(kGeoVisX, kFALSE);
+      trd2->SetBit(kGeoVisX, kFALSE);
       normals[0]=-calf;
       normals[2]=salf;
    }
    if (point[1]>disty) {
    // hi y face visible
-      SetBit(kGeoVisY);
+      trd2->SetBit(kGeoVisY);
       normals[4]=cbet;
       normals[5]=sbet;
    } else {
-      SetBit(kGeoVisY, kFALSE);
+      trd2->SetBit(kGeoVisY, kFALSE);
       normals[4]=-cbet; 
       normals[5]=sbet; 
    }   
    if (point[2]>fDz) {
    // hi z face visible
-      SetBit(kGeoVisZ);
+      trd2->SetBit(kGeoVisZ);
       normals[8]=1;
    } else {
-      SetBit(kGeoVisZ, kFALSE);
+      trd2->SetBit(kGeoVisZ, kFALSE);
       normals[8]=-1;  
    }
    SetVertex(vertex);
 }
 //-----------------------------------------------------------------------------
-void TGeoTrd2::GetOppositeCorner(Double_t *point, Int_t inorm, Double_t *vertex, Double_t *normals)
+void TGeoTrd2::GetOppositeCorner(Double_t *point, Int_t inorm, Double_t *vertex, Double_t *normals) const
 {
 // get the opposite corner of the intersected face
+   TGeoTrd2 *trd2 = (TGeoTrd2*)this;
    if (inorm != 0) {
    // change x face
-      SetBit(kGeoVisX, !TestBit(kGeoVisX));
+      trd2->SetBit(kGeoVisX, !TestBit(kGeoVisX));
       normals[0]=-normals[0];
    }
    if (inorm != 1) {
    // change y face
-      SetBit(kGeoVisY, !TestBit(kGeoVisY));
+      trd2->SetBit(kGeoVisY, !TestBit(kGeoVisY));
       normals[4]=-normals[4];
    } 
    if (inorm != 2) {
    // hi z face visible
-      SetBit(kGeoVisZ, !TestBit(kGeoVisZ));
+      trd2->SetBit(kGeoVisZ, !TestBit(kGeoVisZ));
       normals[8]=-normals[8];
    } 
    SetVertex(vertex);
@@ -347,7 +350,7 @@ TGeoShape *TGeoTrd2::GetMakeRuntimeShape(TGeoShape *mother) const
    return (new TGeoTrd2(dx1, dx2, dy1, dy2, dz));
 }
 //-----------------------------------------------------------------------------
-void TGeoTrd2::InspectShape()
+void TGeoTrd2::InspectShape() const
 {
 // print shape parameters
    printf("*** TGeoTrd2 parameters ***\n");
@@ -365,16 +368,16 @@ void TGeoTrd2::Paint(Option_t *option)
    TGeoBBox::Paint(option);
 }
 //-----------------------------------------------------------------------------
-void TGeoTrd2::NextCrossing(TGeoParamCurve *c, Double_t *point)
+void TGeoTrd2::NextCrossing(TGeoParamCurve *c, Double_t *point) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTrd2::Safety(Double_t *point, Double_t *spoint, Option_t *option)
+Double_t TGeoTrd2::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return 0.0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 void TGeoTrd2::SetDimensions(Double_t *param)
@@ -416,7 +419,7 @@ void TGeoTrd2::SetPoints(Float_t *buff) const
    buff[21] =  fDx2; buff[22] = -fDy2; buff[23] =  fDz;
 }
 //-----------------------------------------------------------------------------
-void TGeoTrd2::SetVertex(Double_t *vertex)
+void TGeoTrd2::SetVertex(Double_t *vertex) const
 {
 // set vertex of a corner according to visibility flags
    if (TestBit(kGeoVisX)) {

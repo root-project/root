@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   24/10/01
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author : Andrei Gheata
 
 ////////////////////////////////////////////////////////////////////////////////
 // TGeoNode
@@ -79,7 +81,6 @@
 #include "TGeoVolume.h"
 #include "TGeoFinder.h"
 #include "TGeoNode.h"
-#include "TGeoPainter.h"
 
 // statics and globals
 
@@ -122,7 +123,7 @@ void TGeoNode::Browse(TBrowser *b)
       b->Add(GetDaughter(i));
 }
 //-----------------------------------------------------------------------------
-Bool_t TGeoNode::IsOnScreen()
+Bool_t TGeoNode::IsOnScreen() const
 {
 // check if this node is drawn. Assumes that this node is current
    if (!IsVisible()) return kFALSE;
@@ -152,7 +153,7 @@ Bool_t TGeoNode::IsOnScreen()
    }
 }
 //-----------------------------------------------------------------------------
-void TGeoNode::InspectNode()
+void TGeoNode::InspectNode() const
 {
    printf("Inspecting node %s\n", GetName());
    if (fNovlp) printf("### node is MANY\n");
@@ -237,12 +238,7 @@ Int_t TGeoNode::FindNode(TGeoNode *node, Int_t level)
    return -1;
 }
 //-----------------------------------------------------------------------------
-TObjArray *TGeoNode::GetNodes()
-{
-   return fVolume->GetNodes();
-}
-//-----------------------------------------------------------------------------
-void TGeoNode::SaveAttributes(ofstream &out)
+void TGeoNode::SaveAttributes(ofstream &out) const
 {
 // save attributes for this node
    if (fVolume->IsVisStreamed()) return;
@@ -273,30 +269,25 @@ void TGeoNode::SaveAttributes(ofstream &out)
    }
 }
 //-----------------------------------------------------------------------------
-void TGeoNode::StoreGlobalMatrix()
-{
-// Store the global matrix in the stack and reference it in fGlobalMatrix
-}
-//-----------------------------------------------------------------------------
-void TGeoNode::MasterToLocal(const Double_t *master, Double_t *local)
+void TGeoNode::MasterToLocal(const Double_t *master, Double_t *local) const
 {
 // Convert the point coordinates from mother reference to local reference system
    GetMatrix()->MasterToLocal(master, local);
 }
 //-----------------------------------------------------------------------------
-void TGeoNode::MasterToLocalVect(const Double_t *master, Double_t *local)
+void TGeoNode::MasterToLocalVect(const Double_t *master, Double_t *local) const
 {
 // Convert a vector from mother reference to local reference system
    GetMatrix()->MasterToLocalVect(master, local);
 }
 //-----------------------------------------------------------------------------
-void TGeoNode::LocalToMaster(const Double_t *local, Double_t *master)
+void TGeoNode::LocalToMaster(const Double_t *local, Double_t *master) const
 {
 // Convert the point coordinates from local reference system to mother reference
    GetMatrix()->LocalToMaster(local, master);
 }
 //-----------------------------------------------------------------------------
-void TGeoNode::LocalToMasterVect(const Double_t *local, Double_t *master)
+void TGeoNode::LocalToMasterVect(const Double_t *local, Double_t *master) const
 {
 // Convert a vector from local reference system to mother reference
    GetMatrix()->LocalToMasterVect(local, master);
@@ -317,6 +308,7 @@ void TGeoNode::Paint(Option_t *option)
    Int_t level = gGeoManager->GetLevel();
    Int_t vis_level=gGeoManager->GetVisLevel();
    Bool_t vis=(IsVisible() && gGeoManager->GetLevel())?kTRUE:kFALSE;
+   Int_t id;
    switch (vis_opt) {
       case TGeoManager::kGeoVisDefault:
          if (vis && (level<=vis_level))
@@ -324,7 +316,7 @@ void TGeoNode::Paint(Option_t *option)
             // draw daughters
          if (level<vis_level) {
             if ((!nd) || (!fVolume->IsVisDaughters())) return;
-            for (Int_t id=0; id<nd; id++) {
+            for (id=0; id<nd; id++) {
                node = GetDaughter(id);
                gGeoManager->CdDown(id);
                node->Paint(option);
@@ -338,7 +330,7 @@ void TGeoNode::Paint(Option_t *option)
          if (vis && last)
             fVolume->GetShape()->Paint(option);
          if (last) return;
-         for (Int_t id=0; id<nd; id++) {
+         for (id=0; id<nd; id++) {
             node = GetDaughter(id);
             gGeoManager->CdDown(id);
             node->Paint(option);
@@ -361,7 +353,7 @@ void TGeoNode::Paint(Option_t *option)
    }
 }
 //-----------------------------------------------------------------------------
-void TGeoNode::PrintCandidates()
+void TGeoNode::PrintCandidates() const
 {
 // print daughters candidates for containing current point
 //   cd();
@@ -406,7 +398,7 @@ void TGeoNode::PrintCandidates()
    PrintOverlaps();
 }
 //-----------------------------------------------------------------------------
-void TGeoNode::PrintOverlaps()
+void TGeoNode::PrintOverlaps() const
 {
 // print possible overlapping nodes
    if (!fNovlp) {printf("node %s is ONLY\n", GetName()); return;}
@@ -470,7 +462,7 @@ TGeoNodeMatrix::~TGeoNodeMatrix()
 // Destructor
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoNodeMatrix::GetByteCount()
+Int_t TGeoNodeMatrix::GetByteCount() const
 {
 // return the total size in bytes of this node
    Int_t count = 40 + 4; // TGeoNode + fMatrix
@@ -478,7 +470,7 @@ Int_t TGeoNodeMatrix::GetByteCount()
    return count;
 }
 //-----------------------------------------------------------------------------
-TGeoNode *TGeoNodeMatrix::MakeCopyNode()
+TGeoNode *TGeoNodeMatrix::MakeCopyNode() const
 {
 // make a copy of this node
    TGeoNodeMatrix *node = new TGeoNodeMatrix(fVolume, fMatrix);
@@ -500,13 +492,6 @@ TGeoNode *TGeoNodeMatrix::MakeCopyNode()
    // copy VC
    if (IsVirtual()) node->SetVirtual();
    return node;
-}
-//-----------------------------------------------------------------------------
-void TGeoNodeMatrix::UpdateGlobalMatrix(TGeoMatrix *globmat)
-{
-// Compute the global matrix in globmat. If globmat=0, create the global
-// matrix and reference it with fGlobalMatrix
-
 }
 
 /*************************************************************************
@@ -541,12 +526,12 @@ TGeoNodeOffset::~TGeoNodeOffset()
 // Destructor
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoNodeOffset::GetIndex()
+Int_t TGeoNodeOffset::GetIndex() const
 {
    return (fIndex+fFinder->GetDivIndex());
 }
 //-----------------------------------------------------------------------------
-TGeoNode *TGeoNodeOffset::MakeCopyNode()
+TGeoNode *TGeoNodeOffset::MakeCopyNode() const
 {
 // make a copy of this node
    TGeoNodeOffset *node = new TGeoNodeOffset(fVolume, GetIndex(), fOffset);
@@ -556,11 +541,5 @@ TGeoNode *TGeoNodeOffset::MakeCopyNode()
    // set the finder
    node->SetFinder(GetFinder());
    return node;
-}
-//-----------------------------------------------------------------------------
-void TGeoNodeOffset::UpdateGlobalMatrix(TGeoMatrix *globmat)
-{
-// Compute the global matrix in globmat. If globmat=0, create the global
-// matrix and reference it with fGlobalMatrix
 }
 

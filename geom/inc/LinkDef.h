@@ -1,4 +1,5 @@
-
+// @(#)root/geom:$Name:$:$Id:$
+// Author : Andrei Gheata 10/06/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *

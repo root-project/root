@@ -1,3 +1,7 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   31/01/02
+// TGeoSphere::Contains() DistToOut() implemented by Mihaela Gheata
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,14 +9,12 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author : Andrei Gheata - Wed 24 Oct 2001 05:20:43 PM CEST
-// TGeoSphere::Contains() DistToOut() implemented by Mihaela Gheata
 
 #include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
-#include "TGeoPainter.h"
+#include "TVirtualGeoPainter.h"
 
 #include "TGeoSphere.h"
 
@@ -55,7 +57,7 @@ TGeoSphere::TGeoSphere(Double_t rmin, Double_t rmax, Double_t theta1,
    SetBit(TGeoShape::kGeoSph);
    SetSphDimensions(rmin, rmax, theta1, theta2, phi1, phi2);
    ComputeBBox();
-   SetNumberOfDivisions(TGeoManager::kGeoDefaultNsegments);
+   SetNumberOfDivisions(20);
 }
 //-----------------------------------------------------------------------------
 TGeoSphere::TGeoSphere(Double_t *param, Int_t nparam)
@@ -66,7 +68,7 @@ TGeoSphere::TGeoSphere(Double_t *param, Int_t nparam)
    SetBit(TGeoShape::kGeoSph);
    SetDimensions(param);
    ComputeBBox();
-   SetNumberOfDivisions(TGeoManager::kGeoDefaultNsegments);
+   SetNumberOfDivisions(20);
 }
 //-----------------------------------------------------------------------------
 TGeoSphere::~TGeoSphere()
@@ -148,7 +150,7 @@ void TGeoSphere::ComputeBBox()
    fDZ = (zmax-zmin)/2;
 }   
 //-----------------------------------------------------------------------------
-Bool_t TGeoSphere::Contains(Double_t *point)
+Bool_t TGeoSphere::Contains(Double_t *point) const
 {
 // test if point is inside this sphere
    // check Rmin<=R<=Rmax
@@ -172,7 +174,7 @@ Bool_t TGeoSphere::Contains(Double_t *point)
    return kTRUE;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoSphere::DistToSurf(Double_t *point, Double_t *dir)
+Double_t TGeoSphere::DistToSurf(Double_t *point, Double_t *dir) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -188,14 +190,14 @@ Int_t TGeoSphere::DistancetoPrimitive(Int_t px, Int_t py)
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the sphere
 //   Warning("DistToIn", "BBOX");
    return TGeoBBox::DistToIn(point, dir, iact, step, safe);
 }   
 //-----------------------------------------------------------------------------
-Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the sphere
    Double_t saf[6];
@@ -319,7 +321,7 @@ void TGeoSphere::Draw(Option_t *option)
 // draw this shape according to option
 }
 //-----------------------------------------------------------------------------
-void TGeoSphere::InspectShape()
+void TGeoSphere::InspectShape() const
 {
 // print shape parameters
    printf("*** TGeoSphere parameters ***\n");
@@ -335,23 +337,23 @@ void TGeoSphere::InspectShape()
 void TGeoSphere::Paint(Option_t *option)
 {
 // paint this shape according to option
-   TGeoPainter *painter = (TGeoPainter*)gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintSphere(vol, option);
 }
 //-----------------------------------------------------------------------------
-void TGeoSphere::NextCrossing(TGeoParamCurve *c, Double_t *point)
+void TGeoSphere::NextCrossing(TGeoParamCurve *c, Double_t *point) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoSphere::Safety(Double_t *point, Double_t *spoint, Option_t *option)
+Double_t TGeoSphere::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return 0.0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 void TGeoSphere::SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,

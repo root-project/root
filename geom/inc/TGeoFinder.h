@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   18/01/02
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author : Andrei Gheata           date : Tue 30 Oct 2001 11:57:07 AM CET
 
 #ifndef ROOT_TGeoFinder
 #define ROOT_TGeoFinder
@@ -45,11 +47,11 @@ public :
    virtual ~TGeoFinder();
 
    virtual void        cd(Int_t idiv) = 0;
-   virtual Int_t       GetByteCount() {return 4;}
+   virtual Int_t       GetByteCount() const {return 4;}
    virtual TGeoMatrix *GetMatrix() = 0;
    virtual void        SetBasicVolume(TGeoVolume *vol) = 0;
    virtual void        SetVolume(TGeoVolume *vol)  {fVolume = vol;}
-   virtual TGeoVolume *GetVolume()     {return fVolume;}
+   virtual TGeoVolume *GetVolume() const     {return fVolume;}
 
    virtual TGeoNode   *FindNode(Double_t *point) = 0; 
 

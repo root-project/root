@@ -1,3 +1,7 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   24/10/01
+// TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,14 +9,12 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author :  Andrei Gheata  - date Thu 31 Jan 2002 01:47:40 PM CET
-// TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
 #include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
-#include "TGeoPainter.h"
+#include "TVirtualGeoPainter.h"
 #include "TGeoTube.h"
 
 /*************************************************************************
@@ -105,7 +107,7 @@ void TGeoTube::ComputeBBox()
    fDZ = fDz;
 }   
 //-----------------------------------------------------------------------------
-Bool_t TGeoTube::Contains(Double_t *point)
+Bool_t TGeoTube::Contains(Double_t *point) const
 {
 // test if point is inside this tube
    if (TMath::Abs(point[2]) > fDz) return kFALSE;
@@ -117,7 +119,7 @@ Bool_t TGeoTube::Contains(Double_t *point)
 Int_t TGeoTube::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute closest distance from point px,py to each corner
-   Int_t n = TGeoManager::kGeoDefaultNsegments;
+   Int_t n = gGeoManager->GetNsegments();
    const Int_t numPoints = 4*n;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
@@ -168,7 +170,7 @@ Double_t TGeoTube::DistToOutS(Double_t *point, Double_t *dir, Int_t iact, Double
    return kBig;      
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTube::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoTube::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the tube
    Double_t saf[3];
@@ -284,7 +286,7 @@ Double_t TGeoTube::DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Doub
    return kBig;
 }   
 //-----------------------------------------------------------------------------
-Double_t TGeoTube::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoTube::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube and safe distance
    // fist localize point w.r.t tube
@@ -304,7 +306,7 @@ Double_t TGeoTube::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return DistToInS(point, dir, fRmin, fRmax, fDz);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTube::DistToSurf(Double_t *point, Double_t *dir)
+Double_t TGeoTube::DistToSurf(Double_t *point, Double_t *dir) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -338,7 +340,7 @@ TGeoShape *TGeoTube::GetMakeRuntimeShape(TGeoShape *mother) const
    return (new TGeoTube(rmin, rmax, dz));
 }
 //-----------------------------------------------------------------------------
-void TGeoTube::InspectShape()
+void TGeoTube::InspectShape() const
 {
 // print shape parameters
    printf("*** TGeoTube parameters ***\n");
@@ -351,23 +353,23 @@ void TGeoTube::InspectShape()
 void TGeoTube::Paint(Option_t *option)
 {
 // paint this shape according to option
-   TGeoPainter *painter = (TGeoPainter*)gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintTube(vol, option);
 }
 //-----------------------------------------------------------------------------
-void TGeoTube::NextCrossing(TGeoParamCurve *c, Double_t *point)
+void TGeoTube::NextCrossing(TGeoParamCurve *c, Double_t *point) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTube::Safety(Double_t *point, Double_t *spoint, Option_t *option)
+Double_t TGeoTube::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return 0.0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 void TGeoTube::SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz)
@@ -410,7 +412,7 @@ void TGeoTube::SetPoints(Double_t *buff) const
     Double_t dz;
     Int_t j, n;
 
-    n = TGeoManager::kGeoDefaultNsegments;
+    n = gGeoManager->GetNsegments();
     Double_t dphi = 360./n;
     Double_t phi = 0;
     dz = fDz;
@@ -449,7 +451,7 @@ void TGeoTube::SetPoints(Float_t *buff) const
     Double_t dz;
     Int_t j, n;
 
-    n = TGeoManager::kGeoDefaultNsegments;
+    n = gGeoManager->GetNsegments();
     Double_t dphi = 360./n;
     Double_t phi = 0;
     dz = fDz;
@@ -485,7 +487,7 @@ void TGeoTube::SetPoints(Float_t *buff) const
 void TGeoTube::Sizeof3D() const
 {
 // fill size of this 3-D object
-    Int_t n = TGeoManager::kGeoDefaultNsegments;
+    Int_t n = gGeoManager->GetNsegments();
     gSize3D.numPoints += n*4;
     gSize3D.numSegs   += n*8;
     gSize3D.numPolys  += n*4;
@@ -574,7 +576,7 @@ void TGeoTubeSeg::ComputeBBox()
    fDZ = fDz;
 }   
 //-----------------------------------------------------------------------------
-Bool_t TGeoTubeSeg::Contains(Double_t *point)
+Bool_t TGeoTubeSeg::Contains(Double_t *point) const
 {
 // test if point is inside this tube segment
    // first check if point is inside the tube
@@ -593,7 +595,7 @@ Bool_t TGeoTubeSeg::Contains(Double_t *point)
 Int_t TGeoTubeSeg::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute closest distance from point px,py to each corner
-   Int_t n = TGeoManager::kGeoDefaultNsegments+1;
+   Int_t n = gGeoManager->GetNsegments()+1;
    const Int_t numPoints = 4*n;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
@@ -690,7 +692,7 @@ Double_t TGeoTubeSeg::DistToOutS(Double_t *point, Double_t *dir, Int_t iact, Dou
    return TMath::Min(TMath::Min(sz,sr), sfmin);      
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTubeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoTubeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the tube segment
    Double_t saf[4];
@@ -879,7 +881,7 @@ Double_t TGeoTubeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin, D
    return snxt;
 }   
 //-----------------------------------------------------------------------------
-Double_t TGeoTubeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoTubeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube segment
    // fist localize point w.r.t tube
@@ -922,7 +924,7 @@ Double_t TGeoTubeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Doubl
    return TGeoTubeSeg::DistToInS(point, dir, fRmin, fRmax, fDz, c1, s1, c2, s2, cfio, sfio, cdfi);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTubeSeg::DistToSurf(Double_t *point, Double_t *dir)
+Double_t TGeoTubeSeg::DistToSurf(Double_t *point, Double_t *dir) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -956,7 +958,7 @@ TGeoShape *TGeoTubeSeg::GetMakeRuntimeShape(TGeoShape *mother) const
    return (new TGeoTubeSeg(rmin, rmax, dz, fPhi1, fPhi2));
 }
 //-----------------------------------------------------------------------------
-void TGeoTubeSeg::InspectShape()
+void TGeoTubeSeg::InspectShape() const
 {
 // print shape parameters
    printf("*** TGeoTubeSeg parameters ***\n");
@@ -971,23 +973,23 @@ void TGeoTubeSeg::InspectShape()
 void TGeoTubeSeg::Paint(Option_t *option)
 {
 // paint this shape according to option
-   TGeoPainter *painter = (TGeoPainter*)gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintTubs(vol, option);
 }
 //-----------------------------------------------------------------------------
-void TGeoTubeSeg::NextCrossing(TGeoParamCurve *c, Double_t *point)
+void TGeoTubeSeg::NextCrossing(TGeoParamCurve *c, Double_t *point) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTubeSeg::Safety(Double_t *point, Double_t *spoint, Option_t *option)
+Double_t TGeoTubeSeg::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return 0.0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 void TGeoTubeSeg::SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
@@ -1021,7 +1023,7 @@ void TGeoTubeSeg::SetPoints(Double_t *buff) const
     phi1 = fPhi1;
     phi2 = fPhi2;
     if (phi2<phi1) phi2+=360.;
-    n = TGeoManager::kGeoDefaultNsegments+1;
+    n = gGeoManager->GetNsegments()+1;
 
     dphi = (phi2-phi1)/(n-1);
     dz   = fDz;
@@ -1061,7 +1063,7 @@ void TGeoTubeSeg::SetPoints(Float_t *buff) const
     phi1 = fPhi1;
     phi2 = fPhi2;
     if (phi2<phi1) phi2+=360.;
-    n = TGeoManager::kGeoDefaultNsegments+1;
+    n = gGeoManager->GetNsegments()+1;
 
     dphi = (phi2-phi1)/(n-1);
     dz   = fDz;
@@ -1095,7 +1097,7 @@ void TGeoTubeSeg::SetPoints(Float_t *buff) const
 void TGeoTubeSeg::Sizeof3D() const
 {
 // fill size of this 3-D object
-    Int_t n = TGeoManager::kGeoDefaultNsegments+1;
+    Int_t n = gGeoManager->GetNsegments()+1;
 
     gSize3D.numPoints += n*4;
     gSize3D.numSegs   += n*8;
@@ -1113,7 +1115,7 @@ TGeoCtub::TGeoCtub()
 }
 //-----------------------------------------------------------------------------
 TGeoCtub::TGeoCtub(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
-                   Double_t lx, Double_t ly, Double_t lz, Double_t hx, Double_t hy, Double_t hz)
+                   Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
          :TGeoTubeSeg(rmin, rmax, dz, phi1, phi2)
 {         
 // ctor
@@ -1122,9 +1124,9 @@ TGeoCtub::TGeoCtub(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Dou
    fNlow[0] = lx;
    fNlow[1] = ly;
    fNlow[2] = lz;
-   fNhigh[0] = hx;
-   fNhigh[1] = hy;
-   fNhigh[2] = hz;
+   fNhigh[0] = tx;
+   fNhigh[1] = ty;
+   fNhigh[2] = tz;
    SetBit(kGeoCtub);
    ComputeBBox();
 }
@@ -1248,7 +1250,7 @@ void TGeoCtub::ComputeBBox()
    fOrigin[2] = 0.5*(zmax+zmin);
 }
 //-----------------------------------------------------------------------------
-Bool_t TGeoCtub::Contains(Double_t *point)
+Bool_t TGeoCtub::Contains(Double_t *point) const
 {
 // check if point is contained in the cut tube
    // check the lower cut plane
@@ -1282,7 +1284,7 @@ Double_t TGeoCtub::GetZcoord(Double_t xc, Double_t yc, Double_t zc) const
    return newz;
 }   
 //-----------------------------------------------------------------------------
-Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the cut tube
    Double_t saf[5];
@@ -1474,7 +1476,7 @@ Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return snxt;
 }   
 //-----------------------------------------------------------------------------
-Double_t TGeoCtub::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe)
+Double_t TGeoCtub::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the cut tube
    Double_t saf[5];
@@ -1564,7 +1566,7 @@ Double_t TGeoCtub::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    return TMath::Min(TMath::Min(sz,sr), sfmin);      
 }   
 //-----------------------------------------------------------------------------
-Double_t TGeoCtub::DistToSurf(Double_t *point, Double_t *dir)
+Double_t TGeoCtub::DistToSurf(Double_t *point, Double_t *dir) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -1599,42 +1601,42 @@ void TGeoCtub::Draw(Option_t *option)
 // draw this shape according to option
 }
 //-----------------------------------------------------------------------------
-void TGeoCtub::InspectShape()
+void TGeoCtub::InspectShape() const
 {
 // print shape parameters
    printf("*** TGeoCtub parameters ***\n");
    printf("    lx = %11.5f\n", fNlow[0]);
    printf("    ly = %11.5f\n", fNlow[1]);
    printf("    lz = %11.5f\n", fNlow[2]);
-   printf("    hx = %11.5f\n", fNhigh[0]);
-   printf("    hy = %11.5f\n", fNhigh[1]);
-   printf("    hz = %11.5f\n", fNhigh[2]);
+   printf("    tx = %11.5f\n", fNhigh[0]);
+   printf("    ty = %11.5f\n", fNhigh[1]);
+   printf("    tz = %11.5f\n", fNhigh[2]);
    TGeoTubeSeg::InspectShape();
 }
 //-----------------------------------------------------------------------------
-void TGeoCtub::NextCrossing(TGeoParamCurve *c, Double_t *point)
+void TGeoCtub::NextCrossing(TGeoParamCurve *c, Double_t *point) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoCtub::Safety(Double_t *point, Double_t *spoint, Option_t *option)
+Double_t TGeoCtub::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return 0.0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 void TGeoCtub::SetCtubDimensions(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
-                   Double_t lx, Double_t ly, Double_t lz, Double_t hx, Double_t hy, Double_t hz)
+                   Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
 {
 // set dimensions of a cut tube
    SetTubsDimensions(rmin, rmax, dz, phi1, phi2);
    fNlow[0] = lx;
    fNlow[1] = ly;
    fNlow[2] = lz;
-   fNhigh[0] = hx;
-   fNhigh[1] = hy;
-   fNhigh[2] = hz;
+   fNhigh[0] = tx;
+   fNhigh[1] = ty;
+   fNhigh[2] = tz;
    ComputeBBox();
 }
 //-----------------------------------------------------------------------------
@@ -1654,7 +1656,7 @@ void TGeoCtub::SetPoints(Double_t *buff) const
     phi1 = fPhi1;
     phi2 = fPhi2;
     if (phi2<phi1) phi2+=360.;
-    n = TGeoManager::kGeoDefaultNsegments+1;
+    n = gGeoManager->GetNsegments()+1;
 
     dphi = (phi2-phi1)/(n-1);
     dz   = fDz;
@@ -1694,7 +1696,7 @@ void TGeoCtub::SetPoints(Float_t *buff) const
     phi1 = fPhi1;
     phi2 = fPhi2;
     if (phi2<phi1) phi2+=360.;
-    n = TGeoManager::kGeoDefaultNsegments+1;
+    n = gGeoManager->GetNsegments()+1;
 
     dphi = (phi2-phi1)/(n-1);
     dz   = fDz;

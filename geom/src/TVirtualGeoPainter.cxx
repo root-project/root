@@ -1,4 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
 // Author: Andrei Gheata   11/01/02
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -10,7 +12,7 @@
 #include "TROOT.h"
 #include "TVirtualGeoPainter.h"
 
-TClass  *TVirtualGeoPainter::fgGeoPainter = 0;
+TVirtualGeoPainter  *TVirtualGeoPainter::fgGeoPainter = 0;
 
 ClassImp(TVirtualGeoPainter)
 
@@ -39,18 +41,15 @@ TVirtualGeoPainter *TVirtualGeoPainter::GeoPainter()
    // if no painter set yet, set TGeoPainter by default
    if (!fgGeoPainter) {
       if (gROOT->LoadClass("TGeoPainter","GeomPainter")) return 0;
-      TVirtualGeoPainter::SetPainter("TGeoPainter");
-      if (!fgGeoPainter) return 0;
+      gROOT->ProcessLineFast("new TGeoPainter();");
    }
-   //create an instance of the painter
-   TVirtualGeoPainter *p = (TVirtualGeoPainter*)fgGeoPainter->New();
-   return p;
+   return fgGeoPainter;
 }
 
 //______________________________________________________________________________
-void TVirtualGeoPainter::SetPainter(const char *painter)
+void TVirtualGeoPainter::SetPainter(TVirtualGeoPainter *painter)
 {
    // Static function to set an alternative histogram painter.
 
-   fgGeoPainter = gROOT->GetClass(painter);
+   fgGeoPainter = painter;
 }

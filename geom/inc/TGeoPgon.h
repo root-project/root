@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   31/01/02
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,8 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author : Andrei Gheata - Wed 24 Oct 2001 05:20:43 PM CEST
-// TGeoShape::Contains implemented by Mihaela Gheata
 
 #ifndef ROOT_TGeoPgon
 #define ROOT_TGeoPgon
@@ -41,27 +42,27 @@ public:
    virtual ~TGeoPgon();
    // methods
    virtual void          ComputeBBox();
-   virtual Bool_t        Contains(Double_t *point);
+   virtual Bool_t        Contains(Double_t *point) const;
 
-   virtual Int_t         GetByteCount() {return 64+12*fNz;}
+   virtual Int_t         GetByteCount() const {return 64+12*fNz;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const {return 0;}
-   Int_t                 GetNedges()   {return fNedges;}
-   virtual Int_t         GetNsegments() {return fNedges;}     
-   Double_t              DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t &isect);
+   Int_t                 GetNedges() const   {return fNedges;}
+   virtual Int_t         GetNsegments() const {return fNedges;}     
+   Double_t              DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t &isect) const;
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
+                                   Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
+                                   Double_t step=0, Double_t *safe=0) const;
    Double_t              DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t &ipsec,
-                                      UChar_t &bits, Double_t *saf); 
+                                      UChar_t &bits, Double_t *saf) const; 
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir);
+   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual void          DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rmax);
    virtual void          Draw(Option_t *option);
-   virtual void          InspectShape();
+   virtual void          InspectShape() const;
    virtual void          Paint(Option_t *option);
-   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point);
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option);
+   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
+   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;

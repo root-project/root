@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   24/10/01
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,8 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author : Andrei Gheata - Wed 24 Oct 2001 05:20:43 PM CEST
-// TGeoShape::Contains implemented by Mihaela Gheata
 
 #ifndef ROOT_TGeoArb8
 #define ROOT_TGeoArb8
@@ -61,26 +62,26 @@ public:
    // methods
    virtual void          ComputeBBox();
    void                  ComputeTwist();
-   virtual Int_t         GetByteCount() {return 100;}
-   Double_t              GetDz() {return fDz;}
+   virtual Int_t         GetByteCount() const {return 100;}
+   Double_t              GetDz() const {return fDz;}
    Double_t             *GetVertices() {return &fXY[0][0];}
-   Bool_t                IsTwisted() {return (fTwist==0)?kFALSE:kTRUE;}
-   void                  SetPlaneVertices(Double_t zpl, Double_t *vertices);
+   Bool_t                IsTwisted() const {return (fTwist==0)?kFALSE:kTRUE;}
+   void                  SetPlaneVertices(Double_t zpl, Double_t *vertices) const;
    virtual void          SetVertex(Int_t vnum, Double_t x, Double_t y);
    
-   virtual Bool_t        Contains(Double_t *point);     
-   Double_t              DistToPlane(Double_t *point, Double_t *dir, Int_t ipl);
+   virtual Bool_t        Contains(Double_t *point) const;     
+   Double_t              DistToPlane(Double_t *point, Double_t *dir, Int_t ipl) const;
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
+                                   Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
-   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir);
+                                   Double_t step=0, Double_t *safe=0) const;
+   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual void          Draw(Option_t *option);
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const {return 0;}
-   virtual void          InspectShape();
+   virtual void          InspectShape() const;
    virtual void          Paint(Option_t *option);
-   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point);
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option);
+   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
+   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;
@@ -129,19 +130,19 @@ public:
    // destructor
    virtual ~TGeoTrap();
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
+                                   Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
-   Double_t              GetTheta() {return fTheta;}
-   Double_t              GetPhi()   {return fPhi;}
-   Double_t              GetH1()    {return fH1;}
-   Double_t              GetBl1()   {return fBl1;}
-   Double_t              GetTl1()   {return fTl1;}
-   Double_t              GetAlpha1()   {return fAlpha1;}
-   Double_t              GetH2()    {return fH2;}
-   Double_t              GetBl2()   {return fBl2;}
-   Double_t              GetTl2()   {return fTl2;}
-   Double_t              GetAlpha2()   {return fAlpha2;}
+                                   Double_t step=0, Double_t *safe=0) const;
+   Double_t              GetTheta() const {return fTheta;}
+   Double_t              GetPhi() const   {return fPhi;}
+   Double_t              GetH1() const    {return fH1;}
+   Double_t              GetBl1() const   {return fBl1;}
+   Double_t              GetTl1() const   {return fTl1;}
+   Double_t              GetAlpha1() const   {return fAlpha1;}
+   Double_t              GetH2() const    {return fH2;}
+   Double_t              GetBl2() const   {return fBl2;}
+   Double_t              GetTl2() const   {return fTl2;}
+   Double_t              GetAlpha2() const   {return fAlpha2;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
 
   ClassDef(TGeoTrap, 1)         // G3 TRAP shape
@@ -176,11 +177,11 @@ public:
    // destructor
    virtual ~TGeoGtra();
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
+                                   Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=0, Double_t *safe=0);
+                                   Double_t step=0, Double_t *safe=0) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
-   Double_t              GetTwistAngle() {return fTwistAngle;}
+   Double_t              GetTwistAngle() const {return fTwistAngle;}
   ClassDef(TGeoGtra, 1)         // G3 GTRA shape
 };
 

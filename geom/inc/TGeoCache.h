@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   18/03/02
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -42,9 +45,9 @@ class TGeoMatHandler;
 class TGeoCacheState : public TObject
 {
 protected:
-   Bool_t               fOverlapping; // overlap flag
    Int_t                fLevel;     // level in the current branch
    Double_t            *fPoint;     // last point in master frame
+   Bool_t               fOverlapping; // overlap flag
 public:
    Int_t               *fBranch;    // last branch stored
    Int_t               *fMatrices;  // global matrices for last branch
@@ -55,7 +58,7 @@ public:
    virtual ~TGeoCacheState();
    
    virtual void         SetState(Int_t level, Bool_t ovlp, Double_t *point=0);
-   virtual Bool_t       GetState(Int_t &level, Double_t *point);
+   virtual Bool_t       GetState(Int_t &level, Double_t *point) const;
                
   ClassDef(TGeoCacheState, 1)       // class storing the cache state
 };
@@ -78,7 +81,7 @@ public:
    virtual ~TGeoCacheStateDummy();
    
    virtual void         SetState(Int_t level, Bool_t ovlp, Double_t *point=0);
-   virtual Bool_t       GetState(Int_t &level, Double_t *point);
+   virtual Bool_t       GetState(Int_t &level, Double_t *point) const;
                
   ClassDef(TGeoCacheStateDummy, 1)       // class storing the cache state
 };
@@ -108,8 +111,6 @@ private:
    Int_t                 fSize;             // current size of the cache
    Int_t                 fNused;            // number of used nodes
    Int_t                 fDefaultLevel;     // level down to which nodes will be persistent
-   TGeoNodeArray       **fCache;            //[128] cache of node arrays
-   
    Int_t                 fTopNode;          // top level physical node
    Int_t                 fCount;            // total usage count
    Int_t                 fCountLimit;       // count limit for which nodes become persistent
@@ -120,8 +121,9 @@ private:
    Int_t                *fMatrices;         // matrix indices from current branch
    Int_t                 fStackLevel;       // level in the stack of states
    TGeoHMatrix          *fGlobalMatrix;     // current global matrix
-
    TGeoMatrixCache      *fMatrixPool;       // pool of compressed global matrices
+   TGeoNodeArray       **fCache;            //[128] cache of node arrays
+
 public:
    TGeoNodeCache();
    TGeoNodeCache(Int_t size);
@@ -129,7 +131,7 @@ public:
 
    Int_t                AddNode(TGeoNode *node);
 //   Int_t                AddDaughter(Int_t mother, TGeoNode *node, Int_t index);
-   Int_t                CacheId(Int_t nindex)
+   Int_t                CacheId(Int_t nindex) const
                          {return (*((UChar_t*)&nindex+3)>kGeoCacheMaxDaughters)?
                                  kGeoCacheObjArrayInd:*((UChar_t*)&nindex+3);}
    void                 CdCache();
@@ -142,32 +144,32 @@ public:
    virtual void         Compact();
    virtual void         DeleteCaches();
    virtual Bool_t       DumpNodes();
-   virtual void        *GetBranch() {return fBranch;}
-   virtual void        *GetMatrices() {return fMatrices;}
-   virtual TGeoHMatrix *GetCurrentMatrix() {return fGlobalMatrix;}
-   Int_t                GetCurrentNode() {return fCurrentNode;}
-   virtual TGeoNode    *GetMother(Int_t up=1);
-   virtual TGeoNode    *GetNode();
-   Int_t                GetStackLevel()  {return fStackLevel;}
-   Int_t                GetTopNode()     {return fTopNode;}
-   Int_t                GetLevel()       {return fLevel;}
-   virtual Int_t        GetFreeSpace()   {return (kGeoCacheMaxSize-fSize);}
-   TGeoMatrixCache     *GetMatrixPool()  {return fMatrixPool;}
-   virtual Int_t        GetNfree()       {return (fSize-fNused);}
-   virtual Int_t        GetNused()       {return fNused;}
+   virtual void        *GetBranch() const {return fBranch;}
+   virtual void        *GetMatrices() const {return fMatrices;}
+   virtual TGeoHMatrix *GetCurrentMatrix() const {return fGlobalMatrix;}
+   Int_t                GetCurrentNode() const {return fCurrentNode;}
+   virtual TGeoNode    *GetMother(Int_t up=1) const;
+   virtual TGeoNode    *GetNode() const;
+   Int_t                GetStackLevel() const  {return fStackLevel;}
+   Int_t                GetTopNode() const     {return fTopNode;}
+   Int_t                GetLevel() const       {return fLevel;}
+   virtual Int_t        GetFreeSpace() const   {return (kGeoCacheMaxSize-fSize);}
+   TGeoMatrixCache     *GetMatrixPool() const  {return fMatrixPool;}
+   virtual Int_t        GetNfree() const       {return (fSize-fNused);}
+   virtual Int_t        GetNused() const       {return fNused;}
    virtual const char  *GetPath(); 
-   Int_t                GetSize()        {return fSize;}
-   virtual Int_t        GetUsageCount();
+   Int_t                GetSize() const        {return fSize;}
+   virtual Int_t        GetUsageCount() const;
    virtual void         IncreasePool(Int_t size) {fSize+=size;}
    virtual void         IncrementUsageCount();
-   Int_t                Index(Int_t nindex) {return (nindex & 0xFFFFFF);}
-   virtual void         LocalToMaster(Double_t *local, Double_t *master);
-   virtual void         MasterToLocal(Double_t *master, Double_t *local);
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master);
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local);
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master);
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local);
-   virtual void         PrintNode();
+   Int_t                Index(Int_t nindex) const {return (nindex & 0xFFFFFF);}
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const;
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const;
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const;
+   virtual void         PrintNode() const;
    virtual Int_t        PushState(Bool_t ovlp, Double_t *point=0);
    virtual Bool_t       PopState(Double_t *point=0);
    virtual Bool_t       PopState(Int_t level, Double_t *point=0);
@@ -175,7 +177,7 @@ public:
    virtual void         Refresh();
    void                 SetDefaultLevel(Int_t level) {fDefaultLevel = level;}
    Bool_t               SetPersistency();                 
-   void                 Status();
+   void                 Status() const;
 
  ClassDef(TGeoNodeCache, 0)        // cache of reusable physical nodes
 };
@@ -211,32 +213,32 @@ public:
    virtual void         DeleteCaches() {;}
    virtual Bool_t       DumpNodes() {return kFALSE;}
 
-   virtual void        *GetBranch() {return fNodeBranch;}
-   virtual TGeoHMatrix *GetCurrentMatrix() {return fMatrix;}
-   Int_t                GetCurrentNode() {return 0;}
-   virtual Int_t        GetFreeSpace()   {return kGeoCacheMaxSize;}
-   virtual void        *GetMatrices() {return fMatrixBranch;}
-   virtual TGeoNode    *GetMother(Int_t up=1) {return ((fLevel-up)>=0)?fNodeBranch[fLevel-up]:0;}
-   virtual TGeoNode    *GetNode() {return fNode;}
-   virtual Int_t        GetNfree()       {return kGeoCacheMaxSize;}
-   virtual Int_t        GetNused()       {return 0;}
+   virtual void        *GetBranch() const {return fNodeBranch;}
+   virtual TGeoHMatrix *GetCurrentMatrix() const {return fMatrix;}
+   Int_t                GetCurrentNode() const {return 0;}
+   virtual Int_t        GetFreeSpace() const   {return kGeoCacheMaxSize;}
+   virtual void        *GetMatrices() const {return fMatrixBranch;}
+   virtual TGeoNode    *GetMother(Int_t up=1) const {return ((fLevel-up)>=0)?fNodeBranch[fLevel-up]:0;}
+   virtual TGeoNode    *GetNode() const {return fNode;}
+   virtual Int_t        GetNfree() const       {return kGeoCacheMaxSize;}
+   virtual Int_t        GetNused() const       {return 0;}
    virtual const char  *GetPath(); 
-   virtual Int_t        GetUsageCount() {return 0;}
+   virtual Int_t        GetUsageCount() const {return 0;}
    virtual void         IncreasePool(Int_t size) {;}
    virtual void         IncrementUsageCount() {;}
-   virtual void         LocalToMaster(Double_t *local, Double_t *master);
-   virtual void         MasterToLocal(Double_t *master, Double_t *local);
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master);
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local);
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master);
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local);
-   virtual void         PrintNode() {;}
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const;
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const;
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const;
+   virtual void         PrintNode() const {;}
 //   virtual Int_t        PushState(Bool_t ovlp, Double_t *point=0);
 //   virtual Bool_t       PopState(Double_t *point=0);
 //   virtual Bool_t       PopState(Int_t level, Double_t *point=0);
    virtual void         Refresh();
    Bool_t               SetPersistency() {return kFALSE;}                 
-   void                 Status() {;}
+   void                 Status() const {;}
 
  ClassDef(TGeoCacheDummy, 0)        // dummy cache of physical nodes
 };
@@ -260,14 +262,14 @@ public:
    static const UChar_t  kGeoMaskRot;
    static const UChar_t  kGeoMaskScale;
 private:
-   UInt_t                fSize[7];    // size of matrix caches
-   UInt_t                fFree[7];    // offset of first free matrices
-   Double_t             *fCache[7];   // pointers to all caches
-   TBits                *fBits[7];    // flags for matrix usage
    Int_t                 fMatrix;     // current global transformation
    Int_t                 fHandler;    // current matrix handler
    Int_t                 fCacheId;    // current cache id
    Int_t                 fLength;     // length of current matrix
+   UInt_t                fSize[7];    // size of matrix caches
+   UInt_t                fFree[7];    // offset of first free matrices
+   Double_t             *fCache[7];   // pointers to all caches
+   TBits                *fBits[7];    // flags for matrix usage
    TGeoMatHandler      **fHandlers;   // handlers for cached matrices
 protected:
    void                  IncreaseCache();
@@ -279,14 +281,14 @@ public:
    Int_t                 AddMatrix(TGeoMatrix *matrix);
    void                  cd(Int_t mindex);
    void                  ClearMatrix(Int_t index);
-   void                  GetMatrix(TGeoHMatrix *matrix);
-   void                  LocalToMaster(Double_t *local, Double_t *master);
-   void                  LocalToMasterVect(Double_t *local, Double_t *master);
-   void                  LocalToMasterBomb(Double_t *local, Double_t *master);
-   void                  MasterToLocal(Double_t *master, Double_t *local);
-   void                  MasterToLocalVect(Double_t *master, Double_t *local);
-   void                  MasterToLocalBomb(Double_t *master, Double_t *local);
-   void                  Status();
+   void                  GetMatrix(TGeoHMatrix *matrix) const;
+   void                  LocalToMaster(Double_t *local, Double_t *master) const;
+   void                  LocalToMasterVect(Double_t *local, Double_t *master) const;
+   void                  LocalToMasterBomb(Double_t *local, Double_t *master) const;
+   void                  MasterToLocal(Double_t *master, Double_t *local) const;
+   void                  MasterToLocalVect(Double_t *master, Double_t *local) const;
+   void                  MasterToLocalBomb(Double_t *master, Double_t *local) const;
+   void                  Status() const;
 
  ClassDef(TGeoMatrixCache, 0)    // cache of compressed global matrices
 };
@@ -308,9 +310,9 @@ public:
    static const UInt_t   kNoMatrix;     // initial value for fGlobalMatrix
 private:
    Int_t                 fNdaughters;   // number of daughters
-   Int_t                *fDaughters;    // [fNdaughters] list of daughters offsets
    Int_t                 fMatrix;       // index of global matrix
    Int_t                 fCount;        // usage counter
+   Int_t                *fDaughters;    // [fNdaughters] list of daughters offsets
    TGeoNode             *fNode;         // pointer to corresponding node from the logical tree
 public:
    TGeoNodePos();
@@ -321,19 +323,17 @@ public:
    Int_t                 AddMatrix(TGeoMatrix *global);
    void                  ClearDaughter(Int_t ind) {fDaughters[ind] = 0;}
    void                  ClearMatrix();
-   Int_t                 GetDaughter(Int_t ind);
-//   void                  GetMatrix(TGeoHMatrix *matrix);
-   Int_t                 GetMatrixInd()       {return fMatrix;}
+   Int_t                 GetDaughter(Int_t ind) const;
+   Int_t                 GetMatrixInd() const       {return fMatrix;}
    const char           *GetName() const      {return fNode->GetName();}
-   Int_t                 GetNdaughters()      {return fNdaughters;}
-   TGeoNode             *GetNode()            {return fNode;}
-   Int_t                 GetUsageCount()      {return (fCount & 0x7FFFFFFF);}
-   Bool_t                HasDaughters();
-   Bool_t                IsPersistent() 
+   Int_t                 GetNdaughters() const      {return fNdaughters;}
+   TGeoNode             *GetNode() const            {return fNode;}
+   Int_t                 GetUsageCount() const      {return (fCount & 0x7FFFFFFF);}
+   Bool_t                HasDaughters() const;
+   Bool_t                IsPersistent() const 
                             {return (((fCount & kPersistentNodeMask)==0)?kFALSE:kTRUE);}
    void                  IncrementUsageCount()     {fCount++;}
    void                  Map(TGeoNode *node);
-//   void                  Reset();
    void                  ResetCount()         {fCount &= kPersistentNodeMask;}
    void                  SetMatrix(Int_t mat_ind) {fMatrix = mat_ind;}
    void                  SetPersistency(Bool_t flag=kTRUE);
@@ -393,19 +393,17 @@ public:
    virtual void         ClearNode();
    virtual void         Compact();
    void                 DeleteArray();
-   virtual Int_t        GetDaughter(Int_t ind) {return fOffset[3+ind];}
-//   virtual void         GetMatrix(TGeoHMatrix *matrix) 
-//                                 {gGeoMatrixCache->GetMatrix(fOffset[1], matrix);}
-   virtual Int_t        GetMatrixInd()   {return fOffset[1];}
-   virtual Int_t        GetNdaughters()  {return fNdaughters;}
-   virtual TGeoNode    *GetNode()        {return (TGeoNode*)(fOffset[0]+(Long_t)gSystem);}
-   Int_t                GetNused()       {return fNused;}
-   Int_t                GetSize()        {return fSize;}
-   virtual Int_t        GetUsageCount()  {return (fOffset[2]&0x3FFFFFFF);}
-   virtual Bool_t       HasDaughters();
+   virtual Int_t        GetDaughter(Int_t ind) const {return fOffset[3+ind];}
+   virtual Int_t        GetMatrixInd() const   {return fOffset[1];}
+   virtual Int_t        GetNdaughters() const  {return fNdaughters;}
+   virtual TGeoNode    *GetNode() const        {return (TGeoNode*)(fOffset[0]+(Long_t)gSystem);}
+   Int_t                GetNused() const       {return fNused;}
+   Int_t                GetSize() const        {return fSize;}
+   virtual Int_t        GetUsageCount() const  {return (fOffset[2]&0x3FFFFFFF);}
+   virtual Bool_t       HasDaughters() const;
    virtual void         IncreaseArray();
    virtual void         IncrementUsageCount() {fOffset[2]++;}
-   virtual Bool_t       IsPersistent();
+   virtual Bool_t       IsPersistent() const;
    virtual void         SetMatrix(Int_t mind) {fOffset[1] = mind;}
    virtual void         SetPersistency(Bool_t flag=kTRUE);   
 
@@ -421,9 +419,9 @@ public:
 class TGeoNodeObjArray : public TGeoNodeArray
 {
 private:
+   Int_t                fIndex;      // index of current node
    TObjArray           *fObjArray;   //[fSize] array of TGeoNodePos objects
    TGeoNodePos         *fCurrent;    // current node
-   Int_t                fIndex;      // index of current node
 public:
    TGeoNodeObjArray();
    TGeoNodeObjArray(Int_t size);
@@ -436,16 +434,15 @@ public:
    virtual void         ClearDaughter(Int_t ind);
    virtual void         ClearMatrix();
    virtual void         ClearNode();
-//   virtual void         GetMatrix(TGeoHMatrix *matrix) {fCurrent->GetMatrix(matrix);}
-   virtual Int_t        GetMatrixInd() {return fCurrent->GetMatrixInd();}
-   virtual Int_t        GetDaughter(Int_t ind) {return fCurrent->GetDaughter(ind);} 
-   virtual Int_t        GetNdaughters() {return fCurrent->GetNdaughters();}
-   virtual TGeoNode    *GetNode() {return fCurrent->GetNode();}
-   virtual Int_t        GetUsageCount() {return fCurrent->GetUsageCount();}
-   virtual Bool_t       HasDaughters() {return fCurrent->HasDaughters();}
+   virtual Int_t        GetMatrixInd() const {return fCurrent->GetMatrixInd();}
+   virtual Int_t        GetDaughter(Int_t ind) const {return fCurrent->GetDaughter(ind);} 
+   virtual Int_t        GetNdaughters() const {return fCurrent->GetNdaughters();}
+   virtual TGeoNode    *GetNode() const {return fCurrent->GetNode();}
+   virtual Int_t        GetUsageCount() const {return fCurrent->GetUsageCount();}
+   virtual Bool_t       HasDaughters() const {return fCurrent->HasDaughters();}
    virtual void         IncreaseArray();
    virtual void         IncrementUsageCount() {fCurrent->IncrementUsageCount();}
-   virtual Bool_t       IsPersistent() {return fCurrent->IsPersistent();}
+   virtual Bool_t       IsPersistent() const {return fCurrent->IsPersistent();}
    virtual void         SetPersistency(Bool_t flag=kTRUE) {fCurrent->SetPersistency(flag);}   
    virtual void         SetMatrix(Int_t mind) {fCurrent->SetMatrix(mind);}
 
@@ -471,12 +468,12 @@ public:
    void                 SetLocation(Double_t *add) {fLocation=add;}   
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix) = 0;
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix) = 0;
-   virtual void         LocalToMaster(Double_t *local, Double_t *master) = 0;
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) = 0;
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) = 0;
-   virtual void         MasterToLocal(Double_t *master, Double_t *local) = 0;   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) = 0;   
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) = 0;   
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const = 0;
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const = 0;
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const = 0;
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const = 0;   
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const = 0;   
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const = 0;   
   ClassDef(TGeoMatHandler,0)      // global matrix cache handler
 };
 
@@ -494,17 +491,17 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix) {;}
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix) {;}
-   virtual void         LocalToMaster(Double_t *local, Double_t *master) 
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const 
                            {memcpy(master, local, 3*sizeof(Double_t));}
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) 
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const 
                            {memcpy(master, local, 3*sizeof(Double_t));}
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) 
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const 
                            {memcpy(master, local, 3*sizeof(Double_t));}
-   virtual void         MasterToLocal(Double_t *master, Double_t *local)
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const
                            {memcpy(local, master, 3*sizeof(Double_t));}
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local)
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const
                            {memcpy(local, master, 3*sizeof(Double_t));}
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local)
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const
                            {memcpy(local, master, 3*sizeof(Double_t));}
    
   ClassDef(TGeoMatHandlerId,0)      // global matrix cache handler id
@@ -525,14 +522,14 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master);
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master)
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const;
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const
                            {memcpy(master, local, 3*sizeof(Double_t));}
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master);
-   virtual void         MasterToLocal(Double_t *master, Double_t *local);   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local)
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const;   
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const
                            {memcpy(local, master, 3*sizeof(Double_t));}
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local);   
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const;   
    
   ClassDef(TGeoMatHandlerX,0)      // global matrix cache handler X
 };
@@ -551,14 +548,14 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master);
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master)
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const;
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const
                            {memcpy(master, local, 3*sizeof(Double_t));}
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master);
-   virtual void         MasterToLocal(Double_t *master, Double_t *local);   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local)
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const;   
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const
                            {memcpy(local, master, 3*sizeof(Double_t));}
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local);   
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const;   
    
   ClassDef(TGeoMatHandlerY,0)      // global matrix cache handler Y
 };
@@ -577,14 +574,14 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master);
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master)
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const;
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const
                            {memcpy(master, local, 3*sizeof(Double_t));}
-   virtual void         MasterToLocal(Double_t *master, Double_t *local);   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local)
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const;   
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const
                            {memcpy(local, master, 3*sizeof(Double_t));}
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master);
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local);   
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const;   
    
   ClassDef(TGeoMatHandlerZ,0)      // global matrix cache handler Z
 };
@@ -603,14 +600,14 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master);
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master)
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const;
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const
                            {memcpy(master, local, 3*sizeof(Double_t));}
-   virtual void         MasterToLocal(Double_t *master, Double_t *local);   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local)
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const;   
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const
                            {memcpy(local, master, 3*sizeof(Double_t));}
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master);
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local);   
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const;   
    
   ClassDef(TGeoMatHandlerXY,0)      // global matrix cache handler XY
 };
@@ -629,14 +626,14 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master);
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master)
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const;
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const
                            {memcpy(master, local, 3*sizeof(Double_t));}
-   virtual void         MasterToLocal(Double_t *master, Double_t *local);   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local)
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const;   
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const
                            {memcpy(local, master, 3*sizeof(Double_t));}
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master);
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local);   
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const;   
    
   ClassDef(TGeoMatHandlerXZ,0)      // global matrix cache handler XZ
 };
@@ -655,14 +652,14 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master);
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master)
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const;
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const
                            {memcpy(master, local, 3*sizeof(Double_t));}
-   virtual void         MasterToLocal(Double_t *master, Double_t *local);   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local)
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const;   
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const
                            {memcpy(local, master, 3*sizeof(Double_t));}
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master);
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local);   
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const;   
    
   ClassDef(TGeoMatHandlerYZ,0)      // global matrix cache handler YZ
 };
@@ -681,14 +678,14 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master);
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master)
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const;
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const
                            {memcpy(master, local, 3*sizeof(Double_t));}
-   virtual void         MasterToLocal(Double_t *master, Double_t *local);   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local)
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const;   
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const
                            {memcpy(local, master, 3*sizeof(Double_t));}
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master);
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local);   
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const;   
    
   ClassDef(TGeoMatHandlerXYZ,0)      // global matrix cache handler XYZ
 };
@@ -707,15 +704,15 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master);
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master)
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const;
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const
                            {TGeoMatHandlerRot::LocalToMaster(local, master);}
-   virtual void         MasterToLocal(Double_t *master, Double_t *local);   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local)
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const;   
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const
                            {TGeoMatHandlerRot::MasterToLocal(master, local);}
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master)
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const
                            {LocalToMaster(local, master);}
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local)
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const
                            {MasterToLocal(master, local);}
    
   ClassDef(TGeoMatHandlerRot,0)      // global matrix cache handler rot
@@ -735,12 +732,12 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master);
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master);
-   virtual void         MasterToLocal(Double_t *master, Double_t *local);   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local);   
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master);
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local);   
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const;
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const;   
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const;   
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const;
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const;   
    
   ClassDef(TGeoMatHandlerRotTr,0)      // global matrix cache handler rot-tr
 };
@@ -759,12 +756,12 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master) {;}
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) {;}
-   virtual void         MasterToLocal(Double_t *master, Double_t *local) {;}   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) {;}   
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) {;}
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) {;}   
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const {;}
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const {;}
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const {;}   
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const {;}   
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const {;}
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const {;}   
    
   ClassDef(TGeoMatHandlerScl,0)      // global matrix cache handler scale
 };
@@ -783,12 +780,12 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master) {;}
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) {;}
-   virtual void         MasterToLocal(Double_t *master, Double_t *local) {;}   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) {;}   
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) {;}
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) {;}   
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const {;}
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const {;}
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const {;}   
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const {;}   
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const {;}
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const {;}   
    
   ClassDef(TGeoMatHandlerTrScl,0)      // global matrix cache handler tr-scale
 };
@@ -807,12 +804,12 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master) {;}
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) {;}
-   virtual void         MasterToLocal(Double_t *master, Double_t *local) {;}   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) {;}   
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) {;}
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) {;}   
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const {;}
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const {;}
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const {;}   
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const {;}   
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const {;}
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const {;}   
    
   ClassDef(TGeoMatHandlerRotScl,0)      // global matrix cache handler rot-scale
 };
@@ -831,12 +828,12 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master) {;}
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) {;}
-   virtual void         MasterToLocal(Double_t *master, Double_t *local) {;} 
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) {;}   
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) {;}
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) {;}   
+   virtual void         LocalToMaster(Double_t *local, Double_t *master) const {;}
+   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const {;}
+   virtual void         MasterToLocal(Double_t *master, Double_t *local) const {;} 
+   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const {;}   
+   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const {;}
+   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const {;}   
    
   ClassDef(TGeoMatHandlerRotTrScl,0)      // global matrix cache handler rot-tr-scale
 };
@@ -846,49 +843,33 @@ inline void TGeoNodeCache::ClearDaughter(Int_t index) {CdCache();
                                    fCache[fCurrentCache]->ClearDaughter(index);}
 inline void TGeoNodeCache::IncrementUsageCount() {fCache[fCurrentCache]->IncrementUsageCount();
                                    fCount++;}
-inline Int_t TGeoNodeCache::GetUsageCount() {return fCache[fCurrentCache]->GetUsageCount();}
-inline TGeoNode *TGeoNodeCache::GetNode() {return fCache[fCurrentCache]->GetNode();}
-inline Int_t TGeoNodeCache::PushState(Bool_t ovlp, Double_t *point) 
-                           {if (fStackLevel>=kGeoCacheStackSize) return 0; 
-                            ((TGeoCacheState*)fStack->At(fStackLevel))->SetState(fLevel,ovlp,point);
-                            return ++fStackLevel;}
-inline void TGeoNodeCache::Refresh() 
-                           {fCurrentNode=fBranch[fLevel]; fCurrentCache=CacheId(fCurrentNode);
-                            fCurrentIndex=Index(fCurrentNode); fCache[fCurrentCache]->cd(fCurrentIndex);
-                            gGeoMatrixCache->cd(fMatrices[fLevel]);}
-inline Bool_t TGeoNodeCache::PopState(Double_t *point) 
-                           {if (!fStackLevel) return 0;
-                            ((TGeoCacheState*)fStack->At(--fStackLevel))->GetState(fLevel,point);
-                            Refresh(); return (fStackLevel+1);}
-inline Bool_t TGeoNodeCache::PopState(Int_t level, Double_t *point) 
-                           {if (level<=0) return 0;
-                            ((TGeoCacheState*)fStack->At(level-1))->GetState(fLevel,point);
-                            Refresh(); return level;}
+inline Int_t TGeoNodeCache::GetUsageCount() const {return fCache[fCurrentCache]->GetUsageCount();}
+inline TGeoNode *TGeoNodeCache::GetNode() const {return fCache[fCurrentCache]->GetNode();}
 inline void TGeoCacheDummy::Refresh() 
                            {fNode=fNodeBranch[fLevel]; fMatrix=fMatrixBranch[fLevel];}
-inline void TGeoMatrixCache::LocalToMaster(Double_t *local, Double_t *master)
+inline void TGeoMatrixCache::LocalToMaster(Double_t *local, Double_t *master) const
                             {fHandlers[fHandler]->LocalToMaster(local, master);}
-inline void TGeoMatrixCache::LocalToMasterVect(Double_t *local, Double_t *master)
+inline void TGeoMatrixCache::LocalToMasterVect(Double_t *local, Double_t *master) const
                             {fHandlers[fHandler]->LocalToMasterVect(local, master);}
-inline void TGeoMatrixCache::LocalToMasterBomb(Double_t *local, Double_t *master)
+inline void TGeoMatrixCache::LocalToMasterBomb(Double_t *local, Double_t *master) const
                             {fHandlers[fHandler]->LocalToMasterBomb(local, master);}
-inline void TGeoMatrixCache::MasterToLocal(Double_t *master, Double_t *local)
+inline void TGeoMatrixCache::MasterToLocal(Double_t *master, Double_t *local) const
                             {fHandlers[fHandler]->MasterToLocal(master, local);}
-inline void TGeoMatrixCache::MasterToLocalVect(Double_t *master, Double_t *local)
+inline void TGeoMatrixCache::MasterToLocalVect(Double_t *master, Double_t *local) const
                             {fHandlers[fHandler]->MasterToLocalVect(master, local);}
-inline void TGeoMatrixCache::MasterToLocalBomb(Double_t *master, Double_t *local)
+inline void TGeoMatrixCache::MasterToLocalBomb(Double_t *master, Double_t *local) const
                             {fHandlers[fHandler]->MasterToLocalBomb(master, local);}
-inline void TGeoNodeCache::LocalToMaster(Double_t *local, Double_t *master)
+inline void TGeoNodeCache::LocalToMaster(Double_t *local, Double_t *master) const
                             {gGeoMatrixCache->LocalToMaster(local, master);}
-inline void TGeoNodeCache::LocalToMasterVect(Double_t *local, Double_t *master)
+inline void TGeoNodeCache::LocalToMasterVect(Double_t *local, Double_t *master) const
                             {gGeoMatrixCache->LocalToMasterVect(local, master);}
-inline void TGeoNodeCache::LocalToMasterBomb(Double_t *local, Double_t *master)
+inline void TGeoNodeCache::LocalToMasterBomb(Double_t *local, Double_t *master) const
                             {gGeoMatrixCache->LocalToMasterBomb(local, master);}
-inline void TGeoNodeCache::MasterToLocal(Double_t *master, Double_t *local)
+inline void TGeoNodeCache::MasterToLocal(Double_t *master, Double_t *local) const
                             {gGeoMatrixCache->MasterToLocal(master, local);}
-inline void TGeoNodeCache::MasterToLocalVect(Double_t *master, Double_t *local)
+inline void TGeoNodeCache::MasterToLocalVect(Double_t *master, Double_t *local) const
                             {gGeoMatrixCache->MasterToLocalVect(master, local);}
-inline void TGeoNodeCache::MasterToLocalBomb(Double_t *master, Double_t *local)
+inline void TGeoNodeCache::MasterToLocalBomb(Double_t *master, Double_t *local) const
                             {gGeoMatrixCache->MasterToLocalBomb(master, local);}
 
 #endif

@@ -1,17 +1,12 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   01/11/01
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
-// Author : Andrei Gheata -           date Thu 01 Nov 2001 11:59:42 AM CET
-
-/*************************************************************************
- * TGeoAtt - visualization and tracking attributes for volumes and nodes
- *
- *
- *
  *************************************************************************/
 
 #ifndef ROOT_TGeoAtt
@@ -21,10 +16,10 @@
 #include "TObject.h"
 #endif
 
-// forward declarations
-
 /*************************************************************************
- * TGeoAtt - class description 
+ * TGeoAtt - visualization and tracking attributes for volumes and nodes
+ *
+ *
  *
  *************************************************************************/
 

@@ -32,7 +32,8 @@
 
 class TGeoPainter : public TVirtualGeoPainter {
 private:
-    TGeoManager       *fGeo;   // geometry to which applies
+    TGeoManager       *fGeo;       // geometry to which applies
+    Int_t              fNsegments; // number of segments approximating circles
 public:
     TGeoPainter();
     virtual ~TGeoPainter();
@@ -42,6 +43,7 @@ public:
     virtual void       DrawPanel();
     virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py);
     virtual char      *GetObjectInfo(Int_t px, Int_t py) const;
+    Int_t              GetNsegments() const {return fNsegments;}
     virtual void       Paint(Option_t *option="");
     void               PaintShape(X3DBuffer *buff, Bool_t rangeView);
     void               PaintBox(TGeoVolume *vol, Option_t *option="");
@@ -50,6 +52,7 @@ public:
     void               PaintSphere(TGeoVolume *vol, Option_t *option="");
     void               PaintPcon(TGeoVolume *vol, Option_t *option="");
     virtual void       PaintStat(Int_t dostat, Option_t *option="");
+    void               SetNsegments(Int_t nseg) {fNsegments=nseg;}
     virtual void       SetGeoManager(TGeoManager *geom) {fGeo=geom;}
 
     ClassDef(TGeoPainter,0)  //geometry painter

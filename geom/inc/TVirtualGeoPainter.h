@@ -1,3 +1,4 @@
+// @(#)root/geom:$Name:$:$Id:$
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -20,33 +21,41 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TClass
-#include "TClass.h"
+#ifndef ROOT_TObject
+#include "TObject.h"
 #endif
 
+class TGeoVolume;
 class TGeoManager;
 class TObjArray;
 
 class TVirtualGeoPainter : public TObject {
 
 
-private:
-   static TClass   *fgGeoPainter; //Pointer to class painter
+protected:
+   static TVirtualGeoPainter   *fgGeoPainter; //Pointer to class painter
 
 public:
-    TVirtualGeoPainter();
-    virtual ~TVirtualGeoPainter();
-    virtual Int_t      DistanceToPrimitive(Int_t px, Int_t py) = 0;
-    virtual void       Draw(Option_t *option="") = 0;
-    virtual void       DrawOnly(Option_t *option="") = 0;
-    virtual void       DrawPanel() = 0;
-    virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py) = 0;
-    virtual char      *GetObjectInfo(Int_t px, Int_t py) const = 0;
-    virtual void       Paint(Option_t *option="") = 0;
-    virtual void       PaintStat(Int_t dostat, Option_t *option="") = 0;
+   TVirtualGeoPainter();
+   virtual ~TVirtualGeoPainter();
 
+   virtual Int_t      DistanceToPrimitive(Int_t px, Int_t py) = 0;
+   virtual void       Draw(Option_t *option="") = 0;
+   virtual void       DrawOnly(Option_t *option="") = 0;
+   virtual void       DrawPanel() = 0;
+   virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py) = 0;
+   virtual Int_t      GetNsegments() const = 0; 
+   virtual char      *GetObjectInfo(Int_t px, Int_t py) const = 0;
+   virtual void       Paint(Option_t *option="") = 0;
+   virtual void       PaintStat(Int_t dostat, Option_t *option="") = 0;
+   virtual void       PaintBox(TGeoVolume *vol, Option_t *option="") = 0;
+   virtual void       PaintTube(TGeoVolume *vol, Option_t *option="") = 0;
+   virtual void       PaintTubs(TGeoVolume *vol, Option_t *option="") = 0;
+   virtual void       PaintSphere(TGeoVolume *vol, Option_t *option="") = 0;
+   virtual void       PaintPcon(TGeoVolume *vol, Option_t *option="") = 0;
+   virtual void       SetNsegments(Int_t nseg) = 0;    
    static  TVirtualGeoPainter *GeoPainter();
-   static void      SetPainter(const char *painter);
+   static void      SetPainter(TVirtualGeoPainter *painter);
 
     ClassDef(TVirtualGeoPainter,0)  //Abstract interface for geometry painters
 };

@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   30/10/01
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author : Andrei Gheata           date : Tue 30 Oct 2001 11:57:07 AM CET
 
 #ifndef ROOT_TGeoPatternFinder
 #define ROOT_TGeoPatternFinder
@@ -24,12 +26,7 @@
 
 // forward declarations
 ///class TGeoVolume;
-/*
-class TGeoVolumeDiv;
-class TGeoNode;
-class TGeoShape;
-class TGeoMatrix;
-*/
+
 /*************************************************************************
  * TGeoPatternFinder - base finder class for patterns. A pattern is specifying 
  *   a division type
@@ -40,14 +37,14 @@ class TGeoPatternFinder : public TGeoFinder
 {
 protected :
 // data members
-   TGeoVolume         *fBasicCell;      // basic volume used for this pattern
-   TGeoMatrix         *fMatrix;         // generic matrix
-   Int_t               fCurrent;        // current division element
-   Int_t               fNdivisions;     // number of divisions
-   Int_t               fDivIndex;       // index of first div. node
    Double_t            fStep;           // division length
    Double_t            fStart;          // starting point
    Double_t            fEnd;            // ending point
+   Int_t               fCurrent;        // current division element
+   Int_t               fNdivisions;     // number of divisions
+   Int_t               fDivIndex;       // index of first div. node
+   TGeoVolume         *fBasicCell;      // basic volume used for this pattern
+   TGeoMatrix         *fMatrix;         // generic matrix
 
 public:
    // constructors
@@ -57,7 +54,7 @@ public:
    virtual ~TGeoPatternFinder();
    // methods
    virtual void        cd(Int_t idiv) = 0;
-   TGeoVolume         *GetBasicVolume(Int_t index = -1);
+   TGeoVolume         *GetBasicVolume() const;
    Int_t               GetCurrent()  {return fCurrent;}
    Int_t               GetDivIndex() {return fDivIndex;}
    virtual TGeoMatrix *GetMatrix()   {return fMatrix;}
@@ -66,7 +63,6 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point) = 0; 
    virtual void        SetBasicVolume(TGeoVolume *vol) {fBasicCell = vol;}
    void                SetDivIndex(Int_t index) {fDivIndex = index;}
-//   virtual void        Paint(Option_t *option) = 0;
 
   ClassDef(TGeoPatternFinder, 0)              // patterns to divide volumes
 
@@ -98,7 +94,6 @@ public:
    virtual void        cd(Int_t idiv) {fCurrent=idiv; 
                            ((TGeoTranslation*)fMatrix)->SetDx(fStart+idiv*fStep+fStep/2);}
    virtual TGeoNode   *FindNode(Double_t *point);
-//   virtual void        Paint(Option_t *option);
 
   ClassDef(TGeoPatternX, 1)              // X division pattern
 
@@ -127,7 +122,6 @@ public:
    virtual void        cd(Int_t idiv) {fCurrent=idiv; 
                           ((TGeoTranslation*)fMatrix)->SetDy(fStart+idiv*fStep+fStep/2);}
    virtual TGeoNode   *FindNode(Double_t *point); 
-//   virtual void        Paint(Option_t *option);
 
   ClassDef(TGeoPatternY, 1)              // Y division pattern
 
@@ -186,7 +180,6 @@ public:
    virtual void        cd(Int_t idiv) {fCurrent=idiv; 
                            ((TGeoTranslation*)fMatrix)->SetDx(fStart+idiv*fStep+fStep/2);}
    virtual TGeoNode   *FindNode(Double_t *point);
-//   virtual void        Paint(Option_t *option);
 
   ClassDef(TGeoPatternParaX, 1)              // Para X division pattern
 
@@ -215,7 +208,6 @@ public:
    // methods
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point);
-//   virtual void        Paint(Option_t *option);
 
   ClassDef(TGeoPatternParaY, 1)              // Para Y division pattern
 
@@ -245,7 +237,6 @@ public:
    // methods
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point);
-//   virtual void        Paint(Option_t *option);
 
   ClassDef(TGeoPatternParaZ, 1)              // Para Z division pattern
 };
@@ -271,11 +262,10 @@ public:
    // destructor
    virtual ~TGeoPatternTrapZ();
    // methods
-   Double_t            GetTxz() {return fTxz;}
-   Double_t            GetTyz() {return fTyz;}
+   Double_t            GetTxz() const {return fTxz;}
+   Double_t            GetTyz() const {return fTyz;}
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point);
-//   virtual void        Paint(Option_t *option);
 
   ClassDef(TGeoPatternTrapZ, 1)              // Trap od Gtra Z division pattern
 };
@@ -302,7 +292,6 @@ public:
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
    virtual TGeoNode   *FindNode(Double_t *point); 
-//   virtual void        Paint(Option_t *option);
 
   ClassDef(TGeoPatternCylR, 1)              // Cylindrical R division pattern
 
@@ -330,7 +319,6 @@ public:
    // methods
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point); 
-//   virtual void        Paint(Option_t *option);
 
   ClassDef(TGeoPatternCylPhi, 1)              // Cylindrical phi division pattern
 
@@ -358,7 +346,6 @@ public:
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
    virtual TGeoNode   *FindNode(Double_t *point); 
-//   virtual void        Paint(Option_t *option);
 
   ClassDef(TGeoPatternSphR, 1)              // spherical R division pattern
 
@@ -386,7 +373,6 @@ public:
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
    virtual TGeoNode   *FindNode(Double_t *point); 
-//   virtual void        Paint(Option_t *option);
 
   ClassDef(TGeoPatternSphTheta, 1)              // spherical theta division pattern
 
@@ -414,7 +400,6 @@ public:
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
    virtual TGeoNode   *FindNode(Double_t *point); 
-//   virtual void        Paint(Option_t *option);
 
   ClassDef(TGeoPatternSphPhi, 1)              // Spherical phi division pattern
 
@@ -444,7 +429,6 @@ public:
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
    virtual TGeoNode   *FindNode(Double_t *point); 
-//   virtual void        Paint(Option_t *option);
 
   ClassDef(TGeoPatternHoneycomb, 1)             // pattern for honeycomb divisions
 };

@@ -1,17 +1,12 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   01/11/01
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
-// Author : Andrei Gheata           - date Thu 01 Nov 2001 11:43:42 AM CET
-
-/*************************************************************************
- * TGeoChecker - A simple checker generating random points inside a 
- *   geometry. Generates a tree of points on the surfaces coresponding
- *   to the safety of each generated point
- *
  *************************************************************************/
 
 #ifndef ROOT_TGeoChecker
@@ -24,7 +19,9 @@ class TGeoVolume;
 class TTree;
 
 /*************************************************************************
- * TGeoChecker - class description 
+ * TGeoChecker - A simple checker generating random points inside a 
+ *   geometry. Generates a tree of points on the surfaces coresponding
+ *   to the safety of each generated point
  *
  *************************************************************************/
 

@@ -1,3 +1,7 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   30/05/02
+// Divide() implemented by Mihaela Gheata
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,8 +9,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author : Andrei Gheata Sun 30 Jun 2002 03:39:56 PM CEST
-// Divide() implemented by Mihaela Gheata
 
 ////////////////////////////////////////////////////////////////////////////////
 //   TGeoVolume - class containing the full description of a geometrical object. 
@@ -112,7 +114,7 @@
 #include "TGeoMatrix.h"
 #include "TGeoFinder.h"
 #include "TGeoVolume.h"
-#include "TGeoPainter.h"
+#include "TVirtualGeoPainter.h"
 
 ClassImp(TGeoVolume)
 
@@ -178,7 +180,7 @@ void TGeoVolume::ClearShape()
    gGeoManager->ClearShape(fShape);
 }   
 //-----------------------------------------------------------------------------
-void TGeoVolume::CheckPoint()
+void TGeoVolume::CheckPoint() const
 {
    if (!gPad) return;
    Double_t point[3];
@@ -251,7 +253,7 @@ void TGeoVolume::CheckShapes()
    }
 }     
 //-----------------------------------------------------------------------------
-Int_t TGeoVolume::CountNodes(Int_t nlevels)
+Int_t TGeoVolume::CountNodes(Int_t nlevels) const
 {
 // count total number of subnodes starting from this volume, nlevels down
    Int_t count = 1;
@@ -273,7 +275,7 @@ Bool_t TGeoVolume::IsFolder() const
    else return kFALSE;
 }
 //-----------------------------------------------------------------------------
-Bool_t TGeoVolume::IsStyleDefault()
+Bool_t TGeoVolume::IsStyleDefault() const
 {
 // check if the visibility and attributes are the default ones
    if (!IsVisible()) return kFALSE;
@@ -283,12 +285,12 @@ Bool_t TGeoVolume::IsStyleDefault()
    return kTRUE;
 }
 //-----------------------------------------------------------------------------
-void TGeoVolume::InspectMaterial()
+void TGeoVolume::InspectMaterial() const
 {
    fMaterial->Print();
 }
 //-----------------------------------------------------------------------------
-void TGeoVolume::cd(Int_t inode)
+void TGeoVolume::cd(Int_t inode) const
 {
 // Actualize matrix of node indexed <inode>
    if (fFinder) fFinder->cd(inode-fFinder->GetDivIndex());
@@ -586,7 +588,8 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
       return this;
    }
    TString opt = "";
-
+   Int_t id, is, ipl, idiv;
+   
    if (stype == "TGeoBBox") {
 //      printf("Dividing box %s on %i axis\n", GetName(), iaxis);
       Double_t dx = ((TGeoBBox*)fShape)->GetDX();
@@ -651,7 +654,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             }
             fFinder = new TGeoPatternCylR(this, ndiv, start, start+ndiv*step);
             fFinder->SetDivIndex(GetNdaughters());
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                shape = new TGeoTube(start+id*step, start+(id+1)*step, dz);
 //               char *name = new char[20];
 //               sprintf(name, "%s_%i", divname, id+1);
@@ -668,7 +671,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             shape = new TGeoTubeSeg(rmin, rmax, dz, -step/2, step/2);
             vol = new TGeoVolume(divname, shape, fMaterial);
             opt = "Phi";
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
                ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
             }
@@ -684,7 +687,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             shape = new TGeoTube(rmin, rmax, step/2);
             vol = new TGeoVolume(divname, shape, fMaterial);
             opt = "Z";
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
                ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
             }
@@ -712,7 +715,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             }
             fFinder = new TGeoPatternCylR(this, ndiv, start, start+ndiv*step);
             fFinder->SetDivIndex(GetNdaughters());
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                shape = new TGeoTubeSeg(start+id*step, start+(id+1)*step, dz, phi1, phi2);
 //               char *name = new char[20];
 //               sprintf(name, "%s_%i", divname, id+1);
@@ -731,7 +734,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             shape = new TGeoTubeSeg(rmin, rmax, dz, -step/2, step/2);
             vol = new TGeoVolume(divname, shape, fMaterial);
             opt = "Phi";
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
                ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
             }
@@ -747,7 +750,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             shape = new TGeoTubeSeg(rmin, rmax, step/2, phi1, phi2);
             vol = new TGeoVolume(divname, shape, fMaterial);
             opt = "Z";
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
                ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
             }
@@ -775,7 +778,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             shape = new TGeoConeSeg(dz, rmin1, rmax1, rmin2, rmax2, -step/2, step/2);
             vol = new TGeoVolume(divname, shape, fMaterial);
             opt = "Phi";
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
                ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
             }
@@ -788,7 +791,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             }
             fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
             fFinder->SetDivIndex(GetNdaughters());            
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                Double_t z1 = start+id*step;
                Double_t z2 = start+(id+1)*step;
                Double_t rmin1n = 0.5*(rmin1*(dz-z1)+rmin2*(dz+z1))/dz;
@@ -830,7 +833,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             shape = new TGeoConeSeg(dz, rmin1, rmax1, rmin2, rmax2, -step/2, step/2);
             vol = new TGeoVolume(divname, shape, fMaterial);
             opt = "Phi";
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
                ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
             }
@@ -843,7 +846,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             }
             fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
             fFinder->SetDivIndex(GetNdaughters());            
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                Double_t z1 = start+id*step;
                Double_t z2 = start+(id+1)*step;
                Double_t rmin1n = 0.5*(rmin1*(dz-z1)+rmin2*(dz+z1))/dz;
@@ -938,7 +941,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             shape = new TGeoTrd1(dx1, dx2, step/2, dz);
             vol = new TGeoVolume(divname, shape, fMaterial); 
             opt = "Y";
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
                ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
             }
@@ -951,7 +954,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             }
             fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
             fFinder->SetDivIndex(GetNdaughters());            
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                zmin = start+id*step;
                zmax = start+(id+1)*step;
                dx1n = 0.5*(dx1*(dz-zmin)+dx2*(dz+zmin))/dz;
@@ -991,7 +994,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             }
             fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
             fFinder->SetDivIndex(GetNdaughters());            
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                zmin = start+id*step;
                zmax = start+(id+1)*step;
                dx1n = 0.5*(dx1*(dz-zmin)+dx2*(dz+zmin))/dz;
@@ -1029,18 +1032,18 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             fFinder = new TGeoPatternCylPhi(this, ndiv, start, start+ndiv*step);
             fFinder->SetDivIndex(GetNdaughters());            
             shape = new TGeoPcon(-step/2, step, nz);
-            for (Int_t is=0; is<nz; is++)
+            for (is=0; is<nz; is++)
                ((TGeoPcon*)shape)->DefineSection(is, zpl[is], rmin[is], rmax[is]); 
             vol = new TGeoVolume(divname, shape, fMaterial);
             opt = "Phi";
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
                ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
             }
             return vol;
          case 3: // Z division
             // find start plane
-            for (Int_t ipl=0; ipl<nz-1; ipl++) {
+            for (ipl=0; ipl<nz-1; ipl++) {
                if (start<zpl[ipl]) continue;
                else {if ((start+ndiv*step)>zpl[ipl+1]) continue;}
                isect = ipl;
@@ -1053,7 +1056,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
             fFinder->SetDivIndex(GetNdaughters());
             opt = "Z";
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                Double_t z1 = start+id*step;
                Double_t z2 = start+(id+1)*step;
                Double_t rmin1 = (rmin[isect]*(zmax-z1)-rmin[isect+1]*(zmin-z1))/(zmax-zmin);
@@ -1097,18 +1100,18 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             fFinder = new TGeoPatternCylPhi(this, ndiv, start, start+ndiv*step);
             fFinder->SetDivIndex(GetNdaughters());            
             shape = new TGeoPgon(-step/2, step, nedges, nz);
-            for (Int_t is=0; is<nz; is++)
+            for (is=0; is<nz; is++)
                ((TGeoPgon*)shape)->DefineSection(is, zpl[is], rmin[is], rmax[is]); 
             vol = new TGeoVolume(divname, shape, fMaterial);
             opt = "Phi";
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
                ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
             }
             return vol;
          case 3: // Z division
             // find start plane
-            for (Int_t ipl=0; ipl<nz-1; ipl++) {
+            for (ipl=0; ipl<nz-1; ipl++) {
                if (start<zpl[ipl]) continue;
                else {if ((start+ndiv*step)>zpl[ipl+1]) continue;}
                isect = ipl;
@@ -1121,7 +1124,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
             fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
             fFinder->SetDivIndex(GetNdaughters());
             opt = "Z";
-            for (Int_t id=0; id<ndiv; id++) {
+            for (id=0; id<ndiv; id++) {
                Double_t z1 = start+id*step;
                Double_t z2 = start+(id+1)*step;
                Double_t rmin1 = (rmin[isect]*(zmax-z1)-rmin[isect+1]*(zmin-z1))/(zmax-zmin);
@@ -1157,7 +1160,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
       Double_t txz = ((TGeoPatternTrapZ*)fFinder)->GetTxz();
       Double_t tyz = ((TGeoPatternTrapZ*)fFinder)->GetTyz();
       Double_t zmin, zmax, ox,oy,oz;
-      for (Int_t idiv=0; idiv<ndiv; idiv++) {
+      for (idiv=0; idiv<ndiv; idiv++) {
          zmin = start+idiv*step;
          zmax = start+(idiv+1)*step;
          oz = start+idiv*step+step/2;
@@ -1201,6 +1204,7 @@ Int_t TGeoVolume::DistancetoPrimitive(Int_t px, Int_t py)
    TView *view = gPad->GetView();
    if (!view) return big;
    Int_t dist = big;
+   Int_t id;
    
    if (gGeoManager->GetTopVolume() == this) gGeoManager->CdTop();
    Int_t vis_opt = gGeoManager->GetVisOption();
@@ -1222,7 +1226,7 @@ Int_t TGeoVolume::DistancetoPrimitive(Int_t px, Int_t py)
          // check daughters
          if (level<vis_level) {
             if ((!nd) || (!IsVisDaughters())) return dist;
-            for (Int_t id=0; id<nd; id++) {
+            for (id=0; id<nd; id++) {
                node = GetNode(id);
                gGeoManager->CdDown(id);
                dist = node->GetVolume()->DistancetoPrimitive(px, py);
@@ -1241,7 +1245,7 @@ Int_t TGeoVolume::DistancetoPrimitive(Int_t px, Int_t py)
             }
          }
          if (last) return dist;
-         for (Int_t id=0; id<nd; id++) {
+         for (id=0; id<nd; id++) {
             node = GetNode(id);
             gGeoManager->CdDown(id);
             dist = node->GetVolume()->DistancetoPrimitive(px,py);
@@ -1309,11 +1313,12 @@ void TGeoVolume::Paint(Option_t *option)
    painter->Paint(option);   
 }
 //-----------------------------------------------------------------------------
-void TGeoVolume::PrintVoxels()
+void TGeoVolume::PrintVoxels() const
 {
    if (fVoxels) fVoxels->Print();
 }
-void TGeoVolume::PrintNodes()
+//-----------------------------------------------------------------------------
+void TGeoVolume::PrintNodes() const
 {
 // print nodes
    Int_t nd = GetNdaughters();
@@ -1377,13 +1382,13 @@ void TGeoVolume::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 //-----------------------------------------------------------------------------
-TGeoNode *TGeoVolume::FindNode(const char *name)
+TGeoNode *TGeoVolume::FindNode(const char *name) const
 {
 // search a daughter inside the list of nodes
    return ((TGeoNode*)fNodes->FindObject(name));
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoVolume::GetNodeIndex(TGeoNode *node, Int_t *check_list, Int_t ncheck)
+Int_t TGeoVolume::GetNodeIndex(TGeoNode *node, Int_t *check_list, Int_t ncheck) const
 {
    TGeoNode *current = 0;
    for (Int_t i=0; i<ncheck; i++) {
@@ -1393,7 +1398,7 @@ Int_t TGeoVolume::GetNodeIndex(TGeoNode *node, Int_t *check_list, Int_t ncheck)
    return -1;
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoVolume::GetIndex(TGeoNode *node)
+Int_t TGeoVolume::GetIndex(TGeoNode *node) const
 {
 // get index number for a given daughter
    TGeoNode *current = 0;
@@ -1512,6 +1517,7 @@ void TGeoVolume::Sizeof3D() const
    Int_t level = gGeoManager->GetLevel();
    Int_t vis_level=gGeoManager->GetVisLevel();
    Bool_t vis=(IsVisible() && gGeoManager->GetLevel())?kTRUE:kFALSE;
+   Int_t id;
    switch (vis_opt) {
       case TGeoManager::kGeoVisDefault:
          if (vis && (level<=vis_level)) 
@@ -1519,7 +1525,7 @@ void TGeoVolume::Sizeof3D() const
             // draw daughters
          if (level<vis_level) {
             if ((!nd) || (!IsVisDaughters())) return;
-            for (Int_t id=0; id<nd; id++) {
+            for (id=0; id<nd; id++) {
                node = GetNode(id);
                gGeoManager->CdDown(id);
                node->GetVolume()->Sizeof3D();
@@ -1532,7 +1538,7 @@ void TGeoVolume::Sizeof3D() const
          if (vis && last)
             fShape->Sizeof3D();
          if (last) return;
-         for (Int_t id=0; id<nd; id++) {
+         for (id=0; id<nd; id++) {
             node = GetNode(id);
             gGeoManager->CdDown(id);
             node->GetVolume()->Sizeof3D();
@@ -1627,7 +1633,7 @@ void TGeoVolume::SetLineWidth(Style_t lwidth)
    if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }   
 //-----------------------------------------------------------------------------
-TGeoNode *TGeoVolume::GetNode(const char *name)
+TGeoNode *TGeoVolume::GetNode(const char *name) const
 {
 // get the pointer to a daughter node
    Int_t nd = fNodes->GetEntriesFast();
@@ -1639,13 +1645,13 @@ TGeoNode *TGeoVolume::GetNode(const char *name)
    return 0;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoVolume::GetUsageCount(Int_t i)
+Double_t TGeoVolume::GetUsageCount(Int_t i) const
 {
 // check usage count 
    return 0;
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoVolume::GetByteCount()
+Int_t TGeoVolume::GetByteCount() const
 {
 // get the total size in bytes for this volume
    Int_t count = 28+2+6+4+0;    // TNamed+TGeoAtt+TAttLine+TAttFill+TAtt3D
@@ -1664,7 +1670,7 @@ Int_t TGeoVolume::GetByteCount()
    return count;
 }
 //-----------------------------------------------------------------------------
-void TGeoVolume::FindOverlaps()
+void TGeoVolume::FindOverlaps() const
 {
 // loop all nodes marked as overlaps and find overlaping brothers
    if (!Valid()) {
@@ -1682,7 +1688,7 @@ void TGeoVolume::FindOverlaps()
    }
 }
 //-----------------------------------------------------------------------------
-Bool_t TGeoVolume::Valid()
+Bool_t TGeoVolume::Valid() const
 {
    Double_t dx = ((TGeoBBox*)fShape)->GetDX();
    Double_t dy = ((TGeoBBox*)fShape)->GetDY();

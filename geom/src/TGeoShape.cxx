@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   31/01/02
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,8 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author :  Andrei Gheata  - date Thu 31 Jan 2002 01:47:40 PM CET
-// TGeoShape::Contains() implemented by Mihaela Gheata
 
 ////////////////////////////////////////////////////////////////////////////////
 // TGeoShape - base class for all geometrical shapes. Abstract functionality
@@ -27,7 +28,6 @@
 #include "TGeoManager.h"
 #include "TGeoBoolCombinator.h"
 #include "TGeoVolume.h"
-#include "TGeoPainter.h"
 #include "TGeoShape.h"
 
 
@@ -111,7 +111,7 @@ const char *TGeoShape::GetName() const
    return ((TObject *)this)->ClassName();
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoShape::ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py)
+Int_t TGeoShape::ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) const
 {
    Int_t dist = 9999;
    TView *view = gPad->GetView();

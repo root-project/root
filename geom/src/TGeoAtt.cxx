@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   01/11/01
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,24 +8,16 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author : Andrei Gheata - date
-
-////////////////////////////////////////////////////////////////////////////////
-// Full description with examples and pictures
-//
-//
-//
-//
-//Begin_Html
-/*
-<img src=".gif">
-*/
-//End_Html
 
 #include "TGeoManager.h"
 #include "TGeoAtt.h"
 
-// statics and globals
+/*************************************************************************
+ * TGeoAtt - visualization and tracking attributes for volumes and nodes
+ *
+ *
+ *
+ *************************************************************************/
 
 ClassImp(TGeoAtt)
 

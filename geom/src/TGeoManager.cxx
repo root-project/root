@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   25/10/01
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author : Andrei Gheata - date
 
 ////////////////////////////////////////////////////////////////////////////////
 // The geometry package
@@ -201,11 +203,8 @@
 TGeoManager *gGeoManager = 0;
 TGeoNodeCache *gGeoNodeCache = 0;
 
-Int_t TGeoManager::kGeoDefaultNsegments = 20;
 Int_t TGeoManager::kGeoVisLevel = 3;
-Double_t *TGeoManager::kGeoSinTable = 0;
-Double_t *TGeoManager::kGeoCosTable = 0;
-const char *TGeoManager::kGeoOutsidePath = " ";
+const char *kGeoOutsidePath = " ";
 
 ClassImp(TGeoManager)
 
@@ -229,7 +228,6 @@ TGeoManager::TGeoManager()
    fVolumes = 0;
    fShapes = 0;
    fTopVolume = 0;
-   fNsegments = 0;
    fSegStep = 0;
    fTopNode = 0;
    fCurrentVolume = 0;
@@ -247,9 +245,6 @@ TGeoManager::TGeoManager()
    fBombZ = 0;
    fBombR = 0;
    fVisBranch = "";
-   fIgnored = 0;
-   fNignored = 0;
-   fILevel = 0;
    fPainter = 0;
    fGVolumes = 0;
    fGShapes = 0;
@@ -297,9 +292,6 @@ TGeoManager::TGeoManager(const char *name, const char *title)
    fBombY = 1.3;
    fBombZ = 1.3;
    fBombR = 1.3;
-   fIgnored = new Int_t[10];
-   fNignored = 0;
-   fILevel = 0;
    fPoint = new Double_t[3];
    fDirection = new Double_t[3];
    fNormalChecked = new Double_t[3];
@@ -312,7 +304,6 @@ TGeoManager::TGeoManager(const char *name, const char *title)
    fGVolumes = new TList();
    fGShapes = new TList();
    fTopVolume = 0;
-   SetNsegments(10000);
    fTopNode = 0;
    fCurrentVolume = 0;
    fMasterVolume = 0;
@@ -359,12 +350,8 @@ TGeoManager::~TGeoManager()
    delete [] fNormal;
    delete [] fCldir;
    delete [] fRandomBox;
-   delete [] kGeoSinTable;
-   delete [] kGeoCosTable;
    delete fGVolumes;
    delete fGShapes;
-   kGeoSinTable = 0;
-   kGeoCosTable = 0;
    gGeoIdentity = 0;
    gGeoManager = 0;
 }
@@ -1615,165 +1602,6 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
    return clnode;
 }
 //-----------------------------------------------------------------------------
-TGeoNode *TGeoManager::FindNodeLast(Bool_t downwards)
-{
-// we have reached the deepest node containing the point, now
-// look if this is the final solution
-
-   // first check if current node is declared overapping
-   if (!fCurrentNode->IsOverlapping()) {
-      ResetIgnored();
-      return fCurrentNode;
-   }
-   // now check if current node might have real overlaps
-   if (fILevel != (fLevel-1)) ResetIgnored();
-   TGeoNode *node = FindNodeOverlap();
-   // if something was found this is the final solution
-   if (node) return node;
-   // if we were looking downwards we can skip stage 2
-   if (downwards) return fCurrentNode;
-   // if the mother of this is not overlapping, current node is the solution
-   if (!GetMother()->IsOverlapping()) return fCurrentNode;
-   // mother is also overapping node, push current path and go up
-   PushPath();
-   CdUp();
-   while (fLevel>0) {
-      node = FindNodeOverlap();
-      if (node) {
-         PopDummy();
-         ResetIgnored();
-         return node;
-      }
-      if (!GetMother()->IsOverlapping()) {
-         PopPath();
-         ResetIgnored();
-         return fCurrentNode;
-      }
-      CdUp();
-   }
-   PopPath();
-   return fCurrentNode;
-}
-//-----------------------------------------------------------------------------
-TGeoNode *TGeoManager::FindNodeOverlap()
-{
-   // point is in current node, which might overlap with other nodes
-   // from the same level
-//   printf("Checking OVERLAPS for %s\n", fCurrentNode->GetName());
-
-   Int_t novlps = 0;
-   // if no real overlaps with other bboxes, return NULL
-   Int_t *ovlps = fCurrentNode->GetOverlaps(novlps);
-   if (!ovlps) return 0;
-   TGeoVolume *vol = fCurrentNode->GetMotherVolume();
-//   if (!vol) return fCurrentNode;
-   // if division, return
-//   TGeoPatternFinder *finder = vol->GetFinder();
-//   if (finder) return fCurrentNode;
-   TGeoVoxelFinder *voxels = vol->GetVoxels();
-   if (!voxels) return 0;
-   Double_t point[3];
-   Int_t *check_list = 0;
-   Int_t ncheck = 0;
-   TGeoNode *last_node = fCurrentNode;
-   Int_t last_level = fLevel;
-   PushPath();
-   CdUp();
-   MasterToLocal(fPoint, &point[0]);
-   // check if we are still in the mother volume or in protruding MANY
-   if (!vol->GetShape()->Contains(point)) {
-//      printf("WOOPS - protruding MANY\n");
-      ResetIgnored();
-      CdUp();
-      PopDummy();
-      return SearchNode();
-   }
-   check_list = voxels->GetCheckList(&point[0], ncheck);
-   if (!ncheck) {
-      PopPath();
-      return 0;
-   }
-//   if (!ncheck) printf("WOOPS ncheck... lost it\n");
-   Int_t current = vol->GetNodeIndex(last_node, check_list, ncheck);
-   if (current<0) {
-      PopPath();
-      return 0;
-//      printf("WOOPS current node not in mother's voxel ???\n");
-//      printf("mother is %s  node is %s\n", vol->GetName(), last_node->GetName());
-//      printf("check list :\n");
-//      for (Int_t i=0; i<ncheck; i++)
-//         printf("%s\n", vol->GetNode(check_list[ncheck])->GetName());
-   }
-   Bool_t is_virtual = kFALSE;
-   TGeoNode *node = 0;
-   if (ncheck>1) {
-   // loop the check list
-//      printf("Ncheck=%i  Novlp=%i\n", ncheck, novlps);
-      fIgnored[fNignored++] = current;
-      fILevel = fLevel;
-      for (Int_t id=0; id<ncheck; id++) {
-         if (IsIgnored(check_list[id])) continue;
-         for (Int_t iov=0; iov<novlps; iov++) {
-            if (check_list[id]!=ovlps[iov]) continue;
-//            printf("down to checklist[id]=%i\n", check_list[id]);
-            CdDown(check_list[id]);
-            node = SearchNode(kTRUE);
-            if (node) {
-               if (!node->IsOverlapping()) {
-               // an ONLY was found
-                  PopDummy();
-                  return node;
-               }
-               if (fLevel>last_level) {
-               // deeper node found
-                  if (last_node->IsVirtual()) {
-                     PopDummy();
-                     return node;
-                  }
-                  is_virtual = node->IsVirtual();
-                  if (!is_virtual) {
-                     PopDummy();
-                     return node;
-                  }
-                  for (Int_t i=1; i<(fLevel-last_level+2); i++)
-                     is_virtual = is_virtual & GetMother(i)->IsVirtual();
-                  if (!is_virtual) {
-                     PopDummy();
-                     return node;
-                  }
-                  // branch to new node virtual, if old node also virtual choose new
-                  PopPath();
-                  return 0;
-               }
-               // new level equal to old one
-               if (node->IsVirtual()) {
-               // keep old one, new node virtual
-                  PopPath();
-                  return 0;
-               }
-               if (last_node->IsVirtual()) {
-               // the new node is not virtual - this is the solution
-                  PopDummy();
-                  return node;
-               } else {
-               // both nodes not virtual at same level
-                  if (last_node->GetMedia()!=node->GetMedia())
-                     printf("ERROR in geom : 2 MANY's with different media at same level overlapping\n");
-                  PopPath();
-                  return 0;
-               }
-            } else {
-               PopPath();
-               PushPath();
-               CdUp();
-            }
-         }
-      }
-   }
-   PopPath();
-   return 0;
-}
-//-----------------------------------------------------------------------------
 void TGeoManager::InitTrack(Double_t *point, Double_t *dir)
 {
 // initialize current point and current direction vector (normalized)
@@ -1803,7 +1631,7 @@ const char *TGeoManager::Path()
    return fPath.Data();
 }
 //-----------------------------------------------------------------------------
-const char *TGeoManager::GetPath()
+const char *TGeoManager::GetPath() const
 {
    if (fIsOutside) return kGeoOutsidePath;
    return gGeoNodeCache->GetPath();
@@ -1833,14 +1661,14 @@ TVirtualGeoPainter *TGeoManager::GetMakeDefPainter()
     return fPainter;
 }
 //-----------------------------------------------------------------------------
-TGeoMaterial *TGeoManager::GetMaterial(const char *matname)
+TGeoMaterial *TGeoManager::GetMaterial(const char *matname) const
 {
 // search for given material
    TGeoMaterial *mat = (TGeoMaterial*)fMaterials->FindObject(matname);
    return mat;
 }
 //-----------------------------------------------------------------------------
-TGeoMaterial *TGeoManager::GetMaterial(Int_t id)
+TGeoMaterial *TGeoManager::GetMaterial(Int_t id) const
 {
 // return material at position id
    if (id >= fMaterials->GetSize()) return 0;
@@ -1848,7 +1676,7 @@ TGeoMaterial *TGeoManager::GetMaterial(Int_t id)
    return mat;
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoManager::GetMaterialIndex(const char *matname)
+Int_t TGeoManager::GetMaterialIndex(const char *matname) const
 {
 // return index of given material
    TIter next(fMaterials);
@@ -1972,7 +1800,7 @@ void TGeoManager::RestoreMasterVolume()
    if (fMasterVolume) SetTopVolume(fMasterVolume);
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoManager::GetVolume(const char *name)
+TGeoVolume *TGeoManager::GetVolume(const char *name) const
 {
 // retrieves a named volume
    return ((TGeoVolume*)fVolumes->FindObject(name));
@@ -2145,7 +1973,7 @@ TGeoVolume *TGeoManager::MakeEltu(const char *name, const char *material,
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::MakeCtub(const char *name, const char *material,
                                      Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
-                                     Double_t lx, Double_t ly, Double_t lz, Double_t hx, Double_t hy, Double_t hz)
+                                     Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
 {
 // Make in one step a volume pointing to a tube segment shape with given material
    TGeoVolume *old = 0;
@@ -2156,7 +1984,7 @@ TGeoVolume *TGeoManager::MakeCtub(const char *name, const char *material,
       Warning("MakeTubs", "Material unknown");
       mat = GetMaterial("default");
    }
-   TGeoCtub *ctub = new TGeoCtub(rmin, rmax, dz, phi1, phi2, lx, ly, lz, hx, hy, hz);
+   TGeoCtub *ctub = new TGeoCtub(rmin, rmax, dz, phi1, phi2, lx, ly, lz, tx, ty, tz);
    TGeoVolume *vol = new TGeoVolume(name, ctub, mat);
    if (old) vol->MakeCopyNodes(old);
    return vol;
@@ -2326,6 +2154,7 @@ TGeoVolumeMulti *TGeoManager::MakeVolumeMulti(const char *name, const char *mate
    }
    return (new TGeoVolumeMulti(name, mat));
 }
+
 //-----------------------------------------------------------------------------
 void TGeoManager::SetExplodedView(UInt_t ibomb)
 {
@@ -2350,42 +2179,30 @@ void TGeoManager::SetExplodedView(UInt_t ibomb)
       gPad->Update();
    }
 }
+
 //-----------------------------------------------------------------------------
 void TGeoManager::SetNsegments(Int_t nseg)
 {
-// (re)compute tables of Sin and Cos
+// Set number of segments for approximating circles
    if (nseg < 3) return;
-   fNsegments = nseg;
-   if (kGeoSinTable) {
-      delete [] kGeoSinTable;
-      delete [] kGeoCosTable;
-   }
-   kGeoSinTable = new Double_t[nseg];
-   kGeoCosTable = new Double_t[nseg];
-   Double_t step = 360./nseg;
-   fSegStep = step;
-   Double_t phi = 0;
-   for (Int_t i=0; i<nseg; i++) {
-      phi = i*step*TMath::Pi()/180;
-      kGeoSinTable[i] = TMath::Sin(phi);
-      kGeoCosTable[i] = TMath::Cos(phi);
-   }
+   TVirtualGeoPainter *painter = GetMakeDefPainter();
+   if (painter) painter->SetNsegments(nseg);
 }
+
 //-----------------------------------------------------------------------------
-Double_t TGeoManager::CoSin(Double_t phi, Bool_t icos)
+Int_t TGeoManager::GetNsegments() const
 {
-   if (phi<0) phi+=360;
-   Int_t n1 = ((Int_t)(phi/fSegStep))%fNsegments;
-   if (icos)
-      return kGeoCosTable[n1];
-   else
-      return kGeoSinTable[n1];
+// Get number of segments approximating circles
+   TVirtualGeoPainter *painter = ((TGeoManager*)this)->GetMakeDefPainter();
+   if (painter) return painter->GetNsegments();
+   return 0;
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::ComputeGlobalMatrices(Option_t *option)
-{
+{   
 // compute global matrices according to option
 }
+
 //-----------------------------------------------------------------------------
 void TGeoManager::BuildDefaultMaterials()
 {

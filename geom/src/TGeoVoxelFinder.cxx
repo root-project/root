@@ -1,3 +1,6 @@
+// @(#)root/geom:$Name:$:$Id:$
+// Author: Andrei Gheata   04/02/02
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -5,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// Author :   date
 
 ////////////////////////////////////////////////////////////////////////////////
 // Full description with examples and pictures
@@ -143,7 +145,7 @@ void TGeoVoxelFinder::BuildBoundingBoxes()
    }
 }
 //-----------------------------------------------------------------------------
-void TGeoVoxelFinder::DaughterToMother(Int_t id, Double_t *local, Double_t *master)
+void TGeoVoxelFinder::DaughterToMother(Int_t id, Double_t *local, Double_t *master) const
 {
 // convert a point from the local reference system of node id to reference
 // system of mother volume
@@ -157,7 +159,7 @@ TGeoNode *TGeoVoxelFinder::FindNode(Double_t *point)
    return 0;
 }
 //-----------------------------------------------------------------------------
-void TGeoVoxelFinder::FindOverlaps(Int_t inode)
+void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
 {
 // create the list of nodes for which the bboxes overlap with inode's bbox
    if (!fBoxes) return;
@@ -1394,7 +1396,7 @@ void TGeoVoxelFinder::Print(Option_t *) const
    }
 }
 //-----------------------------------------------------------------------------
-void TGeoVoxelFinder::PrintVoxelLimits(Double_t *point)
+void TGeoVoxelFinder::PrintVoxelLimits(Double_t *point) const
 {
 // print the voxel containing point
    Int_t im=0;
