@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.4 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.5 2002/12/08 16:56:54 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -80,20 +80,25 @@ istream& TString::ReadToDelim(istream& strm, char delim)
    // encountered, do a resize and keep reading.
 
    Clobber(GetInitialCapacity());
+   int p = strm.peek();             // Check if we are already at delim
+   if (p == delim) {                
+     strm.get();                      // eat the delimiter, and return \0.
+   }else{
 
-   while (1) {
-      strm.get(fData+Length(),            // Address of next byte
-               Capacity()-Length()+1,     // Space available (+1 for terminator)
-               delim);                    // Delimiter
-      Pref()->fNchars += strm.gcount();
-      if (!strm.good()) break;            // Check for EOF or stream failure
-      int p = strm.peek();
-      if (p == delim) {                   // Check for delimiter
-         strm.get();                      // eat the delimiter.
+     while (1) {
+       strm.get(fData+Length(),            // Address of next byte
+                Capacity()-Length()+1,     // Space available (+1 for terminator)
+                delim);                    // Delimiter
+       Pref()->fNchars += strm.gcount();
+       if (!strm.good()) break;            // Check for EOF or stream failure
+       int p = strm.peek();
+       if (p == delim) {                   // Check for delimiter
+         strm.get();                       // eat the delimiter.
          break;
-      }
-      // Delimiter not seen.  Resize and keep going:
-      Capacity(Length() + GetResizeIncrement());
+       }
+       // Delimiter not seen.  Resize and keep going:
+       Capacity(Length() + GetResizeIncrement());
+     }
    }
 
    fData[Length()] = '\0';                // Add null terminator
