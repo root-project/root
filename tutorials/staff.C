@@ -27,7 +27,9 @@
    TFile *f = new TFile("staff.root","RECREATE");
    TTree *tree = new TTree("tree","staff data from ascii file");
    tree->Branch("staff",&staff.cat,"cat/I:division:flag:age:service:children:grade:step:nation:hrweek:cost");
-
+    //note that the above branch declaration may also be replaced by
+    // staff_t *staff1=&staff;
+    // tree->Branch("staff","staff_t",&staff1);
    while (fgets(&line,80,fp)) {
       sscanf(&line[0] ,"%d%d%d%d", &staff.cat,&staff.division,&staff.flag,&staff.age);
       sscanf(&line[13],"%d%d%d%d", &staff.service,&staff.children,&staff.grade,&staff.step);
