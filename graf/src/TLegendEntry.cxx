@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.2 2000/06/27 06:43:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.3 2000/12/13 15:13:50 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -106,9 +106,9 @@ void TLegendEntry::SaveEntry( ofstream &out, const char* name )
   //  to be used with the SaveAs .C option
   char quote = '"';
   if ( gROOT->ClassSaved( TLegendEntry::Class() ) ) {
-    out << "   ";
+    out << "   entry=";
   } else {
-    out << "   TLegendEntry *";
+    out << "   TLegendEntry *entry=";
   }
   TString objname = "NULL";
   if ( fObject ) objname = fObject->GetName();
