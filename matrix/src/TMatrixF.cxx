@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.47 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.2 2004/01/26 07:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -784,8 +784,10 @@ TMatrixF &TMatrixF::Abs()
 
         Float_t *ep = this->GetElements();
   const Float_t * const fp = ep+fNelems;
-  while (ep < fp)
-    *ep++ = TMath::Abs(*ep);
+  while (ep < fp) {
+    *ep = TMath::Abs(*ep);
+    *ep++;
+  }
 
   return *this;
 }
@@ -799,8 +801,10 @@ TMatrixF &TMatrixF::Sqr()
 
         Float_t *ep = this->GetElements();
   const Float_t * const fp = ep+fNelems;
-  while (ep < fp)
-    *ep++ = (*ep) * (*ep);
+  while (ep < fp) {
+    *ep = (*ep) * (*ep);
+    *ep++;
+  }
 
   return *this;
 }
@@ -814,8 +818,10 @@ TMatrixF &TMatrixF::Sqrt()
 
         Float_t *ep = this->GetElements();
   const Float_t * const fp = ep+fNelems;
-  while (ep < fp)
-    *ep++ = TMath::Sqrt(*ep);
+  while (ep < fp) {
+    *ep = TMath::Sqrt(*ep);
+    *ep++;
+  }
 
   return *this;
 }

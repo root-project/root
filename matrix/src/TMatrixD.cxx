@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.47 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.50 2004/01/26 07:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -780,8 +780,10 @@ TMatrixD &TMatrixD::Abs()
 
         Double_t *ep = this->GetElements();
   const Double_t * const fp = ep+fNelems;
-  while (ep < fp)
+  while (ep < fp) {
+    *ep = TMath::Abs(*ep);
     *ep++ = TMath::Abs(*ep);
+  }
 
   return *this;
 }
@@ -795,8 +797,10 @@ TMatrixD &TMatrixD::Sqr()
 
         Double_t *ep = this->GetElements();
   const Double_t * const fp = ep+fNelems;
-  while (ep < fp)
-    *ep++ = (*ep) * (*ep);
+  while (ep < fp) {
+    *ep = (*ep) * (*ep);
+    *ep++;
+  }
 
   return *this;
 }
@@ -810,8 +814,10 @@ TMatrixD &TMatrixD::Sqrt()
 
         Double_t *ep = this->GetElements();
   const Double_t * const fp = ep+fNelems;
-  while (ep < fp)
-    *ep++ = TMath::Sqrt(*ep);
+  while (ep < fp) {
+    *ep = TMath::Sqrt(*ep);
+    *ep++;
+  }
 
   return *this;
 }

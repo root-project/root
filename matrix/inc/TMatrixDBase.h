@@ -129,10 +129,6 @@ public:
   Bool_t operator> (Double_t val) const;
   Bool_t operator>=(Double_t val) const;
 
-  friend Double_t E2Norm       (const TMatrixDBase &m1,const TMatrixDBase &m2);
-  friend Bool_t   AreCompatible(const TMatrixDBase &m1,const TMatrixDBase &m2,Int_t verbose);
-  friend void     Compare      (const TMatrixDBase &m1,const TMatrixDBase &m2);
-
   ClassDef(TMatrixDBase,2) // Matrix class (double precision)
 };
 
@@ -147,7 +143,7 @@ Double_t TMatrixDBase::SetTol(Double_t newTol)
 Double_t E2Norm       (const TMatrixDBase &m1,const TMatrixDBase &m2);
 Bool_t   AreCompatible(const TMatrixDBase &m1,const TMatrixDBase &m2,Int_t verbose=0);
 Bool_t   AreCompatible(const TMatrixDBase &m1,const TMatrixFBase &m2,Int_t verbose=0);
-void   Compare      (const TMatrixDBase &m1,const TMatrixDBase &m2);
+void     Compare      (const TMatrixDBase &m1,const TMatrixDBase &m2);
 
 // Service functions (useful in the verification code).
 // They print some detail info if the validation condition fails

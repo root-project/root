@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.31 2004/01/25 23:28:44 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.32 2004/01/26 07:34:43 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -361,8 +361,10 @@ TVectorD &TVectorD::Abs()
 
         Double_t *ep = this->GetElements();
   const Double_t * const fp = ep+fNrows;
-  while (ep < fp)
-    *ep++ = TMath::Abs(*ep);
+  while (ep < fp) {
+    *ep = TMath::Abs(*ep);
+    *ep++;
+  }
 
   return *this;
 }
@@ -376,8 +378,10 @@ TVectorD &TVectorD::Sqr()
 
         Double_t *ep = this->GetElements();
   const Double_t * const fp = ep+fNrows;
-  while (ep < fp)
-    *ep++ = (*ep) * (*ep);
+  while (ep < fp) {
+    *ep = (*ep) * (*ep);
+    *ep++;
+  }
 
   return *this;
 }
@@ -393,7 +397,8 @@ TVectorD &TVectorD::Sqrt()
   const Double_t * const fp = ep+fNrows;
   while (ep < fp) {
     Assert(*ep >= 0);
-    *ep++ = TMath::Sqrt(*ep);
+    *ep = TMath::Sqrt(*ep);
+    *ep++;
   }
 
   return *this;
