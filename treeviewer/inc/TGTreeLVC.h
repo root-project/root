@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:$:$Id:$
+// @(#)root/treeviewer:$Name:  $:$Id: TGTreeLVC.h,v 1.4 2000/11/22 16:27:44 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -27,8 +27,10 @@
 #include "TGListView.h"
 #endif
 
+
 class TGLabel;
 class TGTextEntry;
+class TTreeViewer;
 
 
 class TGLVTreeEntry : public TGLVEntry {
@@ -70,10 +72,10 @@ class TGTreeLVC : public TGLVContainer {
 friend class TGClient;
 
 private:
-   Cursor_t     fCursor;
-   Cursor_t     fDefaultCursor;
-   TGListView   *fListView;
-
+   Cursor_t     fCursor;             // current cursor
+   Cursor_t     fDefaultCursor;      // default cursor
+   TGListView   *fListView;          // associated list view
+   TTreeViewer  *fViewer;            // pointer to tree viewer
 public:
    TGTreeLVC(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options=kSunkenFrame);
    virtual ~TGTreeLVC() {}
@@ -85,6 +87,7 @@ public:
    const char*  Ey();
    const char*  Ez();
    void         SetListView(TGListView *lv) {fListView = lv;}
+   void         SetViewer(TTreeViewer *viewer) {fViewer = viewer;}
    void         RemoveNonStatic();
    const char*  ScanList();
    void         SelectItem(const char* name);

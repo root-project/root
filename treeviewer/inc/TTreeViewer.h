@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeView.h,v 1.7 2000/11/22 16:27:44 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.2 2000/11/22 17:59:18 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -148,7 +148,6 @@ private:
    void         MapBranch(TBranch *branch, TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
    void         MapOptions(Long_t parm1);
    void         MapTree(TTree *tree, TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
-   void         Message(const char* msg);
    const char*  ScanList();
    void         SetParentTree(TGListTreeItem *item);
    void         Warning(const char* msg);
@@ -167,6 +166,7 @@ public:
    TTree*       GetTree() {return fTree;};
    Bool_t       HandleTimer(TTimer *timer);
    Int_t        MakeSelector(const char* selector = 0);         // *MENU*
+   void         Message(const char* msg);
    void         PrintEntries();
    Int_t        Process(const char* filename, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
    Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);

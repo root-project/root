@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.3 2000/11/22 17:59:18 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.4 2000/11/22 18:03:03 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -481,7 +481,7 @@ void TTreeViewer::BuildInterface()
    fBarLbl1 = new TGLabel(fToolBar,"Command");
    fToolBar->AddFrame(fBarLbl1,lo);
    //--- command text entry
-   fBarCommand = new TGTextEntry(fToolBar, new TGTextBuffer(100),kBarCommand);
+   fBarCommand = new TGTextEntry(fToolBar, new TGTextBuffer(250),kBarCommand);
    fBarCommand->SetWidth(120);
    fBarCommand->Associate(this);
    fToolBar->AddFrame(fBarCommand, lo);
@@ -498,7 +498,7 @@ void TTreeViewer::BuildInterface()
    fBarLbl2 = new TGLabel(fToolBar,"Option");
    fToolBar->AddFrame(fBarLbl2, lo);
    //--- drawing option text entry
-   fBarOption = new TGTextEntry(fToolBar, new TGTextBuffer(100),kBarOption);
+   fBarOption = new TGTextEntry(fToolBar, new TGTextBuffer(200),kBarOption);
    fBarOption->SetWidth(100);
    fBarOption->Associate(this);
    fToolBar->AddFrame(fBarOption, lo);
@@ -600,6 +600,7 @@ void TTreeViewer::BuildInterface()
    fLVContainer = new TGTreeLVC(fListView->GetViewPort(),400,300);
    fLVContainer->Associate(this);
    fLVContainer->SetListView(fListView);
+   fLVContainer->SetViewer(this);
    fLVContainer->SetBackgroundColor(fgWhitePixel);
    fListView->GetViewPort()->SetBackgroundColor(fgWhitePixel);
    fListView->SetContainer(fLVContainer);
@@ -862,9 +863,9 @@ void TTreeViewer::ExecuteDraw()
 {
 //*-*-*-*-*-*-*-*-*Called when the DRAW button is executed*-*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
-   char varexp[100];
+   char varexp[2000];
    varexp[0] = 0;
-   char command[512];
+   char command[2000];
    command[0] = 0;
    // fill in expressions
    if (fVarDraw) {
@@ -894,27 +895,18 @@ void TTreeViewer::ExecuteDraw()
       strcat(varexp, fBarHist->GetText());
    }
    // find canvas/pad where to draw
-   TPad *pad = (TPad*)gROOT->GetSelectedPad();
-   if (pad) {
-      pad->cd();
-   } else {
-      new TCanvas("c1");
+   if (!(fBarScan->GetState() == kButtonDown)) {
+      TPad *pad = (TPad*)gROOT->GetSelectedPad();
+      if (pad) {
+         pad->cd();
+      } else {
+         new TCanvas("c1");
+      }
    }
    // find graphics option
    const char* gopt = fBarOption->GetText();
    // just in case a previous interrupt was posted
    gROOT->SetInterrupt(kFALSE);
-   // check if only histogram has to be updated
-   if (fBarH->GetState() == kButtonDown) {
-      // reset 'Hist' mode
-      fBarH->SetState(kButtonUp);
-      TH1 *hist = fTree->GetHistogram();
-      if (hist) {
-         hist->Draw(gopt);
-         gPad->Update();
-         return;
-      }
-   }
    // check if cut is enabled
    const char *cut = "";
    if (fEnableCut) cut = Cut();
@@ -927,15 +919,36 @@ void TTreeViewer::ExecuteDraw()
    // check if Scan is checked and if there is something in the box
    if (strlen(ScanList())) sprintf(varexp, ScanList());
    if (fBarScan->GetState() == kButtonDown) {
+      fBarScan->SetState(kButtonUp);
       sprintf(command, "tree->Scan(\"%s\",\"%s\",\"%s\", %i, %i);",
               varexp, cut, gopt, nentries, firstentry);
       ExecuteCommand(command, kTRUE);
       return;
    }
+   // check if only histogram has to be updated
+   if (fBarH->GetState() == kButtonDown) {
+      // reset 'Hist' mode
+      fBarH->SetState(kButtonUp);
+      TH1 *hist = fTree->GetHistogram();
+      if (hist) {
+         hist->Draw(gopt);
+         gPad->Update();
+         return;
+      }
+   }
    // send draw command
    sprintf(command, "tree->Draw(\"%s\",\"%s\",\"%s\", %i, %i);",
            varexp, cut, gopt, nentries, firstentry);
-   ExecuteCommand(command, kTRUE);
+   if (fCounting) return;
+   fCounting = kTRUE;   
+   fTree->SetTimerInterval(50);
+   fTimer->TurnOn();
+//   fTree->Draw(varexp, cut, gopt, nentries, firstentry);
+   ExecuteCommand(command);
+   fTimer->TurnOff();
+   fTree->SetTimerInterval(0);
+   fCounting = kFALSE;
+   if (gROOT->IsInterrupted()) printf("Interrupt\n");
    gPad->Update();
 }
 //______________________________________________________________________________
@@ -1033,11 +1046,12 @@ void TTreeViewer::RemoveItem()
 Bool_t TTreeViewer::HandleTimer(TTimer *timer)
 {
 // This function is called by the fTimer object
+   if (fCounting) {
+      cout << "time\n";   
+   }
    timer->Reset();
-   fCounting = kTRUE;
    // functionality to be added
-   if (gPad) gPad->SetCursor(kWatch);
-   cout << "time\n";
+//   if (gPad) gPad->SetCursor(kWatch);
    return kFALSE;
 }
 //______________________________________________________________________________
@@ -1197,10 +1211,8 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      ExecuteDraw();
                      break;
                   case kSTOP:
-                     gROOT->SetInterrupt(kTRUE); // not working :(
-                     if (fCounting) {
-                        fTimer->TurnOff();
-                     }
+		     if (fCounting)
+                        gROOT->SetInterrupt(kTRUE); // not working :(
                      break;
                   case kCLOSE:
                      CloseWindow();
@@ -1358,8 +1370,9 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         void *p = 0;
                         TGLVTreeEntry *item;
                         if ((item = (TGLVTreeEntry *) fLVContainer->GetNextSelected(&p)) != 0) {
-                           TString trueName = item->GetTrueName();
-                           char* msg = new char[256];
+                           TString trueName(2000);
+                           trueName = item->GetTrueName();
+                           char* msg = new char[2000];
                            // get item type
                            ULong_t *itemType = (ULong_t *) item->GetUserData();
                            if (*itemType & kLTTreeType) {
@@ -1371,20 +1384,24 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                               // scissors clicked
                                  sprintf(msg, "Cut : %s", item->GetTrueName());
                               } else {
-                                 if (*itemType & kLTExpressionType) {
-                                 // expression clicked
-                                    sprintf(msg, "Expression : %s", item->GetTrueName());
-                                 } else {
-                                    if (*itemType & kLTBranchType) {
-                                       sprintf(msg, "Branch : %s", item->GetTrueName());
+                                 if (*itemType & kLTPackType) {
+                                    sprintf(msg, "Box : %s", item->GetTrueName());
+				 } else {
+			            if (*itemType & kLTExpressionType) {
+                                       // expression clicked
+                                       sprintf(msg, "Expression : %s", item->GetTrueName());
                                     } else {
-                                       sprintf(msg, "Leaf : %s", item->GetTrueName());
+                                       if (*itemType & kLTBranchType) {
+                                          sprintf(msg, "Branch : %s", item->GetTrueName());
+                                       } else {
+                                          sprintf(msg, "Leaf : %s", item->GetTrueName());
+                                       }
                                     }
                                  }
                               }
                            }
                            // write who is responsable for this
-                           Message(msg);
+                           if (strlen(msg) < 150) Message(msg);
                            delete[] msg;
                            // check if this should be pasted into the expression editor
                            if ((*itemType & kLTBranchType) || (*itemType & kLTCutType)) break;
@@ -1392,7 +1409,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                            if (!fDialogBox) break;
                            // paste it
                            char first = (char) trueName(0);
-                           TString insert("");
+                           TString insert(2000);
                            if (first != '(') insert += "(";
                            insert += item->GetTrueName();
                            if (first != '(') insert += ")";
@@ -1435,7 +1452,8 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         if ((item = (TGLVTreeEntry *) fLVContainer->GetNextSelected(&p)) != 0) {
                         // get item type
                            ULong_t *itemType = (ULong_t *) item->GetUserData();
-                           if (!(*itemType & kLTCutType) && !(*itemType & kLTBranchType)) {
+                           if (!(*itemType & kLTCutType) && !(*itemType & kLTBranchType)
+			        && !(*itemType & kLTPackType)) {
                               if (strlen(item->GetTrueName())) {
                                  fVarDraw = kTRUE;
                                  // draw on double-click
@@ -1450,6 +1468,10 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                               } else {
                                  item->SetSmallPic(gClient->GetPicture("cut-disable_t.xpm"));
                               }
+                           }
+                           if (*itemType & kLTPackType) {
+                              fBarScan->SetState(kButtonDown);
+                              ExecuteDraw();
                            }
                         }
                      }
@@ -1490,14 +1512,18 @@ void TTreeViewer::ExecuteCommand(const char* command, Bool_t fast)
    if (fBarRec->GetState() == kButtonDown) {
    // show the command on the command line
       printf("%s\n", command);
-      char comm[256];
+      char comm[2000];
       comm[0] = 0;
+      if (strlen(command) > 1999) {
+         printf("Command too long : aborting\n");
+	 return;
+      }
       sprintf(comm, command);
       // print the command to history file
       Gl_histadd(comm);
    }
-   gROOT->SetInterrupt(kFALSE);
-   fTimer->TurnOn();
+//   gROOT->SetInterrupt(kFALSE);
+//   fTimer->TurnOn();
    // execute it
    if (fast) {
       gROOT->ProcessLineFast(command);
@@ -1505,8 +1531,8 @@ void TTreeViewer::ExecuteCommand(const char* command, Bool_t fast)
       gROOT->ProcessLine(command);
    }
 //   HandleTimer(fTimer);
-   fTimer->TurnOff();
-   fCounting = kFALSE;
+//   fTimer->TurnOff();
+//   fCounting = kFALSE;
    // make sure that 'draw on double-click' flag is reset
    fVarDraw = kFALSE;
 }
