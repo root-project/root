@@ -1,12 +1,10 @@
-// @(#)root/mc:$Name:  $:$Id: TMCVerbose.cxx,v 1.1 2003/02/26 13:31:32 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TMCVerbose.cxx,v 1.2 2003/02/26 21:06:30 brun Exp $
 // Author: Ivana Hrivnacova, 27/03/2002
 
 //
 // Class TMCVerbose
 // ----------------
 // Class for printing detailed info from MC application.
-
-#include <iomanip>
 
 #include "Riostream.h"
 #include "TVirtualMC.h"
@@ -217,48 +215,46 @@ void TMCVerbose::Stepping()
 // Stepping info
 // ---
 
-#ifdef DOESNOTCOMPILE
   if (fLevel>2) {
   
+#if __GNUC__ >= 3
+    cout << std::fixed;
+#endif
+    
     // Step number
     // 
-    cout << "#" << std::fixed << std::setw(4) << fStepNumber++ << "  ";
+    cout << "#" << setw(4) << fStepNumber++ << "  ";
 
     // Position
     //
     Double_t x, y, z;
     gMC->TrackPosition(x, y, z);
-    cout << std::fixed 
-	 << std::setw(8) << std::setprecision(3) << x << " " 
-	 << std::setw(8) << std::setprecision(3) << y << " " 
-	 << std::setw(8) << std::setprecision(3) << z << "  ";
+    cout << setw(8) << setprecision(3) << x << " " 
+	 << setw(8) << setprecision(3) << y << " " 
+	 << setw(8) << setprecision(3) << z << "  ";
 	 
     // Kinetic energy
     //	 
     Double_t px, py, pz, etot;
     gMC->TrackMomentum(px, py, pz, etot);
     Double_t ekin = etot - gMC->TrackMass(); 
-    cout << std::fixed 
-	 << std::setw(9) << std::setprecision(4) << ekin*1e03 << " "; 
+    cout << setw(9) << setprecision(4) << ekin*1e03 << " "; 
    
     // Energy deposit
     //	 
-    cout << std::fixed 
-	 << std::setw(9) << std::setprecision(4) << gMC->Edep()*1e03 << " "; 
+    cout << setw(9) << setprecision(4) << gMC->Edep()*1e03 << " "; 
    
     // Step length
     //	 
-    cout << std::fixed 
-	 << std::setw(8) << std::setprecision(3) << gMC->TrackStep() << " ";
+    cout << setw(8) << setprecision(3) << gMC->TrackStep() << " ";
 	 
     // Track length
     //	 
-    cout << std::fixed 
-	 << std::setw(8) << std::setprecision(3) << gMC->TrackLength() << "     ";
+    cout << setw(8) << setprecision(3) << gMC->TrackLength() << "     ";
 
     // Volume
     //	 
-    cout << std::setw(4) << gMC->CurrentVolName() << "  ";
+    cout << setw(4) << gMC->CurrentVolName() << "  ";
 
     // Process  
     //	 
@@ -269,7 +265,6 @@ void TMCVerbose::Stepping()
 
     cout << endl;
   }
-#endif
 }
 
 //_____________________________________________________________________________
