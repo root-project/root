@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.12 2000/12/22 12:36:00 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.13 2001/03/14 08:03:36 brun Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -236,7 +236,7 @@ private:
 
 public:
    TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
-               UInt_t options = kMainFrame | kVerticalFrame);
+               UInt_t options = kVerticalFrame);
    virtual ~TestDialog();
 
    virtual void CloseWindow();
@@ -261,7 +261,7 @@ private:
 
 public:
    TestMsgBox(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
-              UInt_t options = kMainFrame | kVerticalFrame);
+              UInt_t options = kVerticalFrame);
    virtual ~TestMsgBox();
 
    virtual void CloseWindow();

@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.2 2000/10/29 14:31:48 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.3 2000/10/30 11:01:15 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -255,7 +255,7 @@ private:
 
 public:
    TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
-               UInt_t options = kMainFrame | kVerticalFrame);
+               UInt_t options = kVerticalFrame);
    virtual ~TestDialog();
 
    // slots
@@ -286,7 +286,7 @@ private:
 
 public:
    TestMsgBox(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
-              UInt_t options = kMainFrame | kVerticalFrame);
+              UInt_t options = kVerticalFrame);
    virtual ~TestMsgBox();
 
    // slots
