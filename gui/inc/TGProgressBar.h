@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.4 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.5 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -45,6 +45,7 @@ protected:
    Int_t         fPosPix;       // position of progress bar in pixel coordinates
    Int_t         fBarWidth;     // progress bar width
    EFillType     fType;         // fill type (default kSolidFill)
+   EBarType      fBarType;      // bar type (default kStandard)
    TString       fFormat;       // format used to show position not in percent
    Bool_t        fShowPos;      // show position value (default false)
    Bool_t        fPercent;      // show position in percent (default true)
@@ -81,6 +82,9 @@ public:
    Float_t      GetMax() const { return fMax; }
    Float_t      GetPosition() const { return fPos; }
    EFillType    GetFillType() const { return fType; }
+   EBarType     GetBarType() const { return fBarType; }
+   Bool_t       GetShowPos() const { return fShowPos; }
+   TString      GetFormat() const { return fFormat; }
    Bool_t       UsePercent() const { return fPercent; }
 
    ClassDef(TGProgressBar,0)  // Progress bar abstract base class

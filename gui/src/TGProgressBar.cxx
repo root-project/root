@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.4 2001/11/01 11:39:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.5 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -46,6 +46,7 @@ TGProgressBar::TGProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
    fPos        = 0;
    fPosPix     = 0;
    fType       = kSolidFill;
+   fBarType    = kStandard;
    fShowPos    = kFALSE;
    fPercent    = kTRUE;
    fNormGC     = norm;
@@ -179,6 +180,7 @@ TGHProgressBar::TGHProgressBar(const TGWindow *p, EBarType type, UInt_t w)
    // white background and a bit wider to allow for text to be printed
    // in the bar.
 
+   fBarType  = type;
    fBarWidth = (type == kStandard) ? kProgressBarStandardWidth : kProgressBarTextWidth;
 }
 
@@ -273,6 +275,7 @@ TGVProgressBar::TGVProgressBar(const TGWindow *p, EBarType type, UInt_t h)
    // white background and a bit wider to allow for text to be printed
    // in the bar.
 
+   fBarType  = type;
    fBarWidth = (type == kStandard) ? kProgressBarStandardWidth : kProgressBarTextWidth;
 }
 

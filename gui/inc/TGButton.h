@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.15 2003/07/18 23:51:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.16 2003/07/21 10:39:58 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -101,6 +101,7 @@ public:
    virtual void         SetUserData(void *userData) { fUserData = userData; }
    virtual void        *GetUserData() const { return fUserData; }
    virtual void         SetToolTipText(const char *text, Long_t delayms = 1000);
+   virtual TGToolTip   *GetToolTip() const { return fTip; }
    virtual void         SetState(EButtonState state);
    virtual EButtonState GetState() const { return fState; }
    virtual void         AllowStayDown(Bool_t a) { fStayDown = a; }

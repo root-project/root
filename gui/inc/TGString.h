@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGString.h,v 1.2 2001/05/29 14:26:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGString.h,v 1.3 2002/06/12 16:46:11 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -74,6 +74,7 @@ public:
    TGHotString(const char *s);
 
    Int_t GetHotChar() const { return fHotChar; }
+   Int_t GetHotPos() const { return fHotPos; }
    virtual void Draw(Drawable_t id, GContext_t gc, Int_t x, Int_t y);
    virtual void DrawWrapped(Drawable_t id, GContext_t gc,
                             Int_t x, Int_t y, UInt_t w, FontStruct_t font);

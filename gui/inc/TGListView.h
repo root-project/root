@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.17 2003/07/09 12:34:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.18 2003/07/14 12:22:48 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -102,6 +102,7 @@ public:
    virtual const char *GetName() const { return fName->GetString(); }
    void                SetItemName(const char *name) { *fName = name; }
    const TGPicture    *GetPicture() const { return fCurrent; }
+   EListViewMode       GetListViewMode() const { return fViewMode; }
    void                SetUserData(void *userData) { fUserData = userData; }
    void               *GetUserData() const { return fUserData; }
    virtual void        SetSubnames(const char* n1="",const char* n2="",const char* n3="",
@@ -203,7 +204,7 @@ public:
                                const char* n10="",const char* n11="",const char* n12="");
 
    void   SetHeaders(Int_t ncolumns) { fListView->SetHeaders(ncolumns); }
-   void   SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx) 
+   void   SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
                               { fListView->SetHeader(s,hmode,cmode,idx); }
    void   SetDefaultHeaders() { fListView->SetDefaultHeaders(); }
    const char *GetHeader(Int_t idx) const { return fListView->GetHeader(idx); }
