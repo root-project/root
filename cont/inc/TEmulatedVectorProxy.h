@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.h,v 1.3 2004/08/20 21:02:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.h,v 1.4 2004/08/23 16:05:43 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -28,12 +28,12 @@
 
 class TEmulatedVectorProxy : public TVirtualCollectionProxy, public TClassStreamer {
 #if !(defined(__CINT__) && defined(G__MSC_VER))
-   // work around a problem with vector<void*> in CINT on MS compiler 
+   // work around a problem with vector<void*> in CINT on MS compiler
    typedef std::vector<void*> ProxyList_t;
 #else
    typedef std::vector<char*> ProxyList_t;
 #endif
-   
+
    TString      fProxiedName; // name of the class being proxied.
 
    TClass      *fValueClass;  //! TClass of object in collection
@@ -41,10 +41,10 @@ class TEmulatedVectorProxy : public TVirtualCollectionProxy, public TClassStream
    ProxyList_t  fProxyList;   //! Stack of proxied containers
    Int_t        fSize;        //! Sizeof the contained objects
    UInt_t       fCase;        //! type of data
-   EDataType    fKind;        //! kind of fundamental type 
+   EDataType    fKind;        //! kind of fundamental type
 
-   TEmulatedVectorProxy() : 
-      fValueClass(0), fProxied(0), fSize(-1), 
+   TEmulatedVectorProxy() :
+      fValueClass(0), fProxied(0), fSize(-1),
       fCase(0), fKind(kNoType_t) {}
    void Init();
    void Destruct(Int_t first,Int_t last,Int_t n);
@@ -61,7 +61,7 @@ public:
    UInt_t  Sizeof() const;
    void    SetProxy(void *objstart) { fProxied = objstart; }
    void    PushProxy(void *objstart) { fProxyList.push_back(fProxied); fProxied = objstart;  }
-   void    PopProxy() { fProxied = fProxyList.back(); fProxyList.pop_back(); } 
+   void    PopProxy() { fProxied = fProxyList.back(); fProxyList.pop_back(); }
 
    virtual Bool_t    HasPointers() const; // Return true if the content is of type 'pointer to'
    virtual TClass   *GetValueClass();     // Return a pointer to the TClass representing the content.
@@ -73,7 +73,7 @@ public:
    UInt_t  Size() const;                         // Return the current size of the container
 
    void    Streamer(TBuffer &b);
-   virtual void operator()(TBuffer &b, void *objp) { fProxied = objp; Streamer(b); }
+   virtual void operator()(TBuffer &b, void *objp) { PushProxy(objp); Streamer(b); PopProxy(); }
 };
 
 #endif /* Root_TEmulatedVectorProxy_h */
