@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.28 2001/01/22 11:19:57 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.29 2001/01/22 12:46:32 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1280,8 +1280,6 @@ void TGraph::PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt
      OptionFill      = 0;
   }
 
-//*-*  Set Clipping option
-  gPad->SetBit(kClipFrame, TestBit(kClipFrame));
 
 //*-*-           Draw the Axis with a fixed number of division: 510
 
@@ -1371,6 +1369,9 @@ void TGraph::PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt
    }
    fHistogram->Paint();
   }
+  
+  //*-*  Set Clipping option
+  gPad->SetBit(kClipFrame, TestBit(kClipFrame));
   
   TF1 *fit = 0;
   if (fFunctions) fit = (TF1*)fFunctions->First();
@@ -1634,7 +1635,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
 //   Draws one dimensional graphs. The aspect of the graph is done
 // according to the value of the chopt.
 //
-// _Input parameters:
+// Input parameters:
 //
 //  npoints : Number of points in X or in Y.
 //  X(N) or x[1] : X coordinates or (XMIN,XMAX) (WC space).
