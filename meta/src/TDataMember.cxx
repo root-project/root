@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.4 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.5 2001/04/27 19:06:27 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -584,10 +584,13 @@ TMethodCall *TDataMember::GetterMethod()
 
       char gettername[128];
       sprintf(gettername, "Get%s", dataname+1);
-      if (strstr(gettername, "Is")) sprintf(gettername, "Set%s", dataname+3);
+      if (strstr(gettername, "Is")) sprintf(gettername, "Get%s", dataname+3);
       if (GetClass()->GetMethod(gettername, ""))
          return fValueGetter = new TMethodCall(fClass, gettername, "");
       sprintf(gettername, "Is%s", dataname+1);
+      if (GetClass()->GetMethod(gettername, ""))
+         return fValueGetter = new TMethodCall(fClass, gettername, "");
+      sprintf(gettername, "Has%s", dataname+1);
       if (GetClass()->GetMethod(gettername, ""))
          return fValueGetter = new TMethodCall(fClass, gettername, "");
    }
@@ -647,8 +650,3 @@ TOptionListItem::~TOptionListItem()
    if (fOptName)  delete fOptName;
    if (fOptLabel) delete fOptLabel;
 }
-
-
-
-
-
