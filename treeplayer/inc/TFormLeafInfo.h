@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.1 2003/05/09 19:57:53 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.1 2004/06/17 17:37:10 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -83,7 +83,7 @@ public:
    virtual Int_t GetVirtVarDim();
    virtual Int_t GetSize(Int_t index);
    virtual Int_t GetSumOfSizes();
-   virtual void  LoadSizes(TBranchElement* branch);
+   virtual void  LoadSizes(TBranch* branch);
    virtual void  SetPrimaryIndex(Int_t index);
    virtual void  SetSize(Int_t index, Int_t val);
    virtual void  UpdateSizes(TArrayI *garr);
@@ -188,6 +188,7 @@ public:
    virtual Bool_t    Update();
 
    virtual Int_t     GetCounterValue(TLeaf* leaf);
+   virtual Int_t     GetCounterValue(TLeaf* leaf, Int_t instance);
    virtual Bool_t    HasCounter() const;
    virtual Double_t  ReadValue(char *where, Int_t instance = 0);
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
@@ -195,6 +196,33 @@ public:
    virtual void     *GetValuePointer(char  *thisobj, Int_t instance = 0);
    virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
    virtual void     *GetLocalValuePointer(char  *thisobj, Int_t instance = 0);
+};
+
+//______________________________________________________________________________
+//
+// TFormLeafInfoCollectionSize is used to return the size of a collection
+//
+class TFormLeafInfoCollectionSize : public TFormLeafInfo {
+   TClass                  *fCollClass;
+   TString                  fCollClassName;
+   TVirtualCollectionProxy *fCollProxy;
+public:
+   TFormLeafInfoCollectionSize(TClass*);
+   TFormLeafInfoCollectionSize(TClass* classptr,Long_t offset,TStreamerElement* element);
+   TFormLeafInfoCollectionSize();
+   TFormLeafInfoCollectionSize(const TFormLeafInfoCollectionSize& orig);
+
+   ~TFormLeafInfoCollectionSize();
+
+   virtual TFormLeafInfo* DeepCopy() const;
+
+   virtual Bool_t    Update();
+
+   virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
+   virtual void     *GetValuePointer(char  *from, Int_t instance = 0);
+   virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
+   virtual void     *GetLocalValuePointer( char *from, Int_t instance = 0);
+   virtual Double_t  ReadValue(char *where, Int_t instance = 0);
 };
 
 //______________________________________________________________________________
@@ -264,6 +292,10 @@ public:
   Int_t fVirtDim;           // number of the virtual dimension to which this object correspond.
   Int_t fPrimaryIndex;      // Index of the dimensions that is indexing the second dimension's size
 
+protected:
+  TFormLeafInfoMultiVarDim(TClass* classptr, Long_t offset,
+     TStreamerElement* element) : TFormLeafInfo(classptr,offset,element) {}
+public:
   TFormLeafInfoMultiVarDim(TClass* classptr, Long_t offset,
                            TStreamerElement* element, TFormLeafInfo* parent);
   TFormLeafInfoMultiVarDim();
@@ -278,7 +310,7 @@ public:
   //   return TFormLeafInfo::ReadValue(where,instance);
   //}
 
-  virtual void     LoadSizes(TBranchElement* branch);
+  virtual void     LoadSizes(TBranch* branch);
   virtual Int_t    GetPrimaryIndex();
   virtual void     SetPrimaryIndex(Int_t index);
   virtual void     SetSize(Int_t index, Int_t val);
@@ -304,6 +336,29 @@ public:
 
    virtual TFormLeafInfo* DeepCopy() const;
 
+   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
+   virtual Double_t  ReadValue(char * /*where*/, Int_t /*instance*/ = 0);
+};
+
+//______________________________________________________________________________
+//
+// TFormLeafInfoMultiVarDimDirect is a small helper class to implement reading
+// a data member on a variable size array inside a TClonesArray object stored
+// in a TTree.  This is the version used for split access
+
+class TFormLeafInfoMultiVarDimCollection : public TFormLeafInfoMultiVarDim {
+public:
+   TFormLeafInfoMultiVarDimCollection(TClass* motherclassptr, Long_t offset,
+      TClass* elementclassptr, TFormLeafInfo *parent);
+   TFormLeafInfoMultiVarDimCollection(TClass* classptr, Long_t offset,
+      TStreamerElement* element, TFormLeafInfo* parent);
+   TFormLeafInfoMultiVarDimCollection();
+   TFormLeafInfoMultiVarDimCollection(const TFormLeafInfoMultiVarDimCollection& orig);
+
+   virtual TFormLeafInfo* DeepCopy() const;
+
+   virtual Int_t GetArrayLength() { return 0; }
+   virtual void      LoadSizes(TBranch* branch);
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
    virtual Double_t  ReadValue(char * /*where*/, Int_t /*instance*/ = 0);
 };

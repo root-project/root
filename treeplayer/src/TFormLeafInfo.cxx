@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.12 2005/01/19 07:52:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.13 2005/01/19 18:30:58 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -354,7 +354,7 @@ Int_t TFormLeafInfo::GetSumOfSizes()
 }
 
 //______________________________________________________________________________
-void TFormLeafInfo::LoadSizes(TBranchElement* branch)
+void TFormLeafInfo::LoadSizes(TBranch* branch)
 {
    if (fNext) fNext->LoadSizes(branch);
 }
@@ -1156,19 +1156,36 @@ Bool_t TFormLeafInfoCollection::HasCounter() const
 }
 
 //______________________________________________________________________________
-Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf) {
+Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf) 
+{
    // Return the current size of the the TClonesArray
 
-   if (fCounter) { return (Int_t)fCounter->ReadValue((char*)GetLocalValuePointer(leaf)); }
-   Assert(fCollProxy);
    void *ptr = GetLocalValuePointer(leaf);
+   if (fCounter) { return (Int_t)fCounter->ReadValue((char*)ptr); }
+   Assert(fCollProxy);
    if (ptr==0) return 0;
    TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
    return (Int_t)fCollProxy->Size();
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoCollection::ReadValue(char *where, Int_t instance) {
+Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf, Int_t instance) 
+{
+   // Return the current size of the the TClonesArray
+
+   void *ptr = GetLocalValuePointer(leaf,instance);
+   if (fCounter) { 
+      return (Int_t)fCounter->ReadValue((char*)ptr); 
+   }
+   Assert(fCollProxy);
+   if (ptr==0) return 0;
+   TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
+   return (Int_t)fCollProxy->Size();
+}
+
+//______________________________________________________________________________
+Double_t TFormLeafInfoCollection::ReadValue(char *where, Int_t instance) 
+{
    // Return the value of the underlying data member inside the
    // clones array.
 
@@ -1184,7 +1201,8 @@ Double_t TFormLeafInfoCollection::ReadValue(char *where, Int_t instance) {
    }
 
    Assert(fCollProxy);
-   TVirtualCollectionProxy::TPushPop helper(fCollProxy, where);
+   void *ptr = GetLocalValuePointer(where,instance);
+   TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
 
    // Note we take advantage of having only one physically variable
    // dimension:
@@ -1213,12 +1231,14 @@ void* TFormLeafInfoCollection::GetLocalValuePointer(TLeaf *leaf, Int_t /*instanc
 }
 
 //______________________________________________________________________________
-void* TFormLeafInfoCollection::GetLocalValuePointer(char *where, Int_t instance) {
+void* TFormLeafInfoCollection::GetLocalValuePointer(char *where, Int_t instance) 
+{
    return TFormLeafInfo::GetLocalValuePointer(where,instance);
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoCollection::GetValue(TLeaf *leaf, Int_t instance) {
+Double_t TFormLeafInfoCollection::GetValue(TLeaf *leaf, Int_t instance) 
+{
    // Return the value of the underlying data member inside the
    // clones array.
 
@@ -1299,11 +1319,126 @@ void * TFormLeafInfoCollection::GetValuePointer(char *where, Int_t instance) {
    return collection;
 }
 
+//______________________________________________________________________________
+//
+// TFormLeafInfoCollectionSize is used to return the size of a collection
+//
+//______________________________________________________________________________
+
+//______________________________________________________________________________
+TFormLeafInfoCollectionSize::TFormLeafInfoCollectionSize(TClass* classptr) :
+   TFormLeafInfo(), fCollClass(classptr), fCollProxy(0)
+{
+   if (fCollClass
+       && fCollClass!=TClonesArray::Class()
+       && fCollClass->GetCollectionProxy()) {
+
+      fCollProxy = fCollClass->GetCollectionProxy()->Generate();
+      fCollClassName = fCollClass->GetName();
+   }
+}
+
+//______________________________________________________________________________
+TFormLeafInfoCollectionSize::TFormLeafInfoCollectionSize(
+   TClass* classptr,Long_t offset,TStreamerElement* element) :
+   TFormLeafInfo(classptr,offset,element), fCollClass(element->GetClassPointer()), fCollProxy(0)
+{
+   if (fCollClass
+       && fCollClass!=TClonesArray::Class()
+       && fCollClass->GetCollectionProxy()) {
+
+      fCollProxy = fCollClass->GetCollectionProxy()->Generate();
+      fCollClassName = fCollClass->GetName();
+   }
+}
+
+//______________________________________________________________________________
+TFormLeafInfoCollectionSize::TFormLeafInfoCollectionSize() : 
+   TFormLeafInfo(), fCollClass(0), fCollProxy(0)
+{
+}
+
+//______________________________________________________________________________
+TFormLeafInfoCollectionSize::TFormLeafInfoCollectionSize(
+   const TFormLeafInfoCollectionSize& orig) :  TFormLeafInfo(),
+      fCollClass(orig.fCollClass),
+      fCollClassName(orig.fCollClassName),
+      fCollProxy(orig.fCollProxy?orig.fCollProxy->Generate():0)
+{
+
+}
+
+//______________________________________________________________________________
+TFormLeafInfoCollectionSize::~TFormLeafInfoCollectionSize()
+{
+   delete fCollProxy;
+}
+
+//______________________________________________________________________________
+TFormLeafInfo* TFormLeafInfoCollectionSize::DeepCopy() const
+{
+   return new TFormLeafInfoCollectionSize(*this);
+}
+
+//______________________________________________________________________________
+Bool_t TFormLeafInfoCollectionSize::Update()
+{
+   Bool_t changed = kFALSE;
+   TClass *new_class = gROOT->GetClass(fCollClassName);
+   if (new_class!=fCollClass) {
+      delete fCollProxy; fCollProxy = 0;
+      fCollClass = new_class;
+      if (fCollClass && fCollClass->GetCollectionProxy()) {
+         fCollProxy = fCollClass->GetCollectionProxy()->Generate();
+      }
+      changed = kTRUE;
+   }
+   return changed;
+}
+
+//______________________________________________________________________________
+void *TFormLeafInfoCollectionSize::GetValuePointer(TLeaf *leaf, Int_t instance)
+{
+   Error("GetValuePointer","This should never be called");
+   return 0;
+}
+
+//______________________________________________________________________________
+void *TFormLeafInfoCollectionSize::GetValuePointer(char  *from, Int_t instance)
+{
+   Error("GetValuePointer","This should never be called");
+   return 0;
+}
+
+//______________________________________________________________________________
+void *TFormLeafInfoCollectionSize::GetLocalValuePointer(TLeaf *leaf, Int_t instance)
+{
+   Error("GetLocalValuePointer","This should never be called");
+   return 0;
+}
+
+//______________________________________________________________________________
+void *TFormLeafInfoCollectionSize::GetLocalValuePointer( char *from, Int_t instance)
+{
+   Error("GetLocalValuePointer","This should never be called");
+   return 0;
+}
+
+//______________________________________________________________________________
+Double_t  TFormLeafInfoCollectionSize::ReadValue(char *where, Int_t instance)
+{
+   Assert(fCollProxy);
+   if (where==0) return 0;
+   void *ptr = fElement ? TFormLeafInfo::GetLocalValuePointer(where) : where;
+   TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
+   return (Int_t)fCollProxy->Size();
+}
 
 //______________________________________________________________________________
 //
 // TFormLeafInfoPointer is a small helper class to implement reading a data
 // member by following a pointer inside a branch of TTree.
+//______________________________________________________________________________
 
 //______________________________________________________________________________
 TFormLeafInfoPointer::TFormLeafInfoPointer(TClass* classptr,
@@ -1610,7 +1745,7 @@ Double_t TFormLeafInfoMethod::ReadValue(char *where, Int_t instance)
 
 //______________________________________________________________________________
 //
-// TFormLeafInfoMultiVarDim is a small helper class to implement reading a
+// TFormLeafInfoMultiVarDim is a helper class to implement reading a
 // data member on a variable size array inside a TClonesArray object stored in
 // a TTree.  This is the version used when the data member is inside a
 // non-splitted object.
@@ -1674,26 +1809,29 @@ TFormLeafInfoMultiVarDim:: ~TFormLeafInfoMultiVarDim()
 //}
 
 //______________________________________________________________________________
-void TFormLeafInfoMultiVarDim::LoadSizes(TBranchElement* branch)
+void TFormLeafInfoMultiVarDim::LoadSizes(TBranch* branch)
 {
    if (fElement) {
-      if (fCounter) fNsize = (Int_t)fCounter->GetValue((TLeaf*)branch->GetListOfLeaves()->At(0));
-      else fNsize = fCounter2->GetCounterValue((TLeaf*)branch->GetListOfLeaves()->At(0));
+      TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
+      if (fCounter) fNsize = (Int_t)fCounter->GetValue(leaf);
+      else fNsize = fCounter2->GetCounterValue(leaf);
       if (fNsize > fSizes.GetSize()) fSizes.Set(fNsize);
       fSumOfSizes = 0;
       for (Int_t i=0; i<fNsize; i++) {
-         Int_t size = (Int_t)fCounter2->GetValue((TLeaf*)branch->GetListOfLeaves()->At(0),i);
+         Int_t size = (Int_t)fCounter2->GetValue(leaf,i);
          fSumOfSizes += size;
          fSizes.AddAt( size, i );
       }
       return;
    }
    if (!fCounter2 || !fCounter) return;
-   fNsize =((TBranchElement*) branch->GetBranchCount())->GetNdata();
+   TBranchElement *br = dynamic_cast<TBranchElement*>(branch);
+   Assert(br);
+   fNsize = br->GetBranchCount()->GetNdata();
    if (fNsize > fSizes.GetSize()) fSizes.Set(fNsize);
    fSumOfSizes = 0;
    for (Int_t i=0; i<fNsize; i++) {
-      Int_t size = (Int_t)fCounter2->GetValue((TLeaf*)branch->GetBranchCount2()->GetListOfLeaves()->At(0),i);
+      Int_t size = (Int_t)fCounter2->GetValue((TLeaf*)br->GetBranchCount2()->GetListOfLeaves()->At(0),i);
       fSumOfSizes += size;
       fSizes.AddAt( size, i );
    }
@@ -1777,13 +1915,12 @@ void TFormLeafInfoMultiVarDim::UpdateSizes(TArrayI *garr)
    }
 }
 
-
-
 //______________________________________________________________________________
 //
 // TFormLeafInfoMultiVarDimDirect is a small helper class to implement reading
 // a data member on a variable size array inside a TClonesArray object stored
 // in a TTree.  This is the version used for split access
+//______________________________________________________________________________
 
 //______________________________________________________________________________
 TFormLeafInfoMultiVarDimDirect::TFormLeafInfoMultiVarDimDirect() :
@@ -1818,8 +1955,108 @@ Double_t TFormLeafInfoMultiVarDimDirect::ReadValue(char * /*where*/, Int_t /*ins
 
 //______________________________________________________________________________
 //
+// TFormLeafInfoMultiVarDimCollection is a small helper class to implement reading
+// a data member on a variable size array inside a TClonesArray object stored
+// in a TTree.  This is the version used for split access
+
+//______________________________________________________________________________
+TFormLeafInfoMultiVarDimCollection::TFormLeafInfoMultiVarDimCollection(
+   TClass* motherclassptr,
+   Long_t offset,
+   TClass* elementclassptr,
+   TFormLeafInfo *parent) :
+   TFormLeafInfoMultiVarDim(motherclassptr,offset,
+                 new TStreamerElement("collection","in class",
+                                      0,
+                                      TStreamerInfo::kAny,
+                                      elementclassptr
+                                      ? elementclassptr->GetName()
+                                      : ( motherclassptr
+                                          ? motherclassptr->GetName()
+                                          : "Unknwon")
+                                          )
+                                          )
+{
+   Assert(parent);
+   fCounter = parent->DeepCopy();
+   fCounter2 = parent->DeepCopy();
+   TFormLeafInfo ** next = &(fCounter2->fNext);
+   while(*next != 0) next = &( (*next)->fNext);
+   *next = new TFormLeafInfoCollectionSize(elementclassptr);
+}
+
+//______________________________________________________________________________
+TFormLeafInfoMultiVarDimCollection::TFormLeafInfoMultiVarDimCollection(
+   TClass* motherclassptr,
+   Long_t offset,
+   TStreamerElement* element,
+   TFormLeafInfo *parent) :
+   TFormLeafInfoMultiVarDim(motherclassptr,offset,element)
+{
+   Assert(parent && element);
+   fCounter = parent->DeepCopy();
+   fCounter2 = parent->DeepCopy();
+   TFormLeafInfo ** next = &(fCounter2->fNext);
+   while(*next != 0) next = &( (*next)->fNext);
+   *next = new TFormLeafInfoCollectionSize(motherclassptr,offset,element);
+}
+
+//______________________________________________________________________________
+TFormLeafInfoMultiVarDimCollection::TFormLeafInfoMultiVarDimCollection() :
+   TFormLeafInfoMultiVarDim()
+{
+}
+
+//______________________________________________________________________________
+TFormLeafInfoMultiVarDimCollection::TFormLeafInfoMultiVarDimCollection(
+   const TFormLeafInfoMultiVarDimCollection& orig) :
+   TFormLeafInfoMultiVarDim(orig)
+{
+}
+
+//______________________________________________________________________________
+TFormLeafInfo* TFormLeafInfoMultiVarDimCollection::DeepCopy() const
+{
+   return new TFormLeafInfoMultiVarDimCollection(*this);
+}
+
+//______________________________________________________________________________
+Double_t TFormLeafInfoMultiVarDimCollection::GetValue(TLeaf *leaf, Int_t instance)
+{
+   /* The proper indexing and unwinding of index need to be done by prior leafinfo in the chain. */
+   Error("GetValue","This should never be called");
+   return 0;
+}
+
+//______________________________________________________________________________
+void TFormLeafInfoMultiVarDimCollection::LoadSizes(TBranch* branch)
+{
+   Assert(fCounter2);
+
+   TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
+   fNsize = (Int_t)fCounter->GetCounterValue(leaf);
+
+   if (fNsize > fSizes.GetSize()) fSizes.Set(fNsize);
+   fSumOfSizes = 0;
+   for (Int_t i=0; i<fNsize; i++) {
+      Int_t size = (Int_t)fCounter2->GetValue(leaf,i);
+      fSumOfSizes += size;
+      fSizes.AddAt( size, i );
+   }
+   return;
+}
+   
+//______________________________________________________________________________
+Double_t TFormLeafInfoMultiVarDimCollection::ReadValue(char *where, Int_t instance)
+{
+   return fNext->ReadValue(where,instance);
+}
+
+//______________________________________________________________________________
+//
 // TFormLeafInfoCast is a small helper class to implement casting an object to
 // a different type (equivalent to dynamic_cast)
+//______________________________________________________________________________
 
 //______________________________________________________________________________
 TFormLeafInfoCast::TFormLeafInfoCast(TClass* classptr, TClass* casted) :
