@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.62 2004/10/15 15:36:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.63 2004/10/21 12:07:54 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1735,6 +1735,10 @@ void TRootBrowser::RecursiveRemove(TObject *obj)
    //fIconBox->RemoveItemWithData(obj);
    //fIconBox->Refresh();
    fLt->RecursiveDeleteItem(fLt->GetFirstItem(), obj);
+
+   if (fListLevel && (fListLevel->GetUserData() == obj)) {
+      fListLevel = 0;
+   }
 }
 
 //______________________________________________________________________________

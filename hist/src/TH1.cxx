@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.211 2004/11/26 15:07:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.212 2004/12/20 10:01:41 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5183,6 +5183,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option) const
    else             z = dfmax*TMath::Sqrt(esum1*esum2/(esum1+esum2));
 
    prb = TMath::KolmogorovProb(z);
+printf("z=%g, prb=%g\n",z,prb);
 
    if (opt.Contains("N")) {
       // Combine probabilities for shape and normalization,
