@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.10 2004/05/27 06:39:53 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.11 2004/05/27 20:20:48 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -37,11 +37,21 @@ ClassImp(TDecompLU)
 ///////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
+TDecompLU::TDecompLU()
+{
+  fSign = 0.0;
+  fNIndex = 0;
+  fIndex = 0;
+  fImplicitPivot = 0;
+}
+
+//______________________________________________________________________________
 TDecompLU::TDecompLU(Int_t nrows)
 {
   fSign = 1.0;
   fNIndex = nrows;
   fIndex = new Int_t[fNIndex];
+  fImplicitPivot = 0;
   fLU.ResizeTo(nrows,nrows);
 }
 
@@ -54,6 +64,7 @@ TDecompLU::TDecompLU(Int_t row_lwb,Int_t row_upb)
   fIndex = new Int_t[fNIndex];
   fRowLwb = row_lwb;
   fColLwb = row_lwb;
+  fImplicitPivot = 0;
   fLU.ResizeTo(nrows,nrows);
 }
 
