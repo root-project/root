@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.10 2004/01/29 11:57:58 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.11 2004/02/18 07:28:02 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -102,10 +102,17 @@ EDataType TDataType::GetType(const type_info &typeinfo)
       retType = kULong_t;
    } else if (!strcmp(typeid(long).name(), typeinfo.name())) {
       retType = kLong_t;
+#ifdef R__WIN32
+   } else if (!strcmp(typeid(unsigned __int64).name(), typeinfo.name())) {
+      retType = kULong64_t;
+   } else if (!strcmp(typeid(__int64).name(), typeinfo.name())) {
+      retType = kLong64_t;
+#else
    } else if (!strcmp(typeid(unsigned long long).name(), typeinfo.name())) {
       retType = kULong64_t;
    } else if (!strcmp(typeid(long long).name(), typeinfo.name())) {
       retType = kLong64_t;
+#endif
    } else if (!strcmp(typeid(unsigned short).name(), typeinfo.name())) {
       retType = kUShort_t;
    } else if (!strcmp(typeid(short).name(), typeinfo.name())) {
