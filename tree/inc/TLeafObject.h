@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.4 2000/12/13 15:13:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.5 2001/01/16 16:15:13 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -34,7 +34,7 @@ class TLeafObject : public TLeaf {
 protected:
     TClass      *fClass;          //! pointer to class
     void       **fObjAddress;     //! Address of Pointer to object
-    Bool_t       fVirtual;        //! Support for Virtuality
+    Bool_t       fVirtual;        // Support for Virtuality
     
 public:
     TLeafObject();
@@ -52,7 +52,7 @@ public:
     virtual void    SetAddress(void *add=0);
     virtual void    SetVirtual(Bool_t virt=kTRUE) {fVirtual=virt;}
     
-    ClassDef(TLeafObject,2)  //A TLeaf for a general object derived from TObject.
+    ClassDef(TLeafObject,4)  //A TLeaf for a general object derived from TObject.
 };
 
 #endif
