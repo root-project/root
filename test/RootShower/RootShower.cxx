@@ -170,12 +170,14 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     // p = pointer to GMainFrame (not owner)
     // w = width of RootShower frame
     // h = width of RootShower frame
-    fOk           = false;
-    fModified     = false;
-    fShowProcess  = false;
-    fCreateGIFs   = false;
-    fTimer        = 0;
-    fPicIndex       = 1;
+    fOk                 = kFALSE;
+    fModified           = kFALSE;
+    fSettingsModified   = kFALSE;
+    fIsRunning          = kFALSE;
+    fShowProcess        = kFALSE;
+    fCreateGIFs         = kFALSE;
+    fTimer              = 0;
+    fPicIndex           = 1;
 
     fRootShowerEnv = new TEnv(".rootshowerrc");
 
@@ -193,7 +195,7 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     fMaxV = TMath::Max(fDimX,TMath::Max(fDimY,fDimZ));
     fMaxV /= 3.0;
     fMinV = -1.0 * fMaxV;
-printf("w=%d, h=%d, fMaxV=%d\n",w,h,fMaxV);
+printf("w=%d, h=%d, fMaxV=%f\n",w,h,fMaxV);
 
     fEventNr = 0;
     fNRun    = 0;
@@ -615,9 +617,11 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         Initialize(0);
                         fStatusBar->SetText("Simulation running, please wait...",0);
 	                    fButtonFrame->SetState(GButtonFrame::kNoneActive);
+                        fMenuTest->DisableEntry(M_SETTINGS_DLG);
                         OnShowerProduce();
                         fClient->NeedRedraw(fEventListTree);
 	                    fButtonFrame->SetState(GButtonFrame::kAllActive);
+                        fMenuTest->EnableEntry(M_SETTINGS_DLG);
                         sprintf(strtmp,"Done - Total particles : %d - Waiting for next simulation",
                             fEvent->GetTotal());
                         fStatusBar->SetText(strtmp,0);
@@ -662,6 +666,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 	                    break;
 
                     case M_FILE_OPEN:
+                        if(fIsRunning) break;
                         {
                             TGFileInfo fi;
                             fi.fFileTypes = filetypes;
@@ -684,6 +689,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
 
                     case M_FILE_SAVEAS:
+                        if(fIsRunning) break;
                          {
                             TGFileInfo fi;
                             fi.fFileTypes = filetypes;
@@ -700,26 +706,27 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                     case M_SHOW_PROCESS:
                         if(fShowProcess) {
                             fMenuTest->UnCheckEntry(M_SHOW_PROCESS);
-                            fShowProcess = false;
+                            fShowProcess = kFALSE;
                         }
                         else {
                             fMenuTest->CheckEntry(M_SHOW_PROCESS);
-                            fShowProcess = true;
+                            fShowProcess = kTRUE;
                         }
                         break;
 
                     case M_ANIMATE_GIF:
                         if(fCreateGIFs) {
                             fMenuTest->UnCheckEntry(M_ANIMATE_GIF);
-                            fCreateGIFs = false;
+                            fCreateGIFs = kFALSE;
                         }
                         else {
                             fMenuTest->CheckEntry(M_ANIMATE_GIF);
-                            fCreateGIFs = true;
+                            fCreateGIFs = kTRUE;
                         }
                         break;
 
                     case M_SETTINGS_DLG:
+                        if(fIsRunning) break;
                         new SettingsDialog(fClient->GetRoot(), this, 400, 200);
                         if(fSettingsModified) {
                             fEvent->Init(0, fFirstParticle, fE0, fB, fMaterial, fDimX, fDimY, fDimZ);
@@ -746,6 +753,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
 
                     case M_SHOW_INFOS:
+                        if(fIsRunning) break;
                         ShowInfos();
                         break;
 
@@ -772,6 +780,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                                         ax, ay, wdummy);
                             hd->Move(ax, ay);
                             hd->Popup();
+                            fClient->WaitFor(hd);
                         }
                         break;
 
@@ -787,6 +796,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                                         ax, ay, wdummy);
                             hd->Move(ax, ay);
                             hd->Popup();
+                            fClient->WaitFor(hd);
                         }
                         break;
 
@@ -802,6 +812,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                                         ax, ay, wdummy);
                             hd->Move(ax, ay);
                             hd->Popup();
+                            fClient->WaitFor(hd);
                         }
                         break;
 
@@ -810,10 +821,12 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
 
                     case M_SHOW_3D:
+                        if(fIsRunning) break;
                         cA->x3d("OpenGL");
                         break;
 
                     case M_SHOW_TRACK:
+                        if(fIsRunning) break;
                         {
                             TGListTreeItem *item;
 	                        if ((item = fEventListTree->GetSelected()) != 0)
@@ -972,6 +985,7 @@ void RootShower::OnShowerProduce()
     fTimer->Reset();
     fTimer->TurnOn();
 
+    fIsRunning = kTRUE;
     fHisto_dEdX->Reset();
     produce();
     Interrupt(kFALSE);
@@ -1048,6 +1062,7 @@ void RootShower::OnShowerProduce()
     gEventListTree->OpenItem(gBaseLTI);
     gEventListTree->OpenItem(gLTI[0]);
     fTimer->TurnOff();
+    fIsRunning = kFALSE;
     if(fPicReset > 0)
         fTitleFrame->ChangeRightLogo(1);
 }
@@ -1253,6 +1268,7 @@ void RootShower::ShowInfos()
               ax, ay, wdummy);
     hd->Move(ax, ay);
     hd->Popup();
+    fClient->WaitFor(hd);
 }
 
 //______________________________________________________________________________

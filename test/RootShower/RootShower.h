@@ -67,6 +67,7 @@ private:
     Bool_t              fOk;
     Bool_t              fModified;
     Bool_t              fSettingsModified;
+    Bool_t              fIsRunning;
     Bool_t              fInterrupted;
     Bool_t              fShowProcess;
     Bool_t              fCreateGIFs;

@@ -459,8 +459,8 @@ GLIBS         = $(ROOTGLIBS) $(SYSLIBS)
 
 #------------------------------------------------------------------------------
 
-ROOTSHOWERS  := $(wildcard *.cxx) RootShowerDict.$(SrcSuf)
-ROOTSHOWERO  := $(ROOTSHOWERS:.cxx=.o)
+ROOTSHOWERS  := $(wildcard *.$(SrcSuf)) RootShowerDict.$(SrcSuf)
+ROOTSHOWERO  := $(ROOTSHOWERS:.$(SrcSuf)=.$(ObjSuf))
 ROOTSHOWER    = RootShower$(ExeSuf)
 
 OBJS          = $(ROOTSHOWERO)
@@ -474,7 +474,11 @@ PROGRAMS      = $(ROOTSHOWER)
 all:            $(PROGRAMS)
 
 $(ROOTSHOWER):  $(ROOTSHOWERO)
+ifeq ($(PLATFORM),win32)
+		$(LD) $(LDFLAGS) $^ $(GLIBS) libEG.lib libHtml.lib $(OutPutOpt)$@
+else
 		$(LD) $(LDFLAGS) $^ $(GLIBS) -lEG -lHtml $(OutPutOpt)$@
+endif
 		@echo "$@ done"
 
 RootShowerDict.$(SrcSuf): MyParticle.h MyDetector.h MyEvent.h RSLinkDef.h
