@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.84 2004/05/03 15:27:12 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.85 2004/05/03 19:17:33 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include "TWin32HookViaThread.h"
 #include "TWin32Timer.h"
 #include "TGWin32Command.h"
+#include "TInterpreter.h"
 
 #include <sys/utime.h>
 #include <process.h>
@@ -50,16 +51,21 @@
 #include <errno.h>
 #include <lm.h>
 
+extern "C" {
+   extern int G__get_security_error();
+   extern int G__genericerror(const char* msg);
+}
+
 const char *kProtocolName   = "tcp";
 typedef void (*SigHandler_t)(ESignals);
 
 static HANDLE gConsoleEvent;
 static HANDLE gConsoleThreadHandle;
-typedef NET_API_STATUS (WINAPI* pfn1)(LPVOID);
-typedef NET_API_STATUS (WINAPI* pfn2)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*);
-typedef NET_API_STATUS (WINAPI* pfn3)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*,
+typedef NET_API_STATUS (WINAPI *pfn1)(LPVOID);
+typedef NET_API_STATUS (WINAPI *pfn2)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*);
+typedef NET_API_STATUS (WINAPI *pfn3)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*,
                                      DWORD, LPDWORD, LPDWORD, PDWORD);
-typedef NET_API_STATUS (WINAPI* pfn4)(LPCWSTR, DWORD, LPBYTE*, DWORD, LPDWORD,
+typedef NET_API_STATUS (WINAPI *pfn4)(LPCWSTR, DWORD, LPBYTE*, DWORD, LPDWORD,
                                      LPDWORD, PDWORD);
 static pfn1 p2NetApiBufferFree;
 static pfn2 p2NetUserGetInfo;
@@ -395,14 +401,23 @@ static BOOL ConsoleSigHandler(DWORD sig)
 
    switch (sig) {
    case CTRL_C_EVENT:
-      printf(" CTRL-C hit !!! ROOT is terminated ! \n");
+   if (!G__get_security_error()) {
+      G__genericerror("\n *** Break *** keyboard interrupt\n");
+   } else {
+      Break("TInterruptHandler::Notify", "keyboard interrupt\n");
+      if (TROOT::Initialized()) {
+         gInterpreter->RewindDictionary();
+      }
+   }
+   return kTRUE;
    case CTRL_BREAK_EVENT:
-//      return ((TWinNTSystem*)gSystem)->HandleConsoleEvent();
    case CTRL_LOGOFF_EVENT:
    case CTRL_SHUTDOWN_EVENT:
    case CTRL_CLOSE_EVENT:
    default:
-      gSystem->Exit(-1); return kTRUE;
+      printf("\n *** Break *** keyboard interrupt - ROOT is terminated\n");
+      gSystem->Exit(-1); 
+      return kTRUE;
    }
 }
 
@@ -608,8 +623,8 @@ Bool_t TWinNTSystem::Init()
 #ifdef GDK_WIN32
    if (!gROOT->IsBatch()) {
       gConsoleEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-      gConsoleThreadHandle = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread,
-                                         0, 0, 0);
+      gConsoleThreadHandle = (HANDLE)_beginthreadex(NULL, 0, &HandleConsoleThread,
+                                                    0, 0, 0);
    }
 #else
    // The the name of the DLL to be used as a stock of the icon
@@ -626,10 +641,13 @@ Bool_t TWinNTSystem::Init()
       HINSTANCE netapi = ::LoadLibrary("netapi32.DLL");
       if (!netapi) return kFALSE;
   
-      p2NetApiBufferFree  = (pfn1)GetProcAddress(netapi, "NetApiBufferFree");
-      p2NetUserGetInfo  = (pfn2)GetProcAddress(netapi, "NetUserGetInfo");
-      p2NetLocalGroupGetMembers  = (pfn3)GetProcAddress(netapi, "NetLocalGroupGetMembers");
-      p2NetLocalGroupEnum = (pfn4)GetProcAddress(netapi, "NetLocalGroupEnum");
+      p2NetApiBufferFree  = (pfn1)::GetProcAddress(netapi, "NetApiBufferFree");
+      p2NetUserGetInfo  = (pfn2)::GetProcAddress(netapi, "NetUserGetInfo");
+      p2NetLocalGroupGetMembers  = (pfn3)::GetProcAddress(netapi, "NetLocalGroupGetMembers");
+      p2NetLocalGroupEnum = (pfn4)::GetProcAddress(netapi, "NetLocalGroupEnum");
+
+      if (!p2NetApiBufferFree || !p2NetUserGetInfo || 
+          !p2NetLocalGroupGetMembers || !p2NetLocalGroupEnum) return kFALSE;
 
       GetNbGroups();
 
@@ -640,6 +658,7 @@ Bool_t TWinNTSystem::Init()
       fPasswords = (struct passwd *)calloc(fNbUsers, sizeof(struct passwd));
 
       CollectGroups();
+      ::FreeLibrary(netapi);
    }
    return kFALSE;
 }
