@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.70 2001/05/17 13:36:46 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.71 2001/05/19 20:25:02 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -646,6 +646,7 @@ void TStreamerInfo::Compile()
    TStreamerElement *element;
    Int_t keep = -1;
    Int_t i;
+   if (!fgOptimize) SetBit(kCannotOptimize);
    for (i=0;i<ndata;i++) {
       element = (TStreamerElement*)fElements->At(i);
       if (!element) break;
@@ -659,7 +660,7 @@ void TStreamerInfo::Compile()
       fElem[fNdata]   = (ULong_t)element;
       fMethod[fNdata] = element->GetMethod();
       // try to group consecutive members of the same type
-      if (fgOptimize && keep>=0 && (element->GetType() < 10)
+      if (!TestBit(kCannotOptimize) && keep>=0 && (element->GetType() < 10)
                   && (fType[fNdata] == fNewType[fNdata])
                   && (fMethod[keep] == 0)
                   && (element->GetType() > 0)
