@@ -1,4 +1,4 @@
-// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.4 2001/05/07 18:41:48 rdm Exp $
+// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.5 2001/06/22 16:10:17 rdm Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 #include "TXTRU.h"
@@ -76,7 +76,7 @@ TXTRU::TXTRU()
 
 //______________________________________________________________________________
 TXTRU::TXTRU(const Text_t *name, const Text_t *title, const Text_t *material,
-             const Int_t nxy, const Int_t nz)
+             Int_t nxy, Int_t nz)
    : TShape (name,title,material)
 {
    //

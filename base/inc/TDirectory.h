@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.6 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.7 2001/05/16 10:21:12 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -82,7 +82,7 @@ public:
    virtual TObject    *Get(const char *namecycle);
    TDatime            &GetCreationDate() {return fDatimeC;}
    virtual TFile      *GetFile() const {return fFile;}
-   virtual TKey       *GetKey(const char *name, const Short_t cycle=9999);
+   virtual TKey       *GetKey(const char *name, Short_t cycle=9999);
    TList              *GetList() const { return fList; }
    TList              *GetListOfKeys() const { return fKeys; }
    TDatime            &GetModificationDate() {return fDatimeM;}

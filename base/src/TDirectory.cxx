@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.14 2001/08/08 06:24:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.15 2001/08/30 13:04:17 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -781,7 +781,7 @@ TObject *TDirectory::Get(const char *namecycle)
 }
 
 //______________________________________________________________________________
-TKey *TDirectory::GetKey(const char *name, const Short_t cycle)
+TKey *TDirectory::GetKey(const char *name, Short_t cycle)
 {
 //*-*-*-*-*-*-*-*-*-*-*Return pointer to key with name,cycle*-*-*-*-*-*-*-*
 //*-*                  =====================================

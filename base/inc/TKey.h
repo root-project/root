@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.3 2000/09/05 09:21:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.4 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -57,7 +57,7 @@ public:
     TKey();
     TKey(const char *name, const char *title, TClass *cl, Int_t nbytes);
     TKey(const TString &name, const TString &title, TClass *cl, Int_t nbytes);
-    TKey(TObject *obj, const char *name, const Int_t bufsize);
+    TKey(TObject *obj, const char *name, Int_t bufsize);
     TKey(Seek_t pointer, Int_t nbytes);
     virtual ~TKey();
     virtual void      Browse(TBrowser *b);

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.1.1.2 2001/05/01 12:57:18 fisyak Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.5 2001/05/14 06:43:20 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -373,7 +373,7 @@ void TPadOpenGLView::HandleInput(Int_t button, Int_t x, Int_t y)
 #endif
 
 //______________________________________________________________________________
-void TPadOpenGLView::MoveModelView(const Char_t option, Int_t count)
+void TPadOpenGLView::MoveModelView(Char_t option, Int_t count)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-* option = 'u' //*-*  Move down

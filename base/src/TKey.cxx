@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.12 2001/02/09 14:03:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.13 2001/04/18 10:20:19 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -124,7 +124,7 @@ TKey::TKey(const TString &name, const TString &title, TClass *cl, Int_t nbytes)
 }
 
 //______________________________________________________________________________
-TKey::TKey(TObject *obj, const char *name, const Int_t bufsize)
+TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
      : TNamed(name, obj->GetTitle())
 {
 //*-*-*-*-*-*-*-*-*-*Create a TKey object and fill output buffer*-*-*-*-*-*-*
@@ -358,7 +358,7 @@ Bool_t TKey::IsFolder() const
            ret = obj->IsFolder();
            delete obj;
        }
-    } 
+    }
 
     return( ret );
 }
