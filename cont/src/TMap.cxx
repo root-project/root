@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.10 2002/10/07 10:40:49 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.11 2003/06/23 22:18:37 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -202,6 +202,16 @@ TObject *TMap::FindObject(const TObject *key) const
    if (IsArgNull("FindObject", key)) return 0;
 
    return fTable->FindObject(key);
+}
+
+//______________________________________________________________________________
+TObject *TMap::GetValue(const char *keyname) const
+{
+   // Returns a pointer to the value associated with keyname as name of the key.
+
+   TPair *a = (TPair *)fTable->FindObject(keyname);
+   if (a) return a->Value();
+   return 0;
 }
 
 //______________________________________________________________________________

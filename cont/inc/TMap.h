@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.13 2002/11/11 16:23:16 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.14 2003/06/23 22:18:37 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -62,6 +62,7 @@ public:
    TObject          *FindObject(const TObject *key) const;
    TObject         **GetObjectRef(const TObject *obj) const { return fTable->GetObjectRef(obj); }
    const THashTable *GetTable() const { return fTable; }
+   TObject          *GetValue(const char *keyname) const;
    TObject          *GetValue(const TObject *key) const;
    TIterator        *MakeIterator(Bool_t dir = kIterForward) const;
    void              Print(Option_t *option="") const;
