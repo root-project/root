@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.9 2001/02/12 07:34:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.10 2001/02/21 08:56:08 brun Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -165,7 +165,7 @@ void TLeafC::SetAddress(void *add)
       delete [] fValue;
    }
    if (add) {
-      if (fLeafCount) {
+      if (TestBit(kIndirectAddress)) {
          fPointer = (char**)add;
          Int_t ncountmax = fLen;
          if (fLeafCount) ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
