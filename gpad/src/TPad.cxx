@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.117 2004/01/01 18:03:02 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.118 2004/01/26 17:21:29 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2726,31 +2726,28 @@ void TPad::PaintModified()
    }
 
    if (fCanvas == this && gStyle->GetOptDate()) {
-      if (!fPrimitives->FindObject("DATE")) {
-          TDatime dt;
-          TText *tdate;
-          if (gStyle->GetOptDate() < 10) {
-             //by default use format like "Wed Sep 25 17:10:35 2002"
-             tdate = new TText(gStyle->GetDateX(),gStyle->GetDateY(),dt.AsString());
-          } else if (gStyle->GetOptDate() < 20) {
-             //use ISO format like 2002-09-25
-             char iso[16];
-             strncpy(iso,dt.AsSQLString(),10); iso[10] = 0;
-             tdate = new TText(gStyle->GetDateX(),gStyle->GetDateY(),iso);
-          } else {
-             //use ISO format like 2002-09-25 17:10:35
-             tdate = new TText(gStyle->GetDateX(),gStyle->GetDateY(),dt.AsSQLString());
-          }
-          tdate->SetName("DATE");
-          tdate->SetTextSize( gStyle->GetAttDate()->GetTextSize());
-          tdate->SetTextFont( gStyle->GetAttDate()->GetTextFont());
-          tdate->SetTextColor(gStyle->GetAttDate()->GetTextColor());
-          tdate->SetTextAlign(gStyle->GetAttDate()->GetTextAlign());
-          tdate->SetTextAngle(gStyle->GetAttDate()->GetTextAngle());
-          tdate->SetNDC();
-          tdate->Draw();
-          delete tdate;
-       }
+      TDatime dt;
+      const char *dates;
+      if (gStyle->GetOptDate() < 10) {
+         //by default use format like "Wed Sep 25 17:10:35 2002"
+         dates = dt.AsString();
+      } else if (gStyle->GetOptDate() < 20) {
+         //use ISO format like 2002-09-25
+         char iso[16];
+         strncpy(iso,dt.AsSQLString(),10); iso[10] = 0;
+         dates = iso;
+      } else {
+         //use ISO format like 2002-09-25 17:10:35
+         dates = dt.AsSQLString();
+      }
+      TText tdate(gStyle->GetDateX(),gStyle->GetDateY(),dates);
+      tdate.SetTextSize( gStyle->GetAttDate()->GetTextSize());
+      tdate.SetTextFont( gStyle->GetAttDate()->GetTextFont());
+      tdate.SetTextColor(gStyle->GetAttDate()->GetTextColor());
+      tdate.SetTextAlign(gStyle->GetAttDate()->GetTextAlign());
+      tdate.SetTextAngle(gStyle->GetAttDate()->GetTextAngle());
+      tdate.SetNDC();
+      tdate.Paint();
    }
    TList *pList = GetListOfPrimitives();
    TObjOptLink *lnk = 0;
