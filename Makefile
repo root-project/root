@@ -359,7 +359,6 @@ distclean:: clean
 	@rm -f bin/roota lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog
-	@rm -rf htmldoc
 	-@cd test && $(MAKE) distclean
 
 maintainer-clean:: distclean
