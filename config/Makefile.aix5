@@ -15,9 +15,9 @@ endif
 # Compiler:
 CXX           = xlC
 CC            = xlC
-CXXFLAGS      = -qchars=signed -qnoro -qnoroconst $(EXTRA_CXXFLAGS)
+CXXFLAGS      = -qchars=signed -qnoro -qnoroconst -qrtti $(EXTRA_CXXFLAGS)
 CFLAGS        = -qchars=signed -qnoro -qnoroconst $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -qchars=signed -qnoro -qnoroconst -DG__REGEXP \
+CINTCXXFLAGS  = -qchars=signed -qnoro -qnoroconst -qrtti -DG__REGEXP \
                 -D_POSIX2_SOURCE -DG__P2FCAST -DG__SHAREDLIB -DG__OSFDLL \
                 -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
 CINTCFLAGS    = -qchars=signed -qnoro -qnoroconst -DG__REGEXP -D_POSIX2_SOURCE \
