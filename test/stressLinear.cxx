@@ -1950,7 +1950,8 @@ void mstress_inversion()
       cout << "Check to see that Invert() and InvertFast() give identical results" <<endl;
       cout << " for size < (7x7)" <<endl;
     }
-    for (Int_t size = 2; size < 7; size++) {
+    Int_t size;
+    for (size = 2; size < 7; size++) {
       TMatrixD m1 = THilbertMatrixD(size,size);
       TMatrixDDiag(m1) += 1;
       TMatrixD m2 = m1;
@@ -1966,7 +1967,7 @@ void mstress_inversion()
         cout << ( (TMath::Abs(det1-det2) <  EPSILON) ? " OK" : " too large") <<endl;
       }
     }
-    for (Int_t size = 2; size < 7; size++) {
+    for (size = 2; size < 7; size++) {
       TMatrixDSym m1 = THilbertMatrixDSym(size);
       TMatrixDDiag(m1) += 1;
       TMatrixDSym m2 = m1;
