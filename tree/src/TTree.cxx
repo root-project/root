@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.215 2004/11/24 14:11:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.216 2004/12/01 15:45:27 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1455,7 +1455,7 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
 
    branch->SetAddress(add);
 
-   if (delobj) {delete objadd; *ppointer=0;}
+   if (delobj) {cl->Destructor(objadd); *ppointer=0;}
    return branch;
 }
 
