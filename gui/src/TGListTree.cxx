@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.33 2005/01/12 18:39:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.34 2005/01/18 11:23:29 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -807,7 +807,7 @@ void TGListTree::DrawRegion(Int_t /*x*/, Int_t /*y*/, UInt_t /*w*/, UInt_t /*h*/
 {
    // Redraw list tree.
 
-   Draw(0,(Int_t)fHeight);
+   Draw(0, (Int_t)fHeight);
 }
 
 //______________________________________________________________________________
@@ -815,7 +815,8 @@ void TGListTree::DoRedraw()
 {
    // Redraw list tree.
 
-   Draw(0,(Int_t)fHeight);
+   ClearViewPort();
+   Draw(0, (Int_t)fHeight);
 }
 
 //______________________________________________________________________________
