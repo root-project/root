@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.45 2004/07/30 19:09:51 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.46 2004/07/30 23:46:34 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -66,7 +66,7 @@ typedef unsigned long  ULong_t;     //Unsigned long integer 4 bytes (unsigned lo
 #endif
 typedef float          Float_t;     //Float 4 bytes (float)
 typedef double         Double_t;    //Double 8 bytes
-typedef double         Double32_t;  //Double 8 bytes in memory, written as a Float 4 bytes 
+typedef double         Double32_t;  //Double 8 bytes in memory, written as a 4 bytes float
 typedef char           Text_t;      //General string (char)
 typedef bool           Bool_t;      //Boolean (0=false, 1=true) (bool)
 typedef unsigned char  Byte_t;      //Byte (8 bits) (unsigned char)
@@ -82,7 +82,7 @@ typedef long long          Long64_t;  //Portable signed long integer 8 bytes
 typedef unsigned long long ULong64_t; //Portable unsigned long integer 8 bytes
 #endif
 
-// There is several streamer concepts.  
+// There is several streamer concepts.
 class TClassStreamer;   // Streamer functor for a class
 class TMemberStreamer;  // Streamer functor for a data member
 typedef void         (*ClassStreamerFunc_t)(TBuffer&, void*);  // Streamer function for a class
@@ -100,8 +100,8 @@ typedef void         (*VoidFuncPtr_t)();  //pointer to void function
 #define NULL 0
 #endif
 
-const Bool_t kTRUE   = 1;
-const Bool_t kFALSE  = 0;
+const Bool_t kTRUE   = true;
+const Bool_t kFALSE  = false;
 
 const Int_t     kMaxUShort   = 65534;
 const Int_t     kMaxShort    = kMaxUShort >> 1;
@@ -375,7 +375,7 @@ namespace ROOT { \
 }
 
 #if defined(__CINT__)
-#define RootStreamer(name,STREAMER) 
+#define RootStreamer(name,STREAMER)
 #else
 #define RootStreamer(name,STREAMER)                                  \
 namespace ROOT {                                                     \
