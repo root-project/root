@@ -1,4 +1,4 @@
-/* @(#)root/srputils:$Name$:$Id$ */
+/* @(#)root/srputils:$Name:  $:$Id: rpasswd.c,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $ */
 /*
  * Create a private SRP passwd file.
  */
@@ -12,8 +12,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <pwd.h>
-/*#include <string.h>*/
+#ifdef __linux
+#include <string.h>
+#else
 extern char *strncpy(char *dest, const char *src, size_t n);
+#endif
 
 #include "pwauth.h"
 #include "pwio.h"
@@ -204,7 +207,7 @@ int main(int argc, char **argv)
    sprintf(r_tconf, "%s/%s", getenv("HOME"), SROOTDCONF);
    sprintf(r_passwd, "%s/%s", getenv("HOME"), SROOTDPASS);
 
-   /* 
+   /*
     * The remaining arguments will be processed one by one and
     * executed by this command.  The name is the last argument
     * if it does not begin with a "-", otherwise the name is
@@ -231,7 +234,7 @@ int main(int argc, char **argv)
    }
 
    /*
-    * Now I have to get the user name.  The name will be gotten 
+    * Now I have to get the user name.  The name will be gotten
     * from the command line if possible.  Otherwise it is figured
     * out from the environment.
     */
