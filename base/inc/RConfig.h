@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.12 2000/12/10 17:57:39 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.15 2001/02/28 17:56:55 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -41,9 +41,17 @@
 #endif
 
 #if defined(__alpha) && !defined(linux)
+#   include <standards.h>
+#   ifdef _XOPEN_SOURCE
+#      if _XOPEN_SOURCE+0 > 0
+#         define R__TRUE64
+#      endif
+#   endif
 #   define R__ALPHA
 #   define ANSICPP
-#   define NEED_SNPRINTF
+#   ifndef R__TRUE64
+#      define NEED_SNPRINTF
+#   endif
 #   ifndef __VMS
 #      define R__UNIX
 #      define R__B64

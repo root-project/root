@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.20 2001/02/26 02:46:06 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.21 2001/02/26 08:39:37 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -65,7 +65,9 @@
 #endif
 #if defined(R__ALPHA) && !defined(R__LINUX)
 #   include <sys/mount.h>
+#   ifndef R__TRUE64
     extern "C" int statfs(const char *file, struct statfs *buffer);
+#   endif
 #elif defined(R__LINUX) || defined(R__HPUX)
 #   include <sys/vfs.h>
 #else

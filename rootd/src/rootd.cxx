@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.29 2001/02/26 02:49:07 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.30 2001/03/01 07:21:23 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -132,8 +132,15 @@
 #include <netinet/in.h>
 #include <errno.h>
 #if defined(__alpha) && !defined(linux)
+#   ifdef _XOPEN_SOURCE
+#      if _XOPEN_SOURCE+0 > 0
+#         define R__TRUE64
+#      endif
+#   endif
 #include <sys/mount.h>
+#ifndef R__TRUE64
 extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
+#endif
 #elif defined(linux) || defined(__hpux)
 #include <sys/vfs.h>
 #else
