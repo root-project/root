@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.26 2002/08/16 19:50:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.27 2002/08/16 20:03:16 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -769,12 +769,24 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
    // [1] J. Humlicek, JQSRT, 21, 437 (1982).
    // [2] R.J. Wells "Rapid Approximation to the Voigt/Faddeeva Function and its 
    // Derivatives" JQSRT 62 (1999), pp 29-48.
-   //Begin_Html
-   /*
    // http://www-atm.physics.ox.ac.uk/user/wells/voigt.html
-   */
-   //End_Html
 
+   if ((sigma < 0 || lg < 0) || (sigma==0 && lg==0)) {
+      return 0;  // Not meant to be for those who want to be thinner than 0
+   }
+   
+   if (sigma == 0) {
+      return lg * 0.159154943  / (x*x + lg*lg /4); //pure Lorentz
+   }
+
+   if (lg == 0) {   //pure gauss
+      return 0.39894228 / sigma * TMath::Exp(-x*x / (2*sigma*sigma));
+   }
+
+   Double_t X, Y, K;
+   X = x / sigma / 1.41421356;
+   Y = lg / 2 / sigma / 1.41421356;
+   
    Double_t R0, R1;
 
    if (R < 2) R = 2;
@@ -782,10 +794,6 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
 
    R0=1.51 * exp(1.144 * (Double_t)R);
    R1=1.60 * exp(0.554 * (Double_t)R);
-
-   Double_t X, Y, K;
-   X = x / sigma / 1.41421356;
-   Y = lg / 2 / sigma / 1.41421356;
 
    // Constants
 
