@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.17 2003/01/29 16:53:15 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.18 2003/02/11 12:29:07 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -428,6 +428,9 @@ TGWin32::TGWin32(const TGWin32 &org) : TVirtualX(org)
 
    Int_t i;
 
+   EnterCriticalSection(org.flpCriticalSection);
+   SuspendThread(org.hGDKThread);
+
    fScreenNumber  = org.fScreenNumber;
    fColormap      = org.fColormap;
    fHasTTFonts    = org.fHasTTFonts;
@@ -515,6 +518,7 @@ TGWin32::TGWin32(const TGWin32 &org) : TVirtualX(org)
    flpCriticalSection = new CRITICAL_SECTION;
    InitializeCriticalSection(flpCriticalSection);
    gIDThread = fIDThread;
+   LeaveCriticalSection(org.flpCriticalSection);
 }
 
 //______________________________________________________________________________
