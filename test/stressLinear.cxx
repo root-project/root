@@ -1650,7 +1650,7 @@ void mstress_vm_multiplications()
   while (iloop >= 0) {
     const Int_t msize = gSizeA[iloop];
 
-    const Double_t epsilon = EPSILON*msize/100;
+    const Double_t epsilon = EPSILON*msize;
 
     const Int_t verbose = (gVerbose && nr==0 && iloop==gNrLoop);
 
@@ -1705,6 +1705,24 @@ void mstress_vm_multiplications()
       ok &= ( vb.GetLwb() == 0 ) ? kTRUE : kFALSE;
       TMatrixD mvm(m,TMatrixDBase::kMult,vm);
       TMatrixD mvb(msize+1,1);
+      TMatrixDColumn(mvb,0) = vb;
+      ok &= VerifyMatrixIdentity(mvb,mvm,verbose,epsilon);
+    }
+
+    if (ok)
+    {
+      if (verbose)
+        cout << "Check symmetric matrix-vector multiplication" << endl;
+      TVectorD vb(msize);
+      for (Int_t i = vb.GetLwb(); i <= vb.GetUpb(); i++)
+        vb(i) = TMath::Pi()+i;
+      TMatrixD vm(msize,1);
+      TMatrixDColumn(vm,0) = vb;
+      TMatrixDSym m = THilbertMatrixDSym(0,msize-1);
+      vb *= m;
+      ok &= ( vb.GetLwb() == 0 ) ? kTRUE : kFALSE;
+      TMatrixD mvm(m,TMatrixDBase::kMult,vm);
+      TMatrixD mvb(msize,1);
       TMatrixDColumn(mvb,0) = vb;
       ok &= VerifyMatrixIdentity(mvb,mvm,verbose,epsilon);
     }

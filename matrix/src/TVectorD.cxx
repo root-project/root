@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.39 2004/03/22 10:50:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.40 2004/03/24 11:44:56 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -834,28 +834,14 @@ TVectorD &TVectorD::operator*=(const TMatrixDSym &a)
   cblas_dsymv(CblasRowMajor,CblasUpper,fNrows,1.0,mp1,
               fNrows,elements_old,1,0.0,tp1,1);
 #else
-  const Double_t *mp2;
-  const Double_t *sp1 = elements_old;
-  const Double_t *sp2 = sp1;
-        Double_t *tp2 = tp1;       // Target vector ptr
-
-  for (Int_t i = 0; i < fNrows; i++) {
-    Double_t vec_i = *sp1++;
-    *tp1 += *mp1 * vec_i;
-    Double_t tmp = 0.0;
-    mp2 = mp1+1;
-    sp2 = sp1;
-    tp2 = tp1+1;
-    for (Int_t j = i+1; j < fNrows; j++) {
-      const Double_t a_ij = *mp2++;
-      *tp2++ += a_ij * vec_i;
-      tmp += a_ij * *sp2++;
-    }
-    *tp1++ += tmp;
-    mp1 += fNrows+1;
+  const Double_t * const tp_last = tp1+fNrows;
+  while (tp1 < tp_last) {
+    Double_t sum = 0;
+    for (const Double_t *sp = elements_old; sp < elements_old+nrows_old; )
+      sum += *sp++ * *mp1++;
+    *tp1++ = sum;
   }
-
-  Assert(tp1 == fElements+fNrows);
+  Assert(mp1 == a.GetMatrixArray()+a.GetNoElements());
 #endif
 
   delete [] elements_old;
