@@ -101,6 +101,7 @@ GEDLIBDEP           = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB)
 GEDLIBEXTRA         = -Llib -lHist -lGpad -lGraf -lGui
 GEDOLDLIBDEP        = $(GPADLIB) $(GRAFLIB)
 GEDOLDLIBEXTRA      = -Llib -lGpad -lGraf
+POSTSCRIPTLIBEXTRA  = -Llib -lGraf
 GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
 GUILIBEXTRA        := -Llib -lGpad -lGraf $(GUILIBEXTRA)
 HISTPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
