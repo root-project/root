@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.3 2003/08/30 19:27:09 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.4 2003/08/31 00:52:32 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -85,7 +85,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #if defined(cygwingcc)
 #define F_LOCK F_WRLCK
 #define F_ULOCK F_UNLCK
-int fcntl_lockf(int fd, int op, off_t off)
+static int fcntl_lockf(int fd, int op, off_t off)
 {
    flock fl;
    fl.l_whence = SEEK_SET;

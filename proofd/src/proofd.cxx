@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.35 2003/08/29 17:23:31 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.36 2003/08/31 00:52:32 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -251,7 +251,7 @@ using namespace ROOT;
 //--- Machine specific routines ------------------------------------------------
 
 #if !defined(__hpux) && !defined(linux) && !defined(__FreeBSD__) || \
-    defined(R__WINGCC)
+    defined(cygwingcc)
 static int setresgid(gid_t r, gid_t e, gid_t)
 {
    if (setgid(r) == -1)
@@ -265,12 +265,13 @@ static int setresuid(uid_t r, uid_t e, uid_t)
       return -1;
    return seteuid(e);
 }
-#endif
-#if defined(linux) && !defined(R__WINGCC) && !defined(HAS_SETRESUID)
+#else
+#if defined(linux) && !defined(HAS_SETRESUID)
 extern "C" {
    int setresgid(gid_t r, gid_t e, gid_t s);
    int setresuid(uid_t r, uid_t e, uid_t s);
 }
+#endif
 #endif
 
 //
