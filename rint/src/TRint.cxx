@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.42 2005/01/05 01:28:12 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.43 2005/01/13 20:04:48 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -225,6 +225,7 @@ void TRint::Run(Bool_t retrn)
             if (!fNcmd)
                printf("\n");
             if (file->String().EndsWith(".root")) {
+               file->String().ReplaceAll("\\","/");
                const char *rfile = (const char*)file->String();
                Printf("Attaching file %s as _file%d...", rfile, nfile);
                sprintf(cmd, "TFile *_file%d = TFile::Open(\"%s\")", nfile++, rfile);
