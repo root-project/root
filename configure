@@ -35,7 +35,6 @@ options="                 \
    enable_ldap            \
    enable_mysql           \
    enable_opengl          \
-   enable_openiv          \
    enable_pgsql           \
    enable_pythia          \
    enable_pythia6         \
@@ -738,8 +737,6 @@ if test $# -gt 0 ; then
       --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
       --with-opengl-incdir=*)  openglincdir=$optarg  ; enable_opengl="yes"  ;;
       --with-opengl-libdir=*)  opengllibdir=$optarg  ; enable_opengl="yes"  ;;
-      --with-openiv-incdir=*)  openivincdir=$optarg  ; enable_openiv="yes"  ;;
-      --with-openiv-libdir=*)  openivlibdir=$optarg  ; enable_openiv="yes"  ;;
       --with-pgsql-incdir=*)   pgsqlincdir=$optarg   ; enable_pgsql="yes"   ;;
       --with-pgsql-libdir=*)   pgsqllibdir=$optarg   ; enable_pgsql="yes"   ;;
       --with-pythia-libdir=*)  pythialibdir=$optarg  ; enable_pythia="yes"  ;;
@@ -2438,11 +2435,7 @@ fi
 if test "x$show_pkglist" = "xyes" ; then
     pkglist="root-daemon"
     test "x$enable_cern" = "xyes" && pkglist="$pkglist root-zebra"
-    if test "x$enable_openiv" = "xyes" ; then
-	pkglist="$pkglist root-gliv"
-    elif test "x$enable_opengl" = "xyes" ; then
-	pkglist="$pkglist root-gl"
-    fi
+    test "x$enable_opengl" = "xyes" && pkglist="$pkglist root-gl"
     test "x$enable_mysql" = "xyes" && pkglist="$pkglist root-mysql"
     test "x$enable_pgsql" = "xyes" && pkglist="$pkglist root-pgsql"
     test "x$enable_sapdb" = "xyes" && pkglist="$pkglist root-sapdb"
@@ -2707,9 +2700,6 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@opengllib@|$opengllib|"              \
     -e "s|@opengllibdir@|$opengllibdir|"        \
     -e "s|@openglulib@|$openglulib|"            \
-    -e "s|@openivincdir@|$openivincdir|"        \
-    -e "s|@openivlib@|$openivlib|"              \
-    -e "s|@openivlibdir@|$openivlibdir|"        \
     -e "s|@pgsqlincdir@|$pgsqlincdir|"          \
     -e "s|@pgsqllib@|$pgsqllib|"                \
     -e "s|@pgsqllibdir@|$pgsqllibdir|"          \

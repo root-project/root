@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: makedebdir.sh,v 1.6 2002/07/31 20:45:10 rdm Exp $
+# $Id: makedebdir.sh,v 1.7 2003/01/22 11:23:02 rdm Exp $
 #
 # Make the debian packaging directory 
 #
@@ -70,7 +70,6 @@ for i in $pkgs; do
     # That is, we don't have to worry if the entry is the first in the
     # list, because it never is. Thank god for that. 
     root-gl)     bd="${bd}, libgl-dev" ;; 
-    root-gliv)   bd="${bd}, inventor-dev, libgl-dev, lesstif-dev" ;;
     root-mysql)  bd="${bd}, libmysqlclient-dev" ;;
     root-pgsql)  bd="${bd}, postgresql-dev" ;;
     root-pythia) bd="${bd}, libpythia-dev" ;; 
@@ -129,6 +128,12 @@ chmod 755 ${tgtdir}/rules
 
 #
 # $Log: makedebdir.sh,v $
+# Revision 1.7  2003/01/22 11:23:02  rdm
+# big patch adding full freetype 2 TTF support to the ROOT core and X11
+# and Win32gdk displaying modules. TTF support provided by Olivier Couet
+# and Bertrand Bellenot (for Win32), build system updated by me.
+# Also fixes the RH8.0 installation problems of rootd and proofd.
+#
 # Revision 1.6  2002/07/31 20:45:10  rdm
 # modified files for Debian and RedHat packaging. By Christian Holm.
 #

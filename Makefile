@@ -456,7 +456,7 @@ distsrc:
 rebase: $(ALLLIBS) $(ALLEXECS)
 	@echo -n "Rebasing binaries... "
 	@rebase -b 0x60600000 bin/*.exe bin/*.dll
-	@echo done. 
+	@echo done.
 
 debian:
 	@if [ ! -x `which debuild` ] || [ ! -x `which dh_testdir` ]; then \
@@ -789,8 +789,6 @@ showbuild:
 	@echo "OPENGLULIB         = $(OPENGLULIB)"
 	@echo "OPENGLLIB          = $(OPENGLLIB)"
 	@echo "OPENGLINCDIR       = $(OPENGLINCDIR)"
-	@echo "OPENIVLIB          = $(OPENIVLIB)"
-	@echo "OPENIVINCDIR       = $(OPENIVINCDIR)"
 	@echo "CERNLIBDIR         = $(CERNLIBDIR)"
 	@echo "CERNLIBS           = $(CERNLIBS)"
 	@echo "OSTHREADLIB        = $(OSTHREADLIB)"

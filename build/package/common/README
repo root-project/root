@@ -24,7 +24,6 @@ The packages are:
 * `root-zebra'     Conversion tools from HBOOK to ROOT files
 * `root-star'      Contributed classes from STAR Collaboration
 * `root-gl'        OpenGL support using Mesa (or XFree)
-* `root-gliv'      OpenGL support using OpenInventor
 * `root-mysql'     MySQL client for ROOT
 * `root-psql'      PostGreSQL client for ROOT
 * `root-sapdb'     SapDB client for ROOT
@@ -472,7 +471,6 @@ where "<pkg>" is the package name. Currently we have
 		      root-daemon
 		      root-zebra
 		      root-gl
-		      root-gliv
 		      root-mysql
 		      root-pgsql
 		      root-shift
