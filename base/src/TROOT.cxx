@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.131 2004/08/04 14:47:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.132 2004/08/04 20:23:23 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -400,7 +400,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fCleanups->Add(fBrowsers); fBrowsers->SetBit(kMustCleanup);
    fCleanups->Add(fTasks);    fTasks->SetBit(kMustCleanup);
    fCleanups->Add(fFiles);    fFiles->SetBit(kMustCleanup);
-   fCleanups->Add(fInterpreter);
+   //fCleanups->Add(fInterpreter);
 
    fForceStyle    = kFALSE;
    fFromPopUp     = kFALSE;
