@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.28 2002/09/18 13:33:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.29 2002/10/31 07:27:37 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -754,7 +754,8 @@ Stat_t TProfile::GetBinError(Int_t bin) const
    // error is set to the (average error on all bins) * 2
    //if (eprim <= 0) {   test in version 2.25/03
    //if (test < 1.e-4) { test in version 3.01/06
-   if (test < 1.e-4 || eprim2 < 1e-6) {
+   //if (test < 1.e-4 || eprim2 < 1e-6) { test in version 3.03/09
+   if (fNcells <=1000 && (test < 1.e-4 || eprim2 < 1e-6)) {
       Stat_t scont, ssum, serr2;
       scont = ssum = serr2 = 0;
       for (Int_t i=1;i<fNcells;i++) {
@@ -1173,12 +1174,14 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
 
 // Fill the projected histogram
   Double_t cont,err;
+  printf("before the loop\n");
   for (Int_t binx =0;binx<=nx+1;binx++) {
      cont  = GetBinContent(binx);
      err   = GetBinError(binx);
      if (cont)          h1->Fill(fXaxis.GetBinCenter(binx), cont);
      if (computeErrors) h1->SetBinError(binx,err);
   }
+printf("before SetEntries\n");
   h1->SetEntries(fEntries);
   return h1;
 }
