@@ -1,4 +1,4 @@
-// $Id: TVirtualGuiBld.h,v 1.3 2004/09/11 19:29:47 brun Exp $
+// $Id: TVirtualGuiBld.h,v 1.4 2004/09/12 10:55:26 brun Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -59,6 +59,8 @@ public:
    virtual void      SetAction(TGuiBldAction *act) { fAction = act; }
    TGuiBldAction    *GetAction() const { return fAction; }
    virtual Bool_t    IsExecutalble() const  { return fAction && !fAction->fAct.IsNull(); }
+   virtual void      Show() = 0;
+   virtual void      Hide() = 0;
 
    static  TVirtualGuiBld  *Instance();
 

@@ -79,6 +79,8 @@ GQTLIBDEP           = $(GPADLIB) $(RINTLIB)
 GQTLIBEXTRA         = lib/libGpad.lib lib/libRint.lib
 RUBYLIBDEP          = $(HISTLIB)
 RUBYLIBEXTRA        = lib/libHist.lib
+GUIBLDLIBDEP        = $(GUILIB)
+GUIBLDLIBEXTRA      = lib/libGui.lib
 
 else
 
@@ -155,5 +157,7 @@ RUBYLIBDEP          = $(HISTLIB)
 RUBYLIBEXTRA        = -Llib -lHist
 NETXLIBDEP          = $(THREADLIB)
 NETXLIBEXTRA        = -Llib -lThread
+GUIBLDLIBDEP        = $(GUILIB)
+GUIBLDLIBEXTRA      = lib/libGui.lib
 
 endif

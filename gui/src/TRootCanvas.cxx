@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.49 2004/08/03 16:01:18 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.50 2004/08/25 15:34:00 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -50,6 +50,7 @@
 #include "TVirtualPadEditor.h"
 #include "TRootControlBar.h"
 #include "TGLabel.h"
+#include "TVirtualGuiBld.h"
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"
@@ -106,6 +107,7 @@ enum ERootCanvasCommands {
 
    kInspectRoot,
    kInspectBrowser,
+   kInspectBuilder,
 
    kClassesTree,
 
@@ -399,6 +401,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fInspectMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fInspectMenu->AddEntry("&ROOT",              kInspectRoot);
    fInspectMenu->AddEntry("&Start Browser",     kInspectBrowser);
+   fInspectMenu->AddEntry("&Gui Builder",       kInspectBuilder);
 
    fClassesMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fClassesMenu->AddEntry("&Class Tree",        kClassesTree);
@@ -972,6 +975,9 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
                   case kInspectBrowser:
                      new TBrowser("browser");
+                     break;
+                  case kInspectBuilder:
+                     TVirtualGuiBld::Instance();
                      break;
 
                   // Handle Inspect menu items...

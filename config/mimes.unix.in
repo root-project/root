@@ -189,3 +189,36 @@ action = ->Browse()
 pattern = TLeaf*
 icon = leaf_s.xpm leaf_t.xpm
 action = ->Browse()
+
+# actions used by GuiBuilder
+[root/textbutton]
+pattern = TGTextButton
+icon = bld_textbutton.xpm bld_textbutton.xpm
+action = new TGuiBldTextDialog("%s")
+
+[root/radiobutton]
+pattern = TGRadioButton
+icon = bld_radiobutton.xpm bld_radiobutton.xpm
+action = new TGuiBldTextDialog("%s")
+
+[root/checkbutton]
+pattern = TGCheckButton
+icon = bld_checkbutton.xpm bld_checkbutton.xpm
+action = new TGuiBldTextDialog("%s")
+
+[root/label]
+pattern = TGLabel
+icon = bld_label.xpm bld_label.xpm
+action = new TGuiBldTextDialog("%s")
+
+[root/textentry]
+pattern = TGTextEntry
+icon = bld_textentry.xpm bld_textentry.xpm
+action = new TGuiBldTextDialog("%s")
+
+[root/groupframe]
+pattern = TGGroupFrame
+icon = bld_groupframe.xpm bld_groupframe.xpm
+action = new TGuiBldTextDialog("%s")
+
+

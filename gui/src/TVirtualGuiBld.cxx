@@ -1,4 +1,4 @@
-// $Id: TVirtualGuiBld.cxx,v 1.2 2004/09/08 17:34:19 rdm Exp $
+// $Id: TVirtualGuiBld.cxx,v 1.4 2004/09/12 10:55:26 brun Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -68,7 +68,7 @@ TVirtualGuiBld *TVirtualGuiBld::Instance()
 
    // load plugin
    if (!loaded) {
-      h = gROOT->GetPluginManager()->FindHandler("TGuiBuilder", "GuiBld");
+      h = gROOT->GetPluginManager()->FindHandler("TVirtualGuiBld", "GuiBld");
 
       if (h) {
          if (h->LoadPlugin() == -1) return 0;

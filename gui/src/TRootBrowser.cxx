@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.57 2004/07/13 12:46:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.58 2004/09/12 10:55:26 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -54,6 +54,7 @@
 #include "TSystemDirectory.h"
 #include "TSystemFile.h"
 #include "TInterpreter.h"
+#include "TVirtualGuiBld.h"
 
 #include "HelpText.h"
 
@@ -65,6 +66,7 @@
 enum ERootBrowserCommands {
    kFileNewBrowser,
    kFileNewCanvas,
+   kFileNewBuilder,
    kFileOpen,
    kFileSave,
    kFileSaveAs,
@@ -708,6 +710,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fFileMenu->AddEntry("&New Browser",        kFileNewBrowser);
    fFileMenu->AddEntry("New Canvas",          kFileNewCanvas);
+   fFileMenu->AddEntry("Gui &Builder",        kFileNewBuilder);
    fFileMenu->AddEntry("&Open...",            kFileOpen);
    fFileMenu->AddSeparator();
    fFileMenu->AddEntry("&Save",               kFileSave);
@@ -1155,6 +1158,9 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      break;
                   case kFileNewCanvas:
                      gROOT->GetMakeDefCanvas()();
+                     break;
+                  case kFileNewBuilder:
+                     TVirtualGuiBld::Instance();
                      break;
                   case kFileOpen:
                      {
