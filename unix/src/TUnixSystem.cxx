@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.59 2003/05/27 14:10:29 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.60 2003/06/17 15:19:56 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -235,7 +235,7 @@ extern "C" {
 #endif
 
 // FPE handling includes
-#if defined(R__LINUX)
+#if (defined(R__LINUX) && !defined(R__WINGCC))
 #include <fpu_control.h>
 #include <fenv.h>
 #endif
