@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.10 2000/09/11 06:18:24 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.11 2000/09/11 09:59:26 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -119,7 +119,7 @@ TCanvas::TCanvas() : TPad()
 {
    // Canvas default constructor.
 
-   if (gROOT->ReadingObject()) {
+   if (TClass::IsCallingNew()) {
       Constructor();
    } else {
       const char *defcanvas = gROOT->GetDefCanvasName();
@@ -667,12 +667,12 @@ void TCanvas::DrawClonePad()
    // Note that the original canvas may have subpads.
 
    
-  if (gPad == 0 || gPad == this) {
+  TPad *padsav = (TPad*)gPad;
+  TPad *pad = (TPad*)gROOT->GetSelectedPad();
+  if (fCanvasID < 0 || padsav == 0 || pad == this) {
      DrawClone();
      return;
   }
-  TPad *padsav = (TPad*)gPad;
-  TPad *pad = (TPad*)gROOT->GetSelectedPad();
   this->cd();
   TObject *obj, *clone;
   //copy pad attributes
