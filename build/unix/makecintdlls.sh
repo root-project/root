@@ -1,4 +1,4 @@
-#! /bin/sh 
+#! /bin/sh
 
 # Script to create auxiliary CINT dll's.
 # Called by main Makefile.
@@ -45,7 +45,6 @@ if [ $PLATFORM = "sgi" ]; then
 fi
 
 clean() {
-   rm -f $CINTDIRI/long.dll
    rm -f $CINTDIRI/stdfunc.dll
    rm -f $CINTDIRI/stdcxxfunc.dll
    rm -f $CINTDIRI/posix.dll
@@ -74,6 +73,19 @@ rename() {
    fi;
 }
 
+cpdllwin32() {
+   cp -f bin/stdfunc.dll   $CINTDIRI
+   cp -f bin/vector.dll    $CINTDIRS
+   cp -f bin/multi*.dll    $CINTDIRS
+   cp -f bin/deque.dll     $CINTDIRS
+   cp -f bin/map*.dll      $CINTDIRS
+   cp -f bin/queue.dll     $CINTDIRS
+   cp -f bin/set.dll       $CINTDIRS
+   cp -f bin/stack.dll     $CINTDIRS
+   cp -f bin/exception.dll $CINTDIRS
+   cp -f bin/list.dll      $CINTDIRS
+}
+
 ##### first delete old dll's #####
 
 clean
@@ -81,21 +93,6 @@ clean
 if [ $PLATFORM = "clean" ]; then
    exit 0;
 fi
-
-##### long.dll #####
-
-#LONGDIR=$CINTDIRL/longlong
-
-#$CINT -w1 -zlong -n$LONGDIR/G__cpp_long.cxx -D__MAKECINT__ \
-#   -DG__MAKECINT -c-1 -A -Z0 $LONGDIR/longdbl.h
-#$CXX $OPT $CINTCXXFLAGS -I. -Icint -o $LONGDIR/G__cpp_long.o \
-#   -c $LONGDIR/G__cpp_long.cxx
-#$MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" long.$SOEXT $CINTDIRI/long.$SOEXT \
-#   $LONGDIR/G__cpp_long.o
-#rename $CINTDIRI/long
-
-#rm -f $LONGDIR/G__cpp_long.cxx $LONGDIR/G__cpp_long.h $LONGDIR/G__cpp_long.o
-
 
 ##### stdfunc.dll  & stdcxxfunc.dll #####
 
@@ -122,7 +119,6 @@ rm -f $STDFUNCDIR/G__c_stdfunc.c $STDFUNCDIR/G__c_stdfunc.h \
       $STDFUNCDIR/G__c_stdcxxfunc.h $STDFUNCDIR/G__c_stdcxxfunc.o
 
 ##### posix.dll #####
-
 
 if [ $PLATFORM != "win32" ]; then
 
@@ -284,5 +280,8 @@ rename $CINTDIRS/exception
 
 rm -f $STLDIR/G__*
 
-exit 0
+if [ $PLATFORM = "win32" ]; then
+   cpdllwin32
+fi
 
+exit 0
