@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.7 2002/05/18 08:22:00 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.8 2003/09/03 06:08:34 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 //    Oct  8 1999: changed Warning to Error and
 //                 return fX in Double_t & operator()
@@ -164,14 +164,14 @@ Lorentz boost</H3>
 A boost in a general direction can be parameterized with three parameters
 which can be taken as the components of a three vector <TT><B>b </B>= (bx,by,bz)</TT>.
 With
-<BR><TT><B>&nbsp; x</B> = (x,y,z) and gamma = 1/Sqrt(1-beta*beta)</TT>,
+<BR><TT><B>&nbsp; x</B> = (x,y,z) and gamma = 1/Sqrt(1-beta*beta)</TT> (beta being the module of vector b),
 an arbitary active Lorentz boost transformation (from the rod frame
 to the original frame) can be written as:
 <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <TT><B>x</B>
 = <B>x'</B> + (gamma-1)/(beta*beta) * (<B>b</B>*<B>x'</B>) * <B>b</B> +
 gamma * t' *<B> b</B></TT>
 <BR><B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </B><TT>t
-= gamma (t'+ <B>b</B>*<B>x</B>).</TT>
+= gamma (t'+ <B>b</B>*<B>x'</B>).</TT>
 
 <P>The member function <TT>Boost()</TT> performs a boost transformation
 from the rod frame to the original frame. <TT>BoostVector()</TT> returns
