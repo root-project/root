@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.7 2002/01/23 17:52:52 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.8 2002/01/24 11:39:31 rdm Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -553,10 +553,10 @@ void test_vector_io()
 //------------------------------------------------------------------------
 //                    Main module
 //
-int main()
+int main(int argc, char **argv)
 {
    // Make sure all registered dictionaries have been initialized
-   TApplication app("vvector", 0, 0);
+   TApplication app("vvector", &argc, argv, 0, 0);
 
    cout<< "\n\n" <<
           "----------------------------------------------------------------" <<
