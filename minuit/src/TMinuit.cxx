@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.7 2001/04/23 16:08:28 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.8 2001/05/04 13:20:53 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -4101,7 +4101,7 @@ void TMinuit::mnimpr()
     Double_t amax, ycalf, ystar, ystst;
     Double_t pb, ep, wg, xi, sigsav, reg, sig2;
     Int_t npfn, ndex, loop=0, i, j, ifail, iseed;
-    Int_t jhold, nloop, nparx, nparp1, jh, jl;
+    Int_t jhold, nloop, nparx, nparp1, jh, jl, iswtr;
 
     if (fNpar <= 0) return;
     if (fAmin == fUndefi) mnamin();
@@ -4116,6 +4116,7 @@ void TMinuit::mnimpr()
     wg = 1 / Double_t(fNpar);
     sigsav = fEDM;
     fApsi  = fAmin;
+    iswtr   = fISW[4] - 2*fItaur;
     for (i = 1; i <= fNpar; ++i) {
 	fXt[i-1]       = fX[i-1];
 	fIMPRdsav[i-1] = fWerr[i-1];
@@ -4291,7 +4292,7 @@ L350:
     if (fISW[1] < 2) goto L380;
     if (loop < nloop && fISW[0] < 1) goto L20;
 L380:
-    mnprin(5, fAmin);
+    if (iswtr >= 0) mnprin(5, fAmin);
     fItaur = 0;
 } /* mnimpr_ */
 
