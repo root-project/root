@@ -80,7 +80,7 @@ main(int argc, char **argv) {
   
   //--- Data set variables ---
   dtErr     = new RooRealVar("dtErr","Calculated Error on Reconstructed Delta(t)",0.1,5.0) ;
-  dtReco    = new RooRealVar("dtReco","Reconstructed Delta(t)",-18,18) ;
+  dtReco    = new RooRealVar("dtReco","Reconstructed Delta(t)",-20,20) ;
   mB        = new RooRealVar("mB","Reconstructed B0 mass",5.20,5.30,"GeV") ;
   pTagB0    = new RooRealVar("pTagB0","Tag side B0 flavour probability",0.,1.01) ;
   pRecB0    = new RooRealVar("pRecB0","Reco side B0 flavour probablity",0.,1.01) ;
@@ -202,7 +202,8 @@ main(int argc, char **argv) {
   mixCust = new RooPdfCustomizer(*mixProto,*fitCat,*splitPars) ;
   mixCust->splitArg(*sigC_bias,*fitCat) ;
   mixCust->splitArgs(RooArgSet(*sig_eta,*bgC_eta,*bgL_eta,*bgP_eta,*bgP_f,*mbMean,*mbWidth,*argPar,*sigfrac),*tagCat) ;
-  mixCust->splitArgs(RooArgSet(*sigC_scfa,*sigT_bias,*sigC_frac,*sigO_frac,*bkgC_bias,*bkgC_scfa,*bkgC_frac),*runBlock) ;
+  mixCust->splitArgs(RooArgSet(*sigC_scfa,*sigT_scfa,*sigT_bias,*sigC_frac,
+			       *sigO_frac,*bkgC_bias,*bkgC_scfa,*bkgC_frac),*runBlock) ;
 
   //--- Combined the individual fits into a simultaneous fit ---
   mbsModel = new RooSimultaneous("mixModel","Top level Mixing PDF",*fitCat) ;
@@ -221,14 +222,18 @@ main(int argc, char **argv) {
   mixVars->readFromStream(cf,kFALSE) ;
 
   //--- Do MBshape prefit ---
-  mbsVars = mbsCust->fullParamList(data->get()) ;
   mbsModel->fitTo(*data,"mht0ooo") ;
 
-  //--- Freeze parameters of MBshape fit 
+  //--- Freeze parameters of MBshape fit and print results
+  mbsVars = mbsModel->getParameters(data) ;
+  mbsVars->Print("v") ;
   mbsVars->setAttribAll("Constant",kTRUE) ;
 
   //--- Do BMixing fit ---
   mixModel->fitTo(*data,"mlth0ooo") ;
+
+  //--- Print final results ---
+  mixModel->getParameters(data)->Print("v") ;
 
   return 0 ;
 }

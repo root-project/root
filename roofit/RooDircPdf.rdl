@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDircPdf.rdl,v 1.4 2001/06/19 18:36:49 jback Exp $
+ *    File: $Id: RooDircPdf.rdl,v 1.5 2001/07/31 05:58:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -34,7 +34,7 @@ public:
   // WVE - This is cheating, this PDF is not normalized.
   //       Making it so, would require major work, and may not be necessary 
   //       for the current analysis.
-  virtual Bool_t selfNormalized(const RooArgSet& dependents) const { return kTRUE ; }
+  virtual Bool_t selfNormalized() const { return kTRUE ; }
 
 protected:
 
