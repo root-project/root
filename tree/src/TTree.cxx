@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.87 2001/08/13 08:54:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.88 2001/08/16 16:36:58 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2063,7 +2063,7 @@ TLeaf *TTree::GetLeaf(const char *aname)
    
    char *slash = (char*)strchr(aname,'/');
    char *name;
-   Int_t nbch;
+   Int_t nbch = 0;
    if (slash) {
       name = slash+1;
       nbch = slash-aname;
