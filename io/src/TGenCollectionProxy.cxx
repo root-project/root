@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.14 2005/02/25 17:06:34 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.15 2005/03/08 21:23:25 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 #include "TError.h"
 #include "TROOT.h"
 #include "Api.h"
-#include <iostream>
+#include "Riostream.h"
 
 #define MESSAGE(which,text)
 

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.3 2004/11/03 16:13:38 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.4 2005/01/19 18:30:58 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 // TGenCollectionStreamer
 //
-// Streamer around an arbitrary container, which implements basic 
+// Streamer around an arbitrary container, which implements basic
 // functionality and iteration.
 //
 // In particular this is used to implement splitting and abstract
@@ -28,7 +28,7 @@
 #include "TClassEdit.h"
 #include "TError.h"
 #include "TROOT.h"
-#include <iostream>
+#include "Riostream.h"
 
 /// Build a Streamer for an emulated vector whose type is 'name'.
 TGenCollectionStreamer::TGenCollectionStreamer(const TGenCollectionStreamer& copy)
@@ -47,7 +47,7 @@ TGenCollectionStreamer::~TGenCollectionStreamer()   {
 }
 
 /// Virtual copy constructor
-TVirtualCollectionProxy* TGenCollectionStreamer::Generate() const  { 
+TVirtualCollectionProxy* TGenCollectionStreamer::Generate() const  {
   if ( !fClass ) Initialize();
   return new TGenCollectionStreamer(*this);
 }
@@ -116,7 +116,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)  {
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
       itm = (StreamHelper*)fResize.invoke(fEnv);
       switch (fVal->fCase) {
-        case G__BIT_ISCLASS: 
+        case G__BIT_ISCLASS:
           DOLOOP( b.StreamObject(i,fVal->fType) );
         case R__BIT_ISSTRING:
           DOLOOP( i->read_std_string(b) );
@@ -124,7 +124,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)  {
           DOLOOP( i->set(b.ReadObjectAny(fVal->fType)) );
         case G__BIT_ISPOINTER|R__BIT_ISSTRING:
           DOLOOP( i->read_std_string_pointer(b) );
-        case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:  
+        case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
           DOLOOP( i->read_tstring_pointer(vsn3,b) );
       }
 #undef DOLOOP
@@ -228,7 +228,7 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b)  {
             case kUInt_t:    b >> i->u_int;       break;
             case kULong_t:   b >> i->u_long;      break;
             case kULong64_t: b >> i->u_longlong;  break;
-            case kDouble32_t:b >> f; 
+            case kDouble32_t:b >> f;
                              i->dbl = double(f);  break;
             case kchar:
             case kNoType_t:
@@ -316,7 +316,7 @@ void TGenCollectionStreamer::WriteObjects(int nElements, TBuffer &b)  {
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
       itm = (StreamHelper*)fFirst.invoke(fEnv);
       switch (fVal->fCase) {
-        case G__BIT_ISCLASS: 
+        case G__BIT_ISCLASS:
           DOLOOP( b.StreamObject(i,fVal->fType));
           break;
         case R__BIT_ISSTRING:
@@ -343,7 +343,7 @@ void TGenCollectionStreamer::WriteObjects(int nElements, TBuffer &b)  {
     case TClassEdit::kSet:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)TGenCollectionProxy::At(idx); { x ;} ++idx;} break;}
       switch (fVal->fCase) {
-        case G__BIT_ISCLASS: 
+        case G__BIT_ISCLASS:
           DOLOOP( b.StreamObject(i,fVal->fType));
         case R__BIT_ISSTRING:
           DOLOOP( TString(i->c_str()).Streamer(b));
@@ -396,7 +396,7 @@ void TGenCollectionStreamer::WriteMap(int nElements, TBuffer &b)  {
               Error("TGenCollectionStreamer","fType %d is not supported yet!\n",v->fKind);
           }
           break;
-        case G__BIT_ISCLASS: 
+        case G__BIT_ISCLASS:
           b.StreamObject(i,v->fType);
           break;
         case R__BIT_ISSTRING:
@@ -420,7 +420,7 @@ void TGenCollectionStreamer::WriteMap(int nElements, TBuffer &b)  {
 
 /// TClassStreamer IO overload
 void TGenCollectionStreamer::Streamer(TBuffer &b) {
-  if ( b.IsReading() ) {  //Read mode 
+  if ( b.IsReading() ) {  //Read mode
     int nElements = 0;
     b >> nElements;
     if ( fEnv->object )   {
@@ -436,7 +436,7 @@ void TGenCollectionStreamer::Streamer(TBuffer &b) {
           switch (fVal->fCase) {
             case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
             case G__BIT_ISENUM:
-              ReadPrimitives(nElements, b); 
+              ReadPrimitives(nElements, b);
               return;
             default:
               ReadObjects(nElements, b);

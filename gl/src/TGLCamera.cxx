@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.5 2004/11/15 14:59:02 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.6 2004/11/24 14:48:02 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -12,8 +12,6 @@
 #ifdef GDK_WIN32
 #include <WIndows4Root.h>
 #endif
-
-#include <iostream>
 
 #include <GL/gl.h>
 #include <GL/glu.h>

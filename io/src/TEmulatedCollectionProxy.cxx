@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.6 2004/11/11 06:06:41 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.7 2005/01/19 18:30:58 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 // TEmulatedCollectionProxy
 //
-// Streamer around an arbitrary container, which implements basic 
+// Streamer around an arbitrary container, which implements basic
 // functionality and iteration.
 //
 // In particular this is used to implement splitting and abstract
@@ -28,7 +28,7 @@
 #include "TClassEdit.h"
 #include "TError.h"
 #include "TROOT.h"
-#include <iostream>
+#include "Riostream.h"
 
 /// Build a Streamer for an emulated vector whose type is 'name'.
 TEmulatedCollectionProxy::TEmulatedCollectionProxy(const TEmulatedCollectionProxy& copy)
@@ -49,13 +49,13 @@ TEmulatedCollectionProxy::~TEmulatedCollectionProxy()   {
 }
 
 /// Virtual copy constructor
-TVirtualCollectionProxy* TEmulatedCollectionProxy::Generate() const  { 
+TVirtualCollectionProxy* TEmulatedCollectionProxy::Generate() const  {
   if ( !fClass ) Initialize();
   return new TEmulatedCollectionProxy(*this);
 }
 
 /// Proxy initializer
-TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx() { 
+TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx() {
   fClass = gROOT->GetClass(fName.c_str());
   fEnv = 0;
   fKey = 0;
@@ -82,7 +82,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx() {
             fValDiff = fKey->fSize + fVal->fSize;
             fValDiff += (slong - fKey->fSize%slong)%slong;
             fValDiff += (slong - fValDiff%slong)%slong;
-            
+
           }
           if ( 0 == fValOffset )  {
             fValOffset  = fKey->fSize;
@@ -116,7 +116,7 @@ UInt_t TEmulatedCollectionProxy::Size() const   {
   return 0;
 }
 
-/// Clear the emulated collection.  
+/// Clear the emulated collection.
 void TEmulatedCollectionProxy::Clear(const char* opt)  {
   Resize(0, opt && *opt=='f');
 }
@@ -345,7 +345,7 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)  {
       }
       break;
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
-    case G__BIT_ISCLASS: 
+    case G__BIT_ISCLASS:
       DOLOOP( b.StreamObject(i,fVal->fType) );
     case R__BIT_ISSTRING:
       DOLOOP( i->read_std_string(b) );
@@ -353,7 +353,7 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)  {
       DOLOOP( i->read_any_object(fVal,b) );
     case G__BIT_ISPOINTER|R__BIT_ISSTRING:
       DOLOOP( i->read_std_string_pointer(b) );
-    case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:  
+    case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
       DOLOOP( i->read_tstring_pointer(vsn3,b) );
   }
 #undef DOLOOP
@@ -389,7 +389,7 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)  {
       }
       break;
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
-    case G__BIT_ISCLASS: 
+    case G__BIT_ISCLASS:
       DOLOOP( b.StreamObject(i,fVal->fType) );
     case R__BIT_ISSTRING:
       DOLOOP( TString(i->c_str()).Streamer(b) );
@@ -405,7 +405,7 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)  {
 
 /// TClassStreamer IO overload
 void TEmulatedCollectionProxy::Streamer(TBuffer &b) {
-  if ( b.IsReading() ) {  //Read mode 
+  if ( b.IsReading() ) {  //Read mode
     int nElements = 0;
     b >> nElements;
     if ( fEnv->object )  {

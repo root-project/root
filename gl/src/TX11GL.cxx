@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.3 2004/08/16 10:00:45 brun Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.4 2004/11/22 23:39:52 rdm Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -17,11 +17,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
 #include "TVirtualX.h"
 #include "TX11GL.h"
 #include "TError.h"
+
 
 ClassImp(TX11GL)
 

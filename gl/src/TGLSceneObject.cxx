@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.28 2005/01/19 13:19:34 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.29 2005/03/09 18:19:26 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -25,7 +25,6 @@
 
 #include <assert.h>
 
-#include <iostream> // Remove
 
 ClassImp(TGLSceneObject)
 
@@ -182,12 +181,12 @@ void TGLSelection::Stretch(Double_t xs, Double_t ys, Double_t zs)
 }
 
 //______________________________________________________________________________
-TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, const Float_t *color, 
+TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, const Float_t *color,
                                UInt_t glName, TObject *obj) :
-   fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts()), 
+   fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts()),
    fColor(),
    fGLName(glName),
-   fNextT(0), 
+   fNextT(0),
    fRealObject(obj),
    fIsSelected(kFALSE)
 {
@@ -197,9 +196,9 @@ TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, const Float_t *color,
 }
 
 //______________________________________________________________________________
-TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve, 
+TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve,
                                const Float_t *color, UInt_t glName, TObject *obj) :
-   fVertices(verticesReserve, 0.), 
+   fVertices(verticesReserve, 0.),
    fColor(),
    fGLName(glName),
    fNextT(0),
@@ -675,7 +674,7 @@ TGLSphere::TGLSphere(const TBuffer3DSphere &buffer, const Float_t *c, UInt_t n, 
    fZ      = (buffer.fBBLowVertex[2] + buffer.fBBLowVertex[2])/2.0;
    fRadius = buffer.fRadiusOuter;
 
-   // TODO: 
+   // TODO:
    // Support hollow & cut spheres
    // buffer.fRadiusInner;
    // buffer.fThetaMin;
@@ -799,17 +798,17 @@ protected:
    void GetNormal(const Vertex3d &vertex, Vertex3d &normal)const;
    Double_t GetZcoord(Double_t x, Double_t y, Double_t z)const;
    const Vertex3d &MakeVertex(Double_t x, Double_t y, Double_t z)const;
-   
+
 public:
-   TGLMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz, 
-                   const Vertex3d &center, const Vertex3d &l = lowNormal, 
+   TGLMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
+                   const Vertex3d &center, const Vertex3d &l = lowNormal,
                    const Vertex3d &h = highNormal);
 
    void Shift(Double_t xs, Double_t ys, Double_t zs)
    {
       fCenter[0] += xs; fCenter[1] += ys; fCenter[2] += zs;
    }
-      
+
    virtual void Draw(const Double_t *rot)const = 0;
 };
 
@@ -822,7 +821,7 @@ private:
 
 public:
    TubeSegMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
-               Double_t phi1, Double_t phi2, const Vertex3d &center, 
+               Double_t phi1, Double_t phi2, const Vertex3d &center,
                const Vertex3d &l = lowNormal, const Vertex3d &h = highNormal);
 
    void Draw(const Double_t *rot)const;
@@ -837,7 +836,7 @@ private:
 
 public:
    TubeMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
-            const Vertex3d &center, const Vertex3d &l = lowNormal, 
+            const Vertex3d &center, const Vertex3d &l = lowNormal,
             const Vertex3d &h = highNormal);
 
    void Draw(const Double_t *rot)const;
@@ -864,7 +863,7 @@ private:
 
 public:
    CylinderSegMesh(Double_t r1, Double_t r2, Double_t dz, Double_t phi1, Double_t phi2,
-                   const Vertex3d &center, const Vertex3d &l = lowNormal, 
+                   const Vertex3d &center, const Vertex3d &l = lowNormal,
                    const Vertex3d &h = highNormal);
 
    void Draw(const Double_t *rot)const;
@@ -872,7 +871,7 @@ public:
 
 
 //______________________________________________________________________________
-TGLMesh::TGLMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz, 
+TGLMesh::TGLMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
                                const Vertex3d &c, const Vertex3d &l, const Vertex3d &h)
                      :fRmin1(r1), fRmax1(r2), fRmin2(r3), fRmax2(r4),
                       fDz(dz), fCenter(c), fNlow(l), fNhigh(h)
@@ -912,11 +911,11 @@ const Vertex3d &TGLMesh::MakeVertex(Double_t x, Double_t y, Double_t z)const
 }
 
 //______________________________________________________________________________
-TubeSegMesh::TubeSegMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz, 
-                         Double_t phi1, Double_t phi2, const Vertex3d &center, 
+TubeSegMesh::TubeSegMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
+                         Double_t phi1, Double_t phi2, const Vertex3d &center,
                          const Vertex3d &l, const Vertex3d &h)
                  :TGLMesh(r1, r2, r3, r4, dz, center, l, h), fMesh(), fNorm()
-                      
+
 {
    const Double_t delta = (phi2 - phi1) / kLod;
    Double_t currAngle = phi1;
@@ -951,7 +950,7 @@ TubeSegMesh::TubeSegMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Dou
          s = TMath::Sin(currAngle);
          j -= 2;
       }
-   
+
       GetNormal(fMesh[i], fNorm[i]);
       fNorm[i + topShift] = fNhigh;
       fNorm[i + botShift] = fNlow;
@@ -1005,7 +1004,7 @@ void TubeSegMesh::Draw(const Double_t *rot)const
    glDrawArrays(GL_QUAD_STRIP, 4 * (kLod + 1) + 8, 2 * (kLod + 1));
    glDrawArrays(GL_QUAD_STRIP, 6 * (kLod + 1) + 8, 2 * (kLod + 1));
 
-   glDisableClientState(GL_VERTEX_ARRAY);   
+   glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_NORMAL_ARRAY);
 
    glPopMatrix();
@@ -1050,7 +1049,7 @@ TubeMesh::TubeMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t 
          s = TMath::Sin(currAngle);
          j -= 2;
       }
-      
+
       GetNormal(fMesh[i], fNorm[i]);
       fNorm[i + topShift] = fNhigh;
       fNorm[i + botShift] = fNlow;
@@ -1076,15 +1075,15 @@ void TubeMesh::Draw(const Double_t *rot)const
    //draw top and bottom strips
    glDrawArrays(GL_QUAD_STRIP, 4 * (kLod + 1), 2 * (kLod + 1));
    glDrawArrays(GL_QUAD_STRIP, 6 * (kLod + 1), 2 * (kLod + 1));
-   //5. disabling vertex arrays   
-   glDisableClientState(GL_VERTEX_ARRAY);   
+   //5. disabling vertex arrays
+   glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_NORMAL_ARRAY);
 
    glPopMatrix();
 }
 
 //______________________________________________________________________________
-CylinderMesh::CylinderMesh(Double_t r1, Double_t r2, Double_t dz, const Vertex3d &center, 
+CylinderMesh::CylinderMesh(Double_t r1, Double_t r2, Double_t dz, const Vertex3d &center,
                            const Vertex3d &l, const Vertex3d &h)
                  :TGLMesh(0., r1, 0., r2, dz, center, l, h), fMesh(), fNorm()
 {
@@ -1122,7 +1121,7 @@ CylinderMesh::CylinderMesh(Double_t r1, Double_t r2, Double_t dz, const Vertex3d
          s = TMath::Sin(currAngle);
          ++j;
       }
-   
+
       GetNormal(fMesh[i], fNorm[i]);
       fNorm[i + topShift] = fNhigh;
       fNorm[i + botShift] = fNlow;
@@ -1148,7 +1147,7 @@ void CylinderMesh::Draw(const Double_t *rot)const
    glDrawArrays(GL_TRIANGLE_FAN, 2 * (kLod + 1), kLod + 2);
    glDrawArrays(GL_TRIANGLE_FAN, 3 * (kLod + 1) + 1, kLod + 2);
 
-   glDisableClientState(GL_VERTEX_ARRAY);   
+   glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_NORMAL_ARRAY);
 
    glPopMatrix();
@@ -1156,7 +1155,7 @@ void CylinderMesh::Draw(const Double_t *rot)const
 
 //______________________________________________________________________________
    CylinderSegMesh::CylinderSegMesh(Double_t r1, Double_t r2, Double_t dz, Double_t phi1,
-                                    Double_t phi2, const Vertex3d &center, const Vertex3d &l, 
+                                    Double_t phi2, const Vertex3d &center, const Vertex3d &l,
                                     const Vertex3d &h)
                      :TGLMesh(0., r1, 0., r2, dz, center, l, h), fMesh(), fNorm()
 {
@@ -1202,7 +1201,7 @@ void CylinderMesh::Draw(const Double_t *rot)const
          s = TMath::Sin(currAngle);
          ++j;
       }
-   
+
       GetNormal(fMesh[i], fNorm[i]);
    }
 
@@ -1254,8 +1253,8 @@ void CylinderSegMesh::Draw(const Double_t *rot)const
    //4. draw top and bottom funs
    glDrawArrays(GL_TRIANGLE_FAN, 2 * (kLod + 1) + 8, kLod + 2);
    //      glDrawArrays(GL_TRIANGLE_FAN, 3 * (kLod + 1) + 9, kLod + 2);
-   //5. disabling vertex arrays   
-   glDisableClientState(GL_VERTEX_ARRAY);   
+   //5. disabling vertex arrays
+   glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_NORMAL_ARRAY);
 
    glPopMatrix();
@@ -1287,7 +1286,7 @@ void TGLCylinder::CreateParts(const TBuffer3DTube &buffer)
    Double_t r4 = buffer.fRadiusOuter;
    Double_t dz = buffer.fHalfLength;
 
-   // Stuff the transposed rotation component of the local -> master 
+   // Stuff the transposed rotation component of the local -> master
    // translation matrix into verticies array
    // Then stuff the translation component in to 'center' - as before
    // TODO: Clean this up - will be tidied as part of local frame conversion
@@ -1316,9 +1315,9 @@ void TGLCylinder::CreateParts(const TBuffer3DTube &buffer)
    case TBuffer3DTypes::kTubeSeg:
       {
          const TBuffer3DTubeSeg * segBuffer = dynamic_cast<const TBuffer3DTubeSeg *>(&buffer);
-         if (!segBuffer) { 
-            assert(kFALSE); 
-            return; 
+         if (!segBuffer) {
+            assert(kFALSE);
+            return;
          }
 
          Double_t phi1 = segBuffer->fPhiMin;
@@ -1326,18 +1325,18 @@ void TGLCylinder::CreateParts(const TBuffer3DTube &buffer)
 			if (phi2 < phi1) phi2 += 360.;
 			phi1 *= TMath::DegToRad();
 			phi2 *= TMath::DegToRad();
-        
+
          // TODO: Check with Timur what this means - was hardcoded into the buffer
          // on TGeo side - so hardcoded here now....same as above for kTUBE
          Vertex3d low = {{0., 0., -1.}}; // Vertex3d low = {{p[44], p[45], p[46]}};
-         Vertex3d high = {{0., 0., 1.}}; // Vertex3d high = {{p[47], p[48], p[49]}};    
-         fParts.push_back(new TubeSegMesh(r1, r2, r3, r4, dz, phi1, 
+         Vertex3d high = {{0., 0., 1.}}; // Vertex3d high = {{p[47], p[48], p[49]}};
+         fParts.push_back(new TubeSegMesh(r1, r2, r3, r4, dz, phi1,
                                           phi2, center, low, high));
       }
       break;
    default:;
    //polycone should be here
-   }  
+   }
 }
 
 //______________________________________________________________________________
