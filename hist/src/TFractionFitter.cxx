@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.1 2002/05/20 15:10:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.2 2002/05/20 21:05:31 brun Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -133,10 +133,9 @@ TFractionFitter::TFractionFitter() :
   fFitDone(kFALSE),fData(0), fPlot(0)  {
   // TFractionFitter default constructor.
 
-  fractionFitter = TVirtualFitter::Fitter(this, fNpar);
-  fractionFitter->Clear();
-  fractionFitter->SetObjectFit(this);
-  fractionFitter->SetFCN(TFractionFitFCN);
+  fractionFitter = 0;
+  fIntegralMCs   = 0;
+  fFractions     = 0;
 }
 
 //______________________________________________________________________________
