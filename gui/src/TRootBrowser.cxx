@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.2 2000/08/04 13:15:48 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -451,6 +451,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fLt = new TGListTree(fTreeView->GetViewPort(), 10, 10, kHorizontalFrame,
                         fgWhitePixel);
    fLt->Associate(this);
+   fLt->SetAutoTips();
    fTreeView->SetContainer(fLt);
 
    lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
