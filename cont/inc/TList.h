@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.4 2000/11/21 16:43:22 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.5 2000/12/13 15:13:46 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -160,7 +160,7 @@ public:
 
 class TListIter : public TIterator {
 
-private:
+protected:
    const TList       *fList;         //list being iterated
    TObjLink          *fCurCursor;    //current position in list
    TObjLink          *fCursor;       //next position in list
