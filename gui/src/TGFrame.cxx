@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.57 2004/06/18 10:20:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.58 2004/06/22 16:27:08 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1487,7 +1487,7 @@ void TGGroupFrame::DrawBorder()
    l = 0;
    t = (max_ascent + max_descent + 2) >> 1;
    r = fWidth - 1;
-   b = fHeight - 1;
+   b = fHeight - t;
 
    sep = 3;
    UInt_t rr = 5 + (sep << 1) + tw;
