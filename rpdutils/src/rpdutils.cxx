@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.61 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.62 2004/11/05 13:55:13 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -4680,10 +4680,13 @@ int RpdUser(const char *sstr)
                             " may result in corrupted salt");
                }
             } else {
-               // We send the random tag here
-               if (gClientProtocol > 11)
-                  NetSend(rtag, kMESS_ANY);
-               else
+               if (gClientProtocol > 11) {
+                  // We send the random tag here
+                  if (RpdSecureSend(ctag) == -1) {
+                     ErrorInfo("RpdUser: problems secure-sending rndmtag -"
+                               " may result in corrupted rndmtag");
+                  }
+               } else
                   NetSend(0, kMESS_ANY);
             }
          } else {
