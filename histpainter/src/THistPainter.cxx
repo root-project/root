@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.193 2004/10/05 10:28:24 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.194 2004/10/08 05:29:40 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2377,7 +2377,7 @@ void THistPainter::PaintContour(Option_t *option)
                   continue;
                }
 
-               ipoly = itarr[ix-1]-1;
+               ipoly = itarr[ix-1];
                if (ipoly >=0 && ipoly <ncontour) {
                   poly = polys[ipoly];
                   poly->SetPoint(np[ipoly]  ,xarr[ix-1],yarr[ix-1]);
@@ -2397,6 +2397,7 @@ void THistPainter::PaintContour(Option_t *option)
    Int_t istart;
    Int_t first = 0;
    Int_t *polysort = 0;
+   Int_t ContListNb;
    if (Hoption.Contour != 1) goto theEND;
 
    //The 2 points line generated above are now sorted/merged to generate
@@ -2417,10 +2418,12 @@ void THistPainter::PaintContour(Option_t *option)
    for (ipoly=first;ipoly>=0;ipoly--) {polysort[k] = ipoly; k++;}
    for (ipoly=first+1;ipoly<ncontour;ipoly++) {polysort[k] = ipoly; k++;}
    // we can now draw sorted contours
+   ContListNb = 0;
    for (k=0;k<ncontour;k++) {
       ipoly = polysort[k];
       if (np[ipoly] == 0) continue;
-      if (Hoption.List) list = (TList*)contours->At(ipoly);
+      if (Hoption.List) list = (TList*)contours->At(ContListNb);
+      ContListNb++;
       poly = polys[ipoly];
       xx = poly->GetX();
       yy = poly->GetY();
