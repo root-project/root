@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.2 2000/10/20 15:52:49 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.3 2000/11/21 20:50:54 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -129,7 +129,7 @@ Int_t TNtuple::Fill()
 }
 
 //______________________________________________________________________________
-Int_t TNtuple::Fill(Float_t *x)
+Int_t TNtuple::Fill(const Float_t *x)
 {
 //*-*-*-*-*-*-*-*-*Fill a Ntuple with an array of floats*-*-*-*-*-*-*-*-*-*
 //*-*              =====================================
