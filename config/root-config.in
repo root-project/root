@@ -198,6 +198,12 @@ linuxalphaegcs)
    auxlibs="-lm -ldl -rdynamic"
    auxglibs=${auxlibs}
    ;;
+linuxarm)
+   # ARM Linux with egcs
+   auxcflags="-fsigned-char"
+   auxlibs="-lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
 mklinux)
    # MkLinux with libc5
    auxcflags="-fsigned-char -I/usr/X11/include -I/usr/include/g++"
