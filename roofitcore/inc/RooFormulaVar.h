@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFormula.rdl,v 1.10 2001/05/10 18:58:48 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,22 +10,22 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
-#ifndef ROO_REAL_FORMULA
-#define ROO_REAL_FORMULA
+#ifndef ROO_FORMULA_VAR
+#define ROO_FORMULA_VAR
 
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooFormula.hh"
 
 class RooArgSet ;
 
-class RooRealFormula : public RooAbsReal {
+class RooFormulaVar : public RooAbsReal {
 public:
   // Constructors, assignment etc
-  inline RooRealFormula() { }
-  RooRealFormula(const char *name, const char *title, const RooArgSet& dependents);
-  RooRealFormula(const RooRealFormula& other, const char* name=0);
-  virtual TObject* clone() const { return new RooRealFormula(*this); }
-  virtual ~RooRealFormula();
+  inline RooFormulaVar() { }
+  RooFormulaVar(const char *name, const char *title, const RooArgSet& dependents);
+  RooFormulaVar(const RooFormulaVar& other, const char* name=0);
+  virtual TObject* clone() const { return new RooFormulaVar(*this); }
+  virtual ~RooFormulaVar();
 
   // Formula editing interface
   Bool_t setFormula(const char* formula) ;
@@ -56,7 +56,7 @@ protected:
 
   mutable RooFormula _formula ; // Formula engine 
 
-  ClassDef(RooRealFormula,1) // a real-valued variable and its value
+  ClassDef(RooFormulaVar,1) // a real-valued variable and its value
 };
 
 #endif
