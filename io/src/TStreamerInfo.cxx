@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.23 2000/12/26 16:56:43 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.24 2000/12/28 21:51:59 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -511,8 +511,8 @@ void TStreamerInfo::Compile()
       // try to group consecutive members of the same type
       if (keep>=0 && (element->GetType() < kRegrouped)
                   && (fType[fNdata] == fNewType[fNdata])
+                  && (fMethod[keep] == 0)
                   && (element->GetType() > 0)
-                  && (element->GetType() != kCounter)
                   && (element->GetArrayDim() == 0)
                   && (element->GetType() == (fType[keep]%kRegrouped))
                   && ((element->GetOffset()-fOffset[keep]) == (fLength[keep])*element->GetSize())) {
