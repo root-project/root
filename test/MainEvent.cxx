@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.10 2001/02/09 17:01:52 brun Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.11 2001/02/21 07:40:23 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -84,11 +84,12 @@
 #include "Event.h"
 
 
+TROOT simple("simple","Example of creation of a tree");
+
+
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
-   TROOT simple("simple","Example of creation of a tree");
-
    Int_t nevent = 400;     // by default create 400 events
    Int_t comp   = 1;       // by default file is compressed
    Int_t split  = 1;       // by default, split Event in sub branches
