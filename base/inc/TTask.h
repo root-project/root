@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTask.h,v 1.6 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTask.h,v 1.7 2002/01/23 15:48:05 rdm Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -53,12 +53,12 @@ public:
            void  Abort();  // *MENU*
            void  Add(TTask *task) {fTasks->Add(task);}
    virtual void  Browse(TBrowser *b);
-           void  CleanTasks();
+   virtual void  CleanTasks();
    virtual void  Clear(Option_t *option="");
    virtual void  Continue(); // *MENU*
    virtual void  Exec(Option_t *option);
-           void  ExecuteTask(Option_t *option="0");  // *MENU*
-           void  ExecuteTasks(Option_t *option);
+   virtual void  ExecuteTask(Option_t *option="0");  // *MENU*
+   virtual void  ExecuteTasks(Option_t *option);
           Int_t  GetBreakin() const {return fBreakin;}
           Int_t  GetBreakout() const {return fBreakout;}
          Bool_t  IsActive() const { return fActive; }
