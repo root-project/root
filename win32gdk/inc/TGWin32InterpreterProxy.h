@@ -1,4 +1,4 @@
-// $Id: TGWin32InterpreterProxy.h,v 1.6 2004/05/10 12:10:09 brun Exp $
+// $Id: TGWin32InterpreterProxy.h,v 1.7 2004/05/17 12:30:28 brun Exp $
 // Author: Valeriy Onuchin  15/11/03
 
 /*************************************************************************
@@ -87,6 +87,7 @@ public:
    void     Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0);
    void     Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0);
    const char *GetSharedLibs();
+   const char *GetClassSharedLibs(const char *cls);
    const char *GetIncludePath();
    const char *TypeName(const char *s);
 
