@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.34 2004/01/10 10:52:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.35 2004/01/21 07:03:13 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -44,6 +44,8 @@ class TBuffer;
 class TStreamerInfo;
 class G__ClassInfo;
 class TVirtualCollectionProxy;
+class TMethodCall;
+
 namespace ROOT { class TGenericClassInfo; }
 
 class TClass : public TDictionary {
@@ -83,8 +85,11 @@ private:
    const type_info   *fTypeInfo;        //pointer to the C++ type information.
    ShowMembersFunc_t  fShowMembers;     //pointer to the class's ShowMembers function
    TClassStreamer    *fStreamer;        //pointer to streamer function
+
    IsAFunc_t          fIsA;             //pointer to the class's IsA function.
    IsAGlobalFunc_t    fGlobalIsA;       //pointer to a global IsA function.
+   TMethodCall       *fIsAMethod;       //!saved info to call a IsA member function
+
    ROOT::NewFunc_t    fNew;             //pointer to a function newing one object.
    ROOT::NewArrFunc_t fNewArray;        //pointer to a function newing an array of objects.
    ROOT::DelFunc_t    fDelete;          //pointer to a function deleting one object.

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.131 2004/01/16 16:27:36 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.132 2004/01/21 07:03:13 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -306,6 +306,7 @@ TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
    fShowMembers    = 0;
    fIsA            = 0;
    fGlobalIsA      = 0;
+   fIsAMethod      = 0;
    fTypeInfo       = 0;
    fInterStreamer  = 0;
 
@@ -350,6 +351,7 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
    fTypeInfo       = 0;
    fIsA            = 0;
    fGlobalIsA      = 0;
+   fIsAMethod      = 0;
    fShowMembers    = 0;
    fStreamerInfo   = 0;
    fStreamer       = 0;
@@ -437,6 +439,7 @@ void TClass::Init(const char *name, Version_t cversion,
    fTypeInfo       = typeinfo;
    fIsA            = isa;
    fGlobalIsA      = 0;
+   fIsAMethod      = 0;
    fShowMembers    = showmembers;
    fStreamer       = 0;
    fStreamerInfo   = new TObjArray(fClassVersion+2+10,-1); // +10 to read new data by old
@@ -626,6 +629,7 @@ TClass::~TClass()
 
    delete fStreamer;
    delete fCollectionProxy;
+   delete fIsAMethod;
 }
 
 //______________________________________________________________________________
@@ -986,13 +990,19 @@ TClass *TClass::GetActualClass(const void *object) const
       //      object->IsA(brd, parent);
       //will not work if the class derives from TObject but not as primary
       //inheritance.
-      TMethodCall method((TClass*)this, "IsA", "");
-      if (!method.GetMethod()) {
-         Error("IsA","Can not find any IsA function for %s!",GetName());
-         return (TClass*)this;
+      if (fIsAMethod==0) {
+         ((TClass*)this)->fIsAMethod = new TMethodCall((TClass*)this, "IsA", "");
+         
+         if (!fIsAMethod->GetMethod()) {
+            delete fIsAMethod;
+            ((TClass*)this)->fIsAMethod = 0;
+            Error("IsA","Can not find any IsA function for %s!",GetName());
+            return (TClass*)this;
+         }
+         
       }
       char * char_result = 0;
-      method.Execute((void*)object, &char_result);
+      fIsAMethod->Execute((void*)object, &char_result);
       return (TClass*)char_result;
    }
 }
