@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.141 2004/02/18 07:28:02 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.142 2004/02/27 20:18:35 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1887,6 +1887,17 @@ TTreeFormula::~TTreeFormula()
    }
    fLeafNames.Delete();
    fDataMembers.Delete();
+   //TCutG objects should not be deleted from fMethods
+   TList temp;
+   TIter next(&fMethods);
+   TObject *obj;
+   while ((obj=next())) {
+      if (obj->InheritsFrom("TCutG")) temp.Add(obj);
+   }
+   TIter next2(&temp);
+   while ((obj=next2())) {
+      fMethods.Remove(obj);
+   }
    fMethods.Delete();
    fAliases.Delete();
    if (fLookupType) delete [] fLookupType;
