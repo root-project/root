@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.9 2003/01/12 14:49:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.10 2003/01/13 17:45:24 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -58,7 +58,6 @@ TGeoPcon::TGeoPcon(Double_t phi, Double_t dphi, Int_t nz)
    fRmin = new Double_t [nz];
    fRmax = new Double_t [nz];
    fZ    = new Double_t [nz];
-   ComputeBBox();
 }
 //-----------------------------------------------------------------------------
 TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
@@ -72,7 +71,6 @@ TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
    fRmin = new Double_t [nz];
    fRmax = new Double_t [nz];
    fZ    = new Double_t [nz];
-   ComputeBBox();
 }
 //-----------------------------------------------------------------------------
 TGeoPcon::TGeoPcon(Double_t *param)

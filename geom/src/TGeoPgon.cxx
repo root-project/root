@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.13 2003/01/12 14:49:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.14 2003/01/13 17:45:24 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -50,7 +50,6 @@ TGeoPgon::TGeoPgon(Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
 // Default constructor
    SetBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
-   ComputeBBox();
 }
 //-----------------------------------------------------------------------------
 TGeoPgon::TGeoPgon(const char *name, Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
@@ -59,7 +58,6 @@ TGeoPgon::TGeoPgon(const char *name, Double_t phi, Double_t dphi, Int_t nedges, 
 // Default constructor
    SetBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
-   ComputeBBox();
 }
 //-----------------------------------------------------------------------------
 TGeoPgon::TGeoPgon(Double_t *param)
