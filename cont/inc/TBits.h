@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.7 2004/01/06 08:27:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.8 2004/01/25 11:56:06 brun Exp $
 // Author: Philippe Canal 05/02/01
 
 /*************************************************************************
@@ -55,7 +55,7 @@ public:
    //----- bit manipulation
    //----- (note the difference with TObject's bit manipulations)
    void   ResetAllBits(Bool_t value=kFALSE);  // if value=1 set all bits to 1
-   void   ResetBitNumber(UInt_t bitnumber) { SetBitNumber(bitnumber,kFALSE); }
+   void   ResetBitNumber(UInt_t bitnumber);
    void   SetBitNumber(UInt_t bitnumber, Bool_t value = kTRUE);
    Bool_t TestBitNumber(UInt_t bitnumber) const;
 
@@ -144,6 +144,11 @@ inline Bool_t TBits::TestBitNumber(UInt_t bitnumber) const
    Bool_t  result = (value & (1<<bit)) != 0;
    return result;
    // short: return 0 != (fAllBits[bitnumber/8] & (1<< (bitnumber%8)));
+}
+
+inline void TBits::ResetBitNumber(UInt_t bitnumber) 
+{
+   SetBitNumber(bitnumber,kFALSE);
 }
 
 #endif
