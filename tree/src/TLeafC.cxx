@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.12 2001/04/16 19:15:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.13 2002/10/25 19:54:45 brun Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -139,7 +139,7 @@ void TLeafC::ReadBasket(TBuffer &b)
       b.ReadFastArray(fValue,len);
       fValue[len] = 0;
    } else {
-      fValue = 0;
+      fValue[0] = 0;
    }
 }
 
@@ -156,7 +156,7 @@ void TLeafC::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
       b.ReadFastArray(fValue,len);
       fValue[len] = 0;
    } else {
-      fValue = 0;
+      fValue[0] = 0;
    }
 
    Int_t j = 0;
