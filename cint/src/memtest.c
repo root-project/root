@@ -24,7 +24,7 @@
 #define G__MEMTEST_H
 #include "common.h"
 
-#ifndef G__SMALLOBJECT
+#if !defined(G__SMALLOBJECT) && defined(G__DEBUG)
 
 #define G__MEMTEST
 #define G__MALLOCSIZE 10000
@@ -68,7 +68,7 @@ size_t size;
    * Set strange data 
    *******************************************************/
   pc=(char *)result;
-  for(j=0;j<size;j++) {
+  for(j=0;j<(int)size;j++) {
     *(pc+j) = (char)0xa3;
   }
   
@@ -310,9 +310,9 @@ size_t size;
       /***************************************************
        * Set strange data
        ***************************************************/
-      if(G__mem[i].size<size) {
+      if(G__mem[i].size<(int)size) {
 	pc = (char *)G__mem[i].p;
-	for(j=G__mem[i].size;j<size;j++) {
+	for(j=G__mem[i].size;j<(int)size;j++) {
 	  *(pc+j) = (char)0xa5;
 	}
       }
@@ -331,7 +331,7 @@ size_t size;
 #endif
 #endif
 #ifndef G__FONS31
-    G__fprinterr(G__serr,"realloc(0x%lx,%d) not allocated",(long)p,size);
+    G__fprinterr(G__serr,"realloc(0x%lx,%ld) not allocated",(long)p,size);
 #else
     G__fprinterr(G__serr,"realloc(0x%x,%d) not allocated",p,size);
 #endif

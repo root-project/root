@@ -214,7 +214,7 @@ int G__exec_bytecode(result7,funcname,libp,hash)
 G__value *result7; /* result buffer */
 char *funcname; /* contains struct G__bytecode* */
 struct G__param *libp; /* argument buffer */
-int hash; /* not use */
+int hash; /* not used */
 {
   int i;
   struct G__bytecodefunc *bytecode;
@@ -1912,7 +1912,7 @@ int func_now;
   char paraname[G__ONELINE];
   char name[G__ONELINE];
   int c=0,iin=0;
-  int tagnum,typenum,type,pointlevel,reftype;
+  int tagnum,typenum,type=0,pointlevel,reftype;
   int isunsigned,isdefault;
   int ip,itemp;
   int store_var_type;
@@ -3898,7 +3898,7 @@ int recursive;
 	  /* reference to derived class can be converted to reference to base 
 	   * class. add offset, modify char *parameter and G__value *param */
 	  {
-	    int rate_inheritance = 
+	    unsigned int rate_inheritance = 
 	      G__rate_inheritance(formal_tagnum,param_tagnum);
 	    if(G__NOMATCH!=rate_inheritance) {
 	      funclist->p_rate[i] = G__STDCONVMATCH+rate_inheritance;
@@ -3916,7 +3916,7 @@ int recursive;
 	   * G__value *param
 	   */
 	  {
-	    int rate_inheritance = 
+	    unsigned int rate_inheritance = 
 	      G__rate_inheritance(formal_tagnum,param_tagnum);
 	    if(G__NOMATCH!=rate_inheritance) {
 	      funclist->p_rate[i] = G__STDCONVMATCH+rate_inheritance;
@@ -4836,7 +4836,7 @@ int scopetagnum;
 char *funcname;
 struct G__param *libp;
 struct G__funclist *funclist;
-int bestmatch;
+unsigned int bestmatch;
 {
   G__fprinterr(G__serr,"Calling : ");
   G__display_param(G__serr,scopetagnum,funcname,libp);

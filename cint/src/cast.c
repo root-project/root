@@ -595,9 +595,11 @@ G__value result3;
 *   G__exec_asm()
 *
 ******************************************************************/
-void G__asm_cast(type,buf)
+void G__asm_cast(type,buf,tagnum,reftype)
 int type;
 G__value *buf;
+int tagnum;
+int reftype;
 {
   switch((char)type) {
   case 'd':
@@ -635,6 +637,19 @@ G__value *buf;
     G__letint(buf,(char)type ,(unsigned char)(G__int(*buf)?1:0));
     break;
 #endif
+  case 'U':
+    {
+      int offset = G__ispublicbase(buf->tagnum,tagnum,buf->obj.i);
+      if(-1!=offset) buf->obj.i += offset;
+    }
+  case 'u':
+    if(G__PARAREFERENCE==reftype) {
+      int offset = G__ispublicbase(buf->tagnum,tagnum,buf->obj.i);
+      if(-1!=offset) {
+	buf->obj.i += offset;
+	buf->ref += offset;
+      }
+    }
   default:
     G__letint(buf,(char)type ,G__int(*buf));
     buf->ref = buf->obj.i;

@@ -42,8 +42,7 @@ extern int G__initval_eval;
 *  MUST CORRESPOND TO G__letstruct
 **************************************************************************/
 
-
-#define G__ASSIGN_VAR(SIZE,CASTTYPE,CONVFUNC)                             \
+#define G__ASSIGN_VAR(SIZE,CASTTYPE,CONVFUNC,X)                           \
 switch(G__var_type) {                                                     \
 case 'v': /* int var[10]; *var=expr; assign to value */                   \
         if(var->paran[ig15]==paran+1&&p_inc==0  /* 1070 */                \
@@ -59,6 +58,9 @@ case 'p': /* var = expr; assign to value */                               \
     /*1068*/    result.ref=G__struct_offset+var->p[ig15]+p_inc*SIZE;      \
 		*(CASTTYPE *)(G__struct_offset+var->p[ig15]+p_inc*SIZE)   \
 			= (CASTTYPE)CONVFUNC(result);                     \
+                result.obj.reftype.reftype = G__PARANORMAL; /*1669???*/   \
+                X = *(CASTTYPE*)result.ref; /*1669*/                      \
+                result.type = var->type[ig15]; /*1669*/                   \
 		break;                                                    \
 	}                                                                 \
 	else if(G__funcheader && paran==0 && isupper(result.type)) {      \
@@ -88,7 +90,7 @@ return(result);
 
 #ifndef G__OLDIMPLEMENTATION581
 
-#define G__ASSIGN_PVAR(CASTTYPE,CONVFUNC)                                    \
+#define G__ASSIGN_PVAR(CASTTYPE,CONVFUNC,X)                                  \
 switch(G__var_type) {                                                        \
 case 'v': /* *var = expr ;  assign to contents of pointer */                 \
   switch(var->reftype[ig15]) {                                               \
@@ -97,11 +99,14 @@ case 'v': /* *var = expr ;  assign to contents of pointer */                 \
   result.ref=(*(long*)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC));   \
   *(CASTTYPE *)(*(long *)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC)) \
 	= (CASTTYPE)CONVFUNC(result);                                        \
+      result.type=tolower(var->type[ig15]); /*1669*/ \
+      X = *(CASTTYPE*)result.ref; /*1669*/ \
     }                                                                        \
     else {                                                                   \
       result.ref=G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC;/*1068*/   \
       *(long *)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC)            \
 			= G__int(result);                                    \
+      result.type=var->type[ig15]; /*1669*/ \
     }                                                                        \
     break;                                                                   \
   case G__PARAP2P:                                                           \
@@ -110,6 +115,8 @@ case 'v': /* *var = expr ;  assign to contents of pointer */                 \
       result.ref=(*(((long*)(*(long *)address))+pp_inc));  /*1068*/          \
       *(CASTTYPE*)(*(((long*)(*(long *)address))+pp_inc))                    \
 		= (CASTTYPE)CONVFUNC(result);                                \
+      result.type=tolower(var->type[ig15]); /*1669*/ \
+      X = *(CASTTYPE*)result.ref; /*1669*/ \
     }                                                                        \
     else { /* below line 1068*/                                              \
    result.ref=(*(long *)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC)); \
@@ -127,6 +134,8 @@ case 'p': /* var = expr; assign to pointer variable  */                      \
         result.ref=(((long)(*(long *)address))+pp_inc); /*1068*/             \
         *(((CASTTYPE *)(*(long *)address))+pp_inc)                           \
 		= (CASTTYPE)CONVFUNC(result);                                \
+        result.type=tolower(var->type[ig15]); /*1669*/ \
+        X = *(CASTTYPE*)result.ref; /*1669*/ \
       }                                                                      \
       else if(var->paran[ig15]==paran-1) {                                   \
         result.ref=(long)(((long*)(*(long *)address))+pp_inc);/*1068*/       \
@@ -2571,12 +2580,55 @@ struct G__var_array *varglobal,*varlocal;
 	 1
 #endif
 	  ) { /* ??? */
+#ifndef G__OLDIMPLEMENTATION1671
+	if(result.type) {
+	  G__asm_gen_stvar(G__struct_offset,ig15,paran,var,item
+			   ,store_struct_offset,G__var_type);
+	}
+	else if('u'==G__var_type) {
+	  G__ASSERT(0==G__decl || 1==G__decl);
+	  if(G__decl) {
+	    if(G__reftype) G__redecl(var,ig15);
+	    else G__class_2nd_decl_i(var,ig15);
+	  }
+	  else if(G__cppconstruct) {
+	    G__class_2nd_decl_c(var,ig15);
+	  }
+	}
+#else
 	G__asm_gen_stvar(G__struct_offset,ig15,paran,var,item
 			 ,store_struct_offset,G__var_type);
+#endif
       }
     }
     else if('u'==G__var_type&&G__AUTO==var->statictype[ig15]&&
 	    (G__decl||G__cppconstruct)) {
+#ifndef G__OLDIMPLEMENTATION1671
+#ifdef G__ASM
+      if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD_VAR  %s index=%d paran=%d\n"
+				    ,G__asm_cp,var->varnamebuf[ig15],ig15,0);
+#endif
+	G__asm_inst[G__asm_cp]=G__LD_VAR;
+	G__asm_inst[G__asm_cp+1]=ig15;
+	G__asm_inst[G__asm_cp+2]=0;
+	G__asm_inst[G__asm_cp+3]='p';
+	G__asm_inst[G__asm_cp+4]=(long)var;
+	G__inc_cp_asm(5,0);
+	
+	G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+	G__asm_inst[G__asm_cp+1] = G__SETSTROS;
+	G__inc_cp_asm(2,0);
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) {
+	  G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+	  G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+	}
+#endif
+      }
+#endif
+#endif
       G__class_2nd_decl(var,ig15);
       result.obj.i=var->p[ig15];
       result.type='u';
@@ -2894,13 +2946,13 @@ struct G__var_array *varglobal,*varlocal;
 	  break;
 	}
 	/* 1666 G__ASSIGN_VAR(G__INTALLOC,int,G__int) */
-	G__ASSIGN_VAR(G__CHARALLOC,unsigned char,G__int)
+	G__ASSIGN_VAR(G__CHARALLOC,unsigned char,G__int,result.obj.i)
 #endif
       case 'i': /* int */
-	G__ASSIGN_VAR(G__INTALLOC,int,G__int)
+	G__ASSIGN_VAR(G__INTALLOC,int,G__int,result.obj.i)
 	  
       case 'd': /* double */
-	G__ASSIGN_VAR(G__DOUBLEALLOC,double,G__double)
+	G__ASSIGN_VAR(G__DOUBLEALLOC,double,G__double,result.obj.d)
 	    
       case 'c': /* char */
 #ifndef G__OLDIMPLEMENTATION1647
@@ -2911,33 +2963,33 @@ struct G__var_array *varglobal,*varlocal;
 	  return(result);
 	}
 	else {
-	  G__ASSIGN_VAR(G__CHARALLOC,char,G__int)
+	  G__ASSIGN_VAR(G__CHARALLOC,char,G__int,result.obj.i)
 	}
 #else
-	G__ASSIGN_VAR(G__CHARALLOC,char,G__int)
+	G__ASSIGN_VAR(G__CHARALLOC,char,G__int,result.obj.i)
 #endif
 	      
       case 'b': /* unsigned char */
-	G__ASSIGN_VAR(G__CHARALLOC,unsigned char ,G__int)
+	G__ASSIGN_VAR(G__CHARALLOC,unsigned char ,G__int,result.obj.i)
 
       case 's': /* short int */
-	G__ASSIGN_VAR(G__SHORTALLOC,short,G__int)
+	G__ASSIGN_VAR(G__SHORTALLOC,short,G__int,result.obj.i)
 
       case 'r': /* unsigned short int */
-	G__ASSIGN_VAR(G__SHORTALLOC,unsigned short ,G__int)
+	G__ASSIGN_VAR(G__SHORTALLOC,unsigned short ,G__int,result.obj.i)
 
       case 'h': /* unsigned int */
-	G__ASSIGN_VAR(G__INTALLOC,unsigned int,G__int)
+	G__ASSIGN_VAR(G__INTALLOC,unsigned int,G__int,result.obj.i)
 
       case 'l': /* long int */
-	G__ASSIGN_VAR(G__LONGALLOC,long ,G__int)
+	G__ASSIGN_VAR(G__LONGALLOC,long ,G__int,result.obj.i)
 
 
       case 'k': /* unsigned long int */
-	G__ASSIGN_VAR(G__LONGALLOC,unsigned long ,G__int)
+	G__ASSIGN_VAR(G__LONGALLOC,unsigned long ,G__int,result.obj.i)
 
       case 'f': /* float */
-	G__ASSIGN_VAR(G__FLOATALLOC,float,G__double)
+	G__ASSIGN_VAR(G__FLOATALLOC,float,G__double,result.obj.d)
 
 
 	/***************************************
@@ -2949,46 +3001,46 @@ struct G__var_array *varglobal,*varlocal;
       case 'Y': /* void pointer */
       case 'Q': /* pointer to function */
       case 'C': /* char pointer */
-	G__ASSIGN_PVAR(char,G__int)
+	G__ASSIGN_PVAR(char,G__int,result.obj.i)
 	break;
 
 #ifndef G__OLDIMPLEMENTATION1604
       case 'G': /* bool */
 #endif
       case 'B': /* unsigned char pointer */
-	G__ASSIGN_PVAR(unsigned char,G__int)
+	G__ASSIGN_PVAR(unsigned char,G__int,result.obj.i)
 	break;
 
       case 'S': /* short pointer */
-	G__ASSIGN_PVAR(short,G__int)
+	G__ASSIGN_PVAR(short,G__int,result.obj.i)
 	break;
 
       case 'R': /* unsigned short pointer */
-	G__ASSIGN_PVAR(unsigned short,G__int)
+	G__ASSIGN_PVAR(unsigned short,G__int,result.obj.i)
 	break;
 
       case 'I': /* int pointer */
-	G__ASSIGN_PVAR(int,G__int)
+	G__ASSIGN_PVAR(int,G__int,result.obj.i)
 	break;
 
       case 'H': /* unsigned int pointer */
-	G__ASSIGN_PVAR(unsigned int,G__int)
+	G__ASSIGN_PVAR(unsigned int,G__int,result.obj.i)
 	break;
 
       case 'L': /* long int pointer */
-	G__ASSIGN_PVAR(long,G__int)
+	G__ASSIGN_PVAR(long,G__int,result.obj.i)
 	break;
 
       case 'K': /* unsigned long int pointer */
-	G__ASSIGN_PVAR(unsigned long,G__int)
+	G__ASSIGN_PVAR(unsigned long,G__int,result.obj.i)
 	break;
 
       case 'F': /* float pointer */
-	G__ASSIGN_PVAR(float,G__double)
+	G__ASSIGN_PVAR(float,G__double,result.obj.d)
 	break;
 
       case 'D': /* double pointer */
-	G__ASSIGN_PVAR(double,G__double)
+	G__ASSIGN_PVAR(double,G__double,result.obj.d)
 	break;
 
       case 'u': /* struct,union */

@@ -995,12 +995,16 @@ long localmem;
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CAST to %c\n"
 			     ,pc,sp,(char)G__asm_inst[pc+1]);
 #endif
-      G__asm_stack[sp-1].typenum = G__asm_inst[pc+2];
-      G__asm_stack[sp-1].tagnum = G__asm_inst[pc+3];
-      G__asm_cast((int)G__asm_inst[pc+1],&G__asm_stack[sp-1]);
-      if(isupper(G__asm_inst[pc+1]))
-	G__asm_stack[sp-1].obj.reftype.reftype = G__asm_inst[pc+4];
-      pc+=5;
+      {
+	int tagnum = G__asm_stack[sp-1].tagnum;
+	G__asm_stack[sp-1].typenum = G__asm_inst[pc+2];
+	G__asm_stack[sp-1].tagnum = G__asm_inst[pc+3];
+	G__asm_cast((int)G__asm_inst[pc+1],&G__asm_stack[sp-1]
+		    ,tagnum,G__asm_inst[pc+4]);
+	if(isupper(G__asm_inst[pc+1]))
+	  G__asm_stack[sp-1].obj.reftype.reftype = G__asm_inst[pc+4];
+	pc+=5;
+      }
 #ifdef G__ASM_DBG
       break;
 #else

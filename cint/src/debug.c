@@ -467,7 +467,7 @@ char *unnamedmacro;
   int nest=0,single_quote=0,double_quote=0;
   G__value buf;
   FILE *fp;
-  int i;
+  int i,len;
   int addmparen=0;
   int addsemicolumn =0;
 
@@ -481,7 +481,8 @@ char *unnamedmacro;
   else if(unnamedmacro[i]==';')  addsemicolumn = 0;
   else                   addsemicolumn = 1;
 
-  for(i=0;i<strlen(unnamedmacro);i++) {
+  len = (int)strlen(unnamedmacro);
+  for(i=0;i<len;i++) {
     switch(unnamedmacro[i]) {
     case '(': case '[': case '{':
       if(!single_quote && !double_quote) ++nest; break;

@@ -285,7 +285,7 @@ char *item;
 	/***********************************
 	 * Get padding size
 	 ***********************************/
-	if(bsize>G__DOUBLEALLOC) allocmem=G__DOUBLEALLOC;
+	if(bsize>(int)G__DOUBLEALLOC) allocmem=G__DOUBLEALLOC;
 	else	    allocmem=bsize;
 	/***********************************
 	 * Get padding size

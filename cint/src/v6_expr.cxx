@@ -2291,7 +2291,22 @@ char *expression2;
   G__value result;
   result=G__getexpr(expression2);
   if('u'==result.type) return(G__iosrdstate(&result));
+#ifndef G__OLDIMPLEMENTATION1670
+  if('f'==result.type||'d'==result.type) {
+    /*
+     printf("\n!!! type=%c  d=%g i=%ld"
+       ,result.type,result.obj.d,result.obj.i); 
+     G__printlinenum();
+    */
+    return(0.0!=result.obj.d);
+  }
+  else {
+    return(result.obj.i);
+  }
+   
+#else
   return(G__int(result));
+#endif
 }
 
 #else /* 1340 */

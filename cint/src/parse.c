@@ -20,6 +20,12 @@
 
 #include "common.h"
 
+#ifndef G__OLDIMPLEMENTATION1672
+#define G__NONBLOCK   0
+#define G__IFSWITCH   1
+#define G__DOWHILE    8
+int G__ifswitch = G__NONBLOCK;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1103
 extern int G__const_setnoerror();
@@ -1542,6 +1548,11 @@ G__value G__exec_do()
   int executed_break=0;
   int store_no_exec_compile;
 
+#ifndef G__OLDIMPLEMENTATION1672
+  int store_ifswitch = G__ifswitch;
+  G__ifswitch = G__DOWHILE;
+#endif
+
   if(G__p_tempbuf->level>=G__templevel && G__p_tempbuf->prev) {
     G__free_tempobject();
   }
@@ -1587,6 +1598,9 @@ G__value G__exec_do()
   if(G__return!=G__RETURN_NON) {
     /* free breakcontinue buffer */
     if(allocflag) G__free_breakcontinue_list(store_pbreakcontinue);
+#ifndef G__OLDIMPLEMENTATION1672
+    G__ifswitch = store_ifswitch;
+#endif
     return(result);
   }
   
@@ -1604,11 +1618,17 @@ G__value G__exec_do()
       if(result.ref==G__block_goto.ref) {
 	/* free breakcontinue buffer */
 	if(allocflag) G__free_breakcontinue_list(store_pbreakcontinue);
+#ifndef G__OLDIMPLEMENTATION1672
+	G__ifswitch = store_ifswitch;
+#endif
 	return(result);
       }
       else if(!G__asm_noverflow) {
 	/* free breakcontinue buffer */
 	if(allocflag) G__free_breakcontinue_list(store_pbreakcontinue);
+#ifndef G__OLDIMPLEMENTATION1672
+	G__ifswitch = store_ifswitch;
+#endif
 	return(G__null);
       }
       executed_break=1;
@@ -1656,6 +1676,9 @@ G__value G__exec_do()
     if(G__return>G__RETURN_NORMAL) {
       /* free breakcontinue buffer */
       if(allocflag) G__free_breakcontinue_list(store_pbreakcontinue);
+#ifndef G__OLDIMPLEMENTATION1672
+      G__ifswitch = store_ifswitch;
+#endif
       return(G__null);
     }
   }
@@ -1725,7 +1748,12 @@ G__value G__exec_do()
 #ifdef G__ASM
     if(asm_exec) {
       asm_exec=G__exec_asm(asm_start_pc,/*stack*/0,&result,/*localmem*/0);
-      if(G__return!=G__RETURN_NON) return(result);
+      if(G__return!=G__RETURN_NON) {
+#ifndef G__OLDIMPLEMENTATION1672
+	G__ifswitch = store_ifswitch;
+#endif
+	return(result);
+      }
       break;
     }
     else {
@@ -1736,7 +1764,12 @@ G__value G__exec_do()
       G__no_exec=0;
       G__mparen=0;
       result=G__exec_statement();
-      if(G__return!=G__RETURN_NON) return(result);
+      if(G__return!=G__RETURN_NON) {
+#ifndef G__OLDIMPLEMENTATION1672
+	G__ifswitch = store_ifswitch;
+#endif
+	return(result);
+      }
       
       /*************************************************
        * do {
@@ -1747,6 +1780,9 @@ G__value G__exec_do()
 	switch(result.obj.i) {
 	case G__BLOCK_BREAK:
 	  G__fignorestream(";");
+#ifndef G__OLDIMPLEMENTATION1672
+	  G__ifswitch = store_ifswitch;
+#endif
 	  if(result.ref==G__block_goto.ref) return(result);
 	  else                              return(G__null);
 	  /* No break here intentionally */
@@ -1762,7 +1798,12 @@ G__value G__exec_do()
 	G__break=0;
 	G__setdebugcond();
 	G__pause();
-	if(G__return>G__RETURN_NORMAL) return(G__null);
+	if(G__return>G__RETURN_NORMAL) {
+#ifndef G__OLDIMPLEMENTATION1672
+	  G__ifswitch = store_ifswitch;
+#endif
+	  return(G__null);
+	}
       }
       
 #ifdef G__ASM
@@ -1782,6 +1823,10 @@ G__value G__exec_do()
   
   G__no_exec=0;
   
+#ifndef G__OLDIMPLEMENTATION1672
+  G__ifswitch = store_ifswitch;
+  result = G__null;
+#endif
   return(result);
 }
 
@@ -2237,10 +2282,16 @@ int breakcontinue;
    *  skip to the end of if,switch conditional clause. If they appear
    *  in plain for,while loop, which make no sense, a strange behavior 
    *  may be observed. */
-  while(*pmparen) {
-    G__fignorestream("}");
-    --(*pmparen);
+#ifndef G__OLDIMPLEMENTATION1672
+  if(G__DOWHILE!=G__ifswitch) {
+#endif
+    while(*pmparen) {
+      G__fignorestream("}");
+      --(*pmparen);
+    }
+#ifndef G__OLDIMPLEMENTATION1672
   }
+#endif
   return(1);
 }
 
@@ -2256,6 +2307,11 @@ G__value G__exec_switch()
   char condition[G__ONELINE];
   G__value result,reg;
   int largestep=0,iout;
+
+#ifndef G__OLDIMPLEMENTATION1672
+  int store_ifswitch = G__ifswitch;
+  G__ifswitch = G__IFSWITCH;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION844
   if(G__ASM_FUNC_COMPILE!=G__asm_wholefunction) {
@@ -2279,6 +2335,9 @@ G__value G__exec_switch()
   G__fgetstream(condition,")");
 
   if(G__breaksignal && G__beforelargestep(condition,&iout,&largestep)>1) {
+#ifndef G__OLDIMPLEMENTATION1672
+    G__ifswitch = store_ifswitch;
+#endif
     return(G__null);
   }
 
@@ -2316,6 +2375,9 @@ G__value G__exec_switch()
    if(G__asm_dbg) G__fprinterr(G__serr,"   %3x: CNDJMP %x assigned\n",G__prevcase-1,G__asm_cp);
 #endif
     G__prevcase = store_prevcase;
+#ifndef G__OLDIMPLEMENTATION1672
+    G__ifswitch = store_ifswitch;
+#endif
     return(result);
   } else
 #endif
@@ -2325,6 +2387,9 @@ G__value G__exec_switch()
     result=G__exec_statement();
     G__no_exec=0;
     result=G__default;
+#ifndef G__OLDIMPLEMENTATION1672
+    G__ifswitch = store_ifswitch;
+#endif
     return(result);
   }
   else {
@@ -2356,16 +2421,27 @@ G__value G__exec_switch()
       G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number]|=G__TRACED;
     }
     result=G__exec_statement();
-    if(G__return!=G__RETURN_NON) return(result);
+    if(G__return!=G__RETURN_NON) {
+      return(result);
+#ifndef G__OLDIMPLEMENTATION1672
+      G__ifswitch = store_ifswitch;
+#endif
+    }
     
     /* break found */
     if(result.type==G__block_break.type&&result.obj.i==G__BLOCK_BREAK) {
+#ifndef G__OLDIMPLEMENTATION1672
+      G__ifswitch = store_ifswitch;
+#endif
       if(result.ref==G__block_goto.ref) return(result);
       else                              return(G__null);
     }
   }
   G__mparen=0;
   G__no_exec=0;
+#ifndef G__OLDIMPLEMENTATION1672
+  G__ifswitch = store_ifswitch;
+#endif
   return(result);
 }
 
@@ -2389,6 +2465,11 @@ G__value G__exec_if()
   int store_no_exec_compile=0;
   int asm_jumppointer=0;
   int largestep=0;
+
+#ifndef G__OLDIMPLEMENTATION1672
+  int store_ifswitch = G__ifswitch;
+  G__ifswitch = G__IFSWITCH;
+#endif
   
 #ifndef G__OLDIMPLEMENTATION837
   G__fgetstream_new(condition,")");
@@ -2398,6 +2479,9 @@ G__value G__exec_if()
   
   if(G__breaksignal &&
      G__beforelargestep(condition,&iout,&largestep)>1) {
+#ifndef G__OLDIMPLEMENTATION1672
+    G__ifswitch = store_ifswitch;
+#endif
     return(G__null);
   }
   
@@ -2422,7 +2506,12 @@ G__value G__exec_if()
     G__no_exec=0;
     G__mparen=0;
     result=G__exec_statement();
-    if(G__return!=G__RETURN_NON) return(result);
+    if(G__return!=G__RETURN_NON) {
+#ifndef G__OLDIMPLEMENTATION1672
+      G__ifswitch = store_ifswitch;
+#endif
+      return(result);
+    }
     false=0;
   }
 
@@ -2496,7 +2585,12 @@ G__value G__exec_if()
 	 *****************************/
 	switch(c) {
 	case '*':
-	  if(G__skip_comment()==EOF) return(G__null);
+	  if(G__skip_comment()==EOF) {
+#ifndef G__OLDIMPLEMENTATION1672
+	    G__ifswitch = store_ifswitch;
+#endif
+	    return(G__null);
+	  }
 	  break;
 	case '/':
 	  G__fignoreline();
@@ -2522,6 +2616,9 @@ G__value G__exec_if()
       G__genericerror("Error: unexpected if() { } EOF");
       if(G__key!=0) system("key .cint_key -l execute");
       G__eof=2;
+#ifndef G__OLDIMPLEMENTATION1672
+      G__ifswitch = store_ifswitch;
+#endif
       return(G__null) ;
     }
   }
@@ -2573,7 +2670,12 @@ G__value G__exec_if()
 #endif
       G__no_exec=0;
     }
-    if(G__return!=G__RETURN_NON)return(result);
+    if(G__return!=G__RETURN_NON){
+#ifndef G__OLDIMPLEMENTATION1672
+      G__ifswitch = store_ifswitch;
+#endif
+      return(result);
+    }
   }
   else {  /* no else  push back */
     G__ifile.line_number
@@ -2596,6 +2698,9 @@ G__value G__exec_if()
 #endif
   }
 
+#ifndef G__OLDIMPLEMENTATION1672
+  G__ifswitch = store_ifswitch;
+#endif
   return(result);
 }
 
@@ -2633,7 +2738,15 @@ char **foraction;
   int zeroloopflag=0;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1672
+  int store_ifswitch = G__ifswitch;
+  G__ifswitch = G__DOWHILE;
+#endif
+
   if(G__breaksignal && G__beforelargestep(condition,&iout,&largestep)>1) {
+#ifndef G__OLDIMPLEMENTATION1672
+    G__ifswitch = store_ifswitch;
+#endif
     return(G__null);
   }
 
@@ -2716,12 +2829,20 @@ char **foraction;
     }
 #endif
     result=G__exec_statement();
+#ifndef G__OLDIMPLEMENTATION1673
+    if(G__p_tempbuf->level>=G__templevel && G__p_tempbuf->prev) {
+      G__free_tempobject();
+    }
+#endif
 #ifndef G__OLDIMPLEMENTATION744
     G__no_exec_compile = store_no_exec_compile;
 #endif
     if(G__return!=G__RETURN_NON) {
       /* free breakcontinue buffer */
       if(allocflag) G__free_breakcontinue_list(store_pbreakcontinue);
+#ifndef G__OLDIMPLEMENTATION1672
+      G__ifswitch = store_ifswitch;
+#endif
       return(result);
     }
     
@@ -2737,11 +2858,17 @@ char **foraction;
 	if(result.ref==G__block_goto.ref) {
 	  /* free breakcontinue buffer */
 	  if(allocflag) G__free_breakcontinue_list(store_pbreakcontinue);
+#ifndef G__OLDIMPLEMENTATION1672
+	  G__ifswitch = store_ifswitch;
+#endif
 	  return(result);
 	}
 	else if(!G__asm_noverflow) {
 	  /* free breakcontinue buffer */
 	  if(allocflag) G__free_breakcontinue_list(store_pbreakcontinue);
+#ifndef G__OLDIMPLEMENTATION1672
+	  G__ifswitch = store_ifswitch;
+#endif
 	  return(G__null);
 	}
 	executed_break=1;
@@ -2813,7 +2940,12 @@ char **foraction;
 
       if(0==G__no_exec_compile) {
 	asm_exec=G__exec_asm(asm_start_pc,/*stack*/0,&result,/*localmem*/0);
-	if(G__return!=G__RETURN_NON) return(result);
+	if(G__return!=G__RETURN_NON) {
+#ifndef G__OLDIMPLEMENTATION1672
+	  G__ifswitch = store_ifswitch;
+#endif
+	  return(result);
+	}
       }
       break;
     }
@@ -2863,10 +2995,18 @@ char **foraction;
   G__mparen=0;
   G__no_exec=1;
   result=G__exec_statement();
-  if(G__return!=G__RETURN_NON)return(result); 
+  if(G__return!=G__RETURN_NON) {
+#ifndef G__OLDIMPLEMENTATION1672
+    G__ifswitch = store_ifswitch;
+#endif
+    return(result); 
+  }
   G__no_exec=0;
   
   if(largestep) G__afterlargestep(&largestep);
+#ifndef G__OLDIMPLEMENTATION1672
+  G__ifswitch = store_ifswitch;
+#endif
   return(result);
 }
 
@@ -2881,9 +3021,16 @@ G__value G__exec_while()
 {
   char condition[G__LONGLINE];
   G__value result;
+#ifndef G__OLDIMPLEMENTATION1672
+  int store_ifswitch = G__ifswitch;
+  G__ifswitch = G__DOWHILE;
+#endif
 
   G__fgetstream(condition,")");
   result=G__exec_loop((char*)NULL,condition,0,(char**)NULL);
+#ifndef G__OLDIMPLEMENTATION1672
+  G__ifswitch = store_ifswitch;
+#endif
   return(result);
 }
 
@@ -2904,15 +3051,27 @@ G__value G__exec_for()
   int naction=0;
   int c;
   G__value result;
+#ifndef G__OLDIMPLEMENTATION1672
+  int store_ifswitch = G__ifswitch;
+  G__ifswitch = G__DOWHILE;
+#endif
 
   /* handling 'for(int i=0;i<xxx;i++)' */
   G__exec_statement();
-  if(G__return>G__RETURN_NORMAL) return(G__null);
+  if(G__return>G__RETURN_NORMAL) {
+#ifndef G__OLDIMPLEMENTATION1672
+    G__ifswitch = store_ifswitch;
+#endif
+    return(G__null);
+  }
 
 #ifndef G__OLDIMPLEMENTATION915
   c=G__fgetstream(condition,";)");
   if(')'==c) {
     G__genericerror("Error: for statement syntax error");
+#ifndef G__OLDIMPLEMENTATION1672
+    G__ifswitch = store_ifswitch;
+#endif
     return(G__null);
   }
 #else
@@ -2926,6 +3085,9 @@ G__value G__exec_for()
 #ifndef G__OLDIMPLEMENTATIONF1086
     if(G__return>G__RETURN_NORMAL) {
       G__fprinterr(G__serr,"Error: for statement syntax error. ';' needed\n");
+#ifndef G__OLDIMPLEMENTATION1672
+      G__ifswitch = store_ifswitch;
+#endif
       return(G__null);
     }
 #endif
@@ -2934,6 +3096,9 @@ G__value G__exec_for()
   } while(')'!=c);
 
   result=G__exec_loop((char*)NULL,condition,naction,foraction);
+#ifndef G__OLDIMPLEMENTATION1672
+  G__ifswitch = store_ifswitch;
+#endif
   return(result);
 }
 
@@ -2952,6 +3117,10 @@ G__value G__exec_else_if()
   int c;
   char statement[10]; /* only read commend and else */
   G__value result;
+#ifndef G__OLDIMPLEMENTATION1672
+  int store_ifswitch = G__ifswitch;
+  G__ifswitch = G__IFSWITCH;
+#endif
 
 #ifdef G__ASM
 #ifndef G__OLDIMPLEMENTATION653
@@ -2990,7 +3159,12 @@ G__value G__exec_else_if()
        ***********************/
       switch(c) {
       case '*':
-	if(G__skip_comment()==EOF) return(G__null);
+	if(G__skip_comment()==EOF) {
+#ifndef G__OLDIMPLEMENTATION1672
+	  G__ifswitch = store_ifswitch;
+#endif
+	  return(G__null);
+	}
 	break;
       case '/':
 	G__fignoreline();
@@ -3013,6 +3187,9 @@ G__value G__exec_else_if()
       G__genericerror("Error: unexpected if() { } EOF");
       if(G__key!=0) system("key .cint_key -l execute");
       G__eof=2;
+#ifndef G__OLDIMPLEMENTATION1672
+      G__ifswitch = store_ifswitch;
+#endif
       return(G__null) ;
     }
   }
@@ -3045,6 +3222,9 @@ G__value G__exec_else_if()
   }
   G__no_exec=0;
   
+#ifndef G__OLDIMPLEMENTATION1672
+  G__ifswitch = store_ifswitch;
+#endif
   return(result);
 }
 

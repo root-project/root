@@ -2660,7 +2660,7 @@ int tagnum,typenum;      /* overrides global variables */
 #ifdef G__ASM
 	if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROSx\n",G__asm_cp);
+	  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
 #endif
 	  G__asm_inst[G__asm_cp] = G__POPSTROS;
 	  G__inc_cp_asm(1,0);
@@ -3491,9 +3491,8 @@ char *new_name;
         }
 #ifndef G__OLDIMPLEMENTATION1603
 	else if('c'==memvar->type[memindex] && 
-		0<memvar->varlabel[memindex][1] &&
-		'"'==expr[0]) {
-	  if(memvar->varlabel[memindex][1]+1>strlen((char*)reg.obj.i)) 
+		0<memvar->varlabel[memindex][1] && '"'==expr[0]) {
+	  if(memvar->varlabel[memindex][1]+1>(int)strlen((char*)reg.obj.i)) 
 	    strcpy((char*)buf.obj.i,(char*)reg.obj.i);
 	  else
 	    strncpy((char*)buf.obj.i,(char*)reg.obj.i

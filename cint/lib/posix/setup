@@ -1,5 +1,5 @@
 cc -o mktypes mktypes.c
-mktypes
+./mktypes
 rm mktypes
 cp ../../include/systypes.h ../../include/sys/types.h
 makecint -mk Makefile -dl $CINTSYSDIR/include/posix.dll -h posix.h exten.h -C exten.c -cint -Z0
