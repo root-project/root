@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -14,8 +14,9 @@
 
 
 // forward declarations
-class TGeoNode;
 class TGeoVolume;
+class TGeoNode;
+class TGeoManager;
 class TTree;
 
 /*************************************************************************
@@ -29,26 +30,30 @@ class TGeoChecker : public TObject
 {
 private :
 // data members
-   TGeoNode        *fCurrentNode;
+   TGeoManager     *fGeom;
    TTree           *fTreePts;
 // methods
 
 public:
    // constructors
    TGeoChecker();
+   TGeoChecker(TGeoManager *geom);
    TGeoChecker(const char *treename, const char *filename);
    // destructor
    virtual ~TGeoChecker();
    // methods
-   void             SetCurrentNode(TGeoNode *node)   {fCurrentNode = node;}
+   void             CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="");
    void             CreateTree(const char *treename, const char *filename);
    void             Generate(UInt_t npoints=1000000);      // compute safety and fill the tree
    void             Raytrace(Double_t *startpoint, UInt_t npoints=1000000);
+   void             RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option);
+   void             RandomRays(Int_t nrays);
+   TGeoNode        *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
    void             ShowPoints(Option_t *option="");
-
+   void             Test(Int_t npoints, Option_t *option);
+   void             TestOverlaps(const char *path);
+   
   ClassDef(TGeoChecker, 1)               // a simple geometry checker
-
-//***** Need to add classes and globals to LinkDef.h *****
 };
 
 #endif

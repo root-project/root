@@ -72,7 +72,6 @@ public:
 
    void              Browse(TBrowser *b);
    virtual void      cd() const {;}
-   void              CheckPoint() const {fVolume->CheckPoint();} // *MENU*
    void              CheckShapes();
    void              Draw(Option_t *option="");
    void              DrawOnly(Option_t *option="");
@@ -94,7 +93,7 @@ public:
    void              InspectNode() const; // *MENU*
    virtual Bool_t    IsFolder() const {return kTRUE;}
    Bool_t            IsOffset() const {return TObject::TestBit(kGeoNodeOffset);}
-   Bool_t            IsOnScreen() const;
+   Bool_t            IsOnScreen() const; //*MENU*
    Bool_t            IsOverlapping() const {return (fNovlp>0)?kTRUE:kFALSE;}
    Bool_t            IsVirtual() const {return TObject::TestBit(kGeoNodeVC);}
    Bool_t            IsVisible() const {return fVolume->IsVisible();}
@@ -148,7 +147,7 @@ public:
 };
 
 /*************************************************************************
- * TGeoNodeOffset - node containing only a translation offset
+ * TGeoNodeOffset - node containing only an translation offset
  *
  *************************************************************************/
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.h,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -53,7 +53,9 @@ public:
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
-   virtual void          Draw(Option_t *option);
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                                Double_t start, Double_t step);
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
    void                  GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *normals) const;
    void                  GetOppositeCorner(Double_t *point, Int_t inorm, Double_t *vertex, Double_t *normals) const;

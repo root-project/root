@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -108,6 +108,99 @@ Int_t TGeoBBox::DistancetoPrimitive(Int_t px, Int_t py)
    const Int_t numPoints = 8;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
+//-----------------------------------------------------------------------------
+TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                             Double_t start, Double_t step) 
+{
+//--- Divide this box shape belonging to volume "voldiv" into ndiv equal volumes
+// called divname, from start position with the given step. Returns pointer
+// to created division cell volume. In case a wrong division axis is supplied,
+// returns pointer to volume to be divided.
+   TGeoShape *shape;           //--- shape to be created
+   TGeoVolume *vol;            //--- division volume to be created
+   TGeoPatternFinder *finder;  //--- finder to be attached
+   TString opt = "";           //--- option to be attached
+   switch (iaxis) {
+      case 1:                  //--- divide on X
+         if (step<=0) {step=2*fDX/ndiv; start=-fDX;}
+         if (((start+fDX)<-1E-4) || ((start+ndiv*step-fDX)>1E-4)) {
+            Warning("Divide", "box x division exceed shape range");
+            printf("   volume was %s\n", voldiv->GetName());
+         }
+         shape = new TGeoBBox(step/2., fDY, fDZ); 
+         finder = new TGeoPatternX(voldiv, ndiv, start, start+ndiv*step);
+         opt = "X";
+         break;
+      case 2:                  //--- divide on Y
+         if (step<=0) {step=2*fDY/ndiv; start=-fDY;}
+         if (((start+fDY)<-1E-4) || ((start+ndiv*step-fDY)>1E-4)) {
+            Warning("Divide", "box y division exceed shape range");
+            printf("   volume was %s\n", voldiv->GetName());
+         }
+         shape = new TGeoBBox(fDX, step/2., fDZ); 
+         finder = new TGeoPatternY(voldiv, ndiv, start, start+ndiv*step);
+         opt = "Y";
+         break;
+      case 3:                  //--- divide on Z
+         if (step<=0) {step=2*fDZ/ndiv; start=-fDZ;}
+         if (((start+fDZ)<-1E-4) || ((start+ndiv*step-fDZ)>1E-4)) {
+            Warning("Divide", "box z division exceed shape range");
+            printf("   volume was %s\n", voldiv->GetName());
+         }
+         shape = new TGeoBBox(fDX, fDY, step/2.); 
+         finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
+         opt = "Z";
+         break;
+      default:
+         Error("Divide", "Wrong axis type for division");
+         return voldiv;
+   }
+   vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+   voldiv->SetFinder(finder);
+   finder->SetBasicVolume(vol);
+   finder->SetDivIndex(voldiv->GetNdaughters());
+   for (Int_t ic=0; ic<ndiv; ic++) {
+      voldiv->AddNodeOffset(vol, ic, start+step/2.+ic*step, opt.Data());
+      ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);    
+   }
+   return vol;
+}     
+//-----------------------------------------------------------------------------
+TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+{
+// Divide all range of iaxis in range/step cells 
+   Double_t start=0, end=0;
+   Int_t ndiv;
+   switch (iaxis) {
+      case 1:
+         start=-fDX;
+         end=fDX;
+         break;
+      case 2:
+         start=-fDY;
+         end=fDY;
+         break;
+      case 3:
+         start=-fDZ;
+         end=fDZ;
+         break;
+      default:
+         Error("Divide", "Wrong division axis");
+         return voldiv;   
+   }
+   Double_t range = end - start;
+   ndiv = Int_t((range+0.01*step)/step);   
+   if (ndiv<=0) {
+      Error("Divide", "ndivisions=0, wrong type");
+      return voldiv;
+   }
+   Double_t err = range-ndiv*step;
+   if (err>(0.01*step)) {
+      start+=0.5*err;
+      end-=0.5*err;
+   }
+   return voldiv->Divide(divname, iaxis, ndiv, start, step);            
+}      
 //-----------------------------------------------------------------------------   
 void TGeoBBox::SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t *origin)
 {
@@ -223,11 +316,6 @@ Double_t TGeoBBox::DistToSurf(Double_t *point, Double_t *dir) const
    return 0.0;
 }
 //-----------------------------------------------------------------------------
-void TGeoBBox::Draw(Option_t *option)
-{
-// draw this shape according to option
-}
-//-----------------------------------------------------------------------------
 TGeoShape *TGeoBBox::GetMakeRuntimeShape(TGeoShape *mother) const
 {
 // in case shape has some negative parameters, these has to be computed
@@ -260,7 +348,7 @@ void TGeoBBox::InspectShape() const
 void TGeoBBox::Paint(Option_t *option)
 {
 // paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
@@ -335,7 +423,6 @@ void TGeoBBox::SetPoints(Float_t *buff) const
 void TGeoBBox::Sizeof3D() const
 {
 // fill size of this 3-D object
-    gSize3D.numPoints += 8;
-    gSize3D.numSegs   += 12;
-    gSize3D.numPolys  += 6;
+    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+    if (painter) painter->AddSize3D(8, 12, 6);
 }

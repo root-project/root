@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -235,6 +235,20 @@ Double_t TGeoEltu::DistToSurf(Double_t *point, Double_t *dir) const
 // starting from given point to the given direction.
    return 0.0;
 }
+//-----------------------------------------------------------------------------
+TGeoVolume *TGeoEltu::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                             Double_t start, Double_t step) 
+{
+   Error("Divide", "Elliptical tubes divisions not implemenetd");
+   return voldiv;
+}   
+//-----------------------------------------------------------------------------
+TGeoVolume *TGeoEltu::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+{
+// Divide all range of iaxis in range/step cells 
+   Error("Divide", "Division in all range not implemented");
+   return voldiv;
+}      
 //-----------------------------------------------------------------------------
 TGeoShape *TGeoEltu::GetMakeRuntimeShape(TGeoShape *mother) const
 {

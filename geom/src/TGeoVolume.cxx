@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.3 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -92,29 +92,15 @@
 //End_Html
 
 #include "TString.h"
-#include "TObjArray.h"
 #include "TBrowser.h"
-#include "TPolyMarker3D.h"
-#include "TPad.h"
-#include "TView.h"
 #include "TStyle.h"
-#include "TRandom3.h"
 
 #include "TGeoManager.h"
-#include "TGeoPara.h"
-#include "TGeoTube.h"
-#include "TGeoCone.h"
-#include "TGeoSphere.h"
-#include "TGeoArb8.h"
-#include "TGeoPgon.h"
-#include "TGeoTrd1.h"
-#include "TGeoTrd2.h"
-#include "TGeoCompositeShape.h"
 #include "TGeoNode.h"
 #include "TGeoMatrix.h"
 #include "TGeoFinder.h"
-#include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
+#include "TGeoVolume.h"
 
 ClassImp(TGeoVolume)
 
@@ -179,44 +165,6 @@ void TGeoVolume::ClearShape()
 {
    gGeoManager->ClearShape(fShape);
 }   
-//-----------------------------------------------------------------------------
-void TGeoVolume::CheckPoint() const
-{
-   if (!gPad) return;
-   Double_t point[3];
-   memcpy(&point[0], gGeoManager->GetCurrentPoint(), 3*sizeof(Double_t));
-   TPolyMarker3D *pm = new TPolyMarker3D();
-   pm->SetMarkerColor(2);
-   pm->SetMarkerStyle(4);
-   pm->SetNextPoint(point[0], point[1], point[2]);
-   Double_t dx = 1;
-   Double_t dmin = 100;
-   Double_t ox, oy, oz, x, y, z;
-   ox = point[0];
-   oy = point[1];
-   oz = point[2];
-   gRandom = new TRandom3();
-   TGeoNode *node = gGeoManager->FindNode();
-   TGeoNode *last, *closest=0;
-   for (Int_t i=0; i<10000; i++) {
-      x = ox-dx+2.*dx*gRandom->Rndm();
-      y = oy-dx+2.*dx*gRandom->Rndm();
-      z = oz-dx+2.*dx*gRandom->Rndm();
-      gGeoManager->SetCurrentPoint(x,y,z);
-      last = gGeoManager->FindNode();
-      if (last!=node) { 
-         dmin=TMath::Min(dmin,TMath::Sqrt((x-ox)*(x-ox)+(y-oy)*(y-oy)+(z-oz)*(z-oz)));
-         dx = dmin;
-         closest = last;
-//         pm->SetNextPoint(x,y,z);
-//         printf("%f %s\n", dmin, gGeoManager->GetPath());
-      }
-   }
-   pm->Draw("SAME");
-   gPad->Update();
-   printf("Distance to boundary : %f\n", dmin);
-   if (closest) printf("closest node : %s\n", closest->GetName());
-}  
 //-----------------------------------------------------------------------------
 void TGeoVolume::CheckShapes()
 {
@@ -309,29 +257,6 @@ void TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option
       printf("### invalid volume was : %s\n", vol->GetName());
       return;
    }
-/*
-   if (!gGeoManager->IsLoopingVolumes()) {
-      gGeoManager->SetLoopVolumes();   
-      TGeoVolume *vcurrent;
-      TList *volumes = gGeoManager->GetListOfVolumes();
-      Int_t nvol = volumes->GetSize();
-      Int_t ivol = 0;
-      for (ivol=0; ivol<nvol; ivol++) {
-         vcurrent = (TGeoVolume*)volumes->At(ivol);
-         if (strcmp(vcurrent->GetName(), GetName())) continue;
-         vcurrent->AddNode(vol, copy_no, mat, option);
-      }
-      volumes = gGeoManager->GetListOfGVolumes();
-      nvol = volumes->GetSize();
-      for (ivol=0; ivol<nvol; ivol++) {
-         vcurrent = (TGeoVolume*)volumes->At(ivol);
-         if (strcmp(vcurrent->GetName(), GetName())) continue;
-         vcurrent->AddNode(vol, copy_no, mat, option);
-      }
-      gGeoManager->SetLoopVolumes(kFALSE);
-      return;
-   }      
-*/
    if (!fNodes) fNodes = new TObjArray();
 
    if (fFinder) {
@@ -365,29 +290,6 @@ void TGeoVolume::AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset, 
       printf("### invalid volume was : %s\n", vol->GetName());
       return;
    }   
-/*
-   if (!gGeoManager->IsLoopingVolumes()) {
-      gGeoManager->SetLoopVolumes();   
-      TGeoVolume *vcurrent;
-      TList *volumes = gGeoManager->GetListOfVolumes();
-      Int_t nvol = volumes->GetSize();
-      Int_t ivol = 0;
-      for (ivol=0; ivol<nvol; ivol++) {
-         vcurrent = (TGeoVolume*)volumes->At(ivol);
-         if (strcmp(vcurrent->GetName(), GetName())) continue;
-         vcurrent->AddNodeOffset(vol, copy_no, offset, option);
-      }
-      volumes = gGeoManager->GetListOfGVolumes();
-      nvol = volumes->GetSize();
-      for (ivol=0; ivol<nvol; ivol++) {
-         vcurrent = (TGeoVolume*)volumes->At(ivol);
-         if (strcmp(vcurrent->GetName(), GetName())) continue;
-         vcurrent->AddNodeOffset(vol, copy_no, offset, option);
-      }
-      gGeoManager->SetLoopVolumes(kFALSE);
-      return;
-   }      
-*/
    if (!fNodes) fNodes = new TObjArray();
    TGeoNode *node = new TGeoNodeOffset(vol, copy_no, offset);
    node->SetMotherVolume(this);
@@ -399,30 +301,6 @@ void TGeoVolume::AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset, 
 //-----------------------------------------------------------------------------
 void TGeoVolume::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
-//   vol->SetVisibility(kFALSE);
-/*
-   if (!gGeoManager->IsLoopingVolumes()) {
-      gGeoManager->SetLoopVolumes();   
-      TGeoVolume *vcurrent;
-      TList *volumes = gGeoManager->GetListOfVolumes();
-      Int_t nvol = volumes->GetSize();
-      Int_t ivol = 0;
-      for (ivol=0; ivol<nvol; ivol++) {
-         vcurrent = (TGeoVolume*)volumes->At(ivol);
-         if (strcmp(vcurrent->GetName(), GetName())) continue;
-         vcurrent->AddNodeOverlap(vol, copy_no, mat, option);
-      }
-      volumes = gGeoManager->GetListOfGVolumes();
-      nvol = volumes->GetSize();
-      for (ivol=0; ivol<nvol; ivol++) {
-         vcurrent = (TGeoVolume*)volumes->At(ivol);
-         if (strcmp(vcurrent->GetName(), GetName())) continue;
-         vcurrent->AddNodeOverlap(vol, copy_no, mat, option);
-      }
-      gGeoManager->SetLoopVolumes(kFALSE);
-      return;
-   }      
-*/
    if (!fFinder) {
       AddNode(vol, copy_no, mat, option);
       TGeoNode *node = (TGeoNode*)fNodes->At(GetNdaughters()-1);
@@ -440,145 +318,48 @@ void TGeoVolume::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat,
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t ndiv, Option_t *option)
 {
-   return 0; 
+   Error("Divide", "This type of division not implemenetd");
+   return this; 
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t ndiv, Double_t start, Double_t step, Option_t *option)
 {
 // divide this volume in ndiv pieces from start, with given step
-   return 0;
+   Error("Divide", "This type of division not implemenetd");
+   return this; 
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoVolume::Divide(const char *divname, Double_t start, Double_t end, Double_t step, Option_t *option)
 {
 // divide this volume from start to end in pieces of length step
-   return 0;
+   Error("Divide", "This type of division not implemenetd");
+   return this; 
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoVolume::Divide(const char *divname, TObject *userdiv, Double_t *params, Option_t *)
 {
 // divide this volume according to userdiv
-   return 0;
+   Error("Divide", "This type of division not implemenetd");
+   return this; 
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Double_t step)
 {
-// divide all range of iaxis in range/step cells (G3 matching from ZEBRA
-   Double_t start=0, end=0;
-   Int_t ndiv;
-   TString stype = fShape->ClassName();
-   if (stype == "TGeoBBox") {
-      switch (iaxis) {
-         case 1:
-            start=-((TGeoBBox*)fShape)->GetDX();
-            end=-start;
-            break;
-         case 2:
-            start=-((TGeoBBox*)fShape)->GetDY();
-            end=-start;
-            break;
-         case 3:
-            start=-((TGeoBBox*)fShape)->GetDZ();
-            end=-start;
-            break;
-         default:
-            Error("Divide", "Wrong division axis");
-            return 0;   
-      }      
-   }
-   if (stype == "TGeoTube") {
-      switch (iaxis) {
-         case 1:
-            start = ((TGeoTube*)fShape)->GetRmin();
-            end = ((TGeoTube*)fShape)->GetRmax();
-            break;
-         case 2:
-            start = 0.;
-            end = 360.;
-            break;
-         case 3:
-            start = -((TGeoTube*)fShape)->GetDz();
-            end = -start;
-            break;
-         default:
-            Error("Divide", "Wrong division axis");
-            return 0;   
-      }      
-   }
-   if (stype == "TGeoTubeSeg") {
-      switch (iaxis) {
-         case 1:
-            start = ((TGeoTube*)fShape)->GetRmin();
-            end = ((TGeoTube*)fShape)->GetRmax();
-            break;
-         case 2:
-            start = ((TGeoTubeSeg*)fShape)->GetPhi1();
-            end = ((TGeoTubeSeg*)fShape)->GetPhi2();
-            if (end<start) end+=360.;
-            break;
-         case 3:
-            start = -((TGeoTube*)fShape)->GetDz();
-            end = -start;
-            break;
-         default:
-            Error("Divide", "Wrong division axis");
-            return 0;   
-      }      
-   }
-   Double_t range = end - start;
-   ndiv = Int_t((range+0.01*step)/step);   
-   if (ndiv<=0) {
-      Error("Divide", "ndivisions=0, wrong type");
-      return 0;
-   }
-   Double_t err = range-ndiv*step;
-   if (err>(0.01*step)) {
-      start+=0.5*err;
-      end-=0.5*err;
-   }   
-//   printf("Divide : start=%f end=%f ndiv=%i step=%f err=%f\n", start, end,ndiv,step,err);
-   return Divide(divname, iaxis, ndiv, start, step);
+// Divide all range of iaxis in range/step cells 
+   return fShape->Divide(this, divname, iaxis, step);
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step)
 {
 // division a la G3
    TString stype = fShape->ClassName();
-   TGeoShape *shape = 0;
    TGeoVolume *vol = 0;
    if (!ndiv && start) {
       printf("Error : Divide %s type %s into %s- ndivisions=0\n",GetName(), stype.Data(), divname);
-//      vol = new TGeoVolume(divname, fShape, fMaterial);
-//      AddNode(vol, 1, gGeoIdentity);
-//      return vol;
       return this;
    }
-/*
-   if (!gGeoManager->IsLoopingVolumes()) {
-      gGeoManager->SetLoopVolumes();   
-      TGeoVolume *vcurrent;
-      TGeoVolume *cell = 0;
-      TList *volumes = gGeoManager->GetListOfVolumes();
-      Int_t nvol = volumes->GetSize();
-      Int_t ivol = 0;
-      for (ivol=0; ivol<nvol; ivol++) {
-         vcurrent = (TGeoVolume*)volumes->At(ivol);
-         if (strcmp(vcurrent->GetName(), GetName())) continue;
-         cell = vcurrent->Divide(divname, iaxis, ndiv, start, step);
-      }
-      volumes = gGeoManager->GetListOfGVolumes();
-      nvol = volumes->GetSize();
-      for (ivol=0; ivol<nvol; ivol++) {
-         vcurrent = (TGeoVolume*)volumes->At(ivol);
-         if (strcmp(vcurrent->GetName(), GetName())) continue;
-         cell = vcurrent->Divide(divname, iaxis, ndiv, start, step);
-      }
-      gGeoManager->SetLoopVolumes(kFALSE);
-      return cell;
-   }      
-*/
-   if ((!ndiv) && (!start)) return Divide(divname, iaxis, step);
    if (!fNodes) fNodes = new TObjArray();
+   if ((!ndiv) && (!start)) return fShape->Divide(this, divname, iaxis, step);
    if (fFinder) {
    // volume already divided. Divide again all its divisions.
       for (Int_t idiv=0; idiv<fFinder->GetNdiv(); idiv++) {
@@ -587,698 +368,15 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
       }
       return this;
    }
-   TString opt = "";
-   Int_t id, is, ipl, idiv;
-   
-   if (stype == "TGeoBBox") {
-//      printf("Dividing box %s on %i axis\n", GetName(), iaxis);
-      Double_t dx = ((TGeoBBox*)fShape)->GetDX();
-      Double_t dy = ((TGeoBBox*)fShape)->GetDY();
-      Double_t dz = ((TGeoBBox*)fShape)->GetDZ();
-      switch (iaxis) {
-         case 1:
-            if (step<=0) {step=2*dx/ndiv; start=-dx;}
-            if (((start+dx)<-1E-4) || ((start+ndiv*step-dx)>1E-4)) {
-               Warning("Divide", "box x division exceed shape range");
-               printf("   volume was %s\n", GetName());
-            }
-            shape = new TGeoBBox(step/2., dy, dz); 
-            fFinder = new TGeoPatternX(this, ndiv, start, start+ndiv*step);
-            opt = "X";
-            break;
-         case 2:
-            if (step<=0) {step=2*dy/ndiv; start=-dy;}
-            if (((start+dy)<-1E-4) || ((start+ndiv*step-dy)>1E-4)) {
-               Warning("Divide", "box y division exceed shape range");
-               printf("   volume was %s\n", GetName());
-            }
-            shape = new TGeoBBox(dx, step/2., dz); 
-            fFinder = new TGeoPatternY(this, ndiv, start, start+ndiv*step);
-            opt = "Y";
-            break;
-         case 3:
-            if (step<=0) {step=2*dz/ndiv; start=-dz;}
-            if (((start+dz)<-1E-4) || ((start+ndiv*step-dz)>1E-4)) {
-               Warning("Divide", "box z division exceed shape range");
-               printf("   volume was %s\n", GetName());
-            }
-            shape = new TGeoBBox(dx, dy, step/2.); 
-            fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
-            opt = "Z";
-            break;
-         default:
-            Error("Divide", "Wrong axis type for division");
-            return this;
-      }
-      vol = new TGeoVolume(divname, shape, fMaterial);
-      fFinder->SetBasicVolume(vol);
-      fFinder->SetDivIndex(GetNdaughters());
-      for (Int_t ic=0; ic<ndiv; ic++) {
-         AddNodeOffset(vol, ic, start+step/2.+ic*step, opt.Data());
-         ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);    
-      }
-      return vol;
-   }
-   if (stype == "TGeoTube") {
-//      printf("Dividing tube %s on %i axis\n", GetName(), iaxis);
-      Double_t rmin = ((TGeoTube*)fShape)->GetRmin();
-      Double_t rmax = ((TGeoTube*)fShape)->GetRmax();
-      Double_t dz   = ((TGeoTube*)fShape)->GetDz();
-      switch (iaxis) {
-         case 1:  // R division
-            if (step<=0) {step=(rmax-rmin)/ndiv; start=rmin;}
-            if (((start-rmin)<-1E-4) || ((start-rmax)>1E-4) || 
-                 ((start+ndiv*step-rmin)<-1E-4) ||((start+ndiv*step-rmax)>1E-4)) {
-               Warning("Divide", "cyl R division exceed shape range");
-               printf("   volume was %s\n", GetName());
-            }
-            fFinder = new TGeoPatternCylR(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());
-            for (id=0; id<ndiv; id++) {
-               shape = new TGeoTube(start+id*step, start+(id+1)*step, dz);
-//               char *name = new char[20];
-//               sprintf(name, "%s_%i", divname, id+1);
-               vol = new TGeoVolume(divname, shape, fMaterial);
-               opt = "R";
-               AddNodeOffset(vol, id, 0, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-            }
-            return this;
-         case 2:  // phi division
-            if (step<=0) step=360./ndiv;
-            fFinder = new TGeoPatternCylPhi(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());            
-            shape = new TGeoTubeSeg(rmin, rmax, dz, -step/2, step/2);
-            vol = new TGeoVolume(divname, shape, fMaterial);
-            opt = "Phi";
-            for (id=0; id<ndiv; id++) {
-               AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-            }
-            return vol;
-         case 3: // Z division
-            if (step<=0) {step=2*dz/ndiv; start=-dz;}
-            if (((start+dz)<-1E-4) || ((start+ndiv*step-dz)>1E-4)) {
-               Warning("Divide", "cyl z division exceed shape range");
-               printf("   volume was %s\n", GetName());
-            }
-            fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());            
-            shape = new TGeoTube(rmin, rmax, step/2);
-            vol = new TGeoVolume(divname, shape, fMaterial);
-            opt = "Z";
-            for (id=0; id<ndiv; id++) {
-               AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-            }
-            return vol;
-         default:
-            Error("Divide", "Wrong axis type for division");
-            return this;            
-      }
-   }
-   if (stype == "TGeoTubeSeg") {
-//      printf("Dividing tube segment %s on %i axis\n", GetName(), iaxis);
-      Double_t rmin = ((TGeoTube*)fShape)->GetRmin();
-      Double_t rmax = ((TGeoTube*)fShape)->GetRmax();
-      Double_t dz   = ((TGeoTube*)fShape)->GetDz();
-      Double_t phi1 = ((TGeoTubeSeg*)fShape)->GetPhi1();
-      Double_t phi2 = ((TGeoTubeSeg*)fShape)->GetPhi2();
-      Double_t dphi;
-      switch (iaxis) {
-         case 1:  // R division
-            if (step<=0) {step=(rmax-rmin)/ndiv; start=rmin;}
-            if (((start-rmin)<-1E-4) || ((start-rmax)>1E-4) || 
-                 ((start+ndiv*step-rmin)<-1E-4) ||((start+ndiv*step-rmax)>1E-4)) {
-               Warning("Divide", "cyl seg R division exceed shape range");
-               printf("   volume was %s\n", GetName());
-            }
-            fFinder = new TGeoPatternCylR(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());
-            for (id=0; id<ndiv; id++) {
-               shape = new TGeoTubeSeg(start+id*step, start+(id+1)*step, dz, phi1, phi2);
-//               char *name = new char[20];
-//               sprintf(name, "%s_%i", divname, id+1);
-               vol = new TGeoVolume(divname, shape, fMaterial);
-               opt = "R";
-               AddNodeOffset(vol, id, 0, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-            }
-            return this;
-         case 2:  // phi division
-            dphi = phi2-phi1;
-            if (dphi<0) dphi+=360.;
-            if (step<=0) {step=dphi/ndiv; start=phi1;}
-            fFinder = new TGeoPatternCylPhi(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());            
-            shape = new TGeoTubeSeg(rmin, rmax, dz, -step/2, step/2);
-            vol = new TGeoVolume(divname, shape, fMaterial);
-            opt = "Phi";
-            for (id=0; id<ndiv; id++) {
-               AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-            }
-            return vol;
-         case 3: // Z division
-            if (step<=0) {step=2*dz/ndiv; start=-dz;}
-            if (((start+dz)<-1E-4) || ((start+ndiv*step-dz)>1E-4)) {
-               Warning("Divide", "cyl seg Z division exceed shape range"); 
-               printf("   volume was %s\n", GetName());
-            }
-            fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());            
-            shape = new TGeoTubeSeg(rmin, rmax, step/2, phi1, phi2);
-            vol = new TGeoVolume(divname, shape, fMaterial);
-            opt = "Z";
-            for (id=0; id<ndiv; id++) {
-               AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-            }
-            return vol;
-         default:
-            Error("Divide", "Wrong axis type for division");
-            return this;            
-      }
-   }
-   if (stype == "TGeoCone") {
-//      printf("Dividing cone %s on %i axis\n", GetName(), iaxis);
-      Double_t rmin1 = ((TGeoCone*)fShape)->GetRmin1();
-      Double_t rmax1 = ((TGeoCone*)fShape)->GetRmax1();
-      Double_t rmin2 = ((TGeoCone*)fShape)->GetRmin2();
-      Double_t rmax2 = ((TGeoCone*)fShape)->GetRmax2();
-      Double_t dz   = ((TGeoCone*)fShape)->GetDz();
-      switch (iaxis) {
-         case 1:  // R division
-            Error("Divide","division of a cone on R not implemented");
-            return this;
-         case 2:  // phi division
-            if (step<=0) step=360./ndiv;
-            fFinder = new TGeoPatternCylPhi(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());            
-            shape = new TGeoConeSeg(dz, rmin1, rmax1, rmin2, rmax2, -step/2, step/2);
-            vol = new TGeoVolume(divname, shape, fMaterial);
-            opt = "Phi";
-            for (id=0; id<ndiv; id++) {
-               AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-            }
-            return vol;
-         case 3: // Z division
-            if (step<=0) {step=2*dz/ndiv; start=-dz;}
-            if (((start+dz)<-1E-4) || ((start+ndiv*step-dz)>1E-4)) {
-               Warning("Divide", "cone Z division exceed shape range");
-               printf("   volume was %s\n", GetName());
-            }
-            fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());            
-            for (id=0; id<ndiv; id++) {
-               Double_t z1 = start+id*step;
-               Double_t z2 = start+(id+1)*step;
-               Double_t rmin1n = 0.5*(rmin1*(dz-z1)+rmin2*(dz+z1))/dz;
-               Double_t rmax1n = 0.5*(rmax1*(dz-z1)+rmax2*(dz+z1))/dz;
-               Double_t rmin2n = 0.5*(rmin1*(dz-z2)+rmin2*(dz+z2))/dz;
-               Double_t rmax2n = 0.5*(rmax1*(dz-z2)+rmax2*(dz+z2))/dz;
-               shape = new TGeoCone(rmin1n, rmax1n, rmin2n, rmax2n, step/2); 
-               vol = new TGeoVolume(divname, shape, fMaterial);
-               opt = "Z";
-               AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-            }
-            return this;
-         default:
-            Error("Divide", "Wrong axis type for division");
-            return this;            
-      }
-   }
-   if (stype == "TGeoConeSeg") {
-//      printf("Dividing cone segment %s on %i axis\n", GetName(), iaxis);
-      Double_t rmin1 = ((TGeoCone*)fShape)->GetRmin1();
-      Double_t rmax1 = ((TGeoCone*)fShape)->GetRmax1();
-      Double_t rmin2 = ((TGeoCone*)fShape)->GetRmin2();
-      Double_t rmax2 = ((TGeoCone*)fShape)->GetRmax2();
-      Double_t phi1 = ((TGeoConeSeg*)fShape)->GetPhi1();
-      Double_t phi2 = ((TGeoConeSeg*)fShape)->GetPhi2();
-      Double_t dz   = ((TGeoCone*)fShape)->GetDz();
-      Double_t dphi;
-      switch (iaxis) {
-         case 1:  // R division
-            Error("Divide","division of a cone segment on R not implemented");
-            return this;
-         case 2:  // phi division
-            dphi = phi2-phi1;
-            if (dphi<0) dphi+=360.;
-            if (step<=0) {step=dphi/ndiv; start=phi1;}
-            fFinder = new TGeoPatternCylPhi(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());            
-            shape = new TGeoConeSeg(dz, rmin1, rmax1, rmin2, rmax2, -step/2, step/2);
-            vol = new TGeoVolume(divname, shape, fMaterial);
-            opt = "Phi";
-            for (id=0; id<ndiv; id++) {
-               AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-            }
-            return vol;
-         case 3: // Z division
-            if (step<=0) {step=2*dz/ndiv; start=-dz;}
-            if (((start+dz)<-1E-4) || ((start+ndiv*step-dz)>1E-4)) {
-               Warning("Divide", "cone seg Z division exceed shape range");
-               printf("   volume was %s\n", GetName());
-            }
-            fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());            
-            for (id=0; id<ndiv; id++) {
-               Double_t z1 = start+id*step;
-               Double_t z2 = start+(id+1)*step;
-               Double_t rmin1n = 0.5*(rmin1*(dz-z1)+rmin2*(dz+z1))/dz;
-               Double_t rmax1n = 0.5*(rmax1*(dz-z1)+rmax2*(dz+z1))/dz;
-               Double_t rmin2n = 0.5*(rmin1*(dz-z2)+rmin2*(dz+z2))/dz;
-               Double_t rmax2n = 0.5*(rmax1*(dz-z2)+rmax2*(dz+z2))/dz;
-               shape = new TGeoConeSeg(step/2, rmin1n, rmax1n, rmin2n, rmax2n, phi1, phi2); 
-               vol = new TGeoVolume(divname, shape, fMaterial);
-               opt = "Z";
-               AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-             }
-             return this;
-         default:
-            Error("Divide", "Wrong axis type for division");
-            return this;            
-      }
-   }
-   if (stype == "TGeoPara") {
-//      printf("Dividing para %s on %i axis\n", GetName(), iaxis);
-      Double_t dx = ((TGeoPara*)fShape)->GetX();
-      Double_t dy = ((TGeoPara*)fShape)->GetY();
-      Double_t dz = ((TGeoPara*)fShape)->GetZ();
-      Double_t alpha = ((TGeoPara*)fShape)->GetAlpha();
-      Double_t theta = ((TGeoPara*)fShape)->GetTheta();
-      Double_t phi = ((TGeoPara*)fShape)->GetPhi();
-      switch (iaxis) {
-         case 1:
-            if (step<=0) {step=2*dx/ndiv; start=-dx;}
-            if (((start+dx)<-1E-4) || ((start+ndiv*step-dx)>1E-4)) {
-               Warning("Divide", "para X division exceed shape range");
-               printf("   volume was %s\n", GetName());
-               printf("start=%f end=%f dx=%f\n", start, start+ndiv*step, dx);
-            }
-            shape = new TGeoPara(step/2, dy, dz, alpha, theta, phi);
-            fFinder = new TGeoPatternParaX(this, ndiv, start, start+ndiv*step);
-            opt = "X";
-            break;
-         case 2:
-            if (step<=0) {step=2*dy/ndiv; start=-dy;}
-            if (((start+dy)<-1E-4) || ((start+ndiv*step-dy)>1E-4)) {
-               Warning("Divide", "para Y division exceed shape range");
-               printf("   volume was %s\n", GetName());
-            }
-            shape = new TGeoPara(dx, step/2, dz, alpha, theta, phi);
-            fFinder = new TGeoPatternParaY(this, ndiv, start, start+ndiv*step);
-            opt = "Y";
-            break;
-         case 3:
-            if (step<=0) {step=2*dz/ndiv; start=-dz;}
-            if (((start+dz)<-1E-4) || ((start+ndiv*step-dz)>1E-4)) {
-               Warning("Divide", "para Z division exceed shape range");
-               printf("   volume was %s\n", GetName());
-            }
-            shape = new TGeoPara(dx, dy, step/2, alpha, theta, phi);
-            fFinder = new TGeoPatternParaZ(this, ndiv, start, start+ndiv*step);
-            opt = "Z";
-            break;
-         default:
-            Error("Divide", "Wrong axis type for division");
-            return this;            
-      }
-      vol = new TGeoVolume(divname, shape, fMaterial);
-      fFinder->SetBasicVolume(vol);
-      fFinder->SetDivIndex(GetNdaughters());
-      for (Int_t ic=0; ic<ndiv; ic++) {
-         AddNodeOffset(vol, ic, start+step/2.+ic*step, opt.Data());
-         ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);    
-      }
-      return vol;
-   }
-   if (stype == "TGeoTrd1") {
-//      printf("Dividing trd1 %s on %i axis\n", GetName(), iaxis);
-      Double_t dx1, dx2, dy, dz, zmin, zmax, dx1n, dx2n;
-      dy = ((TGeoTrd1*)fShape)->GetDy();
-      dz = ((TGeoTrd1*)fShape)->GetDz();
-      dx1 = ((TGeoTrd1*)fShape)->GetDx1();
-      dx2 = ((TGeoTrd1*)fShape)->GetDx2();
-      switch (iaxis) {
-         case 1:
-            Warning("Divide", "dividing a Trd1 on X not implemented");
-            break;
-         case 2:
-            if (step<=0) {step=2*dy/ndiv; start=-dy;}
-            if (((start+dy)<-1E-4) || ((start+ndiv*step-dy)>1E-4)) {
-               Warning("Divide", "trd1 Y division exceed shape range");
-               printf("   volume was %s\n", GetName());
-               printf("start=%f end=%f, dy=%f\n", start, start+ndiv*step, dy);
-            }
-            fFinder = new TGeoPatternY(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());            
-            shape = new TGeoTrd1(dx1, dx2, step/2, dz);
-            vol = new TGeoVolume(divname, shape, fMaterial); 
-            opt = "Y";
-            for (id=0; id<ndiv; id++) {
-               AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-            }
-            return vol;
-         case 3:
-            if (step<=0) {step=2*dz/ndiv; start=-dz;}
-            if (((start+dz)<-1E-4) || ((start+ndiv*step-dz)>1E-4)) {
-               Warning("Divide", "trd1 Z division exceed shape range");
-               printf("   volume was %s\n", GetName());
-            }
-            fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());            
-            for (id=0; id<ndiv; id++) {
-               zmin = start+id*step;
-               zmax = start+(id+1)*step;
-               dx1n = 0.5*(dx1*(dz-zmin)+dx2*(dz+zmin))/dz;
-               dx2n = 0.5*(dx1*(dz-zmax)+dx2*(dz+zmax))/dz;
-               shape = new TGeoTrd1(dx1n, dx2n, dy, step/2.);
-               vol = new TGeoVolume(divname, shape, fMaterial); 
-               opt = "Z";             
-               AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-            }
-            return this;
-         default:
-            Error("Divide", "Wrong axis type for division");
-            return this;
-      }
-   }
-   if (stype == "TGeoTrd2") {
-//      printf("Dividing trd2 %s on %i axis\n", GetName(), iaxis);
-      Double_t dx1, dx2, dy1, dy2, dz, zmin, zmax, dx1n, dx2n, dy1n, dy2n;
-      dz = ((TGeoTrd2*)fShape)->GetDz();
-      dx1 = ((TGeoTrd2*)fShape)->GetDx1();
-      dx2 = ((TGeoTrd2*)fShape)->GetDx2();
-      dy1 = ((TGeoTrd2*)fShape)->GetDy1();
-      dy2 = ((TGeoTrd2*)fShape)->GetDy2();
-      switch (iaxis) {
-         case 1:
-            Warning("Divide", "dividing a Trd2 on X not implemented");
-            break;
-         case 2:
-            Warning("Divide", "dividing a Trd2 on Y not implemented");
-            break;
-         case 3:
-            if (step<=0) {step=2*dz/ndiv; start=-dz;}
-            if (((start+dz)<-1E-4) || ((start+ndiv*step-dz)>1E-4)) {
-               Warning("Divide", "trd2 Z division exceed shape range");
-               printf("   volume was %s\n", GetName());
-            }
-            fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());            
-            for (id=0; id<ndiv; id++) {
-               zmin = start+id*step;
-               zmax = start+(id+1)*step;
-               dx1n = 0.5*(dx1*(dz-zmin)+dx2*(dz+zmin))/dz;
-               dx2n = 0.5*(dx1*(dz-zmax)+dx2*(dz+zmax))/dz;
-               dy1n = 0.5*(dy1*(dz-zmin)+dy2*(dz+zmin))/dz;
-               dy2n = 0.5*(dy1*(dz-zmax)+dy2*(dz+zmax))/dz;
-               shape = new TGeoTrd2(dx1n, dx2n, dy1n, dy2n, step/2.);
-               vol = new TGeoVolume(divname, shape, fMaterial); 
-               opt = "Z";             
-               AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-            }
-            return this;
-         default:
-            Error("Divide", "Wrong axis type for division");
-            return this;
-      }
-   }
-   if (stype == "TGeoPcon") {
-//      printf("Dividing pcon %s on %i axis\n", GetName(), iaxis);
-      Int_t nz = ((TGeoPcon*)fShape)->GetNz();
-      Double_t phi1 = ((TGeoPcon*)fShape)->GetPhi1();
-      Double_t dphi = ((TGeoPcon*)fShape)->GetDphi();
-      Double_t *rmin = ((TGeoPcon*)fShape)->GetRmin();
-      Double_t *rmax = ((TGeoPcon*)fShape)->GetRmax();
-      Double_t *zpl = ((TGeoPcon*)fShape)->GetZ();
-      Double_t zmin = start;
-      Double_t zmax = start+ndiv*step;            
-      Int_t isect = -1;
-      switch (iaxis) {
-         case 1:
-            Error("Divide", "cannot divide a pcon on radius");
-            break;
-         case 2:  // phi division
-            fFinder = new TGeoPatternCylPhi(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());            
-            shape = new TGeoPcon(-step/2, step, nz);
-            for (is=0; is<nz; is++)
-               ((TGeoPcon*)shape)->DefineSection(is, zpl[is], rmin[is], rmax[is]); 
-            vol = new TGeoVolume(divname, shape, fMaterial);
-            opt = "Phi";
-            for (id=0; id<ndiv; id++) {
-               AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-            }
-            return vol;
-         case 3: // Z division
-            // find start plane
-            for (ipl=0; ipl<nz-1; ipl++) {
-               if (start<zpl[ipl]) continue;
-               else {if ((start+ndiv*step)>zpl[ipl+1]) continue;}
-               isect = ipl;
-               break;
-            }
-            if (isect<0) {
-               Error("Divide", "cannot divide pcon on Z if divided region is not between 2 planes");
-               break;
-            }
-            fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());
-            opt = "Z";
-            for (id=0; id<ndiv; id++) {
-               Double_t z1 = start+id*step;
-               Double_t z2 = start+(id+1)*step;
-               Double_t rmin1 = (rmin[isect]*(zmax-z1)-rmin[isect+1]*(zmin-z1))/(zmax-zmin);
-               Double_t rmax1 = (rmax[isect]*(zmax-z1)-rmax[isect+1]*(zmin-z1))/(zmax-zmin);
-               Double_t rmin2 = (rmin[isect]*(zmax-z2)-rmin[isect+1]*(zmin-z2))/(zmax-zmin);
-               Double_t rmax2 = (rmax[isect]*(zmax-z2)-rmax[isect+1]*(zmin-z2))/(zmax-zmin);
-               shape = new TGeoConeSeg(step/2, rmin1, rmax1, rmin2, rmax2, phi1, phi1+dphi); 
-               vol = new TGeoVolume(divname, shape, fMaterial);
-               AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-             }
-             return this;
-         default:
-            Error("Divide", "Wrong axis type for division");
-            return this;            
-      }
-      return this;
-   }
-   if (stype == "TGeoPgon") {
-//      printf("Dividing pgon %s on %i axis\n", GetName(), iaxis);
-      Int_t nz = ((TGeoPcon*)fShape)->GetNz();
-      Double_t *rmin = ((TGeoPcon*)fShape)->GetRmin();
-      Double_t *rmax = ((TGeoPcon*)fShape)->GetRmax();
-      Double_t *zpl = ((TGeoPcon*)fShape)->GetZ();
-      Int_t     nedges = ((TGeoPgon*)fShape)->GetNedges();
-      Double_t phi1 = ((TGeoPcon*)fShape)->GetPhi1();
-      Double_t dphi = ((TGeoPcon*)fShape)->GetDphi();
-      Double_t zmin = start;
-      Double_t zmax = start+ndiv*step;            
-      Int_t isect = -1;
-      switch (iaxis) {
-         case 1:
-            Error("Divide", "makes no sense dividing a pgon on radius");
-            break;
-         case 2:  // phi division
-            if (nedges%ndiv) {
-               Error("Divide", "cannot divide pgon like this");
-               break;
-            }
-            nedges = nedges/ndiv;
-            fFinder = new TGeoPatternCylPhi(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());            
-            shape = new TGeoPgon(-step/2, step, nedges, nz);
-            for (is=0; is<nz; is++)
-               ((TGeoPgon*)shape)->DefineSection(is, zpl[is], rmin[is], rmax[is]); 
-            vol = new TGeoVolume(divname, shape, fMaterial);
-            opt = "Phi";
-            for (id=0; id<ndiv; id++) {
-               AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-            }
-            return vol;
-         case 3: // Z division
-            // find start plane
-            for (ipl=0; ipl<nz-1; ipl++) {
-               if (start<zpl[ipl]) continue;
-               else {if ((start+ndiv*step)>zpl[ipl+1]) continue;}
-               isect = ipl;
-               break;
-            }
-            if (isect<0) {
-               Error("Divide", "cannot divide pcon on Z if divided region is not between 2 planes");
-               break;
-            }
-            fFinder = new TGeoPatternZ(this, ndiv, start, start+ndiv*step);
-            fFinder->SetDivIndex(GetNdaughters());
-            opt = "Z";
-            for (id=0; id<ndiv; id++) {
-               Double_t z1 = start+id*step;
-               Double_t z2 = start+(id+1)*step;
-               Double_t rmin1 = (rmin[isect]*(zmax-z1)-rmin[isect+1]*(zmin-z1))/(zmax-zmin);
-               Double_t rmax1 = (rmax[isect]*(zmax-z1)-rmax[isect+1]*(zmin-z1))/(zmax-zmin);
-               Double_t rmin2 = (rmin[isect]*(zmax-z2)-rmin[isect+1]*(zmin-z2))/(zmax-zmin);
-               Double_t rmax2 = (rmax[isect]*(zmax-z2)-rmax[isect+1]*(zmin-z2))/(zmax-zmin);
-               shape = new TGeoPgon(phi1, dphi, nedges, 2); 
-               ((TGeoPgon*)shape)->DefineSection(0, -step/2, rmin1, rmax1); 
-               ((TGeoPgon*)shape)->DefineSection(1,  step/2, rmin2, rmax2); 
-               vol = new TGeoVolume(divname, shape, fMaterial);
-               AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
-               ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-             }
-             return this;
-         default:
-            Error("Divide", "Wrong axis type for division");
-            return this;            
-      }
-   }
-   if (fShape->InheritsFrom("TGeoTrap")) {
-      if (iaxis!=3) {
-         Error("Divide", "cannot divide Arb8 on other axis than Z");
-         return this;
-      }
-//      printf("Dividing %s Arb8 on Z\n", GetName());
-      Double_t points_lo[8];
-      Double_t points_hi[8];
-      fFinder = new TGeoPatternTrapZ(this, ndiv, start, start+ndiv*step);
-      fFinder->SetDivIndex(GetNdaughters());
-      opt = "Z";
-      Double_t theta = ((TGeoTrap*)fShape)->GetTheta();
-      Double_t phi =   ((TGeoTrap*)fShape)->GetPhi();
-      Double_t txz = ((TGeoPatternTrapZ*)fFinder)->GetTxz();
-      Double_t tyz = ((TGeoPatternTrapZ*)fFinder)->GetTyz();
-      Double_t zmin, zmax, ox,oy,oz;
-      for (idiv=0; idiv<ndiv; idiv++) {
-         zmin = start+idiv*step;
-         zmax = start+(idiv+1)*step;
-         oz = start+idiv*step+step/2;
-         ox = oz*txz;
-         oy = oz*tyz;
-         ((TGeoArb8*)fShape)->SetPlaneVertices(zmin, &points_lo[0]);
-         ((TGeoArb8*)fShape)->SetPlaneVertices(zmax, &points_hi[0]);
-         shape = new TGeoTrap(step/2, theta, phi);
-         for (Int_t vert1=0; vert1<4; vert1++)
-            ((TGeoArb8*)shape)->SetVertex(vert1, points_lo[2*vert1]-ox, points_lo[2*vert1+1]-oy);
-         for (Int_t vert2=0; vert2<4; vert2++)
-            ((TGeoArb8*)shape)->SetVertex(vert2+4, points_hi[2*vert2]-ox, points_hi[2*vert2+1]-oy);
-         vol = new TGeoVolume(divname, shape, fMaterial);
-         AddNodeOffset(vol, idiv, oz, opt.Data());
-         ((TGeoNodeOffset*)fNodes->At(GetNdaughters()-1))->SetFinder(fFinder);
-      }
-      return this;
-   }  
-   Error("Divide", "this type of division not implemented");
-   printf("Volume was : %s shape %s iaxis=%i\n", GetName(), stype.Data(), iaxis);
-   return this;
+   return fShape->Divide(this, divname, iaxis, ndiv, start, step); 
 }
 //-----------------------------------------------------------------------------
 Int_t TGeoVolume::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// compute the closest distance of approach from point px,py to this 
-   const Int_t big = 9999;
-   const Int_t inaxis = 7;
-   const Int_t maxdist = 5;
-   
-   Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
-   Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
-   Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
-   Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
-   // return if point not in user area
-   if (px < puxmin - inaxis) return big;
-   if (py > puymin + inaxis) return big;
-   if (px > puxmax + inaxis) return big;
-   if (py < puymax - inaxis) return big;
-   
-   TView *view = gPad->GetView();
-   if (!view) return big;
-   Int_t dist = big;
-   Int_t id;
-   
-   if (gGeoManager->GetTopVolume() == this) gGeoManager->CdTop();
-   Int_t vis_opt = gGeoManager->GetVisOption();
-   Int_t level = gGeoManager->GetLevel();
-   Int_t vis_level=gGeoManager->GetVisLevel();
-   Bool_t vis=(IsVisible() && gGeoManager->GetLevel())?kTRUE:kFALSE;
-   TGeoNode *node = 0;
-   Int_t nd = GetNdaughters();
-   Bool_t last = kFALSE;
-   switch (vis_opt) {
-      case TGeoManager::kGeoVisDefault:
-         if (vis && (level<=vis_level)) { 
-            dist = fShape->DistancetoPrimitive(px,py);
-            if (dist<maxdist) {
-               gPad->SetSelected(this);
-               return 0;
-            }
-         }
-         // check daughters
-         if (level<vis_level) {
-            if ((!nd) || (!IsVisDaughters())) return dist;
-            for (id=0; id<nd; id++) {
-               node = GetNode(id);
-               gGeoManager->CdDown(id);
-               dist = node->GetVolume()->DistancetoPrimitive(px, py);
-               if (dist==0) return 0;
-               gGeoManager->CdUp();
-            }
-         }
-         break;
-      case TGeoManager::kGeoVisLeaves:
-         last = ((nd==0) || (level==vis_level) || (!IsVisDaughters()))?kTRUE:kFALSE;
-         if (vis && last) {
-            dist = fShape->DistancetoPrimitive(px, py);
-            if (dist<maxdist) {
-               gPad->SetSelected(this);
-               return 0;
-            }
-         }
-         if (last) return dist;
-         for (id=0; id<nd; id++) {
-            node = GetNode(id);
-            gGeoManager->CdDown(id);
-            dist = node->GetVolume()->DistancetoPrimitive(px,py);
-            if (dist==0) return 0;
-            gGeoManager->CdUp();
-         }
-         break;
-      case TGeoManager::kGeoVisOnly:
-         dist = fShape->DistancetoPrimitive(px, py);
-         if (dist<maxdist) {
-            gPad->SetSelected(this);
-            return 0;
-         }
-         break;
-      case TGeoManager::kGeoVisBranch:
-         gGeoManager->cd(gGeoManager->GetDrawPath());
-         while (gGeoManager->GetLevel()) {
-            if (gGeoManager->GetCurrentVolume()->IsVisible()) {
-               dist = gGeoManager->GetCurrentVolume()->GetShape()->DistancetoPrimitive(px, py);
-               if (dist<maxdist) {
-                  gPad->SetSelected(gGeoManager->GetCurrentVolume());
-                  return 0;
-               }
-            }   
-            gGeoManager->CdUp();
-         }
-         gPad->SetSelected(view);      
-         return big;   
-      default:
-         return big;
-   }       
-   if ((dist>maxdist) && !gGeoManager->GetLevel()) gPad->SetSelected(view);
-   return dist;
+// compute the closest distance of approach from point px,py to this volume
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return 9999;
+   return painter->DistanceToPrimitiveVol(this, px, py);
 }
 //-----------------------------------------------------------------------------
 void TGeoVolume::Draw(Option_t *option)
@@ -1287,7 +385,7 @@ void TGeoVolume::Draw(Option_t *option)
    TGeoVolume *old_vol = gGeoManager->GetTopVolume();
    if (old_vol!=this) gGeoManager->SetTopVolume(this);
    else old_vol=0;
-   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
    painter->Draw(option);   
 }
@@ -1295,20 +393,15 @@ void TGeoVolume::Draw(Option_t *option)
 void TGeoVolume::DrawOnly(Option_t *option)
 {
 // draw only this volume
-   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
    painter->DrawOnly(option);   
-}
-//-----------------------------------------------------------------------------
-void TGeoVolume::DrawPoints(Int_t npoints, Option_t *option)
-{
-   gGeoManager->DrawPoints(this, npoints, option);
 }
 //-----------------------------------------------------------------------------
 void TGeoVolume::Paint(Option_t *option)
 {
 // paint volume
-   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
    painter->Paint(option);   
 }
@@ -1329,9 +422,15 @@ void TGeoVolume::PrintNodes() const
    }   
 }
 //-----------------------------------------------------------------------------
+void TGeoVolume::RandomPoints(Int_t npoints, Option_t *option)
+{
+// Draw random points in the bounding box of this volume.
+   gGeoManager->RandomPoints(this, npoints, option);
+}
+//-----------------------------------------------------------------------------
 void TGeoVolume::RandomRays(Int_t nrays)
 {
-// draw top volume according to option
+// Random raytracing method.
    TGeoVolume *old_vol = gGeoManager->GetTopVolume();
    if (old_vol!=this) gGeoManager->SetTopVolume(this);
    else old_vol=0;
@@ -1357,29 +456,8 @@ void TGeoVolume::RenameCopy(Int_t copy_no)
 //-----------------------------------------------------------------------------
 void TGeoVolume::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-// description
-//   if (gPad->GetView()) {
-//      gPad->GetView()->ExecuteRotateView(event, px, py);
-//   }
-   gPad->SetCursor(kHand);
-   switch (event) {
-   case kMouseEnter:
-      SetLineWidth(3);
-      gPad->Modified();
-      gPad->Update();
-      break;
-   
-   case kMouseLeave:
-      SetLineWidth(1);
-      gPad->Modified();
-      gPad->Update();
-      break;
-   
-   case kButton1Double:
-      gPad->SetCursor(kWatch);
-      Draw();
-      break;
-   }
+// Execute mouse actions on this volume.
+   gGeoManager->GetGeomPainter()->ExecuteVolumeEvent(this, event, px, py);
 }
 //-----------------------------------------------------------------------------
 TGeoNode *TGeoVolume::FindNode(const char *name) const
@@ -1413,11 +491,8 @@ Int_t TGeoVolume::GetIndex(TGeoNode *node) const
 //-----------------------------------------------------------------------------
 char *TGeoVolume::GetObjectInfo(Int_t px, Int_t py) const
 {
-   const char *snull = "";
-   if (!gPad) return (char*)snull;
-   static char info[128];
-   sprintf(info,"%s, shape=%s", gGeoManager->GetPath(), fShape->ClassName());
-   return info;
+   TGeoVolume *vol = (TGeoVolume*)this;
+   return gGeoManager->GetGeomPainter()->GetVolumeInfo(vol, px, py);
 }
 //-----------------------------------------------------------------------------
 void TGeoVolume::MakeCopyNodes(TGeoVolume *other)
@@ -1508,57 +583,10 @@ void TGeoVolume::SetShape(TGeoShape *shape)
 //-----------------------------------------------------------------------------
 void TGeoVolume::Sizeof3D() const
 {
-//   return size of this 3d object
-   if (gGeoManager->GetTopVolume() == this) gGeoManager->CdTop();
-   Int_t vis_opt = gGeoManager->GetVisOption();
-   TGeoNode *node = 0;
-   Int_t nd = GetNdaughters();
-   Bool_t last = kFALSE;
-   Int_t level = gGeoManager->GetLevel();
-   Int_t vis_level=gGeoManager->GetVisLevel();
-   Bool_t vis=(IsVisible() && gGeoManager->GetLevel())?kTRUE:kFALSE;
-   Int_t id;
-   switch (vis_opt) {
-      case TGeoManager::kGeoVisDefault:
-         if (vis && (level<=vis_level)) 
-            fShape->Sizeof3D();
-            // draw daughters
-         if (level<vis_level) {
-            if ((!nd) || (!IsVisDaughters())) return;
-            for (id=0; id<nd; id++) {
-               node = GetNode(id);
-               gGeoManager->CdDown(id);
-               node->GetVolume()->Sizeof3D();
-               gGeoManager->CdUp();
-            }
-         }
-         break;
-      case TGeoManager::kGeoVisLeaves:
-         last = ((nd==0) || (level==vis_level) || (!IsVisDaughters()))?kTRUE:kFALSE;
-         if (vis && last)
-            fShape->Sizeof3D();
-         if (last) return;
-         for (id=0; id<nd; id++) {
-            node = GetNode(id);
-            gGeoManager->CdDown(id);
-            node->GetVolume()->Sizeof3D();
-            gGeoManager->CdUp();
-         }
-         break;
-      case TGeoManager::kGeoVisOnly:
-         fShape->Sizeof3D();
-         break;
-      case TGeoManager::kGeoVisBranch:
-         gGeoManager->cd(gGeoManager->GetDrawPath());
-         while (gGeoManager->GetLevel()) {
-            if (gGeoManager->GetCurrentVolume()->IsVisible()) 
-               gGeoManager->GetCurrentVolume()->GetShape()->Sizeof3D();
-            gGeoManager->CdUp();   
-         }   
-         break;
-      default:
-         return;
-   }       
+//   Compute size of this 3d object.
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->Sizeof3D(this);
 }
 //-----------------------------------------------------------------------------
 void TGeoVolume::SortNodes()
@@ -1690,25 +718,14 @@ void TGeoVolume::FindOverlaps() const
 //-----------------------------------------------------------------------------
 Bool_t TGeoVolume::Valid() const
 {
-   Double_t dx = ((TGeoBBox*)fShape)->GetDX();
-   Double_t dy = ((TGeoBBox*)fShape)->GetDY();
-   Double_t dz = ((TGeoBBox*)fShape)->GetDZ();
-   if ((dx<0) || (dy<0) || (dz<0)) return kFALSE;
-   return kTRUE;
+   return fShape->IsValidBox();
 }
 //-----------------------------------------------------------------------------
 void TGeoVolume::VisibleDaughters(Bool_t vis)
 {
 // set visibility for daughters
    SetVisDaughters(vis);
-   if (!gPad) return;
-   if (!gPad->GetView()) return;
-   gPad->Modified();
-   gPad->Update();
-//   if (!GetNdaughters()) return;
-//   TIter next(fNodes);
-//   TGeoNode *node;
-//   while ((node=(TGeoNode*)next())) node->VisibleDaughters(vis);
+   gGeoManager->ModifiedPad();
 }
 //-----------------------------------------------------------------------------
 void TGeoVolume::Voxelize(Option_t *option)

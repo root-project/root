@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.4 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -80,6 +80,7 @@
 #include "TGeoShape.h"
 #include "TGeoVolume.h"
 #include "TGeoFinder.h"
+#include "TVirtualGeoPainter.h"
 #include "TGeoNode.h"
 
 // statics and globals
@@ -126,31 +127,13 @@ void TGeoNode::Browse(TBrowser *b)
 Bool_t TGeoNode::IsOnScreen() const
 {
 // check if this node is drawn. Assumes that this node is current
-   if (!IsVisible()) return kFALSE;
-   if (!gGeoManager->GetTopVolume()->IsVisDaughters()) return kFALSE;
-   Int_t level=gGeoManager->GetLevel();
-   Int_t vis_level=gGeoManager->GetVisLevel();
-   if ((!level) || (level>vis_level)) return kFALSE;
-   Int_t vis_opt = gGeoManager->GetVisOption();
-   Int_t nd=GetNdaughters();
-   switch (vis_opt) {
-      case TGeoManager::kGeoVisDefault:
-         return kTRUE;
-         break;
-      case TGeoManager::kGeoVisLeaves:
-         if ((nd==0) || (level==vis_level)) return kTRUE;
-         if (!fVolume->IsVisDaughters()) return kTRUE;
-         return kFALSE;
-         break;
-      case TGeoManager::kGeoVisOnly:
-         return kFALSE;
-         break;
-      case TGeoManager::kGeoVisBranch:
-         return kFALSE;
-         break;
-      default:
-         return kFALSE;
-   }
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return kFALSE;
+   Bool_t on_screen;
+   on_screen = painter->IsOnScreen(this);
+   if (on_screen) printf("kTRUE\n");
+   else printf("kFALSE\n");
+   return on_screen;
 }
 //-----------------------------------------------------------------------------
 void TGeoNode::InspectNode() const
@@ -300,57 +283,10 @@ void TGeoNode::ls(Option_t *option) const
 //-----------------------------------------------------------------------------
 void TGeoNode::Paint(Option_t *option)
 {
-// Paint this node with option specification
-   Int_t vis_opt = gGeoManager->GetVisOption();
-   TGeoNode *node = 0;
-   Int_t nd = GetNdaughters();
-   Bool_t last = kFALSE;
-   Int_t level = gGeoManager->GetLevel();
-   Int_t vis_level=gGeoManager->GetVisLevel();
-   Bool_t vis=(IsVisible() && gGeoManager->GetLevel())?kTRUE:kFALSE;
-   Int_t id;
-   switch (vis_opt) {
-      case TGeoManager::kGeoVisDefault:
-         if (vis && (level<=vis_level))
-            fVolume->GetShape()->Paint(option);
-            // draw daughters
-         if (level<vis_level) {
-            if ((!nd) || (!fVolume->IsVisDaughters())) return;
-            for (id=0; id<nd; id++) {
-               node = GetDaughter(id);
-               gGeoManager->CdDown(id);
-               node->Paint(option);
-               gGeoManager->CdUp();
-            }
-         }
-         break;
-      case TGeoManager::kGeoVisLeaves:
-         if (level>vis_level) return;
-         last = ((nd==0) || (level==vis_level) || (!fVolume->IsVisDaughters()))?kTRUE:kFALSE;
-         if (vis && last)
-            fVolume->GetShape()->Paint(option);
-         if (last) return;
-         for (id=0; id<nd; id++) {
-            node = GetDaughter(id);
-            gGeoManager->CdDown(id);
-            node->Paint(option);
-            gGeoManager->CdUp();
-         }
-         break;
-      case TGeoManager::kGeoVisOnly:
-         fVolume->GetShape()->Paint(option);
-         break;
-      case TGeoManager::kGeoVisBranch:
-         gGeoManager->cd(gGeoManager->GetDrawPath());
-         while (gGeoManager->GetLevel()) {
-            if (gGeoManager->GetCurrentVolume()->IsVisible())
-               gGeoManager->GetCurrentVolume()->GetShape()->Paint(option);
-            gGeoManager->CdUp();
-         }
-         break;
-      default:
-         return;
-   }
+// Paint this node and its content according to visualization settings.
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->PaintNode(this, option);
 }
 //-----------------------------------------------------------------------------
 void TGeoNode::PrintCandidates() const

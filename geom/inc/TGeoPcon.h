@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -68,7 +68,9 @@ public:
                                     Double_t c2, Double_t s2, Double_t cfio, Double_t sfio, Double_t cdfi) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
-   virtual void          Draw(Option_t *option);
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                                Double_t start, Double_t step);
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
    virtual void          InspectShape() const;
    virtual void          Paint(Option_t *option);
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;

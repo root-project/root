@@ -12,6 +12,7 @@
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TPad.h"
+#include "TPolyMarker3D.h"
 #include "TVirtualGL.h"
 
 #include "TGeoSphere.h"
@@ -19,6 +20,7 @@
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
 #include "TGeoManager.h"
+#include "TGeoChecker.h"
 #include "TGeoPainter.h"
 
 ClassImp(TGeoPainter)
@@ -30,20 +32,190 @@ TGeoPainter::TGeoPainter()
 //*-*                  ====================================
    TVirtualGeoPainter::SetPainter(this);
    fNsegments = 20;
-   if (gGeoManager) fGeo = gGeoManager;
+   fBombX = 1.3;
+   fBombY = 1.3;
+   fBombZ = 1.3;
+   fBombR = 1.3;
+   fVisLevel = 3;
+   fVisOption = kGeoVisDefault;
+   fExplodedView = 0;
+   fVisBranch = "";
+   
+   if (gGeoManager) fGeom = gGeoManager;
    else Error("ctor", "No geometry loaded");
+   fChecker = new TGeoChecker(fGeom);
 }
 //______________________________________________________________________________
 TGeoPainter::~TGeoPainter()
 {
 //*-*-*-*-*-*-*-*-*-*-*Geometry painter default destructor*-*-*-*-*-*-*-*-*
 //*-*                  ===================================
+   if (fChecker) delete fChecker;
 }
 //______________________________________________________________________________
-Int_t TGeoPainter::DistanceToPrimitive(Int_t px, Int_t py)
+void TGeoPainter::AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys)
 {
-   return 0;
+//--- Add numpoints, numsegs, numpolys to the global 3D size.
+   gSize3D.numPoints += numpoints;
+   gSize3D.numSegs   += numsegs;
+   gSize3D.numPolys  += numpolys;
+}      
+//______________________________________________________________________________
+void TGeoPainter::BombTranslation(const Double_t *tr, Double_t *bombtr)
+{
+// get the new 'bombed' translation vector according current exploded view mode
+   memcpy(bombtr, tr, 3*sizeof(Double_t));
+   switch (fExplodedView) {
+      case kGeoNoBomb:
+         return;
+      case kGeoBombXYZ:
+         bombtr[0] *= fBombX;
+         bombtr[1] *= fBombY;
+         bombtr[2] *= fBombZ;
+         return;
+      case kGeoBombCyl:
+         bombtr[0] *= fBombR;
+         bombtr[1] *= fBombR;
+         bombtr[2] *= fBombZ;
+         return;
+      case kGeoBombSph:
+         bombtr[0] *= fBombR;
+         bombtr[1] *= fBombR;
+         bombtr[2] *= fBombR;
+         return;
+      default:
+         return;
+   }   
 }
+//______________________________________________________________________________
+void TGeoPainter::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *option)
+{
+// check current point in the geometry
+   fChecker->CheckPoint(x,y,z,option);
+}   
+//______________________________________________________________________________
+Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
+{
+// compute the closest distance of approach from point px,py to a volume 
+   const Int_t big = 9999;
+   const Int_t inaxis = 7;
+   const Int_t maxdist = 5;
+   
+   Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
+   Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
+   Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
+   Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
+   // return if point not in user area
+   if (px < puxmin - inaxis) return big;
+   if (py > puymin + inaxis) return big;
+   if (px > puxmax + inaxis) return big;
+   if (py < puymax - inaxis) return big;
+   
+   TView *view = gPad->GetView();
+   if (!view) return big;
+   Int_t dist = big;
+   Int_t id;
+   
+   if (fGeom->GetTopVolume() == vol) fGeom->CdTop();
+   Int_t level = fGeom->GetLevel();
+   Bool_t vis=(vol->IsVisible() && fGeom->GetLevel())?kTRUE:kFALSE;
+   TGeoNode *node = 0;
+   Int_t nd = vol->GetNdaughters();
+   Bool_t last = kFALSE;
+   switch (fVisOption) {
+      case kGeoVisDefault:
+         if (vis && (level<=fVisLevel)) { 
+            dist = vol->GetShape()->DistancetoPrimitive(px,py);
+            if (dist<maxdist) {
+               gPad->SetSelected(vol);
+               return 0;
+            }
+         }
+         // check daughters
+         if (level<fVisLevel) {
+            if ((!nd) || (!vol->IsVisDaughters())) return dist;
+            for (id=0; id<nd; id++) {
+               node = vol->GetNode(id);
+               fGeom->CdDown(id);
+               dist = DistanceToPrimitiveVol(node->GetVolume(),px, py);
+               if (dist==0) return 0;
+               fGeom->CdUp();
+            }
+         }
+         break;
+      case kGeoVisLeaves:
+         last = ((nd==0) || (level==fVisLevel))?kTRUE:kFALSE;
+         if (vis && last) {
+            dist = vol->GetShape()->DistancetoPrimitive(px, py);
+            if (dist<maxdist) {
+               gPad->SetSelected(vol);
+               return 0;
+            }
+         }
+         if (last || (!vol->IsVisDaughters())) return dist;
+         for (id=0; id<nd; id++) {
+            node = vol->GetNode(id);
+            fGeom->CdDown(id);
+            dist = DistanceToPrimitiveVol(node->GetVolume(),px,py);
+            if (dist==0) return 0;
+            fGeom->CdUp();
+         }
+         break;
+      case kGeoVisOnly:
+         dist = vol->GetShape()->DistancetoPrimitive(px, py);
+         if (dist<maxdist) {
+            gPad->SetSelected(vol);
+            return 0;
+         }
+         break;
+      case kGeoVisBranch:
+         fGeom->cd(fVisBranch);
+         while (fGeom->GetLevel()) {
+            if (fGeom->GetCurrentVolume()->IsVisible()) {
+               dist = fGeom->GetCurrentVolume()->GetShape()->DistancetoPrimitive(px, py);
+               if (dist<maxdist) {
+                  gPad->SetSelected(fGeom->GetCurrentVolume());
+                  return 0;
+               }
+            }   
+            fGeom->CdUp();
+         }
+         gPad->SetSelected(view);      
+         return big;   
+      default:
+         return big;
+   }       
+   if ((dist>maxdist) && !fGeom->GetLevel()) gPad->SetSelected(view);
+   return dist;
+}
+//______________________________________________________________________________
+void TGeoPainter::DefaultAngles()
+{   
+// Set default angles for the current view.
+   if (gPad) {
+      Int_t irep;
+      TView *view = gPad->GetView();
+      if (!view) return;
+      view->SetView(-206,126,75,irep);
+      gPad->Modified();
+      gPad->Update();
+   }
+}   
+//______________________________________________________________________________
+void TGeoPainter::DefaultColors()
+{   
+// Set default volume colors according to tracking media
+   TIter next(fGeom->GetListOfVolumes());
+   TGeoVolume *vol;
+   while ((vol=(TGeoVolume*)next()))
+      vol->SetLineColor(vol->GetMaterial()->GetDefaultColor());
+   if (gPad) {
+      if (gPad->GetView()) {
+         gPad->Modified();
+         gPad->Update();
+      }
+   }
+}   
 //______________________________________________________________________________
 void TGeoPainter::Draw(Option_t *option)
 {
@@ -57,14 +229,14 @@ void TGeoPainter::Draw(Option_t *option)
    }
    if (!opt.Contains("same")) gPad->Clear();
    // append this volume to pad
-   gGeoManager->GetTopVolume()->AppendPad(option);
+   fGeom->GetTopVolume()->AppendPad(option);
 
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
       view = new TView(1);
       view->SetAutoRange(kTRUE);
-      gGeoManager->GetTopVolume()->Paint("range");
+      fGeom->GetTopVolume()->Paint("range");
       view->SetAutoRange(kFALSE);
       if (has_pad) gPad->Update();
    }
@@ -83,44 +255,198 @@ void TGeoPainter::DrawOnly(Option_t *option)
    }
    if (!opt.Contains("same")) gPad->Clear();
    // append this volume to pad
-   gGeoManager->GetCurrentVolume()->AppendPad(option);
+   fGeom->GetCurrentVolume()->AppendPad(option);
 
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
       view = new TView(1);
       view->SetAutoRange(kTRUE);
-      gGeoManager->SetVisOption(TGeoManager::kGeoVisOnly);
-      gGeoManager->GetCurrentVolume()->Paint("range");
+      fVisOption = kGeoVisOnly;
+      fGeom->GetCurrentVolume()->Paint("range");
       view->SetAutoRange(kFALSE);
       if (has_pad) gPad->Update();
    }
+}
+//-----------------------------------------------------------------------------
+void TGeoPainter::DrawCurrentPoint(Int_t color)
+{
+// Draw current point in the same view.
+   if (!gPad) return;
+   if (!gPad->GetView()) return;
+   TPolyMarker3D *pm = new TPolyMarker3D();
+   pm->SetMarkerColor(color);
+   Double_t *point = fGeom->GetCurrentPoint();
+   pm->SetNextPoint(point[0], point[1], point[2]);
+   pm->SetMarkerStyle(8);
+   pm->SetMarkerSize(0.5);
+   pm->Draw("SAME");
 }
 //______________________________________________________________________________
 void TGeoPainter::DrawPanel()
 {
 }
 //______________________________________________________________________________
-void TGeoPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
+void TGeoPainter::DrawPath(const char *path)
 {
+// Draw all volumes for a given path.
+   fVisOption=kGeoVisBranch;
+   fVisBranch=path; 
+   fGeom->GetTopVolume()->Draw();   
 }
 //______________________________________________________________________________
-char *TGeoPainter::GetObjectInfo(Int_t px, Int_t py) const
+void TGeoPainter::ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py)
 {
-   return 0;
+// Execute mouse actions on a given volume.
+   if (!gPad) return;
+   gPad->SetCursor(kHand);
+   switch (event) {
+   case kMouseEnter:
+      volume->SetLineWidth(3);
+      gPad->Modified();
+      gPad->Update();
+      break;
+   
+   case kMouseLeave:
+      volume->SetLineWidth(1);
+      gPad->Modified();
+      gPad->Update();
+      break;
+   
+   case kButton1Double:
+      gPad->SetCursor(kWatch);
+      volume->Draw();
+      break;
+   }
 }
+//______________________________________________________________________________
+char *TGeoPainter::GetVolumeInfo(TGeoVolume *volume, Int_t px, Int_t py) const
+{
+   const char *snull = "";
+   if (!gPad) return (char*)snull;
+   static char info[128];
+   sprintf(info,"%s, shape=%s", fGeom->GetPath(), volume->GetShape()->ClassName());
+   return info;
+}
+//______________________________________________________________________________
+TGeoChecker *TGeoPainter::GetChecker()
+{
+// Create/return geometry checker.
+   if (!fChecker) fChecker = new TGeoChecker(fGeom);
+   return fChecker;
+}    
+//______________________________________________________________________________
+Bool_t TGeoPainter::IsOnScreen(const TGeoNode *node) const
+{
+// check if this node is drawn. Assumes that this node is current
+   printf("node : %s\n", node->GetName());
+   if (!node->IsVisible()) return kFALSE;
+   TGeoNode *top = fGeom->GetTopNode();
+   if (fVisOption==kGeoVisOnly) {
+      if (node==top) return kTRUE;
+      return kFALSE;
+   }
+   
+   if (fVisOption==kGeoVisBranch) {
+      if (strstr(fVisBranch, node->GetName())) return kTRUE;
+      return kFALSE;
+   }         
+
+   if (node==top) return kFALSE;
+
+   if (!top->GetVolume()->IsVisDaughters()) return kFALSE;
+
+   if (node == fGeom->GetCurrentNode()) {
+      if (fGeom->GetLevel() > fVisLevel) return kFALSE;
+      // check if branch is visible
+      Int_t i=1;
+      TGeoNode *mother;
+      while ((mother=fGeom->GetMother(i))) {
+         if (!mother->GetVolume()->IsVisDaughters()) return kFALSE;
+         if (mother == top) break;
+         i++;
+      }
+      if (!mother) return kFALSE;
+      
+      switch (fVisOption) {
+         case kGeoVisDefault:
+            return kTRUE;
+         case kGeoVisLeaves:
+            if (fGeom->GetLevel() == fVisLevel) return kTRUE;
+            if (!node->GetNdaughters()) return kTRUE;
+            return kFALSE;
+         default:
+            return kFALSE;      
+      }
+   }   
+   Int_t level = 0;
+   return IsOnScreenLoop(node, top, level);
+}   
+//______________________________________________________________________________
+Bool_t TGeoPainter::IsOnScreenLoop(const TGeoNode *node, TGeoNode *current, Int_t &level) const
+{
+// Check iteratively if current node is the same as searched node. Returns true if on screen.
+   printf("current : %s\n", current->GetName());
+   Int_t nd = current->GetNdaughters();
+   TGeoNode *daughter;
+   if (node==current) {
+      printf("EQUAL\n");
+      switch (fVisOption) {
+         case kGeoVisDefault:
+            if (level<=fVisLevel) return kTRUE;
+            return kFALSE;
+         case kGeoVisLeaves:
+            if (nd==0) return kTRUE;
+            if (level==fVisLevel) return kTRUE;
+            return kFALSE;
+         default:
+            return kFALSE;
+      }
+   }                
+   // check recursively daughters
+   level++;
+   Int_t slevel = level;
+   if (level>fVisLevel) return kFALSE;
+   if (nd==0) return kFALSE;
+   if (!current->GetVolume()->IsVisDaughters()) return kFALSE;
+   Int_t id;
+   Bool_t on_screen;
+   for (id=0; id<nd; id++) {
+      daughter = current->GetDaughter(id);
+      if (!daughter->IsVisible()) {
+         if (daughter==node) return kFALSE;
+         if (daughter->GetVolume() == node->GetVolume()) return kFALSE;
+         continue;
+      }   
+      level = slevel;
+      on_screen = IsOnScreenLoop(node, daughter, level);
+      if (on_screen) return kTRUE;
+      if (daughter==node) return kFALSE;
+      if (daughter->GetVolume() == node->GetVolume()) return kFALSE;
+   }
+   return kFALSE;
+}      
+//______________________________________________________________________________
+void TGeoPainter::ModifiedPad() const
+{
+// Check if a pad and view are present and send signal "Modified" to pad.
+   if (!gPad) return;
+   if (!gPad->GetView()) return;
+   gPad->Modified();
+   gPad->Update();
+}   
 //______________________________________________________________________________
 void TGeoPainter::Paint(Option_t *option)
 {
 // paint current geometry according to option
 //   printf("TGeoPainter::Paint()\n");
-   if (!fGeo) return;
-   if (fGeo->GetVisOption()==2) {
-      fGeo->GetCurrentNode()->Paint(option);
+   if (!fGeom) return;
+   if (fVisOption==kGeoVisOnly) {
+      fGeom->GetCurrentNode()->Paint(option);
       return;
    }
-   fGeo->CdTop();
-   TGeoNode *top = fGeo->GetTopNode();
+   fGeom->CdTop();
+   TGeoNode *top = fGeom->GetTopNode();
    top->Paint(option);
 }
 //______________________________________________________________________________
@@ -137,18 +463,18 @@ void TGeoPainter::PaintShape(X3DBuffer *buff, Bool_t rangeView)
     //*-* Convert to the master system
 
     if (!buff) return;
-    if (!gGeoManager) return;
-    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
+    if (!fGeom) return;
+    TGeoVolume *vol = fGeom->GetCurrentVolume();
     Float_t *point = &(buff->points[0]);
     Double_t dlocal[3];
     Double_t dmaster[3];
-    if (gGeoManager) {
+    if (fGeom) {
        for (Int_t j = 0; j < buff->numPoints; j++) {
            dlocal[0]=point[3*j]; dlocal[1]=point[3*j+1]; dlocal[2]=point[3*j+2];
-           if (gGeoManager->IsExplodedView()) 
-              gGeoManager->LocalToMasterBomb(&dlocal[0],&dmaster[0]);
+           if (IsExplodedView()) 
+              fGeom->LocalToMasterBomb(&dlocal[0],&dmaster[0]);
            else   
-              gGeoManager->LocalToMaster(&dlocal[0],&dmaster[0]);
+              fGeom->LocalToMaster(&dlocal[0],&dmaster[0]);
 //           printf("point %i : %g %g %g\n", j,dmaster[0],dmaster[1],dmaster[2]);
            point[3*j]=dmaster[0]; point[3*j+1]=dmaster[1]; point[3*j+2]=dmaster[2];
        }
@@ -721,7 +1047,7 @@ void TGeoPainter::PaintPcon(TGeoVolume *vol, Option_t *option)
 {
 // paint a pcon
    Int_t i, j;
-   const Int_t n = fNsegments+1;
+   const Int_t n = ((TGeoPcon*)vol->GetShape())->GetNsegments()+1;
    Int_t nz = ((TGeoPcon*)vol->GetShape())->GetNz();
    if (nz < 2) return;
    Int_t numpoints =  nz*2*n;
@@ -918,7 +1244,260 @@ void TGeoPainter::PaintPcon(TGeoVolume *vol, Option_t *option)
     if (buff)           delete    buff;
 }
 //______________________________________________________________________________
-void TGeoPainter::PaintStat(Int_t dostat, Option_t *option)
+void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
 {
-// paint stat
+// paint recursively a node and its content accordind to visualization options
+   TGeoNode *daughter = 0;
+   TGeoVolume *vol = node->GetVolume();
+   Int_t nd = node->GetNdaughters();
+   Bool_t last = kFALSE;
+   Int_t level = fGeom->GetLevel();
+   Bool_t vis=(node->IsVisible() && fGeom->GetLevel())?kTRUE:kFALSE;
+   Int_t id;
+   switch (fVisOption) {
+      case kGeoVisDefault:
+         if (vis && (level<=fVisLevel))
+            vol->GetShape()->Paint(option);
+            // draw daughters
+         if (level<fVisLevel) {
+            if ((!nd) || (!vol->IsVisDaughters())) return;
+            for (id=0; id<nd; id++) {
+               daughter = node->GetDaughter(id);
+               fGeom->CdDown(id);
+               PaintNode(daughter, option);
+               fGeom->CdUp();
+            }
+         }
+         break;
+      case kGeoVisLeaves:
+         if (level>fVisLevel) return;
+         last = ((nd==0) || (level==fVisLevel))?kTRUE:kFALSE;
+         if (vis && last)
+            vol->GetShape()->Paint(option);
+         if (last || (!vol->IsVisDaughters())) return;
+         for (id=0; id<nd; id++) {
+            daughter = node->GetDaughter(id);
+            fGeom->CdDown(id);
+            PaintNode(daughter, option);
+            fGeom->CdUp();
+         }
+         break;
+      case kGeoVisOnly:
+         vol->GetShape()->Paint(option);
+         break;
+      case kGeoVisBranch:
+         fGeom->cd(fVisBranch);
+         while (fGeom->GetLevel()) {
+            if (fGeom->GetCurrentVolume()->IsVisible())
+               fGeom->GetCurrentVolume()->GetShape()->Paint(option);
+            fGeom->CdUp();
+         }
+         break;
+      default:
+         return;
+   }
+} 
+//______________________________________________________________________________
+void TGeoPainter::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
+{
+// Draw random points in the bounding box of a volume.
+   fChecker->RandomPoints(vol, npoints, option);
+}   
+//______________________________________________________________________________
+void TGeoPainter::RandomRays(Int_t nrays)
+{
+// Raytrace nrays in the current drawn geometry
+   fChecker->RandomRays(nrays);
+}   
+//-----------------------------------------------------------------------------
+TGeoNode *TGeoPainter::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil,
+                                    const char* g3path)
+{
+// shoot npoints randomly in a box of 1E-5 arround current point.
+// return minimum distance to points outside
+   return fChecker->SamplePoints(npoints, dist, epsil, g3path);
 }
+//______________________________________________________________________________
+void TGeoPainter::SetBombFactors(Double_t bombx, Double_t bomby, Double_t bombz, Double_t bombr)
+{
+//--- Set cartesian and radial bomb factors for translations
+   fBombX = bombx;
+   fBombY = bomby;
+   fBombZ = bombz;
+   fBombR = bombr;
+   if (IsExplodedView()) {
+      if (gPad) {
+         gPad->Modified();
+         gPad->Update();
+      }
+   }
+}          
+//______________________________________________________________________________
+void TGeoPainter::Sizeof3D(const TGeoVolume *vol) const
+{
+//   Compute size of the 3d object "vol".
+   if (fGeom->GetTopVolume() == vol) fGeom->CdTop();
+   TGeoNode *node = 0;
+   Int_t nd = vol->GetNdaughters();
+   TGeoShape *shape = vol->GetShape();
+   Bool_t last = kFALSE;
+   Int_t level = fGeom->GetLevel();
+   Bool_t vis=(vol->IsVisible() && fGeom->GetLevel())?kTRUE:kFALSE;
+   Int_t id;
+   switch (fVisOption) {
+      case kGeoVisDefault:
+         if (vis && (level<=fVisLevel)) 
+            shape->Sizeof3D();
+            // draw daughters
+         if (level<fVisLevel) {
+            if ((!nd) || (!vol->IsVisDaughters())) return;
+            for (id=0; id<nd; id++) {
+               node = vol->GetNode(id);
+               fGeom->CdDown(id);
+               Sizeof3D(node->GetVolume());
+               fGeom->CdUp();
+            }
+         }
+         break;
+      case kGeoVisLeaves:
+         last = ((nd==0) || (level==fVisLevel))?kTRUE:kFALSE;
+         if (vis && last)
+            shape->Sizeof3D();
+         if (last || (!vol->IsVisDaughters())) return;
+         for (id=0; id<nd; id++) {
+            node = vol->GetNode(id);
+            fGeom->CdDown(id);
+            Sizeof3D(node->GetVolume());
+            fGeom->CdUp();
+         }
+         break;
+      case kGeoVisOnly:
+         shape->Sizeof3D();
+         break;
+      case kGeoVisBranch:
+         fGeom->cd(fVisBranch);
+         while (fGeom->GetLevel()) {
+            if (fGeom->GetCurrentVolume()->IsVisible()) 
+               fGeom->GetCurrentVolume()->GetShape()->Sizeof3D();
+            fGeom->CdUp();   
+         }   
+         break;
+      default:
+         return;
+   }          
+}
+//______________________________________________________________________________
+void TGeoPainter::SetExplodedView(UInt_t ibomb)    
+{
+   // set type of exploding view
+   Bool_t change = (gPad==0)?kFALSE:kTRUE;
+
+   if (ibomb==kGeoNoBomb) {
+      change &= ((fExplodedView==kGeoNoBomb)?kFALSE:kTRUE);
+   }
+   if (ibomb==kGeoBombXYZ) {
+      change &= ((fExplodedView==kGeoBombXYZ)?kFALSE:kTRUE);
+   }
+   if (ibomb==kGeoBombCyl) {
+      change &= ((fExplodedView==kGeoBombCyl)?kFALSE:kTRUE);
+   }
+   if (ibomb==kGeoBombSph) {
+      change &= ((fExplodedView==kGeoBombSph)?kFALSE:kTRUE);
+   }
+   fExplodedView = ibomb;
+   if (change && gPad->GetView()) {
+      gPad->Modified();
+      gPad->Update();
+   }   
+}
+//______________________________________________________________________________
+void TGeoPainter::SetVisLevel(Int_t level) {
+// set default level down to which visualization is performed
+   fVisLevel=level;
+   if (!gPad) return;
+   if (gPad->GetView()) {
+      gPad->Modified();
+      gPad->Update();
+   }
+}
+//-----------------------------------------------------------------------------
+void TGeoPainter::SetVisOption(Int_t option) {
+// set drawing mode :
+// option=0 (default) all nodes drawn down to vislevel
+// option=1           leaves and nodes at vislevel drawn
+// option=2           path is drawn
+   fVisOption=option;
+   if (!gPad) return;
+   if (gPad->GetView()) {
+      gPad->Modified();
+      gPad->Update();
+   }
+}
+//-----------------------------------------------------------------------------
+Int_t TGeoPainter::ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const   
+{   
+//  Returns distance between point px,py on the pad an a shape.
+  Int_t dist = 9999;
+   TView *view = gPad->GetView();
+   if (!(numpoints && view)) return dist;
+   Float_t *points = new Float_t[3*numpoints];
+   shape->SetPoints(points);
+   Float_t dpoint2, x1, y1, xndc[3];
+   Double_t dlocal[3], dmaster[3];
+   for (Int_t i=0; i<numpoints; i++) {
+      dlocal[0]=points[3*i]; dlocal[1]=points[3*i+1]; dlocal[2]=points[3*i+2];
+      if (IsExplodedView())
+         fGeom->LocalToMasterBomb(&dlocal[0], &dmaster[0]);
+      else   
+         fGeom->LocalToMaster(&dlocal[0], &dmaster[0]);
+      points[3*i]=dmaster[0]; points[3*i+1]=dmaster[1]; points[3*i+2]=dmaster[2];
+      view->WCtoNDC(&points[3*i], xndc);
+      x1 = gPad->XtoAbsPixel(xndc[0]);
+      y1 = gPad->YtoAbsPixel(xndc[1]);
+      dpoint2 = (px-x1)*(px-x1) + (py-y1)*(py-y1);
+      if (dpoint2 < dist) dist=(Int_t)dpoint2;
+   }
+   delete [] points;
+   return Int_t(TMath::Sqrt(Float_t(dist)));
+}
+//______________________________________________________________________________
+void TGeoPainter::Test(Int_t npoints, Option_t *option)
+{
+// Check time of finding "Where am I" for n points.
+   fChecker->Test(npoints, option);
+}   
+//-----------------------------------------------------------------------------
+void TGeoPainter::TestOverlaps(const char* path)
+{
+//--- Geometry overlap checker based on sampling. 
+  fChecker->TestOverlaps(path);
+}   
+//______________________________________________________________________________
+void TGeoPainter::UnbombTranslation(const Double_t *tr, Double_t *bombtr)
+{
+// get the new 'unbombed' translation vector according current exploded view mode
+   memcpy(bombtr, tr, 3*sizeof(Double_t));
+   switch (fExplodedView) {
+      case kGeoNoBomb:
+         return;
+      case kGeoBombXYZ:
+         bombtr[0] /= fBombX;
+         bombtr[1] /= fBombY;
+         bombtr[2] /= fBombZ;
+         return;
+      case kGeoBombCyl:
+         bombtr[0] /= fBombR;
+         bombtr[1] /= fBombR;
+         bombtr[2] /= fBombZ;
+         return;
+      case kGeoBombSph:
+         bombtr[0] /= fBombR;
+         bombtr[1] /= fBombR;
+         bombtr[2] /= fBombR;
+         return;
+      default:
+         return;
+   }   
+}
+   
+   

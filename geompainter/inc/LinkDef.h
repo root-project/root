@@ -14,6 +14,6 @@
 #pragma link off all functions;
 
 #pragma link C++ class TGeoPainter+;
-
+#pragma link C++ class TGeoChecker+;
 
 #endif

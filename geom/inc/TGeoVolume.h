@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.3 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -88,7 +88,6 @@ public:
    // methods
    virtual void    cd(Int_t inode) const;
    void            Browse(TBrowser *b);
-   void            CheckPoint() const; // *MENU*
    void            CheckShapes();
    void            ClearNodes() {fNodes = 0;}
    void            ClearShape();
@@ -111,7 +110,6 @@ public:
    virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
    virtual void    Draw(Option_t *option=""); // *MENU*
    virtual void    DrawOnly(Option_t *option=""); // *MENU*
-   void            DrawPoints(Int_t npoints=100000, Option_t *option=""); // *MENU*
    virtual void    Paint(Option_t *option="");
    void            PrintNodes() const;
    void            PrintVoxels() const; // *MENU*
@@ -143,6 +141,7 @@ public:
    void            InspectShape() const {fShape->InspectShape();} // *MENU*
    TGeoVolume     *MakeCopyVolume();
    void            MakeCopyNodes(TGeoVolume *other);
+   void            RandomPoints(Int_t npoints=10000, Option_t *option=""); // *MENU*
    void            RandomRays(Int_t nrays=10000); // *MENU*
    void            RenameCopy(Int_t copy_no);
    void            SetAsTopVolume(); // *MENU*

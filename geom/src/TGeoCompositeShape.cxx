@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.3 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -85,10 +85,12 @@ Double_t TGeoCompositeShape::DistToSurf(Double_t *point, Double_t *dir) const
    return 0.0;
 }
 //-----------------------------------------------------------------------------
-void TGeoCompositeShape::Draw(Option_t *option)
+TGeoVolume *TGeoCompositeShape::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
 {
-// draw this shape according to option
-}
+// Divide all range of iaxis in range/step cells 
+   Error("Divide", "Division in all range not implemented");
+   return voldiv;
+}      
 //-----------------------------------------------------------------------------
 void TGeoCompositeShape::InspectShape() const
 {

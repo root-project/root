@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToOut() implemented by Mihaela Gheata
 
@@ -316,10 +316,12 @@ Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doubl
    return kBig;            
 }   
 //-----------------------------------------------------------------------------
-void TGeoSphere::Draw(Option_t *option)
+TGeoVolume *TGeoSphere::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
 {
-// draw this shape according to option
-}
+// Divide all range of iaxis in range/step cells 
+   Error("Divide", "Division in all range not implemented");
+   return voldiv;
+}      
 //-----------------------------------------------------------------------------
 void TGeoSphere::InspectShape() const
 {
@@ -337,7 +339,7 @@ void TGeoSphere::InspectShape() const
 void TGeoSphere::Paint(Option_t *option)
 {
 // paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
@@ -496,8 +498,10 @@ void TGeoSphere::SetPoints(Float_t *buff) const
 void TGeoSphere::Sizeof3D() const
 {
 // fill size of this 3-D object
+    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+    if (!painter) return;
+    
     Int_t n;
-
     n = fNseg+1;
     Int_t nz = fNz+1;
     Bool_t specialCase = kFALSE;
@@ -505,7 +509,8 @@ void TGeoSphere::Sizeof3D() const
     if (TMath::Abs(TMath::Sin(2*(fPhi2 - fPhi1))) <= 0.01)  //mark this as a very special case, when
           specialCase = kTRUE;                                  //we have to draw this PCON like a TUBE
 
-    gSize3D.numPoints += 2*n*nz;
-    gSize3D.numSegs   += 4*(nz*n-1+(specialCase == kTRUE));
-    gSize3D.numPolys  += 2*(nz*n-1+(specialCase == kTRUE));
+    Int_t numPoints = 2*n*nz;
+    Int_t numSegs   = 4*(nz*n-1+(specialCase == kTRUE));
+    Int_t numPolys  = 2*(nz*n-1+(specialCase == kTRUE));
+    painter->AddSize3D(numPoints, numSegs, numPolys);
 }

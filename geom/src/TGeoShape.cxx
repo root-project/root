@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TGeoBoolCombinator.h"
 #include "TGeoVolume.h"
 #include "TGeoShape.h"
+#include "TVirtualGeoPainter.h"
 
 
 /*************************************************************************
@@ -113,28 +114,9 @@ const char *TGeoShape::GetName() const
 //-----------------------------------------------------------------------------
 Int_t TGeoShape::ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) const
 {
-   Int_t dist = 9999;
-   TView *view = gPad->GetView();
-   if (!(numpoints && view)) return dist;
-   Float_t *points = new Float_t[3*numpoints];
-   SetPoints(points);
-   Float_t dpoint2, x1, y1, xndc[3];
-   Double_t dlocal[3], dmaster[3];
-   for (Int_t i=0; i<numpoints; i++) {
-      dlocal[0]=points[3*i]; dlocal[1]=points[3*i+1]; dlocal[2]=points[3*i+2];
-      if (gGeoManager->IsExplodedView())
-         gGeoManager->LocalToMasterBomb(&dlocal[0], &dmaster[0]);
-      else   
-         gGeoManager->LocalToMaster(&dlocal[0], &dmaster[0]);
-      points[3*i]=dmaster[0]; points[3*i+1]=dmaster[1]; points[3*i+2]=dmaster[2];
-      view->WCtoNDC(&points[3*i], xndc);
-      x1 = gPad->XtoAbsPixel(xndc[0]);
-      y1 = gPad->YtoAbsPixel(xndc[1]);
-      dpoint2 = (px-x1)*(px-x1) + (py-y1)*(py-y1);
-      if (dpoint2 < dist) dist=(Int_t)dpoint2;
-   }
-   delete [] points;
-   return Int_t(TMath::Sqrt(Float_t(dist)));
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return 9999;
+   return painter->ShapeDistancetoPrimitive(this, numpoints, px, py);
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoShape::ClosenessToCorner(Double_t *point, Bool_t in,

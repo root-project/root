@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -32,6 +32,7 @@ public:
 
 class TGeoBoolCombinator;
 class TGeoMatrix;
+class TGeoVolume;
 
 /*************************************************************************
  * TGeoShape - base class for geometric shapes. Provides virtual methods
@@ -99,10 +100,13 @@ public:
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const = 0;
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const = 0;
-   virtual void          Draw(Option_t *option)                  = 0;
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                                Double_t start, Double_t step)   = 0; 
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) = 0;
    static Int_t          GetVertexNumber(Bool_t vx, Bool_t vy, Bool_t vz);
    Bool_t                IsRunTimeShape() const {return TestBit(kGeoRunTimeShape);}
    Bool_t                IsValid() const {return !TestBit(kGeoInvalidShape);}
+   virtual Bool_t        IsValidBox() const                      = 0; 
    virtual void          InspectShape() const                    = 0;
    virtual void          Paint(Option_t *option)                 = 0;
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const = 0;

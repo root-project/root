@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.4 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -17,20 +17,17 @@
 #include "TSystem.h"
 #endif
 
-#ifndef ROOT_TObjArray
-#include "TObjArray.h"
+#ifndef ROOT_TGeoNode
+#include "TGeoNode.h"
 #endif
 
 #ifndef ROOT_TGeoMatrix
 #include "TGeoMatrix.h"
 #endif
 
-#ifndef ROOT_TGeoNode
-#include "TGeoNode.h"
-#endif
-
 // forward declarations
 class TBits;
+class TGeoManager;
 class TGeoNodePos;
 class TGeoMatrixCache;
 class TGeoNodeArray;
@@ -94,15 +91,14 @@ public:
 
 class TGeoNodeCache
 {
-public:
-   static const Int_t    kGeoCacheMaxDaughters; // max ndaugters for TGeoNodeArray
-   static const Int_t    kGeoCacheMaxSize;   // maximum initial cache size
-   static const Int_t    kGeoCacheDefaultLevel; // default level down to store nodes
-   static const Int_t    kGeoCacheMaxLevels; // maximum supported number of levels
-   static const Int_t    kGeoCacheObjArrayInd; // maximum number of daughters stored as node arrays
-   static const Int_t    kGeoCacheStackSize;   // maximum size of the stack
-   static const Double_t kGeoCacheUsageRatio; // percentage of total usage count that triggers persistency
 protected:
+   Double_t              fGeoCacheUsageRatio; // percentage of total usage count that triggers persistency
+   Int_t                 fGeoCacheMaxDaughters; // max ndaugters for TGeoNodeArray   
+   Int_t                 fGeoCacheMaxSize;  // maximum initial cache size
+   Int_t                 fGeoCacheDefaultLevel; // default level down to store nodes
+   Int_t                 fGeoCacheMaxLevels;// maximum supported number of levels
+   Int_t                 fGeoCacheObjArrayInd; // maximum number of daughters stored as node arrays
+   Int_t                 fGeoCacheStackSize;   // maximum size of the stack
    Int_t                 fLevel;            // level in the current branch   
    TString               fPath;             // path for current branch
    TObjArray            *fStack;            // stack of cache states
@@ -121,8 +117,10 @@ private:
    Int_t                *fMatrices;         // matrix indices from current branch
    Int_t                 fStackLevel;       // level in the stack of states
    TGeoHMatrix          *fGlobalMatrix;     // current global matrix
-   TGeoMatrixCache      *fMatrixPool;       // pool of compressed global matrices
    TGeoNodeArray       **fCache;            //[128] cache of node arrays
+
+protected:
+   TGeoMatrixCache      *fMatrixPool;       // pool of compressed global matrices
 
 public:
    TGeoNodeCache();
@@ -130,10 +128,9 @@ public:
    virtual ~TGeoNodeCache();
 
    Int_t                AddNode(TGeoNode *node);
-//   Int_t                AddDaughter(Int_t mother, TGeoNode *node, Int_t index);
    Int_t                CacheId(Int_t nindex) const
-                         {return (*((UChar_t*)&nindex+3)>kGeoCacheMaxDaughters)?
-                                 kGeoCacheObjArrayInd:*((UChar_t*)&nindex+3);}
+                         {return (*((UChar_t*)&nindex+3)>fGeoCacheMaxDaughters)?
+                                 fGeoCacheObjArrayInd:*((UChar_t*)&nindex+3);}
    void                 CdCache();
    virtual Bool_t       CdDown(Int_t index, Bool_t make=kTRUE);
    virtual void         CdTop() {fLevel=1; CdUp();}
@@ -153,7 +150,7 @@ public:
    Int_t                GetStackLevel() const  {return fStackLevel;}
    Int_t                GetTopNode() const     {return fTopNode;}
    Int_t                GetLevel() const       {return fLevel;}
-   virtual Int_t        GetFreeSpace() const   {return (kGeoCacheMaxSize-fSize);}
+   virtual Int_t        GetFreeSpace() const   {return (fGeoCacheMaxSize-fSize);}
    TGeoMatrixCache     *GetMatrixPool() const  {return fMatrixPool;}
    virtual Int_t        GetNfree() const       {return (fSize-fNused);}
    virtual Int_t        GetNused() const       {return fNused;}
@@ -182,7 +179,6 @@ public:
  ClassDef(TGeoNodeCache, 0)        // cache of reusable physical nodes
 };
 
-R__EXTERN TGeoNodeCache *gGeoNodeCache;
 
 /*************************************************************************
  * TGeoCacheDummy - dummy cache of nodes
@@ -216,11 +212,11 @@ public:
    virtual void        *GetBranch() const {return fNodeBranch;}
    virtual TGeoHMatrix *GetCurrentMatrix() const {return fMatrix;}
    Int_t                GetCurrentNode() const {return 0;}
-   virtual Int_t        GetFreeSpace() const   {return kGeoCacheMaxSize;}
+   virtual Int_t        GetFreeSpace() const   {return fGeoCacheMaxSize;}
    virtual void        *GetMatrices() const {return fMatrixBranch;}
    virtual TGeoNode    *GetMother(Int_t up=1) const {return ((fLevel-up)>=0)?fNodeBranch[fLevel-up]:0;}
    virtual TGeoNode    *GetNode() const {return fNode;}
-   virtual Int_t        GetNfree() const       {return kGeoCacheMaxSize;}
+   virtual Int_t        GetNfree() const       {return fGeoCacheMaxSize;}
    virtual Int_t        GetNused() const       {return 0;}
    virtual const char  *GetPath(); 
    virtual Int_t        GetUsageCount() const {return 0;}
@@ -252,15 +248,6 @@ public:
 
 class TGeoMatrixCache
 {
-public:
-   static const Int_t    kGeoDefaultIncrease;
-   static const Int_t    kGeoMinCacheSize;
-   static const UChar_t  kGeoMaskX;
-   static const UChar_t  kGeoMaskY;
-   static const UChar_t  kGeoMaskZ;
-   static const UChar_t  kGeoMaskXYZ;
-   static const UChar_t  kGeoMaskRot;
-   static const UChar_t  kGeoMaskScale;
 private:
    Int_t                 fMatrix;     // current global transformation
    Int_t                 fHandler;    // current matrix handler
@@ -272,6 +259,7 @@ private:
    TBits                *fBits[7];    // flags for matrix usage
    TGeoMatHandler      **fHandlers;   // handlers for cached matrices
 protected:
+   Int_t                 fGeoMinCacheSize; // minimum starting cache size
    void                  IncreaseCache();
 public:
    TGeoMatrixCache();
@@ -292,8 +280,6 @@ public:
 
  ClassDef(TGeoMatrixCache, 0)    // cache of compressed global matrices
 };
-
-R__EXTERN TGeoMatrixCache *gGeoMatrixCache;
 
 
 /*************************************************************************
@@ -381,11 +367,9 @@ public:
    TGeoNodeArray(Int_t ndaughters, Int_t size=0);
    virtual ~TGeoNodeArray();
 
-   virtual Int_t        AddDaughter(TGeoNode *node, Int_t i)
-                                {return (fOffset[3+i]=gGeoNodeCache->AddNode(node));}
+   virtual Int_t        AddDaughter(TGeoNode *node, Int_t i);
    virtual Int_t        AddNode(TGeoNode *node);
-   virtual Int_t        AddMatrix(TGeoMatrix *global) 
-                                 {return (fOffset[1]=gGeoMatrixCache->AddMatrix(global));}
+   virtual Int_t        AddMatrix(TGeoMatrix *global); 
    virtual void         cd(Int_t inode)  {fOffset = fArray+inode*fNodeSize;
                                           fCurrent = inode;}
    virtual void         ClearDaughter(Int_t ind);
@@ -860,17 +844,17 @@ inline void TGeoMatrixCache::MasterToLocalVect(Double_t *master, Double_t *local
 inline void TGeoMatrixCache::MasterToLocalBomb(Double_t *master, Double_t *local) const
                             {fHandlers[fHandler]->MasterToLocalBomb(master, local);}
 inline void TGeoNodeCache::LocalToMaster(Double_t *local, Double_t *master) const
-                            {gGeoMatrixCache->LocalToMaster(local, master);}
+                            {fMatrixPool->LocalToMaster(local, master);}
 inline void TGeoNodeCache::LocalToMasterVect(Double_t *local, Double_t *master) const
-                            {gGeoMatrixCache->LocalToMasterVect(local, master);}
+                            {fMatrixPool->LocalToMasterVect(local, master);}
 inline void TGeoNodeCache::LocalToMasterBomb(Double_t *local, Double_t *master) const
-                            {gGeoMatrixCache->LocalToMasterBomb(local, master);}
+                            {fMatrixPool->LocalToMasterBomb(local, master);}
 inline void TGeoNodeCache::MasterToLocal(Double_t *master, Double_t *local) const
-                            {gGeoMatrixCache->MasterToLocal(master, local);}
+                            {fMatrixPool->MasterToLocal(master, local);}
 inline void TGeoNodeCache::MasterToLocalVect(Double_t *master, Double_t *local) const
-                            {gGeoMatrixCache->MasterToLocalVect(master, local);}
+                            {fMatrixPool->MasterToLocalVect(master, local);}
 inline void TGeoNodeCache::MasterToLocalBomb(Double_t *master, Double_t *local) const
-                            {gGeoMatrixCache->MasterToLocalBomb(master, local);}
+                            {fMatrixPool->MasterToLocalBomb(master, local);}
 
 #endif
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -431,10 +431,84 @@ Int_t TGeoPcon::GetNsegments() const
    return gGeoManager->GetNsegments();
 }
 //-----------------------------------------------------------------------------
-void TGeoPcon::Draw(Option_t *option)
+TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                             Double_t start, Double_t step) 
 {
-// draw this shape according to option
+//--- Divide this polycone shape belonging to volume "voldiv" into ndiv volumes
+// called divname, from start position with the given step. Returns pointer
+// to created division cell volume in case of Z divisions. Z divisions can be
+// performed if the divided range is in between two consecutive Z planes.
+//  In case a wrong division axis is supplied, returns pointer to 
+// volume that was divided.
+   TGeoShape *shape;           //--- shape to be created
+   TGeoVolume *vol;            //--- division volume to be created
+   TGeoPatternFinder *finder;  //--- finder to be attached 
+   TString opt = "";           //--- option to be attached
+   Double_t zmin = start;
+   Double_t zmax = start+ndiv*step;            
+   Int_t isect = -1;
+   Int_t is, id, ipl;
+   switch (iaxis) {
+      case 1:  //---               R division
+         Error("Divide", "cannot divide a pcon on radius");
+         return voldiv;;
+      case 2:  //---               Phi division
+         finder = new TGeoPatternCylPhi(voldiv, ndiv, start, start+ndiv*step);
+         voldiv->SetFinder(finder);
+         finder->SetDivIndex(voldiv->GetNdaughters());            
+         shape = new TGeoPcon(-step/2, step, fNz);
+         for (is=0; is<fNz; is++)
+            ((TGeoPcon*)shape)->DefineSection(is, fZ[is], fRmin[is], fRmax[is]); 
+            vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+            opt = "Phi";
+            for (id=0; id<ndiv; id++) {
+               voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
+               ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
+            }
+            return vol;
+      case 3: //---                Z division
+         // find start plane
+         for (ipl=0; ipl<fNz-1; ipl++) {
+            if (start<fZ[ipl]) continue;
+            else {
+               if ((start+ndiv*step)>fZ[ipl+1]) continue;
+            }
+            isect = ipl;
+            break;
+         }
+         if (isect<0) {
+            Error("Divide", "cannot divide pcon on Z if divided region is not between 2 planes");
+            return voldiv;
+         }
+         finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
+         voldiv->SetFinder(finder);
+         finder->SetDivIndex(voldiv->GetNdaughters());
+         opt = "Z";
+         for (id=0; id<ndiv; id++) {
+            Double_t z1 = start+id*step;
+            Double_t z2 = start+(id+1)*step;
+            Double_t rmin1 = (fRmin[isect]*(zmax-z1)-fRmin[isect+1]*(zmin-z1))/(zmax-zmin);
+            Double_t rmax1 = (fRmax[isect]*(zmax-z1)-fRmax[isect+1]*(zmin-z1))/(zmax-zmin);
+            Double_t rmin2 = (fRmin[isect]*(zmax-z2)-fRmin[isect+1]*(zmin-z2))/(zmax-zmin);
+            Double_t rmax2 = (fRmax[isect]*(zmax-z2)-fRmax[isect+1]*(zmin-z2))/(zmax-zmin);
+            shape = new TGeoConeSeg(step/2, rmin1, rmax1, rmin2, rmax2, fPhi1, fPhi1+fDphi); 
+            vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+            voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
+            ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
+         }
+         return voldiv;
+      default:
+         Error("Divide", "Wrong axis type for division");
+         return voldiv;            
+   }
 }
+//-----------------------------------------------------------------------------
+TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+{
+// Divide all range of iaxis in range/step cells 
+   Error("Divide", "Division in all range not implemented");
+   return voldiv;
+}      
 //-----------------------------------------------------------------------------
 void TGeoPcon::InspectShape() const
 {
@@ -451,7 +525,7 @@ void TGeoPcon::InspectShape() const
 void TGeoPcon::Paint(Option_t *option)
 {
 // paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
@@ -545,12 +619,15 @@ void TGeoPcon::SetPoints(Float_t *buff) const
 void TGeoPcon::Sizeof3D() const
 {
 // fill size of this 3-D object
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
     Int_t n;
 
     n = gGeoManager->GetNsegments()+1;
 
-    gSize3D.numPoints += fNz*2*n;
-    gSize3D.numSegs   += 4*(fNz*n-1+(fDphi == 360));
-    gSize3D.numPolys  += 2*(fNz*n-1+(fDphi == 360));
+    Int_t numPoints = fNz*2*n;
+    Int_t numSegs   = 4*(fNz*n-1+(fDphi == 360));
+    Int_t numPolys  = 2*(fNz*n-1+(fDphi == 360));
+    painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 

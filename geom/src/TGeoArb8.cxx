@@ -97,7 +97,6 @@ TGeoArb8::TGeoArb8()
       fXY[i][1] = 0.0;
    }   
 }
-
 //-----------------------------------------------------------------------------
 TGeoArb8::TGeoArb8(Double_t dz, Double_t *vertices)
          :TGeoBBox(0,0,0)
@@ -120,7 +119,6 @@ TGeoArb8::TGeoArb8(Double_t dz, Double_t *vertices)
       }   
    }
 }
-
 //-----------------------------------------------------------------------------
 TGeoArb8::~TGeoArb8()
 {
@@ -142,7 +140,6 @@ void TGeoArb8::SetVertex(Int_t vnum, Double_t x, Double_t y)
       ComputeBBox();
    }
 }
-
 //-----------------------------------------------------------------------------
 void TGeoArb8::ComputeBBox()
 {
@@ -163,8 +160,7 @@ void TGeoArb8::ComputeBBox()
    fOrigin[0] = 0.5*(xmax+xmin);
    fOrigin[1] = 0.5*(ymax+ymin);
    fOrigin[2] = 0;
-}  
- 
+}   
 //-----------------------------------------------------------------------------
 void TGeoArb8::ComputeTwist()
 {
@@ -198,7 +194,6 @@ void TGeoArb8::ComputeTwist()
    fTwist = new Double_t[4];
    memcpy(fTwist, &twist[0], 4*sizeof(Double_t));
 }
-
 //-----------------------------------------------------------------------------
 Bool_t TGeoArb8::Contains(Double_t *point) const
 {
@@ -252,16 +247,14 @@ Bool_t TGeoArb8::Contains(Double_t *point) const
    if ((point[0]>segx[1]) && (point[0]<segx[2])) return kFALSE;
    return kTRUE;
 }
-
 //-----------------------------------------------------------------------------
-Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl) const 
+Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t in) const 
 {
 // compute distance to plane ipl :
 // ipl=0 : points 0,4,1,5
 // ipl=1 : points 1,5,2,6
 // ipl=2 : points 2,6,3,7
 // ipl=3 : points 3,7,0,4
-   printf("Testing plane %i\n", ipl);
    Double_t xa,xb,xc,xd;
    Double_t ya,yb,yc,yd;
    xa=fXY[ipl][0];
@@ -272,8 +265,13 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl) const
    yc=fXY[(ipl+1)%4][1];
    xd=fXY[4+(ipl+1)%4][0];
    yd=fXY[4+(ipl+1)%4][1];
-   printf("seg1 : xa=%f ya=%f xb=%f yb=%f\n", xa,ya,xb,yb);
-   printf("seg2 : xc=%f yc=%f xd=%f yd=%f\n", xc,yc,xd,yd);
+   if (xa==xc) {
+      if (ya==yc) {
+         if (xb==xd) {
+            if (yb==yd) return kBig;
+         }   
+      }
+   }            
    Double_t tx1=0.5*(xb-xa)/fDz;
    Double_t ty1=0.5*(yb-ya)/fDz;
    Double_t tx2=0.5*(xd-xc)/fDz;
@@ -290,88 +288,107 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl) const
    Double_t b=dxs*dir[1]-dys*dir[0]+(dtx*point[1]-dty*point[0]+ty2*xs1-ty1*xs2
               +tx1*ys2-tx2*ys1)*dir[2];
    Double_t c=dxs*point[1]-dys*point[0]+xs1*ys2-xs2*ys1;
-   Double_t zi;
    Double_t s=kBig;
-   //Double_t x1,x2,y1,y2,xp,yp;
+   Double_t x1,x2,y1,y2,xp,yp,zi;
    if (a==0) {           
       if (b==0) return kBig;
       s=-c/b;
       if (s>0) {
-         Double_t zi=point[2]+s*dir[2];
+         if (in) return s;
+         zi=point[2]+s*dir[2];
          if (TMath::Abs(zi)<fDz) {
-            return s;
-            //x1=xs1+tx1*dir[2]*s;
-            //x2=xs2+tx2*dir[2]*s;
-            //xp=point[0]+s*dir[0];
-            //if ((xp-x1)*(x2-xp)>=0) {
-            //   y1=ys1+ty1*dir[2]*s;
-            //   y2=ys2+ty2*dir[2]*s;
-            //   yp=point[1]+s*dir[1];
-            //   if ((yp-y1)*(y2-yp)>=0) return s;
-            //}
+            x1=xs1+tx1*dir[2]*s;
+            x2=xs2+tx2*dir[2]*s;
+            xp=point[0]+s*dir[0];
+            if ((x1==x2) || ((xp-x1)*(x2-xp)>=0)) {
+               y1=ys1+ty1*dir[2]*s;
+               y2=ys2+ty2*dir[2]*s;
+               yp=point[1]+s*dir[1];
+               if ((y1==y2) || ((yp-y1)*(y2-yp)>=0)) return s;
+            }
          }      
       }
       return kBig;
    }      
-   b=b/a;
+   b=0.5*b/a;
    c=c/a;
    Double_t d=b*b-c;
-   printf("det=%f\n", d);
    if (d>=0) {
       s=-b-TMath::Sqrt(d);
-      printf("smin=%f\n", s);
       if (s>0) {
+         if (in) return s;
          zi=point[2]+s*dir[2];
-         if ((TMath::Abs(zi)<fDz)) {
-            return s;
-            //x1=xs1+tx1*dir[2]*s;
-            //x2=xs2+tx2*dir[2]*s;
-            //xp=point[0]+s*dir[0];
-            //printf("x1=%f x2=%f xp=%f\n", x1, x2, xp);
-            //if ((xp-x1)*(x2-xp)>=0) {
-            //   y1=ys1+ty1*dir[2]*s;
-            //   y2=ys2+ty2*dir[2]*s;
-            //   yp=point[1]+s*dir[1];
-            //   printf("y1=%f y2=%f yp=%f\n", y1, y2, yp);
-            //   if ((yp-y1)*(y2-yp)>=0) return s;
-            //}
-         }
+         if (TMath::Abs(zi)<fDz) {
+            x1=xs1+tx1*dir[2]*s;
+            x2=xs2+tx2*dir[2]*s;
+            xp=point[0]+s*dir[0];
+            if ((x1==x2) || ((xp-x1)*(x2-xp)>=0)) {
+               y1=ys1+ty1*dir[2]*s;
+               y2=ys2+ty2*dir[2]*s;
+               yp=point[1]+s*dir[1];
+               if ((y1==y2) || ((yp-y1)*(y2-yp)>=0)) return s;
+            }
+         }      
       }
       s=-b+TMath::Sqrt(d);
-      printf("smax=%f\n", s);
       if (s>0) {
+         if (in) return s;
          zi=point[2]+s*dir[2];
-         if ((TMath::Abs(zi)<fDz)) {
-            return s;
-            //x1=xs1+tx1*dir[2]*s;
-            //x2=xs2+tx2*dir[2]*s;
-            //xp=point[0]+s*dir[0];
-            //printf("x1=%f x2=%f xp=%f\n", x1, x2, xp);
-            //if ((xp-x1)*(x2-xp)>=0) {
-            //   y1=ys1+ty1*dir[2]*s;
-            //   y2=ys2+ty2*dir[2]*s;
-            //   yp=point[1]+s*dir[1];
-            //   printf("y1=%f y2=%f yp=%f\n", y1, y2, yp);
-            //   if ((yp-y1)*(y2-yp)>=0) return s;
-            //}
-         }
+         if (TMath::Abs(zi)<fDz) {
+            x1=xs1+tx1*dir[2]*s;
+            x2=xs2+tx2*dir[2]*s;
+            xp=point[0]+s*dir[0];
+            if ((x1==x2) || ((xp-x1)*(x2-xp)>=0)) {
+               y1=ys1+ty1*dir[2]*s;
+               y2=ys2+ty2*dir[2]*s;
+               yp=point[1]+s*dir[1];
+               if ((y1==y2) || ((yp-y1)*(y2-yp)>=0)) return s;
+            }
+         }      
       }
    }
    return kBig;
-}   
-   
+}      
+      
 //-----------------------------------------------------------------------------
 Double_t TGeoArb8::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from outside point to surface of the sphere
-//   Warning("DistToIn", "ARB8");
-   return TGeoBBox::DistToIn(point, dir, iact, step, safe);
-}  
- 
+// compute distance from outside point to surface of the arb8
+   Double_t snxt=kBig;
+   if (!TGeoBBox::Contains(point)) {
+      snxt=TGeoBBox::DistToIn(point,dir,3);
+      if (snxt>1E20) return snxt;
+   }   
+   Double_t dist[5];
+   // check lateral faces
+   for (Int_t i=0; i<4; i++) 
+      dist[i]=DistToPlane(point, dir, i, kFALSE);  
+   // check Z planes
+   dist[4]=kBig;
+   if (TMath::Abs(point[2])>fDz) {
+      if (dir[2]!=0) {
+         Double_t pt[3];
+         if (point[2]>0) {
+            dist[4] = (fDz-point[2])/dir[2];
+            pt[2]=fDz;
+         } else {   
+            dist[4] = (-fDz-point[2])/dir[2];
+            pt[2]=-fDz;
+         }   
+         if (dist[4]<0) {
+            dist[4]=kBig;
+         } else {   
+            for (Int_t j=0; j<2; j++) pt[j]=point[j]+dist[4]*dir[j];
+            if (!Contains(&pt[0])) dist[4]=kBig;
+         }   
+      }
+   }   
+   return dist[TMath::LocMin(5, &dist[0])];
+}   
 //-----------------------------------------------------------------------------
 Double_t TGeoArb8::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from outside point to surface of the sphere
+// compute distance from outside point to surface of the arb8
    Double_t dist[6];
    dist[0]=dist[1]=kBig;
    if (dir[2]<0) {
@@ -380,13 +397,11 @@ Double_t TGeoArb8::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       if (dir[2]>0) dist[1]=(fDz-point[2])/dir[2];
    }      
    for (Int_t i=0; i<4; i++) {
-      dist[i+2]=DistToPlane(point, dir, i);   
-      printf("%i : dist=%f\n", i, dist[i+2]);
+      dist[i+2]=DistToPlane(point, dir, i, kTRUE);   
    }   
       
    return dist[TMath::LocMin(6, &dist[0])];   
-} 
-  
+}   
 //-----------------------------------------------------------------------------
 Double_t TGeoArb8::DistToSurf(Double_t *point, Double_t *dir) const
 {
@@ -394,13 +409,20 @@ Double_t TGeoArb8::DistToSurf(Double_t *point, Double_t *dir) const
 // starting from given point to the given direction.
    return kBig;
 }
-
 //-----------------------------------------------------------------------------
-void TGeoArb8::Draw(Option_t *option)
+TGeoVolume *TGeoArb8::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                             Double_t start, Double_t step) 
 {
-// draw this shape according to option
-}
-
+   Error("Divide", "Division of an arbitrary trapezoid not implemented");
+   return voldiv;
+}      
+//-----------------------------------------------------------------------------
+TGeoVolume *TGeoArb8::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+{
+// Divide all range of iaxis in range/step cells 
+   Error("Divide", "Division in all range not implemented");
+   return voldiv;
+}      
 //-----------------------------------------------------------------------------
 void TGeoArb8::InspectShape() const
 {
@@ -412,20 +434,17 @@ void TGeoArb8::InspectShape() const
    }
    TGeoBBox::InspectShape();
 }
-
 //-----------------------------------------------------------------------------
 void TGeoArb8::Paint(Option_t *option)
 {
 // paint this shape according to option
    TGeoBBox::Paint(option);
 }
-
 //-----------------------------------------------------------------------------
 void TGeoArb8::NextCrossing(TGeoParamCurve *c, Double_t *point) const
 {
 // computes next intersection point of curve c with this shape
 }
-
 //-----------------------------------------------------------------------------
 Double_t TGeoArb8::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
 {
@@ -433,7 +452,6 @@ Double_t TGeoArb8::Safety(Double_t *point, Double_t *spoint, Option_t *option) c
 // to option. The matching point on the shape is stored in spoint.
    return kBig;
 }
-
 //-----------------------------------------------------------------------------
 void TGeoArb8::SetPlaneVertices(Double_t zpl, Double_t *vertices) const
 {
@@ -444,7 +462,6 @@ void TGeoArb8::SetPlaneVertices(Double_t zpl, Double_t *vertices) const
       vertices[2*i+1] = fXY[i+4][1]+cf*(fXY[i][1]-fXY[i+4][1]);
    }
 }
-
 //-----------------------------------------------------------------------------
 void TGeoArb8::SetDimensions(Double_t *param)
 {
@@ -456,8 +473,7 @@ void TGeoArb8::SetDimensions(Double_t *param)
    }
    ComputeTwist();
    ComputeBBox();
-} 
-  
+}   
 //-----------------------------------------------------------------------------
 void TGeoArb8::SetPoints(Double_t *buff) const
 {
@@ -469,7 +485,6 @@ void TGeoArb8::SetPoints(Double_t *buff) const
 //      printf("%i X=%9.3fY=%9.3fZ=%9.3f\n",i,buff[3*i],buff[3*i+1],buff[3*i+2] );
    }
 }
-
 //-----------------------------------------------------------------------------
 void TGeoArb8::SetPoints(Float_t *buff) const
 {
@@ -481,7 +496,6 @@ void TGeoArb8::SetPoints(Float_t *buff) const
 //      printf("%i X=%9.3fY=%9.3fZ=%9.3f\n",i,buff[3*i],buff[3*i+1],buff[3*i+2] );
    }
 }
-
 //-----------------------------------------------------------------------------
 void TGeoArb8::Sizeof3D() const
 {
@@ -496,7 +510,6 @@ TGeoTrap::TGeoTrap()
 {
    // dummy ctor
 }
-
 //-----------------------------------------------------------------------------
 TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi)
 {
@@ -505,7 +518,6 @@ TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi)
    fPhi = phi;
    fH1 = fH2 = fBl1 = fBl2 = fTl1 = fTl2 = fAlpha1 = fAlpha2 = 0;
 }
-
 //-----------------------------------------------------------------------------
 TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi, Double_t h1,
               Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
@@ -548,29 +560,63 @@ TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi, Double_t h1,
    } 
    else TGeoArb8::ComputeBBox();
 }
-
 //-----------------------------------------------------------------------------
 TGeoTrap::~TGeoTrap()
 {
 // destructor
 }
-
 //-----------------------------------------------------------------------------
-Double_t TGeoTrap::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                             Double_t start, Double_t step) 
 {
-// compute distance from outside point to surface of the sphere
-//   Warning("DistToIn", "TRAP");
-   return TGeoBBox::DistToIn(point, dir, iact, step, safe);
-} 
-  
+//--- Divide this trapezoid shape belonging to volume "voldiv" into ndiv volumes
+// called divname, from start position with the given step. Only Z divisions
+// are supported. For Z divisions just return the pointer to the volume to be 
+// divided. In case a wrong division axis is supplied, returns pointer to 
+// volume that was divided.
+   TGeoShape *shape;           //--- shape to be created
+   TGeoVolume *vol;            //--- division volume to be created
+   TGeoPatternFinder *finder;  //--- finder to be attached 
+   TString opt = "";           //--- option to be attached
+   if (iaxis!=3) {
+      Error("Divide", "cannot divide trapezoids on other axis than Z");
+      return voldiv;
+   }
+   Double_t points_lo[8];
+   Double_t points_hi[8];
+   finder = new TGeoPatternTrapZ(voldiv, ndiv, start, start+ndiv*step);
+   voldiv->SetFinder(finder);
+   finder->SetDivIndex(voldiv->GetNdaughters());
+   opt = "Z";
+   Double_t txz = ((TGeoPatternTrapZ*)finder)->GetTxz();
+   Double_t tyz = ((TGeoPatternTrapZ*)finder)->GetTyz();
+   Double_t zmin, zmax, ox,oy,oz;
+   for (Int_t idiv=0; idiv<ndiv; idiv++) {
+      zmin = start+idiv*step;
+      zmax = start+(idiv+1)*step;
+      oz = start+idiv*step+step/2;
+      ox = oz*txz;
+      oy = oz*tyz;
+      SetPlaneVertices(zmin, &points_lo[0]);
+      SetPlaneVertices(zmax, &points_hi[0]);
+      shape = new TGeoTrap(step/2, fTheta, fPhi);
+      for (Int_t vert1=0; vert1<4; vert1++)
+         ((TGeoArb8*)shape)->SetVertex(vert1, points_lo[2*vert1]-ox, points_lo[2*vert1+1]-oy);
+      for (Int_t vert2=0; vert2<4; vert2++)
+         ((TGeoArb8*)shape)->SetVertex(vert2+4, points_hi[2*vert2]-ox, points_hi[2*vert2+1]-oy);
+      vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+      voldiv->AddNodeOffset(vol, idiv, oz, opt.Data());
+      ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
+   }
+   return voldiv;
+}   
 //-----------------------------------------------------------------------------
-Double_t TGeoTrap::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
 {
-// compute distance from outside point to surface of the sphere
-//   Warning("DistToOut", "TRAP");
-   return TGeoBBox::DistToOut(point, dir, iact, step, safe);
-} 
-  
+// Divide all range of iaxis in range/step cells 
+   Error("Divide", "Division in all range not implemented");
+   return voldiv;
+}      
 //-----------------------------------------------------------------------------
 TGeoShape *TGeoTrap::GetMakeRuntimeShape(TGeoShape *mother) const
 {
@@ -619,7 +665,6 @@ TGeoGtra::TGeoGtra()
    // dummy ctor
    fTwistAngle = 0;
 }
-
 //-----------------------------------------------------------------------------
 TGeoGtra::TGeoGtra(Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
               Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
@@ -674,29 +719,11 @@ TGeoGtra::TGeoGtra(Double_t dz, Double_t theta, Double_t phi, Double_t twist, Do
        (h2<0) || (bl2<0) || (tl2<0)) SetBit(kGeoRunTimeShape);
    else TGeoArb8::ComputeBBox();
 }
-
 //-----------------------------------------------------------------------------
 TGeoGtra::~TGeoGtra()
 {
 // destructor
 }
-
-//-----------------------------------------------------------------------------
-Double_t TGeoGtra::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
-{
-// compute distance from outside point to surface of the sphere
-//   Warning("DistToIn", "GTRA");
-   return TGeoBBox::DistToIn(point, dir, iact, step, safe);
-}  
- 
-//-----------------------------------------------------------------------------
-Double_t TGeoGtra::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
-{
-// compute distance from outside point to surface of the sphere
-//   Warning("DistToOut", "GTRA");
-   return TGeoBBox::DistToOut(point, dir, iact, step, safe);
-}  
- 
 //-----------------------------------------------------------------------------
 TGeoShape *TGeoGtra::GetMakeRuntimeShape(TGeoShape *mother) const
 {

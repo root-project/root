@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.27 2002/07/09 21:13:28 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -56,7 +56,9 @@ public:
                                    Double_t step=0, Double_t *safe=0) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
-   virtual void          Draw(Option_t *option);
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                                Double_t start, Double_t step);
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
 
    virtual Double_t      GetRmin() const {return fRmin;}
    virtual Double_t      GetRmax() const {return fRmax;}
@@ -120,7 +122,9 @@ public:
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
-   virtual void          Draw(Option_t *option);
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                                Double_t start, Double_t step);
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
    virtual void          InspectShape() const;
    virtual void          Paint(Option_t *option);
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
@@ -174,7 +178,9 @@ public:
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
-   virtual void          Draw(Option_t *option);
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                                Double_t start, Double_t step);
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
    virtual void          InspectShape() const;
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoTrd2::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -321,10 +321,62 @@ void TGeoTrd2::GetOppositeCorner(Double_t *point, Int_t inorm, Double_t *vertex,
    SetVertex(vertex);
 }
 //-----------------------------------------------------------------------------
-void TGeoTrd2::Draw(Option_t *option)
+TGeoVolume *TGeoTrd2::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                             Double_t start, Double_t step) 
 {
-// draw this shape according to option
+//--- Divide this trd2 shape belonging to volume "voldiv" into ndiv volumes
+// called divname, from start position with the given step. Only Z divisions
+// are supported. For Z divisions just return the pointer to the volume to be 
+// divided. In case a wrong division axis is supplied, returns pointer to 
+// volume that was divided.
+   TGeoShape *shape;           //--- shape to be created
+   TGeoVolume *vol;            //--- division volume to be created
+   TGeoPatternFinder *finder;  //--- finder to be attached 
+   TString opt = "";           //--- option to be attached
+   Double_t zmin, zmax, dx1n, dx2n, dy1n, dy2n;
+   Int_t id;
+   switch (iaxis) {
+      case 1:
+         Warning("Divide", "dividing a Trd2 on X not implemented");
+         return voldiv;
+      case 2:
+         Warning("Divide", "dividing a Trd2 on Y not implemented");
+         return voldiv;
+      case 3:
+         if (step<=0) {step=2*fDz/ndiv; start=-fDz;}
+         if (((start+fDz)<-1E-4) || ((start+ndiv*step-fDz)>1E-4)) {
+            Warning("Divide", "trd2 Z division exceed shape range");
+            printf("   volume was %s\n", voldiv->GetName());
+         }
+         finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
+         voldiv->SetFinder(finder);
+         finder->SetDivIndex(voldiv->GetNdaughters());            
+         for (id=0; id<ndiv; id++) {
+            zmin = start+id*step;
+            zmax = start+(id+1)*step;
+            dx1n = 0.5*(fDx1*(fDz-zmin)+fDx2*(fDz+zmin))/fDz;
+            dx2n = 0.5*(fDx1*(fDz-zmax)+fDx2*(fDz+zmax))/fDz;
+            dy1n = 0.5*(fDy1*(fDz-zmin)+fDy2*(fDz+zmin))/fDz;
+            dy2n = 0.5*(fDy1*(fDz-zmax)+fDy2*(fDz+zmax))/fDz;
+            shape = new TGeoTrd2(dx1n, dx2n, dy1n, dy2n, step/2.);
+            vol = new TGeoVolume(divname, shape, voldiv->GetMaterial()); 
+            opt = "Z";             
+            voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
+            ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
+         }
+         return voldiv;
+      default:
+         Error("Divide", "Wrong axis type for division");
+         return voldiv;
+   }
 }
+//-----------------------------------------------------------------------------
+TGeoVolume *TGeoTrd2::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+{
+// Divide all range of iaxis in range/step cells 
+   Error("Divide", "Division in all range not implemented");
+   return voldiv;
+}      
 //-----------------------------------------------------------------------------
 TGeoShape *TGeoTrd2::GetMakeRuntimeShape(TGeoShape *mother) const
 {

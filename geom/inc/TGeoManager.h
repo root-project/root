@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -28,11 +28,17 @@
 #include "TGeoCache.h"
 #endif
 
+#ifndef ROOT_TVirtualGeoPainter
+#include "TVirtualGeoPainter.h"
+#endif
+
+
 
 // forward declarations
 class TGeoMatrix;
 class TGeoHMatrix;
 class TGeoMaterial;
+class TGeoNodeCache;
 class TGeoShape;
 class TVirtualGeoPainter;
 
@@ -44,35 +50,11 @@ class TVirtualGeoPainter;
 
 class TGeoManager : public TNamed
 {
-public:
-static Int_t kGeoVisLevel;          // default depth for drawing
-
-enum EGeoVisOption {
-   kGeoVisDefault = 0,    // default visualization - everything visible 3 levels down
-   kGeoVisLeaves  = 1,    // only last leaves are visible
-   kGeoVisOnly    = 2,    // only current volume is drawn
-   kGeoVisBranch  = 3     // only a given branch is drawn
-};
-enum EGeoBombOption {   
-   kGeoNoBomb     = 0,    // default - no bomb
-   kGeoBombXYZ    = 1,    // explode view in cartesian coordinates
-   kGeoBombCyl    = 2,    // explode view in cylindrical coordinates (R, Z)
-   kGeoBombSph    = 3     // explode view in spherical coordinates (R)
-};
 private :
-// data members
-   Double_t              fBombX;            // bomb factor on X
-   Double_t              fBombY;            // bomb factor on Y
-   Double_t              fBombZ;            // bomb factor on Z
-   Double_t              fBombR;            // bomb factor on radius (cyl or sph)
-   Double_t              fSegStep;          // angle step for drawing
    Double_t              fStep;             // step to be done from current point and direction
    Double_t              fSafety;           // safety radius from current point
    Int_t                 fLevel;            // current geometry level;
    Int_t                 fNNodes;           // total number of physical nodes
-   Int_t                 fVisLevel;         // depth for drawing
-   Int_t                 fVisOption;        // global visualization option
-   Int_t                 fExplodedView;     // type of exploding current view
    TString               fPath;             // path to current node
    Double_t             *fNormal;           // normal to shape at current intersection point
    Double_t             *fNormalChecked;    // normal to current checked shape at intersection
@@ -80,13 +62,14 @@ private :
    Double_t             *fCldirChecked;     // unit vector to current checked shape
    Double_t             *fPoint;            //[3] current point
    Double_t             *fDirection;        //[3] current direction
-   Double_t             *fRandomBox;        // random box for sampling
    Bool_t                fSearchOverlaps;   // flag set when an overlapping cluster is searched
    Bool_t                fCurrentOverlapping; // flags the type of the current node
    Bool_t                fLoopVolumes;      // flag volume lists loop
    Bool_t                fStartSafe;        // flag a safe start for point classification
    Bool_t                fIsEntering;       // flag if current step just got into a new node
    Bool_t                fIsExiting;        // flag that current track is about to leave current node
+   Bool_t                fIsStepEntering;   // flag that next geometric step will enter new volume
+   Bool_t                fIsStepExiting;    // flaag that next geometric step will exit current volume
    Bool_t                fIsOutside;        // flag that current point is outside geometry
    TGeoNodeCache        *fCache;            // cache for physical nodes
    TVirtualGeoPainter   *fPainter;          // current painter
@@ -105,7 +88,6 @@ private :
    TList                *fMaterials;        // list of materials
    TObjArray            *fGlobalMatrices;   // global transformations for current branch
    TObjArray            *fNodes;            // current branch of nodes
-   const char           *fVisBranch;        // drawn branch
    UChar_t              *fBits;             // bits used for voxelization
 
 //--- private methods
@@ -113,11 +95,7 @@ private :
    TGeoNode              *FindInCluster(Int_t *cluster, Int_t nc);
    Int_t                  GetTouchedCluster(Int_t start, Double_t *point, Int_t *check_list,
                                             Int_t ncheck, Int_t *result);
-   void                   Down(Int_t id);
-   void                   Top();
-   void                   Up();
    Bool_t                 IsLoopingVolumes() const     {return fLoopVolumes;}
-   const char            *Path();
    void                   SetLoopVolumes(Bool_t flag=kTRUE) {fLoopVolumes=flag;}
    void                   Voxelize(Option_t *option = 0);
 
@@ -147,16 +125,15 @@ public:
    void                   DefaultAngles();   // *MENU*
    void                   DefaultColors();   // *MENU*
    Int_t                  GetNsegments() const;
-   TVirtualGeoPainter    *GetMakeDefPainter();
-   Int_t                  GetBombMode() const      {return fExplodedView;}
-   const char            *GetDrawPath() const      {return fVisBranch;}
-   Int_t                  GetVisLevel() const      {return fVisLevel;}
-   Int_t                  GetVisOption() const     {return fVisOption;}
-   Bool_t                 IsExplodedView() {return ((fExplodedView==TGeoManager::kGeoVisDefault)?kFALSE:kTRUE);}
+   TVirtualGeoPainter    *GetGeomPainter();
+   Int_t                  GetBombMode() const  {return (fPainter)?(fPainter->GetBombMode()):0;}
+   void                   GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const;
+   Int_t                  GetVisLevel() const;
+   Int_t                  GetVisOption() const;
+   void                   ModifiedPad() const;
    void                   SetExplodedView(UInt_t iopt=0); // *MENU*
    void                   SetNsegments(Int_t nseg);
-   void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,
-                                         Double_t bombr=1.3) {fBombX=bombx; fBombY=bomby; fBombZ=bombz; fBombR=bombr;} // *MENU* 
+   void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,                                         Double_t bombr=1.3); // *MENU* 
    void                   SetVisLevel(Int_t level=3);   // *MENU*
    void                   SetVisOption(Int_t option=0); // *MENU*
    void                   SaveAttributes(const char *filename="tgeoatt.C"); // *MENU*
@@ -166,15 +143,11 @@ public:
    void                   CheckGeometry(Option_t *option="");
    void                   CheckPoint(Double_t x=0,Double_t y=0, Double_t z=0, Option_t *option=""); // *MENU*
    void                   DrawCurrentPoint(Int_t color=2); // *MENU*
-   void                   DrawPoints(TGeoVolume *vol=0, Int_t npoints=100000, Option_t *option=""); // *MENU*
-   void                   DrawPoint(Double_t x=0, Double_t y=0, Double_t z=0); // *MENU*
-   void                   DrawPath(const char *path) {fVisOption=kGeoVisBranch;fVisBranch=path; fTopVolume->Draw();} // *MENU*
+   void                   DrawPath(const char *path) {GetGeomPainter()->DrawPath(path);} // *MENU*
+   void                   RandomPoints(TGeoVolume *vol, Int_t npoints=10000, Option_t *option="");
    void                   RandomRays(Int_t nrays=1000);
    TGeoNode              *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil=1E-5,
                                        const char *g3path="");
-   void                   SetRandomBox(Double_t ox=0, Double_t dx=0, 
-                                       Double_t oy=0, Double_t dy=0, 
-                                       Double_t oz=0, Double_t dz=0); // *MENU* 
    void                   Test(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void                   TestOverlaps(const char* path=""); // *MENU*
 
@@ -240,15 +213,17 @@ public:
    TGeoNode              *Step(Bool_t is_geom=kTRUE, Bool_t cross=kTRUE);
    Int_t                  GetVirtualLevel();
    Bool_t                 GotoSafeLevel();
-   Double_t               GetSafeDistance()      {return fSafety;}
-   Double_t               GetStep()              {return fStep;}
-   Bool_t                 IsStartSafe() {return fStartSafe;}
+   Double_t               GetSafeDistance() const      {return fSafety;}
+   Double_t               GetStep() const              {return fStep;}
+   Bool_t                 IsStartSafe() const {return fStartSafe;}
    void                   SetStartSafe(Bool_t flag=kTRUE)   {fStartSafe=flag;}
    void                   SetStep(Double_t step) {fStep=step;}
-   Bool_t                 IsCurrentOverlapping() {return fCurrentOverlapping;}
-   Bool_t                 IsEntering()           {return fIsEntering;}
-   Bool_t                 IsExiting()            {return fIsExiting;}
-   Bool_t                 IsOutside()            {return fIsOutside;} 
+   Bool_t                 IsCurrentOverlapping() const {return fCurrentOverlapping;}
+   Bool_t                 IsEntering() const           {return fIsEntering;}
+   Bool_t                 IsExiting() const            {return fIsExiting;}
+   Bool_t                 IsStepEntering() const       {return fIsStepEntering;}
+   Bool_t                 IsStepExiting() const        {return fIsStepExiting;}
+   Bool_t                 IsOutside() const            {return fIsOutside;} 
    void                   UpdateCurrentPosition(Double_t *nextpoint);
    
 
@@ -273,7 +248,7 @@ public:
 
    //--- modeler state getters/setters
    TGeoNode              *GetNode(Int_t level) const  {return (TGeoNode*)fNodes->At(level);}
-   TGeoNode              *GetMother(Int_t up=1) const {return gGeoNodeCache->GetMother(up);}
+   TGeoNode              *GetMother(Int_t up=1) const {return fCache->GetMother(up);}
    TGeoNode              *GetCurrentNode() const      {return fCurrentNode;}
    Double_t              *GetCurrentPoint() const     {return fPoint;}
    TGeoVolume            *GetCurrentVolume() const {return fCurrentNode->GetVolume();}
@@ -284,7 +259,8 @@ public:
    Double_t              *GetNormal() const        {return fNormal;}
    Int_t                  GetLevel() const         {return fLevel;}
    const char            *GetPath() const;
-   Int_t                  GetStackLevel() const    {return gGeoNodeCache->GetStackLevel();}
+   Int_t                  GetStackLevel() const    {return fCache->GetStackLevel();}
+   TGeoVolume            *GetMasterVolume() const  {return fMasterVolume;}
    TGeoVolume            *GetTopVolume() const     {return fTopVolume;}
    TGeoNode              *GetTopNode() const       {return fTopNode;}
    void                   SetCurrentPoint(Double_t *point) {memcpy(fPoint,point,3*sizeof(Double_t));}
@@ -298,17 +274,17 @@ public:
    
    //--- point/vector reference frame conversion   
    void                   LocalToMaster(Double_t *local, Double_t *master) const
-                            {gGeoNodeCache->LocalToMaster(local, master);}
+                            {fCache->LocalToMaster(local, master);}
    void                   LocalToMasterVect(Double_t *local, Double_t *master) const
-                            {gGeoNodeCache->LocalToMasterVect(local, master);}
+                            {fCache->LocalToMasterVect(local, master);}
    void                   LocalToMasterBomb(Double_t *local, Double_t *master) const
-                            {gGeoNodeCache->LocalToMasterBomb(local, master);}
+                            {fCache->LocalToMasterBomb(local, master);}
    void                   MasterToLocal(Double_t *master, Double_t *local) const
-                            {gGeoNodeCache->MasterToLocal(master, local);}
+                            {fCache->MasterToLocal(master, local);}
    void                   MasterToLocalVect(Double_t *master, Double_t *local) const
-                            {gGeoNodeCache->MasterToLocalVect(master, local);}
+                            {fCache->MasterToLocalVect(master, local);}
    void                   MasterToLocalBomb(Double_t *master, Double_t *local) const
-                            {gGeoNodeCache->MasterToLocalBomb(master, local);}
+                            {fCache->MasterToLocalBomb(master, local);}
 
    //--- general use getters/setters
    TGeoMaterial          *GetMaterial(const char *matname) const;
@@ -323,17 +299,17 @@ public:
    void                   SelectTrackingMedia();
 
    //--- stack manipulation
-   Int_t                  PushPath() {return gGeoNodeCache->PushState(fCurrentOverlapping);}
-   Bool_t                 PopPath() {Bool_t ret=gGeoNodeCache->PopState(); fCurrentNode=gGeoNodeCache->GetNode();
-                                     fLevel=gGeoNodeCache->GetLevel();return ret;}
-   Bool_t                 PopPath(Int_t index) {Bool_t ret=gGeoNodeCache->PopState(index);
-                                     fCurrentNode=gGeoNodeCache->GetNode(); fLevel=gGeoNodeCache->GetLevel();return ret;}
-   Int_t                  PushPoint() {return gGeoNodeCache->PushState(fCurrentOverlapping, fPoint);}
-   Bool_t                 PopPoint() {fCurrentNode=gGeoNodeCache->GetNode();
-                                     fLevel=gGeoNodeCache->GetLevel();return gGeoNodeCache->PopState(fPoint);}
-   Bool_t                 PopPoint(Int_t index) {fCurrentNode=gGeoNodeCache->GetNode();
-                                     fLevel=gGeoNodeCache->GetLevel(); return gGeoNodeCache->PopState(index, fPoint);}
-   void                   PopDummy(Int_t ipop=9999) {gGeoNodeCache->PopDummy(ipop);}
+   Int_t                  PushPath() {return fCache->PushState(fCurrentOverlapping);}
+   Bool_t                 PopPath() {Bool_t ret=fCache->PopState(); fCurrentNode=fCache->GetNode();
+                                     fLevel=fCache->GetLevel();return ret;}
+   Bool_t                 PopPath(Int_t index) {Bool_t ret=fCache->PopState(index);
+                                     fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel();return ret;}
+   Int_t                  PushPoint() {return fCache->PushState(fCurrentOverlapping, fPoint);}
+   Bool_t                 PopPoint() {fCurrentNode=fCache->GetNode();
+                                     fLevel=fCache->GetLevel();return fCache->PopState(fPoint);}
+   Bool_t                 PopPoint(Int_t index) {fCurrentNode=fCache->GetNode();
+                                     fLevel=fCache->GetLevel(); return fCache->PopState(index, fPoint);}
+   void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
 
   ClassDef(TGeoManager, 1)          // geometry manager
 };

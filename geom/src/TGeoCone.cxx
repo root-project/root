@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -456,10 +456,72 @@ Double_t TGeoCone::DistToSurf(Double_t *point, Double_t *dir) const
    return kBig;
 }
 //-----------------------------------------------------------------------------
-void TGeoCone::Draw(Option_t *option)
+TGeoVolume *TGeoCone::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                             Double_t start, Double_t step) 
 {
-// draw this shape according to option
+//--- Divide this cone shape belonging to volume "voldiv" into ndiv volumes
+// called divname, from start position with the given step. Returns pointer
+// to created division cell volume in case of Z divisions. For Z division 
+// creates all volumes with different shapes and returns pointer to volume that
+// was divided. In case a wrong division axis is supplied, returns pointer to 
+// volume that was divided.
+   TGeoShape *shape;           //--- shape to be created
+   TGeoVolume *vol;            //--- division volume to be created
+   TGeoPatternFinder *finder;  //--- finder to be attached 
+   TString opt = "";           //--- option to be attached
+   Int_t id;
+   switch (iaxis) {
+      case 1:  //---              R division
+         Error("Divide","division of a cone on R not implemented");
+         return voldiv;
+      case 2:  // ---             Phi division
+         if (step<=0) step=360./ndiv;
+         finder = new TGeoPatternCylPhi(voldiv, ndiv, start, start+ndiv*step);
+         voldiv->SetFinder(finder);
+         finder->SetDivIndex(voldiv->GetNdaughters());            
+         shape = new TGeoConeSeg(fDz, fRmin1, fRmax1, fRmin2, fRmax2, -step/2, step/2);
+         vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+         opt = "Phi";
+         for (id=0; id<ndiv; id++) {
+            voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
+            ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
+         }
+         return vol;
+      case 3: //---               Z division
+         if (step<=0) {step=2*fDz/ndiv; start=-fDz;}
+         if (((start+fDz)<-1E-4) || ((start+ndiv*step-fDz)>1E-4)) {
+            Warning("Divide", "cone Z division exceed shape range");
+            printf("   volume was %s\n", voldiv->GetName());
+         }
+         finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
+         voldiv->SetFinder(finder);
+         finder->SetDivIndex(voldiv->GetNdaughters());            
+         for (id=0; id<ndiv; id++) {
+            Double_t z1 = start+id*step;
+            Double_t z2 = start+(id+1)*step;
+            Double_t rmin1n = 0.5*(fRmin1*(fDz-z1)+fRmin2*(fDz+z1))/fDz;
+            Double_t rmax1n = 0.5*(fRmax1*(fDz-z1)+fRmax2*(fDz+z1))/fDz;
+            Double_t rmin2n = 0.5*(fRmin1*(fDz-z2)+fRmin2*(fDz+z2))/fDz;
+            Double_t rmax2n = 0.5*(fRmax1*(fDz-z2)+fRmax2*(fDz+z2))/fDz;
+            shape = new TGeoCone(rmin1n, rmax1n, rmin2n, rmax2n, step/2); 
+            vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+            opt = "Z";
+            voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
+            ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
+         }
+         return voldiv;
+      default:
+         Error("Divide", "Wrong axis type for division");
+         return voldiv;            
+   }
 }
+//-----------------------------------------------------------------------------
+TGeoVolume *TGeoCone::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+{
+// Divide all range of iaxis in range/step cells 
+   Error("Divide", "Division in all range not implemented");
+   return voldiv;
+}      
 //-----------------------------------------------------------------------------
 TGeoShape *TGeoCone::GetMakeRuntimeShape(TGeoShape *mother) const
 {
@@ -504,7 +566,7 @@ void TGeoCone::InspectShape() const
 void TGeoCone::Paint(Option_t *option)
 {
 // paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
@@ -667,10 +729,13 @@ void TGeoCone::SetPoints(Float_t *buff) const
 void TGeoCone::Sizeof3D() const
 {
 // fill size of this 3-D object
+    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+    if (!painter) return;
     Int_t n = gGeoManager->GetNsegments();
-    gSize3D.numPoints += n*4;
-    gSize3D.numSegs   += n*8;
-    gSize3D.numPolys  += n*4;
+    Int_t numPoints = n*4;
+    Int_t numSegs   = n*8;
+    Int_t numPolys  = n*4;
+    painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 
 
@@ -1285,10 +1350,75 @@ Double_t TGeoConeSeg::DistToSurf(Double_t *point, Double_t *dir) const
    return kBig;
 }
 //-----------------------------------------------------------------------------
-void TGeoConeSeg::Draw(Option_t *option)
+TGeoVolume *TGeoConeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                             Double_t start, Double_t step) 
 {
-// draw this shape according to option
+//--- Divide this cone segment shape belonging to volume "voldiv" into ndiv volumes
+// called divname, from start position with the given step. Returns pointer
+// to created division cell volume in case of Z divisions. For Z division 
+// creates all volumes with different shapes and returns pointer to volume that
+// was divided. In case a wrong division axis is supplied, returns pointer to 
+// volume that was divided.
+   TGeoShape *shape;           //--- shape to be created
+   TGeoVolume *vol;            //--- division volume to be created
+   TGeoPatternFinder *finder;  //--- finder to be attached 
+   TString opt = "";           //--- option to be attached
+   Double_t dphi;
+   Int_t id;
+   switch (iaxis) {
+      case 1:  //---               R division
+         Error("Divide","division of a cone segment on R not implemented");
+         return voldiv;
+      case 2:  //---               Phi division
+         dphi = fPhi2-fPhi1;
+         if (dphi<0) dphi+=360.;
+         if (step<=0) {step=dphi/ndiv; start=fPhi1;}
+         finder = new TGeoPatternCylPhi(voldiv, ndiv, start, start+ndiv*step);
+         voldiv->SetFinder(finder);
+         finder->SetDivIndex(voldiv->GetNdaughters());            
+         shape = new TGeoConeSeg(fDz, fRmin1, fRmax1, fRmin2, fRmax2, -step/2, step/2);
+         vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+         opt = "Phi";
+         for (id=0; id<ndiv; id++) {
+            voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
+            ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
+         }
+         return vol;
+      case 3: //---                 Z division
+         if (step<=0) {step=2*fDz/ndiv; start=-fDz;}
+         if (((start+fDz)<-1E-4) || ((start+ndiv*step-fDz)>1E-4)) {
+            Warning("Divide", "cone seg Z division exceed shape range");
+            printf("   volume was %s\n", voldiv->GetName());
+         }
+         finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
+         voldiv->SetFinder(finder);
+         finder->SetDivIndex(voldiv->GetNdaughters());            
+         for (id=0; id<ndiv; id++) {
+            Double_t z1 = start+id*step;
+            Double_t z2 = start+(id+1)*step;
+            Double_t rmin1n = 0.5*(fRmin1*(fDz-z1)+fRmin2*(fDz+z1))/fDz;
+            Double_t rmax1n = 0.5*(fRmax1*(fDz-z1)+fRmax2*(fDz+z1))/fDz;
+            Double_t rmin2n = 0.5*(fRmin1*(fDz-z2)+fRmin2*(fDz+z2))/fDz;
+            Double_t rmax2n = 0.5*(fRmax1*(fDz-z2)+fRmax2*(fDz+z2))/fDz;
+            shape = new TGeoConeSeg(step/2, rmin1n, rmax1n, rmin2n, rmax2n, fPhi1, fPhi2); 
+            vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+            opt = "Z";
+            voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
+            ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
+          }
+          return voldiv;
+      default:
+         Error("Divide", "Wrong axis type for division");
+         return voldiv;            
+   }
 }
+//-----------------------------------------------------------------------------
+TGeoVolume *TGeoConeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+{
+// Divide all range of iaxis in range/step cells 
+   Error("Divide", "Division in all range not implemented");
+   return voldiv;
+}      
 //-----------------------------------------------------------------------------
 TGeoShape *TGeoConeSeg::GetMakeRuntimeShape(TGeoShape *mother) const
 {
@@ -1335,7 +1465,7 @@ void TGeoConeSeg::InspectShape() const
 void TGeoConeSeg::Paint(Option_t *option)
 {
 // paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetMakeDefPainter();
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    if (vol->GetShape() != (TGeoShape*)this) return;
@@ -1471,9 +1601,13 @@ void TGeoConeSeg::SetPoints(Float_t *buff) const
 void TGeoConeSeg::Sizeof3D() const
 {
 // fill size of this 3-D object
+    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+    if (!painter) return;
+
     Int_t n = gGeoManager->GetNsegments()+1;
 
-    gSize3D.numPoints += n*4;
-    gSize3D.numSegs   += n*8;
-    gSize3D.numPolys  += n*4-2;
+    Int_t numPoints = n*4;
+    Int_t numSegs   = n*8;
+    Int_t numPolys  = n*4-2;
+    painter->AddSize3D(numPoints, numSegs, numPolys);
 }
