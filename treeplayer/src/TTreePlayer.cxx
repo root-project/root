@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.95 2002/04/13 09:42:14 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.96 2002/04/14 14:35:26 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1688,7 +1688,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    // pertain to the Chain itself but to the currently loaded tree.
    // So we can not rely on it.
    Bool_t ischain = fTree->InheritsFrom("TChain");
-
+   Bool_t isHbook = fTree->InheritsFrom("THbookTree");
+   if (isHbook) strcpy(treefile,fTree->GetTitle());
+   
 //======================Generate classname.h=====================
    // Print header
    TObjArray *leaves = fTree->GetListOfLeaves();
@@ -1712,6 +1714,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"#include <TROOT.h>\n");
    fprintf(fp,"#include <TChain.h>\n");
    fprintf(fp,"#include <TFile.h>\n");
+   if (isHbook) fprintf(fp,"#include <THbookFile.h>\n");
    if (opt.Contains("selector")) fprintf(fp,"#include <TSelector.h>\n");
 
 // First loop on all leaves to generate dimension declarations
@@ -1965,14 +1968,24 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
         fprintf(fp,"      // The following code should be used if you want this class to access\n");
         fprintf(fp,"      // a single tree instead of a chain\n");
       }
-      fprintf(fp,"      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(\"%s\");\n",treefile);
-      fprintf(fp,"      if (!f) {\n");
-      fprintf(fp,"         f = new TFile(\"%s\");\n",treefile);
-      if (gDirectory != gFile) {
-        fprintf(fp,"         f->cd(\"%s\");\n",gDirectory->GetPath());
+      if (isHbook) {
+         fprintf(fp,"      THbookFile *f = (THbookFile*)gROOT->GetListOfBrowsables()->FindObject(\"%s\");\n",treefile);
+         fprintf(fp,"      if (!f) {\n");
+         fprintf(fp,"         f = new THbookFile(\"%s\");\n",treefile);
+         fprintf(fp,"      }\n");
+         Int_t hid;
+         sscanf(fTree->GetName(),"h%d",&hid);
+         fprintf(fp,"      tree = (TTree*)f->Get(%d);\n\n",hid);
+      } else {
+         fprintf(fp,"      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(\"%s\");\n",treefile);
+         fprintf(fp,"      if (!f) {\n");
+         fprintf(fp,"         f = new TFile(\"%s\");\n",treefile);
+         if (gDirectory != gFile) {
+           fprintf(fp,"         f->cd(\"%s\");\n",gDirectory->GetPath());
+         }
+         fprintf(fp,"      }\n");
+         fprintf(fp,"      tree = (TTree*)gDirectory->Get(\"%s\");\n\n",fTree->GetName());
       }
-      fprintf(fp,"      }\n");
-      fprintf(fp,"      tree = (TTree*)gDirectory->Get(\"%s\");\n\n",fTree->GetName());
       if (ischain) {
          fprintf(fp,"#else // SINGLE_TREE\n\n");
          fprintf(fp,"      // The following code should be used if you want this class to access a chain\n");
@@ -1998,7 +2011,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"%s::~%s()\n",classname,classname);
       fprintf(fp,"{\n");
       fprintf(fp,"   if (!fChain) return;\n");
-      fprintf(fp,"   delete fChain->GetCurrentFile();\n");
+      if (isHbook) {
+         //fprintf(fp,"   delete fChain->GetCurrentFile();\n");
+      } else {
+         fprintf(fp,"   delete fChain->GetCurrentFile();\n");
+      }
       fprintf(fp,"}\n");
       fprintf(fp,"\n");
    }
