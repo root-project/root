@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.115 2003/01/17 13:55:47 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.116 2003/01/29 16:49:31 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4805,7 +4805,7 @@ void THistPainter::PaintTitle()
       l.SetTextSize(0.05);
       l.SetTitle(fH->GetTitle());
       Double_t wndc = l.GetXsize()/(gPad->GetX2() - gPad->GetX1());
-      wt = TMath::Min(0.6, 0.02+wndc);
+      wt = TMath::Min(0.7, 0.02+wndc);
    }
    if (title) {
       TText *t0 = (TText*)title->GetLine(0);
