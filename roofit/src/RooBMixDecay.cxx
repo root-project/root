@@ -2,7 +2,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBMixDecay.cc,v 1.16 2004/08/07 06:45:40 bartoldu Exp $
+ *    File: $Id: RooBMixDecay.cc,v 1.17 2004/10/31 01:23:32 herent Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -263,7 +263,7 @@ void RooBMixDecay::generateEvent(Int_t code)
     }
 
     // Accept event if T is in generated range
-    Double_t dil = fabs(1-2*_mistag) ;
+    Double_t dil = fabs(1-2.*_mistag) ;
     Double_t maxAcceptProb = 1 + fabs(_delMistag) + dil ;
     Double_t acceptProb = (1-_tagFlav*_delMistag) + _mixState*dil*cos(_dm*tval);
     Bool_t mixAccept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
