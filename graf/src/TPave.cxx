@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.2 2000/05/29 06:19:20 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -262,6 +262,7 @@ void TPave::PaintPave(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
    Int_t linecolor = GetLineColor();
 
 //*-*- Draw first pave as a normal filled box
+   if (fBorderSize <= 0 && fillstyle <= 0) return;
    TBox::PaintBox(x1,y1,x2,y2);
    if (fBorderSize <= 0) return;
    if (fBorderSize == 1) {
