@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.136 2004/01/13 18:46:39 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.137 2004/01/31 08:59:09 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2444,7 +2444,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
          Int_t offset;
          Int_t nchname = strlen(right);
          TFormLeafInfo *leafinfo = 0;
-         TStreamerElement* element;
+         TStreamerElement* element = 0;
 
          // Let see if the leaf was attempted to be casted.
          // Since there would have been something like
@@ -2689,7 +2689,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                   }
                }
 
-               element = cl->GetStreamerInfo()->GetStreamerElement(work,offset);
+               if (!cl) { 
+                  Warning("DefinedVariable","Missing class for %s!\n",name.Data());
+               } else {
+                  element = cl->GetStreamerInfo()->GetStreamerElement(work,offset);
+               }
 
                if (!element) {
                   // We allow for looking for a data member inside a class inside
