@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.6 2001/11/20 15:00:30 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.7 2002/09/10 13:17:41 brun Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -83,7 +83,6 @@ void TInspectCanvas::InspectObject(TObject *obj)
    */
    //End_Html
 
-obj->Dump();
    Int_t cdate = 0;
    Int_t ctime = 0;
    UInt_t *cdatime = 0;
@@ -103,8 +102,6 @@ obj->Dump();
    TRealData *rd;
    TIter      next(cl->GetListOfRealData());
    Int_t nreal = cl->GetListOfRealData()->GetSize();
-printf("Inspecting obj=%x of class %s, nreal=%d\n",obj,cl->GetName(),nreal);
-
    if (nreal == 0) return;
 
    Int_t nrows = 33;
@@ -198,7 +195,6 @@ printf("Inspecting obj=%x of class %s, nreal=%d\n",obj,cl->GetName(),nreal);
       ytext  = y2 - 0.5;
       next.Reset();
       while ((rd = (TRealData*) next())) {
-printf("Processind rd=%s of class:%s\n",rd->GetName(),cl->GetName());
          TDataMember *member = rd->GetDataMember();
          if (!member) continue;
          TDataType *membertype = member->GetDataType();
