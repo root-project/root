@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.8 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.9 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -55,7 +55,7 @@ public :
    TGeoMatrix(const char *name);
    virtual ~TGeoMatrix();
 
-   TGeoMatrix& operator*(const TGeoMatrix &right);
+   TGeoMatrix& operator*(const TGeoMatrix &right) const;
    
    Bool_t               IsIdentity()    const {return !TestBit(kGeoGenTrans);}
    Bool_t               IsTranslation() const {return TestBit(kGeoTranslation);}
@@ -80,6 +80,9 @@ public :
    virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const;
    virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const;
    void                 Print(Option_t *option="") const;
+   virtual void         RotateX(Double_t) {;}
+   virtual void         RotateY(Double_t) {;}
+   virtual void         RotateZ(Double_t) {;}
    virtual void         RegisterYourself();
    void                 SetDefaultName();
    
@@ -167,11 +170,15 @@ public :
    virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const
                           {TGeoRotation::MasterToLocal(master, local);}
    void                 MultiplyBy(TGeoRotation *rot, Bool_t after=kTRUE);
+   virtual void         RotateX(Double_t angle);
+   virtual void         RotateY(Double_t angle);
+   virtual void         RotateZ(Double_t angle);
    void                 SetAngles(Double_t alpha, Double_t beta, Double_t gamma);
    void                 SetAngles(Double_t theta1, Double_t phi1, Double_t theta2, Double_t phi2,
                                   Double_t theta3, Double_t phi3);
    void                 SetMatrix(Double_t *rot) 
                            {memcpy(&fRotationMatrix[0], rot, 9*sizeof(Double_t));}
+   void                 SetRotation(const TGeoRotation &other);
    void                 GetInverse(Double_t *invmat) const;
    
    virtual const Double_t    *GetTranslation()    const {return &kNullVector[0];}
@@ -230,9 +237,14 @@ public :
    virtual ~TGeoCombiTrans();
    
    virtual void         RegisterYourself();
+   virtual void         RotateX(Double_t angle);
+   virtual void         RotateY(Double_t angle);
+   virtual void         RotateZ(Double_t angle);
+   void                 SetTranslation(const TGeoTranslation &tr);
    void                 SetTranslation(Double_t dx, Double_t dy, Double_t dz);
    void                 SetTranslation(Double_t *vect);
-   void                 SetRotation(TGeoRotation *rot) {fRotation = rot;}
+   void                 SetRotation(const TGeoRotation &other);
+   void                 SetRotation(TGeoRotation *rot);
 
    TGeoRotation              *GetRotation() const    {return fRotation;}
 
@@ -333,16 +345,19 @@ public :
    TGeoHMatrix& operator=(const TGeoMatrix &matrix);
    TGeoHMatrix& operator*=(const TGeoMatrix &matrix) {Multiply(&matrix);return(*this);}
 
-   void                       Clear(Option_t *option ="");
-   void                       Multiply(const TGeoMatrix *right);
-   void                       MultiplyLeft(const TGeoMatrix *left);
+   void                 Clear(Option_t *option ="");
+   void                 Multiply(const TGeoMatrix *right);
+   void                 MultiplyLeft(const TGeoMatrix *left);
 
-   void                       SetTranslation(const Double_t *vect) 
-                                 {memcpy(&fTranslation[0], vect, 3*sizeof(Double_t));}
-   void                       SetRotation(const Double_t *matrix)
-                                 {memcpy(&fRotationMatrix[0], matrix, 9*sizeof(Double_t));}
-   void                       SetScale(const Double_t *scale) 
-                                 {memcpy(&fScale[0], scale, 3*sizeof(Double_t));}
+   virtual void         RotateX(Double_t angle);
+   virtual void         RotateY(Double_t angle);
+   virtual void         RotateZ(Double_t angle);
+   void                 SetTranslation(const Double_t *vect) 
+                             {memcpy(&fTranslation[0], vect, 3*sizeof(Double_t));}
+   void                 SetRotation(const Double_t *matrix)
+                             {memcpy(&fRotationMatrix[0], matrix, 9*sizeof(Double_t));}
+   void                 SetScale(const Double_t *scale) 
+                             {memcpy(&fScale[0], scale, 3*sizeof(Double_t));}
 
 
    virtual const Double_t    *GetTranslation() const {return &fTranslation[0];}
