@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.12 2004/07/12 20:00:41 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.13 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -92,14 +92,15 @@ Bool_t TDecompChol::Decompose()
   if ( !TestBit(kMatrixSet) )
     return kFALSE;
 
+  Int_t i,j,icol,irow;
   const Int_t     n  = fU.GetNrows();
         Double_t *pU = fU.GetMatrixArray();
-  for (Int_t icol = 0; icol < n; icol++) {
+  for (icol = 0; icol < n; icol++) {
     const Int_t rowOff = icol*n;
    
     //Compute fU(j,j) and test for non-positive-definiteness.
     Double_t ujj = pU[rowOff+icol];
-    for (Int_t irow = 0; irow < icol; irow++) {
+    for (irow = 0; irow < icol; irow++) {
       const Int_t pos_ij = irow*n+icol;
       ujj -= pU[pos_ij]*pU[pos_ij];
     }
@@ -111,20 +112,20 @@ Bool_t TDecompChol::Decompose()
     pU[rowOff+icol] = ujj;
 
     if (icol < n-1) {
-      for (Int_t j = icol+1; j < n; j++) {
-        for (Int_t i = 0; i < icol; i++) {
+      for (j = icol+1; j < n; j++) {
+        for (i = 0; i < icol; i++) {
           const Int_t rowOff2 = i*n;
           pU[rowOff+j] -= pU[rowOff2+j]*pU[rowOff2+icol];
         }
       }
-      for (Int_t j = icol+1; j < n; j++)
+      for (j = icol+1; j < n; j++)
         pU[rowOff+j] /= ujj;
     }
   }
 
-  for (Int_t irow = 0; irow < n; irow++) {
+  for (irow = 0; irow < n; irow++) {
     const Int_t rowOff = irow*n;
-    for (Int_t icol = 0; icol < irow; icol++)
+    for (icol = 0; icol < irow; icol++)
       pU[rowOff+icol] = 0.;
   }
 
