@@ -34,6 +34,9 @@
 #ifndef G__OLDIMPLEMENTATION1218
 #ifndef __MAKECINT__
 #include "common.h"
+#ifndef G__OLDIMPLEMENTATION1749
+extern "C" void G__CurrentCall(int, const void*, const int&);
+#endif
 #else
 struct G__friendtag ;
 typedef int (*G__InterfaceMethod)();

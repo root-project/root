@@ -30,8 +30,7 @@
 #pragma ifndef G__SSTREAM_H
 typedef ostrstream ostringstream;
 typedef istrstream istringstream;
-typedef strstream stringstream;
-//typedef strstream stringstream;
+//typedef strstream stringstream;  // problem, 
 #pragma else
 typedef ostringstream ostrstream;
 typedef istringstream istrstream;

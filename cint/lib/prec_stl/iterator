@@ -177,6 +177,35 @@ class reverse_iterator
    reference operator[](difference_type n) const;
 }; 
 
+#if defined(G__BORLANDCC5) 
+template <class T>
+class reverse_iterator<T*> {
+ public:
+  typedef random_access_iterator_tag iterator_category;
+  typedef T                          value_type;
+  typedef ptrdiff_t                  difference_type;
+  typedef T*                         pointer;
+  typedef T&                         reference;
+   reverse_iterator();
+   //reverse_iterator(Iterator x);
+#if 0
+   template <class U> reverse_iterator(const reverse_iterator<U>& u);
+#endif
+   //Iterator base() const;      // explicit
+   reference operator*() const;
+   pointer   operator->() const;
+   reverse_iterator& operator++();
+   reverse_iterator  operator++(int);
+   reverse_iterator& operator--();
+   reverse_iterator  operator--(int);
+   reverse_iterator  operator+ (difference_type n) const;
+   reverse_iterator& operator+=(difference_type n);
+   reverse_iterator  operator- (difference_type n) const;
+   reverse_iterator& operator-=(difference_type n);
+   reference operator[](difference_type n) const;
+};
+#endif
+
 #ifdef G__VISUAL
 // VC++5.0 has different symbol names
 

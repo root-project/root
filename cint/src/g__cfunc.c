@@ -876,6 +876,9 @@ char *funcname;
 struct G__param *libp;
 int hash;
 {
+#ifdef G__NO_STDLIBS
+  return(0);
+#endif
   G__CHECK(G__SECURE_STANDARDLIB,1,return(0));
 
   /******************************************************************

@@ -30,9 +30,6 @@ class string {
   typedef size_t size_type;
   typedef int traits_type;
 
-  typedef char* iterator;
-  typedef const char* const_iterator;
-
   enum { npos=-1 };
   string() ;
   //string(size_t size,capacity cap) ;

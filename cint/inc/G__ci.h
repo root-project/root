@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015065
-#define G__CINTVERSIONSTR  "5.15.65, Nov 11 2002"
+#define G__CINTVERSION      5015066
+#define G__CINTVERSIONSTR  "5.15.66, Nov 28 2002"
 
 
 /**********************************************************************
@@ -1115,6 +1115,9 @@ struct G__ifunc_table {
   struct G__ifunc_table *masking_ifunc[G__MAXIFUNC];
   unsigned char          masking_ifn[G__MAXIFUNC];
 #endif
+#ifdef G__ROOTSPECIAL
+  void* userparam[G__MAXIFUNC]; /* user parameter array */
+#endif
 };
 
 
@@ -1211,6 +1214,9 @@ struct G__ifunc_table_VMS {
   unsigned char          override_ifn[G__MAXIFUNC];
   struct G__ifunc_table *masking_ifunc[G__MAXIFUNC];
   unsigned char          masking_ifn[G__MAXIFUNC];
+#endif
+#ifdef G__ROOTSPECIAL
+  void* userparam[G__MAXIFUNC];  /* user parameter array */
 #endif
 };
 #endif
@@ -1410,6 +1416,9 @@ struct G__tagtable {
 
 #ifndef G__OLDIMPLEMENTATION1503
   int defaulttypenum[G__MAXSTRUCT];
+#endif
+#ifdef G__ROOTSPECIAL
+  void* userparam[G__MAXSTRUCT];     /* user parameter array */
 #endif
 };
 

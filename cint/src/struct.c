@@ -779,6 +779,9 @@ int type;
       len=strlen(atom_tagname);
     }
     
+#ifndef G__OLDIMPLEMENTATION1749
+    G__struct.userparam[i]=0;
+#endif
     G__struct.name[i]=malloc((size_t)(len+1));
     strcpy(G__struct.name[i],atom_tagname);
     G__struct.hash[i]=len;

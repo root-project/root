@@ -891,6 +891,9 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	G__p_ifunc->masking_ifunc[ix] = (struct G__ifunc_table*)NULL;
 	G__p_ifunc->masking_ifn[ix] = 0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1749
+	G__p_ifunc->userparam[ix] = 0;
+#endif
       }
     }
 #endif
@@ -1656,11 +1659,14 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	 0==(G__is_operator_newdelete&G__MASK_OPERATOR_DELETE))
 	G__is_operator_newdelete |= G__IS_OPERATOR_DELETE;
     }
+#ifdef G__OLDIMPLEMENTATION1753
 #ifndef G__OLDIMPLEMENTATION1745
-    if(strcmp(G__p_ifunc->funcname[func_now],"operator delete")==0&&
-       0==(G__is_operator_newdelete&G__MASK_OPERATOR_DELETE)) {
+    if(strcmp(G__p_ifunc->funcname[func_now],"operator delete")==0
+       && 0==(G__is_operator_newdelete&G__MASK_OPERATOR_DELETE)  
+       ) {
       if(-1!=G__p_ifunc->tagnum) G__p_ifunc->staticalloc[func_now] = 1;
     }
+#endif
 #endif
     if(':'==paraname[0] && 0==G__p_ifunc->ansi[func_now]) 
       G__p_ifunc->ansi[func_now]=1;
@@ -1690,6 +1696,13 @@ char *funcheader;   /* funcheader = 'funcname(' */
     if(strcmp(G__p_ifunc->funcname[func_now],"operator delete")==0&&
        0==(G__is_operator_newdelete&G__MASK_OPERATOR_DELETE))
       G__is_operator_newdelete |= G__IS_OPERATOR_DELETE;
+  }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1753
+  if(strcmp(G__p_ifunc->funcname[func_now],"operator delete")==0 &&
+     -1!=G__p_ifunc->tagnum) {
+    G__p_ifunc->staticalloc[func_now] = 1;
   }
 #endif
 
@@ -2001,8 +2014,16 @@ char *funcheader;   /* funcheader = 'funcname(' */
 #ifndef G__OLDIMPLEMENTATION1706
 	    G__p_ifunc->next->override_ifunc[ix]=(struct G__ifunc_table*)NULL;
 	    G__p_ifunc->next->override_ifn[ix] = 0
+#ifndef G__OLDIMPLEMENTATION1752
+	    G__p_ifunc->next->masking_ifunc[ix] = (struct G__ifunc_table*)NULL;
+	    G__p_ifunc->next->masking_ifn[ix] = 0;
+#else
 	    G__p_ifunc->masking_ifunc[ix] = (struct G__ifunc_table*)NULL;
 	    G__p_ifunc->masking_ifn[ix] = 0;
+#endif
+#endif
+#ifndef G__OLDIMPLEMENTATION1749
+	    G__p_ifunc->next->userparam[ix] = 0;
 #endif
 	  }
 	}
@@ -2010,7 +2031,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
       }
 #endif /* 1706 */
     } /* if(ifunc) */
-    /* else: default parameter does not exists in K&R style 
+    /* else: default parameter does not exist in K&R style 
      * no need to free default parameter buffer */
     
   } /* of G__ifile.filenum<G__nfile */

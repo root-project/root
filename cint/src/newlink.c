@@ -153,6 +153,43 @@ static int G__extra_inc_n = 0;
 static char** G__extra_include = 0; /*  [G__MAXFILENAME] = NULL;  */
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1749
+/**************************************************************************
+* G__CurrentCall
+**************************************************************************/
+static int   s_CurrentCallType = 0;
+static void* s_CurrentCall  = 0;
+static int   s_CurrentIndex = 0;
+void G__CurrentCall(int call_type, void* call_ifunc, int* ifunc_idx)
+{
+  switch( call_type )   {
+  case G__NOP:
+    s_CurrentCallType = call_type;
+    s_CurrentCall     = 0;
+    s_CurrentIndex    = -1;
+    break;
+  case G__SETMEMFUNCENV:
+    s_CurrentCallType = call_type;
+    s_CurrentCall     = call_ifunc;
+    s_CurrentIndex    = *ifunc_idx;
+    break;
+  case G__DELETEFREE:
+    s_CurrentCallType = call_type;
+    s_CurrentCall     = call_ifunc;
+    s_CurrentIndex    = *ifunc_idx;
+    break;
+  case G__RECMEMFUNCENV:
+    if ( call_ifunc) *(void**)call_ifunc = s_CurrentCall;
+    if ( ifunc_idx)  *ifunc_idx = s_CurrentIndex;
+    break;
+  case G__RETURN:
+    if ( call_ifunc) *(void**)call_ifunc = 0;
+    if ( ifunc_idx)  *ifunc_idx  = s_CurrentCallType;
+    break;
+  }
+}
+#endif
+
 
 /**************************************************************************
 * Checking private constructor
@@ -440,10 +477,16 @@ int ifn;
     G__suspendbytecode();
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1749
+    G__CurrentCall(G__SETMEMFUNCENV, ifunc, &ifn);
+#endif
 #ifdef G__EXCEPTIONWRAPPER
     G__ExceptionWrapper(cppfunc,result7,(char*)NULL,libp,0);
 #else
     (*cppfunc)(result7,(char*)NULL,libp,0);
+#endif
+#ifndef G__OLDIMPLEMENTATION1749
+    G__CurrentCall(G__NOP, 0, 0);
 #endif
     result = 1;
 
@@ -1640,6 +1683,37 @@ G__linked_taginfo *p;
 #endif /* 1207 */
   return(p->tagnum);
 }
+
+#ifndef G__OLDIMPLEMENTATION1749
+/**************************************************************************
+* G__get_linked_tagnum_with_param
+*
+*  Setup and return tagnum; also set user parameter
+**************************************************************************/
+int G__get_linked_tagnum_with_param(p, param)
+G__linked_taginfo *p;
+void* param;
+{
+  int tag = G__get_linked_tagnum(p);
+  if(tag != -1) {
+    G__struct.userparam[tag] = param;
+    return tag;
+  }
+  return -1;
+}
+
+/**************************************************************************
+* G__get_linked_user_param
+*
+*  Retrieve user parameter
+**************************************************************************/
+void* G__get_linked_user_param(tag_num)
+int tag_num;
+{
+  if ( tag_num<0 || tag_num>G__MAXSTRUCT ) return 0;
+  return G__struct.userparam[tag_num];
+}
+#endif
 
 /**************************************************************************
 * G__get_link_tagname
@@ -7010,6 +7084,37 @@ int G__tag_memvar_reset()
   return(0);
 }
 
+#ifndef G__OLDIMPLEMENTATION1749
+/**************************************************************************
+* G__usermemfunc_setup
+*
+**************************************************************************/
+int G__usermemfunc_setup(funcname,hash,funcp,type,tagnum,typenum,reftype,
+                         para_nu,ansi,accessin,isconst,paras,comment
+#ifdef G__TRUEP2F
+			 ,truep2f,isvirtual
+#endif
+			 ,userparam
+			 )
+int hash,(*funcp)(),type,tagnum,typenum,reftype, para_nu,ansi,accessin,isconst;
+char *funcname, *paras, *comment;
+#ifdef G__TRUEP2F
+void* truep2f;
+int isvirtual;
+#endif
+void* userparam;
+{
+  G__p_ifunc->userparam[G__p_ifunc->allifunc] = userparam;
+  return G__memfunc_setup(funcname,hash,funcp,type,tagnum,typenum,reftype,
+                          para_nu,ansi,accessin,isconst,paras,comment
+#ifdef G__TRUEP2F
+		     ,truep2f,isvirtual
+#endif
+		     );
+}
+
+#endif
+
 /**************************************************************************
 * G__tag_memfunc_setup()
 *
@@ -7414,7 +7519,16 @@ int G__memfunc_next()
 	G__p_ifunc->masking_ifunc[ix] = (struct G__ifunc_table*)NULL;
 	G__p_ifunc->masking_ifn[ix] = 0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1749
+	G__p_ifunc->userparam[ix] = 0;
+#endif
       }
+    }
+#endif
+#ifndef G__OLDIMPLEMENTATION1749
+    {
+      int ix;
+      for(ix=0;ix<G__MAXIFUNC;ix++) G__p_ifunc->userparam[ix] = 0;
     }
 #endif
   }

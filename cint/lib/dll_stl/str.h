@@ -22,6 +22,15 @@ using namespace std;
 //#pragma link C++ typedef string;
 
 #pragma link C++ class string;
+#pragma link C++ typedef string::value_type;
+#pragma link C++ typedef string::iterator;
+#pragma link C++ typedef string::const_iterator;
+#pragma link C++ typedef string::pointer;
+#pragma link C++ typedef string::const_pointer;
+#pragma link C++ typedef string::reference;
+#pragma link C++ typedef string::difference_type;
+#pragma link C++ typedef string::size_type;
+#pragma link C++ typedef string::traits_type;
 #ifndef G__OLDIMPLEMENTATION1598
 #pragma link C++ function operator==(const string&,const string&);
 #pragma link C++ function operator!=(const string&,const string&);

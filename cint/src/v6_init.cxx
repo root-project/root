@@ -2178,6 +2178,9 @@ void G__platformMacro()
 #ifdef G__ROOT
   sprintf(temp,"G__ROOT=%ld",(long)G__ROOT); G__add_macro(temp);
 #endif
+#ifdef G__NO_STDLIBS
+  sprintf(temp,"G__NO_STDLIBS=%ld",(long)G__NO_STDLIBS); G__add_macro(temp);
+#endif
 }
 #endif
 

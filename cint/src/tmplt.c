@@ -1661,6 +1661,25 @@ char *string;
     G__ASSERT (strlen (p) < sizeof (saveref));
     strcpy (saveref, p);
     *p = '\0';
+#ifndef G__OLDIMPLEMENTATION1755
+    if(-1!=(tagnum=G__defined_typename(string))) {
+      char type = G__newtype.type[tagnum];
+      int ref = G__newtype.reftype[tagnum];
+#ifndef G__OLDIMPLEMENTATION1712
+      if(0==strstr(string,"::") && -1!=G__newtype.parent_tagnum[tagnum]) {
+	++G__templatearg_enclosedscope;
+      }
+#endif
+      if (G__newtype.tagnum[tagnum] >= 0 &&
+	  G__struct.name[G__newtype.tagnum[tagnum]][0] == '$') {
+	ref = 0;
+	type = tolower (type);
+      }
+      strcpy (string,G__type2string (type,
+				     G__newtype.tagnum[tagnum],
+				     -1, ref, 0));
+    } else
+#endif
     if(-1!=(tagnum=G__defined_tagname(string,1))) {
 #ifndef G__OLDIMPLEMENTATION1712
       if(0==strstr(string,"::") && -1!=G__struct.parent_tagnum[tagnum]) {
@@ -1669,6 +1688,7 @@ char *string;
 #endif
       strcpy(string,G__fulltagname(tagnum,1));
     }
+#ifdef G__OLDIMPLEMENTATION1755
     else if(-1!=(tagnum=G__defined_typename(string))) {
       char type = G__newtype.type[tagnum];
       int ref = G__newtype.reftype[tagnum];
@@ -1686,6 +1706,7 @@ char *string;
 				     G__newtype.tagnum[tagnum],
 				     -1, ref, 0));
     }
+#endif
     strcat (string, saveref);
   }
 #else /* ON787 */
@@ -2893,7 +2914,11 @@ int isnew;
 	sprintf(symbol,"(%s)",temp);
       }
       if(state) {
-	if(state==npara) flag=1;
+	if(state==npara 
+#ifndef G__OLDIMPLEMENTATION1754
+	   && '*'!=c
+#endif
+	   ) flag=1;
 	++state;
       }
 

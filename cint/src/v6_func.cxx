@@ -2755,6 +2755,10 @@ int hash;
   extern int optind;
   extern char *optarg;
 
+#ifdef G__NO_STDLIBS
+  return(0);
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1192
   *result7 = G__null;
 #endif

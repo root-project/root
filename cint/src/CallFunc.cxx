@@ -93,6 +93,14 @@ void G__CallFunc::SetFunc(G__InterfaceMethod f)
 {
   pfunc = f; // Set pointer to interface method
 }
+#ifndef G__OLDIMPLEMENTATION1749
+///////////////////////////////////////////////////////////////////////////
+void G__CallFunc::SetFunc(G__MethodInfo m)
+{
+  method = m;
+  pfunc = m.InterfaceMethod(); // Set pointer to interface method
+}
+#endif
 #ifdef G__ASM_WHOLEFUNC
 ///////////////////////////////////////////////////////////////////////////
 void G__CallFunc::SetBytecode(struct G__bytecodefunc* bc)
@@ -296,6 +304,9 @@ void G__CallFunc::Exec(void *pobject)
   SetFuncType();
 #endif
   // Call function
+#ifndef G__OLDIMPLEMENTATION1749
+  G__CurrentCall(G__SETMEMFUNCENV, method.ifunc(), method.Index());
+#endif
 #ifdef G__ASM_WHOLEFUNC
   if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
 #else
@@ -303,6 +314,9 @@ void G__CallFunc::Exec(void *pobject)
 #endif
 #ifndef G__OLDIMPLEMENTATION823
   else ret = ExecInterpretedFunc(&result);
+#endif
+#ifndef G__OLDIMPLEMENTATION1749
+  G__CurrentCall(G__NOP, 0, 0);
 #endif
   // Restore  object address
   G__store_struct_offset = store_struct_offset;
@@ -325,6 +339,9 @@ long G__CallFunc::ExecInt(void *pobject)
   SetFuncType();
 #endif
   // Call function
+#ifndef G__OLDIMPLEMENTATION1749
+  G__CurrentCall(G__SETMEMFUNCENV, method.ifunc(), method.Index());
+#endif
 #ifdef G__ASM_WHOLEFUNC
   if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
 #else
@@ -332,6 +349,9 @@ long G__CallFunc::ExecInt(void *pobject)
 #endif
 #ifndef G__OLDIMPLEMENTATION823
   else ret = ExecInterpretedFunc(&result);
+#endif
+#ifndef G__OLDIMPLEMENTATION1749
+  G__CurrentCall(G__NOP, 0, 0);
 #endif
   // Restore  object address
   G__store_struct_offset = store_struct_offset;
@@ -352,6 +372,9 @@ double G__CallFunc::ExecDouble(void *pobject)
   SetFuncType();
 #endif
   // Call function
+#ifndef G__OLDIMPLEMENTATION1749
+  G__CurrentCall(G__SETMEMFUNCENV, method.ifunc(), method.Index());
+#endif
 #ifdef G__ASM_WHOLEFUNC
   if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
 #else
@@ -359,6 +382,9 @@ double G__CallFunc::ExecDouble(void *pobject)
 #endif
 #ifndef G__OLDIMPLEMENTATION823
   else ret = ExecInterpretedFunc(&result);
+#endif
+#ifndef G__OLDIMPLEMENTATION1749
+  G__CurrentCall(G__NOP, 0, 0);
 #endif
   // Restore  object address
   G__store_struct_offset = store_struct_offset;

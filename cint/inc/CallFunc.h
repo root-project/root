@@ -46,6 +46,9 @@ G__CallFunc {
 #endif
   // begin old interface
   void SetFunc(G__InterfaceMethod f);
+#ifndef G__OLDIMPLEMENTATION1749
+  void SetFunc(G__MethodInfo m);
+#endif
 #ifdef G__ASM_WHOLEFUNC
   void SetBytecode(struct G__bytecodefunc* bc);
 #endif

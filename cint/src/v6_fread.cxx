@@ -499,7 +499,11 @@ char *string,*endmark;
     case '>':
       if(0==nest||(i&&'-'==string[i-1])) break;
 #ifndef G__OLDIMPLEMENTATION556
-      else if(nest && i && '>'==string[i-1]) string[i++]=' ';
+      else if(nest && i && '>'==string[i-1]
+#ifndef G__OLDIMPLEMENTATION1750
+	      && 0==double_quote && 0==single_quote
+#endif
+	      ) string[i++]=' ';
 #endif
     case '}':
     case ')':
