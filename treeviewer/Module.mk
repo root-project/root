@@ -21,11 +21,11 @@ TREEVIEWERDH := $(TREEVIEWERDS:.cxx=.h)
 #TREEVIEWERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 ifeq ($(ARCH),win32)
 TREEVIEWERL  := $(MODDIRI)/LinkDefWin32.h
-TREEVIEWERH  := TTreeViewer.h TPaveVar.h
-TREEVIEWERS  := TTreeViewer.cxx TPaveVar.cxx
+TREEVIEWERH  := TTreeViewerOld.h TPaveVar.h
+TREEVIEWERS  := TTreeViewerOld.cxx TPaveVar.cxx
 else
-TREEVIEWERH  := TTreeView.h TGTreeLVC.h HelpTextTV.h
-TREEVIEWERS  := TTreeView.cxx TGTreeLVC.cxx HelpTextTV.cxx
+TREEVIEWERH  := TTreeViewer.h TGTreeLVC.h HelpTextTV.h
+TREEVIEWERS  := TTreeViewer.cxx TGTreeLVC.cxx HelpTextTV.cxx
 endif
 TREEVIEWERH  := $(patsubst %,$(MODDIRI)/%,$(TREEVIEWERH))
 TREEVIEWERS  := $(patsubst %,$(MODDIRS)/%,$(TREEVIEWERS))
