@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.h,v 1.2 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.h,v 1.3 2003/06/17 19:46:10 brun Exp $
 // Author: Andrei Gheata   2003/04/10
 
 /*************************************************************************
@@ -76,7 +76,7 @@ public:
    Bool_t              IsInTimeRange() const;
    virtual void        Paint(Option_t *option="") = 0;
    virtual void        PaintCollect(Double_t /*time*/, Double_t * /*box*/) {;}
-   virtual void        PaintCollectTrack(Double_t /*time*/, Double_t */*box*/) {;}
+   virtual void        PaintCollectTrack(Double_t /*time*/, Double_t * /*box*/) {;}
    virtual void        PaintTrack(Option_t *option="") = 0;
    virtual void        ResetTrack() = 0;
    void                SetName(const char *name);
