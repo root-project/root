@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.83 2002/05/29 18:39:44 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.84 2002/06/15 09:38:51 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2562,20 +2562,25 @@ void THistPainter::PaintFunction(Option_t *)
 //   by a user without calling THistPainter::Fit.
 //   To add a new function to the list of associated functions, do
 //     h->GetListOfFunctions()->Add(f1);
+//        or
+//     h->GetListOfFunctions()->Add(f1,someoption);
 //   To retrieve a function by name from this list, do:
 //     TF1 *f1 = (TF1*)h->GetListOfFunctions()->FindObject(name);
 //   or
 //     TF1 *f1 = h->GetFunction(name);
 //
-   TObject *f;
-   TIter   next(fFunctions);
-   while ((f = (TObject*) next())) {
+   TObjOptLink *lnk = (TObjOptLink*)fFunctions->FirstLink();
+   TObject *obj;
+
+   while (lnk) {
+      obj = lnk->GetObject();
       TVirtualPad *padsave = gPad;
-      if (f->InheritsFrom(TF1::Class())) {
-         if (f->TestBit(TF1::kNotDraw) == 0) f->Paint("lsame");
+      if (obj->InheritsFrom(TF1::Class())) {
+         if (obj->TestBit(TF1::kNotDraw) == 0) obj->Paint("lsame");
       } else  {
-         f->Paint();
+         obj->Paint(lnk->GetOption());
       }
+      lnk = (TObjOptLink*)lnk->Next();
       padsave->cd();
    }
 }
