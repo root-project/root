@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDircPdf.cc,v 1.10 2002/05/03 22:53:17 zhanglei Exp $
+ *    File: $Id: RooDircPdf.cc,v 1.11 2002/05/31 01:07:41 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   Lei Zhang, University of Colorado, zhanglei@slac.stanford.edu
@@ -115,6 +115,20 @@ RooDircPdf::~RooDircPdf() {
 //   relNorm = _relNormFun.Eval(cosTheta, drcMtm); // (core area)/(core + tail areas)
 //
 
+Int_t RooDircPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const
+{
+  if (matchArgs(allVars, analVars, thetaC)) return 1;
+  return 0;
+}
+
+
+Double_t RooDircPdf::analyticalIntegral(Int_t code) const
+{
+  assert(code==1);
+  return 1;
+}
+
+
 Double_t RooDircPdf::evaluate() const
 {
  
@@ -198,6 +212,9 @@ Double_t RooDircPdf::evaluate() const
 
 Bool_t RooDircPdf::isDirectGenSafe(const RooAbsArg& arg) const
 {
+  const char* eins=arg.GetName();
+  const char* zwei=thetaC.GetName();
+  if (strcmp(eins,zwei)==0) return kTRUE;
   if (_selfGen) return _selfGen;
   return RooAbsPdf::isDirectGenSafe(arg);
 }
@@ -221,30 +238,32 @@ Int_t RooDircPdf::getGenerator(const RooArgSet& directVars,
   if (matchArgs(directVars, generateVars, drcMtm)) haveGen=2;
   if (matchArgs(directVars, generateVars, thetaC)) haveGen=3;
   if (matchArgs(directVars, generateVars, theta)) haveGen=4;
-  if (!_selfGen) haveGen=0;
+  if ((!_selfGen)&&(haveGen!=3)) haveGen=0;
   return haveGen;
 }
 
 void RooDircPdf::generateEvent(Int_t code)
 {
-  if (!_selfGen) return;
-  if ((!pThetaCache||cachePtr>=nCache) && pThetaPdf) {
-    cachePtr=0;
+  if (code!=3) {
+    if (!_selfGen) return;
+    if ((!pThetaCache||cachePtr>=nCache) && pThetaPdf) {
+      cachePtr=0;
+      if (pThetaCache) {
+	delete pThetaCache;
+	pThetaCache=0;
+      }
+      pThetaCache=pThetaPdf->
+	generate(RooArgSet(drcMtm.arg(), theta.arg()), nCache);
+    }
     if (pThetaCache) {
-      delete pThetaCache;
-      pThetaCache=0;
+      const RooArgSet *argset=pThetaCache->get(cachePtr++);
+      if(argset) {
+	drcMtm=((RooAbsReal*)(argset->find(drcMtm.arg().GetName())))->getVal();
+	theta=((RooAbsReal*)(argset->find(theta.arg().GetName())))->getVal();
+      }
     }
-    pThetaCache=pThetaPdf->
-      generate(RooArgSet(drcMtm.arg(), theta.arg()), nCache);
-  }
-  if (pThetaCache) {
-    const RooArgSet *argset=pThetaCache->get(cachePtr++);
-    if(argset) {
-      drcMtm=((RooAbsReal*)(argset->find(drcMtm.arg().GetName())))->getVal();
-      theta=((RooAbsReal*)(argset->find(theta.arg().GetName())))->getVal();
-    }
-  }
-  
+  }  
+
   // finally calculate thetaC
   Int_t trials(minTrial);
   while (trials--) {
