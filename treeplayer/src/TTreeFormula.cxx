@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.88 2002/03/19 17:05:50 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.89 2002/03/26 07:05:57 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1130,17 +1130,17 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    for(k0 = 0; k0 < fNcodes; k0++) {
       for(k1 = 0; k1 < fNdimensions[k0]; k1++ ) {
          // fprintf(stderr,"Saw %d dim %d and index %d\n",k1, fFixedSizes[k0][k1], fIndexes[k0][k1]);
-         if ( fIndexes[k0][k1]>=0 && fFixedSizes[k0][k1]>=0 
+         if ( fIndexes[k0][k1]>=0 && fFixedSizes[k0][k1]>=0
               && fIndexes[k0][k1]>=fFixedSizes[k0][k1]) {
-            ::Error("TTreeFormula",
-                    "Index %d for dimension #%d in %s is too high (max is %d)",
-                    fIndexes[k0][k1],k1+1, expression,fFixedSizes[k0][k1]-1);
+            Error("TTreeFormula",
+                  "Index %d for dimension #%d in %s is too high (max is %d)",
+                  fIndexes[k0][k1],k1+1, expression,fFixedSizes[k0][k1]-1);
             fTree = 0; fNdim = 0; return;
          }
       }
    }
 
-   
+
 }
 
 //______________________________________________________________________________
@@ -1215,8 +1215,8 @@ void TTreeFormula::DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVa
 }
 
 //______________________________________________________________________________
-void TTreeFormula::DefineDimensions(Int_t code, Int_t size, 
-                                    TFormLeafInfoMultiVarDim * info, 
+void TTreeFormula::DefineDimensions(Int_t code, Int_t size,
+                                    TFormLeafInfoMultiVarDim * info,
                                     Int_t& virt_dim) {
    // This method is used internally to decode the dimensions of the variables
 
@@ -1401,25 +1401,25 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       fCodes[code] = 0;
       fLookupType[code] = kIndexOfEntry;
       return code;
-   } 
+   }
    if (strcmp(cname,"Entries$")==0) {
       Int_t code = fNcodes++;
       fCodes[code] = 0;
       fLookupType[code] = kEntries;
       return code;
-   } 
+   }
    if (strcmp(cname,"Iteration$")==0) {
       Int_t code = fNcodes++;
       fCodes[code] = 0;
       fLookupType[code] = kIteration;
       return code;
-   } 
+   }
    if (strcmp(cname,"Length$")==0) {
       Int_t code = fNcodes++;
       fCodes[code] = 0;
       fLookupType[code] = kLength;
       return code;
-   } 
+   }
 
    for (i=0, current = &(work[0]); i<=nchname && !final;i++ ) {
       // We will treated the terminator as a token.
@@ -1500,7 +1500,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          //         if (!leaf->InheritsFrom("TLeafObject") ) {
          // If the leaf that we found so far is not a TLeafObject then there is
             // nothing we would be able to do.
-         //   Error("TTreeFormula::DefinedVariable","Need a TLeafObject to call a function!");
+         //   Error("DefinedVariable","Need a TLeafObject to call a function!");
          // return -1;
          //}
          // We need to recover the info not used.
@@ -1603,8 +1603,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             }
          } else {  // correspond to if (leaf || branch)
             if (final) {
-               Error("TTreeFormula::DefinedVariable",
-                     "Unexpected control flow!");
+               Error("DefinedVariable", "Unexpected control flow!");
                return -1;
             }
 
@@ -1671,7 +1670,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                bracket_level--;
          }
          if (bracket_level != 0) {
-            //Error("TTreeFormula::DefinedVariable","Bracket unbalanced");
+            //Error("DefinedVariable","Bracket unbalanced");
             return -1;
          }
          strncat(dims,&cname[bracket],j-bracket);
@@ -1690,7 +1689,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
    }
    if (i<nchname) {
       if (strlen(right) && right[strlen(right)-1]!='.' && cname[i]!='.') {
-         // In some cases we remove a little to fast the period, we added 
+         // In some cases we remove a little to fast the period, we added
          // it back if we need.  It is assumed that 'right' and the rest of
          // the name was cut by a delimiter, so this should be safe.
          strcat(right,".");
@@ -1707,7 +1706,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
    if (leaf) { // We found a Leaf.
 
       if (leaf->GetBranch() && leaf->GetBranch()->TestBit(kDoNotProcess)) {
-         ::Error("TTreeFormula","the branch \"%s\" has to be enabled to be used",leaf->GetBranch()->GetName());
+         Error("DefinedVariable","the branch \"%s\" has to be enabled to be used",leaf->GetBranch()->GetName());
          return -1;
       }
 
@@ -1729,7 +1728,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                else if (right[j]==']') bracket_level--;
             }
             if (bracket_level != 0) {
-               //Error("TTreeFormula::DefinedVariable","Bracket unbalanced");
+               //Error("DefinedVariable","Bracket unbalanced");
                return -1;
             }
             strncat(dims,&right[bracket],j-bracket);
@@ -1821,7 +1820,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
             case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:  {
               element = (TStreamerElement *)info->GetElements()->At(BranchEl->GetID());
-              if (element){ 
+              if (element){
                  cl = element->GetClassPointer();
               }
             }
@@ -1977,13 +1976,13 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 
                TMethodCall *method;
                if (cl->GetClassInfo()==0) {
-                  Error("TTreeFormula","Can not call method %s on class without dictionary (%s)!",
+                  Error("DefinedVariable","Can not call method %s on class without dictionary (%s)!",
                         right,cl->GetName());
                   return -1;
                }
                method = new TMethodCall(cl, work, params);
                if (!method->GetMethod()) {
-                  Error("TTreeFormula","Unknown method:%s",right);
+                  Error("DefinedVariable","Unknown method:%s",right);
                   return -1;
                }
                switch(method->ReturnType()) {
@@ -2215,7 +2214,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                      bracket_level--;
                  }
                  if (bracket_level != 0) {
-                   //Error("TTreeFormula::DefinedVariable","Bracket unbalanced");
+                   //Error("DefinedVariable","Bracket unbalanced");
                    return -1;
                  }
                  strncat(dims,&right[bracket],j-bracket);
@@ -2258,7 +2257,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          if (branch->GetBranchCount2()) {
             // Switch from old direct style to using a TLeafInfo
             if (fLookupType[code] == kDataMember)
-               Warning("TTreeFormula",
+               Warning("DefinedVariable",
                        "Already in kDataMember mode when handling multiple variable dimensions");
             fLookupType[code] = kDataMember;
             fDataMembers.AddAtAndExpand(new TFormLeafInfoMultiVarDim(),code);
@@ -2316,13 +2315,13 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 
          TTreeFormula *fy = new TTreeFormula("f_y",gcut->GetVarY(),fTree);
          gcut->SetObjectY(fy);
-         
+
          fCodes[code] = -2;
 
       } else if (strlen(gcut->GetVarX())) {
-         
+
          // Let's build the equivalent formula:
-         // min(gcut->X) <= VarX <= max(gcut->Y) 
+         // min(gcut->X) <= VarX <= max(gcut->Y)
          Double_t min = 0;
          Double_t max = 0;
          Int_t n = gcut->GetN();
@@ -2341,10 +2340,10 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          formula += "<=";
          formula += max;
          formula += ")";
-         
+
          TTreeFormula *fx = new TTreeFormula("f_x",formula.Data(),fTree);
          gcut->SetObjectX(fx);
-         
+
          fCodes[code] = -1;
 
       } else {
@@ -2352,8 +2351,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          Error("DefinedVariable","Found a TCutG without leaf information (%s)",
                gcut->GetName());
          return -1;
-         
-      } 
+
+      }
 
       fMethods.AddAtAndExpand(gcut,code);
       fNcodes++;
@@ -2792,18 +2791,18 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
                   case kEntries:      param = fTree->GetEntries(); break;
                   case kLength:       param = fManager->fNdata; break;
                   case kIteration:    param = instance; break;
-                  case kDirect: 
+                  case kDirect:
                   case kMethod:
-                  case kDataMember: 
+                  case kDataMember:
                   default: {
                      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(code);
 
                      // Now let calculate what physical instance we really need.
                      real_instance = GetRealInstance(instance,code);
-                     
+
                      if (!instance) leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
                      else if (real_instance>fNdata[code]) return 0;
-                     
+
                      switch(fLookupType[code]) {
                         case kDirect: param = leaf->GetValue(real_instance); break;
                         case kMethod: param = GetValueFromMethod(code,leaf); break;
@@ -3016,10 +3015,10 @@ Bool_t TTreeFormula::IsInteger(Int_t code) const
 
    if (fLeaves.GetEntries() != 1) {
       switch (fLookupType[code]) {
-         case kIndexOfEntry: 
-         case kEntries:      
-         case kLength:       
-         case kIteration: 
+         case kIndexOfEntry:
+         case kEntries:
+         case kLength:
+         case kIteration:
            return kTRUE;
          default:
            return kFALSE;
@@ -3031,11 +3030,11 @@ Bool_t TTreeFormula::IsInteger(Int_t code) const
    if (fAxis) return kTRUE;
    TFormLeafInfo * info;
    switch (fLookupType[code]) {
-      case kMethod: 
-      case kDataMember: 
+      case kMethod:
+      case kDataMember:
          info = GetLeafInfo(code);
-         return info->IsInteger();        
-      case kDirect: 
+         return info->IsInteger();
+      case kDirect:
          break;
    }
    if (!strcmp(leaf->GetTypeName(),"Int_t"))    return kTRUE;
@@ -3276,21 +3275,21 @@ void TTreeFormula::ResetDimensions() {
          virt_dim = 0;
          last_code = info->fCode;
          fNdimensions[last_code] = 0;
-         
-         info->fSize = 1; // Maybe this should actually do nothing!
-      } 
 
-        
+         info->fSize = 1; // Maybe this should actually do nothing!
+      }
+
+
       DefineDimensions(info->fCode,info->fSize, info->fMultiDim, virt_dim);
    }
-     
+
    fMultiplicity = 0;
    for (i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) {
          TCutG *gcut = (TCutG*)fMethods.At(i);
          TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
          TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
-         
+
          if (fx) {
             switch(fx->GetMultiplicity()) {
                case 0: break;
@@ -3307,10 +3306,10 @@ void TTreeFormula::ResetDimensions() {
             }
             fManager->Add(fy);
          }
-         
+
          continue;
       }
-      
+
       if (fOper[i] >= 105000) {
          // We have a string used as a string
 
@@ -3326,7 +3325,7 @@ void TTreeFormula::ResetDimensions() {
          //continue;
       }
 
-      
+
       if (fLookupType[i]==kIteration) {
           fMultiplicity = 1;
           continue;
@@ -3334,13 +3333,13 @@ void TTreeFormula::ResetDimensions() {
 
       TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
       if (!leaf) continue;
-      
+
       // Reminder of the meaning of fMultiplicity:
       //  -1: Only one or 0 element per entry but contains variable length array!
       //   0: Only one element per entry, no variable length array
       //   1: loop over the elements of a variable length array
       //   2: loop over elements of fixed length array (nData is the same for all entry)
-      
+
       if (leaf->GetLeafCount()) {
          // We assume only one possible variable length dimension (the left most)
          fMultiplicity = 1;
@@ -3378,11 +3377,11 @@ void TTreeFormula::ResetDimensions() {
       // NOTE: We assume that the inside variable dimensions are dictated by the
       // first index.
       if (fCumulSizes[i][0]>0) fNdata[i] = fCumulSizes[i][0];
-      
+
       //for (k = 0; k<kMAXFORMDIM; k++) {
       //   if (fVarIndexes[i][k]) fManager->Add(fVarIndexes[i][k]);
       //}
-      
+
    }
 }
 
@@ -3393,7 +3392,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
 
    Int_t size;
    Bool_t outofbounds = kFALSE;
- 
+
    for (Int_t i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) continue;
 
@@ -3546,6 +3545,6 @@ Bool_t TTreeFormula::LoadCurrentDim() {
    }
    return ! outofbounds;
 
-  
+
 
 }
