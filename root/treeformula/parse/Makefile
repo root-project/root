@@ -1,10 +1,10 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS +=  *.log
+CLEAN_TARGETS +=  *.log generatedSel* $(ALL_LIBRARIES)
 
 #Set the list of target to make while testing
-TEST_TARGETS += BoolOrder testStringFormula testBoolOpt expotest NonFormulaMean
+TEST_TARGETS += templateName BoolOrder testStringFormula testBoolOpt expotest NonFormulaMean
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -45,4 +45,10 @@ endif
 #	$(CMDECHO) root.exe -q -b -l runBoolOrder.C 2>&1 | grep -v -e LorentzVector -e TVector3 > $@
 
 BoolOrder: BoolOrder.log
+	$(TestDiff)
+
+templateName.log: templateName_cpp.$(DllSuf)
+	$(CMDECHO) root.exe -q -b -l runtemplateName.C 2>&1 | grep -v -e 'Creating library' -e \\.cxx -e 'creating shared' > templateName.log
+
+templateName: templateName.log
 	$(TestDiff)
