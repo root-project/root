@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.15 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.16 2004/09/10 16:25:03 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -160,6 +160,8 @@ public:
    virtual  void        SetFont(const char *fontName, Bool_t local = kFALSE);
    virtual  void        SetTextColor(Pixel_t color, Bool_t local = kFALSE);
    virtual  void        SetTextColor(TColor *color, Bool_t local = kFALSE);
+   virtual  void        SetForegroundColor(Pixel_t fore) { SetTextColor(fore, kFALSE); }
+   Pixel_t              GetForeground() const { return fNormGC.GetForeground(); }
    Bool_t HasOwnFont() const { return fHasOwnFont; }
 
    virtual  void        SavePrimitive(ofstream &out, Option_t *option);

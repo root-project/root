@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.24 2004/09/06 17:57:55 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.25 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -171,6 +171,8 @@ public:
    virtual void       SetFont(FontStruct_t font, Bool_t global = kFALSE);
    virtual void       SetFont(const char *fontName, Bool_t global = kFALSE);
    virtual void       SetTextColor(Pixel_t color, Bool_t global = kFALSE);
+   virtual void       SetForegroundColor(Pixel_t fore) { SetTextColor(fore, kFALSE); }
+
    Bool_t             HasOwnFont() const;
 
    virtual void       SavePrimitive(ofstream &out, Option_t *option);

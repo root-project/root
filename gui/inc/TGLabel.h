@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.13 2004/08/24 10:42:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.14 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -78,6 +78,8 @@ public:
    virtual void SetTextFont(const char *fontName, Bool_t global = kFALSE);
    virtual void SetTextColor(Pixel_t color, Bool_t global = kFALSE);
    virtual void SetTextColor(TColor *color, Bool_t global = kFALSE);
+   virtual void SetForegroundColor(Pixel_t fore) { SetTextColor(fore, kFALSE); }
+
    virtual void Disable() { fDisabled = kTRUE; fClient->NeedRedraw(this); }
    virtual void Enable() { fDisabled = kFALSE; fClient->NeedRedraw(this); }
    Bool_t IsDisabled() const { return fDisabled; }
