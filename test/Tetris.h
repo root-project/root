@@ -196,9 +196,6 @@ public:
    CurrentPiece(UInt_t type, TetrisBoard* board);
    ~CurrentPiece() { }
 
-   void    Stop()  { TTimer::Remove(); }
-   void    Start() { gSystem->AddTimer(this); }
-
    Bool_t  MoveLeft(Int_t steps = 1);
    Bool_t  MoveRight(Int_t steps = 1);
    Bool_t  RotateLeft();
@@ -345,9 +342,6 @@ class UpdateLevelTimer : public TTimer {
 public:
    UpdateLevelTimer(ULong_t time);
    ~UpdateLevelTimer() { }
-
-   void   Start() { gSystem->AddTimer(this); }
-   void   Stop()  { TTimer::Remove(); }
 
    Bool_t Notify();
 };

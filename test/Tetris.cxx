@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.3 2000/09/08 07:41:00 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -23,6 +23,7 @@
 #include <TGClient.h>
 #include <KeySymbols.h>
 #include <TRootCanvas.h>
+#include <TApplication.h>
 #include "Tetris.h"
 
 static Tetris *gTetris;                    // game manager
@@ -723,7 +724,7 @@ void QuitButton::ExecuteEvent(Int_t event, Int_t, Int_t)
 {
    // Action after mouse click
 
-   if (event == kButton1Up) gTetris->Quit();
+   if (event == kButton1Up) gApplication->Terminate(0);  //gTetris->Quit();
 }
 
 
@@ -831,7 +832,7 @@ Bool_t KeyHandler::HandleKey(Event_t *event)
 {
    // Handle arrow and spacebar keys
 
-   char tmp[1];
+   char tmp[2];
    UInt_t keysym;
 
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
