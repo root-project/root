@@ -110,7 +110,7 @@ POSIXDIR=$CINTDIRL/posix
 pwd=`pwd`
 cd $POSIXDIR
 $CC $OPT -o mktypes mktypes.c
-mktypes
+./mktypes
 rm -f mktypes
 cp -f ../../include/systypes.h ../../include/sys/types.h
 cd $pwd

@@ -301,13 +301,13 @@ $(ROOTRC): config/rootrc.in
 	  echo ""; exit 1)
 
 $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
-	@$(MAKECOMPDATA) $(COMPILEDATA) $(CXX) "$(OPT)" "$(CXXFLAGS)" \
+	@$(MAKECOMPDATA) $(COMPILEDATA) "$(CXX)" "$(OPT)" "$(CXXFLAGS)" \
 	   "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" "$(LIBDIR)" \
 	   "$(ROOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" "$(MAKESHAREDLIB)" \
 	   "$(MAKEEXE)" "$(ARCH)"
 
 $(MAKEINFO): config/Makefile.$(ARCH)
-	@$(MAKEMAKEINFO) $(MAKEINFO) $(CXX) $(CC) "$(CPPPREP)"
+	@$(MAKEMAKEINFO) $(MAKEINFO) "$(CXX)" "$(CC)" "$(CPPPREP)"
 
 build/dummy.d: config $(ROOTRC) $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	@(if [ ! -f $@ ] ; then \
@@ -403,12 +403,12 @@ version: $(CINTTMP)
 	@$(MAKEVERSION)
 
 cintdlls: $(CINTTMP)
-	@$(MAKECINTDLLS) $(PLATFORM) $(CINTTMP) $(MAKELIB) $(CXX) \
-	   $(CC) $(LD) "$(OPT)" "$(CINTCXXFLAGS)" "$(CINTCFLAGS)" \
+	@$(MAKECINTDLLS) $(PLATFORM) "$(CINTTMP)" "$(MAKELIB)" "$(CXX)" \
+	   "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" "$(CINTCFLAGS)" \
 	   "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)"
 
 static: rootlibs
-	@$(MAKESTATIC) $(PLATFORM) $(CXX) $(CC) $(LD) "$(LDFLAGS)" \
+	@$(MAKESTATIC) $(PLATFORM) "$(CXX)" "$(CC)" "$(LD)" "$(LDFLAGS)" \
 	   "$(XLIBS)" "$(SYSLIBS)"
 
 importcint: distclean-cint

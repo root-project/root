@@ -178,6 +178,12 @@ linuxdeb2)
    auxlibs="-lnsl -lm -ldl -rdynamic"
    auxglibs=${auxlibs}
    ;;
+linuxdeb2ppc)
+   # Debian/Linux on PPC
+   auxcflags=-fsigned-char
+   auxlibs="-lnsl -lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
 linuxkcc)
    # Linux with the KAI compiler
    auxcflags="--signed_chars -D_EXTERN_INLINE=inline --diag_suppress 191"
