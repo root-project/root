@@ -237,6 +237,52 @@ check_header()  {
     unset hdrdir
 }
 
+check_symbol() {
+    # This function will try to locate a symbol [$1] in a specific
+    # library [$2] and in a given directory [$3].
+    # The result of the check is stored in found_symbol, 1 if true,
+    # 0 otherwise, which should be immediately copied, since the variable
+    # will be overwritten at next invocation of this function.
+
+    # Assert that we got enough arguments
+    if test $# -ne 3 ; then
+	echo "check_symbol: Not 3 arguments"
+	return 1
+    fi
+
+    # Save arguments in logical names
+    symbol=$1     ; shift
+    symbollib=$1  ; shift
+    symboldir=$1
+
+    # Check if we got a specific argument as to where the library
+    # is to be found
+    symbolfile=$symbollib
+    if test ! "x$symboldir" = "x" ; then
+        symbolfile=$symboldir/$symbollib
+        if test ! -r $symbolfile ; then
+            for i in .a .so .lib ; do
+                if test -r $symbolfile$i ; then
+                    symbolfile=$symbolfile$i
+                    break
+                fi
+             done
+        fi
+    fi
+
+    if test "x$symbolfile" = "x" || test ! -r $symbolfile ; then
+       found_symbol=0
+       return 1
+    fi
+
+    symbol_in_lib=`nm $symbolfile | grep $symbol > /dev/null 2>&1`
+    if test $? -eq 0 ; then
+        found_symbol=1
+    else
+        found_symbol=0
+    fi
+}
+
 ###################################################################
 #
 ### echo %%% Some skeleton and config files
@@ -916,8 +962,8 @@ if test ! "x$enable_cern" = "xno"; then
 
     if test ! "x$packlib" = "x" && test "x$enable_rfio" = "xno" ; then
         # check if libpacklib contains rfio code (case of < 2002 version)
-        rfio_in_pack=`nm $packlib | grep rfio_connect > /dev/null 2>&1`
-        if [ $? -ne 0 ]; then
+        check_symbol rfio_connect "$packlib" "$packlibdir"
+        if test  $found_symbol -eq 0 ; then
             echo "### Need libshift with this version of $packlib"
             echo "### Run configure with --enable-rfio or set --with-shift-libdir"
             packlib=""
@@ -1080,9 +1126,12 @@ fi
 if test ! "x$enable_srp" = "xno" ; then
     if test "x$srpincdir" = "x" && test ! "x$srpdir" = "x" ; then
 	srpincdir=$srpdir/include
+        if ! test -d $srpincdir ; then
+            srpincdir=$srpdir/libsrp
+        fi
     fi
-    check_header "t_server.h" "$srpincdir" $SRP/include /usr/srp/include \
-	/usr/include /usr/local/include /usr/local/srp/include
+    check_header "t_server.h" "$srpincdir" $SRP/include $SRP/libsrp \
+        /usr/srp/include /usr/include /usr/local/include /usr/local/srp/include
     srpinc=$found_hdr
     srpincdir=$found_dir
 
@@ -1092,18 +1141,29 @@ if test ! "x$enable_srp" = "xno" ; then
 
     if test "x$srplibdir" = "x" && test ! "x$srpdir" = "x" ; then
 	srplibdir=$srpdir/lib
+        if ! test -d $srplibdir ; then
+            srplibdir=$srpdir/libsrp
+        fi
     fi
 
-    srplibdirs="$SRP $SRP/lib /usr/srp/lib /usr/local/srp/lib \
+    srplibdirs="$SRP $SRP/lib $SRP/libsrp /usr/srp/lib /usr/local/srp/lib \
 	/usr/lib/srp /usr/local/lib/srp /usr/lib /usr/local/lib"
 
     check_library "libsrp" "no" "$srplibdir" $srplibdirs
     srplib=$found_lib
     srplibdir=$found_dir
 
-    check_library "libgmp" "$enable_shared" "" $srplibdir $srplibdirs
-    gmplib=$found_lib
-    gmplibdir=$found_dir
+    check_symbol BN_new "$srplib" "$srplibdir"
+
+    if test $found_symbol -eq 0 ; then
+        check_library "libgmp" "$enable_shared" "" $srplibdir $srplibdirs
+        gmplib=$found_lib
+        gmplibdir=$found_dir
+    else
+        check_library "libcrypto" "$enable_shared" "" $srplibdir $srplibdirs
+        gmplib=$found_lib
+        gmplibdir=$found_dir
+    fi
 
     if test "x$srplib" = "x" ; then
         enable_srp="no"
