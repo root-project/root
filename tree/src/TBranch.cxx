@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.6 2000/09/06 07:17:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.7 2000/09/11 09:59:27 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -507,7 +507,12 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
 {
 //*-*-*-*-*-*Read all leaves of entry and return total number of bytes*-*-*
 //*-*        =========================================================
-
+// The input argument entry is the entry serial number in the current tree.
+// In case of a TChain, the entry number in the current Tree must be found
+//  before calling this function. example with TChain *chain;
+//  Int_t localEntry = chain->LoadTree(entry);
+//  branch->GetEntry(localEntry);
+   
    if (TestBit(kDoNotProcess) && !getall) return 0;
    if (fReadEntry == entry) return 1;
    if (entry < 0 || entry >= fEntryNumber) return 0;
