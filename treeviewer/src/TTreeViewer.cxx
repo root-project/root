@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.36 2003/11/12 07:23:08 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.37 2003/11/12 10:55:48 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -260,6 +260,7 @@ enum ERootTreeViewerCommands {
    kHelpOpenSave,
    kHelpDragging,
    kHelpEditing,
+   kHelpSession,
    kHelpCommands,
    kHelpContext,
    kHelpDrawing,
@@ -295,6 +296,9 @@ TTreeViewer::TTreeViewer(const char* treeName)
 
    fTree = 0;
    if (!gClient) return;
+   char command[128];
+   sprintf(command, "TTreeViewer *gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
+   gROOT->ProcessLine(command);
    gROOT->ProcessLine("TTree *tv__tree = 0;");
    fTreeList = new TList;
    gROOT->ProcessLine("TList *tv__tree_list = new TList;");
@@ -312,6 +316,9 @@ TTreeViewer::TTreeViewer(const TTree *tree)
    // TTreeViewer constructor with a pointer to a Tree
 
    fTree = 0;
+   char command[128];
+   sprintf(command, "TTreeViewer *gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
+   gROOT->ProcessLine(command);
    if (!tree) return;
    gROOT->ProcessLine("TTree *tv__tree = 0;");
    fTreeList = new TList;
@@ -332,6 +339,71 @@ TTreeViewer::TTreeViewer(const TTree *tree)
       if (cdir->GetFile()) fFilename = cdir->GetFile()->GetName();
    }
    if (dirsav) dirsav->cd();
+}
+//______________________________________________________________________________
+void TTreeViewer::AppendTree(TTree *tree)
+{
+   // Allow geting the tree from the context menu.
+
+   if (!tree) return;
+   TTree *ftree;
+   if (fTreeList) {
+      if (fTreeList->FindObject(tree)) {
+         printf("Tree found\n");
+         TIter next(fTreeList);
+         Int_t index = 0;
+         while ((ftree = (TTree*)next())) {
+            if (ftree==tree) {printf("found at index %i\n", index);break;}
+            index++;
+         }
+         SwitchTree(index);
+         if (fTree != fMappedTree) {
+            // switch also the global "tree" variable
+            fLVContainer->RemoveNonStatic();
+            // map it on the right panel
+            MapTree(fTree);
+            fListView->Layout();
+            TGListTreeItem *base = 0;
+            TGListTreeItem *parent = fLt->FindChildByName(base, "TreeList");
+            TGListTreeItem *item = fLt->FindChildByName(parent, fTree->GetName());
+            fLt->ClearHighlighted();
+            fLt->HighlightItem(item);
+            fClient->NeedRedraw(fLt);
+         }
+         return;
+      }
+   }
+   if (fTree != tree) {
+      fTree = tree;
+      // load the tree via the interpreter
+      char command[100];
+      command[0] = 0;
+      // define a global "tree" variable for the same tree
+      sprintf(command, "tv__tree = (TTree *)0x%lx;", (ULong_t)tree);
+      ExecuteCommand(command);
+   }
+   //--- add the tree to the list if it is not already in
+   fTreeList->Add(fTree);
+   ExecuteCommand("tv__tree_list->Add(tv__tree);");
+   //--- map this tree
+   TGListTreeItem *base = 0;
+   TGListTreeItem *parent = fLt->FindChildByName(base, "TreeList");
+   if (!parent) parent = fLt->AddItem(base, "TreeList", new ULong_t(kLTNoType));
+   ULong_t *itemType = new ULong_t((fTreeIndex << 8) | kLTTreeType);
+   fTreeIndex++;
+   TGListTreeItem *lTreeItem = fLt->AddItem(parent, tree->GetName(), itemType,
+               gClient->GetPicture("tree_t.xpm"), gClient->GetPicture("tree_t.xpm"));
+   MapTree(fTree, lTreeItem, kFALSE);
+   fLt->OpenItem(parent);
+   fLt->HighlightItem(lTreeItem);
+   fClient->NeedRedraw(fLt);
+
+   //--- map slider and list view
+   SwitchTree(fTreeIndex-1);
+   fLVContainer->RemoveNonStatic();
+   MapTree(fTree);
+   fListView->Layout();
+   SetFile();
 }
 //______________________________________________________________________________
 void TTreeViewer::SetNexpressions(Int_t expr)
@@ -590,6 +662,7 @@ void TTreeViewer::BuildInterface()
    fHelpMenu->AddEntry("&Open/Save",             kHelpOpenSave);
    fHelpMenu->AddEntry("&Dragging...",           kHelpDragging);
    fHelpMenu->AddEntry("&Editing expressions...",kHelpEditing);
+   fHelpMenu->AddEntry("&Session...",            kHelpSession);
    fHelpMenu->AddEntry("&User commands...",      kHelpCommands);
    fHelpMenu->AddEntry("&Context menus...",      kHelpContext);
    fHelpMenu->AddEntry("D&rawing...",            kHelpDrawing);
@@ -1784,12 +1857,12 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      hd->Popup();
                      break;
                   case kHelpLayout:
-                     hd = new TRootHelpDialog(this, "The layout...", 600, 400);
+                     hd = new TRootHelpDialog(this, "Layout...", 600, 400);
                      hd->SetText(gTVHelpLayout);
                      hd->Popup();
                      break;
                   case kHelpOpenSave:
-                     hd = new TRootHelpDialog(this, "Browsing...", 600, 400);
+                     hd = new TRootHelpDialog(this, "Open/Save...", 600, 400);
                      hd->SetText(gTVHelpOpenSave);
                      hd->Popup();
                      break;
@@ -1801,6 +1874,11 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kHelpEditing:
                      hd = new TRootHelpDialog(this, "Editing expressions...", 600, 400);
                      hd->SetText(gTVHelpEditExpressions);
+                     hd->Popup();
+                     break;
+                  case kHelpSession:
+                     hd = new TRootHelpDialog(this, "Session...", 600, 400);
+                     hd->SetText(gTVHelpSession);
                      hd->Popup();
                      break;
                   case kHelpCommands:

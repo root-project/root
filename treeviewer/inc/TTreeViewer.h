@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.13 2003/11/05 13:24:46 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.14 2003/11/10 10:48:43 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -181,6 +181,7 @@ public:
    TTreeViewer(const TTree *tree);
    virtual       ~TTreeViewer();
 // public methods
+   void          AppendTree(TTree *tree);
    void          ActivateButtons(Bool_t first, Bool_t previous,
                                  Bool_t next , Bool_t last);
    virtual void  CloseWindow();

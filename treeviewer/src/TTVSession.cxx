@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.cxx,v 1.3 2002/01/23 17:52:52 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.cxx,v 1.4 2002/01/24 11:39:31 rdm Exp $
 //Author : Andrei Gheata   21/02/01
 
 /*************************************************************************
@@ -137,7 +137,19 @@ TTVRecord *TTVSession::AddRecord(Bool_t fromFile)
    fCurrent = fRecords - 1;
    if (fRecords > 1) fViewer->ActivateButtons(kTRUE, kTRUE, kFALSE, kTRUE);
    else              fViewer->ActivateButtons(kTRUE, kFALSE, kFALSE, kTRUE);
-   if (!fromFile) SetRecordName("record");
+   if (!fromFile) {
+      TString name = "";
+      if (strlen(newrec->GetZ())) name += newrec->GetZ();
+      if (strlen(newrec->GetY())) {
+         if (name.Length()) name += ":";
+         name += newrec->GetY();
+      }
+      if (strlen(newrec->GetX())) {
+         if (name.Length()) name += ":";
+         name += newrec->GetX();
+      }
+      SetRecordName(name.Data());
+   }      
    return newrec;
 }
 //______________________________________________________________________________
