@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.69 2002/02/13 09:23:05 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.70 2002/02/14 08:28:53 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -595,10 +595,9 @@ Int_t TPad::ClippingCode(Double_t x, Double_t y, Double_t xcl1, Double_t ycl1, D
 //______________________________________________________________________________
 void TPad::Close(Option_t *)
 {
-//*-*-*-*-*-*-*-*-*Delete all primitives in pad and pad itself*-*-*-*-*-*-*
-//*-*              ============================
-//   NB. Pad cannot be used anymore after this call
-//
+   // Delete all primitives in pad and pad itself.
+   // Pad cannot be used anymore after this call.
+
    if (!TestBit(kNotDeleted)) return;
    if (!fMother) return;
 
@@ -632,8 +631,8 @@ void TPad::Close(Option_t *)
       if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Remove(this);
 
       if (gPad == this) fMother->cd();
-      if (gROOT->GetSelectedPad() == this) gROOT->SetSelectedPad(0);
    }
+
    fMother = 0;
    if (gROOT->GetSelectedPad()== this) gROOT->SetSelectedPad(0);
 }
@@ -2657,7 +2656,7 @@ void TPad::PaintModified()
    fPadPaint = 1;
    cd();
    if (IsModified() || IsTransparent()) {
-       
+
        if (fPadView3D)
 #if 1
          fPadView3D->PaintBeginModel();
