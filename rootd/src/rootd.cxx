@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.38 2002/02/03 18:40:08 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.39 2002/02/06 18:27:40 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -118,6 +118,7 @@
 // Protocol changes:
 // 2 -> 3: added handling of kROOTD_FSTAT message.
 // 3 -> 4: added support for TFTP (i.e. kROOTD_PUTFILE, kROOTD_GETFILE, etc.)
+// 4 -> 5: added support for "+read" to allow readers when file is opened for writing
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -264,7 +265,7 @@ int     gAuth              = 0;
 int     gAnon              = 0;
 int     gFd                = -1;
 int     gWritable          = 0;
-int     gProtocol          = 4;       // increase when protocol changes
+int     gProtocol          = 5;       // increase when protocol changes
 int     gUploaded          = 0;
 int     gDownloaded        = 0;
 int     gFtp               = 0;
@@ -1110,12 +1111,19 @@ void RootdOpen(const char *msg)
    else
       strcpy(gFile, file);
 
-   int  forceOpen = 0;
+   strcpy(gOption, option);
+
+   int forceOpen = 0;
    if (option[0] == 'f') {
       forceOpen = 1;
       strcpy(gOption, &option[1]);
-   } else
-      strcpy(gOption, option);
+   }
+
+   int forceRead = 0;
+   if (!strcmp(option, "+read")) {
+      forceRead = 1;
+      strcpy(gOption, &option[1]);
+   }
 
    int create = 0;
    if (!strcmp(gOption, "new") || !strcmp(gOption, "create"))
@@ -1205,8 +1213,10 @@ void RootdOpen(const char *msg)
          ErrorSys(kErrFileOpen, "RootdOpen: error opening file %s in read mode", gFile);
 
       if (!RootdCheckTab(0)) {
-         close(gFd);
-         ErrorFatal(kErrFileReadOpen, "RootdOpen: file %s already opened in write mode", gFile);
+         if (!forceRead) {
+            close(gFd);
+            ErrorFatal(kErrFileReadOpen, "RootdOpen: file %s already opened in write mode", gFile);
+         }
       }
 
       gWritable = 0;
