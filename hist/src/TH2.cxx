@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.24 2002/02/01 11:03:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.25 2002/02/15 10:43:18 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -559,7 +559,7 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    Int_t ipar;
    char name[80], title[80];
    TH1D *hlist[25];
-   TArrayD *bins = fYaxis.GetXbins();
+   const TArrayD *bins = fYaxis.GetXbins();
    for (ipar=0;ipar<npar;ipar++) {
       sprintf(name,"%s_%d",GetName(),ipar);
       sprintf(title,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
@@ -659,7 +659,7 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    Int_t ipar;
    char name[80], title[80];
    TH1D *hlist[25];
-   TArrayD *bins = fXaxis.GetXbins();
+   const TArrayD *bins = fXaxis.GetXbins();
    for (ipar=0;ipar<npar;ipar++) {
       sprintf(name,"%s_%d",GetName(),ipar);
       sprintf(title,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
@@ -816,7 +816,7 @@ void TH2::GetStats(Stat_t *stats) const
 }
 
 //______________________________________________________________________________
-Stat_t TH2::Integral(Option_t *option)
+Stat_t TH2::Integral(Option_t *option) const
 {
 //Return integral of bin contents. Only bins in the bins range are considered.
 // By default the integral is computed as the sum of bin contents in the range.
@@ -828,7 +828,7 @@ Stat_t TH2::Integral(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option)
+Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option) const
 {
 //Return integral of bin contents in range [binx1,binx2],[biny1,biny2]
 // for a 2-D histogram
@@ -836,7 +836,7 @@ Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_
 // if option "width" is specified, the integral is the sum of
 // the bin contents multiplied by the bin width in x and in y.
 
-   if (fBuffer) BufferEmpty();
+   if (fBuffer) ((TH2*)this)->BufferEmpty();
    
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
@@ -1140,7 +1140,7 @@ Int_t TH2::Merge(TCollection *list)
 }   
    
 //______________________________________________________________________________
-TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Option_t *option)
+TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Option_t *option) const
 {
 //*-*-*-*-*Project a 2-D histogram into a profile histogram along X*-*-*-*-*-*
 //*-*      ========================================================
@@ -1168,7 +1168,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
      sprintf(pname,"%s%s",GetName(),name);
   }
   TProfile *h1;
-  TArrayD *bins = fXaxis.GetXbins();
+  const TArrayD *bins = fXaxis.GetXbins();
   if (bins->fN == 0) {
      h1 = new TProfile(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),option);
   } else {
@@ -1191,7 +1191,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 }
 
 //______________________________________________________________________________
-TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Option_t *option)
+TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Option_t *option) const
 {
 //*-*-*-*-*Project a 2-D histogram into a profile histogram along Y*-*-*-*-*-*
 //*-*      ========================================================
@@ -1219,7 +1219,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
      sprintf(pname,"%s%s",GetName(),name);
   }
   TProfile *h1;
-  TArrayD *bins = fYaxis.GetXbins();
+  const TArrayD *bins = fYaxis.GetXbins();
   if (bins->fN == 0) {
      h1 = new TProfile(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax(),option);
   } else {
@@ -1242,7 +1242,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
 }
 
 //______________________________________________________________________________
-TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option_t *option)
+TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option_t *option) const
 {
 //*-*-*-*-*Project a 2-D histogram into a 1-D histogram along X*-*-*-*-*-*-*
 //*-*      ====================================================
@@ -1274,7 +1274,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      sprintf(pname,"%s%s",GetName(),name);
   }
   TH1D *h1;
-  TArrayD *bins = fXaxis.GetXbins();
+  const TArrayD *bins = fXaxis.GetXbins();
   if (bins->fN == 0) {
      h1 = new TH1D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax());
   } else {
@@ -1312,7 +1312,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 }
 
 //______________________________________________________________________________
-TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option_t *option)
+TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option_t *option) const
 {
 //*-*-*-*-*Project a 2-D histogram into a 1-D histogram along Y*-*-*-*-*-*-*
 //*-*      ====================================================
@@ -1344,7 +1344,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      sprintf(pname,"%s%s",GetName(),name);
   }
   TH1D *h1;
-  TArrayD *bins = fYaxis.GetXbins();
+  const TArrayD *bins = fYaxis.GetXbins();
   if (bins->fN == 0) {
      h1 = new TH1D(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
   } else {
