@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.16 2004/05/03 19:56:11 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.17 2004/05/26 12:30:31 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1361,7 +1361,7 @@ Double_t TMultiLayerPerceptron::Evaluate(Int_t index, Double_t *params) const
 void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) const
 {
    // Exports the NN as a function for any non-ROOT-dependant code
-   // Supported languages are: only C++ and Python (yet)
+   // Supported languages are: only C++ , FORTRAN and Python (yet)
    // This feature is also usefull if you want to plot the NN as 
    // a function (TF1 or TF2).
    
@@ -1454,6 +1454,101 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       headerfile.close();
       sourcefile.close();
       cout << header << " and " << source << " created." << endl;
+   }
+   else if(lg == "FORTRAN") {
+      TString implicit = "      implicit double precision (a-h,n-z)\n";
+      ofstream sigmoid("sigmoid.f");
+      sigmoid 	<< "      double precision FUNCTION SIGMOID(X)"	<< endl
+    		<< implicit
+		<< "      IF(X.GT.37.) THEN"			<< endl
+    		<< "         SIGMOID = 1."			<< endl
+		<< "      ELSE IF(X.LT.-709.) THEN"		<< endl
+    		<< "         SIGMOID = 0."			<< endl
+    		<< "      ELSE"					<< endl
+    		<< "         SIGMOID = 1./(1.+EXP(-X))"		<< endl
+    		<< "      ENDIF"				<< endl
+    		<< "      END"					<< endl;
+      sigmoid.close();
+      TString source = filename;
+      source += ".f";
+      ofstream sourcefile(source);
+
+      // Header
+      sourcefile << "      double precision function " << filename << "(x, index)" << endl;
+      sourcefile << implicit;
+      sourcefile << "      double precision x(" << 
+      fFirstLayer.GetEntriesFast() << ")" << endl << endl;
+
+/*      // First layer
+      sourcefile << "C --- First Layer" << endl;
+      for (i = 0; i < fFirstLayer.GetEntriesFast(); i++)
+         sourcefile << "      first" << i << " = (x(" << i+1 << ") - "
+             << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[1] << ")/"
+             << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[0] << endl;
+*/
+      // Last layer
+      sourcefile << "C --- Last Layer" << endl;
+      TNeuron *neuron;
+      TObjArrayIter *it = (TObjArrayIter *) fLastLayer.MakeIterator();
+      Int_t idx = 0;
+      TString ifelseif = "      if (index.eq.";
+      while ((neuron = (TNeuron *) it->Next())) {
+         sourcefile << ifelseif.Data() << idx++ << ") then" << endl 
+                    << "          " << filename << "=neuron" << neuron << "(x)" 
+                    << endl;
+	 ifelseif = "      else if (index.eq.";
+      }
+      sourcefile << "      else" << endl 
+                 << "          " << filename << "=0.d0" << endl
+		 << "      endif" << endl;
+      sourcefile << "      end" << endl;
+
+      // Network
+      sourcefile << "C --- Hidden layers" << endl;
+      it = (TObjArrayIter *) fNetwork.MakeIterator();
+      idx = 0;
+      while ((neuron = (TNeuron *) it->Next())) {
+         sourcefile << "      double precision function neuron" << neuron << "(x)" << endl
+		    << implicit;
+         sourcefile << "      double precision x(" << fFirstLayer.GetEntriesFast() << ")" << endl << endl;
+         if (!neuron->GetPre(0)) {
+            sourcefile << "      neuron" << neuron << " = (x(" << idx+1 << ") - "
+             << ((TNeuron *) fFirstLayer[idx])->GetNormalisation()[1] << "d0)/"
+             << ((TNeuron *) fFirstLayer[idx])->GetNormalisation()[0] << "d0" << endl;
+	     idx++;
+         } else {
+            sourcefile << "      neuron" << neuron << " = " << neuron->GetWeight() << "d0" << endl;
+            TSynapse *syn;
+            Int_t n = 0;
+            while ((syn = neuron->GetPre(n++)))
+               sourcefile << "      neuron" << neuron 
+	    		  << " = neuron" << neuron 
+			  << " + synapse" << syn << "(x)" << endl;
+            if (neuron->GetPost(0)) {
+               sourcefile << "      neuron" << neuron << "= (sigmoid(neuron" << neuron << ")*";
+               sourcefile << neuron->GetNormalisation()[0] << "d0)+" ;
+               sourcefile << neuron->GetNormalisation()[1] << "d0" << endl;
+            }
+         }
+         sourcefile << "      end" << endl;
+      }
+      delete it;
+      
+      // Synapses
+      sourcefile << "C --- Synapses" << endl;
+      TSynapse *synapse = NULL;
+      it = (TObjArrayIter *) fSynapses.MakeIterator();
+      while ((synapse = (TSynapse *) it->Next())) {
+         sourcefile << "      double precision function " << "synapse" 
+                    << synapse << "(x)\n" << implicit;
+         sourcefile << "      double precision x(" << fFirstLayer.GetEntriesFast() << ")" << endl << endl;
+         sourcefile << "      synapse" << synapse << "=neuron" << synapse->GetPre() 
+                    << "(x)*" << synapse->GetWeight() << "d0" << endl;
+         sourcefile << "      end" << endl << endl;
+      }
+      delete it;
+      sourcefile.close();
+      cout << source << " created." << endl;
    }
    else if(lg == "Python") {
       TString classname = filename;
