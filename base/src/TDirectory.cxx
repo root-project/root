@@ -681,17 +681,6 @@ void TDirectory::FillBuffer(char *&buffer)
    tobuf(buffer, fSeekDir);
    tobuf(buffer, fSeekParent);
    tobuf(buffer, fSeekKeys);
-   //save TObject part in case this directory is TReferenced
-   if (!TestBit(kIsReferenced)) {
-      R__b << fUniqueID;
-      R__b << fBits;
-   } else {
-      UInt_t uid = fUniqueID & 0xffffff;
-      R__b << uid;
-      R__b << fBits;
-      pidf = TProcessID::WriteProcessID(0,file);
-      R__b << pidf;
-   }
 }
 
 //______________________________________________________________________________
