@@ -40,7 +40,8 @@ class TString;
 class TGRadioButton;
 class TGDoubleHSlider;
 class TGTextEntry;
-
+class TGNumberEntryField;
+class TPad;
 class TH1Editor : public TGedFrame {
 
 protected:
@@ -75,7 +76,9 @@ protected:
    TGRadioButton       *fDim;          // 2D-Plot RadioButton             
    TGRadioButton       *fDim0;         // 3D-Plot RadioButton    
    TGDoubleHSlider     *fSlider;       // Slider to set x-axis range
-
+   TGNumberEntryField  *fSldMin;       // Contains the minimum value of the x-Axis
+   TGNumberEntryField  *fSldMax;       // Contains the maximum value of the x-Axis  
+//   TPad                *fRefPad;       // I try to get the pad in which the hist is drawn
    static  TGComboBox *BuildHistTypeComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistCoordsComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistErrorComboBox(TGFrame *parent, Int_t id);
@@ -115,6 +118,9 @@ public:
    virtual void DoPercent();
    virtual void DoHBar(Bool_t on);
    virtual void DoSlider();
+   virtual void DoSliderPressed();
+   virtual void DoSliderReleased();   
+   virtual void DoAxisRange();
    ClassDef(TH1Editor,0)  // TH1 editor
 };
 

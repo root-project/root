@@ -90,7 +90,8 @@
 #include <stdlib.h>
 #include "TG3DLine.h"
 #include "TGDoubleSlider.h"
-
+#include "TPad.h"
+#include "TCanvas.h"
 #include "Riostream.h"
 #include "TRegexp.h"
 
@@ -144,7 +145,9 @@ enum {
    kPER_40,
    kBAR_H,
    kBAR_WIDTH,
-   kBAR_OFFSET   
+   kBAR_OFFSET,
+   kSLIDER_MAX,
+   kSLIDER_MIN
 };
 
 //______________________________________________________________________________
@@ -275,9 +278,9 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    TGLabel *fPercentLabel = new TGLabel(f13, "Percentage:"); 
    f13->AddFrame(fPercentLabel, new TGLayoutHints(kLHintsLeft, 6, 1, 4, 1));
    fPercentCombo = BuildPercentComboBox(f13, kPERCENT_TYPE);
-   f13->AddFrame(fPercentCombo, new TGLayoutHints(kLHintsLeft, 13, 1, 2, 1));
-   fPercentCombo->Resize(52, 20);
-   fPercentCombo->Associate(f12);
+   fPercentCombo->Resize(51, 20);
+   fPercentCombo->Associate(f13);
+   f13->AddFrame(fPercentCombo, new TGLayoutHints(kLHintsLeft, 14, 1, 2, 1));
    f12->AddFrame(f13,new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
    
    fMakeHBar = new TGCheckButton(f12, "Horizontal Bar", kBAR_H);
@@ -288,11 +291,26 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    MakeTitle("Axis Range");
 
    TGCompositeFrame *f14 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGLabel *fSliderYLbl = new TGLabel(f14,"x:");
-   f14->AddFrame(fSliderYLbl, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 6,3, 4, 1)); 
+   TGLabel *fSliderLbl = new TGLabel(f14,"x:");
+   f14->AddFrame(fSliderLbl, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4,3, 4, 1)); 
    fSlider = new TGDoubleHSlider(f14, 1, 2);
    f14->AddFrame(fSlider, new TGLayoutHints(kLHintsExpandX));
    AddFrame(f14, new TGLayoutHints(kLHintsExpandX, 3, 7, 3, 0));
+   
+   TGCompositeFrame *f16 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   fSldMin = new TGNumberEntryField(f16, kSLIDER_MIN, 0.0,  
+                                      TGNumberFormat::kNESRealTwo,
+                                      TGNumberFormat::kNEAAnyNumber);
+   ((TGTextEntry*)fSldMin)->SetToolTipText("Set the minimum value of the x-axis");
+   fSldMin->Resize(58,20);
+   f16->AddFrame(fSldMin, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
+   fSldMax = new TGNumberEntryField(f16, kSLIDER_MAX, 0.0,  
+                                      TGNumberFormat::kNESRealTwo,
+                                      TGNumberFormat::kNEAAnyNumber);
+   ((TGTextEntry*)fSldMax)->SetToolTipText("Set the maximum value of the x-axis");
+   fSldMax->Resize(58,20);
+   f16->AddFrame(fSldMax, new TGLayoutHints(kLHintsLeft, 2, 0, 0, 0));
+   AddFrame(f16, new TGLayoutHints(kLHintsTop, 20, 3, 5, 0));
    
    makeB=kTRUE;
    make=kTRUE;
@@ -348,7 +366,11 @@ void TH1Editor::ConnectSignals2Slots()
    (fBarOffset->GetNumberEntry())->Connect("ReturnPressed()", "TH1Editor", this, "DoBarOffset()");
    fPercentCombo->Connect("Selected(Int_t)", "TH1Editor", this, "DoPercent()");
    fMakeHBar-> Connect("Toggled(Bool_t)","TH1Editor",this,"DoHBar(Bool_t))"); 
-   fSlider->Connect("PositionChanged()","TH1Editor",this,"DoSlider()");         
+   fSlider->Connect("PositionChanged()","TH1Editor",this,"DoSlider()");
+   fSlider->Connect("Pressed()","TH1Editor",this,"DoSliderPressed()"); 
+   fSlider->Connect("Released()","TH1Editor",this,"DoSliderReleased()");     
+   fSldMin->Connect("ReturnPressed()", "TH1Editor", this, "DoAxisRange()");
+   fSldMax->Connect("ReturnPressed()", "TH1Editor", this, "DoAxisRange()");   
    fInit = kFALSE;
 }
 
@@ -372,7 +394,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    fModel = obj;
    fPad = pad;
-
+   TGListBox* lb;
    fHist = (TH1*)fModel;
    const char *text = fHist->GetTitle();
    fTitle->SetText(text);
@@ -477,9 +499,15 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       if (str.Contains("SURF")){ 
          fCoordsCombo->RemoveEntry(kCOORDS_SPH);
          fCoordsCombo->RemoveEntry(kCOORDS_CAR);
+         lb = fCoordsCombo->GetListBox();
+         lb->Resize(lb->GetWidth(), 49);
       } else {
          if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_SPH)==-1) fCoordsCombo->AddEntry("Spheric", kCOORDS_SPH);
-         if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_CAR)==-1) fCoordsCombo->AddEntry("Cartesian", kCOORDS_CAR);
+         if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_CAR)==-1){
+	    fCoordsCombo->AddEntry("Cartesian", kCOORDS_CAR);
+	    lb = fCoordsCombo->GetListBox();
+            lb->Resize(lb->GetWidth(), 83);
+         }
       }
       if (str.Contains("LEGO2")) fTypeCombo->Select(kTYPE_LEGO2);
       else if (str.Contains("LEGO1")) fTypeCombo->Select(kTYPE_LEGO1);
@@ -551,9 +579,14 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    }
 
    Int_t nx = fHist -> GetXaxis() -> GetNbins();
-   Int_t nxbinmin = fHist -> GetXaxis() -> GetFirst()-1;
-   Int_t nxbinmax = fHist -> GetXaxis() -> GetLast()+1;
-   fSlider->SetPosition((Float_t)nxbinmin/nx,(Float_t)nxbinmax/nx);
+   Int_t nxbinmin = fHist -> GetXaxis() -> GetFirst();
+   Int_t nxbinmax = fHist -> GetXaxis() -> GetLast();
+   fSlider->SetRange(1,nx);
+   fSlider->SetPosition((Double_t)nxbinmin,(Double_t)nxbinmax);
+
+   fSldMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge(nxbinmin));
+   fSldMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge(nxbinmax));
+   
    
    Update();
    if (fInit) ConnectSignals2Slots();
@@ -752,6 +785,7 @@ void TH1Editor::DoHistSimple()
    if (fDim->GetState()==kButtonDown){
       TString str ="";
       make=kFALSE;
+      TGListBox* lb;
       HideFrame(f3);
       HideFrame(f4);
       ShowFrame(f6);
@@ -793,13 +827,19 @@ void TH1Editor::DoHistSimple()
       if (fAddCombo->GetSelected()== -1 )fAddCombo->Select(kADD_NONE);
       if (fErrorCombo->GetSelected()!=kERRORS_NO) {
          fAddCombo->RemoveEntries(kADD_SIMPLE,kADD_FILL);
+         lb = fAddCombo->GetListBox();
+         lb->Resize(lb->GetWidth(),19);	 
 	 Disconnect(fAddCombo);
 	 fAddCombo->Select(kADD_NONE);
 	 fAddCombo->Connect("Selected(Int_t)", "TH1Editor", this, "DoHistChanges()"); 
       } else {
          if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_SIMPLE)==-1) ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Simple Line", kADD_SIMPLE);
 	 if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_SMOOTH)==-1) ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Smooth Line", kADD_SMOOTH);
-	 if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_FILL)==-1) ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Fill Area",kADD_FILL);
+	 if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_FILL)==-1) {
+            ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Fill Area",kADD_FILL);
+            lb = fAddCombo->GetListBox();
+            lb->Resize(lb->GetWidth(),76);	 
+	 }    
       }
       if (fAddLine->GetState()==kButtonDown) str+="HIST";
       str += GetHistErrorLabel()+GetHistAddLabel();
@@ -867,13 +907,20 @@ void TH1Editor::DoHistChanges()
    // and the AddCombobox
    
    makeB= kFALSE;
+   TGListBox* lb;
    if (GetHistTypeLabel().Contains("SURF")){ 
       if (fCoordsCombo->GetSelected()==kCOORDS_CAR || fCoordsCombo->GetSelected()==kCOORDS_SPH) fCoordsCombo->Select(kCOORDS_POL); 
       fCoordsCombo->RemoveEntry(kCOORDS_SPH);
       fCoordsCombo->RemoveEntry(kCOORDS_CAR);
+      lb = fCoordsCombo->GetListBox();
+      lb->Resize(lb->GetWidth(), 49);
    } else {
       if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_SPH)==-1) ((TGListBox*)fCoordsCombo->GetListBox())->AddEntrySort("Spheric", kCOORDS_SPH);
-      if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_CAR)==-1) ((TGListBox*)fCoordsCombo->GetListBox())->AddEntrySort("Cartesian", kCOORDS_CAR);
+      if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_CAR)==-1){
+         ((TGListBox*)fCoordsCombo->GetListBox())->AddEntrySort("Cartesian", kCOORDS_CAR);
+         lb = fCoordsCombo->GetListBox();
+         lb->Resize(lb->GetWidth(), 83);
+      }
    }
    if (fDim->GetState()!=kButtonUp){
       if (fErrorCombo->GetSelected() != kERRORS_NO){
@@ -885,6 +932,8 @@ void TH1Editor::DoHistChanges()
 	 if (fAddBar->GetState()==kButtonDisabled) fAddBar->SetState(kButtonUp);
 	 if (fAddLine->GetState()==kButtonDisabled) fAddLine->SetState(kButtonUp);
 	 fAddCombo->RemoveEntries(kADD_SIMPLE,kADD_FILL);
+         lb = fAddCombo->GetListBox();
+         lb->Resize(lb->GetWidth(),19);	 
 	 Disconnect(fAddCombo);
 	 fAddCombo->Select(kADD_NONE);
 	 fAddCombo->Connect("Selected(Int_t)", "TH1Editor", this, "DoHistChanges()");
@@ -907,7 +956,11 @@ void TH1Editor::DoHistChanges()
 	 if (fAddBar->GetState()!=kButtonDown && fAddB->GetState()==kButtonDisabled) fAddB->SetState(kButtonUp);
 	 if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_SIMPLE)==-1) ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Simple Line", kADD_SIMPLE);
 	 if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_SMOOTH)==-1) ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Smooth Line", kADD_SMOOTH);
-	 if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_FILL)==-1) ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Fill Area",kADD_FILL);
+	 if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_FILL)==-1){ 
+            ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Fill Area",kADD_FILL);
+	    lb = fAddCombo->GetListBox();
+            lb->Resize(lb->GetWidth(),76);	
+         }
          make=on;
       }
       if (fAddCombo->GetSelected()!=kADD_NONE) {
@@ -1014,17 +1067,84 @@ void TH1Editor::DoSlider()
 {
    // Slot connected to the x-Slider
    // Redraws the Histogram with the new Slider Range
-   
-   Int_t nx = fHist->GetXaxis()->GetNbins();
-   Int_t binxmin = (Int_t)(nx*fSlider->GetMinPosition());
-   Int_t binxmax = (Int_t)(nx*fSlider->GetMaxPosition());
-   if (binxmin==(fHist->GetXaxis()->GetNbins())) binxmin-=1;
-   else if (binxmax==binxmin) binxmax+=1;
-   if (binxmax==1) binxmax+=1;   
-   fHist->GetXaxis()->SetRange(binxmin,binxmax);
+
+   static Int_t px1,py1,px2,py2;
+   static Float_t ymin,ymax,xleft,xright;
+   xleft = fHist->GetXaxis()->GetBinLowEdge((Int_t)((fSlider->GetMinPosition())+0.5));
+   xright =  fHist->GetXaxis()->GetBinUpEdge((Int_t)((fSlider->GetMaxPosition())+0.5));
+   ymin  = gPad->GetUymin();
+   ymax  = gPad->GetUymax();
+   px1   = gPad->XtoAbsPixel(xleft);
+   py1   = gPad->YtoAbsPixel(ymin);
+   px2   = gPad->XtoAbsPixel(xright);
+   py2   = gPad->YtoAbsPixel(ymax);
+   gPad->GetCanvas()->FeedbackMode(kTRUE);
+   gPad->cd();
+   gVirtualX->SetLineWidth(2);
+   gVirtualX->SetLineColor(-1);
+   gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+
+/*   fHist->GetXaxis()->SetRange((Int_t)((fSlider->GetMinPosition())+0.5),(Int_t)((fSlider->GetMaxPosition())+0.5));
+   fSldMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge(fHist->GetXaxis()->GetFirst()));
+   fSldMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge(fHist->GetXaxis()->GetLast())); */
+   Update();
+}
+
+//______________________________________________________________________________
+
+void TH1Editor::DoSliderPressed()
+{
+   // ...
+   static Int_t px1,py1,px2,py2,nbins;
+   static Float_t ymin,ymax,xleft,xright;
+
+   if (!gPad) return;
+   gPad->cd();
+
+   gPad->GetCanvas()->FeedbackMode(kTRUE);
+   gVirtualX->SetLineWidth(2);
+   gVirtualX->SetLineColor(-1);
+   nbins = fHist->GetXaxis()->GetNbins();
+   xleft = fHist->GetXaxis()->GetBinLowEdge((Int_t)((fSlider->GetMinPosition())+0.5));
+   xright =  fHist->GetXaxis()->GetBinUpEdge((Int_t)((fSlider->GetMaxPosition())+0.5));
+   ymin  = gPad->GetUymin();
+   ymax  = gPad->GetUymax();
+   px1   = gPad->XtoAbsPixel(xleft);
+   py1   = gPad->YtoAbsPixel(ymin);
+   px2   = gPad->XtoAbsPixel(xright);
+   py2   = gPad->YtoAbsPixel(ymax);
+   gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);  
    Update();
 }
    
+//______________________________________________________________________________
+
+void TH1Editor::DoSliderReleased()
+{
+
+   fHist->GetXaxis()->SetRange((Int_t)((fSlider->GetMinPosition())+0.5),(Int_t)((fSlider->GetMaxPosition())+0.5));
+   fSldMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge(fHist->GetXaxis()->GetFirst()));
+   fSldMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge(fHist->GetXaxis()->GetLast()));
+   Update();
+}
+
+//______________________________________________________________________________
+
+void TH1Editor::DoAxisRange()
+{
+   // Slot connected to the TextNumberEntryFields which contain the Max/Min value of the x-axis
+   
+   Int_t nx = fHist->GetXaxis()->GetNbins();
+   Axis_t width = fHist->GetXaxis()->GetBinWidth(1);
+   if ((fSldMin->GetNumber()+width/2) < (fHist->GetXaxis()->GetBinLowEdge(1))) fSldMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge(1)); 
+   if ((fSldMax->GetNumber()-width/2) > (fHist->GetXaxis()->GetBinUpEdge(nx))) fSldMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge(nx)); 
+   fHist->GetXaxis()->SetRangeUser(fSldMin->GetNumber()+width/2, fSldMax->GetNumber()-width/2);
+   Int_t nxbinmin = fHist -> GetXaxis() -> GetFirst();
+   Int_t nxbinmax = fHist -> GetXaxis() -> GetLast();
+   fSlider->SetPosition((Double_t)(nxbinmin),(Double_t)(nxbinmax));
+   Update();
+}
+
 //______________________________________________________________________________
 
 TString TH1Editor::GetHistTypeLabel()
@@ -1157,7 +1277,9 @@ TGComboBox* TH1Editor::BuildHistCoordsComboBox(TGFrame* parent, Int_t id)
    c->AddEntry("Polar", kCOORDS_POL);
    c->AddEntry("Rapidity", kCOORDS_PSR);   
    c->AddEntry("Spheric", kCOORDS_SPH);   
-   
+   TGListBox* lb = c->GetListBox();
+   lb->Resize(lb->GetWidth(), 83);
+ 
    return c;
 }
 
@@ -1191,7 +1313,8 @@ TGComboBox* TH1Editor::BuildHistAddComboBox(TGFrame* parent, Int_t id)
    c->AddEntry("Simple Line", kADD_SIMPLE);
    c->AddEntry("Smooth Line", kADD_SMOOTH);
    c->AddEntry("Fill Area",kADD_FILL);
- 
+   TGListBox* lb = c->GetListBox();
+   lb->Resize(lb->GetWidth(), 76);
    return c;
 }
 
@@ -1208,6 +1331,8 @@ TGComboBox* TH1Editor::BuildPercentComboBox(TGFrame* parent, Int_t id)
    c->AddEntry("20 %", kPER_20);
    c->AddEntry("30 %", kPER_30);
    c->AddEntry("40 %", kPER_40);   
+   TGListBox* lb = c->GetListBox();
+   lb->Resize(lb->GetWidth(), 83);   
    
    return c;
 }
@@ -1249,6 +1374,8 @@ void TH1Editor::ChangeErrorCombo(Int_t i)
      case 0: {
         if (((TGLBContainer*)((TGListBox*)fErrorCombo->GetListBox())->GetContainer())->GetPos(kERRORS_EDGES)!=-1) fErrorCombo->RemoveEntries(kERRORS_EDGES,kERRORS_CONTOUR);
 	if (!((fErrorCombo->GetSelected()== kERRORS_NO) || (fErrorCombo->GetSelected()== kERRORS_SIMPLE))) fErrorCombo->Select(kERRORS_NO);
+        TGListBox* lb = fErrorCombo->GetListBox();
+        lb->Resize(lb->GetWidth(),36);	 
         break;
      }
      case 1: {   
@@ -1257,6 +1384,8 @@ void TH1Editor::ChangeErrorCombo(Int_t i)
            fErrorCombo->AddEntry("Rectangles",kERRORS_REC);
            fErrorCombo->AddEntry("Fill", kERRORS_FILL);   
            fErrorCombo->AddEntry("Contour", kERRORS_CONTOUR);
+           TGListBox* lb = fErrorCombo->GetListBox();
+           lb->Resize(lb->GetWidth(),100);	 
         }
 	break;
       }

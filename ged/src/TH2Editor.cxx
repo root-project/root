@@ -37,6 +37,13 @@
 #include "TGNumberEntry.h"
 #include "TG3DLine.h"
 #include "TGDoubleSlider.h"
+#include "TView.h"
+#include "TCanvas.h"
+#include "TGedPatternSelect.h"
+#include "TGColorSelect.h"
+#include "TGColorDialog.h"
+#include "TColor.h"
+
 
 ClassImp(TH2Editor)
 
@@ -84,7 +91,10 @@ enum {
    kSLIDERX_MIN,
    kSLIDERX_MAX,
    kSLIDERY_MIN,
-   kSLIDERY_MAX
+   kSLIDERY_MAX,
+   kDELAYED_DRAWING,
+   kCOLOR, 
+   kPATTERN
 };
 
 //______________________________________________________________________________
@@ -148,7 +158,7 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    f16 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGLabel *fColContLbl = new TGLabel(f16, "Cont #:");  
+   fColContLbl = new TGLabel(f16, "Cont #:");  
    f16->AddFrame(fColContLbl, new TGLayoutHints( kLHintsLeft, 11, 1, 4, 1));                            
    fContLevels = new TGNumberEntry(f16, 20, 0, kCONT_LEVELS, 
                                       TGNumberFormat::kNESInteger,
@@ -209,7 +219,7 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(f9, new TGLayoutHints(kLHintsTop, 3, 1, 0, 2));
 
    f19 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGLabel *fColContLbl1 = new TGLabel(f19, "Cont #:");  
+   fColContLbl1 = new TGLabel(f19, "Cont #:");  
    f19->AddFrame(fColContLbl1, new TGLayoutHints( kLHintsLeft, 29, 1, 4, 1));                            
    fContLevels1 = new TGNumberEntry(f19, 20, 0, kCONT_LEVELS1, 
                                       TGNumberFormat::kNESInteger,
@@ -218,7 +228,7 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    fContLevels1->GetNumberEntry()->SetToolTipText("Set number of contours (1..99)");
    fContLevels1->Resize(55,20);
    f19->AddFrame(fContLevels1, new TGLayoutHints(kLHintsLeft, 12, 1, 2, 1));
-   AddFrame(f19, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   AddFrame(f19, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
 
    f12 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
    f12->AddFrame(new TGLabel(f12,"Bar"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
@@ -294,6 +304,23 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    f18->AddFrame(fSldYMax, new TGLayoutHints(kLHintsLeft, 2, 0, 0, 0));
    AddFrame(f18, new TGLayoutHints(kLHintsTop, 20, 3, 3, 0));
 
+   TGCompositeFrame *f20 = new TGCompositeFrame(this, 80, 20, kVerticalFrame); 
+   fDelaydraw = new TGCheckButton(f20, "Delayed drawing", kDELAYED_DRAWING);
+   fDelaydraw ->SetToolTipText("Draw the new axis range when the Slider is released");
+   f20->AddFrame(fDelaydraw, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
+   AddFrame(f20, new TGLayoutHints(kLHintsTop, 1, 1, 5, 3)); 
+
+   MakeTitle("Frame Fill");
+   
+   TGCompositeFrame *f21 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   fFrameColor = new TGColorSelect(f21, 0, kCOLOR);
+   f21->AddFrame(fFrameColor, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 0));
+   fFrameColor->Associate(this);
+   fFramePattern = new TGedPatternSelect(f21, 1, kPATTERN);
+   f21->AddFrame(fFramePattern, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 0));
+   fFramePattern->Associate(this);
+   AddFrame(f21, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   
    MapSubwindows();
    Layout();
    MapWindow();
@@ -351,12 +378,18 @@ void TH2Editor::ConnectSignals2Slots()
    (fBarWidth->GetNumberEntry())->Connect("ReturnPressed()", "TH2Editor", this, "DoBarWidth()");   
    fBarOffset->Connect("ValueSet(Long_t)", "TH2Editor", this, "DoBarOffset()");
    (fBarOffset->GetNumberEntry())->Connect("ReturnPressed()", "TH2Editor", this, "DoBarOffset()");
-   fSliderX->Connect("PositionChanged()","TH2Editor",this,"DoSliderX()");  
+   fSliderX->Connect("PositionChanged()","TH2Editor",this, "DoSliderXMoved()");  
+   fSliderX->Connect("Pressed()","TH2Editor",this, "DoSliderXPressed()"); 
+   fSliderX->Connect("Released()","TH2Editor",this, "DoSliderXReleased()");     
    fSldXMin->Connect("ReturnPressed()", "TH2Editor", this, "DoXAxisRange()");
    fSldXMax->Connect("ReturnPressed()", "TH2Editor", this, "DoXAxisRange()");   
-   fSliderY->Connect("PositionChanged()","TH2Editor",this,"DoSliderY()");  
+   fSliderY->Connect("PositionChanged()","TH2Editor",this, "DoSliderYMoved()");  
+   fSliderY->Connect("Pressed()","TH2Editor",this, "DoSliderYPressed()"); 
+   fSliderY->Connect("Released()","TH2Editor",this, "DoSliderYReleased()");     
    fSldYMin->Connect("ReturnPressed()", "TH2Editor", this, "DoYAxisRange()");
    fSldYMax->Connect("ReturnPressed()", "TH2Editor", this, "DoYAxisRange()");   
+   fFrameColor->Connect("ColorSelected(Pixel_t)", "TH2Editor", this, "DoFillColor(Pixel_t)");
+   fFramePattern->Connect("PatternSelected(Style_t)", "TH2Editor", this, "DoFillPattern(Style_t)");
 
    fInit = kFALSE;
 } 
@@ -377,7 +410,6 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    fModel = obj;
    fPad = pad;
-   printf("SetModel called\n");
    fHist = (TH2*) fModel;
    const char *text = fHist->GetTitle();
    fTitle->SetText(text);
@@ -389,7 +421,7 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    str.ToUpper();
    
    if (str == "") {
-      // default options
+      // default options = Scatter-Plot
       HideFrame(f3);
       HideFrame(f4);
       ShowFrame(f5);
@@ -404,6 +436,7 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       fTypeCombo->Select(kTYPE_LEGO);
       fCoordsCombo->Select(kCOORDS_CAR);
       fContCombo->Select(kCONT_NONE);
+      
       fAddArr->SetState(kButtonUp);
       fAddBox->SetState(kButtonUp);
       fAddCol->SetState(kButtonUp);
@@ -446,8 +479,7 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       if (str.Contains("SCAT")) {
          if (str=="SCAT") fAddScat->SetState(kButtonDisabled);
 	 else fAddScat->SetState(kButtonDown);
-      } else /*if (!str.Contains("COL") && !str.Contains("CONT") && !str.Contains("BOX"))*/ fAddScat->SetState(kButtonUp);            
-//      else fAddScat->SetState(kButtonDisabled);
+      } else fAddScat->SetState(kButtonUp);            
       if (str.Contains("TEXT")) fAddText->SetState(kButtonDown);
       else fAddText->SetState(kButtonUp);
  
@@ -536,7 +568,21 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fSliderY->SetPosition((Double_t)nybinmin,(Double_t)nybinmax);
    fSldYMin->SetNumber(fHist->GetYaxis()->GetBinLowEdge(nybinmin));
    fSldYMax->SetNumber(fHist->GetYaxis()->GetBinUpEdge(nybinmax));
-     
+   
+   if (fDelaydraw->GetState()!=kButtonDown) fDelaydraw->SetState(kButtonUp);
+   
+   if (str.Contains("COL") || fContCombo->GetSelected()!= kCONT_NONE) fColContLbl->Enable() ;
+   else fColContLbl->Disable();
+   
+   if (str.Contains("LEGO2") || str.Contains("SURF1") || str.Contains("SURF2") || str.Contains("SURF3") || str.Contains("SURF5")) fColContLbl1->Enable() ;
+   else fColContLbl1->Disable();
+
+   if (!gPad) return;
+   gPad->cd();
+   fFrameColor->SetColor(TColor::Number2Pixel(gPad->GetFrameFillColor()));
+   fFramePattern->SetPattern(gPad->GetFrameFillStyle());
+   
+   SetActive();        
    Update();
    if (fInit) ConnectSignals2Slots();
    SetActive();
@@ -568,7 +614,6 @@ void TH2Editor::DoHistSimple()
    HideFrame(f13);   
    ShowFrame(f16);
    HideFrame(f19);
-   
    if (fContCombo->GetSelected()==-1) fContCombo->Select(kCONT_NONE);
    if ((fContCombo->GetSelected()!=kCONT_NONE) && fAddPalette->GetState()==kButtonDisabled) fAddPalette->SetState(kButtonUp);
    str = GetHistContLabel()+GetHistAdditiveLabel();
@@ -576,7 +621,8 @@ void TH2Editor::DoHistSimple()
       fAddScat->SetState(kButtonDisabled); 
       fAddPalette->SetState(kButtonDisabled);
    } else if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
-
+   if (str.Contains("COL") || fContCombo->GetSelected()!= kCONT_NONE) fColContLbl->Enable() ;
+   else fColContLbl->Disable() ; 
    SetDrawOption(str);
    SetActive();
    Update();
@@ -609,6 +655,9 @@ void TH2Editor::DoHistComplex()
  
    str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistAdditiveLabel(); 
 
+   if (str.Contains("LEGO2") || str.Contains("SURF1") || str.Contains("SURF2") || str.Contains("SURF3") || str.Contains("SURF5")) fColContLbl1->Enable() ;
+   else fColContLbl1->Disable() ;
+   
    SetDrawOption(str);
    SetActive();
    Update();
@@ -633,6 +682,8 @@ void TH2Editor::DoHistChanges()
 	 fAddPalette->SetState(kButtonDisabled);
       } else if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
       str = GetHistContLabel()+GetHistAdditiveLabel();
+      if (str.Contains("COL") || fContCombo->GetSelected()!= kCONT_NONE) fColContLbl->Enable();
+      else fColContLbl->Disable();
    } else if (fDim0->GetState() == kButtonDown) {
       if (fCoordsCombo->GetSelected()!=kCOORDS_CAR) {
          if (fAddFB->GetState()!=kButtonDisabled) fAddFB->SetState(kButtonDisabled);
@@ -655,6 +706,8 @@ void TH2Editor::DoHistChanges()
       }
       SetActive();
       str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistAdditiveLabel();
+      if (str.Contains("LEGO2") || str.Contains("SURF1") || str.Contains("SURF2") || str.Contains("SURF3") || str.Contains("SURF5")) fColContLbl1->Enable() ;
+      else fColContLbl1->Disable() ;
    }
    SetDrawOption(str);
    Update();
@@ -739,6 +792,7 @@ void TH2Editor::DoAddCol(Bool_t on)
 	    fAddBox->SetState(kButtonDisabled);
 	    if (str.Contains("BOX")) str.Remove(strstr(str.Data(),"BOX")-str.Data(),3);
 	 }*/
+	 fColContLbl->Enable() ;
 	 if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
 //	 if (fAddScat->GetState()!=kButtonDisabled) fAddScat->SetState(kButtonDisabled);
 	 if (fAddPalette->GetState()==kButtonDisabled) fAddPalette->SetState(kButtonUp);
@@ -753,7 +807,8 @@ void TH2Editor::DoAddCol(Bool_t on)
 	    if (str.Contains("Z")) str.Remove(strstr(str.Data(),"Z")-str.Data(),1);
 	 }
          if (str=="" || str=="SCAT" /*|| str.Contains("TEXT")*/) fAddScat->SetState(kButtonDisabled);
-//	 else if ((fContCombo->GetSelected()==kCONT_NONE || fContCombo->GetSelected()==kCONT_2 || fContCombo->GetSelected()==kCONT_3 ) && (fAddScat->GetState()==kButtonDisabled)) fAddScat->SetState(kButtonUp);
+         if (fContCombo->GetSelected()!= kCONT_NONE) fColContLbl->Enable() ;
+         else fColContLbl->Disable();
 	 make=kTRUE;
       }
    }
@@ -854,7 +909,7 @@ void TH2Editor::DoAddPalette(Bool_t on)
          str += "Z";
 	 make=kTRUE;
       }
-   } else if (fAddPalette->GetState()==kButtonUp) {
+   } else if (fAddPalette->GetState()==kButtonUp || fAddPalette1->GetState()==kButtonUp) {
       if (str.Contains("Z")) {
          str.Remove(strstr(str.Data(),"Z")-str.Data(),1);
 	 make=kTRUE;
@@ -965,15 +1020,132 @@ void TH2Editor::DoBarOffset()
 
 //______________________________________________________________________________
 
-void TH2Editor::DoSliderX()
+void TH2Editor::DoSliderXMoved()
 {
    // Slot connected to the x-Slider
    // Redraws the Histogram with the new Slider Range
    
-   fHist->GetXaxis()->SetRange((Int_t)((fSliderX->GetMinPosition())+0.5),(Int_t)((fSliderX->GetMaxPosition())+0.5));
-   fSldXMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge(fHist->GetXaxis()->GetFirst()));
-   fSldXMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge(fHist->GetXaxis()->GetLast())); 
-   Update();   
+   if (fDelaydraw->GetState()==kButtonDown && fDim->GetState()==kButtonDown) {
+      static Int_t px1,py1,px2,py2;
+      static Float_t ymin,ymax,xleft,xright;
+      xleft = fHist->GetXaxis()->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
+      xright =  fHist->GetXaxis()->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
+      ymin  = gPad->GetUymin();
+      ymax  = gPad->GetUymax();
+      px1   = gPad->XtoAbsPixel(xleft);
+      py1   = gPad->YtoAbsPixel(ymin);
+      px2   = gPad->XtoAbsPixel(xright);
+      py2   = gPad->YtoAbsPixel(ymax);
+      gPad->GetCanvas()->FeedbackMode(kTRUE);
+      gPad->cd();
+      gVirtualX->SetLineWidth(1);
+      gVirtualX->SetLineColor(2);
+      gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
+      gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+      fPx1old = px1;
+      fPy1old = py1;
+      fPx2old = px2 ;
+      fPy2old = py2;
+      gVirtualX->Update(0);
+      fSldXMin->SetNumber(xleft);
+      fSldXMax->SetNumber(xright);
+   }  else  if (fDelaydraw->GetState()==kButtonDown && fDim0->GetState()==kButtonDown && fCoordsCombo->GetSelected()==kCOORDS_CAR) {
+      static Float_t p1[3], p2[3], p3[3], p4[3], p5[3], p6[3], p7[3], p8[3];
+      gPad->GetCanvas()->FeedbackMode(kTRUE); 
+      gPad->cd();
+      TView *fView = gPad->GetView();
+      Double_t *rmin = fView->GetRmin();
+      Double_t *rmax = fView->GetRmax();
+      p1[0] = p4[0] = p5[0] = p8[0] =fHist->GetXaxis()->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
+      p2[0] = p3[0] = p6[0] = p7[0] = fHist->GetXaxis()->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
+      p1[1] = p2[1] = p3[1] = p4[1] = rmin[1];
+      p5[1] = p6[1] = p7[1] = p8[1] = rmax[1];
+      p1[2] = p2[2] = p5[2] = p6[2] = rmin[2];
+      p3[2] = p4[2] = p7[2] = p8[2] = rmax[2];
+      gPad->SetLineWidth(1);
+      gPad->SetLineColor(2);
+      PaintBox3D(fP2oldx, fP3oldx, fP7oldx, fP6oldx);
+      PaintBox3D(fP1oldx, fP4oldx, fP8oldx, fP5oldx);
+      PaintBox3D(p2, p3, p7, p6);
+      PaintBox3D(p1, p4, p8, p5);
+      for (Int_t i = 0; i<3; i++){
+         fP1oldx[i] = p1[i];
+         fP2oldx[i] = p2[i];      
+         fP3oldx[i] = p3[i];      
+         fP4oldx[i] = p4[i];                              
+         fP5oldx[i] = p5[i];
+         fP6oldx[i] = p6[i];      
+         fP7oldx[i] = p7[i];      
+         fP8oldx[i] = p8[i];                              
+      }
+      fSldXMin->SetNumber(p1[0]);
+      fSldXMax->SetNumber(p2[0]);
+   } else  if (fDelaydraw->GetState()==kButtonDown && fDim0->GetState()==kButtonDown) {
+      fSldXMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5)));
+      fSldXMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5)));
+   } else {
+      fHist->GetXaxis()->SetRange((Int_t)((fSliderX->GetMinPosition())+0.5),(Int_t)((fSliderX->GetMaxPosition())+0.5));
+      fSldXMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge(fHist->GetXaxis()->GetFirst()));
+      fSldXMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge(fHist->GetXaxis()->GetLast())); 
+      Update();   
+   }
+
+}
+
+//______________________________________________________________________________
+
+void TH2Editor::DoSliderXPressed()
+{
+   // ...
+   
+   static Float_t ymin,ymax,xleft,xright;
+   if (fDelaydraw->GetState()==kButtonDown && fDim->GetState()==kButtonDown) {
+      if (!gPad) return;
+      gPad->cd();
+      gPad->GetCanvas()->FeedbackMode(kFALSE);
+      gVirtualX->SetLineWidth(1);
+      gVirtualX->SetLineColor(2);
+      xleft = fHist->GetXaxis()->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
+      xright =  fHist->GetXaxis()->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
+      ymin  = gPad->GetUymin();
+      ymax  = gPad->GetUymax();
+      fPx1old   = gPad->XtoAbsPixel(xleft);
+      fPy1old   = gPad->YtoAbsPixel(ymin);
+      fPx2old   = gPad->XtoAbsPixel(xright);
+      fPy2old   = gPad->YtoAbsPixel(ymax);
+      gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
+   } else if (fDelaydraw->GetState()==kButtonDown && fDim0->GetState()==kButtonDown && fCoordsCombo->GetSelected()==kCOORDS_CAR) {
+      if (!gPad) return;
+      gPad->cd();
+      TView *fView = gPad->GetView();
+      Double_t *rmin = fView->GetRmin();
+      Double_t *rmax = fView->GetRmax();
+      fP1oldx[0] = fP4oldx[0] = fP5oldx[0] = fP8oldx[0] = fHist->GetXaxis()->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
+      fP2oldx[0] = fP3oldx[0] = fP6oldx[0] = fP7oldx[0] = fHist->GetXaxis()->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
+      fP1oldx[1] = fP2oldx[1] = fP3oldx[1] = fP4oldx[1] = rmin[1];
+      fP5oldx[1] = fP6oldx[1] = fP7oldx[1] = fP8oldx[1] = rmax[1];
+      fP1oldx[2] = fP2oldx[2] = fP5oldx[2] = fP6oldx[2] = rmin[2]; 
+      fP3oldx[2] = fP4oldx[2] = fP7oldx[2] = fP8oldx[2] = rmax[2];
+      gPad->GetCanvas()->FeedbackMode(kTRUE); 
+      gPad->SetLineWidth(1);
+      gPad->SetLineColor(2);
+      PaintBox3D(fP2oldx, fP3oldx, fP7oldx, fP6oldx);
+      PaintBox3D(fP1oldx, fP4oldx, fP8oldx, fP5oldx);
+   }
+   Update();
+}
+   
+//______________________________________________________________________________
+
+void TH2Editor::DoSliderXReleased()
+{
+
+   if (fDelaydraw->GetState()==kButtonDown) {
+      fHist->GetXaxis()->SetRange((Int_t)((fSliderX->GetMinPosition())+0.5),(Int_t)((fSliderX->GetMaxPosition())+0.5));
+      fSldXMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge(fHist->GetXaxis()->GetFirst()));
+      fSldXMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge(fHist->GetXaxis()->GetLast()));
+      Update();
+   }
 }
 
 //______________________________________________________________________________
@@ -995,15 +1167,134 @@ void TH2Editor::DoXAxisRange()
 
 //______________________________________________________________________________
 
-void TH2Editor::DoSliderY()
+
+void TH2Editor::DoSliderYMoved()
 {
-   // Slot connected to the y-Slider
+   // Slot connected to the x-Slider
    // Redraws the Histogram with the new Slider Range
    
-   fHist->GetYaxis()->SetRange((Int_t)((fSliderY->GetMinPosition())+0.5),(Int_t)((fSliderY->GetMaxPosition())+0.5));
-   fSldYMin->SetNumber(fHist->GetYaxis()->GetBinLowEdge(fHist->GetYaxis()->GetFirst()));
-   fSldYMax->SetNumber(fHist->GetYaxis()->GetBinUpEdge(fHist->GetYaxis()->GetLast())); 
-   Update();   
+   if (fDelaydraw->GetState()==kButtonDown && fDim->GetState()==kButtonDown) {
+      static Int_t px1,py1,px2,py2;
+      static Float_t xmin,xmax,ybottom,ytop;
+      ybottom = fHist->GetYaxis()->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5));
+      ytop =  fHist->GetYaxis()->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));
+      xmin  = gPad->GetUxmin();
+      xmax  = gPad->GetUxmax();
+      px1   = gPad->XtoAbsPixel(xmin);
+      py1   = gPad->YtoAbsPixel(ybottom);
+      px2   = gPad->XtoAbsPixel(xmax);
+      py2   = gPad->YtoAbsPixel(ytop);
+      gPad->GetCanvas()->FeedbackMode(kTRUE);
+      gPad->cd();
+      gVirtualX->SetLineWidth(1);
+      gVirtualX->SetLineColor(2);
+      gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
+      gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+      fPx1old = px1;
+      fPy1old = py1;
+      fPx2old = px2 ;
+      fPy2old = py2; 
+      gVirtualX->Update(0);
+      fSldYMin->SetNumber(ybottom);
+      fSldYMax->SetNumber(ytop);
+   } else  if (fDelaydraw->GetState()==kButtonDown && fDim0->GetState()==kButtonDown && fCoordsCombo->GetSelected()==kCOORDS_CAR) {
+      static Float_t p1[3], p2[3], p3[3], p4[3], p5[3], p6[3], p7[3], p8[3];
+      gPad->GetCanvas()->FeedbackMode(kTRUE); 
+      gPad->cd();
+      TView *fView = gPad->GetView();
+      Double_t *rmin = fView->GetRmin();
+      Double_t *rmax = fView->GetRmax();
+      p1[0] = p2[0] = p3[0] = p4[0] = rmin[0];
+      p5[0] = p6[0] = p7[0] = p8[0] = rmax[0];
+      p1[1] = p4[1] = p5[1] = p8[1] = fHist->GetYaxis()->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5));
+      p2[1] = p3[1] = p6[1] = p7[1] = fHist->GetYaxis()->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));
+      p1[2] = p2[2] = p5[2] = p6[2] = rmin[2];
+      p3[2] = p4[2] = p7[2] = p8[2] = rmax[2];
+      gPad->SetLineWidth(1);
+      gPad->SetLineColor(2);
+      PaintBox3D(fP2oldy, fP3oldy, fP7oldy, fP6oldy);
+      PaintBox3D(fP1oldy, fP4oldy, fP8oldy, fP5oldy);
+      PaintBox3D(p2, p3, p7, p6);
+      PaintBox3D(p1, p4, p8, p5);
+      for (Int_t i = 0; i<3; i++) { 
+         fP1oldy[i] = p1[i];
+         fP2oldy[i] = p2[i];      
+         fP3oldy[i] = p3[i];      
+         fP4oldy[i] = p4[i];     
+         fP5oldy[i] = p5[i];
+         fP6oldy[i] = p6[i];      
+         fP7oldy[i] = p7[i];      
+         fP8oldy[i] = p8[i];                                
+      }   
+      fSldYMin->SetNumber(p1[1]);
+      fSldYMax->SetNumber(p2[1]);
+   } else  if (fDelaydraw->GetState()==kButtonDown && fDim0->GetState()==kButtonDown) {
+      fSldYMin->SetNumber(fHist->GetYaxis()->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5)));
+      fSldYMax->SetNumber(fHist->GetYaxis()->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5)));
+   } else {
+      fHist->GetYaxis()->SetRange((Int_t)((fSliderY->GetMinPosition())+0.5),(Int_t)((fSliderY->GetMaxPosition())+0.5));
+      fSldYMin->SetNumber(fHist->GetYaxis()->GetBinLowEdge(fHist->GetYaxis()->GetFirst()));
+      fSldYMax->SetNumber(fHist->GetYaxis()->GetBinUpEdge(fHist->GetYaxis()->GetLast())); 
+      Update();   
+   }
+
+}
+
+//______________________________________________________________________________
+
+void TH2Editor::DoSliderYPressed()
+{
+   // ...
+   
+   static Float_t xmin,xmax,ytop,ybottom;
+   if (fDelaydraw->GetState()==kButtonDown && fDim->GetState()==kButtonDown) {
+      if (!gPad) return;
+      gPad->cd();
+      gPad->GetCanvas()->FeedbackMode(kFALSE);
+      gVirtualX->SetLineWidth(1);
+      gVirtualX->SetLineColor(2);
+      ybottom = fHist->GetYaxis()->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5));
+      ytop =  fHist->GetYaxis()->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));
+      xmin  = gPad->GetUxmin();
+      xmax  = gPad->GetUxmax();
+      fPx1old   = gPad->XtoAbsPixel(xmin);
+      fPy1old   = gPad->YtoAbsPixel(ybottom);
+      fPx2old   = gPad->XtoAbsPixel(xmax);
+      fPy2old   = gPad->YtoAbsPixel(ytop);
+      gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
+   }  else if (fDelaydraw->GetState()==kButtonDown && fDim0->GetState()==kButtonDown && fCoordsCombo->GetSelected()==kCOORDS_CAR) {
+      if (!gPad) return;
+      gPad->cd();
+      TView *fView = gPad->GetView();
+      Double_t *rmin = fView->GetRmin();
+      Double_t *rmax = fView->GetRmax();
+
+      fP1oldy[0] = fP2oldy[0] = fP3oldy[0] = fP4oldy[0] = rmin[0];
+      fP5oldy[0] = fP6oldy[0] = fP7oldy[0] = fP8oldy[0] = rmax[0];
+      fP1oldy[1] = fP4oldy[1] = fP5oldy[1] = fP8oldy[1] = fHist->GetYaxis()->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5));
+      fP2oldy[1] = fP3oldy[1] = fP6oldy[1] = fP7oldy[1] = fHist->GetYaxis()->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));
+      fP1oldy[2] = fP2oldy[2] = fP5oldy[2] = fP6oldy[2] = rmin[2]; 
+      fP3oldy[2] = fP4oldy[2] = fP7oldy[2] = fP8oldy[2] = rmax[2];
+      gPad->GetCanvas()->FeedbackMode(kTRUE); 
+      gPad->SetLineWidth(1);
+      gPad->SetLineColor(2);
+      PaintBox3D(fP2oldy, fP3oldy, fP7oldy, fP6oldy);
+      PaintBox3D(fP1oldy, fP4oldy, fP8oldy, fP5oldy);
+   }
+   Update();
+}
+   
+//______________________________________________________________________________
+
+void TH2Editor::DoSliderYReleased()
+{
+
+   if (fDelaydraw->GetState()==kButtonDown) {
+      fHist->GetYaxis()->SetRange((Int_t)((fSliderY->GetMinPosition())+0.5),(Int_t)((fSliderY->GetMaxPosition())+0.5));
+      fSldYMin->SetNumber(fHist->GetYaxis()->GetBinLowEdge(fHist->GetYaxis()->GetFirst()));
+      fSldYMax->SetNumber(fHist->GetYaxis()->GetBinUpEdge(fHist->GetYaxis()->GetLast()));
+      Update();
+   }
 }
 
 //______________________________________________________________________________
@@ -1020,6 +1311,30 @@ void TH2Editor::DoYAxisRange()
    Int_t nybinmin = fHist -> GetYaxis() -> GetFirst();
    Int_t nybinmax = fHist -> GetYaxis() -> GetLast();
    fSliderY->SetPosition((Double_t)(nybinmin),(Double_t)(nybinmax));
+   Update();
+}
+
+//______________________________________________________________________________
+
+void TH2Editor::DoFillColor(Pixel_t color)
+{
+   // Slot connected to the fill area color.
+
+   if (!gPad) return;
+   gPad->cd();
+   gPad->SetFrameFillColor(TColor::GetColor(color));
+   Update();
+}
+
+//______________________________________________________________________________
+
+void TH2Editor::DoFillPattern(Style_t pattern)
+{
+   // Slot connected to the fill area pattern.
+
+   if (!gPad) return;
+   gPad->cd();
+   gPad->SetFrameFillStyle(pattern);
    Update();
 }
 
@@ -1172,7 +1487,7 @@ TGComboBox* TH2Editor::BuildHistContComboBox(TGFrame* parent, Int_t id)
 void TH2Editor::DisconnectAllSlots()
 {
    // Disconnects all Signals from the Slots
-   
+
    Disconnect(fDim, "Pressed()", this, "DoHistSimple()");
    Disconnect(fDim0, "Pressed()", this, "DoHistComplex()");   
    Disconnect(fTitle,"TextChanged(const char *)", this, "DoTitle(const char *)");
@@ -1198,5 +1513,25 @@ void TH2Editor::DisconnectAllSlots()
    Disconnect(fBarOffset, "ValueSet(Long_t)", this, "DoBarOffset()");
    Disconnect((fBarOffset->GetNumberEntry()), "ReturnPressed()", this, "DoBarOffset()");
    Disconnect(fSliderX, "PositionChanged()", this, "DoSliderX()");  
+   Disconnect(fSliderX, "Pressed()", this, "DoSliderXPressed()"); 
+   Disconnect(fSliderX, "Released()", this, "DoSliderXReleased()");     
    Disconnect(fSliderY, "PositionChanged()", this, "DoSliderY()");  
+   Disconnect(fSliderY, "Pressed()", this, "DoSliderYPressed()"); 
+   Disconnect(fSliderY, "Released()", this, "DoSliderYReleased()");     
+   Disconnect(fSldYMin, "ReturnPressed()", this, "DoYAxisRange()");
+   Disconnect(fSldYMax, "ReturnPressed()", this, "DoYAxisRange()");   
+   Disconnect(fFrameColor, "ColorSelected(Pixel_t)", this, "DoFillColor(Pixel_t)");
+   Disconnect(fFramePattern, "PatternSelected(Style_t)", this, "DoFillPattern(Style_t)"); 
+}
+
+//______________________________________________________________________________
+
+void TH2Editor::PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4) 
+{
+   // Paints a square in 3D
+
+   gPad->PaintLine3D(p1, p2);
+   gPad->PaintLine3D(p2, p3);
+   gPad->PaintLine3D(p3, p4);
+   gPad->PaintLine3D(p4, p1);
 }

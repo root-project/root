@@ -42,6 +42,9 @@ class TGButtonGroup;
 class TGHButtonGroup;
 class TGRadioButton;
 class TGNumberEntryField;
+class TGColorSelect;
+class TGedPatternSelect;
+class TAttFill;
 
 class TH2Editor : public TGedFrame {
 
@@ -51,6 +54,8 @@ protected:
    TGComboBox	       *fTypeCombo;    // histogram type combo box
    TGComboBox 	       *fCoordsCombo;  // Coordinate System combo box
    TGComboBox          *fContCombo;    // Contour selecting combo box 
+   TGLabel             *fColContLbl;   // No. of Contours Label 1
+   TGLabel             *fColContLbl1;  // No. of Contours Label 2   
    Int_t                fTitlePrec;    // font precision level
    TGHButtonGroup      *fdimgroup;     // Radiobuttongroup to change 2D <-> 3D-Plot
    TGRadioButton       *fDim;          // 2D-Plot RadioButton
@@ -84,7 +89,10 @@ protected:
    TGDoubleHSlider     *fSliderY;      // Slider to set y-axis range   
    TGNumberEntryField  *fSldYMin;      // Contains the minimum value of the y-Axis
    TGNumberEntryField  *fSldYMax;      // Contains the maximum value of the y-Axis  
-
+   TGCheckButton       *fDelaydraw;    // Delayed drawing of the new axis range
+   TGColorSelect       *fFrameColor;   // Select the Frame Color
+   TGedPatternSelect   *fFramePattern; // Select the Frame Pattern Style
+   
    static  TGComboBox *BuildHistTypeComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistCoordsComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistContComboBox(TGFrame* parent, Int_t id);
@@ -92,10 +100,16 @@ protected:
    virtual void ConnectSignals2Slots();
 
 private:
+   void PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4);
    TString GetHistTypeLabel();
    TString GetHistCoordsLabel();
    TString GetHistContLabel();
    TString GetHistAdditiveLabel();
+   virtual void DisconnectAllSlots();   
+   Int_t  fPx1old,fPy1old,fPx2old,fPy2old;
+   Float_t fP1oldx[3], fP2oldx[3], fP3oldx[3], fP4oldx[3], fP5oldx[3], fP6oldx[3], fP7oldx[3], fP8oldx[3];
+   Float_t fP1oldy[3], fP2oldy[3], fP3oldy[3], fP4oldy[3], fP5oldy[3], fP6oldy[3], fP7oldy[3], fP8oldy[3];
+   
    
 public:
    TH2Editor(const TGWindow *p, Int_t id,
@@ -122,11 +136,16 @@ public:
    virtual void DoContLevel1();   
    virtual void DoBarWidth();
    virtual void DoBarOffset();
-   virtual void DoSliderX();
+   virtual void DoSliderXMoved();
+   virtual void DoSliderXPressed();
+   virtual void DoSliderXReleased();      
    virtual void DoXAxisRange();   
-   virtual void DoSliderY();
+   virtual void DoSliderYMoved();
+   virtual void DoSliderYPressed();
+   virtual void DoSliderYReleased();      
    virtual void DoYAxisRange();   
-   virtual void DisconnectAllSlots();   
+   virtual void DoFillColor(Pixel_t);
+   virtual void DoFillPattern(Style_t);
    ClassDef(TH2Editor,0)  // TH2 editor
 };
 
