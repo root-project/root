@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.85 2001/08/13 17:24:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.86 2001/08/15 09:49:39 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -33,7 +33,8 @@
 #include "TError.h"
  
 Int_t   TStreamerInfo::fgCount = 0;
-Bool_t  TStreamerInfo::fgOptimize = kTRUE;
+Bool_t  TStreamerInfo::fgCanDelete = kTRUE;
+Bool_t  TStreamerInfo::fgOptimize  = kTRUE;
 TFile  *TStreamerInfo::fgFile = 0;
 
 const Int_t kRegrouped = TStreamerInfo::kOffsetL;
@@ -604,6 +605,13 @@ void TStreamerInfo::BuildUserInfo(const char *info)
    delete [] newoffset;
    delete [] newmethod;
 #endif
+}
+
+//______________________________________________________________________________
+Bool_t TStreamerInfo::CanDelete()
+{
+// static function returning true if ReadBuffer can delete object
+   return fgCanDelete;
 }
 
 //______________________________________________________________________________
@@ -2375,6 +2383,19 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
       }
    }
    return 0;
+}
+
+//______________________________________________________________________________
+void TStreamerInfo::SetCanDelete(Bool_t opt)
+{
+//  This is a static function.
+//  Set object delete option.
+//  When this option is activated (default), ReadBuffer automatically
+//  delete objects when a data member is a pointer to an object.
+//  If your constructor is not presetting pointers to 0, you must
+//  call this static function TStreamerInfo::SetCanDelete(kFALSE);
+
+   fgCanDelete = opt;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.26 2001/05/31 08:52:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.27 2001/05/31 10:01:58 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -54,6 +54,7 @@ private:
    TObjArray        *fElements;       //Array of TStreamerElements
 
    static  Int_t     fgCount;         //Number of TStreamerInfo instances
+   static  Bool_t    fgCanDelete;     //True if ReadBuffer can delete object
    static  Bool_t    fgOptimize;      //True if optimization on
    static  TFile    *fgFile;          //Pointer to current file
    
@@ -119,6 +120,8 @@ public:
    static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl, Int_t version);
    static Bool_t       CanOptimize();
    static void         Optimize(Bool_t opt=kTRUE);
+   static Bool_t       CanDelete();
+   static void         SetCanDelete(Bool_t opt=kTRUE);
 
    ClassDef(TStreamerInfo,2)  //Streamer information for one class version
 };
