@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.6 2002/05/13 10:39:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.7 2002/07/16 13:57:14 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -193,9 +193,11 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
    if (fCanCall == -1)
       return 0;
 
-   if (nargs != fMethod->GetNargs()) {
-      Error("ExecPlugin", "nargs (%d) not consistent with expected number of arguments (%d)",
-            nargs, fMethod->GetNargs());
+   if (nargs < fMethod->GetNargs() - fMethod->GetNargsOpt() ||
+       nargs > fMethod->GetNargs()) {
+      Error("ExecPlugin", "nargs (%d) not consistent with expected number of arguments ([%d-%d])",
+            nargs, fMethod->GetNargs() - fMethod->GetNargsOpt(),
+            fMethod->GetNargs());
       return 0;
    }
 
