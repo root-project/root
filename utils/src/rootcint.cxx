@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.58 2002/01/25 11:34:50 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.59 2002/04/24 17:17:36 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -322,21 +322,22 @@ G__TypeInfo &TemplateArg(G__DataMemberInfo &m, int count = 0)
    int len = strlen(arg);
    int nesting = 0;
    int i = 0;
+   current = 0;
    next = &(arg[0]);
    for (int c = 0; c<len && i<=count; c++) {
-     switch (arg[c]) {
-     case '<': nesting++; break;
-     case '>': nesting--; break;
-     case ',': if (nesting==0) { 
-                  arg[c]=0; 
-                  i++; 
-                  current = next; 
-                  next = &(arg[c+1]);
-               }; break;
-     }
-
+      switch (arg[c]) {
+      case '<': nesting++; break;
+      case '>': nesting--; break;
+      case ',': if (nesting==0) {
+                   arg[c]=0;
+                   i++;
+                   current = next;
+                   next = &(arg[c+1]);
+                };
+                break;
+      }
    }
-   ti.Init(current);
+   if (current) ti.Init(current);
 
    return ti;
 }
@@ -354,21 +355,22 @@ G__TypeInfo &TemplateArg(G__BaseClassInfo &m, int count = 0)
    int len = strlen(arg);
    int nesting = 0;
    int i = 0;
+   current = 0;
    next = &(arg[0]);
    for (int c = 0; c<len && i<=count; c++) {
-     switch (arg[c]) {
-     case '<': nesting++; break;
-     case '>': nesting--; break;
-     case ',': if (nesting==0) { 
-                  arg[c]=0; 
-                  i++; 
-                  current = next; 
-                  next = &(arg[c+1]);
-               }; break;
-     }
-
+      switch (arg[c]) {
+      case '<': nesting++; break;
+      case '>': nesting--; break;
+      case ',': if (nesting==0) {
+                   arg[c]=0;
+                   i++;
+                   current = next;
+                   next = &(arg[c+1]);
+                };
+                break;
+      }
    }
-   ti.Init(current);
+   if (current) ti.Init(current);
 
    return ti;
 }
@@ -1569,7 +1571,7 @@ void WriteShowMembers(G__ClassInfo &cl)
        fprintf(fp, "   TClass *R__cl  = msvc_bug_workaround::IsA();\n");
     } else
        fprintf(fp, "   TClass *R__cl  = %s::IsA();\n", cl.Fullname());
-#else   
+#else
    fprintf(fp, "   TClass *R__cl  = %s::IsA();\n", cl.Fullname());
 #endif
    fprintf(fp, "   Int_t   R__ncp = strlen(R__parent);\n");
