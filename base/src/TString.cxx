@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.27 2004/05/13 11:40:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.28 2004/05/14 16:59:54 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1508,8 +1508,9 @@ static char *Format(const char *format, va_list ap)
 char *Form(const char *va_(fmt), ...)
 {
    // Formats a string in a circular formatting buffer. Removes the need to
-   // create and delete short lived strings. Espcially useful to embed
-   // in arguments.
+   // create and delete short lived strings. Avoid passing Form() pointers
+   // from user programs down to ROOT functions as the circular buffer may
+   // be overwritten downstream by the ROOT internals.
 
    va_list ap;
    va_start(ap,va_(fmt));
