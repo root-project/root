@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.9 2003/04/14 13:51:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.10 2003/04/15 09:36:21 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ const char *TSpectrum::Background(TH1 * h, int number_of_iterations,
 
 
 //______________________________________________________________________________
-    Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option) 
+    Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t threshold) 
 {
    
 /////////////////////////////////////////////////////////////////////////////
@@ -163,14 +163,18 @@ const char *TSpectrum::Background(TH1 * h, int number_of_iterations,
       Int_t size = hin->GetXaxis()->GetNbins();
       Int_t i, bin, npeaks;
       Float_t * source = new float[size];
+      Float_t * dest   = new float[size];
       for (i = 0; i < size; i++)
          source[i] = hin->GetBinContent(i + 1);
-      int threshold = (int) (2 * TMath::Sqrt(0.5 * hin->GetMaximum()));
+      //int threshold = (int) (2 * TMath::Sqrt(0.5 * hin->GetMaximum()));
       if (strstr(option, "old")) {
          npeaks = Search1(source, size, sigma);
+      } else if (strstr(option, "new")){
+         npeaks =
+             Search1HighRes(source, dest, size, sigma, threshold, kTRUE, 3, kTRUE, 3);
       } else {
          npeaks =
-             Search1General(source, size, sigma, threshold, kTRUE, 3);
+             Search1General(source, dest, size, sigma, threshold, kTRUE, 3);
       }
       TH1 * hnew = (TH1 *) hin->Clone("markov");
       for (i = 0; i < size; i++)
@@ -2434,96 +2438,100 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
 
 
 //_____________________________________________________________________________
-    Int_t TSpectrum::Search1General(float *spectrum, int size,
-                                     float sigma, int threshold,
-                                     bool markov, int aver_window) 
+    Int_t TSpectrum::Search1General(float *source,float *dest, int size,
+                                     float sigma, double threshold,
+                                     bool markov, int aver_window)
 {
-   
+
 /////////////////////////////////////////////////////////////////////////////
-/*	ONE-DIMENSIONAL PEAK SEARCH FUNCTION				   */ 
-/*	This function searches for peaks in source spectrum		   */ 
-/*	The number of found peaks and their positions are written into	   */ 
-/*	structure pointed by one_dim_peak structure pointer.		   */ 
-/*									   */ 
-/*	Function parameters:						   */ 
-/*	source-pointer to the vector of source spectrum			   */ 
-/*             if markov==true source spectrum is replaced by new          */ 
-/*             spectrum calculated using Markov chains method.             */ 
-/*	size-length of source spectrum and working space                   */ 
-/*	sigma-sigma of searched peaks, for details we refer to manual	   */ 
-/*	threshold-threshold value for selected peaks, see manual           */ 
-/*      markov-logical variable, if it is true, first the source spectrum  */ 
-/*             is replaced by new spectrum calculated using Markov         */ 
-/*             chains method.                                              */ 
-/*	aver_window-averanging window of searched peaks, for details       */ 
-/*                  we refer to manual (applies only for Markov method)    */ 
-/*									   */ 
+/*	ONE-DIMENSIONAL GENERAL PEAK SEARCH FUNCTION			   */
+/*	This function searches for peaks in source spectrum		   */
+/*									   */
+/*	Function parameters:						   */
+/*	source-pointer to the vector of source spectrum			   */
+/*	dest-pointer to the vector of resulting SSD spectrum		   */
+/*	size-length of source spectrum			                   */
+/*	sigma-sigma of searched peaks, for details we refer to manual	   */
+/*	threshold-threshold value in % for selected peaks, peaks with      */
+/*                amplitude of SSD less than threshold*highest_SSD_peak/100*/
+/*                are ignored, see manual                                  */
+/*      markov-logical variable, if it is true, first the source spectrum  */
+/*             is replaced by new spectrum calculated using Markov         */
+/*             chains method.                                              */
+/*	aver_window-averanging window of searched peaks, for details       */
+/*                  we refer to manual (applies only for Markov method)    */
+/*									   */
 /////////////////////////////////////////////////////////////////////////////
-   int xmin = 0, xmax = size, i, l, peak_index = 0;
-   float a, b = 0, suma, sumai, maxch;
+   int xmin, xmax, i, l, peak_index = 0;
+   float a, b, maxch;
    float nom, nip, nim, sp, sm, plocha = 0;
-   int j, i1 = 0, i2 = 0, i3 = 0, i5, n1, n2, n3, stav, lmin, lmax;
-   float s, f, si4 = 0, fi4 = 0, sold, fold =
-       0, norma, filter[PEAK_WINDOW];
-   if (sigma < 0) {
-      Error("Search1General", "Invalid sigma, must be nonnegative");
+   int j, lmin, lmax;
+   float s, norma, filter[PEAK_WINDOW], minimum=0;
+   if (sigma < 1) {
+      Error("Search1General", "Invalid sigma, must be greater than or equal to 1");
+      return 0;
+   }	
+   if(threshold<=0||threshold>=100){
+      Error("Search1General", "Invalid threshold, must be positive and less than 100");
       return 0;
    }
-   j = (int) (3.0 * sigma + 0.5);
+   j = (int) (5.0 * sigma + 0.5);
    if (j >= PEAK_WINDOW / 2) {
       Error("Search1General", "Too large sigma");
       return 0;
    }
-   if (threshold < 0) {
-      Error("Search1General", "Invalide threshold, must be nonnegative");
-      return 0;
-   }
    if (markov == true) {
       if (aver_window <= 0) {
-         Error("Search1General", "AVERAGING WINDOW, MUST BE POSITIVE");
-         return 0;
-      }
-      xmin = aver_window;
-      xmax = size - aver_window;
-      if (xmax <= xmin) {
-         Error("Search1General", "TOO LARGE AVERAGING WINDOW");
+         Error("Search1General", "Averanging window must be positive");
          return 0;
       }
    }
    float *working_space = new float[size];
-   for (i = 0; i < PEAK_WINDOW; i++)
+   for (i = 0; i < PEAK_WINDOW; i++){
       filter[i] = 0;
+   }   
    if (markov == true) {
+      xmin = 0;
+      xmax = size - 1; 	
       for (i = 0, maxch = 0; i < size; i++) {
          working_space[i] = 0;
-         if (maxch < spectrum[i])
-            maxch = spectrum[i];
-         plocha += spectrum[i];
+         if (maxch < source[i])
+            maxch = source[i];         
+         plocha += source[i];
       }
       if (maxch == 0)
          return 0;
       nom = 1;
       working_space[xmin] = 1;
       for (i = xmin; i < xmax; i++) {
-         nip = spectrum[i] / maxch;
-         nim = spectrum[i + 1] / maxch;
+         nip = source[i] / maxch;
+         nim = source[i + 1] / maxch;
          sp = 0, sm = 0;
          for (l = 1; l <= aver_window; l++) {
-            a = spectrum[i + l] / maxch;
+            if((i + l) > xmax)
+               a = source[xmax] / maxch;
+
+            else
+               a = source[i + l] / maxch;
             b = a - nip;
             if (a + nip <= 0)
                a = 1;
-            
+               
             else
                a = TMath::Sqrt(a + nip);
             b = b / a;
             b = TMath::Exp(b);
             sp = sp + b;
-            a = spectrum[i - l + 1] / maxch;
+            if((i - l + 1) < xmin)
+               a = source[xmin] / maxch;
+
+            else
+               a = source[i - l + 1] / maxch;               
+
             b = a - nim;
             if (a + nim <= 0)
                a = 1;
-            
+
             else
                a = TMath::Sqrt(a + nim);
             b = b / a;
@@ -2537,151 +2545,430 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
       for (i = xmin; i <= xmax; i++) {
          working_space[i] = working_space[i] / nom;
       }
-      for (i = xmin; i < xmax; i++)
-         spectrum[i] = working_space[i] * plocha;
+      for (i = 0; i < size; i++)
+         source[i] = working_space[i] * plocha;
    }
-   if (sigma != 0) {
-      for (i = -j; i <= j; i++) {
-         a = i;
-         a = -a * a;
-         b = 2.0 * sigma * sigma;
-         a = a / b;
-         a = exp(a);
-         s = i;
-         s = s * s;
-         s = s - sigma * sigma;
-         s = s / (sigma * sigma * sigma * sigma);
-         s = s * a;
-         filter[PEAK_WINDOW / 2 + i] = s;
-      }
-      norma = 0;
-      for (i = 0; i < PEAK_WINDOW; i++)
-         norma = norma + TMath::Abs(filter[i]);
-      for (i = 0; i < PEAK_WINDOW; i++)
-         filter[i] = filter[i] / norma;
-      suma = 0;
-      sumai = 0;
-      stav = 1;
-      peak_index = 0;
-      sold = PEAK_WINDOW / 2;
-      xmin = (int) (3.0 * sigma);
-      xmax = (int) (size - 3.0 * sigma);
-      lmin = (int) (PEAK_WINDOW / 2 - 3.0 * sigma);
-      lmax = (int) (PEAK_WINDOW / 2 + 3.0 * sigma);
-      for (i = xmin; i <= xmax; i++) {
-         s = 0, f = 0;
-         for (l = lmin; l <= lmax; l++) {
-            a = spectrum[i + l - PEAK_WINDOW / 2];
-            s += a * filter[l];
-            f += a * filter[l] * filter[l];
-         }
-         f = TMath::Sqrt(f);
-         if (s < 0) {
-            a = i;
-            a *= s;
-            suma += s;
-            sumai += a;
-         }
-         if ((stav == 1) && (s > f)) {
-          stav1:stav = 2;
-            suma = 0;
-            sumai = 0;
-            i1 = i;
-         }
-         
-         else if ((stav == 2) && (s <= f)) {
-            stav = 3;
-            i2 = i;
-         }
-         
-         else if (stav == 3) {
-            if (s > f)
-               goto stav1;
-            if (s <= 0) {
-               stav = 4;
-               i3 = i;
-            }
-         }
-         
-         else if ((stav == 4) && (s >= sold)) {
-            si4 = sold;
-            fi4 = fold;
-            stav = 5;
-         }
-         
-         else if ((stav == 5) && (s >= 0)) {
-            stav = 6;
-            i5 = i;
-            if (si4 == 0)
-               stav = 0;
+   for (i = -j; i <= j; i++) {
+      a = i;
+      a = -a * a;
+      b = 2.0 * sigma * sigma;
+      a = a / b;
+      a = TMath::Exp(a);
+      s = i;
+      s = s * s;
+      s = s - sigma * sigma;
+      s = s / (sigma * sigma * sigma * sigma);
+      s = s * a;
+      filter[PEAK_WINDOW / 2 + i] = s;
+   }  
+   norma = 0;
+   for (i = 0; i < PEAK_WINDOW; i++){
+      norma = norma + TMath::Abs(filter[i]);
+   }
+   for (i = 0; i < PEAK_WINDOW; i++){
+      filter[i] = filter[i] / norma;
+   }   
+   peak_index = 0;
+   xmin = int(-5.0 * sigma);
+   xmax = int(size + 5.0 * sigma);
+   lmin = int(PEAK_WINDOW / 2 - 5.0 * sigma);
+   lmax = int(PEAK_WINDOW / 2 + 5.0 * sigma);
+   for(i = xmin; i <= xmax; i++){
+      s=0;
+      for(l = lmin; l <= lmax; l++){
+         if((i + l - PEAK_WINDOW / 2) < 0)
+            a = source[0];
             
-            else {
-               n1 = i5 - i3 + 1;
-               a = n1 + 2;
-               a = fi4 * a / (2. * si4) + 1 / 2.;
-               a = TMath::Abs(a);
-               n2 = (int) a;
-               a = n1 - 4;
-               if (a < 0)
-                  a = 0;
-               a = a * (1 - 2. * (fi4 / si4)) + 1 / 2.;
-               a = TMath::Abs(a);
-               n3 = (int) a;
-               a = TMath::Abs(si4);
-               if (a <= (2. * fi4))
-                  stav = 0;
-               if (markov == false) {
-                  if (n2 >= 1) {
-                     if ((i3 - i2 - 1) > n2)
-                        stav = 0;
-                  }
-                  
-                  else {
-                     if ((i3 - i2 - 1) > 1)
-                        stav = 0;
-                  }
-                  if ((i2 - i1 + 1) < n3)
-                     stav = 0;
-               }
-            }
-            if (stav != 0) {
-               b = sumai / suma;
-               a = (-spectrum[(int) (b - 3.0 * sigma + 0.5)] +
-                     2 * spectrum[(int) (b + 0.5)] -
-                     spectrum[(int) (b + 3.0 * sigma + 0.5)]) / 2;
-               if (a > threshold || threshold == 0) {
-                  if (peak_index < fMaxPeaks) {
-                     fPositionX[peak_index] = b;
-                     peak_index += 1;
-                  } else {
-                     Warning("Search1General", "PEAK BUFFER FULL");
-                     return 0;
-                  }
-               }
-            }
-            stav = 1;
-            suma = 0;
-            sumai = 0;
-         }
-         sold = s;
-         fold = f;
+         else if(( i + l - PEAK_WINDOW / 2) >= size)
+            a = source[size - 1];
+            
+         else
+       	    a = source[i + l - PEAK_WINDOW / 2];
+       	    
+       	 s += a * filter[l];
       }
+      if(i >= 0 && i < size)
+         working_space[i]=s;
    }
-   
-   else {
-      for (i = 1; i < size - 1; i++) {
-         a = (-spectrum[i - 1] + 2 * spectrum[i] - spectrum[i + 1]) / 2;
-         if (a > threshold) {
-            if (peak_index < fMaxPeaks) {
-               fPositionX[peak_index] = b;
-               peak_index += 1;
-            } else {
-               Warning("Search1General", "PEAK BUFFER FULL");
+   for(i = 0; i < size; i++){
+      if(working_space[i] < minimum)
+         minimum = working_space[i];
+   }
+   for(i = 1; i < size - 1; i++){
+      if(working_space[i] < 0 && working_space[i] < working_space[i - 1] && working_space[i] < working_space[i + 1]){
+         if(working_space[i] < threshold * minimum / 100.0){
+            if(peak_index < fMaxPeaks){
+               for(j = i - 1,a = 0,b = 0; j <= i + 1; j++){
+                  a += (double)j * working_space[j];
+                  b += working_space[j];
+               }
+               a = a / b;
+               if(a < 0)
+                  a = 0;
+               if(a >= size - 1)
+                  a = size - 1;
+               fPositionX[peak_index] = a;                  
+               peak_index+=1;
+	    }
+	    
+	    else{
+               Warning("Search1General", "Peak buffer full");
                return 0;
             }
          }
       }
    }
+   for(i = 0; i < size; i++){
+      if(working_space[i] < 0)
+         dest[i] = -working_space[i];
+         
+      else
+        dest[i] = 0;
+   }
+   delete[]working_space;
+   fNPeaks = peak_index;
+   return fNPeaks;
+}
+
+
+
+//_____________________________________________________________________________
+    Int_t TSpectrum::Search1HighRes(float *source,float *dest, int size,
+                                     float sigma, double threshold,
+                                     bool background_remove,int decon_iterations,
+                                     bool markov, int aver_window)
+{
+/////////////////////////////////////////////////////////////////////////////
+/*	ONE-DIMENSIONAL HIGH-RESOLUTION PEAK SEARCH FUNCTION		   */
+/*	This function searches for peaks in source spectrum		   */
+/*      It is based on deconvolution method. First the background is       */
+/*      removed (if desired), then Markov spectrum is calculated           */
+/*      (if desired), then the response function is generated              */
+/*      according to given sigma and deconvolution is carried out.         */
+/*									   */
+/*	Function parameters:						   */
+/*	source-pointer to the vector of source spectrum			   */
+/*	dest-pointer to the vector of resulting deconvolved spectrum	   */
+/*	size-length of source spectrum			                   */
+/*	sigma-sigma of searched peaks, for details we refer to manual	   */
+/*	threshold-threshold value in % for selected peaks, peaks with      */
+/*                amplitude less than threshold*highest_peak/100           */
+/*                are ignored, see manual                                  */
+/*      background_remove-logical variable, set if the removal of          */
+/*                background before deconvolution is desired               */
+/*      decon_iterations-number of iterations in deconvolution operation   */
+/*      markov-logical variable, if it is true, first the source spectrum  */
+/*             is replaced by new spectrum calculated using Markov         */
+/*             chains method.                                              */
+/*	aver_window-averanging window of searched peaks, for details       */
+/*                  we refer to manual (applies only for Markov method)    */
+/*									   */
+/////////////////////////////////////////////////////////////////////////////
+   int i, j, number_of_iterations = (int)(7 * sigma + 0.5);
+   float a, b;
+   int k, lindex, posit, imin, imax, jmin, jmax, lh_gold;
+   double lda, ldb, ldc, area,maximum;
+   int xmin, xmax, l, peak_index = 0, size_ext = size + 2 * number_of_iterations, shift = number_of_iterations;
+   float maxch;
+   float nom, nip, nim, sp, sm, plocha = 0;
+   if (sigma < 1) {
+      Error("Search1HighRes", "Invalid sigma, must be greater than or equal to 1");
+      return 0;
+   }
+   	
+   if(threshold<=0||threshold>=100){
+      Error("Search1HighRes", "Invalid threshold, must be positive and less than 100");
+      return 0;
+   }
+   
+   j = (int) (5.0 * sigma + 0.5);
+   if (j >= PEAK_WINDOW / 2) {
+      Error("Search1HighRes", "Too large sigma");
+      return 0;
+   }
+   
+   if (markov == true) {
+      if (aver_window <= 0) {
+         Error("Search1HighRes", "Averanging window must be positive");
+         return 0;
+      }
+   }
+         
+   if(background_remove == true){
+      if(size < 2 * number_of_iterations + 1){   
+         Error("Search1HighRes", "Too large clipping window");
+         return 0;
+      }
+   }
+   
+   i = (int)(7 * sigma + 0.5);
+   i = 2 * i;
+   double *working_space = new double [6 * (size + i)];    
+   for(i = 0; i < size_ext; i++){
+      if(i < shift)
+         working_space[i + size_ext] = source[0];
+         
+      else if(i >= size + shift)
+         working_space[i + size_ext] = source[size - 1];
+         
+      else
+         working_space[i + size_ext] = source[i - shift];
+   }
+   if(background_remove == true){
+      for(i = 1; i <= number_of_iterations; i++){
+       	 for(j = i; j < size_ext - i; j++){
+            a = working_space[size_ext + j];
+       	    b = (working_space[size_ext + j - i] + working_space[size_ext + j + i]) / 2.0;
+            if(b < a)
+	        a = b;
+	           
+       	    working_space[j]=a;
+         }
+       	 for(j = i; j < size_ext - i; j++)
+            working_space[size_ext + j] = working_space[j];
+      }
+      for(j = 0;j < size_ext; j++){
+         if(j < shift)
+            working_space[size_ext + j] = source[0] - working_space[size_ext + j];
+            
+         else if(j >= size + shift)
+            working_space[size_ext + j] = source[size - 1] - working_space[size_ext + j];
+            
+         else{
+            working_space[size_ext + j] = source[j - shift] - working_space[size_ext + j];
+         }
+      }
+   }
+   if(markov == true){
+      for(j = 0; j < size_ext; j++)
+         working_space[2 * size_ext + j] = working_space[size_ext + j];
+      xmin = 0,xmax = size_ext - 1;
+      for(i = 0, maxch = 0; i < size_ext; i++){
+	 working_space[i] = 0;
+         if(maxch < working_space[2 * size_ext + i])
+            maxch = working_space[2 * size_ext + i];
+         plocha += working_space[2 * size_ext + i];
+      }
+      if(maxch == 0)
+         return 0;
+         
+      nom = 1;
+      working_space[xmin] = 1;
+      for(i = xmin; i < xmax; i++){
+	 nip = working_space[2 * size_ext + i] / maxch;
+         nim = working_space[2 * size_ext + i + 1] / maxch;
+         sp = 0,sm = 0;
+	 for(l = 1; l <= aver_window; l++){
+            if((i + l) > xmax)
+               a = working_space[2 * size_ext + xmax] / maxch;
+               
+            else
+               a = working_space[2 * size_ext + i + l] / maxch;
+               
+	    b = a - nip;
+            if(a + nip <= 0)
+               a=1;
+               
+            else
+               a = TMath::Sqrt(a + nip);            
+               
+            b = b / a;
+            b = TMath::Exp(b);            
+            sp = sp + b;
+            if((i - l + 1) < xmin)
+               a = working_space[2 * size_ext + xmin] / maxch;
+               
+            else
+               a = working_space[2 * size_ext + i - l + 1] / maxch;
+               
+            b = a - nim;
+            if(a + nim <= 0)
+               a = 1;
+               
+            else
+               a = TMath::Sqrt(a + nim);
+               
+	    b = b / a;
+            b = TMath::Exp(b);            	    
+       	    sm = sm + b;
+       	 }
+         a = sp / sm;
+         a = working_space[i + 1] = working_space[i] * a;
+         nom = nom + a;
+      }
+      for(i = xmin; i <= xmax; i++){
+         working_space[i] = working_space[i] / nom;
+      }
+      for(j = 0; j < size_ext; j++)
+         working_space[size_ext + j] = working_space[j] * plocha;
+      for(j = 0; j < size_ext; j++){
+         working_space[2 * size_ext + j] = working_space[size_ext + j];
+      }
+      if(background_remove == true){
+         for(i = 1; i <= number_of_iterations; i++){
+       	    for(j = i; j < size_ext - i; j++){
+               a = working_space[size_ext + j];
+               b = (working_space[size_ext + j - i] + working_space[size_ext + j + i]) / 2.0;
+               if(b < a)
+	          a = b;
+               working_space[j] = a;
+            }
+       	    for(j = i; j < size_ext - i; j++)
+               working_space[size_ext + j] = working_space[j];
+         }
+	 for(j = 0; j < size_ext; j++){
+            working_space[size_ext + j] = working_space[2 * size_ext + j] - working_space[size_ext + j];
+         }
+      }
+   }
+//deconvolution starts
+   area = 0;
+   lh_gold = -1;
+   posit = 0;
+   maximum = 0;
+//generate response vector
+   for(i = 0; i < size_ext; i++){
+      lda = (double)i - 3 * sigma;
+      lda = lda * lda / (2 * sigma * sigma);    
+      j = (int)(1000 * TMath::Exp(-lda));
+      lda = j;
+      if(lda != 0)
+	 lh_gold = i + 1;
+	 
+      working_space[i] = lda;
+      area = area + lda;
+      if(lda > maximum){
+	 maximum = lda;
+	 posit = i;
+      }
+   }
+//read source vector
+   for(i = 0; i < size_ext; i++)
+      working_space[2 * size_ext + i] = TMath::Abs(working_space[size_ext + i]);
+//create matrix at*a(vector b)
+   i = lh_gold - 1;
+   if(i > size_ext)
+     i = size_ext;
+     
+   imin = -i,imax = i;
+   for(i = imin; i <= imax; i++){
+      lda = 0;
+      jmin = 0;
+      if(i < 0)
+	 jmin = -i;
+      jmax = lh_gold - 1 - i;
+      if(jmax > (lh_gold - 1))
+	 jmax = lh_gold - 1;
+	 
+      for(j = jmin;j <= jmax; j++){
+	 ldb = working_space[j];
+	 ldc = working_space[i + j];
+	 lda = lda + ldb * ldc;
+      }
+      working_space[size_ext + i - imin] = lda;
+   }
+//create vector p
+   i = lh_gold - 1;
+   imin = -i,imax = size_ext + i - 1;
+   for(i = imin; i <= imax; i++){
+      lda = 0;
+      for(j = 0; j <= (lh_gold - 1); j++){
+	 ldb = working_space[j];
+	 k = i + j;
+	 if(k >= 0 && k < size_ext){
+	    ldc = working_space[2 * size_ext + k];
+	    lda = lda + ldb * ldc;
+	 }
+	 
+      }
+      working_space[4 * size_ext + i - imin] = lda;
+   }
+//move vector p
+   for(i = imin; i <= imax; i++)
+      working_space[2 * size_ext + i - imin] = working_space[4 * size_ext + i - imin];
+//initialization of resulting vector
+   for(i = 0; i < size_ext; i++)
+      working_space[i] = 1;
+//START OF ITERATIONS
+   for(lindex = 0; lindex < decon_iterations; lindex++){
+      for(i = 0; i < size_ext; i++){
+         if(TMath::Abs(working_space[2 * size_ext + i]) > 0.00001 && TMath::Abs(working_space[i]) > 0.00001){
+	    lda=0;
+	    jmin = lh_gold - 1;
+       	    if(jmin > i)
+               jmin = i;
+               
+	    jmin = -jmin;
+	    jmax = lh_gold - 1;
+            if(jmax > (size_ext - 1 - i))
+	       jmax=size_ext-1-i;
+	       
+       	    for(j = jmin; j <= jmax; j++){
+               ldb = working_space[j + lh_gold - 1 + size_ext];
+	       ldc = working_space[i + j];
+	       lda = lda + ldb * ldc;
+	    }
+       	    ldb = working_space[2 * size_ext + i];
+            if(lda != 0)
+	       lda = ldb / lda;
+	          
+	    else
+	       lda = 0;
+		  
+       	    ldb = working_space[i];
+            lda = lda * ldb;
+	    working_space[3 * size_ext + i] = lda;
+	 }
+      }
+      for(i = 0; i < size_ext; i++){
+         working_space[i] = working_space[3 * size_ext + i];
+      }
+   }
+//shift resulting spectrum
+   for(i=0;i<size_ext;i++){
+      lda = working_space[i];
+      j = i + posit;
+      j = j % size_ext;
+      working_space[size_ext + j] = lda;
+   }
+//write back resulting spectrum
+   maximum = 0;
+   j = lh_gold - 1;
+   for(i = 0; i < size_ext - j; i++){
+      working_space[i] = area * working_space[size_ext + i + j];
+      if(maximum < working_space[i])
+         maximum = working_space[i];
+   }
+//searching for peaks in deconvolved spectrum
+   for(i = 1; i < size_ext - 1; i++){
+      if(working_space[i] > working_space[i - 1] && working_space[i] > working_space[i + 1]){
+         if(i >= shift && i < size + shift){
+            if(working_space[i] > threshold * maximum / 100.0){
+               if(peak_index < fMaxPeaks){
+                  for(j = i - 1, a = 0, b = 0; j <= i + 1; j++){
+                     a += (double)(j - shift) * working_space[j];
+                     b += working_space[j];
+                  }
+                  a = a / b;
+                  if(a < 0)
+                     a = 0;
+                     
+                  if(a >= size)
+                     a = size - 1;
+                     
+                  fPositionX[peak_index] = a;                        
+        	  peak_index += 1;
+	       }
+	       else{
+                  Warning("Search1HighRes", "Peak buffer full");
+                  return 0;
+               }	          
+            }
+         }
+      }
+   }
+   for(i = 0; i < size; i++)
+      dest[i] = working_space[i + shift];      
    delete[]working_space;
    fNPeaks = peak_index;
    return fNPeaks;

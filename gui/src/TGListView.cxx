@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.16 2003/07/08 19:42:07 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.17 2003/07/09 12:34:35 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -130,7 +130,14 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
 
    fCurrent  =
    fBigPic   = fClient->GetMimeTypeList()->GetIcon(cname, kFALSE);
+
+   if (!fBigPic) {
+      fBigPic = fClient->GetPicture("doc_s.xpm");
+   }
    fSmallPic = fClient->GetMimeTypeList()->GetIcon(cname, kTRUE);
+   if (!fSmallPic) {
+      fSmallPic = fClient->GetPicture("doc_t.xpm");
+   }
 
    fName = new TGString(name);
    fSubnames = subnames;
