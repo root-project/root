@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.14 2001/02/21 07:43:51 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.15 2001/03/05 10:06:43 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -111,6 +111,7 @@ public:
    TMethod       *GetMethod(const char *method, const char *params);
    TMethod       *GetMethodWithPrototype(const char *method, const char *proto);
    TMethod       *GetMethodAny(const char *method);
+   TMethod       *GetMethodAllAny(const char *method);
    Int_t          GetNdata();
    Int_t          GetNmethods();
    TObjArray     *GetStreamerInfos() const {return fStreamerInfo;}

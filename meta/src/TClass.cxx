@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.48 2001/05/23 09:46:34 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.49 2001/05/24 16:32:25 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -858,6 +858,34 @@ TMethod *TClass::GetMethodAny(const char *method)
    while ((m = (TMethod *) next())) {
       if (strcmp(method, m->GetName()) == 0) return m;
    }
+   return 0;
+}
+
+//______________________________________________________________________________
+TMethod *TClass::GetMethodAllAny(const char *method)
+{
+   // Return pointer to method without looking at parameters.
+   // Does look in all base classes.
+
+   if (!fClassInfo) return 0;
+
+   TMethod *m;
+   TIter    next(GetListOfMethods());
+
+   while ((m = (TMethod *) next())) {
+      if (strcmp(method, m->GetName()) == 0) return m;
+   }
+
+   TBaseClass *base;
+   TIter       nextb(GetListOfBases());
+   while ((base = (TBaseClass *) nextb())) {
+      TClass *c = base->GetClassPointer();
+      if (c) {
+         m = c->GetMethodAllAny(method);
+         if (m) return m;
+      }
+   }
+
    return 0;
 }
 
