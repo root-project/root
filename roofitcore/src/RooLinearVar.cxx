@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinearVar.cc,v 1.1 2001/05/16 07:41:08 verkerke Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.2 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -81,7 +81,7 @@ RooLinearVar::~RooLinearVar()
 }
 
 
-Double_t RooLinearVar::evaluate() const
+Double_t RooLinearVar::evaluate(const RooDataSet* dset) const
 {
   // Calculate current value of this object  
   return _offset + _var * _slope ;

@@ -1,0 +1,53 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitCore
+ *    File: $Id$
+ * Authors:
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ * History:
+ *   05-Jun-2001 WV Created initial version
+ *
+ * Copyright (C) 2001 University of California
+ *****************************************************************************/
+#ifndef ROO_CONVOLUTED_PDF
+#define ROO_CONVOLUTED_PDF
+
+#include "RooFitCore/RooAbsPdf.hh"
+#include "RooFitCore/RooRealProxy.hh"
+#include "RooFitCore/RooSetProxy.hh"
+
+class RooResolutionModel ;
+class RooRealVar ;
+
+class RooConvolutedPdf : public RooAbsPdf {
+public:
+
+  // Constructors, assignment etc
+  inline RooConvolutedPdf() { }
+  RooConvolutedPdf(const char *name, const char *title, 
+		   const RooResolutionModel& model, 
+		   RooRealVar& convVar) ;
+
+  RooConvolutedPdf(const RooConvolutedPdf& other, const char* name=0);
+  virtual ~RooConvolutedPdf();
+
+  Int_t declareBasis(const char* expression, const RooArgSet& params) ;
+  virtual Double_t evaluate(const RooDataSet* dset) const ;
+  virtual Bool_t selfNormalized(const RooAbsArg& dep) const ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+
+  virtual Double_t coefficient(Int_t basisIndex) const = 0 ;
+    
+protected:
+
+  // Following pointer are only used during 
+  // construction and need not to be proxied
+  RooResolutionModel* _model   ; // Original resolution model
+  RooRealVar* _convVar ;         // Convolution variable
+
+  RooSetProxy _convSet  ;        // Set of resModel X basisFunc convolution
+
+  ClassDef(RooConvolutedPdf,1) // Abstract Resolution Model
+};
+
+#endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.27 2001/05/31 21:21:34 david Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.28 2001/06/06 00:06:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -81,6 +81,8 @@ public:
 
   //Debug hooks
   static void verboseDirty(Bool_t flag) { _verboseDirty = flag ; }
+  static void trace(Bool_t flag) { _traceFlag = flag ; }
+  static void traceDump(ostream& os=cout) ;
   static void copyList(TList& dest, const TList& source) ;
 
 protected:
@@ -99,7 +101,7 @@ protected:
   THashList _clientListShape ; //! clients that requested shape dirty flag propagation
   THashList _clientListValue ; //! clients that requested value dirty flag propagation
   THashList _serverList      ; //! do not persist (or clone)
-  TObjArray _proxyArray      ; //! do not persist (or clone)
+  TList     _proxyList       ; //! do not persist (or clone)
 
   // Server redirection interface
   friend class RooAcceptReject;
@@ -118,6 +120,7 @@ protected:
   void registerProxy(RooArgProxy& proxy) ;
   void registerProxy(RooSetProxy& proxy) ;
   RooAbsProxy* getProxy(Int_t index) const ;
+  void setProxyDataSet(const RooDataSet* dset) ;
   Int_t numProxies() const ;
 	
   // Attribute list
@@ -137,6 +140,8 @@ protected:
   
   // Debug stuff
   static Bool_t _verboseDirty ;
+  static Bool_t _traceFlag ;
+  static TList  _traceList ;
 
 private:
 

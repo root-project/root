@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSetProxy.cc,v 1.2 2001/05/17 00:43:16 verkerke Exp $
+ *    File: $Id: RooSetProxy.cc,v 1.3 2001/06/06 00:06:39 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -42,7 +42,7 @@ RooSetProxy::RooSetProxy(const char* name, const char* desc, RooAbsArg* owner,
 
 
 RooSetProxy::RooSetProxy(const char* name, RooAbsArg* owner, const RooSetProxy& other) : 
-  RooArgSet(other), _owner(other._owner),  
+  RooArgSet(other,name), _owner(owner),  
   _defValueServer(other._defValueServer), 
   _defShapeServer(other._defShapeServer)
 {
@@ -114,13 +114,12 @@ Bool_t RooSetProxy::changePointer(const RooArgSet& newServerList)
 {
   TIterator* iter = MakeIterator() ;
   RooAbsArg* arg ;
-  Bool_t ok(kTRUE) ;
+  Bool_t error(kFALSE) ;
   while (arg=(RooAbsArg*)iter->Next()) {
     RooAbsArg* newArg = newServerList.find(arg->GetName()) ;
-    if (newArg) ok |= replace(*arg,*newArg) ;
+    if (newArg) error |= !RooArgSet::replace(*arg,*newArg) ;
   }
   delete iter ;
-
-  return ok ;
+  return !error ;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.15 2001/05/31 21:21:37 david Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.16 2001/06/06 00:06:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -77,6 +77,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       }
       delete argDeps ;      
     }
+
+    // If this dependent arg is self-normalized, stop here
+    if (function.selfNormalized(*arg)) continue ;
     
     Bool_t depOK(kFALSE) ;
     // Check for integratable AbsRealLValue
@@ -162,7 +165,6 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       
       // Expand server in final dependents and add to numerical integration list      
       RooArgSet *argDeps = arg->getDependents(&depList) ;
-      argDeps->Print("v") ;
       numIntDepList.add(*argDeps) ;
       delete argDeps ; 
     }
@@ -231,7 +233,7 @@ RooRealIntegral::~RooRealIntegral()
 }
 
 
-Double_t RooRealIntegral::evaluate() const 
+Double_t RooRealIntegral::evaluate(const RooDataSet* dset) const 
 {
   // Calculate integral
 
@@ -239,7 +241,7 @@ Double_t RooRealIntegral::evaluate() const
   RooArgSet *saveInt = _intList.snapshot() ;
   RooArgSet *saveSum = _sumList.snapshot() ;
 
-  // Evaluate integral
+  // Evaluate sum/integral
   Double_t retVal = sum() / jacobianProduct() ;
 
   // Restore integral dependent values

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.12 2001/05/31 21:21:35 david Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.13 2001/06/06 00:06:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -94,42 +94,71 @@ Double_t RooAbsPdf::getVal(const RooDataSet* dset) const
   // spoil the cache and interfere with returning the cached
   // return value. Since unnormalized calls are typically
   // done in integration calls, there is no performance hit.
-  if (!dset) {
-    return traceEval() ;
-  }
+  if (!dset) return traceEval(dset) ;
 
   // Process change in last data set used
-  if (dset != _lastDataSet) {
-    if (_verboseEval) cout << "RooAbsPdf:getVal(" << GetName() << ") recalculating normalization" << endl ;
-    _lastDataSet = (RooDataSet*) dset ;
- 
-    // Update dataset pointers of proxies
-    for (int i=0 ; i<numProxies() ; i++) {
-      getProxy(i)->changeDataSet(dset) ;
-    }
- 
-    RooArgSet* depList = getDependents(dset) ;
-
-    // Destroy old normalization & create new
-    if (_norm) delete _norm ;
-
-    if (selfNormalized(*depList)) {
-      _norm = new RooRealVar(TString(GetName()).Append("Norm"),
-			     TString(GetTitle()).Append(" Unit Normalization"),1) ;
-    } else {
-      _norm = new RooRealIntegral(TString(GetName()).Append("Norm"),
-				  TString(GetTitle()).Append(" Integral"),*this,*depList) ;
-    }
-    delete depList ;
-  }
+  syncNormalization(dset) ;
 
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty() || _norm->isValueDirty() || dset != _lastDataSet) {
     if (_verboseEval) cout << "RooAbsPdf::getVal(" << GetName() << "): recalculating value" << endl ;
-    _value = traceEval() / _norm->getVal() ;
+    _value = traceEval(dset) / _norm->getVal() ;
+    setValueDirty(kFALSE) ;
+    setShapeDirty(kFALSE) ;    
   }
 
   return _value ;
+}
+
+
+
+Double_t RooAbsPdf::getNorm(const RooDataSet* dset) const
+{
+  if (!dset) return 1 ;
+
+  syncNormalization(dset) ;
+  return _norm->getVal() ;
+}
+
+
+
+
+Bool_t RooAbsPdf::selfNormalized(const RooArgSet& dependents) const 
+{
+  // Determine if PDF is self-normalized in all dependents
+  TIterator* iter = dependents.MakeIterator() ;
+  RooAbsArg* dep ;
+  while(dep=(RooAbsArg*) iter->Next()) {
+    if (!selfNormalized(*dep)) return kFALSE ;
+  }
+  return kTRUE ;
+}
+
+
+
+void RooAbsPdf::syncNormalization(const RooDataSet* dset) const
+{
+  if (dset == _lastDataSet) return ;
+
+  if (_verboseEval) cout << "RooAbsPdf:syncNormalization(" << GetName() << ") recalculating normalization" << endl ;
+  _lastDataSet = (RooDataSet*) dset ;
+
+  // Update dataset pointers of proxies
+  setProxyDataSet(dset) ;
+  
+  RooArgSet* depList = getDependents(dset) ;
+  
+  // Destroy old normalization & create new
+  if (_norm) delete _norm ;
+  
+  if (selfNormalized(*depList)) {
+    _norm = new RooRealVar(TString(GetName()).Append("Norm"),
+			   TString(GetTitle()).Append(" Unit Normalization"),1) ;
+  } else {
+    _norm = new RooRealIntegral(TString(GetName()).Append("Norm"),
+				TString(GetTitle()).Append(" Integral"),*this,*depList) ;
+  }
+  delete depList ;
 }
 
 

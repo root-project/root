@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.14 2001/05/14 22:54:19 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.15 2001/05/16 07:41:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -75,9 +75,9 @@ protected:
   virtual Bool_t isValid(Double_t value, Bool_t printError=kFALSE) const ;
 
   // Function evaluation and error tracing
-  Double_t traceEval() const ;
+  Double_t traceEval(const RooDataSet* dset) const ;
   virtual Bool_t traceEvalHook(Double_t value) const { return kFALSE ;}
-  virtual Double_t evaluate() const = 0 ;
+  virtual Double_t evaluate(const RooDataSet* dset) const = 0 ;
 
   // Hooks for RooDataSet interface
   virtual void syncCache(const RooDataSet* dset=0) { getVal(dset) ; }
@@ -93,6 +93,7 @@ protected:
   TString  _label ;
 
   friend class RooAbsPdf ;
+  friend class RooConvolutedPdf ;
 
   ClassDef(RooAbsReal,1) // Abstract real-valued variable
 };

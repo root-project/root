@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooLinearVar.rdl,v 1.1 2001/05/16 07:41:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -50,7 +50,7 @@ public:
 
 protected:
 
-  virtual Double_t evaluate() const ;
+  virtual Double_t evaluate(const RooDataSet* dset) const ;
   
   RooRealProxy _var ;  
   RooRealProxy _slope ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.12 2001/05/18 00:59:19 david Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.13 2001/05/31 21:21:35 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -49,7 +49,8 @@ public:
   virtual Double_t analyticalIntegral(Int_t code) const ;
 
   // Data set dependent accessors (normalization & dependent/parameter interpretation)
-  virtual Bool_t selfNormalized(const RooArgSet& dependents) const { return kFALSE ; }
+  virtual Bool_t selfNormalized(const RooArgSet& dependents) const ;
+  virtual Bool_t selfNormalized(const RooAbsArg& dep) const { return kFALSE ; }
   
   // PDF-specific plotting & display
   TH1F *Scan(RooDataSet* data, RooRealVar &param, Int_t bins= 0) { return 0 ; } 
@@ -69,6 +70,7 @@ public:
   virtual Bool_t traceEvalHook(Double_t value) const ;  
   Double_t getVal(const RooDataSet* dset=0) const ;
   Double_t getLogVal(const RooDataSet* dset=0) const ;
+  Double_t getNorm(const RooDataSet* dset=0) const ;
   void resetErrorCounters(Int_t resetValue=10) ;
   void setTraceCounter(Int_t value) ;
 
@@ -86,9 +88,11 @@ private:
   // This forces definition copy ctor in derived classes 
   RooAbsPdf(const RooAbsPdf& other);
 
+protected:
+
   static Bool_t _verboseEval ;
 
-protected:
+  void syncNormalization(const RooDataSet* dset) const ;
 
   // support interface for generating toy MC samples
   virtual Double_t generateEnvelope(const RooArgSet &whatVars);
@@ -109,9 +113,11 @@ protected:
 		   const RooArgProxy& a, const RooArgProxy& b, 
 		   const RooArgProxy& c, const RooArgProxy& d) const ;
 private:
+
   Bool_t matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs, const TList &nameList) const;
 
 protected:
+
   mutable Double_t _rawValue ;
   mutable RooAbsReal* _norm   ;      // Normalization integral
   mutable RooDataSet* _lastDataSet ; // Data set for which normalization integral is valid

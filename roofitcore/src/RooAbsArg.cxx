@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.31 2001/05/31 21:21:34 david Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.32 2001/06/06 00:06:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -37,13 +37,18 @@
 #include "RooFitCore/RooAbsRealLValue.hh"
 
 #include <string.h>
+#include <iomanip.h>
 
 ClassImp(RooAbsArg)
+;
 
+TList RooAbsArg::_traceList ;
+Bool_t RooAbsArg::_traceFlag(kFALSE) ;
 Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 
 RooAbsArg::RooAbsArg() : TNamed(), _attribList()
 {
+  if (_traceFlag) _traceList.Add(this) ;
   // Default constructor creates an unnamed object.
 }
 
@@ -53,6 +58,7 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
   // Create an object with the specified name and descriptive title.
   // The newly created object has no clients or servers and has its
   // dirty flags set.
+  if (_traceFlag) _traceList.Add(this) ;
 }
 
 RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
@@ -87,6 +93,8 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
 
   setValueDirty() ;
   setShapeDirty() ;
+
+  if (_traceFlag) _traceList.Add(this) ;
 }
 
 
@@ -118,6 +126,8 @@ RooAbsArg::~RooAbsArg()
   }
 
   _attribList.Delete() ;
+
+  if (_traceFlag) _traceList.Remove(this) ;
 }
 
 
@@ -520,8 +530,8 @@ Bool_t RooAbsArg::redirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll
   // Process the proxies
   Bool_t allReplaced=kTRUE ;
   for (int i=0 ; i<numProxies() ; i++) {
-    cout << GetName() << ": processing proxy " << i << ": " << (void*)getProxy(i) << endl ;
-    allReplaced &= getProxy(i)->changePointer(newSet) ;    
+    Bool_t ret = getProxy(i)->changePointer(newSet) ;    
+    allReplaced &= ret ;
   }
 
   if (mustReplaceAll && !allReplaced) {
@@ -560,18 +570,20 @@ Bool_t RooAbsArg::recursiveRedirectServers(const RooArgSet& newSet, Bool_t mustR
 void RooAbsArg::registerProxy(RooArgProxy& proxy) 
 {
   // Every proxy can be registered only once
-  if (_proxyArray.FindObject(&proxy)) {
+  if (_proxyList.FindObject(&proxy)) {
     cout << "RooAbsArg::registerProxy(" << GetName() << "): proxy named " 
 	 << proxy.GetName() << " for arg " << proxy.absArg()->GetName() 
 	 << " already registered" << endl ;
     return ;
   }
 
+  //cout << "registering proxy " << (void*)&proxy << " with name " << proxy.name() << endl ;
+
   // Register proxied object as server
   addServer(*proxy.absArg(),proxy.isValueServer(),proxy.isShapeServer()) ;
 
   // Register proxy itself
-  _proxyArray.Add(&proxy) ;  
+  _proxyList.Add(&proxy) ;  
 }
 
 
@@ -580,14 +592,16 @@ void RooAbsArg::registerProxy(RooArgProxy& proxy)
 void RooAbsArg::registerProxy(RooSetProxy& proxy) 
 {
   // Every proxy can be registered only once
-  if (_proxyArray.FindObject(&proxy)) {
+  if (_proxyList.FindObject(&proxy)) {
     cout << "RooAbsArg::registerProxy(" << GetName() << "): proxy named " 
  	 << proxy.GetName() << " already registered" << endl ;
     return ;
   }
+
+  //cout << "registering proxy " << (void*)&proxy << " with name " << proxy.name() << endl ;
    
   // Register proxy itself
-  _proxyArray.Add(&proxy) ;  
+  _proxyList.Add(&proxy) ;  
 }
 
 
@@ -598,14 +612,23 @@ RooAbsProxy* RooAbsArg::getProxy(Int_t index) const
   // Horrible, but works. All RooAbsProxy implementations inherit
   // from TObject, and are thus collectible, but RooAbsProxy doesn't
   // as that would lead to multiple inheritance of TObject
-  return dynamic_cast<RooAbsProxy*> (_proxyArray.At(index)) ;
+  return dynamic_cast<RooAbsProxy*> (_proxyList.At(index)) ;
 }
 
 
 
 Int_t RooAbsArg::numProxies() const
 {
-  return _proxyArray.GetEntries() ;
+  return _proxyList.GetSize() ;
+}
+
+
+
+void RooAbsArg::setProxyDataSet(const RooDataSet* dset) 
+{
+  for (int i=0 ; i<numProxies() ; i++) {
+    getProxy(i)->changeDataSet(dset) ;
+  }
 }
 
 
@@ -709,7 +732,8 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
 	  os << indent << "    " << proxy->name() << " -> " ;
 	  ((RooArgProxy*)proxy)->absArg()->printToStream(os,OneLine) ;
 	} else {
-	  os << indent << "    " << proxy->name() << " -> (RooArgSet)" ;
+	  os << indent << "    " << proxy->name() << " -> " ;
+	  ((RooSetProxy*)proxy)->printToStream(os,Standard,TString("    ").Append(indent)) ;
 	}
       }
     }
@@ -746,4 +770,17 @@ void RooAbsArg::attachDataSet(const RooDataSet &set)
   // Replace server nodes with names matching the dataset variable names
   // with those data set variables, making this PDF directly dependent on the dataset
   recursiveRedirectServers(*set.get(),kFALSE);
+}
+
+
+void RooAbsArg::traceDump(ostream& os) {
+  os << "List of RooAbsArg objects in memory while trace active:" << endl ;
+  TIterator* iter = _traceList.MakeIterator() ;
+  RooAbsArg* arg ;
+  char buf[100] ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    sprintf(buf,"%010x : ",(void*)arg) ;
+    os << buf << setw(20) << arg->ClassName() << setw(0) << " - " << arg->GetName() << endl ;
+  }
+  delete iter ;
 }
