@@ -3390,8 +3390,14 @@ int funcmatch;
     /* funcname="f<int>" ->  funcname="f" , pexplicitarg="int>" */
     int tmp=0;
     *pexplicitarg = 0;
-    ++pexplicitarg;
-    G__hash(funcname,hash,tmp);
+    if(G__defined_templateclass(funcname)) {
+      *pexplicitarg = '<';
+      pexplicitarg = (char*)NULL;
+    }
+    else {
+      ++pexplicitarg;
+      G__hash(funcname,hash,tmp);
+    }
   }
   /* else pexplicitarg==NULL */
 #endif
