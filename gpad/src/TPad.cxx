@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.121 2004/02/18 20:13:42 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.122 2004/02/27 01:03:58 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2762,28 +2762,9 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
       }
       if (style) {
          if (style > 3000 && style < 4000) {
-#ifndef WIN32
+#if !defined(WIN32) || defined(GDK_WIN32)
             if (style < 3026) {
-               // draw stipples
-               gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
-            }
-
-            if (style > 3100) {
-               char gifname[32];
-               sprintf(gifname,"gif%d",style);
-               TNamed *gifnamed = (TNamed*)gROOT->GetListOfSpecials()->FindObject(gifname);
-               if (gifnamed) gVirtualX->ReadGIF(px1,py2,gifnamed->GetTitle());
-            }
-               //special case for TAttFillCanvas
-            if (gVirtualX->GetFillColor() == 10) {
-               gVirtualX->SetFillColor(1);
-               gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
-               gVirtualX->SetFillColor(10);
-            }
-#else
-#ifdef GDK_WIN32
-            if (style < 3026) {
-               // draw stipples
+               // draw stipples with fFillColor foreground
                gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
             }
 
@@ -2802,8 +2783,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 #else
             gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
 #endif
-#endif
-            } else if (style >= 4000 && style <= 4100) {
+         } else if (style >= 4000 && style <= 4100) {
             // For style >=4000 we make the window transparent.
             // From 4000 to 4100 the window is 100% transparent to 100% opaque
 

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.50 2004/03/03 13:26:40 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.51 2004/03/09 14:01:51 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -1675,6 +1675,14 @@ void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    Int_t w = TMath::Abs(x2 - x1);
    Int_t h = TMath::Abs(y2 - y1);
 
+   if (fFillStyle> 3000 && fFillStyle < 3026) { // stippled
+      SetColor(gGCfill, 10);	// white background
+      gdk_gc_set_fill(gGCfill, GDK_SOLID);
+      gdk_win32_draw_rectangle(gCws->drawing, gGCfill, 1, x, y, w, h);
+      SetColor(gGCfill, fFillColor);
+      gdk_gc_set_fill(gGCfill, GDK_STIPPLED);
+   }
+
    switch (mode) {
 
    case kHollow:
@@ -2916,6 +2924,8 @@ void TGWin32::SetColor(GdkGC *gc, int ci)
 
    GdkGCValues gcvals;
    GdkColor color;   
+	
+	if (ci<=0) ci = 10; //white
 
    if (ci >= 0 && ci < kMAXCOL && !gColors[ci].defined) {
       TColor *tcol = gROOT->GetColor(ci);
@@ -3105,8 +3115,6 @@ void TGWin32::SetFillColor(Color_t cindex)
    // Set color index for fill areas.
 
    Int_t indx = Int_t(cindex);
-
-   if (fFillColor==indx) return;
 
    if (!gStyle->GetFillColor() && cindex > 1) {
       indx = 0;
