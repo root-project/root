@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.2 2000/10/13 09:54:28 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -14,8 +14,8 @@
 // TGX11                                                                //
 //                                                                      //
 // This class is the basic interface to the X11 graphics system. It is  //
-// an implementation of the abstract TVirtualX class. The companion class    //
-// for Win32 is TGWin32.                                                //
+// an implementation of the abstract TVirtualX class. The companion     //
+// class for Win32 is TGWin32.                                          //
 //                                                                      //
 // This code was initially developed in the context of HIGZ and PAW     //
 // by Olivier Couet (package X11INT).                                   //
@@ -879,6 +879,11 @@ Int_t TGX11::OpenDisplay(Display *disp)
    } else {
       Error("OpenDisplay", "cannot get GC values");
    }
+
+   // Turn-off GraphicsExpose and NoExpose event reporting for the pixmap
+   // manipulation GC, this to prevent these events from being stacked up
+   // without ever being processed and thereby wasting a lot of memory.
+   XSetGraphicsExposures(fDisplay, *gGCpxmp, False);
 
    // Create input echo graphic context
    XGCValues echov;
