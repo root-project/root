@@ -1651,7 +1651,7 @@ if test ! "x$enable_krb5" = "xno" ; then
         enable_krb5="no"
     fi
 
-    if test ! "x$enable_krb5" = "x" ; then
+    if test ! "x$enable_krb5" = "xno" ; then
         krb5extracflags="-DR__KRB5"
     fi
 fi
