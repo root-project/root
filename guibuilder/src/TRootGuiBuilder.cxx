@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.2 2004/10/17 16:31:05 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.3 2004/10/18 15:22:13 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -241,7 +241,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    if (gDragManager) {
       fManager = (TGuiBldDragManager *)gDragManager;
    } else {
-      fManager = new TGuiBldDragManager();
+      gDragManager = fManager = new TGuiBldDragManager();
    }
    fManager->SetBuilder(this);
 
@@ -443,7 +443,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 0, 3, 0));
 
    MapSubwindows();
-   Resize(1100, 800);
+   Resize(1000, 700);
 
    SetWindowName("ROOT GuiBuilder");
    SetIconName("ROOT GuiBuilder");
@@ -463,6 +463,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    fMain->Connect("FrameClosed(Int_t)", "TRootGuiBuilder", this, "HandleWindowClosed(Int_t)");
 
    BindKeys();
+   UpdateStatusBar("Ready");
    MapRaised();
 }
 

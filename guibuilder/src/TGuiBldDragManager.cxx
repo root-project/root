@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.23 2004/10/15 15:36:41 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.24 2004/10/18 15:59:23 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -1335,6 +1335,7 @@ Bool_t TGuiBldDragManager::HandleButtonRelease(Event_t *event)
    // handle button release event
 
    fPimpl->fButtonPressed = kFALSE;
+   gVirtualX->SetCursor(fClient->GetRoot()->GetId(), gVirtualX->CreateCursor(kPointer));
 
    EndDrag();
    fSelectionIsOn &= (event->fState & kKeyShiftMask);
