@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.31 2005/03/09 18:19:26 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.32 2005/03/16 06:25:25 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -162,12 +162,6 @@ public:
    virtual void      Closed() { Emit("Closed()"); } // *SIGNAL*
    virtual void      CopyPixmap();
    virtual void      CopyPixmaps();
-   virtual void      CreateNewLine(Int_t event, Int_t px, Int_t py, Int_t mode);
-   virtual void      CreateNewEllipse(Int_t event, Int_t px, Int_t py,Int_t mode);
-   virtual void      CreateNewPad(Int_t event, Int_t px, Int_t py, Int_t mode);
-   virtual void      CreateNewPave(Int_t event, Int_t px, Int_t py, Int_t mode);
-   virtual void      CreateNewPolyLine(Int_t event, Int_t px, Int_t py, Int_t mode);
-   virtual void      CreateNewText(Int_t event, Int_t px, Int_t py, Int_t mode);
    virtual void      DeleteExec(const char *name);
    virtual void      Divide(Int_t nx=1, Int_t ny=1, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0); // *MENU*
    virtual void      Draw(Option_t *option="");
