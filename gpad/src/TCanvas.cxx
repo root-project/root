@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.70 2004/06/18 15:48:13 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.71 2004/06/21 10:47:20 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -437,7 +437,7 @@ void TCanvas::Build()
    // Get window identifier
    if (fCanvasID == -1 && fCanvasImp)
       fCanvasID = fCanvasImp->InitWindow();
-   if (fCanvasID < 0) return;
+   if (fCanvasID == -1) return;
 
    if (fCw < fCh) fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
    else           fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
@@ -733,7 +733,7 @@ TObject *TCanvas::DrawClonePad()
   TPad *selpad = (TPad*)gROOT->GetSelectedPad();
   TPad *pad = padsav;
   if (pad == this) pad = selpad;
-  if (fCanvasID < 0 || padsav == 0 || pad == this) {
+  if (fCanvasID == -1 || padsav == 0 || pad == this) {
      return DrawClone();
   }
   this->cd();
