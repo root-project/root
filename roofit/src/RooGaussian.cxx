@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooGaussian.cc,v 1.17 2002/09/10 02:01:32 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -66,7 +66,7 @@ Double_t RooGaussian::analyticalIntegral(Int_t code) const
 {
   assert(code==1) ;
 
-  static const Double_t root2 = sqrt(2) ;
+  static const Double_t root2 = sqrt(2.) ;
   static const Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
   
   Double_t xscale = root2*sigma;

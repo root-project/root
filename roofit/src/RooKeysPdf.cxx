@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooKeysPdf.cc,v 1.10 2002/09/10 02:01:32 verkerke Exp $
+ *    File: $Id: RooKeysPdf.cc,v 1.11 2003/05/14 05:30:31 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -125,7 +125,7 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
   Double_t mean=x1/x0;
   Double_t sigma=sqrt(x2/x0-mean*mean);
   Double_t h=pow(Double_t(4)/Double_t(3),0.2)*pow(_nEvents,-0.2)*_rho;
-  Double_t hmin=h*sigma*sqrt(2)/10;
+  Double_t hmin=h*sigma*sqrt(2.)/10;
   Double_t norm=h*sqrt(sigma)/(2.0*sqrt(3.0));
 
   _weights=new Double_t[_nEvents];

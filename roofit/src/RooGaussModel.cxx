@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGaussModel.cc,v 1.26 2003/05/14 05:30:31 wverkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.27 2003/09/10 04:41:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -116,9 +116,9 @@ Double_t RooGaussModel::evaluate() const
   //cout << "RooGaussModel::evaluate(" << GetName() << ") basisCode = " << _basisCode << endl ;
   
   // *** 1st form: Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime ***
-  static Double_t root2(sqrt(2)) ;
-  static Double_t root2pi(sqrt(2*atan2(0,-1))) ;
-  static Double_t rootpi(sqrt(atan2(0,-1))) ;
+  static Double_t root2(sqrt(2.)) ;
+  static Double_t root2pi(sqrt(2*atan2(0.,-1.))) ;
+  static Double_t rootpi(sqrt(atan2(0.,-1.))) ;
 
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
@@ -323,7 +323,7 @@ Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 Double_t RooGaussModel::analyticalIntegral(Int_t code) const 
 {
-  static Double_t root2 = sqrt(2) ;
+  static Double_t root2 = sqrt(2.) ;
   static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
   static Double_t rootpi = sqrt(atan2(0.0,-1.0));
   Double_t ssfInt(1.0) ;
@@ -627,7 +627,7 @@ RooComplex RooGaussModel::evalCerfApprox(Double_t swt, Double_t u, Double_t c) c
   // to explicitly cancel the divergent exp(y*y) behaviour of
   // CWERF for z = x + i y with large negative y
 
-  static Double_t rootpi= sqrt(atan2(0,-1));
+  static Double_t rootpi= sqrt(atan2(0.,-1.));
   RooComplex z(swt*c,u+c);  
   RooComplex zc(u+c,-swt*c);
   RooComplex zsq= z*z;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGExpModel.cc,v 1.11 2003/05/14 05:30:31 wverkerke Exp $
+ *    File: $Id: RooGExpModel.cc,v 1.12 2003/09/10 04:41:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -119,9 +119,9 @@ Int_t RooGExpModel::basisCode(const char* name) const
 
 Double_t RooGExpModel::evaluate() const 
 {  
-  static Double_t root2(sqrt(2)) ;
-  static Double_t root2pi(sqrt(2*atan2(0,-1))) ;
-  static Double_t rootpi(sqrt(atan2(0,-1)));
+  static Double_t root2(sqrt(2.)) ;
+  static Double_t root2pi(sqrt(2*atan2(0.,-1.))) ;
+  static Double_t rootpi(sqrt(atan2(0.,-1.)));
 
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
@@ -247,7 +247,7 @@ Double_t RooGExpModel::evaluate() const
 
 RooComplex RooGExpModel::calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t omega, Double_t rtau, Double_t fsign) const
 {
-  static Double_t root2(sqrt(2)) ;
+  static Double_t root2(sqrt(2.)) ;
 
   Double_t s1= -sign*x/tau;
   //Double_t s1= x/tau;
@@ -270,7 +270,7 @@ RooComplex RooGExpModel::calcSinConv(Double_t sign, Double_t sig, Double_t tau, 
 // added FMV,08/18/03
 Double_t RooGExpModel::calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t rtau, Double_t fsign) const
 {
-  static Double_t root2(sqrt(2)) ;
+  static Double_t root2(sqrt(2.)) ;
 
   Double_t s1= -sign*x/tau;
   //Double_t s1= x/tau;
@@ -292,9 +292,9 @@ Double_t RooGExpModel::calcSinConv(Double_t sign, Double_t sig, Double_t tau, Do
 Double_t RooGExpModel::calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau, Double_t fsign) const
 // modified FMV,08/13/03
 {
-  static Double_t root2(sqrt(2)) ;
-  static Double_t root2pi(sqrt(2*atan2(0,-1))) ;
-  static Double_t rootpi(sqrt(atan2(0,-1)));
+  static Double_t root2(sqrt(2.)) ;
+  static Double_t root2pi(sqrt(2*atan2(0.,-1.))) ;
+  static Double_t rootpi(sqrt(atan2(0.,-1.)));
 
   // Process flip status
   Double_t xp(x) ;
@@ -353,9 +353,9 @@ Double_t RooGExpModel::calcCoshConv(Double_t sign, Double_t tau, Double_t dgamma
   
   
   
-  static Double_t root2(sqrt(2)) ;
-  static Double_t root2pi(sqrt(2*atan2(0,-1))) ;
-  static Double_t rootpi(sqrt(atan2(0,-1)));
+  static Double_t root2(sqrt(2.)) ;
+  static Double_t root2pi(sqrt(2*atan2(0.,-1.))) ;
+  static Double_t rootpi(sqrt(atan2(0.,-1.)));
   Double_t tau1 = 1/(1/tau-dgamma/2);
   Double_t tau2 = 1/(1/tau+dgamma/2);
   Double_t cFly;
@@ -383,9 +383,9 @@ Double_t RooGExpModel::calcCoshConv(Double_t sign, Double_t tau, Double_t dgamma
 /* commented FMV, 07/24/03
 Double_t RooGExpModel::calcSinhConv(Double_t sign, Double_t sign1, Double_t sign2, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const
 {
-  static Double_t root2(sqrt(2)) ;
-  static Double_t root2pi(sqrt(2*atan2(0,-1))) ;
-  static Double_t rootpi(sqrt(atan2(0,-1)));
+  static Double_t root2(sqrt(2.)) ;
+  static Double_t root2pi(sqrt(2*atan2(0.,-1.))) ;
+  static Double_t rootpi(sqrt(atan2(0.,-1.)));
   Double_t tau1 = 1/(1/tau-dgamma/2);
   Double_t tau2 = 1/(1/tau+dgamma/2);
   Double_t cFly;
@@ -456,7 +456,7 @@ Int_t RooGExpModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 
 Double_t RooGExpModel::analyticalIntegral(Int_t code) const 
 {
-  static Double_t root2 = sqrt(2) ;
+  static Double_t root2 = sqrt(2.) ;
   static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
   Double_t ssfInt(1.0) ;
 
@@ -610,7 +610,7 @@ RooComplex RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau, Double_t o
   //  RooComplex z(1/tau,sign*omega);
   //  return z*2/(omega*omega+1/(tau*tau));
 
-  static Double_t root2(sqrt(2)) ;
+  static Double_t root2(sqrt(2.)) ;
 
   Double_t smin1= x.min()/tau;
   Double_t smax1= x.max()/tau;
@@ -635,7 +635,7 @@ RooComplex RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau, Double_t o
 // added FMV, 08/17/03
 Double_t RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau, Double_t sig, Double_t rtau, Double_t fsign) const
 {
-  static Double_t root2(sqrt(2)) ;
+  static Double_t root2(sqrt(2.)) ;
 
   Double_t smin1= x.min()/tau;
   Double_t smax1= x.max()/tau;
@@ -692,7 +692,7 @@ RooComplex RooGExpModel::evalCerfApprox(Double_t swt, Double_t u, Double_t c) co
   // to explicitly cancel the divergent exp(y*y) behaviour of
   // CWERF for z = x + i y with large negative y
 
-  static Double_t rootpi= sqrt(atan2(0,-1));
+  static Double_t rootpi= sqrt(atan2(0.,-1.));
   RooComplex z(swt*c,u+c);  
   RooComplex zc(u+c,-swt*c);
   RooComplex zsq= z*z;

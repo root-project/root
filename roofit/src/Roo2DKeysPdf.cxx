@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: Roo2DKeysPdf.cc,v 1.12 2002/09/10 02:01:30 verkerke Exp $
+ *    File: $Id: Roo2DKeysPdf.cc,v 1.13 2003/05/14 05:30:31 wverkerke Exp $
  * Authors:                                                                  *
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu         *
  *                                                                           *
@@ -274,8 +274,8 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
 
   Double_t hXSigma = h * _xSigma; 
   Double_t hYSigma = h * _ySigma; 
-  Double_t xhmin   = hXSigma * sqrt(2)/10;  //smallest anticipated bandwidth
-  Double_t yhmin   = hYSigma * sqrt(2)/10;
+  Double_t xhmin   = hXSigma * sqrt(2.)/10;  //smallest anticipated bandwidth
+  Double_t yhmin   = hYSigma * sqrt(2.)/10;
 
   //////////////////////////////////////
   //calculate bandwidths from the data//

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooBifurGauss.cc,v 1.11 2002/09/10 02:01:31 verkerke Exp $
  * Authors:                                                                  *
  *   Abi Soffer, Colorado State University, abi@slac.stanford.edu            *
  *                                                                           *
@@ -22,7 +22,7 @@
 ClassImp(RooBifurGauss)
 
 static const char rcsid[] =
-"$Id: RooBifurGauss.cc,v 1.10 2002/08/27 01:51:31 bevan Exp $";
+"$Id: RooBifurGauss.cc,v 1.11 2002/09/10 02:01:31 verkerke Exp $";
 
 RooBifurGauss::RooBifurGauss(const char *name, const char *title,
 			     RooAbsReal& _x, RooAbsReal& _mean,
@@ -72,7 +72,7 @@ Double_t RooBifurGauss::analyticalIntegral(Int_t code) const
   switch(code) {
   case 1: 
     {
-      static Double_t root2 = sqrt(2) ;
+      static Double_t root2 = sqrt(2.) ;
       static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
       
       Double_t coefL(0.0), coefR(0.0);
