@@ -4508,7 +4508,7 @@ struct G__var_array *varglobal,*varlocal;
 	}
 	else {
 	  G__letint(&result,'i',
-		    *(int *)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC));
+		    *(long *)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC));
 	}
 	break;
       }
