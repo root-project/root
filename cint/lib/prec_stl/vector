@@ -347,7 +347,7 @@ class vector {
 #endif
 
 
-#ifndef G__NOALGORITHM
+#pragma ifndef G__NOALGORITHM
 
   // Generic algorithm
 #if defined(G__GNUC) || defined(G__BORLAND) || defined(G__KCC)
@@ -530,7 +530,7 @@ class vector {
 
 #endif // G__VISUAL,G__GNUC,G__BORLAND
 
-#endif // G__NOALGORITHM
+#pragma endif // G__NOALGORITHM
 
   // iterator_category resolution
   //friend random_access_iterator_tag iterator_category(vector::iterator x);

@@ -230,7 +230,7 @@ class deque {
   //friend void swap(deque& x, deque& y);
 #endif
 
-#ifndef G__NOALGORITHM
+#pragma ifndef G__NOALGORITHM
   // Generic algorithm
 #if defined(G__GNUC) || defined(G__BORLAND) || defined (G__KCC)
 
@@ -409,7 +409,7 @@ class deque {
 
 #endif // G__GNUC || G__BORLAND
 
-#endif // G__NOALGORITHM
+#pragma endif // G__NOALGORITHM
 
   // Generic algorithm
   //friend void reverse(deque::iterator first,deque::iterator last);

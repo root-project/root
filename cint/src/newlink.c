@@ -6392,22 +6392,55 @@ FILE *fp;
 	    G__getcommentstring(buf,i,&ifunc->comment[j]);
 	    fprintf(fp,",%s",buf);
 #ifdef G__TRUEP2F
-#ifdef G__OLDIMPLEMENTATION1289_YET
-	    if(ifunc->staticalloc[j]
+#if defined(G__OLDIMPLEMENTATION1289_YET) || !defined(G__OLDIMPLEMENTATION1993)
+	    if(
+#ifndef G__OLDIMPLEMENTATION1993
+	       (ifunc->staticalloc[j] || 'n'==G__struct.type[i])
+#else
+	       ifunc->staticalloc[j]
+#endif
 #ifndef G__OLDIMPLEMENTATION1292
 	       && G__PUBLIC==ifunc->access[j]
 #endif
-	       ) 
+	       ) {
+#ifndef G__OLDIMPLEMENTATION1993
+	      int k;
+	      fprintf(fp,",(void*)(%s (*)("
+		      ,G__type2string(ifunc->type[j]
+				      ,ifunc->p_tagtable[j]
+				      ,ifunc->p_typetable[j]
+				      ,ifunc->reftype[j]
+#ifndef G__OLDIMPLEMENTATION1328
+				      ,ifunc->isconst[j] /* g++ may have problem */
+#else
+				      ,0  /* avoiding g++ bug */
+#endif
+				      )
+		      );
+	      for(k=0;k<ifunc->para_nu[j];k++) {
+		if(k) fprintf(fp,",");
+		fprintf(fp,"%s"
+			,G__type2string(ifunc->para_type[j][k]
+					,ifunc->para_p_tagtable[j][k]
+					,ifunc->para_p_typetable[j][k]
+					,ifunc->para_reftype[j][k]
+					,ifunc->para_isconst[j][k]));
+	      }
+	      fprintf(fp,"))(%s::%s)"
+		      ,G__fulltagname(ifunc->tagnum,1),ifunc->funcname[j]);
+#else
 	      fprintf(fp,",(void*)%s::%s"
 		      ,G__fulltagname(ifunc->tagnum,1),ifunc->funcname[j]);
+#endif
+	    }
 	    else
 	      fprintf(fp,",(void*)NULL");
 	    fprintf(fp,",%d",ifunc->isvirtual[j]+ifunc->ispurevirtual[j]*2);
-#else
+#else /* 1289_YET  || !1993 */
 	    fprintf(fp,",(void*)NULL,%d"
 		    ,ifunc->isvirtual[j]+ifunc->ispurevirtual[j]*2);
-#endif
-#endif
+#endif /* 1289_YET */
+#endif /* G__TRUEP2F */
 	    fprintf(fp,");\n");
 
 	  } /* end of if access public && not pure virtual func */

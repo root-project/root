@@ -58,6 +58,29 @@ int G__getoptimizemode G__P(());
 extern int G__const_noerror;
 #endif
 
+/******************************************************************
+* G__dispvalue()
+******************************************************************/
+int G__dispvalue(fp,buf)
+FILE* fp;
+G__value *buf;
+{
+  if(buf) {
+    fprintf(fp
+	    ,"\nd=%g i=%ld reftype=%d type=%c tagn=%d typen=%d ref=%ld isconst=%d\n"
+	    ,buf->obj.d
+	    ,buf->obj.i
+	    ,buf->obj.reftype.reftype
+	    ,buf->type
+	    ,buf->tagnum
+	    ,buf->typenum
+	    ,buf->ref
+	    ,buf->isconst
+	    );
+  }
+  return(1);
+}
+
 #ifndef G__OLDIMPLEMENTATION1644
 static int G__exitcode = 0;
 /******************************************************************
@@ -5785,6 +5808,13 @@ int hash;
     if(G__no_exec_compile) return(1);
     G__letint(result7,'i'
 	      ,(long)G__unlock_variable((char *)G__int(libp->para[0])));
+    return(1);
+  }
+
+  if(strcmp(funcname,"G__dispvalue")==0) {
+    if(G__no_exec_compile) return(1);
+    G__letint(result7,'i'
+	      ,(long)G__dispvalue((FILE*)libp->para[0].obj.i,&libp->para[1]));
     return(1);
   }
 

@@ -1922,6 +1922,15 @@ G__value *presult;
 #ifndef G__OLDIMPLEMENTATION1653
 	/* For the time being, pointer to member function can only be handled
 	 * as function name */
+#ifndef G__OLDIMPLEMENTATION1993
+	if(('n'==G__struct.type[scope_tagnum] || memfunc->staticalloc[ifn])
+	   && memfunc->pentry[ifn]->filenum<0 && memfunc->pentry[ifn]->tp2f) {
+	  G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);
+	}
+	else {
+	  G__letint(presult,'C',(long)memfunc->funcname[ifn]);
+	}
+#else
 	G__letint(presult,'C',(long)memfunc->funcname[ifn]);
 	/* 
 	if(memfunc->pentry[ifn]->filenum>=0) 
@@ -1929,6 +1938,7 @@ G__value *presult;
 	else 
 	  G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);
 	*/
+#endif
 #else
 	if(memfunc->pentry[ifn]->tp2f) {
 	  G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);

@@ -230,12 +230,12 @@ class map {
   //friend void swap(map& x, map& y);
 #endif
 
-#ifndef G__NOALGORITHM
+#pragma ifndef G__NOALGORITHM
   // Generic algorithm
   friend map::iterator
     search(map::iterator first1,map::iterator last1,
            map::iterator first2,map::iterator last2);
-#endif
+#pragma endif // G__NOALGORITHM
 
   // iterator_category resolution
   //friend bidirectional_iterator_tag iterator_category(map::iterator x);

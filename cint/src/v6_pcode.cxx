@@ -1668,14 +1668,24 @@ long localmem;
       /***************************************
       * 0 SETTEMP
       ***************************************/
+#ifndef G__OLDIMPLEMENTATION1994
+      store_p_tempbuf = G__p_tempbuf->prev;
+      if(G__p_tempbuf) {
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETTEMP 0x%lx\n"
+				    ,pc,sp ,G__p_tempbuf->obj.obj.i);
+#endif
+	store_struct_offset = G__store_struct_offset;
+	store_tagnum = G__tagnum;
+	store_return=G__return;
+	G__store_struct_offset = G__p_tempbuf->obj.obj.i;
+	G__tagnum = G__p_tempbuf->obj.tagnum;
+	G__return=G__RETURN_NON;
+      }
+#else /* 1994 */
+#ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETTEMP 0x%lx\n"
 			     ,pc,sp ,G__p_tempbuf->obj.obj.i);
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETTEMP 0x%x\n"
-			     ,pc,sp ,G__p_tempbuf->obj.obj.i);
-#endif
 #endif
       store_p_tempbuf = G__p_tempbuf->prev;
       store_struct_offset = G__store_struct_offset;
@@ -1684,6 +1694,7 @@ long localmem;
       G__store_struct_offset = G__p_tempbuf->obj.obj.i;
       G__tagnum = G__p_tempbuf->obj.tagnum;
       G__return=G__RETURN_NON;
+#endif /* 1994 */
       ++pc;
 #ifdef G__ASM_DBG
       break;
@@ -1696,17 +1707,24 @@ long localmem;
       * 0 FREETEMP
       ***************************************/
 #ifdef G__ASM_DBG
-#ifndef G__FONS31
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: FREETEMP 0x%lx\n"
 			     ,pc,sp ,store_p_tempbuf);
-#else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: FREETEMP 0x%x\n"
-			     ,pc,sp ,store_p_tempbuf);
-#endif
 #endif
       G__store_struct_offset = store_struct_offset;
       G__tagnum = store_tagnum;
       G__return=store_return;
+#ifndef G__OLDIMPLEMENTATION1994
+      if(G__p_tempbuf && store_p_tempbuf) {
+#ifdef G__ASM_IFUNC
+	if(-1==G__p_tempbuf->obj.tagnum ||
+	   -1!=G__struct.iscpplink[G__p_tempbuf->obj.tagnum]) {
+	  free((void*)G__p_tempbuf->obj.obj.i);
+	}
+#endif
+	free((void*)G__p_tempbuf);
+	G__p_tempbuf = store_p_tempbuf;
+      }
+#else /* 1994 */
 #ifdef G__ASM_IFUNC
       if(-1==G__p_tempbuf->obj.tagnum ||
 	 -1!=G__struct.iscpplink[G__p_tempbuf->obj.tagnum]) {
@@ -1715,6 +1733,7 @@ long localmem;
 #endif
       free((void*)G__p_tempbuf);
       G__p_tempbuf = store_p_tempbuf;
+#endif /* 1994 */
       ++pc;
 #ifdef G__ASM_DBG
       break;

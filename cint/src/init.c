@@ -611,6 +611,9 @@ char *argv[] ;
   int linkflag=0;
   char *dllid=(char*)NULL;
   struct G__dictposition stubbegin;
+#ifndef G__OLDIMPLEMENTATION1996
+  char *icom=(char*)NULL;
+#endif
 
 
   /*****************************************************************
@@ -750,7 +753,7 @@ char *argv[] ;
    * Get command options
    *************************************************************/
   while((c=getopt(argc,argv
-  ,"a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:H:I:J:KM:N:O:P:QRSTU:VW:X:Y:Z:"))
+  ,"a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:H:I:J:KM:N:O:P:QRSTU:VW:X:Y:Z:-:"))
 	!=EOF) {
     switch(c) {
 
@@ -1130,6 +1133,13 @@ char *argv[] ;
       if(G__key!=0) system("key .cint_key -l execute");
       return(EXIT_SUCCESS);
       /* break; */
+
+#ifndef G__OLDIMPLEMENTATION1996
+    case '-':
+      icom = optarg;
+      break;
+#endif
+
     default:
 #ifndef G__SMALLOBJECT
       G__more_pause((FILE*)NULL,0);
@@ -1205,6 +1215,7 @@ char *argv[] ;
       G__more(G__sout,"  -Y [0|1]: ignore std namespace (default=1:ignore)\n"); 
 #endif
       G__more(G__sout,"  -Z [0|1]: automatic loading of standard header files with DLL\n"); 
+      G__more(G__sout,"  --'command': Execute interactive command and terminate Cint\n"); 
       G__more(G__sout,"suboptions\n");
       G__more(G__sout,"  +V : turn on class title comment mode for following source fies\n");
       G__more(G__sout,"  -V : turn off class title comment mode for following source fies\n");
@@ -1362,6 +1373,17 @@ char *argv[] ;
       return(EXIT_SUCCESS);
     }
   }
+
+#ifndef G__OLDIMPLEMENTATION1996
+  if(icom) {
+    int more = 0;
+    G__redirect_on();
+    G__init_process_cmd();
+    G__process_cmd(icom, "cint>", &more,(int*)NULL,(G__value*)NULL);
+    G__scratch_all();
+    return(EXIT_SUCCESS);
+  }
+#endif
 
 #ifndef G__OLDIMPLEMENTATION953
   if (G__afterparse_hook) G__afterparse_hook ();

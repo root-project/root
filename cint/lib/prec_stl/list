@@ -205,7 +205,7 @@ class list {
   //friend void swap(list& x, list& y);
 #endif
 
-#ifndef G__NOALGORITHM
+#pragma ifndef G__NOALGORITHM
   // Generic algorithm
 #if defined(G__GNUC) || defined(G__BORLAND) || defined(G__KCC)
 
@@ -388,7 +388,7 @@ class list {
 #endif
 
 #endif // G__GNUC || G__BORLAND
-#endif // G__NOALGORITHM
+#pragma endif // G__NOALGORITHM
 
   // Generic algorithm
   //friend void reverse(list::iterator first,list::iterator last);

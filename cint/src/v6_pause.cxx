@@ -2655,7 +2655,8 @@ G__value *rslt;
 #ifndef G__OLDIMPLEMENTATION1635
 	if(strncmp(">>",com,2)!=0) {
 	  G__serr=fopen(command+index,"w");
-	  fclose(G__sout);
+	  fclose(G__serr);
+	  /* fclose(G__sout); */
 	}
 	G__serr=fopen(command+index,"a");
 	G__redirectcerr(command+index);

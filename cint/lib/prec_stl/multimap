@@ -224,12 +224,12 @@ class multimap {
   //friend void swap(multimap& x, multimap& y);
 #endif
 
-#ifndef G__NOALGORITHM
+#pragma ifndef G__NOALGORITHM
   // Generic algorithm
   friend multimap::iterator
     search(multimap::iterator first1,multimap::iterator last1,
            multimap::iterator first2,multimap::iterator last2);
-#endif
+#pragma endif // G__NOALGORITHM
 
 
   // Generic algorithm

@@ -15,7 +15,7 @@
 // Imported from STL SGI implementation 1997 
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
-// May need to improve for the latest standard
+// May need improvement for the latest standard
 
 #ifndef G__VISUAL
 ////////////////////////////////////////////////////////////////////////
@@ -35,6 +35,9 @@ struct output_iterator {};
 template <class T, class Distance> struct forward_iterator {};
 template <class T, class Distance> struct bidirectional_iterator {};
 template <class T, class Distance> struct random_access_iterator {};
+#ifdef G__GNUC
+#pragma link off class output_iterator;
+#endif
 #else
 struct output_iterator;
 #endif
@@ -53,6 +56,9 @@ iterator_category(const input_iterator<T, Distance>&) {
 inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
+#ifdef G__GNUC
+#pragma link off funciton iterator_category(const output_iterator&);
+#endif
 
 template <class T, class Distance> 
 inline forward_iterator_tag

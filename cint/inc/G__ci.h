@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150123
-#define G__CINTVERSIONSTR  "5.15.123, Feb 9 2004"
+#define G__CINTVERSION      50150124
+#define G__CINTVERSIONSTR  "5.15.124, Feb 17 2004"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -30,9 +30,12 @@
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
 
-/* */
+/* If you have problem compiling dictionary with static member function, 
+ * define following macro. */
+/* #define G__OLDIMPLEMENTATION1993 */
+
+/* 1987 fixes the same problem. Turned off because of redundancy. */
 #define G__OLDIMPLEMENTATION1986
-#define G__OLDIMPLEMENTATION1985
 
 /* suppress unused parameter warnings. optional */
 #ifndef G__SUPPRESS_UNUSEDPARA

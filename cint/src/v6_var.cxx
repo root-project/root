@@ -5857,7 +5857,7 @@ int pp_inc;
 /******************************************************************
 * G__returnvartype()
 *
-*
+* 1998 may fix only one case. Other cases may need to be fided as well.
 ******************************************************************/
 void G__returnvartype(presult,var,ig15,paran)
 G__value *presult;
@@ -5914,6 +5914,26 @@ int paran;
 	presult->type=var->type[ig15];
       }
       else if(var->paran[ig15]<paran) {
+#ifndef G__OLDIMPLEMENTATION1998
+	int pointlevel;
+	int reftype = var->reftype[ig15];
+	if(!reftype) reftype=1;
+	pointlevel = reftype - paran;
+	switch(pointlevel) {
+	case 0:
+	  presult->type=tolower(var->type[ig15]);
+	  presult->obj.reftype.reftype = G__PARANORMAL;
+	  break;
+	case 1:
+	  presult->type=toupper(var->type[ig15]);
+	  presult->obj.reftype.reftype = G__PARANORMAL;
+	  break;
+	default:
+	  presult->type=toupper(var->type[ig15]);
+	  presult->obj.reftype.reftype = pointlevel;
+	  break;
+	}
+#else
 	switch(var->reftype[ig15]) {
         case G__PARANORMAL:
 	  presult->type=tolower(var->type[ig15]);
@@ -5930,6 +5950,7 @@ int paran;
 	  break;
 #endif
 	}
+#endif
       }
       else {
 	presult->type=toupper(var->type[ig15]);
@@ -7205,7 +7226,11 @@ int parameter00;
   }
 
 #ifndef G__OLDIMPLEMENTATION1985
-  if(-1!=var->tagnum && G__prerun && strcmp(varname,"G__virtualinfo")==0) {
+  if(-1!=var->tagnum && G__prerun && 
+#ifndef G__OLDIMPLEMENTATION1999
+     G__access==G__PUBLIC &&
+#endif
+     strcmp(varname,"G__virtualinfo")==0) {
     G__struct.virtual_offset[var->tagnum] = var->p[ig15];
   }
 #endif

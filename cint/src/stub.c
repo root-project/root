@@ -39,7 +39,11 @@ int tagnum;
   env->store_exec_memberfunc = G__exec_memberfunc;
   if(p) {
     G__store_struct_offset = (long)p;
+#ifndef G__OLDIMPLEMENTATION1995
+    G__tagnum = tagnum; 
+#else
     /* G__tagnum = G__tagnum; */ /* I think this is intentional */
+#endif
     G__memberfunc_tagnum = tagnum;
     G__exec_memberfunc = 1;
   }

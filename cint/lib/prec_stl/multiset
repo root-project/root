@@ -226,7 +226,7 @@ class multiset {
   // specialized algorithms:
   //friend void swap(multiset& x, multiset& y);
 
-#ifndef G__NOALGORITHM
+#pragma ifndef G__NOALGORITHM
   // Generic algorithm
 #if (defined(G__GNUC) && !defined (G__KCC)) || defined(G__BORLAND)
 
@@ -261,7 +261,7 @@ class multiset {
 #endif
 
 #endif // G__GNUC || G__BORLAND
-#endif // G__NOALGORITHM
+#pragma endif // G__NOALGORITHM
 
 };
 

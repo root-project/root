@@ -322,6 +322,14 @@ char *string,*endmark;
 #endif
       return(c);
 
+#ifndef G__OLDIMPLEMENTATION1997
+    case '*':
+    case '&':
+      if(i>0 && ' '==string[i-1] && nest && single_quote==0&&double_quote==0) 
+	--i;
+      break;
+#endif
+
 #ifndef G__OLDIMPLEMENTATION608
     case ',':
       pp = string+i+1;
@@ -558,15 +566,37 @@ char *string,*endmark;
 	commentflag=1;
       }
       break;
+
+#ifndef G__OLDIMPLEMENTATION1997
+    case '&':
+      if(i>0 && ' '==string[i-1] && nest && single_quote==0&&double_quote==0) 
+	--i;
+      break;
+#endif
       
     case '*':
       /* comment */
+#ifndef G__OLDIMPLEMENTATION1997
+      if(0==double_quote && 0==single_quote) {
+	if(i>0 && string[i-1]=='/' && commentflag) {
+	  G__skip_comment();
+	  --i;
+	  ignoreflag=1;
+	}
+	else if(i>2 && isspace(string[i-1]) && 
+		(isalnum(string[i-2])||'_'==string[i-2])
+		) {
+	  --i;
+	}
+      }
+#else
       if(0==double_quote && 0==single_quote && i>0 && string[i-1]=='/' &&
 	 commentflag) {
 	G__skip_comment();
 	--i;
 	ignoreflag=1;
       }
+#endif
       break;
 
     case '#':
@@ -777,6 +807,13 @@ char *string,*endmark;
 	commentflag=1;
       }
       break;
+
+#ifndef G__OLDIMPLEMENTATION1997
+    case '&':
+      if(i>0 && ' '==string[i-1] && nest && single_quote==0&&double_quote==0) 
+	--i;
+      break;
+#endif
       
     case '*':
       /* comment */
@@ -787,7 +824,15 @@ char *string,*endmark;
 	  --i;
 	  ignoreflag=1;
 	}
-	else if(i>2 && isspace(string[i-1] && isalpha(string[i-2]))) {
+	else 
+	  if(i>2 && 
+#ifndef G__OLDIMPLEMENTATION1997
+	     isspace(string[i-1]) && 
+	     (isalnum(string[i-2])||'_'==string[i-2])
+#else
+	     isspace(string[i-1] && isalnum(string[i-2]))
+#endif
+	     ) {
 	  --i;
 	}
       }
@@ -819,6 +864,7 @@ char *string,*endmark;
 #endif
       return(c);
       /* break; */
+
 
 #ifndef G__OLDIMPLEMENTATION608
     case ',':
@@ -1017,6 +1063,7 @@ char *string,*endmark;
       string[i] = '\0';
 #endif
       break;
+
 
 #ifndef G__OLDIMPLEMENTATION608
     case ',':
