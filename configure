@@ -885,6 +885,7 @@ if test ! "x$enable_rfio" = "xno" ; then
     else
         case $platform in
            linux*) shiftlib="$shiftlib -lnsl" ;;
+           solarisCC5) shiftlib="$shiftlib -lposix4" ;;
         esac
     fi
 fi
