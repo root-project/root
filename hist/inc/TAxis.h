@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.4 2000/06/15 06:51:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.5 2000/11/06 07:18:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -95,7 +95,7 @@ public:
         virtual void    SetTimeFormat(const char *format="");  //*MENU*
         virtual void    UnZoom();  //*MENU*
 
-        ClassDef(TAxis,5)  //Axis class
+        ClassDef(TAxis,6)  //Axis class
 };
 
 #endif
