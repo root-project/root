@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.78 2004/04/16 17:03:04 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.79 2004/04/20 15:17:02 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -242,8 +242,8 @@ static int WinNTRecv(int socket, void *buffer, int length, int flag)
          } else {
             if (::WSAGetLastError() != WSAEINTR)
                ::SysError("TWinNTSystem::WinNTRecv", "recv");
-            if (::WSAGetLastError() == WSAEPIPE ||
-                ::WSAGetLastError() == WSAECONNRESET)
+            //if (::WSAGetLastError() == WSAEPIPE ||
+             if ( ::WSAGetLastError() == WSAECONNRESET)
                return -5;
             else
                return -1;
@@ -286,8 +286,8 @@ static int WinNTSend(int socket, const void *buffer, int length, int flag)
          } else {
             if (::WSAGetLastError() != WSAEINTR)
                ::SysError("TWinNTSystem::WinNTSend", "send");
-            if (::WSAGetLastError() == WSAEPIPE ||
-                ::WSAGetLastError() == WSAECONNRESET)
+            //if (::WSAGetLastError() == WSAEPIPE ||
+             if (   ::WSAGetLastError() == WSAECONNRESET)
                return -5;
             else
                return -1;
