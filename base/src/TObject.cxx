@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.18 2001/02/13 11:10:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.19 2001/02/21 07:30:10 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -260,11 +260,12 @@ void TObject::AppendPad(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TObject::Browse(TBrowser *)
+void TObject::Browse(TBrowser *b)
 {
-   // Browse object (by default we inspect). May be overridden for  other default action
+   // Browse object. May be overridden for  other default action
 
-   Inspect();
+   //Inspect();
+   TClass::AutoBrowse(this,b);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.13 2001/02/15 16:13:48 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.14 2001/02/21 07:43:51 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -132,6 +132,7 @@ public:
    void           SetStreamer(const char *name, Streamer_t p);
    Int_t          WriteBuffer(TBuffer &b, void *pointer, const char *info="");
 
+   static Int_t   AutoBrowse(TObject *obj,TBrowser *browser);
    static Bool_t  IsCallingNew();
    static TClass *Load(TBuffer &b);
    void           Store(TBuffer &b) const;
