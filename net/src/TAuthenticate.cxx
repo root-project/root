@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.59 2004/07/01 18:49:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.60 2004/08/16 14:28:33 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -3617,10 +3617,15 @@ Int_t TAuthenticate::DecodeRSAPublic(const char *RSAPubExport, rsa_NUMBER &RSA_n
               ::Info("TAuthenticate::DecodeRSAPublic",
                      "unable to read pub key from bio");
          } else
-            *RSASSL = (void *)RSAtmp;
+            if (RSASSL)
+               *RSASSL = (void *)RSAtmp;
+            else
+               ::Info("TAuthenticate::DecodeRSAPublic",
+                      "no space allocated for output variable");
       }
 #else
       } else {
+         if (RSASSL) { }   // To avoid compiler complains
          if (gDebug > 0)
             ::Info("TAuthenticate::DecodeRSAPublic","not compiled with SSL support:"
                       " you should not have got here!");
