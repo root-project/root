@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.9 2002/01/02 21:42:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.10 2002/01/15 10:24:17 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -63,6 +63,7 @@ protected:
 public:
         // TGaxis status bits
         enum { kCenterTitle = BIT(12), 
+               kCenterLabels= BIT(14),
                kRotateTitle = BIT(15),
                kNoExponent  = BIT(17)};
 
@@ -76,6 +77,7 @@ public:
         virtual ~TGaxis();
         virtual void    AdjustBinSize(Double_t A1,  Double_t A2,  Int_t nold
                        ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BinWidth);
+        virtual void    CenterLabels(Bool_t center=kTRUE);
         virtual void    CenterTitle(Bool_t center=kTRUE);
         virtual void    DrawAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                                  Double_t wmin,Double_t wmax,Int_t ndiv=510, Option_t *chopt="",

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.21 2002/02/18 23:08:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.22 2002/10/31 07:27:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -53,6 +53,7 @@ public:
         // TAxis status bits
         enum { kAxisRange   = BIT(11),
                kCenterTitle = BIT(12),
+               kCenterLabels= BIT(14),
                kRotateTitle = BIT(15),
                kPalette     = BIT(16),
                kNoExponent  = BIT(17),
@@ -69,6 +70,7 @@ public:
         TAxis(Int_t nbins, const Axis_t *xbins);
         TAxis(const TAxis &axis);
         virtual ~TAxis();
+        virtual void     CenterLabels(Bool_t center=kTRUE);  // *MENU*
         virtual void     CenterTitle(Bool_t center=kTRUE);  // *MENU*
         const char      *ChooseTimeFormat(Double_t axislength=0);
         virtual void     Copy(TObject &axis) const;

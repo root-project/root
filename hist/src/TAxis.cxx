@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.34 2002/05/18 08:21:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.35 2002/10/31 07:27:36 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -75,6 +75,18 @@ TAxis::~TAxis()
 TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis)
 {
    ((TAxis&)axis).Copy(*this);
+}
+
+//______________________________________________________________________________
+void TAxis::CenterLabels(Bool_t center)
+{
+//   if center = kTRUE axis labels will be centered (hori axes only)
+//   on the bin center
+//   default is to center on the primary tick marks
+//   This option does not make sense if there are more bins than tick marks
+   
+   if (center) SetBit(kCenterLabels);
+   else        ResetBit(kCenterLabels);
 }
 
 //______________________________________________________________________________

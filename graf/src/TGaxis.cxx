@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.39 2002/06/17 16:51:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.40 2002/09/11 08:51:25 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -232,6 +232,17 @@ TGaxis::~TGaxis()
 }
 
 //______________________________________________________________________________
+void TGaxis::CenterLabels(Bool_t center)
+{
+//   if center = kTRUE axis labels are centered in the center of the bin
+//   default is to center on the primary tick marks
+//   This option does not make sense if there are more bins than tick marks.
+   
+   if (center) SetBit(kCenterLabels);
+   else        ResetBit(kCenterLabels);
+}
+
+//______________________________________________________________________________
 void TGaxis::CenterTitle(Bool_t center)
 {
 //   if center = kTRUE axis title will be centered
@@ -296,6 +307,7 @@ void TGaxis::ImportAxisAttributes(TAxis *axis)
    SetTitleOffset(axis->GetTitleOffset());
    SetTitleSize(axis->GetTitleSize());
    SetBit(kCenterTitle, axis->TestBit(kCenterTitle));
+   SetBit(kCenterLabels,axis->TestBit(kCenterLabels));
    SetBit(kRotateTitle, axis->TestBit(kRotateTitle));
    SetBit(TAxis::kNoExponent,   axis->TestBit(TAxis::kNoExponent));
    SetBit(TAxis::kTickPlus,     axis->TestBit(TAxis::kTickPlus));
@@ -559,6 +571,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if(strchr(chopt,'t')) OptionTime = 1;  else OptionTime = 0;
    if (TestBit(TAxis::kTickPlus))  OptionPlus  = 2;
    if (TestBit(TAxis::kTickMinus)) OptionMinus = 2;
+   if (TestBit(TAxis::kCenterLabels)) OptionM = 1;
    if (fAxis) {
       if (fAxis->GetLabels()) {
          OptionM    = 1;
