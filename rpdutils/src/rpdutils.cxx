@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.6 2003/09/04 10:46:27 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.7 2003/09/07 18:25:47 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -2969,30 +2969,32 @@ void RpdUser(const char *sstr)
    // we cannot authenticate users ...)
    char *passw = 0;
    if (gAnon == 0) {
-#ifdef R__SHADOWPW
-      // System V Rel 4 style shadow passwords
-      if ((spw = getspnam(user)) == 0) {
-         if (gDebug > 0) {
-            ErrorInfo("RpdUser: Shadow passwd not accessible for user %s",user);
-            ErrorInfo("RpdUser: trying normal or special root passwd");
-         }
-         passw = pw->pw_passwd;
-      } else
-         passw = spw->sp_pwdp;
-#else
-      passw = pw->pw_passwd;
-#endif
-      if (strlen(passw) == 0 || !strcmp(passw, "x")) {
-         // Try if special password is given via .rootdpass
-         sprintf(rootdpass, "%s/%s", pw->pw_dir, kRootdPass);
 
-         int fid = open(rootdpass, O_RDONLY);
-         if (fid != -1) {
-            if (read(fid, specpass, sizeof(specpass) - 1) > 0) {
-               passw = specpass;
-            }
-            close(fid);
+      // Try if special password is given via .rootdpass
+      sprintf(rootdpass, "%s/%s", pw->pw_dir, kRootdPass);
+
+      int fid = open(rootdpass, O_RDONLY);
+      if (fid != -1) {
+         if (read(fid, specpass, sizeof(specpass) - 1) > 0) {
+            passw = specpass;
          }
+         close(fid);
+      }
+
+      if (strlen(passw) == 0 || !strcmp(passw, "x")) {
+#ifdef R__SHADOWPW
+         // System V Rel 4 style shadow passwords
+         if ((spw = getspnam(user)) == 0) {
+            if (gDebug > 0) {
+               ErrorInfo("RpdUser: Shadow passwd not accessible for user %s",user);
+               ErrorInfo("RpdUser: trying normal or special root passwd");
+            }
+            passw = pw->pw_passwd;
+         } else
+            passw = spw->sp_pwdp;
+#else
+         passw = pw->pw_passwd;
+#endif
       }
       // Check if successful
       if (strlen(passw) == 0 || !strcmp(passw, "x")) {

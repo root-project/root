@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.15 2003/09/07 18:25:46 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.16 2003/09/09 09:43:27 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -2212,10 +2212,14 @@ Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd)
                }
             }
             if (Crypt == 1) {
-               // Get hash
+               // Get hash (only if not already hashed ...)
+               if (strncmp(Passwd,Salt,strlen(Salt))) {
 #ifndef R__WIN32
-               PasHash = StrDup(crypt(Passwd, Salt));
+                  PasHash = StrDup(crypt(Passwd, Salt));
 #endif
+               } else {
+                  PasHash = StrDup(Passwd);
+               }
             }
             if (Anon == 1) {
                if (!Passwd.Contains("@")) {
