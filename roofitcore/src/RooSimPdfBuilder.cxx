@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimPdfBuilder.cc,v 1.18 2002/06/28 22:02:40 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.19 2002/07/03 01:05:02 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -426,7 +426,6 @@
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooAddPdf.hh"
 #include "RooFitCore/RooLinearVar.hh"
-#include "RooFitCore/RooFitContext.hh"
 #include "RooFitCore/RooTruthModel.hh"
 #include "RooFitCore/RooAddModel.hh"
 #include "RooFitCore/RooProdPdf.hh"
@@ -435,7 +434,6 @@
 #include "RooFitCore/RooMultiCategory.hh"
 #include "RooFitCore/RooSuperCategory.hh"
 #include "RooFitCore/RooSimultaneous.hh"
-#include "RooFitCore/RooSimFitContext.hh"
 #include "RooFitCore/RooTrace.hh"
 #include "RooFitCore/RooFitResult.hh"
 #include "RooFitCore/RooDataHist.hh"
@@ -490,7 +488,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
   const char* spaceChars = " \t" ;
 
   // Retrieve physics index category
-  char buf[1024] ;
+  char buf[2048] ;
   strcpy(buf,((RooStringVar*)buildConfig.find("physModels"))->getVal()) ;
   RooAbsCategoryLValue* physCat(0) ;
   if (strstr(buf," : ")) {
@@ -672,7 +670,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
   }
 
 
-  TList customizerList ;
+  TList* customizerList = new TList ;
 
   // Loop over requested physics models and build components
   TIterator* physIter = physModelSet.createIterator() ;
@@ -681,7 +679,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
     cout << "RooSimPdfBuilder::buildPdf: processing physics model " << physModel->GetName() << endl ;
 
     RooCustomizer* physCustomizer = new RooCustomizer(*physModel,masterSplitCat,_splitNodeList) ;
-    customizerList.Add(physCustomizer) ;
+    customizerList->Add(physCustomizer) ;
 
     // Parse the splitting rules for this physics model
     RooStringVar* ruleStr = (RooStringVar*) buildConfig.find(physModel->GetName()) ;
@@ -725,7 +723,9 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		  if (!cat) {
 		    cout << "RooSimPdfBuilder::buildPdf: ERROR " << catName
 			 << " not found in the primary or auxilary splitcat list" << endl ;
-		    customizerList.Delete() ;
+		    customizerList->Delete() ;
+		    delete customizerList ;
+
 		    splitStateList.Delete() ;
 		    return 0 ;
 		  }
@@ -750,7 +750,8 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	      if (!splitCat) {
 		cout << "RooSimPdfBuilder::buildPdf: ERROR splitting category " 
 		     << splitCatName << " not found in the primary or auxiliary splitcat list" << endl ;
-		customizerList.Delete() ;
+		customizerList->Delete() ;
+		delete customizerList ;
 		splitStateList.Delete() ;
 		return 0 ;
 	      }
@@ -764,7 +765,8 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	    if (strcmp(token,":")) {
 	      cout << "RooSimPdfBuilder::buildPdf: ERROR in parsing, expected ':' after " 
 		   << splitCat << ", found " << token << endl ;
-	      customizerList.Delete() ;
+	      customizerList->Delete() ;
+	      delete customizerList ;
 	      splitStateList.Delete() ;
 	      return 0 ;	    
 	    }
@@ -780,6 +782,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	    // wve -- add nodes to parameter list
 	    RooArgSet* compList = physModel->getComponents() ;
 	    paramList->add(*compList) ;
+	    delete compList ;
 
 	    char *tokptr(0) ;
 	    Bool_t lastCharIsComma = (token[strlen(token)-1]==',') ;
@@ -800,7 +803,8 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		  cout << "RooSimPdfBuilder::buildPdf: ERROR fraction split of parameter " 
 		       << paramName << " has invalid remainder state name: " << remainderState << endl ;
 		  delete paramList ;
-		  customizerList.Delete() ;
+		  customizerList->Delete() ;
+		  delete customizerList ;
 		  splitStateList.Delete() ;
 		  return 0 ;
 		}
@@ -811,7 +815,8 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		cout << "RooSimPdfBuilder::buildPdf: ERROR " << paramName 
 		     << " is not a parameter of physics model " << physModel->GetName() << endl ;
 		delete paramList ;
-		customizerList.Delete() ;
+		customizerList->Delete() ;
+		delete customizerList ;
 		splitStateList.Delete() ;
 		return 0 ;
 	      }
@@ -825,7 +830,8 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		  cout << "RooSimPdfBuilder::buildPdf: ERROR fraction split requested of non-real valued parameter " 
 		       << param->GetName() << endl ;
 		  delete paramList ;
-		  customizerList.Delete() ;
+		  customizerList->Delete() ;
+		  delete customizerList ;
 		  splitStateList.Delete() ;
 		  return 0 ;
 		}
@@ -881,6 +887,8 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	    // Add the rule to the appropriate customizer ;
 	    physCustomizer->splitArgs(splitParamList,*splitCat) ;
 
+	    delete paramList ;
+
 	    if (!lastCharIsComma) mode = SplitCat ;
 	    break ;
 	  }
@@ -892,14 +900,14 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	     << (mode==Colon?":":"parameter list") << " after " << token << endl ;
       }
 
-      RooArgSet* paramSet = physModel->getParameters(dependents) ;
+      //RooArgSet* paramSet = physModel->getParameters(dependents) ;
     } else {
       cout << "RooSimPdfBuilder::buildPdf: no splitting rules for " << physModel->GetName() << endl ;
     }    
   }
   
   cout << "RooSimPdfBuilder::buildPdf: configured customizers for all physics models" << endl ;
-  customizerList.Print() ;
+  customizerList->Print() ;
 
   // Create fit category from physCat and splitCatList ;
   RooArgSet fitCatList ;
@@ -940,9 +948,9 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
     if (physCat) {      
       RooStringVar* physNameVar = (RooStringVar*) stateMap.find(physCat->getLabel()) ;
       if (!physNameVar) continue ;
-      physCustomizer = (RooCustomizer*) customizerList.FindObject(physNameVar->getVal());  
+      physCustomizer = (RooCustomizer*) customizerList->FindObject(physNameVar->getVal());  
     } else {
-      physCustomizer = (RooCustomizer*) customizerList.First() ;
+      physCustomizer = (RooCustomizer*) customizerList->First() ;
     }
 
     cout << "RooSimPdfBuilder::buildPdf: Customizing physics model " << physCustomizer->GetName() 
@@ -952,9 +960,11 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
     RooAbsPdf* fcPdf = (RooAbsPdf*) physCustomizer->build(masterSplitCat.getLabel(),verbose) ;
     simPdf->addPdf(*fcPdf,fcState->GetName()) ;
   }
+  delete fcIter ;
 
   // Move customizers (owning the cloned branch node components) to the attic
-  _retiredCustomizerList.AddAll(&customizerList) ;
+  _retiredCustomizerList.AddAll(customizerList) ;
+  delete customizerList ;
 
   delete fclIter ;
   splitStateList.Delete() ;
@@ -971,6 +981,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 
 RooSimPdfBuilder::~RooSimPdfBuilder() 
 {
+  _retiredCustomizerList.Delete() ;
 }
  
 
