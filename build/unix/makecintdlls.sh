@@ -31,6 +31,10 @@ if [ $PLATFORM = "win32" ]; then
    CC=`pwd`/$CC
 fi
 
+# Filter out the explicit link flag
+if [ "x`echo $MAKELIB | grep build/unix/makelib.sh`" != "x" ]; then
+   MAKELIB=`echo $MAKELIB | sed -e "s/ -x//g"`
+fi
 
 CINTDIRL=cint/lib
 CINTDIRI=cint/include
