@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.17 2001/07/09 13:48:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.18 2001/07/17 09:07:43 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -96,8 +96,10 @@ TApplication::TApplication(const char *appClassName,
    // line options recogized by TApplication are described in the GetOptions()
    // method. The recognized options are removed from the argument array.
    // The original list of argument options can be retrieved via the Argc()
-   // and Argv() methods. The "options" and "numOptions" arguments are
-   // not used. The appClassName "proofserv" is reserved for the PROOF system.
+   // and Argv() methods. The appClassName "proofserv" is reserved for the
+   // PROOF system. The "options" and "numOptions" arguments are not used.
+   // Except numOptions<0 means: don't call GetOptions() (hack needed for
+   // PROOF).
 
    if (gApplication) {
       Error("TApplication", "only one instance of TApplication allowed");
@@ -113,6 +115,8 @@ TApplication::TApplication(const char *appClassName,
    gApplication = this;
    gROOT->SetApplication(this);
    gROOT->SetName(appClassName);
+
+   if (options) { }  // use unused argument
 
    // copy command line arguments, can be later accessed via Argc() and Argv()
    if (argc && *argc > 0) {
@@ -130,8 +134,11 @@ TApplication::TApplication(const char *appClassName,
    fNoLogo        = kFALSE;
    fQuit          = kFALSE;
 
-   GetOptions(argc, argv);
-   if (fArgv) gSystem->SetProgname(fArgv[0]);
+   if (numOptions >= 0)
+      GetOptions(argc, argv);
+
+   if (fArgv)
+      gSystem->SetProgname(fArgv[0]);
 
    fIdleTimer     = 0;
    fIdleCommand   = 0;
@@ -142,7 +149,7 @@ TApplication::TApplication(const char *appClassName,
    LoadGraphicsLibs();
 
    // Create WM dependent application environment
-   fAppImp = gGuiFactory->CreateApplicationImp(appClassName, argc, argv, options, numOptions);
+   fAppImp = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
 
    // Try to load TrueType font renderer. Only try to load if not in batch
    // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
