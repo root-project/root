@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.9 2002/05/09 20:22:00 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -34,7 +34,7 @@ class TTableDescriptor : public TTable {
              void        LearnTable(const TTable *parentTable);
              void        LearnTable(TClass *classPtr);
              const Char_t *ColumnName(Int_t columnIndex)        const;
-             const Int_t ColumnByName(const Char_t *columnName=0) const;
+             Int_t       ColumnByName(const Char_t *columnName=0) const;
              UInt_t      NumberOfColumns()                      const;
              const UInt_t *IndexArray(Int_t columnIndex)        const;
              UInt_t      Offset(Int_t columnIndex)              const;
@@ -60,19 +60,19 @@ class TTableDescriptor : public TTable {
 
 //    ClassDefTable(TTableDescriptor,tableDescriptor_st)
      static const char* TableDictionary();
-  protected:                                        
+  protected:
      static  TTableDescriptor *fgColDescriptors;
-     virtual TTableDescriptor *GetDescriptorPointer() const     { return fgColDescriptors;}                 
-     virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = list;}                  
-  public:                                           
-    typedef tableDescriptor_st* iterator;                   
-    TTableDescriptor() : TTable("TTableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}      
-    TTableDescriptor(const Text_t *name) : TTable(name,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}     
+     virtual TTableDescriptor *GetDescriptorPointer() const     { return fgColDescriptors;}
+     virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = list;}
+  public:
+    typedef tableDescriptor_st* iterator;
+    TTableDescriptor() : TTable("TTableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}
+    TTableDescriptor(const Text_t *name) : TTable(name,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}
     TTableDescriptor(Int_t n) : TTable("TTableDescriptor",n,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}
     TTableDescriptor(const Text_t *name,Int_t n) : TTable(name,n,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}
-    tableDescriptor_st *GetTable(Int_t i=0) const { return ((tableDescriptor_st *)GetArray())+i;}                       
-    tableDescriptor_st &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }             
-    const tableDescriptor_st &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const tableDescriptor_st *)(GetTable(i))); } 
+    tableDescriptor_st *GetTable(Int_t i=0) const { return ((tableDescriptor_st *)GetArray())+i;}
+    tableDescriptor_st &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }
+    const tableDescriptor_st &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const tableDescriptor_st *)(GetTable(i))); }
     tableDescriptor_st *begin() const  {                      return GetNRows()? GetTable(0):0;}
     tableDescriptor_st *end()   const  {Long_t i = GetNRows(); return          i? GetTable(i):0;}
 

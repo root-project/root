@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.5 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -39,7 +39,7 @@ public:
   TVolumeView(TVolumeView *viewNode,const TVolumeView *node1,const TVolumeView *node2);
   TVolumeView(TVolume &pattern,Int_t maxDepLevel=0,const TVolumePosition *nodePosition=0,EDataSetPass iopt=kMarked,TVolumeView *root=0);
   TVolumeView(Double_t *translate, Double_t *rotate, UInt_t positionId, TVolume *thisNode,
-              const Char_t *thisNodePath, const Char_t *matrixName=0, const Int_t matrixType=0);
+              const Char_t *thisNodePath, const Char_t *matrixName=0, Int_t matrixType=0);
   TVolumeView(TVolume *thisNode,TVolumePosition *nodePosition);
   virtual ~TVolumeView();
   virtual TVolume *AddNode(TVolume *node);
