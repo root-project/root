@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.cxx,v 1.2 2002/09/13 15:23:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.cxx,v 1.3 2003/06/23 06:11:01 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -371,13 +371,14 @@ void  TConfidenceLevel::Draw(const Option_t*)
    // - The histogram of -2lnQ for signal and background hypothesis (dashed)
    // The 2 histograms are respectively named b_hist and sb_hist.
    TH1F h("TConfidenceLevel_Draw","",50,0,0);
-   for (Int_t i=0; i<fNMC; i++) {
+   Int_t i;
+   for (i=0; i<fNMC; i++) {
       h.Fill(-2*(fTSB[i]-fStot));
       h.Fill(-2*(fTSS[i]-fStot));
    }
    TH1F* b_hist  = new TH1F("b_hist", "-2lnQ",50,h.GetXaxis()->GetXmin(),h.GetXaxis()->GetXmax());
    TH1F* sb_hist = new TH1F("sb_hist","-2lnQ",50,h.GetXaxis()->GetXmin(),h.GetXaxis()->GetXmax());
-   for (Int_t i=0; i<fNMC; i++) {
+   for (i=0; i<fNMC; i++) {
       b_hist->Fill(-2*(fTSB[i]-fStot));
       sb_hist->Fill(-2*(fTSS[i]-fStot));
    }
