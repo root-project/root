@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.5 2000/10/12 15:18:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.1 2000/11/21 21:10:30 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -46,8 +46,8 @@ private:
    Int_t            *fNewType;        //![fNdata]
    Int_t            *fOffset;         //![fNdata]
    Int_t            *fLength;         //![fNdata]
-   Long_t           *fElem;           //![fNdata]
-   Long_t           *fMethod;         //![fNdata]
+   ULong_t          *fElem;           //![fNdata]
+   ULong_t          *fMethod;         //![fNdata]
    TClass           *fClass;          //!pointer to class
    TObjArray        *fElements;       //Array of TStreamerElements
    

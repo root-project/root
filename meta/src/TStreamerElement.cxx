@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.1 2000/11/21 21:10:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.2 2000/11/22 11:19:58 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -212,12 +212,12 @@ TStreamerBasicPointer::~TStreamerBasicPointer()
 }
 
 //______________________________________________________________________________
-Long_t TStreamerBasicPointer::GetMethod()
+ULong_t TStreamerBasicPointer::GetMethod()
 {
    // return address of counter
    
 //printf("getmethod, counterAddress=%x\n",fCounter->GetCounterAddress());
-   return (Long_t)fCounter->GetMethod();
+   return (ULong_t)fCounter->GetMethod();
 }
 
 //______________________________________________________________________________
@@ -271,11 +271,11 @@ TStreamerTStringPointer::~TStreamerTStringPointer()
 }
 
 //______________________________________________________________________________
-Long_t TStreamerTStringPointer::GetMethod()
+ULong_t TStreamerTStringPointer::GetMethod()
 {
    // return address of counter
    
-   return (Long_t)fCounter->GetMethod();
+   return (ULong_t)fCounter->GetMethod();
 }
 
 //______________________________________________________________________________
@@ -328,11 +328,11 @@ TStreamerBasicType::~TStreamerBasicType()
 }
 
 //______________________________________________________________________________
-Long_t TStreamerBasicType::GetMethod()
+ULong_t TStreamerBasicType::GetMethod()
 {
    // return address of counter
    
-   if (fType == kCounter || fType == (kCounter+kSkip)) return (Long_t)&fCounter;
+   if (fType == kCounter || fType == (kCounter+kSkip)) return (ULong_t)&fCounter;
    return 0;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.1 2000/11/21 21:10:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.2 2000/11/22 11:19:58 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -63,7 +63,7 @@ public:
    Int_t            GetArrayLength() {return fArrayLength;}
    virtual const char *GetInclude() const {return "";}
    Int_t            GetMaxIndex(Int_t i) {return fMaxIndex[i];}
-   virtual Long_t   GetMethod() {return Long_t(fStreamer);}
+   virtual ULong_t  GetMethod() {return ULong_t(fStreamer);}
    void            *GetStreamer() {return fStreamer;}
    Int_t            GetSize() {return fSize;}
    Int_t            GetNewType() {return fNewType;}
@@ -93,7 +93,7 @@ public:
    TStreamerBase(const char *name, const char *title, Int_t offset);
    virtual         ~TStreamerBase();
    const char      *GetInclude() const;
-   Long_t           GetMethod() {return Long_t(fMethod);}
+   ULong_t          GetMethod() {return ULong_t(fMethod);}
    virtual void     Init(TObject *obj=0);
    
    ClassDef(TStreamerBase,1)  //Streamer element of type base class
@@ -113,7 +113,7 @@ public:
    TStreamerBasicPointer();
    TStreamerBasicPointer(const char *name, const char *title, Int_t offset, Int_t dtype, const char *countName, const char *countClass, Int_t version, const char *typeName);
    virtual       ~TStreamerBasicPointer();
-   Long_t         GetMethod();
+   ULong_t        GetMethod();
    virtual void   Init(TObject *obj=0);
    virtual Bool_t IsaPointer() {return kTRUE;}
    
@@ -135,7 +135,7 @@ public:
    TStreamerTStringPointer(const char *name, const char *title, Int_t offset, const char *countName, const char *countClass, Int_t version, const char *typeName);
    virtual       ~TStreamerTStringPointer();
    const char    *GetInclude() const;
-   Long_t         GetMethod();
+   ULong_t        GetMethod();
    virtual void   Init(TObject *obj=0);
    virtual Bool_t IsaPointer() {return kTRUE;}
    
@@ -154,7 +154,7 @@ public:
    TStreamerBasicType(const char *name, const char *title, Int_t offset, Int_t dtype, const char *typeName);
    virtual       ~TStreamerBasicType();
    Int_t          GetCounter() {return fCounter;}
-   Long_t         GetMethod();
+   ULong_t        GetMethod();
    
    ClassDef(TStreamerBasicType,1)  //Streamer element for a basic type
 };
@@ -207,7 +207,7 @@ public:
    virtual       ~TStreamerObjectPointer();
    TClass        *GetClass() {return fClassObject;}
    const char    *GetInclude() const;
-   Long_t         GetMethod() {return (Long_t)fClassObject;}
+   ULong_t        GetMethod() {return (ULong_t)fClassObject;}
    virtual void   Init(TObject *obj=0);
    virtual Bool_t IsaPointer() {return kTRUE;}
    

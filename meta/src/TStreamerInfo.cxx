@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.2 2000/11/21 21:50:18 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.3 2000/11/22 11:19:58 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -463,7 +463,7 @@ void TStreamerInfo::BuildUserInfo(const char *info)
                //get pointer to method baseclass::Streamer
                TMethodCall *methodcall = new TMethodCall(base,"Streamer","");
                newtype[fNdata]   = 0;
-               newmethod[fNdata] = (Long_t)methodcall;
+               newmethod[fNdata] = (ULong_t)methodcall;
                fNdata++;
             }
          }
@@ -472,7 +472,7 @@ void TStreamerInfo::BuildUserInfo(const char *info)
    }  
    fType     = new Int_t[fNdata+1];
    fOffset   = new Int_t[fNdata+1];
-   fMethod   = new Long_t[fNdata+1];
+   fMethod   = new ULong_t[fNdata+1];
    for (Int_t i=0;i<fNdata;i++) {
       fType[i]   = newtype[i];
       fOffset[i] = newoffset[i];
@@ -501,8 +501,8 @@ void TStreamerInfo::Compile()
    fNewType= new Int_t[ndata];
    fOffset = new Int_t[ndata];
    fLength = new Int_t[ndata];
-   fElem   = new Long_t[ndata];
-   fMethod = new Long_t[ndata];
+   fElem   = new ULong_t[ndata];
+   fMethod = new ULong_t[ndata];
    TStreamerElement *element;
    Int_t keep = -1;
    Int_t i;
@@ -513,7 +513,7 @@ void TStreamerInfo::Compile()
       fNewType[fNdata]= element->GetNewType();
       fOffset[fNdata] = element->GetOffset();
       fLength[fNdata] = element->GetArrayLength();
-      fElem[fNdata]   = (Long_t)element;
+      fElem[fNdata]   = (ULong_t)element;
       fMethod[fNdata] = element->GetMethod();
       if (keep>=0 && (element->GetType() < kRegrouped)
                   && (fType[fNdata] == fNewType[fNdata])
@@ -977,8 +977,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer)
                          break;
                         }
          // Base Class
-         case kBase:    { Long_t args[1];
-                          args[0] = (Long_t)&b;
+         case kBase:    { ULong_t args[1];
+                          args[0] = (ULong_t)&b;
                           TMethodCall *method = (TMethodCall*)fMethod[i];
                           method->SetParamPtrs(args);
                           method->Execute((void*)(pointer+fOffset[i])); 
@@ -1331,8 +1331,8 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
             
          // Base Class
          case kBase:    { 
-            Long_t args[1];
-            args[0] = (Long_t)&b;
+            ULong_t args[1];
+            args[0] = (ULong_t)&b;
             TMethodCall *method = (TMethodCall*)fMethod[i];
             method->SetParamPtrs(args);
             for (Int_t k=0;k<nc;k++) { 
@@ -1621,8 +1621,8 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer)
                          break;
                         }
          // Base Class
-         case kBase:    { Long_t args[1];
-                          args[0] = (Long_t)&b;
+         case kBase:    { ULong_t args[1];
+                          args[0] = (ULong_t)&b;
                           TMethodCall *method = (TMethodCall*)fMethod[i];
                           method->SetParamPtrs(args);
                           method->Execute((void*)(pointer+fOffset[i])); 
@@ -1814,8 +1814,8 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          
          // Base Class
          case kBase: { 
-                       Long_t args[1];
-                       args[0] = (Long_t)&b;
+                       ULong_t args[1];
+                       args[0] = (ULong_t)&b;
                        TMethodCall *method = (TMethodCall*)fMethod[i];
                        method->SetParamPtrs(args);
                        for (Int_t k=0;k<nc;k++) { 
