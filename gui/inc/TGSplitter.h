@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.3 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.4 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -52,8 +52,8 @@ class TGVSplitter : public TGSplitter {
 
 protected:
    Int_t       fStartX;         // x position when dragging starts
-   UInt_t      fWidth;          // width of frame to be resized
-   UInt_t      fHeight;         // height of frame to be resized
+   UInt_t      fFrameWidth;     // width of frame to be resized
+   UInt_t      fFrameHeight;    // height of frame to be resized
    Int_t       fMin;            // min x position frame can be resized to
    Int_t       fMax;            // max x position frame can be resized to
    TGFrame    *fFrame;          // frame that should be resized
@@ -80,8 +80,8 @@ class TGHSplitter : public TGSplitter {
 
 protected:
    Int_t       fStartY;         // y position when dragging starts
-   UInt_t      fWidth;          // width of frame to be resized
-   UInt_t      fHeight;         // height of frame to be resized
+   UInt_t      fFrameWidth;     // width of frame to be resized
+   UInt_t      fFrameHeight;    // height of frame to be resized
    Int_t       fMin;            // min y position frame can be resized to
    Int_t       fMax;            // max y position frame can be resized to
    TGFrame    *fFrame;          // frame that should be resized

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.3 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.4 2000/10/04 23:40:07 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -94,7 +94,7 @@ Bool_t TGVSplitter::HandleButton(Event_t *event)
       fDragging = kTRUE;
 
       Int_t  x, y;
-      gVirtualX->GetWindowSize(fFrame->GetId(), x, y, fWidth, fHeight);
+      gVirtualX->GetWindowSize(fFrame->GetId(), x, y, fFrameWidth, fFrameHeight);
 
       // get fMin and fMax in root coordinates
       Int_t    xroot, yroot;
@@ -128,7 +128,7 @@ Bool_t TGVSplitter::HandleMotion(Event_t *event)
       if (xr > fMax) xr = fMax;
       if (xr < fMin) xr = fMin;
       Int_t delta = xr - fStartX;
-      Int_t w = (Int_t) fWidth;
+      Int_t w = (Int_t) fFrameWidth;
       if (fLeft)
          w += delta;
       else
@@ -137,8 +137,8 @@ Bool_t TGVSplitter::HandleMotion(Event_t *event)
       fStartX = xr;
 
       if (delta != 0) {
-         fWidth = w;
-         fFrame->Resize(fWidth, fHeight);
+         fFrameWidth = w;
+         fFrame->Resize(fFrameWidth, fFrameHeight);
 
          TGCompositeFrame *p = (TGCompositeFrame *) GetParent();
          p->Layout();
@@ -227,7 +227,7 @@ Bool_t TGHSplitter::HandleButton(Event_t *event)
       fDragging = kTRUE;
 
       Int_t  x, y;
-      gVirtualX->GetWindowSize(fFrame->GetId(), x, y, fWidth, fHeight);
+      gVirtualX->GetWindowSize(fFrame->GetId(), x, y, fFrameWidth, fFrameHeight);
 
       // get fMin and fMax in root coordinates
       Int_t    xroot, yroot;
@@ -261,7 +261,7 @@ Bool_t TGHSplitter::HandleMotion(Event_t *event)
       if (yr > fMax) yr = fMax;
       if (yr < fMin) yr = fMin;
       Int_t delta = yr - fStartY;
-      Int_t h = (Int_t) fHeight;
+      Int_t h = (Int_t) fFrameHeight;
       if (fAbove)
          h += delta;
       else
@@ -270,8 +270,8 @@ Bool_t TGHSplitter::HandleMotion(Event_t *event)
       fStartY = yr;
 
       if (delta != 0) {
-         fHeight = h;
-         fFrame->Resize(fWidth, fHeight);
+         fFrameHeight = h;
+         fFrame->Resize(fFrameWidth, fFrameHeight);
 
          TGCompositeFrame *p = (TGCompositeFrame *) GetParent();
          p->Layout();
