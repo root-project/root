@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.145 2003/07/12 12:00:46 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.146 2003/07/18 09:07:09 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1948,10 +1948,10 @@ void THistPainter::PaintColorLevels(Option_t *)
             if (ylow > 0) ylow = TMath::Log10(ylow);
             else continue;
          }
-         if (xlow < gPad->GetUxmin()) continue;
-         if (ylow < gPad->GetUymin()) continue;
-         if (xup  > gPad->GetUxmax()) continue;
-         if (yup  > gPad->GetUymax()) continue;
+         if (xlow < gPad->GetUxmin()) xlow = gPad->GetUxmin();
+         if (ylow < gPad->GetUymin()) ylow = gPad->GetUymin();
+         if (xup  > gPad->GetUxmax()) xup  = gPad->GetUxmax();
+         if (yup  > gPad->GetUymax()) yup  = gPad->GetUymax();
 
          if (fH->TestBit(TH1::kUserContour)) {
             zc = fH->GetContourLevelPad(0);
