@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.29 2001/01/22 12:46:32 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.30 2001/02/01 18:19:12 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2503,6 +2503,17 @@ void TGraph::SavePrimitive(ofstream &out, Option_t *option)
       out<<"   multigraph->Add(graph);"<<endl;
       return;
    }
+   static Int_t frameNumber = 0;
+   if (fHistogram) {
+      frameNumber++;
+      TString hname = fHistogram->GetName();
+      hname += frameNumber;
+      fHistogram->SetName(hname.Data());
+      fHistogram->SavePrimitive(out,"nodraw");
+      out<<"   graph->SetHistogram("<<fHistogram->GetName()<<");"<<endl;      
+      out<<"   "<<endl;
+   }
+   
    out<<"   graph->Draw("
       <<quote<<option<<quote<<");"<<endl;
 }

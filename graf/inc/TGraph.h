@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.8 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.9 2000/12/15 12:05:24 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -45,7 +45,7 @@ protected:
 
     virtual void    LeastSquareFit(Int_t n, Int_t m, Double_t *a);
     virtual void    LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail);
-
+    
 public:
     // TGraph status bits
     enum {
@@ -90,6 +90,7 @@ public:
         virtual void     Print(Option_t *chopt="") const;
         static  void     RemoveFunction(TGraph *gr, TObject *obj);
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
+        virtual void     SetHistogram(TH1 *h) {fHistogram = (TH1F*)h;}
         virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
         virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
         virtual void     Set(Int_t n);
