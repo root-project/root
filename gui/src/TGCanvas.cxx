@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.13 2002/11/15 14:53:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.14 2002/11/18 23:04:42 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -1801,7 +1801,8 @@ void TGCanvas::Layout()
    tcw = TMath::Max(container->GetDefaultWidth(), cw);
    tch = TMath::Max(container->GetDefaultHeight(), ch);
    UInt_t curw = container->GetDefaultWidth();
-   container->SetHeight(0); // force a resize in TGFrame::Resize
+
+   container->SetWidth(0); // force a resize in TGFrame::Resize
 
    if (fixedw && fixedh) {
       container->Resize(curw, container->GetDefaultHeight());
