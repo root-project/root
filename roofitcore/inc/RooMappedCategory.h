@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.rdl,v 1.5 2001/03/29 22:37:40 verkerke Exp $
+ *    File: $Id: RooMappedCategory.rdl,v 1.6 2001/04/05 01:49:10 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -13,10 +13,10 @@
 #define ROO_MAPPED_CATEGORY
 
 #include "TObjArray.h"
-#include "RooFitCore/RooAbsCategory.hh"
+#include "RooFitCore/RooDerivedCategory.hh"
 #include "RooFitCore/RooCatType.hh"
 
-class RooMappedCategory : public RooAbsCategory {
+class RooMappedCategory : public RooDerivedCategory {
 public:
   // Constructors etc.
   inline RooMappedCategory() { }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.rdl,v 1.5 2001/04/05 01:49:10 verkerke Exp $
+ *    File: $Id: RooCategory.rdl,v 1.6 2001/04/08 00:06:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,10 +33,6 @@ public:
   RooCategory& operator=(int index) ; 
   RooCategory& operator=(const char* label) ; 
   
-  // Value accessors (overridden from base class)
-  virtual Int_t getIndex() { return _value.getVal(); }
-  virtual const char* getLabel() { return _value.GetName() ; } 
-
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) ;

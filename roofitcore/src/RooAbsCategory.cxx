@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.7 2001/04/05 01:49:10 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.8 2001/04/08 00:06:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -96,34 +96,10 @@ TIterator* RooAbsCategory::typeIterator() const
 }
 
 
-Int_t RooAbsCategory::getIndex() const
-{
-  if (isValueDirty()) {
-    setValueDirty(false) ;
-    _value = traceEval() ;
-  } 
-
-  return _value.getVal() ;
-}
-
-
-const char* RooAbsCategory::getLabel() const
-{
-  if (isValueDirty()) {
-    setValueDirty(false) ;
-    _value = traceEval() ;
-  } 
-
-  return _value.GetName() ;
-}
-
-
-
 Bool_t RooAbsCategory::operator==(Int_t index) const
 {
   return (index==getIndex()) ;
 }
-
 
 
 Bool_t RooAbsCategory::operator==(const char* label) const
@@ -141,21 +117,6 @@ Bool_t RooAbsCategory::isValidIndex(Int_t index) const
 Bool_t RooAbsCategory::isValidLabel(const char* label) const
 {
   return lookupType(label)?kTRUE:kFALSE ;
-}
-
-
-RooCatType RooAbsCategory::traceEval() const
-{
-  RooCatType value = evaluate() ;
-  
-  //Standard tracing code goes here
-  if (!isValid(value)) {
-  }
-
-  //Call optional subclass tracing code
-  traceEvalHook(value) ;
-
-  return value ;
 }
 
 
