@@ -47,7 +47,7 @@ endif
 BoolOrder: BoolOrder.log
 	$(TestDiff)
 
-templateName.log: templateName_cpp.$(DllSuf)
+templateName.log: templateName_cpp.$(DllSuf) $(ROOTCORELIBS) $(ROOT_LOC)/lib/libTreePlayer.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l runtemplateName.C 2>&1 | grep -v -e 'Creating library' -e \\.cxx -e 'creating shared' > templateName.log
 
 templateName: templateName.log
