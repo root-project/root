@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.41 2002/08/21 23:06:39 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.42 2002/08/27 00:53:24 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -561,6 +561,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, TList& cmdList) const
     // Make temporary projData without RooSim index category components
     RooArgSet projDataVars(*projData->get()) ;
     RooArgSet* idxCatServers = _indexCat.arg().getDependents(frame->getNormVars()) ;
+
     projDataVars.remove(*idxCatServers,kTRUE,kTRUE) ;
 
     if (idxCompSliceSet->getSize()>0) {
@@ -599,13 +600,24 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, TList& cmdList) const
 
 
   // Override normalization and projection dataset
+  TList cmdList2 ;
+  cmdList2.AddAll(&cmdList) ;
+
   RooCmdArg tmp1 = Normalization(scaleFactor*sumWeight,stype) ;
   RooCmdArg tmp2 = ProjWData(*projDataSet,*projDataTmp) ;
-  cmdList.Add(&tmp1) ;
-  cmdList.Add(&tmp2) ;
+  cmdList2.Add(&tmp1) ;
+  cmdList2.Add(&tmp2) ;
 
-  // Plot temporary function  
-  RooPlot* frame2 = plotVar->plotOn(frame,cmdList) ;
+  RooPlot* frame2 ;
+  if (projSetTmp.getSize()>0) {
+    // Plot temporary function  
+    RooCmdArg tmp3 = Project(projSetTmp) ;
+    cmdList2.Add(&tmp3) ;
+    frame2 = plotVar->plotOn(frame,cmdList2) ;
+  } else {
+    // Plot temporary function  
+    frame2 = plotVar->plotOn(frame,cmdList2) ;
+  }
 
   // Cleanup
   delete pIter ;
