@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.40 2001/01/13 11:29:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.41 2001/01/13 12:01:30 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -223,6 +223,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TEventList.h"
+#include "TBranchElement.h"
 #include "TBranchObject.h"
 #include "TLeafObject.h"
 #include "TLeaf.h"
@@ -248,6 +249,7 @@
 #include "TRegexp.h"
 #include "TArrayC.h"
 #include "TStreamerInfo.h"
+#include "TStreamerElement.h"
 #include "TVirtualFitter.h"
 
 TTree *gTree;
@@ -2146,6 +2148,84 @@ void TTree::Streamer(TBuffer &b)
    } else {
       TTree::Class()->WriteBuffer(b,this);
    }
+}
+
+//______________________________________________________________________________
+TBranch *TTree::Trunk(const char *name, const char *classname, void *addobj, Int_t bufsize, Int_t splitlevel)
+{
+//*-*-*-*-*-*-*-*-*-*-*Create a new TTree BranchObject*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                  ===============================
+//
+//    Build a TBranchObject for an object of class classname.
+//    addobj is the address of a pointer to an object of class classname.
+//    IMPORTANT: classname must derive from TObject.
+//    The class dictionary must be available (ClassDef in class header).
+//
+//    This option requires access to the library where the corresponding class
+//    is defined. Accessing one single data member in the object implies
+//    reading the full object.
+//    See the next Branch constructor for a more efficient storage
+//    in case the entry consists of arrays of identical objects.
+//
+//    By default the branch buffers are stored in the same file as the Tree.
+//    use TBranch::SetFile to specify a different file
+//
+//      IMPORTANT NOTE about branch names
+//    In case two or more master branches contain subbranches with
+//    identical names, one must add a "." (dot) character at the end
+//    of the master branch name. This will force the name of the subbranch
+//    to be master.subbranch instead of simply subbranch.
+//    This situation happens when the top level object (say event)
+//    has two or more members referencing the same class.
+//    For example, if a Tree has two branches B1 and B2 corresponding
+//    to objects of the same class MyClass, one can do:
+//       tree.Branch("B1.","MyClass",&b1,8000,1);
+//       tree.Branch("B2.","MyClass",&b2,8000,1);
+//    if MyClass has 3 members a,b,c, the two instructions above will generate
+//    subbranches called B1.a, B1.b ,B1.c, B2.a, B2.b, B2.c
+
+   gTree = this;
+   TClass *cl = gROOT->GetClass(classname);
+   if (!cl) {
+      Error("Trunk","Cannot find class:%s",classname);
+      return 0;
+   }
+   TBranch *branch;
+   if (splitlevel == 0) {
+      branch = new TBranchObject(name,classname,addobj,bufsize,0);
+      fBranches.Add(branch);
+      return branch;
+   }
+
+   char **apointer = (char**)(addobj);
+   TObject *obj = (TObject*)(*apointer);
+   Bool_t delobj = kFALSE;
+   if (!obj) {
+      obj = (TObject*)cl->New();
+      delobj = kTRUE;
+   }
+   //build the StreamerInfo if first time for the class
+   BuildStreamerInfo(cl,obj);
+
+   // create a dummy top level trunk branch
+   TStreamerInfo *sinfo = cl->GetStreamerInfo();
+   branch = new TBranchElement(sinfo,0,-1,addobj,bufsize,0);
+   fBranches.Add(branch);
+   TObjArray *blist = branch->GetListOfBranches();   
+   
+//*-*- Loop on all public data members of the class and its base classes
+   TIter next(sinfo->GetElements());
+   TStreamerElement *element;
+   Int_t id = 0;
+   while ((element = (TStreamerElement*)next())) {
+      TBranch *branch = new TBranchElement(sinfo,element,id,addobj,bufsize);
+      blist->Add(branch);
+      id++;
+   }
+   Print();
+         
+   if (delobj) delete obj;
+   return branch;
 }
 
 

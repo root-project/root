@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.20 2000/12/13 16:45:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.21 2000/12/21 14:03:38 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -231,6 +231,7 @@ public:
     virtual void      SetUpdate(Int_t freq=0) {fUpdate = freq;}
     virtual void      Show(Int_t entry=-1);
     virtual void      StartViewer(); // *MENU*
+    virtual TBranch  *Trunk(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
     virtual Int_t     UnbinnedFit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option="" 
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     void              UseCurrentStyle();
