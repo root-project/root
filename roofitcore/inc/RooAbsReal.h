@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.2 2001/03/19 15:57:30 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.3 2001/03/29 01:59:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,14 +23,16 @@ public:
   // Constructors, assignment etc
   inline RooAbsReal() { }
   RooAbsReal(const char *name, const char *title, const char *unit= "") ;
-  RooAbsReal(const char *name, const char *title, Double_t minVal, Double_t maxVal, const char *unit= "") ;
+  RooAbsReal(const char *name, const char *title, Double_t minVal, Double_t maxVal, 
+	     const char *unit= "") ;
   RooAbsReal(const RooAbsReal& other);
-  RooAbsArg& operator=(RooAbsArg& other) ;
+  RooAbsReal(const char* name, const RooAbsReal& other);
+  RooAbsReal& operator=(RooAbsReal& other) ;
   virtual ~RooAbsReal();
 
   // Return value and unit accessors
   virtual Double_t getVal() const ;
-  Bool_t operator==(Double_t value) ;
+  Bool_t operator==(Double_t value) const ;
   inline const Text_t *getUnit() const { return _unit.Data(); }
   inline void setUnit(const char *unit) { _unit= unit; }
 
@@ -57,6 +59,7 @@ public:
 
 protected:
   friend class RooDataSet ;
+  RooAbsArg& operator=(RooAbsArg& other) ;
 
   // Function evaluation and error tracing
   Double_t traceEval() const ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.4 2001/03/29 01:06:42 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.5 2001/03/29 01:59:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,8 +31,24 @@ RooAbsCategory::RooAbsCategory(const char *name, const char *title) :
 }
 
 
-RooAbsCategory::RooAbsCategory(const RooAbsCategory& other) :
-  RooAbsArg(other), _value(other._value) 
+
+RooAbsCategory::RooAbsCategory(const char* name, const RooAbsCategory& other) :
+  RooAbsArg(name, other), _value(other._value) 
+{
+  initCopy(other) ;
+}
+
+
+
+RooAbsCategory::RooAbsCategory(const RooAbsCategory& other) : 
+  RooAbsArg(other), _value(other._value)
+{
+  initCopy(other) ;
+}
+
+
+
+void RooAbsCategory::initCopy(const RooAbsCategory& other)
 {
   TIterator* iter=other._types.MakeIterator() ;
   TObject* obj ;
@@ -44,6 +60,7 @@ RooAbsCategory::RooAbsCategory(const RooAbsCategory& other) :
   setValueDirty(kTRUE) ;
   setShapeDirty(kTRUE) ;
 }
+
 
 
 RooAbsCategory::~RooAbsCategory()
@@ -53,23 +70,23 @@ RooAbsCategory::~RooAbsCategory()
 }
 
 
+RooAbsCategory& RooAbsCategory::operator=(RooAbsCategory& other)
+{
+  RooAbsArg::operator=(other) ;
+
+  if (!lookupType(other._value)) {
+    cout << "RooAbsCategory::operator=(" << GetName() << "): index " 
+	 << other._value.getVal() << " not defined for this category" << endl ;
+  } else {
+    _value = other._value ;
+    setValueDirty(kTRUE) ;
+  }
+  return *this ;
+}
+
 RooAbsArg& RooAbsCategory::operator=(RooAbsArg& aother)
 {
-  RooAbsArg::operator=(aother) ;
-  RooAbsCategory& other=(RooAbsCategory&)aother ;
-
-  _value = other._value ;
-
-  _types.Delete() ;
-  TIterator* iter=other._types.MakeIterator() ;
-  TObject* obj ;
-  while (obj=iter->Next()) {
-    _types.Add(obj) ;
-  }
-  delete iter ;
-
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
+  return operator=((RooAbsCategory&)aother) ;
 }
 
 

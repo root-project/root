@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.cc,v 1.4 2001/03/21 15:14:20 verkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.5 2001/03/22 15:31:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,11 +33,15 @@ RooCategory::RooCategory(const char *name, const char *title) :
 }
 
 
+RooCategory::RooCategory(const char* name, const RooCategory& other) :
+  RooAbsCategory(name, other)
+{
+}
+
+
 RooCategory::RooCategory(const RooCategory& other) :
   RooAbsCategory(other)
 {
-  setValueDirty(kTRUE) ;  
-  setShapeDirty(kTRUE) ;  
 }
 
 
@@ -46,13 +50,28 @@ RooCategory::~RooCategory()
 }
 
 
+RooCategory& RooCategory::operator=(Int_t index) {
+  setIndex(index,kTRUE) ;
+  return *this ;
+}
+
+
+RooCategory& RooCategory::operator=(const char*label) {
+  setLabel(label) ;
+  return *this ;
+}
+
+
+RooCategory& RooCategory::operator=(RooCategory& other)
+{
+  RooAbsCategory::operator=(other) ;
+  return *this ;
+}
+
+
 RooAbsArg& RooCategory::operator=(RooAbsArg& aother)
 {
-  RooAbsArg::operator=(aother) ;
-  RooCategory& other=(RooCategory&)aother ;
-
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
+  return operator=((RooCategory&)aother) ;
 }
 
 
@@ -75,18 +94,6 @@ Bool_t RooCategory::setLabel(const char* label, Bool_t printError)
   _value = *type ;
   setValueDirty(kTRUE) ;
   return kFALSE ;
-}
-
-
-RooCategory& RooCategory::operator=(Int_t index) {
-  setIndex(index,kTRUE) ;
-  return *this ;
-}
-
-
-RooCategory& RooCategory::operator=(const char*label) {
-  setLabel(label) ;
-  return *this ;
 }
 
 

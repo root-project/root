@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStringVar.cc,v 1.2 2001/03/29 01:06:44 verkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.3 2001/03/29 01:59:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -39,14 +39,22 @@ RooStringVar::RooStringVar(const char *name, const char *title, const char* valu
 }  
 
 
+RooStringVar::RooStringVar(const char* name, const RooStringVar& other) :
+  RooAbsString(name, other)
+{
+}
+
+
 RooStringVar::RooStringVar(const RooStringVar& other) :
   RooAbsString(other)
 {
 }
 
+
 RooStringVar::~RooStringVar() 
 {
 }
+
 
 RooStringVar::operator TString() {
   return this->getVal();
@@ -72,6 +80,21 @@ TString RooStringVar::operator=(TString newValue)
   }
 
   return newValue ;
+}
+
+
+
+RooStringVar& RooStringVar::operator=(const RooStringVar& orig)
+{
+  RooAbsString::operator=(orig) ;
+  return (*this) ;
+}
+
+
+
+RooAbsArg& RooStringVar::operator=(const RooAbsArg& aorig)
+{
+  return operator=((RooStringVar&)aorig) ;
 }
 
 
@@ -131,16 +154,6 @@ void RooStringVar::writeToStream(ostream& os, Bool_t compact) const
 }
 
 
-
-RooAbsArg&
-RooStringVar::operator=(const RooAbsArg& aorig)
-{
-  // Assignment operator for RooStringVar
-  RooAbsString::operator=(aorig) ;
-  RooStringVar& orig = (RooStringVar&)aorig ;
-
-  return (*this) ;
-}
 
 void RooStringVar::printToStream(ostream& os, PrintOption opt) const {
   switch(opt) {

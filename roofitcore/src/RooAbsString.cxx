@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.1 2001/03/27 01:20:19 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.2 2001/03/29 01:59:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,12 +29,26 @@ RooAbsString::RooAbsString(const char *name, const char *title) :
 }
 
 
+
+RooAbsString::RooAbsString(const char* name, const RooAbsString& other) : 
+  RooAbsArg(name, other)
+{
+  initCopy(other) ;
+}
+
+
+
 RooAbsString::RooAbsString(const RooAbsString& other) : 
   RooAbsArg(other)
 {
+  initCopy(other) ;
+}
+
+
+
+void RooAbsString::initCopy(const RooAbsString& other)
+{
   strcpy(_value,other._value) ;
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
 }
 
 
@@ -43,16 +57,20 @@ RooAbsString::~RooAbsString()
 }
 
 
+RooAbsString& RooAbsString::operator=(const RooAbsString& other)
+{
+  RooAbsArg::operator=(other) ;
+
+  strcpy(_value,other._value) ;
+  setValueDirty(kTRUE) ;
+
+  return *this ;
+}
+
+
 RooAbsArg& RooAbsString::operator=(const RooAbsArg& aother)
 {
-  RooAbsArg::operator=(aother) ;
-
-  RooAbsString& other=(RooAbsString&)aother ;
-  strcpy(_value,other._value) ;
-
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
-  return *this ;
+  return operator=((RooAbsString&)aother) ;
 }
 
 

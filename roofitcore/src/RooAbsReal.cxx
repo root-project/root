@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.2 2001/03/19 15:57:30 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.3 2001/03/29 01:59:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,7 +28,8 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit= ""
   setShapeDirty(kTRUE) ;
 }
 
-RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal, Double_t maxVal, const char *unit= "") :
+RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
+		       Double_t maxVal, const char *unit= "") :
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), _plotMin(minVal), _plotMax(maxVal)
 {
   setValueDirty(kTRUE) ;
@@ -36,13 +37,19 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal, Dou
 }
 
 
-RooAbsReal::RooAbsReal(const RooAbsReal& other) : 
+RooAbsReal::RooAbsReal(const char* name, const RooAbsReal& other) : 
+  RooAbsArg(name,other), _unit(other._unit), _plotBins(other._plotBins), 
+  _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value)
+{
+}
+
+
+RooAbsReal::RooAbsReal(const RooAbsReal& other) :
   RooAbsArg(other), _unit(other._unit), _plotBins(other._plotBins), 
   _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value)
 {
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
 }
+
 
 
 RooAbsReal::~RooAbsReal()
@@ -50,20 +57,20 @@ RooAbsReal::~RooAbsReal()
 }
 
 
+RooAbsReal& RooAbsReal::operator=(RooAbsReal& other)
+{
+  RooAbsArg::operator=(other) ;
+
+  _value    = other._value ;
+  setValueDirty(kTRUE) ;
+
+  return *this ;
+}
+
+
 RooAbsArg& RooAbsReal::operator=(RooAbsArg& aother)
 {
-  RooAbsArg::operator=(aother) ;
-
-  RooAbsReal& other=(RooAbsReal&)aother ;
-  _value    = other._value ;
-  _unit     = other._unit ;
-  _plotMin  = other._plotMin ;
-  _plotMax  = other._plotMax ;
-  _plotBins = other._plotBins ;
-
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
-  return *this ;
+  return operator=((RooAbsReal&)aother) ;
 }
 
 
@@ -80,7 +87,7 @@ Double_t RooAbsReal::getVal() const
 
 
 
-Bool_t RooAbsReal::operator==(Double_t value) 
+Bool_t RooAbsReal::operator==(Double_t value) const
 {
   return (getVal()==value) ;
 }

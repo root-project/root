@@ -56,13 +56,22 @@ Bool_t RooFormula::reCompile(const char* newFormula)
 }
 
 
-RooFormula::RooFormula(const RooFormula& other) : 
+RooFormula::RooFormula(const char* name, const RooFormula& other) : 
   TFormula(other), _origList(other._origList), _isOK(other._isOK) 
 {
+  SetName(name) ;
+
   int i ;
   for (i=0 ; i<other._useList.GetEntries() ; i++) {
     _useList.Add(other._useList.At(i)) ;
   }
+}
+
+
+RooFormula& RooFormula::operator=(RooFormula& other) 
+{
+  // to be implemented
+  return *this ;
 }
 
 
@@ -116,7 +125,7 @@ Bool_t RooFormula::changeDependents(RooArgSet& newDeps, Bool_t mustReplaceAll)
 }
 
 
-Double_t RooFormula::eval() 
+Double_t RooFormula::eval()
 { 
   // WVE sanity check should go here
   if (!_isOK) {

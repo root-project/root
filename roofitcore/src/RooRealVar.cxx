@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.6 2001/03/28 00:21:52 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.7 2001/03/29 01:59:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,8 +30,6 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 {
   _value = value ;
   setConstant(kTRUE) ;
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
 }  
 
 RooRealVar::RooRealVar(const char *name, const char *title,
@@ -42,8 +40,6 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 
 {
   _value= 0.5*(minValue + maxValue);
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
 }  
 
 RooRealVar::RooRealVar(const char *name, const char *title,
@@ -53,9 +49,16 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   _fitMin(minValue), _fitMax(maxValue)
 {
   _value = value ;
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
 }  
+
+RooRealVar::RooRealVar(const char* name, const RooRealVar& other) :
+  RooAbsReal(name,other), 
+  _error(other._error),
+  _fitMin(other._fitMin),
+  _fitMax(other._fitMax)
+{
+}
+
 
 RooRealVar::RooRealVar(const RooRealVar& other) :
   RooAbsReal(other), 
@@ -63,9 +66,8 @@ RooRealVar::RooRealVar(const RooRealVar& other) :
   _fitMin(other._fitMin),
   _fitMax(other._fitMax)
 {
-  setConstant(other.isConstant()) ;
-  setProjected(other.isProjected()) ;
 }
+
 
 RooRealVar::~RooRealVar() 
 {
@@ -148,16 +150,6 @@ void RooRealVar::setFitRange(Double_t min, Double_t max) {
   setShapeDirty(kTRUE) ;  
 }
 
-
-
-Double_t RooRealVar::operator=(Double_t newValue) 
-{
-  // Clip 
-  inFitRange(newValue,&_value) ;
-
-  setValueDirty(kTRUE) ;
-  return _value;
-}
 
 
 
@@ -340,19 +332,31 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
 
 
 
-RooAbsArg&
-RooRealVar::operator=(RooAbsArg& aorig)
+Double_t RooRealVar::operator=(Double_t newValue) 
 {
-  // Assignment operator for RooRealVar
-  RooAbsReal::operator=(aorig) ;
+  // Clip 
+  inFitRange(newValue,&_value) ;
+  setValueDirty(kTRUE) ;
+  return _value;
+}
 
-  RooRealVar& orig = (RooRealVar&)aorig ;
+
+RooRealVar& RooRealVar::operator=(RooRealVar& orig)
+{
+  RooAbsReal::operator=(orig) ;
+
+  operator=(orig._value) ; // takes care of error checking
   _error = orig._error ;
-  _fitMin = orig._fitMin ;
-  _fitMax = orig._fitMax ;
 
   return (*this) ;
 }
+
+
+RooAbsArg& RooRealVar::operator=(RooAbsArg& aorig)
+{
+  return operator=((RooRealVar&)aorig) ;
+}
+
 
 void RooRealVar::printToStream(ostream& os, PrintOption opt) const {
   switch(opt) {

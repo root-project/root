@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.9 2001/03/29 01:06:42 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.10 2001/03/29 01:59:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -48,13 +48,30 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
   // dirty flags set.
 }
 
+RooAbsArg::RooAbsArg(const char* name, const RooAbsArg& other)
+  : TNamed(name,other.GetTitle())
+{
+  // Copy constructor transfers attributes and servers from the original
+  // object. The newly created object has no clients and has its dirty
+  // flags set.
+  initCopy(other) ;
+}
+
+
+
 RooAbsArg::RooAbsArg(const RooAbsArg& other)
   : TNamed(other)
 {
   // Copy constructor transfers attributes and servers from the original
   // object. The newly created object has no clients and has its dirty
   // flags set.
+  initCopy(other) ;
+}
 
+
+
+void RooAbsArg::initCopy(const RooAbsArg& other)
+{
   // take attributes from target
   TObject* obj ;
   TIterator* aIter = other._attribList.MakeIterator() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.cc,v 1.4 2001/03/21 15:14:21 verkerke Exp $
+ *    File: $Id: RooMappedCategory.cc,v 1.5 2001/03/29 01:59:09 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -26,6 +26,34 @@ RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbs
 {
   addServer(inputCat) ;
 }
+
+
+RooMappedCategory::RooMappedCategory(const char *name, const RooMappedCategory& other) :
+  RooAbsCategory(name,other), _defout(other._defout) 
+{
+  initCopy(other) ;
+}
+
+
+
+RooMappedCategory::RooMappedCategory(const RooMappedCategory& other) :
+  RooAbsCategory(other), _defout(other._defout) 
+{
+  initCopy(other) ;
+}
+
+
+
+void RooMappedCategory::initCopy(const RooMappedCategory& other) 
+{
+  int i ;
+  for (i=0 ; i<other._inlo.GetEntries() ; i++) {
+    _inlo.Add(other._inlo.At(i)) ;
+    _inhi.Add(other._inhi.At(i)) ;
+    _out.Add(other._out.At(i)) ;
+  }
+}
+
 
 
 RooMappedCategory::~RooMappedCategory() 

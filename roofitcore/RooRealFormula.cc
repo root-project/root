@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFormula.cc,v 1.2 2001/03/19 15:57:32 verkerke Exp $
+ *    File: $Id: RooRealFormula.cc,v 1.3 2001/03/29 01:59:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,6 +32,12 @@ RooRealFormula::RooRealFormula(const char *name, const char *title, RooArgSet& d
 }
 
 
+RooRealFormula::RooRealFormula(const char* name, const RooRealFormula& other) : 
+  RooAbsReal(name, other), _formula(other._formula)
+{
+}
+
+
 RooRealFormula::RooRealFormula(const RooRealFormula& other) : 
   RooAbsReal(other), _formula(other._formula)
 {
@@ -40,6 +46,19 @@ RooRealFormula::RooRealFormula(const RooRealFormula& other) :
 
 RooRealFormula::~RooRealFormula() 
 {
+}
+
+
+RooRealFormula& RooRealFormula::operator=(RooRealFormula& other)
+{
+  RooAbsReal::operator=(other) ;
+  _formula = other._formula ;
+}
+
+
+RooAbsArg& RooRealFormula::operator=(RooAbsArg& aother) 
+{
+  return operator=((RooRealFormula&)aother) ;  
 }
 
 
