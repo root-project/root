@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.rdl,v 1.12 2002/05/31 01:07:41 verkerke Exp $
+ *    File: $Id: RooGaussModel.rdl,v 1.13 2002/08/21 22:01:59 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -24,9 +24,11 @@ public:
                                   sinBasisMinus=11, sinBasisSum=12, sinBasisPlus=13,
                                   cosBasisMinus=21, cosBasisSum=22, cosBasisPlus=23,
                                                                     linBasisPlus=33,
-                                                                   quadBasisPlus=43 } ;
+                                                                   quadBasisPlus=43, 
+				  coshBasisMinus=51,coshBasisSum=52,coshBasisPlus=53,
+ 	  			  sinhBasisMinus=61,sinhBasisSum=62,sinhBasisPlus=63};
   enum BasisType { none=0, expBasis=1, sinBasis=2, cosBasis=3,
-		   linBasis=4, quadBasis=5 } ;
+		   linBasis=4, quadBasis=5, coshBasis=6, sinhBasis=7 } ;
   enum BasisSign { Both=0, Plus=+1, Minus=-1 } ;
 
   // Constructors, assignment etc
@@ -84,3 +86,12 @@ protected:
 };
 
 #endif
+
+
+
+
+
+
+
+
+

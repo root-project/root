@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.21 2002/05/31 21:54:25 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.22 2002/08/21 22:01:58 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -92,7 +92,13 @@ Int_t RooGaussModel::basisCode(const char* name) const
   if (!TString("exp(-abs(@0)/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisSum ;
   if (!TString("(@0/@1)*exp(-@0/@1)").CompareTo(name)) return linBasisPlus ;
   if (!TString("(@0/@1)*(@0/@1)*exp(-@0/@1)").CompareTo(name)) return quadBasisPlus ;
-  return 0 ;
+  if (!TString("exp(-@0/@1)*cosh(@0*@2/2)").CompareTo(name)) return coshBasisPlus;
+  if (!TString("exp(@0/@1)*cosh(@0*@2/2)").CompareTo(name)) return coshBasisMinus;
+  if (!TString("exp(-abs(@0)/@1)*cosh(@0*@2/2)").CompareTo(name)) return coshBasisSum;
+  if (!TString("exp(-@0/@1)*sinh(@0*@2/2)").CompareTo(name)) return sinhBasisPlus;
+  if (!TString("exp(@0/@1)*sinh(@0*@2/2)").CompareTo(name)) return sinhBasisMinus;
+  if (!TString("exp(-abs(@0)/@1)*sinh(@0*@2/2)").CompareTo(name)) return sinhBasisSum;
+return 0 ;
 } 
 
 
@@ -191,6 +197,53 @@ Double_t RooGaussModel::evaluate() const
     return ( x2c2*x2c2*f0 + (2*c/rootpi)*x2c2*f1 + 2*c*c*f0 );
   }
 
+  // ***8th form: Convolution with exp(-|t|/tau)*cosh(dgamma*t/2), used for         coshBasisSum ***
+  if (basisType==coshBasis) {
+    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() 
+			     << ") 8th form tau = " << tau << endl ;
+
+    Double_t dgamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+    Double_t tau1 = 1/(1/tau-dgamma/2) ; 
+    Double_t tau2 = 1/(1/tau+dgamma/2) ;
+    Double_t xprime1 = (x-(mean*msf))/tau1 ;
+    Double_t c1 = (sigma*ssf)/(root2*tau1) ; 
+    Double_t u1 = xprime1/(2*c1) ;
+    Double_t xprime2 = (x-(mean*msf))/tau2 ;
+    Double_t c2 = (sigma*ssf)/(root2*tau2) ; 
+    Double_t u2 = xprime2/(2*c2) ;
+    Double_t c12 = c1*c1;
+    Double_t c22 = c2*c2;
+    Double_t result(0);
+   
+    if (basisSign!=Minus) result += 0.5*(exp(-xprime1+c12) * erfc(-u1+c1)+exp(-xprime2+c22) * erfc(-u2+c2)) ;
+    if (basisSign!=Plus)  result += 0.5*(exp(xprime1+c12) * erfc(u1+c1)+exp(xprime2+c22) * erfc(u2+c2)) ;
+    return result ;
+  }
+
+  // *** 9th form: Convolution with exp(-|t|/tau)*sinh(dgamma*t/2), used for        sinhBasisSum ***
+  if (basisType==sinhBasis) {
+    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() 
+			     << ") 9th form tau = " << tau << endl ;
+
+    Double_t dgamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+    Double_t tau1 = 1/(1/tau-dgamma/2) ; 
+    Double_t tau2 = 1/(1/tau+dgamma/2) ;
+    Double_t xprime1 = (x-(mean*msf))/tau1 ;
+    Double_t c1 = (sigma*ssf)/(root2*tau1) ; 
+    Double_t u1 = xprime1/(2*c1) ;
+    Double_t xprime2 = (x-(mean*msf))/tau2 ;
+    Double_t c2 = (sigma*ssf)/(root2*tau2) ; 
+    Double_t u2 = xprime2/(2*c2) ;
+    Double_t c12 = c1*c1;
+    Double_t c22 = c2*c2;
+    Double_t result(0);
+   
+    
+    if (basisSign!=Minus) result += 0.5*(exp(-xprime1+c12) * erfc(-u1+c1)-exp(-xprime2+c22) * erfc(-u2+c2)) ;
+    if (basisSign!=Plus)  result += 0.5*(-exp(xprime1+c12) * erfc(u1+c1)+exp(xprime2+c22) * erfc(u2+c2)) ;
+    return result ;
+  }
+
 
   assert(0) ;
   return 0 ;
@@ -219,6 +272,13 @@ Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
   case cosBasisSum:
   case linBasisPlus:
   case quadBasisPlus:
+  case coshBasisMinus:
+  case coshBasisPlus:
+  case coshBasisSum:
+  case sinhBasisMinus:
+  case sinhBasisPlus:
+  case sinhBasisSum:
+
     // Optionally advertise flat integral over sigma scale factor
     if (_flatSFInt) {
       if (matchArgs(allVars,analVars,RooArgSet(convVar(),ssf.arg()))) {
@@ -401,6 +461,86 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
                 )*ssfInt;
   }
 
+  // *** 8th form: Convolution with exp(-|t|/tau)*cosh(dgamma*t/2), used for coshBasis ***
+  if (basisType==coshBasis) {
+    if (_verboseEval>0) {cout << "RooGaussModel::analyticalIntegral(" << GetName()                             << ") 8th form tau=" << tau << endl ; }
+    
+    Double_t dgamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+    Double_t tau1 = 1/(1/tau-dgamma/2) ; 
+    Double_t tau2 = 1/(1/tau+dgamma/2) ;
+    Double_t c1 = (sigma*ssf)/(root2*tau1) ; 
+    Double_t xpmin1 = (x.min()-(mean*msf))/tau1 ;
+    Double_t xpmax1 = (x.max()-(mean*msf))/tau1 ;
+    Double_t umin1 = xpmin1/(2*c1) ;
+    Double_t umax1 = xpmax1/(2*c1) ;
+    Double_t c2 = (sigma*ssf)/(root2*tau2) ; 
+    Double_t xpmin2 = (x.min()-(mean*msf))/tau2 ;
+    Double_t xpmax2 = (x.max()-(mean*msf))/tau2 ;
+    Double_t umin2 = xpmin2/(2*c2) ;
+    Double_t umax2 = xpmax2/(2*c2) ;
+    Double_t c12 = c1*c1;
+    Double_t c22 = c2*c2;
+    Double_t ec12 = exp(c12);
+    Double_t ec22 = exp(c22);
+    
+    Double_t result(0) ;
+    
+    if (basisSign!=Minus) result += -0.5*(tau1 * ( erf(-umax1) - erf(-umin1) + 
+						   ec12 * ( exp(-xpmax1)*erfc(-umax1+c1)
+								- exp(-xpmin1)*erfc(-umin1+c1) )) +   
+                                                   tau2 * ( erf(-umax2) - erf(-umin2) + 
+						   ec22 * ( exp(-xpmax2)*erfc(-umax2+c2)
+								- exp(-xpmin2)*erfc(-umin2+c2) ))) ;
+      if (basisSign!=Plus)  result +=  0.5*(tau1 * ( erf(umax1) - erf(umin1) + 
+						   ec12 * ( exp(xpmax1)*erfc(umax1+c1)
+								- exp(xpmin1)*erfc(umin1+c1) ))+ 
+			                           tau2 * ( erf(umax2) - erf(umin2) + 
+						   ec22 * ( exp(xpmax2)*erfc(umax2+c2)
+								- exp(xpmin2)*erfc(umin2+c2) ))) ;  
+    
+      return result*ssfInt ;
+  }
+   
+  // *** 9th form: Convolution with exp(-|t|/tau)*sinh(dgamma*t/2), used for sinhBasis ***
+  if (basisType==sinhBasis) {
+    if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName()                             << ") 9th form tau=" << tau << endl ; 
+    
+    Double_t dgamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+    Double_t tau1 = 1/(1/tau-dgamma/2) ; 
+    Double_t tau2 = 1/(1/tau+dgamma/2) ;
+    Double_t c1 = (sigma*ssf)/(root2*tau1) ; 
+    Double_t xpmin1 = (x.min()-(mean*msf))/tau1 ;
+    Double_t xpmax1 = (x.max()-(mean*msf))/tau1 ;
+    Double_t umin1 = xpmin1/(2*c1) ;
+    Double_t umax1 = xpmax1/(2*c1) ;
+    Double_t c2 = (sigma*ssf)/(root2*tau2) ; 
+    Double_t xpmin2 = (x.min()-(mean*msf))/tau2 ;
+    Double_t xpmax2 = (x.max()-(mean*msf))/tau2 ;
+    Double_t umin2 = xpmin2/(2*c2) ;
+    Double_t umax2 = xpmax2/(2*c2) ;
+    Double_t c12 = c1*c1;
+    Double_t c22 = c2*c2;
+    Double_t ec12 = exp(c12);
+    Double_t ec22 = exp(c22);
+ 
+    Double_t result(0) ;
+
+    if (basisSign!=Minus) result += 0.5*(-tau1 * ( erf(-umax1) - erf(-umin1) + 
+						   ec12 * ( exp(-xpmax1)*erfc(-umax1+c1)
+							    - exp(-xpmin1)*erfc(-umin1+c1) )) +   
+                                                   tau2 * ( erf(-umax2) - erf(-umin2) + 
+							    ec22 * ( exp(-xpmax2)*erfc(-umax2+c2)
+								     - exp(-xpmin2)*erfc(-umin2+c2) ))) ;
+    if (basisSign!=Plus)  result += 0.5*(-tau1 * ( erf(umax1) - erf(umin1) + 
+						   ec12 * ( exp(xpmax1)*erfc(umax1+c1)
+							    - exp(xpmin1)*erfc(umin1+c1) ))+ 
+					 tau2 * ( erf(umax2) - erf(umin2) + 
+						  ec22 * ( exp(xpmax2)*erfc(umax2+c2)
+							   - exp(xpmin2)*erfc(umin2+c2) ))) ; 
+    
+      return result*ssfInt ;
+    
+  }
   assert(0) ;
   return 0 ;
 }
@@ -445,4 +585,7 @@ void RooGaussModel::generateEvent(Int_t code)
     }
   }
 }
+
+
+
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGExpModel.rdl,v 1.6 2002/06/04 23:24:01 verkerke Exp $
+ *    File: $Id: RooGExpModel.rdl,v 1.7 2002/08/21 22:01:58 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -22,8 +22,13 @@ public:
 
   enum RooGExpBasis { noBasis=0, expBasisMinus= 1, expBasisSum= 2, expBasisPlus= 3,
 		                 sinBasisMinus=11, sinBasisSum=12, sinBasisPlus=13,
-                                 cosBasisMinus=21, cosBasisSum=22, cosBasisPlus=23 } ;
-  enum BasisType { none=0, expBasis=1, sinBasis=2, cosBasis=3 } ;
+                                 cosBasisMinus=21, cosBasisSum=22, cosBasisPlus=23, 
+				 sinhBasisMinus=31,sinhBasisSum=32,sinhBasisPlus=33,
+				 coshBasisMinus=41,coshBasisSum=42,coshBasisPlus=43} ;
+  
+
+
+  enum BasisType { none=0, expBasis=1, sinBasis=2, cosBasis=3, sinhBasis=4, coshBasis=5 } ;
   enum BasisSign { Both=0, Plus=+1, Minus=-1 } ;
   enum Type { Normal, Flipped };
 
@@ -61,7 +66,8 @@ protected:
   Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau) const ;
   RooComplex calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t omega, Double_t rtau, Double_t fsign) const ;
   RooComplex calcSinConvNorm(Double_t sign, Double_t tau, Double_t omega) const ;
-
+  Double_t calcSinhConv(Double_t sign, Double_t sign1, Double_t sign2, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
+  Double_t calcCoshConv(Double_t sign, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
   virtual Double_t evaluate() const ;
   RooComplex evalCerfApprox(Double_t swt, Double_t u, Double_t c) const ;
 
@@ -96,3 +102,8 @@ protected:
 };
 
 #endif
+
+
+
+
+
