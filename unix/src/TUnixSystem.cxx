@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.46 2002/12/08 19:21:22 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.47 2002/12/09 12:24:03 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1294,11 +1294,11 @@ void TUnixSystem::StackTrace()
    // check for c++filt (g++), iccfilt (icc) or eccfilt (ecc)
    // could also use c++filt --format=gnu-new-abi for g++ v3 and icc
 #ifdef R__INTEL_COMPILER
-#ifdef __ia64__
+#  ifdef __ia64__
    const char *cppfilt = "eccfilt";
-#else
+#  else
    const char *cppfilt = "iccfilt";
-#endif
+#  endif
 #else
    const char *cppfilt = "c++filt";
 #endif
@@ -1397,7 +1397,11 @@ void TUnixSystem::StackTrace()
       char tmpf2[L_tmpnam];
       tmpnam(tmpf2);
       file1.close();
+#if __GNUC__ >= 3
+      sprintf(buffer, "%s < %s -s gnu-new-abi > %s", filter, tmpf1, tmpf2);
+#else
       sprintf(buffer, "%s < %s > %s", filter, tmpf1, tmpf2);
+#endif
       system(buffer);
       ifstream file2(tmpf2);
       TString line;
