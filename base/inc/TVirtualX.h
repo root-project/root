@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.28 2004/07/27 23:02:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.29 2004/08/03 16:01:17 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -304,58 +304,7 @@ public:
                                  UInt_t w, UInt_t h);
    virtual void         DeleteImage(Drawable_t img);
 
-   //---- Methods used for OpenGL -----
-   virtual Window_t     CreateGLWindow(Window_t wind, Visual_t visual = 0, Int_t depth = 0);
-   virtual ULong_t      GetWinDC(Window_t wind);
-   virtual ULong_t      wglCreateContext(Window_t wind);
-   virtual void         wglDeleteContext(ULong_t ctx);
-   virtual void         wglMakeCurrent(Window_t wind, ULong_t ctx);
-   virtual void         wglSwapLayerBuffers(Window_t wind, UInt_t mode);
-   virtual void         glViewport(Int_t x0, Int_t y0, Int_t x1, Int_t y1);
-   virtual void         glClearIndex(Float_t fParam);
-   virtual void         glClearColor(Float_t red, Float_t green, Float_t blue, Float_t alpha);
-   virtual void         glDrawBuffer(UInt_t mode);
-   virtual void         glClear(UInt_t mode);
-   virtual void         glDisable(UInt_t mode);
-   virtual void         glEnable(UInt_t mode);
-   virtual void         glFlush();
-   virtual void         glFrontFace(UInt_t mode);
-   virtual void         glNewList(UInt_t list, UInt_t mode);
-   virtual void         glGetBooleanv(UInt_t mode, UChar_t *bRet);
-   virtual void         glGetDoublev(UInt_t mode, Double_t *dRet);
-   virtual void         glGetFloatv(UInt_t mode, Float_t *fRet);
-   virtual void         glGetIntegerv(UInt_t mode, Int_t *iRet);
-   virtual Int_t        glGetError();
-   virtual void         glEndList();
-   virtual void         glBegin(UInt_t mode);
-   virtual void         glEnd();
-   virtual void         glPushMatrix();
-   virtual void         glPopMatrix();
-   virtual void         glRotated(Double_t angle, Double_t x, Double_t y, Double_t z);
-   virtual void         glTranslated(Double_t x, Double_t y, Double_t z);
-   virtual void         glMultMatrixd(const Double_t *matrix);
-   virtual void         glColor3fv(const Float_t *color);
-   virtual void         glVertex3f(Float_t x, Float_t y, Float_t z);
-   virtual void         glVertex3fv(const Float_t *vert);
-   virtual void         glIndexi(Int_t index);
-   virtual void         glPointSize(Float_t size);
-   virtual void         glLineWidth(Float_t width);
-   virtual void         glDeleteLists(UInt_t list, Int_t sizei);
-   virtual UInt_t       glGenLists(UInt_t list);
-   virtual void         glCallList(UInt_t list);
-   virtual void         glMatrixMode(UInt_t mode);
-   virtual void         glLoadIdentity();
-   virtual void         glFrustum(Double_t min_0, Double_t max_0, Double_t min_1,
-                                  Double_t max_1, Double_t dnear, Double_t dfar);
-   virtual void         glOrtho(Double_t min_0, Double_t max_0, Double_t min_1,
-                                Double_t max_1, Double_t dnear, Double_t dfar);
-   virtual void         glCullFace(UInt_t mode);
-   virtual void         glPolygonMode(UInt_t face, UInt_t mode);
-   virtual void         glLoadMatrixd(const Double_t *matrix);
-   virtual void         glShadeModel(UInt_t mode);
-   virtual void         glNormal3fv(const Float_t *norm);
    virtual Bool_t       IsCmdThread() const { return kTRUE; }
-
    static TVirtualX    *&Instance();
 
    ClassDef(TVirtualX,0)  //ABC defining a generic interface to graphics system

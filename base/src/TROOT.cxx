@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.132 2004/08/04 20:23:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.133 2004/08/04 20:55:22 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -97,7 +97,6 @@
 #include "TGuiFactory.h"
 #include "TRandom.h"
 #include "TMessageHandler.h"
-#include "TVirtualGL.h"
 #include "TFolder.h"
 #include "TQObject.h"
 #include "TProcessUUID.h"
@@ -435,7 +434,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    gGuiFactory      = gBatchGuiFactory;
    gGXBatch         = new TVirtualX("Batch", "ROOT Interface to batch graphics");
    gVirtualX        = gGXBatch;
-   gVirtualGL       = new TVirtualGL;
 
 #ifdef R__WIN32
    fBatch = kFALSE;

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.22 2004/06/14 08:01:57 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.23 2004/07/27 23:02:11 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -374,55 +374,6 @@ public:
                          Int_t dx, Int_t dy, Int_t x, Int_t y,
                          UInt_t w, UInt_t h);
    void         DeleteImage(Drawable_t img);
-
-   //---- Methods used for OpenGL -----
-   Window_t     CreateGLWindow(Window_t wind, Visual_t visual = 0, Int_t depth = 0);
-   ULong_t      GetWinDC(Window_t wind);
-   ULong_t      wglCreateContext(Window_t wind);
-   void         wglDeleteContext(ULong_t ctx);
-   void         wglMakeCurrent(Window_t wind, ULong_t ctx);
-   void         wglSwapLayerBuffers(Window_t wind, UInt_t mode);
-   void         glViewport(Int_t x0, Int_t y0, Int_t x1, Int_t y1);
-   void         glClearIndex(Float_t fParam);
-   void         glClearColor(Float_t red, Float_t green, Float_t blue, Float_t alpha);
-   void         glDrawBuffer(UInt_t mode);
-   void         glClear(UInt_t mode);
-   void         glDisable(UInt_t mode);
-   void         glEnable(UInt_t mode);
-   void         glFlush();
-   void         glFrontFace(UInt_t mode);
-   void         glNewList(UInt_t list, UInt_t mode);
-   void         glGetBooleanv(UInt_t mode, UChar_t *bRet);
-   void         glGetDoublev(UInt_t mode, Double_t *dRet);
-   void         glGetFloatv(UInt_t mode, Float_t *fRet);
-   void         glGetIntegerv(UInt_t mode, Int_t *iRet);
-   Int_t        glGetError();
-   void         glEndList();
-   void         glBegin(UInt_t mode);
-   void         glEnd();
-   void         glPushMatrix();
-   void         glPopMatrix();
-   void         glRotated(Double_t angle, Double_t x, Double_t y, Double_t z);
-   void         glTranslated(Double_t x, Double_t y, Double_t z);
-   void         glMultMatrixd(const Double_t *matrix);
-   void         glColor3fv(const Float_t *color);
-   void         glVertex3f(Float_t x, Float_t y, Float_t z);
-   void         glVertex3fv(const Float_t *vert);
-   void         glIndexi(Int_t index);
-   void         glPointSize(Float_t size);
-   void         glLineWidth(Float_t width);
-   void         glDeleteLists(UInt_t list, Int_t sizei);
-   UInt_t       glGenLists(UInt_t list);
-   void         glCallList(UInt_t list);
-   void         glMatrixMode(UInt_t mode);
-   void         glLoadIdentity();
-   void         glFrustum(Double_t min_0,Double_t max_0,Double_t min_1,Double_t max_1,Double_t dnear,Double_t dfar);
-   void         glOrtho(Double_t min_0,Double_t max_0,Double_t min_1,Double_t max_1,Double_t dnear,Double_t dfar);
-   void         glCullFace(UInt_t mode);
-   void         glPolygonMode(UInt_t face, UInt_t mode);
-   void         glLoadMatrixd(const Double_t *matrix);
-   void         glShadeModel(UInt_t mode);
-   void         glNormal3fv(const Float_t *norm);
    Bool_t       IsCmdThread() const;
 
    static void Lock();

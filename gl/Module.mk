@@ -19,15 +19,12 @@ GLDH         := $(GLDS:.cxx=.h)
 GLH          := $(wildcard $(MODDIRI)/*.h)
 GLH1         := $(MODDIRI)/TViewerOpenGL.h
 
-ifeq ($(ARCH),win32)
-GLS          := TGdkGLKernel.cxx
-else
-GLS          := TGLKernel.cxx
-endif
+GLS          := TGLKernel.cxx TArcBall.cxx
+
 ifeq ($(ARCH),win32old)
 GLS          += TWin32GLKernel.cxx TWin32GLViewerImp.cxx
 else
-GLS          += TRootGLKernel.cxx TRootGLViewer.cxx
+
 ifneq ($(OPENGLLIB),)
 GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 $(X11LIBDIR) -lX11 -lXext -lXmu -lXi -lm
@@ -39,6 +36,11 @@ IVLIBS       := $(OPENIVLIBDIR) $(OPENIVLIB) \
                 $(X11LIBDIR) -lXm -lXt -lXext -lX11 -lm
 endif
 endif
+
+ifeq ($(ARCH),win32)
+GLLIBS       += opengl32.lib glu32.lib
+endif
+
 GLS          += TViewerOpenGL.cxx
 GLS          := $(patsubst %,$(MODDIRS)/%,$(GLS))
 

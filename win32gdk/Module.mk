@@ -29,7 +29,7 @@ WIN32GDKDS   := $(MODDIRS)/G__Win32gdk.cxx
 WIN32GDKDO   := $(WIN32GDKDS:.cxx=.o)
 WIN32GDKDH   := $(WIN32GDKDS:.cxx=.h)
 
-WIN32GDKH1   := $(MODDIRI)/TGWin32.h
+WIN32GDKH1   := $(MODDIRI)/TGWin32.h $(MODDIRI)/TGWin32GL.h
 WIN32GDKH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 WIN32GDKS1   := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 WIN32GDKS2   := $(wildcard $(MODDIRS)/*.c)
