@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.54 2004/02/06 15:37:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.55 2004/03/12 00:30:43 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -94,12 +94,29 @@ void TAxis::CenterLabels(Bool_t center)
 }
 
 //______________________________________________________________________________
+Bool_t TAxis::GetCenterLabels() const
+{
+   // Return kTRUE if kCenterLabels bit is set, kFALSE otherwise.
+
+   return TestBit(kCenterLabels) ? kTRUE : kFALSE;
+}
+
+//______________________________________________________________________________
 void TAxis::CenterTitle(Bool_t center)
 {
 //   if center = kTRUE axis title will be centered
 //   default is right adjusted
+
    if (center) SetBit(kCenterTitle);
    else        ResetBit(kCenterTitle);
+}
+
+//______________________________________________________________________________
+Bool_t TAxis::GetCenterTitle() const
+{
+   // Return kTRUE if kCenterTitle bit is set, kFALSE otherwise.
+
+   return TestBit(kCenterTitle) ? kTRUE : kFALSE;
 }
 
 //______________________________________________________________________________

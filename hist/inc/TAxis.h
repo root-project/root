@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.27 2003/11/25 17:12:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.28 2004/03/12 00:30:43 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -71,8 +71,8 @@ public:
         TAxis(Int_t nbins, const Axis_t *xbins);
         TAxis(const TAxis &axis);
         virtual ~TAxis();
-        virtual void     CenterLabels(Bool_t center=kTRUE);  // *MENU*
-        virtual void     CenterTitle(Bool_t center=kTRUE);  // *MENU*
+        virtual void     CenterLabels(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterLabels
+        virtual void     CenterTitle(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterTitle
         const char      *ChooseTimeFormat(Double_t axislength=0);
         virtual void     Copy(TObject &axis) const;
         virtual void     Delete(Option_t * /*option*/ ="") { }
@@ -88,6 +88,8 @@ public:
         virtual Axis_t   GetBinUpEdge(Int_t bin) const;
         virtual Axis_t   GetBinWidth(Int_t bin) const;
         virtual void     GetCenter(Axis_t *center) const;
+                Bool_t   GetCenterLabels() const;
+                Bool_t   GetCenterTitle() const;
         THashList       *GetLabels() {return fLabels;}
         virtual void     GetLowEdge(Axis_t *edge) const;
                 Bool_t   GetMoreLogLabels() const;
