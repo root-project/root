@@ -834,7 +834,7 @@ typedef struct {
 
 #ifndef G__OLDIMPLEMENTATION2021
 #ifndef G__ANSI
-#if (__GNUC__>=3)  // ||defined(__SUNPRO_CC)||defined(__SUNPRO_C)
+#if (__GNUC__>=3)
 #define G__ANSI
 #endif
 #endif
