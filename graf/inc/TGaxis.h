@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.16 2004/03/12 00:31:22 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.17 2004/06/16 08:23:27 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -110,6 +110,7 @@ virtual const char     *GetTitle() const {return fTitle.Data();}
                 void    SetLabelSize(Float_t labelsize) {fLabelSize = labelsize;} // *MENU*
          static void    SetMaxDigits(Int_t maxd=5);
         virtual void    SetName(const char *name); // *MENU*
+        virtual void    SetNdivisions(Int_t ndiv) {fNdiv = ndiv;} // *MENU*
         virtual void    SetMoreLogLabels(Bool_t more=kTRUE);  // *MENU*
         virtual void    SetNoExponent(Bool_t noExponent=kTRUE);  // *MENU*
         virtual void    SetDecimals(Bool_t dot=kTRUE);  // *MENU*
