@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id:$
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.2 2003/08/06 21:24:25 rdm Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -77,7 +77,7 @@ TGWin32ProxyBase::TGWin32ProxyBase()
    fCallBack = 0;
    fParam = 0;
    fListOfCallBacks = new TList();
-   fBatchLimit = 20;
+   fBatchLimit = 100;
    fId = ::GetCurrentThreadId();
    fPimpl = new TGWin32ProxyBasePrivate();
 

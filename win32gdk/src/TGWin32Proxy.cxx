@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id:$
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32Proxy.cxx,v 1.2 2003/08/06 21:24:25 rdm Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -51,7 +51,7 @@ VOID_METHOD_ARG1(TGWin32,ResetAttLine,Option_t*,option,1)
 VOID_METHOD_ARG1(TGWin32,ResetAttText,Option_t*,option,1)
 VOID_METHOD_ARG1(TGWin32,SelectWindow,Int_t,wid,0)
 VOID_METHOD_ARG1(TGWin32,SetClipOFF,Int_t,wid,1)
-VOID_METHOD_ARG1(TGWin32,SetFillColor,Color_t,cindex,1)
+VOID_METHOD_ARG1(TGWin32,SetFillColor,Color_t,cindex,0)
 VOID_METHOD_ARG1(TGWin32,SetFillStyle,Style_t,style,1)
 VOID_METHOD_ARG1(TGWin32,SetLineColor,Color_t,cindex,0)
 VOID_METHOD_ARG1(TGWin32,SetLineStyle,Style_t,linestyle,0)
