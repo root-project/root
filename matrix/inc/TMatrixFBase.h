@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.17 2004/09/07 22:02:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.18 2004/10/23 20:19:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -161,7 +161,7 @@ public:
 
   virtual TMatrixFBase &Randomize(Float_t alpha,Float_t beta,Double_t &seed);
 
-  ClassDef(TMatrixFBase,5) // Dense Matrix base class (single precision)
+  ClassDef(TMatrixFBase,4) // Dense Matrix base class (single precision)
 };
 
 Float_t TMatrixFBase::SetTol(Float_t newTol)

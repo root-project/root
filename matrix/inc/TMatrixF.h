@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.14 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.15 2004/10/23 20:19:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -165,7 +165,7 @@ public:
 
   const TMatrixF EigenVectors(TVectorF &eigenValues) const;
 
-  ClassDef(TMatrixF,4) // Matrix class (single precision)
+  ClassDef(TMatrixF,3) // Matrix class (single precision)
 };
 
 class TMatrix : public TMatrixF {
@@ -196,7 +196,7 @@ public :
 inline const Float_t  *TMatrixF::GetMatrixArray() const { return fElements; }
 inline       Float_t  *TMatrixF::GetMatrixArray()       { return fElements; }
 inline       TMatrixF &TMatrixF::Use           (Int_t nrows,Int_t ncols,Float_t *data)
-                                                        { return Use(0,nrows,0,ncols,data); }
+                                                        { return Use(0,nrows-1,0,ncols-1,data); }
 inline       TMatrixF &TMatrixF::Use           (TMatrixF &a)
                                                         {
                                                           Assert(a.IsValid());

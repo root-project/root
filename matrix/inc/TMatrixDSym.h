@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.16 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.17 2004/10/23 20:19:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -145,7 +145,7 @@ public:
 
   const TMatrixD EigenVectors(TVectorD &eigenValues) const;
 
-  ClassDef(TMatrixDSym,2) // Symmetric Matrix class (double precision)
+  ClassDef(TMatrixDSym,1) // Symmetric Matrix class (double precision)
 };
 
 inline const Double_t    *TMatrixDSym::GetMatrixArray() const { return fElements; }

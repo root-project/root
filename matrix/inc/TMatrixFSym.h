@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.15 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.16 2004/10/23 20:19:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -144,7 +144,7 @@ public:
 
   const TMatrixF EigenVectors(TVectorF &eigenValues) const;
 
-  ClassDef(TMatrixFSym,2) // Symmetric Matrix class (single precision)
+  ClassDef(TMatrixFSym,1) // Symmetric Matrix class (single precision)
 };
 
 inline const Float_t     *TMatrixFSym::GetMatrixArray() const { return fElements; }

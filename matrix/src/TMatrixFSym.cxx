@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.17 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.18 2004/10/23 20:19:05 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -936,24 +936,33 @@ TMatrixFSym &TMatrixFSym::Rank1Update(const TVectorF &v,Float_t alpha)
 //______________________________________________________________________________
 TMatrixFSym &TMatrixFSym::Similarity(const TMatrixF &b)
 {
-  // Calculate BAB^T , final matrix will be (nrowsb x nrowsb)
+// Calculate B * (*this) * B^T , final matrix will be (nrowsb x nrowsb)
+// This is a similarity transform when B is orthogonal . It is more
+// efficient than applying the actual multiplication because this
+// routine realizes that  the final matrix is symmetric . 
 
   const TMatrixF ba(b,TMatrixF::kMult,*this);
 
+  const Int_t nrowsb  = b.GetNrows();
+  if (nrowsb != fNrows)
+    this->ResizeTo(nrowsb,nrowsb);
+
+#ifdef CBLAS
+  const Float_t *bap = ba.GetMatrixArray();
+  const Float_t *bp  = b.GetMatrixArray();
+        Float_t *cp  = this->GetMatrixArray();
+  cblas_sgemm (CblasRowMajor,CblasNoTrans,CblasTrans,fNrows,fNcols,ba.GetNcols(),
+               1.0,bap,ba.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
+#else
   const Int_t nba     = ba.GetNoElements();
   const Int_t nb      = b.GetNoElements();
   const Int_t ncolsba = ba.GetNcols();
-  const Int_t nrowsb  = b.GetNrows();
   const Int_t ncolsb  = b.GetNcols();
-  const Float_t * const bap = ba.GetMatrixArray();
-  const Float_t * const bp  = b.GetMatrixArray();
-  const Float_t *bi1p  = bp;
-
-  if (nrowsb != fNrows)
-    this->ResizeTo(nrowsb,nrowsb);
-   
-  Float_t *cp = this->GetMatrixArray();
-  Float_t * const cp0 = cp;
+  const Float_t * const bap  = ba.GetMatrixArray();
+  const Float_t * const bp   = b.GetMatrixArray();
+  const Float_t *       bi1p = bp;
+        Float_t *       cp   = this->GetMatrixArray();
+        Float_t * const cp0  = cp;
 
   Int_t ishift = 0;
   const Float_t *barp0 = bap;
@@ -983,20 +992,133 @@ TMatrixFSym &TMatrixFSym::Similarity(const TMatrixF &b)
       cp[rowOff1+icol] = cp[rowOff2+irow];
     }
   }
+#endif
 
   return *this;
 }
 
 //______________________________________________________________________________
-TMatrixFSym &TMatrixFSym::Similarity(const TMatrixFSym &)
+TMatrixFSym &TMatrixFSym::Similarity(const TMatrixFSym &b)
 {
-   return *this; //temporary
+// Calculate B * (*this) * B^T , final matrix will be (nrowsb x nrowsb)
+// This is a similarity transform when B is orthogonal . It is more
+// efficient than applying the actual multiplication because this
+// routine realizes that  the final matrix is symmetric .
+
+#ifdef CBLAS
+  const TMatrixF abt(*this,TMatrixF::kMultTranspose,b);
+
+  const Float_t *abtp = abt.GetMatrixArray();
+  const Float_t *bp   = b.GetMatrixArray();
+        Float_t *cp   = this->GetMatrixArray();
+  cblas_ssymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
+               bp,b.GetNcols(),abtp,abt.GetNcols(),0.0,cp,fNcols);
+#else
+  const TMatrixF ba(b,TMatrixF::kMult,*this);
+
+  const Int_t nba     = ba.GetNoElements();
+  const Int_t nb      = b.GetNoElements();
+  const Int_t ncolsba = ba.GetNcols();
+  const Int_t ncolsb  = b.GetNcols();
+  const Float_t * const bap  = ba.GetMatrixArray();
+  const Float_t * const bp   = b.GetMatrixArray();
+  const Float_t *       bi1p = bp;
+        Float_t *       cp   = this->GetMatrixArray();
+        Float_t * const cp0  = cp;
+
+  Int_t ishift = 0;
+  const Float_t *barp0 = bap;
+  while (barp0 < bap+nba) {
+    const Float_t *brp0 = bi1p;
+    while (brp0 < bp+nb) {
+      const Float_t *barp = barp0;
+      const Float_t *brp  = brp0;
+      Float_t cij = 0;
+      while (brp < brp0+ncolsb)
+        cij += *barp++ * *brp++;
+      *cp++ = cij;
+      brp0 += ncolsb;
+    }
+    barp0 += ncolsba;
+    bi1p += ncolsb;
+    cp += ++ishift;
+  }
+
+  Assert(cp == cp0+fNelems+ishift && barp0 == bap+nba);
+
+  cp = cp0;
+  for (Int_t irow = 0; irow < fNrows; irow++) {
+    const Int_t rowOff1 = irow*fNrows;
+    for (Int_t icol = 0; icol < irow; icol++) {
+      const Int_t rowOff2 = icol*fNrows;
+      cp[rowOff1+icol] = cp[rowOff2+irow];
+    }
+  }
+#endif
+
+  return *this;
 }
 
 //______________________________________________________________________________
-TMatrixFSym &TMatrixFSym::SimilarityT(const TMatrixF &)
+TMatrixFSym &TMatrixFSym::SimilarityT(const TMatrixF &b)
 {
-   return *this; //temporary
+// Calculate B^T * (*this) * B , final matrix will be (ncolsb x ncolsb)
+// It is more efficient than applying the actual multiplication because this
+// routine realizes that  the final matrix is symmetric .
+
+  const TMatrixF bta(b,TMatrixF::kTransposeMult,*this);
+
+  const Int_t ncolsb = b.GetNcols();
+  if (ncolsb != fNcols)
+    this->ResizeTo(ncolsb,ncolsb);
+
+#ifdef CBLAS
+  const Float_t *btap = bta.GetMatrixArray();
+  const Float_t *bp   = b.GetMatrixArray();
+        Float_t *cp   = this->GetMatrixArray();
+  cblas_sgemm (CblasRowMajor,CblasNoTrans,CblasNoTrans,fNrows,fNcols,bta.GetNcols(),
+               1.0,btap,bta.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
+#else
+  const Int_t nbta     = bta.GetNoElements();
+  const Int_t nb       = b.GetNoElements();
+  const Int_t ncolsbta = bta.GetNcols();
+  const Float_t * const btap = bta.GetMatrixArray();
+  const Float_t * const bp   = b.GetMatrixArray();
+        Float_t *       cp   = this->GetMatrixArray();
+        Float_t * const cp0  = cp;
+
+  Int_t ishift = 0;
+  const Float_t *btarp0 = btap;                     // Pointer to  A[i,0];
+  const Float_t *bcp0   = bp;
+  while (btarp0 < btap+nbta) {
+    for (const Float_t *bcp = bcp0; bcp < bp+ncolsb; ) { // Pointer to the j-th column of B, Start bcp = B[0,0]
+      const Float_t *btarp = btarp0;                   // Pointer to the i-th row of A, reset to A[i,0]
+      Float_t cij = 0;
+      while (bcp < bp+nb) {                         // Scan the i-th row of A and
+        cij += *btarp++ * *bcp;                     // the j-th col of B
+        bcp += ncolsb;
+      }
+      *cp++ = cij;
+      bcp -= nb-1;                                  // Set bcp to the (j+1)-th col
+    }
+    btarp0 += ncolsbta;                             // Set ap to the (i+1)-th row
+    bcp0++;
+    cp += ++ishift;
+  }
+
+  Assert(cp == cp0+fNelems+ishift && btarp0 == btap+nbta);
+
+  cp = cp0;
+  for (Int_t irow = 0; irow < fNrows; irow++) {
+    const Int_t rowOff1 = irow*fNrows;
+    for (Int_t icol = 0; icol < irow; icol++) {
+      const Int_t rowOff2 = icol*fNrows;
+      cp[rowOff1+icol] = cp[rowOff2+irow];
+    }
+  }
+#endif
+
+  return *this;
 }
 
 //______________________________________________________________________________
