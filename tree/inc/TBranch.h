@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.12 2001/10/15 06:59:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.13 2002/01/23 08:38:59 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -118,6 +118,7 @@ public:
             Int_t    GetReadBasket() const {return fReadBasket;}
             Int_t    GetReadEntry() const {return fReadEntry;}
             Int_t    GetWriteBasket() const {return fWriteBasket;}
+            Stat_t   GetTotalSize() const;
             Stat_t   GetTotBytes() const {return fTotBytes;}
             Stat_t   GetZipBytes() const {return fZipBytes;}
             Int_t    GetEntryNumber() const {return fEntryNumber;}

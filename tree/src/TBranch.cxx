@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.39 2002/04/04 07:04:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.40 2002/04/06 14:55:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -808,6 +808,20 @@ Int_t TBranch::GetRow(Int_t)
 
 
 //______________________________________________________________________________
+Stat_t TBranch::GetTotalSize() const
+{
+// Return total number of bytes in the branch (including current buffer)
+// =====================================================================
+
+   TBasket *basket = (TBasket*)fBaskets.Last();
+   if (!basket) return fTotBytes;
+   TBuffer *buf    = basket->GetBufferRef();
+   if (!buf)    return fTotBytes;
+   return fTotBytes + buf->Length();
+}
+
+
+//______________________________________________________________________________
 Bool_t TBranch::IsAutoDelete() const
 {
 //*-*-*-*-*Return TRUE if an existing object in a TBranchObject must be deleted
@@ -841,6 +855,7 @@ void TBranch::Print(Option_t *) const
   aLength += (aLength / 54 + 1) * 80 + 100;
   if (aLength < 200) aLength = 200;
   char *bline = new char[aLength];
+  Double_t totBytes = GetTotalSize();
   if (fZipBytes) cx = fTotBytes/fZipBytes;
   if (len) sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName(),GetTitle());
   else     sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName()," ");
@@ -883,9 +898,9 @@ void TBranch::Print(Option_t *) const
   }
   Printf(bline);
   if (fTotBytes > 2e9) {
-     Printf("*Entries :%9d : Total  Size=%11g bytes  File Size  = %10d *",Int_t(fEntries),fTotBytes,Int_t(fZipBytes));
+     Printf("*Entries :%9d : Total  Size=%11g bytes  File Size  = %10d *",Int_t(fEntries),totBytes,Int_t(fZipBytes));
   } else {
-     Printf("*Entries :%9d : Total  Size=%11d bytes  File Size  = %10d *",Int_t(fEntries),Int_t(fTotBytes),Int_t(fZipBytes));
+     Printf("*Entries :%9d : Total  Size=%11d bytes  File Size  = %10d *",Int_t(fEntries),Int_t(totBytes),Int_t(fZipBytes));
   }
   Printf("*Baskets :%9d : Basket Size=%11d bytes  Compression= %6.2f     *",fWriteBasket,fBasketSize,cx);
   Printf("*............................................................................*");
