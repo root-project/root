@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.4 2002/01/27 17:22:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.5 2002/02/23 10:35:56 brun Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -201,15 +201,13 @@ TPluginHandler *TPluginManager::FindHandler(const char *base, const char *uri)
    while ((h = (TPluginHandler*) next())) {
       if (h->CanHandle(base, uri)) {
          if (gDebug > 0)
-            Printf("<TPluginManager::FindHandler>: found plugin for %s",
-                   h->GetClass());
+            Info("FindHandler", "found plugin for %s", h->GetClass());
          return h;
       }
    }
 
    if (gDebug > 0)
-      Printf("<TPluginManager::FindHandler>: did not find plugin for handling %s",
-             uri);
+      Info("FindHandler", "did not find plugin for handling %s", uri);
 
    return 0;
 }
