@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.38 2003/06/30 12:12:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.39 2003/12/30 13:16:50 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -694,6 +694,7 @@ void TDirectory::FillBuffer(char *&buffer)
       tobuf(buffer, (Int_t)fSeekKeys);
    }
    fUUID.FillBuffer(buffer);
+   if (version <=1000) for (Int_t i=0;i<3;i++) tobuf(buffer,Int_t(0));
 }
 
 //______________________________________________________________________________
@@ -1356,6 +1357,7 @@ void TDirectory::Streamer(TBuffer &b)
          b << (Int_t)fSeekKeys;
       }
       fUUID.Streamer(b);
+      if (version <=1000) for (Int_t i=0;i<3;i++) b << Int_t(0);
    }
 }
 
