@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.72 2001/05/11 12:52:14 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.73 2001/05/20 13:57:34 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -675,9 +675,9 @@ TBranch *TTree::Branch(const char *name, void *clonesaddress, Int_t bufsize, Int
    if (list == 0) return 0;
    gTree = this;
    if (fgBranchStyle == 1) {
-      return Bronch(name,"TClonesArray",clonesaddress,bufsize,splitlevel+1);
+      return Bronch(name,"TClonesArray",clonesaddress,bufsize,splitlevel);
    }
-   if (splitlevel) {
+   if (splitlevel > 0) {
       TBranchClones *branch = new TBranchClones(name,clonesaddress,bufsize,-1,splitlevel);
       fBranches.Add(branch);
       return branch;
@@ -700,11 +700,16 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
   //   - call TTree::SetBranchStyle(0)
   // 
   // Note that with the new style, classname does not need to derive from TObject.
-  // It must derived from TObject if teh branch style has been set to 0 (old)
+  // It must derived from TObject if the branch style has been set to 0 (old)
+  //
+  // The new branch style does not use the Streamer function for the top level
+  // object passed as argument. You can force the use of the Streamer function
+  // by specifying splitlevel = -1 for a top branch
       
-   if (fgBranchStyle == 1) {
+   if (fgBranchStyle == 1 && splitlevel >= 0) {
       return Bronch(name,classname,addobj,bufsize,splitlevel);
    } else {
+      if (splitlevel < 0) splitlevel = 0;
       return BranchOld(name,classname,addobj,bufsize,splitlevel);
    }
 }

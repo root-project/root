@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.38 2001/05/17 10:58:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.39 2001/05/20 13:56:07 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -536,7 +536,7 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
 //______________________________________________________________________________
 TStreamerInfo *TBranchElement::GetInfo()
 {
-  //return pointer to TStreamerinfo object for teh class of this branch
+  //return pointer to TStreamerinfo object for the class of this branch
   //rebuild the info if not yet done
    
    if (fInfo) {
@@ -795,8 +795,11 @@ void TBranchElement::ReadLeaves(TBuffer &b)
           }
        } else {
           fNdata = 1;
-          if (fAddress) fInfo->ReadBuffer(b,fObject,fID);
-          else fNdata = 0;
+          if (fAddress) {
+             fInfo->ReadBuffer(b,fObject,fID);
+          } else {
+             fNdata = 0;
+          }
        }
        return;
      }   
@@ -826,7 +829,6 @@ void TBranchElement::ReadLeaves(TBuffer &b)
     else fNdata = 1;
     fInfo->ReadBuffer(b,fObject,fID);
     if (fStreamerType == 6) fNdata = (Int_t)GetValue(0,0);
-//printf("ReadLeaves:%s, fNdata=%d\n",GetName(),fNdata);
   }   
 }
 
