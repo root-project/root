@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: WidgetMessageTypes.h,v 1.5 2001/05/08 13:53:53 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: WidgetMessageTypes.h,v 1.6 2001/08/15 11:43:03 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -68,6 +68,9 @@ enum EWidgetMessageTypes {
       kTXT_OPEN           = 6,
       kTXT_CLOSE          = 7,
       kTXT_SAVE           = 8,
+   kC_COLORSEL         = 10,
+      kCOL_CLICK          = 1,
+      kCOL_SELCHANGED     = 2,
    kC_USER             = 1001,
    kC_MSGMAX           = 10000
 };
