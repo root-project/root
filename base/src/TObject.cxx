@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.2 2000/05/24 10:31:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.3 2000/07/29 10:54:23 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -990,7 +990,7 @@ void TObject::SetDtorOnly(void *obj)
 void TObject::operator delete(void *ptr)
 {
    if ((Long_t) ptr != fgDtorOnly)
-      ::operator delete(ptr);
+      TStorage::ObjectDealloc(ptr);
    else
       fgDtorOnly = 0;
 }
@@ -1001,6 +1001,6 @@ void TObject::operator delete(void *ptr, void *vp)
 {
    // Only called by placement new when throwing an exception.
 
-   if (ptr && vp) { }
+   TStorage::ObjectDealloc(ptr, vp);
 }
 #endif

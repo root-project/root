@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TStorage.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -52,6 +52,8 @@ public:
    static void         *ReAlloc(void *vp, size_t size, size_t oldsize);
    static void         *ObjectAlloc(size_t size);
    static void         *ObjectAlloc(size_t size, void *vp);
+   static void          ObjectDealloc(void *vp);
+   static void          ObjectDealloc(void *vp, void *ptr);
 
    static void EnterStat(size_t size, void *p);
    static void RemoveStat(void *p);
