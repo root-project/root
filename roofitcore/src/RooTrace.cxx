@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTrace.cc,v 1.6 2001/10/19 22:19:49 verkerke Exp $
+ *    File: $Id: RooTrace.cc,v 1.7 2001/10/21 22:57:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -38,7 +38,7 @@ void RooTrace::create2(const TObject* obj) {
   
 void RooTrace::destroy2(const TObject* obj) {
 
-  if (_list.Remove((RooAbsArg*)obj)) {
+  if (!_list.Remove((RooAbsArg*)obj)) {
     cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName() 
 	 << " already deleted, or created before trace activation[" << obj->GetTitle() << "]" << endl ;
     assert(0) ;
