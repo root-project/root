@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.cxx,v 1.1 2004/04/27 06:28:48 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.cxx,v 1.2 2004/04/28 18:54:21 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -6,7 +6,7 @@
 #include "MethodDispatcher.h"
 
 // Standard
-#include <cstdio>
+#include <stdio.h>
 
 
 //- protected class members -----------------------------------------------------

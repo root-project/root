@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.2 2004/04/28 18:54:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.3 2004/04/29 06:46:07 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -8,7 +8,7 @@
 #include "ObjectHolder.h"
 
 // Standard
-#include <cstring>
+#include <string.h>
 #include <iostream>
 
 
@@ -81,7 +81,7 @@ namespace {
 
    };
 
-}
+} // unnamed namespace
 
 
 //- constructor -----------------------------------------------------------------
@@ -90,9 +90,7 @@ PyROOT::MemoryRegulator::MemoryRegulator() {
 }
 //- public members --------------------------------------------------------------
 void PyROOT::MemoryRegulator::RecursiveRemove( TObject* obj ) {
-   if ( obj == 0 )
-      return;
-   if ( s_objectTable.size() == 0 )  // It looks that the table can be deleted before the libCore is done
+   if ( obj == 0 || s_objectTable.size() == 0 )   // table can be deleted before libCore is done
       return;
 
 // see whether we're tracking this object

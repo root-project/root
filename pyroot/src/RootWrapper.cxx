@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.3 2004/04/28 22:04:06 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.4 2004/04/30 06:13:21 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -21,15 +21,15 @@
 #include "TGeometry.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
+#include "TBaseClass.h"
 #include "TInterpreter.h"
 
 // Standard
-#include <cassert>
+#include <assert.h>
 #include <map>
 #include <string>
-#ifndef NDEBUG
-#include <cstring>
-#endif
+#include <algorithm>
+#include <vector>
 
 // Special for Unixes
 #if defined(linux) || defined(sun)
@@ -175,8 +175,13 @@ int PyROOT::buildRootClassDict( TClass* cls, PyObject* pyclass, PyObject* dct ) 
    typedef std::map< std::string, MethodDispatcher > DispatcherCache_t;
    DispatcherCache_t dispatcherCache;
 
-   TIter nextmethod( cls->GetListOfAllPublicMethods() );
+   TIter nextmethod( cls->GetListOfMethods() );
    while ( TMethod* mt = (TMethod*)nextmethod() ) {
+   // allow only public methods
+      if ( !( mt->Property() & kIsPublic ) )
+         continue;
+
+   // retrieve method name
       std::string mtName = mt->GetName();
 
    // filter C++ destructors
@@ -198,13 +203,8 @@ int PyROOT::buildRootClassDict( TClass* cls, PyObject* pyclass, PyObject* dct ) 
       }
 
    // allowable range in number of arguments
-      unsigned maxArgs = mt->GetNargs() + 1;
-      unsigned minArgs = maxArgs - mt->GetNargsOpt();
-
-   // some more filtering
-      if ( maxArgs == 2 && minArgs == 2 &&
-           mtName == ((TMethodArg*)( TIter( mt->GetListOfMethodArgs() )() ))->GetTypeName() )
-         continue;                             // don't expose copy constructor
+   //    unsigned maxArgs = mt->GetNargs() + 1;
+   //    unsigned minArgs = maxArgs - mt->GetNargsOpt();
 
    // use full signature as a doc string
       std::string doc( mt->GetReturnTypeName() );
@@ -213,9 +213,8 @@ int PyROOT::buildRootClassDict( TClass* cls, PyObject* pyclass, PyObject* dct ) 
    // construct method dispatchers
       if ( mtName == className ) {        // found a constructor
       // lookup dispatcher and store method
-         static const std::string initname("__init__");
-         MethodDispatcher& md = (*(dispatcherCache.insert(
-            std::make_pair( initname, MethodDispatcher( "__init__" ) ) ).first)).second;
+         MethodDispatcher& md = (*(dispatcherCache.insert( std::make_pair(
+            std::string( "__init__" ), MethodDispatcher( "__init__" ) ) ).first) ).second;
          md.addMethod( new ConstructorDispatcher( cls, mt ) );
       }
       else {                              // found a member function
@@ -243,12 +242,52 @@ int PyROOT::buildRootClassDict( TClass* cls, PyObject* pyclass, PyObject* dct ) 
 }
 
 
+PyObject* PyROOT::buildRootClassBases( TClass* cls ) {
+   TList* allbases = cls->GetListOfBases();
+
+// collect bases, remove duplicates
+   std::vector< std::string > uqb;
+   uqb.reserve( allbases->GetSize() );
+
+   TIter nextbase( allbases );
+   while ( TBaseClass* base = (TBaseClass*)nextbase() ) {
+      std::string name = base->GetName();
+      if ( std::find( uqb.begin(), uqb.end(), name ) == uqb.end() ) {
+         uqb.push_back( name );
+      }
+   }
+
+// allocate a tuple for the base classes (even if there aren't any)
+   PyObject* pybases = PyTuple_New( uqb.size() );
+   if ( ! pybases )
+      return 0;
+
+// build all the bases
+   for ( std::vector< std::string >::size_type ibase = 0; ibase < uqb.size(); ++ibase ) {
+      PyObject* pyclass = makeRootClassFromString( uqb[ ibase ].c_str() );
+      if ( ! pyclass ) {
+         Py_DECREF( pybases );
+         return 0;
+      }
+
+      PyTuple_SET_ITEM( pybases, ibase, pyclass );
+   }
+   
+   return pybases;
+}
+
+
 PyObject* PyROOT::makeRootClass( PyObject*, PyObject* args ) {
    const char* className = PyString_AsString( PyTuple_GetItem( args, 0 ) );
 
    if ( PyErr_Occurred() )
       return 0;
 
+   return makeRootClassFromString( className );
+}
+
+
+PyObject* PyROOT::makeRootClassFromString( const char* className ) {
 // retrieve ROOT class (this verifies className)
    TClass* cls = gROOT->GetClass( className );
    if ( cls == 0 ) {
@@ -276,21 +315,28 @@ PyObject* PyROOT::makeRootClass( PyObject*, PyObject* args ) {
    // start with an empty dictionary
       PyObject* dct = PyDict_New();
 
-   // create a fresh Python class, given the name and the empty dictionary
-      pyclass = PyClass_New( 0, dct, PyString_FromString( className ) );
+   // construct the base classes
+      PyObject* pybases = buildRootClassBases( cls );
+      if ( pybases != 0 ) {
+      // create a fresh Python class, given bases, name and empty dictionary
+         pyclass = PyClass_New( pybases, dct, PyString_FromString( className ) );
+         Py_DECREF( pybases );
+      }
 
    // fill the dictionary, if successful
       if ( pyclass != 0 ) {
-         buildRootClassDict( cls, pyclass, dct );
-         if ( g_modroot != 0 ) {
+         if ( buildRootClassDict( cls, pyclass, dct ) != 0 ) {
+         // something failed in building the dictionary
+            Py_DECREF( pyclass );
+            pyclass = 0;
+         }
+         else if ( g_modroot != 0 ) {
             Py_INCREF( pyclass );            // PyModule_AddObject steals reference
             PyModule_AddObject( g_modroot, const_cast< char* >( className ), pyclass );
          }
       }
-      else
-         PyErr_SetString( PyExc_TypeError, "could not allocate new class" );
 
-      Py_DECREF( dct );
+      Py_XDECREF( dct );
    }
 
    return pyclass;

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.3 2004/04/29 06:46:07 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.4 2004/04/29 16:04:29 rdm Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -26,9 +26,9 @@
 #include "TVirtualMutex.h"
 
 // Standard
-#include <cassert>
-#include <cctype>
-#include <cstring>
+#include <assert.h>
+#include <ctype.h>
+#include <string.h>
 #include <map>
 #include <string>
 
@@ -223,39 +223,11 @@ namespace {
       return isp;
    }
 
-   inline std::string getRealType( const std::string& tn ) {
-   #if 0 // removed fllowing the suggestion from P. Canal
-   // remove "const" as applicable and test for typedef
-      int idx = -1, isconst = 0;
-      if ( tn.substr( 0, 5 ) == "const" ) {
-         idx = G__defined_typename( tn.substr( 6, std::string::npos ).c_str() );
-         isconst = 1;
-      }
-      else
-         idx = G__defined_typename( tn.c_str() );
-
-   // lookup real type or accept current type
-      if ( idx != -1 )
-         return G__type2string( G__newtype.type[ idx ], G__newtype.tagnum[ idx ], -1,
-            G__newtype.reftype[ idx ], isconst  );
-      else
-         return tn;
-   #endif
-   
-   // using the high level interface
-     G__TypeInfo t(tn.c_str());
-     return t.TrueName();
-
-   }
-
 } // unnamed namespace
 
 
 //- data -----------------------------------------------------------------------
 namespace {
-
-   //PyObject* False_ = PyInt_FromLong( 0l );
-   //PyObject* True_  = PyInt_FromLong( 1l );
 
    typedef std::pair< const char*, PyROOT::MethodHolder::cnvfct_t > ncp_t;
 
@@ -316,6 +288,7 @@ inline void PyROOT::MethodHolder::copy_( const MethodHolder& om ) {
    m_method      = om.m_method;
    m_methodCall  = 0;
    m_offset      = 0;
+   m_tagnum      = -1;
 
    m_argsConverters = om.m_argsConverters;
    m_callString     = om.m_callString;
@@ -352,7 +325,7 @@ bool PyROOT::MethodHolder::initDispatch_() {
    while ( TMethodArg* arg = (TMethodArg*)nextarg() ) {
       std::string fullType = arg->GetFullTypeName();
       std::string argType  = arg->GetTypeName();
-      std::string realType = getRealType( argType );
+      std::string realType = G__TypeInfo( argType.c_str() ).TrueName();
 
       if ( isPointer( fullType ) ) {
          Handlers_t::iterator h = theHandlers.find( realType + "*" );
@@ -390,11 +363,21 @@ bool PyROOT::MethodHolder::initDispatch_() {
 }
 
 
+void PyROOT::MethodHolder::calcOffset_( long obj ) {
+   long derivedtagnum = ((TObject*)obj)->IsA()->GetClassInfo()->Tagnum();
+   if ( derivedtagnum != m_tagnum ) {
+      m_offset = G__isanybase( m_class->GetClassInfo()->Tagnum(), derivedtagnum, obj );
+      m_tagnum = derivedtagnum;
+   }
+}
+
+
 //- constructors and destructor ------------------------------------------------
 PyROOT::MethodHolder::MethodHolder( TClass* cls, TMethod* tm ) :
       m_class( cls ), m_method( tm ), m_callString( "" ) {
    m_methodCall = 0;
    m_offset = 0;
+   m_tagnum = -1;
    m_returnType = MethodHolder::kOther;
    m_isInitialized = false;
 }
@@ -430,7 +413,7 @@ bool PyROOT::MethodHolder::initialize() {
 
 // determine return type
    std::string returnType = m_method->GetReturnTypeName();
-   std::string realType = getRealType( returnType );
+   std::string realType = G__TypeInfo( returnType.c_str() ).TrueName();
 
    if ( isPointer( returnType ) ) {
       if ( realType.find( "char" ) != std::string::npos )
@@ -489,6 +472,8 @@ bool PyROOT::MethodHolder::setMethodArgs( PyObject* aTuple ) {
 bool PyROOT::MethodHolder::execute( void* self ) {
    R__LOCKGUARD( gCINTMutex );
 
+   calcOffset_( (long) self );
+
    G__settemplevel( 1 );
    m_methodCall->Exec( (void*) ( (long) self + m_offset ) );
    G__settemplevel( -1 );
@@ -500,6 +485,8 @@ bool PyROOT::MethodHolder::execute( void* self ) {
 bool PyROOT::MethodHolder::execute( void* self, long& val ) {
    R__LOCKGUARD( gCINTMutex );
 
+   calcOffset_( (long) self );
+
    G__settemplevel( 1 );
    val = m_methodCall->ExecInt( (void*) ( (long) self + m_offset ) );
    G__settemplevel( -1 );
@@ -510,6 +497,8 @@ bool PyROOT::MethodHolder::execute( void* self, long& val ) {
 
 bool PyROOT::MethodHolder::execute( void* self, double& val ) {
    R__LOCKGUARD( gCINTMutex );
+
+   calcOffset_( (long) self );
 
    G__settemplevel( 1 );
    val = m_methodCall->ExecDouble( (void*) ( (long) self + m_offset ) );
@@ -649,14 +638,16 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
 
 
 //- nullness testing -----------------------------------------------------------
-PyObject* PyROOT::IsZero( PyObject* /* self */, PyObject* aTuple ) { // get a hold of the object and test it
+PyObject* PyROOT::IsZero( PyObject* /* self */, PyObject* aTuple ) {
+// get a hold of the object and test it
    void* obj = getObjectFromHolderFromArgs( aTuple );
    long isZero = obj == 0 ? 1l /* yes, is zero */ : 0l;
    return PyInt_FromLong( isZero );
 }
 
 
-PyObject* PyROOT::IsNotZero( PyObject* /* self */, PyObject* aTuple ) { // test for non-zero is opposite of test for zero
+PyObject* PyROOT::IsNotZero( PyObject* /* self */, PyObject* aTuple ) {
+// test for non-zero is opposite of test for zero
    void* obj = getObjectFromHolderFromArgs( aTuple );
    long isNotZero = obj != 0 ? 1l /* yes, is not zero */ : 0l;
    return PyInt_FromLong( isNotZero );

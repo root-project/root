@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id:  $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.1 2004/04/27 06:28:48 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_METHODHOLDER_H
@@ -20,8 +20,8 @@ namespace PyROOT {
 
 /** Python side ROOT method
       @author  WLAV
-      @date    09/29/2003
-      @version 1.4
+      @date    05/06/2004
+      @version 1.5
  */
 
    class MethodHolder {
@@ -68,6 +68,7 @@ namespace PyROOT {
       void destroy_() const;
 
       bool initDispatch_();
+      void calcOffset_( long obj );
 
    private:
    // representation
@@ -76,6 +77,7 @@ namespace PyROOT {
       G__CallFunc* m_methodCall;
       EReturnType  m_returnType;
       long         m_offset;
+      long         m_tagnum;
 
    // call dispatch buffers and cache
       std::vector< void* >    m_argsBuffer;
