@@ -21,6 +21,6 @@ ClassesDict.cxx:  Classes.h LinkDef.h $(ROOTSYS)/bin/rootcint
 Classes.$(DllSuf): ClassesDict.$(ObjSuf) Classes.$(ObjSuf)
 	$(CMDECHO) $(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" "" $@ \
-		   ClassesDict.$(ObjSuf) Classes.$(ObjSuf)
+		   ClassesDict.$(ObjSuf) Classes.$(ObjSuf) >& build.log
 
 Classes.o: Classes.cxx Classes.h
