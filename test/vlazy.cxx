@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.5 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.6 2002/01/24 11:39:31 rdm Exp $
 // Author: Fons Rademakers   14/11/97
 
 //
@@ -19,7 +19,7 @@ class do_downsample : public TElementPosAction {
 private:
    const TMatrix &fOrigMatrix;
    const int row_lwb, col_lwb;
-   void Operation(Real_t &element)
+   void Operation(Real_t &element) const
        { element = fOrigMatrix((fI-row_lwb)*2+row_lwb,(fJ-col_lwb)*2+col_lwb); }
 public:
    do_downsample(const TMatrix &orig_matrix)

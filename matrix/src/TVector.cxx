@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.15 2002/08/12 15:10:57 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.16 2002/09/15 10:16:44 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -94,6 +94,36 @@ TVector::TVector(Int_t lwb, Int_t upb, Double_t va_(iv1), ...)
       Error("TVector(Int_t, Int_t, ...)", "argument list must be terminated by \"END\"");
 
    va_end(args);
+}
+
+//______________________________________________________________________________
+TVector::TVector(const TMatrixRow &mr) : TObject(mr)
+{
+   if (mr.fMatrix->IsValid()) {
+      Allocate(mr.fMatrix->GetColUpb()-mr.fMatrix->GetColLwb()+1, mr.fMatrix->GetColLwb());
+      *this = mr;
+   } else
+      Error("TVector(const TMatrixRow&)", "matrix is not initialized");
+}
+
+//______________________________________________________________________________
+TVector::TVector(const TMatrixColumn &mc) : TObject(mc)
+{
+   if (mc.fMatrix->IsValid()) {
+      Allocate(mc.fMatrix->GetRowUpb()-mc.fMatrix->GetRowLwb()+1, mc.fMatrix->GetRowLwb());
+      *this = mc;
+   } else
+      Error("TVector(const TMatrixColumn&)", "matrix is not initialized");
+}
+
+//______________________________________________________________________________
+TVector::TVector(const TMatrixDiag &md) : TObject(md)
+{
+   if (md.fMatrix->IsValid()) {
+      Allocate(md.fMatrix->GetRowUpb());
+      *this = md;
+   } else
+      Error("TVector(const TMatrixDiag&)", "matrix is not initialized");
 }
 
 //______________________________________________________________________________
@@ -608,7 +638,7 @@ TVector &TVector::Sqrt()
 }
 
 //______________________________________________________________________________
-TVector &TVector::Apply(TElementAction &action)
+TVector &TVector::Apply(const TElementAction &action)
 {
    // Apply action to each element of the vector.
 
@@ -621,10 +651,10 @@ TVector &TVector::Apply(TElementAction &action)
 }
 
 //______________________________________________________________________________
-TVector &TVector::Apply(TElementPosAction &action)
+TVector &TVector::Apply(const TElementPosAction &action)
 {
-   // Apply action to each element of the vector. In action the location
-   // of the current element is known.
+   // Apply action to each element of the vector. To action the location
+   // of the current element is passed.
 
    if (!IsValid()) {
       Error("Apply(TElementPosAction&)", "vector not initialized");
@@ -938,22 +968,22 @@ Bool_t TVector::IsValid() const
    return kTRUE;
 }
 
-void TVector::SetElements(const Float_t *elements)
+void TVector::SetElements(const Real_t *elements)
 {
   if (!IsValid()) {
     Error("SetElements", "vector is not initialized");
     return;
   }
-  memcpy(fElements,elements,fNrows*sizeof(Float_t));
+  memcpy(fElements,elements,fNrows*sizeof(Real_t));
 }
 
-TVector::TVector(Int_t n, const Float_t *elements)
+TVector::TVector(Int_t n, const Real_t *elements)
 {
    Allocate(n);
    SetElements(elements);
 }
 
-TVector::TVector(Int_t lwb, Int_t upb, const Float_t *elements)
+TVector::TVector(Int_t lwb, Int_t upb, const Real_t *elements)
 {
    Allocate(upb-lwb+1, lwb);
    SetElements(elements);
@@ -1028,6 +1058,16 @@ Real_t &TVector::operator()(Int_t ind) const
 Real_t &TVector::operator()(Int_t index)
 {
    return (Real_t&)((*(const TVector *)this)(index));
+}
+
+const Real_t &TVector::operator[](Int_t i) const
+{
+   return (Real_t&)((*(const TVector *)this)(i));
+}
+
+Real_t &TVector::operator[](Int_t i)
+{
+   return (Real_t&)((*(const TVector *)this)(i));
 }
 
 TVector &TVector::Zero()

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.15 2002/07/27 11:05:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.16 2002/08/08 18:35:26 rdm Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -103,6 +103,9 @@ public:
    TVectorD(Int_t n, const Double_t *elements);
    TVectorD(Int_t lwb, Int_t upb, const Double_t *elements);
    TVectorD(const TVectorD &another);
+   TVectorD(const TMatrixDRow &mr);
+   TVectorD(const TMatrixDColumn &mc);
+   TVectorD(const TMatrixDDiag &md);
 #ifndef __CINT__
    TVectorD(Int_t lwb, Int_t upb, Double_t iv1, ...);
 #endif
@@ -116,14 +119,16 @@ public:
 
    Bool_t IsValid() const;
 
-   Double_t &operator()(Int_t index) const;
+   const Double_t &operator()(Int_t index) const;
    Double_t &operator()(Int_t index);
+   const Double_t &operator[](Int_t index) const;
+   Double_t &operator[](Int_t index);
 
    Int_t     GetLwb()        const { return fRowLwb; }
    Int_t     GetUpb()        const { return fNrows + fRowLwb - 1; }
    Int_t     GetNrows()      const { return fNrows; }
    Int_t     GetNoElements() const { return fNrows; }
-   Double_t *GetElements()         { return fElements; }
+         Double_t *GetElements()       { return fElements; }
    const Double_t *GetElements() const { return fElements; }
    void      SetElements(const Double_t *elements);
 
@@ -149,8 +154,8 @@ public:
    TVectorD &Sqr();
    TVectorD &Sqrt();
 
-   TVectorD &Apply(TElementActionD &action);
-   TVectorD &Apply(TElementPosActionD &action);
+   TVectorD &Apply(const TElementActionD &action);
+   TVectorD &Apply(const TElementPosActionD &action);
 
    Double_t Norm1() const;
    Double_t Norm2Sqr() const;
@@ -254,7 +259,7 @@ inline TVectorD &TVectorD::operator=(const TVectorD &source)
    return *this;
 }
 
-inline TVectorD::TVectorD(const TVectorD &another) : TObject()
+inline TVectorD::TVectorD(const TVectorD &another) : TObject(another)
 {
    if (another.IsValid()) {
       Allocate(another.GetUpb()-another.GetLwb()+1, another.GetLwb());
@@ -273,7 +278,7 @@ inline void TVectorD::ResizeTo(const TVectorD &v)
    TVectorD::ResizeTo(v.GetLwb(), v.GetUpb());
 }
 
-inline Double_t &TVectorD::operator()(Int_t ind) const
+inline const Double_t &TVectorD::operator()(Int_t ind) const
 {
    static Double_t err;
    err = 0.0;
@@ -296,6 +301,16 @@ inline Double_t &TVectorD::operator()(Int_t ind) const
 inline Double_t &TVectorD::operator()(Int_t index)
 {
    return (Double_t&)((*(const TVectorD *)this)(index));
+}
+
+inline const Double_t &TVectorD::operator[](Int_t i) const
+{
+   return (Double_t&)((*(const TVectorD *)this)(i));
+}
+
+inline Double_t &TVectorD::operator[](Int_t i)
+{
+   return (Double_t&)((*(const TVectorD *)this)(i));
 }
 
 inline TVectorD &TVectorD::Zero()

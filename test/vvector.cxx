@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.11 2002/06/28 23:02:22 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.12 2002/07/23 09:42:01 rdm Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -96,14 +96,14 @@ void test_allocation()
 //                Test uniform element operations
 //
 class SinAction : public TElementAction {
-   void Operation(Real_t &element) { element = TMath::Sin(element); }
+   void Operation(Real_t &element) const { element = TMath::Sin(element); }
    public:
       SinAction() { }
 };
 
 class CosAction : public TElementPosAction {
    Double_t factor;
-   void Operation(Real_t &element) { element = TMath::Cos(factor*fI); }
+   void Operation(Real_t &element) const { element = TMath::Cos(factor*fI); }
    public:
       CosAction(Int_t no_elems): factor(2*TMath::Pi()/no_elems) { }
 };

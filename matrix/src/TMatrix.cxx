@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.26 2002/08/12 15:10:57 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.27 2002/09/15 10:16:44 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -110,7 +110,7 @@
 //       m1.Apply(MakeHilbert());                                       //
 //    }                                                                 //
 //                                                                      //
-//    of course, using a special method TMatrix::HilbertMatrix() is     //
+//    of course, using a special method THilbertMatrix() is             //
 //    still more optimal, but not by a whole lot. And that's right,     //
 //    class MakeHilbert is declared *within* a function and local to    //
 //    that function. It means one can define another MakeHilbert class  //
@@ -406,28 +406,6 @@ TMatrix &TMatrix::UnitMatrix()
 }
 
 //______________________________________________________________________________
-TMatrix &TMatrix::HilbertMatrix()
-{
-   // Make a Hilbert matrix. Hilb[i,j] = 1/(i+j-1), i,j=1...max, OR
-   // Hilb[i,j] = 1/(i+j+1), i,j=0...max-1 (matrix need not be a square one).
-   // The matrix is traversed in the natural (that is, column by column) order.
-
-   if (!IsValid()) {
-      Error("HilbertMatrix", "matrix not initialized");
-      return *this;
-   }
-
-   Real_t *ep = fElements;
-   Int_t i, j;
-
-   for (j = 0; j < fNcols; j++)
-      for (i = 0; i < fNrows; i++)
-         *ep++ = 1./(i+j+1);
-
-   return *this;
-}
-
-//______________________________________________________________________________
 TMatrix &TMatrix::operator=(Real_t val)
 {
    // Assign val to every element of the matrix.
@@ -655,28 +633,6 @@ TMatrix &TMatrix::Sqrt()
          Error("Sqrt", "(%d,%d)-th element, %g, is negative, can't take the square root",
                (ep-fElements) % fNrows + fRowLwb,
                (ep-fElements) / fNrows + fColLwb, *ep);
-
-   return *this;
-}
-
-//______________________________________________________________________________
-TMatrix &TMatrix::Apply(TElementPosAction &action)
-{
-   // Apply action to each element of the matrix. In action the location
-   // of the current element is known. The matrix is traversed in the
-   // natural (that is, column by column) order.
-
-   if (!IsValid()) {
-      Error("Apply(TElementPosAction&)", "matrix not initialized");
-      return *this;
-   }
-
-   Real_t *ep = fElements;
-   for (action.fJ = fColLwb; action.fJ < fColLwb+fNcols; action.fJ++)
-      for (action.fI = fRowLwb; action.fI < fRowLwb+fNrows; action.fI++)
-         action.Operation(*ep++);
-
-   Assert(ep == fElements+fNelems);
 
    return *this;
 }
@@ -1145,7 +1101,59 @@ TMatrix &TMatrix::Invert(Double_t *determ_ptr)
    Double_t determinant = 1;
    const Double_t singularity_tolerance = 1e-35;
 
-   Int_t symmetric = IsSymmetric();
+   if (fNrows <= 3) {
+      Real_t *m = fElements;
+      if (fNrows == 1) {
+         determinant = m[0];
+      } else if (fNrows == 2) {
+         determinant = m[0]*m[3]-m[1]*m[2];
+      } else if (fNrows == 3) {
+         determinant =  m[0]*(m[4]*m[8]-m[7]*m[5])
+                       -m[3]*(m[1]*m[8]-m[7]*m[2])
+                       +m[6]*(m[1]*m[5]-m[4]*m[2]);
+      }
+
+      if (TMath::Abs(determinant) < singularity_tolerance) {
+         if (determ_ptr) {
+            *determ_ptr = 0;
+            return *this;
+         } else {
+            Error("Invert(Double_t*)", "matrix turns out to be singular: can't invert");
+            return *this;
+         }
+      }
+
+      if (fNrows == 1) {
+         m[0] = 1/m[0];
+      } else if (fNrows == 2) {
+         Real_t *o = new Real_t[fNelems];
+         memcpy(o,m,fNelems*sizeof(Real_t));
+         m[0] =  o[3]/determinant;
+         m[1] = -o[1]/determinant;
+         m[2] = -o[2]/determinant;
+         m[3] =  o[0]/determinant;
+         delete [] o;
+      } else if (fNrows == 3) {
+         Real_t *o = new Real_t[fNelems];
+         memcpy(o,m,fNelems*sizeof(Real_t));
+         m[0] = +(o[4]*o[8]-o[5]*o[7])/determinant;
+         m[1] = -(o[3]*o[8]-o[5]*o[6])/determinant;
+         m[2] = +(o[3]*o[7]-o[4]*o[6])/determinant;
+         m[3] = -(o[1]*o[8]-o[2]*o[7])/determinant;
+         m[4] = +(o[0]*o[8]-o[2]*o[6])/determinant;
+         m[5] = -(o[0]*o[7]-o[1]*o[6])/determinant;
+         m[6] = +(o[1]*o[5]-o[2]*o[4])/determinant;
+         m[7] = -(o[0]*o[5]-o[2]*o[3])/determinant;
+         m[8] = +(o[0]*o[4]-o[1]*o[3])/determinant;
+         delete [] o;
+      }
+
+      if (determ_ptr)
+         *determ_ptr = determinant;
+      return *this;
+   }
+
+   const Int_t symmetric = IsSymmetric();
 
    // condition the matrix
    TVector diag(fNrows);
@@ -1295,7 +1303,53 @@ TMatrix &TMatrix::InvertPosDef()
       return *this;
    }
 
-   Int_t   n  = fNrows;
+   if (fNrows <= 3) {
+      const Double_t singularity_tolerance = 1e-35;
+      Double_t determinant;
+      Real_t *m = fElements;
+      if (fNrows == 1) {
+         determinant = m[0];
+      } else if (fNrows == 2) {
+         determinant = m[0]*m[3]-m[1]*m[2];
+      } else if (fNrows == 3) {
+         determinant =  m[0]*(m[4]*m[8]-m[7]*m[5])
+                       -m[3]*(m[1]*m[8]-m[7]*m[2])
+                       +m[6]*(m[1]*m[5]-m[4]*m[2]);
+      }
+
+      if (TMath::Abs(determinant) < singularity_tolerance) {
+         Error("InvertPosDef", "matrix turns out to be singular: can't invert");
+         return *this;
+      }
+
+      if (fNrows == 1) {
+         m[0] = 1/m[0];
+      } else if (fNrows == 2) {
+         Real_t *o = new Real_t[fNelems];
+         memcpy(o,m,fNelems*sizeof(Real_t));
+         m[0] =  o[3]/determinant;
+         m[1] = -o[1]/determinant;
+         m[2] = m[1];
+         m[3] =  o[0]/determinant;
+         delete [] o;
+      } else if (fNrows == 3) {
+         Real_t *o = new Real_t[fNelems];
+         memcpy(o,m,fNelems*sizeof(Real_t));
+         m[0] = +(o[4]*o[8]-o[5]*o[7])/determinant;
+         m[1] = -(o[3]*o[8]-o[5]*o[6])/determinant;
+         m[2] = +(o[3]*o[7]-o[4]*o[6])/determinant;
+         m[3] = m[1];
+         m[4] = +(o[0]*o[8]-o[2]*o[6])/determinant;
+         m[5] = -(o[0]*o[7]-o[1]*o[6])/determinant;
+         m[6] = m[2];
+         m[7] = m[5];
+         m[8] = +(o[0]*o[4]-o[1]*o[3])/determinant;
+         delete [] o;
+      }
+      return *this;
+   }
+
+   const Int_t n = fNrows;
    Real_t *pa = fElements;
    Real_t *pu = new Real_t[n*n];
 
@@ -1303,11 +1357,11 @@ TMatrix &TMatrix::InvertPosDef()
    if (Pdcholesky(pa,pu,n))
      Error("InvertPosDef","matrix not positive definite ?");
 
-   Int_t off_n = (n-1)*n;
+   const Int_t off_n = (n-1)*n;
    Int_t i,l;
    for (i = 0; i < n; i++)
    {
-     Int_t off_i = i*n;
+     const Int_t off_i = i*n;
 
    // step 2: Forward substitution
      for (l = i; l < n; l++)
@@ -1326,7 +1380,7 @@ TMatrix &TMatrix::InvertPosDef()
    // step 3: Back substitution
      for (l = n-1; l >= i; l--)
      {
-       Int_t off_l = l*n;
+       const Int_t off_l = l*n;
        if (l == n-1)
          pa[off_i+l] = pa[off_n+l]/pu[off_l+l];
        else
@@ -1375,7 +1429,7 @@ const Int_t   n)
   for (Int_t k = 0; k < n; k++)
   {
     Double_t s = 0.;
-    Int_t off_k = k*n;
+    const Int_t off_k = k*n;
     for (Int_t j = k; j < n; j++)
     {
       if (k > 0)
@@ -1383,7 +1437,7 @@ const Int_t   n)
         s = 0.;
         for (Int_t l = 0; l <= k-1; l++)
         {
-          Int_t off_l = l*n;
+          const Int_t off_l = l*n;
           s += u[off_l+k]*u[off_l+j];
         }
       }
@@ -1418,8 +1472,8 @@ void TMatrix::InvertPosDef(const TMatrix &m)
 }
 
 //____________________________________________________________________
-TMatrix TMatrix::EigenVectors(
-TVector &eigenValues)
+const TMatrix TMatrix::EigenVectors(
+TVector &eigenValues) const
 {
   // Return a matrix containing the eigen-vectors; also fill the
   // supplied vector with the eigen values.
@@ -1475,25 +1529,33 @@ TVector &e)
    */
   // End_Html
 
-  Int_t n = a.fNrows;
+  const Int_t n = a.fNrows;
 
   if (!a.IsValid()) {
-    Error("Maketridiagonal", "matrix not initialized");
+    gROOT->Error("Maketridiagonal", "matrix not initialized");
     return;
   }
 
   if (a.fNrows != a.fNcols) {
-    Error("Maketridiagonal", "matrix to tridiagonalize must be square");
+    gROOT->Error("Maketridiagonal", "matrix to tridiagonalize must be square");
     return;
   }
 
-  Float_t *pa = a.fElements;
-  Float_t *pd = d.fElements;
-  Float_t *pe = e.fElements;
+  if (!a.IsSymmetric()) {
+    gROOT->Error("MakeTridiagonal", "Can only tridiagonalise symmetric matrix");
+    a.Zero();
+    d.Zero();
+    e.Zero();
+    return;
+  }
+
+  Real_t *pa = a.fElements;
+  Real_t *pd = d.fElements;
+  Real_t *pe = e.fElements;
 
   Int_t i;
   for (i = n-1; i > 0; i--) {
-    Int_t    l     = i-1;
+    const Int_t l  = i-1;
     Double_t h     = 0;
     Double_t scale = 0;
 
@@ -1514,8 +1576,8 @@ TVector &e)
           h += pa[i+k*n]*pa[i+k*n];
         }
 
-        Double_t f =  pa[i+l*n];
-        Double_t g =  (f >= 0. ? -TMath::Sqrt(h) : TMath::Sqrt(h));
+        Double_t f = pa[i+l*n];
+        Double_t g = (f >= 0. ? -TMath::Sqrt(h) : TMath::Sqrt(h));
         pe[i]      =  scale*g;
         h         -= f*g; // Now h is eq. (11.2.4) in "Numerical ..."
         pa[i+l*n]  =  f-g;
@@ -1541,7 +1603,7 @@ TVector &e)
           f    += pe[j]*pa[i+j*n];
         }
         // Form K eq (11.2.11)
-        Double_t hh = f/(h+h);
+        const Double_t hh = f/(h+h);
 
         // Form vector q and store in e overwriting p
         for (j = 0; j <= l; j++) {
@@ -1566,7 +1628,7 @@ TVector &e)
 
   for (i = 0; i < n; i++) {
     // Begin accumulation of transformation matrix
-    Int_t l = i-1;
+    const Int_t l = i-1;
 
     if (pd[i]) {
       // This block is skipped if i = 0;
@@ -1740,11 +1802,11 @@ TMatrix &z)
   */
   // End_Html
 
-  Int_t n = z.fNrows;
+  const Int_t n = z.fNrows;
 
-  Float_t *pd = d.fElements;
-  Float_t *pe = e.fElements;
-  Float_t *pz = z.fElements;
+  Real_t *pd = d.fElements;
+  Real_t *pe = e.fElements;
+  Real_t *pz = z.fElements;
 
   // It's convenient to renumber the e vector elements
   Int_t l;
@@ -1760,14 +1822,14 @@ TMatrix &z)
       for (m = l; m < n-1; m++) {
         // Look for a single small sub-diagonal element  to split the
         // matrix
-        Double_t dd = TMath::Abs(pd[m])+TMath::Abs(pd[m+1]);
+        const Double_t dd = TMath::Abs(pd[m])+TMath::Abs(pd[m+1]);
         if ((Double_t)(TMath::Abs(pe[m])+dd) == dd)
           break;
       }
 
       if (m != l) {
         if (iter++ == 30) {
-          Error("MakeEigenVectors","too many iterations\n");
+          gROOT->Error("MakeEigenVectors","too many iterations\n");
           return;
         }
 
@@ -1784,7 +1846,7 @@ TMatrix &z)
           // A plane rotation as in the original QL, followed by
           // Givens rotations to restore tridiagonal form
           Double_t f = s*pe[i];
-          Double_t b = c*pe[i];
+          const Double_t b = c*pe[i];
           r          = TMath::Sqrt(f*f+g*g);
           pe[i+1]    = r;
 
@@ -1844,8 +1906,8 @@ TVector &eigenValues)
 
   Int_t n = eigenVectors.fNrows;
 
-  Float_t *pVec = eigenVectors.fElements;
-  Float_t *pVal = eigenValues.fElements;
+  Real_t *pVec = eigenVectors.fElements;
+  Real_t *pVal = eigenValues.fElements;
 
   Int_t i;
   for (i = 0; i < n; i++) {
@@ -2284,13 +2346,23 @@ Double_t TMatrix::Determinant() const
       return 0.0;
    }
 
-   TMatrixPivoting mp(*this);
-
    Double_t det = 1;
-   Int_t    k;
 
-   for (k = 0; k < fNcols && det != 0; k++)
-      det *= mp.PivotingAndElimination();
+   const Real_t *m = fElements;
+   if (fNrows == 1) {
+      det = m[0];
+   } else if (fNrows == 2) {
+      det = m[0]*m[3]-m[1]*m[2];
+   } else if (fNrows == 3) {
+      det =  m[0]*(m[4]*m[8]-m[7]*m[5])
+            -m[3]*(m[1]*m[8]-m[7]*m[2])
+            +m[6]*(m[1]*m[5]-m[4]*m[2]);
+   } else {
+      TMatrixPivoting mp(*this);
+      Int_t k;
+      for (k = 0; k < fNcols && det != 0; k++)
+         det *= mp.PivotingAndElimination();
+   }
 
    return det;
 }
@@ -2478,7 +2550,7 @@ TMatrix::TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb)
    Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
 }
 
-void TMatrix::SetElements(const Float_t *elements, Option_t *option)
+void TMatrix::SetElements(const Real_t *elements, Option_t *option)
 {
   if (!IsValid()) {
     Error("SetElements", "matrix is not initialized");
@@ -2489,7 +2561,7 @@ void TMatrix::SetElements(const Float_t *elements, Option_t *option)
   opt.ToUpper();
 
   if (opt.Contains("F"))
-    memcpy(fElements,elements,fNelems*sizeof(Float_t));
+    memcpy(fElements,elements,fNelems*sizeof(Real_t));
   else
   {
     for (Int_t irow = 0; irow < fNrows; irow++)
@@ -2501,7 +2573,7 @@ void TMatrix::SetElements(const Float_t *elements, Option_t *option)
 }
 
 TMatrix::TMatrix(Int_t no_rows, Int_t no_cols,
-                        const Float_t *elements, Option_t *option)
+                        const Real_t *elements, Option_t *option)
 {
   // option="F": array elements contains the matrix stored column-wise
   //             like in Fortran, so a[i,j] = elements[i+no_rows*j],
@@ -2520,13 +2592,13 @@ Bool_t TMatrix::IsValid() const
 }
 
 TMatrix::TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb,
-                        const Float_t *elements, Option_t *option)
+                        const Real_t *elements, Option_t *option)
 {
   Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
   SetElements(elements,option);
 }
 
-void TMatrix::GetElements(Float_t *elements, Option_t *option) const
+void TMatrix::GetElements(Real_t *elements, Option_t *option) const
 {
   if (!IsValid()) {
     Error("GetElements", "matrix is not initialized");
@@ -2537,7 +2609,7 @@ void TMatrix::GetElements(Float_t *elements, Option_t *option) const
   opt.ToUpper();
 
   if (opt.Contains("F"))
-    memcpy(elements,fElements,fNelems*sizeof(Float_t));
+    memcpy(elements,fElements,fNelems*sizeof(Real_t));
   else
   {
     for (Int_t irow = 0; irow < fNrows; irow++)
@@ -2667,13 +2739,35 @@ TMatrix &TMatrix::Zero()
    return *this;
 }
 
-TMatrix &TMatrix::Apply(TElementAction &action)
+TMatrix &TMatrix::Apply(const TElementAction &action)
 {
    if (!IsValid())
       Error("Apply(TElementAction&)", "matrix not initialized");
    else
       for (Real_t *ep = fElements; ep < fElements+fNelems; ep++)
          action.Operation(*ep);
+   return *this;
+}
+
+TMatrix &TMatrix::Apply(const TElementPosAction &action)
+{
+   // Apply action to each element of the matrix. To action the location
+   // of the current element is passed. The matrix is traversed in the
+   // natural (that is, column by column) order.
+
+   if (!IsValid()) {
+      Error("Apply(TElementPosAction&)", "matrix not initialized");
+      return *this;
+   }
+
+   Real_t *ep = fElements;
+   Int_t i,j;
+   for (j = fColLwb; j < fColLwb+fNcols; j++)
+      for (i = fRowLwb; i < fRowLwb+fNrows; i++)
+         action.Operation(*ep++,i,j);
+
+   Assert(ep == fElements+fNelems);
+
    return *this;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.15 2002/07/06 15:55:38 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.17 2002/07/27 11:05:49 rdm Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -51,7 +51,11 @@
 
 class TMatrixD;
 class TLazyMatrixD;
+class TMatrixDRow;
+class TMatrixDColumn;
 class TMatrixDDiag;
+class TMatrixDFlat;
+class TMatrixDPivoting;
 
 TMatrixD &operator+=(TMatrixD &target, const TMatrixD &source);
 TMatrixD &operator-=(TMatrixD &target, const TMatrixD &source);
@@ -73,6 +77,7 @@ friend class TVectorD;
 friend class TMatrixDRow;
 friend class TMatrixDColumn;
 friend class TMatrixDDiag;
+friend class TMatrixDFlat;
 friend class TMatrixDPivoting;
 
 protected:
@@ -87,10 +92,10 @@ protected:
    void Allocate(Int_t nrows, Int_t ncols, Int_t row_lwb = 0, Int_t col_lwb = 0);
    void Invalidate() { fNrows = fNcols = fNelems = -1; fElements = 0; fIndex = 0; }
 
-   Int_t Pdcholesky(const Double_t *a, Double_t *u, const Int_t n);
-   void  MakeTridiagonal(TMatrixD &a,TVectorD &d,TVectorD &e);
-   void  MakeEigenVectors(TVectorD &d,TVectorD &e,TMatrixD &z);
-   void  EigenSort(TMatrixD &eigenVectors,TVectorD &eigenValues);
+   static Int_t Pdcholesky(const Double_t *a, Double_t *u, const Int_t n);
+   static void  MakeTridiagonal(TMatrixD &a,TVectorD &d,TVectorD &e);
+   static void  MakeEigenVectors(TVectorD &d,TVectorD &e,TMatrixD &z);
+   static void  EigenSort(TMatrixD &eigenVectors,TVectorD &eigenValues);
 
    // Elementary constructors
    void Transpose(const TMatrixD &m);
@@ -100,6 +105,7 @@ protected:
    void AtMultB(const TMatrixD &a, const TMatrixD &b);
 
    friend void MakeHaarMatrixD(TMatrixD &m);
+   friend void MakeHilbertMatrixD(TMatrixD &m);
 
 public:
    enum EMatrixCreatorsOp1 { kZero, kUnit, kTransposed, kInverted, kInvertedPosDef };
@@ -133,7 +139,8 @@ public:
    Int_t     GetColUpb()     const { return fNcols+fColLwb-1; }
    Int_t     GetNcols()      const { return fNcols; }
    Int_t     GetNoElements() const { return fNelems; }
-   Double_t *GetElements()         { return fElements; }
+   const Double_t *GetElements() const { return fElements; }
+         Double_t *GetElements()       { return fElements; }
    void      GetElements(Double_t *elements, Option_t *option="") const;
    void      SetElements(const Double_t *elements, Option_t *option="");
 
@@ -161,25 +168,24 @@ public:
    TMatrixD &Sqr();
    TMatrixD &Sqrt();
 
-   TMatrixD &Apply(TElementActionD &action);
-   TMatrixD &Apply(TElementPosActionD &action);
+   TMatrixD &Apply(const TElementActionD &action);
+   TMatrixD &Apply(const TElementPosActionD &action);
 
    TMatrixD &Invert(Double_t *determ_ptr = 0);
    TMatrixD &InvertPosDef();
 
-   TMatrixD EigenVectors(TVectorD &eigenValues);
+   const TMatrixD EigenVectors(TVectorD &eigenValues) const;
 
    TMatrixD &MakeSymmetric();
    TMatrixD &UnitMatrix();
-   TMatrixD &HilbertMatrix();
 
    TMatrixD &operator*=(const TMatrixD &source);
    TMatrixD &operator*=(const TMatrixDDiag &diag);
    TMatrixD &operator/=(const TMatrixDDiag &diag);
-   TMatrixD &operator*=(const TMatrixDRow &diag);
-   TMatrixD &operator/=(const TMatrixDRow &diag);
-   TMatrixD &operator*=(const TMatrixDColumn &diag);
-   TMatrixD &operator/=(const TMatrixDColumn &diag);
+   TMatrixD &operator*=(const TMatrixDRow &row);
+   TMatrixD &operator/=(const TMatrixDRow &row);
+   TMatrixD &operator*=(const TMatrixDColumn &col);
+   TMatrixD &operator/=(const TMatrixDColumn &col);
 
    void Mult(const TMatrixD &a, const TMatrixD &b);
 
@@ -366,7 +372,7 @@ inline TMatrixD &TMatrixD::operator=(const TMatrixD &source)
    return *this;
 }
 
-inline TMatrixD::TMatrixD(const TMatrixD &another) : TObject()
+inline TMatrixD::TMatrixD(const TMatrixD &another) : TObject(another)
 {
    if (another.IsValid()) {
       Allocate(another.fNrows, another.fNcols, another.fRowLwb, another.fColLwb);
@@ -431,13 +437,34 @@ inline TMatrixD &TMatrixD::Zero()
    return *this;
 }
 
-inline TMatrixD &TMatrixD::Apply(TElementActionD &action)
+inline TMatrixD &TMatrixD::Apply(const TElementActionD &action)
 {
    if (!IsValid())
       Error("Apply(TElementActionD&)", "matrix not initialized");
    else
       for (Double_t *ep = fElements; ep < fElements+fNelems; ep++)
          action.Operation(*ep);
+   return *this;
+}
+
+inline TMatrixD &TMatrixD::Apply(const TElementPosActionD &action)
+{
+   // Apply action to each element of the matrix. To action the location
+   // of the current element is passed. The matrix is traversed in the
+   // natural (that is, column by column) order.
+
+   if (!IsValid()) {
+      Error("Apply(TElementPosActionD&)", "matrix not initialized");
+      return *this;
+   }
+
+   Double_t *ep = fElements;
+   for (action.fJ = fColLwb; action.fJ < fColLwb+fNcols; action.fJ++)
+      for (action.fI = fRowLwb; action.fI < fRowLwb+fNrows; action.fI++)
+         action.Operation(*ep++);
+
+   Assert(ep == fElements+fNelems);
+
    return *this;
 }
 

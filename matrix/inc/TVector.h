@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.15 2002/07/27 11:05:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.16 2002/08/08 18:35:26 rdm Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -100,9 +100,12 @@ public:
    TVector() { Invalidate(); }
    TVector(Int_t n);
    TVector(Int_t lwb, Int_t upb);
-   TVector(Int_t n, const Float_t *elements);
-   TVector(Int_t lwb, Int_t upb, const Float_t *elements);
+   TVector(Int_t n, const Real_t *elements);
+   TVector(Int_t lwb, Int_t upb, const Real_t *elements);
    TVector(const TVector &another);
+   TVector(const TMatrixRow &mr);
+   TVector(const TMatrixColumn &mc);
+   TVector(const TMatrixDiag &md);
 #ifndef __CINT__
    TVector(Int_t lwb, Int_t upb, Double_t iv1, ...);
 #endif
@@ -116,16 +119,18 @@ public:
 
    Bool_t IsValid() const;
 
-   Real_t &operator()(Int_t index) const;
+   const Real_t &operator()(Int_t index) const;
    Real_t &operator()(Int_t index);
+   const Real_t &operator[](Int_t index) const;
+   Real_t &operator[](Int_t index);
 
    Int_t    GetLwb()        const { return fRowLwb; }
    Int_t    GetUpb()        const { return fNrows + fRowLwb - 1; }
    Int_t    GetNrows()      const { return fNrows; }
    Int_t    GetNoElements() const { return fNrows; }
-   Float_t *GetElements()         { return fElements; }
-   const Float_t *GetElements() const { return fElements; }
-   void     SetElements(const Float_t *elements);
+         Real_t *GetElements()       { return fElements; }
+   const Real_t *GetElements() const { return fElements; }
+   void     SetElements(const Real_t *elements);
 
    TVector &operator=(const TVector &source);
    TVector &operator=(Real_t val);
@@ -149,8 +154,8 @@ public:
    TVector &Sqr();
    TVector &Sqrt();
 
-   TVector &Apply(TElementAction &action);
-   TVector &Apply(TElementPosAction &action);
+   TVector &Apply(const TElementAction &action);
+   TVector &Apply(const TElementPosAction &action);
 
    Double_t Norm1() const;
    Double_t Norm2Sqr() const;
@@ -205,22 +210,22 @@ inline Bool_t TVector::IsValid() const
    return kTRUE;
 }
 
-inline void TVector::SetElements(const Float_t *elements)
+inline void TVector::SetElements(const Real_t *elements)
 {
   if (!IsValid()) {
     Error("SetElements", "vector is not initialized");
     return;
   }
-  memcpy(fElements,elements,fNrows*sizeof(Float_t));
+  memcpy(fElements,elements,fNrows*sizeof(Real_t));
 }
 
-inline TVector::TVector(Int_t n, const Float_t *elements)
+inline TVector::TVector(Int_t n, const Real_t *elements)
 {
    Allocate(n);
    SetElements(elements);
 }
 
-inline TVector::TVector(Int_t lwb, Int_t upb, const Float_t *elements)
+inline TVector::TVector(Int_t lwb, Int_t upb, const Real_t *elements)
 {
    Allocate(upb-lwb+1, lwb);
    SetElements(elements);
@@ -254,7 +259,7 @@ inline TVector &TVector::operator=(const TVector &source)
    return *this;
 }
 
-inline TVector::TVector(const TVector &another) : TObject()
+inline TVector::TVector(const TVector &another) : TObject(another)
 {
    if (another.IsValid()) {
       Allocate(another.GetUpb()-another.GetLwb()+1, another.GetLwb());
@@ -273,7 +278,7 @@ inline void TVector::ResizeTo(const TVector &v)
    TVector::ResizeTo(v.GetLwb(), v.GetUpb());
 }
 
-inline Real_t &TVector::operator()(Int_t ind) const
+inline const Real_t &TVector::operator()(Int_t ind) const
 {
    static Real_t err;
    err = 0.0;
@@ -296,6 +301,16 @@ inline Real_t &TVector::operator()(Int_t ind) const
 inline Real_t &TVector::operator()(Int_t index)
 {
    return (Real_t&)((*(const TVector *)this)(index));
+}
+
+inline const Real_t &TVector::operator[](Int_t i) const
+{
+   return (Real_t&)((*(const TVector *)this)(i));
+}
+
+inline Real_t &TVector::operator[](Int_t i)
+{
+   return (Real_t&)((*(const TVector *)this)(i));
 }
 
 inline TVector &TVector::Zero()

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.12 2002/07/26 15:41:14 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.13 2002/09/09 05:37:26 brun Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -83,7 +83,7 @@ void test_allocation()
 
 class FillMatrix : public TElementPosAction {
    int no_elems, no_cols;
-   void Operation(Real_t &element)
+   void Operation(Real_t &element) const
       { element = 4*TMath::Pi()/no_elems * (fI*no_cols+fJ); }
 public:
    FillMatrix(const TMatrix &m) :
@@ -142,7 +142,7 @@ void test_matrix_fill(int rsize, int csize)
 typedef  double (*dfunc)(double);
 class ApplyFunction : public TElementAction {
    dfunc fFunc;
-   void Operation(Real_t &element) { element = fFunc(double(element)); }
+   void Operation(Real_t &element) const { element = fFunc(double(element)); }
 public:
    ApplyFunction(dfunc func) : fFunc(func) { }
 };
@@ -357,16 +357,14 @@ void test_transposition(int msize)
 
    {
       cout << "\nCheck to see that a symmetric (Hilbert)Matrix stays the same";
-      TMatrix m(msize,msize);
-      m.HilbertMatrix();
+      TMatrix m = THilbertMatrix(msize,msize);
       TMatrix mt(TMatrix::kTransposed,m);
       Assert( m == mt );
    }
 
    {
       cout << "\nCheck transposing a non-symmetric matrix";
-      TMatrix m(msize+1,msize);
-      m.HilbertMatrix();
+      TMatrix m = THilbertMatrix(msize+1,msize);
       m(1,2) = TMath::Pi();
       TMatrix mt(TMatrix::kTransposed,m);
       Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows());
@@ -386,14 +384,14 @@ void test_transposition(int msize)
 //           Test special matrix creation
 //
 class MakeHilbert : public TElementPosAction {
-   void Operation(Real_t &element) { element = 1./(fI+fJ+1); }
+   void Operation(Real_t &element) const { element = 1./(fI+fJ+1); }
 public:
    MakeHilbert() { }
 };
 
 class TestUnit : public TElementPosAction {
-   int fIsUnit;
-   void Operation(Real_t &element)
+   mutable int fIsUnit;
+   void Operation(Real_t &element) const
       { if (fIsUnit) fIsUnit = fI==fJ ? element == 1.0 : element == 0; }
 public:
    TestUnit() : fIsUnit(0==0) { }
@@ -407,9 +405,8 @@ void test_special_creation(int dim)
 
    {
       cout << "\ntest creating Hilbert matrices" << endl;
-      TMatrix m(dim+1,dim);
+      TMatrix m = THilbertMatrix(dim+1,dim);
       TMatrix m1(TMatrix::kZero,m);
-      m.HilbertMatrix();
       Assert( !(m == m1) );
       Assert( m != 0 );
       MakeHilbert mh;
@@ -420,8 +417,7 @@ void test_special_creation(int dim)
 
    {
       cout << "test creating zero matrix and copy constructor" << endl;
-      TMatrix m(dim,dim+1);
-      m.HilbertMatrix();
+      TMatrix m = THilbertMatrix(dim,dim+1);
       Assert( m != 0 );
       TMatrix m1(m);               // Applying the copy constructor
       Assert( m1 == m );
@@ -496,7 +492,9 @@ void test_special_creation(int dim)
 //           Test matrix promises
 //
 class hilbert_matrix_promise : public TLazyMatrix {
-   void FillIn(TMatrix &m) const { m.HilbertMatrix(); }
+   void FillIn(TMatrix &m) const { m = THilbertMatrix(m.GetRowLwb(),m.GetRowUpb(),
+                                                      m.GetColLwb(),m.GetColUpb()); }
+
 public:
    hilbert_matrix_promise(int nrows, int ncols)
       : TLazyMatrix(nrows,ncols) {}
@@ -513,19 +511,15 @@ void test_matrix_promises(int dim)
    {
       cout << "\nmake a promise and force it by a constructor" << endl;
       TMatrix m = hilbert_matrix_promise(dim,dim+1);
-      TMatrix m1(TMatrix::kZero,m);
-      Assert( !(m1 == m) && m1 == 0 );
-      m1.HilbertMatrix();
+      TMatrix m1 = THilbertMatrix(dim,dim+1);
       verify_matrix_identity(m,m1);
    }
 
    {
       cout << "make a promise and force it by an assignment" << endl;
       TMatrix m(-1,dim,0,dim);
-      TMatrix m1(TMatrix::kZero,m);
       m = hilbert_matrix_promise(-1,dim,0,dim);
-      Assert( !(m1 == m) && m1 == 0 );
-      m1.HilbertMatrix();
+      TMatrix m1 = THilbertMatrix(-1,dim,0,dim);
       verify_matrix_identity(m,m1);
    }
 
@@ -649,33 +643,32 @@ void test_determinant(int msize)
    Assert( m.Determinant() == 0 );
 
    cout << "\nCheck out the determinant of the Hilbert matrix";
-   TMatrix H(3,3);
-   H.HilbertMatrix();
+   TMatrix H = THilbertMatrix(3,3);
    cout << "\n    3x3 Hilbert matrix: exact determinant 1/2160 ";
    cout << "\n                              computed    1/"<< 1/H.Determinant();
 
    H.ResizeTo(4,4);
-   H.HilbertMatrix();
+   H = THilbertMatrix(4,4);
    cout << "\n    4x4 Hilbert matrix: exact determinant 1/6048000 ";
    cout << "\n                              computed    1/"<< 1/H.Determinant();
 
    H.ResizeTo(5,5);
-   H.HilbertMatrix();
+   H = THilbertMatrix(5,5);
    cout << "\n    5x5 Hilbert matrix: exact determinant 3.749295e-12";
    cout << "\n                              computed    "<< H.Determinant();
 
    H.ResizeTo(7,7);
-   H.HilbertMatrix();
+   H = THilbertMatrix(7,7);
    cout << "\n    7x7 Hilbert matrix: exact determinant 4.8358e-25";
    cout << "\n                              computed    "<< H.Determinant();
 
    H.ResizeTo(9,9);
-   H.HilbertMatrix();
+   H = THilbertMatrix(9,9);
    cout << "\n    9x9 Hilbert matrix: exact determinant 9.72023e-43";
    cout << "\n                              computed    "<< H.Determinant();
 
    H.ResizeTo(10,10);
-   H.HilbertMatrix();
+   H = THilbertMatrix(10,10);
    cout << "\n    10x10 Hilbert matrix: exact determinant 2.16418e-53";
    cout << "\n                              computed    "<< H.Determinant()
         << endl;
@@ -694,17 +687,17 @@ void test_mm_multiplications(int msize)
 
    {
       cout << "\nTest inline multiplications of the UnitMatrix" << endl;
-      TMatrix m(-1,msize,-1,msize);
+      TMatrix m = THilbertMatrix(-1,msize,-1,msize);
       TMatrix u(TMatrix::kUnit,m);
-      m.HilbertMatrix(); m(3,1) = TMath::Pi();
+      m(3,1) = TMath::Pi();
       u *= m;
       verify_matrix_identity(u,m);
    }
 
    {
       cout << "Test inline multiplications by a DiagMatrix" << endl;
-      TMatrix m(msize+3,msize);
-      m.HilbertMatrix(); m(1,3) = TMath::Pi();
+      TMatrix m = THilbertMatrix(msize+3,msize);
+      m(1,3) = TMath::Pi();
       TVector v(msize);
       int i;
       for (i = v.GetLwb(); i <= v.GetUpb(); i++)
@@ -723,8 +716,8 @@ void test_mm_multiplications(int msize)
 
    {
       cout << "Test XPP = X where P is a permutation matrix" << endl;
-      TMatrix m(msize-1,msize);
-      m.HilbertMatrix(); m(2,3) = TMath::Pi();
+      TMatrix m = THilbertMatrix(msize-1,msize);
+      m(2,3) = TMath::Pi();
       TMatrix eth = m;
       TMatrix p(msize,msize);
       for (int i = p.GetRowLwb(); i <= p.GetRowUpb(); i++)
@@ -736,11 +729,10 @@ void test_mm_multiplications(int msize)
 
    {
       cout << "Test general matrix multiplication through inline mult" << endl;
-      TMatrix m(msize-2,msize);
-      m.HilbertMatrix(); m(3,3) = TMath::Pi();
+      TMatrix m = THilbertMatrix(msize-2,msize);
+      m(3,3) = TMath::Pi();
       TMatrix mt(TMatrix::kTransposed,m);
-      TMatrix p(msize,msize);
-      p.HilbertMatrix();
+      TMatrix p = THilbertMatrix(msize,msize);
       TMatrixDiag(p) += 1;
       TMatrix mp(m,TMatrix::kMult,p);
       TMatrix m1 = m;
@@ -834,8 +826,7 @@ void test_vm_multiplications(int msize)
          vb(i) = TMath::Pi() + i;
       TMatrix vm(msize,1);
       TMatrixColumn(vm,0) = vb;
-      TMatrix m(0,msize,0,msize-1);
-      m.HilbertMatrix();
+      TMatrix m = THilbertMatrix(0,msize,0,msize-1);
       vb *= m;
       Assert( vb.GetLwb() == 0 );
       TMatrix mvm(m,TMatrix::kMult,vm);
@@ -882,8 +873,7 @@ void test_inversion(int msize)
 
    {
       cout << "Test inversion of a good matrix with diagonal dominance" << endl;
-      TMatrix m(msize,msize);
-      m.HilbertMatrix();
+      TMatrix m = THilbertMatrix(msize,msize);
       TMatrixDiag(m) += 1;
       TMatrix morig = m;
       double det_inv = 0;

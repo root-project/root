@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.3 2002/05/10 07:18:59 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.5 2002/07/27 11:05:49 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -69,6 +69,7 @@
 #pragma link C++ class TMatrixRow-;
 #pragma link C++ class TMatrixColumn-;
 #pragma link C++ class TMatrixDiag-;
+#pragma link C++ class TMatrixFlat-;
 
 #pragma link C++ class TVectorD-;
 #pragma link C++ class TMatrixD-;
@@ -76,5 +77,6 @@
 #pragma link C++ class TMatrixDRow-;
 #pragma link C++ class TMatrixDColumn-;
 #pragma link C++ class TMatrixDDiag-;
+#pragma link C++ class TMatrixDFlat-;
 
 #endif

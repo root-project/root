@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.cxx,v 1.6 2002/07/27 11:05:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.cxx,v 1.7 2002/09/09 05:37:26 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -19,9 +19,11 @@
 //   TMatrixPosAction                                                   //
 //   TLazyMatrix                                                        //
 //   THaarMatrix                                                        //
+//   THilbertMatrix                                                     //
 //   TMatrixRow                                                         //
 //   TMatrixColumn                                                      //
 //   TMatrixDiag                                                        //
+//   TMatrixFlat                                                        //
 //   TMatrixPivoting                                                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -35,6 +37,7 @@ ClassImp(TLazyMatrix)
 ClassImp(TMatrixRow)
 ClassImp(TMatrixColumn)
 ClassImp(TMatrixDiag)
+ClassImp(TMatrixFlat)
 
 
 //______________________________________________________________________________
@@ -53,7 +56,65 @@ void TMatrixRow::operator=(Real_t val)
 }
 
 //______________________________________________________________________________
-void TMatrixRow::operator+=(Double_t val)
+void TMatrixRow::operator+=(const TMatrixRow &r)
+{
+   // Add to every element of the matrix row the
+   // corresponding element of row r.
+
+   if (!fMatrix->IsValid()) {
+      Error("operator+=", "matrix not initialized");
+      return;
+   }
+   if (!r.fMatrix->IsValid()) {
+      Error("operator+=", "matrix r not initialized");
+      return;
+   }
+   if (fMatrix->fColLwb != r.fMatrix->fColLwb) {
+      Error("operator+=", "matrices have different column indices");
+      return;
+   }
+   if (fMatrix->fNcols != r.fMatrix->fNcols) {
+      Error("operator+=", "matrices have different # of columns");
+      return;
+   }
+
+   Real_t *rp1 = fPtr;
+   Real_t *rp2 = r.fPtr;
+   for ( ; rp1 < fPtr + fMatrix->fNelems; rp1 += fInc, rp2 += r.fInc)
+      *rp1 += *rp2;
+}
+
+//______________________________________________________________________________
+void TMatrixRow::operator*=(const TMatrixRow &r)
+{
+   // Multiply every element of the matrix row with the
+   // corresponding element of row r.
+
+   if (!fMatrix->IsValid()) {
+      Error("operator*=", "matrix not initialized");
+      return;
+   }
+   if (!r.fMatrix->IsValid()) {
+      Error("operator*=", "matrix r not initialized");
+      return;
+   }
+   if (fMatrix->fColLwb != r.fMatrix->fColLwb) {
+      Error("operator*=", "matrices have different column indices");
+      return;
+   }
+   if (fMatrix->fNcols != r.fMatrix->fNcols) {
+      Error("operator*=", "matrices have different # of columns");
+      return;
+   }
+
+   Real_t *rp1 = fPtr;
+   Real_t *rp2 = r.fPtr;
+   for ( ; rp1 < fPtr + fMatrix->fNelems; rp1 += fInc, rp2 += r.fInc)
+      *rp1 *= *rp2;
+}
+
+//______________________________________________________________________________
+void TMatrixRow::operator+=(Real_t val)
 {
    // Add val to every element of the matrix row.
 
@@ -68,7 +129,7 @@ void TMatrixRow::operator+=(Double_t val)
 }
 
 //______________________________________________________________________________
-void TMatrixRow::operator*=(Double_t val)
+void TMatrixRow::operator*=(Real_t val)
 {
    // Multiply every element of the matrix row with val.
 
@@ -141,7 +202,65 @@ void TMatrixColumn::operator=(Real_t val)
 }
 
 //______________________________________________________________________________
-void TMatrixColumn::operator+=(Double_t val)
+void TMatrixColumn::operator+=(const TMatrixColumn &c)
+{
+   // Add to every element of the matrix column the
+   // corresponding element of column r.
+
+   if (!fMatrix->IsValid()) {
+      Error("operator+=", "matrix not initialized");
+      return;
+   }
+   if (!c.fMatrix->IsValid()) {
+      Error("operator+=", "matrix c not initialized");
+      return;
+   }
+   if (fMatrix->fRowLwb != c.fMatrix->fRowLwb) {
+      Error("operator+=", "matrices have different row indices");
+      return;
+   }
+   if (fMatrix->fNrows != c.fMatrix->fNrows) {
+      Error("operator+=", "matrices have different # of rows");
+      return;
+   }
+
+   Real_t *cp1 = fPtr;
+   Real_t *cp2 = c.fPtr;
+   while (cp1 < fPtr + fMatrix->fNrows)
+      *cp1++ += *cp2++;
+}
+
+//______________________________________________________________________________
+void TMatrixColumn::operator*=(const TMatrixColumn &c)
+{
+   // Multiply every element of the matrix column with the
+   // corresponding element of column c.
+
+   if (!fMatrix->IsValid()) {
+      Error("operator*=", "matrix not initialized");
+      return;
+   }
+   if (!c.fMatrix->IsValid()) {
+      Error("operator*=", "matrix c not initialized");
+      return;
+   }
+   if (fMatrix->fRowLwb != c.fMatrix->fRowLwb) {
+      Error("operator*=", "matrices have different row indices");
+      return;
+   }
+   if (fMatrix->fNrows != c.fMatrix->fNrows) {
+      Error("operator*=", "matrices have different # of rows");
+      return;
+   }
+
+   Real_t *cp1 = fPtr;
+   Real_t *cp2 = c.fPtr;
+   while (cp1 < fPtr + fMatrix->fNrows)
+      *cp1++ *= *cp2++;
+}
+
+//______________________________________________________________________________
+void TMatrixColumn::operator+=(Real_t val)
 {
    // Add val to every element of the matrix column.
 
@@ -156,7 +275,7 @@ void TMatrixColumn::operator+=(Double_t val)
 }
 
 //______________________________________________________________________________
-void TMatrixColumn::operator*=(Double_t val)
+void TMatrixColumn::operator*=(Real_t val)
 {
    // Multiply every element of the matrix column with val.
 
@@ -229,9 +348,61 @@ void TMatrixDiag::operator=(Real_t val)
 }
 
 //______________________________________________________________________________
-void TMatrixDiag::operator+=(Double_t val)
+void TMatrixDiag::operator+=(const TMatrixDiag &d)
 {
-   // Assign val to every element of the matrix diagonal.
+   // Add to every element of the matrix diagonal the
+   // corresponding element of diagonal d.
+
+   if (!fMatrix->IsValid()) {
+      Error("operator+=", "matrix not initialized");
+      return;
+   }
+   if (!d.fMatrix->IsValid()) {
+      Error("operator+=", "matrix d not initialized");
+      return;
+   }
+   if (fNdiag != d.fNdiag) {
+      Error("operator+=", "matrices have different diagonal length");
+      return;
+   }
+
+   Real_t *dp1 = fPtr;
+   Real_t *dp2 = d.fPtr;
+   Int_t i;
+   for (i = 0; i < fNdiag; i++, dp1 += fInc, dp2 += d.fInc)
+      *dp1 += *dp2;
+}
+
+//______________________________________________________________________________
+void TMatrixDiag::operator*=(const TMatrixDiag &d)
+{
+   // Multiply every element of the matrix diagonal with the
+   // corresponding element of diagonal d.
+
+   if (!fMatrix->IsValid()) {
+      Error("operator*=", "matrix not initialized");
+      return;
+   }
+   if (!d.fMatrix->IsValid()) {
+      Error("operator*=", "matrix d not initialized");
+      return;
+   }
+   if (fNdiag != d.fNdiag) {
+      Error("operator*=", "matrices have different diagonal length");
+      return;
+   }
+
+   Real_t *dp1 = fPtr;
+   Real_t *dp2 = d.fPtr;
+   Int_t i;
+   for (i = 0; i < fNdiag; i++, dp1 += fInc, dp2 += d.fInc)
+      *dp1 *= *dp2;
+}
+
+//______________________________________________________________________________
+void TMatrixDiag::operator+=(Real_t val)
+{
+   // Add val to every element of the matrix diagonal.
 
    if (!fMatrix->IsValid()) {
       Error("operator+=", "matrix not initialized");
@@ -245,7 +416,7 @@ void TMatrixDiag::operator+=(Double_t val)
 }
 
 //______________________________________________________________________________
-void TMatrixDiag::operator*=(Double_t val)
+void TMatrixDiag::operator*=(Real_t val)
 {
    // Multiply every element of the matrix diagonal with val.
 
@@ -299,6 +470,126 @@ void TMatrixDiag::Streamer(TBuffer &R__b)
       fPtr = &(fMatrix->fElements[0]);
    } else {
       TMatrixDiag::Class()->WriteBuffer(R__b,this);
+   }
+}
+
+//______________________________________________________________________________
+void TMatrixFlat::operator=(Real_t val)
+{
+   // Assign val to every element of the matrix.
+
+   if (!fMatrix->IsValid()) {
+      Error("operator=", "matrix not initialized");
+      return;
+   }
+
+   Real_t *dp = fPtr;
+   while (dp < fPtr + fMatrix->fNelems)
+      *dp++ = val;
+}
+
+//______________________________________________________________________________
+void TMatrixFlat::operator+=(const TMatrixFlat &mf)
+{
+   // Add to every element of the matrix the
+   // corresponding element of matrix mf.
+
+   if (AreCompatible(*fMatrix,*mf.fMatrix)) {
+      Error("operator*=", "matrices are not compatible");
+      return;
+   }
+
+   Real_t *dp1 = fPtr;
+   Real_t *dp2 = mf.fPtr;
+   while (dp1 < fPtr + fMatrix->fNelems)
+      *dp1++ += *dp2++;
+}
+
+//______________________________________________________________________________
+void TMatrixFlat::operator*=(const TMatrixFlat &mf)
+{
+   // Multiply every element of the matrix with the
+   // corresponding element of diagonal mf.
+
+   if (AreCompatible(*fMatrix,*mf.fMatrix)) {
+      Error("operator*=", "matrices are not compatible");
+      return;
+   }
+
+   Real_t *fp1 = fPtr;
+   Real_t *fp2 = mf.fPtr;
+   while (fp1 < fPtr + fMatrix->fNelems)
+      *fp1++ *= *fp2++;
+}
+
+//______________________________________________________________________________
+void TMatrixFlat::operator+=(Real_t val)
+{
+   // Add val to every element of the matrix.
+
+   if (!fMatrix->IsValid()) {
+      Error("operator+=", "matrix not initialized");
+      return;
+   }
+
+   Real_t *dp = fPtr;
+   while (dp < fPtr + fMatrix->fNelems)
+      *dp++ += val;
+}
+
+//______________________________________________________________________________
+void TMatrixFlat::operator*=(Real_t val)
+{
+   // Multiply every element of the matrix with val.
+
+   if (!fMatrix->IsValid()) {
+      Error("operator*=", "matrix not initialized");
+      return;
+   }
+
+   Real_t *dp = fPtr;
+   while (dp < fPtr + fMatrix->fNelems)
+      *dp++ *= val;
+}
+
+//______________________________________________________________________________
+void TMatrixFlat::operator=(const TVector &vec)
+{
+   // Assign a vector to the matrix. The matrix is
+   // traversed column-wise
+
+   if (!fMatrix->IsValid()) {
+      Error("operator=", "matrix not initialized");
+      return;
+   }
+   if (!vec.IsValid()) {
+      Error("operator=", "vector not initialized");
+      return;
+   }
+
+   if (fMatrix->fNelems != vec.fNrows) {
+      Error("operator=", "vector cannot be assigned to the matrix");
+      return;
+   }
+
+   Real_t *dp = fPtr;
+   Real_t *vp = vec.fElements;
+   while (dp < fPtr + fMatrix->fNelems)
+      *dp++ = *vp++;
+}
+
+//______________________________________________________________________________
+void TMatrixFlat::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TMatrixFlat.
+
+   if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      TMatrixFlat::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+      fPtr = &(fMatrix->fElements[0]);
+   } else {
+      TMatrixFlat::Class()->WriteBuffer(R__b,this);
    }
 }
 
@@ -462,6 +753,50 @@ void THaarMatrix::FillIn(TMatrix &m) const
    MakeHaarMatrix(m);
 }
 
+//______________________________________________________________________________
+void MakeHilbertMatrix(TMatrix &m)
+{
+   // Make a Hilbert matrix. Hilb[i,j] = 1/(i+j-1), i,j=1...max, OR
+   // Hilb[i,j] = 1/(i+j+1), i,j=0...max-1 (matrix need not be a square one).
+   // The matrix is traversed in the natural (that is, column by column) order.
+
+   if (!m.IsValid()) {
+      Error("MakeHilbertMatrix", "matrix not initialized");
+      return;
+   }
+
+   if (m.fNrows <= 0 || m.fNcols <= 0) {
+      Error("MakeHilbertMatrix", "matrix not right shape");
+      return;
+   }
+
+   Real_t *cp = m.fElements;
+   Int_t i, j;
+
+   for (j = 0; j < m.fNcols; j++)
+      for (i = 0; i < m.fNrows; i++)
+         *cp++ = 1./(i+j+1);
+}
+
+//______________________________________________________________________________
+THilbertMatrix::THilbertMatrix(Int_t no_rows, Int_t no_cols)
+    : TLazyMatrix(no_rows, no_cols)
+{
+   Assert(no_rows > 0 && no_cols > 0);
+}
+
+//______________________________________________________________________________
+THilbertMatrix::THilbertMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb)
+    : TLazyMatrix(row_lwb, row_upb, col_lwb, col_upb)
+{
+   Assert(row_upb-row_lwb+1 > 0 && col_upb-col_lwb+1 > 0);
+}
+
+//______________________________________________________________________________
+void THilbertMatrix::FillIn(TMatrix &m) const
+{
+   MakeHilbertMatrix(m);
+}
 
 #if defined(R__HPUX) || defined(R__MACOSX)
 
@@ -591,6 +926,16 @@ Real_t &TMatrixColumn::operator()(Int_t i)
    return (Real_t&)((*(const TMatrixColumn *)this)(i));
 }
 
+const Real_t &TMatrixColumn::operator[](Int_t i) const
+{
+   return (Real_t&)((*(const TMatrixColumn *)this)(i));
+}
+
+Real_t &TMatrixColumn::operator[](Int_t i)
+{
+   return (Real_t&)((*(const TMatrixColumn *)this)(i));
+}
+
 TMatrixDiag::TMatrixDiag(const TMatrix &matrix)
        : fMatrix(&matrix), fInc(matrix.fNrows+1),
          fNdiag(TMath::Min(matrix.fNrows, matrix.fNcols))
@@ -638,6 +983,73 @@ const Real_t &TMatrixDiag::operator()(Int_t i) const
 Real_t &TMatrixDiag::operator()(Int_t i)
 {
    return (Real_t&)((*(const TMatrixDiag *)this)(i));
+}
+
+const Real_t &TMatrixDiag::operator[](Int_t i) const
+{
+   return (Real_t&)((*(const TMatrixDiag *)this)(i));
+}
+
+Real_t &TMatrixDiag::operator[](Int_t i)
+{
+   return (Real_t&)((*(const TMatrixDiag *)this)(i));
+}
+
+TMatrixFlat::TMatrixFlat(const TMatrix &matrix)
+       : fMatrix(&matrix)
+{
+   if (!matrix.IsValid()) {
+      Error("TMatrixFlat", "matrix is not initialized");
+      return;
+   }
+   fPtr = &(matrix.fElements[0]);
+}
+
+void TMatrixFlat::operator=(const TMatrixFlat &mf)
+{
+   if (fMatrix != mf.fMatrix && AreCompatible(*fMatrix,*mf.fMatrix)) {
+      Real_t *fp1 = fPtr;
+      Real_t *fp2 = mf.fPtr;
+      while (fp1 < fPtr+fMatrix->fNElems)
+         *fp1++ = *fp2++;
+   }
+}
+
+const Real_t &TMatrixFlat::operator()(Int_t i) const
+{
+   // Get hold of the i-th element (indexing always starts at 0,
+   // regardless of matrix' col_lwb and row_lwb)
+
+   static Real_t err;
+   err = 0.0;
+
+   if (!fMatrix->IsValid()) {
+      Error("operator()", "matrix is not initialized");
+      return err;
+   }
+
+   if (i >= fMatrix->fNelems || i < 0) {
+      Error("TMatrixFlat", "TMatrixFlat index %d is out of boundaries [0,%d]",
+            i, fNelems-1);
+      return err;
+   }
+
+   return fMatrix->fElements[i];
+}
+
+Real_t &TMatrixFlat::operator()(Int_t i)
+{
+   return (Real_t&)((*(const TMatrixFlat *)this)(i));
+}
+
+const Real_t &TMatrixFlat::operator[](Int_t i) const
+{
+   return (Real_t&)((*(const TMatrixFlat *)this)(i));
+}
+
+Real_t &TMatrixFlat::operator[](Int_t i)
+{
+   return (Real_t&)((*(const TMatrixFlat *)this)(i));
 }
 
 #endif

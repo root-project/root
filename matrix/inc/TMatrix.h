@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.15 2002/07/06 15:55:38 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.17 2002/07/27 11:05:49 rdm Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -54,6 +54,7 @@ class TLazyMatrix;
 class TMatrixRow;
 class TMatrixColumn;
 class TMatrixDiag;
+class TMatrixFlat;
 class TMatrixPivoting;
 
 TMatrix &operator+=(TMatrix &target, const TMatrix &source);
@@ -76,6 +77,7 @@ friend class TVector;
 friend class TMatrixRow;
 friend class TMatrixColumn;
 friend class TMatrixDiag;
+friend class TMatrixFlat;
 friend class TMatrixPivoting;
 
 protected:
@@ -90,10 +92,10 @@ protected:
    void Allocate(Int_t nrows, Int_t ncols, Int_t row_lwb = 0, Int_t col_lwb = 0);
    void Invalidate() { fNrows = fNcols = fNelems = -1; fElements = 0; fIndex = 0; }
 
-   Int_t Pdcholesky(const Real_t *a, Real_t *u, const Int_t n);
-   void  MakeTridiagonal(TMatrix &a,TVector &d,TVector &e);
-   void  MakeEigenVectors(TVector &d,TVector &e,TMatrix &z);
-   void  EigenSort(TMatrix &eigenVectors,TVector &eigenValues);
+   static Int_t Pdcholesky(const Real_t *a, Real_t *u, const Int_t n);
+   static void  MakeTridiagonal(TMatrix &a,TVector &d,TVector &e);
+   static void  MakeEigenVectors(TVector &d,TVector &e,TMatrix &z);
+   static void  EigenSort(TMatrix &eigenVectors,TVector &eigenValues);
 
    // Elementary constructors
    void Transpose(const TMatrix &m);
@@ -103,6 +105,7 @@ protected:
    void AtMultB(const TMatrix &a, const TMatrix &b);
 
    friend void MakeHaarMatrix(TMatrix &m);
+   friend void MakeHilbertMatrix(TMatrix &m);
 
 public:
    enum EMatrixCreatorsOp1 { kZero, kUnit, kTransposed, kInverted, kInvertedPosDef };
@@ -111,9 +114,9 @@ public:
    TMatrix() { Invalidate(); }
    TMatrix(Int_t nrows, Int_t ncols);
    TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb);
-   TMatrix(Int_t nrows, Int_t ncols, const Float_t *elements, Option_t *option="");
+   TMatrix(Int_t nrows, Int_t ncols, const Real_t *elements, Option_t *option="");
    TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb,
-           const Float_t *elements, Option_t *option="");
+           const Real_t *elements, Option_t *option="");
    TMatrix(const TMatrix &another);
    TMatrix(EMatrixCreatorsOp1 op, const TMatrix &prototype);
    TMatrix(const TMatrix &a, EMatrixCreatorsOp2 op, const TMatrix &b);
@@ -136,9 +139,10 @@ public:
    Int_t    GetColUpb()     const { return fNcols+fColLwb-1; }
    Int_t    GetNcols()      const { return fNcols; }
    Int_t    GetNoElements() const { return fNelems; }
-   Float_t *GetElements()         { return fElements; }
-   void     GetElements(Float_t *elements, Option_t *option="") const;
-   void     SetElements(const Float_t *elements, Option_t *option="");
+   const Real_t *GetElements() const { return fElements; }
+         Real_t *GetElements()       { return fElements; }
+   void     GetElements(Real_t *elements, Option_t *option="") const;
+   void     SetElements(const Real_t *elements, Option_t *option="");
 
    const Real_t &operator()(Int_t rown, Int_t coln) const;
    Real_t &operator()(Int_t rown, Int_t coln);
@@ -164,25 +168,24 @@ public:
    TMatrix &Sqr();
    TMatrix &Sqrt();
 
-   TMatrix &Apply(TElementAction &action);
-   TMatrix &Apply(TElementPosAction &action);
+   TMatrix &Apply(const TElementAction &action);
+   TMatrix &Apply(const TElementPosAction &action);
 
    TMatrix &Invert(Double_t *determ_ptr = 0);
    TMatrix &InvertPosDef();
 
-   TMatrix EigenVectors(TVector &eigenValues);
+   const TMatrix EigenVectors(TVector &eigenValues) const;
 
    TMatrix &MakeSymmetric();
    TMatrix &UnitMatrix();
-   TMatrix &HilbertMatrix();
 
    TMatrix &operator*=(const TMatrix &source);
    TMatrix &operator*=(const TMatrixDiag &diag);
    TMatrix &operator/=(const TMatrixDiag &diag);
-   TMatrix &operator*=(const TMatrixRow &diag);
-   TMatrix &operator/=(const TMatrixRow &diag);
-   TMatrix &operator*=(const TMatrixColumn &diag);
-   TMatrix &operator/=(const TMatrixColumn &diag);
+   TMatrix &operator*=(const TMatrixRow &row);
+   TMatrix &operator/=(const TMatrixRow &row);
+   TMatrix &operator*=(const TMatrixColumn &col);
+   TMatrix &operator/=(const TMatrixColumn &col);
 
    void Mult(const TMatrix &a, const TMatrix &b);
 
@@ -250,7 +253,7 @@ inline TMatrix::TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_u
    Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
 }
 
-inline void TMatrix::SetElements(const Float_t *elements, Option_t *option)
+inline void TMatrix::SetElements(const Real_t *elements, Option_t *option)
 {
   if (!IsValid()) {
     Error("SetElements", "matrix is not initialized");
@@ -261,7 +264,7 @@ inline void TMatrix::SetElements(const Float_t *elements, Option_t *option)
   opt.ToUpper();
 
   if (opt.Contains("F"))
-    memcpy(fElements,elements,fNelems*sizeof(Float_t));
+    memcpy(fElements,elements,fNelems*sizeof(Real_t));
   else
   {
     for (Int_t irow = 0; irow < fNrows; irow++)
@@ -273,7 +276,7 @@ inline void TMatrix::SetElements(const Float_t *elements, Option_t *option)
 }
 
 inline TMatrix::TMatrix(Int_t no_rows, Int_t no_cols,
-                        const Float_t *elements, Option_t *option)
+                        const Real_t *elements, Option_t *option)
 {
   // option="F": array elements contains the matrix stored column-wise
   //             like in Fortran, so a[i,j] = elements[i+no_rows*j],
@@ -285,13 +288,13 @@ inline TMatrix::TMatrix(Int_t no_rows, Int_t no_cols,
 }
 
 inline TMatrix::TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb,
-                        const Float_t *elements, Option_t *option)
+                        const Real_t *elements, Option_t *option)
 {
   Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
   SetElements(elements,option);
 }
 
-inline void TMatrix::GetElements(Float_t *elements, Option_t *option) const
+inline void TMatrix::GetElements(Real_t *elements, Option_t *option) const
 {
   if (!IsValid()) {
     Error("GetElements", "matrix is not initialized");
@@ -302,7 +305,7 @@ inline void TMatrix::GetElements(Float_t *elements, Option_t *option) const
   opt.ToUpper();
 
   if (opt.Contains("F"))
-    memcpy(elements,fElements,fNelems*sizeof(Float_t));
+    memcpy(elements,fElements,fNelems*sizeof(Real_t));
   else
   {
     for (Int_t irow = 0; irow < fNrows; irow++)
@@ -369,7 +372,7 @@ inline TMatrix &TMatrix::operator=(const TMatrix &source)
    return *this;
 }
 
-inline TMatrix::TMatrix(const TMatrix &another) : TObject()
+inline TMatrix::TMatrix(const TMatrix &another) : TObject(another)
 {
    if (another.IsValid()) {
       Allocate(another.fNrows, another.fNcols, another.fRowLwb, another.fColLwb);
@@ -434,13 +437,34 @@ inline TMatrix &TMatrix::Zero()
    return *this;
 }
 
-inline TMatrix &TMatrix::Apply(TElementAction &action)
+inline TMatrix &TMatrix::Apply(const TElementAction &action)
 {
    if (!IsValid())
       Error("Apply(TElementAction&)", "matrix not initialized");
    else
       for (Real_t *ep = fElements; ep < fElements+fNelems; ep++)
          action.Operation(*ep);
+   return *this;
+}
+
+inline TMatrix &TMatrix::Apply(const TElementPosAction &action)
+{
+   // Apply action to each element of the matrix. To action the location
+   // of the current element is passed. The matrix is traversed in the
+   // natural (that is, column by column) order.
+
+   if (!IsValid()) {
+      Error("Apply(TElementPosAction&)", "matrix not initialized");
+      return *this;
+   }
+
+   Real_t *ep = fElements;
+   for (action.fJ = fColLwb; action.fJ < fColLwb+fNcols; action.fJ++)
+      for (action.fI = fRowLwb; action.fI < fRowLwb+fNrows; action.fI++)
+         action.Operation(*ep++);
+
+   Assert(ep == fElements+fNelems);
+
    return *this;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.14 2002/08/12 15:10:57 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.15 2002/09/15 10:16:44 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -94,6 +94,36 @@ TVectorD::TVectorD(Int_t lwb, Int_t upb, Double_t va_(iv1), ...)
       Error("TVectorD(Int_t, Int_t, ...)", "argument list must be terminated by \"END\"");
 
    va_end(args);
+}
+
+//______________________________________________________________________________
+TVectorD::TVectorD(const TMatrixDRow &mr) : TObject(mr)
+{
+   if (mr.fMatrix->IsValid()) {
+      Allocate(mr.fMatrix->GetColUpb()-mr.fMatrix->GetColLwb()+1, mr.fMatrix->GetColLwb());
+      *this = mr;
+   } else
+      Error("TVectorD(const TMatrixDRow&)", "matrix is not initialized");
+}
+
+//______________________________________________________________________________
+TVectorD::TVectorD(const TMatrixDColumn &mc) : TObject(mc)
+{
+   if (mc.fMatrix->IsValid()) {
+      Allocate(mc.fMatrix->GetRowUpb()-mc.fMatrix->GetRowLwb()+1, mc.fMatrix->GetRowLwb());
+      *this = mc;
+   } else
+      Error("TVectorD(const TMatrixDColumn&)", "matrix is not initialized");
+}
+
+//______________________________________________________________________________
+TVectorD::TVectorD(const TMatrixDDiag &md) : TObject(md)
+{
+   if (md.fMatrix->IsValid()) {
+      Allocate(md.fMatrix->GetRowUpb());
+      *this = md;
+   } else
+      Error("TVectorD(const TMatrixDDiag&)", "matrix is not initialized");
 }
 
 //______________________________________________________________________________
@@ -606,7 +636,7 @@ TVectorD &TVectorD::Sqrt()
 }
 
 //______________________________________________________________________________
-TVectorD &TVectorD::Apply(TElementActionD &action)
+TVectorD &TVectorD::Apply(const TElementActionD &action)
 {
    // Apply action to each element of the vector.
 
@@ -619,7 +649,7 @@ TVectorD &TVectorD::Apply(TElementActionD &action)
 }
 
 //______________________________________________________________________________
-TVectorD &TVectorD::Apply(TElementPosActionD &action)
+TVectorD &TVectorD::Apply(const TElementPosActionD &action)
 {
    // Apply action to each element of the vector. In action the location
    // of the current element is known.
@@ -1023,6 +1053,16 @@ Double_t &TVectorD::operator()(Int_t ind) const
 Double_t &TVectorD::operator()(Int_t index)
 {
    return (Double_t&)((*(const TVectorD *)this)(index));
+}
+
+inline const Double_t &TVectorD::operator[](Int_t i) const
+{
+   return (Double_t&)((*(const TVectorD *)this)(i));
+}
+
+inline Double_t &TVectorD::operator[](Int_t i)
+{
+   return (Double_t&)((*(const TVectorD *)this)(i));
 }
 
 TVectorD &TVectorD::Zero()

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.8 2002/07/27 11:05:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.9 2002/09/09 05:37:25 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -23,9 +23,11 @@
 //   TElementPosActionD                                                 //
 //   TLazyMatrixD                                                       //
 //   THaarMatrixD                                                       //
+//   THilbertMatrixD                                                    //
 //   TMatrixDRow                                                        //
 //   TMatrixDColumn                                                     //
 //   TMatrixDDiag                                                       //
+//   TMatrixDFlat                                                       //
 //   TMatrixDPivoting                                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -37,7 +39,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TElementAction                                                       //
+// TElementActionD                                                      //
 //                                                                      //
 // A class to do a specific operation on every vector or matrix element //
 // (regardless of it position) as the object is being traversed.        //
@@ -52,14 +54,14 @@ friend class TMatrixD;
 friend class TVectorD;
 
 private:
-   virtual void Operation(Double_t &element) = 0;
+   virtual void Operation(Double_t &element) const = 0;
    void operator=(const TElementActionD &) { }
 };
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TElementPosAction                                                    //
+// TElementPosActionD                                                   //
 //                                                                      //
 // A class to do a specific operation on every vector or matrix element //
 // as the object is being traversed. This is an abstract class.         //
@@ -75,11 +77,11 @@ friend class TMatrixD;
 friend class TVectorD;
 
 protected:
-   Int_t fI;        // i position of element being passed to Operation()
-   Int_t fJ;        // j position of element being passed to Operation()
+   mutable Int_t fI;        // i position of element being passed to Operation()
+   mutable Int_t fJ;        // j position of element being passed to Operation()
 
 private:
-   virtual void Operation(Double_t &element) = 0;
+   virtual void Operation(Double_t &element) const = 0;
    void operator=(const TElementPosActionD &) { }
 };
 
@@ -129,6 +131,15 @@ public:
    THaarMatrixD(Int_t n, Int_t no_cols = 0);
 };
 
+class THilbertMatrixD : public TLazyMatrixD {
+
+private:
+   void FillIn(TMatrixD &m) const;
+
+public:
+   THilbertMatrixD(Int_t no_rows, Int_t no_cols);
+   THilbertMatrixD(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb);
+};
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -155,6 +166,8 @@ public:
    TMatrixDRow(const TMatrixD &matrix, Int_t row);
 
    void operator=(Double_t val);
+   void operator+=(const TMatrixDRow &r);
+   void operator*=(const TMatrixDRow &r);
    void operator+=(Double_t val);
    void operator*=(Double_t val);
 
@@ -194,6 +207,8 @@ public:
    TMatrixDColumn(const TMatrixD &matrix, Int_t col);
 
    void operator=(Double_t val);
+   void operator+=(const TMatrixDColumn &c);
+   void operator*=(const TMatrixDColumn &c);
    void operator+=(Double_t val);
    void operator*=(Double_t val);
 
@@ -202,6 +217,8 @@ public:
 
    const Double_t &operator()(Int_t i) const;
    Double_t &operator()(Int_t i);
+   const Double_t &operator[](Int_t i) const;
+   Double_t &operator[](Int_t i);
 
    ClassDef(TMatrixDColumn,1)  // One column of a matrix (double precision)
 };
@@ -232,6 +249,8 @@ public:
    TMatrixDDiag(const TMatrixD &matrix);
 
    void operator=(Double_t val);
+   void operator+=(const TMatrixDDiag &d);
+   void operator*=(const TMatrixDDiag &d);
    void operator+=(Double_t val);
    void operator*=(Double_t val);
 
@@ -240,11 +259,51 @@ public:
 
    const Double_t &operator()(Int_t i) const;
    Double_t &operator()(Int_t i);
+   const Double_t &operator[](Int_t i) const;
+   Double_t &operator[](Int_t i);
    Int_t  GetNdiags() const { return fNdiag; }
 
    ClassDef(TMatrixDDiag,1)  // Diagonal of a matrix (double  precision)
 };
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TMatrixDFlat                                                         //
+//                                                                      //
+// Class represents a flat matrix (for easy manipulation).              //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TMatrixDFlat : public TObject {
+
+friend class TMatrixD;
+friend class TVectorD;
+
+private:
+   const TMatrixD *fMatrix;  //! the matrix I am the diagonal of
+   Double_t       *fPtr;     //! pointer to the a[0,0]
+
+   TMatrixDFlat() { fMatrix = 0; fPtr = 0; }
+
+public:
+   TMatrixDFlat(const TMatrixD &matrix);
+
+   void operator=(Double_t val);
+   void operator+=(const TMatrixDFlat &d);
+   void operator*=(const TMatrixDFlat &d);
+   void operator+=(Double_t val);
+   void operator*=(Double_t val);
+
+   void operator=(const TMatrixDFlat &d);
+   void operator=(const TVectorD &vec);
+
+   const Double_t &operator()(Int_t i) const;
+   Double_t &operator()(Int_t i);
+   const Double_t &operator[](Int_t i) const;
+   Double_t &operator[](Int_t i);
+
+   ClassDef(TMatrixDFlat,1)  // Flat representation of a matrix
+};
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -413,6 +472,16 @@ inline Double_t &TMatrixDColumn::operator()(Int_t i)
    return (Double_t&)((*(const TMatrixDColumn *)this)(i));
 }
 
+inline const Double_t &TMatrixDColumn::operator[](Int_t i) const
+{
+   return (Double_t&)((*(const TMatrixDColumn *)this)(i));
+}
+
+inline Double_t &TMatrixDColumn::operator[](Int_t i)
+{
+   return (Double_t&)((*(const TMatrixDColumn *)this)(i));
+}
+
 inline TMatrixDDiag::TMatrixDDiag(const TMatrixD &matrix)
        : fMatrix(&matrix), fInc(matrix.fNrows+1),
          fNdiag(TMath::Min(matrix.fNrows, matrix.fNcols))
@@ -460,6 +529,73 @@ inline const Double_t &TMatrixDDiag::operator()(Int_t i) const
 inline Double_t &TMatrixDDiag::operator()(Int_t i)
 {
    return (Double_t&)((*(const TMatrixDDiag *)this)(i));
+}
+
+inline const Double_t &TMatrixDDiag::operator[](Int_t i) const
+{
+   return (Double_t&)((*(const TMatrixDDiag *)this)(i));
+}
+
+inline Double_t &TMatrixDDiag::operator[](Int_t i)
+{
+   return (Double_t&)((*(const TMatrixDDiag *)this)(i));
+}
+
+inline TMatrixDFlat::TMatrixDFlat(const TMatrixD &matrix)
+       : fMatrix(&matrix)
+{
+   if (!matrix.IsValid()) {
+      Error("TMatrixDFlat", "matrix is not initialized");
+      return;
+   }
+   fPtr = &(matrix.fElements[0]);
+}
+
+inline void TMatrixDFlat::operator=(const TMatrixDFlat &mf)
+{
+   if (fMatrix != mf.fMatrix && AreCompatible(*fMatrix,*mf.fMatrix)) {
+      Double_t *fp1 = fPtr;
+      Double_t *fp2 = mf.fPtr;
+      while (fp1 < fPtr+fMatrix->fNelems)
+         *fp1++ = *fp2++;
+   }
+}
+
+inline const Double_t &TMatrixDFlat::operator()(Int_t i) const
+{
+   // Get hold of the i-th element (indexing always starts at 0,
+   // regardless of matrix' col_lwb and row_lwb)
+
+   static Double_t err;
+   err = 0.0;
+
+   if (!fMatrix->IsValid()) {
+      Error("operator()", "matrix is not initialized");
+      return err;
+   }
+
+   if (i >= fMatrix->fNelems || i < 0) {
+      Error("TMatrixDFlat", "TMatrixDFlat index %d is out of boundaries [0,%d]",
+            i, fMatrix->fNelems-1);
+      return err;
+   }
+
+   return fMatrix->fElements[i];
+}
+
+inline Double_t &TMatrixDFlat::operator()(Int_t i)
+{
+   return (Double_t&)((*(const TMatrixDFlat *)this)(i));
+}
+
+inline const Double_t &TMatrixDFlat::operator[](Int_t i) const
+{
+   return (Double_t&)((*(const TMatrixDFlat *)this)(i));
+}
+
+inline Double_t &TMatrixDFlat::operator[](Int_t i)
+{
+   return (Double_t&)((*(const TMatrixDFlat *)this)(i));
 }
 
 #endif
