@@ -589,9 +589,4 @@ typedef TClaImpProxy<Char_t>   TClaCharProxy;
 
 #endif // TPROXY_H
 
-#ifdef __MAKECINT__
-#pragma link C++ class TClaArrayProxy<int>;
-#pragma link C++ class TClaArrayProxy<Float_t>;
-#pragma link C++ class TClaArrayProxy<double>;
-#endif
 

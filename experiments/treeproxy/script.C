@@ -8,7 +8,7 @@ void script() {
    int meas1 = fMeasures[3];
    
    if (fChain->GetReadEntry()==1) {
-      cout << ntracks << endl;
+      cout << ntracks << "==" << event.fNtrack << endl;
       cout << fNtrack << endl;
       cout << temp << endl;
       cout << meas0 << endl;
