@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.17 2001/06/07 10:47:10 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.18 2001/06/17 23:08:45 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -217,18 +217,26 @@ TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
 TWinNTSystem::~TWinNTSystem()
 {
 
- SafeDelete(fWin32Timer);
+   SafeDelete(fWin32Timer);
 
-//*-* Clean up the WinSocket connectios
-  WSACleanup();
+   // Clean up the WinSocket connectios
+   WSACleanup();
 
-  if (fDirNameBuffer) {
-   delete [] fDirNameBuffer;  fDirNameBuffer = 0;
-  }
+   if (fDirNameBuffer) {
+      delete [] fDirNameBuffer;
+      fDirNameBuffer = 0;
+   }
 
- if (fhSmallIconList)  {ImageList_Destroy(fhSmallIconList);  fhSmallIconList = 0; }
- if (fhNormalIconList) {ImageList_Destroy(fhNormalIconList); fhNormalIconList = 0; }
+   if (fhSmallIconList) {
+      ImageList_Destroy(fhSmallIconList);
+      fhSmallIconList = 0;
+   }
+   if (fhNormalIconList) {
+      ImageList_Destroy(fhNormalIconList);
+      fhNormalIconList = 0;
+   }
 
+   CloseHandle(fhTermInputEvent);
 }
 
 //______________________________________________________________________________
@@ -277,9 +285,12 @@ Bool_t TWinNTSystem::Init()
    gRootDir= ROOTPREFIX;
 #endif
 
-//*-*  The the name of the DLL to be used as a stock of the icon
+   // The the name of the DLL to be used as a stock of the icon
    SetShellName();
    CreateIcons();
+
+   // Create Event HANDLE for stand-alone ROOT-based applications
+   fhTermInputEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
 
    return kFALSE;
 }
@@ -627,77 +638,32 @@ Bool_t TWinNTSystem::ProcessEvents()
    gROOT->SetInterrupt(kFALSE);
    return intr;
 }
+
 //______________________________________________________________________________
 void TWinNTSystem::DispatchOneEvent(Bool_t)
 {
  // Dispatch a single event via Command thread
 
-  gROOT->GetApplication()->HandleTermInput();
-#if 0
-     // check for file descriptors ready for reading/writing
-  if (fNfd > 0 && fFileHandler->GetSize() > 0) {
-      TFileHandler *fh;
-      TIter next(fFileHandler);
-
-      while (fh = (TFileHandler*) next()) {
-          int fd = fh->GetFd();
-          if (fd <= fMaxrfd && fReadready.IsSet(fd)) {
-              fReadready.Clr(fd);
-              if (fh->ReadNotify())
-                  return;
-          }
-          if (fd <= fMaxwfd && fWriteready.IsSet(fd)) {
-              fWriteready.Clr(fd);
-              if (fh->WriteNotify())
-                  return;
-          }
-      }
+  if (!gApplication()->HandleTermInput()) {
+     // wait ExitLoop()
+     WaitForSingleObject(fhTermInputEvent,INFINITE);
+     ResetEvent(fhTermInputEvent);
   }
-  fNfd = 0;
-  fReadready.Zero();
-  fWriteready.Zero();
+}
 
-  // check synchronous signals
-  if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
-      if (CheckSignals(kTRUE))
-      return;
-  fSigcnt = 0;
-  fSignals.Zero();
+//______________________________________________________________________________
+void TWinNTSystem::ExitLoop()
+{
+   TSystem::ExitLoop();
 
-      // check synchronous timers
-  if (fTimers && fTimers->GetSize() > 0)
-      if (DispatchTimers(kTRUE))
-      return;
+   // Release Dispatch one event
+   SetEvent(fhTermInputEvent);
+}
 
-  // nothing ready, so setup select call
-  fReadready  = fReadmask;
-  fWriteready = fWritemask;
-  int mxfd = TMath::Max(fMaxrfd, fMaxwfd) + 1;
-  fNfd = WinNTSelect(mxfd, &fReadready, &fWriteready, NextTimeOut(kTRUE));
-  if (fNfd < 0 && fNfd != -2) {
-      int fd, rc;
-      TFdSet t;
-      for (fd = 0; fd < mxfd; fd++) {
-          t.Set(fd);
-          if (fReadmask.IsSet(fd)) {
-              rc = WinNTSelect(fd+1, &t, 0, 0);
-              if (rc < 0 && rc != -2) {
-                  fprintf(stderr, "select: read error on %d\n", fd);
-                  fReadmask.Clr(fd);
-              }
-          }
-          if (fWritemask.IsSet(fd)) {
-              rc = WinNTSelect(fd+1, 0, &t, 0);
-              if (rc < 0 && rc != -2) {
-                  fprintf(stderr, "select: write error on %d\n", fd);
-                  fWritemask.Clr(fd);
-              }
-          }
-          t.Clr(fd);
-      }
-  }
-#endif
-
+//______________________________________________________________________________
+void TWinNTSystem::InnerLoop()
+{
+   TSystem::InnerLoop();
 }
 
 //---- handling of system events -----------------------------------------------
@@ -2858,69 +2824,12 @@ int TWinNTSystem::WinNTSend(int socket, const void *buffer, int length, int flag
 
 //---- Dynamic Loading ---------------------------------------------------------
 
-#ifdef R__HPUX
-//______________________________________________________________________________
-static const char *DynamicPathName(const char *lib)
-{
-   // Returns the path of a shared library (searches for library in the
-   // shared library search path). If no file name extension is provided
-   // it first tries .so, sl and then .dl. Static utility function.
-
-   const char *name = lib;
-
-   if (!strchr(name, '.')) {
-      name = Form("%s.dll", lib);
-      name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
-   } else {
-
-      int len = strlen(name);
-      if (len > 4 && (!strcmp(name+len-4, ".dll"))
-         name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
-      else {
-         ::Error("TUnixSystem::DynamicPathName",
-                 "shared library must have extension: .dll", lib);
-         name = 0;
-      }
-   }
-   return name;
-}
-
-//______________________________________________________________________________
-static shl_t FindDynLib(const char *lib)
-{
-   // Returns the handle to a loaded shared library. Returns 0 when library
-   // not loaded.
-
-   const char *path;
-
-   if (path = DynamicPathName(lib)) {
-      // find handle of shared library using its name
-      struct shl_descriptor *desc;
-      int index = 0;
-      while (shl_get(index++, &desc) == 0)
-         if (!strcmp(path, desc->filename))
-            return desc->handle;
-   }
-   return 0;
-}
-#endif
-
 //______________________________________________________________________________
 int TWinNTSystem::WinNTDynLoad(const char *lib)
 {
    // Load a shared library. Returns 0 on successful loading.
 
-#ifdef R__HPUX
-   const char *path;
-
-   if (path = DynamicPathName(lib)) {
-//    shl_t handle = cxxshl_load(path, BIND_DEFERRED, 0L);
-      shl_t handle = cxxshl_load(path, BIND_IMMEDIATE | BIND_NONFATAL, 0L);
-      if (handle) return 0;
-   }
-   return 1;
-#endif
-        return 0;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -2928,18 +2837,6 @@ Func_t TWinNTSystem::WinNTDynFindSymbol(const char *lib, const char *entry)
 {
    // Finds and returns a function pointer to a symbol in the shared library.
    // Returns 0 when symbol not found.
-
-#ifdef R__HPUX
-   shl_t handle;
-
-   if (handle = FindDynLib(lib)) {
-      Func_t addr;
-      if (shl_findsym(&handle, entry, TYPE_PROCEDURE, addr) == -1)
-         ::SysError("TWinNTSystem::WinNTDynFindSymbol", "shl_findsym");
-      return addr;
-   }
-   return 0;
-#endif
 
    // Assume always found
    return (Func_t)1;
@@ -2951,43 +2848,6 @@ void TWinNTSystem::WinNTDynListSymbols(const char *lib, const char *regexp)
    // List symbols in a shared library. One can use wildcards to list only
    // the intresting symbols.
 
-#ifdef R__HPUX
-   shl_t handle;
-
-   if (handle = FindDynLib(lib)) {
-      struct shl_symbol *symbols;
-      int nsym = shl_getsymbols(handle, TYPE_PROCEDURE,
-                                EXPORT_SYMBOLS|NO_VALUES, (void *(*)())malloc,
-                                &symbols);
-      if (nsym != -1) {
-         if (nsym > 0) {
-            int cnt = 0;
-            TRegexp *re = 0;
-            if (regexp && strlen(regexp)) re = new TRegexp(regexp, kTRUE);
-            Printf("");
-            Printf("Functions exported by library %s", DynamicPathName(lib));
-            Printf("=========================================================");
-            for (int i = 0; i < nsym; i++)
-               if (symbols[i].type == TYPE_PROCEDURE) {
-                  cnt++;
-                  char *dsym = cplus_demangle(symbols[i].name,
-                                              DMGL_PARAMS|DMGL_ANSI|DMGL_ARM);
-                  if (re) {
-                     TString s = dsym;
-                     if (s.Index(*re) != kNPOS) Printf("%s", dsym);
-                  } else
-                     Printf("%s", dsym);
-                  free(dsym);
-               }
-            Printf("---------------------------------------------------------");
-            Printf("%d exported functions", cnt);
-            Printf("=========================================================");
-            delete re;
-         }
-         free(symbols);
-      }
-   }
-#endif
 }
 
 //______________________________________________________________________________
@@ -2995,27 +2855,6 @@ void TWinNTSystem::WinNTDynListLibs(const char *lib)
 {
    // List all loaded shared libraries.
 
-#ifdef R__HPUX
-   TRegexp *re = 0;
-   if (lib && strlen(lib)) re = new TRegexp(lib, kTRUE);
-   struct shl_descriptor *desc;
-   int index = 0;
-
-   Printf("");
-   Printf("Loaded shared libraries");
-   Printf("=======================");
-
-   while (shl_get(index++, &desc) == 0)
-      if (re) {
-         TString s = desc->filename;
-         if (s.Index(*re) != kNPOS) Printf("%s", desc->filename);
-      } else
-         Printf("%s", desc->filename);
-   Printf("-----------------------");
-   Printf("%d libraries loaded", index-1);
-   Printf("=======================");
-   delete re;
-#endif
 }
 
 //______________________________________________________________________________
@@ -3023,11 +2862,4 @@ void TWinNTSystem::WinNTDynUnload(const char *lib)
 {
    // Unload a shared library.
 
-#ifdef R__HPUX
-   shl_t handle;
-
-   if (handle = FindDynLib(lib))
-      if (cxxshl_unload(handle) == -1)
-         ::SysError("TWinNTSystem::WinNTDynUnLoad", "could not unload library %s", lib);
-#endif
 }

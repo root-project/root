@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.2 2001/02/22 13:32:00 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.3 2001/03/16 14:25:56 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -44,7 +44,7 @@ public:
    virtual             ~TRint();
    virtual char       *GetPrompt();
    virtual const char *SetPrompt(const char *newPrompt);
-   virtual void        HandleTermInput();
+   virtual Bool_t      HandleTermInput();
    virtual void        PrintLogo();
    virtual void        Run(Bool_t retrn = kFALSE);
    virtual void        Terminate(int status);

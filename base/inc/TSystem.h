@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.12 2001/04/23 08:33:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.13 2001/06/06 16:48:33 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -200,9 +200,9 @@ public:
    virtual void            Run();
    virtual Bool_t          ProcessEvents();
    virtual void            DispatchOneEvent(Bool_t pendingOnly = kFALSE);
-   void                    ExitLoop();
+   virtual void            ExitLoop();
    Bool_t                  InControl() const { return fInControl; }
-   void                    InnerLoop();
+   virtual void            InnerLoop();
 
    //---- Handling of system events
    virtual void            AddSignalHandler(TSignalHandler *sh);

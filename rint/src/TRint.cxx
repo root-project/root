@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.10 2001/06/25 16:28:39 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.11 2001/06/30 13:18:14 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -97,8 +97,7 @@ public:
 //______________________________________________________________________________
 Bool_t TTermInputHandler::Notify()
 {
-   gApplication->HandleTermInput();
-   return kTRUE;
+   return gApplication->HandleTermInput();
 }
 
 
@@ -331,7 +330,7 @@ const char *TRint::SetPrompt(const char *newPrompt)
 }
 
 //______________________________________________________________________________
-void TRint::HandleTermInput()
+Bool_t TRint::HandleTermInput()
 {
    // Handle input coming from terminal.
 
@@ -363,6 +362,7 @@ void TRint::HandleTermInput()
       gTabCom->ClearAll();
       Getlinem(kInit, GetPrompt());
    }
+   return kTRUE;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.7 2001/03/11 22:47:20 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.8 2001/06/06 16:48:33 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -65,6 +65,7 @@ class TWinNTSystem : public TSystem {
 
 protected:
    HANDLE          fhProcess;         // Handle of the current process
+   HANDLE          fhTermInputEvent;  // Handle of "event" to suspend "dummy" terminal loop
    char           *fDirNameBuffer;    // The string buffer to hold path name
    WIN32_FIND_DATA  fFindFileData;    // Structure to look for files (aka OpenDir under UNIX)
 
@@ -128,6 +129,8 @@ public:
    //---- EventLoop --------------------------------------------
    Bool_t            ProcessEvents();
    void              DispatchOneEvent(Bool_t pendingOnly = kFALSE);
+   void              ExitLoop();
+   void              InnerLoop();
 
    //---- Handling of system events
    void              CheckChilds();
