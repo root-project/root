@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.19 2001/11/07 23:25:57 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.20 2001/11/14 18:42:36 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -305,10 +305,6 @@ Double_t RooAddModel::evaluate() const
 
 Double_t RooAddModel::getNorm(const RooArgSet* nset) const
 {
-  if (!nset) {
-    cout << "RooAddModel::getNorm(" << GetName() << "): ERROR nset=0!!!" << endl ;    
-  }
-
   // Calculate current normalization of object
   //
   // Norm = sum(i=0,n-1) coef_i * norm(model_i) + (1 - sum(i=0,n-1)coef_i) * norm(model_n)

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.19 2001/11/07 22:41:26 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.20 2001/11/14 18:42:37 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -270,8 +270,7 @@ Double_t RooResolutionModel::getNormSpecial(const RooArgSet* nset) const
   // object. Using RooAbsPdf::getNorm for both would lead to 100% cache misses.
 
   if (!nset) {
-    cout << "RooResolutionModel::getNorm(" << GetName() << "): ERROR nset=0!!!" << endl ;
-    return 1 ;
+    return getVal() ;
   }
 
   if (nset != _lastNormSetSpecial) {
@@ -301,8 +300,7 @@ Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
 {
   // Return the integral of this PDF over all elements of 'nset'. 
   if (!nset) {
-    cout << "RooResolutionModel::getNorm(" << GetName() << "): ERROR nset=0!!!" << endl ;
-    return 1 ;
+    return getVal() ;
   }
 
   syncNormalization(nset) ;
