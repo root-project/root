@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: GuiTypes.h,v 1.4 2000/10/08 14:24:48 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: GuiTypes.h,v 1.5 2000/10/13 09:56:45 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -30,6 +30,7 @@ typedef Handle_t           Display_t;    //Display handle
 typedef Handle_t           Window_t;     //Window handle
 typedef Handle_t           Pixmap_t;     //Pixmap handle
 typedef Handle_t           Drawable_t;   //Drawable handle
+typedef Handle_t           Region_t;     //Region handle
 typedef Handle_t           Colormap_t;   //Colormap handle
 typedef Handle_t           Cursor_t;     //Cursor handle
 typedef Handle_t           FontH_t;      //Font handle (as opposed to Font_t which is an index)
