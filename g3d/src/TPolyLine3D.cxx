@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.12 2002/05/18 08:21:59 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.13 2002/10/31 07:27:34 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -95,6 +95,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Option_t *option)
    fP = new Float_t[3*fN];
    for (Int_t i=0; i<3*fN; i++) fP[i] = 0;
    fOption = option;
+   SetBit(kCanDelete);
 }
 
 //______________________________________________________________________________
@@ -119,6 +120,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t *p, Option_t *option)
       fLastPoint = -1;
    }
    fOption = option;
+   SetBit(kCanDelete);
 }
 
 //______________________________________________________________________________
@@ -143,6 +145,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t *p, Option_t *option)
       fLastPoint = -1;
    }
    fOption = option;
+   SetBit(kCanDelete);
 }
 
 //______________________________________________________________________________
@@ -171,6 +174,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *
       }
    }
    fOption = option;
+   SetBit(kCanDelete);
 }
 
 //______________________________________________________________________________
@@ -200,6 +204,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_
       }
    }
    fOption = option;
+   SetBit(kCanDelete);
 }
 
 //______________________________________________________________________________
