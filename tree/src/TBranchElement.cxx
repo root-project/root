@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.139 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.140 2004/08/20 14:59:50 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1597,7 +1597,8 @@ void TBranchElement::ReadLeaves(TBuffer &b)
        } else {
           fNdata = 1;
           if (fAddress) {
-             fInfo->ReadBuffer(b,fObject,fID);
+	    //char **arr = &fObject;
+             fInfo->ReadBuffer(b,(char**)&fObject,fID);
           } else {
              fNdata = 0;
           }
@@ -1666,7 +1667,8 @@ void TBranchElement::ReadLeaves(TBuffer &b)
      if (fBranchCount) fNdata = (Int_t)fBranchCount->GetValue(0,0);
      else fNdata = 1;
      if (!fInfo) return;
-     fInfo->ReadBuffer(b,fObject,fID);
+     //char **arr = &fObject;
+     fInfo->ReadBuffer(b,(char**)&fObject,fID);
      if (fStreamerType == 6) fNdata = (Int_t)GetValue(0,0);
   }
 }

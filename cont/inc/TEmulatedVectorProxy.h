@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.h,v 1.1 2004/01/10 10:52:29 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.h,v 1.2 2004/02/18 07:28:02 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -27,21 +27,21 @@
 #include "TVirtualCollectionProxy.h"
 
 class TEmulatedVectorProxy : public TVirtualCollectionProxy, public TClassStreamer {
+
+  typedef std::vector<void*> ProxyList_t;
    
    TString      fProxiedName; // name of the class being proxied.
 
    TClass      *fValueClass;  //! TClass of object in collection
    void        *fProxied;     //! Address of the proxied vector
+   ProxyList_t  fProxyList;   //! Stack of proxied containers
    Int_t        fSize;        //! Sizeof the contained objects
    UInt_t       fCase;        //! type of data
    EDataType    fKind;        //! kind of fundamental type 
 
-   UInt_t       fNarr;        //! Allocated size of fArr
-   void       **fArr;         //! [fNarr] Implementing GetPtrArray   
-
    TEmulatedVectorProxy() : 
       fValueClass(0), fProxied(0), fSize(-1), 
-      fCase(0), fKind(kNoType_t),fNarr(0),fArr(0) {}
+      fCase(0), fKind(kNoType_t) {}
    void Init();
    void Destruct(Int_t first,Int_t last,Int_t n);
 
@@ -56,7 +56,8 @@ public:
    void   *New(void *arena) const;
    UInt_t  Sizeof() const;
    void    SetProxy(void *objstart) { fProxied = objstart; }
-   virtual void  **GetPtrArray();           // Return a contiguous array of pointer to the values in the container.
+   void    PushProxy(void *objstart) { fProxyList.push_back(fProxied); fProxied = objstart;  }
+   void    PopProxy() { fProxied = fProxyList.back(); fProxyList.pop_back(); } 
 
    virtual Bool_t    HasPointers() const; // Return true if the content is of type 'pointer to'
    virtual TClass   *GetValueClass();     // Return a pointer to the TClass representing the content.

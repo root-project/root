@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.1 2004/01/10 10:52:29 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.2 2004/02/18 07:28:02 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -45,9 +45,9 @@ public:
 
    virtual UInt_t    Sizeof() const = 0; // Return the sizeof the collection object.
 
-   virtual void      SetProxy(void *objstart) = 0; // Set the address of the container being proxied
-
-   virtual void    **GetPtrArray() = 0;            // Return a contiguous array of pointer to the values in the container (used for splitting)
+   virtual void      SetProxy(void *objstart) = 0;     // Set the address of the container being proxied
+   virtual void      PushProxy(void *objectstart) = 0; // Set the address of the container being proxied and keep track of the previous one.
+   virtual void      PopProxy() = 0;                   // Reset the address of the container being proxied to the previous container
 
    virtual Bool_t    HasPointers() const = 0; // Return true if the content is of type 'pointer to'
 
@@ -60,6 +60,7 @@ public:
    virtual UInt_t    Size() const = 0;                         // Return the current size of the container
 
    virtual void      Streamer(TBuffer &b) = 0;                 // Stream the proxied container
+           char     *operator[](UInt_t idx) const { return (char*)(const_cast<TVirtualCollectionProxy*>(this))->At(idx); }
 };
 
 #endif // Root_TVirtualCollectionProxy_h

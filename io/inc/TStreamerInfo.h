@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.51 2004/06/22 18:47:16 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.52 2004/08/03 05:25:03 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -164,9 +164,14 @@ public:
    void                PrintValue(const char *name, char *pointer, Int_t i, Int_t len, Int_t lenmax=1000) const;
    void                PrintValueClones(const char *name, TClonesArray *clones, Int_t i, Int_t eoffset, Int_t lenmax=1000) const;
    void                PrintValueSTL(const char *name, TVirtualCollectionProxy *cont, Int_t i, Int_t eoffset, Int_t lenmax=1000) const;
-   Int_t               ReadBuffer(TBuffer &b, void *pointer, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
-   Int_t               ReadBufferSkip(TBuffer &b, char **arr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-   Int_t               ReadBufferConv(TBuffer &b, char **arr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+
+   template <class T>  
+   Int_t               ReadBuffer(TBuffer &b, const T &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
+   template <class T>
+   Int_t               ReadBufferSkip(TBuffer &b, const T &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   template <class T>
+   Int_t               ReadBufferConv(TBuffer &b, const T &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
    Int_t               ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset);
    void                SetCheckSum(UInt_t checksum) {fCheckSum = checksum;}
@@ -185,7 +190,8 @@ public:
    static Bool_t       CanDelete();
    static void         SetCanDelete(Bool_t opt=kTRUE);
 
-   Int_t             WriteBufferAux      (TBuffer &b, char **arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
+   template <class T> 
+   Int_t               WriteBufferAux      (TBuffer &b, const T &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
 
    ClassDef(TStreamerInfo,4)  //Streamer information for one class version
 };

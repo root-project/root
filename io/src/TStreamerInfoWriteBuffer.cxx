@@ -74,27 +74,32 @@
 
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, char **arr, Int_t first, 
-                                    Int_t narr, Int_t eoffset, Int_t arrayMode)
+template <class T> 
+Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first, 
+				    Int_t narr, Int_t eoffset, Int_t arrayMode)
 {
    //  The object at pointer is serialized to the buffer b
    //  if (arrayMode & 1) ptr is a pointer to array of pointers to the objects
-   //  otherwise it is a pointer to the object
+   //  otherwise it is a pointer to a pointer to a single object.
+   //  This also means that T is of a type such that arr[i] is a pointer to an
+   //  object.  Currently the only anticipated instantiation are for T==char**
+   //  and T==TVirtualCollectionProxy
 
    b.IncrementLevel(this);
 
    //mark this class as being used in the current file
    TagFile((TFile *)b.GetParent());
 
-//============
+   //============
 
    //loop on all active members
    Int_t last;
    if (first < 0) {first = 0; last = fNdata;}
    else            last = first+1;
 
-   // In order to speed up the case where the object being written is not in a collection (i.e. arrayMode is false),
-   // we actually duplicate the elementary types using this typeOffset.
+   // In order to speed up the case where the object being written is
+   // not in a collection (i.e. arrayMode is false), we actually
+   // duplicate the elementary types using this typeOffset.
    static const int kHaveLoop = 1024;
    const Int_t typeOffset = arrayMode ? kHaveLoop : 0;
 
@@ -106,12 +111,18 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, char **arr, Int_t first,
       const Int_t ioffset = eoffset+fOffset[i];
 
       if (gDebug > 1) {
-         printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, arr=%p, offset=%d\n",fClass->GetName(),aElement->GetName(),i,fType[i],aElement->ClassName(),b.Length(),arr,ioffset);
+         printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d, %s, "
+               "bufpos=%d, arr=%p, offset=%d\n",
+                fClass->GetName(),aElement->GetName(),i,fType[i],aElement->ClassName(),
+                b.Length(),arr[0],ioffset);
       }
 
       switch (fType[i]+typeOffset) { 
+         // In this switch we intentionally use 'continue' instead of
+         // 'break' to avoid running the 2nd switch (see later in this 
+         // function).
 
-         case kChar:                WriteBasicType(Char_t);    continue; // use 'continue' instead of 'break' to avoid running the 2nd switch
+         case kChar:                WriteBasicType(Char_t);    continue; 
          case kShort:               WriteBasicType(Short_t);   continue;
          case kInt:                 WriteBasicType(Int_t);     continue;
          case kLong:                WriteBasicType(Long_t);    continue;
@@ -497,27 +508,14 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, char **arr, Int_t first,
    return 0;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 //______________________________________________________________________________
 Int_t TStreamerInfo::WriteBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset)
 {
 
    if (!nc) return 0;
    Assert((unsigned int)nc==cont->Size());
-   char **arr = (char**) cont->GetPtrArray();
 
-   int ret = WriteBufferAux(b, arr,first,nc,eoffset,1);
+   int ret = WriteBufferAux(b, *cont,first,nc,eoffset,1);
    return ret;
 }
 
@@ -531,7 +529,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *ipointer, Int_t first)
 Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, 
                                        Int_t nc, Int_t first, Int_t eoffset)
 {
-   char **arr = reinterpret_cast<char**>(clones->GetObjectRef(0)); // (char **)&((*clones)[0]);
+   char **arr = reinterpret_cast<char**>(clones->GetObjectRef(0)); 
    return WriteBufferAux(b,arr,first,nc,eoffset,1);
 }
 

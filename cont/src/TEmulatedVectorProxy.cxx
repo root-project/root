@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.cxx,v 1.4 2004/03/11 06:17:43 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.cxx,v 1.5 2004/07/10 05:23:14 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -45,8 +45,7 @@ enum {
 TEmulatedVectorProxy::TEmulatedVectorProxy(const char* classname) :
    TVirtualCollectionProxy(gROOT->GetClass(classname)),
    fProxiedName(classname),
-   fValueClass(0), fProxied(0), fSize(-1), fCase(0), fKind(kNoType_t), fNarr(0),
-   fArr(0)
+   fValueClass(0), fProxied(0), fSize(-1), fCase(0), fKind(kNoType_t)
 {
    // Build a proxy for an emulated vector whose type is 'classname'.
 
@@ -57,8 +56,7 @@ TEmulatedVectorProxy::TEmulatedVectorProxy(const char* classname) :
 TEmulatedVectorProxy::TEmulatedVectorProxy(TClass *collectionClass) :
    TVirtualCollectionProxy(collectionClass),
    fProxiedName(collectionClass->GetName()),
-   fValueClass(0), fProxied(0), fSize(-1), fCase(0), fKind(kNoType_t), fNarr(0),
-   fArr(0)
+   fValueClass(0), fProxied(0), fSize(-1), fCase(0), fKind(kNoType_t)
 {
    // Build a proxy for an emulated vector whose type is described by
    // 'collectionClass'.
@@ -246,29 +244,6 @@ EDataType TEmulatedVectorProxy::GetType()
    // If the content is a simple numerical value, return its type (see TDataType)
    
    return fKind;
-}
-
-//______________________________________________________________________________
-void  **TEmulatedVectorProxy::GetPtrArray()
-{
-   // Return a contiguous array of pointer to the values in the container.
-
-   if (gDebug>1) Info("TEmulatedVectorProxy::GetPtrArray","called for %s at %p",fClass->GetName(),fProxied);
-
-   if (HasPointers()) return (void**)At(0);
-
-   unsigned int n = Size();
-   if (n >= fNarr) {
-      delete [] fArr;
-      fNarr =  int(n*1.3) + 10;
-      fArr  = new void*[fNarr+1];
-   }
-
-   fArr[0] = At(0);
-   for (unsigned int i=1;i<n;i++)   { fArr[i] = (char*)(fArr[i-1]) + fSize;}
-
-   fArr[n]=0;
-   return fArr;
 }
 
 //______________________________________________________________________________

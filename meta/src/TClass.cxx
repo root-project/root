@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.149 2004/06/09 06:10:21 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.150 2004/06/18 15:47:34 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -350,7 +350,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
 
          } else {
             TClass *actualCl = 0;
-            proxy->SetProxy(obj);
+            proxy->PushProxy(obj);
 
             int sz = proxy->Size();
 
@@ -372,6 +372,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
                ts += buf;
                fBrowser->Add( p, actualCl, ts );
             }
+	    proxy->PopProxy();
          }
       }
    }
@@ -2744,7 +2745,7 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start,
    }
 
    //deserialize the object
-   sinfo->ReadBuffer(b, (char*)pointer,-1);
+   sinfo->ReadBuffer(b, (char**)&pointer,-1);
    if (sinfo->IsRecovered()) count=0;
 
    //check that the buffer position corresponds to the byte count
@@ -2788,7 +2789,7 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
    }
 
    //deserialize the object
-   sinfo->ReadBuffer(b, (char*)pointer,-1);
+   sinfo->ReadBuffer(b, (char**)&pointer,-1);
    if (sinfo->IsRecovered()) R__c=0;
 
    //check that the buffer position corresponds to the byte count
@@ -2829,7 +2830,7 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char *info)
    UInt_t R__c = b.WriteVersion(this, kTRUE);
 
    //serialize the object
-   sinfo->WriteBufferAux(b, (char**)&pointer,-1,1,0,0); // NOTE: expanded
+   sinfo->WriteBufferAux(b,(char**)&pointer,-1,1,0,0); // NOTE: expanded
 
    //write the byte count at the start of the buffer
    b.SetByteCount(R__c, kTRUE);
@@ -2873,12 +2874,12 @@ void TClass::Streamer(void *object, TBuffer &b)
          Version_t v = b.ReadVersion(&start,&count);
          if (count) {
             TStreamerInfo *sinfo = GetStreamerInfo(v);
-            sinfo->ReadBuffer(b,(char*)object,-1);
+            sinfo->ReadBuffer(b,(char**)&object,-1);
             if (sinfo->IsRecovered()) count=0;
             b.CheckByteCount(start,count,this);
          } else {
             b.SetBufferOffset(start);
-            GetStreamerInfo( )->ReadBuffer(b,(char*)object,-1);
+            GetStreamerInfo( )->ReadBuffer(b,(char**)&object,-1);
          }
       }
       return;

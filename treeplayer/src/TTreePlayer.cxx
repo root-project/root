@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.165 2004/08/12 04:33:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.166 2004/08/13 09:44:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2382,6 +2382,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
 
    TString opt = option;
    opt.ToLower();
+   UInt_t ui;
    UInt_t lenmax = 0;
    UInt_t colDefaultSize = 9;
    UInt_t colPrecision = 9;
@@ -2494,12 +2495,6 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    
    nentries = GetEntriesToProcess(firstentry, nentries);
 
-   UInt_t ui;
-   for(ui=colFormats.size();ui<ncols;++ui) {
-      colFormats.push_back(defFormat);
-      colSizes.push_back(colDefaultSize);
-   }
-
 //*-*- Compile selection expression if there is one
    TTreeFormula        *select  = 0;
    if (strlen(selection)) {
@@ -2534,6 +2529,11 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       }
    }
    var = new TTreeFormula* [ncols];
+
+   for(ui=colFormats.size();ui<ncols;++ui) {
+      colFormats.push_back(defFormat);
+      colSizes.push_back(colDefaultSize);
+   }
 
 //*-*- Create the TreeFormula objects corresponding to each column
    for (ui=0;ui<ncols;ui++) {
