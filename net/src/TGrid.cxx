@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.1 2002/05/13 10:35:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.2 2002/05/28 16:41:46 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -90,8 +90,9 @@ void TGrid::ls(const char *dir, const char *options) const
    TGridResult *r = Ls(dir, options);
 
    if (r) {
-      while (r->Next()) {
-         printf("%s\n", r->GetValue());
+      const char *item;
+      while ((item = r->Next())) {
+         printf("%s\n", item);
       }
       delete r;
    }

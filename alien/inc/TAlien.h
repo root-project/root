@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.3 2002/05/27 18:13:55 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.4 2002/05/28 16:41:45 rdm Exp $
 // Author: Fons Rademakers   13/5/2002
 
 /*************************************************************************
@@ -59,6 +59,8 @@ public:
    Int_t        Rmdir(const char *dir, const char *options = 0);
    char        *GetPhysicalFileName(const char *lfn);
    TGridResult *GetPhysicalFileNames(const char *lfn);
+   Int_t        GetPathInfo(const char *lfn, Long_t *size,
+                            Long_t *flags, Long_t *modtime);
 
    //--- file attribute management
    Int_t        AddAttribute(const char *lfn, const char *attrname,

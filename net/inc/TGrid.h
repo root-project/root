@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.2 2002/05/23 14:04:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.3 2002/05/28 16:41:46 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -64,6 +64,8 @@ public:
    virtual Int_t        Rmdir(const char *dir, const char *options = 0) = 0;
    virtual char        *GetPhysicalFileName(const char *lfn) = 0;
    virtual TGridResult *GetPhysicalFileNames(const char *lfn) = 0;
+   virtual Int_t        GetPathInfo(const char *lfn, Long_t *size,
+                                    Long_t *flags, Long_t *modtime) = 0;
 
    //--- file attribute management
    virtual Int_t        AddAttribute(const char *lfn, const char *attrname,

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.4 2002/05/27 18:13:55 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.5 2002/05/28 16:41:46 rdm Exp $
 // Author: Fons Rademakers   13/5/2002
 
 /*************************************************************************
@@ -249,6 +249,46 @@ TGridResult *TAlien::GetPhysicalFileNames(const char *lfn)
    }
 
    return new TAlienResult(ar);
+}
+
+//______________________________________________________________________________
+Int_t TAlien::GetPathInfo(const char *lfn, Long_t *size, Long_t *flags,
+                          Long_t *modtime)
+{
+   // Get info about a lfn: size, flags, modification time.
+   // Size    is the file size
+   // Flags   is file type: 0 is regular file, bit 1 set directory
+   // Modtime is modification time.
+   // The function returns 0 in case of success and -1 if the file could
+   // not be stat'ed.
+
+#if 0
+   TString slfn = MakeLfn(lfn);
+
+   AlienStat_t buf;
+   if (AlienStat(slfn, &buf) == -1) {
+      return -1;
+   }
+   if (size)
+      *size = (Long_t) buf.st_size;
+   if (flags) {
+      *flags = 0;
+      if (buf.st_mode & AL_IFDIR)
+         *flags |= 1;
+   }
+   if (modtime)
+      *modtime = buf.st_mtime;
+
+#else
+   if (size)
+      *size = 0;
+   if (flags)
+      *flags = 0;
+   if (modtime)
+      *modtime = 0;
+#endif
+
+   return 0;
 }
 
 //______________________________________________________________________________
