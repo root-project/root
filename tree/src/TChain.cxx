@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.61 2003/01/13 20:18:33 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.62 2003/03/06 23:07:06 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -55,6 +55,8 @@ TChain::TChain(): TTree()
    fFile           = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
    fStatus         = new TList();
+   fMaxCacheSize   = 0;
+   fPageSize       = 0;
 }
 
 //______________________________________________________________________________
@@ -93,6 +95,8 @@ TChain::TChain(const char *name, const char *title)
    fFile           = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
    fStatus         = new TList();
+   fMaxCacheSize   = 0;
+   fPageSize       = 0;
    fTreeOffset[0]  = 0;
    //TChainElement *element = new TChainElement("*","");
    //fStatus->Add(element);
@@ -301,7 +305,7 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
          return 0;
       }
 
-   //Check that tree with the right name exists in the file
+      //Check that tree with the right name exists in the file
       TObject *obj = file->Get(treename);
       if (!obj || !obj->InheritsFrom("TTree") ) {
          Error("AddFile","cannot find tree with name %s in file %s", treename,filename);
@@ -392,9 +396,9 @@ TFriendElement *TChain::AddFriend(const char *chain, const char *dummy)
    if (fe) {
       fFriends->Add(fe);
 
-      // We need to invalidate the loading of the current because if list 
+      // We need to invalidate the loading of the current because if list
       // of real friend is now obsolete.  It is repairable only from LoadTree
-      fTreeNumber = -1; 
+      fTreeNumber = -1;
 
       TTree *t = fe->GetTree();
       if (t) {
@@ -419,9 +423,9 @@ TFriendElement *TChain::AddFriend(const char *chain, TFile *dummy)
    if (fe) {
       fFriends->Add(fe);
 
-      // We need to invalidate the loading of the current because if list 
+      // We need to invalidate the loading of the current because if list
       // of real friend is now obsolete.  It is repairable only from LoadTree
-      fTreeNumber = -1; 
+      fTreeNumber = -1;
 
       TTree *t = fe->GetTree();
       if (t) {
@@ -447,9 +451,9 @@ TFriendElement *TChain::AddFriend(TTree *chain, const char* alias,
    if (fe) {
       fFriends->Add(fe);
 
-      // We need to invalidate the loading of the current because if list 
+      // We need to invalidate the loading of the current because if list
       // of real friend is now obsolete.  It is repairable only from LoadTree
-      fTreeNumber = -1; 
+      fTreeNumber = -1;
 
       TTree *t = fe->GetTree();
       if (t) {
@@ -735,6 +739,10 @@ Int_t TChain::LoadTree(Int_t entry)
       delete fFile; fFile = 0;
       return -3;
    }
+
+   if (fMaxCacheSize > 0)
+      fFile->UseCache(fMaxCacheSize, fPageSize);
+
    fTree = (TTree*)fFile->Get(element->GetName());
    if (fTree==0) {
       // Now that we do not check during the addition, we need to check here!
@@ -865,8 +873,8 @@ void TChain::ls(Option_t *option) const
 //______________________________________________________________________________
 Int_t TChain::Merge(const char *name)
 {
-//     Merge all files in this chain into a new file
-// see important note in the following function Merge
+   // Merge all files in this chain into a new file.
+   // See important note in the following function Merge().
 
    TFile *file = TFile::Open(name,"recreate","chain files",1);
    return Merge(file,0,"");
@@ -912,7 +920,7 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 // fgMaxTreeSize may be modified via the static function TTree::SetMaxTreeSize.
 //
 // IMPORTANT Note 3: The input file is automatically closed and deleted.
-// This is required because in general the automatic file overflow described 
+// This is required because in general the automatic file overflow described
 // above may happen during the merge.
 //
 // The function returns the total number of files produced.
@@ -1169,7 +1177,7 @@ void TChain::SetWeight(Double_t w, Option_t *option)
    }
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TChain::Streamer(TBuffer &b)
 {
 // Stream a class object
@@ -1197,4 +1205,18 @@ void TChain::Streamer(TBuffer &b)
    } else {
       TChain::Class()->WriteBuffer(b,this);
    }
+}
+
+//______________________________________________________________________________
+void TChain::UseCache(Int_t maxCacheSize, Int_t pageSize)
+{
+   // Activate file caching. Use maxCacheSize to specify the maximum cache size
+   // in MB's (default is 10 MB) and pageSize to specify the page size
+   // (default is 512 KB). To turn off the cache use maxCacheSize=0.
+   // Not needed for normal disk files since the operating system will
+   // do proper caching (via the "buffer cache"). Use it for TNetFile,
+   // TWebFile, TRFIOFile, TDCacheFile, etc.
+
+   fMaxCacheSize = maxCacheSize;
+   fPageSize     = pageSize;
 }

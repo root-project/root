@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.86 2003/02/26 15:09:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.87 2003/03/06 21:49:16 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1188,7 +1188,7 @@ Int_t TFile::ReOpen(Option_t *mode)
    // The Current Directory is changed to this file
 
    cd();
-   
+
    TString opt = mode;
    opt.ToUpper();
 
@@ -1359,7 +1359,7 @@ void TFile::UseCache(Int_t maxCacheSize, Int_t pageSize)
    // (default is 512 KB). To turn off the cache use maxCacheSize=0.
    // Not needed for normal disk files since the operating system will
    // do proper caching (via the "buffer cache"). Use it for TNetFile,
-   // TWebFile and TRFIOFile.
+   // TWebFile, TRFIOFile, TDCacheFile, etc.
 
    if (IsA() == TFile::Class())
       return;

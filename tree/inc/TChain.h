@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.27 2002/08/17 21:41:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.28 2003/01/15 06:58:20 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -24,6 +24,9 @@
 #ifndef ROOT_TTree
 #include "TTree.h"
 #endif
+#ifndef ROOT_TCache
+#include "TCache.h"
+#endif
 
 class TFile;
 class TBrowser;
@@ -36,6 +39,8 @@ protected:
     Int_t       fNtrees;            //  Number of Trees
     Int_t       fTreeNumber;        //! Current Tree number in fTreeOffset table
     Int_t       *fTreeOffset;       //[fTreeOffsetLen]Array of variables
+    Int_t        fMaxCacheSize;     //! Max cache size passed to TFile's
+    Int_t        fPageSize;         //! Cache page size passed to TFile's
     TTree       *fTree;             //! Pointer to current tree
     TFile       *fFile;             //! Pointer to current file
     TObjArray   *fFiles;            //->  List of file names containing the Trees
@@ -101,6 +106,7 @@ public:
     virtual void      SetMakeClass(Int_t make) { TTree::SetMakeClass(make); if (fTree) fTree->SetMakeClass(make);}
     virtual void      SetPacketSize(Int_t size = 100);
     virtual void      SetWeight(Double_t w=1, Option_t *option="");
+    virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = TCache::kDfltPageSize);
 
     ClassDef(TChain,4)  //A chain of TTrees
 };
