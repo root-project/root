@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.31 2004/01/03 09:41:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.32 2004/01/10 10:52:29 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #endif
 
 class TClass;
+class TStreamerInfo;
 class TExMap;
 
 class TBuffer : public TObject {
@@ -68,7 +69,12 @@ protected:
    Int_t Write(const char *name, Int_t opt, Int_t bufs)
                                 { return TObject::Write(name, opt, bufs); }
 
+#ifdef R__TBufferVirtual
+   virtual  void     WriteObject(const void *actualObjStart, TClass *actualClass);
+
+#else
    void     WriteObject(const void *actualObjStart, TClass *actualClass);
+#endif
 
 public:
    enum EMode { kRead = 0, kWrite = 1 };
@@ -98,9 +104,37 @@ public:
    void     DetachBuffer() { fBuffer = 0; }
    Int_t    Length() const { return (Int_t)(fBufCur - fBuffer); }
 
+
+#ifdef R__TBufferVirtual
+   virtual   Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);
+   virtual   Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);
+   virtual   void     SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);
+
+   virtual Version_t  ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, TClass *cl = 0);
+   virtual UInt_t     WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
+
+   virtual void      *ReadObjectAny(const TClass* cast);
+
+   virtual void       IncrementLevel(TStreamerInfo*) {}
+   virtual void       SetStreamerElementNumber(Int_t) {}
+   virtual void       DecrementLevel(TStreamerInfo*) {}
+
+#else
+
    Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);
    Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);
    void     SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);
+
+   Version_t ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, TClass *cl = 0);
+   UInt_t    WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
+
+   void     *ReadObjectAny(const TClass* cast);
+
+   void      IncrementLevel(TStreamerInfo*) {}
+   void      SetStreamerElementNumber(Int_t) {}
+   void      DecrementLevel(TStreamerInfo*) {}
+
+#endif
 
    Bool_t   IsReading() const { return (fMode & kWrite) == 0; }
    Bool_t   IsWriting() const { return (fMode & kWrite) != 0; }
@@ -111,8 +145,6 @@ public:
    char    *ReadString(char *s, Int_t max);
    void     WriteString(const char *s);
 
-   Version_t ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, TClass *cl = 0);
-   UInt_t    WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
 
    virtual TClass  *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0);
    virtual void     WriteClass(const TClass *cl);
@@ -120,7 +152,6 @@ public:
    virtual TObject *ReadObject(const TClass *cl);
    virtual void     WriteObject(const TObject *obj);
 
-   void    *ReadObjectAny(const TClass* cast);
    Int_t    WriteObjectAny(const void *obj, TClass *ptrClass);
 
    void     SetBufferDisplacement(Int_t skipped)
@@ -128,6 +159,121 @@ public:
    void     SetBufferDisplacement() { fDisplacement = 0; }
    Int_t    GetBufferDisplacement() const { return fDisplacement; }
 
+
+#ifdef R__TBufferVirtual
+   virtual   Int_t    ReadArray(Bool_t    *&b);
+   virtual   Int_t    ReadArray(Char_t    *&c);
+   virtual   Int_t    ReadArray(UChar_t   *&c);
+   virtual   Int_t    ReadArray(Short_t   *&h);
+   virtual   Int_t    ReadArray(UShort_t  *&h);
+   virtual   Int_t    ReadArray(Int_t     *&i);
+   virtual   Int_t    ReadArray(UInt_t    *&i);
+   virtual   Int_t    ReadArray(Long_t    *&l);
+   virtual   Int_t    ReadArray(ULong_t   *&l);
+   virtual   Int_t    ReadArray(Long64_t  *&l);
+   virtual   Int_t    ReadArray(ULong64_t *&l);
+   virtual   Int_t    ReadArray(Float_t   *&f);
+   virtual   Int_t    ReadArray(Double_t  *&d);
+   virtual   Int_t    ReadArrayDouble32(Double_t  *&d);
+
+   virtual   Int_t    ReadStaticArray(Bool_t    *b);
+   virtual   Int_t    ReadStaticArray(Char_t    *c);
+   virtual   Int_t    ReadStaticArray(UChar_t   *c);
+   virtual   Int_t    ReadStaticArray(Short_t   *h);
+   virtual   Int_t    ReadStaticArray(UShort_t  *h);
+   virtual   Int_t    ReadStaticArray(Int_t     *i);
+   virtual   Int_t    ReadStaticArray(UInt_t    *i);
+   virtual   Int_t    ReadStaticArray(Long_t    *l);
+   virtual   Int_t    ReadStaticArray(ULong_t   *l);
+   virtual   Int_t    ReadStaticArray(Long64_t  *l);
+   virtual   Int_t    ReadStaticArray(ULong64_t *l);
+   virtual   Int_t    ReadStaticArray(Float_t   *f);
+   virtual   Int_t    ReadStaticArray(Double_t  *d);
+   virtual   Int_t    ReadStaticArrayDouble32(Double_t  *d);
+
+   virtual   void     ReadFastArray(Bool_t    *b, Int_t n);
+   virtual   void     ReadFastArray(Char_t    *c, Int_t n);
+   virtual   void     ReadFastArray(UChar_t   *c, Int_t n);
+   virtual   void     ReadFastArray(Short_t   *h, Int_t n);
+   virtual   void     ReadFastArray(UShort_t  *h, Int_t n);
+   virtual   void     ReadFastArray(Int_t     *i, Int_t n);
+   virtual   void     ReadFastArray(UInt_t    *i, Int_t n);
+   virtual   void     ReadFastArray(Long_t    *l, Int_t n);
+   virtual   void     ReadFastArray(ULong_t   *l, Int_t n);
+   virtual   void     ReadFastArray(Long64_t  *l, Int_t n);
+   virtual   void     ReadFastArray(ULong64_t *l, Int_t n);
+   virtual   void     ReadFastArray(Float_t   *f, Int_t n);
+   virtual   void     ReadFastArray(Double_t  *d, Int_t n);
+   virtual   void     ReadFastArrayDouble32(Double_t  *d, Int_t n);
+   virtual   void     ReadFastArray(void  *start , TClass *cl, Int_t n=1, TMemberStreamer *s=0);
+   virtual   void     ReadFastArray(void **startp, TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
+   
+   virtual   void     WriteArray(const Bool_t    *b, Int_t n);
+   virtual   void     WriteArray(const Char_t    *c, Int_t n);
+   virtual   void     WriteArray(const UChar_t   *c, Int_t n);
+   virtual   void     WriteArray(const Short_t   *h, Int_t n);
+   virtual   void     WriteArray(const UShort_t  *h, Int_t n);
+   virtual   void     WriteArray(const Int_t     *i, Int_t n);
+   virtual   void     WriteArray(const UInt_t    *i, Int_t n);
+   virtual   void     WriteArray(const Long_t    *l, Int_t n);
+   virtual   void     WriteArray(const ULong_t   *l, Int_t n);
+   virtual   void     WriteArray(const Long64_t  *l, Int_t n);
+   virtual   void     WriteArray(const ULong64_t *l, Int_t n);
+   virtual   void     WriteArray(const Float_t   *f, Int_t n);
+   virtual   void     WriteArray(const Double_t  *d, Int_t n);
+   virtual   void     WriteArrayDouble32(const Double_t  *d, Int_t n);
+
+   virtual   void     WriteFastArray(const Bool_t    *b, Int_t n);
+   virtual   void     WriteFastArray(const Char_t    *c, Int_t n);
+   virtual   void     WriteFastArray(const UChar_t   *c, Int_t n);
+   virtual   void     WriteFastArray(const Short_t   *h, Int_t n);
+   virtual   void     WriteFastArray(const UShort_t  *h, Int_t n);
+   virtual   void     WriteFastArray(const Int_t     *i, Int_t n);
+   virtual   void     WriteFastArray(const UInt_t    *i, Int_t n);
+   virtual   void     WriteFastArray(const Long_t    *l, Int_t n);
+   virtual   void     WriteFastArray(const ULong_t   *l, Int_t n);
+   virtual   void     WriteFastArray(const Long64_t  *l, Int_t n);
+   virtual   void     WriteFastArray(const ULong64_t *l, Int_t n);
+   virtual   void     WriteFastArray(const Float_t   *f, Int_t n);
+   virtual   void     WriteFastArray(const Double_t  *d, Int_t n);
+   virtual   void     WriteFastArrayDouble32(const Double_t  *d, Int_t n);
+   virtual   void     WriteFastArray(void  *start,  TClass *cl, Int_t n=1, TMemberStreamer *s=0);
+   virtual   Int_t    WriteFastArray(void **startp, TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
+
+   virtual   void     StreamObject(void *obj, const type_info &typeinfo);
+   virtual   void     StreamObject(void *obj, const char *className);
+   virtual   void     StreamObject(void *obj, TClass *cl);
+
+   virtual   TBuffer  &operator>>(Bool_t    &b);
+   virtual   TBuffer  &operator>>(Char_t    &c);
+   virtual   TBuffer  &operator>>(UChar_t   &c);
+   virtual   TBuffer  &operator>>(Short_t   &h);
+   virtual   TBuffer  &operator>>(UShort_t  &h);
+   virtual   TBuffer  &operator>>(Int_t     &i);
+   virtual   TBuffer  &operator>>(UInt_t    &i);
+   virtual   TBuffer  &operator>>(Long_t    &l);
+   virtual   TBuffer  &operator>>(ULong_t   &l);
+   virtual   TBuffer  &operator>>(Long64_t  &l);
+   virtual   TBuffer  &operator>>(ULong64_t &l);
+   virtual   TBuffer  &operator>>(Float_t   &f);
+   virtual   TBuffer  &operator>>(Double_t  &d);
+   virtual   TBuffer  &operator>>(Char_t    *c);
+
+   virtual   TBuffer  &operator<<(Bool_t    b);
+   virtual   TBuffer  &operator<<(Char_t    c);
+   virtual   TBuffer  &operator<<(UChar_t   c);
+   virtual   TBuffer  &operator<<(Short_t   h);
+   virtual   TBuffer  &operator<<(UShort_t  h);
+   virtual   TBuffer  &operator<<(Int_t     i);
+   virtual   TBuffer  &operator<<(UInt_t    i);
+   virtual   TBuffer  &operator<<(Long_t    l);
+   virtual   TBuffer  &operator<<(ULong_t   l);
+   virtual   TBuffer  &operator<<(Long64_t  l);
+   virtual   TBuffer  &operator<<(ULong64_t l);
+   virtual   TBuffer  &operator<<(Float_t   f);
+   virtual   TBuffer  &operator<<(Double_t  d);
+   virtual   TBuffer  &operator<<(const Char_t *c);
+#else
    Int_t    ReadArray(Bool_t    *&b);
    Int_t    ReadArray(Char_t    *&c);
    Int_t    ReadArray(UChar_t   *&c);
@@ -240,6 +386,10 @@ public:
    TBuffer  &operator<<(Float_t   f);
    TBuffer  &operator<<(Double_t  d);
    TBuffer  &operator<<(const Char_t *c);
+
+#endif
+
+   
 
    //friend TBuffer  &operator>>(TBuffer &b, TObject *&obj);
    //friend TBuffer  &operator>>(TBuffer &b, const TObject *&obj);
