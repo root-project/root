@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.94 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.95 2004/08/27 11:23:40 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -250,9 +250,12 @@ Int_t TChain::Add(const char *name, Long64_t nentries)
 }
 
 //______________________________________________________________________________
-Int_t TChain::AddFile(const char *name, Long64_t nentries)
+Int_t TChain::AddFile(const char *name, Long64_t nentries, const char *tname)
 {
 //       Add a new file to this chain.
+//       if tname is specified, the chain will load the tree named tname
+//       from the file, otherwise the original treename specified in the
+//       TChain constructor will be used.
 //
 //    A- if nentries <= 0, the file is connected and the tree header read
 //       in memory to get the number of entries.
@@ -277,7 +280,8 @@ Int_t TChain::AddFile(const char *name, Long64_t nentries)
 //       read to read the number of entries in each Tree.
 
    TDirectory *cursav = gDirectory;
-   char *treename = (char*)GetName();
+   const char *treename = GetName();
+   if (tname && strlen(tname) > 0) treename = tname;
    char *dot = (char*)strstr(name,".root");
    //the ".root" is mandatory only if one wants to specify a treename
    //if (!dot) {
