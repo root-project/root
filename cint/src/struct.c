@@ -657,8 +657,8 @@ int type;
 {
   int i ,len;
   char *p;
-  char temp[G__ONELINE];
-  char atom_tagname[G__ONELINE];
+  char temp[G__LONGLINE];
+  char atom_tagname[G__LONGLINE];
   /* int parent_tagnum; */
 #ifndef G__OLDIMPLEMENTATION1206
   int isstructdecl = isupper(type);
