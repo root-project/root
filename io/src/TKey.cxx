@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.39 2004/02/21 08:39:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.40 2004/05/10 12:09:17 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -511,8 +511,8 @@ void TKey::Print(Option_t *) const
 //______________________________________________________________________________
 TObject *TKey::ReadObj()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*To read an object from the file*-*-*-*-*-*-*-*-*
-//*-*                      ===============================
+// To read a TObject* from the file
+//
 //  The object associated to this key is read from the file into memory
 //  Once the key structure is read (via Streamer) the class identifier
 //  of the object is known.
@@ -521,6 +521,8 @@ TObject *TKey::ReadObj()
 //  associated class. In particular the TClass object can create a new
 //  object of the class type it describes. This new object now calls its
 //  Streamer function to rebuilt itself.
+//
+//  see TKey::ReadObjectAny to read any object non-derived from TObject
 //
 //  NOTE:
 //  In case the class of this object derives from TObject but not
@@ -537,6 +539,16 @@ TObject *TKey::ReadObj()
 //
 //  Of course, dynamic_cast<> can also be used in the example 1.
 
+   TClass *cl = gROOT->GetClass(fClassName.Data());
+   if (!cl) {
+       Error("ReadObj", "Unknown class %s", fClassName.Data());
+       return 0;
+   }
+   if (!cl->InheritsFrom(TObject::Class())) {
+      // in principle user should call TKey::ReadObjectAny!
+      return (TObject*)ReadObjectAny();
+   }
+   
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
    if (!fBufferRef) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
@@ -560,11 +572,6 @@ TObject *TKey::ReadObj()
    fBufferRef->SetBufferOffset(fKeylen);
    TObject *tobj = 0;
    TDirectory *cursav = gDirectory;
-   TClass *cl = gROOT->GetClass(fClassName.Data());
-   if (!cl) {
-       Error("ReadObj", "Unknown class %s", fClassName.Data());
-       return 0;
-   }
    // Create an instance of this class
 
    char *pobj = (char*)cl->New();
@@ -628,6 +635,92 @@ CLEAR:
    gDirectory = cursav;
 
    return tobj;
+}
+
+//______________________________________________________________________________
+void *TKey::ReadObjectAny()
+{
+// To read an object (non deriving from TObject)  from the file
+//
+//  The object associated to this key is read from the file into memory
+//  Once the key structure is read (via Streamer) the class identifier
+//  of the object is known.
+//  Using the class identifier we find the TClass object for this class.
+//  A TClass object contains a full description (i.e. dictionary) of the
+//  associated class. In particular the TClass object can create a new
+//  object of the class type it describes. This new object now calls its
+//  Streamer function to rebuilt itself.
+
+   fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
+   if (!fBufferRef) {
+      Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
+      return 0;
+   }
+   if (!gFile) return 0;
+   fBufferRef->SetParent(gFile);
+   if (fObjlen > fNbytes-fKeylen) {
+      fBuffer = new char[fNbytes];
+      ReadFile();                    //Read object structure from file
+      memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
+   } else {
+      fBuffer = fBufferRef->Buffer();
+      ReadFile();                    //Read object structure from file
+   }
+
+   // get version of key
+   fBufferRef->SetBufferOffset(sizeof(fNbytes));
+   fBufferRef->ReadVersion();
+
+   fBufferRef->SetBufferOffset(fKeylen);
+   TDirectory *cursav = gDirectory;
+   TClass *cl = gROOT->GetClass(fClassName.Data());
+   if (!cl) {
+       Error("ReadObjectAny", "Unknown class %s", fClassName.Data());
+       return 0;
+   }
+   // Create an instance of this class
+
+   void *pobj = cl->New();
+   if (!pobj) {
+      Error("ReadObjectAny", "Cannot create new object of class %s", fClassName.Data());
+      return 0;
+   }
+
+   if (fObjlen > fNbytes-fKeylen) {
+      char *objbuf = fBufferRef->Buffer() + fKeylen;
+      UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
+      Int_t nin, nout, nbuf;
+      Int_t noutot = 0;
+      while (1) {
+         nin  = 9 + ((Int_t)bufcur[3] | ((Int_t)bufcur[4] << 8) | ((Int_t)bufcur[5] << 16));
+         nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
+         R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
+         if (!nout) break;
+         noutot += nout;
+         if (noutot >= fObjlen) break;
+         bufcur += nin;
+         objbuf += nout;
+      }
+      if (nout) {
+         ((TClass*)cl)->Streamer((void*)pobj, *fBufferRef);    //read object
+         delete [] fBuffer;
+      } else {
+         delete [] fBuffer;
+         //delete pobj;  //sorry I will get a leak but I cannot delete a void*
+         pobj = 0;
+         goto CLEAR;
+      }
+   } else {
+      ((TClass*)cl)->Streamer((void*)pobj, *fBufferRef);    //read object
+   }
+
+   CLEAR:
+   delete fBufferRef;
+   fBufferRef = 0;
+   fBuffer    = 0;
+   gDirectory = cursav;
+
+   return pobj;
 }
 
 //______________________________________________________________________________
