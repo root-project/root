@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.1 2000/10/17 12:19:19 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -562,11 +562,16 @@ void TQObject::LowPriority(const char *signal_name, const char *slot_name)
 }
 
 //______________________________________________________________________________
-void  TQObject::Emit(const char *signal_name)
+void TQObject::Emit(const char *signal_name)
 {
    // Acitvate signal without args
    // Example:
    //          theButton->Emit("Clicked()");
+
+   TList *slist = GetListOfClassSignals();
+
+   if (!slist && !fListOfSignals)
+      return;
 
    gTQSender = GetSender();
    register TQConnectionList *clist  = 0;
@@ -575,8 +580,6 @@ void  TQObject::Emit(const char *signal_name)
    char *signal = CompressName(signal_name);
 
    // execute class signals
-   TList *slist = GetListOfClassSignals();
-
    if (slist) {
       TIter nextcl_list(slist);
       while ((clist = (TQConnectionList*)nextcl_list())) {
@@ -619,6 +622,11 @@ void TQObject::Emit(const char *signal_name, Long_t param)
    // Example:
    //          theButton->Emit("Clicked(int)",id)
 
+   TList *slist = GetListOfClassSignals();
+
+   if (!slist && !fListOfSignals)
+      return;
+
    gTQSender = GetSender();
    register TQConnectionList *clist  = 0;
    register TQConnection *connection = 0;
@@ -626,7 +634,6 @@ void TQObject::Emit(const char *signal_name, Long_t param)
    char *signal = CompressName(signal_name);
 
    // execute class signals
-   TList *slist = GetListOfClassSignals();
    if (slist) {
       TIter nextcl_list(slist);
       while ((clist = (TQConnectionList*)nextcl_list())) {
@@ -667,6 +674,11 @@ void TQObject::Emit(const char *signal_name, Double_t param)
 {
    // Activate signal with single parameter.
 
+   TList *slist = GetListOfClassSignals();
+
+   if (!slist && !fListOfSignals)
+      return;
+
    gTQSender = GetSender();
    register TQConnectionList *clist  = 0;
    register TQConnection *connection = 0;
@@ -674,7 +686,6 @@ void TQObject::Emit(const char *signal_name, Double_t param)
    char *signal = CompressName(signal_name);
 
    // execute class signals
-   TList *slist = GetListOfClassSignals();
    if (slist) {
       TIter nextcl_list(slist);
       while ((clist = (TQConnectionList*)nextcl_list())) {
@@ -718,6 +729,11 @@ void TQObject::Emit(const char *signal_name, const char *params)
    // Example:
    //          myObject->Emit("Error(char*)","Fatal error");
 
+   TList *slist = GetListOfClassSignals();
+
+   if (!slist && !fListOfSignals)
+      return;
+
    gTQSender = GetSender();
    register TQConnectionList *clist  = 0;
    register TQConnection *connection = 0;
@@ -725,7 +741,6 @@ void TQObject::Emit(const char *signal_name, const char *params)
    char *signal = CompressName(signal_name);
 
    // execute class signals
-   TList *slist = GetListOfClassSignals();
    if (slist) {
       TIter nextcl_list(slist);
       while ((clist = (TQConnectionList*)nextcl_list())) {
@@ -762,7 +777,7 @@ void TQObject::Emit(const char *signal_name, const char *params)
 }
 
 //______________________________________________________________________________
-void TQObject::Emit(const char* signal_name, Long_t *paramArr)
+void TQObject::Emit(const char *signal_name, Long_t *paramArr)
 {
    // Emit a signal with a varying number of arguments,
    // paramArr is an array of the parameters.
@@ -780,6 +795,11 @@ void TQObject::Emit(const char* signal_name, Long_t *paramArr)
    //
    //    processor->Emit("Evaluated(Float_t,Float_t)",args);
 
+   TList *slist = GetListOfClassSignals();
+
+   if (!slist && !fListOfSignals)
+      return;
+
    gTQSender = GetSender();
    register TQConnectionList *clist  = 0;
    register TQConnection *connection = 0;
@@ -787,8 +807,6 @@ void TQObject::Emit(const char* signal_name, Long_t *paramArr)
    char *signal = CompressName(signal_name);
 
    // execute class signals
-   TList *slist = GetListOfClassSignals();
-
    if (slist) {
       TIter nextcl_list(slist);
       while ((clist = (TQConnectionList*)nextcl_list())) {
@@ -847,7 +865,8 @@ Bool_t TQObject::ConnectToClass(TQObject *sender,
    if (!CheckConnectArgs(sender->IsA(), signal_name, cl, slot_name))
       return kFALSE;
 
-   if (!sender->fListOfSignals) sender->fListOfSignals = new TList();
+   if (!sender->fListOfSignals)
+      sender->fListOfSignals = new TList();
 
    TQConnectionList *clist=0;
    TIter next_list(sender->fListOfSignals);
@@ -914,9 +933,8 @@ Bool_t TQObject::ConnectToClass(const char *class_name,
 
    TQConnectionList *clist = 0;
 
-   if (!slist) {
+   if (!slist)
       ((TQClass*)sender)->fListOfSignals = slist = new TList();
-   }
 
    TIter next_list(slist);
    while ((clist = (TQConnectionList*)next_list())) {
@@ -998,13 +1016,12 @@ Bool_t TQObject::Connect(TQObject *sender,
    // e.g. interpreted class or function.
 
    // sender should be TQObject
-   if (!sender->IsA()->InheritsFrom(TQObject::Class())) {
+   if (!sender->IsA()->InheritsFrom(TQObject::Class()))
       return kFALSE;
-   }
 
    // remove "const" and strip blanks
-   char *signal_name  = CompressName(signal);
-   char *slot_name    = CompressName(slot);
+   char *signal_name = CompressName(signal);
+   char *slot_name   = CompressName(slot);
 
    // Warning! No check on consitency of signal/slot methods/args
 
@@ -1096,9 +1113,8 @@ Bool_t TQObject::Connect(const char *class_name,
    TClass *sender = gROOT->GetClass(class_name);
 
    // sender should be TQObject
-   if (!sender->InheritsFrom(TQObject::Class())) {
+   if (!sender->InheritsFrom(TQObject::Class()))
       return kFALSE;
-   }
 
    TList *slist = ((TQClass*)sender)->fListOfSignals;
 
