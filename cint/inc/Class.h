@@ -126,19 +126,29 @@ G__ClassInfo {
   int RootFlag();
   //void SetDefaultConstructor(void* p2f);
   enum MatchMode { ExactMatch=0, ConversionMatch=1 };
+  enum InheritanceMode { InThisScope=0, WithInheritance=1 };
   G__InterfaceMethod GetInterfaceMethod(const char *fname,const char *arg
 					,long* poffset
 					,MatchMode mode=ConversionMatch
+                                        ,InheritanceMode imode=WithInheritance
 					);
   G__MethodInfo GetMethod(const char *fname,const char *arg,long* poffset
-			  ,MatchMode mode=ConversionMatch);
+			  ,MatchMode mode=ConversionMatch
+                          ,InheritanceMode imode=WithInheritance
+                          );
   G__MethodInfo GetMethod(const char *fname,struct G__param* libp,long* poffset
-			  ,MatchMode mode=ConversionMatch);
+			  ,MatchMode mode=ConversionMatch
+                          ,InheritanceMode imode=WithInheritance
+                          );
 #ifndef G__OLDIMPLEMENTATION2059
   G__MethodInfo GetDefaultConstructor();
   G__MethodInfo GetCopyConstructor();
   G__MethodInfo GetDestructor();
   G__MethodInfo GetAssignOperator();
+#endif
+#ifndef G__OLDIMPLEMENTATION2076
+  G__MethodInfo AddMethod(const char* typenam,const char* fname,const char *arg
+                         ,int isstatic=0,int isvirtual=0);
 #endif
   G__DataMemberInfo GetDataMember(const char *name,long* poffset);
   int HasMethod(const char *fname);

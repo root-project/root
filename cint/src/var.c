@@ -888,16 +888,44 @@ int ig15;
 *
 **************************************************************************/
 int G__asm_gen_stvar(G__struct_offset,ig15,paran,var,item
-		     ,store_struct_offset,var_type)
+		     ,store_struct_offset,var_type
+#ifndef G__OLDIMPLEMENTATION2089
+		     ,presult
+#endif
+                     )
 long G__struct_offset;
 int ig15,paran;
 struct G__var_array *var;
 char *item;
 long store_struct_offset;
 int var_type;
+#ifndef G__OLDIMPLEMENTATION2089
+G__value *presult;
+#endif
 {
 #ifndef G__OLDIMPLEMENTATION1911
   if(0 && item) return 0;
+#endif
+#ifndef G__OLDIMPLEMENTATION2089
+  if(G__cintv6 &&
+     ('U'==var->type[ig15] || ('u'==var->type[ig15]&&
+                               G__PARAREFERENCE==var->reftype[ig15]))
+     && var->type[ig15]==presult->type
+     && -1!=var->p_tagtable[ig15] && -1!=presult->tagnum
+     && var->p_tagtable[ig15]!=presult->tagnum 
+     && -1!=G__ispublicbase(var->p_tagtable[ig15],presult->tagnum,(long)0)) {
+#ifdef G__ASM_DBG
+    if(G__asm_dbg&&G__asm_noverflow) {
+      G__fprinterr(G__serr,"%3x: CAST to %c\n",G__asm_cp,var->type[ig15]);
+    }
+#endif
+    G__asm_inst[G__asm_cp]=G__CAST;
+    G__asm_inst[G__asm_cp+1]=var->type[ig15];
+    G__asm_inst[G__asm_cp+2]=var->p_typetable[ig15];
+    G__asm_inst[G__asm_cp+3]=var->p_tagtable[ig15];
+    G__asm_inst[G__asm_cp+4]=(var->reftype[ig15]==G__PARAREFERENCE)?1:0;
+    G__inc_cp_asm(5,0);
+  }
 #endif
   /************************************
    * ST_GVAR or ST_VAR instruction
@@ -2541,7 +2569,11 @@ struct G__var_array *varglobal,*varlocal;
 #ifndef G__OLDIMPLEMENTATION1671
 	if(result.type) {
 	  G__asm_gen_stvar(G__struct_offset,ig15,paran,var,item
-			   ,store_struct_offset,G__var_type);
+			   ,store_struct_offset,G__var_type
+#ifndef G__OLDIMPLEMENTATION2089
+                           , &result
+#endif
+                           );
 	}
 	else if('u'==G__var_type) {
 	  G__ASSERT(0==G__decl || 1==G__decl);
@@ -2560,7 +2592,11 @@ struct G__var_array *varglobal,*varlocal;
 	}
 #else
 	G__asm_gen_stvar(G__struct_offset,ig15,paran,var,item
-			 ,store_struct_offset,G__var_type);
+			 ,store_struct_offset,G__var_type
+#ifndef G__OLDIMPLEMENTATION2089
+			 , &result
+#endif
+                         );
 #endif
       }
     }
@@ -5414,7 +5450,11 @@ long G__struct_offset; /* used to be int */
 	G__oprovld=0;
 	if(G__asm_wholefunction && 0==ig2) {
 	  G__asm_gen_stvar(G__struct_offset,ig15,paran,var,item
-			   ,G__ASM_VARLOCAL,G__var_type);
+			   ,G__ASM_VARLOCAL,G__var_type
+#ifndef G__OLDIMPLEMENTATION2089
+                           ,result
+#endif
+                           );
 	}
 #endif
 	G__decl=1;
@@ -6544,6 +6584,17 @@ int parameter00;
   
   
   if(paran>0) {
+
+#ifndef G__OLDIMPLEMENTATION2093
+    if(paran>=G__MAXVARDIM) {
+      G__fprinterr(G__serr
+                  ,"Limitation: Cint can handle only upto %d dimention array"
+                  ,G__MAXVARDIM-1);
+      G__genericerror((char*)NULL);
+      return(result);
+    }
+#endif
+
     /************************************************************
      * In case of 'func(type a[][B][C][D],type b[A][B][C])' 
      * and ANSI style function parameter and runtime
@@ -6809,7 +6860,11 @@ int parameter00;
 	G__inc_cp_asm(5,0);
       }
       else {
-	G__asm_gen_stvar(0,ig15,paran,var,item,G__ASM_VARLOCAL,'p');
+	G__asm_gen_stvar(0,ig15,paran,var,item,G__ASM_VARLOCAL,'p'
+#ifndef G__OLDIMPLEMENTATION2089
+	                , &result
+#endif
+                        );
       }
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POP\n",G__asm_cp);
@@ -6819,7 +6874,11 @@ int parameter00;
     }
     else if(result.type && !G__static_alloc) {
       /* normal object */
-      G__asm_gen_stvar(0,ig15,paran,var,item,G__ASM_VARLOCAL,'p');
+      G__asm_gen_stvar(0,ig15,paran,var,item,G__ASM_VARLOCAL,'p'
+#ifndef G__OLDIMPLEMENTATION2089
+	              , &result
+#endif
+                      );
     }
 #ifndef G__OLDIMPLEMENTATION1073 /* 1073 is disabled */
     else if('u'==G__var_type && G__PARAREFERENCE!=G__reftype &&
@@ -6870,7 +6929,11 @@ int parameter00;
 #endif /* G__ASM_WHOLEFUNC */
      ) {
     if(result.type) {
-      G__asm_gen_stvar(0,ig15,paran,var,item,0,'p');
+      G__asm_gen_stvar(0,ig15,paran,var,item,0,'p'
+#ifndef G__OLDIMPLEMENTATION2089
+                      , &result
+#endif
+                      );
     }
     else if('u'==G__var_type) {
       G__ASSERT(0==G__decl || 1==G__decl);
@@ -7420,7 +7483,12 @@ struct G__var_array *varglobal,*varlocal;
       }
     }
     else {
+#ifndef G__OLDIMPLEMENTATION2098
+      if(G__decl) accesslimit = G__PUBLIC_PROTECTED_PRIVATE ;
+      else        accesslimit = G__PUBLIC;
+#else
       accesslimit = G__PUBLIC;
+#endif
       isbase=0;
       basen=0;
     }

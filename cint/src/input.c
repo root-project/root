@@ -66,6 +66,9 @@ char *string;
 #else
   char tname[L_tmpnam+10];
 #endif
+#ifndef G__OLDIMPLEMENTATION2092
+  int istmpnam=0;
+#endif
   
   static char prevstring[G__LONGLINE];
   static char histfile[G__ONELINE];
@@ -123,7 +126,14 @@ char *string;
    ********************************************************/
   fp=fopen(histfile,"r");
   do {
-#ifndef G__OLDIMPLEMENTATION1918
+#if !defined(G__OLDIMPLEMENTATION2092)
+    tmp=tmpfile();
+    if(!tmp) {
+      G__tmpnam(tname); /* not used anymore */
+      tmp=fopen(tname,"w");
+      istmpnam=1;
+    }
+#elif !defined(G__OLDIMPLEMENTATION1918)
     tmp=tmpfile();
 #else
     G__tmpnam(tname); /* not used anymore */
@@ -140,7 +150,14 @@ char *string;
 #endif
     }
   }
-#ifndef G__OLDIMPLEMENTATION1918
+#if !defined(G__OLDIMPLEMENTATION2092)
+  if(!istmpnam) {
+    if(tmp) fseek(tmp,0L,SEEK_SET);
+  }
+  else {
+    if(tmp) fclose(tmp);
+  }
+#elif !defined(G__OLDIMPLEMENTATION1918)
   if(tmp) fseek(tmp,0L,SEEK_SET);
 #else
   if(tmp) fclose(tmp);
@@ -149,7 +166,10 @@ char *string;
   
   /* copy back to history file */
   fp=fopen(histfile,"w");
-#ifdef G__OLDIMPLEMENTATION1918
+#if !defined(G__OLDIMPLEMENTATION2092)
+  if(istmpnam) tmp=fopen(tname,"r");
+#elif !defined(G__OLDIMPLEMENTATION1918)
+#else
   tmp=fopen(tname,"r");
 #endif
   if(tmp&&fp) {
@@ -159,7 +179,10 @@ char *string;
   }
   if(tmp) fclose(tmp);
   if(fp) fclose(fp);
-#ifdef G__OLDIMPLEMENTATION1918
+#if !defined(G__OLDIMPLEMENTATION2092)
+  if(istmpnam) remove(tname);
+#elif !defined(G__OLDIMPLEMENTATION1918)
+#else
   remove(tname);
 #endif
 }

@@ -2630,7 +2630,7 @@ struct G__param *libp;
 	}
 
 	if(strcmp(funcname,"strlen")==0) {
-		sprintf(result7,"%d",strlen(libp->para[0]));
+		sprintf(result7,"%ld",(long)strlen(libp->para[0]));
 		return(1);
 	}
 

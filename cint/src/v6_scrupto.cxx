@@ -521,6 +521,9 @@ int tagnum;
 #ifdef G__MEMTEST
     fprintf(G__memhist,"struct %s\n",G__struct.name[G__struct.alltag]);
 #endif
+#ifndef G__OLDIMPLEMENTATION2084
+    G__bc_delete_vtbl(G__struct.alltag);    
+#endif
 #ifdef G__ROOTSPECIAL
     if(G__struct.rootspecial[G__struct.alltag]) {
       free((void*)G__struct.rootspecial[G__struct.alltag]);

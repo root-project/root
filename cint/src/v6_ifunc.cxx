@@ -7,7 +7,7 @@
  * Description:
  *  interpret function and new style compiled function
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -495,6 +495,7 @@ int hash; /* not used */
 
   return(0);
 }
+
 
 #ifndef G__OLDIMPLEMENTATION523
 /***********************************************************************
@@ -1091,58 +1092,57 @@ char *funcheader;   /* funcheader = 'funcname(' */
 #else
     strcpy(G__p_ifunc->funcname[func_now],funcheader);
 #endif
-
-#ifndef G__OLDIMPLEMENTATION_CONTRIB_1
-    if(  (strstr(funcheader,">>")!=NULL && strchr(funcheader,'<')!=NULL)
+#ifndef G__OLDIMPLEMENTATION2090
+    if((strstr(funcheader,">>")!=NULL && strchr(funcheader,'<')!=NULL)
        ||(strstr(funcheader,"<<")!=NULL && strchr(funcheader,'>')!=NULL) ) {
 
-       int maxpt2 = strlen(G__p_ifunc->funcname[func_now])+20; /* allow 20 extra spaces */
-       char *pt2 = (char*)malloc(maxpt2);
-       strcpy(pt2,G__p_ifunc->funcname[func_now]);
-       free((void*)(G__p_ifunc->funcname[func_now]));
-       G__p_ifunc->funcname[func_now] = pt2;
+      int maxpt2 = strlen(G__p_ifunc->funcname[func_now])+20; /* allow 20 extra spaces */
+      char *pt2 = (char*)malloc(maxpt2);
+      strcpy(pt2,G__p_ifunc->funcname[func_now]);
+      free((void*)(G__p_ifunc->funcname[func_now]));
+      G__p_ifunc->funcname[func_now] = pt2;
 
-       if ((char*)NULL!=strstr(funcheader,"operator<<") &&
-           (char*)NULL!=strchr(funcheader,'>') ) { 
-          /* we might have operator< <> or operator< <double> 
-             or operator<< <> or operator<< <double>
-             with the space missing */
-          pt2 = pt2 + strlen( "operator<" );
-          pt1 = funcheader + strlen( "operator<" );
-          /*char *pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );*/
-          if ( *(pt2+1)=='<' ) {
-             /* we have operator<< <...> */
-             ++pt2;
-             ++pt1;
-          }
-          *pt2 = ' ';
+      if((char*)NULL!=strstr(funcheader,"operator<<") &&
+         (char*)NULL!=strchr(funcheader,'>') ) { 
+        /* we might have operator< <> or operator< <double> 
+          or operator<< <> or operator<< <double>
+          with the space missing */
+        pt2 = pt2 + strlen( "operator<" );
+        pt1 = funcheader + strlen( "operator<" );
+        /*char *pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );*/
+        if( *(pt2+1)=='<' ) {
+          /* we have operator<< <...> */
           ++pt2;
-          strcpy(pt2,pt1);
-       } 
-       else if ((char*)NULL!=strstr(pt2,"operator>>") &&
-                (char*)NULL!=strchr(pt2,'<') ) {
-          /* we might have operator>><>  */
-          /* we have nothing to do ... yet (we may have to do something 
-             for nested templates */
-          pt2 = pt2 + strlen("operator>>");
-          pt1 = funcheader + strlen( "operator>>" );
-       } else {
-          pt1 = funcheader;
-       }
-       while ((char*)NULL!=(pt1=strstr(pt1,">>"))) {
-          /* && (char*)NULL!=strchr(funcheader,'<') */
-          char *pt3;
-          pt3 = strstr(pt2,">>");
-          ++pt3;
-          *pt3 = ' ';
-          ++pt3;
           ++pt1;
-          pt2 = pt3;
-          strcpy(pt3,pt1);
-       }
+        }
+        *pt2 = ' ';
+        ++pt2;
+        strcpy(pt2,pt1);
+      } 
+      else if((char*)NULL!=strstr(pt2,"operator>>") &&
+              (char*)NULL!=strchr(pt2,'<') ) {
+        /* we might have operator>><>  */
+        /* we have nothing to do ... yet (we may have to do something 
+           for nested templates */
+        pt2 = pt2 + strlen("operator>>");
+        pt1 = funcheader + strlen( "operator>>" );
+      } 
+      else {
+        pt1 = funcheader;
+      }
+      while ((char*)NULL!=(pt1=strstr(pt1,">>"))) {
+        char *pt3;
+        pt3 = strstr(pt2,">>");
+        ++pt3;
+        *pt3 = ' ';
+        ++pt3;
+        ++pt1;
+        pt2 = pt3;
+        strcpy(pt3,pt1);
+      }
     }
   }
-#else  /* G__OLDIMPLEMENTATION_CONTRIB_1 */
+#else /* 2090 */
     if((char*)NULL!=(pt1=strstr(funcheader,">>")) && 
        (char*)NULL!=strchr(funcheader,'<')) {
       char *pt2;
@@ -1199,14 +1199,14 @@ char *funcheader;   /* funcheader = 'funcname(' */
           /* we have operator< <...> */
           ++pt2;
        }
-#endif  
+#endif
        *pt2 = ' ';
        ++pt2;
        strcpy(pt2,pt1);        
      }
 #endif
   }
-#endif /*  G__OLDIMPLEMENTATION_CONTRIB_1 */
+#endif /* 2090 */
   G__p_ifunc->funcname[func_now][strlen(G__p_ifunc->funcname[func_now])-1]
     ='\0';
 
@@ -1402,11 +1402,23 @@ char *funcheader;   /* funcheader = 'funcname(' */
   }
   G__virtual=0; /* this position is not very best */
 
+
 #ifdef G__FONS_COMMENT
   G__p_ifunc->comment[func_now].p.com = (char*)NULL;
   G__p_ifunc->comment[func_now].filenum = -1;
 #endif
   
+#ifndef G__OLDIMPLEMENTATION2073
+  /*************************************************************
+   * initialize virtual table index
+   *  TODO, may need to this this in other places too, need investigation
+   *************************************************************/
+  G__p_ifunc->vtblindex[func_now] = -1;
+#endif
+#ifndef G__OLDIMPLEMENTATION2084
+  G__p_ifunc->vtblbasetagnum[func_now] = -1;
+#endif
+
   /*************************************************************
    * initialize busy flag
    *************************************************************/
@@ -2297,12 +2309,8 @@ char *funcheader;   /* funcheader = 'funcname(' */
        && 0==G__def_struct_member
 #endif
        ) {
-      if(ifunc) {
-	G__compile_bytecode(ifunc,iexist);
-      }
-      else {
-	G__compile_bytecode(G__p_ifunc,func_now);
-      }
+      if(ifunc) G__compile_bytecode(ifunc,iexist);
+      else G__compile_bytecode(G__p_ifunc,func_now);
     }
 #endif
   }
@@ -6643,6 +6651,50 @@ asm_ifunc_start:   /* loop compilation execution label */
    * create bytecode instruction for calling interpreted function
    *******************************************************************/
   if(G__asm_noverflow) {
+#ifndef G__OLDIMPLEMENTATION2074
+    if(G__cintv6) {
+      if(p_ifunc->isvirtual[ifn] && !G__fixedscope) {
+#ifdef G__ASM_DBG
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD_FUNC virtual %s paran=%d\n"
+			       ,G__asm_cp,funcname,libp->paran);
+#endif
+        G__asm_inst[G__asm_cp]=G__LD_FUNC;
+        G__asm_inst[G__asm_cp+1]=p_ifunc->tagnum;
+        G__asm_inst[G__asm_cp+2]=(p_ifunc->vtblindex[ifn]&0xffff)
+                                 +(p_ifunc->vtblbasetagnum[ifn]*0x10000);
+        G__asm_inst[G__asm_cp+3]=libp->paran;
+        G__asm_inst[G__asm_cp+4]=(long)G__bc_exec_virtual_bytecode;
+        G__inc_cp_asm(5,0);
+      }
+      else {
+#ifdef G__ASM_DBG
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD_FUNC %s paran=%d\n"
+			       ,G__asm_cp,funcname,libp->paran);
+#endif
+        G__asm_inst[G__asm_cp]=G__LD_FUNC;
+        G__asm_inst[G__asm_cp+1]=(long)p_ifunc;
+        G__asm_inst[G__asm_cp+2]=ifn;
+        G__asm_inst[G__asm_cp+3]=libp->paran;
+        G__asm_inst[G__asm_cp+4]=(long)G__bc_exec_normal_bytecode;
+        G__inc_cp_asm(5,0);
+      }
+    }
+    else {
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD_IFUNC %s paran=%d\n"
+			     ,G__asm_cp,funcname,libp->paran);
+#endif
+      G__asm_inst[G__asm_cp]=G__LD_IFUNC;
+      G__asm_inst[G__asm_cp+1]=(long)p_ifunc->funcname[ifn];
+      G__asm_inst[G__asm_cp+2]=hash;
+      G__asm_inst[G__asm_cp+3]=libp->paran;
+      G__asm_inst[G__asm_cp+4]=(long)p_ifunc;
+      G__asm_inst[G__asm_cp+5]=(long)funcmatch;
+      G__asm_inst[G__asm_cp+6]=(long)memfunc_flag;
+      G__asm_inst[G__asm_cp+7]=(long)ifn;
+      G__inc_cp_asm(8,0);
+    }
+#else /* 2074 */
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD_IFUNC %s paran=%d\n"
 			   ,G__asm_cp,funcname,libp->paran);
@@ -6656,6 +6708,7 @@ asm_ifunc_start:   /* loop compilation execution label */
     G__asm_inst[G__asm_cp+6]=(long)memfunc_flag;
     G__asm_inst[G__asm_cp+7]=(long)ifn;
     G__inc_cp_asm(8,0);
+#endif /* 2074 */
     if(G__store_struct_offset && G__store_struct_offset!=store_inherit_offset){
 #ifdef G__ASM_DBG
       if(G__asm_dbg) 
@@ -6808,6 +6861,11 @@ asm_ifunc_start:   /* loop compilation execution label */
   }
 #endif /* ON891 */
 
+#ifndef G__OLDIMPLEMENTATION2067
+  if(G__cintv6 && G__BYTECODE_NOTYET==p_ifunc->pentry[ifn]->bytecodestatus) {
+    G__bc_compile_function(p_ifunc,ifn);
+  }
+#endif
 
 #ifdef G__ASM
 #ifdef G__ASM_WHOLEFUNC
@@ -8517,7 +8575,11 @@ int funcmatch;
 **************************************************************************/
 struct G__ifunc_table *G__get_ifunchandle_base(funcname,libp,hash,p_ifunc,pifn
 					       ,poffset
-					       ,access,funcmatch)
+					       ,access,funcmatch
+#ifndef G__OLDIMPLEMENTATION2079
+                                               ,withInheritance
+#endif
+                                               )
 char *funcname;
 struct G__param *libp;
 int hash;
@@ -8526,6 +8588,9 @@ long *pifn;
 long *poffset;
 int access;
 int funcmatch;
+#ifndef G__OLDIMPLEMENTATION2079
+int withInheritance;
+#endif
 {
   int tagnum;
   struct G__ifunc_table *ifunc;
@@ -8535,7 +8600,11 @@ int funcmatch;
   /* Search for function */
   *poffset = 0;
   ifunc=G__get_ifunchandle(funcname,libp,hash,p_ifunc,pifn,access,funcmatch);
+#ifndef G__OLDIMPLEMENTATION2079
+  if(ifunc || !withInheritance) return(ifunc);
+#else
   if(ifunc) return(ifunc);
+#endif
 
   /* Search for base class function if member function */
   tagnum = p_ifunc->tagnum;
@@ -8597,6 +8666,9 @@ struct G__ifunc_table *G__get_methodhandle(funcname,argtype,p_ifunc
 #ifndef G__OLDIMPLEMENTATION1989
 					   ,withConversion
 #endif
+#ifndef G__OLDIMPLEMENTATION2079
+					   ,withInheritance
+#endif
 					   )
 char *funcname;
 char *argtype;
@@ -8605,6 +8677,9 @@ long *pifn;
 long *poffset;
 #ifndef G__OLDIMPLEMENTATION1989
 int withConversion;
+#endif
+#ifndef G__OLDIMPLEMENTATION2079
+int withInheritance;
 #endif
 {
 #ifdef G__OLDIMPLEMENTATION1928
@@ -8651,7 +8726,11 @@ int withConversion;
 			     ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
    *poffset = 0;
    *pifn = ifn;
+#ifndef G__OLDIMPLEMENTATION2079
+   if(ifunc || !withInheritance) return(ifunc);
+#else
    if(ifunc) return(ifunc);
+#endif
    if(-1!=tagnum) {
      int basen=0;
      struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
@@ -8675,7 +8754,11 @@ int withConversion;
 #ifndef G__OLDIMPLEMENTATION1313
    /* first, search for exact match */
    ifunc=G__get_ifunchandle_base(funcname,&para,hash,p_ifunc,pifn,poffset
-				 ,G__PUBLIC_PROTECTED_PRIVATE,G__EXACT);
+				 ,G__PUBLIC_PROTECTED_PRIVATE,G__EXACT
+#ifndef G__OLDIMPLEMENTATION2079
+                                 ,withInheritance
+#endif
+                                 );
    if(ifunc) return(ifunc);
    
    /* if no exact match, try to instantiate template function */
@@ -8696,7 +8779,11 @@ int withConversion;
 #else
 				   ,G__PUBLIC
 #endif
-				   ,match);
+				   ,match
+#ifndef G__OLDIMPLEMENTATION2079
+                                   ,withInheritance
+#endif
+                                   );
      if(ifunc) return(ifunc);
    }
  }
@@ -8740,7 +8827,11 @@ int withConversion;
 #ifndef G__OLDIMPLEMENTATION1313
   /* first, search for exact match */
   ifunc=G__get_ifunchandle_base(funcname,&para,hash,p_ifunc,pifn,poffset
-				,G__PUBLIC_PROTECTED_PRIVATE,G__EXACT);
+				,G__PUBLIC_PROTECTED_PRIVATE,G__EXACT
+#ifndef G__OLDIMPLEMENTATION2079
+                                ,withInheritance
+#endif
+                                );
   if(ifunc) return(ifunc);
 
   /* if no exact match, try to instantiate template function */
@@ -8761,7 +8852,11 @@ int withConversion;
 #else
 				  ,G__PUBLIC
 #endif
-				  ,match);
+				  ,match
+#ifndef G__OLDIMPLEMENTATION2079
+                                  ,withInheritance
+#endif
+                                  );
     if(ifunc) return(ifunc);
   }
 #endif /* 1928 */
@@ -8780,6 +8875,9 @@ struct G__ifunc_table *G__get_methodhandle2(funcname,libp,p_ifunc
 #ifndef G__OLDIMPLEMENTATION1989
 					   ,withConversion
 #endif
+#ifndef G__OLDIMPLEMENTATION2079
+					   ,withInheritance
+#endif
 					   )
 char *funcname;
 struct G__param *libp;
@@ -8788,6 +8886,9 @@ long *pifn;
 long *poffset;
 #ifndef G__OLDIMPLEMENTATION1989
 int withConversion;
+#endif
+#ifndef G__OLDIMPLEMENTATION2079
+int withInheritance;
 #endif
 {
 #ifdef G__OLDIMPLEMENTATION1928
@@ -8832,7 +8933,11 @@ int withConversion;
 			     ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
    *poffset = 0;
    *pifn = ifn;
+#ifndef G__OLDIMPLEMENTATION2079
+   if(ifunc || !withInheritance) return(ifunc);
+#else
    if(ifunc) return(ifunc);
+#endif
    if(-1!=tagnum) {
      int basen=0;
      struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
@@ -8856,7 +8961,11 @@ int withConversion;
 #ifndef G__OLDIMPLEMENTATION1313
    /* first, search for exact match */
    ifunc=G__get_ifunchandle_base(funcname,libp,hash,p_ifunc,pifn,poffset
-				 ,G__PUBLIC_PROTECTED_PRIVATE,G__EXACT);
+				 ,G__PUBLIC_PROTECTED_PRIVATE,G__EXACT
+#ifndef G__OLDIMPLEMENTATION2079
+                                 ,withInheritance
+#endif
+                                 );
    if(ifunc) return(ifunc);
    
    /* if no exact match, try to instantiate template function */
@@ -8877,7 +8986,11 @@ int withConversion;
 #else
 				   ,G__PUBLIC
 #endif
-				   ,match);
+				   ,match
+#ifndef G__OLDIMPLEMENTATION2079
+                                   ,withInheritance
+#endif
+                                   );
      if(ifunc) return(ifunc);
    }
  }
@@ -8897,7 +9010,11 @@ int withConversion;
 			     ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
    *poffset = 0;
    *pifn = ifn;
+#ifndef G__OLDIMPLEMENTATION2079
+   if(ifunc || !withInheritance) return(ifunc);
+#else
    if(ifunc) return(ifunc);
+#endif
    if(-1!=tagnum) {
      int basen=0;
      struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
@@ -8921,7 +9038,11 @@ int withConversion;
 #ifndef G__OLDIMPLEMENTATION1313
   /* first, search for exact match */
   ifunc=G__get_ifunchandle_base(funcname,libp,hash,p_ifunc,pifn,poffset
-				,G__PUBLIC_PROTECTED_PRIVATE,G__EXACT);
+				,G__PUBLIC_PROTECTED_PRIVATE,G__EXACT
+#ifndef G__OLDIMPLEMENTATION2079
+                                ,withInheritance
+#endif
+                                );
   if(ifunc) return(ifunc);
 
   /* if no exact match, try to instantiate template function */
@@ -8942,7 +9063,11 @@ int withConversion;
 #else
 				  ,G__PUBLIC
 #endif
-				  ,match);
+				  ,match
+#ifndef G__OLDIMPLEMENTATION2079
+                                  ,withInheritance
+#endif
+                                  );
     if(ifunc) return(ifunc);
   }
 #endif /* 1928 */

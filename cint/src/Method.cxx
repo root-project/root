@@ -304,6 +304,10 @@ struct G__bytecodefunc *G__MethodInfo::GetBytecode()
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
+#ifndef G__OLDIMPLEMENTATION2082
+    int store_asm_loopcompile = G__asm_loopcompile;
+    G__asm_loopcompile = 4;
+#endif
     if(!ifunc->pentry[index]->bytecode &&
 #ifndef G__OLDIMPLEMENTATION2012
        -1!=ifunc->pentry[index]->size && 
@@ -317,6 +321,9 @@ struct G__bytecodefunc *G__MethodInfo::GetBytecode()
        ) {
       G__compile_bytecode(ifunc,(int)index);
     }
+#ifndef G__OLDIMPLEMENTATION2082
+    G__asm_loopcompile = store_asm_loopcompile;
+#endif
     return(ifunc->pentry[index]->bytecode);
   }
   else {
@@ -848,5 +855,36 @@ extern "C" int G__ForceBytecodecompilation(char *funcname,char *param)
     G__printlinenum();
     return(1);
   }
+}
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2073
+///////////////////////////////////////////////////////////////////////////
+// SetVtblIndex
+///////////////////////////////////////////////////////////////////////////
+void G__MethodInfo::SetVtblIndex(int vtblindex) {
+  if(!IsValid()) return;
+  struct G__ifunc_table* ifunc = (struct G__ifunc_table*)handle;
+  ifunc->vtblindex[index] = (short)vtblindex;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// SetIsVirtual
+///////////////////////////////////////////////////////////////////////////
+void G__MethodInfo::SetIsVirtual(int isvirtual) {
+  if(!IsValid()) return;
+  struct G__ifunc_table* ifunc = (struct G__ifunc_table*)handle;
+  ifunc->isvirtual[index] = isvirtual;
+}
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2073
+///////////////////////////////////////////////////////////////////////////
+// SetVtblBasetagnum
+///////////////////////////////////////////////////////////////////////////
+void G__MethodInfo::SetVtblBasetagnum(int basetagnum) {
+  if(!IsValid()) return;
+  struct G__ifunc_table* ifunc = (struct G__ifunc_table*)handle;
+  ifunc->vtblbasetagnum[index] = (short)basetagnum;
 }
 #endif

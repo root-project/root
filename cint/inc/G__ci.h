@@ -22,11 +22,11 @@
 #define G__CI_H
 
 #ifdef G__CINT_VER6
-#define G__CINTVERSION      6000002
-#define G__CINTVERSIONSTR  "6.0.2, May 23 2004"
+#define G__CINTVERSION      6000009
+#define G__CINTVERSIONSTR  "6.0.9, July 19 2004"
 #else
-#define G__CINTVERSION      50150138
-#define G__CINTVERSIONSTR  "5.15.138, May 23 2004"
+#define G__CINTVERSION      50150145
+#define G__CINTVERSIONSTR  "5.15.145, July 19 2004"
 #endif
 
 #define G__ALWAYS
@@ -36,6 +36,14 @@
 **********************************************************************/
 
 #ifndef G__CINT_VER6
+#define G__OLDIMPLEMENTATION2089
+#define G__OLDIMPLEMENTATION2087
+#define G__OLDIMPLEMENTATION2084
+#define G__OLDIMPLEMENTATION2075
+#define G__OLDIMPLEMENTATION2074
+#define G__OLDIMPLEMENTATION2073
+#define G__OLDIMPLEMENTATION2067
+#define G__OLDIMPLEMENTATION2066
 #define G__OLDIMPLEMENTATION2062
 #define G__OLDIMPLEMENTATION2058
 /* #define G__OLDIMPLEMENTATION2057 */
@@ -1164,6 +1172,12 @@ struct G__ifunc_table {
 #ifdef G__ROOTSPECIAL
   void* userparam[G__MAXIFUNC]; /* user parameter array */
 #endif
+#ifndef G__OLDIMPLEMENTATION2073
+  short vtblindex[G__MAXIFUNC]; 
+#endif
+#ifndef G__OLDIMPLEMENTATION2084
+  short vtblbasetagnum[G__MAXIFUNC];
+#endif
 };
 
 
@@ -1249,6 +1263,12 @@ struct G__ifunc_table_VMS {
 #endif
 #ifdef G__ROOTSPECIAL
   void* userparam[G__MAXIFUNC];  /* user parameter array */
+#endif
+#ifndef G__OLDIMPLEMENTATION2073
+  short vtblindex[G__MAXIFUNC]; 
+#endif
+#ifndef G__OLDIMPLEMENTATION2084
+  short vtblbasetagnum[G__MAXIFUNC];
 #endif
 };
 #endif
@@ -1461,6 +1481,10 @@ struct G__tagtable {
 #ifndef G__OLDIMPLEMENTATION2014
   char* libname[G__MAXSTRUCT];
 #endif
+#ifndef G__OLDIMPLEMENTATION2073
+  void* vtable[G__MAXSTRUCT];
+  /* short vtabledepth[G__MAXSTRUCT]; */
+#endif
 };
 
 /**************************************************************************
@@ -1655,7 +1679,19 @@ extern int G__del_alloctable G__P((void* allocmem));
 extern int G__add_refcount G__P((void* allocedmem,void** storedmem));
 extern int G__del_refcount G__P((void* allocedmem,void** storedmem));
 extern int G__disp_garbagecollection G__P((FILE* fout));
-#ifndef G__OLDIMPLEMENTATION1989
+#if !defined(G__OLDIMPLEMENTATION2079)
+struct G__ifunc_table *G__get_methodhandle G__P((char *funcname,char *argtype
+					   ,struct G__ifunc_table *p_ifunc
+					   ,long *pifn,long *poffset
+					   ,int withConversion
+                                           ,int withInheritance));
+struct G__ifunc_table *G__get_methodhandle2 G__P((char *funcname
+					   ,struct G__param* libp
+					   ,struct G__ifunc_table *p_ifunc
+					   ,long *pifn,long *poffset
+					   ,int withConversion
+                                           ,int withInheritance));
+#elif !defined(G__OLDIMPLEMENTATION1989)
 struct G__ifunc_table *G__get_methodhandle G__P((char *funcname,char *argtype
 					   ,struct G__ifunc_table *p_ifunc
 					   ,long *pifn,long *poffset
@@ -1852,6 +1888,8 @@ extern G__EXPORT void G__set_autoloading G__P((int (*p2f) G__P((char*))));
 #ifndef G__OLDIMPLEMENTATION2014
 extern G__EXPORT void G__set_class_autoloading_callback G__P((int (*p2f) G__P((char*,char*))));
 extern G__EXPORT void G__set_class_autoloading_table G__P((char* classname,char* libname));
+#endif
+#ifndef G__OLDIMPLEMENTATION2097
 extern G__EXPORT int G__set_class_autoloading G__P((int newvalue));
 #endif
 

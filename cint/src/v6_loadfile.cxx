@@ -1651,8 +1651,22 @@ char *filenamein;
     }
     else {
       G__ifile.fp = G__copytotmpfile(prepname);
+#ifndef G__OLDIMPLEMENTATION2092
+      if(G__ifile.fp) {
+        remove(prepname);
+        strcpy(prepname,"(tmpfile)");
+      }
+      else {
+#ifndef G__WIN32
+        G__ifile.fp = fopen(prepname,"r");
+#else /* G__WIN32 */
+        G__ifile.fp = fopen(prepname,"rb");
+#endif /* G__WIN32 */
+      }
+#else /* 2092 */
       remove(prepname);
       strcpy(prepname,"(tmpfile)");
+#endif /* 2092 */
     }
 #else /* 1922 */
     G__ifile.fp = G__copytotmpfile(prepname);
@@ -2802,6 +2816,8 @@ FILE *to,*from;
 #ifdef G__TMPFILE
 static char G__tmpdir[G__MAXFILENAME];
 static char G__mfpname[G__MAXFILENAME];
+#elif !defined(G__OLDIMPLEMENTATION2092)
+static char G__mfpname[G__MAXFILENAME];
 #endif
 
 
@@ -2887,13 +2903,28 @@ char *name;
 #endif
 }
 
+#ifndef G__OLDIMPLEMENTATION2092
+static int G__istmpnam=0;
+#endif
+
 /**************************************************************************
 * G__openmfp()
 **************************************************************************/
 void G__openmfp()
 {
 #ifndef G__TMPFILE
+#ifndef G__OLDIMPLEMENTATION2092
   G__mfp=tmpfile();
+  if(!G__mfp) {
+    do {
+      G__tmpnam(G__mfpname); /* Only VC++ uses this */
+      G__mfp=fopen(G__mfpname,"wb+");
+    } while((FILE*)NULL==G__mfp && G__setTMPDIR(G__mfpname));
+    G__istmpnam=1;
+  }
+#else
+  G__mfp=tmpfile();
+#endif
 #else
   do {
     G__tmpnam(G__mfpname); /* Only VC++ uses this */
@@ -2909,8 +2940,22 @@ int G__closemfp()
 {
 #ifndef G__TMPFILE
   int result=0;
+#ifndef G__OLDIMPLEMENTATION2092
+  if(!G__istmpnam) {
+    if(G__mfp) result=fclose(G__mfp);
+    G__mfp = (FILE*)NULL;
+  }
+  else {
+    if(G__mfp) fclose(G__mfp);
+    G__mfp = (FILE*)NULL;
+    if(G__mfpname[0]) result=remove(G__mfpname);
+    G__mfpname[0]=0;
+    G__istmpnam=0;
+  }
+#else
   if(G__mfp) result=fclose(G__mfp);
   G__mfp = (FILE*)NULL;
+#endif
   return(result);
 #else
   int result=0;
@@ -2921,6 +2966,12 @@ int G__closemfp()
   return(result);
 #endif
 }
+
+
+#if 0
+/* Just for experimenting Windows Server OS tmpfile patch */
+FILE* G__dmy_tmpfile() { return((FILE*)NULL); }
+#endif
 
 /*
  * Local Variables:

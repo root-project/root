@@ -592,6 +592,7 @@ G__InterfaceMethod G__ClassInfo::GetInterfaceMethod(const char* fname
 						    ,const char* arg
 						    ,long* poffset
 						    ,MatchMode mode
+                                                    ,InheritanceMode imode
 						)
 {
   struct G__ifunc_table *ifunc;
@@ -608,6 +609,7 @@ G__InterfaceMethod G__ClassInfo::GetInterfaceMethod(const char* fname
 #ifndef G__OLDIMPLEMENTATION1989
 			      ,(mode==ConversionMatch)?1:0
 #endif
+                              ,imode
 			      );
 
   if(
@@ -627,6 +629,7 @@ G__InterfaceMethod G__ClassInfo::GetInterfaceMethod(const char* fname
 G__MethodInfo G__ClassInfo::GetMethod(const char* fname,const char* arg
 				      ,long* poffset
 				      ,MatchMode mode
+				      ,InheritanceMode imode
 				      )
 {
   struct G__ifunc_table *ifunc;
@@ -643,6 +646,7 @@ G__MethodInfo G__ClassInfo::GetMethod(const char* fname,const char* arg
 #ifndef G__OLDIMPLEMENTATION1989
 			      ,(mode==ConversionMatch)?1:0
 #endif
+			      ,(imode==WithInheritance)?1:0
 			      );
 
   /* Initialize method object */
@@ -653,7 +657,9 @@ G__MethodInfo G__ClassInfo::GetMethod(const char* fname,const char* arg
 ///////////////////////////////////////////////////////////////////////////
 G__MethodInfo G__ClassInfo::GetMethod(const char* fname,struct G__param* libp
 				      ,long* poffset
-				      ,MatchMode mode)
+				      ,MatchMode mode
+				      ,InheritanceMode imode
+                                      )
 {
   struct G__ifunc_table *ifunc;
   char *funcname = (char*)fname;
@@ -664,7 +670,9 @@ G__MethodInfo G__ClassInfo::GetMethod(const char* fname,struct G__param* libp
   else           ifunc = G__struct.memfunc[tagnum];
 
   ifunc = G__get_methodhandle2(funcname,libp,ifunc,&index,poffset
-			       ,(mode==ConversionMatch)?1:0);
+			       ,(mode==ConversionMatch)?1:0
+			       ,(imode==WithInheritance)?1:0
+                               );
 
   /* Initialize method object */
   G__MethodInfo method;
@@ -674,44 +682,48 @@ G__MethodInfo G__ClassInfo::GetMethod(const char* fname,struct G__param* libp
 #ifndef G__OLDIMPLEMENTATION2059
 ///////////////////////////////////////////////////////////////////////////
 G__MethodInfo G__ClassInfo::GetDefaultConstructor() {
+  // TODO, reserve location for default ctor for tune up
   long dmy;
   G__MethodInfo method;
   char *fname= (char*)malloc(strlen(Name())+1);
   sprintf(fname,"%s",Name());
-  method = GetMethod(fname,"",&dmy);
+  method = GetMethod(fname,"",&dmy,ExactMatch,InThisScope);
   free((void*)fname);
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
 G__MethodInfo G__ClassInfo::GetCopyConstructor() {
+  // TODO, reserve location for copy ctor for tune up
   long dmy;
   G__MethodInfo method;
   char *fname= (char*)malloc(strlen(Name())+1);
   sprintf(fname,"%s",Name());
   char *arg= (char*)malloc(strlen(Name())+10);
   sprintf(arg,"const %s&",Name());
-  method = GetMethod(fname,arg,&dmy);
+  method = GetMethod(fname,arg,&dmy,ExactMatch,InThisScope);
   free((void*)arg);
   free((void*)fname);
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
 G__MethodInfo G__ClassInfo::GetDestructor() {
+  // TODO, dtor location is already reserved, ready for tune up
   long dmy;
   G__MethodInfo method;
   char *fname= (char*)malloc(strlen(Name())+2);
   sprintf(fname,"~%s",Name());
-  method = GetMethod(fname,"",&dmy);
+  method = GetMethod(fname,"",&dmy,ExactMatch,InThisScope);
   free((void*)fname);
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
 G__MethodInfo G__ClassInfo::GetAssignOperator() {
+  // TODO, reserve operator= location for tune up
   long dmy;
   G__MethodInfo method;
   char *arg= (char*)malloc(strlen(Name())+10);
   sprintf(arg,"const %s&",Name());
-  method = GetMethod("operator=",arg,&dmy);
+  method = GetMethod("operator=",arg,&dmy,ExactMatch,InThisScope);
   free((void*)arg);
   return(method);
 }
@@ -1060,7 +1072,7 @@ static long G__ClassInfo_MemberFunctionProperty(long& property,int tagnum)
   int ifn;
   ifunc = G__struct.memfunc[tagnum];
   while(ifunc) {
-    for(ifn=0;ifn<G__MAXIFUNC;ifn++) {
+    for(ifn=0;ifn<ifunc->allifunc;ifn++) {
       if(strcmp(G__struct.name[tagnum],ifunc->funcname[ifn])==0) {
 	/* explicit constructor */
 	property |= G__CLS_HASEXPLICITCTOR;
@@ -1072,6 +1084,11 @@ static long G__ClassInfo_MemberFunctionProperty(long& property,int tagnum)
 	      strcmp(G__struct.name[tagnum],ifunc->funcname[ifn]+1)==0) {
 	/* explicit destructor */
 	property |= G__CLS_HASEXPLICITDTOR;
+      }
+      else if(strcmp("operator=",ifunc->funcname[ifn])==0 
+	      /* && (G__struct.funcs[ifn]&G__HAS_ASSIGNMENTOPERATOR) */ ) {
+	// TODO, above condition has to be refined.
+	property |= G__CLS_HASASSIGNOPR;
       }
       if(ifunc->isvirtual[ifn]) {
 	property|=G__CLS_HASVIRTUAL;
@@ -1105,7 +1122,7 @@ static long G__ClassInfo_DataMemberProperty(long& property,int tagnum)
   int ig15;
   var = G__struct.memvar[tagnum];
   while(var) {
-    for(ig15=0;ig15<G__MEMDEPTH;ig15++) {
+    for(ig15=0;ig15<var->allvar;ig15++) {
       if('u'==var->type[ig15] && G__PARANORMAL==var->reftype[ig15]) {
 	G__ClassInfo classinfo(G__struct.name[var->p_tagtable[ig15]]);
 	long baseprop = classinfo.ClassProperty();
@@ -1149,4 +1166,132 @@ struct G__friendtag* G__ClassInfo::GetFriendInfo() {
 }
 ///////////////////////////////////////////////////////////////////////////
 #endif /* ON644 */
+
+#ifndef G__OLDIMPLEMENTATION2076
+///////////////////////////////////////////////////////////////////////////
+G__MethodInfo G__ClassInfo::AddMethod(const char* typenam,const char* fname
+				     ,const char *arg
+                         	     ,int isstatic,int isvirtual) {
+  struct G__ifunc_table *ifunc;
+  long index;
+
+  if(-1==tagnum) ifunc = &G__ifunc;
+  else           ifunc = G__struct.memfunc[tagnum];
+
+  //////////////////////////////////////////////////
+  // Add a method entry
+  while(ifunc->next) ifunc=ifunc->next;
+  index = ifunc->allifunc;
+  if(ifunc->allifunc==G__MAXIFUNC) {
+    ifunc->next=(struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
+    ifunc->next->allifunc=0;
+    ifunc->next->next=(struct G__ifunc_table *)NULL;
+    ifunc->next->page = ifunc->page+1;
+    ifunc->next->tagnum = ifunc->tagnum;
+    ifunc = ifunc->next;
+    for(int ix=0;ix<G__MAXIFUNC;ix++) {
+      ifunc->funcname[ix] = (char*)NULL;
+      ifunc->userparam[ix] = 0;
+#ifndef G__OLDIMPLEMENTATION1706
+      ifunc->override_ifunc[ix] = (struct G__ifunc_table*)NULL;
+      ifunc->override_ifn[ix] = 0;
+      ifunc->masking_ifunc[ix] = (struct G__ifunc_table*)NULL;
+      ifunc->masking_ifn[ix] = 0;
+#endif
+    }
+    index=0;
+  }
+
+  //////////////////////////////////////////////////
+  // save function name 
+  G__savestring(&ifunc->funcname[index],(char*)fname);
+  int tmp;
+  G__hash(ifunc->funcname[index],ifunc->hash[index],tmp);
+  ifunc->para_name[index][0]=(char*)NULL;
+
+  //////////////////////////////////////////////////
+  // save type information
+  G__TypeInfo type(typenam);
+  ifunc->type[index] =   type.Type();
+  ifunc->p_typetable[index] =   type.Typenum();
+  ifunc->p_tagtable[index] =   type.Tagnum();
+  ifunc->reftype[index] =   type.Reftype();
+  ifunc->isconst[index] =   type.Isconst();
+
+  // flags
+  ifunc->staticalloc[index] = isstatic;
+  ifunc->isvirtual[index] = isvirtual;
+  ifunc->ispurevirtual[index] = 0;
+  ifunc->access[index] = G__PUBLIC;
+
+  // miscellaneous flags
+  ifunc->isexplicit[index] = 0;
+  ifunc->iscpp[index] = 1;
+  ifunc->ansi[index] = 1;
+  ifunc->busy[index] = 0;
+  ifunc->friendtag[index] = (struct G__friendtag*)NULL;
+  ifunc->globalcomp[index] = G__NOLINK;
+#ifdef G__FONS_COMMENT
+  ifunc->comment[index].p.com = (char*)NULL;
+  ifunc->comment[index].filenum = -1;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1706
+  ifunc->override_ifunc[index] = (struct G__ifunc_table*)NULL;
+  ifunc->override_ifn[index] = 0;
+  ifunc->masking_ifunc[index] = (struct G__ifunc_table*)NULL;
+  ifunc->masking_ifn[index] = 0;
+#endif
+
+  ifunc->userparam[index] = (void*)NULL;
+#ifndef G__OLDIMPLEMENTATION2073
+  ifunc->vtblindex[index] = -1;
+#endif
+#ifndef G__OLDIMPLEMENTATION2084
+  ifunc->vtblbasetagnum[index] = -1;
+#endif
+
+  //////////////////////////////////////////////////
+  // set argument infomation
+  char *argtype = (char*)arg;
+  struct G__param para;
+  G__argtype2param(argtype,&para);
+
+  ifunc->para_nu[index] = para.paran;
+  for(int i=0;i<para.paran;i++) {
+    ifunc->para_type[index][i] = para.para[i].type;
+    if(para.para[i].type!='d' && para.para[i].type!='f') 
+      ifunc->para_reftype[index][i] = para.para[i].obj.reftype.reftype;
+    else 
+      ifunc->para_reftype[index][i] = G__PARANORMAL;
+    ifunc->para_p_tagtable[index][i] = para.para[i].tagnum;
+    ifunc->para_p_typetable[index][i] = para.para[i].typenum;
+    ifunc->para_name[index][i] = (char*)malloc(10);
+    sprintf(ifunc->para_name[index][i],"G__p%d",i);
+    ifunc->para_default[index][i] = (G__value*)NULL;
+    ifunc->para_def[index][i] = (char*)NULL;
+  }
+
+  //////////////////////////////////////////////////
+  ifunc->pentry[index] = &ifunc->entry[index];
+  //ifunc->entry[index].pos
+  ifunc->entry[index].p = G__srcfile[G__struct.filenum[tagnum]].fp;
+  ifunc->entry[index].line_number=(-1==tagnum)?0:G__struct.line_number[tagnum];
+  ifunc->entry[index].filenum=(-1==tagnum)?0:G__struct.filenum[tagnum];
+  ifunc->entry[index].size = 1;
+  ifunc->entry[index].tp2f = (char*)NULL;
+  ifunc->entry[index].bytecode = (struct G__bytecodefunc*)NULL;
+  ifunc->entry[index].bytecodestatus = G__BYTECODE_NOTYET;
+
+  //////////////////////////////////////////////////
+  ++ifunc->allifunc;
+
+  /* Initialize method object */
+  G__MethodInfo method;
+  method.Init((long)ifunc,index,this);
+  return(method);
+}
+#endif
+
+///////////////////////////////////////////////////////////////////////////
 

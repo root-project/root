@@ -8,6 +8,8 @@ Basic Qt library can be used in an interpreted code by including <qtcint.dll>
 
 Platform support:
 	 Windows	Visual C++ 6.0
+    qtcint.dll hasn't been port to Linux/UNIX platforms. Your 
+    contribution will be highly appreciated.
 
 Files: 
        README.txt       : This file

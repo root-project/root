@@ -21,13 +21,19 @@
 #ifndef G__FPROTO_H
 #define G__FPROTO_H
 
+
 #ifndef __CINT__
 
 #ifdef __cplusplus
 
 extern "C" {
 
+#endif
 
+#if 0
+/* Just for experimenting Windows Server OS tmpfile patch */
+FILE* G__dmy_tmpfile() ;
+#define tmpfile G__dmy_tmpfile
 #endif
 
 
@@ -462,7 +468,11 @@ int G__search_gotolabel G__P((char *label,fpos_t *pfpos,int line,int *pmparen));
 int G__setaccess G__P((char *statement,int iout));
 int G__class_conversion_operator G__P((int tagnum,G__value *presult,char* ttt));
 int G__fundamental_conversion_operator G__P((int type,int tagnum,int typenum,int reftype,int constvar,G__value *presult,char* ttt));
+#ifndef G__OLDIMPLEMENTATION2089
+int G__asm_gen_stvar G__P((long G__struct_offset,int ig15,int paran,struct G__var_array *var,char *item,long store_struct_offset,int var_type,G__value *presult));
+#else
 int G__asm_gen_stvar G__P((long G__struct_offset,int ig15,int paran,struct G__var_array *var,char *item,long store_struct_offset,int var_type));
+#endif
 int G__exec_asm G__P((int start,int stack,G__value *presult,long localmem));
 int G__asm_test_E G__P((int *a,int *b));
 int G__asm_test_N G__P((int *a,int *b));
@@ -842,6 +852,50 @@ void G__push_autoobjectstack G__P((void *p,int tagnum,int num
 			           ,int scopelevel,int isheap)) ;
 void G__delete_autoobjectstack G__P((int scopelevel)) ;
 #endif
+
+#ifndef G__OLDIMPLEMENTATION2066
+int G__LD_IFUNC_optimize G__P((struct G__ifunc_table* ifunc,int ifn ,long *inst,int pc));
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2067
+int G__bc_compile_function G__P((struct G__ifunc_table *ifunc,int iexist));
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2074
+int G__bc_exec_virtual_bytecode G__P((G__value *result7
+			,char *funcname        // vtagnum
+			,struct G__param *libp
+			,int hash              // vtblindex
+			)) ;
+int G__bc_exec_normal_bytecode G__P((G__value *result7
+			,char *funcname        // ifunc
+			,struct G__param *libp
+			,int hash              // ifn
+			)) ;
+int G__bc_exec_ctorary_bytecode G__P((G__value *result7
+			,char *funcname        // ifunc
+			,struct G__param *libp
+			,int hash              // ifn, n
+			)) ;
+int G__bc_exec_dtorary_bytecode G__P((G__value *result7
+			,char *funcname        // ifunc
+			,struct G__param *libp
+			,int hash              // ifn, n
+			)) ;
+#endif
+#ifndef G__OLDIMPLEMENTATION2075
+void G__bc_struct G__P((int tagnum)) ;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2084
+void G__bc_delete_vtbl G__P((int tagnum)) ;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2087
+G__value G__bc_new_operator G__P((char *expression)) ;
+#endif
+
+void G__argtype2param G__P((char *argtype,struct G__param *libp));
 
 #ifdef __cplusplus
 }

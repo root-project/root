@@ -54,13 +54,13 @@ char *dir="";
 *******************************************************************/
 int check_pointersize()
 {
-  fprintf(stdout,"sizeof(long)=%d , sizeof(void*)=%d\n"
-	  ,sizeof(long),sizeof(void*));
+  fprintf(stdout,"sizeof(long)=%ld , sizeof(void*)=%ld\n"
+	  ,(long)sizeof(long),(long)sizeof(void*));
   if(sizeof(long)<sizeof(void*)) {
     fprintf(stderr,"\n");
     fprintf(stderr,"CINT INSTALLATION FATAL ERROR :\n");
-    fprintf(stderr,"        sizeof(long)=%d < sizeof(void*)=%d\n"
-	    ,sizeof(long),sizeof(void*));
+    fprintf(stderr,"        sizeof(long)=%ld < sizeof(void*)=%ld\n"
+	    ,(long)sizeof(long),(long)sizeof(void*));
     fprintf(stderr,"  SORRY, CAN NOT INSTALL CINT.\n");
     fprintf(stderr,"Size of long must be greater or equal to size of void*\n\n");
     exit(EXIT_FAILURE);
@@ -104,7 +104,7 @@ char *iden;
   }                                                                     \
   else {                                                                \
     fprintf(fp,"typedef struct %s {\n",ctype);                          \
-    fprintf(fp,"  char dmy[%d];\n",sizeof(type));                       \
+    fprintf(fp,"  char dmy[%ld];\n",(long)sizeof(type));                \
     fprintf(fp,"} %s;\n",ctype);                                        \
     fprintf(fp,"#pragma link off class %s;\n",ctype);                   \
     fprintf(fp,"#pragma link off typedef %s;\n",ctype);                 \
@@ -130,7 +130,7 @@ char *iden;
   }                                                                     \
   else {                                                                \
     fprintf(fp,"typedef struct %s {\n",ctype);                          \
-    fprintf(fp,"  char dmy[%d];\n",sizeof(type));                       \
+    fprintf(fp,"  char dmy[%ld];\n",(long)sizeof(type));                \
     fprintf(fp,"} %s;\n",ctype);                                        \
     fprintf(fp,"#pragma link off class %s;\n",ctype);                   \
     fprintf(fp,"#pragma link off typedef %s;\n",ctype);                 \
@@ -156,7 +156,7 @@ char *iden;
   }                                                                     \
   else {                                                                \
     fprintf(fp,"typedef struct %s {\n",ctype);                          \
-    fprintf(fp,"  char dmy[%d];\n",sizeof(type));                       \
+    fprintf(fp,"  char dmy[%ld];\n",(long)sizeof(type));                \
     fprintf(fp,"} %s;\n",ctype);                                        \
     fprintf(fp,"#pragma link off class %s;\n",ctype);                   \
     fprintf(fp,"#pragma link off typedef %s;\n",ctype);                 \
@@ -182,7 +182,7 @@ char *iden;
   }                                                                     \
   else {                                                                \
     fprintf(fp,"typedef struct %s {\n",ctype);                          \
-    fprintf(fp,"  char dmy[%d];\n",sizeof(type));                       \
+    fprintf(fp,"  char dmy[%ld];\n",(long)sizeof(type));                \
     fprintf(fp,"} %s;\n",ctype);                                        \
     fprintf(fp,"#pragma link off class %s;\n",ctype);                   \
     fprintf(fp,"#pragma link off typedef %s;\n",ctype);                 \
@@ -453,7 +453,7 @@ int gen_stdlib()
   UINT_TYPEDEF_PREFER_INT(fp,size_t,"size_t");
   fprintf(fp,"#define \tEXIT_FAILURE (%d)\n",EXIT_FAILURE);
   fprintf(fp,"#define \tEXIT_SUCCESS (%d)\n",EXIT_SUCCESS);
-  fprintf(fp,"#define \tMB_CUR_MAX (%d)\n",MB_CUR_MAX);
+  fprintf(fp,"#define \tMB_CUR_MAX (%ld)\n",(long)MB_CUR_MAX);
   fprintf(fp,"#define \tMB_LEN_MAX (%d)\n",MB_LEN_MAX);
 #ifndef G__NONANSI
 #ifndef G__SUNOS4

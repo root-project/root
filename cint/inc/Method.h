@@ -97,6 +97,14 @@ G__MethodInfo {
   int LoadDLLDirect(const char* filename,const char* funcname);
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2073
+  void SetVtblIndex(int vtblindex);
+  void SetIsVirtual(int isvirtual);
+#endif
+#ifndef G__OLDIMPLEMENTATION2084
+  void SetVtblBasetagnum(int basetagnum);
+#endif
+
  protected:
   long handle;
   long index;

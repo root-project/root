@@ -7,7 +7,7 @@
  * Description:
  *  Loop compilation related source code
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -390,6 +390,10 @@ long localmem;
 
   G__no_exec_compile=0;
 
+#ifndef G__OLDIMPLEMENTATION
+  *presult = G__null;
+#endif
+
 
   /****************************************
   * local compile asembler execution start
@@ -738,9 +742,10 @@ long localmem;
       * sp+1             <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LD %g from %x %x,%x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LD %g,%d from %x %x,%x\n"
 			     ,pc,sp
 			     ,G__double(G__asm_stack[G__asm_inst[pc+1]])
+			     ,G__int(G__asm_stack[G__asm_inst[pc+1]])
 			     ,G__asm_inst[pc+1]
 			     ,G__asm_stack,&G__asm_stack[G__asm_inst[pc+1]]);
 #endif
@@ -1453,7 +1458,8 @@ long localmem;
       sp-=fpara.paran;
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	G__fprinterr(G__serr,"  value=%g\n" ,G__double(G__asm_stack[sp-1]));
+	G__fprinterr(G__serr,"  value=%g,%d\n" 
+		    ,G__double(G__asm_stack[sp-1]),G__int(G__asm_stack[sp-1]));
 #endif
 
       G__letvariable("",G__asm_stack[sp-1]
@@ -1840,6 +1846,9 @@ long localmem;
 #endif
       G__asm_index = G__asm_inst[pc+7];
       ifunc = (struct G__ifunc_table*)G__asm_inst[pc+4];
+#ifndef G__OLDIMPLEMENTATION2066
+      if(G__cintv6 && G__LD_IFUNC_optimize(ifunc,G__asm_index,G__asm_inst,pc)) goto ld_func;
+#endif
 #ifdef G__ASM_WHOLEFUNC
       if(ifunc->pentry[G__asm_index]->bytecode&&G__asm_inst[pc]==G__LD_IFUNC
 #ifndef G__OLDIMPLEMENTATION891
@@ -2061,6 +2070,11 @@ long localmem;
       if(G__asm_stack[sp-1].ref==G__asm_stack[sp-1].obj.i)
 	G__asm_stack[sp-1].ref += G__asm_inst[pc+2];
       G__asm_stack[sp-1].obj.i += G__asm_inst[pc+2];
+/* #define G__OLDIMPLEMENTATION2077 */
+#ifndef G__OLDIMPLEMENTATION2077
+      if(0==G__asm_stack[sp-1].ref && 'u'==G__asm_stack[sp-1].type)
+	G__asm_stack[sp-1].ref += G__asm_stack[sp-1].obj.i;
+#endif
       pc+=3;
 #ifdef G__ASM_DBG
       break;
@@ -2455,8 +2469,10 @@ long localmem;
 			     ,G__asm_inst[pc+3]);
 #endif
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"  value=%g\n"
-			     ,G__double(G__asm_stack[sp-1]));
+      if(G__asm_dbg) G__fprinterr(G__serr,"  value=%ld,%p ref=%p\n"
+				  ,G__int(G__asm_stack[sp-1])
+				  ,G__int(G__asm_stack[sp-1])
+	                          ,G__asm_stack[sp-1].ref);
 #endif
       var = (struct G__var_array*)G__asm_inst[pc+4];
       *(long*)(var->p[G__asm_inst[pc+1]]+localmem)=G__asm_stack[sp-1].ref;
@@ -2476,13 +2492,19 @@ long localmem;
       * sp+1            <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: PUSHCPY %g\n"
-			     ,pc,sp,G__double(G__asm_stack[sp-1]));
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: PUSHCPY %g,%p,ref=%p\n"
+				  ,pc,sp,G__double(G__asm_stack[sp-1])
+				  ,G__int(G__asm_stack[sp-1])
+				  ,G__asm_stack[sp-1].ref);
 #endif
       ++pc;
       G__asm_stack[sp]=G__asm_stack[sp-1];
+/* #define G__OLDIMPLEMENTATION2078 */
+#ifdef G__OLDIMPLEMENTATION2078
       /* clear reference because this the value is modified by ++/-- opr */
+      /* 2004/6/16, following line may not be needed. */
       G__asm_stack[sp-1].ref = 0;
+#endif
       ++sp;
 #ifdef G__ASM_DBG
       break;
@@ -2533,7 +2555,13 @@ long localmem;
 	store_globalvarpointer[gvpp++] = G__globalvarpointer;
 	G__globalvarpointer = G__asm_stack[sp-1].obj.i;
 	break;
-      default:
+#ifndef G__OLDIMPLEMENTATION2099
+      case 1:
+	store_globalvarpointer[gvpp++] = G__globalvarpointer;
+	G__globalvarpointer = G__store_struct_offset;
+	break;
+#endif
+      default: /* looks like this case is not used. 2004/7/19 */
 	store_globalvarpointer[gvpp++] = G__globalvarpointer;
 	G__globalvarpointer = G__asm_inst[pc+1];
 	break;
@@ -2579,24 +2607,35 @@ long localmem;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1073
-    case G__CTOR_SETGVP:
+    case G__CTOR_SETGVP: 
       /***************************************
       * inst
       * 0 CTOR_SETGVP
       * 1 index
       * 2 var_array pointer
+      * 3 mode, 0 local block scope, 1 member offset, 2 static
       ***************************************/
 #ifndef G__OLDIMPLEMENTATION2054
       store_globalvarpointer[gvpp++] = G__globalvarpointer; /* ??? */
 #endif
       var=(struct G__var_array*)G__asm_inst[pc+2];
-      G__globalvarpointer = localmem+var->p[G__asm_inst[pc+1]];
+      switch(G__asm_inst[pc+3]) {
+      case 0:
+        G__globalvarpointer = localmem+var->p[G__asm_inst[pc+1]];
+        break;
+      case 1:
+        G__globalvarpointer = G__store_struct_offset+var->p[G__asm_inst[pc+1]];
+        break;
+      case 2: /* not used so far. Just for generality  */
+        G__globalvarpointer = var->p[G__asm_inst[pc+1]];
+        break;
+      }
 #ifdef G__ASM_DBG
       if(G__asm_dbg) 
 	G__fprinterr(G__serr,"%3x,%d: CTOR_SETGVP %p\n",pc,sp
 		     ,G__globalvarpointer);
 #endif
-      pc+=3;
+      pc+=4;
 #ifdef G__ASM_DBG
       break;
 #else
@@ -2761,6 +2800,37 @@ long localmem;
 #else
       goto pcode_parse_start;
 #endif
+
+#if 0
+    case G__SETARYCTOR:
+      /***************************************
+      * inst
+      * 0 SETARYCTOR
+      * 1 num,  num>=0 set this value, -1 set stack value (, 0 reset)
+      * stack
+      * sp-1         <- sp-paran
+      * sp
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) 
+       G__fprinterr(G__serr,"%3x,%d: SETARYCTOR\n",pc,sp);
+#endif
+      switch(G__asm_inst[pc+1]) {
+      case -1:
+        G__cpp_aryconstruct = G__int(G__asm_stack[sp-1]);
+        --sp;
+        break;
+      default:
+        G__cpp_aryconstruct = G__asm_inst[pc+1];
+        break;
+      }
+      pc+=2;
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+#endif /* 0 */
 #endif /* 2042 */
 
 #ifdef G__NEVER_BUT_KEEP
@@ -10365,12 +10435,13 @@ int *start;
       * 0 CTOR_SETGVP
       * 1 index
       * 2 var_array pointer
+      * 3 mode, 0 local block scope, 1 member offset
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: CTOR_SETGVP\n",pc);
 #endif
       /* no optimization */
-      pc+=3;
+      pc+=4;
       break;
 #endif
 
@@ -10496,6 +10567,24 @@ int *start;
       /* no optimization */
       pc+=3;
       break;
+
+#if 0
+    case G__SETARYCTOR:
+      /***************************************
+      * inst
+      * 0 SETARYCTOR
+      * 1 num,  num>=0 set this value, -1 set stack value (, 0 reset)
+      * stack
+      * sp-1         <- sp-paran
+      * sp
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETARYCTOR\n",pc);
+#endif
+      /* no optimization */
+      pc+=2;
+      break;
+#endif /* 0 */
 #endif /* 2042 */
 
     case G__NOP:
@@ -11602,11 +11691,12 @@ int isthrow;
       * 0 CTOR_SETGVP
       * 1 index
       * 2 var_array pointer
+      * 3 mode, 0 local block scope, 1 member offset
       ***************************************/
       if(0==isthrow) {
 	fprintf(fout,"%3x: CTOR_SETGVP\n",pc);
       }
-      pc+=3;
+      pc+=4;
       break;
 #endif
 
@@ -11740,6 +11830,24 @@ int isthrow;
       /* no optimization */
       pc+=3;
       break;
+
+#if 0
+    case G__SETARYCTOR:
+      /***************************************
+      * inst
+      * 0 SETARYCTOR
+      * 1 num,  num>=0 set this value, -1 set stack value (, 0 reset)
+      * stack
+      * sp-1         <- sp-paran
+      * sp
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(0==isthrow) G__fprinterr(G__serr,"%3x: SETARYCTOR\n",pc);
+#endif
+      /* no optimization */
+      pc+=2;
+      break;
+#endif /* 0 */
 #endif /* 2042 */
 
     case G__NOP:

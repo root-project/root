@@ -78,7 +78,15 @@ char *expression;
   int ld_flag = 0 ;
 #endif
 
+
   G__CHECK(G__SECURE_MALLOC,1,return(G__null));
+
+#ifndef G__OLDIMPLEMENTATION2087
+  /* TODO , this function aborts bytecode. New implementation is needed */
+  if(G__cintv6) {
+    return(G__bc_new_operator(expression));
+  }
+#endif
 
   /******************************************************
    * get arena which is ignored due to limitation, however

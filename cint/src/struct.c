@@ -387,16 +387,18 @@ char* name;
 static int G__enable_autoloading=1;
 int (*G__p_class_autoloading) G__P((char*,char*));
 
+#ifndef G__OLDIMPLEMENTATION2097
 /************************************************************************
 * G__set_class_autloading
 ************************************************************************/
 int G__set_class_autoloading(newvalue)
 int newvalue;
 {  
-   int oldvalue =  G__enable_autoloading;
-   G__enable_autoloading = newvalue;
-   return oldvalue;
+  int oldvalue =  G__enable_autoloading;
+  G__enable_autoloading = newvalue;
+  return oldvalue;
 }
+#endif
 
 /************************************************************************
 * G__set_class_autoloading_callback
@@ -1111,6 +1113,9 @@ int type;
 
 #ifndef G__OLDIMPLEMENTATION1503
     G__struct.defaulttypenum[i] = -1;
+#endif
+#ifndef G__OLDIMPLEMENTATION2073
+    G__struct.vtable[i]= (void*)NULL;
 #endif
 
     G__struct.alltag++;
@@ -2137,7 +2142,7 @@ char type;
 
   if(G__return>G__RETURN_NORMAL) return;
   
-  if('u'==type) {
+  if('u'==type) { /* union */
     fpos_t pos;
     int linenum;
     fgetpos(G__ifile.fp,&pos);
@@ -2161,11 +2166,14 @@ char type;
     }
   }
 #ifndef G__OLDIMPLEMENTATION612
-  else if('n'==type) {
+  else if('n'==type) { /* namespace */
     /* no instance object for namespace, do nothing */
   }
 #endif
   else { /* struct or class instance */
+#ifndef G__OLDIMPLEMENTATION2075
+    if(G__cintv6) G__bc_struct(G__tagnum);
+#endif
 #ifndef G__OLDIMPLEMENTATION1087
     if(G__check_semicolumn_after_classdef(isclassdef)) {
 #ifndef G__OLDIMPLEMENTATION1195

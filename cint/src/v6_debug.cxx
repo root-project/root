@@ -711,7 +711,14 @@ char *file;
 G__value G__exec_text(unnamedmacro)
 char *unnamedmacro;
 {
-#ifdef G__OLDIMPLEMENTATION1794
+#if !defined(G__OLDIMPLEMENTATION2092)
+#ifndef G__TMPFILE
+  char tname[L_tmpnam+10], sname[L_tmpnam+10];
+#else
+  char tname[G__MAXFILENAME], sname[G__MAXFILENAME];
+#endif
+#elif !defined(G__OLDIMPLEMENTATION1794)
+#else
 #ifndef G__TMPFILE
   char tname[L_tmpnam+10], sname[L_tmpnam+10];
 #else
@@ -727,6 +734,9 @@ char *unnamedmacro;
   int i,len;
   int addmparen=0;
   int addsemicolumn =0;
+#ifndef G__OLDIMPLEMENTATION2092
+  int istmpnam=0;
+#endif
 
   i=0;
   while(unnamedmacro[i] && isspace(unnamedmacro[i])) ++i;
@@ -789,7 +799,14 @@ char *unnamedmacro;
     return(G__null);
   }
   
-#ifndef G__OLDIMPLEMENTATION1794
+#if !defined(G__OLDIMPLEMENTATION2092)
+  fp = tmpfile();
+  if(!fp) {
+    G__tmpnam(tname);  /* not used anymore 0 */
+    fp = fopen(tname,"w");
+    istmpnam=1;
+  }
+#elif !defined(G__OLDIMPLEMENTATION1794)
   fp = tmpfile();
 #else
   G__tmpnam(tname);  /* not used anymore 0 */
@@ -801,13 +818,30 @@ char *unnamedmacro;
   if(addsemicolumn) fprintf(fp,";");
   fprintf(fp,"\n");
   if(addmparen) fprintf(fp,"}\n");
-#ifndef G__OLDIMPLEMENTATION1794
+#if !defined(G__OLDIMPLEMENTATION2092)
+  if(!istmpnam) fseek(fp,0L,SEEK_SET);
+  else          fclose(fp);
+#elif !defined(G__OLDIMPLEMENTATION1794)
   fseek(fp,0L,SEEK_SET);
 #else
   fclose(fp);
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1794
+#if !defined(G__OLDIMPLEMENTATION2092)
+  if(!istmpnam) {
+    G__storerewindposition();
+    buf=G__exec_tempfile_fp(fp);
+    G__security_recover(G__serr);
+    fclose(fp);
+  }
+  else {
+    strcpy(sname,tname);
+    G__storerewindposition();
+    buf=G__exec_tempfile(sname);
+    G__security_recover(G__serr);
+    remove(sname);
+  }
+#elif !defined(G__OLDIMPLEMENTATION1794)
   G__storerewindposition();
   buf=G__exec_tempfile_fp(fp);
   G__security_recover(G__serr);
@@ -849,21 +883,62 @@ char *namedmacro;
   int fentry;
   char* result = (char*)NULL;
   FILE *fp;
+#ifndef G__OLDIMPLEMENTATION2092
+  int istmpnam=0;
+#ifndef G__TMPFILE
+  static char tname[L_tmpnam+10];
+#else
+  static char tname[G__MAXFILENAME];
+#endif
+#endif
 
   fp = tmpfile();
+#ifndef G__OLDIMPLEMENTATION2092
+  if(!fp) {
+    G__tmpnam(tname);  /* not used anymore */
+    strcat(tname,G__NAMEDMACROEXT);
+    fp = fopen(tname,"w");
+    if(!fp) return((char*)NULL);
+    istmpnam=1;
+  }
+#else
   if(!fp) return((char*)NULL);
+#endif
   fprintf(fp,"%s",namedmacro);
   fprintf(fp,"\n");
 
+#ifndef G__OLDIMPLEMENTATION2092
+  if(!istmpnam) {
+    fseek(fp,0L,SEEK_SET);
+    fentry=G__loadfile_tmpfile(fp);
+  }
+  else {
+    fclose(fp);
+    fentry=G__loadfile(tname);
+  }
+#else
   fseek(fp,0L,SEEK_SET);
-  switch((fentry=G__loadfile_tmpfile(fp))) {
+  fentry=G__loadfile_tmpfile(fp);
+#endif
+
+  switch(fentry) {
   case G__LOADFILE_SUCCESS:
+#ifndef G__OLDIMPLEMENTATION2092
+    if(!istmpnam) result = "(tmpfile)";
+    else          result = tname;
+#else
     result = "(tmpfile)";
+#endif
     break;
   case G__LOADFILE_DUPLICATE:
   case G__LOADFILE_FAILURE:
   case G__LOADFILE_FATAL:
+#ifndef G__OLDIMPLEMENTATION2092
+    if(!istmpnam) fclose(fp);
+    else          remove(tname);
+#else
     fclose(fp);
+#endif
     result = (char*)NULL;
     break;
   default:

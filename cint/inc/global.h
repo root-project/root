@@ -733,6 +733,7 @@ extern G__eolcallback_t G__eolcallback;
 #endif
 
 extern int G__scopelevel;
+extern int G__cintv6;
 
 #ifndef __CINT__
 #ifdef __cplusplus

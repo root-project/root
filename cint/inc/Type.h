@@ -71,6 +71,17 @@ G__TypeInfo : public G__ClassInfo  {
   int Type() { return(type); }
   int Reftype() { return(reftype); }
   int Isconst() { return(isconst); }
+
+  G__value Value() const {
+    G__value buf;
+    buf.type=type;
+    buf.tagnum=tagnum;
+    buf.typenum=typenum;
+    buf.isconst=isconst;
+    buf.obj.reftype.reftype = reftype;
+    buf.obj.i = 1;
+    return(buf);
+  }
  protected:
   long type;
   long typenum;

@@ -27,6 +27,8 @@ makecint -mk Makeit  -dl ReadF.dl -H ReadF.h -C++ ReadF.cxx
 nmake -f Makeit CFG="ReadF - Win32 Release"
 move Release\\ReadF.dll ReadF.dl
 
+copy iosenum.win32 iosenum.h
+
 rem makecint -mk Makeit  -dl RegE.dl -H RegE.h -C++ RegE.cxx
 rem nmake -f Makeit CFG="RegE - Win32 Release"
 rem move Release\\RegE.dll RegE.dl
