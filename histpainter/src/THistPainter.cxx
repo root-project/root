@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.56 2001/12/09 17:35:39 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.57 2001/12/10 21:27:24 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1330,21 +1330,7 @@ void THistPainter::PaintAxis()
    }
    TGaxis axis;
    axis.SetTextAngle(0);
-   axis.SetLineColor(fXaxis->GetAxisColor());
-   axis.SetTextColor(fXaxis->GetTitleColor());
-   axis.SetTextFont(fXaxis->GetTitleFont());
-   axis.SetLabelColor(fXaxis->GetLabelColor());
-   axis.SetLabelFont(fXaxis->GetLabelFont());
-   axis.SetLabelSize(fXaxis->GetLabelSize());
-   axis.SetLabelOffset(fXaxis->GetLabelOffset());
-   axis.SetTickSize(fXaxis->GetTickLength());
-   axis.SetTitle(fXaxis->GetTitle());
-   axis.SetTitleOffset(fXaxis->GetTitleOffset());
-   axis.SetTitleSize(fXaxis->GetTitleSize());
-   axis.SetBit(TGaxis::kCenterTitle, fXaxis->TestBit(TGaxis::kCenterTitle));
-   axis.SetBit(TGaxis::kRotateTitle, fXaxis->TestBit(TGaxis::kRotateTitle));
-   axis.SetBit(TAxis::kNoExponent,   fXaxis->TestBit(TAxis::kNoExponent));
-   axis.SetTimeFormat(fXaxis->GetTimeFormat());
+   axis.ImportAxisAttributes(fXaxis);
 
    chopt[0] = 0;
    strcat(chopt, "SDH");
@@ -1389,21 +1375,7 @@ void THistPainter::PaintAxis()
                      uminsave, umaxsave,  ndivsave, chopt, gridl);
    }
 //*-*- Y axis
-   axis.SetLineColor(fYaxis->GetAxisColor());
-   axis.SetTextColor(fYaxis->GetTitleColor());
-   axis.SetTextFont(fYaxis->GetTitleFont());
-   axis.SetLabelColor(fYaxis->GetLabelColor());
-   axis.SetLabelFont(fYaxis->GetLabelFont());
-   axis.SetLabelSize(fYaxis->GetLabelSize());
-   axis.SetLabelOffset(fYaxis->GetLabelOffset());
-   axis.SetTickSize(fYaxis->GetTickLength());
-   axis.SetTitle(fYaxis->GetTitle());
-   axis.SetTitleOffset(fYaxis->GetTitleOffset());
-   axis.SetTitleSize(fYaxis->GetTitleSize());
-   axis.SetBit(TGaxis::kCenterTitle, fYaxis->TestBit(TGaxis::kCenterTitle));
-   axis.SetBit(TGaxis::kRotateTitle, fYaxis->TestBit(TGaxis::kRotateTitle));
-   axis.SetBit(TAxis::kNoExponent,  fYaxis->TestBit(TAxis::kNoExponent));
-   axis.SetTimeFormat(fYaxis->GetTimeFormat());
+   axis.ImportAxisAttributes(fYaxis);
 
       chopt[0] = 0;
    strcat(chopt, "SDH");
@@ -3100,20 +3072,8 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 //*-*-          X axis drawing
 
     if (TMath::Abs(x1[0] - x2[0]) >= epsil || TMath::Abs(x1[1] - x2[1]) > epsil) {
-        axis->SetLineColor(fXaxis->GetAxisColor());
-        axis->SetTextFont(fXaxis->GetTitleFont());
-	axis->SetTextColor(fXaxis->GetTitleColor());
-	axis->SetTickSize(fXaxis->GetTickLength());
-        axis->SetLabelColor(fXaxis->GetLabelColor());
-        axis->SetLabelFont(fXaxis->GetLabelFont());
+        axis->ImportAxisAttributes(fXaxis);
 	axis->SetLabelOffset(fXaxis->GetLabelOffset()+fXaxis->GetTickLength());
-        axis->SetLabelSize(fXaxis->GetLabelSize());
-        axis->SetTitle(fXaxis->GetTitle());
-        axis->SetTitleOffset(fXaxis->GetTitleOffset());
-        axis->SetTitleSize(fXaxis->GetTitleSize());
-        axis->SetBit(TGaxis::kCenterTitle, fXaxis->TestBit(TGaxis::kCenterTitle));
-        axis->SetBit(TGaxis::kRotateTitle, fXaxis->TestBit(TGaxis::kRotateTitle));
-        axis->SetBit(TAxis::kNoExponent,  fXaxis->TestBit(TAxis::kNoExponent));
 	if (Hoption.Logx) {
 	    bmin = TMath::Power(10, rmin[0]);
 	    bmax = TMath::Power(10, rmax[0]);
@@ -3137,20 +3097,8 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 //*-*-          Y axis drawing
 
     if (TMath::Abs(y1[0] - y2[0]) >= epsil || TMath::Abs(y1[1] - y2[1]) > epsil) {
-        axis->SetLineColor(fYaxis->GetAxisColor());
-        axis->SetTextFont(fYaxis->GetTitleFont());
-	axis->SetTextColor(fYaxis->GetTitleColor());
-	axis->SetTickSize(fYaxis->GetTickLength());
-        axis->SetLabelColor(fYaxis->GetLabelColor());
-        axis->SetLabelFont(fYaxis->GetLabelFont());
+        axis->ImportAxisAttributes(fYaxis);
 	axis->SetLabelOffset(fYaxis->GetLabelOffset()+fYaxis->GetTickLength());
-        axis->SetLabelSize(fYaxis->GetLabelSize());
-        axis->SetTitle(fYaxis->GetTitle());
-        axis->SetTitleOffset(fYaxis->GetTitleOffset());
-        axis->SetTitleSize(fYaxis->GetTitleSize());
-        axis->SetBit(TGaxis::kCenterTitle, fYaxis->TestBit(TGaxis::kCenterTitle));
-        axis->SetBit(TGaxis::kRotateTitle, fYaxis->TestBit(TGaxis::kRotateTitle));
-        axis->SetBit(TAxis::kNoExponent,  fYaxis->TestBit(TAxis::kNoExponent));
 
 	//if (TMath::Abs(z1[0] - z2[0]) < epsil && TMath::Abs(z1[1] - z2[1]) < epsil) {
 	//    strcpy(chopay, "SDH+=N");
@@ -3185,20 +3133,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 //*-*-          Z axis drawing
 
     if (TMath::Abs(z1[0] - z2[0]) >= 100*epsil || TMath::Abs(z1[1] - z2[1]) > 100*epsil) {
-        axis->SetLineColor(fZaxis->GetAxisColor());
-        axis->SetTextFont(fZaxis->GetTitleFont());
-	axis->SetTextColor(fZaxis->GetTitleColor());
-	axis->SetTickSize(fZaxis->GetTickLength());
-        axis->SetLabelColor(fZaxis->GetLabelColor());
-        axis->SetLabelFont(fZaxis->GetLabelFont());
-	axis->SetLabelOffset(fZaxis->GetLabelOffset());
-        axis->SetLabelSize(fZaxis->GetLabelSize());
-        axis->SetTitle(fZaxis->GetTitle());
-        axis->SetTitleOffset(fZaxis->GetTitleOffset());
-        axis->SetTitleSize(fZaxis->GetTitleSize());
-        axis->SetBit(TGaxis::kCenterTitle, fZaxis->TestBit(TGaxis::kCenterTitle));
-        axis->SetBit(TGaxis::kRotateTitle, fZaxis->TestBit(TGaxis::kRotateTitle));
-        axis->SetBit(TAxis::kNoExponent,  fZaxis->TestBit(TAxis::kNoExponent));
+        axis->ImportAxisAttributes(fZaxis);
 	if (Hoption.Logz) {
 	    bmin = TMath::Power(10, rmin[2]);
 	    bmax = TMath::Power(10, rmax[2]);
@@ -3248,20 +3183,7 @@ void THistPainter::PaintPalette()
    TAxis *zaxis = fH->GetZaxis();
    //Draw the palette axis using the Z axis parameters
    TGaxis axis;
-   axis.SetLineColor(zaxis->GetAxisColor());
-   axis.SetTextColor(zaxis->GetTitleColor());
-   axis.SetTextFont(zaxis->GetTitleFont());
-   axis.SetLabelColor(zaxis->GetLabelColor());
-   axis.SetLabelFont(zaxis->GetLabelFont());
-   axis.SetLabelSize(zaxis->GetLabelSize());
-   axis.SetLabelOffset(zaxis->GetLabelOffset());
-   axis.SetTickSize(zaxis->GetTickLength());
-   axis.SetTitle(zaxis->GetTitle());
-   axis.SetTitleOffset(zaxis->GetTitleOffset());
-   axis.SetTitleSize(zaxis->GetTitleSize());
-   axis.SetBit(TGaxis::kCenterTitle, zaxis->TestBit(TGaxis::kCenterTitle));
-   axis.SetBit(TGaxis::kRotateTitle, zaxis->TestBit(TGaxis::kRotateTitle));
-   axis.SetBit(TAxis::kNoExponent,  zaxis->TestBit(TAxis::kNoExponent));
+   axis.ImportAxisAttributes(zaxis);
    Int_t ndiv = zaxis->GetNdivisions();
    Double_t wmin = Hparam.zmin;
    Double_t wmax = Hparam.zmax;
