@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.19 2003/01/26 13:17:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.20 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -217,9 +217,6 @@ TGListTree::~TGListTree()
 
    delete fTip;
 
-   gVirtualX->DeleteGC(fDrawGC);
-   gVirtualX->DeleteGC(fLineGC);
-   gVirtualX->DeleteGC(fHighlightGC);
    item = fFirst;
    while (item) {
       if (item->fFirstchild) PDeleteChildren(item->fFirstchild);
