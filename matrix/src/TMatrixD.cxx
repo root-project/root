@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.14 2002/01/30 07:00:30 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.15 2002/02/27 08:39:27 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -981,7 +981,11 @@ TMatrixD &TMatrixD::Invert(Double_t *determ_ptr)
                   if (!was_pivoted[k] && (curr_value = TMath::Abs(*cp)) > max_value)
                      max_value = curr_value, prow = k, pcol = j;
              }
-         if (max_value < singularity_tolerance)
+         if (max_value < singularity_tolerance) {
+            // free allocated heap memory before returning
+            if (symmetric) delete [] diag;
+            delete [] pivots;
+            delete [] was_pivoted;
             if (determ_ptr) {
                *determ_ptr = 0;
                return *this;
@@ -989,6 +993,7 @@ TMatrixD &TMatrixD::Invert(Double_t *determ_ptr)
                Error("Invert(Double_t*)", "matrix turns out to be singular: can't invert");
                return *this;
             }
+         }
          pivotp->row = prow;
          pivotp->col = pcol;
      }
@@ -1056,7 +1061,7 @@ TMatrixD &TMatrixD::Invert(Double_t *determ_ptr)
 
    delete [] was_pivoted;
    delete [] pivots;
-   //delete [] diag;
+
    return *this;
 }
 
@@ -1308,7 +1313,7 @@ TVectorD &e)
     a.Zero();
     d.Zero();
     e.Zero();
-    return; 
+    return;
   }
 
   Double_t *pa = a.fElements;
