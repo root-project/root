@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.9 2004/01/14 21:30:50 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.10 2004/01/15 10:59:48 brun Exp $
 // Author: Bertrand Bellenot   30/07/02
 
 /*************************************************************************
@@ -52,7 +52,7 @@ static const char *gCintDevelopers[] = {
 
 static const char *gRootDocumentation[] = {
    "Ilka Antcheva",
-   "Suzanne Panachek",
+   "Suzanne Panacek",
    0
 };
 
