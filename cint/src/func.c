@@ -180,6 +180,17 @@ void (*p2f)();
 }
 #endif /* ON875 */
 
+#ifndef G__OLDIMPLEMENTATION1548
+/******************************************************************
+* G__set_emergencycallback
+******************************************************************/
+void G__set_emergencycallback(p2f)
+void (*p2f)();
+{
+  G__emergencycallback= p2f;
+}
+#endif
+
 #ifndef G__OLDIMPLEMENTATION405
 /******************************************************************
 * G__getindexedvalue()
@@ -3270,6 +3281,17 @@ int hash;
     G__CHECKNONULL(0,'C');
 #endif
     *result7=G__exec_tempfile((char *)G__int(libp->para[0]));
+    return(1);
+  }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1546
+  if(1225==hash&&strcmp(funcname,"G__load_text")==0) {
+    if(G__no_exec_compile) return(1);
+    G__CHECKNONULL(0,'C');
+    G__storerewindposition();
+    G__letint(result7,'C',(long)G__load_text((char *)G__int(libp->para[0])));
+    G__security_recover(G__serr);
     return(1);
   }
 #endif

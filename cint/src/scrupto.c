@@ -832,6 +832,14 @@ int nfile;
       G__srcfile[G__nfile].prepname=(char*)NULL;
     }
     if(G__srcfile[G__nfile].filename) {
+#ifndef G__OLDIMPLEMENTATION1546
+      int len = strlen(G__srcfile[G__nfile].filename);
+      if(len>strlen(G__NAMEDMACROEXT2) && 
+	 strcmp(G__srcfile[G__nfile].filename+len-strlen(G__NAMEDMACROEXT2),
+		G__NAMEDMACROEXT2)==0) {
+	remove(G__srcfile[G__nfile].filename);
+      }
+#endif
       free((void*)G__srcfile[G__nfile].filename);
       G__srcfile[G__nfile].filename=(char*)NULL;
     }

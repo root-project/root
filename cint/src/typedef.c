@@ -285,6 +285,32 @@ void G__define_type()
     c=G__fgetname(type1,"");
   }
 #endif
+#ifndef G__OLDIMPLEMENTATION1548
+  else if(strcmp(type1,"unsigned*")==0) {
+    unsigned_flag=1;
+    strcpy(type1,"int*");
+  }
+  else if(strcmp(type1,"signed*")==0) {
+    unsigned_flag=0;
+    strcpy(type1,"int*");
+  }
+  else if(strcmp(type1,"unsigned&")==0) {
+    unsigned_flag=1;
+    strcpy(type1,"int&");
+  }
+  else if(strcmp(type1,"signed&")==0) {
+    unsigned_flag=0;
+    strcpy(type1,"int&");
+  }
+  else if(strcmp(type1,"unsigned*&")==0) {
+    unsigned_flag=1;
+    strcpy(type1,"int*&");
+  }
+  else if(strcmp(type1,"signed*&")==0) {
+    unsigned_flag=0;
+    strcpy(type1,"int*&");
+  }
+#endif
 
   /*
    *  typedef  [struct|union|enum]  tagname { member } newtype;

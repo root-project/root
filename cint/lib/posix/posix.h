@@ -171,7 +171,7 @@ extern long int sysconf(int name);
 
 #if defined(__SUNPRO_C) || defined(G__SUNPRO_C) 
 extern int putenv(char *string);
-#elif defined(G__GLIBC_) && (G__GLIBC_<=201)
+#elif defined(G__GLIBC_) && (G__GLIBC_<201)
 extern int putenv(char *string);
 #else
 extern int putenv(const char *string);

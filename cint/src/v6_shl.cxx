@@ -670,6 +670,33 @@ int (*sharedlib_func)();
 /**************************************************************************
  * G__show_dllrev
  **************************************************************************/
+#if !defined(G__OLDIMPLEMENTATION1485)
+typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*));
+#elif !defined(G__OLDIMPLEMENTATION1546)
+typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*));
+#else
 typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
@@ -682,6 +709,7 @@ typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*));
+#endif
 
 /**************************************************************************
 * G__SetCIntApiPointers
@@ -817,7 +845,15 @@ char *fname;
 	G__exec_text,
 	G__lasterror_filename,
 	G__lasterror_linenum,
-	G__va_arg_put);
+	G__va_arg_put
+#ifndef G__OLDIMPLEMENTATION1546
+	,G__load_text
+	,G__set_emergencycallback
+#endif
+#ifndef G__OLDIMPLEMENTATION1485
+	,G__set_errmsgcallback
+#endif
+	);
 }
 
 #endif

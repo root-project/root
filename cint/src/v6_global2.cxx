@@ -459,6 +459,10 @@ int G__multithreadlibcint = 0;
 #endif
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1548
+void (*G__emergencycallback)();
+#endif
+
 /*
  * Local Variables:
  * c-tab-always-indent:nil

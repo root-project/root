@@ -21,24 +21,21 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015003
-#define G__CINTVERSIONSTR  "5.15.03, June 5 2001"
+#define G__CINTVERSION      5015004
+#define G__CINTVERSIONSTR  "5.15.04, June 17 2001"
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
 
-/* Delete following macro for DLL binary compatibility improvement */
-/* #define G__OLDIMPLEMENTATION1530 */
-
 /* Define following macro to enable multi-thread safe libcint and DLL
  * features. */
 /* #define G__MULTITHREADLIBCINT */
 
-/* Disable G__fprinterr */
-#ifndef G__ERRORCALLBACK
-#define G__OLDIMPLEMENTATION1485
-#endif
+/* Define G__ERRORCALLBACK to activat error message redirection. If
+ * G__ERRORCALLBACK is defined, a user can set a callback routine for
+ * handling error message by G__set_errmsgcallback() API */
+/* #define G__ERRORCALLBACK */
 
 /* New memory allocation scheme is turned on for ROOT by defining 
  * following macro. */
@@ -79,12 +76,10 @@
  * in platform dependency file OTHMACRO flag. Reason of not making this
  * default is because some old compilers may not support exception. */
 /* #define G__EXCEPTIONWRAPPER */
-#if defined(_WIN32) || defined(_WINDOWS) || defined(_Windows) || defined(_WINDOWS_)
-#define G__STD_EXCEPTION
-#endif
-#if defined(G__STD_EXCEPTION) && !defined(G__EXCEPTIONWRAPPER)
-#define G__EXCEPTIONWRAPPER
-#endif
+
+/* Define G__STD_EXCEPTION for using std::exception in exception handler. 
+ * If G__STD_EXCEPTION is defined, G__EXCEPTIONWRAPPER is also defined. */
+/* #define G__STD_EXCEPTION */
 
 /* If you define G__REFCONV in platform dependency file, bug fix for 
  * reference argument conversion is activated. This macro breaks DLL
@@ -199,6 +194,28 @@
 #      define G__NONSCALARFPOS2
 #   endif
 #endif
+
+
+/***********************************************************************
+ * Something that depends on platform
+ ***********************************************************************/
+
+/* Exception */
+#if defined(G__WIN32) && !defined(G__STD_EXCEPTION)
+#define G__STD_EXCEPTION
+#endif
+#if defined(G__STD_EXCEPTION) && !defined(G__EXCEPTIONWRAPPER)
+#define G__EXCEPTIONWRAPPER
+#endif
+
+/* Error redirection ,  G__fprinterr */
+#if defined(G__WIN32) && !defined(G__ERRORCALLBACk)
+#define G__ERRORCALLBACK
+#endif
+#ifndef G__ERRORCALLBACK
+#define G__OLDIMPLEMENTATION1485
+#endif
+
 
 /***********************************************************************
  * Define G__EH_DUMMY_DELETE in order to avoid some compiler dependency
@@ -1525,9 +1542,6 @@ char* G__p2f2funcname G__P((void *p2f));
 int G__isinterpretedp2f G__P((void* p2f));
 int G__compile_bytecode G__P((struct G__ifunc_table* ifunc,int index));
 
-#ifndef G__OLDIMPLEMENTATION1485
-extern G__EXPORT void G__set_errmsgcallback G__P((void *p));
-#endif
 
 
 #ifndef G__OLDIMPLEMENTATION1473
@@ -1780,10 +1794,18 @@ extern G__EXPORT double* G__Doubleref G__P((G__value *buf));
 extern G__EXPORT int G__loadsystemfile G__P((G__CONST char* filename));
 extern G__EXPORT void G__set_ignoreinclude G__P((G__IgnoreInclude ignoreinclude));
 extern G__EXPORT G__value G__exec_tempfile G__P((char *file));
-extern G__EXPORT G__value G__exec_text G__P((char *text));
+extern G__EXPORT G__value G__exec_text G__P((char *unnamedmacro));
 extern G__EXPORT char* G__lasterror_filename G__P(());
 extern G__EXPORT int G__lasterror_linenum G__P(());
 extern void G__EXPORT G__va_arg_put G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));
+
+#ifndef G__OLDIMPLEMENTATION1546
+extern G__EXPORT char* G__load_text G__P((char *namedmacro));
+extern G__EXPORT void G__set_emergencycallback G__P((void (*p2f)()));
+#endif
+#ifndef G__OLDIMPLEMENTATION1485
+extern G__EXPORT void G__set_errmsgcallback(void* p);
+#endif
 
 #else /* G__MULTITHREADLIBCINT */
 
@@ -1923,10 +1945,18 @@ static double* (*G__Doubleref) G__P((G__value *buf));
 static int (*G__loadsystemfile) G__P((G__CONST char* filename));
 static void (*G__set_ignoreinclude) G__P((G__IgnoreInclude ignoreinclude));
 static G__value (*G__exec_tempfile) G__P((char *file));
-static G__value (*G__exec_text) G__P((char *text));
+static G__value (*G__exec_text) G__P((char *unnamedmacro));
 static char* (*G__lasterror_filename) G__P(());
 static int (*G__lasterror_linenum) G__P(());
 static void (*G__va_arg_put) G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));
+
+#ifndef G__OLDIMPLEMENTATION1546
+static char* (*G__load_text) G__P((char *namedmacro));
+static void (*G__set_emergencycallback) G__P((void (*p2f)()));
+#endif
+#ifndef G__OLDIMPLEMENTATION1485
+static void (*G__set_errmsgcallback) G__P((void* p));
+#endif
 
 #ifdef G__MULTITHREADLIBCINTC
 G__EXPORT void G__SetCCintApiPointers(
@@ -2054,7 +2084,15 @@ G__EXPORT void G__SetCppCintApiPointers(
 		void* a121,
 		void* a122,
 		void* a123,
-		void* a124)
+		void* a124
+#ifndef G__OLDIMPLEMENTATION1546
+		,void* a125
+		,void* a126
+#endif
+#ifndef G__OLDIMPLEMENTATION1485
+		,void* a127
+#endif
+		)
 {
   G__main = (int (*) G__P((int argc,char **argv)) ) a1;
   G__setothermain = (void (*) G__P((int othermain)) ) a2;
@@ -2182,10 +2220,17 @@ G__EXPORT void G__SetCppCintApiPointers(
   G__loadsystemfile = (int (*) G__P((G__CONST char* filename)) ) a118;
   G__set_ignoreinclude = (void (*) G__P((G__IgnoreInclude ignoreinclude)) ) a119;
   G__exec_tempfile = (G__value (*) G__P((char *file)) ) a120;
-  G__exec_text = (G__value (*) G__P((char *text)) ) a121;
+  G__exec_text = (G__value (*) G__P((char *unnamedmacro)) ) a121;
   G__lasterror_filename = (char* (*) G__P(()) ) a122;
   G__lasterror_linenum = (int (*) G__P(()) ) a123;
   G__va_arg_put = (void (*) G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n)) ) a124;
+#ifndef G__OLDIMPLEMENTATION1546
+  G__load_text = (char* (*) G__P((char *namedmacro)) ) a125;
+  G__set_emergencycallback= (void (*) G__P((void (*p2f)())) ) a126;
+#endif
+#ifndef G__OLDIMPLEMENTATION1485
+  G__set_errmsgcallback= (void (*) G__P((void *p)) ) a127;
+#endif
 }
 
 #endif /* G__MULTITHREADLIBCINT */

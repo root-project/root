@@ -1765,8 +1765,14 @@ int tagnum,typenum;      /* overrides global variables */
 #endif
 	G__reftype=G__PARANORMAL;
 #ifndef G__OLDIMPLEMENTATION1093
+#ifndef G__OLDIMPLEMENTATION1549
+	  if(store_prerun||0==store_static_alloc||G__IsInMacro()) {
+	    reg=G__getexpr(temp);
+	  }
+#else
 	if(store_prerun||0==G__static_alloc||G__IsInMacro())
 	  reg=G__getexpr(temp);
+#endif
 	else reg=G__null;
 #else
 	reg = G__getexpr(temp);
@@ -1818,8 +1824,14 @@ int tagnum,typenum;      /* overrides global variables */
 	    G__static_alloc=0;
 #endif
 	  }
+#ifndef G__OLDIMPLEMENTATION1549
+	  if(store_prerun||0==store_static_alloc||G__IsInMacro()) {
+	    reg=G__getexpr(temp);
+	  }
+#else
 	  if(store_prerun||0==G__static_alloc||G__IsInMacro())
 	    reg = G__getpower(temp);
+#endif
 	  else reg=G__null;
 	  G__prerun=store_prerun;
 	  G__decl=store_decl;
@@ -1855,9 +1867,15 @@ int tagnum,typenum;      /* overrides global variables */
 	    G__static_alloc=0;
 #endif
 	  }
+#ifndef G__OLDIMPLEMENTATION1549
+	  if(store_prerun||0==store_static_alloc||G__IsInMacro()) {
+	    reg=G__getexpr(temp);
+	  }
+#else
 	  if(store_prerun||0==G__static_alloc||G__IsInMacro()) {
 	    reg=G__getexpr(temp);
 	  }
+#endif
 	  else reg=G__null;
 	  G__prerun=store_prerun;
 	  G__decl=store_decl;

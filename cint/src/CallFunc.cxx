@@ -81,6 +81,12 @@ void G__CallFunc::Init()
 {
   pfunc = (G__InterfaceMethod)NULL;
   para.paran = 0;
+#ifndef G__OLDIMPLEMENTATION1547
+  result = G__null;
+#ifdef G__ASM_WHOLEFUNC
+  bytecode = (struct G__bytecodefunc*)NULL;
+#endif
+#endif
 }
 ///////////////////////////////////////////////////////////////////////////
 void G__CallFunc::SetFunc(G__InterfaceMethod f)

@@ -971,10 +971,22 @@ FILE *fp;
 #ifndef G__OLDIMPLEMENTATION1525
   if(G__multithreadlibcint) {
     fprintf(fp,"extern G__DLLEXPORT void G__SetCCintApiPointers G__P((\n");
+#if !defined(G__OLDIMPLEMENTATION1485)
+    for(i=0;i<125;i++) {
+      fprintf(fp,"\tvoid*");
+      if(i!=124) fprintf(fp,",\n");
+    }
+#elif !defined(G__OLDIMPLEMENTATION1546)
+    for(i=0;i<124;i++) {
+      fprintf(fp,"\tvoid*");
+      if(i!=123) fprintf(fp,",\n");
+    }
+#else
     for(i=0;i<122;i++) {
       fprintf(fp,"\tvoid*");
       if(i!=121) fprintf(fp,",\n");
     }
+#endif
     fprintf(fp,"));\n");
   }
 #endif
@@ -988,10 +1000,22 @@ FILE *fp;
 #ifndef G__OLDIMPLEMENTATION1525
   if(G__multithreadlibcint) {
     fprintf(fp,"extern void G__SetCCintApiPointers G__P((\n");
+#if !defined(G__OLDIMPLEMENTATION1485)
+    for(i=0;i<125;i++) {
+      fprintf(fp,"\tvoid*");
+      if(i!=124) fprintf(fp,",\n");
+    }
+#elif !defined(G__OLDIMPLEMENTATION1546)
+    for(i=0;i<124;i++) {
+      fprintf(fp,"\tvoid*");
+      if(i!=123) fprintf(fp,",\n");
+    }
+#else
     for(i=0;i<122;i++) {
       fprintf(fp,"\tvoid*");
       if(i!=121) fprintf(fp,",\n");
     }
+#endif
     fprintf(fp,"));\n");
   }
 #endif
@@ -1057,10 +1081,22 @@ FILE *fp;
 #ifndef G__OLDIMPLEMENTATION1525
   if(G__multithreadlibcint) {
     fprintf(fp,"extern G__DLLEXPORT void G__SetCppCintApiPointers G__P((\n");
+#if !defined(G__OLDIMPLEMENTATION1485)
+    for(i=0;i<125;i++) {
+      fprintf(fp,"\tvoid*");
+      if(i!=124) fprintf(fp,",\n");
+    }
+#elif !defined(G__OLDIMPLEMENTATION1546)
+    for(i=0;i<124;i++) {
+      fprintf(fp,"\tvoid*");
+      if(i!=123) fprintf(fp,",\n");
+    }
+#else
     for(i=0;i<122;i++) {
       fprintf(fp,"\tvoid*");
       if(i!=121) fprintf(fp,",\n");
     }
+#endif
     fprintf(fp,"));\n");
   }
 #endif
@@ -1076,10 +1112,22 @@ FILE *fp;
 #ifndef G__OLDIMPLEMENTATION1525
   if(G__multithreadlibcint) {
     fprintf(fp,"extern void G__SetCppCintApiPointers G__P((\n");
+#if !defined(G__OLDIMPLEMENTATION1485)
+    for(i=0;i<125;i++) {
+      fprintf(fp,"\tvoid*");
+      if(i!=124) fprintf(fp,",\n");
+    }
+#elif !defined(G__OLDIMPLEMENTATION1546)
+    for(i=0;i<124;i++) {
+      fprintf(fp,"\tvoid*");
+      if(i!=123) fprintf(fp,",\n");
+    }
+#else
     for(i=0;i<122;i++) {
       fprintf(fp,"\tvoid*");
       if(i!=121) fprintf(fp,",\n");
     }
+#endif
     fprintf(fp,"));\n");
   }
 #endif
@@ -4372,12 +4420,12 @@ FILE *hfp;
 
       if(-1==G__struct.line_number[i]) { 
 	if(G__NOLINK==G__struct.iscpplink[i]) {
-	  G__fprinterr(G__serr,"Note: Link requested for undefined class %s "
+	  G__fprinterr(G__serr,"Note: Link requested for undefined class %s (ignore this message)"
 		  ,G__fulltagname(i,1));
 	}
 	else {
 	  G__fprinterr(G__serr,
-		  "Note: Link requested for already precompiled class %s "
+		  "Note: Link requested for already precompiled class %s (ignore this message)"
 		  ,G__fulltagname(i,1));
 	}
 	G__printlinenum();
@@ -7225,7 +7273,8 @@ int link_stub;
 	for(i=0;i<ifunc->allifunc;i++) {
 	  if(0==regexec(&re,ifunc->funcname[i],(size_t)0,(regmatch_t*)NULL,0)
 #ifndef G__OLDIMPLEMENTATION1534
-	     && (-1==ifunc->para_p_tagtable[i][1] ||
+	     && (ifunc->para_nu[i]<2 ||
+		 -1==ifunc->para_p_tagtable[i][1] ||
 		 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
 			 ,"G__CINT_",8)!=0)
 #endif
@@ -7254,7 +7303,8 @@ int link_stub;
 	for(i=0;i<ifunc->allifunc;i++) {
  	  if(0!=regex(re,ifunc->funcname[i])
 #ifndef G__OLDIMPLEMENTATION1534
-	     && (-1==ifunc->para_p_tagtable[i][1] ||
+	     && (ifunc->para_nu[i]<2 ||
+		 -1==ifunc->para_p_tagtable[i][1] ||
 		 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
 			 ,"G__CINT_",8)!=0)
 #endif
@@ -7283,7 +7333,8 @@ int link_stub;
 	      || ('*'==buf[0]&&strstr(ifunc->funcname[i],buf+1)))
 #endif
 #ifndef G__OLDIMPLEMENTATION1534
-	     && (-1==ifunc->para_p_tagtable[i][1] ||
+	     && (ifunc->para_nu[i]<2 ||
+		 -1==ifunc->para_p_tagtable[i][1] ||
 		 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
 			 ,"G__CINT_",8)!=0)
 #endif
@@ -7309,7 +7360,8 @@ int link_stub;
 	for(i=0;i<ifunc->allifunc;i++) {
 	  if(strcmp(buf,ifunc->funcname[i])==0
 #ifndef G__OLDIMPLEMENTATION1534
-	     && (-1==ifunc->para_p_tagtable[i][1] ||
+	     && (ifunc->para_nu[i]<2 ||
+		 -1==ifunc->para_p_tagtable[i][1] ||
 		 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
 			 ,"G__CINT_",8)!=0)
 #endif

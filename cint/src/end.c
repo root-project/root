@@ -655,6 +655,14 @@ int G__close_inputfiles()
       G__srcfile[iarg].prepname=(char*)NULL;
     }
     if(G__srcfile[iarg].filename) {
+#ifndef G__OLDIMPLEMENTATION1546
+      int len = strlen(G__srcfile[iarg].filename);
+      if(len>strlen(G__NAMEDMACROEXT2) && 
+	 strcmp(G__srcfile[iarg].filename+len-strlen(G__NAMEDMACROEXT2),
+		G__NAMEDMACROEXT2)==0) {
+	remove(G__srcfile[iarg].filename);
+      }
+#endif
       free((void*)G__srcfile[iarg].filename);
       G__srcfile[iarg].filename=(char*)NULL;
     }

@@ -672,6 +672,10 @@ extern int G__command_eval ;
 extern int G__multithreadlibcint ;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1548
+extern void (*G__emergencycallback)();
+#endif
+
 #ifndef __CINT__
 #ifdef __cplusplus
 }

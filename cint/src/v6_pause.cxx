@@ -2544,6 +2544,13 @@ G__value *rslt;
       }
     }
 
+#ifndef G__OLDIMPLEMENTATION1546
+    else if(strncmp("save",com,4)==0) {
+      if(G__emergencycallback) (*G__emergencycallback)();
+      else fprintf(G__sout,"!!!No emergency callback\n");
+    }
+#endif
+
 #ifndef G__OLDIMPLEMENTATION970
     else if(strncmp("COPYFLAG",com,1)==0) {
       fprintf(G__sout,"set source file copy flag '%s'\n",string);
@@ -2682,6 +2689,9 @@ G__value *rslt;
       G__more(G__sout,"             qqq       : quit cint - mandatory\n");
       G__more(G__sout,"             qqqqq     : exit process immediately\n");
       G__more(G__sout,"             qqqqqqq   : abort process\n");
+#ifndef G__OLDIMPLEMENTATION1546
+      G__more(G__sout,"             save      : call emergency routine to save important data\n");
+#endif
     }
 
     else if(strncmp("/",com,1)==0) {
@@ -3106,7 +3116,7 @@ G__value *rslt;
     }
     else if( strncmp(command,"qqqqq",5)==0 ||
 	     strncmp(command,"QQQQQ",5)==0) {
-      G__fprinterr(G__serr,"If you can not quit with 'qqqqq', try 'qqqqqqq'.\n");
+      G__fprinterr(G__serr,"  Bye... (try 'qqqqqqq' if still running)\n");
       exit(EXIT_FAILURE);
     }
 
@@ -3115,11 +3125,11 @@ G__value *rslt;
       fprintf(G__sout,"*** Process will be killed ***\n");
       strcpy(command,G__input("Are you sure(y/Y/n)? "));
       if(command[0]=='Y') {
-	G__fprinterr(G__serr,"If you can not quit with 'qqq', try 'qqqqq'.\n");
+	G__fprinterr(G__serr,"  Bye... (try 'qqqqq' if still running)\n");
 	exit(EXIT_FAILURE); 
       }
       else if(command[0]=='y') {
-	G__fprinterr(G__serr,"If you can not quit with 'qqq', try 'qqqqq'.\n");
+	G__fprinterr(G__serr,"  Bye... (try 'qqqqq' if still running)\n");
 #ifndef G__OLDIMPLEMENTATION464
 	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
 		      ,keyword,pipefile);
@@ -3190,7 +3200,7 @@ G__value *rslt;
 	return(ignore);
       }
       else {
-	G__fprinterr(G__serr,"If you can not quit with 'q', try 'qqq'.\n");
+	G__fprinterr(G__serr,"  Bye... (try 'qqq' if still running)\n");
       }
 
       G__stepover=0;
