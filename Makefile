@@ -625,7 +625,7 @@ version: $(CINTTMP)
 cintdlls: $(CINTTMP)
 	@$(MAKECINTDLLS) $(PLATFORM) "$(CINTTMP)" "$(MAKELIB)" "$(CXX)" \
 	   "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" "$(CINTCFLAGS)" \
-	   "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)"
+	   "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)"
 
 static: rootlibs
 	@$(MAKESTATIC) $(PLATFORM) "$(CXX)" "$(CC)" "$(LD)" "$(LDFLAGS)" \
