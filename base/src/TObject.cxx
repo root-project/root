@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.57 2003/12/09 17:49:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.58 2004/04/16 20:53:55 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -775,14 +775,16 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
    }
 
    if ((option & kOverwrite)) {
-      key = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
+      //One must use GetKey. FindObject would return the lowest cycle of the key!
+      //key = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
+      key = (TKey*)gDirectory->GetKey(oname);
       if (key) {
          key->Delete();
          delete key;
       }
    }
    if ((option & kWriteDelete)) {
-      oldkey = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
+      oldkey = (TKey*)gDirectory->GetKey(oname);
    }
    key = new TKey(this, oname, bsize);
    if (newName) delete [] newName;
