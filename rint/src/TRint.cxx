@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.3 2000/06/13 18:49:00 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.4 2001/02/22 13:32:00 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -72,8 +72,6 @@ Bool_t TInterruptHandler::Notify()
 
    // make sure we use the sbrk heap (in case of mapped files)
    gMmallocDesc = 0;
-//  go via the interpreter???
-//   if (gProof) gProof->Interrupt(TProof::kHardInterrupt);
 
    if (!G__get_security_error())
       G__genericerror("\n *** Break *** keyboard interrupt");
@@ -165,11 +163,11 @@ TRint::TRint(const char *appClassName, int *argc, char **argv, void *options,
 
    // Install interrupt and terminal input handlers
    TInterruptHandler *ih = new TInterruptHandler();
-   gSystem->AddSignalHandler(ih);
+   ih->Add();
    SetSignalHandler(ih);
 
    TTermInputHandler *th = new TTermInputHandler(0);
-   gSystem->AddFileHandler(th);
+   th->Add();
 
    // Goto into raw terminal input mode
    char defhist[128];
