@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.19 2002/11/05 10:28:39 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.20 2002/12/02 18:50:03 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -449,9 +449,10 @@ class TGGroupFrame : public TGCompositeFrame {
 friend class TGClient;
 
 protected:
-   TGString      *fText;
-   FontStruct_t   fFontStruct;
-   GContext_t     fNormGC;
+   TGString      *fText;         // title text
+   FontStruct_t   fFontStruct;   // title fontstruct
+   GContext_t     fNormGC;       // title graphics context
+   Int_t          fTitlePos;     // title position
 
    virtual void DoRedraw();
 
@@ -459,6 +460,8 @@ protected:
    static TGGC          fgDefaultGC;
 
 public:
+   enum ETitlePos { kLeft = -1, kCenter = 0, kRight = 1 };
+
    static FontStruct_t  GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();
 
@@ -474,7 +477,9 @@ public:
                 ULong_t back = GetDefaultFrameBackground());
    virtual ~TGGroupFrame();
 
+   virtual TGDimension GetDefaultSize() const;
    virtual void DrawBorder();
+   virtual void SetTitlePos(ETitlePos pos = kLeft) { fTitlePos = pos; }
    virtual void SetTitle(TGString *title);
    virtual void SetTitle(const char *title);
    virtual const char *GetTitle() const { return fText->GetString(); }

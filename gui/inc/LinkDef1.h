@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.8 2001/05/02 00:52:07 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.9 2001/09/18 10:56:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -31,6 +31,7 @@
 #pragma link C++ enum TGNumberFormat::EAttribute;
 #pragma link C++ enum TGNumberFormat::ELimit;
 #pragma link C++ enum TGNumberFormat::EStepSize;
+#pragma link C++ enum TGGroupFrame::ETitlePos;
 
 #pragma link C++ global gClient;
 

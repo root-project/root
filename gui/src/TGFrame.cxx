@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.19 2002/11/05 10:28:40 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.20 2002/11/24 22:47:37 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1096,6 +1096,7 @@ TGGroupFrame::TGGroupFrame(const TGWindow *p, const char *title,
    fText       = new TGString(title);
    fFontStruct = font;
    fNormGC     = norm;
+   fTitlePos   = kLeft;
 
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
@@ -1108,6 +1109,19 @@ TGGroupFrame::~TGGroupFrame()
    // Delete a group frame.
 
    delete fText;
+}
+
+//______________________________________________________________________________
+TGDimension TGGroupFrame::GetDefaultSize() const
+{
+   // Returns default size.
+
+   UInt_t tw = gVirtualX->TextWidth(fFontStruct, fText->GetString(),
+                                    fText->GetLength()) + 24;
+
+   TGDimension dim = TGCompositeFrame::GetDefaultSize();
+
+   return  tw>dim.fWidth ? TGDimension(tw, dim.fHeight) : dim;
 }
 
 //______________________________________________________________________________
@@ -1126,9 +1140,9 @@ void TGGroupFrame::DrawBorder()
 {
    // Draw border of around the group frame.
 
-   int x, y, tw, l, t, r, b, gl, gr, sep, max_ascent, max_descent;
+   Int_t x, y, l, t, r, b, gl, gr, sep, max_ascent, max_descent;
 
-   tw = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
+   UInt_t tw = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
    l = 0;
@@ -1137,7 +1151,19 @@ void TGGroupFrame::DrawBorder()
    b = fHeight - 1;
 
    sep = 3;
-   gl = 5 + sep;
+   UInt_t rr = 5 + (sep << 1) + tw;
+
+   switch (fTitlePos) {
+      case kRight:
+         gl = fWidth>rr ? fWidth - rr : 5 + sep;
+         break;
+      case kCenter:
+         gl = fWidth>tw ? ((fWidth - tw)>>1) - sep : 5 + sep;
+         break;
+      case kLeft:
+      default:
+         gl = 5 + sep;
+   }
    gr = gl + tw + (sep << 1);
 
    gVirtualX->DrawLine(fId, fgShadowGC(),  l,   t,   gl,  t);

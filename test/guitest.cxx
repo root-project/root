@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.24 2002/09/14 00:35:48 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.25 2002/09/18 12:22:14 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -224,7 +224,8 @@ public:
 class TestDialog : public TGTransientFrame {
 
 private:
-   TGCompositeFrame    *fFrame1, *fF1, *fF2, *fF3, *fF4, *fF5, *fF6, *fF7;
+   TGCompositeFrame    *fFrame1, *fF1, *fF2, *fF3, *fF4, *fF5;
+   TGGroupFrame        *fF6, *fF7;
    TGButton            *fOkButton, *fCancelButton, *fStartB, *fStopB;
    TGButton            *fBtn1, *fBtn2, *fChk1, *fChk2, *fRad1, *fRad2;
    TGPictureButton     *fPicBut1;
@@ -896,6 +897,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    tf->SetLayoutManager(new TGHorizontalLayout(tf));
 
    fF6 = new TGGroupFrame(tf, "Options", kVerticalFrame);
+   fF6->SetTitlePos(TGGroupFrame::kRight); // right aligned
    tf->AddFrame(fF6, fL3);
 
    // 2 column, n rows
