@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.46 2001/04/28 07:49:24 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.47 2001/05/07 12:34:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1273,20 +1273,20 @@ void TTreePlayer::EstimateLimits(Int_t, Int_t nentries, Int_t firstentry)
    Int_t nchans = fNbins[0];
    if (fVar1) {
       if (fVmin[0] >= fVmax[0]) { fVmin[0] -= 1; fVmax[0] += 1;}
-      FindGoodLimits(nchans,fNbins[0],fVmin[0],fVmax[0]);
+      FindGoodLimits(nchans,fNbins[0],fVmin[0],fVmax[0], fVar1->IsInteger());
    }
    if (fVar2) {
       if (fVmin[1] >= fVmax[1]) { fVmin[1] -= 1; fVmax[1] += 1;}
-      FindGoodLimits(nchans,fNbins[1],fVmin[1],fVmax[1]);
+      FindGoodLimits(nchans,fNbins[1],fVmin[1],fVmax[1], fVar2->IsInteger());
    }
    if (fVar3) {
       if (fVmin[2] >= fVmax[2]) { fVmin[2] -= 1; fVmax[2] += 1;}
-      FindGoodLimits(nchans,fNbins[2],fVmin[2],fVmax[2]);
+      FindGoodLimits(nchans,fNbins[2],fVmin[2],fVmax[2], fVar3->IsInteger());
    }
 }
 
 //______________________________________________________________________________
-void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax)
+void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax, Bool_t isInteger)
 {
 //*-*-*-*-*-*-*-*-*Find reasonable bin values*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==========================
@@ -1308,7 +1308,20 @@ void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Do
       xmin    = binlow;
       xmax    = binhigh;
    }
-
+   if (isInteger) {
+      Int_t ixmin = Int_t(xmin);
+      Int_t ixmax = Int_t(xmax);
+      Double_t dxmin = Double_t(ixmin);
+      Double_t dxmax = Double_t(ixmax);
+      if (xmin < 0 && xmin != dxmin) xmin = dxmin - 1;
+      else                           xmin = dxmin;
+      if (xmax > 0 && xmax != dxmax) xmax = dxmax + 1;
+      else                           xmax = dxmax;
+      if (xmin >= xmax) xmax = xmin+1;
+      Int_t bw = 1 + Int_t((xmax-xmin)/nbins);
+      nbins = Int_t((xmax-xmin)/bw);
+      if (xmin +nbins*bw < xmax) {nbins++; xmax = xmin +nbins*bw;}
+  }
    newbins = nbins; 
 }
 
@@ -2869,7 +2882,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
      }
      Int_t nchans = fNbins[0];
      if (fVmin[0] >= fVmax[0]) { fVmin[0] -= 1; fVmax[0] += 1;}
-     FindGoodLimits(nchans,fNbins[0],fVmin[0],fVmax[0]);
+     FindGoodLimits(nchans,fNbins[0],fVmin[0],fVmax[0], fVar1->IsInteger());
 
      // When a PROOF client ask master for limits
      if (gProofServ) {
@@ -2894,9 +2907,9 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
      }
      Int_t nchans = fNbins[0];
      if (fVmin[0] >= fVmax[0]) { fVmin[0] -= 1; fVmax[0] += 1;}
-     FindGoodLimits(nchans,fNbins[0],fVmin[0],fVmax[0]);
+     FindGoodLimits(nchans,fNbins[0],fVmin[0],fVmax[0], fVar1->IsInteger());
      if (fVmin[1] >= fVmax[1]) { fVmin[1] -= 1; fVmax[1] += 1;}
-     FindGoodLimits(nchans,fNbins[1],fVmin[1],fVmax[1]);
+     FindGoodLimits(nchans,fNbins[1],fVmin[1],fVmax[1], fVar2->IsInteger());
 
      TH2 *h2 = (TH2*)obj;
      h2->SetBins(fNbins[1],fVmin[1],fVmax[1],fNbins[0],fVmin[0],fVmax[0]);
@@ -2912,7 +2925,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
      }
      Int_t nchans = fNbins[1];
      if (fVmin[1] >= fVmax[1]) { fVmin[1] -= 1; fVmax[1] += 1;}
-     FindGoodLimits(nchans,fNbins[1],fVmin[1],fVmax[1]);
+     FindGoodLimits(nchans,fNbins[1],fVmin[1],fVmax[1], fVar2->IsInteger());
      TProfile *hp = (TProfile*)obj;
      hp->SetBins(fNbins[1],fVmin[1],fVmax[1]);
      hp->FillN(nfill, fV2, fV1, fW);
@@ -2927,9 +2940,9 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
      }
      Int_t nchans = fNbins[0];
      if (fVmin[0] >= fVmax[0]) { fVmin[0] -= 1; fVmax[0] += 1;}
-     FindGoodLimits(nchans,fNbins[0],fVmin[0],fVmax[0]);
+     FindGoodLimits(nchans,fNbins[0],fVmin[0],fVmax[0], fVar1->IsInteger());
      if (fVmin[1] >= fVmax[1]) { fVmin[1] -= 1; fVmax[1] += 1;}
-     FindGoodLimits(nchans,fNbins[1],fVmin[1],fVmax[1]);
+     FindGoodLimits(nchans,fNbins[1],fVmin[1],fVmax[1], fVar2->IsInteger());
 
      TH2 *h2 = (TH2*)obj;
      h2->SetBins(fNbins[1],fVmin[1],fVmax[1],fNbins[0],fVmin[0],fVmax[0]);
@@ -2976,11 +2989,11 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
      }
      Int_t nchans = fNbins[0];
      if (fVmin[0] >= fVmax[0]) { fVmin[0] -= 1; fVmax[0] += 1;}
-     FindGoodLimits(nchans,fNbins[0],fVmin[0],fVmax[0]);
+     FindGoodLimits(nchans,fNbins[0],fVmin[0],fVmax[0], fVar1->IsInteger());
      if (fVmin[1] >= fVmax[1]) { fVmin[1] -= 1; fVmax[1] += 1;}
-     FindGoodLimits(nchans,fNbins[1],fVmin[1],fVmax[1]);
+     FindGoodLimits(nchans,fNbins[1],fVmin[1],fVmax[1], fVar2->IsInteger());
      if (fVmin[2] >= fVmax[2]) { fVmin[2] -= 1; fVmax[2] += 1;}
-     FindGoodLimits(nchans,fNbins[2],fVmin[2],fVmax[2]);
+     FindGoodLimits(nchans,fNbins[2],fVmin[2],fVmax[2], fVar3->IsInteger());
 
      TH3 *h3 = (TH3*)obj;
      h3->SetBins(fNbins[2],fVmin[2],fVmax[2],fNbins[1],fVmin[1],fVmax[1],fNbins[0],fVmin[0],fVmax[0]);
