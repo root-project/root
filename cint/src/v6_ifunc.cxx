@@ -5716,7 +5716,7 @@ int isrecursive;
 #endif
   
   /* Search matching template function name */
-  while(deftmpfunc->next) {
+  while(deftmpfunc) {
     G__freecharlist(&call_para);
 #ifndef G__OLDIMPLEMENTATION1560
     if(ptmplt) {
@@ -5769,14 +5769,7 @@ int isrecursive;
 #ifndef G__OLDIMPLEMENTATION1727
       if(pexplicitarg) {
 	int tmp=0;
-	char *p = pexplicitarg-1;
-	pexplicitarg = (char*)malloc(strlen(funcname)+1);
-	strcpy(pexplicitarg,funcname);
-	*p = '<';
 	G__hash(funcname,hash,tmp);
-      }
-      else {
-	pexplicitarg = "";
       }
 #endif
       
@@ -5784,11 +5777,11 @@ int isrecursive;
        * then expand the template and parse as prerun */
       G__replacetemplate(
 #ifndef G__OLDIMPLEMENTATION1727
-			 pexplicitarg
+			 funcname
 #else
 			 ""
 #endif
-			 ,funcname
+			 ,funcnamein
 			 ,&call_para /* needs to make this up */
 			 ,deftmpfunc->def_fp
 			 ,deftmpfunc->line
@@ -5802,27 +5795,20 @@ int isrecursive;
 
       G__friendtagnum = store_friendtagnum;
 
-#ifndef G__OLDIMPLEMENTATION1727
-      if(pexplicitarg && pexplicitarg[0]) {
-	free((void*)pexplicitarg);
-      }
-      pexplicitarg=(char*)NULL;
-#endif
-
       /* search for instantiated template function */
       ifunc = p_ifunc;
       while(ifunc && ifunc->next && ifunc->next->allifunc) ifunc=ifunc->next;
       if(ifunc) {
 	ifn = ifunc->allifunc-1;
-	if(strcmp(funcname,ifunc->funcname[ifn])==0) {
+	if(strcmp(funcnamein,ifunc->funcname[ifn])==0) {
 #ifndef G__OLDIMPLEMENTATION1560
 	  if(ptmplt) {
 	    int tmp;
 	    *ptmplt='<';
 	    free((void*)ifunc->funcname[ifn]);
-	    ifunc->funcname[ifn] = (char*)malloc(strlen(funcname)+1);
-	    strcpy(ifunc->funcname[ifn],funcname);
-	    G__hash(funcname,hash,tmp);
+	    ifunc->funcname[ifn] = (char*)malloc(strlen(funcnamein)+1);
+	    strcpy(ifunc->funcname[ifn],funcnamein);
+	    G__hash(funcnamein,hash,tmp);
 	    ifunc->hash[ifn] = hash;
 	  }
 #endif
