@@ -30,3 +30,4 @@ void ScanString() {
 #ifdef __MAKECINT__
 #pragma link C++ class vector<ScanStringClass>;
 #endif
+
