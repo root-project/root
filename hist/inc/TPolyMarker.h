@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.h,v 1.4 2001/09/19 20:05:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.h,v 1.5 2002/01/20 10:11:40 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -28,6 +28,8 @@
 #ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
 #endif
+
+class TCollection;
 
 class TPolyMarker : public TObject, public TAttMarker {
 protected:
