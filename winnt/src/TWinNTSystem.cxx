@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.6 2000/11/17 13:29:14 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.7 2000/12/27 18:08:40 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -200,13 +200,16 @@ TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
    fhProcess = GetCurrentProcess();
    fDirNameBuffer = 0;
    fShellName = 0;
+   fWin32Timer = 0;
+   fhSmallIconList = 0;
+   fhNormalIconList = 0;
 
    WSADATA  WSAData;
    int initwinsock= 0;
    if (initwinsock = WSAStartup(MAKEWORD(2,0),&WSAData)) {
-           Error("TWinNTSystem()","Starting sockets failed");  //  %d \n",initwinsock);
-           // printf(" exit code = %d \n", 1);
-           // return -1;
+      Error("TWinNTSystem()","Starting sockets failed");
+      // printf(" exit code = %d \n", 1);
+      // return -1;
    }
 }
 
