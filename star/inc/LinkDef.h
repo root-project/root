@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: LinkDef.h,v 1.2 2000/06/05 08:01:03 brun Exp $ */
+/* @(#)root/star:$Name:  $:$Id: LinkDef.h,v 1.2 2001/03/02 21:44:39 fine Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -18,6 +18,7 @@
 #pragma link C++ class TDataSet+;
 #pragma link C++ class TDataSetIter;
 #pragma link C++ class TFileSet+;
+#pragma link C++ class TFileIter;
 #pragma link C++ class TObjectSet+;
 #pragma link C++ class TPoints3D+;
 #pragma link C++ class TPolyLineShape+;
