@@ -1,44 +1,41 @@
-// example of macro to read data from an ascii file and
-// create a root file with a Tree.
-// see also a variant in cernbuild.C
-// Author: Rene Brun
-void staff() {
-   
+{
+//   example of macro to read data from an ascii file and
+//   create a root file with an histogram and an ntuple.
+
+   gROOT->Reset();
+
    struct staff_t {
-      Int_t           Category;
-      UInt_t          Flag;
-      Int_t           Age;
-      Int_t           Service;
-      Int_t           Children;
-      Int_t           Grade;
-      Int_t           Step;
-      Int_t           Hrweek;
-      Int_t           Cost;
-      Char_t          Division[4];
-      Char_t          Nation[3];
+                Float_t cat;
+                Float_t division;
+                Float_t flag;
+                Float_t age;
+                Float_t service;
+                Float_t children;
+                Float_t grade;
+                Float_t step;
+                Float_t nation;
+                Float_t hrweek;
+                Float_t cost;
     };
 
    staff_t staff;
 
-   //The input file cern.dat is a copy of the CERN staff data base
-   //from 1988
-   FILE *fp = fopen("cernstaff.dat","r");
+   FILE *fp = fopen("staff.dat","r");
 
-   char line[80];
+   char line[81];
 
    TFile *f = new TFile("staff.root","RECREATE");
-   TTree *tree = new TTree("T","staff data from ascii file");
-   tree->Branch("staff",&staff.Category,"Category/I:Flag:Age:Service:Children:Grade:Step:Hrweek:Cost");
-   tree->Branch("Division",staff.Division,"Division/C");
-   tree->Branch("Nation",staff.Nation,"Nation/C");
-    //note that the branches Division and Nation cannot be on the first branch
+   TNtuple *ntuple = new TNtuple("ntuple","staff data from ascii file",
+        "cat:division:flag:age:service:children:grade:step:nation:hrweek:cost");
+
    while (fgets(&line,80,fp)) {
-      sscanf(&line[0],"%d %d %d %d %d",&staff.Category,&staff.Flag,&staff.Age,&staff.Service,&staff.Children);
-      sscanf(&line[32],"%d %d  %d %d %s %s",&staff.Grade,&staff.Step,&staff.Hrweek,&staff.Cost,staff.Division,staff.Nation);
-      tree->Fill();
+      sscanf(&line[0] ,"%f%f%f%f", &staff.cat,&staff.division,&staff.flag,&staff.age);
+      sscanf(&line[17],"%f%f%f%f", &staff.service,&staff.children,&staff.grade,&staff.step);
+      sscanf(&line[33],"%f%f%f",   &staff.nation,&staff.hrweek,&staff.cost);
+      ntuple->Fill(&staff.cat);
    }
-   tree->Print();
-   tree->Write();
+   ntuple->Print();
 
    fclose(fp);
+   f->Write();
 }

@@ -5,7 +5,6 @@
 
 #ifdef G__MEMTEST
 #undef malloc
-#undef free
 #endif
 
 extern "C" void G__cpp_reset_tagtableG__stream();

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.50 2002/02/01 07:14:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.7 2000/10/09 10:09:54 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -9,18 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <iostream.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <sys/stat.h>
 #ifndef WIN32
 #   include <unistd.h>
 #else
 #   define ssize_t int
 #   include <io.h>
+#   include <sys/stat.h>
 #   include <sys/types.h>
 #endif
 
-#include "Riostream.h"
 #include "Strlen.h"
 #include "TFile.h"
 #include "TWebFile.h"
@@ -33,12 +33,7 @@
 #include "TError.h"
 #include "Bytes.h"
 #include "TInterpreter.h"
-#include "TStreamerInfo.h"
-#include "TArrayC.h"
 #include "TClassTable.h"
-#include "TProcessID.h"
-#include "TPluginManager.h"
-
 
 TFile *gFile;                 //Pointer to current file
 
@@ -62,9 +57,6 @@ TFile::TFile() : TDirectory()
    fWritten    = 0;
    fSumBuffer  = 0;
    fSum2Buffer = 0;
-   fClassIndex = 0;
-   fCache      = 0;
-   fProcessIDs = 0;
 
    if (gDebug)
       cerr << "TFile default ctor" <<endl;
@@ -108,7 +100,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 //  A ROOT file can be used interactively. In this case, one has the
 //    possibility to delete existing objects and add new ones.
 //  When an object is deleted from the file, the freed space is added
-//  into the FREE linked list (fFree). The FREE list consists of a chain
+//  into the FREE linked list (lFree). The FREE list consists of a chain
 //  of consecutive free segments on the file. At the same time, the first
 //  4 bytes of the freed record on the file are overwritten by GAPSIZE
 //  where GAPSIZE = -(Number of bytes occupied by the record).
@@ -186,11 +178,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fSum2Buffer = 0;
    fBytesRead  = 0;
    fBytesWrite = 0;
-   fClassIndex = 0;
-   fSeekInfo   = 0;
-   fNbytesInfo = 0;
-   fCache      = 0;
-   fProcessIDs = 0;
 
    if (!fOption.CompareTo("NET", TString::kIgnoreCase))
       return;
@@ -307,10 +294,7 @@ TFile::~TFile()
 
    Close();
 
-   delete fProcessIDs; fProcessIDs = 0;
-
    SafeDelete(fFree);
-   SafeDelete(fCache);
 
    gROOT->GetListOfFiles()->Remove(this);
 
@@ -334,7 +318,7 @@ void TFile::Init(Bool_t create)
       fFree        = new TList;
       fBEGIN       = kBegin;    //First used word in file following the file header
       fEND         = fBEGIN;    //Pointer to end of file
-      new TFree(fFree, fBEGIN, max_file_size);  //Create new free list
+      new TFree(fBEGIN, max_file_size);  //Create new free list
 
 //*-* Write Directory info
       Int_t namelen= TNamed::Sizeof();
@@ -374,8 +358,6 @@ void TFile::Init(Bool_t create)
       frombuf(buffer, &fNbytesName);
       frombuf(buffer, &fUnits );
       frombuf(buffer, &fCompress);
-      frombuf(buffer, &fSeekInfo);
-      frombuf(buffer, &fNbytesInfo);
       fSeekDir = fBEGIN;
       delete [] header;
 //*-*-------------Read Free segments structure if file is writable
@@ -416,33 +398,22 @@ void TFile::Init(Bool_t create)
          Error("Init","Cannot read directory info");
          goto zombie;
       }
-//*-* -------------Check if file is truncated
-      Long_t id, size, flags, modtime;
-      gSystem->GetPathInfo(GetName(), &id, &size, &flags, &modtime);
 //*-* -------------Read keys of the top directory
-      if (fSeekKeys > fBEGIN && fEND <= size) {
+      if (fSeekKeys > fBEGIN) {
          TDirectory::ReadKeys();
          gDirectory = this;
       } else {
-         if (fEND > size) {
-            Error("TFile","file %s is truncated at %d bytes: should be %d, trying to recover",GetName(),size,fEND);
-         } else {
-            Warning("TFile","file %s probably not closed, trying to recover",GetName());
-         }
-         if (!Recover()) goto zombie;
+         Warning("TFile","file %s probably not closed, trying to recover",GetName());
+         Recover();
       }
    }
    gROOT->GetListOfFiles()->Add(this);
 
-   // Create StreamerInfo index
-   {
-      Int_t lenIndex = gROOT->GetListOfStreamerInfo()->GetSize()+1;
-      if (lenIndex < 5000) lenIndex = 5000;
-      fClassIndex = new TArrayC(lenIndex);
-      if (fSeekFree > fBEGIN) ReadStreamerInfo();
+   if (TClassTable::GetDict("TProof")) {
+      if (gROOT->ProcessLineFast("TProof::IsActive()"))
+         gROOT->ProcessLineFast(Form("TProof::This()->ConnectFile((TFile *)0x%lx);",
+                                (Long_t)this));
    }
-
-   fProcessIDs = new TObjArray(10);
    return;
 
 zombie:
@@ -459,14 +430,6 @@ void TFile::Close(Option_t *)
 
    if (!IsOpen()) return;
 
-   if (IsWritable()) {
-      TStreamerInfo::SetCurrentFile(this);
-      WriteStreamerInfo();
-   }
-
-   delete fClassIndex;
-   fClassIndex = 0;
-
    TCollection::StartGarbageCollection();
 
    TDirectory *cursav = gDirectory;
@@ -481,12 +444,11 @@ void TFile::Close(Option_t *)
    cd();      // Close() sets gFile = 0
 
    if (IsWritable()) {
-      TFree *f1 = (TFree*)fFree->First();
+      TFree *f1 = (TFree*) GetListOfFree()->First();
       if (f1) {
          WriteFree();       //*-*- Write free segments linked list
          WriteHeader();     //*-*- Now write file header
       }
-      if (fCache) fCache->Flush();
    }
 
    // Delete free segments from free list (but don't delete list header)
@@ -507,18 +469,14 @@ void TFile::Close(Option_t *)
       gFile      = 0;
       gDirectory = gROOT;
    }
-   TStreamerInfo::SetCurrentFile(gFile);
-
-   //delete the TProcessIDs
-   TIter next(fProcessIDs);
-   TProcessID *pid;
-   while ((pid = (TProcessID*)next())) {
-      if (!pid->DecrementCount()) {
-         if (pid != TProcessID::GetSessionProcessID()) delete pid;
-      }
-  }
 
    gROOT->GetListOfFiles()->Remove(this);
+
+   if (TClassTable::GetDict("TProof")) {
+      if (gROOT->ProcessLineFast("TProof::IsActive()"))
+         gROOT->ProcessLineFast(Form("TProof::This()->DisConnectFile((TFile *)0x%lx);",
+                                (Long_t)this));
+   }
 
    TCollection::EmptyGarbageCollection();
 }
@@ -584,7 +542,7 @@ void TFile::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-Int_t TFile::GetBestBuffer() const
+Int_t TFile::GetBestBuffer()
 {
 //*-*-*-*-*-*-*-*Return the best buffer size of objects on this file*-*-*-*-*-*
 //*-*            ===================================================
@@ -611,16 +569,17 @@ Float_t TFile::GetCompressionFactor()
 //
    Short_t  keylen;
    UInt_t   datime;
-   Int_t    nbytes, objlen, nwh = 64;
+   Int_t    nbytes,objlen;
    char    *header = new char[kBegin];
    char    *buffer;
    Seek_t   idcur = fBEGIN;
    Float_t comp,uncomp;
    comp = uncomp = fBEGIN;
+   char nwh = 64;
 
    while (idcur < fEND-100) {
       Seek(idcur);
-      ReadBuffer(header, nwh);
+      ReadBuffer(header,int(nwh));
       buffer=header;
       frombuf(buffer, &nbytes);
       if (nbytes < 0) {
@@ -628,7 +587,6 @@ Float_t TFile::GetCompressionFactor()
          Seek(idcur);
          continue;
       }
-      if (nbytes == 0) break; //this may happen when the file is corrupted
       Version_t versionkey;
       frombuf(buffer, &versionkey);
       frombuf(buffer, &objlen);
@@ -641,22 +599,6 @@ Float_t TFile::GetCompressionFactor()
    }
    delete [] header;
    return uncomp/comp;
-}
-
-//______________________________________________________________________________
-Int_t TFile::GetErrno() const
-{
-   // Method returning errno. Is overriden in TRFIOFile.
-
-   return TSystem::GetErrno();
-}
-
-//______________________________________________________________________________
-void TFile::ResetErrno() const
-{
-   // Method resetting the errno. Is overridden in TRFIOFile.
-
-   TSystem::ResetErrno();
 }
 
 //______________________________________________________________________________
@@ -708,25 +650,7 @@ Int_t TFile::GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nby
 }
 
 //______________________________________________________________________________
-Seek_t TFile::GetSize() const
-{
-   // Returns the current file size.
-
-   Long_t id, size, flags, modtime;
-#if defined(R__AIX) || (defined(R__HPUX) && !defined(R__ACC))
-   if (((TFile*)this)->SysStat(fD, &id, &size, &flags, &modtime)) {
-#else
-   if (const_cast<TFile*>(this)->SysStat(fD, &id, &size, &flags, &modtime)) {
-#endif
-      Error("GetSize", "cannot stat the file %s", GetName());
-      return 0;
-   }
-
-   return size;
-}
-
-//______________________________________________________________________________
-void TFile::ls(Option_t *option) const
+void TFile::ls(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List File contents*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ==================
@@ -756,18 +680,17 @@ void TFile::MakeFree(Seek_t first, Seek_t last)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Mark unused bytes on the file*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =============================
-//  The list of free segments is in the fFree linked list
+//  The list of free segments is in the lFree linked list
 //  When an object is deleted from the file, the freed space is added
-//  into the FREE linked list (fFree). The FREE list consists of a chain
+//  into the FREE linked list (lFree). The FREE list consists of a chain
 //  of consecutive free segments on the file. At the same time, the first
 //  4 bytes of the freed record on the file are overwritten by GAPSIZE
 //  where GAPSIZE = -(Number of bytes occupied by the record).
 //
 
-   TFree *f1      = (TFree*)fFree->First();
+   TFree *f1      = (TFree*) GetListOfFree()->First();
    if (!f1) return;
-   TFree *newfree = f1->AddFree(fFree,first,last);
-   if(!newfree) return;
+   TFree *newfree = f1->AddFree(first,last);
    Seek_t nfirst  = newfree->GetFirst();
    Seek_t nlast   = newfree->GetLast();
    Int_t nbytes   = Int_t (nfirst - nlast -1);
@@ -782,7 +705,6 @@ void TFile::MakeFree(Seek_t first, Seek_t last)
    delete [] psave;
 }
 
-
 //______________________________________________________________________________
 void TFile::Map()
 {
@@ -793,35 +715,19 @@ void TFile::Map()
 //     Date/Time  Record_Adress Logical_Record_Length  ClassName  CompressionFactor
 //
 //  Example of output
-//  20010404/150437  At:64        N=150       TFile
-//  20010404/150440  At:214       N=28326     TBasket        CX =  1.13
-//  20010404/150440  At:28540     N=29616     TBasket        CX =  1.08
-//  20010404/150440  At:58156     N=29640     TBasket        CX =  1.08
-//  20010404/150440  At:87796     N=29076     TBasket        CX =  1.10
-//  20010404/150440  At:116872    N=10151     TBasket        CX =  3.15
-//  20010404/150441  At:127023    N=28341     TBasket        CX =  1.13
-//  20010404/150441  At:155364    N=29594     TBasket        CX =  1.08
-//  20010404/150441  At:184958    N=29616     TBasket        CX =  1.08
-//  20010404/150441  At:214574    N=29075     TBasket        CX =  1.10
-//  20010404/150441  At:243649    N=9583      TBasket        CX =  3.34
-//  20010404/150442  At:253232    N=28324     TBasket        CX =  1.13
-//  20010404/150442  At:281556    N=29641     TBasket        CX =  1.08
-//  20010404/150442  At:311197    N=29633     TBasket        CX =  1.08
-//  20010404/150442  At:340830    N=29091     TBasket        CX =  1.10
-//  20010404/150442  At:369921    N=10341     TBasket        CX =  3.09
-//  20010404/150442  At:380262    N=509       TH1F           CX =  1.93
-//  20010404/150442  At:380771    N=1769      TH2F           CX =  4.32
-//  20010404/150442  At:382540    N=1849      TProfile       CX =  1.65
-//  20010404/150442  At:384389    N=18434     TNtuple        CX =  4.51
-//  20010404/150442  At:402823    N=307       KeysList
-//  20010404/150443  At:403130    N=4548      StreamerInfo   CX =  3.65
-//  20010404/150443  At:407678    N=86        FreeSegments
-//  20010404/150443  At:407764    N=1         END
+//  960122/105933  At:64        N=160       TFile
+//  960122/105933  At:224       N=402       TH1F           CX = 2.09
+//  960122/105934  At:626       N=1369      TH2F           CX = 5.57
+//  960122/105934  At:1995      N=1761      TProfile       CX = 1.63
+//  960122/105936  At:3756      N=181640    THN            CX = 1.10
+//  960122/105936  At:185396    N=326       TFile
+//  960122/105936  At:185722    N=98        TFile
 //
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
    Seek_t   seekkey,seekpdir;
+   char    *header = new char[kBegin];
    char    *buffer;
    char     nwhc;
    Seek_t   idcur = fBEGIN;
@@ -829,13 +735,10 @@ void TFile::Map()
    nwheader = 64;
    Int_t nread = nwheader;
 
-   char header[kBegin];
-   char classname[512];
-
    while (idcur < fEND) {
       Seek(idcur);
       if (idcur+nread >= fEND) nread = fEND-idcur-1;
-      ReadBuffer(header, nread);
+      ReadBuffer(header,int(nread));
       buffer=header;
       frombuf(buffer, &nbytes);
       if (!nbytes) {
@@ -857,12 +760,10 @@ void TFile::Map()
       frombuf(buffer, &seekkey);
       frombuf(buffer, &seekpdir);
       frombuf(buffer, &nwhc);
+      char *classname = new char[nwhc+1];
       int i;
       for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
       classname[nwhc] = '\0';
-      if (idcur == fSeekFree) strcpy(classname,"FreeSegments");
-      if (idcur == fSeekInfo) strcpy(classname,"StreamerInfo");
-      if (idcur == fSeekKeys) strcpy(classname,"KeysList");
       TDatime::GetDateTime(datime, date, time);
       if (objlen != nbytes-keylen) {
          Float_t cx = Float_t(objlen+keylen)/Float_t(nbytes);
@@ -870,9 +771,10 @@ void TFile::Map()
       } else {
          Printf("%d/%06d  At:%-8d  N=%-8d  %-14s",date,time,idcur,nbytes,classname);
       }
+      delete [] classname;
       idcur += nbytes;
    }
-   Printf("%d/%06d  At:%-8d  N=%-8d  %-14s",date,time,idcur,1,"END");
+   delete [] header;
 }
 
 //______________________________________________________________________________
@@ -886,7 +788,7 @@ void TFile::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TFile::Print(Option_t *option) const
+void TFile::Print(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Print all objects in the file*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =============================
@@ -897,15 +799,15 @@ void TFile::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Bool_t TFile::ReadBuffer(char *buf, Int_t len)
+Bool_t TFile::ReadBuffer(char *buf, int len)
 {
    // Read a buffer from the file. This is the basic low level read operation.
    // Returns kTRUE in case of failure.
 
    if (IsOpen()) {
       ssize_t siz;
-      while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
-         ResetErrno();
+      while ((siz = SysRead(fD, buf, len)) < 0 && TSystem::GetErrno() == EINTR)
+         TSystem::ResetErrno();
       if (siz < 0) {
          SysError("ReadBuffer", "error reading from file %s", GetName());
          return kTRUE;
@@ -941,22 +843,17 @@ void TFile::ReadFree()
    while(1) {
       TFree *afree = new TFree();
       afree->ReadBuffer(buffer);
-      fFree->Add(afree);
       if (afree->GetLast() > fEND) break;
    }
    delete headerfree;
 }
 
 //______________________________________________________________________________
-Int_t TFile::Recover()
+void TFile::Recover()
 {
 //*-*-*-*-*-*-*-*-*Attempt to recover file if not correctly closed*-*-*-*-*
 //*-*              ===============================================
-//
-//  The function returns the number of keys that have been recovered.
-//  If no keys can be recovered, the file will be declared Zombie by 
-//  the calling function.
-       
+
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
@@ -967,12 +864,9 @@ Int_t TFile::Recover()
    Seek_t   idcur = fBEGIN;
 
    Long_t id, size, flags, modtime;
-   if (SysStat(fD, &id, &size, &flags, &modtime)) {
-      Error("Recover", "cannot stat the file %s", GetName());
-      return 0;
-   }
+   gSystem->GetPathInfo(GetName(),&id,&size,&flags,&modtime);
 
-   fEND = Seek_t(size);
+   fEND = (Int_t)size;
 
    if (fWritable && !fFree) fFree  = new TList;
 
@@ -984,7 +878,7 @@ Int_t TFile::Recover()
    while (idcur < fEND) {
       Seek(idcur);
       if (idcur+nread >= fEND) nread = fEND-idcur-1;
-      ReadBuffer(header, nread);
+      ReadBuffer(header,int(nread));
       buffer  = header;
       bufread = header;
       frombuf(buffer, &nbytes);
@@ -994,7 +888,7 @@ Int_t TFile::Recover()
       }
       if (nbytes < 0) {
          idcur -= nbytes;
-         if (fWritable) new TFree(fFree,idcur,idcur-nbytes-1);
+         if (fWritable) new TFree(idcur,idcur-nbytes-1);
          Seek(idcur);
          continue;
       }
@@ -1012,24 +906,22 @@ Int_t TFile::Recover()
       for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
       classname[nwhc] = '\0';
       TDatime::GetDateTime(datime, date, time);
-      if (seekpdir == fSeekDir && strcmp(classname,"TBasket")) {
-         key = new TKey();
-         key->ReadBuffer(bufread);
-         AppendKey(key);
-         nrecov++;
-         Printf("Recovering key: %s:%s at address:%d",key->GetClassName(),key->GetName(),idcur);
-      }
+      if (!strcmp(classname,"TBasket")) {idcur += nbytes; continue;}
+      if (seekpdir != fSeekDir) {idcur += nbytes; continue;}
+      key = new TKey();
+      key->ReadBuffer(bufread);
+      AppendKey(key);
+      nrecov++;
       delete [] classname;
       idcur += nbytes;
    }
    if (fWritable) {
-      new TFree(fFree,fEND,2000000000);
+      new TFree(fEND,2000000000);
       if (nrecov) Write();
    }
    delete [] header;
    if (nrecov) Warning("Recover", "successfully recovered %d keys", nrecov);
-   else        Warning("Recover", "no keys recovered: file is a Zombie");
-   return nrecov;
+   else        Warning("Recover", "no keys recovered");
 }
 
 //______________________________________________________________________________
@@ -1109,43 +1001,6 @@ void TFile::SumBuffer(Int_t bufsize)
    fSum2Buffer += bufsize*bufsize;
 }
 
-//_______________________________________________________________________
-void TFile::UseCache(Int_t maxCacheSize, Int_t pageSize)
-{
-   // Activate caching. Use maxCacheSize to specify the maximum cache size
-   // in MB's (default is 10 MB) and pageSize to specify the page size
-   // (default is 512 KB). To turn off the cache use maxCacheSize=0.
-   // Not needed for normal disk files since the operating system will
-   // do proper caching (via the "buffer cache"). Use it for TNetFile,
-   // TWebFile and TRFIOFile.
-
-   if (IsA() == TFile::Class())
-      return;
-
-   if (maxCacheSize == 0) {
-      if (fCache) {
-         if (IsWritable())
-            fCache->Flush();
-         delete fCache;
-         fCache = 0;
-      }
-      return;
-   }
-
-   if (fCache) {
-      // if pageSize is changed, we need to delete the cache and recreate it
-      if (pageSize != fCache->GetPageSize()) {
-         if (IsWritable())
-            fCache->Flush();
-         delete fCache;
-      } else if (maxCacheSize != fCache->GetMaxCacheSize()) {
-         fCache->Resize(maxCacheSize);
-         return;
-      }
-   }
-   fCache = new TCache(maxCacheSize, this, pageSize);
-}
-
 //______________________________________________________________________________
 Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
 {
@@ -1177,7 +1032,6 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
    }
 
    Int_t nbytes = TDirectory::Write(0, opt, bufsiz); // Write directory tree
-   WriteStreamerInfo();
    WriteFree();                       // Write free segments linked list
    WriteHeader();                     // Now write file header
 
@@ -1186,7 +1040,7 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
 }
 
 //______________________________________________________________________________
-Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
+Bool_t TFile::WriteBuffer(const char *buf, int len)
 {
    // Write a buffer to the file. This is the basic low level write operation.
    // Returns kTRUE in case of failure.
@@ -1194,8 +1048,8 @@ Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
    if (IsOpen() && fWritable) {
       ssize_t siz;
       gSystem->IgnoreInterrupt();
-      while ((siz = SysWrite(fD, buf, len)) < 0 && GetErrno() == EINTR)
-         ResetErrno();
+      while ((siz = SysWrite(fD, buf, len)) < 0 && TSystem::GetErrno() == EINTR)
+         TSystem::ResetErrno();
       gSystem->IgnoreInterrupt(kFALSE);
       if (siz < 0) {
          SysError("WriteBuffer", "error writing to file %s", GetName());
@@ -1258,7 +1112,7 @@ void TFile::WriteHeader()
 //*-*-*-*-*-*-*-*-*-*-*-*Write File Header*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =================
 //
-   TFree *lastfree = (TFree*)fFree->Last();
+   TFree *lastfree = (TFree*)GetListOfFree()->Last();
    if (lastfree) fEND  = lastfree->GetFirst();
    const char *root = "root";
    char *psave  = new char[kBegin];
@@ -1274,8 +1128,6 @@ void TFile::WriteHeader()
    tobuf(buffer, fNbytesName);
    tobuf(buffer, fUnits);
    tobuf(buffer, fCompress);
-   tobuf(buffer, fSeekInfo);
-   tobuf(buffer, fNbytesInfo);
    Int_t nbytes  = buffer - psave;
    Seek(0);
    WriteBuffer(psave, nbytes);
@@ -1284,366 +1136,28 @@ void TFile::WriteHeader()
 }
 
 //______________________________________________________________________________
-void TFile::MakeProject(const char *dirname, const char *classes, Option_t *option)
-{
-// Generate code in directory dirname for all classes specified in argument classes
-// If classes = "*" (default), the function generates an include file for each
-// class in the StreamerInfo list for which a TClass object does not exist.
-// One can restrict the list of classes to be generated by using expressions like:
-//   classes = "Ali*" generate code only for classes starting with Ali
-//   classes = "myClass" generate code for class MyClass only.
-//
-// if option = "new" (default) a new directory dirname is created.
-//                   If dirname already exist, an error message is printed
-//                   and the function returns.
-// if option = "recreate", then;
-//                   if dirname does not exist, it is created (like in "new")
-//                   if dirname already exist, all existing files in dirname
-//                   are deleted before creating the new files.
-// if option = "update", then new classes are added to the existing directory.
-//                   Existing classes with the same name are replaced by the
-//                   new definition. If the directory dirname doest not exist,
-//                   same effect as "new".
-// if, in addition to one of the 3 above options, the option "+" is specified,
-// the function will generate:
-//   - a script called MAKE to build the shared lib
-//   - a LinkDef.h file
-//   - rootcint will be run to generate a dirnameProjectDict.cxx file
-//   - dirnameProjectDict.cxx will be compiled with the current options in compiledata.h
-//   - a shared lib dirname.so will be created.
-// if the option "++" is specified, the generated shared lib is dynamically
-// linked with the current executable module.
-// example:
-//  file.MakeProject("demo","*","recreate++");
-//  - creates a new directory demo unless it already exist
-//  - clear the previous directory content
-//  - generate the xxx.h files for all classes xxx found in this file
-//    and not yet known to the CINT dictionary.
-//  - creates the build script MAKE
-//  - creates a LinkDef.h file
-//  - runs rootcint generating demoProjectDict.cxx
-//  - compiles demoProjectDict.cxx into demoProjectDict.o
-//  - generates a shared lib demo.so
-//  - dynamically links the shared lib demo.so to the executable
-//  If only the option "+" had been specified, one can still link the
-//  shared lib to the current executable module with:
-//     gSystem->load("demo/demo.so");
-//
-
-   TString opt = option;
-   opt.ToLower();
-   void *dir = gSystem->OpenDirectory(dirname);
-   char *path = new char[4000];
-
-   if (opt.Contains("update")) {
-      // check that directory exist, if not create it
-      if (dir == 0) {
-         gSystem->mkdir(dirname);
-      }
-
-   } else if (opt.Contains("recreate")) {
-      // check that directory exist, if not create it
-      if (dir == 0) {
-         gSystem->mkdir(dirname);
-      }
-      // clear directory
-      while (dir) {
-         const char *afile = gSystem->GetDirEntry(dir);
-         if (afile == 0) break;
-         if (strcmp(afile,".") == 0) continue;
-         if (strcmp(afile,"..") == 0) continue;
-         sprintf(path,"%s/%s",dirname,afile);
-         gSystem->Unlink(path);
-      }
-
-   } else {
-      // new is assumed
-      // if directory already exist, print error message and return
-      if (dir) {
-         Error("MakeProject","Cannot create directory:%s, already existing",dirname);
-         delete [] path;
-         return;
-      }
-      gSystem->mkdir(dirname);
-   }
-
-   // we are now ready to generate the classes
-   // loop on all TStreamerInfo
-   TList *list = 0;
-   if (fSeekInfo) {
-      TKey *key = new TKey();
-      char *buffer = new char[fNbytesInfo+1];
-      char *buf    = buffer;
-      Seek(fSeekInfo);
-      ReadBuffer(buf,fNbytesInfo);
-      key->ReadBuffer(buf);
-      list = (TList*)key->ReadObj();
-      delete [] buffer;
-      delete key;
-   } else {
-      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
-   }
-   if (list == 0) {
-      Error("MakeProject","File has no StreamerInfo");
-      delete [] path;
-      return;
-   }
-
-   // loop on all TStreamerInfo classes
-   TStreamerInfo *info;
-   TIter next(list);
-   Int_t ngener = 0;
-   while ((info = (TStreamerInfo*)next())) {
-      ngener += info->GenerateHeaderFile(dirname);
-   }
-   list->Delete();
-   delete list;
-   printf("MakeProject has generated %d classes in %s\n",ngener,dirname);
-
-   // generate the shared lib
-   if (!opt.Contains("+")) { delete [] path; return;}
-
-   // create the MAKE file by looping on all *.h files
-   // delete MAKE if it already exists
-#ifdef WIN32
-   sprintf(path,"%s/make.cmd",dirname);
-#else
-   sprintf(path,"%s/MAKE",dirname);
-#endif
-   FILE *fpMAKE = fopen(path,"w");
-   if (!fpMAKE) {
-      printf("Cannot open file:%s\n",path);
-      delete [] path;
-      return;
-   }
-
-   // add rootcint statement generating ProjectDict.cxx
-   fprintf(fpMAKE,"rootcint -f %sProjectDict.cxx -c %s ",dirname,gSystem->GetIncludePath());
-
-   // create the LinkDef.h file by looping on all *.h files
-   // delete LinkDef.h if it already exists
-   sprintf(path,"%s/LinkDef.h",dirname);
-   FILE *fp = fopen(path,"w");
-   if (!fp) {
-      printf("Cannot open path file:%s\n",path);
-      delete [] path;
-      return;
-   }
-   fprintf(fp,"#ifdef __CINT__\n");
-   fprintf(fp,"#pragma link off all globals;\n");
-   fprintf(fp,"#pragma link off all classes;\n");
-   fprintf(fp,"#pragma link off all functions;\n");
-   fprintf(fp,"\n");
-   dir = gSystem->OpenDirectory(dirname);
-   while (dir) {
-      const char *afile = gSystem->GetDirEntry(dir);
-      if (afile == 0) break;
-      if(strcmp(afile,"LinkDef.h") == 0) continue;
-      if(strstr(afile,"ProjectDict.h") != 0) continue;
-      strcpy(path,afile);
-      char *h = strstr(path,".h");
-      if (!h) continue;
-      *h = 0;
-      fprintf(fp,"#pragma link C++ class %s+;\n",path);
-      fprintf(fpMAKE,"%s ",afile);
-  }
-   fprintf(fp,"#endif\n");
-   fclose(fp);
-   fprintf(fpMAKE,"LinkDef.h \n");
-
-   // add compilation line
-   TString sdirname(dirname);
-
-   TString cmd = gSystem->GetMakeSharedLib();
-   cmd.ReplaceAll("$SourceFiles",sdirname+"ProjectDict.cxx");
-   cmd.ReplaceAll("$ObjectFiles",sdirname+"ProjectDict."+gSystem->GetObjExt());
-   cmd.ReplaceAll("$IncludePath",TString(gSystem->GetIncludePath()) + " -I" + dirname);
-   cmd.ReplaceAll("$SharedLib",sdirname+"."+gSystem->GetSoExt());
-   cmd.ReplaceAll("$LinkedLibs",gSystem->GetLibraries("","SDL"));
-   cmd.ReplaceAll("$LibName",sdirname);
-   cmd.ReplaceAll("$BuildDir",".");
-
-   fprintf(fpMAKE,"%s\n",cmd.Data());
-
-   fclose(fpMAKE);
-   printf("%s/MAKE file has been generated\n",dirname);
-
-   // now execute the generated script compiling and generating the shared lib
-   strcpy(path,gSystem->WorkingDirectory());
-   gSystem->ChangeDirectory(dirname);
-#ifndef WIN32
-   gSystem->Exec("chmod +x MAKE");
-#else
-   // not really needed for Windows but it would work both both Unix and NT
-   chmod("make.cmd",00700);
-#endif
-   int res = !gSystem->Exec("MAKE");
-   gSystem->ChangeDirectory(path);
-   sprintf(path,"%s/%s.%s",dirname,dirname,gSystem->GetSoExt());
-   if (res) printf("Shared lib %s has been generated\n",path);
-
-   //dynamically link the generated shared lib
-   if (opt.Contains("++")) {
-      res = !gSystem->Load(path);
-      if (res) printf("Shared lib %s has been dynamically linked\n",path);
-   }
-   delete [] path;
-}
-
-//______________________________________________________________________________
-void TFile::ReadStreamerInfo()
-{
-// Read the list of StreamerInfo from this file
-// The key with name holding the list of TStreamerInfo objects is read.
-// The corresponding TClass objects are updated.
-
-   TList *list = 0;
-   if (fSeekInfo > 0 && fSeekInfo < fEND) {
-      TKey *key = new TKey();
-      char *buffer = new char[fNbytesInfo+1];
-      char *buf    = buffer;
-      Seek(fSeekInfo);
-      ReadBuffer(buf,fNbytesInfo);
-      key->ReadBuffer(buf);
-      list = (TList*)key->ReadObj();
-      delete [] buffer;
-      delete key;
-   } else {
-      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
-   }
-
-   if (list == 0) return;
-   if (gDebug > 0) printf("Calling ReadStreamerInfo for file: %s\n",GetName());
-//list->Dump();
-   // loop on all TStreamerInfo classes
-   TStreamerInfo *info;
-   TIter next(list);
-   while ((info = (TStreamerInfo*)next())) {
-      if (info->IsA() != TStreamerInfo::Class()) {
-         Warning("ReadStreamerInfo"," not a TStreamerInfo object");
-         continue;
-      }
-      info->BuildCheck();
-      Int_t uid = info->GetNumber();
-      if (uid >= 0) fClassIndex->fArray[uid] = 1;
-      if (gDebug > 0) printf(" -class: %s version: %d info read at slot %d\n",info->GetName(), info->GetClassVersion(),uid);
-   }
-   fClassIndex->fArray[0] = 0;
-   list->Clear();  //this will delete all TStreamerInfo objects with kCanDelete bit set
-   delete list;
-}
-
-//______________________________________________________________________________
-void TFile::ShowStreamerInfo()
-{
-// Show the StreamerInfo of all classes written to this file.
-
-   TList *list = 0;
-   if (fSeekInfo) {
-      TKey *key = new TKey();
-      char *buffer = new char[fNbytesInfo+1];
-      char *buf    = buffer;
-      Seek(fSeekInfo);
-      ReadBuffer(buf,fNbytesInfo);
-      key->ReadBuffer(buf);
-      list = (TList*)key->ReadObj();
-      delete [] buffer;
-      delete key;
-   } else {
-      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
-   }
-
-   if (list == 0) {
-      printf("Cannot find the StreamerInfo record in this file\n");
-      return;
-   }
-
-   list->ls();
-
-   list->Delete();
-   delete list;
-}
-
-//______________________________________________________________________________
-void TFile::WriteStreamerInfo()
-{
-//  Write the list of TStreamerInfo as a single object in this file
-//  The class Streamer description for all classes written to this file
-//  is saved.
-//  see class TStreamerInfo
-
-   //if (!gFile) return;
-   if (!fWritable) return;
-   if (!fClassIndex) return;
-   //no need to update the index if no new classes added to the file
-   if (fClassIndex->fArray[0] == 0) return;
-   if (gDebug > 0) printf("Calling WriteStreamerInfo for file: %s\n",GetName());
-
-   // build a temporary list with the marked files
-   TIter next(gROOT->GetListOfStreamerInfo());
-   TStreamerInfo *info;
-   TList list;
-
-   while ((info = (TStreamerInfo*)next())) {
-      Int_t uid = info->GetNumber();
-      if (fClassIndex->fArray[uid]) list.Add(info);
-      if (gDebug > 0) printf(" -class: %s info number %d saved\n",info->GetName(),uid);
-   }
-   if (list.GetSize() == 0) return;
-   fClassIndex->fArray[0] = 0;
-
-   // always write with compression on
-   Int_t compress = fCompress;
-   fCompress = 1;
-   TFile * fileSave = gFile;
-   TDirectory *dirSave = gDirectory;
-   gFile = this;
-   gDirectory = this;
-
-   //free previous StreamerInfo record
-   if (fSeekInfo) MakeFree(fSeekInfo,fSeekInfo+fNbytesInfo-1);
-   //Create new key
-   TKey key(&list,"StreamerInfo",GetBestBuffer());
-   fKeys->Remove(&key);
-   fSeekInfo   = key.GetSeekKey();
-   fNbytesInfo = key.GetNbytes();
-   SumBuffer(key.GetObjlen());
-   key.WriteFile(0);
-
-   gFile = fileSave;
-   gDirectory = dirSave;
-   fCompress = compress;
-}
-
-//______________________________________________________________________________
-TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
-                   Int_t compress, Int_t netopt)
+TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle, Int_t compress)
 {
    // Static member function allowing the creation/opening of either a
-   // TFile, TNetFile, TWebFile or any TFile derived class for which an
-   // plugin library handler has been registered with the plugin manager
-   // (for the plugin manager see the TPluginManager class). The returned
-   // type of TFile depends on the file name. If the file starts with
-   // "root:" or "roots:" a TNetFile object will be returned, with "http:"
-   // a TWebFile, with "file:" a local TFile, etc. (see the list of TFile
-   // plugin handlers for regular axpressions that will be checked) and
-   // as last a local file will be tried.
-   // Before opening a file via TNetFile a check is made to see if the URL
+   // TFile, TNetFile, TWebFile or a TRFIOFile. The returned type of TFile
+   // depends on the file name. If the file starts with "root:" a TNetFile
+   // object will be returned, with "http:" a TWebFile, with "rfio:" a
+   // TRFIOFile and with "file:" or the default a local TFile. However,
+   // before opening a file via TNetFile a check is made to see if the URL
    // specifies a local file. If that is the case the file will be opened
    // via a normal TFile. To force the opening of a local file via a
    // TNetFile use either TNetFile directly or specify as host "localhost".
    // For the meaning of the options and other arguments see the constructors
-   // of the individual file classes. In case of error returns 0.
+   // of the individual file classes.
 
-   TPluginHandler *h;
    TFile *f = 0;
 
-   if (!strncmp(name, "root:", 5) || !strncmp(name, "roots:", 6)) {
+   if (!strncmp(name, "root:", 5)) {
       TUrl url(name);
       TInetAddress a(gSystem->GetHostByName(url.GetHost()));
       TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
       if (strcmp(a.GetHostName(), b.GetHostName()))
-         f = new TNetFile(name, option, ftitle, compress, netopt);
+         f = new TNetFile(name, option, ftitle, compress);
       else {
          const char *fname = url.GetFile();
          if (fname[1] == '/' || fname[1] == '~' || fname[1] == '$')
@@ -1652,16 +1166,17 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
             f = new TFile(Form("%s%s", gSystem->HomeDirectory(), fname),
                           option, ftitle, compress);
       }
+   } else if (!strncmp(name, "rfio:", 5)) {
+      if (gROOT->LoadClass("TRFIOFile", "RFIO")) return 0;
+      f = (TFile*) gROOT->ProcessLineFast(Form("new TRFIOFile(\"%s\",\"%s\",\"%s\",%d)",
+          name, option, ftitle, compress));
+   } else if (!strncmp(name, "hpss:", 5)) {
+
    } else if (!strncmp(name, "http:", 5))
       f = new TWebFile(name);
    else if (!strncmp(name, "file:", 5))
       f = new TFile(name+5, option, ftitle, compress);
-   else if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
-      if (h->LoadPlugin() == -1)
-         return 0;
-      f = (TFile*) gROOT->ProcessLineFast(Form("new %s(\"%s\",\"%s\",\"%s\",%d)",
-                   h->GetClass(), name, option, ftitle, compress));
-   } else
+   else
       f = new TFile(name, option, ftitle, compress);
 
    return f;
@@ -1670,7 +1185,7 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
 //______________________________________________________________________________
 Int_t TFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
-   // Interface to system open. All arguments like in POSIX open().
+   // Interface to system open. All arguments like in "man 2 open".
 
    return ::open(pathname, flags, mode);
 }
@@ -1678,7 +1193,7 @@ Int_t TFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 //______________________________________________________________________________
 Int_t TFile::SysClose(Int_t fd)
 {
-   // Interface to system close. All arguments like in POSIX close().
+   // Interface to system close. All arguments like in "man 2 close".
 
    return ::close(fd);
 }
@@ -1686,7 +1201,7 @@ Int_t TFile::SysClose(Int_t fd)
 //______________________________________________________________________________
 Int_t TFile::SysRead(Int_t fd, void *buf, Int_t len)
 {
-   // Interface to system read. All arguments like in POSIX read().
+   // Interface to system read. All arguments like in "man 2 read".
 
    return ::read(fd, buf, len);
 }
@@ -1694,7 +1209,7 @@ Int_t TFile::SysRead(Int_t fd, void *buf, Int_t len)
 //______________________________________________________________________________
 Int_t TFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 {
-   // Interface to system write. All arguments like in POSIX write().
+   // Interface to system write. All arguments like in "man 2 write".
 
    return ::write(fd, buf, len);
 }
@@ -1702,27 +1217,17 @@ Int_t TFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 //______________________________________________________________________________
 Seek_t TFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
 {
-   // Interface to system lseek. All arguments like in POSIX lseek()
-   // except that the offset and return value are of a type which will
-   // be able to handle 64 bit file systems in the future.
+   // Interface to system lseek. All arguments like in "man 2 lseek"
+   // except that the offset and return value are Long_t to be able to
+   // handle 64 bit file systems.
 
    return ::lseek(fd, offset, whence);
 }
 
 //______________________________________________________________________________
-Int_t TFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags,
-                     Long_t *modtime)
-{
-   // Return file stat information. The interface and return value is
-   // identical to TSystem::GetPathInfo().
-
-   return gSystem->GetPathInfo(GetName(), id, size, flags, modtime);
-}
-
-//______________________________________________________________________________
 Int_t TFile::SysSync(Int_t fd)
 {
-   // Interface to system fsync. All arguments like in POSIX fsync().
+   // Interface to system fsync. All arguments like in "man 2 fsync".
 
 #ifndef WIN32
    return ::fsync(fd);

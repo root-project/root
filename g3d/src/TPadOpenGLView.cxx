@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.6 2001/10/04 16:52:47 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.2 2000/06/05 07:28:47 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -74,6 +74,11 @@ TPadOpenGLView::TPadOpenGLView(TVirtualPad *pad) : TPadView3D(pad)
 //*-* Set the indentity matrix as a extra rotations
     for (i=1;i<15;i++)  fExtraRotMatrix[i] = 0;
     for (i=0;i<16;i+=5) fExtraRotMatrix[i] = 1.0;
+#if 0
+//*-*  Date protection
+    TDatime lock;
+    if (lock.GetDate() > 970530) ::exit(-1);
+#endif
 }
 
 //____________________________________________________________________________
@@ -151,16 +156,7 @@ void TPadOpenGLView::MapOpenGL()
    gVirtualGL->EnableGL(kCULL_FACE);
 
    gVirtualGL->PolygonGLMode(kFRONT,kFILL);
-
-#ifdef Inventor
-   // "Default light" with Inventor is "native" Inventor
-   gVirtualGL->SetRootLight(kFALSE);
-#else
-   // "Default light" with no Inventor is "ROOT artificial" light
    gVirtualGL->SetRootLight(kTRUE);
-#endif
-
-
    gVirtualGL->FrontGLFace(kCCW);
 
 //*-* Create a main GL list to draw the scene
@@ -248,7 +244,7 @@ void TPadOpenGLView::PaintPolyLine(TPolyLine3D *line,Option_t *opt)
 {
     gVirtualGL->SetGLColorIndex(line->GetLineColor());
     gVirtualGL->SetGLLineWidth((Float_t)(line->GetLineWidth()));
-    gVirtualGL->PaintPolyLine(line->Size(), line->GetP(), opt);
+    gVirtualGL->PaintPolyLine(line->GetN(), line->GetP(), opt);
 }
 
 //______________________________________________________________________________
@@ -256,7 +252,7 @@ void TPadOpenGLView::PaintPolyMarker(TPolyMarker3D *marker,Option_t *opt)
 {
     gVirtualGL->SetGLColorIndex(marker->GetMarkerColor());
     gVirtualGL->SetGLPointSize((Float_t)(marker->GetMarkerSize()));
-    gVirtualGL->PaintGLPoints(marker->Size(), marker->GetP(), opt);
+    gVirtualGL->PaintGLPoints(marker->GetN(), marker->GetP(), opt);
 }
 //______________________________________________________________________________
 void TPadOpenGLView::PaintPoints3D(const TPoints3DABC *points,Option_t *opt)
@@ -373,7 +369,7 @@ void TPadOpenGLView::HandleInput(Int_t button, Int_t x, Int_t y)
 #endif
 
 //______________________________________________________________________________
-void TPadOpenGLView::MoveModelView(Char_t option, Int_t count)
+void TPadOpenGLView::MoveModelView(const Char_t option, Int_t count)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-* option = 'u' //*-*  Move down

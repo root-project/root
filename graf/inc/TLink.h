@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLink.h,v 1.3 2000/09/08 16:07:33 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLink.h,v 1.2 2000/06/13 11:05:33 brun Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -29,11 +29,11 @@
 class TLink : public TText {
 
 protected:
+   enum { kObjIsParent = BIT(1) };
 
    void   *fLink;           //pointer to object
 
 public:
-   enum { kObjIsParent = BIT(1) , kIsStarStar = BIT(2)};
    TLink();
    TLink(Double_t x, Double_t y, void *pointer);
    virtual ~TLink();

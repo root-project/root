@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.3 2000/10/29 14:26:03 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.2 2000/10/26 15:33:16 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -104,20 +104,6 @@
 #pragma link C++ enum EKeySym;
 #pragma link C++ enum EEventType;
 
-#pragma link C++ struct  Event_t;
-#pragma link C++ struct  timespec;
-#pragma link C++ typedef timespec_t;
-
-#pragma link C++ function operator<<(ostream&, const TTimeStamp&);
-#pragma link C++ function operator<<(TBuffer&, const TTimeStamp&);
-#pragma link C++ function operator>>(TBuffer&, TTimeStamp&);
-#pragma link C++ function operator==(const TTimeStamp&, const TTimeStamp&);
-#pragma link C++ function operator!=(const TTimeStamp&, const TTimeStamp&);
-#pragma link C++ function operator< (const TTimeStamp&, const TTimeStamp&);
-#pragma link C++ function operator<=(const TTimeStamp&, const TTimeStamp&);
-#pragma link C++ function operator> (const TTimeStamp&, const TTimeStamp&);
-#pragma link C++ function operator>=(const TTimeStamp&, const TTimeStamp&);
-
-#pragma link C++ class TTimeStamp+;
+#pragma link C++ struct Event_t;
 
 #endif

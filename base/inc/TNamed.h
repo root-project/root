@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.h,v 1.3 2001/01/12 08:27:10 brun Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -46,19 +46,18 @@ public:
    TNamed(const TNamed &named);
    TNamed& operator=(const TNamed& rhs);
    virtual ~TNamed() { }
-   virtual TObject *Clone(const char *newname="") const;
-   virtual Int_t    Compare(const TObject *obj) const;
+   virtual Int_t    Compare(TObject *obj);
    virtual void     Copy(TObject &named);
    virtual void     FillBuffer(char *&buffer);
    virtual const char  *GetName() const {return fName.Data();}
    virtual const char  *GetTitle() const {return fTitle.Data();}
-   virtual ULong_t  Hash() const { return fName.Hash(); }
+   virtual ULong_t  Hash() { return fName.Hash(); }
    virtual Bool_t   IsSortable() const { return kTRUE; }
    virtual void     SetName(const char *name); // *MENU*
-   virtual void     SetNameTitle(const char *name, const char *title);
+   virtual void     SetObject(const char *name, const char *title);
    virtual void     SetTitle(const char *title=""); // *MENU*
-   virtual void     ls(Option_t *option="") const;
-   virtual void     Print(Option_t *option="") const;
+   virtual void     ls(Option_t *option="");
+   virtual void     Print(Option_t *option="");
    virtual Int_t    Sizeof() const;
 
    ClassDef(TNamed,1)  //The basis for a named object (name, title)

@@ -1,6 +1,5 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.6 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.2 2000/06/13 12:18:42 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
-
 // ***********************************************************************
 // * C++ class library to paint 3D axice "arround" TView object
 //                     and zoom 3D objects  as well
@@ -20,11 +19,12 @@
 // * representations about the suitability of this software for any
 // * purpose.  It is provided "as is" without express or implied warranty.
 // ************************************************************************
+//
 
+#include <iostream.h>
 #include <ctype.h>
 #include <assert.h>
 
-#include "Riostream.h"
 #include "TClass.h"
 #include "TAxis3D.h"
 #include "TCanvas.h"
@@ -280,11 +280,11 @@ void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-char *TAxis3D::GetObjectInfo(Int_t , Int_t ) const
+char *TAxis3D::GetObjectInfo(Int_t , Int_t )
 {
 //  Dummy method
 //  returns the const char * to "axis3d"
-  return (char*)"axis3d";
+  return "axis3d";
 }
 
 //______________________________________________________________________________
@@ -491,7 +491,7 @@ void TAxis3D::UseCurrentStyle()
 }
 
 //______________________________________________________________________________
-Int_t TAxis3D::AxisChoice( Option_t *axis) const
+Int_t TAxis3D::AxisChoice( Option_t *axis)
 {
  //  Return the axis index by its name
    char achoice = toupper(axis[0]);
@@ -502,56 +502,56 @@ Int_t TAxis3D::AxisChoice( Option_t *axis) const
 }
 
 //______________________________________________________________________________
-Int_t TAxis3D::GetNdivisions( Option_t *axis) const
+Int_t TAxis3D::GetNdivisions( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    return fAxis[ax].GetNdivisions();
 }
 
 //______________________________________________________________________________
-Color_t TAxis3D::GetAxisColor( Option_t *axis) const
+Color_t TAxis3D::GetAxisColor( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    return fAxis[ax].GetAxisColor();
 }
 
 //______________________________________________________________________________
-Color_t TAxis3D::GetLabelColor( Option_t *axis) const
+Color_t TAxis3D::GetLabelColor( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    return fAxis[ax].GetLabelColor();
 }
 
 //______________________________________________________________________________
-Style_t TAxis3D::GetLabelFont( Option_t *axis) const
+Style_t TAxis3D::GetLabelFont( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    return fAxis[ax].GetLabelFont();
 }
 
 //______________________________________________________________________________
-Float_t TAxis3D::GetLabelOffset( Option_t *axis) const
+Float_t TAxis3D::GetLabelOffset( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    return fAxis[ax].GetLabelOffset();
 }
 
 //______________________________________________________________________________
-Float_t TAxis3D::GetLabelSize( Option_t *axis) const
+Float_t TAxis3D::GetLabelSize( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    return fAxis[ax].GetLabelSize();
 }
 
 //______________________________________________________________________________
-Float_t TAxis3D::GetTickLength( Option_t *axis) const
+Float_t TAxis3D::GetTickLength( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    return fAxis[ax].GetTickLength();
 }
 
 //______________________________________________________________________________
-Float_t TAxis3D::GetTitleOffset( Option_t *axis) const
+Float_t TAxis3D::GetTitleOffset( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    fAxis[ax].GetTitleOffset();

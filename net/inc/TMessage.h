@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.3 2000/12/12 18:20:02 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   19/12/96
 
 /*************************************************************************
@@ -33,18 +33,13 @@
 class TMessage : public TBuffer {
 
 friend class TSocket;
-friend class TPSocket;
 
 private:
    UInt_t   fWhat;   //message type
    TClass  *fClass;  //if message is kMESS_OBJECT, pointer to object's class
 
-   // TMessage objects cannot be copied or assigned
-   TMessage(const TMessage &);           // not implemented
-   void operator=(const TMessage &);     // not implemented
-
-   TMessage(void *buf, Int_t bufsize);   // only called by T(P)Socket::Recv()
-   void SetLength() const;               // only called by T(P)Socket::Send()
+   TMessage(void *buf, Int_t bufsize);   // only called by TSocket::Recv()
+   void SetLength() const;               // only called by TSocket::Send()
 
 public:
    TMessage(UInt_t what = kMESS_ANY);
@@ -56,8 +51,6 @@ public:
    void     Reset(UInt_t what) { SetWhat(what); Reset(); }
    UInt_t   What() const { return fWhat; }
    void     SetWhat(UInt_t what);
-
-   void     WriteObject(const TObject *obj);
 
    ClassDef(TMessage,0)  // Message buffer class
 };

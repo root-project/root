@@ -1,7 +1,0 @@
-@prefix@/bin/rootd 
-@prefix@/bin/proofd 
-@prefix@/bin/proofserv 
-@prefix@/share/root/proof 
-@prefix@/share/man/man1/rootd.1 
-@prefix@/share/man/man1/proofd.1 
-@prefix@/share/man/man1/proofserv.1 

@@ -1,6 +1,0 @@
-short: A meta-package for a complete ROOT environment
-long:
-This package is a meta-package, meaning that its purpose is to
-contain dependencies for a complete, Debian-based environment for
-ROOT (Root's Object Oriented Technologies), the analysis,
-development, etc. framework from the ROOT team.  

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.5 2002/01/19 13:18:38 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 //    Oct  8 1999: changed Warning to Error and
 //                 return fX in Double_t & operator()
@@ -216,11 +216,6 @@ and negative light-cone components:<TT></TT>
 
 <P><TT>&nbsp; Double_t pcone = v.Plus();</TT>
 <BR><TT>&nbsp; Double_t mcone = v.Minus();</TT>
-<P>CAVEAT: The values returned are T{+,-}Z. It is known that some authors
-find it easier to define these components as (T{+,-}Z)/sqrt(2). Thus
-check what definition is used in the physics you're working in and adapt
-your code accordingly.
-   
 <H5>
 Transformation by TLorentzRotation</H5>
 A general Lorentz transformation see class <TT>TLorentzRotation</TT> can
@@ -237,7 +232,6 @@ v *= l;&nbsp; // Attention v = l*v</TT>
 */
 //END_HTML
 
-#include "TClass.h"
 #include "TError.h"
 #include "TLorentzVector.h"
 #include "TLorentzRotation.h"
@@ -247,10 +241,10 @@ ClassImp(TLorentzVector)
 TLorentzVector::TLorentzVector(Double_t x, Double_t y, Double_t z, Double_t t)
                : fP(x,y,z), fE(t) {}
 
-TLorentzVector::TLorentzVector(const Double_t * x0)
+TLorentzVector::TLorentzVector(Double_t * x0)
                : fP(x0), fE(x0[3]) {}
 
-TLorentzVector::TLorentzVector(const Float_t * x0)
+TLorentzVector::TLorentzVector(Float_t * x0)
                : fP(x0), fE(x0[3]) {}
 
 TLorentzVector::TLorentzVector(const TVector3 & p, Double_t e)
@@ -326,12 +320,7 @@ void TLorentzVector::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 3) {
-         TLorentzVector::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
-      if (R__v != 2) TObject::Streamer(R__b);
+      if (R__v < 2) TObject::Streamer(R__b);
       R__b >> x;
       R__b >> y;
       R__b >> z;
@@ -339,6 +328,11 @@ void TLorentzVector::Streamer(TBuffer &R__b)
       R__b >> fE;
       R__b.CheckByteCount(R__s, R__c, TLorentzVector::IsA());
    } else {
-      TLorentzVector::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TLorentzVector::IsA(), kTRUE);
+      R__b << fP.X();
+      R__b << fP.Y();
+      R__b << fP.Z();
+      R__b << fE;
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }

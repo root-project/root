@@ -1,6 +1,5 @@
 #ifndef G__MULTIMAP_DLL
 #pragma include_noerr <multimap.dll>
-#pragma include_noerr <multimap2.dll>
 #endif
 
 #ifdef __MAKECINT__

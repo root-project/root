@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.3 2000/12/13 15:13:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.1 2000/09/29 08:52:52 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -73,7 +73,7 @@ public:
    void SetClipYOrigin(Int_t v);
    void SetClipMask(Pixmap_t v);
    void SetDashOffset(Int_t v);
-   void SetDashList(const char v[], Int_t len);
+   void SetDashList(char v[], Int_t len);
    void SetArcMode(Int_t v);
 
    ClassDef(TGGC,0)  // Graphics context
@@ -89,7 +89,7 @@ protected:
    public:
       TGGC   *fContext;
       ~TGGCElement() { delete fContext; }
-      Bool_t  IsEqual(const TObject *obj) const { return fContext == obj; }
+      Bool_t  IsEqual(TObject *obj) { return fContext == obj; }
    };
    TList  *fList;   // list of graphics contexts in pool
 

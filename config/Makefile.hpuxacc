@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for HP-UX with aCC
 
 PLATFORM      = hpux
@@ -15,7 +13,7 @@ endif
 # Compiler:
 CXX           = aCC
 CC            = cc
-CXXFLAGS      = +W740,749 -DR__ACC -z +Z $(EXTRA_CXXFLAGS)
+CXXFLAGS      = +W70,495,740,749,823,829 -DR__ACC -z +Z $(EXTRA_CXXFLAGS)
 CFLAGS        = -Ae -z +Z $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -z +Z -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL $(EXTRA_CXXFLAGS) \
                 -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO
@@ -32,7 +30,7 @@ SOEXT         = sl
 
 # System libraries:
 SYSLIBS       = -lm -ldld
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
+XLIBS         = $(XPMLIB) -lX11
 CILIBS        = -lm -Wl,-E -ldld -lcurses
 
 # Fortran:
@@ -43,5 +41,5 @@ F77LDFLAGS    = -K +ppu $(OPT)
 F77LIBS       =
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) \
                 -L/usr/contrib/X11R6/lib -lXext -lXmu -lXi -lX11

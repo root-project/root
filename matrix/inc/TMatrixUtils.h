@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.5 2001/07/02 19:23:48 brun Exp $
+// @(#)root/matrix:$Name$:$Id$
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -103,11 +103,11 @@ protected:
    Int_t fColUpb;
    Int_t fColLwb;
 
-   TLazyMatrix(const TLazyMatrix &) : TObject() { }
-   void operator=(const TLazyMatrix &) { }
-
 private:
    virtual void FillIn(TMatrix &m) const = 0;
+
+   TLazyMatrix(const TLazyMatrix &) { }
+   void operator=(const TLazyMatrix &) { }
 
 public:
    TLazyMatrix() { fRowUpb = fRowLwb = fColUpb = fColLwb = 0; }
@@ -144,10 +144,10 @@ friend class TMatrix;
 friend class TVector;
 
 private:
-   const TMatrix  *fMatrix;  //! the matrix I am a row of
+   const TMatrix  *fMatrix;  // the matrix I am a row of
    Int_t           fRowInd;  // effective row index
    Int_t           fInc;     // if ptr = @a[row,i], then ptr+inc = @a[row,i+1]
-   Real_t         *fPtr;     //! pointer to the a[row,0]
+   Real_t         *fPtr;     // pointer to the a[row,0]
 
    TMatrixRow() { fMatrix = 0; fInc = 0; fPtr = 0; }
 
@@ -181,9 +181,9 @@ friend class TMatrix;
 friend class TVector;
 
 private:
-   const TMatrix  *fMatrix;         //! the matrix I am a column of
+   const TMatrix  *fMatrix;         // the matrix I am a column of
    Int_t           fColInd;         // effective column index
-   Real_t         *fPtr;            //! pointer to the a[0,i] column
+   Real_t         *fPtr;            // pointer to the a[0,i] column
 
    TMatrixColumn() { fMatrix = 0; fPtr = 0; }
 
@@ -217,10 +217,10 @@ friend class TMatrix;
 friend class TVector;
 
 private:
-   const TMatrix  *fMatrix;  //! the matrix I am the diagonal of
+   const TMatrix  *fMatrix;  // the matrix I am the diagonal of
    Int_t           fInc;     // if ptr=@a[i,i], then ptr+inc = @a[i+1,i+1]
    Int_t           fNdiag;   // number of diag elems, min(nrows,ncols)
-   Real_t         *fPtr;     //! pointer to the a[0,0]
+   Real_t         *fPtr;     // pointer to the a[0,0]
 
    TMatrixDiag() { fMatrix = 0; fInc = 0; fNdiag = 0; fPtr = 0; }
 
@@ -282,7 +282,7 @@ public:
 
 //----- inlines ----------------------------------------------------------------
 
-#if !defined(R__HPUX) && !defined(R__MACOSX)
+#ifndef R__HPUX
 
 #ifndef __CINT__
 

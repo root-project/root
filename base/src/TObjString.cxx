@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObjString.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 ClassImp(TObjString)
 
 //______________________________________________________________________________
-Int_t TObjString::Compare(const TObject *obj) const
+Int_t TObjString::Compare(TObject *obj)
 {
    if (this == obj) return 0;
    if (TObjString::Class() != obj->IsA()) return -1;
@@ -30,7 +30,7 @@ Int_t TObjString::Compare(const TObject *obj) const
 }
 
 //______________________________________________________________________________
-Bool_t TObjString::IsEqual(const TObject *obj) const
+Bool_t TObjString::IsEqual(TObject *obj)
 {
    if (this == obj) return kTRUE;
    if (TObjString::Class() != obj->IsA()) return kFALSE;

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.22 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.5 2000/09/29 07:47:49 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -12,28 +12,21 @@
 //  Additional arguments can be passed to the program to control the flow
 //  of execution. (see comments describing the arguments in the code).
 //      Event  nevent comp split fill
-//  All arguments are optional. Default is:
+//  All arguments are optional: Default is
 //      Event  400      1    1     1
 //
 //  In this example, the tree consists of one single "super branch"
 //  The statement ***tree->Branch("event", event, 64000,split);*** below
 //  will parse the structure described in Event.h and will make
 //  a new branch for each data member of the class if split is set to 1.
-//    - 9 branches corresponding to the basic types fType, fNtrack,fNseg,
-//           fNvertex,fFlag,fTemperature,fMeasures,fMatrix,fClosesDistance.
+//    - 5 branches corresponding to the basic types fNtrack,fNseg,fNvertex
+//           ,fFlag and fTemperature.
 //    - 3 branches corresponding to the members of the subobject EventHeader.
 //    - one branch for each data member of the class Track of TClonesArray.
-//    - one branch for the TRefArray of high Pt tracks
-//    - one branch for the TRefArray of muon tracks
-//    - one branch for the reference pointer to the last track
 //    - one branch for the object fH (histogram of class TH1F).
 //
 //  if split = 0 only one single branch is created and the complete event
 //  is serialized in one single buffer.
-//  if split = -2 the event is split using the old TBranchObject mechanism
-//  if split = -1 the event is streamed using the old TBranchObject mechanism
-//  if split > 0  the event is split ising the new TBranchElement mechanism.
-//
 //  if comp = 0 no compression at all.
 //  if comp = 1 event is compressed.
 //  if comp = 2 same as 1. In addition branches with floats in the TClonesArray
@@ -48,9 +41,6 @@
 //  are generated and added to the TClonesArray list.
 //  For each event the event histogram is saved as well as the list
 //  of all tracks.
-//
-//  The two TRefArray contain only references to the original tracks owned by
-//  the TClonesArray fTracks.
 //
 //  The number of events can be given as the first argument to the program.
 //  By default 400 events are generated.
@@ -82,10 +72,8 @@
 
 #include <stdlib.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TFile.h"
-#include "TNetFile.h"
 #include "TRandom.h"
 #include "TTree.h"
 #include "TBranch.h"
@@ -98,6 +86,8 @@
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
+   TROOT simple("simple","Example of creation of a tree");
+
    Int_t nevent = 400;     // by default create 400 events
    Int_t comp   = 1;       // by default file is compressed
    Int_t split  = 1;       // by default, split Event in sub branches
@@ -106,7 +96,6 @@ int main(int argc, char **argv)
    Int_t read   = 0;
    Int_t arg4   = 1;
    Int_t arg5   = 600;     //default number of tracks per event
-   Int_t netf   = 0;
 
    if (argc > 1)  nevent = atoi(argv[1]);
    if (argc > 2)  comp   = atoi(argv[2]);
@@ -120,12 +109,7 @@ int main(int argc, char **argv)
    if (arg4 == 11) { write = 1; hfill = 1;}
    if (arg4 == 20) { write = 0; read  = 1;}  //read sequential
    if (arg4 == 25) { write = 0; read  = 2;}  //read random
-   if (arg4 >= 30) { netf  = 1; }            //use TNetFile
-   if (arg4 == 30) { write = 0; read  = 1;}  //netfile + read sequential
-   if (arg4 == 35) { write = 0; read  = 2;}  //netfile + read random
-   if (arg4 == 36) { write = 1; }            //netfile + write sequential
-   Int_t branchStyle = 1; //new style by default
-   if (split < 0) {branchStyle = 0; split = -1-split;}
+
 
    TFile *hfile;
    TTree *tree;
@@ -144,17 +128,9 @@ int main(int argc, char **argv)
    if (arg5 < 100) printev = 1000;
    if (arg5 < 10)  printev = 10000;
 
-   //In this new version of mainEvent, one cannot activate the next statement
-   //because tracks are referenced
-   //Track::Class()->IgnoreTObjectStreamer();
-
 //         Read case
    if (read) {
-      if (netf) {
-         hfile = new TNetFile("root://localhost/root/test/EventNet.root");
-         hfile->UseCache(10);
-      } else
-         hfile = new TFile("Event.root");
+      hfile = new TFile("Event.root");
       tree = (TTree*)hfile->Get("T");
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
@@ -184,11 +160,7 @@ int main(int argc, char **argv)
       // Note that this file may contain any kind of ROOT objects, histograms,
       // pictures, graphics objects, detector geometries, tracks, events, etc..
       // This file is now becoming the current directory.
-      if (netf) {
-         hfile = new TNetFile("root://localhost/root/test/EventNet.root","RECREATE","TTree benchmark ROOT file");
-         hfile->UseCache(10);
-      } else
-         hfile = new TFile("Event.root","RECREATE","TTree benchmark ROOT file");
+      hfile = new TFile("Event.root","RECREATE","TTree benchmark ROOT file");
       hfile->SetCompressionLevel(comp);
 
      // Create histogram to show write_time in function of time
@@ -204,13 +176,12 @@ int main(int argc, char **argv)
      // Create a ROOT Tree and one superbranch
       TTree *tree = new TTree("T","An example of a ROOT tree");
       tree->SetAutoSave(1000000000);  // autosave when 1 Gbyte written
-      bufsize = 64000;
+      bufsize = 256000;
       if (split)  bufsize /= 4;
       event = new Event();
-      TTree::SetBranchStyle(branchStyle);
       TBranch *branch = tree->Branch("event", "Event", &event, bufsize,split);
       branch->SetAutoDelete(kFALSE);
-      Float_t ptmin = 1;
+      char etype[20];
 
       for (ev = 0; ev < nevent; ev++) {
          if (ev%printev == 0) {
@@ -222,11 +193,36 @@ int main(int argc, char **argv)
             timer.Continue();
          }
 
-         event->Build(ev, arg5, ptmin);
+         Float_t sigmat, sigmas;
+         gRandom->Rannor(sigmat,sigmas);
+         Int_t ntrack   = Int_t(arg5 +arg5*sigmat/120.);
+         Float_t random = gRandom->Rndm(1);
+
+         sprintf(etype,"type%d",ev%5);
+         event->SetType(etype);
+         event->SetHeader(ev, 200, 960312, random);
+         event->SetNseg(Int_t(10*ntrack+20*sigmas));
+         event->SetNvertex(Int_t(1+20*gRandom->Rndm()));
+         event->SetFlag(UInt_t(random+0.5));
+         event->SetTemperature(random+20.);
+
+         for(UChar_t m = 0; m < 10; m++) {
+            event->SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
+         }
+         for(UChar_t i0 = 0; i0 < 4; i0++) {
+            for(UChar_t i1 = 0; i1 < 4; i1++) {
+               event->SetMatrix(i0,i1,gRandom->Gaus(i0*i1,1));
+            }
+         }
+
+         //  Create and Fill the Track objects
+         for (Int_t t = 0; t < ntrack; t++) event->AddTrack(random);
 
          if (write) nb += tree->Fill();  //fill the tree
 
          if (hm) hm->Hfill(event);      //fill histograms
+
+         event->Clear();
       }
       if (write) {
          hfile->Write();

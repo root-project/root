@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.10 2001/10/01 17:46:51 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.3 2000/08/18 06:27:31 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -65,7 +65,6 @@ class TWinNTSystem : public TSystem {
 
 protected:
    HANDLE          fhProcess;         // Handle of the current process
-   HANDLE          fhTermInputEvent;  // Handle of "event" to suspend "dummy" terminal loop
    char           *fDirNameBuffer;    // The string buffer to hold path name
    WIN32_FIND_DATA  fFindFileData;    // Structure to look for files (aka OpenDir under UNIX)
 
@@ -75,27 +74,21 @@ protected:
    HIMAGELIST fhSmallIconList;  // List of the small icons
    HIMAGELIST fhNormalIconList; // List of the normal icons
 
-   void       CreateIcons();    // Create a list of the icons for ROOT appl
+   void                CreateIcons();            // Create a list of the icons for Root appl
 
-   // static functions providing semi-low level interface to raw WinNT
+  // static functions providing semi-low level interface to raw WinNT
    static const char  *WinNTHomedirectory(const char *user = 0);
    static int          WinNTWaitchild();
-#ifndef GDK_WIN32
    static int          WinNTSetitimer(TTimer *ti);
-#else
-   static int          WinNTSetitimer(Long_t ms);
-#endif
    static int          WinNTSelect(UInt_t nfds, TFdSet *readready, TFdSet *writeready,
                                   Long_t timeout);
    static void         WinNTSignal(ESignals sig, SigHandler_t h);
    static char        *WinNTSigname(ESignals sig);
    static int          WinNTFilestat(const char *path, Long_t *id, Long_t *size,
                                     Long_t *flags, Long_t *modtime);
-   static int          WinNTFSstat(const char *path, Long_t *id, Long_t *bsize,
-                                    Long_t *blocks, Long_t *bfree);
-   static int          WinNTTcpConnect(const char *hostname, int port, int tcpwindowsize);
+   static int          WinNTTcpConnect(const char *hostname, int port);
    static int          WinNTWinNTConnect(const char *hostname, int port);
-   static int          WinNTTcpService(int port,  Bool_t reuse, int backlog, int tcpwindowsize);
+   static int          WinNTTcpService(int port,  Bool_t reuse, int backlog);
    static int          WinNTWinNTService(int port, int backlog);
    static int          WinNTSend(int socket, const void *buffer, int length, int flag);
    static int          WinNTRecv(int socket, void *buffer, int length, int flag);
@@ -120,7 +113,7 @@ public:
    const char       *BaseName(const char *name);
    void              SetProgname(const char *name);
    const char       *GetError();
-   const char       *HostName();
+   const char       *Hostname();
 
    HIMAGELIST GetSmallIconList() { return fhSmallIconList; }
    HICON   GetSmallIcon(Int_t IconIdx) {return fhSmallIconList  ? ImageList_GetIcon(fhSmallIconList,IconIdx,ILD_NORMAL):0; }
@@ -131,12 +124,8 @@ public:
    void              SetShellName(const char *name=0);
 
    //---- EventLoop --------------------------------------------
-#ifndef GDK_WIN32
    Bool_t            ProcessEvents();
-#endif
    void              DispatchOneEvent(Bool_t pendingOnly = kFALSE);
-   void              ExitLoop();
-   void              InnerLoop();
 
    //---- Handling of system events
    void              CheckChilds();
@@ -144,11 +133,10 @@ public:
    void              DispatchSignals(ESignals sig);
    void              AddSignalHandler(TSignalHandler *sh);
    TSignalHandler   *RemoveSignalHandler(TSignalHandler *sh);
-   void              ResetSignal(ESignals sig, Bool_t reset = kTRUE);
-   void              IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
    void              AddFileHandler(TFileHandler *fh);
    TFileHandler     *RemoveFileHandler(TFileHandler *fh);
    BOOL              HandleConsoleEvent();
+   void              IgnoreInterrupt(Bool_t ignore = kTRUE);
 
    //---- Processes --------------------------------------------
    int               Exec(const char *shellcmd);
@@ -188,8 +176,6 @@ public:
    int               SetNonBlock(int fd);
    int               GetPathInfo(const char *path, Long_t *id, Long_t *size,
                                  Long_t *flags, Long_t *modtime);
-   int               GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
-                                 Long_t *blocks, Long_t *bfree);
    const char       *UnixPathName(const char *unixpathname);
 
    //---- Dynamic Loading --------------------------------------
@@ -205,23 +191,21 @@ public:
    TTime             Now();
    void              AddTimer(TTimer *ti);
    TTimer           *RemoveTimer(TTimer *ti);
-#ifdef GDK_WIN32
-   Bool_t            DispatchTimers(Bool_t mode);
-#endif
+//   void              DispatchTimers();
    Bool_t            DispatchSynchTimers();
    void              Sleep(UInt_t milliSec);
    Double_t          GetRealTime();
    Double_t          GetCPUTime();
 
    //---- RPC --------------------------------------------------
-   virtual int             ConnectService(const char *servername, int port, int tcpwindowsize);
+   virtual int             ConnectService(const char *servername, int port);
    virtual TInetAddress    GetHostByName(const char *server);
    virtual TInetAddress    GetPeerName(int sock);
    virtual TInetAddress    GetSockName(int sock);
    virtual int             GetServiceByName(const char *service);
    virtual char           *GetServiceByPort(int port);
-   virtual int             OpenConnection(const char *server, int port, int tcpwindowsize = -1);
-   virtual int             AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1);
+   virtual int             OpenConnection(const char *server, int port);
+   virtual int             AnnounceTcpService(int port, Bool_t reuse, int backlog);
    virtual int             AnnounceUnixService(int port, int backlog);
    virtual int             AcceptConnection(int sock);
    virtual void            CloseConnection(int sock, Bool_t force = kFALSE);

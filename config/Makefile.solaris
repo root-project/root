@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Solaris with CC
 
 PLATFORM      = solaris
@@ -15,7 +13,7 @@ endif
 # Compiler:
 CXX           = /opt/SUNWspro/bin/CC
 CC            = /opt/SUNWspro/bin/cc
-CXXFLAGS      = -KPIC -I/usr/openwin/include $(EXTRA_CXXFLAGS)
+CXXFLAGS      = -KPIC -I/usr/openwin/include -D__SunOS_5_6 $(EXTRA_CXXFLAGS)
 CFLAGS        = -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
                 -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
@@ -31,18 +29,14 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl -lnsl -lsocket -lgen
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/openwin/lib -lX11
+XLIBS         = $(XPMLIB) -L/usr/openwin/lib -lX11
 CILIBS        = -lm -ltermcap -ldl -L/usr/ccs/lib -lgen
 
 # Fortran:
 F77           = /opt/SUNWspro/bin/f77
-F77LIBS       = -lM77 -lF77 -lsunmath -lsocket -lnsl
-
-# Override default in Makefile.config
-INSTALL      := cp -pR
-INSTALLDATA  := cp -pR
+F77LIBS       = $(CERNLIB)/libpacklib.a -lM77 -lF77 -lsunmath -lsocket -lnsl
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) \
                 -L/usr/openwin/lib -lX11 -lXext -lXmu -lXi -lm
 

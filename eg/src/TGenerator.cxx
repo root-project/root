@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.6 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -37,8 +37,8 @@
 #include "TText.h"
 #include "TPaveText.h"
 #include "TClonesArray.h"
-#include "Riostream.h"
 
+#include <iostream.h>
 
 ClassImp(TGenerator)
 
@@ -51,9 +51,8 @@ TGenerator::TGenerator(const char *name,const char *title): TNamed(name,title)
 
 
   //  Initialize particles table
-   TDatabasePDG::Instance();
-   //TDatabasePDG *pdg = TDatabasePDG::Instance();
-   //if (!pdg->ParticleList()) pdg->Init();
+   TDatabasePDG *pdg = TDatabasePDG::Instance();
+   if (!pdg->ParticleList()) pdg->Init();
 
    fPtCut        = 0;
    fShowNeutrons = kTRUE;
@@ -378,7 +377,7 @@ void TGenerator::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-TParticle *TGenerator::GetParticle(Int_t i) const
+TParticle *TGenerator::GetParticle(Int_t i)
 {
 //
 //  Returns pointer to primary number i;
@@ -442,4 +441,23 @@ void TGenerator::ShowNeutrons(Bool_t show)
    fShowNeutrons = show;
    Draw();
    gPad->Update();
+}
+
+//______________________________________________________________________________
+void TGenerator::Streamer(TBuffer &b)
+{
+   // Stream an object of class TGenerator.
+
+   UInt_t R__s, R__c;
+   if (b.IsReading()) {
+      b.ReadVersion(&R__s, &R__c);
+      TNamed::Streamer(b);
+      fParticles->Streamer(b);
+      b.CheckByteCount(R__s, R__c, TGenerator::IsA());
+   } else {
+      R__c = b.WriteVersion(TGenerator::IsA(), kTRUE);
+      TNamed::Streamer(b);
+      fParticles->Streamer(b);
+      b.SetByteCount(R__c, kTRUE);
+   }
 }

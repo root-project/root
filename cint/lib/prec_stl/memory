@@ -12,13 +12,8 @@
 
 #include <stddef.h>
 
-#if defined(G__ANSIISOLIB)
-#undef G__GNUC
-#undef G__HPUX
-#endif
-
 //////////////////////////////////////////////////////////////////////
-#if defined(G__GNUC) && !defined (G__KCC)
+#if defined(G__GNUC)
 
 template <int inst>
 class __malloc_alloc_template {
@@ -107,7 +102,6 @@ class allocator<void> {
 	typedef const _Ty *const_pointer;
 	typedef _Ty value_type;
 };
-
 
 #endif // G__GNUC
 //////////////////////////////////////////////////////////////////////

@@ -40,7 +40,8 @@ include/%.h:    $(PYTHIADIRI)/%.h
 $(PYTHIALIB):   $(PYTHIAO) $(PYTHIADO) $(MAINLIBS) $(PYTHIALIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libEGPythia.$(SOEXT) $@ \
-		   "$(PYTHIAO) $(PYTHIADO)" "$(PYTHIALIBEXTRA)"
+		   "$(PYTHIAO) $(PYTHIADO)" \
+		   "$(PYTHIALIBEXTRA)"
 
 $(PYTHIADS):    $(PYTHIAH1) $(PYTHIAL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."

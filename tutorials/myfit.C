@@ -10,7 +10,7 @@
 Double_t fitf(Double_t *x, Double_t *par)
 {
    Double_t arg = 0;
-   if (par[2] != 0) arg = (x[0] - par[1])/par[2];
+   if (par[2]) arg = (x[0] - par[1])/par[2];
 
    Double_t fitval = par[0]*TMath::Exp(-0.5*arg*arg);
    return fitval;
@@ -31,7 +31,7 @@ void myfit()
    func->SetParNames("Constant","Mean_value","Sigma");
 
 // Fit histogram in range defined by function
-   hpx->Fit(func,"r");
+   hpx->Fit("fitf","r");
 
 // Gets integral of function between fit limits
    printf("Integral of function = %g\n",func->Integral(-2,2));

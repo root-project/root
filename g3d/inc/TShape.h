@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.h,v 1.2 2000/11/21 20:14:43 brun Exp $
+// @(#)root/g3d:$Name$:$Id$
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -57,17 +57,16 @@ class TShape : public TNamed, public TAttLine, public TAttFill, public TAtt3D {
 protected:
    Int_t           fNumber;      //Shape number
    Int_t           fVisibility;  //Visibility flag
-   TMaterial      *fMaterial;    //Pointer to material
-   
+   TMaterial       *fMaterial;   //Pointer to material
    Int_t           ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py);
 
 public:
                    TShape();
                    TShape(const char *name, const char *title, const char *material);
    virtual         ~TShape();
-   TMaterial       *GetMaterial()  const {return fMaterial;}
-   virtual Int_t   GetNumber()     const {return fNumber;}
-           Int_t   GetVisibility() const {return fVisibility;}
+   TMaterial       *GetMaterial() {return fMaterial;}
+   virtual Int_t   GetNumber() {return fNumber;}
+           Int_t   GetVisibility() {return fVisibility;}
    virtual void    Paint(Option_t *option="");
    virtual void    PaintGLPoints(Float_t *vertex);
    virtual void    PaintShape(X3DBuffer *buff, Bool_t rangeView=kFALSE);
@@ -75,7 +74,7 @@ public:
    virtual void    SetPoints(Float_t *buffer);
    virtual void    SetVisibility(Int_t vis) {fVisibility = vis;} // *MENU*
 
-   ClassDef(TShape,2)  //Basic shape
+   ClassDef(TShape,1)  //Basic shape
 };
 
 R__EXTERN TNode *gNode;

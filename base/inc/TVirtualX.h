@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.10 2001/08/21 17:29:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.5 2000/10/13 09:54:28 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -104,8 +104,6 @@ public:
    virtual Window_t  GetWindowID(Int_t wid);
    virtual Bool_t    HasTTFonts() const { return kFALSE; }
    virtual Int_t     InitWindow(ULong_t window);
-   virtual Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
-   virtual void      RemoveWindow(ULong_t qwid);
    virtual void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    virtual Int_t     OpenPixmap(UInt_t w, UInt_t h);
    virtual void      QueryPointer(Int_t &ix, Int_t &iy) { ix = iy = 0; }
@@ -143,7 +141,7 @@ public:
    virtual void      SetTextSize(Float_t textsize);
    virtual void      UpdateWindow(Int_t mode);
    virtual void      Warp(Int_t ix, Int_t iy);
-   virtual Int_t     WriteGIF(char *name);
+   virtual void      WriteGIF(char *name);
    virtual void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
 
    //---- Methods used for GUI -----
@@ -164,8 +162,7 @@ public:
    virtual Window_t     CreateWindow(Window_t parent, Int_t x, Int_t y,
                                      UInt_t w, UInt_t h, UInt_t border,
                                      Int_t depth, UInt_t clss,
-                                     void *visual, SetWindowAttributes_t *attr,
-                                     UInt_t wtype);
+                                     void *visual, SetWindowAttributes_t *attr);
    virtual Int_t        OpenDisplay(const char *dpyName);
    virtual void         CloseDisplay() { }
    virtual Display_t    GetDisplay() { return 0; }
@@ -249,7 +246,6 @@ public:
                                       UInt_t w, UInt_t h);
    virtual void         DrawSegments(Drawable_t id, GContext_t gc, Segment_t *seg, Int_t nseg);
    virtual void         SelectInput(Window_t id, UInt_t evmask);
-   virtual Window_t     GetInputFocus() { return kNone; }
    virtual void         SetInputFocus(Window_t id);
    virtual Window_t     GetPrimarySelectionOwner() { return kNone; }
    virtual void         SetPrimarySelectionOwner(Window_t id);
@@ -267,18 +263,18 @@ public:
    virtual void         SetForeground(GContext_t gc, ULong_t foreground);
    virtual void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    virtual void         Update(Int_t mode = 0);
-   virtual Region_t     CreateRegion();
-   virtual void         DestroyRegion(Region_t reg);
-   virtual void         UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest);
-   virtual Region_t     PolygonRegion(Point_t *points, Int_t np, Bool_t winding);
-   virtual void         UnionRegion(Region_t rega, Region_t regb, Region_t result);
-   virtual void         IntersectRegion(Region_t rega, Region_t regb, Region_t result);
-   virtual void         SubtractRegion(Region_t rega, Region_t regb, Region_t result);
-   virtual void         XorRegion(Region_t rega, Region_t regb, Region_t result);
-   virtual Bool_t       EmptyRegion(Region_t reg);
-   virtual Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg);
-   virtual Bool_t       EqualRegion(Region_t rega, Region_t regb);
-   virtual void         GetRegionBox(Region_t reg, Rectangle_t *rect);
+   Region_t             CreateRegion();
+   void                 DestroyRegion(Region_t reg);
+   void                 UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest);
+   Region_t             PolygonRegion(Point_t *points, Int_t np, Bool_t winding);
+   void                 UnionRegion(Region_t rega, Region_t regb, Region_t result);
+   void                 IntersectRegion(Region_t rega, Region_t regb, Region_t result);
+   void                 SubtractRegion(Region_t rega, Region_t regb, Region_t result);
+   void                 XorRegion(Region_t rega, Region_t regb, Region_t result);
+   Bool_t               EmptyRegion(Region_t reg);
+   Bool_t               PointInRegion(Int_t x, Int_t y, Region_t reg);
+   Bool_t               EqualRegion(Region_t rega, Region_t regb);
+   void                 GetRegionBox(Region_t reg, Rectangle_t *rect);
 
    ClassDef(TVirtualX,0)  //ABC defining a generic interface to graphics system
 };
@@ -305,8 +301,6 @@ inline void      TVirtualX::GetRGB(Int_t, Float_t &r, Float_t &g, Float_t &b) { 
 inline void      TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, char *) { w = h = 0; }
 inline Window_t  TVirtualX::GetWindowID(Int_t) { return 0; }
 inline Int_t     TVirtualX::InitWindow(ULong_t) { return 0; }
-inline Int_t     TVirtualX::AddWindow(ULong_t, UInt_t, UInt_t) { return 0; }
-inline void      TVirtualX::RemoveWindow(ULong_t) { }
 inline void      TVirtualX::MoveWindow(Int_t, Int_t, Int_t) { }
 inline Int_t     TVirtualX::OpenPixmap(UInt_t, UInt_t) { return 0; }
 inline void      TVirtualX::ReadGIF(Int_t, Int_t, const char *) { }
@@ -341,7 +335,7 @@ inline void      TVirtualX::SetTextMagnitude(Float_t) { }
 inline void      TVirtualX::SetTextSize(Float_t) { }
 inline void      TVirtualX::UpdateWindow(Int_t) { }
 inline void      TVirtualX::Warp(Int_t, Int_t) { }
-inline Int_t     TVirtualX::WriteGIF(char *) {return 0;}
+inline void      TVirtualX::WriteGIF(char *) { }
 inline void      TVirtualX::WritePixmap(Int_t, UInt_t, UInt_t, char *) { }
 
 //---- Methods used for GUI -----
@@ -358,10 +352,9 @@ inline void         TVirtualX::ResizeWindow(Window_t, UInt_t, UInt_t) { }
 inline void         TVirtualX::IconifyWindow(Window_t) { }
 inline void         TVirtualX::SetWindowBackground(Window_t, ULong_t) { }
 inline void         TVirtualX::SetWindowBackgroundPixmap(Window_t, Pixmap_t) { }
-inline Window_t     TVirtualX::CreateWindow(Window_t, Int_t, Int_t, UInt_t,
-                                            UInt_t, UInt_t, Int_t, UInt_t,
-                                            void *, SetWindowAttributes_t *,
-                                            UInt_t) { return 0; }
+inline Window_t     TVirtualX::CreateWindow(Window_t, Int_t, Int_t, UInt_t, UInt_t, UInt_t,
+                                       Int_t, UInt_t, void *,
+                                       SetWindowAttributes_t *) { return 0; }
 inline Int_t        TVirtualX::OpenDisplay(const char *) { return 0; }
 inline Atom_t       TVirtualX::InternAtom(const char *, Bool_t) { return 0; }
 inline Window_t     TVirtualX::GetParent(Window_t) { return 0; }

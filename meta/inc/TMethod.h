@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethod.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name$:$Id$
 // Author: Rene Brun   09/02/95
 
 /*************************************************************************
@@ -56,8 +56,7 @@ public:
    virtual const char     *GetCommentString();
    virtual TDataMember    *FindDataMember();
    virtual TList          *GetListOfMethodArgs();
-   virtual void            SetMenuItem(EMenuItemKind menuItem) {fMenuItem=menuItem;}
-   
+
    ClassDef(TMethod,0)  //Dictionary for a class member function (method)
 };
 

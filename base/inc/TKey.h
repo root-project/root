@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.5 2001/10/04 16:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.2 2000/05/24 10:31:47 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -57,7 +57,7 @@ public:
     TKey();
     TKey(const char *name, const char *title, TClass *cl, Int_t nbytes);
     TKey(const TString &name, const TString &title, TClass *cl, Int_t nbytes);
-    TKey(TObject *obj, const char *name, Int_t bufsize);
+    TKey(TObject *obj, const char *name, const Int_t bufsize);
     TKey(Seek_t pointer, Int_t nbytes);
     virtual ~TKey();
     virtual void      Browse(TBrowser *b);
@@ -65,26 +65,25 @@ public:
     virtual void      DeleteBuffer();
     virtual void      FillBuffer(char *&buffer);
     virtual const char *GetClassName() const {return fClassName.Data();}
-    virtual char     *GetBuffer() const {return fBuffer+fKeylen;}
-         TBuffer     *GetBufferRef() const {return fBufferRef;}
-         Short_t      GetCycle() const ;
-         Short_t      GetKeep() const;
-           Int_t      GetKeylen() const  {return fKeylen;}
-           Int_t      GetNbytes() const  {return fNbytes;}
-           Int_t      GetObjlen() const  {return fObjlen;}
-           Int_t      GetVersion() const {return fVersion;}
-    virtual Seek_t    GetSeekKey() const  {return fSeekKey;}
-    virtual Seek_t    GetSeekPdir() const {return fSeekPdir;}
+    virtual char     *GetBuffer() {return fBuffer+fKeylen;}
+         TBuffer     *GetBufferRef() {return fBufferRef;}
+         Short_t      GetCycle();
+         Short_t      GetKeep();
+           Int_t      GetKeylen()  {return fKeylen;}
+           Int_t      GetNbytes()  {return fNbytes;}
+           Int_t      GetObjlen()  {return fObjlen;}
+           Int_t      GetVersion() {return fVersion;}
+    virtual Seek_t    GetSeekKey()   {return fSeekKey;}
+    virtual Seek_t    GetSeekPdir()  {return fSeekPdir;}
     Bool_t            IsFolder() const;
     virtual void      Keep();
-    virtual void      ls(Option_t *option="") const;
-    virtual void      Print(Option_t *option="") const;
+    virtual void      ls(Option_t *option="");
+    virtual void      Print(Option_t *option="");
     virtual Int_t     Read(TObject *obj);
     virtual TObject  *ReadObj();
     virtual void      ReadBuffer(char *&buffer);
     virtual void      ReadFile();
     virtual void      SetBuffer() { fBuffer = new char[fNbytes];}
-    virtual void      SetParent(TObject *parent);
     virtual Int_t     Sizeof() const;
     virtual Int_t     WriteFile(Int_t cycle=1);
 

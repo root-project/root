@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Itanium/Linux with sgiCC
 
 PLATFORM      = linux
@@ -8,7 +6,7 @@ ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = -g
 NOOPT         =
 else
-OPT           = -O
+OPT           = -O2
 NOOPT         =
 endif
 
@@ -31,10 +29,11 @@ SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB)
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
+SYSLIBS       = -lm -ldl $(THREAD)
+XLIBS         = -L/usr/X11R6/lib -lXpm -lX11
 CILIBS        = -lm -ldl
 CRYPTLIBS     = -lcrypt
+THREAD        = #-lpthread
 
 # Fortran:
 F77           = g77
@@ -42,5 +41,4 @@ F77FLAGS      =
 F77LIBS       = -lg2c -lnsl
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                -L/usr/X11R6/lib -lXmu
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -L/usr/X11R6/lib -lXmu

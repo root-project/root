@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.3 2001/05/15 14:17:48 rdm Exp $
+// @(#)root/gui:$Name$:$Id$
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -33,13 +33,11 @@
 #include "TString.h"
 #endif
 
-class TList;
 class THashList;
 class TGWindow;
 class TGPicturePool;
 class TGPicture;
 class TGMimeTypes;
-class TGUnknownWindowHandler;
 
 
 class TGClient : public TObject {
@@ -58,9 +56,7 @@ protected:
    TGPicturePool *fPicturePool;      // pixmap cache
    TGMimeTypes   *fMimeTypeList;     // mimetype list
    Bool_t         fGlobalNeedRedraw; // true if at least one window needs to be redrawn
-   Bool_t         fForceRedraw;      // redraw widgets as soon as possible
    THashList     *fWlist;            // list of frames
-   TList         *fUWHandlers;       // list of event handlers for unknown windows
    EGEventType    fWaitForEvent;     // event to wait for
    Window_t       fWaitForWindow;    // window in which to wait for event
 
@@ -80,17 +76,13 @@ public:
    FontStruct_t GetFontByName(const char *name) const;
    ULong_t GetHilite(ULong_t base_color) const;
    ULong_t GetShadow(ULong_t base_color) const;
-   void    ForceRedraw() { fForceRedraw = kTRUE; }
    void    NeedRedraw(TGWindow *w);
    void    RegisterWindow(TGWindow *w);
    void    UnregisterWindow(TGWindow *w);
-   void    AddUnknownWindowHandler(TGUnknownWindowHandler *h);
-   void    RemoveUnknownWindowHandler(TGUnknownWindowHandler *h);
    Bool_t  HandleInput();
    void    ProcessLine(TString cmd, Long_t msg, Long_t parm1, Long_t parm2);
    void    WaitFor(TGWindow *w);
    void    WaitForUnmap(TGWindow *w);
-   Bool_t  ProcessEventsFor(TGWindow *w);
 
    const TGPicturePool *GetPicturePool() const { return fPicturePool; }
    const TGPicture *GetPicture(const char *name);

@@ -1,4 +1,4 @@
-/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.6 2001/05/16 16:23:23 rdm Exp $ */
+/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.2 2000/10/13 19:04:40 rdm Exp $ */
 /* Author: Mark Spychalla*/
 /*
   Copyright 1992 Mark Spychalla
@@ -123,8 +123,6 @@ static int quitApplication = 0;
 static Display *gDisplay = NULL;
 static Ginfo *gGInfo = NULL;
 static Oinfo *gOInfo = NULL;
-
-static int gRedDiv, gGreenDiv, gBlueDiv, gRedShift, gGreenShift, gBlueShift;
 
 
 
@@ -864,34 +862,28 @@ XColor c;
 }
 
 
-static void TrueColorSetColors(g)
+
+static void TwentyFourBitSetColors(g)
 Ginfo *g;
 /******************************************************************************
-   Set up color information/stipples for TrueColor displays.
+   Set up color information/stipples for a twenty-four  bit display.
 ******************************************************************************/
 {
 int index, colorValue;
 Color *colors;
 int numColors;
 
-   /* On TrueColor displays the color pixel value composed directly of
-      r, g and b components. The order of the r, g and b and the number
-      of bits used for each color is specified by the X server and decoded
-      in the gRedShift, gRedDiv etc. values. Since X3D uses 255 as max
-      color the div is the number of bits to left shift (divide) from 255.
-   */
-
    colors = g->colors;
    numColors = g->numColors;
 
    for(index = 0; index < numColors; index++){
 
-/* In TrueColor every color is what it is */
+/* In 24 bit every color is what it is */
 
       colors[index].value =
-      (colors[index].red >>   gRedDiv)   << gRedShift |
-      (colors[index].green >> gGreenDiv) << gGreenShift |
-      (colors[index].blue >>  gBlueDiv)  << gBlueShift;
+      colors[index].red << 16 |
+      colors[index].green << 8 |
+      colors[index].blue;
 
 /* Set stipple */
 
@@ -904,25 +896,24 @@ int numColors;
 
 /* Set stereo color */
 
-      colorValue= (int)((double)(255 >> gRedDiv) *
+      colorValue= (int)((double)255 *
       ((double)sqrt((double)((double)colors[index].red *
       (double)colors[index].red + (double)colors[index].green *
       (double)colors[index].green + (double)colors[index].blue *
       (double)colors[index].blue)) / MAXCOLORDIST));
 
-      colors[index].stereoColor = (colorValue << gRedShift) |
-                                  (colorValue << gBlueShift);
+      colors[index].stereoColor = colorValue << 16 | colorValue;
       }
 
 /* Set various important color values */
 
    g->stereoBlack  = 0;
-   g->redMask  = (255 >> gRedDiv) << gRedShift;
-   g->blueMask = (255 >> gBlueDiv) << gBlueShift;
+   g->redMask  = 255 << 16;
+   g->blueMask = 255;
    g->Black  = 0;
-   g->Red    = (255 >> gRedDiv) << gRedShift;
-   g->Blue   = (255 >> gBlueDiv) << gBlueShift;
-   g->Purple = g->Red | g->Blue;
+   g->Red    = 255 << 16;
+   g->Blue   = 255;
+   g->Purple = (255 << 16) | 255;
 }
 
 
@@ -970,7 +961,7 @@ XWindowAttributes attributes;
 XSetWindowAttributes attribs;
 XWMHints wmhint;
 int index, index2, screen;
-Visual *vis;
+XVisualInfo vInfo;
 XSizeHints sizehint;
 int x, y, NUMCOLORS;
 unsigned int width, height, numSegments;
@@ -1051,42 +1042,36 @@ int useroot = 0;
 
 /* Which visual do we get? */
 
-   gRedDiv = gGreenDiv = gBlueDiv = gRedShift = gGreenShift = gBlueShift = -1;
-   g->depth = DefaultDepth(g->dpy, screen);
+   g->depth = ONE;
 
-   vis = DefaultVisual(g->dpy, screen);
-   if (g->depth > EIGHT && vis->class == TrueColor) {
-      int i;
-      for (i = 0; i < (int)sizeof(vis->blue_mask)*8; i++) {
-         if (gBlueShift == -1 && ((vis->blue_mask >> i) & 1))
-            gBlueShift = i;
-         if ((vis->blue_mask >> i) == 1) {
-            gBlueDiv = 8 - i - 1 + gBlueShift;  /* max value is 255, i.e. 8 bits */
-            break;
-         }
-      }
-      for (i = 0; i < (int)sizeof(vis->green_mask)*8; i++) {
-         if (gGreenShift == -1 && ((vis->green_mask >> i) & 1))
-            gGreenShift = i;
-         if ((vis->green_mask >> i) == 1) {
-            gGreenDiv = 8 - i - 1 + gGreenShift;
-            break;
-         }
-      }
-      for (i = 0; i < (int)sizeof(vis->red_mask)*8; i++) {
-         if (gRedShift == -1 && ((vis->red_mask >> i) & 1))
-            gRedShift = i;
-         if ((vis->red_mask >> i) == 1) {
-            gRedDiv = 8 - i - 1 + gRedShift;
-            break;
-         }
-      }
-      /*
-      printf("gRedDiv = %d, gGreenDiv = %d, gBlueDiv = %d, gRedShift = %d, gGreenShift = %d, gBlueShift = %d\n",
-             gRedDiv, gGreenDiv, gBlueDiv, gRedShift, gGreenShift, gBlueShift);
-      */
-   } else if (g->depth > EIGHT)
+/* An 8 bit GrayScale ? */
+
+   if(XMatchVisualInfo(g->dpy, screen, 8, GrayScale, &vInfo)){
       g->depth = EIGHT;
+   }else{
+
+/* An 8 bit PseudoColor ? */
+
+     if(XMatchVisualInfo(g->dpy, screen, 8, PseudoColor, &vInfo)){
+        g->depth = EIGHT;
+     }else{
+
+/* An 16 bit TrueColor ? */
+
+#define SIXTEEN  16
+
+       if(XMatchVisualInfo(g->dpy, screen, 16, TrueColor, &vInfo)){
+         g->depth = SIXTEEN;
+       }else{
+
+/* A 24 bit TrueColor ? */
+
+         if(XMatchVisualInfo(g->dpy, screen, 24, TrueColor, &vInfo)){
+            g->depth = TWENTYFOUR;
+            }
+         }
+      }
+   }
 
    g->pix = XCreatePixmap(g->dpy, RootWindow(g->dpy,screen), g->winX,
    g->winY, g->depth);
@@ -1209,8 +1194,12 @@ int useroot = 0;
       OneBitSetColors(g);
       }
 
-   if(g->depth > EIGHT){
-      TrueColorSetColors(g);
+   if(g->depth == SIXTEEN ){
+      TwentyFourBitSetColors(g);
+      }
+
+   if(g->depth == TWENTYFOUR){
+      TwentyFourBitSetColors(g);
       }
 
    if(g->depth == EIGHT){
@@ -1634,6 +1623,7 @@ double X, Y, Z;
       }
 
 /* Keep angles 0 - 6.28 */
+
    X = fmod(X + o->dX, TWOPI);
    Y = fmod(Y + o->dY, TWOPI);
    Z = fmod(Z + o->dZ, TWOPI);
@@ -3353,7 +3343,6 @@ void x3d_update()
 
 int x3d_dispatch_event(unsigned long evnt)
 {
- 
    XEvent *event = (XEvent *)evnt;
    Ginfo *g = gGInfo;
    Oinfo *o = gOInfo;
@@ -3441,176 +3430,6 @@ void x3d_terminate()
 void x3d_set_display(unsigned long disp)
 {
    gDisplay = (Display*) disp;
-}
-
-int x3d_exec_command(int pointerX, int pointerY, char command)
-/******************************************************************************
-   Update the scene position information using user input.
-
-   The routine will eventually block waiting for an event if block is True
-   and the no events of interest show up due to the call to GetInput()
-******************************************************************************/
-{
-int same, dx, dy;
-double X, Y, Z;
-
-   Ginfo *g = gGInfo;
-   Oinfo *o = gOInfo;
-   
-   X = Y = Z = 0.0; 
-
-   same = 1;
-
-/* dx, dy, dz are the amount to step about each axis every frame
-   We want the scene to continue to rotate even if the user does
-   not give any new input */
-
-/* Do not forget to put your automatic update variables into this if
-   statement.  Be careful somehow you can get MANY bugs with these!  */
-
-      g->Block = 1;
-
-/* Note: I do not move the origin which the scene is rotated about around.
-   You may want to do oX += ???; oY += ???; oZ += ???    */
-
-      switch(command){
-         case ' ' : break;
-
-         case 'm' :
-         case 'M' : same = 0; g->helpMenu    = !g->helpMenu;
-             /*
-             if(g->helpMenu == False){
-               XUnmapWindow(g->dpy, g->helpWin);
-             }else{
-               XMapWindow(g->dpy, g->helpWin);
-             }
-             */
-             break;
-
-         case 's' :
-         case 'S' : same = 0; g->stereo  = !g->stereo; g->modeChanged = 1;
-             break;
-
-         case 'd' :
-         case 'D' : same = 0; g->stereoBlue = !g->stereoBlue; g->modeChanged = 1;
-             break;
-
-         case 'f' :
-         case 'F' : same = 0; g->buffer = !g->buffer; g->modeChanged = 1;
-             break;
-
-         case 'o' :
-         case 'O' : same = 0; g->Relative = !g->Relative; break;
-
-         case 'w' :
-         case 'W' : same = 0; g->renderMode = WIREFRAME; g->modeChanged = 1;
-             break;
-
-         case 'e' :
-         case 'E' : if(o->numPolys) {
-                      same = 0; g->renderMode = HIDDENLINE; g->modeChanged = 1;
-                    }
-             break;
-
-         case 'r' :
-         case 'R' : if(o->numPolys) {
-                      same = 0; g->renderMode = SOLID; g->modeChanged = 1;
-                    }
-             break;
-
-         case 'l' : same = 0; o->tX  -= deltaMove; break;
-         case 'j' : same = 0; o->tY  -= deltaMove; break;
-         case 'k' : same = 0; o->tY  += deltaMove; break;
-         case 'h' : same = 0; o->tX  += deltaMove; break;
-         case 'i' : same = 0; o->tZ  += deltaMove; break;
-         case 'u' : same = 0; o->tZ  -= deltaMove; break;
-         case 'L' : same = 0; o->tX  -= 5*deltaMove; break;
-         case 'J' : same = 0; o->tY  -= 5*deltaMove; break;
-         case 'K' : same = 0; o->tY  += 5*deltaMove; break;
-         case 'H' : same = 0; o->tX  += 5*deltaMove; break;
-         case 'I' : same = 0; o->tZ  += 5*deltaMove; break;
-         case 'U' : same = 0; o->tZ  -= 5*deltaMove; break;
-         case '1' : same = 0; o->dX += 0.02; break;
-         case '2' : same = 0; o->dX =  0.0 ; break;
-         case '3' : same = 0; o->dX -= 0.02; break;
-         case '4' : same = 0; o->dY -= 0.02; break;
-         case '5' : same = 0; o->dY =  0.0 ; break;
-         case '6' : same = 0; o->dY += 0.02; break;
-         case '7' : same = 0; o->dZ += 0.02; break;
-         case '8' : same = 0; o->dZ =  0.0 ; break;
-         case '9' : same = 0; o->dZ -= 0.02; break;
-         case 'x' : same = 0; X -= 0.03; break;
-         case 'X' : same = 0; X += 0.03; break;
-         case 'y' : same = 0; Y += 0.03; break;
-         case 'Y' : same = 0; Y -= 0.03; break;
-         case 'z' : same = 0; Z -= 0.03; break;
-         case 'Z' : same = 0; Z += 0.03; break;
-         case 'a' : same = 0; X -= 0.05; break;
-         case 'A' : same = 0; X += 0.05; break;
-         case 'b' : same = 0; Y += 0.05; break;
-         case 'B' : same = 0; Y -= 0.05; break;
-         case 'c' : same = 0; Z -= 0.05; break;
-         case 'C' : same = 0; Z += 0.05; break;
-         case '[' : same = 0;
-                    o->focus = o->focus += 0.1;
-                    if((o->focus > 1.8))
-                       o->focus = 1.8;
-                    break;
-         case ']' : same = 0;
-                    o->focus = o->focus -= 0.1;
-                    if((o->focus < -0.8))
-                       o->focus = -0.8;
-                    break;
-         case '{' : same = 0; o->BViewpointX -= 4.0; break;
-         case '}' : same = 0; o->BViewpointX += 4.0; break;
-
-         case 'q' :
-         case 'Q' : return(1);
-
-         default : {
-
-/* My pointer movement stuff */
-
-/* Only update if the movement was reasonably small */
-
-            dx = pointerX - g->oldPointerX;
-            dy = pointerY - g->oldPointerY;
-
-            if((dy * dy <= SMALLMOVEMENT) &&
-               (dx * dx <= SMALLMOVEMENT)){
-
-/* Rotate proportionally with the amount the pointer moved */
-/* Note: I only control the X and Z axes by the pointer */
-
-               X -= (dy * POINTERRATIO);
-               Z -= (dx * POINTERRATIO);
-               same = 0;
-            }
-            g->oldPointerY = pointerY;
-            g->oldPointerX = pointerX;
-         }
-      }
-/*      } */
-
-/* Keep angles 0 - 6.28 */
-
-   X = fmod(X + o->dX, TWOPI);
-   Y = fmod(Y + o->dY, TWOPI);
-   Z = fmod(Z + o->dZ, TWOPI);
-
-/* Fix up the angles */
-
-   if(g->Relative){
-      o->X = fmod(X + o->X, TWOPI);
-      o->Y = fmod(Y + o->Y, TWOPI);
-      o->Z = fmod(Z + o->Z, TWOPI);
-   }else{
-      CalculateAngles(&(o->X), &(o->Y), &(o->Z), X, Y, Z);
-   }
-
-   x3d_update();
-
-   return quitApplication;
 }
 
 #endif

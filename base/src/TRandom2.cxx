@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Rene Brun   04/03/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -46,7 +46,7 @@ void TRandom2::GetSeed2(UInt_t &seed1, UInt_t &seed2)
 }
 
 //______________________________________________________________________________
-Double_t TRandom2::Rndm(Int_t)
+Float_t TRandom2::Rndm(Int_t)
 {
 //  Machine independent random number generator.
 //  Produces uniformly-distributed floating points between 0 and 1.
@@ -61,7 +61,7 @@ Double_t TRandom2::Rndm(Int_t)
    if (fSeed2 < 0) fSeed2 += 2147483399;
    Double_t iz = fSeed1 - fSeed2;
    if (iz <= 0) iz += 2147483562;
-   Double_t r = iz*4.6566128e-10;
+   Float_t r = iz*4.6566128e-10;
    return r;
 }
 

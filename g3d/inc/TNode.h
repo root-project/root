@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.6 2001/02/28 11:04:06 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -69,39 +69,39 @@ protected:
    virtual void        Draw(Option_t *option=""); // *MENU*
    virtual void        DrawOnly(Option_t *option="");
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
-           TList      *GetListOfNodes() const {return fNodes;}
-   virtual TRotMatrix *GetMatrix() const {return fMatrix;}
-   virtual TNode      *GetNode(const char *name) const;
-   virtual char       *GetObjectInfo(Int_t px, Int_t py) const;
-   const   Option_t   *GetOption() const { return fOption.Data();}
-   virtual TNode      *GetParent() const {return fParent;}
-           TShape     *GetShape() const {return fShape;}
-   Int_t               GetVisibility() const {return fVisibility;}
-   virtual Double_t    GetX() const {return fX;}
-   virtual Double_t    GetY() const {return fY;}
-   virtual Double_t    GetZ() const {return fZ;}
+           TList       *GetListOfNodes() {return fNodes;}
+   virtual TRotMatrix  *GetMatrix() {return fMatrix;}
+   virtual TNode       *GetNode(const char *name);
+   virtual char        *GetObjectInfo(Int_t px, Int_t py);
+   const   Option_t    *GetOption() const { return fOption.Data();}
+   virtual TNode       *GetParent() {return fParent;}
+           TShape      *GetShape() {return fShape;}
+   Int_t               GetVisibility() {return fVisibility;}
+   virtual Double_t    GetX() {return fX;}
+   virtual Double_t    GetY() {return fY;}
+   virtual Double_t    GetZ() {return fZ;}
    virtual void        ImportShapeAttributes();
    Bool_t              IsFolder() const;
-   virtual void        Local2Master(const Double_t *local, Double_t *master);
-   virtual void        Local2Master(const Float_t *local, Float_t *master);
-   virtual void        ls(Option_t *option="2") const; // *MENU*
-   virtual void        Master2Local(const Double_t *master, Double_t *local);
-   virtual void        Master2Local(const Float_t *master, Float_t *local);
+   virtual void        Local2Master(Double_t *local, Double_t *master);
+   virtual void        Local2Master(Float_t *local, Float_t *master);
+   virtual void        ls(Option_t *option="2"); // *MENU*
+   virtual void        Master2Local(Double_t *master, Double_t *local);
+   virtual void        Master2Local(Float_t *master, Float_t *local);
    virtual void        Paint(Option_t *option="");
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        SetMatrix(TRotMatrix *matrix=0) {fMatrix = matrix;}
    virtual void        SetName(const char *name);
-   virtual void        SetParent(TNode *parent);
-   virtual void        SetNameTitle(const char *name, const char *title);
+   virtual void        SetParent(TNode *parent) {fParent=parent;}
+   virtual void        SetObject(const char *name, const char *title);
    virtual void        SetPosition( Double_t x=0, Double_t y=0, Double_t z=0) {fX=x; fY=y; fZ=z;}
    virtual void        SetVisibility(Int_t vis=1); // *MENU*
    virtual void        Sizeof3D() const;
    virtual void        UpdateMatrix();
-   virtual void        UpdateTempMatrix(const Double_t *dx1,const Double_t *rmat1,
+   virtual void        UpdateTempMatrix(Double_t *dx1,Double_t *rmat1,
                               Double_t x, Double_t y, Double_t z, Double_t *matrix,
                               Double_t *dxnew, Double_t *rmatnew);
 
-   ClassDef(TNode,3)  //Description of parameters to position a 3-D geometry object
+   ClassDef(TNode,2)  //Description of parameters to position a 3-D geometry object
 };
 
 #endif

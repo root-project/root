@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.7 2000/12/19 14:34:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.2 2000/06/11 12:25:48 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -25,31 +25,26 @@
 #include "TSocket.h"
 #include "TSystem.h"
 #include "TROOT.h"
-#include "TAuthenticate.h"
-#include "TMessage.h"
-
 
 ClassImp(TSlave)
 
 //______________________________________________________________________________
 TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
-               const char *image, Int_t security, TProof *proof)
+               const char *image, TProof *proof)
 {
    // Create a PROOF slave object. Called via the TProof ctor.
 
-   fName     = host;
-   fPort     = port;
-   fImage    = image;
-   fWorkDir  = kPROOF_WorkDir;
-   fOrdinal  = ord;
-   fPerfIdx  = perf;
-   fSecurity = security;
-   fProof    = proof;
-   fSocket   = 0;
-   fInput    = 0;
+   fName    = host;
+   fPort    = port;
+   fImage   = image;
+   fOrdinal = ord;
+   fPerfIdx = perf;
+   fProof   = proof;
+   fSocket  = 0;
+   fInput   = 0;
 
    // Open connection to remote PROOF slave server.
-   fSocket = new TSocket(host, port, 65536);  // make tcpwindosize configurable
+   fSocket = new TSocket(host, port);
    if (fSocket->IsValid()) {
       // Remove socket from global TROOT socket list. Only the TProof object,
       // representing all slave sockets, will be added to this list. This will
@@ -63,67 +58,15 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
       else
          fSocket->Send("master");
 
-      TAuthenticate *auth;
-      auth = new TAuthenticate(fSocket, host, "proofd", fSecurity);
+      // Send user name and passwd to remote host (use trivial
+      // inverted byte encoding)
+      char user_pass[68], buf[512];
+      sprintf(user_pass, "%s %s", fProof->GetUser(), fProof->fPasswd.Data());
 
-      // Authenticate to proofd...
-      if (!proof->IsMaster()) {
-         // we are remote client... need full authentication procedure, either:
-         // - via TAuthenticate::SetGlobalUser()/SetGlobalPasswd())
-         // - ~/.rootnetrc or ~/.netrc
-         // - interactive
-         if (!auth->Authenticate()) {
-            if (fSecurity == TAuthenticate::kSRP)
-               Error("TSlave", "secure authentication failed for host %s", host);
-            else
-               Error("TSlave", "authentication failed for host %s", host);
-            delete auth;
-            SafeDelete(fSocket);
-            return;
-         }
-         proof->fUser   = auth->GetUser();
-         proof->fPasswd = auth->GetPasswd();
-         fUser          = proof->fUser;;
+      for (int i = 0; i < (int)strlen(user_pass); i++)
+         user_pass[i] = ~user_pass[i];
 
-      } else {
-         // we are a master server... authenticate either:
-         // - stored user/passwd (coming from client)
-         // - ~/.rootnetrc or ~/.netrc
-         // - but NOT interactive (obviously)
-
-         // check for .rootnetrc
-         // if not in .rootnetrc and SRP -> fail
-         // if not in .rootnetrc and normal -> set global user/passwd
-
-         TString user, passwd;
-         if (!auth->CheckNetrc(user, passwd)) {
-            if (fProof->fPasswd == "") {
-               if (fSecurity == TAuthenticate::kSRP)
-                  Error("TSlave", "secure authentication failed for host %s", host);
-               else
-                  Error("TSlave", "authentication failed for host %s", host);
-               delete auth;
-               SafeDelete(fSocket);
-               return;
-            }
-            TAuthenticate::SetGlobalUser(fProof->fUser);
-            TAuthenticate::SetGlobalPasswd(fProof->fPasswd);
-         }
-         if (!auth->Authenticate()) {
-            if (fSecurity == TAuthenticate::kSRP)
-               Error("TSlave", "secure authentication failed for host %s", host);
-            else
-               Error("TSlave", "authentication failed for host %s", host);
-            delete auth;
-            SafeDelete(fSocket);
-            return;
-         }
-         fUser = auth->GetUser();
-      }
-
-      delete auth;
-
-      char buf[512];
+      fSocket->Send(user_pass);
 
       fSocket->Recv(buf, sizeof(buf));
 
@@ -131,6 +74,8 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          Printf("%s", buf);
          SafeDelete(fSocket);
       } else {
+         fSocket->Send(fProof->GetVersion());
+
          // get back startup message of proofserv (we are now talking with
          // the real proofserver and not anymore with the proofd front-end)
 
@@ -143,26 +88,17 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
             return;
          }
 
-         TMessage mess;
+         if (!fProof->IsMaster())
+            sprintf(buf, "%s %s %s %s %d", fProof->GetUser(), fProof->GetVersion(),
+                    user_pass, fProof->GetConfFile(), fProof->GetProtocol());
+         else
+            sprintf(buf, "%s %s %d %d", fProof->GetUser(), fProof->GetVersion(),
+                    fProof->GetProtocol(), fOrdinal);
+         fSocket->Send(buf);
 
-         if (!fProof->IsMaster()) {
-            // Send user name and passwd to remote host (use trivial
-            // inverted byte encoding)
-            TString passwd = fProof->fPasswd;
-            for (int i = 0; i < passwd.Length(); i++) {
-               char inv = ~passwd(i);
-               passwd.Replace(i, 1, inv);
-            }
-
-            mess << fProof->fUser << passwd << fProof->fConfFile <<
-                    fProof->fProtocol;
-         } else
-            mess << fProof->fUser << fProof->fProtocol << fOrdinal;
-
-         fSocket->Send(mess);
-
-         // set some socket options
          fSocket->SetOption(kNoDelay, 1);
+         fSocket->SetOption(kSendBuffer, 65536);
+         fSocket->SetOption(kRecvBuffer, 65536);
       }
    } else
       SafeDelete(fSocket);
@@ -186,7 +122,7 @@ void TSlave::Close(Option_t *)
 }
 
 //______________________________________________________________________________
-Int_t TSlave::Compare(const TObject *obj) const
+Int_t TSlave::Compare(TObject *obj)
 {
    // Used to sort slaves by performance index.
 
@@ -198,14 +134,13 @@ Int_t TSlave::Compare(const TObject *obj) const
 }
 
 //______________________________________________________________________________
-void TSlave::Print(Option_t *) const
+void TSlave::Print(Option_t *)
 {
    // Printf info about slave.
 
    Printf("*** Slave %d  (%s)", fOrdinal, fSocket ? "valid" : "invalid");
    Printf("    Host name:            %s", GetName());
    Printf("    Port number:          %d", GetPort());
-   Printf("    User:                 %s", GetUser());
    Printf("    Image name:           %s", GetImage());
    Printf("    Working directory:    %s", GetWorkingDirectory());
    Printf("    Performance index:    %d", GetPerfIdx());

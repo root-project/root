@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTask.h,v 1.6 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTask.h,v 1.4 2000/09/06 09:29:20 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -23,9 +23,6 @@
 
 #ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TList
-#include "TList.h"
 #endif
 
 class TBrowser;
@@ -63,7 +60,7 @@ public:
           Int_t  GetBreakout() const {return fBreakout;}
          Bool_t  IsActive() const { return fActive; }
          Bool_t  IsFolder() const { return kTRUE; }
-   virtual void  ls(Option_t *option="*") const;  // *MENU*
+   virtual void  ls(Option_t *option="*");  // *MENU*
            void  SetActive(Bool_t active=kTRUE) {fActive=active;} // *TOGGLE*
            void  SetBreakin(Int_t breakin=1)    {fBreakin = breakin;} // *TOGGLE*
            void  SetBreakout(Int_t breakout=1)  {fBreakout=breakout;} // *TOGGLE*

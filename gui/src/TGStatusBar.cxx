@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.2 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -93,7 +93,6 @@ TGStatusBar::TGStatusBar(const TGWindow *p, UInt_t w, UInt_t h,
    fXt            = new Int_t [1];
    fParts[0]      = 100;
    fNpart         = 1;
-   f3DCorner      = kTRUE;
 
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fgDefaultFontStruct, max_ascent, max_descent);
@@ -178,22 +177,20 @@ void TGStatusBar::DrawBorder()
    }
 
    // 3d corner...
-   if (f3DCorner) {
-      gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-3,  fHeight-2, fWidth-2, fHeight-3);
-      gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-4,  fHeight-2, fWidth-2, fHeight-4);
-      gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-5,  fHeight-2, fWidth-2, fHeight-5);
+   gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-3,  fHeight-2, fWidth-2, fHeight-3);
+   gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-4,  fHeight-2, fWidth-2, fHeight-4);
+   gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-5,  fHeight-2, fWidth-2, fHeight-5);
 
-      gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-7,  fHeight-2, fWidth-2, fHeight-7);
-      gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-8,  fHeight-2, fWidth-2, fHeight-8);
-      gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-9,  fHeight-2, fWidth-2, fHeight-9);
+   gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-7,  fHeight-2, fWidth-2, fHeight-7);
+   gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-8,  fHeight-2, fWidth-2, fHeight-8);
+   gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-9,  fHeight-2, fWidth-2, fHeight-9);
 
-      gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-11, fHeight-2, fWidth-2, fHeight-11);
-      gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-12, fHeight-2, fWidth-2, fHeight-12);
-      gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-13, fHeight-2, fWidth-2, fHeight-13);
+   gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-11, fHeight-2, fWidth-2, fHeight-11);
+   gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-12, fHeight-2, fWidth-2, fHeight-12);
+   gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-13, fHeight-2, fWidth-2, fHeight-13);
 
-      gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-13, fHeight-1, fWidth-1, fHeight-1);
-      gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-1,  fHeight-1, fWidth-1, fHeight-13);
-   }
+   gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-13, fHeight-1, fWidth-1, fHeight-1);
+   gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-1,  fHeight-1, fWidth-1, fHeight-13);
 }
 
 //______________________________________________________________________________

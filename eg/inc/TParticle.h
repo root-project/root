@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.4 2000/12/13 15:13:46 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 /*************************************************************************
@@ -105,7 +105,7 @@ public:
   Double_t       GetCalcMass     () const { return fCalcMass; }
   Double_t       GetMass         ()       { return GetPDG()->Mass();}
 
-  Int_t          GetNDaughters   () const { return fDaughter[1]>0 ? fDaughter[1]-fDaughter[0]+1 : 0;}
+  Int_t          GetNDaughters   () const { return fDaughter[1]-fDaughter[0]+1;}
   void           GetPolarisation(TVector3 &v);
   Float_t        GetWeight       () const { return fWeight;}
   TParticlePDG*  GetPDG          (Int_t mode = 0);
@@ -168,7 +168,7 @@ public:
                                 // ****** overloaded functions of TObject
 
   virtual void      Paint(Option_t *option = "");
-  virtual void      Print(Option_t *option = "") const;
+  virtual void      Print(Option_t *option = "");
   virtual void      Sizeof3D() const;
   virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
   virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
@@ -176,7 +176,7 @@ public:
   virtual const     char *GetTitle() const;
 
 
-  ClassDef(TParticle,2)  // TParticle vertex particle information
+  ClassDef(TParticle,1)  // TParticle vertex particle information
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TBRIK.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name$:$Id$
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -38,9 +38,9 @@ class TBRIK : public TShape {
         virtual ~TBRIK();
 
         virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
-        Float_t         GetDx() const {return fDx;}
-        Float_t         GetDy() const {return fDy;}
-        Float_t         GetDz() const {return fDz;}
+        Float_t         GetDx() {return fDx;}
+        Float_t         GetDy() {return fDy;}
+        Float_t         GetDz() {return fDz;}
         virtual void    Paint(Option_t *option);
         virtual void    PaintGLPoints(Float_t *buff);
         virtual void    SetPoints(Float_t *buff);

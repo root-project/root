@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.10 2001/12/07 21:58:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.1 2000/06/16 15:15:47 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -48,19 +48,8 @@
 #include "TVectorD.h"
 #endif
 
-class TMatrixD;
 class TLazyMatrixD;
-class TMatrixDDiag;
 
-TMatrixD &operator+=(TMatrixD &target, const TMatrixD &source);
-TMatrixD &operator-=(TMatrixD &target, const TMatrixD &source);
-TMatrixD &Add(TMatrixD &target, Double_t scalar, const TMatrixD &source);
-TMatrixD &ElementMult(TMatrixD &target, const TMatrixD &source);
-TMatrixD &ElementDiv(TMatrixD &target, const TMatrixD &source);
-Bool_t    operator==(const TMatrixD &im1, const TMatrixD &im2);
-void      Compare(const TMatrixD &im1, const TMatrixD &im2);
-Bool_t    AreCompatible(const TMatrixD &im1, const TMatrixD &im2);
-Double_t  E2Norm(const TMatrixD &m1, const TMatrixD &m2);
 
 
 class TMatrixD : public TObject {
@@ -77,29 +66,23 @@ protected:
    Int_t      fNelems;           // number of elements in matrix
    Int_t      fRowLwb;           // lower bound of the row index
    Int_t      fColLwb;           // lower bound of the col index
-   Double_t  *fElements;         //[fNelems] elements themselves
-   Double_t **fIndex;            //! index[i] = &matrix(0,i) (col index)
+   Double_t  *fElements;         // elements themselves
+   Double_t **fIndex;            // index[i] = &matrix(0,i) (col index)
 
    void Allocate(Int_t nrows, Int_t ncols, Int_t row_lwb = 0, Int_t col_lwb = 0);
    void Invalidate() { fNrows = fNcols = fNelems = -1; fElements = 0; fIndex = 0; }
 
-   Int_t Pdcholesky(const Double_t *a, Double_t *u, const Int_t n);
-   void  MakeTridiagonal(TMatrixD &a,TVectorD &d,TVectorD &e);
-   void  MakeEigenVectors(TVectorD &d,TVectorD &e,TMatrixD &z);
-   void  EigenSort(TMatrixD &eigenVectors,TVectorD &eigenValues);
-
    // Elementary constructors
    void Transpose(const TMatrixD &m);
    void Invert(const TMatrixD &m);
-   void InvertPosDef(const TMatrixD &m);
    void AMultB(const TMatrixD &a, const TMatrixD &b);
    void AtMultB(const TMatrixD &a, const TMatrixD &b);
 
    friend void MakeHaarMatrixD(TMatrixD &m);
 
 public:
-   enum EMatrixCreatorsOp1 { kZero, kUnit, kTransposed, kInverted, kInvertedPosDef };
-   enum EMatrixCreatorsOp2 { kMult, kTransposeMult, kInvMult, kInvPosDefMult, kAtBA };
+   enum EMatrixCreatorsOp1 { kZero, kUnit, kTransposed, kInverted };
+   enum EMatrixCreatorsOp2 { kMult, kTransposeMult, kInvMult, kAtBA };
 
    TMatrixD() { Invalidate(); }
    TMatrixD(Int_t nrows, Int_t ncols);
@@ -117,14 +100,13 @@ public:
    void ResizeTo(const TMatrixD &m);
 
    Bool_t IsValid() const;
-   Bool_t IsSymmetric() const;
 
    Int_t GetRowLwb() const     { return fRowLwb; }
    Int_t GetRowUpb() const     { return fNrows+fRowLwb-1; }
-   Int_t GetNrows()  const     { return fNrows; }
+   Int_t GetNrows() const      { return fNrows; }
    Int_t GetColLwb() const     { return fColLwb; }
    Int_t GetColUpb() const     { return fNcols+fColLwb-1; }
-   Int_t GetNcols()  const     { return fNcols; }
+   Int_t GetNcols() const      { return fNcols; }
    Int_t GetNoElements() const { return fNelems; }
 
    const Double_t &operator()(Int_t rown, Int_t coln) const;
@@ -153,9 +135,6 @@ public:
    TMatrixD &Apply(TElementPosActionD &action);
 
    TMatrixD &Invert(Double_t *determ_ptr = 0);
-   TMatrixD &InvertPosDef();
-
-   TMatrixD EigenVectors(TVectorD &eigenValues);
 
    TMatrixD &UnitMatrix();
    TMatrixD &HilbertMatrix();
@@ -173,7 +152,7 @@ public:
 
    Double_t Determinant() const;
 
-   void Print(Option_t *option="") const;
+   void Print(Option_t *option="");
 
    friend TMatrixD &operator+=(TMatrixD &target, const TMatrixD &source);
    friend TMatrixD &operator-=(TMatrixD &target, const TMatrixD &source);
@@ -186,7 +165,7 @@ public:
    friend Bool_t AreCompatible(const TMatrixD &im1, const TMatrixD &im2);
    friend Double_t E2Norm(const TMatrixD &m1, const TMatrixD &m2);
 
-   ClassDef(TMatrixD,2)  // Matrix class (double precision)
+   ClassDef(TMatrixD,1)  // Matrix class (double precision)
 };
 
 
@@ -196,7 +175,7 @@ void VerifyElementValue(const TMatrixD &m, Double_t val);
 void VerifyMatrixIdentity(const TMatrixD &m1, const TMatrixD &m2);
 
 
-#if !defined(R__HPUX) && !defined(R__MACOSX)
+#ifndef R__HPUX
 inline Bool_t TMatrixD::IsValid() const
    { if (fNrows == -1) return kFALSE; return kTRUE; }
 #endif
@@ -208,7 +187,7 @@ inline Bool_t TMatrixD::IsValid() const
 
 //----- inlines ----------------------------------------------------------------
 
-#if !defined(R__HPUX) && !defined(R__MACOSX)
+#ifndef R__HPUX
 
 #ifndef __CINT__
 
@@ -278,7 +257,7 @@ inline TMatrixD &TMatrixD::operator=(const TMatrixD &source)
    return *this;
 }
 
-inline TMatrixD::TMatrixD(const TMatrixD &another) : TObject()
+inline TMatrixD::TMatrixD(const TMatrixD &another)
 {
    if (another.IsValid()) {
       Allocate(another.fNrows, another.fNcols, another.fRowLwb, another.fColLwb);

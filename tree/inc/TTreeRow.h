@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeRow.h,v 1.2 2001/09/24 00:42:17 rdm Exp $
+// @(#)root/tree:$Name$:$Id$
 // Author: Fons Rademakers   30/11/99
 
 /*************************************************************************
@@ -28,32 +28,32 @@
 #include "TSQLRow.h"
 #endif
 
+class TString;
+
+
 class TTreeRow : public TSQLRow {
 
 friend class TTreeResult;
-friend class TTreePlayer;
 
 private:
    Int_t        fColumnCount;  // number of columns in row
-   Int_t       *fFields;       //[fColumnCount] index in fRow of the end of each field
-   char        *fRow;          // string with all the fColumnCount fields
-   TTreeRow    *fOriginal;     //! pointer to original row
+   TString     *fFields;       // array containing result strings
+   TTreeRow    *fOriginal;     // pointer to original row
 
-   TTreeRow(TSQLRow *original);
    Bool_t  IsValid(Int_t field);
+   TTreeRow(TSQLRow *original);
 
 public:
-   TTreeRow();
    TTreeRow(Int_t nfields);
-   TTreeRow(Int_t nfields, const Int_t *fields, const char *row);
    virtual ~TTreeRow();
+
+   void        AddField(Int_t field, const char *fieldvalue);
 
    void        Close(Option_t *option="");
    ULong_t     GetFieldLength(Int_t field);
    const char *GetField(Int_t field);
-   void        SetRow(const Int_t *fields, const char *row);
-   
-   ClassDef(TTreeRow,1)  // One row of an TTree query result
+
+   ClassDef(TTreeRow,0)  // One row of an TTree query result
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.14 2002/01/15 00:45:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.3 2000/06/13 09:43:33 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -24,30 +24,21 @@
 #include <io.h>
 typedef long off_t;
 #endif
-#include <errno.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 #include "TProofServ.h"
 #include "TProof.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TSysEvtHandler.h"
-#include "TAuthenticate.h"
 #include "TSystem.h"
 #include "TInterpreter.h"
 #include "TException.h"
 #include "TSocket.h"
 #include "TStopwatch.h"
 #include "TMessage.h"
-#include "TUrl.h"
 #include "TEnv.h"
 #include "TError.h"
 #include "TTree.h"
-#include "TProofPlayer.h"
-#include "TDSet.h"
-
 
 TProofServ *gProofServ;
 
@@ -98,13 +89,7 @@ static void ProofServErrorHandler(int level, Bool_t abort, const char *location,
    gSystem->Syslog(loglevel, bp);
 
    if (abort) {
-      static Bool_t recursive = kFALSE;
-
-      if (!recursive) {
-         recursive = kTRUE;
-         gProofServ->GetSocket()->Send(kPROOF_FATAL);
-         recursive = kFALSE;
-      }
+      gProofServ->GetSocket()->Send(kPROOF_FATAL);
 
       fprintf(stderr, "aborting\n");
       fflush(stderr);
@@ -173,17 +158,10 @@ ClassImp(TProofServ)
 
 //______________________________________________________________________________
 TProofServ::TProofServ(int *argc, char **argv)
-       : TApplication("proofserv", argc, argv, 0, -1)
+       : TApplication("proofserv", argc, argv)
 {
    // Create an application environment. The TProofServ environment provides
    // an eventloop via inheritance of TApplication.
-
-   // debug hook
-#ifdef R__DEBUG
-   int debug = 1;
-   while (debug)
-      ;
-#endif
 
    // Make sure all registered dictionaries have been initialized
    gInterpreter->InitializeDictionaries();
@@ -204,37 +182,8 @@ TProofServ::TProofServ(int *argc, char **argv)
    fSocket      = new TSocket(0);
 
    GetOptions(argc, argv);
-
-   // debug hooks
-   if (IsMaster()) {
-#ifdef R__MASTERDEBUG
-      int debug = 1;
-      while (debug)
-         ;
-#endif
-   } else {
-#ifdef R__SLAVEDEBUG
-      int debug = 1;
-      while (debug)
-         ;
-#endif
-   }
-
    Setup();
    RedirectOutput();
-
-   // Send message of the day to the client
-   if (IsMaster()) {
-      if (CatMotd() == -1) {
-         SendLogFile(-99);
-         Terminate(0);
-      }
-   }
-
-   // Everybody expects iostream to be available, so load it...
-#ifndef WIN32
-   ProcessLine("#include <iostream>");
-#endif
 
    // Load user functions
    const char *logon;
@@ -258,15 +207,9 @@ TProofServ::TProofServ(int *argc, char **argv)
 
    // if master, start slave servers
    if (IsMaster()) {
-      TAuthenticate::SetGlobalUser(fUser);
-      TAuthenticate::SetGlobalPasswd(fPasswd);
-      TString master = "proof://__master__";
-      TInetAddress a = gSystem->GetSockName(0);
-      if (a.IsValid()) {
-         master += ":";
-         master += a.GetPort();
-      }
-      new TProof(master, fConfFile, fConfDir, fLogLevel);
+      TProof::SetUser(fUser);
+      TProof::SetPasswd(fUserPass);
+      new TProof("", kPROOF_Port, fVersion, fConfFile, fConfDir, fLogLevel);
       SendLogFile();
    }
 }
@@ -278,62 +221,6 @@ TProofServ::~TProofServ()
    // live anyway.
 
    delete fSocket;
-}
-
-//______________________________________________________________________________
-Int_t TProofServ::CatMotd()
-{
-   // Print message of the day (in fConfDir/proof/etc/motd). The motd
-   // is not shown more than once a dat. If the file fConfDir/proof/etc/noproof
-   // exists, show its contents and close the connection.
-
-   TString motdname;
-   TString lastname;
-   FILE   *motd;
-   Bool_t  show = kFALSE;
-
-   motdname = fConfDir + "/proof/etc/noproof";
-   if ((motd = fopen(motdname, "r"))) {
-      int c;
-      printf("\n");
-      while ((c = getc(motd)) != EOF)
-         putchar(c);
-      fclose(motd);
-      printf("\n");
-
-      return -1;
-   }
-
-   // get last modification time of the file ~/proof/.prooflast
-   lastname = TString(kPROOF_WorkDir) + "/.prooflast";
-   char *last = gSystem->ExpandPathName(lastname.Data());
-   Long_t id, size, flags, modtime, lasttime;
-   if (gSystem->GetPathInfo(last, &id, &size, &flags, &lasttime) == 1)
-      lasttime = 0;
-
-   // show motd at least once per day
-   if (time(0) - lasttime > (time_t)86400)
-      show = kTRUE;
-
-   motdname = fConfDir + "/proof/etc/motd";
-   if (gSystem->GetPathInfo(motdname, &id, &size, &flags, &modtime) == 0) {
-      if (modtime > lasttime || show) {
-         if ((motd = fopen(motdname, "r"))) {
-            int c;
-            printf("\n");
-            while ((c = getc(motd)) != EOF)
-               putchar(c);
-            fclose(motd);
-            printf("\n");
-         }
-      }
-   }
-
-   int fd = creat(last, 0600);
-   close(fd);
-   delete [] last;
-
-   return 0;
 }
 
 //______________________________________________________________________________
@@ -410,16 +297,17 @@ Bool_t TProofServ::GetNextPacket(Int_t &nentries, Stat_t &firstentry)
 //______________________________________________________________________________
 void TProofServ::GetOptions(int *argc, char **argv)
 {
-   // Get and handle command line options. Fixed format:
-   // "proofserv"|"proofslave" <confdir>
+   // Get and handle command line options.
 
-   if (!strcmp(argv[1], "proofserv") || !strcmp(argv[1], "proofslave")) {
-      fService = argv[1];
-      fMasterServ = kTRUE;
-      if (!strcmp(argv[1], "proofslave")) fMasterServ = kFALSE;
+   for (int i = 1; i < *argc; i++) {
+      if (!strcmp(argv[i], "proofserv") || !strcmp(argv[i], "proofslave")) {
+         fService = argv[i];
+         fMasterServ = kTRUE;
+         if (!strcmp(argv[i], "proofslave")) fMasterServ = kFALSE;
+      } else {
+         fConfDir = argv[i];
+      }
    }
-
-   fConfDir = argv[2];
 }
 
 //______________________________________________________________________________
@@ -433,8 +321,8 @@ void TProofServ::HandleSocketInput()
    char      str[2048];
    Int_t     what;
 
-   if (fSocket->Recv(mess) <= 0)
-      Terminate(0);               // do something more intelligent here
+   if (fSocket->Recv(mess) < 0)
+      return;                    // do something more intelligent here
 
    what = mess->What();
 
@@ -517,94 +405,13 @@ void TProofServ::HandleSocketInput()
          }
          break;
 
-      case kPROOF_PROCESS:
-         {
-            TDSet *dset;
-            TString filename;
-            TList *input;
-            Int_t nentries, first;
-
-            Info("TProofServ::HandleSocketInput", "### kPROOF_PROCESS:");
-
-            (*mess) >> dset >> filename >> input >> nentries >> first;
-
-            TProofPlayer *p;
-
-            if (IsMaster()) {
-               p = new TProofPlayerRemote(gProof);
-            } else {
-               p = new TProofPlayerSlave;
-            }
-
-            TIter next(input);
-            for (TObject *obj; (obj = next()); ) {
-               Info("Copying: ", obj->GetName());
-               p->AddInput(obj);
-            }
-            delete input;
-
-            p->Process(dset, filename, nentries, first);
-
-            TList *output;
-            if (IsMaster()) {
-               // handle slave output
-            } else {
-               output = p->GetOutputList();
-            }
-
-            // return output!
-
-            SendLogFile();
-
-            delete p;
-         }
-         break;
-
       case kPROOF_SENDFILE:
          mess->ReadString(str, sizeof(str));
          {
-            Long_t size;
-            Int_t  bin;
+            Int_t size;
             char  name[512];
-            sscanf(str, "%s %d %ld", name, &bin, &size);
-            ReceiveFile(name, bin ? kTRUE : kFALSE, size);
-         }
-         break;
-
-      case kPROOF_OPENFILE:
-         {
-            // open file on master, if successfull this will also send the
-            // connect message to the slaves
-            TString clsnam, filenam, option;
-            (*mess) >> clsnam >> filenam >> option;
-            TString cmd;
-            cmd = "TFile::Open(\"" + filenam + "\", \"" + option + "\");";
-            if (IsMaster()) {
-               if (clsnam == "TNetFile") {
-                  TUrl url(filenam);
-                  Int_t sec = !strcmp(url.GetProtocol(), "roots") ?
-                              TAuthenticate::kSRP : TAuthenticate::kNormal;
-                  TAuthenticate auth(0, url.GetHost(), "rootd", sec);
-                  TString user, passwd;
-                  if (auth.CheckNetrc(user, passwd))
-                     ProcessLine(cmd);
-                  else
-                     Error("HandleSocketInput", "cannot execute \"%s\" since authentication is not possible",
-                           cmd.Data());
-               } else
-                  ProcessLine(cmd);
-            } else
-               ProcessLine(cmd);
-         }
-         SendLogFile();
-         break;
-
-      case kPROOF_PARALLEL:
-         if (IsMaster()) {
-            Int_t nodes;
-            (*mess) >> nodes;
-            gProof->SetParallel(nodes);
-            SendLogFile();
+            sscanf(str, "%s %d", name, &size);
+            ReceiveFile(name, size);
          }
          break;
 
@@ -735,7 +542,7 @@ void TProofServ::HandleUrgentData()
          if (IsMaster())
             Info("HandleUrgentData", "Master: Shutdown Interrupt");
          else
-            Info("HandleUrgentData", "Slave %d: Shutdown Interrupt", fOrdinal);
+            Info("HandleUrgntData", "Slave %d: Shutdown Interrupt", fOrdinal);
 
          // If master server, propagate interrupt to slaves
          if (IsMaster())
@@ -799,7 +606,7 @@ Bool_t TProofServ::IsParallel() const
 }
 
 //______________________________________________________________________________
-void TProofServ::Print(Option_t *) const
+void TProofServ::Print(Option_t *)
 {
    // Print status of slave server.
 
@@ -815,8 +622,8 @@ void TProofServ::RedirectOutput()
    // Redirect stdout to a log file. This log file will be flushed to the
    // client or master after each command.
 
-   // Duplicate the initial socket (0), this will yield a socket with
-   // a descriptor >0, which will free descriptor 0 for stdout.
+   // Duplicate the initial (0) socket, this will yield a socket with a
+   // descriptor >0, which will free id=0 for stdout.
    int isock;
    if ((isock = dup(fSocket->GetDescriptor())) < 0)
       SysError("RedirectOutput", "could not duplicate output socket");
@@ -843,6 +650,11 @@ void TProofServ::RedirectOutput()
 
    if ((fLogFile = fopen(logfile, "r")) == 0)
       SysError("RedirectOutput", "could not open logfile");
+
+#if 0
+   // Send message of the day to the client.
+   if (IsMaster()) CatMotd();
+#endif
 }
 
 //______________________________________________________________________________
@@ -870,75 +682,9 @@ void TProofServ::Reset(const char *dir)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::ReceiveFile(const char *file, Bool_t bin, Long_t size)
+void TProofServ::ReceiveFile(const char *file, Int_t size)
 {
-   // Receive a file, either sent by a client or a master server.
-   // If bin is true it is a binary file, other wise it is an ASCII
-   // file and we need to check for Windows \r tokens. Returns -1 in
-   // case of error, 0 otherwise.
 
-   // open file, overwrite already existing file
-   int fd = open(file, O_CREAT | O_TRUNC | O_WRONLY, 0600);
-   if (fd < 0) {
-      SysError("ReceiveFile", "error opening file %s", file);
-      return -1;
-   }
-
-   const Int_t kMAXBUF = 16384;  //32768  //16384  //65536;
-   char buf[kMAXBUF], cpy[kMAXBUF];
-
-   Int_t  left, r;
-   Long_t filesize = 0;
-
-   while (filesize < size) {
-      left = Int_t(size - filesize);
-      if (left > kMAXBUF)
-         left = kMAXBUF;
-      r = fSocket->RecvRaw(&buf, left);
-      if (r > 0) {
-         char *p = buf;
-
-         filesize += r;
-         while (r) {
-            Int_t w;
-
-            if (!bin) {
-               Int_t k = 0, i = 0, j = 0;
-               char *q;
-               while (i < r) {
-                  if (p[i] == '\r') {
-                     i++;
-                     k++;
-                  }
-                  cpy[j++] = buf[i++];
-               }
-               q = cpy;
-               r -= k;
-               w = write(fd, q, r);
-            } else {
-               w = write(fd, p, r);
-            }
-
-            if (w < 0) {
-               SysError("ReceiveFile", "error writing to file %s", file);
-               close(fd);
-               return -1;
-            }
-            r -= w;
-            p += w;
-         }
-      } else if (r < 0) {
-         Error("ReceiveFile", "error during receiving file %s", file);
-         close(fd);
-         return -1;
-      }
-   }
-
-   close(fd);
-
-   chmod(file, 0644);
-
-   return 0;
 }
 
 //______________________________________________________________________________
@@ -950,7 +696,7 @@ void TProofServ::Run(Bool_t retrn)
 }
 
 //______________________________________________________________________________
-void TProofServ::SendLogFile(Int_t status)
+void TProofServ::SendLogFile()
 {
    // Send log file to master.
 
@@ -964,37 +710,24 @@ void TProofServ::SendLogFile(Int_t status)
    lnow = lseek(fileno(fLogFile), (off_t) 0, SEEK_CUR);
    left = Int_t(ltot - lnow);
 
-   if (left > 0) {
-      fSocket->Send(left, kPROOF_LOGFILE);
+   if (left <= 0)
+      fSocket->Send(kPROOF_LOGDONE);
+   else {
+      fSocket->Send(kPROOF_LOGFILE);
 
-      const Int_t kMAXBUF = 32768;  //16384  //65536;
-      char buf[kMAXBUF];
-      Int_t len;
-      do {
-         while ((len = read(fileno(fLogFile), buf, kMAXBUF)) < 0 &&
-                TSystem::GetErrno() == EINTR)
-            TSystem::ResetErrno();
+      while (left > 0) {
+         char line[256];
 
-         if (len < 0) {
-            SysError("SendLogFile", "error reading log file");
-            break;
+         if (fgets(line, sizeof(line), fLogFile) == 0) {
+            left = 0;
+         } else {
+            left -= strlen(line);
+            fSocket->Send(line);
          }
-
-         if (fSocket->SendRaw(buf, len) < 0) {
-            SysError("SendLogFile", "error sending log file");
-            break;
-         }
-
-      } while (len > 0);
+         if (!left)
+            fSocket->Send(kPROOF_LOGDONE);
+      }
    }
-
-   TMessage mess(kPROOF_LOGDONE);
-   if (IsMaster())
-      mess << status << gProof->GetNumberOfActiveSlaves();
-   else
-      mess << status << (Int_t) 1;
-
-   fSocket->Send(mess);
 }
 
 //______________________________________________________________________________
@@ -1002,14 +735,11 @@ void TProofServ::SendStatus()
 {
    // Send status of slave server to master or client.
 
-   if (!IsMaster()) {
-      TMessage mess(kPROOF_STATUS);
-      TString workdir = gSystem->WorkingDirectory();  // expect TString on other side
-      mess << TFile::GetFileBytesRead() << fRealTime << fCpuTime << workdir;
-      fSocket->Send(mess);
-   } else {
-      fSocket->Send(gProof->GetNumberOfActiveSlaves(), kPROOF_STATUS);
-   }
+   char str[64];
+
+   sprintf(str, "%g %.3f %.3f %s", TFile::GetFileBytesRead(), fRealTime,
+           fCpuTime, gSystem->WorkingDirectory());
+   fSocket->Send(str, kPROOF_STATUS);
 }
 
 //______________________________________________________________________________
@@ -1026,45 +756,37 @@ void TProofServ::Setup()
    }
    fSocket->Send(str);
 
-   TMessage *mess;
-   fSocket->Recv(mess);
+   fSocket->Recv(str, sizeof(str));
 
+   char user[16], vers[16];
    if (IsMaster()) {
-
-      (*mess) >> fUser >> fPasswd >> fConfFile >> fProtocol;
-
-      for (int i = 0; i < fPasswd.Length(); i++) {
-         char inv = ~fPasswd(i);
-         fPasswd.Replace(i, 1, inv);
-      }
-   } else
-      (*mess) >> fUser >> fProtocol >> fOrdinal;
-
-   delete mess;
+      char userpass[68], user_pass[64], conffile[64];
+      Int_t i;
+      sscanf(str, "%s %s %s %s %d", user, vers, userpass, conffile, &fProtocol);
+      for (i = 0; i < (Int_t) strlen(userpass); i++)
+         user_pass[i] = ~userpass[i];
+      user_pass[i] = '\0';
+      fUserPass = user_pass;
+      fConfFile = conffile;
+   } else {
+      sscanf(str, "%s %s %d %d", user, vers, &fProtocol, &fOrdinal);
+   }
+   fUser    = user;
+   fVersion = vers;
 
    // deny write access for group and world
    gSystem->Umask(022);
 
    if (IsMaster())
-      gSystem->Openlog("proofserv", kLogPid | kLogCons, kLogLocal5);
+      gSystem->Openlog("proofserv", kLogPid | kLogCons, kLogLocal6);
    else
-      gSystem->Openlog("proofslave", kLogPid | kLogCons, kLogLocal6);
+      gSystem->Openlog("proofslave", kLogPid | kLogCons, kLogLocal7);
 
    // Set $HOME and $PATH. The HOME directory was already set to the
    // user's home directory by proofd.
    gSystem->Setenv("HOME", gSystem->HomeDirectory());
-
 #ifdef R__UNIX
-   TString bindir;
-# ifdef ROOTBINDIR
-   bindir = ROOTBINDIR;
-# else
-   bindir = gSystem->Getenv("ROOTSYS");
-   if (!bindir.IsNull()) bindir += "/bin";
-# endif
-   if (!bindir.IsNull()) bindir += ":";
-   bindir += "/bin:/usr/bin:/usr/local/bin";
-   gSystem->Setenv("PATH", bindir);
+   gSystem->Setenv("PATH", "/bin:/usr/bin:/usr/contrib/bin:/usr/local/bin");
 #endif
 
    // set the working directory to ~/proof
@@ -1094,6 +816,10 @@ void TProofServ::Setup()
 
    // Send packages off immediately to reduce latency
    fSocket->SetOption(kNoDelay, 1);
+
+   // Use large buffers
+   fSocket->SetOption(kSendBuffer, 65536);
+   fSocket->SetOption(kRecvBuffer, 65536);
 
    // Check every two hours if client is still alive
    fSocket->SetOption(kKeepAlive, 1);

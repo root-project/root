@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.9 2002/01/05 17:15:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.4 2000/09/06 14:13:10 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -23,9 +23,6 @@
 
 #ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TList
-#include "TList.h"
 #endif
 #ifndef ROOT_TDatime
 #include "TDatime.h"
@@ -80,31 +77,26 @@ public:
    virtual void        Delete(const char *namecycle="");
    virtual void        Draw(Option_t *option="");
    virtual void        FillBuffer(char *&buffer);
-   virtual TKey       *FindKey(const char *keyname) const;
-   virtual TKey       *FindKeyAny(const char *keyname) const;
    virtual TObject    *FindObject(const char *name) const;
-   virtual TObject    *FindObject(const TObject *obj) const;
-   virtual TObject    *FindObjectAny(const char *name) const;
+   virtual TObject    *FindObject(TObject *obj) const;
    virtual TObject    *Get(const char *namecycle);
-   TDatime            &GetCreationDate() {return fDatimeC;}
-   virtual TFile      *GetFile() const {return fFile;}
-   virtual TKey       *GetKey(const char *name, Short_t cycle=9999) const;
+   virtual TFile      *GetFile() {return fFile;}
+   virtual TKey       *GetKey(const char *name, const Short_t cycle=9999);
    TList              *GetList() const { return fList; }
    TList              *GetListOfKeys() const { return fKeys; }
-   TDatime            &GetModificationDate() {return fDatimeM;}
    TObject            *GetMother() const { return fMother; }
-   virtual Int_t       GetNkeys() const {return fKeys->GetSize();}
-   virtual Seek_t      GetSeekDir() const { return fSeekDir; }
-   virtual Seek_t      GetSeekParent() const { return fSeekParent; }
-   virtual Seek_t      GetSeekKeys() const { return fSeekKeys; }
+   virtual Int_t       GetNkeys() {return fKeys->GetSize();}
+   virtual Seek_t      GetSeekDir() { return fSeekDir; }
+   virtual Seek_t      GetSeekParent() { return fSeekParent; }
+   virtual Seek_t      GetSeekKeys() { return fSeekKeys; }
    virtual const char *GetPath() const;
    Bool_t              IsFolder() const { return kTRUE; }
    Bool_t              IsModified() const { return fModified; }
    Bool_t              IsWritable() const { return fWritable; }
-   virtual void        ls(Option_t *option="") const;
+   virtual void        ls(Option_t *option="");
    virtual TDirectory *mkdir(const char *name, const char *title="");
    virtual void        Paint(Option_t *option="");
-   virtual void        Print(Option_t *option="") const;
+   virtual void        Print(Option_t *option="");
    virtual void        Purge(Short_t nkeep=1);
    virtual void        pwd() const;
    virtual void        ReadAll(Option_t *option="");
@@ -113,7 +105,7 @@ public:
    virtual void        Save();
    virtual void        SaveSelf(Bool_t force = kFALSE);
    void                SetModified() {fModified = kTRUE;}
-   void                SetMother(const TObject *mother) {fMother = (TObject*)mother;}
+   void                SetMother(TObject *mother) {fMother = mother;}
    virtual Int_t       Sizeof() const;
    virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
    virtual void        WriteDirHeader();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.6 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.2 2000/10/20 12:18:06 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -45,25 +45,25 @@ protected:
    void Init();
 
 public:
-   TGButtonGroup(TGWindow *parent,
+   TGButtonGroup(TGWindow *parent = 0,
                  const TString &title = "",
                  UInt_t options = kChildFrame | kVerticalFrame,
-                 GContext_t norm = GetDefaultGC()(),
-                 FontStruct_t font = GetDefaultFontStruct(),
-                 ULong_t back = GetDefaultFrameBackground());
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
+                 ULong_t back = fgDefaultFrameBackground);
 
    TGButtonGroup(TGWindow *parent,
                  UInt_t r, UInt_t c, Int_t s = 0, Int_t h = 0 ,
                  const TString &title = "",
-                 GContext_t norm = GetDefaultGC()(),
-                 FontStruct_t font = GetDefaultFontStruct(),
-                 ULong_t back = GetDefaultFrameBackground());
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
+                 ULong_t back = fgDefaultFrameBackground);
 
    virtual ~TGButtonGroup();
 
-   virtual void Pressed(Int_t id)  { Emit("Pressed(Int_t)",id); }   //*SIGNAL*
-   virtual void Released(Int_t id) { Emit("Released(Int_t)",id);}   //*SIGNAL*
-   virtual void Clicked(Int_t id)  { Emit("Clicked(Int_t)",id); }   //*SIGNAL*
+   void Pressed(Int_t id)  { Emit("Pressed(Int_t)",id); }     //*SIGNAL*
+   void Released(Int_t id) { Emit("Released(Int_t)",id);}     //*SIGNAL*
+   void Clicked(Int_t id)  { Emit("Clicked(Int_t)",id); }     //*SIGNAL*
 
    void ButtonPressed();
    void ButtonReleased();
@@ -78,8 +78,7 @@ public:
    void SetRadioButtonExclusive(Bool_t flag = kTRUE);
    void SetBorderDrawn(Bool_t enable = kTRUE);
    void SetButton(Int_t id, Bool_t down = kTRUE);
-   void SetTitle(TGString *title);
-   void SetTitle(const char *title);
+   void SetTitle(const char *title = "");
 
    Int_t     Insert(TGButton *button, int id = -1);
    void      Remove(TGButton *button);
@@ -99,11 +98,11 @@ public:
 class TGVButtonGroup : public TGButtonGroup {
 
 public:
-   TGVButtonGroup(TGWindow *parent,
+   TGVButtonGroup(TGWindow *parent = 0,
                   const TString &title = "",
-                  GContext_t norm = GetDefaultGC()(),
-                  FontStruct_t font = GetDefaultFontStruct(),
-                  ULong_t back = GetDefaultFrameBackground()) :
+                  GContext_t norm = fgDefaultGC(),
+                  FontStruct_t font = fgDefaultFontStruct,
+                  ULong_t back = fgDefaultFrameBackground) :
       TGButtonGroup(parent, title, kChildFrame | kVerticalFrame,
                     norm, font, back) { }
 
@@ -116,11 +115,11 @@ public:
 class TGHButtonGroup : public TGButtonGroup {
 
 public:
-   TGHButtonGroup(TGWindow *parent,
+   TGHButtonGroup(TGWindow *parent = 0,
                   const TString &title = "",
-                  GContext_t norm = GetDefaultGC()(),
-                  FontStruct_t font = GetDefaultFontStruct(),
-                  ULong_t back = GetDefaultFrameBackground()) :
+                  GContext_t norm = fgDefaultGC(),
+                  FontStruct_t font = fgDefaultFontStruct,
+                  ULong_t back = fgDefaultFrameBackground) :
       TGButtonGroup(parent, title, kChildFrame | kHorizontalFrame,
                     norm, font, back) { }
 

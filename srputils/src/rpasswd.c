@@ -1,8 +1,10 @@
-/* @(#)root/srputils:$Name:  $:$Id: rpasswd.c,v 1.2 2000/11/27 10:49:30 rdm Exp $ */
+/* @(#)root/srputils:$Name$:$Id$ */
 /*
  * Create a private SRP passwd file.
  */
 
+#include "prototypes.h"
+#include "defines.h"
 #include <sys/types.h>
 #include <time.h>
 #include <stdio.h>
@@ -10,21 +12,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <pwd.h>
-#include <string.h>
-
-#ifndef P_
-#if __STDC__
-#define P_(x) x
-#else
-#define P_(x) ()
-#endif
-#endif
-#define STRFCPY(A,B) \
-	(strncpy((A), (B), sizeof(A) - 1), (A)[sizeof(A) - 1] = '\0')
-extern int obscure P_((const char *, const char *, const struct passwd *));
-extern char *Basename P_((char *str));
-extern struct passwd *get_my_pwent P_((void));
-extern char *xstrdup P_((const char *str));
+/*#include <string.h>*/
+extern char *strncpy(char *dest, const char *src, size_t n);
 
 #include "pwauth.h"
 #include "pwio.h"
@@ -215,7 +204,7 @@ int main(int argc, char **argv)
    sprintf(r_tconf, "%s/%s", getenv("HOME"), SROOTDCONF);
    sprintf(r_passwd, "%s/%s", getenv("HOME"), SROOTDPASS);
 
-   /*
+   /* 
     * The remaining arguments will be processed one by one and
     * executed by this command.  The name is the last argument
     * if it does not begin with a "-", otherwise the name is
@@ -242,7 +231,7 @@ int main(int argc, char **argv)
    }
 
    /*
-    * Now I have to get the user name.  The name will be gotten
+    * Now I have to get the user name.  The name will be gotten 
     * from the command line if possible.  Otherwise it is figured
     * out from the environment.
     */
@@ -263,6 +252,7 @@ int main(int argc, char **argv)
     */
    if (new_password(pw)) {
       fprintf(stderr, UNCHANGED, name);
+      closelog();
       exit(1);
    }
 

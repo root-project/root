@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom2.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Rene Brun   04/03/99
 
 /*************************************************************************
@@ -36,7 +36,7 @@ public:
    TRandom2(UInt_t seed=65539);
    virtual ~TRandom2();
    virtual  void     GetSeed2(UInt_t &seed1, UInt_t &seed2);
-   virtual  Double_t Rndm(Int_t i=0);
+   virtual  Float_t  Rndm(Int_t i=0);
    virtual  void     SetSeed(UInt_t seed=0);
    virtual  void     SetSeed2(UInt_t seed1, UInt_t seed2);
 

@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/pythia6:$Name$:$Id$
 // Author: Rene Brun   19/10/99
 
 /*************************************************************************
@@ -194,20 +194,18 @@ public:
   void        SetMRPY(int i, int m)    { fPydatr->MRPY[i-1] = m; }
   void        SetRRPY(int i, double r) { fPydatr->RRPY[i-1] = r; }
 
-				// ****** /PYSUBS/
+				// ****** /PYSABS/
 
   Pysubs_t*   GetPysubs     () { return fPysubs; }
   int         GetMSEL       () { return fPysubs->MSEL; }
   int         GetMSELPD     () { return fPysubs->MSELPD; }
   int         GetMSUB  (int i) { return fPysubs->MSUB[i-1]; }
   double      GetCKIN  (int i) { return fPysubs->CKIN[i-1]; }
-  Int_t       GetKFIN(int i, int j)  {return fPysubs->KFIN[j-1][i-1]; } 
 
   void        SetMSEL   (int m)           { fPysubs->MSEL      = m; }
   void        SetMSELPD (int m)           { fPysubs->MSELPD    = m; }
   void        SetMSUB   (int i, int m)    { fPysubs->MSUB[i-1] = m; }
   void        SetCKIN   (int i, double c) { fPysubs->CKIN[i-1] = c; }
-  void        SetKFIN(int i, int j, Int_t kfin=1) { fPysubs->KFIN[j-1][i-1] = kfin; }
 
 				// ****** /PYPARS/
 

@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Solaris with KCC
 
 PLATFORM      = solaris
@@ -10,18 +8,14 @@ CXXOPT        = +K0 -O0
 NOOPT         =
 else
 OPT           = -O4
-CXXOPT        = +K1
+CXXOPT        = +K3
 NOOPT         =
 endif
 
 ifeq (exception,$(findstring exception,$(ROOTBUILD)))
-EXCEPTION     = --exceptions -DG__EXCEPTIONWRAPPER
+EXCEPTION     = --exceptions
 else
 EXCEPTION     = --no_exceptions
-endif
-
-ifneq ($(OSTHREADLIB),)
-CXXOPT        += --thread_safe
 endif
 
 # Compiler:
@@ -29,7 +23,7 @@ CXX           = KCC
 CC            = /opt/SUNWspro/bin/cc
 CXXFLAGS      = $(EXCEPTION) --display_error_number $(EXTRA_CXXFLAGS) \
                 --diag_suppress 191 --diag_suppress 830 \
-                $(CXXOPT) -KPIC -I/usr/openwin/include
+                $(CXXOPT) -KPIC -I/usr/openwin/include -D__SunOS_5_6
 CFLAGS        = -KPIC -I/usr/openwin/include -O0 $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = $(EXCEPTION) --display_error_number $(EXTRA_CXXFLAGS) \
                 --diag_suppress 191 --diag_suppress 830 $(CXXOPT) \
@@ -38,10 +32,6 @@ CINTCXXFLAGS  = $(EXCEPTION) --display_error_number $(EXTRA_CXXFLAGS) \
 CINTCFLAGS    = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
                 -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO \
                 -D__KCC $(EXTRA_CFLAGS)
-
-ifeq (exception,$(findstring exception,$(ROOTBUILD)))
-CINTCFLAGS   += -DG__EXCEPTIONWRAPPER
-endif
 
 # Linker:
 LD            = KCC
@@ -53,7 +43,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl -lsocket -lnsl
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/openwin/lib -lX11
+XLIBS         = $(XPMLIB) -L/usr/openwin/lib -lX11
 CILIBS        = -lm -ltermcap -ldl -L/usr/ccs/lib -lgen
 CRYPTLIBS     =
 
@@ -61,7 +51,3 @@ CRYPTLIBS     =
 F77           = f77
 F77FLAGS      =
 F77LIBS       = -L/opt/SUNWspro/lib -lM77 -lF77 -lsunmath -lsocket -lnsl
-
-# Override default in Makefile.config
-INSTALL      := cp -pR
-INSTALLDATA  := cp -pR

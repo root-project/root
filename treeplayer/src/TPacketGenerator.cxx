@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TPacketGenerator.cxx,v 1.2 2000/12/13 15:13:57 brun Exp $
+// @(#)root/treeplayer:$Name$:$Id$
 // Author: Fons Rademakers   28/03/97
 
 /*************************************************************************
@@ -48,7 +48,7 @@ public:
    Int_t   GetPacketSize() const { return fNentries; }
    TSlave *GetSlave() const { return fSlave; }
    TTime   GetTime() const { return fTime; }
-   void    Print(Option_t *option ="") const ;
+   void    Print(Option_t *option ="");
 };
 
 TPacket::TPacket(TSlave *sl, Stat_t first, Int_t nentries)
@@ -59,7 +59,7 @@ TPacket::TPacket(TSlave *sl, Stat_t first, Int_t nentries)
    fTime     = gSystem->Now();
 }
 
-void TPacket::Print(Option_t *) const
+void TPacket::Print(Option_t *)
 {
    Printf("    Processed on host:     %s",   fSlave->GetName());
    Printf("    Begin entry:           %.0f", fFirst);
@@ -225,7 +225,7 @@ Int_t TPacketGenerator::GetNoPackets() const
 }
 
 //______________________________________________________________________________
-void TPacketGenerator::Print(Option_t *option) const
+void TPacketGenerator::Print(Option_t *option)
 {
    // Prints info about the packet generator. If option is "all", print also
    // info about all packets.

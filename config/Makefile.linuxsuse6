@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Linux with glibc and egcs (SuSE v6.0)
 
 PLATFORM      = linux
@@ -30,15 +28,14 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl -rdynamic
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
+XLIBS         = $(XPMLIB) -L/usr/X11R6/lib -lX11
 CILIBS        = -lm -lncurses -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
 F77           = g77
 F77FLAGS      = $(OPT)
-F77LIBS       = -lg2c -lnsl
+F77LIBS       = -lg2c
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                -L/usr/X11R6/lib -lXmu
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -L/usr/X11R6/lib -lXmu

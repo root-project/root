@@ -37,14 +37,12 @@
 /* union semun is defined by including <sys/sem.h> */
 #else
 /* according to X/OPEN we have to define it ourselves */
-#ifndef __FreeBSD__
 union semun {
   int val;                    /* value for SETVAL */
   struct semid_ds *buf;       /* buffer for IPC_STAT, IPC_SET */
   unsigned short int *array;  /* array for GETALL, SETALL */
   struct seminfo *__buf;      /* buffer for IPC_INFO */
 };
-#endif
 #endif 
 
 #include <sys/msg.h>
@@ -63,7 +61,7 @@ struct msqid_ds;
 union semun;
 
 struct sembuf;
-struct msgbuf; /* does not exist in RH7.0 */
+struct msgbuf;
 
 /**************************************************************************
  * convert a pathname and a project id to a System V IPC Key
@@ -189,7 +187,7 @@ int semop(int semid,struct sembuf *sops,unsigned int nsops);
  **************************************************************************/
 struct msgbuf {
   long mtype;
-  char mtext[80];  /* This is dummy */
+  char mtext[80];
 };
 
 struct msqid_ds;
@@ -200,7 +198,6 @@ int msgrcv(int msgid,struct msgbuf *msgp,int msgsz,long msgtyp,int msgflg);
 int msgctl(int msgid, int cmd,struct msqid_ds *buf);
 
 
-#pragma link off struct msgbuf;
 #endif /* __MAKECINT__ */
 
 #endif /* G__IPC_H */

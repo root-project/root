@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.13 2001/08/22 07:33:45 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -22,11 +22,6 @@
 //*-*                                                                     *
 //*-*   - The variables in the various Minuit labelled common blocks      *
 //*-*     have been changed to the TMinuit class data members.            *
-//*-*   - The internal arrays with a maximum dimension depending on the   *
-//*-*     maximum number of parameters are now data members arrays with   *
-//*-*     a dynamic dimension such that one can fit very large problems   *
-//*-*     by simply initialising the TMinuit constructor with the maximum *
-//*-*     number of parameters.                                           *
 //*-*   - The include file Minuit.h has been commented as much as possible*
 //*-*     using existing comments in the code or the printed documentation*
 //*-*   - The original Minuit subroutines are now member functions.       *
@@ -40,7 +35,7 @@
 //*-*     format statements and to print on currently defined output file.*
 //*-*   - The derived class TMinuitOld contains obsolete routines from    *
 //*-*     the Fortran based version.                                      *
-//*-*   - The functions SetObjectFit(TObject *obj)/GetObjectFit() can be  *
+//*-*   - The functions SetObjFit(TObject *obj) and GetObjFit() can be    *
 //*-*     used inside the FCN function to set/get a referenced object     *
 //*-*     instead of using global variables.                              *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -277,6 +272,9 @@ some variables.
 
 TMinuit *gMinuit;
 
+
+const Int_t kMAXDIM = 200;
+const Int_t kMAXP   = kMAXDIM;
 const char charal[29] = " .ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 ClassImp(TMinuit)
@@ -299,6 +297,7 @@ TMinuit::TMinuit(Int_t maxpar): TNamed("MINUIT","The Minimization package")
 //*-*                  ========================
 //
 //  maxpar is the maximum number of parameters used with this TMinuit object.
+//  maxpar must < kMAXDIM=100
 
    BuildArrays(maxpar);
 
@@ -339,7 +338,7 @@ void TMinuit::BuildArrays(Int_t maxpar)
 //*-*          =======================================================
 
    Int_t mni = 25;
-   if (maxpar > 10) mni = maxpar;
+   if (maxpar > 10 && maxpar < kMAXDIM) mni = maxpar;
    fMaxpar      = mni;
    Int_t mnihl  = mni*(mni+1)/2;
    Int_t maxcpt = 101;
@@ -373,43 +372,16 @@ void TMinuit::BuildArrays(Int_t maxpar)
    fVhmat  = new Double_t[mnihl];
    fVthmat = new Double_t[mnihl];
    fP      = new Double_t[mni*(mni+1)];
-   fPstar  = new Double_t[2*mni];
+   fPstar  = new Double_t[mni];
    fPstst  = new Double_t[mni];
    fPbar   = new Double_t[mni];
    fPrho   = new Double_t[mni];
-   fWord7  = new Double_t[mni];
+   fWord7  = new Double_t[kMAXP];
    fXpt    = new Double_t[maxcpt];
    fYpt    = new Double_t[maxcpt];
    fChpt   = new char[maxcpt+1];
    fOrigin = new TString[100];
    fWarmes = new TString[100];
-   // initialisation of dynamic arrays used internally in some functions
-   // these arrays had a fix dimension in Minuit
-   fCONTgcc   = new Double_t[mni];
-   fCONTw     = new Double_t[mni];
-   fFIXPyy    = new Double_t[mni];
-   fGRADgf    = new Double_t[mni];
-   fHESSyy    = new Double_t[mni];
-   fIMPRdsav  = new Double_t[mni];
-   fIMPRy     = new Double_t[mni];
-   fMATUvline = new Double_t[mni];
-   fMIGRflnu  = new Double_t[mni];
-   fMIGRstep  = new Double_t[mni];
-   fMIGRgs    = new Double_t[mni];
-   fMIGRvg    = new Double_t[mni];
-   fMIGRxxs   = new Double_t[mni];
-   fMNOTxdev  = new Double_t[mni];
-   fMNOTw     = new Double_t[mni];
-   fMNOTgcc   = new Double_t[mni];
-   fPSDFs     = new Double_t[mni];
-   fSEEKxmid  = new Double_t[mni];
-   fSEEKxbest = new Double_t[mni];
-   fSIMPy     = new Double_t[mni];
-   fVERTq     = new Double_t[mni];
-   fVERTs     = new Double_t[mni];
-   fVERTpp    = new Double_t[mni];
-   fCOMDplist = new Double_t[mni];
-   fPARSplist = new Double_t[mni];
 
    for (int i = 0; i < fMaxpar; i++) {
       fErp[i] = 0;
@@ -465,8 +437,6 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
   //
   // The TGraph object is created via the interpreter. The user must cast it
   // to a TGraph*
-  //
-  // You can find an example in $ROOTSYS/tutorials/fitcont.C
 
   if (npoints<4) {
     // we need at least 4 points
@@ -554,33 +524,6 @@ void TMinuit::DeleteArrays()
    delete [] fChpt;
    delete [] fOrigin;
    delete [] fWarmes;
-   
-   delete [] fCONTgcc;
-   delete [] fCONTw;
-   delete [] fFIXPyy;
-   delete [] fGRADgf;
-   delete [] fHESSyy;
-   delete [] fIMPRdsav;
-   delete [] fIMPRy;
-   delete [] fMATUvline;
-   delete [] fMIGRflnu;
-   delete [] fMIGRstep;
-   delete [] fMIGRgs;
-   delete [] fMIGRvg;
-   delete [] fMIGRxxs;
-   delete [] fMNOTxdev;
-   delete [] fMNOTw;
-   delete [] fMNOTgcc;
-   delete [] fPSDFs;
-   delete [] fSEEKxmid;
-   delete [] fSEEKxbest;
-   delete [] fSIMPy;
-   delete [] fVERTq;
-   delete [] fVERTs;
-   delete [] fVERTpp;
-   delete [] fCOMDplist;
-   delete [] fPARSplist;
-   
    fEmpty = 1;
 }
 
@@ -739,8 +682,8 @@ void TMinuit::mnamin()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t fnew;
-    Int_t nparx;
+    static Double_t fnew;
+    static Int_t nparx;
 
     nparx = fNpar;
     if (fISW[4] >= 1) {
@@ -766,7 +709,7 @@ void TMinuit::mnbins(Double_t a1, Double_t a2, Int_t naa, Double_t &bl, Double_t
 
     /* Local variables */
     Double_t awid,ah, al, sigfig, sigrnd, alb;
-    Int_t kwid, lwid, na=0, log_;
+    static Int_t kwid, lwid, na, log_;
 
     al = TMath::Min(a1,a2);
     ah = TMath::Max(a1,a2);
@@ -839,8 +782,8 @@ void TMinuit::mncalf(Double_t *pvec, Double_t &ycalf)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Int_t ndex, i, j, m, n, nparx;
-    Double_t denom, f;
+    static Int_t ndex, i, j, m, n, nparx;
+    static Double_t denom, f;
 
     nparx = fNpar;
     mninex(&pvec[0]);
@@ -910,8 +853,8 @@ void TMinuit::mncntr(Int_t ike1, Int_t ike2, Int_t &ierrf)
     Double_t fcna[115], fcnb[115], contur[20];
     Double_t  ylabel, fmn, fmx, xlo, ylo, xup, yup;
     Double_t devs, xsav, ysav,  bwidx,  bwidy, unext, ff, xb4;
-    Int_t i,  ngrid, ixmid, nparx, ix, nx, ny, ki1, ki2, ixzero, iy, ics;
-    TString chmid, chln, chzero;
+    static Int_t i,  ngrid, ixmid, nparx, ix, nx, ny, ki1, ki2, ixzero, iy, ics;
+    static TString chmid, chln, chzero;
 
     Int_t ke1 = ike1+1;
     Int_t ke2 = ike2+1;
@@ -1081,9 +1024,10 @@ void TMinuit::mncomd(const char *crdbin, Int_t &icondn)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Int_t ierr, ipos, i, llist, lenbuf, lnc;
-    Bool_t leader;
-    TString comand, crdbuf, ctemp;
+    static Double_t plist[kMAXP];
+    static Int_t ierr, ipos, i, llist, lenbuf, lnc;
+    static Bool_t leader;
+    static TString comand, crdbuf, ctemp;
 
     crdbuf = crdbin;
     crdbuf.ToUpper();
@@ -1134,14 +1078,14 @@ void TMinuit::mncomd(const char *crdbin, Int_t &icondn)
     }
 //*-*-              crack the command . . . . . . . . . . . . . . . .
     ctemp = crdbuf(ipos-1,lenbuf-ipos+1);
-    mncrck(ctemp, 20, comand, lnc, fMaxpar, fCOMDplist, llist, ierr, fIsyswr);
+    mncrck(ctemp, 20, comand, lnc, kMAXP, plist, llist, ierr, fIsyswr);
     if (ierr > 0) {
 	Printf(" COMMAND CANNOT BE INTERPRETED");
 	icondn = 2;
 	return;
     }
 
-    mnexcm(comand.Data(), fCOMDplist, llist, ierr);
+    mnexcm(comand.Data(), plist, llist, ierr);
     icondn = ierr;
 } /* mncomd_ */
 
@@ -1167,13 +1111,13 @@ void TMinuit::mncont(Int_t ike1, Int_t ike2, Int_t nptu, Double_t *xptu, Double_
 
     /* Local variables */
     Double_t d__1, d__2;
-    Double_t dist, xdir, ydir, aopt,  u1min, u2min;
-    Double_t abest, scalx, scaly;
-    Double_t a1, a2, val2mi, val2pl, dc, sclfac, bigdis, sigsav;
-    Int_t nall, iold, line, mpar, ierr, inew, move, next, i, j, nfcol, iercr;
-    Int_t idist=0, npcol, kints, i2, i1, lr, nfcnco=0, ki1, ki2, ki3, ke3;
-    Int_t nowpts, istrav, nfmxin, isw2, isw4;
-    Bool_t ldebug;
+    static Double_t dist, xdir, ydir, aopt,  u1min, u2min;
+    static Double_t gcc[kMAXDIM], w[kMAXDIM], abest, scalx, scaly;
+    static Double_t a1, a2, val2mi, val2pl, dc, sclfac, bigdis, sigsav;
+    static Int_t nall, iold, line, mpar, ierr, inew, move, next, i, j, nfcol, iercr;
+    static Int_t idist, npcol, kints, i2, i1, lr, nfcnco, ki1, ki2, ki3, ke3;
+    static Int_t nowpts, istrav, nfmxin, isw2, isw4;
+    static Bool_t ldebug;
 
     /* Function Body */
     Int_t ke1 = ike1+1;
@@ -1280,8 +1224,8 @@ void TMinuit::mncont(Int_t ike1, Int_t ike2, Int_t nptu, Double_t *xptu, Double_
     i__1 = mpar*(mpar + 1) / 2;
     for (j = 1; j <= i__1; ++j) { fVthmat[j-1] = fVhmat[j-1]; }
     for (i = 1; i <= mpar; ++i) {
-	fCONTgcc[i-1] = fGlobcc[i-1];
-	fCONTw[i-1]   = fWerr[i-1];
+	gcc[i-1] = fGlobcc[i-1];
+	w[i-1] = fWerr[i-1];
     }
 //*-*-                          fix the two parameters in question
     kints = fNiofex[ke1-1];
@@ -1392,8 +1336,8 @@ L950:
     i__1 = mpar*(mpar + 1) / 2;
     for (j = 1; j <= i__1; ++j) { fVhmat[j-1] = fVthmat[j-1]; }
     for (i = 1; i <= mpar; ++i) {
-	fGlobcc[i-1] = fCONTgcc[i-1];
-	fWerr[i-1]   = fCONTw[i-1];
+	fGlobcc[i-1] = gcc[i-1];
+	fWerr[i-1]   = w[i-1];
 	fX[i-1]      = fXt[i-1];
     }
     mninex(fX);
@@ -1450,9 +1394,9 @@ void TMinuit::mncrck(TString cardbuf, Int_t maxcwd, TString &comand, Int_t &lnc,
     const char *cnumer = "123456789-.0+";
 
     /* Local variables */
-    Int_t ifld, iend, lend, left, nreq, ipos, kcmnd, nextb, ic, ibegin, ltoadd;
-    Int_t ielmnt, lelmnt[25], nelmnt;
-    TString ctemp;
+    static Int_t ifld, iend, lend, left, nreq, ipos, kcmnd, nextb, ic, ibegin, ltoadd;
+    static Int_t ielmnt, lelmnt[25], nelmnt;
+    static TString ctemp;
     char *celmnt[25];
     char command[25];
 
@@ -1566,14 +1510,14 @@ void TMinuit::mncros(Double_t &aopt, Int_t &iercr)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t alsb[3], flsb[3], bmin, bmax, zmid, sdev, zdir, zlim;
-    Double_t coeff[3], aleft, aulim, fdist, adist, aminsv;
-    Double_t anext, fnext, slope, s1, s2, x1, x2, ecarmn, ecarmx;
-    Double_t determ, rt, smalla, aright, aim, tla, tlf, dfda,ecart;
-    Int_t iout=0, i, ileft, ierev, maxlk, ibest, ik, it;
-    Int_t noless, iworst=0, iright, itoohi, kex, ipt;
-    Bool_t ldebug;
-    const char *chsign;
+    static Double_t alsb[3], flsb[3], bmin, bmax, zmid, sdev, zdir, zlim;
+    static Double_t coeff[3], aleft, aulim, fdist, adist, aminsv;
+    static Double_t anext, fnext, slope, s1, s2, x1, x2, ecarmn, ecarmx;
+    static Double_t determ, rt, smalla, aright, aim, tla, tlf, dfda,ecart;
+    static Int_t iout, i, ileft, ierev, maxlk, ibest, ik, it;
+    static Int_t noless, iworst, iright, itoohi, kex, ipt;
+    static Bool_t ldebug;
+    static const char *chsign;
     x2 = 0;
 
     ldebug = fIdbg[6] >= 1;
@@ -1899,8 +1843,8 @@ void TMinuit::mncuve()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t dxdi, wint;
-    Int_t ndex, iext, i, j;
+    static Double_t dxdi, wint;
+    static Int_t ndex, iext, i, j;
 
     if (fISW[3] < 1) {
 	Printf(" FUNCTION MUST BE MINIMIZED BEFORE CALLING %s",(const char*)fCfrom);
@@ -1948,10 +1892,10 @@ void TMinuit::mnderi()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t step, dfmin, stepb4, dd, df, fs1;
-    Double_t tlrstp, tlrgrd, epspri, optstp, stpmax, stpmin, fs2, grbfor=0, d1d2, xtf;
-    Int_t icyc, ncyc, iint, iext, i, nparx;
-    Bool_t ldebug;
+    static Double_t step, dfmin, stepb4, dd, df, fs1;
+    static Double_t tlrstp, tlrgrd, epspri, optstp, stpmax, stpmin, fs2, grbfor, d1d2, xtf;
+    static Int_t icyc, ncyc, iint, iext, i, nparx;
+    static Bool_t ldebug;
 
     nparx = fNpar;
     ldebug = fIdbg[2] >= 1;
@@ -2080,8 +2024,8 @@ void TMinuit::mneig(Double_t *a, Int_t ndima, Int_t n, Int_t mits, Double_t *wor
     Double_t d__1;
 
     /* Local variables */
-    Double_t b, c, f, h, r, s, hh, gl, pr, pt;
-    Int_t i, j, k, l, m=0, i0, i1, j1, m1, n1;
+    static Double_t b, c, f, h, r, s, hh, gl, pr, pt;
+    static Int_t i, j, k, l, m, i0, i1, j1, m1, n1;
 
 //*-*-         PRECIS is the machine precision EPSMAC
     /* Parameter adjustments */
@@ -2274,9 +2218,9 @@ void TMinuit::mnemat(Double_t *emat, Int_t ndim)
     Int_t emat_dim1, emat_offset;
 
     /* Local variables */
-    Double_t dxdi, dxdj;
-    Int_t i, j, k, npard, k2, kk, iz, nperln, kga, kgb;
-    TString ctemp;
+    static Double_t dxdi, dxdj;
+    static Int_t i, j, k, npard, k2, kk, iz, nperln, kga, kgb;
+    static TString ctemp;
 
     /* Parameter adjustments */
     emat_dim1 = ndim;
@@ -2346,8 +2290,8 @@ void TMinuit::mnerrs(Int_t number, Double_t &eplus, Double_t &eminus, Double_t &
 //*-*       GCC is global correlation coefficient from error matrix
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t dxdi;
-    Int_t ndiag, iin, iex;
+    static Double_t dxdi;
+    static Int_t ndiag, iin, iex;
 
     iex = number+1;
 
@@ -2389,7 +2333,7 @@ void TMinuit::mneval(Double_t anext, Double_t &fnext, Int_t &ierev)
 //*-*      and (if KE2CR .NE. 0)  U(KE2CR) = YMIDCR + ANEXT*YDIRCR
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t nparx;
+    static Int_t nparx;
 
     fU[fKe1cr-1] = fXmidcr + anext*fXdircr;
     if (fKe2cr != 0) fU[fKe2cr-1] = fYmidcr + anext*fYdircr;
@@ -2478,16 +2422,16 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
       "LIMITS    ",
       "PUNCH     "};
 
-    Int_t nntot = 40;
+    static Int_t nntot = 40;
 
     /* Local variables */
-    Double_t step, xptu[101], yptu[101], f, rno;
-    Int_t icol, kcol, ierr, iint, iext, lnow, nptu, i, iflag, ierrf;
-    Int_t ilist, nparx, izero, nf, lk, it, iw, inonde, nsuper;
-    Int_t it2, ke1, ke2, nowprt, kll, krl;
-    TString chwhy, c26, cvblnk, cneway, comd;
-    TString ctemp;
-    Bool_t lfreed, ltofix, lfixed;
+    static Double_t step, xptu[101], yptu[101], f, rno;
+    static Int_t icol, kcol, ierr, iint, iext, lnow, nptu, i, iflag, ierrf;
+    static Int_t ilist, nparx, izero, nf, lk, it, iw, inonde, nsuper;
+    static Int_t it2, ke1, ke2, nowprt, kll, let, krl;
+    static TString chwhy, c26, cvblnk, cneway, comd;
+    static TString ctemp;
+    static Bool_t lfreed, ltofix, lfixed;
 
 //*-*  alphabetical order of command names!
 
@@ -2496,10 +2440,17 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
     lk = comand.Length();
     if (lk > 20) lk = 20;
     fCword =  comand;
-    fCword.ToUpper();
+//*-*-             get upper case
+    for (icol = 1; icol <= lk; ++icol) {
+	for (let = 1; let <= 26; ++let) {
+	    if (fCword(icol-1,1) == clower[let-1]) {
+		fCword(icol-1,1)  = cupper[let-1];
+	    }
+	}
+    }
 //*-*-          Copy the first MAXP arguments into WORD7, making
 //*-*-          sure that WORD7(1)=0 if LLIST=0
-    for (iw = 1; iw <= fMaxpar; ++iw) {
+    for (iw = 1; iw <= kMAXP; ++iw) {
 	fWord7[iw-1] = 0;
 	if (iw <= llist) fWord7[iw-1] = plist[iw-1];
     }
@@ -2518,9 +2469,9 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
 	    inonde = 0;
 	    if (llist > lnow) {
 		kll = llist;
-		if (llist > fMaxpar) {
+		if (llist > kMAXP) {
 		    inonde = 1;
-		    kll = fMaxpar;
+		    kll = kMAXP;
 		}
                 Printf(" ***********");
 		for (i = lnow + 1; i <= kll; ++i) {
@@ -2529,7 +2480,7 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
 	    }
 	    Printf(" **********");
 	    if (inonde > 0) {
-		Printf("  ERROR: ABOVE CALL TO MNEXCM TRIED TO PASS MORE THAN %d PARAMETERS.", fMaxpar);
+		Printf("  ERROR: ABOVE CALL TO MNEXCM TRIED TO PASS MORE THAN %d PARAMETERS.", kMAXP);
 	    }
 	}
     }
@@ -2920,8 +2871,8 @@ void TMinuit::mnexin(Double_t *pint)
 //*-*        values in the dense array PINT.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t pinti;
-    Int_t iint, iext;
+    static Double_t pinti;
+    static Int_t iint, iext;
 
     fLimset = kFALSE;
     for (iint = 1; iint <= fNpar; ++iint) {
@@ -2940,8 +2891,8 @@ void TMinuit::mnfixp(Int_t iint1, Int_t &ierr)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t yyover;
-    Int_t kold, nold, ndex, knew, iext, i, j, m, n, lc, ik;
+    static Double_t yy[kMAXDIM], yyover;
+    static Int_t kold, nold, ndex, knew, iext, i, j, m, n, lc, ik;
 
 //*-*-                          first see if it can be done
     ierr = 0;
@@ -2995,9 +2946,9 @@ void TMinuit::mnfixp(Int_t iint1, Int_t &ierr)
 	m       = TMath::Max(i,iint);
 	n       = TMath::Min(i,iint);
 	ndex    = m*(m-1) / 2 + n;
-	fFIXPyy[i-1] = fVhmat[ndex-1];
+	yy[i-1] = fVhmat[ndex-1];
     }
-    yyover = 1 / fFIXPyy[iint-1];
+    yyover = 1 / yy[iint-1];
     knew   = 0;
     kold   = 0;
     for (i = 1; i <= nold; ++i) {
@@ -3005,7 +2956,7 @@ void TMinuit::mnfixp(Int_t iint1, Int_t &ierr)
 	    ++kold;
 	    if (j == iint || i == iint) continue;
 	    ++knew;
-	    fVhmat[knew-1] = fVhmat[kold-1] - fFIXPyy[j-1]*fFIXPyy[i-1]*yyover;
+	    fVhmat[knew-1] = fVhmat[kold-1] - yy[j-1]*yy[i-1]*yyover;
 	}
     }
 } /* mnfixp_ */
@@ -3028,8 +2979,8 @@ void TMinuit::mnfree(Int_t k)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t grdv, xv, dirinv, g2v, gstepv, xtv;
-    Int_t i, ipsav, ka, lc, ik, iq, ir, is;
+    static Double_t grdv, xv, dirinv, g2v, gstepv, xtv;
+    static Int_t i, ipsav, ka, lc, ik, iq, ir, is;
 
     if (k > 1) {
 	Printf(" CALL TO MNFREE IGNORED.  ARGUMENT GREATER THAN ONE");
@@ -3135,9 +3086,9 @@ void TMinuit::mngrad()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t fzero, err;
-    Int_t i, nparx, lc, istsav;
-    Bool_t lnone;
+    static Double_t gf[kMAXDIM], fzero, err;
+    static Int_t i, nparx, lc, istsav;
+    static Bool_t lnone;
     static TString cwd = "    ";
 
     fISW[2] = 1;
@@ -3149,7 +3100,7 @@ void TMinuit::mngrad()
     mninex(fX);
     (*fFCN)(nparx, fGin, fzero, fU, 2);    ++fNfcn;
     mnderi();
-    for (i = 1; i <= fNpar; ++i) { fGRADgf[i-1] = fGrd[i-1]; }
+    for (i = 1; i <= fNpar; ++i) { gf[i-1] = fGrd[i-1]; }
 //*-*-                   get MINUIT-calculated first derivatives
     fISW[2] = 0;
     istsav  = fIstrat;
@@ -3164,16 +3115,16 @@ void TMinuit::mngrad()
 	i   = fNexofi[lc-1];
 	cwd = "GOOD";
 	err = fDgrd[lc-1];
-	if (TMath::Abs(fGRADgf[lc-1] - fGrd[lc-1]) > err)  cwd = " BAD";
+	if (TMath::Abs(gf[lc-1] - fGrd[lc-1]) > err)  cwd = " BAD";
 	if (fGin[i-1] == fUndefi) {
 	    cwd      = "NONE";
 	    lnone    = kTRUE;
-	    fGRADgf[lc-1] = 0;
+	    gf[lc-1] = 0;
 	}
 	if (cwd != "GOOD") fISW[2] = 0;
 	Printf("       %5d  %10s%12.4e%12.4e%12.4e    %s",i
                     ,(const char*)fCpnam[i-1]
-                    ,fGRADgf[lc-1],fGrd[lc-1],err,(const char*)cwd);
+                    ,gf[lc-1],fGrd[lc-1],err,(const char*)cwd);
     }
     if (lnone) {
 	Printf("  AGREEMENT=NONE  MEANS FCN DID NOT CALCULATE THE DERIVATIVE");
@@ -3208,6 +3159,8 @@ void TMinuit::mnhelp(TString comd)
 //*-*     Author: Rene Brun
 //*-*             comments extracted from the MINUIT documentation file.
 //*-*
+//*-*
+//*-* command name ASSUMED to be in upper case
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 //*-*.......................................................................
@@ -3791,10 +3744,10 @@ void TMinuit::mnhess()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t dmin_, dxdi, elem, wint, tlrg2, d, dlast, ztemp, g2bfor;
-    Double_t df, aimsag, fs1, tlrstp, fs2, stpinm, g2i, sag=0, xtf, xti, xtj;
-    Int_t icyc, ncyc, ndex, idrv, iext, npar2, i, j, ifail, npard, nparx, id, multpy;
-    Bool_t ldebug;
+    static Double_t dmin_, dxdi, elem, wint, tlrg2, d, dlast, ztemp, g2bfor;
+    static Double_t  yy[kMAXDIM], df, aimsag, fs1, tlrstp, fs2, stpinm, g2i, sag, xtf, xti, xtj;
+    static Int_t icyc, ncyc, ndex, idrv, iext, npar2, i, j, ifail, npard, nparx, id, multpy;
+    static Bool_t ldebug;
 
     ldebug = fIdbg[3] >= 1;
     if (fAmin == fUndefi) {
@@ -3899,7 +3852,7 @@ L30:
 	    if (fGstep[i-1] > 0) fGstep[i-1] =  TMath::Abs(d);
 	    else                 fGstep[i-1] = -TMath::Abs(d);
 	    fDirin[i-1] = d;
-	    fHESSyy[i-1]= fs1;
+	    yy[i-1]     = fs1;
 	    dlast       = d;
 	    d           = TMath::Sqrt(aimsag*2 / TMath::Abs(fG2[i-1]));
 //*-*-        if parameter has limits, max int step size = 0.5
@@ -3941,7 +3894,7 @@ L30:
 	    (*fFCN)(nparx, fGin, fs1, fU, 4);	    ++fNfcn;
 	    fX[i-1] = xti;
 	    fX[j-1] = xtj;
-	    elem = (fs1 + fAmin - fHESSyy[i-1] - fHESSyy[j-1]) / (
+	    elem = (fs1 + fAmin - yy[i-1] - yy[j-1]) / (
 		    fDirin[i-1]*fDirin[j-1]);
 	    ndex = i*(i-1) / 2 + j;
 	    fVhmat[ndex-1] = elem;
@@ -4017,10 +3970,10 @@ void TMinuit::mnhes1()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t dmin_, d, dfmin, dgmin=0, change, chgold, grdold=0, epspri;
-    Double_t fs1, optstp, fs2, grdnew=0, sag, xtf;
-    Int_t icyc, ncyc=0, idrv, i, nparx;
-    Bool_t ldebug;
+    static Double_t dmin_, d, dfmin, dgmin, change, chgold, grdold, epspri;
+    static Double_t fs1, optstp, fs2, grdnew, sag, xtf;
+    static Int_t icyc, ncyc, idrv, i, nparx;
+    static Bool_t ldebug;
 
     ldebug = fIdbg[5] >= 1;
     if (fIstrat <= 0) ncyc = 1;
@@ -4098,10 +4051,10 @@ void TMinuit::mnimpr()
     static Double_t rnum = 0;
 
     /* Local variables */
-    Double_t amax, ycalf, ystar, ystst;
-    Double_t pb, ep, wg, xi, sigsav, reg, sig2;
-    Int_t npfn, ndex, loop=0, i, j, ifail, iseed;
-    Int_t jhold, nloop, nparx, nparp1, jh, jl, iswtr;
+    static Double_t amax, dsav[kMAXDIM], y[kMAXDIM+1], ycalf, ystar, ystst;
+    static Double_t pb, ep, wg, xi, sigsav, reg, sig2;
+    static Int_t npfn, ndex, loop, i, j, ifail, iseed;
+    static Int_t jhold, nloop, nparx, nparp1, jh, jl;
 
     if (fNpar <= 0) return;
     if (fAmin == fUndefi) mnamin();
@@ -4116,10 +4069,9 @@ void TMinuit::mnimpr()
     wg = 1 / Double_t(fNpar);
     sigsav = fEDM;
     fApsi  = fAmin;
-    iswtr   = fISW[4] - 2*fItaur;
     for (i = 1; i <= fNpar; ++i) {
-	fXt[i-1]       = fX[i-1];
-	fIMPRdsav[i-1] = fWerr[i-1];
+	fXt[i-1]  = fX[i-1];
+	dsav[i-1] = fWerr[i-1];
 	for (j = 1; j <= i; ++j) {
 	    ndex = i*(i-1) / 2 + j;
 	    fP[i + j*fMaxpar - fMaxpar-1] = fVhmat[ndex-1];
@@ -4140,7 +4092,7 @@ void TMinuit::mnimpr()
 
 L20:
     for (i = 1; i <= fNpar; ++i) {
-	fDirin[i-1] = fIMPRdsav[i-1]*2;
+	fDirin[i-1] = dsav[i-1]*2;
 	mnrn15(rnum, iseed);
 	fX[i-1] = fXt[i-1] + fDirin[i-1]*2*(rnum - .5);
     }
@@ -4155,19 +4107,19 @@ L30:
 //*-*-                                       . . . . set up  random simplex
     jl = nparp1;
     jh = nparp1;
-    fIMPRy[nparp1-1] = fAmin;
+    y[nparp1-1] = fAmin;
     amax = fAmin;
     for (i = 1; i <= fNpar; ++i) {
 	xi = fX[i-1];
 	mnrn15(rnum, iseed);
 	fX[i-1] = xi - fDirin[i-1]*(rnum - .5);
 	mncalf(fX, ycalf);
-	fIMPRy[i-1] = ycalf;
-	if (fIMPRy[i-1] < fAmin) {
-	    fAmin = fIMPRy[i-1];
+	y[i-1] = ycalf;
+	if (y[i-1] < fAmin) {
+	    fAmin = y[i-1];
 	    jl    = i;
-	} else if (fIMPRy[i-1] > amax) {
-	    amax = fIMPRy[i-1];
+	} else if (y[i-1] > amax) {
+	    amax = y[i-1];
 	    jh   = i;
 	}
 	for (j = 1; j <= fNpar; ++j) { fP[j + i*fMaxpar - fMaxpar-1] = fX[j-1]; }
@@ -4201,17 +4153,17 @@ L50:
     }
     mncalf(fPstst, ycalf);
     ystst = ycalf;
-    if (ystst < fIMPRy[jl-1]) goto L67;
-    mnrazz(ystar, fPstar, fIMPRy, jh, jl);
+    if (ystst < y[jl-1]) goto L67;
+    mnrazz(ystar, fPstar, y, jh, jl);
     goto L50;
 L67:
-    mnrazz(ystst, fPstst, fIMPRy, jh, jl);
+    mnrazz(ystst, fPstst, y, jh, jl);
     goto L50;
 //*-*-        point * is not as good as jl
 L70:
-    if (ystar >= fIMPRy[jh-1]) goto L73;
+    if (ystar >= y[jh-1]) goto L73;
     jhold = jh;
-    mnrazz(ystar, fPstar, fIMPRy, jh, jl);
+    mnrazz(ystar, fPstar, y, jh, jl);
     if (jhold != jh) goto L50;
 //*-*-        calculate new point **
 L73:
@@ -4220,10 +4172,10 @@ L73:
     }
     mncalf(fPstst, ycalf);
     ystst = ycalf;
-    if (ystst > fIMPRy[jh-1]) goto L30;
+    if (ystst > y[jh-1]) goto L30;
 //*-*-    point ** is better than jh
     if (ystst < fAmin) goto L67;
-    mnrazz(ystst, fPstst, fIMPRy, jh, jl);
+    mnrazz(ystst, fPstst, y, jh, jl);
     goto L50;
 //*-*-                                       . . . . . .  end main loop
 L95:
@@ -4236,7 +4188,7 @@ L100:
     mninex(fX);
     (*fFCN)(nparx, fGin, fAmin, fU, 4);    ++fNfcn;
     for (i = 1; i <= fNpar; ++i) {
-	fDirin[i-1] = reg*fIMPRdsav[i-1];
+	fDirin[i-1] = reg*dsav[i-1];
 	if (TMath::Abs(fX[i-1] - fXt[i-1]) > fDirin[i-1])     goto L150;
     }
     goto L230;
@@ -4246,7 +4198,7 @@ L150:
     mnsimp();
     if (fAmin >= fApsi) goto L325;
     for (i = 1; i <= fNpar; ++i) {
-	fDirin[i-1] = fIMPRdsav[i-1]*.1;
+	fDirin[i-1] = dsav[i-1]*.1;
 	if (TMath::Abs(fX[i-1] - fXt[i-1]) > fDirin[i-1])     goto L250;
     }
 L230:
@@ -4277,7 +4229,7 @@ L300:
     fISW[0] = 1;
 L325:
     for (i = 1; i <= fNpar; ++i) {
-	fDirin[i-1] = fIMPRdsav[i-1]*.01;
+	fDirin[i-1] = dsav[i-1]*.01;
 	fX[i-1]     = fXt[i-1];
     }
     fAmin = fApsi;
@@ -4292,7 +4244,7 @@ L350:
     if (fISW[1] < 2) goto L380;
     if (loop < nloop && fISW[0] < 1) goto L20;
 L380:
-    if (iswtr >= 0) mnprin(5, fAmin);
+    mnprin(5, fAmin);
     fItaur = 0;
 } /* mnimpr_ */
 
@@ -4327,8 +4279,8 @@ void TMinuit::mninit(Int_t i1, Int_t i2, Int_t i3)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t piby2, epsp1, epsbak, epstry, distnn;
-    Int_t i, idb;
+    static Double_t piby2, epsp1, epsbak, epstry, distnn;
+    static Int_t i, idb;
 
 //*-*-           I/O unit numbers
     fIsysrd = i1;
@@ -4417,8 +4369,8 @@ void TMinuit::mnlims()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t dxdi, snew;
-    Int_t kint, i2, newcod, ifx=0, inu;
+    static Double_t dxdi, snew;
+    static Int_t kint, i2, newcod, ifx, inu;
 
     fCfrom  = "SET LIM ";
     fNfcnfr = fNfcn;
@@ -4538,11 +4490,11 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t xpq[12], ypq[12], slam, sdev, coeff[3], denom, flast;
-    Double_t fvals[3], xvals[3], f1, fvmin, xvmin, ratio, f2, f3, fvmax;
-    Double_t toler8, toler9, overal, undral, slamin, slamax, slopem;
-    Int_t i, nparx, nvmax=0, nxypt, kk, ipt;
-    Bool_t ldebug;
+    static Double_t xpq[12], ypq[12], slam, sdev, coeff[3], denom, flast;
+    static Double_t fvals[3], xvals[3], f1, fvmin, xvmin, ratio, f2, f3, fvmax;
+    static Double_t toler8, toler9, overal, undral, slamin, slamax, slopem;
+    static Int_t i, nparx, nvmax, nxypt, kk, ipt;
+    static Bool_t ldebug;
     TString cmess;
     char chpq[13];
     int     l65, l70, l80;
@@ -4769,9 +4721,10 @@ void TMinuit::mnmatu(Int_t kode)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Int_t ndex, i, j, m, n, ncoef, nparm, id, it, ix;
-    Int_t nsofar, ndi, ndj, iso, isw2, isw5;
-    TString ctemp;
+    static Double_t vline[kMAXDIM];
+    static Int_t ndex, i, j, m, n, ncoef, nparm, id, it, ix;
+    static Int_t nsofar, ndi, ndj, iso, isw2, isw5;
+    static TString ctemp;
 
     isw2 = fISW[1];
     if (isw2 < 1) {
@@ -4813,12 +4766,12 @@ void TMinuit::mnmatu(Int_t kode)
 	    n    = TMath::Min(i,j);
 	    ndex = m*(m-1) / 2 + n;
 	    ndj  = j*(j + 1) / 2;
-	    fMATUvline[j-1] = fVhmat[ndex-1] / TMath::Sqrt(TMath::Abs(fVhmat[ndi-1]*fVhmat[ndj-1]));
+	    vline[j-1] = fVhmat[ndex-1] / TMath::Sqrt(TMath::Abs(fVhmat[ndi-1]*fVhmat[ndj-1]));
 	}
 	nparm = TMath::Min(fNpar,ncoef);
         ctemp = Form("      %3d  %7.5f ",ix,fGlobcc[i-1]);
 	for (it = 1; it <= nparm; ++it) {
-            ctemp += Form(" %6.3f",fMATUvline[it-1]);
+            ctemp += Form(" %6.3f",vline[it-1]);
 	}
         Printf("%s",(const char*)ctemp);
 	if (i <= nparm) continue;
@@ -4827,7 +4780,7 @@ void TMinuit::mnmatu(Int_t kode)
 	    nsofar = nparm;
 	    nparm  = TMath::Min(fNpar,nsofar + ncoef);
 	    for (it = nsofar + 1; it <= nparm; ++it) {
-                ctemp = ctemp + Form(" %6.3f",fMATUvline[it-1]);
+                ctemp = ctemp + Form(" %6.3f",vline[it-1]);
 	    }
             Printf("%s",(const char*)ctemp);
 	    if (i <= nparm) break;
@@ -4849,13 +4802,13 @@ void TMinuit::mnmigr()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t gdel, gami, vlen, dsum, gssq, vsum, d;
-    Double_t fzero, fs, ri, delgam, rhotol;
-    Double_t gdgssq, gvg, vgi;
-    Int_t npfn, ndex, iext, i, j, m, n, npsdf, nparx;
-    Int_t iswtr, lined2, kk, nfcnmg, nrstrt,iter;
-    Bool_t ldebug;
-    Double_t toler = 0.05;
+    static Double_t gdel, gami, flnu[kMAXDIM], vlen, step[kMAXDIM], dsum, gssq, vsum, d;
+    static Double_t fzero, gs[kMAXDIM], fs, ri, vg[kMAXDIM], delgam, rhotol;
+    static Double_t gdgssq, gvg, vgi, xxs[kMAXDIM];
+    static Int_t npfn, ndex, iext, i, j, m, n, npsdf, nparx;
+    static Int_t iswtr, lined2, kk, nfcnmg, nrstrt,iter;
+    static Bool_t ldebug;
+    static Double_t toler = 0.05;
 
     if (fNpar <= 0) return;
     if (fAmin == fUndefi) mnamin();
@@ -4900,19 +4853,19 @@ L2:
     if (fISW[1] >= 1) goto L10;
 //*-*-                                  sometimes start with diagonal matrix
     for (i = 1; i <= fNpar; ++i) {
-	fMIGRxxs[i-1]  = fX[i-1];
-	fMIGRstep[i-1] = 0;
+	xxs[i-1]  = fX[i-1];
+	step[i-1] = 0;
     }
 //*-*-                          do line search if second derivative negative
     ++lined2;
     if (lined2 < (fIstrat + 1)*fNpar) {
 	for (i = 1; i <= fNpar; ++i) {
 	    if (fG2[i-1] > 0) continue;
-	    if (fGrd[i-1] > 0) fMIGRstep[i-1] = -TMath::Abs(fGstep[i-1]);
-	    else               fMIGRstep[i-1] =  TMath::Abs(fGstep[i-1]);
-	    gdel = fMIGRstep[i-1]*fGrd[i-1];
+	    if (fGrd[i-1] > 0) step[i-1] = -TMath::Abs(fGstep[i-1]);
+	    else               step[i-1] =  TMath::Abs(fGstep[i-1]);
+	    gdel = step[i-1]*fGrd[i-1];
 	    fs   = fAmin;
-	    mnline(fMIGRxxs, fs, fMIGRstep, gdel, toler);
+	    mnline(xxs, fs, step, gdel, toler);
 	    mnwarn("D", "MNMIGR", "Negative G2 line search");
 	    iext = fNexofi[i-1];
 	    if (ldebug) {
@@ -4950,15 +4903,15 @@ L10:
 //*-*-                                       . . . get EDM and set up loop
     fEDM = 0;
     for (i = 1; i <= fNpar; ++i) {
-	fMIGRgs[i-1]  = fGrd[i-1];
-	fMIGRxxs[i-1] = fX[i-1];
+	gs[i-1]  = fGrd[i-1];
+	xxs[i-1] = fX[i-1];
 	ndex     = i*(i-1) / 2;
 	for (j = 1; j <= i-1; ++j) {
 	    ++ndex;
-	    fEDM += fMIGRgs[i-1]*fVhmat[ndex-1]*fMIGRgs[j-1];
+	    fEDM += gs[i-1]*fVhmat[ndex-1]*gs[j-1];
 	}
 	++ndex;
-	fEDM += fMIGRgs[i-1]*fMIGRgs[i-1]*.5*fVhmat[ndex-1];
+	fEDM += gs[i-1]*gs[i-1]*.5*fVhmat[ndex-1];
     }
     fEDM = fEDM*.5*(fDcovar*3 + 1);
     if (fEDM < 0) {
@@ -4980,15 +4933,15 @@ L24:
     gssq = 0;
     for (i = 1; i <= fNpar; ++i) {
 	ri = 0;
-	gssq += fMIGRgs[i-1]*fMIGRgs[i-1];
+	gssq += gs[i-1]*gs[i-1];
 	for (j = 1; j <= fNpar; ++j) {
 	    m    = TMath::Max(i,j);
 	    n    = TMath::Min(i,j);
 	    ndex = m*(m-1) / 2 + n;
-	    ri  += fVhmat[ndex-1]*fMIGRgs[j-1];
+	    ri  += fVhmat[ndex-1]*gs[j-1];
 	}
-	fMIGRstep[i-1] = ri*-.5;
-	gdel += fMIGRstep[i-1]*fMIGRgs[i-1];
+	step[i-1] = ri*-.5;
+	gdel += step[i-1]*gs[i-1];
     }
     if (gssq == 0) {
 	mnwarn("D", "MIGRAD", " FIRST DERIVATIVES OF FCN ARE ALL ZERO");
@@ -5003,7 +4956,7 @@ L24:
 	goto L24;
     }
 //*-*-                                       . . . . do line search
-    mnline(fMIGRxxs, fs, fMIGRstep, gdel, toler);
+    mnline(xxs, fs, step, gdel, toler);
     if (fAmin == fs) goto L200;
     fCfrom  = "MIGRAD  ";
     fNfcnfr = nfcnmg;
@@ -5028,13 +4981,13 @@ L81:
 	    m    = TMath::Max(i,j);
 	    n    = TMath::Min(i,j);
 	    ndex = m*(m-1) / 2 + n;
-	    vgi += fVhmat[ndex-1]*(fGrd[j-1] - fMIGRgs[j-1]);
+	    vgi += fVhmat[ndex-1]*(fGrd[j-1] - gs[j-1]);
 	    ri  += fVhmat[ndex-1]*fGrd[j-1];
 	}
-	fMIGRvg[i-1] = vgi*.5;
-	gami    = fGrd[i-1] - fMIGRgs[i-1];
+	vg[i-1] = vgi*.5;
+	gami    = fGrd[i-1] - gs[i-1];
 	gdgssq += gami*gami;
-	gvg    += gami*fMIGRvg[i-1];
+	gvg    += gami*vg[i-1];
 	delgam += fDirin[i-1]*gami;
 	fEDM   += fGrd[i-1]*ri*.5;
     }
@@ -5072,7 +5025,7 @@ L81:
     vsum = 0;
     for (i = 1; i <= fNpar; ++i) {
 	for (j = 1; j <= i; ++j) {
-	    d = fDirin[i-1]*fDirin[j-1] / delgam - fMIGRvg[i-1]*fMIGRvg[j-1] / gvg;
+	    d = fDirin[i-1]*fDirin[j-1] / delgam - vg[i-1]*vg[j-1] / gvg;
 	    dsum += TMath::Abs(d);
 	    ndex  = i*(i-1) / 2 + j;
 	    fVhmat[ndex-1] += d*2;
@@ -5092,12 +5045,12 @@ L81:
     }
     if (delgam <= gvg) goto L135;
     for (i = 1; i <= fNpar; ++i) {
-	fMIGRflnu[i-1] = fDirin[i-1] / delgam - fMIGRvg[i-1] / gvg;
+	flnu[i-1] = fDirin[i-1] / delgam - vg[i-1] / gvg;
     }
     for (i = 1; i <= fNpar; ++i) {
 	for (j = 1; j <= i; ++j) {
 	    ndex = i*(i-1) / 2 + j;
-	    fVhmat[ndex-1] += gvg*2*fMIGRflnu[i-1]*fMIGRflnu[j-1];
+	    fVhmat[ndex-1] += gvg*2*flnu[i-1]*flnu[j-1];
 	}
     }
 L135:
@@ -5105,8 +5058,8 @@ L135:
     if (fEDM < rhotol*.1) goto L300;
 //*-*-                                   if not, prepare next iteration
     for (i = 1; i <= fNpar; ++i) {
-	fMIGRxxs[i-1] = fX[i-1];
-	fMIGRgs[i-1]  = fGrd[i-1];
+	xxs[i-1] = fX[i-1];
+	gs[i-1]  = fGrd[i-1];
     }
     fs = fAmin;
     if (fISW[1] == 0 && fDcovar < .5)  fISW[1] = 1;
@@ -5127,7 +5080,7 @@ L200:
     if (iswtr >= 1) {
 	Printf(" MIGRAD FAILS TO FIND IMPROVEMENT");
     }
-    for (i = 1; i <= fNpar; ++i) { fX[i-1] = fMIGRxxs[i-1]; }
+    for (i = 1; i <= fNpar; ++i) { fX[i-1] = xxs[i-1]; }
     if (fEDM < rhotol) goto L300;
     if (fEDM < TMath::Abs(fEpsma2*fAmin)) {
 	if (iswtr >= 0) {
@@ -5189,8 +5142,8 @@ void TMinuit::mnmnos()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t val2mi, val2pl;
-    Int_t nbad, ilax, ilax2, ngood, nfcnmi, iin, knt;
+    static Double_t val2mi, val2pl;
+    static Int_t nbad, ilax, ilax2, ngood, nfcnmi, iin, knt;
 
     if (fNpar <= 0) goto L700;
     ngood = 0;
@@ -5269,12 +5222,12 @@ void TMinuit::mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi
     Int_t i__1;
 
     /* Local variables */
-    Double_t delu, aopt, eros;
-    Double_t abest, xunit, dc, ut, sigsav, du1;
-    Double_t fac, sig, sav;
-    Int_t marc, isig, mpar, ndex, imax, indx, ierr, i, j;
-    Int_t iercr, it, istrav, nfmxin, nlimit, isw2, isw4;
-    TString csig;
+    static Double_t xdev[kMAXDIM], delu, aopt, eros;
+    static Double_t w[kMAXDIM], abest, xunit, dc, ut, sigsav, du1;
+    static Double_t fac, gcc[kMAXDIM], sig, sav;
+    static Int_t marc, isig, mpar, ndex, imax, indx, ierr, i, j;
+    static Int_t iercr, it, istrav, nfmxin, nlimit, isw2, isw4;
+    static TString csig;
 
 //*-*-                                       . . save and prepare start vals
     isw2    = fISW[1];
@@ -5291,8 +5244,8 @@ void TMinuit::mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi
     i__1 = mpar*(mpar + 1) / 2;
     for (j = 1; j <= i__1; ++j) { fVthmat[j-1] = fVhmat[j-1]; }
     for (i = 1; i <= mpar; ++i) {
-	fMNOTgcc[i-1] = fGlobcc[i-1];
-	fMNOTw[i-1]   = fWerr[i-1];
+	gcc[i-1] = fGlobcc[i-1];
+	w[i-1]   = fWerr[i-1];
     }
     it = fNiofex[ilax-1];
     fErp[it-1] = 0;
@@ -5300,8 +5253,8 @@ void TMinuit::mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi
     mninex(fXt);
     ut = fU[ilax-1];
     if (fNvarl[ilax-1] == 1) {
-	fAlim[ilax-1] = ut - fMNOTw[it-1]*100;
-	fBlim[ilax-1] = ut + fMNOTw[it-1]*100;
+	fAlim[ilax-1] = ut - w[it-1]*100;
+	fBlim[ilax-1] = ut + w[it-1]*100;
     }
     ndex  = it*(it + 1) / 2;
     xunit = TMath::Sqrt(fUp / fVthmat[ndex-1]);
@@ -5311,7 +5264,7 @@ void TMinuit::mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi
 	++marc;
 	imax = TMath::Max(it,i);
 	indx = imax*(imax-1) / 2 + TMath::Min(it,i);
-	fMNOTxdev[marc-1] = xunit*fVthmat[indx-1];
+	xdev[marc-1] = xunit*fVthmat[indx-1];
     }
 //*-*-                          fix the parameter in question
     mnfixp(it-1, ierr);
@@ -5341,16 +5294,16 @@ void TMinuit::mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi
 	}
 	nlimit     = fNfcn + nfmxin;
 	fIstrat    = TMath::Max(istrav-1,0);
-	du1        = fMNOTw[it-1];
+	du1        = w[it-1];
 	fU[ilax-1] = ut + sig*du1;
 	fU[ilax-1] = TMath::Min(fU[ilax-1],fBlim[ilax-1]);
 	fU[ilax-1] = TMath::Max(fU[ilax-1],fAlim[ilax-1]);
 	delu = fU[ilax-1] - ut;
 //*-*-        stop if already at limit with negligible step size
 	if (TMath::Abs(delu) / (TMath::Abs(ut) + TMath::Abs(fU[ilax-1])) < fEpsmac) goto L440;
-	fac = delu / fMNOTw[it-1];
+	fac = delu / w[it-1];
 	for (i = 1; i <= fNpar; ++i) {
-	    fX[i-1] = fXt[i-1] + fac*fMNOTxdev[i-1];
+	    fX[i-1] = fXt[i-1] + fac*xdev[i-1];
 	}
 	if (fISW[4] > 1) {
 	    Printf(" PARAMETER%4d SET TO%11.3e + %10.3e = %12.3e",ilax,ut,delu,fU[ilax-1]);
@@ -5418,8 +5371,8 @@ L480:
     i__1 = mpar*(mpar + 1) / 2;
     for (j = 1; j <= i__1; ++j) { fVhmat[j-1] = fVthmat[j-1]; }
     for (i = 1; i <= mpar; ++i) {
-	fWerr[i-1]   = fMNOTw[i-1];
-	fGlobcc[i-1] = fMNOTgcc[i-1];
+	fWerr[i-1]   = w[i-1];
+	fGlobcc[i-1] = gcc[i-1];
 	fX[i-1]      = fXt[i-1];
     }
     mninex(fX);
@@ -5466,9 +5419,9 @@ void TMinuit::mnparm(Int_t k1, TString cnamj, Double_t uk, Double_t wk, Double_t
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t vplu, a_small, gsmin, pinti, vminu, danger, sav, sav2;
-    Int_t ierr, kint, in, ix, ktofix, lastin, kinfix, nvl;
-    TString cnamk, chbufi;
+    static Double_t vplu, a_small, gsmin, pinti, vminu, danger, sav, sav2;
+    static Int_t ierr, kint, in, ix, ktofix, lastin, kinfix, nvl;
+    static TString cnamk, chbufi;
 
     Int_t k = k1+1;
     cnamk   = cnamj;
@@ -5492,7 +5445,7 @@ void TMinuit::mnparm(Int_t k1, TString cnamj, Double_t uk, Double_t wk, Double_t
 	    Printf(" CANNOT RELEASE. MAX NPAR EXCEEDED.");
 	    goto L800;
 	}
-	mnfree(-k);
+	mnfree(1);
     }
 //*-*-                      if redefining previously variable parameter
     if (fNiofex[k-1] > 0) kint = fNpar - 1;
@@ -5523,7 +5476,7 @@ L122:
 	nvl = 4;
 	fLnolim = kFALSE;
 	if (fISW[4] >= 0) {
-            Printf(" %5d %-10s %13.5e%13.5e  %13.5e%13.5e",k,(const char*)cnamk,uk,wk,a,b);
+            Printf(" %5d '%-10s' %13.5e%13.5e  %13.5e%13.5e",k,(const char*)cnamk,uk,wk,a,b);
 	}
     }
 //*-*-                            . . request for another variable parameter
@@ -5664,10 +5617,10 @@ void TMinuit::mnpars(TString &crdbuf, Int_t &icondn)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t a=0, b=0, fk=0, uk=0, wk=0, xk=0;
-    Int_t ierr, kapo1, kapo2;
-    Int_t k, llist, ibegin, lenbuf, istart, lnc, icy;
-    TString cnamk, comand, celmnt, ctemp;
+    static Double_t a, b, plist[kMAXP], fk, uk, wk, xk;
+    static Int_t ierr, kapo1, kapo2;
+    static Int_t k, llist, ibegin, lenbuf, istart, lnc, icy;
+    static TString cnamk, comand, celmnt, ctemp;
     char stmp[128];
 
     lenbuf = strlen((const char*)crdbuf);
@@ -5708,15 +5661,15 @@ L139:
 L140:
     ibegin = icy;
     ctemp = crdbuf(ibegin-1,lenbuf-ibegin);
-    mncrck(ctemp, 20, comand, lnc, fMaxpar, fPARSplist, llist, ierr, fIsyswr);
+    mncrck(ctemp, 20, comand, lnc, kMAXP, plist, llist, ierr, fIsyswr);
     if (ierr > 0) goto L180;
-    uk = fPARSplist[0];
+    uk = plist[0];
     wk = 0;
-    if (llist >= 2) wk = fPARSplist[1];
+    if (llist >= 2) wk = plist[1];
     a = 0;
-    if (llist >= 3) a = fPARSplist[2];
+    if (llist >= 3) a = plist[2];
     b = 0;
-    if (llist >= 4) b = fPARSplist[3];
+    if (llist >= 4) b = plist[3];
     goto L170;
 //*-*-         old (fixed-field) format
 L150:
@@ -5754,7 +5707,7 @@ void TMinuit::mnpfit(Double_t *parx2p, Double_t *pary2p, Int_t npar2p, Double_t 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t a, f, s, t, y, s2, x2, x3, x4, y2, cz[3], xm, xy, x2y;
+    static Double_t a, f, s, t, y, s2, x2, x3, x4, y2, cz[3], xm, xy, x2y;
     x2 = x3 = 0;
     Int_t i;
 
@@ -5816,9 +5769,9 @@ void TMinuit::mnpint(Double_t &pexti, Int_t i1, Double_t &pinti)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t a, alimi, blimi, yy, yy2;
-    Int_t igo;
-    TString chbuf2, chbufi;
+    static Double_t a, alimi, blimi, yy, yy2;
+    static Int_t igo;
+    static TString chbuf2, chbufi;
 
     Int_t i = i1+1;
     pinti   = pexti;
@@ -5867,13 +5820,13 @@ void TMinuit::mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_
      static TString cslash = "/";
 
      /* Local variables */
-     Double_t xmin, ymin, xmax, ymax, savx, savy, yprt;
-     Double_t bwidx, bwidy, xbest, ybest, ax, ay, bx, by;
-     Double_t xvalus[12], any, dxx, dyy;
-     Int_t iten, i, j, k, maxnx, maxny, iquit, ni, linodd;
-     Int_t nxbest, nybest, km1, ibk, isp1, nx, ny, ks, ix;
-     TString chmess, ctemp;
-     Bool_t overpr;
+     static Double_t xmin, ymin, xmax, ymax, savx, savy, yprt;
+     static Double_t bwidx, bwidy, xbest, ybest, ax, ay, bx, by;
+     static Double_t xvalus[12], any, dxx, dyy;
+     static Int_t iten, i, j, k, maxnx, maxny, iquit, ni, linodd;
+     static Int_t nxbest, nybest, km1, ibk, isp1, nx, ny, ks, ix;
+     static TString chmess, ctemp;
+     static Bool_t overpr;
      char cline[120];
      char chsav, chbest;
 
@@ -6034,7 +5987,7 @@ void TMinuit::mnpout(Int_t iuext1, TString &chnam, Double_t &val, Double_t &err,
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Int_t iint, iext, nvl;
+    static Int_t iint, iext, nvl;
 
     Int_t iuext = iuext1 + 1;
     xlolim = 0;
@@ -6098,9 +6051,9 @@ void TMinuit::mnprin(Int_t inkode, Double_t fval)
     /* Local variables */
     Double_t dcmax, x1, x2, x3, dc;
     x2 = x3 = 0;
-    Int_t nadd, i, k, l, m, ikode, ic, nc, ntrail, lbl;
-    TString chedm;
-    TString colhdl[6], colhdu[6], cx2, cx3, cheval;
+    static Int_t nadd, i, k, l, m, ikode, ic, nc, ntrail, lbl;
+    static TString chedm;
+    static TString colhdl[6], colhdu[6], cx2, cx3, cheval;
 
     if (fNu == 0) {
 	Printf(" THERE ARE CURRENTLY NO PARAMETERS DEFINED");
@@ -6282,9 +6235,9 @@ void TMinuit::mnpsdf()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t dgmin, padd, pmin, pmax, dg, epspdf, epsmin;
-    Int_t ndex, i, j, ndexd, ip, ifault;
-    TString chbuff, ctemp;
+    static Double_t s[kMAXDIM], dgmin, padd, pmin, pmax, dg, epspdf, epsmin;
+    static Int_t ndex, i, j, ndexd, ip, ifault;
+    static TString chbuff, ctemp;
 
     epsmin = 1e-6;
     epspdf = TMath::Max(epsmin,fEpsma2);
@@ -6308,10 +6261,10 @@ void TMinuit::mnpsdf()
 	ndex  = i*(i-1) / 2;
 	ndexd = ndex + i;
 	fVhmat[ndexd-1] += dg;
-	fPSDFs[i-1] = 1 / TMath::Sqrt(fVhmat[ndexd-1]);
+	s[i-1] = 1 / TMath::Sqrt(fVhmat[ndexd-1]);
 	for (j = 1; j <= i; ++j) {
 	    ++ndex;
-	    fP[i + j*fMaxpar - fMaxpar-1] = fVhmat[ndex-1]*fPSDFs[i-1]*fPSDFs[j-1];
+	    fP[i + j*fMaxpar - fMaxpar-1] = fVhmat[ndex-1]*s[i-1]*s[j-1];
 	}
     }
 //*-*-     call eigen (p,p,maxint,npar,pstar,-npar)
@@ -6353,8 +6306,8 @@ void TMinuit::mnrazz(Double_t ynew, Double_t *pnew, Double_t *y, Int_t &jh, Int_
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t pbig, plit;
-    Int_t i, j, nparp1;
+    static Double_t pbig, plit;
+    static Int_t i, j, nparp1;
 
     /* Function Body */
     for (i = 1; i <= fNpar; ++i) { fP[i + jh*fMaxpar - fMaxpar-1] = pnew[i-1]; }
@@ -6430,7 +6383,7 @@ void TMinuit::mnrset(Int_t iopt)
 //*-*        after SET LIMITS, SET PARAM, CALL FCN 6
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t iext, i;
+    static Int_t iext, i;
 
     fCstatu = "RESET     ";
     if (iopt >= 1) {
@@ -6480,9 +6433,9 @@ void TMinuit::mnscan()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t step, uhigh, xhreq, xlreq, ubest, fnext, unext, xh, xl;
-    Int_t ipar, iint, icall, ncall, nbins, nparx;
-    Int_t nxypt, nccall, iparwd;
+    static Double_t step, uhigh, xhreq, xlreq, ubest, fnext, unext, xh, xl;
+    static Int_t ipar, iint, icall, ncall, nbins, nparx;
+    static Int_t nxypt, nccall, iparwd;
 
     xlreq = TMath::Min(fWord7[2],fWord7[3]);
     xhreq = TMath::Max(fWord7[2],fWord7[3]);
@@ -6590,9 +6543,9 @@ void TMinuit::mnseek()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t dxdi, rnum, ftry, rnum1, rnum2, alpha;
-    Double_t flast, bar;
-    Int_t ipar, iext, j, ifail, iseed, nparx, istep, ib, mxfail, mxstep;
+    static Double_t xmid[kMAXDIM], dxdi, rnum, ftry, rnum1, rnum2, alpha;
+    static Double_t flast, xbest[kMAXDIM], bar;
+    static Int_t ipar, iext, j, ifail, iseed, nparx, istep, ib, mxfail, mxstep;
 
     mxfail = Int_t(fWord7[0]);
     if (mxfail <= 0) mxfail = fNpar*20 + 100;
@@ -6627,8 +6580,8 @@ void TMinuit::mnseek()
 		fDirin[ipar-1] = 6.2831859999999997;
 	    }
 	}
-	fSEEKxmid[ipar-1]  = fX[ipar-1];
-	fSEEKxbest[ipar-1] = fX[ipar-1];
+	xmid[ipar-1] = fX[ipar-1];
+	xbest[ipar-1] = fX[ipar-1];
     }
 //*-*-                             search loop
     for (istep = 1; istep <= mxstep; ++istep) {
@@ -6636,7 +6589,7 @@ void TMinuit::mnseek()
 	for (ipar = 1; ipar <= fNpar; ++ipar) {
 	    mnrn15(rnum1, iseed);
 	    mnrn15(rnum2, iseed);
-	    fX[ipar-1] = fSEEKxmid[ipar-1] + (rnum1 + rnum2 - 1)*.5*fDirin[ipar-1];
+	    fX[ipar-1] = xmid[ipar-1] + (rnum1 + rnum2 - 1)*.5*fDirin[ipar-1];
 	}
 	mninex(fX);
 	(*fFCN)(nparx, fGin, ftry, fU, 4);	++fNfcn;
@@ -6644,7 +6597,7 @@ void TMinuit::mnseek()
 	    if (ftry < fAmin) {
 		fCstatu = "IMPROVEMNT";
 		fAmin = ftry;
-		for (ib = 1; ib <= fNpar; ++ib) { fSEEKxbest[ib-1] = fX[ib-1]; }
+		for (ib = 1; ib <= fNpar; ++ib) { xbest[ib-1] = fX[ib-1]; }
 		ifail = 0;
 		if (fISW[4] >= 2) mnprin(2, fAmin);
 	    }
@@ -6658,14 +6611,14 @@ void TMinuit::mnseek()
 	}
 //*-*-                   Accept new point, move there
 L300:
-	for (j = 1; j <= fNpar; ++j) { fSEEKxmid[j-1] = fX[j-1];	}
+	for (j = 1; j <= fNpar; ++j) { xmid[j-1] = fX[j-1];	}
 	flast = ftry;
     }
 //*-*-                              end search loop
     if (fISW[4] > 1) {
         Printf(" MNSEEK: %5d SUCCESSIVE UNSUCCESSFUL TRIALS.",ifail);
     }
-    for (ib = 1; ib <= fNpar; ++ib) { fX[ib-1] = fSEEKxbest[ib-1]; }
+    for (ib = 1; ib <= fNpar; ++ib) { fX[ib-1] = xbest[ib-1]; }
     mninex(fX);
     if (fISW[4] >= 1) mnprin(2, fAmin);
     if (fISW[4] == 0) mnprin(0, fAmin);
@@ -6746,11 +6699,11 @@ void TMinuit::mnset()
     Int_t f_inqu();
 
     /* Local variables */
-    Double_t val;
-    Int_t iset, iprm, i, jseed, kname, iseed, iunit, id, ii, kk;
-    Int_t ikseed, idbopt, igrain, iswsav, isw2;
-    TString  cfname, cmode, ckind,  cwarn, copt, ctemp, ctemp2;
-    Bool_t lname=kFALSE;
+    static Double_t val;
+    static Int_t iset, iprm, i, jseed, kname, iseed, iunit, id, ii, kk;
+    static Int_t ikseed, idbopt, igrain, iswsav, isw2;
+    static TString  cfname, cmode, ckind,  cwarn, copt, ctemp, ctemp2;
+    static Bool_t lname;
 
     for (i = 1; i <= nntot; ++i) {
 	ctemp  = cname[i-1];
@@ -7031,7 +6984,7 @@ L1060:
     Printf("                           %s",cprlev[2].Data());
     Printf("                           %s",cprlev[3].Data());
     Printf("                           %s",cprlev[4].Data());
-    Printf(" CURRENT PRINTOUT LEVEL IS %s",cprlev[fISW[4]+1].Data());
+    Printf(" CURRENT PRINTOUT LEVEL IS %s",cprlev[fISW[4]].Data());
     return;
 //*-*-                                       . . . . . . . show nograd, grad
 L1070:
@@ -7213,11 +7166,11 @@ void TMinuit::mnsimp()
     static Double_t rhomax = 8;
 
     /* Local variables */
-    Double_t dmin_, dxdi, yrho, f, ynpp1, aming, ypbar;
-    Double_t bestx, ystar, y1, y2, ystst, pb, wg;
-    Double_t absmin, rho, sig2, rho1, rho2;
-    Int_t npfn, i, j, k, jhold, ncycl, nparx;
-    Int_t nparp1, kg, jh, nf, jl, ns;
+    static Double_t dmin_, dxdi, yrho, f, ynpp1, y[kMAXDIM+1], aming, ypbar;
+    static Double_t bestx, ystar, y1, y2, ystst, pb, wg;
+    static Double_t absmin, rho, sig2, rho1, rho2;
+    static Int_t npfn, i, j, k, jhold, ncycl, nparx;
+    static Int_t nparp1, kg, jh, nf, jl, ns;
 
     if (fNpar <= 0) return;
     if (fAmin == fUndefi) mnamin();
@@ -7244,7 +7197,7 @@ void TMinuit::mnsimp()
 L1:
     ynpp1 = fAmin;
     jl = nparp1;
-    fSIMPy[nparp1-1] = fAmin;
+    y[nparp1-1] = fAmin;
     absmin = fAmin;
     for (i = 1; i <= fNpar; ++i) {
 	aming      = fAmin;
@@ -7276,15 +7229,15 @@ L6:
 	if (ns < 6) goto L4;
 //*-*-        local minimum found in ith direction
 L8:
-	fSIMPy[i-1] = aming;
+	y[i-1] = aming;
 	if (aming < absmin) jl = i;
 	if (aming < absmin) absmin = aming;
 	fX[i-1] = bestx;
 	for (k = 1; k <= fNpar; ++k) { fP[k + i*fMaxpar - fMaxpar-1] = fX[k-1]; }
     }
     jh    = nparp1;
-    fAmin = fSIMPy[jl-1];
-    mnrazz(ynpp1, fPbar, fSIMPy, jh, jl);
+    fAmin = y[jl-1];
+    mnrazz(ynpp1, fPbar, y, jh, jl);
     for (i = 1; i <= fNpar; ++i) { fX[i-1] = fP[i + jl*fMaxpar - fMaxpar-1]; }
     mninex(fX);
     fCstatu = "PROGRESS  ";
@@ -7314,8 +7267,8 @@ L50:
     mninex(fPstst);
     (*fFCN)(nparx, fGin, ystst, fU, 4);    ++fNfcn;
 //*-*-        try a parabola through ph, pstar, pstst.  min = prho
-    y1 = (ystar - fSIMPy[jh-1])*rho2;
-    y2 = (ystst - fSIMPy[jh-1])*rho1;
+    y1 = (ystar - y[jh-1])*rho2;
+    y2 = (ystst - y[jh-1])*rho1;
     rho = (rho2*y1 - rho1*y2)*.5 / (y1 - y2);
     if (rho < rhomin) goto L66;
     if (rho > rhomax) rho = rhomax;
@@ -7324,19 +7277,19 @@ L50:
     }
     mninex(fPrho);
     (*fFCN)(nparx, fGin, yrho, fU, 4);    ++fNfcn;
-    if (yrho  < fSIMPy[jl-1] && yrho < ystst) goto L65;
-    if (ystst < fSIMPy[jl-1]) goto L67;
-    if (yrho  > fSIMPy[jl-1]) goto L66;
+    if (yrho < y[jl-1] && yrho < ystst) goto L65;
+    if (ystst < y[jl-1]) goto L67;
+    if (yrho > y[jl-1])  goto L66;
 //*-*-        accept minimum point of parabola, PRHO
 L65:
-    mnrazz(yrho, fPrho, fSIMPy, jh, jl);
+    mnrazz(yrho, fPrho, y, jh, jl);
     goto L68;
 L66:
-    if (ystst < fSIMPy[jl-1]) goto L67;
-    mnrazz(ystar, fPstar, fSIMPy, jh, jl);
+    if (ystst < y[jl-1]) goto L67;
+    mnrazz(ystar, fPstar, y, jh, jl);
     goto L68;
 L67:
-    mnrazz(ystst, fPstst, fSIMPy, jh, jl);
+    mnrazz(ystst, fPstst, y, jh, jl);
 L68:
     ++ncycl;
     if (fISW[4] < 2) goto L50;
@@ -7346,9 +7299,9 @@ L68:
     goto L50;
 //*-*-        point * is not as good as jl
 L70:
-    if (ystar >= fSIMPy[jh-1]) goto L73;
+    if (ystar >= y[jh-1]) goto L73;
     jhold = jh;
-    mnrazz(ystar, fPstar, fSIMPy, jh, jl);
+    mnrazz(ystar, fPstar, y, jh, jl);
     if (jhold != jh) goto L50;
 //*-*-        calculate new point **
 L73:
@@ -7357,10 +7310,10 @@ L73:
     }
     mninex(fPstst);
     (*fFCN)(nparx, fGin, ystst, fU, 4);    ++fNfcn;
-    if (ystst > fSIMPy[jh-1]) goto L1;
+    if (ystst > y[jh-1]) goto L1;
 //*-*-    point ** is better than jh
     if (ystst < fAmin) goto L67;
-    mnrazz(ystst, fPstst, fSIMPy, jh, jl);
+    mnrazz(ystst, fPstst, y, jh, jl);
     goto L50;
 //*-*-                                       . . . . . .  end main loop
 L76:
@@ -7384,7 +7337,7 @@ L80:
     }
     mninex(fPbar);
     (*fFCN)(nparx, fGin, ypbar, fU, 4);    ++fNfcn;
-    if (ypbar < fAmin) 	mnrazz(ypbar, fPbar, fSIMPy, jh, jl);
+    if (ypbar < fAmin) 	mnrazz(ypbar, fPbar, y, jh, jl);
     mninex(fX);
     if (fNfcnmx + npfn - fNfcn < fNpar*3) goto L90;
     if (fEDM > fEpsi*2) goto L1;
@@ -7446,7 +7399,7 @@ Bool_t TMinuit::mnunpt(TString &cfname)
 //*-*        ========================================================
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t i, l, ic;
+    static Int_t i, l, ic;
     Bool_t ret_val;
     static TString cpt = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890./;:[]$%*_!@#&+()";
 
@@ -7477,8 +7430,8 @@ void TMinuit::mnvert(Double_t *a, Int_t l, Int_t, Int_t n, Int_t &ifail)
     Int_t a_offset;
 
     /* Local variables */
-    Double_t si;
-    Int_t i, j, k, kp1, km1;
+    static Double_t q[kMAXDIM], s[kMAXDIM], si, pp[kMAXDIM];
+    static Int_t i, j, k, kp1, km1;
 
     /* Parameter adjustments */
     a_offset = l + 1;
@@ -7492,20 +7445,20 @@ void TMinuit::mnvert(Double_t *a, Int_t l, Int_t, Int_t n, Int_t &ifail)
     for (i = 1; i <= n; ++i) {
 	si = a[i + i*l];
 	if (si <= 0) goto L100;
-	fVERTs[i-1] = 1 / TMath::Sqrt(si);
+	s[i-1] = 1 / TMath::Sqrt(si);
     }
     for (i = 1; i <= n; ++i) {
 	for (j = 1; j <= n; ++j) {
-	    a[i + j*l] = a[i + j*l]*fVERTs[i-1]*fVERTs[j-1];
+	    a[i + j*l] = a[i + j*l]*s[i-1]*s[j-1];
 	}
     }
 //*-*-                                       . . . start main loop . . . .
     for (i = 1; i <= n; ++i) {
 	k = i;
 //*-*-                  preparation for elimination step1
-	if (a[k + k*l] != 0) fVERTq[k-1] = 1 / a[k + k*l];
+	if (a[k + k*l] != 0) q[k-1] = 1 / a[k + k*l];
 	else goto L100;
-	fVERTpp[k-1] = 1;
+	pp[k-1] = 1;
 	a[k + k*l] = 0;
 	kp1 = k + 1;
 	km1 = k - 1;
@@ -7514,9 +7467,9 @@ void TMinuit::mnvert(Double_t *a, Int_t l, Int_t, Int_t n, Int_t &ifail)
 	else               goto L40;
 L40:
 	for (j = 1; j <= km1; ++j) {
-	    fVERTpp[j-1] = a[j + k*l];
-	    fVERTq[j-1]  = a[j + k*l]*fVERTq[k-1];
-	    a[j + k*l]   = 0;
+	    pp[j-1]    = a[j + k*l];
+	    q[j-1]     = a[j + k*l]*q[k-1];
+	    a[j + k*l] = 0;
 	}
 L50:
 	if (k - n < 0) goto L51;
@@ -7524,20 +7477,20 @@ L50:
 	else                goto L100;
 L51:
 	for (j = kp1; j <= n; ++j) {
-	    fVERTpp[j-1] = a[k + j*l];
-	    fVERTq[j-1]  = -a[k + j*l]*fVERTq[k-1];
-	    a[k + j*l]   = 0;
+	    pp[j-1]    = a[k + j*l];
+	    q[j-1]     = -a[k + j*l]*q[k-1];
+	    a[k + j*l] = 0;
 	}
 //*-*-                  elimination proper
 L60:
 	for (j = 1; j <= n; ++j) {
-	    for (k = j; k <= n; ++k) { a[j + k*l] += fVERTpp[j-1]*fVERTq[k-1]; }
+	    for (k = j; k <= n; ++k) { a[j + k*l] += pp[j-1]*q[k-1]; }
 	}
     }
 //*-*-                  elements of left diagonal and unscaling
     for (j = 1; j <= n; ++j) {
 	for (k = 1; k <= j; ++k) {
-	    a[k + j*l] = a[k + j*l]*fVERTs[k-1]*fVERTs[j-1];
+	    a[k + j*l] = a[k + j*l]*s[k-1]*s[j-1];
 	    a[j + k*l] = a[k + j*l];
 	}
     }
@@ -7567,8 +7520,8 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
     TString cmes = cmes1;
 
     const Int_t MAXMES = 10;
-    Int_t ityp, i, ic, nm;
-    TString englsh, ctyp;
+    static Int_t ityp, i, ic, nm;
+    static TString englsh, ctyp;
 
     if (corg(0,3) != "SHO" || cmes(0,3) != "SHO") {
 
@@ -7577,7 +7530,7 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
           ityp = 1;
 	  if (fLwarn) {
              Printf(" MINUIT WARNING IN %s",(const char*)corg);
-             Printf(" ============== %s",(const char*)cmes);
+             Printf(" ============== ",(const char*)cmes);
 	     return;
 	  }
        } else {
@@ -7594,9 +7547,9 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
        ++fIcirc[ityp-1];
        if (fIcirc[ityp-1] > 10) 	fIcirc[ityp-1] = 1;
        ic = fIcirc[ityp-1];
-       fOrigin[ic] = corg;
-       fWarmes[ic] = cmes;
-       fNfcwar[ic] = fNfcn;
+       fOrigin[ic + ityp*10 - 11] = corg;
+       fWarmes[ic + ityp*10 - 11] = cmes;
+       fNfcwar[ic + ityp*10 - 11] = fNfcn;
        return;
    }
 
@@ -7624,7 +7577,9 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
 	for (i = 1; i <= nm; ++i) {
 	    ++ic;
 	    if (ic > MAXMES) ic = 1;
-            Printf(" %6d  %s  %s", fNfcwar[ic],fOrigin[ic].Data(),fWarmes[ic].Data());
+            Printf(" %6d %s %s", fNfcwar[ic + ityp*10 - 11],
+                               (const char*)fOrigin + (ic + ityp*10 - 11)*10,
+                               (const char*)fWarmes + (ic + ityp*10 - 11)*60);
 	}
 	fNwrmes[ityp-1] = 0;
 	Printf(" ");
@@ -7640,8 +7595,8 @@ void TMinuit::mnwerr()
 //*-*      whenever a new covariance matrix is available.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t denom, ba, al, dx, du1, du2;
-    Int_t ndex, ierr, i, j, k, l, ndiag, k1, iin;
+    static Double_t denom, ba, al, dx, du1, du2;
+    static Int_t ndex, ierr, i, j, k, l, ndiag, k1, iin;
 
 //*-*-                        calculate external error if v exists
     if (fISW[1] >= 1) {

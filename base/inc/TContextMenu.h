@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.h,v 1.3 2001/01/12 08:28:55 brun Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -44,7 +44,7 @@ class TContextMenu : public TNamed {
 friend class  TContextMenuImp;
 
 protected:
-   TContextMenuImp *fContextMenuImp;      //!Context menu system specific implementation
+   TContextMenuImp *fContextMenuImp;      //Context menu system specific implementation
    TMethod         *fSelectedMethod;      //selected method
    TObject         *fSelectedObject;      //selected object
    TVirtualPad     *fSelectedCanvas;      //selected canvas (if exist)
@@ -68,8 +68,8 @@ public:
    virtual Char_t *CreateArgumentTitle(TMethodArg *argument);
    virtual Char_t *CreateDialogTitle(TObject *object, TMethod *method);
    virtual Char_t *CreatePopupTitle(TObject *object );
-   virtual void Execute(const char *method,  const char *params, int* error=0) { TObject::Execute(method, params, error); }
-   virtual void Execute(TMethod *method, TObjArray *params, int* error=0) { TObject::Execute(method, params, error); }
+   virtual void Execute(const char *method,  const char *params) { TObject::Execute(method, params); }
+   virtual void Execute(TMethod *method, TObjArray *params) { TObject::Execute(method, params); }
    virtual void Execute(TObject *object, TMethod *method, const Char_t *params);
    virtual void Execute(TObject *object, TMethod *method, TObjArray *params);
    void Execute(const Char_t *params) { Execute(fSelectedObject, fSelectedMethod, params); }
@@ -85,7 +85,7 @@ public:
    virtual void SetCanvas(TVirtualPad *c) { fSelectedCanvas = c; }
    virtual void SetBrowser(TBrowser *b) { fBrowser = b; }
    virtual void SetMethod(TMethod *m) { fSelectedMethod = m; }
-   virtual void SetNameTitle(const char *name, const char *title) { TNamed::SetNameTitle(name, title); }
+   virtual void SetObject(const char *name, const char *title) { TNamed::SetObject(name, title); }
    virtual void SetObject(TObject *o) { fSelectedObject = o; }
    virtual void SetPad(TVirtualPad *p) { fSelectedPad = p; }
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.11 2001/06/27 16:54:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.8 2000/10/12 16:53:38 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -208,7 +208,7 @@ void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
                                   TObject *obj, const char *name)
 {
    // Retrieve icons associated with class "name". Association is made
-   // via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
+   // via the $ROOTSYS/root.mimes file or via the user's ~/.root.mimes.
 
    *pic  = fClient->GetMimeTypeList()->GetIcon(name, kFALSE);
    if (*pic == 0) {
@@ -701,7 +701,7 @@ void TRootBrowser::DisplayDirectory()
 void TRootBrowser::ExecuteDefaultAction(TObject *obj)
 {
    // Execute default action for selected object (action is specified
-   // in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file.
+   // in the $HOME/.root.mimes or $ROOTSYS/icons/root.mimes file.
 
    char action[512];
 
@@ -750,14 +750,12 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      break;
                   case kFileOpen:
                      {
-                        static TString dir(".");
                         TGFileInfo fi;
-                        fi.fFileTypes = gOpenTypes;
-                        fi.fIniDir    = StrDup(dir);
+                        fi.fFileTypes = (char **) gOpenTypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen,&fi);
                         if (!fi.fFilename) return kTRUE;
-                        dir = fi.fIniDir;
                         new TFile(fi.fFilename, "update");
+                        delete [] fi.fFilename;
                      }
                      break;
                   case kFileSave:
@@ -1197,17 +1195,14 @@ void TRootBrowser::ShowStatusBar(Bool_t show)
 }
 
 //______________________________________________________________________________
-void TRootBrowser::SetDefaults(const char *iconStyle, const char *sortBy)
+void TRootBrowser::SetDefaults()
 {
    // Set defaults depending on settings in the user's .rootrc.
 
    const char *opt;
 
    // IconStyle: big, small, list, details
-   if (iconStyle)
-      opt = iconStyle;
-   else
-      opt = gEnv->GetValue("Browser.IconStyle", "small");
+   opt = gEnv->GetValue("Browser.IconStyle", "small");
    if (!strcasecmp(opt, "big"))
       SetViewMode(kViewLargeIcons, kTRUE);
    else if (!strcasecmp(opt, "small"))
@@ -1220,10 +1215,7 @@ void TRootBrowser::SetDefaults(const char *iconStyle, const char *sortBy)
       SetViewMode(kViewSmallIcons, kTRUE);
 
    // SortBy: name, type, size, date
-   if (sortBy)
-      opt = sortBy;
-   else
-      opt = gEnv->GetValue("Browser.SortBy", "name");
+   opt = gEnv->GetValue("Browser.SortBy", "name");
    if (!strcasecmp(opt, "name"))
       SetSortMode(kViewArrangeByName);
    else if (!strcasecmp(opt, "type"))

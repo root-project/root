@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TCONE.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name$:$Id$
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -40,8 +40,8 @@ class TCONE : public TTUBE {
         TCONE(const char *name, const char *title, const char *material, Float_t dz, Float_t rmax1, Float_t rmax2 =0);
         virtual ~TCONE();
 
-        Float_t         GetRmin2() const {return fRmin2;}
-        Float_t         GetRmax2() const {return fRmax2;}
+        Float_t         GetRmin2() {return fRmin2;}
+        Float_t         GetRmax2() {return fRmax2;}
         virtual void    SetPoints(Float_t *buff);
 
         ClassDef(TCONE,1)  //CONE shape

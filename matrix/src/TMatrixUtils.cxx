@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.cxx,v 1.2 2000/11/21 20:41:36 brun Exp $
+// @(#)root/matrix:$Name$:$Id$
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -28,7 +28,6 @@
 
 #include "TVector.h"
 #include "TMatrix.h"
-#include "TClass.h"
 
 
 ClassImp(TLazyMatrix)
@@ -115,13 +114,22 @@ void TMatrixRow::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TMatrixRow.
 
+   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      TMatrixRow::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+      R__b.ReadVersion(&R__s, &R__c);
+      TObject::Streamer(R__b);
+      R__b >> (TMatrix*&)fMatrix;
+      R__b >> fRowInd;
+      R__b >> fInc;
+      R__b.CheckByteCount(R__s, R__c, TMatrixRow::IsA());
       fPtr = &(fMatrix->fIndex[0][fRowInd]);
    } else {
-      TMatrix::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TMatrixRow::IsA(), kTRUE);
+      TObject::Streamer(R__b);
+      R__b << fMatrix;
+      R__b << fRowInd;
+      R__b << fInc;
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }
 
@@ -202,13 +210,20 @@ void TMatrixColumn::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TMatrixColumn.
 
+   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      TMatrixColumn::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+      R__b.ReadVersion(&R__s, &R__c);
+      TObject::Streamer(R__b);
+      R__b >> (TMatrix*&)fMatrix;
+      R__b >> fColInd;
+      R__b.CheckByteCount(R__s, R__c, TMatrixColumn::IsA());
       fPtr = &(fMatrix->fIndex[fColInd][0]);
    } else {
-      TMatrixColumn::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TMatrixColumn::IsA(), kTRUE);
+      TObject::Streamer(R__b);
+      R__b << fMatrix;
+      R__b << fColInd;
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }
 
@@ -292,13 +307,22 @@ void TMatrixDiag::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TMatrixDiag.
 
+   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      TMatrixDiag::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+      R__b.ReadVersion(&R__s, &R__c);
+      TObject::Streamer(R__b);
+      R__b >> (TMatrix*&)fMatrix;
+      R__b >> fInc;
+      R__b >> fNdiag;
+      R__b.CheckByteCount(R__s, R__c, TMatrixDiag::IsA());
       fPtr = &(fMatrix->fElements[0]);
    } else {
-      TMatrixDiag::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TMatrixDiag::IsA(), kTRUE);
+      TObject::Streamer(R__b);
+      R__b << fMatrix;
+      R__b << fInc;
+      R__b << fNdiag;
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }
 
@@ -463,7 +487,7 @@ void THaarMatrix::FillIn(TMatrix &m) const
 }
 
 
-#if defined(R__HPUX) || defined(R__MACOSX)
+#ifdef R__HPUX
 
 //______________________________________________________________________________
 //  These functions should be inline

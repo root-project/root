@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for SGI IRIX 6.x with GCC 2.95.2 compiler
 
 PLATFORM      = sgi
@@ -32,11 +30,11 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lgen -lstdc++ -lm
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
-CILIBS        = -lm -lgen -lbsd -lstdc++
+XLIBS         = $(XPMLIB) -L/usr/X11R6/lib -lX11
+CILIBS        =  -lm -lgen -lbsd -lstdc++
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB)
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB)
 
 # Fortran:
 F77LIBS       = -lftn

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.22 2002/01/22 10:53:28 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.8 2000/10/02 11:10:51 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -13,67 +13,14 @@
 //                                                                      //
 // Proofd                                                               //
 //                                                                      //
-// PROOF, Parallel ROOT Facility, front-end daemon.                     //
-// This small server is started either by inetd when a client requests  //
-// a connection to a PROOF server or by hand (i.e. from the command     //
-// line). By default proofd uses port 1093 (allocated by IANA,          //
-// www.iana.org, to proofd). If we don't want the PROOF server          //
+// Proof, Parallel ROOT Facility, front-end daemon.                     //
+// This small server is started by inetd when a client requests         //
+// a connection to a Proof server. If we don't want the Proof server    //
 // to run on this specific node, e.g. because the system is being       //
 // shutdown or there are already too many servers running, we send      //
 // the client a re-route message and close the connection. Otherwise    //
-// we authenticate the user and exec the proofserv program.             //
-// To run proofd via inetd add the following line to /etc/services:     //
-//                                                                      //
-// proofd     1093/tcp                                                  //
-//                                                                      //
-// and to /etc/inetd.conf:                                              //
-//                                                                      //
-// proofd stream tcp nowait root /usr/local/root/bin/proofd -i \        //
-//    /usr/local/root                                                   //
-//                                                                      //
-// Force inetd to reread its conf file with "kill -HUP <pid inetd>".    //
-// You can also start proofd by hand running directly under your        //
-// private account (no root system priviliges needed). For example to   //
-// start proofd listening on port 5252 just type:                       //
-//                                                                      //
-// prootf -p 5252 $ROOTSYS                                              //
-//                                                                      //
-// Notice: no & is needed. Proofd will go in background by itself.      //
-//                                                                      //
-// Proofd arguments:                                                    //
-//   -i                says we were started by inetd                    //
-//   -p port#          specifies a different port to listen on          //
-//   -b tcpwindowsize  specifies the tcp window size in bytes (e.g. see //
-//                     http://www.psc.edu/networking/perf_tune.html)    //
-//                     Default is 65535. Only change default for pipes  //
-//                     with a high bandwidth*delay product.             //
-//   -d level          level of debug info written to syslog            //
-//                     0 = no debug (default)                           //
-//                     1 = minimum                                      //
-//                     2 = medium                                       //
-//                     3 = maximum                                      //
-//   rootsys_dir       directory which must contain bin/proofserv and   //
-//                     proof/etc/proof.conf                             //
-//                                                                      //
-//  When your system uses shadow passwords you have to compile proofd   //
-//  with -DR__SHADOWPW. Since shadow passwords can only be accessed     //
-//  while being superuser (root) this works only when the server is     //
-//  started via inetd. Another solution is to create a file             //
-//  ~/.rootdpass containing an encrypted password. If this file exists  //
-//  its password is used for authentication. This method overrides      //
-//  all other authentication methods. To create an encrypted password   //
-//  do something like:                                                  //
-//     perl -e '$pw = crypt("<secretpasswd>","salt"); print "$pw\n"'    //
-//  and store this string in ~/.rootdpass.                              //
-//                                                                      //
-//  To use AFS for authentication compile proofd with the -DR__AFS      //
-//  flag. In that case you also need to link with the AFS libraries.    //
-//  See the Makefiles for more details.                                 //
-//                                                                      //
-//  To use Secure Remote Passwords (SRP) for authentication compile     //
-//  proofd with the -DR__SRP flag. In that case you also need to link   //
-//  with the SRP and gmp libraries. See the Makefile for more details.  //
-//  SRP is described at: http://srp.stanford.edu/.                      //
+// we receive the client's version key and exec the appropriate         //
+// server version.                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -90,13 +37,13 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/stat.h>
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <errno.h>
 
-#if defined(linux)
+#if defined(__linux)
 #   include <features.h>
 #   if __GNU_LIBRARY__ == 6
 #      ifndef R__GLIBC
@@ -104,19 +51,8 @@
 #      endif
 #   endif
 #endif
-#ifdef __MACH__
-#   define R__GLIBC
-#endif
 
-#if defined(__FreeBSD__) && (__FreeBSD__ < 4)
-#include <sys/file.h>
-#define lockf(fd, op, sz)   flock((fd), (op))
-#define	F_LOCK             (LOCK_EX | LOCK_NB)
-#define	F_ULOCK             LOCK_UN
-#endif
-
-#if defined(linux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__) || defined(__MACH__)
+#if defined(__linux) || defined(__linux__) || defined(__sun) || defined(__sgi) || defined(_AIX)
 #include <grp.h>
 #include <sys/types.h>
 #endif
@@ -129,11 +65,11 @@
 extern "C" char *crypt(const char *, const char *);
 #endif
 
-#if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__)
+#if defined(__alpha) && !defined(__linux) && !defined(__FreeBSD__)
 extern "C" int initgroups(const char *name, int basegid);
 #endif
 
-#if defined(__sgi) && !defined(__GNUG__) && (SGI_REL<62)
+#if defined(__sgi) && !defined(__GNUG__) && (!defined(SGI_REL) || (SGI_REL<62))
 extern "C" {
    int seteuid(int euid);
    int setegid(int egid);
@@ -142,7 +78,7 @@ extern "C" {
 
 #if defined(_AIX)
 extern "C" {
-   //int initgroups(const char *name, int basegid);
+   int initgroups(const char *name, int basegid);
    int seteuid(uid_t euid);
    int setegid(gid_t egid);
 }
@@ -159,43 +95,13 @@ extern "C" int gethostname(char *, int);
 #include <shadow.h>
 #endif
 
-#ifdef R__AFS
-//#include <afs/kautils.h>
-#define KA_USERAUTH_VERSION 1
-#define KA_USERAUTH_DOSETPAG 0x10000
-#define NOPAG  0xffffffff
-extern "C" int ka_UserAuthenticateGeneral(int,char*,char*,char*,char*,int,int,int,char**);
-#endif
-
-#ifdef R__SRP
-extern "C" {
-#include <t_pwd.h>
-#include <t_server.h>
-}
-#endif
-
-#include "proofdp.h"
+#include "MessageTypes.h"
 
 
-//--- Globals ------------------------------------------------------------------
+const int kMaxSlaves = 32;
 
-const char kProofdService[] = "proofd";
-const char kRootdPass[]     = ".rootdpass";
-const char kSRootdPass[]    = ".srootdpass";
-const int  kMaxSlaves       = 32;
-const int  kMAXPATHLEN      = 1024;
-
-int  gInetdFlag             = 0;
-int  gPort                  = 0;
-int  gDebug                 = 0;
-int  gSockFd                = -1;
-int  gAuth                  = 0;
-char gUser[64]              = { 0 };
-char gPasswd[64]            = { 0 };
-char gConfDir[kMAXPATHLEN]  = { 0 };
-
-
-//--- Machine specific routines ------------------------------------------------
+static int sockin  = 0;
+static int sockout = 1;
 
 #if !defined(__hpux)
 static int setresgid(gid_t r, gid_t e, gid_t)
@@ -214,375 +120,131 @@ static int setresuid(uid_t r, uid_t e, uid_t)
 #endif
 
 
-//--- Proofd routines ----------------------------------------------------------
-
-//______________________________________________________________________________
-void ProofdUser(const char *user)
+void Send(char *msg)
 {
-   // Check user id. If user id is not equal to proofd's effective uid, user
-   // will not be allowed access, unless effective uid = 0 (i.e. root).
-   // Code almost identical to RootdUser().
+   // Simulate TSocket::Send(const char *str).
 
-   if (!*user)
-      ErrorFatal("ProofdUser: bad user name");
-
-   struct passwd *pw;
-   if ((pw = getpwnam(user)) == 0)
-      ErrorFatal("ProofdUser: user %s unknown", user);
-
-   // If server is not started as root and user is not same as the
-   // one who started proofd then authetication is not ok.
-   uid_t uid = getuid();
-   if (uid && uid != pw->pw_uid)
-      ErrorFatal("ProofdUser: user not same as effective user of proofd");
-
-   strcpy(gUser, user);
-
-   NetSend(gAuth, kROOTD_AUTH);
+   int hdr[2];
+   int hlen = sizeof(kMESS_STRING) + strlen(msg)+1;  // including \0
+   hdr[0] = htonl(hlen);
+   hdr[1] = htonl(kMESS_STRING);
+   if (send(sockout, (const char *)hdr, sizeof(hdr), 0) != sizeof(hdr))
+      exit(1);
+   hlen -= sizeof(kMESS_STRING);
+   if (send(sockout, msg, hlen, 0) != hlen)
+      exit(1);
 }
 
-//______________________________________________________________________________
-void ProofdSRPUser(const char *user)
+int Recv(char *msg, int max)
 {
-   // Use Secure Remote Password protocol.
-   // Check user id in $HOME/.srootdpass file.
-   // Code almost identical to RootdSRPUsr().
+   // Simulate TSocket::Recv(char *str, int max).
 
-   if (!*user)
-      ErrorFatal("ProofdSRPUser: bad user name");
+   int n, hdr[2];
 
-   if (kSRootdPass[0]) { }  // remove compiler warning
+   if ((n = recv(sockin, (char *)hdr, sizeof(hdr), 0)) < 0)
+      return -1;
 
-#ifdef R__SRP
+   int hlen = ntohl(hdr[0]) - sizeof(kMESS_STRING);
+   if (hlen > max) hlen = max;
+   if ((n = recv(sockin, msg, hlen, 0)) < 0)
+      return -1;
 
-   char srootdpass[kMAXPATHLEN], srootdconf[kMAXPATHLEN];
-
-   struct passwd *pw = getpwnam(user);
-   if (!pw)
-      ErrorFatal("ProofdSRPUser: user %s unknown", user);
-
-   // If server is not started as root and user is not same as the
-   // one who started proofd then authetication is not ok.
-   uid_t uid = getuid();
-   if (uid && uid != pw->pw_uid)
-      ErrorFatal("ProofdSRPUser: user not same as effective user of proofd");
-
-   NetSend(gAuth, kROOTD_AUTH);
-
-   strcpy(gUser, user);
-
-   sprintf(srootdpass, "%s/%s", pw->pw_dir, kSRootdPass);
-   sprintf(srootdconf, "%s/%s.conf", pw->pw_dir, kSRootdPass);
-
-   FILE *fp1 = fopen(srootdpass, "r");
-   if (!fp1) {
-      NetSend(2, kROOTD_AUTH);
-      ErrorInfo("ProofdSRPUser: error opening %s", srootdpass);
-      return;
-   }
-   FILE *fp2 = fopen(srootdconf, "r");
-   if (!fp2) {
-      NetSend(2, kROOTD_AUTH);
-      ErrorInfo("ProofdSRPUser: error opening %s", srootdconf);
-      if (fp1) fclose(fp1);
-      return;
-   }
-
-   struct t_pw *tpw = t_openpw(fp1);
-   if (!tpw) {
-      NetSend(2, kROOTD_AUTH);
-      ErrorInfo("ProofdSRPUser: unable to open password file %s", srootdpass);
-      fclose(fp1);
-      fclose(fp2);
-      return;
-   }
-
-   struct t_conf *tcnf = t_openconf(fp2);
-   if (!tcnf) {
-      NetSend(2, kROOTD_AUTH);
-      ErrorInfo("ProofdSRPUser: unable to open configuration file %s", srootdconf);
-      t_closepw(tpw);
-      fclose(fp1);
-      fclose(fp2);
-      return;
-   }
-
-#if R__SRP_1_1
-   struct t_server *ts = t_serveropen(gUser, tpw, tcnf);
-#else
-   struct t_server *ts = t_serveropenfromfiles(gUser, tpw, tcnf);
-#endif
-   if (!ts)
-      ErrorFatal("ProofdSRPUser: user %s not found SRP password file", gUser);
-
-   if (tcnf) t_closeconf(tcnf);
-   if (tpw)  t_closepw(tpw);
-   if (fp2)  fclose(fp2);
-   if (fp1)  fclose(fp1);
-
-   char hexbuf[MAXHEXPARAMLEN];
-
-   // send n to client
-   NetSend(t_tob64(hexbuf, (char*)ts->n.data, ts->n.len), kROOTD_SRPN);
-   // send g to client
-   NetSend(t_tob64(hexbuf, (char*)ts->g.data, ts->g.len), kROOTD_SRPG);
-   // send salt to client
-   NetSend(t_tob64(hexbuf, (char*)ts->s.data, ts->s.len), kROOTD_SRPSALT);
-
-   struct t_num *B = t_servergenexp(ts);
-
-   // receive A from client
-   EMessageTypes kind;
-   if (NetRecv(hexbuf, MAXHEXPARAMLEN, kind) < 0)
-      ErrorFatal("ProofdSRPUser: error receiving A from client");
-   if (kind != kROOTD_SRPA)
-      ErrorFatal("ProofdSRPUser: expected kROOTD_SRPA message");
-
-   unsigned char buf[MAXPARAMLEN];
-   struct t_num A;
-   A.data = buf;
-   A.len  = t_fromb64((char*)A.data, hexbuf);
-
-   // send B to client
-   NetSend(t_tob64(hexbuf, (char*)B->data, B->len), kROOTD_SRPB);
-
-   t_servergetkey(ts, &A);
-
-   // receive response from client
-   if (NetRecv(hexbuf, MAXHEXPARAMLEN, kind) < 0)
-      ErrorFatal("ProofdSRPUser: error receiving response from client");
-   if (kind != kROOTD_SRPRESPONSE)
-      ErrorFatal("ProofdSRPUser: expected kROOTD_SRPRESPONSE message");
-
-   unsigned char cbuf[20];
-   t_fromhex((char*)cbuf, hexbuf);
-
-   if (!t_serververify(ts, cbuf)) {
-      // authentication successful
-
-      gAuth = 1;
-
-      if (chdir(pw->pw_dir) == -1)
-         ErrorFatal("ProofdSRPUser: can't change directory to %s", pw->pw_dir);
-
-      if (getuid() == 0) {
-
-         // set access control list from /etc/initgroup
-         initgroups(gUser, pw->pw_gid);
-
-         if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1)
-            ErrorFatal("ProofdSRPUser: can't setgid for user %s", gUser);
-
-         if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1)
-            ErrorFatal("ProofdSRPUser: can't setuid for user %s", gUser);
-
-      }
-
-      char *home = new char[6+strlen(pw->pw_dir)];
-      sprintf(home, "HOME=%s", pw->pw_dir);
-      putenv(home);
-
-      umask(022);
-
-      NetSend(gAuth, kROOTD_AUTH);
-
-      if (gDebug > 0)
-         ErrorInfo("ProofdSRPUser: user %s authenticated", gUser);
-
-   } else
-      ErrorFatal("ProofdSRPUser: authentication failed for user %s", gUser);
-
-   t_serverclose(ts);
-
-#else
-   NetSend(2, kROOTD_AUTH);
-#endif
+   return hlen;
 }
 
-//______________________________________________________________________________
-int ProofdCheckSpecialPass(const char *passwd)
+void fatal_error(char *msg)
 {
-   // Check user's password against password in $HOME/.rootdpass. If matches
-   // skip other authentication mechanism. Returns 1 in case of success
-   // authentication, 0 otherwise. Almost identical to RootdCheckSpecialPass().
-
-   char rootdpass[kMAXPATHLEN];
-
-   struct passwd *pw = getpwnam(gUser);
-
-   sprintf(rootdpass, "%s/%s", pw->pw_dir, kRootdPass);
-
-   int fid = open(rootdpass, O_RDONLY);
-   if (fid == -1)
-      return 0;
-
-   int n;
-   if ((n = read(fid, rootdpass, sizeof(rootdpass)-1)) <= 0) {
-      close(fid);
-      return 0;
-   }
-   close(fid);
-
-   rootdpass[n] = 0;
-   char *s = strchr(rootdpass, '\n');
-   if (s) *s = 0;
-
-   char *pass_crypt = crypt(passwd, rootdpass);
-   n = strlen(rootdpass);
-
-   if (strncmp(pass_crypt, rootdpass, n+1) != 0)
-      return 0;
-
-   if (gDebug > 0)
-      ErrorInfo("ProofdCheckSpecialPass: user %s authenticated via ~/.rootdpass", gUser);
-
-   return 1;
+   Send(msg);
+   exit(1);
 }
 
-//______________________________________________________________________________
-void ProofdPass(const char *pass)
+char *check_pass()
 {
    // Check user's password, if ok, change to user's id and to user's directory.
-   // Almost identical to RootdPass().
 
-   char   passwd[64];
-   char  *passw;
+   char   user_pass[64];
+   char   new_user_pass[68];
+   static char user_name[32];
+   char   pass_word[32];
    char  *pass_crypt;
+   char  *passw;
+   char   msg[80];
    struct passwd *pw;
-#ifdef R__SHADOWPW
+#ifdef SHADOWPW
    struct spwd *spw;
 #endif
-#ifdef R__AFS
-   char  *reason;
-   int    afs_auth = 0;
-#endif
+   int    n, i;
 
-   if (!*gUser)
-      ErrorFatal("ProofdPass: user needs to be specified first");
+   if ((n = Recv(new_user_pass, sizeof(new_user_pass))) < 0) {
+      fatal_error("Cannot receive authentication");
+   }
 
-   int i;
-   int n = strlen(pass);
+   for (i = 0; i < n-1; i++)
+      user_pass[i] = ~new_user_pass[i];
+   user_pass[i] = '\0';
 
-   if (!n)
-      ErrorFatal("ProofdPass: null passwd not allowed");
+   if (sscanf(user_pass, "%s %s", user_name, pass_word) != 2) {
+      fatal_error("Bad authentication record");
+   }
 
-   if (n > (int)sizeof(passwd))
-      ErrorFatal("ProofdPass: passwd too long");
-
-   for (i = 0; i < n; i++)
-      passwd[i] = ~pass[i];
-   passwd[i] = '\0';
-
-   pw = getpwnam(gUser);
-
-   if (ProofdCheckSpecialPass(passwd))
-      goto skipauth;
-
-#ifdef R__AFS
-   afs_auth = !ka_UserAuthenticateGeneral(
-        KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG,
-        gUser,             //user name
-        (char *) 0,        //instance
-        (char *) 0,        //realm
-        passwd,            //password
-        0,                 //default lifetime
-        0, 0,              //two spares
-        &reason);          //error string
-
-   if (!afs_auth) {
-      ErrorInfo("ProofdPass: AFS login failed for user %s: %s", gUser, reason);
-      // try conventional login...
-#endif
-
-#ifdef R__SHADOWPW
+   if ((pw = getpwnam(user_name)) == 0) {
+      sprintf(msg, "Passwd: User %s unknown", user_name);
+      fatal_error(msg);
+   }
+#ifdef SHADOWPW
    // System V Rel 4 style shadow passwords
-   if ((spw = getspnam(gUser)) == 0) {
-      ErrorInfo("ProofdPass: Shadow passwd not available for user %s", gUser);
-      passw = pw->pw_passwd;
-   } else
-      passw = spw->sp_pwdp;
+   if ((spw = getspnam(user_name)) == NULL) {
+      sprintf(msg, "Passwd: User %s password unavailable", user_name);
+      fatal_error(msg);
+   }
+   passw = spw->sp_pwdp;
 #else
    passw = pw->pw_passwd;
 #endif
-   pass_crypt = crypt(passwd, passw);
+   pass_crypt = crypt(pass_word, passw);
    n = strlen(passw);
-
-   if (strncmp(pass_crypt, passw, n+1) != 0)
-      ErrorFatal("ProofdPass: invalid password for user %s", gUser);
-
-#ifdef R__AFS
-   }  // afs_auth
+#if 0
+   // no passwd checking for time being.......... rdm
+   if (strncmp(pass_crypt, passw, n+1) != 0) {
+      sprintf(msg, "Passwd: Invalid password for user %s", user_name);
+      fatal_error(msg);
+   }
 #endif
 
-skipauth:
-   gAuth = 1;
+   // set access control list from /etc/initgroup
+   initgroups(user_name, pw->pw_gid);
 
-   if (chdir(pw->pw_dir) == -1)
-      ErrorFatal("ProofdPass: can't change directory to %s", pw->pw_dir);
+   if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1) {
+      sprintf(msg, "Cannot setgid for user %s", user_name);
+      fatal_error(msg);
+   }
 
-   if (getuid() == 0) {
+   if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1) {
+      sprintf(msg, "Cannot setuid for user %s", user_name);
+      fatal_error(msg);
+   }
 
-      // set access control list from /etc/initgroup
-      initgroups(gUser, pw->pw_gid);
 
-      if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1)
-         ErrorFatal("ProofdPass: can't setgid for user %s", gUser);
-
-      if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1)
-         ErrorFatal("ProofdPass: can't setuid for user %s", gUser);
-
+   if (chdir(pw->pw_dir) == -1) {
+      sprintf(msg, "Cannot change directory to %s", pw->pw_dir);
+      fatal_error(msg);
    }
 
    char *home = new char[6+strlen(pw->pw_dir)];
    sprintf(home, "HOME=%s", pw->pw_dir);
    putenv(home);
 
-   umask(022);
-
-   NetSend(gAuth, kROOTD_AUTH);
-
-   if (gDebug > 0)
-      ErrorInfo("ProofdPass: user %s authenticated", gUser);
+   return user_name;
 }
 
-//______________________________________________________________________________
-void Authenticate()
-{
-   // Handle user authentication.
-
-   const int kMaxBuf = 1024;
-   char recvbuf[kMaxBuf];
-   EMessageTypes kind;
-
-   while (!gAuth) {
-      if (NetRecv(recvbuf, kMaxBuf, kind) < 0)
-         ErrorFatal("Authenticate: error receiving message");
-
-      switch (kind) {
-         case kROOTD_USER:
-            ProofdUser(recvbuf);
-            break;
-         case kROOTD_SRPUSER:
-            ProofdSRPUser(recvbuf);
-            break;
-         case kROOTD_PASS:
-            ProofdPass(recvbuf);
-            break;
-         default:
-            ErrorFatal("Authenticate: received bad opcode %d", kind);
-      }
-   }
-}
-
-//______________________________________________________________________________
-const char *RerouteUser()
+char *reroute_user(char *confdir, char *user_name)
 {
    // Look if user should be rerouted to another server node.
 
    char conffile[256];
    FILE *proofconf;
 
-   sprintf(conffile, "%s/etc/proof.conf", gConfDir);
+   sprintf(conffile, "%s/etc/proof.conf", confdir);
    if ((proofconf = fopen(conffile, "r")) != 0) {
       // read configuration file
       static char user_on_node[32];
@@ -605,11 +267,11 @@ const char *RerouteUser()
          //    node <name>
          //
          if (nword >= 2 && strcmp(word[0], "node") == 0) {
-            if (gethostbyname(word[1]) != 0) {
-               if (nnodes < kMaxSlaves) {
-                  strcpy(node_name[nnodes], word[1]);
-                  nnodes++;
-               }
+            struct hostent *hp;
+
+            if ((hp = gethostbyname(word[1])) != 0) {
+               strcpy(node_name[nnodes], word[1]);
+               nnodes++;
             }
             continue;
          }
@@ -619,7 +281,7 @@ const char *RerouteUser()
          //    user <name> on <node>
          //
          if (nword >= 4 && strcmp(word[0], "user") == 0 &&
-             strcmp(word[1], gUser) == 0 && strcmp(word[2], "on") == 0) {
+             strcmp(word[1], user_name) == 0 && strcmp(word[2], "on") == 0) {
             // user <name> on <node>
             strcpy(user_on_node, word[3]);
             continue;
@@ -638,7 +300,7 @@ const char *RerouteUser()
       // get the node name from next.node update by a daemon monitoring
       // the system load; make sure the file is not completely out of date
       //
-      sprintf(conffile, "%s/etc/next.node", gConfDir);
+      sprintf(conffile, "%s/etc/next.node", confdir);
       if (stat(conffile, &statbuf) == -1) {
          return 0;
       } else if (difftime(time(0), statbuf.st_mtime) < 600 &&
@@ -658,16 +320,27 @@ const char *RerouteUser()
    return 0;
 }
 
-//______________________________________________________________________________
-void ProofdExec()
+int main(int /* argc */, char **argv)
 {
-   // Authenticate the user and exec the proofserv program.
-   // gConfdir is the location where the PROOF config files and binaries live.
+   // Arguments:  <confdir>
+   // Confdir is the location where the PROOF config files and binaries live.
 
    char *argvv[4];
    char  arg0[256];
+   char *user_name;
+   char *node_name;
+   char  vtag[80];
    char  msg[80];
    int   master;
+
+   //
+   // Make this process the process group leader and disassociate from
+   // control terminal - fork is executed to ensure a unique process id
+   // and to make sure our process already isn't a process group leader
+   // in which case the call to setsid would fail
+   //
+   if (fork() != 0) exit(0);   // parent exits
+   setsid();
 
 #ifdef R__DEBUG
    int debug = 1;
@@ -675,24 +348,17 @@ void ProofdExec()
       ;
 #endif
 
-   if (gDebug > 0)
-      ErrorInfo("ProofdExec: gConfDir = %s", gConfDir);
-
    // find out if we are supposed to be a master or a slave server
-   if (NetRecv(msg, sizeof(msg)) < 0)
-      ErrorFatal("Cannot receive master/slave status");
+   if (Recv(msg, sizeof(msg)) < 0)
+      fatal_error("Cannot receive master/slave status");
 
    master = !strcmp(msg, "master") ? 1 : 0;
 
-   if (gDebug > 0)
-      ErrorInfo("ProofdExec: master/slave = %s", msg);
-
    // user authentication
-   Authenticate();
+   user_name = check_pass();
 
    // only reroute in case of master server
-   const char *node_name;
-   if (master && (node_name = RerouteUser()) != 0) {
+   if (master && (node_name = reroute_user(argv[1], user_name)) != 0) {
       // send a reroute request to the client passing the IP address
 
       char host_name[32];
@@ -719,145 +385,47 @@ void ProofdExec()
                //
                if (strcmp(host_numb, node_numb) != 0) {
                   sprintf(msg, "Reroute:%s", node_numb);
-                  NetSend(msg);
+                  Send(msg);
                   exit(0);
                }
             }
          }
       }
    }
-   if (gDebug > 0)
-      ErrorInfo("ProofdExec: send Okay");
+   Send("Okay");
 
-   NetSend("Okay");
+   // receive version tag
+   if (Recv(vtag, sizeof(vtag)) < 0)
+      fatal_error("Error receiving version tag");
 
    // start server version
-   sprintf(arg0, "%s/bin/proofserv", gConfDir);
+   sprintf(arg0, "%s/bin/proofserv.%s", argv[1], vtag);
    argvv[0] = arg0;
    argvv[1] = (char *)(master ? "proofserv" : "proofslave");
-   argvv[2] = gConfDir;
+   argvv[2] = argv[1];
    argvv[3] = 0;
 #ifndef ROOTPREFIX
-   char *rootsys = new char[9+strlen(gConfDir)];
-   sprintf(rootsys, "ROOTSYS=%s", gConfDir);
+   char *rootsys = new char[9+strlen(argv[1])];
+   sprintf(rootsys, "ROOTSYS=%s", argv[1]);
    putenv(rootsys);
 #endif
 #ifndef ROOTLIBDIR
-   char *ldpath = new char[21+strlen(gConfDir)];
+   char *ldpath = new char[21+strlen(argv[1])];
 #   if defined(__hpux) || defined(_HIUX_SOURCE)
-   sprintf(ldpath, "SHLIB_PATH=%s/lib", gConfDir);
+   sprintf(ldpath, "SHLIB_PATH=%s/lib", argv[1]);
 #   elif defined(_AIX)
-   sprintf(ldpath, "LIBPATH=%s/lib", gConfDir);
+   sprintf(ldpath, "LIBPATH=%s/lib", argv[1]);
 #   else
-   sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib", gConfDir);
+   sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib", argv[1]);
 #   endif
    putenv(ldpath);
 #endif
-
-   if (gDebug > 0)
-      ErrorInfo("ProofdExec: execv(%s, %s, %s)", argvv[0], argvv[1], argvv[2]);
-
-   if (!gInetdFlag) {
-      // Duplicate the socket onto the descriptors 0, 1 and 2
-      // and close the original socket descriptor (like inetd).
-      dup2(gSockFd, 0);
-      close(gSockFd);
-      dup2(0, 1);
-      dup2(0, 2);
-   }
-
    execv(arg0, argvv);
 
    // tell client that exec failed
    sprintf(msg,
-   "Cannot start PROOF server --- make sure %s exists!", arg0);
-   NetSend(msg);
-}
+   "Cannot start PROOF server version %s --- update your ROOT version!", vtag);
+   Send(msg);
 
-//______________________________________________________________________________
-int main(int argc, char **argv)
-{
-   char *s;
-   int   tcpwindowsize = 65535;
-
-   ErrorInit(argv[0]);
-
-   while (--argc > 0 && (*++argv)[0] == '-')
-      for (s = argv[0]+1; *s != 0; s++)
-         switch (*s) {
-            case 'i':
-               gInetdFlag = 1;
-               break;
-
-            case 'p':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr, "-p requires a port number as argument\n");
-                  ErrorFatal("-p requires a port number as argument");
-               }
-               gPort = atoi(*++argv);
-               break;
-
-            case 'd':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr, "-d requires a debug level as argument\n");
-                  ErrorFatal("-d requires a debug level as argument");
-               }
-               gDebug = atoi(*++argv);
-               break;
-
-            case 'b':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr, "-b requires a buffersize in bytes as argument\n");
-                  ErrorFatal("-b requires a buffersize in bytes as argument");
-               }
-               tcpwindowsize = atoi(*++argv);
-               break;
-
-            default:
-               if (!gInetdFlag)
-                  fprintf(stderr, "unknown command line option: %c\n", *s);
-               ErrorFatal("unknown command line option: %c", *s);
-         }
-
-   if (argc > 0) {
-      strncpy(gConfDir, *argv, kMAXPATHLEN-1);
-      gConfDir[kMAXPATHLEN-1] = 0;
-   } else {
-      if (!gInetdFlag)
-         fprintf(stderr, "no config directory specified\n");
-      ErrorFatal("no config directory specified");
-   }
-
-   if (!gInetdFlag) {
-
-      // Start proofd up as a daemon process (in the background).
-      // Also initialize the network connection - create the socket
-      // and bind our well-know address to it.
-
-      DaemonStart(1);
-
-      NetInit(kProofdService, gPort, tcpwindowsize);
-   }
-
-   if (gDebug > 0)
-      ErrorInfo("main: pid = %d, gInetdFlag = %d", getpid(), gInetdFlag);
-
-   // Concurrent server loop.
-   // The child created by NetOpen() handles the client's request.
-   // The parent waits for another request. In the inetd case,
-   // the parent from NetOpen() never returns.
-
-   while (1) {
-      if (NetOpen(gInetdFlag) == 0) {
-         ProofdExec();     // child processes client's requests
-         NetClose();       // then we are done
-         exit(0);
-      }
-
-      // parent waits for another client to connect
-
-   }
+   return 0;
 }

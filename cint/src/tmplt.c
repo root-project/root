@@ -7,7 +7,7 @@
  * Description:
  *  Class and member function template
  ************************************************************************
- * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its
  * documentation for any purpose is hereby granted without fee,
@@ -311,9 +311,6 @@ struct G__Templatearg *G__read_formal_templatearg()
     /*  template<class T,class E,int S> ...
      *           ^                            */
     c = G__fgetname(type,"<");
-#ifndef G__OLDIMPLEMENTATION1456
-    if (strcmp (type, "const") == 0 && c == ' ') c=G__fgetname(type,"<");
-#endif
     if(strcmp(type,"class")==0 || strcmp(type,"typename")==0) {
       p->type = G__TMPLT_CLASSARG;
     }
@@ -345,7 +342,7 @@ struct G__Templatearg *G__read_formal_templatearg()
 #endif
       else {
 	if(G__dispsource) {
-	  G__fprinterr(G__serr,"Limitation: template argument type '%s' may cause problem",type);
+	  fprintf(G__serr,"Limitation: template argument type '%s' may cause problem",type);
 	  G__printlinenum();
 	}
 	p->type = G__TMPLT_INTARG;
@@ -356,19 +353,11 @@ struct G__Templatearg *G__read_formal_templatearg()
      *                 ^                     */
     c = G__fgetstream(name,",>="); /* G__fgetstream_tmplt() ? */
 #ifndef G__OLDIMPLEMENTATION818
-#ifndef G__OLDIMPLEMENTATION1587
-    while(name[0] && '*'==name[strlen(name)-1]) {
-      if(G__TMPLT_CLASSARG==p->type) p->type = G__TMPLT_POINTERARG1;
-      else p->type+=G__TMPLT_POINTERARG1;
-      name[strlen(name)-1] = '\0';
-    }
-#else
     while(name[0] && '*'==name[strlen(name)-1]) {
       if(G__TMPLT_CLASSARG) p->type = G__TMPLT_POINTERARG1;
       else ++p->type;
       name[strlen(name)-1] = '\0';
     }
-#endif
 #endif
     p->string=(char*)malloc(strlen(name)+1);
     strcpy(p->string,name);
@@ -396,216 +385,6 @@ struct G__Templatearg *G__read_formal_templatearg()
   return(targ);
 }
 
-#ifndef G__OLDIMPLEMENTATION1587
-/**************************************************************************
-* G__read_specializationarg()
-*
-*  template<class T,class E,int S> ...
-*           ^
-**************************************************************************/
-struct G__Templatearg *G__read_specializationarg(source)
-char* source;
-{
-  struct G__Templatearg *targ=NULL;
-  struct G__Templatearg *p=NULL;
-  char type[G__MAXNAME];
-  int c;
-  int stat=1;
-  int isrc=0;
-  int len;
-
-  do {
-
-    /* allocate entry of template argument list */
-    if(stat) {
-      p = (struct G__Templatearg *)malloc(sizeof(struct G__Templatearg));
-      p->next = (struct G__Templatearg *)NULL;
-      p->default_parameter=(char*)NULL;
-      /* store entry of the template argument list */
-      targ = p;
-      stat=0;
-    }
-    else {
-      p->next = (struct G__Templatearg *)malloc(sizeof(struct G__Templatearg));
-      p=p->next;
-      p->default_parameter=(char*)NULL;
-      p->next = (struct G__Templatearg *)NULL;
-    }
-
-    p->type = 0;
-    /*  templatename<T*,E,int> ...
-     *                ^                            */
-    c = G__getname(source,&isrc,type,",>");
-    if (strcmp (type, "const") == 0 && c == ' ') {
-      p->type |= G__TMPLT_CONSTARG;
-      c=G__getname(source,&isrc,type,",>");
-    }
-    len = strlen(type);
-    if('&'==type[len-1]) {
-      p->type |= G__TMPLT_REFERENCEARG;
-      type[--len] = 0;
-    }
-    while('*'==type[len-1]) {
-      p->type += G__TMPLT_POINTERARG1;
-      type[--len] = 0;
-    }
-
-    if(strcmp(type,"int")==0) p->type |= G__TMPLT_INTARG;
-    else if(strcmp(type,"size_t")==0) p->type |= G__TMPLT_SIZEARG;
-    else if(strcmp(type,"unsigned int")==0) p->type |= G__TMPLT_UINTARG;
-    else if(strcmp(type,"unsigned")==0) p->type |= G__TMPLT_UINTARG;
-    else if(strcmp(type,"char")==0) p->type |= G__TMPLT_CHARARG;
-    else if(strcmp(type,"unsigned char")==0) p->type |= G__TMPLT_UCHARARG;
-    else if(strcmp(type,"short")==0) p->type |= G__TMPLT_SHORTARG;
-    else if(strcmp(type,"unsigned short")==0) p->type |= G__TMPLT_USHORTARG;
-    else if(strcmp(type,"long")==0) p->type |= G__TMPLT_LONGARG;
-    else if(strcmp(type,"unsigned long")==0) p->type |= G__TMPLT_ULONGARG;
-    else if(strcmp(type,"float")==0) p->type |= G__TMPLT_FLOATARG;
-    else if(strcmp(type,"double")==0) p->type |= G__TMPLT_DOUBLEARG;
-#ifndef G__OLDIMPLEMENTATION815
-    else if(strcmp(type,">")==0) {
-      if(targ) free((void*)targ);
-      targ = (struct G__Templatearg *)NULL;
-      return(targ);
-    }
-#endif
-    else {
-      p->type |= G__TMPLT_CLASSARG;
-    }
-
-    p->string=(char*)malloc(strlen(type)+1);
-    strcpy(p->string,type);
-
-    /*  template<T*,E,int> ...
-     *              ^                  */
-  } while(','==c) ;
-
-  /*  template<T*,E,int> ...
-   *                   ^                  */
-
-  return(targ);
-}
-
-/**************************************************************************
-* G__delete_string
-*
-**************************************************************************/
-static void G__delete_string(str,del)
-char *str;
-char *del;
-{
-  char *e;
-  char *p = strstr(str,del);
-  if(p) {
-    e = p + strlen(del);
-    while(*e) *(p++) = *(e++);
-    *p=0;
-  }
-}
-/**************************************************************************
-* G__modify_callpara()
-*
-**************************************************************************/
-static void G__modify_callpara(spec_arg,call_arg,pcall_para)
-struct G__Templatearg *spec_arg;
-struct G__Templatearg *call_arg ;
-struct G__Charlist *pcall_para;
-{
-  while(spec_arg && call_arg && pcall_para) {
-    int spec_p = spec_arg->type & G__TMPLT_POINTERARGMASK;
-    int call_p = call_arg->type & G__TMPLT_POINTERARGMASK;
-    int spec_r = spec_arg->type & G__TMPLT_REFERENCEARG;
-    int call_r = call_arg->type & G__TMPLT_REFERENCEARG;
-    int spec_c = spec_arg->type & G__TMPLT_CONSTARG;
-    int call_c = call_arg->type & G__TMPLT_CONSTARG;
-    if(spec_p>0 && spec_p<=call_p) {
-      int i;
-      int n = spec_p/G__TMPLT_POINTERARG1;
-      char buf[10];
-      for(i=0;i<n;i++) buf[i]='*';
-      buf[n]=0;
-      G__delete_string(pcall_para->string,buf);
-    }
-    if(spec_r && spec_r == call_r) {
-      G__delete_string(pcall_para->string,"&");
-    }
-    if(spec_c && spec_c == call_c) {
-      G__delete_string(pcall_para->string,"const ");
-    }
-    spec_arg = spec_arg->next;
-    call_arg = call_arg->next;
-    pcall_para = pcall_para->next;
-  }
-}
-
-/**************************************************************************
-* G__resolve_specialization(deftmpclass,pcall_para)
-*
-**************************************************************************/
-static struct G__Definedtemplateclass *G__resolve_specialization(arg
-								 ,deftmpclass
-								 ,pcall_para)
-char *arg;
-struct G__Definedtemplateclass *deftmpclass;
-struct G__Charlist *pcall_para;
-{
-  struct G__Definedtemplateclass *spec = deftmpclass->specialization;
-  struct G__Templatearg *call_arg = G__read_specializationarg(arg);
-  struct G__Templatearg *pcall_arg ;
-  struct G__Templatearg *spec_arg;
-  int match;
-  struct G__Definedtemplateclass *bestmatch = deftmpclass;
-  int best = 0;
-
-  while(spec->next) {
-    match = 0;
-    spec_arg = spec->spec_arg;
-    pcall_arg = call_arg;
-    while(spec_arg && pcall_arg) {
-      if(spec_arg->type==pcall_arg->type) match+=10;
-      else {
-	int spec_p = spec_arg->type & G__TMPLT_POINTERARGMASK;
-	int call_p = call_arg->type & G__TMPLT_POINTERARGMASK;
-	int spec_r = spec_arg->type & G__TMPLT_REFERENCEARG;
-	int call_r = call_arg->type & G__TMPLT_REFERENCEARG;
-	int spec_c = spec_arg->type & G__TMPLT_CONSTARG;
-	int call_c = call_arg->type & G__TMPLT_CONSTARG;
-	if(spec_r==call_r) ++match;
-	else if(spec_r>call_r) {
-	  match = 0;
-	  break;
-	}
-	if(spec_p==call_p) ++match;
-	else if(spec_p>call_p) {
-	  match = 0;
-	  break;
-	}
-	if(spec_c==call_c) ++match;
-	else if(spec_c>call_c) {
-	  match = 0;
-	  break;
-	}
-      }
-      spec_arg = spec_arg->next;
-      pcall_arg = pcall_arg->next;
-    }
-    if(match>best) {
-      bestmatch = spec;
-      best = match;
-    }
-    spec = spec->next;
-  }
-
-  if(bestmatch!=deftmpclass) {
-    G__modify_callpara(bestmatch->spec_arg,call_arg,pcall_para);
-  }
-
-  G__freetemplatearg(call_arg);
-
-  return(bestmatch);
-}
-#endif /* 1587 */
-
 #ifdef G__TEMPLATEMEMFUNC
 /**************************************************************************
 * G__createtemplatememfunc()
@@ -627,7 +406,7 @@ char *new_name;
   deftmpclass = G__defined_templateclass(new_name+os);
   if(!deftmpclass) {
     /* error */
-    G__fprinterr(G__serr,"Error: Template class %s not defined",new_name+os);
+    fprintf(G__serr,"Error: Template class %s not defined",new_name+os);
     G__genericerror((char*)NULL);
   }
   else {
@@ -657,7 +436,6 @@ char *new_name;
 }
 #endif
 
-
 /**************************************************************************
 * G__createtemplateclass()
 *  template<class T,class E,int S> class A { .... };
@@ -681,15 +459,6 @@ int isforwarddecl;
   int env_tagnum = G__get_envtagnum();
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1587
-  struct G__Templatearg *spec_arg=(struct G__Templatearg*)NULL;
-  char *spec = strchr(new_name,'<');
-  if(spec) {
-    *spec = 0;
-    spec_arg = G__read_specializationarg(spec+1);
-  }
-#endif
-
   /* Search for the end of list */
   deftmpclass = &G__definedtemplateclass;
   G__hash(new_name,hash,i)
@@ -711,41 +480,14 @@ int isforwarddecl;
 	  return(0);
 	}
 #endif /* ON775 */
-#ifndef G__OLDIMPLEMENTATION1587
-	if(spec_arg) {
-	  if(!deftmpclass->specialization) {
-	    deftmpclass->specialization = (struct G__Definedtemplateclass*)
-	      malloc(sizeof(struct G__Definedtemplateclass));
-	    deftmpclass = deftmpclass->specialization;
-	    deftmpclass->def_para = (struct G__Templatearg*)NULL;
-	    deftmpclass->next = (struct G__Definedtemplateclass*)NULL;
-	    deftmpclass->name = (char*)NULL;
-	    deftmpclass->hash = 0;
-	    deftmpclass->memfunctmplt.next
-	      = (struct G__Definedtemplatememfunc*)NULL;
-	    deftmpclass->def_fp = (FILE*)NULL;
-	    deftmpclass->isforwarddecl = 0;
-	    deftmpclass->instantiatedtagnum = (struct G__IntList*)NULL;
-	    deftmpclass->specialization=(struct G__Definedtemplateclass*)NULL;
-	    deftmpclass->spec_arg=(struct G__Templatearg*)NULL;
-	  }
-	  else {
-	    deftmpclass = deftmpclass->specialization;
-	    while(deftmpclass->next) deftmpclass=deftmpclass->next;
-	  }
-	  deftmpclass->spec_arg = spec_arg;
-	  override=0;
-	  break;
-	}
-#endif
 #ifndef G__OLDIMPLEMENTATION1202
 	/* ignore duplicate template class definition */
-	G__fprinterr(G__serr,"Warning: template %s duplicate definition",new_name);
+	fprintf(G__serr,"Warning: template %s duplicate definition",new_name);
 	G__printlinenum();
 	G__fignorestream(";");
 	return(0);
 #else
-	G__fprinterr(G__serr,"Error: template %s duplicate definition",new_name);
+	fprintf(G__serr,"Error: template %s duplicate definition",new_name);
 	G__genericerror(NULL);
 #endif
       }
@@ -768,31 +510,11 @@ int isforwarddecl;
 #endif
 
   /* store template argument list */
+#ifndef G__OLDIMPLEMENTATION691
   if(!override || !deftmpclass->def_para) deftmpclass->def_para=targ;
-#ifndef G__OLDIMPLEMENTATION1453
-  else {
-    struct G__Templatearg* t1 = deftmpclass->def_para;
-    struct G__Templatearg* t2 = targ;
-    while (t1 && t2) {
-      if (strcmp (t1->string, t2->string) != 0) {
-	char *tmp = t2->string;
-	t2->string = t1->string;
-	t1->string = tmp;
-      }
-      if(t1->default_parameter && t2->default_parameter) {
-	G__genericerror("Error: Redefinition of default template argument");
-      }
-      else if(!t1->default_parameter && t2->default_parameter) {
-	t1->default_parameter = t2->default_parameter;
-	t2->default_parameter = 0;
-      }
-      t1 = t1->next;
-      t2 = t2->next;
-    }
-    G__freetemplatearg (targ);
-  }
-#else
   else G__freetemplatearg(targ);
+#else
+  deftmpclass->def_para=targ;
 #endif
 
   /* store file pointer, line number and position */
@@ -815,10 +537,6 @@ int isforwarddecl;
     deftmpclass->next->isforwarddecl = 0;
     deftmpclass->next->instantiatedtagnum = (struct G__IntList*)NULL;
 #endif
-#ifndef G__OLDIMPLEMENTATION1587
-    deftmpclass->next->specialization=(struct G__Definedtemplateclass*)NULL;
-    deftmpclass->next->spec_arg=(struct G__Templatearg*)NULL;
-#endif
   }
   /* skip template class body */
   if(targ) G__fignorestream(";");
@@ -838,211 +556,11 @@ int isforwarddecl;
   return(0);
 }
 
-#ifndef G__OLDIMPLEMENTATION1611
-/***********************************************************************
-* G__getobjecttagnum
-***********************************************************************/
-int G__getobjecttagnum(name)
-char *name;
-{
-  int result = -1;
-  char *p;
-  char *p1;
-  char *p2;
-  p1 = strrchr(name,'.');
-  p2 = G__strrstr(name,"->");
-
-  if(!p1 && !p2) {
-    struct G__var_array *var;
-    int ig15;
-    int itmpx,varhash;
-    long store_struct_offset1=0,store_struct_offset2=0;
-    G__hash(name,varhash,itmpx);
-    var = G__searchvariable(name,varhash,G__p_local,&G__global
-			    ,&store_struct_offset1,&store_struct_offset2
-			    ,&ig15
-			    ,0);
-    if(var && 'u'==tolower(var->type[ig15]) && -1!=var->p_tagtable[ig15]) {
-      result = var->p_tagtable[ig15];
-      return(result);
-    }
-    else {
-      char *p3 = strchr(name,'(');
-      if(p3) {
-	/* LOOK FOR A FUNCTION */
-      }
-    }
-  }
-
-  else {
-    if(p1>p2 || !p2) {
-      *p1 = 0;
-      p = p1+1;
-    }
-    else /* if(p2>p1 || !p1) */ {
-      *p2 = 0;
-      p = p2+2;
-    }
-    
-    result = G__getobjecttagnum(name);
-    if(-1!=result) {
-      /* TO BE IMPLEMENTED */
-      /* struct G__var_array *var = G__struct.memvar[result];
-	 struct G__ifunc_table *ifunc = G__struct.memfunc[result]; */
-    }
-  }
-
-  if(p1 && 0==(*p1)) *p1 = '.';
-  if(p2 && 0==(*p2)) *p2 = '-';
-  return(result);
-}
-
-
-/***********************************************************************
-* G__defined_templatememfunc()
-*
-* t.Handle<int>();
-* a.t.Handle<int>();
-* a.f().Handle<int>();
-*
-***********************************************************************/
-struct G__Definetemplatefunc *G__defined_templatememfunc(name)
-char *name;
-{
-  char *p;
-  char *p1;
-  char *p2;
-  int store_asm_noverflow = G__asm_noverflow ;
-  struct G__Definetemplatefunc *result= NULL;
-
-  /* separate "t" and "Handle" */
-  p1 = strrchr(name,'.');
-  p2 = G__strrstr(name,"->");
-  if(!p1 && !p2) return(result);
-
-  if(p1>p2 || !p2) {
-    *p1 = 0;
-    p = p1+1;
-  }
-  else /* if(p2>p1 || !p1) */ {
-    *p2 = 0;
-    p = p2+2;
-  }
-  /* "t" as name "Handle" as p */
-
-  G__suspendbytecode();
-
-  {
-    int tagnum = G__getobjecttagnum(name);
-    if(-1!=tagnum) {
-      int store_def_tagnum = G__def_tagnum;
-      int store_tagdefining = G__tagdefining;
-      /* Have to look at base class */
-      G__def_tagnum = tagnum;
-      G__tagdefining = tagnum;
-      result = G__defined_templatefunc(p);
-      G__def_tagnum = store_def_tagnum;
-      G__tagdefining = store_tagdefining;
-      if(!result) {
-	struct G__ifunc_table *ifunc=G__struct.memfunc[tagnum];
-	int ifn;
-	int len=strlen(p);
-	p[len++]='<';
-	p[len]=0;
-	while(ifunc) {
-	  for(ifn=0;ifn<ifunc->allifunc;ifn++) {
-	    if(0==strncmp(ifunc->funcname[ifn],p,len)) {
-	      result = (struct G__Definetemplatefunc*)G__PVOID;
-	    }
-	  }
-	  ifunc = ifunc->next;
-	}
-	p[len-1]=0;
-      }
-    }
-  }
-
-  G__asm_noverflow = store_asm_noverflow;
-  if(p1 && 0==(*p1)) *p1 = '.';
-  if(p2 && 0==(*p2)) *p2 = '-';
-  return(result);
-}
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1560
-/***********************************************************************
-* G__defined_templatefunc()
-*
-* Check if the template function is declared
-***********************************************************************/
-struct G__Definetemplatefunc *G__defined_templatefunc(name)
-char *name;
-{
-  struct G__Definetemplatefunc *deftmplt;
-  int hash,temp;
-  long dmy_struct_offset=0;
-  char atom_name[G__LONGLINE];
-  int env_tagnum=G__get_envtagnum();
-  int scope_tagnum = -1;
-  struct G__inheritance *baseclass;
-
-  /* return if no name */
-  if('\0'==name[0]||strchr(name,'.')||strchr(name,'-') || strchr(name,'('))
-    return((struct G__Definetemplatefunc*)NULL);
-
-  /* get a handle for using declaration info */
-  if(-1!=env_tagnum) baseclass = G__struct.baseclass[env_tagnum];
-  else               baseclass = &G__globalusingnamespace;
-  if(0==baseclass->basen) baseclass = (struct G__inheritance*)NULL;
-
-  /* scope operator resolution, A::templatename<int> ... */
-  strcpy(atom_name,name);
-  G__hash(atom_name,hash,temp)
-  G__scopeoperator(atom_name,&hash,&dmy_struct_offset,&scope_tagnum);
-
-  /* Don't crash on a null name (like 'std::'). */
-  if('\0' == atom_name[0])
-    return((struct G__Definetemplatefunc*)NULL);
-
-  /* search for template name and scope match */
-  deftmplt = &G__definedtemplatefunc;
-  while(deftmplt->next) { /* BUG FIX */
-    if(hash==deftmplt->hash && strcmp(atom_name,deftmplt->name)==0) {
-      /* look for ordinary scope resolution */
-      if((-1==scope_tagnum&&(-1==deftmplt->parent_tagnum||
-			     env_tagnum==deftmplt->parent_tagnum))||
-	 scope_tagnum==deftmplt->parent_tagnum) {
-	return(deftmplt);
-      }
-      else if(-1==scope_tagnum) {
-	int env_parent_tagnum = env_tagnum;
-	if(baseclass) {
-	  /* look for using directive scope resolution */
-	  for(temp=0;temp<baseclass->basen;temp++) {
-	    if(baseclass->basetagnum[temp]==deftmplt->parent_tagnum) {
-	      return(deftmplt);
-	    }
-	  }
-	}
-	/* look for enclosing scope resolution */
-	while(-1!=env_parent_tagnum) {
-	  env_parent_tagnum = G__struct.parent_tagnum[env_parent_tagnum];
-	  if(env_parent_tagnum==deftmplt->parent_tagnum) return(deftmplt);
-	}
-      }
-    }
-    deftmplt=deftmplt->next;
-  }
-  return((struct G__Definetemplatefunc*)NULL);
-}
-#endif
-
-
 /***********************************************************************
 * G__defined_templateclass()
 *
-* Check if the template class is declared
-*  but maybe in future I might need this to handle case 4,5
+* Check if the template is declared
+* Not used now, but maybe in future I might need this to handle case 4,5
 ***********************************************************************/
 struct G__Definedtemplateclass *G__defined_templateclass(name)
 char *name;
@@ -1057,11 +575,7 @@ char *name;
   struct G__inheritance *baseclass;
 
   /* return if no name */
-  if('\0'==name[0]||strchr(name,'.')||strchr(name,'-')
-#ifndef G__OLDIMPLEMENTATION1484
-     || strchr(name,'(')
-#endif
-     )
+  if('\0'==name[0]||strchr(name,'.')||strchr(name,'-'))
      return((struct G__Definedtemplateclass *)NULL);
 
   /* get a handle for using declaration info */
@@ -1248,12 +762,8 @@ void G__declare_template()
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1412
-#ifndef G__OLDIMPLEMENTATION1601
-  if(G__ifile.filenum>G__gettempfilenum()) {
-#else
   if(G__MAXFILE-1==G__ifile.filenum) {
-#endif
-    G__fprinterr(G__serr,"Limitation: template can not be defined in a command line or a tempfile\n");
+    fprintf(G__serr,"Limitation: template can not be defined in a command line or a tempfile\n");
     G__genericerror("You need to write it in a source file");
     return;
   }
@@ -1284,26 +794,18 @@ void G__declare_template()
 
   do {
     c=G__fgetname_template(temp,"(<");
-  } while(strcmp(temp,"inline")==0||strcmp(temp,"const")==0
-#ifndef G__OLDIMPLEMENTATION1463
-	  || strcmp(temp,"typename")==0
-#endif
-	  ) ;
+  } while(strcmp(temp,"inline")==0||strcmp(temp,"const")==0) ;
 
   /* template class */
   if(strcmp(temp,"class")==0 || strcmp(temp,"struct")==0) {
 #ifndef G__OLDIMPLEMENTATION662
-#ifndef G__OLDIMPLEMENTATION1587
-    c = G__fgetstream_template(temp,":{;"); /* read template name */
-#else
     c = G__fgetstream(temp,":{;"); /* read template name */
-#endif
     if(';'==c) {
 #ifndef G__OLDIMPLEMENTATION691
       isforwarddecl = 1;
 #else
       /* G__nosupport("Forward declaration of template"); */
-      G__fprinterr(G__serr,"Limitation Forward declaration of template ignored");
+      fprintf(G__serr,"Limitation Forward declaration of template ignored");
       G__printlinenum();
       return;
 #endif
@@ -1420,26 +922,12 @@ void G__declare_template()
     return;
   }
 #endif
-#ifndef G__OLDIMPLEMENTATION1488
-  else if(isspace(c) && strcmp(temp,"operator")==0) {
-    temp[8] = ' ';
-    c=G__fgetname_template(temp+9,"(");
-  }
-#endif
   else { /* if('<'==c) */
     /* template<..> inline|const type A<T,S>::f() { ... }
      * template<..> inline|const type f(T a,S b) { ... }
      *                               ^              */
     do {
-#ifndef G__OLDIMPLEMENTATION1488
       c=G__fgetname_template(temp,"(<");
-      if(isspace(c) && strcmp(temp,"operator")==0) {
-	c=G__fgetstream(temp+8,"(");
-	if('('==c&&0==strcmp(temp,"operator(")) c=G__fgetname(temp+9,"(");
-      }
-#else
-      c=G__fgetname_template(temp,"(<");
-#endif
     } while('('!=c && '<'!=c) ;
   }
 
@@ -1461,29 +949,15 @@ void G__declare_template()
     if(G__dispsource) G__disp_mask=0;
     /* global function template */
     if(strcmp(temp,"operator")==0) {
-#ifdef G__OLDIMPLEMENTATION1461
 #ifndef G__OLDIMPLEMENTATION1117
       if('('==c) {
 	G__genericerror("Error: operator() overloading syntax error");
 	return;
       }
 #endif
-#endif
       /* in case of operator< operator<= operator<< */
       temp[8]=c; /* operator< */
       c=G__fgetstream(temp+9,"(");
-#ifndef G__OLDIMPLEMENTATION1461
-      if (temp[8] == '(') {
-        if (c == ')') {
-          temp[9] = c;
-          c=G__fgetstream(temp+10,"(");
-        }
-        else {
-          G__genericerror("Error: operator() overloading syntax error");
-          return;
-        }
-      }
-#endif
     }
     G__createtemplatefunc(temp,targ,store_line_number,&pos);
   }
@@ -1853,11 +1327,7 @@ int *pnpara;
 	charlist->next->string = (char *)NULL;
 	charlist = charlist->next;
 #ifndef G__OLDIMPLEMENTATION773
-#ifndef G__OLDIMPLEMENTATION1503
-	searchflag = 3;
-#else
 	searchflag = 1;
-#endif
 #endif
       }
       else {
@@ -1900,9 +1370,6 @@ char *tagnamein;
   int parent_tagnum;
 #ifndef G__PHILIPPE24
   int store_constvar = G__constvar;
-#endif
-#ifndef G__OLDIMPLEMENTATION1503
-  int defarg=0;
 #endif
 #ifndef G__OLDIMPLEMENTATION770
 #define G__OLDIMPLEMENTATION778
@@ -2011,30 +1478,21 @@ char *tagnamein;
 #endif /* ON682 */
 
   /* if no such template, error */
-#ifndef G__OLDIMPLEMENTATION1466
-  if(!deftmpclass->next) {
-#else
   if(!deftmpclass) {
-#endif
-    G__fprinterr(G__serr,"Error: no such template %s",tagname);
+    fprintf(G__serr,"Error: no such template %s",tagname);
     G__genericerror((char*)NULL);
     return(-1);
   }
 
   if(!deftmpclass->def_fp) {
-    G__fprinterr(G__serr,"Limitation: Can't instantiate precompiled template %s"
+    fprintf(G__serr,"Limitation: Can't instantiate precompiled template %s"
 	    ,tagname);
     G__genericerror(NULL);
     return(-1);
   }
 
   /* separate and evaluate template argument */
-#ifndef G__OLDIMPLEMENTATION1503
-  if((defarg=
-      G__gettemplatearglist(arg,&call_para,deftmpclass->def_para,&npara))) {
-#else
   if(G__gettemplatearglist(arg,&call_para,deftmpclass->def_para,&npara)) {
-#endif
     /* If evaluated template argument is not identical as string to
      * the original argument, recursively call G__defined_tagname()
      * to find actual tagname. */
@@ -2059,9 +1517,6 @@ char *tagnamein;
     if(-1!=typenum) {
       G__newtype.tagnum[typenum] = tagnum;
       G__newtype.parent_tagnum[typenum] = G__struct.parent_tagnum[tagnum];
-#ifndef G__OLDIMPLEMENTATION1503
-      if(3==defarg) G__struct.defaulttypenum[tagnum] = typenum;
-#endif
     }
 #endif
     G__freecharlist(&call_para);
@@ -2081,13 +1536,6 @@ char *tagnamein;
 #endif
   }
 #endif /* ON682 */
-
-#ifndef G__OLDIMPLEMENTATION1587
-  /* resolve template specialization */
-  if(deftmpclass->specialization) {
-    deftmpclass = G__resolve_specialization(arg,deftmpclass,&call_para);
-  }
-#endif
 
   /* store tagnum */
   tagnum = G__struct.alltag;
@@ -2146,16 +1594,6 @@ char *tagnamein;
     deftmpmemfunc=deftmpmemfunc->next;
   }
 #endif /* G__TEMPLATEFUNC */
-
-#ifndef G__OLDIMPLEMENTATION1587
-  if(tagnum<G__struct.alltag && G__struct.name[tagnum] &&
-     strcmp(tagname,G__struct.name[tagnum])!=0) {
-    free((void*)G__struct.name[tagnum]);
-    G__struct.name[tagnum] = (char*)malloc(strlen(tagname)+1);
-    strcpy(G__struct.name[tagnum],tagname);
-    G__struct.hash[tagnum] = strlen(tagname);
-  }
-#endif
 
 #ifndef G__OLDIMPLEMENTATION691
   tagnum = G__defined_tagname(tagname,2);
@@ -2270,9 +1708,6 @@ int parent_tagnum;
 #ifndef G__PHILIPPE13
   int store_memberfunc_tagnum;
 #endif
-#ifndef G__PHILIPPE29
-  int store_globalcomp;
-#endif
 
   /*******************************************************************
    * open macro and template substitution file and get ready for
@@ -2297,7 +1732,7 @@ int parent_tagnum;
   }
 
   if(G__dispsource) {
-    G__fprinterr(G__serr,"\n!!!Instantiating template %s\n",tagname);
+    fprintf(G__serr,"\n!!!Instantiating template %s\n",tagname);
   }
 
   /* print out header */
@@ -2305,7 +1740,7 @@ int parent_tagnum;
   fprintf(G__mfp,"// template %s  FILE:%s LINE:%d\n"
 	  ,tagname ,G__ifile.name,G__ifile.line_number);
   if(G__dispsource) {
-    G__fprinterr(G__serr,"// template %s  FILE:%s LINE:%d\n"
+    fprintf(G__serr,"// template %s  FILE:%s LINE:%d\n"
 	    ,tagname ,G__ifile.name,G__ifile.line_number);
   }
 
@@ -2332,7 +1767,7 @@ int parent_tagnum;
   fprintf(G__mfp,"# %d \"%s\"\n"
 	  ,G__ifile.line_number,G__srcfile[G__ifile.filenum].filename);
   if(G__dispsource) {
-    G__fprinterr(G__serr,"# %d \"%s\"\n"
+    fprintf(G__serr,"# %d \"%s\"\n"
 	    ,G__ifile.line_number,G__srcfile[G__ifile.filenum].filename);
   }
 
@@ -2417,7 +1852,7 @@ int parent_tagnum;
 #else
       fprintf(G__mfp,"%s",symbol);
 #endif
-      if(G__dispsource) G__fprinterr(G__serr,"%s",symbol);
+      if(G__dispsource) fprintf(G__serr,"%s",symbol);
     }
 
     if(1==slash) {
@@ -2436,10 +1871,10 @@ int parent_tagnum;
 	SET_WRITINGFILE; /* ON777 */
 #ifndef G__OLDIMPLEMENTATION1100
 	fprintf(G__mfp,"/%s\n",symbol);
-	if(G__dispsource) G__fprinterr(G__serr,"/%s\n",symbol);
+	if(G__dispsource) fprintf(G__serr,"/%s\n",symbol);
 #else
 	fprintf(G__mfp,"/\n");
-	if(G__dispsource) G__fprinterr(G__serr,"/\n");
+	if(G__dispsource) fprintf(G__serr,"/\n");
 #endif
 	++G__mline;
 	continue;
@@ -2450,7 +1885,7 @@ int parent_tagnum;
       else if('*'==c) {
 #endif
 	fprintf(G__mfp,"/\n");
-	if(G__dispsource) G__fprinterr(G__serr,"/\n");
+	if(G__dispsource) fprintf(G__serr,"/\n");
 	++G__mline;
 	SET_READINGFILE; /* ON777 */
 	G__skip_comment();
@@ -2465,11 +1900,7 @@ int parent_tagnum;
 	--mparen;
 	if(0==mparen) {
 	  fputc(c,G__mfp);
-#ifndef G__OLDIMPLEMENTATION1485
-	  if(G__dispsource) G__fputerr(c);
-#else
 	  if(G__dispsource) fputc(c,G__serr);
-#endif
 	  break;
 	}
       }
@@ -2485,18 +1916,14 @@ int parent_tagnum;
     if('/'==c) slash=1;
 
     fputc(c,G__mfp);
-#ifndef G__OLDIMPLEMENTATION1485
-    if(G__dispsource) G__fputerr(c);
-#else
     if(G__dispsource) fputc(c,G__serr);
-#endif
     if('\n'==c||'\r'==c) ++G__mline;
   }
 
 #ifndef G__OLDIMPLEMENTATION691
   if(2==isclasstemplate) {
     fprintf(G__mfp,";");
-    if(G__dispsource) G__fprinterr(G__serr,";");
+    if(G__dispsource) fprintf(G__serr,";");
   }
   else if(1==isclasstemplate) {
 #else
@@ -2509,22 +1936,14 @@ int parent_tagnum;
 #endif
     SET_WRITINGFILE; /* ON777 */
     fprintf(G__mfp,"%s ;",symbol);
-    if(G__dispsource) G__fprinterr(G__serr,"%s ;",symbol);
+    if(G__dispsource) fprintf(G__serr,"%s ;",symbol);
   }
   else if(';'==c) {
     fputc(c,G__mfp);
-#ifndef G__OLDIMPLEMENTATION1485
-    if(G__dispsource) G__fputerr(c);
-#else
     if(G__dispsource) fputc(c,G__serr);
-#endif
   }
   fputc('\n',G__mfp);
-#ifndef G__OLDIMPLEMENTATION1485
-  if(G__dispsource) G__fputerr('\n');
-#else
   if(G__dispsource) fputc('\n',G__serr);
-#endif
   ++G__mline;
 
   /* finish string substitution */
@@ -2536,7 +1955,7 @@ int parent_tagnum;
   * rewind tmpfile and parse template class or function
   ********************************************************************/
   if(G__dispsource) {
-    G__fprinterr(G__serr,"!!! Reading template %s\n",tagname);
+    fprintf(G__serr,"!!! Reading template %s\n",tagname);
   }
 
   fsetpos(G__mfp,&pos);
@@ -2564,9 +1983,6 @@ int parent_tagnum;
 #endif
 #ifndef G__PHILIPPE13
   store_memberfunc_tagnum = G__memberfunc_tagnum;
-#endif
-#ifndef G__PHILIPPE29
-  store_globalcomp = G__globalcomp;
 #endif
 
   G__prerun=1;
@@ -2615,7 +2031,7 @@ int parent_tagnum;
 #endif /* ON682 */
   G__var_type = 'p';
   G__breaksignal=0;
-  G__abortbytecode(); /* This has to be 'suspend', indeed. */
+  G__abortbytecode();
   G__no_exec_compile=0;
   G__func_now = -1;
   G__func_page = 0;
@@ -2654,9 +2070,6 @@ int parent_tagnum;
 #ifndef G__PHILIPPE13
   G__memberfunc_tagnum = store_memberfunc_tagnum;
 #endif
-#ifndef G__PHILIPPE29
-  G__globalcomp = store_globalcomp;
-#endif
 
   /* restore input file */
   G__ifile = store_ifile;
@@ -2676,7 +2089,7 @@ int parent_tagnum;
 #endif
 
   if(G__dispsource) {
-    G__fprinterr(G__serr,"\n!!!Complete instantiating template %s\n",tagname);
+    fprintf(G__serr,"\n!!!Complete instantiating template %s\n",tagname);
   }
 
   if(store_mfline) fsetpos(G__mfp,&store_mfpos);
@@ -2729,7 +2142,7 @@ int isnew;
 	strcpy(symbol,defpara->default_parameter);
       }
       else {
-	G__fprinterr(G__serr,"Error: template argument for %s missing"
+	fprintf(G__serr,"Error: template argument for %s missing"
 		,defpara->string);
 	G__genericerror((char*)NULL);
       }
@@ -2737,13 +2150,7 @@ int isnew;
 #ifndef G__OLDIMPLEMENTATION923
          0==isnew &&
 #endif
-#ifndef G__OLDIMPLEMENTATION1610
- 	 ('*'==symbol[strlen(symbol)-1] || strchr(symbol,' ') ||  
-	  strchr(symbol,'<') )
-#else
-	 ('*'==symbol[strlen(symbol)-1] || strchr(symbol,' '))
-#endif
-	 ) {
+	 ('*'==symbol[strlen(symbol)-1] || strchr(symbol,' '))) {
 	char temp[G__LONGLINE];
 	strcpy(temp,symbol);
 	sprintf(symbol,"(%s)",temp);
@@ -2781,17 +2188,6 @@ struct G__Definedtemplateclass *deftmpclass;
     free((void*)deftmpclass->next);
     deftmpclass->next = (struct G__Definedtemplateclass *)NULL;
   }
-#ifndef G__OLDIMPLEMENTATION1587
-  if(deftmpclass->spec_arg) {
-    G__freetemplatearg(deftmpclass->spec_arg);
-    deftmpclass->spec_arg = (struct G__Templatearg*)NULL;
-  }
-  if(deftmpclass->specialization) {
-    G__freedeftemplateclass(deftmpclass->specialization);
-    free((void*)deftmpclass->specialization);
-    deftmpclass->specialization=(struct G__Definedtemplateclass*)NULL;
-  }
-#endif
   G__freetemplatearg(deftmpclass->def_para);
   deftmpclass->def_para=(struct G__Templatearg *)NULL;
   if(deftmpclass->name) {
@@ -2996,12 +2392,7 @@ int funcmatch;
     typenum = libp->para[i].typenum;
     ref = libp->para[i].ref;
 #ifndef G__OLDIMPLEMENTATION922
-    if(
-#ifndef G__OLDIMPLEMENTATION1521
-       'u'==libp->para[i].type ||
-#endif
-       isupper(libp->para[i].type))
-      reftype=libp->para[i].obj.reftype.reftype;
+    if(isupper(libp->para[i].type))reftype=libp->para[i].obj.reftype.reftype;
     /*else if(ref) reftype=G__PARAREFERENCE;*/
     else reftype=G__PARANORMAL;
 #else
@@ -3024,11 +2415,7 @@ int funcmatch;
 #endif
 #ifndef G__OLDIMPLEMENTATION716
       /* fixed argument type */
-      if(type==ftype&&ftagnum==tagnum&&(0==freftype||ref
-#ifndef G__OLDIMPLEMENTATION1521
-					||freftype==reftype
-#endif
-					)) {
+      if(type==ftype&&ftagnum==tagnum&&(0==freftype||ref)) {
 	continue;
       }
 #endif
@@ -3041,9 +2428,6 @@ int funcmatch;
       basetagnum = tagnum;
       bmatch=0;
       while(0==bmatch && bn<basen) {
-#ifndef G__OLDIMPLEMENTATION1532
-	int nest=0;
-#endif
 	cnt=0;
 	if(bn>=0) basetagnum = G__struct.baseclass[tagnum]->basetagnum[bn];
 	++bn;
@@ -3060,20 +2444,9 @@ int funcmatch;
 	  *p = 0;  /*   ^ ^ ^       */
 	  ++p;     /*    ^ ^ ^      */
 	  cntarg[cnt++] = p;
-#ifndef G__OLDIMPLEMENTATION1532
-	  while((0!=(*p) && ','!=(*p) && '>'!=(*p)) || nest) {
-	    if('<'==(*p)) ++nest;
-	    else if('>'==(*p)) --nest;
-	    ++p;
-	  }
-#else
 	  while(0!=(*p) && ','!=(*p) && '>'!=(*p)) ++p;
-#endif
 	} while(','==(*p));
 	if('>'==(*p)) *p = 0;  /* the last '>' */
-#ifndef G__OLDIMPLEMENTATION1532
-	if(' '== (*(p-1))) *(p-1) = 0;
-#endif
 	/* match template argument */
 #ifndef G__OLDIMPLEMENTATION1116
 	if(fnt>cnt) {/* unmatch */
@@ -3378,7 +2751,7 @@ int funcmatch;
 			   ,G__EXACT
 #endif
 			   ,G__TRYNORMAL)==0) {
-	G__fprinterr(G__serr,"Internal error: template function call %s failed"
+	fprintf(G__serr,"Internal error: template function call %s failed"
 		,funcname);
 	G__genericerror((char*)NULL);
 	*result = G__null;
@@ -3501,16 +2874,7 @@ fpos_t *ppos;
     do { /* read typename */
       c = G__fgetname_template(paraname,",)<*&=");
     } while(strcmp(paraname,"class")==0 || strcmp(paraname,"struct")==0 ||
-	    strcmp(paraname,"const")==0 || strcmp(paraname,"volatile")==0
-#ifndef G__OLDIMPLEMENTATION1462
-            || strcmp(paraname,"typename")==0
-#endif
-	      );
-
-#ifndef G__OLDIMPLEMENTATION1464
-    /* Don't barf on an empty arg list. */
-    if (paraname[0] == '\0' && c == ')' && tmp == 0) break;
-#endif
+	    strcmp(paraname,"const")==0 || strcmp(paraname,"volatile")==0);
 
     /*  template<class T,template<class U> class E> type func(T a,E<T> b) {
      *                                                         ^   ^  */
@@ -3523,12 +2887,6 @@ fpos_t *ppos;
       unsigned_flag = -1;
       if('*'!=c && '&'!=c) c = G__fgetname(paraname,",)*&=");
     }
-#ifndef G__OLDIMPLEMENTATION1460
-    else if(strcmp(paraname,"signed")==0) {
-      unsigned_flag = 0;
-      if('*'!=c && '&'!=c) c = G__fgetname(paraname,",)*&=");
-    }
-#endif
     if(strcmp(paraname,"int")==0) {
       deftmpfunc->func_para.type[tmp] = 'i' + unsigned_flag;
     }
@@ -3538,11 +2896,6 @@ fpos_t *ppos;
     else if(strcmp(paraname,"short")==0) {
       deftmpfunc->func_para.type[tmp] = 's' + unsigned_flag;
     }
-#ifndef G__OLDIMPLEMENTATION1604
-    else if(strcmp(paraname,"bool")==0) {
-      deftmpfunc->func_para.type[tmp] = 'g';
-    }
-#endif
     else if(strcmp(paraname,"long")==0) {
       deftmpfunc->func_para.type[tmp] = 'l' + unsigned_flag;
       if('*'!=c && '&'!=c) {

@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TMCParticle6.cxx,v 1.1 2000/07/01 08:37:43 rdm Exp $
+// @(#)root/pythia6:$Name$:$Id$
 // Author: Piotr Golonka   17/09/97
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -23,7 +23,7 @@ extern "C" void pyname(const Int_t &kf, const char *name, const Int_t len);
 ClassImp(TMCParticle)
 
 //______________________________________________________________________________
-void TMCParticle::ls(Option_t *) const
+void TMCParticle::ls(Option_t *)
 {
    printf("(%2i,%4i) <-%3i, =>[%3i,%3i]",fKS,fKF,fParent,
           fFirstChild,fLastChild);

@@ -1,16 +1,14 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.8 2001/05/31 06:36:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.8 2001/05/31 06:36:36 brun Exp $
+// $Id: TTableDescriptor.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 #include <stdlib.h>
 
-#include "TROOT.h"
 #include "TTableDescriptor.h"
 #include "TTable.h"
 #include "TClass.h"
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "Ttypes.h"
-#include "TInterpreter.h"
 
 TTableDescriptor *TTableDescriptor::fgColDescriptors = 0;
 TableClassImp(TTableDescriptor,tableDescriptor_st)
@@ -19,13 +17,19 @@ TableClassImp(TTableDescriptor,tableDescriptor_st)
 void TTableDescriptor::Streamer(TBuffer &R__b)
 {
   // The custom Streamer for this table
-  fSecondDescriptor = 0;
+#if 0
+  Version_t R__v = 0;
+  if (R__b.IsReading())
+    R__v = R__b.ReadVersion();
+  else
+    R__b.WriteVersion(TTableDescriptor::IsA());
+#endif
   TTable::Streamer(R__b);
 }
 
 //______________________________________________________________________________
 TTableDescriptor::TTableDescriptor(const TTable *parentTable)
- : TTable("tableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0),fSecondDescriptor(0)
+ : TTable("tableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0)
 {
   if (parentTable) {
      TClass *classPtr = parentTable->GetRowClass();
@@ -36,7 +40,7 @@ TTableDescriptor::TTableDescriptor(const TTable *parentTable)
 
 //______________________________________________________________________________
 TTableDescriptor::TTableDescriptor(TClass *classPtr)
- : TTable("tableDescriptor",sizeof(tableDescriptor_st)),fRowClass(0),fSecondDescriptor(0)
+ : TTable("tableDescriptor",sizeof(tableDescriptor_st)),fRowClass(0)
 {
   // Create a descriptor of the C-structure defined by TClass
   // TClass *classPtr must be a valid pointer to TClass object for
@@ -48,8 +52,7 @@ void TTableDescriptor::Init(TClass *classPtr)
 {
   // Create a descriptor of the C-structure defined by TClass
   // TClass *classPtr must be a valid pointer to TClass object for
-  // "plain" C_structure only !!!
-  fSecondDescriptor = 0;
+  // "plain" C_struture only !!!
   SetType("tableDescriptor");
   if (classPtr) {
     fRowClass = classPtr; // remember my row class
@@ -72,7 +75,6 @@ TTableDescriptor::~TTableDescriptor()
     }
   }
 #endif
-  delete fSecondDescriptor;
 }
 
 //____________________________________________________________________________
@@ -120,26 +122,6 @@ TString TTableDescriptor::CreateLeafList() const
   return string;
 }
 
-//______________________________________________________________________________
-TTableDescriptor *TTableDescriptor::MakeDescriptor(const char *structName)
-{
-	///////////////////////////////////////////////////////////
-	//
-	// MakeDescriptor(const char *structName) - static method
-	//                structName - the name of the C structure 
-	//                             to create descriptor of
-	// return a new instance of the TTableDescriptor or 0 
-	// if the "structName is not present with the dictionary
-	//
-	///////////////////////////////////////////////////////////
-	TTableDescriptor *dsc = 0;
-//    TClass *cl = gROOT->GetClass(structName, kFALSE);
-    TClass *cl = new TClass(structName,1,0,0);
-	assert(cl);
-	dsc = new TTableDescriptor(cl);
-	return dsc;
-}
-
 //____________________________________________________________________________
 void TTableDescriptor::LearnTable(const TTable *parentTable)
 {
@@ -158,7 +140,7 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
 //
 // It creates a descriptor of the C-structure defined by TClass
 // TClass *classPtr must be a valid pointer to TClass object for
-// "plain" C-structure only !!!
+// "plain" C_struture only !!!
 //
 //  This is to introduce an artificial restriction demanded by STAR database group
 //
@@ -171,17 +153,10 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
 
   if (!classPtr) return;
 
-  if (!classPtr->GetListOfRealData()) {
-	  const char *name = classPtr->GetName();
-	   char buffer[512];
-	   sprintf(buffer," new %s();",name);
- 	   void *p = (void *)gInterpreter->Calc(buffer);
- 	   classPtr->BuildRealData(p);
-  	   sprintf(buffer,"delete ((%s *)(0x%lx);",name,(Long_t)p);
-
-  }
+  if (!classPtr->GetListOfRealData()) classPtr->BuildRealData();
   if (!(classPtr->GetNdata())) return;
 
+  const Char_t *types;
   Char_t *varname;
 
   tableDescriptor_st elementDescriptor;
@@ -190,7 +165,6 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
   Int_t columnIndex = 0;
   TIter next(classPtr->GetListOfDataMembers());
   TDataMember *member = 0;
-  TDataSet *comments = new TDataSet(".comments",this,kTRUE);
   while ( (member = (TDataMember *) next()) ) {
     memset(&elementDescriptor,0,sizeof(tableDescriptor_st));
     varname = (Char_t *) member->GetName();
@@ -204,7 +178,19 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
     // define index
     TDataType *memberType = member->GetDataType();
                                               elementDescriptor.fTypeSize = memberType->Size();
-    elementDescriptor.fType = TTable::GetTypeId(memberType->GetTypeName());
+    types = memberType->GetTypeName();
+    elementDescriptor.fType = kNAN;
+    if (!strcmp("float", types))              elementDescriptor.fType = kFloat;
+    else if (!strcmp("int", types))           elementDescriptor.fType = kInt;
+    else if (!strcmp("long", types))          elementDescriptor.fType = kLong;
+    else if (!strcmp("short", types))         elementDescriptor.fType = kShort;
+    else if (!strcmp("double", types))        elementDescriptor.fType = kDouble;
+    else if (!strcmp("unsigned int", types))  elementDescriptor.fType = kUInt;
+    else if (!strcmp("unsigned long", types)) elementDescriptor.fType = kULong ;
+    else if (!strcmp("unsigned short", types))elementDescriptor.fType = kUShort;
+    else if (!strcmp("unsigned char", types)) elementDescriptor.fType = kUChar;
+    else if (!strcmp("char", types))          elementDescriptor.fType = kChar;
+
     Int_t globalIndex = 1;
     if (elementDescriptor.fType != kNAN) {
       Int_t dim = 0;
@@ -229,19 +215,18 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
     elementDescriptor.fSize   =  globalIndex * (elementDescriptor.fTypeSize);
     elementDescriptor.fOffset = member->GetOffset();
     AddAt(&elementDescriptor,columnIndex); columnIndex++;
-    (new TDataSet(varname,comments))->SetTitle(member->GetTitle());
   }
 }
- 
+
 //______________________________________________________________________________
 Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
 {
   //                  "Schema evolution"
-  // Method updates the offsets with a new ones from another descriptor
-  // 
+  // Method updates the offsets with a new ones from another descritor
+  //
   Int_t maxColumns = NumberOfColumns();
   Int_t mismathes = 0;
- 
+
   if (   (UInt_t(maxColumns) == newDescriptor->NumberOfColumns())
       && (memcmp(GetArray(),newDescriptor->GetArray(),sizeof(tableDescriptor_st)*GetNRows()) == 0)
      ) return mismathes; // everything fine for sure !
@@ -251,14 +236,9 @@ Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
   {
     Int_t colNewIndx = newDescriptor->ColumnByName(ColumnName(colCounter));
     // look for analog
-    EColumnType newType = newDescriptor->ColumnType(colNewIndx);
-#ifdef __STAR__
-    if (newType == kInt)       newType = kLong;
-    else if (newType == kUInt) newType = kULong;
-#endif
     if (    colNewIndx >=0
          && Dimensions(colCounter) == newDescriptor->Dimensions(colNewIndx)
-         && ColumnType(colCounter) == newType
+         && ColumnType(colCounter) == newDescriptor->ColumnType(colNewIndx)
        )  {
       SetOffset(newDescriptor->Offset(colNewIndx),colCounter);
       if (colNewIndx != colCounter) {
@@ -268,16 +248,12 @@ Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
       }
     }
     else {
-      printf("Schema evolution: \t%d column \"%s\" of %d type has been lost\n",
-        colCounter,ColumnName(colCounter),ColumnType(colCounter));
+      printf("Schema evolution: \t%d column of the \"%s\" table has been lost\n",
+        colCounter,ColumnName(colCounter));
       printf(" Indx = %d, name = %s \n", colNewIndx, ColumnName(colCounter));
-      SetOffset(UInt_t(-1),colCounter);
+      SetOffset(-1,colCounter);
       mismathes++;
     }
-  }
-  if (!mismathes && UInt_t(maxColumns) != newDescriptor->NumberOfColumns()) {
-      mismathes++;
-      printf("Warning: One extra column has been introduced\n");
   }
   return mismathes;
 }
@@ -356,4 +332,3 @@ TTable::EColumnType TTableDescriptor::ColumnType(const Char_t *columnName) const
   if (indx >= 0 ) indx = ColumnType(indx);
   return EColumnType(indx);
 }
-

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.h,v 1.2 2000/06/13 11:07:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -47,13 +47,13 @@ public:
         virtual void     Draw(Option_t *option="");
         virtual void     DrawMarker(Double_t x, Double_t y);
         virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        Double_t         GetX() const  {return fX;}
-        Double_t         GetY() const  {return fY;}
-        virtual void     ls(Option_t *option="") const;
+        Double_t         GetX()  {return fX;}
+        Double_t         GetY()  {return fY;}
+        virtual void     ls(Option_t *option="");
         virtual void     Paint(Option_t *option="");
         virtual void     PaintMarker(Double_t x, Double_t y);
         virtual void     PaintMarkerNDC(Double_t u, Double_t v);
-        virtual void     Print(Option_t *option="") const;
+        virtual void     Print(Option_t *option="");
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
         virtual void     SetX(Double_t x) { fX = x;} // *MENU*
         virtual void     SetY(Double_t y) { fY = y;} // *MENU*

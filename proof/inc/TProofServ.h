@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.6 2000/12/13 15:13:53 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.2 2000/06/13 09:43:33 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -43,13 +43,14 @@ class TProofServ : public TApplication {
 private:
    TString     fService;          //service we are running, either "proofserv" or "proofslave"
    TString     fUser;             //user as which we run
-   TString     fPasswd;           //encoded passwd info for slaves
+   TString     fUserPass;         //encoded user and passwd info for slaves
+   TString     fVersion;          //proof server major version
    TString     fConfDir;          //directory containing cluster config information
    TString     fConfFile;         //file containing config information
    TString     fLogDir;           //directory containing log files
    TSocket    *fSocket;           //socket connection to client
    FILE       *fLogFile;          //log file
-   Int_t       fProtocol;         //protocol version number
+   Int_t       fProtocol;         //protocol level
    Int_t       fOrdinal;          //slave ordinal number, -1 for master
    Int_t       fGroupId;          //slave unique id in the active slave group
    Int_t       fGroupSize;        //size of the active slave group
@@ -63,7 +64,6 @@ private:
 
    void        Setup();
    void        RedirectOutput();
-   Int_t       CatMotd();
    void        Info(const char *method, const char *msgfmt, ...) const; // should be in TObject
 
 public:
@@ -74,6 +74,7 @@ public:
    const char *GetConfDir() const { return fConfDir.Data(); }
    const char *GetConfFile() const { return fConfFile.Data(); }
    const char *GetUser() const { return fUser.Data(); }
+   const char *GetVersion() const { return fVersion.Data(); }
    Int_t       GetProtocol() const { return fProtocol; }
    Int_t       GetOrdinal() const { return fOrdinal; }
    Int_t       GetGroupId() const { return fGroupId; }
@@ -93,15 +94,15 @@ public:
 
    void        Run(Bool_t retrn = kFALSE);
 
-   void        Print(Option_t *option="") const;
+   void        Print(Option_t *option="");
 
    TObject    *Get(const char *namecycle);
    Stat_t      GetEntriesProcessed() const { return fEntriesProcessed; }
    void        GetLimits(Int_t dim, Int_t nentries, Int_t *nbins, Double_t *vmin, Double_t *vmax);
    Bool_t      GetNextPacket(Int_t &nentries, Stat_t &firstentry);
    void        Reset(const char *dir);
-   Int_t       ReceiveFile(const char *file, Bool_t bin, Long_t size);
-   void        SendLogFile(Int_t status = 0);
+   void        ReceiveFile(const char *file, Int_t size);
+   void        SendLogFile();
    void        SendStatus();
 
    void        Terminate(int status);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObjPtr.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 
 //ClassImp(TObjPtr)
 
-Int_t TObjPtr::Compare(const TObject *obj) const
+Int_t TObjPtr::Compare(TObject *obj)
 {
    if (fPtr == obj)
       return 0;

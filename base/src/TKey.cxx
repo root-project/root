@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.18 2002/01/25 18:24:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.4 2000/09/11 09:59:26 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -42,7 +42,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TClass.h"
 #include "TDirectory.h"
@@ -51,15 +52,11 @@
 #include "TFree.h"
 #include "TBrowser.h"
 #include "Bytes.h"
-#include "TInterpreter.h"
-#include "Api.h"
 
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
-const Int_t kMAXBUF = 0xffffff;
-#if 0
 const Int_t kMAXFILEBUFFER = 262144;
-#endif
+const Int_t kMAXBUF = 0xffffff;
 
 ClassImp(TKey)
 
@@ -125,7 +122,7 @@ TKey::TKey(const TString &name, const TString &title, TClass *cl, Int_t nbytes)
 }
 
 //______________________________________________________________________________
-TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
+TKey::TKey(TObject *obj, const char *name, const Int_t bufsize)
      : TNamed(name, obj->GetTitle())
 {
 //*-*-*-*-*-*-*-*-*-*Create a TKey object and fill output buffer*-*-*-*-*-*-*
@@ -136,7 +133,6 @@ TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
    fNbytes    = 0;
    fBuffer    = 0;
    fBufferRef = new TBuffer(TBuffer::kWrite, bufsize);
-   fBufferRef->SetParent(gFile);
    fCycle = gDirectory->AppendKey(this);
    fObjlen    = 0 ; // RDK: Must initialize before calling Streamer()
    fKeylen    = 0 ; // RDK: Must initialize before calling Streamer()
@@ -228,9 +224,8 @@ void TKey::Create(Int_t nbytes)
 //*-*-------------------find free segment
 //*-*                    =================
    Int_t nsize      = nbytes + fKeylen;
-   TList *lfree = gFile->GetListOfFree();
-   TFree *f1        = (TFree*)lfree->First();
-   TFree *bestfree  = f1->GetBestFree(lfree,nsize);
+   TFree *f1        = (TFree*) gFile->GetListOfFree()->First();
+   TFree *bestfree  = f1->GetBestFree(nsize);
    if (bestfree == 0) {
       Error("Create","Cannot allocate %d bytes for ID = %s Title = %s",
             nsize,GetName(),GetTitle());
@@ -253,7 +248,7 @@ void TKey::Create(Int_t nbytes)
       if (!fBuffer) {
          fBuffer = new char[nsize];
       }
-      lfree->Remove(bestfree);
+      gFile->GetListOfFree()->Remove(bestfree);
       delete bestfree;
    }
 //*-*----------------- Case where new object is placed in a deleted gap larger than itself
@@ -313,7 +308,7 @@ void TKey::DeleteBuffer()
 }
 
 //______________________________________________________________________________
-Short_t TKey::GetCycle() const
+Short_t TKey::GetCycle()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Return cycle number associated to this key*-*-*-*
 //*-*                      ==========================================
@@ -321,7 +316,7 @@ Short_t TKey::GetCycle() const
 }
 
 //______________________________________________________________________________
-Short_t TKey::GetKeep() const
+Short_t TKey::GetKeep()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Returns the "KEEP" status*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =========================
@@ -354,7 +349,7 @@ Bool_t TKey::IsFolder() const
     Bool_t ret = kFALSE;
 
     TClass *classPtr = gROOT->GetClass( (const char * ) fClassName );
-    if( classPtr && classPtr->GetClassInfo()) {
+    if( classPtr ) {
        TObject *obj = ( TObject * ) classPtr->New();
        if( obj ) {
            ret = obj->IsFolder();
@@ -376,7 +371,7 @@ void TKey::Keep()
 }
 
 //______________________________________________________________________________
-void TKey::ls(Option_t *) const
+void TKey::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*List Key contents-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =================
@@ -385,7 +380,7 @@ void TKey::ls(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TKey::Print(Option_t *) const
+void TKey::Print(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Print key contents*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ==================
@@ -407,22 +402,8 @@ TObject *TKey::ReadObj()
 //  object of the class type it describes. This new object now calls its
 //  Streamer function to rebuilt itself.
 //
-//  NOTE:
-//  In case the class of this object derives from TObject but not
-//  as a first inheritance, one must cast the return value twice.
-//  Example1: Normal case:
-//      class MyClass : public TObject, public AnotherClass
-//   then on return, one can do:
-//    MyClass *obj = (MyClass*)key->ReadObj();
-//
-//  Example2: Special case:
-//      class MyClass : public AnotherClass, public TObject
-//   then on return, one must do:
-//    MyClass *obj = (MyClass*)((void*)key->ReadObj());
-//
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
-   fBufferRef->SetParent(gFile);
    if (!fBufferRef) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
       return 0;
@@ -451,6 +432,7 @@ TObject *TKey::ReadObj()
    // Create an instance of this class
 
    obj = (TObject*)cl->New();
+
    if (!obj) {
       Error("ReadObj", "Cannot create new object of class %s", fClassName.Data());
       return 0;
@@ -458,9 +440,6 @@ TObject *TKey::ReadObj()
    if (kvers > 1)
       fBufferRef->MapObject(obj);  //register obj in map to handle self reference
 
-   char cmd[2048];
-   sprintf(cmd,"((%s*)0x%lx)->Streamer((TBuffer&)0x%lx);",cl->GetName(),(Long_t)obj,(Long_t)fBufferRef);
-   
    if (fObjlen > fNbytes-fKeylen) {
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
@@ -476,30 +455,20 @@ TObject *TKey::ReadObj()
          bufcur += nin;
          objbuf += nout;
       }
-      if (nout) {
-         //obj->Streamer(*fBufferRef); //does not work with example 2 above
-         gInterpreter->Calc(cmd); //also works if TObject is not the first base class
-         delete [] fBuffer;
-      } else {
-         delete [] fBuffer;
-         delete obj;
-         obj = 0;
-         goto CLEAR;
-      }
+      if (nout) obj->Streamer(*fBufferRef);
+      delete [] fBuffer;
    } else {
-      //obj->Streamer(*fBufferRef);
-      gInterpreter->Calc(cmd);
+      obj->Streamer(*fBufferRef);
    }
 
    if (gROOT->GetForceStyle()) obj->UseCurrentStyle();
 
-   if (cl == TDirectory::Class()) {
+   if (obj->IsA() == TDirectory::Class()) {
       TDirectory *dir = (TDirectory*)obj;
       dir->SetName(GetName());
       dir->SetTitle(GetTitle());
       gDirectory->Append(dir);
    }
-CLEAR:
    delete fBufferRef;
    fBufferRef = 0;
    fBuffer    = 0;
@@ -521,8 +490,7 @@ Int_t TKey::Read(TObject *obj)
    if (!obj) return 0;
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
-   fBufferRef->SetParent(gFile);
-   
+
    if (fVersion > 1)
       fBufferRef->MapObject(obj);  //register obj in map to handle self reference
 
@@ -537,21 +505,13 @@ Int_t TKey::Read(TObject *obj)
    fBufferRef->SetBufferOffset(fKeylen);
    TDirectory *cursav = gDirectory;
    if (fObjlen > fNbytes-fKeylen) {
-      char *objbuf = fBufferRef->Buffer() + fKeylen;
+      char *objbuf    = fBufferRef->Buffer() + fKeylen;
       UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
-      Int_t nin, nout, nbuf;
-      Int_t noutot = 0;
-      while (1) {
-         nin  = 9 + ((Int_t)bufcur[3] | ((Int_t)bufcur[4] << 8) | ((Int_t)bufcur[5] << 16));
-         nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
-         R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
-         if (!nout) break;
-         noutot += nout;
-         if (noutot >= fObjlen) break;
-         bufcur += nin;
-         objbuf += nout;
-      }
-      if (nout) obj->Streamer(*fBufferRef);
+      Int_t nin = fNbytes-fKeylen;
+      Int_t nout;
+      R__unzip(&nin, bufcur, &fObjlen, objbuf, &nout);
+      if (nout != fObjlen) Error("Read", "fObjlen = %d, nout = %d", fObjlen, nout);
+      obj->Streamer(*fBufferRef);
       delete [] fBuffer;
    } else {
       obj->Streamer(*fBufferRef);
@@ -593,27 +553,16 @@ void TKey::ReadFile()
 //*-*                      ====================================
   Int_t nsize = fNbytes;
   gFile->Seek(fSeekKey);
-#if 0
   for (Int_t i = 0; i < nsize; i += kMAXFILEBUFFER) {
      int nb = kMAXFILEBUFFER;
      if (i+nb > nsize) nb = nsize - i;
      gFile->ReadBuffer(fBuffer+i,nb);
   }
-#else
-  gFile->ReadBuffer(fBuffer,nsize);
-#endif
   if (gDebug) {
      cout << "TKey Reading "<<nsize<< " bytes at address "<<fSeekKey<<endl;
   }
 }
 
-//______________________________________________________________________________
-void TKey::SetParent(TObject *parent)
-{
-//  Set parent in key buffer
-   
-   if (fBufferRef) fBufferRef->SetParent(parent);
-}
 
 //______________________________________________________________________________
 Int_t TKey::Sizeof() const
@@ -684,16 +633,12 @@ Int_t TKey::WriteFile(Int_t cycle)
 
   if (fLeft > 0) nsize += sizeof(Int_t);
   gFile->Seek(fSeekKey);
-#if 0
   for (Int_t i=0;i<nsize;i+=kMAXFILEBUFFER) {
-     Int_t nb = kMAXFILEBUFFER;
-     if (i+nb > nsize) nb = nsize - i;
+     int nb = kMAXFILEBUFFER;
+     if( i+nb >nsize) nb= int(nsize -i);
      gFile->WriteBuffer(buffer,nb);
      buffer += nb;
   }
-#else
-   gFile->WriteBuffer(buffer,nsize);
-#endif
 //  gFile->Flush(); Flushing takes too much time.
 //                  Let user flush the file when he wants.
   if (gDebug) {

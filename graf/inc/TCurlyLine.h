@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyLine.h,v 1.4 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -15,9 +15,12 @@
 // This class implements a curly or wavy polyline typically
 // used to draw Feynman diagrams.
 
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
+#ifndef __CINT__
+#include "fstream.h"
+#else
+class ofstream;
 #endif
+
 #ifndef ROOT_TPolyLine
 #include "TPolyLine.h"
 #endif
@@ -46,19 +49,19 @@ public:
    virtual void Build();
    Int_t        DistancetoPrimitive(Int_t px, Int_t py);
    void         ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   Bool_t       GetCurly() const     {return fIsCurly;}
-   Double_t     GetWaveLength() const{return fWaveLength;}
-   Double_t     GetAmplitude() const {return fAmplitude;}
-   Double_t     GetStartX() const    {return fX1;}
-   Double_t     GetEndX() const      {return fX2;}
-   Double_t     GetStartY() const    {return fY1;}
-   Double_t     GetEndY() const      {return fY2;}
    virtual void SetCurly();                             // *MENU*
    virtual void SetWavy();                              // *MENU*
    virtual void SetWaveLength(Double_t WaveLength);     // *MENU* *ARGS={WaveLength=>fWaveLength}
    virtual void SetAmplitude(Double_t x);               // *MENU* *ARGS={x=>fAmplitude}
    virtual void SetStartPoint(Double_t x1, Double_t y1);
    virtual void SetEndPoint  (Double_t x2, Double_t y2);
+   Bool_t       GetCurly()      {return fIsCurly;}
+   Double_t      GetWaveLength(){return fWaveLength;}
+   Double_t      GetAmplitude() {return fAmplitude;}
+   Double_t      GetStartX()    {return fX1;}
+   Double_t      GetEndX()      {return fX2;}
+   Double_t      GetStartY()    {return fY1;}
+   Double_t      GetEndY()      {return fY2;}
    virtual void SavePrimitive(ofstream &out, Option_t *);
 
    ClassDef(TCurlyLine,2) // A curly polyline

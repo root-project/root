@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name$:$Id$
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -57,23 +57,23 @@ public:
    TControlBar(const char *orientation, const char *title, Int_t x, Int_t y);
    virtual ~TControlBar();
 
-   void            AddButton(TControlBarButton *button);
-   void            AddButton(TControlBarButton &button);
-   void            AddButton(const char *label, const char *action, const char *hint="", const char *type="button");
-   void            AddControlBar(TControlBar *controlBar);
-   void            AddControlBar(TControlBar &controlBar);
-   void            AddSeparator();
-   TControlBarImp *GetControlBarImp() const   { return fControlBarImp; }
-   TList          *GetListOfButtons() const   { return fButtons; }
-   Int_t           GetNumberOfColumns() const { return fNoroc; }
-   Int_t           GetNumberOfRows() const    { return fNoroc; }
-   Int_t           GetOrientation() const     { return fOrientation; }
-   void            Hide();
-   void            SetNumberOfColumns(Int_t n) { fNoroc = n; }
-   void            SetNumberOfRows(Int_t n) { fNoroc = n; }
-   void            SetOrientation(const char *o);
-   void            SetOrientation(Int_t o);
-   void            Show();
+   void           AddButton(TControlBarButton *button);
+   void           AddButton(TControlBarButton &button);
+   void           AddButton(const char *label, const char *action, const char *hint="", const char *type="button");
+   void           AddControlBar(TControlBar *controlBar);
+   void           AddControlBar(TControlBar &controlBar);
+   void           AddSeparator();
+   TControlBarImp *GetControlBarImp() { return fControlBarImp; }
+   TList          *GetListOfButtons() { return fButtons; }
+   Int_t          GetNumberOfColumns() { return fNoroc; }
+   Int_t          GetNumberOfRows() { return fNoroc; }
+   Int_t          GetOrientation() { return fOrientation; }
+   void           Hide();
+   void           SetNumberOfColumns(Int_t n) { fNoroc = n; }
+   void           SetNumberOfRows(Int_t n) { fNoroc = n; }
+   void           SetOrientation(const char *o);
+   void           SetOrientation(Int_t o);
+   void           Show();
 
    ClassDef(TControlBar,0) //Control bar
 };

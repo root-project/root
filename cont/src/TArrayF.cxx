@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayF.cxx,v 1.4 2002/01/08 22:13:00 rdm Exp $
+// @(#)root/cont:$Name$:$Id$
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TArrayF::TArrayF(Int_t n)
 }
 
 //______________________________________________________________________________
-TArrayF::TArrayF(Int_t n, const Float_t *array)
+TArrayF::TArrayF(Int_t n, Float_t *array)
 {
    // Create TArrayF object and initialize it with values of array.
 
@@ -126,7 +126,7 @@ void TArrayF::Set(Int_t n)
 }
 
 //______________________________________________________________________________
-void TArrayF::Set(Int_t n, const Float_t *array)
+void TArrayF::Set(Int_t n, Float_t *array)
 {
    // Set size of this array to n floats and set the contents.
 
@@ -147,10 +147,7 @@ void TArrayF::Streamer(TBuffer &b)
    // Stream a TArrayF object.
 
    if (b.IsReading()) {
-      Int_t n;
-      b >> n;
-      Set(n);
-      b.ReadFastArray(fArray,n);
+      fN = b.ReadArray(fArray);
    } else {
       b.WriteArray(fArray, fN);
    }

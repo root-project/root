@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.13 2001/04/03 10:36:21 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.7 2000/10/29 14:29:43 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -88,8 +88,7 @@ ClassImp(TGGroupFrame)
 
 //______________________________________________________________________________
 TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
-                 UInt_t options, ULong_t back)
-   : TGWindow(p, 0, 0, w, h, 0, 0, 0, 0, 0, options)
+    UInt_t options, ULong_t back) : TGWindow(p, 0, 0, w, h, 0, 0, 0, 0, 0)
 {
    // Create a TGFrame object. Options is an OR of the EFrameTypes.
 
@@ -115,7 +114,7 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
       //if (!(fOptions & kOwnBackground))
       //   SetBackgroundPixmap(kParentRelative);
    }
-   fEventMask = (UInt_t) wattr.fEventMask;
+   fEventMask = wattr.fEventMask;
 }
 
 //______________________________________________________________________________
@@ -134,7 +133,7 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    fWidth       = attributes.fWidth;
    fHeight      = attributes.fHeight;
    fBorderWidth = attributes.fBorderWidth;
-   fEventMask   = (UInt_t) attributes.fYourEventMask;
+   fEventMask   = attributes.fYourEventMask;
    fBackground  = 0;
    fOptions     = 0;
 }
@@ -711,11 +710,11 @@ TGMainFrame::~TGMainFrame()
 {
    // TGMainFrame destructor.
 
+   DestroyWindow();
    if (fBindList) {
       fBindList->Delete();
       delete fBindList;
    }
-   DestroyWindow();
 }
 
 //______________________________________________________________________________
@@ -919,8 +918,7 @@ void TGMainFrame::SetWMState(EInitialState state)
 
 //______________________________________________________________________________
 TGTransientFrame::TGTransientFrame(const TGWindow *p, const TGWindow *main,
-                                   UInt_t w, UInt_t h, UInt_t options)
-   : TGMainFrame(p, w, h, options | kTransientFrame)
+     UInt_t w, UInt_t h, UInt_t options) : TGMainFrame(p, w, h, options)
 {
    // Create a transient window. A transient window is typically used for
    // dialog boxes.
@@ -976,17 +974,6 @@ TGGroupFrame::~TGGroupFrame()
 }
 
 //______________________________________________________________________________
-void TGGroupFrame::DoRedraw()
-{
-   // Redraw the group frame. Need special DoRedraw() since we need to
-   // redraw with fBorderWidth=0.
-
-   gVirtualX->ClearArea(fId, 0, 0, fWidth, fHeight);
-
-   DrawBorder();
-}
-
-//______________________________________________________________________________
 void TGGroupFrame::DrawBorder()
 {
    // Draw border of around the group frame.
@@ -1023,36 +1010,6 @@ void TGGroupFrame::DrawBorder()
    y = 1;
 
    fText->Draw(fId, fNormGC, x, y + max_ascent);
-}
-
-//______________________________________________________________________________
-void TGGroupFrame::SetTitle(TGString *title)
-{
-   // Set or change title of the group frame. Titlte TGString is adopted
-   // by the TGGroupFrame.
-
-   if (!title) {
-      Error("SetTitle", "title cannot be 0, try \"\"");
-      return;
-   }
-
-   delete fText;
-
-   fText = title;
-   fClient->NeedRedraw(this);
-}
-
-//______________________________________________________________________________
-void TGGroupFrame::SetTitle(const char *title)
-{
-   // Set or change title of the group frame.
-
-   if (!title) {
-      Error("SetTitle", "title cannot be 0, try \"\"");
-      return;
-   }
-
-   SetTitle(new TGString(title));
 }
 
 //______________________________________________________________________________

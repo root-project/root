@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayC.h,v 1.3 2001/02/08 15:31:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayC.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -33,7 +33,7 @@ public:
 
    TArrayC();
    TArrayC(Int_t n);
-   TArrayC(Int_t n, const Char_t *array);
+   TArrayC(Int_t n, Char_t *array);
    TArrayC(const TArrayC &array);
    TArrayC    &operator=(const TArrayC &rhs);
    virtual    ~TArrayC();
@@ -44,9 +44,9 @@ public:
    void       Copy(TArrayC &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
    Char_t    *GetArray() const { return fArray; }
    Stat_t     GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
-   void       Reset(Char_t val=0)  {memset(fArray,val,fN*sizeof(Char_t));}
+   void       Reset()  {memset(fArray,0,fN*sizeof(Char_t));}
    void       Set(Int_t n);
-   void       Set(Int_t n, const Char_t *array);
+   void       Set(Int_t n, Char_t *array);
    Char_t    &operator[](Int_t i);
 
    ClassDef(TArrayC,1)  //Array of chars

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name$:$Id$
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -43,10 +43,10 @@ public:
    TInspectCanvas();
    TInspectCanvas(UInt_t ww, UInt_t wh);
    virtual        ~TInspectCanvas();
-   TButton       *GetBackward() const  {return fBackward;}
-   TButton       *GetForward() const    {return fForward;}
-   TObject       *GetCurObject() const  {return fCurObject;}
-   TList         *GetObjects() const    {return fObjects;}
+   TButton       *GetBackward()   {return fBackward;}
+   TButton       *GetForward()    {return fForward;}
+   TObject       *GetCurObject()  {return fCurObject;}
+   TList         *GetObjects()    {return fObjects;}
    static  void   GoBackward();
    static  void   GoForward();
    static  void   Inspector(TObject *obj);

@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for SGI IRIX 6.x with CC compiler
 
 PLATFORM      = sgi
@@ -15,11 +13,11 @@ endif
 # Compiler:
 CXX           = CC
 CC            = cc
-CXXFLAGS      = -n32 -LANG:std -signed -DIRIX64 -DSGI_REL=62 $(EXTRA_CXXFLAGS) -I/usr/include/CC.sgi
-CFLAGS        = -n32 -signed -DIRIX64 $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -n32 -LANG:std -signed -w -DIRIX64 -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
+CXXFLAGS      = -n32  -signed -DIRIX64 -DSGI_REL=62 $(EXTRA_CXXFLAGS) -I/usr/include/CC.sgi
+CFLAGS        = -n32  -signed -DIRIX64 $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -n32  -signed -w -DIRIX64 -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
                 -DG__SHAREDLIB -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS) -I/usr/include/CC.sgi
-CINTCFLAGS    = -n32 -signed -w -DIRIX64 -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
+CINTCFLAGS    = -n32  -signed -w -DIRIX64 -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
                 -DG__SHAREDLIB -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
 
 # Linker:
@@ -30,17 +28,17 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -lPW -ldl
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
-CILIBS        = -lm -ltermcap -lbsd -lgen -ldl
+XLIBS         = $(XPMLIB) -lX11
+CILIBS        =  -lm -ltermcap -lbsd -lgen -ldl
 
 # Fortran:
 F77           = f77
 F77FLAGS      = $(ABI)
-ifeq ($(O32),)
+ifeq (n32,$(findstring n32,$(ROOTBUILD)))
 F77LIBS       = -lftn
 else
 F77LIBS       = -lI77 -lU77 -lF77 -lisam
 endif
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB)
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB)
 

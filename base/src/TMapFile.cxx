@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.8 2002/01/07 16:11:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.4 2000/09/05 09:21:22 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -96,7 +96,7 @@
 #include "TClass.h"
 #include "TMath.h"
 
-#if defined(R__UNIX) && !defined(R__MACOSX)
+#ifdef R__UNIX
 #define HAVE_SEMOP
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -110,7 +110,7 @@ union semun {
    ushort *array;                // array for GETALL & SETALL
 };
 #endif
-#if defined(R__LINUX) || defined(R__LYNXOS) || defined(R__HURD)
+#if defined(R__LINUX) || defined(R__LYNXOS)
 #  define       SEM_A   0200     // alter permission
 #  define       SEM_R   0400     // read permission
 #endif
@@ -125,11 +125,11 @@ void *gMmallocDesc = 0;
 
 
 //______________________________________________________________________________
-TMapRec::TMapRec(const char *name, const TObject *obj, Int_t size, void *buf)
+TMapRec::TMapRec(const char *name, TObject *obj, Int_t size, void *buf)
 {
    fName      = StrDup(name);
    fClassName = 0;
-   fObject    = (TObject*)obj;
+   fObject    = obj;
    fBuffer    = buf;
    fBufSize   = size;
    fNext      = 0;
@@ -313,24 +313,19 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
        ((fMmallocDesc = mmalloc_attach((HANDLE) fFd, mapto, fSize)) == 0)) {
 #endif
 
-      if (mapto == (void *)-1) {
-         Error("TMapFile", "no memory mapped file capability available\n"
-                           "Use rootn.exe or link application against \"-lNew\"");
-      } else {
-         if (fMmallocDesc == 0 && fWritable)
-            Error("TMapFile", "mapped file not in mmalloc format or\n"
-                              "already open in RW mode by another process");
-         if (fMmallocDesc == 0 && !fWritable)
-            Error("TMapFile", "mapped file not in mmalloc format");
-      }
+      if (mapto == (void *)-1)
+         Error("TMapFile", "no memory mapped file capability available");
+      if (fMmallocDesc == 0 && fWritable)
+         Error("TMapFile", "mapped file not in mmalloc format or\n"
+                           "already open in RW mode by another process");
+      if (fMmallocDesc == 0 && !fWritable)
+         Error("TMapFile", "mapped file not in mmalloc format");
 #ifndef WIN32
       close(fFd);
 #else
       CloseHandle((HANDLE) fFd);
 #endif
       fFd = -1;
-      if (create)
-         gSystem->Unlink(fname);
       goto zombie;
 
    } else if ((mapfil = (TMapFile *) mmalloc_getkey(fMmallocDesc, 0)) != 0) {
@@ -519,7 +514,7 @@ void TMapFile::InitDirectory()
 }
 
 //______________________________________________________________________________
-void TMapFile::Add(const TObject *obj, const char *name)
+void TMapFile::Add(TObject *obj, const char *name)
 {
    // Add an object to the list of objects to be stored in shared memory.
    // To place the object actually into shared memory call Update().
@@ -929,7 +924,7 @@ TMapFile *TMapFile::FindShadowMapFile()
 }
 
 //______________________________________________________________________________
-void TMapFile::Print(Option_t *) const
+void TMapFile::Print(Option_t *)
 {
    // Print some info about the mapped file.
 
@@ -992,13 +987,13 @@ Bool_t TMapFile::cd(const char *path)
 }
 
 //______________________________________________________________________________
-void TMapFile::ls(Option_t *) const
+void TMapFile::ls(Option_t *)
 {
    // List contents of TMapFile.
 
    if (fMmallocDesc) {
 
-      ((TMapFile*)this)->AcquireSemaphore();
+      AcquireSemaphore();
 
       Printf("%-20s %-20s %-10s", "Object", "Class", "Size");
       if (!fFirst)
@@ -1011,7 +1006,7 @@ void TMapFile::ls(Option_t *) const
          mr = mr->GetNext(fOffset);
       }
 
-      ((TMapFile*)this)->ReleaseSemaphore();
+      ReleaseSemaphore();
 
    }
 }

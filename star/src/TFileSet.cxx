@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.4 2001/05/14 06:44:09 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-// $Id: TFileSet.cxx,v 1.4 2001/05/14 06:44:09 brun Exp $
+// $Id: TFileSet.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 
 #include "TFileSet.h"
 #include "TBrowser.h"
@@ -37,7 +37,7 @@ ClassImp(TFileSet)
 }
 
 //______________________________________________________________________________
-TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, Int_t maxDepth)
+TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand)
            : TDataSet()
 {
   //
@@ -52,14 +52,7 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
   //                                 of the "dirname" by default)
   //  expand   - flag whether the "dirname" must be "expanded
   //             (kTRUE by default)
-  //  maxDeep  - the max number of the levels of the directory to read in
-  //             (=10 by default)
-  //  Note: If the "dirname" points to non-existent object.
-  //  ----  For example it is dead-link then the object is marked as "Zombie" 
-  //        and this flag is propagated upwards
-
-  if (!maxDepth) return;
-
+  //
   Long_t id, size, flags, modtime;
   TString dirbuf = dirname;
 
@@ -67,10 +60,7 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
   const char *name= dirbuf;
   if (gSystem->GetPathInfo(name, &id, &size, &flags, &modtime)==0) {
 
-    if (!setname) {
-      setname = strrchr(name,'/');
-      if (setname) setname++;      
-    }
+    if (!setname) {setname = strrchr(name,'/')+1;}
     if (setname) SetName(setname);
     else SetName(name);
 
@@ -78,12 +68,12 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
     void *dir = 0;
     if (flags & 2 ) {
        dir = gSystem->OpenDirectory(name);
-       if (!dir) {
 #ifndef WIN32
-        perror("cannot be open due to error:\n");
+       if (!dir) {
+        perror("can not be open due error\n");
         fprintf(stderr, " directory: %s",name);
+        }
 #endif
-       }
     }
     if (dir) {   // this is a directory
       SetTitle("directory");
@@ -93,22 +83,13 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
          Char_t *file = gSystem->ConcatFileName(dirbuf,name);
          TString nextdir = file;
          delete [] file;
-         TFileSet *fs = new TFileSet(nextdir,name,kFALSE,maxDepth-1);
-         if (fs->IsZombie())  {
-           // propagate "Zombie flag upwards
-           MakeZombie(); 
-         }
-         Add(fs);
+         Add(new TFileSet(nextdir,name,kFALSE));
 
       }
       gSystem->FreeDirectory(dir);
     }
     else
        SetTitle("file");
-  } else { 
-    // Set Zombie flag
-    MakeZombie(); 
-    SetTitle("Zombie");
   }
 }
 

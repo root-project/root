@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.10 2001/12/07 21:58:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -48,22 +48,8 @@
 #include "TVector.h"
 #endif
 
-class TMatrix;
 class TLazyMatrix;
-class TMatrixRow;
-class TMatrixColumn;
-class TMatrixDiag;
-class TMatrixPivoting;
 
-TMatrix &operator+=(TMatrix &target, const TMatrix &source);
-TMatrix &operator-=(TMatrix &target, const TMatrix &source);
-TMatrix &Add(TMatrix &target, Double_t scalar, const TMatrix &source);
-TMatrix &ElementMult(TMatrix &target, const TMatrix &source);
-TMatrix &ElementDiv(TMatrix &target, const TMatrix &source);
-Bool_t   operator==(const TMatrix &im1, const TMatrix &im2);
-void     Compare(const TMatrix &im1, const TMatrix &im2);
-Bool_t   AreCompatible(const TMatrix &im1, const TMatrix &im2);
-Double_t E2Norm(const TMatrix &m1, const TMatrix &m2);
 
 
 class TMatrix : public TObject {
@@ -80,29 +66,23 @@ protected:
    Int_t     fNelems;           // number of elements in matrix
    Int_t     fRowLwb;           // lower bound of the row index
    Int_t     fColLwb;           // lower bound of the col index
-   Real_t   *fElements;	        //[fNelems] elements themselves
-   Real_t  **fIndex;            //! index[i] = &matrix(0,i) (col index)
+   Real_t   *fElements;	        // elements themselves
+   Real_t  **fIndex;            // index[i] = &matrix(0,i) (col index)
 
    void Allocate(Int_t nrows, Int_t ncols, Int_t row_lwb = 0, Int_t col_lwb = 0);
    void Invalidate() { fNrows = fNcols = fNelems = -1; fElements = 0; fIndex = 0; }
 
-   Int_t Pdcholesky(const Real_t *a, Real_t *u, const Int_t n);
-   void  MakeTridiagonal(TMatrix &a,TVector &d,TVector &e);
-   void  MakeEigenVectors(TVector &d,TVector &e,TMatrix &z);
-   void  EigenSort(TMatrix &eigenVectors,TVector &eigenValues);
-
    // Elementary constructors
    void Transpose(const TMatrix &m);
    void Invert(const TMatrix &m);
-   void InvertPosDef(const TMatrix &m);
    void AMultB(const TMatrix &a, const TMatrix &b);
    void AtMultB(const TMatrix &a, const TMatrix &b);
 
    friend void MakeHaarMatrix(TMatrix &m);
 
 public:
-   enum EMatrixCreatorsOp1 { kZero, kUnit, kTransposed, kInverted, kInvertedPosDef };
-   enum EMatrixCreatorsOp2 { kMult, kTransposeMult, kInvMult, kInvPosDefMult, kAtBA };
+   enum EMatrixCreatorsOp1 { kZero, kUnit, kTransposed, kInverted };
+   enum EMatrixCreatorsOp2 { kMult, kTransposeMult, kInvMult, kAtBA };
 
    TMatrix() { Invalidate(); }
    TMatrix(Int_t nrows, Int_t ncols);
@@ -120,7 +100,6 @@ public:
    void ResizeTo(const TMatrix &m);
 
    Bool_t IsValid() const;
-   Bool_t IsSymmetric() const;
 
    Int_t GetRowLwb() const     { return fRowLwb; }
    Int_t GetRowUpb() const     { return fNrows+fRowLwb-1; }
@@ -156,9 +135,6 @@ public:
    TMatrix &Apply(TElementPosAction &action);
 
    TMatrix &Invert(Double_t *determ_ptr = 0);
-   TMatrix &InvertPosDef();
-
-   TMatrix EigenVectors(TVector &eigenValues);
 
    TMatrix &UnitMatrix();
    TMatrix &HilbertMatrix();
@@ -176,7 +152,7 @@ public:
 
    Double_t Determinant() const;
 
-   void Print(Option_t *option="") const;
+   void Print(Option_t *option="");
 
    friend TMatrix &operator+=(TMatrix &target, const TMatrix &source);
    friend TMatrix &operator-=(TMatrix &target, const TMatrix &source);
@@ -189,7 +165,7 @@ public:
    friend Bool_t AreCompatible(const TMatrix &im1, const TMatrix &im2);
    friend Double_t E2Norm(const TMatrix &m1, const TMatrix &m2);
 
-   ClassDef(TMatrix,2)  // Matrix class
+   ClassDef(TMatrix,1)  // Matrix class
 };
 
 
@@ -199,7 +175,7 @@ void VerifyElementValue(const TMatrix &m, Real_t val);
 void VerifyMatrixIdentity(const TMatrix &m1, const TMatrix &m2);
 
 
-#if !defined(R__HPUX) && !defined(R__MACOSX)
+#ifndef R__HPUX
 inline Bool_t TMatrix::IsValid() const
    { if (fNrows == -1) return kFALSE; return kTRUE; }
 #endif
@@ -211,7 +187,7 @@ inline Bool_t TMatrix::IsValid() const
 
 //----- inlines ----------------------------------------------------------------
 
-#if !defined(R__HPUX) && !defined(R__MACOSX)
+#ifndef R__HPUX
 
 #ifndef __CINT__
 
@@ -281,7 +257,7 @@ inline TMatrix &TMatrix::operator=(const TMatrix &source)
    return *this;
 }
 
-inline TMatrix::TMatrix(const TMatrix &another) : TObject()
+inline TMatrix::TMatrix(const TMatrix &another)
 {
    if (another.IsValid()) {
       Allocate(another.fNrows, another.fNcols, another.fRowLwb, another.fColLwb);

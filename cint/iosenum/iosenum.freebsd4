@@ -14,6 +14,7 @@ static int ios::trunc=16;
 static int ios::nocreate=32;
 static int ios::noreplace=64;
 static int ios::binary=128;
+static int ios::bin=128;
 static int ios::beg=0;
 static int ios::cur=1;
 static int ios::end=2;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.6 2001/10/22 14:26:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -56,12 +56,11 @@ TEventList::TEventList(): TNamed()
    fDelta      = 100;
    fList       = 0;
    fDirectory  = 0;
-   fReapply    = kFALSE;
 }
 
 //______________________________________________________________________________
 TEventList::TEventList(const char *name, const char *title, Int_t initsize, Int_t delta)
-  :TNamed(name,title), fReapply(kFALSE)
+    :TNamed(name,title)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a EventList*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =================
@@ -90,8 +89,6 @@ TEventList::TEventList(const TEventList &list)
    fList  = new Int_t[fSize];
    for (Int_t i=0; i<fN; i++)
       fList[i] = list.fList[i];
-   fReapply = list.fReapply;
-   fDirectory = 0;
 }
 
 //______________________________________________________________________________
@@ -145,11 +142,6 @@ void TEventList::Add(const TEventList *alist)
    fN    = newpos;
    fSize = newsize;
    fList = newlist;
-
-   TCut orig = GetTitle();
-   TCut added = alist->GetTitle();
-   TCut updated = orig || added;
-   SetTitle(updated.GetTitle());
 }
 
 //______________________________________________________________________________
@@ -172,7 +164,6 @@ void TEventList::Enter(Int_t entry)
       fN = 1;
       return;
    }
-   if (GetIndex(entry)>=0) return;
    if (fN >= fSize) {
       Int_t newsize = TMath::Max(2*fSize,fN+fDelta);
       Resize(newsize-fSize);
@@ -213,30 +204,7 @@ Int_t TEventList::GetIndex(Int_t entry) const
 }
 
 //______________________________________________________________________________
-Int_t TEventList::Merge(TCollection *list)
-{
-// Merge entries in all the TEventList in the collection in this event list
-   
-   if (!list) return -1;
-   TIter next(list);
-
-   //first loop to count the number of entries
-   TEventList *el;
-   Int_t nevents = 0;
-   while ((el = (TEventList*)next())) {
-      if (!el->InheritsFrom(TEventList::Class())) {
-         Error("Add","Attempt to add object of class: %s to a %s",el->ClassName(),this->ClassName());
-         return -1;
-      }
-      Add(el);
-      nevents += el->GetN();
-   }
-   
-   return nevents;   
-}
-
-//______________________________________________________________________________
-void TEventList::Print(Option_t *option) const
+void TEventList::Print(Option_t *option)
 {
 //          Print contents of this list
 
@@ -334,16 +302,9 @@ void TEventList::Streamer(TBuffer &b)
 {
    // Stream an object of class TEventList.
 
+   UInt_t R__s, R__c;
    if (b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TEventList::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
-         fDirectory = gDirectory;
-         gDirectory->Append(this);
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      b.ReadVersion(&R__s, &R__c);
       TNamed::Streamer(b);
       b >> fN;
       b >> fSize;
@@ -355,10 +316,16 @@ void TEventList::Streamer(TBuffer &b)
       fDirectory = gDirectory;
       gDirectory->Append(this);
       b.CheckByteCount(R__s, R__c, TEventList::IsA());
-      //====end of old versions
-      
    } else {
-      TEventList::Class()->WriteBuffer(b,this);
+      R__c = b.WriteVersion(TEventList::IsA(), kTRUE);
+      TNamed::Streamer(b);
+      b << fN;
+      b << fSize;
+      b << fDelta;
+      if (fN) {
+         b.WriteFastArray(fList,fN);
+      }
+      b.SetByteCount(R__c, kTRUE);
    }
 }
 
@@ -382,11 +349,6 @@ void TEventList::Subtract(const TEventList *alist)
    delete [] fList;
    fN    = newpos;
    fList = newlist;
-
-   TCut orig = GetTitle();
-   TCut removed = alist->GetTitle();
-   TCut updated = orig && !removed;
-   SetTitle(updated.GetTitle());
 }
 
 //______________________________________________________________________________

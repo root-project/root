@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyArc.h,v 1.2 2000/06/13 10:47:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyArc.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -34,13 +34,13 @@ public:
    virtual void Build();
    Int_t        DistancetoPrimitive(Int_t px, Int_t py);
    void         ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   Double_t     GetRadius() const {return fR1;}
-   Double_t     GetPhimin() const {return fPhimin;}
-   Double_t     GetPhimax() const {return fPhimax;}
    virtual void SetCenter(Double_t x1, Double_t y1); // *MENU* *ARGS={x1=>fX1,y1=>fY1}
    virtual void SetRadius(Double_t radius);          // *MENU* *ARGS={radius=>fR1}
    virtual void SetPhimin(Double_t phimin);          // *MENU* *ARGS={phimin=>fPhimin}
    virtual void SetPhimax(Double_t phimax);          // *MENU* *ARGS={phimax=>fPhimax}
+   Double_t      GetRadius() {return fR1;}
+   Double_t      GetPhimin() {return fPhimin;}
+   Double_t      GetPhimax() {return fPhimax;}
    virtual void SavePrimitive(ofstream &out, Option_t *);
 
    ClassDef(TCurlyArc,2) // a curly arc

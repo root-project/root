@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.9 2001/11/05 17:31:37 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.3 2000/10/01 15:20:20 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,7 +17,6 @@
 #pragma link C++ global kTRUE;
 #pragma link C++ global kFALSE;
 #pragma link C++ global kNPOS;
-#pragma link C++ global kInfo;
 #pragma link C++ global kWarning;
 #pragma link C++ global kError;
 #pragma link C++ global kSysError;
@@ -36,27 +35,16 @@
 #pragma link C++ global gRandom;
 #pragma link C++ global gDebug;
 #pragma link C++ global gErrorIgnoreLevel;
-#pragma link C++ global gErrorAbortLevel;
 #pragma link C++ global gStyle;
 #pragma link C++ global gVirtualGL;
 #pragma link C++ global gVirtualX;
 #pragma link C++ global gVirtualPS;
-#pragma link C++ global gRootDir;
-#pragma link C++ global gProgName;
-#pragma link C++ global gProgPath;
 
-#pragma link C++ function Form;
-#pragma link C++ function Printf;
 #pragma link C++ function Strip;
 #pragma link C++ function StrDup;
 #pragma link C++ function Compress;
 #pragma link C++ function EscChar;
 #pragma link C++ function UnEscChar;
-#pragma link C++ function Info;
-#pragma link C++ function Warning;
-#pragma link C++ function Error;
-#pragma link C++ function SysError;
-#pragma link C++ function Fatal;
 #pragma link C++ function operator+(const TString&,const TString&);
 #pragma link C++ function operator+(const TString&,const char*);
 #pragma link C++ function operator+(const char*,const TString&);
@@ -74,8 +62,6 @@
 #pragma link C++ function operator!=(const char*,const TString&);
 #pragma link C++ function operator>>(istream&,TString&);
 #pragma link C++ function operator<<(ostream&,const TString&);
-#pragma link C++ function operator>>(TBuffer&,TString&);
-#pragma link C++ function operator<<(TBuffer&,const TString&);
 //#pragma link C++ function operator>>(TBuffer&,const TObject*&);
 //#pragma link C++ function operator<<(TBuffer&,const TObject*);
 
@@ -88,36 +74,36 @@
 
 #pragma link C++ class TApplication;
 #pragma link C++ class TApplicationImp;
-#pragma link C++ class TAttFill+;
-#pragma link C++ class TAttLine+;
-#pragma link C++ class TAttMarker+;
+#pragma link C++ class TAttFill;
+#pragma link C++ class TAttLine;
+#pragma link C++ class TAttMarker;
 #pragma link C++ class TAttPad-;
 #pragma link C++ class TAttAxis-;
-#pragma link C++ class TAttText+;
-#pragma link C++ class TAtt3D+;
-#pragma link C++ class TBenchmark+;
-#pragma link C++ class TBrowser+;
-#pragma link C++ class TBrowserImp+;
+#pragma link C++ class TAttText;
+#pragma link C++ class TAtt3D;
+#pragma link C++ class TBenchmark;
+#pragma link C++ class TBrowser;
+#pragma link C++ class TBrowserImp;
 #pragma link C++ class TBuffer;
 #pragma link C++ class TCanvasImp;
 #pragma link C++ class TColor+;
-#pragma link C++ class TContextMenu+;
-#pragma link C++ class TContextMenuImp+;
-#pragma link C++ class TControlBarImp+;
-#pragma link C++ class TInspectorImp+;
+#pragma link C++ class TContextMenu;
+#pragma link C++ class TContextMenuImp;
+#pragma link C++ class TControlBarImp;
+#pragma link C++ class TInspectorImp;
 #pragma link C++ class TDatime-;
 #pragma link C++ class TDirectory-;
-#pragma link C++ class TEnv+;
+#pragma link C++ class TEnv;
 #pragma link C++ class TFile-;
-#pragma link C++ class TFileHandler+;
+#pragma link C++ class TFileHandler;
 #pragma link C++ class TGuiFactory;
-#pragma link C++ class TPadView3D+;
+#pragma link C++ class TPadView3D;
 #pragma link C++ class TStyle+;
 #pragma link C++ class TView-;
-#pragma link C++ class TVirtualX+;
-#pragma link C++ class TVirtualFitter+;
-#pragma link C++ class TVirtualPad-;
-#pragma link C++ class TVirtualGL+;
-#pragma link C++ class TVirtualPS+;
+#pragma link C++ class TVirtualX;
+#pragma link C++ class TVirtualFitter;
+#pragma link C++ class TVirtualPad;
+#pragma link C++ class TVirtualGL;
+#pragma link C++ class TVirtualPS;
 
 #endif

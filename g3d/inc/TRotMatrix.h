@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TRotMatrix.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name$:$Id$
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -64,7 +64,7 @@ public:
    virtual void      SetMatrix(const Double_t *matrix);
    virtual void      SetName(const char *name);
 
-   ClassDef(TRotMatrix,2)  //Rotation Matrix for 3-D geometry objects
+   ClassDef(TRotMatrix,1)  //Rotation Matrix for 3-D geometry objects
 };
 
 inline void TRotMatrix::SetName(const char *) { }

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.12 2002/01/04 08:07:38 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -125,7 +125,7 @@
 //    {                                                                 //
 //       typedef  double (*dfunc_t)(double);                            //
 //       class ApplyFunction : public TElementAction {                  //
-//          dfunc_t fFunc;                                              //
+//          dfunc_t *fFunc;                                             //
 //          void Operation(Real_t &element) { element=fFunc(element); } //
 //       public:                                                        //
 //          ApplyFunction(dfunc_t func):fFunc(func) {}                  //
@@ -156,7 +156,6 @@
 
 #include "TMatrix.h"
 #include "TROOT.h"
-#include "TClass.h"
 
 ClassImp(TMatrix)
 
@@ -221,7 +220,7 @@ void TMatrix::Draw(Option_t *option)
 {
    // Draw this matrix using an intermediate histogram
    // The histogram is named "TMatrix" by default and no title
-
+   
    gROOT->ProcessLine(Form("TH2F *R__TV = new TH2F((TMatrix&)((TMatrix*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
       (Long_t)this,option));
 }
@@ -272,7 +271,7 @@ TMatrix::TMatrix(EMatrixCreatorsOp1 op, const TMatrix &prototype)
 {
    // Create a matrix applying a specific operation to the prototype.
    // Example: TMatrix a(10,12); ...; TMatrix b(TMatrix::kTransposed, a);
-   // Supported operations are: kZero, kUnit, kTransposed, kInverted and kInvertedPosDef.
+   // Supported operations are: kZero, kUnit, kTransposed and kInverted.
 
    Invalidate();
 
@@ -301,10 +300,6 @@ TMatrix::TMatrix(EMatrixCreatorsOp1 op, const TMatrix &prototype)
          Invert(prototype);
          break;
 
-      case kInvertedPosDef:
-         InvertPosDef(prototype);
-         break;
-
       default:
          Error("TMatrix(EMatrixCreatorOp1)", "operation %d not yet implemented", op);
    }
@@ -316,7 +311,7 @@ TMatrix::TMatrix(const TMatrix &a, EMatrixCreatorsOp2 op, const TMatrix &b)
    // Create a matrix applying a specific operation to two prototypes.
    // Example: TMatrix a(10,12), b(12,5); ...; TMatrix c(a, TMatrix::kMult, b);
    // Supported operations are: kMult (a*b), kTransposeMult (a'*b),
-   // kInvMult,kInvPosDefMult (a^(-1)*b) and kAtBA (a'*b*a).
+   // kInvMult (a^(-1)*b) and kAtBA (a'*b*a).
 
    Invalidate();
 
@@ -838,7 +833,7 @@ Double_t E2Norm(const TMatrix &m1, const TMatrix &m2)
 }
 
 //______________________________________________________________________________
-void TMatrix::Print(Option_t *) const
+void TMatrix::Print(Option_t *)
 {
    // Print the matrix as a table of elements (zeros are printed as dots).
 
@@ -939,27 +934,6 @@ TMatrix &TMatrix::Invert(Double_t *determ_ptr)
    Double_t determinant = 1;
    const Double_t singularity_tolerance = 1e-35;
 
-   Int_t symmetric = IsSymmetric();
-
-   // store matrix diagonal
-   Real_t *diag = 0;
-   if (symmetric) {
-      diag = new Real_t[fNrows];
-      Int_t idiag;
-      for (idiag = 0; idiag < fNrows; idiag++)
-        diag[idiag] = fElements[idiag*(1+fNrows)];
-
-     // condition the matrix
-     Int_t irow;
-     for (irow = 0; irow < fNrows; irow++) {
-        Int_t icol;
-        for (icol = 0; icol < fNcols; icol++) {
-           Double_t val = TMath::Sqrt(TMath::Abs(diag[irow]*diag[icol]));
-           if (val != 0.0) fElements[irow*fNcols+icol] /= val;
-       }
-     }
-   }
-
    // Locations of pivots (indices start with 0)
    struct Pivot_t { int row, col; } *const pivots = new Pivot_t[fNcols];
    Bool_t *const was_pivoted = new Bool_t[fNrows];
@@ -1035,41 +1009,12 @@ TMatrix &TMatrix::Invert(Double_t *determ_ptr)
          }
       }
 
-   // revert our scaling
-   if (symmetric) {
-      Int_t irow;
-      for (irow = 0; irow < fNrows; irow++) {
-         Int_t icol;
-         for (icol = 0; icol < fNcols; icol++) {
-            Double_t val = TMath::Sqrt(TMath::Abs(diag[irow]*diag[icol]));
-            if (val != 0.0) fElements[irow*fNcols+icol] /= val;
-         }
-         determinant *= TMath::Abs(diag[irow]);
-      }
-      delete [] diag;
-   }
-
    if (determ_ptr)
       *determ_ptr = (no_swaps & 1 ? -determinant : determinant);
 
    delete [] was_pivoted;
    delete [] pivots;
    return *this;
-}
-
-//______________________________________________________________________________
-Bool_t TMatrix::IsSymmetric() const
-{
-  Int_t irow;
-  for (irow = 0; irow < fNrows; irow++) {
-    Int_t icol;
-    for (icol = 0; icol < irow; icol++) {
-      if (fElements[irow*fNrows+icol] != fElements[icol*fNrows+irow]) {
-        return 0;
-      }
-    }
-  }
-  return 1;
 }
 
 //______________________________________________________________________________
@@ -1088,601 +1033,6 @@ void TMatrix::Invert(const TMatrix &m)
 
    Invert(0);
 }
-
-//______________________________________________________________________________
-TMatrix &TMatrix::InvertPosDef()
-{
-   if (!IsValid()) {
-      Error("InvertPosDef(Real_t*)", "matrix not initialized");
-      return *this;
-   }
-
-   if (fNrows != fNcols) {
-      Error("InvertPosDef(Real_t*)", "matrix to invert must be square");
-      return *this;
-   }
-
-   Int_t   n  = fNrows;
-   Real_t *pa = fElements;
-   Real_t *pu = new Real_t[n*n];
-
-   // step 1: Cholesky decomposition
-   if (Pdcholesky(pa,pu,n))
-   {
-     Error("InverPosDef","matrix not positive definite");
-     delete [] pu;
-     return *this;
-   }
-
-   Int_t off_n = (n-1)*n;
-   Int_t i,l;
-   for (i = 0; i < n; i++)
-   {
-     Int_t off_i = i*n;
-
-   // step 2: Forward substitution
-     for (l = i; l < n; l++)
-     {
-       if (l == i)
-         pa[off_n+l] = 1./pu[l*n+l];
-       else
-       {
-         pa[off_n+l] = 0.;
-         for (Int_t k = i; k <= l-1; k++)
-           pa[off_n+l] = pa[off_n+l]-pu[k*n+l]*pa[off_n+k];
-         pa[off_n+l] = pa[off_n+l]/pu[l*n+l];
-       }
-     }
-
-   // step 3: Back substitution
-     for (l = n-1; l >= i; l--)
-     {
-       Int_t off_l = l*n;
-       if (l == n-1)
-         pa[off_i+l] = pa[off_n+l]/pu[off_l+l];
-       else
-       {
-         pa[off_i+l] = pa[off_n+l];
-         for (Int_t k = n-1; k >= l+1; k--)
-           pa[off_i+l] = pa[off_i+l]-pu[off_l+k]*pa[off_i+k];
-         pa[off_i+l] = pa[off_i+l]/pu[off_l+l];
-       }
-     }
-   }
-
-   // Fill lower triangle symmetrically
-   if (n > 1)
-   {
-     for (Int_t i = 0; i < n; i++)
-     {
-       for (Int_t l = 0; l <= i-1; l++)
-         pa[i*n+l] = pa[l*n+i];
-     }
-   }
-
-   delete [] pu;
-   return *this;
-}
-
-//______________________________________________________________________________
-Int_t TMatrix::Pdcholesky(
-const Real_t *a,
-      Real_t *u,
-const Int_t   n)
-{
-  //  Program Pdcholesky inverts a positiv definite (n x n) - matrix A,
-  //  using the Cholesky decomposition
-  //
-  //  Input:	a	- (n x n)- Matrix A
-  //  		n	- dimensions n of matrices
-  //
-  //  Output:	u	- (n x n)- Matrix U so that U^T . U = A
-  //		return	- 0 decomposition succesful
-  //			- 1 decomposition failed
-
-  memset(u,0,n*n*sizeof(Real_t));
-
-  for (Int_t k = 0; k < n; k++)
-  {
-    Double_t s = 0.;
-    Int_t off_k = k*n;
-    for (Int_t j = k; j < n; j++)
-    {
-      if (k > 0)
-      {
-        s = 0.;
-        for (Int_t l = 0; l <= k-1; l++)
-        {
-          Int_t off_l = l*n;
-          s += u[off_l+k]*u[off_l+j];
-        }
-      }
-      u[off_k+j] = a[off_k+j]-s;
-      if (k == j)
-      {
-        if (u[off_k+j] <= 0)
-          return 1;
-        u[off_k+j] = TMath::Sqrt(u[off_k+j]);
-      }
-      else
-        u[off_k+j] = u[off_k+j]/u[off_k+k];
-    }
-  }
-  return 0;
-}
-
-//______________________________________________________________________________
-void TMatrix::InvertPosDef(const TMatrix &m)
-{
-   // Allocate new matrix and set it to inv(m).
-
-   if (!m.IsValid()) {
-      Error("InvertPosDef(const TMatrix&)", "matrix m not initialized");
-      return;
-   }
-
-   ResizeTo(m);
-
-   *this = m;    // assignment operator
-
-   InvertPosDef();
-}
-
-//____________________________________________________________________
-TMatrix TMatrix::EigenVectors(
-TVector &eigenValues)
-{
-  // Return a matrix containing the eigen-vectors; also fill the
-  // supplied vector with the eigen values.
-
-  if (IsSymmetric()) {
-    TMatrix eigenVectors = *this;
-    eigenValues.ResizeTo(fNrows);
-    TVector offDiag(fNrows);
-    // Tridiagonalize matrix
-    MakeTridiagonal(eigenVectors,eigenValues,offDiag);
-
-    // Make eigenvectors and -values
-    MakeEigenVectors(eigenValues,offDiag,eigenVectors);
-
-    // Order eigenvalues and -vectors
-    EigenSort(eigenVectors,eigenValues);
-    return eigenVectors;
-  }
-  else {
-    Error("EigenVectors","Not yet implemented for non-symmetric matrix");
-    return *this;
-  }
-}
-
-//____________________________________________________________________
-void TMatrix::MakeTridiagonal(
-TMatrix &a,
-TVector &d,
-TVector &e)
-{
-  // The comments in this algorithm are modified version of those in
-  // "Numerical ...". Please refer to that book (web-page) for more on
-  // the algorithm.
-  // Begin_Html
-  /*
-    </PRE>
-    PRIVATE METHOD:
-    <BR>
-    Tridiagonalise the covariance matrix according to the Householder
-    method as described in
-    <A NAME="tex2html3"
-    HREF="http://www.nr.com">Numerical Recipes in C</A>
-    section&nbsp;11.2.
-
-    <P>
-    The basic idea is to perform <IMG
-    WIDTH="48" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
-    SRC="gif/principal_img51.gif"
-    ALT="$P-2$"> orthogonal transformation, where
-    each transformation eat away the off-diagonal elements, except the
-    inner most.
-    <PRE>
-   */
-  // End_Html
-
-  Int_t n = a.fNrows;
-
-  if (!a.IsValid()) {
-    Error("Maketridiagonal", "matrix not initialized");
-    return;
-  }
-
-  if (a.fNrows != a.fNcols) {
-    Error("Maketridiagonal", "matrix to tridiagonalize must be square");
-    return;
-  }
-
-  Float_t *pa = a.fElements;
-  Float_t *pd = d.fElements;
-  Float_t *pe = e.fElements;
-
-  Int_t i;
-  for (i = n-1; i > 0; i--) {
-    Int_t    l     = i-1;
-    Double_t h     = 0;
-    Double_t scale = 0;
-
-    if (l > 0) {
-      for (Int_t k = 0; k <= l; k++)
-        scale += TMath::Abs(pa[i+k*n]);
-
-      if (scale == 0)
-        // Skip transformation
-        pe[i] = pa[i+l*n];
-
-      else {
-        Int_t k;
-        for (k = 0; k <= l; k++) {
-          // Use scaled elements of a for transformation
-          pa[i+k*n] /= scale;
-          // Calculate sigma in h
-          h += pa[i+k*n]*pa[i+k*n];
-        }
-
-        Double_t f =  pa[i+l*n];
-        Double_t g =  (f >= 0. ? -TMath::Sqrt(h) : TMath::Sqrt(h));
-        pe[i]      =  scale*g;
-        h         -= f*g; // Now h is eq. (11.2.4) in "Numerical ..."
-        pa[i+l*n]  =  f-g;
-        f          = 0;
-
-        Int_t j;
-        for (j = 0; j <= l; j++) {
-          // Store the u/H in ith column of a;
-          pa[j+i*n] = pa[i+j*n]/h;
-          // Form element A dot u in g;
-          g = 0;
-
-          Int_t k;
-          for (k = 0; k <= j; k++)
-            g += pa[j+k*n]*pa[i+k*n];
-
-          for (k = j+1; k <= l; k++)
-            g += pa[k+j*n]*pa[i+k*n];
-
-          // Form element of vector p in temporarily unused element of
-          // e
-          pe[j] =  g/h;
-          f    += pe[j]*pa[i+j*n];
-        }
-        // Form K eq (11.2.11)
-        Double_t hh = f/(h+h);
-
-        // Form vector q and store in e overwriting p
-        for (j = 0; j <= l; j++) {
-          f    = pa[i+j*n];
-          pe[j] = g = pe[j]-hh*f;
-
-          Int_t k;
-          for (k = 0; k <= j; k++)
-            // Reduce a, eq (11.2.13)
-            pa[j+k*n] -= (f*pe[k]+g*pa[i+k*n]);
-        }
-      }
-    }
-    else
-      pe[i] = pa[i+l*n];
-
-    pd[i] = h;
-  }
-
-  pd[0] = 0;
-  pe[0] = 0;
-
-  for (i = 0; i < n; i++) {
-    // Begin accumulation of transformation matrix
-    Int_t l = i-1;
-
-    if (pd[i]) {
-      // This block is skipped if i = 0;
-      Int_t j;
-      for (j = 0; j <= l; j++) {
-        Double_t g = 0;
-
-        Int_t k;
-        for (k = 0; k <= l; k++)
-          // Use vector u/H stored in a to form P dot Q
-          g += pa[i+k*n]*pa[k+j*n];
-
-        for (k = 0; k <= l; k++)
-          pa[k+j*n] -= g*pa[k+i*n];
-      }
-    }
-
-    pd[i]     = pa[i+i*n];
-    pa[i+i*n] = 1;
-
-    Int_t j;
-    for (j = 0; j <= l; j++) {
-      pa[j+i*n] = pa[i+j*n] = 0;
-    }
-  }
-
-}
-
-//____________________________________________________________________
-void TMatrix::MakeEigenVectors(
-TVector &d,
-TVector &e,
-TMatrix &z)
-{
-  // Begin_Html
-  /*
-    </PRE>
-    PRIVATE METHOD:
-    <BR>
-    Find eigenvalues and vectors of tridiagonalised covariance matrix
-    according to the <I>QL with implicit shift</I> algorithm from
-    <A NAME="tex2html1"
-    HREF="http://www.nr.com">Numerical Recipes in C</A>
-    section&nbsp;11.3.
-    <P>
-    The basic idea is to find matrices <IMG
-    WIDTH="17" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
-    SRC="gif/principal_img41.gif"
-    ALT="$\mathsf{Q}$"> and <IMG
-    WIDTH="14" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
-    SRC="gif/principal_img42.gif"
-    ALT="$\mathsf{L}$"> so that
-    <!-- MATH
-    $\mathsf{C} = \mathsf{Q} \cdot \mathsf{L}$
-    -->
-    <IMG
-    WIDTH="74" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
-    SRC="gif/principal_img43.gif"
-    ALT="$\mathsf{C} = \mathsf{Q} \cdot \mathsf{L}$">, where  <IMG
-    WIDTH="17" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
-    SRC="gif/principal_img41.gif"
-    ALT="$\mathsf{Q}$"> is orthogonal and
-    <IMG
-    WIDTH="14" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
-    SRC="gif/principal_img42.gif"
-    ALT="$\mathsf{L}$"> is lower triangular. The <I>QL</I> algorithm
-    consist of a
-    sequence of orthogonal transformations
-    <BR><P></P>
-    <DIV ALIGN="CENTER">
-
-    <!-- MATH
-    \begin{displaymath}
-    \mathsf{C}_s = \mathsf{Q}_s \cdot \mathsf{L}_s
-    \end{displaymath}
-    -->
-
-
-    <IMG
-    WIDTH="89" HEIGHT="29" BORDER="0"
-    SRC="gif/principal_img44.gif"
-    ALT="\begin{displaymath}
-    \mathsf{C}_s = \mathsf{Q}_s \cdot \mathsf{L}_s
-    \end{displaymath}">
-    </DIV>
-    <BR CLEAR="ALL">
-    <P></P>
-    <BR><P></P>
-    <DIV ALIGN="CENTER">
-
-    <!-- MATH
-    \begin{displaymath}
-    \mathsf{C}_{s+1} = \mathsf{L}_s   \cdot \mathsf{Q}_s
-    = \mathsf{Q}_s^T \cdot \mathsf{C}_s \cdot \mathsf{Q}_s
-    \end{displaymath}
-    -->
-
-
-    <IMG
-    WIDTH="215" HEIGHT="31" BORDER="0"
-    SRC="gif/principal_img45.gif"
-    ALT="\begin{displaymath}
-    \mathsf{C}_{s+1} = \mathsf{L}_s \cdot \mathsf{Q}_s
-    = \mathsf{Q}_s^T \cdot \mathsf{C}_s \cdot \mathsf{Q}_s
-    \end{displaymath}">
-    </DIV>
-    <BR CLEAR="ALL">
-    <P></P>
-    (1) If <IMG
-    WIDTH="16" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
-    SRC="gif/principal_img2.gif"
-    ALT="$\mathsf{C}$"> have eigenvalues with different absolute value
-    <IMG
-    WIDTH="25" HEIGHT="34" ALIGN="MIDDLE" BORDER="0"
-    SRC="gif/principal_img46.gif"
-    ALT="$\vert l_i\vert$">,  then
-    <!-- MATH
-    $\mathsf{C}_s \rightarrow$
-    -->
-    <IMG
-    WIDTH="45" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
-    SRC="gif/principal_img47.gif"
-    ALT="$\mathsf{C}_s \rightarrow$">&nbsp;[lower triangular form] as
-
-    <!-- MATH
-    $s\rightarrow\infty$
-    -->
-    <IMG
-    WIDTH="57" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
-    SRC="gif/principal_img48.gif"
-    ALT="$s\rightarrow\infty$">. The eigenvalues appear on the diagonal in
-    increasing order of absolute magnitude. (2) If If <IMG
-    WIDTH="16" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
-    SRC="gif/principal_img2.gif"
-    ALT="$\mathsf{C}$"> has an
-    eigenvalue <IMG
-    WIDTH="25" HEIGHT="34" ALIGN="MIDDLE" BORDER="0"
-    SRC="gif/principal_img46.gif"
-    ALT="$\vert l_i\vert$"> of multiplicty of order <IMG
-    WIDTH="13" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
-    SRC="gif/principal_img49.gif"
-    ALT="$p$">,
-
-    <!-- MATH
-    $\mathsf{C}_s \rightarrow$
-    -->
-    <IMG
-    WIDTH="45" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
-    SRC="gif/principal_img47.gif"
-    ALT="$\mathsf{C}_s \rightarrow$">&nbsp;[lower triangular form] as
-
-    <!-- MATH
-    $s\rightarrow\infty$
-    -->
-    <IMG
-    WIDTH="57" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
-    SRC="gif/principal_img48.gif"
-    ALT="$s\rightarrow\infty$">, except for a diagona block matrix of order <IMG
-    WIDTH="13" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
-    SRC="gif/principal_img49.gif"
-    ALT="$p$">,
-    whose eigenvalues
-    <!-- MATH
-    $\rightarrow l_i$
-    -->
-    <IMG
-    WIDTH="37" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
-    SRC="gif/principal_img50.gif"
-    ALT="$\rightarrow l_i$">.
-    <PRE>
-  */
-  // End_Html
-
-  Int_t n = z.fNrows;
-
-  Float_t *pd = d.fElements;
-  Float_t *pe = e.fElements;
-  Float_t *pz = z.fElements;
-
-  // It's convenient to renumber the e vector elements
-  Int_t l;
-  for (l = 1; l < n; l++)
-    pe[l-1] = pe[l];
-  pe[n-1] = 0;
-
-  for (l = 0; l < n; l++) {
-    Int_t iter = 0;
-    Int_t m    = 0;
-
-    do {
-      for (m = l; m < n-1; m++) {
-        // Look for a single small sub-diagonal element  to split the
-        // matrix
-        Double_t dd = TMath::Abs(pd[m])+TMath::Abs(pd[m+1]);
-        if ((Double_t)(TMath::Abs(pe[m])+dd) == dd)
-          break;
-      }
-
-      if (m != l) {
-        if (iter++ == 30) {
-          Error("MakeEigenVectors","too many iterations\n");
-          return;
-        }
-
-        // Form shift
-        Double_t g = (pd[l+1]-pd[l])/(2*pe[l]);
-        Double_t r = TMath::Sqrt(g*g+1);
-        // This is d_m-k_s
-        g          = pd[m]-pd[l]+pe[l]/(g+TMath::Sign(r,g));
-        Double_t s = 1;
-        Double_t c = 1;
-        Double_t p = 0;
-        Int_t i    = 0;
-        for (i = m-1; i >= l; i--) {
-          // A plane rotation as in the original QL, followed by
-          // Givens rotations to restore tridiagonal form
-          Double_t f = s*pe[i];
-          Double_t b = c*pe[i];
-          r          = TMath::Sqrt(f*f+g*g);
-          pe[i+1]    = r;
-
-          if (r == 0) {
-            // Recover from underflow
-            pd[i+1] -= p;
-            pe[m]   =  0;
-            break;
-          }
-          s       = f/r;
-          c       = g/r;
-          g       = pd[i+1]-p;
-          r       = (pd[i]-g)*s+2*c*b;
-          p       = s*r;
-          pd[i+1] = g+p;
-          g       = c*r-b;
-
-          Int_t k;
-          for (k = 0; k < n; k++) {
-            // Form Eigenvectors
-            f             = pz[k+(i+1)*n];
-            pz[k+(i+1)*n] = s*pz[k+i*n]+c*f;
-            pz[k+i*n]     = c*pz[k+i*n]-s*f;
-          }
-        }  // for (i = m)
-
-        if (r == 0 && i >= l)
-          continue;
-
-        pd[l] -= p;
-        pe[l]  = g;
-        pe[m]  = 0;
-
-      } // if (m != l)
-    } while (m != l);
-  } // for (l = 0)
-}
-
-//____________________________________________________________________
-void TMatrix::EigenSort(
-TMatrix &eigenVectors,
-TVector &eigenValues)
-{
-  // Begin_Html
-  /*
-    </PRE>
-    PRIVATE METHOD:
-    <BR>
-    Order the eigenvalues and vectors by ascending eigenvalue. The
-    algorithm is a straight insertion. It's taken from
-    <A NAME="tex2html2"
-    HREF="http://www.nr.com">Numerical Recipes in C</A>
-    section 11.1.
-    <PRE>
-  */
-  // End_Html
-
-  Int_t n = eigenVectors.fNrows;
-
-  Float_t *pVec = eigenVectors.fElements;
-  Float_t *pVal = eigenValues.fElements;
-
-  Int_t i;
-  for (i = 0; i < n; i++) {
-    Int_t k = i;
-    Double_t p = pVal[i];
-
-    Int_t j;
-    for (j = i + 1; j < n; j++)
-      if (pVal[j] >= p) {
-        k = j;
-        p = pVal[j];
-      }
-
-    if (k != i) {
-      pVal[k] = pVal[i];
-      pVal[i] = p;
-
-      for (j = 0; j < n; j++) {
-        p           = pVec[j+i*n];
-        pVec[j+i*n] = pVec[j+k*n];
-        pVec[j+k*n] = p;
-      }
-    }
-  }
-}
-
 
 //______________________________________________________________________________
 TMatrix &TMatrix::operator*=(const TMatrix &source)
@@ -1936,26 +1286,9 @@ void TMatrix::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TMatrix.
 
+   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TMatrix::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         if (fNcols == 1) {
-            fIndex = &fElements;
-         } else {
-            if (fNcols <= 0) return;
-            fIndex = new Real_t*[fNcols];
-            if (fIndex)
-               memset(fIndex, 0, fNcols*sizeof(Real_t*));
-            Int_t i;
-            Real_t *col_p;
-            for (i = 0, col_p = &fElements[0]; i < fNcols; i++, col_p += fNrows)
-               fIndex[i] = col_p;
-         }
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      R__b.ReadVersion(&R__s, &R__c);
       TObject::Streamer(R__b);
       R__b >> fNrows;
       R__b >> fNcols;
@@ -1974,10 +1307,15 @@ void TMatrix::Streamer(TBuffer &R__b)
             fIndex[i] = col_p;
       }
       R__b.CheckByteCount(R__s, R__c, TMatrix::IsA());
-      //====end of old versions
-
    } else {
-      TMatrix::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TMatrix::IsA(), kTRUE);
+      TObject::Streamer(R__b);
+      R__b << fNrows;
+      R__b << fNcols;
+      R__b << fRowLwb;
+      R__b << fColLwb;
+      R__b.WriteArray(fElements, fNelems);
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }
 
@@ -2098,7 +1436,7 @@ void VerifyMatrixIdentity(const TMatrix &m1, const TMatrix &m2)
 }
 
 
-#if defined(R__HPUX) || defined(R__MACOSX)
+#ifdef R__HPUX
 
 //______________________________________________________________________________
 //  These functions should be inline

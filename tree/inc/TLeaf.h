@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.6 2001/01/16 16:15:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.2 2000/06/13 09:27:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -37,14 +37,14 @@ class TLeaf : public TNamed {
 
 protected:
 
-    Int_t       fNdata;           //! Number of elements in fAddress data buffer
-    Int_t       fLen;             //  Number of fixed length elements
-    Int_t       fLenType;         //  Number of bytes for this data type
-    Int_t       fOffset;          //  Offset in ClonesArray object (if one)
-    Bool_t      fIsRange;         //  (=kTRUE if leaf has a range, kFALSE otherwise)
-    Bool_t      fIsUnsigned;      //  (=kTRUE if unsigned, kFALSE otherwise)
-    TLeaf      *fLeafCount;       //  Pointer to Leaf count if variable length
-    TBranch    *fBranch;          //! Pointer to supporting branch
+    Int_t       fLen;             //Number of fixed length elements
+    Int_t       fLenType;         //Number of bytes for this data type
+    Int_t       fNdata;           //Number of elements in fAddress data buffer
+    Int_t       fOffset;          //Offset in ClonesArray object (if one)
+    TLeaf       *fLeafCount;      //Pointer to Leaf count if variable length
+    Bool_t      fIsRange;         //(=kTRUE if leaf has a range, kFALSE otherwise)
+    Bool_t      fIsUnsigned;      //(=kTRUE if unsigned, kFALSE otherwise)
+    TBranch     *fBranch;         //Pointer to supporting branch
 
 public:
     enum { kIndirectAddress = BIT(11), // Addresses passed via pointer
@@ -57,24 +57,22 @@ public:
     virtual void     Browse(TBrowser *b);
     virtual void     Export(TClonesArray *list, Int_t n);
     virtual void     FillBasket(TBuffer &b);
-    TBranch         *GetBranch() const { return fBranch; }
-    virtual TLeaf   *GetLeafCount() const { return fLeafCount; }
-    virtual TLeaf   *GetLeafCounter(Int_t &countval) const;
+    TBranch         *GetBranch() { return fBranch; }
+    virtual TLeaf   *GetLeafCount() { return fLeafCount; }
+    virtual TLeaf   *GetLeafCounter(Int_t &countval);
     virtual Int_t    GetLen() const;
-    virtual Int_t    GetLenStatic() const { return fLen; }
-    virtual Int_t    GetLenType() const { return fLenType; }
-    virtual Int_t    GetMaximum() const { return 0; }
-    virtual Int_t    GetMinimum() const { return 0; }
-    virtual Int_t    GetNdata() const { return fNdata; }
-    virtual Int_t    GetOffset() const { return fOffset; }
-    virtual void    *GetValuePointer() const { return 0; }
+    virtual Int_t    GetLenStatic() { return fLen; }
+    virtual Int_t    GetLenType() { return fLenType; }
+    virtual Int_t    GetMaximum() { return 0; }
+    virtual Int_t    GetMinimum() { return 0; }
+    virtual Int_t    GetNdata() { return fNdata; }
+    virtual Int_t    GetOffset() { return fOffset; }
+    virtual void    *GetValuePointer() { return 0; }
     virtual const char *GetTypeName() const { return ""; }
-    virtual Double_t GetValue(Int_t i=0) const;
+    virtual Double_t GetValue(Int_t i=0);
     virtual void     Import(TClonesArray *list, Int_t n);
-    virtual Bool_t   IsOnTerminalBranch() const    { return kTRUE; }
-    virtual Bool_t   IsRange() const    { return fIsRange; }
-    virtual Bool_t   IsUnsigned() const { return fIsUnsigned; }
-    virtual void     PrintValue(Int_t i=0) const {;}
+    virtual Bool_t   IsRange()    { return fIsRange; }
+    virtual Bool_t   IsUnsigned() { return fIsUnsigned; }
     virtual void     ReadBasket(TBuffer &) {;}
     virtual void     ReadBasketExport(TBuffer &, TClonesArray *, Int_t) {;}
             Int_t    ResetAddress(void *add, Bool_t destructor = kFALSE);
@@ -86,11 +84,11 @@ public:
     virtual void     SetRange(Bool_t range=kTRUE) { fIsRange = range; }
     virtual void     SetUnsigned() { fIsUnsigned = kTRUE; }
 
-    ClassDef(TLeaf,2)  //Leaf: description of a Branch data type
+    ClassDef(TLeaf,1)  //Leaf: description of a Branch data type
 };
 
 inline void     TLeaf::Export(TClonesArray *, Int_t) { }
-inline Double_t TLeaf::GetValue(Int_t) const { return 0; }
+inline Double_t TLeaf::GetValue(Int_t) { return 0; }
 inline void     TLeaf::Import(TClonesArray *, Int_t) { }
 inline void     TLeaf::SetAddress(void *) { }
 

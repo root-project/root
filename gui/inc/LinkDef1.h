@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.8 2001/05/02 00:52:07 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.5 2000/10/17 12:30:14 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -19,7 +19,6 @@
 #pragma link C++ enum EFrameType;
 #pragma link C++ enum EMWMHints;
 #pragma link C++ enum ELayoutHints;
-#pragma link C++ enum ETableLayoutHints;
 #pragma link C++ enum EMenuEntryState;
 #pragma link C++ enum EMenuEntryType;
 #pragma link C++ enum EMsgBoxIcon;
@@ -27,10 +26,6 @@
 #pragma link C++ enum ETextJustification;
 #pragma link C++ enum EWidgetStatus;
 #pragma link C++ enum EWidgetMessageTypes;
-#pragma link C++ enum TGNumberFormat::EStyle;
-#pragma link C++ enum TGNumberFormat::EAttribute;
-#pragma link C++ enum TGNumberFormat::ELimit;
-#pragma link C++ enum TGNumberFormat::EStepSize;
 
 #pragma link C++ global gClient;
 
@@ -41,7 +36,6 @@
 #pragma link C++ class TGObject;
 #pragma link C++ class TGClient;
 #pragma link C++ class TGWindow;
-#pragma link C++ class TGUnknownWindowHandler;
 #pragma link C++ class TGPicture;
 #pragma link C++ class TGSelectedPicture;
 #pragma link C++ class TGPicturePool;
@@ -57,14 +51,12 @@
 #pragma link C++ class TGGroupFrame;
 #pragma link C++ class TGFrameElement;
 #pragma link C++ class TGLayoutHints;
-#pragma link C++ class TGTableLayoutHints;
 #pragma link C++ class TGLayoutManager;
 #pragma link C++ class TGVerticalLayout;
 #pragma link C++ class TGHorizontalLayout;
 #pragma link C++ class TGRowLayout;
 #pragma link C++ class TGColumnLayout;
 #pragma link C++ class TGMatrixLayout;
-#pragma link C++ class TGTableLayout;
 #pragma link C++ class TGTileLayout;
 #pragma link C++ class TGListLayout;
 #pragma link C++ class TGListDetailsLayout;
@@ -97,8 +89,5 @@
 #pragma link C++ class TGProgressBar;
 #pragma link C++ class TGHProgressBar;
 #pragma link C++ class TGVProgressBar;
-#pragma link C++ class TGNumberFormat;
-#pragma link C++ class TGNumberEntryField;
-#pragma link C++ class TGNumberEntry;
 
 #endif

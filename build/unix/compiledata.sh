@@ -25,8 +25,6 @@ CUSTOMSHARED=$9
 shift
 CUSTOMEXE=$9
 shift
-ARCH=$9
-shift
 
 if [ "$INCDIR" = "$ROOTSYS/include" ]; then
    INCDIR=\$ROOTSYS/include
@@ -35,26 +33,19 @@ if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
    LIBDIR=\$ROOTSYS/lib
 fi
 
-if [ "x`echo $SOFLAGS | grep -- '-soname,$' `" != "x" ]; then
-    # If soname is specified, add the library name.
-    SOFLAGS=$SOFLAGS\$LibName.$SOEXT
-    # Alternatively we could remove the soname flag.
-    #    SOFLAGS=`echo $SOFLAGS | sed  -e 's/-soname,/ /' -e 's/ -Wl, / /' `
-fi
 rm -f __compiledata
 
-echo "Running $0"
+echo "Running $COMPILEDATA"
 echo "/* This is file is automatically generated */" > __compiledata
-echo "#define BUILD_ARCH \"$ARCH\"" >> __compiledata
 echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type $CXX`"\" " >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then
-   echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS -o \$SharedLib\"" >> __compiledata
+   echo "#define MAKESHAREDLIB  \"$CXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS -o \$SharedLib\"" >> __compiledata
 else
    echo "#define MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
 fi
 if [ "$CUSTOMEXE" = "" ]; then
-   echo "#define MAKEEXE \"cd \$BuildDir ; $CXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles; $CXX \$ObjectFiles $LDFLAGS -o \$ExeName \$LinkedLibs $SYSLIBS\""  >> __compiledata
+   echo "#define MAKEEXE \"$CXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles; $CXX \$ObjectFiles $LDFLAGS -o \$ExeName \$LinkedLibs $SYSLIBS\""  >> __compiledata
 else
    echo "#define MAKEEXE \"$CUSTOMEXE\"" >> __compiledata
 fi
@@ -70,7 +61,7 @@ if [ -r $COMPILEDATA ]; then
       echo "Changing $COMPILEDATA"
       mv __compiledata $COMPILEDATA;
    else
-      rm -f __compiledata; fi
+      rm -f __compiledata; fi;
 else
    echo "Making $COMPILEDATA"
    mv __compiledata $COMPILEDATA; fi

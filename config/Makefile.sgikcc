@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for SGI IRIX 6.x with KCC compiler
 
 # You can steer the build with the variable ROOTBUILD
@@ -15,7 +13,7 @@ CXXOPT        = +K0
 OPT           = -g -O0
 NOOPT         =
 else
-CXXOPT        = +K1
+CXXOPT        = +K3
 OPT           = -O2
 NOOPT         =
 endif
@@ -26,29 +24,33 @@ else
 EXCEPTION     = --no_exceptions
 endif
 
-ifeq ($(O32),)
+ifeq (n32,$(findstring n32,$(ROOTBUILD)))
 ABI           = -n32
 else
 ABI           = -32 -mips2
 endif
 
-ifneq ($(OSTHREADLIB),)
-CXXOPT        += --thread_safe
+ifeq (thread,$(findstring thread,$(ROOTBUILD)))
+THREAD        += "USE"
+CXXOPT        += --thread_safe -g
+OPT           += -g
 endif
 
 # Compiler:
 CXX           = KCC
 CC            = cc
 CXXFLAGS      = $(ABI) $(EXCEPTION) --signed_chars --display_error_number \
-                --diag_suppress 608 --diag_suppress 68 --diag_suppress 191 \
-                --one_instantiation_per_object $(CXXOPT) -DSGI_REL=$(SGI_REL) \
-                $(EXTRA_CXXFLAGS)
+                --diag_suppress 68 --diag_suppress 191 --diag_suppress 830 \
+                --diag_suppress 837 $(CXXOPT) -DSGI_REL=$(SGI_REL) \
+                $(EXTRA_CXXFLAGS) \
+
 CFLAGS        = $(ABI) -signed $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = $(ABI) $(EXCEPTION) --signed_chars --display_error_number \
-                --diag_suppress 608 --diag_suppress 68 --diag_suppress 191 \
-                --one_instantiation_per_object -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
+                --diag_suppress 68 --diag_suppress 191 --diag_suppress 830 \
+                --diag_suppress 837 -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(CXXOPT) \
-                $(EXTRA_CXXFLAGS)
+                --diag_suppress 426 $(EXTRA_CXXFLAGS)
+
 CINTCFLAGS    = $(ABI) -signed -w -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO \
                 -D__KCC $(EXTRA_CFLAGS)
@@ -67,19 +69,19 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
+XLIBS         = $(XPMLIB) -lX11
 CILIBS        = -lm -ltermcap -lbsd -ldl -lgen
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
 F77           = f77
 F77FLAGS      = $(ABI)
-ifeq ($(O32),)
+ifeq (n32,$(findstring n32,$(ROOTBUILD)))
 F77LIBS       = -lftn
 else
 F77LIBS       = -lI77 -lU77 -lF77 -lisam
 endif
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB)
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB)
 

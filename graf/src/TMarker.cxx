@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.7 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.2 2000/06/13 11:07:15 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -10,8 +10,9 @@
  *************************************************************************/
 
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TMarker.h"
@@ -194,7 +195,7 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TMarker::ls(Option_t *) const
+void TMarker::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this marker with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    ====================================
@@ -217,7 +218,7 @@ void TMarker::PaintMarker(Double_t x, Double_t y)
 //*-*                  =====================================
 
    TAttMarker::Modify();  //Change line attributes only if necessary
-   gPad->PaintPolyMarker(-1,&x,&y,"");
+   gPad->PaintPolyMarker(1,&x,&y,"");
 }
 
 //______________________________________________________________________________
@@ -229,7 +230,7 @@ void TMarker::PaintMarkerNDC(Double_t, Double_t)
 }
 
 //______________________________________________________________________________
-void TMarker::Print(Option_t *) const
+void TMarker::Print(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this marker with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ====================================
@@ -264,21 +265,22 @@ void TMarker::Streamer(TBuffer &R__b)
    // Stream an object of class TMarker.
 
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TMarker::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      Version_t R__v = R__b.ReadVersion();
       TObject::Streamer(R__b);
       TAttMarker::Streamer(R__b);
-      Float_t x,y;
-      R__b >> x;  fX = x;
-      R__b >> y;  fY = y;
-      //====end of old versions
-
+      if (R__v < 2) {
+         Float_t x,y;
+         R__b >> x;  fX = x;
+         R__b >> y;  fY = y;
+      } else {
+         R__b >> fX;
+         R__b >> fY;
+      }
    } else {
-      TMarker::Class()->WriteBuffer(R__b,this);
+      R__b.WriteVersion(TMarker::IsA());
+      TObject::Streamer(R__b);
+      TAttMarker::Streamer(R__b);
+      R__b << fX;
+      R__b << fY;
    }
 }

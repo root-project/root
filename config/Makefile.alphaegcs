@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile to build ROOT for DEC unix with egcs1.1
 
 PLATFORM      = alphaegcs
@@ -31,7 +29,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ltermcap
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
+XLIBS         = $(XPMLIB) -lX11
 CILIBS        = -lm -ltermcap
 
 # Fortran:
@@ -40,10 +38,4 @@ F77           = g77
 F77LD         = g77
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                -lX11 -lXext -lXmu -lXi -lm
-
-# Override default in Makefile.config
-INSTALL        := cp -pR
-INSTALLDATA    := cp -pR
-
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -lX11 -lXext -lXmu -lXi -lm

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.2 2000/05/30 17:17:10 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -93,7 +93,7 @@ Bool_t TWebFile::IsOpen() const
 }
 
 //______________________________________________________________________________
-Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
+Bool_t TWebFile::ReadBuffer(char *buf, int len)
 {
    // Read specified byte range from remote file via HTTP daemon. This
    // routine connects to the remote host, sends the request and returns

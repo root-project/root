@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.3 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -48,10 +48,6 @@ private:
    TList              *fOptions;     //list of possible values 0=no restrictions
 
 public:
-    
-   // Type of STL container (returned by IsSTLContainer).
-   enum ESTLType {kNone=0, kVector=1, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
-
    TDataMember(G__DataMemberInfo *info = 0, TClass *cl = 0);
    virtual       ~TDataMember();
    Int_t          GetArrayDim() const;
@@ -65,17 +61,16 @@ public:
    const char    *GetFullTypeName() const;
    const char    *GetArrayIndex() const;
 
-   TList         *GetOptions() const;
+   TList         *GetOptions();
    TMethodCall   *SetterMethod();
    TMethodCall   *GetterMethod();
 
-   Int_t          Compare(const TObject *obj) const;
-   ULong_t        Hash() const;
+   Int_t          Compare(TObject *obj);
+   ULong_t        Hash();
    Bool_t         IsBasic() const;
    Bool_t         IsEnum() const;
    Bool_t         IsaPointer() const;
    Bool_t         IsPersistent() const { return TestBit(kObjIsPersistent); }
-   Int_t          IsSTLContainer();
    Long_t         Property() const;
 
    ClassDef(TDataMember,0)  //Dictionary for a class data member

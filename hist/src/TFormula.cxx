@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.28 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.6 2000/08/11 20:10:12 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <iostream.h>
 #include <math.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TFormula.h"
@@ -24,6 +24,7 @@
 
 static Int_t MAXOP,MAXPAR,MAXCONST;
 const Int_t kMAXSTRINGFOUND = 10;
+static Int_t already_found[kMAXFOUND];
 
 ClassImp(TFormula)
 
@@ -124,10 +125,6 @@ TFormula::TFormula(const char *name,const char *expression) :TNamed(name,express
   j = 0;
   for (i=0;i<nch;i++) {
      if (expression[i] == ' ') continue;
-     if (i > 0 && (expression[i] == '*') && (expression[i-1] == '*')) {
-        expr[j-1] = '^';
-        continue;
-     }
      expr[j] = expression[i]; j++;
    }
   expr[j] = 0;
@@ -169,7 +166,7 @@ TFormula::~TFormula()
 
 
 //______________________________________________________________________________
-void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
+void TFormula::Analyze(const char *schain, Int_t &err)
 {
 //*-*-*-*-*-*-*-*-*Analyze a sub-expression in one formula*-*-*-*-*-*-*-*-*-*-*
 //*-*              =======================================
@@ -238,7 +235,6 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*     !           68
 //*-*     ==(string)  76                  &            78
 //*-*     !=(string)  77                  |            79
-//*-*     <<(shift)   80                  >>(shift)    81
 //*-*
 //*-*   * constants :
 //*-*
@@ -295,14 +291,14 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 
    Int_t valeur,find,n,i,j,k,lchain,nomb,virgule,inter;
    Int_t compt,compt2,compt3,compt4,hexa;
-   Double_t vafConst;
-   ULong_t vafConst2;
+   Float_t vafConst;
+   UInt_t vafConst2;
    Bool_t parenthese;
    TString s,chaine_error,chaine1ST;
    TString s1,s2,s3,ctemp;
    TString chaine = schain;
    TFormula *oldformula;
-   Int_t modulo,plus,puiss10,puiss10bis,moins,multi,divi,puiss,et,ou,petit,grand,egal,diff,peteg,grdeg,etx,oux,rshift,lshift;
+   Int_t modulo,plus,puiss10,puiss10bis,moins,multi,divi,puiss,et,ou,petit,grand,egal,diff,peteg,grdeg,etx,oux;
    char t;
 
   Int_t inter2 = 0;
@@ -336,7 +332,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
     }
   }
   if (lchain==0) err=4; // empty string
-  modulo=plus=moins=multi=divi=puiss=et=ou=petit=grand=egal=diff=peteg=grdeg=etx=oux=rshift=lshift=0;
+  modulo=plus=moins=multi=divi=puiss=et=ou=petit=grand=egal=diff=peteg=grdeg=etx=oux=0;
 
 //*-*- Look for simple operators
 //*-*  =========================
@@ -374,12 +370,8 @@ if (err==0) {
     if (chaine(i-1,2)=="||" && compt==0 && compt2==0 && ou==0) {puiss10=0; ou=i;}
     if (chaine(i-1,1)=="&" && compt==0 && compt2==0 && etx==0) {etx=i;puiss=0;}
     if (chaine(i-1,1)=="|" && compt==0 && compt2==0 && oux==0) {puiss10=0; oux=i;}
-    if (chaine(i-1,2)==">>" && compt==0 && compt2==0 && rshift==0) {puiss10=0; rshift=i;}
-    if (chaine(i-1,1)==">" && compt==0 && compt2==0 && rshift==0 && grand==0)
-        {puiss10=0; grand=i;}
-    if (chaine(i-1,2)=="<<" && compt==0 && compt2==0 && lshift==0) {puiss10=0; lshift=i;}
-    if (chaine(i-1,1)=="<" && compt==0 && compt2==0 && lshift==0 && petit==0)
-        {puiss10=0; petit=i;}
+    if (chaine(i-1,1)==">" && compt==0 && compt2==0 && grand==0) {puiss10=0; grand=i;}
+    if (chaine(i-1,1)=="<" && compt==0 && compt2==0 && petit==0) {puiss10=0; petit=i;}
     if ((chaine(i-1,2)=="<=" || chaine(i-1,2)=="=<") && compt==0 && compt2==0
         && peteg==0) {peteg=i; puiss10=0; petit=0;}
     if ((chaine(i-1,2)=="=>" || chaine(i-1,2)==">=") && compt==0 && compt2==0
@@ -406,9 +398,9 @@ if (err==0) {
        }
     else {
        ctemp = chaine(0,ou-1);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        ctemp = chaine(ou+1,lchain-ou-1);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        fExpr[fNoper] = "||";
        fOper[fNoper] = 61;
        fNoper++;
@@ -420,9 +412,9 @@ if (err==0) {
       }
     else {
       ctemp = chaine(0,et-1);
-      Analyze(ctemp.Data(),err,offset);
+      Analyze(ctemp.Data(),err);
       ctemp = chaine(et+1,lchain-et-1);
-      Analyze(ctemp.Data(),err,offset);
+      Analyze(ctemp.Data(),err);
       fExpr[fNoper] = "&&";
       fOper[fNoper] = 60;
       fNoper++;
@@ -434,9 +426,9 @@ if (err==0) {
       }
     else {
       ctemp = chaine(0,oux-1);
-      Analyze(ctemp.Data(),err,offset);
+      Analyze(ctemp.Data(),err);
       ctemp = chaine(oux,lchain-oux);
-      Analyze(ctemp.Data(),err,offset);
+      Analyze(ctemp.Data(),err);
       fExpr[fNoper] = "|";
       fOper[fNoper] = 79;
       fNoper++;
@@ -448,9 +440,9 @@ if (err==0) {
       }
     else {
       ctemp = chaine(0,etx-1);
-      Analyze(ctemp.Data(),err,offset);
+      Analyze(ctemp.Data(),err);
       ctemp = chaine(etx,lchain-etx);
-      Analyze(ctemp.Data(),err,offset);
+      Analyze(ctemp.Data(),err);
       fExpr[fNoper] = "&";
       fOper[fNoper] = 78;
       fNoper++;
@@ -462,9 +454,9 @@ if (err==0) {
        }
     else {
        ctemp = chaine(0,petit-1);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        ctemp = chaine(petit,lchain-petit);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        fExpr[fNoper] = "<";
        fOper[fNoper] = 64;
        fNoper++;
@@ -476,9 +468,9 @@ if (err==0) {
        }
     else {
        ctemp = chaine(0,grand-1);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        ctemp = chaine(grand,lchain-grand);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        fExpr[fNoper] = ">";
        fOper[fNoper] = 65;
        fNoper++;
@@ -490,9 +482,9 @@ if (err==0) {
        }
     else {
        ctemp = chaine(0,peteg-1);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        ctemp = chaine(peteg+1,lchain-peteg-1);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        fExpr[fNoper] = "<=";
        fOper[fNoper] = 66;
        fNoper++;
@@ -504,9 +496,9 @@ if (err==0) {
        }
     else {
        ctemp = chaine(0,grdeg-1);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        ctemp = chaine(grdeg+1,lchain-grdeg-1);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        fExpr[fNoper] = "=>";
        fOper[fNoper] = 67;
        fNoper++;
@@ -518,9 +510,9 @@ if (err==0) {
        }
     else {
        ctemp = chaine(0,egal-1);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        ctemp = chaine(egal+1,lchain-egal-1);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        fExpr[fNoper] = "==";
        fOper[fNoper] = 62;
        fNoper++;
@@ -532,9 +524,9 @@ if (err==0) {
        }
     else {
        ctemp = chaine(0,diff-1);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        ctemp = chaine(diff+1,lchain-diff-1);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        fExpr[fNoper] = "!=";
        fOper[fNoper] = 63;
        fNoper++;
@@ -547,9 +539,9 @@ if (err==0) {
       }
     else {
        ctemp = chaine(0,plus-1);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        ctemp = chaine(plus,lchain-plus);
-       Analyze(ctemp.Data(),err,offset);
+       Analyze(ctemp.Data(),err);
        fExpr[fNoper] = "+";
        fOper[fNoper] = 1;
        fNoper++;
@@ -559,7 +551,7 @@ if (err==0) {
     if (moins != 0) {
       if (moins == 1) {
         ctemp = chaine(moins,lchain-moins);
-        Analyze(ctemp.Data(),err,offset);
+        Analyze(ctemp.Data(),err);
         fExpr[fNoper] = "-1";
         fOper[fNoper] = 0;
         fNoper++;
@@ -572,9 +564,9 @@ if (err==0) {
           chaine_error = "-";
         } else {
           ctemp = chaine(0,moins-1);
-          Analyze(ctemp.Data(),err,offset);
+          Analyze(ctemp.Data(),err);
           ctemp = chaine(moins,lchain-moins);
-          Analyze(ctemp.Data(),err,offset);
+          Analyze(ctemp.Data(),err);
           fExpr[fNoper] = "-";
           fOper[fNoper] = 2;
           fNoper++;
@@ -586,38 +578,12 @@ if (err==0) {
             chaine_error="%";
          } else {
            ctemp = chaine(0,modulo-1);
-           Analyze(ctemp.Data(),err,offset);
+           Analyze(ctemp.Data(),err);
            ctemp = chaine(modulo,lchain-modulo);
-           Analyze(ctemp.Data(),err,offset);
+           Analyze(ctemp.Data(),err);
            fExpr[fNoper] = "%";
            fOper[fNoper] = 5;
            fNoper++;
-         }
-    } else if (rshift != 0) {
-         if (rshift == 1 || rshift == lchain) {
-            err=5;
-            chaine_error=">>";
-         } else {
-            ctemp = chaine(0,rshift-1);
-            Analyze(ctemp.Data(),err,offset);
-            ctemp = chaine(rshift+1,lchain-rshift-1);
-            Analyze(ctemp.Data(),err,offset);
-            fExpr[fNoper] = ">>";
-            fOper[fNoper] = 81;
-            fNoper++;
-         }
-    } else if (lshift != 0) {
-         if (lshift == 1 || lshift == lchain) {
-            err=5;
-            chaine_error=">>";
-         } else {
-            ctemp = chaine(0,lshift-1);
-            Analyze(ctemp.Data(),err,offset);
-            ctemp = chaine(lshift+1,lchain-lshift-1);
-            Analyze(ctemp.Data(),err,offset);
-            fExpr[fNoper] = ">>";
-            fOper[fNoper] = 80;
-            fNoper++;
          }
     } else {
       if (multi != 0) {
@@ -627,9 +593,9 @@ if (err==0) {
           }
         else {
           ctemp = chaine(0,multi-1);
-          Analyze(ctemp.Data(),err,offset);
+          Analyze(ctemp.Data(),err);
           ctemp = chaine(multi,lchain-multi);
-          Analyze(ctemp.Data(),err,offset);
+          Analyze(ctemp.Data(),err);
           fExpr[fNoper] = "*";
           fOper[fNoper] = 3;
           fNoper++;
@@ -642,9 +608,9 @@ if (err==0) {
              }
           else {
             ctemp = chaine(0,divi-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err);
             ctemp = chaine(divi,lchain-divi);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err);
             fExpr[fNoper] = "/";
             fOper[fNoper] = 4;
             fNoper++;
@@ -658,12 +624,12 @@ if (err==0) {
             else {
               if (chaine(lchain-2,2) == "^2") {
                  ctemp = "sq(" + chaine(0,lchain-2) + ")";
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
               } else {
                  ctemp = chaine(0,puiss-1);
                  Analyze(ctemp.Data(),err);
                  ctemp = chaine(puiss,lchain-puiss);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "^";
                  fOper[fNoper] = 20;
                  fNoper++;
@@ -674,9 +640,7 @@ if (err==0) {
               find=0;
               oldformula = (TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
                if (oldformula && !oldformula->GetNumber()) {
-                 Int_t nprior = fNpar;
-                 Analyze(oldformula->GetTitle(),err,fNpar); // changes fNpar
-                 fNpar = nprior;
+                 Analyze(oldformula->GetTitle(),err);
                  find=1;
                  if (!err) {
                     Int_t npold = oldformula->GetNpar();
@@ -698,128 +662,128 @@ if (err==0) {
                } else if ( k >= 0 ) {
                   fExpr[fNoper] = chaine;
                   fOper[fNoper] = 100000 + k;
-                  if (k <kMAXFOUND && !fAlreadyFound.TestBitNumber(k)) {
-                     fAlreadyFound.SetBitNumber(k);
+                  if (k <kMAXFOUND && !already_found[k]) {
+                     already_found[k] = 1;
                      fNval++;
                   }
                   fNoper++;
                } else if (chaine(0,1) == "!") {
                   ctemp = chaine(1,lchain-1);
-                  Analyze(ctemp.Data(),err,offset);
+                  Analyze(ctemp.Data(),err);
                   fExpr[fNoper] = "!";
                   fOper[fNoper] = 68;
                   fNoper++;
                } else if (chaine(0,4) == "cos(") {
                   ctemp = chaine(3,lchain-3);
-                  Analyze(ctemp.Data(),err,offset);
+                  Analyze(ctemp.Data(),err);
                   fExpr[fNoper] = "cos";
                   fOper[fNoper] = 10;
                   fNoper++;
                } else if (chaine(0,4) == "sin(") {
                  ctemp = chaine(3,lchain-3);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "sin";
                  fOper[fNoper] = 11;
                  fNoper++;
                } else if (chaine(0,4) == "tan(") {
                  ctemp = chaine(3,lchain-3);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "tan";
                  fOper[fNoper] = 12;
                  fNoper++;
                } else if (chaine(0,5) == "acos(") {
                  ctemp = chaine(4,lchain-4);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "acos";
                  fOper[fNoper] = 13;
                  fNoper++;
                } else if (chaine(0,5) == "asin(") {
                  ctemp = chaine(4,lchain-4);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "asin";
                  fOper[fNoper] = 14;
                  fNoper++;
                } else if (chaine(0,5) == "atan(") {
                  ctemp = chaine(4,lchain-4);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "atan";
                  fOper[fNoper] = 15;
                  fNoper++;
                 } else if (chaine(0,5) == "cosh(") {
                   ctemp = chaine(4,lchain-4);
-                  Analyze(ctemp.Data(),err,offset);
+                  Analyze(ctemp.Data(),err);
                   fExpr[fNoper] = "cosh";
                   fOper[fNoper] = 70;
                   fNoper++;
                } else if (chaine(0,5) == "sinh(") {
                  ctemp = chaine(4,lchain-4);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "sinh";
                  fOper[fNoper] = 71;
                  fNoper++;
                } else if (chaine(0,5) == "tanh(") {
                  ctemp = chaine(4,lchain-4);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "tanh";
                  fOper[fNoper] = 72;
                  fNoper++;
                } else if (chaine(0,6) == "acosh(") {
                  ctemp = chaine(5,lchain-5);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "acosh";
                  fOper[fNoper] = 73;
                  fNoper++;
                } else if (chaine(0,6) == "asinh(") {
                  ctemp = chaine(5,lchain-5);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "asinh";
                  fOper[fNoper] = 74;
                  fNoper++;
                } else if (chaine(0,6) == "atanh(") {
                  ctemp = chaine(5,lchain-5);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "atanh";
                  fOper[fNoper] = 75;
                  fNoper++;
                } else if (chaine(0,3) == "sq(") {
                  ctemp = chaine(2,lchain-2);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "sq";
                  fOper[fNoper] = 21;
                  fNoper++;
                } else if (chaine(0,4) == "log(") {
                  ctemp = chaine(3,lchain-3);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "log";
                  fOper[fNoper] = 30;
                  fNoper++;
                } else if (chaine(0,6) == "log10(") {
                  ctemp = chaine(5,lchain-5);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "log10";
                  fOper[fNoper] = 32;
                  fNoper++;
                } else if (chaine(0,4) == "exp(") {
                  ctemp = chaine(3,lchain-3);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "exp";
                  fOper[fNoper] = 31;
                  fNoper++;
                } else if (chaine(0,4) == "abs(") {
                  ctemp = chaine(3,lchain-3);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "abs";
                  fOper[fNoper] = 41;
                  fNoper++;
                } else if (chaine(0,5) == "sign(") {
                  ctemp = chaine(4,lchain-4);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "sign";
                  fOper[fNoper] = 42;
                  fNoper++;
                } else if (chaine(0,4) == "int(") {
                  ctemp = chaine(3,lchain-3);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "int";
                  fOper[fNoper] = 43;
                  fNoper++;
@@ -829,11 +793,11 @@ if (err==0) {
                  fNoper++;
                } else if (chaine(0,5) == "sqrt(") {
                  ctemp = chaine(4,lchain-4);
-                 Analyze(ctemp.Data(),err,offset);
+                 Analyze(ctemp.Data(),err);
                  fExpr[fNoper] = "sqrt";
                  fOper[fNoper] = 22;
                  fNoper++;
-
+			
 //*-*- Look for an exponential
 //*-*  =======================
                } else if (chaine(0,4)=="expo" || chaine(1,4)=="expo" || chaine(2,4)=="expo") {
@@ -876,14 +840,14 @@ if (err==0) {
                 if (fNpar>=MAXPAR) err=7; // too many parameters
                 if (!err) {
                    fExpr[fNoper] = "E";
-                   fOper[fNoper] = 1001+100*inter2+offset;
-                   if (inter2 == 5+offset && fNpar < 3+offset) fNpar = 3+offset;
-                   if (fNpar < 2+offset) fNpar = 2+offset;
+                   fOper[fNoper] = 1001+100*inter2;
+                   if (inter2 == 5 && fNpar < 3) fNpar = 3;
+                   if (fNpar < 2) fNpar = 2;
                    if (fNpar>=MAXPAR) err=7; // too many parameters
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
-                      if (fNpar == 2) SetNumber(200);
+                      SetNumber(200);
                    }
                 }
             } else if (chaine(4,1) == "(") {
@@ -899,13 +863,12 @@ if (err==0) {
                       if (err==0) {
                          sscanf(ctemp.Data(),"%d",&inter);
                          if (inter>=0) {
-                            inter += offset;
                             fOper[fNoper] = 1001+inter+100*inter2;
                             if (inter2 == 5) inter++;
                             if (inter+2>fNpar) fNpar = inter+2;
                             if (fNpar>=MAXPAR) err=7; // too many parameters
                             if (!err) fNoper++;
-                            if (fNpar == 2) SetNumber(200);
+                            SetNumber(200);
                          } else err=20;
                       } else err = 20; // non integer value for parameter number
                     } else {
@@ -953,14 +916,14 @@ if (err==0) {
                 if (fNpar>=MAXPAR) err=7; // too many parameters
                 if (!err) {
                    fExpr[fNoper] = "G";
-                   fOper[fNoper] = 2001+100*inter2+offset;
-                   if (inter2 == 5+offset && fNpar < 5+offset) fNpar = 5+offset;
-                   if (3+offset>fNpar) fNpar = 3+offset;
+                   fOper[fNoper] = 2001+100*inter2;
+                   if (inter2 == 5 && fNpar < 5) fNpar = 5;
+                   if (3>fNpar) fNpar = 3;
                    if (fNpar>=MAXPAR) err=7; // too many parameters
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
-                      if (fNpar == 3) SetNumber(100);
+                      SetNumber(100);
                    }
                 }
             } else if (chaine(4,1) == "(" && err==0) {
@@ -976,13 +939,12 @@ if (err==0) {
                       if (err==0) {
                           sscanf(ctemp.Data(),"%d",&inter);
                           if (inter >= 0) {
-                             inter += offset;
                              fOper[fNoper] = 2001+inter+100*inter2;
                              if (inter2 == 5) inter += 2;
                              if (inter+3>fNpar) fNpar = inter+3;
                              if (fNpar>=MAXPAR) err=7; // too many parameters
                              if (!err) fNoper++;
-                             if(fNpar == 3) SetNumber(100);
+                             SetNumber(100);
                          } else err = 20; // non integer value for parameter number
                       }
                    } else if (err==0) {
@@ -1030,14 +992,14 @@ if (err==0) {
                 if (fNpar>=MAXPAR) err=7; // too many parameters
                 if (!err) {
                    fExpr[fNoper] = "L";
-                   fOper[fNoper] = 4001+100*inter2+offset;
-                   if (inter2 == 5+offset && fNpar < 5+offset) fNpar = 5+offset;
-                   if (3+offset>fNpar) fNpar = 3+offset;
+                   fOper[fNoper] = 4001+100*inter2;
+                   if (inter2 == 5 && fNpar < 5) fNpar = 5;
+                   if (3>fNpar) fNpar = 3;
                    if (fNpar>=MAXPAR) err=7; // too many parameters
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
-                      if (fNpar == 3) SetNumber(400);
+                      SetNumber(400);
                    }
                 }
             } else if (chaine(6,1) == "(" && err==0) {
@@ -1053,13 +1015,12 @@ if (err==0) {
                       if (err==0) {
                           sscanf(ctemp.Data(),"%d",&inter);
                           if (inter >= 0) {
-                             inter += offset;
                              fOper[fNoper] = 4001+inter+100*inter2;
                              if (inter2 == 5) inter += 2;
                              if (inter+3>fNpar) fNpar = inter+3;
                              if (fNpar>=MAXPAR) err=7; // too many parameters
                              if (!err) fNoper++;
-                             if (fNpar == 3) SetNumber(400);
+                             SetNumber(400);
                          } else err = 20; // non integer value for parameter number
                       }
                    } else if (err==0) {
@@ -1144,9 +1105,9 @@ if (err==0) {
             if (nomb != 1) err = 22; // There are plus or minus than 2 arguments for pow
             else {
               ctemp = chaine(4,virgule-5);
-              Analyze(ctemp.Data(),err,offset);
+              Analyze(ctemp.Data(),err);
               ctemp = chaine(virgule,lchain-virgule-1);
-              Analyze(ctemp.Data(),err,offset);
+              Analyze(ctemp.Data(),err);
               fExpr[fNoper] = "";
               fOper[fNoper] = 20;
               fNoper++;
@@ -1161,9 +1122,9 @@ if (err==0) {
             if (nomb != 1) err = 28; // There are plus or minus than 2 arguments for strstr
             else {
               ctemp = chaine(7,virgule-8);
-              Analyze(ctemp.Data(),err,offset);
+              Analyze(ctemp.Data(),err);
               ctemp = chaine(virgule,lchain-virgule-1);
-              Analyze(ctemp.Data(),err,offset);
+              Analyze(ctemp.Data(),err);
               fExpr[fNoper] = "";
               fOper[fNoper] = 23;
               fNoper++;
@@ -1179,9 +1140,9 @@ if (err==0) {
             if (nomb != 1) err = 21;  //{ There are plus or minus than 2 arguments for atan2
             else {
               ctemp = chaine(6,virgule-7);
-              Analyze(ctemp.Data(),err,offset);
+              Analyze(ctemp.Data(),err);
               ctemp = chaine(virgule,lchain-virgule-1);
-              Analyze(ctemp.Data(),err,offset);
+              Analyze(ctemp.Data(),err);
               fExpr[fNoper] = "";
               fOper[fNoper] = 16;
               fNoper++;
@@ -1196,9 +1157,9 @@ if (err==0) {
             if (nomb != 1) err = 21;  //{ There are plus or minus than 2 arguments for atan2
             else {
               ctemp = chaine(5,virgule-6);
-              Analyze(ctemp.Data(),err,offset);
+              Analyze(ctemp.Data(),err);
               ctemp = chaine(virgule,lchain-virgule-1);
-              Analyze(ctemp.Data(),err,offset);
+              Analyze(ctemp.Data(),err);
               fExpr[fNoper] = "";
               fOper[fNoper] = 17;
               fNoper++;
@@ -1216,7 +1177,7 @@ if (err==0) {
             }
             if (!err) {
               sscanf(ctemp.Data(),"%d",&valeur);
-              fOper[fNoper-1] = valeur + 101 + offset;
+              fOper[fNoper-1] = valeur + 101;
             }
           } else if (chaine == "pi") {
             fExpr[fNoper] = "P";
@@ -1267,9 +1228,9 @@ if (err==0) {
             }
             if (fNconst >= MAXCONST) err = 27;
             if (!err) {
-               if (hexa==0) {if (sscanf((const char*)chaine,"%lg",&vafConst) > 0) err = 0; else err =1;}
-               else {if (sscanf((const char*)chaine,"%lx",&vafConst2) > 0) err = 0; else err=1;
-               vafConst = (Double_t) vafConst2;}
+               if (hexa==0) {if (sscanf((const char*)chaine,"%g",&vafConst) > 0) err = 0; else err =1;}
+               else {if (sscanf((const char*)chaine,"%x",&vafConst2) > 0) err = 0; else err=1;
+               vafConst = (Float_t) vafConst2;}
                fExpr[fNoper] = chaine;
                k = -1;
                for (j=0;j<fNconst;j++) {
@@ -1390,9 +1351,7 @@ Int_t TFormula::Compile(const char *expression)
       fExpr[i] = "";
       fOper[i] = 0;
   }
-  for (i=0; i<MAXCONST; i++)
-      fConst[i] = 0;
-
+  for(i=0;i<kMAXFOUND;i++) already_found[i]=0;
 //*-*- Substitution of some operators to C++ style
 //*-*  ===========================================
   for (i=1; i<=chaine.Length(); i++) {
@@ -1413,23 +1372,19 @@ Int_t TFormula::Compile(const char *expression)
                 chaine = chaine(0,i-1) + "+" + chaine(i+1,lc-i-1);
                 i=0;
              } else
-               if (chaine(i-1,2) == "->") {
-                  chaine = chaine(0,i-1) + "." + chaine(i+1,lc-i-1);
-                  i=0;
-               } else
-                  if (chaine(i-1,1) == "[") {
-                     for (j=1;j<=chaine.Length()-i;j++) {
-                        if (chaine(j+i-1,1) == "]" || j+i > chaine.Length()) break;
-                     }
-                     ctemp = chaine(i,j-1);
-                     valeur=0;
-                     sscanf(ctemp.Data(),"%d",&valeur);
-                     if (valeur >= fNpar) fNpar = valeur+1;
-                  } else
-                     if (chaine(i-1,1) == " ") {
-                       chaine = chaine(0,i-1)+chaine(i,lc-i);
-                       i=0;
-                     }
+                if (chaine(i-1,1) == "[") {
+                   for (j=1;j<=chaine.Length()-i;j++) {
+                     if (chaine(j+i-1,1) == "]" || j+i > chaine.Length()) break;
+                   }
+                   ctemp = chaine(i,j-1);
+                   valeur=0;
+                   sscanf(ctemp.Data(),"%d",&valeur);
+                   if (valeur >= fNpar) fNpar = valeur+1;
+                } else
+                   if (chaine(i-1,1) == " ") {
+                      chaine = chaine(0,i-1)+chaine(i,lc-i);
+                      i=0;
+                   }
   }
   err = 0;
   Analyze((const char*)chaine,err);
@@ -1456,62 +1411,20 @@ Int_t TFormula::Compile(const char *expression)
      //*-*- if formula is a landau, set parameter names
      if (GetNumber() == 400) {
         SetParName(0,"Constant");
-        SetParName(1,"MPV");
+        SetParName(1,"Mean");
         SetParName(2,"Sigma");
      }
   }
 
 
 //*-* replace 'normal' == or != by ==(string) or !=(string) if needed.
-  Int_t is_it_string,last_string=0,before_last_string=0;
+  Int_t is_it_string,last_string=0;
   if (!fOper) fNoper = 0;
-   enum { kIsCharacter = BIT(12) };
   for (i=0; i<fNoper; i++) {
      is_it_string = 0;
      if ((fOper[i]>=105000 && fOper[i]<110000) || fOper[i] == 80000) is_it_string = 1;
-     else if (last_string) {
-
-       if (fOper[i] == 62) {
-          if (!before_last_string) {
-             Error("Compile", "Both operands of the operator == have too be either numbers or strings");
-             return -1;
-          }
-          fOper[i] = 76;
-          SetBit(kIsCharacter);
-       } else if (fOper[i] == 63) {
-          if (!before_last_string) {
-             Error("Compile", "Both operands of the operator != have too be either numbers or strings");
-             return -1;
-          }
-          fOper[i] = 77;
-          SetBit(kIsCharacter);
-       }
-       else if (fOper[i] == 23) {
-          if (! (before_last_string && last_string) ) {
-             Error("Compile", "strstr requires 2 string arguments");
-             return -1;
-          }
-          SetBit(kIsCharacter);
-       } else if (before_last_string) {
-          // the i-2 element is a string not used in a string operation, let's down grade it
-          // to a char array:
-          if (fOper[i-2]>=105000) {
-            fOper[i-2] -= 5000;
-            fNval++;
-            fNstring--;
-          }
-       }
-
-     } else if (before_last_string) {
-        // the i-2 element is a string not used in a string operation, let's down grade it
-        // to a char array:
-        if (fOper[i-2]>=105000){
-           fOper[i-2] -= 5000;
-           fNval++;
-           fNstring--;
-        }
-     }
-     before_last_string = last_string;
+     else if (fOper[i] == 62 && last_string == 1) fOper[i] = 76;
+     else if (fOper[i] == 63 && last_string == 1) fOper[i] = 77;
      last_string = is_it_string;
   }
 
@@ -1533,36 +1446,11 @@ void TFormula::Copy(TObject &obj)
    ((TFormula&)obj).fNconst = fNconst;
    ((TFormula&)obj).fNumber = fNumber;
    ((TFormula&)obj).fNval   = fNval;
-   ((TFormula&)obj).fExpr   = 0;
-   ((TFormula&)obj).fOper   = 0;
-   ((TFormula&)obj).fConst  = 0;
-   ((TFormula&)obj).fParams = 0;
-   ((TFormula&)obj).fNames  = 0;
-   if (fExpr && fNoper) {
-      ((TFormula&)obj).fExpr = new TString[fNoper];
-      for (i=0; i<fNoper; i++)
-         ((TFormula&)obj).fExpr[i] = "";
-   }
-   if (fOper && fNoper) {
-      ((TFormula&)obj).fOper = new Int_t[fNoper];
-      for (i=0; i<fNoper; i++)
-         ((TFormula&)obj).fOper[i] = 0;
-   }
-   if (fConst && fNconst) {
-      ((TFormula&)obj).fConst = new Double_t[fNconst];
-      for (i=0; i<fNconst; i++)
-         ((TFormula&)obj).fConst[i] = 0;
-   }
-   if (fParams && fNpar) {
-      ((TFormula&)obj).fParams = new Double_t[fNpar];
-      for (i=0; i<fNpar; i++)
-         ((TFormula&)obj).fParams[i] = 0;
-   }
-   if (fNames && fNpar) {
-      ((TFormula&)obj).fNames = new TString[fNpar];
-      for (i=0; i<fNpar; i++)
-         ((TFormula&)obj).fNames[i] = "";
-   }
+   if (fNoper)  ((TFormula&)obj).fExpr   = new TString[fNoper];
+   if (fNoper)  ((TFormula&)obj).fOper   = new Int_t[fNoper];
+   if (fNconst) ((TFormula&)obj).fConst  = new Double_t[fNconst];
+   if (fNpar)   ((TFormula&)obj).fParams = new Double_t[fNpar];
+   if (fNpar)   ((TFormula&)obj).fNames  = new TString[fNpar];
    for (i=0;i<fNoper;i++)  ((TFormula&)obj).fExpr[i]   = fExpr[i];
    for (i=0;i<fNoper;i++)  ((TFormula&)obj).fOper[i]   = fOper[i];
    for (i=0;i<fNconst;i++) ((TFormula&)obj).fConst[i]  = fConst[i];
@@ -1642,7 +1530,7 @@ Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z)
 }
 
 //______________________________________________________________________________
-Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
+Double_t TFormula::EvalPar(Double_t *x, Double_t *params)
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================
@@ -1791,8 +1679,6 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
                             else tab[pos-1]=0; break;
           case  78 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) & ((Int_t) tab[pos]); break;
           case  79 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); break;
-          case  80 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) <<((Int_t) tab[pos]); break;
-          case  81 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) >>((Int_t) tab[pos]); break;
        }
 //*-*- Parameter substitution
     } else if (action > 100 && action < 200) {
@@ -1826,25 +1712,13 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
           pos++;
           inter=action/100-20;
           int1=action-inter*100;
-          if (fParams[int1-1999] == 0) {
-             intermede2=1e10;
-          } else {
-             intermede2=Double_t((x[inter]-fParams[int1-2000])/fParams[int1-1999]);
-          }
+          intermede2=Double_t((x[inter]-fParams[int1-2000])/fParams[int1-1999]);
           tab[pos-1] = fParams[int1-2001]*TMath::Exp(-0.5*intermede2*intermede2);
 //*-*- xygaus
     } else if (action > 2500 && action < 2600) {
           pos++;
-          if (fParams[action-2499] == 0) {
-             intermede1=1e10;
-          } else {
-             intermede1=Double_t((x[0]-fParams[action-2500])/fParams[action-2499]);
-          }
-          if (fParams[action-2497] == 0) {
-             intermede2=1e10;
-          } else {
-             intermede2=Double_t((x[1]-fParams[action-2498])/fParams[action-2497]);
-          }
+          intermede1=Double_t((x[0]-fParams[action-2500])/fParams[action-2499]);
+          intermede2=Double_t((x[1]-fParams[action-2498])/fParams[action-2497]);
           tab[pos-1] = fParams[action-2501]*TMath::Exp(-0.5*(intermede1*intermede1+intermede2*intermede2));
 //*-*- landau, xlandau, ylandau or zlandau
     } else if (action > 4000 && action < 4500) {
@@ -1865,19 +1739,10 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
 }
 
 //______________________________________________________________________________
-Double_t TFormula::GetParameter(Int_t ipar) const
-{
-  //return value of parameter number ipar
-
-  if (ipar <0 && ipar >= fNpar) return 0;
-  return fParams[ipar];
-}
-
-//______________________________________________________________________________
-Double_t TFormula::GetParameter(const char *parName) const
+Double_t TFormula::GetParameter(const char *parName) 
 {
   //return value of parameter named parName
-
+   
   const Double_t kNaN = 1e-300;
   Int_t index = GetParNumber(parName);
   if (index==-1) {
@@ -1899,10 +1764,10 @@ const char *TFormula::GetParName(Int_t ipar) const
 }
 
 //______________________________________________________________________________
-Int_t TFormula::GetParNumber(const char *parName) const
+Int_t TFormula::GetParNumber(const char *parName) 
 {
   // return parameter number by name
-
+   
    for (Int_t i=0; i<fNpar; i++) {
       if (fNames[i] == parName) return i;
    }
@@ -1910,7 +1775,7 @@ Int_t TFormula::GetParNumber(const char *parName) const
 }
 
 //______________________________________________________________________________
-void TFormula::Print(Option_t *) const
+void TFormula::Print(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this formula with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================================
@@ -1927,18 +1792,6 @@ void TFormula::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TFormula::SetParameter(const char *name, Double_t value)
-{
-//*-*-*-*-*-*-*-*Initialize parameter number ipar*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            ================================
-
-   Int_t ipar = GetParNumber(name);
-   if (ipar <0 || ipar >= fNpar) return;
-   fParams[ipar] = value;
-   Update();
-}
-
-//______________________________________________________________________________
 void TFormula::SetParameter(Int_t ipar, Double_t value)
 {
 //*-*-*-*-*-*-*-*Initialize parameter number ipar*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -1950,7 +1803,7 @@ void TFormula::SetParameter(Int_t ipar, Double_t value)
 }
 
 //______________________________________________________________________________
-void TFormula::SetParameters(const Double_t *params)
+void TFormula::SetParameters(Double_t *params)
 {
 //*-*-*-*-*-*-*-*Initialize array of all parameters*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            ==================================
@@ -1964,7 +1817,7 @@ void TFormula::SetParameters(const Double_t *params)
 
 //______________________________________________________________________________
 void TFormula::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Double_t p4
-                       ,Double_t p5,Double_t p6,Double_t p7,Double_t p8,Double_t p9,Double_t p10)
+                       ,Double_t p5,Double_t p6,Double_t p7,Double_t p8,Double_t p9)
 {
 //*-*-*-*-*-*-*-*Initialize up to 10 parameters*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            ==============================
@@ -1979,22 +1832,12 @@ void TFormula::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Dou
    if (fNpar > 7) fParams[7] = p7;
    if (fNpar > 8) fParams[8] = p8;
    if (fNpar > 9) fParams[9] = p9;
-   if (fNpar >10) fParams[10]= p10;
    Update();
 }
 
 //______________________________________________________________________________
-void TFormula::SetParName(Int_t ipar, const char *name)
-{
-// Set name of parameter number ipar
-
-   if (ipar <0 || ipar >= fNpar) return;
-   fNames[ipar] = name;
-}
-
-//______________________________________________________________________________
 void TFormula::SetParNames(const char*name0,const char*name1,const char*name2,const char*name3,const char*name4,
-                     const char*name5,const char*name6,const char*name7,const char*name8,const char*name9,const char*name10)
+                     const char*name5,const char*name6,const char*name7,const char*name8,const char*name9)
 {
 //*-*-*-*-*-*-*-*-*-*Set up to 10 parameter names*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                ============================
@@ -2009,7 +1852,6 @@ void TFormula::SetParNames(const char*name0,const char*name1,const char*name2,co
    if (fNpar > 7) fNames[7] = name7;
    if (fNpar > 8) fNames[8] = name8;
    if (fNpar > 9) fNames[9] = name9;
-   if (fNpar >10) fNames[10]= name10;
 }
 
 //_______________________________________________________________________
@@ -2018,15 +1860,9 @@ void TFormula::Streamer(TBuffer &b)
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
    Int_t i;
+   UInt_t R__s, R__c;
    if (b.IsReading()) {
-      UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
-      if (v > 3) {
-         TFormula::Class()->ReadBuffer(b, this, v, R__s, R__c);
-         if (!TestBit(kNotGlobal)) gROOT->GetListOfFunctions()->Add(this);
-         return;
-      }
-      //====process old versions before automatic schema evolution
       TNamed::Streamer(b);
       b >> fNdim;
       b >> fNumber;
@@ -2046,9 +1882,18 @@ void TFormula::Streamer(TBuffer &b)
       if (gROOT->GetListOfFunctions()->FindObject(GetName())) return;
       gROOT->GetListOfFunctions()->Add(this);
       b.CheckByteCount(R__s, R__c, TFormula::IsA());
-      //====end of old versions
-
    } else {
-      TFormula::Class()->WriteBuffer(b,this);
+      R__c = b.WriteVersion(TFormula::IsA(), kTRUE);
+      TNamed::Streamer(b);
+      b << fNdim;
+      b << fNumber;
+      b << fNval;
+      b << fNstring;
+      b.WriteArray(fParams,fNpar);
+      b.WriteArray(fOper,fNoper);
+      b.WriteArray(fConst,fNconst);
+      for (i=0;i<fNoper;i++)  fExpr[i].Streamer(b);
+      for (i=0;i<fNpar;i++)  fNames[i].Streamer(b);
+      b.SetByteCount(R__c, kTRUE);
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.5 2000/12/19 14:34:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -33,7 +33,6 @@
 
 class TSocket;
 class TFileHandler;
-class TProof;
 
 
 class TSlave : public TObject {
@@ -44,11 +43,9 @@ private:
    TString       fName;      //slave's hostname
    TString       fImage;     //slave's image name
    TString       fWorkDir;   //slave's working directory (info obtained from slave)
-   TString       fUser;      //slave's user id
    Int_t         fPort;      //slave's port number
    Int_t         fOrdinal;   //slave's ordinal number
    Int_t         fPerfIdx;   //relative CPU performance index
-   Int_t         fSecurity;  //authentication method (0 = standard, 1 = SRP)
    TSocket      *fSocket;    //socket to slave
    TProof       *fProof;     //proof cluster to which slave belongs
    TFileHandler *fInput;     //input handler related to this slave
@@ -61,20 +58,19 @@ private:
    void operator=(const TSlave &) { }
 
    TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
-          const char *image, Int_t security, TProof *proof);
+          const char *image, TProof *proof);
 
 public:
    virtual ~TSlave();
 
    void          Close(Option_t *opt = "");
 
-   Int_t         Compare(const TObject *obj) const;
+   Int_t         Compare(TObject *obj);
    Bool_t        IsSortable() const { return kTRUE; }
 
    const char   *GetName() const { return fName.Data(); }
    const char   *GetImage() const { return fImage.Data(); }
    const char   *GetWorkingDirectory() const { return fWorkDir.Data(); }
-   const char   *GetUser() const { return fUser.Data(); }
    Int_t         GetPort() const { return fPort; }
    Int_t         GetOrdinal() const { return fOrdinal; }
    Int_t         GetPerfIdx() const { return fPerfIdx; }
@@ -88,7 +84,7 @@ public:
 
    Bool_t        IsValid() const { return fSocket ? kTRUE : kFALSE; }
 
-   void          Print(Option_t *option="") const;
+   void          Print(Option_t *option="");
 
    ClassDef(TSlave,0)  //PROOF slave server
 };

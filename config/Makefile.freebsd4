@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for FreeBSD 4.x
 
 PLATFORM      = fbsd
@@ -30,7 +28,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lstdc++ -lm
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11 -lstdc++
+XLIBS         = -L/usr/X11R6/lib -lXpm -lX11 -lstdc++
 CILIBS        = -lm -ltermcap -lstdc++
 CRYPTLIBS     = -lcrypt
 
@@ -39,14 +37,4 @@ F77           = f77
 F77FLAGS      = $(OPT)
 F77LIBS       = -lg2c
 
-# Extras
-TREEPLAYERLIBDEP    = $(PROOFLIB)
-TREEPLAYERLIBEXTRA  = -Llib -lProof
-X11TTFLIBDEP        = $(X11LIB)
-X11TTFLIBEXTRA      = -Llib -lGX11
-GLLIBEXTRA          = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                      -L/usr/X11R6/lib -lXmu
 
-# Override default in Makefile.config
-INSTALL        := cp -pR
-INSTALLDATA    := cp -pR

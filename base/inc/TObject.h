@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.16 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.5 2000/09/08 07:33:29 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -36,12 +36,20 @@
 #ifndef ROOT_TStorage
 #include "TStorage.h"
 #endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 
 #ifdef WIN32
 #undef RemoveDirectory
+#endif
+
+#if defined(R__ANSISTREAM)
+#include <iosfwd>
+using namespace std;
+#elif R__MWERKS
+template <class charT> class ios_traits;
+template <class charT, class traits> class basic_ofstream;
+typedef basic_ofstream<char, ios_traits<char> > ofstream;
+#else
+class ofstream;
 #endif
 
 class TList;
@@ -60,9 +68,7 @@ enum EObjBits {
    kCanDelete        = BIT(0),   // if object in a list can be deleted
    kMustCleanup      = BIT(3),   // if object destructor must call RecursiveRemove()
    kObjInCanvas      = BIT(3),   // for backward compatibility only, use kMustCleanup
-   kIsReferenced     = BIT(4),   // if object is referenced by a TRef or TRefArray
    kCannotPick       = BIT(6),   // if object in a pad cannot be picked
-   kNoContextMenu    = BIT(8),   // if object does not want context menu
    kInvalidObject    = BIT(13)   // if object ctor succeeded but object should not be used
 };
 
@@ -78,7 +84,9 @@ private:
 
 protected:
    void MakeZombie() { fBits |= kZombie; }
+#ifndef __CINT__
    void DoError(int level, const char *location, const char *fmt, va_list va) const;
+#endif
 
 public:
    //----- Private bits, clients can only test but not change them
@@ -104,47 +112,48 @@ public:
    virtual void        Browse(TBrowser *b);
    virtual const char *ClassName() const;
    virtual void        Clear(Option_t * /*option*/ ="") { }
-   virtual TObject    *Clone(const char *newname="") const;
-   virtual Int_t       Compare(const TObject *obj) const;
+   virtual TObject    *Clone();
+   virtual Int_t       Compare(TObject *obj);
    virtual void        Copy(TObject &object);
    virtual void        Delete(Option_t *option=""); // *MENU*
    virtual Int_t       DistancetoPrimitive(Int_t px, Int_t py);
    virtual void        Draw(Option_t *option="");
-   virtual void        DrawClass() const; // *MENU*
-   virtual TObject    *DrawClone(Option_t *option="") const; // *MENU*
-   virtual void        Dump() const; // *MENU*
-   virtual void        Execute(const char *method,  const char *params, int* error=0);
-   virtual void        Execute(TMethod *method, TObjArray *params, int* error=0);
+   virtual void        DrawClass(); // *MENU*
+   virtual void        DrawClone(Option_t *option=""); // *MENU*
+   virtual void        Dump(); // *MENU*
+   virtual void        Execute(const char *method,  const char *params);
+   virtual void        Execute(TMethod *method, TObjArray *params);
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TObject    *FindObject(const char *name) const;
-   virtual TObject    *FindObject(const TObject *obj) const;
+   virtual TObject    *FindObject(TObject *obj) const;
    virtual Option_t   *GetDrawOption() const;
    virtual UInt_t      GetUniqueID() const;
    virtual const char *GetName() const;
    virtual const char *GetIconName() const;
    virtual Option_t   *GetOption() const { return ""; }
-   virtual char       *GetObjectInfo(Int_t px, Int_t py) const;
+   virtual char       *GetObjectInfo(Int_t px, Int_t py);
    virtual const char *GetTitle() const;
    virtual Bool_t      HandleTimer(TTimer *timer);
-   virtual ULong_t     Hash() const;
+   virtual ULong_t     Hash();
    virtual Bool_t      InheritsFrom(const char *classname) const;
    virtual Bool_t      InheritsFrom(const TClass *cl) const;
-   virtual void        Inspect() const; // *MENU*
+   virtual void        Inspect(); // *MENU*
    virtual Bool_t      IsFolder() const;
-   virtual Bool_t      IsEqual(const TObject *obj) const;
+   virtual Bool_t      IsEqual(TObject *obj);
    virtual Bool_t      IsSortable() const { return kFALSE; }
            Bool_t      IsOnHeap() const { return TestBit(kIsOnHeap); }
            Bool_t      IsZombie() const { return TestBit(kZombie); }
    virtual Bool_t      Notify();
-   virtual void        ls(Option_t *option="") const;
+   virtual void        ls(Option_t *option="");
    virtual void        Paint(Option_t *option="");
    virtual void        Pop();
-   virtual void        Print(Option_t *option="") const;
+   virtual void        Print(Option_t *option="");
    virtual Int_t       Read(const char *name);
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
    virtual void        SetDrawOption(Option_t *option="");  // *MENU*
    virtual void        SetUniqueID(UInt_t uid);
+   virtual const char *StreamerInfo() const;
    virtual void        UseCurrentStyle();
    virtual Int_t       Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
 
@@ -152,8 +161,10 @@ public:
    void    *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }
    void    *operator new(size_t sz, void *vp) { return TStorage::ObjectAlloc(sz, vp); }
    void     operator delete(void *ptr);
+#ifndef __CINT__
 #ifdef R__PLACEMENTDELETE
    void     operator delete(void *ptr, void *vp);
+#endif
 #endif
 
    //----- bit manipulation
@@ -161,7 +172,6 @@ public:
    void     SetBit(UInt_t f) { fBits |= f & kBitMask; }
    void     ResetBit(UInt_t f) { fBits &= ~(f & kBitMask); }
    Bool_t   TestBit(UInt_t f) const { return (Bool_t) ((fBits & f) != 0); }
-   Int_t    TestBits(UInt_t f) const { return (Int_t) (fBits & f); }
    void     InvertBit(UInt_t f) { fBits ^= f & kBitMask; }
 
    //---- error handling

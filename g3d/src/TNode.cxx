@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.14 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.2 2000/09/05 09:21:22 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TClass.h"
 #include "TVirtualPad.h"
@@ -20,6 +21,7 @@
 #include "TNode.h"
 #include "TBrowser.h"
 #include "X3DBuffer.h"
+
 #include "TPadView3D.h"
 
 #if 0
@@ -115,10 +117,10 @@ TNode::TNode(const char *name, const char *title, const char *shapename, Double_
       return;
    }
 
-   ImportShapeAttributes();
    if (fParent) {
       fParent->BuildListOfNodes();
       fParent->GetListOfNodes()->Add(this);
+      ImportShapeAttributes();
    } else {
       gGeometry->GetListOfNodes()->Add(this);
       cd();
@@ -181,11 +183,10 @@ TNode::~TNode()
 //*-*-*-*-*-*-*-*-*-*-*Node default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================
 
-   //if (!gGeometry) return;
    if (fParent)     fParent->GetListOfNodes()->Remove(this);
    else    gGeometry->GetListOfNodes()->Remove(this);
    if (fNodes) fNodes->Delete();
-   if (gGeometry && gGeometry->GetCurrentNode() == this) gGeometry->SetCurrentNode(0);
+   if (gGeometry->GetCurrentNode() == this) gGeometry->SetCurrentNode(0);
    delete fNodes;
    fNodes = 0;
 }
@@ -249,7 +250,7 @@ Int_t TNode::DistancetoPrimitive(Int_t px, Int_t py)
    if (!view) return big;
 
 //*-*- Update translation vector and rotation matrix for new level
-   if (fMatrix && gGeometry) {
+   if (fMatrix) {
       gGeometry->UpdateTempMatrix(fX,fY,fZ,fMatrix->GetMatrix(),fMatrix->IsReflection());
    }
 //*-*- Paint Referenced shape
@@ -263,7 +264,6 @@ Int_t TNode::DistancetoPrimitive(Int_t px, Int_t py)
       }
    }
    if ( TestBit(kSonsInvisible) ) return dist;
-   if (!gGeometry) return dist;
 
 //*-*- Loop on all sons
    Int_t nsons = 0;
@@ -307,7 +307,6 @@ void TNode::Draw(Option_t *option)
    if (!opt.Contains("same")) gPad->Clear();
 
 //*-*- Draw Referenced node
-   if (!gGeometry) new TGeometry;
    gGeometry->SetGeomLevel();
    gGeometry->UpdateTempMatrix();
 
@@ -351,28 +350,27 @@ void TNode::ExecuteEvent(Int_t, Int_t, Int_t)
 }
 
 //______________________________________________________________________________
-TNode *TNode::GetNode(const char *name) const
+TNode *TNode::GetNode(const char *name)
 {
 //*-*-*-*-*-*-*Return pointer to node with name in the node tree*-*-*-*-*
 //*-*          =================================================
 
-   if (!strcmp(name, GetName())) return (TNode*)this;
+   if (!strcmp(name, GetName())) return this;
    TNode *node, *nodefound;
+   TObject *obj;
    if (!fNodes) return 0;
-   TObjLink *lnk = fNodes->FirstLink();
-   while (lnk) {
-      node = (TNode *)lnk->GetObject();
-      if (node->TestBit(kNotDeleted)) {
-         nodefound = node->GetNode(name);
-         if (nodefound) return nodefound;
-      }
-      lnk = lnk->Next();
+   TIter  next(fNodes);
+   while ((obj = next())) {
+      node = (TNode*)obj;
+      if (!node->TestBit(kNotDeleted)) continue;
+      nodefound = node->GetNode(name);
+      if (nodefound) return nodefound;
    }
    return 0;
 }
 
 //______________________________________________________________________________
-char *TNode::GetObjectInfo(Int_t, Int_t) const
+char *TNode::GetObjectInfo(Int_t, Int_t)
 {
    const char *snull = "";
    if (!gPad) return (char*)snull;
@@ -395,14 +393,12 @@ void TNode::ImportShapeAttributes()
 
    if (!fNodes) return;
    TNode *node;
-
-   TObjLink *lnk = fNodes->FirstLink();
-   while (lnk) {
-      node = (TNode *)lnk->GetObject();
+   TObject *obj;
+   TIter  next(fNodes);
+   while ((obj = next())) {
+      node = (TNode*)obj;
       node->ImportShapeAttributes();
-      lnk = lnk->Next();
    }
-
 }
 
 //______________________________________________________________________________
@@ -416,7 +412,7 @@ Bool_t TNode::IsFolder() const
 }
 
 //______________________________________________________________________________
-void TNode::Local2Master(const Double_t *local, Double_t *master)
+void TNode::Local2Master(Double_t *local, Double_t *master)
 {
 //*-*-*-*-*Convert one point from local system to master reference system*-*-*
 //*-*      ==============================================================
@@ -451,7 +447,7 @@ void TNode::Local2Master(const Double_t *local, Double_t *master)
 }
 
 //______________________________________________________________________________
-void TNode::Local2Master(const Float_t *local, Float_t *master)
+void TNode::Local2Master(Float_t *local, Float_t *master)
 {
 //*-*-*-*-*Convert one point from local system to master reference system*-*-*
 //*-*      ==============================================================
@@ -487,7 +483,7 @@ void TNode::Local2Master(const Float_t *local, Float_t *master)
 }
 
 //______________________________________________________________________________
-void TNode::ls(Option_t *option) const
+void TNode::ls(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List Referenced object with current parameters*-*-*-*
 //*-*                   ===============================================
@@ -495,8 +491,6 @@ void TNode::ls(Option_t *option) const
    Int_t sizeX3D = 0;
    TString opt = option;
    opt.ToLower();
-
-   if (!gGeometry) new TGeometry;
 
    Int_t maxlevel = 15;
    if (opt.Contains("1")) maxlevel = 1;
@@ -542,7 +536,7 @@ void TNode::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TNode::Master2Local(const Double_t *master, Double_t *local)
+void TNode::Master2Local(Double_t *master, Double_t *local)
 {
 //*-*-*-*-*Convert one point from master system to local reference system*-*-*
 //*-*      ==============================================================
@@ -570,7 +564,7 @@ void TNode::Master2Local(const Double_t *master, Double_t *local)
 }
 
 //______________________________________________________________________________
-void TNode::Master2Local(const Float_t *master, Float_t *local)
+void TNode::Master2Local(Float_t *master, Float_t *local)
 {
 //*-*-*-*-*Convert one point from master system to local reference system*-*-*
 //*-*      ==============================================================
@@ -612,8 +606,7 @@ void TNode::Paint(Option_t *option)
 
    TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
 
-   Int_t level = 0;
-   if (gGeometry) level = gGeometry->GeomLevel();
+   Int_t level = gGeometry->GeomLevel();
 // restrict the levels for "range" option
    if (level > 3 && option && strlen(option) && strcmp(option,"range") == 0) return;
 //*-*- Update translation vector and rotation matrix for new level
@@ -691,7 +684,7 @@ void TNode::SetName(const char *name)
 }
 
 //______________________________________________________________________________
-void TNode::SetNameTitle(const char *name, const char *title)
+void TNode::SetObject(const char *name, const char *title)
 {
 // Change the name and title of this Node
 //
@@ -703,33 +696,6 @@ void TNode::SetNameTitle(const char *name, const char *title)
    fName  = name;
    fTitle = title;
    if (fParent) fParent->GetListOfNodes()->Add(this);
-}
-
-//______________________________________________________________________________
-void TNode::SetParent(TNode *parent)
-{
-   // set the pointer to the parent, keep parents informed about who they have
-
-   TNode *pp = parent;
-   while(pp) {
-     if (pp == this) {
-       printf("Error: Cannot set parent node to be a child node:%s\n",GetName());
-       printf("       Operation not performed!\n");
-       return;
-     }
-     pp = pp->GetParent();
-   }
-
-   if (fParent)   fParent->GetListOfNodes()->Remove(this);
-   else         gGeometry->GetListOfNodes()->Remove(this);
-
-   fParent = parent;
-
-   if (fParent) {
-      fParent->BuildListOfNodes(); // new parent might not have list
-      fParent->GetListOfNodes()->Add(this);
-   }
-   else gGeometry->GetListOfNodes()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -749,23 +715,24 @@ void TNode::SetVisibility(Int_t vis)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    ResetBit(kSonsInvisible);
+   TIter  next(fNodes);
    TNode *node;
    if (vis == -4 ) {         //Node is not drawn. Its immediate sons are drawn
       fVisibility = 0;
       if (!fNodes) { fVisibility = 1; return;}
-      TIter  next(fNodes); while ((node = (TNode*)next())) { node->SetVisibility(-2); }
+      while ((node = (TNode*)next())) { node->SetVisibility(-2); }
    } else if (vis == -3 ) {  //Only node leaves are drawn
       fVisibility = 0;
       if (!fNodes) { fVisibility = 1; return;}
-      TIter  next(fNodes); while ((node = (TNode*)next())) { node->SetVisibility(-3); }
+      while ((node = (TNode*)next())) { node->SetVisibility(-3); }
 
    } else if (vis == -2) {  //node is drawn. Its sons are not drawn
       fVisibility = 1; SetBit(kSonsInvisible); if (!fNodes) return;
-      TIter  next(fNodes); while ((node = (TNode*)next())) { node->SetVisibility(-1); }
+      while ((node = (TNode*)next())) { node->SetVisibility(-1); }
 
    } else if (vis == -1) {  //node is not drawn. Its sons are not drawn
       fVisibility = 0; SetBit(kSonsInvisible); if (!fNodes) return;
-      TIter  next(fNodes); while ((node = (TNode*)next())) { node->SetVisibility(-1); }
+      while ((node = (TNode*)next())) { node->SetVisibility(-1); }
 
    } else if (vis ==  0) {  //node is not drawn
       fVisibility = 0;
@@ -775,11 +742,11 @@ void TNode::SetVisibility(Int_t vis)
 
    } else if (vis ==  2) {  //node is not drawn but its sons are drawn
       fVisibility = 0; if (!fNodes) return;
-      TIter  next(fNodes); while ((node = (TNode*)next())) { node->SetVisibility(3); }
+      while ((node = (TNode*)next())) { node->SetVisibility(3); }
 
    } else if (vis ==  3) {  //node is drawn and its sons are drawn
       fVisibility = 1; if (!fNodes) return;
-      TIter  next(fNodes); while ((node = (TNode*)next())) { node->SetVisibility(3); }
+      while ((node = (TNode*)next())) { node->SetVisibility(3); }
    }
 }
 
@@ -809,14 +776,9 @@ void TNode::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
+   UInt_t R__s, R__c;
    if (b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      if (R__v > 2) {
-         TNode::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      Version_t v = b.ReadVersion(&R__s, &R__c);
       TNamed::Streamer(b);
       TAttLine::Streamer(b);
       TAttFill::Streamer(b);
@@ -828,13 +790,24 @@ void TNode::Streamer(TBuffer &b)
       b >> fParent;
       b >> fNodes;
       fOption.Streamer(b);
-      if (R__v > 1) b >> fVisibility;
+      if (v > 1) b >> fVisibility;
       else  fVisibility = fShape->GetVisibility();
       b.CheckByteCount(R__s, R__c, TNode::IsA());
-      //====end of old versions
-
    } else {
-      TNode::Class()->WriteBuffer(b,this);
+      R__c = b.WriteVersion(TNode::IsA(), kTRUE);
+      TNamed::Streamer(b);
+      TAttLine::Streamer(b);
+      TAttFill::Streamer(b);
+      b << fX;
+      b << fY;
+      b << fZ;
+      b << fMatrix;
+      b << fShape;
+      b << fParent;
+      b << fNodes;
+      fOption.Streamer(b);
+      b << fVisibility;
+      b.SetByteCount(R__c, kTRUE);
    }
 }
 
@@ -870,7 +843,7 @@ void TNode::UpdateMatrix()
 }
 
 //______________________________________________________________________________
-void TNode::UpdateTempMatrix(const Double_t *dx,const Double_t *rmat
+void TNode::UpdateTempMatrix(Double_t *dx,Double_t *rmat
                          , Double_t x, Double_t y, Double_t z, Double_t *matrix
                          , Double_t *dxnew, Double_t *rmatnew)
 {

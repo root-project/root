@@ -174,23 +174,6 @@
 #define G__OPR_POSTFIXDEC_K  0x812
 #define G__OPR_PREFIXDEC_K   0x813
 
-#ifndef G__OLDIMPLEMENTATION1491
-#define G__OPR_ADD_UU        0xa00
-#define G__OPR_SUB_UU        0xa01
-#define G__OPR_MUL_UU        0xa02
-#define G__OPR_DIV_UU        0xa03
-#define G__OPR_LT_UU         0xa04
-#define G__OPR_GT_UU         0xa05
-#define G__OPR_LE_UU         0xa06
-#define G__OPR_GE_UU         0xa07
-#define G__OPR_EQ_UU         0xa08
-#define G__OPR_NE_UU         0xa09
-#define G__OPR_ADDASSIGN_UU  0xa0a
-#define G__OPR_SUBASSIGN_UU  0xa0b
-#define G__OPR_MULASSIGN_UU  0xa0c
-#define G__OPR_DIVASSIGN_UU  0xa0d
-#endif
-
 #define G__OPR_ADD_II        0x100
 #define G__OPR_SUB_II        0x101
 #define G__OPR_MUL_II        0x102
@@ -236,7 +219,6 @@
 #define G__OPR_DIVASSIGN_FD  0x30d
 #endif /* ON572 */
 
-
 /**************************************************************************
 * G__reftype, var->reftype[], ifunc->reftype[] flag
 **************************************************************************/
@@ -267,13 +249,8 @@
 **************************************************************************/
 #define G__HAS_DEFAULTCONSTRUCTOR  0x01
 #define G__HAS_COPYCONSTRUCTOR     0x02
-#define G__HAS_CONSTRUCTOR         0x03
 #define G__HAS_DESTRUCTOR          0x04
 #define G__HAS_ASSIGNMENTOPERATOR  0x08
-#define G__HAS_OPERATORNEW1ARG     0x10
-#define G__HAS_OPERATORNEW2ARG     0x20
-#define G__HAS_OPERATORNEW         0x30
-#define G__HAS_OPERATORDELETE      0x40
 
 /**************************************************************************
 * Default parameter expression as function
@@ -415,9 +392,6 @@
 
 #define G__THROW              0x0042
 #define G__CATCH              0x0043
-#define G__SETARYINDEX        0x0044
-#define G__RESETARYINDEX      0x0045
-#define G__GETARYINDEX        0x0046
 
 #define G__NOP                0xffff
 
@@ -513,19 +487,9 @@ struct G__breakcontinue_list {
 #define G__TMPLT_FLOATARG     'f'
 #define G__TMPLT_DOUBLEARG    'd'
 
-#ifndef G__OLDIMPLEMENTATION1587
-#define G__TMPLT_POINTERARG1   0x10000
-#define G__TMPLT_POINTERARG2   0x20000
-#define G__TMPLT_POINTERARG3   0x30000
-#define G__TMPLT_POINTERARGMASK 0xffff0000
-#else
 #define G__TMPLT_POINTERARG1   1
 #define G__TMPLT_POINTERARG2   2
 #define G__TMPLT_POINTERARG3   3
-#endif
-
-#define G__TMPLT_CONSTARG      0x100
-#define G__TMPLT_REFERENCEARG  0x200
 
 #ifdef G__TEMPLATEMEMFUNC
 
@@ -575,10 +539,6 @@ struct G__Definedtemplateclass {
 #endif
 #ifndef G__OLDIMPLEMENTATION972
   int friendtagnum;
-#endif
-#ifndef G__OLDIMPLEMENTATION1587
-  struct G__Definedtemplateclass *specialization;
-  struct G__Templatearg *spec_arg;
 #endif
 };
 
@@ -817,11 +777,6 @@ typedef unsigned long G__UINT32 ;
 typedef void (*G__DLLINIT)();
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1536
-#define G__NONCINTHDR   0x01
-#define G__CINTHDR      0x10
-#endif
-
 struct G__filetable {
   FILE *fp;
   int hash;
@@ -840,9 +795,6 @@ struct G__filetable {
 #endif
 #ifndef G__OLDIMPLEMENTATION1273
   struct G__dictposition *hasonlyfunc;
-#endif
-#ifndef G__OLDIMPLEMENTATION1536
-  char hdrprop;
 #endif
 };
 
@@ -916,12 +868,6 @@ struct G__AppPragma {
 #define G__RETURN_EXIT1     3
 #define G__RETURN_EXIT2     4
 #endif
-
-/*********************************************************************
-* x
-*********************************************************************/
-#define G__NAMEDMACROEXT  "_NM"
-#define G__NAMEDMACROEXT2 "_cint_NM"
 
 /*********************************************************************
 * cint parser function and global variable prototypes

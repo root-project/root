@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.6 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: "Valery fine"   31/10/97
 
 
@@ -10,7 +10,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TView.h"
 #include "TMarker3DBox.h"
@@ -47,17 +49,6 @@ TMarker3DBox::TMarker3DBox()
 //*-*                      ================================
 
    fRefObject = 0;
-   //just in case of a stupid call to this constructor
-   fDx = 1;
-   fDy = 1;
-   fDz = 1;
-
-   fX  = 0;
-   fY  = 0;
-   fZ  = 0;
-
-   fTheta = 0;
-   fPhi   = 0;
 }
 
 
@@ -500,20 +491,14 @@ void TMarker3DBox::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TMarker3DBox.
 
+   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TMarker3DBox::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
       TObject::Streamer(R__b);
       TAttLine::Streamer(R__b);
       TAttFill::Streamer(R__b);
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file) {
-         if (file->GetVersion() > 22300) TAtt3D::Streamer(R__b);
+      if (gFile) {
+         if (gFile->GetVersion() > 22300) TAtt3D::Streamer(R__b);
       } else {
          TAtt3D::Streamer(R__b);
        }
@@ -527,10 +512,22 @@ void TMarker3DBox::Streamer(TBuffer &R__b)
       R__b >> fPhi;
       R__b >> fRefObject;
       R__b.CheckByteCount(R__s, R__c, TMarker3DBox::IsA());
-      //====end of old versions
-
    } else {
-      TMarker3DBox::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TMarker3DBox::IsA(), kTRUE);
+      TObject::Streamer(R__b);
+      TAttLine::Streamer(R__b);
+      TAttFill::Streamer(R__b);
+      TAtt3D::Streamer(R__b);
+      R__b << fX;
+      R__b << fY;
+      R__b << fZ;
+      R__b << fDx;
+      R__b << fDy;
+      R__b << fDz;
+      R__b << fTheta;
+      R__b << fPhi;
+      R__b << fRefObject;
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }
 

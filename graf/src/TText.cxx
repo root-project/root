@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.11 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.3 2000/08/16 14:33:50 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TText.h"
@@ -23,7 +25,7 @@ ClassImp(TText)
 //
 //   TText is the base class for several text objects.
 //   See TAttText for a list of text attributes or fonts,
-//   and also for a discussion on text speed and font quality.
+//   and also for a discussion on text spped and font quality.
 //
 //  By default, the text is drawn in the pad coordinates system.
 //  One can draw in NDC coordinates [0,1] if the function SetNDC
@@ -91,7 +93,6 @@ Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
    const char *text = GetTitle();
    Int_t len    = strlen(text);
    Double_t fh  = (fTextSize*gPad->GetAbsHNDC())*Double_t(gPad->GetWh());
-   if (fTextFont%10 > 2) fh = fTextSize;
    Int_t h      = Int_t(fh/2);
    Int_t w      = h*len;
    Int_t err = 1;
@@ -388,7 +389,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TText::ls(Option_t *) const
+void TText::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this text with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    ==================================
@@ -430,7 +431,7 @@ void TText::PaintTextNDC(Double_t u, Double_t v, const char *text)
 }
 
 //______________________________________________________________________________
-void TText::Print(Option_t *) const
+void TText::Print(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this text with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================
@@ -453,10 +454,7 @@ void TText::SavePrimitive(ofstream &out, Option_t *)
    } else {
        out<<"   TText *";
    }
-   TString s = GetTitle();
-   s.ReplaceAll("\"","\\\"");
-   out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<endl;
-   if (TestBit(kTextNDC)) out<<"   text->SetNDC();"<<endl;
+   out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<GetTitle()<<quote<<");"<<endl;
 
    SaveTextAttributes(out,"text",11,0,1,62,1);
 
@@ -477,21 +475,22 @@ void TText::Streamer(TBuffer &R__b)
    // Stream an object of class TText.
 
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TText::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      Version_t R__v = R__b.ReadVersion();
       TNamed::Streamer(R__b);
       TAttText::Streamer(R__b);
-      Float_t x,y;
-      R__b >> x; fX = x;
-      R__b >> y; fY = y;
-      //====end of old versions
-
+      if (R__v < 2) {
+         Float_t x,y;
+         R__b >> x; fX = x;
+         R__b >> y; fY = y;
+      } else {
+         R__b >> fX;
+         R__b >> fY;
+      }
    } else {
-      TText::Class()->WriteBuffer(R__b,this);
+      R__b.WriteVersion(TText::IsA());
+      TNamed::Streamer(R__b);
+      TAttText::Streamer(R__b);
+      R__b << fX;
+      R__b << fY;
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.7 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.2 2000/06/13 11:04:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -10,8 +10,9 @@
  *************************************************************************/
 
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TLine.h"
 #include "TVirtualPad.h"
@@ -257,12 +258,12 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TLine::ls(Option_t *) const
+void TLine::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this line with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    ==================================
    TROOT::IndentLevel();
-   printf("%s  X1=%f Y1=%f X2=%f Y2=%f\n",IsA()->GetName(),fX1,fY1,fX2,fY2);
+   printf("%s  X1= %f Y1=%f X2=%f Y2=%f\n",IsA()->GetName(),fX1,fY1,fX2,fY2);
 }
 
 //______________________________________________________________________________
@@ -294,7 +295,7 @@ void TLine::PaintLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 }
 
 //______________________________________________________________________________
-void TLine::Print(Option_t *) const
+void TLine::Print(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this line with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================
@@ -330,23 +331,28 @@ void TLine::Streamer(TBuffer &R__b)
    // Stream an object of class TLine.
 
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TLine::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      Version_t R__v = R__b.ReadVersion();
       TObject::Streamer(R__b);
       TAttLine::Streamer(R__b);
-      Float_t x1,y1,x2,y2;
-      R__b >> x1; fX1 = x1;
-      R__b >> y1; fY1 = y1;
-      R__b >> x2; fX2 = x2;
-      R__b >> y2; fY2 = y2;
-      //====end of old versions
-
+      if (R__v < 2) {
+         Float_t x1,y1,x2,y2;
+         R__b >> x1; fX1 = x1;
+         R__b >> y1; fY1 = y1;
+         R__b >> x2; fX2 = x2;
+         R__b >> y2; fY2 = y2;
+      } else {
+         R__b >> fX1;
+         R__b >> fY1;
+         R__b >> fX2;
+         R__b >> fY2;
+      }
    } else {
-      TLine::Class()->WriteBuffer(R__b,this);
+      R__b.WriteVersion(TLine::IsA());
+      TObject::Streamer(R__b);
+      TAttLine::Streamer(R__b);
+      R__b << fX1;
+      R__b << fY1;
+      R__b << fX2;
+      R__b << fY2;
    }
 }

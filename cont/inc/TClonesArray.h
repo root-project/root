@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.6 2001/03/11 23:10:00 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -32,16 +32,14 @@ class TClass;
 class TClonesArray : public TObjArray {
 
 protected:
-   TClass       *fClass;       //!Pointer to the class
-   TObjArray    *fKeep;        //!Saved copies of pointers to objects
+   TClass       *fClass;       //Pointer to the class
+   TObjArray    *fKeep;        //Saved copies of pointers to objects
 
 public:
    enum {
-      kForgetBits     = BIT(0),   // Do not create branches for fBits, fUniqueID
-      kNoSplit        = BIT(1),   // Array not split by TTree::Branch
-      kBypassStreamer = BIT(12)   // Class Streamer not called (default)
+      kForgetBits    = BIT(0),        // Do not create branches for fBits, fUniqueID
+      kNoSplit       = BIT(1)         // array not split by TTree::Branch
    };
-
    TClonesArray();
    TClonesArray(const char *classname, Int_t size = 1000, Bool_t call_dtor = kFALSE);
    virtual         ~TClonesArray();
@@ -60,23 +58,20 @@ public:
    Int_t            AddAtFree(TObject *) { MayNotUse("AddAtFree"); return 0; }
    void             AddAfter(TObject *, TObject *) { MayNotUse("AddAfter"); }
    void             AddBefore(TObject *, TObject *) { MayNotUse("AddBefore"); }
-   void             BypassStreamer(Bool_t bypass=kTRUE);
-   Bool_t           CanBypassStreamer() const { return TestBit(kBypassStreamer); }
 
    virtual TObject *RemoveAt(Int_t idx);
    virtual TObject *Remove(TObject *obj);
    virtual void     Sort(Int_t upto = kMaxInt);
 
-   TObject         *New(Int_t idx);
-   TObject         *AddrAt(Int_t idx);
-   TObject         *&operator[](Int_t idx);
+   TObject         *AddrAt(Int_t i);
+   TObject         *&operator[](Int_t i);
 
-   ClassDef(TClonesArray,4)  //An array of clone objects
+   ClassDef(TClonesArray,3)  //An array of clone objects
 };
 
-inline TObject *TClonesArray::AddrAt(Int_t idx)
+inline TObject *TClonesArray::AddrAt(Int_t i)
 {
-   return operator[](idx);
+   return operator[](i);
 }
 
 #endif

@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for DEC OSF1 with KCC compiler
 
 PLATFORM      = alpha
@@ -22,8 +20,10 @@ else
 EXCEPTION     = --no_exceptions
 endif
 
-ifneq ($(OSTHREADLIB),)
-CXXOPT        += --thread_safe
+ifeq (thread,$(findstring thread,$(ROOTBUILD)))
+THREAD        += "USE"
+CXXOPT        += --thread_safe -g3
+OPT           += -g
 endif
 
 # Compiler:
@@ -38,27 +38,31 @@ CINTCXXFLAGS  = $(EXCEPTION) --signed_chars --display_error_number \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__SIGNEDCHAR -DG__ROOT \
                 -DG__REDIRECTIO -DG__64BIT \
-                $(CXXOPT) $(EXTRA_CXXFLAGS) --one_instantiation_per_object
+                $(CXXOPT) $(EXTRA_CXXFLAGS)
 CINTCFLAGS    = -signed -w -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__SIGNEDCHAR -DG__ROOT \
                 -DG__REDIRECTIO -DG__64BIT -D__KCC $(EXTRA_CFLAGS)
+
 ifeq (exception,$(findstring exception,$(ROOTBUILD)))
 CINTCFLAGS   += -DG__EXCEPTIONWRAPPER
 endif
 
 # Linker:
 LD            = KCC
-LDFLAGS       = $(CXXOPT) $(EXCEPTION) $(EXTRA_LDFLAGS)
+LDFLAGS       = -v $(CXXOPT) $(EXCEPTION) $(EXTRA_LDFLAGS)
 AR            = KCC
-ARFLAGS       = $(CXXOPT) $(EXCEPTION)
-SOFLAGS       = --COMPDO_ln_dy '-expect_unresolved *'
+ARFLAGS       = -v $(CXXOPT) $(EXCEPTION)
+SOFLAGS       =
+# we should pass this to the linker but KCC
+# dont let us
+# -Wl,-expect_unresolved,*
 SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
+XLIBS         = $(XPMLIB) -lX11
 CILIBS        = -lm -ltermcap -lbsd
-CRYPTLIBS     = -L$(ROOTSYS)/lib -lcrypt
+CRYPTLIBS     = -lcrypt
 
 # Fortran:
 F77           = f77
@@ -66,11 +70,4 @@ F77FLAGS      = -O0 -recursive -nofor_main
 F77LIBS       = /usr/lib/libfor.a -lUfor -lFutil
 
 # Extras
-CORELIBDEP    = $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                -lX11 -lXext -lXmu -lXi -lm
-
-# Override default in Makefile.config
-INSTALL        := cp -pR
-INSTALLDATA    := cp -pR
-
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -lX11 -lXext -lXmu -lXi -lm

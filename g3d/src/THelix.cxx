@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.5 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/g3d:$Name$:$Id$
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -62,7 +62,9 @@
 // range[0] = 0 and range[1] = 1
 //______________________________________________________________________________
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "THelix.h"
@@ -152,7 +154,6 @@ THelix::THelix(Double_t x,  Double_t y,  Double_t z,
    v[1] = vy;
    v[2] = vz;
    Double_t *range = 0;
-   fRotMat   = 0;
 
    SetHelix(p, v, w, range, kHelixZ);
    fOption = "";
@@ -173,7 +174,6 @@ THelix::THelix(Double_t * p, Double_t * v, Double_t w,
       r[0] = 0.0;        r[1] = 1.0;
    }
 
-   fRotMat   = 0;
    if ( axis ) {                        // specify axis
       SetHelix(p, v, w, r, rType, axis);
    } else {                             // default axis
@@ -263,7 +263,7 @@ void THelix::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void THelix::Print(Option_t *option) const
+void THelix::Print(Option_t *option)
 {
    // Dump this helix with its attributes.
 
@@ -613,36 +613,4 @@ Double_t  THelix::FindClosestPhase(Double_t phi0,  Double_t cosine)
    //
    if ( TMath::Abs(phi1-phi0) < TMath::Abs(phi2-phi0) )  return phi1;
    else                                                  return phi2;
-}
-
-//______________________________________________________________________________
-void THelix::Streamer(TBuffer &R__b)
-{
-   // Stream an object of class THelix.
-
-   if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
-      if (R__v > 1) {
-         THelix::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
-      TPolyLine3D::Streamer(R__b);
-      R__b >> fX0;
-      R__b >> fY0;
-      R__b >> fZ0;
-      R__b >> fVt;
-      R__b >> fPhi0;
-      R__b >> fVz;
-      R__b >> fW;
-      R__b.ReadStaticArray(fAxis);
-      R__b >> fRotMat;
-      R__b.ReadStaticArray(fRange);
-      R__b.CheckByteCount(R__s, R__c, THelix::IsA());
-      //====end of old versions
-
-   } else {
-      THelix::Class()->WriteBuffer(R__b,this);
-   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegendEntry.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name$:$Id$
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -47,9 +47,9 @@ public:
   virtual ~TLegendEntry();
   virtual void          Copy( TObject &obj );
   virtual const char   *GetLabel() const { return fLabel.Data(); }
-  virtual TObject      *GetObject() const { return fObject; }
+  virtual TObject      *GetObject() { return fObject; }
   virtual Option_t     *GetOption() const { return fOption.Data(); }
-  virtual void          Print( Option_t *option = "" ) const;
+  virtual void          Print( Option_t *option = "" );
   virtual void          SaveEntry( ofstream &out, const char *name );
   virtual void          SetLabel( const char *label = "" ) { fLabel = label; } // *MENU*
   virtual void          SetObject(TObject* obj );

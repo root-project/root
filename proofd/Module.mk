@@ -18,8 +18,6 @@ PROOFDEXEO   := $(PROOFDEXES:.cxx=.o)
 PROOFDDEP    := $(PROOFDEXEO:.o=.d)
 PROOFDEXE    := bin/proofd
 
-##### authentication flags and libs defined in rootd/Module.mk #####
-
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFDEXEH))
 ALLEXECS     += $(PROOFDEXE)
@@ -32,8 +30,7 @@ include/%.h:    $(PROOFDDIRI)/%.h
 		cp $< $@
 
 $(PROOFDEXE):   $(PROOFDEXEO)
-		$(LD) $(LDFLAGS) -o $@ $(PROOFDEXEO) $(AUTHLIBS) $(CRYPTLIBS) \
-		   $(SYSLIBS)
+		$(LD) $(LDFLAGS) -o $@ $(PROOFDEXEO) $(CRYPTLIBS) $(SYSLIBS)
 
 all-proofd:     $(PROOFDEXE)
 
@@ -46,7 +43,3 @@ distclean-proofd: clean-proofd
 		@rm -f $(PROOFDDEP) $(PROOFDEXE)
 
 distclean::     distclean-proofd
-
-##### extra rules ######
-$(PROOFDDIRS)/proofd.o: $(PROOFDDIRS)/proofd.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(AUTHFLAGS) -o $@ -c $<

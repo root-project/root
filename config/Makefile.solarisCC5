@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Solaris with CC 5.0
 
 PLATFORM      = solaris
@@ -12,12 +10,6 @@ OPT           = -O
 NOOPT         =
 endif
 
-MTOPT         =
-ifneq ($(OSTHREADLIB),)
-MTOPT         = -mt
-endif
-
-
 # Compiler:
 # used in cint/Module.mk
 SUNCC5        = true
@@ -25,35 +17,30 @@ SUNCC5        = true
 #CC            = /opt/WS5.0/bin/cc
 CXX           = CC
 CC            = cc
-CXXFLAGS      = -KPIC -I/usr/openwin/include -ptr$(ROOTSYS) $(EXTRA_CXXFLAGS) \
-                $(MTOPT)
-CFLAGS        = -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS) $(MTOPT)
+CXXFLAGS      = -KPIC -I/usr/openwin/include -D__SunOS_5_6 \
+                -library=iostream,no%Cstd $(EXTRA_CXXFLAGS)
+CFLAGS        = -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL $(EXTRA_CXXFLAGS) \
-                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -ptr$(ROOTSYS) $(MTOPT)
+                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -library=iostream,no%Cstd
 CINTCFLAGS    = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL $(EXTRA_CFLAGS) \
-                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(MTOPT)
+                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO
 CPPPREP       = /usr/ccs/lib/cpp -E -C -B -D__sun -D__sparc -D__unix
 
 # Linker:
 LD            = $(CXX)
-LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
-SOFLAGS       = -G -ptr$(ROOTSYS)
+LDFLAGS       = $(OPT) -library=iostream,no%Cstd $(EXTRA_LDFLAGS)
+SOFLAGS       = -G
 SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl -lnsl -lsocket
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/openwin/lib -lX11
+XLIBS         = $(XPMLIB) -L/usr/openwin/lib -lX11
 CILIBS        = -lm -ltermcap -ldl
 
 # Fortran:
-#F77           = /opt/SUNWspro/bin/f77
-F77           = f77
-F77LIBS       = -lM77 -lF77 -lsunmath -lsocket -lnsl
-
-# Override default in Makefile.config
-INSTALL      := cp -pR
-INSTALLDATA  := cp -pR
+F77           = /opt/SUNWspro/bin/f77
+F77LIBS       = $(CERNLIB)/libpacklib.a -lM77 -lF77 -lsunmath -lsocket -lnsl
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) \
                 -L/usr/openwin/lib -lX11 -lXext -lXmu -lXi -lm

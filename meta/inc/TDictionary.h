@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDictionary.h,v 1.2 2000/08/25 21:45:22 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDictionary.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   20/06/96
 
 /*************************************************************************
@@ -79,9 +79,9 @@ public:
    virtual const char *GetTitle() const = 0;
    virtual Long_t      Property() const = 0;
 
-   virtual Int_t       Compare(const TObject *obj) const = 0;
-   virtual ULong_t     Hash() const = 0;
+   virtual ULong_t     Hash() = 0;
    virtual Bool_t      IsSortable() const { return kTRUE; }
+   virtual Int_t       Compare(TObject *obj) = 0;
 
    ClassDef(TDictionary,0)  //ABC defining interface to dictionary
 };

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.2 2001/05/21 11:18:02 rdm Exp $
+// @(#)root/cont:$Name$:$Id$
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -38,26 +38,11 @@ TExMap::TExMap(Int_t mapSize)
 }
 
 //______________________________________________________________________________
-TExMap::TExMap(const TExMap &map)
-{
-   // Copy constructor.
-
-   fSize  = map.fSize;
-   fTally = map.fTally;
-   fTable = new Assoc_t* [fSize];
-   memset(fTable, 0, fSize*sizeof(Assoc_t*));
-   for (Int_t i = 0; i < fSize; i++)
-      if (map.fTable[i])
-         fTable[i] = new Assoc_t(map.fTable[i]->fHash, map.fTable[i]->fKey,
-                                 map.fTable[i]->fValue);
-}
-
-//______________________________________________________________________________
 TExMap::~TExMap()
 {
    // Delete TExMap.
 
-   for (Int_t i = 0; i < fSize; i++)
+   for (int i = 0; i < fSize; i++)
       delete fTable[i];
    delete [] fTable; fTable = 0;
 }
@@ -224,42 +209,5 @@ void TExMap::Expand(Int_t newSize)
             Error("Expand", "slot %d not empty (should never happen)", slot);
       }
    delete [] oldTable;
-}
-
-
-ClassImp(TExMapIter)
-
-//______________________________________________________________________________
-TExMapIter::TExMapIter(const TExMap *map) : fMap(map), fCursor(0)
-{
-   // Create TExMap iterator.
-}
-
-//______________________________________________________________________________
-Bool_t TExMapIter::Next(ULong_t &hash, Long_t &key, Long_t &value)
-{
-   // Get next entry from TExMap. Returns kFALSE at end of map.
-
-   while (fCursor < fMap->fSize && !fMap->fTable[fCursor])
-      fCursor++;
-
-   if (fCursor == fMap->fSize)
-      return kFALSE;
-
-   hash  = fMap->fTable[fCursor]->fHash;
-   key   = fMap->fTable[fCursor]->fKey;
-   value = fMap->fTable[fCursor]->fValue;
-   fCursor++;
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TExMapIter::Next(Long_t &key, Long_t &value)
-{
-   // Get next entry from TExMap. Returns kFALSE at end of map.
-
-   ULong_t hash;
-   return Next(hash, key, value);
 }
 

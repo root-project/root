@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMaterial.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/g3d:$Name$:$Id$
 // Author: Rene Brun   03/10/95
 
 /*************************************************************************
@@ -74,7 +74,7 @@ TMaterial::~TMaterial()
 //*-*-*-*-*-*-*-*-*-*-*Material default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ============================
 
-   if (gGeometry) gGeometry->GetListOfMaterials()->Remove(this);
+   gGeometry->GetListOfMaterials()->Remove(this);
 
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.33 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.10 2000/10/15 01:27:46 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -29,8 +29,9 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TObject.h"
 #include "TFile.h"
 #include "TDirectory.h"
@@ -50,7 +51,6 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TDatime.h"
-#include "TProcessID.h"
 #include "TMath.h"
 
 
@@ -62,11 +62,11 @@ class TDumpMembers : public TMemberInspector {
 
 public:
    TDumpMembers() { }
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+   void Inspect(TClass *cl, const char *parent, const char *name, void *addr);
 };
 
 //______________________________________________________________________________
-void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, const void *add)
+void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, void *add)
 {
    // Print value of member mname.
    //
@@ -78,9 +78,9 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
    //    mname is the data member name
    //    add   is the data member address
 
-   const Int_t kvalue = 30;
-   const Int_t ktitle = 42;
-   const Int_t kline  = 1024;
+   const Int_t kvalue = 25;
+   const Int_t ktitle = 37;
+   const Int_t kline  = 350;
    Int_t cdate = 0;
    Int_t ctime = 0;
    UInt_t *cdatime = 0;
@@ -97,7 +97,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
    for (i = 0;i < kline; i++) line[i] = ' ';
    line[kline-1] = 0;
    sprintf(line,"%s%s ",pname,mname);
-   i = strlen(line); line[i] = ' ';
+   i = strlen(&line[0]); line[i] = ' ';
 
    // Encode data value or pointer value
    char *pointer = (char*)add;
@@ -110,23 +110,15 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
       else if (!member->IsBasic())
          sprintf(&line[kvalue],"->%lx ", (Long_t)p3pointer);
       else if (membertype) {
-         if (!strcmp(membertype->GetTypeName(), "char")) {
-            i = strlen(*ppointer);
-            if (kvalue+i >= kline) i=kline-kvalue;
-            strncpy(&line[kvalue],*ppointer,i);
-            line[kvalue+i] = 0;
-         } else {
+         if (!strcmp(membertype->GetTypeName(), "char"))
+            sprintf(&line[kvalue], "%s", *ppointer);
+         else
             strcpy(&line[kvalue], membertype->AsString(p3pointer));
-         }
       } else if (!strcmp(member->GetFullTypeName(), "char*") ||
-                 !strcmp(member->GetFullTypeName(), "const char*")) {
-         i = strlen(*ppointer);
-         if (kvalue+i >= kline) i=kline-kvalue;
-         strncpy(&line[kvalue],*ppointer,i);
-         line[kvalue+i] = 0;
-      } else {
+                 !strcmp(member->GetFullTypeName(), "const char*"))
+         sprintf(&line[kvalue], "%s", *ppointer);
+      else
          sprintf(&line[kvalue],"->%lx ", (Long_t)p3pointer);
-      }
    } else if (membertype)
        if (isdate) {
           cdatime = (UInt_t*)pointer;
@@ -185,8 +177,6 @@ TObject::TObject(const TObject &obj)
    else
       fBits &= ~kIsOnHeap;
 
-   fBits &= ~kIsReferenced;
-
    if (fgObjectStat) TObjectTable::AddObj(this);
 }
 
@@ -204,7 +194,6 @@ TObject& TObject::operator=(const TObject &rhs)
          fBits  = rhs.fBits;
          fBits &= ~kIsOnHeap;
       }
-      fBits &= ~kIsReferenced;
    }
    return *this;
 }
@@ -222,14 +211,13 @@ void TObject::Copy(TObject &obj)
       obj.fBits  = fBits;
       obj.fBits &= ~kIsOnHeap;
    }
-   obj.fBits &= ~kIsReferenced;
 }
 
 //______________________________________________________________________________
 TObject::~TObject()
 {
    // TObject destructor. Removes object from all canvases and object browsers
-   // if observer bit is on and remove from the global object table.
+   // iff observer bit is on and remove from the global object table.
 
    // if (!TestBit(kNotDeleted))
    //    Fatal("~TObject", "object deleted twice");
@@ -258,19 +246,17 @@ void TObject::AppendPad(Option_t *option)
       if (!gROOT->GetMakeDefCanvas()) return;
       (gROOT->GetMakeDefCanvas())();
    }
-   if (!gPad->IsEditable()) return;
    SetBit(kMustCleanup);
    gPad->GetListOfPrimitives()->Add(this,option);
    gPad->Modified(kTRUE);
 }
 
 //______________________________________________________________________________
-void TObject::Browse(TBrowser *b)
+void TObject::Browse(TBrowser *)
 {
-   // Browse object. May be overridden for  other default action
+   // Browse object (by default we inspect). May be overridden for  other default action
 
-   //Inspect();
-   TClass::AutoBrowse(this,b);
+   Inspect();
 }
 
 //______________________________________________________________________________
@@ -282,32 +268,22 @@ const char *TObject::ClassName() const
 }
 
 //______________________________________________________________________________
-TObject *TObject::Clone(const char *) const
+TObject *TObject::Clone()
 {
    // Make a clone of an object using the Streamer facility.
-   // If the object derives from TNamed, this function is called
-   // by TNamed::Clone. TNamed::Clone uses the optional argument to set
-   // a new name to the new created object.
-
-   // if no default ctor return immediately (error issued by New())
-   TObject *newobj = (TObject *)IsA()->New();
-   if (!newobj) return 0;
 
    //create a buffer where the object will be streamed
    TFile *filsav = gFile;
    gFile = 0;
    const Int_t bufsize = 10000;
    TBuffer *buffer = new TBuffer(TBuffer::kWrite,bufsize);
-   buffer->MapObject(this);  //register obj in map to handle self reference
-   ((TObject*)this)->Streamer(*buffer);
+   buffer->WriteObject(this);
 
    // read new object from buffer
    buffer->SetReadMode();
    buffer->ResetMap();
    buffer->SetBufferOffset(0);
-   buffer->MapObject(newobj);  //register obj in map to handle self reference
-   newobj->Streamer(*buffer);
-   newobj->ResetBit(kIsReferenced);
+   TObject *newobj = buffer->ReadObject(IsA());
    gFile = filsav;
 
    delete buffer;
@@ -315,7 +291,7 @@ TObject *TObject::Clone(const char *) const
 }
 
 //______________________________________________________________________________
-Int_t TObject::Compare(const TObject *) const
+Int_t TObject::Compare(TObject *)
 {
    // Compare abstract method. Must be overridden if a class wants to be able
    // to compare itself with other objects. Must return -1 if this is smaller
@@ -361,7 +337,7 @@ void TObject::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TObject::DrawClass() const
+void TObject::DrawClass()
 {
    // Draw class inheritance tree of the class to which this object belongs.
    // If a class B inherits from a class A, description of B is drawn
@@ -379,27 +355,26 @@ void TObject::DrawClass() const
 }
 
 //______________________________________________________________________________
-TObject *TObject::DrawClone(Option_t *option) const
+void TObject::DrawClone(Option_t *option)
 {
    // Draw a clone of this object in the current pad
 
    TObject *newobj = Clone();
-   if (!newobj) return 0;
+   if (!newobj) return;
    TVirtualPad *pad = gROOT->GetSelectedPad();
    if (pad) {
       if (strlen(option)) pad->GetListOfPrimitives()->Add(newobj,option);
       else                pad->GetListOfPrimitives()->Add(newobj,GetDrawOption());
       pad->Modified(kTRUE);
       pad->Update();
-      return newobj;
+      return;
    }
    if (strlen(option))  newobj->Draw(option);
    else                 newobj->Draw(GetDrawOption());
-   return newobj;
 }
 
 //______________________________________________________________________________
-void TObject::Dump() const
+void TObject::Dump()
 {
    // Dump contents of object on stdout.
    // Using the information in the object dictionary (class TClass)
@@ -425,24 +400,24 @@ void TObject::Dump() const
    char parent[256];
    parent[0] = 0;
    TDumpMembers dm;
-   ((TObject*)this)->ShowMembers(dm, parent);
+   ShowMembers(dm, parent);
 }
 
 //______________________________________________________________________________
-void TObject::Execute(const char *method, const char *params, int* error)
+void TObject::Execute(const char *method, const char *params)
 {
    // Execute method on this object with the given parameter string, e.g.
    // "3.14,1,\"text\"".
 
    if (!IsA()) return;
 
-   gInterpreter->Execute(this, IsA(), method, params, error);
+   gInterpreter->Execute(this, IsA(), method, params);
 
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 //______________________________________________________________________________
-void TObject::Execute(TMethod *method, TObjArray *params, int* error)
+void TObject::Execute(TMethod *method, TObjArray *params)
 {
    // Execute method on this object with parameters stored in the TObjArray.
    // The TObjArray should contain an argv vector like:
@@ -451,7 +426,7 @@ void TObject::Execute(TMethod *method, TObjArray *params, int* error)
 
    if (!IsA()) return;
 
-   gInterpreter->Execute(this, IsA(), method, params, error);
+   gInterpreter->Execute(this, IsA(), method, params);
 
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
@@ -477,7 +452,7 @@ TObject *TObject::FindObject(const char *) const
 }
 
 //______________________________________________________________________________
-TObject *TObject::FindObject(const TObject *) const
+TObject *TObject::FindObject(TObject *) const
 {
 // must be redefined in derived classes
 // this function is typycally used with TCollections, but can also be used
@@ -529,7 +504,7 @@ UInt_t TObject::GetUniqueID() const
 }
 
 //______________________________________________________________________________
-char *TObject::GetObjectInfo(Int_t px, Int_t py) const
+char *TObject::GetObjectInfo(Int_t px, Int_t py)
 {
    // Returns string containing info about the object at position (px,py).
    // This method is typically overridden by classes of which the objects
@@ -565,7 +540,7 @@ Bool_t TObject::HandleTimer(TTimer *)
 }
 
 //______________________________________________________________________________
-ULong_t TObject::Hash() const
+ULong_t TObject::Hash()
 {
    // Return hash value for this object.
 
@@ -591,7 +566,7 @@ Bool_t TObject::InheritsFrom(const TClass *cl) const
 }
 
 //______________________________________________________________________________
-void TObject::Inspect() const
+void TObject::Inspect()
 {
    // Dump contents of this object in a graphics canvas.
    // Same action as Dump but in a graphical form.
@@ -605,11 +580,7 @@ void TObject::Inspect() const
    //End_Html
 
 #ifdef WIN32
-#ifdef GDK_WIN32
-   gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject *)0x%lx);",(Long_t)this));
-#else
    gGuiFactory->CreateInspectorImp(this, 400, 200);
-#endif
 #else
    gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject *)0x%lx);",(Long_t)this));
 #endif
@@ -625,7 +596,7 @@ Bool_t TObject::IsFolder() const
 }
 
 //______________________________________________________________________________
-Bool_t TObject::IsEqual(const TObject *obj) const
+Bool_t TObject::IsEqual(TObject *obj)
 {
    // Default equal comparison (objects are equal if they have the same
    // address in memory). More complicated classes might want to override
@@ -635,7 +606,7 @@ Bool_t TObject::IsEqual(const TObject *obj) const
 }
 
 //______________________________________________________________________________
-void TObject::ls(Option_t *) const
+void TObject::ls(Option_t *)
 {
    // The ls function lists the contents of a class on stdout. Ls output
    // is typically much less verbose then Dump().
@@ -681,7 +652,7 @@ void TObject::Pop()
    while ((obj = next()))
       if (obj == this) {
          char *opt = StrDup(next.GetOption());
-         gPad->GetListOfPrimitives()->Remove((TObject*)this);
+         gPad->GetListOfPrimitives()->Remove(this);
          gPad->GetListOfPrimitives()->AddLast(this, opt);
          gPad->Modified();
          delete [] opt;
@@ -690,7 +661,7 @@ void TObject::Pop()
 }
 
 //______________________________________________________________________________
-void TObject::Print(Option_t *) const
+void TObject::Print(Option_t *)
 {
    // This method must be overridden when a class wants to print itself.
 
@@ -768,6 +739,19 @@ void TObject::SetUniqueID(UInt_t uid)
 }
 
 //______________________________________________________________________________
+const char *TObject::StreamerInfo() const
+{
+   // Returns a string describing the names/types of object attributes
+   // as written by the Streamer function.
+   // The default function is valid only for Streamer functions
+   // automatically generated by rootcint.
+   // This function must be overriden in case of a user-written Streamer.
+   //    See TClass::SetStreamerInfo
+
+   return IsA()->GetStreamerInfo();
+}
+
+//______________________________________________________________________________
 void TObject::UseCurrentStyle()
 {
    // Set current style settings in this object
@@ -829,12 +813,7 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
    TKey *key;
    Int_t bsize = bufsize;
    if (!bsize) bsize = gFile->GetBestBuffer();
-
-   const char *oname;
-   if (name && *name)
-      oname = name;
-   else
-      oname = GetName();
+   const char *oname = name ? name : GetName();
 
    // Remove trailing blanks in object name
    Int_t nch = strlen(oname);
@@ -873,27 +852,15 @@ void TObject::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TObject.
 
-   if (IsA()->CanIgnoreTObjectStreamer()) return;
-   UShort_t pidf;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       R__b >> fUniqueID;
       R__b >> fBits;
       fBits |= kIsOnHeap;  // by definition de-serialized object is on heap
-      //if the object is referenced, we must read its old address
-      //and store it in the ProcessID map in gROOT
-      if (!TestBit(kIsReferenced)) return;
-      R__b >> pidf;
-      TProcessID *pid = TProcessID::ReadProcessID(pidf,gFile);
-      if (pid) pid->PutObjectWithID(this);
    } else {
       R__b.WriteVersion(TObject::IsA());
       R__b << fUniqueID;
       R__b << fBits;
-      //if the object is referenced, we must save its address/file_pid
-      if (!TestBit(kIsReferenced)) return;
-      pidf = (UShort_t)TProcessID::WriteProcessID(0,gFile);
-      R__b << pidf;
    }
 }
 

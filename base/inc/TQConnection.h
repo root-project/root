@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.h,v 1.1 2000/10/17 12:19:18 rdm Exp $
+// @(#)root/base:$Name:$:$Id:$
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -60,8 +60,8 @@ public:
    void ExecuteMethod(Double_t param);
    void ExecuteMethod(Long_t *params);
    void ExecuteMethod(const char *params);
-   void ls(Option_t *option="") const;
-   void Print(Option_t *option="") const;
+   void ls(Option_t *option="");
+   void Print(Option_t *option="");
 
    ClassDef(TQConnection,0) // Internal class used in the object communication mechanism
 };

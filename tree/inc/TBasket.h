@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.6 2002/01/16 18:10:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -43,9 +43,10 @@ protected:
     Int_t       fNevBuf;          //Number of entries in basket
     Int_t       fLast;            //Pointer to last used byte in basket
     Bool_t      fHeaderOnly;      //True when only the basket header must be read/written
-    Int_t      *fDisplacement;    //![fNevBuf] Displacement of entries in fBuffer(TKey)
-    Int_t      *fEntryOffset;     //[fNevBuf] Offset of entries in fBuffer(TKey)
-    TBranch    *fBranch;          //Pointer to the basket support branch
+    char        *fZipBuffer;      //Basket compressed buffer (if compression)
+    Int_t       *fDisplacement;   //![fNevBuf] Displacement of entries in fBuffer(TKey)
+    Int_t       *fEntryOffset;    //[fNevBuf] Offset of entries in fBuffer(TKey)
+    TBranch     *fBranch;         //Pointer to the basket support branch
 
 public:
     TBasket();
@@ -53,20 +54,19 @@ public:
     virtual ~TBasket();
 
     virtual void    AdjustSize(Int_t newsize);
-    virtual void    DeleteEntryOffset();
     virtual Int_t   DropBuffers();
-    TBranch        *GetBranch() const {return fBranch;}
-            Int_t   GetBufferSize() const {return fBufferSize;}
-            Int_t  *GetDisplacement() const {return fDisplacement;}
-            Int_t  *GetEntryOffset() const {return fEntryOffset;}
-            Int_t   GetEntryPointer(Int_t Entry);
-            Int_t   GetNevBuf() const {return fNevBuf;}
-            Int_t   GetNevBufSize() const {return fNevBufSize;}
-            Int_t   GetLast() const {return fLast;}
-            Int_t   ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file);
-            Int_t   ReadBasketBytes(Seek_t pos, TFile *file);
+    TBranch        *GetBranch() {return fBranch;}
+            Int_t   GetBufferSize() {return fBufferSize;}
+            Int_t  *GetDisplacement() {return fDisplacement;}
+            Int_t  *GetEntryOffset() {return fEntryOffset;}
+    virtual Int_t   GetEntryPointer(Int_t Entry);
+            char   *GetZipBuffer() {return fZipBuffer;}
+            Int_t   GetNevBuf() {return fNevBuf;}
+            Int_t   GetNevBufSize() {return fNevBufSize;}
+            Int_t   GetLast() {return fLast;}
+    virtual void    ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file);
+    virtual Int_t   ReadBasketBytes(Seek_t pos, TFile *file);
 
-            void    SetBranch(TBranch *branch) {fBranch = branch;}
             void    SetNevBufSize(Int_t n) {fNevBufSize=n;}
     virtual void    SetReadMode();
     virtual void    SetWriteMode();

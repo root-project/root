@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.4 2001/05/07 18:41:49 rdm Exp $
+// @(#)root/matrix:$Name$:$Id$
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -106,7 +106,7 @@ protected:
 private:
    virtual void FillIn(TMatrixD &m) const = 0;
 
-   TLazyMatrixD(const TLazyMatrixD &) : TObject() { }
+   TLazyMatrixD(const TLazyMatrixD &) { }
    void operator=(const TLazyMatrixD &) { }
 
 public:
@@ -144,10 +144,10 @@ friend class TMatrixD;
 friend class TVectorD;
 
 private:
-   const TMatrixD *fMatrix;  //! the matrix I am a row of
+   const TMatrixD *fMatrix;  // the matrix I am a row of
    Int_t           fRowInd;  // effective row index
    Int_t           fInc;     // if ptr = @a[row,i], then ptr+inc = @a[row,i+1]
-   Double_t       *fPtr;     //! pointer to the a[row,0]
+   Double_t       *fPtr;     // pointer to the a[row,0]
 
    TMatrixDRow() { fMatrix = 0; fInc = 0; fPtr = 0; }
 
@@ -181,9 +181,9 @@ friend class TMatrixD;
 friend class TVectorD;
 
 private:
-   const TMatrixD *fMatrix;         //! the matrix I am a column of
+   const TMatrixD *fMatrix;         // the matrix I am a column of
    Int_t           fColInd;         // effective column index
-   Double_t       *fPtr;            //! pointer to the a[0,i] column
+   Double_t       *fPtr;            // pointer to the a[0,i] column
 
    TMatrixDColumn() { fMatrix = 0; fPtr = 0; }
 
@@ -217,10 +217,10 @@ friend class TMatrixD;
 friend class TVectorD;
 
 private:
-   const TMatrixD *fMatrix;  //! the matrix I am the diagonal of
+   const TMatrixD *fMatrix;  // the matrix I am the diagonal of
    Int_t           fInc;     // if ptr=@a[i,i], then ptr+inc = @a[i+1,i+1]
    Int_t           fNdiag;   // number of diag elems, min(nrows,ncols)
-   Double_t       *fPtr;     //! pointer to the a[0,0]
+   Double_t       *fPtr;     // pointer to the a[0,0]
 
    TMatrixDDiag() { fMatrix = 0; fInc = 0; fNdiag = 0; fPtr = 0; }
 
@@ -282,7 +282,7 @@ public:
 
 //----- inlines ----------------------------------------------------------------
 
-#if !defined(R__HPUX) && !defined(R__MACOSX)
+#ifndef R__HPUX
 
 #ifndef __CINT__
 

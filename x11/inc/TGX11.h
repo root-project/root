@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.12 2001/08/21 17:29:39 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.5 2000/10/13 09:54:28 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -73,19 +73,8 @@ struct XWindow_t {
    UInt_t   hclip;                // height of the clipping rectangle
    ULong_t *new_colors;           // new image colors (after processing)
    Int_t    ncolors;              // number of different colors
-   Bool_t   shared;               // notify when window is shared
 };
 
-struct XColor_t {
-   ULong_t  pixel;                // color pixel value
-   UShort_t red;                  // red value in range [0,kBIGGEST_RGB_VALUE]
-   UShort_t green;                // green value
-   UShort_t blue;                 // blue value
-   Bool_t   defined;              // true if pixel value is defined
-   XColor_t() { pixel = 0; red = green = blue = 0; defined = kFALSE; }
-};
-
-class TExMap;
 
 
 class TGX11 : public TVirtualX {
@@ -93,26 +82,25 @@ class TGX11 : public TVirtualX {
 private:
    Int_t      fMaxNumberOfWindows;    //Maximum number of windows
    XWindow_t *fWindows;               //List of windows
-   TExMap    *fColors;                //Hash list of colors
    Cursor     fCursors[kNumCursors];  //List of cursors
    XEvent    *fXEvent;                //Current native (X11) event
 
-   void   CloseWindow1();
-   void   ClearPixmap(Drawable *pix);
-   void   CopyWindowtoPixmap(Drawable *pix, Int_t xpos, Int_t ypos);
-   void   PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
-                   Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
-                   UChar_t *image);
-   void   RemovePixmap(Drawable *pix);
-   void   SetColor(GC gc, Int_t ci);
-   void   SetFillStyleIndex(Int_t style, Int_t fasi);
-   void   SetInput(Int_t inp);
-   void   SetMarkerType(Int_t type, Int_t n, XPoint *xy);
-   void   CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolors,
-                             Int_t &maxcolors);
-   void   MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors);
-   Int_t  FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors);
-   void   ImgPickPalette(XImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B);
+   void  CloseWindow1();
+   void  ClearPixmap(Drawable *pix);
+   void  CopyWindowtoPixmap(Drawable *pix, Int_t xpos, Int_t ypos);
+   void  PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
+                  Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
+                  UChar_t *image);
+   void  RemovePixmap(Drawable *pix);
+   void  SetColor(GC gc, Int_t ci);
+   void  SetFillStyleIndex(Int_t style, Int_t fasi);
+   void  SetInput(Int_t inp);
+   void  SetMarkerType(Int_t type, Int_t n, XPoint *xy);
+   void  CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolors,
+                            Int_t &maxcolors);
+   void  MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors);
+   Int_t FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors);
+   void  ImgPickPalette(XImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B);
 
    //---- Private methods used for GUI ----
    void MapGCValues(GCValues_t &gval, ULong_t &xmask, XGCValues &xgval, Bool_t tox = kTRUE);
@@ -138,20 +126,10 @@ protected:
    Float_t    fCharacterUpY;       //Character Up vector along Y
    Float_t    fTextMagnitude;      //Text Magnitude
    Bool_t     fHasTTFonts;         //True when TrueType fonts are used
-   Int_t      fDepth;              //Number of color planes
-   Int_t      fRedDiv;             //Red value divider, -1 if no TrueColor visual
-   Int_t      fGreenDiv;           //Green value divider
-   Int_t      fBlueDiv;            //Blue value divider
-   Int_t      fRedShift;           //Bits to left shift red, -1 if no TrueColor visual
-   Int_t      fGreenShift;         //Bits to left shift green
-   Int_t      fBlueShift;          //Bits to left shift blue
 
    // needed by TGX11TTF
-   Bool_t     AllocColor(Colormap cmap, XColor *color);
-   void       QueryColors(Colormap cmap, XColor *colors, Int_t ncolors);
    XWindow_t *GetCurrentWindow() const;
    GC        *GetGC(Int_t which) const;
-   XColor_t  &GetColor(Int_t cid);
 
 public:
    TGX11();
@@ -183,8 +161,6 @@ public:
    Window_t  GetWindowID(Int_t wid);
    Bool_t    HasTTFonts() const { return fHasTTFonts; }
    Int_t     InitWindow(ULong_t window);
-   Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
-   void      RemoveWindow(ULong_t qwid);
    void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    Int_t     OpenDisplay(Display *display);
    Int_t     OpenPixmap(UInt_t w, UInt_t h);
@@ -224,7 +200,7 @@ public:
    void      Sync(Int_t mode);
    void      UpdateWindow(Int_t mode);
    void      Warp(Int_t ix, Int_t iy);
-   Int_t     WriteGIF(char *name);
+   void      WriteGIF(char *name);
    void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
 
    //---- Methods used for GUI -----
@@ -245,8 +221,7 @@ public:
    Window_t     CreateWindow(Window_t parent, Int_t x, Int_t y,
                              UInt_t w, UInt_t h, UInt_t border,
                              Int_t depth, UInt_t clss,
-                             void *visual, SetWindowAttributes_t *attr,
-                             UInt_t wtype);
+                             void *visual, SetWindowAttributes_t *attr);
    Int_t        OpenDisplay(const char *dpyName);
    void         CloseDisplay();
    Display_t    GetDisplay();
@@ -329,7 +304,6 @@ public:
                               UInt_t w, UInt_t h);
    void         DrawSegments(Drawable_t id, GContext_t gc, Segment_t *seg, Int_t nseg);
    void         SelectInput(Window_t id, UInt_t evmask);
-   Window_t     GetInputFocus();
    void         SetInputFocus(Window_t id);
    Window_t     GetPrimarySelectionOwner();
    void         SetPrimarySelectionOwner(Window_t id);

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TAttTextCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name$:$Id$
 // Author: Rene Brun   04/07/96
 
 /*************************************************************************
@@ -94,7 +94,6 @@ TAttTextCanvas::TAttTextCanvas(const char *name, const char *title, UInt_t ww, U
          xlow = 0.02 + i*wpad;
          sprintf(command,"SetTextAlign(%d)",align);
          test1 = new TGroupButton("Align","",command,xlow, ylow, xlow+0.9*wpad, ylow+0.9*hpad);
-         test1->SetEditable(kTRUE);
          if (!i && !j) test1->SetBorderMode(-1);
          test1->SetFillColor(42);
          test1->SetBorderSize(2);
@@ -112,7 +111,6 @@ TAttTextCanvas::TAttTextCanvas(const char *name, const char *title, UInt_t ww, U
          test1->SetTextAlign(align);
          test1->SetTextSize(0.3);
          text->Draw();
-         test1->SetEditable(kFALSE);
          cd();
       }
    }
@@ -129,14 +127,12 @@ TAttTextCanvas::TAttTextCanvas(const char *name, const char *title, UInt_t ww, U
          xlow = 0.42 + i*wpad;
          sprintf(command,"PIXELS(%d)",npixels);
          test1 = new TGroupButton("Size","Aa",command,xlow, ylow, xlow+0.9*wpad, ylow+0.9*hpad);
-         test1->SetEditable(kTRUE);
          if (npixels == 18) test1->SetBorderMode(-1);
          test1->SetFillColor(18);
          test1->SetBorderSize(2);
          tsize = test1->PixeltoY(0) - test1->PixeltoY(npixels);
          test1->SetTextSize(tsize);
          test1->Draw();
-         test1->SetEditable(kFALSE);
          cd();
       }
    }
@@ -144,7 +140,6 @@ TAttTextCanvas::TAttTextCanvas(const char *name, const char *title, UInt_t ww, U
 //*-* draw colortable pads
    test1->DisplayColorTable("SetTextColor",0.02, 0.70, 0.40, 0.28);
    Update();
-   SetEditable(kFALSE);
 
    padsav->cd();
 }

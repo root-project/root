@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.h,v 1.1 2000/10/12 13:27:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.h,v 1.4 2000/10/12 10:00:59 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -48,12 +48,12 @@ public:
         virtual void     Browse(TBrowser *b);
         virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
         virtual void     Draw(Option_t *chopt="");
-        TH1F            *GetHistogram() const;
-        TList           *GetListOfGraphs() const { return fGraphs; }
-        TAxis           *GetXaxis() const;
-        TAxis           *GetYaxis() const;
+        TH1F            *GetHistogram();
+        TList           *GetListOfGraphs() { return fGraphs; }
+        TAxis           *GetXaxis();
+        TAxis           *GetYaxis();
         virtual void     Paint(Option_t *chopt="");
-        virtual void     Print(Option_t *chopt="") const;
+        virtual void     Print(Option_t *chopt="");
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
         virtual void     SetMaximum(Double_t maximum=-1111);
         virtual void     SetMinimum(Double_t minimum=-1111);

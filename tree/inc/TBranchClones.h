@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.h,v 1.3 2000/11/21 20:46:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -32,10 +32,10 @@
 class TBranchClones : public TBranch {
 
 protected:
-    TClonesArray     *fList;           //!Pointer to the clonesarray
-    Int_t            fRead;            //!flag = 1 if clonesarray has been read
-    Int_t            fN;               //!Number of elements in ClonesArray
-    Int_t            fNdataMax;        //!Maximum value of fN
+    TClonesArray     *fList;           //Pointer to the clonesarray
+    Int_t            fRead;            //flag = 1 if clonesarray has been read
+    Int_t            fN;               //Number of elements in ClonesArray
+    Int_t            fNdataMax;        //Maximum value of fN
     TString          fClassName;       //name of the class of the objets in the ClonesArray
     TBranch          *fBranchCount;    //Branch with clones count
 
@@ -47,15 +47,15 @@ public:
     virtual void    Browse(TBrowser *b);
     virtual Int_t   Fill();
     virtual Int_t   GetEntry(Int_t entry=0, Int_t getall = 0);
-    virtual Int_t   GetN() const {return fN;}
-    TClonesArray    *GetList() const {return fList;}
+    virtual Int_t   GetN() {return fN;}
+    TClonesArray    *GetList() {return fList;}
     Bool_t          IsFolder() const {return kTRUE;}
-    virtual void    Print(Option_t *option="") const;
+    virtual void    Print(Option_t *option="");
     virtual void    Reset(Option_t *option="");
     virtual void    SetAddress(void *add);
     virtual void    SetBasketSize(Int_t buffsize);
 
-    ClassDef(TBranchClones,2)  //Branch in case of an array of clone objects
+    ClassDef(TBranchClones,1)  //Branch in case of an array of clone objects
 };
 
 #endif

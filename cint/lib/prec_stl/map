@@ -22,10 +22,7 @@
 #include <functional>
 
 //////////////////////////////////////////////////////////////////////////
-#if defined(G__ANSIISOLIB)
-template<class Key,class T,class Compare=less<Key>
-        ,class Allocator=allocator<T> >
-#elif defined(G__GNUC) && !defined(G__KCC)
+#if defined(G__GNUC)
 template<class Key,class T,class Compare=less<Key>
         ,class Allocator=alloc>
 #elif defined(G__HPUX)
@@ -43,7 +40,7 @@ class map {
   //typedef pair<const Key,T>                         value_type;
   typedef Compare                                   key_compare;
   typedef Allocator                                 allocator_type;
-#if (defined(G__GNUC) && !defined(G__KCC)) || defined(G__HPUX)
+#if defined(G__GNUC) || defined(G__HPUX)
   //typedef Key*                                     pointer;
   //typedef const Key*                               const_pointer;
   //typedef Key&                                     reference;
@@ -85,7 +82,7 @@ class map {
     bool operator==(const iterator& x) ;
 #endif
   };
-#if defined(G__GNUC) && !defined(G__KCC)
+#ifdef G__GNUC
   friend bool operator==(const map::iterator& x ,const map::iterator& y) const;
   friend bool operator!=(const map::iterator& x ,const map::iterator& y) const;
 #endif
@@ -127,7 +124,7 @@ class map {
     map(InputIterator first, InputIterator last,
      const Compare& comp = Compare(), const Allocator& = Allocator());
 #endif
-#if defined(G__GNUC) || defined(G__KCC)
+#ifdef G__GNUC
   map(iterator first, iterator last);
   map(reverse_iterator first, reverse_iterator last);
 #endif
@@ -154,11 +151,11 @@ class map {
   // modifiers:
   //pair<iterator, bool> insert(const value_type& x);
   iterator             insert(iterator position, const value_type& x);
-#if defined(G__KCC)
+#if 0
   template <class InputIterator>
    void insert(InputIterator first, InputIterator last);
 #endif
-#if defined(G__GNUC) && !defined (G__KCC)
+#ifdef G__GNUC
   void insert(iterator first, iterator last);
   void insert(reverse_iterator first, reverse_iterator last);
 #endif
@@ -190,17 +187,14 @@ class map {
   friend bool operator>=(const map& x, const map& y);
   friend bool operator<=(const map& x, const map& y);
   // specialized algorithms:
-#if !defined(G__GNUC) && !defined(G__KCC)
+#ifndef G__GNUC
   // doesn't work on egcs nor VC++5.0
   //friend void swap(map& x, map& y);
 #endif
 
-#ifndef G__NOALGORITHM
   // Generic algorithm
-  friend map::iterator
-    search(map::iterator first1,map::iterator last1,
-           map::iterator first2,map::iterator last2);
-#endif
+  //friend void reverse(map::iterator first,map::iterator last);
+  //friend void reverse(map::reverse_iterator first,map::reverse_itetator last);
 
   // iterator_category resolution
   //friend bidirectional_iterator_tag iterator_category(map::iterator x);

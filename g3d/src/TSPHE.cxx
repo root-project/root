@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.3 2001/02/28 11:04:06 brun Exp $
+// @(#)root/g3d:$Name$:$Id$
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -337,7 +337,7 @@ void TSPHE::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TSPHE::SetEllipse(const Float_t *factors){
+void TSPHE::SetEllipse(Float_t *factors){
 
   if (factors[0] > 0) faX = factors[0];
   if (factors[1] > 0) faY = factors[1];
@@ -481,17 +481,9 @@ void TSPHE::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
+   UInt_t R__s, R__c;
    if (b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      if (R__v > 2) {
-         TSPHE::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
-         Int_t ndiv = fNdiv;
-         fNdiv = 0;
-         SetNumberOfDivisions (ndiv);
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      Version_t v = b.ReadVersion(&R__s, &R__c);
       TShape::Streamer(b);
       b >> fRmin;    // minimum radius
       b >> fRmax;    // maximum radius
@@ -501,17 +493,27 @@ void TSPHE::Streamer(TBuffer &b)
       b >> fPhimax;  // maximum phi
       Int_t tNdiv;   // XXX added by RvdE XXX (fNdiv is set by SetNumberOfDivisions)
       b >> tNdiv;
-      if (R__v > 1) {
+      if (v > 1) {
         b >> faX;
         b >> faY;
         b >> faZ;
       }
       SetNumberOfDivisions (tNdiv); // XXX added by RvdE
       b.CheckByteCount(R__s, R__c, TSPHE::IsA());
-      //====end of old versions
-      
    } else {
-      TSPHE::Class()->WriteBuffer(b,this);
+      R__c = b.WriteVersion(TSPHE::IsA(), kTRUE);
+      TShape::Streamer(b);
+      b << fRmin;    // minimum radius
+      b << fRmax;    // maximum radius
+      b << fThemin;  // minimum theta
+      b << fThemax;  // maximum theta
+      b << fPhimin;  // minimum phi
+      b << fPhimax;  // maximum phi
+      b << fNdiv;
+      b << faX;
+      b << faY;
+      b << faZ;
+      b.SetByteCount(R__c, kTRUE);
    }
 }
 

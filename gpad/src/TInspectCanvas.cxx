@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.5 2001/07/01 08:29:45 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.3 2000/09/08 07:41:00 brun Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -96,7 +96,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
 
    TClass *cl = obj->IsA();
    if (cl == 0) return;
-   if (!cl->GetListOfRealData()) cl->BuildRealData(obj);
+   if (!cl->GetListOfRealData()) cl->BuildRealData();
 
    // Count number of data members in order to resize the canvas
    TRealData *rd;
@@ -209,7 +209,6 @@ void TInspectCanvas::InspectObject(TObject *obj)
          for (Int_t i=0;i<kline;i++) line[i] = ' ';
          line[kline-1] = 0;
          sprintf(pname,"%s ",rd->GetName());
-         if (strstr(member->GetFullTypeName(),"**")) strcat(pname,"**");
 
          // Encode data value or pointer value
          tval = &tvalue;
@@ -266,10 +265,9 @@ void TInspectCanvas::InspectObject(TObject *obj)
                tlink->SetTextAlign(12);
                tlink->SetTextColor(2);
                tlink->SetTextSize(tsize);
+               tlink->SetName(member->GetTypeName());
                tlink->SetBit(kCanDelete);
                tlink->Draw();
-               if (strstr(member->GetFullTypeName(),"**")) tlink->SetBit(TLink::kIsStarStar);
-               tlink->SetName(member->GetTypeName());
             } else {
                tval->DrawText(xvalue+0.1, ytext, &line[kvalue]);
             }

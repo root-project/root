@@ -1,4 +1,4 @@
-/* @(#)root/g3d:$Name:  $:$Id: LinkDef.h,v 1.3 2000/10/13 18:59:06 rdm Exp $ */
+/* @(#)root/g3d:$Name:  $:$Id: LinkDef.h,v 1.2 2000/09/14 06:28:00 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -16,15 +16,15 @@
 
 #pragma link C++ global gGeometry;
 
-#pragma link C++ class TAxis3D+;
+#pragma link C++ class TAxis3D;
 #pragma link C++ class TBRIK+;
 #pragma link C++ class TCONE+;
 #pragma link C++ class TCONS+;
-#pragma link C++ class TCTUB-;
+#pragma link C++ class TCTUB+;
 #pragma link C++ class TELTU+;
 #pragma link C++ class TGTRA+;
 #pragma link C++ class TGeometry-;
-#pragma link C++ class THelix-;
+#pragma link C++ class THelix+;
 #pragma link C++ class THYPE+;
 #pragma link C++ class TMaterial-;
 #pragma link C++ class TMixture-;
@@ -35,7 +35,7 @@
 #pragma link C++ class TPGON+;
 #pragma link C++ class TPolyLine3D-;
 #pragma link C++ class TPolyMarker3D-;
-#pragma link C++ class TRotMatrix-;
+#pragma link C++ class TRotMatrix+;
 #pragma link C++ class TShape-;
 #pragma link C++ class TSPHE-;
 #pragma link C++ class TTRAP+;

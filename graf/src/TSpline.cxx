@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.4 2000/12/11 00:01:22 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -157,43 +157,6 @@ void TSpline::Paint(Option_t *option)
    }
 }
 
-//______________________________________________________________________________
-void TSpline::Streamer(TBuffer &R__b)
-{
-   // Stream an object of class TSpline.
-
-   if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TSpline::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      } 
-      //====process old versions before automatic schema evolution
-      TNamed::Streamer(R__b);
-      TAttLine::Streamer(R__b);
-      TAttFill::Streamer(R__b);
-      TAttMarker::Streamer(R__b);
-      
-      fNp = 0;
-      /*
-      R__b >> fDelta;
-      R__b >> fXmin;
-      R__b >> fXmax;
-      R__b >> fNp;
-      R__b >> fKstep;
-      R__b >> fHistogram;
-      R__b >> fGraph;
-      R__b >> fNpx;
-      */
-      R__b.CheckByteCount(R__s, R__c, TSpline::IsA());
-      //====end of old versions
-      
-   } else {
-      TSpline::Class()->WriteBuffer(R__b,this);
-   }
-}
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TSpline3                                                             //
@@ -206,8 +169,8 @@ void TSpline::Streamer(TBuffer &R__b)
 
 
 //____________________________________________________________________________
-TSpline3::TSpline3(const char *title,
-		   Double_t x[], Double_t y[], Int_t n, const char *opt,
+TSpline3::TSpline3(Text_t *title,
+		   Double_t x[], Double_t y[], Int_t n, Text_t *opt,
 		   Double_t valbeg, Double_t valend) :
   TSpline(title,-1,x[0],x[n-1],n,kFALSE),
   fValBeg(valbeg), fValEnd(valend), fBegCond(0), fEndCond(0)
@@ -236,9 +199,9 @@ TSpline3::TSpline3(const char *title,
 }
 
 //____________________________________________________________________________
-TSpline3::TSpline3(const char *title,
+TSpline3::TSpline3(Text_t *title,
 		   Double_t xmin, Double_t xmax,
-		   Double_t y[], Int_t n, const char *opt,
+		   Double_t y[], Int_t n, Text_t *opt,
 		   Double_t valbeg, Double_t valend) :
   TSpline(title,(xmax-xmin)/(n-1), xmin, xmax, n, kTRUE),
   fValBeg(valbeg), fValEnd(valend),
@@ -268,8 +231,8 @@ TSpline3::TSpline3(const char *title,
 }
 
 //____________________________________________________________________________
-TSpline3::TSpline3(const char *title,
-		   Double_t x[], TF1 *func, Int_t n, const char *opt,
+TSpline3::TSpline3(Text_t *title,
+		   Double_t x[], TF1 *func, Int_t n, Text_t *opt,
 		   Double_t valbeg, Double_t valend) :
   TSpline(title,-1, x[0], x[n-1], n, kFALSE),
   fValBeg(valbeg), fValEnd(valend),
@@ -299,9 +262,9 @@ TSpline3::TSpline3(const char *title,
 }
 
 //____________________________________________________________________________
-TSpline3::TSpline3(const char *title,
+TSpline3::TSpline3(Text_t *title,
 		   Double_t xmin, Double_t xmax,
-		   TF1 *func, Int_t n, const char *opt,
+		   TF1 *func, Int_t n, Text_t *opt,
 		   Double_t valbeg, Double_t valend) :
   TSpline(title,(xmax-xmin)/(n-1), xmin, xmax, n, kTRUE),
   fValBeg(valbeg), fValEnd(valend),
@@ -332,8 +295,8 @@ TSpline3::TSpline3(const char *title,
 }
 
 //____________________________________________________________________________
-TSpline3::TSpline3(const char *title,
-		   TGraph *g, const char *opt,
+TSpline3::TSpline3(Text_t *title,
+		   TGraph *g, Text_t *opt,
 		   Double_t valbeg, Double_t valend) :
   TSpline(title,-1,0,0,g->GetN(),kFALSE),
   fValBeg(valbeg), fValEnd(valend),
@@ -367,22 +330,22 @@ TSpline3::TSpline3(const char *title,
 }
 
 //____________________________________________________________________________
-void TSpline3::SetCond(const char *opt)
+void TSpline3::SetCond(Text_t *opt)
 {
   //
   // Check the boundary conditions
   //
-  const char *b1 = strstr(opt,"b1");
-  const char *e1 = strstr(opt,"e1");
-  const char *b2 = strstr(opt,"b2");
-  const char *e2 = strstr(opt,"e2");
+  char *b1 = strstr(opt,"b1");
+  char *e1 = strstr(opt,"e1");
+  char *b2 = strstr(opt,"b2");
+  char *e2 = strstr(opt,"e2");
   if (b1 && b2)
-    Error("SetCond","Cannot specify first and second derivative at first point");
+    Error("ctor","Cannot specify first and second derivative at first point");
   if (e1 && e2)
-    Error("SetCond","Cannot specify first and second derivative at last point");
-  if (b1) fBegCond=1;
+    Error("ctor","Cannot specify first and second derivative at last point");
+  if(b1) fBegCond=1;
   else if (b2) fBegCond=2;
-  if (e1) fEndCond=1;
+  if(e1) fEndCond=1;
   else if (e2) fEndCond=2;
 }
 
@@ -736,19 +699,11 @@ void TSpline3::Streamer(TBuffer &R__b)
    // Stream an object of class TSpline3.
 
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TSpline3::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      } 
-      //====process old versions before automatic schema evolution
+      Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       TSpline::Streamer(R__b);
-      if (fNp > 0) {
-         fPoly = new TSplinePoly3[fNp];
-         for(Int_t i=0; i<fNp; ++i) {
-	   fPoly[i].Streamer(R__b);
-         }
+      fPoly = new TSplinePoly3[fNp];
+      for(Int_t i=0; i<fNp; ++i) {
+	fPoly[i].Streamer(R__b);
       }
       //      R__b >> fPoly;
       R__b >> fValBeg;
@@ -756,7 +711,16 @@ void TSpline3::Streamer(TBuffer &R__b)
       R__b >> fBegCond;
       R__b >> fEndCond;
    } else {
-      TSpline3::Class()->WriteBuffer(R__b,this);
+      R__b.WriteVersion(TSpline3::IsA());
+      TSpline::Streamer(R__b);
+      for(Int_t i=0; i<fNp; ++i) {
+	fPoly[i].Streamer(R__b);
+      }
+      //      R__b << fPoly;
+      R__b << fValBeg;
+      R__b << fValEnd;
+      R__b << fBegCond;
+      R__b << fEndCond;
    }
 }
 
@@ -774,9 +738,9 @@ void TSpline3::Streamer(TBuffer &R__b)
 
 
 //____________________________________________________________________________
-TSpline5::TSpline5(const char *title,
+TSpline5::TSpline5(Text_t *title,
 		   Double_t x[], Double_t y[], Int_t n,
-		   const char *opt, Double_t b1, Double_t e1,
+		   Text_t *opt, Double_t b1, Double_t e1,
 		   Double_t b2, Double_t e2) :
   TSpline(title,-1, x[0], x[n-1], n, kFALSE)
 {
@@ -786,7 +750,7 @@ TSpline5::TSpline5(const char *title,
   // possibly end point conditions
   //
   Int_t beg, end;
-  const char *cb1, *ce1, *cb2, *ce2;
+  char *cb1, *ce1, *cb2, *ce2;
   fName="Spline5";
   //
   // Check endpoint conditions
@@ -808,10 +772,10 @@ TSpline5::TSpline5(const char *title,
 }
 
 //____________________________________________________________________________
-TSpline5::TSpline5(const char *title,
+TSpline5::TSpline5(Text_t *title,
 		   Double_t xmin, Double_t xmax,
 		   Double_t y[], Int_t n,
-		   const char *opt, Double_t b1, Double_t e1,
+		   Text_t *opt, Double_t b1, Double_t e1,
 		   Double_t b2, Double_t e2) :
   TSpline(title,(xmax-xmin)/(n-1), xmin, xmax, n, kTRUE)
 {
@@ -821,7 +785,7 @@ TSpline5::TSpline5(const char *title,
   // values from xmin to xmax and possibly end point conditions
   //
   Int_t beg, end;
-  const char *cb1, *ce1, *cb2, *ce2;
+  char *cb1, *ce1, *cb2, *ce2;
   fName="Spline5";
   //
   // Check endpoint conditions
@@ -843,9 +807,9 @@ TSpline5::TSpline5(const char *title,
 }
 
 //____________________________________________________________________________
-TSpline5::TSpline5(const char *title,
+TSpline5::TSpline5(Text_t *title,
 		   Double_t x[], TF1 *func, Int_t n,
-		   const char *opt, Double_t b1, Double_t e1,
+		   Text_t *opt, Double_t b1, Double_t e1,
 		   Double_t b2, Double_t e2) :
   TSpline(title,-1, x[0], x[n-1], n, kFALSE)
 {
@@ -855,7 +819,7 @@ TSpline5::TSpline5(const char *title,
   // to interpolate and possibly end point conditions
   //
   Int_t beg, end;
-  const char *cb1, *ce1, *cb2, *ce2;
+  char *cb1, *ce1, *cb2, *ce2;
   fName="Spline5";
   //
   // Check endpoint conditions
@@ -877,10 +841,10 @@ TSpline5::TSpline5(const char *title,
 }
 
 //____________________________________________________________________________
-TSpline5::TSpline5(const char *title,
+TSpline5::TSpline5(Text_t *title,
 		   Double_t xmin, Double_t xmax,
 		   TF1 *func, Int_t n,
-		   const char *opt, Double_t b1, Double_t e1,
+		   Text_t *opt, Double_t b1, Double_t e1,
 		   Double_t b2, Double_t e2) :
   TSpline(title,(xmax-xmin)/(n-1), xmin, xmax, n, kTRUE)
 {
@@ -890,7 +854,7 @@ TSpline5::TSpline5(const char *title,
   // and xmax and possibly end point conditions
   //
   Int_t beg, end;
-  const char *cb1, *ce1, *cb2, *ce2;
+  char *cb1, *ce1, *cb2, *ce2;
   fName="Spline5";
   //
   // Check endpoint conditions
@@ -913,9 +877,9 @@ TSpline5::TSpline5(const char *title,
 }
 
 //____________________________________________________________________________
-TSpline5::TSpline5(const char *title,
+TSpline5::TSpline5(Text_t *title,
 		   TGraph *g,
-		   const char *opt, Double_t b1, Double_t e1,
+		   Text_t *opt, Double_t b1, Double_t e1,
 		   Double_t b2, Double_t e2) :
   TSpline(title,-1,0,0,g->GetN(),kFALSE)
 {
@@ -925,7 +889,7 @@ TSpline5::TSpline5(const char *title,
   // point conditions
   //
   Int_t beg, end;
-  const char *cb1, *ce1, *cb2, *ce2;
+  char *cb1, *ce1, *cb2, *ce2;
   fName="Spline5";
   //
   // Check endpoint conditions
@@ -951,9 +915,8 @@ TSpline5::TSpline5(const char *title,
 }
 
 //____________________________________________________________________________
-void TSpline5::BoundaryConditions(const char *opt,Int_t &beg,Int_t &end,
-				  const char *&cb1,const char *&ce1,
-                                  const char *&cb2,const char *&ce2)
+void TSpline5::BoundaryConditions(Text_t *opt,Int_t &beg,Int_t&end,
+				  char *&cb1,char *&ce1,char *&cb2,char *&ce2)
 {
   //
   // Check the boundary conditions and the
@@ -983,10 +946,8 @@ void TSpline5::BoundaryConditions(const char *opt,Int_t &beg,Int_t &end,
   }
 }
 
-//____________________________________________________________________________
 void TSpline5::SetBoundaries(Double_t b1, Double_t e1, Double_t b2, Double_t e2,
-			     const char *cb1, const char *ce1, const char *cb2,
-                             const char *ce2)
+			     char *cb1, char *ce1, char *cb2, char *ce2)
 {
   //
   // Set the boundary conditions at double/triple knots
@@ -1735,23 +1696,20 @@ void TSpline5::Streamer(TBuffer &R__b)
    // Stream an object of class TSpline5.
 
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TSpline5::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      } 
-      //====process old versions before automatic schema evolution
+      Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       TSpline::Streamer(R__b);
-      if (fNp > 0) {
-         fPoly = new TSplinePoly5[fNp];
-         for(Int_t i=0; i<fNp; ++i) {
-	   fPoly[i].Streamer(R__b);
-         }
+      fPoly = new TSplinePoly5[fNp];
+      for(Int_t i=0; i<fNp; ++i) {
+	fPoly[i].Streamer(R__b);
       }
       //      R__b >> fPoly;
    } else {
-      TSpline5::Class()->WriteBuffer(R__b,this);
+      R__b.WriteVersion(TSpline5::IsA());
+      TSpline::Streamer(R__b);
+      for(Int_t i=0; i<fNp; ++i) {
+	fPoly[i].Streamer(R__b);
+      }
+      //      R__b << fPoly;
    }
 }
 

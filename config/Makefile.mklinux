@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for MkLinux with glibc
 
 PLATFORM      = linux
@@ -33,7 +31,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lg++ -lm -ldl
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11 -lSM -lICE -lg++
+XLIBS         = -L/usr/X11R6/lib -lX11 -lSM -lICE -lXpm -lg++
 CILIBS        = -lm -ltermcap -lbsd -ldl -lg++
 
 # Fortran:

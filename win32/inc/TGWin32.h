@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.11 2001/08/21 17:29:39 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.4 2000/09/07 00:26:06 rdm Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -77,7 +77,6 @@ class TGWin32  :  public TVirtualX  {
    friend class TGWin32WindowsObject;
    friend class TGWin32PixmapObject;
    friend class TWin32GLViewerImp;
-   friend class TWin32InventorViewerImp;
    friend class TPadOpenGLView;
 
 protected:
@@ -230,7 +229,7 @@ public:
     void      SetTitle(const char *title);
     void      UpdateWindow(Int_t mode);
     void      Warp(Int_t ix, Int_t iy);
-    Int_t     WriteGIF(char *name);
+    void      WriteGIF(char *name);
     void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
 
     UInt_t    ExecCommand(TGWin32Command *command);
@@ -275,8 +274,7 @@ public:
    virtual Window_t     CreateWindow(Window_t parent, Int_t x, Int_t y,
                                      UInt_t w, UInt_t h, UInt_t border,
                                      Int_t depth, UInt_t clss,
-                                     void *visual, SetWindowAttributes_t *attr,
-                                     UInt_t wtype);
+                                     void *visual, SetWindowAttributes_t *attr);
    virtual Int_t        OpenDisplay(const char *dpyName);
    virtual void         CloseDisplay() { }
    virtual Display_t    GetDisplay() { return 0; }
@@ -358,7 +356,6 @@ public:
                                       UInt_t w, UInt_t h);
    virtual void         DrawSegments(Drawable_t id, GContext_t gc, Segment_t *seg, Int_t nseg);
    virtual void         SelectInput(Window_t id, UInt_t evmask);
-   virtual Window_t     GetInputFocus() { return kNone; }
    virtual void         SetInputFocus(Window_t id);
    virtual Window_t     GetPrimarySelectionOwner() { return kNone; }
    virtual void         SetPrimarySelectionOwner(Window_t id);
@@ -376,18 +373,18 @@ public:
    virtual void         SetForeground(GContext_t gc, ULong_t foreground);
    virtual void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    virtual void         Update(Int_t mode = 0);
-   virtual Region_t     CreateRegion();
-   virtual void         DestroyRegion(Region_t reg);
-   virtual void         UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest);
-   virtual Region_t     PolygonRegion(Point_t *points, Int_t np, Bool_t winding);
-   virtual void         UnionRegion(Region_t rega, Region_t regb, Region_t result);
-   virtual void         IntersectRegion(Region_t rega, Region_t regb, Region_t result);
-   virtual void         SubtractRegion(Region_t rega, Region_t regb, Region_t result);
-   virtual void         XorRegion(Region_t rega, Region_t regb, Region_t result);
-   virtual Bool_t       EmptyRegion(Region_t reg);
-   virtual Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg);
-   virtual Bool_t       EqualRegion(Region_t rega, Region_t regb);
-   virtual void         GetRegionBox(Region_t reg, Rectangle_t *rect);
+   Region_t             CreateRegion();
+   void                 DestroyRegion(Region_t reg);
+   void                 UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest);
+   Region_t             PolygonRegion(Point_t *points, Int_t np, Bool_t winding);
+   void                 UnionRegion(Region_t rega, Region_t regb, Region_t result);
+   void                 IntersectRegion(Region_t rega, Region_t regb, Region_t result);
+   void                 SubtractRegion(Region_t rega, Region_t regb, Region_t result);
+   void                 XorRegion(Region_t rega, Region_t regb, Region_t result);
+   Bool_t               EmptyRegion(Region_t reg);
+   Bool_t               PointInRegion(Int_t x, Int_t y, Region_t reg);
+   Bool_t               EqualRegion(Region_t rega, Region_t regb);
+   void                 GetRegionBox(Region_t reg, Rectangle_t *rect);
 
    ClassDef(TGWin32,0)  //Interface to Win32
 };

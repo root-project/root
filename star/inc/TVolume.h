@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.h,v 1.1.1.2 2000/12/18 21:05:28 fisyak Exp $
+// @(#)root/star:$Name$:$Id$
 // Author: Valery Fine   10/12/98
 
 /*************************************************************************
@@ -56,7 +56,6 @@ class TVolume  : public TObjectSet, public TAttLine, public TAttFill, public TAt
                                    //                 01 - this visible but sons
                                    //                 11 - neither this nor its sons are visible
 
-   virtual void             Add(TDataSet *dataset);
    virtual void             Add(TVolumePosition *position);
    virtual TVolumePosition *Add(TVolume *node, TVolumePosition *nodePosition);
    virtual Int_t            DistancetoNodePrimitive(Int_t px, Int_t py,TVolumePosition *position=0);
@@ -82,17 +81,17 @@ class TVolume  : public TObjectSet, public TAttLine, public TAttFill, public TAt
         virtual void        DrawOnly(Option_t *option="");
         virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
         static  TRotMatrix *GetIdentity();
-        virtual Text_t     *GetObjectInfo(Int_t px, Int_t py) const;
+        virtual Text_t     *GetObjectInfo(Int_t px, Int_t py);
         const   Option_t   *GetOption() const { return fOption.Data();}
                 TShape     *GetShape()  const {return fShape;}
                 TList      *GetListOfShapes()  const {return fListOfShapes;}
         virtual void        GetLocalRange(Float_t *min, Float_t *max);
         virtual ENodeSEEN   GetVisibility() const {return fVisibility;}
         virtual TList      *GetListOfPositions()  { return (TList *)(GetObject());}
-        virtual ULong_t     Hash() const { return TObject::Hash();}
+        virtual ULong_t     Hash() { return TObject::Hash();}
         virtual void        ImportShapeAttributes();
-        virtual Bool_t      IsMarked() const;
-        virtual Bool_t      Is3D() const {return kTRUE;}
+        virtual Bool_t      IsMarked();
+        virtual Bool_t      Is3D()  {return kTRUE;}
         virtual TList      *Nodes() const { return GetList(); }
         virtual void        Paint(Option_t *option="");
         virtual void        PaintShape(Option_t *option="");
@@ -102,7 +101,6 @@ class TVolume  : public TObjectSet, public TAttLine, public TAttFill, public TAt
         ClassDef(TVolume,1)  //Description of parameters to position a 3-D geometry object
 };
 
-inline void   TVolume::Add(TDataSet *dataset){ TDataSet::Add(dataset);}
-inline Bool_t TVolume::IsMarked() const { return TestBit(kMark); }
+inline Bool_t TVolume::IsMarked(){ return TestBit(kMark); }
 
 #endif

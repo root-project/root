@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32Marker.cxx,v 1.3 2001/06/29 06:40:29 brun Exp $
+// @(#)root/win32:$Name$:$Id$
 // Author: Valery Fine   27/01/96
 
 /*************************************************************************
@@ -12,17 +12,17 @@
 #include "TGWin32Marker.h"
 
 //______________________________________________________________________________
-TGWin32Marker::TGWin32Marker(int n, TPoint *xy, int type) : fNumNode(n),
-               fChain(0), fCindex(0), fMarkerType(type)
-{
-  if (type >= 2) {
-     if (fChain = new POINT[n]) {
-        for( int i = 0; i < n; i++ ) {
-           fChain[i].x = xy[i].GetX();
-           fChain[i].y = xy[i].GetY();
-        }
-     }
-  }
+TGWin32Marker::TGWin32Marker(int n, TPoint *xy, int type){
+  fNumNode = n;
+  fMarkerType = type;
+  if (type >= 2)
+     if (fChain = new POINT[n])
+      for( int i = 0; i < n; i++ ) {
+                 fChain[i].x = xy[i].GetX();
+                 fChain[i].y = xy[i].GetY();
+      }
+  else
+     fChain = NULL;
 }
 //______________________________________________________________________________
 TGWin32Marker::~TGWin32Marker(){
@@ -43,22 +43,23 @@ void TGWin32Marker::SetMarker(int n, TPoint *xy, int type){
 
 //*-* Did we have a chain ?
 
-   if (fMarkerType >= 2 && fNumNode != n){    // Yes, we had chain
+if (fMarkerType >= 2 && fNumNode != n){    // Yes, we had chain
        if (fChain) delete fChain;  // Delete the obsolete chain
        fChain = NULL;
-   }
+}
 
 //*-*  Create the new shaped marker
 
-   if (type >= 2) {
-      if (!fChain) fChain = new POINT[n];
-      for( int i = 0; i < n; i++ ) {
-         fChain[i].x = xy[i].GetX();
-         fChain[i].y = xy[i].GetY();
-      }
-   }
-   else if (fChain) { delete fChain; fChain = NULL; }
+if (type >= 2) {
+    if (!fChain) fChain = new POINT[n];
+    for( int i = 0; i < n; i++ ) {
+      fChain[i].x = xy[i].GetX();
+      fChain[i].y = xy[i].GetY();
+    }
+}
+else if (fChain) { delete fChain; fChain = NULL; }
 
-   fNumNode = n;
-   fMarkerType = type;
+fNumNode = n;
+fMarkerType = type;
+
 }

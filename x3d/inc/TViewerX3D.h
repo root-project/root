@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.4 2001/04/11 14:24:16 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.2 2000/10/13 19:04:40 rdm Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -30,7 +30,6 @@ class TGCanvas;
 class TGMenuBar;
 class TGPopupMenu;
 class TGLayoutHints;
-class TX3DContainer;
 
 
 class TViewerX3D : public TGMainFrame {
@@ -66,11 +65,9 @@ public:
               Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TViewerX3D();
 
-   Int_t    ExecCommand(Int_t px, Int_t py, char command);
-   void     GetPosition(Float_t &longitude, Float_t &latitude, Float_t &psi);
-   void     Iconify() { }
-   void     Show() { MapRaised(); }
-   void     Update();
+   void  Iconify() { }
+   void  Show() { MapRaised(); }
+   void  Update();
 
    // overridden from TGMainFrame
    void     CloseWindow();
