@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.19 2003/11/24 10:51:55 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.20 2003/11/25 15:57:34 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TGStatusBar.h"
 
 #include "TROOT.h"
+#include "TSystem.h"
 #include "TCanvas.h"
 #include "TBrowser.h"
 #include "TClassTree.h"
@@ -740,11 +741,23 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   // Handle Help menu items...
                   case kHelpAbout:
                      {
+#ifdef R__UNIX
+                        TString rootx;
+# ifdef ROOTBINDIR
+                        rootx = ROOTBINDIR;
+# else
+                        rootx = gSystem->Getenv("ROOTSYS");
+                        if (!rootx.IsNull()) rootx += "/bin";
+# endif
+                        rootx += "/root -a &";
+                        gSystem->Exec(rootx);
+#else
                         char str[32];
                         sprintf(str, "About ROOT %s...", gROOT->GetVersion());
                         hd = new TRootHelpDialog(this, str, 600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
+#endif
                      }
                      break;
                   case kHelpOnCanvas:
