@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.77 2002/01/02 21:47:40 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.78 2002/01/09 18:51:08 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -770,6 +770,7 @@ class TFormLeafInfoMethod : public TFormLeafInfo {
    TMethodCall *fMethod;
    TString fMethodName;
    TString fParams;
+   Double_t result;
 public:
 
    TFormLeafInfoMethod(TClass* classptr = 0, TMethodCall *method = 0) :
@@ -787,12 +788,63 @@ public:
       } else return kFALSE;
    }
 
+   virtual Bool_t    IsString() {
+      TMethodCall::EReturnType r = fMethod->ReturnType();
+      return (r==TMethodCall::kString);
+   }
+
    virtual Bool_t Update() {
       if (!TFormLeafInfo::Update()) return kFALSE;
       delete fMethod;
       fMethod = new TMethodCall(fClass, fMethodName, fParams);
       return kTRUE;
    }
+
+   virtual void *GetLocalValuePointer( TLeaf *from, Int_t instance = 0) {
+      // This is implemented here because some compiler want ALL the 
+      // signature of an overloaded function to be re-implemented.
+      return TFormLeafInfo::GetLocalValuePointer( from, instance);
+   }
+
+   virtual void *GetLocalValuePointer( char *from, Int_t instance = 0) {
+
+      void *thisobj = from;
+      if (!thisobj) return 0;
+
+      TMethodCall::EReturnType r = fMethod->ReturnType();
+      result = 0;
+
+      if (r == TMethodCall::kLong) {
+         Long_t l;
+         fMethod->Execute(thisobj, l);
+         result = (Double_t) l;
+         // Get rid of temporary return object.
+         gInterpreter->ClearStack();
+         return &result;
+
+      } else if (r == TMethodCall::kDouble) {
+         Double_t d;
+         fMethod->Execute(thisobj, d);
+         result = (Double_t) d;
+         // Get rid of temporary return object.
+         gInterpreter->ClearStack();
+         return &result;
+
+      } else if (r == TMethodCall::kString) {
+         char *returntext = 0;
+         fMethod->Execute(thisobj,&returntext);
+         gInterpreter->ClearStack();
+         return returntext;
+
+      } else if (fNext) {
+         char * char_result = 0;
+         fMethod->Execute(thisobj, &char_result);
+         gInterpreter->ClearStack();
+         Warning("TTreeFormula","Temporary object have been deleted before possible usage!");
+         return char_result;
+      }
+      return 0;
+    }
 
    virtual Double_t  ReadValue(char *where, Int_t instance = 0) {
       // Execute the method on the given address
@@ -813,10 +865,15 @@ public:
          fMethod->Execute(thisobj, d);
          result = (Double_t) d;
 
-      } if (fNext) {
-        char * char_result = 0;
-        fMethod->Execute(thisobj, &char_result);
-        result = fNext->ReadValue(char_result,instance);
+      } else if (r == TMethodCall::kString) {
+         char *returntext = 0;
+         fMethod->Execute(thisobj,&returntext);
+         result = (Int_t) returntext;
+
+      } else if (fNext) {
+         char * char_result = 0;
+         fMethod->Execute(thisobj, &char_result);
+         result = fNext->ReadValue(char_result,instance);
 
       } else fMethod->Execute(thisobj);
 
@@ -1062,29 +1119,27 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    SetName(name);
    for (i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) continue;
-      //TLeaf *leaf = GetLeaf(i);
+  
       TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
-      //if (leaf->InheritsFrom("TLeafC") && !leaf->IsUnsigned()) SetBit(kIsCharacter);
-      //if (leaf->InheritsFrom("TLeafB") && !leaf->IsUnsigned()) SetBit(kIsCharacter);
-      //      if (IsString(i)) SetBit(kIsCharacter);
+
       if (fOper[i] >= 105000) {
          // We have a string used as a string
         
-        // This dormant portion of code would be used if (when?) we allow the histogramming
-        // of the integral content (as opposed to the string content) of strings 
-        // held in a variable size container delimited by a null (as opposed to 
-        // a fixed size container or variable size container whose size is controlled
-        // by a variable).  In GetNdata, we will then use strlen to grab the current length.
-        //fCumulSizes[i][fNdimensions[i]-1] = 1;
-        //fUsedSizes[fNdimensions[i]-1] = -TMath::Abs(fUsedSizes[fNdimensions[i]-1]);
-        //fUsedSizes[0] = - TMath::Abs( fUsedSizes[0]);
+         // This dormant portion of code would be used if (when?) we allow the histogramming
+         // of the integral content (as opposed to the string content) of strings 
+         // held in a variable size container delimited by a null (as opposed to 
+         // a fixed size container or variable size container whose size is controlled
+         // by a variable).  In GetNdata, we will then use strlen to grab the current length.
+         //fCumulSizes[i][fNdimensions[i]-1] = 1;
+         //fUsedSizes[fNdimensions[i]-1] = -TMath::Abs(fUsedSizes[fNdimensions[i]-1]);
+         //fUsedSizes[0] = - TMath::Abs( fUsedSizes[0]);
 
-        if (fNcodes == 1) {
-           // If the string is by itself, then it can safely be histogrammed as
-           // in a string based axis.  To histogram the number inside the string
-           // just make part of a useless expression (for example: mystring+0)
-           SetBit(kIsCharacter);
-        }
+         if (fNcodes == 1) {
+            // If the string is by itself, then it can safely be histogrammed as
+            // in a string based axis.  To histogram the number inside the string
+            // just make part of a useless expression (for example: mystring+0)
+            SetBit(kIsCharacter);
+         }
       }      
 
       // Reminder of the meaning of fMultiplicity:
@@ -1319,6 +1374,11 @@ void TTreeFormula::DefineDimensions(Int_t code, TFormLeafInfo *leafinfo) {
       ndim = elem->GetArrayDim();
       size = elem->GetMaxIndex(0);
 
+   } else if ( elem->GetType()== TStreamerInfo::kCharStar) {
+
+      ndim = 1;
+      size = -1;
+     
    } else return;
 
    current = 0;
@@ -1647,6 +1707,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          strncat(dims,&cname[bracket],j-bracket);
          if (current!=work) *(--current) = '\0'; // remove bracket.
          --i;
+         // Skip dots that made be adjacent to the closing bracket
+         while (cname[i+1]=='.') i++; 
       }
    }
    // Copy the left over for later use.
@@ -1938,6 +2000,10 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   case TMethodCall::kDouble:
                         leafinfo = new TFormLeafInfoMethod(cl,method);
                         break;
+                  case TMethodCall::kString:
+                        leafinfo = new TFormLeafInfoMethod(cl,method);
+                        DefineDimensions(code,-1);
+                        break;                        
                   case TMethodCall::kOther:
                        {TString return_type = gInterpreter->TypeName(method->GetMethod()->GetReturnTypeName());
                        leafinfo = new TFormLeafInfoMethod(cl,method);
