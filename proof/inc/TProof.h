@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.7 2000/12/13 15:13:53 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.8 2000/12/19 14:34:31 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -40,6 +40,7 @@ class TSocket;
 class TMonitor;
 class TFile;
 class TTree;
+class TSignalHandler;
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol = 1;            // protocol version number
@@ -78,8 +79,9 @@ private:
    Double_t  fBytesRead;     //bytes read by all slaves during the session
    Float_t   fRealTime;      //realtime spent by all slaves during the session
    Float_t   fCpuTime;       //CPU time spent by all slaves during the session
-   TTree    *fTree;          //Object being PROOFed
-   Int_t     fLimits;        //Used by Limits()
+   TTree    *fTree;          //object being PROOFed
+   Int_t     fLimits;        //used by Limits()
+   TSignalHandler *fIntHandler; //interrupt signal handler (ctrl-c)
 
    Int_t     Init(const char *masterurl, const char *conffile,
                   const char *confdir, Int_t loglevel);

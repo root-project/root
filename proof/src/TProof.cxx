@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.10 2000/12/20 18:43:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.11 2000/12/22 12:36:00 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -49,9 +49,30 @@
 TProof *gProof = 0;
 
 
+//----- PROOF Interrupt signal handler -----------------------------------------------
+//______________________________________________________________________________
+class TProofInterruptHandler : public TSignalHandler {
+private:
+   TProof *fProof;
+public:
+   TProofInterruptHandler(TProof *p)
+      : TSignalHandler(kSigInterrupt, kFALSE), fProof(p) { }
+   Bool_t Notify();
+};
+
+//______________________________________________________________________________
+Bool_t TProofInterruptHandler::Notify()
+{
+   // TProof interrupt handler.
+
+   fProof->Interrupt(TProof::kHardInterrupt);
+   return kTRUE;
+}
+
 //----- Input handler for messages from TProofServ -----------------------------
 //______________________________________________________________________________
 class TProofInputHandler : public TFileHandler {
+private:
    TSocket *fSocket;
    TProof  *fProof;
 public:
@@ -106,6 +127,7 @@ TProof::~TProof()
 
    Close();
 
+   SafeDelete(fIntHandler);
    SafeDelete(fSlaves);
    SafeDelete(fActiveSlaves);
    SafeDelete(fUniqueSlaves);
@@ -147,6 +169,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fMasterServ    = fMaster == "__master__" ? kTRUE : kFALSE;
    fSendGroupView = kTRUE;
    fImage         = "";
+   fIntHandler    = 0;
    fStatus        = 0;
    fParallel      = 0;
    fTree          = 0;
@@ -256,6 +279,8 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             return 0;
          }
          slave->SetInputHandler(new TProofInputHandler(this, slave->GetSocket()));
+         fIntHandler = new TProofInterruptHandler(this);
+         fIntHandler->Add();
       } else {
          delete slave;
          Error("Init", "failed to connect to a PROOF master server");
@@ -335,6 +360,9 @@ void TProof::Close(Option_t *)
    // Close all open slave servers.
 
    if (fSlaves) {
+      if (fIntHandler)
+         fIntHandler->Remove();
+
       //Broadcast(kPROOF_STOP, kAll);
       Interrupt(kShutdownInterrupt, kAll);
 
