@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.78 2002/01/09 16:44:35 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.79 2002/01/11 15:46:34 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -263,12 +263,12 @@
 #include "TF1.h"
 #include "TVirtualFitter.h"
 #include "TEnv.h"
+#include "THLimitsFinder.h"
 
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;
 
 TVirtualFitter *tFitter=0;
-const Int_t kIsCharacter = BIT(12);
 
 extern void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
@@ -1123,7 +1123,9 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
                 fVmax[0]  = gPad->GetUxmax();
              }
          } else {
-             action = -1;
+             action   = -1;
+             fVmin[0] = 0;
+             fVmax[0] = 0;
          }
       }
       TH1F *h1;
@@ -1140,6 +1142,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
          h1->SetMarkerStyle(fTree->GetMarkerStyle());
          h1->SetMarkerColor(fTree->GetMarkerColor());
          h1->SetMarkerSize(fTree->GetMarkerSize());
+         //if (action == -1) h1->SetBuffer(fTree->GetEstimate());
          if (!opt.Contains("same"))h1->SetBit(TH1::kCanRebin);
          if (!hkeep) {
             h1->SetBit(kCanDelete);
@@ -1147,7 +1150,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
          }
          if (opt.Length() && opt[0] == 'e') h1->Sumw2();
       }
-      if (fVar1->TestBit(kIsCharacter)) fVar1->SetAxis(h1->GetXaxis());
+      fVar1->SetAxis(h1->GetXaxis());
       
       if (TProof::IsActive()) {
          CreatePacketGenerator(nentries, firstentry);
@@ -1257,7 +1260,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
             hp->SetMarkerSize(fTree->GetMarkerSize());
             if (!opt.Contains("same"))hp->SetBit(TH1::kCanRebin);
          }
-         if (fVar2->TestBit(kIsCharacter)) fVar2->SetAxis(hp->GetXaxis());
+         fVar2->SetAxis(hp->GetXaxis());
 
          EntryLoop(action,hp,nentries, firstentry, option);
 
@@ -1282,8 +1285,8 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
                if (!opt.Contains("goff")) h2->SetDirectory(0);
             }
          }
-         if (fVar1->TestBit(kIsCharacter)) fVar1->SetAxis(h2->GetYaxis());
-         if (fVar2->TestBit(kIsCharacter)) fVar2->SetAxis(h2->GetXaxis());
+         fVar1->SetAxis(h2->GetYaxis());
+         fVar2->SetAxis(h2->GetXaxis());
          Int_t noscat = strlen(option);
          if (opt.Contains("same")) noscat -= 4;
          if (noscat) {
@@ -1364,8 +1367,8 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
             hp->SetMarkerSize(fTree->GetMarkerSize());
             if (!opt.Contains("same"))hp->SetBit(TH1::kCanRebin);
          }
-         if (fVar2->TestBit(kIsCharacter)) fVar2->SetAxis(hp->GetYaxis());
-         if (fVar3->TestBit(kIsCharacter)) fVar3->SetAxis(hp->GetXaxis());
+         fVar2->SetAxis(hp->GetYaxis());
+         fVar3->SetAxis(hp->GetXaxis());
 
          EntryLoop(action,hp,nentries, firstentry, option);
 
@@ -1392,9 +1395,9 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
                if (!opt.Contains("goff")) h3->SetDirectory(0);
             }
          }
-         if (fVar1->TestBit(kIsCharacter)) fVar1->SetAxis(h3->GetZaxis());
-         if (fVar2->TestBit(kIsCharacter)) fVar2->SetAxis(h3->GetYaxis());
-         if (fVar3->TestBit(kIsCharacter)) fVar3->SetAxis(h3->GetXaxis());
+         fVar1->SetAxis(h3->GetZaxis());
+         fVar2->SetAxis(h3->GetYaxis());
+         fVar3->SetAxis(h3->GetXaxis());
          Int_t noscat = strlen(option);
          if (opt.Contains("same")) noscat -= 4;
          if (noscat) {
@@ -1613,50 +1616,6 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
    if (cursav) cursav->cd();
 }
 
-
-//______________________________________________________________________________
-void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax, Bool_t isInteger)
-{
-//*-*-*-*-*-*-*-*-*Find reasonable bin values*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              ==========================
-
-   Double_t binlow,binhigh,binwidth;
-   Int_t n;
-   Double_t dx = 0.1*(xmax-xmin);
-   if (isInteger) dx = 5*(xmax-xmin)/nbins;
-   Double_t umin = xmin - dx;
-   Double_t umax = xmax + dx;
-   if (umin < 0 && xmin >= 0) umin = 0;
-   if (umax > 0 && xmax <= 0) umax = 0;
-
-   TGaxis::Optimize(umin,umax,nbins,binlow,binhigh,n,binwidth,"");
-
-   if (binwidth <= 0 || binwidth > 1.e+39) {
-      xmin = -1;
-      xmax = 1;
-   } else {
-      xmin    = binlow;
-      xmax    = binhigh;
-   }
-   if (isInteger) {
-      Int_t ixmin = Int_t(xmin);
-      Int_t ixmax = Int_t(xmax);
-      Double_t dxmin = Double_t(ixmin);
-      Double_t dxmax = Double_t(ixmax);
-      if (xmin < 0 && xmin != dxmin) xmin = dxmin - 1;
-      else                           xmin = dxmin;
-      if (xmax > 0 && xmax != dxmax) xmax = dxmax + 1;
-      else                           xmax = dxmax;
-      if (xmin >= xmax) xmax = xmin+1;
-      Int_t bw = Int_t((xmax-xmin)/nbins);
-      if (bw == 0) bw = 1;
-      nbins = Int_t((xmax-xmin)/bw);
-      if (xmin +nbins*bw < umax) {nbins++; xmax = xmin +nbins*bw;}
-      if (xmin > umin)           {nbins++; xmin = xmax -nbins*bw;}
-   }
-   newbins = nbins;
-}
-
 //______________________________________________________________________________
 Int_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
 {
@@ -1869,6 +1828,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    char branchname[128];
    char aprefix[128];
    TObjArray branches(100);
+   TObjArray mustInit(100);
    Int_t *leafStatus = new Int_t[nleaves];
    for (l=0;l<nleaves;l++) {
       Int_t kmax = 0;
@@ -1903,6 +1863,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          leafobj = (TLeafObject*)leaf;
          if (!leafobj->GetClass()) {leafStatus[l] = 1; head = headcom;}
          fprintf(fp,"%s%-15s *%s;\n",head,leafobj->GetTypeName(), leafobj->GetName());
+         mustInit.Add(leafobj);
          continue;
       }
       if (leafcount) {
@@ -1925,6 +1886,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          if (bre->GetStreamerType() <= 0) {
             if (!gROOT->GetClass(bre->GetClassName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
             fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), bre->GetName());
+            mustInit.Add(bre);
             continue;
          }
          if (bre->GetStreamerType() > 60) {
@@ -2132,6 +2094,18 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 // generate code for class member function Init(), first pass = get branch pointer
    fprintf(fp,"void %s::Init(TTree *tree)\n",classname);
    fprintf(fp,"{\n");
+   if (mustInit.Last()) {
+      TIter next(&mustInit);
+      TObject *obj;
+      fprintf(fp,"//   Set object pointer\n");
+      while( (obj = next()) ) {
+         if (obj->InheritsFrom(TBranch::Class())) {
+            fprintf(fp,"   %s = 0;\n",((TBranch*)obj)->GetName() );
+         } else if (obj->InheritsFrom(TLeaf::Class())) {
+            fprintf(fp,"   %s = 0;\n",((TLeaf*)obj)->GetName() );
+         }
+      }
+   }
    fprintf(fp,"//   Set branch addresses\n");
    fprintf(fp,"   if (tree == 0) return;\n");
    fprintf(fp,"   fChain    = tree;\n");
@@ -3274,13 +3248,13 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
   fVmax[0] = fVmax[1] = fVmax[2] = -fVmin[0];
 //__________________________1-D histogram_______________________
   if      (action ==  1) {
+     TH1 *h1 = (TH1*)obj;
+     fHistogram = h1;
      for (i=0;i<nfill;i++) {
         if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
         if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
      }
-     TH1 *h1 = (TH1*)obj;
-     if (fVmin[0] >= fVmax[0]) { fVmin[0] -= 1; fVmax[0] += 1;}
-     FindGoodLimits(h1->GetXaxis()->GetNbins(),fNbins[0],fVmin[0],fVmax[0], fVar1->IsInteger());
+     THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h1,fVmin[0],fVmax[0]);
 
      // When a PROOF client ask master for limits
      if (gProofServ) {
@@ -3291,10 +3265,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
            printf("got limits: (nfill=%d) %d, %f, %f\n", nfill, fNbins[0], fVmin[0], fVmax[0]);
      }
 
-     h1->SetBins(fNbins[0],fVmin[0],fVmax[0]);
-
      h1->FillN(nfill, fV1, fW);
-     fHistogram = h1;
 //__________________________2-D histogram_______________________
   } else if (action ==  2) {
      for (i=0;i<nfill;i++) {
@@ -3304,12 +3275,8 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
         if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
      }
      TH2 *h2 = (TH2*)obj;
-     if (fVmin[0] >= fVmax[0]) { fVmin[0] -= 1; fVmax[0] += 1;}
-     FindGoodLimits(h2->GetYaxis()->GetNbins(),fNbins[0],fVmin[0],fVmax[0], fVar1->IsInteger());
-     if (fVmin[1] >= fVmax[1]) { fVmin[1] -= 1; fVmax[1] += 1;}
-     FindGoodLimits(h2->GetXaxis()->GetNbins(),fNbins[1],fVmin[1],fVmax[1], fVar2->IsInteger());
+     THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2,fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
 
-     h2->SetBins(fNbins[1],fVmin[1],fVmax[1],fNbins[0],fVmin[0],fVmax[0]);
      for(i=0;i<nfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
      fHistogram = h2;
 //__________________________Profile histogram_______________________
@@ -3321,9 +3288,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
         if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
      }
      TProfile *hp = (TProfile*)obj;
-     if (fVmin[1] >= fVmax[1]) { fVmin[1] -= 1; fVmax[1] += 1;}
-     FindGoodLimits(hp->GetXaxis()->GetNbins(),fNbins[1],fVmin[1],fVmax[1], fVar2->IsInteger());
-     hp->SetBins(fNbins[1],fVmin[1],fVmax[1]);
+     THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hp,fVmin[1],fVmax[1]);
      hp->FillN(nfill, fV2, fV1, fW);
      fHistogram = hp;
 //__________________________2D scatter plot_______________________
@@ -3335,12 +3300,8 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
         if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
      }
      TH2 *h2 = (TH2*)obj;
-     if (fVmin[0] >= fVmax[0]) { fVmin[0] -= 1; fVmax[0] += 1;}
-     FindGoodLimits(h2->GetYaxis()->GetNbins(),fNbins[0],fVmin[0],fVmax[0], fVar1->IsInteger());
-     if (fVmin[1] >= fVmax[1]) { fVmin[1] -= 1; fVmax[1] += 1;}
-     FindGoodLimits(h2->GetXaxis()->GetNbins(),fNbins[1],fVmin[1],fVmax[1], fVar2->IsInteger());
+     THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2,fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
 
-     h2->SetBins(fNbins[1],fVmin[1],fVmax[1],fNbins[0],fVmin[0],fVmax[0]);
      if (!strstr(option,"same") && !strstr(option,"goff")) {
         h2->DrawCopy(option);
         gPad->Update();
@@ -3383,14 +3344,8 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
         if (fVmax[2] < fV3[i]) fVmax[2] = fV3[i];
      }
      TH3 *h3 = (TH3*)obj;
-     if (fVmin[0] >= fVmax[0]) { fVmin[0] -= 1; fVmax[0] += 1;}
-     FindGoodLimits(h3->GetZaxis()->GetNbins(),fNbins[0],fVmin[0],fVmax[0], fVar1->IsInteger());
-     if (fVmin[1] >= fVmax[1]) { fVmin[1] -= 1; fVmax[1] += 1;}
-     FindGoodLimits(h3->GetYaxis()->GetNbins(),fNbins[1],fVmin[1],fVmax[1], fVar2->IsInteger());
-     if (fVmin[2] >= fVmax[2]) { fVmin[2] -= 1; fVmax[2] += 1;}
-     FindGoodLimits(h3->GetXaxis()->GetNbins(),fNbins[2],fVmin[2],fVmax[2], fVar3->IsInteger());
+     THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h3,fVmin[2],fVmax[2],fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
 
-     h3->SetBins(fNbins[2],fVmin[2],fVmax[2],fNbins[1],fVmin[1],fVmax[1],fNbins[0],fVmin[0],fVmax[0]);
      if (action == 3 || !h3->TestBit(kCanDelete)) {
         for (i=0;i<nfill;i++) h3->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
      }
@@ -3423,12 +3378,8 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
         if (fVmax[2] < fV3[i]) fVmax[2] = fV3[i];
      }
      TProfile2D *hp = (TProfile2D*)obj;
-     if (fVmin[1] >= fVmax[1]) { fVmin[1] -= 1; fVmax[1] += 1;}
-     FindGoodLimits(hp->GetYaxis()->GetNbins(),fNbins[1],fVmin[1],fVmax[1], fVar2->IsInteger());
-     if (fVmin[2] >= fVmax[2]) { fVmin[2] -= 1; fVmax[2] += 1;}
-     FindGoodLimits(hp->GetXaxis()->GetNbins(),fNbins[2],fVmin[2],fVmax[2], fVar3->IsInteger());
+     THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hp,fVmin[2],fVmax[2],fVmin[1],fVmax[1]);
 
-     hp->SetBins(fNbins[2],fVmin[2],fVmax[2],fNbins[1],fVmin[1],fVmax[1]);
      for (i=0;i<nfill;i++) hp->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
      fHistogram = hp;
   }
