@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.8 2000/10/12 10:37:02 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.1 2000/11/21 21:10:30 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -39,6 +39,7 @@ TStreamerElement::TStreamerElement()
    fArrayDim    = 0;
    fArrayLength = 0;
    fStreamer    = 0;
+   fMethod      = 0;
    for (Int_t i=0;i<5;i++) fMaxIndex[i] = 0;
 }
 
@@ -56,6 +57,7 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
    fArrayLength = 0;
    fTypeName    = typeName;
    fStreamer    = 0;
+   fMethod      = 0;
    for (Int_t i=0;i<5;i++) fMaxIndex[i] = 0;
 }
 
@@ -63,6 +65,7 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
 TStreamerElement::~TStreamerElement()
 {
    // TStreamerElement dtor.
+   delete fMethod;
 }
 
 
@@ -133,7 +136,6 @@ TStreamerBase::TStreamerBase()
 {
    // Default ctor.
    
-   fMethod = 0;
 }
 
 //______________________________________________________________________________
@@ -152,7 +154,6 @@ TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
 TStreamerBase::~TStreamerBase()
 {
    // TStreamerBase dtor.
-   delete fMethod;
 }
 
 //______________________________________________________________________________
@@ -425,8 +426,6 @@ TStreamerObjectAny::~TStreamerObjectAny()
 void TStreamerObjectAny::Init(TObject *)
 {
    fClassObject = gROOT->GetClass(fTypeName.Data());
-   fMethod = new TMethodCall();
-   fMethod->InitWithPrototype(fClassObject,"Streamer","TBuffer &");
 }
 
 //______________________________________________________________________________
