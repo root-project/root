@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.5 2002/10/03 18:09:14 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.6 2002/10/07 10:43:51 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -461,7 +461,7 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
 
       fPackets->Add(slstat->fCurElem);
       (*r) >> latency >> proctime >> proccpu;
-      PDB(kPacketizer,2) Info("GetNextPacket","slave-% (%s): %d %7.3lf %7.3lf %7.3lf",
+      PDB(kPacketizer,2) Info("GetNextPacket","slave-%d (%s): %d %7.3lf %7.3lf %7.3lf",
                               sl->GetOrdinal(), sl->GetName(),
                               slstat->fCurElem->GetNum(),
                               latency, proctime, proccpu);
