@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.17 2004/12/28 20:51:25 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.18 2005/01/05 16:51:58 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -228,7 +228,7 @@ ClassImp(TPacketizer)
 TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
                          Long64_t num, TList * /*input*/ )
 {
-   PDB(kPacketizer,1) Info("TPacketizer", "Enter (first %lld, num %lld)", first, num);
+   PDB(kPacketizer,1) Info("TPacketizer", "enter (first %lld, num %lld)", first, num);
 
    fProcessed = 0;
    fMaxPerfIdx = 1;
@@ -544,7 +544,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
    TIter    si(slaves);
    TSlave   *slave;
    while ((slave = (TSlave*)si.Next()) != 0) {
-      PDB(kPacketizer,3) Info("TPacketizer","Socket added to monitor: %p (%s)",
+      PDB(kPacketizer,3) Info("ValidateFiles","socket added to monitor: %p (%s)",
           slave->GetSocket(), slave->GetName());
       mon.Add(slave->GetSocket());
       slaves_by_sock.Add(slave->GetSocket(),slave);
@@ -596,7 +596,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
             s->GetSocket()->Send( m );
             mon.Activate(s->GetSocket());
-            PDB(kPacketizer,2) Info("TPacketizer","sent to slave-%d (%s) via %p GETENTRIES on %s %s %s %s",
+            PDB(kPacketizer,2) Info("ValidateFiles", "sent to slave-%d (%s) via %p GETENTRIES on %s %s %s %s",
                 s->GetOrdinal(), s->GetName(), s->GetSocket(), dset->IsTree() ? "tree" : "objects",
                 elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
          } else {
@@ -609,13 +609,13 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
       if ( mon.GetActive() == 0 ) break; // nothing to wait for anymore
 
       PDB(kPacketizer,3) {
-         Info("TPacketizer", "waiting for %d slaves:", mon.GetActive());
+         Info("ValidateFiles", "waiting for %d slaves:", mon.GetActive());
          TList *act = mon.GetListOfActives();
          TIter next(act);
          while (TSocket *s = (TSocket*) next()) {
             TSlave *sl = (TSlave *) slaves_by_sock.GetValue(s);
             if (sl)
-               Info("TPacketizer", "   slave-%d (%s)", sl->GetOrdinal(), sl->GetName());
+               Info("ValidateFiles", "   slave-%d (%s)", sl->GetOrdinal(), sl->GetName());
          }
          delete act;
       }
@@ -623,7 +623,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
       TSocket *sock = mon.Select();
       mon.DeActivate(sock);
 
-      PDB(kPacketizer,3) Info("TPacketizer","Select returned: %p", sock);
+      PDB(kPacketizer,3) Info("ValidateFiles", "select returned: %p", sock);
 
       TSlave *slave = (TSlave *) slaves_by_sock.GetValue( sock );
 
@@ -633,31 +633,31 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          // Help! lost a slave?
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
-         Error("TPacketizer","Recv failed! for slave-%d (%s)",
+         Error("ValidateFiles", "recv failed for slave-%d (%s)",
                slave->GetOrdinal(), slave->GetName());
          continue;
       }
 
       if ( reply->What() == kPROOF_FATAL ) {
-         Error("TPacketizer","kPROOF_FATAL from slave-%d (%s)",
+         Error("ValidateFiles", "kPROOF_FATAL from slave-%d (%s)",
                slave->GetOrdinal(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
          continue;
       } else if ( reply->What() == kPROOF_LOGFILE ) {
-         PDB(kPacketizer,3) Info("TPacketizer","Got logfile");
+         PDB(kPacketizer,3) Info("ValidateFiles", "got logfile");
          Int_t size;
          (*reply) >> size;
          ((TProof*)gProof)->RecvLogFile(sock, size);
          mon.Activate(sock);
          continue;
       } else if ( reply->What() == kPROOF_LOGDONE ) {
-         PDB(kPacketizer,3) Info("TPacketizer","Got logdone");
+         PDB(kPacketizer,3) Info("ValidateFiles", "got logdone");
          mon.Activate(sock);
          continue;
       } else if ( reply->What() != kPROOF_GETENTRIES ) {
          // Help! unexpected message type
-         Error("TPacketizer","unexpected message type (%d) from slave-%d (%s)", reply->What(),
+         Error("ValidateFiles", "unexpected message type (%d) from slave-%d (%s)", reply->What(),
                slave->GetOrdinal(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
@@ -674,7 +674,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
       if ( entries > 0 ) {
 
          if ( e->GetFirst() > entries ) {
-            Error("TPacketizer","first (%d) higher then number of entries (%d) in %d",
+            Error("ValidateFiles", "first (%d) higher then number of entries (%d) in %d",
                   e->GetFirst(), entries, e->GetFileName() );
 
             // disable element
@@ -685,7 +685,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          if ( e->GetNum() == -1 ) {
             e->SetNum( entries - e->GetFirst() );
          } else if ( e->GetFirst() + e->GetNum() > entries ) {
-            Error("TPacketizer",
+            Error("ValidateFiles",
                   "Num (%d) + First (%d) larger then number of keys/entries (%d) in %s",
                   e->GetNum(), e->GetFirst(), entries, e->GetFileName() );
             e->SetNum( entries - e->GetFirst() );
@@ -693,7 +693,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
       } else {
 
-         Error("TPacketizer", "cannot get entries for %s (", e->GetFileName() );
+         Error("ValidateFiles", "cannot get entries for %s (", e->GetFileName() );
 
          // disable element
          slavestat->fCurFile->SetDone();
@@ -714,9 +714,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
       // we ran out of slaves ...
       fValid = kFALSE;
    }
-
 }
-
 
 //______________________________________________________________________________
 Long64_t TPacketizer::GetEntriesProcessed(TSlave *slave) const
