@@ -1,13 +1,14 @@
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.3 2004/07/28 00:12:40 rdm Exp $
 // Author: Valeri Fine   21/01/2002
-/****************************************************************************
-** $Id: TQtThread.h,v 1.20 2004/07/30 17:08:01 fine Exp $
-**
-** Copyright (C) 2002 by Valeri Fine.  All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
-*****************************************************************************/
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2002 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TQtThread
 #define ROOT_TQtThread
@@ -28,7 +29,7 @@
 
 class TQtThread :
 #ifndef __CINT__
-  public QObject, 
+  public QObject,
 #endif
   public TGQt {
 #ifndef __CINT__
@@ -40,7 +41,7 @@ private:
 public:
 
    TQtThread();
-   TQtThread(const TQtThread &) : 
+   TQtThread(const TQtThread &) :
 #ifndef __CINT__
       QObject(),
 #endif
@@ -246,7 +247,7 @@ public:
    virtual void         SetForeground(GContext_t gc, ULong_t foreground);
    virtual void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    virtual void         Update(Int_t mode = 0);
-   
+
    virtual void         SelectPixmap(Int_t qpixid);
    virtual Int_t        AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
    virtual void         RemoveWindow(ULong_t qwid);
@@ -260,17 +261,17 @@ public:
    virtual Bool_t       CreatePictureFromFile(Drawable_t id, const char *filename,
                                               Pixmap_t &pict, Pixmap_t &pict_mask,
                                               PictureAttributes_t &attr);
-  virtual void         DeletePictureData(void *data);    
+  virtual void         DeletePictureData(void *data);
 
-   
+
    #else
-   // Include the base TVirtualX class interface 
+   // Include the base TVirtualX class interface
 #include "TVirtualX.interface.h"
     void      PutByte(Byte_t b);
     void      SetFillStyleIndex( Int_t style, Int_t fasi);
     void      TQtThread::SetMarkerType(int, int, TPoint*);
     void      TQtThread::SetTitle(const char*);
-#endif   
+#endif
 
            bool event(QEvent *e);
 #endif

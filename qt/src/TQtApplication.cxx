@@ -1,26 +1,26 @@
+// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
 // Author: Valeri Fine   21/01/2002
-/****************************************************************************
-** $Id: TQtApplication.cxx,v 1.15 2004/07/29 16:04:28 fine Exp $
-**
-** Copyright (C) 2002 by Valeri Fine. Brookhaven National Laboratory.
-**                                    All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
-**
-*****************************************************************************/
 
-//______________________________________________________________________________
-//*-*-*-*-*-*-*-*-*The  T Q t A p p l i c a t i o n class-*-*-*-*-*-*-*
-//*-*              ==========================================
-//*-*
-//*-*  Create Qt environment
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2002 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TQtApplication                                                       //
+//                                                                      //
+// Interface to low level Qt package. This class gives access to basic  //
+// Qt graphics, pixmap, text and font handling routines.                //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 #include <assert.h>
-#include "qapplication.h" 
+#include "qapplication.h"
 
 #include "TQtRConfig.h"
 #include "TQtApplication.h"
@@ -65,18 +65,18 @@ void TQtApplication::CreateQApplication(int argc, char ** argv, bool GUIenabled)
       // QApplication::setColorSpec( QApplication::NormalColor );
        QApplication::setColorSpec( QApplication::ManyColor );
        qApp = new QApplication (argc, argv, GUIenabled );
-       // The string must be one of the QStyleFactory::keys(), 
-       // typically one of 
-       //      "windows", "motif",     "cde",    "motifplus", "platinum", "sgi" 
+       // The string must be one of the QStyleFactory::keys(),
+       // typically one of
+       //      "windows", "motif",     "cde",    "motifplus", "platinum", "sgi"
        //  and "compact", "windowsxp", "aqua" or "macintosh"
       QString fromConfig = "native";
-      if (gEnv) 
+      if (gEnv)
          fromConfig = gEnv->GetValue("Gui.Style","native");
       if (fromConfig != "native" ) QApplication::setStyle(fromConfig);
    }
    // Add Qt plugin path if  present (it is the case for Windows binary ROOT distribution)
    char *qtPluginPath = gSystem->ConcatFileName(gSystem->Getenv("ROOTSYS"),"/Qt/plugins");
-   if (!gSystem->AccessPathName(qtPluginPath)) 
+   if (!gSystem->AccessPathName(qtPluginPath))
        qApp->addLibraryPath(qtPluginPath);
    delete [] qtPluginPath;
 }
@@ -85,7 +85,7 @@ void TQtApplication::CreateGUIThread(int argc, char **argv)
 {
   // Create GUI thread to Qt event loop
    if (gROOT->IsBatch()) {
-     CreateQApplication(argc,argv,kFALSE); 
+     CreateQApplication(argc,argv,kFALSE);
    } else {
 #ifdef R__QTGUITHREAD
      TWaitCondition ThrSem;
@@ -106,8 +106,8 @@ bool TQtApplication::Terminate()
 {
   // Terminate GUI thread
   if (fgQtApplication) {
-    TQtApplication *app = fgQtApplication; 
-    fgQtApplication = 0;   
+    TQtApplication *app = fgQtApplication;
+    fgQtApplication = 0;
     delete  app;
   }
   return TRUE;

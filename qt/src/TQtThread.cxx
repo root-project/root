@@ -1,13 +1,14 @@
-// Author: Valeri Fine   21/01/2002
-/****************************************************************************
-** $Id: TQtThread.cxx,v 1.12 2004/07/30 14:12:07 fine Exp $
-**
-** Copyright (C) 2002 by Valeri Fine.  All rights reserved.
-**
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
-*****************************************************************************/
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// Author: Valeri Fine   23/01/2003
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2003 by Valeri Fine.                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -90,7 +91,7 @@ TQtThread::~TQtThread(){;}
 //______________________________________________________________________________
     VOIDACTION3(GetTextExtent,UInt_t&,w, UInt_t&,h, char *,mess);
 //______________________________________________________________________________
-    Float_t TQtThread::GetTextMagnitude(){ return TGQt::GetTextMagnitude() ;} 
+    Float_t TQtThread::GetTextMagnitude(){ return TGQt::GetTextMagnitude() ;}
 //______________________________________________________________________________
     Bool_t  TQtThread::HasTTFonts() const { return HasTTFonts() ;}
 //______________________________________________________________________________
