@@ -42,7 +42,7 @@ if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
 fi
 
 if [ "$ARCH" = "macosx" ]; then
-   macosx_minor=`sw_vers -productVersion | cut -d'.' -f2`
+   macosx_minor=`sw_vers | sed -n 's/ProductVersion:[[:blank:]]*[0-9]*.\([0-9]*\).[0-9]*/\1/p'`
    SOEXT="so"
    if [ $macosx_minor -ge 3 ]; then
       SOFLAGS="-bundle $OPT -flat_namespace -undefined dynamic_lookup"
