@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.17 2000/12/19 16:27:50 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.18 2000/12/19 17:49:55 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -837,6 +837,4 @@ int main(int argc, char **argv)
       // parent waits for another client to connect
 
    }
-
-   return 0;   // not reached
 }

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.15 2000/12/19 16:27:50 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.16 2000/12/19 17:49:54 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1313,6 +1313,4 @@ int main(int argc, char **argv)
       // parent waits for another client to connect
 
    }
-
-   return 0;   // not reached
 }
