@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.16 2004/09/06 10:23:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.17 2004/09/06 16:42:32 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -128,6 +128,9 @@ public :
    virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const;
    virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const;
    virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const;
+   virtual void         RotateX(Double_t angle);
+   virtual void         RotateY(Double_t angle);
+   virtual void         RotateZ(Double_t angle);
    void                 Subtract(const TGeoTranslation *other);
    void                 SetTranslation(Double_t dx, Double_t dy, Double_t dz);
    void                 SetTranslation(const TGeoMatrix &other);
@@ -384,11 +387,11 @@ public :
    virtual void         RotateY(Double_t angle);
    virtual void         RotateZ(Double_t angle);
    void                 SetTranslation(const Double_t *vect) 
-                             {memcpy(&fTranslation[0], vect, 3*sizeof(Double_t));}
+                             {SetBit(kGeoTranslation); memcpy(&fTranslation[0], vect, 3*sizeof(Double_t));}
    void                 SetRotation(const Double_t *matrix)
-                             {memcpy(&fRotationMatrix[0], matrix, 9*sizeof(Double_t));}
+                             {SetBit(kGeoRotation); memcpy(&fRotationMatrix[0], matrix, 9*sizeof(Double_t));}
    void                 SetScale(const Double_t *scale) 
-                             {memcpy(&fScale[0], scale, 3*sizeof(Double_t));}
+                             {SetBit(kGeoScale); memcpy(&fScale[0], scale, 3*sizeof(Double_t));}
 
 
    virtual const Double_t    *GetTranslation() const {return &fTranslation[0];}

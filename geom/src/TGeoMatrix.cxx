@@ -42,10 +42,10 @@
 //          0    0    0    1               0    0    0    1
 //
 //   Translation:                   Inverse translation:
-//          1    0    0    0               1    0    0    0
-//          0    1    0    0               0    1    0    0
-//          0    0    1    0               0    0    1    0
-//          tx   ty   tz   1              -tx  -ty  -tz   1
+//          1    0    0    tx               1    0    0   -tx
+//          0    1    0    ty               0    1    0   -ty
+//          0    0    1    tz               0    0    1   -tz
+//          0    0    0    1                0    0    0   1
 //
 //   Scale:                         Inverse scale:
 //          sx   0    0    0              1/sx  0    0    0
@@ -450,15 +450,11 @@ void TGeoMatrix::Print(Option_t *) const
 // print the matrix in 4x4 format
    const Double_t *rot = GetRotationMatrix();
    const Double_t *tr  = GetTranslation();
-   const Double_t *sc  = GetScale();
-   printf("matrix %s - translation : %i  rotation : %i  scale : %i\n", GetName(),(Int_t)IsTranslation(),
-          (Int_t)IsRotation(), (Int_t)IsScale());
-   printf(" %g %g %g %g\n", rot[0], rot[1], rot[2], (Double_t)0); 
-   printf(" %g %g %g %g\n", rot[3], rot[4], rot[5], (Double_t)0); 
-   printf(" %g %g %g %g\n", rot[6], rot[7], rot[8], (Double_t)0); 
-
-   printf(" %g %g %g %g\n", tr[0], tr[1], tr[2], (Double_t)1);
-   if (IsScale()) printf("Scale : %g %g %g\n", sc[0], sc[1], sc[2]);
+   printf("matrix %s - tr=%d  rot=%d  refl=%d\n", GetName(),(Int_t)IsTranslation(),
+          (Int_t)IsRotation(), (Int_t)IsReflection());
+   printf("%10.6f%12.6f%12.6f    Tx = %g\n", rot[0], rot[1], rot[2], tr[0]); 
+   printf("%10.6f%12.6f%12.6f    Ty = %g\n", rot[3], rot[4], rot[5], tr[1]); 
+   printf("%10.6f%12.6f%12.6f    Tz = %g\n", rot[6], rot[7], rot[8], tr[2]); 
 }
 
 //_____________________________________________________________________________
@@ -579,6 +575,48 @@ void TGeoTranslation::Add(const TGeoTranslation *other)
    const Double_t *trans = other->GetTranslation();
    for (Int_t i=0; i<3; i++) 
       fTranslation[i] += trans[i];
+}
+
+//_____________________________________________________________________________
+void TGeoTranslation::RotateX(Double_t angle)
+{
+// Rotate about X axis of the master frame with angle expressed in degrees.
+   Double_t phi = angle*TMath::DegToRad();
+   Double_t c = TMath::Cos(phi);
+   Double_t s = TMath::Sin(phi);
+   Double_t v[3];
+   v[0] = fTranslation[0];
+   v[1] = c*fTranslation[1]-s*fTranslation[2];
+   v[2] = s*fTranslation[1]+c*fTranslation[2];
+   memcpy(fTranslation,v,kN3);
+}
+
+//_____________________________________________________________________________
+void TGeoTranslation::RotateY(Double_t angle)
+{
+// Rotate about Y axis of the master frame with angle expressed in degrees.
+   Double_t phi = angle*TMath::DegToRad();
+   Double_t c = TMath::Cos(phi);
+   Double_t s = TMath::Sin(phi);
+   Double_t v[3];
+   v[0] = c*fTranslation[0]+s*fTranslation[2];
+   v[1] = fTranslation[1];
+   v[2] = -s*fTranslation[0]+c*fTranslation[2];
+   memcpy(fTranslation,v,kN3);
+}
+
+//_____________________________________________________________________________
+void TGeoTranslation::RotateZ(Double_t angle)
+{
+// Rotate about Z axis of the master frame with angle expressed in degrees.
+   Double_t phi = angle*TMath::DegToRad();
+   Double_t c = TMath::Cos(phi);
+   Double_t s = TMath::Sin(phi);
+   Double_t v[3];
+   v[0] = c*fTranslation[0]-s*fTranslation[1];
+   v[1] = s*fTranslation[0]+c*fTranslation[1];
+   v[2] = fTranslation[2];
+   memcpy(fTranslation,v,kN3);
 }
 
 //_____________________________________________________________________________
@@ -831,58 +869,67 @@ void TGeoRotation::MasterToLocal(const Double_t *master, Double_t *local) const
 //_____________________________________________________________________________
 void TGeoRotation::RotateX(Double_t angle)
 {
-// Rotate about X axis with angle expressed in degrees.
+// Rotate about X axis of the master frame with angle expressed in degrees.
    SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
-   Double_t v[3];
-   Int_t j;
-   for (Int_t i=0; i<3; i++) {
-      j = 3*i;
-      v[0] = fRotationMatrix[j];
-      v[1] = c*fRotationMatrix[j+1]+s*fRotationMatrix[j+2];
-      v[2] = -s*fRotationMatrix[j+1]+c*fRotationMatrix[j+2];
-      memcpy(&fRotationMatrix[j], v, kN3);
-   }   
+   Double_t v[9];
+   v[0] = fRotationMatrix[0];
+   v[1] = fRotationMatrix[1];
+   v[2] = fRotationMatrix[2];
+   v[3] = c*fRotationMatrix[3]-s*fRotationMatrix[6];
+   v[4] = c*fRotationMatrix[4]-s*fRotationMatrix[7];
+   v[5] = c*fRotationMatrix[5]-s*fRotationMatrix[8];
+   v[6] = s*fRotationMatrix[3]+c*fRotationMatrix[6];
+   v[7] = s*fRotationMatrix[4]+c*fRotationMatrix[7];
+   v[8] = s*fRotationMatrix[5]+c*fRotationMatrix[8];
+   
+   memcpy(fRotationMatrix, v, kN9);
 }
 
 //_____________________________________________________________________________
 void TGeoRotation::RotateY(Double_t angle)
 {
-// Rotate about Y axis with angle expressed in degrees.
+// Rotate about Y axis of the master frame with angle expressed in degrees.
    SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
-   Double_t v[3];
-   Int_t j;
-   for (Int_t i=0; i<3; i++) {
-      j = 3*i;
-      v[0] = c*fRotationMatrix[j]-s*fRotationMatrix[j+2];
-      v[1] = fRotationMatrix[j+1];
-      v[2] = s*fRotationMatrix[j]+c*fRotationMatrix[j+2];
-      memcpy(&fRotationMatrix[j], v, kN3);
-   }   
+   Double_t v[9];
+   v[0] = c*fRotationMatrix[0]+s*fRotationMatrix[6];
+   v[1] = c*fRotationMatrix[1]+s*fRotationMatrix[7];
+   v[2] = c*fRotationMatrix[2]+s*fRotationMatrix[8];
+   v[3] = fRotationMatrix[3];
+   v[4] = fRotationMatrix[4];
+   v[5] = fRotationMatrix[5];
+   v[6] = -s*fRotationMatrix[0]+c*fRotationMatrix[6];
+   v[7] = -s*fRotationMatrix[1]+c*fRotationMatrix[7];
+   v[8] = -s*fRotationMatrix[2]+c*fRotationMatrix[8];
+   
+   memcpy(fRotationMatrix, v, kN9);
 }
 
 //_____________________________________________________________________________
 void TGeoRotation::RotateZ(Double_t angle)
 {
-// Rotate about Z axis with angle expressed in degrees.
+// Rotate about Z axis of the master frame with angle expressed in degrees.
    SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
-   Double_t v[3];
-   Int_t j;
-   for (Int_t i=0; i<3; i++) {
-      j = 3*i;
-      v[0] = c*fRotationMatrix[j]+s*fRotationMatrix[j+1];
-      v[1] = -s*fRotationMatrix[j]+c*fRotationMatrix[j+1];
-      v[2] = fRotationMatrix[j+2];
-      memcpy(&fRotationMatrix[j], v, kN3);
-   }   
+   Double_t v[9];
+   v[0] = c*fRotationMatrix[0]-s*fRotationMatrix[3];
+   v[1] = c*fRotationMatrix[1]-s*fRotationMatrix[4];
+   v[2] = c*fRotationMatrix[2]-s*fRotationMatrix[5];
+   v[3] = s*fRotationMatrix[0]+c*fRotationMatrix[3];
+   v[4] = s*fRotationMatrix[1]+c*fRotationMatrix[4];
+   v[5] = s*fRotationMatrix[2]+c*fRotationMatrix[5];
+   v[6] = fRotationMatrix[6];
+   v[7] = fRotationMatrix[7];
+   v[8] = fRotationMatrix[8];
+   
+   memcpy(&fRotationMatrix[0],v,kN9);
 }
 
 //_____________________________________________________________________________
@@ -1286,55 +1333,88 @@ void TGeoCombiTrans::RegisterYourself()
 //_____________________________________________________________________________
 void TGeoCombiTrans::RotateX(Double_t angle)
 {
-// Combine this with a rotation about X axis. Current rotation must be not NULL.
+// Rotate about X axis with angle expressed in degrees.
    if (!fRotation) fRotation = new TGeoRotation();
    SetBit(kGeoRotation);
-   fRotation->RotateX(angle);
-   if (!IsTranslation()) return;
+   const Double_t *rot = fRotation->GetRotationMatrix();
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
-   Double_t tr[3];
-   tr[0] = fTranslation[0];
-   tr[1] = c*fTranslation[1]+s*fTranslation[2];
-   tr[2] = -s*fTranslation[1]+c*fTranslation[2];
-   SetTranslation(tr);
+   Double_t v[9];
+   v[0] = rot[0];
+   v[1] = rot[1];
+   v[2] = rot[2];
+   v[3] = c*rot[3]-s*rot[6];
+   v[4] = c*rot[4]-s*rot[7];
+   v[5] = c*rot[5]-s*rot[8];
+   v[6] = s*rot[3]+c*rot[6];
+   v[7] = s*rot[4]+c*rot[7];
+   v[8] = s*rot[5]+c*rot[8];
+   fRotation->SetMatrix(v);
+   fRotation->SetBit(kGeoRotation);
+   if (!IsTranslation()) return;
+   v[0] = fTranslation[0];
+   v[1] = c*fTranslation[1]-s*fTranslation[2];
+   v[2] = s*fTranslation[1]+c*fTranslation[2];   
+   memcpy(fTranslation,v,kN3);
 }   
 
 //_____________________________________________________________________________
 void TGeoCombiTrans::RotateY(Double_t angle)
 {
-// Combine this with a rotation about Y axis. Current rotation must be not NULL.
+// Rotate about Y axis with angle expressed in degrees.
    if (!fRotation) fRotation = new TGeoRotation();
    SetBit(kGeoRotation);
-   fRotation->RotateY(angle);
-   if (!IsTranslation()) return;
+   const Double_t *rot = fRotation->GetRotationMatrix();
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
-   Double_t tr[3];
-   tr[0] = c*fTranslation[0]-s*fTranslation[2];
-   tr[1] = fTranslation[1];
-   tr[2] = s*fTranslation[0]+c*fTranslation[2];
-   SetTranslation(tr);
+   Double_t v[9];
+   v[0] = c*rot[0]+s*rot[6];
+   v[1] = c*rot[1]+s*rot[7];
+   v[2] = c*rot[2]+s*rot[8];
+   v[3] = rot[3];
+   v[4] = rot[4];
+   v[5] = rot[5];
+   v[6] = -s*rot[0]+c*rot[6];
+   v[7] = -s*rot[1]+c*rot[7];
+   v[8] = -s*rot[2]+c*rot[8];
+   fRotation->SetMatrix(v);
+   fRotation->SetBit(kGeoRotation);
+   if (!IsTranslation()) return;
+   v[0] = c*fTranslation[0]+s*fTranslation[2];
+   v[1] = fTranslation[1];
+   v[2] = -s*fTranslation[0]+c*fTranslation[2];
+   memcpy(fTranslation,v,kN3);
 }   
 
 //_____________________________________________________________________________
 void TGeoCombiTrans::RotateZ(Double_t angle)
 {
-// Combine this with a rotation about Z axis. Current rotation must be not NULL.
+// Rotate about Z axis with angle expressed in degrees.
    if (!fRotation) fRotation = new TGeoRotation();
    SetBit(kGeoRotation);
-   fRotation->RotateZ(angle);
-   if (!IsTranslation()) return;
+   const Double_t *rot = fRotation->GetRotationMatrix();
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
-   Double_t tr[3];
-   tr[0] = c*fTranslation[0]+s*fTranslation[1];
-   tr[1] = -s*fTranslation[0]+c*fTranslation[1];
-   tr[2] = fTranslation[2];
-   SetTranslation(tr);
+   Double_t v[9];
+   v[0] = c*rot[0]-s*rot[3];
+   v[1] = c*rot[1]-s*rot[4];
+   v[2] = c*rot[2]-s*rot[5];
+   v[3] = s*rot[0]+c*rot[3];
+   v[4] = s*rot[1]+c*rot[4];
+   v[5] = s*rot[2]+c*rot[5];
+   v[6] = rot[6];
+   v[7] = rot[7];
+   v[8] = rot[8];
+   fRotation->SetMatrix(v);
+   fRotation->SetBit(kGeoRotation);
+   if (!IsTranslation()) return;
+   v[0] = c*fTranslation[0]-s*fTranslation[1];
+   v[1] = s*fTranslation[0]+c*fTranslation[1];
+   v[2] = fTranslation[2];
+   memcpy(fTranslation,v,kN3);
 }   
 
 //_____________________________________________________________________________
@@ -1604,6 +1684,7 @@ TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix *matrix)
    // assignment
    if (matrix == this) return *this;
    Clear();
+   if (matrix == gGeoIdentity) return *this;
    TGeoMatrix::operator=(*matrix);
    if (matrix->IsIdentity()) return *this;
    if (matrix->IsTranslation()) {
@@ -1831,22 +1912,25 @@ void TGeoHMatrix::MultiplyLeft(const TGeoMatrix *left)
 void TGeoHMatrix::RotateX(Double_t angle)
 {
 // Rotate about X axis with angle expressed in degrees.
+   SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
-   Double_t v[3];
-   Int_t j;
-   for (Int_t i=0; i<3; i++) {
-      j = 3*i;
-      v[0] = fRotationMatrix[j];
-      v[1] = c*fRotationMatrix[j+1]+s*fRotationMatrix[j+2];
-      v[2] = -s*fRotationMatrix[j+1]+c*fRotationMatrix[j+2];
-      memcpy(&fRotationMatrix[j], v, kN3);
-   }   
-   SetBit(kGeoRotation);
+   Double_t v[9];
+   v[0] = fRotationMatrix[0];
+   v[1] = fRotationMatrix[1];
+   v[2] = fRotationMatrix[2];
+   v[3] = c*fRotationMatrix[3]-s*fRotationMatrix[6];
+   v[4] = c*fRotationMatrix[4]-s*fRotationMatrix[7];
+   v[5] = c*fRotationMatrix[5]-s*fRotationMatrix[8];
+   v[6] = s*fRotationMatrix[3]+c*fRotationMatrix[6];
+   v[7] = s*fRotationMatrix[4]+c*fRotationMatrix[7];
+   v[8] = s*fRotationMatrix[5]+c*fRotationMatrix[8];
+   memcpy(fRotationMatrix, v, kN9);
+
    v[0] = fTranslation[0];
-   v[1] = c*fTranslation[1]+s*fTranslation[2];
-   v[2] = -s*fTranslation[1]+c*fTranslation[2];
+   v[1] = c*fTranslation[1]-s*fTranslation[2];
+   v[2] = s*fTranslation[1]+c*fTranslation[2];
    memcpy(fTranslation,v,kN3);
 }
 
@@ -1854,22 +1938,25 @@ void TGeoHMatrix::RotateX(Double_t angle)
 void TGeoHMatrix::RotateY(Double_t angle)
 {
 // Rotate about Y axis with angle expressed in degrees.
+   SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
-   Double_t v[3];
-   Int_t j;
-   for (Int_t i=0; i<3; i++) {
-      j = 3*i;
-      v[0] = c*fRotationMatrix[j]-s*fRotationMatrix[j+2];
-      v[1] = fRotationMatrix[j+1];
-      v[2] = s*fRotationMatrix[j]+c*fRotationMatrix[j+2];
-      memcpy(&fRotationMatrix[j], v, kN3);
-   }   
-   SetBit(kGeoRotation);
-   v[0] = c*fTranslation[0]-s*fTranslation[2];
+   Double_t v[9];
+   v[0] = c*fRotationMatrix[0]+s*fRotationMatrix[6];
+   v[1] = c*fRotationMatrix[1]+s*fRotationMatrix[7];
+   v[2] = c*fRotationMatrix[2]+s*fRotationMatrix[8];
+   v[3] = fRotationMatrix[3];
+   v[4] = fRotationMatrix[4];
+   v[5] = fRotationMatrix[5];
+   v[6] = -s*fRotationMatrix[0]+c*fRotationMatrix[6];
+   v[7] = -s*fRotationMatrix[1]+c*fRotationMatrix[7];
+   v[8] = -s*fRotationMatrix[2]+c*fRotationMatrix[8];
+   memcpy(fRotationMatrix, v, kN9);
+
+   v[0] = c*fTranslation[0]+s*fTranslation[2];
    v[1] = fTranslation[1];
-   v[2] = s*fTranslation[0]+c*fTranslation[2];
+   v[2] = -s*fTranslation[0]+c*fTranslation[2];
    memcpy(fTranslation,v,kN3);
 }
 
@@ -1877,21 +1964,24 @@ void TGeoHMatrix::RotateY(Double_t angle)
 void TGeoHMatrix::RotateZ(Double_t angle)
 {
 // Rotate about Z axis with angle expressed in degrees.
+   SetBit(kGeoRotation);
    Double_t phi = angle*TMath::DegToRad();
    Double_t c = TMath::Cos(phi);
    Double_t s = TMath::Sin(phi);
-   Double_t v[3];
-   Int_t j;
-   for (Int_t i=0; i<3; i++) {
-      j = 3*i;
-      v[0] = c*fRotationMatrix[j]+s*fRotationMatrix[j+1];
-      v[1] = -s*fRotationMatrix[j]+c*fRotationMatrix[j+1];
-      v[2] = fRotationMatrix[j+2];
-      memcpy(&fRotationMatrix[j], v, kN3);
-   }   
-   SetBit(kGeoRotation);
-   v[0] = c*fTranslation[0]+s*fTranslation[1];
-   v[1] = -s*fTranslation[0]+c*fTranslation[1];
+   Double_t v[9];
+   v[0] = c*fRotationMatrix[0]-s*fRotationMatrix[3];
+   v[1] = c*fRotationMatrix[1]-s*fRotationMatrix[4];
+   v[2] = c*fRotationMatrix[2]-s*fRotationMatrix[5];
+   v[3] = s*fRotationMatrix[0]+c*fRotationMatrix[3];
+   v[4] = s*fRotationMatrix[1]+c*fRotationMatrix[4];
+   v[5] = s*fRotationMatrix[2]+c*fRotationMatrix[5];
+   v[6] = fRotationMatrix[6];
+   v[7] = fRotationMatrix[7];
+   v[8] = fRotationMatrix[8];
+   memcpy(&fRotationMatrix[0],v,kN9);
+
+   v[0] = c*fTranslation[0]-s*fTranslation[1];
+   v[1] = s*fTranslation[0]+c*fTranslation[1];
    v[2] = fTranslation[2];
    memcpy(fTranslation,v,kN3);
 }
