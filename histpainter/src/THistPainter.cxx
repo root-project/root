@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.119 2003/02/12 12:05:32 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.120 2003/02/20 22:39:51 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2022,14 +2022,13 @@ void THistPainter::PaintContour(Option_t *option)
    ncontour  = fH->GetContour();
    if (!ncontour) {
       ncontour = gStyle->GetNumberContours();
+      fH->SetContour(ncontour);
    }
    if (ncontour > kMAXCONTOUR) {
       Warning("PaintContour", "maximum number of contours is %d, asked for %d",
               kMAXCONTOUR, ncontour);
       ncontour = kMAXCONTOUR-1;
    }
-   // Initialise contourlevels, possibly change to logarithmic
-   fH->SetContour(ncontour);
 
    for (i=0;i<ncontour;i++) levels[i] = fH->GetContourLevel(i);
    //for (i=0;i<ncontour;i++)
