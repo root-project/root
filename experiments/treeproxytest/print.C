@@ -1,3 +1,3 @@
 void print() {
-  cout << "mc vertex " << mc.vtxz << endl;
+  cout << "mc vertex " << mc.vtxz[0] << endl;
 }
