@@ -2791,6 +2791,7 @@ Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t ch
    point[0] = x;
    point[1] = y;
    point[2] = z;
+   if (change) memcpy(fPoint, point, 3*sizeof(Double_t));
    TGeoVolume *vol = fCurrentNode->GetVolume();
    if (fIsOutside) {
       if (vol->GetShape()->Contains(point)) {
@@ -3316,6 +3317,12 @@ TGeoVolume *TGeoManager::MakeGtra(const char *name, const TGeoMedium *medium,
                                  tl2, alpha2);
    TGeoVolume *vol = new TGeoVolume(name, gtra, medium);
    return vol;
+}
+//_____________________________________________________________________________
+TGeoVolumeAssembly *TGeoManager::MakeVolumeAssembly(const char *name)
+{
+// Make an assembly of volumes.
+   return (new TGeoVolumeAssembly(name));
 }
 
 //_____________________________________________________________________________

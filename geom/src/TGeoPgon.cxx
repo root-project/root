@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.25 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.26 2003/08/21 10:17:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -850,18 +850,14 @@ Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
       if (dz<1E-6) {
          if (fRmin[ipl]>0) return 0;
       }
-      if (ipl==0) {
-         saf[0] = point[2]-fZ[0];
-         if (saf[0]<1E-4) return saf[0];
-      }
-      if (ipl==fNz-2) {
-         saf[1] = fZ[fNz-1]-point[2];   
-         if (saf[1]<1E-4) return saf[1];
-      }
+      saf[0] = point[2] - fZ[ipl];
+      saf[1] = fZ[ipl+1] - point[2];
+      
+      if (ipl==0 && saf[0]<1E-4) return saf[0];
+      if (ipl==(fNz-2) &&  saf[1]<1E-4) return saf[1];
       if (ipl>1) {
          if (fZ[ipl]==fZ[ipl-1]) {
             if (fRmin[ipl]<fRmin[ipl-1] || fRmax[ipl]>fRmax[ipl-1]) {
-               saf[0] = point[2]-fZ[ipl];
                if (saf[0]<1E-4) return saf[0];
             }
          }
@@ -869,13 +865,24 @@ Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
       if (ipl<fNz-3) {
          if (fZ[ipl+1]==fZ[ipl+2]) {
             if (fRmin[ipl+1]<fRmin[ipl+2] || fRmax[ipl+1]>fRmax[ipl+2]) {
-               saf[1] = fZ[ipl+1]-point[2];
                if (saf[1]<1E-4) return saf[1];         
             }
          }
       }
    } else {
       if (ipl>=0 && ipl<fNz-1) {
+         if (ipl==0) {
+            saf[0] = -fZ[0]+point[2];
+            if (saf[0]==0) {
+               if (Contains(point)) return 0;
+            }
+         }
+         if (ipl==fNz-2) {
+            saf[1] = -point[2]+fZ[fNz-1];
+            if (saf[1]==0) {
+               if (Contains(point)) return 0;   
+            }
+         }
          dz = fZ[ipl+1]-fZ[ipl];
          if (dz==0) {
             ipl++;

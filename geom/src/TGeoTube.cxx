@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.25 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.26 2003/08/21 10:17:16 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -261,9 +261,12 @@ Double_t TGeoTube::DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, Dou
       sr=-b+d;
       if (sr>0) return TMath::Min(sz,sr);
    }
-   printf("Error : TGeoTube::DistToOutS() -> cannot exit tube rmin=%f rmax=%f dZ=%f from point (%f, %f, %f,)!\n", 
-          rmin,rmax,dz, point[0], point[1], point[2]);
-   return kBig;      
+//   printf("Error : TGeoTube::DistToOutS() -> cannot exit tube rmin=%f rmax=%f dZ=%f from point (%f, %f, %f,)!\n", 
+//          rmin,rmax,dz, point[0], point[1], point[2]);
+//   Double_t *p = gGeoManager->GetCurrentPoint();
+//   Double_t *dr = gGeoManager->GetCurrentDirection();
+//   printf("Location: (%f,%f,%f,%f,%f,%f) %s\n", p[0],p[1],p[2],dr[0],dr[1],dr[2],gGeoManager->GetPath());
+   return 0.;      
 }
 
 //_____________________________________________________________________________

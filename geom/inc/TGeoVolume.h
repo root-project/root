@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.28 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.29 2003/08/08 09:22:18 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -98,6 +98,7 @@ public:
    void            CheckOverlaps(Double_t ovlp=0.1, Option_t *option="") const; // *MENU*
    Int_t           CountNodes(Int_t nlevels=1000);
    Bool_t          Contains(Double_t *point) const {return fShape->Contains(point);}
+   virtual Bool_t  IsAssembly() const {return kFALSE;}
    Bool_t          IsFolder() const;
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}
    virtual Bool_t  IsVolumeMulti() const {return kFALSE;}
@@ -224,6 +225,23 @@ public:
 
 
  ClassDef(TGeoVolumeMulti, 3)     // class to handle multiple volumes in one step
+};
+
+/*************************************************************************
+ * TGeoVolumeAssembly - special assembly of volumes
+ *  
+ *
+ *************************************************************************/
+
+class TGeoVolumeAssembly : public TGeoVolume
+{
+public:
+   TGeoVolumeAssembly();
+   TGeoVolumeAssembly(const char *name);
+   virtual ~TGeoVolumeAssembly() {;}
+   virtual Bool_t  IsAssembly() const {return kTRUE;}
+
+ClassDef(TGeoVolumeAssembly, 1)   // an assembly of volumes
 };
 
 inline Int_t TGeoVolume::GetNdaughters() const {

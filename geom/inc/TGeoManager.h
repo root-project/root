@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.37 2003/09/23 10:33:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.38 2003/10/08 16:21:27 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -276,6 +276,7 @@ public:
    TGeoVolume            *MakeTubs(const char *name, const TGeoMedium *medium,
                                       Double_t rmin, Double_t rmax, Double_t dz,
                                       Double_t phi1, Double_t phi2);
+   TGeoVolumeAssembly    *MakeVolumeAssembly(const char *name);
    TGeoVolumeMulti       *MakeVolumeMulti(const char *name, const TGeoMedium *medium);
    void                   SetTopVolume(TGeoVolume *vol);
    

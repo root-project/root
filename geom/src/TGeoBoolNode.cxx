@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.6 2003/09/04 12:38:22 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.7 2003/09/23 10:33:15 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -122,13 +122,12 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
 //-----------------------------------------------------------------------------
 void TGeoBoolNode::PaintNext(TGeoHMatrix *glmat, Option_t *option)
 {
-   TGeoHMatrix *mat = gGeoManager->GetHMatrix();
-   *mat = glmat;
-   mat->Multiply(fLeftMat);
-   fLeft->PaintNext(mat, option);
-   *mat = glmat;
-   mat->Multiply(fRightMat);
-   fRight->PaintNext(mat, option);
+   TGeoHMatrix mat = *glmat;
+   mat.Multiply(fLeftMat);
+   fLeft->PaintNext(&mat, option);
+   mat = glmat;
+   mat.Multiply(fRightMat);
+   fRight->PaintNext(&mat, option);
 }
 //-----------------------------------------------------------------------------
 void TGeoBoolNode::Sizeof3D() const
