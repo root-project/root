@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.11 2002/04/05 11:39:21 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.12 2002/05/23 08:11:35 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -464,6 +464,13 @@ const char *TDataMember::GetFullTypeName() const
    return fInfo->Type()->Name();
 }
 
+//______________________________________________________________________________
+const char *TDataMember::GetTrueTypeName() const
+{
+   // Get full type description of data member, e,g.: "class TDirectory*".
+
+   return fInfo->Type()->TrueName();
+}
 //______________________________________________________________________________
 const char *TDataMember::GetName() const
 {

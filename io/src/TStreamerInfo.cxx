@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.142 2002/09/27 18:06:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.143 2002/11/01 19:12:09 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -264,7 +264,7 @@ void TStreamerInfo::Build()
             continue;
          }
          if (dm->IsSTLContainer()) {
-            TStreamerSTL *stl = new TStreamerSTL(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName(),dm->IsaPointer());
+            TStreamerSTL *stl = new TStreamerSTL(dm->GetName(),dm->GetTitle(),offset,dm->GetTrueTypeName(),dm->IsaPointer());
             if (stl->GetSTLtype()) {
                fElements->Add(stl);
                for (i=0;i<ndim;i++) stl->SetMaxIndex(i,dm->GetMaxIndex(i));

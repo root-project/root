@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.6 2002/02/21 15:40:08 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.7 2002/08/09 19:26:26 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -61,6 +61,7 @@ public:
    const char    *GetTitle() const;
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;
+   const char    *GetTrueTypeName() const;
    const char    *GetArrayIndex() const;
 
    TList         *GetOptions() const;
