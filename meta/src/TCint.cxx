@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.67 2003/12/12 10:24:02 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.68 2004/01/10 10:52:30 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -502,54 +502,6 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
 
    R__LOCKGUARD(gCINTMutex);
    if (!cl->fClassInfo || reload) {
-      // In the case where the class is not loaded and belongs to a namespace
-      // or is nested, looking for the full class name is outputing a lots of
-      // (expected) error messages.  Currently the only way to avoid this is to
-      // specifically check that each level of nesting is already loaded.
-      // In case of templates the idea is that everything between the outer
-      // '<' and '>' has to be skipped, e.g.: aap<pipo<noot>::klaas>::a_class
-
-      char *classname = StrDup(cl->GetName());
-      char *current = classname;
-      while (*current) {
-
-         while (*current && *current != ':' && *current != '<')
-            current++;
-
-         if (!*current) break;
-
-         if (*current == '<') {
-            int level = 1;
-            current++;
-            while (*current && level > 0) {
-               if (*current == '<') level++;
-               if (*current == '>') level--;
-               current++;
-            }
-            continue;
-         }
-
-         // *current == ':', must be a "::"
-         if (*(current+1) != ':') {
-            Error("SetClassInfo", "unexpected token : in %s", classname);
-            delete [] classname;
-            return;
-         }
-
-         *current = '\0';
-         G__ClassInfo info(classname);
-         if (!info.IsLoaded()) {
-            delete [] classname;
-            if (cl->fClassInfo && reload) {
-               delete cl->fClassInfo;
-               cl->fClassInfo = 0;
-            }
-            return;
-         }
-         *current = ':';
-         current += 2;
-      }
-      delete [] classname;
 
       delete cl->fClassInfo; cl->fClassInfo = 0;
       if (CheckClassInfo(cl->GetName())) {
@@ -573,7 +525,8 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
             delete cl->fClassInfo;
             cl->fClassInfo = 0;
          }
-      }
+
+      } 
    }
 }
 
@@ -582,6 +535,51 @@ Bool_t TCint::CheckClassInfo(const char *name)
 {
    // Checks if a class with the specified name is defined in CINT.
    // Returns kFALSE is class is not defined.
+
+   // In the case where the class is not loaded and belongs to a namespace
+   // or is nested, looking for the full class name is outputing a lots of
+   // (expected) error messages.  Currently the only way to avoid this is to
+   // specifically check that each level of nesting is already loaded.
+   // In case of templates the idea is that everything between the outer
+   // '<' and '>' has to be skipped, e.g.: aap<pipo<noot>::klaas>::a_class
+
+   char *classname = StrDup(name);
+   char *current = classname;
+   while (*current) {
+
+      while (*current && *current != ':' && *current != '<')
+         current++;
+      
+      if (!*current) break;
+      
+      if (*current == '<') {
+         int level = 1;
+         current++;
+         while (*current && level > 0) {
+            if (*current == '<') level++;
+            if (*current == '>') level--;
+            current++;
+         }
+         continue;
+      }
+
+      // *current == ':', must be a "::"
+      if (*(current+1) != ':') {
+         Error("CheckClassInfo", "unexpected token : in %s", classname);
+         delete [] classname;
+         return kFALSE;
+      }
+
+      *current = '\0';
+      G__ClassInfo info(classname);
+      if (!info.IsLoaded()) {
+         delete [] classname;
+         return kFALSE;
+      }
+      *current = ':';
+      current += 2;
+   }
+   delete [] classname;
 
    Int_t tagnum = G__defined_tagname(name, 2);
    if (tagnum >= 0) return kTRUE;
