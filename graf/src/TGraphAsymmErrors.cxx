@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.8 2001/02/28 07:26:04 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.9 2001/04/06 07:16:24 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -235,9 +235,8 @@ void TGraphAsymmErrors::Paint(Option_t *option)
    static Float_t cxx[11] = {1,1,0.6,0.6,1,1,0.6,0.5,1,0.6,0.6};
    static Float_t cyy[11] = {1,1,1,1,1,1,1,1,1,0.5,0.6};
 
-
-   TGraph::Paint(option);
-
+   if (strchr(option,'X')) {TGraph::Paint(option); return;}
+   gPad->SetBit(kClipFrame);
    if (strchr(option,'X')) return;
    Bool_t endLines = kTRUE;
    if (strchr(option,'z')) endLines = kFALSE;
@@ -320,6 +319,7 @@ void TGraphAsymmErrors::Paint(Option_t *option)
          }
       }
    }
+   TGraph::Paint(option);
    gPad->ResetBit(kClipFrame);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.11 2001/04/06 07:10:06 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.12 2001/05/16 19:13:04 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -208,10 +208,7 @@ void TGraphErrors::Paint(Option_t *option)
    static Float_t cxx[11] = {1,1,0.6,0.6,1,1,0.6,0.5,1,0.6,0.6};
    static Float_t cyy[11] = {1,1,1,1,1,1,1,1,1,0.5,0.6};
 
-
-   TGraph::Paint(option);
-
-   if (strchr(option,'X')) return;
+   if (strchr(option,'X')) {TGraph::Paint(option); return;}
    Bool_t endLines = kTRUE;
    if (strchr(option,'z')) endLines = kFALSE;
    if (strchr(option,'Z')) endLines = kFALSE;
@@ -295,6 +292,7 @@ void TGraphErrors::Paint(Option_t *option)
          }
       }
    }
+   TGraph::Paint(option);
    gPad->ResetBit(kClipFrame);
 }
 
