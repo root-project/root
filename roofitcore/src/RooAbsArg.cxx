@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsArg.cc,v 1.74 2002/09/05 04:33:01 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -132,7 +132,7 @@ RooAbsArg::~RooAbsArg()
   TIterator* serverIter = _serverList.MakeIterator() ;
   RooAbsArg* server ;
   while (server=(RooAbsArg*)serverIter->Next()) {
-    removeServer(*server) ;
+    removeServer(*server,kTRUE) ;
   }
   delete serverIter ;
 
@@ -144,7 +144,7 @@ RooAbsArg::~RooAbsArg()
     TString attr("ServerDied:");
     attr.Append(GetName());
     client->setAttribute(attr.Data());
-    client->removeServer(*this);
+    client->removeServer(*this,kTRUE);
     if (_verboseDirty) {
       cout << fName << "::" << ClassName() << ":~RooAbsArg: dependent \""
 	   << client->GetName() << "\" should have been deleted first" << endl ;
@@ -211,24 +211,11 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
   }
 
   // Add server link to given server
-  if (!_serverList.FindObject(&server)) {
-    _serverList.Add(&server) ;
-  } else {
-    // WVE - Increment server reference count
-//     cout << "RooAbsArg::addServer(" << GetName() << "): Server " 
-// 	 << server.GetName() << " already registered" << endl ;
-    return ;
-  }
-
-  if (!server._clientList.FindObject(this)) {    
-    server._clientList.Add(this) ;
-    if (valueProp) server._clientListValue.Add(this) ;
-    if (shapeProp) server._clientListShape.Add(this) ;
-  } else {    
-    cout << "RooAbsArg::addServer(" << GetName() 
-	 << "): Already registered as client of " << server.GetName() << endl ;
-    // WVE - Increment client reference count 
-  }
+  _serverList.Add(&server) ;
+  
+  server._clientList.Add(this) ;
+  if (valueProp) server._clientListValue.Add(this) ;
+  if (shapeProp) server._clientListShape.Add(this) ;
 } 
 
 
@@ -247,7 +234,7 @@ void RooAbsArg::addServerList(RooAbsCollection& serverList, Bool_t valueProp, Bo
 
 
 
-void RooAbsArg::removeServer(RooAbsArg& server) 
+void RooAbsArg::removeServer(RooAbsArg& server, Bool_t force) 
 {
   // Unregister another RooAbsArg as a server to us, ie, declare that
   // we no longer depend on its value and shape.
@@ -258,26 +245,30 @@ void RooAbsArg::removeServer(RooAbsArg& server)
   }
 
   // Remove server link to given server
-  if (_serverList.FindObject(&server)) {
+  if (!force) {
     _serverList.Remove(&server) ;
-  } else {
-    // WVE - decrement server reference count
-    cout << fName << "::" << ClassName() << "(" << this << "):removeServer: Server "
-	 << server.GetName() << "(" << &server << ") is not registered" << endl;
-    return ;
-  }
 
-  if (server._clientList.FindObject(this)) {
     server._clientList.Remove(this) ;
     server._clientListValue.Remove(this) ;
     server._clientListShape.Remove(this) ;
   } else {
-    // WVE - decrement client reference count
-    cout << "RooAbsArg::removeServer(" << GetName() 
-	 << "): Never registered as client of " << server.GetName() << endl ;
+    _serverList.RemoveAll(&server) ;
+
+    server._clientList.RemoveAll(this) ;
+    server._clientListValue.RemoveAll(this) ;
+    server._clientListShape.RemoveAll(this) ;
   }
 } 
 
+
+void RooAbsArg::replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, Bool_t propValue, Bool_t propShape) 
+{
+    Int_t count = _serverList.refCount(&oldServer) ;
+    removeServer(oldServer,kTRUE) ;
+    while(count--) {
+      addServer(newServer,propValue,propShape) ;
+    }
+}
 
 
 void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
@@ -298,10 +289,16 @@ void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapePr
   }
 
   // Remove all propagation links, then reinstall requested ones ;
-  server._clientListValue.Remove(this) ;
-  server._clientListShape.Remove(this) ;
-  if (valueProp) server._clientListValue.Add(this) ;
-  if (shapeProp) server._clientListShape.Add(this) ;
+  Int_t vcount = server._clientListValue.refCount(this) ;
+  Int_t scount = server._clientListShape.refCount(this) ;
+  server._clientListValue.RemoveAll(this) ;
+  server._clientListShape.RemoveAll(this) ;
+  if (valueProp) {
+    while (vcount--) server._clientListValue.Add(this) ;
+  }
+  if (shapeProp) {
+    while(scount--) server._clientListShape.Add(this) ;
+  }
 }
 
 
@@ -325,7 +322,7 @@ void RooAbsArg::branchNodeServerList(RooAbsCollection* list, const RooAbsArg* ar
 }
 
 
-void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf) const
+void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf, Bool_t valueOnly) const
 {
   // Fill supplied list with nodes of the arg tree, following all server links, 
   // starting with ourself as top node.
@@ -349,6 +346,11 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
     RooAbsArg* server ;
     TIterator* sIter = arg->serverIterator() ;
     while (server=(RooAbsArg*)sIter->Next()) {
+      
+      // Skip non-value server nodes if requested
+      Bool_t isValueServer = server->_clientListValue.FindObject((TObject*)arg)?kTRUE:kFALSE ;
+      if (valueOnly && !isValueServer) continue ;
+
       treeNodeServerList(list,server,doBranch,doLeaf) ;
     }  
     delete sIter ;
@@ -381,7 +383,8 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset) const
 
   // Create and fill deep server list
   RooArgSet leafList("leafNodeServerList") ;
-  leafNodeServerList(&leafList) ;
+  treeNodeServerList(&leafList,0,kFALSE,kTRUE,kFALSE) ;
+  // leafNodeServerList(&leafList) ;
 
   // Copy non-dependent servers to parameter list
   TIterator* sIter = leafList.createIterator() ;
@@ -440,7 +443,8 @@ RooArgSet* RooAbsArg::getDependents(const RooArgSet* dataList) const
 
   // Make iterator over tree leaf node list
   RooArgSet leafList("leafNodeServerList") ;
-  leafNodeServerList(&leafList) ;    
+  treeNodeServerList(&leafList,0,kFALSE,kTRUE,kTRUE) ;
+  //leafNodeServerList(&leafList) ;    
   TIterator *sIter = leafList.createIterator() ;
 
   RooAbsArg* arg ;
@@ -718,11 +722,12 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
       }
       continue ;
     }
-    
+
     propValue=origServerValue.FindObject(oldServer)?kTRUE:kFALSE ;
     propShape=origServerShape.FindObject(oldServer)?kTRUE:kFALSE ;
-    removeServer(*oldServer) ;
-    addServer(*newServer,propValue,propShape) ;
+    replaceServer(*oldServer,*newServer,propValue,propShape) ;
+//     removeServer(*oldServer) ;
+//     addServer(*newServer,propValue,propShape) ;
   }
 
   delete sIter ;

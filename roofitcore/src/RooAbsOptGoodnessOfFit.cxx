@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.4 2002/09/05 04:33:07 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -234,6 +234,8 @@ void RooAbsOptGoodnessOfFit::constOptimize(ConstOpCode opcode)
 
 void RooAbsOptGoodnessOfFit::optimizeDirty()
 {
+  _pdfClone->getVal(_normSet) ;
+
   RooArgSet branchList("branchList") ;
   _pdfClone->setOperMode(RooAbsArg::ADirty) ;
   _pdfClone->branchNodeServerList(&branchList) ;
@@ -241,8 +243,14 @@ void RooAbsOptGoodnessOfFit::optimizeDirty()
   RooAbsArg* branch ;
   while(branch=(RooAbsArg*)bIter->Next()) {
     if (branch->dependsOn(*_dataClone->get())) {
-      branch->setOperMode(RooAbsArg::ADirty) ;
-//       cout << "   seting branch " << branch->GetName() << " to ADirty" << endl ;
+
+      RooArgSet* bdep = branch->getDependents(_dataClone->get()) ;
+      if (bdep->getSize()>0) {
+	branch->setOperMode(RooAbsArg::ADirty) ;
+      } else {
+	//cout << "using lazy evaluation for node " << branch->GetName() << endl ;
+      }
+      delete bdep ;
     }
   }
   delete bIter ;
@@ -305,6 +313,13 @@ Bool_t RooAbsOptGoodnessOfFit::findCacheableBranches(RooAbsArg* arg, RooAbsData*
 {
   // Find branch PDFs with all-constant parameters, and add them
   // to the dataset cache list
+
+  // Evaluate function with current normalization in case servers
+  // are created on the fly
+  RooAbsReal* realArg = dynamic_cast<RooAbsReal*>(arg) ;
+  if (realArg) {
+    realArg->getVal(_normSet) ;
+  }
 
   TIterator* sIter = arg->serverIterator() ;
   RooAbsArg* server ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsArg.rdl,v 1.69 2002/09/05 04:33:01 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,7 @@
 #include "TObjArray.h"
 #include "TStopwatch.h"
 #include "RooFitCore/RooPrintable.hh"
+#include "RooFitCore/RooRefCountList.hh"
 
 class TTree ;
 class RooArgSet ;
@@ -68,7 +69,7 @@ public:
   void leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0) const ;
   void branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0) const ;
   void treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, 
-			  Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE) const ;
+			  Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE, Bool_t valueOnly=kFALSE) const ;
   
   // Is this object a fundamental type that can be added to a dataset?
   // Fundamental-type subclasses override this method to return kTRUE.
@@ -186,10 +187,10 @@ protected:
   friend class RooArgSet ;
   friend class RooAbsCollection ;
   friend class RooCustomizer ;
-  TList _serverList       ; //! list of server objects
-  THashList _clientList       ; //! list of client objects
-  THashList _clientListShape  ; //! subset of clients that requested shape dirty flag propagation
-  THashList _clientListValue  ; //! subset of clients that requested value dirty flag propagation
+  RooRefCountList _serverList       ; //! list of server objects
+  RooRefCountList _clientList       ; //! list of client objects
+  RooRefCountList _clientListShape  ; //! subset of clients that requested shape dirty flag propagation
+  RooRefCountList _clientListValue  ; //! subset of clients that requested value dirty flag propagation
   TList _proxyList        ; //! list of proxies
   TIterator* _clientShapeIter ; //! Iterator over _clientListShape 
   TIterator* _clientValueIter ; //! Iterator over _clientListValue 
@@ -210,8 +211,9 @@ protected:
   friend class RooFormula ;
   void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
   void addServerList(RooAbsCollection& serverList, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
+  void replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, Bool_t valueProp, Bool_t shapeProp) ;
   void changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp) ;
-  void removeServer(RooAbsArg& server) ;
+  void removeServer(RooAbsArg& server, Bool_t force=kFALSE) ;
   RooAbsArg *findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const;
 
   // Proxy management
