@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.10 2004/10/19 13:04:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.11 2004/10/21 15:05:18 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -279,7 +279,7 @@ void PrintNumber(Double_t x, Double_t y, Double_t z, Double_t num, Double_t ys)
 #ifdef R__SSTREAM
    std::ostringstream ss;
 #else
-   ostrtream ss;
+   ostrstream ss;
 #endif
    ss<<num;
    std::string str(ss.str());
