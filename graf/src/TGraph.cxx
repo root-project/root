@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.50 2001/11/07 16:54:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.51 2001/11/30 15:46:21 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2709,8 +2709,10 @@ void TGraph::SavePrimitive(ofstream &out, Option_t *option)
       out<<"   "<<endl;
    }
 
-   out<<"   graph->Draw("
-      <<quote<<option<<quote<<");"<<endl;
+   if (!strstr(option,"multigraph")) {
+      out<<"   graph->Draw("
+         <<quote<<option<<quote<<");"<<endl;
+   }
 }
 
 //______________________________________________________________________________
