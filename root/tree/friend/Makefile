@@ -1,19 +1,12 @@
-include ../../Rules.mk
 
 all: tests
 test: tests ChainFriend
 
 override SUBDIRS =  
 
-#TEST_TARGETS = $(SUBDIRS:%=%.test) 
+TEST_TARGETS = ChainFriend
 
-TEST_TARGETS += ChainFriend
-
-#$(TEST_TARGETS): %.test:
-#	@(cd $*; gmake test)
-
-#ArraySyntax: Event.root
-#	@echo built
+include ../../Rules.mk
 
 files: Event.root Event2.root
 

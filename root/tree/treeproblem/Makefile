@@ -3,8 +3,9 @@ include ../../Rules.mk
 LIBS = $(ROOTLIBS)
 
 all:	Foo.$(DllSuf) reader writer 
+test: check
 
-Foo.$(DllSuf):Foo.h Foo.cxx
+Foo.$(DllSuf): Foo.h Foo.cxx
 	rootcint -f FooDict.cxx -c Foo.h+
 	$(CXX) $(CXXFLAGS) -c Foo.cxx 
 	$(CXX) $(CXXFLAGS) -c FooDict.cxx 
@@ -27,7 +28,7 @@ ifeq ($(PLATFORM),win32)
 	$(LD) $(SOFLAGS) $(LDFLAGS) Foo.$(ObjSuf) FooDict.$(ObjSuf) Foo.exp $(LIBS) \
                    $(OutPutOpt)$@
 else
-                $(LD) $(SOFLAGS) $(LDFLAGS) $(LIBSFORLINK) $^ $(OutPutOpt) $@
+	$(LD) $(SOFLAGS) $(LDFLAGS) $(LIBSFORLINK) Foo.$(ObjSuf) FooDict.$(ObjSuf) $(OutPutOpt) $@
 endif
 endif
 endif
@@ -44,7 +45,7 @@ reader:reader.C
 
 writer:writer.C Foo.$(DllSuf) 
 	$(CXX) $(CXXFLAGS) -c $< 
-	$(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.lib $(OutPutOpt)$@
+	$(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.so $(OutPutOpt)$@
 
 #	g++ -o $@ writer.$(ObjSuf) Foo.$(DllSuf) `root-config --libs` \
 #		-Wl,-rpath,`root-config --libdir` -Wl,-rpath,.

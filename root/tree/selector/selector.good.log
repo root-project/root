@@ -1,0 +1,39 @@
+  *******************************************
+  *                                         *
+  *        W E L C O M E  to  R O O T       *
+  *                                         *
+  *   Version   3.03/09 27 September 2002   *
+  *                                         *
+  *  You are welcome to visit our Web site  *
+  *          http://root.cern.ch            *
+  *                                         *
+  *******************************************
+
+Compiled for linux with thread support.
+
+CINT/ROOT C/C++ Interpreter version 5.15.58, Sep 16 2002
+Type ? for help. Commands must be C++ statements.
+Enclose multiple statements between { }.
+
+Processing run.C...
+Warning in <TClass::TClass>: no dictionary for class Event is available
+Warning in <TClass::TClass>: no dictionary for class EventHeader is available
+Warning in <TClass::TClass>: no dictionary for class Track is available
+My option are T1
+My name is T1
+reloading /cdf/scratch/pcanal/roottest/root/tree/selector/./sel.C  0
+reloading sel.h  0
+My option are T2
+My name is T2
+reloading /cdf/scratch/pcanal/roottest/root/tree/selector/./sel.C  0
+reloading sel.h  0
+My option are T3
+My name is T3
+reloading /cdf/scratch/pcanal/roottest/root/tree/selector/./sel.C  0
+reloading sel.h  0
+My option are T1
+My name is T1
+My option are T2
+My name is T2
+My option are T3
+My name is T3

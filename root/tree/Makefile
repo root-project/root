@@ -1,7 +1,7 @@
 all: tests
 test: tests
 
-SUBDIRS = friend
+SUBDIRS = friend selector treeproblem
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 
