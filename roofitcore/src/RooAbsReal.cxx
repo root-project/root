@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.87 2002/09/17 06:39:34 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.88 2002/09/30 00:57:28 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -742,13 +742,13 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 
     // Forward to actual calculation
     ret = RooAbsReal::plotOn(frame,drawOptions,scaleFactor,RooAbsReal::Raw,
-			      projData,projectedVars.getSize()>0?&projectedVars:0,precision,shiftToZero,
+			      projData,&projectedVars,precision,shiftToZero,
 			      projDataSet,rangeLo,rangeHi,wmode) ;
   } else {
         
     // Forward to actual calculation
     ret = RooAbsReal::plotAsymOn(frame,*asymCat,drawOptions,scaleFactor,
-				  projData,projectedVars.getSize()>0?&projectedVars:0,precision,
+				  projData,&projectedVars,precision,
 				  projDataSet,rangeLo,rangeHi,wmode) ;    
   }
 
