@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.36 2002/02/07 08:06:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.37 2002/02/13 11:12:41 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -386,7 +386,7 @@ TObject *TObject::DrawClone(Option_t *option) const
    TVirtualPad *pad = gROOT->GetSelectedPad();
    TVirtualPad *padsav = gPad;
    if (pad) pad->cd();
-   
+
    TObject *newobj = Clone();
    if (!newobj) return 0;
    if (pad) {
@@ -400,7 +400,7 @@ TObject *TObject::DrawClone(Option_t *option) const
    if (strlen(option))  newobj->Draw(option);
    else                 newobj->Draw(GetDrawOption());
    if (padsav) padsav->cd();
-   
+
    return newobj;
 }
 
@@ -914,6 +914,18 @@ void TObject::DoError(int level, const char *location, const char *fmt, va_list 
    // Interface to ErrorHandler (protected).
 
    ::ErrorHandler(level, Form("%s::%s", ClassName(), location), fmt, va);
+}
+
+//______________________________________________________________________________
+void TObject::Info(const char *location, const char *va_(fmt), ...) const
+{
+   // Issue info message. Use "location" to specify the method where the
+   // warning occured. Accepts standard printf formatting arguments.
+
+   va_list ap;
+   va_start(ap, va_(fmt));
+   DoError(kInfo, location, va_(fmt), ap);
+   va_end(ap);
 }
 
 //______________________________________________________________________________

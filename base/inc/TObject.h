@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.16 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.17 2002/01/24 11:39:26 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -165,6 +165,7 @@ public:
    void     InvertBit(UInt_t f) { fBits ^= f & kBitMask; }
 
    //---- error handling
+   void     Info(const char *method, const char *msgfmt, ...) const;
    void     Warning(const char *method, const char *msgfmt, ...) const;
    void     Error(const char *method, const char *msgfmt, ...) const;
    void     SysError(const char *method, const char *msgfmt, ...) const;
