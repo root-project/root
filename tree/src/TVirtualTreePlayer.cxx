@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.2 2002/07/16 17:20:16 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -26,8 +26,9 @@ TVirtualTreePlayer *TVirtualTreePlayer::TreePlayer(TTree *obj)
 
    // if no player set yet,  create a default painter via the PluginManager
    if (!fgPlayer) {
-      if (gROOT->LoadClass("TProof","Proof")) return 0;
       TPluginHandler *h;
+      //if ((h = GetPluginManager()->FindHandler("TVirtualProof")))
+      //   h->LoadPlugin();
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualTreePlayer"))) {
          if (h->LoadPlugin() == -1)
             return 0;
@@ -35,7 +36,7 @@ TVirtualTreePlayer *TVirtualTreePlayer::TreePlayer(TTree *obj)
          if (!fgPlayer) return 0;
       }
    }
-   
+
    //create an instance of the Tree player
    TVirtualTreePlayer *p = (TVirtualTreePlayer*)fgPlayer->New();
    if (p) p->SetTree(obj);

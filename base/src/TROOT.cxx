@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.80 2002/09/16 06:52:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.81 2002/09/16 10:57:57 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1458,8 +1458,8 @@ void TROOT::Proof(const char *cluster)
 
    // make sure libProof is loaded and TProof can be created
    TPluginHandler *h;
-   if ((h = GetPluginManager()->FindHandler("TVirtualTreePlayer")))
-      h->LoadPlugin();
+   //if ((h = GetPluginManager()->FindHandler("TVirtualTreePlayer")))
+   //   h->LoadPlugin();
 
    if ((h = GetPluginManager()->FindHandler("TVirtualProof"))) {
       if (h->LoadPlugin() == -1)
