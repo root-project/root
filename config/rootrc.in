@@ -137,6 +137,11 @@ Proofd.Authentication:  0
 +Plugin.TGrid:       ^alien    TAlien        RAliEn  "TAlien(const char*,const char*,const char*, const char*)"
 Plugin.TVirtualFitter:      *  TFitter       Minuit       "TFitter(Int_t)"
 Plugin.TVirtualHistPainter: *  THistPainter  HistPainter  "THistPainter()"
+Plugin.TVirtualTreePlayer:  *  TTreePlayer   TreePlayer   "TTreePlayer()"
+Plugin.TVirtualGeoPainter:  *  TGeoPainter   GeomPainter  "TGeoPainter()"
+Plugin.TVirtualPS:          *  TPostScript   Postscript   "TPostScript()"
+Plugin.TViewerX3D:          *  TViewerX3D    X3d          "TViewerX3D(TVirtualPad*,Option_t*,const char*,UInt_t,UInt_t)"
+Plugin.TMinuitGraph:        *  TGraph        Graf         "TGraph(Int_t, const Double_t*, const Double_t*)"
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.cxx,v 1.3 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TROOT.h"
 #include "TVirtualGeoPainter.h"
+#include "TPluginManager.h"
 
 TVirtualGeoPainter  *TVirtualGeoPainter::fgGeoPainter = 0;
 
@@ -28,6 +29,8 @@ TVirtualGeoPainter::~TVirtualGeoPainter()
 {
 //*-*-*-*-*-*-*-*-*-*-*Geometry painter default destructor*-*-*-*-*-*-*-*-*
 //*-*                  ===================================
+
+   fgGeoPainter = 0;
 }
 
 
@@ -38,18 +41,22 @@ TVirtualGeoPainter *TVirtualGeoPainter::GeoPainter()
    // The painter will paint objects from the specified geometry. 
    // If the geometry painter does not exist a default painter is created.
 
-   // if no painter set yet, set TGeoPainter by default
+   // if no painter set yet, create a default painter via the PluginManager
    if (!fgGeoPainter) {
-      if (gROOT->LoadClass("TGeoPainter","GeomPainter")) return 0;
-      gROOT->ProcessLineFast("new TGeoPainter();");
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoPainter"))) {
+         if (h->LoadPlugin() == -1)
+            return 0;
+         fgGeoPainter = (TVirtualGeoPainter*)h->ExecPlugin(0);
+      }
    }
    return fgGeoPainter;
 }
 
 //______________________________________________________________________________
-void TVirtualGeoPainter::SetPainter(TVirtualGeoPainter *painter)
+void TVirtualGeoPainter::SetPainter(const TVirtualGeoPainter *painter)
 {
    // Static function to set an alternative histogram painter.
 
-   fgGeoPainter = painter;
+   fgGeoPainter = (TVirtualGeoPainter*)painter;
 }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -95,7 +95,7 @@ public:
    virtual void       SetExplodedView(UInt_t iopt=0) = 0;
    virtual void       SetNsegments(Int_t nseg) = 0;    
    static  TVirtualGeoPainter *GeoPainter();
-   static void        SetPainter(TVirtualGeoPainter *painter);
+   static void        SetPainter(const TVirtualGeoPainter *painter);
    virtual void       SetVisLevel(Int_t level=3) = 0;
    virtual void       SetVisOption(Int_t option=0) = 0;
    virtual void       Sizeof3D(const TGeoVolume *vol) const = 0;      
