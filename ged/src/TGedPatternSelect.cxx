@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.4 2004/02/22 11:50:29 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.5 2004/02/26 13:38:37 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 // ****It needs more fixes*****
 /*************************************************************************
@@ -210,11 +210,11 @@ TGedPatternFrame::TGedPatternFrame(const TGWindow *p, Style_t pattern,
 
    // solid and hollow must be treated separately
    if (pattern != 0 && pattern != 1001)
-      fTip = new TGToolTip(fClient->GetRoot(), this, fTipText, 1000);
+      fTip = new TGToolTip(fClient->GetDefaultRoot(), this, fTipText, 1000);
    else if (pattern == 0)
-      fTip = new TGToolTip(fClient->GetRoot(), this, "0 - hollow", 1000);
+      fTip = new TGToolTip(fClient->GetDefaultRoot(), this, "0 - hollow", 1000);
    else // pattern == 1001
-      fTip = new TGToolTip(fClient->GetRoot(), this, "1001 - solid", 1000);
+      fTip = new TGToolTip(fClient->GetDefaultRoot(), this, "1001 - solid", 1000);
   
    AddInput(kEnterWindowMask | kLeaveWindowMask); 
 
@@ -303,10 +303,10 @@ void TGedPatternFrame::SetFillStyle(TGGC* gc, Style_t fstyle)
             fillPattern = 0;
          }
          if (fasi >= 1 && fasi <=25)
-            fillPattern = gVirtualX->CreateBitmap(gClient->GetRoot()->GetId(),
+            fillPattern = gVirtualX->CreateBitmap(gClient->GetDefaultRoot()->GetId(),
                                                   p_bits[fasi], 16, 16);
          else
-            fillPattern = gVirtualX->CreateBitmap(gClient->GetRoot()->GetId(),
+            fillPattern = gVirtualX->CreateBitmap(gClient->GetDefaultRoot()->GetId(),
                                                   p_bits[2], 16, 16);
          gc->SetStipple(fillPattern);
          break;
@@ -562,7 +562,7 @@ Bool_t TGedSelect::HandleButton(Event_t *event)
          Window_t wdummy;
          Int_t ax, ay;
          if (fPopup) {
-            gVirtualX->TranslateCoordinates(fId, gClient->GetRoot()->GetId(),
+            gVirtualX->TranslateCoordinates(fId, gClient->GetDefaultRoot()->GetId(),
                                             0, fHeight, ax, ay, wdummy);
             fPopup->PlacePopup(ax, ay, fPopup->GetDefaultWidth(),
                                fPopup->GetDefaultHeight());
@@ -664,7 +664,7 @@ TGedPatternSelect::TGedPatternSelect(const TGWindow *p, Style_t pattern, Int_t i
    : TGedSelect(p, id)
 {
    fPattern = pattern;
-   SetPopup(new TGedPatternPopup(gClient->GetRoot(), this, fPattern));
+   SetPopup(new TGedPatternPopup(gClient->GetDefaultRoot(), this, fPattern));
    SetPattern(fPattern);
 }
 
