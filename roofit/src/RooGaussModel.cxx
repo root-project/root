@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.7 2001/08/03 18:13:02 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.8 2001/08/23 01:23:35 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -69,7 +69,7 @@ Double_t RooGaussModel::evaluate() const
   static Double_t root2(sqrt(2)) ;
   static Double_t root2pi(sqrt(2*atan2(0,-1))) ;
 
-  Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+  Double_t tau = (_basisCode!=noBasis)?((RooAbsReal*)basis().getParameter(1))->getVal():0 ;
 
   if (_basisCode==noBasis || 
       ((_basisCode==expBasisPlus||_basisCode==expBasisMinus||
@@ -155,7 +155,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
   assert(code==1) ;
   
   // *** 1st form: Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime ***
-  Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+  Double_t tau = (_basisCode!=noBasis)?((RooAbsReal*)basis().getParameter(1))->getVal():0 ;
   if (_basisCode==noBasis || 
       ((_basisCode==expBasisPlus||_basisCode==expBasisMinus||
 	_basisCode==cosBasisPlus||_basisCode==cosBasisMinus)&&tau==0.)) {
