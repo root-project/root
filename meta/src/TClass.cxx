@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.51 2001/05/25 09:41:41 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.52 2001/05/28 12:40:36 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -280,6 +280,19 @@ TClass::TClass(const char *name, Version_t cversion,
 
    ResetInstanceCount();
 
+   TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
+
+   if ( oldcl && oldcl->TestBit(kLoading) ) {
+     // Do not recreate a class while it is already being created!
+     return;
+   }
+   
+   if (oldcl) gROOT->GetListOfClasses()->Remove(oldcl);
+
+   SetBit(kLoading);
+   // Advertise ourself as the loading class for this class name
+   gROOT->GetListOfClasses()->Add(this);
+
    if (!fClassInfo) {
       if (!gInterpreter)
          ::Fatal("TClass::TClass", "gInterpreter not initialized");
@@ -288,7 +301,10 @@ TClass::TClass(const char *name, Version_t cversion,
       if (!fClassInfo) {
          gInterpreter->InitializeDictionaries();
          gInterpreter->SetClassInfo(this);
-         if (IsZombie()) return;
+         if (IsZombie()) {
+           gROOT->GetListOfClasses()->Remove(this);
+           return;
+         }
       }
       if (!fClassInfo)
          ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
@@ -301,8 +317,6 @@ TClass::TClass(const char *name, Version_t cversion,
    //we must delete the old class, importing only the StreamerInfo structure
    //from the old dummy class.
    TStreamerInfo *info;
-   TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
-   gROOT->GetListOfClasses()->Add(this);
    if (oldcl) {
       if (oldcl->CanIgnoreTObjectStreamer()) {
          IgnoreTObjectStreamer();
@@ -314,7 +328,6 @@ TClass::TClass(const char *name, Version_t cversion,
          fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
       }
       oldcl->GetStreamerInfos()->Clear();
-      gROOT->GetListOfClasses()->Remove(oldcl);
       delete oldcl;
    }
 
@@ -347,6 +360,7 @@ TClass::TClass(const char *name, Version_t cversion,
       }
       if (cursav) cursav->cd();
    }
+   ResetBit(kLoading);
 }
 
 //______________________________________________________________________________

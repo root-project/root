@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.15 2001/03/05 10:06:43 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.16 2001/05/25 06:24:15 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -67,6 +67,9 @@ private:
    static Bool_t     fgCallingNew;     //True when TClass:New is executing
    static Int_t      fgClassCount;     //provides unique id for a each class
                                        //stored in TObject::fUniqueID
+   // Internal status bits
+   enum { kLoading = BIT(14) };
+
 public:
    // TClass status bits
    enum { kClassSaved = BIT(12) , kIgnoreTObjectStreamer = BIT(13)};

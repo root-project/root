@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.29 2001/06/30 13:18:14 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.30 2001/07/05 14:49:15 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -761,8 +761,8 @@ void TCint::UpdateClassInfo(char *item, Long_t tagnum)
    // the TClass for class "item".
 
    if (gROOT && gROOT->GetListOfClasses()) {
-      TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(item);
-      if (cl && cl->GetImplFileLine() >= 0) {
+      TClass *cl = gROOT->GetClass(item, kFALSE);
+      if (cl) {
          G__ClassInfo *info = cl->GetClassInfo();
          if (info && info->Tagnum() != tagnum) {
             info->Init((int)tagnum);
