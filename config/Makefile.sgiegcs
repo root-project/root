@@ -42,5 +42,9 @@ CILIBS        = -lm -lgen -lbsd -lstdc++
 # Fortran:
 F77LIBS       = -lftn
 
+# Override default in Makefile.config
+INSTALL      := cp -pR
+INSTALLDATA  := cp -pR
+
 # Extras
 

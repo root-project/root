@@ -39,4 +39,11 @@ SYSLIBS       = -lm -ldl
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -L/usr/lib32 -lX11 -lg++
 CILIBS        = -lm -lgen
 
+# Fortran:
 
+
+# Override default in Makefile.config
+INSTALL      := cp -pR
+INSTALLDATA  := cp -pR
+
+# Extras

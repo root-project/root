@@ -44,6 +44,8 @@ else
 F77LIBS       = -lI77 -lU77 -lF77 -lisam
 endif
 
+# Override default in Makefile.config
+INSTALL      := cp -pR
+INSTALLDATA  := cp -pR
+
 # Extras
-
-

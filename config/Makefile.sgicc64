@@ -35,9 +35,9 @@ SOFLAGS       = -shared
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -lPW 
+SYSLIBS       = -lm -lPW
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
-CILIBS        = -lm -ltermcap -lbsd -lgen 
+CILIBS        = -lm -ltermcap -lbsd -lgen
 
 # Fortran:
 F77           = f77
@@ -47,6 +47,10 @@ F77LIBS       = -lftn
 else
 F77LIBS       = -lI77 -lU77 -lF77 -lisam
 endif
+
+# Override default in Makefile.config
+INSTALL      := cp -pR
+INSTALLDATA  := cp -pR
 
 # Extras
 
