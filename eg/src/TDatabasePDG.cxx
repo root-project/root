@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.15 2001/11/06 19:15:13 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.16 2001/11/22 07:38:22 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #ifdef HAVE_CONFIG
@@ -217,7 +217,7 @@ Int_t TDatabasePDG::ConvertGeant3ToPdg(Int_t Geant3number) {
   //
   //Begin_Html
   /*
-   http://www.slac.stanford.edu/BFROOT/www/Computing/Environment/NewUser/htmlbug/node51.html
+   see <A href="http://www.slac.stanford.edu/BFROOT/www/Computing/Environment/NewUser/htmlbug/node51.html"> Conversion table</A>
   */
   //End_Html
   // with some fixes by PB, marked with (PB) below. Checked against
