@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.47 2002/01/09 23:00:37 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.48 2002/02/01 19:50:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -887,7 +887,10 @@ void RooFitGlue(Int_t &np, Double_t *gin,
 
   // Optional logging
   if (logf) (*logf) << setprecision(15) << f << setprecision(4) << endl;
-  if (verbose) cout << "\nprevNLL = " << setprecision(10) << f << setprecision(4) << "  " ;
+  if (verbose) {
+    cout << "\nprevNLL = " << setprecision(10) << f << setprecision(4) << "  " ;
+    cout.flush() ;
+  }
 }
 
 

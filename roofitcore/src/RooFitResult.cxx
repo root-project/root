@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.8 2001/11/22 01:07:11 verkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.9 2002/02/09 02:01:23 davidk Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -249,9 +249,14 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
       os << "  "    << setw(20) << ((RooAbsArg*)_finalPars->at(i))->GetName() ;
       os << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_initPars->at(i))->getVal())
 	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->at(i))->getVal())
-	 << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->at(i))->getError())
-	 << "  "    << setw(8)  << Form("%8.6f" ,((RooRealVar*)_globalCorr->at(i))->getVal())
-	 << endl ;
+	 << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->at(i))->getError()) ;
+
+      if (_globalCorr) {
+	os << "  "    << setw(8)  << Form("%8.6f" ,((RooRealVar*)_globalCorr->at(i))->getVal()) ;
+      } else {
+      } os << "  <none>" ;
+
+      os << endl ;
     }
 
   } else {
