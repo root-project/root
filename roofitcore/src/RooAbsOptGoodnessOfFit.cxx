@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.5 2002/09/06 22:41:29 verkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.6 2002/10/25 00:13:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -144,7 +144,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const RooAbsOptGoodnessOfFit& oth
 {
   // Don't do a thing in master mode
   if (operMode()!=Slave) {
-    _normSet = (RooArgSet*) other._normSet->snapshot() ;   
+    _normSet = other._normSet ? ((RooArgSet*) other._normSet->snapshot()) : 0 ;   
     return ;
   }
 
