@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32Proxy.cxx,v 1.5 2003/08/11 15:07:06 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32Proxy.cxx,v 1.6 2003/08/12 09:53:47 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 
@@ -31,6 +31,7 @@ TGWin32Proxy::~TGWin32Proxy()
    // dtor
 
 }
+
 // canvas graphics
 VOID_METHOD_ARG0_LOCK(TGWin32,SetFillAttributes)
 VOID_METHOD_ARG0_LOCK(TGWin32,SetMarkerAttributes)
@@ -44,15 +45,15 @@ VOID_METHOD_ARG1_LOCK(TGWin32,SetFillStyle,Style_t,style)
 VOID_METHOD_ARG1_LOCK(TGWin32,SetTextAngle,Float_t,tangle)
 VOID_METHOD_ARG1_LOCK(TGWin32,SetTextMagnitude,Float_t,mgn)
 VOID_METHOD_ARG1_LOCK(TGWin32,SetTextSizePixels,Int_t,npixels)
-VOID_METHOD_ARG1(TGWin32,SetTextAlign,Short_t,talign,0)
-VOID_METHOD_ARG1(TGWin32,SetTextSize,Float_t,textsize,0)
-VOID_METHOD_ARG1(TGWin32,SetFillColor,Color_t,cindex,0)
+VOID_METHOD_ARG1_LOCK(TGWin32,SetFillColor,Color_t,cindex)
+VOID_METHOD_ARG1_LOCK(TGWin32,SetMarkerSize,Float_t,markersize)
+VOID_METHOD_ARG1_LOCK(TGWin32,SetMarkerStyle,Style_t,markerstyle)
+VOID_METHOD_ARG1_LOCK(TGWin32,SetMarkerColor,Color_t,cindex)
 VOID_METHOD_ARG1(TGWin32,SetLineColor,Color_t,cindex,0)
 VOID_METHOD_ARG1(TGWin32,SetLineStyle,Style_t,linestyle,0)
 VOID_METHOD_ARG1(TGWin32,SetLineWidth,Width_t,width,0)
-VOID_METHOD_ARG1(TGWin32,SetMarkerColor,Color_t,cindex,0)
-VOID_METHOD_ARG1(TGWin32,SetMarkerSize,Float_t,markersize,0)
-VOID_METHOD_ARG1(TGWin32,SetMarkerStyle,Style_t,markerstyle,0)
+VOID_METHOD_ARG1(TGWin32,SetTextAlign,Short_t,talign,0)
+VOID_METHOD_ARG1(TGWin32,SetTextSize,Float_t,textsize,0)
 VOID_METHOD_ARG1(TGWin32,SetTextColor,Color_t,cindex,0)
 VOID_METHOD_ARG1(TGWin32,SetTextFont,Font_t,fontnumber,0)
 VOID_METHOD_ARG1(TGWin32,SelectWindow,Int_t,wid,0)
@@ -81,7 +82,6 @@ RETURN_METHOD_ARG0_CONST(TGWin32,Float_t,GetTextAngle)
 RETURN_METHOD_ARG0_CONST(TGWin32,Color_t,GetTextColor)
 RETURN_METHOD_ARG0_CONST(TGWin32,Font_t,GetTextFont)
 RETURN_METHOD_ARG0_CONST(TGWin32,Float_t,GetTextSize)
-
 VOID_METHOD_ARG1(TGWin32,Bell,Int_t,percent,1)
 VOID_METHOD_ARG0(TGWin32,ClosePixmap,1)
 VOID_METHOD_ARG0(TGWin32,CloseWindow,1)

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.12 2003/03/28 21:27:48 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.13 2003/08/06 20:25:05 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -95,7 +95,6 @@ private:
                   UChar_t *image);
    void  RemovePixmap(GdkDrawable *pix);
    void  SetColor(GdkGC *gc, Int_t ci);
-   void  SetFillStyleIndex(Int_t style, Int_t fasi);
    void  SetInput(Int_t inp);
    void  SetMarkerType(Int_t type, Int_t n, GdkPoint *xy);
    void  CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolors,
@@ -120,24 +119,38 @@ private:
 protected:
    static TGWin32 *fgRealObject;    // singleton
 
-   GdkVisual  *fVisual;             //
-   GdkColormap  *fColormap;         // Default colormap, 0 if b/w
-   Int_t      fScreenNumber;        // Screen number
-   Bool_t     fHasTTFonts;          // True when TrueType fonts are used
-   Int_t      fTextAlignH;          // Text Alignment Horizontal
-   Int_t      fTextAlignV;          // Text Alignment Vertical
-   Int_t      fTextAlign;           // Text alignment (set in SetTextAlign)
-   Float_t    fCharacterUpX;        // Character Up vector along X
-   Float_t    fCharacterUpY;        // Character Up vector along Y
-   Float_t    fTextMagnitude;       // Text Magnitude
-   Int_t      fDepth;               // Number of color planes
-   Int_t      fRedDiv;              // Red value divider, -1 if no TrueColor visual
-   Int_t      fGreenDiv;            // Green value divider
-   Int_t      fBlueDiv;             // Blue value divider
-   Int_t      fRedShift;            // Bits to left shift red, -1 if no TrueColor visual
-   Int_t      fGreenShift;          // Bits to left shift green
-   Int_t      fBlueShift;           // Bits to left shift blue
-   Handle_t   fXEvent;              // Current native (GDK) event
+   GdkVisual   *fVisual;            //
+   GdkColormap *fColormap;          // Default colormap, 0 if b/w
+   Int_t       fScreenNumber;       // Screen number
+   Bool_t      fHasTTFonts;         // True when TrueType fonts are used
+   Int_t       fTextAlignH;         // Text Alignment Horizontal
+   Int_t       fTextAlignV;         // Text Alignment Vertical
+   Int_t       fTextAlign;          // Text alignment (set in SetTextAlign)
+   Float_t     fCharacterUpX;       // Character Up vector along X
+   Float_t     fCharacterUpY;       // Character Up vector along Y
+   Float_t     fTextMagnitude;      // Text Magnitude
+   Int_t       fDepth;              // Number of color planes
+   Int_t       fRedDiv;             // Red value divider, -1 if no TrueColor visual
+   Int_t       fGreenDiv;           // Green value divider
+   Int_t       fBlueDiv;            // Blue value divider
+   Int_t       fRedShift;           // Bits to left shift red, -1 if no TrueColor visual
+   Int_t       fGreenShift;         // Bits to left shift green
+   Int_t       fBlueShift;          // Bits to left shift blue
+   Handle_t    fXEvent;             // Current native (GDK) event
+
+   Bool_t      fFillColorModified;  //   
+   Bool_t      fFillStyleModified;  // 
+   Bool_t      fLineColorModified;  //
+   Bool_t      fPenModified;        // line syle || width modified 
+   Bool_t      fMarkerStyleModified; //
+   Bool_t      fMarkerColorModified; //
+
+   void        UpdateFillColor();
+   void        UpdateFillStyle();  
+   void        UpdateLineColor();
+   void        UpdateMarkerStyle();
+   void        UpdateMarkerColor();
+   void        UpdateLineStyle();
 
    // needed by TGWin32TTF
    Bool_t     AllocColor(GdkColormap *cmap, GdkColor *color);

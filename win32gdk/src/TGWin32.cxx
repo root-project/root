@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.21 2003/03/28 21:27:48 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.24 2003/08/06 20:25:05 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -153,7 +153,6 @@ static struct {
 //
 // Keep style values for line GdkGC
 //
-static int gLineWidth = 0;
 static int gLineStyle = GDK_LINE_SOLID;
 static int gCapStyle = GDK_CAP_BUTT;
 static int gJoinStyle = GDK_JOIN_MITER;
@@ -815,6 +814,12 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title)
    fWindows = 0;
    fMaxNumberOfWindows = 10;
    fXEvent = 0;
+   fFillColorModified = kFALSE;
+   fFillStyleModified = kFALSE;
+   fLineColorModified = kFALSE;
+   fPenModified = kFALSE;
+   fMarkerStyleModified = kFALSE;
+   fMarkerColorModified = kFALSE;  
 
    fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
    for (int i = 0; i < fMaxNumberOfWindows; i++) fWindows[i].open = 0;
@@ -899,16 +904,19 @@ Bool_t TGWin32::NeedSplash()
 {
    // return kFALSE if option "-l" was specified as main programm command arg
 
-   if (gApplication->Argc()>1) {
-      TString arg;
-      for(int i=1; i<2; i++) {
-         arg = gApplication->Argv(i);
-         arg.Strip(TString::kBoth);
+   TString arg = gSystem->BaseName(gApplication->Argv(0));
 
-         if (arg=="-l") {
-            return kFALSE;
-            break;
-         }
+   if ((arg!="root") && (arg!="rootn") &&
+       (arg!="root.exe") && (arg!="rootn.exe")) return kFALSE;
+
+   if (gROOT->IsBatch()) return kFALSE;
+
+   for(int i=1; i<gApplication->Argc(); i++) {
+      arg = gApplication->Argv(i);
+      arg.Strip(TString::kBoth);
+
+      if ((arg=="-l") || (arg=="-b")) {
+         return kFALSE;
       }
    }
    return TRUE;
@@ -1598,10 +1606,14 @@ void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    switch (mode) {
 
    case kHollow:
+      if (fLineColorModified) UpdateLineColor();
+      if (fPenModified) UpdateLineStyle();
       gdk_win32_draw_rectangle(gCws->drawing, gGCline, 0, x, y, w, h);
       break;
 
    case kFilled:
+      if (fFillStyleModified) UpdateFillStyle();
+      if (fFillColorModified) UpdateFillColor();
       gdk_win32_draw_rectangle(gCws->drawing, gGCfill, 1, x, y, w, h);
       break;
 
@@ -1631,6 +1643,9 @@ void TGWin32::DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
    h = TMath::Max((y1 - y2) / (ny), 1);
    ix = x1;
 
+   if (fFillStyleModified) UpdateFillStyle();
+   if (fFillColorModified) UpdateFillColor();
+
    for (i = 0; i < nx; i++) {
       iy = y1 - h;
       for (j = 0; j < ny; j++) {
@@ -1657,6 +1672,9 @@ void TGWin32::DrawFillArea(int n, TPoint *xyt)
    int i;
    static int lastn = 0;
    static GdkPoint *xy = 0;
+   
+   if (fFillStyleModified) UpdateFillStyle();
+   if (fFillColorModified) UpdateFillColor();
 
    if (lastn!=n) {
       delete [] (GdkPoint *)xy;
@@ -1681,6 +1699,9 @@ void TGWin32::DrawLine(int x1, int y1, int x2, int y2)
    // Draw a line.
    // x1,y1        : begin of line
    // x2,y2        : end of line
+
+   if (fLineColorModified) UpdateLineColor();
+   if (fPenModified) UpdateLineStyle();
 
    if (gLineStyle == GDK_LINE_SOLID) {
       gdk_draw_line((GdkDrawable *) gCws->drawing, gGCline, 
@@ -1714,6 +1735,9 @@ void TGWin32::DrawPolyLine(int n, TPoint * xyt)
       xy[i].fX = xyt[i].fX;
       xy[i].fY = xyt[i].fY;
    }
+
+   if (fLineColorModified) UpdateLineColor();
+   if (fPenModified) UpdateLineStyle();
 
    if (n > 1) {
       if (gLineStyle == GDK_LINE_SOLID) {
@@ -1761,11 +1785,15 @@ void TGWin32::DrawPolyMarker(int n, TPoint *xyt)
    static lastn = 0;
    static GdkPoint *xy = 0;
 
+   if (fMarkerStyleModified) UpdateMarkerStyle();
+   if (fMarkerColorModified) UpdateMarkerColor();
+
    if (lastn!=n) {
       delete [] (GdkPoint *)xy;
       xy = new GdkPoint[n];
       lastn = n;
    }
+
    for (i = 0; i < n; i++) {
       xy[i].x = xyt[i].fX;
       xy[i].y = xyt[i].fY;
@@ -1784,12 +1812,12 @@ void TGWin32::DrawPolyMarker(int n, TPoint *xyt)
 
          case 0:               // hollow circle
             gdk_win32_draw_arc(gCws->drawing, gGCmark, kFALSE, xy[m].x-r, xy[m].y-r,
-                         gMarker.n, gMarker.n, 0, 23040);
+                              gMarker.n, gMarker.n, 0, 23040);
             break;
 
          case 1:               // filled circle
             gdk_win32_draw_arc(gCws->drawing, gGCmark, kTRUE, xy[m].x-r, xy[m].y-r,
-                         gMarker.n, gMarker.n, 0, 23040);
+                              gMarker.n, gMarker.n, 0, 23040);
             break;
 
          case 2:               // hollow polygon
@@ -2977,25 +3005,33 @@ void TGWin32::SetFillColor(Color_t cindex)
 {
    // Set color index for fill areas.
 
-   Int_t indx =  Int_t(cindex);
+   Int_t indx = Int_t(cindex);
 
    if (fFillColor==indx) return;
 
    if (!gStyle->GetFillColor() && cindex > 1) {
       indx = 0;
    }
-   
-   if (cindex >= 0) {
-      SetColor(gGCfill, indx);
-   }
 
    fFillColor = indx;
+   fFillColorModified = kTRUE;
+}
+
+//______________________________________________________________________________
+void TGWin32::UpdateFillColor()
+{
+   //
+
+   if (fFillColor >= 0) {
+      SetColor(gGCfill, fFillColor);
+   }
 
    // invalidate fill pattern
    if (gFillPattern != NULL) {
       gdk_pixmap_unref(gFillPattern);
       gFillPattern = NULL;
    }
+   fFillColorModified = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -3008,20 +3044,19 @@ void TGWin32::SetFillStyle(Style_t fstyle)
    if (fFillStyle==fstyle) return;
  
    fFillStyle = fstyle;
-   Int_t style = fstyle / 1000;
-   Int_t fasi = fstyle % 1000;
-   SetFillStyleIndex(style, fasi);
+   fFillStyleModified = kTRUE;
 }
 
 //______________________________________________________________________________
-void TGWin32::SetFillStyleIndex(Int_t style, Int_t fasi)
+void TGWin32::UpdateFillStyle()
 {
    // Set fill area style index.
 
    char* pchar;
    static int current_fasi = 0;
 
-   fFillStyle = 1000 * style + fasi;
+   Int_t style = fFillStyle / 1000;
+   Int_t fasi = fFillStyle % 1000;
 
    switch (style) {
 
@@ -3135,6 +3170,8 @@ void TGWin32::SetFillStyleIndex(Int_t style, Int_t fasi)
    default:
       gFillHollow = 1;
    }
+
+   fFillStyleModified = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -3150,12 +3187,20 @@ void TGWin32::SetLineColor(Color_t cindex)
 {
    // Set color index for lines.
 
-   static Int_t current = 0;
-   if ((cindex < 0) || (Int_t(cindex)==Int_t(current))) return;
+   if ((cindex < 0) || (cindex==fLineColor)) return;
 
-   SetColor(gGCline, Int_t(cindex));
-   SetColor(gGCdash, Int_t(cindex));
-   current =  Int_t(cindex);
+   fLineColor =  cindex;
+   fLineColorModified = kTRUE;
+}
+
+//______________________________________________________________________________
+void TGWin32::UpdateLineColor()
+{
+   //
+
+   SetColor(gGCline, Int_t(fLineColor));
+   SetColor(gGCdash, Int_t(fLineColor));
+   fLineColorModified = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -3170,10 +3215,10 @@ void TGWin32::SetLineType(int n, int *dash)
    //    e.g. N=4,DASH=(6,3,1,3) gives a dashed-dotted line with dash length 6
    //    and a gap of 7 between dashes
 
-  if (n <= 0) {
+   if (n <= 0) {
       gLineStyle = GDK_LINE_SOLID;
-      gdk_gc_set_line_attributes(gGCline, gLineWidth,
-                                 (GdkLineStyle) gLineStyle,
+      gdk_gc_set_line_attributes(gGCline, fLineWidth,
+                                 (GdkLineStyle)gLineStyle,
                                  (GdkCapStyle) gCapStyle,
                                  (GdkJoinStyle) gJoinStyle);
    } else {
@@ -3187,15 +3232,12 @@ void TGWin32::SetLineType(int n, int *dash)
       gDashSize = n;
       gDashOffset = 0;
       gLineStyle = GDK_LINE_ON_OFF_DASH;
-      gdk_gc_set_line_attributes(gGCline, gLineWidth,
-                                 (GdkLineStyle) gLineStyle,
-                                 (GdkCapStyle) gCapStyle,
-                                 (GdkJoinStyle) gJoinStyle);
-      gdk_gc_set_line_attributes(gGCdash, gLineWidth,
+      gdk_gc_set_line_attributes(gGCdash, fLineWidth,
                                  (GdkLineStyle) gLineStyle,
                                  (GdkCapStyle) gCapStyle,
                                  (GdkJoinStyle) gJoinStyle);
    }
+   fPenModified = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -3203,25 +3245,34 @@ void TGWin32::SetLineStyle(Style_t lstyle)
 {
    // Set line style.
 
+   if (fLineStyle == lstyle) return;
+         
+   fLineStyle = lstyle;
+   fPenModified = kTRUE;
+}
+
+//______________________________________________________________________________
+void TGWin32::UpdateLineStyle()
+{
+   //
+
    static Int_t dashed[2] = { 5, 5 };
    static Int_t dotted[2] = { 1, 3 };
    static Int_t dasheddotted[4] = { 5, 3, 1, 3 };
 
-   if (fLineStyle != lstyle) {  //set style index only if different
-      fLineStyle = lstyle;
-      if (lstyle <= 1) {
-         SetLineType(0, 0);
-      }
-      if (lstyle == 2) {
-         SetLineType(2, dashed);
-      }
-      if (lstyle == 3) {
-         SetLineType(2, dotted);
-      }
-      if (lstyle == 4) {
-         SetLineType(4, dasheddotted);
-      }
+   if (fLineStyle <= 1) {
+      SetLineType(0, 0);
    }
+   if (fLineStyle == 2) {
+      SetLineType(2, dashed);
+   }
+   if (fLineStyle == 3) {
+      SetLineType(2, dotted);
+   }
+   if (fLineStyle == 4) {
+      SetLineType(4, dasheddotted);
+   }
+   fPenModified = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -3230,25 +3281,15 @@ void TGWin32::SetLineWidth(Width_t width)
    // Set line width.
    // width   : line width in pixels
 
-   if (gLineWidth == width) return;
+   if ((fLineWidth==width) || (width<0)) return;
 
    if (width == 1) {
-      gLineWidth = 0;
+      fLineWidth = 0;
    } else {
-      gLineWidth = width;
+      fLineWidth = width;
    }
 
-   if (gLineWidth < 0) return;
-   fLineWidth = gLineWidth;
-
-   gdk_gc_set_line_attributes(gGCline, gLineWidth,
-                              (GdkLineStyle) gLineStyle,
-                              (GdkCapStyle) gCapStyle,
-                              (GdkJoinStyle) gJoinStyle);
-   gdk_gc_set_line_attributes(gGCdash, gLineWidth,
-                              (GdkLineStyle) gLineStyle,
-                              (GdkCapStyle) gCapStyle,
-                              (GdkJoinStyle) gJoinStyle);
+   fPenModified = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -3256,8 +3297,18 @@ void TGWin32::SetMarkerColor(Color_t cindex)
 {
    // Set color index for markers.
 
-   if (cindex < 0) return;
-   SetColor(gGCmark, Int_t(cindex));   
+   if ((cindex<0) || (cindex==fMarkerColor)) return;
+   fMarkerColor = cindex;
+   fMarkerColorModified = kTRUE; 
+}
+
+//______________________________________________________________________________
+void TGWin32::UpdateMarkerColor()
+{
+   //
+
+   SetColor(gGCmark, Int_t(fMarkerColor));
+   fMarkerColorModified = kFALSE;  
 }
 
 //______________________________________________________________________________
@@ -3266,8 +3317,7 @@ void TGWin32::SetMarkerSize(Float_t msize)
    // Set marker size index.
    // msize  : marker scale factor
 
-   if (msize == fMarkerSize) return;
-   if (msize < 0) return;
+   if ((msize==fMarkerSize) || (msize<0)) return;
 
    fMarkerSize = msize;
    SetMarkerStyle(-fMarkerStyle);
@@ -3303,17 +3353,21 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
 {
    // Set marker style.
 
-   if (fMarkerStyle == markerstyle) {
-      return;
-   }
+   if ((fMarkerStyle==markerstyle) || (markerstyle >= 31)) return;
+   fMarkerStyle = TMath::Abs(markerstyle);
+   fMarkerStyleModified = kTRUE;
+}
+
+//______________________________________________________________________________
+void TGWin32::UpdateMarkerStyle()
+{
+   //
+
    static GdkPoint shape[15];
-   if (markerstyle >= 31) {
-      return;
-   }
-   markerstyle = TMath::Abs(markerstyle);
-   fMarkerStyle = markerstyle;
+
    Int_t im = Int_t(4 * fMarkerSize + 0.5);
-   if (markerstyle == 2) {
+
+   if (fMarkerStyle == 2) {
       // + shaped marker
       shape[0].x = -im;
       shape[0].y = 0;
@@ -3324,7 +3378,7 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
       shape[3].x = 0;
       shape[3].y = im;
       SetMarkerType(4, 4, shape);
-   } else if (markerstyle == 3) {
+   } else if (fMarkerStyle == 3) {
       // * shaped marker
       shape[0].x = -im;
       shape[0].y = 0;
@@ -3344,10 +3398,10 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
       shape[7].x = im;
       shape[7].y = -im;
       SetMarkerType(4, 8, shape);
-   } else if (markerstyle == 4 || markerstyle == 24) {
+   } else if (fMarkerStyle == 4 || fMarkerStyle == 24) {
       // O shaped marker
       SetMarkerType(0, im * 2, shape);
-   } else if (markerstyle == 5) {
+   } else if (fMarkerStyle == 5) {
       // X shaped marker
       im = Int_t(0.707 * Float_t(im) + 0.5);
       shape[0].x = -im;
@@ -3359,7 +3413,7 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
       shape[3].x = im;
       shape[3].y = -im;
       SetMarkerType(4, 4, shape);
-   } else if (markerstyle == 6) {
+   } else if (fMarkerStyle == 6) {
       // + shaped marker (with 1 pixel)
       shape[0].x = -1;
       shape[0].y = 0;
@@ -3370,7 +3424,7 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
       shape[3].x = 0;
       shape[3].y = 1;
       SetMarkerType(4, 4, shape);
-   } else if (markerstyle == 7) {
+   } else if (fMarkerStyle == 7) {
       // . shaped marker (with 9 pixel)
       shape[0].x = -1;
       shape[0].y = 1;
@@ -3385,10 +3439,10 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
       shape[5].x = 1;
       shape[5].y = -1;
       SetMarkerType(4, 6, shape);
-   } else if (markerstyle == 8 || markerstyle == 20) {
+   } else if (fMarkerStyle == 8 || fMarkerStyle == 20) {
       // O shaped marker (filled)
       SetMarkerType(1, im * 2, shape);
-   } else if (markerstyle == 21) {  // here start the old HIGZ symbols
+   } else if (fMarkerStyle == 21) {  // here start the old HIGZ symbols
       // HIGZ full square
       shape[0].x = -im;
       shape[0].y = -im;
@@ -3401,7 +3455,7 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
       shape[4].x = -im;
       shape[4].y = -im;
       SetMarkerType(3, 5, shape);
-   } else if (markerstyle == 22) {
+   } else if (fMarkerStyle == 22) {
       // HIGZ full triangle up
       shape[0].x = -im;
       shape[0].y = im;
@@ -3412,7 +3466,7 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
       shape[3].x = -im;
       shape[3].y = im;
       SetMarkerType(3, 4, shape);
-   } else if (markerstyle == 23) {
+   } else if (fMarkerStyle == 23) {
       // HIGZ full triangle down
       shape[0].x = 0;
       shape[0].y = im;
@@ -3423,7 +3477,7 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
       shape[3].x = 0;
       shape[3].y = im;
       SetMarkerType(3, 4, shape);
-   } else if (markerstyle == 25) {
+   } else if (fMarkerStyle == 25) {
       // HIGZ open square
       shape[0].x = -im;
       shape[0].y = -im;
@@ -3436,7 +3490,7 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
       shape[4].x = -im;
       shape[4].y = -im;
       SetMarkerType(2, 5, shape);
-   } else if (markerstyle == 26) {
+   } else if (fMarkerStyle == 26) {
       // HIGZ open triangle up
       shape[0].x = -im;
       shape[0].y = im;
@@ -3447,7 +3501,7 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
       shape[3].x = -im;
       shape[3].y = im;
       SetMarkerType(2, 4, shape);
-   } else if (markerstyle == 27) {
+   } else if (fMarkerStyle == 27) {
       // HIGZ open losange
       Int_t imx = Int_t(2.66 * fMarkerSize + 0.5);
       shape[0].x = -imx;
@@ -3461,7 +3515,7 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
       shape[4].x = -imx;
       shape[4].y = 0;
       SetMarkerType(2, 5, shape);
-   } else if (markerstyle == 28) {
+   } else if (fMarkerStyle == 28) {
       // HIGZ open cross
       Int_t imx = Int_t(1.33 * fMarkerSize + 0.5);
       shape[0].x = -im;
@@ -3491,7 +3545,7 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
       shape[12].x = -im;
       shape[12].y = -imx;
       SetMarkerType(2, 13, shape);
-   } else if (markerstyle == 29) {
+   } else if (fMarkerStyle == 29) {
       // HIGZ full star pentagone
       Int_t im1 = Int_t(0.66 * fMarkerSize + 0.5);
       Int_t im2 = Int_t(2.00 * fMarkerSize + 0.5);
@@ -3520,7 +3574,7 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
       shape[10].x = -im;
       shape[10].y = im4;
       SetMarkerType(3, 11, shape);
-   } else if (markerstyle == 30) {
+   } else if (fMarkerStyle == 30) {
       // HIGZ open star pentagone
       Int_t im1 = Int_t(0.66 * fMarkerSize + 0.5);
       Int_t im2 = Int_t(2.00 * fMarkerSize + 0.5);
@@ -3549,13 +3603,14 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
       shape[10].x = -im;
       shape[10].y = im4;
       SetMarkerType(2, 11, shape);
-   } else if (markerstyle == 31) {
+   } else if (fMarkerStyle == 31) {
       // HIGZ +&&x (kind of star)
       SetMarkerType(1, im * 2, shape);
    } else {
       // single dot
       SetMarkerType(0, 0, shape);
    }
+   fMarkerStyleModified = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -5262,9 +5317,7 @@ void TGWin32::NextEvent(Event_t & event)
    // for each event type, except fType and fWindow.
 
    GdkEvent *xev = gdk_event_get();
-/*
-   GdkEvent *xev = gdk_event_unqueue();
-*/
+
    // fill in Event_t
    event.fType = kOtherEvent;   // bb add
    if (xev == NULL) {

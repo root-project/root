@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.46 2003/06/25 05:49:28 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.47 2003/07/03 13:00:16 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -251,18 +251,25 @@ TWinNTSystem::~TWinNTSystem()
 #ifdef GDK_WIN32
 unsigned __stdcall HandleConsoleThread(void *pArg )
 {
+   //
 
-    while (1) {
-        if(gROOT->GetApplication()) {
-            WaitForSingleObject(hEvent1, INFINITE);
-            if(!gROOT->IsLineProcessing())
-                gApplication->HandleTermInput();
-            ResetEvent(hEvent1);
-        }
-    }
+   while (1) {
+      if(gROOT->GetApplication()) {
+         WaitForSingleObject(hEvent1, INFINITE);
+         if(!gROOT->IsLineProcessing()) {
+            gApplication->HandleTermInput();
+         }
+        ResetEvent(hEvent1);
+      } else {
+         static int i = 0;
+         SleepEx(100,1);
+         i++;
+         if (i>20) break; // TApplication object doesn't exist
+      }
+   }
 
-    _endthreadex( 0 );
-    return 0;
+   _endthreadex( 0 );
+   return 0;
 }
 #endif
 
