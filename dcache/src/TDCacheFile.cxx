@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.14 2003/12/25 18:11:57 brun Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.15 2003/12/30 13:16:50 brun Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 
@@ -252,8 +252,6 @@ Bool_t TDCacheFile::Stage(const char *path, UInt_t after, const char *location)
 
    if (dc_errno != 0)
       gSystem->SetErrorStr(dc_strerror(dc_errno));
-   else
-      gSystem->SetErrorStr(strerror(errno));
 
    return kFALSE;
 }
@@ -275,8 +273,6 @@ Bool_t TDCacheFile::CheckFile(const char *path, const char *location)
 
    if (dc_errno != 0)
       gSystem->SetErrorStr(dc_strerror(dc_errno));
-   else
-      gSystem->SetErrorStr(strerror(errno));
 
    return kFALSE;
 }
@@ -338,8 +334,6 @@ Int_t TDCacheFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
    if (rc < 0) {
       if (dc_errno != 0)
          gSystem->SetErrorStr(dc_strerror(dc_errno));
-      else
-         gSystem->SetErrorStr(strerror(errno));
    }
 
    return rc;
@@ -357,8 +351,6 @@ Int_t TDCacheFile::SysClose(Int_t fd)
    if (rc < 0) {
       if (dc_errno != 0)
          gSystem->SetErrorStr(dc_strerror(dc_errno));
-      else
-         gSystem->SetErrorStr(strerror(errno));
    }
 
    return rc;
@@ -378,8 +370,6 @@ Int_t TDCacheFile::SysRead(Int_t fd, void *buf, Int_t len)
    if (rc < 0) {
       if (dc_errno != 0)
          gSystem->SetErrorStr(dc_strerror(dc_errno));
-      else
-         gSystem->SetErrorStr(strerror(errno));
    }
 
    return rc;
@@ -399,8 +389,6 @@ Int_t TDCacheFile::SysWrite(Int_t fd, const void *buf, Int_t len)
    if (rc < 0) {
       if (dc_errno != 0)
          gSystem->SetErrorStr(dc_strerror(dc_errno));
-      else
-         gSystem->SetErrorStr(strerror(errno));
    }
 
    return rc;
@@ -420,8 +408,6 @@ Long64_t TDCacheFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
    if (rc < 0) {
       if (dc_errno != 0)
          gSystem->SetErrorStr(dc_strerror(dc_errno));
-      else
-         gSystem->SetErrorStr(strerror(errno));
    } else
       fOffset = rc;
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.36 2004/01/28 02:41:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.37 2004/02/19 00:11:18 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -194,8 +194,8 @@ public:
    virtual Bool_t          Init();
    virtual void            SetProgname(const char *name);
    virtual void            SetDisplay();
-   void                    SetErrorStr(const char *errstr) { fLastErrorString = errstr; }
-   const char             *GetErrorStr() { return (const char *)fLastErrorString; }
+   void                    SetErrorStr(const char *errstr);
+   const char             *GetErrorStr() const { return fLastErrorString; }
    virtual const char     *GetError();
    void                    RemoveOnExit(TObject *obj);
    virtual const char     *HostName();

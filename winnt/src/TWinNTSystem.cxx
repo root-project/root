@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.76 2004/03/03 13:26:40 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.77 2004/03/04 09:04:10 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -829,11 +829,13 @@ const char *TWinNTSystem::GetError()
 {
    // Return system error string.
 
-  // GetLastError Could ne introduced in here
-   if (GetErrno() < 0 || GetErrno() >= sys_nerr) {
-      return Form("errno out of range %d", GetErrno());
+   Int_t err = GetErrno();
+   if (err == 0 && fLastErrorString != "")
+      return fLastErrorString;
+   if (err < 0 || err >= sys_nerr) {
+      return Form("errno out of range %d", err);
    }
-   return sys_errlist[GetErrno()];
+   return sys_errlist[err];
 }
 
 //______________________________________________________________________________
@@ -1589,7 +1591,7 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
    if (::_access(path, mode) == 0) {
       return kFALSE;
    }
-   fLastErrorString = sys_errlist[GetErrno()];
+   fLastErrorString = GetError();
    return kTRUE;
 }
 
@@ -1642,7 +1644,7 @@ int TWinNTSystem::Rename(const char *f, const char *t)
    // Rename a file. Returns 0 when successful, -1 in case of failure.
 
    int ret = ::rename(f, t);
-   fLastErrorString = sys_errlist[GetErrno()];
+   fLastErrorString = GetError();
    return ret;
 }
 
@@ -2101,7 +2103,7 @@ Bool_t TWinNTSystem::GetNbGroups()
 }
 
 //________________________________________________________________________________
-Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what, 
+Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what,
                                 int &groupIdx, int &memberIdx)
 {
    //
@@ -2182,7 +2184,7 @@ Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what,
 }
 
 //________________________________________________________________________________
-Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx, 
+Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
                                     int &memberIdx)
 {
    NET_API_STATUS NetStatus = NERR_Success;

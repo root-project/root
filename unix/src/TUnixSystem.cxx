@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.91 2004/02/26 20:42:20 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.92 2004/04/06 22:55:36 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -426,6 +426,8 @@ const char *TUnixSystem::GetError()
    // Return system error string.
 
    Int_t err = GetErrno();
+   if (err == 0 && fLastErrorString != "")
+      return fLastErrorString;
 #if defined(R__SOLARIS) || defined (R__LINUX) || defined(R__AIX) || \
     defined(R__FBSD) || defined(R__HURD)
    return strerror(err);
