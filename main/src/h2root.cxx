@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.20 2004/02/19 21:48:06 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.21 2004/02/24 15:02:50 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -670,10 +670,10 @@ void convert_directory(const char *dir)
   Int_t bufpos = 0;
   Int_t isachar = 0;
   Int_t isabool = 0;
-  char fullname[64];
-  char name[32];
-  char block[32];
-  char oldblock[32];
+  char fullname[1024];
+  char name[512];
+  char block[512];
+  char oldblock[512];
   Int_t nbits = 0;
   strcpy(oldblock,"OLDBLOCK");
   Int_t oldischar = -1;
@@ -687,18 +687,18 @@ void convert_directory(const char *dir)
      memset(fullname,' ',sizeof(fullname));
      fullname[sizeof(fullname)-1]=0;
 #ifndef WIN32
-     hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem,32,64,32);
+     hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem,512,1024,512);
 #else
      hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem);
 #endif
      
-     for (j=30;j>0;j--) {
+     for (j=510;j>0;j--) {
        if(golower) name[j] = tolower(name[j]);
        if (name[j] == ' ') name[j] = 0;
      }
      if (golower == 2) name[0] = tolower(name[0]);
      
-     for (j=62;j>0;j--) {
+     for (j=1022;j>0;j--) {
         if(golower && fullname[j-1] != '[') fullname[j] = tolower(fullname[j]);
         // convert also character after [, if golower == 2
         if (golower == 2) fullname[j] = tolower(fullname[j]);
@@ -706,7 +706,7 @@ void convert_directory(const char *dir)
      }
      // convert also first character, if golower == 2
      if (golower == 2) fullname[0] = tolower(fullname[0]);
-     for (j=30;j>0;j--) {
+     for (j=510;j>0;j--) {
         if (block[j] == ' ') block[j] = 0;
         else break;
      }
