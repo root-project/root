@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.cxx,v 1.2 2000/06/13 12:16:22 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.cxx,v 1.3 2000/11/21 20:21:18 brun Exp $
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************
@@ -122,14 +122,4 @@ void TDialogCanvas::RecursiveRemove(TObject *obj)
    TPad::RecursiveRemove(obj);
    if (fRefObject == obj) fRefObject = 0;
    if (fRefPad    == obj) fRefPad    = 0;
-}
-
-//______________________________________________________________________________
-void TDialogCanvas::SetObject()
-{
-//*-*-*-*-*-*-*Copy referenced object/pad in gROOT to this dialogcanvas*-*-*-*
-//*-*          ========================================================
-
-   fRefObject = gROOT->GetSelectedPrimitive();
-   fRefPad    = (TPad*)gROOT->GetSelectedPad();
 }

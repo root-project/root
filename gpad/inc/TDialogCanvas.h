@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.h,v 1.2 2000/06/13 12:16:22 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.h,v 1.3 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************
@@ -50,7 +50,6 @@ public:
    virtual void   SetLogx(Int_t value = 1);
    virtual void   SetLogy(Int_t value = 1);
    virtual void   SetName(const char *name) { fName = name; }
-   virtual void   SetObject();
    virtual void   SetRefObject(TObject*obj) { fRefObject=obj; }
    virtual void   SetRefPad(TPad *pad) { fRefPad=pad; }
    virtual void   x3d(Option_t *option="");
