@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.9 2001/03/09 18:11:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.10 2001/04/10 15:25:18 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -142,21 +142,44 @@ unsigned Hash(const char *str)
 {
    // Return a case-sensitive hash value.
 
-   unsigned len      = strlen(str);
-   unsigned hv       = len; // Mix in the string length.
-   unsigned i        = hv*sizeof(char)/sizeof(unsigned);
-   const unsigned* p = (const unsigned*)str;
-   {
+   unsigned len = strlen(str);
+   unsigned hv  = len; // Mix in the string length.
+   unsigned i   = hv*sizeof(char)/sizeof(unsigned);
+
+   if (((unsigned long)str)%sizeof(unsigned) == 0) {
+      // str is word aligned
+      const unsigned *p = (const unsigned*)str;
+
       while (i--)
          Mash(hv, *p++);                   // XOR in the characters.
-   }
-   // XOR in any remaining characters:
-   if ((i = len*sizeof(char)%sizeof(unsigned)) != 0) {
-      unsigned h = 0;
-      const char* c = (const char*)p;
-      while (i--)
-         h = ((h << kBitsPerByte*sizeof(char)) | *c++);
-      Mash(hv, h);
+
+      // XOR in any remaining characters:
+      if ((i = len*sizeof(char)%sizeof(unsigned)) != 0) {
+         unsigned h = 0;
+         const char* c = (const char*)p;
+         while (i--)
+            h = ((h << kBitsPerByte*sizeof(char)) | *c++);
+         Mash(hv, h);
+      }
+   } else {
+      // str is not word aligned
+      unsigned h;
+      const unsigned char *p = (const unsigned char*)str;
+
+      while (i--) {
+         memcpy(&h, p, sizeof(unsigned));
+         Mash(hv, h);
+         p += sizeof(unsigned);
+      }
+
+      // XOR in any remaining characters:
+      if ((i = len*sizeof(char)%sizeof(unsigned)) != 0) {
+         h = 0;
+         const char* c = (const char*)p;
+         while (i--)
+            h = ((h << kBitsPerByte*sizeof(char)) | *c++);
+         Mash(hv, h);
+      }
    }
    return hv;
 }
@@ -168,7 +191,7 @@ unsigned TStringRef::Hash() const
 
    unsigned hv       = (unsigned)Length(); // Mix in the string length.
    unsigned i        = hv*sizeof(char)/sizeof(unsigned);
-   const unsigned* p = (const unsigned*)Data();
+   const unsigned *p = (const unsigned*)Data();
    {
       while (i--)
          Mash(hv, *p++);                   // XOR in the characters.
@@ -191,7 +214,7 @@ unsigned TStringRef::HashFoldCase() const
 
    unsigned hv = (unsigned)Length();    // Mix in the string length.
    unsigned i  = hv;
-   const unsigned char* p = (const unsigned char*)Data();
+   const unsigned char *p = (const unsigned char*)Data();
    while (i--) {
       Mash(hv, toupper(*p));
       ++p;
