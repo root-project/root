@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.2 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.3 2002/01/16 21:13:38 brun Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -180,11 +180,11 @@ void *TFunction::InterfaceMethod() const
    G__InterfaceMethod pfunc = fInfo->InterfaceMethod();
    if (!pfunc) {
       struct G__bytecodefunc *bytecode = fInfo->GetBytecode();
-    
+
       if(bytecode) pfunc = (G__InterfaceMethod)G__exec_bytecode;
       else {
         pfunc = (G__InterfaceMethod)NULL;
       }
    }
-   return pfunc;
+   return (void*)pfunc;
 }
