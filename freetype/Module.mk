@@ -28,45 +28,47 @@ $(FREETYPELIB): $(FREETYPELIBA)
 			ranlib $@; \
 		fi)
 
-$(FREETYPELIBA):
+$(FREETYPELIBA): $(FREETYPELIBS)
 ifeq ($(PLATFORM),win32)
-		@(if [ ! -r $@ ]; then \
-			echo "*** Building $@..."; \
-			cd $(FREETYPEDIRS); \
-			if [ ! -d $(FREETYPEVERS) ]; then \
+		@(if [ -d $(FREETYPEDIRS)/$(FREETYPEVERS) ]; then \
+			rm -rf $(FREETYPEDIRS)/$(FREETYPEVERS); \
+		fi; \
+		echo "*** Building $@..."; \
+		cd $(FREETYPEDIRS); \
+		if [ ! -d $(FREETYPEVERS) ]; then \
+			gunzip -c $(FREETYPEVERS).tar.gz | tar xf -; \
+		fi; \
+		cd $(FREETYPEVERS)/builds/win32/visualc; \
+		cp ../../../../win/freetype.mak .; \
+		cp ../../../../win/freetype.dep .; \
+		unset MAKEFLAGS; \
+		nmake -nologo -f freetype.mak \
+		CFG="freetype - Win32 Release Multithreaded")
+else
+		@(if [ -d $(FREETYPEDIRS)/$(FREETYPEVERS) ]; then \
+			rm -rf $(FREETYPEDIRS)/$(FREETYPEVERS); \
+		fi; \
+		echo "*** Building $@..."; \
+		cd $(FREETYPEDIRS); \
+		if [ ! -d $(FREETYPEVERS) ]; then \
+			if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]; then \
+				gtar zxf $(FREETYPEVERS).tar.gz; \
+			else \
 				gunzip -c $(FREETYPEVERS).tar.gz | tar xf -; \
 			fi; \
-			cd $(FREETYPEVERS)/builds/win32/visualc; \
-			cp ../../../../win/freetype.mak .; \
-			cp ../../../../win/freetype.dep .; \
-			unset MAKEFLAGS; \
-			nmake -nologo -f freetype.mak \
-			CFG="freetype - Win32 Release Multithreaded"; \
-		fi)
-else
-		@(if [ ! -r $@ ]; then \
-			echo "*** Building $@..."; \
-			cd $(FREETYPEDIRS); \
-			if [ ! -d $(FREETYPEVERS) ]; then \
-				if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]; then \
-					gtar zxf $(FREETYPEVERS).tar.gz; \
-				else \
-					gunzip -c $(FREETYPEVERS).tar.gz | tar xf -; \
-				fi; \
-				if [ $(ARCH) = "macosx" ]; then \
-					PATCH=$(FREETYPEVERS)/include/freetype/config/ftconfig.h; \
-					sed -e "s/define FT_MACINTOSH 1/undef FT_MACINTOSH/" $$PATCH > ftconfig.hh; \
-					mv ftconfig.hh $$PATCH; \
-				fi; \
+			if [ $(ARCH) = "macosx" ]; then \
+				PATCH=$(FREETYPEVERS)/include/freetype/config/ftconfig.h; \
+				sed -e "s/define FT_MACINTOSH 1/undef FT_MACINTOSH/" $$PATCH > ftconfig.hh; \
+				mv ftconfig.hh $$PATCH; \
 			fi; \
-			cd $(FREETYPEVERS); \
-			FREECC=""; \
-			if [ $(ARCH) = "alphacxx6" ]; then \
-				FREECC="CC=cc"; \
-			fi; \
-			GNUMAKE=$(MAKE) ./configure --with-pic $$FREECC CFLAGS=-O2; \
-			$(MAKE); \
-		fi)
+		fi; \
+		cd $(FREETYPEVERS); \
+		FREECC=""; \
+		if [ $(ARCH) = "alphacxx6" ]; then \
+			FREECC="CC=cc"; \
+		fi; \
+		GNUMAKE=$(MAKE) ./configure --with-pic $$FREECC CFLAGS=-O2; \
+		$(MAKE))
 endif
 
 all-freetype:   $(FREETYPELIB)

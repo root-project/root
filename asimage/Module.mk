@@ -50,32 +50,33 @@ $(ASTEPLIB):    $(ASTEPLIBA)
 			ranlib $@; \
 		fi)
 
-$(ASTEPLIBA):
-		@(if [ ! -r $@ ]; then \
-			echo "*** Building $@..."; \
-			cd $(ASIMAGEDIRS); \
-			if [ ! -d $(ASTEPVERS) ]; then \
-				if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]; then \
-					gtar zxf $(ASTEPVERS).tar.gz; \
-				else \
-					gunzip -c $(ASTEPVERS).tar.gz | tar xf -; \
-				fi; \
+$(ASTEPLIBA):   $(ASTEPDIRS).tar.gz
+		@(if [ -d $(ASTEPDIRS) ]; then \
+			rm -rf $(ASTEPDIRS); \
+		fi; \
+		echo "*** Building $@..."; \
+		cd $(ASIMAGEDIRS); \
+		if [ ! -d $(ASTEPVERS) ]; then \
+			if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]; then \
+				gtar zxf $(ASTEPVERS).tar.gz; \
+			else \
+				gunzip -c $(ASTEPVERS).tar.gz | tar xf -; \
 			fi; \
-			cd $(ASTEPVERS); \
-			ACC=; \
-			ACFLAGS="-O"; \
-			if [ $(CC) = "icc" ]; then \
-				ACC="icc"; \
-			fi; \
-			GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
-			./configure \
-			--with-ttf=no --with-gif=no --with-afterbase=no \
-			--with-jpeg-includes=$(ASJPEGINCDIR) \
-			--with-png-includes=$(ASPNGINCDIR) \
-			--with-tiff-includes=$(ASTIFFINCDIR) \
-			--with-gif-includes=$(ASGIFINCDIR); \
-			$(MAKE); \
-		fi)
+		fi; \
+		cd $(ASTEPVERS); \
+		ACC=; \
+		ACFLAGS="-O"; \
+		if [ $(CC) = "icc" ]; then \
+			ACC="icc"; \
+		fi; \
+		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
+		./configure \
+		--with-ttf=no --with-gif=no --with-afterbase=no \
+		--with-jpeg-includes=$(ASJPEGINCDIR) \
+		--with-png-includes=$(ASPNGINCDIR) \
+		--with-tiff-includes=$(ASTIFFINCDIR) \
+		--with-gif-includes=$(ASGIFINCDIR); \
+		$(MAKE))
 
 $(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPLIB) $(MAINLIBS) \
                 $(ASIMAGELIBDEP)
