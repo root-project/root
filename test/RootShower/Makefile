@@ -444,16 +444,16 @@ OutPutOpt     = -out:
 CXX           = cl
 CXXOPT        = -O2
 #CXXOPT        = -Z7
-CXXFLAGS      = $(CXXOPT) -G5 -GR -MD -DWIN32 -D_WINDOWS -nologo \
+CXXFLAGS      = $(CXXOPT) -G5 -GR -GX -MD -DWIN32 -D_WINDOWS -nologo \
                 -DVISUAL_CPLUSPLUS -D_X86_=1 -D_DLL
 LD            = link
 LDOPT         = -opt:ref
 #LDOPT         = -debug
 LDFLAGS       = $(LDOPT) -pdb:none -nologo -nodefaultlib -incremental:no
 SOFLAGS       = -DLL
-SYSLIBS       = msvcrt.lib oldnames.lib kernel32.lib  ws2_32.lib mswsock.lib \
-                advapi32.lib  user32.lib gdi32.lib comdlg32.lib winspool.lib \
-                msvcirt.lib
+SYSLIBS       = msvcrt.lib oldnames.lib kernel32.lib ws2_32.lib mswsock.lib \
+                advapi32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib \
+                msvcprt.lib
 
 ROOTLIBS     := $(shell root-config --libs)
 ROOTGLIBS    := $(shell root-config --glibs)
@@ -485,7 +485,8 @@ all:            $(PROGRAMS)
 
 $(ROOTSHOWER):  $(ROOTSHOWERO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(GLIBS) libEG.lib libHtml.lib $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(GLIBS) ../../lib/libEG.lib \
+		   ../../lib/libHtml.lib $(OutPutOpt)$@
 else
 		$(LD) $(LDFLAGS) $^ $(GLIBS) -lEG -lHtml $(OutPutOpt)$@
 endif
