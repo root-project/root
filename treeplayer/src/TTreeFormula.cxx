@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.11 2000/06/15 06:46:22 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.12 2000/06/15 11:10:39 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -120,7 +120,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    }
    // Now that we know the virtual dimension we know if a loop over EvalInstance
    // is needed or not.
-   if (fCumulUsedSize[0]==1) fMultiplicity -= 2;
+   if (fCumulUsedSize[0]==1 && fMultiplicity!=0) fMultiplicity -= 2;
    
 }
 
@@ -170,7 +170,11 @@ void TTreeFormula::DefineDimensions(const char *info, Int_t code, Int_t& virt_di
          }
       }
       fNdimensions[code] ++;
-      // NOTE: test that fNdimensions[code] this is NOT too big!!
+      if (fNdimensions[code] >= kMAXFORMDIM) {
+         // NOTE: test that fNdimensions[code] this is NOT too big!!
+          
+         break; 
+      }
       current = (char*)strstr( current, "[" );
    }
 
@@ -241,7 +245,10 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                }
             }
             dim ++;
-            // NOTE: test that dim this is NOT too big!!
+            if (dim >= kMAXFORMDIM) {
+               // NOTE: test that dim this is NOT too big!!
+               break; 
+            }
             current = (char*)strstr( current, "[" );
          }
          lname[i] = 0;
