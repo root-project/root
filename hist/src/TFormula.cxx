@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.56 2003/10/20 18:19:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.57 2003/11/21 11:13:36 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2601,7 +2601,6 @@ void TFormula::Streamer(TBuffer &b)
       if (v > 3) {
          TFormula::Class()->ReadBuffer(b, this, v, R__s, R__c);
          if (!TestBit(kNotGlobal)) gROOT->GetListOfFunctions()->Add(this);
-         Compile();
          return;
       }
       //====process old versions before automatic schema evolution
