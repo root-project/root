@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.2 2004/11/03 16:13:38 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.3 2004/11/04 10:51:07 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -133,8 +133,8 @@ public:
     void write_std_string_pointer(TBuffer& b)  {
       const char* c;
       if (ptr()) {
-         std::string* str (*(std::string**)this);
-         c = (const char*)str->c_str();
+         std::string* strptr = (*(std::string**)this);
+         c = (const char*)(strptr->c_str());
       } else c = "";
       TString(c).Streamer(b);
     }
