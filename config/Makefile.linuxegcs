@@ -29,7 +29,7 @@ SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -ldl $(THREAD) -rdynamic
+SYSLIBS       = -lm -lnsl -ldl $(THREAD) -rdynamic
 XLIBS         = -L/usr/X11R6/lib -lXpm -lX11
 CILIBS        = -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
