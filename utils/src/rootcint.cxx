@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.148 2004/01/10 10:52:31 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.149 2004/01/16 17:52:16 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1093,6 +1093,7 @@ const char *GetFullShadowName(G__ClassInfo &cl)
 //   				return stl;
 // }   
 
+
 //______________________________________________________________________________
 int IsSTLContainer(G__DataMemberInfo &m)
 {
@@ -2144,7 +2145,11 @@ void WriteClassInit(G__ClassInfo &cl)
      fprintf(fp, "      instance.SetDestructor(&destruct_%s);\n",mappedname.c_str());
    }
    if (stl==1 || stl==-1) {
-      fprintf(fp, "      instance.AdoptCollectionProxy(new ROOT::TVectorProxy<%s >);\n",classname.c_str());
+      if (TClassEdit::IsVectorBool(classname.c_str())) {
+         fprintf(fp, "      instance.AdoptCollectionProxy(new ROOT::TBoolVectorProxy<%s >);\n",classname.c_str());
+      } else {
+         fprintf(fp, "      instance.AdoptCollectionProxy(new ROOT::TVectorProxy<%s >);\n",classname.c_str());
+      }
    }
    fprintf(fp, "      return &instance;\n");
    fprintf(fp, "   }\n");
@@ -3140,6 +3145,21 @@ int WriteNamespaceHeader(G__ClassInfo &cl)
 void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
 {
    GetFullyQualifiedName(cl.Fullname(),fullyQualifiedName);
+   const char *qual = fullyQualifiedName.c_str();
+   if (!strncmp(qual, "::vector", strlen("::vector"))
+       ||!strncmp(qual, "::list", strlen("::list"))
+       ||!strncmp(qual, "::deque", strlen("::deque"))
+       ||!strncmp(qual, "::map", strlen("::map"))
+       ||!strncmp(qual, "::multimap", strlen("::multimap"))
+       ||!strncmp(qual, "::set", strlen("::set"))
+       ||!strncmp(qual, "::multiset", strlen("::multiset"))
+       ||!strncmp(qual, "::allocator", strlen("::allocator"))
+       ) {
+      
+      fullyQualifiedName.erase(0,2);
+      
+   }
+
 }
 
 //______________________________________________________________________________
@@ -3163,6 +3183,7 @@ void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName)
        ||!strcmp(typeName, "multimap")
        ||!strcmp(typeName, "set")
        ||!strcmp(typeName, "multiset")
+       ||!strcmp(typeName, "allocator")
       ) {
 
       GetFullyQualifiedName(type.Name(),fullyQualifiedName);
@@ -3174,6 +3195,7 @@ void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName)
        ||!strncmp(qual, "::multimap", strlen("::multimap"))
        ||!strncmp(qual, "::set", strlen("::set"))
        ||!strncmp(qual, "::multiset", strlen("::multiset"))
+       ||!strncmp(qual, "::allocator", strlen("::allocator"))
       ) {
 
          fullyQualifiedName.erase(0,2);

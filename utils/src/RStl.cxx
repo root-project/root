@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.1 2004/01/10 10:52:31 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.2 2004/01/16 17:52:16 brun Exp $
 // Author: Philippe Canal 27/08/2003
 
 /*************************************************************************
@@ -27,6 +27,12 @@ enum ESTLType {kNone, kVector, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=0);
 string GetLong64_Name(const string& original);
 
+#ifndef ROOT_Varargs
+#include "Varargs.h"
+#endif
+void Error(const char *location, const char *va_(fmt), ...);
+void Warning(const char *location, const char *va_(fmt), ...);
+
 //
 // ROOT::RStl is the rootcint STL handling class.
 //
@@ -44,11 +50,20 @@ void ROOT::RStl::GenerateTClassFor(const string& stlclassname) {
    string registername( TClassEdit::ShortType(stlclassname.c_str(), 
                                               TClassEdit::kDropTrailStar
                                               | TClassEdit::kDropStlDefault ) );
+
+   
+   vector<string> splitName;
+   TClassEdit::GetSplit(registername.c_str(),splitName);
+
+   if ( TClassEdit::STLKind( splitName[0].c_str() ) == TClassEdit::kVector ) {
+      if ( splitName[1] == "bool" || splitName[1]=="Bool_t") {
+         Warning("std::vector<bool>", " is not fully supported yet!\nUse std::vector<char> or std::deque<bool> instead.\n");
+      }
+   }
+
    fList.insert(registername);
 
    // We also should register the template arguments if they are STL.
-   vector<string> splitName;
-   TClassEdit::GetSplit(registername.c_str(),splitName);
    for(unsigned int i=1 ; i<splitName.size(); ++i) {
       if ( TClassEdit::IsSTLCont( splitName[i].c_str()) != 0 ) {
          GenerateTClassFor( splitName[i] );

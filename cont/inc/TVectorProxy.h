@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id:  $
+// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.1 2004/01/10 10:52:29 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -137,6 +137,73 @@ namespace ROOT {
       
       UInt_t  Size() const { return fProxied ? (*fProxied).size() : 0; }
 
+      void    Streamer(TBuffer &b) { GetCollectionClass()->Streamer( fProxied, b ); }
+   };
+
+   template <class vec> class TBoolVectorProxy : public TVirtualCollectionProxy {
+
+      typedef typename vec::value_type nested;
+      
+      vec* fProxied;
+      
+      struct boolholder {
+         bool val;
+      };
+
+      UInt_t       fNarr;        //! Allocated size of fArr
+      boolholder **fArr;         //! [fNarr] Implementing GetPtrArray
+      
+   public:
+      TVirtualCollectionProxy* Generate() const  { return new TBoolVectorProxy<vec>(); }
+      TBoolVectorProxy() : fNarr(0), fArr(0) {}
+      
+      void    SetProxy(void *objstart) { fProxied = (vec*)objstart; }
+      UInt_t  Sizeof() const { return sizeof(vec); }
+      virtual TClass *GetCollectionClass() { 
+         // Return a pointer to the TClass representing the container
+         if (fClass==0) { fClass=gROOT->GetClass(typeid(vec)); } 
+         return fClass; 
+      }
+
+      void  **GetPtrArray() {
+         // Return a contiguous array of pointer to the values in the container.
+
+         if (gDebug>1) Info("TBoolVectorProxy::GetPtrArray","called for %s at %p",GetCollectionClass()->GetName(),fProxied);
+
+         unsigned int n = Size();
+         if (n >= fNarr) {
+            for (unsigned int k=0;k<fNarr;++k) {
+               delete fArr[k];
+            }
+            delete [] fArr;
+            fNarr =  int(n*1.3) + 10;
+            fArr  = new boolholder*[fNarr+1];
+            for (unsigned int l=0;l<fNarr;++l) {
+               fArr[l] = new boolholder;
+            }
+         }
+         
+         for (unsigned int i=0;i<n;i++) { 
+            fArr[i]->val = (*fProxied)[i]; 
+         }
+
+         return (void**)fArr;
+      }
+                    
+      void   *At(UInt_t /* idx */) {
+         // Return the address of the value at index 'idx'
+         
+         Fatal("At","At is not useable for a proxy of vector<bool>");
+         return 0x0;
+      }
+      
+      void Clear(const char *){ fProxied->clear();  }
+      
+      TClass *GetValueClass() { return 0; }      
+      Bool_t HasPointers() const { return 0; }      
+      void Resize(UInt_t n, Bool_t ) { fProxied->resize(n); }
+      
+      UInt_t  Size() const { return fProxied ? (*fProxied).size() : 0; }
       void    Streamer(TBuffer &b) { GetCollectionClass()->Streamer( fProxied, b ); }
    };
 

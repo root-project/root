@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.1 2004/01/10 10:52:30 brun Exp $
 // Author: Victor Perev   04/10/2003
 
 
@@ -464,3 +464,11 @@ int TClassEdit::IsSTLCont(const char *ty,int testAlloc)
    return kind;
 }
 
+
+bool TClassEdit::IsVectorBool(const char *name) {
+   vector<string> splitName;
+   TClassEdit::GetSplit(name,splitName);
+
+   return ( TClassEdit::STLKind( splitName[0].c_str() ) == TClassEdit::kVector)
+      && ( splitName[1] == "bool" || splitName[1]=="Bool_t");
+};

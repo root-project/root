@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.h,Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.1 2004/01/10 10:52:30 brun Exp $
 // Author: Victor Perev   10/04/2003
 
 #ifndef ROOT_TClassEdit
@@ -49,6 +49,7 @@ public:
    static bool        IsDefAlloc(const char *alloc, const char *keyclassname, const char *valueclassname);
    static bool        IsDefComp (const char *comp , const char *classname);
    static int         IsSTLCont (const char *type,int testAlloc=0);
+   static bool        IsVectorBool(const char *name);
    static int         GetSplit  (const char *type, std::vector<std::string> &output);
    static int         STLKind   (const char *type);    //Kind of stl container
    static int         STLArgs   (int kind);            //Min number of arguments without allocator
