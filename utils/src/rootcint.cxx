@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.125 2003/01/11 16:26:25 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.126 2003/01/16 06:39:18 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -268,6 +268,7 @@ const int kWarning  =   1000;
 const int kError    =   2000;
 const int kSysError =   3000;
 const int kFatal    =   4000;
+const int kMaxLen   =   1024;
 static int gErrorIgnoreLevel = kError;
 void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName);
 void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName);
@@ -423,7 +424,7 @@ bool CheckInputOperator(G__ClassInfo &cl)
 string FixSTLName(const string& cintName) {
 
    const char *s = cintName.c_str();
-   char type[512];
+   char type[kMaxLen];
    strcpy(type, s);
 
 #if 0 // (G__GNUC<3) && !defined (G__KCC) 
@@ -904,7 +905,7 @@ int IsSTLContainer(G__DataMemberInfo &m)
 
    const char *s = m.Type()->TmpltName();
    if (!s) return kNone;
-   char type[512];
+   char type[kMaxLen];
    strcpy(type, s);
 
    if (!strcmp(type, "vector"))   return kVector;
@@ -924,7 +925,7 @@ int IsSTLContainer(G__BaseClassInfo &m)
 
    const char *s = m.Name();
    if (!s) return kNone;
-   char type[512];
+   char type[kMaxLen];
    strcpy(type, s);
 
    if (!strncmp(type, "vector",6))   return kVector;
@@ -1134,7 +1135,7 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
    };
 
    long P = ti.Property();
-   char tiName[512],tiFullname[512],objType[512];
+   char tiName[kMaxLen],tiFullname[kMaxLen],objType[kMaxLen];
    strcpy(tiName,ti.Name());
    strcpy(objType,ShortTypeName(tiName));
    if (ti.Fullname())
@@ -1467,12 +1468,12 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
 
    int stltype = IsSTLContainer(m);
    if (m.IsTmplt() && stltype) {
-      char ss[512];strcpy(ss,TemplateArg(m).Name());char *s=ss;
+      char ss[kMaxLen];strcpy(ss,TemplateArg(m).Name());char *s=ss;
 
       if (rwmode == 0) {
          // create read code
          fprintf(fp, "      {\n");
-         char tmparg[512];
+         char tmparg[kMaxLen];
          strcpy(tmparg,m.Name());
          int lenarg = strlen(tmparg);
          if (tmparg[lenarg-1] == '*') {tmparg[lenarg-1] = 0; lenarg--;}
@@ -1577,7 +1578,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
          // create write code
          fprintf(fp, "      {\n");
          fprintf(fp, "         R__b << int(size());\n");
-         char tmparg[512];
+         char tmparg[kMaxLen];
          strcpy(tmparg,m.Name());
          int lenarg = strlen(tmparg);
          if (tmparg[lenarg-1] == '*') {tmparg[lenarg-1] = 0; lenarg--;}
@@ -1687,7 +1688,7 @@ void WriteInputOperator(G__ClassInfo &cl)
    fprintf(fp, "//_______________________________________");
    fprintf(fp, "_______________________________________\n");
 
-   char space_prefix[256] = "";
+   char space_prefix[kMaxLen] = "";
 #ifdef WIN32
    G__ClassInfo space = cl.EnclosingSpace();
    if (space.Property() & G__BIT_ISNAMESPACE)
@@ -2784,7 +2785,7 @@ void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName)
 
    const char *s = type.TmpltName();
 
-   char typeName[512];
+   char typeName[kMaxLen];
    if (s) strcpy(typeName, s);
    else typeName[0] = 0;
 
@@ -3220,7 +3221,7 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
       return;
    }
 
-   char tmpdictname[256];
+   char tmpdictname[512];
    sprintf(tmpdictname, "%s_+_+_+rootcinttmp", dictname);
    FILE *tmpdict = fopen(tmpdictname, "w");
    if (!tmpdict) {
@@ -3230,10 +3231,10 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
       return;
    }
 
-   char esc_bundlename[256];
+   char esc_bundlename[512];
    StrcpyWithEsc(esc_bundlename, bundlename);
 
-   char checkline[512];
+   char checkline[kMaxLen];
    sprintf(checkline, "  G__add_compiledheader(\"%s\");", esc_bundlename);
    int clen = strlen(checkline);
 
@@ -3279,7 +3280,7 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
    // replace it by the appropriate number of lines contained in the bundle.
 
    // make dict.h
-   char dictnameh[512];
+   char dictnameh[kMaxLen];
    strcpy(dictnameh, dictname);
    char *s = strrchr(dictnameh, '.');
    if (s) {
@@ -3336,7 +3337,7 @@ int main(int argc, char **argv)
       return 1;
    }
 
-   char dictname[256];
+   char dictname[512];
    int i, j, ic, ifl, force;
    int icc = 0;
    int use_preprocessor = 0;
@@ -3545,7 +3546,7 @@ int main(int argc, char **argv)
       if (strcmp(argv[i], "-p") == 0) use_preprocessor = 1;
 
    char bundlename[L_tmpnam+2];
-   char esc_arg[256];
+   char esc_arg[512];
    FILE *bundle = 0;
    if (use_preprocessor) {
       tmpnam(bundlename);
@@ -3835,7 +3836,7 @@ int main(int argc, char **argv)
 
          // make name of dict include file "aapDict.cxx" -> "aapDict.h"
          int  nl = 0;
-         char inclf[512];
+         char inclf[kMaxLen];
          char *s = strrchr(dictname, '.');
          if (s) *s = 0;
          sprintf(inclf, "%s.h", dictname);
