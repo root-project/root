@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.19 2004/06/25 16:49:09 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.20 2004/08/16 14:28:34 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -55,9 +55,8 @@ const int  kMAXUSERLEN       = 128;
 
 // Masks for initialization options
 const unsigned int kDMN_RQAUTH = 0x1;  // Require authentication
-const unsigned int kDMN_INCTKN = 0x2;  // Create inclusive tokens
-const unsigned int kDMN_HOSTEQ = 0x4;  // Allow host equivalence 
-const unsigned int kDMN_SYSLOG = 0x8;  // Log messages to syslog i.o. stderr 
+const unsigned int kDMN_HOSTEQ = 0x2;  // Allow host equivalence 
+const unsigned int kDMN_SYSLOG = 0x4;  // Log messages to syslog i.o. stderr 
 
 //
 // type of service
@@ -102,6 +101,7 @@ void DaemonStart(int ignsigcld, int fdkeep, EService service);
 // rpdutils.cxx
 void RpdAuthCleanup(const char *sstr, int opt);
 int  RpdGenRSAKeys(int);
+const char *RpdGetKeyRoot();
 #ifdef R__GLBS
 int  RpdGetShmIdCred();
 #endif

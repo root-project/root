@@ -258,6 +258,7 @@ static const std::string kAuthTab    = "/rpdauthtab";   // auth table
 static const std::string kDaemonRc   = ".rootdaemonrc"; // daemon access rules
 static const std::string kRootdPass  = ".rootdpass";    // special rootd passwd
 static const std::string kSRootdPass = "/.srootdpass";  // SRP passwd
+static const std::string kKeyRoot    = "/rpk.";         // Root for key files
 
 //
 // RW dir for temporary files (needed by gRpdAuthTab: do not move)
@@ -276,7 +277,6 @@ static int gAnon = 0;
 static int gAuth = 0;
 static int gAuthListSent = 0;
 static int gHaveMeth[kMAXSEC];
-static bool gInclusiveToken = 0;
 static EMessageTypes gKindOld;          // msg sync for old client (<=3.05/07)
 static int gMethInit = 0;
 static int gNumAllow = -1;
@@ -293,6 +293,7 @@ static bool gRequireAuth = 1;
 static int gReUseAllow = 0x1F;  // define methods for which tokens can be asked
 static int gReUseRequired = -1;
 static std::string gRpdAuthTab = std::string(gTmpDir).append(kAuthTab);
+static std::string gRpdKeyRoot = std::string(gTmpDir).append(kKeyRoot);
 static rsa_NUMBER gRSA_d;
 static rsa_NUMBER gRSA_n;
 static int gRSAInit = 0;
@@ -329,7 +330,6 @@ static std::string gKeytabFile = "";   // via RpdSetKeytabFile
 #ifdef R__GLBS
 static int gShmIdCred = -1;
 #endif
-
 
 //______________________________________________________________________________
 static int reads(int fd, char *buf, int len)
@@ -426,6 +426,13 @@ void RpdSetSysLogFlag(int syslog)
    if (gDebug > 2)
       ErrorInfo("RpdSetSysLogFlag: gSysLog set to %d", gSysLog);
 }
+//______________________________________________________________________________
+const char *RpdGetKeyRoot()
+{
+   // Return pointer to the root string for key files
+   // Used by proofd. 
+   return (const char *)gRpdKeyRoot.c_str();
+}
 
 #ifdef R__KRB5
 //______________________________________________________________________________
@@ -497,15 +504,13 @@ int RpdDeleteKeyFile(int ofs)
    //          1 if error unlinking (check errno);
    int retval = 0;
 
-   char strofs[30];
-   snprintf(strofs,30,"/rpk_%d",ofs);
-   std::string PubKeyFile;
-   PubKeyFile = gTmpDir + std::string(strofs);
+   std::string pukfile = gRpdKeyRoot;
+   pukfile.append(ItoA(ofs));
 
    // Some debug info
    if (gDebug > 2) {
       struct stat st;
-      if (stat(PubKeyFile.c_str(), &st) == 0) {
+      if (stat(pukfile.c_str(), &st) == 0) {
          ErrorInfo("RpdDeleteKeyFile: file uid:%d gid:%d",
                     st.st_uid,st.st_gid);
       }
@@ -514,11 +519,11 @@ int RpdDeleteKeyFile(int ofs)
    }
 
    // Unlink
-   if (unlink(PubKeyFile.c_str()) == -1) {
+   if (unlink(pukfile.c_str()) == -1) {
       if (gDebug > 0 && GetErrno() != ENOENT) {
          ErrorInfo("RpdDeleteKeyFile: problems unlinking pub"
                    " key file '%s' (errno: %d)",
-                   PubKeyFile.c_str(),GetErrno());
+                   pukfile.c_str(),GetErrno());
       }
       retval = 1;
    }
@@ -554,15 +559,13 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
       if (itab == -1) {
          if (opt == 1 && GetErrno() == ENOENT) {
             // Try creating the file
-            itab = open(gRpdAuthTab.c_str(), O_RDWR | O_CREAT, 0666);
+            itab = open(gRpdAuthTab.c_str(), O_RDWR | O_CREAT, 0600);
             if (itab == -1) {
                ErrorInfo("RpdUpdateAuthTab: opt=%d: error opening %s"
                          "(errno: %d)",
                          opt, gRpdAuthTab.c_str(), GetErrno());
                return retval;
             }
-            // override umask setting
-            fchmod(itab, 0666);
          } else {
             ErrorInfo("RpdUpdateAuthTab: opt=%d: error opening %s"
                       " (errno: %d)",
@@ -606,9 +609,9 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
 
       // Open backup file
       std::string bak = std::string(gRpdAuthTab).append(".bak");
-      int ibak = open(bak.c_str(), O_RDWR | O_CREAT, 0666);
+      int ibak = open(bak.c_str(), O_RDWR | O_CREAT, 0600);
       if (itab == -1) {
-         ErrorInfo("RpdUpdateAuthTab: opt=%d: error opening %s"
+         ErrorInfo("RpdUpdateAuthTab: opt=%d: error opening/creating %s"
                    " (errno: %d)", opt, bak.c_str(), GetErrno());
          goto goingout;
       }
@@ -757,8 +760,8 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
          // dummy entry
          char ltmp[256];
          SPrintf(ltmp, 256,
-                 "0 0 %d %d %d %s error: pubkey file in use: shift offset\n",
-                 gRSAKey, gParentId, gRemPid, gOpenHost.c_str());
+                 "0 0 %d %d %s error: pubkey file in use: shift offset\n",
+                 gRSAKey, gRemPid, gOpenHost.c_str());
 
          // adds line
          while (write(itab, ltmp, strlen(ltmp)) < 0 && GetErrno() == EINTR)
@@ -825,20 +828,17 @@ int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
 
    // Open file for update
    int itab = -1;
-   if (access(gRpdAuthTab.c_str(),F_OK) == 0) {
-
-      itab = open(gRpdAuthTab.c_str(), O_RDWR);
-      if (itab == -1) {
+   if ((itab = open(gRpdAuthTab.c_str(), O_RDWR)) == -1) {
+      if (GetErrno() == ENOENT) {
+         if (gDebug > 0)
+            ErrorInfo("RpdCleanupAuthTab: file %s does not exist",
+                       gRpdAuthTab.c_str());
+         return -3;
+      } else {
          ErrorInfo("RpdCleanupAuthTab: error opening %s (errno: %d)",
                   gRpdAuthTab.c_str(), GetErrno());
-         //     return retval;
          return -1;
       }
-   } else {
-      if (gDebug > 0)
-         ErrorInfo("RpdCleanupAuthTab: file %s does not exist",
-                   gRpdAuthTab.c_str());
-      return -3;
    }
 
    // lock tab file
@@ -856,11 +856,13 @@ int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
 
    // Now access entry or scan over entries
    int pr = 0, pw = 0;
-   int nw, lsec, act, parid, remid, pkey;
+   int nw, lsec, act, remid, pkey;
    char line[kMAXPATHLEN];
 
+   // Clean all flag
+   int all = (!strcmp(Host, "all") || RemId == 0);
+
    // Set indicator
-   int all = (int)(!strcmp(Host, "all") || RemId == 0);
    if (all || OffSet < 0)
       pr = lseek(itab, 0, SEEK_SET);
    else
@@ -874,11 +876,11 @@ int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
                     pr, pw, line, gParentId);
 
       char dumm[kMAXPATHLEN], host[kMAXUSERLEN], user[kMAXUSERLEN], shmbuf[30];
-      nw = sscanf(line, "%d %d %d %d %d %s %s %s %s", &lsec, &act, &pkey,
-                  &parid, &remid, host, user, shmbuf, dumm);
+      nw = sscanf(line, "%d %d %d %d %s %s %s %s", &lsec, &act, &pkey,
+                  &remid, host, user, shmbuf, dumm);
 
       if (nw > 5) {
-         if (all || OffSet > -1 ||
+         if (OffSet > -1 ||
             (strstr(line,Host) && (RemId == remid))) {
 
             // Delete Public Key file
@@ -897,8 +899,7 @@ int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
                }
             }
 #endif
-            // Deactivate active entries (either inclusive or exclusive:
-            // remote client has gone ...)
+            // Deactivate active entries: remote client has gone ...
             if (act > 0) {
 
                // Locate 'act' ... skeep initial spaces, if any
@@ -990,21 +991,12 @@ int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
    int ofs = *OffSet;
    char *token = 0;
    if (gRSAKey > 0) {
-      // Get Public Key
-      char strofs[20];
-      snprintf(strofs,20,"%d",ofs);
-      std::string PubKeyFile;
-      PubKeyFile = gTmpDir + "/rpk_" + strofs;
-      if (gDebug > 2)
-         ErrorInfo("RpdCheckAuthTab: RSAKey ofs file: %d %d '%s' ",
-                   gRSAKey, ofs, PubKeyFile.c_str());
-      if (RpdGetRSAKeys(PubKeyFile.c_str(), 1) > 0) {
-         if (RpdSecureRecv(&token) == -1) {
-            ErrorInfo
-                ("RpdCheckAuthTab: problems secure-receiving token %s",
-                 "- may result in authentication failure ");
-         }
+      if (RpdSecureRecv(&token) == -1) {
+         ErrorInfo("RpdCheckAuthTab: problems secure-"
+                   "receiving token %s",
+                   "- may result in authentication failure ");
       }
+
    } else {
       EMessageTypes kind;
       int Tlen = 9;
@@ -1071,17 +1063,15 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
       ErrorInfo("RpdCheckOffSet: analyzing: %d %s %s %d %d", Sec, User,
                 Host, RemId, *OffSet);
 
-   // First check if file exists and can be read
-   if (access(gRpdAuthTab.c_str(), R_OK)) {
-      ErrorInfo("RpcCheckOffSet: can't read file %s (errno: %d)",
-                gRpdAuthTab.c_str(), GetErrno());
-      return retval;
-   }
    // Open file
    int itab = open(gRpdAuthTab.c_str(), O_RDWR);
    if (itab == -1) {
-      ErrorInfo("RpcCheckOffSet: error opening %s (errno: %d)",
-                gRpdAuthTab.c_str(), GetErrno());
+      if (GetErrno() == ENOENT)
+         ErrorInfo("RpcCheckOffSet: file %s does not exist",
+                   gRpdAuthTab.c_str());
+      else
+         ErrorInfo("RpcCheckOffSet: error opening %s (errno: %d)",
+                   gRpdAuthTab.c_str(), GetErrno());
       return retval;
    }
    // lock tab file
@@ -1102,21 +1092,20 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
    reads(itab,line, sizeof(line));
 
    // and parse its content according to auth method
-   int lsec, act, parid, remid, shmid;
+   int lsec, act, remid, shmid;
    char host[kMAXPATHLEN], user[kMAXPATHLEN], subj[kMAXPATHLEN],
        dumm[kMAXPATHLEN], tkn[20];
    int nw =
-       sscanf(line, "%d %d %d %d %d %s %s %s %s", &lsec, &act, &gRSAKey,
-              &parid, &remid, host, user, tkn, dumm);
+       sscanf(line, "%d %d %d %d %s %s %s %s", &lsec, &act, &gRSAKey,
+              &remid, host, user, tkn, dumm);
    if (gDebug > 2)
       ErrorInfo("RpdCheckOffSet: found line: %s", line);
 
-   if (nw > 5 && act > 0 &&
-      (gInclusiveToken || (act == 2 && gParentId == parid))) {
+   if (nw > 5 && act > 0) {
       if ((lsec == Sec)) {
          if (lsec == 3) {
-            sscanf(line, "%d %d %d %d %d %s %s %d %s %s %s", &lsec, &act,
-                   &gRSAKey, &parid, &remid, host, user, &shmid, subj, tkn,
+            sscanf(line, "%d %d %d %d %s %s %d %s %s %s", &lsec, &act,
+                   &gRSAKey, &remid, host, user, &shmid, subj, tkn,
                    dumm);
             if ((remid == RemId)
                 && !strcmp(host, Host) && !strcmp(subj, User))
@@ -1134,17 +1123,16 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
       ofs = 0;
       while (reads(itab, line, sizeof(line))) {
 
-         nw = sscanf(line, "%d %d %d %d %d %s %s %s %s", &lsec, &act,
-                     &gRSAKey, &parid, &remid, host, user, tkn, dumm);
+         nw = sscanf(line, "%d %d %d %d %s %s %s %s", &lsec, &act,
+                     &gRSAKey, &remid, host, user, tkn, dumm);
          if (gDebug > 2)
             ErrorInfo("RpdCheckOffSet: found line: %s", line);
 
-         if (nw > 5 && act > 0 &&
-            (gInclusiveToken || (act == 2 && gParentId == parid))) {
+         if (nw > 5 && act > 0) {
             if (lsec == Sec) {
                if (lsec == 3) {
-                  sscanf(line, "%d %d %d %d %d %s %s %d %s %s %s", &lsec,
-                         &act, &gRSAKey, &parid, &remid, host, user,
+                  sscanf(line, "%d %d %d %d %s %s %d %s %s %s", &lsec,
+                         &act, &gRSAKey, &remid, host, user,
                          &shmid, subj, tkn, dumm);
                   if ((remid == RemId)
                       && !strcmp(host, Host) && !strcmp(subj, User)) {
@@ -1173,21 +1161,53 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
    // closing file ...
    close(itab);
 
+   // Read public key
+   std::string pukfile = gRpdKeyRoot;
+   pukfile.append(ItoA(*OffSet));
+   if (gDebug > 2)
+      ErrorInfo("RpdCheckOffSet: RSAKey ofs file: %d %d '%s' ",
+                gRSAKey, ofs, pukfile.c_str());
+
+   struct passwd *pw = getpwnam(User);
+   if (pw) {
+      Int_t fromUid = getuid();
+      Int_t fromEUid = geteuid();
+      // The check should be done with user IDs
+      if (!getuid())
+         if (setresuid(pw->pw_uid, pw->pw_uid, fromEUid) == -1)
+            // Since we could not set the user IDs, we will
+            // not trust the client
+            GoodOfs = 0;
+
+      // Get the key now
+      if (GoodOfs) {
+         if (RpdGetRSAKeys(pukfile.c_str(), 1) < 1)
+            GoodOfs = 0;
+
+         // Reset original IDs
+         if (!getuid())
+            setresuid(fromUid,fromEUid,pw->pw_uid);
+      }
+   } else
+      ErrorInfo("RpdCheckOffSet: error in getpwname(%s) (errno: %d)",
+                User,GetErrno());
+
    if (gDebug > 2)
       ErrorInfo("RpdCheckOffSet: GoodOfs: %d (active: %d)",
                 GoodOfs, act);
 
-   // Rename the key file, if needed
-   if (*OffSet > 0 && *OffSet != ofs) {
-      if (RpdRenameKeyFile(*OffSet,ofs) > 0) {
-         GoodOfs = 0;
-         // Error: set entry inactive
-         RpdCleanupAuthTab(Host,RemId,ofs);
-      }
-   }
-
    // Comunicate new offset to remote client
    if (GoodOfs) {
+
+      // Rename the key file, if needed
+      if (*OffSet > 0 && *OffSet != ofs) {
+         if (RpdRenameKeyFile(*OffSet,ofs) > 0) {
+            GoodOfs = 0;
+            // Error: set entry inactive
+            RpdCleanupAuthTab(Host,RemId,ofs);
+         }
+      }
+
       *OffSet = ofs;
       // return token if requested
       if (Token) {
@@ -1216,12 +1236,12 @@ int RpdRenameKeyFile(int oldofs, int newofs)
    int retval = 0;
 
    // Old name
-   std::string oldname = std::string(gTmpDir).append("/rpk_");
+   std::string oldname = gRpdKeyRoot;
    oldname.append(ItoA(oldofs));
-
-   // Ok, we should have full rights on the key file
-   std::string newname = std::string(gTmpDir).append("/rpk_");
+   // New name
+   std::string newname = gRpdKeyRoot;
    newname.append(ItoA(newofs));
+
    if (rename(oldname.c_str(), newname.c_str()) == -1) {
       if (gDebug > 0)
          ErrorInfo("RpdRenameKeyFile: error renaming key file"
@@ -1459,18 +1479,15 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
 
    } else {
 
-      // First check if file exists and can be read
-      if (access(theDaemonRc.c_str(), R_OK)) {
-         ErrorInfo("RpdCheckAuthAllow: can't read file %s (errno: %d)",
-                   theDaemonRc.c_str(), GetErrno());
-         return retval;
-      }
       // Open file
       FILE *ftab = fopen(theDaemonRc.c_str(), "r");
       if (ftab == 0) {
-         ErrorInfo("RpdCheckAuthAllow: error opening %s (errno: %d)",
-                   theDaemonRc.c_str(), GetErrno());
-         return retval;
+         if (GetErrno() == ENOENT) 
+            ErrorInfo("RpdCheckAuthAllow: file %s does not exist",
+                      theDaemonRc.c_str());
+         else
+            ErrorInfo("RpdCheckAuthAllow: error opening %s (errno: %d)",
+                      theDaemonRc.c_str(), GetErrno());
       }
       // Now read the entry
       char line[kMAXPATHLEN], host[kMAXPATHLEN], rest[kMAXPATHLEN],
@@ -1478,7 +1495,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
       int nmet = 0, mth[6] = { 0 };
 
       int cont = 0, jm = -1;
-      while (fgets(line, sizeof(line), ftab)) {
+      while (ftab && fgets(line, sizeof(line), ftab)) {
          int rc = 0, i;
          if (line[0] == '#')
             continue;           // skip comment lines
@@ -1706,7 +1723,8 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
       }
 
       // closing file ...
-      fclose(ftab);
+      if (ftab)
+         fclose(ftab);
 
       // Host specific directives have been checked for ...
       gMethInit = 1;
@@ -1938,31 +1956,33 @@ void RpdSshAuth(const char *sstr)
       if (pw) {
          std::string PipeFile =
             std::string(pw->pw_dir) + std::string("/RootSshPipe.") + PipeId;
-         if (access(PipeFile.c_str(),R_OK) && GetErrno() == ENOENT)
+         if (access(PipeFile.c_str(),F_OK))
             PipeFile= gTmpDir + std::string("/RootSshPipe.") + PipeId;
 
-         if (!access(PipeFile.c_str(),R_OK)) {
 
-            FILE *fpipe = fopen(PipeFile.c_str(), "r");
-            char Pipe[kMAXPATHLEN];
-            if (fpipe) {
-               while (fgets(Pipe, sizeof(Pipe), fpipe)) {
-                  if (Pipe[strlen(Pipe)-1] == '\n')
-                  Pipe[strlen(Pipe)-1] = 0;
-               }
-               fclose(fpipe);
-               // Remove the temporary file
-               unlink(PipeFile.c_str());
+         FILE *fpipe = fopen(PipeFile.c_str(), "r");
+         char Pipe[kMAXPATHLEN];
+         if (fpipe) {
+            while (fgets(Pipe, sizeof(Pipe), fpipe)) {
+               if (Pipe[strlen(Pipe)-1] == '\n')
+               Pipe[strlen(Pipe)-1] = 0;
+            }
+            fclose(fpipe);
+            // Remove the temporary file
+            unlink(PipeFile.c_str());
 
-               if (SshToolNotifyFailure(Pipe))
-                  ErrorInfo("RpdSshAuth: failure notification perhaps"
-                         " unsuccessful ... ");
-            } else
-               ErrorInfo("RpdSshAuth: cannot open file with pipe info"
-                         " (errno= %d)",GetErrno());
-         } else
-            ErrorInfo("RpdSshAuth: unable to localize pipe file"
-                      " (errno: %d)", GetErrno());
+            if (SshToolNotifyFailure(Pipe))
+               ErrorInfo("RpdSshAuth: failure notification may have"
+                         " failed ");
+         } else {
+            if (GetErrno() == ENOENT) 
+               ErrorInfo("RpdSshAuth: pipe file %s does not exists",
+                          PipeFile.c_str());
+            else
+               ErrorInfo("RpdSshAuth: cannot open pipe file %s"
+                      " (errno= %d)",PipeFile.c_str(),GetErrno());
+         }
+
       } else
          ErrorInfo("RpdSshAuth: unable to get user info for '%s'"
                    " (errno: %d)",User,GetErrno());
@@ -2218,18 +2238,24 @@ void RpdSshAuth(const char *sstr)
                       " - received: %d", (int)kROOTD_SSH, kind);
          if (!strncmp(res,"1",1))
             NetSend(kErrBadOp, kROOTD_ERR);
-         if (access(AuthFile,F_OK) == 0)
-            unlink(AuthFile);
-         if (AuthFile) delete[] AuthFile;
+         if (unlink(AuthFile) == -1)
+            if (GetErrno() != ENOENT)
+               ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
+                         AuthFile,GetErrno());
+         if (AuthFile) 
+            delete[] AuthFile;
          // Set to Auth failed
          gAuth = 0;
          return;
       }
       if (!strncmp(res,"0",1)) {
          // Failure
-         if (access(AuthFile,F_OK) == 0)
-            unlink(AuthFile);
-         if (AuthFile) delete[] AuthFile;
+         if (unlink(AuthFile) == -1)
+            if (GetErrno() != ENOENT)
+               ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
+                         AuthFile,GetErrno());
+         if (AuthFile) 
+            delete[] AuthFile;
          // Set to Auth failed
          gAuth = 0;
          return;
@@ -2244,9 +2270,12 @@ void RpdSshAuth(const char *sstr)
             ErrorInfo("RpdSshAuth: cannot open auth file:"
                       " %s (errno: %d)", AuthFile, GetErrno());
             NetSend(kErrFileOpen, kROOTD_ERR);
-            if (access(AuthFile,F_OK) == 0)
-               unlink(AuthFile);
-            if (AuthFile) delete[] AuthFile;
+            if (unlink(AuthFile) == -1)
+               if (GetErrno() != ENOENT)
+                  ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
+                            AuthFile,GetErrno());
+            if (AuthFile)
+               delete[] AuthFile;
             // Set to Auth failed
             gAuth = 0;
             return;
@@ -2288,24 +2317,32 @@ void RpdSshAuth(const char *sstr)
                // the file has been overwritten: the client got in
                // but something went wrong
                NetSend(kErrAuthNotOK, kROOTD_ERR);
-            if (access(AuthFile,F_OK) == 0)
-               unlink(AuthFile);
-            if (AuthFile) delete[] AuthFile;
+            if (unlink(AuthFile) == -1)
+               if (GetErrno() != ENOENT)
+                  ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
+                            AuthFile,GetErrno());
+            if (AuthFile) 
+               delete[] AuthFile;
             return;
          }
       } else {
          ErrorInfo("RpdSshAuth: got unknown reply: %s", res);
          NetSend(kErrBadMess, kROOTD_ERR);
-         if (access(AuthFile,F_OK) == 0)
-            unlink(AuthFile);
-         if (AuthFile) delete[] AuthFile;
+         if (unlink(AuthFile) == -1)
+            if (GetErrno() != ENOENT)
+               ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
+                         AuthFile,GetErrno());
+         if (AuthFile)
+            delete[] AuthFile;
          // Set to Auth failed
          gAuth = 0;
          return;
       }
       // Remove the file
-      if (access(AuthFile,F_OK) == 0)
-         unlink(AuthFile);
+      if (unlink(AuthFile) == -1)
+         if (GetErrno() != ENOENT)
+            ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
+                      AuthFile,GetErrno());
    }
 
    // If failure, notify and return ...
@@ -2349,9 +2386,8 @@ void RpdSshAuth(const char *sstr)
       int OffSet = -1;
       char *token = 0;
       if (gReUseRequired) {
-         int Act = gInclusiveToken ? 1 : 2;
-         SPrintf(line, kMAXPATHLEN, "4 %d %d %d %d %s %s",
-                 Act, gRSAKey, gParentId, gRemPid, gOpenHost.c_str(), gUser);
+         SPrintf(line, kMAXPATHLEN, "4 1 %d %d %s %s",
+                 gRSAKey, gRemPid, gOpenHost.c_str(), gUser);
          OffSet = RpdUpdateAuthTab(1, line, &token);
       }
       // Comunicate login user name to client
@@ -2739,9 +2775,8 @@ void RpdKrb5Auth(const char *sstr)
          int OffSet = -1;
          char *token = 0;
          if (gReUseRequired) {
-            int Act = gInclusiveToken ? 1 : 2;
-            SPrintf(line, kMAXPATHLEN, "2 %d %d %d %d %s %s",
-                    Act, gRSAKey, gParentId, gRemPid, gOpenHost.c_str(), gUser);
+            SPrintf(line, kMAXPATHLEN, "2 1 %d %d %s %s",
+                    gRSAKey, gRemPid, gOpenHost.c_str(), gUser);
             OffSet = RpdUpdateAuthTab(1, line, &token);
             if (gDebug > 2)
                ErrorInfo("RpdKrb5Auth: line:%s OffSet:%d", line, OffSet);
@@ -2991,10 +3026,8 @@ void RpdSRPUser(const char *sstr)
             int OffSet = -1;
             char *token = 0;
             if (gReUseRequired) {
-               int Act = gInclusiveToken ? 1 : 2;
-               SPrintf(line, kMAXPATHLEN, "1 %d %d %d %d %s %s",
-                       Act, gRSAKey, gParentId, gRemPid,
-                       gOpenHost.c_str(), gUser);
+               SPrintf(line, kMAXPATHLEN, "1 1 %d %d %s %s",
+                       gRSAKey, gRemPid, gOpenHost.c_str(), gUser);
                OffSet = RpdUpdateAuthTab(1, line, &token);
             }
             // Comunicate login user name to client
@@ -3066,81 +3099,77 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser, const char *user)
    // Check /etc/hosts.equiv if non-root
    if (!rootuser) {
 
-      // Check existence and readibility of the file ...
-      if (access(hostsequiv,R_OK) == -1) {
-         if (gDebug > 1)
-            ErrorInfo("RpdCheckHostsEquiv: /etc/hosts.equiv either non-existing"
-                      " or non-readable (errno: %d)",GetErrno());
+      // Get info about the file ...
+      struct stat st;
+      if (stat(hostsequiv,&st) == -1) {
+         if (GetErrno() != ENOENT) {
+            ErrorInfo("RpdCheckHostsEquiv: cannot stat /etc/hosts.equiv"
+                      " (errno: %d)",GetErrno());
+            if (rename(hostsequiv,hostsequsv) == -1)
+               ErrorInfo("RpdCheckHostsEquiv: error renaming %s to %s",
+                      " (errno: %d)",hostsequiv,hostsequsv,GetErrno());
+            ihesv = 1;
+         } else
+            if (gDebug > 1)
+               ErrorInfo("RpdCheckHostsEquiv: %s does not exist",
+                         hostsequiv);
       } else {
 
-         struct stat st;
-         if (stat(hostsequiv,&st) == -1) {
-            if (GetErrno() != ENOENT) {
-               ErrorInfo("RpdCheckHostsEquiv: cannot stat /etc/hosts.equiv"
-                         " (errno: %d)",GetErrno());
-               rename(hostsequiv,hostsequsv);
-               ihesv = 1;
-            }
+         // Require 'root' ownership
+         if (st.st_uid || st.st_gid) {
+            if (gDebug > 0)
+               ErrorInfo("RpdCheckHostsEquiv: /etc/hosts.equiv not owned by"
+                         " system (uid: %d, gid: %d)",st.st_uid,st.st_gid);
+            rename(hostsequiv,hostsequsv);
+            ihesv = 1;
+
          } else {
 
-            // Require 'root' ownership
-            if (st.st_uid || st.st_gid) {
+            // Require WRITE permission only for owner
+            if ((st.st_mode & S_IWGRP) || (st.st_mode & S_IWOTH)) {
                if (gDebug > 0)
-                  ErrorInfo("RpdCheckHostsEquiv: /etc/hosts.equiv not owned by"
-                            " system (uid: %d, gid: %d)",st.st_uid,st.st_gid);
-               rename(hostsequiv,hostsequsv);
+                  ErrorInfo("RpdCheckHostsEquiv: group or others have write"
+                            " permission on /etc/hosts.equiv: do not trust"
+                            " it (g: %d, o: %d)",
+                            (st.st_mode & S_IWGRP),(st.st_mode & S_IWOTH));
+               if (rename(hostsequiv,hostsequsv) == -1)
+                  ErrorInfo("RpdCheckHostsEquiv: error renaming %s to %s",
+                            " (errno: %d)",hostsequiv,hostsequsv,GetErrno());
                ihesv = 1;
-            }
-
-            if (!ihesv) {
-               // Require WRITE permission only for owner
-               if ((st.st_mode & S_IWGRP) || (st.st_mode & S_IWOTH)) {
-                  if (gDebug > 0)
-                     ErrorInfo("RpdCheckHostsEquiv: group or others have write"
-                               " permission on /etc/hosts.equiv: do not trust"
-                               " it (g: %d, o: %d)",
-                               (st.st_mode & S_IWGRP),(st.st_mode & S_IWOTH));
-                  rename(hostsequiv,hostsequsv);
-                  ihesv = 1;
-               }
             }
          }
       }
    }
 
-   // Check existence and readibility of the $HOME/.rhosts file ...
-   if (access(rhosts,R_OK) != -1) {
-
-      // Now check ownership and protections
-      struct stat st;
-      if (stat(rhosts,&st) == -1) {
-         if (GetErrno() != ENOENT)
-            ErrorInfo("RpdCheckHostsEquiv: cannot stat $HOME/.rhosts"
-                   " (errno: %d)",GetErrno());
-         sprintf(rhossv, "%s/.rhosts.sv", pw->pw_dir);
-         rename(rhosts,rhossv);
-         irhsv = 1;
-      }
-
-      if (!irhsv) {
-         // Only use file when its access rights are 0600
-         if (!S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) ||
-             (st.st_mode & 0777) != (S_IRUSR | S_IWUSR)) {
-            if (gDebug > 0)
-               ErrorInfo("RpdCheckHostsEquiv: unsecure permission setting found"
-                         " for $HOME/.rhosts: cannot use it (mode: 0%o)",
-                         (st.st_mode & 0777));
-            rename(rhosts,rhossv);
-            irhsv = 1;
-
-         }
-      }
-   } else {
+   // Check the $HOME/.rhosts file ... ownership and protections
+   struct stat st;
+   if (stat(rhosts,&st) == -1) {
       if (GetErrno() != ENOENT) {
-         ErrorInfo("RpdCheckHostsEquiv: cannot access %s/.rhosts"
-                   " (errno: %d)", pw->pw_dir, GetErrno());
-         rename(rhosts,rhossv);
+         ErrorInfo("RpdCheckHostsEquiv: cannot stat $HOME/.rhosts"
+                " (errno: %d)",GetErrno());
+         sprintf(rhossv, "%s.sv", rhosts);
+         if (rename(rhosts,rhossv) == -1)
+            ErrorInfo("RpdCheckHostsEquiv: error renaming %s to %s"
+                " (errno: %d)",rhosts,rhossv,GetErrno());
          irhsv = 1;
+      } else 
+         ErrorInfo("RpdCheckHostsEquiv: %s/.rhosts does not exist",
+                   pw->pw_dir);
+
+   } else {
+
+      // Only use file when its access rights are 0600
+      if (!S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) ||
+          (st.st_mode & 0777) != (S_IRUSR | S_IWUSR)) {
+         if (gDebug > 0)
+            ErrorInfo("RpdCheckHostsEquiv: unsecure permission setting found"
+                      " for $HOME/.rhosts: cannot use it (mode: 0%o)",
+                      (st.st_mode & 0777));
+         if (rename(rhosts,rhossv) == -1)
+            ErrorInfo("RpdCheckHostsEquiv: error renaming %s to %s"
+                " (errno: %d)",rhosts,rhossv,GetErrno());
+         irhsv = 1;
+
       }
    }
 
@@ -3349,10 +3378,8 @@ void RpdPass(const char *pass)
       char line[kMAXPATHLEN];
       if ((gReUseAllow & kAUTH_CLR_MSK) && gReUseRequired) {
 
-         int Act = gInclusiveToken ? 1 : 2;
-         SPrintf(line, kMAXPATHLEN, "0 %d %d %d %d %s %s",
-                 Act, gRSAKey, gParentId, gRemPid,
-                 gOpenHost.c_str(), gUser);
+         SPrintf(line, kMAXPATHLEN, "0 1 %d %d %s %s",
+                 gRSAKey, gRemPid, gOpenHost.c_str(), gUser);
          OffSet = RpdUpdateAuthTab(1, line, &token);
          if (gDebug > 2)
             ErrorInfo("RpdPass: got offset %d", OffSet);
@@ -3658,9 +3685,8 @@ void RpdGlobusAuth(const char *sstr)
       if (gReUseRequired) {
          int ShmId = GlbsToolStoreContext(GlbContextHandle, user);
          if (ShmId > 0) {
-            int Act = gInclusiveToken ? 1 : 2;
-            SPrintf(line, kMAXPATHLEN, "3 %d %d %d %d %s %s %d %s",
-                    Act, gRSAKey, gParentId, gRemPid, gOpenHost.c_str(),
+            SPrintf(line, kMAXPATHLEN, "3 1 %d %d %s %s %d %s",
+                    gRSAKey, gRemPid, gOpenHost.c_str(),
                     user, ShmId, GlbClientName);
             OffSet = RpdUpdateAuthTab(1, line, &token);
          } else if (gDebug > 0)
@@ -4441,43 +4467,67 @@ char *RpdGetRandString(int Opt, int Len)
 }
 
 //______________________________________________________________________________
-int RpdGetRSAKeys(const char *PubKey, int Opt)
+int RpdGetRSAKeys(const char *pubkey, int Opt)
 {
-   // Get public key from file PubKey (Opt == 1) or string PubKey (Opt == 0).
+   // Get public key from file pubkey (Opt == 1) or string pubkey (Opt == 0).
 
-   char Str[kMAXPATHLEN] = { 0 };
-   int KeyType = 0;
+   char str[kMAXPATHLEN] = { 0 };
+   int keytype = 0;
 
    if (gDebug > 2)
       ErrorInfo("RpdGetRSAKeys: enter: string len: %d, opt %d ",
                  gPubKeyLen, Opt);
 
-   if (!PubKey)
-      return KeyType;
+   if (!pubkey)
+      return keytype;
 
    char *theKey = 0;
    FILE *fKey = 0;
    // Parse input type
    if (Opt == 1) {
-      // Input is a File name: should get the string first
-      if (access(PubKey, R_OK)) {
-         ErrorInfo("RpdGetRSAKeys: Key File cannot be read - return ");
+
+      // Check first the permissions: should be 0600
+      struct stat st;
+      if (stat(pubkey, &st) == -1) {
+         ErrorInfo("RpdGetRSAKeys: cannot stat key file"
+                   " %s (errno: %d)", pubkey, GetErrno());
          return 0;
       }
-      fKey = fopen(PubKey, "r");
+      if (!S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) ||
+          (st.st_mode & 0777) != (S_IRUSR | S_IWUSR)) {
+         ErrorInfo("RpdGetRSAKeys: key file %s: wrong permissions"
+                   " 0%o (should be 0600)", pubkey, (st.st_mode & 0777));
+         return 0;
+      }
+
+      // Ok, now open it
+      fKey = fopen(pubkey, "r");
       if (!fKey) {
-         ErrorInfo("RpdGetRSAKeys: cannot open key file %s ", PubKey);
+         if (GetErrno() == EACCES) {
+            struct passwd *pw = getpwuid(getuid());
+            char *usr = 0;
+            if (pw)
+               usr = pw->pw_name;
+            else
+               usr = strdup("????");
+            ErrorInfo("RpdGetRSAKeys: access to key file %s denied"
+                      " to user: %s", pubkey, usr);
+            if (!strcmp(usr,"????"))
+                delete[] usr;
+         } else
+            ErrorInfo("RpdGetRSAKeys: cannot open key file"
+                      " %s (errno: %d)", pubkey, GetErrno());
          return 0;
       }
-      gPubKeyLen = fread((void *)Str,1,sizeof(Str),fKey);
+      gPubKeyLen = fread((void *)str,1,sizeof(str),fKey);
       if (gDebug > 2)
          ErrorInfo("RpdGetRSAKeys: length of the read key: %d",gPubKeyLen);
 
       // This the key
-      theKey = Str;
+      theKey = str;
    } else {
       // the key is the argument
-      theKey = (char *)PubKey;
+      theKey = (char *)pubkey;
    }
 
    if (gPubKeyLen > 0) {
@@ -4488,9 +4538,9 @@ int RpdGetRSAKeys(const char *PubKey, int Opt)
 
       if (theKey[k] == '#') {
 
-         KeyType = 1;
+         keytype = 1;
          if (gDebug > 2)
-            ErrorInfo("RpdGetRSAKeys: keytype %d ", KeyType);
+            ErrorInfo("RpdGetRSAKeys: keytype %d ", keytype);
 
          // The format is #<hex_n>#<hex_d>#
          char *pd1 = strstr(theKey, "#");
@@ -4525,9 +4575,9 @@ int RpdGetRSAKeys(const char *PubKey, int Opt)
       } else {
 #ifdef R__SSL
          // try SSL
-         KeyType = 2;
+         keytype = 2;
          if (gDebug > 2)
-            ErrorInfo("RpdGetRSAKeys: keytype %d ", KeyType);
+            ErrorInfo("RpdGetRSAKeys: keytype %d ", keytype);
 
          // Now set the key locally in BF form
          BF_set_key(&gBFKey, gPubKeyLen, (const unsigned char *)theKey);
@@ -4543,7 +4593,7 @@ int RpdGetRSAKeys(const char *PubKey, int Opt)
    if (fKey)
       fclose(fKey);
 
-   return KeyType;
+   return keytype;
 }
 
 //______________________________________________________________________________
@@ -4560,22 +4610,19 @@ int RpdSavePubKey(const char *PubKey, int OffSet, char *user)
    if (gRSAKey == 0 || OffSet < 0)
       return 1;
 
-   char strofs[20];
-   snprintf(strofs,20,"%d",OffSet);
-   std::string pukfile = gTmpDir + "/rpk_" + std::string(strofs);
+   std::string pukfile = gRpdKeyRoot;
+   pukfile.append(ItoA(OffSet));
 
-   // Stat file
-   if (access(pukfile.c_str(),W_OK)) {
-      if (GetErrno() != ENOENT) {
+   // Unlink the file first
+   if (unlink(pukfile.c_str()) == -1) {
+      if (GetErrno() != ENOENT)
          // File exists and cannot overwritten by this process
-         // return
          return 2;
-      }
    }
 
-   // Open file for writing; truncate it if exists
+   // Create file 
    int ipuk = -1;
-   ipuk = open(pukfile.c_str(), O_WRONLY | O_CREAT | O_TRUNC);
+   ipuk = open(pukfile.c_str(), O_WRONLY | O_CREAT, 0600);
    if (ipuk == -1) {
       ErrorInfo("RpdSavePubKey: cannot open file %s (errno: %d)",
                 pukfile.c_str(),GetErrno());
@@ -4583,13 +4630,6 @@ int RpdSavePubKey(const char *PubKey, int OffSet, char *user)
          return 2;
       else
          return 1;
-   }
-
-   // Change permissions
-   if (fchmod(ipuk, 0600) == -1) {
-      ErrorInfo("RpdSavePubKey: cannot change permissions on file"
-                " %s (errno: %d)", pukfile.c_str(),GetErrno());
-      return 2;
    }
 
    // If root process set ownership of the pub key to the user
@@ -5654,22 +5694,27 @@ void RpdInit(EService serv, int pid, int sproto, unsigned int options,
 
    // Parse options
    gCheckHostsEquiv= (bool)((options & kDMN_HOSTEQ) != 0);
-   gInclusiveToken = (bool)((options & kDMN_INCTKN) != 0);
    gRequireAuth    = (bool)((options & kDMN_RQAUTH) != 0);
    gSysLog         = (bool)((options & kDMN_SYSLOG) != 0);
 
    if (tmpd && strlen(tmpd)) {
       gTmpDir      = tmpd;
       gRpdAuthTab  = gTmpDir + kAuthTab;
+      gRpdKeyRoot  = gTmpDir + kKeyRoot;
    }
+   // Auth Tab and public key files are exclusive to this family
+   gRpdAuthTab.append(".");
+   gRpdAuthTab.append(ItoA(getuid()));
+   gRpdKeyRoot.append(ItoA(getuid()));
+   gRpdKeyRoot.append("_");
+
    if (asrpp && strlen(asrpp))
       gAltSRPPass  = asrpp;
 
    if (gDebug > 0) {
       ErrorInfo("RpdInit: gService= %s, gSysLog= %d, gSshdPort= %d",
                  gServName[gService].c_str(), gSysLog, gSshdPort);
-      ErrorInfo("RpdInit: gParentId= %d, gInclusiveToken= %d",
-                 gParentId, gInclusiveToken);
+      ErrorInfo("RpdInit: gParentId= %d", gParentId);
       ErrorInfo("RpdInit: gRequireAuth= %d, gCheckHostEquiv= %d",
                  gRequireAuth, gCheckHostsEquiv);
       ErrorInfo("RpdInit: gReUseAllow= 0x%x", gReUseAllow);

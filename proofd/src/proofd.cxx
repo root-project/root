@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.68 2004/07/01 18:49:31 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.69 2004/07/04 17:48:43 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -88,9 +88,10 @@
 //                     used for access rules; for privately started     //
 //                     daemons $HOME/.rootdaemonrc (if present) takes   //
 //                     highest priority.                                //
-//   -E                created tokens are exclusive to this process and //
-//                     its childs (by default tokens can be used by     //
-//                     another daemon with the right privilegies)       //
+//   -E                obsolete; up to v4.00.08 this option was used to //
+//                     force exclusivity of the authentication tokens;  //
+//                     with the new approach for authentication tab     //
+//                     files this option is dummy.                      //
 //   -f                do not run as daemon, run in the foreground      //
 //   -G gridmapfile    defines the gridmap file to be used for globus   //
 //                     authentication if different from globus default  //
@@ -275,8 +276,6 @@ static void ProofdTerm(int)
    ErrorInfo("ProofdTerm: rootd.cxx: got a SIGTERM/SIGINT");
    // Terminate properly
    RpdAuthCleanup(0,0);
-   // Trim Auth Table
-   RpdUpdateAuthTab(0,0,0);
    // Close network connection
    NetClose();
    // exit
@@ -553,6 +552,10 @@ void ProofdExec()
       putenv(authrc);
    }
 
+   char *keyfile = new char[15+strlen(RpdGetKeyRoot())];
+   sprintf(keyfile, "ROOTKEYFILE=%s",RpdGetKeyRoot());
+   putenv(keyfile);
+
    if (gDebug > 0)
 #ifdef R__GLBS
       ErrorInfo("ProofdExec: execv(%s, %s, %s, %s, %s, %s, %s,"
@@ -580,7 +583,6 @@ int main(int argc, char **argv)
    int checkhostsequiv = 1;
    int requireauth    = 1;
    int tcpwindowsize  = 65535;
-   int inclusivetoken = 1;
    int sshdport       = 22;
    int port1          = 0;
    int port2          = 0;
@@ -669,7 +671,8 @@ int main(int argc, char **argv)
                break;
 
             case 'E':
-               inclusivetoken = 0;
+               fprintf(stderr,"Option '-E' is now dummy - ignored (see proofd"
+                              "/src/proofd.cxx for additional details)\n");
                break;
 
             case 'f':
@@ -873,13 +876,10 @@ int main(int argc, char **argv)
      proofdparentid = getppid(); // Identifies this family
 
    // default job options
-   unsigned int options = kDMN_RQAUTH | kDMN_INCTKN |
-                          kDMN_HOSTEQ | kDMN_SYSLOG ;
+   unsigned int options = kDMN_RQAUTH | kDMN_HOSTEQ | kDMN_SYSLOG ;
    // modify them if required
    if (!requireauth)
       options &= ~kDMN_RQAUTH;
-   if (!inclusivetoken)
-      options &= ~kDMN_INCTKN;
    if (!checkhostsequiv)
       options &= ~kDMN_HOSTEQ;
    if (foregroundflag)

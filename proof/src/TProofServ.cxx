@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.76 2004/07/16 22:29:07 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.77 2004/08/07 18:19:12 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1501,11 +1501,9 @@ void TProofServ::Setup()
    if (kind == kROOTD_RSAKEY) {
 
       if (retval > -1) {
-         if (lApp && lApp->Argc() > 3 && strlen(lApp->Argv(3)) > 0 &&
-             gROOT->IsProofServ()) {
-            // We got a file name ... extract the tmp directory path
-            TString KeyFile = lApp->Argv(3);
-            KeyFile += "/rpk_";
+         if (gSystem->Getenv("ROOTKEYFILE")) {
+
+            TString KeyFile = gSystem->Getenv("ROOTKEYFILE");
             KeyFile += retval;
 
             FILE *fKey = 0;
