@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.137 2004/06/09 21:51:36 brun Exp $
+// @(#)root/tree:$Name: v4-00-08-patches $:$Id: TBranchElement.cxx,v 1.138 2004/06/22 15:36:42 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -951,7 +951,7 @@ void TBranchElement::FillLeaves(TBuffer &b)
   } else if (fType == 41) {   // sub branch of an STL class
 
      //char **ppointer = (char**)fAddress;
-     if (!fObject) 	return;
+     if (!fObject) return;
      GetCollectionProxy()->SetProxy(fObject); // NOTE: this wont work if a pointer to vector is split!
      Int_t n = fCollProxy->Size();
      fInfo->WriteBufferSTL(b,fCollProxy,n,fID,fOffset);
@@ -1003,8 +1003,8 @@ void TBranchElement::FillLeaves(TBuffer &b)
           case 16:  {b.WriteFastArray((Long64_t*) fAddress, n); break;}
           case 17:  {b.WriteFastArray((ULong64_t*)fAddress, n); break;}
           case  9:  {Double_t *xx = (Double_t*)fAddress;
-		               for (Int_t ii=0;ii<n;ii++) b << (Float_t)xx[ii];
-					      break;}
+                     for (Int_t ii=0;ii<n;ii++) b << (Float_t)xx[ii];
+                     break;}
         }
         return;
      }
@@ -1169,17 +1169,17 @@ TStreamerInfo *TBranchElement::GetInfo()
       TStreamerInfo::Optimize(kFALSE);
       if (cl == TClonesArray::Class()) fClassVersion = TClonesArray::Class()->GetClassVersion();
       fInfo = cl->GetStreamerInfo(fClassVersion);
-	  if (fCheckSum != 0 && cl->IsForeign()) {
-		  Int_t ninfos = cl->GetStreamerInfos()->GetEntriesFast();
-		  for (Int_t i=1;i<ninfos;i++) {
-			  TStreamerInfo *info = (TStreamerInfo*)cl->GetStreamerInfos()->At(i);
-			  if (!info) continue;
-			  if (info->GetCheckSum() == fCheckSum) {
-				  fClassVersion = i;
-				  fInfo = cl->GetStreamerInfo(fClassVersion);
-				  break;
-              }
-          }
+      if (fCheckSum != 0 && cl->IsForeign()) {
+         Int_t ninfos = cl->GetStreamerInfos()->GetEntriesFast();
+         for (Int_t i=1;i<ninfos;i++) {
+            TStreamerInfo *info = (TStreamerInfo*)cl->GetStreamerInfos()->At(i);
+            if (!info) continue;
+            if (info->GetCheckSum() == fCheckSum) {
+               fClassVersion = i;
+               fInfo = cl->GetStreamerInfo(fClassVersion);
+               break;
+            }
+         }
       }
       if (fInfo && !fInfo->GetOffsets()) {
          fInfo->Compile();
@@ -1508,8 +1508,9 @@ void TBranchElement::ReadLeaves(TBuffer &b)
                 case 12:  {length = ((UShort_t*) len_where)[k]; break;}
                 case 13:  {length = ((UInt_t*)   len_where)[k]; break;}
                 case 14:  {length = ((ULong_t*)  len_where)[k]; break;}
-                case 15:  {length = ((Long64_t*) len_where)[k]; break;}
-                case 16:  {length = ((ULong64_t*)len_where)[k]; break;}
+                case 15:  {length = ((UInt_t*)   len_where)[k]; break;}
+                case 16:  {length = ((Long64_t*) len_where)[k]; break;}
+                case 17:  {length = ((ULong64_t*)len_where)[k]; break;}
                 default: continue;
              }
              b >> isArray;
@@ -1527,8 +1528,9 @@ void TBranchElement::ReadLeaves(TBuffer &b)
                 case 12:  {*where=new char[sizeof(UShort_t)*length]; b.ReadFastArray((UShort_t*)*where, length); break;}
                 case 13:  {*where=new char[sizeof(UInt_t)*length]; b.ReadFastArray((UInt_t*)  *where, length); break;}
                 case 14:  {*where=new char[sizeof(ULong_t)*length]; b.ReadFastArray((ULong_t*) *where, length); break;}
-                case 15:  {*where=new char[sizeof(Long64_t)*length]; b.ReadFastArray((Long64_t*)  *where, length); break;}
-                case 16:  {*where=new char[sizeof(ULong64_t)*length]; b.ReadFastArray((ULong64_t*)*where, length); break;}
+                case 15:  {*where=new char[sizeof(UInt_t)*length]; b.ReadFastArray((UInt_t*)  *where, length); break;}
+                case 16:  {*where=new char[sizeof(Long64_t)*length]; b.ReadFastArray((Long64_t*)  *where, length); break;}
+                case 17:  {*where=new char[sizeof(ULong64_t)*length]; b.ReadFastArray((ULong64_t*)*where, length); break;}
              }
           }
           return;
@@ -1550,13 +1552,14 @@ void TBranchElement::ReadLeaves(TBuffer &b)
           case 12:  {b.ReadFastArray((UShort_t*)fAddress, n); break;}
           case 13:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
           case 14:  {b.ReadFastArray((ULong_t*) fAddress, n); break;}
-          case 15:  {b.ReadFastArray((Long64_t*)fAddress, n); break;}
-          case 16:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
-		  case  9:  {Double_t *xx = (Double_t*)fAddress;
-			            Float_t afloat;
-						for (Int_t ii=0;ii<n;ii++) {
-				            b>> afloat; xx[ii] = Double_t(afloat);
-						} break;}
+          case 15:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
+          case 16:  {b.ReadFastArray((Long64_t*)fAddress, n); break;}
+          case 17:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
+          case  9:  {Double_t *xx = (Double_t*)fAddress;
+                     Float_t afloat;
+                     for (Int_t ii=0;ii<n;ii++) {
+                        b >> afloat; xx[ii] = Double_t(afloat);
+                     } break;}
        }
        return;
      } else if (fType <= 2) {     // branch in split mode
@@ -1578,13 +1581,14 @@ void TBranchElement::ReadLeaves(TBuffer &b)
              case 12:  {b.ReadFastArray((UShort_t*)fAddress, n); break;}
              case 13:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
              case 14:  {b.ReadFastArray((ULong_t*) fAddress, n); break;}
-             case 15:  {b.ReadFastArray((Long64_t*) fAddress, n); break;}
-             case 16:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
-			 case  9:  {Double_t *xx = (Double_t*)fAddress;
-			            Float_t afloat;
-						for (Int_t ii=0;ii<n;ii++) {
-				            b>> afloat; xx[ii] = Double_t(afloat);
-						} break;}
+             case 15:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
+             case 16:  {b.ReadFastArray((Long64_t*) fAddress, n); break;}
+             case 17:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
+             case  9:  {Double_t *xx = (Double_t*)fAddress;
+                        Float_t afloat;
+                        for (Int_t ii=0;ii<n;ii++) {
+                           b >> afloat; xx[ii] = Double_t(afloat);
+                        } break;}
           }
        } else {
           fNdata = 1;
@@ -2200,7 +2204,7 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
                branch->SetParentName(cltop->GetName());
                fBranches.Add(branch);
                unroll = 0;
-               
+
             } else {
 
                unroll = Unroll(branchname,cltop,clbase,basketsize,splitlevel-1,btype);
@@ -2217,7 +2221,7 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
 
             if (elem->CannotSplit()) {
                subSplitlevel = 0;
-            } 
+            }
 
             char *pointer = fBranchPointer + offset;
             branch = new TBranchElement(branchname,info,jd,/* 0 */ pointer ,basketsize,subSplitlevel,btype);
@@ -2226,7 +2230,7 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
 
          } else {
             //fBranchPointer may be null in case of a TClonesArray inside another TClonesArray
-            if (fBranchPointer && 
+            if (fBranchPointer &&
                 ( elem->GetClassPointer() == TClonesArray::Class()
                   || (elem->IsA() == TStreamerSTL::Class() && !elem->CannotSplit())
                   )
