@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.3 2004/11/04 10:51:07 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.4 2004/11/08 18:44:05 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -10,7 +10,6 @@
  *************************************************************************/
 #ifndef ROOT_TGenCollectionProxy
 #define ROOT_TGenCollectionProxy
-#ifndef __CINT__
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -312,5 +311,5 @@ struct AnyCollectionProxy : public TGenCollectionProxy  {
   }
   virtual ~AnyCollectionProxy() {  }
 };
-#endif
+
 #endif

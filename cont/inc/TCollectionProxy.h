@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.6 2004/11/05 14:32:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.7 2005/01/05 16:48:52 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -18,7 +18,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
 #include <typeinfo>
 
 // Forward declarations
@@ -52,7 +51,8 @@ namespace ROOT {
     * @version 1.0
     * @date    10/10/2004
     */
-  template <class T> struct Environ  {
+#ifndef __CINT__
+  template <typename T> struct Environ  {
     typedef T           Iter_t;
     char                buff[64];
     size_t              idx;
@@ -64,6 +64,9 @@ namespace ROOT {
     int                 refCount;
     T& iter() { return *(T*)buff; }
   };
+#else 
+  template <typename T> struct Environ;
+#endif
 #if defined(R__VCXX6)
   template <class T> void Destruct(T* obj) { obj->~T(); }
 #endif
@@ -524,9 +527,11 @@ public:
   { Streamer(buff, pObj, siz);                       }
 };
 
+#ifndef __CINT__
 // Need specialization for boolean references due to stupid STL vector<bool>
 template<> inline void* TCollectionProxy::Address<std::vector<bool>::const_reference>::address(std::vector<bool>::const_reference ) {
   return 0;
 }
 #endif
+
 #endif

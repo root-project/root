@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.12 2005/02/02 15:16:51 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.13 2005/02/21 17:58:07 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -40,7 +40,7 @@
 //                                                                      //
 //  class TGenVectorProxy
 //
-//   Localoptimization class.
+//   Local optimization class.
 //
 //   Collection proxies get copied. On copy we switch the type of the
 //   proxy to the concrete STL type. The concrete types are optimized

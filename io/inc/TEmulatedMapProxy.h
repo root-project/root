@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.h,v 1.15 2004/10/13 15:30:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.h,v 1.1 2004/10/29 18:03:10 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -10,9 +10,6 @@
  *************************************************************************/
 #ifndef ROOT_TEmulatedMapProxy
 #define ROOT_TEmulatedMapProxy
-#define ROOT_TGenCollectionStreamer
-
-#ifndef __CINT__
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -62,5 +59,4 @@ public:
   }
 };
 
-#endif
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.161 2005/01/18 17:59:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.162 2005/01/18 21:04:17 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -839,7 +839,7 @@ void TClass::BuildRealData(void *pointer)
 
    fRealData = new TList;
 
-   if (!fClassInfo) {
+   if (!fClassInfo || TClassEdit::IsSTLCont(GetName(), 0)) {
       BuildEmulatedRealData("",0,this);
       return;
    }

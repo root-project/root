@@ -1,4 +1,4 @@
-/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.9 2004/02/19 20:00:57 brun Exp $ */
+/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.10 2004/08/20 14:46:36 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -57,5 +57,13 @@
 #pragma link C++ class TRefArrayIter;
 #pragma link C++ class TRefTable+;
 #pragma link C++ class TVirtualCollectionProxy-;
+
+#pragma link C++ class TCollectionProxy-;
+#pragma link C++ class TEmulatedCollectionProxy-;
+#pragma link C++ class TEmulatedMapProxy-;
+#pragma link C++ class TGenCollectionProxy-;
+#pragma link C++ class TCollectionStreamer-;
+#pragma link C++ class TCollectionClassStreamer-;
+#pragma link C++ class TCollectionMemberStreamer-;
 
 #endif
