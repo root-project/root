@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.rdl,v 1.10 2001/05/03 02:15:54 verkerke Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.11 2001/05/10 21:26:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -61,8 +61,9 @@ public:
   RooArgSet(const RooArgSet& other, const char *name="");
   virtual TObject* Clone(const char* newname=0) const { return new RooArgSet(*this,newname); }
   RooArgSet& operator=(const RooArgSet& other);
-  // Deep copy operator (copies all extern dependents into list)
-  RooArgSet *snapshot() ;
+
+  // Copy list and contents (and optionally 'deep' servers)
+  RooArgSet *snapshot(Bool_t deepCopy=kTRUE) const ;
 
   // List content management
   Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) ;

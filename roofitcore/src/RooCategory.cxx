@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.cc,v 1.10 2001/05/10 00:16:07 verkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.11 2001/05/10 18:58:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -63,6 +63,31 @@ Bool_t RooCategory::setLabel(const char* label, Bool_t printError)
   _value = *type ;
   setValueDirty(kTRUE) ;
   return kFALSE ;
+}
+
+
+
+Bool_t RooCategory::defineType(const char* label) 
+{ 
+  if (TString(label).Contains(";")) {
+  cout << "RooCategory::defineType(" << GetName() 
+       << "): semicolons not allowed in label name" << endl ;
+  return kTRUE ;
+  }
+
+  return RooAbsCategory::defineType(label)?kFALSE:kTRUE ; 
+}
+
+
+Bool_t RooCategory::defineType(const char* label, Int_t index) 
+{
+  if (TString(label).Contains(";")) {
+  cout << "RooCategory::defineType(" << GetName() 
+       << "): semicolons not allowed in label name" << endl ;
+  return kTRUE ;
+  }
+
+  return RooAbsCategory::defineType(label,index)?kFALSE:kTRUE ; 
 }
 
 

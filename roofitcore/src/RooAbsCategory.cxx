@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.15 2001/05/10 00:16:06 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.16 2001/05/10 18:58:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -146,7 +146,7 @@ const RooCatType* RooAbsCategory::defineType(const char* label, Int_t index)
 
   if (isValidLabel(label)) {
     cout << "RooAbsCategory::defineType(" << GetName() << "): label " 
-	 << label << " already assigned" << endl ;
+	 << label << " already assigned or not allowed" << endl ;
     return 0 ;
   }
 

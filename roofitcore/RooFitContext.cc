@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.3 2001/05/10 18:58:48 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.4 2001/05/10 21:26:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -35,7 +35,7 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf)
   RooArgSet tmp("PdfBranchNodeList") ;
   pdf->branchNodeServerList(&tmp) ;
   tmp.Print("v") ;
-  _pdfCompList = new RooArgSet(tmp,"ClonedPDFBranchNodes") ;  
+  _pdfCompList = tmp.snapshot(kFALSE) ;
   _pdfCompList->Print("v") ;
 
   // Find the top level PDF in the snapshot list

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.22 2001/05/10 21:26:08 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.23 2001/05/11 00:45:49 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -102,9 +102,30 @@ RooDataSet::~RooDataSet()
 }
 
 
-void RooDataSet::append(RooDataSet& data) {
-  loadValues(&data,0) ;
+void RooDataSet::initialize(const RooArgSet& vars) {
+  // Initialize dataset: attach variables of internal ArgSet 
+  // to the corresponding TTree branches
+
+  // iterate over the variables for this dataset
+  TIterator* iter = vars.MakeIterator() ;
+  RooAbsArg *var;
+  while(0 != (var= (RooAbsArg*)iter->Next())) {
+    if (var->isDerived()) {
+      cout << "RooDataSet::initialize(" << GetName() 
+	   << "): Data set cannot contain derived values, ignoring " 
+	   << var->GetName() << endl ;
+    } else {
+      RooAbsArg* varClone = (RooAbsArg*) var->Clone() ;
+      varClone->attachToTree(*this) ;
+      _vars.add(*varClone) ;
+    }
+  }
+  delete iter ;
+
+  _iterator= _vars.MakeIterator();
+  _cacheIter = _cachedVars.MakeIterator() ;
 }
+
 
 void RooDataSet::loadValues(const char *filename, const char *treename,
 			    const char *cuts) {
@@ -178,6 +199,11 @@ void RooDataSet::loadValues(const TTree *t, const char *cuts)
 }
 
 
+void RooDataSet::append(RooDataSet& data) {
+  loadValues(&data,0) ;
+}
+
+
 void RooDataSet::dump() {
   // DEBUG: Dump contents
 
@@ -205,31 +231,6 @@ void RooDataSet::dump() {
      }  
     cout << endl ;
   }
-}
-
-
-void RooDataSet::initialize(const RooArgSet& vars) {
-  // Initialize dataset: attach variables of internal ArgSet 
-  // to the corresponding TTree branches
-
-  // iterate over the variables for this dataset
-  TIterator* iter = vars.MakeIterator() ;
-  RooAbsArg *var;
-  while(0 != (var= (RooAbsArg*)iter->Next())) {
-    if (var->isDerived()) {
-      cout << "RooDataSet::initialize(" << GetName() 
-	   << "): Data set cannot contain derived values, ignoring " 
-	   << var->GetName() << endl ;
-    } else {
-      RooAbsArg* varClone = (RooAbsArg*) var->Clone() ;
-      varClone->attachToTree(*this) ;
-      _vars.add(*varClone) ;
-    }
-  }
-  delete iter ;
-
-  _iterator= _vars.MakeIterator();
-  _cacheIter = _cachedVars.MakeIterator() ;
 }
 
 
@@ -354,7 +355,10 @@ void RooDataSet::add(const RooArgSet& data) {
   Fill();
 }
 
-RooPlot *RooDataSet::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions) const {
+
+
+RooPlot *RooDataSet::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions) const 
+{
   if(0 == frame) {
     cout << ClassName() << "::" << GetName() << ":plot: frame is null" << endl;
     return 0;

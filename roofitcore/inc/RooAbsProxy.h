@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgProxy.rdl,v 1.3 2001/05/10 18:58:47 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,32 +10,35 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
-#ifndef ROO_ARG_PROXY
-#define ROO_ARG_PROXY
+#ifndef ROO_ABS_PROXY
+#define ROO_ABS_PROXY
 
 #include "TObject.h"
-#include "RooFitCore/RooAbsProxy.hh"
 #include "RooFitCore/RooAbsArg.hh"
 
-class RooArgProxy : public RooAbsProxy {
+class RooAbsProxy : public TNamed {
 public:
 
   // Constructors, assignment etc.
-  RooArgProxy() {} ;
-  RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsArg& arg, 
-	      Bool_t valueServer, Bool_t shapeServer) ;
-  RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& other) ;
-  virtual ~RooArgProxy() {} ;
-  inline RooAbsArg* absArg() const { return _arg ; }
+  RooAbsProxy() {} ;
+  RooAbsProxy(const char* name, const char* desc, Bool_t valueServer, Bool_t shapeServer) ;
+  RooAbsProxy(const char* name, const RooAbsProxy& other) ;
+  virtual ~RooAbsProxy() {} ;
 
 protected:
 
-  RooAbsArg* _arg ;
+  RooDataSet* _dset ;
+  Bool_t _valueServer ;
+  Bool_t _shapeServer ;
   friend class RooAbsArg ;
   friend class RooAbsPdf ;
-  virtual Bool_t changePointer(const RooArgSet& newServerSet) ;
 
-  ClassDef(RooArgProxy,0) // not persistable 
+  inline Bool_t isValueServer() const { return _valueServer ; }
+  inline Bool_t isShapeServer() const { return _valueServer ; }
+  virtual Bool_t changePointer(const RooArgSet& newServerSet) = 0 ;
+  void changeDataSet(const RooDataSet* newDataSet) ;
+
+  ClassDef(RooAbsProxy,0) // not persistable 
 };
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.rdl,v 1.10 2001/05/10 00:16:07 verkerke Exp $
+ *    File: $Id: RooCategory.rdl,v 1.11 2001/05/10 18:58:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,8 +36,8 @@ public:
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
-  Bool_t defineType(const char* label) { return RooAbsCategory::defineType(label)?kFALSE:kTRUE ; }
-  Bool_t defineType(const char* label, Int_t index) { return RooAbsCategory::defineType(label,index)?kFALSE:kTRUE ; }
+  Bool_t defineType(const char* label) ;
+  Bool_t defineType(const char* label, Int_t index) ;
   void clearTypes() { RooAbsCategory::clearTypes() ; }
 
 protected:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.7 2001/05/10 18:58:48 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.8 2001/05/10 21:26:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,8 +16,8 @@
 #include "TH1.h"
 #include "RooFitCore/RooRealIntegral.hh"
 #include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooCategory.hh"
+#include "RooFitCore/RooAbsRealLValue.hh"
+#include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooMultiCatIter.hh"
 #include "RooFitCore/RooIntegrator1D.hh"
 
@@ -43,10 +43,10 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       continue ;
     }
     
-    if (!arg->IsA()->InheritsFrom(RooRealVar::Class()) &&
-	!arg->IsA()->InheritsFrom(RooCategory::Class())) {
+    if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class()) &&
+	!arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
       cout << "RooRealIntegral::RooIntegral(" << name << "): integrand " << arg->GetName()
-	   << " is neither a RooCategory nor a RooRealVar, ignored" << endl ;
+	   << " is neither a RooAbsCategoryLValue nor a RooAbsRealLValue, ignored" << endl ;
       continue ;
     }
     
@@ -71,9 +71,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   TIterator* numIter=numDepList.MakeIterator() ;
   while (arg=(RooAbsArg*)numIter->Next()) {
   
-    if (arg->IsA()->InheritsFrom(RooRealVar::Class())) {
+    if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
       _intList.add(*arg) ;
-    } else if (arg->IsA()->InheritsFrom(RooCategory::Class())) {
+    } else if (arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
       _sumList.add(*arg) ;
     }
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.cc,v 1.1 2001/05/10 00:16:08 verkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.2 2001/05/10 21:26:09 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -18,22 +18,31 @@
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooMultiCatIter.hh"
+#include "RooFitCore/RooAbsCategoryLValue.hh"
 
 ClassImp(RooSuperCategory)
 
 
+//WVE change _catList from RooArgSet to TList of RooCategoryProxy, or make RooArgSetProxy ;
+
 RooSuperCategory::RooSuperCategory(const char *name, const char *title, RooArgSet& inputCatList) :
   RooAbsCategoryLValue(name, title) 
 {  
+
   // Copy category list
+  RooArgSet* catList = new RooArgSet("catList") ;
   TIterator* iter = inputCatList.MakeIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)iter->Next()) {
-    _catList.add(*arg) ;
-    addServer(*arg,kTRUE,kTRUE) ;
+    if (!arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
+      cout << "RooSuperCategory::RooSuperCategory(" << GetName() << "): input category " << arg->GetName() 
+	   << " is not an lvalue" << endl ;
+    }
+    catList->add(*arg) ;
   }
   delete iter ;
-
+  _catListProxy = new RooSetProxy("catList","catList",this,*catList,kTRUE,kTRUE) ;
+  
   updateIndexList() ;
 }
 
@@ -41,12 +50,14 @@ RooSuperCategory::RooSuperCategory(const char *name, const char *title, RooArgSe
 RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *name) :
   RooAbsCategoryLValue(other,name)
 {
-  TIterator* iter = other._catList.MakeIterator() ;
+  RooArgSet* catList = new RooArgSet("catList") ;
+  TIterator* iter = other._catListProxy->set()->MakeIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)iter->Next()) {
-    _catList.add(*arg) ;
+    catList->add(*arg) ;
   }
   delete iter ;
+  _catListProxy = new RooSetProxy("catList","catList",this,*catList,kTRUE,kTRUE) ;
 
   updateIndexList() ;
 }
@@ -55,22 +66,32 @@ RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *na
 
 RooSuperCategory::~RooSuperCategory() 
 {
+  // We own the ArgSet of the proxy
+  delete _catListProxy->set() ;
 }
+
+
+
+TIterator* RooSuperCategory::MakeIterator() const 
+{
+  return new RooMultiCatIter(*_catListProxy->set()) ;
+}
+
 
 
 void RooSuperCategory::updateIndexList()
 {
   clearTypes() ;
-  RooArgSet catListClone(_catList) ;
-  RooMultiCatIter mcIter(_catList) ;
+  RooArgSet* catListClone = _catListProxy->set()->snapshot(kTRUE) ;
+  RooMultiCatIter mcIter(*_catListProxy->set()) ;
 
   while(mcIter.Next()) {
     // Register composite label
     defineType(currentLabel()) ;
   }
 
-  // Restore original input state
-  _catList = catListClone ;
+  *_catListProxy->set() = *catListClone ;
+  delete catListClone ;
 
   // Renumbering will invalidate cache
   setValueDirty(kTRUE) ;
@@ -79,7 +100,7 @@ void RooSuperCategory::updateIndexList()
 
 TString RooSuperCategory::currentLabel() const
 {
-  TIterator* lIter = _catList.MakeIterator() ;
+  TIterator* lIter = _catListProxy->set()->MakeIterator() ;
 
   // Construct composite label name
   TString label ;
@@ -100,24 +121,58 @@ TString RooSuperCategory::currentLabel() const
 RooCatType
 RooSuperCategory::evaluate() const
 {
-  if (isShapeDirty()) updateIndexList() ;
+  if (isShapeDirty()) const_cast<RooSuperCategory*>(this)->updateIndexList() ;
   return *lookupType(currentLabel()) ;
 }
 
 
 Bool_t RooSuperCategory::setIndex(Int_t index, Bool_t printError) 
 {
+  const RooCatType* type = lookupType(index,kTRUE) ;
+  if (!type) return kTRUE ;
+  return setType(type) ;
 }
 
 
 Bool_t RooSuperCategory::setLabel(const char* label, Bool_t printError) 
 {
+  const RooCatType* type = lookupType(label,kTRUE) ;
+  if (!type) return kTRUE ;
+  return setType(type) ;
 }
+
+
+Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t printError)
+{
+  char buf[1024] ;
+  strcpy(buf,type->GetName()) ;
+
+  TIterator* iter = _catListProxy->set()->MakeIterator() ;
+  RooAbsCategoryLValue* arg ;
+  Bool_t error(kFALSE) ;
+
+  // Parse composite label and set label of components to their values
+  char* ptr = strtok(buf+1,";}") ;
+  while (arg=(RooAbsCategoryLValue*)iter->Next()) {
+    error |= arg->setLabel(ptr) ;
+    ptr = strtok(0,";}") ;
+  }
+  
+  delete iter ;
+  return error ;
+}
+
 
 
 void RooSuperCategory::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
   RooAbsCategory::printToStream(os,opt,indent) ;
+  
+  if (opt>=Verbose) {     
+    os << indent << "--- RooSuperCategory ---" << endl;
+    os << indent << "  Input category list:" << endl ;
+    _catListProxy->set()->printToStream(os,Standard,TString(indent).Append("  ")) ;
+  }
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.rdl,v 1.1 2001/05/10 00:16:09 verkerke Exp $
+ *    File: $Id: RooSuperCategory.rdl,v 1.2 2001/05/10 18:58:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -16,6 +16,7 @@
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooCatType.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooSetProxy.hh"
  
 
 class RooSuperCategory : public RooAbsCategoryLValue {
@@ -37,12 +38,16 @@ public:
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
+  TIterator* MakeIterator() const ;
+  const RooArgSet& inputCatList() const { return *_catListProxy->set() ; }
+
 protected:
 
+  Bool_t setType(const RooCatType* type, Bool_t prinError=kTRUE) ;
   void updateIndexList() ;
   TString currentLabel() const ;
 
-  RooArgSet _catList ;
+  RooSetProxy* _catListProxy ;
   
   virtual RooCatType evaluate() const ; 
 

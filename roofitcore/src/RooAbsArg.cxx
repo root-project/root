@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.23 2001/05/10 18:58:46 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.24 2001/05/10 21:26:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,6 +31,7 @@
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgProxy.hh"
+#include "RooFitCore/RooSetProxy.hh"
 #include "RooFitCore/RooDataSet.hh"
 
 #include <string.h>
@@ -108,8 +109,10 @@ RooAbsArg::~RooAbsArg()
   RooAbsArg* client ;
   while (client=(RooAbsArg*)clientIter->Next()) {
     client->setAttribute("FATAL:ServerDied") ;
-    cout << "RooAbsArg::~RooAbsArg(" << GetName() << "): Fatal error: dependent RooAbsArg " 
-	 << client->GetName() << " should have been deleted before" << endl ;
+    if (_verboseDirty) {
+      cout << "RooAbsArg::~RooAbsArg(" << GetName() << "): Fatal error: dependent RooAbsArg " 
+	   << client->GetName() << " should have been deleted before" << endl ;
+    }
     fatalError=kTRUE ;
   }
 
@@ -533,6 +536,7 @@ Bool_t RooAbsArg::redirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll
   for (int i=0 ; i<numProxies() ; i++) {
     allReplaced &= getProxy(i).changePointer(newSet) ;    
   }
+
   if (mustReplaceAll && !allReplaced) {
     cout << "RooAbsArg::redirectServers(" << GetName() 
 	 << "): ERROR, some proxies could not be adjusted" << endl ;
@@ -577,7 +581,7 @@ void RooAbsArg::registerProxy(RooArgProxy& proxy)
   }
 
   // Register proxied object as server
-  addServer(*proxy.absArg()) ;
+  addServer(*proxy.absArg(),proxy.isValueServer(),proxy.isShapeServer()) ;
 
   // Register proxy itself
   _proxyArray.Add(&proxy) ;  
@@ -585,9 +589,34 @@ void RooAbsArg::registerProxy(RooArgProxy& proxy)
 
 
 
-RooArgProxy& RooAbsArg::getProxy(Int_t index) const
+
+void RooAbsArg::registerProxy(RooSetProxy& proxy) 
 {
-  return *((RooArgProxy*)_proxyArray.At(index)) ;
+  // Every proxy can be registered only once
+  if (_proxyArray.FindObject(&proxy)) {
+    cout << "RooAbsArg::registerProxy(" << GetName() << "): proxy named " 
+	 << proxy.GetName() << " already registered" << endl ;
+    return ;
+  }
+
+  // Register list contents as server
+  TIterator* iter = proxy.set()->MakeIterator() ;
+  RooAbsArg *arg ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    addServer(*arg,proxy.isValueServer(),proxy.isShapeServer()) ;
+  }
+  delete iter ;
+
+  // Register proxy itself
+  _proxyArray.Add(&proxy) ;  
+}
+
+
+
+
+RooAbsProxy& RooAbsArg::getProxy(Int_t index) const
+{
+  return *((RooAbsProxy*)_proxyArray.At(index)) ;
 }
 
 
@@ -691,9 +720,14 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
       // proxy list
       os << indent << "  Proxies: " << endl ;
       for (int i=0 ; i<numProxies() ; i++) {
-	RooArgProxy& proxy=getProxy(i) ;
-	os << indent << "    " << proxy.GetName() << " -> " ;
-	proxy.absArg()->printToStream(os,OneLine) ;
+	RooAbsProxy& proxy=getProxy(i) ;
+
+	if (proxy.IsA()->InheritsFrom(RooArgProxy::Class())) {
+	  os << indent << "    " << proxy.GetName() << " -> " ;
+	  ((RooArgProxy&)proxy).absArg()->printToStream(os,OneLine) ;
+	} else {
+	  os << indent << "    " << proxy.GetName() << " -> (RooArgSet)" ;
+	}
       }
     }
   }

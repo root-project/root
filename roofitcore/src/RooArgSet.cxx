@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.17 2001/05/10 18:58:47 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.18 2001/05/10 21:26:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -102,23 +102,17 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 
 
 RooArgSet::RooArgSet(const RooArgSet& other, const char *name) :
-  _name(name), THashList(), _isCopy(kTRUE)
+  _name(name), THashList(), _isCopy(kFALSE)
 {
   if (!name) SetName(other.GetName()) ;
 
+  // Transfer contents (not owned)
   TIterator *iterator= other.MakeIterator();
-  RooAbsArg *orig(0);
-  while(0 != (orig= (RooAbsArg*)iterator->Next())) {
-    RooAbsArg *copy= (RooAbsArg*)orig->Clone();
-    Add(copy);
+  RooAbsArg *arg(0);
+  while(arg= (RooAbsArg*)iterator->Next()) {
+    add(*arg);
   }
   delete iterator;
-
-  iterator = MakeIterator() ;
-  while (orig = (RooAbsArg*)iterator->Next()) {
-    orig->redirectServers(*this) ;
-  }
-  delete iterator ;
 }
 
 RooArgSet::~RooArgSet() 
@@ -127,43 +121,58 @@ RooArgSet::~RooArgSet()
   if(_isCopy) Delete();
 }
 
-RooArgSet* RooArgSet::snapshot() {
+RooArgSet* RooArgSet::snapshot(Bool_t deepCopy) const
+{
   // Take a snap shot: clone current list and recursively add
   // all its external dependents
 
-  // First clone current list and contents
-  RooArgSet* snapshot = new RooArgSet(*this,TString("Snapshot of ").Append(GetName())) ;
+  // First create empty list
+  RooArgSet* snapshot = new RooArgSet(TString("Snapshot of ").Append(GetName())) ;
 
-  // Add external dependents
+  // Copy contents
+  TIterator *iterator= MakeIterator();
+  RooAbsArg *orig(0);
+  while(0 != (orig= (RooAbsArg*)iterator->Next())) {
+    RooAbsArg *copy= (RooAbsArg*)orig->Clone();
+    snapshot->add(*copy);
+  }
+  delete iterator;
+
   TIterator* vIter = snapshot->MakeIterator() ;
   RooAbsArg* var ;
 
-  // Recursively add clones of all servers
-  while (var=(RooAbsArg*)vIter->Next()) {
-    snapshot->addServerClonesToList(*var) ;
+  // Add external dependents
+  if (deepCopy) {
+    // Recursively add clones of all servers
+    while (var=(RooAbsArg*)vIter->Next()) {
+      snapshot->addServerClonesToList(*var) ;
+    }
   }
 
   // Redirect all server connections to internal list members
   vIter->Reset() ;
   while (var=(RooAbsArg*)vIter->Next()) {
-    var->redirectServers(*snapshot,kTRUE) ;
+    var->redirectServers(*snapshot,deepCopy) ;
   }
   delete vIter ;
+
+  // Transfer ownership of contents to list
+  snapshot->_isCopy = kTRUE ;
   return snapshot ;
 }
+
 
 
 void RooArgSet::addServerClonesToList(const RooAbsArg& var)
 {
   // Add clones of servers of given argument to list
-
   TIterator* sIter = var.serverIterator() ;
   RooAbsArg* server ;
   while (server=(RooAbsArg*)sIter->Next()) {
     if (!find(server->GetName())) {
       RooAbsArg* serverClone = (RooAbsArg*)server->Clone() ;
       serverClone->setAttribute("SnapShot_ExtRefClone") ;
-      Add(serverClone) ;      
+      add(*serverClone) ;      
       addServerClonesToList(*server) ;
     }
   }
@@ -252,8 +261,8 @@ Bool_t RooArgSet::replace(const RooAbsArg& var1, const RooAbsArg& var2)
     return kFALSE;
   }
   // replace var1 with var2
+  AddBefore((TObject*)&var1,(TObject*)&var2);
   Remove((TObject*)&var1);
-  Add((TObject*)&var2);
   return kTRUE;
 }
 
@@ -532,7 +541,7 @@ void RooArgSet::printToStream(ostream& os, PrintOption opt, TString indent) cons
   //   Verbose: Shape description of each argument
 
   // we cannot use oneLinePrint() since we do not inherit from TNamed
-  os << ClassName() << "::" << GetName() << ":" << endl;
+  os << indent << ClassName() << "::" << GetName() << ":" << endl;
   if(opt >= Standard) {
     TIterator *iterator= MakeIterator();
     int index= 0;
