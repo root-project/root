@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.7 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.8 2001/04/11 15:19:10 rdm Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -84,6 +84,7 @@ public:
    virtual void     DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2) = 0;
    virtual void     DrawText(Double_t x, Double_t y, const char *text) = 0;
    virtual void     DrawTextNDC(Double_t u, Double_t v, const char *text) = 0;
+   virtual void     SetFixedAspectRatio(Bool_t fixed = kTRUE) = 0;
    virtual Short_t  GetBorderMode() const = 0;
    virtual Short_t  GetBorderSize() const = 0;
    virtual Int_t    GetCanvasID() const = 0;
@@ -107,6 +108,7 @@ public:
    virtual Double_t GetAbsYlowNDC() const = 0;
    virtual Double_t GetAbsWNDC() const = 0;
    virtual Double_t GetAbsHNDC() const = 0;
+   virtual Double_t GetAspectRatio() const = 0;
    virtual Double_t GetPhi() const = 0;
    virtual Double_t GetTheta() const = 0;
    virtual Double_t GetUxmin() const = 0;
@@ -140,6 +142,7 @@ public:
    virtual TPadView3D *GetView3D() const = 0;
    virtual Bool_t   HasCrosshair() const = 0;
    virtual void     HighLight(Color_t col=kRed, Bool_t set=kTRUE) = 0;
+   virtual Bool_t   HasFixedAspectRatio() const = 0;
    virtual Bool_t   IsBatch() const = 0;
    Bool_t           IsBeingResized() const { return fResizing; }
    virtual Bool_t   IsEditable() const = 0;

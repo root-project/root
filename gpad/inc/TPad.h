@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.9 2001/04/11 15:19:11 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.10 2001/10/05 07:03:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -79,6 +79,8 @@ protected:
    Double_t      fTheta;           //  theta angle to view as lego/surface
    Double_t      fPhi;             //  phi angle   to view as lego/surface
 
+   Double_t      fAspectRatio;     //  ratio of w/h in case of fixed ratio
+
    Int_t         fPixmapID;        //! Off-screen pixmap identifier
    Int_t         fNumber;          //  pad number identifier
    Int_t         fTickx;           //  Set to 1 if tick marks along X
@@ -96,6 +98,7 @@ protected:
    Bool_t        fGridy;           //  Set to true if grid along Y
    Bool_t        fAbsCoord;        //  Use absolute coordinates
    Bool_t        fEditable;        //  True if canvas is editable
+   Bool_t        fFixedAspectRatio; //  True if fixed aspect ratio
    TPad         *fMother;          //! pointer to mother of the list
    TCanvas      *fCanvas;          //! Pointer to mother canvas
    TList        *fPrimitives;      //->List of primitives (subpads)
@@ -169,6 +172,7 @@ public:
    void              DrawTextNDC(Double_t u, Double_t v, const char *text);
    virtual TObject  *FindObject(const char *name) const;
    virtual TObject  *FindObject(const TObject *obj) const;
+   virtual void      SetFixedAspectRatio(Bool_t fixed = kTRUE);  // *TOGGLE*
    virtual void      UseCurrentStyle();  // *MENU*
    virtual Short_t   GetBorderMode() const { return fBorderMode;}
    virtual Short_t   GetBorderSize() const { return fBorderSize;}
@@ -192,6 +196,7 @@ public:
    Double_t          GetAbsYlowNDC() const {return fAbsYlowNDC;}
    Double_t          GetAbsWNDC() const {return fAbsWNDC;}
    Double_t          GetAbsHNDC() const {return fAbsHNDC;}
+   Double_t          GetAspectRatio() const { return fAspectRatio; }
    Double_t          GetPhi() const   {return fPhi;}
    Double_t          GetTheta() const {return fTheta;}
    Double_t          GetUxmin() const {return fUxmin;}
@@ -228,6 +233,7 @@ public:
    Int_t             GetPixmapID() const {return fPixmapID;}
    virtual Bool_t    HasCrosshair() const {return (Bool_t)fCrosshair;}
    void              HighLight(Color_t col=kRed, Bool_t set=kTRUE);
+   Bool_t            HasFixedAspectRatio() const { return fFixedAspectRatio; }
    virtual Bool_t    IsBatch() const;
    virtual Bool_t    IsEditable() const {return fEditable;}
    Bool_t            IsFolder() const {return kTRUE;}
@@ -329,7 +335,7 @@ public:
 
    virtual void      x3d(Option_t *option=""); // *MENU*
 
-   ClassDef(TPad,6)  //A Graphics pad
+   ClassDef(TPad,7)  //A Graphics pad
 };
 
 

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.48 2001/10/18 06:55:06 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.49 2001/10/25 19:16:10 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -143,6 +143,9 @@ TPad::TPad(): TVirtualPad()
    fCrosshairPos = 0;
    fPadView3D  = 0;
 
+   fFixedAspectRatio = kFALSE;
+   fAspectRatio      = 0.;
+
    fLogx  = 0;
    fLogy  = 0;
    fLogz  = 0;
@@ -220,6 +223,9 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fCrosshair  = 0;
    fCrosshairPos = 0;
 
+   fFixedAspectRatio = kFALSE;
+   fAspectRatio      = 0.;
+
 //*-*- Set default world coordinates to NDC [0,1]
    fX1 = 0;
    fX2 = 1;
@@ -234,11 +240,11 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
 
    TPad *padsav = (TPad*)gPad;
 
-   if ((xlow < 0) || (xlow > 1) || (ylow <0) || (ylow > 1)) {
+   if ((xlow < 0) || (xlow > 1) || (ylow < 0) || (ylow > 1)) {
       Error("TPad", "illegal bottom left position: x=%f, y=%f", xlow, ylow);
       goto zombie;
    }
-   if ((xup < 0) || (xup > 1) || (yup <0) || (yup > 1)) {
+   if ((xup < 0) || (xup > 1) || (yup < 0) || (yup > 1)) {
       Error("TPad", "illegal top right position: x=%f, y=%f", xup, yup);
       goto zombie;
    }
@@ -1644,8 +1650,8 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //
 //  If the mouse is clicked inside the pad, the pad is moved.
 //
-//  If the mouse is clicked on the 4 edges (L,R,T,B), the pad is rscaled
-//  parallel to this edge (same as Motif window manager).
+//  If the mouse is clicked on the 4 edges (L,R,T,B), the pad is scaled
+//  parallel to this edge.
 //
 //    PA                    T                       PB
 //     +--------------------------------------------+
@@ -1681,6 +1687,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    TVirtualPad  *parent;
    Bool_t opaque  = OpaqueMoving();
    Bool_t ropaque = OpaqueResizing();
+   Bool_t fixedr  = HasFixedAspectRatio();
 
    if (!IsEditable() && event != kMouseEnter) return;
 
@@ -1905,6 +1912,19 @@ again:
          if (py > pyt-kMinSize) { py = pyt-kMinSize; wy = py; }
          if (px < pxlp) { px = pxlp; wx = px; }
          if (py < pylp) { py = pylp; wy = py; }
+         if (fixedr) {
+            Double_t dy = Double_t(parent->AbsPixeltoX(TMath::Abs(pxt-px))) /
+                          fAspectRatio;
+            Int_t npy2 = pyt - TMath::Abs(parent->YtoAbsPixel(dy) -
+                                          parent->YtoAbsPixel(0));
+            if (npy2 < pylp) {
+               px = pxold;
+               py = pyold;
+            } else
+               py = npy2;
+
+            wx = wy = 0;
+         }
          if (!ropaque) gVirtualX->DrawBox(px   , pyt, pxt, py,    TVirtualX::kHollow);  // draw the new box
       }
       if (PB) {
@@ -1913,6 +1933,19 @@ again:
          if (py > pyt-kMinSize) { py = pyt-kMinSize; wy = py; }
          if (px > pxtp) { px = pxtp; wx = px; }
          if (py < pylp) { py = pylp; wy = py; }
+         if (fixedr) {
+            Double_t dy = Double_t(parent->AbsPixeltoX(TMath::Abs(pxl-px))) /
+                          fAspectRatio;
+            Int_t npy2 = pyt - TMath::Abs(parent->YtoAbsPixel(dy) -
+                                          parent->YtoAbsPixel(0));
+            if (npy2 < pylp) {
+               px = pxold;
+               py = pyold;
+            } else
+               py = npy2;
+
+            wx = wy = 0;
+         }
          if (!ropaque) gVirtualX->DrawBox(pxl  , pyt, px ,  py,    TVirtualX::kHollow);
       }
       if (PC) {
@@ -1921,6 +1954,19 @@ again:
          if (py < pyl+kMinSize) { py = pyl+kMinSize; wy = py; }
          if (px > pxtp) { px = pxtp; wx = px; }
          if (py > pytp) { py = pytp; wy = py; }
+         if (fixedr) {
+            Double_t dy = Double_t(parent->AbsPixeltoX(TMath::Abs(pxl-px))) /
+                          fAspectRatio;
+            Int_t npy2 = pyl + TMath::Abs(parent->YtoAbsPixel(dy) -
+                                          parent->YtoAbsPixel(0));
+            if (npy2 > pytp) {
+               px = pxold;
+               py = pyold;
+            } else
+               py = npy2;
+
+            wx = wy = 0;
+         }
          if (!ropaque) gVirtualX->DrawBox(pxl  , pyl, px ,   py,    TVirtualX::kHollow);
       }
       if (PD) {
@@ -1929,6 +1975,19 @@ again:
          if (py < pyl+kMinSize) { py = pyl+kMinSize; wy = py; }
          if (px < pxlp) { px = pxlp; wx = px; }
          if (py > pytp) { py = pytp; wy = py; }
+         if (fixedr) {
+            Double_t dy = Double_t(parent->AbsPixeltoX(TMath::Abs(pxt-px))) /
+                          fAspectRatio;
+            Int_t npy2 = pyl + TMath::Abs(parent->YtoAbsPixel(dy) -
+                                          parent->YtoAbsPixel(0));
+            if (npy2 > pytp) {
+               px = pxold;
+               py = pyold;
+            } else
+               py = npy2;
+
+            wx = wy = 0;
+         }
          if (!ropaque) gVirtualX->DrawBox(px   , py ,   pxt, pyl, TVirtualX::kHollow);
       }
       if (T) {
@@ -1936,6 +1995,15 @@ again:
          py2 += py - pyold;
          if (py2 > py1-kMinSize) { py2 = py1-kMinSize; wy = py2; }
          if (py2 < py2p) { py2 = py2p; wy = py2; }
+         if (fixedr) {
+            Double_t dx = TMath::Abs(Double_t(parent->AbsPixeltoY(TMath::Abs(py2-py1))) - 1.) *
+                          fAspectRatio;
+            Int_t npx2 = px1 + parent->XtoAbsPixel(dx);
+            if (npx2 > px2p)
+               py2 -= py - pyold;
+            else
+               px2 = npx2;
+         }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
       if (B) {
@@ -1943,6 +2011,15 @@ again:
          py1 += py - pyold;
          if (py1 < py2+kMinSize) { py1 = py2+kMinSize; wy = py1; }
          if (py1 > py1p) { py1 = py1p; wy = py1; }
+         if (fixedr) {
+            Double_t dx = TMath::Abs(Double_t(parent->AbsPixeltoY(TMath::Abs(py2-py1))) - 1.) *
+                          fAspectRatio;
+            Int_t npx2 = px1 + parent->XtoAbsPixel(dx);
+            if (npx2 > px2p)
+               py1 -= py - pyold;
+            else
+               px2 = npx2;
+         }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
       if (L) {
@@ -1950,6 +2027,16 @@ again:
          px1 += px - pxold;
          if (px1 > px2-kMinSize) { px1 = px2-kMinSize; wx = px1; }
          if (px1 < px1p) { px1 = px1p; wx = px1; }
+         if (fixedr) {
+            Double_t dy = Double_t(parent->AbsPixeltoX(TMath::Abs(px2-px1))) /
+                          fAspectRatio;
+            Int_t npy2 = py1 - TMath::Abs(parent->YtoAbsPixel(dy) -
+                                          parent->YtoAbsPixel(0));
+            if (npy2 < py2p)
+               px1 -= px - pxold;
+            else
+               py2 = npy2;
+         }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
       if (R) {
@@ -1957,6 +2044,16 @@ again:
          px2 += px - pxold;
          if (px2 < px1+kMinSize) { px2 = px1+kMinSize; wx = px2; }
          if (px2 > px2p) { px2 = px2p; wx = px2; }
+         if (fixedr) {
+            Double_t dy = Double_t(parent->AbsPixeltoX(TMath::Abs(px2-px1))) /
+                          fAspectRatio;
+            Int_t npy2 = py1 - TMath::Abs(parent->YtoAbsPixel(dy) -
+                                          parent->YtoAbsPixel(0));
+            if (npy2 < py2p)
+               px2 -= px - pxold;
+            else
+               py2 = npy2;
+         }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
       if (INSIDE) {
@@ -3932,6 +4029,27 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
 }
 
 //______________________________________________________________________________
+void TPad::SetFixedAspectRatio(Bool_t fixed)
+{
+   // Fix pad aspect ratio to current value if fixed is true.
+
+   if (fixed) {
+      if (!fFixedAspectRatio) {
+         if (fHNDC != 0.)
+            fAspectRatio = fWNDC / fHNDC;
+         else {
+            Error("SetAspectRatio", "cannot fix aspect ratio, height of pad is 0");
+            return;
+         }
+         fFixedAspectRatio = kTRUE;
+      }
+   } else {
+      fFixedAspectRatio = kFALSE;
+      fAspectRatio = 0;
+   }
+}
+
+//______________________________________________________________________________
 void TPad::SetEditable(Bool_t mode)
 {
    // Set pad editable yes/no
@@ -3990,17 +4108,32 @@ void TPad::SetLogz(Int_t value)
 //______________________________________________________________________________
 void TPad::SetPad(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup)
 {
-//*-*-*-*-*-*-*-*-*Set canvas range for pad*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              ========================
+   // Set canvas range for pad and resize the pad. If the aspect ratio
+   // was fixed before the call it will be un-fixed.
 
-  //if (!IsEditable()) return;
+   //if (!IsEditable()) return;
 
-  fXlowNDC = xlow;
-  fYlowNDC = ylow;
-  fWNDC    = xup - xlow;
-  fHNDC    = yup - ylow;
+   // Reorder points to make sure xlow,ylow is bottom left point and
+   // xup,yup is top right point.
+   if (xup < xlow) {
+      Double_t x = xlow;
+      xlow = xup;
+      xup  = x;
+   }
+   if (yup < ylow) {
+      Double_t y = ylow;
+      ylow = yup;
+      yup  = y;
+   }
 
-  ResizePad();
+   fXlowNDC = xlow;
+   fYlowNDC = ylow;
+   fWNDC    = xup - xlow;
+   fHNDC    = yup - ylow;
+
+   SetFixedAspectRatio(kFALSE);
+
+   ResizePad();
 }
 
 //______________________________________________________________________________
