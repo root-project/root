@@ -1,10 +1,14 @@
-// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.1 2000/09/08 16:42:12 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.2 2000/09/11 06:16:26 brun Exp $
 // Author: Rene Brun , Valerio Filippini  06/09/2000 
 
 //_____________________________________________________________________________________
-//  Utility class to generate n-body event
-//  according to fermi lorentz-invariant phase space
-//  events are generated in their own center-of-mass,
+//
+//  Utility class to generate n-body event,
+//  with constant cross-section (default)
+//  or with Fermi energy dependence (opt="Fermi").
+//  The event is generated in the center-of-mass frame, 
+//  but the decay products are finally boosted
+//  using the betas of the original particle.
 
 #include "TGenPhaseSpace.h"
 #include "TRandom.h"
@@ -53,10 +57,11 @@ TGenPhaseSpace::TGenPhaseSpace(const TGenPhaseSpace &gen)
 //__________________________________________________________________________________________________
 Double_t TGenPhaseSpace::Generate() 
 {
-  //
-  //-----> With the help of fNt-2 random numbers in ascending order
-  //       compute fNt invariant masses in ascending order
-  //
+  //  Generate a random final state.
+  //  The function returns the weigth of the current event.
+  //  The TLorentzVector of each decay product can be get using GetDecay(n).
+  //  The maximum weigth can be get using GetWtMax().
+  // 
   Double_t rno[kMAXP];
   rno[0] = 0;
   Int_t n;
@@ -144,8 +149,8 @@ Bool_t TGenPhaseSpace::SetDecay(TLorentzVector &P, Int_t nt,
   // TLorentzVector &P:    decay particle
   // Int_t nt:             number of decay products
   // Double_t *mass:       array of decay product masses
-  // Option_t *opt:        fermi or constant cross section
-  //
+  // Option_t *opt:        default -> constant cross section
+  //                       "Fermi" -> Fermi energy dependece
   // return value:
   // kTRUE:      the decay is permitted by kinematics
   // kFALSE:     the decay is forbidden by kinematics
