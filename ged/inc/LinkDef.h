@@ -33,6 +33,4 @@
 #pragma link C++ class TGedMarkerSelect;
 #pragma link C++ class TGedMarkerPopup;
 
-#pragma link C++ class TGedPadEditor;
-
 #endif
