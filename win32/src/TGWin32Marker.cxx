@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name$:$Id$
+// @(#)root/win32:$Name:  $:$Id: TGWin32Marker.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Valery Fine   27/01/96
 
 /*************************************************************************
@@ -15,14 +15,18 @@
 TGWin32Marker::TGWin32Marker(int n, TPoint *xy, int type){
   fNumNode = n;
   fMarkerType = type;
-  if (type >= 2)
-     if (fChain = new POINT[n])
-      for( int i = 0; i < n; i++ ) {
-                 fChain[i].x = xy[i].GetX();
-                 fChain[i].y = xy[i].GetY();
-      }
-  else
-     fChain = NULL;
+  if (type >= 2) {
+     if (fChain = new POINT[n]) {
+        for( int i = 0; i < n; i++ ) {
+           fChain[i].x = xy[i].GetX();
+           fChain[i].y = xy[i].GetY();
+        }
+     } else {
+        fChain = 0;
+     }
+  } else {
+     fChain = 0;
+  }
 }
 //______________________________________________________________________________
 TGWin32Marker::~TGWin32Marker(){
