@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.17 2001/12/10 14:42:47 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.18 2002/01/02 21:43:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -59,7 +59,8 @@ public:
                kLabelsHori  = BIT(18),
                kLabelsVert  = BIT(19),
                kLabelsDown  = BIT(20),
-               kLabelsUp    = BIT(21)};
+               kLabelsUp    = BIT(21),
+               kIsInteger   = BIT(22)};
 
         TAxis();
         TAxis(Int_t nbins, Axis_t xmin, Axis_t xmax);
