@@ -1,7 +1,7 @@
-class A { int a; };
-class B { int a; };
-class C : public A {int a; };
-class D : public A, public B {int a; };
+class A { public: A() {}; virtual ~A() {}; int a; };
+class B { public: B() {}; virtual ~B() {}; int a; };
+class C : public A { public: virtual ~C() {}; int a; };
+class D : public A, public B {public: virtual ~D() {}; int a; };
 
 #include <stdio.h>
 
@@ -52,7 +52,7 @@ void castfeat() {
    
    WriteCast * w;
    w = new WriteCast( a );
-
+#if 1
    fprintf(stderr,"WriteCast of a (%p) gives %p and %s\n", a, w->fStartAdd, w->fActualClass->GetName());
    w = new WriteCast( b );
    fprintf(stderr,"WriteCast of b (%p) gives %p and %s\n", b, w->fStartAdd, w->fActualClass->GetName());
@@ -71,4 +71,5 @@ void castfeat() {
 
    w = new WriteCast( bd );
    fprintf(stderr,"WriteCast of bd (%p) gives %p and %s %d\n", bd, w->fStartAdd, w->fActualClass->GetName(), w->fOffset);
+#endif
 }
