@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.95 2002/07/06 06:54:35 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.97 2002/08/01 21:33:48 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -105,10 +105,10 @@ public:
    TFormLeafInfo(const TFormLeafInfo& orig) {
       *this = orig; // default copy
       // change the pointers that need to be deep-copied
-      if (fCounter) fCounter = fCounter->Clone();
-      if (fNext) fNext = fNext->Clone();
+      if (fCounter) fCounter = fCounter->DeepCopy();
+      if (fNext) fNext = fNext->DeepCopy();
    }
-   virtual TFormLeafInfo* Clone(const char* name = "") const {
+   virtual TFormLeafInfo* DeepCopy() const {
       return new TFormLeafInfo(*this);
    }
    virtual ~TFormLeafInfo() { delete fCounter; delete fNext; };
@@ -608,7 +608,7 @@ public:
    };
    TFormLeafInfoDirect(const TFormLeafInfoDirect& orig) : TFormLeafInfo(orig) {
    }
-   virtual TFormLeafInfo* Clone(const char* name = "") const {
+   virtual TFormLeafInfo* DeepCopy() const {
       return new TFormLeafInfoDirect(*this);
    }
    virtual ~TFormLeafInfoDirect() { };
@@ -654,7 +654,7 @@ public:
    TFormLeafInfoClones(const TFormLeafInfoClones& orig) : TFormLeafInfo(orig) {
       fTop = orig.fTop;
    };
-   virtual TFormLeafInfo* Clone(const char* name = "") const {
+   virtual TFormLeafInfo* DeepCopy() const {
       return new TFormLeafInfoClones(*this);
    }
    
@@ -801,7 +801,7 @@ public:
                         TStreamerElement* element = 0) :
       TFormLeafInfo(classptr,offset,element) { };
    TFormLeafInfoPointer(const TFormLeafInfoPointer& orig) : TFormLeafInfo(orig) {};
-   virtual TFormLeafInfo* Clone(const char* name = "") const {
+   virtual TFormLeafInfo* DeepCopy() const {
       return new TFormLeafInfoPointer(*this);
    }
 
@@ -866,7 +866,7 @@ public:
       fParams = orig.fParams ;
       fResult = orig.fResult;
    };
-   virtual TFormLeafInfo* Clone(const char* name = "") const {
+   virtual TFormLeafInfo* DeepCopy() const {
       return new TFormLeafInfoMethod(*this);
    }
 
@@ -999,7 +999,7 @@ public:
         Int_t counterOffset;
         TStreamerElement* counter = classptr->GetStreamerInfo()->GetStreamerElement(elem->GetCountName(),counterOffset);
         if (!parent) return;
-        fCounter2 = parent->Clone();
+        fCounter2 = parent->DeepCopy();
         TFormLeafInfo ** next = &(fCounter2->fNext);
         while(*next != 0) next = &( (*next)->fNext);
         *next = new TFormLeafInfo(classptr,counterOffset,counter);
@@ -1014,13 +1014,13 @@ public:
   TFormLeafInfoMultiVarDim(const TFormLeafInfoMultiVarDim& orig) : TFormLeafInfo(orig) {     
      fNsize = orig.fNsize;
      fSizes.Copy(fSizes); 
-     fCounter2 = orig.fCounter2?orig.fCounter2->Clone():0;
+     fCounter2 = orig.fCounter2?orig.fCounter2->DeepCopy():0;
      fSumOfSizes = orig.fSumOfSizes;   
      fDim = orig.fDim;             
      fVirtDim = orig.fVirtDim;          
      fPrimaryIndex = orig.fPrimaryIndex;      
   };
-  virtual TFormLeafInfo* Clone(const char* name = "") const {
+  virtual TFormLeafInfo* DeepCopy() const {
      return new TFormLeafInfoMultiVarDim(*this);
   }
 
@@ -1124,7 +1124,7 @@ public:
   TFormLeafInfoMultiVarDimDirect() : TFormLeafInfoMultiVarDim() {};
   TFormLeafInfoMultiVarDimDirect(const TFormLeafInfoMultiVarDimDirect& orig) : 
     TFormLeafInfoMultiVarDim(orig) {}      
-  virtual TFormLeafInfo* Clone(const char* name = "") const {
+  virtual TFormLeafInfo* DeepCopy() const {
      return new TFormLeafInfoMultiVarDimDirect(*this);
   }
   
@@ -1162,7 +1162,7 @@ public:
       fGoodCast = orig.fGoodCast;
       fIsTObject = orig.fIsTObject;
    }
-   virtual TFormLeafInfo* Clone(const char* name = "") const {
+   virtual TFormLeafInfo* DeepCopy() const {
       return new TFormLeafInfoCast(*this);
    }   
    virtual ~TFormLeafInfoCast() { };
