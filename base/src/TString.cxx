@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.29 2004/06/02 09:25:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.30 2004/06/16 10:23:32 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1451,7 +1451,7 @@ void TString::Form(const char *va_(fmt), ...)
    // Formats a string using a printf style format descriptor.
    // Existing string contents will be overwritten.
 
-   Ssiz_t buflen = 50 * strlen(va_(fmt));    // pick a number, any number
+   Ssiz_t buflen = 20 * strlen(va_(fmt));    // pick a number, any number
    Clobber(buflen);
 
    int n;
