@@ -3067,7 +3067,7 @@ char *new_name;
    * initialize remaining object to 0
    **********************************************************/
 #ifndef G__OLDIMPLEMENTATION1621
-  if(2!=stringflag)
+  if(0==stringflag)
 #endif
 #ifndef G__OLDIMPLEMENTATION1329
   {

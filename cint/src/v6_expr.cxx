@@ -24,8 +24,10 @@
 #define G__OLDIMPLEMENTATION918
 #endif
 
+#ifndef G__ROOT
 #ifndef G__OLDIMPLEMENTATION1620
 #define G__NOPOWEROPR
+#endif
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1103

@@ -7097,7 +7097,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 
 #ifndef G__OLDIMPLEMENTATION1612
     case 'U':
-      if('U'==p_ifunc->p_tagtable[ifn] && 'U'==result7->type) {
+      if('U'==p_ifunc->type[ifn] && 'U'==result7->type) {
 	if(p_ifunc->p_tagtable[ifn]!=result7->tagnum) {
 	  int offset = G__ispublicbase(p_ifunc->p_tagtable[ifn]
 				   ,result7->tagnum,result7->obj.i);
