@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.58 2004/01/12 10:10:45 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.59 2004/01/12 11:32:25 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -753,10 +753,11 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    // calling ::SleepEx(1, 1) on return does the same dirty work ;-) 
    // i.e. prevents from 100% CPU time occupation.
    class ThreadSwitch {
+      Bool_t fSwitch; // do no call SleepEx on return for pendingOnly events
    public:
-      ThreadSwitch() {}
-      ~ThreadSwitch() { ::SleepEx(1, 1); } 
-   } switcher;
+      ThreadSwitch(Bool_t on) { fSwitch = on; }
+      ~ThreadSwitch() { if (fSwitch) ::SleepEx(1, 1); } 
+   } switcher(!pendingOnly);
 
    if (gROOT->IsLineProcessing()) {
       return;   // might block, but rarely
