@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.74 2005/03/07 22:45:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.75 2005/03/22 17:10:25 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -2401,7 +2401,7 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
          UInt_t checksum = 0;
          *this >> checksum;
          version = R__FindStreamerInfoVersion(cl,checksum);
-      }  else if (version == 1 &&  ((TFile*)fParent)->GetVersion()<40000 ) {
+      }  else if (version == 1 && fParent && ((TFile*)fParent)->GetVersion()<40000 ) {
          // We could have a file created using a Foreign class before
          // the introduction of the CheckSum.  We need to check
          if ((!cl->IsLoaded() || cl->IsForeign()) && 
