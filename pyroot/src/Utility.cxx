@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.4 2004/07/27 12:27:04 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.5 2004/07/29 04:41:38 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -84,6 +84,8 @@ PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& ty
       effType = EDataType( (int) kInt | mask );
    else if ( shortName == "long" )
       effType = EDataType( (int) kLong | mask );
+   else if ( shortName == "long long" )
+      effType = EDataType( (int) kLongLong | mask );
    else if ( shortName == "float" )
       effType = EDataType( (int) kFloat | mask );
    else if ( shortName == "double" )

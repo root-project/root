@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.cxx,v 1.3 2004/05/07 20:47:20 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.cxx,v 1.4 2004/07/30 06:31:18 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -62,7 +62,7 @@ PyROOT::ObjectHolder::~ObjectHolder() {
 
 //- public members -------------------------------------------------------------
 void PyROOT::ObjectHolder::release() {
-   if ( m_ref && --*m_ref <= 0 )
+   if ( m_ref && ( *m_ref - 1 ) <= 0 )
       delete m_ref;
    m_ref = 0;
 }

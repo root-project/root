@@ -346,6 +346,7 @@ namespace {
          for ( int i = 0; i < PySequence_Size( obj ); ++i ) {
             PyObject* item = PySequence_GetItem( obj, i );
             ObjectHolder* seqobh = Utility::getObjectHolder( item );
+            seqobh->release();
             oseq->AddAt( (TObject*) seqobh->getObject(), i + start );
             Py_DECREF( item );
          }

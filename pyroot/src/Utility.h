@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.4 2004/07/27 12:27:04 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.5 2004/07/29 04:41:38 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -33,6 +33,7 @@ namespace PyROOT {
          kDouble      = 0x0040,
          kVoid        = 0x0080,
          kOther       = 0x0100,
+         kLongLong    = 0x0200,
          kString      = 0x1000 | kChar,
          kDoublePtr   = 0x1000 | kDouble,
          kFloatPtr    = 0x1000 | kFloat,

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.11 2004/07/27 12:27:04 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.12 2004/07/29 04:41:38 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -107,6 +107,10 @@ namespace {
    // just convert pointer if it is a ROOT object
       PyROOT::ObjectHolder* holder = PyROOT::Utility::getObjectHolder( obj );
       if ( holder != 0 ) {
+      // this object can no longer be held, as the pointer to it may get copied
+         holder->release();
+
+      // set pointer
          func->SetArg( reinterpret_cast< long >( holder->getObject() ) );
          return true;
       }
@@ -213,6 +217,7 @@ namespace {
       ncp_t( "unsigned int",       &long_convert                      ),
       ncp_t( "long",               &long_convert                      ),
       ncp_t( "unsigned long",      &long_convert                      ),
+      ncp_t( "long long",          &long_convert                      ),
       ncp_t( "float",              &double_convert                    ),
       ncp_t( "double",             &double_convert                    ),
       ncp_t( "void",               &void_convert                      ),
@@ -510,7 +515,8 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
    case Utility::kChar:
    case Utility::kShort:
    case Utility::kInt:
-   case Utility::kLong: {
+   case Utility::kLong:
+   case Utility::kLongLong: {
       long returnValue;
       execute( obj, returnValue );
       return PyLong_FromLong( returnValue );
