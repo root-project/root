@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.67 2001/11/01 11:46:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.68 2001/11/19 21:09:39 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -131,7 +131,9 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    }
    //change defaults set in TBranch constructor
    fEntryOffsetLen = 0;
-   if (btype || fStreamerType <= 0 || fStreamerType > 15) fEntryOffsetLen = 1000; 
+   if (btype || fStreamerType <= 0 
+             || fStreamerType == 7 
+             || fStreamerType > 15) fEntryOffsetLen = 1000; 
    if (basketsize < 100) basketsize = 100;
    fBasketSize     = basketsize;
    fBasketEntry    = new Int_t[fMaxBaskets];
