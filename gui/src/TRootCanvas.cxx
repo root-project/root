@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.41 2004/05/07 13:01:18 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.42 2004/05/10 12:09:45 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -65,6 +65,7 @@ enum ERootCanvasCommands {
    kFileSaveAsPDF,
    kFileSaveAsSVG,
    kFileSaveAsGIF,
+   kFileSaveAsXML,
    kFilePrint,
    kFileCloseCanvas,
    kFileQuit,
@@ -143,6 +144,7 @@ static const char *gSaveAsTypes[] = { "PostScript",   "*.ps",
                                       "Gif files",    "*.gif",
                                       "Macro files",  "*.C",
                                       "ROOT files",   "*.root",
+                                      "XML files",    "*.xml",
                                       "All files",    "*",
                                       0,              0 };
 
@@ -310,6 +312,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fFileSaveMenu->AddEntry(Form("%s.&gif", name), kFileSaveAsGIF);
    fFileSaveMenu->AddEntry(Form("%s.&C",   name), kFileSaveAsC);
    fFileSaveMenu->AddEntry(Form("%s.&root",name), kFileSaveAsRoot);
+   fFileSaveMenu->AddEntry(Form("%s.&xml",name),  kFileSaveAsXML);
 
    fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fFileMenu->AddEntry("&New Canvas",   kFileNewCanvas);
@@ -746,6 +749,9 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
                   case kFileSaveAsRoot:
                      fCanvas->SaveAs(".root");
+                     break;
+                  case kFileSaveAsXML:
+                     fCanvas->SaveAs(".xml");
                      break;
                   case kFileSaveAsC:
                      fCanvas->SaveSource();
