@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.62 2004/08/03 20:51:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.63 2004/08/05 10:06:26 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -594,8 +594,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
    // command starting with a ".".
    // Return the return value of the command casted to a long.
 
-   Int_t nch = strlen(line);
-   if (!nch) return 0;
+   if (!line || !*line) return 0;
 
     if (!strncmp(line, ".qqqqqqq", 7) || !strncmp(line, ".QQQQQQQ", 7)) {
        gSystem->Abort();
@@ -705,8 +704,7 @@ Long_t TApplication::ProcessFile(const char *name, int *error)
 
    const Int_t kBufSize = 1024;
 
-   Int_t nch = strlen(name);
-   if (nch == 0) return 0;
+   if (!name || !*name) return 0;
 
    TString aclicMode;
    TString arguments;
