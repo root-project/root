@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.8 2002/07/16 14:01:20 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.9 2002/11/26 10:24:09 brun Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -43,6 +43,28 @@ TFunction::TFunction(G__MethodInfo *info) : TDictionary()
 }
 
 //______________________________________________________________________________
+TFunction::TFunction(const TFunction &orig) : TDictionary(orig)
+{
+   if (orig.fInfo) fInfo = new G__MethodInfo(*orig.fInfo);
+   else fInfo = 0;
+   fMethodArgs = 0;   
+}
+
+//______________________________________________________________________________
+TFunction& TFunction::operator=(const TFunction &orig)
+{
+   if (orig.fInfo) {
+      fInfo = new G__MethodInfo(*orig.fInfo);
+      SetName(fInfo->Name());
+      SetTitle(fInfo->Title());
+   }
+   else fInfo = 0;
+   fMethodArgs = 0;
+   
+   return *this;
+}
+
+//______________________________________________________________________________
 TFunction::~TFunction()
 {
    // TFunction dtor deletes adopted G__MethodInfo.
@@ -51,6 +73,14 @@ TFunction::~TFunction()
 
    if (fMethodArgs) fMethodArgs->Delete();
    delete fMethodArgs;
+}
+
+//______________________________________________________________________________
+TObject *TFunction::Clone(const char *newname) const {
+   
+   TNamed *newobj = new TFunction(*this);
+   if (newname && strlen(newname)) newobj->SetName(newname);
+   return newobj;
 }
 
 //______________________________________________________________________________
