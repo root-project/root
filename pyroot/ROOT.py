@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.7 2004/07/27 12:27:04 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.8 2004/08/12 20:55:10 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 08/12/04
+# Last: 08/16/04
 
 """Modify the exception hook to add ROOT classes as requested. Ideas stolen from
 LazyPython (Nathaniel Gray <n8gray@caltech.edu>)."""
@@ -43,6 +43,24 @@ _NAMEREX = re.compile( r"named? '?(?P<%s>[\w\d]+)'?" % _NAME )
 _orig_ehook = sys.excepthook
 
 kWhite, kBlack, kRed, kGreen, kBlue, kYellow, kMagenta, kCyan = range( 0, 8 )
+
+
+### special case for gPad (is a C++ macro) --------------------------------------
+TVirtualPad = makeRootClass( "TVirtualPad" )
+
+class _TVirtualPad( object ):
+   def __getattribute__( self, what ):
+      return getattr( TVirtualPad.Pad(), what )
+
+   def __cmp__( self, other ):
+      return cmp( TVirtualPad.Pad(), other )
+
+   def __len__( self ):
+      if TVirtualPad.Pad():
+         return 1
+      return 0
+
+gPad = _TVirtualPad()
 
 
 ### exeption hook replacement ---------------------------------------------------
