@@ -1021,12 +1021,18 @@ void RootShower::OnShowerProduce()
     cA->Modified();
     cA->Update();
     padC->cd();
-//    fHisto_dEdX->Fit("gaus","W");
-//    fHisto_dEdX->GetFunction("gaus")->SetLineColor(kRed);
-//    fHisto_dEdX->GetFunction("gaus")->SetLineWidth(1);
-    fHisto_dEdX->Fit("landau","L");
-    fHisto_dEdX->GetFunction("landau")->SetLineColor(kRed);
-    fHisto_dEdX->GetFunction("landau")->SetLineWidth(1);
+    // do not fit if not enough particles
+    if(fHisto_dEdX->GetEntries() > 10) {
+       fHisto_dEdX->Fit("landau","L");
+       TF1 *f1 = fHisto_dEdX->GetFunction("landau");
+       //delete fit function is fit is a non sense
+       if (f1 && f1->GetNDF() > 0) {
+          f1->SetLineColor(kRed);
+          f1->SetLineWidth(1);
+       } else {
+          delete f1;
+       }
+    }
     fHisto_dEdX->Draw();    
     padC->Modified();
     padC->Update();
@@ -1161,9 +1167,18 @@ void RootShower::OnOpenFile(const Char_t *filename)
                     fEvent->GetTotal());
     fStatusBar->SetText(strtmp,0);
     padC->cd();
-    fHisto_dEdX->Fit("landau","L");
-    fHisto_dEdX->GetFunction("landau")->SetLineColor(kRed);
-    fHisto_dEdX->GetFunction("landau")->SetLineWidth(1);
+    // do not fit if not enough particles
+    if(fHisto_dEdX->GetEntries() > 10) {
+       fHisto_dEdX->Fit("landau","L");
+       TF1 *f1 = fHisto_dEdX->GetFunction("landau");
+       //delete fit function is fit is a non sense
+       if (f1 && f1->GetNDF() > 0) {
+          f1->SetLineColor(kRed);
+          f1->SetLineWidth(1);
+       } else {
+          delete f1;
+       }
+    }
     fHisto_dEdX->Draw();    
     padC->Modified();
     padC->Update();
