@@ -443,19 +443,20 @@ void TFile::Init(Bool_t create)
 //*-* -------------Read keys of the top directory
 
       if (fSeekKeys > fBEGIN && fEND <= size) {
+         //normal case. Recover only if file has no keys
          TDirectory::ReadKeys();
          gDirectory = this;
          if (!GetNkeys()) Recover();
+      } else if ((fBEGIN+nbytes == fEND) && (fEND==size)) {
+         //the file might be open by another process and nothing written to the file yet
+         Warning("Init","file %s has no keys", GetName());
+         gDirectory = this;
       } else {
-         if (fBEGIN+nbytes == fEND) {
-            Warning("Init","file %s has no keys\n(could be due to a ctlr-c), "
-                    "checking to be sure...", GetName());
-         } else if (fEND > size) {
-            Error("Init","file %s is truncated at %d bytes, should be %d, "
-                  "trying to recover...", GetName(), size, fEND);
+         //something had been written to the file. Trailer is missing, must recover
+         if (fEND > size) {
+            Error("Init","file %s is truncated at %d bytes: should be %d, trying to recover",GetName(),size,fEND);
          } else {
-            Warning("Init","file %s probably not closed, trying to recover...",
-                    GetName());
+            Warning("Init","file %s probably not closed, trying to recover",GetName());
          }
          Int_t nrecov = Recover();
          if (nrecov) {
@@ -474,7 +475,7 @@ void TFile::Init(Bool_t create)
       Int_t lenIndex = gROOT->GetListOfStreamerInfo()->GetSize()+1;
       if (lenIndex < 5000) lenIndex = 5000;
       fClassIndex = new TArrayC(lenIndex);
-      if (fSeekFree > fBEGIN) ReadStreamerInfo();
+      if (fSeekInfo > fBEGIN) ReadStreamerInfo();
    }
 
    // Count number of TProcessIDs in this file
@@ -1102,7 +1103,12 @@ Int_t TFile::Recover()
       if (seekpdir == fSeekDir && strcmp(classname,"TBasket")) {
          key = new TKey();
          key->ReadBuffer(bufread);
-         AppendKey(key);
+         if (!strcmp(key->GetName(),"StreamerInfo")) {
+            fSeekInfo = seekkey;
+            fNbytesInfo = nbytes;
+         } else {
+            AppendKey(key);
+         }
          nrecov++;
          SetBit(kRecovered);
          Info("Recover", "recovered key %s:%s at address %d",key->GetClassName(),key->GetName(),idcur);
