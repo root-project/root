@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.5 2002/10/08 16:17:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.6 2002/10/21 15:21:13 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -265,11 +265,11 @@ Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    Double_t par[3]; 
    Double_t newpt[3];
    memcpy(&newpt[0], point, 3*sizeof(Double_t));
-   for (Int_t i=0; i<3; i++) newpt[i]-=fOrigin[i];
+   Int_t i;
+   for (i=0; i<3; i++) newpt[i]-=fOrigin[i];
    par[0] = fDX;
    par[1] = fDY;
    par[2] = fDZ;
-   Int_t i;
    for (i=0; i<3; i++)
       saf[i] = TMath::Abs(newpt[i])-par[i];
    if (safe) {
