@@ -1,6 +1,6 @@
 # -*- mode: makefile -*-
 #
-# Makefile of ROOT for Itanium/Linux with Intel ecc compiler
+# Makefile of ROOT for Itanium/Linux with Intel icc compiler
 
 PLATFORM      = linux
 
@@ -14,9 +14,23 @@ OPT           = $(OPTFLAGS)
 NOOPT         = -O0
 endif
 
+# Compiler version:
+ICC_MAJOR    := $(shell ecc -quiet -V 2>&1 | awk '{ if (NR==2) print $$2 }' | \
+                cut -d'.' -f1)
+ICC_MINOR    := $(shell ecc -quiet -V 2>&1 | awk '{ if (NR==2) print $$2 }' | \
+                cut -d'.' -f2 | cut -d',' -f1)
+
+ifeq ($(ICC_MAJOR),8)
+ICC           = icc
+IFORT         = ifort
+else
+ICC           = ecc
+IFORT         = efc
+endif
+
 # Compiler:
-CXX           = ecc
-CC            = ecc
+CXX          := $(ICC)
+CC           := $(ICC)
 CXXFLAGS      = $(EXTRA_CXXFLAGS)
 CFLAGS        = $(EXTRA_CFLAGS) -restrict
 CINTCXXFLAGS  = $(EXTRA_CXXFLAGS) \
@@ -26,12 +40,6 @@ CINTCFLAGS    = $(EXTRA_CFLAGS) -restrict \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
 
-# Compiler version:
-ICC_MAJOR    := $(shell $(CXX) -V 2>&1 | awk '{ if (NR==2) print $$2 }' | \
-                cut -d'.' -f1)
-ICC_MINOR    := $(shell $(CXX) -V 2>&1 | awk '{ if (NR==2) print $$2 }' | \
-                cut -d'.' -f2)
-
 ifeq ($(ICC_MAJOR),8)
 CXXFLAGS     += -fPIC
 CFLAGS       += -fPIC
@@ -40,7 +48,7 @@ CINTCFLAGS   += -fPIC
 endif
 
 # Linker:
-LD            = ecc
+LD           := $(ICC)
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
 SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
@@ -52,7 +60,7 @@ CILIBS        = -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
-F77           = efc
+F77          := $(IFORT)
 F77FLAGS      =
 # check path for libg2c and libfrtbegin
 LIBG2C       := $(shell gcc -print-file-name=libg2c.a | \
@@ -61,8 +69,8 @@ LIBFRTBEGIN  := $(shell gcc -print-file-name=libfrtbegin.a | \
                   awk '{ if ($$1 != "libfrtbegin.a") print $$1}')
 ifeq ($(ICC_MAJOR),8)
 F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
-                -L$(shell which efc | sed -e 's|bin/efc|lib|') \
-                -lF90 -lifcore
+                -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
+                -lifcore
 else
 F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
                 -L$(shell which efc | sed -e 's|bin/efc|lib|') \

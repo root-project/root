@@ -358,11 +358,23 @@ SOFLAGS       = -shared
 endif
 
 ifeq ($(ARCH),linuxia64ecc)
-# Itanium Linux with Intel ecc
-CXX           = ecc
-CXXFLAGS      = -O
-LD            = ecc
-LDFLAGS       = -O -i_dynamic
+# Itanium Linux with Intel icc (was ecc)
+ICC_MAJOR    := $(shell ecc -quiet -V 2>&1 | awk '{ if (NR==2) print $$2 }' | \
+                cut -d'.' -f1)
+ICC_MINOR    := $(shell ecc -quiet -V 2>&1 | awk '{ if (NR==2) print $$2 }' | \
+                cut -d'.' -f2 | cut -d',' -f1)
+ifeq ($(ICC_MAJOR),8)
+ICC           = icc
+IFORT         = ifort
+else
+ICC           = ecc
+IFORT         = efc
+endif
+
+CXX           = $(ICC)
+CXXFLAGS      = -O -fPIC
+LD            = $(ICC)
+LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
 
