@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.4 2000/09/14 17:41:44 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.5 2001/03/30 15:19:36 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -59,6 +59,8 @@
 
 #include <stdlib.h>
 
+#include "TROOT.h"
+#include "MemCheck.h"
 #include "TObjectTable.h"
 #include "TError.h"
 #include "TMath.h"
@@ -185,6 +187,10 @@ void *operator new(size_t size)
 {
    // Custom new() operator.
 
+   // use memory checker
+   if (TROOT::MemCheck())
+      return TMemHashTable::AddPointer(size);
+
    static const char *where = "operator new";
 
    if (!newInit) {
@@ -242,6 +248,10 @@ void *operator new(size_t size, void *vp)
 #endif
 #endif
    if (vp == 0) {
+      // use memory checker
+      if (TROOT::MemCheck())
+         return TMemHashTable::AddPointer(size);
+
       register void *vp;
       if (gMmallocDesc)
          vp = ::mcalloc(gMmallocDesc, RealSize(size), sizeof(char));
@@ -260,6 +270,12 @@ void *operator new(size_t size, void *vp)
 void operator delete(void *ptr)
 {
    // Custom delete() operator.
+
+   // use memory checker
+   if (TROOT::MemCheck()) {
+      TMemHashTable::FreePointer(ptr);
+      return;
+   }
 
    static const char *where = "operator delete";
 
@@ -296,6 +312,8 @@ void operator delete(void *ptr)
 //______________________________________________________________________________
 void *operator new[](size_t size)
 {
+   // Custom vector new operator.
+
    return ::operator new(size);
 }
 
@@ -303,6 +321,8 @@ void *operator new[](size_t size)
 //______________________________________________________________________________
 void *operator new[](size_t size, void *vp)
 {
+   // Custom vector new() operator with placement argument.
+
    return ::operator new(size, vp);
 }
 #endif
@@ -318,6 +338,10 @@ void operator delete[](void *ptr)
 void *CustomReAlloc1(void *ovp, size_t size)
 {
    // Reallocate (i.e. resize) block of memory.
+
+   // use memory checker
+   if (TROOT::MemCheck())
+      return TMemHashTable::AddPointer(size, ovp);
 
    static const char *where = "CustomReAlloc1";
 
@@ -350,6 +374,10 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
 {
    // Reallocate (i.e. resize) block of memory. Checks if current size is
    // equal to oldsize. If not memory was overwritten.
+
+   // use memory checker
+   if (TROOT::MemCheck())
+      return TMemHashTable::AddPointer(size, ovp);
 
    static const char *where = "CustomReAlloc2";
 
