@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Inflate.c,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Inflate.c,v 1.2 2001/11/13 14:16:18 brun Exp $ */
 /* Author: */
 #include <stdio.h>
 #include <stdlib.h>
@@ -347,8 +347,8 @@ static ush mask[] = {
 
 static ulg bb;                         /* bit buffer */
 static unsigned bk;                    /* bits in bit buffer */
-static uch  *ibufptr;
-static long  ibufcnt;
+static uch  *ibufptr,*obufptr;
+static long  ibufcnt, obufcnt;
 
 #define CHECK_EOF
 
@@ -1130,9 +1130,6 @@ int R__Inflate_free()
  *                                                                     *
  ***********************************************************************/
 #define HDRSIZE 9
-
-static uch  *ibufptr,*obufptr;
-static long  ibufcnt, obufcnt;
 
 void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 {
