@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.11 2004/11/23 13:55:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.12 2005/02/02 15:16:51 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -241,66 +241,79 @@ TGenCollectionProxy::Value::Value(const std::string& inside)  {
     }
   }
   else {
-    G__TypeInfo ti(inside.c_str());
-    if ( !ti.IsValid() ) {
-      if (intype != inside) {
-        fCase |= G__BIT_ISPOINTER;
-        fSize = sizeof(void*);
-      }
-      fType = gROOT->GetClass(intype.c_str());
-      if (fType)  {
+    // In the case where we have an emulated class,
+    // if the class is nested (in a class or a namespace),
+    // calling G__TypeInfo ti(inside.c_str());
+    // might fail because CINT does not known the nesting
+    // scope, so let's first look for an emulated class:
+    fType = gROOT->GetClass(intype.c_str());
+    if (fType && !fType->IsLoaded()) {
         fCase  |= G__BIT_ISCLASS;
         fCtor   = fType->GetNew();
         fDtor   = fType->GetDestructor();
         fDelete = fType->GetDelete();
-      }
-      else {
-        // either we have an Emulated enum or a really unknown class!
-        // let's just claim its an enum :(
-        fCase = G__BIT_ISENUM;
-        fSize = sizeof(Int_t);
-        fKind = kInt_t;
-      }
-    }
-    else {
-      long P = ti.Property();
-      if ( P&G__BIT_ISPOINTER ) {
-        fSize = sizeof(void*);
-      }
-      if ( P&G__BIT_ISSTRUCT ) {
-        P |= G__BIT_ISCLASS;
-      }
-      if ( P&G__BIT_ISCLASS ) {
-        fType = gROOT->GetClass(intype.c_str());
-        Assert(fType);
-        fCtor   = fType->GetNew();
-        fDtor   = fType->GetDestructor();
-        fDelete = fType->GetDelete();
-      }
-      else if ( P&G__BIT_ISFUNDAMENTAL ) {
-        TDataType *fundType = gROOT->GetType( intype.c_str() );
-        fKind = (EDataType)fundType->GetType();
-        if ( 0 == strcmp("bool",fundType->GetFullTypeName()) )  {
-          fKind = (EDataType)kBOOL_t;
-        }
-        fSize = ti.Size();
-        Assert(fKind>0 && fKind<0x16);
-      }
-      else if ( P&G__BIT_ISENUM ) {
-        fSize = sizeof(int);
-        fKind = kInt_t;
-      }
-      fCase = P & (G__BIT_ISPOINTER|G__BIT_ISFUNDAMENTAL|G__BIT_ISENUM|G__BIT_ISCLASS);
-      if (fType == TString::Class() && (fCase&G__BIT_ISPOINTER)) {
-        fCase |= R__BIT_ISTSTRING;
-      }
+    } else {
+       G__TypeInfo ti(inside.c_str());
+       if ( !ti.IsValid() ) {
+          if (intype != inside) {
+             fCase |= G__BIT_ISPOINTER;
+             fSize = sizeof(void*);
+          }
+          fType = gROOT->GetClass(intype.c_str());
+          if (fType)  {
+             fCase  |= G__BIT_ISCLASS;
+             fCtor   = fType->GetNew();
+             fDtor   = fType->GetDestructor();
+             fDelete = fType->GetDelete();
+          }
+          else {
+             // either we have an Emulated enum or a really unknown class!
+             // let's just claim its an enum :(
+             fCase = G__BIT_ISENUM;
+             fSize = sizeof(Int_t);
+             fKind = kInt_t;
+          }
+       }
+       else {
+          long P = ti.Property();
+          if ( P&G__BIT_ISPOINTER ) {
+             fSize = sizeof(void*);
+          }
+          if ( P&G__BIT_ISSTRUCT ) {
+             P |= G__BIT_ISCLASS;
+          }
+          if ( P&G__BIT_ISCLASS ) {
+             fType = gROOT->GetClass(intype.c_str());
+             Assert(fType);
+             fCtor   = fType->GetNew();
+             fDtor   = fType->GetDestructor();
+             fDelete = fType->GetDelete();
+          }
+          else if ( P&G__BIT_ISFUNDAMENTAL ) {
+             TDataType *fundType = gROOT->GetType( intype.c_str() );
+             fKind = (EDataType)fundType->GetType();
+             if ( 0 == strcmp("bool",fundType->GetFullTypeName()) )  {
+                fKind = (EDataType)kBOOL_t;
+             }
+             fSize = ti.Size();
+             Assert(fKind>0 && fKind<0x16);
+          }
+          else if ( P&G__BIT_ISENUM ) {
+             fSize = sizeof(int);
+             fKind = kInt_t;
+          }
+          fCase = P & (G__BIT_ISPOINTER|G__BIT_ISFUNDAMENTAL|G__BIT_ISENUM|G__BIT_ISCLASS);
+          if (fType == TString::Class() && (fCase&G__BIT_ISPOINTER)) {
+             fCase |= R__BIT_ISTSTRING;
+          }
+       }
     }
   }
   if ( fSize == std::string::npos ) {
-    if ( fType == 0 ) {
-      Fatal("TGenCollectionProxy","Could not find %s!",inside.c_str());
-    }
-    fSize = fType->Size();
+     if ( fType == 0 ) {
+        Fatal("TGenCollectionProxy","Could not find %s!",inside.c_str());
+     }
+     fSize = fType->Size();
   }
 }
 
