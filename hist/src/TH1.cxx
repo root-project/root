@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.178 2004/05/05 12:52:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.179 2004/05/10 06:58:49 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5063,7 +5063,7 @@ void TH1::SetContour(Int_t  nlevels, const Double_t *levels)
 //
 //  By default the number of contour levels is set to 20.
 //
-//  if argument levels = 0 or issing, equidistant contours are computed
+//  if argument levels = 0 or missing, equidistant contours are computed
 //
 
   Int_t level;
