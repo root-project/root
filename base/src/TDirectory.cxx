@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.39 2003/12/30 13:16:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.40 2004/01/05 08:18:35 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -694,6 +694,7 @@ void TDirectory::FillBuffer(char *&buffer)
       tobuf(buffer, (Int_t)fSeekKeys);
    }
    fUUID.FillBuffer(buffer);
+   if (fFile && fFile->GetVersion() < 40000) return;
    if (version <=1000) for (Int_t i=0;i<3;i++) tobuf(buffer,Int_t(0));
 }
 
@@ -1301,7 +1302,8 @@ Int_t TDirectory::Sizeof() const
    nbytes     += fDatimeC.Sizeof();
    nbytes     += fDatimeM.Sizeof();
    nbytes     += fUUID.Sizeof();
-   nbytes += 12; //always assume that the file may be above 2 Gbytes
+    //assume that the file may be above 2 Gbytes if file version is > 4
+   if (fFile && fFile->GetVersion() >= 40000) nbytes += 12;
    return nbytes;
 }
 
