@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.21 2003/12/12 18:21:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.22 2003/12/15 08:54:29 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -1216,22 +1216,21 @@ void TGTextButton::SavePrimitive(ofstream &out, Option_t *option)
    // font + GC
    option = GetName()+5;         // unique digit id of the name
    char ParGC[50], ParFont[50];
+   sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+   sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(ParFont,"ufont->GetFontStruct()");
-      } else {
-         sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-      }
+      } 
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
-      } else {
-         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
-      }
+      } 
    }
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
@@ -1279,13 +1278,13 @@ void TGPictureButton::SavePrimitive(ofstream &out, Option_t *option)
    // GC
    option = GetName()+5;         // unique digit id of the name
    char ParGC[50];
+   sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   
    if (GetDefaultGC()() != fNormGC) {
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
-      } else {
-         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
       }
    }
 
@@ -1349,22 +1348,21 @@ void TGCheckButton::SavePrimitive(ofstream &out, Option_t *option)
    // font + GC
    option = GetName()+5;         // unique digit id of the name
    char ParGC[50], ParFont[50];
+   sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+   sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(ParFont,"ufont->GetFontStruct()");
-      } else {
-         sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-      }
+      } 
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
-      } else {
-         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
-      }
+      } 
    }
 
    if (GetOptions() == kChildFrame) {
@@ -1419,22 +1417,21 @@ void TGRadioButton::SavePrimitive(ofstream &out, Option_t *option)
    // font + GC
    option = GetName()+5;         // unique digit id of the name
    char ParGC[50], ParFont[50];
+   sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+   sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(ParFont,"ufont->GetFontStruct()");
-      } else {
-         sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-      }
+      } 
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
-      } else {
-         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
-      }
+      } 
    }
 
    if (GetOptions() == (kChildFrame)) {

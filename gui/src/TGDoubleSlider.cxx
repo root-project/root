@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.9 2003/11/11 14:39:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.10 2003/12/11 16:26:11 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -516,7 +516,7 @@ void TGDoubleHSlider::SavePrimitive(ofstream &out, Option_t *option)
 void TGDoubleVSlider::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
-
+   
    SaveUserColor(out, option);
 
    out<<"   TGDoubleVSlider *";
