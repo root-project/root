@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.9 2000/12/18 07:12:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.10 2001/01/18 09:41:17 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -95,11 +95,12 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
    TRealData *rd;
    TIter      next(cl->GetListOfRealData());
    while ((rd = (TRealData *) next())) {
+      if (rd->IsObject()) continue;
       TDataMember *member = rd->GetDataMember();
       if (!member->IsPersistent()) continue; //do not process members with a ! as the first
                                              // character in the comment field
       if (!member->IsBasic() || member->IsaPointer() ) {
-         Warning("BranchClones","Cannot process member:%s",member->GetName());
+         Warning("BranchClones","Cannot process: %s::%s",cl->GetName(),member->GetName());
          continue;
       }
       // forget TObject part if splitlevel = 2
@@ -114,7 +115,7 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
       TDataType *membertype = member->GetDataType();
       Int_t type = membertype->GetType();
       if (type == 0) {
-         Warning("BranchClones","Cannot process member:%s",member->GetName());
+         Warning("BranchClones","Cannot process: %s::%s",cl->GetName(),member->GetName());
          continue;
       }
       if (type == 1)  itype = "B";
