@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.58 2004/01/10 10:52:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.59 2004/02/17 08:18:17 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -153,7 +153,7 @@ public:
     virtual TBranch  *Bronch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual TBranch  *BranchOld(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
     virtual void      Browse(TBrowser *b);
-    virtual void      BuildIndex(const char *majorname, const char *minorname);
+    virtual Int_t     BuildIndex(const char *majorname, const char *minorname);
     TStreamerInfo    *BuildStreamerInfo(TClass *cl, void *pointer=0);
     virtual TTree    *CloneTree(Int_t nentries=-1, Option_t *option="");
     virtual void      CopyAddresses(TTree *tree);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.181 2004/02/17 16:19:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.182 2004/03/06 10:10:53 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1387,7 +1387,7 @@ void TTree::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-void TTree::BuildIndex(const char *majorname, const char *minorname)
+Int_t TTree::BuildIndex(const char *majorname, const char *minorname)
 {
    // Build an index table using the leaves with name: major & minor name
    // The index is built in the following way:
@@ -1409,6 +1409,8 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
    // In case an expression is specified, the equivalent expression must be computed
    // when calling GetEntryWithIndex.
    //
+   // To build an index with only majorname, specify minorname="0"
+   //
    // Note that once the index is built, it can be saved with the TTree object
    // with tree.Write(); //if the file has been open in "update" mode.
    //
@@ -1417,6 +1419,8 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
    // If a previous index was computed, it is redefined by this new call.
    //
    // Note that this function can also be applied to a TChain.
+   //
+   // The return value is the number of entries in the Index (< 0 indicates failure)
 
    Int_t nch = strlen(majorname) + strlen(minorname) + 10;
    char *varexp = new char[nch];
@@ -1424,7 +1428,7 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
 
    Int_t oldEstimate = fEstimate;
    Int_t n = (Int_t)GetEntries(); //must use GetEntries instead of fEntries in case of a chain
-   if (n <= 0) return;
+   if (n <= 0) return 0;
 
    if (n > fEstimate) SetEstimate(n);
 
@@ -1433,7 +1437,7 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
       Error("BuildIndex",
             Form("Badly formed index because the expression %s has %d values while the tree has %d entries\n",
                  varexp,res,n));
-      return;
+      return -1;
    }
 
    // Sort array fV1 (contains  majorname +minorname*1e-9) into fIndex
@@ -1451,6 +1455,7 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
    // clean up
    delete [] ind;
    delete [] varexp;
+   return n;
 }
 
 //______________________________________________________________________________
