@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.5 2001/02/06 10:34:20 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.6 2001/02/06 17:35:55 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -171,7 +171,7 @@ THtml::THtml()
 
    fLen       = 1024;
    fLine      = new char [fLen];
-   fCounter   = new char [6];
+   fCounter   = new char [6]; for (Int_t i=0;i<6;i++) fCounter[i] = 0;
    fEscFlag   = kFALSE;
    SetEscape();
 
@@ -2544,9 +2544,9 @@ void THtml::MakeIndex(const char *filter)
          fileNames[numberOfImpFiles] = StrDup( impname, 64 );
 
          char *underline = strchr( fileNames[numberOfImpFiles], '_');
-         if( underline )
-            strcpy( underline + 1, classNames[nOK] );
-         else {
+//         if( underline )
+//            strcpy( underline + 1, classNames[nOK] );
+//         else {
             // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
             char *srcdir = strstr(fileNames[numberOfImpFiles], "/src/");
             if (srcdir) {
@@ -2557,7 +2557,7 @@ void THtml::MakeIndex(const char *filter)
                strcpy( fileNames[nOK], "USER_" );
                strcat( fileNames[nOK], classNames[nOK] );
             }
-         }
+//         }
          numberOfImpFiles++;
       }
       else cout << "WARNING class:" << classNames[i] << " has no implementation file name !" << endl;
