@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1I.h,v 1.1 2002/05/18 11:02:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1I.h,v 1.1 2003/09/08 12:50:23 brun Exp $
 // Author: Rene Brun   08/09/2003
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 //                                                                      //
 // TH1I                                                                 //
 //                                                                      //
-// 1-Dim histogram with a 4 bits integer per channel                    //
+// 1-Dim histogram with a 32 bits integer per channel                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
