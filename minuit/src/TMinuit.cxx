@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.5 2000/12/26 14:21:25 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.6 2001/02/13 07:26:19 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -465,6 +465,8 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
   //
   // The TGraph object is created via the interpreter. The user must cast it
   // to a TGraph*
+  //
+  // You can find an example in $ROOTSYS/tutorials/fitcont.C
 
   if (npoints<4) {
     // we need at least 4 points
