@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.51 2005/02/17 14:32:38 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.52 2005/02/23 15:09:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,16 +19,23 @@
 //
 //  PDF_1 * PDF_2 * ... * PDF_N
 //
-// RooProdPdf relies on each component PDF to be normalized and will perform no 
-// explicit normalization itself. No PDF may share any dependents with any other PDF. 
+// PDFs may share observables. If that is the case any irreducable subset
+// of PDFS that share observables will be normalized with explicit numeric
+// integration as any built-in normalization will no longer be valid.
+//
+// Alternatively, products using conditional PDFs can be defined, e.g.
+//
+//    F(x|y) * G(y)
+//
+// meaning a pdf F(x) _given_ y and a PDF G(y). In this contruction F is only
+// normalized w.r.t x and G is normalized w.r.t y. The product in this construction
+// is properly normalized.
 //
 // If exactly one of the component PDFs supports extended likelihood fits, the
 // product will also be usable in extended mode, returning the number of expected
 // events from the extendable component PDF. The extendable component does not
 // have to appear in any specific place in the list.
 // 
-// To construct a product of PDFs that share dependents, and thus require explicit
-// normalization of the product, use RooGenericPdf.
 
 #include "TIterator.h"
 #include "RooFitCore/RooProdPdf.hh"
@@ -190,13 +197,16 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
 {
   // Constructor from named argument list
   //
-  // Full(pdfSet) argument adds set of given PDFs to product
-  // Partial(pdfSet,depSet) argument adds set of given PDFs to product, but given PDFs will _only_  
-  //                        be normalized over dependents listed in depSet
+  // fullPdf -- Set of 'regular' PDFS that are normalized over all their observables
+  // ConditionalPdf(pdfSet,depSet) -- Add PDF to product with condition that it
+  //                                  only be normalized over specified observables
+  //                                  any remaining observables will be conditional
+  //                                  observables
+  //                               
   //
   // For example, given a PDF F(x,y) and G(y)
   //
-  // RooProdPdf("P","P",Partial(F,x),Full(G)) will construct a 2-dimensional PDF as follows:
+  // RooProdPdf("P","P",G,Partial(F,x)) will construct a 2-dimensional PDF as follows:
   // 
   //   P(x,y) = G(y)/Int[y]G(y) * F(x,y)/Int[x]G(x,y)
   //
@@ -387,11 +397,11 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
   RooLinkedList depIntNoNormList ;
 
   // Setup lists for factorization terms and their dependents
-  RooArgSet* term ;
-  RooArgSet* termNormDeps ;
-  RooArgSet* termAllDeps ;
-  RooArgSet* termIntDeps ;
-  RooArgSet* termIntNoNormDeps ;
+  RooArgSet* term(0) ;
+  RooArgSet* termNormDeps(0) ;
+  RooArgSet* termAllDeps(0) ;
+  RooArgSet* termIntDeps(0) ;
+  RooArgSet* termIntNoNormDeps(0) ;
   TIterator* lIter = termList.MakeIterator() ;
   TIterator* ldIter = normList.MakeIterator() ;
   TIterator* laIter = depAllList.MakeIterator() ;

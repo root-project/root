@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.cc,v 1.37 2005/02/14 20:44:26 wverkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.38 2005/02/15 21:16:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -321,8 +321,10 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, Bool_t refreshNorm) {
   //cout << "correction factor = " << _normBinWidth << "/" << rp->getFitRangeBinW() << endl ;
   //cout << "updating numevts to " << _normNumEvts << endl ;
 
-  _normBinWidth = rp->getFitRangeBinW() ;
-  //cout << "updating binw to " << _normBinWidth << endl ;
+  if (rp->getFitRangeBinW()!=0.) {
+    _normBinWidth = rp->getFitRangeBinW() ;
+    //cout << "updating binw to " << _normBinWidth << endl ;
+  }
 }
 
 void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label) {

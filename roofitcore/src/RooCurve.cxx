@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCurve.cc,v 1.40 2005/02/14 20:44:23 wverkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.41 2005/02/15 21:16:22 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -329,7 +329,7 @@ Double_t RooCurve::getFitRangeNEvt() const {
 }
 
 Double_t RooCurve::getFitRangeBinW() const {
-  return 1;
+  return 0 ;
 }
 
 void RooCurve::printToStream(ostream& os, PrintOption opt, TString indent) const {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.rdl,v 1.25 2005/02/16 21:51:25 wverkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.26 2005/02/23 15:08:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -76,6 +76,14 @@ public:
   // Split a dataset by a category
   virtual TList* split(const RooAbsCategory& splitCat) const = 0 ;
  
+
+  // Create 1,2, and 3D histograms from and fill it
+  TH1 *createHistogram(const char *name, const RooAbsRealLValue& xvar,
+                       const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none, 
+                       const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none, 
+                       const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none, 
+                       const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) const ;
+
   // Fill an existing histogram
   virtual TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "", const char* cutRange=0) const = 0;
 

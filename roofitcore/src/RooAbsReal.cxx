@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.106 2005/02/16 21:51:27 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.107 2005/02/23 15:09:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -345,6 +345,20 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg ar
 				       const RooCmdArg arg3, const RooCmdArg arg4, const RooCmdArg arg5, 
 				       const RooCmdArg arg6, const RooCmdArg arg7, const RooCmdArg arg8) const 
 {
+  // Create an object that represents the integral of the function over one or more observables listed in iset
+  // The actual integration calculation is only performed when the return object is evaluated. The name
+  // of the integral object is automatically constructed from the name of the input function, the variables
+  // it integrates and the range integrates over
+  //
+  // The following named arguments are accepted
+  //
+  // NormSet(const RooArgSet&)            -- Specify normalization set, mostly useful when working with PDFS
+  // NumIntConfig(const RooNumIntConfig&) -- Use given configuration for any numeric integration, if necessary
+  // Range(const char* name)              -- Integrate only over given range. Multiple ranges may be specified
+  //                                         by passing multiple Range() arguments  
+
+
+
   // Define configuration for this method
   RooCmdConfig pc(Form("RooAbsReal::createIntegral(%s)",GetName())) ;
   pc.defineString("rangeName","RangeWithName",0,"",kTRUE) ;
@@ -754,12 +768,133 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 }
 
 
+TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
+				 const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4, 
+				 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const 
+{
+  // Create and fill a ROOT histogram TH1,TH2 or TH3 with the values of this function. 
+  //
+  // This function accepts the following arguments
+  //
+  // name -- Name of the ROOT histogram
+  // xvar -- Observable to be mapped on x axis of ROOT histogram
+  //
+  // Binning(const char* name)                    -- Apply binning with given name to x axis of histogram
+  // Binning(RooAbsBinning& binning)              -- Apply specified binning to x axis of histogram
+  // Binning(double lo, double hi, int nbins)     -- Apply specified binning to x axis of histogram
+  // ConditionalObservables(const RooArgSet& set) -- Do not normalized PDF over following observables when projecting PDF into histogram
+  //
+  // YVar(const RooAbsRealLValue& var,...)    -- Observable to be mapped on y axis of ROOT histogram
+  // ZVar(const RooAbsRealLValue& var,...)    -- Observable to be mapped on z axis of ROOT histogram
+  //
+  // The YVar() and ZVar() arguments can be supplied with optional Binning() arguments to control the binning of the Y and Z axes, e.g.
+  // createHistogram("histo",x,Binning(-1,1,20), YVar(y,Binning(-1,1,30)), ZVar(z,Binning("zbinning")))
+  //
+  // The caller takes ownership of the returned histogram
+
+
+  RooLinkedList l ;
+  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
+  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
+  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
+  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+
+  // Define configuration for this method
+  RooCmdConfig pc(Form("RooAbsReal::createHistogram(%s)",GetName())) ;
+  pc.defineObject("projObs","ProjectedObservables",0,0) ;
+  pc.defineObject("yvar","YVar",0,0) ;
+  pc.defineObject("zvar","ZVar",0,0) ;
+  pc.allowUndefined() ;
+  
+  // Process & check varargs 
+  pc.process(l) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  RooArgList vars(xvar) ;
+  RooAbsArg* yvar = static_cast<RooAbsArg*>(pc.getObject("yvar")) ;
+  if (yvar) {
+    vars.add(*yvar) ;
+  }
+  RooAbsArg* zvar = static_cast<RooAbsArg*>(pc.getObject("zvar")) ;
+  if (zvar) {
+    vars.add(*zvar) ;
+  }
+
+  RooArgSet* projObs = static_cast<RooArgSet*>(pc.getObject("projObs")) ;
+
+  TH1* histo = xvar.createHistogram(name,l) ;
+  fillHistogram(histo,vars,1.0,projObs) ;
+
+  return histo ;
+}
+
+
+
 
 RooPlot* RooAbsReal::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
 			    const RooCmdArg& arg3, const RooCmdArg& arg4,
 			    const RooCmdArg& arg5, const RooCmdArg& arg6,
 			    const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
+  // Plot (project) PDF on specified frame. If a PDF is plotted in an empty frame, it
+  // will show a unit normalized curve in the frame variable, taken at the present value 
+  // of other observables defined for this PDF
+  //
+  // If a PDF is plotted in a frame in which a dataset has already been plotted, it will
+  // show a projected curve integrated over all variables that were present in the shown
+  // dataset except for the one on the x-axis. The normalization of the curve will also
+  // be adjusted to the event count of the plotted dataset. An informational message
+  // will be printed for each projection step that is performed
+  //
+  // This function takes the following named arguments
+  //
+  // Projection control
+  // ------------------
+  // Slice(const RooArgSet& set)     -- Override default projection behaviour by omittting observables listed 
+  //                                    in set from the projection, resulting a 'slice' plot. Slicing is usually
+  //                                    only sensible in discrete observables
+  // Project(const RooArgSet& set)   -- Override default projection behaviour by projecting over observables
+  //                                    given in set and complete ignoring the default projection behavior. Advanced use only.
+  // ProjWData(const RooAbsData& d)  -- Override default projection _technique_ (integration). For observables present in given dataset
+  //                                    projection of PDF is achieved by constructing an average over all observable values in given set.
+  //                                    Consult RooFit plotting tutorial for further explanation of meaning & use of this technique
+  // ProjWData(const RooArgSet& s,   -- As above but only consider subset 's' of observables in dataset 'd' for projection through data averaging
+  //           const RooAbsData& d)
+  // ProjectionRange(const char* rn) -- Override default range of projection integrals to a different range speficied by given range name.
+  //                                    This technique allows you to project a finite width slice in a real-valued observable
+  // 
+  // Misc content control
+  // --------------------
+  // Normalization(Double_t scale,   -- Adjust normalization by given scale factor. Interpretation of number depends on code: Relative:
+  //                ScaleType code)     relative adjustment factor, NumEvent: scale to match given number of events.
+  // Name(const chat* name)          -- Give curve specified name in frame. Useful if curve is to be referenced later
+  // Asymmetry(const RooCategory& c) -- Show the asymmetry of the PDF in given two-state category [F(+)-F(-)] / [F(+)+F(-)] rather than
+  //                                    the PDF projection. Category must have two states with indices -1 and +1 or three states with
+  //                                    indeces -1,0 and +1.
+  // ShiftToZero(Bool_t flag)        -- Shift entire curve such that lowest visible point is at exactly zero. Mostly useful when
+  //                                    plotting -log(L) or chi^2 distributions
+  // AddTo(const char* name,         -- Add constructed projection to already existing curve with given name and relative weight factors
+  //       double_t wgtSelf, double_t wgtOther)
+  //
+  // Plotting control 
+  // ----------------
+  // DrawOption(const char* opt)     -- Select ROOT draw option for resulting TGraph object
+  // LineStyle(Int_t style)          -- Select line style by ROOT line style code, default is solid
+  // LineColor(Int_t color)          -- Select line color by ROOT color code, default is blue
+  // LineWidth(Int_t width)          -- Select line with in pixels, default is 3
+  // FillStyle(Int_t style)          -- Select fill style, default is not filled. If a filled style is selected, also use VLines()
+  //                                    to add vertical downward lines at end of curve to ensure proper closure
+  // FillColor(Int_t color)          -- Select fill color by ROOT color code
+  // Range(const char* name)         -- Only draw curve in range defined by given name
+  // Range(double lo, double hi)     -- Only draw curve in specified range
+  // VLines()                        -- Add vertical lines to y=0 at end points of curve
+  // Precision(Double_t eps)         -- Control precision of drawn curve w.r.t to scale of plot, default is 1e-3. Higher precision
+  //                                    will result in more and more densely spaced curve points
+  // Invisble(Bool_t flag)           -- Add curve to frame, but do not display. Useful in combination AddTo()
+
+
   RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
   l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
@@ -801,7 +936,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineDouble("addToWgtOther","AddTo",1,1.) ;
   pc.defineMutex("SliceVars","Project") ;
   pc.defineMutex("AddTo","Asymmetry") ;
-  pc.defineMutex("Range","RangeWithName","RangeWithVLines") ;
+  pc.defineMutex("Range","RangeWithName") ;
 
   // Process & check varargs 
   pc.process(argList) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooChi2Var.cc,v 1.12 2005/02/16 21:51:29 wverkerke Exp $
+ *    File: $Id: RooChi2Var.cc,v 1.13 2005/02/23 15:09:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,17 +44,19 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
   RooAbsOptGoodnessOfFit(name,title,pdf,data,
 			 *(const RooArgSet*)RooCmdConfig::decodeObjOnTheFly("RooChi2Var::RooChi2Var","ProjectedObservables",0,&_emptySet
 									    ,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
-			 RooCmdConfig::decodeStringOnTheFly("RooChi2Var::RooChi2Var","CutRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
+			 RooCmdConfig::decodeStringOnTheFly("RooChi2Var::RooChi2Var","RangeWithName",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","NumCPU",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
-			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
+			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
+			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","SplitRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))             
   // RooChi2Var constructor. Optional arguments taken
   //
-  //  Extended()  -- Include extended term in calculation
-  //  DataError() -- Choose between Poisson errors and Sum-of-weights errors
-  //  NumCPU()    -- Activate parallel processing feature
-  //  CutRange()  -- Fit only selected region
+  //  Extended()   -- Include extended term in calculation
+  //  DataError()  -- Choose between Poisson errors and Sum-of-weights errors
+  //  NumCPU()     -- Activate parallel processing feature
+  //  Range()      -- Fit only selected region
+  //  SplitRange() -- Fit range is split by index catory of simultaneous PDF
   //  ConditionalObservables() -- Define projected observables 
-  //  Verbose()   -- Verbose output of GOF framework
+  //  Verbose()    -- Verbose output of GOF framework
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
   pc.defineInt("extended","Extended",0,kFALSE) ;
@@ -71,8 +73,8 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 
 
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
-		     Bool_t extended, const char* cutRange, Int_t nCPU, Bool_t verbose) : 
-  RooAbsOptGoodnessOfFit(name,title,pdf,data,RooArgSet(),cutRange,nCPU,verbose),
+		     Bool_t extended, const char* cutRange, Int_t nCPU, Bool_t verbose, Bool_t splitCutRange) : 
+  RooAbsOptGoodnessOfFit(name,title,pdf,data,RooArgSet(),cutRange,nCPU,verbose,splitCutRange),
   _extended(extended)
 {
   
@@ -80,8 +82,8 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooD
 
 
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
-		     const RooArgSet& projDeps, Bool_t extended, const char* cutRange, Int_t nCPU, Bool_t verbose) : 
-  RooAbsOptGoodnessOfFit(name,title,pdf,data,projDeps,cutRange,nCPU,verbose),
+		     const RooArgSet& projDeps, Bool_t extended, const char* cutRange, Int_t nCPU, Bool_t verbose, Bool_t splitCutRange) : 
+  RooAbsOptGoodnessOfFit(name,title,pdf,data,projDeps,cutRange,nCPU,verbose,splitCutRange),
   _extended(extended)
 {
   

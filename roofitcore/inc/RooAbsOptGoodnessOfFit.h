@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.rdl,v 1.10 2005/02/16 21:51:25 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.rdl,v 1.11 2005/02/23 15:08:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,7 +30,7 @@ public:
   // Constructors, assignment etc
   inline RooAbsOptGoodnessOfFit() { }
   RooAbsOptGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-		      const RooArgSet& projDeps, const char* rangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE) ;
+		      const RooArgSet& projDeps, const char* rangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
   RooAbsOptGoodnessOfFit(const RooAbsOptGoodnessOfFit& other, const char* name=0);
   virtual ~RooAbsOptGoodnessOfFit();
 

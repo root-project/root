@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.rdl,v 1.10 2005/02/16 21:51:25 wverkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.rdl,v 1.11 2005/02/23 15:08:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,11 +37,11 @@ public:
   // Constructors, assignment etc
   inline RooAbsGoodnessOfFit() { }
   RooAbsGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-		      const RooArgSet& projDeps, const char* rangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE) ;
+		      const RooArgSet& projDeps, const char* rangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
   RooAbsGoodnessOfFit(const RooAbsGoodnessOfFit& other, const char* name=0);
   virtual ~RooAbsGoodnessOfFit();
   virtual RooAbsGoodnessOfFit* create(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-				      const RooArgSet& projDeps, const char* rangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE) = 0 ;
+				      const RooArgSet& projDeps, const char* rangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) = 0 ;
 
   virtual void constOptimize(ConstOpCode opcode) ;
   virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const = 0 ;
@@ -69,6 +69,7 @@ protected:
   RooAbsData* _data ;
   const RooArgSet* _projDeps ;
   const char*    _rangeName ; //! 
+  Bool_t _splitRange ;
   Int_t _simCount ;
   Bool_t _verbose ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.90 2005/02/16 21:51:26 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.91 2005/02/23 15:08:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -563,6 +563,42 @@ Double_t RooAbsPdf::extendedTerm(UInt_t observed, const RooArgSet* nset) const
 RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3, RooCmdArg arg4, 
                                                  RooCmdArg arg5, RooCmdArg arg6, RooCmdArg arg7, RooCmdArg arg8) 
 {
+  // Fit PDF to given dataset. If dataset is unbinned, an unbinned maximum likelihood is performed. If the dataset
+  // is binned, a binned maximum likelihood is performed. By default the fit is executed through the MINUIT
+  // commands MIGRAD, HESSE and MINOS in succession.
+  //
+  // The following named arguments are supported
+  //
+  // Options to control construction of -log(L)
+  // ------------------------------------------
+  // ConditionalObservables(const RooArgSet& set) -- Do not normalize PDF over listed observables
+  // Extended(Bool_t flag)         -- Add extended likelihood term, off by default
+  // Range(const char* name)       -- Fit only data inside range with given name
+  // NumCPU(int num)               -- Parallelize NLL calculation on num CPUs
+  // Optimize(Bool_t flag)         -- Activate constant term optimization (on by default)
+  // SplitRange(Bool_t flag)       -- Use separate fit ranges in a simultaneous fit. Actual range name for each
+  //                                  subsample is assumed to by rangeName_{indexState} where indexState
+  //                                  is the state of the master index category of the simultaneous fit
+  //
+  // Options to control flow of fit procedure
+  // ----------------------------------------
+  // InitialHesse(Bool_t flag)      -- Flag controls if HESSE before MIGRAD as well, off by default
+  // Hesse(Bool_t flag)             -- Flag controls if HESSE is run after MIGRAD, on by default
+  // Minos(Bool_t flag)             -- Flag controls if MINOS is run after HESSE, on by default
+  // Save(Bool_t flag)              -- Flac controls if RooFitResult object is produced and returned, off by default
+  // Strategy(Int_t flag)           -- Set Minuit strategy (0 through 2, default is 1)
+  // FitOptions(const char* optStr) -- Steer fit with classic options string (for backward compatibility). Use of this option
+  //                                   excludes use of any of the new style steering options.
+  //
+  // Options to control informational output
+  // ---------------------------------------
+  // Verbose(Bool_t flag)           -- Flag controls if verbose output is printed (NLL, parameter changes during fit
+  // Timer(Bool_t flag)             -- Time CPU and wall clock consumption of fit steps, off by default
+  // PrintLevel(Int_t level)        -- Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational 
+  //                                   messages are suppressed as well
+  // 
+  // 
+  
   RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
   l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
@@ -573,11 +609,22 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2,
 
 RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList) 
 {
+  // Fit PDF to given dataset. If dataset is unbinned, an unbinned maximum likelihood is performed. If the dataset
+  // is binned, a binned maximum likelihood is performed. By default the fit is executed through the MINUIT
+  // commands MIGRAD, HESSE and MINOS in succession.
+  //
+  // See RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3, RooCmdArg arg4, 
+  //                                         RooCmdArg arg5, RooCmdArg arg6, RooCmdArg arg7, RooCmdArg arg8) 
+  //
+  // for documentation of options
+
+
   // Select the pdf-specific commands 
   RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
 
   pc.defineString("fitOpt","FitOptions",0,"") ;
   pc.defineString("rangeName","RangeWithName",0,"",kTRUE) ;
+  pc.defineInt("splitRange","SplitRange",0,0) ;
   pc.defineInt("optConst","Optimize",0,1) ;
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("doSave","Save",0,0) ;
@@ -590,16 +637,14 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("ext","Extended",0,0) ;
   pc.defineInt("numcpu","NumCPU",0,1) ;
   pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
-  pc.defineMutex("Verbose","Quiet") ;
   pc.defineMutex("FitOptions","Verbose") ;
-  pc.defineMutex("FitOptions","Quiet") ;
   pc.defineMutex("FitOptions","Save") ;
   pc.defineMutex("FitOptions","Timer") ;
-  pc.defineMutex("FitOptions","Blind") ;
   pc.defineMutex("FitOptions","Strategy") ;
   pc.defineMutex("FitOptions","InitialHesse") ;
   pc.defineMutex("FitOptions","Hesse") ;
   pc.defineMutex("FitOptions","Minos") ;
+
   
   // Process and check varargs 
   pc.process(cmdList) ;
@@ -621,6 +666,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t minos    = pc.getInt("minos") ;
   Int_t ext      = pc.getInt("ext") ;
   Int_t numcpu   = pc.getInt("numcpu") ;
+  Int_t splitr   = pc.getInt("splitRange") ;
 
   RooArgSet projDeps ;
   RooArgSet* tmp = (RooArgSet*) pc.getObject("projDepSet") ;  
@@ -630,7 +676,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooAbsReal* nll ;
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: default range, or single restricted range
-    nll = new RooNLLVar("nll","-log(likelihood)",*this,data,projDeps,ext,rangeName,numcpu,plevel!=-1) ;
+    nll = new RooNLLVar("nll","-log(likelihood)",*this,data,projDeps,ext,rangeName,numcpu,plevel!=-1,splitr) ;
   } else {
     // Composite case: multiple ranges
     RooArgList nllList ;
@@ -638,7 +684,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     strcpy(buf,rangeName) ;
     char* token = strtok(buf,",") ;
     while(token) {
-      RooAbsReal* nllComp = new RooNLLVar(Form("nll_%s",token),"-log(likelihood)",*this,data,projDeps,ext,token,numcpu,plevel!=-1) ;
+      RooAbsReal* nllComp = new RooNLLVar(Form("nll_%s",token),"-log(likelihood)",*this,data,projDeps,ext,token,numcpu,plevel!=-1,splitr) ;
       nllList.add(*nllComp) ;
       token = strtok(0,",") ;
     }
@@ -721,6 +767,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *opt
 RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooArgSet& projDeps, Option_t *fitOpt, Option_t *optOpt, const char* fitRange) 
 {
   // Fit this PDF to given data set
+  //
+  // OLD STYLE INTERFACE, PLEASE USE NEW INTERFACE fitTo(RooAbsData& data, RooCmdArg arg1,...,RooCmdArg arg8) 
   //
   // The dataset can be either binned, in which case a binned maximum likelihood fit
   // is performed, or unbinned, in which case an unbinned maximum likelihood fit is performed
@@ -857,17 +905,68 @@ RooAbsGenContext* RooAbsPdf::genContext(const RooArgSet &vars, const RooDataSet 
 
 
 RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, Int_t nEvents, const RooCmdArg& arg1,
-				const RooCmdArg& arg2, const RooCmdArg& arg3,const RooCmdArg& arg4, const RooCmdArg& arg5) {
+				const RooCmdArg& arg2, const RooCmdArg& arg3,const RooCmdArg& arg4, const RooCmdArg& arg5) 
+{
+  // Generate a new dataset containing the specified variables with events sampled from our distribution. 
+  // Generate the specified number of events or expectedEvents() if not specified.
+  //
+  // Any variables of this PDF that are not in whatVars will use their
+  // current values and be treated as fixed parameters. Returns zero
+  // in case of an error. The caller takes ownership of the returned
+  // dataset.
+  //
+  // The following named arguments are supported
+  //
+  // Verbose(Bool_t flag)               -- Print informational messages during event generation
+  // Extended()                         -- The actual number of events generated will be sampled from a Poisson distribution
+  //                                       with mu=nevt. For use with extended maximum likelihood fits
+  // ProtoData(const RooDataSet& data,  -- Use specified dataset as prototype dataset. If randOrder is set to true
+  //                 Bool_t randOrder)     the order of the events in the dataset will be read in a random order
+  //                                       if the requested number of events to be generated does not match the
+  //                                       number of events in the prototype dataset
+  //                                        
+  // If ProtoData() is used, the specified existing dataset as a prototype: the new dataset will contain 
+  // the same number of events as the prototype (unless otherwise specified), and any prototype variables not in
+  // whatVars will be copied into the new dataset for each generated event and also used to set our PDF parameters. 
+  // The user can specify a  number of events to generate that will override the default. The result is a
+  // copy of the prototype dataset with only variables in whatVars randomized. Variables in whatVars that 
+  // are not in the prototype will be added as new columns to the generated dataset.  
   return generate(whatVars,RooFit::NumEvents(nEvents),arg1,arg2,arg3,arg4,arg5) ;
 }
 
 RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1,const RooCmdArg& arg2,
 				const RooCmdArg& arg3,const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6) 
 {
+  // Generate a new dataset containing the specified variables with events sampled from our distribution. 
+  // Generate the specified number of events or expectedEvents() if not specified.
+  //
+  // Any variables of this PDF that are not in whatVars will use their
+  // current values and be treated as fixed parameters. Returns zero
+  // in case of an error. The caller takes ownership of the returned
+  // dataset.
+  //
+  // The following named arguments are supported
+  //
+  // Verbose(Bool_t flag)               -- Print informational messages during event generation
+  // NumEvent(int nevt)                 -- Generate specified number of events
+  // Extended()                         -- The actual number of events generated will be sampled from a Poisson distribution
+  //                                       with mu=nevt. For use with extended maximum likelihood fits
+  // ProtoData(const RooDataSet& data,  -- Use specified dataset as prototype dataset. If randOrder is set to true
+  //                 Bool_t randOrder)     the order of the events in the dataset will be read in a random order
+  //                                       if the requested number of events to be generated does not match the
+  //                                       number of events in the prototype dataset
+  //                                        
+  // If ProtoData() is used, the specified existing dataset as a prototype: the new dataset will contain 
+  // the same number of events as the prototype (unless otherwise specified), and any prototype variables not in
+  // whatVars will be copied into the new dataset for each generated event and also used to set our PDF parameters. 
+  // The user can specify a  number of events to generate that will override the default. The result is a
+  // copy of the prototype dataset with only variables in whatVars randomized. Variables in whatVars that 
+  // are not in the prototype will be added as new columns to the generated dataset.  
+
   // Select the pdf-specific commands 
   RooCmdConfig pc(Form("RooAbsPdf::generate(%s)",GetName())) ;
-  pc.defineObject("proto","ProtoData",0,0) ;
-  pc.defineInt("randProto","ProtoData",0,0) ;
+  pc.defineObject("proto","PrototypeData",0,0) ;
+  pc.defineInt("randProto","PrototypeData",0,0) ;
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("extended","Extended",0,0) ;
   pc.defineInt("nEvents","NumEvents",0,0) ;
@@ -1069,7 +1168,62 @@ Double_t RooAbsPdf::maxVal(Int_t code)
 
 RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 {
-  // New experimental plotOn() with varargs...
+  // Plot (project) PDF on specified frame. If a PDF is plotted in an empty frame, it
+  // will show a unit normalized curve in the frame variable, taken at the present value 
+  // of other observables defined for this PDF
+  //
+  // If a PDF is plotted in a frame in which a dataset has already been plotted, it will
+  // show a projected curve integrated over all variables that were present in the shown
+  // dataset except for the one on the x-axis. The normalization of the curve will also
+  // be adjusted to the event count of the plotted dataset. An informational message
+  // will be printed for each projection step that is performed
+  //
+  // This function takes the following named arguments
+  //
+  // Projection control
+  // ------------------
+  // Slice(const RooArgSet& set)     -- Override default projection behaviour by omittting observables listed 
+  //                                    in set from the projection, resulting a 'slice' plot. Slicing is usually
+  //                                    only sensible in discrete observables
+  // Project(const RooArgSet& set)   -- Override default projection behaviour by projecting over observables
+  //                                    given in set and complete ignoring the default projection behavior. Advanced use only.
+  // ProjWData(const RooAbsData& d)  -- Override default projection _technique_ (integration). For observables present in given dataset
+  //                                    projection of PDF is achieved by constructing an average over all observable values in given set.
+  //                                    Consult RooFit plotting tutorial for further explanation of meaning & use of this technique
+  // ProjWData(const RooArgSet& s,   -- As above but only consider subset 's' of observables in dataset 'd' for projection through data averaging
+  //           const RooAbsData& d)
+  // ProjectionRange(const char* rn) -- Override default range of projection integrals to a different range speficied by given range name.
+  //                                    This technique allows you to project a finite width slice in a real-valued observable
+  // 
+  // Misc content control
+  // --------------------
+  // Normalization(Double_t scale,   -- Adjust normalization by given scale factor. Interpretation of number depends on code: Relative:
+  //                ScaleType code)     relative adjustment factor, NumEvent: scale to match given number of events.
+  // Name(const chat* name)          -- Give curve specified name in frame. Useful if curve is to be referenced later
+  // Asymmetry(const RooCategory& c) -- Show the asymmetry of the PDF in given two-state category [F(+)-F(-)] / [F(+)+F(-)] rather than
+  //                                    the PDF projection. Category must have two states with indices -1 and +1 or three states with
+  //                                    indeces -1,0 and +1.
+  // ShiftToZero(Bool_t flag)        -- Shift entire curve such that lowest visible point is at exactly zero. Mostly useful when
+  //                                    plotting -log(L) or chi^2 distributions
+  // AddTo(const char* name,         -- Add constructed projection to already existing curve with given name and relative weight factors
+  //       double_t wgtSelf, double_t wgtOther)
+  //
+  // Plotting control 
+  // ----------------
+  // LineStyle(Int_t style)          -- Select line style by ROOT line style code, default is solid
+  // LineColor(Int_t color)          -- Select line color by ROOT color code, default is blue
+  // LineWidth(Int_t width)          -- Select line with in pixels, default is 3
+  // FillStyle(Int_t style)          -- Select fill style, default is not filled. If a filled style is selected, also use VLines()
+  //                                    to add vertical downward lines at end of curve to ensure proper closure
+  // FillColor(Int_t color)          -- Select fill color by ROOT color code
+  // Range(const char* name)         -- Only draw curve in range defined by given name
+  // Range(double lo, double hi)     -- Only draw curve in specified range
+  // VLines()                        -- Add vertical lines to y=0 at end points of curve
+  // Precision(Double_t eps)         -- Control precision of drawn curve w.r.t to scale of plot, default is 1e-3. Higher precision
+  //                                    will result in more and more densely spaced curve points
+  // Invisble(Bool_t flag)           -- Add curve to frame, but do not display. Useful in combination AddTo()
+
+
 
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
@@ -1129,7 +1283,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
     scaleFactor *= frame->getFitRangeBinW() ;
   }
   frame->updateNormVars(*frame->getPlotVar()) ;
-  
+
   // Append overriding scale factor command at end of original command list
   RooCmdArg tmp = RooFit::Normalization(scaleFactor,Raw) ;
   cmdList.Add(&tmp) ;
@@ -1294,6 +1448,9 @@ RooPlot* RooAbsPdf::plotCompOn(RooPlot *frame, const RooArgSet& compSet, Option_
 			       Double_t scaleFactor, ScaleType stype, const RooAbsData* projData, 
 			       const RooArgSet* projSet) const 
 {
+  // THIS FUNCTION IS OBSOLETE AND ONLY RETAINED FOR BACKWARD COMPATIBILITY. 
+  // PLEASE USE plotOn(frame,Componenents(...),...)
+  //
   // Plot only the PDF components listed in 'compSet' of this PDF on 'frame'. 
   // See RooAbsReal::plotOn() for a description of the remaining arguments and other features
 
@@ -1329,6 +1486,9 @@ RooPlot* RooAbsPdf::plotCompOn(RooPlot *frame, const char* compNameList, Option_
 			       Double_t scaleFactor, ScaleType stype, const RooAbsData* projData, 
 			       const RooArgSet* projSet) const 
 {
+  // THIS FUNCTION IS OBSOLETE AND ONLY RETAINED FOR BACKWARD COMPATIBILITY. 
+  // PLEASE USE plotOn(frame,Componenents(...),...)
+  //
   // Plot only the PDF components listed in 'compSet' of this PDF on 'frame'. 
   // See RooAbsReal::plotOn() for a description of the remaining arguments and other features
 
@@ -1438,6 +1598,9 @@ RooPlot* RooAbsPdf::plotCompSliceOn(RooPlot *frame, const char* compNameList, co
 				    Option_t* drawOptions, Double_t scaleFactor, ScaleType stype, 
 				    const RooAbsData* projData) const 
 {
+  // THIS FUNCTION IS OBSOLETE AND ONLY RETAINED FOR BACKWARD COMPATIBILITY. 
+  // PLEASE USE plotOn(frame,Componenents(...),Slice(...),...)
+  //
   // Plot ourselves on given frame, as done in plotOn(), except that the variables 
   // listed in 'sliceSet' are taken out from the default list of projected dimensions created
   // by plotOn().
@@ -1470,6 +1633,9 @@ RooPlot* RooAbsPdf::plotCompSliceOn(RooPlot *frame, const RooArgSet& compSet, co
 				    Option_t* drawOptions, Double_t scaleFactor, ScaleType stype, 
 				    const RooAbsData* projData) const 
 {
+  // THIS FUNCTION IS OBSOLETE AND ONLY RETAINED FOR BACKWARD COMPATIBILITY. 
+  // PLEASE USE plotOn(frame,Componenents(...),Slice(...),...)
+  //
   // Plot ourselves on given frame, as done in plotOn(), except that the variables 
   // listed in 'sliceSet' are taken out from the default list of projected dimensions created
   // by plotOn().
@@ -1499,10 +1665,30 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
 			    const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
 			    const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
-  // Accepted commands
-  // Label() -- Add given label to text box
-  // Layout() -- Modify default box layout
-  // Format() -- Options to format variable printing
+  // Add a box with parameter values (and errors) to the specified frame
+  //
+  // The following named arguments are supported
+  //
+  //   Parameters(const RooArgSet& param) -- Only the specified subset of parameters will be shown. 
+  //                                         By default all non-contant parameters are shown
+  //   ShowConstant(Bool_t flag)          -- Also display constant parameters
+  //   Format(const char* optStr)         -- Classing [arameter formatting options, provided for backward compatibility
+  //   Format(const char* what,...)       -- Parameter formatting options, details given below
+  //   Label(const chat* label)           -- Add header label to parameter box
+  //   Layout(Double_t xmin,              -- Specify relative position of left,right side of box and top of box. Position of 
+  //       Double_t xmax, Double_t ymax)     bottom of box is calculated automatically from number lines in box
+  //                                 
+  //
+  // The Format(const char* what,...) has the following structure
+  //
+  //   const char* what      -- Controls what is shown. "N" adds name, "E" adds error, 
+  //                            "A" shows asymmetric error, "U" shows unit, "H" hides the value
+  //   FixedPrecision(int n) -- Controls precision, set fixed number of digits
+  //   AutoPrecision(int n)  -- Controls precision. Number of shown digits is calculated from error 
+  //                            + n specified additional digits (1 is sensible default)
+  //
+  // Example use: pdf.paramOn(frame, Label("fit result"), Format("NEU",AutoPrecision(1)) ) ;
+  //
 
   // Stuff all arguments in a list
   RooLinkedList cmdList;
@@ -1574,6 +1760,8 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
 			    Int_t sigDigits, Option_t *options, Double_t xmin,
 			    Double_t xmax ,Double_t ymax) 
 {
+  // OBSOLETE FUNCTION PROVIDED FOR BACKWARD COMPATIBILITY
+
   RooArgSet* params = getParameters(data) ;
   TString opts(options) ;  
   paramOn(frame,*params,opts.Contains("c"),label,sigDigits,options,xmin,xmax,ymax) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.14 2005/02/16 21:51:25 wverkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.15 2005/02/23 15:08:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -45,13 +45,14 @@ ClassImp(RooAbsGoodnessOfFit)
 ;
 
 RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-					 const RooArgSet& projDeps, const char* rangeName, Int_t nCPU, Bool_t verbose) : 
+					 const RooArgSet& projDeps, const char* rangeName, Int_t nCPU, Bool_t verbose, Bool_t splitCutRange) : 
   RooAbsReal(name,title),
   _paramSet("paramSet","Set of parameters",this),
   _pdf(&pdf),
   _data(&data),
   _projDeps((RooArgSet*)projDeps.Clone()),
   _rangeName(rangeName),
+  _splitRange(splitCutRange),
   _simCount(1),
   _verbose(verbose),
   _nGof(0),
@@ -95,6 +96,7 @@ RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const RooAbsGoodnessOfFit& other, const
   _data(other._data),
   _projDeps((RooArgSet*)other._projDeps->Clone()),
   _rangeName(other._rangeName),
+  _splitRange(other._splitRange),
   _simCount(other._simCount),
   _init(other._init),
   _gofOpMode(other._gofOpMode),
@@ -341,7 +343,12 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 	cout << "RooAbsGoodnessOfFit::initSimMode: creating slave GOF calculator #" << n << " for state " << type->GetName() 
 	     << " (" << dset->numEntries() << " dataset entries)" << endl ;
       }
-      _gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps) ;
+      if (_splitRange) {
+	cout << "calling create with range " << Form("%s_%s",rangeName,type->GetName()) << endl ;
+	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,Form("%s_%s",rangeName,type->GetName()),_verbose) ;
+      } else {
+	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,rangeName,_verbose) ;
+      }
       _gofArray[n]->setSimCount(_nGof) ;
       
       // Servers may have been redirected between instantiation and (deferred) initialization

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.63 2005/02/16 21:51:47 wverkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.64 2005/02/23 15:10:05 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -38,6 +38,7 @@ using std::string ;
 #include "TLeaf.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TH3.h"
 #include "TFile.h"
 #include "TChain.h"
 #include "TROOT.h"
@@ -850,6 +851,47 @@ TList* RooTreeData::split(const RooAbsCategory& splitCat) const
 
 RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
 {
+  // Plot dataset on specified frame. By default an unbinned dataset will use the default binning of
+  // the target frame. A binned dataset will by default retain its intrinsic binning.
+  //
+  // The following optional named arguments can be used to modify the default behavior
+  //
+  // Data representation options
+  // ---------------------------
+  // Asymmetry(const RooCategory& c) -- Show the asymmetry of the daya in given two-state category [F(+)-F(-)] / [F(+)+F(-)]. 
+  //                                    Category must have two states with indices -1 and +1 or three states with indeces -1,0 and +1.
+  // ErrorType(RooAbsData::EType)    -- Select the type of error drawn: Poisson (default) draws asymmetric Poisson
+  //                                    confidence intervals. SumW2 draws symmetric sum-of-weights error
+  // Binning(double xlo, double xhi, -- Use specified binning to draw dataset
+  //                      int nbins)
+  // Binning(const RooAbsBinning&)   -- Use specified binning to draw dataset
+  // Binning(const char* name)       -- Use binning with specified name to draw dataset
+  // RefreshNorm(Bool_t flag)        -- Force refreshing for PDF normalization information in frame.
+  //                                    If set, any subsequent PDF will normalize to this dataset, even if it is
+  //                                    not the first one added to the frame. By default only the 1st dataset
+  //                                    added to a frame will update the normalization information
+  //
+  // Histogram drawing options
+  // -------------------------
+  // DrawOption(const char* opt)     -- Select ROOT draw option for resulting TGraph object
+  // LineStyle(Int_t style)          -- Select line style by ROOT line style code, default is solid
+  // LineColor(Int_t color)          -- Select line color by ROOT color code, default is black
+  // LineWidth(Int_t width)          -- Select line with in pixels, default is 3
+  // MarkerStyle(Int_t style)        -- Select the ROOT marker style, default is 21
+  // MarkerColor(Int_t color)        -- Select the ROOT marker color, default is black
+  // MarkerSize(Double_t size)       -- Select the ROOT marker size
+  // XErrorSize(Double_t frac)       -- Select size of X error bar as fraction of the bin width, default is 1
+  //
+  //
+  // Misc. other options
+  // -------------------
+  // Name(const chat* name)          -- Give curve specified name in frame. Useful if curve is to be referenced later
+  // Invisble(Bool_t flag)           -- Add curve to frame, but do not display. Useful in combination AddTo()
+  // AddTo(const char* name,         -- Add constructed histogram to already existing histogram with given name and relative weight factors
+  // double_t wgtSelf, double_t wgtOther)
+  // 
+  //                                    
+  //
 
   // New experimental plotOn() with varargs...
 
@@ -1255,11 +1297,11 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
     if (entryNumber<0) break;
     get(entryNumber);
 
-
     // Apply expression based selection criteria
     if (select && select->eval()==0) {
       continue ;
     }
+
 
     // Apply range based selection criteria
     Bool_t selectByRange = kTRUE ;
@@ -1291,22 +1333,28 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
     switch(hdim) {
     case 1:
       bin= hist->FindBin(xvar->getVal());
+      hist->Fill(xvar->getVal(),weight()) ;
       break;
     case 2:
       bin= hist->FindBin(xvar->getVal(),yvar->getVal());
+      static_cast<TH2*>(hist)->Fill(xvar->getVal(),yvar->getVal(),weight()) ;
       break;
     case 3:
       bin= hist->FindBin(xvar->getVal(),yvar->getVal(),zvar->getVal());
+      static_cast<TH3*>(hist)->Fill(xvar->getVal(),yvar->getVal(),zvar->getVal(),weight()) ;
       break;
     default:
       assert(hdim < 3);
       break;
     }
+
+    //cout << "hdim = " << hdim << " bin = " << bin << endl ;
+
     Double_t error2 = pow(hist->GetBinError(bin),2) ;
     Double_t we = weightError(RooAbsData::SumW2) ;
     if (we==0) we = weight() ;
     error2 += pow(we,2) ;
-    hist->AddBinContent(bin,weight());
+    //hist->AddBinContent(bin,weight());
     hist->SetBinError(bin,sqrt(error2)) ;
   }
 
@@ -1531,10 +1579,30 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmd
 			    const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
 			    const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
-  // Accepted commands
-  // Label() -- Add given label to text box
-  // Layout() -- Modify default box layout
-  // Format() -- Options to format variable printing
+  // Add a box with statistics information to the specified frame. By default a box with the
+  // event count, mean and rms of the plotted variable is added.
+  //
+  // The following optional named arguments are accepted
+  //
+  //   What(const char* whatstr)          -- Controls what is printed: "N" = count, "M" is mean, "R" is RMS.
+  //   Format(const char* optStr)         -- Classing [arameter formatting options, provided for backward compatibility
+  //   Format(const char* what,...)       -- Parameter formatting options, details given below
+  //   Label(const chat* label)           -- Add header label to parameter box
+  //   Layout(Double_t xmin,              -- Specify relative position of left,right side of box and top of box. Position of 
+  //       Double_t xmax, Double_t ymax)     bottom of box is calculated automatically from number lines in box
+  //   Cut(const char* expression)        -- Apply given cut expression to data when calculating statistics
+  //   CutRange(const char* rangeName)    -- Only consider events within given range when calculating statistics. Multiple
+  //                                         CutRange() argument may be specified to combine ranges
+  //
+  // The Format(const char* what,...) has the following structure
+  //
+  //   const char* what          -- Controls what is shown. "N" adds name, "E" adds error, 
+  //                                "A" shows asymmetric error, "U" shows unit, "H" hides the value
+  //   FixedPrecision(int n)     -- Controls precision, set fixed number of digits
+  //   AutoPrecision(int n)      -- Controls precision. Number of shown digits is calculated from error 
+  //                                + n specified additional digits (1 is sensible default)
+  //   VerbatimName(Bool_t flag) -- Put variable name in a \verb+   + clause.
+  //
 
   // Stuff all arguments in a list
   RooLinkedList cmdList;

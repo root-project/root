@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.rdl,v 1.4 2005/02/17 14:32:38 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.rdl,v 1.5 2005/02/23 15:09:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -108,6 +108,7 @@ RooCmdArg Strategy(Int_t code) ;
 RooCmdArg InitialHesse(Bool_t flag=kTRUE) ;
 RooCmdArg Hesse(Bool_t flag=kTRUE) ;
 RooCmdArg Minos(Bool_t flag=kTRUE) ;
+RooCmdArg SplitRange(Bool_t flag=kTRUE) ;
 
 // RooAbsPdf::paramOn arguments
 RooCmdArg Label(const char* str) ;

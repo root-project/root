@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.cc,v 1.36 2005/02/15 21:16:13 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.37 2005/02/23 15:09:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -152,7 +152,27 @@ RooAbsArg& RooAbsRealLValue::operator=(const RooAbsReal& arg)
 }
 
 RooPlot* RooAbsRealLValue::frame(const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
-				 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const {
+				 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const 
+
+  // Create a new RooPlot on the heap with a drawing frame initialized for this
+  // object, but no plot contents. Use x.frame() as the first argument to a
+  // y.plotOn(...) method, for example. The caller is responsible for deleting
+  // the returned object.
+  //
+  // This function takes the following named arguments
+  //
+  // Range(double lo, double hi)          -- Make plot frame for the specified range
+  // Range(const char* name)              -- Make plot frame for range with the specified name
+  // Bins(Int_t nbins)                    -- Set default binning for datasets to specified number of bins
+  // AutoRange(const RooAbsData& data,    -- Specifies range so that all points in given data set fit 
+  //                    double margin)       inside the range with given margin.
+  // AutoSymRange(const RooAbsData& data, -- Specifies range so that all points in given data set fit 
+  //                    double margin)       inside the range and center of range coincides with mean
+  //                                         of distribution in given dataset. 
+  // Name(const char* name)               -- Give specified name to RooPlot object 
+  // Title(const char* title)             -- Give specified title to RooPlot object
+  //  
+{
   RooLinkedList cmdList ;
   cmdList.Add(const_cast<RooCmdArg*>(&arg1)) ; cmdList.Add(const_cast<RooCmdArg*>(&arg2)) ;
   cmdList.Add(const_cast<RooCmdArg*>(&arg3)) ; cmdList.Add(const_cast<RooCmdArg*>(&arg4)) ;
@@ -380,10 +400,41 @@ Bool_t RooAbsRealLValue::inRange(const char* name) const
 }
 
 
+
 TH1* RooAbsRealLValue::createHistogram(const char *name, const RooCmdArg& arg1, const RooCmdArg& arg2, 
 					const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
 					const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const 
+
+  // Create an empty ROOT histogram TH1,TH2 or TH3 suitabe to store information represent by the RooAbsRealLValue
+  //
+  // This function accepts the following arguments
+  //
+  // name -- Name of the ROOT histogram
+  //
+  // Binning(const char* name)                    -- Apply binning with given name to x axis of histogram
+  // Binning(RooAbsBinning& binning)              -- Apply specified binning to x axis of histogram
+  // Binning(double lo, double hi, int nbins)     -- Apply specified binning to x axis of histogram
+  // ConditionalObservables(const RooArgSet& set) -- Do not normalized PDF over following observables when projecting PDF into histogram
+  //
+  // YVar(const RooAbsRealLValue& var,...)    -- Observable to be mapped on y axis of ROOT histogram
+  // ZVar(const RooAbsRealLValue& var,...)    -- Observable to be mapped on z axis of ROOT histogram
+  //
+  // The YVar() and ZVar() arguments can be supplied with optional Binning() arguments to control the binning of the Y and Z axes, e.g.
+  // createHistogram("histo",x,Binning(-1,1,20), YVar(y,Binning(-1,1,30)), ZVar(z,Binning("zbinning")))
+  //
+  // The caller takes ownership of the returned histogram
 {
+  RooLinkedList l ;
+  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
+  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
+  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
+  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+
+  return createHistogram(name,l) ;
+}
+
+TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cmdList) const 
+{  
   // Create empty 1,2 or 3D histogram
   // Arguments recognized
   //
@@ -420,7 +471,7 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooCmdArg& arg1, 
   pc.defineDependency("ZVar","YVar") ;
 
   // Process & check varargs 
-  pc.process(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  pc.process(cmdList) ;
   if (!pc.ok(kTRUE)) {
     return 0 ;
   }

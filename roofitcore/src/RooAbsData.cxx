@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.cc,v 1.22 2005/02/16 21:51:25 wverkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.23 2005/02/23 15:08:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,7 @@
 #include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/RooFormulaVar.hh"
 #include "RooFitCore/RooCmdConfig.hh"
+#include "RooFitCore/RooAbsRealLValue.hh"
 
 using std::cout;
 using std::endl;
@@ -92,6 +93,20 @@ RooAbsData::~RooAbsData()
 RooAbsData* RooAbsData::reduce(RooCmdArg arg1,RooCmdArg arg2,RooCmdArg arg3,RooCmdArg arg4,
 			       RooCmdArg arg5,RooCmdArg arg6,RooCmdArg arg7,RooCmdArg arg8) 
 {
+  // Create a reduced copy of this dataset. The caller takes ownership of the returned dataset
+  //
+  // The following optional named arguments are accepted
+  //
+  //   SelectVars(const RooArgSet& vars) -- Only retain the listed observables in the output dataset
+  //   Cut(const char* expression)       -- Only retain event surviving the given cut expression
+  //   Cut(const RooFormulaVar& expr)    -- Only retain event surviving the given cut formula
+  //   CutRange(const char* name)        -- Only retain events inside range with given name. Multiple CutRange
+  //                                        arguments may be given to select multiple ranges
+  //   EventRange(int lo, int hi)        -- Only retain events with given sequential event numbers
+  //   Name(const char* name)            -- Give specified name to output dataset
+  //   Title(const char* name)           -- Give specified title to output dataset
+  //
+
   // Define configuration for this method
   RooCmdConfig pc(Form("RooAbsData::reduce(%s)",GetName())) ;
   pc.defineString("name","Name",0,"") ;
@@ -254,10 +269,113 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
 			    const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
 			    const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
+  // Plot dataset on specified frame. By default an unbinned dataset will use the default binning of
+  // the target frame. A binned dataset will by default retain its intrinsic binning.
+  //
+  // The following optional named arguments can be used to modify the default behavior
+  //
+  // Data representation options
+  // ---------------------------
+  // Asymmetry(const RooCategory& c) -- Show the asymmetry of the daya in given two-state category [F(+)-F(-)] / [F(+)+F(-)]. 
+  //                                    Category must have two states with indices -1 and +1 or three states with indeces -1,0 and +1.
+  // ErrorType(RooAbsData::EType)    -- Select the type of error drawn: Poisson (default) draws asymmetric Poisson
+  //                                    confidence intervals. SumW2 draws symmetric sum-of-weights error
+  // Binning(double xlo, double xhi, -- Use specified binning to draw dataset
+  //                      int nbins)
+  // Binning(const RooAbsBinning&)   -- Use specified binning to draw dataset
+  // Binning(const char* name)       -- Use binning with specified name to draw dataset
+  // RefreshNorm(Bool_t flag)        -- Force refreshing for PDF normalization information in frame.
+  //                                    If set, any subsequent PDF will normalize to this dataset, even if it is
+  //                                    not the first one added to the frame. By default only the 1st dataset
+  //                                    added to a frame will update the normalization information
+  //
+  // Histogram drawing options
+  // -------------------------
+  // DrawOption(const char* opt)     -- Select ROOT draw option for resulting TGraph object
+  // LineStyle(Int_t style)          -- Select line style by ROOT line style code, default is solid
+  // LineColor(Int_t color)          -- Select line color by ROOT color code, default is black
+  // LineWidth(Int_t width)          -- Select line with in pixels, default is 3
+  // MarkerStyle(Int_t style)        -- Select the ROOT marker style, default is 21
+  // MarkerColor(Int_t color)        -- Select the ROOT marker color, default is black
+  // MarkerSize(Double_t size)       -- Select the ROOT marker size
+  // XErrorSize(Double_t frac)       -- Select size of X error bar as fraction of the bin width, default is 1
+  //
+  //
+  // Misc. other options
+  // -------------------
+  // Name(const chat* name)          -- Give curve specified name in frame. Useful if curve is to be referenced later
+  // Invisble(Bool_t flag)           -- Add curve to frame, but do not display. Useful in combination AddTo()
+  // AddTo(const char* name,         -- Add constructed histogram to already existing histogram with given name and relative weight factors
+  // double_t wgtSelf, double_t wgtOther)
+  // 
+  //                                    
   RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
   l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
   l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
   l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
   return plotOn(frame,l) ;  
+}
+
+TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
+				 const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4, 
+				 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const 
+{
+  // Create and fill a ROOT histogram TH1,TH2 or TH3 with the values of this dataset. 
+  //
+  // This function accepts the following arguments
+  //
+  // name -- Name of the ROOT histogram
+  // xvar -- Observable to be mapped on x axis of ROOT histogram
+  //
+  // Binning(const char* name)                    -- Apply binning with given name to x axis of histogram
+  // Binning(RooAbsBinning& binning)              -- Apply specified binning to x axis of histogram
+  // Binning(double lo, double hi, int nbins)     -- Apply specified binning to x axis of histogram
+  //
+  // YVar(const RooAbsRealLValue& var,...)    -- Observable to be mapped on y axis of ROOT histogram
+  // ZVar(const RooAbsRealLValue& var,...)    -- Observable to be mapped on z axis of ROOT histogram
+  //
+  // The YVar() and ZVar() arguments can be supplied with optional Binning() arguments to control the binning of the Y and Z axes, e.g.
+  // createHistogram("histo",x,Binning(-1,1,20), YVar(y,Binning(-1,1,30)), ZVar(z,Binning("zbinning")))
+  //
+  // The caller takes ownership of the returned histogram
+
+  RooLinkedList l ;
+  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
+  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
+  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
+  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+
+  // Define configuration for this method
+  RooCmdConfig pc(Form("RooAbsData::createHistogram(%s)",GetName())) ;
+  pc.defineString("cutRange","CutRange",0,"",kTRUE) ;
+  pc.defineString("cutString","CutSpec",0,"") ;
+  pc.defineObject("yvar","YVar",0,0) ;
+  pc.defineObject("zvar","ZVar",0,0) ;
+  pc.allowUndefined() ;
+  
+  // Process & check varargs 
+  pc.process(l) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  const char* cutSpec = pc.getString("cutString",0,kTRUE) ;
+  const char* cutRange = pc.getString("cutRange",0,kTRUE) ;
+
+  RooArgList vars(xvar) ;
+  RooAbsArg* yvar = static_cast<RooAbsArg*>(pc.getObject("yvar")) ;
+  if (yvar) {
+    vars.add(*yvar) ;
+  }
+  RooAbsArg* zvar = static_cast<RooAbsArg*>(pc.getObject("zvar")) ;
+  if (zvar) {
+    vars.add(*zvar) ;
+  }
+
+  pc.stripCmdList(l,"CutRange,CutSpec") ;
+  TH1* histo = xvar.createHistogram(name,l) ;
+  fillHistogram(histo,vars,cutSpec,cutRange) ;
+
+  return histo ;
 }

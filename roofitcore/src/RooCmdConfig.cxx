@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.cc,v 1.12 2005/02/16 21:51:29 wverkerke Exp $
+ *    File: $Id: RooCmdConfig.cc,v 1.13 2005/02/23 15:09:32 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -492,8 +492,9 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
     for (Int_t ia=0 ; ia<arg._argList.GetSize() ; ia++) {
       RooCmdArg* subArg = static_cast<RooCmdArg*>(arg._argList.At(ia)) ;
       if (strlen(subArg->GetName())>0) {
-	subArg->SetName(Form("%s::%s",arg.GetName(),subArg->GetName())) ;
-	depRet |= process(*subArg) ;
+	RooCmdArg subArgCopy(*subArg) ;
+	subArgCopy.SetName(Form("%s::%s",arg.GetName(),subArg->GetName())) ;
+	depRet |= process(subArgCopy) ;
       }
     }
   }

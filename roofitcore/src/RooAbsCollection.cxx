@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.cc,v 1.30 2005/02/14 20:44:18 wverkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.31 2005/02/23 15:08:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -750,6 +750,34 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
 				  const RooCmdArg& arg5, const RooCmdArg& arg6,	
 				  const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
+  // Output content of collection as LaTex table. By default a table with two columns is created: the left
+  // column contains the name of each variable, the right column the value.
+  //
+  // The following optional named arguments can be used to modify the default behavior
+  //
+  //   Columns(Int_t ncol)                    -- Fold table into multiple columns, i.e. ncol=3 will result in 3 x 2 = 6 total columns
+  //   Sibling(const RooAbsCollection& other) -- Define sibling list. The sibling list is assumed to have objects with the same
+  //                                             name in the same order. If this is not the case warnings will be printed. If a single
+  //                                             sibling list is specified, 3 columns will be output: the (common) name, the value of this
+  //                                             list and the value in the sibling list. Multiple sibling lists can be specified by 
+  //                                             repeating the Sibling() command. 
+  //   Format(const char* str)                -- Classic format string, provided for backward compatibility
+  //   Format(...)                            -- Formatting arguments, details are given below
+  //   OutputFile(const char* fname)          -- Send output to file with given name rather than standard output
+  //
+  // The Format(const char* what,...) has the following structure
+  //
+  //   const char* what          -- Controls what is shown. "N" adds name, "E" adds error, 
+  //                                "A" shows asymmetric error, "U" shows unit, "H" hides the value
+  //   FixedPrecision(int n)     -- Controls precision, set fixed number of digits
+  //   AutoPrecision(int n)      -- Controls precision. Number of shown digits is calculated from error 
+  //                                + n specified additional digits (1 is sensible default)
+  //   VerbatimName(Bool_t flag) -- Put variable name in a \verb+   + clause.
+  //
+  // Example use: list.printLatex(Columns(2), Format("NEU",AutoPrecision(1),VerbatimName()) ) ;
+
+
+  
   // Define configuration for this method
   RooCmdConfig pc("RooAbsCollection::printLatex()") ;
   pc.defineInt("ncol","Columns",0,1) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.18 2005/02/16 21:51:25 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.19 2005/02/23 15:08:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,8 +44,8 @@ ClassImp(RooAbsOptGoodnessOfFit)
 ;
 
 RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-					 const RooArgSet& projDeps, const char* rangeName, Int_t nCPU, Bool_t verbose) : 
-  RooAbsGoodnessOfFit(name,title,pdf,data,projDeps,rangeName, nCPU, verbose),
+					 const RooArgSet& projDeps, const char* rangeName, Int_t nCPU, Bool_t verbose, Bool_t splitCutRange) : 
+  RooAbsGoodnessOfFit(name,title,pdf,data,projDeps,rangeName, nCPU, verbose, splitCutRange),
   _projDeps(0)
 {
   // Don't do a thing in master mode
@@ -115,14 +115,15 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
     }
 
     // Mark fitted range in original PDF dependents for future use
-    iter->Reset() ;
-    while(arg=(RooAbsArg*)iter->Next()) {      
-      RooRealVar* pdfReal = dynamic_cast<RooRealVar*>(arg) ;
-      if (pdfReal) {
-	pdfReal->setRange("fit",pdfReal->getMin(rangeName),pdfReal->getMax(rangeName)) ;
+    if (!_splitRange) {
+      iter->Reset() ;
+      while(arg=(RooAbsArg*)iter->Next()) {      
+	RooRealVar* pdfReal = dynamic_cast<RooRealVar*>(arg) ;
+	if (pdfReal) {
+	  pdfReal->setRange("fit",pdfReal->getMin(rangeName),pdfReal->getMax(rangeName)) ;
+	}
       }
     }
-
     delete iter2 ;
   }
   delete iter ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNLLVar.rdl,v 1.5 2005/02/16 21:51:32 wverkerke Exp $
+ *    File: $Id: RooNLLVar.rdl,v 1.6 2005/02/23 15:09:41 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,15 +29,15 @@ public:
 	    const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none,const RooCmdArg& arg9=RooCmdArg::none) ;
 
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-	    Bool_t extended=kFALSE, const char* rangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE) ;
+	    Bool_t extended=kFALSE, const char* rangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE) ;
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-	    const RooArgSet& projDeps, Bool_t extended=kFALSE, const char* rangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE) ;
+	    const RooArgSet& projDeps, Bool_t extended=kFALSE, const char* rangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE) ;
   RooNLLVar(const RooNLLVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooNLLVar(*this,newname); }
 
   virtual RooAbsGoodnessOfFit* create(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-				      const RooArgSet& projDeps, const char* rangeName, Int_t nCPU=1, Bool_t verbose=kTRUE) {
-    return new RooNLLVar(name,title,pdf,data,projDeps,_extended,_rangeName, nCPU, verbose) ;
+				      const RooArgSet& projDeps, const char* rangeName, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE) {
+    return new RooNLLVar(name,title,pdf,data,projDeps,_extended,rangeName, nCPU, verbose,splitRange) ;
   }
   
   virtual ~RooNLLVar();
