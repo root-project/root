@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.3 2000/10/02 10:44:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.4 2001/06/25 09:16:30 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -63,9 +63,11 @@ public:
    static Double_t Log10(Double_t x);
    static Int_t    Nint(Float_t x);
    static Int_t    Nint(Double_t x);
+   static Int_t    Finite(Double_t x);
+   static Int_t    IsNaN(Double_t x);
 
    // Some integer math
-   static Long_t   NextPrime(Long_t x);   // least prime number greater than x
+   static Long_t   NextPrime(Long_t x);   // Least prime number greater than x
    static Long_t   Sqrt(Long_t x);
    static Long_t   Hypot(Long_t x, Long_t y);     // sqrt(px*px + py*py)
 
@@ -146,7 +148,7 @@ public:
 
    // Advanced
    static Float_t *Cross(Float_t v1[3],Float_t v2[3],Float_t out[3]);     // Calculate the Cross Product of two vectors
-   static Float_t  Normalize(Float_t v[3]);                               // normalize a vector
+   static Float_t  Normalize(Float_t v[3]);                               // Normalize a vector
    static Float_t  NormCross(Float_t v1[3],Float_t v2[3],Float_t out[3]); // Calculate the Normalized Cross Product of two vectors
    static Float_t *Normal2Plane(Float_t v1[3],Float_t v2[3],Float_t v3[3], Float_t normal[3]); // Calcualte a normal vector of a plane
 
@@ -159,7 +161,7 @@ public:
    static Double_t  Gaus(Double_t x, Double_t mean=0, Double_t sigma=1);
    static Double_t  Landau(Double_t x, Double_t mean=0, Double_t sigma=1);
    static Double_t  LnGamma(Double_t z);
-   static Double_t  Normalize(Double_t v[3]);                             // normalize a vector
+   static Double_t  Normalize(Double_t v[3]);                             // Normalize a vector
    static Double_t  NormCross(Double_t v1[3],Double_t v2[3],Double_t out[3]); // Calculate the Normalized Cross Product of two vectors
    static Double_t *Normal2Plane(Double_t v1[3],Double_t v2[3],Double_t v3[3], Double_t normal[3]); // Calcualte a normal vector of a plane
    static Double_t  Prob(Double_t chi2,Int_t ndf);
@@ -290,6 +292,12 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 
 //---- Trig and other functions ------------------------------------------------
 
+#ifdef R__WIN32
+#   ifndef finite
+#      define finite _finite
+#      define isnan  _isnan
+#   endif
+#endif
 #if defined(R__AIX) || defined(R__MAC) || defined(R__SOLARIS_CC50) || \
     defined(R__USESTHROW)
 // math functions are defined inline so we have to include them here
@@ -312,6 +320,8 @@ extern "C" {
    extern double pow(double, double);
    extern double log(double);
    extern double log10(double);
+   extern int    finite(double);
+   extern int    isnan(double);
 }
 #endif
 
@@ -359,6 +369,12 @@ inline Double_t TMath::Log(Double_t x)
 
 inline Double_t TMath::Log10(Double_t x)
    { return log10(x); }
+
+inline Int_t TMath::Finite(Double_t x)
+   { return finite(x); }
+
+inline Int_t TMath::IsNaN(Double_t x)
+   { return isnan(x); }
 
 //-------- Advanced -------------
 
