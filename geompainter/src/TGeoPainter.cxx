@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.26 2003/08/22 13:08:48 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.27 2003/08/28 14:09:08 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -2223,12 +2223,15 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                   next = gGeoManager->Step();
                   steptot = 0;
                   stemin = 0;
-                  if (next && next->IsOnScreen()) {
-                     done = kTRUE;
-                     base_color = next->GetVolume()->GetLineColor();
-                     fClippingShape->ComputeNormal(point, dir, normal);
-                     norm = normal;
-                     break;
+                  if (next) {
+                     TGeoVolume *nextvol = next->GetVolume();
+                     if (fVisVolumes->IndexOf(nextvol) >= 0) {
+                        done = kTRUE;
+                        base_color = nextvol->GetLineColor();
+                        fClippingShape->ComputeNormal(point, dir, normal);
+                        norm = normal;
+                        break;
+                     }
                   }
                   inclip = kTRUE;
                   stemax = fClippingShape->DistToOut(point,dir,3);
@@ -2271,10 +2274,13 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                   }
                }
             }      
-            if (next && next->IsOnScreen()) {
-               done = kTRUE;
-               base_color = next->GetVolume()->GetLineColor();
-               break;
+            if (next) {
+               TGeoVolume *nextvol = next->GetVolume();
+               if (fVisVolumes->IndexOf(nextvol) >= 0) {
+                  done = kTRUE;
+                  base_color = next->GetVolume()->GetLineColor();
+                  break;
+               }
             }
          }
          if (!done) continue;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.67 2003/07/14 12:58:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.68 2003/08/20 07:00:47 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -515,6 +515,31 @@ TF1::~TF1()
 //______________________________________________________________________________
 TF1::TF1(const TF1 &f1) : TFormula(f1), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
 {
+
+   fXmin      = 0;
+   fXmax      = 0;
+   fNpx       = 100;
+   fType      = 0;
+   fNpfits    = 0;
+   fNDF       = 0;
+   fNsave     = 0;
+   fChisquare = 0;
+   fIntegral  = 0;
+   fFunction  = 0;
+   fParErrors = 0;
+   fParMin    = 0;
+   fParMax    = 0;
+   fAlpha     = 0;
+   fBeta      = 0;
+   fGamma     = 0;
+   fParent    = 0;
+   fSave      = 0;
+   fHistogram = 0;
+   fMinimum   = -1111;
+   fMaximum   = -1111;
+   fMethodCall = 0;
+   SetFillStyle(0);
+
    ((TF1&)f1).Copy(*this);
 }
 
@@ -531,6 +556,17 @@ void TF1::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Copy this F1 to a new F1*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
+
+   if (((TF1&)obj).fParMin)    delete [] ((TF1&)obj).fParMin;
+   if (((TF1&)obj).fParMax)    delete [] ((TF1&)obj).fParMax;
+   if (((TF1&)obj).fParErrors) delete [] ((TF1&)obj).fParErrors;
+   if (((TF1&)obj).fIntegral)  delete [] ((TF1&)obj).fIntegral;
+   if (((TF1&)obj).fAlpha)     delete [] ((TF1&)obj).fAlpha;
+   if (((TF1&)obj).fBeta)      delete [] ((TF1&)obj).fBeta;
+   if (((TF1&)obj).fGamma)     delete [] ((TF1&)obj).fGamma;
+   if (((TF1&)obj).fSave)      delete [] ((TF1&)obj).fSave;
+   delete ((TF1&)obj).fHistogram;
+   delete ((TF1&)obj).fMethodCall;
 
    TFormula::Copy(obj);
    TAttLine::Copy((TF1&)obj);
