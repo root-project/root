@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.20 2003/03/15 14:21:39 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.21 2003/05/01 17:16:57 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -363,10 +363,23 @@ TGClient::TGClient(const char *dpyName)
    TGView::fgClipboard = gVirtualX->InternAtom("CLIPBOARD", kFALSE);
 #endif
 
-   // Create an object for the root window, create picture pool, etc...
+   // Create the graphics event handler, an object for the root window,
+   // a picture pool, mimetype list, etc...
 
    fGlobalNeedRedraw = kFALSE;
    fForceRedraw      = kFALSE;
+
+   if (fXfd > 0) {
+      TGInputHandler *xi = new TGInputHandler(this, fXfd);
+      gSystem->AddFileHandler(xi);
+      // X11 events are handled via gXDisplay->Notify() in
+      // TUnixSystem::DispatchOneEvent(). When no events available we wait for
+      // events on all TFileHandlers including this one via a select() call.
+      // However, X11 events are always handled via gXDisplay->Notify() and not
+      // via the ReadNotify() (therefore TGInputHandler should not override
+      // TFileHandler::ReadNotify()).
+      gXDisplay = xi;
+   }
 
    fRoot = new TGFrame(this, gVirtualX->GetDefaultRootWindow());
 
@@ -540,18 +553,6 @@ TGClient::TGClient(const char *dpyName)
    TGTextView::fgDefaultSelectedGC.SetAttributes(&gval);
 
    fWaitForWindow = kNone;
-
-   if (fXfd > 0) {
-      TGInputHandler *xi = new TGInputHandler(this, fXfd);
-      gSystem->AddFileHandler(xi);
-      // X11 events are handled via gXDisplay->Notify() in
-      // TUnixSystem::DispatchOneEvent(). When no events available we wait for
-      // events on all TFileHandlers including this one via a select() call.
-      // However, X11 events are always handled via gXDisplay->Notify() and not
-      // via the ReadNotify() (therefore TGInputHandler should not override
-      // TFileHandler::ReadNotify()).
-      gXDisplay = xi;
-   }
 
    gClient = this;
 }
