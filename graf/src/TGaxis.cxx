@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.37 2002/02/15 23:22:02 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.38 2002/06/17 07:59:34 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -456,7 +456,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t BinLow,  BinLow2,  BinLow3;
    Double_t BinHigh, BinHigh2, BinHigh3;
    Double_t BinWidth, BinWidth2, BinWidth3;
-   Double_t textsize;
    Double_t xpl1, xpl2, ypl1, ypl2;
    Double_t Xtick = 0;
    Double_t Xtick0, Xtick1, DXtick=0;
@@ -1436,8 +1435,7 @@ L110:
       //Double_t SMALD = (TMath::Log10(1./0.9)/TMath::Log10(wmax/wmin))*axis_length;
       //if (xmin == xmax && SMALD <= charheight) LogInteger = kFALSE;
       if (ymin == ymax) {
-         textsize  = 0;
-//            CALL IGTEXT(0.,0.,"0.01",charheight,textsize,'S');
+         //Double_t textsize  = 0;
          //if (0.5*textsize > SMALD) LogInteger = kFALSE;
       }
 
