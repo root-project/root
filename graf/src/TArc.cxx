@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArc.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TArc.cxx,v 1.2 2000/06/13 10:42:26 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -43,6 +43,10 @@ TArc::TArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t phimax)
 //  phimin : min and max angle in degrees (default is 0-->360)
 //  phimax :
 //
+//  When a circle sector only is drawn, the lines connecting the center
+//  of the arc to the edges are drawn by default. One can specify
+//  the drawing option "only" to not draw these lines.
+//
 }
 
 //______________________________________________________________________________
@@ -68,14 +72,14 @@ void TArc::Copy(TObject &arc)
 }
 
 //______________________________________________________________________________
-void TArc::DrawArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t phimax)
+void TArc::DrawArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t phimax,Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this arc with new coordinates*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================
    TArc *newarc = new TArc(x1, y1, r1, phimin, phimax);
    TAttLine::Copy(*newarc);
    TAttFill::Copy(*newarc);
-   newarc->AppendPad();
+   newarc->AppendPad(option);
 }
 
 //______________________________________________________________________________

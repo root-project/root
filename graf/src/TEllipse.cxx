@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.4 2000/11/21 20:24:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.5 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -30,6 +30,11 @@ ClassImp(TEllipse)
 //  The attributes of the outline line are given via TAttLine.
 //  The attributes of the fill area are given via TAttFill.
 //  The picture below illustrates different types of ellipses.
+//
+//  When an ellipse sector only is drawn, the lines connecting the center
+//  of the ellipse to the edges are drawn by default. One can specify
+//  the drawing option "only" to not draw these lines.
+//
 //Begin_Html
 /*
 <img src="gif/ellipse.gif">
@@ -137,7 +142,7 @@ void TEllipse::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Double_t phimin,Double_t phimax,Double_t theta)
+void TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Double_t phimin,Double_t phimax,Double_t theta,Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this ellipse with new coordinates*-*-*-*-*-*-*-*-*
 //*-*                  ======================================
@@ -145,7 +150,7 @@ void TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Doub
    TAttLine::Copy(*newellipse);
    TAttFill::Copy(*newellipse);
    newellipse->SetBit(kCanDelete);
-   newellipse->AppendPad();
+   newellipse->AppendPad(option);
 }
 
 //______________________________________________________________________________
@@ -415,15 +420,15 @@ void TEllipse::ls(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TEllipse::Paint(Option_t *)
+void TEllipse::Paint(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Paint this ellipse with its current attributes*-*-*-*-*
 //*-*                  ==============================================
-   PaintEllipse(fX1,fY1,fR1,fR2,fPhimin,fPhimax,fTheta);
+   PaintEllipse(fX1,fY1,fR1,fR2,fPhimin,fPhimax,fTheta,option);
 }
 
 //______________________________________________________________________________
-void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phimin,Double_t phimax, Double_t theta)
+void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phimin,Double_t phimax, Double_t theta,Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this ellipse with new coordinates*-*-*-*-*-*-*-*-*
 //*-*                  ======================================
@@ -445,6 +450,8 @@ void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phi
       x[i]  = fX1 + dx*ct - dy*st;
       y[i]  = fY1 + dx*st + dy*ct;
    }
+   TString opt = option;
+   opt.ToLower();
    if (phimax-phimin >= 360 ) {
       if (GetFillColor()) gPad->PaintFillArea(np,x,y);
       if (GetLineStyle()) gPad->PaintPolyLine(np+1,x,y);
@@ -454,9 +461,13 @@ void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phi
       x[np+2] = x[0];
       y[np+2] = y[0];
       if (GetFillColor()) gPad->PaintFillArea(np+2,x,y);
-      if (GetLineStyle()) gPad->PaintPolyLine(np+3,x,y);
+      if (GetLineStyle()) {
+         if (opt.Contains("only")) gPad->PaintPolyLine(np+1,x,y);
+         else                      gPad->PaintPolyLine(np+3,x,y);
+      }
    }
-}
+}   
+
 
 //______________________________________________________________________________
 void TEllipse::Print(Option_t *) const
