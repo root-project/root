@@ -47,6 +47,7 @@ public:
    virtual void        Clear(Option_t *option="");
    virtual void        Copy(TObject &) { MayNotUse("Copy(TObject &)"); }
    virtual TObject    *FindObject(const char *name) const;
+   virtual TObject    *FindObject(TObject *obj) const;
    TCollection        *GetListOfFolders() const { return fFolders; }
    virtual const char *GetPath() const;
    Bool_t              IsFolder() const { return kTRUE; }

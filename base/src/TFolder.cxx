@@ -159,6 +159,15 @@ void TFolder::Clear(Option_t *)
 }
 
 //______________________________________________________________________________
+TObject *TFolder::FindObject(TObject *) const
+{
+// find object in an folder
+   
+   Error("FindObject","Not yet implemented");
+   return 0;
+}
+
+//______________________________________________________________________________
 TObject *TFolder::FindObject(const char *name) const
 {
 // search object identified by name in the tree of folders inside
