@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.2 2000/05/24 10:31:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.3 2000/11/21 16:11:53 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -31,21 +31,23 @@ class TArrayC;
 class TFile : public TDirectory {
 
 protected:
-   Int_t       fD;                //File descriptor
-   Seek_t      fBEGIN;            //First used byte in file
-   Seek_t      fEND;              //Last used byte in file
-   Int_t       fVersion;          //File format version
-   Int_t       fCompress;         //(=1 file is compressed, 0 otherwise)
-   TString     fOption;           //File options
-   Char_t      fUnits;            //Number of bytes for file pointers
-   Seek_t      fSeekFree;         //Location on disk of free segments structure
-   Int_t       fNbytesFree;       //Number of bytes for free segments structure
-   Int_t       fWritten;          //Number of objects written so far
    Double_t    fSumBuffer;        //Sum of buffer sizes of objects written so far
    Double_t    fSum2Buffer;       //Sum of squares of buffer sizes of objects written so far
-   TList      *fFree;             //Free segments linked list table
    Double_t    fBytesWrite;       //Number of bytes written to this file
    Double_t    fBytesRead;        //Number of bytes read from this file
+   Seek_t      fBEGIN;            //First used byte in file
+   Seek_t      fEND;              //Last used byte in file
+   Seek_t      fSeekFree;         //Location on disk of free segments structure
+   Seek_t      fSeekInfo;         //Location on disk of StreamerInfo record
+   Int_t       fD;                //File descriptor
+   Int_t       fVersion;          //File format version
+   Int_t       fCompress;         //(=1 file is compressed, 0 otherwise)
+   Int_t       fNbytesFree;       //Number of bytes for free segments structure
+   Int_t       fNbytesInfo;       //Number of bytes for StreamerInfo record
+   Int_t       fWritten;          //Number of objects written so far
+   TString     fOption;           //File options
+   Char_t      fUnits;            //Number of bytes for file pointers
+   TList      *fFree;             //Free segments linked list table
    TArrayC    *fClassIndex;       //!Index of TStreamerInfo classes written to this file
    
    static Double_t fgBytesWrite;    //Number of bytes written by all TFile objects
@@ -102,20 +104,20 @@ public:
    virtual void      Print(Option_t *option="");
    virtual Bool_t    ReadBuffer(char *buf, int len);
    virtual void      ReadFree();
-   virtual void      ReadStreamerInfo(const char *name="StreamerInfo");
+   virtual void      ReadStreamerInfo();
    virtual void      Recover();
    virtual void      Seek(Seek_t offset, ERelativeTo pos = kBeg);
    virtual void      SetCompressionLevel(Int_t level=1);
    virtual void      SetEND(Seek_t last) {fEND = last;}
    virtual void      SetOption(Option_t *option=">") {fOption = option;}
-   virtual void      ShowStreamerInfo(const char *name="StreamerInfo");
+   virtual void      ShowStreamerInfo();
    virtual Int_t     Sizeof() const;
    void              SumBuffer(Int_t bufsize);
    virtual Bool_t    WriteBuffer(const char *buf, int len);
    virtual Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
    virtual void      WriteFree();
    virtual void      WriteHeader();
-   virtual void      WriteStreamerInfo(const char *name="StreamerInfo");
+   virtual void      WriteStreamerInfo();
 
    static TFile     *Open(const char *name, Option_t *option="",
                           const char *ftitle="", Int_t compress=1);

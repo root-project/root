@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.13 2000/11/30 08:34:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.14 2000/12/02 15:48:59 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -182,7 +182,9 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fBytesRead  = 0;
    fBytesWrite = 0;
    fClassIndex = 0;
-
+   fSeekInfo   = 0;
+   fNbytesInfo = 0;
+   
    if (!fOption.CompareTo("NET", TString::kIgnoreCase))
       return;
 
@@ -362,6 +364,8 @@ void TFile::Init(Bool_t create)
       frombuf(buffer, &fNbytesName);
       frombuf(buffer, &fUnits );
       frombuf(buffer, &fCompress);
+      frombuf(buffer, &fSeekInfo);
+      frombuf(buffer, &fNbytesInfo);
       fSeekDir = fBEGIN;
       delete [] header;
 //*-*-------------Read Free segments structure if file is writable
@@ -1143,6 +1147,8 @@ void TFile::WriteHeader()
    tobuf(buffer, fNbytesName);
    tobuf(buffer, fUnits);
    tobuf(buffer, fCompress);
+   tobuf(buffer, fSeekInfo);
+   tobuf(buffer, fNbytesInfo);
    Int_t nbytes  = buffer - psave;
    Seek(0);
    WriteBuffer(psave, nbytes);
@@ -1345,13 +1351,27 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
 }
 
 //______________________________________________________________________________
-void TFile::ReadStreamerInfo(const char *name)
+void TFile::ReadStreamerInfo()
 {
 // Read the list of StreamerInfo from this file
 // The key with name holding the list of TStreamerInfo objects is read.
 // The corresponding TClass objects are updated.
 
-   TList *list = (TList*)Get(name);
+   TList *list = 0;
+   if (fSeekInfo) {
+      TKey *key = new TKey();
+      char *buffer = new char[fNbytesInfo+1];
+      char *buf    = buffer;
+      Seek(fSeekInfo);
+      ReadBuffer(buf,fNbytesInfo);
+      key->ReadBuffer(buf);
+      list = (TList*)key->ReadObj();
+      delete [] buffer;
+      delete key;
+   } else {
+      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
+   }
+   
    if (list == 0) return;
    if (gDebug > 0) printf("Calling ReadStreamerInfo for file: %s\n",GetName());
 
@@ -1370,13 +1390,27 @@ void TFile::ReadStreamerInfo(const char *name)
 }
 
 //______________________________________________________________________________
-void TFile::ShowStreamerInfo(const char *name)
+void TFile::ShowStreamerInfo()
 {
 // Show the StreamerInfo of all classes written to this file.
 
-   TList *list = (TList*)Get(name);
+   TList *list = 0;
+   if (fSeekInfo) {
+      TKey *key = new TKey();
+      char *buffer = new char[fNbytesInfo+1];
+      char *buf    = buffer;
+      Seek(fSeekInfo);
+      ReadBuffer(buf,fNbytesInfo);
+      key->ReadBuffer(buf);
+      list = (TList*)key->ReadObj();
+      delete [] buffer;
+      delete key;
+   } else {
+      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
+   }
+
    if (list == 0) {
-      printf("Cannot find a %s key on this file\n",name);
+      printf("Cannot find the StreamerInfo record in this file\n");
       return;
    }
 
@@ -1387,7 +1421,7 @@ void TFile::ShowStreamerInfo(const char *name)
 }
 
 //______________________________________________________________________________
-void TFile::WriteStreamerInfo(const char *name)
+void TFile::WriteStreamerInfo()
 {
 //  Write the list of TStreamerInfo as a single object in this file
 //  The class Streamer description for all classes written to this file
@@ -1421,7 +1455,17 @@ void TFile::WriteStreamerInfo(const char *name)
    TDirectory *dirSave = gDirectory;
    gFile = this;
    gDirectory = this;
-   list.Write(name,kSingleKey|kOverwrite);
+
+   //free previous StreamerInfo record
+   if (fSeekInfo) MakeFree(fSeekInfo,fSeekInfo+fNbytesInfo-1);
+   //Create new key
+   TKey key(&list,"StreamerInfo",GetBestBuffer());
+   fKeys->Remove(&key);
+   fSeekInfo   = key.GetSeekKey();
+   fNbytesInfo = key.GetNbytes();
+   SumBuffer(key.GetObjlen());
+   key.WriteFile(0);
+     
    gFile = fileSave;
    gDirectory = dirSave;
    fCompress = compress;
