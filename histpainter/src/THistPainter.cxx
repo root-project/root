@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.54 2001/11/16 15:01:51 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.55 2001/12/05 17:02:50 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -61,7 +61,6 @@ Hparam_t  Hparam;
 
 const Int_t kNMAX = 2000;
 
-static TH1 *hlist[10];
 const Double_t kHMAX = 1.05;
 const Int_t kMAXCONTOUR  = 104;
 const Int_t kCannotRotate = BIT(11);
@@ -78,10 +77,10 @@ THistPainter::THistPainter()
    fYaxis = 0;
    fZaxis = 0;
    fFunctions = 0;
-   fNIDS  = 0;
    fXbuf  = new Double_t[kNMAX];
    fYbuf  = new Double_t[kNMAX];
    fNcuts = 0;
+   fStack = 0;
 }
 
 //______________________________________________________________________________
@@ -134,7 +133,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       if (d1 <= kMaxDiff) {gPad->SetSelected(fXaxis); return 0;}
       d2 = view->GetDistancetoAxis(2, px, py, ratio);
       if (d2 <= kMaxDiff) {gPad->SetSelected(fYaxis); return 0;}
-      if ( px > puxmin && px < puxmax && py > puymax && py < puymin) return 0;
+      if ( px > puxmin && px < puxmax && py > puymax && py < puymin) return 1;
       return big;
    }
 //*-*- check if point is close to an axis
@@ -179,7 +178,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       if ( px > puxmin + delta2
         && px < puxmax - delta2
         && py > puymax + delta2
-        && py < puymin - delta2) return 0;
+        && py < puymin - delta2) return 1;
    }
 
 //*-*- point is inside histogram area. Find channel number
@@ -2784,9 +2783,6 @@ void THistPainter::PaintLego()
 
    Int_t i;
    Int_t raster = 1;
-   TH1 *hid;
-   fNIDS = 0;
-   hlist[0] = fH;
    if (Hparam.zmin == 0 && Hparam.zmax == 0) {Hparam.zmin = -1; Hparam.zmax = 1;}
    Int_t   nx      = Hparam.xlast - Hparam.xfirst + 1;
    Int_t   ny      = Hparam.ylast - Hparam.yfirst + 1;
@@ -2866,15 +2862,18 @@ void THistPainter::PaintLego()
          fLego->SetColorMain(colormain,0);
    }
    if (Hoption.Lego == 11) {
-      for (Int_t id=0;id<=fNIDS;id++) {
-         hid = hlist[id];
+      Int_t nids = 1;
+      if (fStack) nids = fStack->GetEntriesFast();
+      TH1 *hid = fH;
+      for (Int_t id=0;id<=nids;id++) {
+         if (id > 0 && fStack) hid = (TH1*)fStack->At(id-1);
          Color_t colormain = hid->GetFillColor();
          if (colormain == 1) colormain = 17; //avoid drawing with black
          Color_t colordark = colormain + 100;
          fLego->SetColorMain(colormain,id);
          fLego->SetColorDark(colordark,id);
-         if (id == 0)     fLego->SetColorMain(colormain,-1);  // Set Bottom color
-         if (id == fNIDS) fLego->SetColorMain(colormain,99);  // Set Top color
+         if (id == 0)    fLego->SetColorMain(colormain,-1);  // Set Bottom color
+         if (id == nids) fLego->SetColorMain(colormain,99);  // Set Top color
       }
    }
 
@@ -2896,11 +2895,11 @@ void THistPainter::PaintLego()
    fLego->SetFillStyle(fH->GetFillStyle());
 
 //*-*- Set color/style for back box
-   fLego->SetFillStyle(gStyle->GetFrameFillStyle());
-   fLego->SetFillColor(gStyle->GetFrameFillColor());
+   fLego->SetFillStyle(gPad->GetFrameFillStyle());
+   fLego->SetFillColor(gPad->GetFrameFillColor());
    fLego->TAttFill::Modify();
 
-   Int_t backcolor = gStyle->GetFrameFillColor();
+   Int_t backcolor = gPad->GetFrameFillColor();
    if (Hoption.System != kCARTESIAN) backcolor = 0;
    view->PadRange(backcolor);
 
@@ -2981,7 +2980,6 @@ void THistPainter::PaintLego()
    }
    if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
    if (Hoption.Zscale) PaintPalette();  // MOD MWH
-   fNIDS = 0;
    delete axis;
    delete fLego; fLego = 0;
 }
@@ -3715,8 +3713,6 @@ void THistPainter::PaintSurface()
    Int_t raster = 0;
    Int_t irep   = 0;
 
-   fNIDS        = 0;
-
    if (Hparam.zmin == 0 && Hparam.zmax == 0) {Hparam.zmin = -1; Hparam.zmax = 1;}
    Int_t   nx      = Hparam.xlast - Hparam.xfirst;
    Int_t   ny      = Hparam.ylast - Hparam.yfirst;
@@ -3840,11 +3836,11 @@ void THistPainter::PaintSurface()
    view->SetView(phideg, thedeg, psideg, irep);
 
 //*-*- Set color/style for back box
-   fLego->SetFillStyle(gStyle->GetFrameFillStyle());
-   fLego->SetFillColor(gStyle->GetFrameFillColor());
+   fLego->SetFillStyle(gPad->GetFrameFillStyle());
+   fLego->SetFillColor(gPad->GetFrameFillColor());
    fLego->TAttFill::Modify();
 
-   Int_t backcolor = gStyle->GetFrameFillColor();
+   Int_t backcolor = gPad->GetFrameFillColor();
    if (Hoption.System != kCARTESIAN) backcolor = 0;
    view->PadRange(backcolor);
 
@@ -3950,7 +3946,6 @@ void THistPainter::PaintSurface()
 
    if (Hoption.Zscale) PaintPalette();  // MOD MWH
 
-   fNIDS = 0;
    delete axis;
    delete fLego; fLego = 0;
 }
