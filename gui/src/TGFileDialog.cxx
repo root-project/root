@@ -279,7 +279,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
                kMWMInputModeless);
 
    MapWindow();
-   fFc->DisplayDirectory();
+   fFc->DisplayDirectory(); 
    fClient->WaitFor(this);
 }
 
@@ -426,11 +426,15 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                break;
 
             case kCT_ITEMDBLCLICK:
-#ifndef WIN32
+
                if (parm1 == kButton1) {
                   if (fFc->NumSelected() == 1) {
                      f = (TGFileItem *) fFc->GetNextSelected(&p);
+#ifndef GDK_WIN32
                      if (S_ISDIR(f->GetType())) {
+#else
+                     if (f->GetType() & _S_IFDIR) {
+#endif
                         fFc->ChangeDirectory(f->GetItemName()->GetString());
                         fTreeLB->Update(fFc->GetDirectory());
                         if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
@@ -442,23 +446,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      }
                   }
                }
-#else
-#ifdef GDK_WIN32
-               if (parm1 == kButton1) {
-                  if (fFc->NumSelected() == 1) {
-                     f = (TGFileItem *) fFc->GetNextSelected(&p);
-                     if ((f->GetType()) & _S_IFDIR) {
-                        fFc->ChangeDirectory(f->GetItemName()->GetString());
-                        fTreeLB->Update(fFc->GetDirectory());
-                     } else {
-                        fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
-                                                                       fTbfname->GetString());
-                        DeleteWindow();
-                     }
-                  }
-               }
-#endif
-#endif
+
                break;
 
             default:
