@@ -1,3 +1,8 @@
+#include "TFile.h"
+#include "TTree.h"
+#include "TRandom.h"
+#include "TCanvas.h"
+
 void tree3w() {
 // Example of a Tree where branches are variable length arrays
 // A second Tree is created and filled in parallel.

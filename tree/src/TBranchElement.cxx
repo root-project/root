@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.159 2004/11/19 20:08:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.160 2005/01/03 21:58:52 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -428,13 +428,14 @@ TBranchElement::TBranchElement(const char *bname, TVirtualCollectionProxy *cont,
    //
    // If splitlevel > 0 this branch in turn is split into sub branches
 
-   fCollProxy = cont;
+   fCollProxy = cont->Generate();
    char name[kMaxLen];
    strcpy(name,bname);
+   if (name[strlen(name)-1]=='.') name[strlen(name)-1]=0;
    fSplitLevel   = splitlevel;
    fInfo         = 0;
-   fID           = 0;
-   fStreamerType = -1;
+   fID           = -1;
+   fStreamerType = -1; // TStreamerInfo::kSTLp;
    fType         = 0;
    fClassVersion = cont->GetCollectionClass()->GetClassVersion();
    fBranchCount  = 0;
@@ -451,9 +452,9 @@ TBranchElement::TBranchElement(const char *bname, TVirtualCollectionProxy *cont,
 
    SetName(name);
    SetTitle(name);
-   Bool_t Implemented=kFALSE;
-   Assert(Implemented);
-   // fClassName = cont->GetName();
+   //Bool_t Implemented=kFALSE;
+   //Assert(Implemented);
+   fClassName = cont->GetCollectionClass()->GetName();
    fCompress = compress;
    if (compress == -1 && fTree->GetDirectory()) {
       TFile *bfile = fTree->GetDirectory()->GetFile();
@@ -481,7 +482,8 @@ TBranchElement::TBranchElement(const char *bname, TVirtualCollectionProxy *cont,
 
 
    // create sub branches if requested by splitlevel
-   if (splitlevel > 0) {
+   if (splitlevel > 0 &&
+       GetCollectionProxy()->GetCollectionClass()->CanSplit()) {
       // ===> Create a leafcount
       TLeaf *leaf     = new TLeafElement(name,fID, fStreamerType);
       leaf->SetBranch(this);
@@ -505,8 +507,6 @@ TBranchElement::TBranchElement(const char *bname, TVirtualCollectionProxy *cont,
       BuildTitle(name);
       return;
    }
-
-   SetBit(kBranchObject);
 
    TLeaf *leaf     = new TLeafElement(GetTitle(),fID, fStreamerType);
    leaf->SetTitle(GetTitle());
@@ -821,6 +821,7 @@ void TBranchElement::Browse(TBrowser *b)
       if (GetBrowsableMethods())
          GetBrowsableMethods()->Browse(b);
    } else {
+
       // Get the name and strip any extra brackets
       // in order to get the full arrays.
       TString slash("/"), escapedSlash("\\/");
@@ -1100,6 +1101,7 @@ TList *TBranchElement::GetBrowsableMethods() {
          cl=clsub;
    }
 
+   if (cl && cl->GetCollectionProxy()) cl = cl->GetCollectionProxy()->GetValueClass();
    if (!cl) return 0;
    fBrowsableMethods=TMethodBrowsable::GetMethodBrowsables(this, cl);
    return fBrowsableMethods;
@@ -1769,7 +1771,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
         //                         and Commit   == noop.
         // TODO: Exception safety a la TPushPop
         TVirtualCollectionProxy* proxy = GetCollectionProxy();
-        TVirtualCollectionProxy::TPushPop helper(proxy,fAddress);
+        TVirtualCollectionProxy::TPushPop helper(proxy,fObject);
         void* env = proxy->Allocate(fNdata,true);
         Int_t i, nbranches = fBranches.GetEntriesFast();
         switch(fSTLtype)  {
@@ -1883,7 +1885,14 @@ namespace {
 
       // Get the current type of this data member!
       TStreamerInfo *brInfo = br->GetInfo();
+      if (brInfo==0) {
+         TClass *coll = gROOT->GetClass(br->GetClassName());
+         Assert(coll && coll->GetCollectionProxy());
+         return coll;
+      }
       TClass *motherCl = brInfo->GetClass();
+      if (motherCl->GetCollectionProxy()) 
+         return motherCl->GetCollectionProxy()->GetCollectionClass();
 
       TStreamerElement *currentStreamerElement = 
          ((TStreamerElement*)brInfo->GetElems()[br->GetID()]);
@@ -2458,6 +2467,11 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
    char branchname[kMaxLen];
    Int_t jd = 0;
    Int_t unroll = 0;
+   if (ndata==1 && cl->GetCollectionProxy() && 
+      strcmp(((TStreamerElement*)elems[0])->GetName(),"This")==0) {
+      // This streamerInfo only refers to the collection itself
+      return 1;
+   }
    for (Int_t i=0;i<ndata;i++) {
       elem = (TStreamerElement*)elems[i];
       Int_t offset = elem->GetOffset();
@@ -2583,7 +2597,9 @@ TVirtualCollectionProxy *TBranchElement::GetCollectionProxy()
    TBranchElement *This = const_cast<TBranchElement*>(this);
 
    if (fType==4 ) {
-      const char *ty = ((TStreamerElement*)This->GetInfo()->GetElems()[fID])->GetTypeName();
+      const char *ty;
+      if (fID>=0) ty = ((TStreamerElement*)This->GetInfo()->GetElems()[fID])->GetTypeName();
+      else ty = fClassName.Data();
       TClass *cl = gROOT->GetClass(ty);
       fCollProxy = cl->GetCollectionProxy()->Generate();
       fSTLtype   = TClassEdit::IsSTLCont(ty);

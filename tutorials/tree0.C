@@ -66,7 +66,7 @@ void tree0() {
   Event *e = new Event;
   
   // create a branch with energy 
-  tree->Branch("event","Event",&e);
+  tree->Branch("event",&e);
   
   // fill some events with random numbers
   Int_t nevent=10000;

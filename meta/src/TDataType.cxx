@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.14 2004/07/30 01:16:17 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.15 2004/11/11 20:42:26 rdm Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -64,6 +64,30 @@ TDataType::~TDataType()
    // TDataType dtor deletes adopted G__TypedefInfo object.
 
    delete fInfo;
+}
+
+//______________________________________________________________________________
+const char *TDataType::GetTypeName(EDataType type)
+{
+   switch (type) {
+      case  1: return "Char_t";   
+      case  2: return "Short_t";   
+      case  3: return "Int_t";   
+      case  4: return "Long_t";   
+      case  5: return "Float_t";   
+      case  6: return "Int_t";   
+      case  7: return "char*";   
+      case  8: return "Double_t";
+      case  9: return "Double32_t";
+      case 11: return "UChar_t";   
+      case 12: return "UShort_t";   
+      case 13: return "UInt_t";   
+      case 14: return "ULong_t"; 
+      case 15: return "UInt_t"; 
+      case 16: return "Long64_t";
+      case 17: return "ULong64_t";
+   }
+   return "";  
 }
 
 //______________________________________________________________________________

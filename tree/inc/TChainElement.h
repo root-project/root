@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.4 2000/12/26 14:23:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.5 2001/01/23 21:09:08 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -28,12 +28,15 @@
 class TChainElement : public TNamed {
 
 protected:
-    Int_t         fEntries;         //Number of entries in the tree of this chain element
-    Int_t         fNPackets;        //Number of packets
-    Int_t         fPacketSize;      //Number of events in one packet for parallel root
-    Int_t         fStatus;          //branch status when used as a branch
-    void         *fBaddress;        //!branch address when used as a branch
-    char         *fPackets;         //!Packet descriptor string
+    Int_t         fEntries;          //Number of entries in the tree of this chain element
+    Int_t         fNPackets;         //Number of packets
+    Int_t         fPacketSize;       //Number of events in one packet for parallel root
+    Int_t         fStatus;           //branch status when used as a branch
+    void         *fBaddress;         //!branch address when used as a branch
+    TString       fBaddressClassName;//!Name of the class pointed to by fBaddress
+    UInt_t        fBaddressType;     //!Type of the value pointed to by fBaddress
+    Bool_t        fBaddressIsPtr;    //!True if the address is a pointer to an address
+    char         *fPackets;          //!Packet descriptor string
 
 public:
         TChainElement();
@@ -41,12 +44,18 @@ public:
         virtual ~TChainElement();
         virtual void     CreatePackets();
         virtual void    *GetBaddress() const {return fBaddress;}
+        virtual const char*GetBaddressClassName() const { return fBaddressClassName; }
+        virtual Bool_t   GetBaddressIsPtr() const { return fBaddressIsPtr; }
+        virtual UInt_t   GetBaddressType() const { return fBaddressType; }
         virtual Int_t    GetEntries() const {return fEntries;}
         virtual char    *GetPackets() const {return fPackets;}
         virtual Int_t    GetPacketSize() const {return fPacketSize;}
         virtual Int_t    GetStatus() const {return fStatus;}
         virtual void     ls(Option_t *option="") const;
         virtual void     SetBaddress(void *add) {fBaddress = add;}
+        virtual void     SetBaddressClassName(const char* clname) { fBaddressClassName = clname; }
+        virtual void     SetBaddressIsPtr(Bool_t isptr) { fBaddressIsPtr = isptr; }
+        virtual void     SetBaddressType(UInt_t type) { fBaddressType = type; }
         virtual void     SetNumberEntries(Int_t n) {fEntries=n;}
         virtual void     SetPacketSize(Int_t size = 100);
         virtual void     SetStatus(Int_t status) {fStatus = status;}

@@ -59,8 +59,8 @@ void tree4w()
   Event *event = new Event();
     
   // Create two branches, split one.
-  t4.Branch("event_split", "Event", &event,16000,99);
-  t4.Branch("event_not_split", "Event", &event,16000,0);
+  t4.Branch("event_split", &event,16000,99);
+  t4.Branch("event_not_split", &event,16000,0);
  
   // a local variable for the event type 
   char etype[20];

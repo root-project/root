@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.28 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.29 2004/09/24 18:22:02 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -67,7 +67,7 @@ TBranchObject::TBranchObject(const char *name, const char *classname, void *addo
       delobj = kTRUE;
    }
    gTree->BuildStreamerInfo(cl,obj);
-   if (delobj) delete obj;
+   if (delobj) cl->Destructor(obj);
    
    SetName(name);
    SetTitle(name);

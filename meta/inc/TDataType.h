@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.8 2004/07/30 01:16:17 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.9 2004/07/30 19:09:51 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -64,6 +64,7 @@ public:
    const char    *AsString(void *buf) const;
    Long_t         Property() const;
 
+   static const char *GetTypeName(EDataType type);
    static EDataType GetType(const type_info &typeinfo);
 
    ClassDef(TDataType,0)  //Basic data type descriptor

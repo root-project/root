@@ -85,7 +85,7 @@ void tree2aw()
    TFile f("tree2.root","recreate");
    TTree t2("t2","a Tree with data from a fake Geant3");
    Gctrak *gstep = new Gctrak;
-   t2.Branch("track","Gctrak",&gstep,8000,1);
+   t2.Branch("track",&gstep,8000,1);
    
    //Initialize particle parameters at first point
    Float_t px,py,pz,p,charge=0;

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.156 2004/11/17 08:46:43 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.157 2004/11/17 17:56:53 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1294,6 +1294,23 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 
             maininfo = collectioninfo;
             previnfo = maininfo;
+
+         } else if (BranchEl->GetStreamerType()==-1 && cl && cl->GetCollectionProxy()) {
+
+            TFormLeafInfo* collectioninfo = new TFormLeafInfoCollection(cl, 0, cl, kTRUE);
+            // The dimension needs to be handled!
+            numberOfVarDim += RegisterDimensions(code,collectioninfo);
+
+            maininfo = collectioninfo;
+            if (cl->GetCollectionProxy()->GetValueClass()==0 &&
+                cl->GetCollectionProxy()->GetType()>0) {
+
+               collectioninfo->fNext = 
+                  new TFormLeafInfoNumerical(cl->GetCollectionProxy()->GetType());
+               previnfo = collectioninfo->fNext;
+            } else {
+               previnfo = collectioninfo;
+            }
 
          } else if (strlen(right)==0 && cl && element && !element->IsaPointer() && final) {
 

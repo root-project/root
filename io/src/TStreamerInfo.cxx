@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.215 2004/12/10 09:28:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.216 2005/01/04 19:54:31 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -132,6 +132,13 @@ void TStreamerInfo::Build()
 
    // This is used to avoid unwanted recursive call to Build
    fIsBuilt = kTRUE;
+
+   if (fClass->GetCollectionProxy()) {
+      TStreamerElement *element = new TStreamerSTL("This","Used to call the proper TStreamerInfo case",0,fClass->GetName(),fClass->GetName(),0);
+      fElements->Add(element);
+      Compile();
+      return;
+   }
 
    TStreamerElement::Class()->IgnoreTObjectStreamer();
    //if (!strcmp(fClass->GetName(),"TVector3"))       fClass->IgnoreTObjectStreamer();
@@ -667,6 +674,10 @@ void TStreamerInfo::BuildOld()
       fClass->GetStreamerInfo();
    }
 
+   if (fClass->GetCollectionProxy() && 
+      fElements->GetEntries()==1 &&
+      strcmp(fElements->At(0)->GetName(),"This")==0) {
+   }
    TIter next(fElements);
    TStreamerElement *element;
    Int_t offset = 0;
@@ -676,6 +687,11 @@ void TStreamerInfo::BuildOld()
    sp = 8;
 #endif
    int nBaze=0;
+   if (fClass->GetCollectionProxy() && 
+      fElements->GetEntries()==1 &&
+      strcmp(fElements->At(0)->GetName(),"This")==0) {
+      next();
+   }
    while ((element = (TStreamerElement*)next())) {
       element->SetNewType(element->GetType());
       element->Init();

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.218 2004/12/22 17:06:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.219 2005/01/11 13:15:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -739,6 +739,39 @@ Long64_t TTree::AutoSave(Option_t *option)
 }
 
 //______________________________________________________________________________
+TBranch* TTree::BranchImp(const char *name, const char *classname, 
+                          TClass *realClass, void *addobj, Int_t bufsize, 
+                          Int_t splitlevel) 
+{
+   // Same as TTree::Branch with added check that the address passed in addobj
+   // corresponding to className.  See TTree::Branch for other details.
+
+   if (realClass==0) return Branch(name,classname,(void*)addobj,bufsize,splitlevel);
+   TClass *claim = gROOT->GetClass(classname);
+   if (realClass && claim && !(claim->InheritsFrom(realClass)||realClass->InheritsFrom(claim)) ) {
+      // Note we currently do not warning in case of splicing or over-expectation).
+      Error("Branch","The class requested (%s) for \"%s\" is different from the type of the pointer passed (%s)",
+            claim->GetName(),name,realClass->GetName());
+   }
+   return Branch(name,realClass->GetName(),(void*)addobj,bufsize,splitlevel);
+}
+
+//______________________________________________________________________________
+TBranch* TTree::BranchImp(const char *name, TClass *realClass, void *addobj, 
+                          Int_t bufsize, Int_t splitlevel) 
+{
+   // Same as TTree::Branch but automatic detection of the class name
+   // See TTree::Branch for other details.
+
+   if (realClass == 0) {
+      Error("Branch","The pointer specified for %s not of a class known to ROOT",
+            name);
+      return 0;
+   }
+   return Branch(name,realClass->GetName(),(void*)addobj,bufsize,splitlevel);
+}
+
+//______________________________________________________________________________
 Int_t TTree::Branch(TList *list, Int_t bufsize, Int_t splitlevel)
 {
 //   Deprecated function. Use next function instead.
@@ -938,7 +971,7 @@ TBranch *TTree::Branch(const char *name, void *address, const char *leaflist,Int
 }
 
 //______________________________________________________________________________
-TBranch *TTree::Branch(const char *name, void *clonesaddress, Int_t bufsize, Int_t splitlevel)
+TBranch *TTree::Branch(const char *name, TClonesArray **clonesaddress, Int_t bufsize, Int_t splitlevel)
 {
 // Special constructor for TClonesArray.
 // Note that this function is only provided for backward compatibility.
@@ -973,9 +1006,7 @@ TBranch *TTree::Branch(const char *name, void *clonesaddress, Int_t bufsize, Int
 
    if (clonesaddress == 0) return 0;
 
-   char *cpointer =(char*)clonesaddress;
-   char **ppointer =(char**)cpointer;
-   TClonesArray *list = (TClonesArray*)(*ppointer);
+   TClonesArray *list = *clonesaddress;
    if (list == 0) return 0;
    gTree = this;
    if (fgBranchStyle == 1) {
@@ -1343,37 +1374,42 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
          return branch;
       }
    }
-//		Now look vector<> or list<>
-   TString inclass;
-   int stlcont = TClassEdit::IsSTLCont(classname);
+   //	Now look vector<> or list<>
+   //int stlcont = TClassEdit::IsSTLCont(classname);
 
-   if ( (stlcont>=1 && stlcont<=8) || (stlcont>=-8 && stlcont<=-1) ) {
-      inclass = TClassEdit::ShortType(classname,1+2+4).c_str();
-      TClass *inklass = gROOT->GetClass(inclass.Data());
-      if (!inklass) {
+   //if ( (stlcont>=1 && stlcont<=8) || (stlcont>=-8 && stlcont<=-1) || cl->GetCollectionProxy() ) {
+   if (cl->GetCollectionProxy()) {
+      TVirtualCollectionProxy *collProxy = cl->GetCollectionProxy();
+      //if( !collProxy )  { 
+      //   Error("Bronch","%s is missing its CollectionProxy (for branch %s)",classname,name);
+      //}
+      TClass *inklass = collProxy->GetValueClass();
+      if (!inklass && collProxy->GetType()==0 ) {
          Error("Bronch","%s with no class defined in branch: %s",classname,name);
          return 0;
       }
-      G__ClassInfo* classinfo = inklass->GetClassInfo();
-      if (!classinfo) {
-         Error("Bronch","%s with no dictionary defined in branch: %s",classname,name);
-         return 0;
-      }
-      if (splitlevel > 0) {
+
+      if (splitlevel > 0 && inklass && inklass->GetCollectionProxy()==0) {
+         G__ClassInfo *classinfo = inklass->GetClassInfo();
+         if (!classinfo) {
+           Error("Bronch","Container with no dictionary defined in branch: %s",name);
+            return 0;
+         }
          if (classinfo->RootFlag() & 1)
-            Warning("Bronch","Using split mode on a class: %s with a custom Streamer",inclass.Data());
-      } else {
-         TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
-         fBranches.Add(branch);
-         return branch;
+            Warning("Bronch","Using split mode on a class: %s with a custom Streamer",inklass->GetName());
       }
+      TBranchElement *branch = new TBranchElement(name,collProxy,bufsize,splitlevel);
+      fBranches.Add(branch);
+      branch->SetAddress(add);
+      return branch;
    }
+
    Bool_t hasCustomStreamer = kFALSE;
-   if (!cl->GetClassInfo()) {
+   if (!cl->GetClassInfo() && !cl->GetCollectionProxy()) {
       Error("Bronch","Cannot find dictionary for class: %s",classname);
       return 0;
    }
-   if (cl->GetClassInfo()->RootFlag() & 1)  hasCustomStreamer = kTRUE;
+   if (cl->GetCollectionProxy()==0 && cl->GetClassInfo()->RootFlag() & 1 )  hasCustomStreamer = kTRUE;
    if (splitlevel < 0 || (splitlevel == 0 && hasCustomStreamer)) {
       TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
       fBranches.Add(branch);
@@ -1389,18 +1425,7 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       branch->SetAddress(add);
       return branch;
    }
-   //====>
-   //====> special case of vector<...> or list<...>
-   TVirtualCollectionProxy *collProxy = cl->GetCollectionProxy();
-   if( collProxy )  { // MSF: stlcont>=1 && stlcont<=2) {
-      TVirtualCollectionProxy *collProxy = cl->GetCollectionProxy()->Generate(); // TSTLCont  *tstl = new TSTLCont(classname,(void*)objadd);
-      TBranchElement *branch = new TBranchElement(name,collProxy,bufsize,splitlevel);
-      fBranches.Add(branch);
-      branch->SetAddress(add);
-      return branch;
-   }
-   //====>
-
+   
    if (!objadd) {
       objadd = (char*)cl->New();
       *ppointer = objadd;
@@ -1654,6 +1679,71 @@ TFile *TTree::ChangeFile(TFile *file)
 }
 
 //______________________________________________________________________________
+Bool_t TTree::CheckBranchAddressType(TBranch *branch, TClass *realClass, 
+                                     EDataType datatype, Bool_t ptr)
+{
+   // Check whether the address described by the last 3 parameters match the
+   // content of the branch.
+    
+   // Let determine what we need!
+   TClass *expectedClass = 0;
+   EDataType expectedType = kOther_t;
+
+   if (branch->InheritsFrom(TBranchObject::Class()) ) {
+
+      TLeafObject *lobj = (TLeafObject*)branch->GetListOfLeaves()->At(0);
+      expectedClass = lobj->GetClass();
+
+   } else if (branch->InheritsFrom(TBranchElement::Class()) ) {
+      TBranchElement *branchEl = (TBranchElement *)branch;
+      Int_t type = branchEl->GetStreamerType();
+      if (type==-1 || branchEl->GetID()==-1) {
+         expectedClass =  branchEl->GetInfo()->GetClass();
+      } else {
+         // Case of an object data member.  Here we allow for the
+         // variable name to be ommitted.  Eg, for Event.root with split
+         // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
+         TStreamerElement* element = (TStreamerElement*)
+            branchEl->GetInfo()->GetElems()[branchEl->GetID()];
+         if (element) expectedClass = element->GetClassPointer();
+         if (expectedClass==0) {
+            expectedType = (EDataType)gROOT->GetType(element->GetTypeNameBasic())->GetType();
+         }
+      }
+      if (branch->GetMother()==branch) {
+         // Top Level branch
+         if (!ptr) {
+            Error("SetBranchAddress",
+                  "The address for \"%s\" should be the address of a pointer!",branch->GetName());
+         }
+      }
+   } else {
+      TLeaf *l = (TLeaf*)branch->GetListOfLeaves()->At(0);
+      if (l) expectedType = (EDataType)gROOT->GetType(l->GetTypeName())->GetType();
+   }
+
+   if (expectedType == kDouble32_t) expectedType = kDouble_t;
+   if (datatype == kDouble32_t) datatype = kDouble_t;
+   if (expectedClass && realClass && !expectedClass->InheritsFrom(realClass)) {
+      Error("SetBranchAddress",
+            "The pointer type give (%s) does not correspond to the class needed (%s) by the branch: %s",
+            realClass->GetName(),expectedClass->GetName(),branch->GetName());
+      return kFALSE;
+   } else if (expectedType != kOther_t && datatype != kOther_t && 
+              expectedType != kNoType_t && datatype != kNoType_t && 
+              expectedType != datatype) {
+      if (datatype != kChar_t) {
+         // For backward compatibility we assume that (char*) was just a cast and/or a generic address
+         Error("SetBranchAddress",
+               "The pointer type given \"%s\" (%d) does not correspond to the type needed \"%s\" (%d) by the branch: %s",
+               TDataType::GetTypeName(datatype),datatype,TDataType::GetTypeName(expectedType),expectedType, branch->GetName());
+         return kFALSE;
+      }
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 TTree *TTree::CloneTree(Long64_t nentries, Option_t *)
 {
 // Create a clone of this tree and copy nentries
@@ -1787,7 +1877,7 @@ void TTree::CopyAddresses(TTree *tree)
          branch->GetEntry(0);
       }
       if (branch->GetAddress()) {
-         tree->SetBranchAddress(branch->GetName(),branch->GetAddress());
+         tree->SetBranchAddress(branch->GetName(),(void*)branch->GetAddress());
       } else {
          leaf2->SetAddress(leaf->GetValuePointer());
       }
@@ -2126,6 +2216,9 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //  		   entry (==TTreeFormula::GetNdata())
 //  Iteration$: return the current iteration over this formula for this
 //                 entry (i.e. varies from 0 to Length$).
+//
+//  Length$(formula): return the total number of element of the formula given as a 
+//                    parameter.
 //
 //  Alt$(primary,alternate) : return the value of "primary" if it is available
 //                 for the current iteration otherwise return the value of "alternate".
@@ -3978,6 +4071,24 @@ Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
       }
       branch->SetAddress(add);
    } else        Error("SetBranchAddress", "unknown branch -> %s", bname);
+}
+
+//_______________________________________________________________________
+ void TTree::SetBranchAddress(const char *bname, void *add, 
+                              TClass *realClass, EDataType datatype, 
+                              Bool_t ptr)
+{
+   //  Verify the validity of the type of add before calling SetBranchAddress.
+   
+   TBranch *branch = GetBranch(bname);
+   if (branch) {
+
+      CheckBranchAddressType(branch,realClass,datatype,ptr);
+      return SetBranchAddress(bname,add);
+
+   } else {
+      Error("SetBranchAddress", "unknown branch -> %s", bname);
+   }
 }
 
 //_______________________________________________________________________

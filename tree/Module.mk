@@ -17,6 +17,13 @@ TREEDS       := $(MODDIRS)/G__Tree.cxx
 TREEDO       := $(TREEDS:.cxx=.o)
 TREEDH       := $(TREEDS:.cxx=.h)
 
+# ManualBase4 only needs to be regenerated (and then changed manually) when
+# the dictionary interface changes
+TREEL2       := $(MODDIRI)/LinkDef2.h
+TREEDS2      := $(MODDIRS)/ManualTree2.cxx
+TREEDO2      := $(TREEDS2:.cxx=.o)
+TREEDH2      := TTree.h
+
 TREEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 TREES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TREEO        := $(TREES:.cxx=.o)
@@ -44,6 +51,12 @@ $(TREELIB):     $(TREEO) $(TREEDO) $(MAINLIBS)
 $(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TREEH) $(TREEL)
+
+# pre-requisites intentionally not specified... should be called only
+# on demand after deleting the file
+$(TREEDS2):
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(TREEDH2) $(TREEL2)
 
 $(TREEDO):      $(TREEDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.26 2003/12/30 18:16:43 brun Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.27 2003/12/30 18:31:13 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -16,7 +16,7 @@
 //      Event  400      1    1     1
 //
 //  In this example, the tree consists of one single "super branch"
-//  The statement ***tree->Branch("event", event, 64000,split);*** below
+//  The statement ***tree->Branch("event", &event, 64000,split);*** below
 //  will parse the structure described in Event.h and will make
 //  a new branch for each data member of the class if split is set to 1.
 //    - 9 branches corresponding to the basic types fType, fNtrack,fNseg,
@@ -207,7 +207,7 @@ int main(int argc, char **argv)
       if (split)  bufsize /= 4;
       event = new Event();
       TTree::SetBranchStyle(branchStyle);
-      TBranch *branch = tree->Branch("event", "Event", &event, bufsize,split);
+      TBranch *branch = tree->Branch("event", &event, bufsize,split);
       branch->SetAutoDelete(kFALSE);
       Float_t ptmin = 1;
 

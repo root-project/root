@@ -683,21 +683,6 @@ char *argv[] ;
   G__set_stdio();
 
 
-#ifndef G__OLDIMPLEMENTATION1817
-#ifdef G__ROOT
-  {
-    int xtagnum,xtypenum;
-    G__cpp_setuplongif();
-    xtagnum=G__defined_tagname("G__longlong",2);
-    xtypenum=G__search_typename("long long",'u',xtagnum,G__PARANORMAL);
-    xtagnum=G__defined_tagname("G__ulonglong",2);
-    xtypenum=G__search_typename("unsigned long long",'u',xtagnum,G__PARANORMAL);
-    xtagnum=G__defined_tagname("G__longdouble",2);
-    xtypenum=G__search_typename("long double",'u',xtagnum,G__PARANORMAL);
-  }
-#endif
-#endif
-
   /* Signal handling moved after getopt to enable core dump with 'E' */
 
 #ifdef G__HSTD
@@ -734,6 +719,21 @@ char *argv[] ;
 #ifndef G__OLDIMPLEMENTATION442
   G__do_p2fsetup();
 #endif
+#ifndef G__OLDIMPLEMENTATION1817
+#ifdef G__ROOT
+  {
+    int xtagnum,xtypenum;
+    G__cpp_setuplongif();
+    xtagnum=G__defined_tagname("G__longlong",2);
+    xtypenum=G__search_typename("long long",'u',xtagnum,G__PARANORMAL);
+    xtagnum=G__defined_tagname("G__ulonglong",2);
+    xtypenum=G__search_typename("unsigned long long",'u',xtagnum,G__PARANORMAL);
+    xtagnum=G__defined_tagname("G__longdouble",2);
+    xtypenum=G__search_typename("long double",'u',xtagnum,G__PARANORMAL);
+  }
+#endif
+#endif
+
   G__prerun=0;
   G__setdebugcond();
 

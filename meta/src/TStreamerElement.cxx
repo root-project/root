@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.70 2004/11/17 08:46:43 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.71 2004/11/17 17:56:53 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -209,22 +209,7 @@ const char *TStreamerElement::GetTypeNameBasic() const
    if (fType < 1 || fType > 55) return fTypeName.Data();
    if (dt && dt->GetType() > 0) return fTypeName.Data();
    Int_t dtype = fType%20;
-   switch (dtype) {
-      case  1: return "Char_t";   
-      case  2: return "Short_t";   
-      case  3: return "Int_t";   
-      case  4: return "Long_t";   
-      case  5: return "Float_t";   
-      case  6: return "Int_t";   
-      case  7: return "char*";   
-      case  8: return "Double_t";   
-      case 11: return "UChar_t";   
-      case 12: return "UShort_t";   
-      case 13: return "UInt_t";   
-      case 14: return "ULong_t"; 
-      case 15: return "UInt_t"; 
-   }
-   return "";  
+   return TDataType::GetTypeName((EDataType)dtype);
 }
 
 //______________________________________________________________________________

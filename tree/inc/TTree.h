@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.72 2004/10/18 12:32:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.73 2004/11/24 14:11:38 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -67,6 +67,10 @@
 #include "TVirtualTreePlayer.h"
 #endif
 
+#ifndef ROOT_TDataType
+#include "TDataType.h"
+#endif
+
 class TBrowser;
 class TFile;
 class TDirectory;
@@ -132,6 +136,9 @@ protected:
     virtual void     KeepCircular();
     virtual void     MakeIndex(TString &varexp, Int_t *index);
     virtual TFile   *ChangeFile(TFile *file);
+    virtual TBranch *BranchImp(const char *name, const char *classname, TClass *realClass, void *addobj, Int_t bufsize, Int_t splitlevel);
+    virtual TBranch *BranchImp(const char *name, TClass *realClass, void *addobj, Int_t bufsize, Int_t splitlevel);
+    virtual Bool_t   CheckBranchAddressType(TBranch *branch, TClass *realClass, EDataType datatype, Bool_t ptr);
 
 public:
     // TTree status bits
@@ -153,8 +160,20 @@ public:
     virtual Int_t        Branch(TList *list, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual Int_t        Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual TBranch     *Branch(const char *name, void *address, const char *leaflist, Int_t bufsize=32000);
-    virtual TBranch     *Branch(const char *name, void *clonesaddress, Int_t bufsize=32000, Int_t splitlevel=1);
+    virtual TBranch     *Branch(const char *name, TClonesArray **clonesaddress, Int_t bufsize=32000, Int_t splitlevel=1);
+#if !defined(__CINT__)
     virtual TBranch     *Branch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
+#endif
+    template <class T> TBranch *Branch(const char *name, const char *classname, T **addobj, Int_t bufsize=32000, Int_t splitlevel=99) 
+    {
+       // See BranchImp for details
+       return BranchImp(name,classname,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
+    }
+    template <class T> TBranch *Branch(const char *name, T **addobj, Int_t bufsize=32000, Int_t splitlevel=99) 
+    {
+       // See BranchImp for details
+       return BranchImp(name,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
+    }
     virtual TBranch     *Bronch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual TBranch     *BranchOld(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
     virtual TBranch     *BranchRef();
@@ -285,7 +304,20 @@ public:
     virtual Bool_t       SetAlias(const char *aliasName, const char *aliasFormula);
     virtual void         SetAutoSave(Long64_t autos=10000000) {fAutoSave=autos;}
     virtual void         SetBasketSize(const char *bname,Int_t buffsize=16000);
+#if !defined(__CINT__)
     virtual void         SetBranchAddress(const char *bname,void *add);
+#endif
+    virtual void         SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t ptr);
+    template <class T> void SetBranchAddress(const char *bname, T **add) {
+       SetBranchAddress(bname,add,gROOT->GetClass(typeid(T)),TDataType::GetType(typeid(T)),true);
+    }
+#ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
+    // This can only be used when the template overload resolution can distringuish between
+    // T* and T**
+    template <class T> void SetBranchAddress(const char *bname, T *add) {
+       SetBranchAddress(bname,add,gROOT->GetClass(typeid(T)),TDataType::GetType(typeid(T)),false);
+    }
+#endif
     virtual void         SetBranchStatus(const char *bname,Bool_t status=1,UInt_t *found=0);
     static  void         SetBranchStyle(Int_t style=1);  //style=0 for old branch, =1 for new branch style
     virtual void         SetChainOffset(Int_t offset=0) {fChainOffset=offset;}

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.154 2004/10/29 18:03:10 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.155 2005/01/04 19:54:31 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2000,7 +2000,7 @@ TStreamerInfo *TClass::GetStreamerInfo(Int_t version)
       sinfo = new TStreamerInfo(this,"");
       fStreamerInfo->AddAtAndExpand(sinfo,fClassVersion);
       if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
-      if (fClassInfo) {
+      if (fClassInfo || fCollectionProxy) {
          // if we do not have a StreamerInfo for this version and we do not
          // have a ClassInfo, there is nothing to built!
          sinfo->Build();

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.54 2004/02/09 21:00:57 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.55 2004/12/17 12:19:02 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -752,7 +752,7 @@ Int_t stress8write(Int_t nevent, Int_t comp, Int_t split)
    tree->SetAutoSave(100000000);  // autosave when 100 Mbytes written
    Int_t bufsize = 64000;
    if (split)  bufsize /= 4;
-   tree->Branch("event", "Event", &event, bufsize,split);
+   tree->Branch("event", &event, bufsize,split);
 
    //Fill the Tree
    Int_t ev, nb=0, meanTracks=600;
