@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.43 2004/10/20 12:00:04 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.44 2005/01/20 15:28:50 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #include "TStyle.h"
 #include "TMath.h"
 #include "TArrow.h"
+#include "TBox.h"
 #include "TVirtualPad.h"
 #include "TF1.h"
 #include "TVector.h"
@@ -501,6 +502,11 @@ void TGraphErrors::Paint(Option_t *option)
    arrow.SetLineColor(GetLineColor());
    arrow.SetFillColor(GetFillColor());
 
+   TBox box;
+   box.SetLineWidth(GetLineWidth());
+   box.SetLineColor(GetLineColor());
+   box.SetFillColor(GetFillColor());
+
    symbolsize  = GetMarkerSize();
    sbase       = symbolsize*BASEMARKER;
    Int_t mark  = GetMarkerStyle();
@@ -532,10 +538,10 @@ void TGraphErrors::Paint(Option_t *option)
 
       //  draw the error rectangles
       if (option2) {
-         gPad->PaintBox(gPad->XtoPad(fX[i] - ex),
-                        gPad->YtoPad(fY[i] - ey),
-                        gPad->XtoPad(fX[i] + ex),
-                        gPad->YtoPad(fY[i] + ey));
+         box.PaintBox(gPad->XtoPad(fX[i] - ex),
+                      gPad->YtoPad(fY[i] - ey),
+                      gPad->XtoPad(fX[i] + ex),
+                      gPad->YtoPad(fY[i] + ey));
          continue;
       }
 

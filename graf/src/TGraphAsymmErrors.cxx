@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.46 2004/10/20 12:00:04 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.47 2005/01/20 15:28:50 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #include "TStyle.h"
 #include "TMath.h"
 #include "TArrow.h"
+#include "TBox.h"
 #include "TVirtualPad.h"
 #include "TF1.h"
 #include "TH1.h"
@@ -796,6 +797,11 @@ void TGraphAsymmErrors::Paint(Option_t *option)
    arrow.SetLineColor(GetLineColor());
    arrow.SetFillColor(GetFillColor());
 
+   TBox box;
+   box.SetLineWidth(GetLineWidth());
+   box.SetLineColor(GetLineColor());
+   box.SetFillColor(GetFillColor());
+
    symbolsize  = GetMarkerSize();
    sbase       = symbolsize*BASEMARKER;
    Int_t mark  = GetMarkerStyle();
@@ -827,10 +833,10 @@ void TGraphAsymmErrors::Paint(Option_t *option)
 
       //  draw the error rectangles
       if (option2) {
-         gPad->PaintBox(gPad->XtoPad(fX[i] - fEXlow[i]),
-                        gPad->YtoPad(fY[i] - fEYlow[i]),
-                        gPad->XtoPad(fX[i] + fEXhigh[i]),
-                        gPad->YtoPad(fY[i] + fEYhigh[i]));
+         box.PaintBox(gPad->XtoPad(fX[i] - fEXlow[i]),
+                      gPad->YtoPad(fY[i] - fEYlow[i]),
+                      gPad->XtoPad(fX[i] + fEXhigh[i]),
+                      gPad->YtoPad(fY[i] + fEYhigh[i]));
          continue;
       }
 

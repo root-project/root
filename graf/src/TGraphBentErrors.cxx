@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.9 2004/09/14 06:38:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.10 2004/10/12 10:37:25 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #include "TStyle.h"
 #include "TMath.h"
 #include "TArrow.h"
+#include "TBox.h"
 #include "TVirtualPad.h"
 #include "TF1.h"
 
@@ -461,6 +462,11 @@ void TGraphBentErrors::Paint(Option_t *option)
    arrow.SetLineColor(GetLineColor());
    arrow.SetFillColor(GetFillColor());
 
+   TBox box;
+   box.SetLineWidth(GetLineWidth());
+   box.SetLineColor(GetLineColor());
+   box.SetFillColor(GetFillColor());
+
    symbolsize  = GetMarkerSize();
    sbase       = symbolsize*BASEMARKER;
    Int_t mark  = GetMarkerStyle();
@@ -493,10 +499,10 @@ void TGraphBentErrors::Paint(Option_t *option)
 
       //  draw the error rectangles
       if (option2) {
-         gPad->PaintBox(gPad->XtoPad(fX[i] - fEXlow[i]),
-                        gPad->YtoPad(fY[i] - fEYlow[i]),
-                        gPad->XtoPad(fX[i] + fEXhigh[i]),
-                        gPad->YtoPad(fY[i] + fEYhigh[i]));
+         box.PaintBox(gPad->XtoPad(fX[i] - fEXlow[i]),
+                      gPad->YtoPad(fY[i] - fEYlow[i]),
+                      gPad->XtoPad(fX[i] + fEXhigh[i]),
+                      gPad->YtoPad(fY[i] + fEYhigh[i]));
          continue;
       }
 
