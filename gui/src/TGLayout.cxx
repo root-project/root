@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.13 2004/09/07 09:31:08 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.14 2004/09/08 07:15:56 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -126,18 +126,6 @@ TGLayoutHints::~TGLayoutHints()
 {
    // dtor
 
-   if (fFE) RemoveReference();
-
-   if (References() <= 0) {
-      UpdateFrameElements(0);
-   } else {
-      TGLayoutHints *l = new TGLayoutHints();
-      l->fPadleft = fPadleft; l->fPadright = fPadright;
-      l->fPadtop  = fPadtop;  l->fPadbottom = fPadbottom;
-      l->fLayoutHints = fLayoutHints; l->fRefs = fRefs;
-      l->fFE = fFE;
-      UpdateFrameElements(l);
-   }
 }
 
 //______________________________________________________________________________
