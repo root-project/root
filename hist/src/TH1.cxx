@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.91 2002/04/29 17:11:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.92 2002/04/30 22:47:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1321,7 +1321,7 @@ void TH1::Eval(TF1 *f1, Option_t *option)
 //     If option "A" is specified, the value of the function is added to the
 //     existing bin contents
 //     If option "S" is specified, the value of the function is used to
-//     generate an integer value, distributed according to the Poisson
+//     generate a value, distributed according to the Poisson
 //     distribution, with f1 as the mean.
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -1349,7 +1349,7 @@ void TH1::Eval(TF1 *f1, Option_t *option)
             bin = GetBin(binx,biny,binz);
             x[0]  = fXaxis.GetBinCenter(binx);
             fu = f1->Eval(x[0],x[1],x[2]);
-            if (stat) fu = gRandom->Poisson(fu);
+            if (stat) fu = gRandom->PoissonD(fu);
             if (fSumw2.fN) e = fSumw2.fArray[bin];
             AddBinContent(bin,fu);
             if (fSumw2.fN) fSumw2.fArray[bin] = e+ fu*fu;
