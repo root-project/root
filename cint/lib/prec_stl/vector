@@ -409,7 +409,19 @@ class vector {
 
   // iterator_category resolution
   //friend random_access_iterator_tag iterator_category(vector::iterator x);
+
 };
+
+#if 0  // G__defined("std::vector<bool>")
+#pragma link off class std::vector<bool>::iterator;
+#pragma link off function operator==(std::vector<bool>::iterator&,std::vector<bool>::iterator&);
+#pragma link off function operator!=(std::vector<bool>::iterator&,std::vector<bool>::iterator&);
+#pragma link off function operator<(std::vector<bool>::iterator&,std::vector<bool>::iterator&);
+#pragma link off function operator>(std::vector<bool>::iterator&,std::vector<bool>::iterator&);
+#pragma link off function operator<=(std::vector<bool>::iterator&,std::vector<bool>::iterator&);
+#pragma link off function operator>=(std::vector<bool>::iterator&,std::vector<bool>::iterator&);
+#endif
+
 
 
 #pragma endif

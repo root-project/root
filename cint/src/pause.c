@@ -2077,6 +2077,9 @@ G__value *rslt;
       }
       fprintf(G__sout,"  0x%lx\n",G__security);
     }
+    else if(strncmp("Security",com,4)==0) {
+      G__security = G__int(G__calc_internal(string));
+    }
 
 #ifndef G__OLDIMPLEMENTATION1033
     else if(strncmp("refcount",com,3)==0) {

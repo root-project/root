@@ -2312,6 +2312,7 @@ char *tagnamein;
   }
 #endif /* G__TEMPLATEFUNC */
 
+#ifdef G__OLDIMPLEMENTATION1760
 #ifndef G__OLDIMPLEMENTATION1587
   if(tagnum<G__struct.alltag && G__struct.name[tagnum] &&
      strcmp(tagname,G__struct.name[tagnum])!=0) {
@@ -2320,6 +2321,7 @@ char *tagnamein;
     strcpy(G__struct.name[tagnum],tagname);
     G__struct.hash[tagnum] = strlen(tagname);
   }
+#endif
 #endif
 
 #ifndef G__OLDIMPLEMENTATION691

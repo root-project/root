@@ -6344,7 +6344,12 @@ asm_ifunc_start:   /* loop compilation execution label */
       result7->type = p_ifunc->type[ifn];
     }
     result7->typenum = p_ifunc->p_typetable[ifn];
+#ifndef G__OLDIMPLEMENTATION1760
+    if(-1!=result7->tagnum) result7->ref = 1;
+    else result7->ref = 0;
+#else
     result7->ref = p_ifunc->reftype[ifn];
+#endif
 #ifndef G__OLDIMPLEMENTATION1259
     result7->isconst = p_ifunc->isconst[ifn];
 #endif

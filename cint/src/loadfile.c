@@ -724,25 +724,62 @@ char *filename;
   int hash;
   /* int from = -1 ,to = -1, next; */
   int flag;
+#ifndef G__OLDIMPLEMENTATION1765
+  char buf[G__MAXFILENAME];
+  char *fname;
+  char *scope;
+  int envtagnum;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1345
   G__LockCriticalSection();
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1765
+  strcpy(buf,filename);
+  fname = G__strrstr(buf,"::");
+  if(fname) {
+    scope = buf;
+    *fname = 0;
+    fname+=2;
+    if(0==scope[0]) envtagnum = -1;
+    else {
+      envtagnum = G__defined_tagname(scope,2);
+      if(-1==envtagnum) {
+	G__fprinterr(G__serr,"Error: G__unloadfile() File \"%s\" scope not found ",scope);
+	G__genericerror((char*)NULL);
+#ifndef G__OLDIMPLEMENTATION1345
+	G__UnlockCriticalSection();
+#endif
+	return(G__UNLOADFILE_FAILURE);
+      }
+    }
+  }
+  else {
+    fname = filename;
+    envtagnum = -1;
+  }
 #endif
 
   /******************************************************************
   * check if file is already loaded.
   * if not so, return
   ******************************************************************/
+#ifndef G__OLDIMPLEMENTATION1765
+  G__hash(fname,hash,i2);
+#else
   G__hash(filename,hash,i2);
+#endif
 
   flag=0;
   while(i1<G__nfile) {
 #ifndef G__OLDIMPLEMENTATION1196
-    if(G__matchfilename(i1,filename)
-#ifdef G__OLDIMPLEMENTATION1756_YET
-       &&G__get_envtagnum()==G__srcfile[i1].parent_tagnum
+#ifndef G__OLDIMPLEMENTATION1765
+    if(G__matchfilename(i1,fname)
+       && (-1==envtagnum||(envtagnum==G__srcfile[i1].parent_tagnum))){
+#else
+    if(G__matchfilename(i1,filename)) {
 #endif
-       ){
 #else
     if((G__srcfile[i1].hash==hash&&strcmp(G__srcfile[i1].filename,filename)==0)
        ){

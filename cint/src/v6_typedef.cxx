@@ -155,9 +155,18 @@ void G__define_type()
 #ifndef G__OLDIMPLEMENTATION1394
   int isconst = 0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1763
+  fpos_t pos_p2fcomment;
+  int    line_p2fcomment;
+  int    flag_p2f=0;
+#endif
 
   tagname[0] = '\0';		/* initialize it */
 
+#ifndef G__OLDIMPLEMENTATION1763
+  fgetpos(G__ifile.fp,&pos_p2fcomment);
+  line_p2fcomment = G__ifile.line_number;
+#endif
 
 #ifdef G__ASM
 #ifdef G__ASM_DBG
@@ -733,6 +742,9 @@ void G__define_type()
   p=strchr(typename,'(');
   if(p) {
 
+#ifndef G__OLDIMPLEMENTATION1763
+    flag_p2f = 1;
+#endif
     if(p==typename) {
       /* function to pointer 'typedef type (*newtype)();'
        * handle this as 'typedef void* newtype;'
@@ -1103,6 +1115,24 @@ void G__define_type()
 #ifdef G__FONS_COMMENT
   if(G__fons_comment) {
     G__fsetcomment(&G__newtype.comment[G__newtype.alltype-1]);
+  }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1763
+  if(flag_p2f 
+     && G__newtype.comment[G__newtype.alltype-1].filenum<0 
+     && !G__newtype.comment[G__newtype.alltype-1].p.com) {
+    fpos_t xpos;
+    fgetpos(G__ifile.fp,&xpos);
+    fsetpos(G__ifile.fp,&pos_p2fcomment);
+
+    if(G__ifile.fp==G__mfp) 
+      G__newtype.comment[G__newtype.alltype-1].filenum = G__MAXFILE;
+    else
+      G__newtype.comment[G__newtype.alltype-1].filenum = G__ifile.filenum;
+    fgetpos(G__ifile.fp,&G__newtype.comment[G__newtype.alltype-1].p.pos);
+
+    fsetpos(G__ifile.fp,&xpos);
   }
 #endif
 

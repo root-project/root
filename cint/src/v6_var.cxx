@@ -1247,10 +1247,10 @@ G__value result;
       G__inc_cp_asm(-1,0);
       letvvalflag=1;
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) {
-      G__fprinterr(G__serr,"LETVVAL cancelled");
-      G__printlinenum();
-    }
+      if(G__asm_dbg) {
+	G__fprinterr(G__serr,"LETVVAL cancelled");
+	G__printlinenum();
+      }
 #endif
     }
     else {
@@ -2819,10 +2819,12 @@ struct G__var_array *varglobal,*varlocal;
 	      G__tryindexopr(&result,para,paran,ig25);
 	      para[0]=result;
 	      para[0]=G__letVvalue(&para[0],expression);
+#ifdef G__OLDIMPLEMENTATION1768 /* side effect, t599.cxx,t601.cxx */
 	      if('u'==result.type && -1!=result.tagnum &&
 		 'e'!=G__struct.type[result.tagnum]) {
 		G__classassign(0,result.tagnum,expression);
 	      }
+#endif
 	    }
 #endif
 	    break;

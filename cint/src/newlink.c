@@ -458,6 +458,12 @@ int ifn;
     if('u'==ifunc->type[ifn]&&0==result7->ref&&-1!=result7->tagnum) {
       G__store_tempobject(*result7); /* To free tempobject in pcode */
     }
+#ifndef G__OLDIMPLEMENTATION1766 /* side effect, t705.cxx */
+    if('u'==result7->type&&-1!=result7->tagnum) {
+      result7->ref = 1;
+      result7->obj.i=1;
+    }
+#endif
     return(1);
   }
 #endif
@@ -468,6 +474,16 @@ int ifn;
     if(G__PAUSE_IGNORE==G__debug_compiledfunc_arg(G__sout,ifunc,ifn,libp)) {
       return(0);
     }
+  }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1769
+  if('~'==ifunc->funcname[ifn][0] && 1==G__store_struct_offset &&
+     -1!=ifunc->tagnum && 0==ifunc->staticalloc[ifn]) {
+    /* Object is constructed when 1==G__no_exec_compile at loop compilation
+     * and destructed at 0==G__no_exec_compile at 2nd iteration. 
+     * G__store_struct_offset is set to 1. Need to avoid calling destructor. */
+    return(1);
   }
 #endif
 
@@ -4398,7 +4414,14 @@ char *endoffunc;
       if(isupper(type)) isconst |= G__PCONSTVAR;
       else              isconst |= G__CONSTVAR;
     }
+#ifndef G__OLDIMPLEMENTATION1761
+    if(islower(type) && !isconst) 
+      fprintf(fp,"const %s obj=",G__type2string(type,tagnum,typenum,reftype,isconst));
+    else
+      fprintf(fp,"%s obj=",G__type2string(type,tagnum,typenum,reftype,isconst));
+#else
     fprintf(fp,"%s obj=",G__type2string(type,tagnum,typenum,reftype,isconst));
+#endif
 #else
     fprintf(fp,"%s obj=",G__type2string(type,tagnum,typenum,reftype,isconst));
 #endif
@@ -4478,7 +4501,11 @@ char *endoffunc;
 #ifndef G__OLDIMPLEMENTATION1209
 	if(isconst&G__CONSTFUNC) fprintf(fp,"const ");
 #endif
+#ifndef G__OLDIMPLEMENTATION1761
+	fprintf(fp,"         const %s& obj=",G__type2string('u',tagnum,deftyp,0,0));
+#else
 	fprintf(fp,"         %s& obj=",G__type2string('u',tagnum,deftyp,0,0));
+#endif
 	sprintf(endoffunc,";\n        result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);\n      }");
       }
       else {
@@ -7932,7 +7959,14 @@ int link_stub;
 #else
     p = strchr(buf,'*');
 #endif
-    if(len&&p&&(p2||'*'==buf[len-1]||('>'!=buf[len-1]&&'-'!=buf[len-1]))) p=p;
+    if(len&&p&&(p2||'*'==buf[len-1]||('>'!=buf[len-1]&&'-'!=buf[len-1]))) {
+#ifndef G__OLDIMPLEMENTATION1764
+      if(*(p+1)=='>') p=(char*)NULL;
+      else p=p;
+#else
+      p=p;
+#endif
+    }
     else p=(char*)NULL;
 #else
     c = G__fgetname_template(buf,";\n\r");

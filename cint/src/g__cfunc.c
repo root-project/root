@@ -3634,6 +3634,7 @@ void G__list_sut(fp) FILE *fp; {
    fprintf(fp,"   int G__optimizemode(int optlevel);\n");
    fprintf(fp,"   int G__getoptimizemode();\n");
    fprintf(fp,"   void G__clearerror();\n");
+   fprintf(fp,"   int G__defined(const char* type_name);\n");
 }
 
 

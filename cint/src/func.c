@@ -2734,6 +2734,22 @@ int hash;
        
 }
 
+#ifndef G__OLDIMPLEMENTATION1762
+/******************************************************************
+* int G__defined
+*
+******************************************************************/
+int G__defined(tname)
+char *tname;
+{
+  int tagnum,typenum;
+  typenum = G__defined_typename(tname);
+  if(-1!=typenum) return 1;
+  tagnum = G__defined_tagname(tname,2);
+  if(-1!=tagnum) return 1;
+  return 0;
+}
+#endif
 
 
 
@@ -4143,6 +4159,14 @@ int hash;
 	      ,(long)G__unlock_variable((char *)G__int(libp->para[0])));
     return(1);
   }
+
+#ifndef G__OLDIMPLEMENTATION1762
+  if(strcmp(funcname,"G__defined")==0) {
+    if(G__no_exec_compile) return(1);
+    G__letint(result7,'i',(long)G__defined((char *)G__int(libp->para[0])));
+    return(1);
+  }
+#endif
 
 #endif /* G__SMALLOBJECT */
   

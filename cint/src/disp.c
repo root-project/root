@@ -145,12 +145,11 @@ char* msg;
   if(fp==G__serr) G__fprinterr(G__serr,msg);
   else fprintf(fp,msg);
 #endif
-    
 #else
 #ifndef G__OLDIMPLEMENTATION1759
-  fprintf(fp,msg);
-#else
   fprintf(fp,"%s",msg);
+#else
+  fprintf(fp,msg);
 #endif
 #endif
   if(strchr(msg,'\n')) {
