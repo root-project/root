@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -227,7 +227,7 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    switch (event) {
 
    case kButton1Down:
-      axisNumber = 0;
+      axisNumber = 1;
       if (!strcmp(GetName(),"xaxis")) axisNumber = 1;
       if (!strcmp(GetName(),"yaxis")) axisNumber = 2;
       if (!axisNumber) return;
