@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.43 2001/06/26 12:49:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.44 2001/07/19 17:12:25 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -814,6 +814,66 @@ void TGraph::FitPanel()
       return;
    }
    gROOT->ProcessLine("R__fitpanelgraph->SetDefaults(); R__fitpanelgraph->Show();");
+}
+//______________________________________________________________________________
+Double_t TGraph::GetCorrelationFactor() const
+{
+// Return graph correlation factor
+
+  Double_t rms1 = GetRMS(1);
+  if (rms1 == 0) return 0;
+  Double_t rms2 = GetRMS(2);
+  if (rms2 == 0) return 0;
+  return GetCovariance()/rms1/rms2;
+}
+
+//______________________________________________________________________________
+Double_t TGraph::GetCovariance() const
+{
+// Return covariance of vectors x,y
+
+  if (fNpoints <= 0) return 0;
+  Double_t sum = fNpoints, sumx = 0, sumy = 0, sumxy = 0;
+
+  for (Int_t i=0;i<fNpoints;i++) {
+     sumx  += fX[i];
+     sumy  += fY[i];
+     sumxy += fX[i]*fY[i];
+  }
+
+  return sumxy/sum - sumx/sum*sumy/sum;
+}
+
+//______________________________________________________________________________
+Double_t TGraph::GetMean(Int_t axis) const
+{
+// Return mean value of X (axis=1)  or Y (axis=2)
+
+  if (axis < 1 || axis > 2) return 0;
+  if (fNpoints <= 0) return 0;
+  Double_t sumx = 0;
+  for (Int_t i=0;i<fNpoints;i++) {
+     if (axis == 1) sumx += fX[i];
+     else           sumx += fY[i];
+  }
+  return sumx/fNpoints;
+}
+
+//______________________________________________________________________________
+Double_t TGraph::GetRMS(Int_t axis) const
+{
+// Return RMS of X (axis=1)  or Y (axis=2)
+
+  if (axis < 1 || axis > 2) return 0;
+  if (fNpoints <= 0) return 0;
+  Double_t sumx = 0, sumx2 = 0;
+  for (Int_t i=0;i<fNpoints;i++) {
+     if (axis == 1) {sumx += fX[i]; sumx2 += fX[i]*fX[i];}
+     else           {sumx += fY[i]; sumx2 += fY[i]*fY[i];}
+  }
+  Double_t x = sumx/fNpoints;
+  Double_t rms2 = TMath::Abs(sumx2/fNpoints -x*x);
+  return TMath::Sqrt(rms2);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.11 2001/02/26 09:41:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.12 2001/02/28 07:20:48 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -74,6 +74,10 @@ public:
         TF1             *GetFunction(const char *name) const;
         TH1F            *GetHistogram() const;
         TList           *GetListOfFunctions() const { return fFunctions; }
+        virtual Double_t GetCorrelationFactor() const;
+        virtual Double_t GetCovariance() const;
+        virtual Double_t GetMean(Int_t axis=1) const;
+        virtual Double_t GetRMS(Int_t axis=1) const;
         Int_t            GetN() const {return fNpoints;}
         Double_t        *GetX() const {return fX;}
         Double_t        *GetY() const {return fY;}
