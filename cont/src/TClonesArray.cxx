@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.9 2001/02/21 07:36:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.10 2001/02/24 11:18:30 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -99,7 +99,7 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
       return;
    }
    fKeep = new TObjArray(s);
-   
+
    BypassStreamer(kTRUE);
 }
 
@@ -120,13 +120,15 @@ TClonesArray::~TClonesArray()
 }
 
 //______________________________________________________________________________
-void TClonesArray::BypassStreamer(Bool_t Bypass)
+void TClonesArray::BypassStreamer(Bool_t bypass)
 {
-//  When the kBypassStreamer bit is set, the automatically
-//  generated Streamer can call directly TClass::WriteBuffer
+   // When the kBypassStreamer bit is set, the automatically
+   // generated Streamer can call directly TClass::WriteBuffer.
 
-   if (Bypass) SetBit(kBypassStreamer);
-   else        ResetBit(kBypassStreamer);
+   if (bypass)
+      SetBit(kBypassStreamer);
+   else
+      ResetBit(kBypassStreamer);
 }
 
 
@@ -365,7 +367,7 @@ void TClonesArray::Sort(Int_t upto)
 }
 
 //_______________________________________________________________________
-void TClonesArray::Streamer(TBuffer &b) 
+void TClonesArray::Streamer(TBuffer &b)
 {
    // Write all objects in array to the I/O buffer. ATTENTION: empty slots
    // are also stored (using one byte per slot). If you don't want this
@@ -399,9 +401,7 @@ void TClonesArray::Streamer(TBuffer &b)
       b >> fLowerBound;
       if (fClass == 0 && fKeep == 0) {
          fClass = cl;
-//         fKeep  = new TObjArray(nobjects);
          fKeep  = new TObjArray(fSize);
-//         printf("clones streamer, nobjects=%d, fSize=%d\n",nobjects,fSize);
          Expand(nobjects);
       }
       if (cl != fClass) {
