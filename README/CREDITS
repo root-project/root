@@ -76,6 +76,10 @@ N: Gian Paolo Ciceri
 E: gp.ciceri@acm.org
 D: PostgreSQL interface
 
+N: Jan Conrad
+E: Jan.Conrad@cern.ch
+D: class TRolke and tutorial Rolke.C
+
 N: Olivier Couet
 E: Olivier.Couet@cern.ch
 D: implement support for CellArrays in TPostScript
