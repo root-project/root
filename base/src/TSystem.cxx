@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.99 2004/07/22 20:37:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.100 2004/07/26 22:57:21 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2696,22 +2696,30 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
    }
 
    // strip off I/O redirect tokens from filename
-   char *s2   = 0;
-   char *s3;
-   s2 = strstr(fname, ">>");
-   if (!s2) s2 = strstr(fname, "2>");
-   if (!s2) s2 = strchr(fname, '>');
-   s3 = strchr(fname, '<');
-   if (s2 && s3) s2 = s2<s3 ? s2 : s3;
-   if (s3 && !s2) s2 = s3;
-   if (s2) {
-     s2--;
-     while (s2 && *s2 == ' ') s2--;
-     s2++;
-     io = s2; // ssave = *s2;
-     *s2 = 0;
-   } else
-     io = "";
+   {
+      char *s2   = 0;
+      char *s3;
+      s2 = strstr(fname, ">>");
+      if (!s2) s2 = strstr(fname, "2>");
+      if (!s2) s2 = strchr(fname, '>');
+      s3 = strchr(fname, '<');
+      if (s2 && s3) s2 = s2<s3 ? s2 : s3;
+      if (s3 && !s2) s2 = s3;
+      if (s2==fname) {
+         io = fname;
+         aclicMode = "";
+         arguments = "";
+         delete []fname;
+         return "";
+      } else if (s2) {
+         s2--;
+         while (s2 && *s2 == ' ') s2--;
+         s2++;
+         io = s2; // ssave = *s2;
+         *s2 = 0;
+      } else
+         io = "";
+   }
 
    // remove the possible ACLiC + or ++ and g or O
    char postfix[4];
