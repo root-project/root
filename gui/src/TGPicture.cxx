@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.10 2004/07/09 12:47:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.11 2004/08/21 09:32:52 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -57,7 +57,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
    TString pname = name;
 
    if (pname.EndsWith(".xpm")) {
-      const char *pxname = gSystem->ExpandPathName(gSystem->UnixPathName(pname));
+      char *pxname = gSystem->ExpandPathName(gSystem->UnixPathName(pname));
       pname = pxname;
       delete [] pxname;
    }
@@ -112,7 +112,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
    TString pname = name;
 
    if (pname.EndsWith(".xpm")) {
-      const char *pxname = gSystem->ExpandPathName(gSystem->UnixPathName(pname));
+      char *pxname = gSystem->ExpandPathName(gSystem->UnixPathName(pname));
       pname = pxname;
       delete [] pxname;
    }
