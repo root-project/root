@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.15 2003/08/20 07:00:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.16 2003/11/27 11:45:45 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -279,7 +279,14 @@ Double_t TF3::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Doubl
    a[2] = az;
    b[2] = bz;
    Double_t relerr  = 0;
-   Double_t result = IntegralMultiple(3,a,b,epsilon,relerr);
+   Int_t n = 3;
+   Int_t minpts = 2*2*2+2*n*(n+1)+1;  // ie 33
+   Int_t maxpts = 10000;
+   Int_t nfnevl,ifail;
+   Double_t result = IntegralMultiple(n,a,b,minpts,maxpts,epsilon,relerr,nfnevl,ifail);
+   if (ifail > 0) {
+      Warning("Integral","failed code=%d, minpts=%d, maxpts=%d, epsilon=%g, nfnevl=%d, relerr=%g ",ifail,minpts,maxpts,epsilon,nfnevl,relerr);
+   }
    return result;
 }
 

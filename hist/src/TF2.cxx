@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.25 2003/08/20 07:00:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.26 2003/11/27 11:45:45 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -484,7 +484,14 @@ Double_t TF2::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Doubl
    a[1] = ay;
    b[1] = by;
    Double_t relerr  = 0;
-   Double_t result = IntegralMultiple(2,a,b,epsilon,relerr);
+   Int_t n = 2;
+   Int_t minpts = 2*2+2*n*(n+1)+1; //ie 17
+   Int_t maxpts = 10000;
+   Int_t nfnevl,ifail;
+   Double_t result = IntegralMultiple(n,a,b,minpts,maxpts,epsilon,relerr,nfnevl,ifail);
+   if (ifail > 0) {
+      Warning("Integral","failed code=%d, minpts=%d, maxpts=%d, epsilon=%g, nfnevl=%d, relerr=%g ",ifail,minpts,maxpts,epsilon,nfnevl,relerr);
+   }
    return result;
 }
 

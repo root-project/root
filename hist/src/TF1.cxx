@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.87 2004/08/11 07:59:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.88 2004/08/12 20:11:11 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1872,7 +1872,23 @@ Double_t TF1::IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Doub
 }
 
 //______________________________________________________________________________
-Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t eps, Double_t &relerr, Int_t maxpts)
+Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t eps, Double_t &relerr)
+{
+//  See more general prototype below.
+//  This interface kept for back compatibility
+   
+   Int_t nfnevl,ifail;
+   Int_t minpts = 2+2*n*(n+1)+1; //ie 7 for n=1   
+   Int_t maxpts = 1000;
+   Double_t result = IntegralMultiple(n,a,b,minpts, maxpts,eps,relerr,nfnevl,ifail);
+   if (ifail > 0) {
+      Warning("IntegralMultiple","failed code=%d, ",ifail);
+   }
+   return result;
+}
+
+//______________________________________________________________________________
+Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t minpts, Int_t maxpts, Double_t eps, Double_t &relerr,Int_t &nfnevl, Int_t &ifail)
 {
 //  Adaptive Quadrature for Multiple Integrals over N-Dimensional
 //  Rectangular Regions
@@ -1894,16 +1910,26 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
 //
 // input parameters
 // ================
-// n :     Number of dimensions.
-// a,b :   One-dimensional arrays of length >= N . On entry A[i],  and  B[i],
+// n     : Number of dimensions [2,15]
+// a,b   : One-dimensional arrays of length >= N . On entry A[i],  and  B[i],
 //         contain the lower and upper limits of integration, respectively.
-// eps   : Specified relative accuracy.
+// minpts: Minimum number of function evaluations requested. Must not exceed maxpts. 
+//         if minpts < 1 minpts is set to 2^n +2*n*(n+1) +1
 // maxpts: Maximum number of function evaluations to be allowed.
-//         if maxpts<1000, maxpts is set to 1000 (default is 0)
+//         maxpts >= 2^n +2*n*(n+1) +1
+//         if maxpts<minpts, maxpts is set to 10*minpts
+// eps   : Specified relative accuracy.
 //
 // output parameter
 // ================
-// relerr : Contains, on exit, an estimation of the relative accuray of RESULT.
+// relerr : Contains, on exit, an estimation of the relative accuracy of the result.
+// nfnevl : number of function evaluations performed.
+// ifail  :
+//     0 Normal exit.  . At least minpts and at most maxpts calls to the function were performed.
+//     1 maxpts is too small for the specified accuracy eps. 
+//       The result and relerr contain the values obtainable for the 
+//       specified value of maxpts.
+//     3 n<2 or n>15
 //
 // Method:
 // =======
@@ -1973,7 +1999,9 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
 
    Double_t result = 0;
    Double_t abserr = 0;
-   Int_t ifail = 3;
+   ifail  = 3;
+   nfnevl = 0;
+   relerr = 0;
    if (n < 2 || n > 15) return 0;
 
    Double_t twondm = TMath::Power(2,n);
@@ -1984,9 +2012,8 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
    Int_t isbrgn = irgnst;
    Int_t isbrgs = irgnst;
 
-//   Here we set maxpts to 1000*(the lowest possible value) , if maxpts <1000
-   if (maxpts < 1000) maxpts = 1000*irlcls;
-   Int_t minpts = 1;
+   if (minpts < 1)      minpts = irlcls;
+   if (maxpts < minpts) maxpts = 10*minpts;
 
 // The original agorithm expected a working space array WK of length IWK
 // with IWK Length ( >= (2N + 3) * (1 + MAXPTS/(2**N + 2N(N + 1) + 1))/2).
@@ -2084,6 +2111,7 @@ L90:
    aresult = TMath::Abs(result);
    if (aresult < 1e-100) {
       delete [] wk;
+      ifail = 0;  //function is probably symmetric ==> integral is null: not an error
       return result;
    }
 
@@ -2150,13 +2178,8 @@ L160:
       ctr[idvax0-1] -= wth[idvax0-1];
       goto L20;
    }
-// IFAIL On exit:
-//     0 Normal exit.  . At most MAXPTS calls to the function F were performed.
-//     1 MAXPTS is too small for the specified accuracy EPS. RESULT and RELERR
-//              contain the values obtainable for the specified value of MAXPTS.
-//
    delete [] wk;
-//   Int_t nfnevl = ifncls; //number of function evaluations performed.
+   nfnevl = ifncls;       //number of function evaluations performed.
    return result;         //an approximate value of the integral
 }
 
@@ -2206,7 +2229,6 @@ void TF1::Paint(Option_t *option)
    }
 
    if (fHistogram) {
-//      if (xmin != fXmin || xmax != fXmax) fHistogram->GetXaxis()->SetLimits(xmin,xmax);
       fHistogram->GetXaxis()->SetLimits(xmin,xmax);
    } else {
 //      if logx, we must bin in logx and not in x !!!
