@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.63 2003/03/14 19:21:19 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.64 2003/03/19 14:01:50 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -769,6 +769,19 @@ Int_t TChain::LoadTree(Int_t entry)
       }
    }
 
+   if (fFriends) {
+      //An Alternative would move this code to each of the function calling LoadTree
+      //(and to overload a few more).
+      TIter next(fFriends);
+      TFriendElement *fe;
+      while ((fe = (TFriendElement*)next())) {
+         TTree *t = fe->GetTree();
+         t->LoadTree(entry);
+         TTree *friend_t = t->GetTree();
+         if (friend_t) fTree->AddFriend(friend_t,fe->GetName());
+      }
+   }
+
    //Set the branches status and address for the newly connected file
    fTree->SetMakeClass(fMakeClass);
    fTree->SetMaxVirtualSize(fMaxVirtualSize);
@@ -792,19 +805,6 @@ Int_t TChain::LoadTree(Int_t entry)
    }
 
    if (cursav) cursav->cd();
-
-   if (fFriends) {
-      //An Alternative would move this code to each of the function calling LoadTree
-      //(and to overload a few more).
-      TIter next(fFriends);
-      TFriendElement *fe;
-      while ((fe = (TFriendElement*)next())) {
-         TTree *t = fe->GetTree();
-         t->LoadTree(entry);
-         TTree *friend_t = t->GetTree();
-         if (friend_t) fTree->AddFriend(friend_t,fe->GetName());
-      }
-   }
 
    //update list of leaves in all TTreeFormula of the TTreePlayer (if any)
    if (fPlayer) fPlayer->UpdateFormulaLeaves();
