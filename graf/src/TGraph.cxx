@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.30 2001/02/01 18:19:12 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.31 2001/02/07 20:56:51 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -558,6 +558,13 @@ void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *)
 //        TF1 *f1 = new TF1("f1","gaus",1,3);
 //        graph->Fit("f1","R");
 //
+//
+//   Setting initial conditions
+//   ==========================
+//   Parameters must be initialized before invoking the Fit function.
+//   The setting of the parameter initial values is automatic for the
+//   predefined functions : poln, expo, gaus. One can however disable
+//   this automatic computation by specifying the option "B".
 //   You can specify boundary limits for some or all parameters via
 //        f1->SetParLimits(p_number, parmin, parmax);
 //   if parmin>=parmax, the parameter is fixed
@@ -629,6 +636,7 @@ void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *)
    if (opt.Contains("N")) fitOption.Nostore = 1;
    if (opt.Contains("0")) fitOption.Nograph = 1;
    if (opt.Contains("+")) fitOption.Plus    = 1;
+   if (opt.Contains("B")) fitOption.Bound   = 1;
 
    xmin    = fX[0];
    xmax    = fX[fNpoints-1];
@@ -680,6 +688,7 @@ void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *)
 
 //*-*- If case of a predefined function, then compute initial values of parameters
    Int_t special = grF1->GetNumber();
+   if (fitOption.Bound) special = 0;
    if      (special == 100)      InitGaus();
    else if (special == 200)      InitExpo();
    else if (special == 299+npar) InitPolynom();

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.37 2001/02/07 21:34:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.38 2001/02/13 11:57:30 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1491,6 +1491,12 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
 //*-*        TF1 *f1 = new TF1("f1","gaus",1,3);
 //*-*        histo->Fit("f1","R");
 //*-*
+//*-*   Setting initial conditions
+//*-*   ==========================
+//*-*   Parameters must be initialized before invoking the Fit function.
+//*-*   The setting of the parameter initial values is automatic for the
+//*-*   predefined functions : poln, expo, gaus. One can however disable
+//*-*   this automatic computation by specifying the option "B".
 //*-*   You can specify boundary limits for some or all parameters via
 //*-*        f1->SetParLimits(p_number, parmin, parmax);
 //*-*   if parmin>=parmax, the parameter is fixed
@@ -1606,6 +1612,7 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
 
 //*-*- If case of a predefined function, then compute initial values of parameters
    Int_t special = gF1->GetNumber();
+   if (Foption.Bound) special = 0;
    if      (special == 100)      H1InitGaus();
    else if (special == 400)      H1InitGaus();
    else if (special == 200)      H1InitExpo();
@@ -1806,6 +1813,7 @@ Int_t TH1::FitOptionsMake(Option_t *choptin)
    if (strstr(chopt,"0")) Foption.Nograph = 1;
    if (strstr(chopt,"+")) Foption.Plus    = 1;
    if (strstr(chopt,"I")) Foption.Integral= 1;
+   if (strstr(chopt,"B")) Foption.Bound   = 1;
    if (strstr(chopt,"U")){Foption.User    = 1; Foption.Like = 0;}
    return 1;
 }
