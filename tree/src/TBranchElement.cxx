@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.18 2001/04/18 10:23:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.19 2001/04/19 08:39:56 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -600,7 +600,7 @@ void TBranchElement::PrintValue(Int_t len) const
       TClonesArray *clones = (TClonesArray*)fObject;
       fInfo->PrintValueClones(GetName(),clones,fID);
    } else {
-      fInfo->PrintValue(GetName(),GetAddress(),fID);
+      fInfo->PrintValue(GetName(),fObject,fID);
    }
 }
 
@@ -628,6 +628,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
     fNdata = n;
     fInfo->ReadBufferClones(b,clones,n,fID);
   } else if (fType <= 2) {     // branch in split mode
+    fNdata = 1;
     fInfo->ReadBuffer(b,fObject,fID);
   }   
 }
