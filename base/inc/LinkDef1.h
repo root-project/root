@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.22 2004/02/18 20:13:42 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.23 2004/06/04 00:39:37 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -149,8 +149,5 @@
 
 #pragma link C++ class TVirtualPadEditor;
 
-#ifdef R__BAD_OVERLOAD_RESOLUTION_WITH_TEMPLATE
-#pragma link C++ function TDirectory::WriteObject(const TObject*,const char*,Option_t*);
-#endif
 
 #endif
