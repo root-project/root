@@ -1,8 +1,8 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFiler.cxx,v 1.0 2004/04/21 15:06:45 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.1 2004/05/10 21:29:26 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -15,7 +15,7 @@
 // communication with other non ROOT applications. Currently
 // writing and reading XML files is limited to ROOT applications.
 // It is our intention to develop a simple reader independent
-// of the ROOT libraries that could be used as an example for 
+// of the ROOT libraries that could be used as an example for
 // real applications.
 // The XML format should be used only for small data volumes,
 // typically histogram files, pictures, geometries, calibrations.
@@ -33,7 +33,7 @@
 // loaded by the plugin manager as soon as a XML file is created
 // via, eg
 //   TFile::Open("file.xml","recreate");
-// TFile::Open returns a TXMLFile object. When a XML file is open in write mode, 
+// TFile::Open returns a TXMLFile object. When a XML file is open in write mode,
 // one can use the normal TObject::Write to write an object in the file.
 // Alternatively one can use the new functions TDirectory::WriteObject and
 // TDirectory::WriteObjectAny to write a TObject* or any class not deriving
@@ -46,13 +46,13 @@
 //   h->FillRandom("gaus");
 //   h->Write();
 //   delete f;
-//  
+//
 // example of a session reading the histogram from the file
 // ========================================================
 //   TFile *f = TFile::Open("Example.xml");
 //   TH1F *h = (TH1F*)f->Get("h");
 //   h->Draw();
-//  
+//
 // A new option in the canvas "File" menu is available to save
 // a TCanvas as a XML file. One can also do
 //   canvas->Print("Example.xml");
@@ -69,7 +69,7 @@
 //   ./configure
 //   make
 //
-// On Windows, from the same web site download 
+// On Windows, from the same web site download
 //   libxml2-2.6.9.win32.zip
 //   iconv-1.9.1.win32.zip
 // unzip the two files, then copy the file iconv.h from the iconv/include file
@@ -109,19 +109,19 @@
 ClassImp(TXMLFile);
 
 //______________________________________________________________________________
-TXMLFile::TXMLFile() : 
-    TFile(), 
+TXMLFile::TXMLFile() :
+    TFile(),
     TXMLSetup(),
-    fDoc(0), 
+    fDoc(0),
     fDtdGener(0)  {
 }
 
 
 //______________________________________________________________________________
 TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, Int_t compression) :
-    TFile(), 
+    TFile(),
     TXMLSetup(),
-    fDoc(0), 
+    fDoc(0),
     fDtdGener(0) {
 
    SetName(filename);
@@ -142,7 +142,7 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
    gDirectory = 0;
    TDirectory::Build();
    gROOT->cd();
-   
+
 
    int len = gROOT->GetListOfStreamerInfo()->GetSize()+1;
    if (len<5000) len = 5000;
@@ -151,7 +151,7 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
 
    fWritable = fOption != "read";
    if (!IsWritable()) {
-      ReadFromFile(); 
+      ReadFromFile();
    } else {
       ReadSetupFromStr(fOption);
       fDoc = gXML->NewDoc(0);
@@ -164,7 +164,7 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
 
    gROOT->GetListOfFiles()->Add(this);
    cd();
-   
+
    fNProcessIDs = 0;
    TKey* key = 0;
    TIter iter(fKeys);
@@ -175,7 +175,7 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
    fProcessIDs = new TObjArray(fNProcessIDs+1);
 }
 
-     
+
 //______________________________________________________________________________
 TXMLFile::~TXMLFile() {
    if ((fDoc!=0) && IsWritable()) SaveToFile();
@@ -183,7 +183,7 @@ TXMLFile::~TXMLFile() {
    if (fDoc) gXML->FreeDoc(fDoc);
 
    gROOT->GetListOfFiles()->Remove(this);
-   
+
    if (gFile==this)
      gROOT->cd();
 }
@@ -236,13 +236,13 @@ Int_t TXMLFile::ReOpen(Option_t*) {
 
 //______________________________________________________________________________
 Int_t TXMLFile::WriteObject(const TObject* obj, const char* name, Option_t *) {
-   new TXMLKey(this, obj, name); 
+   new TXMLKey(this, obj, name);
    return 0;
 }
 
 //______________________________________________________________________________
 Int_t TXMLFile::WriteObjectAny(const void* obj, const TClass* cl, const char* name,Option_t *) {
-   new TXMLKey(this, obj, cl, name);  
+   new TXMLKey(this, obj, cl, name);
    return 0;
 }
 
@@ -250,21 +250,21 @@ Int_t TXMLFile::WriteObjectAny(const void* obj, const TClass* cl, const char* na
 //______________________________________________________________________________
 void TXMLFile::ProduceFileNames(const char* filename, TString& fname, TString& dtdname) {
    fname = filename;
-   dtdname = filename; 
-    
+   dtdname = filename;
+
    Bool_t hasxmlext = kFALSE;
-   
+
    if (fname.Length()>4) {
       TString last = fname(fname.Length()-4,4);
       last.ToLower();
       hasxmlext = (last==".xml");
    }
-   
+
    if (hasxmlext) {
-      dtdname.Replace(dtdname.Length()-4,4,".dtd");   
+      dtdname.Replace(dtdname.Length()-4,4,".dtd");
    } else {
       fname+=".xml";
-      dtdname+=".dtd";   
+      dtdname+=".dtd";
    }
 }
 
@@ -274,36 +274,36 @@ void TXMLFile::SaveToFile() {
    if (fDoc==0) return;
 
    xmlNodePointer fRootNode = gXML->DocGetRootElement(fDoc);
-   
+
    TString fname, dtdname;
    ProduceFileNames(fRealName, fname, dtdname);
-   
+
    TIter iter(GetListOfKeys());
    TXMLKey* key = 0;
-   
-   while ((key=(TXMLKey*)iter()) !=0) 
+
+   while ((key=(TXMLKey*)iter()) !=0)
       gXML->AddChild(fRootNode, key->KeyNode());
 
    xmlNodePointer sinfonode = CreateStreamerInfoNode();
    if (sinfonode)
      gXML->AddChild(fRootNode, sinfonode);
-      
-   if (fDtdGener && IsUseDtd()) 
+
+   if (fDtdGener && IsUseDtd())
      gXML->AssignDtd(fDoc, dtdname, xmlNames_Root);
 
    Int_t layout = GetCompressionLevel()>2 ? 0 : 1;
-         
+
    gXML->SaveDoc(fDoc, fname, layout);
-   
+
    if (fDtdGener && IsUseDtd()) {
        fDtdGener->Produce(dtdname);
    }
 
    iter.Reset();
    while ((key=(TXMLKey*)iter()) !=0)
-      gXML->UnlinkChild(key->KeyNode());                       
+      gXML->UnlinkChild(key->KeyNode());
 
-   
+
    if (sinfonode) {
      gXML->UnlinkChild(sinfonode);
      gXML->FreeNode(sinfonode);
@@ -314,22 +314,22 @@ void TXMLFile::SaveToFile() {
 Bool_t TXMLFile::ReadFromFile() {
    fDoc = gXML->ParseFile(fRealName);
    if (fDoc==0) return kFALSE;
-   
+
    xmlNodePointer fRootNode = gXML->DocGetRootElement(fDoc);
-   
+
    if (fRootNode==0) {
-      gXML->FreeDoc(fDoc); 
+      gXML->FreeDoc(fDoc);
       fDoc=0;
       return kFALSE;
    }
-   
+
    ReadSetup(fRootNode);
 
    ReadStreamerInfos(fRootNode);
 
    if (IsUseDtd())
      if (!gXML->ValidateDocument(fDoc, gDebug>0)) {
-        gXML->FreeDoc(fDoc); 
+        gXML->FreeDoc(fDoc);
         fDoc=0;
         return kFALSE;
      }
@@ -338,21 +338,21 @@ Bool_t TXMLFile::ReadFromFile() {
    gDirectory = this;
 
    xmlNodePointer keynode = gXML->GetChild(fRootNode);
-   gXML->SkipEmpty(keynode); 
+   gXML->SkipEmpty(keynode);
    while (keynode!=0) {
       xmlNodePointer next = gXML->GetNext(keynode);
       gXML->UnlinkChild(keynode);
-      
+
       TXMLKey* key = new TXMLKey(this, keynode);
 
       if (gDebug>2)
         cout << "Adding key " << gXML->GetNodeName(keynode) << "   name = " << key->GetName() << endl;
       fKeys->Add(key);
-      
-      keynode = next;  
-      gXML->SkipEmpty(keynode); 
+
+      keynode = next;
+      gXML->SkipEmpty(keynode);
    }
-   
+
    return kTRUE;
 }
 
@@ -360,14 +360,14 @@ Bool_t TXMLFile::ReadFromFile() {
 TObject* TXMLFile::Get(const char* name) {
    TXMLKey* key = dynamic_cast<TXMLKey*> (GetKey(name));
    if (key==0) return 0;
-   return key->GetObject();   
+   return key->GetObject();
 }
-   
+
 //______________________________________________________________________________
 void* TXMLFile::GetAny(const char* name) {
-   TXMLKey* key = dynamic_cast<TXMLKey*> (GetKey(name)); 
+   TXMLKey* key = dynamic_cast<TXMLKey*> (GetKey(name));
    if (key==0) return 0;
-   return key->GetObjectAny(); 
+   return key->GetObjectAny();
 }
 
 //______________________________________________________________________________
@@ -399,10 +399,10 @@ xmlNodePointer TXMLFile::CreateStreamerInfoNode() {
 
       sprintf(sbuf, "%d", info->IsA()->GetClassVersion());
       gXML->NewProp(infonode, 0, "v", sbuf);
-      
+
       sprintf(sbuf, "%d", info->GetClassVersion());
       gXML->NewProp(infonode,0,"classversion", sbuf);
-      
+
       sprintf(sbuf, "%d", info->GetCheckSum());
       gXML->NewProp(infonode,0,"checksum", sbuf);
 
@@ -418,7 +418,7 @@ xmlNodePointer TXMLFile::CreateStreamerInfoNode() {
 
 //______________________________________________________________________________
 void TXMLFile::ReadStreamerInfos(xmlNodePointer fRootNode) {
-  
+
    xmlNodePointer startnode = gXML->GetChild(fRootNode);
    gXML->SkipEmpty(startnode);
 
@@ -433,7 +433,7 @@ void TXMLFile::ReadStreamerInfos(xmlNodePointer fRootNode) {
    gXML->UnlinkChild(startnode);
    gXML->FreeNode(startnode);
    return;
- 
+
    TObjArray infos;
 
    xmlNodePointer sinfonode = gXML->GetChild(startnode);
@@ -445,9 +445,9 @@ void TXMLFile::ReadStreamerInfos(xmlNodePointer fRootNode) {
         TString ftitle = gXML->GetProp(sinfonode,"title");
 
         TStreamerInfo* info = new TStreamerInfo(gROOT->GetClass(fname), ftitle);
-        
+
         infos.Add(info);
-        
+
         Int_t clversion = atoi(gXML->GetProp(sinfonode,"classversion"));
         info->SetClassVersion(clversion);
         Int_t checksum = atoi(gXML->GetProp(sinfonode,"checksum"));
@@ -495,18 +495,18 @@ void TXMLFile::ReadStreamerInfos(xmlNodePointer fRootNode) {
 //______________________________________________________________________________
 void TXMLFile::StoreStreamerElement(xmlNodePointer infonode, TStreamerElement* elem) {
    TClass* cl = elem->IsA();
-  
+
    xmlNodePointer node = gXML->NewChild(infonode, 0, cl->GetName());
 
    char sbuf[100], namebuf[100];
-   
+
    gXML->NewProp(node,0,"name",elem->GetName());
    if (strlen(elem->GetTitle())>0)
      gXML->NewProp(node,0,"title",elem->GetTitle());
 
    sprintf(sbuf, "%d", cl->GetClassVersion());
    gXML->NewProp(node,0,"v",sbuf);
-     
+
    sprintf(sbuf, "%d", elem->GetType());
    gXML->NewProp(node,0,"type", sbuf);
 
@@ -537,16 +537,16 @@ void TXMLFile::StoreStreamerElement(xmlNodePointer infonode, TStreamerElement* e
      sprintf(sbuf, "%d", bptr->GetCountVersion());
      gXML->NewProp(node, 0, "countversion", sbuf);
      gXML->NewProp(node, 0, "countname", bptr->GetCountName());
-     gXML->NewProp(node, 0, "countclass", bptr->GetCountClass());    
+     gXML->NewProp(node, 0, "countclass", bptr->GetCountClass());
    } else
 //   if (cl == TStreamerBasicType::Class()) {
 //   } else
    if (cl == TStreamerLoop::Class()) {
      TStreamerLoop* loop = (TStreamerLoop*) elem;
      sprintf(sbuf, "%d", loop->GetCountVersion());
-     gXML->NewProp(node, 0, "countversion", sbuf);              
+     gXML->NewProp(node, 0, "countversion", sbuf);
      gXML->NewProp(node, 0, "countname", loop->GetCountName());
-     gXML->NewProp(node, 0, "countclass", loop->GetCountClass());  
+     gXML->NewProp(node, 0, "countclass", loop->GetCountClass());
    } else
 //   if (cl == TStreamerObject::Class()) {
 //   } else
@@ -576,7 +576,7 @@ void TXMLFile::ReadStreamerElement(xmlNodePointer node, TStreamerInfo* info) {
    if (cl==0) return;
 
 //   Int_t elemversion = gXML->GetProp(node,"v");
-   
+
    TString fname = gXML->GetProp(node,"name");
    TString ftitle = gXML->GetProp(node,"title");
    TString ftypename = gXML->GetProp(node,"typename");
@@ -596,12 +596,12 @@ void TXMLFile::ReadStreamerElement(xmlNodePointer node, TStreamerInfo* info) {
      TString countname = gXML->GetProp(node,"countname");
      TString countclass = gXML->GetProp(node,"countclass");
      Int_t countversion = atoi(gXML->GetProp(node,"countversion"));
-     
+
      TStreamerBasicPointer* bptr = new TStreamerBasicPointer();
      bptr->SetCountVersion(countversion);
      bptr->SetCountName(countname);
      bptr->SetCountClass(countclass);
-     
+
      elem = bptr;
    } else
    if (cl == TStreamerBasicType::Class()) {
@@ -637,7 +637,7 @@ void TXMLFile::ReadStreamerElement(xmlNodePointer node, TStreamerInfo* info) {
                                else stl = new TStreamerSTLstring();
      stl->SetSTLtype(fSTLtype);
      stl->SetCtype(fCtype);
-     elem = stl;                          
+     elem = stl;
    }
 
    if (elem==0) return;

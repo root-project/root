@@ -1,26 +1,34 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.0 2004/01/28 22:31:11 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.1 2004/05/10 21:29:26 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef TXMLFILE_H
-#define TXMLFILE_H
+#ifndef ROOT_TXMLFile
+#define ROOT_TXMLFile
 
+#ifndef ROOT_TXMLEngine
 #include "TXMLEngine.h"
+#endif
+#ifndef ROOT_TFile
 #include "TFile.h"
+#endif
+#ifndef ROOT_TXMLSetup
 #include "TXMLSetup.h"
+#endif
+
 
 class TXMLKey;
 class TList;
 class TXMLDtdGenerator;
 class TStreamerElement;
 class TStreamerInfo;
+
 
 class TXMLFile : public TFile, public TXMLSetup {
    protected:
@@ -32,8 +40,8 @@ class TXMLFile : public TFile, public TXMLSetup {
        virtual Long64_t SysSeek(Int_t, Long64_t, Int_t) { return 0; }
        virtual Int_t    SysStat(Int_t, Long_t*, Long64_t*, Long_t*, Long_t*) { return 0; }
        virtual Int_t    SysSync(Int_t) { return 0; }
-       
-   private:    
+
+   private:
       //let the compiler do the job. gcc complains when the following line is activated
       //TXMLFile(const TXMLFile &) {}            //Files cannot be copied
       void operator=(const TXMLFile &);
@@ -45,7 +53,7 @@ class TXMLFile : public TFile, public TXMLSetup {
 
       virtual void      Browse(TBrowser *b);
       virtual Bool_t    cd(const char* path = "");
-      
+
       virtual void      Close(Option_t* = "") {} // *MENU*
       virtual void      Draw(Option_t* = "") {}
       virtual void      DrawMap(const char* ="*",Option_t* ="") {} // *MENU*
@@ -92,7 +100,7 @@ class TXMLFile : public TFile, public TXMLSetup {
 
       // XML specific functions
 
-      TXMLDtdGenerator* GetDtdGenerator() const { return fDtdGener; }      
+      TXMLDtdGenerator* GetDtdGenerator() const { return fDtdGener; }
       TObject*          Get(const char* name);
       void*             GetAny(const char* name);
 
@@ -101,21 +109,21 @@ class TXMLFile : public TFile, public TXMLSetup {
 
       xmlNodePointer    CreateStreamerInfoNode();
       void              ReadStreamerInfos(xmlNodePointer fRootNode);
-   
+
       void              StoreStreamerElement(xmlNodePointer node, TStreamerElement* elem);
       void              ReadStreamerElement(xmlNodePointer node, TStreamerInfo* info);
-   
+
 
       Bool_t            ReadFromFile();
-      
+
       void              SaveToFile();
-      
+
       static void       ProduceFileNames(const char* filename, TString& fname, TString& dtdname);
 
       xmlDocPointer     fDoc;              //!
-      
+
       TXMLDtdGenerator*  fDtdGener;        //!
-      
+
    ClassDef(TXMLFile,1);
 };
 

@@ -1,8 +1,8 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.0 2004/04/21 15:06:45 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.1 2004/05/10 21:29:26 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -17,7 +17,7 @@
 #include "Riostream.h"
 
 ClassImp(TXMLSetup);
-   
+
 const char* NameSpaceBase = "http://root.cern.ch/";
 
 const char* xmlNames_Root        = "root";
@@ -60,56 +60,62 @@ const char* xmlNames_CharStar    = "CharStar";
 
 //______________________________________________________________________________
 TXMLSetup::TXMLSetup() :
-   fXmlLayout(kSpecialized), 
+   fXmlLayout(kSpecialized),
    fSolidDataBlock(kTRUE),
    fConvertBasicTypes(kTRUE),
    fUseDtd(kFALSE),
    fUseNamespaces(kFALSE),
-   fRefCounter(0) {
+   fRefCounter(0)
+{
 }
 
 //______________________________________________________________________________
-TXMLSetup::TXMLSetup(const char* opt) : fRefCounter(0) {
-   ReadSetupFromStr(opt); 
+TXMLSetup::TXMLSetup(const char* opt) : fRefCounter(0)
+{
+   ReadSetupFromStr(opt);
 }
-      
-      
+
+
 //______________________________________________________________________________
-TXMLSetup::TXMLSetup(const TXMLSetup& src) : 
-   fXmlLayout(src.fXmlLayout), 
+TXMLSetup::TXMLSetup(const TXMLSetup& src) :
+   fXmlLayout(src.fXmlLayout),
    fSolidDataBlock(src.fSolidDataBlock),
    fConvertBasicTypes(src.fConvertBasicTypes),
    fUseDtd(src.fUseDtd),
    fUseNamespaces(src.fUseNamespaces),
-   fRefCounter(0)    {
+   fRefCounter(0)
+{
 }
 
 //______________________________________________________________________________
-TXMLSetup::~TXMLSetup() {
+TXMLSetup::~TXMLSetup()
+{
 }
 
 //______________________________________________________________________________
-void TXMLSetup::StoreSetup(xmlNodePointer node) {
+void TXMLSetup::StoreSetup(xmlNodePointer node)
+{
    if (node==0) return;
-   
-   char setupstr[10] = "1xxxx"; 
-    
+
+   char setupstr[10] = "1xxxx";
+
    setupstr[0] = char(48+fXmlLayout);
    setupstr[1] = fSolidDataBlock ? 'x' : 'o';
    setupstr[2] = fConvertBasicTypes ? 'x' : 'o';
    setupstr[3] = fUseDtd ? 'x' : 'o';
    setupstr[4] = fUseNamespaces ? 'x' : 'o';
 
-   gXML->NewProp(node, 0, xmlNames_Setup, setupstr);  
+   gXML->NewProp(node, 0, xmlNames_Setup, setupstr);
 }
 
 //______________________________________________________________________________
-Bool_t TXMLSetup::ReadSetupFromStr(const char* setupstr) {
+Bool_t TXMLSetup::ReadSetupFromStr(const char* setupstr)
+{
    if ((setupstr==0) || (strlen(setupstr)<6)) return kFALSE;
    Int_t lay          = TXMLLayout(setupstr[0] - 48);
    if (lay==kGeneralized) fXmlLayout = kGeneralized;
                      else fXmlLayout = kSpecialized;
-            
+
    fSolidDataBlock    = setupstr[1]=='x';
    fConvertBasicTypes = kTRUE;
    fUseDtd            = kFALSE;
@@ -119,24 +125,27 @@ Bool_t TXMLSetup::ReadSetupFromStr(const char* setupstr) {
 
 
 //______________________________________________________________________________
-void TXMLSetup::PrintSetup() {
+void TXMLSetup::PrintSetup()
+{
    cout << " *** Setup printout ***" << endl;
    cout << "Attribute mode = " << fXmlLayout << endl;
-   cout << "Solid data block = " << (fSolidDataBlock ? "true" : "false") << endl;   
-   cout << "Convert basic types = " << (fConvertBasicTypes ? "true" : "false") << endl;   
-   cout << "Use dtd = " << (fUseDtd ? "true" : "false") << endl;   
-   cout << "Use name spaces = " << (fUseNamespaces ? "true" : "false") << endl;   
+   cout << "Solid data block = " << (fSolidDataBlock ? "true" : "false") << endl;
+   cout << "Convert basic types = " << (fConvertBasicTypes ? "true" : "false") << endl;
+   cout << "Use dtd = " << (fUseDtd ? "true" : "false") << endl;
+   cout << "Use name spaces = " << (fUseNamespaces ? "true" : "false") << endl;
 }
 
 //______________________________________________________________________________
-Bool_t TXMLSetup::ReadSetup(xmlNodePointer node) {
-   if (node==0) return kFALSE; 
-   
+Bool_t TXMLSetup::ReadSetup(xmlNodePointer node)
+{
+   if (node==0) return kFALSE;
+
    return ReadSetupFromStr(gXML->GetProp(node, xmlNames_Setup));
 }
 
 //______________________________________________________________________________
-const char* TXMLSetup::XmlConvertClassName(const TClass* cl) {
+const char* TXMLSetup::XmlConvertClassName(const TClass* cl)
+{
    if (cl==0) return 0;
    fStrBuf = cl->GetName();
    fStrBuf.ReplaceAll('<','_');
@@ -146,38 +155,40 @@ const char* TXMLSetup::XmlConvertClassName(const TClass* cl) {
 }
 
 //______________________________________________________________________________
-const char* TXMLSetup::XmlClassNameSpaceRef(const TClass* cl) {
-   TString clname = XmlConvertClassName(cl); 
+const char* TXMLSetup::XmlClassNameSpaceRef(const TClass* cl)
+{
+   TString clname = XmlConvertClassName(cl);
    fStrBuf = NameSpaceBase;
    fStrBuf += clname;
    return fStrBuf.Data();
 }
 
 //______________________________________________________________________________
-const char* TXMLSetup::GetElName(TStreamerElement* el) {
+const char* TXMLSetup::GetElName(TStreamerElement* el)
+{
    if (el==0) return 0;
-   return el->GetName(); 
+   return el->GetName();
 }
 
 //______________________________________________________________________________
-const char* TXMLSetup::GetElItemName(TStreamerElement* el) {
+const char* TXMLSetup::GetElItemName(TStreamerElement* el)
+{
    if (el==0) return 0;
    fStrBuf = el->GetName();
    fStrBuf+="_item";
    return fStrBuf.Data();
 }
 
-
 //______________________________________________________________________________
-TClass* TXMLSetup::XmlDefineClass(const char* xmlClassName) {
+TClass* TXMLSetup::XmlDefineClass(const char* xmlClassName)
+{
    if (strchr(xmlClassName,'_')==0) return gROOT->GetClass(xmlClassName);
-   
+
    TIter iter(gROOT->GetListOfClasses());
    TClass* cl = 0;
    while ((cl = (TClass*) iter()) != 0) {
-      const char* name = XmlConvertClassName(cl); 
+      const char* name = XmlConvertClassName(cl);
       if (strcmp(xmlClassName,name)==0) return cl;
    }
    return 0;
 }
-

@@ -1,8 +1,8 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.0 2004/04/21 15:06:45 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.1 2004/05/10 21:29:26 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -32,46 +32,46 @@ TXMLEngine::~TXMLEngine() {
 
 //______________________________________________________________________________
 Bool_t TXMLEngine::HasProp(xmlNodePointer node, const char* name) {
-    
+
    if ((node==0) || (name==0)) return kFALSE;
-   return xmlHasProp((xmlNodePtr) node, (const xmlChar*) name) != 0;   
+   return xmlHasProp((xmlNodePtr) node, (const xmlChar*) name) != 0;
 }
 
 //______________________________________________________________________________
 const char* TXMLEngine::GetProp(xmlNodePointer node, const char* name) {
    if (node==0) return 0;
-   xmlChar* prop = xmlGetProp((xmlNodePtr) node, (const xmlChar*) name);   
+   xmlChar* prop = xmlGetProp((xmlNodePtr) node, (const xmlChar*) name);
    if (prop) {
       fStrBuf = (const char*) prop;
       xmlFree(prop);
-      return fStrBuf.Data();   
+      return fStrBuf.Data();
    }
    return 0;
 }
 
 //______________________________________________________________________________
-xmlAttrPointer TXMLEngine::NewProp(xmlNodePointer node, 
+xmlAttrPointer TXMLEngine::NewProp(xmlNodePointer node,
                                    xmlNsPointer ns,
-                                   const char* name, 
+                                   const char* name,
                                    const char* value) {
-   if (ns==0) 
-      return (xmlAttrPointer) xmlNewProp((xmlNodePtr) node, 
-                                         (const xmlChar*) name, 
+   if (ns==0)
+      return (xmlAttrPointer) xmlNewProp((xmlNodePtr) node,
+                                         (const xmlChar*) name,
                                          (const xmlChar*) value);
-   else          
-      return (xmlAttrPointer) xmlNewNsProp((xmlNodePtr) node, 
-                                           (xmlNsPtr) ns, 
-                                           (const xmlChar*) name, 
+   else
+      return (xmlAttrPointer) xmlNewNsProp((xmlNodePtr) node,
+                                           (xmlNsPtr) ns,
+                                           (const xmlChar*) name,
                                            (const xmlChar*) value);
 }
 
 //______________________________________________________________________________
-xmlNodePointer TXMLEngine::NewChild(xmlNodePointer parent, 
+xmlNodePointer TXMLEngine::NewChild(xmlNodePointer parent,
                                     xmlNsPointer ns,
-                                    const char* name, 
+                                    const char* name,
                                     const char* content) {
    xmlNodePointer node = xmlNewNode((xmlNsPtr) ns, (const xmlChar*) name);
-   if (parent!=0) 
+   if (parent!=0)
      xmlAddChild((xmlNodePtr) parent, (xmlNodePtr) node);
    if (content!=0)
      xmlNodeAddContent((xmlNodePtr) node, (const xmlChar*) content);
@@ -79,25 +79,25 @@ xmlNodePointer TXMLEngine::NewChild(xmlNodePointer parent,
 }
 
 //______________________________________________________________________________
-xmlNsPointer TXMLEngine::NewNS(xmlNodePointer node, 
+xmlNsPointer TXMLEngine::NewNS(xmlNodePointer node,
                                const char* reference,
                                const char* name) {
-   return (xmlNsPointer) xmlNewNs((xmlNodePtr) node, (const xmlChar*) reference, (const xmlChar*) name);   
+   return (xmlNsPointer) xmlNewNs((xmlNodePtr) node, (const xmlChar*) reference, (const xmlChar*) name);
 }
 
 //______________________________________________________________________________
 void TXMLEngine::AddChild(xmlNodePointer parent, xmlNodePointer child) {
-   xmlAddChild((xmlNodePtr) parent, (xmlNodePtr) child); 
+   xmlAddChild((xmlNodePtr) parent, (xmlNodePtr) child);
 }
 
 //______________________________________________________________________________
 void TXMLEngine::UnlinkChild(xmlNodePointer node) {
-   xmlUnlinkNode((xmlNodePtr) node);   
+   xmlUnlinkNode((xmlNodePtr) node);
 }
 
 //______________________________________________________________________________
 void TXMLEngine::FreeNode(xmlNodePointer node) {
-   xmlFreeNode((xmlNodePtr) node);   
+   xmlFreeNode((xmlNodePtr) node);
 }
 
 //______________________________________________________________________________
@@ -113,7 +113,7 @@ const char* TXMLEngine::GetNodeContent(xmlNodePointer node) {
    if (cont) {
       fStrBuf = (const char*) cont;
       xmlFree(cont);
-      return fStrBuf.Data();   
+      return fStrBuf.Data();
    }
    return 0;
 }
@@ -140,10 +140,10 @@ xmlNodePointer TXMLEngine::GetNext(xmlNodePointer node) {
 
 //______________________________________________________________________________
 void TXMLEngine::ShiftToNext(xmlNodePointer &node, Bool_t skipempty) {
-   if (node==0) return; 
+   if (node==0) return;
    node = ((xmlNodePtr) node)->next;
-   
-   if (skipempty)  
+
+   if (skipempty)
      while (node && xmlIsBlankNode((xmlNodePtr) node))
        node = ((xmlNodePtr) node)->next;
 }
@@ -156,30 +156,30 @@ void TXMLEngine::SkipEmpty(xmlNodePointer &node) {
 
 //______________________________________________________________________________
 xmlDocPointer TXMLEngine::NewDoc(const char* version) {
-   return xmlNewDoc((const xmlChar*)version); 
+   return xmlNewDoc((const xmlChar*)version);
 }
 
 //______________________________________________________________________________
 void TXMLEngine::AssignDtd(xmlDocPointer doc, const char* dtdname, const char* rootname) {
-   xmlCreateIntSubset((xmlDocPtr) doc, 
-                      (const xmlChar*) rootname, 
-                      (const xmlChar*) "-//CERN//ROOT//v 1.0//EN", 
+   xmlCreateIntSubset((xmlDocPtr) doc,
+                      (const xmlChar*) rootname,
+                      (const xmlChar*) "-//CERN//ROOT//v 1.0//EN",
                       (const xmlChar*) dtdname);
 }
 
 //______________________________________________________________________________
 void TXMLEngine::FreeDoc(xmlDocPointer doc) {
-   xmlFreeDoc((xmlDocPtr) doc); 
+   xmlFreeDoc((xmlDocPtr) doc);
 }
 
 //______________________________________________________________________________
 void TXMLEngine::SaveDoc(xmlDocPointer doc, const char* filename, Int_t layout) {
-   xmlSaveFormatFile(filename, (xmlDocPtr) doc, layout); 
+   xmlSaveFormatFile(filename, (xmlDocPtr) doc, layout);
 }
 
 //______________________________________________________________________________
 void TXMLEngine::DocSetRootElement(xmlDocPointer doc, xmlNodePointer node) {
-   xmlDocSetRootElement((xmlDocPtr) doc, (xmlNodePtr) node); 
+   xmlDocSetRootElement((xmlDocPtr) doc, (xmlNodePtr) node);
 }
 
 //______________________________________________________________________________
@@ -198,31 +198,31 @@ Bool_t TXMLEngine::ValidateDocument(xmlDocPointer doc, Bool_t doout) {
 	cvp.userData = doout ? (void *) stderr : 0;
 	cvp.error    = doout ? (xmlValidityErrorFunc) fprintf : 0;
 	cvp.warning  = doout ? (xmlValidityWarningFunc) fprintf : 0;
-    
+
     xmlDocPtr docptr = (xmlDocPtr) doc;
-    
+
     int res = xmlValidateDocument(&cvp, docptr);
-    
+
     if ((docptr->intSubset!=0) || (docptr->extSubset!=0)) {
        xmlDtdPtr i = docptr->intSubset;
        xmlDtdPtr e = docptr->extSubset;
        if (i==e) e = 0;
        if (e!=0) {
-         xmlUnlinkNode((xmlNodePtr) docptr->extSubset);  
+         xmlUnlinkNode((xmlNodePtr) docptr->extSubset);
          docptr->extSubset = 0;
          xmlFreeDtd(e);
        }
        if (i!=0) {
-         xmlUnlinkNode((xmlNodePtr) docptr->intSubset);  
+         xmlUnlinkNode((xmlNodePtr) docptr->intSubset);
          docptr->intSubset = 0;
-         xmlFreeDtd(i);   
+         xmlFreeDtd(i);
        }
     }
-    
+
     if (doout)
       if (res==1) cout << "Validation done" << endl;
              else cout << "Validation failed" << endl;
-       
+
     return (res == 1);
 }
 

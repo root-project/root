@@ -1,8 +1,8 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.0 2004/04/21 15:06:45 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.1 2004/05/10 21:29:26 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -35,8 +35,8 @@ extern "C" void R__unzip(int *srcsize, unsigned char *src, int *tgtsize, unsigne
 ClassImp(TXMLBuffer);
 
 //______________________________________________________________________________
-TXMLBuffer::TXMLBuffer() : 
-    TBuffer(), 
+TXMLBuffer::TXMLBuffer() :
+    TBuffer(),
     TXMLSetup() {
 }
 
@@ -77,11 +77,11 @@ xmlNodePointer TXMLBuffer::XmlWrite(const TObject* obj) {
 //______________________________________________________________________________
 xmlNodePointer TXMLBuffer::XmlWrite(const void* obj, const TClass* cl) {
    fErrorFlag = 0;
-   
+
    fStoredBuffePos = Length();
 
    xmlNodePointer res = XmlWriteObjectNew(obj, cl);
-   
+
    XmlWriteBlock(kTRUE);
    return res;
 }
@@ -92,18 +92,18 @@ TObject* TXMLBuffer::XmlRead(xmlNodePointer node) {
 
    return (TObject*) obj;
 }
-    
+
 //______________________________________________________________________________
 void* TXMLBuffer::XmlReadAny(xmlNodePointer node) {
    if (node==0) return 0;
-   
+
    fErrorFlag = 0;
 
    PushStack(node, kTRUE);
 
    if (IsaSolidDataBlock())
      XmlReadBlock(gXML->GetChild(node));
-   
+
    void* obj = XmlReadObjectNew(0);
 
    return obj;
@@ -132,8 +132,8 @@ TXMLStackObj* TXMLBuffer::PushStack(xmlNodePointer current, Bool_t simple) {
   if (IsReading() && !simple) {
     current = gXML->GetChild(current);
     gXML->SkipEmpty(current);
-  } 
-  
+  }
+
   TXMLStackObj* stack = new TXMLStackObj(current);
   fStack.Add(stack);
   return stack;
@@ -598,7 +598,7 @@ UInt_t TXMLBuffer::WriteVersion(const TClass *cl, Bool_t /* useBcnt */) {
 //   cout << " ----> " << cl->GetName() << endl;
 
    BeforeIOoperation();
-   
+
    fVersionBuf = cl->GetClassVersion();
 
 
@@ -1489,7 +1489,7 @@ xmlNodePointer TXMLBuffer::XmlWriteValue(const char* value,
    }
 
    fCanUseCompact = kFALSE;
-   
+
    return node;
 }
 
@@ -1646,11 +1646,11 @@ const char* TXMLBuffer::XmlReadValue(const char* name) {
 
       if (gDebug>4)
          cout << fValueBuf << endl;
-         
+
       if (!trysimple)
          ShiftStack("readvalue");
    }
-            
+
    return fValueBuf.Data();
 }
 
@@ -1774,7 +1774,7 @@ void TXMLBuffer::CreateElemNode(const TStreamerElement* elem, Int_t number) {
       sprintf(sbuf,"%d", elem->GetType());
       gXML->NewProp(elemnode, 0, xmlNames_Type, sbuf);
     } else {
-      
+
        elemnode = gXML->NewChild(StackNode(), 0, elem->GetName(), 0);
     }
 
@@ -1794,7 +1794,7 @@ Bool_t TXMLBuffer::VerifyElemNode(const TStreamerElement* elem, Int_t number) {
     } else {
        if (!VerifyNode(StackNode(), elem->GetName())) return kFALSE;
     }
-       
+
     TXMLStackObj* curr = PushStack(StackNode()); // set pointer to first data inside element
     curr->fLastElem = (TStreamerElement*)elem;
     curr->fElemNumber = number;
@@ -1830,7 +1830,7 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number) {
       Int_t comp_type = info->GetTypes()[number];
 
       Bool_t isBasicType = (elem->GetType()>0) && (elem->GetType()<20);
-      
+
       fCanUseCompact = isBasicType && (elem->GetType()==comp_type);
 
       fExpectedChain = isBasicType && (comp_type - elem->GetType() == TStreamerInfo::kOffsetL);
@@ -1841,7 +1841,7 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number) {
          cout << "Expects chain for class " << info->GetName()
               << " in elem " << elem->GetName() << " number " << number << endl;
       }
-      
+
    } else {
        if (stack->fInfo==0) {  // this is not a first element
           PopStack();         // go level back
@@ -1852,7 +1852,7 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number) {
       TStreamerInfo* info = stack->fInfo;
 
       TStreamerElement* elem = info->GetStreamerElementReal(number, 0);
-      
+
       Int_t comp_type = info->GetTypes()[number];
 
       Bool_t isBasicType = (elem->GetType()>0) && (elem->GetType()<20);

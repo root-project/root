@@ -1,20 +1,26 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.h,v 1.0 2004/01/28 22:31:11 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.h,v 1.1 2004/05/10 21:29:26 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef TXMLSETUP_H
-#define TXMLSETUP_H
+#ifndef ROOT_TXMLSetup
+#define ROOT_TXMLSetup
 
+#ifndef ROOT_TXMLEngine
 #include "TXMLEngine.h"
+#endif
+#ifndef ROOT_TObject
 #include "TObject.h"
+#endif
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
 
 extern const char* NameSpaceBase;
 
@@ -61,7 +67,7 @@ extern const char* xmlNames_CharStar;
 class TStreamerElement;
 
 class TXMLSetup {
-   public: 
+   public:
       enum TXMLLayout { kSpecialized = 2,
                         kGeneralized = 3 };
 
@@ -69,51 +75,51 @@ class TXMLSetup {
       TXMLSetup(const char* opt);
       TXMLSetup(const TXMLSetup& src);
       virtual ~TXMLSetup();
-      
+
       void StoreSetup(xmlNodePointer node);
       Bool_t ReadSetup(xmlNodePointer node);
 
       void PrintSetup();
-      
+
       TXMLLayout GetXmlLayout() const { return fXmlLayout; }
       void SetXmlLayout(TXMLLayout layout) { fXmlLayout = layout; }
-      
+
       Bool_t IsaSolidDataBlock() const { return fSolidDataBlock; }
       void SetSolidDataBlock(Bool_t iSolid = kTRUE) { fSolidDataBlock = iSolid; }
-      
+
       Bool_t IsConvertBasicTypes() const { return fConvertBasicTypes; }
       void SetConvertBasicTypes(Bool_t iConvert = kTRUE) { fConvertBasicTypes = iConvert; }
-      
+
       Bool_t IsUseDtd() const { return fUseDtd; }
       void SetUsedDtd(Bool_t use = kTRUE) { fUseDtd = use; }
-      
+
       Bool_t IsUseNamespaces() const { return fUseNamespaces; }
       void SetUseNamespaces(Bool_t iUseNamespaces = kTRUE) { fUseNamespaces = iUseNamespaces; }
-      
+
       const char* XmlConvertClassName(const TClass* cl);
-      const char* XmlClassNameSpaceRef(const TClass* cl);   
-      
+      const char* XmlClassNameSpaceRef(const TClass* cl);
+
       Int_t GetNextRefCounter() { return fRefCounter++; }
-      
+
    protected:
-   
+
       TClass* XmlDefineClass(const char* xmlClassName);
       const char* GetElItemName(TStreamerElement* el);
       const char* GetElName(TStreamerElement* el);
-      
+
       Bool_t ReadSetupFromStr(const char* setupstr);
-   
+
       TXMLLayout fXmlLayout;
       Bool_t fSolidDataBlock;
       Bool_t fConvertBasicTypes;
       Bool_t fUseDtd;
       Bool_t fUseNamespaces;
-      
+
       Int_t  fRefCounter;
-      
+
       TString fStrBuf;          //!
       TString fNameBuf;         //!
-      
+
    ClassDef(TXMLSetup,1);
 };
 
