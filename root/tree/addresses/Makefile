@@ -4,7 +4,7 @@
 CLEAN_TARGETS +=  *.log $(ALL_LIBRARIES) *.d
 
 #Set the list of target to make while testing
-TEST_TARGETS += headerTest clonesATest EmbeddedTest inheritTest relationsTest
+TEST_TARGETS += merging headerTest clonesATest EmbeddedTest inheritTest relationsTest
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -73,3 +73,6 @@ ifeq ($(FAIL),)
 endif
 
 
+
+merging: merging.log
+	$(TestDiff)

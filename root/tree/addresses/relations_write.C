@@ -5,7 +5,7 @@
 
 void Write(bool write=false) 
 {
-   TFile *f    = new TFile("RootRelations.root", "RECREATE", "Root RootRelations test");
+   TFile *f    = new TFile("RootRelations.root", "RECREATE", "Root RootRelations test",0);
    TTree *tree = new TTree("T","An example of a ROOT tree");
    Relation1D<int,float>* obj = new Relation1D<int,float>();
 
