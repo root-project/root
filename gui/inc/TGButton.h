@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.10 2001/11/08 20:33:36 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.11 2002/02/23 16:19:24 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -121,7 +121,7 @@ public:
    virtual void Pressed()  { Emit("Pressed()"); }   // *SIGNAL*
    virtual void Released() { Emit("Released()"); }  // *SIGNAL*
    virtual void Clicked()  { Emit("Clicked()"); }   // *SIGNAL*
-   virtual void Toggled(Bool_t on) { Emit("Toggled(Bool_t)", (Int_t)on); }  // *SIGNAL*
+   virtual void Toggled(Bool_t on) { Emit("Toggled(Bool_t)", on); }  // *SIGNAL*
 
    ClassDef(TGButton,0)  // Button widget abstract base class
 };
