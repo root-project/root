@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.23 2003/03/05 23:33:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.24 2003/03/07 10:54:02 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -317,7 +317,7 @@ void TBranchObject::SetAddress(void *add)
    TIter      next(cl->GetListOfRealData());
    while ((rd = (TRealData *) next())) {
       TDataMember *dm = rd->GetDataMember();
-      if (!dm->IsPersistent()) continue;
+      if (!dm || !dm->IsPersistent()) continue;
       rdname = rd->GetName();
       TDataType *dtype = dm->GetDataType();
       Int_t code = 0;
