@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.36 2003/05/07 16:07:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.37 2003/05/07 16:25:29 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -624,7 +624,8 @@ Double_t TMath::Poisson(Double_t x, Double_t par)
 {
   // compute the Poisson distribution function for (x,par)
 
-  if (x<=0) return 0;                                                         
+  if (x<0) return 0;                                                         
+  if (x==0) return TMath::Exp(-par);                                                         
   return TMath::Power(par,x)/TMath::Gamma(x+1)/TMath::Exp(par); 
 }                                                                              
     
