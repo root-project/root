@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.43 2004/05/10 12:08:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.44 2004/05/10 13:49:39 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -808,8 +808,8 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
 //______________________________________________________________________________
 TObject *TDirectory::Get(const char *namecycle)
 {
-//*-*-*-*-*-*-*-* return pointer to object identified by namecycle*-*-*-*-*-*
-//*-*             ================================================
+//  return pointer to object identified by namecycle
+//
 //   namecycle has the format name;cycle
 //   name  = * is illegal, cycle = * is illegal
 //   cycle = "" or cycle = 9999 ==> apply to a memory object
@@ -818,6 +818,11 @@ TObject *TDirectory::Get(const char *namecycle)
 //     foo   : get object named foo in memory
 //             if object is not in memory, try with highest cycle from file
 //     foo;1 : get cycle 1 of foo on file
+//
+//  The retrieved object should in principle derived from TObject.
+//  If not, the function TDirectory::GetObjectAny should be called.
+//  However, this function will still work for a non-TObject, providing that
+//  the calling application cast the return type to the correct type.
 //
 //  VERY IMPORTANT NOTE:
 //  In case the class of this object derives from TObject but not
@@ -833,6 +838,7 @@ TObject *TDirectory::Get(const char *namecycle)
 //      MyClass *obj = dynamic_cast<MyClass*>(directory->Get("some object of MyClass"));
 //
 //  Of course, dynamic_cast<> can also be used in the example 1.
+//
 
    Short_t  cycle;
    char     name[kMaxLen];
@@ -880,6 +886,59 @@ TObject *TDirectory::Get(const char *namecycle)
      if (strcmp(namobj,key->GetName()) == 0) {
         if ((cycle == 9999) || (cycle == key->GetCycle())) {
            idcur = key->ReadObj();
+           break;
+        }
+     }
+   }
+   cursav->cd();
+
+   return idcur;
+}
+
+//______________________________________________________________________________
+void *TDirectory::GetObjectAny(const char *namecycle)
+{
+// return pointer to object identified by namecycle.
+// The returned object may or may not derive from TObject.
+//
+//   namecycle has the format name;cycle
+//   name  = * is illegal, cycle = * is illegal
+//   cycle = "" or cycle = 9999 ==> apply to a memory object
+//
+//  VERY IMPORTANT NOTE:
+//  The calling application must cast the returned object to 
+//  the final type, eg
+//      MyClass *obj = (MyClass*)directory->GetObjectAny("some object of MyClass");
+//      MyClass *obj = dynamic_cast<MyClass*>(directory->GetObjectAny("some object of MyClass"));
+
+   Short_t  cycle;
+   char     name[kMaxLen];
+
+   TDirectory *cursav = gDirectory;
+   cd();
+
+   DecodeNameCycle(namecycle, name, cycle);
+   char *namobj = name;
+   Int_t nch = strlen(name);
+   for (Int_t i = nch-1; i > 0; i--) {
+      if (name[i] == '/') {
+         name[i] = 0;
+         cd(name);
+         namobj = name + i + 1;
+         name[i] = '/';
+         break;
+      }
+   }
+
+//*-*---------------------Case of Key---------------------
+//                        ===========
+   void *idcur;
+   TKey *key;
+   TIter nextkey(gDirectory->GetListOfKeys());
+   while ((key = (TKey *) nextkey())) {
+     if (strcmp(namobj,key->GetName()) == 0) {
+        if ((cycle == 9999) || (cycle == key->GetCycle())) {
+           idcur = key->ReadObjectAny();
            break;
         }
      }
@@ -1524,6 +1583,21 @@ Int_t TDirectory::WriteObject(const TObject *obj, const char *name, Option_t *op
 
    return nbytes;
 }
+
+//______________________________________________________________________________
+Int_t TDirectory::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option)
+{
+   // Write object of class classname in this directory
+   // obj may not derive from TObject
+   // see TDirectory::WriteObject for comments
+   
+   TClass *cl = gROOT->GetClass(classname);
+   if (!cl) {
+      Error("WriteObjectAny","Unknown class: %s",classname);
+      return 0;
+   }
+   return WriteObjectAny(obj,cl,name,option);
+}   
 
 //______________________________________________________________________________
 Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option)
