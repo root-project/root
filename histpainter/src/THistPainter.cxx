@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.98 2002/08/16 21:16:00 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.99 2002/08/23 12:10:16 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2373,7 +2373,7 @@ void THistPainter::PaintErrors(Option_t *)
    s2y    =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
 
    // compute size of the lines at the end of the error bars
-   Int_t dxend = Int_t(1+gStyle->GetEndErrorSize());
+   Int_t dxend = Int_t(gStyle->GetEndErrorSize());
    bxsize    = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
    bysize    =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.20 2002/07/30 18:26:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.21 2002/08/16 10:54:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -410,7 +410,7 @@ void TStyle::Reset(Option_t *)
    fOptStat        = 1;
    fOptTitle       = 1;
    fErrorMarker    = 21;
-   fEndErrorSize   = 1;
+   fEndErrorSize   = 2;
    fErrorX         = 0.5;
    fScreenFactor   = 1;
    fStatColor      = fCanvasColor;
@@ -627,6 +627,18 @@ void TStyle::SetAxisColor(Color_t color, Option_t *axis)
    if (opt.Contains("x")) fXaxis.SetAxisColor(color);
    if (opt.Contains("y")) fYaxis.SetAxisColor(color);
    if (opt.Contains("z")) fZaxis.SetAxisColor(color);
+}
+
+//______________________________________________________________________________
+void TStyle::SetEndErrorSize(Float_t np)
+{
+// Set the size (in pixels) of the small lines drawn at the
+// end of the error bars (TH1 or TGraphErrors).
+// The default value is 2 pixels.
+// Set np=0 to remove these lines
+   
+   if (np >= 0) fEndErrorSize = np;
+   else         fEndErrorSize = 0;
 }
 
 //______________________________________________________________________________

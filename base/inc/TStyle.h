@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.11 2002/02/25 23:08:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.12 2002/03/14 17:32:29 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -290,7 +290,7 @@ public:
         void             SetDateX(Float_t x=0.01) {fDateX = x;}
         void             SetDateY(Float_t y=0.01) {fDateY = y;}
         void             SetErrorMarker(Int_t marker=21) {fErrorMarker = marker;}
-        void             SetEndErrorSize(Float_t np=1) {fEndErrorSize = np;}
+        void             SetEndErrorSize(Float_t np=2);
         void             SetErrorX(Float_t errorx=0.5) {fErrorX = errorx;}
         void             SetDrawBorder(Int_t drawborder=1) {fDrawBorder = drawborder;}
         void             SetCanvasColor(Color_t color=19) {fCanvasColor = color;}
