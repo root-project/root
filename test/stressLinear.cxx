@@ -1349,13 +1349,6 @@ void mstress_determinant(Int_t msize)
     cout  << "\n svd det = " << d1*TMath::Power(2.0,d2) <<endl;
   }
 
-  if (gVerbose) {
-    TDecompBK bk(H);
-    Double_t d1,d2;
-    bk.Det(d1,d2);
-    cout  << "\n bk det = " << d1*TMath::Power(2.0,d2) <<endl;
-  }
-
   H.ResizeTo(7,7);
   H = THilbertMatrixDSym(7);
   H.SetTol(1.0e-20);
