@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.27 2002/08/09 19:26:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.28 2002/10/31 07:27:37 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -267,7 +267,7 @@ protected:
 public:
 
    TStreamerSTL();
-   TStreamerSTL(const char *name, const char *title, Int_t offset, const char *typeName, Bool_t dmPointer);
+   TStreamerSTL(const char *name, const char *title, Int_t offset, const char *typeName, const char *trueType, Bool_t dmPointer);
    virtual       ~TStreamerSTL();
    Int_t          GetSTLtype() const {return fSTLtype;}
    Int_t          GetCtype()   const {return fCtype;}

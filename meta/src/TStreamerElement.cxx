@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.51 2002/09/06 19:30:17 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.52 2002/11/01 19:12:09 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1144,14 +1144,16 @@ TStreamerSTL::TStreamerSTL()
 }
 
 //______________________________________________________________________________
-TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset, const char *typeName, Bool_t dmPointer)
+TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset, const char *typeName, const char *trueType,Bool_t dmPointer)
         : TStreamerElement(name,title,offset,kSTL,typeName)
 {
    // Create a TStreamerSTL object.
    
-   Int_t nch = strlen(typeName);
+   const char *t = trueType;
+   if (!t || !*t) t = typeName;
+   Int_t nch = strlen(t);
    char *s = new char[nch+1];
-   strcpy(s,typeName);
+   strcpy(s,t);
    char *sopen  = strchr(s,'<'); *sopen  = 0; sopen++;
    // We are looking for the first arguments of the STL container, because
    // this arguments can be a templates we need to count the < and >

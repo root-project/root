@@ -142,7 +142,7 @@ void TStreamerInfo::Build()
          continue;
       }
       if (base->IsSTLContainer()) {
-         TStreamerSTL *stl = new TStreamerSTL(base->GetName(),base->GetTitle(),offset,base->GetName(),0);
+         TStreamerSTL *stl = new TStreamerSTL(base->GetName(),base->GetTitle(),offset,base->GetName(),0,0);
          if (stl->GetSTLtype()) {
             fElements->Add(stl);
             stl->SetStreamer(streamer);
@@ -264,7 +264,7 @@ void TStreamerInfo::Build()
             continue;
          }
          if (dm->IsSTLContainer()) {
-            TStreamerSTL *stl = new TStreamerSTL(dm->GetName(),dm->GetTitle(),offset,dm->GetTrueTypeName(),dm->IsaPointer());
+            TStreamerSTL *stl = new TStreamerSTL(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName(),dm->GetTrueTypeName(),dm->IsaPointer());
             if (stl->GetSTLtype()) {
                fElements->Add(stl);
                for (i=0;i<ndim;i++) stl->SetMaxIndex(i,dm->GetMaxIndex(i));
