@@ -754,7 +754,11 @@ int G__close_inputfiles()
       G__srcfile[iarg].maxline=0;
     }
     if(G__srcfile[iarg].prepname) {
+#ifndef G__OLDIMPLEMENTATION1920
+      if('('!=G__srcfile[iarg].prepname[0]) remove(G__srcfile[iarg].prepname);
+#else
       remove(G__srcfile[iarg].prepname);
+#endif
       free((void*)G__srcfile[iarg].prepname);
       G__srcfile[iarg].prepname=(char*)NULL;
     }

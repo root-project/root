@@ -4784,7 +4784,11 @@ G__value G__exec_statement()
       }
       else {
 	if((--mparen)<=0) {
-	  if(iout) {
+	  if(iout
+#ifndef G__OLDIMPLEMENTATION1924
+	     && G__NOLINK==G__globalcomp
+#endif
+	     ) {
 	    statement[iout]='\0';
 	    G__missingsemicolumn(statement);
 	  }

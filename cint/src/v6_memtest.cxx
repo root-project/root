@@ -531,6 +531,68 @@ FILE *p;
   return(fclose(p));
 }
 
+
+/*************************************************************************
+ * G__TEST_tmpfile()
+ *
+ *************************************************************************/
+void *G__TEST_tmpfile()
+{
+  int i=0;
+  /* int j; */
+  FILE *result;
+  /* char *pc; */
+  
+  result = tmpfile();
+  if(result==NULL) return(result);
+  
+#ifdef G__SAVEMEMORY
+  while(G__mem[i].alive!=0 && i<G__MALLOCSIZE) ++i;
+  if(i>=G__MALLOCSIZE) {
+    G__genericerror("!!! Sorry memory parity checker capacity overflow");
+  }
+  if(i>=G__imem) {
+    G__imem=i+1;
+  }
+  G__mem[i].p = (void *)result;
+  G__mem[i].alive = 1;
+  G__mem[i].size = 0;
+  G__mem[i].type= G__TYPE_FOPEN;
+#else
+  while(i<G__imem && G__mem[i].p!=result) ++i;
+  
+  if(i<G__imem) {
+    G__mem[i].alive++;
+    G__mem[i].use = G__mem[i].use+1;
+    G__mem[i].size = 0;
+    G__mem[i].type= G__TYPE_FOPEN;
+  }
+  else {
+    G__mem[i].p = (void *)result;
+    G__mem[i].alive = 1;
+    G__mem[i].use = 1 ;
+    G__mem[i].size = 0;
+    G__mem[i].type= G__TYPE_FOPEN;
+    ++G__imem;
+  }
+#endif
+#ifdef G__DUMPMEMHISTORY
+#ifndef G__FONS31
+  fprintf(G__memhist
+	  ,"0x%lx=tmpfile()\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
+	  ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i
+	  ,G__ifile.name,G__ifile.line_number);
+#else
+  fprintf(G__memhist
+	  ,"0x%x=tmpfile()\talive=%d\tuse=%d i=%d FILE:%s LINE:%d\n"
+	  ,G__mem[i].p,G__mem[i].alive,G__mem[i].use,i
+	  ,G__ifile.name,G__ifile.line_number);
+#endif
+  fflush(G__memhist);
+#endif
+  return(result);
+}
+
 #endif /* G__SMALLOBJECT */
 
 /*

@@ -1280,6 +1280,14 @@ void G__define_type()
      && G__newtype.comment[G__newtype.alltype-1].filenum<0 
      && !G__newtype.comment[G__newtype.alltype-1].p.com) {
     fpos_t xpos;
+#ifndef G__OLDIMPLEMENTATION1920
+    if(G__ifile.filenum > G__nfile) {
+      G__fprinterr(G__serr
+	   ,"Warning: pointer to function typedef incomplete in command line or G__exec_text(). Declare in source file or use G__load_text()\n");
+      return;
+    }
+    ++G__macroORtemplateINfile;
+#endif
     fgetpos(G__ifile.fp,&xpos);
     fsetpos(G__ifile.fp,&pos_p2fcomment);
 

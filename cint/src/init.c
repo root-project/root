@@ -839,8 +839,11 @@ char *argv[] ;
 	G__exit(EXIT_FAILURE);
       }
       else {
+#ifndef G__OLDIMPLEMENATTION1919
+	xfileflag=optind-1;
+#else
 #ifndef G__OLDIMPLEMENATTION1564
-	G__tmpnam(G__xfile);
+	G__tmpnam(G__xfile); /* not used anymore */
 #else
 	tmpnam(G__xfile);
 #endif
@@ -848,6 +851,7 @@ char *argv[] ;
 	fprintf(G__ifile.fp,"%s\n",optarg);
 	fclose(G__ifile.fp);
 	xfileflag=1;
+#endif
       }
       break;
 
@@ -1259,8 +1263,29 @@ char *argv[] ;
   while( (G__MAINEXIST!=G__ismain&&(optind<argc)) || xfileflag ) {
 
     if(xfileflag) {
+#ifndef G__OLDIMPLEMENATTION1919
+      FILE *tmpf = tmpfile();
+      if(tmpf) {
+	fprintf(tmpf,"%s\n",argv[xfileflag]);
+	xfileflag=0;
+	fseek(tmpf,0L,SEEK_SET);
+	if(G__loadfile_tmpfile(tmpf) || G__eof==2) {
+	  /* file not found or unexpected EOF */
+	  if(G__CPPLINK==G__globalcomp||G__CLINK==G__globalcomp) {
+	    G__cleardictfile(-1);
+	  }
+	  G__scratch_all();
+	  return(EXIT_FAILURE);
+	}
+	continue;
+      }
+      else {
+	xfileflag=0;
+      }
+#else
       sprintf(sourcefile,G__xfile);
       xfileflag=0;
+#endif
     }
     else {
       strcpy(sourcefile,argv[optind]);

@@ -48,6 +48,7 @@
 #define G__CINTBODY
 #include "G__ci.h"
 
+#ifdef G__OLDIMPLEMENTATION1921
 /**************************************************************************
 * Windows tempfile
 *
@@ -56,6 +57,7 @@
 #ifdef G__WIN32
 #ifndef G__BORLAND
 #define G__TMPFILE
+#endif
 #endif
 #endif
 

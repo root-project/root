@@ -792,7 +792,7 @@ char *unnamedmacro;
 #ifndef G__OLDIMPLEMENTATION1794
   fp = tmpfile();
 #else
-  G__tmpnam(tname);  /* not used anymore */
+  G__tmpnam(tname);  /* not used anymore 0 */
   fp = fopen(tname,"w");
 #endif
   if(!fp) return G__null;
@@ -845,6 +845,31 @@ char *result;
 char* G__load_text(namedmacro)
 char *namedmacro;
 {
+#ifndef G__OLDIMPLEMENTATION1919
+  char* result = (char*)NULL;
+  FILE *fp;
+
+  fp = tmpfile();
+  if(!fp) return((char*)NULL);
+  fprintf(fp,"%s",namedmacro);
+  fprintf(fp,"\n");
+
+  fseek(fp,0L,SEEK_SET);
+  switch(G__loadfile_tmpfile(fp)) {
+  case G__LOADFILE_SUCCESS:
+    result = "(tmpfile)";
+    break;
+  case G__LOADFILE_DUPLICATE:
+  case G__LOADFILE_FAILURE:
+  case G__LOADFILE_FATAL:
+    fclose(fp);
+    result = (char*)NULL;
+    break;
+  }
+  return(result);
+
+#else
+
   char* result = (char*)NULL;
 #ifndef G__TMPFILE
   static char tname[L_tmpnam+10];
@@ -853,7 +878,7 @@ char *namedmacro;
 #endif
   FILE *fp;
   
-  G__tmpnam(tname);
+  G__tmpnam(tname);  /* not used anymore */
   strcat(tname,G__NAMEDMACROEXT);
   fp = fopen(tname,"w");
   if(!fp) return((char*)NULL);
@@ -872,8 +897,9 @@ char *namedmacro;
     result = (char*)NULL;
     break;
   }
-
   return(result);
+#endif
+
 }
 #endif
 

@@ -35,6 +35,7 @@
 #undef realloc
 #undef fopen
 #undef fclose
+#undef tmpfile
 
 void *G__TEST_Malloc G__P((size_t size));
 void *G__TEST_Calloc G__P((size_t n,size_t bsize));
@@ -45,6 +46,7 @@ int G__memresult G__P(());
 void G__DUMMY_Free G__P((void* p));
 void *G__TEST_fopen G__P((char *fname,char *mode));
 int G__TEST_fclose G__P((FILE* p));
+void *G__TEST_tmpfile G__P(());
 
 #define malloc(x) G__TEST_Malloc(x)
 #define calloc(x,y) G__TEST_Calloc(x,y)
@@ -52,6 +54,7 @@ int G__TEST_fclose G__P((FILE* p));
 #define realloc(p,x) G__TEST_Realloc(p,x)
 #define fopen(x,y) G__TEST_fopen(x,y)
 #define fclose(x) G__TEST_fclose(x)
+#define tmpfile G__TEST_tmpfile
 
 #endif /* G__MEMTEST_H */
 

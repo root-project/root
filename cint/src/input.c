@@ -101,8 +101,12 @@ char *string;
    ********************************************************/
   fp=fopen(histfile,"r");
   do {
-    G__tmpnam(tname);
+#ifndef G__OLDIMPLEMENTATION1918
+    tmp=tmpfile();
+#else
+    G__tmpnam(tname); /* not used anymore */
     tmp=fopen(tname,"w");
+#endif
   } while((FILE*)NULL==tmp && G__setTMPDIR(tname));
   if(tmp&&fp) {
     while(G__readline(fp,G__oneline,G__argbuf,&argn,arg)!=0){
@@ -110,12 +114,18 @@ char *string;
       if(line>30) fprintf(tmp,"%s\n",arg[0]);
     }
   }
+#ifndef G__OLDIMPLEMENTATION1918
+  if(tmp) fseek(tmp,0L,SEEK_SET);
+#else
   if(tmp) fclose(tmp);
+#endif
   if(fp) fclose(fp);
   
   /* copy back to history file */
   fp=fopen(histfile,"w");
+#ifdef G__OLDIMPLEMENTATION1918
   tmp=fopen(tname,"r");
+#endif
   if(tmp&&fp) {
     while(G__readline(tmp,G__oneline,G__argbuf,&argn,arg)!=0){
       fprintf(fp,"%s\n",arg[0]);
@@ -123,7 +133,9 @@ char *string;
   }
   if(tmp) fclose(tmp);
   if(fp) fclose(fp);
+#ifdef G__OLDIMPLEMENTATION1918
   remove(tname);
+#endif
 }
 #endif
 

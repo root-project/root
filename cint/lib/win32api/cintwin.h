@@ -13,7 +13,7 @@
 #endif
 
 /* windows header */
-#if defined(__MAKECINT__) && defined(G__BORLAND)
+#if defined(__MAKECINT__) && (defined(G__BORLAND)||defined(G__VISUAL))
 #undef MIDL_PASS
 #endif
 #include <windows.h>

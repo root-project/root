@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150104
-#define G__CINTVERSIONSTR  "5.15.104, Sep 23 2003"
+#define G__CINTVERSION      50150105
+#define G__CINTVERSIONSTR  "5.15.105 preview, Sep 28 2003"
 
 
 /**********************************************************************
@@ -704,11 +704,7 @@ typedef int (*G__IgnoreInclude)();
 
 #ifdef G__WIN32
 #define G__MAXSTRUCT   4000  /* struct table */
-#ifdef G__BORLANDCC5
 #define G__MAXTYPEDEF  8000  /* typedef table */
-#else
-#define G__MAXTYPEDEF  4000  /* typedef table */
-#endif
 #else
 #define G__MAXSTRUCT   4000  /* struct table */
 #define G__MAXTYPEDEF  4000  /* typedef table */

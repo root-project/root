@@ -18,6 +18,18 @@
  * purpose.  It is provided "as is" without express or implied warranty.
  ************************************************************************/
 
+#ifndef G__OLDIMPLEMENTATION1920 
+/* Define one of following */
+#if 0
+#define G__OLDIMPLEMENTATION1923 /* keep tmpfile for -cN +V +P */
+#else
+#define G__OLDIMPLEMENTATION1922 /* keep opening all header files for +V +P */
+#endif
+#else  /* 1920 */
+#define G__OLDIMPLEMENTATION1922 
+#define G__OLDIMPLEMENTATION1923 
+#endif /* 1920 */
+
 #ifdef G__ROOT
 #ifdef HAVE_CONFIG
 #include "config.h"
@@ -35,7 +47,6 @@
 #ifdef G__WIN32
 #include <windows.h>
 #endif
-
 
 #define G__OLDIMPLEMENTATION1849
 #ifndef G__OLDIMPLEMENTATION1849
@@ -104,6 +115,32 @@ int(*p2f) G__P((G__CONST char*,G__CONST char*));
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1920
+/******************************************************************
+* G__copytotmpfile()
+******************************************************************/
+static FILE* G__copytotmpfile(prepname)
+char *prepname;
+{
+  FILE *ifp;
+  FILE *ofp;
+  ifp = fopen(prepname,"rb");
+  if(!ifp) {
+    G__genericerror("Internal error: G__copytotmpfile() 1\n");
+    return((FILE*)NULL);
+  }
+  ofp = tmpfile();
+  if(!ofp) {
+    G__genericerror("Internal error: G__copytotmpfile() 2\n");
+    fclose(ifp);
+    return((FILE*)NULL);
+  }
+  G__copyfile(ofp,ifp);
+  fclose(ifp);
+  fseek(ofp,0L,SEEK_SET);
+  return(ofp);
+}
+#endif
 
 /******************************************************************
 * G__copysourcetotmp()
@@ -115,7 +152,22 @@ int fentry;
 {
   if(G__copyflag && 0==prepname[0]) {
     FILE *fpout;
-    G__tmpnam(prepname);
+#ifndef G__OLDIMPLEMENTATION1920
+    fpout = tmpfile();
+    if(!fpout) {
+      G__genericerror("Internal error: can not open tmpfile.");
+      return;
+    }
+    strcpy(prepname,"(tmpfile)");
+    G__copyfile(fpout,pifile->fp);
+    fseek(fpout,0L,SEEK_SET);
+    G__srcfile[fentry].prepname = (char*)malloc(strlen(prepname)+1);
+    strcpy(G__srcfile[fentry].prepname,prepname);
+    G__srcfile[fentry].fp = fpout;
+    fclose(pifile->fp);
+    pifile->fp = fpout;
+#else /* 1920 */
+    G__tmpnam(prepname); /* not used anymore */
     fpout = fopen(prepname,"wb");
     if(!fpout) {
       G__fprinterr(G__serr,"cannot open tmp file %s",prepname);
@@ -133,6 +185,7 @@ int fentry;
 #else
     pifile->fp = fopen(prepname,"rb");
 #endif
+#endif /* 1920 */
   }
 }
 
@@ -1035,6 +1088,230 @@ int fentry;
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1919
+/******************************************************************
+* G__loadfile_tmpfile(fp)
+*
+******************************************************************/
+int G__loadfile_tmpfile(fp)
+FILE *fp;
+{
+  int store_prerun;
+  struct G__var_array *store_p_local;
+  int store_var_type,store_tagnum,store_typenum;
+  int fentry;
+  int store_nobreak;
+  int store_step;
+  struct G__input_file store_file;
+  int store_macroORtemplateINfile;
+  short store_iscpp;
+  G__UINT32 store_security;
+  int store_func_now;
+  int pragmacompile_iscpp;
+  int pragmacompile_filenum;
+  int store_asm_noverflow;
+  int store_no_exec_compile;
+  int store_asm_exec;
+  int store_return;
+  long store_struct_offset;
+#ifndef G__OLDIMPLEMENTATION1536
+  char hdrprop = G__NONCINTHDR;
+#endif
+
+  /******************************************************************
+  * check if number of loaded file exceeds G__MAXFILE
+  * if so, restore G__ifile reset G__eof and return.
+  ******************************************************************/
+  if(G__nfile==G__MAXFILE) {
+    G__fprinterr(G__serr,"Limitation: Sorry, can not load any more files\n");
+    return(G__LOADFILE_FATAL);
+  }
+
+  if(!fp) {
+    G__genericerror("Internal error: G__loadfile_tmpfile((FILE*)NULL)");
+    return(G__LOADFILE_FATAL);
+  }
+
+#ifndef G__OLDIMPLEMENTATION1345
+  G__LockCriticalSection();
+#endif
+
+  /*************************************************
+  * store current input file information
+  *************************************************/
+  store_file = G__ifile;
+  store_step = G__step;
+  G__step=0;
+  G__setdebugcond();
+
+  /* pre run , read whole ifuncs to allocate global variables and
+     make ifunc table */
+
+  /**********************************************
+  * store iscpp (is C++) flag. This flag is modified in G__preprocessor()
+  * function and restored in G__loadfile() before return.
+  **********************************************/
+  store_iscpp=G__iscpp;
+
+  /**********************************************
+  * filenum and line_number.
+  **********************************************/
+  G__ifile.line_number = 1;
+  G__ifile.fp = fp;
+  strcpy(G__ifile.name,"(tmpfile)");
+  G__ifile.filenum = G__nfile ;
+  fentry = G__nfile++;
+
+  G__srcfile[fentry].dictpos
+    = (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
+  G__store_dictposition(G__srcfile[fentry].dictpos);
+
+  G__srcfile[fentry].hdrprop = hdrprop;
+
+  store_security = G__security;
+  G__srcfile[fentry].security = G__security;
+
+  G__srcfile[fentry].prepname = (char*)NULL;
+  G__srcfile[fentry].filename = (char*)malloc(strlen(G__ifile.name)+1);
+  strcpy(G__srcfile[fentry].filename,G__ifile.name);
+  G__srcfile[fentry].fp=G__ifile.fp;
+
+  G__srcfile[fentry].included_from = store_file.filenum;
+
+  G__srcfile[fentry].ispermanentsl = G__ispermanentsl;
+  G__srcfile[fentry].initsl = (G__DLLINIT)NULL;
+  G__srcfile[fentry].hasonlyfunc = (struct G__dictposition*)NULL;
+  G__srcfile[fentry].parent_tagnum = G__get_envtagnum();
+  G__srcfile[fentry].slindex = -1;
+
+  if(G__debugtrace) {
+    G__fprinterr(G__serr,"LOADING tmpfile\n");
+  }
+  if(G__debug) {
+    G__fprinterr(G__serr,"%-5d",G__ifile.line_number);
+  }
+
+  /******************************************************
+   * store parser parameters
+   ******************************************************/
+  store_prerun=G__prerun;
+  store_p_local=G__p_local;
+  if(0==G__def_struct_member||-1==G__tagdefining||
+     ('n'!=G__struct.type[G__tagdefining]
+      && 'c'!=G__struct.type[G__tagdefining]
+      && 's'!=G__struct.type[G__tagdefining]
+     )) {
+    G__p_local=NULL;
+  }
+
+  G__eof = 0;
+  G__prerun = 1;
+  G__switch = 0;
+  G__mparen = 0;
+  store_nobreak=G__nobreak;
+  G__nobreak=1;
+
+  store_var_type = G__var_type;
+  store_tagnum = G__tagnum;
+  store_typenum = G__typenum;
+  store_func_now = G__func_now;
+  G__func_now = -1;
+  store_macroORtemplateINfile = G__macroORtemplateINfile;
+  G__macroORtemplateINfile = 0;
+  store_asm_noverflow = G__asm_noverflow;
+  store_no_exec_compile = G__no_exec_compile;
+  store_asm_exec = G__asm_exec;
+  G__asm_noverflow = 0;
+  G__no_exec_compile = 0;
+  G__asm_exec = 0;
+  store_return=G__return;
+  G__return=G__RETURN_NON;
+
+  store_struct_offset = G__store_struct_offset;
+  G__store_struct_offset = 0;
+
+  /******************************************************
+   * read source file
+   ******************************************************/
+  while (!G__eof && G__return<G__RETURN_EXIT1) G__exec_statement();
+
+
+  /******************************************************
+   * restore parser parameters
+   ******************************************************/
+  G__store_struct_offset = store_struct_offset;
+#ifndef G__OLDIMPLEMENTATION487
+  pragmacompile_filenum = G__ifile.filenum;
+  pragmacompile_iscpp = G__iscpp;
+  G__func_now = store_func_now;
+#endif
+  G__macroORtemplateINfile = store_macroORtemplateINfile;
+  G__var_type = store_var_type;
+  G__tagnum = store_tagnum;
+  G__typenum = store_typenum;
+
+  G__nobreak=store_nobreak;
+  G__prerun=store_prerun;
+  G__p_local=store_p_local;
+
+#ifndef G__OLDIMPLEMENTATION974
+  G__asm_noverflow = store_asm_noverflow;
+  G__no_exec_compile = store_no_exec_compile;
+  G__asm_exec = store_asm_exec;
+#endif
+
+  /******************************************************
+   * restore input file information to G__ifile
+   * and reset G__eof to 0.
+   ******************************************************/
+  G__ifile = store_file ;
+  G__eof = 0;
+  G__step=store_step;
+  G__setdebugcond();
+  G__globalcomp=G__store_globalcomp;
+  G__iscpp=store_iscpp;
+#ifdef G__SECURITY
+  G__security = store_security;
+#endif
+  if(G__return>G__RETURN_NORMAL) {
+#ifndef G__OLDIMPLEMENTATION1345
+    G__UnlockCriticalSection();
+#endif
+#ifndef G__OLDIMPLEMENTATION1849
+    G__return=store_return;
+#endif
+    return(G__LOADFILE_FAILURE);
+  }
+
+#ifndef G__OLDIMPLEMENTATION1849
+  G__return=store_return;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION487
+#ifdef G__AUTOCOMPILE
+  /*************************************************************
+   * if '#pragma compile' appears in source code.
+   *************************************************************/
+  if(G__fpautocc && G__autoccfilenum == pragmacompile_filenum) {
+    store_iscpp = G__iscpp;
+    G__iscpp=pragmacompile_iscpp;
+    G__autocc();
+    G__iscpp = store_iscpp;
+  }
+#endif
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1273
+  G__checkIfOnlyFunction(fentry);
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1345
+  G__UnlockCriticalSection();
+#endif
+  return(G__LOADFILE_SUCCESS);
+}
+#endif
+
 /******************************************************************
 * G__loadfile(filename)
 *
@@ -1310,11 +1587,32 @@ char *filenamein;
      * -p option. open preprocessed tmpfile
      **********************************************/
     sprintf(G__ifile.name,"%s",filename);
+#ifndef G__OLDIMPLEMENTATION1920
+#ifndef G__OLDIMPLEMENTATION1922
+    if(G__fons_comment && G__cpp && G__NOLINK!=G__globalcomp) {
+#ifndef G__WIN32
+      G__ifile.fp = fopen(prepname,"r");
+#else
+      G__ifile.fp = fopen(prepname,"rb");
+#endif
+    }
+    else {
+      G__ifile.fp = G__copytotmpfile(prepname);
+      remove(prepname);
+      strcpy(prepname,"(tmpfile)");
+    }
+#else /* 1922 */
+    G__ifile.fp = G__copytotmpfile(prepname);
+    remove(prepname);
+    strcpy(prepname,"(tmpfile)");
+#endif /* 1922 */
+#else /* 1920 */
 #ifndef G__WIN32
     G__ifile.fp = fopen(prepname,"r");
-#else
+#else /* G__WIN32 */
     G__ifile.fp = fopen(prepname,"rb");
-#endif
+#endif /* G__WIN32 */
+#endif /* 1920 */
     G__kindofheader = G__USERHEADER;
   }
   else {
@@ -1998,15 +2296,19 @@ char *filenamein;
    * Avoid file array overflow when G__globalcomp
    ******************************************************/
   if(G__NOLINK!=G__globalcomp && G__srcfile[fentry].fp) {
-    if(!G__macroORtemplateINfile) {
+    if(!G__macroORtemplateINfile
+#ifndef G__OLDIMPLEMENTATION1923
+       && (!G__fons_comment || !G__cpp)
+#endif
+       ) {
 #ifdef G__OLDIMPLEMENTATION1562
       /* Close file for process max file open limitation with -cN option */
       fclose(G__srcfile[fentry].fp);
 #endif
 #ifndef G__PHILIPPE0
-      /* After closing the file let's make sure than all reference to
-	 the file pointer are reset. When a preprocessor is used, we
-	 will have several logical file packed in one. */
+      /* After closing the file let's make sure that all reference to
+	 the file pointer are reset. When preprocessor is used, we
+	 will have several logical file packed in one file. */
       tmpfp = G__srcfile[fentry].fp;
       for(i1=0;i1<G__nfile;i1++) {
         if (G__srcfile[i1].fp==tmpfp){
@@ -2283,7 +2585,7 @@ char *macros,*undeflist,*ppopt,*includepath;
     {
       /* if header file, create tmpfile name as xxx.C */
       do {
-	G__tmpnam(tmpfile);
+	G__tmpnam(tmpfile); /* can't replace this with tmpfile() */
 	tmplen=strlen(tmpfile);
 	if(G__CPPLINK==G__globalcomp || G__iscpp) {
 	  if('\0'==G__cppsrcpost[0]) {
@@ -2320,7 +2622,7 @@ char *macros,*undeflist,*ppopt,*includepath;
 
     /* Get output file name */
     G__getcintsysdir();
-    G__tmpnam(outname);
+    G__tmpnam(outname); /* can't replace this with tmpfile() */
 #if defined(G__SYMANTEC) && (!defined(G__TMPFILE))
     /* NEVER DONE */
     { int len_outname = strlen(outname);
@@ -2538,7 +2840,7 @@ void G__openmfp()
   G__mfp=tmpfile();
 #else
   do {
-    G__tmpnam(G__mfpname);
+    G__tmpnam(G__mfpname); /* Only VC++ uses this */
     G__mfp=fopen(G__mfpname,"wb+");
   } while((FILE*)NULL==G__mfp && G__setTMPDIR(G__mfpname));
 #endif

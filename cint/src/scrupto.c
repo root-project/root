@@ -893,7 +893,12 @@ int nfile;
       G__srcfile[G__nfile].maxline=0;
     }
     if(G__srcfile[G__nfile].prepname) {
+#ifndef G__OLDIMPLEMENTATION1920
+      if('('!=G__srcfile[G__nfile].prepname[0])
+	remove(G__srcfile[G__nfile].prepname);
+#else
       remove(G__srcfile[G__nfile].prepname);
+#endif
       free((void*)G__srcfile[G__nfile].prepname);
       G__srcfile[G__nfile].prepname=(char*)NULL;
     }

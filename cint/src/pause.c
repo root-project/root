@@ -72,7 +72,11 @@ void G__show_undo_position(int index);
 void G__init_undo(void);
 int G__clearfilebusy(int ifn);
 void G__storerewindposition(void);
+#ifndef G__OLDIMPLEMENTATION1917
+static void G__display_keyword(FILE *fout,char *keyword,FILE *keyfile);
+#else
 static void G__display_keyword(FILE *fout,char *keyword,char *fname);
+#endif
 void G__rewinddictionary(void);
 void G__UnlockCriticalSection(void);
 void G__LockCriticalSection(void); 
@@ -802,18 +806,33 @@ FILE *fout;
 *  display keyword for '/[keyword]' debugger command
 *
 ************************************************************************/
-static void G__display_keyword(fout,keyword,fname)
+static void G__display_keyword(fout,keyword,
+#ifndef G__OLDIMPLEMENTATION1917
+			       keyfile
+#else
+			       fname
+#endif
+)
 FILE *fout;
 char *keyword;
+#ifndef G__OLDIMPLEMENTATION1917
+FILE *keyfile;
+#else
 char *fname;
+#endif
 {
   char line[G__LONGLINE];
   char *null_fgets;
+#ifdef G__OLDIMPLEMENTATION1917
   FILE *keyfile;
 
   keyfile = fopen(fname,"r");
+#endif
 
   if(keyfile) {
+#ifndef G__OLDIMPLEMENTATION1917
+    fseek(keyfile,0L,SEEK_SET);
+#endif
     null_fgets=fgets(line,G__LONGLINE-1,keyfile);
     while((char*)NULL!=null_fgets) {
       if(strstr(line,keyword)) {
@@ -821,7 +840,9 @@ char *fname;
       }
       null_fgets=fgets(line,G__LONGLINE-1,keyfile);
     }
+#ifdef G__OLDIMPLEMENTATION1917
     fclose(keyfile);
+#endif
   }
   else {
     G__genericerror("Warning: can't open file. keyword search unsuccessful");
@@ -967,14 +988,24 @@ int base;
 #endif
     FILE *G__temp;
     do {
-      G__tmpnam(tname);
+#ifndef G__OLDIMPLEMENTATION1917
+      G__temp=tmpfile();
+#else
+      G__tmpnam(tname); /* not used anymore */
       G__temp=fopen(tname,"w");
+#endif
     } while((FILE*)NULL==G__temp && G__setTMPDIR(tname));
     if(G__temp) {
       G__display_class(G__temp,classname,base,0);
+#ifndef G__OLDIMPLEMENTATION1917
+      fseek(G__temp,0L,SEEK_SET);
+      G__display_keyword(fout,keyword,G__temp);
+      fclose(G__temp);
+#else
       fclose(G__temp);
       G__display_keyword(fout,keyword,tname);
       remove(tname);
+#endif
     }
   }
   else {
@@ -1626,7 +1657,13 @@ char *pipefile;
 #endif /* G__REDIRECTIO */
 
   if(pipefile[0] && keyword[0]) {
+#ifndef G__OLDIMPLEMENTATION1917
+    FILE *keyfile = fopen(pipefile,"r");
+    G__display_keyword(G__sout,keyword,keyfile);
+    fclose(keyfile);
+#else
     G__display_keyword(G__sout,keyword,pipefile);
+#endif
   }
 }
 #endif
@@ -3064,8 +3101,12 @@ G__value *rslt;
        * Display keyword help information
        *******************************************************/
       do {
-	G__tmpnam(tname);
+#ifndef G__OLDIMPLEMENTATION1917
+	G__temp=tmpfile();
+#else
+	G__tmpnam(tname); /* not used anymore */
 	G__temp=fopen(tname,"w");
+#endif
       } while((FILE*)NULL==G__temp && G__setTMPDIR(tname));
       if(G__temp) {
 	G__cintrevision(G__temp);
@@ -3080,9 +3121,15 @@ G__value *rslt;
 	G__listfunc(G__temp,G__PUBLIC_PROTECTED_PRIVATE,(char*)NULL
 		    ,(struct G__ifunc_table*)NULL);
 	G__varmonitor(G__temp,&G__global,"","",0);
+#ifdef G__OLDIMPLEMENTATION1917
 	fclose(G__temp);
+#endif
       
 	if(command[strlen(command)-1]==' ') command[strlen(command)-1]='\0';
+#ifndef G__OLDIMPLEMENTATION1917
+	G__display_keyword(G__sout,command+1,G__temp);
+	fclose(G__temp);
+#else
 #ifndef G__OLDIMPLEMENTATION577
 	G__display_keyword(G__sout,command+1,tname);
 #else
@@ -3090,6 +3137,7 @@ G__value *rslt;
 	system(syscom);
 #endif
 	remove(tname);
+#endif
       }
       else {
 	G__fprinterr(G__serr,"Error: Tempfile G__temp can not open\n");
@@ -3641,7 +3689,7 @@ G__value *rslt;
       if (com[0] == 'E') {
 #endif
 	if(command[temp]=='\0') {
-	  if('\0'==G__tempc[0]) G__tmpnam(G__tempc);
+	  if('\0'==G__tempc[0]) G__tmpnam(G__tempc); /* E command, rare case */
 	  sprintf(syscom,"%s %s",editor, G__tempc);
 	  system(syscom);
 	  sprintf(syscom,G__tempc);
@@ -3755,7 +3803,7 @@ G__value *rslt;
 	ftemp.fp = tmpfile();
 #else /* 1794 */
 	do {
-	  G__tmpnam(tname);
+	  G__tmpnam(tname); /* not used anymore */
 	  ftemp.fp = fopen(tname,"w");
 	} while((FILE*)NULL==ftemp.fp && G__setTMPDIR(tname));
 #endif /* 1794 */

@@ -812,6 +812,10 @@ void* G__FindSymbol G__P((struct G__ifunc_table *ifunc,int ifn));
 void* G__GetShlHandle G__P(());
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1919
+int G__loadfile_tmpfile G__P((FILE *fp));
+#endif
+
 #ifdef __cplusplus
 }
 #endif
