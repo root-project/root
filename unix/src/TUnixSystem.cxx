@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.69 2003/09/03 05:15:56 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.70 2003/09/04 23:19:31 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1542,7 +1542,7 @@ void TUnixSystem::StackTrace()
    Bool_t demangle = kTRUE;
 
    // check for c++filt (g++), iccfilt (icc) or eccfilt (ecc)
-#if defined(R__INTEL_COMPILER)
+#if defined(R__INTEL_COMPILER_SKIP)
 #if defined(R__B64)
    const char *cppfilt = "eccfilt";
 #else
@@ -1568,7 +1568,7 @@ void TUnixSystem::StackTrace()
    if (!filter)
       demangle = kFALSE;
 
-#if (__GNUC__ >= 3)
+#if (__GNUC__ >= 3) && !defined(R__INTEL_COMPILER_SKIP)
    // try finding supported format option for g++ v3
    if (filter) {
       FILE *p = OpenPipe(Form("%s --help 2>&1", filter), "r");
