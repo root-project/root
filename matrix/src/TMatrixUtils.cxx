@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.cxx,v 1.3 2001/05/07 18:41:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.cxx,v 1.4 2002/05/10 07:19:00 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -511,6 +511,16 @@ const Real_t &TMatrixRow::operator()(Int_t i) const
 }
 
 Real_t &TMatrixRow::operator()(Int_t i)
+{
+   return (Real_t&)((*(const TMatrixRow *)this)(i));
+}
+
+const Real_t &TMatrixRow::operator[](Int_t i) const
+{
+   return (Real_t&)((*(const TMatrixRow *)this)(i));
+}
+
+Real_t &TMatrixRow::operator[](Int_t i)
 {
    return (Real_t&)((*(const TMatrixRow *)this)(i));
 }

@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.2 2000/06/16 15:15:47 rdm Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.3 2002/05/10 07:18:59 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -16,6 +16,8 @@
 
 #pragma link C++ function operator+=(TVector&,const TVector&);
 #pragma link C++ function operator-=(TVector&,const TVector&);
+#pragma link C++ function operator+(const TVector&,const TVector&);
+#pragma link C++ function operator-(const TVector&,const TVector&);
 #pragma link C++ function Add(TVector&,Double_t,const TVector&);
 #pragma link C++ function ElementMult(TVector&,const TVector&);
 #pragma link C++ function ElementDiv(TVector&,const TVector&);
@@ -25,6 +27,9 @@
 #pragma link C++ function AreCompatible(const TVector&,const TVector&);
 #pragma link C++ function operator+=(TMatrix&,const TMatrix&);
 #pragma link C++ function operator-=(TMatrix&,const TMatrix&);
+#pragma link C++ function operator+(const TMatrix&,const TMatrix&);
+#pragma link C++ function operator-(const TMatrix&,const TMatrix&);
+#pragma link C++ function operator*(const TMatrix&,const TMatrix&);
 #pragma link C++ function Add(TMatrix&,Double_t,const TMatrix&);
 #pragma link C++ function ElementMult(TMatrix&,const TMatrix&);
 #pragma link C++ function ElementDiv(TMatrix&,const TMatrix&);
@@ -36,6 +41,8 @@
 // double precision versions
 #pragma link C++ function operator+=(TVectorD&,const TVectorD&);
 #pragma link C++ function operator-=(TVectorD&,const TVectorD&);
+#pragma link C++ function operator+(const TVectorD&,const TVectorD&);
+#pragma link C++ function operator-(const TVectorD&,const TVectorD&);
 #pragma link C++ function Add(TVectorD&,Double_t,const TVectorD&);
 #pragma link C++ function ElementMult(TVectorD&,const TVectorD&);
 #pragma link C++ function ElementDiv(TVectorD&,const TVectorD&);
@@ -45,6 +52,9 @@
 #pragma link C++ function AreCompatible(const TVectorD&,const TVectorD&);
 #pragma link C++ function operator+=(TMatrixD&,const TMatrixD&);
 #pragma link C++ function operator-=(TMatrixD&,const TMatrixD&);
+#pragma link C++ function operator+(const TMatrixD&,const TMatrixD&);
+#pragma link C++ function operator-(const TMatrixD&,const TMatrixD&);
+#pragma link C++ function operator*(const TMatrixD&,const TMatrixD&);
 #pragma link C++ function Add(TMatrixD&,Double_t,const TMatrixD&);
 #pragma link C++ function ElementMult(TMatrixD&,const TMatrixD&);
 #pragma link C++ function ElementDiv(TMatrixD&,const TMatrixD&);
@@ -52,8 +62,6 @@
 #pragma link C++ function Compare(const TMatrixD&,const TMatrixD&);
 #pragma link C++ function AreCompatible(const TMatrixD&,const TMatrixD&);
 #pragma link C++ function E2Norm(const TMatrixD&,const TMatrixD&);
-
-#pragma link C++ function operator()(Int_t) const;
 
 #pragma link C++ class TVector-;
 #pragma link C++ class TMatrix-;

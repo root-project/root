@@ -112,7 +112,7 @@ void TVector::Draw(Option_t *option)
    // Draw this vector using an intermediate histogram
    // The histogram is named "TVector" by default and no title
 
-   gROOT->ProcessLine(Form("TH1F *R__TVector = new TH1F((TVector&)((TVector*)(0x%lx)));R__TVector->SetBit(kCanDelete);R__TVector->Draw(\"%s\");",
+   gROOT->ProcessLine(Form("TH1F *R__TV = new TH1F((TVector&)((TVector*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
       (Long_t)this,option));
 }
 
@@ -671,6 +671,22 @@ TVector &operator-=(TVector &target, const TVector &source)
    for ( ; tp < target.fElements+target.fNrows; )
       *tp++ -= *sp++;
 
+   return target;
+}
+
+//______________________________________________________________________________
+TVector operator+(const TVector &source1, const TVector &source2)
+{
+   TVector target = source1;
+   target += source2;
+   return target;
+}
+
+//______________________________________________________________________________
+TVector operator-(const TVector &source1, const TVector &source2)
+{
+   TVector target = source1;
+   target -= source2;
    return target;
 }
 

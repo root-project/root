@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.3 2001/05/07 18:41:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.4 2002/05/10 07:19:00 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -511,6 +511,16 @@ const Double_t &TMatrixDRow::operator()(Int_t i) const
 }
 
 Double_t &TMatrixDRow::operator()(Int_t i)
+{
+   return (Double_t&)((*(const TMatrixDRow *)this)(i));
+}
+
+const Double_t &TMatrixDRow::operator[](Int_t i) const
+{
+   return (Double_t&)((*(const TMatrixDRow *)this)(i));
+}
+
+Double_t &TMatrixDRow::operator[](Int_t i)
 {
    return (Double_t&)((*(const TMatrixDRow *)this)(i));
 }

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.8 2002/05/10 08:25:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.9 2002/05/10 09:06:26 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -162,6 +162,8 @@ public:
 
    const Real_t &operator()(Int_t i) const;
    Real_t &operator()(Int_t i);
+   const Real_t &operator[](Int_t i) const;
+   Real_t &operator[](Int_t i);
 
    ClassDef(TMatrixRow,1)  // One row of a matrix
 };
@@ -328,6 +330,16 @@ inline const Real_t &TMatrixRow::operator()(Int_t i) const
 }
 
 inline Real_t &TMatrixRow::operator()(Int_t i)
+{
+   return (Real_t&)((*(const TMatrixRow *)this)(i));
+}
+
+inline const Real_t &TMatrixRow::operator[](Int_t i) const
+{
+   return (Real_t&)((*(const TMatrixRow *)this)(i));
+}
+
+inline Real_t &TMatrixRow::operator[](Int_t i)
 {
    return (Real_t&)((*(const TMatrixRow *)this)(i));
 }

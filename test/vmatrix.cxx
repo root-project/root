@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.10 2002/05/03 10:24:10 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.11 2002/05/10 08:30:09 brun Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -103,6 +103,9 @@ void test_matrix_fill(int rsize, int csize)
    FillMatrix f(m);
    m.Apply(f);
 
+   TMatrix m_overload1(-1,rsize-2,1,csize);
+   TMatrix m_overload2(-1,rsize-2,1,csize);
+
    TArrayF a_fortran(rsize*csize);
    TArrayF a_c      (rsize*csize);
    for (Int_t i = 0; i < rsize; i++)
@@ -111,6 +114,8 @@ void test_matrix_fill(int rsize, int csize)
      {
        a_c[i*csize+j] = 4*TMath::Pi()/rsize/csize*((i-1)*csize+j+1);
        a_fortran[i+rsize*j] = a_c[i*csize+j];
+       m_overload1(i-1,j+1)  = a_c[i*csize+j];
+       m_overload2[i-1][j+1] = a_c[i*csize+j];
      }
    }
 
@@ -123,6 +128,9 @@ void test_matrix_fill(int rsize, int csize)
    TMatrix m_c(-1,rsize-2,1,csize,a_c.GetArray());
    cout << "Check identity between m_fortran and m_c" << endl;
    verify_matrix_identity(m_fortran,m_c);
+
+   cout << "Check identity between matrix filled through [i][j] and (i,j)" << endl;
+   verify_matrix_identity(m_overload1,m_overload2);
 
    cout << "\nDone\n" << endl;
 }
@@ -363,6 +371,7 @@ void test_transposition(int msize)
       TMatrix mt(TMatrix::kTransposed,m);
       Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows());
       Assert(mt(2,1) == (Real_t)TMath::Pi() && mt(1,2) != (Real_t)TMath::Pi());
+      Assert(mt[2][1] == (Real_t)TMath::Pi() && mt[1][2] != (Real_t)TMath::Pi());
 
       cout << "\nCheck double transposing a non-symmetric matrix" << endl;
       TMatrix mtt(TMatrix::kTransposed,mt);
@@ -727,6 +736,10 @@ void test_mm_multiplications(int msize)
       Assert( mp2 == 0 );
       mp2.Mult(m1,p);
       verify_matrix_identity(m,mp2);
+
+      cout << "Test XP=X*P  vs XP=X;XP*=P" << endl;
+      TMatrix mp3 = m1*p;
+      verify_matrix_identity(m,mp3);
    }
 
    {

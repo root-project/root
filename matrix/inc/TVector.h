@@ -69,6 +69,8 @@ class TMatrixDiag;
 
 TVector &operator+=(TVector &target, const TVector &source);
 TVector &operator-=(TVector &target, const TVector &source);
+TVector  operator+(const TVector &source1, const TVector &source2);
+TVector  operator-(const TVector &source1, const TVector &source2);
 Double_t operator*(const TVector &v1, const TVector &v2);
 TVector &Add(TVector &target, Double_t scalar, const TVector &source);
 TVector &ElementMult(TVector &target, const TVector &source);
@@ -107,7 +109,7 @@ public:
 
    virtual ~TVector();
 
-   void Draw(Option_t *option="");  // *MENU*
+   void Draw(Option_t *option="");
    void ResizeTo(Int_t n);
    void ResizeTo(Int_t lwb, Int_t upb);
    void ResizeTo(const TVector &v);
@@ -153,10 +155,13 @@ public:
    Double_t Norm2Sqr() const;
    Double_t NormInf() const;
 
-   void Print(Option_t *option="") const;  // *MENU*
+   void Print(Option_t *option="") const;
 
    friend TVector &operator+=(TVector &target, const TVector &source);
    friend TVector &operator-=(TVector &target, const TVector &source);
+   friend TVector  operator+(const TVector &source1, const TVector &source2);
+   friend TVector  operator-(const TVector &source1, const TVector &source2);
+
    friend Double_t operator*(const TVector &v1, const TVector &v2);
    friend TVector &Add(TVector &target, Double_t scalar, const TVector &source);
    friend TVector &ElementMult(TVector &target, const TVector &source);

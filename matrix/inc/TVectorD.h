@@ -69,6 +69,8 @@ class TMatrixDDiag;
 
 TVectorD &operator+=(TVectorD &target, const TVectorD &source);
 TVectorD &operator-=(TVectorD &target, const TVectorD &source);
+TVectorD operator+(const TVectorD &source1, const TVectorD &source2);
+TVectorD operator-(const TVectorD &source1, const TVectorD &source2);
 Double_t  operator*(const TVectorD &v1, const TVectorD &v2);
 TVectorD &Add(TVectorD &target, Double_t scalar, const TVectorD &source);
 TVectorD &ElementMult(TVectorD &target, const TVectorD &source);
@@ -107,7 +109,7 @@ public:
 
    virtual ~TVectorD();
 
-   void Draw(Option_t *option=""); // *MENU*
+   void Draw(Option_t *option="");
    void ResizeTo(Int_t n);
    void ResizeTo(Int_t lwb, Int_t upb);
    void ResizeTo(const TVectorD &v);
@@ -153,10 +155,13 @@ public:
    Double_t Norm2Sqr() const;
    Double_t NormInf() const;
 
-   void Print(Option_t *option="") const;  // *MENU*
+   void Print(Option_t *option="") const;
 
    friend TVectorD &operator+=(TVectorD &target, const TVectorD &source);
    friend TVectorD &operator-=(TVectorD &target, const TVectorD &source);
+   friend TVectorD operator+(const TVectorD &source1, const TVectorD &source2);
+   friend TVectorD operator-(const TVectorD &source1, const TVectorD &source2);
+
    friend Double_t operator*(const TVectorD &v1, const TVectorD &v2);
    friend TVectorD &Add(TVectorD &target, Double_t scalar, const TVectorD &source);
    friend TVectorD &ElementMult(TVectorD &target, const TVectorD &source);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.14 2002/07/05 22:25:20 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.13 2002/05/03 15:18:59 brun Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -55,6 +55,9 @@ class TMatrixDDiag;
 
 TMatrixD &operator+=(TMatrixD &target, const TMatrixD &source);
 TMatrixD &operator-=(TMatrixD &target, const TMatrixD &source);
+TMatrixD  operator+(const TMatrixD &source1, const TMatrixD &source2);
+TMatrixD  operator-(const TMatrixD &source1, const TMatrixD &source2);
+TMatrixD  operator*(const TMatrixD &source1, const TMatrixD &source2);
 TMatrixD &Add(TMatrixD &target, Double_t scalar, const TMatrixD &source);
 TMatrixD &ElementMult(TMatrixD &target, const TMatrixD &source);
 TMatrixD &ElementDiv(TMatrixD &target, const TMatrixD &source);
@@ -115,7 +118,7 @@ public:
 
    virtual ~TMatrixD();
 
-   void Draw(Option_t *option=""); // *MENU*
+   void Draw(Option_t *option="");
    void ResizeTo(Int_t nrows, Int_t ncols);
    void ResizeTo(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb);
    void ResizeTo(const TMatrixD &m);
@@ -136,6 +139,8 @@ public:
 
    const Double_t &operator()(Int_t rown, Int_t coln) const;
    Double_t &operator()(Int_t rown, Int_t coln);
+   const TMatrixDRow operator[](Int_t rown) const;
+   TMatrixDRow operator[](Int_t rown);
 
    TMatrixD &operator=(const TMatrixD &source);
    TMatrixD &operator=(const TLazyMatrixD &source);
@@ -164,17 +169,11 @@ public:
 
    TMatrixD EigenVectors(TVectorD &eigenValues);
 
-   TMatrixD &MakeSymmetric();
    TMatrixD &UnitMatrix();
    TMatrixD &HilbertMatrix();
 
    TMatrixD &operator*=(const TMatrixD &source);
    TMatrixD &operator*=(const TMatrixDDiag &diag);
-   TMatrixD &operator/=(const TMatrixDDiag &diag);
-   TMatrixD &operator*=(const TMatrixDRow &diag);
-   TMatrixD &operator/=(const TMatrixDRow &diag);
-   TMatrixD &operator*=(const TMatrixDColumn &diag);
-   TMatrixD &operator/=(const TMatrixDColumn &diag);
 
    void Mult(const TMatrixD &a, const TMatrixD &b);
 
@@ -183,19 +182,20 @@ public:
    Double_t ColNorm() const;
    Double_t Norm1() const { return ColNorm(); }
    Double_t E2Norm() const;
-   TMatrixD &NormByDiag(const TVectorD &v, Option_t *option="D");
-   TMatrixD &NormByColumn(const TVectorD &v, Option_t *option="D");
-   TMatrixD &NormByRow(const TVectorD &v, Option_t *option="D");
 
    Double_t Determinant() const;
 
-   void Print(Option_t *option="") const; // *MENU*
+   void Print(Option_t *option="") const;
 
    friend TMatrixD &operator+=(TMatrixD &target, const TMatrixD &source);
    friend TMatrixD &operator-=(TMatrixD &target, const TMatrixD &source);
    friend TMatrixD &Add(TMatrixD &target, Double_t scalar, const TMatrixD &source);
    friend TMatrixD &ElementMult(TMatrixD &target, const TMatrixD &source);
    friend TMatrixD &ElementDiv(TMatrixD &target, const TMatrixD &source);
+
+   friend TMatrixD  operator+(const TMatrixD &source1, const TMatrixD &source2);
+   friend TMatrixD  operator-(const TMatrixD &source1, const TMatrixD &source2);
+   friend TMatrixD  operator*(const TMatrixD &source1, const TMatrixD &source2);
 
    friend Bool_t operator==(const TMatrixD &im1, const TMatrixD &im2);
    friend void Compare(const TMatrixD &im1, const TMatrixD &im2);
@@ -401,6 +401,16 @@ inline const Double_t &TMatrixD::operator()(int rown, int coln) const
 inline Double_t &TMatrixD::operator()(Int_t rown, Int_t coln)
 {
    return (Double_t&)((*(const TMatrixD *)this)(rown,coln));
+}
+
+inline const TMatrixDRow TMatrixD::operator[](int rown) const
+{
+   return TMatrixDRow(*this,rown);
+}
+
+inline TMatrixDRow TMatrixD::operator[](int rown)
+{
+   return TMatrixDRow(*this,rown);
 }
 
 inline TMatrixD &TMatrixD::Zero()

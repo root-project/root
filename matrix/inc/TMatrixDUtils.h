@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.5 2001/12/07 21:58:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.6 2002/05/10 07:18:59 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -162,6 +162,8 @@ public:
 
    const Double_t &operator()(Int_t i) const;
    Double_t &operator()(Int_t i);
+   const Double_t &operator[](Int_t i) const;
+   Double_t &operator[](Int_t i);
 
    ClassDef(TMatrixDRow,1)  // One row of a matrix (double precision)
 };
@@ -328,6 +330,16 @@ inline const Double_t &TMatrixDRow::operator()(Int_t i) const
 }
 
 inline Double_t &TMatrixDRow::operator()(Int_t i)
+{
+   return (Double_t&)((*(const TMatrixDRow *)this)(i));
+}
+
+inline const Double_t &TMatrixDRow::operator[](Int_t i) const
+{
+   return (Double_t&)((*(const TMatrixDRow *)this)(i));
+}
+
+inline Double_t &TMatrixDRow::operator[](Int_t i)
 {
    return (Double_t&)((*(const TMatrixDRow *)this)(i));
 }

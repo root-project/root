@@ -113,7 +113,7 @@ void TVectorD::Draw(Option_t *option)
    // Draw this vector using an intermediate histogram
    // The histogram is named "TVectorD" by default and no title
 
-   gROOT->ProcessLine(Form("TH1D *R__TVectorD = new TH1D((TVectorD&)((TVectorD*)(0x%lx)));R__TVectorD->SetBit(kCanDelete);R__TVectorD->Draw(\"%s\");",
+   gROOT->ProcessLine(Form("TH1D *R__TV = new TH1D((TVectorD&)((TVectorD*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
       (Long_t)this,option));
 }
 
@@ -430,6 +430,22 @@ TVectorD &TVectorD::operator-=(Double_t val)
       *ep++ -= val;
 
    return *this;
+}
+
+//______________________________________________________________________________
+TVectorD operator+(const TVectorD &source1, const TVectorD &source2)
+{
+   TVectorD target = source1;
+   target += source2;
+   return target;
+}
+
+//______________________________________________________________________________
+TVectorD operator-(const TVectorD &source1, const TVectorD &source2)
+{
+   TVectorD target = source1;
+   target -= source2;
+   return target;
 }
 
 //______________________________________________________________________________
