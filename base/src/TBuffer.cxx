@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.37 2002/11/01 19:58:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.38 2002/11/11 11:27:47 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -452,8 +452,8 @@ void TBuffer::ResetMap()
    // Delete existing fMap and reset map counter.
 
    delete fMap;
-   fMap = 0;
-   fMapCount = 0;
+   fMap          = 0;
+   fMapCount     = 0;
    fDisplacement = 0;
 }
 
@@ -1457,26 +1457,26 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
 {
    // Read object from I/O buffer. clReq is NOT used.
    // The value returned is the address actual start in memory of the object.
-   // Note that if the actual class of the object does not inherit first 
-   // from TObject, the type of the pointer is NOT 'TObject*'.  
-   // [More accurately, the class needs to start with the TObject part, for 
+   // Note that if the actual class of the object does not inherit first
+   // from TObject, the type of the pointer is NOT 'TObject*'.
+   // [More accurately, the class needs to start with the TObject part, for
    // the pointer to a real TOject*].
    // We recommend using ReadObjectAny instead of ReadObject
-   
+
    return (TObject*) ReadObjectAny(0);
 }
 
 //______________________________________________________________________________
 void *TBuffer::ReadObjectAny(const TClass *clCast)
 {
-   // Read object from I/O buffer. 
+   // Read object from I/O buffer.
    // A typical use for this function is:
    //    MyClass *ptr = (MyClass*)b.ReadObjectAny(MyClass::Class());
-   // I.e. clCast should point to a TClass object describing the class pointed 
+   // I.e. clCast should point to a TClass object describing the class pointed
    // to by your pointer.
-   // In case of multiple inheritance, the return value might not be the 
-   // real beginning of the object in memory.  You will need to use a dynamic_cast
-   // later if you need to retrieve it. 
+   // In case of multiple inheritance, the return value might not be the
+   // real beginning of the object in memory.  You will need to use a
+   // dynamic_cast later if you need to retrieve it.
 
    Assert(IsReading());
 
@@ -1493,7 +1493,7 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
    if (clRef && (clRef!=(TClass*)(-1)) && clCast) {
       //baseOffset will be -1 if clRef does not inherit from clCast.
       baseOffset = clRef->GetBaseClassOffset(clCast);
-      if (baseOffset==-1) {
+      if (baseOffset == -1) {
          Error("ReadObject", "got object of wrong class");
          // exception
          baseOffset = 0;
@@ -1552,7 +1552,7 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
       if (!obj) {
          Error("ReadObject", "could not create object of class %s",
                clRef->GetName());
-         // exception 
+         // exception
          return 0;
       }
 
@@ -1576,7 +1576,7 @@ void TBuffer::WriteObject(const TObject *obj)
 {
    // Write object to I/O buffer.
 
-   WriteObjectAny(obj,TObject::Class());
+   WriteObjectAny(obj, TObject::Class());
 }
 
 //______________________________________________________________________________
@@ -1609,13 +1609,13 @@ void TBuffer::WriteObject(const void *actualObjectStart, TClass *actualClass)
 
    } else {
 
-      // A warning to let the user know it will need to change the class code to 
-      // be able to read this back.
-      if (actualClass->GetNew()==0) {
-         Warning("WriteObjectAny","Since %s had no public constructor \n"
-                 "\twhich can be called without argument, TSocket objects can not be read\n"
-                 "\twith the current library. You would need to add a default constructor\n"
-                 "\tbefore attempting to read.",
+      // A warning to let the user know it will need to change the class code
+      // to  be able to read this back.
+      if (actualClass->GetNew() == 0) {
+         Warning("WriteObjectAny", "since %s had no public constructor\n"
+                 "\twhich can be called without argument, objects of this class\n"
+                 "\tcan not be read with the current library. You would need to\n"
+                 "\tadd a default constructor before attempting to read it.",
                  actualClass->GetName());
       }
 
@@ -1641,33 +1641,33 @@ void TBuffer::WriteObject(const void *actualObjectStart, TClass *actualClass)
 Int_t TBuffer::WriteObjectAny(const void *obj, TClass *ptrClass)
 {
    // Write object to I/O buffer.
-   // This function assumes that the value in 'obj' is the value stored in 
-   // a pointer to a "ptrClass".  The actual type of the object pointed to can be
-   // any class derieved from "ptrClass".
+   // This function assumes that the value in 'obj' is the value stored in
+   // a pointer to a "ptrClass". The actual type of the object pointed to
+   // can be any class derieved from "ptrClass".
    // Return:
    //  0: failure (not used yet)
    //  1: success
    //  2: truncated success (i.e actual class is missing. Only ptrClass saved.
 
-   if (obj==0) {
-      WriteObject(0,0);
+   if (!obj) {
+      WriteObject(0, 0);
       return 1;
    }
-   
+
    TClass *clActual = ptrClass->GetActualClass(obj);
 
    if (clActual) {
-      const char* temp = (const char*)obj;
+      const char *temp = (const char*) obj;
       // clActual->GetStreamerInfo();
-      Int_t offset = (ptrClass!=clActual)?clActual->GetBaseClassOffset(ptrClass):0;
+      Int_t offset = (ptrClass != clActual) ?
+                     clActual->GetBaseClassOffset(ptrClass) : 0;
       temp -= offset;
-      WriteObject( temp, clActual );
+      WriteObject(temp, clActual);
       return 1;
    } else {
-      WriteObject( obj, ptrClass);
+      WriteObject(obj, ptrClass);
       return 2;
    }
-      
 }
 
 //______________________________________________________________________________
@@ -1735,7 +1735,7 @@ TClass *TBuffer::ReadClass(const TClass *clReq, UInt_t *objTag)
    }
 
    if (cl && clReq && !cl->InheritsFrom(clReq)) {
-      Error("ReadClass", "got wrong class: %s",cl->GetName());
+      Error("ReadClass", "got wrong class: %s", cl->GetName());
       // exception
    }
 
@@ -1816,7 +1816,6 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt)
       }
       *bcnt = (v.cnt & ~kByteCountMask);
       *this >> version;
-//printf("Reading version=%d at pos=%d, bytecount=%d\n",version,*startpos,*bcnt);
 
    } else {
 
@@ -1828,7 +1827,6 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt)
          *this >> version;
          *this >> version;
       }
-//printf("Reading version=%d at pos=%d\n",version,startpos);
    }
 
    return version;
@@ -1847,7 +1845,6 @@ UInt_t TBuffer::WriteVersion(const TClass *cl, Bool_t useBcnt)
    }
 
    Version_t version = cl->GetClassVersion();
-//printf("Writing version=%d at pos=%d for class:%s\n",version,cntpos,cl->GetName());
    if (version > kMaxVersion) {
       Error("WriteVersion", "version number cannot be larger than %hd)",
             kMaxVersion);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.25 2002/11/01 21:25:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.26 2002/11/11 11:27:47 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -135,11 +135,11 @@ TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
 //*-*-*-*-*-*-*-*-*-*Create a TKey object and fill output buffer*-*-*-*-*-*-*
 //*-*                ===========================================
 
-   if (obj->IsA()->GetNew()==0) {
-      Warning("TKey","Since %s had no public constructor \n"
-              "\twhich can be called without argument, TSocket objects can not be read\n"
-              "\twith the current library. You would need to add a default constructor\n"
-              "\tbefore attempting to read.",
+   if (!obj->IsA()->GetNew()) {
+      Warning("TKey", "since %s had no public constructor\n"
+              "\twhich can be called without argument, objects of this class\n"
+              "\tcan not be read with the current library. You would need to\n"
+              "\tadd a default constructor before attempting to read it.",
               obj->ClassName());
    }
    Int_t lbuf, nout, noutot, bufmax, nzip;
@@ -542,7 +542,7 @@ Int_t TKey::Read(TObject *obj)
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
    fBufferRef->SetParent(gFile);
-   
+
    if (fVersion > 1)
       fBufferRef->MapObject(obj);  //register obj in map to handle self reference
 
@@ -631,7 +631,7 @@ void TKey::ReadFile()
 void TKey::SetParent(TObject *parent)
 {
 //  Set parent in key buffer
-   
+
    if (fBufferRef) fBufferRef->SetParent(parent);
 }
 
