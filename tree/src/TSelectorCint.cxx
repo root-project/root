@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.6 2002/04/19 18:24:02 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.7 2002/06/13 15:13:21 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -62,7 +62,6 @@ TSelectorCint::~TSelectorCint()
    delete fFuncOut;
    delete fIntSelector;
 }
-
 
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.23 2002/06/14 10:29:06 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.24 2002/06/16 01:40:36 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 #include "TProofPlayer.h"
 #include "TDSet.h"
 #include "TEnv.h"
+#include "TProofDebug.h"
 
 
 TProof *gProof = 0;
@@ -209,8 +210,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             return 0;
          }
       }
-      if (fLogLevel > 1)
-         Info("Init", "using PROOF config file: %s", fconf);
+      PDB(kGlobal,1) Info("Init", "using PROOF config file: %s", fconf);
 
       FILE *pconf;
       if ((pconf = fopen(fconf, "r"))) {
@@ -956,10 +956,9 @@ Int_t TProof::Collect(TMonitor *mon)
 
          case kPROOF_OUTPUTLIST:
             {
-Info("Collect","Got kPROOF_OUTPUTLIST");
+               PDB(kGlobal,2) Info("Collect","Got kPROOF_OUTPUTLIST");
                TList *out = (TList *) mess->ReadObject(TList::Class());
                fPlayer->StoreOutput(out); // Adopts the list
-Info("Collect","Done kPROOF_OUTPUTLIST");
             }
             break;
 

@@ -1,5 +1,5 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.3 2002/06/14 15:14:31 rdm Exp $
-// Author: Maarten Ballintijn    18/03/02
+// @(#)root/proof:$Name:  $:$Id: $
+// Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -9,13 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TPacketizer
-#define ROOT_TPacketizer
+#ifndef ROOT_TVirtualPacketizer
+#define ROOT_TVirtualPacketizer
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TPacketizer                                                          //
+// TVirtualPacketizer                                                   //
 //                                                                      //
+// XXX update Comment XXX                                               //
 // This class generates packets to be processed on PROOF slave servers. //
 // A packet is an event range (begin entry and number of entries) or    //
 // object range (first object and number of objects) in a TTree         //
@@ -26,37 +27,39 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualPacketizer
-#include "TVirtualPacketizer.h"
+#ifndef ROOT_TObject
+#include "TObject.h"
 #endif
 
 
-class TPacketizer : public TVirtualPacketizer {
+class TDSet;
+class TDSetElement;
+class TSlave;
+
+typedef long Long64_t;
+
+
+class TVirtualPacketizer : public TObject {
 
 private:
-   Int_t    fProcessed;       // number of entries processed
-   Long64_t fTotalEntries;    // Total number of entries to be distributed
+   TVirtualPacketizer(const TVirtualPacketizer &);  // no implementation, will generate
+   void operator=(const TVirtualPacketizer &);      // error on accidental usage
 
-   TList   *fFileNodes;       // nodes with files
-   TList   *fUnAllocated;     // nodes with unallocated files
-   TObject *fUnAllocNext;     // cursor in fUnAllocated
-   TList   *fActive;          // nodes with unfinished files
-   TObject *fActiveNext;      // cursor in fActive
-   TList   *fSlaves;          // slaves processing
+protected:
+   Bool_t   fValid;           // Constructed properly ?
 
-   TPacketizer();
-   TPacketizer(const TPacketizer &);     // no implementation, will generate
-   void operator=(const TPacketizer &);  // error on accidental usage
+   TVirtualPacketizer();
+   Long64_t GetEntries(Bool_t tree, TDSetElement *e); // Num of entries or objects
 
 public:
-   TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num);
-   virtual ~TPacketizer();
+   virtual ~TVirtualPacketizer();
 
-   Long64_t      GetEntriesProcessed() const { return fProcessed; }
-   Long64_t      GetEntriesProcessed(TSlave *sl) const;
-   TDSetElement  *GetNextPacket(TSlave *sl);
+   Bool_t                  IsValid() const { return fValid; }
+   virtual Long64_t        GetEntriesProcessed() const;
+   virtual Long64_t        GetEntriesProcessed(TSlave *sl) const;
+   virtual TDSetElement   *GetNextPacket(TSlave *sl);
 
-   ClassDef(TPacketizer,0)  //Generate work packets for parallel processing
+   ClassDef(TVirtualPacketizer,0)  //Generate work packets for parallel processing
 };
 
 #endif

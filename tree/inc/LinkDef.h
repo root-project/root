@@ -1,4 +1,4 @@
-/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.10 2001/08/12 09:00:10 brun Exp $ */
+/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.11 2001/12/08 15:22:40 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -36,7 +36,7 @@
 #pragma link C++ class TLeafS+;
 #pragma link C++ class TNtuple-;
 #pragma link C++ class TNtupleD-;
-#pragma link C++ class TSelector+;
+#pragma link C++ class+protected TSelector+;
 #pragma link C++ class TSelectorCint+;
 #pragma link C++ class TTree-;
 #pragma link C++ class TVirtualTreePlayer;

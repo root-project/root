@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.24 2002/04/25 11:27:11 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.25 2002/06/14 10:29:06 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -38,8 +38,8 @@
 #endif
 
 #include "TProofServ.h"
-#include "TProof.h"
 #include "TProofLimitsFinder.h"
+#include "TProof.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TSysEvtHandler.h"
@@ -57,6 +57,7 @@
 #include "TProofPlayer.h"
 #include "TDSetProxy.h"
 #include "TTimeStamp.h"
+#include "TProofDebug.h"
 
 #ifndef R__WIN32
 const char* const kCP = "/bin/cp -f";
@@ -446,10 +447,10 @@ TDSetElement *TProofServ::GetNextPacket()
       e = 0;
    }
    if (e != 0) {
-      Info("GetNextPacket", "'%s' '%s' '%s' %d %d", e->GetFileName(),
+      PDB(kLoop,2) Info("GetNextPacket", "'%s' '%s' '%s' %d %d", e->GetFileName(),
             e->GetDirectory(), e->GetObjName(),e->GetFirst(),e->GetNum());
    } else {
-      Info("GetNextPacket", "Done");
+      PDB(kLoop,2) Info("GetNextPacket", "Done");
    }
 
    return e;
@@ -496,8 +497,7 @@ void TProofServ::HandleSocketInput()
          if (IsMaster() && IsParallel()) {
             fProof->SendCommand(str);
          } else {
-            if (fLogLevel > 1)
-               Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
+            PDB(kGlobal,1) Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
             ProcessLine(str);
          }
          SendLogFile();
@@ -568,7 +568,7 @@ void TProofServ::HandleSocketInput()
             TList *input;
             Long64_t nentries, first;
 
-Info("HandleSocketInput", "### kPROOF_PROCESS:");
+            PDB(kGlobal,1) Info("HandleSocketInput:kPROOF_PROCESS", "enter");
 
             (*mess) >> dset >> filename >> input >> nentries >> first;
 
@@ -586,7 +586,7 @@ Info("HandleSocketInput", "### kPROOF_PROCESS:");
 
             TIter next(input);
             for (TObject *obj; (obj = next()); ) {
-               Info("Copying: ", obj->GetName());
+               PDB(kGlobal,2) Info("HandleSocketInput:kPROOF_PROCESS", "Adding: %s", obj->GetName());
                p->AddInput(obj);
             }
             delete input;
@@ -594,17 +594,17 @@ Info("HandleSocketInput", "### kPROOF_PROCESS:");
             p->Process(dset, filename, nentries, first);
 
             // return output!
-Info("HandleSocketInput","### kPROOF_PROCESS: SendObject");
 
+            PDB(kGlobal,2) Info("HandleSocketInput:kPROOF_PROCESS","Send Output");
             fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
 
-Info("HandleSocketInput","### kPROOF_PROCESS: SendLogFile");
-
+            PDB(kGlobal,2) Info("HandleSocketInput:kPROOF_PROCESS","Send LogFile");
             SendLogFile();
-Info("HandleSocketInput","### kPROOF_PROCESS: Done");
 
             delete dset;
             delete p;
+
+            PDB(kGlobal,1) Info("HandleSocketInput:kPROOF_PROCESS","Done");
          }
          break;
 
