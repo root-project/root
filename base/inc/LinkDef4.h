@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef4.h,v 1.22 2004/02/18 20:13:42 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef4.h,v 1.1 2004/06/03 21:05:24 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun, Fons Rademakers and al.           *
@@ -24,6 +24,6 @@
 //     you might have to update the syntax in ManualBase4Body.cxx
 
 #pragma link C++ function TDirectory::WriteObject(void*,const char*,Option_t*);
-#pragma link C++ function TDirectory::GetObjectAny(const char*,void*&);
+#pragma link C++ function TDirectory::GetObject(const char*,void*&);
 
 #endif

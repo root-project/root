@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.54 2004/06/16 12:00:03 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.55 2004/06/17 17:31:00 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -820,16 +820,16 @@ TObject *TDirectory::Get(const char *namecycle)
 //     foo;1 : get cycle 1 of foo on file
 //
 //  The retrieved object should in principle derive from TObject.
-//  If not, the function TDirectory::GetObjectAny should be called.
+//  If not, the function TDirectory::GetObject should be called.
 //  However, this function will still work for a non-TObject, providing that
 //  the calling application cast the return type to the correct type (which 
 //  is the actual type of the object).
 //
 //  NOTE:
-//  The method GetObjectAny offer better protection and avoid the need
+//  The method GetObject offer better protection and avoid the need
 //  for any cast:
 //      MyClass *obj;
-//      directory->GetObjectAny("some object",obj);
+//      directory->GetObject("some object",obj);
 //      if (obj) { ... the object exist and inherits from MyClass ... }
 //
 //  VERY IMPORTANT NOTE:
@@ -904,7 +904,7 @@ TObject *TDirectory::Get(const char *namecycle)
 }
 
 //______________________________________________________________________________
-void *TDirectory::GetObjectAnyUnchecked(const char *namecycle)
+void *TDirectory::GetObjectUnchecked(const char *namecycle)
 {
 // return pointer to object identified by namecycle.
 // The returned object may or may not derive from TObject.
@@ -916,22 +916,22 @@ void *TDirectory::GetObjectAnyUnchecked(const char *namecycle)
 //  VERY IMPORTANT NOTE:
 //  The calling application must cast the returned object to 
 //  the final type, eg
-//      MyClass *obj = (MyClass*)directory->GetObjectAny("some object of MyClass");
+//      MyClass *obj = (MyClass*)directory->GetObject("some object of MyClass");
 
-   return GetObjectAnyChecked(namecycle,(TClass*)0);
+   return GetObjectChecked(namecycle,(TClass*)0);
 }
 
 //_________________________________________________________________________________
-void *TDirectory::GetObjectAnyChecked(const char *namecycle, const char* classname)
+void *TDirectory::GetObjectChecked(const char *namecycle, const char* classname)
 {
-// See documentation of TDirectory::GetObjectAnyCheck(const char *namecycle, const TClass *cl)
+// See documentation of TDirectory::GetObjectCheck(const char *namecycle, const TClass *cl)
 
-   return GetObjectAnyChecked(namecycle,ROOT::GetROOT()->GetClass(classname));
+   return GetObjectChecked(namecycle,ROOT::GetROOT()->GetClass(classname));
 }
 
 
 //____________________________________________________________________________
-void *TDirectory::GetObjectAnyChecked(const char *namecycle, const TClass* cl)
+void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* cl)
 {
 // return pointer to object identified by namecycle if and only if the actual
 // object is a type suitable to be stored as a pointer to a "cl"
@@ -944,9 +944,9 @@ void *TDirectory::GetObjectAnyChecked(const char *namecycle, const TClass* cl)
 //  VERY IMPORTANT NOTE:
 //  The calling application must cast the returned pointer to 
 //  the type described by the 2 arguments (i.e. cl):
-//      MyClass *obj = (MyClass*)directory->GetObjectAnyChecked("some object of MyClass","MyClass"));
+//      MyClass *obj = (MyClass*)directory->GetObjectChecked("some object of MyClass","MyClass"));
 //
-//  Note: We recommend using the method TDirectory::GetObjectAny:
+//  Note: We recommend using the method TDirectory::GetObject:
 //      MyClass *obj = 0;
 //      directory->GetObject("some object inheriting from MyClass",obj);
 //      if (obj) { ... we found what we are looking for ... }

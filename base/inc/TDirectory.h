@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.23 2004/06/04 05:16:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.24 2004/06/04 16:28:30 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -90,13 +90,13 @@ public:
    virtual TObject    *FindObject(const TObject *obj) const;
    virtual TObject    *FindObjectAny(const char *name) const;
    virtual TObject    *Get(const char *namecycle); 
-   template <class T> inline void GetObjectAny(const char* namecycle, T*& ptr) // See TDirectory::Get for information
+   template <class T> inline void GetObject(const char* namecycle, T*& ptr) // See TDirectory::Get for information
       {
-         ptr = (T*)GetObjectAnyChecked(namecycle,TBuffer::GetClass(typeid(T)));
+         ptr = (T*)GetObjectChecked(namecycle,TBuffer::GetClass(typeid(T)));
       }
-   virtual void       *GetObjectAnyChecked(const char *namecycle, const char* classname);
-   virtual void       *GetObjectAnyChecked(const char *namecycle, const TClass* cl);
-   virtual void       *GetObjectAnyUnchecked(const char *namecycle);
+   virtual void       *GetObjectChecked(const char *namecycle, const char* classname);
+   virtual void       *GetObjectChecked(const char *namecycle, const TClass* cl);
+   virtual void       *GetObjectUnchecked(const char *namecycle);
    virtual Int_t       GetBufferSize() const;
    const TDatime      &GetCreationDate() const {return fDatimeC;}
    virtual TFile      *GetFile() const {return fFile;}
