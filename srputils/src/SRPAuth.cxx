@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.3 2000/12/19 14:37:14 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.4 2000/12/19 16:19:03 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -35,23 +35,15 @@ static SRPAuthInit srpauth_init;
 Int_t SRPAuthenticate(TSocket *sock, const char *user, const char *passwd,
                       const char *remote)
 {
-   // Authenticate to remote rootd server using the SRP (secure remote
+   // Authenticate to remote rootd/proofd server using the SRP (secure remote
    // password) protocol. Returns 0 if authentication failed, 1 if
    // authentication succeeded and 2 if SRP is not available and standard
-   // authentication should be tried
+   // authentication should be tried. Called via TAuthenticate class.
 
    Int_t  result = 0;
    char  *usr = 0;
    char  *psswd = 0;
    Int_t  stat, kind;
-
-   // check rootd protocol version (we need at least protocol version 2)
-   /* Redundant since kROOTD_PROTOCOL is only known since version 2
-   sock->Send(kROOTD_PROTOCOL);
-   sock->Recv(stat, kind);
-   if (kind == kROOTD_PROTOCOL && stat < 2)
-      return 2;
-   */
 
    // send user name
    if (user && user[0])
