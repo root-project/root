@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.124 2003/01/11 09:10:44 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.125 2003/01/11 16:26:25 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -426,7 +426,7 @@ string FixSTLName(const string& cintName) {
    char type[512];
    strcpy(type, s);
 
-#if (G__GNUC<3) && !defined (G__KCC) 
+#if 0 // (G__GNUC<3) && !defined (G__KCC) 
    if (!strncmp(type, "vector",6)   ||
        !strncmp(type, "list",4)     || 
        !strncmp(type, "deque",5)    ||
