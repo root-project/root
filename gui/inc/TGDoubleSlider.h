@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.4 2001/06/07 11:14:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.5 2003/05/28 11:55:31 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -95,6 +95,8 @@ protected:
                                     // 0: don't move any value
    Bool_t           fReversedScale; // reverse which end is min and max
    Bool_t           fMarkEnds;      // lines marking where stretch zones begin
+
+   static void      FixBounds(Float_t &min, Float_t &max);
 
 public:
    TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t scale, Int_t id = -1,

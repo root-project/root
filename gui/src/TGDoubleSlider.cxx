@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.5 2001/06/07 11:14:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.6 2003/05/28 11:55:31 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -86,6 +86,25 @@ TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t typ
                     kPointerMotionMask, kNone, kNone);
 }
 
+//______________________________________________________________________________
+void TGDoubleSlider::FixBounds(Float_t &min, Float_t &max)
+{
+   // Avoid boundaries to be equal.
+
+   if (min > max) min = max;
+
+   Float_t eps = 1e-6;
+   if (max - min < eps) {
+      if (max == 0)
+         max += eps;
+      else
+         max += max*eps;
+      if (min == 0)
+         min -= eps;
+      else
+         min -= min*eps;
+   }
+}
 
 
 //______________________________________________________________________________
@@ -111,6 +130,8 @@ TGDoubleVSlider::~TGDoubleVSlider()
 void TGDoubleVSlider::DoRedraw()
 {
    // Redraw vertical slider widget.
+
+   FixBounds(fVmin, fVmax);
 
    // cleanup the drawable
    gVirtualX->ClearWindow(fId);
@@ -275,6 +296,8 @@ TGDoubleHSlider::~TGDoubleHSlider()
 void TGDoubleHSlider::DoRedraw()
 {
    // Redraw horizontal slider widget.
+
+   FixBounds(fVmin, fVmax);
 
    // cleanup drawable
    gVirtualX->ClearWindow(fId);
