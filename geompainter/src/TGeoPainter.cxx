@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.59 2005/03/18 08:46:20 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.60 2005/04/01 13:53:18 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -529,7 +529,6 @@ void TGeoPainter::Draw(Option_t *option)
    // set to perspective
    if (!view->IsPerspective()) view->SetPerspective();
    
-   fVisLock = kTRUE;
    fLastVolume = fGeom->GetTopVolume();
  
  	// Create a 3D viewer to paint us
@@ -561,6 +560,8 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    overlap->AppendPad(option);
 
    // Create a 3-D view
+ 	// Create a 3D viewer to paint us
+   gPad->GetViewer3D(option);
    TView *view = gPad->GetView();
    if (!view) {
       view = new TView(11);
@@ -866,7 +867,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
       vol->SetLineColor(3);
       vol->SetTransparency(49);
       if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
-      vol->GetShape()->Paint(option);
+      PaintShape(*(vol->GetShape()),option);
       vol->SetLineColor(color);
       vol->SetTransparency(transparency);
       node1 = overlap->GetNode(0);
@@ -878,7 +879,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
       color = vol->GetLineColor();
       vol->SetLineColor(4);
       if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
-      vol->GetShape()->Paint(option);
+      PaintShape(*(vol->GetShape()),option);
       vol->SetLineColor(color);
    } else {
       node1 = overlap->GetNode(0);
@@ -892,7 +893,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
       vol->SetLineColor(3);
       vol->SetTransparency(40);
       if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
-      vol->GetShape()->Paint(option);
+      PaintShape(*(vol->GetShape()),option);
       vol->SetLineColor(color);
       vol->SetTransparency(transparency);
       node2 = overlap->GetNode(1);
@@ -906,7 +907,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
       vol->SetLineColor(4);
       vol->SetTransparency(40);
       if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
-      vol->GetShape()->Paint(option);
+      PaintShape(*(vol->GetShape()),option);
       vol->SetLineColor(color);
       vol->SetTransparency(transparency);
    }     

@@ -117,6 +117,7 @@ void rgeom()
    rootgeom();
    Bool_t is_raytracing = gGeoManager->GetGeomPainter()->IsRaytracing();
    if (is_raytracing != raytracing) {
+      gGeoManager->GetTopVolume()->Draw();
       gGeoManager->GetGeomPainter()->SetRaytracing(raytracing);
       gPad->Modified();
       gPad->Update();
@@ -341,7 +342,7 @@ void tubeseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
-   TGeoVolume *vol = gGeoManager->MakeTubs("TUBESEG",med, 20,30,40,-30,250);
+   TGeoVolume *vol = gGeoManager->MakeTubs("TUBESEG",med, 20,30,40,-30,270);
    vol->SetLineColor(randomColor());
    if (iaxis) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
@@ -1044,10 +1045,12 @@ void pgon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,150,150,100);
    gGeoManager->SetTopVolume(top);
-   TGeoVolume *vol = gGeoManager->MakePgon("PGON",med, -45.0,270.0,4,2);
+   TGeoVolume *vol = gGeoManager->MakePgon("PGON",med, -45.0,270.0,4,4);
    TGeoPgon *pgon = (TGeoPgon*)(vol->GetShape());
-   pgon->DefineSection(0,-70,25,50);
-   pgon->DefineSection(1,70,50,100);
+   pgon->DefineSection(0,-70,45,50);
+   pgon->DefineSection(1,0,35,40);
+   pgon->DefineSection(2,0,30,35);
+   pgon->DefineSection(3,70,90,100);
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
@@ -1788,4 +1791,3 @@ void help() {
 
    hdemo->Draw();
 }
-
