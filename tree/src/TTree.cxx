@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.162 2003/09/15 08:10:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.163 2003/10/07 15:45:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3622,6 +3622,21 @@ void TTree::SetDirectory(TDirectory *dir)
    while((b = (TBranch*)next())){
       b->SetFile(file);
    }
+}
+
+//_______________________________________________________________________
+void TTree::SetEntries(Double_t n)
+{
+  // Set number of entries in the Tree.
+  // This function should be called only when one filles each branch
+  // independently via TBranch::Fill without calling TTree::Fill
+  // Calling TTree::SetEntries make sense only if the number of existing entries
+  // is null. A Warning is issued otherwise
+   
+   if (fEntries != 0) {
+      Warning("SetEntries","Trees has already %g entries",fEntries);
+   }
+   fEntries = n;
 }
 
 //_______________________________________________________________________

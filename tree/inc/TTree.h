@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.51 2003/08/14 04:44:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.52 2003/10/07 11:10:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -268,6 +268,7 @@ public:
     virtual void      SetChainOffset(Int_t offset=0) {fChainOffset=offset;}
     virtual void      SetDebug(Int_t level=1, Int_t min=0, Int_t max=9999999); // *MENU*
     virtual void      SetDirectory(TDirectory *dir);
+    virtual void      SetEntries(Double_t n);
     virtual void      SetEstimate(Int_t nentries=10000);
     virtual void      SetFileNumber(Int_t number=0);
     virtual void      SetEventList(TEventList *list) {fEventList = list;}
