@@ -961,12 +961,16 @@ if test ! "x$enable_cern" = "xno"; then
     kernlibdir=$found_dir
 
     if test ! "x$packlib" = "x" && test "x$enable_rfio" = "xno" ; then
-        # check if libpacklib contains rfio code (case of < 2002 version)
-        check_symbol rfio_connect "$packlib" "$packlibdir"
-        if test  $found_symbol -eq 0 ; then
-            echo "### Need libshift with this version of $packlib"
-            echo "### Run configure with --enable-rfio or set --with-shift-libdir"
-            packlib=""
+        # check if libpacklib contains rfio references, if yes make further check
+        check_symbol rfio "$packlib" "$packlibdir"
+        if test  $found_symbol -eq 1 ; then
+            # check if libpacklib contains rfio code (case of < 2002 version)
+            check_symbol rfio_connect "$packlib" "$packlibdir"
+            if test  $found_symbol -eq 0 ; then
+                echo "### Need libshift with this version of $packlib"
+                echo "### Run configure with --enable-rfio or set --with-shift-libdir"
+                packlib=""
+            fi
         fi
     fi
 
