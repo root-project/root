@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualUtilHist.h,v 1.1 2002/09/14 16:19:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualUtilHist.h,v 1.1 2002/09/15 10:16:44 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -17,6 +17,17 @@
 // TVirtualUtilHist                                                     //
 //                                                                      //
 // Abstract interface to the histogram  utilities                       //
+//                                                                      //
+// This class is called via the TPluginManager from classes that        //
+// do not require linking with libHist except in some rare cases like   //
+// painting matrices and vectors              .                         //
+// The concrete implementation TUtilHist is defined in system.rootrc    //
+// and can be overridden by a user to extend the functionality.         //
+// This abstract interface has three main goals:                        //
+//   - it decouples libHist from the calling classes                    //
+//   - it does not require the use of magic strings like when using     //
+//     gROOT->ProcessLine to instantiate classes in libHist.            //
+//   - it allows advanced users to redefine or extend some functions.   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

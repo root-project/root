@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualUtil3D.h,v 1.6 2002/02/22 08:30:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualUtil3D.h,v 1.1 2002/09/14 16:19:13 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -17,6 +17,17 @@
 // TVirtualUtil3D                                                       //
 //                                                                      //
 // Abstract interface to the 3-D view utility                           //
+//                                                                      //
+// This class is called via the TPluginManager from classes that        //
+// do not require linking with libG3d except in some rare cases like    //
+// rotating a 3-d object in the pad or drawing 3-d axis in the pad.     //
+// The concrete implementation TUtil3D is defined in system.rootrc      //
+// and can be overridden by a user to extend the functionality.         //
+// This abstract interface has three main goals:                        //
+//   - it decouples libG3d from the calling classes                     //
+//   - it does not require the use of magic strings like when using     //
+//     gROOT->ProcessLine to instantiate classes in libG3d.             //
+//   - it allows advanced users to redefine or extend some functions.   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

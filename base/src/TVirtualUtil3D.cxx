@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualUtil3D.cxx,v 1.4 2002/04/11 11:41:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualUtil3D.cxx,v 1.1 2002/09/14 16:19:14 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -16,12 +16,16 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TVirtualUtil3D.h"
+#include "TROOT.h"
 
 ClassImp(TVirtualUtil3D)
 
 //______________________________________________________________________________
 TVirtualUtil3D::TVirtualUtil3D()
 {
+   SetName("R__TVirtualUtil3D");
+   TVirtualUtil3D *u = (TVirtualUtil3D*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtil3D");
+   if (!u) gROOT->GetListOfSpecials()->Add(this);
 }
 //______________________________________________________________________________
 TVirtualUtil3D::~TVirtualUtil3D()

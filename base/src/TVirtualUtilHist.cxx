@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualUtilHist.cxx,v 1.1 2002/09/14 16:19:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualUtilHist.cxx,v 1.1 2002/09/15 10:16:44 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -16,13 +16,18 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TVirtualUtilHist.h"
+#include "TROOT.h"
 
 ClassImp(TVirtualUtilHist)
 
 //______________________________________________________________________________
 TVirtualUtilHist::TVirtualUtilHist()
 {
+   SetName("R__TVirtualUtilHist");
+   TVirtualUtilHist *u = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
+   if (!u) gROOT->GetListOfSpecials()->Add(this);
 }
+
 //______________________________________________________________________________
 TVirtualUtilHist::~TVirtualUtilHist()
 {

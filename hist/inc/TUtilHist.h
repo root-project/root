@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TUtilHist.h,v 1.1 2002/09/14 16:19:13 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TUtilHist.h,v 1.1 2002/09/15 10:16:44 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -21,8 +21,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TNamed
-#include "TNamed.h"
+#ifndef ROOT_TVirtualUtilHist
+#include "TVirtualUtilHist.h"
 #endif
 
 class TMatrix;
@@ -30,7 +30,7 @@ class TMatrixD;
 class TVector;
 class TVectorD;
 
-class TUtilHist : public TNamed {
+class TUtilHist : public TVirtualUtilHist {
 
 
 public:
@@ -42,7 +42,7 @@ public:
    virtual void  PaintVector(TVector &v, Option_t *option);
    virtual void  PaintVector(TVectorD &v, Option_t *option);
 
-   ClassDef(TUtilHist,0)  //misc histogram  utilities
+   ClassDef(TUtilHist,0)  //misc. histogram  utilities
 };
 
 #endif
