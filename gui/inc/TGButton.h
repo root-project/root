@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.29 2004/09/15 17:37:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.30 2004/09/22 12:34:10 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -248,7 +248,7 @@ public:
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t IsToggleButton() const { return kTRUE; }
-   virtual void   SetState(EButtonState state, Bool_t emit = kFALSE) { PSetState(fPrevState = state, emit); }
+   virtual void   SetState(EButtonState state, Bool_t emit = kFALSE);
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGCheckButton,0)  // A check button widget
@@ -293,7 +293,7 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
-   virtual void SetState(EButtonState state, Bool_t emit = kFALSE) { PSetState(fPrevState = state, emit); }
+   virtual void   SetState(EButtonState state, Bool_t emit = kFALSE);
    virtual Bool_t IsToggleButton() const { return kTRUE; }
    virtual Bool_t IsExclusiveToggle() const { return kTRUE; }
    virtual void   SavePrimitive(ofstream &out, Option_t *option);

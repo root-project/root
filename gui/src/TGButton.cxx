@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.46 2004/10/18 15:22:13 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.47 2004/10/25 12:06:50 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -791,6 +791,13 @@ TGCheckButton::~TGCheckButton()
 }
 
 //______________________________________________________________________________
+void TGCheckButton::SetState(EButtonState state, Bool_t emit)
+{
+   // Set check button state.
+   PSetState(fPrevState = state, emit);
+}
+
+//______________________________________________________________________________
 void TGCheckButton::PSetState(EButtonState state, Bool_t emit)
 {
    // Set check button state.
@@ -1047,6 +1054,13 @@ TGRadioButton::~TGRadioButton()
 
    if (fOn)  fClient->FreePicture(fOn);
    if (fOff) fClient->FreePicture(fOff);
+}
+
+//______________________________________________________________________________
+void TGRadioButton::SetState(EButtonState state, Bool_t emit)
+{
+   // Set radio button state.
+   PSetState(fPrevState = state, emit);
 }
 
 //______________________________________________________________________________
