@@ -26,10 +26,12 @@ THREADDEP    := $(THREADO:.o=.d) $(THREADDO:.o=.d)
 THREADLIB    := $(LPATH)/libThread.$(SOEXT)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(THREADH))
-ALLLIBS     += $(THREADLIB)
-CXXFLAGS    += -D_REENTRANT
-CFLAGS      += -D_REENTRANT
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(THREADH))
+ALLLIBS      += $(THREADLIB)
+CXXFLAGS     += -D_REENTRANT
+CFLAGS       += -D_REENTRANT
+CINTCXXFLAGS += -D_REENTRANT
+CINTCFLAGS   += -D_REENTRANT
 
 # include all dependency files
 INCLUDEFILES += $(THREADDEP)
