@@ -7,7 +7,7 @@
  * Description:
  *  Strip and add quotation
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -60,12 +60,21 @@ char *string;
   char temp[G__LONGLINE];
   G__value result;
   struct G__ConstStringList *pconststring;
+#ifndef G__OLDIMPLEMENTATION1631
+  int lenm1 = strlen(string)-1;
+#endif
 
   result.tagnum = -1;
   result.typenum = -1;
   result.ref = 0;
   if((string[0]=='"')||(string[0]=='\'')) {
-    for(itemp=1;itemp<strlen(string)-1;itemp++ ) {
+    for(itemp=1;
+#ifndef G__OLDIMPLEMENTATION1631
+	itemp<lenm1;
+#else
+	itemp<strlen(string)-1;
+#endif
+	itemp++ ) {
       /*
       temp[itemp2++] = string[itemp];
       */

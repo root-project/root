@@ -5836,7 +5836,26 @@ G__value *bufm2;
     return;
   }
 #endif
+#ifndef G__OLDIMPLEMENTATION1627
+  if(G__isunsignedM(bufm2)) {
+    if(G__isunsignedM(bufm1)) {
+      bufm2->obj.ulo %= bufm1->obj.ulo;
+    }
+    else {
+      bufm2->obj.ulo %= bufm1->obj.i;
+    }
+  }
+  else {
+    if(G__isunsignedM(bufm1)) {
+      bufm2->obj.i %= bufm1->obj.ulo;
+    }
+    else {
+      bufm2->obj.i %= bufm1->obj.i;
+    }
+  }
+#else
   bufm2->obj.i %= bufm1->obj.i;
+#endif
   G__intassign(bufm2->ref,bufm2->obj.i,bufm2->type);
 }
 
@@ -5885,7 +5904,26 @@ G__value *bufm2;
 	return;
       }
 #endif
+#ifndef G__OLDIMPLEMENTATION1627
+      if(G__isunsignedM(bufm2)) {
+	if(G__isunsignedM(bufm1)) {
+	  bufm2->obj.ulo /= bufm1->obj.ulo;
+	}
+	else {
+	  bufm2->obj.ulo /= bufm1->obj.i;
+	}
+      }
+      else {
+	if(G__isunsignedM(bufm1)) {
+	  bufm2->obj.i /= bufm1->obj.ulo;
+	}
+	else {
+	  bufm2->obj.i /= bufm1->obj.i;
+	}
+      }
+#else
       bufm2->obj.i /= bufm1->obj.i;
+#endif
     }
     G__intassign(bufm2->ref,bufm2->obj.i,bufm2->type);
   }

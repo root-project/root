@@ -3993,7 +3993,13 @@ struct G__var_array *varglobal,*varlocal;
 	char store_var_type = G__var_type;
 	int sizex = G__Lsizeof(G__newtype.name[typenumx]);
 	G__var_type = store_var_type;
+#ifndef G__OLDIMPLEMENTATION1632
+	/* This is still questionable, but should be better than the old
+	 * implementation */
+	if(var->paran[ig15]>paran) p_inc /= var->varlabel[ig15][0];
+#else
 	if(p_inc>1) --p_inc; /* questionable */
+#endif
 	switch(var->type[ig15]) {
 	case 'c': /* char */
 	  G__GET_VAR(sizex, char ,G__letint,'c','C')
@@ -6657,7 +6663,11 @@ int parameter00;
      * When G__CPLUSPLUS or G__IFUNCPARA are not 
      * specified, there are no problems.
      *******************************************/
-    if(G__ansiheader!=0&&result.type!='\0'&& G__globalvarpointer==G__PVOID)
+    if(G__ansiheader!=0&&result.type!='\0'&& G__globalvarpointer==G__PVOID
+#ifndef G__OLDIMPLEMENTATION1624
+       &&(0==G__static_alloc||-1==G__func_now)
+#endif
+       )
       memcpy((void *)var->p[ig15] ,(void *)(G__int(result))
 	     ,(size_t)G__struct.size[var->p_tagtable[ig15]]);
     result.obj.i = var->p[ig15];

@@ -534,6 +534,10 @@ G__value result3;
   if(type!=result3.type) result3.ref = 0; /* questionable */
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1628
+  result3.isconst = isconst;
+#endif
+
   switch(type) {
   case 'd':
     G__letdouble(&result3,type ,(double)G__double(result3));

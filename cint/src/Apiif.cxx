@@ -60,7 +60,7 @@ extern "C" int G__cpp_dllrevG__API() { return(G__CREATEDLLREV); }
 static int G__G__MethodInfo_G__MethodInfo_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__MethodInfo *p=NULL;
    if(G__getaryconstruct()) p=new G__MethodInfo[G__getaryconstruct()];
-   else p=new((G__ApiifdOcxx_tag*)G__getgvp()) G__MethodInfo;
+   else p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__MethodInfo;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -70,7 +70,7 @@ static int G__G__MethodInfo_G__MethodInfo_1_0(G__value *result7,G__CONST char *f
 
 static int G__G__MethodInfo_G__MethodInfo_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__MethodInfo *p=NULL;
-      p = new((G__ApiifdOcxx_tag*)G__getgvp()) G__MethodInfo(*(G__ClassInfo*)libp->para[0].ref);
+      p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__MethodInfo(*(G__ClassInfo*)libp->para[0].ref);
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -225,6 +225,7 @@ static int G__G__MethodInfo_G__MethodInfo_7_2(G__value *result7,G__CONST char *f
 // automatic destructor
 typedef G__MethodInfo G__TG__MethodInfo;
 static int G__G__MethodInfo_wAG__MethodInfo_8_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (G__MethodInfo *)(G__getstructoffset());
@@ -247,7 +248,7 @@ static int G__G__MethodInfo_wAG__MethodInfo_8_2(G__value *result7,G__CONST char 
 static int G__G__DataMemberInfo_G__DataMemberInfo_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__DataMemberInfo *p=NULL;
    if(G__getaryconstruct()) p=new G__DataMemberInfo[G__getaryconstruct()];
-   else p=new((G__ApiifdOcxx_tag*)G__getgvp()) G__DataMemberInfo;
+   else p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__DataMemberInfo;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -257,7 +258,7 @@ static int G__G__DataMemberInfo_G__DataMemberInfo_1_0(G__value *result7,G__CONST
 
 static int G__G__DataMemberInfo_G__DataMemberInfo_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__DataMemberInfo *p=NULL;
-      p = new((G__ApiifdOcxx_tag*)G__getgvp()) G__DataMemberInfo(*(G__ClassInfo*)libp->para[0].ref);
+      p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__DataMemberInfo(*(G__ClassInfo*)libp->para[0].ref);
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -390,6 +391,7 @@ static int G__G__DataMemberInfo_G__DataMemberInfo_2_2(G__value *result7,G__CONST
 // automatic destructor
 typedef G__DataMemberInfo G__TG__DataMemberInfo;
 static int G__G__DataMemberInfo_wAG__DataMemberInfo_3_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (G__DataMemberInfo *)(G__getstructoffset());
@@ -413,11 +415,11 @@ static int G__G__FriendInfo_G__FriendInfo_0_0(G__value *result7,G__CONST char *f
    G__FriendInfo *p=NULL;
    switch(libp->paran) {
    case 1:
-      p = new((G__ApiifdOcxx_tag*)G__getgvp()) G__FriendInfo((G__friendtag*)G__int(libp->para[0]));
+      p = ::new((G__ApiifdOcxx_tag*)G__getgvp()) G__FriendInfo((G__friendtag*)G__int(libp->para[0]));
       break;
    case 0:
    if(G__getaryconstruct()) p=new G__FriendInfo[G__getaryconstruct()];
-   else p=new((G__ApiifdOcxx_tag*)G__getgvp()) G__FriendInfo;
+   else p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__FriendInfo;
       break;
    }
       result7->obj.i = (long)p;
@@ -469,6 +471,7 @@ static int G__G__FriendInfo_G__FriendInfo_6_0(G__value *result7,G__CONST char *f
 // automatic destructor
 typedef G__FriendInfo G__TG__FriendInfo;
 static int G__G__FriendInfo_wAG__FriendInfo_7_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (G__FriendInfo *)(G__getstructoffset());
@@ -491,7 +494,7 @@ static int G__G__FriendInfo_wAG__FriendInfo_7_0(G__value *result7,G__CONST char 
 static int G__G__ClassInfo_G__ClassInfo_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__ClassInfo *p=NULL;
    if(G__getaryconstruct()) p=new G__ClassInfo[G__getaryconstruct()];
-   else p=new((G__ApiifdOcxx_tag*)G__getgvp()) G__ClassInfo;
+   else p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__ClassInfo;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -507,7 +510,7 @@ static int G__G__ClassInfo_Init_2_0(G__value *result7,G__CONST char *funcname,st
 
 static int G__G__ClassInfo_G__ClassInfo_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__ClassInfo *p=NULL;
-      p = new((G__ApiifdOcxx_tag*)G__getgvp()) G__ClassInfo((const char*)G__int(libp->para[0]));
+      p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__ClassInfo((const char*)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -523,7 +526,7 @@ static int G__G__ClassInfo_Init_4_0(G__value *result7,G__CONST char *funcname,st
 
 static int G__G__ClassInfo_G__ClassInfo_5_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__ClassInfo *p=NULL;
-      p = new((G__ApiifdOcxx_tag*)G__getgvp()) G__ClassInfo((int)G__int(libp->para[0]));
+      p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__ClassInfo((int)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -845,6 +848,7 @@ static int G__G__ClassInfo_G__ClassInfo_0_6(G__value *result7,G__CONST char *fun
 // automatic destructor
 typedef G__ClassInfo G__TG__ClassInfo;
 static int G__G__ClassInfo_wAG__ClassInfo_1_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (G__ClassInfo *)(G__getstructoffset());
@@ -866,7 +870,7 @@ static int G__G__ClassInfo_wAG__ClassInfo_1_6(G__value *result7,G__CONST char *f
 /* G__BaseClassInfo */
 static int G__G__BaseClassInfo_G__BaseClassInfo_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__BaseClassInfo *p=NULL;
-      p = new((G__ApiifdOcxx_tag*)G__getgvp()) G__BaseClassInfo(*(G__ClassInfo*)libp->para[0].ref);
+      p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__BaseClassInfo(*(G__ClassInfo*)libp->para[0].ref);
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -915,6 +919,7 @@ static int G__G__BaseClassInfo_G__BaseClassInfo_7_0(G__value *result7,G__CONST c
 // automatic destructor
 typedef G__BaseClassInfo G__TG__BaseClassInfo;
 static int G__G__BaseClassInfo_wAG__BaseClassInfo_8_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (G__BaseClassInfo *)(G__getstructoffset());
@@ -936,7 +941,7 @@ static int G__G__BaseClassInfo_wAG__BaseClassInfo_8_0(G__value *result7,G__CONST
 /* G__TypeInfo */
 static int G__G__TypeInfo_G__TypeInfo_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__TypeInfo *p=NULL;
-      p = new((G__ApiifdOcxx_tag*)G__getgvp()) G__TypeInfo((const char*)G__int(libp->para[0]));
+      p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__TypeInfo((const char*)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -947,7 +952,7 @@ static int G__G__TypeInfo_G__TypeInfo_1_0(G__value *result7,G__CONST char *funcn
 static int G__G__TypeInfo_G__TypeInfo_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__TypeInfo *p=NULL;
    if(G__getaryconstruct()) p=new G__TypeInfo[G__getaryconstruct()];
-   else p=new((G__ApiifdOcxx_tag*)G__getgvp()) G__TypeInfo;
+   else p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__TypeInfo;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1026,6 +1031,7 @@ static int G__G__TypeInfo_G__TypeInfo_5_1(G__value *result7,G__CONST char *funcn
 // automatic destructor
 typedef G__TypeInfo G__TG__TypeInfo;
 static int G__G__TypeInfo_wAG__TypeInfo_6_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (G__TypeInfo *)(G__getstructoffset());
@@ -1053,7 +1059,7 @@ static int G__G__MethodArgInfo_Init_1_0(G__value *result7,G__CONST char *funcnam
 
 static int G__G__MethodArgInfo_G__MethodArgInfo_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__MethodArgInfo *p=NULL;
-      p = new((G__ApiifdOcxx_tag*)G__getgvp()) G__MethodArgInfo(*(G__MethodInfo*)libp->para[0].ref);
+      p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__MethodArgInfo(*(G__MethodInfo*)libp->para[0].ref);
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1099,7 +1105,7 @@ static int G__G__MethodArgInfo_Next_9_0(G__value *result7,G__CONST char *funcnam
 static int G__G__MethodArgInfo_G__MethodArgInfo_0_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__MethodArgInfo *p=NULL;
    if(G__getaryconstruct()) p=new G__MethodArgInfo[G__getaryconstruct()];
-   else p=new((G__ApiifdOcxx_tag*)G__getgvp()) G__MethodArgInfo;
+   else p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__MethodArgInfo;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1122,6 +1128,7 @@ static int G__G__MethodArgInfo_G__MethodArgInfo_1_1(G__value *result7,G__CONST c
 // automatic destructor
 typedef G__MethodArgInfo G__TG__MethodArgInfo;
 static int G__G__MethodArgInfo_wAG__MethodArgInfo_2_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (G__MethodArgInfo *)(G__getstructoffset());
@@ -1144,7 +1151,7 @@ static int G__G__MethodArgInfo_wAG__MethodArgInfo_2_1(G__value *result7,G__CONST
 static int G__G__CallFunc_G__CallFunc_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__CallFunc *p=NULL;
    if(G__getaryconstruct()) p=new G__CallFunc[G__getaryconstruct()];
-   else p=new((G__ApiifdOcxx_tag*)G__getgvp()) G__CallFunc;
+   else p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__CallFunc;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1240,8 +1247,18 @@ static int G__G__CallFunc_SetArgs_6_1(G__value *result7,G__CONST char *funcname,
    return(1 || funcname || hash || result7 || libp) ;
 }
 
+static int G__G__CallFunc_GetMethodInfo_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+      {
+        G__MethodInfo *pobj,xobj=((G__CallFunc*)(G__getstructoffset()))->GetMethodInfo();
+        pobj=new G__MethodInfo(xobj);
+        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;
+        G__store_tempobject(*result7);
+      }
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
 // automatic copy constructor
-static int G__G__CallFunc_G__CallFunc_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
+static int G__G__CallFunc_G__CallFunc_9_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
 {
    G__CallFunc *p;
    p=new G__CallFunc(*(G__CallFunc*)G__int(libp->para[0]));
@@ -1254,7 +1271,8 @@ static int G__G__CallFunc_G__CallFunc_7_1(G__value *result7,G__CONST char *funcn
 
 // automatic destructor
 typedef G__CallFunc G__TG__CallFunc;
-static int G__G__CallFunc_wAG__CallFunc_8_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__G__CallFunc_wAG__CallFunc_0_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (G__CallFunc *)(G__getstructoffset());
@@ -1277,7 +1295,7 @@ static int G__G__CallFunc_wAG__CallFunc_8_1(G__value *result7,G__CONST char *fun
 static int G__G__TypedefInfo_G__TypedefInfo_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__TypedefInfo *p=NULL;
    if(G__getaryconstruct()) p=new G__TypedefInfo[G__getaryconstruct()];
-   else p=new((G__ApiifdOcxx_tag*)G__getgvp()) G__TypedefInfo;
+   else p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__TypedefInfo;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1293,7 +1311,7 @@ static int G__G__TypedefInfo_Init_2_0(G__value *result7,G__CONST char *funcname,
 
 static int G__G__TypedefInfo_G__TypedefInfo_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__TypedefInfo *p=NULL;
-      p = new((G__ApiifdOcxx_tag*)G__getgvp()) G__TypedefInfo((const char*)G__int(libp->para[0]));
+      p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__TypedefInfo((const char*)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1309,7 +1327,7 @@ static int G__G__TypedefInfo_Init_4_0(G__value *result7,G__CONST char *funcname,
 
 static int G__G__TypedefInfo_G__TypedefInfo_5_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__TypedefInfo *p=NULL;
-      p = new((G__ApiifdOcxx_tag*)G__getgvp()) G__TypedefInfo((int)G__int(libp->para[0]));
+      p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__TypedefInfo((int)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1384,6 +1402,7 @@ static int G__G__TypedefInfo_G__TypedefInfo_5_1(G__value *result7,G__CONST char 
 // automatic destructor
 typedef G__TypedefInfo G__TG__TypedefInfo;
 static int G__G__TypedefInfo_wAG__TypedefInfo_6_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (G__TypedefInfo *)(G__getstructoffset());
@@ -1406,7 +1425,7 @@ static int G__G__TypedefInfo_wAG__TypedefInfo_6_1(G__value *result7,G__CONST cha
 static int G__G__TokenInfo_G__TokenInfo_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__TokenInfo *p=NULL;
    if(G__getaryconstruct()) p=new G__TokenInfo[G__getaryconstruct()];
-   else p=new((G__ApiifdOcxx_tag*)G__getgvp()) G__TokenInfo;
+   else p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__TokenInfo;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1463,6 +1482,7 @@ static int G__G__TokenInfo_G__TokenInfo_3_1(G__value *result7,G__CONST char *fun
 // automatic destructor
 typedef G__TokenInfo G__TG__TokenInfo;
 static int G__G__TokenInfo_wAG__TokenInfo_4_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (G__TokenInfo *)(G__getstructoffset());
@@ -1485,7 +1505,7 @@ static int G__G__TokenInfo_wAG__TokenInfo_4_1(G__value *result7,G__CONST char *f
 static int G__G__SourceFileInfo_G__SourceFileInfo_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__SourceFileInfo *p=NULL;
    if(G__getaryconstruct()) p=new G__SourceFileInfo[G__getaryconstruct()];
-   else p=new((G__ApiifdOcxx_tag*)G__getgvp()) G__SourceFileInfo;
+   else p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__SourceFileInfo;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1495,7 +1515,7 @@ static int G__G__SourceFileInfo_G__SourceFileInfo_0_0(G__value *result7,G__CONST
 
 static int G__G__SourceFileInfo_G__SourceFileInfo_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__SourceFileInfo *p=NULL;
-      p = new((G__ApiifdOcxx_tag*)G__getgvp()) G__SourceFileInfo((int)G__int(libp->para[0]));
+      p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__SourceFileInfo((int)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1505,7 +1525,7 @@ static int G__G__SourceFileInfo_G__SourceFileInfo_1_0(G__value *result7,G__CONST
 
 static int G__G__SourceFileInfo_G__SourceFileInfo_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__SourceFileInfo *p=NULL;
-      p = new((G__ApiifdOcxx_tag*)G__getgvp()) G__SourceFileInfo((const char*)G__int(libp->para[0]));
+      p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__SourceFileInfo((const char*)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1583,6 +1603,7 @@ static int G__G__SourceFileInfo_G__SourceFileInfo_4_1(G__value *result7,G__CONST
 // automatic destructor
 typedef G__SourceFileInfo G__TG__SourceFileInfo;
 static int G__G__SourceFileInfo_wAG__SourceFileInfo_5_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (G__SourceFileInfo *)(G__getstructoffset());
@@ -1605,7 +1626,7 @@ static int G__G__SourceFileInfo_wAG__SourceFileInfo_5_1(G__value *result7,G__CON
 static int G__G__IncludePathInfo_G__IncludePathInfo_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    G__IncludePathInfo *p=NULL;
    if(G__getaryconstruct()) p=new G__IncludePathInfo[G__getaryconstruct()];
-   else p=new((G__ApiifdOcxx_tag*)G__getgvp()) G__IncludePathInfo;
+   else p=::new((G__ApiifdOcxx_tag*)G__getgvp()) G__IncludePathInfo;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1654,6 +1675,7 @@ static int G__G__IncludePathInfo_G__IncludePathInfo_7_0(G__value *result7,G__CON
 // automatic destructor
 typedef G__IncludePathInfo G__TG__IncludePathInfo;
 static int G__G__IncludePathInfo_wAG__IncludePathInfo_8_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (G__IncludePathInfo *)(G__getstructoffset());
@@ -1673,25 +1695,25 @@ static int G__G__IncludePathInfo_wAG__IncludePathInfo_8_0(G__value *result7,G__C
 
 
 /* Setting up global function */
-static int G___G__SetGlobalcomp_3_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___G__SetGlobalcomp_1_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__SetGlobalcomp((char*)G__int(libp->para[0]),(char*)G__int(libp->para[1])
 ,(int)G__int(libp->para[2])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___G__InitGetSpecialObject_4_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___G__InitGetSpecialObject_2_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
       G__InitGetSpecialObject((G__pMethodSpecialObject)G__int(libp->para[0]));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___G__InitGetSpecialValue_5_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___G__InitGetSpecialValue_3_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
       G__InitGetSpecialValue((G__pMethodSpecialValue)G__int(libp->para[0]));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___G__InitUpdateClassInfo_6_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___G__InitUpdateClassInfo_4_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
       G__InitUpdateClassInfo((G__pMethodUpdateClassInfo)G__int(libp->para[0]));
    return(1 || funcname || hash || result7 || libp) ;
@@ -2203,10 +2225,11 @@ static void G__setup_memfuncG__CallFunc(void) {
    G__memfunc_setup("ExecDouble",992,G__G__CallFunc_ExecDouble_4_1,100,-1,-1,0,1,1,1,0,"Y - - 0 - pobject",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("InterfaceMethod",1522,G__G__CallFunc_InterfaceMethod_5_1,89,-1,G__defined_typename("G__InterfaceMethod"),0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("SetArgs",697,G__G__CallFunc_SetArgs_6_1,121,-1,-1,0,1,1,1,0,"C - - 10 - args",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("GetMethodInfo",1293,G__G__CallFunc_GetMethodInfo_7_1,117,G__get_linked_tagnum(&G__G__APILN_G__MethodInfo),-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__CallFunc",1037,G__G__CallFunc_G__CallFunc_7_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__CallFunc),-1,0,1,1,1,0,"u 'G__CallFunc' - 1 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__CallFunc",1037,G__G__CallFunc_G__CallFunc_9_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__CallFunc),-1,0,1,1,1,0,"u 'G__CallFunc' - 1 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
-   G__memfunc_setup("~G__CallFunc",1163,G__G__CallFunc_wAG__CallFunc_8_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("~G__CallFunc",1163,G__G__CallFunc_wAG__CallFunc_0_2,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2303,11 +2326,17 @@ extern "C" void G__cpp_setup_memfuncG__API() {
 /*********************************************************
 * Global variable information setup for each class
 *********************************************************/
-extern "C" void G__cpp_setup_globalG__API() {
+static void G__cpp_setup_global0() {
 
    /* Setting up global variables */
    G__resetplocal();
 
+}
+
+static void G__cpp_setup_global1() {
+}
+
+static void G__cpp_setup_global2() {
    G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__INFO_BUFLEN=50",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__INFO_TITLELEN=256",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__PROPERTY_H=0",1,(char*)NULL);
@@ -2363,25 +2392,38 @@ extern "C" void G__cpp_setup_globalG__API() {
 
    G__resetglobalenv();
 }
+extern "C" void G__cpp_setup_globalG__API() {
+  G__cpp_setup_global0();
+  G__cpp_setup_global1();
+  G__cpp_setup_global2();
+}
 
 /*********************************************************
 * Global function information setup for each class
 *********************************************************/
-extern "C" void G__cpp_setup_funcG__API() {
+static void G__cpp_setup_func0() {
    G__lastifuncposition();
 
-   G__memfunc_setup("G__SetGlobalcomp",1585,G___G__SetGlobalcomp_3_19,105,-1,-1,0,3,1,1,0,
+}
+
+static void G__cpp_setup_func1() {
+   G__memfunc_setup("G__SetGlobalcomp",1585,G___G__SetGlobalcomp_1_19,105,-1,-1,0,3,1,1,0,
 "C - - 0 - funcname C - - 0 - param "
 "i - - 0 - globalcomp",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__InitGetSpecialObject",2257,G___G__InitGetSpecialObject_4_19,121,-1,-1,0,1,1,1,0,"Q - 'G__pMethodSpecialObject' 0 - pmethod",(char*)NULL
+   G__memfunc_setup("G__InitGetSpecialObject",2257,G___G__InitGetSpecialObject_2_19,121,-1,-1,0,1,1,1,0,"Q - 'G__pMethodSpecialObject' 0 - pmethod",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__InitGetSpecialValue",2167,G___G__InitGetSpecialValue_5_19,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodSpecialValue' 0 - pmethod",(char*)NULL
+   G__memfunc_setup("G__InitGetSpecialValue",2167,G___G__InitGetSpecialValue_3_19,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodSpecialValue' 0 - pmethod",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__InitUpdateClassInfo",2174,G___G__InitUpdateClassInfo_6_19,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodUpdateClassInfo' 0 - pmethod",(char*)NULL
+   G__memfunc_setup("G__InitUpdateClassInfo",2174,G___G__InitUpdateClassInfo_4_19,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodUpdateClassInfo' 0 - pmethod",(char*)NULL
 ,(void*)NULL,0);
 
    G__resetifuncposition();
+}
+
+extern "C" void G__cpp_setup_funcG__API() {
+  G__cpp_setup_func0();
+  G__cpp_setup_func1();
 }
 
 /*********************************************************

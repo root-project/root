@@ -3499,6 +3499,9 @@ int recursive;
   char param_type,formal_type;
   int param_tagnum,formal_tagnum;
   int param_reftype,formal_reftype;
+#ifndef G__OLDIMPLEMENTATION1628
+  int param_isconst,formal_isconst;
+#endif
   funclist->rate = 0;
   for(i=0;i<libp->paran;i++) {
     param_type = libp->para[i].type;
@@ -3507,6 +3510,10 @@ int recursive;
     formal_tagnum = p_ifunc->para_p_tagtable[ifn][i];
     param_reftype = libp->para[i].obj.reftype.reftype;
     formal_reftype = p_ifunc->para_reftype[ifn][i];
+#ifndef G__OLDIMPLEMENTATION1628
+    param_isconst = libp->para[i].isconst;
+    formal_isconst = p_ifunc->para_isconst[ifn][i];
+#endif
     funclist->p_rate[i] = G__NOMATCH;
 
     /* exact match */
@@ -3953,8 +3960,12 @@ int recursive;
       funclist->rate = G__NOMATCH;
       break;
     }
-    else
+    else {
+#ifndef G__OLDIMPLEMENTATION1628
+      if(param_isconst!=formal_isconst) funclist->p_rate[i] += G__CVCONVMATCH;
+#endif
       funclist->rate += funclist->p_rate[i];
+    }
   }
 #ifndef G__OLDIMPLEMENTATION1359
   if(G__NOMATCH!=funclist->rate && 
@@ -5026,13 +5037,13 @@ struct G__funclist *func;
 * G__overload_match(funcname,libp,hash,p_ifunc,memfunc_flag,access,pifn)
 **********************************************************************/
 struct G__ifunc_table* G__overload_match(funcname
-				       ,libp
-				       ,hash
-				       ,p_ifunc
-				       ,memfunc_flag
-				       ,access
-				       ,pifn
-				       ,recursive)
+					 ,libp
+					 ,hash
+					 ,p_ifunc
+					 ,memfunc_flag
+					 ,access
+					 ,pifn
+					 ,recursive)
 char* funcname;
 struct G__param *libp;
 int hash;
