@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.25 2004/05/06 16:57:39 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.26 2004/05/12 13:05:54 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -143,8 +143,8 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
             }
          }
 
-         if ((fSocket->GetSecContext()->IsA("UsrPwd") && pwdctx) ||
-             (fSocket->GetSecContext()->IsA("SRP")    && sndsrp)) {
+         if ((fSecContext->IsA("UsrPwd") && pwdctx) ||
+             (fSecContext->IsA("SRP")    && sndsrp)) {
 
             // Send offset to identify remotely the public part of RSA key
             fSocket->Send(RemoteOffSet,kROOTD_RSAKEY);
@@ -155,12 +155,12 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
             }
             srppwd = fSecContext->IsA("SRP");
 
-            if (fSocket->SecureSend(passwd) == -1) {
+            if (fSocket->SecureSend(passwd,1,fSecContext->GetRSAKey()) == -1) {
                if (RemoteOffSet > -1)
                   Warning("TSlave","problems secure-sending pass hash %s",
                           "- may result in failures");
                // If non RSA encoding available try passwd inversion
-               if (fSocket->GetSecContext()->IsA("UsrPwd")) {
+               if (fSecContext->IsA("UsrPwd")) {
                   for (int i = 0; i < passwd.Length(); i++) {
                      char inv = ~passwd(i);
                      passwd.Replace(i, 1, inv);
