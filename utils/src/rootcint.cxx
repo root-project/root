@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.2 2000/05/25 15:37:03 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -342,6 +342,10 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
             if (!strncmp(s, "const ", 6)) s += 6;
             fprintf(fp, "         %s R__t;\n", s);
             fprintf(fp, "         R__b >> R__n;\n");
+            if (m.Property() & G__BIT_ISPOINTER)
+               fprintf(fp, "            %s->clear();\n", m.Name());
+            else
+               fprintf(fp, "            %s.clear();\n", m.Name());
             fprintf(fp, "         for (R__i = 0; R__i < R__n; R__i++) {\n");
             if ((TemplateArg(m).Property() & G__BIT_ISPOINTER) ||
                 (TemplateArg(m).Property() & G__BIT_ISFUNDAMENTAL) ||
