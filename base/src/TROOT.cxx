@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.24 2000/12/25 12:23:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.25 2001/03/14 07:51:48 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -67,6 +67,7 @@
 #endif
 
 #include <string.h>
+#include <stdlib.h>
 #include <iostream.h>
 
 #include "Gtypes.h"
@@ -154,6 +155,21 @@ static Int_t ITIMQQ()
    return 100*hh + mm;
 }
 //------------------------------------------------------------------------------
+
+//______________________________________________________________________________
+static void CleanUpROOTAtExit()
+{
+   // Clean up at program termination before global objects go out of scope.
+
+   if (gROOT) {
+      if (gROOT->GetListOfFiles())
+         gROOT->GetListOfFiles()->Delete();
+      if (gROOT->GetListOfSockets())
+         gROOT->GetListOfSockets()->Delete();
+      if (gROOT->GetListOfMappedFiles())
+         gROOT->GetListOfMappedFiles()->Delete("slow");
+   }
+}
 
 
 TROOT      *gROOT;         // The ROOT of EVERYTHING
@@ -345,6 +361,8 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fBrowsables->Add(workdir, gSystem->WorkingDirectory());
    fBrowsables->Add(fFiles, "ROOT Files");
 
+   atexit(CleanUpROOTAtExit);
+
    fgRootInit = kTRUE;
 }
 
@@ -489,7 +507,7 @@ TObject *TROOT::FindObject(const char *name) const
    if (gPad) {
       TVirtualPad *canvas = gPad->GetVirtCanvas();
       if (fCanvases->FindObject(canvas)) {  //this check in case call from TCanvas ctor
-         temp   = canvas->FindObject(name);
+         temp = canvas->FindObject(name);
          if (!temp && canvas != gPad) temp  = gPad->FindObject(name);
       }
    }
