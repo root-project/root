@@ -247,9 +247,10 @@ void G__CallFunc::SetArgs(const char* args)
     c=G__getstream((char*)args,&isrc,tmp,endmark);
     if (tmp[0]) {
       // evaluate arg
-      para.para[para.paran] = G__calc(tmp);
-      if(strlen(tmp)<G__ONELINE-1) strcpy(para.parameter[para.paran],tmp);
-      else para.parameter[para.paran][0]=0;
+      if(strlen(tmp)<G__ONELINE-1) {
+         strcpy(para.parameter[para.paran],tmp);
+         para.para[para.paran] = G__calc(tmp);
+      } else para.parameter[para.paran][0]=0;
 #else /* 1941 */
     c=G__getstream((char*)args,&isrc,para.parameter[para.paran],endmark);
     if (para.parameter[para.paran][0]) {

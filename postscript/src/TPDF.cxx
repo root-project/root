@@ -1531,7 +1531,7 @@ void TPDF::WriteCompressedBuffer()
 
    z_stream stream;
    int err;
-   char out[2*fLenBuffer];
+   char *out = new char[2*fLenBuffer];
 
    stream.next_in   = (Bytef*)fBuffer;
    stream.avail_in  = (uInt)fLenBuffer;
@@ -1561,6 +1561,6 @@ void TPDF::WriteCompressedBuffer()
    fNByte += stream.total_out;
    fStream->write("\n",1); fNByte++;
    fLenBuffer = 0;
-
+   delete [] out;
    fCompress = kFALSE;
 }
