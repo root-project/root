@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.6 2004/09/08 16:03:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.7 2004/09/10 14:00:40 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -1096,7 +1096,7 @@ void TGMdiMainFrame::SavePrimitive(ofstream &out, Option_t *option)
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
-   TGMdiFrameList *travel;
+   TGMdiFrameList *travel=fChildren;
    travel->SetCycleNext(travel);
    for (travel = fChildren; travel; travel = travel->GetNext()) {
       TGMdiFrame *mf = travel->GetDecorFrame()->GetMdiFrame();
