@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.83 2001/07/03 16:46:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.84 2001/07/18 16:12:02 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -985,11 +985,18 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    //a TBranchObject. We cannot assume that TClass::ReadBuffer is consistent
    //with the custom Streamer. The penalty is that one cannot process
    //this Tree without the class library containing the class.
-   Bool_t HasCustomStreamer = kFALSE;
-   if (cl == TClonesArray::Class())          HasCustomStreamer = kTRUE;
-   if (cl->GetClassInfo()->RootFlag() == 0)  HasCustomStreamer = kTRUE;
+   //The following convention is used for the RootFlag
+   // #pragma link C++ class TExMap;     rootflag = 0
+   // #pragma link C++ class TList-;     rootflag = 1
+   // #pragma link C++ class TArray!;    rootflag = 2
+   // #pragma link C++ class TArrayC-!;  rootflag = 3
+   // #pragma link C++ class TBits+;     rootflag = 4
+   // #pragma link C++ class Txxxx+!;    rootflag = 6
+   Bool_t hasCustomStreamer = kFALSE;
+   if (cl == TClonesArray::Class())         hasCustomStreamer = kTRUE;
+   if (cl->GetClassInfo()->RootFlag() & 1)  hasCustomStreamer = kTRUE;
    
-   if (splitlevel < 0 || (splitlevel == 0 && HasCustomStreamer)) {
+   if (splitlevel < 0 || (splitlevel == 0 && hasCustomStreamer)) {
       TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
       fBranches.Add(branch);
       return branch;
