@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofNTuple.cxx,v 1.1 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofVarArray.cxx,v 1.2 2005/03/17 10:43:30 rdm Exp $
 // Author: Marek Biskup   28/01/2005
 
 /*************************************************************************
@@ -11,41 +11,41 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TProofNTuple                                                         //
+// TProofVarArray                                                       //
 //                                                                      //
 // This class represents a set of points of a dimension specified in    //
 // the constructor the points are counted from 0 and the coordinates    //
-// from 1, see TProofNTuple::Get().                                     //
+// from 1, see TProofVarArray::Get().                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TProofNTuple.h"
+#include "TProofVarArray.h"
 #include "TGraph.h"
 #include "TVirtualPad.h"
 #include "TGraph2D.h"
 #include "TPolyMarker3D.h"
 
 
-ClassImp(TProofNTuple)
+ClassImp(TProofVarArray)
 
 //______________________________________________________________________________
-TProofNTuple::TProofNTuple(Int_t dimension) : fDimension(dimension),
+TProofVarArray::TProofVarArray(Int_t dimension) : fDimension(dimension),
    fArray(10*dimension),  fEntries(0)
 {
-   // Creates a new TProofNTuple of dimension *dimension*.
-   // dimension - dimension of the new TProofNTuple.
+   // Creates a new TProofVarArray of dimension *dimension*.
+   // dimension - dimension of the new TProofVarArray.
 }
 
 
 //______________________________________________________________________________
-TProofNTuple::~TProofNTuple()
+TProofVarArray::~TProofVarArray()
 {
    // destructor
 }
 
 
 //______________________________________________________________________________
-Double_t TProofNTuple::Get(Int_t entry, Int_t coord)
+Double_t TProofVarArray::Get(Int_t entry, Int_t coord)
 {
    // The *coord*-th coordinate of the entry *entry*.
    // entry - entry number (counted from 0)
@@ -67,7 +67,7 @@ Double_t TProofNTuple::Get(Int_t entry, Int_t coord)
 }
 
 //______________________________________________________________________________
-Bool_t TProofNTuple::AssertSize(Int_t newMinSize)
+Bool_t TProofVarArray::AssertSize(Int_t newMinSize)
 {
    // Enlarges (if necessary) the array where the poins are kept to the size
    // of minimum *newMinSize.
@@ -86,7 +86,7 @@ Bool_t TProofNTuple::AssertSize(Int_t newMinSize)
 }
 
 //______________________________________________________________________________
-Bool_t TProofNTuple::Fill(Double_t x)
+Bool_t TProofVarArray::Fill(Double_t x)
 {
    // Adds a new point, assumes that the dimension equals 1.
    // x - 1st coordinate of the poind
@@ -104,7 +104,7 @@ Bool_t TProofNTuple::Fill(Double_t x)
 
 
 //______________________________________________________________________________
-Bool_t TProofNTuple::Fill(Double_t x, Double_t y)
+Bool_t TProofVarArray::Fill(Double_t x, Double_t y)
 {
    // Adds a new point, assumes that the dimension equals 2.
    // x - 1st coordinate of the point
@@ -125,7 +125,7 @@ Bool_t TProofNTuple::Fill(Double_t x, Double_t y)
 }
 
 //______________________________________________________________________________
-Bool_t TProofNTuple::Fill(Double_t x, Double_t y, Double_t z)
+Bool_t TProofVarArray::Fill(Double_t x, Double_t y, Double_t z)
 {
    // Adds a new point, assumes that the dimension equals 3.
    // x - 1st coordinate of the point
@@ -149,7 +149,7 @@ Bool_t TProofNTuple::Fill(Double_t x, Double_t y, Double_t z)
 
 
 //______________________________________________________________________________
-Bool_t TProofNTuple::Fill(Double_t x, Double_t y, Double_t z, Double_t t)
+Bool_t TProofVarArray::Fill(Double_t x, Double_t y, Double_t z, Double_t t)
 {
    // Adds a new point, assumes that the dimension equals 4.
    // x - 1st coordinate of the point
@@ -175,7 +175,7 @@ Bool_t TProofNTuple::Fill(Double_t x, Double_t y, Double_t z, Double_t t)
 
 
 //______________________________________________________________________________
-Bool_t TProofNTuple::Add(TProofNTuple* ntuple)
+Bool_t TProofVarArray::Add(TProofVarArray* ntuple)
 {
    // Adds another ntuple.
    // ntuple - another ntuple plot. It will be added to this one.
@@ -196,10 +196,10 @@ Bool_t TProofNTuple::Add(TProofNTuple* ntuple)
 }
 
 //______________________________________________________________________________
-Int_t TProofNTuple::Merge(TCollection* list)
+Int_t TProofVarArray::Merge(TCollection* list)
 {
    // Adds all thei TNtuples in the collection to this one.
-   // fails if there is an object on the list which is not a TProofNTuple
+   // fails if there is an object on the list which is not a TProofVarArray
    // or if the dimension of that object != dimension of this one
    // if the function fails the state of this object is unspecified.
    // After the successfull function call the NTuple contains
@@ -212,7 +212,7 @@ Int_t TProofNTuple::Merge(TCollection* list)
    int totalEntries = fEntries;
    TIter next(list);
    while (TObject * o = next()) {
-      TProofNTuple *p = dynamic_cast<TProofNTuple*> (o);
+      TProofVarArray *p = dynamic_cast<TProofVarArray*> (o);
       if (!p)
          return -1;
       if (fDimension != p->GetDimension())
@@ -223,7 +223,7 @@ Int_t TProofNTuple::Merge(TCollection* list)
    AssertSize(totalEntries*fDimension);
 
    while (TObject * o = next()) {
-      TProofNTuple *p = dynamic_cast<TProofNTuple*> (o);
+      TProofVarArray *p = dynamic_cast<TProofVarArray*> (o);
       if (!p)
          return -1;
       if (!Add(p))
@@ -233,15 +233,15 @@ Int_t TProofNTuple::Merge(TCollection* list)
 }
 
 //______________________________________________________________________________
-Double_t TProofNTuple::Min(int coord)
+Double_t TProofVarArray::Min(int coord)
 {
    // Returns minimum value for the specified coordinate.
    // coord - the number of the coordinate for which we want the minimum. Must be between
    // 1 and this->GetDimension()
-   // Returns minimum of 0 in case of w wrong parameter of empty TProofNTuple.
+   // Returns minimum of 0 in case of w wrong parameter of empty TProofVarArray.
 
    if (coord < 1 || coord > GetDimension()) {
-      Error("Min", "Wrong parameter %d, the dimension of the TProofNTuple is %d",
+      Error("Min", "Wrong parameter %d, the dimension of the TProofVarArray is %d",
          coord, GetDimension());
       return 0.0;
    }
@@ -256,15 +256,15 @@ Double_t TProofNTuple::Min(int coord)
 }
 
 //______________________________________________________________________________
-Double_t TProofNTuple::Max(int coord)
+Double_t TProofVarArray::Max(int coord)
 {
    // Returns maximum value for the specified coordinate.
    // coord - the number of the coordinate for which we want the maximum. Must be between
    // 1 and this->GetDimension()
-   // Returns minimum of 0 in case of w wrong parameter of empty TProofNTuple.
+   // Returns minimum of 0 in case of w wrong parameter of empty TProofVarArray.
 
    if (coord < 1 || coord > GetDimension()) {
-      Error("Min", "Wrong parameter %d, the dimension of the TProofNTuple is %d",
+      Error("Min", "Wrong parameter %d, the dimension of the TProofVarArray is %d",
          coord, GetDimension());
       return 0.0;
    }

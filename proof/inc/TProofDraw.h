@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.6 2005/03/17 10:43:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.7 2005/03/18 22:41:27 rdm Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 #ifndef ROOT_TProofDraw
@@ -34,7 +34,7 @@ class TH1;
 class TEventList;
 class TProfile;
 class TProfile2D;
-class TProofNTuple;
+class TProofVarArray;
 class TGraph;
 class TPolyMarker3D;
 
@@ -188,7 +188,7 @@ public:
 class TProofDrawListOfGraphs : public TProofDraw {
 
 protected:
-   TProofNTuple       *fScatterPlot;
+   TProofVarArray     *fScatterPlot;
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
 
 public:
@@ -203,7 +203,7 @@ public:
 class TProofDrawListOfPolyMarkers3D : public TProofDraw {
 
 protected:
-   TProofNTuple       *fScatterPlot;
+   TProofVarArray       *fScatterPlot;
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
 
 public:

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofNTuple.h,v 1.1 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofVarArray.h,v 1.2 2005/03/17 10:43:30 rdm Exp $
 // Author: Marek Biskup   28/01/2005
 
 /*************************************************************************
@@ -9,16 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TProofNTuple
-#define ROOT_TProofNTuple
+#ifndef ROOT_TProofVarArray
+#define ROOT_TProofVarArray
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TProofNTuple                                                         //
+// TProofVarArray                                                       //
 //                                                                      //
 // This class represents a set of points of a dimension specified in    //
 // the constructor the points are counted from 0 and the coordinates    //
-// from 1, see TProofNTuple::Get().                                     //
+// from 1, see TProofVarArray::Get().                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -31,7 +31,7 @@
 #endif
 
 
-class TProofNTuple : public TNamed {
+class TProofVarArray : public TNamed {
 
 protected:
    Int_t         fDimension;                 // dimension of the NTuple
@@ -41,8 +41,8 @@ protected:
    Bool_t        AssertSize(int newMinSize);
 
 public:
-   TProofNTuple(Int_t dimension = 1);
-   ~TProofNTuple();
+   TProofVarArray(Int_t dimension = 1);
+   ~TProofVarArray();
    virtual Bool_t      Fill(Double_t x);
    virtual Bool_t      Fill(Double_t x, Double_t y);
    virtual Bool_t      Fill(Double_t x, Double_t y, Double_t z);
@@ -71,7 +71,7 @@ public:
    virtual Double_t    Get(Int_t entry, Int_t coord);
 
    virtual Int_t       Merge(TCollection* list);
-   virtual Bool_t      Add(TProofNTuple* ntuple);
+   virtual Bool_t      Add(TProofVarArray* ntuple);
 
    virtual Int_t GetDimension() {
       // Returns the dimension
@@ -84,7 +84,7 @@ public:
    virtual Double_t Min(int coord);
    virtual Double_t Max(int coord);
 
-   ClassDef(TProofNTuple,1)
+   ClassDef(TProofVarArray,1)
 };
 
 #endif

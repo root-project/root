@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.12 2005/03/18 22:41:27 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.13 2005/03/23 12:41:01 brun Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -23,7 +23,7 @@
 #include "TEventList.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
-#include "TProofNTuple.h"
+#include "TProofVarArray.h"
 #include "TEnv.h"
 #include "TNamed.h"
 #include "TGraph.h"
@@ -1436,7 +1436,7 @@ void TProofDrawListOfGraphs::SlaveBegin(TTree *tree)
    SafeDelete(fScatterPlot);
    fDimension = 3;
 
-   fScatterPlot = new TProofNTuple(3);
+   fScatterPlot = new TProofVarArray(3);
    fScatterPlot->SetName("PROOF_SCATTERPLOT");
    fOutput->Add(fScatterPlot);      // release ownership
 
@@ -1464,7 +1464,7 @@ void TProofDrawListOfGraphs::Terminate(void)
    if (!fStatus)
       return;
 
-   fScatterPlot = (TProofNTuple*) fOutput->FindObject("PROOF_SCATTERPLOT");
+   fScatterPlot = (TProofVarArray*) fOutput->FindObject("PROOF_SCATTERPLOT");
    if (fScatterPlot) {
       SetStatus((Int_t) fScatterPlot->GetEntries());
       TH2F* hist;
@@ -1567,7 +1567,7 @@ void TProofDrawListOfPolyMarkers3D::SlaveBegin(TTree *tree)
    SafeDelete(fScatterPlot);
    fDimension = 4;
 
-   fScatterPlot = new TProofNTuple(4);
+   fScatterPlot = new TProofVarArray(4);
    fScatterPlot->SetName("PROOF_SCATTERPLOT");
    fOutput->Add(fScatterPlot);      // release ownership
 
@@ -1595,7 +1595,7 @@ void TProofDrawListOfPolyMarkers3D::Terminate(void)
    if (!fStatus)
       return;
 
-   fScatterPlot = (TProofNTuple*) fOutput->FindObject("PROOF_SCATTERPLOT");
+   fScatterPlot = (TProofVarArray*) fOutput->FindObject("PROOF_SCATTERPLOT");
    if (fScatterPlot) {
       SetStatus((Int_t) fScatterPlot->GetEntries());
       TH3F* hist;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.6 2005/03/11 08:25:53 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.7 2005/03/17 10:43:30 rdm Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -29,7 +29,6 @@
 #include "TSeqCollection.h"
 #include "TVirtualPad.h"
 #include "TProofDebug.h"
-#include "TProofNTuple.h"
 
 ClassImp(TDrawFeedback)
 
