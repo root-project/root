@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.49 2004/01/10 10:52:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.50 2004/01/13 21:02:14 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1061,6 +1061,8 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
 
    // Special case for file system objects...
    if (obj->IsA() == TSystemFile::Class()) {
+      Emit("ExecuteDefaultAction(TObject*)", (Long_t)obj);
+
       if (fClient->GetMimeTypeList()->GetAction(obj->GetName(), action)) {
          TString act = action;
          act.ReplaceAll("%s", obj->GetName());
@@ -1070,7 +1072,6 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
          } else
             gApplication->ProcessLine(act.Data());
       }
-      Emit("ExecuteDefaultAction(TObject*)", (Long_t)obj);
       return;
    }
 
