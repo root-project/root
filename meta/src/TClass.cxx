@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.39 2001/04/18 10:21:42 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.40 2001/04/20 17:47:40 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -301,7 +301,6 @@ TClass::TClass(const char *name, Version_t cversion,
    TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
    if (oldcl) {
       if (oldcl->CanIgnoreTObjectStreamer()) {
-         printf("old class: %s has IgnoreTobjectStreamer bit\n",name);
          IgnoreTObjectStreamer();
       }
 
