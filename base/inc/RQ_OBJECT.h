@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.4 2001/03/28 16:49:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.5 2001/04/21 17:20:23 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 //    #include "RQ_OBJECT.h"
 //
 //    class A {
-//       RQ_OBJECT()
+//       RQ_OBJECT("A")
 //    private:
 //       Int_t fValue;
 //    public:
@@ -63,7 +63,7 @@
 // slot has been connected to it, so it disappears into hyperspace.
 //
 
-#define RQ_OBJECT() \
+#define RQ_OBJECT(sender_class) \
 private: \
    TQObjSender fQObject; \
 public: \
@@ -71,6 +71,7 @@ public: \
                   void *rcvr, const char *slt) \
    { \
       fQObject.SetSender(this); \
+      fQObject.SetSenderClassName(sender_class); \
       return fQObject.Connect(sig, cl, rcvr, slt); \
    } \
    Bool_t Disconnect(const char *sig = 0, \
