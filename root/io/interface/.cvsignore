@@ -1,0 +1,5 @@
+*.log
+*.root
+*.d
+*.so
+*.dll
