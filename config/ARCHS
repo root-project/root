@@ -12,6 +12,7 @@ linuxppcegcs         for PPC Linux egcs and glibc
 linuxdeb2ppc         for PPC Linux based on Debian v2.0
 linuxia64gcc         for Itanium Linux gcc 2.9x and glibc
 linuxia64sgi         for Itanium Linux sgiCC and glibc
+linuxia64ecc         for Itanium Linux Intel ecc and glibc
 linuxalphaegcs       for Alpha Linux egcs and glibc
 linuxarm             for ARM Linux egcs and glibc
 mklinux              for MkLinux gcc and glibc

@@ -11,19 +11,19 @@ NOOPT         =
 endif
 
 # Compiler:
-CXX           = sgiCC
-CC            = sgicc
-CXXFLAGS      = -pipe -Wall -fPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -Wall -fPIC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -pipe -Wall -fPIC $(EXTRA_CXXFLAGS) \
+CXX           = ecc
+CC            = ecc
+CXXFLAGS      = -kPIC $(EXTRA_CXXFLAGS)
+CFLAGS        = -kPIC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -kPIC $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
-CINTCFLAGS    = -pipe -Wall -fPIC $(EXTRA_CFLAGS) \
+CINTCFLAGS    = -kPIC $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
 
 # Linker:
-LD            = sgiCC
+LD            = ecc
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
 SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
@@ -35,9 +35,9 @@ CILIBS        = -lm -ldl
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
-F77           = g77
+F77           = efc
 F77FLAGS      =
-F77LIBS       = -lg2c -lnsl
+F77LIBS       =
 
 # Extras
 GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \

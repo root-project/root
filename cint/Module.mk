@@ -112,6 +112,10 @@ endif
 ifeq ($(PLATFORM),vms)
 CINTS2       += $(MODDIRS)/fakestrm.cxx
 endif
+ifeq ($(CXX),ecc)
+CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
+CINTS2       += $(MODDIRS)/fakestrm.cxx
+endif
 ifeq ($(GCCVERS),3)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 #CINTS2       += $(MODDIRS)/gcc3strm.cxx

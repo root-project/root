@@ -181,13 +181,19 @@ linuxppcegcs)
    auxglibs=${auxlibs}
    ;;
 linuxia64gcc)
-   # Itanium Linux with gcc 2.9x
+   # Itanium Linux with gcc 2.x/3.x
    auxcflags=
    auxlibs="-lm -ldl -rdynamic"
    auxglibs=${auxlibs}
    ;;
 linuxia64sgi)
    # Itanium Linux with SGI compiler
+   auxcflags=
+   auxlibs="-lm -ldl"
+   auxglibs=${auxlibs}
+   ;;
+linuxia64ecc)
+   # Itanium Linux with Intel ecc compiler
    auxcflags=
    auxlibs="-lm -ldl"
    auxglibs=${auxlibs}

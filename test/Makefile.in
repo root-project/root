@@ -315,6 +315,15 @@ LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
 
+ifeq ($(ARCH),linuxia64ecc)
+# Itanium Linux with Intel ecc
+CXX           = ecc
+CXXFLAGS      = -O -kPIC
+LD            = ecc
+LDFLAGS       = -O
+SOFLAGS       = -shared
+endif
+
 ifeq ($(ARCH),linuxalphaegcs)
 # Alpha Linux with egcs
 CXX           = g++
