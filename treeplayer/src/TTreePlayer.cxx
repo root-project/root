@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.20 2000/09/06 06:07:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.21 2000/09/08 07:41:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1141,18 +1141,29 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
       if (gROOT->IsInterrupted()) break;
       fTree->LoadTree(entryNumber);
       nfill0 = fNfill;
+
+      // Look for the lowest common array size amongst the
+      // variable and selection cut.
       ndata = fMultiplicity->GetNdata();
+      if (Var1Multiple && (fMultiplicity!=fVar1)) 
+        ndata = TMath::Min(ndata,fVar1->GetNdata());
+      if (Var2Multiple && (fMultiplicity!=fVar2)) 
+        ndata = TMath::Min(ndata,fVar2->GetNdata());
+      if (Var3Multiple && (fMultiplicity!=fVar3)) 
+        ndata = TMath::Min(ndata,fVar3->GetNdata());
+
+      // no data at all, let's move on to the next entry.
       if (!ndata) continue;
+
+      // Calculate the first values
       if (fSelect) {
          fW[fNfill] = fSelect->EvalInstance(0);
          if (!fW[fNfill]  && !SelectMultiple) continue;
       } else fW[fNfill] = 1;
       fV1[fNfill] = fVar1->EvalInstance(0);
       if (fVar2) {
-         if (Var2Multiple && (fMultiplicity!=fVar2)) fVar2->GetNdata();
          fV2[fNfill] = fVar2->EvalInstance(0);
          if (fVar3) {
-           if (Var3Multiple && (fMultiplicity!=fVar3)) fVar3->GetNdata();           
            fV3[fNfill] = fVar3->EvalInstance(0);
          }
       }
