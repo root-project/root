@@ -1,5 +1,6 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32Proxy.cxx,v 1.4 2003/08/11 14:55:32 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32Proxy.cxx,v 1.5 2003/08/11 15:07:06 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
+
 
 /*************************************************************************
  * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
@@ -31,31 +32,30 @@ TGWin32Proxy::~TGWin32Proxy()
 
 }
 // canvas graphics
-VOID_METHOD_ARG0_LOCK(TGWin32,SetFillAttributes,0)
-VOID_METHOD_ARG0_LOCK(TGWin32,SetMarkerAttributes,0)
-VOID_METHOD_ARG0_LOCK(TGWin32,SetLineAttributes,0)
-VOID_METHOD_ARG0_LOCK(TGWin32,SetTextAttributes,0)
+VOID_METHOD_ARG0_LOCK(TGWin32,SetFillAttributes)
+VOID_METHOD_ARG0_LOCK(TGWin32,SetMarkerAttributes)
+VOID_METHOD_ARG0_LOCK(TGWin32,SetLineAttributes)
+VOID_METHOD_ARG0_LOCK(TGWin32,SetTextAttributes)
+VOID_METHOD_ARG1_LOCK(TGWin32,ResetAttMarker,Option_t*,toption)
+VOID_METHOD_ARG1_LOCK(TGWin32,ResetAttFill,Option_t*,option)
+VOID_METHOD_ARG1_LOCK(TGWin32,ResetAttLine,Option_t*,option)
+VOID_METHOD_ARG1_LOCK(TGWin32,ResetAttText,Option_t*,option)
+VOID_METHOD_ARG1_LOCK(TGWin32,SetFillStyle,Style_t,style)
+VOID_METHOD_ARG1_LOCK(TGWin32,SetTextAngle,Float_t,tangle)
+VOID_METHOD_ARG1_LOCK(TGWin32,SetTextMagnitude,Float_t,mgn)
+VOID_METHOD_ARG1_LOCK(TGWin32,SetTextSizePixels,Int_t,npixels)
+VOID_METHOD_ARG1(TGWin32,SetTextAlign,Short_t,talign,0)
+VOID_METHOD_ARG1(TGWin32,SetTextSize,Float_t,textsize,0)
+VOID_METHOD_ARG1(TGWin32,SetFillColor,Color_t,cindex,0)
+VOID_METHOD_ARG1(TGWin32,SetLineColor,Color_t,cindex,0)
+VOID_METHOD_ARG1(TGWin32,SetLineStyle,Style_t,linestyle,0)
+VOID_METHOD_ARG1(TGWin32,SetLineWidth,Width_t,width,0)
+VOID_METHOD_ARG1(TGWin32,SetMarkerColor,Color_t,cindex,0)
+VOID_METHOD_ARG1(TGWin32,SetMarkerSize,Float_t,markersize,0)
+VOID_METHOD_ARG1(TGWin32,SetMarkerStyle,Style_t,markerstyle,0)
+VOID_METHOD_ARG1(TGWin32,SetTextColor,Color_t,cindex,0)
+VOID_METHOD_ARG1(TGWin32,SetTextFont,Font_t,fontnumber,0)
 VOID_METHOD_ARG1(TGWin32,SelectWindow,Int_t,wid,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,ResetAttMarker,Option_t*,toption,1)
-VOID_METHOD_ARG1_LOCK(TGWin32,ResetAttFill,Option_t*,option,1)
-VOID_METHOD_ARG1_LOCK(TGWin32,ResetAttLine,Option_t*,option,1)
-VOID_METHOD_ARG1_LOCK(TGWin32,ResetAttText,Option_t*,option,1)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetFillColor,Color_t,cindex,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetFillStyle,Style_t,style,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetLineColor,Color_t,cindex,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetLineStyle,Style_t,linestyle,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetLineWidth,Width_t,width,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetMarkerColor,Color_t,cindex,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetMarkerSize,Float_t,markersize,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetMarkerStyle,Style_t,markerstyle,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetTextAlign,Short_t,talign,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetTextColor,Color_t,cindex,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetTextMagnitude,Float_t,mgn,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetTextSize,Float_t,textsize,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetTextAngle,Float_t,tangle,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetTextFont,Font_t,fontnumber,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,SetTextSizePixels,Int_t,npixels,0)
-VOID_METHOD_ARG1_LOCK(TGWin32,Bell,Int_t,percent,0)
 VOID_METHOD_ARG2(TGWin32,DrawFillArea,Int_t,n,TPoint*,xy,1)
 VOID_METHOD_ARG2(TGWin32,DrawPolyLine,Int_t,n,TPoint*,xy,1)
 VOID_METHOD_ARG2(TGWin32,DrawPolyMarker,Int_t,n,TPoint*,xy,1)
@@ -82,6 +82,7 @@ RETURN_METHOD_ARG0_CONST(TGWin32,Color_t,GetTextColor)
 RETURN_METHOD_ARG0_CONST(TGWin32,Font_t,GetTextFont)
 RETURN_METHOD_ARG0_CONST(TGWin32,Float_t,GetTextSize)
 
+VOID_METHOD_ARG1(TGWin32,Bell,Int_t,percent,1)
 VOID_METHOD_ARG0(TGWin32,ClosePixmap,1)
 VOID_METHOD_ARG0(TGWin32,CloseWindow,1)
 VOID_METHOD_ARG0(TGWin32,SetDoubleBufferOFF,1)
@@ -377,6 +378,7 @@ Window_t TGWin32Proxy::GetParent(Window_t id) const
 ULong_t TGWin32Proxy::GetPixel(Drawable_t id, Int_t x, Int_t y)
 {
    //
+
    ULong_t ret;
    DEBUG_PROFILE_PROXY_START(GetPixel)
    Lock();

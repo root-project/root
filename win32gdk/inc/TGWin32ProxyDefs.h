@@ -1,5 +1,6 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyDefs.h,v 1.3 2003/08/07 12:36:51 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyDefs.h,v 1.4 2003/08/11 14:55:32 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
+
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -73,6 +74,29 @@ double total_time = 0;
       }\
    }\
 
+// ***_LOCK macros for setter methods which do nothing only set data members
+//______________________________________________________________________________
+#define VOID_METHOD_ARG0_LOCK(klass,method)\
+void _NAME2_(klass,Proxy)::method()\
+{\
+   DEBUG_PROFILE_PROXY_START(method)\
+   Lock();\
+   klass::Instance()->method();\
+   Unlock();\
+   DEBUG_PROFILE_PROXY_STOP(method)\
+}
+
+//______________________________________________________________________________
+#define VOID_METHOD_ARG1_LOCK(klass,method,type1,par1)\
+void _NAME2_(klass,Proxy)::method(type1 par1)\
+{\
+   DEBUG_PROFILE_PROXY_START(method)\
+   Lock();\
+   klass::Instance()->method(par1);\
+   Unlock();\
+   DEBUG_PROFILE_PROXY_STOP(method)\
+}
+
 //______________________________________________________________________________
 #define VOID_METHOD_ARG0(klass,method,sync)\
 void _NAME3_(p2,klass,method)(void *in)\
@@ -111,28 +135,6 @@ void _NAME2_(klass,Proxy)::method(type1 par1)\
    Bool_t batch = ForwardCallBack(sync);\
    par1 = ((tmp*)fParam)->par1;\
    if (!batch) delete fParam;\
-   DEBUG_PROFILE_PROXY_STOP(method)\
-}
-
-//______________________________________________________________________________
-#define VOID_METHOD_ARG0_LOCK(klass,method,sync)\
-void _NAME2_(klass,Proxy)::method()\
-{\
-   DEBUG_PROFILE_PROXY_START(method)\
-   Lock();\
-   klass::Instance()->method();\
-   Unlock();\
-   DEBUG_PROFILE_PROXY_STOP(method)\
-}
-
-//______________________________________________________________________________
-#define VOID_METHOD_ARG1_LOCK(klass,method,type1,par1,sync)\
-void _NAME2_(klass,Proxy)::method(type1 par1)\
-{\
-   DEBUG_PROFILE_PROXY_START(method)\
-   Lock();\
-   klass::Instance()->method(par1);\
-   Unlock();\
    DEBUG_PROFILE_PROXY_STOP(method)\
 }
 
