@@ -2,7 +2,7 @@
 #
 # node <hostname> [image=<imagename>]
 # slave <hostname> [perf=<perfindex>] [image=<imagename>] [port=<portnumber>]
-#                  [user=userid>] [srp]
+#                  [srp]
 # user <username> on <hostname>
 #
 # For each unique node in the cluster add a "node" line.
@@ -20,9 +20,7 @@
 # be unique for each different image). By default imagename is the hostname.
 # Port is used to tell PROOF to connect to the slave servers on the specified
 # port (in case proofd was started by the user as opposed to via inetd).
-# User is used to tell PROOF to authenticate on the slaves with the specified
-# user id. By default the user id used to connect to the master server is
-# used. Srp is used to tell PROOF to use SRP (Secure Remote Password) protocol
+# Srp is used to tell PROOF to use the SRP (Secure Remote Password) protocol
 # to authenticate to the slaves. If this flag is set it is necessary that
 # on the master server there is a file ~/.rootnetrc with the needed login
 # information and that on the slaves the file ~/.srootdpass exists.
