@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.33 2003/11/26 10:33:08 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.34 2003/12/01 07:18:07 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -2168,11 +2168,15 @@ Int_t TAuthenticate::RfioAuth(TString &User)
       fDetails = TString("pt:0 ru:0 us:") + User;
 
       // Check that we are not root ...
-      if (strcmp(pw->fUser, "root")) {
+      if (pw->fUid != 0) {
 
-         // Get group ID associated with the current process ...
+         UserGroup_t *grp = gSystem->GetGroupInfo(gSystem->GetEffectiveGid());
+
+         // Get effective user & group ID associated with the current process...
          Int_t uid = pw->fUid;
-         Int_t gid = pw->fGid;
+         Int_t gid = grp ? grp->fGid : pw->fGid;
+
+         delete grp;
 
          // Send request ....
          char *sstr = new char[40];
