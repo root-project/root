@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.47 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.48 2002/01/27 13:57:01 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1666,7 +1666,7 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
 //______________________________________________________________________________
 Int_t TFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
-   // Interface to system open. All arguments like in "man 2 open".
+   // Interface to system open. All arguments like in POSIX open().
 
    return ::open(pathname, flags, mode);
 }
@@ -1674,7 +1674,7 @@ Int_t TFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 //______________________________________________________________________________
 Int_t TFile::SysClose(Int_t fd)
 {
-   // Interface to system close. All arguments like in "man 2 close".
+   // Interface to system close. All arguments like in POSIX close().
 
    return ::close(fd);
 }
@@ -1682,7 +1682,7 @@ Int_t TFile::SysClose(Int_t fd)
 //______________________________________________________________________________
 Int_t TFile::SysRead(Int_t fd, void *buf, Int_t len)
 {
-   // Interface to system read. All arguments like in "man 2 read".
+   // Interface to system read. All arguments like in POSIX read().
 
    return ::read(fd, buf, len);
 }
@@ -1690,7 +1690,7 @@ Int_t TFile::SysRead(Int_t fd, void *buf, Int_t len)
 //______________________________________________________________________________
 Int_t TFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 {
-   // Interface to system write. All arguments like in "man 2 write".
+   // Interface to system write. All arguments like in POSIX write().
 
    return ::write(fd, buf, len);
 }
@@ -1698,9 +1698,9 @@ Int_t TFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 //______________________________________________________________________________
 Seek_t TFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
 {
-   // Interface to system lseek. All arguments like in "man 2 lseek"
-   // except that the offset and return value are Long_t to be able to
-   // handle 64 bit file systems.
+   // Interface to system lseek. All arguments like in POSIX lseek()
+   // except that the offset and return value are of a type which will
+   // be able to handle 64 bit file systems in the future.
 
    return ::lseek(fd, offset, whence);
 }
@@ -1718,7 +1718,7 @@ Int_t TFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags,
 //______________________________________________________________________________
 Int_t TFile::SysSync(Int_t fd)
 {
-   // Interface to system fsync. All arguments like in "man 2 fsync".
+   // Interface to system fsync. All arguments like in POSIX fsync().
 
 #ifndef WIN32
    return ::fsync(fd);
