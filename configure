@@ -326,6 +326,7 @@ confhelp() {
     echo "   venus-libdir    VENUS support, location of libVenus"
     echo "   cern-libdir     HBOOK converter, location of CERNLIB libraries"
     echo "   shift-libdir    RFIO support, location of libshift"
+    echo "   dcap-incdir     dCache support, location of dcap.h"
     echo "   dcap-libdir     dCache support, location of libdcap"
     echo "   srp             Secure Remote Passwd support, location of SRP distribution"
     echo "   srp-incdir      SRP support, location header of t_server.h"
@@ -411,6 +412,7 @@ if test $# -gt 0 ; then
       --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
       --with-cern-libdir=*)    cernlibdir=$optarg    ; enable_cern="yes"    ;;
       --with-shift-libdir=*)   shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
+      --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-srp-incdir=*)     srpincdir=$optarg     ; enable_srp="yes"     ;;
@@ -889,12 +891,17 @@ fi
 # Check for libdcap
 #
 if test ! "x$enable_dcache" = "xno" ; then
+    check_header "dcap.h" /products/dcache/include /opt/dcache/include \
+	/usr/include /usr/local/include
+
+    dcapincdir=$found_dir
+
     check_library "libdcap" "$enable_shared" "$dcaplibdir" \
 	/products/dcache/lib /opt/dcache/lib /usr/lib /usr/local/lib
     dcaplib=$found_lib
     dcaplibdir=$found_dir
 
-    if test "x$dcaplib" = "x"; then
+    if test "x$dcapnincdir" = "x" || test "x$dcaplib" = "x"; then
         enable_dcache="no"
     fi
 fi
@@ -1318,6 +1325,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@cernlibs@|$cernlib|"            \
     -e "s|@shiftlibdir@|$shiftlibdir|"     \
     -e "s|@shiftlib@|$shiftlib|"           \
+    -e "s|@dcapincdir@|$dcapincdir|"       \
     -e "s|@dcaplibdir@|$dcaplibdir|"       \
     -e "s|@dcaplib@|$dcaplib|"             \
     -e "s|@srplib@|$srplib|"               \

@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:$:$Id:$
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.1 2002/01/27 17:21:22 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 
 /*************************************************************************
@@ -19,8 +19,6 @@
 // to the dCache managed filesystem, it falls back to the ordinary      //
 // TFile behaviour.                                                     //
 //                                                                      //
-// Author: Grzegorz Mazur <mazur@mail.desy.de>                          //
-//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TDCacheFile.h"
@@ -32,67 +30,25 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-// Declarations copied from dcap.h file to avoid additional parameters
-// in the configuration process.
-extern "C" {
+#include <dcap.h>
 
-/* POSIX like IO*/
-extern int      dc_open(const char *, int, ...);
-extern int      dc_creat(const char *, mode_t);
-extern int      dc_close(int);
-extern int      dc_close2(int);
-extern ssize_t  dc_read(int, void *, size_t);
-extern ssize_t  dc_write(int, const void *, size_t);
-extern off_t    dc_lseek(int, off_t, int);
+//______________________________________________________________________________
+static const char* const DCACHE_PREFIX = "dcache:";
+static const size_t DCACHE_PREFIX_LEN = strlen(DCACHE_PREFIX);
+static const char* const DCAP_PREFIX = "dcap:";
+static const size_t DCAP_PREFIX_LEN = strlen(DCAP_PREFIX);
 
-/* pre-stage */
-extern int      dc_stage(const char *, time_t, const char *);
-extern int      dc_check(const char *, const char *);
-
-/* user control */
-#define onErrorRetry 1
-#define onErrorFail  0
-#define onErrorDefault -1
-
-void dc_setOpenTimeout(time_t);
-void dc_setOnError(int);
-
-/* read ahead buffering */
-void dc_noBuffering(int);
-void dc_setBufferSize(int, ssize_t);
-
-extern void dc_setReplyHostName( char *s);
-extern char * getDcapVersion();
-
-extern void dc_setDebugLevel(int);
-extern void debug(int, const char *, ...);
-extern void dc_error(const char *);
-
-/* thread-safe errno hack */
-#ifdef _REENTRANT
-extern int *__dc_errno();
-#define dc_errno (*(__dc_errno()))
-#else
-extern int dc_errno;
-#endif /* _REENTRANT */
-
-#ifdef DCAP_USE_SSL
-extern void dc_enableSSL();
-#endif /* DCAP_USE_SSL */
-
-}
-
-
+//______________________________________________________________________________
 ClassImp(TDCacheFile)
 
 //______________________________________________________________________________
 TDCacheFile::TDCacheFile(const char *path, Option_t *option,
                          const char *ftitle, Int_t compress):
-    TFile(path, "NET", ftitle, compress)
+   TFile(path, "NET", ftitle, compress)
 {
    // get rid of the optional URI
-   if (!strncmp(path, "dcache:", 7))
-       path += 7;
+   if (!strncmp(path, DCACHE_PREFIX, DCACHE_PREFIX_LEN))
+      path += 7;
 
    fOption = option;
    fOffset = 0;
@@ -100,61 +56,72 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    Bool_t create = kFALSE;
    if (!fOption.CompareTo("NEW", TString::kIgnoreCase) ||
        !fOption.CompareTo("CREATE", TString::kIgnoreCase))
-       create = kTRUE;
+      create = kTRUE;
    Bool_t recreate = fOption.CompareTo("RECREATE", TString::kIgnoreCase)
-                    ? kFALSE : kTRUE;
+      ? kFALSE : kTRUE;
    Bool_t update   = fOption.CompareTo("UPDATE", TString::kIgnoreCase)
-                    ? kFALSE : kTRUE;
+      ? kFALSE : kTRUE;
    Bool_t read     = fOption.CompareTo("READ", TString::kIgnoreCase)
-                    ? kFALSE : kTRUE;
+      ? kFALSE : kTRUE;
    if (!create && !recreate && !update && !read) {
       read    = kTRUE;
       fOption = "READ";
    }
 
    const char *fname;
-   if ((fname = gSystem->ExpandPathName(path))) {
-      SetName(fname);
-      delete [] (char*)fname;
+
+   if (!strncmp(path, DCAP_PREFIX, DCAP_PREFIX_LEN)) {
+      // Ugh, no PNFS support
+      if (create || recreate || update) {
+         Error("TDCacheFile", "Without PNFS support only reading access is allowed.");
+         goto zombie;
+      }
+      SetName(path);
       fname = GetName();
    } else {
-      Error("TDCacheFile", "error expanding path %s", path);
-      goto zombie;
-   }
+      // Metadata provided by PNFS
+      if ((fname = gSystem->ExpandPathName(path))) {
+         SetName(fname);
+         delete [] (char*)fname;
+         fname = GetName();
+      } else {
+         Error("TDCacheFile", "error expanding path %s", path);
+         goto zombie;
+      }
 
-   if (recreate) {
-      if (!gSystem->AccessPathName(fname, kFileExists))
-         gSystem->Unlink(fname);
-      recreate = kFALSE;
-      create   = kTRUE;
-      fOption  = "CREATE";
-   }
-   if (create && !gSystem->AccessPathName(fname, kFileExists)) {
-      Error("TDCacheFile", "file %s already exists", fname);
-      goto zombie;
-   }
-   if (update) {
-      if (gSystem->AccessPathName(fname, kFileExists)) {
-         update = kFALSE;
-         create = kTRUE;
+      if (recreate) {
+         if (!gSystem->AccessPathName(fname, kFileExists))
+            gSystem->Unlink(fname);
+         recreate = kFALSE;
+         create   = kTRUE;
+         fOption  = "CREATE";
       }
-      if (update && gSystem->AccessPathName(fname, kWritePermission)) {
-         Error("TDCacheFile", "no write permission, could not open file %s", fname);
+      if (create && !gSystem->AccessPathName(fname, kFileExists)) {
+         Error("TDCacheFile", "file %s already exists", fname);
          goto zombie;
       }
-   }
-   if (read) {
-      if (gSystem->AccessPathName(fname, kFileExists)) {
-         Error("TDCacheFile", "file %s does not exist", fname);
-         goto zombie;
+      if (update) {
+         if (gSystem->AccessPathName(fname, kFileExists)) {
+            update = kFALSE;
+            create = kTRUE;
+         }
+         if (update && gSystem->AccessPathName(fname, kWritePermission)) {
+            Error("TDCacheFile", "no write permission, could not open file %s", fname);
+            goto zombie;
+         }
       }
-      if (gSystem->AccessPathName(fname, kReadPermission)) {
-         Error("TDCacheFile", "no read permission, could not open file %s", fname);
-         goto zombie;
+      if (read) {
+         if (gSystem->AccessPathName(fname, kFileExists)) {
+            Error("TDCacheFile", "file %s does not exist", fname);
+            goto zombie;
+         }
+         if (gSystem->AccessPathName(fname, kReadPermission)) {
+            Error("TDCacheFile", "no read permission, could not open file %s", fname);
+            goto zombie;
+         }
       }
    }
-
-//*-*--------------Connect to file system stream
+   // Connect to file system stream
    if (create || update) {
 #ifndef WIN32
       fD = SysOpen(fname, O_RDWR | O_CREAT, 0644);
@@ -254,39 +221,59 @@ Bool_t TDCacheFile::WriteBuffer(const char *buf, Int_t len)
 //______________________________________________________________________________
 Bool_t TDCacheFile::Stage(const char *path, UInt_t after, const char *location)
 {
-    // Note: Stage() returns kTRUE on success and kFALSE on
-    // failure. This is _not_ compatible with the convention taken by
-    // the dcap library authors.
+   // Stage() returns kTRUE on success and kFALSE on failure.
 
-    dc_stage(path, after, location);
+   if (!strncmp(path, DCACHE_PREFIX, DCACHE_PREFIX_LEN))
+      path += 7;
 
-    return errno == EAGAIN ? kTRUE : kFALSE;
+   dc_errno = 0;
+
+   if (dc_stage(path, after, location) == 0)
+      return kTRUE;
+
+   if (dc_errno != 0)
+      gSystem->SetErrorStr(dc_strerror(dc_errno));
+   else
+      gSystem->SetErrorStr(strerror(errno));
+
+   return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TDCacheFile::CheckFile(const char *path, const char *location)
 {
-    // Note: Name of the method was changed to avoid collision with Check
-    // macro #defined in ROOT
-    // Note: CheckFile() returns kTRUE on success and kFALSE on
-    // failure. This is _not_ compatible with the convention taken by
-    // the dcap library authors.
+   // Note: Name of the method was changed to avoid collision with Check
+   // macro #defined in ROOT.
+   // CheckFile() returns kTRUE on success and kFALSE on failure.  In
+   // case the file exists but is not cached, CheckFile() returns
+   // kFALSE and errno is set to EAGAIN.
 
-    dc_check(path, location);
+   if (!strncmp(path, DCACHE_PREFIX, DCACHE_PREFIX_LEN))
+      path += 7;
 
-    return errno == EAGAIN ? kTRUE : kFALSE;
+   dc_errno = 0;
+
+   if (dc_check(path, location) == 0)
+      return kTRUE;
+
+   if (dc_errno != 0)
+      gSystem->SetErrorStr(dc_strerror(dc_errno));
+   else
+      gSystem->SetErrorStr(strerror(errno));
+
+   return kFALSE;
 }
 
 //______________________________________________________________________________
 void TDCacheFile::SetOpenTimeout(UInt_t n)
 {
-    dc_setOpenTimeout(n);
+   dc_setOpenTimeout(n);
 }
 
 //______________________________________________________________________________
 void TDCacheFile::SetOnError(OnErrorAction a)
 {
-    dc_setOnError(a);
+   dc_setOnError(a);
 }
 
 //______________________________________________________________________________
@@ -302,29 +289,86 @@ const char *TDCacheFile::GetDcapVersion()
 }
 
 //______________________________________________________________________________
+Bool_t TDCacheFile::EnableSSL()
+{
+#ifdef DCAP_USE_SSL
+   dc_enableSSL();
+   return kTRUE;
+#else
+   return kFALSE;
+#endif
+}
+
+//______________________________________________________________________________
 Int_t TDCacheFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
-   return dc_open(pathname, flags, (Int_t) mode);
+   dc_errno = 0;
+
+   Int_t rc = dc_open(pathname, flags, (Int_t) mode);
+
+   if (rc < 0) {
+      if (dc_errno != 0)
+         gSystem->SetErrorStr(dc_strerror(dc_errno));
+      else
+         gSystem->SetErrorStr(strerror(errno));
+   }
+
+   return rc;
 }
 
 //______________________________________________________________________________
 Int_t TDCacheFile::SysClose(Int_t fd)
 {
-   return dc_close(fd);
+   dc_errno = 0;
+
+   Int_t rc = dc_close(fd);
+
+   if (rc < 0) {
+      if (dc_errno != 0)
+         gSystem->SetErrorStr(dc_strerror(dc_errno));
+      else
+         gSystem->SetErrorStr(strerror(errno));
+   }
+
+   return rc;
 }
 
 //______________________________________________________________________________
 Int_t TDCacheFile::SysRead(Int_t fd, void *buf, Int_t len)
 {
    fOffset += len;
-   return dc_read(fd, buf, len);
+
+   dc_errno = 0;
+
+   Int_t rc = dc_read(fd, buf, len);
+
+   if (rc < 0) {
+      if (dc_errno != 0)
+         gSystem->SetErrorStr(dc_strerror(dc_errno));
+      else
+         gSystem->SetErrorStr(strerror(errno));
+   }
+
+   return rc;
 }
 
 //______________________________________________________________________________
 Int_t TDCacheFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 {
    fOffset += len;
-   return dc_write(fd, (char *)buf, len);
+
+   dc_errno = 0;
+
+   Int_t rc =  dc_write(fd, (char *)buf, len);
+
+   if (rc < 0) {
+      if (dc_errno != 0)
+         gSystem->SetErrorStr(dc_strerror(dc_errno));
+      else
+         gSystem->SetErrorStr(strerror(errno));
+   }
+
+   return rc;
 }
 
 //______________________________________________________________________________
@@ -345,11 +389,64 @@ Seek_t TDCacheFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
       break;
    }
 
-   return dc_lseek(fd, offset, whence);
+   dc_errno = 0;
+
+   Int_t rc = dc_lseek(fd, offset, whence);
+
+   if (rc < 0) {
+      if (dc_errno != 0)
+         gSystem->SetErrorStr(dc_strerror(dc_errno));
+      else
+         gSystem->SetErrorStr(strerror(errno));
+   }
+
+   return rc;
 }
 
 //______________________________________________________________________________
 Int_t TDCacheFile::SysSync(Int_t fd)
 {
+   // dCache always keep it's files sync'ed, so there's no need to
+   // sync() them manually.
+
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TDCacheFile::SysStat(Int_t fd, Long_t *id, Long_t *size,
+                           Long_t *flags, Long_t *modtime)
+{
+   // FIXME: dcap library doesn't (yet) provide any stat()
+   // capabilities, relying on PNFS to provide all meta-level data. In
+   // spite of this, it is possible to open a file which is not
+   // accessible via PNFS. In such case we do some dirty tricks to
+   // provide as much information as possible, but not everything can
+   // really be done correctly.
+
+   if (!strncmp(GetName(), DCAP_PREFIX, DCAP_PREFIX_LEN)) {
+      // Ugh, no PNFS support.
+
+      // Try to provide a unique id
+      *id = ::Hash(GetName());
+
+      // Funny way of checking the file size, isn't it?
+      Seek_t offset = fOffset;
+      *size = SysSeek(fd, 0, SEEK_END);
+      SysSeek(fd, offset, SEEK_SET);
+
+      *flags = 0;          // This one is easy, only ordinary files are allowed here
+      *modtime = 0;        // FIXME: no way to get it right without dc_stat()
+      return 0;
+   } else {
+      return TFile::SysStat(fd, id, size, flags, modtime);
+   }
+}
+
+//______________________________________________________________________________
+void TDCacheFile::ResetErrno() const
+{
+   // Method resetting the dc_errno and errno.
+
+   dc_errno = 0;
+   TSystem::ResetErrno();
 }

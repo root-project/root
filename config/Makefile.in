@@ -63,6 +63,7 @@ SHIFTLIB       := @shiftlib@
 
 DCAPLIBDIR     := @dcaplibdir@
 DCAPLIB        := @dcaplib@
+DCAPINCDIR     := @dcapincdir@
 
 FPYTHIALIBDIR  := @pythialibdir@
 FPYTHIALIB     := @pythialib@

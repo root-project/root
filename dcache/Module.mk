@@ -45,7 +45,7 @@ $(DCACHEDS):    $(DCACHEH) $(DCACHEL) $(ROOTCINTTMP)
 	$(ROOTCINTTMP) -f $@ -c $(DCACHEH) $(DCACHEL)
 
 $(DCACHEDO):    $(DCACHEDS)
-	$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
+	$(CXX) $(NOOPT) $(CXXFLAGS) -I$(DCAPINCDIR) -I. -o $@ -c $<
 
 all-dcache:     $(DCACHELIB)
 
@@ -58,3 +58,7 @@ distclean-dcache: clean-dcache
 	@rm -f $(DCACHEDEP) $(DCACHEDS) $(DCACHEDH) $(DCACHELIB)
 
 distclean::     distclean-dcache
+
+##### extra rules ######
+$(DCACHEO): %.o: %.cxx
+	$(CXX) $(OPT) $(CXXFLAGS) -I$(DCAPINCDIR) -o $@ -c $<
