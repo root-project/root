@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.71 2004/05/10 23:26:38 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.72 2004/05/18 11:32:49 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -213,6 +213,19 @@ Globus.ProxyKeyBits:     1024
 
 # Path to alternative 'ssh' (to override $PATH if ever needed)
 # SSH.ExecDir:      /usr/bin
+
+# In case of error, SSH returns 1 (or 256 = 0x100).
+# To trap those errors for which one should retry, error printouts
+# must be parsed; any substring found under the Env SSH.ErrorRetry
+# triggers a retry condition; strings can be added here
+# in the form (including double quotes):
+#              +SSH.ErrorRetry:     "<error_string>" 
+# This is what one usually gets if the server has reached the maximum
+# number of sshd daemons (defined by MaxStartups in sshd_config);
+# this is a typical case in which one should retry.
+SSH.ErrorRetry:     "Connection closed by remote host"
+# Max number of retries for SSH in case of retry error (see above)
+SSH.MaxRetry:     100
 
 # Special cases for the TUrl parser, where the special cases are parsed
 # in a protocol + file part, like rfio:host:/patch/file.root or

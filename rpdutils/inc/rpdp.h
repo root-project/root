@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.15 2004/04/20 22:12:43 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.16 2004/04/21 08:51:45 brun Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -51,6 +51,13 @@ typedef void (*SigPipe_t)(int);
 #include "AuthConst.h"
 const int  kMAXRECVBUF       = 1024;
 const int  kMAXPATHLEN       = kMAXSECBUF;
+const int  kMAXUSERLEN       = 128;
+
+// Masks for initialization options
+const unsigned int kDMN_RQAUTH = 0x1;  // Require authentication
+const unsigned int kDMN_INCTKN = 0x2;  // Create inclusive tokens
+const unsigned int kDMN_HOSTEQ = 0x4;  // Allow host equivalence 
+const unsigned int kDMN_SYSLOG = 0x8;  // Log messages to syslog i.o. stderr 
 
 //
 // type of service
@@ -100,14 +107,15 @@ int  RpdGetShmIdCred();
 #endif
 int  RpdInitSession(int, std::string &, int &);
 int  RpdInitSession(int, std::string &, int &, int &, std::string &);
-void RpdInit(EService serv, int pid, int sproto, int rlog, int inctok,
-             int rumsk, int sshp, const char *tmpd, const char *asrpp);
+void RpdInit(EService serv, int pid, int sproto, 
+             unsigned int opts, int rumsk, int sshp, 
+             const char *tmpd, const char *asrpp);
 void RpdSetErrorHandler(ErrorHandler_t Err, ErrorHandler_t Sys,
                         ErrorHandler_t Fatal);
 #ifdef R__KRB5
 void RpdSetKeytabFile(const char *keytabfile);
 #endif
-void RpdSetRootLogFlag(int RootLog);
+void RpdSetSysLogFlag(int syslog);
 int  RpdUpdateAuthTab(int opt, const char *line, char **token);
 
 } // namespace ROOT
@@ -171,6 +179,7 @@ void RpdInitAuth();
 void RpdInitRand();
 void RpdKrb5Auth(const char *sstr);
 void RpdLogin(int);
+void RpdNoAuth(int);
 void RpdPass(const char *pass);
 void RpdProtocol(int);
 int  RpdRecvClientRSAKey();

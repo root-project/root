@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.87 2004/04/22 13:10:47 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.88 2004/04/22 13:14:43 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -88,6 +88,7 @@
 //                     (/etc/grid-security/gridmap); (re)defines the    //
 //                     GRIDMAP environment variable.                    //
 //   -i                says we were started by inetd                    //
+//   -noauth           do not require client authentication             // 
 //   -p port#          specifies a different port to listen on.         //
 //                     Use port1-port2 to find first available port in  //
 //                     range. Use 0-N for range relative to service     //
@@ -104,6 +105,11 @@
 //   -T <tmpdir>       specifies the directory path to be used to place //
 //                     temporary files; default is /usr/tmp.            //
 //                     Useful if not running as root.                   //
+//   -w                do not check /etc/hosts.equiv, $HOME/.rhosts     //
+//                     for UsrPwd authentications; by default these     //
+//                     files are checked first by calling ruserok(...); //
+//                     if this option is specified a password is always //
+//                     required.
 //   rootsys_dir       directory containing the ROOT etc and bin        //
 //                     directories. Superseeds ROOTSYS or built-in      //
 //                     (as specified to ./configure).                   //
@@ -184,6 +190,7 @@
 // 7 -> 8: added support for Globus, SSH and Rfio authentication and negotiation
 // 8 -> 9: change in Kerberos authentication protocol
 // 9 -> 10: Receives client protocol with kROOTD_PROTOCOL + change cleaning protocol
+// 10 -> 11: modified SSH protocol + support for server 'no authentication' mode
 
 #include "config.h"
 #include "RConfig.h"
@@ -323,7 +330,7 @@ static std::string gDaemonrc;
 static std::string gRootdTab;     // keeps track of open files
 static std::string gRpdAuthTab;   // keeps track of authentication info
 static EService gService         = kROOTD;
-static int gProtocol             = 10;      // increase when protocol changes
+static int gProtocol             = 11;      // increase when protocol changes
 static int gClientProtocol       = -1;  // Determined by RpdInitSession
 static int gAnon                 = 0;      // anonymous user flag
 static std::string gUser;
@@ -978,7 +985,8 @@ void RootdOpen(const char *msg)
    }
 
    if (!read && gReadOnly)
-      Error(ErrFatal, kErrNoAccess, "RootdOpen: file %s can only be opened in \"READ\" mode", gFile);
+      Error(ErrFatal, kErrNoAccess, 
+            "RootdOpen: file %s can only be opened in \"READ\" mode", gFile);
 
    if (!gAnon) {
       char *fname;
@@ -995,7 +1003,8 @@ void RootdOpen(const char *msg)
    int trunc = 0;
    if (recreate) {
       if (!RootdCheckTab(-1))
-         Error(ErrFatal, kErrFileWriteOpen, "RootdOpen: file %s already opened in read or write mode", gFile);
+         Error(ErrFatal, kErrFileWriteOpen,
+               "RootdOpen: file %s already opened in read or write mode", gFile);
       if (!access(gFile, F_OK))
          trunc = O_TRUNC;
       else {
@@ -1015,14 +1024,17 @@ void RootdOpen(const char *msg)
          strcpy(gOption, "create");
       }
       if (update && access(gFile, W_OK))
-         Error(ErrFatal, kErrNoAccess, "RootdOpen: no write permission for file %s", gFile);
+         Error(ErrFatal, kErrNoAccess, 
+               "RootdOpen: no write permission for file %s", gFile);
    }
 
    if (read) {
       if (access(gFile, F_OK))
-         Error(ErrFatal, kErrNoFile, "RootdOpen: file %s does not exist (errno: 0x%x)", gFile, errno);
+         Error(ErrFatal, kErrNoFile,
+               "RootdOpen: file %s does not exist (errno: 0x%x)", gFile, errno);
       if (access(gFile, R_OK))
-         Error(ErrFatal, kErrNoAccess, "RootdOpen: no read permission for file %s (errno: 0x%x)", gFile, errno);
+         Error(ErrFatal, kErrNoAccess,
+               "RootdOpen: no read permission for file %s (errno: 0x%x)", gFile, errno);
    }
 
    if (create || recreate || update) {
@@ -1161,7 +1173,8 @@ void RootdGet(const char *msg)
 #else
    if (lseek(gFd, offset, SEEK_SET) < 0)
 #endif
-      Error(ErrSys, kErrFileGet, "RootdGet: cannot seek to position %lld in file %s", offset, gFile);
+      Error(ErrSys, kErrFileGet, "RootdGet: cannot seek to position %lld in"
+            " file %s", offset, gFile);
 
    ssize_t siz;
    while ((siz = read(gFd, buf, len)) < 0 && GetErrno() == EINTR)
@@ -1171,8 +1184,8 @@ void RootdGet(const char *msg)
       Error(ErrSys, kErrFileGet, "RootdGet: error reading from file %s", gFile);
 
    if (siz != len)
-      Error(ErrFatal, kErrFileGet, "RootdGet: error reading all requested bytes from file %s, got %d of %d",
-                 gFile, siz, len);
+      Error(ErrFatal, kErrFileGet, "RootdGet: error reading all requested bytes"
+            " from file %s, got %d of %d",gFile, siz, len);
 
    NetSend(0, kROOTD_GET);
 
@@ -1890,6 +1903,8 @@ void RootdLoop()
 int main(int argc, char **argv)
 {
    char *s;
+   int checkhostsequiv= 1;
+   int requireauth    = 1;
    int tcpwindowsize  = 65535;
    int inclusivetoken = 1;
    int sshdport       = 22;
@@ -2010,6 +2025,13 @@ int main(int argc, char **argv)
                gInetdFlag = 1;
                break;
 
+            case 'n':
+               if (!strncmp(argv[0]+1,"noauth",6)) {
+                  requireauth = 0;
+                  s += 5;
+               }
+               break;
+
             case 'p':
                if (--argc <= 0) {
                   if (!gInetdFlag)
@@ -2088,6 +2110,10 @@ int main(int argc, char **argv)
                                     " temporary files [/usr/tmp]");
                }
                tmpdir = std::string(*++argv);
+               break;
+
+            case 'w':
+               checkhostsequiv = 0;
                break;
 
             default:
@@ -2181,10 +2207,20 @@ int main(int argc, char **argv)
    else
      rootdparentid = getppid(); // Identifies this family
 
-   // Set job options
-   int rootlog = (foregroundflag) ? 1 : 0;
-   RpdInit(gService, rootdparentid, gProtocol, inclusivetoken,
-           reuseallow, rootlog, sshdport,
+   // default job options
+   unsigned int options = kDMN_RQAUTH | kDMN_INCTKN | 
+                          kDMN_HOSTEQ | kDMN_SYSLOG;
+   // modify them if required
+   if (!requireauth) 
+      options &= ~kDMN_RQAUTH;
+   if (!inclusivetoken) 
+      options &= ~kDMN_INCTKN;
+   if (!checkhostsequiv) 
+      options &= ~kDMN_HOSTEQ;
+   if (foregroundflag) 
+      options &= ~kDMN_SYSLOG;
+   RpdInit(gService, rootdparentid, gProtocol, options,
+           reuseallow, sshdport,
            tmpdir.c_str(),altSRPpass.c_str());
 
    // Generate Local RSA keys for the session

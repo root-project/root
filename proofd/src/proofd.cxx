@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.64 2004/04/20 21:32:02 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.65 2004/04/22 13:10:47 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -97,6 +97,7 @@
 //                     (/etc/grid-security/gridmap); (re)defines the    //
 //                     GRIDMAP environment variable.                    //
 //   -i                says we were started by inetd                    //
+//   -noauth           do not require client authentication             // 
 //   -p port#          specifies a different port to listen on          //
 //   -s <sshd_port>    specifies the port number for the sshd daemon    //
 //                     (deafult is 22)                                  //
@@ -106,6 +107,11 @@
 //   -T <tmpdir>       specifies the directory path to be used to place //
 //                     temporary files; default is /usr/tmp.            //
 //                     Useful if not running as root.                   //
+//   -w                do not check /etc/hosts.equiv, $HOME/.rhosts     //
+//                     for UsrPwd authentications; by default these     //
+//                     files are checked first by calling ruserok(...); //
+//                     if this option is specified a password is always //
+//                     required.
 //   rootsys_dir       directory which must contain bin/proofserv and   //
 //                     proof/etc/proof.conf. If not specified ROOTSYS   //
 //                     or built-in (as specified to ./configure) is     //
@@ -140,7 +146,7 @@
 // 7: added support for Globus, SSH and uid/gid authentication and negotiation
 // 8: change in Kerberos authentication protocol
 // 9: change authentication cleaning protocol
-
+// 10: modified SSH protocol + support for server 'no authentication' mode
 
 #include "config.h"
 #include "RConfig.h"
@@ -228,7 +234,7 @@ static std::string gRpdAuthTab;   // keeps track of authentication info
 static std::string gTmpDir;
 static std::string gUser;
 static EService gService         = kPROOFD;
-static int gProtocol             = 9;       // increase when protocol changes
+static int gProtocol             = 10;       // increase when protocol changes
 static int gRemPid               = -1;      // remote process ID
 static std::string gReadHomeAuthrc = "0";
 static int gInetdFlag            = 0;
@@ -455,7 +461,7 @@ void ProofdExec()
             close(2);
             close(1);
             close(0);
-            RpdSetRootLogFlag(0);   //syslog only from here
+            RpdSetSysLogFlag(1);   //syslog only from here
             break;
          }
       }
@@ -564,6 +570,8 @@ void ProofdExec()
 int main(int argc, char **argv)
 {
    char *s;
+   int checkhostsequiv = 1;
+   int requireauth    = 1;
    int tcpwindowsize  = 65535;
    int inclusivetoken = 1;
    int sshdport       = 22;
@@ -676,6 +684,13 @@ int main(int argc, char **argv)
                gInetdFlag = 1;
                break;
 
+            case 'n':
+               if (!strncmp(argv[0]+1,"noauth",6)) {
+                  requireauth = 0;
+                  s += 5;
+               }
+               break;
+
             case 'p':
                if (--argc <= 0) {
                   if (!gInetdFlag)
@@ -748,6 +763,10 @@ int main(int argc, char **argv)
                                     " temporary files [/usr/tmp]");
                }
                gTmpDir = std::string(*++argv);
+               break;
+
+            case 'w':
+               checkhostsequiv = 0;
                break;
 
             default:
@@ -846,10 +865,20 @@ int main(int argc, char **argv)
    else
      proofdparentid = getppid(); // Identifies this family
 
-   // Set job options
-   int rootlog = (foregroundflag) ? 1 : 0;
-   RpdInit(gService, proofdparentid, gProtocol, inclusivetoken,
-           reuseallow, rootlog, sshdport,
+   // default job options
+   unsigned int options = kDMN_RQAUTH | kDMN_INCTKN | 
+                          kDMN_HOSTEQ | kDMN_SYSLOG ;
+   // modify them if required
+   if (!requireauth) 
+      options &= ~kDMN_RQAUTH;
+   if (!inclusivetoken) 
+      options &= ~kDMN_INCTKN;
+   if (!checkhostsequiv) 
+      options &= ~kDMN_HOSTEQ;
+   if (foregroundflag) 
+      options &= ~kDMN_SYSLOG;
+   RpdInit(gService, proofdparentid, gProtocol, options,
+           reuseallow, sshdport,
            gTmpDir.c_str(),altSRPpass.c_str());
 
    // Generate Local RSA keys for the session

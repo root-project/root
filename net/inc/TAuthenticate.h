@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.20 2004/03/17 17:52:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.21 2004/04/20 15:17:02 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -93,6 +93,7 @@ private:
    Int_t        RfioAuth(TString &user);
    void         SetEnvironment();
    Int_t        SshAuth(TString &user);
+   Int_t        SshError(const char *errfile);
 
    static TList         *fgAuthInfo;
    static TString        fgAuthMeth[kMAXSEC];

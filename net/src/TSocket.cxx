@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.17 2004/05/10 08:17:57 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.18 2004/05/10 16:00:02 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -700,6 +700,7 @@ Bool_t TSocket::Authenticate(const char *user)
    // Authenticated the socket with specified user.
 
    Bool_t rc = kFALSE;
+   Bool_t runAuth = kTRUE;
 
    // Parse protocol name, for PROOF, send message with server role
    Bool_t Master = kFALSE;
@@ -746,6 +747,12 @@ Bool_t TSocket::Authenticate(const char *user)
       return kFALSE;
    }
 
+   if (fRemoteProtocol > 1000) {
+      // Authentication not required by the remote server
+      runAuth = kFALSE;
+      fRemoteProtocol %= 1000;
+   }
+
    if (fServType == kROOTD) {
       if (fRemoteProtocol > 6 && fRemoteProtocol < 10) {
          // Middle aged versions expect client protocol now
@@ -757,49 +764,94 @@ Bool_t TSocket::Authenticate(const char *user)
    // Remote Host
    TString Host = GetInetAddress().GetHostName();
 
-   // Init authentication
-   TAuthenticate *auth = new TAuthenticate(this,Host,
-                  Form("%s:%d",SProtocol.Data(),fRemoteProtocol), user);
+   if (runAuth) {
 
-   // If PROOF client and transmission of the SRP password is
-   // requested make sure that ReUse is switched on to get and
-   // send also the Public Key.
-   // Masters do this automatically upon reception of valid info
-   // (see TSlave.cxx).
-   if (!Master && fServType == kPROOFD) {
-      if (gEnv->GetValue("Proofd.SendSRPPwd",0)) {
-         Int_t kSRP = TAuthenticate::kSRP;
-         TString SRPDets(auth->GetHostAuth()->GetDetails(kSRP));
-         Int_t pos = SRPDets.Index("ru:0");
-         if (pos > -1) {
-            SRPDets.ReplaceAll("ru:0",4,"ru:1",4);
-            auth->GetHostAuth()->SetDetails(kSRP,SRPDets);
-         } else {
-            TSubString ss = SRPDets.SubString("ru:no",TString::kIgnoreCase);
-            if (!ss.IsNull()) {
-               SRPDets.ReplaceAll(ss.Data(),5,"ru:1",4);
+      // Init authentication
+      TAuthenticate *auth = new TAuthenticate(this,Host,
+                     Form("%s:%d",SProtocol.Data(),fRemoteProtocol), user);
+      
+      // If PROOF client and trasmission of the SRP password is
+      // requested make sure that ReUse is switched on to get and
+      // send also the Public Key
+      // Masters do this automatically upon reception of valid info
+      // (see TSlave.cxx)
+      if (!Master && fServType == kPROOFD) {
+         if (gEnv->GetValue("Proofd.SendSRPPwd",0)) {
+            Int_t kSRP = TAuthenticate::kSRP;
+            TString SRPDets(auth->GetHostAuth()->GetDetails(kSRP));
+            Int_t pos = SRPDets.Index("ru:0");
+            if (pos > -1) {
+               SRPDets.ReplaceAll("ru:0",4,"ru:1",4);
                auth->GetHostAuth()->SetDetails(kSRP,SRPDets);
+            } else {
+               TSubString ss = SRPDets.SubString("ru:no",TString::kIgnoreCase);
+               if (!ss.IsNull()) {
+                  SRPDets.ReplaceAll(ss.Data(),5,"ru:1",4);
+                  auth->GetHostAuth()->SetDetails(kSRP,SRPDets);
+               }
             }
          }
       }
-   }
+      
+      // Attempt authentication
+      if (!auth->Authenticate()) {
+         // Close the socket if unsuccessful
+         Error("Authenticate",
+               "authentication failed for %s@%s",auth->GetUser(),Host.Data());
+         // This is to terminate properly remote proofd in case of failure
+         if (fServType == kPROOFD)
+            Send(Form("%d %s", gSystem->GetPid(), Host.Data()), kROOTD_CLEANUP);
+      } else {
+         // Set return flag;
+         rc = kTRUE;
+         // Search pointer to relevant TSecContext
+         SetSecContext(auth->GetSecContext());
+      }
 
-   // Attempt authentication
-   if (!auth->Authenticate()) {
-      // Close the socket if unsuccessful
-      Error("Authenticate",
-            "authentication failed for %s@%s",auth->GetUser(),Host.Data());
-      // This is to terminate properly remote proofd in case of failure
-      if (fServType == kPROOFD)
-         Send(Form("%d %s", gSystem->GetPid(), Host.Data()), kROOTD_CLEANUP);
-  } else {
-      // Set return flag;
-      rc = kTRUE;
-      // Search pointer to relevant TSecContext
-      SetSecContext(auth->GetSecContext());
-   }
+      delete auth;
 
-   delete auth;
+   } else {
+
+      // Communicate who we are and our target user
+      UserGroup_t *u = gSystem->GetUserInfo();
+      if (u) {
+         Send(Form("%s %s", u->fUser.Data(), user), kROOTD_USER);
+         delete u;
+      } else
+         Send(Form("-1 %s", user), kROOTD_USER);
+
+      rc = kFALSE;
+
+      // Receive confirmation that everything went well
+      Int_t kind, stat;
+      if (Recv(stat, kind) > 0) {
+
+         if (kind == kROOTD_ERR) {
+            if (gDebug > 0)
+               TAuthenticate::AuthError("Authenticate(TSocket)", stat);
+         } else if (kind == kROOTD_AUTH) {
+
+            // Authentication was not required: create inactive
+            // security context for consistency
+            TSecContext *ctx = new TSecContext(user, Host,0, -4, 0, 0); 
+            if (gDebug > 3)
+               Info("Authenticate", "no authentication required remotely");
+            
+            // Save pointer
+            SetSecContext(ctx);
+            
+            // Set return flag;
+            rc = kTRUE;
+         } else {
+            if (gDebug > 0)
+               Info("Authenticate", "expected message type %d, received %d",
+                    kROOTD_AUTH, kind);
+         }
+      } else {
+         if (gDebug > 0)
+            Info("Authenticate", "error receiving message");
+      }
+   }
 
    return rc;
 }
@@ -858,6 +910,7 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    }
 
    // Create the socket now
+
    TSocket *sock = 0;
    if (!parallel) {
 

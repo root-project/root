@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.51 2004/05/05 09:23:57 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.52 2004/05/10 16:00:01 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -93,7 +93,8 @@ Bool_t         TAuthenticate::fgUsrPwdCrypt;
 // 7 -> 8: added support for update being a create (open stat = 2 and not 1)
 // 8 -> 9: added new authentication features (see README.AUTH)
 // 9 -> 10: added support for authenticated socket via TSocket::CreateAuthSocket(...)
-Int_t TAuthenticate::fgClientProtocol = 10;  // increase when client protocol changes
+// 10 -> 11: modified SSH protocol + support for server 'no authentication' mode
+Int_t TAuthenticate::fgClientProtocol = 11;  // increase when client protocol changes
 
 // Standar version of Sec Context match checking
 Int_t StdCheckSecCtx(const char *, TSecContext *);
@@ -109,7 +110,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    fSocket   = sock;
    fRemote   = remote;
    fHostAuth = 0;
-   fVersion  = 3;                // The latest, by default
+   fVersion  = 4;                // The latest, by default
    fRSAKey   = 0;
    fSecContext = 0;
 
@@ -127,21 +128,27 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
          int rproto = atoi(pdd + 1);
          *pdd = '\0';
          if (strstr(sproto, "root") != 0) {
-            if (rproto < 9 ) {
-               fVersion = 2;
-               if (rproto < 8) {
-                  fVersion = 1;
-                  if (rproto < 6)
-                     fVersion = 0;
+            if (rproto < 11 ) {
+               fVersion = 3;
+               if (rproto < 9 ) {
+                  fVersion = 2;
+                  if (rproto < 8) {
+                     fVersion = 1;
+                     if (rproto < 6)
+                        fVersion = 0;
+                  }
                }
             }
             servtype = TSocket::kROOTD;
          }
          if (strstr(sproto, "proof") != 0) {
-            if (rproto < 8) {
-               fVersion = 2;
-               if (rproto < 7)
-                  fVersion = 1;
+            if (rproto < 10) {
+               fVersion = 3;
+               if (rproto < 8) {
+                  fVersion = 2;
+                  if (rproto < 7)
+                     fVersion = 1;
+               }
             }
             servtype = TSocket::kPROOFD;
          }
@@ -859,7 +866,7 @@ void TAuthenticate::SetEnvironment()
       }
       if (fgDefaultUser == "anonymous" || fgDefaultUser == "rootd" ||
           // when set by user don't prompt for it anymore
-          fgUser != "" || fUser != "")  
+          fgUser != "" || fUser != "")
          fgPromptUser = kFALSE;
 
       if (gDebug > 2)
@@ -1408,35 +1415,108 @@ void TAuthenticate::SetGlobusAuthHook(GlobusAuth_t func)
 }
 
 //______________________________________________________________________________
+Int_t TAuthenticate::SshError(const char *errorfile)
+{
+   // SSH error parsing: returns
+   //     0  :  no error or fatal
+   //     1  :  should retry (eg 'connection closed by remote host')
+
+   Int_t error = 0;
+
+   if (!gSystem->AccessPathName(errorfile, kReadPermission)) {
+      FILE *ferr = fopen(errorfile,"r");
+      if (ferr) {
+         // Get list of errors for which one should retry
+         char *serr = StrDup(gEnv->GetValue("SSH.ErrorRetry", ""));
+         // Prepare for parsing getting rid of '"'s
+         Int_t lerr = strlen(serr);
+         char *pc = (char *)memchr(serr,'"',lerr);
+         while (pc) {
+           *pc = '\0';
+            pc = (char *)memchr(pc+1,'"',strlen(pc+1));
+         }
+         // Now read the file
+         char line[kMAXPATHLEN];
+         while (fgets(line,sizeof(line),ferr)) {
+            // Get rid of trailing '\n'
+            if (line[strlen(line)-1] == '\n')
+               line[strlen(line)-1] = '\0';
+            if (gDebug > 2)
+               Info("SshError","read line: %s",line);
+            pc = serr;
+            while (pc < serr + lerr) {
+               if (pc[0] == '\0' || pc[0] == ' ')
+                  pc++;
+               else {
+                  if (gDebug > 2)
+                     Info("SshError","checking error: '%s'",pc);
+                  if (strstr(line,pc))
+                     error = 1;
+                  pc += strlen(pc);
+               }
+            }
+         }
+         // Close file
+         fclose(ferr);
+         // Free allocated memory
+         if (serr) delete[] serr;
+      }
+   }
+   return error;
+}
+
+//______________________________________________________________________________
 Int_t TAuthenticate::SshAuth(TString &User)
 {
    // SSH client authentication code.
 
-   // Check First if a 'ssh' executable exists ...
-   char *gSshExe =
-       gSystem->Which(gSystem->Getenv("PATH"), "ssh", kExecutePermission);
+   Int_t sshproto = 1;
+   if (fVersion < 4)
+      sshproto = 0;
 
-   if (!gSshExe) {
-      if (gDebug > 2)
-         Info("SshAuth", "ssh not found in $PATH");
+   // Find out whihc command we should be using
+   char cmdref[2][5] = {"ssh", "scp"};
+   char scmd[5] = "";
+   char *gSshExe = 0;
+   Bool_t notfound = kTRUE;
+
+   while (notfound && sshproto > -1) {
+
+      strcpy(scmd,cmdref[sshproto]);
+
+      // Check First if a 'scmd' executable exists ...
+      gSshExe = gSystem->Which(gSystem->Getenv("PATH"),
+                               scmd, kExecutePermission);
+      if (!gSshExe) {
+         if (gDebug > 2)
+            Info("SshAuth", "%s not found in $PATH", scmd);
+
+         // Still allow for client definition of the ssh location ...
+         if (strcmp(gEnv->GetValue("SSH.ExecDir", "-1"), "-1")) {
+            if (gDebug > 2)
+               Info("SshAuth", "searching user defined path ...");
+            if (gSshExe) delete[] gSshExe;
+            gSshExe = StrDup(Form("%s/%s",
+                            (char *)gEnv->GetValue("SSH.ExecDir", ""), scmd));
+            if (gSystem->AccessPathName(gSshExe, kExecutePermission)) {
+               if (gDebug > 2)
+                  Info("SshAuth", "%s not executable", gSshExe);
+            } else
+               notfound = kFALSE;
+         }
+      } else
+         notfound = kFALSE;
+      if (notfound) sshproto--;
+   }
+
+   // Check if the command was found
+   if (notfound) {
+      if (gSshExe) delete[] gSshExe;
       return -1;
    }
-
    if (gDebug > 2)
-      Info("SshAuth", "ssh is %s", gSshExe);
+      Info("SshAuth", "%s is %s (sshproto: %d)", scmd, gSshExe, sshproto);
 
-   // Still allow for client definition of the ssh location ...
-   if (strcmp(gEnv->GetValue("SSH.ExecDir", "-1"), "-1")) {
-      if (gSshExe) delete[] gSshExe;
-      gSshExe =
-          StrDup(Form
-                 ("%s/ssh", (char *) gEnv->GetValue("SSH.ExecDir", "")));
-      if (gSystem->AccessPathName(gSshExe, kExecutePermission)) {
-         Info("SshAuth", "%s not executable", gSshExe);
-         if (gSshExe) delete[] gSshExe;
-         return -1;
-      }
-   }
    // SSH-like authentication code.
    // Returns 0 in case authentication failed
    //         1 in case of success
@@ -1457,8 +1537,8 @@ Int_t TAuthenticate::SshAuth(TString &User)
 
    // Create Options string
    int Opt = ReUse * kAUTH_REUSE_MSK;
-   TString Options(Form("%d none %ld %s", Opt,
-                       (Long_t)User.Length(),User.Data()));
+   TString Options(Form("%d none %ld %s %d", Opt,
+                       (Long_t)User.Length(),User.Data(),sshproto));
 
    // Check established authentications
    Int_t kind = kROOTD_SSH;
@@ -1516,24 +1596,108 @@ Int_t TAuthenticate::SshAuth(TString &User)
 
    // Send authentication request to remote sshd
    // Create command
-   char sshcmd[kMAXPATHLEN] = { 0 };
-   if (rport == -1) {
-      // Remote server did not specify a specific port ... use our default,
-      // whatever it is ...
-      snprintf(sshcmd, kMAXPATHLEN,"%s -x -l %s %s %s %s", gSshExe, User.Data(),
-              noPrompt.Data(), fRemote.Data(), CmdInfo);
+   int ssh_rc = 1;
+   Int_t ntry = gEnv->GetValue("SSH.MaxRetry",100);
+   TString fileErr = "";
+   if (sshproto == 0) {
+      // Prepare local file first in the home directory
+      TString fileErr = "rootsshtmp_";
+      FILE *floc = gSystem->TempFileName(fileErr,gSystem->HomeDirectory());
+      if (floc == 0) {
+         // Try the temp directory
+         fileErr = "rootsshtmp_";
+         floc = gSystem->TempFileName(fileErr);
+      }
+      fileErr.Append(".error");
+      TString sshcmd(Form("%s -x -l %s %s",
+                          gSshExe, User.Data(), noPrompt.Data()));
+      if (rport != -1)
+         sshcmd += TString(Form(" -p %d",rport));
+      sshcmd += TString(Form(" %s %s",fRemote.Data(), CmdInfo));
+      sshcmd += TString(Form(" 1> /dev/null 2> %s",fileErr.Data()));
+
+      // Execute command
+      Int_t again = 1;
+      while (ssh_rc && again && ntry--) {
+         ssh_rc = gSystem->Exec(sshcmd);
+         if (ssh_rc) {
+            again = SshError(fileErr);
+            if (gDebug > 3)
+               Info("SshAuth", "%d: sleeping: rc: %d, again:%d, ntry: %d",
+                         getpid(), ssh_rc, again, ntry);
+            if (again)
+               sleep(1);
+         }
+      }
    } else {
-      // Remote server did specify a specific port ...
-      snprintf(sshcmd, kMAXPATHLEN, "%s -x -l %s -p %d %s %s %s", gSshExe,
-               User.Data(),rport, noPrompt.Data(), fRemote.Data(), CmdInfo);
+      // Prepare local file first in the home directory
+      TString fileLoc = "rootsshtmp_";
+      FILE *floc = gSystem->TempFileName(fileLoc,gSystem->HomeDirectory());
+      if (floc == 0) {
+         // Try the temp directory
+         fileLoc = "rootsshtmp_";
+         floc = gSystem->TempFileName(fileLoc);
+      }
+
+      if (floc != 0) {
+         // Close file and change permissions before filling it
+         fclose(floc);
+         if (chmod(fileLoc, 0600) == -1) {
+            Info("SshAuth", "fchmod error: %d", errno);
+            ssh_rc = 2;
+         } else {
+            floc = fopen(fileLoc, "w");
+            if (ReUse == 1)
+               // Send our public key
+               fprintf(floc,"k: %s\n",fgRSAPubExport.keys);
+            else
+               // Just a notification
+               fprintf(floc,"k: -1\n");
+            fclose(floc);
+            ssh_rc = 0;
+         }
+         if (!ssh_rc) {
+            fileErr = TString(fileLoc).Append(".error");
+            TString sshcmd(Form("%s -p %s", gSshExe, noPrompt.Data()));
+            if (rport != -1)
+               sshcmd += TString(Form(" -P %d",rport));
+            sshcmd += TString(Form(" %s",fileLoc.Data()));
+            sshcmd += TString(Form(" %s@%s:%s 1> /dev/null",
+                                   User.Data(),fRemote.Data(),CmdInfo));
+            sshcmd += TString(Form(" 2> %s",fileErr.Data()));
+            // Execute command
+            ssh_rc = 1;
+            Int_t again = 1;
+            while (ssh_rc && again && ntry--) {
+               ssh_rc = gSystem->Exec(sshcmd);
+               if (ssh_rc) {
+                  again = SshError(fileErr);
+                  if (gDebug > 3)
+                     Info("SshAuth", "%d: sleeping: rc: %d, again:%d, ntry: %d",
+                               getpid(), ssh_rc, again, ntry);
+                  if (again)
+                     // Wait 1 sec before retry
+                     gSystem->Sleep(1000);
+               }
+            }
+         }
+      } else {
+         // Problems creating temporary file: return ...
+         ssh_rc = 1;
+      }
+      // Remove the file after use ...
+      if (!gSystem->AccessPathName(fileLoc,kFileExists)) {
+         gSystem->Unlink(fileLoc);
+      }
    }
-
-   // Execute command
-   int ssh_rc = gSystem->Exec(sshcmd);
+   // Remove the file after use ...
+   if (!gSystem->AccessPathName(fileErr,kFileExists)) {
+      gSystem->Unlink(fileErr);
+   }
    if (gDebug > 3)
-      Info("SshAuth", "system return code: %d", ssh_rc);
+      Info("SshAuth", "%d: system return code: %d (%d)", getpid(), ssh_rc, ntry+1);
 
-   if (ssh_rc) {
+   if (ssh_rc && sshproto == 0) {
 
       Int_t srvtyp = fSocket->GetServType();
       Int_t rproto = fSocket->GetRemoteProtocol();
@@ -1607,6 +1771,17 @@ Int_t TAuthenticate::SshAuth(TString &User)
          }
       }
       return 0;
+   } else if (ssh_rc && sshproto > 0) {
+      // Communicate failure
+      if (fSocket->Send("0", kROOTD_SSH) < 0)
+         Info("SshAuth", "error communicating failure");
+      return 0;
+   }
+
+   // Communicate success
+   if (sshproto > 0) {
+      if (fSocket->Send("1", kROOTD_SSH) < 0)
+         Info("SshAuth", "error communicating success");
    }
 
    Int_t nrec = 0;
@@ -1623,7 +1798,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
       return 0;
    }
 
-   if (ReUse == 1) {
+   if (ReUse == 1 && sshproto == 0) {
 
       // Save type of key
       if (kind != kROOTD_RSAKEY)
@@ -1644,10 +1819,12 @@ Int_t TAuthenticate::SshAuth(TString &User)
          Info("SshAuth", "got message %d, flag: %d", kind, retval);
    }
 
-   if (kind != kROOTD_SSH || retval < 1)
+   if (kind != kROOTD_SSH || retval < 1) {
       Warning("SshAuth",
               "problems recvn (user,offset) length (%d:%d bytes:%d)", kind,
               retval, nrec);
+      return 0;
+   }
 
    char answer[256];
    reclen = (retval+1 > 256) ? 256 : retval+1;
@@ -1838,7 +2015,7 @@ Int_t TAuthenticate::RfioAuth(TString &User)
             // Create inactive SecContext object for use in TSocket
             fSecContext =
                fHostAuth->CreateSecContext((const char *)pw->fUser,
-                                  fRemote, kRfio, -1, fDetails, 0);
+                                  fRemote, kRfio, -stat, fDetails, 0);
             delete pw;
             return 1;
          } else {
@@ -1916,11 +2093,16 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
       TString Salt = "";
       TString PasHash = "";
 
+      // Get effective user (fro remote checks in $HOME/.rhosts)
+      UserGroup_t *pw = gSystem->GetUserInfo(gSystem->GetEffectiveUid());
+      TString EffUser = TString(pw->fUser);
+
       // Create Options string
       int Opt = (ReUse * kAUTH_REUSE_MSK) + (Crypt * kAUTH_CRYPT_MSK) +
                 (NeedSalt * kAUTH_SSALT_MSK);
-      TString Options(Form("%d %ld %s", Opt,
-                          (Long_t)User.Length(), User.Data()));
+      TString Options(Form("%d %ld %s %ld %s", Opt,
+                          (Long_t)User.Length(), User.Data(),
+                          (Long_t)EffUser.Length(), EffUser.Data()));
 
       // Check established authentications
       kind = kROOTD_USER;
@@ -1929,8 +2111,6 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
       if ((rc = AuthExists(User, (Int_t) TAuthenticate::kClear, Options,
                            &kind, &stat, &StdCheckSecCtx)) == 1) {
          // A valid authentication exists: we are done ...
-         if (gDebug > 3)
-            Info("ClearAuth", "valid authentication exists: return 1");
          return 1;
       }
       if (rc == -2) {
@@ -1942,7 +2122,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
 
       if (kind == kROOTD_AUTH && stat == -1) {
          if (gDebug > 3)
-            Info("ClearAuth", "anonymous user", kind, stat);
+            Info("ClearAuth", "anonymous user");
          Anon  = 1;
          Crypt = 0;
          ReUse = 0;
@@ -2791,6 +2971,20 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
    }
 
    if (kind == kROOTD_AUTH && stat >= 1) {
+      if (!SecCtx)
+         SecCtx =
+            fHostAuth->CreateSecContext(fUser,fRemote,Method,-stat,fDetails,0);
+      if (gDebug > 3) {
+         if (stat == 1)
+            Info("AuthExists", "valid authentication exists");
+         if (stat == 2)
+            Info("AuthExists", "valid authentication exists: offset changed");
+         if (stat == 3)
+            Info("AuthExists", "remote access authorized by /etc/hosts.equiv");
+         if (stat == 4)
+            Info("AuthExists", "no authentication required remotely");
+      }
+
       if (stat == 2) {
          int newOffSet;
          // Receive new offset ...
@@ -2799,6 +2993,7 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
          // ... and save it
          SecCtx->SetOffSet(newOffSet);
       }
+
       fSecContext = SecCtx;
       // Add it to local list for later use (if not already there)
       if (NotHA)

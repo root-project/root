@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: error.cxx,v 1.2 2004/04/20 15:21:50 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: error.cxx,v 1.3 2004/04/20 21:32:02 brun Exp $
 // Author: Fons Rademakers   11/08/97
 // Modifified: Gerardo Ganis 8/04/2003
 
@@ -50,7 +50,7 @@ extern int     gDebug;
 
 namespace ROOT {
 
-extern int     gRootLog;
+extern bool gSysLog;
 
 //______________________________________________________________________________
 int GetErrno()
@@ -84,9 +84,9 @@ void ErrorInfo(const char *va_(fmt), ...)
    vsnprintf(buf, sizeof(buf), fmt, ap);
    va_end(ap);
 
-   if (gRootLog == 0) {
+   if (gSysLog) {
     syslog(LOG_INFO, buf);
-   } else if (gRootLog == 1) {
+   } else {
      fprintf(stderr, "%s\n",buf);
    }
 }
@@ -126,9 +126,9 @@ void Error(ErrorHandler_t func, int code, const char *va_(fmt), ...)
    vsnprintf(buf, sizeof(buf), fmt, ap);
    va_end(ap);
 
-   if (gRootLog == 0) {
+   if (gSysLog) {
       syslog(LOG_ERR, buf);
-   } else if (gRootLog == 1) {
+   } else {
       fprintf(stderr, "%s\n",buf);
    }
 
