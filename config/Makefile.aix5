@@ -83,5 +83,5 @@ GLLIBEXTRA          = -lGpad -lGraf3d -lGui $(OPENGLLIBDIR) $(OPENGLULIB) \
 HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(TREEPLAYERLIB)
 HBOOKLIBEXTRA       = -lHist -lMatrix -lTree -lGraf -lTreePlayer
-GEOMPAINTERLIBDEP   = $(GEOMLIB)
+GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB)
 GEOMPAINTERLIBEXTRA = -lGeom -lTree -lGraf3d
