@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.45 2001/04/23 14:08:07 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.46 2001/04/28 07:49:24 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1291,7 +1291,6 @@ void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Do
 //*-*-*-*-*-*-*-*-*Find reasonable bin values*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==========================
 
-   static TGaxis gaxis_tree;
    Double_t binlow,binhigh,binwidth;
    Int_t n;
    Double_t dx = 0.1*(xmax-xmin);
@@ -1300,7 +1299,7 @@ void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Do
    if (umin < 0 && xmin >= 0) umin = 0;
    if (umax > 0 && xmax <= 0) umax = 0;
 
-   gaxis_tree.Optimize(umin,umax,nbins,binlow,binhigh,n,binwidth);
+   TGaxis::Optimize(umin,umax,nbins,binlow,binhigh,n,binwidth,"");
 
    if (binwidth <= 0 || binwidth > 1.e+39) {
       xmin = -1;
@@ -1310,7 +1309,7 @@ void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Do
       xmax    = binhigh;
    }
 
-   newbins = nbins;
+   newbins = nbins; 
 }
 
 //______________________________________________________________________________
