@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.2 2000/10/13 19:04:40 rdm Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.3 2000/10/15 01:29:48 rdm Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -30,6 +30,7 @@ class TGCanvas;
 class TGMenuBar;
 class TGPopupMenu;
 class TGLayoutHints;
+class TX3DContainer;
 
 
 class TViewerX3D : public TGMainFrame {

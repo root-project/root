@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.3 2000/11/21 20:39:31 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.4 2000/12/13 15:13:52 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -58,6 +58,9 @@
 class TMatrix;
 class TElementAction;
 class TElementPosAction;
+class TMatrixRow;
+class TMatrixColumn;
+class TMatrixDiag;
 
 
 class TVector : public TObject {

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 
 
 class TCanvas;
+class TRootEmbeddedContainer;
 
 
 class TRootEmbeddedCanvas : public TGCanvas {
