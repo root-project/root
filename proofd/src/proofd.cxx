@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.62 2004/04/11 18:18:01 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.63 2004/04/20 15:21:50 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -163,6 +163,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <sys/un.h>
+#include "snprintf.h"
 
 #if defined(__CYGWIN__) && defined(__GNUC__)
 #   define cygwingcc

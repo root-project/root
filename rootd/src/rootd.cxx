@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.84 2004/03/30 13:10:17 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.85 2004/04/20 15:21:50 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -202,6 +202,7 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include <netdb.h>
+#include "snprintf.h"
 
 #if defined(__CYGWIN__) && defined(__GNUC__)
 #   define cygwingcc

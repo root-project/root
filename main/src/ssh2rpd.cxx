@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.4 2004/03/17 17:52:23 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.5 2004/04/20 15:21:51 rdm Exp $
 // Author: Gerardo Ganis    1/7/2003
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 #include "Varargs.h"
 #include <netinet/in.h>
+#include "snprintf.h"
 
 
 #define kMAXPATHLEN 2048

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: error.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: error.cxx,v 1.2 2004/04/20 15:21:50 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 // Modifified: Gerardo Ganis 8/04/2003
 
@@ -25,6 +25,7 @@
 #include <syslog.h>
 #include <errno.h>
 #include <string.h>
+#include "snprintf.h"
 
 #if defined(hpux9)
 extern "C" {

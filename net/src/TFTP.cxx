@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.21 2004/01/26 11:14:01 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.22 2004/02/19 00:11:18 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -75,7 +75,8 @@ TFTP::TFTP(const char *url, Int_t par, Int_t wsize)
    TString s = url;
    if (s.Contains("://")) {
       if (!s.BeginsWith("root")) {
-         Error("TFTP", "url must be of the form \"[root[s,k]://]host[:port]\"");
+         Error("TFTP", 
+               "url must be of the form \"[root[up,s,k,g,h,ug]://]host[:port]\"");
          MakeZombie();
          return;
       }

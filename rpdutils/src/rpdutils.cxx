@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.34 2004/04/11 18:18:01 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.35 2004/04/20 15:21:50 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #include <errno.h>
 #include <netdb.h>
 #include <math.h>
+#include "snprintf.h"
 
 #if defined(__CYGWIN__) && defined(__GNUC__)
 #   define cygwingcc
