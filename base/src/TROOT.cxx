@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.61 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.62 2002/01/24 11:39:27 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -96,6 +96,7 @@
 #include "TFolder.h"
 #include "TQObject.h"
 #include "TProcessID.h"
+#include "TPluginManager.h"
 
 #if defined(R__UNIX)
 #include "TUnixSystem.h"
@@ -246,7 +247,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fClasses     = 0;  // might be checked via TCint ctor
    fInterpreter = new TCint("C/C++", "CINT C/C++ Interpreter");
 
-   // Add the root include directory to list search by default by
+   // Add the root include directory to list searched by default by
    // the interpreter (should this be here or somewhere else?)
 #ifndef ROOTINCDIR
    TString include = gSystem->Getenv("ROOTSYS");
@@ -285,6 +286,9 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fStreamerInfo= new TObjArray(100);
    fMessageHandlers = new TList;
 
+   fPluginManager = new TPluginManager;
+   fPluginManager->LoadHandlersFromEnv(gEnv);
+
    TProcessID::AddProcessID();
 
    fRootFolder = new TFolder();
@@ -322,7 +326,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fEditorMode    = 0;
    fDefCanvasName = "c1";
    fEditHistograms= kFALSE;
-   fLineIsProcessing  = 1;   // This prevents WIN32 "Windows" thread to pick ROOT objects with mouse
+   fLineIsProcessing = 1;   // This prevents WIN32 "Windows" thread to pick ROOT objects with mouse
    gDirectory     = this;
    gPad           = 0;
    gRandom        = new TRandom;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.18 2001/12/19 07:15:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.19 2002/01/15 00:48:12 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -44,6 +44,7 @@ class TBrowser;
 class TGlobal;
 class TFunction;
 class TFolder;
+class TPluginManager;
 
 
 class TROOT : public TDirectory {
@@ -101,6 +102,7 @@ protected:
    TSeqCollection  *fStreamerInfo;        //List of active StreamerInfo classes
    TFolder         *fRootFolder;          //top level folder //root
    TList           *fBrowsables;          //List of browsables
+   TPluginManager  *fPluginManager;       //Keeps track of plugin library handlers
    TString         fCutClassName;         //Name of default CutG class in graphics editor
    TString         fDefCanvasName;        //Name of default canvas
 
@@ -125,6 +127,7 @@ public:
    const char       *FindObjectPathName(const TObject *obj) const;
    void              ForceStyle(Bool_t force=kTRUE) {fForceStyle = force;}
    Bool_t            FromPopUp() const {return fFromPopUp;}
+   TPluginManager   *GetPluginManager() const { return fPluginManager; }
    TApplication     *GetApplication() const {return fApplication;}
    TClass           *GetClass(const char *name, Bool_t load=kTRUE) const;
    TColor           *GetColor(Int_t color) const;

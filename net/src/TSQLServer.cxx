@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.2 2001/06/22 16:12:39 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.3 2001/08/24 16:34:18 rdm Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 
 #include "TSQLServer.h"
 #include "TROOT.h"
+#include "TPluginManager.h"
 
 
 ClassImp(TSQLServer)
@@ -43,28 +44,14 @@ TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
    // for the selected system will be loaded. When the connection could not
    // be opened 0 is returned.
 
+   TPluginHandler *h;
    TSQLServer *serv = 0;
 
-   if (!strncmp(db, "mysql", 5)) {
-      if (gROOT->LoadClass("TMySQLServer", "MySQL"))
+   if ((h = gROOT->GetPluginManager()->FindHandler("TSQLServer", db))) {
+      if (h->LoadPlugin() == -1)
          return 0;
       serv = (TSQLServer *) gROOT->ProcessLineFast(Form(
-             "new TMySQLServer(\"%s\", \"%s\", \"%s\")", db, uid, pw));
-   } else if (!strncmp(db, "pgsql", 5)) {
-      if (gROOT->LoadClass("TPgSQLServer", "PgSQL"))
-         return 0;
-      serv = (TSQLServer *) gROOT->ProcessLineFast(Form(
-             "new TPgSQLServer(\"%s\", \"%s\", \"%s\")", db, uid, pw));
-   } else if (!strncmp(db, "sapdb", 5)) {
-      if (gROOT->LoadClass("TSapDBServer", "SapDB"))
-         return 0;
-      serv = (TSQLServer *) gROOT->ProcessLineFast(Form(
-             "new TSapDBServer(\"%s\", \"%s\", \"%s\")", db, uid, pw));
-   } else if (!strncmp(db, "oracle", 6)) {
-      if (gROOT->LoadClass("TOracleServer", "Oracle"))
-         return 0;
-      serv = (TSQLServer *) gROOT->ProcessLineFast(Form(
-             "new TOracleServer(\"%s\", \"%s\", \"%s\")", db, uid, pw));
+             "new %s(\"%s\", \"%s\", \"%s\")", h->GetClass(), db, uid, pw));
    }
    return serv;
 }

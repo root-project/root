@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.46 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.47 2002/01/24 11:39:27 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -37,6 +37,8 @@
 #include "TArrayC.h"
 #include "TClassTable.h"
 #include "TProcessID.h"
+#include "TPluginManager.h"
+
 
 TFile *gFile;                 //Pointer to current file
 
@@ -1614,17 +1616,22 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
                    Int_t compress, Int_t netopt)
 {
    // Static member function allowing the creation/opening of either a
-   // TFile, TNetFile, TWebFile or a TRFIOFile. The returned type of TFile
-   // depends on the file name. If the file starts with "root:" a TNetFile
-   // object will be returned, with "http:" a TWebFile, with "rfio:" a
-   // TRFIOFile and with "file:" or the default a local TFile. However,
-   // before opening a file via TNetFile a check is made to see if the URL
+   // TFile, TNetFile, TWebFile or any TFile derived class for which an
+   // plugin library handler has been registered with the plugin manager
+   // (for the plugin manager see the TPluginManager class). The returned
+   // type of TFile depends on the file name. If the file starts with
+   // "root:" or "roots:" a TNetFile object will be returned, with "http:"
+   // a TWebFile, with "file:" a local TFile, etc. (see the list of TFile
+   // plugin handlers for regular axpressions that will be checked) and
+   // as last a local file will be tried.
+   // Before opening a file via TNetFile a check is made to see if the URL
    // specifies a local file. If that is the case the file will be opened
    // via a normal TFile. To force the opening of a local file via a
    // TNetFile use either TNetFile directly or specify as host "localhost".
    // For the meaning of the options and other arguments see the constructors
    // of the individual file classes. In case of error returns 0.
 
+   TPluginHandler *h;
    TFile *f = 0;
 
    if (!strncmp(name, "root:", 5) || !strncmp(name, "roots:", 6)) {
@@ -1641,17 +1648,16 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
             f = new TFile(Form("%s%s", gSystem->HomeDirectory(), fname),
                           option, ftitle, compress);
       }
-   } else if (!strncmp(name, "rfio:", 5)) {
-      if (gROOT->LoadClass("TRFIOFile", "RFIO")) return 0;
-      f = (TFile*) gROOT->ProcessLineFast(Form("new TRFIOFile(\"%s\",\"%s\",\"%s\",%d)",
-          name, option, ftitle, compress));
-   } else if (!strncmp(name, "hpss:", 5)) {
-
    } else if (!strncmp(name, "http:", 5))
       f = new TWebFile(name);
    else if (!strncmp(name, "file:", 5))
       f = new TFile(name+5, option, ftitle, compress);
-   else
+   else if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
+      if (h->LoadPlugin() == -1)
+         return 0;
+      f = (TFile*) gROOT->ProcessLineFast(Form("new %s(\"%s\",\"%s\",\"%s\",%d)",
+                   h->GetClass(), name, option, ftitle, compress));
+   } else
       f = new TFile(name, option, ftitle, compress);
 
    return f;

@@ -112,6 +112,13 @@ Rint.Logoff:             rootlogoff.C
 # Record session commands, set to "-" to turn off command recording
 Rint.History:            $(HOME)/.root_hist
 
+# Plugin library handlers
++Plugin.TFile:       ^rfio:    TRFIOFile     RFIO
++Plugin.TSQLServer:  ^mysql:   TMySQLServer  MySQL
++Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL
++Plugin.TSQLServer:  ^sapdb:   TSapDBServer  SapDB
++Plugin.TSQLServer:  ^oracle:  TOracleServer Oracle
+
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.
 # Color 5 is yellow.
