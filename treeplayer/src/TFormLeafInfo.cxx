@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.3 2004/08/12 04:33:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.4 2004/10/05 20:27:32 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -899,6 +899,7 @@ Int_t TFormLeafInfoClones::GetCounterValue(TLeaf* leaf) {
    if (!fCounter) return 1;
    return (Int_t)fCounter->ReadValue((char*)GetLocalValuePointer(leaf)) + 1;
 }
+
 //______________________________________________________________________________
 Double_t TFormLeafInfoClones::ReadValue(char *where, Int_t instance) {
    // Return the value of the underlying data member inside the
@@ -1020,7 +1021,6 @@ void * TFormLeafInfoClones::GetValuePointer(char *where, Int_t instance) {
 //
 // TFormLeafInfoCollection is a small helper class to implement reading a data
 // member on a generic collection object stored in a TTree.
-
 
 //______________________________________________________________________________
 TFormLeafInfoCollection::TFormLeafInfoCollection(TClass* classptr,
