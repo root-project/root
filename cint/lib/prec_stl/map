@@ -43,7 +43,7 @@ class map {
   //typedef pair<const Key,T>                         value_type;
   typedef Compare                                   key_compare;
   typedef Allocator                                 allocator_type;
-#if defined(G__GNUC) || defined(G__HPUX)
+#if (defined(G__GNUC) && !defined (G__KCC)) || defined(G__HPUX)
   //typedef Key*                                     pointer;
   //typedef const Key*                               const_pointer;
   //typedef Key&                                     reference;
@@ -85,7 +85,7 @@ class map {
     bool operator==(const iterator& x) ;
 #endif
   };
-#ifdef G__GNUC
+#if defined(G__GNUC) || !defined (G__KCC)
   friend bool operator==(const map::iterator& x ,const map::iterator& y) const;
   friend bool operator!=(const map::iterator& x ,const map::iterator& y) const;
 #endif
@@ -127,7 +127,7 @@ class map {
     map(InputIterator first, InputIterator last,
      const Compare& comp = Compare(), const Allocator& = Allocator());
 #endif
-#ifdef G__GNUC
+#if defined(G__GNUC) || defined(G__KCC)
   map(iterator first, iterator last);
   map(reverse_iterator first, reverse_iterator last);
 #endif
@@ -154,11 +154,11 @@ class map {
   // modifiers:
   //pair<iterator, bool> insert(const value_type& x);
   iterator             insert(iterator position, const value_type& x);
-#if 0
+#if defined(G__KCC)
   template <class InputIterator>
    void insert(InputIterator first, InputIterator last);
 #endif
-#ifdef G__GNUC
+#if defined(G__GNUC) || !defined (G__KCC)
   void insert(iterator first, iterator last);
   void insert(reverse_iterator first, reverse_iterator last);
 #endif
@@ -190,7 +190,7 @@ class map {
   friend bool operator>=(const map& x, const map& y);
   friend bool operator<=(const map& x, const map& y);
   // specialized algorithms:
-#ifndef G__GNUC
+#if !defined(G__GNUC) && !defined(G__KCC)
   // doesn't work on egcs nor VC++5.0
   //friend void swap(map& x, map& y);
 #endif

@@ -18,7 +18,7 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////
-#if defined(G__GNUC)
+#if defined(G__GNUC) && !defined (G__KCC)
 
 template <int inst>
 class __malloc_alloc_template {
@@ -107,6 +107,7 @@ class allocator<void> {
 	typedef const _Ty *const_pointer;
 	typedef _Ty value_type;
 };
+
 
 #endif // G__GNUC
 //////////////////////////////////////////////////////////////////////

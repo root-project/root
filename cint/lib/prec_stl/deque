@@ -32,7 +32,7 @@ class deque {
  public:
   typedef T value_type;
   typedef Allocator                                 allocator_type;
-#if defined(G__GNUC) || defined(G__HPUX)
+#if (defined(G__GNUC) && !defined (G__KCC)) || defined(G__HPUX)
   typedef value_type* pointer;
   typedef const value_type* const_pointer;
   typedef value_type& reference;
@@ -124,7 +124,7 @@ class deque {
     deque(InputIterator first, InputIterator last,
          const Allocator& = Allocator());
 #else
-#if defined(G__GNUC)
+#if (defined(G__GNUC) && !defined (G__KCC))
   deque(const T* first,const T* last) ;
 #endif
   deque(const_iterator first, const_iterator last);
@@ -136,7 +136,7 @@ class deque {
   template <class InputIterator>
    void assign(InputIterator first, InputIterator last);
 #endif
-#ifndef G__GNUC
+#if !defined(G__GNUC) || defined(G__KCC)
   void assign(size_type n, const T& t);
 #endif
   //allocator_type get_allocator() const;
@@ -160,7 +160,7 @@ class deque {
   // element access:
   T&       operator[](size_type n);
   //const_reference operator[](size_type n) const;
-#ifndef G__GNUC
+#if !defined(G__GNUC) || defined(G__KCC)
   T& at(size_type n);
 #endif
   //const_reference at(size_type n) const;
@@ -199,7 +199,7 @@ class deque {
 
 #ifndef G__NOALGORITHM
   // Generic algorithm
-#if defined(G__GNUC) || defined(G__BORLAND)
+#if defined(G__GNUC) || defined(G__BORLAND) || defined (G__KCC)
 
   // input iter
   friend deque::iterator 
@@ -258,7 +258,7 @@ class deque {
   // forward iter
   friend void
     fill(deque::iterator first,deque::iterator last,const T& value);
-#if (G__GNUC>=3)
+#if (G__GNUC>=3) || defined(G__KCC)
   friend void
     fill_n(deque::iterator first,deque::size_type n,const T& value);
 #endif
