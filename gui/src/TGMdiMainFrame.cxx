@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.13 2004/10/26 09:39:23 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.14 2004/12/09 17:05:41 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -1025,6 +1025,22 @@ void TGMdiMainFrame::ConfigureWindow(TGMdiFrame *f, TGMdiGeometry &geom)
             frame->Move(frame->GetMinimizedX(), frame->GetMinimizedY());
       }
       Layout();
+   }
+}
+
+//_____________________________________________________________________________
+void TGMdiMainFrame::CloseAll()
+{
+   // close all mdi frames
+
+   TGMdiFrameList *tmp, *travel = fChildren;
+   TGMdiFrame *mdi;
+
+   while (travel) {
+      tmp = travel->GetNext();
+      mdi = travel->GetDecorFrame()->GetMdiFrame();
+      RemoveMdiFrame(mdi);
+      travel = tmp;
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.2 2004/10/17 16:31:05 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.3 2004/11/23 00:07:22 rdm Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -119,18 +119,16 @@ TGuiBuilder::TGuiBuilder()
 
       gGuiBuilder = this;
       gHandler->ExecPlugin(0);
+   } else {
+      fAction      = 0;
+      gGuiBuilder->Show();
    }
-
-   fAction      = 0;
-   gGuiBuilder  = this;
 }
 
 //______________________________________________________________________________
 TGuiBuilder::~TGuiBuilder()
 {
    // dtor
-
-   gGuiBuilder = 0;
 }
 
 //______________________________________________________________________________

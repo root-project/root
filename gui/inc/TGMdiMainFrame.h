@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.h,v 1.4 2004/09/10 14:00:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.h,v 1.5 2004/10/26 09:39:23 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -184,23 +184,24 @@ public:
 
    virtual void     Layout();
 
-   void             FreeMove(TGMdiFrame *frame);
-   void             FreeSize(TGMdiFrame *frame);
-   void             Restore(TGMdiFrame *frame);
-   void             Maximize(TGMdiFrame *frame);
-   void             Minimize(TGMdiFrame *frame);
-   Int_t            Close(TGMdiFrame *frame);
-   Int_t            ContextHelp(TGMdiFrame *frame);
+   virtual void     FreeMove(TGMdiFrame *frame);
+   virtual void     FreeSize(TGMdiFrame *frame);
+   virtual void     Restore(TGMdiFrame *frame);
+   virtual void     Maximize(TGMdiFrame *frame);
+   virtual void     Minimize(TGMdiFrame *frame);
+   virtual Int_t    Close(TGMdiFrame *frame);
+   virtual Int_t    ContextHelp(TGMdiFrame *frame);
+   virtual void     CloseAll();
+  
+   virtual void     Cascade() { ArrangeFrames(kMdiCascade); }
+   virtual void     TileHorizontal() { ArrangeFrames(kMdiTileHorizontal); }
+   virtual void     TileVertical() { ArrangeFrames(kMdiTileVertical); }
 
-   void             Cascade() { ArrangeFrames(kMdiCascade); }
-   void             TileHorizontal() { ArrangeFrames(kMdiTileHorizontal); }
-   void             TileVertical() { ArrangeFrames(kMdiTileVertical); }
+   virtual void     ArrangeFrames(Int_t mode);
+   virtual void     ArrangeMinimized();
 
-   void             ArrangeFrames(Int_t mode);
-   void             ArrangeMinimized();
-
-   void             CirculateUp();
-   void             CirculateDown();
+   virtual void     CirculateUp();
+   virtual void     CirculateDown();
 
    TGMdiFrame      *GetCurrent() const;
    TGMdiFrame      *GetMdiFrame(UInt_t id) const;

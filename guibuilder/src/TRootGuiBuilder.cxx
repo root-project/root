@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.10 2004/12/07 15:34:27 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.11 2004/12/09 17:05:41 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -213,6 +213,7 @@ static ToolBarData_t gToolBarData[] = {
 
 ClassImp(TRootGuiBuilder)
 
+
 ////////////////////////////////////////////////////////////////////////////////
 class TRootGuiBuilderContainer : public TGMdiContainer {
 
@@ -221,7 +222,6 @@ public:
          TGMdiContainer(p, 10, 10, kOwnBackground) {
       const TGPicture *pbg = fClient->GetPicture("bld_bg.xpm");
       if (pbg) SetBackgroundPixmap(pbg->GetPicture());
-      //SetEditDisabled(kFALSE);
    }
    virtual ~TRootGuiBuilderContainer() {}
    void SetEditable(Bool_t) {}
@@ -310,9 +310,10 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    fMain = new TGMdiMainFrame(cf, fMenuBar, 1, 1);
    cf->AddFrame(fMain, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
-   delete fMain->GetContainer();
+   TGFrame *mdicont = fMain->GetContainer();   
+   fMain->GetViewPort()->RemoveFrame(mdicont);
+   delete mdicont;
    fMain->SetContainer(new TRootGuiBuilderContainer(fMain));
-   fMain->SetCleanup(-1);  //deep cleanup
 
    if (fManager) {
       fEditor = new TGuiBldEditor(cf);
@@ -478,6 +479,7 @@ TRootGuiBuilder::~TRootGuiBuilder()
    delete fMenuFile;
    delete fMenuWindow;
    delete fMenuHelp;
+   gGuiBuilder = 0;
 }
 
 //______________________________________________________________________________
@@ -486,15 +488,9 @@ void TRootGuiBuilder::CloseWindow()
    // close GUI builder via "Close" button
 
    TGWindow *root = (TGWindow*)fClient->GetRoot();
-
-   root->SetEditable(kFALSE);
+   if (root) root->SetEditable(kFALSE);
    fManager->SetEditable(kFALSE);
-   fManager->SetBuilder(0);
-   fManager->SetPropertyEditor(0);
-   fManager = 0;
-
-   gGuiBuilder = 0;
-   delete this;
+   Hide();
 }
 
 //______________________________________________________________________________
@@ -861,7 +857,7 @@ Bool_t TRootGuiBuilder::NewProject(Event_t *)
 //______________________________________________________________________________
 Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
 {
-   //
+   // open new gui builder project
 
    TGFileInfo fi;
    static TString dir(".");
@@ -1194,7 +1190,7 @@ void TRootGuiBuilder::BindKeys()
 //______________________________________________________________________________
 TGFrame *TRootGuiBuilder::VSplitter()
 {
-   //
+   // creates new TGVSplitter 
 
    TGHorizontalFrame *ret = new TGHorizontalFrame();
    ret->SetCleanup(kDeepCleanup);
@@ -1217,7 +1213,7 @@ TGFrame *TRootGuiBuilder::VSplitter()
 //______________________________________________________________________________
 TGFrame *TRootGuiBuilder::HSplitter()
 {
-   //
+   //  creates new TGHSplitter 
 
    TGVerticalFrame *ret = new TGVerticalFrame();
    ret->SetCleanup(kDeepCleanup);
@@ -1236,3 +1232,14 @@ TGFrame *TRootGuiBuilder::HSplitter()
    ret->SetLayoutBroken(kFALSE);
    return ret;
 }
+
+//______________________________________________________________________________
+void TRootGuiBuilder::Hide()
+{
+   // cleanup and hide gui builder
+
+   //fMain->CloseAll();
+   UnmapWindow();
+}
+
+

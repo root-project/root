@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.9 2004/10/21 14:25:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.10 2004/10/25 12:06:50 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -139,14 +139,16 @@ TGMdiDecorFrame::~TGMdiDecorFrame()
 {
    // dtor
 
-   delete fUpperHR;
-   delete fLowerHR;
-   delete fLeftVR;
-   delete fRightVR;
-   delete fUpperLeftCR;
-   delete fLowerLeftCR;
-   delete fUpperRightCR;
-   delete fLowerRightCR;
+   if (!MustCleanup()) {
+      delete fUpperHR;
+      delete fLowerHR;
+      delete fLeftVR;
+      delete fRightVR;
+      delete fUpperLeftCR;
+      delete fLowerLeftCR;
+      delete fUpperRightCR;
+      delete fLowerRightCR;
+   }
    DestroyWindow();
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.46 2004/10/15 17:10:32 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.47 2004/12/03 12:07:44 brun Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -1082,7 +1082,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    fCheckMulti->Connect("Clicked()", "TestDialog", this, "HandleButtons()");
    tf->AddFrame(fF4, fL3);
 
-   for (i = 0; i < 20; ++i) {
+   for (i = 0; i < 20; ++i)  {
       sprintf(tmp, "Entry %i", i+1);
       fListBox->AddEntry(tmp, i+1);
    }

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.7 2004/09/22 09:28:47 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.1 2004/10/15 15:34:53 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -72,7 +72,7 @@ public:
    virtual TGFrame  *ExecuteAction();
    virtual void      HandleButtons();
    virtual void      Show() { MapRaised(); }
-   virtual void      Hide() { UnmapWindow(); }
+   virtual void      Hide();
    virtual void      ChangeSelected(TGFrame *f);
    virtual void      Update();
    virtual Bool_t    IsSelectMode() const;

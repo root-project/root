@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.29 2004/12/07 15:34:27 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.30 2004/12/09 17:05:41 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -2401,10 +2401,7 @@ Bool_t TGuiBldDragManager::HandleClientMessage(Event_t *event)
             return kFALSE;
          }
 
-         delete fBuilder;
-         fBuilder = 0;
-         gGuiBuilder = 0;
-         fEditor = 0;
+         fBuilder->Hide();
 
          delete fFrameMenu;
          fFrameMenu =0;
@@ -2418,8 +2415,7 @@ Bool_t TGuiBldDragManager::HandleClientMessage(Event_t *event)
          if (fPimpl) fPimpl->ResetParams();
 
       } else if (fBuilder && (event->fWindow == fBuilder->GetId())) {
-         fBuilder = 0;
-         gGuiBuilder = 0;
+         fBuilder->Hide();
 
       } else if (fEditor && (event->fWindow == fEditor->GetMainFrame()->GetId())) {
          TQObject::Disconnect(fEditor);
