@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.4 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -148,7 +148,7 @@ public:
 };
 
 /*************************************************************************
- * TGeoNodeOffset - node containing only an translation offset
+ * TGeoNodeOffset - node containing only a translation offset
  *
  *************************************************************************/
 

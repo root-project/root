@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.29 2002/05/18 08:22:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.30 2002/05/18 16:29:44 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1158,7 +1158,8 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstybin < 0) firstybin = 1;
-  if (lastybin > ny) lastybin = ny;
+  if (lastybin  < 0) lastybin  = ny;
+  if (lastybin  > ny+1) lastybin  = ny;
 
 // Create the profile histogram
   char *pname = (char*)name;
@@ -1209,7 +1210,8 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstxbin < 0) firstxbin = 1;
-  if (lastxbin > nx) lastxbin = nx;
+  if (lastxbin  < 0) lastxbin  = nx;
+  if (lastxbin  > nx+1) lastxbin  = nx;
 
 // Create the projection histogram
   char *pname = (char*)name;
@@ -1267,8 +1269,8 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstybin < 0) firstybin = 1;
-  if (lastybin > 9000) lastybin = ny;
-  if (lastybin > ny+1) lastybin = ny;
+  if (lastybin  < 0) lastybin  = ny;
+  if (lastybin  > ny+1) lastybin  = ny;
 
 // Create the projection histogram
   char *pname = (char*)name;
@@ -1341,8 +1343,8 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstxbin < 0) firstxbin = 1;
-  if (lastxbin > 9000) lastxbin = nx;
-  if (lastxbin > nx+1) lastxbin = nx;
+  if (lastxbin  < 0) lastxbin  = nx;
+  if (lastxbin  > nx+1) lastxbin  = nx;
 
 // Create the projection histogram
   char *pname = (char*)name;

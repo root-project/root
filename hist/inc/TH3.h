@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.17 2002/02/18 23:09:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.18 2002/02/25 16:05:37 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -81,7 +81,7 @@ public:
    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
    virtual Int_t   Merge(TCollection *list);
           TH1D    *ProjectionZ(const char *name="_pz", Int_t firstxbin=-1, Int_t lastxbin=9999, Int_t firstybin=0,
-                                 Int_t lastybin=9999, Option_t *option="") const; // *MENU*
+                                 Int_t lastybin=-1, Option_t *option="") const; // *MENU*
           TH1     *Project3D(Option_t *option="x") const; // *MENU*
    virtual void    PutStats(Stat_t *stats);
    virtual void    Reset(Option_t *option="");
