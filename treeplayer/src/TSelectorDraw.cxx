@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.37 2004/08/12 10:52:12 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.38 2004/10/05 07:02:21 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -320,9 +320,9 @@ void TSelectorDraw::Begin(TTree *tree)
          }
 
          TObject *oldObject = gDirectory->Get(hname);  // if hname contains '(...)' the return values is NULL, which is what we want
-         fOldHistogram = oldObject?dynamic_cast<TH1*>(oldObject):0;
+         fOldHistogram = oldObject ? dynamic_cast<TH1*>(oldObject) : 0;
 
-         if (fOldHistogram==0 && oldObject &&  !oldObject->InheritsFrom(TH1::Class())) {
+         if (!fOldHistogram && oldObject && !oldObject->InheritsFrom(TH1::Class())) {
             Error("Begin","An object of type '%s' has the same name as the requested histo (%s)",oldObject->IsA()->GetName(),hname);
             SetStatus(-1);
             return;
@@ -336,11 +336,11 @@ void TSelectorDraw::Begin(TTree *tree)
             delete fOldHistogram; fOldHistogram=0;
          }
 
-      } else { // if (i)                       // make selection list (i.e. varexp0 starts with ">>")
+      } else { // if (i)  // make selection list (i.e. varexp0 starts with ">>")
          TObject *oldObject = gDirectory->Get(hname);
-         elist = dynamic_cast<TEventList*>(oldObject);
+         elist = oldObject ? dynamic_cast<TEventList*>(oldObject) : 0;
 
-         if (elist==0 && oldObject!=0) {
+         if (!elist && oldObject) {
             Error("Begin","An object of type '%s' has the same name as the requested event list (%s)",
                   oldObject->IsA()->GetName(),hname);
             SetStatus(-1);
