@@ -58,9 +58,9 @@ int G__getexitcode()
 ******************************************************************/
 int G__get_return(int *exitval)
 {
-   if (exitval)
-      *exitval = G__getexitcode();
-   return G__return;
+  if (exitval)
+    *exitval = G__getexitcode();
+  return G__return;
 }
 #endif
 

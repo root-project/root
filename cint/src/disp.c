@@ -1968,6 +1968,22 @@ long offset;
   return(0);
 }
 
+
+#ifdef G__WIN32
+/**************************************************************************
+* status flags
+**************************************************************************/
+#ifdef G__SPECIALSTDIO
+static int G__autoconsole=1;
+static int G__isconsole=0;
+#else
+static int G__autoconsole=0;
+static int G__isconsole=1;
+#endif
+static int G__lockstdio=0;
+#endif
+
+
 #ifndef G__OLDIMPLEMENTATION1485
 #include <stdarg.h>
 
@@ -2015,6 +2031,11 @@ va_list arg;
     (*G__ErrMsgCallback)(buf);
   }
   else {
+#ifdef G__WIN32
+    if(stdout==fp||stderr==fp) {
+      if(G__autoconsole&&0==G__isconsole) G__AllocConsole();
+    }
+#endif
     if(fp) result = vfprintf(fp,fmt,argptr);
     else if(G__serr) result = vfprintf(G__serr,fmt,argptr);
     else result = vfprintf(stderr,fmt,argptr);
@@ -2038,6 +2059,11 @@ int c;
     result = c;
   }
   else {
+#ifdef G__WIN32
+    if(stdout==G__serr||stderr==G__serr) {
+      if(G__autoconsole&&0==G__isconsole) G__AllocConsole();
+    }
+#endif
     result = fputc(c,G__serr);
   }
   return(result);
@@ -2069,18 +2095,6 @@ int c;
 #ifndef G__OLDIMPLEMENTATION614
 #undef signal
 #endif
-
-/**************************************************************************
-* status flags
-**************************************************************************/
-#ifdef G__SPECIALSTDIO
-static int G__autoconsole=1;
-static int G__isconsole=0;
-#else
-static int G__autoconsole=0;
-static int G__isconsole=1;
-#endif
-static int G__lockstdio=0;
 
 
 #ifndef G__OLDIMPLEMENTATION614

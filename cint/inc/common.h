@@ -844,6 +844,10 @@ struct G__filetable {
 #ifndef G__OLDIMPLEMENTATION1536
   char hdrprop;
 #endif
+#ifndef G__OLDIMPLEMENTATION1649
+  char *str;
+  int vindex;
+#endif
 };
 
 /**************************************************************************
