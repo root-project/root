@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TViewer3DPad.cxx,v 1.5 2005/03/18 08:03:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TViewer3DPad.cxx,v 1.6 2005/03/18 16:19:16 brun Exp $
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************
@@ -147,3 +147,19 @@ Int_t TViewer3DPad::AddObject(UInt_t /*placedID*/, const TBuffer3D & buffer, Boo
    // We don't support placed ID shapes - ID is discarded
    return AddObject(buffer,addChildren);
 }
+
+
+//______________________________________________________________________________
+   // Composite shapes not supported on this viewer currently - ignore.
+   // Will result in a set of individual component shapes
+
+void TViewer3DPad::OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * /*addChildren*/) 
+{};
+
+//______________________________________________________________________________
+void TViewer3DPad::CloseComposite() 
+{};
+
+//______________________________________________________________________________
+void TViewer3DPad::AddCompositeOp(UInt_t /*operation*/) 
+{};
