@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.9 2003/11/13 15:15:11 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.10 2003/11/18 23:09:13 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -40,7 +40,7 @@ const int  kMAXSECBUF        = 2048;
 const int  kAUTH_REUSE_MSK   = 0x1;
 const int  kAUTH_CRYPT_MSK   = 0x2;
 const int  kAUTH_SSALT_MSK   = 0x4;
-const int  kMAXPATHLEN       = 1024;
+const int  kMAXPATHLEN       = 2048;
 const int  kMAXTABSIZE       = 1000000000;
 const int  kMAXRSATRIES      = 100;
 
