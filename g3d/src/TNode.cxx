@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.7 2001/01/12 10:49:11 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.8 2001/02/28 11:04:06 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -309,6 +309,7 @@ void TNode::Draw(Option_t *option)
    if (!opt.Contains("same")) gPad->Clear();
 
 //*-*- Draw Referenced node
+   if (!gGeometry) new TGeometry;
    gGeometry->SetGeomLevel();
    gGeometry->UpdateTempMatrix();
 
@@ -497,6 +498,8 @@ void TNode::ls(Option_t *option) const
    TString opt = option;
    opt.ToLower();
 
+   if (!gGeometry) new TGeometry;
+   
    Int_t maxlevel = 15;
    if (opt.Contains("1")) maxlevel = 1;
    if (opt.Contains("2")) maxlevel = 2;
