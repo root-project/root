@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.2 2000/11/21 21:02:48 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewerOld.cxx,v 1.1 2000/11/22 17:58:38 rdm Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 #include "TROOT.h"
 #include "TSystem.h"
-#include "TTreeViewer.h"
+#include "TTreeViewerOld.h"
 #include "TPaveVar.h"
 #include "TLeaf.h"
 #include "TH1.h"
