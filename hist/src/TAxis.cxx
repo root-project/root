@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.55 2004/03/12 00:30:43 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.56 2004/03/12 09:45:07 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -451,7 +451,9 @@ Int_t TAxis::FindBin(const char *label)
    //create list of labels if it does not exist yet
    if (!fLabels) {
       if (!fParent) return -1;
-      fLabels = new THashList(fNbins,1);
+      fLabels = new THashList(1,1);
+      fParent->SetBit(TH1::kCanRebin);
+      if (fXmax <= fXmin) fXmax = fXmin+1;
    }
 
    // search for label in the existing list
