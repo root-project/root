@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.79 2004/11/18 06:13:14 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.80 2004/11/24 14:11:38 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1003,15 +1003,15 @@ void TBranch::KeepCircular(Long64_t maxEntries)
 //______________________________________________________________________________
 Int_t TBranch::LoadBaskets()
 {
-//  Baskets associated to this branch are forced to be in memory
+//  Baskets associated to this branch are forced to be in memory.
 //  You can call TTree::SetMaxVirtualSize(maxmemory) to instruct
-//  the system that the total size of the imported baskets do not
+//  the system that the total size of the imported baskets does not
 //  exceed maxmemory bytes.
-//  The function returns the number of baskets that have been put in memory
-//  This method may be called to force all baskets of one or more branch
+//  The function returns the number of baskets that have been put in memory.
+//  This method may be called to force all baskets of one or more branches
 //  in memory when random access to entries in this branch is required.
 //  See also TTree::LoadBaskets to load all baskets of all branches in memory.
-      
+
    Int_t nimported = 0;
    Int_t nbaskets = fBaskets.GetEntriesFast();
    TFile *file = GetFile(0);
@@ -1035,7 +1035,7 @@ Int_t TBranch::LoadBaskets()
    }
    return nimported;
 }
-   
+
 //______________________________________________________________________________
 void TBranch::Print(Option_t *) const
 {
