@@ -81,4 +81,8 @@ graf/src/TText.o: graf/src/TText.cxx $(FREETYPELIB)
 		$(CXX) $(OPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -o $@ -c $<
 
 graf/src/TLatex.o: graf/src/TLatex.cxx $(FREETYPELIB)
+ifneq ($(PLATFORM),win32)
 		$(CXX) $(OPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -o $@ -c $<
+else
+		$(CXX) $(DEBUGFLAGS) -I$(FREETYPEDIRI) $(CXXFLAGS) -o $@ -c $<
+endif
