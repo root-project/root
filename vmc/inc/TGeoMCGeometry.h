@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.3 2003/09/23 14:03:15 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.4 2004/03/19 17:42:47 brun Exp $
 // Authors: ... 25/06/2002
 
 #ifndef ROOT_TGeoMCGeometry
@@ -7,7 +7,7 @@
 /* Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. *
  * See cxx source for full Copyright notice                               */
 
-/* $Id: TGeoMCGeometry.h,v 1.3 2003/09/23 14:03:15 brun Exp $ */
+/* $Id: TGeoMCGeometry.h,v 1.4 2004/03/19 17:42:47 brun Exp $ */
 
 //
 // Class TGeoMCGeometry
@@ -96,7 +96,7 @@ class TGeoMCGeometry : public TVirtualMCGeometry {
     void     Vname(const char *name, char *vname) const;
    
     TGeoMCGeometry(const TGeoMCGeometry& rhs);
-    TGeoMCGeometry& operator=(const TGeoMCGeometry& rhs) {return (*this);}
+    TGeoMCGeometry& operator=(const TGeoMCGeometry& /*rhs*/) {return (*this);}
     Bool_t  fG3CompatibleVolumeNames;   // option to convert volumes names to
                                         // be compatible with G3
 
