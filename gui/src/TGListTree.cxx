@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -762,6 +762,28 @@ Int_t TGListTree::DeleteItem(TGListTreeItem *item)
    //fClient->NeedRedraw(this);
 
    return 1;
+}
+
+//______________________________________________________________________________
+void TGListTree::OpenItem(TGListTreeItem *item)
+{
+   // Open item in list tree (i.e. show child items).
+
+   if (item)
+      item->fOpen = kTRUE;
+
+   //fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TGListTree::CloseItem(TGListTreeItem *item)
+{
+   // Close item in list tree (i.e. hide child items).
+
+   if (item)
+      item->fOpen = kFALSE;
+
+   //fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
