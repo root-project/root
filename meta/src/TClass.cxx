@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.44 2001/05/02 20:44:33 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.45 2001/05/04 13:32:20 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include <iostream.h>
 
 #include "TROOT.h"
+#include "TFile.h"
 #include "TClass.h"
 #include "TObjArray.h"
 #include "TBaseClass.h"
@@ -275,7 +276,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fAllPubData     = 0;
    fAllPubMethod   = 0;
    fCheckSum       = 0;
-   fStreamerInfo   = new TObjArray(fClassVersion+1);
+   fStreamerInfo   = new TObjArray(fClassVersion+2+10,-1); // +10 to read new data by old
 
    ResetInstanceCount();
 
@@ -581,7 +582,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
    if (cl == this) return 0;
 
    if (!fClassInfo) {
-      TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(fClassVersion);
+      TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(fClassVersion);
       if (!sinfo) return 0;
       TIter next(sinfo->GetElements());
       TStreamerElement *element;
@@ -966,12 +967,12 @@ TStreamerInfo *TClass::GetStreamerInfo(Int_t version)
    // returns a pointer to the TStreamerInfo object for version
    // If the object doest not exist, it is created
 
-   if (version <= 0) version = fClassVersion;
-   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(version);
+   if (version == 0) version = fClassVersion;
+   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);
    //if (sinfo) return sinfo;
    if (!sinfo) {
       sinfo = new TStreamerInfo(this,"");
-      fStreamerInfo->AddAt(sinfo,fClassVersion);
+      fStreamerInfo->AddAtAndExpand(sinfo,fClassVersion);
       if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
       sinfo->Build();
    } else {
@@ -998,7 +999,7 @@ void TClass::IgnoreTObjectStreamer(Bool_t ignore)
 
    if ( ignore &&  TestBit(kIgnoreTObjectStreamer)) return;
    if (!ignore && !TestBit(kIgnoreTObjectStreamer)) return;
-   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(fClassVersion);
+   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(fClassVersion);
    if (sinfo) {
       Error("IgnoreTObjectStreamer","Must be called before the creation of StreamerInfo");
       return;
@@ -1426,11 +1427,11 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start,
 //   count    is the number of bytes for this object in the buffer
 
    //the StreamerInfo should exist at this point
-   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(version);
+   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);
    if (sinfo == 0) {
       BuildRealData(pointer);
       sinfo = new TStreamerInfo(this,"");
-      fStreamerInfo->AddAt(sinfo,version);
+      fStreamerInfo->AddAtAndExpand(sinfo,version);
       if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),version);
       sinfo->Build();
    } else if (!fRealData) {
@@ -1457,14 +1458,19 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
    UInt_t R__s, R__c;
    Version_t version = b.ReadVersion(&R__s, &R__c);
 
+   if (gFile && gFile->GetVersion() < 30000) version = -1; //This is old file
+
    //the StreamerInfo should exist at this point
-   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(version);
+   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);
    if (sinfo == 0) {
       BuildRealData(pointer);
       sinfo = new TStreamerInfo(this,"");
-      fStreamerInfo->AddAt(sinfo,version);
+      fStreamerInfo->AddAtAndExpand(sinfo,version);
       if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),version);
       sinfo->Build();
+
+      if (version == -1) sinfo->BuildFake();
+
    } else if (!sinfo->GetOffsets()) {
       BuildRealData(pointer);
       sinfo->BuildOld();
@@ -1491,11 +1497,11 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char *info)
 // For more information, see class TStreamerInfo.
 
    //build the StreamerInfo if first time for the class
-   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(fClassVersion);
+   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(fClassVersion);
    if (sinfo == 0) {
       BuildRealData(pointer);
       sinfo = new TStreamerInfo(this,info);
-      fStreamerInfo->AddAt(sinfo,fClassVersion);
+      fStreamerInfo->AddAtAndExpand(sinfo,fClassVersion);
       if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
       sinfo->Build();
    } else if (!sinfo->GetOffsets()) {
