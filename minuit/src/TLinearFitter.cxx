@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.4 2005/03/04 09:24:52 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.5 2005/03/04 15:32:26 rdm Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -346,7 +346,7 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
    Int_t i, j, ii;
    fEsum+=e;
    //for numerical stability if y is large
-   e=TMath::Sqrt(e*e + (y*y*1e-26));
+   e = TMath::Sqrt(e*e + (y*y*1e-26));
    fEcorsum+=e;
    y/=e;
 
@@ -363,10 +363,10 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
    } else {
       if (fSpecial>200){
          //Hyperplane fitting. Constant term is added
-         Int_t npar=fSpecial-200;
+         Int_t npar=fSpecial-201;
          val[0]=1./e;
-         for (i=1; i<npar; i++)
-            val[i]=x[i]/e;
+         for (i=0; i<npar; i++)
+            val[i+1]=x[i]/e;
       } else {
          //general case
          for (ii=0; ii<fNfunctions; ii++){
@@ -487,10 +487,11 @@ void TLinearFitter::Chisquare()
    Double_t sumtotal2;
    Double_t temp, temp2;
 
-   if (fEcorsum/fEsum > 1e3)
+   if (fEcorsum/fEsum > 1e3) {
       Warning("Chisquare", "Some values of Y are very large compared to the weights\n.");
-   printf(" The chisquare might be calculated incorrectly. \n");
-   printf("It doesn't mean that parameters  or parameter errors are not correct\n");
+      printf(" The chisquare might be calculated incorrectly. \n");
+      printf("It doesn't mean that parameters  or parameter errors are not correct\n");
+   }
 
    if (!fStoreData){
       sumtotal2 = 0;
@@ -525,9 +526,11 @@ void TLinearFitter::Chisquare()
                   temp += fParams(i)*val[i];
             } else {
                if (fSpecial>200) {
-                  Int_t npar = fSpecial-200;
+		  //hyperplane case
+                  Int_t npar = fSpecial-201;
+		  temp+=fParams(0);
                   for (i=0; i<npar; i++)
-                     temp += fParams(i)*fX(point, i);
+                     temp += fParams(i+1)*fX(point, i);
                } else {
                   for (j=0; j<fNfunctions; j++) {
                      TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
@@ -790,13 +793,13 @@ void TLinearFitter::SetDim(Int_t ndim)
 //______________________________________________________________________________
 void TLinearFitter::SetFormula(const char *formula)
 {
-  //Additive parts should be separated by vertical bars.
+  //Additive parts should be separated by "++".
   //Examples (ai are parameters to fit):
   //1.fitting function: a0*x0 + a1*x1 + a2*x2
-  //  input formula "x0|x1|x2"
+  //  input formula "x0++x1++x2"
   //2.TMath functions can be used:
   //  fitting function: a0*TMath::Gaus(x0, 0, 1) + a1*x1
-  //  input formula:    "TMath::Gaus(x0, 0, 1)|x1"
+  //  input formula:    "TMath::Gaus(x0, 0, 1)++x1"
   //fills the array of functions
 
    Int_t size, special = 0;
@@ -809,10 +812,12 @@ void TLinearFitter::SetFormula(const char *formula)
    fSpecial = 0;
    //in case of a hyperplane:
    char *fstring;
-   fstring = strstr(fFormula, "hyp");
+   fstring = (char *)strstr(fFormula, "hyp");
    if (fstring!=NULL){
       fstring+=3;
       sscanf(fstring, "%d", &size);
+      //+1 for the constant term
+      size++;
       fSpecial=200+size;
    }
 
@@ -838,9 +843,8 @@ void TLinearFitter::SetFormula(const char *formula)
    fFunctions.Expand(fNfunctions);
 
    //replace xn by [n]
-   //TString replaceformula;
-   char *pattern=new char[5];
-   char *replacement=new char[6];
+   char pattern[5];
+   char replacement[6]; 
 
    for (i=0; i<fNdim; i++){
       sprintf(pattern, "x%d", i);
@@ -848,19 +852,15 @@ void TLinearFitter::SetFormula(const char *formula)
       sstring = sstring.ReplaceAll(pattern, Int_t(i/10)+2, replacement, Int_t(i/10)+3);
    }
    //replace the regular x, y, z
-   pattern = "y";
-   replacement = "[1]";
-   sstring = sstring.ReplaceAll(pattern, 1, replacement, 3);
-   pattern = "z";
-   replacement = "[2]";
-   sstring = sstring.ReplaceAll(pattern, 1, replacement, 3);
+
+   sstring = sstring.ReplaceAll("y", 1, "[1]", 3);
+   sstring = sstring.ReplaceAll("z", 1, "[2]", 3);
    //check in order not to replace the x in exp
    fstring = (char*)strchr(sstring.Data(), 'x');
    while (fstring){
-      replacement="[0]";
       Int_t offset = fstring - sstring.Data();
       if (*(fstring-1)!='e' && *(fstring+1)!='p')
-         sstring.Replace(fstring - sstring.Data(), 1, replacement,3);
+         sstring.Replace(fstring - sstring.Data(), 1, "[0]",3);
       else
          offset++;
       fstring = (char*)strchr(sstring.Data()+offset, 'x');
@@ -980,6 +980,7 @@ void TLinearFitter::SetFormula(TFormula *function)
 //______________________________________________________________________________
 Bool_t TLinearFitter::UpdateMatrix()
 {
+
    //Update the design matrix after the formula has been changed.
 
      if (fStoreData){
