@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.42 2002/07/16 08:30:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.43 2002/08/05 18:13:15 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -104,6 +104,15 @@ ClassImp(TF1)
 //
 //  TF1 *fs2 = new TF1 ("fs2", "fsc+fsc");
 //}
+//
+//     WHY TF1 CANNOT ACCEPT A CLASS MEMBER FUNCTION ?
+//     ===============================================
+// This is a frequently asked question.
+// C++ is a strongly typed language. There is no way for TF1 (without
+// recompiling this class) to know about all possible user defined data types.
+// This also apply to the case of a static class function.
+//
+//------------------------------------------------------------------------
 
 //______________________________________________________________________________
 TF1::TF1(): TFormula(), TAttLine(), TAttFill(), TAttMarker()
