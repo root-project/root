@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: rpddefs.h,v 1.1 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: DaemonUtils.cxx,v 1.2 2004/10/11 21:50:06 rdm Exp $
 // Author: Gerri Ganis   19/1/2004
 
 /*************************************************************************
@@ -77,8 +77,8 @@ using namespace ROOT;
 
 extern "C" {
    Int_t SrvAuthenticate(TSocket *socket,
-                      const char *confdir, const char *tmpdir,
-                      string &user, Int_t &meth, Int_t &type, string &ctkn) {
+                         const char *confdir, const char *tmpdir,
+                         string &user, Int_t &meth, Int_t &type, string &ctkn) {
       return SrvAuthImpl(socket, confdir, tmpdir, user, meth, type, ctkn);
    }
 }
@@ -172,12 +172,14 @@ void Err(int level, const char *msg)
    Perror((char *)msg);
    if (level > -1) NetSend(level, kROOTD_ERR);
 }
+
 //______________________________________________________________________________
 void ErrFatal(int level, const char *msg)
 {
    Perror((char *)msg);
    if (level > -1) NetSend(msg, kMESS_STRING);
 }
+
 //______________________________________________________________________________
 void ErrSys(int level, const char *msg)
 {
@@ -299,7 +301,6 @@ static int Recvn(int sock, void *buffer, int length)
    return n;
 }
 
-
 //________________________________________________________________________
 void NetClose()
 {
@@ -387,7 +388,6 @@ int NetRecvRaw(int sock, void *buf, int len)
    }
 
    return len;
-
 }
 
 //________________________________________________________________________
