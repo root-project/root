@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.52 2004/09/13 09:10:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.53 2004/09/14 10:50:47 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -481,7 +481,7 @@ public:
    const char *GetIconName() const { return fIconName; }
    const char *GetIconPixmap() const { return fIconPixmap; }
    void GetClassHints(const char *&className, const char *&resourceName) const
-      { className = fClassName; resourceName = fResourceName; }
+      { className = fClassName.Data(); resourceName = fResourceName.Data(); }
    void GetMWMHints(UInt_t &value, UInt_t &funcs, UInt_t &input) const
       { value = fMWMValue; funcs = fMWMFuncs; input = fMWMInput; }
    void GetWMPosition(Int_t &x, Int_t &y) const { x = fWMX; y = fWMY; }
