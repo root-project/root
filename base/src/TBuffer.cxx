@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.55 2003/07/11 15:04:03 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.56 2003/07/14 17:14:49 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1668,7 +1668,7 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
       }
       if (clCast->GetClassInfo() && !clRef->GetClassInfo()) {
          //we cannot mix a compiled class with a fake class in the inheritance
-         Error("ReadObject", "Trying to read an emulated class (%s) to store in a compiled pointer (%s)",
+         Error("ReadObject", "trying to read an emulated class (%s) to store in a compiled pointer (%s)",
                clRef->GetName(),clCast->GetName());
          CheckByteCount(startpos, tag, 0); // avoid mis-leading byte count error message
          return 0;
