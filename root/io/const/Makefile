@@ -14,7 +14,7 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
-constTest.log: constTest.C
+constTest.log: constTest_C.$(DllSuf)
 	$(CMDECHO) root -q -b -l constTest.C+ > constTest.log 
 
 constTest: constTest.log
