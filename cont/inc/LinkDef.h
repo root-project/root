@@ -1,4 +1,4 @@
-/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.10 2004/08/20 14:46:36 brun Exp $ */
+/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.11 2005/02/25 17:06:34 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,10 +9,6 @@
  *************************************************************************/
 
 #ifdef __CINT__
-
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
 
 #pragma link C++ global kIterForward;
 #pragma link C++ global kIterBackward;
@@ -58,10 +54,15 @@
 #pragma link C++ class TRefTable+;
 #pragma link C++ class TVirtualCollectionProxy-;
 
+#pragma link C++ nestedclass;
+#pragma link C++ nestedtypedef;
+
 #pragma link C++ class TCollectionProxy-;
 #pragma link C++ class TEmulatedCollectionProxy-;
 #pragma link C++ class TEmulatedMapProxy-;
 #pragma link C++ class TGenCollectionProxy-;
+#pragma link C++ class TGenCollectionProxy::Value-;
+#pragma link C++ class TGenCollectionProxy::Method-;
 #pragma link C++ class TCollectionStreamer-;
 #pragma link C++ class TCollectionClassStreamer-;
 #pragma link C++ class TCollectionMemberStreamer-;

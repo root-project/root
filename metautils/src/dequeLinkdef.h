@@ -4,11 +4,11 @@
 using namespace std;
 #endif
 
-#pragma link C++ class deque<int>;
-#pragma link C++ class deque<long>;
-#pragma link C++ class deque<float>;
-#pragma link C++ class deque<double>;
-#pragma link C++ class deque<void*>;
-#pragma link C++ class deque<char*>;
-#pragma link C++ class deque<string>;
+#pragma create TClass deque<int>;
+#pragma create TClass deque<long>;
+#pragma create TClass deque<float>;
+#pragma create TClass deque<double>;
+#pragma create TClass deque<void*>;
+#pragma create TClass deque<char*>;
+#pragma create TClass deque<string>;
 

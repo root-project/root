@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.162 2005/01/18 21:04:17 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.163 2005/02/25 17:06:34 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TFile.h"
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TClassRef.h"
 #include "TClassTable.h"
 #include "TObjArray.h"
 #include "TBaseClass.h"
@@ -390,7 +391,7 @@ ClassImp(TClass)
 TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
                    fDeleteArray(0), fDestructor(0), fSizeof(-1),
                    fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
-                   fCurrentInfo(0)
+                   fCurrentInfo(0), fRefs(0)
 {
    // Default ctor.
 
@@ -426,7 +427,7 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
                                    fDelete(0), fDeleteArray(0), fDestructor(0),
                                    fSizeof(-1), fVersionUsed(kFALSE),
                                    fOffsetStreamer(0), fStreamerType(kNone),
-                                   fCurrentInfo(0)
+                                   fCurrentInfo(0), fRefs(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -491,7 +492,7 @@ TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
    : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
      fDestructor(0), fSizeof(-1), fVersionUsed(kFALSE), fOffsetStreamer(0),
-     fStreamerType(kNone), fCurrentInfo(0)
+     fStreamerType(kNone), fCurrentInfo(0), fRefs(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -507,7 +508,7 @@ TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
    : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
      fDestructor(0), fSizeof(-1), fVersionUsed(kFALSE), fOffsetStreamer(0),
-     fStreamerType(kNone), fCurrentInfo(0)
+     fStreamerType(kNone), fCurrentInfo(0), fRefs(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -709,6 +710,13 @@ TClass::~TClass()
    delete fAllPubData;     fAllPubData  =0;
    delete fAllPubMethod;   fAllPubMethod=0;
 
+   if (fRefs) {
+      // Inform the TClassRef object that we are going away.
+      std::list<TClassRef*>::iterator iter;
+      for(iter = fRefs->begin(); iter != fRefs->end(); ++iter) {
+         (*iter)->Reset();
+      }
+   }
    if (fBase)
       fBase->Delete();
    delete fBase;   fBase=0;
@@ -759,6 +767,17 @@ void TClass::AddImplFile(const char* filename, int line) {
 
    fImplFileName = filename;
    fImplFileLine = line;
+}
+
+//______________________________________________________________________________
+void TClass::AddRef(TClassRef *ref) 
+{
+   // Register a TClassRef object which points to this TClass object.
+   // When this TClass object is deleted, 'ref' will be 'Reset'.
+
+   if (fRefs==0) fRefs = new std::list<TClassRef*>;
+   fRefs->remove(ref);
+   fRefs->push_back(ref);
 }
 
 //______________________________________________________________________________
@@ -1643,6 +1662,14 @@ void TClass::GetMenuItems(TList *list)
 Bool_t TClass::IsFolder(void *obj) const
 {
    return Browse(obj,(TBrowser*)0);
+}
+
+//______________________________________________________________________________
+void TClass::RemoveRef(TClassRef *ref) 
+{
+   // Unregister the TClassRef object.
+
+   if (fRefs) fRefs->remove(ref);
 }
 
 //______________________________________________________________________________

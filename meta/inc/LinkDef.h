@@ -1,4 +1,4 @@
-/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.12 2003/11/24 10:51:55 brun Exp $ */
+/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.13 2004/01/10 10:52:29 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -19,6 +19,9 @@
 
 #pragma link C++ class TBaseClass;
 #pragma link C++ class TClass;
+#pragma link C++ class TClassStreamer+;
+#pragma link C++ class TMemberStreamer+;
+#pragma link C++ class TClassRef+;
 #pragma link C++ class TClassGenerator+;
 #pragma link C++ class TDataMember;
 #pragma link C++ class TDataType;

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.45 2004/10/29 16:07:32 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.46 2005/01/18 21:04:17 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -36,10 +36,12 @@
 #ifndef ROOT_TStreamerInfo
 #include "TStreamerInfo.h"
 #endif
+#include <list>
 
 class TBaseClass;
 class TBrowser;
 class TDataMember;
+class TClassRef;
 class TMethod;
 class TRealData;
 class TCint;
@@ -108,6 +110,7 @@ private:
    Long_t             fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
    TStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
+   std::list<TClassRef*> *fRefs;        //!List of references to this object
 
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *GetClassMethod(const char *name, const char *signature);
@@ -146,6 +149,7 @@ public:
 
    void               AddInstance(Bool_t heap = kFALSE) { fInstanceCount++; if (heap) fOnHeap++; }
    void               AddImplFile(const char *filename, int line);
+   void               AddRef(TClassRef *ref); 
    virtual void       Browse(TBrowser *b);
    void               BuildRealData(void *pointer=0);
    void               BuildEmulatedRealData(const char *name, Int_t offset, TClass *cl);
@@ -215,6 +219,7 @@ public:
    Long_t             Property() const;
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t              ReadBuffer(TBuffer &b, void *pointer);
+   void               RemoveRef(TClassRef *ref); 
    void               ReplaceWith(TClass *newcl, Bool_t recurse = kTRUE) const;
    void               ResetClassInfo(Long_t tagnum);
    void               ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
