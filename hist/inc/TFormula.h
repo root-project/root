@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -61,8 +61,10 @@ public:
          Int_t      GetNpar() {return fNpar;}
          Int_t      GetNumber() {return fNumber;}
  Double_t           GetParameter(Int_t ipar) {return fParams[ipar];}
+ Double_t           GetParameter(const char *name);
  virtual void       GetParameters(Double_t *params){for(Int_t i=0;i<fNpar;i++) params[i] = fParams[i];}
  virtual const char *GetParName(Int_t ipar) const;
+         Int_t      GetParNumber(const char *name);
  virtual void       Print(Option_t *option=""); // *MENU*
  virtual void       SetNumber(Int_t number) {fNumber = number;}
  virtual void       SetParameter(Int_t ipar, Double_t parvalue);

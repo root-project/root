@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.10 2000/07/10 06:17:57 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.11 2000/07/13 19:19:27 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2092,11 +2092,9 @@ Int_t TTreePlayer::Process(TSelector *selector, Int_t nentries, Int_t firstentry
    //loop case B: loop on all entries
    } else {
       for (entry=firstentry;entry<firstentry+nentries;entry++) {
-         entryNumber = fTree->GetEntryNumber(entry);
-         if (entryNumber < 0) break;
          if (timer && timer->ProcessEvents()) break;
          if (gROOT->IsInterrupted()) break;
-         fTree->LoadTree(entryNumber);
+         entryNumber = fTree->LoadTree(entry);
          if (!selector->ExecuteProcessCut(entryNumber)) continue; //<==call user selection function
          selector->ExecuteProcessFill(entryNumber); //<==call user analysis function
       }

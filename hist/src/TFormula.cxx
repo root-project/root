@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.3 2000/05/26 06:43:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.4 2000/06/13 10:39:20 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1739,6 +1739,20 @@ Double_t TFormula::EvalPar(Double_t *x, Double_t *params)
 }
 
 //______________________________________________________________________________
+Double_t TFormula::GetParameter(const char *parName) 
+{
+  //return value of parameter named parName
+   
+  const Double_t kNaN = 1e-300;
+  Int_t index = GetParNumber(parName);
+  if (index==-1) {
+     Error("TFormula", "Parameter %s not found", parName);
+     return kNaN;
+  }
+  return GetParameter(index);
+}
+
+//______________________________________________________________________________
 const char *TFormula::GetParName(Int_t ipar) const
 {
 //*-*-*-*-*-*-*-*Return name of one parameter*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -1747,6 +1761,17 @@ const char *TFormula::GetParName(Int_t ipar) const
    if (ipar <0 && ipar >= fNpar) return "";
    if (fNames[ipar].Length() > 0) return (const char*)fNames[ipar];
    return Form("p%d",ipar);
+}
+
+//______________________________________________________________________________
+Int_t TFormula::GetParNumber(const char *parName) 
+{
+  // return parameter number by name
+   
+   for (Int_t i=0; i<MAXPAR; i++) {
+      if (fNames[i] == parName) return i;
+   }
+  return -1;
 }
 
 //______________________________________________________________________________

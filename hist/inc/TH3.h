@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.3 2000/06/15 06:51:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.4 2000/06/28 14:35:29 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -52,7 +52,7 @@ public:
    virtual void    FillRandom(const char *fname, Int_t ntimes=5000);
    virtual void    FillRandom(TH1 *h, Int_t ntimes=5000);
    virtual void    FitSlicesZ(TF1 *f1=0,Int_t binminx=1, Int_t binmaxx=0,Int_t binminy=1, Int_t binmaxy=0,
-                                        Int_t cut=0 ,Option_t *option="QNR");
+                                        Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
    virtual void    GetRandom3(Axis_t &x, Axis_t &y, Axis_t &z);
    virtual void    GetStats(Stat_t *stats);
    virtual Stat_t  Integral();
@@ -61,8 +61,8 @@ public:
    virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2);
    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
           TH1D    *ProjectionZ(const char *name="_pz", Int_t firstxbin=0, Int_t lastxbin=9999, Int_t firstybin=0,
-                                 Int_t lastybin=9999, Option_t *option="");
-          TH1     *Project3D(Option_t *option="x");
+                                 Int_t lastybin=9999, Option_t *option=""); // *MENU*
+          TH1     *Project3D(Option_t *option="x"); // *MENU*
    virtual void    PutStats(Stat_t *stats);
    virtual void    Reset(Option_t *option="");
    virtual void    Sizeof3D() const;
