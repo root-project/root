@@ -42,7 +42,7 @@ endif
 MODULES       = build cint utils base cont meta net zip clib matrix newdelete \
                 hist tree freetype graf g3d gpad gui minuit histpainter proof \
                 treeplayer treeviewer physics postscript rint html eg geom \
-                geompainter vmc fumili
+                geompainter vmc fumili mlp
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32 gl
@@ -146,7 +146,7 @@ ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd dcache chirp hbook alien asimage ldap \
-                krb5auth
+                krb5auth mlp
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
