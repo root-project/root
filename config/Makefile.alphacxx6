@@ -42,7 +42,7 @@ CILIBS        = -lm -ltermcap
 F77LIBS       = /usr/shlib/libFutil.so /usr/shlib/libfor.so /usr/shlib/libots.so
 
 # Extras
-CORELIBDEP    = $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
+CORELDFLAGS   = $(DEBUGFLAGS) $(EXTRA_LDFLAGS)
 
 # Override default in Makefile.config
 INSTALL        := cp -pR

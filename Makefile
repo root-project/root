@@ -349,9 +349,15 @@ build/dummy.d: config $(ROOTRC) $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	$(MAKEDEP) $@ "$(CXXFLAGS)" $*.cxx > $@
 
 $(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(CORELIBDEP)
+ifneq ($(ARCH),alphacxx6)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
 	   "$(CORELIBEXTRA) $(CRYPTLIBS)"
+else
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(CORELDFLAGS)" \
+	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
+	   "$(CORELIBEXTRA) $(CRYPTLIBS)"
+endif
 
 dist:
 	@$(MAKEDIST)
