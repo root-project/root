@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.147 2004/10/22 07:31:58 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.148 2004/10/26 07:06:14 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2562,7 +2562,8 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    } else {
       Float_t r, g, b, h, l, s;
       TColor *c = gROOT->GetColor(color);
-      c->GetRGB(r, g, b);
+      if (c) c->GetRGB(r, g, b);
+      else {r = 0.5; g=0.5; b=0.5;}
       TColor::RGBtoHLS(r, g, b, h, l, s);
       TColor::HLStoRGB(h, 0.7*l, s, r, g, b);
       dark = TColor::GetColor(r, g, b);
