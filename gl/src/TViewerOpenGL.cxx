@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.48 2005/01/20 17:28:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.49 2005/01/27 14:51:49 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -131,7 +131,7 @@ const Int_t TViewerOpenGL::fgInitW = 780;
 const Int_t TViewerOpenGL::fgInitH = 670;
 
 int format = GL2PS_EPS;
-int sort   = GL2PS_BSP_SORT;
+int sortgl = GL2PS_BSP_SORT;
 
 //______________________________________________________________________________
 TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
@@ -642,7 +642,7 @@ void TViewerOpenGL::PrintObjects() const
    // Generates a PostScript or PDF output of the OpenGL scene. They are vector
    // graphics files and can be huge and long to generate.
     MakeCurrent();
-    gVirtualGL->PrintObjects(format, sort, fRender, fCanvasContainer->GetGLWindow(),
+    gVirtualGL->PrintObjects(format, sortgl, fRender, fCanvasContainer->GetGLWindow(),
                              fRad, fYc, fZc);
     SwapBuffers();
 }
@@ -701,22 +701,22 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          }
          case kGLPrintEPS_SIMPLE:
             format = GL2PS_EPS;
-	    sort   = GL2PS_SIMPLE_SORT;
+	    sortgl = GL2PS_SIMPLE_SORT;
             PrintObjects();
             break;
          case kGLPrintEPS_BSP:
             format = GL2PS_EPS;
-	    sort   = GL2PS_BSP_SORT;
+	    sortgl = GL2PS_BSP_SORT;
             PrintObjects();
             break;
          case kGLPrintPDF_SIMPLE:
             format = GL2PS_PDF;
-	    sort   = GL2PS_SIMPLE_SORT;
+	    sortgl = GL2PS_SIMPLE_SORT;
             PrintObjects();
             break;
          case kGLPrintPDF_BSP:
             format = GL2PS_PDF;
-	    sort   = GL2PS_BSP_SORT;
+	    sortgl = GL2PS_BSP_SORT;
             PrintObjects();
             break;
          case kGLXOY:
