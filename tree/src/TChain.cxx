@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.56 2002/08/17 21:41:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.57 2002/08/18 20:52:28 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -731,7 +731,8 @@ Int_t TChain::LoadTree(Int_t entry)
       fTreeOffset[fTreeNumber+1] = fTreeOffset[fTreeNumber] + nentries;
       fEntries = fTreeOffset[fNtrees];
       element->SetNumberEntries(nentries);
-      if (entry > fTreeOffset[fTreeNumber+1]) {
+      //below, we must test >= in case the Tree has no entries
+      if (entry >= fTreeOffset[fTreeNumber+1]) {
          cursav->cd();
          if (fTreeNumber < fNtrees && entry < fTreeOffset[fTreeNumber+2]) return LoadTree(entry);
          else  fReadEntry = -2;
