@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.14 2003/09/12 09:18:01 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.15 2003/11/25 17:12:30 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -57,11 +57,11 @@ protected:
     TString    fFunctionName;        //name of mapping function pointed by fFunction
     TF1       *fFunction;            //!Pointer to function computing axis values
     TAxis     *fAxis;                //!pointer to original TAxis axis (if any)
-    
+
   static Int_t fgMaxDigits;          //!Number of digits above which the 10>N notation is used
 
 public:
-   
+
         TGaxis();
         TGaxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                Double_t wmin,Double_t wmax,Int_t ndiv=510, Option_t *chopt="",

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.19 2003/12/12 17:35:59 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.20 2004/01/10 10:52:30 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -97,8 +97,8 @@
     class MyClass{
         Int_t mydata;  // <em> *OPTIONS={GetMethod="Get";SetMethod="Set"} </em>
          ...
-        Int_t Get(){ return mydata;};
-        void  Set(Int_t i){mydata=i;};
+        Int_t Get() const { return mydata;};
+        void  Set(Int_t i) {mydata=i;};
         }
 */
 //</pre>
@@ -608,7 +608,7 @@ Long_t TDataMember::Property() const
    if (!fInfo) return 0;
    t->fProperty = fInfo->Property()|fInfo->Type()->Property();
    t->fTypeName = gInterpreter->TypeName(fInfo->Type()->Name());
-   t->fFullTypeName = fInfo->Type()->Name(); 
+   t->fFullTypeName = fInfo->Type()->Name();
    t->fName = fInfo->Name();
    t->fTitle = fInfo->Title();
 

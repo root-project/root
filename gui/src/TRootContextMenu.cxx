@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.6 2003/03/16 16:35:55 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.7 2004/02/18 15:06:30 brun Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -323,6 +323,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
                m->GetterMethod()->Execute(object, "", ddefval);
                sprintf(val, "%g", ddefval);
             } else if (!strncmp(basictype, "char", 4) ||
+                       !strncmp(basictype, "bool", 4) ||
                        !strncmp(basictype, "int", 3)  ||
                        !strncmp(basictype, "long", 4) ||
                        !strncmp(basictype, "short", 5)) {
@@ -396,7 +397,7 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   if (t->GetState() == 0)
                      t->SetState(1);
                } else {
-                  TClassMenuItem* mi = (TClassMenuItem*)parm2;
+                  TClassMenuItem *mi = (TClassMenuItem*)parm2;
                   GetContextMenu()->Action(mi);
                }
                break;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootDialog.cxx,v 1.2 2001/12/20 10:19:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootDialog.cxx,v 1.3 2002/04/04 17:32:14 rdm Exp $
 // Author: Fons Rademakers   20/02/98
 
 /*************************************************************************
@@ -141,12 +141,12 @@ const char *TRootDialog::GetParameters()
       strcat(params, param);
    }
 
-// if selected object is the last argument, have to insert it here
+   // if selected object is the last argument, have to insert it here
    if (selfobjpos == nparam) {
       if (params[0]) strcat(params, ",");
       sprintf(param,"(TObject*)0x%lx",
             (Long_t)fMenu->GetContextMenu()->GetSelectedObject());
-      strcat(params,param);
+      strcat(params, param);
    }
 
    return params;
