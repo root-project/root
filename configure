@@ -680,7 +680,7 @@ fi
 ### echo %%% Explicitlink - explicitly link with all dependent libraries
 #
 case $platform in
-freebsd4|aix*|win32*)
+freebsd*|aix*|win32*)
     enable_explicitlink="yes"
     ;;
 esac
