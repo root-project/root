@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.6 2002/05/09 22:56:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.7 2002/05/10 21:32:08 brun Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -17,21 +17,19 @@
 #endif
 
 namespace ROOT {
-
    inline void GenericShowMembers(const char *topClassName,
                                   void *obj, TMemberInspector &R__insp,
-                                  char *R__parent) {
+                                  char *R__parent)
+   {
       // This could be faster if we implemented this either as a templated
       // function or by rootcint-generated code using the typeid (i.e. the
-      // difference is a lookup a in TList instead of in a map.
+      // difference is a lookup a in TList instead of in a map).
       TClass *top = gROOT->GetClass(topClassName);
       if (top) {
          ShowMembersFunc_t show = top->GetShowMembersWrapper();
          if (show) show(obj, R__insp, R__parent);
       }
    }
-
-
 }
 
 #endif
