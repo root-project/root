@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.3 2001/01/30 11:29:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.4 2001/04/09 07:53:41 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -149,6 +149,8 @@ public:
         virtual void     Copy(TObject &style);
         virtual void     cd();
 
+        static Int_t     CreateGradientColorTable(UInt_t Number, Double_t* Length, 
+                              Double_t* Red, Double_t* Green, Double_t* Blue, UInt_t NColors);
         Int_t            GetNdivisions(Option_t *axis="X") const;
         TAttText        *GetAttDate() {return &fAttDate;}
         Color_t          GetAxisColor(Option_t *axis="X") const;

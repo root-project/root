@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.6 2000/12/15 08:47:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.7 2001/01/30 11:29:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -12,9 +12,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "TROOT.h"
 #include "TStyle.h"
+#include "TColor.h"
 
 TStyle  *gStyle;
 
@@ -845,6 +847,104 @@ void TStyle::SetTitleSize(Float_t size, Option_t *axis)
 }
 
 //______________________________________________________________________________
+Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length, 
+                              Double_t* Red, Double_t* Green, 
+                              Double_t* Blue, UInt_t NColors)
+{
+  // STATIC function.
+  // Linear gradient color table: 
+  // Red, Green and Blue are several RGB colors with values from 0.0 .. 1.0.
+  // Their number is "Intervals".
+  // Length is the length of the color interval between the RGB-colors:
+  // Imaging the whole gradient goes from 0.0 for the first RGB color to 1.0
+  // for the last RGB color, then each "Length"-entry in between stands for 
+  // the length of the intervall between the according RGB colors.
+  // 
+  // This definition is similar to the povray-definition of gradient
+  // color tables.
+  //
+  // In order to create a color table do the following:
+  // Define the RGB Colors:
+  // > UInt_t Number = 5;
+  // > Double_t Red[5]   = { 0.00, 0.09, 0.18, 0.09, 0.00 };
+  // > Double_t Green[5] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
+  // > Double_t Blue[5]  = { 0.17, 0.39, 0.62, 0.79, 0.97 };
+  // Define the length of the (color)-interval between this points 
+  // > Double_t Stops[5] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
+  // i.e. the color interval between Color 2 and Color 3 is 
+  // 0.79 - 0.62 => 17 % of the total palette area between these colors
+  //
+  //  Original code by Andreas Zoglauer <zog@mpe.mpg.de>
+  
+  UInt_t g, c;
+  UInt_t NPalette = 0;
+  Int_t *Palette = new Int_t[NColors+1];
+  UInt_t NColorsGradient;
+  TColor *Color;
+  Int_t HighestIndex = 0;
+
+  // Check if all RGB values are between 0.0 and 1.0 and 
+  // Length goes from 0.0 to 1.0 in increasing order.
+  for (c = 0; c < Number; c++) {
+    if (Red[c] < 0 || Red[c] > 1.0 || 
+        Green[c] < 0 || Green[c] > 1.0 || 
+        Blue[c] < 0 || Blue[c] > 1.0 || 
+        Length[c] < 0 || Length[c] > 1.0) {
+      //Error("CreateGradientColorTable",
+      //      "All RGB colors and interval lengths have to be between 0.0 and 1.0");
+      delete [] Palette;
+      return -1;
+    }
+    if (c >= 1) {
+      if (Length[c-1] > Length[c]) {
+        //Error("CreateGradientColorTable",
+        //      "The interval lengths have to be in increasing order");
+        delete [] Palette;
+        return -1;
+      }
+    } 
+  }
+
+  // Search for the highest color index not used in ROOT:
+  // We do not want to overwrite some colors...
+  TSeqCollection *ColorTable = gROOT->GetListOfColors();
+  if ((Color = (TColor *) ColorTable->Last()) != 0) {
+    if (Color->GetNumber() > HighestIndex) {
+      HighestIndex = Color->GetNumber();
+    }
+    while ((Color = (TColor *) (ColorTable->Before(Color))) != 0) {
+      if (Color->GetNumber() > HighestIndex) {
+      HighestIndex = Color->GetNumber();
+      }
+    }
+  }
+  HighestIndex++;
+
+  // Now create the colors and add them to the default palette:  
+  
+  // For each defined gradient...
+  for (g = 1; g < Number; g++) {
+    // create the colors...
+    NColorsGradient = (Int_t) (floor(NColors*Length[g]) - floor(NColors*Length[g-1]));
+    for (c = 0; c < NColorsGradient; c++) {
+      Color = new TColor(HighestIndex, 
+                         Red[g-1] + c * (Red[g] - Red[g-1])/ NColorsGradient,
+                         Green[g-1] + c * (Green[g] - Green[g-1])/ NColorsGradient,
+                         Blue[g-1] + c * (Blue[g] - Blue[g-1])/ NColorsGradient,
+                         "  ");
+      Palette[NPalette] = HighestIndex;
+      NPalette++;
+      HighestIndex++;
+    }
+  }
+  
+  gStyle->SetPalette(NPalette, Palette);
+  delete [] Palette;
+  
+  return HighestIndex - NColors;
+}
+
+//______________________________________________________________________________
 void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
 {
 // The color palette is used by the histogram classes
@@ -862,6 +962,9 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
 //     a Pretty Palette with a Spectrum Violet->Red is created.
 //   It is recommended to use this Pretty palette when drawing legos,
 //   surfaces or contours.
+//
+// if ncolors > 50 and colors=0, the DeepSea palette is used.
+//     (see TStyle::CreateGradientColorTable for more details)
 //
 // if ncolors > 0 and colors = 0, the default palette is used
 // with a maximum of ncolors.
@@ -890,6 +993,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
       for (i=0;i<ncolors;i++) fPalette.fArray[i] = palette[i];
       return;
    }
+   
    // set Pretty Palette Spectrum Violet->Red
    if (ncolors == 1 && colors == 0) {
       ncolors = 50;
@@ -897,8 +1001,19 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
       for (i=0;i<ncolors;i++) fPalette.fArray[i] = 51+i;
       return;
    }
+   
+   // set DeepSea palette
+   if (colors == 0 && ncolors > 50) {
+      const Int_t NRGBs = 5;
+      Double_t Stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
+      Double_t Red[NRGBs] = { 0.00, 0.09, 0.18, 0.09, 0.00 };
+      Double_t Green[NRGBs] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
+      Double_t Blue[NRGBs] = { 0.17, 0.39, 0.62, 0.79, 0.97 };
+      CreateGradientColorTable(NRGBs, Stops, Red, Green, Blue, ncolors);
+      return;
+   }
+   
    // set user defined palette
-   if (colors == 0 && ncolors > 50) ncolors = 50;
    fPalette.Set(ncolors);
    if (colors)  for (i=0;i<ncolors;i++) fPalette.fArray[i] = colors[i];
    else         for (i=0;i<ncolors;i++) fPalette.fArray[i] = palette[i];
