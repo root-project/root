@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.cxx,v 1.12 2002/10/25 13:35:22 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.cxx,v 1.13 2002/10/25 15:29:51 rdm Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -34,6 +34,8 @@
 
 
 ClassImp(TLazyMatrix)
+ClassImp(THaarMatrix)
+ClassImp(THilbertMatrix)
 ClassImp(TMatrixRow)
 ClassImp(TMatrixColumn)
 ClassImp(TMatrixDiag)

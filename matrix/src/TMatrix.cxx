@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.35 2002/11/16 07:58:13 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.36 2002/11/16 18:23:10 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -1263,6 +1263,21 @@ TMatrix &TMatrix::Invert(Double_t *determ_ptr)
 //______________________________________________________________________________
 Bool_t TMatrix::IsSymmetric() const
 {
+  if (!IsValid()) {
+    Error("IsSymmetric", "matrix not initialized");
+    return 0;
+  }
+
+  if (fNrows != fNcols) {
+    Error("IsSymmetric", "matrix is not square");
+    return 0;
+  }
+
+  if (fRowLwb != fColLwb) {
+    Error("IsSymmetric", "row and column start at different values");
+    return 0;
+  }
+
   Int_t irow;
   for (irow = 0; irow < fNrows; irow++) {
     Int_t icol;

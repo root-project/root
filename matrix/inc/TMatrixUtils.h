@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.16 2002/10/25 13:35:21 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.17 2002/10/25 15:29:50 rdm Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -127,6 +127,8 @@ private:
 
 public:
    THaarMatrix(Int_t n, Int_t no_cols = 0);
+
+   ClassDef(THaarMatrix,1)  // Haar matrix
 };
 
 class THilbertMatrix : public TLazyMatrix {
@@ -137,6 +139,8 @@ private:
 public:
    THilbertMatrix(Int_t no_rows, Int_t no_cols);
    THilbertMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb);
+
+   ClassDef(THilbertMatrix,1)  // Hilbert matrix
 };
 
 
