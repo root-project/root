@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.43 2004/07/30 16:41:58 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.44 2004/08/03 14:31:09 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -130,7 +130,8 @@ TGMenuBar::~TGMenuBar()
 //______________________________________________________________________________
 void TGMenuBar::BindKeys(Bool_t on)
 {
-   // if on kTRUE bind arrow, popup mehu hot keys, otherwise - remove key bindings
+   // If on kTRUE bind arrow, popup menu hot keys, otherwise
+   // remove key bindings.
 
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Left), 0, on);
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Right), 0, on);
@@ -157,7 +158,7 @@ void TGMenuBar::BindKeys(Bool_t on)
 //______________________________________________________________________________
 void TGMenuBar::BindHotKey(Int_t keycode, Bool_t on)
 {
-   // if on kTRUE bind hot keys, otherwise - remove key binding
+   // If on kTRUE bind hot keys, otherwise remove key binding.
 
    const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
 
@@ -474,7 +475,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
             if (!menu || !menu->fPoppedUp) return kFALSE;
 
             TGMenuEntry *ce = 0;
-           
+
             TIter next2(menu->GetListOfEntries());
 
             while ((ce = (TGMenuEntry*)next2())) {
