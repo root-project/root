@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.41 2002/12/02 18:50:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.42 2002/12/04 14:35:13 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -607,7 +607,7 @@ Int_t TBuffer::ReadArray(Bool_t *&b)
    Int_t n;
    *this >> n;
 
-   if (n <= 0) return 0;
+   if (n <= 0 || n > fBufSize) return 0;
 
    if (!b) b = new Bool_t[n];
 
@@ -635,7 +635,7 @@ Int_t TBuffer::ReadArray(Char_t *&c)
    Int_t n;
    *this >> n;
 
-   if (n <= 0) return 0;
+   if (n <= 0 || n > fBufSize) return 0;
 
    if (!c) c = new Char_t[n];
 
@@ -658,7 +658,7 @@ Int_t TBuffer::ReadArray(Short_t *&h)
    Int_t n;
    *this >> n;
 
-   if (n <= 0) return 0;
+   if (n <= 0 || n > fBufSize) return 0;
 
    if (!h) h = new Short_t[n];
 
@@ -691,7 +691,7 @@ Int_t TBuffer::ReadArray(Int_t *&ii)
    Int_t n;
    *this >> n;
 
-   if (n <= 0) return 0;
+   if (n <= 0 || n > fBufSize) return 0;
 
    if (!ii) ii = new Int_t[n];
 
@@ -724,7 +724,7 @@ Int_t TBuffer::ReadArray(Long_t *&ll)
    Int_t n;
    *this >> n;
 
-   if (n <= 0) return 0;
+   if (n <= 0 || n > fBufSize) return 0;
 
    if (!ll) ll = new Long_t[n];
 
@@ -748,7 +748,7 @@ Int_t TBuffer::ReadArray(Float_t *&f)
    Int_t n;
    *this >> n;
 
-   if (n <= 0) return 0;
+   if (n <= 0 || n > fBufSize) return 0;
 
    if (!f) f = new Float_t[n];
 
@@ -781,7 +781,7 @@ Int_t TBuffer::ReadArray(Double_t *&d)
    Int_t n;
    *this >> n;
 
-   if (n <= 0) return 0;
+   if (n <= 0 || n > fBufSize) return 0;
 
    if (!d) d = new Double_t[n];
 
@@ -808,7 +808,7 @@ Int_t TBuffer::ReadStaticArray(Bool_t *b)
    Int_t n;
    *this >> n;
 
-   if (n <= 0) return 0;
+   if (n <= 0 || n > fBufSize) return 0;
 
    if (!b) return 0;
 
@@ -835,7 +835,7 @@ Int_t TBuffer::ReadStaticArray(Char_t *c)
    Int_t n;
    *this >> n;
 
-   if (n <= 0) return 0;
+   if (n <= 0 || n > fBufSize) return 0;
 
    if (!c) return 0;
 
@@ -857,7 +857,7 @@ Int_t TBuffer::ReadStaticArray(Short_t *h)
    Int_t n;
    *this >> n;
 
-   if (n <= 0) return 0;
+   if (n <= 0 || n > fBufSize) return 0;
 
    if (!h) return 0;
 
@@ -889,7 +889,7 @@ Int_t TBuffer::ReadStaticArray(Int_t *ii)
    Int_t n;
    *this >> n;
 
-   if (n <= 0) return 0;
+   if (n <= 0 || n > fBufSize) return 0;
 
    if (!ii) return 0;
 
@@ -921,7 +921,7 @@ Int_t TBuffer::ReadStaticArray(Long_t *ll)
    Int_t n;
    *this >> n;
 
-   if (n <= 0) return 0;
+   if (n <= 0 || n > fBufSize) return 0;
 
    if (!ll) return 0;
 
@@ -945,7 +945,7 @@ Int_t TBuffer::ReadStaticArray(Float_t *f)
    Int_t n;
    *this >> n;
 
-   if (n <= 0) return 0;
+   if (n <= 0 || n > fBufSize) return 0;
 
    if (!f) return 0;
 
@@ -977,7 +977,7 @@ Int_t TBuffer::ReadStaticArray(Double_t *d)
    Int_t n;
    *this >> n;
 
-   if (n <= 0) return 0;
+   if (n <= 0 || n > fBufSize) return 0;
 
    if (!d) return 0;
 
@@ -998,7 +998,7 @@ void TBuffer::ReadFastArray(Bool_t *b, Int_t n)
 {
    // Read array of n bools from the I/O buffer.
 
-   if (n <= 0) return;
+   if (n <= 0 || n > fBufSize) return;
 
    if (sizeof(Bool_t) > 1) {
       for (int i = 0; i < n; i++)
@@ -1015,7 +1015,7 @@ void TBuffer::ReadFastArray(Char_t *c, Int_t n)
 {
    // Read array of n characters from the I/O buffer.
 
-   if (n <= 0) return;
+   if (n <= 0 || n > fBufSize) return;
 
    Int_t l = sizeof(Char_t)*n;
    memcpy(c, fBufCur, l);
@@ -1027,7 +1027,7 @@ void TBuffer::ReadFastArray(Short_t *h, Int_t n)
 {
    // Read array of n shorts from the I/O buffer.
 
-   if (n <= 0) return;
+   if (n <= 0 || n > fBufSize) return;
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
@@ -1049,7 +1049,7 @@ void TBuffer::ReadFastArray(Int_t *ii, Int_t n)
 {
    // Read array of n ints from the I/O buffer.
 
-   if (n <= 0) return;
+   if (n <= 0 || n > fBufSize) return;
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
@@ -1079,7 +1079,7 @@ void TBuffer::ReadFastArray(Long_t *ll, Int_t n)
 {
    // Read array of n longs from the I/O buffer.
 
-   if (n <= 0) return;
+   if (n <= 0 || n > fBufSize) return;
 
    TFile *file = (TFile*)fParent;
    if (file && file->GetVersion() < 30006) {
@@ -1094,7 +1094,7 @@ void TBuffer::ReadFastArray(Float_t *f, Int_t n)
 {
    // Read array of n floats from the I/O buffer.
 
-   if (n <= 0) return;
+   if (n <= 0 || n > fBufSize) return;
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
@@ -1124,7 +1124,7 @@ void TBuffer::ReadFastArray(Double_t *d, Int_t n)
 {
    // Read array of n doubles from the I/O buffer.
 
-   if (n <= 0) return;
+   if (n <= 0 || n > fBufSize) return;
 
 #ifdef R__BYTESWAP
    for (int i = 0; i < n; i++)
