@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.1 2002/01/18 14:24:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.2 2002/02/04 21:22:23 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -96,7 +96,7 @@ public:
 
    Bool_t      IsTree() const { return fIsTree; }
    Bool_t      IsValid() const { return !fName.IsNull(); }
-   TList      *GetElementList() const { return fElements; }
+   TList      *GetListOfElements() const { return fElements; }
 
    ClassDef(TDSet,1)  // Data set for remote processing (PROOF)
 };
