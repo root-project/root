@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.8 2004/10/29 16:07:32 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.9 2005/01/19 18:30:58 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -2126,7 +2126,7 @@ void TTable::StreamerHeader(TBuffer &b, Version_t version)
    b >> rbytes;            /* number of bytes per row */
    if (GetRowSize() == -1) fSize = rbytes;
    if (rbytes - GetRowSize()) {
-      Warning("StreamerHeader","Wrong row size: must be %d, read %d bytes\n",GetRowSize(),rbytes);
+      Warning("StreamerHeader","Schema evolution warning: row size mismatch: expected %d, read %d bytes\n",GetRowSize(),rbytes);
    }
 
 #ifdef __STAR__
