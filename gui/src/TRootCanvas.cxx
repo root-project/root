@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.12 2002/09/10 14:58:13 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.13 2002/09/18 12:22:14 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -380,17 +380,23 @@ void TRootCanvas::Close()
 }
 
 //______________________________________________________________________________
-void TRootCanvas::CloseWindow()
+void TRootCanvas::ReallyDelete()
 {
-   // In case window is closed via WM we get here.
+   // Really delete the canvas and the this GUI.
 
    TVirtualPad *savepad = gPad;
    gPad = 0;        // hide gPad from CINT
    gInterpreter->DeleteGlobal(fCanvas);
    gPad = savepad;  // restore gPad for ROOT
-   fCanvas->DetachCanvasImp();
-   delete fCanvas;  // avoid deleting TRootCanvas object now
-   DeleteWindow();  // but do it slightly delayed here
+   delete fCanvas;  // will in turn delete this object
+}
+
+//______________________________________________________________________________
+void TRootCanvas::CloseWindow()
+{
+   // In case window is closed via WM we get here.
+
+   DeleteWindow();
 }
 
 //______________________________________________________________________________

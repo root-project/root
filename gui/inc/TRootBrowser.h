@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.2 2001/07/05 16:50:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.3 2002/06/12 16:46:11 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -123,6 +123,7 @@ public:
    // overridden from TGMainFrame
    void     CloseWindow();
    Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   void     ReallyDelete();
 
    ClassDef(TRootBrowser,0)  //ROOT native GUI version of browser
 };

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.h,v 1.2 2000/12/13 15:13:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TControlBar.h,v 1.3 2002/09/18 12:21:04 rdm Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -63,7 +63,6 @@ public:
    void            AddControlBar(TControlBar *controlBar);
    void            AddControlBar(TControlBar &controlBar);
    void            AddSeparator();
-   void            DetachControlBarImp()      { fControlBarImp = 0; }
    TControlBarImp *GetControlBarImp() const   { return fControlBarImp; }
    TList          *GetListOfButtons() const   { return fButtons; }
    Int_t           GetNumberOfColumns() const { return fNoroc; }

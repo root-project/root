@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.3 2001/05/10 14:31:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.4 2001/10/30 17:21:46 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -99,6 +99,7 @@ public:
    // overridden from TGMainFrame
    void     CloseWindow();
    Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   void     ReallyDelete();
 
    ClassDef(TRootCanvas,0)  //ROOT native GUI version of main window with menubar and drawing area
 };

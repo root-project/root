@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.38 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.39 2002/01/26 10:08:46 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -418,7 +418,7 @@ void TCanvas::Build()
    // Build a canvas. Called by all constructors.
 
    // Get window identifier
-   if (fCanvasID == -1)
+   if (fCanvasID == -1 && fCanvasImp)
       fCanvasID = fCanvasImp->InitWindow();
 #ifndef WIN32
    if (fCanvasID < 0) return;
@@ -599,7 +599,7 @@ void TCanvas::Close(Option_t *option)
 
    if (!IsBatch()) {
       gVirtualX->SelectWindow(fCanvasID);    //select current canvas
-      fCanvasImp->Close();
+      if (fCanvasImp) fCanvasImp->Close();
    }
    fCanvasID = -1;
    fBatch    = kTRUE;

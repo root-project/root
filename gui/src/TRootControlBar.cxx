@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.2 2002/09/18 12:22:14 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -136,13 +136,18 @@ Bool_t TRootControlBar::ProcessMessage(Long_t, Long_t, Long_t parm2)
    return kTRUE;
 }
 
+//______________________________________________________________________________
+void TRootControlBar::ReallyDelete()
+{
+   // Really delete the control bar and the this GUI.
+
+   delete fControlBar;    // will in turn delete this object
+}
 
 //______________________________________________________________________________
 void TRootControlBar::CloseWindow()
 {
    // Called when closed via window manager action.
 
-   fControlBar->DetachControlBarImp();
-   delete fControlBar;    // avoid deleting TRootControlBar object now
    DeleteWindow();        // but do it slightly delayed here
 }
