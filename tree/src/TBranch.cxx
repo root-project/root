@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.33 2002/01/23 08:38:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.34 2002/02/02 11:54:34 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -576,7 +576,7 @@ TBasket *TBranch::GetBasket(Int_t basketnumber)
    TDirectory *cursav = gDirectory;
    TFile *file = GetFile(0);
    basket = new TBasket();
-   basket->SetParent(file);
+   basket->SetBranch(this);
    if (fBasketBytes[basketnumber] == 0) {
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
    }
@@ -1102,21 +1102,15 @@ void TBranch::Streamer(TBuffer &b)
       gROOT->SetReadingObject(kTRUE);
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 5) {
+
          TBranch::Class()->ReadBuffer(b, this, v, R__s, R__c);
 
+         fDirectory = gDirectory;
+         if (fFileName.Length() != 0) fDirectory = 0;
          TIter next(GetListOfLeaves());
          TLeaf *leaf;
          while ((leaf=(TLeaf*)next())) {
             leaf->SetBranch(this);
-         }
-         fDirectory = gDirectory;
-         if (fFileName.Length() != 0) fDirectory = 0;
-         if (fDirectory) {
-            TIter nextb(GetListOfBaskets());
-            TBasket *basket;
-            while ((basket = (TBasket*)nextb())) {
-               basket->SetParent(fDirectory->GetFile());
-            }
          }
          fNleaves = fLeaves.GetEntriesFast();
          if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
@@ -1124,7 +1118,6 @@ void TBranch::Streamer(TBuffer &b)
          return;
       }
       //====process old versions before automatic schema evolution
-      gBranch = this;
       TNamed::Streamer(b);
       b >> fCompress;
       b >> fBasketSize;
