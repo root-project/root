@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.1 2001/06/09 05:14:11 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.2 2001/06/19 02:17:19 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -75,24 +75,22 @@ Double_t RooGaussModel::evaluate(const RooDataSet* dset) const
   Double_t u = xprime/(2*c) ;
 
   Double_t result ;
-  switch(_basisCode) {
-  case expBasisPlus: 
-  case expBasisMinus: {
+  if (_basisCode==expBasisPlus||_basisCode==expBasisMinus) {
     result = 0.25/tau * exp(xprime+c*c) * erfc(u+c) ;
-    break ;
-  }
-      
-  case sinBasisPlus: 
-  case sinBasisMinus: {
-    Double_t swt = ((RooAbsReal*)basis().getParameter(2))->getVal() * tau * sign ;
-    result = 0.25/tau * evalCerf(swt,u,c).im() ;
+    return result ;
   }
 
-  case cosBasisPlus: 
-  case cosBasisMinus: {
-    Double_t swt = ((RooAbsReal*)basis().getParameter(2))->getVal() * tau * sign ;
-    result = 0.25/tau * evalCerf(swt,u,c).re() ;
+  Double_t swt = ((RooAbsReal*)basis().getParameter(2))->getVal() * tau * sign ;
+  RooComplex evalTerm = evalCerf(swt,u,c) ;    
+
+  if (_basisCode==sinBasisPlus||_basisCode==sinBasisMinus) {
+    result = 0.25/tau * evalTerm.im() ;
+    return result ;
   }
+
+  if (_basisCode==cosBasisPlus||_basisCode==cosBasisMinus) {
+    result = 0.25/tau * evalTerm.re() ;
+    return result ;
   }
 
   return result ;
@@ -112,18 +110,11 @@ Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
   // Analytical integration capability of convoluted PDF
   case expBasisPlus:
   case expBasisMinus:
-    if (matchArgs(allVars,analVars,convVar())) {
-      return 1 ;
-    }
-    break ;
-
   case sinBasisPlus:
   case sinBasisMinus:
   case cosBasisPlus:
   case cosBasisMinus:
-    if (matchArgs(allVars,analVars,convVar())) {
-      return 1 ;
-    }
+    if (matchArgs(allVars,analVars,convVar())) return 1 ;
     break ;
   }
   
@@ -165,20 +156,19 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
   }
 
   // Calculate additional intermediate results for oscillating terms
-  Double_t swt = ((RooAbsReal*)basis().getParameter(2))->getVal() * tau * sign ;
   Double_t umin = xpmin/(2*c) ;
   Double_t umax = xpmax/(2*c) ;
+  Double_t swt = ((RooAbsReal*)basis().getParameter(2))->getVal() * tau * sign ;
+  RooComplex evalDif(evalCerf(swt,umax,c) - evalCerf(swt,umin,c)) ;
 
   // SIN basis function integrals
   if (_basisCode==sinBasisPlus||_basisCode==sinBasisMinus) {    
-    RooComplex evalDif(evalCerf(swt,umax,c) - evalCerf(swt,umin,c)) ;
     Double_t result = 0.25*sign/(1+swt*swt) * ( evalDif.im() - swt*evalDif.re() + erf(umax) - erf(umin) ) ;
     return result ;
   }
 
   // COS basis function integrals
   if (_basisCode==cosBasisPlus||_basisCode==cosBasisMinus) {
-    RooComplex evalDif(evalCerf(swt,umax,c) - evalCerf(swt,umin,c)) ;
     Double_t result = 0.25*sign/(1+swt*swt) * ( evalDif.re() + swt*evalDif.im() + erf(umax) - erf(umin) ) ;
     return result ;
   }
