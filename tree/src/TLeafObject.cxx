@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.12 2001/05/07 12:32:04 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.13 2001/06/22 16:10:21 rdm Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -148,7 +148,7 @@ void TLeafObject::ReadBasket(TBuffer &b)
    if (fVirtual) {
       b >> n;
       b.ReadFastArray(classname,n+1);
-      fClass      = gROOT->GetClass(GetTitle());
+      fClass      = gROOT->GetClass(classname);
    }
    if (fClass) {
       TObject *object;
