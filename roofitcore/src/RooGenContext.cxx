@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenContext.cc,v 1.34 2002/10/25 21:13:04 wverkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.35 2003/04/28 20:42:38 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,9 +36,9 @@ ClassImp(RooGenContext)
 
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
-			     const RooDataSet *prototype, Bool_t verbose,
-			     const RooArgSet* forceDirect) :  
-  RooAbsGenContext(model,vars,prototype,verbose),
+			     const RooDataSet *prototype, const RooArgSet* auxProto,
+			     Bool_t verbose, const RooArgSet* forceDirect) :  
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose),
   _cloneSet(0), _pdfClone(0), _acceptRejectFunc(0), _generator(0),
   _maxVar(0), _uniIter(0) 
 {

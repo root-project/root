@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.82 2003/05/12 18:46:04 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.83 2003/07/18 15:33:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -702,10 +702,10 @@ void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) cons
   }
 }
 
-RooAbsGenContext* RooAbsPdf::genContext(const RooArgSet &vars, 
-					const RooDataSet *prototype, Bool_t verbose) const 
+RooAbsGenContext* RooAbsPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
+					const RooArgSet* auxProto, Bool_t verbose) const 
 {
-  return new RooGenContext(*this,vars,prototype,verbose) ;
+  return new RooGenContext(*this,vars,prototype,auxProto,verbose) ;
 }
 
 RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t verbose) const {
@@ -718,7 +718,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t
   // dataset.
 
   RooDataSet *generated = 0;
-  RooAbsGenContext *context= genContext(whatVars,0,verbose);
+  RooAbsGenContext *context= genContext(whatVars,0,0,verbose);
   if(0 != context && context->isValid()) {
     generated= context->generate(nEvents);
   }
@@ -745,7 +745,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &pro
   // returned dataset.
 
   RooDataSet *generated = 0;
-  RooAbsGenContext *context= genContext(whatVars,&prototype,verbose);
+  RooAbsGenContext *context= genContext(whatVars,&prototype,0,verbose);
   if(0 != context && context->isValid()) {
     generated= context->generate(nEvents);
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.rdl,v 1.74 2003/05/10 01:37:52 wverkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.75 2004/03/12 21:14:36 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -147,6 +147,9 @@ public:
   void printCompactTree(const char* indent="") ;
   virtual void printCompactTreeHook(const char* indent="") {} ;
 
+  inline void setDeleteWatch(Bool_t flag=kTRUE) { _deleteWatch = flag ; } ;
+  Bool_t deleteWatch() const { return _deleteWatch ; }
+
 
 protected:
 
@@ -211,6 +214,7 @@ protected:
   friend class RooAbsOptGoodnessOfFit ;
   friend class RooAbsPdf ;
   friend class RooGenProdProj ;
+  friend class RooSpecProdProj ;
 
   Bool_t redirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE, Bool_t isRecursionStep=kFALSE) ;
   Bool_t recursiveRedirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE) ;
@@ -261,6 +265,7 @@ protected:
   // Debug stuff
   static Bool_t _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
   static Bool_t _inhibitDirty ; // Static flag controlling global inhibit of dirty state propagation
+  Bool_t _deleteWatch ; //! Delete watch flag 
 
   static Int_t _nameLength ;
 

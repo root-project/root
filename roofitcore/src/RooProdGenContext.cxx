@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.cc,v 1.8 2003/04/28 20:42:39 wverkerke Exp $
+ *    File: $Id: RooProdGenContext.cc,v 1.9 2003/07/10 00:03:43 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,13 +23,14 @@
 #include "RooFitCore/RooProdGenContext.hh"
 #include "RooFitCore/RooProdPdf.hh"
 #include "RooFitCore/RooDataSet.hh"
+#include "RooFitCore/RooRealVar.hh"
 
 ClassImp(RooProdGenContext)
 ;
   
 RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &vars, 
-				   const RooDataSet *prototype, Bool_t verbose) :
-  RooAbsGenContext(model,vars,prototype,verbose), _pdf(&model)
+				     const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdf(&model)
 {
   // Constructor. Build an array of generator contexts for each product component PDF
 
@@ -37,54 +38,204 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   RooArgSet deps(vars) ;
   if (prototype) {
     RooArgSet* protoDeps = model.getDependents(*prototype->get()) ;
-    deps.add(*protoDeps) ;
+    deps.remove(*protoDeps,kTRUE,kTRUE) ;
     delete protoDeps ;
   }
 
   // Factorize product in irreducible terms
-  TList* termList = model.factorizeProduct(vars) ;
-  TIterator* termIter = termList->MakeIterator() ;
+  RooLinkedList termList,depsList,impDepList,crossDepList,intList ;
+  model.factorizeProduct(deps,RooArgSet(),termList,depsList,impDepList,crossDepList,intList) ;
+  TIterator* termIter = termList.MakeIterator() ;
+  TIterator* normIter = depsList.MakeIterator() ;
+  TIterator* impIter = impDepList.MakeIterator() ;
 
-  RooAbsPdf* pdf ;
-  RooArgSet* term ;
-  while(term=(RooArgSet*)termIter->Next()) {
-    TIterator* pdfIter = term->createIterator() ;
-    
-    if (term->getSize()==1) {
-      // Simple term
+  RooArgSet genDeps ;
+  // First add terms that do not import observables
+  
+  Bool_t working = kTRUE ;
+  while(working) {
+    working = kFALSE ;
 
-      pdf = (RooAbsPdf*) pdfIter->Next() ;
-      RooArgSet* pdfDep = pdf->getDependents(&vars) ;
-      if (pdfDep->getSize()>0) {
-	RooAbsGenContext* cx = pdf->genContext(*pdfDep,prototype,verbose) ;
-	_gcList.Add(cx) ;
-      } 
-      delete pdfDep ;
+    RooAbsPdf* pdf ;
+    RooArgSet* term ;
+    RooArgSet* impDeps ;
+    RooArgSet* termDeps ;
 
-    } else {
+    termIter->Reset() ;
+    impIter->Reset() ;
+    normIter->Reset() ;
 
-      // Composite term
-      RooArgSet termDeps ;
-      while(pdf=(RooAbsPdf*) pdfIter->Next()) {
-	RooArgSet* pdfDep = pdf->getDependents(&vars) ;
-	termDeps.add(*pdfDep,kFALSE) ;
+    while(term=(RooArgSet*)termIter->Next()) {
+      impDeps = (RooArgSet*)impIter->Next() ;
+      termDeps = (RooArgSet*)normIter->Next() ;
+
+//       cout << "considering term " ; term->Print("1") ;
+//       cout << "deps to be generated: " ; termDeps->Print("1") ;
+//       cout << "imported dependents are " ; impDeps->Print("1") ;
+
+      // Add this term if we have no imported dependents, or imported dependents are
+      // already generated
+      RooArgSet neededDeps(*impDeps) ;
+      neededDeps.remove(genDeps,kTRUE,kTRUE) ;
+
+//       cout << "needed imported dependents are " ; neededDeps.Print("1") ;
+      if (neededDeps.getSize()>0) {
+// 	cout << "skipping this term for now because it needs imported dependents that are not generated yet" << endl ;
+	continue ;
+      }
+
+      // Check if this component has any dependents that need to be generated
+      // e.g. it can happen that there are none if all dependents of this component are prototyped
+      if (termDeps->getSize()==0) {
+// 	cout << "no dependents to be generated for this term, removing it from list" << endl ;
+	termList.Remove(term) ;
+	continue ;
+      }
+
+      working = kTRUE ;	
+      TIterator* pdfIter = term->createIterator() ;      
+      if (term->getSize()==1) {
+	// Simple term
+	
+	pdf = (RooAbsPdf*) pdfIter->Next() ;
+	RooArgSet* pdfDep = pdf->getDependents(termDeps) ;
+	if (pdfDep->getSize()>0) {
+// 	  cout << "RooProdGenContext(" << model.GetName() << "): creating subcontext for " << pdf->GetName() << " with depSet " ; pdfDep->Print("1") ;
+	  RooArgSet* auxProto = 0 ;
+	  if (impDeps) auxProto = (RooArgSet*) impDeps->snapshot() ;
+	  RooAbsGenContext* cx = pdf->genContext(*pdfDep,prototype,auxProto,verbose) ;
+	  _gcList.Add(cx) ;
+	} 
+
+// 	cout << "adding following dependents to list of generated observables: " ; pdfDep->Print("1") ;
+	genDeps.add(*pdfDep) ;
+
 	delete pdfDep ;
-      }
-      if (termDeps.getSize()>0) {
-	const char* name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet()) ;      
+	
+      } else {
+	
+	// Composite term
+	if (termDeps->getSize()>0) {
+	  const char* name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet()) ;      
+	  
+	  // Construct auxiliary PDF expressing product of composite terms, 
+	  // following Partial/Full component specification of input model
+	  RooLinkedList cmdList ;
+	  RooLinkedList pdfSetList ;
+	  pdfIter->Reset() ;
+	  while(pdf=(RooAbsPdf*)pdfIter->Next()) {
 
-	RooProdPdf* multiPdf = new RooProdPdf(name,name,*term) ;
-	multiPdf->useDefaultGen(kTRUE) ;
-	_ownedMultiProds.addOwned(*multiPdf) ;
+	    RooArgSet* pdfnset = model.findPdfNSet(*pdf) ;
+	    RooArgSet* pdfSet = new RooArgSet(*pdf) ;
+	    pdfSetList.Add(pdfSet) ;
 
-	RooAbsGenContext* cx = multiPdf->genContext(termDeps,prototype,verbose) ;
-	_gcList.Add(cx) ;
+	    if (pdfnset && pdfnset->getSize()>0) {
+	      // This PDF requires a Partial() construction
+	      cmdList.Add(Partial(*pdfSet,*pdfnset).Clone()) ;
+// 	      cout << "Partial " << pdf->GetName() << " " ; pdfnset->Print("1") ;
+	    } else {
+	      // This PDF can use a Full() construction
+	      cmdList.Add(Full(*pdfSet).Clone()) ;
+// 	      cout << "Full " << pdf->GetName() << endl ;
+	    }
+	    
+	  }
+// 	  cmdList.Print("v") ;
+	  RooProdPdf* multiPdf = new RooProdPdf(name,name,cmdList) ;
+	  cmdList.Delete() ;
+	  pdfSetList.Delete() ;
+
+	  multiPdf->useDefaultGen(kTRUE) ;
+	  _ownedMultiProds.addOwned(*multiPdf) ;
+	  
+// 	  cout << "RooProdGenContext(" << model.GetName() << "): creating subcontext for composite " << multiPdf->GetName() << " with depSet " ; termDeps->Print("1") ;
+	  RooAbsGenContext* cx = multiPdf->genContext(*termDeps,prototype,auxProto,verbose) ;
+	  _gcList.Add(cx) ;
+
+// 	  cout << "adding following dependents to list of generated observables: " ; termDeps->Print("1") ;
+	  genDeps.add(*termDeps) ;
+
+	}
       }
+      
+      delete pdfIter ;
+
+//       cout << "added generator for this term, removing from list" << endl ;
+      termList.Remove(term) ;
+
+
     }
-    
-    delete pdfIter ;
   }
+
+  // Check if there are any left over terms that cannot be generated 
+  // separately due to cross dependency of observables
+  if (termList.GetSize()>0) {
+//     cout << "there are left-over terms that need to be generated separately" << endl ;
+
+    RooAbsPdf* pdf ;
+    RooArgSet* term ;
+
+    // Concatenate remaining terms
+    termIter->Reset() ;
+    normIter->Reset() ;
+    RooArgSet trailerTerm ;
+    RooArgSet trailerTermDeps ;
+    while(term=(RooArgSet*)termIter->Next()) {
+      RooArgSet* termDeps = (RooArgSet*)normIter->Next() ;
+      trailerTerm.add(*term) ;
+      trailerTermDeps.add(*termDeps) ;
+    }
+
+    const char* name = model.makeRGPPName("PRODGEN_",trailerTerm,RooArgSet(),RooArgSet()) ;      
+      
+    // Construct auxiliary PDF expressing product of composite terms, 
+    // following Partial/Full component specification of input model
+    RooLinkedList cmdList ;
+    RooLinkedList pdfSetList ;
+    TIterator* pdfIter = trailerTerm.createIterator() ;
+    while(pdf=(RooAbsPdf*)pdfIter->Next()) {
+	
+      RooArgSet* pdfnset = model.findPdfNSet(*pdf) ;
+      RooArgSet* pdfSet = new RooArgSet(*pdf) ;
+      pdfSetList.Add(pdfSet) ;
+      
+      if (pdfnset && pdfnset->getSize()>0) {
+	// This PDF requires a Partial() construction
+	  cmdList.Add(Partial(*pdfSet,*pdfnset).Clone()) ;
+// 	  cout << "Partial " << pdf->GetName() << " " ; pdfnset->Print("1") ;
+      } else {
+	// This PDF can use a Full() construction
+	cmdList.Add(Full(*pdfSet).Clone()) ;
+// 	cout << "Full " << pdf->GetName() << endl ;
+      }
+      
+    }
+//     cmdList.Print("v") ;
+    RooProdPdf* multiPdf = new RooProdPdf(name,name,cmdList) ;
+    cmdList.Delete() ;
+    pdfSetList.Delete() ;
+    
+    multiPdf->useDefaultGen(kTRUE) ;
+    _ownedMultiProds.addOwned(*multiPdf) ;
+    
+    cout << "RooProdGenContext(" << model.GetName() << "): creating context for trailer composite " << multiPdf->GetName() << " with depSet " ; trailerTermDeps.Print("1") ;
+    RooAbsGenContext* cx = multiPdf->genContext(trailerTermDeps,prototype,auxProto,verbose) ;
+    _gcList.Add(cx) ;    
+  }
+
+
+  delete termIter ;
+  delete impIter ;
+  delete normIter ;
+
   _gcIter = _gcList.MakeIterator() ;
+
+  // We own contents of lists filled by factorizeProduct() 
+  termList.Delete() ;
+  depsList.Delete() ;
+  impDepList.Delete() ;
+  crossDepList.Delete() ;
+  intList.Delete() ;
 }
 
 
@@ -118,10 +269,16 @@ void RooProdGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
   TList compData ;
   RooAbsGenContext* gc ;
   _gcIter->Reset() ;
+
+//   cout << "generateEvent" << endl ;
+//   ((RooRealVar*)theEvent.find("x"))->setVal(0) ;
+//   ((RooRealVar*)theEvent.find("y"))->setVal(0) ;
+
   while(gc=(RooAbsGenContext*)_gcIter->Next()) {
 
     // Generate component 
     gc->generateEvent(theEvent,remaining) ;
+//     theEvent.Print("v") ;
   }
 }
 

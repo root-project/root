@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooSimGenContext.cc,v 1.12 2002/09/05 04:33:57 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,8 +32,8 @@ ClassImp(RooSimGenContext)
 ;
   
 RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet &vars, 
-				   const RooDataSet *prototype, Bool_t verbose) :
-  RooAbsGenContext(model,vars,prototype,verbose), _pdf(&model)
+				   const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdf(&model)
 {
   // Constructor. Build an array of generator contexts for each component PDF
 
@@ -101,7 +101,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
     pdf=(RooAbsPdf*)proxy->absArg() ;
 
     // Create generator context for this PDF
-    RooAbsGenContext* cx = pdf->genContext(pdfVars,prototype,verbose) ;
+    RooAbsGenContext* cx = pdf->genContext(pdfVars,prototype,auxProto,verbose) ;
 
     // Name the context after the associated state and add to list
     cx->SetName(proxy->name()) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.rdl,v 1.33 2002/09/30 00:57:28 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.34 2003/01/14 00:07:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -70,8 +70,8 @@ protected:
   mutable Double_t* _coefCache ;
   
   friend class RooAddGenContext ;
-  virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
-				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
+  virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
+                                       const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
 
 
   virtual void operModeHook() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormListManager.cc,v 1.3 2002/09/05 04:33:45 verkerke Exp $
+ *    File: $Id: RooNormListManager.cc,v 1.4 2003/04/28 20:42:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -60,20 +60,26 @@ RooNormListManager::RooNormListManager(const RooNormListManager& other)
   _normList = new pRooArgList[_maxSize] ;
   _lastIndex = -1 ;
 
+//   cout << "RooNormListManager:cctor(" << this << ")" << endl ;
+
   Int_t i ;
   for (i=0 ; i<other._size ; i++) {    
     _nsetCache[i].initialize(other._nsetCache[i]) ;
     if (other._normList[i]->isOwning()) {
+//       cout << "list [" << i << "] is owning" << endl ;
 
       _normList[i] = new RooArgList ;
       TIterator* iter = other._normList[i]->createIterator() ;
       RooAbsArg* arg ;
       while(arg=(RooAbsArg*)iter->Next()) {
-	_normList[i]->addOwned(*(RooAbsArg*)arg->Clone()) ;
+	RooAbsArg* argclone = (RooAbsArg*)arg->Clone() ;
+	_normList[i]->addOwned(*argclone) ;
+// 	cout << "   cloning elem " << arg << " into " << argclone << endl ;
       }
       delete iter ;
 
     } else {
+//       cout << "list [" << i << "] is not owning" << endl ;
       _normList[i] = (RooArgList*) other._normList[i]->Clone() ;
     }
   }

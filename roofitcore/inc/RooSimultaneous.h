@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.rdl,v 1.31 2003/01/14 00:07:58 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.32 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -84,8 +84,8 @@ protected:
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
   friend class RooSimGenContext ;
-  virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
-				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
+  virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
+	                               const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
  
   RooCategoryProxy _indexCat ; // Index category
   TList    _pdfProxyList ;     // List of PDF proxies (named after applicable category state)

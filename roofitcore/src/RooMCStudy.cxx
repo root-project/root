@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCStudy.cc,v 1.17 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.18 2003/06/17 20:14:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -89,7 +89,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
 	 << "                        Generated datasets will not faithfully reproduce prototype data" << endl ;
   }
 
-  _genContext = genModel.genContext(dependents,genProtoData,verboseGen) ;
+  _genContext = genModel.genContext(dependents,genProtoData,0,verboseGen) ;
   RooArgSet* tmp = genModel.getParameters(&dependents) ;
   _genParams = (RooArgSet*) tmp->snapshot(kFALSE) ;
   delete tmp ;

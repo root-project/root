@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.cc,v 1.55 2003/04/28 20:42:38 wverkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.56 2003/05/14 02:58:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -737,9 +737,10 @@ void RooAddPdf::selectNormalization(const RooArgSet* depSet, Bool_t force)
 
 
 
-RooAbsGenContext* RooAddPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, Bool_t verbose) const 
+RooAbsGenContext* RooAddPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
+					const RooArgSet* auxProto, Bool_t verbose) const 
 {
-  return new RooAddGenContext(*this,vars,prototype,verbose) ;
+  return new RooAddGenContext(*this,vars,prototype,auxProto,verbose) ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddGenContext.cc,v 1.7 2002/09/05 04:33:11 verkerke Exp $
+ *    File: $Id: RooAddGenContext.cc,v 1.8 2003/05/14 02:58:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,8 +30,9 @@ ClassImp(RooAddGenContext)
 ;
   
 RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars, 
-				   const RooDataSet *prototype, Bool_t verbose) :
-  RooAbsGenContext(model,vars,prototype,verbose)
+				   const RooDataSet *prototype, const RooArgSet* auxProto,
+				   Bool_t verbose) :
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
   // Constructor. Build an array of generator contexts for each product component PDF
   _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(kTRUE) ;
@@ -53,7 +54,7 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   _vars = (RooArgSet*) vars.snapshot(kFALSE) ;
 
   while(pdf=(RooAbsPdf*)model._pdfIter->Next()) {
-    RooAbsGenContext* cx = pdf->genContext(vars,prototype,verbose) ;
+    RooAbsGenContext* cx = pdf->genContext(vars,prototype,auxProto,verbose) ;
     _gcList.Add(cx) ;
   }  
 

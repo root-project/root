@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinkedList.cc,v 1.7 2002/09/17 06:39:34 verkerke Exp $
+ *    File: $Id: RooLinkedList.cc,v 1.8 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -270,7 +270,7 @@ void RooLinkedList::Print(const char* opt) const
 {
   RooLinkedListElem* elem = _first ;
   while(elem) {
-    cout << elem << " : " ; 
+    cout << elem->_arg << " : " ; 
     elem->_arg->Print(opt) ;
     elem = elem->_next ;
   }    

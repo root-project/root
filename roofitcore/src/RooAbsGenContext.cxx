@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGenContext.cc,v 1.9 2002/09/05 04:33:05 verkerke Exp $
+ *    File: $Id: RooAbsGenContext.cc,v 1.10 2003/05/14 02:58:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,7 +25,7 @@ ClassImp(RooAbsGenContext)
 ;
 
 RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars,
-				   const RooDataSet *prototype, Bool_t verbose) :
+				   const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
   TNamed(model), 
   _prototype(prototype), 
   _theEvent(0), 
@@ -57,6 +57,11 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
       }
     }
     delete protoIterator;
+  }
+
+  // Add auxiliary protovars to _protoVars, if provided
+  if (auxProto) {
+    _protoVars.add(*auxProto) ;
   }
 
   // Remember the default number of events to generate when no prototype dataset is provided.
@@ -126,7 +131,9 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
       if(vars->contains(*arg)) continue;
       cout << ClassName() << "::" << GetName() << ":generate: prototype dataset is missing \""
 	   << arg->GetName() << "\"" << endl;
-      ok= kFALSE;
+
+      // WVE disable this for the moment
+      // ok= kFALSE;
     }
     delete iterator;
     if(!ok) return 0;

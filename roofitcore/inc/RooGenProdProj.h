@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenProdProj.rdl,v 1.1 2003/04/28 20:42:39 wverkerke Exp $
+ *    File: $Id: RooGenProdProj.rdl,v 1.2 2003/07/30 01:19:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -45,6 +45,7 @@ protected:
   RooSetProxy _compSetN ; // Set proxy for numerator components 
   RooSetProxy _compSetD ; // Set proxy for denominator components 
   RooListProxy _intList ; // Master integrals representing numerator and denominator
+  Bool_t _haveD ;         // Do we have a denominator term?
 
   ClassDef(RooGenProdProj,1) // General form of projected integral of product of PDFs 
 };

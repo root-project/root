@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.78 2003/05/10 01:37:52 wverkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.79 2004/03/12 21:14:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -52,8 +52,8 @@ Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 Bool_t RooAbsArg::_inhibitDirty(kFALSE) ;
 Int_t  RooAbsArg::_nameLength(0) ;
 
-RooAbsArg::RooAbsArg() : TNamed(), _attribList(),
-  _operMode(Auto)
+RooAbsArg::RooAbsArg() : TNamed(), _attribList(), 
+  _operMode(Auto), _deleteWatch(kFALSE)
 {
   // Default constructor creates an unnamed object. At present this
   // will trigger an assert(0) because may indicate an attempt to
@@ -70,7 +70,7 @@ RooAbsArg::RooAbsArg() : TNamed(), _attribList(),
 
 RooAbsArg::RooAbsArg(const char *name, const char *title)
   : TNamed(name,title), _valueDirty(kTRUE), _shapeDirty(kTRUE),
-  _operMode(Auto)
+  _operMode(Auto), _deleteWatch(kFALSE)
 {    
   // Create an object with the specified name and descriptive title.
   // The newly created object has no clients or servers and has its
@@ -83,6 +83,7 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
 
 RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
   : TNamed(other.GetName(),other.GetTitle()), _operMode(Auto)
+  , _deleteWatch(other._deleteWatch)
 {
   // Copy constructor transfers all properties of the original
   // object, except for its list of clients. The newly created 
@@ -139,13 +140,21 @@ RooAbsArg::~RooAbsArg()
   //Notify all client that they are in limbo
   TIterator* clientIter = _clientList.MakeIterator() ;
   RooAbsArg* client = 0;
+  Bool_t first(kTRUE) ;
   while (client=(RooAbsArg*)clientIter->Next()) {
     client->setAttribute("ServerDied") ;
     TString attr("ServerDied:");
     attr.Append(GetName());
+    attr.Append(Form("(%x)",this)) ;
     client->setAttribute(attr.Data());
     client->removeServer(*this,kTRUE);
-    if (_verboseDirty) {
+    if (_verboseDirty || deleteWatch()) {
+
+      if (deleteWatch() && first) {
+	cout << "RooAbsArg::dtor(" << GetName() << "," << this << ") DeleteWatch: object is being destroyed" << endl ;
+	first = kFALSE ;
+      }
+
       cout << fName << "::" << ClassName() << ":~RooAbsArg: dependent \""
 	   << client->GetName() << "\" should have been deleted first" << endl ;
     }
@@ -157,6 +166,8 @@ RooAbsArg::~RooAbsArg()
 
   delete _clientShapeIter ;
   delete _clientValueIter ;
+
+
 
   RooTrace::destroy(this) ;
 }
@@ -501,8 +512,9 @@ Bool_t RooAbsArg::recursiveCheckDependents(const RooArgSet* nset) const
   Bool_t ret(kFALSE) ;
   while(arg=(RooAbsArg*)iter->Next()) {
     if (arg->getAttribute("ServerDied")) {
-      cout << "RooAbsArg::recursiveCheckDependents: ERROR: one or more servers of node " 
+      cout << "RooAbsArg::recursiveCheckDependents(" << GetName() << "): ERROR: one or more servers of node " 
 	   << arg->GetName() << " no longer exists!" << endl ;
+      arg->Print("v") ;
       ret = kTRUE ;
     }
     ret |= arg->checkDependents(nset) ;

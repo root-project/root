@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooGenContext.rdl,v 1.12 2002/09/05 04:33:29 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,7 +28,7 @@ class TRandom;
 class RooGenContext : public RooAbsGenContext {
 public:
   RooGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-		Bool_t verbose=kFALSE, const RooArgSet* forceDirect=0);
+		const RooArgSet* auxProto=0, Bool_t verbose=kFALSE, const RooArgSet* forceDirect=0);
   virtual ~RooGenContext();
 
   virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;

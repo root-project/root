@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.rdl,v 1.7 2002/09/09 21:43:34 verkerke Exp $
+ *    File: $Id: RooProdGenContext.rdl,v 1.8 2003/04/28 20:42:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -31,7 +31,7 @@ class RooSuperCategory ;
 class RooProdGenContext : public RooAbsGenContext {
 public:
   RooProdGenContext(const RooProdPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-		Bool_t _verbose= kFALSE);
+		    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
   virtual ~RooProdGenContext();
 
   virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;

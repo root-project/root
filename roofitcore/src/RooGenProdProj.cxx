@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenProdProj.cc,v 1.3 2003/07/30 01:19:39 wverkerke Exp $
+ *    File: $Id: RooGenProdProj.cc,v 1.4 2003/07/30 02:58:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,7 +50,8 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
   _compSetOwnedD(0),
   _compSetN("compSetN","Set of integral components owned by numerator",this,kFALSE),
   _compSetD("compSetD","Set of integral components owned by denominator",this,kFALSE),
-  _intList("intList","List of integrals",this,kTRUE)
+  _intList("intList","List of integrals",this,kTRUE),
+  _haveD(kFALSE)
 {
   // Constructor
 
@@ -66,7 +67,10 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
   _compSetD.add(*_compSetOwnedD) ;
   
   _intList.add(*numerator) ;
-  _intList.add(*denominator) ;
+  if (denominator) {
+    _intList.add(*denominator) ;
+    _haveD = kTRUE ;
+  }
 }
 
 
@@ -79,6 +83,16 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   _compSetD("compSetD","Set of integral components owned by denominator",this),
   _intList("intList","List of integrals",this)
 {
+//   cout << "RooGenProdProj copy ctor(" << this << ") orig = " << &other << endl ;
+
+  // Explicitly remove all server links at this point
+  TIterator* iter = serverIterator() ;
+  RooAbsArg* server ;
+  while(server=(RooAbsArg*)iter->Next()) {
+    removeServer(*server,kTRUE) ;
+  }
+  delete iter ;
+
   // Copy constructor
   _compSetOwnedN = (RooArgSet*) other._compSetN.snapshot() ;
   _compSetN.add(*_compSetOwnedN) ;
@@ -89,18 +103,23 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   RooAbsArg* arg ;
   TIterator* nIter = _compSetOwnedN->createIterator() ;  
   while(arg=(RooAbsArg*)nIter->Next()) {
+//     cout << "ownedN elem " << arg->GetName() << "(" << arg << ")" << endl ;
     arg->setOperMode(_operMode) ;
   }
   delete nIter ;
   TIterator* dIter = _compSetOwnedD->createIterator() ;
   while(arg=(RooAbsArg*)dIter->Next()) {
+//     cout << "ownedD elem " << arg->GetName() << "(" << arg << ")" << endl ;
     arg->setOperMode(_operMode) ;
   }
   delete dIter ;
 
   // Fill _intList
+  _haveD = other._haveD ;
   _intList.add(*_compSetN.find(other._intList.at(0)->GetName())) ;
-  _intList.add(*_compSetD.find(other._intList.at(1)->GetName())) ;
+  if (other._haveD) {
+    _intList.add(*_compSetD.find(other._intList.at(1)->GetName())) ;
+  }
 }
 
 
@@ -190,6 +209,9 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
 Double_t RooGenProdProj::evaluate() const 
 {  
   Double_t nom = ((RooAbsReal*)_intList.at(0))->getVal() ;
+
+  if (!_haveD) return nom ;
+
   Double_t den = ((RooAbsReal*)_intList.at(1))->getVal() ;
 
   //cout << "RooGenProdProj::eval(" << GetName() << ") ret = " << nom << " / " << den << endl ;
@@ -214,7 +236,7 @@ void RooGenProdProj::operModeHook()
   delete dIter ;
 
   _intList.at(0)->setOperMode(_operMode) ;
-  _intList.at(1)->setOperMode(Auto) ; // Denominator always stays in Auto mode (normalization integral)
+  if (_haveD) _intList.at(1)->setOperMode(Auto) ; // Denominator always stays in Auto mode (normalization integral)
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.rdl,v 1.30 2003/05/12 18:46:04 wverkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.31 2004/03/12 21:14:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,8 +18,13 @@
 
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooListProxy.hh"
+#include "RooFitCore/RooLinkedList.hh"
 #include "RooFitCore/RooAICRegistry.hh"
 #include "RooFitCore/RooNormListManager.hh"
+#include "RooFitCore/RooCmdArg.hh"
+
+typedef RooArgList* pRooArgList ;
+typedef RooLinkedList* pRooLinkedList ;
 
 class RooProdPdf : public RooAbsPdf {
 public:
@@ -27,6 +32,13 @@ public:
   RooProdPdf(const char *name, const char *title,
 	    RooAbsPdf& pdf1, RooAbsPdf& pdf2, Double_t cutOff=0) ;
   RooProdPdf(const char* name, const char* title, const RooArgList& pdfList, Double_t cutOff=0) ;
+  RooProdPdf(const char* name, const char* title, const RooLinkedList& cmdArgList) ;
+  RooProdPdf(const char* name, const char* title,
+   	     const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
+             const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
+             const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
+             const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) ;
+
   RooProdPdf(const RooProdPdf& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooProdPdf(*this,newname) ; }
   virtual ~RooProdPdf() ;
@@ -52,14 +64,28 @@ public:
 
 protected:
 
-  TList* factorizeProduct(const RooArgSet& normSet) const ;
+  void initializeFromCmdArgList(const RooLinkedList& l) ;
+
+  void factorizeProduct(const RooArgSet& normSet, const RooArgSet& intSet, 
+                        RooLinkedList& termList,   RooLinkedList& normList, 
+                        RooLinkedList& impDepList, RooLinkedList& crossDepList,
+                        RooLinkedList& intList) const;
   const char* makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset, const RooArgSet& nset) const ;
+  void groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outerIntDeps,
+                         const RooLinkedList& terms, const RooLinkedList& norms, 
+                         const RooLinkedList& imps, const RooLinkedList& ints, const RooLinkedList& cross) const ;
   
-  Double_t calculate(const RooArgList* partIntList, const RooArgSet* normSet) const ;
-  RooArgList* getPartIntList(const RooArgSet* nset, const RooArgSet* iset, Int_t& code) const ;
+  Double_t calculate(const RooArgList* partIntList, const RooLinkedList* normSetList) const ;
+	
+	
+  void getPartIntList(const RooArgSet* nset, const RooArgSet* iset, pRooArgList& partList, pRooLinkedList& nsetList, Int_t& code) const ;
+  RooAbsReal* processProductTerm(const RooArgSet* nset, const RooArgSet* iset, 
+                                 const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet, 
+                                 Bool_t& isOwned, Bool_t forceWrap=kFALSE) const ;
   
-  mutable RooNormListManager _partListMgr ; // Partial normalization list manager
-  mutable RooNormListManager _partOwnedListMgr ; // Partial normalization list manager for owned components
+  mutable RooNormListManager _partListMgr ; // Partial integral list manager
+  mutable RooNormListManager _partOwnedListMgr ; // Partial integral list manager for owned components
+  mutable RooLinkedList _partNormListCache[10] ; // Cache of normalization listss
   
   virtual void operModeHook() ;
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
@@ -68,14 +94,17 @@ protected:
   virtual void printCompactTreeHook(const char* indent="") ;
 
   friend class RooProdGenContext ;
-  virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
-				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
+  virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
+	                               const RooArgSet *auxProto=0, Bool_t verbose= kFALSE) const ;
+
+  RooArgSet* findPdfNSet(RooAbsPdf& pdf) const ; 
 
   mutable RooAICRegistry _genCode ; // Registry of composite direct generator codes
 
   mutable RooArgSet* _curNormSet ; //!
   Double_t _cutOff ;       //  Cutoff parameter for running product
   RooListProxy _pdfList ;  //  List of PDF components
+  RooLinkedList _pdfNSetList ; // List of PDF component normalization sets
   TIterator* _pdfIter ;    //! Iterator of PDF list
   Int_t _extendedIndex ;   //  Index of extended PDF (if any) 
 
@@ -86,5 +115,9 @@ private:
 
   ClassDef(RooProdPdf,0) // PDF representing a product of PDFs
 };
+
+// Constructor arguments
+RooCmdArg Partial(const RooArgSet& pdfSet, const RooArgSet& depSet) ;
+RooCmdArg Full(const RooArgSet& pdfSet) ;
 
 #endif

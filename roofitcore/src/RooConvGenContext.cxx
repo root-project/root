@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooConvGenContext.cc,v 1.7 2002/09/05 04:33:20 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,8 +33,8 @@ ClassImp(RooConvGenContext)
 ;
   
 RooConvGenContext::RooConvGenContext(const RooConvolutedPdf &model, const RooArgSet &vars, 
-				   const RooDataSet *prototype, Bool_t verbose) :
-  RooAbsGenContext(model,vars,prototype,verbose)
+	 			     const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
   // Constructor. Build a generator for the physics PDF convoluted with the truth model
   // and a generator for the resolution model as PDF.
@@ -53,7 +53,7 @@ RooConvGenContext::RooConvGenContext(const RooConvolutedPdf &model, const RooArg
 
   // Create generator for physics X truth model
   _pdfVars = (RooArgSet*) pdfClone->getDependents(&vars) ;
-  _pdfGen = pdfClone->genContext(*_pdfVars,prototype,verbose) ;  
+  _pdfGen = pdfClone->genContext(*_pdfVars,prototype,auxProto,verbose) ;  
 
   // Clone resolution model and use as normal PDF
   _modelCloneSet = (RooArgSet*) RooArgSet(*model._convSet.at(0)).snapshot(kTRUE) ;
@@ -71,7 +71,7 @@ RooConvGenContext::RooConvGenContext(const RooConvolutedPdf &model, const RooArg
   _modelVars = (RooArgSet*) modelClone->getDependents(&vars) ;
   _modelVars->add(modelClone->convVar()) ;
   _convVarName = modelClone->convVar().GetName() ;
-  _modelGen = modelClone->genContext(*_modelVars,prototype,verbose) ;
+  _modelGen = modelClone->genContext(*_modelVars,prototype,auxProto,verbose) ;
 
   if (prototype) {
     _pdfVars->add(*prototype->get()) ;

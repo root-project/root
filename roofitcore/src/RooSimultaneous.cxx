@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.cc,v 1.49 2003/01/14 00:07:57 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.50 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -664,15 +664,15 @@ void RooSimultaneous::selectNormalization(const RooArgSet* normSet, Bool_t force
 
 
 
-RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, 
-					const RooDataSet *prototype, Bool_t verbose) const 
+RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
+					      const RooArgSet* auxProto, Bool_t verbose) const 
 {
   const char* idxCatName = _indexCat.arg().GetName() ;
   const RooArgSet* protoVars = prototype ? prototype->get() : 0 ;
 
   if (vars.find(idxCatName) || (protoVars && protoVars->find(idxCatName))) {
     // Generating index category: return special sim-context
-    return new RooSimGenContext(*this,vars,prototype,verbose) ;
+    return new RooSimGenContext(*this,vars,prototype,auxProto,verbose) ;
   } else if (_indexCat.arg().isDerived()) {
     // Generating dependents of a derived index category
 
@@ -695,7 +695,7 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars,
 
     if (allServers) {
       // Use simcontext if we have all servers
-      return new RooSimGenContext(*this,vars,prototype,verbose) ;
+      return new RooSimGenContext(*this,vars,prototype,auxProto,verbose) ;
     } else if (!allServers && anyServer) {
       // Abort if we have only part of the servers
       cout << "RooSimultaneous::genContext: ERROR: prototype must include either all "
@@ -713,6 +713,6 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars,
          << _indexCat.arg().GetName() << "=" << _indexCat.arg().getLabel() << ")" << endl ; 
     return 0 ;
   }
-  return ((RooAbsPdf*)proxy->absArg())->genContext(vars,prototype,verbose) ;
+  return ((RooAbsPdf*)proxy->absArg())->genContext(vars,prototype,auxProto,verbose) ;
 }
 

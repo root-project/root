@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.96 2003/08/27 22:34:12 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.97 2003/11/12 23:20:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -405,6 +405,8 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   leafNodeServerList(&leafNodes,this);
   treeNodeServerList(&treeNodes,this) ;
 
+//   cout << "initial leafNodes: " ; leafNodes.Print("1") ;
+
   // Check that the dependents are all fundamental. Filter out any that we
   // do not depend on, and make substitutions by name in our leaf list.
   // Check for overlaps with the projection variables.
@@ -462,6 +464,10 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   // Remove the projected variables from the list of leaf nodes, if necessary.
   if(0 != projectedVars) leafNodes.remove(*projectedVars,kTRUE);
 
+//   cout << "createProjection: final leafNodes: " ; leafNodes.Print("1") ;
+//   cout << "@@@@@@@@@ Before any manipulation" << endl ;
+//   printCompactTree() ;
+
   // Make a deep-clone of ourself so later operations do not disturb our original state
   cloneSet= (RooArgSet*)RooArgSet(*this).snapshot(kTRUE);
   if (!cloneSet) {
@@ -476,7 +482,19 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   // are still in the cloneList and so will be cleaned up eventually.
   //cout << "redirection leafNodes : " ; leafNodes.Print("1") ;
 
+//   cout << "@@@@@@@@@@ Original After deep-copy" << endl ;
+//   printCompactTree() ;
+//   cout << "@@@@@@@@@@ Clone After deep-copy" << endl ;
+//   clone->printCompactTree() ;
+
+
   clone->recursiveRedirectServers(leafNodes);
+
+//   cout << "@@@@@@@@@@ Original after leaf node redirect" << endl ;
+//   printCompactTree() ;
+//   cout << "@@@@@@@@@@ Clone after leaf node redirect" << endl ;
+//   clone->printCompactTree() ;
+
 
   // Create the set of normalization variables to use in the projection integrand
 
@@ -893,8 +911,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     if (projDataNeededVars) delete projDataNeededVars ;
     return frame ;
   }
-
-
+ 
   RooAbsReal *projection = (RooAbsReal*) createProjection(*deps, &projectedVars, projectionCompList) ;
 
   if (projDataNeededVars && projDataNeededVars->getSize()>0) {

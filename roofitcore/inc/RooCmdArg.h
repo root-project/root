@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooCmdArg.rdl,v 1.3 2002/09/05 04:33:18 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,6 +44,7 @@ public:
 protected:
 
   friend class RooCmdConfig ;
+  friend class RooProdPdf ;
 
   const char* opcode() const { return strlen(GetName()) ? GetName() : 0 ; }
   Int_t getInt(Int_t idx) const { return _i[idx] ; }

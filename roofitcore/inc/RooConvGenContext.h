@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooConvGenContext.rdl,v 1.3 2002/09/05 04:33:20 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -31,7 +31,7 @@ class RooRealVar ;
 class RooConvGenContext : public RooAbsGenContext {
 public:
   RooConvGenContext(const RooConvolutedPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-		    Bool_t _verbose= kFALSE);
+		    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
   virtual ~RooConvGenContext();
 
 protected:

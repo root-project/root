@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.67 2003/05/07 21:06:23 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.68 2003/05/12 18:46:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -164,8 +164,8 @@ protected:
   friend class RooSimultaneous ;
   friend class RooMCStudy ;
 
-  virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
-				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
+  virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
+	                               const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
 
 
   friend class RooExtendPdf ;

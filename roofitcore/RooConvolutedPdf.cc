@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvolutedPdf.cc,v 1.36 2002/09/05 04:33:20 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.37 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -225,8 +225,8 @@ Bool_t RooConvolutedPdf::changeModel(const RooResolutionModel& newModel)
 
 
 
-RooAbsGenContext* RooConvolutedPdf::genContext(const RooArgSet &vars, 
-					       const RooDataSet *prototype, Bool_t verbose) const 
+RooAbsGenContext* RooConvolutedPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
+					       const RooArgSet* auxProto, Bool_t verbose) const 
 {
   RooArgSet* modelDep = _model->getDependents(&vars) ;
   modelDep->remove(*convVar(),kTRUE,kTRUE) ;
@@ -236,7 +236,7 @@ RooAbsGenContext* RooConvolutedPdf::genContext(const RooArgSet &vars,
   if (dynamic_cast<RooTruthModel*>(_model)) {
     // Truth resolution model: use generic context explicitly allowing generation of convolution variable
     RooArgSet forceDirect(*convVar()) ;
-    return new RooGenContext(*this,vars,prototype,verbose,&forceDirect) ;
+    return new RooGenContext(*this,vars,prototype,auxProto,verbose,&forceDirect) ;
   } 
 
   // Check if physics PDF and resolution model can both directly generate the convolution variable
@@ -248,11 +248,11 @@ RooAbsGenContext* RooConvolutedPdf::genContext(const RooArgSet &vars,
   if (numAddDep>0 || !pdfCanDir || !resCanDir) {
     // Any resolution model with more dependents than the convolution variable
     // or pdf or resmodel do not support direct generation
-    return new RooGenContext(*this,vars,prototype,verbose) ;
+    return new RooGenContext(*this,vars,prototype,auxProto,verbose) ;
   } 
   
   // Any other resolution model: use specialized generator context
-  return new RooConvGenContext(*this,vars,prototype,verbose) ;
+  return new RooConvGenContext(*this,vars,prototype,auxProto,verbose) ;
 }
 
 
