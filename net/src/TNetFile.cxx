@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.55 2004/11/03 22:54:53 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.56 2004/11/05 13:51:48 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -457,8 +457,12 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
                         fUrl.GetUser(), fUrl.GetHost(), fUrl.GetPort()));
    fSocket = TSocket::CreateAuthSocket(url, sSize, tcpwindowsize);
    if (!fSocket || !fSocket->IsAuthenticated()) {
-      Error("TNetFile", "can't open %d-fold connections to rootd on "
-            "host %s at port %d", sSize, fUrl.GetHost(), fUrl.GetPort());
+      if (sSize > 1)
+         Error("TNetFile", "can't open %d-stream connection to rootd on "
+               "host %s at port %d", sSize, fUrl.GetHost(), fUrl.GetPort());
+      else
+         Error("TNetFile", "can't open connection to rootd on "
+               "host %s at port %d", fUrl.GetHost(), fUrl.GetPort());
       *kind = kROOTD_ERR;
       *stat = (Int_t)kErrAuthNotOK;
       goto zombie;

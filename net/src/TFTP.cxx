@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.25 2004/07/02 18:36:57 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.26 2004/10/15 16:55:07 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -103,8 +103,12 @@ void TFTP::Init(const char *surl, Int_t par, Int_t wsize)
                         url.GetUser(), url.GetHost(), url.GetPort()));
    fSocket = TSocket::CreateAuthSocket(hurl, par, wsize);
    if (!fSocket || !fSocket->IsAuthenticated()) {
-      Error("TFTP", "can't open %d-fold connections to rootd on "
-            "host %s at port %d", par, url.GetHost(), url.GetPort());
+      if (par > 1)
+         Error("TFTP", "can't open %d-stream connection to rootd on "
+               "host %s at port %d", par, url.GetHost(), url.GetPort());
+      else
+         Error("TFTP", "can't open connection to rootd on "
+               "host %s at port %d", url.GetHost(), url.GetPort());
       goto zombie;
    }
 
