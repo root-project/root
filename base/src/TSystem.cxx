@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.111 2004/12/15 22:26:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.112 2004/12/17 22:24:12 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2048,6 +2048,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
            ) {
          // the library does not exist and is older than the script.
          recompile = kTRUE;
+         modified  = kTRUE;
 
       } else {
 
