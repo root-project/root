@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.29 2003/01/30 09:21:02 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.30 2003/04/09 14:30:38 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1250,7 +1250,7 @@ void TTreeViewer::ExecuteDraw()
       fBarH->SetState(kButtonUp);
       TH1 *hist = fTree->GetHistogram();
       if (hist && gPad) {
-         hist = (TH1*)gPad->GetListOfPrimitives()->FindObject(fBarHist->GetText());
+         //hist = (TH1*)gPad->GetListOfPrimitives()->FindObject(fBarHist->GetText());
          if (hist) {
             // check if graphic option was modified
             TString last(fLastOption);
@@ -1311,7 +1311,7 @@ void TTreeViewer::ExecuteDraw()
             current++;
          }
       }
-      hist = (TH1*)gPad->GetListOfPrimitives()->FindObject(fBarHist->GetText());
+      //hist = (TH1*)gPad->GetListOfPrimitives()->FindObject(fBarHist->GetText());
       TAxis *axis[3];
       axis[0] = hist->GetXaxis();
       axis[1] = hist->GetYaxis();
