@@ -2,7 +2,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.cc,v 1.25 2004/08/09 00:00:54 bartoldu Exp $
+ *    File: $Id: RooFitResult.cc,v 1.26 2004/09/11 00:32:23 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,6 +33,7 @@
 #include "TBox.h"
 #include "TGaxis.h"
 #include "TMatrix.h"
+#include "TVector.h"
 #include "RooFitCore/RooFitResult.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgList.hh"
