@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCustomizer.cc,v 1.4 2001/10/27 22:28:20 verkerke Exp $
+ *    File: $Id: RooCustomizer.cc,v 1.5 2001/11/01 22:52:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -426,7 +426,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   delete iter ;  
 
 
-  return cloneTopPdf ;
+  return cloneTopPdf?cloneTopPdf:_masterPdf ;
 }
 
 
