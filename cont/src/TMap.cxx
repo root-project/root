@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.8 2002/07/29 09:22:29 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.9 2002/08/07 11:56:20 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -95,8 +95,9 @@ Int_t TMap::Capacity() const
 void TMap::Clear(Option_t *option)
 {
    // Remove all (key,value) pairs from the map but DO NOT delete the keys
-   // and/or values. Objects are not deleted unless the TMap is the
-   // owner (set via SetOwner()).
+   // and/or values. Key objects are not deleted unless the TMap is the
+   // owner (set via SetOwner()). To delete only the value objects call
+   // DeleteValues() and to delete both keys and values use DeleteAll().
 
    if (IsOwner())
       Delete();
@@ -143,6 +144,23 @@ void TMap::Delete(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TMap::DeleteValues()
+{
+   // Remove all (key,value) pairs from the map AND delete the values
+   // when they are allocated on the heap.
+
+   TIter next(fTable);
+   TAssoc *a;
+
+   while ((a = (TAssoc *)next()))
+      if (a->Value() && a->Value()->IsOnHeap())
+         TCollection::GarbageCollect(a->Value());
+
+   fTable->Delete();   // delete the TAssoc's
+   fSize = 0;
+}
+
+//______________________________________________________________________________
 void TMap::DeleteAll()
 {
    // Remove all (key,value) pairs from the map AND delete the keys AND
@@ -157,6 +175,7 @@ void TMap::DeleteAll()
       if (a->Value() && a->Value()->IsOnHeap())
          TCollection::GarbageCollect(a->Value());
    }
+
    fTable->Delete();   // delete the TAssoc's
    fSize = 0;
 }
@@ -303,6 +322,7 @@ void TMap::Streamer(TBuffer &b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+//______________________________________________________________________________
 void TAssoc::Browse(TBrowser *b)
 {
    if (b) {

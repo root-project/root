@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.10 2002/07/24 13:23:17 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.11 2002/07/29 09:22:28 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -36,12 +36,13 @@ class THashTableIter;
 class TMapIter;
 class TBrowser;
 
+
 class TMap : public TCollection {
 
 friend class  TMapIter;
 
 private:
-   THashTable   *fTable;         //Hash table used to store TAssociation's
+   THashTable   *fTable;     //Hash table used to store TAssociation's
 
 public:
    TMap(Int_t capacity = TCollection::kInitHashTableCapacity, Int_t rehash = 0);
@@ -54,6 +55,8 @@ public:
    Int_t             Collisions(const char *keyname) const;
    Int_t             Collisions(TObject *key) const;
    void              Delete(Option_t *option="");
+   void              DeleteKeys() { Delete(); }
+   void              DeleteValues();
    void              DeleteAll();
    TObject          *FindObject(const char *keyname) const;
    TObject          *FindObject(const TObject *key) const;
@@ -64,7 +67,7 @@ public:
    void              Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);
    TObject          *Remove(TObject *key);
 
-   ClassDef(TMap,3)  //A map
+   ClassDef(TMap,3)  //A (key,value) map
 };
 
 
