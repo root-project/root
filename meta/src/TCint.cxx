@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.82 2004/04/27 13:15:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.83 2004/05/03 15:33:25 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -961,10 +961,15 @@ Int_t TCint::LoadLibraryMap()
    while ((rec = (TEnvRec*) next())) {
       const char *cls = rec->GetName();
       if (!strncmp(cls, "Library.", 8) && strlen(cls) > 8) {
-         G__set_class_autoloading_table((char*)(cls+8), (char*)rec->GetValue());
+         TString libs = rec->GetValue();
+         TString delim(" ");
+         TObjArray *tokens = libs.Tokenize(delim);
+         char *lib = (char *)((TObjString*)tokens->At(0))->GetName();
+         G__set_class_autoloading_table((char*)(cls+8), lib);
          if (gDebug > 0)
             printf("<TCint::LoadLibraryMap>: adding class %s in lib %s\n",
-                   cls+8, rec->GetValue());
+                   cls+8, lib);
+         delete tokens;
       }
    }
    return 0;
