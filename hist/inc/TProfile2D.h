@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.11 2002/01/18 11:38:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.12 2002/01/20 10:21:46 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -55,14 +55,14 @@ public:
     TProfile2D(const TProfile2D &profile);
     virtual ~TProfile2D();
     virtual void    Add(TF1 *h1, Double_t c1=1);
-    virtual void    Add(TH1 *h1, Double_t c1=1);
-    virtual void    Add(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
+    virtual void    Add(const TH1 *h1, Double_t c1=1);
+    virtual void    Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
             void    BuildOptions(Double_t zmin, Double_t zmax, Option_t *option);
     virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
     virtual void    Copy(TObject &hnew);
     virtual void    Divide(TF1 *h1, Double_t c1=1);
-    virtual void    Divide(TH1 *h1);
-    virtual void    Divide(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+    virtual void    Divide(const TH1 *h1);
+    virtual void    Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual TH1    *DrawCopy(Option_t *option="");
             Int_t   Fill(Axis_t) {return -1;} //MayNotUse
             Int_t   Fill(const char*, Stat_t) {return -1;} //MayNotUse
@@ -88,9 +88,9 @@ public:
     virtual void    LabelsOption(Option_t *option="h", Option_t *axis="X");
     virtual Int_t   Merge(TCollection *list);
     virtual void    Multiply(TF1 *h1, Double_t c1=1);
-    virtual void    Multiply(TH1 *h1);
-    virtual void    Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
-            TH2D   *ProjectionXY(const char *name="_pxy", Option_t *option="e");
+    virtual void    Multiply(const TH1 *h1);
+    virtual void    Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+            TH2D   *ProjectionXY(const char *name="_pxy", Option_t *option="e") const;
     virtual void    Reset(Option_t *option="");
     virtual void    Scale(Double_t c1=1);
     virtual void    SetBinEntries(Int_t bin, Stat_t w);
