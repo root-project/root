@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.157 2004/03/11 08:04:27 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.158 2004/03/11 18:34:43 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2011,11 +2011,11 @@ void WriteClassInit(G__ClassInfo &cl)
       if (IsStdPair(cl)) {
          // Some compiler don't recognize ::pair even after a 'using namespace std;'
          // and there is not risk of confusion since it is a template.
-         fprintf(fp, "      Assert(sizeof(%s)", classname.c_str() );
+         //fprintf(fp, "      Assert(sizeof(%s)", classname.c_str() );
       } else {
          fprintf(fp, "      Assert(sizeof(::%s)", classname.c_str() );
+         fprintf(fp, " == sizeof(%s));\n", GetFullShadowName(cl));
       }
-      fprintf(fp, " == sizeof(%s));\n", GetFullShadowName(cl));
    }
 
    fprintf(fp, "      %s *ptr = 0;\n",classname.c_str());
