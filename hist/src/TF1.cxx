@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.96 2004/10/20 17:07:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.97 2005/01/04 11:36:35 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1479,12 +1479,14 @@ Double_t TF1::GetRandom()
       //the integral r for each bin is approximated by a parabola
       //  x = alpha + beta*r +gamma*r**2
       // compute the coefficients alpha, beta, gamma for each bin
-      Double_t x0,r1,r2;
+      Double_t x0,r1,r2,r3;
       for (i=0;i<fNpx;i++) {
          x0 = fXmin+i*dx;
          r2 = fIntegral[i+1] - fIntegral[i];
          r1 = Integral(x0,x0+0.5*dx)/total;
-         fGamma[i] = (2*r2 - 4*r1)/(dx*dx);
+         r3 = 2*r2 - 4*r1;
+         if (TMath::Abs(r3) > 1e-8) fGamma[i] = r3/(dx*dx);
+         else           fGamma[i] = 0;
          fBeta[i]  = r2/dx - fGamma[i]*dx;
          fAlpha[i] = x0;
          fGamma[i] *= 2;
@@ -1498,9 +1500,9 @@ Double_t TF1::GetRandom()
    Double_t rr = r - fIntegral[bin];
 
    Double_t xx;
-   if(fGamma[bin])
+   if(fGamma[bin] != 0)
       xx = (-fBeta[bin] + TMath::Sqrt(fBeta[bin]*fBeta[bin]+2*fGamma[bin]*rr))/fGamma[bin];
-   else
+   else 
       xx = rr/fBeta[bin];
    Double_t x = fAlpha[bin] + xx;
    return x;
@@ -1560,12 +1562,14 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
       //the integral r for each bin is approximated by a parabola
       //  x = alpha + beta*r +gamma*r**2
       // compute the coefficients alpha, beta, gamma for each bin
-      Double_t x0,r1,r2;
+      Double_t x0,r1,r2,r3;
       for (i=0;i<fNpx;i++) {
          x0 = fXmin+i*dx;
          r2 = fIntegral[i+1] - fIntegral[i];
          r1 = Integral(x0,x0+0.5*dx)/total;
-         fGamma[i] = (2*r2 - 4*r1)/(dx*dx);
+         r3 = 2*r2 - 4*r1;
+         if (TMath::Abs(r3) > 1e-8) fGamma[i] = r3/(dx*dx);
+         else           fGamma[i] = 0;
          fBeta[i]  = r2/dx - fGamma[i]*dx;
          fAlpha[i] = x0;
          fGamma[i] *= 2;
@@ -1589,7 +1593,7 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
       Int_t bin  = TMath::BinarySearch(fNpx,fIntegral,r);
       rr = r - fIntegral[bin];
 
-      if(fGamma[bin])
+      if(fGamma[bin] != 0)
          xx = (-fBeta[bin] + TMath::Sqrt(fBeta[bin]*fBeta[bin]+2*fGamma[bin]*rr))/fGamma[bin]; 
       else
          xx = rr/fBeta[bin];
