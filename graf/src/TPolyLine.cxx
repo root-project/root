@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.13 2002/05/18 08:21:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.14 2002/10/31 07:27:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -19,6 +19,19 @@ ClassImp(TPolyLine)
 //______________________________________________________________________________
 //
 //  a PolyLine is defined by an array on N points in a 2-D space.
+//
+// One can draw the contour of the polyline or/and its fill area.
+// Example:
+//{
+//   Double_t x[5] = {.2,.7,.6,.25,.2};
+//   Double_t y[5] = {.5,.1,.9,.7,.5};
+//   TPolyLine *pline = new TPolyLine(5,x,y);
+//   pline->SetFillColor(38);
+//   pline->SetLineColor(2);
+//   pline->SetLineWidth(4);
+//   pline->Draw("f");
+//   pline->Draw();
+//}
 
 //______________________________________________________________________________
 TPolyLine::TPolyLine(): TObject()
