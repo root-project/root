@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.1 2002/01/15 10:22:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.2 2002/07/04 16:12:42 brun Exp $
 // Author: Rene Brun   14/01/2002
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -220,8 +220,10 @@ L20:
       return;
    }
    if (awidth <= 1 && (!OptionTime || timemulti==1) ) jlog--;
-   sigfig = awidth*TMath::Power(10,-jlog);
-
+   sigfig = awidth*TMath::Power(10,-jlog) -1e-10;
+   //in the above statement, it is important to substract 1e-10
+   //to avoid precision problems if the tests below
+   
 //      Round mantissa
 
    switch (roundmode) {
