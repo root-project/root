@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TOrdCollection.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************
@@ -53,7 +53,7 @@ public:
    ~TOrdCollection();
    void          Clear(Option_t *option="");
    void          Delete(Option_t *option="");
-   Int_t         IndexOf(TObject *obj) const; // returns -1 if not found
+   Int_t         IndexOf(const TObject *obj) const;
    TIterator    *MakeIterator(Bool_t dir = kIterForward) const;
 
    void          AddFirst(TObject *obj);

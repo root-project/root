@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TSeqCollection.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 ClassImp(TSeqCollection)
 
 //______________________________________________________________________________
-Int_t TSeqCollection::IndexOf(TObject *obj) const
+Int_t TSeqCollection::IndexOf(const TObject *obj) const
 {
    // Return index of object in collection. Returns -1 when object not found.
    // Uses member IsEqual() to find object.

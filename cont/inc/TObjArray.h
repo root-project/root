@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.2 2000/09/08 16:11:02 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.3 2000/11/21 16:44:07 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -75,7 +75,7 @@ public:
    TObject         *Last() const;
    virtual TObject *&operator[](Int_t i);
    Int_t            LowerBound() const { return fLowerBound; }
-   Int_t            IndexOf(TObject *obj) const; // returns fLowerBound-1 if not found
+   Int_t            IndexOf(const TObject *obj) const;
    void             SetLast(Int_t last);
 
    virtual void     Sort(Int_t upto = kMaxInt);

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.2 2000/09/08 16:11:03 rdm Exp $
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************
@@ -249,7 +249,7 @@ Bool_t TOrdCollection::IllegalIndex(const char *method, Int_t idx) const
 }
 
 //______________________________________________________________________________
-Int_t TOrdCollection::IndexOf(TObject *obj) const
+Int_t TOrdCollection::IndexOf(const TObject *obj) const
 {
    // Return index of object in collection. Returns -1 when object not found.
    // Uses member IsEqual() to find object.

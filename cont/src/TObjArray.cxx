@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.3 2000/10/23 10:22:21 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.4 2000/10/31 11:18:45 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -406,7 +406,7 @@ Int_t TObjArray::GetLast() const
 }
 
 //______________________________________________________________________________
-Int_t TObjArray::IndexOf(TObject *obj) const
+Int_t TObjArray::IndexOf(const TObject *obj) const
 {
    // obj != 0 Return index of object in array.
    //          Returns lowerBound-1 in case array doesn't contain the obj.
