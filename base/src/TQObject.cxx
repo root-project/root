@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.5 2000/11/13 19:46:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.6 2000/12/13 16:58:31 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -92,7 +92,7 @@ static char *ResolveTypes(const char *method)
    // func(Float_t,Int_t) becomes func(float,int).
    // The returned string must be deleted by the user.
 
-   if (!method || !strlen(method)) return 0;
+   if (!method || !*method) return 0;
 
    char *str = new char[strlen(method)+1];
    if (str) strcpy(str, method);
@@ -146,7 +146,7 @@ static char *CompressName(const char *method_name)
    // Returns the string "Draw(char*,char*,char*,int,int)"
    // The returned string must be deleted by the user.
 
-   if (!method_name || !strlen(method_name)) return 0;
+   if (!method_name || !*method_name) return 0;
 
    char *str = new char[strlen(method_name)+1];
    if (str) strcpy(str, method_name);
@@ -184,8 +184,8 @@ static TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
 
    if (!gInterpreter) return 0;
 
-    Long_t faddr = (Long_t)gInterpreter->GetInterfaceMethodWithPrototype(cl,
-                                  (char *)method, (char *)proto);
+   Long_t faddr = (Long_t)gInterpreter->GetInterfaceMethodWithPrototype(cl,
+                                    (char *)method, (char *)proto);
    if (!faddr) return 0;
 
    TMethod *m;
@@ -455,7 +455,9 @@ TQObject::~TQObject()
    // TQObject Destructor.
    //    - delete all connections and signal list
 
-   TQConnectionList *list=0;
+   Destroyed();   // emit "Destroyed()" signal
+
+   TQConnectionList *list = 0;
 
    if (fListOfSignals) {
       TIter next(fListOfSignals);
