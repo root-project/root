@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.50 2002/02/01 07:14:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.51 2002/02/03 16:13:55 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -417,8 +417,11 @@ void TFile::Init(Bool_t create)
          goto zombie;
       }
 //*-* -------------Check if file is truncated
-      Long_t id, size, flags, modtime;
-      gSystem->GetPathInfo(GetName(), &id, &size, &flags, &modtime);
+      Long_t size;
+      if ((size = GetSize()) == -1) {
+         Error("TFile", "cannot stat the file %s", GetName());
+         goto zombie;
+      }
 //*-* -------------Read keys of the top directory
       if (fSeekKeys > fBEGIN && fEND <= size) {
          TDirectory::ReadKeys();
@@ -710,7 +713,8 @@ Int_t TFile::GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nby
 //______________________________________________________________________________
 Seek_t TFile::GetSize() const
 {
-   // Returns the current file size.
+   // Returns the current file size. Returns -1 in case the file could not
+   // be stat'ed.
 
    Long_t id, size, flags, modtime;
 #if defined(R__AIX) || (defined(R__HPUX) && !defined(R__ACC))
@@ -719,7 +723,7 @@ Seek_t TFile::GetSize() const
    if (const_cast<TFile*>(this)->SysStat(fD, &id, &size, &flags, &modtime)) {
 #endif
       Error("GetSize", "cannot stat the file %s", GetName());
-      return 0;
+      return -1;
    }
 
    return size;
@@ -954,9 +958,9 @@ Int_t TFile::Recover()
 //*-*              ===============================================
 //
 //  The function returns the number of keys that have been recovered.
-//  If no keys can be recovered, the file will be declared Zombie by 
+//  If no keys can be recovered, the file will be declared Zombie by
 //  the calling function.
-       
+
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
@@ -966,8 +970,8 @@ Int_t TFile::Recover()
    char     nwhc;
    Seek_t   idcur = fBEGIN;
 
-   Long_t id, size, flags, modtime;
-   if (SysStat(fD, &id, &size, &flags, &modtime)) {
+   Long_t size;
+   if ((size = GetSize()) == -1) {
       Error("Recover", "cannot stat the file %s", GetName());
       return 0;
    }
@@ -1714,7 +1718,8 @@ Int_t TFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags,
                      Long_t *modtime)
 {
    // Return file stat information. The interface and return value is
-   // identical to TSystem::GetPathInfo().
+   // identical to TSystem::GetPathInfo(). The function returns 0 in
+   // case of success and 1 if the file could not be stat'ed.
 
    return gSystem->GetPathInfo(GetName(), id, size, flags, modtime);
 }
