@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.135 2003/04/01 08:09:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.136 2003/04/03 06:42:15 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5572,7 +5572,7 @@ TH1C& TH1C::operator=(const TH1C &h1)
 
 
 //______________________________________________________________________________
-TH1C operator*(Double_t c1, TH1C &h1)
+TH1C operator*(Double_t c1, const TH1C &h1)
 {
    TH1C hnew = h1;
    hnew.Scale(c1);
@@ -5581,7 +5581,7 @@ TH1C operator*(Double_t c1, TH1C &h1)
 }
 
 //______________________________________________________________________________
-TH1C operator+(TH1C &h1, TH1C &h2)
+TH1C operator+(const TH1C &h1, const TH1C &h2)
 {
    TH1C hnew = h1;
    hnew.Add(&h2,1);
@@ -5590,7 +5590,7 @@ TH1C operator+(TH1C &h1, TH1C &h2)
 }
 
 //______________________________________________________________________________
-TH1C operator-(TH1C &h1, TH1C &h2)
+TH1C operator-(const TH1C &h1, const TH1C &h2)
 {
    TH1C hnew = h1;
    hnew.Add(&h2,-1);
@@ -5599,7 +5599,7 @@ TH1C operator-(TH1C &h1, TH1C &h2)
 }
 
 //______________________________________________________________________________
-TH1C operator*(TH1C &h1, TH1C &h2)
+TH1C operator*(const TH1C &h1, const TH1C &h2)
 {
    TH1C hnew = h1;
    hnew.Multiply(&h2);
@@ -5608,7 +5608,7 @@ TH1C operator*(TH1C &h1, TH1C &h2)
 }
 
 //______________________________________________________________________________
-TH1C operator/(TH1C &h1, TH1C &h2)
+TH1C operator/(const TH1C &h1, const TH1C &h2)
 {
    TH1C hnew = h1;
    hnew.Divide(&h2);
@@ -5776,7 +5776,7 @@ TH1S& TH1S::operator=(const TH1S &h1)
 
 
 //______________________________________________________________________________
-TH1S operator*(Double_t c1, TH1S &h1)
+TH1S operator*(Double_t c1, const TH1S &h1)
 {
    TH1S hnew = h1;
    hnew.Scale(c1);
@@ -5785,7 +5785,7 @@ TH1S operator*(Double_t c1, TH1S &h1)
 }
 
 //______________________________________________________________________________
-TH1S operator+(TH1S &h1, TH1S &h2)
+TH1S operator+(const TH1S &h1, const TH1S &h2)
 {
    TH1S hnew = h1;
    hnew.Add(&h2,1);
@@ -5794,7 +5794,7 @@ TH1S operator+(TH1S &h1, TH1S &h2)
 }
 
 //______________________________________________________________________________
-TH1S operator-(TH1S &h1, TH1S &h2)
+TH1S operator-(const TH1S &h1, const TH1S &h2)
 {
    TH1S hnew = h1;
    hnew.Add(&h2,-1);
@@ -5803,7 +5803,7 @@ TH1S operator-(TH1S &h1, TH1S &h2)
 }
 
 //______________________________________________________________________________
-TH1S operator*(TH1S &h1, TH1S &h2)
+TH1S operator*(const TH1S &h1, const TH1S &h2)
 {
    TH1S hnew = h1;
    hnew.Multiply(&h2);
@@ -5812,7 +5812,7 @@ TH1S operator*(TH1S &h1, TH1S &h2)
 }
 
 //______________________________________________________________________________
-TH1S operator/(TH1S &h1, TH1S &h2)
+TH1S operator/(const TH1S &h1, const TH1S &h2)
 {
    TH1S hnew = h1;
    hnew.Divide(&h2);
@@ -5974,7 +5974,7 @@ TH1F& TH1F::operator=(const TH1F &h1)
 
 
 //______________________________________________________________________________
-TH1F operator*(Double_t c1, TH1F &h1)
+TH1F operator*(Double_t c1, const TH1F &h1)
 {
    TH1F hnew = h1;
    hnew.Scale(c1);
@@ -5983,7 +5983,7 @@ TH1F operator*(Double_t c1, TH1F &h1)
 }
 
 //______________________________________________________________________________
-TH1F operator+(TH1F &h1, TH1F &h2)
+TH1F operator+(const TH1F &h1, const TH1F &h2)
 {
    TH1F hnew = h1;
    hnew.Add(&h2,1);
@@ -5992,7 +5992,7 @@ TH1F operator+(TH1F &h1, TH1F &h2)
 }
 
 //______________________________________________________________________________
-TH1F operator-(TH1F &h1, TH1F &h2)
+TH1F operator-(const TH1F &h1, const TH1F &h2)
 {
    TH1F hnew = h1;
    hnew.Add(&h2,-1);
@@ -6001,7 +6001,7 @@ TH1F operator-(TH1F &h1, TH1F &h2)
 }
 
 //______________________________________________________________________________
-TH1F operator*(TH1F &h1, TH1F &h2)
+TH1F operator*(const TH1F &h1, const TH1F &h2)
 {
    TH1F hnew = h1;
    hnew.Multiply(&h2);
@@ -6010,7 +6010,7 @@ TH1F operator*(TH1F &h1, TH1F &h2)
 }
 
 //______________________________________________________________________________
-TH1F operator/(TH1F &h1, TH1F &h2)
+TH1F operator/(const TH1F &h1, const TH1F &h2)
 {
    TH1F hnew = h1;
    hnew.Divide(&h2);
@@ -6172,7 +6172,7 @@ TH1D& TH1D::operator=(const TH1D &h1)
 }
 
 //______________________________________________________________________________
-TH1D operator*(Double_t c1, TH1D &h1)
+TH1D operator*(Double_t c1, const TH1D &h1)
 {
    TH1D hnew = h1;
    hnew.Scale(c1);
@@ -6181,7 +6181,7 @@ TH1D operator*(Double_t c1, TH1D &h1)
 }
 
 //______________________________________________________________________________
-TH1D operator+(TH1D &h1, TH1D &h2)
+TH1D operator+(const TH1D &h1, const TH1D &h2)
 {
    TH1D hnew = h1;
    hnew.Add(&h2,1);
@@ -6190,7 +6190,7 @@ TH1D operator+(TH1D &h1, TH1D &h2)
 }
 
 //______________________________________________________________________________
-TH1D operator-(TH1D &h1, TH1D &h2)
+TH1D operator-(const TH1D &h1, const TH1D &h2)
 {
    TH1D hnew = h1;
    hnew.Add(&h2,-1);
@@ -6199,7 +6199,7 @@ TH1D operator-(TH1D &h1, TH1D &h2)
 }
 
 //______________________________________________________________________________
-TH1D operator*(TH1D &h1, TH1D &h2)
+TH1D operator*(const TH1D &h1, const TH1D &h2)
 {
    TH1D hnew = h1;
    hnew.Multiply(&h2);
@@ -6208,7 +6208,7 @@ TH1D operator*(TH1D &h1, TH1D &h2)
 }
 
 //______________________________________________________________________________
-TH1D operator/(TH1D &h1, TH1D &h2)
+TH1D operator/(const TH1D &h1, const TH1D &h2)
 {
    TH1D hnew = h1;
    hnew.Divide(&h2);
