@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.7 2000/10/10 11:11:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.8 2000/11/06 07:19:26 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -83,7 +83,7 @@ protected:
     TString       fOption;          //histogram options
     TList        *fFunctions;       //->Pointer to list of functions (fits and user)
     TDirectory   *fDirectory;       //!Pointer to directory holding this histogram
-    Int_t         fDimension;       //Histogram dimension (1, 2 or 3 dim)
+    Int_t         fDimension;       //!Histogram dimension (1, 2 or 3 dim)
     Double_t     *fIntegral;        //!Integral of bins used by GetRandom
     TVirtualHistPainter *fPainter;  //!pointer to histogram painter
     static Bool_t fgAddDirectory;   //!flag to add histograms to the directory
@@ -245,9 +245,9 @@ public:
     virtual void     SetTickLength(Float_t length=0.02, Option_t *axis="X");
     virtual void     SetTitleOffset(Float_t offset=1, Option_t *axis="X");
     virtual void     SetTitleSize(Float_t size=0.02, Option_t *axis="X");
-    virtual void     SetXTitle(char *title) {fXaxis.SetTitle(title);}
-    virtual void     SetYTitle(char *title) {fYaxis.SetTitle(title);}
-    virtual void     SetZTitle(char *title) {fZaxis.SetTitle(title);}
+    virtual void     SetXTitle(const char *title) {fXaxis.SetTitle(title);}
+    virtual void     SetYTitle(const char *title) {fYaxis.SetTitle(title);}
+    virtual void     SetZTitle(const char *title) {fZaxis.SetTitle(title);}
     virtual void     Smooth(Int_t ntimes=1); // *MENU*
     static  void     SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes=1);
     static Double_t  SmoothMedian(Int_t n, Double_t *a);
@@ -255,7 +255,7 @@ public:
     virtual void     Sumw2();
     void             UseCurrentStyle();
 
-    ClassDef(TH1,2)  //1-Dim histogram base class
+    ClassDef(TH1,3)  //1-Dim histogram base class
 };
 
 //________________________________________________________________________
