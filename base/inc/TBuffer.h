@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.39 2004/10/19 11:00:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.40 2004/10/29 16:07:32 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -97,6 +97,9 @@ public:
    TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE);
    virtual ~TBuffer();
 
+   Int_t    GetMapCount() const { return fMapCount; }
+   Int_t    GetBufferVersion() const { return fVersion; }
+   void     GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) const;
    void     MapObject(const TObject *obj, UInt_t offset = 1);
    void     MapObject(const void *obj, const TClass *cl, UInt_t offset = 1);
    virtual void Reset() { SetBufferOffset(); ResetMap(); }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.13 2004/10/06 10:31:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.14 2004/10/07 17:07:56 brun Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -577,6 +577,8 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
    // For example for "typedef MyObj MyObjTypedef;"
    //    vector<MyObjTypedef> return vector<MyObjTypedef>
    //
+
+   if ( tname==0 || tname[0]==0) return tname;
 
    if ( strchr(tname,'<')==0 && (tname[strlen(tname)-1]!='*') ) {
 

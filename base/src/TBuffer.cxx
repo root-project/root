@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.68 2004/06/22 18:09:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.69 2004/10/19 11:00:09 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -350,6 +350,22 @@ void TBuffer::SetParent(TObject *parent)
    // Set parent owning this buffer.
 
    fParent = parent;
+}
+
+//______________________________________________________________________________
+void TBuffer::GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) const
+{
+   // Retrieve the object stored in the buffer's object map at 'tag'
+   // Set ptr and ClassPtr respectively to the address of the object and 
+   // a pointer to its TClass.
+
+   if (tag > (UInt_t)fMap->GetSize()) {
+      ptr = 0;
+      ClassPtr = 0;
+   } else {
+      ptr = (void*)fMap->GetValue(tag);
+      ClassPtr = (TClass*) fClassMap->GetValue(tag);
+   }
 }
 
 //______________________________________________________________________________
@@ -1999,7 +2015,8 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
          //baseOffset will be -1 if clRef does not inherit from clCast.
          baseOffset = clRef->GetBaseClassOffset(clCast);
          if (baseOffset == -1) {
-            Error("ReadObject", "got object of wrong class");
+            Error("ReadObject", "Got object of wrong class (Got %s while expecting %s)",
+                  clRef->GetName(),clCast->GetName());
             // exception
             baseOffset = 0;
          }

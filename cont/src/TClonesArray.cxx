@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.42 2004/09/03 07:52:19 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.43 2004/09/29 09:46:29 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -487,6 +487,9 @@ void TClonesArray::Streamer(TBuffer &b)
    // Write all objects in array to the I/O buffer. ATTENTION: empty slots
    // are also stored (using one byte per slot). If you don't want this
    // use a TOrdCollection or TList.
+
+   // Important Note: if you modify this function, remember to also modify
+   // TConvertClonesArrayToProxy accordingly
 
    Int_t   nobjects;
    char    nch;

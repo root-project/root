@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.153 2004/10/05 13:21:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.154 2004/10/07 17:10:07 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1615,6 +1615,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                         clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
                   }
                   // NOTE clones can be zero!
+                  if (clones==0) {
+                     Warning("DefinedVariable","TClonesArray object was not retrievable for %s!",
+                        name.Data());
+                     return -1;
+                  }
                   TClass * inside_cl = clones->GetClass();
                   if (1 || inside_cl) cl = inside_cl;
                   // if inside_cl is nul ... we have a problem of inconsistency :(

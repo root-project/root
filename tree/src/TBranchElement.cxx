@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.152 2004/11/02 21:51:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.153 2004/11/05 17:01:58 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -1270,7 +1270,11 @@ TStreamerInfo *TBranchElement::GetInfo()
       TStreamerInfo::Optimize(kFALSE);
       if (cl == TClonesArray::Class()) fClassVersion = TClonesArray::Class()->GetClassVersion();
       fInfo = cl->GetStreamerInfo(fClassVersion);
-      if (fCheckSum != 0 && cl->IsForeign()) {
+      if (fCheckSum != 0 && (cl->IsForeign() ||
+                             (!cl->IsLoaded() && 
+                              fClassVersion==1 && 
+                              cl->GetStreamerInfos()->At(1)!=0 && 
+                              fCheckSum!= ((TStreamerInfo*)cl->GetStreamerInfos()->At(1))->GetCheckSum()))) {
          Int_t ninfos = cl->GetStreamerInfos()->GetEntriesFast();
          for (Int_t i=1;i<ninfos;i++) {
             TStreamerInfo *info = (TStreamerInfo*)cl->GetStreamerInfos()->At(i);
@@ -1836,7 +1840,7 @@ void TBranchElement::Reset(Option_t *option)
 
    TBranch::Reset(option);
 
-   fInfo           = gROOT->GetClass(fClassName.Data())->GetStreamerInfo(fClassVersion);
+   fInfo = gROOT->GetClass(fClassName.Data())->GetStreamerInfo(fClassVersion);
 
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i=0;i<nbranches;i++)  {
@@ -1856,6 +1860,50 @@ void TBranchElement::ResetAddress()
    TBranch::ResetAddress();
 }
 
+//______________________________________________________________________________
+namespace {
+   void SwitchContainer(TObjArray *branches) {
+      const Int_t nbranches = branches->GetEntriesFast();
+      for(Int_t i = 0; i < nbranches; ++i) {
+         TBranchElement *br = (TBranchElement*)branches->At(i);
+         switch ( br->GetType() ) {
+            case 31: br->SetType(41); break;
+            case 41: br->SetType(31); break;
+         };
+         SwitchContainer( br->GetListOfBranches());
+      }
+   }
+   TClass* GetCurrentClass(TBranchElement *br) 
+   {
+      // Return a pointer to the current type of the data member corresponding
+      // to 'br'
+
+      // Get the current type of this data member!
+      TStreamerInfo *brInfo = br->GetInfo();
+      TClass *motherCl = brInfo->GetClass();
+
+      TStreamerElement *currentStreamerElement = 
+         ((TStreamerElement*)brInfo->GetElems()[br->GetID()]);
+      TDataMember *dm = 
+         (TDataMember*)motherCl->GetListOfDataMembers()->FindObject(currentStreamerElement->GetName());
+
+      TString newType;
+      if ( dm==0 ) {
+         // Either the class is not loaded or the data member is gone
+          if (! motherCl->IsLoaded() ) {
+            TStreamerInfo *newInfo = motherCl->GetStreamerInfo();
+            if (newInfo != brInfo) {
+               TStreamerElement *newElems = (TStreamerElement*)
+                  newInfo->GetElements()->FindObject(currentStreamerElement->GetName());
+               newType = newElems->GetClassPointer()->GetName();
+            }
+         }
+      } else {
+         newType = dm->GetTypeName();
+      }
+      return gROOT->GetClass(newType);
+   }
+}
 //______________________________________________________________________________
 void TBranchElement::SetAddress(void *add)
 {
@@ -1910,14 +1958,109 @@ void TBranchElement::SetAddress(void *add)
       fObject = fAddress;
    }
 
-   //special case for a TClonesArray when address is not yet set
-   //we must create the clonesarray first
+   // Check whether the container type is still the same
    if (fType ==3) {
       TClass *clm = gROOT->GetClass(fClonesName.Data());
       if (clm) {
          clm->BuildRealData(); //just in case clm derives from an abstract class
          clm->GetStreamerInfo();
+      }  
+      TClass *newType = GetCurrentClass( this );
+      if ( newType && newType != TClonesArray::Class() ) {
+         // The data type of the container was changed
+
+         // Let's check if it is a compatible type:
+         Bool_t matched = kFALSE;
+         if (newType->GetCollectionProxy()) {
+            TClass *content = newType->GetCollectionProxy()->GetValueClass();
+            if (clm==content) {
+               matched = kTRUE;
+            } else {
+               Warning("SetAddress",
+                  "The type of %s was changed from TClonesArray to %s but the content do not match (was %s)!",
+                  GetName(),newType->GetName(),fClonesName.Data());
+            }
+         } else {
+            Warning("SetAddress",
+               "The type of the %s was changed from TClonesArray to %s but we do not have a TVirtualCollectionProxy for that container type!",
+               GetName(),newType->GetName());
+         }
+         if (matched) {
+            // Change from 3/31 to 4/41 
+            SetType(4);
+            SwitchContainer(GetListOfBranches());
+            // Set the proxy.
+            fSTLtype = TMath::Abs(TClassEdit::IsSTLCont(newType->GetName()));
+            fCollProxy = newType->GetCollectionProxy()->Generate();
+         } else {
+            fAddress = 0;
+         }
       }
+   }
+
+   //Special case for an STL container.
+   if (fType==4) {
+      TClass *newType = GetCurrentClass( this );
+      if ( newType && newType != GetCollectionProxy()->GetCollectionClass() ) {
+
+         // Let's check if it is a compatible type:
+         TVirtualCollectionProxy *newProxy = newType->GetCollectionProxy();
+         TVirtualCollectionProxy *oldProxy = GetCollectionProxy();
+         if (newProxy && oldProxy->GetValueClass() == newProxy->GetValueClass()
+            && ( (oldProxy->GetValueClass() ==0 && 
+                  oldProxy->GetType() == newProxy->GetType()) || 
+                 (oldProxy->GetValueClass() && 
+                  oldProxy->HasPointers() == newProxy->HasPointers()) ) ) {
+
+            fSTLtype = TMath::Abs(TClassEdit::IsSTLCont(newType->GetName()));
+            fCollProxy = newType->GetCollectionProxy()->Generate();           
+         } else {
+            // The new collection and the old collection are not compatible,
+            // we can not use the new collection to read the data.
+            // Actually if could check whether the new collection is a 
+            // compatible ROOT collection.
+            if (  newType == TClonesArray::Class() && 
+                  ( oldProxy->GetValueClass() && !oldProxy->HasPointers()
+                   && oldProxy->GetValueClass()->InheritsFrom(TObject::Class()))) {
+               // We can not insure that the TClonesArray is set for the
+               // proper class ( oldProxy->GetValueClass() ), so we assume that
+               // the transformation was done properly by the class designer.
+
+               // Change from 4/41 to 3/31 
+               SetType(3);
+               SwitchContainer(GetListOfBranches());
+               // Reset the proxy.
+               fSTLtype = kNone; 
+               switch(fStreamerType) {
+                  case TStreamerInfo::kAny:
+                  case TStreamerInfo::kSTL: 
+                     fStreamerType = TStreamerInfo::kObject; 
+                     break;
+                  case TStreamerInfo::kAnyp:
+                  case TStreamerInfo::kSTLp: 
+                     fStreamerType = TStreamerInfo::kObjectp;
+                     break;
+                  case TStreamerInfo::kAnyP: 
+                     fStreamerType = TStreamerInfo::kObjectP;
+                     break;
+               }
+               fClonesName = oldProxy->GetValueClass()->GetName();
+               delete fCollProxy; fCollProxy = 0;
+               TClass *clm = gROOT->GetClass(fClonesName);
+               if (clm) {
+                  clm->BuildRealData(); //just in case clm derives from an abstract class
+                  clm->GetStreamerInfo();
+               }
+             } else {
+               fAddress = 0;
+            }
+         }
+      }
+   }
+
+   //special case for a TClonesArray when address is not yet set
+   //we must create the clonesarray first
+   if (fType==3) {
       if (fAddress) {
          if (fStreamerType==61) {
             // Case of an embedded ClonesArray
@@ -1939,10 +2082,8 @@ void TBranchElement::SetAddress(void *add)
          fObject = (char*)new TClonesArray(fClonesName.Data());
          fAddress = (char*)&fObject;
       }
-   }
 
-   //Special case for an STL container.
-   if (fType==4) {
+   } else if (fType==4) {
       if (fAddress) {
          if (fStreamerType==61 ||
              fStreamerType==TStreamerInfo::kAny ||
