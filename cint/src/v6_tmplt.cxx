@@ -1975,7 +1975,7 @@ struct G__Templatearg *def_para;
     int rlen = strlen(reslt);
     if(isconst && strncmp(reslt,"const ",6)==0 &&
        rlen>0 && '*'==reslt[rlen-1]) {
-      strcat (str_out, reslt+6);
+      strcpy (str_out + iout, reslt+6);
       strcat (str_out, " const");
       iout += lreslt;
       isconst=0;
