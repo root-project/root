@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.2 2002/03/25 18:18:05 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.3 2003/08/29 10:41:27 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -238,8 +238,16 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       return 0;
    }
 
-   // get service principal from service and host names
-   const char *service = sock->GetService();
+   // get service principal from service and host names --
+   // hard coding of service names avoids having the have these
+   // services in the local /etc/services file
+   const char *service;
+   if (sock->GetPort() == 1093)
+      service = "proofd";
+   else if (sock->GetPort() == 1094)
+      service = "rootd";
+   else
+      service = sock->GetService();
    const char *serv_host = sock->GetInetAddress().GetHostName();
    krb5_principal server;
 
