@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:$:$Id:$ */
+/* @(#)root/base:$Name:  $:$Id: KeySymbols.h,v 1.1 2000/10/21 09:12:09 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -188,7 +188,9 @@ enum EKeySym {
    kKey_BraceRight          = 0x7d,
    kKey_AsciiTilde          = 0x7e,
 
-   kKey_Unknown             = 0xffff
+   kKey_Unknown             = 0xffff,
+
+   kAnyKey                  = 0           // maps to any key, used by GrabKey()
 };
 
 #endif
