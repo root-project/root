@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.56 2005/01/12 07:50:02 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.57 2005/01/12 18:02:28 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -664,7 +664,7 @@ void stress7()
       sprintf(elistname,">>elist%d",i);
       sprintf(cutname,"i 10 == %d",i); cutname[1] ='%';
       ntuple->Draw(elistname,cutname,"goff");
-      el[i]; gDirectory->GetObject(&elistname[2],el[i]);
+      gDirectory->GetObject(&elistname[2],el[i]);
       el[i]->Write();
       elistall->Add(el[i]);
    }
@@ -1360,7 +1360,7 @@ void stress15()
 
    // Open small file, histogram fNtrack and fH
    newfile = new TFile("stress_small.root");
-   newtree; newfile->GetObject("T", newtree);
+   newfile->GetObject("T", newtree);
    newtree->Draw("fNtrack>>hNtrack","","goff");
    newtree->Draw("fH.GetMean()>>hHmean","","goff");
    TH1F *hNtrack; newfile->GetObject("hNtrack",hNtrack);
