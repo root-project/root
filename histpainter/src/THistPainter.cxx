@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.88 2002/07/10 11:28:20 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.89 2002/07/15 10:56:22 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -36,6 +36,7 @@
 #include "TMath.h"
 #include "TRandom.h"
 #include "TObjArray.h"
+#include "TVectorD.h"
 #include "Hoption.h"
 #include "Hparam.h"
 
@@ -4756,6 +4757,24 @@ void THistPainter::PaintTitle()
    ptitle->Draw();
    ptitle->Paint();
 
+}
+
+//______________________________________________________________________________
+void THistPainter::ProcessMessage(const char *mess, const TObject *obj)
+{
+//  Process message mess
+   
+   if (!strcmp(mess,"SetF3")) {
+      TPainter3dAlgorithms::SetF3((TF3*)obj);
+   } else if (!strcmp(mess,"SetF3ClippingBoxOff")) {
+      TPainter3dAlgorithms::SetF3ClippingBoxOff();
+   } else if (!strcmp(mess,"SetF3ClippingBoxOn")) {
+      TVectorD &v =  (TVectorD&)(*obj);
+      Double_t xclip = v(0);
+      Double_t yclip = v(1);
+      Double_t zclip = v(2);
+      TPainter3dAlgorithms::SetF3ClippingBoxOn(xclip,yclip,zclip);
+   }
 }
 
 //______________________________________________________________________________
