@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.47 2001/09/12 01:25:43 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.48 2001/09/17 18:48:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,6 +25,7 @@
 #include "RooFitCore/Roo1DTable.hh"
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooFormulaVar.hh"
+#include "RooFitCore/RooArgList.hh"
 
 ClassImp(RooDataSet)
 ;
@@ -210,7 +211,7 @@ TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2
 }
 
 
-RooDataSet *RooDataSet::read(const char *fileList, RooArgSet &variables,
+RooDataSet *RooDataSet::read(const char *fileList, RooArgList &variables,
 			     const char *options, const char* commonPath, 
 			     const char* indexCatName) {
   //Read given ascii file(s), and construct a data set, using the given
@@ -380,7 +381,9 @@ RooDataSet *RooDataSet::read(const char *fileList, RooArgSet &variables,
 	// if(file.peek() == '\n') { file.get(); }
 
 	// Read single line
-	Bool_t readError = data->_vars.readFromStream(file,kTRUE,verbose) ;
+	Bool_t readError = variables.readFromStream(file,kTRUE,verbose) ;
+	data->_vars = variables ;
+// 	Bool_t readError = data->_vars.readFromStream(file,kTRUE,verbose) ;
 
 	// Stop at end of file or on read error
 	if(file.eof()) break ;	

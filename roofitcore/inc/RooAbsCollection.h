@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.rdl,v 1.2 2001/09/24 23:05:57 verkerke Exp $
+ *    File: $Id: RooAbsCollection.rdl,v 1.3 2001/10/03 16:16:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -82,17 +82,17 @@ protected:
   friend class RooMultiCatIter ;
   inline const TCollection &getCollection() const { return _list; }
      
-  THashList _list ;
+  THashList _list ; // Actual object store
 
-  Bool_t _isCopy;  // Flag to identify a list that owns its contents.
-  TString _name;   // Our name.
+  Bool_t _ownCont;  // Flag to identify a list that owns its contents.
+  TString _name;    // Our name.
 
   // Support for snapshot method 
   void addServerClonesToList(const RooAbsArg& var) ;
 
 private:
 
-  ClassDef(RooAbsCollection,1) // Set of RooAbsArg objects
+  ClassDef(RooAbsCollection,1) // Collection of RooAbsArg objects
 };
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgList.rdl,v 1.1 2001/09/17 18:48:12 verkerke Exp $
+ *    File: $Id: RooArgList.rdl,v 1.2 2001/10/01 22:04:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -73,9 +73,13 @@ public:
   inline Int_t index(const RooAbsArg* arg) const { return _list.IndexOf(arg) ; }
   inline RooAbsArg* at(Int_t idx) const { return (RooAbsArg*) _list.At(idx) ; }
 
+  // I/O streaming interface (machine readable)
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) ;  
+
 protected:
 
-  ClassDef(RooArgList,1) // Set of RooAbsArg objects
+  ClassDef(RooArgList,1) // List of RooAbsArg objects
 };
 
 #endif

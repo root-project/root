@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.rdl,v 1.25 2001/09/17 18:48:12 verkerke Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.26 2001/10/01 22:04:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -79,6 +79,8 @@ public:
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) ;  
+  void writeToFile(const char* fileName) ;
+  Bool_t readFromFile(const char* fileName) ;
 
 protected:
 
