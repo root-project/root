@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.20 2003/10/29 15:54:15 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.21 2003/11/05 14:05:59 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -52,12 +52,6 @@ Int_t         TCollection::fgGarbageStack      = 0;
 
 ClassImp(TCollection)
 ClassImp(TIter)
-
-//______________________________________________________________________________
-TCollection::TCollection(const TCollection &) : TObject()
-{
-   // Intentionally not implemented
-}
 
 //______________________________________________________________________________
 void TCollection::AddAll(const TCollection *col)
