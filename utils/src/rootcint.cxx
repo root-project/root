@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.56 2002/01/09 15:18:05 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.57 2002/01/24 07:47:05 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1329,7 +1329,7 @@ void WriteAutoStreamer(G__ClassInfo &cl)
    G__BaseClassInfo bw(cl);
    while (bw.Next())
       if (IsSTLContainer(bw)) {
-         STLBaseStreamer(br,1);
+         STLBaseStreamer(bw,1);
       }
    fprintf(fp, "   }\n");
    fprintf(fp, "}\n\n");
