@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.2 2000/09/08 16:11:03 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -543,7 +543,7 @@ Int_t TObjArray::BinarySearch(TObject *op, Int_t upto)
    // Find object using a binary search. Array must first have been sorted.
    // Search can be limited by setting upto to desired index.
 
-   Int_t   base, position, last, result;
+   Int_t   base, position, last, result = 0;
    TObject *op2;
 
    if (!op) return -1;
