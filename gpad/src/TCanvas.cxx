@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.67 2004/06/02 15:17:52 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.68 2004/06/03 10:03:47 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -144,10 +144,6 @@ void TCanvas::Constructor()
       arr[1] = this;
       if ((*gThreadXAR)("CANV", 2, arr, 0)) return;
    }
-   if (!gVirtualX->IsCmdThread()) {
-      gInterpreter->Execute(this, IsA(), "Constructor", "");
-      return;
-   }
 
    fCanvas    = 0;
    fCanvasID  = -1;
@@ -224,11 +220,6 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
       if ((*gThreadXAR)("CANV", 6, arr, NULL)) return;
    }
-   if (!gVirtualX->IsCmdThread()) {
-      gInterpreter->Execute(this, IsA(), "Constructor",
-                            Form("%s,%s,%d", name, title, form));
-      return;
-   }
 
    Init();
    fMenuBar = kTRUE;
@@ -300,11 +291,6 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
        arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
        if ((*gThreadXAR)("CANV", 6, arr, NULL)) return;
    }
-   if (!gVirtualX->IsCmdThread()) {
-      gInterpreter->Execute(this, IsA(), "Constructor",
-                            Form("%s,%s,%d,%d", name, title, ww, wh));
-      return;
-   }
 
    Init();
    fMenuBar = kTRUE;
@@ -369,11 +355,6 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       arr[1] = this;   arr[2] = (void*)name;   arr[3] = (void*)title;
       arr[4] = &wtopx; arr[5] = &wtopy; arr[6] = &ww; arr[7] = &wh;
       if ((*gThreadXAR)("CANV", 8, arr, NULL)) return;
-   }
-   if (!gVirtualX->IsCmdThread()) {
-      gInterpreter->Execute(this, IsA(), "Constructor",
-                     Form("%s,%s,%d,%d,%d,%d", name, title, wtopx, wtopy, ww, wh));
-      return;
    }
 
    Init();
@@ -561,10 +542,6 @@ void TCanvas::Destructor()
       void *arr[2];
       arr[1] = this;
       if ((*gThreadXAR)("CDEL", 2, arr, NULL)) return;
-   }
-   if (!gVirtualX->IsCmdThread()) {
-      gInterpreter->Execute(this, IsA(), "Destructor", "");
-      return;
    }
 
    if (!TestBit(kNotDeleted)) return;
