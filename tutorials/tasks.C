@@ -1,5 +1,5 @@
 // Example of TTasks.
-// Create a hierachy of objects derived from TTask in library Mytasks
+// Create a hierarchy of objects derived from TTask in library Mytasks
 // Show the tasks in a browser.
 // To execute a Task, use the context context menu and select
 // the item "ExecuteTask"
