@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.8 2000/10/22 19:24:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.9 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -247,7 +247,7 @@ TObject *TFolder::FindObject(const char *name) const
 // this folder.
 // name may be of the forms:
 //   A, specify a full pathname starting at the top ROOT folder
-//     //root/xxx/yyy/name
+//     //root/xxx/yyy/name 
 //
 //   B, specify a pathname starting with a single slash. //root is assumed
 //     /xxx/yyy/name
@@ -293,10 +293,10 @@ TObject *TFolder::FindObjectAny(const char *name) const
    TIter next(fFolders);
    TFolder *folder;
    TObject *found;
-   d[level] = GetName();
+   if (level >= 0) d[level] = GetName();
    while ((obj=next())) {
       if (!obj->InheritsFrom(TFolder::Class())) continue;
-      if (obj->InheritsFrom(TClass::Class())) continue;
+      if (obj->IsA() == TClass::Class()) continue;
       folder = (TFolder*)obj;
       found = folder->FindObjectAny(name);
       if (found) return found;
@@ -337,6 +337,28 @@ void TFolder::ls(Option_t *option) const
       else           obj->ls(option);
    }
    TROOT::DecreaseDirLevel();
+}
+
+//______________________________________________________________________________
+Int_t TFolder::Occurence(const TObject *object) const
+{
+// Return occurence number of object in the list of objects of this folder.
+// The function returns the number of objects with the same name as object
+// found in the list of objects in this folder before object itself.
+// If only one object is found, return 0;
+   Int_t n = 0;
+   TIter next(fFolders);
+   TObject *obj;
+   while ((obj=next())) {
+      if (strcmp(obj->GetName(),object->GetName()) == 0) n++;
+   }
+   if (n <=1) return n-1;
+   n = 0;
+   next.Reset();
+   while ((obj=next())) {
+      if (strcmp(obj->GetName(),object->GetName()) == 0) n++;
+      if (obj == object) return n;
+   }
 }
 
 //______________________________________________________________________________
