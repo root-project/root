@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.8 2003/01/20 08:44:47 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.9 2004/02/20 09:50:32 brun Exp $
 // Author: Olivier Couet
 
 /*************************************************************************
@@ -132,7 +132,7 @@ void TSVG::Open(const char *fname, Int_t wtype)
 
    gVirtualPS = this;
 
-   for (Int_t i=0;i<512;i++) fBuffer[i] = ' ';
+   for (Int_t i=0;i<fSizBuffer;i++) fBuffer[i] = ' ';
 
    fBoundingBox = kFALSE;
 

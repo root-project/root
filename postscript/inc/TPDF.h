@@ -36,16 +36,19 @@ protected:
    Float_t  fXsize;           //Page size along X
    Float_t  fYsize;           //Page size along Y
    Int_t    fType;            //Workstation type used to know if the PDF is open
-   Bool_t   fRange;           //True when a range has been defined
+   Int_t    fPageFormat;      // Page format (A4, Letter etc ...)
+   Int_t    fPageOrientation; // Page orientation (Portrait, Landscape)
    Int_t    fStartStream;     //
    Int_t   *fObjPos;          //Objets position
    Int_t    fObjPosSize;      //Real size of fObjPos
    Int_t    fNbObj;           //Number of objects
    Int_t    fNbPage;          //Number of pages
+   Bool_t   fCompress;        //True when fBuffer must be compressed
+   Bool_t   fRange;           //True when a range has been defined
 
 public:
    TPDF();
-   TPDF(const char *filename, Int_t type=-113);
+   TPDF(const char *filename, Int_t type=-111);
    virtual ~TPDF();
 
    void     CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2);
@@ -72,6 +75,8 @@ public:
    void     Off();
    void     On();
    void     Open(const char *filename, Int_t type=-111);
+   void     PrintFast(Int_t nch, const char *string="");
+   void     PrintStr(const char *string="");
    void     Range(Float_t xrange, Float_t yrange);
    void     SetColor(Int_t color = 1);
    void     SetColor(Float_t r, Float_t g, Float_t b);
@@ -84,6 +89,7 @@ public:
    void     SetTextColor( Color_t cindex=1);
    void     Text(Double_t x, Double_t y, const char *string);
    void     TextNDC(Double_t u, Double_t v, const char *string);
+   void     WriteCompressedBuffer();
    Double_t UtoPDF(Double_t u);
    Double_t VtoPDF(Double_t v);
    Double_t XtoPDF(Double_t x);

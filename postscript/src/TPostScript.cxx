@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.45 2004/01/28 15:49:07 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.46 2004/02/12 09:46:04 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -282,7 +282,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
    }
    gVirtualPS = this;
 
-   for (Int_t i=0;i<512;i++) fBuffer[i] = ' ';
+   for (Int_t i=0;i<fSizBuffer;i++) fBuffer[i] = ' ';
    if( fType == 113) {
       fBoundingBox = kFALSE;
       PrintStr("%!PS-Adobe-2.0 EPSF-2.0@");

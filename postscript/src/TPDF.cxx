@@ -33,26 +33,43 @@
 #include "TPDF.h"
 #include "TStyle.h"
 #include "TMath.h"
+#include "TStorage.h"
+#include "zlib.h"
 
-// to scale fonts to the same size as the old TT version
+const Int_t  kMaxBuffer = 250;
+
+// To scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
 
+// Objects numbers
+const Int_t kObjRoot      = 1; // Root object
+const Int_t kObjInfo      = 2; // Info object
+const Int_t kObjOutlines  = 3; // Outlines object
+const Int_t kObjPages     = 4; // Pages object (pages index)
+const Int_t kObjResources = 5; // Pages Resources object
+const Int_t kObjFont      = 6; // Font object
+const Int_t kObjFirstPage = 7; // First page object
+
 ClassImp(TPDF)
+
 
 //______________________________________________________________________________
 //
 // PDF driver
 //
 
+
 //______________________________________________________________________________
 TPDF::TPDF() : TVirtualPS()
 {
    // Default PDF constructor
 
-   fStream = 0;
-   fType   = 0;
+   fStream    = 0;
+   fType      = 0;
+   fCompress  = kFALSE;
    gVirtualPS = this;
 }
+
 
 //______________________________________________________________________________
 TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
@@ -65,85 +82,11 @@ TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    //          necessary to specify this parameter at creation time because it
    //          has a default value (which is ignore in the PDF case).
 
-   fStream = 0;
+   fStream   = 0;
+   fCompress = kFALSE;
    Open(fname, wtype);
 }
 
-//______________________________________________________________________________
-void TPDF::Open(const char *fname, Int_t wtype)
-{
-   // Open a PDF file
-
-   if (fStream) {
-      Warning("Open", "PDF file already open");
-      return;
-   }
-
-   fLenBuffer = 0;
-   fRed       = -1;
-   fGreen     = -1;
-   fBlue      = -1;
-   fType      = abs(wtype);
-   gStyle->GetPaperSize(fXsize, fYsize);
-   Float_t xrange, yrange;
-   if (gPad) {
-      Double_t ww = gPad->GetWw();
-      Double_t wh = gPad->GetWh();
-      ww *= gPad->GetWNDC();
-      wh *= gPad->GetHNDC();
-      Double_t ratio = wh/ww;
-      xrange = fXsize;
-      yrange = fXsize*ratio;
-      if (yrange > fYsize) { yrange = fYsize; xrange = yrange/ratio;}
-      fXsize = xrange; fYsize = yrange;
-   }
-
-   // Open OS file
-   fStream   = new ofstream(fname,ios::out);
-   if (fStream == 0) {
-      printf("ERROR in TPDF::Open: Cannot open file:%s\n",fname);
-      return;
-   }
-
-   gVirtualPS = this;
-
-   for (Int_t i=0;i<512;i++) fBuffer[i] = ' ';
-
-   fRange = kFALSE;
-
-   // Set a default range
-   Range(fXsize, fYsize);
-
-   fObjPos = 0;
-   fObjPosSize = 0;
-   fNbObj = 0;
-   fNbPage = 0;
-
-   PrintStr("%PDF-1.4@");
-   
-   NewObject(1);
-   PrintStr("<<@");
-   PrintStr("/Type /Catalog@");
-   PrintStr("/Outlines 2 0 R@");
-   PrintStr("/Pages 3 0 R@");
-   PrintStr(">>@");
-   PrintStr("endobj@");
-   
-   NewObject(2);
-   PrintStr("<<@");
-   PrintStr("/Type /Outlines@");
-   PrintStr("/Count 0@");
-   PrintStr(">>@");
-   PrintStr("endobj@");
-   
-   NewObject(4);
-   PrintStr("[/PDF /Text]@");
-   PrintStr("endobj@");
-  
-   FontEncode();
-
-   NewPage();
-}
 
 //______________________________________________________________________________
 TPDF::~TPDF()
@@ -154,6 +97,29 @@ TPDF::~TPDF()
 
    if (fObjPos) delete [] fObjPos;
 }
+
+
+//______________________________________________________________________________
+void TPDF::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
+                          Double_t)
+{
+   Warning("TPDF::CellArrayBegin", "not yet implemented");
+}
+
+
+//______________________________________________________________________________
+void TPDF::CellArrayFill(Int_t, Int_t, Int_t)
+{
+   Warning("TPDF::CellArrayFill", "not yet implemented");
+}
+
+
+//______________________________________________________________________________
+void TPDF::CellArrayEnd()
+{
+   Warning("TPDF::CellArrayEnd", "not yet implemented");
+}
+
 
 //______________________________________________________________________________
 void TPDF::Close(Option_t *)
@@ -167,15 +133,16 @@ void TPDF::Close(Option_t *)
    if (gPad) gPad->Update();
 
    // Close the currently opened page
+   WriteCompressedBuffer();
    PrintStr("endstream@");
    Int_t StreamLength = fNByte-fStartStream-10;
    PrintStr("endobj@");
-   NewObject(3*fNbPage+18);
+   NewObject(3*(fNbPage-1)+kObjFirstPage+2);
    WriteInteger(StreamLength, 0);
    PrintStr("endobj@");
 
    // List of all the pages
-   NewObject(3);
+   NewObject(kObjPages);
    PrintStr("<<@");
    PrintStr("/Type /Pages@");
    PrintStr("/Count");
@@ -183,7 +150,7 @@ void TPDF::Close(Option_t *)
    PrintStr("@");
    PrintStr("/Kids [");
    for (i=1; i<=fNbPage; i++) {
-      WriteInteger(3*fNbPage+16);
+      WriteInteger(3*(i-1)+kObjFirstPage);
       PrintStr(" 0 R");
    }
    PrintStr(" ]");
@@ -207,8 +174,16 @@ void TPDF::Close(Option_t *)
    // Trailer
    PrintStr("trailer@");
    PrintStr("<<@"); 
-   PrintStr("/Size 8@"); 
-   PrintStr("/Root 1 0 R@");
+   PrintStr("/Size"); 
+   WriteInteger(fNbObj+1);
+   PrintStr("@");
+   PrintStr("/Root");
+   WriteInteger(kObjRoot);
+   PrintStr(" 0 R");
+   PrintStr("@");
+   PrintStr("/Info");
+   WriteInteger(kObjInfo);
+   PrintStr(" 0 R");
    PrintStr(">>@");
    PrintStr("startxref@");
    WriteInteger(RefInd, 0);
@@ -220,29 +195,6 @@ void TPDF::Close(Option_t *)
    gVirtualPS = 0;
 }
 
-//______________________________________________________________________________
-void TPDF::On()
-{
-   // Activate an already open PDF file
-
-   // fType is used to know if the PDF file is open. Unlike TPostScript, TPDF
-   // has no "workstation type".
-
-   if (!fType) {
-      Error("On", "no PDF file open");
-      Off();
-      return;
-   }
-   gVirtualPS = this;
-}
-
-//______________________________________________________________________________
-void TPDF::Off()
-{
-   // Deactivate an already open PDF file
-
-   gVirtualPS = 0;
-}
 
 //______________________________________________________________________________
 void TPDF::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
@@ -299,6 +251,7 @@ void TPDF::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    }
 }
 
+
 //______________________________________________________________________________
 void TPDF::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
                             Int_t mode, Int_t border, Int_t dark, Int_t light)
@@ -345,6 +298,25 @@ void TPDF::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    PrintFast(3," f*");
 }
 
+
+//______________________________________________________________________________
+void TPDF::DrawHatch(Float_t, Float_t, Int_t, Float_t *, Float_t *)
+{
+   // Draw Fill area with hatch styles
+
+   Warning("DrawHatch", "hatch fill style not yet implemented");
+}
+
+
+//______________________________________________________________________________
+void TPDF::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
+{
+   // Draw Fill area with hatch styles
+
+   Warning("DrawHatch", "hatch fill style not yet implemented");
+}
+
+
 //______________________________________________________________________________
 void TPDF::DrawPolyLine(Int_t nn, TPoints *xy)
 {
@@ -359,16 +331,19 @@ void TPDF::DrawPolyLine(Int_t nn, TPoints *xy)
 
    Int_t  n;
 
+   Style_t linestylesav = fLineStyle;
+   Width_t linewidthsav = fLineWidth;
+
    if (nn > 0) {
-     n = nn;
-     SetLineStyle(fLineStyle);
-     SetLineWidth(fLineWidth);
-     SetColor(Int_t(fLineColor));
+      n = nn;
+      SetLineStyle(fLineStyle);
+      SetLineWidth(fLineWidth);
+      SetColor(Int_t(fLineColor));
    } else {
-     n = -nn;
-     SetLineStyle(1);
-     SetLineWidth(1);
-     SetColor(Int_t(fLineColor));
+      n = -nn;
+      SetLineStyle(1);
+      SetLineWidth(1);
+      SetColor(Int_t(fLineColor));
    }
 
    WriteReal(XtoPDF(xy[0].GetX()));
@@ -389,7 +364,11 @@ void TPDF::DrawPolyLine(Int_t nn, TPoints *xy)
    } else {
       PrintFast(3," f*");
    }
+
+   SetLineStyle(linestylesav);
+   SetLineWidth(linewidthsav);
 }
+
 
 //______________________________________________________________________________
 void TPDF::DrawPolyLineNDC(Int_t nn, TPoints *xy)
@@ -404,6 +383,9 @@ void TPDF::DrawPolyLineNDC(Int_t nn, TPoints *xy)
    //  If NN<0 the line is clipped as a fill area.
 
    Int_t  n;
+
+   Style_t linestylesav = fLineStyle;
+   Width_t linewidthsav = fLineWidth;
 
    if (nn > 0) {
       n = nn;
@@ -435,625 +417,11 @@ void TPDF::DrawPolyLineNDC(Int_t nn, TPoints *xy)
    } else {
       PrintFast(3," f*");
    }
+
+   SetLineStyle(linestylesav);
+   SetLineWidth(linewidthsav);
 }
 
-
-//______________________________________________________________________________
-void TPDF::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
-{
-   // Draw a PolyLine
-   //
-   //  Draw a polyline through the points xw,yw.
-   //  If nn=1 moves only to point xw,yw.
-   //  If nn=0 the XW(1) and YW(1) are  written  in the PostScript file
-   //          according to the current NT.
-   //  If nn>0 the line is clipped as a line.
-   //  If nn<0 the line is clipped as a fill area.
-
-   static Float_t dyhatch[24] = {.0075,.0075,.0075,.0075,.0075,.0075,.0075,.0075,
-                                 .01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,
-                                 .015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015};
-   static Float_t anglehatch[24] = {180, 90,135, 45,150, 30,120, 60,
-                                    180, 90,135, 45,150, 30,120, 60,
-                                    180, 90,135, 45,150, 30,120, 60};
-   Int_t  n, fais = 0 , fasi = 0;
-
-   if (nn > 0) {
-      n = nn;
-      SetLineStyle(fLineStyle);
-      SetLineWidth(fLineWidth);
-      SetColor(Int_t(fLineColor));
-   } else {
-      n = -nn;
-      SetLineStyle(1);
-      SetLineWidth(1);
-      SetColor(Int_t(fFillColor));
-      fais = fFillStyle/1000;
-      fasi = fFillStyle%1000;
-      if (fais == 3 || fais == 2) {
-         if (fasi > 100 && fasi <125) {
-            DrawHatch(dyhatch[fasi-101],anglehatch[fasi-101], n, xw, yw);
-            return;
-         }
-         if (fasi > 0 && fasi < 26) {
-            SetFillPatterns(fasi, Int_t(fFillColor));
-         }
-      }
-   }
-
-   WriteReal(XtoPDF(xw[0]));
-   WriteReal(YtoPDF(yw[0]));
-   if( n <= 1) {
-      if( n == 0) return;
-      PrintFast(2," m");
-      return;
-   }
-
-   PrintFast(2," m");
-
-   for (Int_t i=1;i<n;i++) LineTo(XtoPDF(xw[i]), YtoPDF(yw[i]));
-
-   if (nn > 0 ) {
-      if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(2," h");
-      PrintFast(2," S");
-   } else {
-      if (fais == 0) {PrintFast(2," s"); return;}
-      if (fais == 3 || fais == 2) {
-         if (fasi > 0 && fasi < 26) {
-            PrintFast(3," f*");
-            fRed   = -1;
-            fGreen = -1;
-            fBlue  = -1;
-         }
-         return;
-      }
-      PrintFast(3," f*");
-   }
-}
-
-
-//______________________________________________________________________________
-void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
-{
-   // Draw a PolyLine
-   //
-   // Draw a polyline through  the points xw,yw.
-   // If nn=1 moves only to point xw,yw.
-   // If nn=0 the xw(1) and YW(1) are  written  in the PostScript file
-   //         according to the current NT.
-   // If nn>0 the line is clipped as a line.
-   // If nn<0 the line is clipped as a fill area.
-
-   static Float_t dyhatch[24] = {.0075,.0075,.0075,.0075,.0075,.0075,.0075,.0075,
-                                 .01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,
-                                 .015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015};
-   static Float_t anglehatch[24] = {180, 90,135, 45,150, 30,120, 60,
-                                    180, 90,135, 45,150, 30,120, 60,
-                                    180, 90,135, 45,150, 30,120, 60};
-   Int_t  n, fais = 0, fasi = 0;
-
-   if (nn > 0) {
-      n = nn;
-      SetLineStyle(fLineStyle);
-      SetLineWidth(fLineWidth);
-      SetColor(Int_t(fLineColor));
-   } else {
-      n = -nn;
-      SetLineStyle(1);
-      SetLineWidth(1);
-      SetColor(Int_t(fFillColor));
-      fais = fFillStyle/1000;
-      fasi = fFillStyle%1000;
-      if (fais == 3 || fais == 2) {
-         if (fasi > 100 && fasi <125) {
-            DrawHatch(dyhatch[fasi-101],anglehatch[fasi-101], n, xw, yw);
-            return;
-         }
-         if (fasi > 0 && fasi < 26) {
-            SetFillPatterns(fasi, Int_t(fFillColor));
-         }
-      }
-   }
-
-   WriteReal(XtoPDF(xw[0]));
-   WriteReal(YtoPDF(yw[0]));
-   if( n <= 1) {
-      if( n == 0) return;
-      PrintFast(2," m");
-      return;
-   }
-
-   PrintFast(2," m");
-
-   for (Int_t i=1;i<n;i++) LineTo(XtoPDF(xw[i]), YtoPDF(yw[i]));
-
-   if (nn > 0 ) {
-      if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(2," h");
-      PrintFast(2," S");
-   } else {
-      if (fais == 0) {PrintFast(2," s"); return;}
-      if (fais == 3 || fais == 2) {
-         if (fasi > 0 && fasi < 26) {
-            PrintFast(3," f*");
-            fRed   = -1;
-            fGreen = -1;
-            fBlue  = -1;
-         }
-         return;
-      }
-      PrintFast(3," f*");
-   }
-}
-
-//______________________________________________________________________________
-void TPDF::DrawHatch(Float_t, Float_t, Int_t, Float_t *, Float_t *)
-{
-   // Draw Fill area with hatch styles
-
-   Warning("DrawHatch", "hatch fill style not yet implemented");
-}
-
-//______________________________________________________________________________
-void TPDF::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
-{
-   // Draw Fill area with hatch styles
-
-   Warning("DrawHatch", "hatch fill style not yet implemented");
-}
-
-//______________________________________________________________________________
-void TPDF::FontEncode()
-{
-   // Font encoding
-
-   static const char *sdtfonts[] = {
-   "/Times-Italic"         , "/Times-Bold"         , "/Times-BoldItalic",
-   "/Helvetica"            , "/Helvetica-Oblique"  , "/Helvetica-Bold"  ,
-   "/Helvetica-BoldOblique", "/Courier"            , "/Courier-Oblique" ,
-   "/Courier-Bold"         , "/Courier-BoldOblique", "/Symbol"          ,
-   "/Times-Roman"          , "/ZapfDingbats"};
-
-   for (Int_t i=0; i<14; i++) {
-      NewObject(5+i);
-      PrintStr("<<@");
-      PrintStr("/Type /Font@");
-      PrintStr("/Subtype /Type1@");
-      PrintStr("/BaseFont ");
-      PrintStr(sdtfonts[i]);
-      PrintStr("@");
-      PrintStr(">>@");
-      PrintStr("endobj@");
-   }
-}
-
-//______________________________________________________________________________
-void TPDF::LineTo(Double_t x, Double_t y)
-{
-   // Draw a line to a new position
-
-   WriteReal(x);
-   WriteReal(y);
-   PrintFast(2," l");
-}
-
-//______________________________________________________________________________
-void TPDF::MoveTo(Double_t x, Double_t y)
-{
-   // Move to a new position
-
-   WriteReal(x);
-   WriteReal(y);
-   PrintFast(2," m");
-}
-
-//______________________________________________________________________________
-void TPDF::NewObject(Int_t n)
-{
-   // Create a new object in the PDF file
-
-   if (!fObjPos || n >= fObjPosSize) {
-      Int_t newN = TMath::Max(2*fObjPosSize,n+1);
-      Int_t *saveo = new Int_t [newN];
-      if (fObjPos && fObjPosSize) {
-         memcpy(saveo,fObjPos,fObjPosSize*sizeof(Int_t));
-         memset(&saveo[fObjPosSize],0,(newN-fObjPosSize)*sizeof(Int_t));
-         delete [] fObjPos;
-      }
-      fObjPos     = saveo;
-      fObjPosSize = newN;
-   }
-   fObjPos[n-1] = fNByte;
-   fNbObj       = TMath::Max(fNbObj,n);
-   WriteInteger(n, 0);
-   PrintStr(" 0 obj");
-   PrintStr("@");
-}
-
-//______________________________________________________________________________
-void TPDF::NewPage()
-{
-   // Start a new  PDF page.
-
-   // Compute pad conversion coefficients
-   if (gPad) {
-      Double_t ww   = gPad->GetWw();
-      Double_t wh   = gPad->GetWh();
-      fYsize        = fXsize*wh/ww;
-   } else {
-      fYsize = 27;
-   }
-
-   fNbPage++;
-
-   if (fNbPage>1) {
-      // Close the currently opened page
-      PrintStr("endstream@");
-      Int_t StreamLength = fNByte-fStartStream-10;
-      PrintStr("endobj@");
-      NewObject(3*(fNbPage-1)+18);
-      WriteInteger(StreamLength, 0);
-      PrintStr("endobj@");
-   }
-
-   // Start a new page
-   NewObject(3*fNbPage+16);
-   PrintStr("<<@");
-   PrintStr("/Type /Page@");
-   PrintStr("/Parent 3 0 R@");
-   PrintStr("/Resources <<@");
-   PrintStr("/Font <<@");
-   PrintStr("/F01 5 0 R ");
-   PrintStr("/F02 6 0 R ");
-   PrintStr("/F03 7 0 R ");
-   PrintStr("/F04 8 0 R ");
-   PrintStr("/F05 9 0 R ");
-   PrintStr("/F06 10 0 R ");
-   PrintStr("/F07 11 0 R ");
-   PrintStr("/F08 12 0 R ");
-   PrintStr("/F09 13 0 R ");
-   PrintStr("/F10 14 0 R ");
-   PrintStr("/F11 15 0 R ");
-   PrintStr("/F12 16 0 R ");
-   PrintStr("/F13 17 0 R ");
-   PrintStr("/F14 18 0 R ");
-   PrintStr(">>@");
-   PrintStr("/ProcSet 4 0 R >>@");
-
-   Double_t xlow=0, ylow=0, xup=1, yup=1;
-   if (gPad) {
-      xlow = gPad->GetAbsXlowNDC();
-      xup  = xlow + gPad->GetAbsWNDC();
-      ylow = gPad->GetAbsYlowNDC();
-      yup  = ylow + gPad->GetAbsHNDC();
-   }
-   PrintStr("/MediaBox [");
-   WriteReal(CMtoPDF(fXsize*xlow));
-   WriteReal(CMtoPDF(fYsize*ylow));
-   WriteReal(CMtoPDF(fXsize*xup));
-   WriteReal(CMtoPDF(fYsize*yup));
-   PrintStr("]");
-   PrintStr("@");
-   PrintStr("/CropBox [");
-   WriteReal(CMtoPDF(fXsize*xlow));
-   WriteReal(CMtoPDF(fYsize*ylow));
-   WriteReal(CMtoPDF(fXsize*xup));
-   WriteReal(CMtoPDF(fYsize*yup));
-   PrintStr("]");
-   PrintStr("@");
-   
-   PrintStr("/Rotate 0@");
-   PrintStr("/Contents");
-   WriteInteger(3*fNbPage+17);
-   PrintStr(" 0 R");
-   PrintStr("@");
-   PrintStr(">>@");
-   PrintStr("endobj@");
-   
-   NewObject(3*fNbPage+17);
-   PrintStr("<</Length");
-   WriteInteger(3*fNbPage+18);
-   PrintStr(" 0 R >>");
-   PrintStr("@");
-   PrintStr("stream@");
-   fStartStream = fNByte;
-}
-
-//______________________________________________________________________________
-void TPDF::Range(Float_t xsize, Float_t ysize)
-{
-   // Set the range for the paper in centimetres
-
-   Float_t xps, yps, xncm, yncm, dxwn, dywn, xwkwn, ywkwn, xymax;
-
-   fXsize = xsize;
-   fYsize = ysize;
-
-   xps = xsize;
-   yps = ysize;
-
-   if( xsize <= xps && ysize < yps) {
-      if ( xps > yps ) xymax = xps;
-      else             xymax = yps;
-      xncm  = xsize/xymax;
-      yncm  = ysize/xymax;
-      dxwn  = ((xps/xymax)-xncm)/2;
-      dywn  = ((yps/xymax)-yncm)/2;
-   } else {
-      if (xps/yps < 1) xwkwn = xps/yps;
-      else             xwkwn = 1;
-      if (yps/xps < 1) ywkwn = yps/xps;
-      else             ywkwn = 1;
-
-      if (xsize < ysize)  {
-         xncm = ywkwn*xsize/ysize;
-         yncm = ywkwn;
-         dxwn = (xwkwn-xncm)/2;
-         dywn = 0;
-         if( dxwn < 0) {
-            xncm = xwkwn;
-            dxwn = 0;
-            yncm = xwkwn*ysize/xsize;
-            dywn = (ywkwn-yncm)/2;
-         }
-      } else {
-         xncm = xwkwn;
-         yncm = xwkwn*ysize/xsize;
-         dxwn = 0;
-         dywn = (ywkwn-yncm)/2;
-         if( dywn < 0) {
-            yncm = ywkwn;
-            dywn = 0;
-            xncm = ywkwn*xsize/ysize;
-            dxwn = (xwkwn-xncm)/2;
-         }
-      }
-   }
-   fRange = kTRUE;
-}
-
-//______________________________________________________________________________
-void TPDF::SetFillColor( Color_t cindex )
-{
-   // Set color index for fill areas
-
-   fFillColor = cindex;
-   if (gStyle->GetFillColor() <= 0) cindex = 0;
-}
-
-//______________________________________________________________________________
-void TPDF::SetFillPatterns(Int_t /*ipat*/, Int_t /*color*/)
-{
-}
-
-//______________________________________________________________________________
-void TPDF::SetLineColor( Color_t cindex )
-{
-   // Set color index for lines
-
-   fLineColor = cindex;
-}
-
-//______________________________________________________________________________
-void TPDF::SetLineStyle(Style_t linestyle)
-{
-   // Change the line style
-   //
-   // linestyle = 2 dashed
-   //           = 3 dotted
-   //           = 4 dash-dotted
-   //           = else solid (1 in is used most of the time)
-
-   if ( linestyle == fLineStyle) return;
-   fLineStyle = linestyle;
-   if      (linestyle == 2) {PrintStr(" [3 3] 0 d");}
-   else if (linestyle == 3) {PrintStr(" [1 2] 0 d");}
-   else if (linestyle == 4) {PrintStr(" [3 4 1 4] 0 d");}
-   else                     {PrintStr(" [] 0 d");}
-}
-
-//______________________________________________________________________________
-void TPDF::SetLineWidth(Width_t linewidth)
-{
-   // Change the line width
-
-   if (linewidth == fLineWidth) return;
-   fLineWidth = linewidth;
-   WriteReal(fLineWidth);
-   PrintFast(2," w");
-}
-
-//______________________________________________________________________________
-void TPDF::SetMarkerColor( Color_t cindex )
-{
-   // Set color index for markers.
-
-   fMarkerColor = cindex;
-}
-
-//______________________________________________________________________________
-void TPDF::SetColor(Int_t color)
-{
-   // Set color with its color index
-
-   if (color < 0) color = 0;
-   TColor *col = gROOT->GetColor(color);
-   if (col) {
-      SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
-   } else {
-      SetColor(1., 1., 1.);
-   }
-}
-
-//______________________________________________________________________________
-void TPDF::SetColor(Float_t r, Float_t g, Float_t b)
-{
-   // Set color with its R G B components
-   //
-   //  r: % of red in [0,1]
-   //  g: % of green in [0,1]
-   //  b: % of blue in [0,1]
-
-   if (r == fRed && g == fGreen && b == fBlue) return;
-
-   fRed   = r;
-   fGreen = g;
-   fBlue  = b;
-
-   WriteReal(fRed); 
-   WriteReal(fGreen);
-   WriteReal(fBlue);
-   PrintFast(3," RG");
-
-   WriteReal(fRed); 
-   WriteReal(fGreen);
-   WriteReal(fBlue);
-   PrintFast(3," rg");
-}
-
-//______________________________________________________________________________
-void TPDF::SetTextColor( Color_t cindex )
-{
-   // Set color index for text
-
-   fTextColor = cindex;
-}
-
-//______________________________________________________________________________
-void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
-{
-   // Draw text
-   //
-   // xx: x position of the text
-   // yy: y position of the text
-   // chars: text to be drawn
-
-   char str[8];
-
-   // Start the text
-   PrintStr("@");
-   PrintStr("BT");
-
-   // Font and text size
-   sprintf(str," /F%2.2d",abs(fTextFont)/10);
-   PrintStr(str);
-   Double_t wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Float_t tsize, ftsize;
-   if (wh < hh) {
-      tsize = fTextSize*wh;
-      Int_t TTFsize = (Int_t)(tsize*kScale+0.5); // TTF size
-      ftsize = (TTFsize*fXsize*gPad->GetAbsWNDC())/wh;
-   } else {
-      tsize = fTextSize*hh;
-      Int_t TTFsize = (Int_t)(tsize*kScale+0.5); // TTF size
-      ftsize = (TTFsize*fYsize*gPad->GetAbsHNDC())/hh;
-   }
-   Double_t fontsize = 72*(ftsize)/2.54;
-   if( fontsize <= 0) return;
-   WriteReal(fontsize);
-   PrintStr(" Tf");
-
-   // Text angle
-   if(fTextAngle == 0) {
-      WriteReal(XtoPDF(xx));
-      WriteReal(YtoPDF(yy));
-      PrintStr(" Td");
-   } else if (fTextAngle == 90) {
-      PrintStr(" 0 1 -1 0");
-      WriteReal(XtoPDF(xx));
-      WriteReal(YtoPDF(yy));
-      PrintStr(" Tm");
-   } else {
-      Double_t DegRad = TMath::Pi()/180.;
-      WriteReal(TMath::Cos(DegRad*fTextAngle));
-      WriteReal(TMath::Sin(DegRad*fTextAngle));
-      WriteReal(-TMath::Sin(DegRad*fTextAngle));
-      WriteReal(TMath::Cos(DegRad*fTextAngle));
-      WriteReal(XtoPDF(xx));
-      WriteReal(YtoPDF(yy));
-      PrintStr(" Tm");
-   }
-
-   // Ouput the text. Escape some characters if needed
-   PrintStr(" (");
-   Int_t len=strlen(chars);
-   for (Int_t i=0; i<len;i++) {
-      if (chars[i]=='(' || chars[i]==')') {
-         sprintf(str,"\\%c",chars[i]);
-      } else {
-         sprintf(str,"%c",chars[i]);
-      }
-      PrintStr(str);
-   }
-   PrintStr(") Tj");
-   PrintStr(" ET");
-   PrintStr("@");
-}
-
-//______________________________________________________________________________
-void TPDF::TextNDC(Double_t u, Double_t v, const char *chars)
-{
-   // Write a string of characters in NDC
-
-   Double_t x = gPad->GetX1() + u*(gPad->GetX2() - gPad->GetX1());
-   Double_t y = gPad->GetY1() + v*(gPad->GetY2() - gPad->GetY1());
-   Text(x, y, chars);
-}
-
-//______________________________________________________________________________
-Double_t TPDF::UtoPDF(Double_t u)
-{
-   // Convert U from NDC coordinate to PDF
-
-   Double_t cm = fXsize*(gPad->GetAbsXlowNDC() + u*gPad->GetAbsWNDC());
-   return 72*cm/2.54;
-}
-
-//______________________________________________________________________________
-Double_t TPDF::VtoPDF(Double_t v)
-{
-   // Convert V from NDC coordinate to PDF
-
-   Double_t cm = fYsize*(gPad->GetAbsYlowNDC() + v*gPad->GetAbsHNDC());
-   return 72*cm/2.54;
-}
-
-//______________________________________________________________________________
-Double_t TPDF::XtoPDF(Double_t x)
-{
-   // Convert X from world coordinate to PDF
-
-   Double_t u = (x - gPad->GetX1())/(gPad->GetX2() - gPad->GetX1());
-   return  UtoPDF(u);
-}
-
-//______________________________________________________________________________
-Double_t TPDF::YtoPDF(Double_t y)
-{
-   // Convert Y from world coordinate to PDF
-
-   Double_t v = (y - gPad->GetY1())/(gPad->GetY2() - gPad->GetY1());
-   return  VtoPDF(v);
-}
-
-//______________________________________________________________________________
-void TPDF::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
-                          Double_t)
-{
-   Warning("TPDF::CellArrayBegin", "not yet implemented");
-}
-
-//______________________________________________________________________________
-void TPDF::CellArrayFill(Int_t, Int_t, Int_t)
-{
-   Warning("TPDF::CellArrayFill", "not yet implemented");
-}
-
-//______________________________________________________________________________
-void TPDF::CellArrayEnd()
-{
-   Warning("TPDF::CellArrayEnd", "not yet implemented");
-}
 
 //______________________________________________________________________________
 void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
@@ -1184,6 +552,7 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    SetLineWidth(linewidthsav);
 }
 
+
 //______________________________________________________________________________
 void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 {
@@ -1311,4 +680,887 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
    SetLineStyle(linestylesav);
    SetLineWidth(linewidthsav);
+}
+
+
+//______________________________________________________________________________
+void TPDF::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
+{
+   // Draw a PolyLine
+   //
+   //  Draw a polyline through the points xw,yw.
+   //  If nn=1 moves only to point xw,yw.
+   //  If nn=0 the XW(1) and YW(1) are  written  in the PostScript file
+   //          according to the current NT.
+   //  If nn>0 the line is clipped as a line.
+   //  If nn<0 the line is clipped as a fill area.
+
+   static Float_t dyhatch[24] = {.0075,.0075,.0075,.0075,.0075,.0075,.0075,.0075,
+                                 .01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,
+                                 .015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015};
+   static Float_t anglehatch[24] = {180, 90,135, 45,150, 30,120, 60,
+                                    180, 90,135, 45,150, 30,120, 60,
+                                    180, 90,135, 45,150, 30,120, 60};
+   Int_t  n, fais = 0 , fasi = 0;
+
+   Style_t linestylesav = fLineStyle;
+   Width_t linewidthsav = fLineWidth;
+
+   if (nn > 0) {
+      n = nn;
+      SetLineStyle(fLineStyle);
+      SetLineWidth(fLineWidth);
+      SetColor(Int_t(fLineColor));
+   } else {
+      n = -nn;
+      SetLineStyle(1);
+      SetLineWidth(1);
+      SetColor(Int_t(fFillColor));
+      fais = fFillStyle/1000;
+      fasi = fFillStyle%1000;
+      if (fais == 3 || fais == 2) {
+         if (fasi > 100 && fasi <125) {
+            DrawHatch(dyhatch[fasi-101],anglehatch[fasi-101], n, xw, yw);
+            SetLineStyle(linestylesav);
+            SetLineWidth(linewidthsav);
+            return;
+         }
+         if (fasi > 0 && fasi < 26) {
+            SetFillPatterns(fasi, Int_t(fFillColor));
+         }
+      }
+   }
+
+   WriteReal(XtoPDF(xw[0]));
+   WriteReal(YtoPDF(yw[0]));
+   if( n <= 1) {
+      if( n == 0) return;
+      PrintFast(2," m");
+      return;
+   }
+
+   PrintFast(2," m");
+
+   for (Int_t i=1;i<n;i++) LineTo(XtoPDF(xw[i]), YtoPDF(yw[i]));
+
+   if (nn > 0 ) {
+      if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(2," h");
+      PrintFast(2," S");
+   } else {
+      if (fais == 0) {PrintFast(2," s"); return;}
+      if (fais == 3 || fais == 2) {
+         if (fasi > 0 && fasi < 26) {
+            PrintFast(3," f*");
+            fRed   = -1;
+            fGreen = -1;
+            fBlue  = -1;
+         }
+         SetLineStyle(linestylesav);
+         SetLineWidth(linewidthsav);
+         return;
+      }
+      PrintFast(3," f*");
+   }
+
+   SetLineStyle(linestylesav);
+   SetLineWidth(linewidthsav);
+}
+
+
+//______________________________________________________________________________
+void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
+{
+   // Draw a PolyLine
+   //
+   // Draw a polyline through  the points xw,yw.
+   // If nn=1 moves only to point xw,yw.
+   // If nn=0 the xw(1) and YW(1) are  written  in the PostScript file
+   //         according to the current NT.
+   // If nn>0 the line is clipped as a line.
+   // If nn<0 the line is clipped as a fill area.
+
+   static Float_t dyhatch[24] = {.0075,.0075,.0075,.0075,.0075,.0075,.0075,.0075,
+                                 .01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,
+                                 .015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015};
+   static Float_t anglehatch[24] = {180, 90,135, 45,150, 30,120, 60,
+                                    180, 90,135, 45,150, 30,120, 60,
+                                    180, 90,135, 45,150, 30,120, 60};
+   Int_t  n, fais = 0, fasi = 0;
+
+   Style_t linestylesav = fLineStyle;
+   Width_t linewidthsav = fLineWidth;
+
+   if (nn > 0) {
+      n = nn;
+      SetLineStyle(fLineStyle);
+      SetLineWidth(fLineWidth);
+      SetColor(Int_t(fLineColor));
+   } else {
+      n = -nn;
+      SetLineStyle(1);
+      SetLineWidth(1);
+      SetColor(Int_t(fFillColor));
+      fais = fFillStyle/1000;
+      fasi = fFillStyle%1000;
+      if (fais == 3 || fais == 2) {
+         if (fasi > 100 && fasi <125) {
+            DrawHatch(dyhatch[fasi-101],anglehatch[fasi-101], n, xw, yw);
+            SetLineStyle(linestylesav);
+            SetLineWidth(linewidthsav);
+            return;
+         }
+         if (fasi > 0 && fasi < 26) {
+            SetFillPatterns(fasi, Int_t(fFillColor));
+         }
+      }
+   }
+
+   WriteReal(XtoPDF(xw[0]));
+   WriteReal(YtoPDF(yw[0]));
+   if( n <= 1) {
+      if( n == 0) return;
+      PrintFast(2," m");
+      return;
+   }
+
+   PrintFast(2," m");
+
+   for (Int_t i=1;i<n;i++) LineTo(XtoPDF(xw[i]), YtoPDF(yw[i]));
+
+   if (nn > 0 ) {
+      if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(2," h");
+      PrintFast(2," S");
+   } else {
+      if (fais == 0) {PrintFast(2," s"); return;}
+      if (fais == 3 || fais == 2) {
+         if (fasi > 0 && fasi < 26) {
+            PrintFast(3," f*");
+            fRed   = -1;
+            fGreen = -1;
+            fBlue  = -1;
+         }
+         SetLineStyle(linestylesav);
+         SetLineWidth(linewidthsav);
+         return;
+      }
+      PrintFast(3," f*");
+   }
+
+   SetLineStyle(linestylesav);
+   SetLineWidth(linewidthsav);
+}
+
+
+//______________________________________________________________________________
+void TPDF::FontEncode()
+{
+   // Font encoding
+
+   static const char *sdtfonts[] = {
+   "/Times-Italic"         , "/Times-Bold"         , "/Times-BoldItalic",
+   "/Helvetica"            , "/Helvetica-Oblique"  , "/Helvetica-Bold"  ,
+   "/Helvetica-BoldOblique", "/Courier"            , "/Courier-Oblique" ,
+   "/Courier-Bold"         , "/Courier-BoldOblique", "/Symbol"          ,
+   "/Times-Roman"          , "/ZapfDingbats"};
+
+   NewObject(kObjFont);
+   PrintStr("<<@");
+   for (Int_t i=0; i<14; i++) {
+      PrintStr("/F");
+      WriteInteger(i+1,0);
+      PrintStr(" <<");
+      PrintStr("/Type/Font");
+      PrintStr("/Subtype/Type1");
+      PrintStr("/BaseFont");
+      PrintStr(sdtfonts[i]);
+      PrintStr(">>");
+      PrintStr("@");
+   }
+   PrintStr(">>");
+   PrintStr("endobj@");
+}
+
+
+//______________________________________________________________________________
+void TPDF::LineTo(Double_t x, Double_t y)
+{
+   // Draw a line to a new position
+
+   WriteReal(x);
+   WriteReal(y);
+   PrintFast(2," l");
+}
+
+
+//______________________________________________________________________________
+void TPDF::MoveTo(Double_t x, Double_t y)
+{
+   // Move to a new position
+
+   WriteReal(x);
+   WriteReal(y);
+   PrintFast(2," m");
+}
+
+
+//______________________________________________________________________________
+void TPDF::NewObject(Int_t n)
+{
+   // Create a new object in the PDF file
+
+   if (!fObjPos || n >= fObjPosSize) {
+      Int_t newN = TMath::Max(2*fObjPosSize,n+1);
+      Int_t *saveo = new Int_t [newN];
+      if (fObjPos && fObjPosSize) {
+         memcpy(saveo,fObjPos,fObjPosSize*sizeof(Int_t));
+         memset(&saveo[fObjPosSize],0,(newN-fObjPosSize)*sizeof(Int_t));
+         delete [] fObjPos;
+      }
+      fObjPos     = saveo;
+      fObjPosSize = newN;
+   }
+   fObjPos[n-1] = fNByte;
+   fNbObj       = TMath::Max(fNbObj,n);
+   WriteInteger(n, 0);
+   PrintStr(" 0 obj");
+   PrintStr("@");
+}
+
+
+//______________________________________________________________________________
+void TPDF::NewPage()
+{
+   // Start a new PDF page.
+
+   // Compute pad conversion coefficients
+   if (gPad) {
+      Double_t ww   = gPad->GetWw();
+      Double_t wh   = gPad->GetWh();
+      fYsize        = fXsize*wh/ww;
+   } else {
+      fYsize = 27;
+   }
+
+   fNbPage++;
+
+   if (fNbPage>1) {
+      // Close the currently opened page
+      WriteCompressedBuffer();
+      PrintStr("endstream@");
+      Int_t StreamLength = fNByte-fStartStream-10;
+      PrintStr("endobj@");
+      NewObject(3*(fNbPage-2)+kObjFirstPage+2);
+      WriteInteger(StreamLength, 0);
+      PrintStr("endobj@");
+   }
+
+   // Start a new page
+   NewObject(3*(fNbPage-1)+kObjFirstPage);
+   PrintStr("<<@");
+   PrintStr("/Type /Page@");
+   PrintStr("@");
+   PrintStr("/Parent");
+   WriteInteger(kObjPages);
+   PrintStr(" 0 R");
+   PrintStr("@");
+
+   Double_t xlow=0, ylow=0, xup=1, yup=1;
+   if (gPad) {
+      xlow = gPad->GetAbsXlowNDC();
+      xup  = xlow + gPad->GetAbsWNDC();
+      ylow = gPad->GetAbsYlowNDC();
+      yup  = ylow + gPad->GetAbsHNDC();
+   }
+   PrintStr("/MediaBox [");
+
+   Double_t width, height;
+   switch (fPageFormat) {
+      case 100 :
+         width  = 8.5*2.54;
+         height = 11.*2.54;
+         break;
+      case 200 :
+         width  = 8.5*2.54;
+         height = 14.*2.54;
+         break;
+      case 300 :
+         width  = 11.*2.54;
+         height = 17.*2.54;
+         break;
+      default  :
+         width  = 21.0*TMath::Power(TMath::Sqrt(2.), 4-fPageFormat);
+         height = 29.7*TMath::Power(TMath::Sqrt(2.), 4-fPageFormat);
+   };
+
+   WriteReal(CMtoPDF(fXsize*xlow));
+   WriteReal(CMtoPDF(fYsize*ylow));
+   WriteReal(CMtoPDF(width));
+   WriteReal(CMtoPDF(height));
+   PrintStr("]");
+   PrintStr("@");
+
+   if (fPageOrientation == 1) PrintStr("/Rotate 0@");
+   if (fPageOrientation == 2) PrintStr("/Rotate 90@");
+
+   PrintStr("/Resources");
+   WriteInteger(kObjResources);
+   PrintStr(" 0 R");
+   PrintStr("@");
+
+   PrintStr("/Contents");
+   WriteInteger(3*(fNbPage-1)+kObjFirstPage+1);
+   PrintStr(" 0 R");
+   PrintStr(">>@");
+   PrintStr("endobj@");
+   
+   NewObject(3*(fNbPage-1)+kObjFirstPage+1);
+   PrintStr("<<@");
+   PrintStr("/Length");
+   WriteInteger(3*(fNbPage-1)+kObjFirstPage+2);
+   PrintStr(" 0 R");
+   PrintStr("/Filter [/FlateDecode]@");
+   PrintStr(">>@");
+   PrintStr("stream@");
+   fStartStream = fNByte;
+   fCompress = kTRUE;
+
+   if (fPageOrientation == 1) {
+      PrintStr("1 0 0 1");
+      WriteReal(CMtoPDF(0.7));
+      WriteReal(CMtoPDF(TMath::Sqrt(2.)*0.7));
+      PrintStr(" cm");
+   }
+}
+
+
+//______________________________________________________________________________
+void TPDF::Off()
+{
+   // Deactivate an already open PDF file
+
+   gVirtualPS = 0;
+}
+
+
+//______________________________________________________________________________
+void TPDF::On()
+{
+   // Activate an already open PDF file
+
+   // fType is used to know if the PDF file is open. Unlike TPostScript, TPDF
+   // has no "workstation type".
+
+   if (!fType) {
+      Error("On", "no PDF file open");
+      Off();
+      return;
+   }
+   gVirtualPS = this;
+}
+
+
+//______________________________________________________________________________
+void TPDF::Open(const char *fname, Int_t wtype)
+{
+   // Open a PDF file
+
+   if (fStream) {
+      Warning("Open", "PDF file already open");
+      return;
+   }
+
+   fLenBuffer = 0;
+   fRed       = -1;
+   fGreen     = -1;
+   fBlue      = -1;
+   fType      = abs(wtype);
+   gStyle->GetPaperSize(fXsize, fYsize);
+   Float_t xrange, yrange;
+   if (gPad) {
+      Double_t ww = gPad->GetWw();
+      Double_t wh = gPad->GetWh();
+      if (fType == 113) {
+         ww *= gPad->GetWNDC();
+         wh *= gPad->GetHNDC();
+      }
+      Double_t ratio = wh/ww;
+      xrange = fXsize;
+      yrange = fXsize*ratio;
+      if (yrange > fYsize) { yrange = fYsize; xrange = yrange/ratio;}
+      fXsize = xrange; fYsize = yrange;
+   }
+
+   // Open OS file
+   fStream   = new ofstream(fname,ios::out);
+   if (fStream == 0) {
+      printf("ERROR in TPDF::Open: Cannot open file:%s\n",fname);
+      return;
+   }
+
+   gVirtualPS = this;
+
+   for (Int_t i=0;i<fSizBuffer;i++) fBuffer[i] = ' ';
+
+   // The page orientation is last digit of PDF workstation type
+   //  orientation = 1 for portrait
+   //  orientation = 2 for landscape
+   fPageOrientation = fType%10;
+   if( fPageOrientation < 1 || fPageOrientation > 2) {
+      Error("Open", "Invalid page orientation %d", fPageOrientation);
+      return;
+   }
+
+   // format = 0-99 is the European page format (A4,A3 ...)
+   // format = 100 is the US format  8.5x11.0 inch
+   // format = 200 is the US format  8.5x14.0 inch
+   // format = 300 is the US format 11.0x17.0 inch
+   fPageFormat = fType/1000;
+   if( fPageFormat == 0 )  fPageFormat = 4;
+   if( fPageFormat == 99 ) fPageFormat = 0;
+
+   fRange = kFALSE;
+
+   // Set a default range
+   Range(fXsize, fYsize);
+
+   fObjPos = 0;
+   fObjPosSize = 0;
+   fNbObj = 0;
+   fNbPage = 0;
+
+   PrintStr("%PDF-1.4@");
+   
+   NewObject(kObjRoot);
+   PrintStr("<<@");
+   PrintStr("/Type /Catalog@");
+   PrintStr("/Outlines");
+   WriteInteger(kObjOutlines);
+   PrintStr(" 0 R");
+   PrintStr("@");
+   PrintStr("/Pages");
+   WriteInteger(kObjPages);
+   PrintStr(" 0 R");
+   PrintStr(">>@");
+   PrintStr("endobj@");
+   
+   NewObject(kObjInfo);
+   PrintStr("<<@");
+   PrintStr("/Creator (ROOT Version ");
+   PrintStr(gROOT->GetVersion());
+   PrintStr(")");
+   PrintStr("@");
+   PrintStr("/CreationDate (");
+   TDatime t;
+   char str[16];
+   sprintf(str,"D:%4.4d%2.2d%2.2d%2.2d%2.2d%2.2d",
+                t.GetYear()  , t.GetMonth(),
+                t.GetDay()   , t.GetHour(),
+                t.GetMinute(), t.GetSecond());
+   PrintStr(str);
+   PrintStr(")");
+   PrintStr("@");
+   PrintStr("/Title (");
+   PrintStr(GetName());
+   PrintStr(")");
+   PrintStr("@");
+   PrintStr("/Keywords (ROOT)");
+   PrintStr(">>@");
+   PrintStr("endobj@");
+   
+   NewObject(kObjOutlines);
+   PrintStr("<<@");
+   PrintStr("/Type /Outlines@");
+   PrintStr("/Count 0@");
+   PrintStr(">>@");
+   PrintStr("endobj@");
+   
+   NewObject(kObjResources);
+   PrintStr("<<@");
+   PrintStr("/ProcSet [/PDF /Text]@");
+   PrintStr("/Font");
+   WriteInteger(kObjFont);
+   PrintStr(" 0 R");
+   PrintStr("@");
+   PrintStr(">>@");
+   PrintStr("endobj@");
+  
+   FontEncode();
+
+   NewPage();
+}
+
+
+//______________________________________________________________________________
+void TPDF::PrintStr(const char *str)
+{
+   // Output the string str in the output buffer
+
+   Int_t len = strlen(str);
+   if (len == 0) return;
+   
+   if (fCompress) {
+      if (fLenBuffer+len >= fSizBuffer) {
+         fBuffer  = TStorage::ReAllocChar(fBuffer, 2*fSizBuffer, fSizBuffer);
+         fSizBuffer = 2*fSizBuffer;
+      }
+      strcpy(fBuffer + fLenBuffer, str);
+      fLenBuffer += len;
+      return;
+   }
+
+   TVirtualPS::PrintStr(str);
+}
+
+
+//______________________________________________________________________________
+void TPDF::PrintFast(Int_t len, const char *str)
+{
+   // Fast version of Print
+
+   if (fCompress) {
+      if (fLenBuffer+len >= fSizBuffer) {
+         fBuffer  = TStorage::ReAllocChar(fBuffer, 2*fSizBuffer, fSizBuffer);
+         fSizBuffer = 2*fSizBuffer;
+      }
+      strcpy(fBuffer + fLenBuffer, str);
+      fLenBuffer += len;
+      return;
+   }
+
+   TVirtualPS::PrintFast(len, str);
+}
+
+
+//______________________________________________________________________________
+void TPDF::Range(Float_t xsize, Float_t ysize)
+{
+   // Set the range for the paper in centimetres
+
+   Float_t xps, yps, xncm, yncm, dxwn, dywn, xwkwn, ywkwn, xymax;
+
+   fXsize = xsize;
+   fYsize = ysize;
+
+   xps = xsize;
+   yps = ysize;
+
+   if( xsize <= xps && ysize < yps) {
+      if ( xps > yps ) xymax = xps;
+      else             xymax = yps;
+      xncm  = xsize/xymax;
+      yncm  = ysize/xymax;
+      dxwn  = ((xps/xymax)-xncm)/2;
+      dywn  = ((yps/xymax)-yncm)/2;
+   } else {
+      if (xps/yps < 1) xwkwn = xps/yps;
+      else             xwkwn = 1;
+      if (yps/xps < 1) ywkwn = yps/xps;
+      else             ywkwn = 1;
+
+      if (xsize < ysize)  {
+         xncm = ywkwn*xsize/ysize;
+         yncm = ywkwn;
+         dxwn = (xwkwn-xncm)/2;
+         dywn = 0;
+         if( dxwn < 0) {
+            xncm = xwkwn;
+            dxwn = 0;
+            yncm = xwkwn*ysize/xsize;
+            dywn = (ywkwn-yncm)/2;
+         }
+      } else {
+         xncm = xwkwn;
+         yncm = xwkwn*ysize/xsize;
+         dxwn = 0;
+         dywn = (ywkwn-yncm)/2;
+         if( dywn < 0) {
+            yncm = ywkwn;
+            dywn = 0;
+            xncm = ywkwn*xsize/ysize;
+            dxwn = (xwkwn-xncm)/2;
+         }
+      }
+   }
+   fRange = kTRUE;
+}
+
+
+//______________________________________________________________________________
+void TPDF::SetColor(Int_t color)
+{
+   // Set color with its color index
+
+   if (color < 0) color = 0;
+   TColor *col = gROOT->GetColor(color);
+   if (col) {
+      SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
+   } else {
+      SetColor(1., 1., 1.);
+   }
+}
+
+
+//______________________________________________________________________________
+void TPDF::SetColor(Float_t r, Float_t g, Float_t b)
+{
+   // Set color with its R G B components
+   //
+   //  r: % of red in [0,1]
+   //  g: % of green in [0,1]
+   //  b: % of blue in [0,1]
+
+   if (r == fRed && g == fGreen && b == fBlue) return;
+
+   fRed   = r;
+   fGreen = g;
+   fBlue  = b;
+
+   WriteReal(fRed); 
+   WriteReal(fGreen);
+   WriteReal(fBlue);
+   PrintFast(3," RG");
+
+   WriteReal(fRed); 
+   WriteReal(fGreen);
+   WriteReal(fBlue);
+   PrintFast(3," rg");
+}
+
+
+//______________________________________________________________________________
+void TPDF::SetFillColor( Color_t cindex )
+{
+   // Set color index for fill areas
+
+   fFillColor = cindex;
+   if (gStyle->GetFillColor() <= 0) cindex = 0;
+}
+
+
+//______________________________________________________________________________
+void TPDF::SetFillPatterns(Int_t /*ipat*/, Int_t /*color*/)
+{
+}
+
+
+//______________________________________________________________________________
+void TPDF::SetLineColor( Color_t cindex )
+{
+   // Set color index for lines
+
+   fLineColor = cindex;
+}
+
+
+//______________________________________________________________________________
+void TPDF::SetLineStyle(Style_t linestyle)
+{
+   // Change the line style
+   //
+   // linestyle = 2 dashed
+   //           = 3 dotted
+   //           = 4 dash-dotted
+   //           = else solid (1 in is used most of the time)
+
+   if ( linestyle == fLineStyle) return;
+   fLineStyle = linestyle;
+   if      (linestyle == 2) {PrintStr(" [3 3] 0 d");}
+   else if (linestyle == 3) {PrintStr(" [1 2] 0 d");}
+   else if (linestyle == 4) {PrintStr(" [3 4 1 4] 0 d");}
+   else                     {PrintStr(" [] 0 d");}
+}
+
+
+//______________________________________________________________________________
+void TPDF::SetLineWidth(Width_t linewidth)
+{
+   // Change the line width
+
+   if (linewidth == fLineWidth) return;
+   fLineWidth = linewidth;
+   WriteReal(fLineWidth);
+   PrintFast(2," w");
+}
+
+
+//______________________________________________________________________________
+void TPDF::SetMarkerColor( Color_t cindex )
+{
+   // Set color index for markers.
+
+   fMarkerColor = cindex;
+}
+
+
+//______________________________________________________________________________
+void TPDF::SetTextColor( Color_t cindex )
+{
+   // Set color index for text
+
+   fTextColor = cindex;
+}
+
+
+//______________________________________________________________________________
+void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
+{
+   // Draw text
+   //
+   // xx: x position of the text
+   // yy: y position of the text
+   // chars: text to be drawn
+
+   char str[8];
+
+   // Start the text
+   if (!fCompress) PrintStr("@");
+   PrintStr(" BT");
+
+   // Font and text size
+   sprintf(str," /F%d",abs(fTextFont)/10);
+   PrintStr(str);
+   Double_t wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
+   Double_t hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Float_t tsize, ftsize;
+   if (wh < hh) {
+      tsize = fTextSize*wh;
+      Int_t TTFsize = (Int_t)(tsize*kScale+0.5); // TTF size
+      ftsize = (TTFsize*fXsize*gPad->GetAbsWNDC())/wh;
+   } else {
+      tsize = fTextSize*hh;
+      Int_t TTFsize = (Int_t)(tsize*kScale+0.5); // TTF size
+      ftsize = (TTFsize*fYsize*gPad->GetAbsHNDC())/hh;
+   }
+   Double_t fontsize = 72*(ftsize)/2.54;
+   if( fontsize <= 0) return;
+   WriteReal(fontsize);
+   PrintStr(" Tf");
+
+   // Text angle
+   if(fTextAngle == 0) {
+      WriteReal(XtoPDF(xx));
+      WriteReal(YtoPDF(yy));
+      PrintStr(" Td");
+   } else if (fTextAngle == 90) {
+      PrintStr(" 0 1 -1 0");
+      WriteReal(XtoPDF(xx));
+      WriteReal(YtoPDF(yy));
+      PrintStr(" Tm");
+   } else {
+      Double_t DegRad = TMath::Pi()/180.;
+      WriteReal(TMath::Cos(DegRad*fTextAngle));
+      WriteReal(TMath::Sin(DegRad*fTextAngle));
+      WriteReal(-TMath::Sin(DegRad*fTextAngle));
+      WriteReal(TMath::Cos(DegRad*fTextAngle));
+      WriteReal(XtoPDF(xx));
+      WriteReal(YtoPDF(yy));
+      PrintStr(" Tm");
+   }
+
+   // Ouput the text. Escape some characters if needed
+   PrintStr(" (");
+   Int_t len=strlen(chars);
+   for (Int_t i=0; i<len;i++) {
+      if (chars[i]=='(' || chars[i]==')') {
+         sprintf(str,"\\%c",chars[i]);
+      } else {
+         sprintf(str,"%c",chars[i]);
+      }
+      PrintStr(str);
+   }
+   PrintStr(") Tj ET");
+   if (!fCompress) PrintStr("@");
+}
+
+
+//______________________________________________________________________________
+void TPDF::TextNDC(Double_t u, Double_t v, const char *chars)
+{
+   // Write a string of characters in NDC
+
+   Double_t x = gPad->GetX1() + u*(gPad->GetX2() - gPad->GetX1());
+   Double_t y = gPad->GetY1() + v*(gPad->GetY2() - gPad->GetY1());
+   Text(x, y, chars);
+}
+
+
+//______________________________________________________________________________
+Double_t TPDF::UtoPDF(Double_t u)
+{
+   // Convert U from NDC coordinate to PDF
+
+   Double_t cm = fXsize*(gPad->GetAbsXlowNDC() + u*gPad->GetAbsWNDC());
+   return 72*cm/2.54;
+}
+
+
+//______________________________________________________________________________
+Double_t TPDF::VtoPDF(Double_t v)
+{
+   // Convert V from NDC coordinate to PDF
+
+   Double_t cm = fYsize*(gPad->GetAbsYlowNDC() + v*gPad->GetAbsHNDC());
+   return 72*cm/2.54;
+}
+
+
+//______________________________________________________________________________
+Double_t TPDF::XtoPDF(Double_t x)
+{
+   // Convert X from world coordinate to PDF
+
+   Double_t u = (x - gPad->GetX1())/(gPad->GetX2() - gPad->GetX1());
+   return  UtoPDF(u);
+}
+
+
+//______________________________________________________________________________
+Double_t TPDF::YtoPDF(Double_t y)
+{
+   // Convert Y from world coordinate to PDF
+
+   Double_t v = (y - gPad->GetY1())/(gPad->GetY2() - gPad->GetY1());
+   return  VtoPDF(v);
+}
+
+
+//______________________________________________________________________________
+void TPDF::WriteCompressedBuffer()
+{
+   // Write the buffer in a compressed way
+
+   z_stream stream;
+   int err;
+   char out[2*fLenBuffer];
+
+   stream.next_in   = (Bytef*)fBuffer;
+   stream.avail_in  = (uInt)fLenBuffer;
+   stream.next_out  = (Bytef*)out;
+   stream.avail_out = (uInt)2*fLenBuffer;
+   stream.zalloc    = (alloc_func)0;
+   stream.zfree     = (free_func)0;
+   stream.opaque    = (voidpf)0;
+
+   err = deflateInit(&stream, Z_DEFAULT_COMPRESSION);
+   if (err != Z_OK) {
+      Error("WriteCompressedBuffer", "error in deflateInit (zlib)");
+      return;
+   }
+
+   err = deflate(&stream, Z_FINISH);
+   if (err != Z_STREAM_END) {
+      deflateEnd(&stream);
+      Error("WriteCompressedBuffer", "error in deflate (zlib)");
+      return;
+   }
+
+   err = deflateEnd(&stream);
+
+   fStream->write(out, stream.total_out);
+
+   fNByte += stream.total_out;
+   fStream->write("\n",1); fNByte++;
+   fLenBuffer = 0;
+
+   fCompress = kFALSE;
 }

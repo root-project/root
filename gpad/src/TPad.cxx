@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.123 2004/03/10 14:43:10 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.124 2004/03/12 15:05:34 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3669,48 +3669,6 @@ void TPad::Print(const char *filenam, Option_t *option)
       return;
    }
 
-//==============Save pad/canvas as a PDF file====================================
-   if (strstr(opt,"pdf")) {
-      gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
-
-      Bool_t noScreen = kFALSE;
-      if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
-         noScreen = kTRUE;
-         GetCanvas()->SetBatch(kTRUE);
-      }
-
-      TPad *padsav = (TPad*)gPad;
-      cd();
-      TVirtualPS *psave = gVirtualPS;
-
-      if (!gVirtualPS) {
-         // Plugin Postscript/PDF driver
-         TPluginHandler *h;
-         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "pdf"))) {
-            if (h->LoadPlugin() == -1)
-               return;
-            h->ExecPlugin(0);
-         }
-      }
-
-      // Create a new PDF file
-      gVirtualPS->SetName(psname);
-      gVirtualPS->Open(psname);
-      gVirtualPS->SetBit(kPrintingPS);
-///   gVirtualPS->NewPage();
-      Paint();
-      if (noScreen)  GetCanvas()->SetBatch(kFALSE);
-
-      if (!gSystem->AccessPathName(psname)) Info("Print", "PDF file %s has been created", psname);
-
-      delete gVirtualPS;
-      gVirtualPS = psave;
-      gVirtualPS = 0;
-      padsav->cd();
-
-      return;
-   }
-
 //==============Save pad/canvas as a SVG file====================================
    if (strstr(opt,"svg")) {
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
@@ -3780,7 +3738,8 @@ void TPad::Print(const char *filenam, Option_t *option)
    if (ratio < 1)               pstype = 112;
    if (strstr(opt,"Portrait"))  pstype = 111;
    if (strstr(opt,"Landscape")) pstype = 112;
-   if (strstr(opt,"eps")) pstype = 113;
+   if (strstr(opt,"eps"))       pstype = 113;
+   if (strstr(opt,"pdf"))       pstype = 111;
    TPad *padsav = (TPad*)gPad;
    cd();
    TVirtualPS *psave = gVirtualPS;
@@ -3788,22 +3747,28 @@ void TPad::Print(const char *filenam, Option_t *option)
    if (!gVirtualPS || mustOpen) {
       // Plugin Postscript driver
       TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "ps"))) {
-         if (h->LoadPlugin() == -1)
-            return;
-         h->ExecPlugin(0);
+      if (strstr(opt,"pdf")) {
+         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "pdf"))) {
+            if (h->LoadPlugin() == -1) return;
+            h->ExecPlugin(0);
+         }
+      } else {
+         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "ps"))) {
+            if (h->LoadPlugin() == -1) return;
+            h->ExecPlugin(0);
+         }
       }
 
-      // Create a new Postscript file
+      // Create a new Postscript or PDF file
       gVirtualPS->SetName(psname);
       gVirtualPS->Open(psname,pstype);
       gVirtualPS->SetBit(kPrintingPS);
       if (!copenb) {
-         gVirtualPS->NewPage();
+         if (!strstr(opt,"pdf"))gVirtualPS->NewPage();
          Paint();
       }
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
-      if (!gSystem->AccessPathName(psname)) Info("Print", "PostScript file %s has been created", psname);
+      if (!gSystem->AccessPathName(psname)) Info("Print", "%s file %s has been created", opt, psname);
       if (mustClose) {
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
          delete gVirtualPS;
@@ -3813,12 +3778,12 @@ void TPad::Print(const char *filenam, Option_t *option)
          gVirtualPS = 0;
       }
    } else {
-      // Append to existing Postscript file
+      // Append to existing Postscript or PDF file
       if (!ccloseb) {
          gVirtualPS->NewPage();
          Paint();
       }
-      Info("Print", "Current canvas added to PostScript file %s", psname);
+      Info("Print", "Current canvas added to %s file %s", opt, psname);
       if (mustClose) {
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
          delete gVirtualPS;

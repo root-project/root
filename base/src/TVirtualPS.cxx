@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.6 2004/02/13 17:04:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.7 2004/02/19 15:49:43 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -33,8 +33,10 @@ ClassImp(TVirtualPS)
 TVirtualPS::TVirtualPS()
 {
    // VirtualPS default constructor
-   fStream = 0;
-   fNByte = 0;
+   fStream    = 0;
+   fNByte     = 0;
+   fSizBuffer = kMaxBuffer;
+   fBuffer    = new char[fSizBuffer];
 }
 
 //______________________________________________________________________________
@@ -42,14 +44,18 @@ TVirtualPS::TVirtualPS(const char *name, Int_t)
           : TNamed(name,"Postscript interface")
 {
    // VirtualPS constructor
-   fStream = 0;
-   fNByte = 0;
+   fStream    = 0;
+   fNByte     = 0;
+   fSizBuffer = kMaxBuffer;
+   fBuffer    = new char[fSizBuffer];
 }
 
 //______________________________________________________________________________
 TVirtualPS::~TVirtualPS()
 {
    // VirtualPS destructor
+
+   if (fBuffer) delete [] fBuffer;
 }
 
 //______________________________________________________________________________
