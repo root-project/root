@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.16 2002/05/09 22:56:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.17 2002/05/10 21:32:09 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -129,11 +129,11 @@ public:
    virtual void   Disconnected(const char * /*signal_name*/) { }
 
    virtual void   Destroyed()
-                  { Emit("Destroyed()"); }                 //*SIGNAL*
+                  { Emit("Destroyed()"); }                 // *SIGNAL*
    virtual void   ChangedBy(const char *method)
-                  { Emit("ChangedBy(char*)", method); }    //*SIGNAL*
+                  { Emit("ChangedBy(char*)", method); }    // *SIGNAL*
    virtual void   Message(const char *msg)
-                  { Emit("Message(char*)", msg); }         //*SIGNAL*
+                  { Emit("Message(char*)", msg); }         // *SIGNAL*
 
    static Bool_t  Connect(TQObject *sender,
                           const char *signal,
@@ -250,8 +250,8 @@ namespace ROOT {
 
    inline const TQObjectInitBehavior *DefineBehavior(TQObject *, TQObject *)
    {
-      static TQObjectInitBehavior Default;
-      return &Default;
+      TQObjectInitBehavior *Default = new TQObjectInitBehavior;
+      return Default;
    }
 }
 
