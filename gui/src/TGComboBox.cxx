@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.14 2004/02/19 09:44:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.15 2004/02/19 15:36:46 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -397,7 +397,7 @@ TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
                new TGLayoutHints(kLHintsLeft | kLHintsExpandY | kLHintsExpandX));
    fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
 
-   for (int i = 0; i < 16; i++)
+   for (int i = 1; i < 16; i++)
       AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, Form("%d",i), i, 0), 
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
    Select(1);  // to have first entry selected
