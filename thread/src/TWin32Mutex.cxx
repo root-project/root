@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TWin32Mutex.cxx,v 1.2 2004/12/10 12:13:33 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TWin32Mutex.cxx,v 1.3 2004/12/15 10:09:04 rdm Exp $
 // Author: Bertrand Bellenot   23/10/04
 
 /*************************************************************************
@@ -55,15 +55,9 @@ Int_t TWin32Mutex::TryLock()
 {
    // Try locking the mutex. Returns 0 if mutex can be locked.
 
-   switch (::WaitForSingleObject(fHMutex, 1000)) {
-      case WAIT_OBJECT_0:
-         return 1;
-      case WAIT_TIMEOUT:
-         return 0;
-      default:
-         break;
-   }
-   return 0;
+   if (::WaitForSingleObject(fHMutex, 0) == WAIT_OBJECT_0)
+      return 0;
+   return 1;
 }
 
 //______________________________________________________________________________
