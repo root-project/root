@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.65 2004/12/16 19:39:11 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.66 2005/01/14 17:11:17 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -5780,13 +5780,15 @@ int RpdProtocol(int ServType)
    // receive the rest
    kind = (EMessageTypes) ntohl(lbuf[1]);
    int len = ntohl(lbuf[0]);
-   ErrorInfo("RpdProtocol: kind: %d %d",kind,len);
+   if (gDebug > 1)
+      ErrorInfo("RpdProtocol: kind: %d %d",kind,len);
    if (kind == kROOTD_PROTOCOL || kind == kROOTD_CLEANUP ||
        kind == kROOTD_SSH) {
       // Receive the rest
       char *buf = 0;
       len -= sizeof(int);
-      ErrorInfo("RpdProtocol: len: %d",len);
+      if (gDebug > 1)
+         ErrorInfo("RpdProtocol: len: %d",len);
       if (len) {
          buf = new char[len];
          if (NetRecvRaw(buf, len) < 0) {
@@ -5800,7 +5802,8 @@ int RpdProtocol(int ServType)
          // Empty buffer
          proto[0] = '\0';
       }
-      ErrorInfo("RpdProtocol: proto buff: %s",buf);
+      if (gDebug > 1)
+         ErrorInfo("RpdProtocol: proto buff: %s",buf);
       // Copy buffer for later use
       readbuf = 0;
       if (buf) delete[] buf;
