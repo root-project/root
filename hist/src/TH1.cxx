@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.217 2005/01/20 21:58:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.218 2005/01/25 07:36:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1201,6 +1201,14 @@ void TH1::Copy(TObject &obj) const
    ((TH1&)obj).fMaximum   = fMaximum;
    ((TH1&)obj).fMinimum   = fMinimum;
    ((TH1&)obj).fOption    = fOption;
+   ((TH1&)obj).fBuffer    = 0;
+   ((TH1&)obj).fBufferSize= fBufferSize;
+   if (fBuffer) {
+      Double_t *buf = new Double_t[fBufferSize];
+      for (Int_t i=0;i<fBufferSize;i++) buf[i] = fBuffer[i];
+      ((TH1&)obj).fBuffer    = buf;
+   }
+         
    TAttLine::Copy(((TH1&)obj));
    TAttFill::Copy(((TH1&)obj));
    TAttMarker::Copy(((TH1&)obj));
