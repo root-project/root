@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.2 2000/07/03 18:55:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.3 2000/07/06 16:47:54 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -762,7 +762,8 @@ void TGClient::WaitFor(TGWindow *w)
 {
    // Wait for window to be destroyed.
 
-   Window_t wsave = fWaitForWindow;
+   Window_t wsave    = fWaitForWindow;
+   EGEventType esave = fWaitForEvent;
 
    fWaitForWindow = w->GetId();
    fWaitForEvent  = kDestroyNotify;
@@ -771,6 +772,7 @@ void TGClient::WaitFor(TGWindow *w)
       gSystem->InnerLoop();
 
    fWaitForWindow = wsave;
+   fWaitForEvent  = esave;
 }
 
 //______________________________________________________________________________
@@ -778,7 +780,8 @@ void TGClient::WaitForUnmap(TGWindow *w)
 {
    // Wait for window to be unmapped.
 
-   Window_t wsave = fWaitForWindow;
+   Window_t wsave    = fWaitForWindow;
+   EGEventType esave = fWaitForEvent;
 
    fWaitForWindow = w->GetId();
    fWaitForEvent  = kUnmapNotify;
@@ -787,6 +790,7 @@ void TGClient::WaitForUnmap(TGWindow *w)
       gSystem->InnerLoop();
 
    fWaitForWindow = wsave;
+   fWaitForEvent  = esave;
 }
 
 //______________________________________________________________________________
