@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.44 2005/02/08 11:02:24 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.45 2005/02/08 11:07:13 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -653,6 +653,8 @@ TList *TProofPlayerRemote::MergeFeedback()
 //______________________________________________________________________________
 void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
 {
+   // Store feedback results from the specified slave.
+
    PDB(kFeedback,1) Info("StoreFeedback","Enter");
 
    if ( out == 0 ) {
@@ -701,6 +703,8 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
 //______________________________________________________________________________
 void TProofPlayerRemote::SetupFeedback()
 {
+   // Setup reporting of feedback objects.
+
    if (!gProof->IsMaster()) return; // Client does not need timer
 
    fFeedback = (TList*) fInput->FindObject("FeedbackList");
@@ -720,6 +724,8 @@ void TProofPlayerRemote::SetupFeedback()
 //______________________________________________________________________________
 void TProofPlayerRemote::StopFeedback()
 {
+   // Stop reporting of feedback objects.
+
    if (fFeedbackTimer == 0) return;
 
    PDB(kFeedback,1) Info("StopFeedback","Stop Timer");
@@ -730,6 +736,8 @@ void TProofPlayerRemote::StopFeedback()
 //______________________________________________________________________________
 Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
 {
+   // Send feedback objects to client.
+
    PDB(kFeedback,2) Info("HandleTimer","Entry");
 
    if ( fFeedbackTimer == 0 ) return kFALSE; // timer already switched off
@@ -774,6 +782,8 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
 //______________________________________________________________________________
 TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
 {
+   // Get next packet for specified slave.
+
    TDSetElement *e = fPacketizer->GetNextPacket( slave, r );
 
    if ( e != 0 ) {
@@ -1073,18 +1083,19 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
 //______________________________________________________________________________
 void TProofPlayerSuperMaster::Progress(TSlave *sl, Long64_t total, Long64_t processed)
 {
+   // Report progress.
 
    Int_t idx = fSlaves.IndexOf(sl);
    fSlaveProgress[idx] = processed;
    if (fSlaveTotals[idx] != total)
-      Warning("Progress", "Total events has changed for slave %s", sl->GetName());
+      Warning("Progress", "total events has changed for slave %s", sl->GetName());
    fSlaveTotals[idx] = total;
 
    Long64_t tot = 0;
    Int_t i;
-   for (i=0; i<fSlaveTotals.GetSize(); i++) tot+=fSlaveTotals[i];
+   for (i = 0; i < fSlaveTotals.GetSize(); i++) tot += fSlaveTotals[i];
    Long64_t proc = 0;
-   for (i=0; i<fSlaveProgress.GetSize(); i++) proc+=fSlaveProgress[i];
+   for (i = 0; i < fSlaveProgress.GetSize(); i++) proc += fSlaveProgress[i];
 
    Progress(tot, proc);
 }
@@ -1092,16 +1103,15 @@ void TProofPlayerSuperMaster::Progress(TSlave *sl, Long64_t total, Long64_t proc
 //______________________________________________________________________________
 Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)
 {
-
-   // Send progress and feedback to client
+   // Send progress and feedback to client.
 
    if (fFeedbackTimer == 0) return kFALSE; // timer stopped already
 
    Long64_t tot = 0;
    Int_t i;
-   for (i=0; i<fSlaveTotals.GetSize(); i++) tot+=fSlaveTotals[i];
+   for (i = 0; i < fSlaveTotals.GetSize(); i++) tot += fSlaveTotals[i];
    Long64_t proc = 0;
-   for (i=0; i<fSlaveProgress.GetSize(); i++) proc+=fSlaveProgress[i];
+   for (i = 0; i < fSlaveProgress.GetSize(); i++) proc += fSlaveProgress[i];
 
    TMessage m(kPROOF_PROGRESS);
 
@@ -1116,10 +1126,11 @@ Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)
       return kFALSE;
 }
 
-
 //______________________________________________________________________________
 void TProofPlayerSuperMaster::SetupFeedback()
 {
+   // Setup reporting of feedback objects.
+
    if (!gProof->IsMaster()) return; // Client does not need timer
 
    TProofPlayerRemote::SetupFeedback();
