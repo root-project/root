@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.55 2001/03/03 08:49:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.56 2001/03/12 07:19:29 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -233,6 +233,7 @@
 #include "TLeafF.h"
 #include "TLeafS.h"
 #include "TLeafD.h"
+#include "TLeafElement.h"
 #include "TBasket.h"
 #include "TMath.h"
 #include "TDirectory.h"
@@ -249,11 +250,14 @@
 #include "TInterpreter.h"
 #include "TRegexp.h"
 #include "TArrayC.h"
+#include "TFolder.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
+#include "TFriendElement.h"
 #include "TVirtualFitter.h"
 
 TTree *gTree;
+const Int_t kMaxLen = 512;
 
 ClassImp(TTree)
 
@@ -271,6 +275,10 @@ TTree::TTree(): TNamed()
    fPacketSize     = 100;
    fTimerInterval  = 0;
    fPlayer         = 0;
+   fDebug          = 0;
+   fDebugMin       = 0;
+   fDebugMax       = 9999999;
+   fFriends        = 0;
 }
 
 //______________________________________________________________________________
@@ -301,6 +309,10 @@ TTree::TTree(const char *name,const char *title, Int_t maxvirtualsize)
    fPacketSize     = 100;
    fTimerInterval  = 0;
    fPlayer         = 0;
+   fDebug          = 0;
+   fDebugMin       = 0;
+   fDebugMax       = 9999999;
+   fFriends        = 0;
 
    SetFillColor(gStyle->GetHistFillColor());
    SetFillStyle(gStyle->GetHistFillStyle());
@@ -312,6 +324,15 @@ TTree::TTree(const char *name,const char *title, Int_t maxvirtualsize)
    SetMarkerSize(gStyle->GetMarkerSize());
 
    gDirectory->Append(this);
+   
+   // if title starts with ":" and is a valid folder name, a superbranch
+   // is created.
+   gTree = this;
+   if (strlen(title) > 2) {
+      if (title[0] == '/') {
+         Branch(title+1);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -327,6 +348,60 @@ TTree::~TTree()
    fBranches.Delete();
    fDirectory  = 0;
    delete fPlayer;
+   if (fFriends) {
+      fFriends->Delete();
+      delete fFriends;
+      fFriends = 0;
+   }
+}
+
+//______________________________________________________________________________
+TFriendElement *TTree::AddFriend(const char *treename, const char *filename)
+{
+// Add a TFriendElement to the list of friends
+// A TFriendElement TF describes a TTree object TF in a file.
+// When a TFriendElement TF is added to the the list of friends of an
+// existing TTree T, any variable from TF can be referenced in a query
+// to T.
+// if filename = "", treename is assumed to be in the same file as this Tree.
+//   
+// Example:
+//   T.AddFriend("ft1","friendfile1.root");
+//   T.AddFriend("ft2","friendfile2.root");
+//   T.Draw("var:ft1.v1:ft2.v2");
+//     This command will generate a 3-d scatter plot of variable "var"
+//     in the TTree "T" versus variable "v1" in TTree "ft1" versus
+//     variable "v2" in TTree "ft2".   
+//
+// When this function is called, the filename is connected and treename
+// is loaded in memory. The created friend element is added to the list
+// of friends of this Tree (GetListOfFriends).
+// When this Tree is deleted, all its friend elements are also deleted.
+//
+// Note that the number of entries in the friend Tree treename must be equal
+// or greater to the number of entries of this Tree.
+//
+// Note that it is possible to declare a friend Tree that has the same 
+// internal structure (same branches and leaves) than this Tree.
+// eg. T.Draw("var:ft1.var:ft2.var"). 
+    
+   if (!fFriends) fFriends = new TList();
+   TFriendElement *fe = new TFriendElement(this,treename,filename);
+   if (fe) {
+      fFriends->Add(fe);
+      TTree *t = fe->GetTree();
+      if (t) {
+         if (t->GetEntries() < fEntries) {
+            Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent Tree: %g",
+                     treename,filename,t->GetEntries(),fEntries);
+         }
+      } else {
+         Warning("AddFriend","Unknown Tree %s in file %s",treename,filename);
+      }
+   } else {
+      Warning("AddFriend","Cannot add FriendElement %s in file %s",treename,filename);
+   }   
+   return fe;
 }
 
 //______________________________________________________________________________
@@ -408,6 +483,43 @@ Int_t TTree::Branch(TList *list, Int_t bufsize)
       }
       lnk = lnk->Next();
    }
+   return GetListOfBranches()->GetEntries() - nbranches;
+}
+
+//______________________________________________________________________________
+Int_t TTree::Branch(const char *foldername, Int_t bufsize, Int_t splitlevel)
+{
+//   This new function creates one branch for each element in the folder.
+//   The function returns the total number of branches created.
+
+   TObject *ob = gROOT->FindObjectAny(foldername);
+   if (!ob) return 0;
+   if (ob->IsA() != TFolder::Class()) return 0;
+   Int_t nbranches = GetListOfBranches()->GetEntries();
+   TFolder *folder = (TFolder*)ob;
+   TIter next(folder->GetListOfFolders());
+   TObject *obj;
+   char *curname = new char[1000];
+   char occur[20];
+   while ((obj=next())) {
+      sprintf(curname,"%s/%s",foldername,obj->GetName());
+      if (obj->IsA() == TFolder::Class()) {
+        Branch(curname, bufsize, splitlevel-1);
+      } else {
+        void *add = (void*)folder->GetListOfFolders()->GetObjectRef(obj);
+        for (Int_t i=0;i<1000;i++) {
+           if (curname[i] == 0) break;
+           if (curname[i] == '/') curname[i] = '.';
+        }
+        Int_t noccur = folder->Occurence(obj);
+        if (noccur > 0) {
+           sprintf(occur,"_%d",noccur);
+           strcat(curname,occur);
+        }
+        Bronch(curname,obj->ClassName(), add, bufsize, splitlevel-1);
+      }
+   }          
+   delete [] curname;
    return GetListOfBranches()->GetEntries() - nbranches;
 }
 
@@ -754,6 +866,19 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    Bool_t delobj = kFALSE;
    char **ppointer = (char**)add;
    char *objadd = *ppointer;
+   //====> special case of TClonesArray
+   if(cl == TClonesArray::Class()) {
+      if (!objadd) {
+         Error("Bronch","Pointer to TClonesArray is null");
+         return 0;
+      }
+      TBranchElement *branch = new TBranchElement(name,(TClonesArray*)objadd,bufsize,splitlevel-1);
+      fBranches.Add(branch);
+      branch->SetAddress(add);
+      return branch;
+   }
+   //====>
+      
    if (!objadd) {
       objadd = (char*)cl->New();
       *ppointer = objadd;
@@ -761,13 +886,19 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    }
    
    //build the StreamerInfo if first time for the class
-   if (splitlevel > 0) TStreamerInfo::Optimize(kFALSE);
+   //if (splitlevel > 0) TStreamerInfo::Optimize(kFALSE);
+   TStreamerInfo::Optimize(kFALSE);
    TStreamerInfo *sinfo = BuildStreamerInfo(cl,objadd);
 
    // create a dummy top level  branch object
    Int_t id = -1;
    if (splitlevel > 0) id = -2;
-   TBranchElement *branch = new TBranchElement(name,sinfo,id,(char*)objadd,bufsize,0);
+   char *dot = strchr(name,'.');
+   //char *dot = strchr(name,'_');
+   Int_t nch = strlen(name);
+   Bool_t dotlast = kFALSE;
+   if (nch && name[nch-1] == '.') dotlast = kTRUE;
+   TBranchElement *branch = new TBranchElement(name,sinfo,id,objadd,bufsize,0);
    fBranches.Add(branch);
    if (splitlevel > 0) {
       
@@ -776,12 +907,27 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       TIter next(sinfo->GetElements());
       TStreamerElement *element;
       id = 0;
+      char *bname = new char[1000];
       while ((element = (TStreamerElement*)next())) {
          char *pointer = (char*)objadd + element->GetOffset();
-         TBranchElement *bre = new TBranchElement(element->GetFullName(),sinfo,id,pointer,bufsize,splitlevel-1);
+         Bool_t isBase = element->IsA() == TStreamerBase::Class();
+         if (dot) {
+            if (dotlast) {
+               if (isBase) {sprintf(bname,"%s",name); bname[nch-1] = 0;}
+               else         sprintf(bname,"%s%s",name,element->GetFullName());
+            } else {
+               if (isBase) sprintf(bname,"%s",name);
+               else        sprintf(bname,"%s.%s",name,element->GetFullName());  
+               //else        sprintf(bname,"%s_%s",name,element->GetFullName());  
+            }
+         } else {
+            sprintf(bname,"%s",element->GetFullName());
+         }
+         TBranchElement *bre = new TBranchElement(bname,sinfo,id,pointer,bufsize,splitlevel-1);
          blist->Add(bre);
          id++;
       }
+      delete [] bname;
    }
          
    branch->SetAddress(add);
@@ -1089,7 +1235,7 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //  a weight = value.
 //  Examples:
 //      selection1 = "x<y && sqrt(z)>3.2"
-//      selection2 = "(x+y)*(sqrt(z)>3.2"
+//      selection2 = "(x+y)*(sqrt(z)>3.2)"
 //  selection1 returns a weigth = 0 or 1
 //  selection2 returns a weight = x+y if sqrt(z)>3.2
 //             returns a weight = 0 otherwise.
@@ -1346,6 +1492,80 @@ Int_t TTree::Fill()
 }
 
 //______________________________________________________________________________
+TBranch *TTree::FindBranch(const char* branchname) 
+{
+   char name[kMaxLen];
+   TIter next(GetListOfBranches());
+   
+   TBranch *branch;
+   while ((branch = (TBranch*)next())) {
+      strcpy(name,branch->GetName());
+      char *dim = (char*)strstr(name,"[");
+      if (dim) dim[0]='\0';
+      if (!strcmp(branchname,name)) return branch;
+   }
+   
+   //search in list of friends
+   if (!fFriends) return 0;
+   TIter nextf(fFriends);
+   TFriendElement *fe;
+   while ((fe = (TFriendElement*)nextf())) {
+      TTree *t = fe->GetTree();
+      branch = t->FindBranch(branchname);
+      if (branch) return branch;
+   }
+   return 0;
+}
+
+
+//______________________________________________________________________________
+TLeaf *TTree::FindLeaf(const char* searchname) 
+{
+   char leafname[kMaxLen];
+   char longname[kMaxLen];
+   
+   // For leaves we allow for one level up to be prefixed to the
+   // name
+   
+   TIter next (GetListOfLeaves());
+   TLeaf *leaf;
+   while ((leaf = (TLeaf*)next())) {
+      strcpy(leafname,leaf->GetName());
+      char *dim = (char*)strstr(leafname,"[");
+      if (dim) dim[0]='\0';
+      
+      if (!strcmp(searchname,leafname)) return leaf;
+      
+      TBranch * branch = leaf->GetBranch();
+      if (branch) {
+         sprintf(longname,"%s.%s",branch->GetName(),leafname);
+         char *dim = (char*)strstr(longname,"[");
+         if (dim) dim[0]='\0';
+         if (!strcmp(searchname,longname)) return leaf;
+
+         // The following is for the case where the branch is only
+         // a sub-branch.  Since we do not see it through
+         // TTree::GetListOfBranches, we need to see it indirectly.
+         // This is the less sturdy part of this search ... it may
+         // need refining ... 
+         if (strstr(searchname,".")
+             && !strcmp(searchname,branch->GetName())) return leaf;                //printf("found leaf3=%s/%s, branch=%s, i=%d\n",leaf->GetName(),leaf->GetTitle(),branch->GetName(),i);
+      }
+   }
+   
+   //search in list of friends
+   if (!fFriends) return 0;
+   TIter nextf(fFriends);
+   TFriendElement *fe;
+   while ((fe = (TFriendElement*)nextf())) {
+      TTree *t = fe->GetTree();
+      leaf = t->FindLeaf(searchname);
+      if (leaf) return leaf;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 Int_t TTree::Fit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Fit  a projected item(s) from a Tree*-*-*-*-*-*-*-*-*-*
@@ -1376,8 +1596,8 @@ Int_t TTree::Fit(const char *funcname ,const char *varexp, const char *selection
 //______________________________________________________________________________
 TBranch *TTree::GetBranch(const char *name)
 {
-//*-*-*-*-*-*Return pointer to the branch with name*-*-*-*-*-*-*-*
-//*-*        ======================================
+// Return pointer to the branch with name in this Tree or the list
+// of friends of this tree.
 
    Int_t i,j,k,nb1,nb2;
    TObjArray *lb, *lb1;
@@ -1405,6 +1625,31 @@ TBranch *TTree::GetBranch(const char *name)
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(i);
       branch = leaf->GetBranch();
       if (!strcmp(branch->GetName(),name)) return branch;
+   }
+   
+   //search in list of friends
+   if (!fFriends) return 0;
+   TIter next(fFriends);
+   TFriendElement *fe;
+   while ((fe = (TFriendElement*)next())) {
+      TTree *t = fe->GetTree();
+      branch = t->GetBranch(name);
+      if (branch) return branch;
+   }
+   
+   //second pass in the list of friends when the branch name
+   //is prefixed by the tree name
+   next.Reset();
+   while ((fe = (TFriendElement*)next())) {
+      TTree *t = fe->GetTree();
+      char *subname = (char*)strstr(name,t->GetName());
+      if (subname != name) continue;
+      Int_t l = strlen(t->GetName());
+      subname += l;
+      if (*subname != '.') continue;
+      subname++;
+      branch = t->GetBranch(subname);
+      if (branch) return branch;
    }
    return 0;
 }
@@ -1529,10 +1774,35 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
 //______________________________________________________________________________
 TLeaf *TTree::GetLeaf(const char *name) 
 {
-//*-*-*-*-*-*Return pointer to the 1st Leaf named name in any Branch-*-*-*-*-*
-//*-*        =======================================================
+// Return pointer to the 1st Leaf named name in any Branch of this Tree
+// or any branch in the list of friend trees.
 
-   return (TLeaf*)fLeaves.FindObject(name);
+   TLeaf *leaf = (TLeaf*)fLeaves.FindObject(name);
+   if (leaf) return leaf;
+   if (!fFriends) return 0;
+   TIter next(fFriends);
+   TFriendElement *fe;
+   while ((fe = (TFriendElement*)next())) {
+      TTree *t = fe->GetTree();
+      leaf = t->GetLeaf(name);
+      if (leaf) return leaf;
+   }
+   
+   //second pass in the list of friends when the leaf name
+   //is prefixed by the tree name
+   next.Reset();
+   while ((fe = (TFriendElement*)next())) {
+      TTree *t = fe->GetTree();
+      char *subname = (char*)strstr(name,t->GetName());
+      if (subname != name) continue;
+      Int_t l = strlen(t->GetName());
+      subname += l;
+      if (*subname != '.') continue;
+      subname++;
+      leaf = t->GetLeaf(subname);
+      if (leaf) return leaf;
+   }
+   return 0;      
 }
 
 
@@ -2114,6 +2384,19 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
 }
 
 //______________________________________________________________________________
+void TTree::SetDebug(Int_t level, Int_t min, Int_t max)
+{
+   // Set the debug level and the debug range
+   // for entries in the debug range, the functions TBranchElement::Fill
+   // and TBranchElement::GetEntry will print the number of bytes filled 
+   // or read for each branch.
+   
+   fDebug    = level;
+   fDebugMin = min;
+   fDebugMax = max;
+}
+
+//______________________________________________________________________________
 void TTree::SetDirectory(TDirectory *dir)
 {
    // Remove reference to this tree from current directory and add
@@ -2188,6 +2471,7 @@ void TTree::Show(Int_t entry)
       if (leaf->IsA() == TLeafF::Class()) len = TMath::Min(len,5);
       if (leaf->IsA() == TLeafD::Class()) len = TMath::Min(len,5);
       len = TMath::Min(len,10);
+      if (leaf->IsA() == TLeafElement::Class()) {leaf->PrintValue(len); continue;}
       printf(" %-15s = ",leaf->GetName());
       for (Int_t l=0;l<len;l++) {
          leaf->PrintValue(l);

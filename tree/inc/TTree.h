@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.23 2001/01/29 09:18:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.24 2001/02/02 16:35:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -82,6 +82,7 @@ class TEventList;
 class TSQLResult;
 class TSelector;
 class TPrincipal;
+class TFriendElement;
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -102,12 +103,16 @@ protected:
     Int_t         fTotalBuffers;      //! Total number of bytes in branch buffers
     Int_t         fPacketSize;        //! Number of entries in one packet for parallel root
     Int_t         fNfill;             //! Local for EntryLoop
+    Int_t         fDebug;             //! Debug level
+    Int_t         fDebugMin;          //! First entry number to debug
+    Int_t         fDebugMax;          //! Last entry number to debug
     TDirectory   *fDirectory;         //! Pointer to directory holding this tree
     TObjArray     fBranches;          //  List of Branches
     TObjArray     fLeaves;            //  Direct pointers to individual branch leaves
     TEventList   *fEventList;         //! Pointer to event selection list (if one)
     TArrayD       fIndexValues;       //  Sorted index values
     TArrayI       fIndex;             //  Index of sorted values
+    TList        *fFriends;           //  pointer to list of friend elements
     TVirtualTreePlayer *fPlayer;      //! Pointer to current Tree player
     
 protected:
@@ -124,10 +129,12 @@ public:
     TTree(const char *name, const char *title, Int_t maxvirtualsize=0);
     virtual ~TTree();
 
+    virtual TFriendElement *AddFriend(const char *treename, const char *filename="");
     virtual void      AddTotBytes(Int_t tot) {fTotBytes += tot;}
     virtual void      AddZipBytes(Int_t zip) {fZipBytes += zip;}
     virtual void      AutoSave();
     virtual Int_t     Branch(TList *list, Int_t bufsize=32000);
+    virtual Int_t     Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual TBranch  *Branch(const char *name, void *address, const char *leaflist, Int_t bufsize=32000);
     virtual TBranch  *Branch(const char *name, void *clonesaddress, Int_t bufsize=32000, Int_t splitlevel=1);
     virtual TBranch  *Branch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
@@ -139,6 +146,7 @@ public:
     virtual Int_t     CopyEntries(TTree *tree, Int_t nentries=-1);
     virtual TTree    *CopyTree(const char *selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
+    Int_t             Debug() const {return fDebug;}
     virtual void      Delete(Option_t *option=""); // *MENU*
     virtual void      Draw(Option_t *opt);
     virtual Int_t     Draw(const char *varexp, TCut selection, Option_t *option=""
@@ -147,6 +155,8 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual void      DropBuffers(Int_t nbytes);
     virtual Int_t     Fill();
+    virtual TBranch  *FindBranch(const char *name);
+    virtual TLeaf    *FindLeaf(const char *name);
     virtual Int_t     Fit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option="" ,Option_t *goption=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
 
@@ -154,6 +164,8 @@ public:
     virtual Int_t     GetChainEntryNumber(Int_t entry) const {return entry;}
     virtual Int_t     GetChainOffset() const { return fChainOffset; }
     TFile            *GetCurrentFile() const;
+            Int_t     GetDebugMax()  const {return fDebugMax;}
+            Int_t     GetDebugMin()  const {return fDebugMin;}
     TDirectory       *GetDirectory() const {return fDirectory;}
     virtual Stat_t    GetEntries() const   {return fEntries;}
     virtual Int_t     GetEstimate() const { return fEstimate; }
@@ -170,6 +182,7 @@ public:
     virtual TLeaf    *GetLeaf(const char *name);
     virtual TObjArray       *GetListOfBranches() {return &fBranches;}
     virtual TObjArray       *GetListOfLeaves()   {return &fLeaves;}
+    virtual TList    *GetListOfFriends() const  {return fFriends;}
     virtual Int_t     GetMaxEntryLoop() const {return fMaxEntryLoop;}
     virtual Double_t  GetMaximum(const char *columname);
     virtual Double_t  GetMinimum(const char *columname);
@@ -221,6 +234,7 @@ public:
     virtual void      SetBranchAddress(const char *bname,void *add);
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
     virtual void      SetChainOffset(Int_t offset=0) {fChainOffset=offset;}
+    virtual void      SetDebug(Int_t level=1, Int_t min=0, Int_t max=9999999); // *MENU*
     virtual void      SetDirectory(TDirectory *dir);
     virtual void      SetEstimate(Int_t nentries=10000);
     virtual void      SetEventList(TEventList *list) {fEventList = list;}
@@ -237,7 +251,7 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     void              UseCurrentStyle();
 
-    ClassDef(TTree,5)  //Tree descriptor (the main ROOT I/O class)
+    ClassDef(TTree,6)  //Tree descriptor (the main ROOT I/O class)
 };
 
 inline void TTree::Draw(Option_t *opt)
