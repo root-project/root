@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.49 2004/05/20 15:07:54 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.50 2004/05/24 14:02:51 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -240,7 +240,8 @@ static const int kAUTH_SRP_MSK = 0x2;
 static const int kAUTH_KRB_MSK = 0x4;
 static const int kAUTH_GLB_MSK = 0x8;
 static const int kAUTH_SSH_MSK = 0x10;
-static const int kMAXTABSIZE = 1000000000;
+static const int kMAXTABSIZE = 50000000;
+
 static const std::string kAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5",
                                                 "Globus", "SSH", "UidGid" };
 static const std::string kAuthTab    = "/rpdauthtab";   // auth table
@@ -313,6 +314,57 @@ static std::string gKeytabFile = "";   // via RpdSetKeytabFile
 #ifdef R__GLBS
 static int gShmIdCred = -1;
 #endif
+
+
+//______________________________________________________________________________
+static int reads(int fd, char *buf, int len)
+{
+   //  reads in at most one less than len characters from open
+   //  descriptor fd and stores them into the buffer pointed to by buf.
+   //  Reading stops after an EOF or a newline. If a newline is
+   //  read, it  is stored into the buffer. 
+   //  A '\0' is stored after the last character in the buffer.
+   //  The number of characters read is returned (newline included).
+   //  Returns < 0 in case of error.
+
+   int k = 0;
+   int nread = -1;
+   int nr = read(fd,buf,1);
+   while (nr > 0 && buf[k] != '\n' && k < (len-1)) {
+      k++;
+      nr = read(fd,buf+k,1);
+   }
+   if (k == len-1) {
+      buf[k] = 0;
+      nread = len-1;
+   } else if (buf[k] == '\n'){
+      if (k <= len-2) {
+         buf[k+1] = 0;
+         nread = k+1;
+      } else {
+         buf[k] = 0;
+         nread = k;
+      }
+   } else if (nr == 0) {
+      if (k > 0) {
+         buf[k-1] = 0;
+         nread = k-1;
+      } else {
+         buf[0] = 0;
+         nread = 0;
+      }
+   } else if (nr < 0) {
+      if (k > 0) {
+         buf[k] = 0;
+         nread = -(k-1);
+      } else {
+         buf[0] = 0;
+         nread = -1;
+      }
+   }
+
+   return nread;
+}
 
 //______________________________________________________________________________
 static int rpdstrncasecmp(const char *str1, const char *str2, int n)
@@ -423,49 +475,87 @@ int RpdGetAuthMethod(int kind)
 }
 
 //______________________________________________________________________________
-int RpdUpdateAuthTab(int opt, const char *line, char **token)
+int RpdDeleteKeyFile(int ofs)
+{
+   // Delete Public Key file
+   // Returns: 0 if ok
+   //          1 if error unlinking (check errno);
+   int retval = 0;
+
+   char strofs[30];
+   snprintf(strofs,30,"/rpk_%d",ofs);
+   std::string PubKeyFile;
+   PubKeyFile = gTmpDir + std::string(strofs);
+
+   // Some debug info
+   if (gDebug > 2) {
+      struct stat st;
+      if (stat(PubKeyFile.c_str(), &st) == 0) {
+         ErrorInfo("RpdDeleteKeyFile: file uid:%d gid:%d",
+                    st.st_uid,st.st_gid);
+      }
+      ErrorInfo("RpdDeleteKeyFile: proc uid:%d gid:%d",
+      getuid(),getgid());
+   }
+
+   // Unlink
+   if (unlink(PubKeyFile.c_str()) == -1) {
+      if (gDebug > 0 && GetErrno() != ENOENT) {
+         ErrorInfo("RpdDeleteKeyFile: problems unlinking pub"
+                   " key file '%s' (errno: %d)",
+                   PubKeyFile.c_str(),GetErrno());
+      }
+      retval = 1;
+   }
+   return retval;
+}
+
+//______________________________________________________________________________
+int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
 {
    // Update tab file.
+   // If ilck <= 0 open and lock the file; if ilck > 0, use file
+   // descriptor ilck, which should correspond to an open and locked file.
    // If opt = -1 : delete file (backup saved in <file>.bak);
-   // If opt =  0 : eliminate all inactive entries;
+   // If opt =  0 : eliminate all inactive entries
+   //               (if line="size" act only if size > kMAXTABSIZE)
    // if opt =  1 : append 'line'.
-   // Returns offset for 'line' (opt = 1) or -1 if any error occurs
-   // and token.
+   // Returns -1 in case of error.
+   // Returns offset for 'line' and token for opt = 1.
+   // Returns new file size for opt = 0.
 
    int retval = -1;
    int itab = 0;
    char fbuf[kMAXPATHLEN];
 
    if (gDebug > 2)
-      ErrorInfo("RpdUpdateAuthTab: analyzing: opt: %d, line: %s", opt,
-                line);
+      ErrorInfo("RpdUpdateAuthTab: analyzing: opt: %d, line: %s, ilck: %d",
+                opt, line, ilck);
 
-   if (opt == -1) {
-      if (!access(gRpdAuthTab.c_str(), F_OK)) {
-         // Save the content ...
-         std::string bak = std::string(gRpdAuthTab).append(".bak");
-         FILE *fbak = fopen(bak.c_str(), "w");
-         FILE *ftab = fopen(gRpdAuthTab.c_str(), "r");
-         char buf[kMAXPATHLEN];
-         while (fgets(buf, sizeof(buf), ftab)) {
-            fprintf(fbak, "%s", buf);
-         }
-         fclose(fbak);
-         fclose(ftab);
-         // ... before deleting the original ...
-         unlink(gRpdAuthTab.c_str());
-      }
-      return 0;
-   } else if (opt == 0) {
-      // Open file for update
-      itab = open(gRpdAuthTab.c_str(), O_RDWR | O_CREAT, 0666);
+   if (ilck <= 0) {
+
+      // Open file for reading/ writing
+      itab = open(gRpdAuthTab.c_str(), O_RDWR);
       if (itab == -1) {
-         ErrorInfo("RpdUpdateAuthTab: opt=%d: error opening %s"
-                   " (errno: %d)", opt, gRpdAuthTab.c_str(), GetErrno());
-         return retval;
+         if (opt == 1 && GetErrno() == ENOENT) {
+            // Try creating the file
+            itab = open(gRpdAuthTab.c_str(), O_RDWR | O_CREAT, 0666);
+            if (itab == -1) {
+               ErrorInfo("RpdUpdateAuthTab: opt=%d: error opening %s"
+                         "(errno: %d)", 
+                         opt, gRpdAuthTab.c_str(), GetErrno());
+               return retval;
+            }
+            // override umask setting
+            fchmod(itab, 0666);
+         } else {
+            ErrorInfo("RpdUpdateAuthTab: opt=%d: error opening %s"
+                      " (errno: %d)",
+                       opt, gRpdAuthTab.c_str(), GetErrno());
+            return retval;
+         }
       }
-      // override umask setting
-      fchmod(itab, 0666);
+
       // lock tab file
       if (lockf(itab, F_LOCK, (off_t) 1) == -1) {
          ErrorInfo("RpdUpdateAuthTab: opt=%d: error locking %s"
@@ -473,44 +563,145 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token)
          close(itab);
          return retval;
       }
-      // File is open: get FILE descriptor
-      FILE *ftab = fdopen(itab, "w+");
-      // and set indicator to beginning
-      if (lseek(itab, 0, SEEK_SET) == -1) {
-         ErrorInfo("RpdUpdateAuthTab: opt=%d: lseek error (errno: %d)",
-              opt, GetErrno());
-         if (lockf(itab, F_ULOCK, (off_t) 1) == -1) {
-            ErrorInfo("RpdUpdateAuthTab: error unlocking %s",
-                      gRpdAuthTab.c_str());
-         }
-         fclose(ftab);
-         return retval;
+      if (gDebug > 0)
+         ErrorInfo("RpdUpdateAuthTab: opt= %d - file LOCKED", opt);
+   } else {
+      itab = ilck;
+   }
+
+   // File size
+   int fsize = 0;
+   if ((fsize = lseek(itab, 0, SEEK_END)) == -1) {
+      ErrorInfo("RpdUpdateAuthTab: opt=%d: lseek error (errno: %d)",
+           opt, GetErrno());
+      goto goingout;
+   }
+
+   // Set indicator to beginning
+   if (lseek(itab, 0, SEEK_SET) == -1) {
+      ErrorInfo("RpdUpdateAuthTab: opt=%d: lseek error (errno: %d)",
+           opt, GetErrno());
+      goto goingout;
+   }
+
+   if (opt == -1) {
+
+      //
+      // Save file in .bak and delete its content
+
+      // Open backup file
+      std::string bak = std::string(gRpdAuthTab).append(".bak");
+      int ibak = open(bak.c_str(), O_RDWR | O_CREAT, 0666);
+      if (itab == -1) {
+         ErrorInfo("RpdUpdateAuthTab: opt=%d: error opening %s"
+                   " (errno: %d)", opt, bak.c_str(), GetErrno());
+         goto goingout;
       }
+
+      // Truncate file to new length
+      if (ftruncate(ibak, 0) == -1)
+         ErrorInfo("RpdUpdateAuthTab: opt=%d: ftruncate error (%s)"
+                   " (errno: %d)", opt, bak.c_str(), GetErrno());
+
+      // Copy the content
+      char buf[kMAXPATHLEN];
+      int ofs = 0, nr = 0;
+      while ((nr = reads(itab, buf, sizeof(buf)))) {
+         int slen = strlen(buf);
+
+         // Make sure there is a '\n' before writing
+         if (buf[slen-1] != '\n') {
+            if (slen >= kMAXPATHLEN -1)
+               buf[slen-1] = '\n';
+            else {
+               buf[slen] = '\n';
+               buf[slen+1] = '\0';
+            }
+         }
+         if (slen) {
+            while (write(ibak, buf, slen) < 0 && GetErrno() == EINTR)
+               ResetErrno();
+         }
+
+         // Delete Public Key file
+         RpdDeleteKeyFile(ofs);
+         // Next OffSet
+         ofs += slen;
+      }
+      close(ibak);
+         
+      // Truncate file to new length
+      if (ftruncate(itab, 0) == -1)
+         ErrorInfo("RpdUpdateAuthTab: opt=%d: ftruncate error (%s)"
+                   " (errno: %d)", opt, gRpdAuthTab.c_str(), GetErrno());
+      retval = 0;
+
+   } else if (opt == 0) {
+
+      //
+      // Cleanup the file (remove inactive entries)
 
       // Now scan over entries
       int pr = 0, pw = 0;
-      int lsec, act;
+      int lsec, act, oldofs = 0, bytesread = 0;
       char line[kMAXPATHLEN], dumm[kMAXPATHLEN];
       bool fwr = 0;
 
-      while (fgets(line, sizeof(line), ftab)) {
-         pr = lseek(itab, 0, SEEK_CUR);
-         sscanf(line, "%d %d %s", &lsec, &act, dumm);
+      while ((bytesread = reads(itab, line, sizeof(line)))) {
 
-         if (act > 0) {
+         // Current position
+         pr = lseek(itab,0,SEEK_CUR);
+
+         bool ok = 1;
+         // Check file corruption: length and number of items
+         int slen = bytesread; 
+         if (slen < 1) {
+            ErrorInfo("RpdUpdateAuthTab: opt=%d: file %s seems corrupted"
+                      " (slen: %d)", opt, gRpdAuthTab.c_str(), slen);
+            fwr = 1;
+            ok = 0;
+         }
+         if (ok) {
+            // Check file corruption: number of items
+            int ns = sscanf(line, "%d %d %s", &lsec, &act, dumm);
+            if (ns < 3 ) {
+               ErrorInfo("RpdUpdateAuthTab: opt=%d: file %s seems corrupted"
+                         " (ns: %d)", opt, gRpdAuthTab.c_str(), ns);
+               fwr = 1;
+               ok = 0;
+            }
+         }
+
+         if (ok && act > 0) {
             if (fwr) {
-               lseek(itab, pw, SEEK_SET);
-               SPrintf(fbuf, kMAXPATHLEN, "%s\n", line);
-               while (write(itab, fbuf, strlen(fbuf)) < 0
-                      && GetErrno() == EINTR)
-                  ResetErrno();
-               pw = lseek(itab, 0, SEEK_CUR);
+               // We have to update the key file name
+               int nr = 0;
+               if ((nr = RpdRenameKeyFile(oldofs,pw)) == 0) {
+                  // Write the entry at new position
+                  lseek(itab, pw, SEEK_SET);
+
+                  if (line[slen-1] != '\n') {
+                     if (slen >= kMAXPATHLEN -1)
+                        line[slen-1] = '\n';
+                     else {
+                        line[slen] = '\n';
+                        line[slen+1] = '\0';
+                     }
+                  }
+                  while (write(itab, line, strlen(line)) < 0
+                         && GetErrno() == EINTR)
+                     ResetErrno();
+                  pw += strlen(line);
+               } else
+                  RpdDeleteKeyFile(oldofs);
                lseek(itab, pr, SEEK_SET);
             } else
-               pw = lseek(itab, 0, SEEK_CUR);
+               pw += strlen(line);
          } else {
             fwr = 1;
          }
+         // Set old offset
+         oldofs = pr;
       }
 
       // Truncate file to new length
@@ -518,48 +709,30 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token)
          ErrorInfo("RpdUpdateAuthTab: opt=%d: ftruncate error (errno: %d)",
               opt, GetErrno());
 
-      retval = 0;
+      // Return new file size
+      retval = pw;
 
    } else if (opt == 1) {
-      // open file for append
-      if (gDebug > 2)
-         ErrorInfo("RpdUpdateAuthTab: opening file %s",
-                   gRpdAuthTab.c_str());
 
-      if (access(gRpdAuthTab.c_str(), F_OK)) {
-         itab = open(gRpdAuthTab.c_str(), O_RDWR | O_CREAT, 0666);
-         if (itab == -1) {
-            ErrorInfo("RpdUpdateAuthTab: opt=%d: error opening %s"
-                     "(errno: %d)", opt, gRpdAuthTab.c_str(), GetErrno());
-            return retval;
-         }
-         // override umask setting
-         fchmod(itab, 0666);
-      } else {
-         itab = open(gRpdAuthTab.c_str(), O_RDWR);
+      //
+      // Add 'line' at the end 
+      // (check size and cleanup/truncate if needed) 
+
+      // Check size ...
+      if ((int)(fsize+strlen(line)) > kMAXTABSIZE) {
+
+         // If it is going to be too big, cleanup or truncate first
+         fsize = RpdUpdateAuthTab(0,(const char *)0,0,itab);
+
+         // If still too big: delete everything
+         if ((int)(fsize+strlen(line)) > kMAXTABSIZE)
+            fsize = RpdUpdateAuthTab(-1,(const char *)0,0,itab);
       }
-      if (itab == -1) {
-         ErrorInfo("RpdUpdateAuthTab: opt=%d: error opening"
-                   " or creating %s (errno: %d)",
-                   opt, gRpdAuthTab.c_str(), GetErrno());
-         return retval;
-      }
-      // lock tab file
-      if (gDebug > 2)
-         ErrorInfo("RpdUpdateAuthTab: locking file %s", gRpdAuthTab.c_str());
-      if (lockf(itab, F_LOCK, (off_t) 1) == -1) {
-         ErrorInfo("RpdUpdateAuthTab: opt=%d: error locking %s"
-                   " (errno: %d)", opt, gRpdAuthTab.c_str(), GetErrno());
-         close(itab);
-         return retval;
-      }
-      // saves offset
+      // We are going to write at the end 
       retval = lseek(itab, 0, SEEK_END);
-      if (gDebug > 2)
-         ErrorInfo("RpdUpdateAuthTab: offset is %d", retval);
 
       // Generate token
-      *token = RpdGetRandString(3, 8);   // 8 crypt-like chras
+      *token = RpdGetRandString(3, 8);   // 8 crypt-like chars
       char *CryptToken = crypt(*token, *token);
       SPrintf(fbuf, kMAXPATHLEN, "%s %s\n", line, CryptToken);
       if (gDebug > 2)
@@ -569,19 +742,28 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token)
       while (write(itab, fbuf, strlen(fbuf)) < 0 && GetErrno() == EINTR)
          ResetErrno();
 
+      // Save RSA public key into file for later use by other rootd/proofd
+      RpdSavePubKey(gPubKey, retval, gUser);
+      
    } else {
+
+      //
+      // Unknown option
       ErrorInfo("RpdUpdateAuthTab: unrecognized option (opt= %d)", opt);
-      return retval;
    }
 
-   // unlock the file
-   lseek(itab, 0, SEEK_SET);
-   if (lockf(itab, F_ULOCK, (off_t) 1) == -1) {
-      ErrorInfo("RpdUpdateAuthTab: error unlocking %s",
-                gRpdAuthTab.c_str());
+ goingout:
+   if (ilck == 0) {
+      // unlock the file
+      lseek(itab, 0, SEEK_SET);
+      if (lockf(itab, F_ULOCK, (off_t) 1) == -1) {
+         ErrorInfo("RpdUpdateAuthTab: error unlocking %s",
+                   gRpdAuthTab.c_str());
+      }
+      
+      // closing file ...
+      close(itab);
    }
-   // closing file ...
-   close(itab);
 
    return retval;
 }
@@ -626,17 +808,15 @@ int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
       //     return retval;
       return -2;
    }
-   // File is open: get FILE descriptor
-   FILE *ftab = fdopen(itab, "r+");
+   if (gDebug > 0)
+      ErrorInfo("RpdCleanupAuthTab: file LOCKED"
+                " (Host: '%s', RemId:%d, OffSet: %d)",
+                  Host, RemId, OffSet);
 
    // Now access entry or scan over entries
    int pr = 0, pw = 0;
    int nw, lsec, act, parid, remid, pkey;
-   char line[kMAXPATHLEN], line1[kMAXPATHLEN], host[kMAXPATHLEN];
-   char dumm[kMAXPATHLEN], user[kMAXPATHLEN];
-#ifdef R__GLBS
-   char subj[kMAXPATHLEN];
-#endif
+   char line[kMAXPATHLEN];
 
    // Set indicator
    int all = (int)(!strcmp(Host, "all") || RemId == 0);
@@ -645,77 +825,67 @@ int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
    else
       pr = lseek(itab, OffSet, SEEK_SET);
    pw = pr;
-   while (fgets(line, sizeof(line), ftab)) {
+   while (reads(itab,line, sizeof(line))) {
+
       pr += strlen(line);
       if (gDebug > 2)
          ErrorInfo("RpdCleanupAuthTab: pr:%d pw:%d (line:%s) (pId:%d)",
                     pr, pw, line, gParentId);
 
-      nw = sscanf(line, "%d %d %d %d %d %s %s %s", &lsec, &act, &pkey,
-                  &parid, &remid, host, user, dumm);
+      char dumm[kMAXPATHLEN], host[kMAXUSERLEN], user[kMAXUSERLEN], shmbuf[30];
+      nw = sscanf(line, "%d %d %d %d %d %s %s %s %s", &lsec, &act, &pkey,
+                  &parid, &remid, host, user, shmbuf, dumm);
 
       if (nw > 5) {
          if (all || OffSet > -1 ||
-            (!strcmp(Host, host) && (RemId == remid))) {
+            (strstr(line,Host) && (RemId == remid))) {
 
             // Delete Public Key file
-            char strpw[20];
-            snprintf(strpw,20,"%d",pw);
-            std::string PubKeyFile;
-            PubKeyFile = gTmpDir + "/rpk_" + strpw;
+            RpdDeleteKeyFile(pw);
 
-            if (gDebug > 0) {
-               struct stat st;
-               if (stat(PubKeyFile.c_str(), &st) == 0) {
-                  ErrorInfo("RpdCleanupAuthTab: file uid:%d gid:%d",
-                             st.st_uid,st.st_gid);
-               }
-               ErrorInfo("RpdCleanupAuthTab: proc uid:%d gid:%d",
-               getuid(),getgid());
-            }
-
-            if (unlink(PubKeyFile.c_str()) == -1) {
-               if (gDebug > 0 && GetErrno() != ENOENT) {
-                  ErrorInfo("RpdCleanupAuthTab: problems unlinking pub"
-                            " key file '%s' (errno: %d)",
-                            PubKeyFile.c_str(),GetErrno());
+#ifdef R__GLBS
+            if (lsec == 3) {
+               int shmid = atoi(shmbuf);
+               struct shmid_ds shm_ds;
+               if (shmctl(shmid, IPC_RMID, &shm_ds) == -1) {
+                  ErrorInfo("RpdCleanupAuthTab: unable to mark shared"
+                            " memory segment %d (buf:%s)", shmid, shmbuf);
+                  ErrorInfo("RpdCleanupAuthTab: for desctruction"
+                            " (errno: %d)", GetErrno());
+                  retval++;
                }
             }
-
+#endif
             // Deactivate active entries (either inclusive or exclusive:
             // remote client has gone ...)
             if (act > 0) {
-               if (lsec == 3) {
-#ifdef R__GLBS
-                  int shmid;
-                  nw = sscanf(line, "%d %d %d %d %d %s %s %d %s %s", &lsec,
-                              &act, &pkey, &parid, &remid, host, user,
-                              &shmid, subj, dumm);
-                  struct shmid_ds shm_ds;
-                  if (shmctl(shmid, IPC_RMID, &shm_ds) == -1) {
-                     ErrorInfo("RpdCleanupAuthTab: unable to mark shared"
-                               " memory segment %d", shmid);
-                     ErrorInfo("RpdCleanupAuthTab: for desctruction"
-                               " (errno: %d)", GetErrno());
-                     retval++;
+
+               // Locate 'act' ... skeep initial spaces, if any
+               int slen = (int)strlen(line);
+               int ka = 0;
+               while (ka < slen && line[ka] == 32)
+                  ka++;
+               // skeep method
+               while (ka < slen && line[ka] != 32)
+                  ka++;
+               // skeep spaces before 'act'
+               while (ka < slen && line[ka] == 32)
+                  ka++;
+               // This is 'act'
+               line[ka] = '0';
+               // Make sure there is a '\n' before writing
+               int sl = strlen(line);
+               if (line[sl-1] != '\n') {
+                  if (sl >= kMAXPATHLEN -1)
+                     line[sl-1] = '\n';
+                  else {
+                     line[sl] = '\n';
+                     line[sl+1] = '\0';
                   }
-                  SPrintf(line1, kMAXPATHLEN,
-                          "%d 0 %d %d %d %s %s %d %s %s\n",
-                          lsec, pkey, parid, remid, host,
-                          user, shmid, subj, dumm);
-#else
-                  ErrorInfo("RpdCleanupAuthTab: compiled without Globus"
-                            " support: you shouldn't have got here!");
-                  SPrintf(line1, kMAXPATHLEN,
-                          "%d %d %d %d %d %s %s %s - WARNING: bad line\n",
-                          lsec, 0, pkey, parid, remid, host, user, dumm);
-#endif
-               } else {
-                  SPrintf(line1, kMAXPATHLEN, "%d 0 %d %d %d %s %s %s\n",
-                          lsec, pkey, parid, remid, host, user, dumm);
                }
+               // Write it now
                lseek(itab, pw, SEEK_SET);
-               while (write(itab, line1, strlen(line1)) < 0
+               while (write(itab, line, strlen(line)) < 0
                       && GetErrno() == EINTR)
                   ResetErrno();
                if (all || OffSet < 0)
@@ -734,7 +904,7 @@ int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
       ErrorInfo("RpdCleanupAuthTab: error unlocking %s", gRpdAuthTab.c_str());
    }
    // closing file ...
-   fclose(ftab);
+   close(itab);
 
    return retval;
 }
@@ -878,13 +1048,15 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
       close(itab);
       return retval;
    }
+   if (gDebug > 0)
+      ErrorInfo("RpdCheckOffSet: file LOCKED");
+
    // File is open: set position at wanted location
-   FILE *ftab = fdopen(itab, "r+");
-   fseek(ftab, ofs, SEEK_SET);
+   lseek(itab, ofs, SEEK_SET);
 
    // Now read the entry
    char line[kMAXPATHLEN];
-   fgets(line, sizeof(line), ftab);
+   reads(itab,line, sizeof(line));
 
    // and parse its content according to auth method
    int lsec, act, parid, remid, shmid;
@@ -915,9 +1087,10 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
    }
    if (!GoodOfs) {
       // Tab may have been cleaned in the meantime ... try a scan
-      fseek(ftab, 0, SEEK_SET);
-      ofs = ftell(ftab);
-      while (fgets(line, sizeof(line), ftab)) {
+      lseek(itab, 0, SEEK_SET);
+      ofs = 0;
+      while (reads(itab, line, sizeof(line))) {
+
          nw = sscanf(line, "%d %d %d %d %d %s %s %s %s", &lsec, &act,
                      &gRSAKey, &parid, &remid, host, user, tkn, dumm);
          if (gDebug > 2)
@@ -963,36 +1136,10 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
 
    // Rename the key file, if needed
    if (*OffSet > 0 && *OffSet != ofs) {
-      std::string OldName = std::string(gTmpDir).append("/rpk_");
-      OldName.append(ItoA(*OffSet));
-      if (!access(OldName.c_str(), W_OK)) {
+      if (RpdRenameKeyFile(*OffSet,ofs) > 0) {
          GoodOfs = 0;
-         ErrorInfo("RpdCleanupAuthTab: NO access to key file %s"
-                   " (errno: %d) (uid: %d)",
-                   OldName.c_str(),GetErrno(),getuid());
-         if (!getuid()) {
-            struct stat st;
-            if (stat(OldName.c_str(), &st) == -1) {
-               ErrorInfo("RpdCleanupAuthTab: unable to stat key file %s"
-                         " (errno: %d)",OldName.c_str(),GetErrno());
-            } else {
-               if (st.st_uid != getuid() || st.st_gid != getgid())
-                  ErrorInfo("RpdCleanupAuthTab: NOT superuser"
-                            " and NOT owner of key file");
-            }
-         }
-      } else {
-         // Ok, we should have full rights on the key file
-         std::string NewName = std::string(gTmpDir).append("/rpk_");
-         NewName.append(ItoA(ofs));
-         if (rename(OldName.c_str(), NewName.c_str()) == -1) {
-            // Error: set entry inactive
-            if (gDebug > 0)
-               ErrorInfo("RpdCheckOffSet: Error renaming key file"
-                         " %s to %s (errno: %d)",
-                         OldName.c_str(),NewName.c_str(),GetErrno());
-            RpdCleanupAuthTab(Host,RemId,*OffSet);
-         }
+         // Error: set entry inactive
+         RpdCleanupAuthTab(Host,RemId,ofs);
       }
    }
 
@@ -1015,6 +1162,32 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
    }
 
    return GoodOfs;
+}
+
+//______________________________________________________________________________
+int RpdRenameKeyFile(int oldofs, int newofs)
+{
+   // Rename public file with new offset
+   // Returns: 0 if OK
+   //          1 if problems renaming 
+   int retval = 0;
+
+   // Old name
+   std::string oldname = std::string(gTmpDir).append("/rpk_");
+   oldname.append(ItoA(oldofs));
+
+   // Ok, we should have full rights on the key file
+   std::string newname = std::string(gTmpDir).append("/rpk_");
+   newname.append(ItoA(newofs));
+   if (rename(oldname.c_str(), newname.c_str()) == -1) {
+      if (gDebug > 0)
+         ErrorInfo("RpdRenameKeyFile: error renaming key file"
+                   " %s to %s (errno: %d)",
+                   oldname.c_str(),newname.c_str(),GetErrno());
+      retval = 2;
+   }
+
+   return retval;
 }
 
 //______________________________________________________________________________
@@ -2133,9 +2306,6 @@ void RpdSshAuth(const char *sstr)
                  " - may result in corrupted token");
          }
          if (token) delete[] token;
-
-         // Save RSA public key into file for later use by other rootd/proofd
-         RpdSavePubKey(gPubKey, OffSet, gUser);
       }
       gOffSet = OffSet;
    } else {
@@ -2244,13 +2414,6 @@ void RpdKrb5Auth(const char *sstr)
    std::string reply = std::string("authenticated as ").append(user);
 
    // set user name
-#if 0
-   user = user.erase(user.find("@"));   // cut off realm
-   string::size_type pos = user.find("/");   // see if there is an instance
-   if (pos != string::npos)
-      user = user.erase(pos);   // drop the instance
-   strncpy(gUser, user.c_str(), 64);
-#else
    // avoid using 'erase' (it is buggy with some compilers)
    snprintf(gUser,64,"%s",user.c_str());
    char *pc = 0;
@@ -2260,7 +2423,6 @@ void RpdKrb5Auth(const char *sstr)
    // drop instances, if any
    if ((pc = (char *)strstr(gUser,"/")))
       *pc = '\0';
-#endif
 
    std::string targetUser = std::string(gUser);
 
@@ -2526,10 +2688,6 @@ void RpdKrb5Auth(const char *sstr)
                          " - may result in corrupted token");
             }
             if (token) delete[] token;
-
-            // Save RSA public key into file for later use by
-            // other daemon server
-            RpdSavePubKey(gPubKey, OffSet, gUser);
          }
          gOffSet = OffSet;
 
@@ -2772,9 +2930,6 @@ void RpdSRPUser(const char *sstr)
                             " - may result in corrupted token");
                }
                if (token) delete[] token;
-
-               // Save RSA public key into file for later use by other rootd/proofd
-               RpdSavePubKey(gPubKey, OffSet, gUser);
             }
             gOffSet = OffSet;
 
@@ -3148,11 +3303,6 @@ void RpdPass(const char *pass)
          NetSend(strlen(line), kROOTD_PASS);   // Send message length first
          NetSend(line, kMESS_STRING);
       }
-
-      if (gCryptRequired) {
-         // Save RSA public key into file for later use by other rootd/proofd
-         RpdSavePubKey(gPubKey, OffSet, gUser);
-      }
    }
 }
 
@@ -3430,9 +3580,6 @@ void RpdGlobusAuth(const char *sstr)
                       " - may result in corrupted token");
          }
          if (token) delete[] token;
-
-         // Save RSA public key into file for later use by other rootd/proofd
-         RpdSavePubKey(gPubKey, OffSet, gUser);
       }
       gOffSet = OffSet;
    } else {
@@ -3525,7 +3672,7 @@ void RpdAuthCleanup(const char *sstr, int opt)
 {
    // Terminate correctly by cleaning up the auth table (and shared
    // memories in case of Globus) and closing the file.
-   // Called upon receipt of a kROOTD_CLEANUP, kROOTD_CLOSE and on SIGPIPE.
+   // Called upon receipt of a kROOTD_CLEANUP and on SIGPIPE.
 
    int rpid = 0, sec = -1, offs = -1, nw = 0;
    char usr[64] = {0};
@@ -3546,12 +3693,12 @@ void RpdAuthCleanup(const char *sstr, int opt)
       ErrorInfo("RpdAuthCleanup: cleanup ('all',0) done");
    } else if (opt == 1) {
       if (nw == 1) {
-         // host specific cleanup (kROOTD_CLOSE)
+         // host specific cleanup
          RpdCleanupAuthTab(gOpenHost.c_str(), rpid, -1);
          ErrorInfo("RpdAuthCleanup: cleanup ('%s',%d) done",
                    gOpenHost.c_str(), rpid);
       } else if (nw == 4) {
-         // (host,usr,method) specific cleanup (kROOTD_CLOSE)
+         // (host,usr,method) specific cleanup
          if (RpdCheckOffSet(sec,usr,gOpenHost.c_str(),rpid,&offs,0,0,0)) {
             RpdCleanupAuthTab(gOpenHost.c_str(), rpid, offs);
             ErrorInfo("RpdAuthCleanup: cleanup (%s,%d,%d,%d,%s) done",
@@ -3568,20 +3715,7 @@ void RpdAuthCleanup(const char *sstr, int opt)
 void RpdInitAuth()
 {
 
-   // Check auth tab file size
-   struct stat st;
-   if (stat(gRpdAuthTab.c_str(), &st) == 0) {
-
-      // Cleanup auth tab file if too big
-      if (st.st_size > kMAXTABSIZE)
-         RpdUpdateAuthTab(0, (const char *)0, 0);
-
-      // New file if still too big
-      if (stat(gRpdAuthTab.c_str(), &st) == 0) {
-         if (st.st_size > kMAXTABSIZE)
-            RpdUpdateAuthTab(-1,(const char *)0, 0);
-      }
-   }
+   // Size check done in RpdUpdateAuthTab(1,...)
 
    // Reset
    int i;

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.16 2004/04/21 08:51:45 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.17 2004/05/18 11:56:38 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -116,7 +116,7 @@ void RpdSetErrorHandler(ErrorHandler_t Err, ErrorHandler_t Sys,
 void RpdSetKeytabFile(const char *keytabfile);
 #endif
 void RpdSetSysLogFlag(int syslog);
-int  RpdUpdateAuthTab(int opt, const char *line, char **token);
+int  RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck = 0);
 
 } // namespace ROOT
 
@@ -169,6 +169,7 @@ int  RpdCheckSshd(int opt);
 bool RpdCheckToken(char *tknin, char *tknref);
 int  RpdCleanupAuthTab(const char *Host, int RemId, int OffSet);
 void RpdDefaultAuthAllow();
+int  RpdDeleteKeyFile(int ofs);
 int  RpdGetAuthMethod(int kind);
 char *RpdGetIP(const char *host);
 char *RpdGetRandString(int Opt, int Len);
@@ -183,6 +184,7 @@ void RpdNoAuth(int);
 void RpdPass(const char *pass);
 void RpdProtocol(int);
 int  RpdRecvClientRSAKey();
+int  RpdRenameKeyFile(int oofs, int nofs);
 bool RpdReUseAuth(const char *sstr, int kind);
 void RpdRfioAuth(const char *sstr);
 void RpdSavePubKey(const char *PubKey, int OffSet, char *User);
@@ -192,7 +194,6 @@ void RpdSendAuthList();
 void RpdSetUid(int uid);
 void RpdSRPUser(const char *user);
 void RpdSshAuth(const char *sstr);
-int  RpdUpdateAuthTab(int opt, const char *line, char **token);
 void RpdUser(const char *sstr);
 
 //
