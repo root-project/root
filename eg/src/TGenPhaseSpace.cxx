@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.2 2000/09/06 13:07:28 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.1 2000/09/06 15:15:18 brun Exp $
 // Author: Rene Brun , Valerio Filippini  06/09/2000 
 
 //_____________________________________________________________________________________
@@ -73,6 +73,7 @@ Double_t TGenPhaseSpace::Generate()
   fDecPro[0].SetPxPyPzE(0, pd[0], 0 , TMath::Sqrt(pd[0]*pd[0]+fMass[0]*fMass[0]) );
 
   Int_t i=1;
+  Int_t j;
   while (1) {
     fDecPro[i].SetPxPyPzE(0, -pd[i-1], 0 , TMath::Sqrt(pd[i-1]*pd[i-1]+fMass[i]*fMass[i]) );
 
@@ -81,7 +82,7 @@ Double_t TGenPhaseSpace::Generate()
     Double_t sZ = TMath::Sin(angZ); 
     Double_t cY = 2*gRandom->Rndm() - 1;
     Double_t sY = TMath::Sqrt(1-cY*cY);
-    for (Int_t j=0; j<=i; j++) {
+    for (j=0; j<=i; j++) {
       TLorentzVector *v = fDecPro+j;
       Double_t x = v->Px();
       Double_t y = v->Py();
@@ -96,7 +97,7 @@ Double_t TGenPhaseSpace::Generate()
     if (i == (fNt-1)) break;
 
     Double_t beta = pd[i] / sqrt(pd[i]*pd[i] + InvMas[i]*InvMas[i]);
-    for (Int_t j=0; j<=i; j++) fDecPro[j].Boost(0,beta,0);
+    for (j=0; j<=i; j++) fDecPro[j].Boost(0,beta,0);
     i++;
   }
  
