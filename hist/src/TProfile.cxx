@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.22 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.23 2002/02/18 23:09:58 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -129,6 +129,19 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Double_t
 //
 
    BuildOptions(0,0,option);
+}
+
+//______________________________________________________________________________
+TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Double_t *xbins,Axis_t ylow,Axis_t yup,Option_t *option)
+    : TH1D(name,title,nbins,xbins)
+{
+//*-*-*-*-*-*Constructor for Profile histograms with variable bin size*-*-*-*-*
+//*-*        =========================================================
+//
+//        See TProfile::BuildOptions for more explanations on errors
+//
+
+   BuildOptions(ylow,yup,option);
 }
 
 //______________________________________________________________________________
