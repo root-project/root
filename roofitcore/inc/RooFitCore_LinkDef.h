@@ -5,6 +5,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class RooLinkedList- ;
+#pragma link C++ class RooRealVar- ;
 #pragma link C++ class Roo* ;
 #pragma link off class RooErrorHandler ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.36 2002/03/08 01:15:57 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.37 2002/03/11 07:41:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -586,3 +586,38 @@ void RooRealVar::copyCache(const RooAbsArg* source)
   }
 }
 
+
+void RooRealVar::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooRealVar.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      RooAbsRealLValue::Streamer(R__b);
+      if (R__v==1) {
+	cout << "RooRealVar::Streamer(" << GetName() << ") converting version 1 data format" << endl ;
+	Double_t fitMin, fitMax, fitBins ; 
+	R__b >> fitMin;
+	R__b >> fitMax;
+	R__b >> fitBins;
+	_binning = new RooUniformBinning(fitMin,fitMax,fitBins) ;
+      }
+      R__b >> _error;
+      R__b >> _asymErrLo;
+      R__b >> _asymErrHi;
+      if (R__v!=1) {
+	R__b >> _binning;
+      }
+      R__b.CheckByteCount(R__s, R__c, RooRealVar::IsA());
+   } else {
+      R__c = R__b.WriteVersion(RooRealVar::IsA(), kTRUE);
+      RooAbsRealLValue::Streamer(R__b);
+      Double_t fitMin(getFitMin()),fitMax(getFitMax()),fitBins(getFitBins()) ;
+      R__b << _error;
+      R__b << _asymErrLo;
+      R__b << _asymErrHi;
+      R__b << _binning;
+      R__b.SetByteCount(R__c, kTRUE);
+   }
+}

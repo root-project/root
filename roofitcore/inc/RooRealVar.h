@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.34 2002/03/07 06:22:23 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.35 2002/03/11 07:41:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,7 +28,7 @@ class RooErrorVar ;
 class RooRealVar : public RooAbsRealLValue {
 public:
   // Constructors, assignment etc.
-  inline RooRealVar() ;
+  RooRealVar() ;
   RooRealVar(const char *name, const char *title,
   	   Double_t value, const char *unit= "") ;
   RooRealVar(const char *name, const char *title, Double_t minValue, 
@@ -94,15 +94,15 @@ protected:
 
   Double_t chopAt(Double_t what, Int_t where) const ;
 
-//   Double_t _fitMin ;    // Minimum of fit range
-//   Double_t _fitMax ;    // Maximum of fit range
-  //Int_t    _fitBins ;   // Number of bins in fit range for binned fits
+//   Double_t _fitMin ;    // Minimum of fit range [ obsolete ]
+//   Double_t _fitMax ;    // Maximum of fit range [ obsolete ]
+//   Int_t    _fitBins ;   // Number of bins in fit range for binned fits [ obsolete ] 
   Double_t _error;      // Symmetric error associated with current value
   Double_t _asymErrLo ; // Low side of asymmetric error associated with current value
   Double_t _asymErrHi ; // High side of asymmetric error associated with current value
   RooAbsBinning* _binning ; 
 
-  ClassDef(RooRealVar,1) // Real-valued variable 
+  ClassDef(RooRealVar,2) // Real-valued variable 
 };
 
 
