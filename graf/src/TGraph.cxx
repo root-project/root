@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.85 2002/11/16 15:17:47 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.86 2002/11/18 21:48:03 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2760,6 +2760,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
           if (ix < 0) ix = 0;
           if (ix >= nrPix) ix = nrPix-1;
           Int_t yPixel = gPad->YtoAbsPixel(y[ip]);
+          if (yPixel >= ay1Pix) continue;
           if (minPix[ix] > yPixel) minPix[ix] = yPixel;
           if (maxPix[ix] < yPixel) maxPix[ix] = yPixel;
           (nrEntries[ix])++;
