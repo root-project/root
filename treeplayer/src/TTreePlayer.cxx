@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.128 2003/07/04 13:27:35 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.129 2003/07/06 19:41:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -720,7 +720,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    fHistogram = (TH1*)fSelector->GetObject();
 
    if (!nrows && drawflag && !opt.Contains("same")) {
-      gPad->Clear();
+      if (gPad) gPad->Clear();
       return 0;
    }
 
