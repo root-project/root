@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.63 2004/05/05 15:36:21 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.64 2004/05/10 12:10:09 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -750,7 +750,7 @@ static char *EventMask2String(UInt_t evmask)
 //______________________________________________________________________________
 static Bool_t MessageProcessingFunc(MSG *msg)
 {
-   //
+   // windows message processing procedure
 
    Bool_t ret = kFALSE;
 
@@ -762,7 +762,7 @@ static Bool_t MessageProcessingFunc(MSG *msg)
          ret = kTRUE;
       }
    } else if (msg->message == TGWin32ProxyBase::fgPingMessageId) {
-         TGWin32ProxyBase::GlobalUnlock();
+      TGWin32ProxyBase::GlobalUnlock();
    } else {
       if ( (msg->message >= WM_NCMOUSEMOVE) &&
             (msg->message <= WM_NCMBUTTONDBLCLK) ) {
@@ -785,8 +785,8 @@ public:
       Reset();
       MSG msg;
 
-      while (::PeekMessage(&msg, NULL, 0, WM_USER, PM_NOREMOVE)) {
-         ::PeekMessage(&msg, NULL, 0, WM_USER, PM_REMOVE);
+      while (::PeekMessage(&msg, NULL, NULL, NULL, PM_NOREMOVE)) {
+         ::PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE);
          MessageProcessingFunc(&msg);
       }
       return kFALSE;

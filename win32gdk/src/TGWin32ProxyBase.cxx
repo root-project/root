@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.12 2003/12/19 10:26:48 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.13 2004/02/04 17:23:00 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -88,9 +88,9 @@
 #include "TList.h"
 #include "TGWin32.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-class TGWin32CallBackObject: public TObject
-{
+class TGWin32CallBackObject : public TObject {
 public:
    TGWin32CallBack   fCallBack;  // callback function (called by GUI thread)
    void              *fParam;    // arguments passed to/from callback function
@@ -129,7 +129,6 @@ ULong_t TGWin32ProxyBase::fgPostMessageId = 0;
 ULong_t TGWin32ProxyBase::fgPingMessageId = 0;
 ULong_t TGWin32ProxyBase::fgMainThreadId = 0;
 Long_t TGWin32ProxyBase::fgLock = 0;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //______________________________________________________________________________
@@ -279,13 +278,14 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
       return kTRUE;
    }
 
-   while (::PostThreadMessage(fgMainThreadId, fgPostMessageId, (WPARAM)this, 0L)==0) {
+   while (!::PostThreadMessage(fgMainThreadId, fgPostMessageId, (WPARAM)this, 0L)) {
       // wait because there is a chance that message queue does not exist yet
-      ::SleepEx(50,1);
-      if (wait++>5) return kFALSE; // failed to post
+      ::SleepEx(50, 1);
+      if (wait++ > 5) return kFALSE; // failed to post
    }
 
-   DWORD res = ::WaitForSingleObject(fPimpl->fEvent, fMaxResponseTime); // limiting wait time
+   // limiting wait time
+   DWORD res = ::WaitForSingleObject(fPimpl->fEvent, fMaxResponseTime);
    ::ResetEvent(fPimpl->fEvent);
 
    if (res == WAIT_TIMEOUT) { // server thread is blocked

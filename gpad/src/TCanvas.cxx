@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.64 2004/05/08 14:16:36 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.65 2004/05/10 12:09:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -578,6 +578,12 @@ void TCanvas::Clear(Option_t *option)
    // This option is not recursive, i.e. pads in direct subpads are deleted.
 
    if (fCanvasID == -1) return;
+
+   if (!gVirtualX->IsCmdThread()) {
+      gInterpreter->Execute(this, IsA(), "Clear", option);
+      return;
+   }
+
    TString opt = option;
    opt.ToLower();
    if (opt.Contains("d")) {
@@ -609,6 +615,12 @@ void TCanvas::Close(Option_t *option)
 //
 
    if (fCanvasID == -1) return;
+
+   if (!gVirtualX->IsCmdThread()) {
+      gInterpreter->Execute(this, IsA(), "Close", option);
+      return;
+   }
+
    TCanvas *cansave = (TCanvas*)gPad->GetCanvas();
    TPad    *padsave = (TPad*)gPad;
 
@@ -640,6 +652,11 @@ void TCanvas::CopyPixmaps()
 {
 //*-*-*-*-*-*-*-*-*Copy the canvas pixmap of the pad to the canvas*-*-*-*-*-*-*
 //*-*              ===============================================
+
+   if (!gVirtualX->IsCmdThread()) {
+      gInterpreter->Execute(this, IsA(), "CopyPixmaps", "");
+      return;
+   }
 
    if (!IsBatch()) {
       CopyPixmap();
@@ -885,6 +902,10 @@ void TCanvas::UseCurrentStyle()
 //*-*-*-*-*-*Force a copy of current style for all objects in canvas*-*-*-*-*
 //*-*        =======================================================
 
+   if (!gVirtualX->IsCmdThread()) {
+      gInterpreter->Execute(this, IsA(), "UseCurrentStyle", "");
+      return;
+   }
    TPad::UseCurrentStyle();
 
    SetFillColor(gStyle->GetCanvasColor());
