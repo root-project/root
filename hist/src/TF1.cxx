@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.43 2002/08/05 18:13:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.44 2002/08/20 16:00:16 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -18,6 +18,8 @@
 #include "TStyle.h"
 #include "TRandom.h"
 #include "Api.h"
+#include "TPluginManager.h"
+#include "TVirtualUtilPad.h"
 
 Bool_t TF1::fgRejectPoint = kFALSE;
 
@@ -470,12 +472,19 @@ TF1::~TF1()
          ((TH1*)fParent)->GetListOfFunctions()->Remove(this);
          return;
       }
-      if (fParent->InheritsFrom("TGraph")) {
-         gROOT->ProcessLine(Form("TGraph::RemoveFunction((TGraph *)0x%lx,"
-                                 "(TObject *)0x%lx);",(Long_t)fParent,
-                                 (Long_t)this));
-         return;
+      //parent may be a graph, or ??
+      //The pad utility manager is required (a plugin)
+      TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+      if (!util) {
+         TPluginHandler *h;
+         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
+            if (h->LoadPlugin() == -1)
+               return;
+            h->ExecPlugin(0);
+            util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+         }
       }
+      util->RemoveObject(fParent,this);
       fParent = 0;
    }
 }
@@ -718,19 +727,22 @@ void TF1::DrawPanel()
 //*-*   See class TDrawPanelHist for example
 
    if (gPad) {
-      //gROOT->SetSelectedPrimitive(gPad->GetSelected());
-      //gROOT->SetSelectedPad(gPad->GetSelectedPad());
       gROOT->SetSelectedPrimitive(this);
       gROOT->SetSelectedPad(gPad);
    }
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   if (!lc->FindObject("R__drawpanelhist")) {
-      gROOT->ProcessLine("TDrawPanelHist *R__drawpanelhist = "
-                         "new TDrawPanelHist(\"R__drawpanelhist\",\"Hist Draw Panel\","
-                         "330,450);");
-      return;
+
+   //The pad utility manager is required (a plugin)
+   TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+   if (!util) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
+          if (h->LoadPlugin() == -1)
+            return;
+          h->ExecPlugin(0);
+          util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+      }
    }
-   gROOT->ProcessLine("R__drawpanelhist->SetDefaults();");
+   util->DrawPanel();
 }
 
 //______________________________________________________________________________

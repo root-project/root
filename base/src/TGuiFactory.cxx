@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGuiFactory.cxx,v 1.2 2001/10/02 09:07:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TGuiFactory.cxx,v 1.3 2002/09/09 20:13:11 brun Exp $
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************
@@ -29,6 +29,8 @@
 #include "TControlBarImp.h"
 #include "TInspectorImp.h"
 #include "TROOT.h"
+#include "TPluginManager.h"
+#include "TVirtualUtilPad.h"
 
 TGuiFactory *gGuiFactory = 0;
 TGuiFactory *gBatchGuiFactory = 0;
@@ -95,7 +97,7 @@ TControlBarImp *TGuiFactory::CreateControlBarImp(TControlBar *c, const char *tit
 {
    // Create a batch version of TControlBarImp.
 
-   return new TControlBarImp(c, title);
+   return new TControlBarImp(c, title); 
 }
 
 //______________________________________________________________________________
@@ -111,10 +113,22 @@ TInspectorImp *TGuiFactory::CreateInspectorImp(const TObject *obj, UInt_t width,
 {
    // Create a batch version of TInspectorImp.
 
-   if (gROOT->IsBatch()) 
+   if (gROOT->IsBatch()) {
       return new TInspectorImp(obj, width, height);
-   else 
-      gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject *)0x%lx);",(Long_t)obj));
+   }
+
+   //The pad utility manager is required (a plugin)
+   TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+   if (!util) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
+          if (h->LoadPlugin() == -1)
+            return 0;
+          h->ExecPlugin(0);
+          util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+      }
+   }
+   util->InspectCanvas(obj);
    return 0;
 }
 

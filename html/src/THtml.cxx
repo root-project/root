@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.25 2002/07/09 06:20:40 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.26 2002/08/03 20:05:46 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -26,6 +26,8 @@
 #include "TInterpreter.h"
 #include "TRegexp.h"
 #include "Riostream.h"
+#include "TPluginManager.h"
+#include "TVirtualUtilPad.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -3088,7 +3090,20 @@ void THtml::MakeTree(const char *className, Bool_t force)
 
    // create canvas & set fill color
    TVirtualPad *psCanvas = 0;
-   gROOT->ProcessLineFast("new TCanvas(\"\",\"psCanvas\",0,0,1000,750);");
+
+   //The pad utility manager is required (a plugin)
+   TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+   if (!util) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
+          if (h->LoadPlugin() == -1)
+            return;
+          h->ExecPlugin(0);
+          util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+      }
+   }
+   util->MakeCanvas("","psCanvas",0,0,1000,750);
+
    psCanvas = gPad->GetVirtCanvas();
 
    TClass *classPtr = GetClass(className);

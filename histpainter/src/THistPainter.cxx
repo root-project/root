@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.99 2002/08/23 12:10:16 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.100 2002/09/07 20:55:42 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -39,6 +39,8 @@
 #include "TVectorD.h"
 #include "Hoption.h"
 #include "Hparam.h"
+#include "TPluginManager.h"
+#include "TVirtualUtilPad.h"
 
 //______________________________________________________________________________
 //   The histogram painter class
@@ -267,14 +269,18 @@ void THistPainter::DrawPanel()
       return;
    }
 
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   if (!lc->FindObject("R__drawpanelhist")) {
-      gROOT->ProcessLine("TDrawPanelHist *R__drawpanelhist = "
-                         "new TDrawPanelHist(\"R__drawpanelhist\",\"Hist Draw Panel\","
-                         "330,450);");
-      return;
+   //The pad utility manager is required (a plugin)
+   TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+   if (!util) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
+          if (h->LoadPlugin() == -1)
+            return;
+          h->ExecPlugin(0);
+          util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+      }
    }
-   gROOT->ProcessLine("R__drawpanelhist->SetDefaults(); R__drawpanelhist->Show();");
+   util->DrawPanel();
 }
 
 //______________________________________________________________________________
@@ -396,13 +402,18 @@ void THistPainter::FitPanel()
       return;
    }
 
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   if (!lc->FindObject("R__fitpanel")) {
-      gROOT->ProcessLine("TFitPanel *R__fitpanel = "
-                         "new TFitPanel(\"R__fitpanel\",\"Fit Panel\",300,400);");
-      return;
+   //The pad utility manager is required (a plugin)
+   TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+   if (!util) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
+          if (h->LoadPlugin() == -1)
+            return;
+          h->ExecPlugin(0);
+          util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+      }
    }
-   gROOT->ProcessLine("R__fitpanel->SetDefaults(); R__fitpanel->Show();");
+   util->FitPanel();
 }
 
 //______________________________________________________________________________

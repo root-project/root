@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.83 2002/08/09 19:26:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.84 2002/08/21 20:35:29 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -48,6 +48,8 @@
 #include "TClassMenuItem.h"
 #include "Api.h"
 #include "TVirtualMutex.h"
+#include "TVirtualUtilPad.h"
+#include "TPluginManager.h"
 
 #ifndef WIN32
 extern long G__globalvarpointer;
@@ -638,10 +640,22 @@ void TClass::Draw(Option_t *option)
    TString opt=option;
    if (!padsav || !opt.Contains("same")) {
       TVirtualPad *padclass = (TVirtualPad*)(gROOT->GetListOfCanvases())->FindObject("R__class");
-      if (!padclass)
-         gROOT->ProcessLineFast("new TCanvas(\"R__class\",\"class\",20,20,1000,750);");
-      else
+      if (!padclass) {
+         //The pad utility manager is required (a plugin)
+         TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+         if (!util) {
+            TPluginHandler *h;
+            if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
+               if (h->LoadPlugin() == -1)
+                 return;
+               h->ExecPlugin(0);
+               util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+            }
+         }
+         util->MakeCanvas("R__class","class",20,20,1000,750);
+      } else {
          padclass->cd();
+      }
    }
 
    if (gPad) gPad->DrawClassObject(this,option);
