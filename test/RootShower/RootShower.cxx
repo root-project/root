@@ -809,8 +809,9 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                     case M_SHOW_3D:
                         if(fIsRunning) break;
                         fCA->cd();
-                        fCA->x3d("ogl");
-                        break;
+                        fCA->GetViewer3D("ogl");
+                        fCA->Paint();
+			break;
 
                     case M_SHOW_TRACK:
                         if(fIsRunning) break;
