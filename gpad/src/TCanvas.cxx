@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.85 2005/01/30 07:16:55 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.86 2005/02/03 08:01:06 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1747,12 +1747,19 @@ void TCanvas::Streamer(TBuffer &b)
       b.CheckByteCount(R__s, R__c, TCanvas::IsA());
    } else {
       //save list of colors
-      TObjArray *colors = (TObjArray*)gROOT->GetListOfColors();
-      fPrimitives->Add(colors);
+      //we must protect the case when two or more canvases are saved
+      //in the same buffer. We use one of the user bits in TBuffer.
+      //This bit is automatically reset by TBuffer::ResetMap
+      TObjArray *colors = 0;
+      if (!b.TestBit(TBuffer::kUser3)) {
+         b.SetBit(TBuffer::kUser3);
+         colors = (TObjArray*)gROOT->GetListOfColors();
+         fPrimitives->Add(colors);
+      }
       
       R__c = b.WriteVersion(TCanvas::IsA(), kTRUE);
       TPad::Streamer(b);
-      fPrimitives->Remove(colors);
+      if(colors) fPrimitives->Remove(colors);
       fDISPLAY.Streamer(b);
       b << fDoubleBuffer;
       b << fRetained;
