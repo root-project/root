@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: mmalloc.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: rsaaux.c,v 1.1 2003/08/29 10:38:18 rdm Exp $ */
 /* Author: */
 
 /*******************************************************************************
@@ -162,9 +162,7 @@ rsa_NUMBER a_two = {
 /*
  * Vergleiche zwei rsa_INT arrays der Laenge l
  */
-int n_cmp( i1, i2, l )
-rsa_INT *i1,*i2;
-int l;
+int n_cmp(rsa_INT *i1, rsa_INT *i2, int l)
 {
 	i1 += (l-1);			/* Pointer ans Ende		*/
 	i2 += (l-1);
@@ -179,8 +177,7 @@ int l;
 /*
  * Vergleiche zwei rsa_NUMBER
  */
-int a_cmp( c1, c2 )
-rsa_NUMBER *c1,*c2;
+int a_cmp(rsa_NUMBER *c1, rsa_NUMBER *c2)
 {
 	int l;
 					/* bei verschiedener Laenge klar*/
@@ -194,8 +191,7 @@ rsa_NUMBER *c1,*c2;
 /*
  * Zuweisung einer rsa_NUMBER (d = s)
  */
-void a_assign( d, s )
-rsa_NUMBER *d,*s;
+void a_assign(rsa_NUMBER *d, rsa_NUMBER *s)
 {
 	int l;
 
@@ -211,8 +207,7 @@ rsa_NUMBER *d,*s;
 /*
  * Addiere zwei rsa_NUMBER (d = s1 + s2)
  */
-void a_add( s1, s2, d )
-rsa_NUMBER *s1,*s2,*d;
+void a_add(rsa_NUMBER *s1, rsa_NUMBER *s2, rsa_NUMBER *d)
 {
 	int l,lo,ld,same;
 	register rsa_LONG sum;
@@ -272,9 +267,7 @@ rsa_NUMBER *s1,*s2,*d;
  * l == Laenge p1
  * lo== Laenge p3
  */
-int n_sub( p1, p2, p3, l, lo )
-rsa_INT *p1,*p2,*p3;
-int l,lo;
+int n_sub(rsa_INT *p1, rsa_INT *p2, rsa_INT *p3, int l, int lo)
 {
 	int ld,lc,same;
 	int over = 0;
@@ -320,8 +313,7 @@ int l,lo;
 /*
  * Subtrahiere zwei rsa_NUMBER (d= s1 - s2)
  */
-void a_sub( s1, s2, d )
-rsa_NUMBER *s1,*s2,*d;
+void a_sub(rsa_NUMBER *s1, rsa_NUMBER *s2, rsa_NUMBER *d)
 {
 	d->n_len = n_sub( s1->n_part, s2->n_part, d->n_part
 			 ,s1->n_len, s2->n_len );
@@ -331,11 +323,7 @@ rsa_NUMBER *s1,*s2,*d;
  * Mulitipliziere rsa_INT array der Laenge l mit einer rsa_INT (d = n * m)
  * return neue Laenge
  */
-int n_mult( n, m, d, l)
-register rsa_INT *n;
-register rsa_INT m;
-rsa_INT *d;
-int l;
+int n_mult(rsa_INT *n, rsa_INT m, rsa_INT *d, int l)
 {
 	int i;
 	register rsa_LONG mul;
@@ -357,10 +345,7 @@ int l;
 /*
  * Mulitipliziere eine rsa_NUMBER mit einer rsa_INT (d = n * m)
  */
-void a_imult( n, m, d )
-rsa_NUMBER *n;
-rsa_INT m;
-rsa_NUMBER *d;
+void a_imult(rsa_NUMBER *n, rsa_INT m, rsa_NUMBER *d)
 {
 	if (m == 0)
 		d->n_len=0;
@@ -373,8 +358,7 @@ rsa_NUMBER *d;
 /*
  * Multipliziere zwei rsa_NUMBER (d = m1 * m2)
  */
-void a_mult( m1, m2, d )
-rsa_NUMBER *m1,*m2,*d;
+void a_mult(rsa_NUMBER *m1, rsa_NUMBER *m2, rsa_NUMBER *d)
 {
 	static rsa_INT id[ rsa_MAXLEN ];		/* Zwischenspeicher	*/
 	register rsa_INT *vp;			/* Pointer darin	*/
@@ -424,8 +408,7 @@ rsa_NUMBER *m1,*m2,*d;
  * r = 0 : kein Rest
  * q = 0 : kein Quotient
  */
-void n_div( d1, z2, q, r )
-rsa_NUMBER *d1,*z2,*q,*r;
+void n_div(rsa_NUMBER *d1, rsa_NUMBER *z2, rsa_NUMBER *q, rsa_NUMBER *r)
 {
 	static	rsa_NUMBER dummy_rest;  /* Dummy Variable, falls r = 0 */
 	static	rsa_NUMBER dummy_quot;  /* Dummy Variable, falla q = 0 */
@@ -501,8 +484,7 @@ rsa_NUMBER *d1,*z2,*q,*r;
  * r = 0 : kein Rest
  * q = 0 : kein Quotient
  */
-void a_div( d1, d2, q, r )
-rsa_NUMBER *d1,*d2,*q,*r;
+void a_div(rsa_NUMBER *d1, rsa_NUMBER *d2, rsa_NUMBER *q, rsa_NUMBER *r)
 {
 #if rsa_MAXINT != 1
 	rsa_NUMBER z2[rsa_MAXBIT];
@@ -522,8 +504,7 @@ rsa_NUMBER *d1,*d2,*q,*r;
 /*
  * Dividiere eine rsa_NUMBER durch 2
  */
-void a_div2( n )
-rsa_NUMBER *n;
+void a_div2(rsa_NUMBER *n)
 {
 #if rsa_MAXBIT == rsa_LOWBITS
 	register rsa_INT *p;
@@ -579,8 +560,7 @@ static rsa_NUMBER mod_z2[ rsa_MAXBIT ];
 /*
  * Init
  */
-void m_init( n, o )
-rsa_NUMBER *n,*o;
+void m_init(rsa_NUMBER *n, rsa_NUMBER *o)
 {
 	rsa_INT z;
 	int i;
@@ -595,16 +575,14 @@ rsa_NUMBER *n,*o;
 		a_imult( n, z, &mod_z2[i] );
 }
 
-void m_add( s1, s2, d )
-rsa_NUMBER *s1, *s2, *d;
+void m_add(rsa_NUMBER *s1, rsa_NUMBER *s2, rsa_NUMBER *d)
 {
 	a_add( s1, s2, d );
 	if (a_cmp( d, mod_z2) >= 0)
 		a_sub( d, mod_z2, d );
 }
 
-void m_mult( m1, m2, d )
-rsa_NUMBER *m1,*m2,*d;
+void m_mult(rsa_NUMBER *m1, rsa_NUMBER *m2, rsa_NUMBER *d)
 {
 	a_mult( m1, m2, d );
 	n_div( d, mod_z2, rsa_NUM0P, d );
@@ -613,8 +591,7 @@ rsa_NUMBER *m1,*m2,*d;
 /*
  * Restklassen Exponent
  */
-void m_exp( x, n, z )
-rsa_NUMBER *x,*n,*z;
+void m_exp(rsa_NUMBER *x, rsa_NUMBER *n, rsa_NUMBER *z)
 {
 	rsa_NUMBER xt,nt;
 
@@ -635,8 +612,7 @@ rsa_NUMBER *x,*n,*z;
 /*
  * GGT
  */
-void a_ggt( a, b, f )
-rsa_NUMBER *a,*b,*f;
+void a_ggt(rsa_NUMBER *a, rsa_NUMBER *b, rsa_NUMBER *f)
 {
 	rsa_NUMBER t[2];
 	int at,bt, tmp;
@@ -660,9 +636,7 @@ rsa_NUMBER *a,*b,*f;
  * die untersten b bits der Dualdarstellung von n
  * die bits muessen in ein int passen
  */
-int n_bits(n,b)
-rsa_NUMBER *n;
-int b;
+int n_bits(rsa_NUMBER *n, int b)
 {
 	rsa_INT *p;
 	int l;
@@ -691,8 +665,7 @@ int b;
 /*
  * Anzahl der bits von n bei Dualdarstellung
  */
-int n_bitlen( n )
-rsa_NUMBER *n;
+int n_bitlen(rsa_NUMBER *n)
 {
 	rsa_NUMBER b;
 	int i;
@@ -768,8 +741,7 @@ static int	jakobi( rsa_NUMBER*, rsa_NUMBER* );
 /*
  * Hilfs-Funktion fuer jakobi
  */
-static int jak_f( n )
-rsa_NUMBER *n;
+static int jak_f(rsa_NUMBER *n)
 {
 	int f,ret;
 
@@ -783,8 +755,7 @@ rsa_NUMBER *n;
 /*
  * Hilfs-Funktuion fuer jakobi
  */
-static int jak_g( a, n )
-rsa_NUMBER *a,*n;
+static int jak_g(rsa_NUMBER *a, rsa_NUMBER *n)
 {
 	int ret;
 
@@ -800,8 +771,7 @@ rsa_NUMBER *a,*n;
 /*
  * Jakobi-Symbol
  */
-static int jakobi( a, n )
-rsa_NUMBER *a,*n;
+static int jakobi(rsa_NUMBER *a, rsa_NUMBER *n)
 {
 	rsa_NUMBER t[2];
 	int at,nt, ret;
@@ -858,9 +828,7 @@ rsa_NUMBER *a,*n;
  *	p_prim benutzt m_init !!
  *
  */
-int p_prim( n, m )
-rsa_NUMBER *n;
-int m;
+int p_prim(rsa_NUMBER *n, int m)
 {
 	rsa_NUMBER gt,n1,n2,a;
 	rsa_INT *p;
@@ -925,8 +893,7 @@ int m;
  *	ACHTUNG !!!!
  *	inv benutzt m_init
  */
-void inv( d, phi, e )
-rsa_NUMBER *d,*phi,*e;
+void inv(rsa_NUMBER *d, rsa_NUMBER *phi, rsa_NUMBER *e)
 {
 	int k, i0, i1, i2;
 	rsa_NUMBER r[3],p[3],c;
@@ -971,9 +938,7 @@ rsa_NUMBER *d,*phi,*e;
 *                                                                              *
 ********************************************************************************/
 
-void gen_number( len, n )
-rsa_NUMBER *n;
-int len;
+void gen_number(int len, rsa_NUMBER *n)
 {
 	char *hex = "0123456789ABCDEF" ;
 	char num[ rsa_MAXLEN*rsa_MAXBIT/4 +1 ];
@@ -1013,9 +978,7 @@ void init_rnd()
 
 /* These are not needed, for the moment
 
-int get_clear( p, fp )
-char *p;
-FILE *fp;
+int get_clear(char *p, FILE *fp)
 {
 	int n;
 
@@ -1029,9 +992,7 @@ FILE *fp;
 	return(1);
 }
 
-int get_enc( p, fp )
-char *p;
-FILE *fp;
+int get_enc(char *p, FILE *fp)
 {
 	int n;
 
@@ -1043,9 +1004,7 @@ FILE *fp;
 	return(1);
 }
 
-int put_clear( p, fp )
-char *p;
-FILE *fp;
+int put_clear(char *p, FILE *fp)
 {
 	int n;
 
@@ -1057,9 +1016,7 @@ FILE *fp;
 	return(1);
 }
 
-int put_enc( p, fp )
-char *p;
-FILE *fp;
+int put_enc(char *p, FILE *fp)
 {
 	int n;
 
@@ -1073,11 +1030,7 @@ FILE *fp;
 
 */
 
-void do_crypt( s, d, len, e )
-char *s;
-char *d;
-rsa_NUMBER *e;
-int len;
+void do_crypt(char *s, char *d, int len, rsa_NUMBER *e)
 {
 	static char hex[] = "0123456789ABCDEF";
 	rsa_NUMBER n;

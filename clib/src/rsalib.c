@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: mmalloc.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: rsalib.c,v 1.1 2003/08/29 10:38:18 rdm Exp $ */
 /* Author: */
 
 /*******************************************************************************
@@ -223,7 +223,7 @@ static char *HEX="0123456789ABCDEF";
 static char *hex="0123456789abcdef";
 
 static rsa_NUMBER bits[9];
-static rsa_NUMBER int16[16];
+static rsa_NUMBER gint16[16];
 
 static int init = 0;
 
@@ -237,18 +237,15 @@ void num_init()
 	for ( i=1; i<9; i++)
 		a_add( &bits[i-1], &bits[i-1], &bits[i] );
 
-	a_assign( &int16[0], &a_one );
+	a_assign( &gint16[0], &a_one );
 	for ( i=1; i<16; i++)
-		a_add( &int16[i-1], &a_one, &int16[i] );
+		a_add( &gint16[i-1], &a_one, &gint16[i] );
 
 	init = 1;
 }
 
 
-int rsa_num_sput( n, s, l)
-rsa_NUMBER *n;
-char *s;
-int l;
+int rsa_num_sput(rsa_NUMBER *n, char *s, int l)
 {
 #if rsa_MAXINT == ( (1 << rsa_MAXBIT) - 1 )
 	rsa_INT *p;
@@ -322,9 +319,7 @@ int l;
 }
 
 
-int rsa_num_fput( n, f )
-rsa_NUMBER *n;
-FILE *f;
+int rsa_num_fput(rsa_NUMBER *n, FILE *f)
 {
 	int j;
 	char *np;
@@ -348,9 +343,7 @@ FILE *f;
 }
 
 
-int rsa_num_sget( n, s )
-rsa_NUMBER *n;
-char *s;
+int rsa_num_sget(rsa_NUMBER *n, char *s)
 {
 #if rsa_MAXINT == ( (1 << rsa_MAXBIT) - 1 )
 	rsa_INT *p;
@@ -419,16 +412,14 @@ char *s;
 
 		a_mult( n, &bits[4], n );
 		if (i)
-			a_add( n, &int16[i-1], n );
+			a_add( n, &gint16[i-1], n );
 	}
 
 	return(0);
 #endif
 }
 
-int rsa_num_fget( n, f )
-rsa_NUMBER *n;
-FILE *f;
+int rsa_num_fget(rsa_NUMBER *n, FILE *f)
 {
 	int j,c;
 	char *np;
@@ -454,8 +445,7 @@ FILE *f;
 	return(0);
 }
 
-int rsa_cmp( c1, c2 )
-rsa_NUMBER *c1,*c2;
+int rsa_cmp(rsa_NUMBER *c1, rsa_NUMBER *c2)
 {
 	int l;
 					/* bei verschiedener Laenge klar*/
@@ -466,8 +456,7 @@ rsa_NUMBER *c1,*c2;
 	return( n_cmp( c1->n_part, c2->n_part, l) );
 }
 
-void rsa_assign( d, s )
-rsa_NUMBER *d,*s;
+void rsa_assign(rsa_NUMBER *d, rsa_NUMBER *s)
 {
 	int l;
 
@@ -479,4 +468,3 @@ rsa_NUMBER *d,*s;
 
 	d->n_len = l;
 }
-

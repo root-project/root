@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.12 2003/03/05 16:07:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.13 2003/08/29 10:41:28 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 
 // For fast name-to-number translation for authentication methods
 const char  kMethods[]= "usrpwd srp    krb5   globus ssh    uidgid";
-char       *gAuthMeth[kMAXSEC]= {"UsrPwd","SRP","Krb5","Globus","SSH","UidGid"};
+const char *gAuthMeth[kMAXSEC]= {"UsrPwd","SRP","Krb5","Globus","SSH","UidGid"};
 
 
 ClassImp(TSlave)
@@ -326,7 +326,7 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
             PDB(kGlobal,3) Info("SendHostAuth","found proofserv: %s", rest);
 
             if (cont == 0) {
-               pnx = strstr(line,rest);
+               pnx = strstr(line, rest);
             } else if (cont == 1) {
                pnx  = line;
                cont = 0;
@@ -339,16 +339,16 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
 
                // Check if a protocol is requested
                char *pd1 = 0, *pd2 = 0;
-               char  meth[10] = {""}, usr[256]={""};
+               char  meth[10] = { "" }, usr[256] = { "" };
                int   met = -1;
                pd1 = strchr(host,':');
-               if (pd1 != 0) pd2 = strchr(pd1+1,':');
+               if (pd1 != 0) pd2 = strchr(pd1+1, ':');
                if (pd2 != 0) {
-                  strcpy(meth,pd2+1);
+                  strcpy(meth, pd2+1);
 
                   if (strlen(meth) > 1) {
                      // Method passed as string: translate it to number
-                     char *pmet = strstr(kMethods,meth);
+                     const char *pmet = strstr(kMethods, meth);
                      if (pmet) {
                         met = ((int)(pmet-kMethods))/7;
                      } else {
@@ -362,7 +362,7 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
                   host[plen]='\0';
                }
                if (pd1 != 0) {
-                  strcpy(usr,pd1+1);
+                  strcpy(usr, pd1+1);
                   int plen = (int)(pd1-host);
                   host[plen]='\0';
                }
@@ -373,7 +373,7 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
                user = new char*[1]; user[0] = StrDup(usr);
                Int_t Nuser = TAuthenticate::GetAuthMeth(host, "root", &user, &nmeth, security, details);
                // Now copy the info to send into buffer
-               int ju=0;
+               int ju = 0;
                for (ju = 0; ju < Nuser; ju++) {
                   int i = 0;
                   bsiz = strlen(host)+strlen(user[ju])+2+(nmeth[ju]+1)*3;
@@ -389,12 +389,12 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
                      char *newdet = TAuthenticate::GetDefaultDetails(met, 0, user[ju]);
                      bsiz += strlen(newdet)+1;
                      buf = new char[bsiz];
-                     sprintf(buf,"h:%s u:%s n:%d",host,user[ju],nmeth[ju]+1);
-                     sprintf(buf,"%s '%d %s' ",buf,met,newdet);
+                     sprintf(buf,"h:%s u:%s n:%d", host, user[ju], nmeth[ju]+1);
+                     sprintf(buf,"%s '%d %s' ", buf, met, newdet);
                      for (i = 0; i < nmeth[ju]; i++) {
                         sprintf(buf,"%s '%d %s' ", buf, security[i][ju], details[i][ju]);
                      }
-                     delete[] newdet;
+                     delete [] newdet;
                   } else {
                      // Details for the method chosen were found in the file
                      // Put them first ...
@@ -410,28 +410,24 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
                            sprintf(buf,"%s '%d %s' ", buf, security[i][ju], details[i][ju]);
                      }
                   }
-                  sl->GetSocket()->Send((const char *)buf, kPROOF_SENDHOSTAUTH);
+                  sl->GetSocket()->Send(buf, kPROOF_SENDHOSTAUTH);
+                  delete [] buf;
                }
 
                // Got to next, if any
                if (strlen(rest) > 0) {
                   // Check if there is a continuation line
-                  if ((int)rest[0] == 92) cont=1;
-                  pnx = strstr(pnx,rest);
+                  if ((int)rest[0] == 92) cont = 1;
+                  pnx = strstr(pnx, rest);
                } else {
-                  pnx= 0;
+                  pnx = 0;
                }
-               // Clean memory
-               delete[] buf;
             }
          }
       }
 
       // End of transmission ...
-      buf = new char[10];
-      sprintf(buf,"END");
-      sl->GetSocket()->Send((const char *)buf,kPROOF_SENDHOSTAUTH);
-      delete[] buf;
+      sl->GetSocket()->Send("END", kPROOF_SENDHOSTAUTH);
 
       fclose(fd);
 
@@ -439,10 +435,11 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
       // We are a Master notifying the Slaves for nodes to be considered
       // This includes the other slaves and additional info received from the Client
 
-      PDB(kGlobal,3) Info("SendHostAuth","Number of HostAuth instantiations in memory: %d",authInfo->GetSize());
+      PDB(kGlobal,3)
+         Info("SendHostAuth","Number of HostAuth instantiations in memory: %d",authInfo->GetSize());
 
       // Loop over list of auth info
-      if (authInfo->GetSize()>0) {
+      if (authInfo->GetSize() > 0) {
          TIter next(authInfo);
          THostAuth *fHA;
          while ((fHA = (THostAuth*) next())) {
@@ -460,15 +457,13 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
             for (i = 0; i < nmeth; i++) {
                sprintf(buf,"%s '%d %s' ", buf, fHA->GetMethods(i), fHA->GetDetails(fHA->GetMethods(i)));
             }
-            sl->GetSocket()->Send((const char *)buf, kPROOF_SENDHOSTAUTH);
+            sl->GetSocket()->Send(buf, kPROOF_SENDHOSTAUTH);
+            delete [] buf;
          }
       }
 
       // End of transmission ...
-      buf = new char[10];
-      sprintf(buf, "END");
-      sl->GetSocket()->Send((const char *)buf, kPROOF_SENDHOSTAUTH);
-      delete[] buf;
+      sl->GetSocket()->Send("END", kPROOF_SENDHOSTAUTH);
    }
    return retval;
 }

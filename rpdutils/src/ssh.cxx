@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.2 2003/08/29 17:23:32 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -108,7 +108,7 @@ int SshToolAllocateSocket(unsigned int Uid, unsigned int Gid, char **pipe)
 
    // The socket ...
    fstat(sd, &sst);
-   if (sst.st_uid != Uid || sst.st_gid != Gid) {
+   if ((unsigned int)sst.st_uid != Uid || (unsigned int)sst.st_gid != Gid) {
       if (fchown(sd, Uid, Gid)) {
          if (gDebug > 0) {
             ErrorInfo
@@ -123,7 +123,7 @@ int SshToolAllocateSocket(unsigned int Uid, unsigned int Gid, char **pipe)
    }
    // The path ...
    stat(fsun, &sst);
-   if (sst.st_uid != Uid || sst.st_gid != Gid) {
+   if ((unsigned int)sst.st_uid != Uid || (unsigned int)sst.st_gid != Gid) {
       if (chown(fsun, Uid, Gid)) {
          if (gDebug > 0) {
             ErrorInfo
