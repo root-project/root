@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.68 2002/02/07 09:10:23 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.69 2002/02/14 08:30:04 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -23,7 +23,7 @@
 #include "TPad.h"
 #include "TPaveStats.h"
 #include "TFrame.h"
-#include "TText.h"
+#include "TLatex.h"
 #include "TLine.h"
 #include "TPolyLine.h"
 #include "TPoints.h"
@@ -1803,18 +1803,25 @@ void THistPainter::PaintColorLevels()
 //
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-
    Double_t z, xk,xstep, yk, ystep, xlow, xup, ylow, yup;
    Double_t dz = Hparam.zmax - Hparam.zmin;
    if (dz <= 0) return;
 
    Style_t fillsav   = fH->GetFillStyle();
    Style_t colsav    = fH->GetFillColor();
-//   SetFillStyle(1000);
    fH->TAttFill::Modify();
 
+//                  Initialize the levels on the Z axis
    Int_t ncolors  = gStyle->GetNumberOfColors();
-   Double_t scale = ncolors/dz;
+   Int_t ndiv   = fH->GetContour();
+   if (ndiv == 0 ) {
+      ndiv = 20;
+      fH->SetContour(ndiv);
+   }
+   Int_t ndivz  = TMath::Abs(ndiv);
+   if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
+   Double_t scale = ndivz/dz;
+
    Int_t color;
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       yk    = fYaxis->GetBinLowEdge(j);
@@ -1850,9 +1857,10 @@ void THistPainter::PaintColorLevels()
          if (ylow < gPad->GetUymin()) continue;
          if (xup  > gPad->GetUxmax()) continue;
          if (yup  > gPad->GetUymax()) continue;
-         color = Int_t((z- Hparam.zmin)*scale);
-         if (z >= Hparam.zmax) color = ncolors-1;
-         fH->SetFillColor(gStyle->GetColorPalette(color));
+         color = Int_t(0.01+(z- Hparam.zmin)*scale);
+         Int_t theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
+         if (z >= Hparam.zmax) theColor = ndivz-1;
+         fH->SetFillColor(gStyle->GetColorPalette(theColor));
          fH->TAttFill::Modify();
          gPad->PaintBox(xlow, ylow, xup, yup);
       }
@@ -1937,7 +1945,10 @@ void THistPainter::PaintContour()
       ncontour = kMAXCONTOUR-1;
       fH->SetContour(ncontour);
    }
+
    for (i=0;i<ncontour;i++) levels[i] = fH->GetContourLevel(i);
+   //levels[ncontour] = fH->GetMaximum();
+   //ncontour++;
    Int_t linesav   = fH->GetLineStyle();
    Int_t colorsav  = fH->GetLineColor();
    Int_t fillsav  = fH->GetFillColor();
@@ -1946,7 +1957,7 @@ void THistPainter::PaintContour()
    }
 
    TPolyLine **polys = 0;
-   TPolyLine *poly=0, *polynew=0;
+   TPolyLine *poly=0;
    TObjArray *contours = 0;
    TList *list = 0;
    TGraph *graph = 0;
@@ -1987,8 +1998,6 @@ void THistPainter::PaintContour()
       y[1] = y[0];
       y[2] = fYaxis->GetBinCenter(j+1);
       y[3] = y[2];
-      //if (y[0] < gPad->GetUymin() || y[0] > gPad->GetUymax()) continue;
-      //if (y[2] < gPad->GetUymin() || y[2] > gPad->GetUymax()) continue;
       for (i=Hparam.xfirst; i<Hparam.xlast; i++) {
          zc[0] = fH->GetBinContent(i,   j);
          zc[1] = fH->GetBinContent(i+1, j);
@@ -1996,15 +2005,12 @@ void THistPainter::PaintContour()
          zc[3] = fH->GetBinContent(i,   j+1);
          for (k=0;k<4;k++) {
             ir[k] = TMath::BinarySearch(ncontour,levels,zc[k]);
-            if (zc[k] > levels[ncontour-1]) ir[k] = ncontour-1;
          }
          if (ir[0] != ir[1] || ir[1] != ir[2] || ir[2] != ir[3] || ir[3] != ir[0]) {
             x[0] = fXaxis->GetBinCenter(i);
             x[3] = x[0];
             x[1] = fXaxis->GetBinCenter(i+1);
             x[2] = x[1];
-            //if (x[0] < gPad->GetUxmin() || x[0] > gPad->GetUxmax()) continue;
-            //if (x[2] < gPad->GetUxmin() || x[2] > gPad->GetUxmax()) continue;
             if (zc[0] <= zc[1]) n = 0; else n = 1;
             if (zc[2] <= zc[3]) m = 2; else m = 3;
             if (zc[n] > zc[m]) n = m;
@@ -2036,7 +2042,7 @@ void THistPainter::PaintContour()
 
             count = 0;
             for (ix=1; ix<=lj-5; ix +=2) {
-               count = 0;
+               //count = 0;
                while (itarr[ix-1] != itarr[ix]) {
                   xsave = xarr[ix];
                   ysave = yarr[ix];
@@ -2053,11 +2059,10 @@ void THistPainter::PaintContour()
                   count++;
                }
             }
-            if (count > 100) continue;
 
+            if (count > 100) continue;
             for (ix=1; ix<=lj-2; ix +=2) {
-//               icol = (4*itarr[ix])/ncontour+1;
-               theColor = Int_t((itarr[ix])*Float_t(ncolors)/Float_t(ndivz));
+               theColor = Int_t((itarr[ix-1]+0.99)*Float_t(ncolors)/Float_t(ndivz));
                icol = gStyle->GetColorPalette(theColor);
                if (Hoption.Contour == 11) {
                    fH->SetLineColor(icol);
@@ -2073,18 +2078,9 @@ void THistPainter::PaintContour()
                   continue;
                }
 
-               ipoly = itarr[ix]-1;
+               ipoly = itarr[ix-1]-1;
                if (ipoly >=0 && ipoly <ncontour) {
                   poly = polys[ipoly];
-                  if (np[ipoly] > poly->GetN()-2) { // extend polyline
-                     polynew = new TPolyLine(np[ipoly] + 100);
-                     for (k=0;k<np[ipoly];k++) {
-                        polynew->SetPoint(k,poly->GetX()[k],poly->GetY()[k]);
-                     }
-                     delete poly;
-                     polys[ipoly] = polynew;
-                     poly = polynew;
-                  }
                   poly->SetPoint(np[ipoly]  ,xarr[ix-1],yarr[ix-1]);
                   poly->SetPoint(np[ipoly]+1,xarr[ix],  yarr[ix]);
                   np[ipoly] += 2;
@@ -2157,9 +2153,9 @@ void THistPainter::PaintContour()
             }
             if (nadd == 0) break;
          }
-         theColor = Int_t((ipoly+1)*Float_t(ncolors)/Float_t(ndivz));
+         theColor = Int_t((ipoly+1.99)*Float_t(ncolors)/Float_t(ndivz));
          icol = gStyle->GetColorPalette(theColor);
-         if (ndivz > 2) fH->SetFillColor(icol);
+         if (ndivz > 1) fH->SetFillColor(icol);
          fH->TAttFill::Modify();
          gPad->PaintFillArea(iplus-iminus+1,&xp[iminus],&yp[iminus]);
          if (Hoption.List) {
@@ -3355,15 +3351,17 @@ void THistPainter::PaintLego()
    }
    Double_t *funlevel = new Double_t[ndivz+1];
    Int_t *colorlevel = new Int_t[ndivz+1];
-   Int_t lowcolor = fH->GetFillColor();
+   //Int_t lowcolor = fH->GetFillColor();
    Int_t theColor;
    Int_t ncolors = gStyle->GetNumberOfColors();
    for (i = 0; i < ndivz; ++i) {
       funlevel[i]   = fH->GetContourLevel(i);
-      theColor = lowcolor + Int_t(i*Float_t(ncolors)/Float_t(ndivz));
+      //theColor = lowcolor + Int_t(i*Float_t(ncolors)/Float_t(ndivz));
+      theColor = Int_t(i*Float_t(ncolors)/Float_t(ndivz));
       colorlevel[i] = gStyle->GetColorPalette(theColor);
    }
-   colorlevel[ndivz] = gStyle->GetColorPalette(lowcolor+ncolors-1);
+   //colorlevel[ndivz] = gStyle->GetColorPalette(lowcolor+ncolors-1);
+   colorlevel[ndivz] = gStyle->GetColorPalette(ncolors-1);
    fLego->ColorFunction(ndivz, funlevel, colorlevel, irep);
    delete [] colorlevel;
    delete [] funlevel;
@@ -3622,26 +3620,43 @@ void THistPainter::PaintPalette()
    Double_t xr   = 0.05*(x2 - gPad->GetX1());
    Double_t xmin = xup +0.1*xr;
    Double_t xmax = xmin + xr;
+   Double_t wmin = fH->GetMinimum();
+   Double_t wmax = fH->GetMaximum();
+   Double_t wlmin = wmin;
+   Double_t wlmax = wmax;
+   if (Hoption.Logz) {
+      wlmin = Hparam.zmin;
+      if (wmax > 0) wlmax = TMath::Log10(wmax);
+      else          wlmax = Hparam.zmax;
+   }
+   Double_t ws    = wlmax-wlmin;
    if (xmax > x2) xmax = x2-0.01*xr;
    Int_t ncolors = gStyle->GetNumberOfColors();
-   Double_t dy = (ymax-ymin)/ncolors;
+   Int_t ndivz = TMath::Abs(fH->GetContour());
+   Int_t theColor;
    Color_t colorsav = fH->GetFillColor();
-   for (Int_t i=0;i<ncolors;i++) {
-      fH->SetFillColor(gStyle->GetColorPalette(i));
+   for (Int_t i=0;i<ndivz;i++) {
+      Double_t w1 = fH->GetContourLevel(i);
+      if (w1 < wlmin) w1 = wlmin;
+      Double_t w2 = wlmax;
+      if (i < ndivz-1) w2 = fH->GetContourLevel(i+1);
+      if (w2 <= wlmin) continue;
+      Double_t y1 = ymin + (w1-wlmin)*(ymax-ymin)/ws;
+      Double_t y2 = ymin + (w2-wlmin)*(ymax-ymin)/ws;
+      theColor = Int_t((i+0.99)*Float_t(ncolors)/Float_t(ndivz));
+      fH->SetFillColor(gStyle->GetColorPalette(theColor));
       fH->TAttFill::Modify();
-      gPad->PaintBox(xmin,ymin+i*dy,xmax,ymin+(i+1)*dy);
+      gPad->PaintBox(xmin,y1,xmax,y2);
    }
    fH->SetFillColor(colorsav);
    TAxis *zaxis = fH->GetZaxis();
    //Draw the palette axis using the Z axis parameters
    TGaxis axis;
    axis.ImportAxisAttributes(zaxis);
-   Int_t ndiv = zaxis->GetNdivisions();
-   Double_t wmin = Hparam.zmin;
-   Double_t wmax = Hparam.zmax;
+   Int_t ndiv  = zaxis->GetNdivisions()%100; //take primary divisions only
    if (Hoption.Logz) {
-      wmin = TMath::Power(10.,wmin);
-      wmax = TMath::Power(10.,wmax);
+      wmin = TMath::Power(10.,wlmin);
+      wmax = TMath::Power(10.,wlmax);
       axis.PaintAxis(xmax,ymin,xmax,ymax,wmin,wmax,ndiv,"+LG");
    } else {
       axis.PaintAxis(xmax,ymin,xmax,ymax,wmin,wmax,ndiv,"+L");
@@ -4431,7 +4446,13 @@ void THistPainter::PaintTitle()
    Double_t ht = gStyle->GetTitleH();
    Double_t wt = gStyle->GetTitleW();
    if (ht <= 0) ht = 0.05;
-   if (wt <= 0) wt = TMath::Min(0.6, 0.05+0.015*nt);
+   if (wt <= 0) {
+      TLatex l;
+      l.SetTextSize(0.05);
+      l.SetTitle(fH->GetTitle());
+      Double_t wndc = l.GetXsize()/(gPad->GetX2() - gPad->GetX1());
+      wt = TMath::Min(0.6, 0.02+wndc);
+   }
 
    TPaveText *ptitle = new TPaveText(
              gStyle->GetTitleX(),
