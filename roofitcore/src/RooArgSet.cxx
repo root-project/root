@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.33 2001/08/24 17:28:40 david Exp $
+ *    File: $Id: RooArgSet.cc,v 1.34 2001/08/24 21:49:25 chcheng Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -241,6 +241,39 @@ RooArgSet &RooArgSet::operator=(const RooArgSet& other) {
   return *this;
 }
 
+Bool_t RooArgSet::addOwned(RooAbsArg& var, Bool_t silent) {
+  // Add the specified argument to list. Returns kTRUE if successful, or
+  // else kFALSE if a variable of the same name is already in the list.
+  // This method can only be called on a list that is flagged as owning
+  // all of its contents, or else on an empty list (which will force the
+  // list into that mode).
+
+  // check that we own our variables or else are empty
+  if(!_isCopy && (getSize() > 0)) {
+    cout << ClassName() << "::" << GetName() << "::addOwned: can only add to an owned list" << endl;
+    return kFALSE;
+  }
+  _isCopy= kTRUE;
+
+  // is this variable name already in this list?
+  const char *name= var.GetName();
+  RooAbsArg *other(0);
+  if(other= find(name)) {
+    if(other != &var) {
+      if (!silent)
+	// print a warning if this variable is not the same one we
+	// already have
+	cout << ClassName() << "::" << GetName() << "::addOwned: cannot add second copy of argument \""
+	     << name << "\"" << endl;
+    }
+    // don't add duplicates
+    return kFALSE;
+  }
+
+  _list.Add((TObject*)&var);
+  return kTRUE;
+}
+
 RooAbsArg *RooArgSet::addClone(const RooAbsArg& var, Bool_t silent) {
   // Add a clone of the specified argument to list. Returns a pointer to
   // the clone if successful, or else zero if a variable of the same name
@@ -252,7 +285,7 @@ RooAbsArg *RooArgSet::addClone(const RooAbsArg& var, Bool_t silent) {
 
   // check that we own our variables or else are empty
   if(!_isCopy && (getSize() > 0)) {
-    cout << "RooArgSet(" << _name << "): can only add clones to a copied list" << endl;
+    cout << ClassName() << "::" << GetName() << "::addClone: can only add to an owned list" << endl;
     return 0;
   }
   _isCopy= kTRUE;
@@ -264,15 +297,15 @@ RooAbsArg *RooArgSet::addClone(const RooAbsArg& var, Bool_t silent) {
       if (!silent)
 	// print a warning if this variable is not the same one we
 	// already have
-	cout << "RooArgSet(" << _name << "): cannot add clone of second variable \"" << name
-	     << "\"" << endl;
+	cout << ClassName() << "::" << GetName() << "::addClone: cannot add second copy of argument \""
+	     << name << "\"" << endl;
     }
     // don't add duplicates
     return 0;
   }
   // add a pointer to a clone of this variable to our list (we now own it!)
   RooAbsArg *clone= (RooAbsArg*)var.Clone();
-  if(0 != clone) add(*clone);
+  if(0 != clone) _list.Add((TObject*)clone);
 
   return clone;
 }
@@ -285,7 +318,7 @@ Bool_t RooArgSet::add(const RooAbsArg& var, Bool_t silent) {
   const char *name= var.GetName();
   // check that this isn't a copy of a list
   if(_isCopy) {
-    cout << "RooArgSet(" << _name << "): cannot add variables to a copied list" << endl;
+    cout << ClassName() << "::" << GetName() << "::add: cannot add to an owned list" << endl;
     return kFALSE;
   }
 
@@ -296,8 +329,8 @@ Bool_t RooArgSet::add(const RooAbsArg& var, Bool_t silent) {
       if (!silent)
 	// print a warning if this variable is not the same one we
 	// already have
-	cout << "RooArgSet(" << _name << "): cannot add second variable \"" << name
-	     << "\"" << endl;
+	cout << ClassName() << "::" << GetName() << "::add: cannot add second copy of argument \""
+	     << name << "\"" << endl;
     }
     // don't add duplicates
     return kFALSE;
@@ -418,7 +451,7 @@ void RooArgSet::removeAll() {
   // just after calling the RooArgSet(const char*) constructor.
 
   if(_isCopy) {
-    Delete();
+    _list.Delete();
     _isCopy= kFALSE;
   }
   else {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.34 2001/08/23 01:21:46 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.35 2001/08/24 22:11:56 bevan Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -257,7 +257,7 @@ Bool_t RooAbsReal::isValidReal(Double_t value, Bool_t printError) const
 
 
 TH1F *RooAbsReal::createHistogram(const char *label, const char *axis, Int_t bins) const {
-  // Create a 1D-histogram with appropriate scale and labels for this variable.
+  // Create an empty 1D-histogram with appropriate scale and labels for this variable.
   // This method uses the default plot range which can be changed using the
   // setPlotMin(),setPlotMax() methods. Uses the default binning (setPlotBins())
   // unless you specify your own binning.
@@ -267,7 +267,7 @@ TH1F *RooAbsReal::createHistogram(const char *label, const char *axis, Int_t bin
 
 TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
 				  Double_t lo, Double_t hi, Int_t bins) const {
-  // Create a 1D-histogram with appropriate scale and labels for this variable.
+  // Create an empty 1D-histogram with appropriate scale and labels for this variable.
   // Binning must be specified with this method since the default binning is associated
   // with the default plot ranges, but you have asked for a non-default range.
 

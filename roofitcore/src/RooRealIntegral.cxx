@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.30 2001/08/23 23:43:43 david Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.31 2001/08/24 21:49:26 chcheng Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -253,19 +253,26 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
 Bool_t RooRealIntegral::initNumIntegrator() const
 {
-  // (Re)Initialize numerical integration engine if necessary
+  // (Re)Initialize numerical integration engine if necessary. Return kTRUE if
+  // successful, or otherwise kFALSE.
 
-  if (0 != _numIntEngine) {
+  // if we already have an engine, check if it still works for the present limits.
+  if(0 != _numIntEngine) {
+    cout << "checking the existing engine..." << endl;
+    if(_numIntEngine->checkLimits() && _numIntEngine->isValid()) return kTRUE;
+    // otherwise, cleanup the old engine
     delete _numIntEngine ;
     _numIntEngine= 0;
-  }
-  if(0 != _numIntegrand) {
-    delete _numIntegrand;
-    _numIntegrand= 0;
+    if(0 != _numIntegrand) {
+      delete _numIntegrand;
+      _numIntegrand= 0;
+    }
   }
 
   // All done if there are no arguments to integrate numerically
   if(0 == _intList.getSize()) return kTRUE;
+
+  cout << "creating a new engine..." << endl;
 
   // Bind the appropriate analytic integral (specified by _mode) of our RooRealVar object to
   // those of its arguments that will be integrated out numerically.

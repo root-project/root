@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.rdl,v 1.6 2001/08/02 23:54:24 david Exp $
+ *    File: $Id: RooIntegrator1D.rdl,v 1.7 2001/08/08 23:11:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -27,6 +27,7 @@ public:
 		  SummationRule rule= Trapezoid, Int_t maxSteps= 0, Double_t eps= 0) ; 
   virtual ~RooIntegrator1D();
 
+  virtual Bool_t checkLimits() const;
   virtual Double_t integral() ;
 
 protected:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCIntegrator.rdl,v 1.2 2001/08/20 23:45:24 david Exp $
+ *    File: $Id: RooMCIntegrator.rdl,v 1.3 2001/08/22 00:50:25 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,6 +26,7 @@ public:
 		  GeneratorType genType= QuasiRandom, Bool_t verbose= kFALSE);
   virtual ~RooMCIntegrator();
 
+  virtual Bool_t checkLimits() const;
   virtual Double_t integral();
 
   enum Stage { AllStages, ReuseGrid, RefineGrid };

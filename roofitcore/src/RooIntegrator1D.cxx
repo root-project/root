@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.cc,v 1.7 2001/08/02 23:54:24 david Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.8 2001/08/08 23:11:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -62,11 +62,6 @@ Bool_t RooIntegrator1D::initialize(Double_t xmin, Double_t xmax)
 	 << _function->getDimension() << endl;
     return kFALSE;
   }
-  // check that the range is finite
-  if(RooNumber::isInfinite(xmin) || RooNumber::isInfinite(xmax)) {
-    cout << "RooIntegrator1D::initialize: cannot integrate unbounded function" << endl;
-    return kFALSE;
-  }
 
   // Allocate workspace for numerical integration engine
   _h= new Double_t[_maxSteps + 2];
@@ -83,7 +78,7 @@ Bool_t RooIntegrator1D::initialize(Double_t xmin, Double_t xmax)
   _xmax= xmax;
   _range= _xmax - _xmin;
 
-  return kTRUE;
+  return checkLimits();
 }
 
 RooIntegrator1D::~RooIntegrator1D()
@@ -93,6 +88,12 @@ RooIntegrator1D::~RooIntegrator1D()
   if(_s) delete[] _s;
   if(_c) delete[] _c;
   if(_d) delete[] _d;
+}
+
+Bool_t RooIntegrator1D::checkLimits() const {
+  // Check that our integration range is finite and otherwise return kFALSE.
+
+  return (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
 }
 
 Double_t RooIntegrator1D::integral() 

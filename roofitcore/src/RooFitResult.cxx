@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.2 2001/08/21 01:46:53 verkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.3 2001/08/23 23:43:43 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -30,17 +30,9 @@ RooFitResult::~RooFitResult()
   if (_constPars) delete _constPars ;
   if (_initPars)  delete _initPars ;
   if (_finalPars) delete _finalPars ;
-  if (_globalCorr) {
-    _globalCorr->Delete() ;
-    delete _globalCorr ;
-  }
+  if (_globalCorr) delete _globalCorr;
 
-  TIterator* iter = _corrMatrix.MakeIterator() ;
-  RooArgSet* set ; 
-  while (set=(RooArgSet*)iter->Next()) {
-    set->Delete() ;
-  }
-  delete iter ;
+  _corrMatrix.Delete();
 }
 
 void RooFitResult::setConstParList(const RooArgSet& list) 
@@ -154,17 +146,9 @@ void RooFitResult::fillCorrMatrix()
   }
 
   // Delete eventual prevous correlation data holders
-  if (_globalCorr) {
-    _globalCorr->Delete() ;
-    delete _globalCorr ;
-  }
+  if (_globalCorr) delete _globalCorr ;
 
-  TIterator* iter = _corrMatrix.MakeIterator() ;
-  RooArgSet* set ; 
-  while (set=(RooArgSet*)iter->Next()) {
-    set->Delete() ;
-  }
-  delete iter ;
+  _corrMatrix.Delete();
 
   // Build holding arrays for correlation coefficients
   _globalCorr = new RooArgSet("globalCorrelations") ;
@@ -178,7 +162,7 @@ void RooFitResult::fillCorrMatrix()
     gcName.Append("]") ;
     TString gcTitle(arg->GetTitle()) ;
     gcTitle.Append(" Global Correlation") ;
-    _globalCorr->add(*(new RooRealVar(gcName.Data(),gcTitle.Data(),0.))) ;
+    _globalCorr->addOwned(*(new RooRealVar(gcName.Data(),gcTitle.Data(),0.))) ;
 
     // Create array with correlation holders for this parameter
     TString name("C[") ;
@@ -199,7 +183,7 @@ void RooFitResult::fillCorrMatrix()
       cTitle.Append(arg->GetName()) ;
       cTitle.Append(" and ") ;
       cTitle.Append(arg2->GetName()) ;
-      corrMatrixRow->add(*(new RooRealVar(cName.Data(),cTitle.Data(),0.))) ;      
+      corrMatrixRow->addOwned(*(new RooRealVar(cName.Data(),cTitle.Data(),0.))) ;      
     }
     delete vIter2 ;
     idx++ ;

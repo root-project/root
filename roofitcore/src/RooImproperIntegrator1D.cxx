@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.rdl,v 1.6 2001/08/02 23:54:24 david Exp $
+ *    File: $Id: RooImproperIntegrator1D.cc,v 1.1 2001/08/08 23:11:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,7 +29,7 @@ ClassImp(RooImproperIntegrator1D)
 ;
 
 static const char rcsid[] =
-"$Id: RooInvTransform.cc,v 1.1 2001/08/03 21:44:57 david Exp $";
+"$Id: RooImproperIntegrator1D.cc,v 1.1 2001/08/08 23:11:24 david Exp $";
 
 RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function) :
   RooAbsIntegrator(function),_function(0),_integrator1(0),_integrator2(0),_integrator3(0)
@@ -83,6 +83,10 @@ RooImproperIntegrator1D::~RooImproperIntegrator1D() {
   if(0 != _integrator1) delete _integrator1;
   if(0 != _integrator2) delete _integrator2;
   if(0 != _integrator3) delete _integrator3;
+}
+
+Bool_t RooImproperIntegrator1D::checkLimits() const {
+  return kFALSE;
 }
 
 Double_t RooImproperIntegrator1D::integral() {

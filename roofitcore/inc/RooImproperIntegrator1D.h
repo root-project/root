@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.rdl,v 1.6 2001/08/02 23:54:24 david Exp $
+ *    File: $Id: RooImproperIntegrator1D.rdl,v 1.1 2001/08/08 23:11:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,6 +24,7 @@ public:
   RooImproperIntegrator1D(const RooAbsFunc& function);
   virtual ~RooImproperIntegrator1D();
 
+  virtual Bool_t checkLimits() const;
   virtual Double_t integral() ;
 
 protected:
