@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.2 2000/09/11 09:50:20 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.3 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -253,6 +253,26 @@ Bool_t TGCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          break;
    }
    return kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TGCanvas::GetHsbPosition() const
+{
+   // Get position of horizontal scrollbar.
+
+   if (fHScrollbar && fHScrollbar->IsMapped())
+     return fHScrollbar->GetPosition();
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TGCanvas::GetVsbPosition() const
+{
+   // Get position of vertical scrollbar.
+
+   if (fVScrollbar && fVScrollbar->IsMapped())
+     return fVScrollbar->GetPosition();
+   return 0;
 }
 
 //______________________________________________________________________________

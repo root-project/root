@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.2 2000/09/11 09:50:20 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.3 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -77,17 +77,19 @@ public:
             ULong_t back = fgDefaultFrameBackground);
    virtual ~TGCanvas();
 
-   TGFrame     *GetContainer() const { return fVport->GetContainer(); }
-   TGViewPort  *GetViewPort() const { return fVport; }
-   virtual void AddFrame(TGFrame *f, TGLayoutHints *l = 0);
-   virtual void SetContainer(TGFrame *f) { fVport->SetContainer(f); }
-   virtual void MapSubwindows();
-   virtual void DrawBorder();
-   virtual void Layout();
-   virtual void SetHsbPosition(Int_t newPos);
-   virtual void SetVsbPosition(Int_t newPos);
-   void         SetScrolling(Int_t scrolling);
-   Int_t        GetScrolling() const { return fScrolling; }
+   TGFrame      *GetContainer() const { return fVport->GetContainer(); }
+   TGViewPort   *GetViewPort() const { return fVport; }
+   virtual void  AddFrame(TGFrame *f, TGLayoutHints *l = 0);
+   virtual void  SetContainer(TGFrame *f) { fVport->SetContainer(f); }
+   virtual void  MapSubwindows();
+   virtual void  DrawBorder();
+   virtual void  Layout();
+   virtual Int_t GetHsbPosition() const;
+   virtual Int_t GetVsbPosition() const;
+   virtual void  SetHsbPosition(Int_t newPos);
+   virtual void  SetVsbPosition(Int_t newPos);
+   void          SetScrolling(Int_t scrolling);
+   Int_t         GetScrolling() const { return fScrolling; }
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
 
