@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.4 2001/03/21 15:14:21 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.5 2001/03/22 15:31:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,9 +24,9 @@ ClassImp(RooRealVar)
 
 
 RooRealVar::RooRealVar(const char *name, const char *title,
-		       Double_t value, const char *unit, RooBlindBase* blinder) :
-  RooAbsReal(name, title, 0, 0, unit), _error(0), _blinder(blinder),
-  _integMin(-1e10), _integMax(1e10)
+		       Double_t value, const char *unit) :
+  RooAbsReal(name, title, 0, 0, unit), _error(0),
+  _fitMin(-1e10), _fitMax(1e10)
 {
   _value = value ;
   setConstant(kTRUE) ;
@@ -36,9 +36,9 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t minValue, Double_t maxValue,
-		       const char *unit, RooBlindBase* blinder) :
-  RooAbsReal(name, title, minValue, maxValue, unit), _blinder(blinder),
-  _integMin(minValue), _integMax(maxValue)
+		       const char *unit) :
+  RooAbsReal(name, title, minValue, maxValue, unit),
+  _fitMin(minValue), _fitMax(maxValue)
 
 {
   _value= 0.5*(minValue + maxValue);
@@ -48,11 +48,10 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, Double_t minValue, Double_t maxValue,
-		       const char *unit, RooBlindBase* blinder) :
-  RooAbsReal(name, title, minValue, maxValue, unit), _error(0), _blinder(blinder),
-  _integMin(minValue), _integMax(maxValue)
+		       const char *unit) :
+  RooAbsReal(name, title, minValue, maxValue, unit), _error(0),
+  _fitMin(minValue), _fitMax(maxValue)
 {
-  //   if (_blinder) _blinder->redoBlind() ;
   _value = value ;
   setValueDirty(kTRUE) ;
   setShapeDirty(kTRUE) ;
@@ -61,9 +60,8 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 RooRealVar::RooRealVar(const RooRealVar& other) :
   RooAbsReal(other), 
   _error(other._error),
-  _blinder(other._blinder),
-  _integMin(other._integMin),
-  _integMax(other._integMax)
+  _fitMin(other._fitMin),
+  _fitMax(other._fitMax)
 {
   setConstant(other.isConstant()) ;
   setProjected(other.isProjected()) ;
@@ -86,27 +84,27 @@ void RooRealVar::setVal(Double_t value) {
 
   // Set current value
   Double_t clipValue ;
-  inIntegRange(value,&clipValue) ;
+  inFitRange(value,&clipValue) ;
 
   setValueDirty(kTRUE) ;
   _value = clipValue;
 }
 
 
-void RooRealVar::setIntegMin(Double_t value) 
+void RooRealVar::setFitMin(Double_t value) 
 {
   // Check if new limit is consistent
-  if (_integMin>_integMax) {
-    cout << "RooRealVar::setIntegMin(" << GetName() 
-	 << "): Proposed new integration min. larger than max., setting min. to max." << endl ;
-    _integMin = _integMax ;
+  if (_fitMin>_fitMax) {
+    cout << "RooRealVar::setFitMin(" << GetName() 
+	 << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
+    _fitMin = _fitMax ;
   } else {
-    _integMin = value ;
+    _fitMin = value ;
   }
 
   // Clip current value in window if it fell out
   Double_t clipValue ;
-  if (!inIntegRange(_value,&clipValue)) {
+  if (!inFitRange(_value,&clipValue)) {
     setVal(clipValue) ;
   }
 
@@ -114,20 +112,20 @@ void RooRealVar::setIntegMin(Double_t value)
 }
 
 
-void RooRealVar::setIntegMax(Double_t value)
+void RooRealVar::setFitMax(Double_t value)
 {
   // Check if new limit is consistent
-  if (_integMax<_integMin) {
-    cout << "RooRealVar::setIntegMax(" << GetName() 
-	 << "): Proposed new integration max. smaller than min., setting max. to min." << endl ;
-    _integMax = _integMax ;
+  if (_fitMax<_fitMin) {
+    cout << "RooRealVar::setFitMax(" << GetName() 
+	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
+    _fitMax = _fitMax ;
   } else {
-    _integMax = value ;
+    _fitMax = value ;
   }
 
   // Clip current value in window if it fell out
   Double_t clipValue ;
-  if (!inIntegRange(_value,&clipValue)) {
+  if (!inFitRange(_value,&clipValue)) {
     setVal(clipValue) ;
   }
 
@@ -135,16 +133,16 @@ void RooRealVar::setIntegMax(Double_t value)
 }
 
 
-void RooRealVar::setIntegRange(Double_t min, Double_t max) {
+void RooRealVar::setFitRange(Double_t min, Double_t max) {
   // Check if new limit is consistent
   if (min>max) {
-    cout << "RooRealVar::setIntegMinMax(" << GetName() 
-	 << "): Proposed new integration max. smaller than min., setting max. to min." << endl ;
-    _integMin = min ;
-    _integMax = min ;
+    cout << "RooRealVar::setFitRange(" << GetName() 
+	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
+    _fitMin = min ;
+    _fitMax = min ;
   } else {
-    _integMin = min ;
-    _integMax = max ;
+    _fitMin = min ;
+    _fitMax = max ;
   }
 
   setShapeDirty(kTRUE) ;  
@@ -155,7 +153,7 @@ void RooRealVar::setIntegRange(Double_t min, Double_t max) {
 Double_t RooRealVar::operator=(Double_t newValue) 
 {
   // Clip 
-  inIntegRange(newValue,&_value) ;
+  inFitRange(newValue,&_value) ;
 
   setValueDirty(kTRUE) ;
   return _value;
@@ -163,32 +161,32 @@ Double_t RooRealVar::operator=(Double_t newValue)
 
 
 
-Bool_t RooRealVar::inIntegRange(Double_t value, Double_t* clippedValPtr) const
+Bool_t RooRealVar::inFitRange(Double_t value, Double_t* clippedValPtr) const
 {
   // Check which limit we exceeded and truncate. Print a warning message
   // unless we are very close to the boundary.  
   
-  Double_t range = _integMax - _integMin ;
+  Double_t range = _fitMax - _fitMin ;
   Double_t clippedValue(value);
   Bool_t inRange(kTRUE) ;
 
-  if (hasIntegLimits()) {
-    if(value > _integMax) {
-      if(value - _integMax > 1e-6*range) {
+  if (hasFitLimits()) {
+    if(value > _fitMax) {
+      if(value - _fitMax > 1e-6*range) {
 	if (clippedValPtr)
-	  cout << "RooRealVar::inIntegRange(" << GetName() << "): value " << value
-	       << " rounded down to max limit " << _integMax << endl;
+	  cout << "RooRealVar::inFitRange(" << GetName() << "): value " << value
+	       << " rounded down to max limit " << _fitMax << endl;
       }
-      clippedValue = _integMax;
+      clippedValue = _fitMax;
       inRange = kFALSE ;
     }
-    else if(value < _integMin) {
-      if(_integMin - value > 1e-6*range) {
+    else if(value < _fitMin) {
+      if(_fitMin - value > 1e-6*range) {
 	if (clippedValPtr)
-	  cout << "RooRealVar::inIntegRange(" << GetName() << "): value " << value
-	       << " rounded up to min limit " << _integMin << endl;
+	  cout << "RooRealVar::inFitRange(" << GetName() << "): value " << value
+	       << " rounded up to min limit " << _fitMin << endl;
       }
-      clippedValue = _integMin;
+      clippedValue = _fitMin;
       inRange = kFALSE ;
     } 
   }
@@ -207,7 +205,7 @@ Bool_t RooRealVar::isValid()
 
 
 Bool_t RooRealVar::isValid(Double_t value, Bool_t verbose) {
-  if (!inIntegRange(value)) {
+  if (!inFitRange(value)) {
     if (verbose)
       cout << "RooRealVar::isValid(" << GetName() << "): value " << value << " out of range" << endl ;
     return kFALSE ;
@@ -285,16 +283,16 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 	    parser.expectToken(")",kTRUE)) break ;
 	setPlotRange(plotMin,plotMax) ;
 
-      } else if (!token.CompareTo("I")) {
+      } else if (!token.CompareTo("F")) {
 
-	// Next tokens are integration limits
-	Double_t integMin, integMax ;
+	// Next tokens are fit limits
+	Double_t fitMin, fitMax ;
 	if (parser.expectToken("(",kTRUE) ||
-	    parser.readDouble(integMin,kTRUE) ||
+	    parser.readDouble(fitMin,kTRUE) ||
 	    parser.expectToken("-",kTRUE) ||
-	    parser.readDouble(integMax,kTRUE) ||
+	    parser.readDouble(fitMax,kTRUE) ||
 	    parser.expectToken(")",kTRUE)) break ;
-	setIntegRange(integMin,integMax) ;
+	setFitRange(fitMin,fitMax) ;
       } else {
 	// Token is value
 	if (parser.convertToDouble(token,value)) { parser.zapToEnd() ; break ; }
@@ -330,9 +328,9 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact)
     }      
     // Append plot limits
     os << "P(" << getPlotMin() << " - " << getPlotMax() << " : " << getPlotBins() << ") " ;      
-    // Append integration limits if not +Inf:-Inf
-    if (hasIntegLimits()) {
-      os << "I(" << getIntegMin() << " - " << getIntegMax() << ") " ;      
+    // Append fit limits if not +Inf:-Inf
+    if (hasFitLimits()) {
+      os << "F(" << getFitMin() << " - " << getFitMax() << ") " ;      
     }
     // Add comment with unit, if unit exists
     if (!_unit.IsNull())
@@ -350,9 +348,8 @@ RooRealVar::operator=(RooAbsArg& aorig)
 
   RooRealVar& orig = (RooRealVar&)aorig ;
   _error = orig._error ;
-  _blinder = orig._blinder ;
-  _integMin = orig._integMin ;
-  _integMax = orig._integMax ;
+  _fitMin = orig._fitMin ;
+  _fitMax = orig._fitMax ;
 
   return (*this) ;
 }
@@ -372,7 +369,7 @@ void RooRealVar::printToStream(ostream& os, PrintOption opt) {
       os << ", fixed at " << getVal();
     }
     else {
-      os << ", range is (" << _integMin << "," << _integMax << ")";
+      os << ", range is (" << _fitMin << "," << _fitMax << ")";
     }
     if(!_unit.IsNull()) os << ' ' << _unit;
     printAttribList(os) ;
@@ -381,11 +378,10 @@ void RooRealVar::printToStream(ostream& os, PrintOption opt) {
     
   case Standard:
     os << "RooRealVar: " << GetName() << " = " << getVal();
-    if (_blinder) os << " (blind)" ; 
     if(!_unit.IsNull()) os << ' ' << _unit;
     os << " : " << GetTitle() ;
-    if(!isConstant() && hasIntegLimits())
-      os << " (" << _integMin << ',' << _integMax << ')';
+    if(!isConstant() && hasFitLimits())
+      os << " (" << _fitMin << ',' << _fitMax << ')';
     else if (isConstant()) 
       os << " Constant" ;
     os << endl ;	

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.3 2001/03/19 15:57:32 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.4 2001/03/21 15:14:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,19 +19,17 @@
 
 #include "RooFitCore/RooAbsReal.hh"
 class RooArgSet ;
-class RooBlindBase ;
 
 class RooRealVar : public RooAbsReal {
 public:
   // Constructors, assignment etc.
   inline RooRealVar() { }
   RooRealVar(const char *name, const char *title,
-  	   Double_t value, const char *unit= "", RooBlindBase* blinder=0) ;
+  	   Double_t value, const char *unit= "") ;
   RooRealVar(const char *name, const char *title, Double_t minValue, 
-	   Double_t maxValue, const char *unit= "", RooBlindBase* blinder=0);
+	   Double_t maxValue, const char *unit= "");
   RooRealVar(const char *name, const char *title, Double_t value, 
-	   Double_t minValue, Double_t maxValue, const char *unit= "", 
-	   RooBlindBase* blinder=0);
+	   Double_t minValue, Double_t maxValue, const char *unit= "") ;
   RooRealVar(const RooRealVar& other);
   virtual ~RooRealVar();
   virtual RooAbsArg& operator=(RooAbsArg& other) ;
@@ -45,14 +43,14 @@ public:
   inline void setError(Double_t value) { _error= value; }
   virtual Double_t operator=(Double_t newValue);
 
-  // Integration limits
-  inline Double_t getIntegMin() const { return _integMin ; }
-  inline Double_t getIntegMax() const { return _integMax ; }
-  void setIntegMin(Double_t value) ;
-  void setIntegMax(Double_t value) ;
-  void setIntegRange(Double_t min, Double_t max) ;
-  Bool_t inIntegRange(Double_t value, Double_t* clippedValue=0) const;
-  Bool_t hasIntegLimits() const { return kTRUE ; }
+  // Fit limits
+  inline Double_t getFitMin() const { return _fitMin ; }
+  inline Double_t getFitMax() const { return _fitMax ; }
+  void setFitMin(Double_t value) ;
+  void setFitMax(Double_t value) ;
+  void setFitRange(Double_t min, Double_t max) ;
+  Bool_t inFitRange(Double_t value, Double_t* clippedValue=0) const;
+  Bool_t hasFitLimits() const { return kTRUE ; }
 
   // Constant and Projected flags 
   inline Bool_t isConstant() const { return getAttribute("Constant") ; }
@@ -70,17 +68,15 @@ public:
 
 protected:
 
-  void updateIntegLimits() ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   Double_t chopAt(Double_t what, Int_t where) ;
 
   virtual Bool_t isValid() ;
   virtual Bool_t isValid(Double_t value, Bool_t verbose=kFALSE) ;
 
-  Double_t _integMin ;
-  Double_t _integMax ;
+  Double_t _fitMin ;
+  Double_t _fitMax ;
   Double_t _error;
-  RooBlindBase* _blinder ; //! unowned ptr
 
   ClassDef(RooRealVar,1) // a real-valued variable and its value
 };
