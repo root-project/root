@@ -247,7 +247,6 @@ void G__CallFunc::SetArgs(const char* args)
 #ifndef G__OLDIMPLEMENTATION1941
     c=G__getstream((char*)args,&isrc,tmp,endmark);
     if (tmp[0]) {
-       fprintf(stderr,"--%s--\n",tmp);
       // evaluate arg
       para.para[para.paran] = G__calc(tmp);
       if(strlen(tmp)<G__ONELINE-1) strcpy(para.parameter[para.paran],tmp);
