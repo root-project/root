@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.28 2001/04/04 14:03:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.29 2001/04/09 07:56:10 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -655,14 +655,15 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
       if (cl->GetImplFileLine() >= 0) return cl;
       //we may pass here in case of a dummy class created by TStreamerInfo
       load = 1;
-   }
-   TDataType *objType = gROOT->GetType(name,load);
-   if (objType) {
-     const Char_t *typdfName = objType->GetTypeName();
-     if (typdfName && strcmp(typdfName,name)) {
-       cl = GetClass(typdfName,load);
-       return cl;
-     }
+   } else {
+      TDataType *objType = gROOT->GetType(name, load);
+      if (objType) {
+         const char *typdfName = objType->GetTypeName();
+         if (typdfName && strcmp(typdfName, name)) {
+            cl = GetClass(typdfName, load);
+            return cl;
+         }
+      }
    }
 
    if (!load) return 0;
@@ -675,13 +676,15 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
    if (cl) return cl;
    
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
-   for (Int_t tagnum=0;tagnum<G__struct.alltag;tagnum++) {
-      if (strcmp(G__struct.name[tagnum],name) == 0) {
-         if (strchr(name,'<')) continue; //reject STL containers
-         if (strcmp(name,"string") == 0) continue;
-         return new TClass(name,1,"","",-1,-1);
-      }
-   }
+   if (!strcmp(name, "string")) return 0;
+   if (strstr(name, "vector<") || strstr(name, "list<") ||
+       strstr(name, "set<")    || strstr(name, "map<")  ||
+       strstr(name, "deque<")  || strstr(name, "multimap<") ||
+       strstr(name, "multiset<"))
+      return 0;   //reject STL containers
+      
+   if (gInterpreter->CheckClassInfo(name))
+      return new TClass(name, 1, 0, 0, -1, -1);
    return 0;
 }
 
@@ -725,16 +728,7 @@ TDataType *TROOT::GetType(const char *name, Bool_t load)
    size_t nch = strlen(tname);
    while (tname[nch-1] == ' ') nch--;
 
-   TDataType *idcur;
-   TIter      next(GetListOfTypes(load));
-   while ((idcur = (TDataType *) next())) {
-     if (strlen(idcur->GetName()) != nch) continue;
-     if (strstr(tname, idcur->GetName()) == tname) {
-        return idcur;
-     }
-   }
-
-   return 0;
+   return (TDataType*)GetListOfTypes(load)->FindObject(name);
 }
 
 //______________________________________________________________________________
