@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.26 2002/02/14 18:04:14 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.27 2002/03/15 20:45:11 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -399,21 +399,21 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
 
    // Define some paremeters
    PrintStr("@/WT"); WriteInteger(WT)       ; PrintStr(" def"); // Cells width
-   PrintStr(" /HT"); WriteInteger(HT)       ; PrintStr(" def"); // Cells height   PrintStr("@/WT"); WriteInteger(ix2-ix1)  ; PrintStr(" def"); // Cells width
+   PrintStr(" /HT"); WriteInteger(HT)       ; PrintStr(" def"); // Cells height
    PrintStr(" /XS"); WriteInteger(ix1)      ; PrintStr(" def"); // X start
-   PrintStr(" /Y") ; WriteInteger(iy1)      ; PrintStr(" def"); // Y start
+   PrintStr(" /YY"); WriteInteger(iy1)      ; PrintStr(" def"); // Y start
    PrintStr(" /NX"); WriteInteger(W)        ; PrintStr(" def"); // Number of columns
    PrintStr(" /NY"); WriteInteger(fMaxLines); PrintStr(" def"); // Number of lines
 
    // This PS procedure draws one cell.
    PrintStr(" /DrawCell ");
-   PrintStr(   "{WT HT X Y bf");
+   PrintStr(   "{WT HT XX YY bf");
    PrintStr(   " /NBBD NBBD 1 add def");
    PrintStr(   " NBBD NBB eq {exit} if");
-   PrintStr(   " /X WT X add def");
+   PrintStr(   " /XX WT XX add def");
    PrintStr(   " IX NX eq ");
-   PrintStr(      "{/Y Y HT sub def");
-   PrintStr(      " /X XS def");
+   PrintStr(      "{/YY YY HT sub def");
+   PrintStr(      " /XX XS def");
    PrintStr(      " /IX 0 def} if");
    PrintStr(   " /IX IX 1 add def} def");
 
@@ -422,7 +422,7 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
    // should be duplicated n-300 times.
    PrintStr(" /DrawCT ");
    PrintStr(   "{/NBB NX NY mul def");
-   PrintStr(   " /X XS def");
+   PrintStr(   " /XX XS def");
    PrintStr(   " /IX 1 def");
    PrintStr(   " /NBBD 0 def");
    PrintStr(   " /RC 0 def /GC 1 def /BC 2 def");
@@ -441,7 +441,7 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
    PrintStr(         " /RC RC 3 add def");
    PrintStr(         " /GC GC 3 add def");
    PrintStr(         " /BC BC 3 add def} ifelse NBBD NBB eq {exit} if} for");
-   PrintStr(         " /Y Y HT sub def clear} def");
+   PrintStr(         " /YY YY HT sub def clear} def");
 
    PrintStr(" /CT [");
 }
