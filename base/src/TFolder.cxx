@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.11 2001/03/29 11:25:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.12 2001/04/04 13:59:37 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -82,6 +82,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TError.h"
+#include "TFile.h"
 #include "TRegexp.h"
 
 const int kMAXDEPTH = 64;
@@ -378,4 +379,17 @@ void TFolder::Remove(TObject *obj)
 
    if (obj == 0 || fFolders == 0) return;
    fFolders->Remove(obj);
+}
+
+//______________________________________________________________________________
+void TFolder::SaveAs(const char *filename)
+{
+// Save all objects in this folder in filename
+// Each object in this folder will have a key in the file where the name of
+// the key will be the name of the object.
+
+   TFile f(filename,"recreate");
+   if (f.IsZombie()) return;
+   fFolders->Write();
+   printf("Folder: %s saved to file: %s\n",GetName(),filename);
 }
