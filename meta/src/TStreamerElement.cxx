@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.37 2001/11/22 18:10:01 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.38 2001/11/28 14:56:38 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -246,7 +246,8 @@ void TStreamerElement::SetStreamer(Streamer_t streamer)
 
    fStreamer = streamer;
    if (streamer) {
-      if (fArrayLength == 0 && fType != kSTL) return;
+      //if (fArrayLength == 0 && fType != kSTL) return;
+      if (fType != kSTL) return;
       //printf("Changing type of %s from %d to kStreamer\n",GetName(),fType);
       fType = TStreamerInfo::kStreamer;
       fNewType = fType;
@@ -900,6 +901,16 @@ Int_t TStreamerObjectPointer::GetSize() const
    
    if (fArrayLength) return fArrayLength*sizeof(void *);
    return sizeof(void *);
+}
+
+//______________________________________________________________________________
+void TStreamerObjectPointer::SetArrayDim(Int_t dim)
+{
+   // Set number of array dimensions.
+   
+   fArrayDim = dim;
+   //if (dim) fType += TStreamerInfo::kOffsetL;
+   fNewType = fType;
 }
 
 //______________________________________________________________________________
