@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.66 2004/05/10 15:06:35 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.67 2004/06/02 15:17:52 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -658,10 +658,11 @@ void TCanvas::Close(Option_t *option)
    fCanvasID = -1;
    fBatch    = kTRUE;
 
+   gROOT->GetListOfCanvases()->Remove(this);
+
    // Close actual window on screen
    SafeDelete(fCanvasImp);
 
-   gROOT->GetListOfCanvases()->Remove(this);
 
    if (cansave == this) {
       gPad = (TCanvas *) gROOT->GetListOfCanvases()->First();
