@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.31 2004/04/30 14:57:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.32 2004/05/03 12:56:16 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -193,8 +193,6 @@ Bool_t TGButton::HandleButton(Event_t *event)
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
                            (Long_t) fUserData);
    }
-
-   Bool_t now = !IsDown();          // kTRUE if button now is off
 
    if (in) { 
       EmitSignals(was);
