@@ -74,6 +74,7 @@ enable_python=no
 enable_ruby=no
 enable_qt=no
 enable_thread=           # must be set explicitely via --enable-thread
+enable_xrootd=           # must be set explicitely via --enable-xrootd
 
 #
 # ./configure arguments and defaults set via supported env vars
@@ -1659,21 +1660,22 @@ fi
 #
 ### echo %%% Check for xrootd support
 #
-buildxrd="no"
-hasnetx="#"
+case $arch in
+linux)
+    if test "x$enable_xrootd" = "x"; then
+        enable_xrootd="yes"
+    fi
+    ;;
+esac
+message "Checking whether to build xrootd"
 if test "x$enable_xrootd" = "xyes"; then
-    # The server builds on Linux, Solaris and MacOS X only
-    # (for the time being)
-    message "Checking for xrootd platform support"
-    case $arch in
-    # linux* | solaris* | macos*)
-    linux)
-        buildxrd="yes"
-        hasnetx=""
-        echo "yes" ;;
-    *)
-        echo "no"  ;;
-    esac
+    buildxrd="yes"
+    hasnetx=""
+    echo "yes"
+else
+    buildxrd="no"
+    hasnetx="#"
+    echo "no"
 fi
 
 ######################################################################
