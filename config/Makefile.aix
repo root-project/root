@@ -43,6 +43,8 @@ F77LIBS       = -lxlf -lxlf90
 
 # Extras
 EXPLICITLINK        = YES
+HISTLIBDEP          = $(MATRIXLIB)
+HISTLIBEXTRA        = -lMatrix
 GRAFLIBDEP          = $(HISTLIB)
 GRAFLIBEXTRA        = -lHist
 GPADLIBDEP          = $(GRAFLIB) $(HISTLIB)

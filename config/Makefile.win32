@@ -59,6 +59,8 @@ F77LIBS       =
 
 # Extras
 EXPLICITLINK        = YES
+HISTLIBDEP          = $(MATRIXLIB)
+HISTLIBEXTRA        = lib/libMatrix.lib
 GRAFLIBDEP          = $(HISTLIB)
 GRAFLIBEXTRA        = lib/libHist.lib
 GPADLIBDEP          = $(GRAFLIB) $(HISTLIB)
