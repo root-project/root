@@ -440,7 +440,7 @@ distclean:: clean
 	-@mv -f include/config.hh include/config.h
 	@rm -f bin/*.dll bin/*.exp bin/*.lib bin/*.pdb \
                lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
-               .def
+               *.def .def
 	-@mv -f tutorials/galaxy.pal.root tutorials/galaxy.pal.roott
 	-@mv -f tutorials/galaxy.root tutorials/galaxy.roott
 	-@mv -f tutorials/mlpHiggs.root tutorials/mlpHiggs.roott
