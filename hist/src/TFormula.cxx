@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.46 2003/07/06 19:40:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.47 2003/07/08 07:26:30 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -58,6 +58,10 @@ ClassImp(TFormula)
 //*-*     pol3(5) is a substitute for par[5]+par[6]*x+par[7]*x**2+par[8]*x**3
 //*-*         (here Pol3 stands for Polynomial of degree 3)
 //*-*
+//*-*   TMath functions can be part of the expression, eg:
+//*-*     -  TMath::Landau(x)*sin(x)
+//*-*     -  TMath::Erf(x)
+//*-*
 //*-*   Comparisons operators are also supported (&&, ||, ==, <=, >=, !)
 //*-*   Examples:
 //*-*      sin(x*(x<0.5 || x>1))
@@ -82,6 +86,16 @@ ClassImp(TFormula)
 //*-*
 //*-*   This class is the base class for the function classes TF1,TF2 and TF3.
 //*-*   It is also used by the ntuple selection mechanism TNtupleFormula.
+//*-*
+//*-*
+//*-*     WHY TFormula CANNOT ACCEPT A CLASS MEMBER FUNCTION ?
+//*-*     ====================================================
+//*-* This is a frequently asked question.
+//*-* C++ is a strongly typed language. There is no way for TFormula (without
+//*-* recompiling this class) to know about all possible user defined data types.
+//*-* This also apply to the case of a static class function.
+//*-* Because TMath is a special and frequent case, TFormula is aware
+//*-* of all TMath functions.
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
