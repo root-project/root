@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.15 2002/02/13 02:03:28 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.16 2002/02/20 19:46:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -201,5 +201,28 @@ Bool_t RooSimFitContext::setPdfParamVal(Int_t index, Double_t value, Bool_t verb
   }
 
   return kTRUE ;
+}
+
+
+void RooSimFitContext::syncParams() const
+{
+  Int_t i,index ;
+  
+  for (index=0 ; index<_floatParamList->getSize() ; index++) {
+    for (i=0 ; i<_nCtx ; i++) {
+      if (_ctxArray[i]) {
+	RooAbsArg* par = _floatParamList->at(index) ;
+	if (!par) continue ;
+	Double_t value = ((RooAbsReal*)par)->getVal() ;
+	
+	Int_t subIdx = _ctxArray[i]->_floatParamList->index(par) ;
+	// Mark subcontexts as dirty
+	if (subIdx!=-1) {	  
+	  _ctxArray[i]->setPdfParamVal(subIdx,value,kFALSE) ;
+	  _dirtyArray[i] = kTRUE ;
+	}
+      }
+    }
+  }
 }
 

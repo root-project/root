@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooNLLBinding.cc,v 1.2 2001/10/08 05:20:18 verkerke Exp $
+ *    File: $Id: RooNLLBinding.cc,v 1.3 2002/01/25 00:23:06 verkerke Exp $
  * Authors:
  *   DK, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -44,6 +44,14 @@ RooNLLBinding::~RooNLLBinding()
 Double_t RooNLLBinding::operator()(const Double_t xvector[]) const 
 {
   assert(isValid());
-  loadValues(xvector);    
-  return _context->nLogLikelihood() ;
+  loadValues(xvector);      
+  Double_t NLL =  _context->nLogLikelihood() ;
+  cout << "RooNLLBinding::operator() NLL(" ;
+  Int_t i ;  
+  for (i=0 ; i<_dimension ; i++) {
+    if (i!=0) cout << ", " ;
+    cout << _vars[i]->GetName() << " = " << _vars[i]->getVal() ;
+  }
+  cout << ") = " << NLL << endl ;
+  return NLL ;
 }
