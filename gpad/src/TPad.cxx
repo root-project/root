@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.41 2001/06/25 16:54:37 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.42 2001/07/17 09:09:08 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -197,7 +197,7 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fBorderSize = bordersize;
    fBorderMode = bordermode;
    if (gPad)   fCanvas = gPad->GetCanvas();
-   else        fCanvas = (TCanvas*)this;
+   else        fCanvas = (TCanvas*)this; 
    fMother     = (TPad*)gPad;
    fPrimitives = new TList;
    fExecs      = new TList;
@@ -225,7 +225,12 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fY1 = 0;
    fY2 = 1;
 
-   if (!gPad) return;
+   if (!gPad) {
+      Error("TPad", "You must create a TCanvas before creating a TPad");
+      MakeZombie();
+      return;
+   }
+
    TPad *padsav = (TPad*)gPad;
 
    if ((xlow < 0) || (xlow > 1) || (ylow <0) || (ylow > 1)) {
