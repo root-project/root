@@ -28,7 +28,7 @@ current_test.log : main Run.C
 
 currentTest: current_test.log
 	$(CMDECHO) diff -b current_test.log current_test.ref
-	
+
 $(DICTS) : %dict.C : %.h %linkdef.h
 	$(CMDECHO)rootcint -f $@ -c $^
 
@@ -36,7 +36,7 @@ $(DICTS) : %dict.C : %.h %linkdef.h
 $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)
 	$(CMDECHO)$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" "" $@ "$^" "$(ROOTLIBS)" >& $*.build.log
-		   
+
 #ifeq ($(ARCH),aix)
 #		@/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 #else
@@ -70,10 +70,3 @@ local_clean:
 	$(CMDECHO)rm -rf *.exp .def *.log
 
 clean: local_clean
-
-
-array_cxx.$(DllSuf) : array.cxx
-	$(CMDECHO)root.exe -l -b -q '.L $<++' 
-
-.C.$(ObjSuf):
-	$(CMDECHO)$(CXX) $(CXXFLAGS) -c $<
