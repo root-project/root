@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name$:$Id$ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -43,11 +43,13 @@ enum EMessageTypes {
    kPROOF_LOGDONE,                       //log file received
    kPROOF_STATUS,                        //print status of slave
    kPROOF_PING,                          //ping slave
+   kPROOF_PRINT,                         //ask master to print config
    kPROOF_RESET,                         //reset slave
    kPROOF_GETOBJECT,                     //ask for object with given name
    kPROOF_TREEDRAW,                      //tree draw command follows
    kPROOF_GETPACKET,                     //ask for next packet
    kPROOF_LIMITS,                        //ask for histogram limits
+   kPROOF_SENDFILE,                      //file follows
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows
