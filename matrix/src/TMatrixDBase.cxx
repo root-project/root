@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.2 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.3 2004/01/28 16:36:48 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -21,7 +21,7 @@
 // used in matrix inversion, equation solving.                          //
 //                                                                      //
 // Matrix elements are arranged in memory in a ROW-wise fashion         //
-// fashion . For (n x m) matrices where n*m < kSizeMax (=25 currently)  //
+// fashion . For (n x m) matrices where n*m <=kSizeMax (=25 currently)  //
 // storage space is avaialble on the stack, thus avoiding expensive     //
 // allocation/deallocation of heap space . However, this introduces of  //
 // course kSizeMax overhead for each matrix object . If this is an      //
@@ -366,6 +366,12 @@ void TMatrixDBase::ResizeTo(Int_t nrows,Int_t ncols)
     const Int_t  ncols_old    = fNcols;
 
     Allocate(nrows,ncols);
+    // new memory should be initialized but be careful ot to wipe out the stack
+    // storage. Initialize all when old or new storag ewas on the heap
+    if (fNelems > kSizeMax || nelems_old > kSizeMax)
+      memset(GetMatrixArray(),0,fNelems*sizeof(Double_t));
+    else if (fNelems > nelems_old)
+      memset(GetMatrixArray()+nelems_old,0,(fNelems-nelems_old)*sizeof(Double_t));
 
     Assert(IsValid());
 
@@ -420,6 +426,12 @@ void TMatrixDBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_
     const Int_t  colLwb_old   = fColLwb;
 
     Allocate(new_nrows,new_ncols,row_lwb,col_lwb);
+    // new memory should be initialized but be careful ot to wipe out the stack
+    // storage. Initialize all when old or new storag ewas on the heap
+    if (fNelems > kSizeMax || nelems_old > kSizeMax)
+      memset(GetMatrixArray(),0,fNelems*sizeof(Double_t));
+    else if (fNelems > nelems_old)
+      memset(GetMatrixArray()+nelems_old,0,(fNelems-nelems_old)*sizeof(Double_t));
 
     Assert(IsValid());
 

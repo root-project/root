@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.5 2004/01/26 21:15:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.6 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -217,6 +217,10 @@ void TVectorF::ResizeTo(Int_t lwb,Int_t upb)
 
     Allocate(new_nrows,lwb);
     Assert(IsValid());
+    if (fNrows > kSizeMax || nrows_old > kSizeMax)
+      memset(GetMatrixArray(),0,fNrows*sizeof(Double_t));
+    else if (fNrows > nrows_old)
+      memset(GetMatrixArray()+nrows_old,0,(fNrows-nrows_old)*sizeof(Double_t));
 
     // Copy overlap
     const Int_t rowLwb_copy = TMath::Max(fRowLwb,rowLwb_old);
@@ -229,14 +233,6 @@ void TVectorF::ResizeTo(Int_t lwb,Int_t upb)
       const Int_t rowOldOff = rowLwb_copy-rowLwb_old;
       const Int_t rowNewOff = rowLwb_copy-fRowLwb;
       Memcpy_m(elements_new+rowNewOff,elements_old+rowOldOff,nrows_copy,nelems_new,nrows_old);
-
-      // initialize the other parts to zero since it was not requested in the Allocate
-      const Int_t bot = rowNewOff;
-      const Int_t top = nelems_new-(rowNewOff+nrows_copy);
-      if (bot > 0)
-        memset(elements_new,0,bot*sizeof(Float_t));
-      if (top > 0)
-        memset(elements_new+bot+nrows_copy,0,top*sizeof(Float_t));
     }
 
     Delete_m(nrows_old,elements_old);
