@@ -111,14 +111,14 @@ else
 			GIFINCDIR="--with-gif-includes=$(ASGIFINCDIR)"; \
 			NOUNGIF="--with-ungif --with-builtin-ungif=no"; \
 		else \
-			NOUNGIF="--with-ungif --with-builtin-ungif"; \
+			NOUNGIF="--with-builtin-ungif"; \
 		fi; \
 		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 		./configure \
 		--with-ttf --with-ttf-includes=../../../$(FREETYPEDIRI) \
 		--with-afterbase=no \
 		$$MMX \
-		--with-ungif --with-builtin-ungif \
+		--with-builtin-ungif \
 		$$JPEGINCDIR \
 		$$PNGINCDIR \
 		$$TIFFINCDIR \
