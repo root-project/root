@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.36 2001/05/16 06:44:53 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.37 2001/05/16 07:41:10 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -308,6 +308,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fType         = 0;
    fClassVersion = 1;
    fBranchCount  = 0;
+   fBranchCount2 = 0;
    fObject       = 0;
    fMaximum      = 0;
            
