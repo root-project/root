@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.21 2002/02/11 09:08:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.22 2002/02/25 11:26:13 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -253,8 +253,8 @@ void TDirectory::Build()
    fSeekDir    = 0;
    fSeekParent = 0;
    fSeekKeys   = 0;
-   fList       = new THashList(100,4);
-   fKeys       = new THashList(100,4);
+   fList       = new THashList(100,50);
+   fKeys       = new THashList(100,50);
    fMother     = gDirectory;
    fFile       = gFile;
    SetBit(kCanDelete);
