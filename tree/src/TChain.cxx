@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -388,12 +388,12 @@ Int_t TChain::LoadTree(Int_t entry)
 
    //Delete current tree and connect new tree
    TDirectory *cursav = gDirectory;
-   delete fFile;
+   delete fFile; fFile = 0;
    TChainElement *element = (TChainElement*)fFiles->At(t);
    if (!element) return -4;
    fFile = TFile::Open(element->GetTitle());
    if (fFile->IsZombie()) {
-      delete fFile;
+      delete fFile; fFile = 0;
       return -3;
    }
    fTree = (TTree*)fFile->Get(element->GetName());
