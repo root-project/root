@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.45 2001/01/18 09:46:44 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.46 2001/01/18 10:37:33 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -770,16 +770,9 @@ void TTree::BuildStreamerInfo(TClass *cl, void *pointer)
    if (cl->Property() & kIsAbstract) return;
    cl->BuildRealData(pointer);
    TStreamerInfo *sinfo = cl->GetStreamerInfo(cl->GetClassVersion());
-   //if (!sinfo->GetTypes() || sinfo->IsOptimized()) sinfo->BuildOld();
-   if (gFile) {
-      TArrayC *cindex = gFile->GetClassIndex();
-      Int_t number = sinfo->GetNumber();
-      if (cindex->fArray[number] == 0) {
-         cindex->fArray[0]       = 1;
-         cindex->fArray[number]  = 1;
-      }
-   }
-   //*-*- Create StreamerInfo for all base classes
+   sinfo->ForceWriteInfo();
+   
+   // Create StreamerInfo for all base classes
    TBaseClass *base;
    TIter nextb(cl->GetListOfBases());
    while((base = (TBaseClass*)nextb())) {
