@@ -1131,9 +1131,16 @@ char *expression;
 	}
 	else if(c==expression[ig1+1]) {
 	  if(lenbuf) {
+#ifndef G__NOPOWEROPR
 	    /* a**b handle as power operator */
 	    ++ig1;
 	    G__exec_binopr('@',G__PREC_P2MEM);
+#else
+	    /* a**b handle as a*(*b) */
+	    G__exec_binopr('*',G__PREC_MULT);
+	    G__exec_unaopr('*');
+	    ++ig1;
+#endif
 	  }
 	  else {
 	    /* **a */

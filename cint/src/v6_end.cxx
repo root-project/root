@@ -303,6 +303,9 @@ int G__free_ifunc_table(ifunc)
 struct G__ifunc_table *ifunc;
 {
   int i,j;
+#ifndef G__OLDIMPLEMENTATION1588
+  int flag;
+#endif
   if(ifunc->next) {
     G__free_ifunc_table(ifunc->next);
     free((void*)ifunc->next);
@@ -313,14 +316,23 @@ struct G__ifunc_table *ifunc;
 #ifdef G__MEMTEST
     fprintf(G__memhist,"func %s\n",ifunc->funcname[i]);
 #endif
+#ifndef G__OLDIMPLEMENTATION1588
+      flag = 0;
+#endif /* 1588 */
 #ifndef G__OLDIMPLEMENTATION1543
     if(ifunc->funcname[i]) {
       free((void*)ifunc->funcname[i]);
       ifunc->funcname[i] = (char*)NULL;
+#ifndef G__OLDIMPLEMENTATION1588
+      flag = 1;
+#endif /* 1588 */
     }
 #endif
 #ifdef G__ASM_WHOLEFUNC
     if(
+#ifndef G__OLDIMPLEMENTATION1588
+       flag &&
+#endif
 #ifndef G__OLDIMPLEMENTATION1501
        ifunc->pentry[i] && 
 #endif
@@ -330,24 +342,34 @@ struct G__ifunc_table *ifunc;
     }
 #endif
 #ifdef G__FRIEND
+#ifndef G__OLDIMPLEMENTATION1588
+    if(flag) G__free_friendtag(ifunc->friendtag[i]);
+#else
     G__free_friendtag(ifunc->friendtag[i]);
 #endif
-    for(j=ifunc->para_nu[i]-1;j>=0;j--) {
-      if(ifunc->para_name[i][j]) {
-	free((void*)ifunc->para_name[i][j]);
-	ifunc->para_name[i][j]=(char*)NULL;
+#endif
+#ifndef G__OLDIMPLEMENTATION1588
+    if(flag) {
+#endif
+      for(j=ifunc->para_nu[i]-1;j>=0;j--) {
+	if(ifunc->para_name[i][j]) {
+	  free((void*)ifunc->para_name[i][j]);
+	  ifunc->para_name[i][j]=(char*)NULL;
+	}
+	if(ifunc->para_def[i][j]) {
+	  free((void*)ifunc->para_def[i][j]);
+	  ifunc->para_def[i][j]=(char*)NULL;
+	}
+	if(ifunc->para_default[i][j] &&
+	   (&G__default_parameter)!=ifunc->para_default[i][j] &&
+	   (G__value*)(-1)!=ifunc->para_default[i][j]) {
+	  free((void*)ifunc->para_default[i][j]);
+	  ifunc->para_default[i][j]=(G__value*)NULL;
+	}
       }
-      if(ifunc->para_def[i][j]) {
-	free((void*)ifunc->para_def[i][j]);
-	ifunc->para_def[i][j]=(char*)NULL;
-      }
-      if(ifunc->para_default[i][j] &&
-	 (&G__default_parameter)!=ifunc->para_default[i][j] &&
-	 (G__value*)(-1)!=ifunc->para_default[i][j]) {
-	free((void*)ifunc->para_default[i][j]);
-	ifunc->para_default[i][j]=(G__value*)NULL;
-      }
+#ifndef G__OLDIMPLEMENTATION1588
     }
+#endif
   }
   ifunc->page=0;
 

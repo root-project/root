@@ -93,7 +93,7 @@ struct iterator_traits {
   typedef typename Iterator::reference         reference;
 };
 
-// template partial specialization, need to implement in CINT
+// template partial specialization, implement in cint5.15.14 1587
 template <class T>
 struct iterator_traits<T*> {
   typedef random_access_iterator_tag iterator_category;
@@ -103,6 +103,9 @@ struct iterator_traits<T*> {
   typedef T&                         reference;
 };
 
+// incomplete implementation in cint5.15.14 1587, need some fix
+// iterator_traits<const int*> is changed as iterator_traits<const int* const>
+// or something, but cint5.15.14 can not handle this well
 template <class T>
 struct iterator_traits<const T*> {
   typedef random_access_iterator_tag iterator_category;
@@ -111,6 +114,7 @@ struct iterator_traits<const T*> {
   typedef const T*                   pointer;
   typedef const T&                   reference;
 };
+
 
 ////////////////////////////////////////////////////////////////////////
 // iterator
@@ -232,6 +236,73 @@ inline random_access_iterator_tag
 _Iter_cat(const T*) {
     return random_access_iterator_tag();
 }
+#endif
+
+#if (G__GNUC>=3)
+// for g++ 3.00
+////////////////////////////////////////////////////////////////////////
+// __normal_iterator
+////////////////////////////////////////////////////////////////////////
+template<typename _Iterator, typename _Container>
+class __normal_iterator
+  : public iterator<iterator_traits<_Iterator>::iterator_category,
+                    iterator_traits<_Iterator>::value_type,
+                    iterator_traits<_Iterator>::difference_type,
+                    iterator_traits<_Iterator>::pointer,
+                    iterator_traits<_Iterator>::reference>
+{
+
+public:
+  typedef __normal_iterator<_Iterator, _Container> normal_iterator_type;
+  typedef iterator_traits<_Iterator>  			__traits_type;
+  typedef typename __traits_type::iterator_category 	iterator_category;
+  typedef typename __traits_type::value_type 		value_type;
+  typedef typename __traits_type::difference_type 	difference_type;
+  typedef typename __traits_type::pointer          	pointer;
+  typedef typename __traits_type::reference 		reference;
+
+  __normal_iterator() ;
+
+#ifndef __CINT__ //this can be a problem, may need solution not to mask this
+  explicit __normal_iterator(const _Iterator& __i) ;
+#endif
+
+  // Allow iterator to const_iterator conversion
+  template<typename _Iter>
+  inline __normal_iterator(const __normal_iterator<_Iter, _Container>& __i);
+
+  //There was a big hussle compiling operator*(), partial template 
+  //specialization for iterator_traits<T*> used in __normal_iterator.
+
+  // Forward iterator requirements
+  reference operator*() const ; 
+
+  pointer operator->() const ;
+
+  normal_iterator_type& operator++() ;
+
+  normal_iterator_type operator++(int) ;
+
+  // Bidirectional iterator requirements
+  normal_iterator_type& operator--() ;
+
+  normal_iterator_type operator--(int) ;
+
+  // Random access iterator requirements
+  reference operator[](const difference_type& __n) const;
+
+  normal_iterator_type& operator+=(const difference_type& __n);
+
+  normal_iterator_type operator+(const difference_type& __n) const;
+
+  normal_iterator_type& operator-=(const difference_type& __n);
+
+  normal_iterator_type operator-(const difference_type& __n) const;
+
+  difference_type operator-(const normal_iterator_type& __i) const;
+
+  const _Iterator& base() const ;
+};
 #endif
 
 #pragma endif

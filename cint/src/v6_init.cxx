@@ -1861,6 +1861,11 @@ int G__init_globals()
   G__definedtemplateclass.isforwarddecl=0;
   G__definedtemplateclass.instantiatedtagnum=(struct G__IntList*)NULL;
 #endif
+#ifndef G__OLDIMPLEMENTATION1587
+  G__definedtemplateclass.specialization=(struct G__Definedtemplateclass*)NULL;
+  G__definedtemplateclass.spec_arg=(struct G__Templatearg*)NULL;
+#endif
+
 #ifdef G__TEMPLATEFUNC
   G__definedtemplatefunc.next = (struct G__Definetemplatefunc *)NULL;
   G__definedtemplatefunc.def_para = (struct G__Templatearg*)NULL;

@@ -1840,6 +1840,16 @@ G__value *pios;
     result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
   }
 #endif
+#ifndef G__OLDIMPLEMENTATION1585
+  if(0==ig2) {
+    sprintf(buf,"operator char*()" /* ,pios->obj.i */ );
+    result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
+  }
+  if(0==ig2) {
+    sprintf(buf,"operator const char*()" /* ,pios->obj.i */ );
+    result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
+  }
+#endif
 
   /* restore environment */
   G__store_struct_offset = store_struct_offset;

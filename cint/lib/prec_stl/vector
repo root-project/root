@@ -31,8 +31,14 @@ template<class T,class Allocator=allocator<T> >
 class vector {
  public:
   typedef T value_type;
+#if !(G__GNUC>=3)
   typedef T* iterator;
   typedef const T* const_iterator;
+#else
+  typedef vector<T, Allocator> vector_type;
+  typedef __normal_iterator<T*, vector_type> iterator;
+  typedef __normal_iterator<T*, vector_type> const_iterator;
+#endif
 #if defined(G__GNUC) || defined(G__HPUX)
   typedef value_type* pointer;
   typedef const value_type* const_pointer;
@@ -64,7 +70,11 @@ class vector {
 #if !defined(G__BORLAND) && !defined(G__KCC)
     reverse_iterator& operator=(const reverse_iterator& x) ;
 #endif
+#if !(G__GNUC>=3)
     T* base() ;
+#else
+    iterator base() ;
+#endif
     T& operator*() const ;
     reverse_iterator& operator++();
     reverse_iterator operator++(int a);

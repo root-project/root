@@ -1426,6 +1426,156 @@ char *string,*endmark;
   return(c);
 }
 
+#ifndef G__OLDIMPLEMENTATION1587
+/***********************************************************************
+* G__getname(source,isrc,string,endmark)
+*
+*
+* char *string       : string until the endmark appears
+* char *endmark      : specify endmark characters
+*
+*   read one non-space char string upto next space char or endmark
+*  char.
+*
+* 1) skip space char until non space char appears
+* 2) Store non-space char to char *string. If space char is surrounded by
+*   quotation, it is stored.
+* 3) if space char or one of endmark char which is not surrounded by
+*   quotation appears, stop reading and return the last char.
+*
+*
+*   '     azAZ09*&^%/     '
+*    ----------------^        return(' ');
+*
+* if ";" is given as end mark
+*   '     azAZ09*&^%/;  '
+*    ----------------^        return(';');
+*
+***********************************************************************/
+int G__getname(source,isrc,string,endmark)
+char *source;
+int *isrc;
+char *string,*endmark;
+{
+  short i=0,l;
+  int c,prev;
+  short single_quote=0,double_quote=0,flag=0,spaceflag,ignoreflag;
+  
+  spaceflag=0;
+
+  do {
+    ignoreflag=0;
+    c = source[(*isrc)++] ;
+    
+    if((single_quote==0)&&(double_quote==0)) {
+      l=0;
+      while((prev=endmark[l++])!='\0') {
+	if(c==prev) {
+	  flag=1;
+	  ignoreflag=1;
+	}
+      }
+    }
+    
+    switch(c) {
+    case ' ':
+    case '\t':
+    case '\n':
+    case '\r':
+    case '\f':
+      if((single_quote==0)&&(double_quote==0)) {
+	ignoreflag=1;
+	if(spaceflag!=0) flag=1;
+      }
+      break;
+    case '"':
+      if(single_quote==0) {
+	spaceflag=1;
+	double_quote ^= 1;
+      }
+      break;
+    case '\'':
+      if(double_quote==0) {
+	spaceflag=1;
+	single_quote ^= 1;
+      }
+      break;
+      /*
+	case '\0':
+	flag=1;
+	ignoreflag=1;
+	break;
+	*/
+#ifdef G__NEVER
+    case '/':
+      if((single_quote==0)&&(double_quote==0)) {
+	/* comment */
+	string[i++] = c ;
+	
+	c = source[(*isrc)++] ;
+	switch(c) {
+	case '*':
+	  G__skip_comment();
+	  --i;
+	  ignoreflag=1;
+	  break;
+	case '/':
+	  G__fignoreline();
+	  --i;
+	  ignoreflag=1;
+	  break;
+	default:
+	  fseek(G__ifile.fp,-1,SEEK_CUR);
+	  if(G__dispsource) G__disp_mask=1;
+	  spaceflag=1;
+	  ignoreflag=1;
+	  break;
+	}
+      }
+      
+      break;
+      
+    case '#':
+      if(single_quote==0&&double_quote==0&&(i==0||string[i-1]!='$')) {
+	G__pp_command();
+	ignoreflag=1;
+#ifdef G__TEMPLATECLASS
+	c=' ';
+#endif
+      }
+      break;
+#endif
+
+    case EOF:
+      G__unexpectedEOF("G__fgetname():2");
+#ifndef G__OLDIMPLEMENTATION789
+      string[i] = '\0';
+#endif
+      return(c);
+    default:
+      spaceflag=1;
+#ifdef G__MULTIBYTE
+      if(G__IsDBCSLeadByte(c) && !ignoreflag) {
+	string[i++]=c;
+	c = source[(*isrc)++] ;
+	G__CheckDBCS2ndByte(c);
+      }
+#endif
+      break;
+    }
+    
+    if(ignoreflag==0) {
+      string[i++] = c ;
+    }
+    
+  } while(flag==0) ;
+  
+  string[i]='\0';
+  
+  return(c);
+}
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1572
 /***********************************************************************
  *
@@ -1951,6 +2101,135 @@ char *endmark;
   
   return(c);
 }
+
+#ifndef G__OLDIMPLEMENTATION1587
+/***********************************************************************
+* G__ignorestream(source,isrc,endmark)
+*
+*
+* char *endmark      : specify endmark characters
+*
+*  skip source file until specified endmark char appears.
+* This function is identical to G__fgetstream() except it does not
+* return char *string;
+*
+* 1) read source file.
+* 2) When one of endmark char appears or parenthesis nesting of
+*   parenthesis gets negative , like '())' , stop reading and 
+*   return the last char.
+*
+*  *endmark=";"
+*     '  ab cd e f g;hijklm '
+*      -------------^           return(';');
+*
+*  *endmark=";"
+*     ' abc );'
+*      -----^                   return(')');
+*
+***********************************************************************/
+int G__ignorestream(source,isrc,endmark)
+char *source;
+int* isrc;
+char *endmark;
+{
+  short l;
+  int c,prev;
+  short nest=0,single_quote=0,double_quote=0,flag=0;
+  
+  
+  do {
+    c = source[(*isrc)++] ;
+    
+    
+    if((nest==0)&&(single_quote==0)&&(double_quote==0)) {
+      l=0;
+      while((prev=endmark[l++])!='\0') {
+	if(c==prev) {
+	  flag=1;
+	}
+      }
+    }
+    
+    switch(c) {
+    case '{':
+    case '(':
+    case '[':
+      if((single_quote==0)&&(double_quote==0)) {
+	nest++;
+      }
+      break;
+    case '}':
+    case ')':
+    case ']':
+      if((single_quote==0)&&(double_quote==0)) {
+	nest--;
+	if(nest<0) {
+	  flag=1;
+	}
+      }
+      break;
+    case '"':
+      if(single_quote==0) {
+	double_quote ^= 1;
+      }
+      break;
+    case '\'':
+      if(double_quote==0) {
+	single_quote ^= 1;
+      }
+      break;
+      
+    case '\\':
+      if(flag==0) c = source[(*isrc)++] ;
+      break;
+      
+#ifdef G__NEVER
+    case '/':
+      if((single_quote==0)&&(double_quote==0)) {
+	/* comment */
+	
+	c = source[(*isrc)++] ;
+	switch(c) {
+	case '*':
+	  G__skip_comment();
+	  break;
+	case '/':
+	  G__fignoreline();
+	  break;
+	default:
+	  fseek(G__ifile.fp,-1,SEEK_CUR);
+	  if(c=='\n' /* || c=='\r' */) --G__ifile.line_number;
+	  if(G__dispsource) G__disp_mask=1;
+	  c='/';
+	  /* flag=1; BUG BUG, WHY */
+	  break;
+	}
+      }
+      break;
+#endif
+      
+    /* need to handle preprocessor statements */
+      
+    case EOF:
+      G__unexpectedEOF("G__fignorestream():3");
+      return(c);
+
+#ifdef G__MULTIBYTE
+    default:
+      if(G__IsDBCSLeadByte(c)) {
+	c = source[(*isrc)++] ;
+	G__CheckDBCS2ndByte(c);
+      }
+      break;
+#endif
+    }
+    
+  } while(flag==0) ;
+  
+  return(c);
+}
+
+#endif
 
 /***********************************************************************
 * G__fgetstream_new(string,endmark)

@@ -128,15 +128,27 @@ class setbase {
   setbase(int in) {i=in;}
 } ;
 ostream& operator<<(ostream& ostr,setbase& i) {
+#pragma ifndef G__TMPLTIOS
  if(8==i.i)       ostr.flags(ios::oct);
  else if(10==i.i) ostr.flags(ios::dec);
  else if(16==i.i) ostr.flags(ios::hex);
+#pragma else
+ if(8==i.i)       ostr.flags(ios_base::oct);
+ else if(10==i.i) ostr.flags(ios_base::dec);
+ else if(16==i.i) ostr.flags(ios_base::hex);
+#pragma endif
  return(ostr);
 }
 istream& operator>>(istream& istr,setbase& i) {
+#pragma ifndef G__TMPLTIOS
  if(8==i.i)       istr.flags(ios::oct);
  else if(10==i.i) istr.flags(ios::dec);
  else if(16==i.i) istr.flags(ios::hex);
+#pragma else
+ if(8==i.i)       istr.flags(ios_base::oct);
+ else if(10==i.i) istr.flags(ios_base::dec);
+ else if(16==i.i) istr.flags(ios_base::hex);
+#pragma endif
  return(istr);
 }
 
