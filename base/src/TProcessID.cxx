@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.3 2001/10/01 17:01:47 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.4 2001/10/03 16:43:18 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -164,6 +164,8 @@ void TProcessID::RecursiveRemove(TObject *obj)
 {
    // called by the object destructor
    if (!fMap) return;
+   if (!obj->TestBit(kIsReferenced)) return;
    Long_t uid = (Long_t)obj->GetUniqueID();
+   if (!uid) return;
    fMap->Remove(uid);
 }
