@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMapCatEntry.rdl,v 1.3 2001/08/02 22:36:29 verkerke Exp $
+ *    File: $Id: RooMapCatEntry.rdl,v 1.4 2001/08/09 01:02:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,6 +32,7 @@ public:
 
 protected:
 
+  TString mangle(const char* exp) const ;
   TRegexp _regexp ;
   RooCatType _cat ;
 	

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMapCatEntry.cc,v 1.3 2001/08/02 22:36:29 verkerke Exp $
+ *    File: $Id: RooMapCatEntry.cc,v 1.4 2001/10/08 05:20:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,18 +18,19 @@
 // category state (RooCatType), which should be assign if the match is successfull.
 
 #include "RooFitCore/RooMapCatEntry.hh"
+#include "TString.h"
 
 ClassImp(RooMapCatEntry)
 ;
 
 RooMapCatEntry::RooMapCatEntry(const char* exp, const RooCatType* cat) : 
-  TNamed(exp,exp), _regexp(exp,kTRUE), _cat(*cat) 
+  TNamed(exp,mangle(exp).Data()), _regexp(mangle(exp),kTRUE), _cat(*cat) 
 {
 }
 
 
 RooMapCatEntry::RooMapCatEntry(const RooMapCatEntry& other) : 
-  TNamed(other), _regexp(other.GetName(),kTRUE), _cat(other._cat) 
+  TNamed(other), _regexp(other.GetTitle(),kTRUE), _cat(other._cat) 
 {
 }
 
@@ -37,4 +38,19 @@ RooMapCatEntry::RooMapCatEntry(const RooMapCatEntry& other) :
 Bool_t RooMapCatEntry::match(const char* testPattern) const 
 {
   return (TString(testPattern).Index(_regexp)>=0) ;
+}
+
+
+
+TString RooMapCatEntry::mangle(const char* exp) const
+{
+  // Mangle name : escape regexp character '+'
+  TString t ;
+  const char *c = exp ;
+  while(*c) {
+    if (*c=='+') t.Append('\\') ;
+    t.Append(*c) ;
+    c++ ;
+  }
+  return t ;
 }
