@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.18 2004/07/23 13:48:43 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.19 2004/07/25 07:34:39 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1551,7 +1551,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       sourcefile.close();
       cout << source << " created." << endl;
    }
-   else if(lg == "Python") {
+   else if(lg == "PYTHON") {
       TString classname = filename;
       TString pyfile = filename;
       pyfile += ".py";
