@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.34 2002/08/19 16:37:16 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.35 2002/10/25 17:38:00 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -712,8 +712,10 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       fReadready  = fReadmask;
       fWriteready = fWritemask;
       if(gROOT->IsLineProcessing()) {
-         SleepEx(5, TRUE);
-         return;
+         if (!pendingOnly) {
+            SleepEx(1, TRUE);
+            return;
+         }
       }
       SetEvent(hEvent1);
       if (gXDisplay) {
@@ -724,6 +726,11 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
             }
             if (!pendingOnly) {
                return;
+            }
+         }
+         else {
+            if (!pendingOnly) {
+               SleepEx(1, TRUE);
             }
          }
       }
