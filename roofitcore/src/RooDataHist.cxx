@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.22 2002/04/03 23:37:24 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.23 2002/04/17 20:08:40 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -313,6 +313,16 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
   appendToDir(this,kTRUE) ;
 }
 
+// RooAbsData* RooDataHist::cacheClone(const RooArgSet* newCacheVars, const char* newName=0) 
+// {
+//   RooDataHist* dhist = new RooDataHist(newName?newName:GetName(),GetTitle(),this,*get(),0,kTRUE) ; 
+
+//   RooArgSet* selCacheVars = (RooArgSet*) newCacheVars->selectCommon(dhist->_cachedVars) ;
+//   dhist->initCache(*selCacheVars) ;
+//   delete selCacheVars ;
+
+//   return dhist ;
+// }
 
 
 RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache) 
@@ -448,21 +458,27 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
     Double_t yarr[10] ;
     Double_t xarr[10] ;
     for (i=ybinLo ; i<=intOrder+ybinLo ; i++) {
+      Int_t ibin ;
       if (i>=0 && i<ybinM) {
-	realY->setFitBin(i) ;
-	yarr[i-ybinLo] = interpolateDim(*realX,xval,intOrder,correctForBinSize) ;	
- 	xarr[i-ybinLo] = realY->getVal() ;
+	// In range
+	ibin = i ;
+	realY->setFitBin(ibin) ;
+	xarr[i-ybinLo] = realY->getVal() ;
+      } else if (i>=ybinM) {
+	// Overflow: mirror
+	ibin = 2*ybinM-i-1 ;
+	realY->setFitBin(ibin) ;
+	xarr[i-ybinLo] = 2*realY->getFitMax()-realY->getVal() ;
       } else {
-	yarr[i-ybinLo] = 0. ;
-	if (i>=ybinM) {
-	  xarr[i-ybinLo] = realY->getFitMax() + (i-ybinM+1)*realY->getBinning().averageBinWidth() ;
-	} else {
-	  xarr[i-ybinLo] = realY->getFitMin() + i*realY->getBinning().averageBinWidth() ;
-	}
+	// Underflow: mirror
+	ibin = -i ;
+	realY->setFitBin(ibin) ;
+	xarr[i-ybinLo] = 2*realY->getFitMin()-realY->getVal() ;
       }
+      yarr[i-ybinLo] = interpolateDim(*realX,xval,intOrder,correctForBinSize) ;	
     }
     wInt = RooMath::interpolate(xarr,yarr,intOrder+1,yval) ;
-
+    
   } else {
 
     // Higher dimensional scenarios not yet implemented
@@ -495,23 +511,29 @@ Double_t RooDataHist::interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOr
   Double_t yarr[10] ;
   Double_t xarr[10] ;
   for (i=fbinLo ; i<=intOrder+fbinLo ; i++) {
+    Int_t ibin ;
     if (i>=0 && i<fbinM) {
-      dim.setFitBin(i) ;
-      Int_t idx = calcTreeIndex() ;      
-      yarr[i-fbinLo] = _wgt[idx] ; 
-      if (correctForBinSize) yarr[i-fbinLo] /=  _binv[idx] ;
+      // In range
+      ibin = i ;
+      dim.setFitBin(ibin) ;
       xarr[i-fbinLo] = dim.getVal() ;
+    } else if (i>=fbinM) {
+      // Overflow: mirror
+      ibin = 2*fbinM-i-1 ;
+      dim.setFitBin(ibin) ;
+      xarr[i-fbinLo] = 2*dim.getFitMax()-dim.getVal() ;
     } else {
-      yarr[i-fbinLo] = 0. ;
-      if (i>=fbinM) {
-	xarr[i-fbinLo] = dim.getFitMax() + (i-fbinM+1)*dim.getBinning().averageBinWidth() ;
-      } else {
-	xarr[i-fbinLo] = dim.getFitMin() + i*dim.getBinning().averageBinWidth() ;
-      }
-    }    
+      // Underflow: mirror
+      ibin = -i ;
+      dim.setFitBin(ibin) ;
+      xarr[i-fbinLo] = 2*dim.getFitMin()-dim.getVal() ;
+    }
+    Int_t idx = calcTreeIndex() ;      
+    yarr[i-fbinLo] = _wgt[idx] ; 
+    if (correctForBinSize) yarr[i-fbinLo] /=  _binv[idx] ;
   }
   dim.setFitBin(fbinC) ;
-  Double_t ret =  RooMath::interpolate(xarr,yarr,intOrder+1,xval) ;
+  Double_t ret = RooMath::interpolate(xarr,yarr,intOrder+1,xval) ;
   return ret ;
 }
 
