@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.8 2002/05/18 08:48:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.9 2002/06/14 10:29:06 rdm Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -167,19 +167,30 @@ void TEventList::Enter(Int_t entry)
 {
 //          Enter element entry into the list
 
-   if (!fList) {
-      fList = new Int_t[fSize];
-      fList[0] = entry;
-      fN = 1;
+
+  if (!fList) {
+    fList = new Int_t[fSize];
+    fList[0] = entry;
+    fN = 1;
+    return;
+  }
+  if (entry==fList[fN-1]) return;
+  if (fN >= fSize) {
+    Int_t newsize = TMath::Max(2*fSize,fN+fDelta);
+    Resize(newsize-fSize);
+  }
+  if(entry>fList[fN-1]) {
+    fList[fN] = entry;
+    ++fN;
+  } else {
+    Int_t pos = TMath::BinarySearch(fN, fList, entry);
+    if(pos>=0 && entry==fList[pos])
       return;
-   }
-   if (GetIndex(entry)>=0) return;
-   if (fN >= fSize) {
-      Int_t newsize = TMath::Max(2*fSize,fN+fDelta);
-      Resize(newsize-fSize);
-   }
-   fList[fN] = entry;
-   fN++;
+    ++pos;
+    memmove( &(fList[pos+1]), &(fList[pos]), 4*(fN-pos));
+    fList[pos] = entry;
+    ++fN;
+  }
 }
 
 //______________________________________________________________________________
