@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.68 2004/06/02 09:39:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.69 2004/06/08 20:41:28 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -434,7 +434,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //
 //   Blank characters are stripped, and then the
 //   label is correctly aligned. the dot, if last
-//   character of the string, is also stripped.
+//   character of the string, is also stripped,
+//   unless the option "." (a dot, or period) is specified.
 //
 //   In the following, we have some parameters, like
 //   tick marks length and characters height (in percentage
