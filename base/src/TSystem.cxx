@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.108 2004/11/10 16:41:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.109 2004/11/20 18:08:02 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -352,6 +352,22 @@ void TSystem::Sleep(UInt_t)
    AbstractMethod("Sleep");
 }
 
+//______________________________________________________________________________
+Int_t TSystem::Select(TList *, Long_t)
+{
+   // Select on active file descriptors (called by TMonitor).
+
+   AbstractMethod("Select");
+   return -1;
+}
+//______________________________________________________________________________
+Int_t TSystem::Select(TFileHandler *, Long_t)
+{
+   // Select on active file descriptors (called by TMonitor).
+
+   AbstractMethod("Select");
+   return -1;
+}
 
 //---- handling of system events -----------------------------------------------
 //______________________________________________________________________________

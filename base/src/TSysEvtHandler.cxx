@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.cxx,v 1.3 2002/02/06 11:51:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.cxx,v 1.4 2004/04/20 09:27:03 rdm Exp $
 // Author: Fons Rademakers   16/09/95
 
 /*************************************************************************
@@ -61,8 +61,9 @@ TFileHandler::TFileHandler(int fd, int mask)
 
    fFileNum = fd;
    if (!mask)
-      mask = 1;
+      mask = kRead;
    fMask = mask;
+   fReadyMask = 0;
 }
 
 //______________________________________________________________________________
@@ -108,6 +109,16 @@ Bool_t TFileHandler::HasWriteInterest()
    // True if handler is interested in write events.
 
    return (fMask & 2);
+}
+
+//______________________________________________________________________________
+void TFileHandler::SetInterest(Int_t mask)
+{
+   // Set interest mask to 'mask'.
+
+   if (!mask)
+      mask = kRead;
+   fMask = mask;
 }
 
 //______________________________________________________________________________

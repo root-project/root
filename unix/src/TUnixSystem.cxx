@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.113 2004/10/15 16:55:07 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.114 2004/12/08 13:58:13 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -321,7 +321,6 @@ public:
    }
    Int_t *GetBits() { return (Int_t *)fds_bits; }
 };
-
 
 //______________________________________________________________________________
 static void SigHandler(ESignals sig)
@@ -756,6 +755,84 @@ void TUnixSystem::Sleep(UInt_t milliSec)
    tv.tv_usec = (milliSec % 1000) * 1000;
 
    select(0, 0, 0, 0, &tv);
+}
+
+//______________________________________________________________________________
+Int_t TUnixSystem::Select(TList *act, Long_t to)
+{
+   // Select on file descriptors. The timeout to is in millisec.
+
+   Int_t rc = -4;
+
+   TFdSet rd, wr;
+   Int_t mxfd = -1;
+   TIter next(act);
+   TFileHandler *h = 0;
+   while ((h = (TFileHandler *) next())) {
+      Int_t fd = h->GetFd();
+      if (fd > -1) {
+         if (h->HasReadInterest()) {
+            rd.Set(fd);
+            mxfd = TMath::Max(mxfd, fd);
+         }
+         if (h->HasWriteInterest()) {
+            wr.Set(fd);
+            mxfd = TMath::Max(mxfd, fd);
+         }
+         h->ResetReadyMask();
+      }
+   }
+   if (mxfd > -1)
+      rc = UnixSelect(mxfd+1, &rd, &wr, to);
+
+   // Set readiness bits
+   if (rc > 0) {
+      next.Reset();
+      while ((h = (TFileHandler *) next())) {
+         Int_t fd = h->GetFd();
+         if (rd.IsSet(fd))
+            h->SetReadReady();
+         if (wr.IsSet(fd))
+            h->SetWriteReady();
+      }
+   }
+
+   return rc;
+}
+
+//______________________________________________________________________________
+Int_t TUnixSystem::Select(TFileHandler *h, Long_t to)
+{
+   // Select on the file descriptor related to file handler h.
+   // The timeout to is in millisec.
+
+   Int_t rc = -4;
+
+   TFdSet rd, wr;
+   Int_t mxfd = -1;
+   Int_t fd = -1;
+   if (h) {
+      fd = h->GetFd();
+      if (fd > -1) {
+         if (h->HasReadInterest())
+            rd.Set(fd);
+         if (h->HasWriteInterest())
+            wr.Set(fd);
+         h->ResetReadyMask();
+         mxfd = fd;
+         rc = UnixSelect(mxfd+1, &rd, &wr, to);
+      }
+   }
+
+   // Fill output lists, if required
+   if (rc > 0) {
+      if (rd.IsSet(fd))
+         h->SetReadReady();
+      if (wr.IsSet(fd))
+         h->SetWriteReady();
+   }
+
+   return rc;
 }
 
 //---- handling of system events -----------------------------------------------

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.32 2004/10/15 16:55:07 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.33 2004/10/15 17:15:44 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -122,6 +122,9 @@ public:
    Bool_t            ProcessEvents();
    void              DispatchOneEvent(Bool_t pendingOnly = kFALSE);
    void              ExitLoop();
+   Int_t             Select(TList *active, Long_t timeout);
+   Int_t             Select(TFileHandler *fh, Long_t timeout);
+
    //---- Handling of system events
    void              AddSignalHandler(TSignalHandler *sh);
    TSignalHandler   *RemoveSignalHandler(TSignalHandler *sh);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.h,v 1.3 2002/02/03 18:34:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.h,v 1.4 2004/04/20 09:27:03 rdm Exp $
 // Author: Fons Rademakers   16/09/95
 
 /*************************************************************************
@@ -70,9 +70,10 @@ class TFileHandler : public TSysEvtHandler {
 
 protected:
    int  fFileNum;     //File descriptor
-   int  fMask;        //Event mask, either bit 1 (read), 2 (write) or both can be set
+   int  fMask;        //Event interest mask, either bit 1 (read), 2 (write) or both can be set
+   int  fReadyMask;   //Readiness mask, either bit 1 (read), 2 (write) or both can be set
 
-   TFileHandler() { fFileNum = -1; } //For Dictionary()
+   TFileHandler() { fFileNum = -1; }
 
 public:
    enum { kRead = 1, kWrite = 2 };
@@ -86,6 +87,12 @@ public:
    virtual Bool_t  WriteNotify();
    virtual Bool_t  HasReadInterest();
    virtual Bool_t  HasWriteInterest();
+   virtual void    SetInterest(Int_t mask);
+   virtual void    ResetReadyMask() { fReadyMask = 0; }
+   virtual void    SetReadReady() { fReadyMask |= 0x1; }
+   virtual void    SetWriteReady() { fReadyMask |= 0x2; }
+   virtual Bool_t  IsReadReady() const { return (fReadyMask & 0x1); }
+   virtual Bool_t  IsWriteReady() const { return (fReadyMask & 0x2); }
    virtual void    Add();
    virtual void    Remove();
 

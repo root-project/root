@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.44 2004/07/26 22:57:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.45 2004/10/15 16:55:06 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -261,6 +261,8 @@ public:
    virtual void            ExitLoop();
    Bool_t                  InControl() const { return fInControl; }
    virtual void            InnerLoop();
+   virtual Int_t           Select(TList *active, Long_t timeout);
+   virtual Int_t           Select(TFileHandler *fh, Long_t timeout);
 
    //---- Handling of system events
    virtual void            AddSignalHandler(TSignalHandler *sh);

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.106 2004/10/15 17:20:17 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.107 2004/12/14 00:20:48 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3285,6 +3285,71 @@ void TWinNTSystem::Sleep(UInt_t milliSec)
    // a specified interval.
 
    ::Sleep(milliSec);
+}
+
+//______________________________________________________________________________
+Int_t TWinNTSystem::Select(TList *act, Long_t to)
+{
+   // Select on file descriptors. The timeout to is in millisec.   
+   Int_t rc = -4;
+
+   TFdSet rd, wr;
+   Int_t mxfd = -1;
+   TIter next(act);
+   TFileHandler *h = 0;
+   while ((h = (TFileHandler *) next())) {
+      Int_t fd = h->GetFd();
+      if (h->HasReadInterest())
+         rd.Set(fd);
+      if (h->HasWriteInterest())
+         wr.Set(fd);
+      h->ResetReadyMask();
+   }
+   rc = WinNTSelect(&rd, &wr, to);
+
+   // Set readiness bits
+   if (rc > 0) {
+      next.Reset();
+      while ((h = (TFileHandler *) next())) {
+         Int_t fd = h->GetFd();
+         if (rd.IsSet(fd))
+            h->AssertReadReady();
+         if (wr.IsSet(fd))
+            h->AssertWriteReady();
+      }
+   }
+
+   return rc;
+}
+
+//______________________________________________________________________________
+Int_t TWinNTSystem::Select(TFileHandler *h, Long_t to)
+{
+   // Select on the file descriptor related to file handler h.
+   // The timeout to is in millisec.   
+   Int_t rc = -4;
+
+   TFdSet rd, wr;
+   Int_t fd = -1;
+   if (h) {
+      fd = h->GetFd();
+      if (h->HasReadInterest())
+         rd.Set(fd);
+      if (h->HasWriteInterest())
+         wr.Set(fd);
+      h->ResetReadyMask();
+      rc = WinNTSelect(&rd, &wr, to);
+   }
+
+   // Fill output lists, if required
+   if (rc > 0) {
+      if (rd.IsSet(fd))
+         h->AssertReadReady();
+      if (wr.IsSet(fd))
+         h->AssertWriteReady();
+   }
+
+   return rc;
 }
 
 //---- RPC ---------------------------------------------------------------------

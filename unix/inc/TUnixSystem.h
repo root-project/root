@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.20 2004/07/26 22:57:21 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.21 2004/10/15 16:55:07 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -91,6 +91,8 @@ public:
 
    //---- EventLoop --------------------------------------------
    void              DispatchOneEvent(Bool_t pendingOnly = kFALSE);
+   Int_t             Select(TList *active, Long_t timeout);
+   Int_t             Select(TFileHandler *fh, Long_t timeout);
 
    //---- Handling of system events ----------------------------
    void              CheckChilds();
