@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.20 2002/01/02 21:47:39 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.21 2002/01/15 10:31:28 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -53,7 +53,7 @@ class TTreeFormula : public TFormula {
 
 protected:
    enum { kIsCharacter = BIT(12) };
-   enum { kDirect, kDataMember, kMethod };
+   enum { kDirect, kDataMember, kMethod, kIndexOfEntry };
 
    TTree       *fTree;            //! pointer to Tree
    Short_t     fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.114 2002/02/25 11:21:44 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.115 2002/03/07 02:03:47 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1670,6 +1670,14 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //  of the histogram name;
 //    tree.Draw("sqrt(x)>>+hsqrt","y>0")
 //      will not reset hsqrt, but will continue filling.
+//
+//     Special functions and variables
+//     ===============================
+//
+//  'ENTRY':  A TTree::Draw formula can use the special variable ENTRY
+//  to access the entry number being read.  For example to draw every 
+//  other entry use:
+//    tree.Draw("myvar","ENTRY%2==0");
 //
 //     Making a Profile histogram
 //     ==========================

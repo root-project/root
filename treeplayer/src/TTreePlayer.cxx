@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.90 2002/02/15 22:13:49 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.91 2002/02/26 21:55:58 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -651,6 +651,14 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //    tree.Draw("sqrt(x)>>+hsqrt","y>0")
 //      will not reset hsqrt, but will continue filling.
 //  This works for 1-D, 2-D and 3-D histograms.
+//
+//     Special functions and variables
+//     ===============================
+//
+//  'ENTRY':  In TTree::Draw formula can use the special variable ENTRY
+//  to access the entry number being read.  For example to draw every 
+//  other entry use:
+//    tree.Draw("myvar","ENTRY%2==0");
 //
 //     Making a Profile histogram
 //     ==========================

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.86 2002/03/12 07:20:03 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.87 2002/03/13 07:16:58 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1129,6 +1129,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
       if (fCodes[i] < 0) continue;
 
       TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
+      if (!leaf) continue;
 
       if (fOper[i] >= 105000) {
          // We have a string used as a string
@@ -1505,6 +1506,13 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 
    UInt_t paran_level = 0;
    TObjArray castqueue;
+
+   if (strcmp(cname,"ENTRY")==0) {
+      Int_t code = fNcodes++;
+      fCodes[code] = 0;
+      fLookupType[code] = kIndexOfEntry;
+      return code;
+   } 
 
    for (i=0, current = &(work[0]); i<=nchname && !final;i++ ) {
       // We will treated the terminator as a token.
@@ -2743,6 +2751,10 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
          Double_t ycut = fy->EvalInstance(instance);
          return gcut->IsInside(xcut,ycut);
       }
+      if (fLookupType[0]==kIndexOfEntry) {
+         return fTree->GetReadEntry();
+      }
+
       TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
 
       real_instance = GetRealInstance(instance,0);
@@ -2806,20 +2818,25 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
             Double_t ycut = fy->EvalInstance(instance);
             param = gcut->IsInside(xcut,ycut);
          } else {
-            TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(code);
+            if (fLookupType[0]==kIndexOfEntry) {
+               param = fTree->GetReadEntry();
+            } else {
 
-            // Now let calculate what physical instance we really need.
-            real_instance = GetRealInstance(instance,code);
+               TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(code);
 
-            if (!instance) leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
-            else if (real_instance>fNdata[code]) return 0;
+               // Now let calculate what physical instance we really need.
+               real_instance = GetRealInstance(instance,code);
 
-            switch(fLookupType[code]) {
-               case kDirect: param = leaf->GetValue(real_instance); break;
-               case kMethod: param = GetValueFromMethod(code,leaf); break;
-               case kDataMember: param = ((TFormLeafInfo*)fDataMembers.UncheckedAt(code))->
-                                                   GetValue(leaf,real_instance); break;
-               default: param = 0;
+               if (!instance) leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
+               else if (real_instance>fNdata[code]) return 0;
+               
+               switch(fLookupType[code]) {
+                  case kDirect: param = leaf->GetValue(real_instance); break;
+                  case kMethod: param = GetValueFromMethod(code,leaf); break;
+                  case kDataMember: param = ((TFormLeafInfo*)fDataMembers.UncheckedAt(code))->
+                                      GetValue(leaf,real_instance); break;
+                  default: param = 0;
+               }
             }
          }
          tab[pos] = param; pos++;
@@ -3241,6 +3258,8 @@ Bool_t TTreeFormula::IsInteger(Int_t code) const
    if (fLookupType[code]!=kDirect) {
       info = GetLeafInfo(code);
       return info->IsInteger();
+   } else if (fLookupType[code]!=kIndexOfEntry) {
+      return kTRUE;
    }
    if (!strcmp(leaf->GetTypeName(),"Int_t"))    return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"Short_t"))  return kTRUE;
