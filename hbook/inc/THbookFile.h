@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.h,v 1.2 2002/02/18 23:11:49 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.h,v 1.3 2002/02/20 16:57:30 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -32,6 +32,7 @@ class THbookFile : public TNamed {
 
 protected:
    Int_t         fLun;     //Fortran logical unit for this file
+   Int_t         fLrecl;   //Record length in Hbook machine words
    TList        *fList;    //list of objects in memory
    TList        *fKeys;    //list of Hbook keys (Ids) on disk
    TString       fCurDir;  //name of current directory

@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.6 2002/02/20 17:05:16 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.7 2002/02/21 09:51:24 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -287,6 +287,7 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
 #else
   hropen(fLun,PASSCHAR(topdir),PASSCHAR(fname),PASSCHAR("p"),lrecl,ier);
 #endif
+  fLrecl = lrecl;
   sprintf(topdir,"//lun%d",fLun);
   SetTitle(topdir);
   fCurDir = topdir;
@@ -436,7 +437,10 @@ TObject *THbookFile::Get(Int_t idd)
      if (iq[lcid-2] == 2) obj = ConvertRWN(id);
      else                 obj = ConvertCWN(id);
      //hdelet(id); //cannot be deleted here since used in GetEntry
-     if (obj) fList->Add(obj);
+     if (obj) {
+        fList->Add(obj);
+        ((THbookTree *)obj)->SetTitle(GetName());
+     }
      return obj;
   }
   if (hcbits[0] && hcbits[7]) {
