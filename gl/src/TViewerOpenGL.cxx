@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.42 2004/12/14 08:45:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.43 2004/12/14 09:34:27 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -298,6 +298,11 @@ TViewerOpenGL::~TViewerOpenGL()
    delete fL3;
    delete fL4;
    delete fContextMenu;
+   delete fShutter;
+   delete fShutItem1;
+   delete fShutItem2;
+   delete fShutItem3;
+   delete fShutItem4;
 }
 
 //______________________________________________________________________________
