@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.21 2001/11/01 17:57:55 david Exp $
+ *    File: $Id: RooTreeData.cc,v 1.22 2001/11/19 18:03:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -925,6 +925,148 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
 
   return table ;
 }
+
+
+
+Double_t RooTreeData::moment(RooRealVar &var, Double_t order, Double_t offset) const
+{
+  // Lookup variable in dataset
+  RooRealVar *varPtr= (RooRealVar*) _vars.find(var.GetName());
+  if(0 == varPtr) {
+    cout << "RooDataSet::moment(" << GetName() << ") ERROR: unknown variable: " << var.GetName() << endl ;
+    return 0;
+  }
+
+  // Check if found variable is of type RooRealVar
+  if (!dynamic_cast<RooRealVar*>(varPtr)) {
+    cout << "RooDataSet::moment(" << GetName() << ") ERROR: variable " << var.GetName() << " is not of type RooRealVar" << endl ;
+    return 0;
+  }
+
+  // Check if dataset is not empty
+  if(numEntries(kTRUE) <= 0) {
+    cout << "RooDataSet::moment(" << GetName() << ") WARNING: empty dataset" << endl ;
+    return 0;
+  }
+
+  // Calculate requested moment
+  Double_t sum(0);
+  for(Int_t index= 0; index < numEntries(); index++) {
+    get(index) ;
+    sum+= weight() * pow(varPtr->getVal() - offset,order);
+  }
+  return sum/numEntries(kTRUE);
+}
+
+
+
+RooRealVar* RooTreeData::meanVar(RooRealVar &var) const
+{
+  // Create a new variable with appropriate strings. The error is calculated as
+  // RMS/Sqrt(N) which is generally valid.
+
+  // Create holder variable for mean
+  TString name(var.GetName()),title("Mean of ") ;
+  name.Append("Mean");
+  title.Append(var.GetTitle());
+  RooRealVar *mean= new RooRealVar(name,title,0) ;
+  mean->setConstant(kFALSE) ;
+
+  // Adjust plot label
+  TString label("<") ;
+  label.Append(var.getPlotLabel());
+  label.Append(">");
+  mean->setPlotLabel(label.Data());
+
+  // fill in this variable's value and error
+  Double_t meanVal=moment(var,1) ;
+  Double_t N(numEntries(kTRUE)) ;
+
+  Double_t rmsVal= sqrt(moment(var,2,meanVal)*N/(N-1));
+  mean->setVal(meanVal) ;
+  mean->setError(N > 0 ? rmsVal/sqrt(N) : 0);
+
+  return mean;
+}
+
+
+
+RooRealVar* RooTreeData::rmsVar(RooRealVar &var) const
+{
+  // Create a new variable with appropriate strings. The error is calculated as
+  // RMS/(2*Sqrt(N)) which is only valid if the variable has a Gaussian distribution.
+
+  // Create RMS value holder
+  TString name(var.GetName()),title("RMS of ") ;
+  name.Append("RMS");
+  title.Append(var.GetTitle());
+  RooRealVar *rms= new RooRealVar(name,title,0) ;
+  rms->setConstant(kFALSE) ;
+
+  // Adjust plot label
+  TString label(var.getPlotLabel());
+  label.Append("_{RMS}");
+  rms->setPlotLabel(label);
+
+  // Fill in this variable's value and error
+  Double_t meanVal(moment(var,1)) ;
+  Double_t N(numEntries(kTRUE));
+  Double_t rmsVal= sqrt(moment(var,2,meanVal)*N/(N-1));
+  rms->setVal(rmsVal) ;
+  rms->setError(rmsVal/sqrt(2*N));
+
+  return rms;
+}
+
+
+
+RooPlot* RooTreeData::statOn(RooPlot* frame, RooRealVar &var,
+			     const char *label, Int_t sigDigits,
+			     Option_t *options, Double_t xmin,
+			     Double_t xmax, Double_t ymax) {
+
+  Bool_t showLabel= (label != 0 && strlen(label) > 0);
+
+  // calculate the box's size
+  Int_t nPar= 3;
+  Real_t dy(0.06), ymin(ymax-nPar*dy);
+  if(showLabel) ymin-= dy;
+
+  // create the box and set its options
+  TPaveText *box= new TPaveText(xmin,ymax,xmax,ymin,"BRNDC");
+  if(!box) return 0;
+  box->SetFillColor(0);
+  box->SetBorderSize(1);
+  box->SetTextAlign(12);
+  box->SetTextSize(0.04);
+  box->SetFillStyle(1001);
+
+  // add formatted text for each statistic
+  TText *text(0);
+  RooRealVar N("N","Number of Events",numEntries(kTRUE));
+  RooRealVar *mean= meanVar(var);
+  RooRealVar *rms= rmsVar(var);
+  TString *rmsText= rms->format(sigDigits,options);
+  TString *meanText= mean->format(sigDigits,options);
+  TString *NText= N.format(sigDigits,options);
+  text= box->AddText(rmsText->Data());
+  text= box->AddText(meanText->Data());
+  text= box->AddText(NText->Data());
+
+  // cleanup heap memory
+  delete NText;
+  delete meanText;
+  delete rmsText;
+  delete mean;
+  delete rms;
+
+  // add the optional label if specified
+  if(showLabel) text= box->AddText(label);
+
+  frame->addObject(box) ;
+  return frame ;
+}
+
 
 
 void RooTreeData::printToStream(ostream& os, PrintOption opt, TString indent) const {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.rdl,v 1.7 2001/10/19 22:19:49 verkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.8 2001/11/14 18:42:37 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -15,6 +15,7 @@
 
 #include "TObject.h"
 #include "RooFitCore/RooTreeData.hh"
+#include "RooFitCore/RooDirItem.hh"
 #include "RooFitCore/RooArgSet.hh"
 
 class RooAbsArg;
@@ -25,7 +26,7 @@ class RooPlot;
 class RooFitContext ;
 class RooArgSet ;
 
-class RooDataHist : public RooTreeData {
+class RooDataHist : public RooTreeData, public RooDirItem {
 public:
 
   // Constructors, factory methods etc.

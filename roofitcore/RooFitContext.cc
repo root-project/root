@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.41 2001/11/19 07:23:56 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.42 2001/11/19 23:09:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -498,7 +498,19 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
 
   // Create fit result container if so requested
   RooFitResult* fitRes(0) ;
-  if (doSaveResult) fitRes = new RooFitResult ;
+
+  if (doSaveResult) {
+    TString name("fit(") ;
+    name.Append(_pdfClone->GetName()) ;
+    name.Append(",") ;
+    name.Append(_dataClone->GetName()) ;
+    name.Append(")") ;
+    TString title("Result of fit of PDF ") ;
+    title.Append(_pdfClone->GetName()) ;
+    title.Append(" to dataset ") ;
+    title.Append(_dataClone->GetName()) ;
+    fitRes = new RooFitResult(name,title) ;
+  }
 
   // Check if an extended ML fit is possible
   if(_extendedMode) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.6 2001/10/08 05:20:15 verkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.7 2001/10/08 21:22:51 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -32,9 +32,11 @@
 ClassImp(RooFitResult) 
 ;
 
-RooFitResult::RooFitResult() : _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0)
-{
+RooFitResult::RooFitResult(const char* name, const char* title) : 
+  TNamed(name,title), _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0)
+{  
   // Constructor
+  appendToDir(this) ;
 }
 
 RooFitResult::~RooFitResult() 
@@ -46,6 +48,8 @@ RooFitResult::~RooFitResult()
   if (_globalCorr) delete _globalCorr;
 
   _corrMatrix.Delete();
+
+  removeFromDir(this) ;
 }
 
 void RooFitResult::setConstParList(const RooArgList& list) 
@@ -72,29 +76,29 @@ void RooFitResult::setFinalParList(const RooArgList& list)
 }
 
 
-Double_t RooFitResult::correlation(const RooAbsArg& par1, const RooAbsArg& par2) const 
+Double_t RooFitResult::correlation(const char* parname1, const char* parname2) const 
 {
   // Return the correlation between parameters 'par1' and 'par2'
 
-  const RooArgList* row = correlation(par1) ;
+  const RooArgList* row = correlation(parname1) ;
   if (!row) return 0. ;
-  RooAbsArg* arg = _initPars->find(par2.GetName()) ;
+  RooAbsArg* arg = _initPars->find(parname2) ;
   if (!arg) {
-    cout << "RooFitResult::correlation: variable " << par2.GetName() << " not a floating parameter in fit" << endl ;
+    cout << "RooFitResult::correlation: variable " << parname2 << " not a floating parameter in fit" << endl ;
     return 0. ;
   }
   return ((RooRealVar*)row->at(_initPars->index(arg)))->getVal() ;
 }
 
 
-const RooArgList* RooFitResult::correlation(const RooAbsArg& par) const 
+const RooArgList* RooFitResult::correlation(const char* parname) const 
 {
   // Return the set of correlation coefficients of parameter 'par' with
   // all other floating parameters
 
-  RooAbsArg* arg = _initPars->find(par.GetName()) ;
+  RooAbsArg* arg = _initPars->find(parname) ;
   if (!arg) {
-    cout << "RooFitResult::correlation: variable " << par.GetName() << " not a floating parameter in fit" << endl ;
+    cout << "RooFitResult::correlation: variable " << parname << " not a floating parameter in fit" << endl ;
     return 0 ;
   }    
   return (RooArgList*)_corrMatrix.At(_initPars->index(arg)) ;
@@ -244,7 +248,7 @@ void RooFitResult::fillCorrMatrix()
     gcVal = (RooRealVar*) gcIter->Next() ;
     gcVal->setVal(gMinuit->fGlobcc[i-1]) ;
     TIterator* cIter = ((RooArgList*)_corrMatrix.At(i-1))->createIterator() ;
-    for (it = 1; it <= nparm; ++it) {
+    for (it = 1; it <= gMinuit->fNpar ; ++it) {
       RooRealVar* cVal = (RooRealVar*) cIter->Next() ;
       cVal->setVal(gMinuit->fMATUvline[it-1]) ;
     }
@@ -254,4 +258,5 @@ void RooFitResult::fillCorrMatrix()
 
   delete gcIter ;
 } 
+
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.11 2001/11/15 17:21:34 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.12 2001/11/19 07:23:55 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -58,8 +58,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
   // construct a RooThresholdCategory of the real dimension to be binned variably.
   // Set the thresholds at the desired bin boundaries, and construct the
   // data hist as function of the threshold category instead of the real variable.
-
-   initialize() ;
+  
+  initialize() ;
+  appendToDir(this,kTRUE) ;
 }
 
 
@@ -88,6 +89,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 
   initialize() ;
   add(data) ;
+  appendToDir(this,kTRUE) ;
 }
 
 
@@ -151,6 +153,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
   // Initialize internal data structure
   initialize() ;
+  appendToDir(this,kTRUE) ;
 
   // Transfer contents
   RooArgSet set(*xvar) ;
@@ -264,6 +267,8 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
     if (dynamic_cast<RooAbsReal*>(arg)) _realVars.add(*arg) ;
   }
   _realIter = _realVars.createIterator() ;
+
+  appendToDir(this,kTRUE) ;
 }
 
 
@@ -279,6 +284,8 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
   //
   // For most uses the RooAbsData::reduce() wrapper function, which uses this constructor, 
   // is the most convenient way to create a subset of an existing data
+
+  appendToDir(this,kTRUE) ;
 }
 
 
@@ -300,6 +307,8 @@ RooDataHist::~RooDataHist()
   if (_wgt) delete[] _wgt ;
   if (_idxMult) delete[] _idxMult ;
   delete _realIter ;
+
+  removeFromDir(this) ;
 }
 
 

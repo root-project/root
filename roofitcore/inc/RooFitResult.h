@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.rdl,v 1.4 2001/10/08 21:22:51 verkerke Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.5 2001/10/11 01:28:50 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -17,16 +17,17 @@
 #include "TObject.h"
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooPrintable.hh"
+#include "RooFitCore/RooDirItem.hh"
 
 class RooArgSet ;
 class RooArgList ;
 typedef RooArgSet* pRooArgSet ;
 
-class RooFitResult : public TObject, public RooPrintable {
+class RooFitResult : public TNamed, public RooPrintable, public RooDirItem {
 public:
 
   // Constructors, assignment etc.
-  RooFitResult() ;
+  RooFitResult(const char* name=0, const char* title=0) ;
   virtual ~RooFitResult() ;
 
   // Printing interface (human readable)
@@ -44,8 +45,15 @@ public:
   inline const RooArgList& floatParsFinal() const { return *_finalPars ; } 
 
   // Correlation matrix element and row accessors
-  Double_t correlation(const RooAbsArg& par1, const RooAbsArg& par2) const ;
-  const RooArgList* correlation(const RooAbsArg& par) const ;
+  Double_t correlation(const RooAbsArg& par1, const RooAbsArg& par2) const {
+    return correlation(par1.GetName(),par2.GetName()) ;
+  }
+  const RooArgList* correlation(const RooAbsArg& par) const {
+    return correlation(par.GetName()) ;
+  }
+
+  Double_t correlation(const char* parname1, const char* parname2) const ;
+  const RooArgList* correlation(const char* parname) const ;
 
 protected:
   

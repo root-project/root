@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.38 2001/10/27 22:28:21 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.39 2001/11/19 19:53:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,9 +20,10 @@
 class TDirectory ;
 class RooAbsRealLValue ;
 #include "RooFitCore/RooTreeData.hh"
+#include "RooFitCore/RooDirItem.hh"
 
 
-class RooDataSet : public RooTreeData {
+class RooDataSet : public RooTreeData, public RooDirItem {
 public:
 
   // Constructors, factory methods etc.
@@ -67,7 +68,6 @@ protected:
 
   friend class RooProdGenContext ;
   Bool_t merge(const TList& data) ;
-  TDirectory* _dir ; //!
   
   // Cache copy feature is not publicly accessible
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) ;

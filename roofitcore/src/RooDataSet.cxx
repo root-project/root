@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.60 2001/11/19 19:53:54 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.61 2001/11/19 23:09:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -45,9 +45,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& var
 {
   // Constructor of an empty data set from a RooArgSet defining the dimensions
   // of the data space.
-
-  _dir = gDirectory ;
-  gDirectory->Append(this) ;
+  appendToDir(this,kTRUE) ;
 }
 
 
@@ -66,9 +64,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
   //
   // For most uses the RooAbsData::reduce() wrapper function, which uses this constructor, 
   // is the most convenient way to create a subset of an existing data
-
-  _dir = gDirectory ;
-  gDirectory->Append(this) ;
+  appendToDir(this,kTRUE) ;
 }
 
 
@@ -86,9 +82,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t,
   //
   // For most uses the RooAbsData::reduce() wrapper function, which uses this constructor, 
   // is the most convenient way to create a subset of an existing data
-
-  _dir = gDirectory ;
-  gDirectory->Append(this) ;
+  appendToDir(this,kTRUE) ;
 }
 
 
@@ -108,9 +102,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *t,
   // For subsets without selection on the data points, or involving cuts
   // operating exclusively and directly on the data set dimensions, the equivalent
   // constructor with a string based cut expression is recommended.
-
-  _dir = gDirectory ;
-  gDirectory->Append(this) ;
+  appendToDir(this,kTRUE) ;
 }
 
 
@@ -132,9 +124,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *ntuple,
   // the vars argset, such as intermediate formula objects, use the 
   // equivalent constructor accepting RooFormulaVar reference as cut specification
   //
-
-  _dir = gDirectory ;
-  gDirectory->Append(this) ;
+  appendToDir(this,kTRUE) ;
 }
 
 
@@ -156,9 +146,7 @@ RooDataSet::RooDataSet(const char *name, const char *filename, const char *treen
   // the vars argset, such as intermediate formula objects, use the 
   // equivalent constructor accepting RooFormulaVar reference as cut specification
   //
-
-  _dir = gDirectory ;
-  gDirectory->Append(this) ;
+  appendToDir(this,kTRUE) ;
 }
 
 
@@ -166,9 +154,7 @@ RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
   RooTreeData(other,newname)
 {
   // Copy constructor
-
-  _dir = gDirectory ;
-  gDirectory->Append(this) ;
+  appendToDir(this,kTRUE) ;
 }
 
 
@@ -177,9 +163,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *ntuple,
   RooTreeData(name,title,ntuple,vars,cutVar, copyCache)
 {
   // Protected constructor for internal use only
-
-  _dir = gDirectory ;
-  gDirectory->Append(this) ;
+  appendToDir(this,kTRUE) ;
 }
 
 
@@ -193,11 +177,7 @@ RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVa
 
 RooDataSet::~RooDataSet()
 {
-  // Destructor
-  if (_dir) {
-    if (!_dir->TestBit(TDirectory::kCloseDirectory))
-      _dir->GetList()->Remove(this);
-  }
+  removeFromDir(this) ;
 }
 
 
