@@ -1304,7 +1304,7 @@ TMatrixD &TMatrixD::InvertPosDef()
 
    if (fNrows <= 3) {
       const Double_t singularity_tolerance = 1e-35;
-      Double_t determinant;
+      Double_t determinant = 1;
       Double_t *m = fElements;
       if (fNrows == 1) {
          determinant = m[0];

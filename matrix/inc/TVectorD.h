@@ -86,6 +86,7 @@ friend class TMatrixD;
 friend class TMatrixDRow;
 friend class TMatrixDColumn;
 friend class TMatrixDDiag;
+friend class TMatrixDFlat;
 
 protected:
    Int_t     fNmem;             //! number of rows in allocated memory (>=fNrows)
