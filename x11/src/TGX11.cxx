@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.42 2004/08/12 10:44:38 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.43 2004/10/05 15:40:29 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -1077,6 +1077,9 @@ void TGX11::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
    // iw          : text width
    // ih          : text height
    // mess        : message
+
+   w=0; h=0;
+   if (strlen(mess)==0) return;
 
    XPoint *CBox;
    XRotSetMagnification(fTextMagnitude);
