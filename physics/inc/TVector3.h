@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.3 2000/11/21 20:44:06 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.4 2000/12/29 07:35:20 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************
@@ -27,8 +27,8 @@ public:
   TVector3(Double_t x = 0.0, Double_t y = 0.0, Double_t z = 0.0);
   // The constructor.
 
-  TVector3(Double_t *);
-  TVector3(Float_t *);
+  TVector3(const Double_t *);
+  TVector3(const Float_t *);
   // Constructors from an array
 
   TVector3(const TVector3 &);
@@ -59,8 +59,8 @@ public:
   inline void SetXYZ(Double_t x, Double_t y, Double_t z);
   // Set the components in cartesian coordinate system.
 
-  inline void GetXYZ(Double_t *carray);
-  inline void GetXYZ(Float_t *carray);
+  inline void GetXYZ(Double_t *carray) const;
+  inline void GetXYZ(Float_t *carray) const;
   // Get the components into an array
   // not checked!
 
@@ -218,13 +218,13 @@ inline void TVector3::SetXYZ(Double_t x, Double_t y, Double_t z) {
    fZ = z;
 }
 
-inline void TVector3::GetXYZ(Double_t *carray){
+inline void TVector3::GetXYZ(Double_t *carray) const {
   carray[0] = fX;
   carray[1] = fY;
   carray[2] = fZ;
 }
 
-inline void TVector3::GetXYZ(Float_t *carray){
+inline void TVector3::GetXYZ(Float_t *carray) const {
   carray[0] = fX;
   carray[1] = fY;
   carray[2] = fZ;

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.2 2000/10/11 07:13:11 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.3 2000/12/29 07:36:08 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 
 /*************************************************************************
@@ -58,8 +58,8 @@ public:
                           Double_t z = 0.0, Double_t t = 0.0);
   // Constructor giving the components x, y, z, t.
 
-  TLorentzVector(Double_t * carray);
-  TLorentzVector(Float_t * carray);
+  TLorentzVector(const Double_t * carray);
+  TLorentzVector(const Float_t * carray);
   // Constructor from an array, not checked!
 
   TLorentzVector(const TVector3 & vector3, Double_t t);
@@ -126,8 +126,8 @@ public:
   // Setters to provide the functionality (but a more meanigful name) of
   // the previous version eg SetV4... PsetV4...
 
-  inline void GetXYZT(Double_t *carray);
-  inline void GetXYZT(Float_t *carray);
+  inline void GetXYZT(Double_t *carray) const;
+  inline void GetXYZT(Float_t *carray) const;
   // Getters into an arry
   // no checking!
 
@@ -345,12 +345,12 @@ inline void TLorentzVector::SetPtEtaPhiE(Double_t pt, Double_t eta, Double_t phi
   SetPtEtaPhiM(pt, eta, phi, e);
 }
 
-inline void TLorentzVector::GetXYZT(Double_t *carray){
+inline void TLorentzVector::GetXYZT(Double_t *carray) const {
   fP.GetXYZ(carray);
   carray[3] = fE;
 }
 
-inline void TLorentzVector::GetXYZT(Float_t *carray){
+inline void TLorentzVector::GetXYZT(Float_t *carray) const{
   fP.GetXYZ(carray);
   carray[3] = fE;
 }

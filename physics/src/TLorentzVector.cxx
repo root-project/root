@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.2 2000/10/11 07:13:11 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 //    Oct  8 1999: changed Warning to Error and
 //                 return fX in Double_t & operator()
@@ -241,10 +241,10 @@ ClassImp(TLorentzVector)
 TLorentzVector::TLorentzVector(Double_t x, Double_t y, Double_t z, Double_t t)
                : fP(x,y,z), fE(t) {}
 
-TLorentzVector::TLorentzVector(Double_t * x0)
+TLorentzVector::TLorentzVector(const Double_t * x0)
                : fP(x0), fE(x0[3]) {}
 
-TLorentzVector::TLorentzVector(Float_t * x0)
+TLorentzVector::TLorentzVector(const Float_t * x0)
                : fP(x0), fE(x0[3]) {}
 
 TLorentzVector::TLorentzVector(const TVector3 & p, Double_t e)
