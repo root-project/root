@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.33 2001/02/23 11:47:21 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.34 2001/02/24 20:54:27 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -112,8 +112,9 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    const Int_t big = 9999;
    const Int_t kMaxDiff = 7;
 
-   Double_t x = gPad->AbsPixeltoX(px);
-
+   Double_t x  = gPad->AbsPixeltoX(px);
+   Double_t x1 = gPad->AbsPixeltoX(px+1);
+   
    Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
    Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
    Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
@@ -181,10 +182,24 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 
 //*-*- point is inside histogram area. Find channel number
    Int_t bin      = fXaxis->FindFixBin(gPad->PadtoX(x));
+   Int_t binsup   = fXaxis->FindFixBin(gPad->PadtoX(x1));
    Double_t binval = fH->GetBinContent(bin);
    Int_t pybin    = gPad->YtoAbsPixel(gPad->YtoPad(binval));
    if (TMath::Abs(py - pybin) <= kMaxDiff) return TMath::Abs(py - pybin);
-
+// special case if more than one bin for the pixel
+   if (binsup-bin>1) {
+      Double_t binvalmin, binvalmax;
+      binvalmin=binval;
+      binvalmax=binval;
+      for (Int_t ibin=bin+1; ibin<binsup; ibin++) {
+         Double_t binvaltmp = fH->GetBinContent(ibin);
+         if (binvalmin>binvaltmp) binvalmin=binvaltmp;
+         if (binvalmax<binvaltmp) binvalmax=binvaltmp;
+      }
+      Int_t pybinmin = gPad->YtoAbsPixel(gPad->YtoPad(binvalmax));
+      Int_t pybinmax = gPad->YtoAbsPixel(gPad->YtoPad(binvalmin));
+      if (py<pybinmax+kMaxDiff/2 && py>pybinmin-kMaxDiff/2) pybin = py;
+   }
 //*-*- Loop on the list of associated functions and user objects
    TObject *f;
    TIter   next(fFunctions);
@@ -365,8 +380,9 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
 //
    if (!gPad) return (char*)"";
    static char info[64];
-   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
-   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+   Double_t x  = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y  = gPad->PadtoY(gPad->AbsPixeltoY(py));
+   Double_t x1 = gPad->PadtoX(gPad->AbsPixeltoX(px+1));
    const char *drawOption = fH->GetDrawOption();
    Double_t xmin, xmax, uxmin,uxmax;
    Double_t ymin, ymax, uymin,uymax;
@@ -385,9 +401,23 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
          y = ymin +(ymax-ymin)*(y-uymin)/(uymax-uymin);
       }
    }
-   Int_t binx,biny,binmin;
+   Int_t binx,biny,binmin,binx1;
    binx   = fXaxis->FindFixBin(x);
    binmin = fXaxis->GetFirst();
+   binx1  = fXaxis->FindFixBin(x1);
+// special case if more than 1 bin in x per pixel
+   if (binx1-binx>1) {
+      Double_t binval=fH->GetBinContent(binx);
+      Int_t binnear=binx;
+      for (Int_t ibin=binx+1; ibin<binx1; ibin++) {
+         Double_t binvaltmp = fH->GetBinContent(ibin);
+         if (TMath::Abs(y-binvaltmp) < TMath::Abs(y-binval)) {
+            binval=binvaltmp;
+            binnear=ibin;
+         }
+      }
+      binx = binnear;
+   }
    if (fH->GetDimension() == 1) {
       Double_t integ = 0;
       for (Int_t bin=binmin;bin<=binx;bin++) {integ += fH->GetBinContent(bin);}
