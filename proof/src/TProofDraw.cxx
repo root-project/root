@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.14 2005/03/24 16:32:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.15 2005/04/06 10:01:40 rdm Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -23,7 +23,6 @@
 #include "TEventList.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
-#include "TProofVarArray.h"
 #include "TEnv.h"
 #include "TNamed.h"
 #include "TGraph.h"
@@ -32,6 +31,9 @@
 #include "THLimitsFinder.h"
 #include "TView.h"
 #include "TStyle.h"
+
+#include <algorithm>
+
 
 ClassImp(TProofDraw)
 

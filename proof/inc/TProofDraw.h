@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.8 2005/03/24 16:32:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.9 2005/04/06 10:01:40 rdm Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 #ifndef ROOT_TProofDraw
@@ -30,6 +30,9 @@
 #include "TNamed.h"
 #endif
 
+#include <vector>
+
+
 class TTree;
 class TTreeFormulaManager;
 class TTreeFormula;
@@ -38,7 +41,6 @@ class TH1;
 class TEventList;
 class TProfile;
 class TProfile2D;
-class TProofVarArray;
 class TGraph;
 class TPolyMarker3D;
 class TCollection;
@@ -206,7 +208,7 @@ public:
 
 class TProofDrawListOfGraphs : public TProofDraw {
 
-protected:
+public:
    struct Point3D_t {
    public:
       Double_t fX, fY, fZ;
@@ -214,6 +216,7 @@ protected:
       Point3D_t() : fX(0), fY(0), fZ(0) { }
    };
 
+protected:
    TProofVectorContainer<Point3D_t> *fPoints;
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
 
@@ -228,7 +231,7 @@ public:
 
 class TProofDrawListOfPolyMarkers3D : public TProofDraw {
 
-protected:
+public:
    struct Point4D_t {
    public:
       Double_t fX, fY, fZ, fT;
@@ -236,6 +239,7 @@ protected:
       Point4D_t() : fX(0), fY(0), fZ(0), fT(0) { }
    };
 
+protected:
    TProofVectorContainer<Point4D_t> *fPoints;
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
 
