@@ -1092,7 +1092,11 @@ char *expression;
 	  break;
 	}
 #ifndef G__OLDIMPLEMENTATION1560
-	else if(G__defined_templatefunc(ebuf)) {
+	else if(G__defined_templatefunc(ebuf)
+#ifndef G__OLDIMPLEMENTATION1611
+		|| G__defined_templatememfunc(ebuf)
+#endif
+		) {
 	  ++ig1;
 	  ebuf[lenbuf++] = c;
 	  c=G__getstream_template(expression,&ig1,ebuf+lenbuf,">");

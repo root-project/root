@@ -87,6 +87,11 @@ struct G__param *libp;
       case 'd':
 	libp->para[itemp].ref = (long)G__Doubleref(&libp->para[itemp]);
 	break;
+#ifndef G__OLDIMPLEMENTATION1604
+      case 'g':
+	libp->para[itemp].ref = (long)G__Intref(&libp->para[itemp]);
+	break;
+#endif
       }
     }
   }
@@ -348,6 +353,11 @@ int hash; /* not use */
 	case 'u':
 	  G__asm_stack[j].ref=libp->para[i].obj.i;
 	  break;
+#ifndef G__OLDIMPLEMENTATION1604
+	case 'g':
+	  G__asm_stack[j].ref=(long)G__Intref(&libp->para[i]);
+	  break;
+#endif
 	default:
 	  G__asm_stack[j].ref=(long)(&libp->para[i].obj.i);
 	  break;
@@ -723,6 +733,9 @@ char *temp;
      strcmp(temp,"enum")==0||
 #ifndef G__OLDIMPLEMENTATION1414
      strcmp(temp,"register")==0||
+#endif
+#ifndef G__OLDIMPLEMENTATION1604
+     strcmp(temp,"bool")==0||
 #endif
 #ifndef G__OLDIMPLEMENTATION1419
      (G__iscpp && strcmp(temp,"typename")==0)||
@@ -2055,6 +2068,9 @@ int func_now;
     else if(strcmp(paraname,"long")==0) type='l'+isunsigned;
     else if(strcmp(paraname,"float")==0) type='f'+isunsigned;
     else if(strcmp(paraname,"double")==0) type='d'+isunsigned;
+#ifndef G__OLDIMPLEMENTATION1604
+    else if(strcmp(paraname,"bool")==0) type='g';
+#endif
     else if(strcmp(paraname,"void")==0) type='y';
     else if(strcmp(paraname,"FILE")==0) type='e';
     else {
@@ -2294,7 +2310,11 @@ int func_now;
 	    }
 #endif
 	    if('='==c) {
-         c=G__fgetstream_template(paraname,",)");
+#ifndef G__OLDIMPLEMENTATION1609
+	      c=G__fgetstream_template(paraname,",)");
+#else
+	      c=G__fgetstream(paraname,",)");
+#endif
 	      isdefault=1;
 	    }
 	  }
@@ -2726,6 +2746,9 @@ int formal_isconst;
     case 'i':
     case 'k':
     case 'l':
+#ifndef G__OLDIMPLEMENTATION1604
+    case 'g':
+#endif
       switch(param_type) {
       case 'd':
       case 'f':
@@ -2742,6 +2765,9 @@ int formal_isconst;
       case 'i':
       case 'k':
       case 'l':
+#ifndef G__OLDIMPLEMENTATION1604
+      case 'g':
+#endif
 	match=1;
 	break;
       default:
@@ -2760,6 +2786,9 @@ int formal_isconst;
       case 'i':
       case 'k':
       case 'l':
+#ifndef G__OLDIMPLEMENTATION1604
+      case 'g':
+#endif
 	if(G__PARAREFERENCE==formal_reftype) {
           param->obj.d = param->obj.i;
           param->type = formal_type;
@@ -3530,6 +3559,9 @@ int recursive;
 	case 'l':
 	case 'd':
 	case 'f':
+#ifndef G__OLDIMPLEMENTATION1604
+	case 'g':
+#endif
 	  funclist->p_rate[i] = G__PROMOTIONMATCH;
 	  break;
 	default:
@@ -3546,6 +3578,9 @@ int recursive;
 	case 'i':
 	  /* case 'k': */
 	case 'l':
+#ifndef G__OLDIMPLEMENTATION1604
+	case 'g':
+#endif
 	  funclist->p_rate[i] = G__PROMOTIONMATCH;
 	  break;
 	default:
@@ -3562,6 +3597,9 @@ int recursive;
 	case 'i':
 	  /* case 'k': */
 	  /* case 'l': */
+#ifndef G__OLDIMPLEMENTATION1604
+	case 'g':
+#endif
 	  funclist->p_rate[i] = G__PROMOTIONMATCH;
 	  break;
 	case 'u':
@@ -3583,6 +3621,9 @@ int recursive;
 	  /* case 'i': */
 	  /* case 'k': */
 	  /* case 'l': */
+#ifndef G__OLDIMPLEMENTATION1604
+	case 'g':
+#endif
 	  funclist->p_rate[i] = G__PROMOTIONMATCH;
 	  break;
 	default:
@@ -3599,6 +3640,9 @@ int recursive;
 	  /* case 'i': */
 	case 'k':
 	  /* case 'l': */
+#ifndef G__OLDIMPLEMENTATION1604
+	case 'g':
+#endif
 	  funclist->p_rate[i] = G__PROMOTIONMATCH;
 	  break;
 	default:
@@ -3615,6 +3659,9 @@ int recursive;
 	  /* case 'i': */
 	  /* case 'k': */
 	  /* case 'l': */
+#ifndef G__OLDIMPLEMENTATION1604
+	case 'g':
+#endif
 	  funclist->p_rate[i] = G__PROMOTIONMATCH;
 	  break;
 	default:
@@ -3631,6 +3678,9 @@ int recursive;
 	  /* case 'i': */
 	  /* case 'k': */
 	  /* case 'l': */
+#ifndef G__OLDIMPLEMENTATION1604
+	case 'g':
+#endif
 	  funclist->p_rate[i] = G__PROMOTIONMATCH;
 	  break;
 	default:
@@ -3680,6 +3730,9 @@ int recursive;
       case 'i':
       case 'k':
       case 'l':
+#ifndef G__OLDIMPLEMENTATION1604
+      case 'g':
+#endif
 	switch(param_type) {
 	case 'd':
 	case 'f':
@@ -3691,6 +3744,9 @@ int recursive;
 	case 'i':
 	case 'k':
 	case 'l':
+#ifndef G__OLDIMPLEMENTATION1604
+	case 'g':
+#endif
 	  funclist->p_rate[i] = G__STDCONVMATCH;
 	  break;
 	default:
@@ -3710,6 +3766,9 @@ int recursive;
 	case 'l':
 	case 'd':
 	case 'f':
+#ifndef G__OLDIMPLEMENTATION1604
+	case 'g':
+#endif
 	  funclist->p_rate[i] = G__STDCONVMATCH;
 	  break;
 	default:
@@ -4403,6 +4462,27 @@ struct G__funclist *pmatch;
 	break;
       }
       break;
+#ifndef G__OLDIMPLEMENTATION1604
+    case 'g':
+      switch(param_type) {
+      case 'd':
+      case 'f':
+	/* std conv */
+	if(G__PARAREFERENCE==formal_reftype) {
+          param->obj.i = param->obj.d?1:0;
+          param->type = formal_type;
+          param->ref = 0;
+	}
+      default:
+	if(G__PARAREFERENCE==formal_reftype) {
+          param->obj.i = (long)param->obj.i?1:0;
+          param->type = formal_type;
+          param->ref = 0;
+	}
+	break;
+      }
+      break;
+#endif
     case 'd':
     case 'f':
       switch(param_type) {
@@ -4414,6 +4494,9 @@ struct G__funclist *pmatch;
       case 'i':
       case 'k':
       case 'l':
+#ifndef G__OLDIMPLEMENTATION1604
+      case 'g':
+#endif
 	/* std conv */
 	if(G__PARAREFERENCE==formal_reftype) {
           param->obj.d = param->obj.i;
@@ -5708,6 +5791,9 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifndef G__OLDIMPLEMENTATION851
       if(0==G__templatefunc(result7,funcname,libp,hash,funcmatch)) {
 	if(G__USERCONV==funcmatch) {
+#ifndef G__OLDIMPLEMENTATION1605
+	  *result7 = G__null;
+#endif
 	  G__fprinterr(G__serr,"Error: %s() header declared but not defined"
 		  ,funcname);
 	  G__genericerror((char*)NULL);
@@ -6414,6 +6500,9 @@ asm_ifunc_start:   /* loop compilation execution label */
 	    G__ansipara.ref = (long)(&libp->para[ipara].obj.sh);
 	    break;
 	  case 'i':
+#ifndef G__OLDIMPLEMENTATION1604
+	  case 'g':
+#endif
 	    G__Mint(libp->para[ipara]);
 	    G__ansipara.ref = (long)(&libp->para[ipara].obj.in);
 	    break;
@@ -6723,6 +6812,16 @@ asm_ifunc_start:   /* loop compilation execution label */
       result7->isconst = p_ifunc->isconst[ifn];
 #endif
       break;
+
+#ifndef G__OLDIMPLEMENTATION1604
+    case 'g':
+      G__letint(result7,p_ifunc->type[ifn],G__int(*result7)?1:0);
+#ifdef G__OLDIMPLEMENTATION753
+      if(p_ifunc->reftype[ifn]==G__PARANORMAL) result7->ref=0;
+#endif
+      result7->isconst = p_ifunc->isconst[ifn];
+      break;
+#endif
       
       /***************************************************
        * in case of void, if return(); statement exists
@@ -6758,7 +6857,29 @@ asm_ifunc_start:   /* loop compilation execution label */
 	 ) {
 	
 	/* don't call copy constructor if returning reference type */
-	if(G__PARANORMAL!=p_ifunc->reftype[ifn]) break;
+	if(G__PARANORMAL!=p_ifunc->reftype[ifn]) {
+#ifndef G__OLDIMPLEMENTATION1612
+	  if(p_ifunc->p_tagtable[ifn]!=result7->tagnum) {
+	    int offset = G__ispublicbase(p_ifunc->p_tagtable[ifn]
+					 ,result7->tagnum,result7->obj.i);
+	    if(-1==offset) {
+	      G__fprinterr(G__serr,"Error: Return type mismatch. %s "
+			   ,G__fulltagname(p_ifunc->p_tagtable[ifn],1));
+	      G__fprinterr(G__serr,"not a public base of %s"
+			   ,G__fulltagname(result7->tagnum,1));
+	      G__genericerror((char*)NULL);
+	      result7->tagnum = p_ifunc->p_tagtable[ifn];
+	      break;
+	    }
+	    else {
+	      result7->obj.i += offset;
+	      if(result7->ref) result7->ref += offset;
+	      result7->tagnum = p_ifunc->p_tagtable[ifn];
+	    }
+	  }
+#endif
+	  break;
+	}
 #ifndef G__OLDIMPLEMENTATION1332
 	if('e'==G__struct.type[p_ifunc->p_tagtable[ifn]]) {
 	  break;
@@ -6972,6 +7093,31 @@ asm_ifunc_start:   /* loop compilation execution label */
 #endif
 	break;
       }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1612
+    case 'U':
+      if('U'==p_ifunc->p_tagtable[ifn] && 'U'==result7->type) {
+	if(p_ifunc->p_tagtable[ifn]!=result7->tagnum) {
+	  int offset = G__ispublicbase(p_ifunc->p_tagtable[ifn]
+				   ,result7->tagnum,result7->obj.i);
+	  if(-1==offset) {
+	    G__fprinterr(G__serr,"Error: Return type mismatch. %s "
+			 ,G__fulltagname(p_ifunc->p_tagtable[ifn],1));
+	    G__fprinterr(G__serr,"not a public base of %s"
+			 ,G__fulltagname(result7->tagnum,1));
+	    G__genericerror((char*)NULL);
+	    result7->tagnum = p_ifunc->p_tagtable[ifn];
+	    break;
+	  }
+	  else {
+	    result7->obj.i += offset;
+	    if(result7->ref) result7->ref += offset;
+	    result7->tagnum = p_ifunc->p_tagtable[ifn];
+	  }
+	}
+      }
+      /* no break, this case continues to default: */
 #endif
 
       /***************************************************

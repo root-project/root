@@ -284,6 +284,9 @@ char *expression;
       else if(strcmp(type,"unsignedlong")==0) var_type='l';
       else if(strcmp(type,"size_t")==0) var_type='l';
       else if(strcmp(type,"time_t")==0) var_type='l';
+#ifndef G__OLDIMPLEMENTATION1604
+      else if(strcmp(type,"bool")==0) var_type='g';
+#endif
     }
   }
 #ifndef G__OLDIMPLEMENTATION683

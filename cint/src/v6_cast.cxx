@@ -254,6 +254,14 @@ G__value result3;
       result3.typenum = -1;
       break;
     }
+#ifndef G__OLDIMPLEMENTATION1604
+    if(strcmp(casttype,"bool")==0) {
+      type='g'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+#endif
     break;
   case 5:
     if(strcmp(casttype,"short")==0) {
@@ -522,6 +530,11 @@ G__value result3;
   case 'l':
     G__letint(&result3,type ,(long)G__int(result3));
     break;
+#ifndef G__OLDIMPLEMENTATION1604
+  case 'g':
+    G__letint(&result3,type ,(int)G__int(result3)?1:0);
+    break;
+#endif
   default:
     G__letint(&result3,type,G__int(result3));
 #ifndef G__OLDIMPLEMENTATION1071
@@ -578,6 +591,11 @@ G__value *buf;
   case 'l':
     G__letint(buf,(char)type ,(long)G__int(*buf));
     break;
+#ifndef G__OLDIMPLEMENTATION1604
+  case 'g':
+    G__letint(buf,(char)type ,(int)G__int(*buf)?1:0);
+    break;
+#endif
   default:
     G__letint(buf,(char)type ,G__int(*buf));
     buf->ref = buf->obj.i;

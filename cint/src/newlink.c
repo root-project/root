@@ -3987,6 +3987,9 @@ char *endoffunc;
   case 'r':
   case 'h':
   case 'k':
+#ifndef G__OLDIMPLEMENTATION1604
+  case 'g':
+#endif
     fprintf(fp,"      G__letint(result7,%d,(long)",type);
     sprintf(endoffunc,");");
     return(0);
@@ -4228,6 +4231,12 @@ int k;
 	  fprintf(fp,"*(%s*)G__ULongref(&libp->para[%d])"
 		  ,G__type2string(type,tagnum,typenum,0,0),k);
 	  break;
+#ifndef G__OLDIMPLEMENTATION1604
+        case 'g':
+	  fprintf(fp,"*(%s*)G__Intref(&libp->para[%d])"
+		  ,G__type2string(type,tagnum,typenum,0,0),k);
+	  break;
+#endif
         case 'f':
 	  fprintf(fp,"*(%s*)G__Floatref(&libp->para[%d])"
 		  ,G__type2string(type,tagnum,typenum,0,0),k);
@@ -4273,6 +4282,12 @@ int k;
 	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mulong(libp->para[%d])"
 		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
 	  break;
+#ifndef G__OLDIMPLEMENTATION1604
+        case 'g':
+	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mint(libp->para[%d])"
+		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
+	  break;
+#endif
         case 'f':
 	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mfloat(libp->para[%d])"
 		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
@@ -4389,6 +4404,9 @@ int k;
   case 'h':
   case 'l':
   case 'k':
+#ifndef G__OLDIMPLEMENTATION1604
+  case 'g':
+#endif
   case 'F':
   case 'D':
   case 'E':
@@ -5072,11 +5090,13 @@ FILE *fp;
 #endif
 	     ) {
 #ifndef G__OLDIMPLEMENTATION1029
+#if 0
 	    G__fprinterr(G__serr,
 		    "class %s in %s line %d original base of virtual func\n"
 		    ,G__fulltagname(i,1)
 		    ,G__srcfile[G__struct.filenum[i]].filename
 		    ,G__struct.line_number[i]);
+#endif
 #endif
 	  }
 	  if(((G__PUBLIC==var->access[j]

@@ -361,6 +361,11 @@ void G__define_type()
     if(unsigned_flag==0) type='l';
     else                 type='k';
   }
+#ifndef G__OLDIMPLEMENTATION1604
+  else if(strcmp(type1,"bool")==0) {
+    type='g';
+  }
+#endif
   else if(strcmp(type1,"void")==0) {
     type='y';
   }

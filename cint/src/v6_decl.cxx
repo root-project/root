@@ -2809,6 +2809,9 @@ char *new_name;
   int size;
   int prev;
   long tmp;
+#ifndef G__OLDIMPLEMENTATION1607
+  int stringflag=0;
+#endif
   
   /* G__ASSERT(0==G__store_struct_offset); */
 
@@ -2946,6 +2949,12 @@ char *new_name;
       /********************************************
        * increment the pointer
        ********************************************/
+#ifndef G__OLDIMPLEMENTATION1607
+      if('c'==var->type[ig15] && '"'==expr[0]) {
+	size = var->varlabel[ig15][var->paran[ig15]];
+	stringflag=1;
+      }
+#endif
       prev=pinc;
       if(inc) pinc = pinc - pinc%inc + inc;
       if(pinc>var->varlabel[ig15][1]) {
@@ -3000,7 +3009,16 @@ char *new_name;
        *******************************************/
       buf.obj.i=var->p[ig15]+size*pinc;
       reg=G__getexpr(expr);
+#ifndef G__OLDIMPLEMENTATION1607
+      if(stringflag) {
+	strcpy((char*)buf.obj.i,(char*)reg.obj.i);
+      }
+      else {
+	G__letvalue(&buf,reg);
+      }
+#else
       G__letvalue(&buf,reg);
+#endif
     }
     switch(c) {
     case '{':

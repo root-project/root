@@ -188,6 +188,9 @@ char *typename;
       break;
     case 'h':
     case 'i':
+#ifndef G__OLDIMPLEMENTATION1604
+    case 'g':
+#endif
       result = sizeof(int);
       break;
     case 'r':
@@ -416,6 +419,9 @@ char *typenamein;
 	break;
       case 'h':
       case 'i':
+#ifndef G__OLDIMPLEMENTATION1604
+      case 'g':
+#endif
 	size = G__INTALLOC;
 	break;
       case 'k':
@@ -1186,6 +1192,9 @@ int objsize;
     break;
   case 'h':
   case 'i':
+#ifndef G__OLDIMPLEMENTATION1604
+  case 'g':
+#endif
     *(int*)(p) = (int)G__int(*pval);
     break;
   case 'k':

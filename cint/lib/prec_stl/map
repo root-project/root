@@ -43,7 +43,7 @@ class map {
   //typedef pair<const Key,T>                         value_type;
   typedef Compare                                   key_compare;
   typedef Allocator                                 allocator_type;
-#if (defined(G__GNUC) && !defined (G__KCC)) || defined(G__HPUX)
+#if (defined(G__GNUC) && !defined(G__KCC)) || defined(G__HPUX)
   //typedef Key*                                     pointer;
   //typedef const Key*                               const_pointer;
   //typedef Key&                                     reference;
@@ -85,7 +85,7 @@ class map {
     bool operator==(const iterator& x) ;
 #endif
   };
-#if defined(G__GNUC) || !defined (G__KCC)
+#if defined(G__GNUC) && !defined(G__KCC)
   friend bool operator==(const map::iterator& x ,const map::iterator& y) const;
   friend bool operator!=(const map::iterator& x ,const map::iterator& y) const;
 #endif
@@ -158,7 +158,7 @@ class map {
   template <class InputIterator>
    void insert(InputIterator first, InputIterator last);
 #endif
-#if defined(G__GNUC) || !defined (G__KCC)
+#if defined(G__GNUC) && !defined (G__KCC)
   void insert(iterator first, iterator last);
   void insert(reverse_iterator first, reverse_iterator last);
 #endif

@@ -290,6 +290,12 @@ G__value *presult3;
 #endif
 #ifndef G__OLDIMPLEMENTATION1332
     else if(strcmp(funcname,"bool")==0 && 'u'==libp->para[0].type) {
+#ifndef G__OLDIMPLEMENTATION1604
+      presult3->type='g';
+      presult3->obj.i = G__int(libp->para[0])?1:0;
+      if(presult3->ref) *(int*)presult3->ref = (int)presult3->obj.i;
+      flag=1;
+#else
       char ttt[G__ONELINE];
       int xtype = 'u';
       int xreftype = 0;
@@ -300,6 +306,7 @@ G__value *presult3;
 				       ,presult3,ttt);
       flag=1;
       return(flag);
+#endif
     }
 #endif
     break;
@@ -822,6 +829,9 @@ int memfunc_flag;
   short castflag;
   int funcmatch;
   int i,classhash;
+#ifndef G__OLDIMPLEMENTATION1613
+  long store_globalvarpointer;
+#endif
   long store_struct_offset;
   int store_tagnum;
   int store_exec_memberfunc;
@@ -1344,6 +1354,10 @@ int memfunc_flag;
   store_struct_offset = G__store_struct_offset;
   store_tagnum = G__tagnum;
   store_memberfunc_var_type = G__var_type;
+#ifndef G__OLDIMPLEMENTATION1613
+  store_globalvarpointer = G__globalvarpointer;
+  G__globalvarpointer = G__PVOID;
+#endif
   G__tagnum = G__memberfunc_tagnum;
   G__store_struct_offset = G__memberfunc_struct_offset;
   G__var_type = 'p';
@@ -1389,6 +1403,9 @@ int memfunc_flag;
   G__store_struct_offset=store_struct_offset;
   G__tagnum=store_tagnum;
   G__var_type = store_memberfunc_var_type;
+#ifndef G__OLDIMPLEMENTATION1613
+  G__globalvarpointer = store_globalvarpointer;
+#endif
 
 #ifdef G__ASM
   if(G__oprovld) {
@@ -2042,6 +2059,12 @@ int memfunc_flag;
 	}
 	if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) {
 	  G__store_tempobject(result3);
+	  if(G__dispsource) {
+	    G__fprinterr(G__serr,
+		    "!!!Create temp object (%s)0x%lx,%d for %s()\n"
+		    ,G__struct.name[G__tagnum] ,G__p_tempbuf->obj.obj.i
+		    ,G__templevel ,funcname);
+	  }
 #ifdef G__ASM
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG

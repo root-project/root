@@ -7,7 +7,7 @@
  * Description:
  *  Variable initialization, assignment and referencing
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -2832,6 +2832,19 @@ struct G__var_array *varglobal,*varlocal;
       
       switch(var->type[ig15]) {
 	
+#ifndef G__OLDIMPLEMENTATION1604
+      case 'g': /* bool */
+	switch(result.type) {
+	case 'd':
+	case 'f':
+	  result.obj.d = result.obj.d?1:0;
+	  break;
+	default:
+	  result.obj.i = result.obj.i?1:0;
+	  break;
+	}
+	G__ASSIGN_VAR(G__INTALLOC,int,G__int)
+#endif
       case 'i': /* int */
 	G__ASSIGN_VAR(G__INTALLOC,int,G__int)
 	  
@@ -2855,6 +2868,7 @@ struct G__var_array *varglobal,*varlocal;
 
       case 'l': /* long int */
 	G__ASSIGN_VAR(G__LONGALLOC,long ,G__int)
+
 
       case 'k': /* unsigned long int */
 	G__ASSIGN_VAR(G__LONGALLOC,unsigned long ,G__int)
@@ -6679,6 +6693,11 @@ int parameter00;
   case 'R': /* unsigned short int pointer */
     G__ALLOC_VAR_REF(G__SHORTALLOC,unsigned short,G__int)
     break;
+
+#ifndef G__OLDIMPLEMENTATION1604
+  case 'g': /* bool */
+    result.obj.i = result.obj.i?1:0;
+#endif
 
   case 'i': /* int */
   case 'I': /* int pointer */

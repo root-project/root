@@ -246,6 +246,11 @@ char *oldtype,*newtype;
   else if(strcmp(oldtype,"float")==0) {
     type='f'+ispointer;
   }
+#ifndef G__OLDIMPLEMENTATION1604
+  else if(strcmp(oldtype,"bool")==0) {
+    type='g'+ispointer;
+  }
+#endif
   else if(strncmp(oldtype,"struct",6)==0) {
     ptype=oldtype+6;
     type='u'+ispointer;

@@ -374,6 +374,9 @@ G__value *buf1,*buf2;
 	  
 	case 'h':
 	case 'i':
+#ifndef G__OLDIMPLEMENTATION1604
+	case 'g':
+#endif
 	  memcpy(
 	         (void *)(buf1->obj.i+var1->p[i])
 		 ,(void *)(buf2->obj.i+var2->p[i])
@@ -607,6 +610,11 @@ char *typename;
   case 'o':
     sprintf(vtype,"automatic");
     break;
+#ifndef G__OLDIMPLEMENTATION1604
+  case 'g':
+    sprintf(vtype,"bool");
+    break;
+#endif
   default:
     sprintf(vtype,"unknown %s",ispointer);
     break;

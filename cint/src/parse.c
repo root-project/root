@@ -3425,6 +3425,12 @@ G__value G__exec_statement()
 	      G__DEFVAR('y');
 	      break;
 	    }
+#ifndef G__OLDIMPLEMENTATION1604
+	    if(strcmp(statement,"bool")==0) {
+	      G__DEFVAR('g');
+	      break;
+	    }
+#endif
 	    if(strcmp(statement,"int*")==0) {
 	      G__typepdecl=1;
 	      G__DEFVAR('I');
@@ -3523,6 +3529,12 @@ G__value G__exec_statement()
 	      G__DEFREFVAR('c');
 	      break;
 	    }
+#ifndef G__OLDIMPLEMENTATION1604
+	    if(strcmp(statement,"bool&")==0) {
+	      G__DEFREFVAR('g');
+	      break;
+	    }
+#endif
 	    if(strcmp(statement,"FILE*")==0) {
 	      G__typepdecl=1;
 	      G__DEFVAR('E');
@@ -3535,6 +3547,14 @@ G__value G__exec_statement()
 	      G__typepdecl=0;
 	      break;
 	    }
+#ifndef G__OLDIMPLEMENTATION1604
+	    if(strcmp(statement,"bool*")==0) {
+	      G__typepdecl=1;
+	      G__DEFVAR('G');
+	      G__typepdecl=0;
+	      break;
+	    }
+#endif
 	    if(strcmp(statement,"long&")==0) {
 	      G__DEFREFVAR('l');
 	      break;

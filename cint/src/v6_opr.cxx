@@ -162,6 +162,12 @@ double val;
     *(unsigned char*)defined->ref = (unsigned char)val;
     defined->obj.i = (unsigned char)val;
     break;
+#ifndef G__OLDIMPLEMENTATION1604
+  case 'g': /* bool */
+    *(int*)defined->ref = (int)val?1:0;
+    defined->obj.i = (int)val?1:0;
+    break;
+#endif
   default:
     G__genericerror("Invalid operation and assignment, G__doubleassignbyref");
     break;
@@ -214,6 +220,12 @@ long val;
     *(unsigned char*)defined->ref = (unsigned char)val;
     defined->obj.i = (unsigned char)val;
     break;
+#ifndef G__OLDIMPLEMENTATION1604
+  case 'g': /* bool */
+    *(int*)defined->ref = (int)val?1:0;
+    defined->obj.i = (int)val?1:0;
+    break;
+#endif
   case 'd': /* double */
     *(double*)defined->ref = (double)val;
     defined->obj.d = (double)val;

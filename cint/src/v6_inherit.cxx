@@ -320,6 +320,14 @@ struct G__baseparam *pbaseparam;
   for(i=0;i<baseclass->basen;i++) {
     if(baseclass->property[i]&G__ISDIRECTINHERIT) {
       G__tagnum = baseclass->basetagnum[i];
+#define G__OLDIMPLEMENTATION1606
+#ifndef G__OLDIMPLEMENTATION1606
+      if(G__PUBLIC!=baseclass->baseaccess[i]) {
+	G__fprinterr(G__serr,"Error: Illegal constructor call. Non-public base class %s",G__struct.name[baseclass->basetagnum[i]]);
+	G__genericerror((char*)NULL);
+	return(0);
+      }
+#endif
 #ifdef G__VIRTUALBASE
       if(baseclass->property[i]&G__ISVIRTUALBASE) {
 	long vbaseosaddr;
@@ -561,6 +569,12 @@ struct G__baseparam *pbaseparam;
 		dval = G__double(G__getexpr(pbaseparam->param[j]));
 		*(double*)addr = dval;
 		break;
+#ifndef G__OLDIMPLEMENTATION1604
+	      case 'g':
+		lval = G__int(G__getexpr(pbaseparam->param[j]))?1:0;
+		*(int*)addr = lval;
+		break;
+#endif
 	      default:
 		G__genericerror("Error: Illegal type in member initialization");
 		break;

@@ -1113,7 +1113,7 @@ int G__pause()
   * If Display mode, display source code
   ************************************************/
   if((G__breakdisp!=0)&&(G__ifile.name[0]!='\0')) {
-    G__pr(G__sout,view);
+    G__pr(G__sout,view.file);
   }
 
   /************************************************
@@ -2860,7 +2860,7 @@ G__value *rslt;
       /*******************************************************
        * Delete break point
        *******************************************************/
-      if(1<G__findposition(string,view,&line_number,&filenum)) {
+      if(1<G__findposition(string,view.file,&line_number,&filenum)) {
 	G__srcfile[filenum].breakpoint[line_number] &= G__NOBREAK;
 	fprintf(G__sout,"Break point line %d %s deleted\n"
 		,line_number,G__srcfile[filenum].filename);
@@ -2877,7 +2877,7 @@ G__value *rslt;
       /*******************************************************
        * Set break point
        *******************************************************/
-      if(1<G__findposition(string,view,&line_number,&filenum) &&
+      if(1<G__findposition(string,view.file,&line_number,&filenum) &&
 	 G__srcfile[filenum].breakpoint && G__srcfile[filenum].maxline) {
 	fprintf(G__sout,"Break point set to line %d %s\n"
 		,line_number,G__srcfile[filenum].filename);
@@ -2931,7 +2931,7 @@ G__value *rslt;
 #endif
 	return(ignore);
       }
-      else if(1<G__findposition(string,view,&line_number,&filenum)) {
+      else if(1<G__findposition(string,view.file,&line_number,&filenum)) {
 	G__srcfile[filenum].breakpoint[line_number] |= G__CONTUNTIL;
 	G__pause_return=1;
 #ifndef G__OLDIMPLEMENTATION464
@@ -2972,7 +2972,7 @@ G__value *rslt;
 	view.file.fp=G__srcfile[temp].fp;
 	strcpy(view.file.name,G__srcfile[temp].filename);
 	view.file.line_number=1;
-	G__pr(G__sout,view);
+	G__pr(G__sout,view.file);
       }
     }
 
@@ -2996,12 +2996,12 @@ G__value *rslt;
       /*******************************************************
        * Display source code
        *******************************************************/
-      if(0<G__findposition(command,view,&line_number,&filenum)&&filenum>=0) {
+      if(0<G__findposition(command,view.file,&line_number,&filenum)&&filenum>=0) {
 	view.file.filenum = filenum;
 	view.file.fp = G__srcfile[filenum].fp;
 	strcpy(view.file.name,G__srcfile[filenum].filename);
 	view.file.line_number = line_number;
-	G__pr(G__sout,view);
+	G__pr(G__sout,view.file);
       }
       else {
 	fprintf(G__sout,"No proper file view.file. Can not display source! Use 'f [file]' command\n");
@@ -3025,7 +3025,7 @@ G__value *rslt;
 	view.struct_offset=G__store_struct_offset;
 	view.tagnum=G__tagnum;
 	view.exec_memberfunc=G__exec_memberfunc;
-	G__pr(G__sout,view);
+	G__pr(G__sout,view.file);
       }
       else if(local && local->prev_local) {
 	view.file.filenum = local->prev_filenum ;
@@ -3036,7 +3036,7 @@ G__value *rslt;
 	view.struct_offset=view.var_local->struct_offset;
 	view.tagnum=view.var_local->tagnum;
 	view.exec_memberfunc=view.var_local->exec_memberfunc;
-	G__pr(G__sout,view);
+	G__pr(G__sout,view.file);
       }
       else {
 	fprintf(G__sout,"Stack isn't that deep\n");
@@ -3480,32 +3480,35 @@ G__value *rslt;
 	G__store_undo_position();
 #endif
 	G__more_pause((FILE*)NULL,1);
-	G__SET_TEMPENV;
-	strcpy(sname,tname);
+        { 
+          struct G__store_env store;
+          G__SET_TEMPENV;
+          strcpy(sname,tname);
 #ifndef G__OLDIMPLEMENTATION1476
-	G__command_eval=1 ;
+          G__command_eval=1 ;
 #endif
-	buf=G__exec_tempfile(sname);
-	if(rslt) *rslt = buf;
-	remove(sname);
-	G__in_pause=1;
-	G__valuemonitor(buf,syscom);
-	G__in_pause=0;
+          buf=G__exec_tempfile(sname);
+          if(rslt) *rslt = buf;
+          remove(sname);
+          G__in_pause=1;
+          G__valuemonitor(buf,syscom);
+          G__in_pause=0;
 #ifndef G__OLDIMPLEMENTATION1259
-	if(buf.isconst&(G__CONSTVAR|G__CONSTFUNC)) {
-	  char tmp[G__ONELINE];
-	  sprintf(tmp,"(const %s",syscom+1);
-	  strcpy(syscom,tmp);
-	}
-	if(buf.isconst&G__PCONSTVAR) {
-	  char tmp2[G__ONELINE];
-	  char *ptmp = strchr(syscom,')');
-	  strcpy(tmp2,ptmp);
-	  strcpy(ptmp,"const");
-	  strcat(syscom,tmp2);
-	}
+          if(buf.isconst&(G__CONSTVAR|G__CONSTFUNC)) {
+            char tmp[G__ONELINE];
+            sprintf(tmp,"(const %s",syscom+1);
+            strcpy(syscom,tmp);
+          }
+          if(buf.isconst&G__PCONSTVAR) {
+            char tmp2[G__ONELINE];
+            char *ptmp = strchr(syscom,')');
+            strcpy(tmp2,ptmp);
+            strcpy(ptmp,"const");
+            strcat(syscom,tmp2);
+          }
 #endif
-	G__RESET_TEMPENV;
+          G__RESET_TEMPENV;
+        }
 #ifndef G__OLDIMPLEMENTATION1004
 	if(-1==G__func_now) G__p_local=0;
 #endif

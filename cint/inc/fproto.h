@@ -560,6 +560,9 @@ struct G__Definedtemplateclass *G__defined_templateclass G__P((char *name));
 #ifndef G__OLDIMPLEMENTATION1560
 struct G__Definetemplatefunc *G__defined_templatefunc G__P((char *name));
 #endif
+#ifndef G__OLDIMPLEMENTATION1611
+struct G__Definetemplatefunc *G__defined_templatememfunc G__P((char *name));
+#endif
 void G__declare_template G__P((void));
 int G__gettemplatearglist G__P((char *paralist,struct G__Charlist *charlist,struct G__Templatearg *def_para,int *pnpara));
 int G__instantiate_templateclass G__P((char *tagname));

@@ -7,7 +7,7 @@
  * Description:
  *  Class and member function template
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its
  * documentation for any purpose is hereby granted without fee,
@@ -837,6 +837,137 @@ int isforwarddecl;
 
   return(0);
 }
+
+#ifndef G__OLDIMPLEMENTATION1611
+/***********************************************************************
+* G__getobjecttagnum
+***********************************************************************/
+int G__getobjecttagnum(name)
+char *name;
+{
+  int result = -1;
+  char *p;
+  char *p1;
+  char *p2;
+  p1 = strrchr(name,'.');
+  p2 = G__strrstr(name,"->");
+
+  if(!p1 && !p2) {
+    struct G__var_array *var;
+    int ig15;
+    int itmpx,varhash;
+    long store_struct_offset1=0,store_struct_offset2=0;
+    G__hash(name,varhash,itmpx);
+    var = G__searchvariable(name,varhash,G__p_local,&G__global
+			    ,&store_struct_offset1,&store_struct_offset2
+			    ,&ig15
+			    ,0);
+    if(var && 'u'==tolower(var->type[ig15]) && -1!=var->p_tagtable[ig15]) {
+      result = var->p_tagtable[ig15];
+      return(result);
+    }
+    else {
+      char *p3 = strchr(name,'(');
+      if(p3) {
+	/* LOOK FOR A FUNCTION */
+      }
+    }
+  }
+
+  else {
+    if(p1>p2 || !p2) {
+      *p1 = 0;
+      p = p1+1;
+    }
+    else /* if(p2>p1 || !p1) */ {
+      *p2 = 0;
+      p = p2+2;
+    }
+    
+    result = G__getobjecttagnum(name);
+    if(-1!=result) {
+      /* TO BE IMPLEMENTED */
+      /* struct G__var_array *var = G__struct.memvar[result];
+	 struct G__ifunc_table *ifunc = G__struct.memfunc[result]; */
+    }
+  }
+
+  if(p1 && 0==(*p1)) *p1 = '.';
+  if(p2 && 0==(*p2)) *p2 = '-';
+  return(result);
+}
+
+
+/***********************************************************************
+* G__defined_templatememfunc()
+*
+* t.Handle<int>();
+* a.t.Handle<int>();
+* a.f().Handle<int>();
+*
+***********************************************************************/
+struct G__Definetemplatefunc *G__defined_templatememfunc(name)
+char *name;
+{
+  char *p;
+  char *p1;
+  char *p2;
+  int store_asm_noverflow = G__asm_noverflow ;
+  struct G__Definetemplatefunc *result= NULL;
+
+  /* separate "t" and "Handle" */
+  p1 = strrchr(name,'.');
+  p2 = G__strrstr(name,"->");
+  if(!p1 && !p2) return(result);
+
+  if(p1>p2 || !p2) {
+    *p1 = 0;
+    p = p1+1;
+  }
+  else /* if(p2>p1 || !p1) */ {
+    *p2 = 0;
+    p = p2+2;
+  }
+  /* "t" as name "Handle" as p */
+
+  G__suspendbytecode();
+
+  {
+    int tagnum = G__getobjecttagnum(name);
+    if(-1!=tagnum) {
+      int store_def_tagnum = G__def_tagnum;
+      int store_tagdefining = G__tagdefining;
+      /* Have to look at base class */
+      G__def_tagnum = tagnum;
+      G__tagdefining = tagnum;
+      result = G__defined_templatefunc(p);
+      G__def_tagnum = store_def_tagnum;
+      G__tagdefining = store_tagdefining;
+      if(!result) {
+	struct G__ifunc_table *ifunc=G__struct.memfunc[tagnum];
+	int ifn;
+	int len=strlen(p);
+	p[len++]='<';
+	p[len]=0;
+	while(ifunc) {
+	  for(ifn=0;ifn<ifunc->allifunc;ifn++) {
+	    if(0==strncmp(ifunc->funcname[ifn],p,len)) {
+	      result = (struct G__Definetemplatefunc*)G__PVOID;
+	    }
+	  }
+	  ifunc = ifunc->next;
+	}
+	p[len-1]=0;
+      }
+    }
+  }
+
+  G__asm_noverflow = store_asm_noverflow;
+  if(p1 && 0==(*p1)) *p1 = '.';
+  if(p2 && 0==(*p2)) *p2 = '-';
+  return(result);
+}
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1560
 /***********************************************************************
@@ -2606,7 +2737,13 @@ int isnew;
 #ifndef G__OLDIMPLEMENTATION923
          0==isnew &&
 #endif
-    ('*'==symbol[strlen(symbol)-1] || strchr(symbol,' ') ||  strchr(symbol,'<') )) {
+#ifndef G__OLDIMPLEMENTATION1610
+ 	 ('*'==symbol[strlen(symbol)-1] || strchr(symbol,' ') ||  
+	  strchr(symbol,'<') )
+#else
+	 ('*'==symbol[strlen(symbol)-1] || strchr(symbol,' '))
+#endif
+	 ) {
 	char temp[G__LONGLINE];
 	strcpy(temp,symbol);
 	sprintf(symbol,"(%s)",temp);
@@ -3401,6 +3538,11 @@ fpos_t *ppos;
     else if(strcmp(paraname,"short")==0) {
       deftmpfunc->func_para.type[tmp] = 's' + unsigned_flag;
     }
+#ifndef G__OLDIMPLEMENTATION1604
+    else if(strcmp(paraname,"bool")==0) {
+      deftmpfunc->func_para.type[tmp] = 'g';
+    }
+#endif
     else if(strcmp(paraname,"long")==0) {
       deftmpfunc->func_para.type[tmp] = 'l' + unsigned_flag;
       if('*'!=c && '&'!=c) {
