@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.80 2003/04/28 20:42:37 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.81 2003/05/07 21:06:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -136,11 +136,10 @@ ClassImp(RooAbsPdf)
 Int_t RooAbsPdf::_verboseEval = 0;
 Bool_t RooAbsPdf::_globalSelectComp = kFALSE ;
 Bool_t RooAbsPdf::_evalError = kFALSE ;
-RooIntegratorConfig* RooAbsPdf::_defaultNormIntConfig(0) ;
 
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title) : 
-  RooAbsReal(name,title), _norm(0), _normSet(0), _normMgr(10), _selectComp(kTRUE), _specNormIntConfig(0)
+  RooAbsReal(name,title), _norm(0), _normSet(0), _normMgr(10), _selectComp(kTRUE)
 {
   // Constructor with name and title only
   resetErrorCounters() ;
@@ -150,7 +149,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title) :
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title, 
 		     Double_t plotMin, Double_t plotMax) :
-  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _normSet(0), _normMgr(10), _selectComp(kTRUE), _specNormIntConfig(0)
+  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _normSet(0), _normMgr(10), _selectComp(kTRUE)
 {
   // Constructor with name, title, and plot range
   resetErrorCounters() ;
@@ -165,12 +164,6 @@ RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) :
   // Copy constructor
   resetErrorCounters() ;
   setTraceCounter(other._traceCount) ;
-
-  if (other._specNormIntConfig) {
-    _specNormIntConfig = new RooIntegratorConfig(*other._specNormIntConfig) ;
-  } else {
-    _specNormIntConfig = 0 ;
-  }
 }
 
 
@@ -178,7 +171,6 @@ RooAbsPdf::~RooAbsPdf()
 {
   // Destructor
   //if (_norm) delete _norm ;
-  if (_specNormIntConfig) delete _specNormIntConfig ;
 }
 
 
@@ -418,7 +410,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
     delete iter ;
     nname.Append("]") ;
 
-    _norm = new RooRealIntegral(nname.Data(),ntitle.Data(),*this,*depList,0,getNormIntConfig()) ;
+    _norm = new RooRealIntegral(nname.Data(),ntitle.Data(),*this,*depList,0,getIntegratorConfig()) ;
   }
 
   // Register new normalization with manager (takes ownership)
@@ -429,57 +421,6 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
  
   if (!fullNorm) delete depList ;
   return kTRUE ;
-}
-
-
-
-RooIntegratorConfig* RooAbsPdf::defaultNormIntConfig() const 
-{
-  if (!_defaultNormIntConfig) {
-    _defaultNormIntConfig = new RooIntegratorConfig ;
-  }
-  return _defaultNormIntConfig ;
-}
-
-
-RooIntegratorConfig* RooAbsPdf::specialNormIntConfig() const 
-{
-  return _specNormIntConfig ;
-}
-
-
-void RooAbsPdf::setDefaultNormIntConfig(const RooIntegratorConfig& config) 
-{
-  if (_defaultNormIntConfig) {
-    delete _defaultNormIntConfig ;
-  }
-  _defaultNormIntConfig = new RooIntegratorConfig(config) ;
-}
-
-
-const RooIntegratorConfig* RooAbsPdf::getNormIntConfig() const 
-{
-  const RooIntegratorConfig* config = specialNormIntConfig() ;
-  if (config) return config ;
-  return defaultNormIntConfig() ;
-}
-
-
-void RooAbsPdf::setNormIntConfig(const RooIntegratorConfig& config) 
-{
-  if (_specNormIntConfig) {
-    delete _specNormIntConfig ;
-  }
-  _specNormIntConfig = new RooIntegratorConfig(config) ;  
-}
-
-
-void RooAbsPdf::setNormIntConfig() 
-{
-  if (_specNormIntConfig) {
-    delete _specNormIntConfig ;
-  }
-  _specNormIntConfig = 0 ;
 }
 
 

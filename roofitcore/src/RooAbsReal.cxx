@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.91 2003/05/07 21:06:24 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.92 2003/05/10 01:37:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,6 +40,7 @@
 #include "RooFitCore/RooAddPdf.hh"
 #include "RooFitCore/RooCmdConfig.hh"
 #include "RooFitCore/RooCategory.hh"
+#include "RooFitCore/RooIntegratorConfig.hh"
 
 #include <iostream.h>
 
@@ -51,14 +52,15 @@
 #include "TBranch.h"
 #include "TLeaf.h"
 #include "TAttLine.h"
-
+ 
 ClassImp(RooAbsReal)
 ;
 
+RooIntegratorConfig* RooAbsReal::_defaultIntegratorConfig(0) ;
 
 RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) : 
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), 
-  _plotMin(0), _plotMax(0), _forceNumInt(kFALSE)
+  _plotMin(0), _plotMax(0), _forceNumInt(kFALSE), _specIntegratorConfig(0)
 {
   // Constructor with unit label
   setValueDirty() ;
@@ -68,7 +70,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) :
 RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
 		       Double_t maxVal, const char *unit) :
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), 
-  _plotMin(minVal), _plotMax(maxVal), _forceNumInt(kFALSE)
+  _plotMin(minVal), _plotMax(maxVal), _forceNumInt(kFALSE), _specIntegratorConfig(0)
 {
   // Constructor with plot range and unit label
   setValueDirty() ;
@@ -83,11 +85,17 @@ RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) :
 {
 
   // Copy constructor
+  if (other._specIntegratorConfig) {
+    _specIntegratorConfig = new RooIntegratorConfig(*other._specIntegratorConfig) ;
+  } else {
+    _specIntegratorConfig = 0 ;
+  }
 }
 
 
 RooAbsReal::~RooAbsReal()
 {
+  if (_specIntegratorConfig) delete _specIntegratorConfig ;
   // Destructor
 }
 
@@ -1670,6 +1678,57 @@ Bool_t RooAbsReal::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedA
   delete iterator;
   if(isMatched) matchedArgs.add(matched);
   return isMatched;
+}
+
+
+
+RooIntegratorConfig* RooAbsReal::defaultIntegratorConfig() const 
+{
+  if (!_defaultIntegratorConfig) {
+    _defaultIntegratorConfig = new RooIntegratorConfig ;
+  }
+  return _defaultIntegratorConfig ;
+}
+
+
+RooIntegratorConfig* RooAbsReal::specialIntegratorConfig() const 
+{
+  return _specIntegratorConfig ;
+}
+
+
+void RooAbsReal::setDefaultIntegratorConfig(const RooIntegratorConfig& config) 
+{
+  if (_defaultIntegratorConfig) {
+    delete _defaultIntegratorConfig ;
+  }
+  _defaultIntegratorConfig = new RooIntegratorConfig(config) ;
+}
+
+
+const RooIntegratorConfig* RooAbsReal::getIntegratorConfig() const 
+{
+  const RooIntegratorConfig* config = specialIntegratorConfig() ;
+  if (config) return config ;
+  return defaultIntegratorConfig() ;
+}
+
+
+void RooAbsReal::setIntegratorConfig(const RooIntegratorConfig& config) 
+{
+  if (_specIntegratorConfig) {
+    delete _specIntegratorConfig ;
+  }
+  _specIntegratorConfig = new RooIntegratorConfig(config) ;  
+}
+
+
+void RooAbsReal::setIntegratorConfig() 
+{
+  if (_specIntegratorConfig) {
+    delete _specIntegratorConfig ;
+  }
+  _specIntegratorConfig = 0 ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.55 2002/09/17 06:39:34 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.56 2003/05/07 21:06:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -87,6 +87,14 @@ public:
   virtual Bool_t inPlotRange(Double_t value) const;
 
   virtual Double_t defaultErrorLevel() const { return 1.0 ; }
+
+  const RooIntegratorConfig* getIntegratorConfig() const ;
+  RooIntegratorConfig* defaultIntegratorConfig() const ;
+  RooIntegratorConfig* specialIntegratorConfig() const ;
+  static void setDefaultIntegratorConfig(const RooIntegratorConfig& config) ;
+  void setIntegratorConfig() ;
+  void setIntegratorConfig(const RooIntegratorConfig& config) ;
+
 
 public:
 
@@ -188,6 +196,9 @@ protected:
   friend class RooAbsPdf ;
   friend class RooConvolutedPdf ;
   friend class RooRealProxy ;
+
+  RooIntegratorConfig* _specIntegratorConfig ;
+  static RooIntegratorConfig* _defaultIntegratorConfig ;
 
 private:
 

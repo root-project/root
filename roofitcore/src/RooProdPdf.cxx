@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.35 2003/04/28 20:42:39 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.36 2003/05/10 01:37:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -177,15 +177,23 @@ RooProdPdf::~RooProdPdf()
 }
 
 
+Double_t RooProdPdf::getVal(const RooArgSet* set) const 
+{
+  _curNormSet = (RooArgSet*)set ;
+  return RooAbsPdf::getVal(set) ;
+}
+
+
 Double_t RooProdPdf::evaluate() const 
 {
   // Calculate current unnormalized value of object
 
-  const RooArgSet* nset = _pdfList.nset() ;
-  Int_t code ;
-  RooArgList* plist = getPartIntList(nset,0,code) ;
+  // WVE NSET may not exists, but getPartIntList may need it...
 
-  return calculate(plist,nset) ;
+  Int_t code ;
+  RooArgList* plist = getPartIntList(_curNormSet,0,code) ;
+
+  return calculate(plist,_curNormSet) ;
 }
 
 
@@ -290,6 +298,8 @@ RooArgList* RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* i
     code = _partListMgr.lastIndex() ;
     return partIntList ;
   }
+
+  // WVE --- NSET object may not exist?
 
   // Factorize the product in irreducible terms for this nset
   TList* terms = factorizeProduct(nset?(*nset):RooArgSet()) ;

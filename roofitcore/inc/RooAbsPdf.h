@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.66 2003/01/14 00:07:46 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.67 2003/05/07 21:06:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -141,13 +141,6 @@ public:
 
   inline Bool_t isSelectedComp() const { return _selectComp || _globalSelectComp ; }
 
-  const RooIntegratorConfig* getNormIntConfig() const ;
-  RooIntegratorConfig* defaultNormIntConfig() const ;
-  RooIntegratorConfig* specialNormIntConfig() const ;
-  static void setDefaultNormIntConfig(const RooIntegratorConfig& config) ;
-  void setNormIntConfig() ;
-  void setNormIntConfig(const RooIntegratorConfig& config) ;
-
   virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet()) ;
 
   virtual Double_t extendedTerm(UInt_t observedEvents) const ;
@@ -203,9 +196,6 @@ protected:
   mutable Int_t _traceCount ;        // Number of traces remaining to print
   mutable Int_t _negCount ;          // Number of negative probablities remaining to print
 
-
-  RooIntegratorConfig* _specNormIntConfig ;
-  static RooIntegratorConfig* _defaultNormIntConfig ;
 
   friend class RooAddPdf ;
   void selectComp(Bool_t flag) { _selectComp = flag ; }

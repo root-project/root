@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.rdl,v 1.28 2003/01/14 00:07:54 wverkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.29 2003/04/28 20:42:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -31,6 +31,7 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooProdPdf(*this,newname) ; }
   virtual ~RooProdPdf() ;
 
+  virtual Double_t getVal(const RooArgSet* set=0) const ;
   Double_t evaluate() const ;
   virtual Bool_t checkDependents(const RooArgSet* nset) const ;	
 
@@ -68,6 +69,7 @@ protected:
 
   mutable RooAICRegistry _genCode ; // Registry of composite direct generator codes
 
+  mutable RooArgSet* _curNormSet ; //!
   Double_t _cutOff ;       //  Cutoff parameter for running product
   RooListProxy _pdfList ;  //  List of PDF components
   TIterator* _pdfIter ;    //! Iterator of PDF list

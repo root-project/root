@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.68 2003/01/14 00:07:55 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.69 2003/05/07 21:06:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -84,6 +84,10 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   //
   //   G) Split numeric list in integration list and summation list   
   //
+
+
+  // Use objects integrator configuration if none is specified
+  if (!_iconfig) _iconfig = (RooIntegratorConfig*) function.getIntegratorConfig() ;
 
   // Save private copy of funcNormSet, if supplied, excluding factorizing terms
   if (funcNormSet) {
