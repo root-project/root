@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.5 2003/08/27 16:21:10 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.6 2003/09/03 06:08:34 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@ the following structure:</P>
 ALIGN=MIDDLE WIDTH=333 HEIGHT=358 BORDER=0>
 </P>
 <P>It is made of neurons characterized by a bias and weighted links
-between them – let's call those links synapses. The input neurons
+between them (let's call those links synapses). The input neurons
 receive the inputs, normalize them and forward them to the first
 hidden layer. 
 </P>
@@ -145,6 +145,8 @@ given in the constructor. The network is described by a simple
 string: The input/output layers are defined by giving the branch
 names and types, separated by comas. Hidden layers are just described
 by the number of neurons. The layers are separated by semicolons.
+In addition, output layer types can be preceded by '@' (e.g "out/@F")
+if one wants to also normalize the output.
 Input and outputs are taken from the TTree given as second argument.
 One defines the training and test datasets by TEventLists.</FONT></P>
 <P STYLE="margin-left: 2cm"><FONT SIZE=3><SPAN STYLE="background: #e6e6e6">
@@ -154,20 +156,12 @@ One defines the training and test datasets by TEventLists.</FONT></P>
 the constructor, or later with the suited setter method.</FONT></P>
 <P><FONT SIZE=3>The learning method is defined using the
 TMultiLayerPerceptron::SetLearningMethod() . Learning methods are :</FONT></P>
-<OL>
-	<LI><P><FONT SIZE=3>TMultiLayerPerceptron::kStochastic, </FONT>
-	</P>
-	<LI><P><FONT SIZE=3>TMultiLayerPerceptron::kBatch, </FONT>
-	</P>
-	<LI><P><FONT SIZE=3>TMultiLayerPerceptron::kSteepestDescent, </FONT>
-	</P>
-	<LI><P><FONT SIZE=3>TMultiLayerPerceptron::kRibierePolak, </FONT>
-	</P>
-	<LI><P><FONT SIZE=3>TMultiLayerPerceptron::kFletcherReeves, </FONT>
-	</P>
-	<LI><P><FONT SIZE=3>TMultiLayerPerceptron::kBFGS </FONT>
-	</P>
-</OL>
+<P><FONT SIZE=3>TMultiLayerPerceptron::kStochastic, <BR>
+TMultiLayerPerceptron::kBatch,<BR>
+TMultiLayerPerceptron::kSteepestDescent,<BR>
+TMultiLayerPerceptron::kRibierePolak,<BR>
+TMultiLayerPerceptron::kFletcherReeves,<BR>
+TMultiLayerPerceptron::kBFGS<BR></FONT></P>
 <P><FONT SIZE=3>Finally, one starts the training with
 TMultiLayerPerceptron::Train(Int_t nepoch, Option_t* options). The
 first argument is the number of epochs while option is a string that
@@ -175,15 +169,14 @@ can contain: &quot;text&quot; (simple text output) , &quot;graph&quot;
 (evoluting graphical training curves), &quot;update=X&quot; (step for
 the text/graph output update) or &quot;+&quot; (will skip the
 randomisation and start from the previous values). All combinations
-are available. </FONT>
-</P>
+are available. </FONT></P>
 <P STYLE="margin-left: 2cm"><FONT SIZE=3><SPAN STYLE="background: #e6e6e6">
 <U><FONT COLOR="#ff0000">Example</FONT></U>:
-net.Train(100,”text, graph, update=10”).</SPAN></FONT></P>
+net.Train(100,&quot;text, graph, update=10&quot;).</SPAN></FONT></P>
 <P><FONT SIZE=3>When the neural net is trained, it can be used
 directly ( TMultiLayerPerceptron::Evaluate() ) or exported to a
 standalone C++ code ( TMultiLayerPerceptron::Export() ).</FONT></P>
-<!--*/
+<!-- */
 // -->END_HTML
 
 #include "TMultiLayerPerceptron.h"
@@ -239,6 +232,8 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(TString layout, TTree * data,
    // Hidden layers are just described by the number of neurons.
    // The layers are separated by semicolons.
    // Ex: "x/F,y/F:10:5:f/F"
+   // The output type can be prepended by '@' if the variable has to be
+   // normalized.
    // Input and outputs are taken from the TTree given as second argument.
    // training and test are the two TEventLists defining events 
    // to be used during the neural net training. 
@@ -808,7 +803,7 @@ void TMultiLayerPerceptron::BuildFirstLayer(TString & input)
       if (!fData->GetBranch(brName.Data())) {
          Error("BuildNetwork()","malformed structure. Unknown Branch",brName.Data());
       }
-      neuron->UseBranch(fData->GetBranch(brName.Data()), brType);
+      neuron->UseBranch(fData,brName.Data(), brType);
       fFirstLayer.AddLast(neuron);
       fNetwork.AddLast(neuron);
       beg = end + 1;
@@ -825,7 +820,7 @@ void TMultiLayerPerceptron::BuildFirstLayer(TString & input)
    if (!fData->GetBranch(brName.Data())) {
       Error("BuildNetwork()","malformed structure. Unknown Branch %s",brName.Data());
    }
-   neuron->UseBranch(fData->GetBranch(brName.Data()), brType);
+   neuron->UseBranch(fData,brName.Data(), brType);
    fFirstLayer.AddLast(neuron);
    fNetwork.AddLast(neuron);
 }
@@ -845,7 +840,7 @@ void TMultiLayerPerceptron::BuildHiddenLayers(TString & hidden)
    while (end != -1) {
       Int_t num = atoi(TString(hidden(beg, end - beg)).Data());
       for (i = 0; i < num; i++) {
-         neuron = new TNeuron;
+         neuron = new TNeuron(TNeuron::kSigmoid);
          fNetwork.AddLast(neuron);
          for (j = prevStart; j < prevStop; j++) {
             synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
@@ -859,7 +854,7 @@ void TMultiLayerPerceptron::BuildHiddenLayers(TString & hidden)
    }
    Int_t num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
    for (i = 0; i < num; i++) {
-      neuron = new TNeuron;
+      neuron = new TNeuron(TNeuron::kSigmoid);
       fNetwork.AddLast(neuron);
       for (j = prevStart; j < prevStop; j++) {
          synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
@@ -873,9 +868,10 @@ void TMultiLayerPerceptron::BuildLastLayer(TString & output, Int_t prev)
 {
    // Builds the output layer
    // Neurons are linear combinations of input.
-   // The branch is not normalised since this would degrade 
+   // By default, the branch is not normalised since this would degrade 
    // performance for classification jobs.
-   
+   // Normalisation can be requested by putting '@' in front of 
+   // the branch type.
    Int_t beg = 0;
    Int_t end = output.Index(",", beg + 1);
    Int_t prevStop = fNetwork.GetEntriesFast();
@@ -886,10 +882,15 @@ void TMultiLayerPerceptron::BuildLastLayer(TString & output, Int_t prev)
    TSynapse *synapse;
    Int_t j;
    while (end != -1) {
+      Bool_t normalize = false;
       brName = TString(output(beg, end - beg));
       Int_t slashPos = brName.Index("/");
       if (slashPos != -1) {
          brType = brName[slashPos + 1];
+         if (brType=='@') {
+            normalize = true;
+            brType = brName[slashPos + 2];
+         }
          brName = brName(0, slashPos);
       } else
          brType = 'D';
@@ -897,8 +898,8 @@ void TMultiLayerPerceptron::BuildLastLayer(TString & output, Int_t prev)
       if (!fData->GetBranch(brName.Data())) {
          Error("BuildNetwork()","malformed structure. Unknown Branch %s",brName.Data());
       }
-      neuron->UseBranch(fData->GetBranch(brName.Data()), brType);
-      neuron->SetNormalisation(0., 1.);	// no normalisation of the output layer
+      neuron->UseBranch(fData,brName.Data(), brType);
+      if(!normalize) neuron->SetNormalisation(0., 1.);
       for (j = prevStart; j < prevStop; j++) {
          synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
          fSynapses.AddLast(synapse);
@@ -919,7 +920,7 @@ void TMultiLayerPerceptron::BuildLastLayer(TString & output, Int_t prev)
    if (!fData->GetBranch(brName.Data())) {
       Error("BuildNetwork()","malformed structure. Unknown Branch %s",brName.Data());
    }
-   neuron->UseBranch(fData->GetBranch(brName.Data()), brType);
+   neuron->UseBranch(fData,brName.Data(), brType);
    neuron->SetNormalisation(0., 1.);	// no normalisation of the output layer
    for (j = prevStart; j < prevStop; j++) {
       synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
@@ -1165,8 +1166,11 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language)
                           << endl;
             if (!neuron->GetPost(0))
                sourcefile << "   return input;" << endl;
-            else
-               sourcefile << "   return (1/(1+exp(-input)));" << endl;
+            else {
+               sourcefile << "   return ((1/(1+exp(-input)))*";
+               sourcefile << neuron->GetNormalisation()[0] << ")+" ;
+               sourcefile << neuron->GetNormalisation()[1] << ";" << endl;
+            }
          }
          sourcefile << "}" << endl << endl;
       }

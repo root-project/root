@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.1 2003/08/27 15:31:13 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.2 2003/08/29 14:28:40 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 #ifndef ROOT_TNeuron
@@ -13,6 +13,7 @@
 
 class TSynapse;
 class TBranch;
+class TTree;
 
 //____________________________________________________________________
 //
@@ -41,10 +42,11 @@ class TNeuron : public TObject {
    enum NeuronType { kOff, kLinear, kSigmoid, kTanh, kGauss };
 
    TNeuron(NeuronType type = kSigmoid);
-   virtual ~ TNeuron() { delete[] fNorm; } 
+   virtual ~ TNeuron() {} 
    inline TSynapse* GetPre(Int_t n) { return (TSynapse*) fpre.At(n); }
    inline TSynapse* GetPost(Int_t n) { return (TSynapse*) fpost.At(n); }
    void UseBranch(TBranch*, char);
+   void UseBranch(TTree*, const char*, char);
    Double_t GetValue();
    Double_t GetDerivative();
    Double_t GetError();
@@ -70,7 +72,7 @@ class TNeuron : public TObject {
    TObjArray fpost;       // pointers to the next level in a network
    Double_t fBranch;      // branch to be used for inputs and outputs
    Double_t fWeight;      // weight used for computation
-   Double_t* fNorm;       // normalisation to mean=0, RMS=1.
+   Double_t fNorm[2];     // normalisation to mean=0, RMS=1.
    NeuronType fType;      // neuron type
    char fBType;           // branch type
    //buffers

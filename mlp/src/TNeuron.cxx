@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.2 2003/08/27 16:02:17 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.3 2003/08/27 16:06:17 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -25,6 +25,8 @@
 #include "TNeuron.h"
 #include "TTree.h"
 #include "TBranch.h"
+#include "TCanvas.h"
+#include "TROOT.h"
 #include "TH1D.h"
 #include "Riostream.h"
 
@@ -33,11 +35,10 @@ ClassImp(TNeuron)
 //______________________________________________________________________________
 TNeuron::TNeuron(TNeuron::NeuronType type)
 {
-   // Default constructor
+   // Usual constructor
    fpre.SetOwner(false);
    fpost.SetOwner(false);
    fWeight = 0.;
-   fNorm = new Double_t[2];
    fNorm[0] = 1.;
    fNorm[1] = 0.;
    fType = type;
@@ -823,7 +824,31 @@ void TNeuron::UseBranch(TBranch * input, char btype)
    fBType = btype;
    TH1D tmp("tmpb", "tmpb", 1, -FLT_MAX, FLT_MAX);
    TString cmd = TString(input->GetName()) + ">>tmpb";
+   gROOT->SetBatch(1);
+   TCanvas tmpCanvas;
    input->GetTree()->Draw(cmd.Data(),"","groff");
+   gROOT->SetBatch(0);
+   fNorm[0] = tmp.GetRMS();
+   fNorm[1] = tmp.GetMean();
+}
+
+//______________________________________________________________________________
+void TNeuron::UseBranch(TTree* input, const char* bname, char btype)
+{
+   // Sets a branch that can be used to make the neuron an input.
+   // The branch is automatically normalized to mean=0, RMS=1.
+   // This normalisation is used by GetValue() (input neurons) 
+   // and GetError() (output neurons)
+   // This version doesn't see the branch directly and can thus 
+   // be used with TChains 
+   input->SetBranchAddress(bname,&fBranch);
+   fBType = btype;
+   TH1D tmp("tmpb", "tmpb", 1, -FLT_MAX, FLT_MAX);
+   TString cmd = TString(bname) + ">>tmpb";
+   gROOT->SetBatch(1);
+   TCanvas tmpCanvas;
+   input->Draw(cmd.Data(),"","groff");
+   gROOT->SetBatch(0);
    fNorm[0] = tmp.GetRMS();
    fNorm[1] = tmp.GetMean();
 }
