@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.10 2003/01/16 18:07:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.11 2004/06/01 11:15:57 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -2716,7 +2716,8 @@ void TMultiDimFit::MakeCorrelation()
 	XjNorm  += (fVariables(l) - fMeanVariables(j))
 	  * (fVariables(l) - fMeanVariables(j));
       }
-      fCorrelationMatrix(i+1,j) = XidotXj / TMath::Sqrt(XiNorm * XjNorm);
+      //fCorrelationMatrix(i+1,j) = XidotXj / TMath::Sqrt(XiNorm * XjNorm);
+      fCorrelationMatrix(i,j+1) = XidotXj / TMath::Sqrt(XiNorm * XjNorm);
     }
   }
 }
