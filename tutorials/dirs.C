@@ -18,7 +18,7 @@
 //  You can see the begin_html <a href="gif/dirs.gif" >picture of the browser </a> end_html
 //
 //    Instead of using the browser, you can also do:
-//   Root > top->cd();
+//   Root > tof->cd();
 //   Root > plane3->cd();
 //   Root > h3_90N->Draw();
 
