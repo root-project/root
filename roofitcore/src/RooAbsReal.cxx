@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.94 2003/05/12 20:25:51 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.95 2003/05/14 02:58:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1108,7 +1108,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
     // Print list of non-projected variables
     if (frame->getNormVars()) {
-      sliceSet.add(*frame->getNormVars()) ;
+      sliceSet.add(*getDependents(*frame->getNormVars())) ;
       sliceSet.remove(projectedVars,kTRUE) ;
       sliceSet.remove(*sliceSet.find(frame->getPlotVar()->GetName())) ;
       if (sliceSet.getSize()) {
