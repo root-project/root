@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.44 2002/03/01 19:57:18 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.45 2002/04/12 19:06:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -44,9 +44,7 @@ public:
   virtual TObject* Clone(const char* newname=0) const { return new RooDataSet(*this,newname?newname:GetName()) ; }
   virtual ~RooDataSet() ;
 
-  virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0) const {
-    return new RooDataSet(newName?newName:GetName(),newTitle?newTitle:GetTitle(),*get()) ; 
-  }
+  virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0) const ;
 
   virtual Int_t numEntries(Bool_t useWeights=kFALSE) const ;
 
