@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.cxx,v 1.5 2001/05/28 06:23:12 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.cxx,v 1.6 2001/08/08 15:23:30 brun Exp $
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************
@@ -72,6 +72,7 @@ void TDialogCanvas::Apply(const char *action)
 //*-*-*-*-*-*-*-*-*Called when the APPLY button is executed*-*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
 
+   if (!fRefPad) return;
    SetCursor(kWatch);
 
    TIter next(fPrimitives);
@@ -87,6 +88,7 @@ void TDialogCanvas::Apply(const char *action)
       }
    }
    fRefObject = refobj;
+   if (!gROOT->GetSelectedPad()) return;
    gROOT->GetSelectedPad()->Modified();
    gROOT->GetSelectedPad()->Update();
 }
