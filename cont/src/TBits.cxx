@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.6 2001/12/06 15:53:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.7 2001/12/19 15:40:59 brun Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -167,21 +167,21 @@ UInt_t TBits::FirstNullBit(UInt_t startBit) const
       for(UInt_t i=0; i<fNbytes; i++) {
          if (fAllBits[i] != 255) return 8*i + fbits[fAllBits[i]];      
       }
-      return fNbits+1;
+      return fNbits;
    }
-   if (startBit > fNbits) return fNbits+1;
+   if (startBit >= fNbits) return fNbits; 
    UInt_t startByte = startBit/8;
    UInt_t ibit = startBit%8;
    if (ibit) {
       for (i=ibit;i<8;i++) {
-         if ((fAllBits[startByte] & (1<<ibit)) == 0) return 8*startByte+ibit;
+         if ((fAllBits[startByte] & (1<<i)) == 0) return 8*startByte+i;
       }
       startByte++;
    }
    for(i=startByte; i<fNbytes; i++) {
       if (fAllBits[i] != 255) return 8*i + fbits[fAllBits[i]];      
    }
-   return fNbits+1;
+   return fNbits;
 }
 
 //______________________________________________________________________________
@@ -212,21 +212,21 @@ UInt_t TBits::FirstSetBit(UInt_t startBit) const
       for(UInt_t i=0; i<fNbytes; i++) {
          if (fAllBits[i] != 0) return 8*i + fbits[fAllBits[i]];      
       }
-      return fNbits+1;
+      return fNbits;
    }
-   if (startBit > fNbits) return fNbits+1;
+   if (startBit >= fNbits) return fNbits;
    UInt_t startByte = startBit/8;
    UInt_t ibit = startBit%8;
    if (ibit) {
       for (i=ibit;i<8;i++) {
-         if ((fAllBits[startByte] & (1<<ibit)) != 0) return 8*startByte+ibit;
+         if ((fAllBits[startByte] & (1<<i)) != 0) return 8*startByte+i;
       }
       startByte++;
    }
    for(i=startByte; i<fNbytes; i++) {
       if (fAllBits[i] != 0) return 8*i + fbits[fAllBits[i]];      
    }
-   return fNbits+1;
+   return fNbits;
 }
 
 //______________________________________________________________________________
@@ -272,6 +272,7 @@ void TBits::SetBitNumber(UInt_t bitnumber, Bool_t value)
          UChar_t *old_location = fAllBits;
          fAllBits = new UChar_t[new_size];
          memcpy(fAllBits,old_location,fNbytes);
+         memset(fAllBits+fNbytes ,0, new_size-fNbytes);
          fNbytes = new_size;
          delete old_location;
       } 
