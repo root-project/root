@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.rdl,v 1.34 2003/01/14 00:07:49 wverkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.35 2004/03/19 06:09:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,6 +50,7 @@ public:
   const RooArgList& coefList() const { return _coefList ; }
 
   void fixCoefNormalization(const RooArgSet& refCoefNorm) ;
+  virtual void resetErrorCounters(Int_t resetValue=10) ;
 
 protected:
 
@@ -73,7 +74,6 @@ protected:
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
                                        const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
 
-
   virtual void operModeHook() ;
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, 
 				     Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
@@ -88,6 +88,8 @@ protected:
   
   Bool_t _haveLastCoef ;   //  Flag indicating if last PDFs coefficient was supplied in the ctor
   Bool_t _allExtendable ;   //  Flag indicating if all PDF components are extendable
+
+  mutable Int_t _coefErrCount ; //! Coefficient error counter
 
 private:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.cc,v 1.56 2003/05/14 02:58:39 wverkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.57 2004/03/19 06:09:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -72,6 +72,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
   _coefIter  = _coefList.createIterator() ;
 
   _coefCache = new Double_t[10] ;
+  _coefErrCount = _errorCount ;
 }
 
 
@@ -100,7 +101,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
   _coefList.add(coef1) ;
 
   _coefCache = new Double_t[_pdfList.getSize()] ;
-
+  _coefErrCount = _errorCount ;
 }
 
 
@@ -174,6 +175,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   delete coefIter  ;
 
   _coefCache = new Double_t[_pdfList.getSize()] ;
+  _coefErrCount = _errorCount ;
 }
 
 
@@ -219,6 +221,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   delete pdfIter ;
 
   _coefCache = new Double_t[_pdfList.getSize()] ;
+  _coefErrCount = _errorCount ;
 }
 
 
@@ -242,6 +245,7 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   _pdfIter  = _pdfList.createIterator() ;
   _coefIter = _coefList.createIterator() ;
   _coefCache = new Double_t[_pdfList.getSize()] ;
+  _coefErrCount = _errorCount ;
 }
 
 
@@ -447,10 +451,14 @@ void RooAddPdf::updateCoefCache(const RooArgSet* nset) const
       _coefCache[_coefList.getSize()] = lastCoef ;
       
       // Warn about coefficient degeneration
-      if (lastCoef<-1e-05 || (lastCoef-1)>1e-5) {
+      if ((lastCoef<-1e-05 || (lastCoef-1)>1e-5) && _coefErrCount-->0) {
 	cout << "RooAddPdf::updateCoefCache(" << GetName() 
 	     << " WARNING: sum of PDF coefficients not in range [0-1], value=" 
-	     << 1-lastCoef << endl ;
+	     << 1-lastCoef ; 
+	if (_coefErrCount==0) {
+	  cout << " (no more will be printed)"  ;
+	}
+	cout << endl ;
       } 
     }
   }
@@ -519,6 +527,15 @@ Double_t RooAddPdf::evaluate() const
   }
 
   return value ;
+}
+
+
+void RooAddPdf::resetErrorCounters(Int_t resetValue)
+{
+  // Reset error counter to given value, limiting the number
+  // of future error messages for this pdf to 'resetValue'
+  RooAbsPdf::resetErrorCounters(resetValue) ;
+  _coefErrCount = resetValue ;
 }
 
 
