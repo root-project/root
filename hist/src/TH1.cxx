@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.171 2004/03/10 16:12:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.172 2004/03/20 21:14:34 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2782,6 +2782,18 @@ Int_t TH1::GetBin(Int_t binx, Int_t biny, Int_t binz) const
 //
 //     In case of a TH1x, returns binx directly.
 //
+//      Convention for numbering bins
+//      =============================
+//      For all histogram types: nbins, xlow, xup
+//        bin = 0;       underflow bin
+//        bin = 1;       first bin with low-edge xlow INCLUDED
+//        bin = nbins;   last bin with upper-edge xup EXCLUDED
+//        bin = nbins+1; overflow bin
+//      In case of 2-D or 3-D histograms, a "global bin" number is defined.
+//      For example, assuming a 3-D histogram with binx,biny,binz, the function
+//        Int_t bin = h->GetBin(binx,biny,binz);
+//      returns a global/linearized bin number. This global bin is useful
+//      to access the bin information independently of the dimension.
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    Int_t nx, ny, nz;
    if (GetDimension() < 2) {
@@ -2848,6 +2860,19 @@ Stat_t TH1::GetBinContent(Int_t) const
 //   -*-*-*-*-*Return content of bin number bin
 //             ================================
 // Implemented in TH1C,S,F,D
+//
+//      Convention for numbering bins
+//      =============================
+//      For all histogram types: nbins, xlow, xup
+//        bin = 0;       underflow bin
+//        bin = 1;       first bin with low-edge xlow INCLUDED
+//        bin = nbins;   last bin with upper-edge xup EXCLUDED
+//        bin = nbins+1; overflow bin
+//      In case of 2-D or 3-D histograms, a "global bin" number is defined.
+//      For example, assuming a 3-D histogram with binx,biny,binz, the function
+//        Int_t bin = h->GetBin(binx,biny,binz);
+//      returns a global/linearized bin number. This global bin is useful
+//      to access the bin information independently of the dimension.
 
    AbstractMethod("GetBinContent");
    return 0;
@@ -2859,7 +2884,8 @@ Stat_t TH1::GetBinContent(Int_t binx, Int_t biny) const
 //   -*-*-*-*-*Return content of bin number binx, biny
 //             =======================================
 // NB: Function to be called for 2-d histograms only
-
+// see convention for numbering bins in TH1::GetBin
+   
    Int_t bin = GetBin(binx,biny);
    return GetBinContent(bin);
 }
@@ -2870,6 +2896,7 @@ Stat_t TH1::GetBinContent(Int_t binx, Int_t biny, Int_t binz) const
 //   -*-*-*-*-*Return content of bin number binx,biny,binz
 //             ===========================================
 // NB: Function to be called for 3-d histograms only
+// see convention for numbering bins in TH1::GetBin
 
    Int_t bin = GetBin(binx,biny,binz);
    return GetBinContent(bin);
@@ -5482,6 +5509,7 @@ Stat_t TH1::GetCellError(Int_t binx, Int_t biny) const
 //______________________________________________________________________________
 void TH1::SetBinError(Int_t bin, Stat_t error)
 {
+// see convention for numbering bins in TH1::GetBin
   if (!fSumw2.fN) Sumw2();
   if (bin <0 || bin>= fSumw2.fN) return;
   fSumw2.fArray[bin] = error*error;
@@ -5490,6 +5518,7 @@ void TH1::SetBinError(Int_t bin, Stat_t error)
 //______________________________________________________________________________
 void TH1::SetBinContent(Int_t binx, Int_t biny, Stat_t content)
 {
+// see convention for numbering bins in TH1::GetBin
   if (binx <0 || binx>fXaxis.GetNbins()+1) return;
   if (biny <0 || biny>fYaxis.GetNbins()+1) return;
   SetBinContent(biny*(fXaxis.GetNbins()+2) + binx,content);
@@ -5498,6 +5527,7 @@ void TH1::SetBinContent(Int_t binx, Int_t biny, Stat_t content)
 //______________________________________________________________________________
 void TH1::SetBinContent(Int_t binx, Int_t biny, Int_t binz, Stat_t content)
 {
+// see convention for numbering bins in TH1::GetBin
   if (binx <0 || binx>fXaxis.GetNbins()+1) return;
   if (biny <0 || biny>fYaxis.GetNbins()+1) return;
   if (binz <0 || binz>fZaxis.GetNbins()+1) return;
@@ -5516,6 +5546,7 @@ void TH1::SetCellContent(Int_t binx, Int_t biny, Stat_t content)
 //______________________________________________________________________________
 void TH1::SetBinError(Int_t binx, Int_t biny, Stat_t error)
 {
+// see convention for numbering bins in TH1::GetBin
   if (binx <0 || binx>fXaxis.GetNbins()+1) return;
   if (biny <0 || biny>fYaxis.GetNbins()+1) return;
   SetBinError(biny*(fXaxis.GetNbins()+2) + binx,error);
@@ -5524,6 +5555,7 @@ void TH1::SetBinError(Int_t binx, Int_t biny, Stat_t error)
 //______________________________________________________________________________
 void TH1::SetBinError(Int_t binx, Int_t biny, Int_t binz, Stat_t error)
 {
+// see convention for numbering bins in TH1::GetBin
   if (binx <0 || binx>fXaxis.GetNbins()+1) return;
   if (biny <0 || biny>fYaxis.GetNbins()+1) return;
   if (binz <0 || binz>fZaxis.GetNbins()+1) return;
@@ -5534,6 +5566,7 @@ void TH1::SetBinError(Int_t binx, Int_t biny, Int_t binz, Stat_t error)
 //______________________________________________________________________________
 void TH1::SetCellError(Int_t binx, Int_t biny, Stat_t error)
 {
+// see convention for numbering bins in TH1::GetBin
   if (binx <0 || binx>fXaxis.GetNbins()+1) return;
   if (biny <0 || biny>fYaxis.GetNbins()+1) return;
   if (!fSumw2.fN) Sumw2();
@@ -5544,6 +5577,7 @@ void TH1::SetCellError(Int_t binx, Int_t biny, Stat_t error)
 //______________________________________________________________________________
 void TH1::SetBinContent(Int_t, Stat_t)
 {
+// see convention for numbering bins in TH1::GetBin
    AbstractMethod("SetBinContent");
 }
 
@@ -5656,6 +5690,8 @@ TH1 *TH1C::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Stat_t TH1C::GetBinContent(Int_t bin) const
 {
+// see convention for numbering bins in TH1::GetBin
+
    if (fBuffer) ((TH1C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -5674,6 +5710,7 @@ void TH1C::Reset(Option_t *option)
 void TH1C::SetBinContent(Int_t bin, Stat_t content)
 {
 // Set bin content
+// see convention for numbering bins in TH1::GetBin
 // In case the bin number is greater than the number of bins and
 // the timedisplay option is set or the kCanRebin bit is set,
 // the number of bins is automatically doubled to accomodate the new bin
@@ -5861,6 +5898,7 @@ TH1 *TH1S::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Stat_t TH1S::GetBinContent(Int_t bin) const
 {
+// see convention for numbering bins in TH1::GetBin
    if (fBuffer) ((TH1S*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -5879,6 +5917,7 @@ void TH1S::Reset(Option_t *option)
 void TH1S::SetBinContent(Int_t bin, Stat_t content)
 {
 // Set bin content
+// see convention for numbering bins in TH1::GetBin
 // In case the bin number is greater than the number of bins and
 // the timedisplay option is set or the kCanRebin bit is set,
 // the number of bins is automatically doubled to accomodate the new bin
@@ -6066,6 +6105,7 @@ TH1 *TH1I::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Stat_t TH1I::GetBinContent(Int_t bin) const
 {
+// see convention for numbering bins in TH1::GetBin
    if (fBuffer) ((TH1I*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -6084,6 +6124,7 @@ void TH1I::Reset(Option_t *option)
 void TH1I::SetBinContent(Int_t bin, Stat_t content)
 {
 // Set bin content
+// see convention for numbering bins in TH1::GetBin
 // In case the bin number is greater than the number of bins and
 // the timedisplay option is set or the kCanRebin bit is set,
 // the number of bins is automatically doubled to accomodate the new bin
@@ -6265,6 +6306,7 @@ TH1 *TH1F::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Stat_t TH1F::GetBinContent(Int_t bin) const
 {
+// see convention for numbering bins in TH1::GetBin
    if (fBuffer) ((TH1F*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -6283,6 +6325,7 @@ void TH1F::Reset(Option_t *option)
 void TH1F::SetBinContent(Int_t bin, Stat_t content)
 {
 // Set bin content
+// see convention for numbering bins in TH1::GetBin
 // In case the bin number is greater than the number of bins and
 // the timedisplay option is set or the kCanRebin bit is set,
 // the number of bins is automatically doubled to accomodate the new bin
@@ -6465,6 +6508,7 @@ TH1 *TH1D::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Stat_t TH1D::GetBinContent(Int_t bin) const
 {
+// see convention for numbering bins in TH1::GetBin
    if (fBuffer) ((TH1D*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -6483,6 +6527,7 @@ void TH1D::Reset(Option_t *option)
 void TH1D::SetBinContent(Int_t bin, Stat_t content)
 {
 // Set bin content
+// see convention for numbering bins in TH1::GetBin
 // In case the bin number is greater than the number of bins and
 // the timedisplay option is set or the kCanRebin bit is set,
 // the number of bins is automatically doubled to accomodate the new bin
