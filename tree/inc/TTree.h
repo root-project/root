@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.71 2004/08/20 14:59:50 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.72 2004/10/18 12:32:12 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -253,6 +253,7 @@ public:
     virtual Long64_t     GetZipBytes() const {return fZipBytes;}
     virtual void         IncrementTotalBuffers(Int_t nbytes) {fTotalBuffers += nbytes;}
     Bool_t               IsFolder() const {return kTRUE;}
+    virtual Int_t        LoadBaskets(Long64_t maxmemory=2000000000);
     virtual Long64_t     LoadTree(Long64_t entry);
     virtual Long64_t     LoadTreeFriend(Long64_t entry, TTree *T);
     virtual Int_t        MakeClass(const char *classname=0,Option_t *option="");

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.213 2004/10/29 18:03:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.214 2004/11/22 20:29:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3160,6 +3160,31 @@ Long64_t TTree::LoadTree(Long64_t entry)
 
 }
 
+//______________________________________________________________________________
+Int_t TTree::LoadBaskets(Long64_t maxmemory)
+{
+  // Read in memory all baskets from all branchs up to the limit 
+  // of maxmemory bytes.
+  // if maxmemory is non null and positive SetVaxVirtualSize is called
+  // with this value. Default for maxmemory is 2000000000 (2 Gigabytes).
+  // The function returns the total number of baskets read into memory
+  // if negative an error occured while loading the branches.
+  // This method may be called to force branch baskets in memory
+  // when random access to branch entries is required.
+  // If random access to only a few branches is required, you should
+  // call directly TBranch::LoadBaskets.
+   
+  if (maxmemory > 0) SetMaxVirtualSize(maxmemory);
+  
+   TIter next(GetListOfLeaves());
+   TLeaf *leaf;
+   Int_t nimported = 0;
+   while ((leaf=(TLeaf*)next())) {
+      nimported += leaf->GetBranch()->LoadBaskets();//break;
+   }
+   return nimported;
+}
+      
 //______________________________________________________________________________
 Long64_t TTree::LoadTreeFriend(Long64_t entry, TTree *T)
 {
