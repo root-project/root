@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.100 2003/03/07 08:37:08 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.101 2003/04/09 08:18:04 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -174,6 +174,7 @@ TPad::TPad(): TVirtualPad()
    fYlowNDC = 0;
    fWNDC    = 1;
    fHNDC    = 1;
+   gROOT->SetSelectedPad(this);
 }
 
 //______________________________________________________________________________
