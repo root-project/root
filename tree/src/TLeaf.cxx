@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.7 2002/02/01 07:47:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.8 2002/05/30 23:42:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -139,9 +139,9 @@ TLeaf *TLeaf::GetLeafCounter(Int_t &countval) const
    //    method is called from the TLeaf constructor. In that case, use global pointer
    //    gTree.
    //    Also, if fBranch is set, but fBranch->GetTree() returns NULL, use gTree.
-  TTree* pTree = fBranch ? fBranch->GetTree() : gTree;
-  if(pTree==NULL) pTree = gTree;
-  TLeaf *leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
+  //TTree* pTree = fBranch ? fBranch->GetTree() : gTree;
+  //if(pTree==NULL) pTree = gTree;
+  TLeaf *leaf = (TLeaf*) gTree->GetListOfLeaves()->FindObject(countname);
   Int_t i;
   if (leaf) {
      countval = 1;
