@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.53 2003/06/11 16:57:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.54 2003/06/25 15:35:09 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1665,6 +1665,8 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
          baseOffset = 0;
          return 0; //we better return at this point
       }
+      //we cannot mix a compiled class with a fake class in the inheritance
+      if (clCast->GetClassInfo() && !clRef->GetClassInfo()) return 0;
    }
 
    // check if object has not already been read
