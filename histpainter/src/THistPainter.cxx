@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.94 2002/08/09 08:29:07 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.95 2002/08/13 21:17:59 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -646,6 +646,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (strstr(chopt,"+")) Hoption.Plus =1;
    if (strstr(chopt,"-")) Hoption.Plus =-1;
    if (strstr(chopt,"H")) Hoption.Hist =2;
+   if (strstr(chopt,"P0")) Hoption.Mark =10;
    if (strstr(chopt,"E0")) Hoption.Error =10;
    if (strstr(chopt,"E1")) Hoption.Error =11;
    if (strstr(chopt,"E2")) Hoption.Error =12;
@@ -798,7 +799,8 @@ void THistPainter::Paint(Option_t *option)
 //    "E3"     : Draw a fill area througth the end points of the vertical error bars
 //    "E4"     : Draw a smoothed filled area through the end points of the error bars
 //    "L"      : Draw a line througth the bin contents
-//    "P"      : Draw current marker at each bin
+//    "P"      : Draw current marker at each bin except empty bins
+//    "P0"     : Draw current marker at each bin including empty bins
 //    "*H"     : Draw histogram with a * at each bin
 //    "LF2"    : Draw histogram like with option "L" but with a fill area.
 //             : Note that "L" draws also a fill area if the hist fillcolor is set
@@ -2747,6 +2749,7 @@ void THistPainter::PaintHist(Option_t *)
    if (Hoption.Line) chopth[0] = 'L';
    if (Hoption.Star) chopth[1] = '*';
    if (Hoption.Mark) chopth[2] = 'P';
+   if (Hoption.Mark == 10) chopth[3] = '0';
    if (Hoption.Line || Hoption.Curve || Hoption.Hist || Hoption.Bar) {
       if (Hoption.Curve)      chopth[3] = 'C';
       if (Hoption.Hist > 0) { chopth[4] = 'H';  strcpy(choptg,"H"); }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.78 2002/08/07 16:10:31 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.79 2002/08/09 08:29:07 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2251,6 +2251,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 //  chopt='*' :  A Star is plotted at the center of each bin.
 //
 //  chopt='P' :  Idem with the current marker
+//  chopt='P0':  Idem with the current marker. Empty bins also drawn
 //
 //  chopt='B' :  A Bar chart with equidistant bins is drawn as fill
 //               areas (Contours are drawn).
@@ -2299,12 +2300,12 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
    if(opt.Contains("L")) OptionLine = 1;  else OptionLine = 0;
    if(opt.Contains("P")) OptionMark = 1;  else OptionMark = 0;
    if(opt.Contains("A")) OptionAxis = 1;  else OptionAxis = 0;
+   if(opt.Contains("P0")) OptionMark = 10;
    
    Int_t OptionFill2 = 0;
    if(opt.Contains("F") && opt.Contains("2")) {
       OptionFill = 0; OptionFill2 = 1;
    }
-
 
 //*-*  Set Clipping option
   gPad->SetBit(kClipFrame, TestBit(kClipFrame));
@@ -2650,7 +2651,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
      }
   }
 
-//*-*-              Draw the histogram with a simple line
+//*-*-    Draw the histogram with a simple line or/and a marker
 
   OptionMarker = 0;
   if ((OptionStar) || (OptionMark))OptionMarker=1;
@@ -2794,6 +2795,13 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               gxwork[npt-1] = x[i-1];      gxwork[npt] = x[i];
            }
            if (gxwork[npt-1] < uxmin || gxwork[npt-1] > uxmax) { npt--; continue;}
+           if ((OptionMark != 10) && (OptionLine == 0)) {
+              if (gPad->GetLogy()) {
+                 if (y[i-1] <  0)  {npt--; continue;}
+              } else {
+                 if (y[i-1] == 0)  {npt--; continue;}
+              }
+           }
            gywork[npt-1] = y[i-1];
            gywork[npt]   = y[i-1]; //new
            if ((gywork[npt-1] < rwymin) || (gywork[npt-1] > rwymax)) {
