@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.3 2000/09/08 07:41:00 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.4 2000/11/10 02:32:05 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -895,7 +895,7 @@ Tetris::Tetris() :
    // Tetris constructor
 
    gTetris = this;
-   fIsEditable = kFALSE;
+   fEditable = kFALSE;
 
    //-----------  play board ------------
    fBoard            = new  TetrisBoard(0.35,0.05,0.7,0.95);

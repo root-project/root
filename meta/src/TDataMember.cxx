@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.2 2000/09/06 14:18:58 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -61,14 +61,14 @@
 // GetXXX() or IsXXX() [where XXX is base name].
 //
 // As an example of using it let's analyse a few lines which get and set
-// a fIsEditable field in TCanvas:
+// a fEditable field in TCanvas:
 //Begin_Html <pre>
 /*
 
     TCanvas     *c  = new TCanvas("c");   // create a canvas
     TClass      *cl = c-&gt;IsA();            // get its class description object.
 
-    TDataMember *dm = cl-&gt;GetDataMember("fIsEditable"); //This is our data member
+    TDataMember *dm = cl-&gt;GetDataMember("fEditable"); //This is our data member
 
     TMethodCall *getter = dm-&gt;GetterMethod(); //find a method that gets value!
     Long_t l;   // declare a storage for this value;
