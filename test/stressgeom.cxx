@@ -35,10 +35,13 @@ int main(int argc, char **argv)
 // or
 // root > .x stressgeom.cxx
 
-void sample_volume(const char *name)
+void sample_volume(Int_t ivol)
 {
+   const Double_t vshape[16] = {40000.00, 36037.92, 40064.00, 48065.49, 28503.81,
+      8725.26, 42433.05, 9833.21, 12576.32, 65034.20, 37765.44, 23507.97,
+      25608.06, 18400.86, 50088.71, 47866.73};
    gRandom = new TRandom3();
-   TGeoVolume *vol = gGeoManager->GetVolume(name);
+   TGeoVolume *vol = (TGeoVolume*)gGeoManager->GetListOfVolumes()->At(ivol);
    TGeoShape *shape = vol->GetShape();
    Double_t dx = ((TGeoBBox*)shape)->GetDX();
    Double_t dy = ((TGeoBBox*)shape)->GetDY();
@@ -58,8 +61,14 @@ void sample_volume(const char *name)
       if (shape->Contains(point)) iin++;
    }    
    ratio = Double_t(iin)/Double_t(ngen);
-   Double_t vv = 8*dx*dy*dz*ratio;
-   printf("---> testing %-4s ............ vol = %g\n", vol->GetName(), vv);
+   Double_t vbox = 8*dx*dy*dz;
+   Double_t vv = vbox*ratio;
+   Double_t dvv = TMath::Abs(vv-vshape[ivol-1]);
+   Double_t sigma = vv/TMath::Sqrt(iin+1);
+   char result[16];
+   sprintf(result, "FAILED");
+   if (dvv<2*sigma) sprintf(result, "OK");
+   printf("---> testing %-4s ............ vol = %7.1f +/- %5.1f ... %s\n", vol->GetName(), vv, sigma, result);
 }
 
 void length()
@@ -287,8 +296,12 @@ TGeoMedium *med16 = new TGeoMedium("RHONEYCM",16,16,0,0,0,20,0.1000000E+11,0.212
    
    TIter next(gGeoManager->GetListOfVolumes());
    TGeoVolume *vol = (TGeoVolume*)next();
+   Int_t ivol=1;
    printf("=== testing shapes ...\n");
-   while ((vol=(TGeoVolume*)next())) sample_volume(vol->GetName());
+   while ((vol=(TGeoVolume*)next())) {
+      sample_volume(ivol);
+      ivol++;
+   }      
    printf("=== testing global tracking ...\n");
    length();
 
@@ -296,9 +309,9 @@ TGeoMedium *med16 = new TGeoMedium("RHONEYCM",16,16,0,0,0,20,0.1000000E+11,0.212
    gBenchmark->Stop("stressgeom");
    Float_t ct = gBenchmark->GetCpuTime("stressgeom");
 #ifdef __CINT__
-   Float_t cp_brun = 276;
+   Float_t cp_brun = 258.60;
 #else
-   Float_t cp_brun = 10;
+   Float_t cp_brun = 6.55;
 #endif
    Float_t rootmarks = 600*cp_brun/ct;
    printf("*******************************************************************\n");
