@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.49 2002/10/31 07:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.50 2002/12/04 10:38:32 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1492,8 +1492,10 @@ L20:
       sum2   += f2;
       sum3   += f3;
       dif     = TMath::Abs(7*f2-f3-12*sum1);
-      difmax  = TMath::Max(dif, difmax);
-      if (difmax == dif) idvaxn = j+1;
+      if (dif >= difmax) {
+         difmax=dif;
+         idvaxn=j+1;
+      }
       z[j]    = ctr[j];
    }
 
