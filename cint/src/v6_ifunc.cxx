@@ -8556,6 +8556,9 @@ long *poffset;
      struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
      while(basen<baseclass->basen) {
        if(baseclass->baseaccess[basen]&G__PUBLIC) {
+#ifndef G__OLDIMPLEMENTATION1931
+            G__incsetup_memfunc(baseclass->basetagnum[basen]);
+#endif
 	 *poffset = baseclass->baseoffset[basen];
 	 p_ifunc = G__struct.memfunc[baseclass->basetagnum[basen]];
 	 ifunc = G__overload_match(funcname,&para,hash,p_ifunc,G__TRYNORMAL
