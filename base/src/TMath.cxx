@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.84 2004/09/01 10:24:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.85 2004/09/15 19:24:46 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1838,10 +1838,7 @@ Double_t TMath::MedianImp(Size n, const Element *a,const Double_t *w, Index *wor
        if (n%2 == 1)
           median = KOrdStatImp(n, a,n/2, ind);
        else {
-          if (n<1000)
-             median = 0.5*(KOrdStatImp(n, a, n/2 -1, ind)+KOrdStatImp(n, a, n/2, ind));
-          else
-             median = KOrdStatImp(n, a, n/2, ind);
+          median = 0.5*(KOrdStatImp(n, a, n/2 -1, ind)+KOrdStatImp(n, a, n/2, ind));
        }
     }
 
