@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.8 2000/12/13 15:13:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.9 2001/01/08 08:34:27 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -103,13 +103,13 @@ public:
    virtual void    Copy(TObject &hnew);
    virtual TH1    *DrawCopy(Option_t *option="");
    virtual Stat_t  GetBinContent(Int_t bin) const;
-   virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
-   virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
+   virtual Stat_t  GetBinContent(Int_t binx, Int_t biny) const {return GetBinContent(GetBin(binx,biny));}
+   virtual Stat_t  GetBinContent(Int_t binx, Int_t biny, Int_t) const {return GetBinContent(GetBin(binx,biny));}
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Char_t (content);}
-   virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
-   virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
+   virtual void    SetBinContent(Int_t binx, Int_t biny, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
+   virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinsLength(Int_t nx) {TArrayC::Set(nx);}
            TH2C&   operator=(const TH2C &h1);
    friend  TH2C    operator*(Float_t c1, TH2C &h1);
@@ -146,13 +146,13 @@ public:
    virtual void    Copy(TObject &hnew);
    virtual TH1    *DrawCopy(Option_t *option="");
    virtual Stat_t  GetBinContent(Int_t bin) const;
-   virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
-   virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
+   virtual Stat_t  GetBinContent(Int_t binx, Int_t biny) const {return GetBinContent(GetBin(binx,biny));}
+   virtual Stat_t  GetBinContent(Int_t binx, Int_t biny, Int_t) const {return GetBinContent(GetBin(binx,biny));}
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Short_t (content);}
-   virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
-   virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
+   virtual void    SetBinContent(Int_t binx, Int_t biny, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
+   virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinsLength(Int_t nx) {TArrayS::Set(nx);}
            TH2S&   operator=(const TH2S &h1);
    friend  TH2S    operator*(Float_t c1, TH2S &h1);
@@ -191,13 +191,13 @@ public:
    virtual void    Copy(TObject &hnew);
    virtual TH1    *DrawCopy(Option_t *option="");
    virtual Stat_t  GetBinContent(Int_t bin) const;
-   virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
-   virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
+   virtual Stat_t  GetBinContent(Int_t binx, Int_t biny) const {return GetBinContent(GetBin(binx,biny));}
+   virtual Stat_t  GetBinContent(Int_t binx, Int_t biny, Int_t) const {return GetBinContent(GetBin(binx,biny));}
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Float_t (content);}
-   virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
-   virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
+   virtual void    SetBinContent(Int_t binx, Int_t biny, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
+   virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinsLength(Int_t nx) {TArrayF::Set(nx);}
            TH2F&   operator=(const TH2F &h1);
    friend  TH2F    operator*(Float_t c1, TH2F &h1);
@@ -236,13 +236,13 @@ public:
    virtual void    Copy(TObject &hnew);
    virtual TH1    *DrawCopy(Option_t *option="");
    virtual Stat_t  GetBinContent(Int_t bin) const;
-   virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
-   virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
+   virtual Stat_t  GetBinContent(Int_t binx, Int_t biny) const {return GetBinContent(GetBin(binx,biny));}
+   virtual Stat_t  GetBinContent(Int_t binx, Int_t biny, Int_t) const {return GetBinContent(GetBin(binx,biny));}
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Double_t (content);}
-   virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
-   virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
+   virtual void    SetBinContent(Int_t binx, Int_t biny, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
+   virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinsLength(Int_t nx) {TArrayD::Set(nx);}
            TH2D&   operator=(const TH2D &h1);
    friend  TH2D    operator*(Float_t c1, TH2D &h1);
