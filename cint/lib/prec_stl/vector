@@ -60,6 +60,16 @@ class vector {
   typedef reverse_iterator<iterator>	      reverse_iterator;
   typedef reverse_iterator<const_iterator>   const_reverse_iterator;
 
+#elif defined(G__AIX)
+
+   typedef Allocator allocator_type;
+   typedef _Ptrit<value_type, difference_type, _Tptr,
+                  reference, pointer, reference> iterator;
+   typedef _Ptrit<value_type, difference_type, _Ctptr,
+                  const_reference, pointer, reference> const_iterator;
+   typedef typename std::reverse_iterator<iterator>       reverse_iterator;
+   typedef typename std::reverse_iterator<const_iterator> const_reverse_iterator;
+
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1) 
 
 #ifndef G__OLDIMPLEMENTATION1703
