@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.11 2002/11/20 08:55:10 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.12 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -51,7 +51,7 @@ class TGeoVoxelFinder;
 class TGeoPatternFinder;
 
 /*************************************************************************
- * TGeoVolume - class description 
+ * TGeoVolume - class description
  *
  *************************************************************************/
 
@@ -120,10 +120,10 @@ public:
    void            PrintNodes() const;
    void            PrintVoxels() const; // *MENU*
    virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   
+
    Bool_t          IsCylVoxels() const {return TObject::TestBit(kVoxelsCyl);}
    Bool_t          IsXYZVoxels() const {return TObject::TestBit(kVoxelsXYZ);}
-   Bool_t          IsValid() const {return fShape->IsValid();} 
+   Bool_t          IsValid() const {return fShape->IsValid();}
    Bool_t          IsVisible() const {return TGeoAtt::IsVisible();}
    TGeoNode       *FindNode(const char *name) const;
    void            FindOverlaps() const;
@@ -181,7 +181,7 @@ public:
 
 /*************************************************************************
  * TGeoVolumeMulti - class storing a list of volumes that have to
- *   be handled togeather at build time 
+ *   be handled togeather at build time
  *
  *************************************************************************/
 
@@ -194,23 +194,23 @@ public:
    TGeoVolumeMulti();
    TGeoVolumeMulti(const char* name, TGeoMaterial *mat=0);
    virtual ~TGeoVolumeMulti();
-   
+
    void            AddVolume(TGeoVolume *vol) {fVolumes->Add(vol);}
    TGeoVolume     *GetVolume(Int_t id) const {return (TGeoVolume*)fVolumes->At(id);}
    virtual void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");       // most general case
    virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");
    virtual TGeoVolume *Divide(const char *, Int_t, Option_t *) { return 0;}
-   virtual TGeoVolume *Divide(const char *, Int_t ndiv, Double_t, Double_t, Option_t *) {return 0;}
+   virtual TGeoVolume *Divide(const char *, Int_t, Double_t, Double_t, Option_t *) {return 0;}
    virtual TGeoVolume *Divide(const char *, Double_t, Double_t, Double_t, Option_t *) {return 0;}
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step);
    virtual TGeoVolume *Divide(const char *, Int_t, Double_t) {return 0;}
    virtual TGeoVolume *Divide(const char *, TObject *, Double_t *, Option_t *) {return 0;}
-   TGeoShape      *GetLastShape() const {return GetVolume(fVolumes->GetEntriesFast()-1)->GetShape();} 
+   TGeoShape      *GetLastShape() const {return GetVolume(fVolumes->GetEntriesFast()-1)->GetShape();}
    virtual void    SetLineColor(Color_t lcolor);
    virtual void    SetLineStyle(Style_t lstyle);
    virtual void    SetLineWidth(Width_t lwidth);
    virtual void    SetVisibility(Bool_t vis=kTRUE);
-   
+
 
  ClassDef(TGeoVolumeMulti, 1)     // class to handle multiple volumes in one step
 };
