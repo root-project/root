@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.3 2000/06/19 23:36:12 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.4 2000/06/20 06:47:05 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -216,7 +216,7 @@ Int_t TCint::ProcessLine(const char *line)
       if (strstr(line,fantomline))
           TCint::UpdateAllCanvases();
       else
-          ret = G__process_cmd((char *)line, fPrompt, &fMore);
+          ret = G__process_cmd((char *)line, fPrompt, &fMore, 0, 0);
       gROOT->SetLineHasBeenProcessed();
    } else
       ret = ProcessLineAsynch(line);
@@ -381,7 +381,7 @@ void TCint::UpdateListOfGlobals()
          gROOT->fGlobals->Add(new TGlobal(a));
       }
    }
-}    
+}
 
 //______________________________________________________________________________
 void TCint::UpdateListOfGlobalFunctions()
@@ -403,7 +403,7 @@ void TCint::UpdateListOfGlobalFunctions()
          gROOT->fGlobalFunctions->Add(new TFunction(a));
       }
    }
-} 
+}
 
 //______________________________________________________________________________
 void TCint::UpdateListOfTypes()
@@ -456,7 +456,7 @@ void TCint::CreateListOfBaseClasses(TClass *cl)
          if (t.IsValid() && t.Name()) {
             a = new G__BaseClassInfo(t);
             cl->fBase->Add(new TBaseClass(a, cl));
-         }      
+         }
       }
    }
 }
