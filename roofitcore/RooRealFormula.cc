@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFormula.cc,v 1.7 2001/05/02 18:09:00 david Exp $
+ *    File: $Id: RooRealFormula.cc,v 1.8 2001/05/03 02:15:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,7 +18,7 @@ ClassImp(RooRealFormula)
 
 
 RooRealFormula::RooRealFormula(const char *name, const char *title, RooArgSet& dependents) : 
-  RooDerivedReal(name,title), _formula(name,title,dependents)
+  RooAbsReal(name,title), _formula(name,title,dependents)
 {  
   TIterator* depIter = _formula.actualDependents().MakeIterator() ;
   RooAbsArg* server(0) ;
@@ -29,7 +29,7 @@ RooRealFormula::RooRealFormula(const char *name, const char *title, RooArgSet& d
 
 
 RooRealFormula::RooRealFormula(const RooRealFormula& other, const char* name) : 
-  RooDerivedReal(other, name), _formula(other._formula)
+  RooAbsReal(other, name), _formula(other._formula)
 {
 }
 
@@ -100,7 +100,7 @@ Bool_t RooRealFormula::checkDependents(const RooDataSet* set) const
 
 void RooRealFormula::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
-  RooDerivedReal::printToStream(os,opt,indent);
+  RooAbsReal::printToStream(os,opt,indent);
   if(opt >= Verbose) {
     indent.Append("  ");
     os << indent;
@@ -124,7 +124,7 @@ Bool_t RooRealFormula::readFromStream(istream& is, Bool_t compact, Bool_t verbos
 void RooRealFormula::writeToStream(ostream& os, Bool_t compact) const
 {
   if (compact) {
-    cout << "RooRealFormula::writeToStream(" << GetName() << "): can't write in compact mode" << endl ;
+    cout << getVal() << endl ;
   } else {
     os << GetTitle() ;
   }

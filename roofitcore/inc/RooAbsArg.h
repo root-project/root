@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.18 2001/04/20 01:51:38 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.19 2001/05/03 02:15:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -108,8 +108,8 @@ protected:
   // 
   // The dirty state accessors can be overriden by 
   // fundamental subclasses to always return false
-  virtual Bool_t isValueDirty() const { return _valueDirty ; } 
-  virtual Bool_t isShapeDirty() const { return _shapeDirty ; } 
+  virtual Bool_t isValueDirty() const { return isDerived()?_valueDirty:kFALSE ; } 
+  virtual Bool_t isShapeDirty() const { return isDerived()?_shapeDirty:kFALSE ; } 
   void setValueDirty(Bool_t flag=kTRUE) const { setValueDirty(flag,0) ; }
   void setShapeDirty(Bool_t flag=kTRUE) const { setShapeDirty(flag,0) ; } 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.cc,v 1.1 2001/04/19 01:42:27 verkerke Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.2 2001/04/21 02:42:43 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,7 +17,7 @@
 ClassImp(RooIntegrator1D)
 ;
 
-RooIntegrator1D::RooIntegrator1D(const RooDerivedReal& function, Int_t mode, RooRealVar& var,
+RooIntegrator1D::RooIntegrator1D(const RooAbsReal& function, Int_t mode, RooRealVar& var,
 				 Int_t maxSteps, Double_t eps) : 
   RooAbsIntegrator(function, mode), _var(&var), _maxSteps(maxSteps), _eps(eps) 
 {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.rdl,v 1.8 2001/04/18 20:38:02 verkerke Exp $
+ *    File: $Id: RooCategory.rdl,v 1.9 2001/05/03 02:15:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,9 +14,9 @@
 #define ROO_CATEGORY
 
 #include <iostream.h>
-#include "RooFitCore/RooAbsCategory.hh"
+#include "RooFitCore/RooAbsCategoryLValue.hh"
 
-class RooCategory : public RooAbsCategory {
+class RooCategory : public RooAbsCategoryLValue {
 public:
   // Constructor, assignment etc.
   RooCategory() {} ;
@@ -27,20 +27,24 @@ public:
   virtual RooCategory& operator=(const RooCategory& other) ; 
 
   // Value modifiers
-  Bool_t setIndex(Int_t index, Bool_t printError=kTRUE) ;
-  Bool_t setLabel(const char* label, Bool_t printError=kTRUE) ;
-  RooCategory& operator=(int index) ; 
-  RooCategory& operator=(const char* label) ; 
+  virtual Int_t getIndex() const { return _value.getVal() ; }
+  virtual const char* getLabel() const { return _value.GetName() ; }
+  virtual Bool_t setIndex(Int_t index, Bool_t printError=kTRUE) ;
+  virtual Bool_t setLabel(const char* label, Bool_t printError=kTRUE) ;
   
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
+  Bool_t defineType(const char* label) { return RooAbsCategory::defineType(label)?kFALSE:kTRUE ; }
+  Bool_t defineType(const char* label, Int_t index) { return RooAbsCategory::defineType(label,index)?kFALSE:kTRUE ; }
+  void clearTypes() { RooAbsCategory::clearTypes() ; }
+
 protected:
 
-  Int_t _dummy ;
-
   virtual RooAbsArg& operator=(const RooAbsArg& other) ; 
+
+  virtual RooCatType evaluate() const {} // dummy because we overload getIndex()/getLabel()
 
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   virtual void postTreeLoadHook() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.12 2001/05/07 06:26:13 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.13 2001/05/09 00:51:09 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,6 +17,7 @@
 #include "RooFitCore/RooCurve.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooRealFunc1D.hh"
+#include "RooFitCore/RooArgProxy.hh"
 
 #include <iostream.h>
 
@@ -76,6 +77,81 @@ RooAbsArg& RooAbsReal::operator=(const RooAbsArg& aother)
 Bool_t RooAbsReal::operator==(Double_t value) const
 {
   return (getVal()==value) ;
+}
+
+
+
+Double_t RooAbsReal::getVal(const RooDataSet* dset) const
+{
+  // Return value of object. Calculated if dirty, otherwise cached value is returned.
+  if (isValueDirty() || isShapeDirty()) {
+    _value = traceEval() ;
+    setValueDirty(kFALSE) ;
+    setShapeDirty(kFALSE) ;
+  } 
+  
+  return _value ;
+}
+
+
+Double_t RooAbsReal::traceEval() const
+{
+  Double_t value = evaluate() ;
+  
+  //Standard tracing code goes here
+  if (!isValid(value)) {
+    cout << "RooAbsReal::traceEval(" << GetName() 
+	 << "): validation failed: " << value << endl ;
+  }
+
+  //Call optional subclass tracing code
+  traceEvalHook(value) ;
+
+  return value ;
+}
+
+
+Int_t RooAbsReal::getAnalyticalIntegral(RooArgSet& allDeps, RooArgSet& numDeps) const
+{
+  // By default we do supply any analytical integrals
+
+  // Indicate all variables need to be integrated numerically
+  TIterator* iter = allDeps.MakeIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    numDeps.add(*arg) ;
+  }
+
+  return 0 ;
+}
+
+
+
+Bool_t RooAbsReal::tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, const RooArgProxy& a) const
+{
+  Bool_t match = kFALSE ;
+  TString name(a.absArg()->GetName()) ;
+
+  TIterator* iter = allDeps.MakeIterator()  ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)iter->Next()){    
+    if (!name.CompareTo(arg->GetName())) {
+      match = kTRUE ;
+    } else {
+      numDeps.add(*arg) ;
+    }
+  }
+  delete iter ;
+
+  return match ;  
+}
+
+
+
+Double_t RooAbsReal::analyticalIntegral(Int_t code) const
+{
+  // By default no analytical integrals are implemented
+  return getVal() ;
 }
 
 

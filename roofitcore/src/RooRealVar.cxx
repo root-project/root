@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.14 2001/05/03 02:15:56 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.15 2001/05/07 06:26:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,7 +24,7 @@ ClassImp(RooRealVar)
 
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, const char *unit) :
-  RooAbsReal(name, title, 0, 0, unit), _error(0)
+  RooAbsRealLValue(name, title, unit), _error(0)
 {
   _value = value ;
   removeFitRange();
@@ -34,25 +34,26 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t minValue, Double_t maxValue,
 		       const char *unit) :
-  RooAbsReal(name, title, minValue, maxValue, unit)
+  RooAbsRealLValue(name, title, unit)
 {
   _value= 0.5*(minValue + maxValue);
+
+  setPlotRange(minValue,maxValue) ;
   setFitRange(minValue,maxValue) ;
-  //removeFitRange();
 }  
 
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, Double_t minValue, Double_t maxValue,
 		       const char *unit) :
-  RooAbsReal(name, title, minValue, maxValue, unit), _error(0)
+  RooAbsRealLValue(name, title, unit), _error(0)
 {
   _value = value ;
+  setPlotRange(minValue,maxValue) ;
   setFitRange(minValue,maxValue) ;
-  //removeFitRange();
 }  
 
 RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
-  RooAbsReal(other,name), 
+  RooAbsRealLValue(other,name), 
   _error(other._error),
   _fitMin(other._fitMin),
   _fitMax(other._fitMax)
@@ -128,49 +129,6 @@ void RooRealVar::setFitRange(Double_t min, Double_t max) {
   setShapeDirty(kTRUE) ;  
 }
 
-Bool_t RooRealVar::inFitRange(Double_t value, Double_t* clippedValPtr) const
-{
-  // Return kTRUE if the input value is within our fit range. Otherwise, return
-  // kFALSE and write a clipped value into clippedValPtr if it is non-zero.
-
-  Double_t range = _fitMax - _fitMin ; // ok for +/-INIFINITY
-  Double_t clippedValue(value);
-  Bool_t inRange(kTRUE) ;
-
-  // test this value against our upper fit limit
-  if(hasFitMax() && value > _fitMax) {
-    if(value - _fitMax > 1e-6*range) {
-      if (clippedValPtr)
-	cout << "RooRealVar::inFitRange(" << GetName() << "): value " << value
-	     << " rounded down to max limit " << _fitMax << endl;
-    }
-    clippedValue = _fitMax;
-    inRange = kFALSE ;
-  }
-  // test this value against our lower fit limit
-  if(hasFitMin() && value < _fitMin) {
-    if(_fitMin - value > 1e-6*range) {
-      if (clippedValPtr)
-	cout << "RooRealVar::inFitRange(" << GetName() << "): value " << value
-	     << " rounded up to min limit " << _fitMin << endl;
-    }
-    clippedValue = _fitMin;
-    inRange = kFALSE ;
-  } 
-
-  if (clippedValPtr) *clippedValPtr=clippedValue ;
-  return inRange ;
-}
-
-Bool_t RooRealVar::isValid(Double_t value, Bool_t verbose) const {
-  if (!inFitRange(value)) {
-    if (verbose)
-      cout << "RooRealVar::isValid(" << GetName() << "): value " << value
-	   << " out of range" << endl ;
-    return kFALSE ;
-  }
-  return kTRUE ;
-}
 
 void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
 {
@@ -305,19 +263,10 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
   }
 }
 
-Double_t RooRealVar::operator=(Double_t newValue) 
-{
-  // Clip 
-  inFitRange(newValue,&_value) ;
-  setValueDirty(kTRUE) ;
-  return _value;
-}
 
 RooRealVar& RooRealVar::operator=(const RooRealVar& orig)
 {
-  RooAbsReal::operator=(orig) ;
-
-  operator=(orig._value) ; // takes care of error checking
+  RooAbsRealLValue::operator=(orig) ;
   _error = orig._error ;
 
   return (*this) ;
@@ -330,28 +279,15 @@ RooAbsArg& RooRealVar::operator=(const RooAbsArg& aorig)
 
 void RooRealVar::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print info about this object to the specified stream. In addition to the info
-  // from RooAbsReal::printToStream() we add:
+  // from RooAbsRealLValue::printToStream() we add:
   //
   //   Verbose : fit range and error
 
-  RooAbsReal::printToStream(os,opt,indent);
+  RooAbsRealLValue::printToStream(os,opt,indent);
   if(opt >= Verbose) {
     os << indent << "--- RooRealVar ---" << endl;
     TString unit(_unit);
     if(!unit.IsNull()) unit.Prepend(' ');
-    os << indent << "  Fit range is [ ";
-    if(hasFitMin()) {
-      os << getFitMin() << unit << " , ";
-    }
-    else {
-      os << "-INF , ";
-    }
-    if(hasFitMax()) {
-      os << getFitMax() << unit << " ]" << endl;
-    }
-    else {
-      os << "+INF ]" << endl;
-    }
     if(opt >= Verbose) {
       os << indent << "  Error = " << getError() << unit << endl;
     }

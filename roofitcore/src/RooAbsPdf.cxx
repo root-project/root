@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.1 2001/05/03 02:15:54 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.2 2001/05/07 06:26:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,7 +26,7 @@ ClassImp(RooAbsPdf)
 
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title, const char *unit) : 
-  RooDerivedReal(name,title,unit), _norm(0), _lastDataSet(0)
+  RooAbsReal(name,title,unit), _norm(0), _lastDataSet(0)
 {
   resetErrorCounters() ;
   setTraceCounter(0) ;
@@ -35,7 +35,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title, const char *unit) :
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title, 
 				 Double_t plotMin, Double_t plotMax, const char *unit) :
-  RooDerivedReal(name,title,plotMin,plotMax,unit), _norm(0), _lastDataSet(0)
+  RooAbsReal(name,title,plotMin,plotMax,unit), _norm(0), _lastDataSet(0)
 {
   resetErrorCounters() ;
   setTraceCounter(0) ;
@@ -44,7 +44,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title,
 
 
 RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) : 
-  RooDerivedReal(other,name), _norm(0), _lastDataSet(0)
+  RooAbsReal(other,name), _norm(0), _lastDataSet(0)
 {
   resetErrorCounters() ;
   setTraceCounter(0) ;

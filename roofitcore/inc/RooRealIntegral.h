@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.rdl,v 1.3 2001/04/21 02:42:44 verkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.4 2001/05/03 02:15:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -13,7 +13,7 @@
 #ifndef ROO_REAL_INTEGRAL
 #define ROO_REAL_INTEGRAL
 
-#include "RooFitCore/RooDerivedReal.hh"
+#include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooArgSet.hh"
 
 class RooArgSet ;
@@ -22,12 +22,12 @@ class RooAbsCategory ;
 class RooRealVar ;
 class RooAbsIntegrator ;
 
-class RooRealIntegral : public RooDerivedReal {
+class RooRealIntegral : public RooAbsReal {
 public:
 
   // Constructors, assignment etc
   inline RooRealIntegral() { }
-  RooRealIntegral(const char *name, const char *title, const RooDerivedReal& function, 
+  RooRealIntegral(const char *name, const char *title, const RooAbsReal& function, 
 		  RooArgSet& depList, Int_t maxSteps=20, Double_t eps=1e-6) ;
   RooRealIntegral(const RooRealIntegral& other, const char* name=0);
   RooRealIntegral& operator=(const RooRealIntegral& other) ;
@@ -52,7 +52,7 @@ protected:
   virtual Bool_t redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;  
 
   // Function pointer and integrands list
-  RooDerivedReal* _function ;
+  RooAbsReal* _function ;
   mutable RooArgSet _sumList ;
   mutable RooArgSet _intList ;
   Int_t _mode ;

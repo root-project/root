@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.3 2001/05/03 02:15:54 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.4 2001/05/07 06:26:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -13,14 +13,14 @@
 #ifndef ROO_ABS_PDF
 #define ROO_ABS_PDF
 
-#include "RooFitCore/RooDerivedReal.hh"
+#include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealIntegral.hh"
 class RooArgSet ;
 class TPaveText;
 class TH1F;
 class TH2F;
 
-class RooAbsPdf : public RooDerivedReal {
+class RooAbsPdf : public RooAbsReal {
 public:
 
   // Constructors, assignment etc

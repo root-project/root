@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.4 2001/04/21 02:42:44 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.5 2001/05/03 02:15:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,9 +26,9 @@ ClassImp(RooRealIntegral)
 
 
 RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
-				 const RooDerivedReal& function, RooArgSet& depList,
+				 const RooAbsReal& function, RooArgSet& depList,
 				 Int_t maxSteps, Double_t eps) : 
-  RooDerivedReal(name,title), _function((RooDerivedReal*)&function), _mode(0),
+  RooAbsReal(name,title), _function((RooAbsReal*)&function), _mode(0),
   _intList("intList"), _sumList("sumList"), _numIntEngine(0) 
 {
 
@@ -105,7 +105,7 @@ void RooRealIntegral::initNumIntegrator()
 }
 
 RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name) : 
-  RooDerivedReal(other,name), _function(other._function), _mode(other._mode),
+  RooAbsReal(other,name), _function(other._function), _mode(other._mode),
   _intList("intList"), _sumList("sumList") 
 {
   copyList(_intList,other._intList) ;
@@ -122,7 +122,7 @@ RooRealIntegral::~RooRealIntegral()
 
 RooRealIntegral& RooRealIntegral::operator=(const RooRealIntegral& other)
 {
-  RooDerivedReal::operator=(other) ;
+  RooAbsReal::operator=(other) ;
   copyList(_intList,other._intList) ;
   copyList(_sumList,other._sumList) ;
   _mode = other._mode ;

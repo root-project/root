@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.13 2001/05/02 18:09:00 david Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.14 2001/05/03 02:15:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,15 +17,11 @@
 #include <math.h>
 #include <float.h>
 #include "TString.h"
-#include "RooFitCore/RooAbsReal.hh"
-
-#ifndef INFINITY
- #define INFINITY FLT_MAX
-#endif
+#include "RooFitCore/RooAbsRealLValue.hh"
 
 class RooArgSet ;
 
-class RooRealVar : public RooAbsReal {
+class RooRealVar : public RooAbsRealLValue {
 public:
   // Constructors, assignment etc.
   inline RooRealVar() { }
@@ -41,8 +37,8 @@ public:
   RooRealVar& operator=(const RooRealVar& other) ;
   
   // Parameter value and error accessors
+  virtual Double_t getVal() const { return _value ; }
   virtual void setVal(Double_t value);
-  virtual Double_t operator=(Double_t newValue);
   inline Double_t getError() const { return _error; }
   inline void setError(Double_t value) { _error= value; }
 
@@ -50,23 +46,13 @@ public:
   void setFitMin(Double_t value) ;
   void setFitMax(Double_t value) ;
   void setFitRange(Double_t min, Double_t max) ;
-  inline Double_t getFitMin() const { return _fitMin ; }
-  inline Double_t getFitMax() const { return _fitMax ; }
+  virtual Double_t getFitMin() const { return _fitMin ; }
+  virtual Double_t getFitMax() const { return _fitMax ; }
 
   // Set/get infinite fit range limits
   inline void removeFitMin() { _fitMin= -INFINITY; }
   inline void removeFitMax() { _fitMax= +INFINITY; }
   inline void removeFitRange() { _fitMin= -INFINITY; _fitMax= +INFINITY; }
-  inline Bool_t hasFitMin() const { return _fitMin != -INFINITY; }
-  inline Bool_t hasFitMax() const { return _fitMax != +INFINITY; }
-
-  // Test a value against our fit range
-  Bool_t inFitRange(Double_t value, Double_t* clippedValue=0) const;
-
-  // Constant and Projected flags 
-  inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); }
-  inline Bool_t isProjected() const { return getAttribute("Projected") ; }
-  inline void setProjected(Bool_t value= kTRUE) { setAttribute("Projected",value);}
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
@@ -80,10 +66,10 @@ protected:
 
   virtual RooAbsArg& operator=(const RooAbsArg& other) ;
 
+  virtual Double_t evaluate() const {} ; // dummy because we overloaded getVal()
+
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   Double_t chopAt(Double_t what, Int_t where) ;
-
-  virtual Bool_t isValid(Double_t value, Bool_t verbose=kFALSE) const ;
 
   Double_t _fitMin ;
   Double_t _fitMax ;

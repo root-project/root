@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.rdl,v 1.8 2001/04/14 00:43:19 davidk Exp $
+ *    File: $Id: RooMappedCategory.rdl,v 1.9 2001/05/03 02:15:55 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -13,30 +13,21 @@
 #define ROO_MAPPED_CATEGORY
 
 #include "TObjArray.h"
-#include "RooFitCore/RooDerivedCategory.hh"
+#include "RooFitCore/RooAbsCategory.hh"
+#include "RooFitCore/RooCategoryProxy.hh"
 #include "RooFitCore/RooCatType.hh"
 
-class RooMappedCategory : public RooDerivedCategory {
+class RooMappedCategory : public RooAbsCategory {
 public:
   // Constructors etc.
   inline RooMappedCategory() { }
-  RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat);
+  RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defCatName="NotMapped");
   RooMappedCategory(const RooMappedCategory& other, const char *name=0) ;
   virtual TObject* clone() const { return new RooMappedCategory(*this); }
   virtual ~RooMappedCategory();
 
-  // Mapping definition functions
-  Bool_t setDefault(int def)  ;	
-  Bool_t setDefault(const char* def_key)  ;	
-  Bool_t mapValue(int   in,     int   out) ; 
-  Bool_t mapValue(const char* in_key, int   out) ; 
-  Bool_t mapValue(int   in,     const char* out_key) ; 
-  Bool_t mapValue(const char* in_key, const char* out_key) ; 
-
-  Bool_t mapRange(const char* inlo_key, const char* inhi_key, int   out) ;
-  Bool_t mapRange(int   inlo,     int   inhi,     const char* out) ;
-  Bool_t mapRange(const char* inlo_key, const char* inhi_key, const char* out_key) ;
-  Bool_t mapRange(int   inlo,     int   inhi,     int   out) ;
+  // Mapping function
+  Bool_t map(const char* inKeyRegExp, const char* outKeyName) ; 
 
   // Printing interface (human readable)
   virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
@@ -49,13 +40,9 @@ protected:
 
   RooMappedCategory& operator=(const RooMappedCategory& other) ;
   
-  TObjArray _inlo ;
-  TObjArray _inhi ;
-  TObjArray _out ;
-  RooCatType _defout ;
-
-  inline RooAbsCategory* inputCat() const { return (RooAbsCategory*)_serverList.First() ; }
-  Bool_t addMap(const RooCatType* inlo, const RooCatType* inhi, const RooCatType* out) ;
+  TObjArray _mapArray ;
+  RooCatType* _defCat ;
+  RooCategoryProxy _inputCat ;
 
   virtual RooCatType evaluate() const ; 
 

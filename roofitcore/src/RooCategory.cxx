@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.cc,v 1.8 2001/04/18 20:38:02 verkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.9 2001/05/03 02:15:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,7 +26,7 @@ ClassImp(RooCategory)
 
 
 RooCategory::RooCategory(const char *name, const char *title) : 
-  RooAbsCategory(name,title)
+  RooAbsCategoryLValue(name,title)
 {
   setValueDirty(kTRUE) ;  
   setShapeDirty(kTRUE) ;  
@@ -34,7 +34,7 @@ RooCategory::RooCategory(const char *name, const char *title) :
 
 
 RooCategory::RooCategory(const RooCategory& other, const char* name) :
-  RooAbsCategory(other, name)
+  RooAbsCategoryLValue(other, name)
 {
 }
 
@@ -44,21 +44,9 @@ RooCategory::~RooCategory()
 }
 
 
-RooCategory& RooCategory::operator=(Int_t index) {
-  setIndex(index,kTRUE) ;
-  return *this ;
-}
-
-
-RooCategory& RooCategory::operator=(const char*label) {
-  setLabel(label) ;
-  return *this ;
-}
-
-
 RooCategory& RooCategory::operator=(const RooCategory& other)
 {
-  RooAbsCategory::operator=(other) ;
+  RooAbsCategoryLValue::operator=(other) ;
   return *this ;
 }
 

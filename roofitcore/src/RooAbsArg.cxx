@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.20 2001/05/03 02:15:53 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.21 2001/05/07 06:26:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -672,7 +672,14 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
 
   if(opt == Standard) {
     os << ClassName() << "::" << GetName() << ": " ;
-    writeToStream(os,kFALSE);
+    if (isDerived()) {
+      os << "(" ;
+      writeToStream(os,kFALSE);
+      os << ") -> " ;
+      writeToStream(os,kTRUE);
+    } else {
+      writeToStream(os,kFALSE);
+    }
     os << endl;
   }
   else {
@@ -680,8 +687,8 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
     if(opt == Verbose) {
       os << indent << "--- RooAbsArg ---" << endl;
       // dirty state flags
-      os << indent << "  Value State: " << (_valueDirty ? "DIRTY":"clean") << endl
-	 << indent << "  Shape State: " << (_shapeDirty ? "DIRTY":"clean") << endl;
+      os << indent << "  Value State: " << (isValueDirty() ? "DIRTY":"clean") << endl
+	 << indent << "  Shape State: " << (isShapeDirty() ? "DIRTY":"clean") << endl;
       // attribute list
       os << indent << "  Attributes: " ;
       printAttribList(os) ;

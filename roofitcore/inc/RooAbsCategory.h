@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.rdl,v 1.11 2001/04/14 00:43:18 davidk Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.12 2001/05/03 02:15:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,13 +33,11 @@ public:
   virtual ~RooAbsCategory();
   
   // Value accessors
-  virtual Int_t getIndex() const { return _value.getVal() ; }
-  virtual const char* getLabel() const { return _value.GetName() ; }
+  virtual Int_t getIndex() const ;
+  virtual const char* getLabel() const ;
   Bool_t operator==(Int_t index) const ;
   Bool_t operator==(const char* label) const ;
   
-  // Type definition management
-  Bool_t defineType(const char* label, Int_t index) ;
   Bool_t isValidIndex(Int_t index) const ;
   Bool_t isValidLabel(const char* label) const ;  
   const RooCatType* lookupType(Int_t index, Bool_t printError=kFALSE) const ;
@@ -56,20 +54,24 @@ public:
 
 protected:
 
+  // Function evaluation and error tracing
+  RooCatType traceEval() const ;
+  virtual Bool_t traceEvalHook(RooCatType value) const { return kFALSE ;}
+  virtual RooCatType evaluate() const = 0 ;
+
+  // Type definition management
+  const RooCatType* defineType(const char* label) ;
+  const RooCatType* defineType(const char* label, Int_t index) ;
+  void clearTypes() ;
+
   RooAbsCategory& operator=(const RooAbsCategory& other) ; 
   virtual RooAbsArg& operator=(const RooAbsArg& other) ; 
-
-  // Ordinal index representation is strictly for internal use
-  Int_t getOrdinalIndex() const ;
-  Bool_t setOrdinalIndex(Int_t newIndex) ;
-
-  mutable RooCatType _value ; // Current value
-  TObjArray  _types ; // Array of allowed values
 
   virtual Bool_t isValid() const ;
   virtual Bool_t isValid(RooCatType value) const ;
 
-  friend class RooMappedCategory ;
+  mutable RooCatType _value ; // Current value
+  TObjArray  _types ; // Array of allowed values
 
   ClassDef(RooAbsCategory,1) // a real-valued variable and its value
 };

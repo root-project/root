@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.8 2001/05/02 18:08:59 david Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.9 2001/05/03 02:15:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,13 +34,17 @@ public:
   virtual ~RooAbsReal();
 
   // Return value and unit accessors
-  virtual Double_t getVal(const RooDataSet* dset=0) const { return _value ; }
+  virtual Double_t getVal(const RooDataSet* dset=0) const ;
   Bool_t operator==(Double_t value) const ;
   inline const Text_t *getUnit() const { return _unit.Data(); }
   inline void setUnit(const char *unit) { _unit= unit; }
 
   // Bind ourselves with one particular real variable
   RooRealFunc1D operator()(RooRealVar &var) const;
+
+  // Analytical integration support
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const ;
+  virtual Double_t analyticalIntegral(Int_t code) const ;
 
   // Plotting options
   inline Double_t getPlotMin() const { return _plotMin; }
@@ -75,6 +79,14 @@ protected:
   // Internal consistency checking (needed by RooDataSet)
   virtual Bool_t isValid() const ;
   virtual Bool_t isValid(Double_t value) const ;
+
+  // Function evaluation and error tracing
+  Double_t traceEval() const ;
+  virtual Bool_t traceEvalHook(Double_t value) const { return kFALSE ;}
+  virtual Double_t evaluate() const = 0 ;
+
+  // Analytical integration support
+  Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, const RooArgProxy& a) const ;
 
   Double_t _plotMin ;
   Double_t _plotMax ;

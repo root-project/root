@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.12 2001/04/21 02:42:43 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.13 2001/05/03 02:15:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,7 +31,7 @@ class Roo1DTable ;
 class RooAbsCategory ;
 class RooPlot;
 class RooRealFunction ;
-class RooDerivedReal ;
+class RooAbsReal ;
 class RooFitContext ;
 class RooAbsPdf ;
 
@@ -59,7 +59,7 @@ public:
   // Add one ore more rows of data
   void add(const RooArgSet& data);
   void append(RooDataSet& data) ;
-  void addColumn(RooDerivedReal& var) ;
+  void addColumn(RooAbsReal& var) ;
 //   void addColumn(RooRealFunction& var) {} ;
 
   // Load a given row of data

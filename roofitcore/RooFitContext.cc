@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooFitContext.cc,v 1.1 2001/05/03 02:15:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,7 +18,6 @@
 #include "RooFitCore/RooFitContext.hh"
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooDerivedReal.hh"
 #include "RooFitCore/RooRealVar.hh"
 
 ClassImp(RooFitContext)
@@ -117,6 +116,10 @@ Bool_t RooFitContext::optimizePdf(RooAbsPdf* pdf, RooDataSet* dset)
     if (server->isDerived() && server->IsA()->InheritsFrom(RooAbsPdf::Class())) {
       // Check if this branch node is eligible for precalculation
       Bool_t canOpt(kTRUE) ;
+
+      // WVE additional checks: branch must have dependents 
+      //                        mother pdf must allow optimization / branch must be PDF-type
+      //                        or branch is blinding-type (how do we check that?)
 
       RooArgSet* branchParamList = server->getParameters(dset) ;
       TIterator* pIter = branchParamList->MakeIterator() ;

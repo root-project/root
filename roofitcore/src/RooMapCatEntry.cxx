@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsIntegrator.cc,v 1.3 2001/05/03 02:15:53 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,23 +11,24 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-#include "RooFitCore/RooAbsIntegrator.rdl"
+#include "RooFitCore/RooMapCatEntry.hh"
 
-ClassImp(RooAbsIntegrator)
+ClassImp(RooMapCatEntry)
 ;
 
-
-RooAbsIntegrator::RooAbsIntegrator(const RooAbsReal& function, Int_t mode) : 
-  _function((RooAbsReal*)&function), _mode(mode) 
+RooMapCatEntry::RooMapCatEntry(const char* exp, const RooCatType* cat) : 
+  TNamed(exp,exp), _regexp(exp,kTRUE), _cat((RooCatType*)cat) 
 {
 }
 
 
-RooAbsIntegrator::RooAbsIntegrator(const RooAbsIntegrator& other) : _function(other._function), _mode(other._mode)
+RooMapCatEntry::RooMapCatEntry(const RooMapCatEntry& other) : 
+  TNamed(other), _regexp(other.GetName(),kTRUE), _cat(other._cat) 
 {
 }
 
 
-RooAbsIntegrator::~RooAbsIntegrator()
+Bool_t RooMapCatEntry::match(const char* testPattern) const 
 {
+  return (TString(testPattern).Index(_regexp)>=0) ;
 }

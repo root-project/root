@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMultiCatIter.cc,v 1.1 2001/04/18 20:38:02 verkerke Exp $
+ *    File: $Id: RooMultiCatIter.cc,v 1.2 2001/05/03 02:15:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -89,16 +89,27 @@ TObject* RooMultiCatIter::Next()
     return 0 ;
   }
 
-  // Increment current iterator
   RooCatType* next = (RooCatType*) _iterList[_curIter]->Next() ;
   if (next) { 
-    _catPtrList[_curIter]->setIndex(next->getVal()) ;
-    return &_catList ;
-  }  
 
-  // If at end of current iter, rewind and increment next iter
-  _iterList[_curIter++]->Reset() ;
-  return Next() ;
+    // Increment current iterator
+    _catPtrList[_curIter]->setIndex(next->getVal()) ;
+
+    // If higher order increment was successful, reset master iterator
+    if (_curIter>0) _curIter=0 ;
+
+    return &_catList ;    
+  } else {
+
+    // Reset current iterator
+    _iterList[_curIter]->Reset() ;
+    next = (RooCatType*) _iterList[_curIter]->Next() ;
+    if (next) _catPtrList[_curIter]->setIndex(next->getVal()) ;
+
+    // Increment next iterator 
+    _curIter++ ;
+    return Next() ;
+  }
 }
 
 
@@ -110,7 +121,7 @@ void RooMultiCatIter::Reset()
     cIter->Reset() ;
     RooCatType* first = (RooCatType*) cIter->Next() ;
     if (first) {
-      cIter->Reset() ;
+      if (_curIter==0) cIter->Reset() ;
       _catPtrList[_curIter]->setIndex(first->getVal()) ;
     }
   }

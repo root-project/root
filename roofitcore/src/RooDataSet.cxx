@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.18 2001/05/02 18:08:59 david Exp $
+ *    File: $Id: RooDataSet.cc,v 1.19 2001/05/03 02:15:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -47,7 +47,6 @@
 #include "RooFitCore/Roo1DTable.hh"
 #include "RooFitCore/RooFormula.hh"
 #include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooDerivedReal.hh"
 #include "RooFitCore/RooPlot.hh"
 
 ClassImp(RooDataSet)
@@ -227,13 +226,13 @@ void RooDataSet::initialize(const RooArgSet& vars) {
 }
 
 
-void RooDataSet::addColumn(RooDerivedReal& newVar) 
+void RooDataSet::addColumn(RooAbsReal& newVar) 
 {
   // Clone current tree
   RooDataSet* cloneData = new RooDataSet(*this) ;
 
   // Clone variable and attach to cloned tree 
-  RooDerivedReal* newVarClone = (RooDerivedReal*) newVar.Clone() ;
+  RooAbsReal* newVarClone = (RooAbsReal*) newVar.Clone() ;
   newVarClone->redirectServers(cloneData->_vars,kFALSE) ;
 
   // Attach value place holder to this tree
