@@ -379,9 +379,9 @@ ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist \
       distsrc version importcint install uninstall showbuild changelog html \
       debian redhat),)
 ifeq ($(findstring skip,$(MAKECMDGOALS))$(findstring fast,$(MAKECMDGOALS)),)
-include $(INCLUDEFILES)
+-include $(INCLUDEFILES)
 endif
-include build/dummy.d          # must be last include
+-include build/dummy.d          # must be last include
 endif
 
 rootcint:       all-cint all-utils
