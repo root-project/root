@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.14 2003/08/08 18:07:42 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.15 2004/01/19 10:49:13 rdm Exp $ */
 /* Author: */
 
 /*
@@ -927,7 +927,6 @@ Getlinem(int mode, const char *prompt)
                       switch(c = gl_getc())
                       {
                       case 'A':                           /* up */
-
                            strcpy(gl_buf, hist_prev());
                            if (Gl_in_hook)
                                 Gl_in_hook(gl_buf);
@@ -942,6 +941,10 @@ Getlinem(int mode, const char *prompt)
                       case 'C': gl_fixup(gl_prompt, -1, gl_pos+1);  /* right */
                            break;
                       case 'D': gl_fixup(gl_prompt, -1, gl_pos-1);  /* left */
+                           break;
+                      case 'H': gl_fixup(gl_prompt, -1, 0);         /* home */
+                           break;
+                      case 'F': gl_fixup(gl_prompt, -1, gl_cnt);    /* end */
                            break;
                       case '3':  /* delete */
                            gl_del(0);
