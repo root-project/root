@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.25 2002/07/06 06:54:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.26 2002/07/13 11:35:52 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -40,7 +40,6 @@ protected:
     TFile       *fFile;             //! Pointer to current file
     TObjArray   *fFiles;            //->  List of file names containing the Trees
     TList       *fStatus;           //->  List of active/inactive branches
-  static Int_t   fgMaxMergeSize;    //  Maximum size of a merged file
 
 public:
     // TChain constants
@@ -77,7 +76,6 @@ public:
     TObjArray        *GetListOfBranches();
     TObjArray        *GetListOfFiles() const {return fFiles;}
     TObjArray        *GetListOfLeaves();
-    static  Int_t     GetMaxMergeSize();
     virtual Double_t  GetMaximum(const char *columname);
     virtual Double_t  GetMinimum(const char *columname);
     virtual Int_t     GetNbranches();
@@ -100,7 +98,6 @@ public:
     virtual void      SetBranchAddress(const char *bname,void *add);
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
     virtual void      SetDirectory(TDirectory *dir);
-    static  void      SetMaxMergeSize(Int_t maxsize=1900000000);
     virtual void      SetPacketSize(Int_t size = 100);
     virtual void      SetWeight(Double_t w=1, Option_t *option="");
 

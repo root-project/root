@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.54 2002/07/13 11:35:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.55 2002/07/13 21:56:12 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -38,8 +38,6 @@
 #include "TFriendElement.h"
 #include "TSystem.h"
 #include "TRegexp.h"
-
-Int_t TChain::fgMaxMergeSize = 1900000000;
 
 ClassImp(TChain)
 
@@ -578,15 +576,6 @@ TObjArray *TChain::GetListOfLeaves()
 }
 
 //______________________________________________________________________________
-Int_t TChain::GetMaxMergeSize()
-{
-// static function
-// return maximum size of a merged file
-
-   return fgMaxMergeSize;
-}
-
-//______________________________________________________________________________
 Double_t TChain::GetMaximum(const char *columname)
 {
 // Return maximum of column with name columname
@@ -858,12 +847,7 @@ Int_t TChain::Merge(const char *name)
 // see important note in the following function Merge
 
    TFile *file = TFile::Open(name,"recreate","chain files",1);
-   Int_t nFiles = Merge(file,0,"");
-   if (nFiles <= 1) {
-      file->Close();
-      delete file;
-   }
-   return nFiles;
+   return Merge(file,0,"");
 }
 
 
@@ -900,11 +884,11 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 //  AUTOMATIC FILE OVERFLOW
 //  -----------------------
 // When merging many files, it may happen that the resulting file
-// reaches a size > fgMaxMergeSize (default = 1.9 GBytes). In this case
+// reaches a size > TTree::fgMaxTreeSize (default = 1.9 GBytes). In this case
 // the current file is automatically closed and a new file started.
 // If the name of the merged file was "merged.root", the subsequent files
 // will be named "merged_1.root", "merged_2.root", etc.
-// fgMaxMergeSize may be modified via the static function SetMaxMergeSize.
+// fgMaxTreeSize may be modified via the static function TTree::SetMaxTreeSize.
 //
 // The function returns the total number of files produced.
 
@@ -940,7 +924,6 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    firstname[0] = 0;
    strcpy(firstname,gFile->GetName());
 
-   Int_t nFiles = 0;
    Int_t treeNumber = -1;
    Int_t nentries = Int_t(GetEntriesFast());
    for (Int_t i=0;i<nentries;i++) {
@@ -974,45 +957,13 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
          }
       }
       hnew->Fill();
-
-      //check that output file is still below the maximum size.
-      //If above, close the current file and continue on a new file.
-      if (gFile->GetBytesWritten() > (Double_t)fgMaxMergeSize) {
-         hnew->Write();
-         hnew->SetDirectory(0);
-         hnew->Reset();
-         nFiles++;
-         char *fname = new char[1000];
-         fname[0] = 0;
-         strcpy(fname,firstname);
-         char *cdot = strrchr(fname,'.');
-         if (cdot) {
-            sprintf(cdot,"_%d",nFiles);
-            strcat(fname,strrchr(firstname,'.'));
-         } else {
-            char fcount[10];
-            sprintf(fcount,"_%d",nFiles);
-            strcat(fname,fcount);
-         }
-         delete file;
-         file = TFile::Open(fname,"recreate","chain files",1);
-         Printf("Merge: Switching to new file: %s at entry: %d",fname,i);
-         hnew->SetDirectory(file);
-         nextb.Reset();
-         while ((branch = (TBranch*)nextb())) {
-            branch->SetFile(file);
-         }
-         delete [] fname;
-      }
    }
 
 // Write new tree header
    hnew->Write();
    delete [] firstname;
-   if (nFiles) {
-      delete file;
-   }
-   return nFiles+1;
+   delete hnew->GetCurrentFile();
+   return hnew->GetFileNumber()+1;
 }
 
 
@@ -1151,19 +1102,6 @@ void TChain::SetDirectory(TDirectory *dir)
    } else {
       fFile = 0;
    }
-}
-
-//______________________________________________________________________________
-void TChain::SetMaxMergeSize(Int_t maxsize)
-{
-// static function
-// Set the maximum size of a merged file.
-// In TChain::Merge, when the merged file has a size > fgMaxMergeSize,
-// the function closes the current merged file and starts writing into
-// a new file with a name of the style "merged_1.root" if the original
-// requested file name was "merged.root"
-
-   fgMaxMergeSize = maxsize;
 }
 
 //_______________________________________________________________________
