@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.20 2004/11/09 12:30:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.21 2005/01/31 17:20:30 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -209,7 +209,10 @@ void TGButtonGroup::SetButton(Int_t id, Bool_t down)
    // exclusive group, all other button in the group to be off/up.
 
    TGButton *b = Find(id);
-   if (b) b->SetDown(down, kTRUE);
+
+   if (b && (b->IsDown() != down)) {
+      b->SetDown(down, kTRUE);
+   }
 }
 
 //______________________________________________________________________________

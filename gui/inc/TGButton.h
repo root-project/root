@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.31 2004/11/24 08:13:05 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.32 2005/01/31 17:20:30 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -249,6 +249,8 @@ public:
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t IsToggleButton() const { return kTRUE; }
+   virtual Bool_t IsOn() const { return fState == kButtonDown; }
+   virtual Bool_t IsDown() const { return fState == kButtonDown; }
    virtual void   SetState(EButtonState state, Bool_t emit = kFALSE);
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
@@ -298,6 +300,8 @@ public:
    virtual void   SetState(EButtonState state, Bool_t emit = kFALSE);
    virtual Bool_t IsToggleButton() const { return kTRUE; }
    virtual Bool_t IsExclusiveToggle() const { return kTRUE; }
+   virtual Bool_t IsOn() const { return fState == kButtonDown; }
+   virtual Bool_t IsDown() const { return fState == kButtonDown; }
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGRadioButton,0)  // A radio button widget
