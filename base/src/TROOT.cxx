@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.15 2000/09/08 16:05:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.16 2000/09/11 09:59:26 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -96,6 +96,7 @@
 #include "TMessageHandler.h"
 #include "TVirtualGL.h"
 #include "TFolder.h"
+#include "TQObject.h"
 
 #if defined(R__UNIX)
 #include "TUnixSystem.h"
@@ -332,6 +333,9 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    // Load and init threads library
    InitThreads();
+
+   // Load RQ_OBJECT.h in interpreter (allows signal/slot programming, like Qt)
+   TQObject::LoadRQ_OBJECT();
 
    // Set initial/default list of browsable objects
    fBrowsables->Add(fRootFolder, "root");
