@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.12 2001/10/07 20:03:29 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.13 2001/10/10 20:57:51 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -101,6 +101,7 @@ Event::Event()
    }
    for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
    fClosestDistance = 0;
+   fEventName = 0;
 }
 
 //______________________________________________________________________________
@@ -112,6 +113,7 @@ Event::~Event()
    delete fHighPt; fHighPt = 0;
    delete fMuons;  fMuons = 0;
    delete [] fClosestDistance;
+   if (fEventName) delete [] fEventName;
 }
 
 //______________________________________________________________________________
@@ -126,6 +128,12 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
   fHighPt->Delete();
   fMuons->Delete();
   
+  Int_t nch = 15;
+  if (ev > 100)   nch += 3;
+  if (ev > 10000) nch += 3;
+  if (fEventName) delete [] fEventName;
+  fEventName = new char[nch];
+  sprintf(fEventName,"Event%d_Run%d",ev,200);
   sprintf(etype,"type%d",ev%5);
   SetType(etype);
   SetHeader(ev, 200, 960312, random);

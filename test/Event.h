@@ -93,6 +93,7 @@ class Event : public TObject {
 
 private:
    char           fType[20];          //event type
+   char          *fEventName;         //run+event number in character format
    Int_t          fNtrack;            //Number of tracks
    Int_t          fNseg;              //Number of track segments
    Int_t          fNvertex;
@@ -105,7 +106,7 @@ private:
    TClonesArray  *fTracks;            //->array with all tracks
    TRefArray     *fHighPt;            //array of High Pt tracks only
    TRefArray     *fMuons;             //array of Muon tracks only
-   TRef           fLastTrack;         //reference pointer to last track
+   TRef           fLastTrack;         //EXEC:DemoExec reference pointer to last track
    TH1F          *fH;                 //->
       
    static TClonesArray *fgTracks;
