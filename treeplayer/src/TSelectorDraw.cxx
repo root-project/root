@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.9 2003/03/19 14:01:51 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.10 2003/03/28 15:02:25 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -798,7 +798,7 @@ Bool_t TSelectorDraw::Notify()
 {
    // This function is called at the first entry of a new tree in a chain.
 
-   fWeight  = fTree->GetWeight();
+   if (fTree) fWeight  = fTree->GetWeight();
    if (fVar1) fVar1->UpdateFormulaLeaves();
    if (fVar2) fVar2->UpdateFormulaLeaves();
    if (fVar3) fVar3->UpdateFormulaLeaves();
