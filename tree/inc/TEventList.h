@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.3 2000/12/13 15:13:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.4 2001/10/22 14:26:49 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -53,6 +53,7 @@ public:
         virtual Int_t    GetN() const { return fN; }
         virtual Bool_t   GetReapplyCut() { return fReapply; };
         virtual Int_t    GetSize() const { return fSize; }
+        virtual Int_t    Merge(TCollection *list);
         virtual void     Print(Option_t *option="") const;
         virtual void     Reset(Option_t *option="");
         virtual void     Resize(Int_t delta=0);
