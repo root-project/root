@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.6 2000/11/21 20:30:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.7 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -91,6 +91,8 @@ public:
    virtual void    Copy(TObject &hnew);
    virtual TH1    *DrawCopy(Option_t *option="");
    virtual Stat_t  GetBinContent(Int_t bin) const;
+   virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
+   virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Char_t (content);}
@@ -127,6 +129,8 @@ public:
    virtual void    Copy(TObject &hnew);
    virtual TH1    *DrawCopy(Option_t *option="");
    virtual Stat_t  GetBinContent(Int_t bin) const;
+   virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
+   virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Short_t (content);}
@@ -165,6 +169,8 @@ public:
    virtual void    Copy(TObject &hnew);
    virtual TH1    *DrawCopy(Option_t *option="");
    virtual Stat_t  GetBinContent(Int_t bin) const;
+   virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
+   virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Float_t (content);}
@@ -202,6 +208,8 @@ public:
    virtual void    Copy(TObject &hnew);
    virtual TH1    *DrawCopy(Option_t *option="");
    virtual Stat_t  GetBinContent(Int_t bin) const;
+   virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
+   virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Double_t (content);}

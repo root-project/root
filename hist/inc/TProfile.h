@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.7 2000/11/21 20:31:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.8 2000/12/13 15:13:51 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -69,6 +69,8 @@ public:
     virtual Int_t   Fill(Axis_t x, Axis_t y, Stat_t w);
     virtual void    FillN(Int_t ntimes, Axis_t *x, Axis_t *y, Double_t *w, Int_t stride=1);
     virtual Stat_t  GetBinContent(Int_t bin) const;
+    virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
+    virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
     virtual Stat_t  GetBinError(Int_t bin) const;
     virtual Stat_t  GetBinEntries(Int_t bin) const;
     Option_t       *GetErrorOption() const;
