@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.27 2003/01/15 21:45:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.28 2003/01/28 16:41:11 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -99,6 +99,7 @@ public:
        Double_t     GetChisquare() const {return fChisquare;}
            TH1     *GetHistogram() const;
    virtual Double_t GetMaximumX(Double_t xmin=0, Double_t xmax=0) const;
+   virtual Double_t GetMinimumX(Double_t xmin=0, Double_t xmax=0) const;
    virtual Int_t    GetNDF() const;
    virtual Int_t    GetNpx() const {return fNpx;}
     TMethodCall    *GetMethodCall() const {return fMethodCall;}
