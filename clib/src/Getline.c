@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.9 2002/04/04 10:11:13 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.10 2002/07/19 08:26:50 rdm Exp $ */
 /* Author: */
 
 /*
@@ -299,6 +299,7 @@ static void     gl_yank();              /* yank killed text */
 static int      is_whitespace(char c);  /* "whitespace" very loosely interpreted */
 static void     gl_back_1_word();       /* move cursor back one word */
 static void     gl_kill_1_word();       /* kill to end of word */
+static void     gl_kill_back_1_word();  /* kill to begin of word */
 static void     gl_kill_region(int i, int j); /* kills from i to j */
 static void     gl_fwd_1_word();        /* move cursor forward one word */
 static void     gl_set_mark();          /* sets mark to be at point */
@@ -943,6 +944,10 @@ Getlinem(int mode, const char *prompt)
                            gl_putc('\007');
                            break;
                       }
+                      break;
+                 case '\010':           /* DEL and ^H */
+                 case '\177':
+                      gl_kill_back_1_word();
                       break;
                  default:
                       gl_putc('\007');
@@ -1809,5 +1814,26 @@ static void gl_exch( void )
      tmp = gl_pos;
      gl_fixup( gl_prompt, -1, gl_mark );
      gl_mark = tmp;
+}
+
+/* kills from current position to begin of word */
+static void gl_kill_back_1_word( void )
+{
+     int i = gl_pos;
+
+     /* first find a word */
+     while( i>0 && is_whitespace(gl_buf[i-1]) ) {
+          i--;
+     }
+
+     /* next, find the begin of this word. */
+     while( i>0 && !is_whitespace(gl_buf[i-1]) ) {
+          i--;
+     }
+
+     /* kill */
+     gl_mark = i;
+     gl_wipe();
+
 }
 
