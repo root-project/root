@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.210 2004/11/15 21:42:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.211 2004/11/26 15:07:49 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3909,13 +3909,11 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
 //     TH1F *hnew = h1->Rebin(5,"hnew"); // creates a new histogram hnew
 //                                       //merging 5 bins of h1 in one bin
 //
-//   NOTE1: If ngroup is not an exact divider of the number of bins,
+//   NOTE:  If ngroup is not an exact divider of the number of bins,
 //          the top limit of the rebinned histogram is changed
 //          to the upper edge of the bin=newbins*ngroup and the corresponding
 //          bins are added to the overflow bin.
 //          Statistics will be recomputed from the new bin contents.
-//
-//   NOTE2: This function cannot be used with variable bin size histograms.
 
    Int_t nbins  = fXaxis.GetNbins();
    Axis_t xmin  = fXaxis.GetXmin();
@@ -3926,10 +3924,6 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
    }
    if (fDimension > 1 || InheritsFrom("TProfile")) {
       Error("Rebin", "Operation valid on 1-D histograms only");
-      return 0;
-   }
-   if (fXaxis.GetXbins()->GetSize() > 0) {
-      Error("Rebin", "Cannot rebin variable bin size histograms");
       return 0;
    }
    Int_t newbins = nbins/ngroup;
@@ -3947,7 +3941,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
 
    // create a clone of the old histogram if newname is specified
    TH1 *hnew = this;
-   if (strlen(newname) > 0) {
+   if (newname && strlen(newname) > 0) {
       hnew = (TH1*)Clone();
       hnew->SetName(newname);
    }
@@ -3968,9 +3962,16 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
         Float_t  TitleOffset = fXaxis.GetTitleOffset();
         Float_t  TitleSize   = fXaxis.GetTitleSize();
         Color_t  TitleColor  = fXaxis.GetTitleColor();
-		Style_t  TitleFont   = fXaxis.GetTitleFont();
+        Style_t  TitleFont   = fXaxis.GetTitleFont();
 
-   hnew->SetBins(newbins,xmin,xmax); //this also changes errors array (if any)
+   if(fXaxis.GetXbins()->GetSize() > 0){ // variable bin sizes
+      Axis_t *bins = new Axis_t[newbins+1];
+      for(Int_t i = 0; i <= newbins; ++i) bins[i] = fXaxis.GetBinLowEdge(1+i*ngroup);
+      hnew->SetBins(newbins,bins); //this also changes errors array (if any)
+      delete [] bins;
+   } else {
+      hnew->SetBins(newbins,xmin,xmax); //this also changes errors array (if any)
+   }
 
    // Restore axis attributes
         fXaxis.SetNdivisions(Ndivisions);
@@ -5537,6 +5538,32 @@ void TH1::SetBins(Int_t nx, Axis_t xmin, Axis_t xmax)
       fSumw2.Set(fNcells);
    }
 }
+ 
+//______________________________________________________________________________
+void TH1::SetBins(Int_t nx, const Axis_t *xBins)
+{
+//   -*-*-*-*-*-*-*Redefine  x axis parameters with variable bin sizes *-*-*-*-*-*-*-*-*-*
+//                 ===================================================
+// The X axis parameters are modified.
+// The bins content array is resized
+// if errors (Sumw2) the errors array is resized
+// The previous bin contents are lost
+// To change only the axis limits, see TAxis::SetRange
+// xBins is supposed to be of length nx+1
+   if (GetDimension() != 1) {
+      Error("SetBins","Operation only valid for 1-d histograms");
+      return;
+   }
+   fXaxis.SetRange(0,0);
+   fXaxis.Set(nx,xBins);
+   fYaxis.Set(1,0,1);
+   fZaxis.Set(1,0,1);
+   fNcells = nx+2;
+   SetBinsLength(fNcells);
+   if (fSumw2.fN) {
+      fSumw2.Set(fNcells);
+   }
+}
 
 //______________________________________________________________________________
 void TH1::SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axis_t ymax)
@@ -5564,6 +5591,35 @@ void TH1::SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axi
       fSumw2.Set(fNcells);
    }
 }
+
+//______________________________________________________________________________
+void TH1::SetBins(Int_t nx, const Axis_t *xBins, Int_t ny, const Axis_t *yBins)
+{
+//   -*-*-*-*-*-*-*Redefine  x and y axis parameters with variable bin sizes *-*-*-*-*-*-*-*-*
+//                 =========================================================
+// The X and Y axis parameters are modified.
+// The bins content array is resized
+// if errors (Sumw2) the errors array is resized
+// The previous bin contents are lost
+// To change only the axis limits, see TAxis::SetRange
+// xBins is supposed to be of length nx+1, yBins is supposed to be of length ny+1
+
+   if (GetDimension() != 2) {
+      Error("SetBins","Operation only valid for 2-d histograms");
+      return;
+   }
+   fXaxis.SetRange(0,0);
+   fYaxis.SetRange(0,0);
+   fXaxis.Set(nx,xBins);
+   fYaxis.Set(ny,yBins);
+   fZaxis.Set(1,0,1);
+   fNcells = (nx+2)*(ny+2);
+   SetBinsLength(fNcells);
+   if (fSumw2.fN) {
+      fSumw2.Set(fNcells);
+   }
+}
+
 
 //______________________________________________________________________________
 void TH1::SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axis_t ymax, Int_t nz, Axis_t zmin, Axis_t zmax)

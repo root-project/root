@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.25 2004/02/07 21:17:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.26 2004/09/13 10:03:08 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -47,10 +47,12 @@ static Bool_t   fgApproximate;    //bin error approximation option
 private:
    Int_t Fill(Axis_t) { MayNotUse("Fill(Axis_t)"); return -1;}
    void FillN(Int_t, const Axis_t *, const Double_t *, Int_t) { MayNotUse("FillN(Int_t, Axis_t*, Double_t*, Int_t)"); }
-   void SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t)
-      { MayNotUse("SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t"); }
-   void SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t)
-      { MayNotUse("SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t"); }
+   void SetBins(Int_t, Axis_t, Axis_t, Int_t, Axis_t, Axis_t)
+      { MayNotUse("SetBins(Int_t, Axis_t, Axis_t, Int_t, Axis_t, Axis_t"); }
+   void SetBins(Int_t, const Axis_t*, Int_t, const Axis_t*)
+      { MayNotUse("SetBins(Int_t, const Axis_t*, Int_t, const Axis_t*"); }
+   void SetBins(Int_t, Axis_t, Axis_t, Int_t, Axis_t, Axis_t, Int_t, Axis_t, Axis_t)
+      { MayNotUse("SetBins(Int_t, Axis_t, Axis_t, Int_t, Axis_t, Axis_t, Int_t, Axis_t, Axis_t"); }
    Double_t *GetB()  {return &fBinEntries.fArray[0];}
    Double_t *GetW()  {return &fArray[0];}
    Double_t *GetW2() {return &fSumw2.fArray[0];}
@@ -104,7 +106,8 @@ public:
     virtual void    SavePrimitive(ofstream &out, Option_t *option);
     virtual void    Scale(Double_t c1=1);
     virtual void    SetBinEntries(Int_t bin, Stat_t w);
-    virtual void    SetBins(Int_t nbins, Double_t xmin, Double_t xmax);
+    virtual void    SetBins(Int_t nbins, Axis_t xmin, Axis_t xmax);
+    virtual void    SetBins(Int_t nx, const Axis_t *xbins);
     virtual void    SetBuffer(Int_t buffersize, Option_t *option="");
     virtual void    SetErrorOption(Option_t *option=""); // *MENU*
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.49 2004/09/13 10:03:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.50 2004/10/22 16:19:18 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1356,7 +1356,7 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname)
 //     TProfile *hnew = hp->Rebin(5,"hnew"); // creates a new profile hnew
 //                                       //merging 5 bins of hp in one bin
 //
-//   NOTE1: If ngroup is not an exact divider of the number of bins,
+//   NOTE:  If ngroup is not an exact divider of the number of bins,
 //          the top limit of the rebinned profile is changed
 //          to the upper edge of the bin=newbins*ngroup and the corresponding
 //          bins are added to the overflow bin.
@@ -1387,7 +1387,7 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname)
 
    // create a clone of the old histogram if newname is specified
    TProfile *hnew = this;
-   if (strlen(newname) > 0) {
+   if (newname && strlen(newname) > 0) {
       hnew = (TProfile*)Clone();
       hnew->SetName(newname);
    }
@@ -1397,7 +1397,15 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname)
       xmax = fXaxis.GetBinUpEdge(newbins*ngroup);
       hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
    }
-   hnew->SetBins(newbins,xmin,xmax); //this also changes errors array (if any)
+
+   if(fXaxis.GetXbins()->GetSize() > 0){ // variable bin sizes
+      Axis_t *bins = new Axis_t[newbins+1];
+      for(Int_t i = 0; i <= newbins; ++i) bins[i] = fXaxis.GetBinLowEdge(1+i*ngroup);
+      hnew->SetBins(newbins,bins); //this also changes errors array (if any)
+      delete [] bins;
+   } else {
+      hnew->SetBins(newbins,xmin,xmax); //this also changes errors array (if any)
+   }
 
    // copy merged bin contents (ignore under/overflows)
    Double_t *cu2 = hnew->GetW();
@@ -1532,12 +1540,25 @@ void TProfile::SetBinEntries(Int_t bin, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TProfile::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
+void TProfile::SetBins(Int_t nx, Axis_t xmin, Axis_t xmax)
 {
 //*-*-*-*-*-*-*-*-*Redefine  x axis parameters*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ===========================
 
    fXaxis.Set(nx,xmin,xmax);
+   fNcells = nx+2;
+   SetBinsLength(fNcells);
+   fBinEntries.Set(fNcells);
+   fSumw2.Set(fNcells);
+}
+
+//______________________________________________________________________________
+void TProfile::SetBins(Int_t nx, const Axis_t *xbins)
+{
+//*-*-*-*-*-*-*-*-*Redefine  x axis parameters*-*-*-*-*-*-*-*-*-*-*-*
+//*-*              ===========================
+
+   fXaxis.Set(nx,xbins);
    fNcells = nx+2;
    SetBinsLength(fNcells);
    fBinEntries.Set(fNcells);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.21 2004/05/26 11:32:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.22 2004/09/13 10:03:08 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -106,11 +106,15 @@ public:
     virtual void    SavePrimitive(ofstream &out, Option_t *option);
     virtual void    Scale(Double_t c1=1);
     virtual void    SetBinEntries(Int_t bin, Stat_t w);
-            void    SetBins(Int_t, Double_t, Double_t)
-                       { MayNotUse("SetBins(Int_t, Double_t, Double_t"); }
-    virtual void    SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax, Int_t nbinsy, Double_t ymin, Double_t ymax);
-            void    SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t)
-                       { MayNotUse("SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t"); }
+            void    SetBins(Int_t, Axis_t, Axis_t)
+                       { MayNotUse("SetBins(Int_t, Axis_t, Axis_t"); }
+            void    SetBins(Int_t, const Axis_t*)
+                       { MayNotUse("SetBins(Int_t, const Axis_t*"); }
+    virtual void    SetBins(Int_t nbinsx, Axis_t xmin, Axis_t xmax, Int_t nbinsy, Axis_t ymin, Axis_t ymax);
+            void    SetBins(Int_t, const Axis_t*, Int_t, const Axis_t*)
+                       { MayNotUse("SetBins(Int_t, const Axis_t*, Int_t, const Axis_t*"); }
+            void    SetBins(Int_t, Axis_t, Axis_t, Int_t, Axis_t, Axis_t, Int_t, Axis_t, Axis_t)
+                       { MayNotUse("SetBins(Int_t, Axis_t, Axis_t, Int_t, Axis_t, Axis_t, Int_t, Axis_t, Axis_t"); }
     virtual void    SetBuffer(Int_t buffersize, Option_t *option="");
     virtual void    SetErrorOption(Option_t *option=""); // *MENU*
 

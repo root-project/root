@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.25 2004/09/13 10:03:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.26 2004/11/26 07:34:56 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -109,7 +109,7 @@ TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,const Double_
     : TH2D(name,title,nx,xbins,ny,ylow,yup)
 {
 //  Create a 2-D Profile with variable bins in X and fix bins in Y
-   
+
    BuildOptions(0,0,option);
 }
 
@@ -118,7 +118,7 @@ TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,Axis_t xlow,A
     : TH2D(name,title,nx,xlow,xup,ny,ybins)
 {
 //  Create a 2-D Profile with fix bins in X and variable bins in Y
-   
+
    BuildOptions(0,0,option);
 }
 
@@ -127,7 +127,7 @@ TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,const Double_
     : TH2D(name,title,nx,xbins,ny,ybins)
 {
 //  Create a 2-D Profile with variable bins in X and variable bins in Y
-   
+
    BuildOptions(0,0,option);
 }
 
@@ -365,7 +365,7 @@ void TProfile2D::Approximate(Bool_t approx)
 //  - the bin number of entries is small ( <5)
 //  - the estimated bin error is extremely small compared to the bin content
 //  (see TProfile2D::GetBinError)
-   
+
    fgApproximate = approx;
 }
 
@@ -378,7 +378,7 @@ Int_t TProfile2D::BufferEmpty(Int_t action)
 // action =  0 histogram is filled from the buffer
 // action =  1 histogram is filled and buffer is deleted
 //             The buffer is automatically deleted when the number of entries
-//             in the buffer is greater than the number of entries in the histogram   
+//             in the buffer is greater than the number of entries in the histogram
 
    // do we need to compute the bin size?
    if (!fBuffer) return 0;
@@ -425,7 +425,7 @@ Int_t TProfile2D::BufferEmpty(Int_t action)
       Fill(buffer[4*i+2],buffer[4*i+3],buffer[4*i+4],buffer[4*i+1]);
    }
    fBuffer = buffer;
-   
+
    if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
    else {
       if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
@@ -898,12 +898,12 @@ Stat_t TProfile2D::GetBinError(Int_t bin) const
 //   expression eprim2 is very close to 0 (rounding problems) or 0.
 // - The algorithm is modified/protected for the case
 //   when a TProfile2D is projected (ProjectionX). The previous algorithm
-//   generated a N^2 problem when projecting a TProfile2D with a large number of 
+//   generated a N^2 problem when projecting a TProfile2D with a large number of
 //   bins (eg 100000).
 // - in version 3.10/02, a new static function TProfile::Approximate
 //   is introduced to enable or disable (default) the approximation.
 //   (see also comments in TProfile::GetBinError)
-   
+
    if (fBuffer) ((TProfile2D*)this)->BufferEmpty();
 
    if (bin < 0 || bin >= fNcells) return 0;
@@ -1433,7 +1433,7 @@ void TProfile2D::Reset(Option_t *option)
 //*-*                =======================================
   TH2D::Reset(option);
   fBinEntries.Reset();
-  fTsumwz = fTsumwz2 = 0;  
+  fTsumwz = fTsumwz2 = 0;
 }
 
 //______________________________________________________________________________
@@ -1461,7 +1461,7 @@ void TProfile2D::SavePrimitive(ofstream &out, Option_t *option)
    out << "," << fZmin
        << "," << fZmax;
    out << ");" << endl;
-   
+
 
    // save bin entries
    Int_t bin;
@@ -1487,7 +1487,7 @@ void TProfile2D::SavePrimitive(ofstream &out, Option_t *option)
          }
       }
    }
-   
+
    TH1::SavePrimitiveHelp(out, option);
 }
 
@@ -1520,7 +1520,7 @@ void TProfile2D::SetBinEntries(Int_t bin, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TProfile2D::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax)
+void TProfile2D::SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axis_t ymax)
 {
 //*-*-*-*-*-*-*-*-*Redefine  x axis parameters*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ===========================

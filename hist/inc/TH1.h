@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.60 2004/10/18 15:42:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.61 2004/10/22 14:53:47 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -265,10 +265,12 @@ public:
     virtual void     SetBinError(Int_t binx, Int_t biny, Stat_t error);
     virtual void     SetBinError(Int_t binx, Int_t biny, Int_t binz, Stat_t error);
     virtual void     SetBins(Int_t nx, Axis_t xmin, Axis_t xmax);
+    virtual void     SetBins(Int_t nx, const Axis_t *xBins);
     virtual void     SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axis_t ymax);
+    virtual void     SetBins(Int_t nx, const Axis_t *xBins, Int_t ny, const Axis_t *yBins);
     virtual void     SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axis_t ymax,
                              Int_t nz, Axis_t zmin, Axis_t zmax);
-    virtual void     SetBinsLength(Int_t = -1) { } //refefined in derived classes
+    virtual void     SetBinsLength(Int_t = -1) { } //redefined in derived classes
     virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
     virtual void     SetCellContent(Int_t binx, Int_t biny, Stat_t content);
     virtual void     SetCellError(Int_t binx, Int_t biny, Stat_t content);

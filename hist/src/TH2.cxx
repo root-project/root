@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.59 2004/10/07 08:32:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.60 2004/11/23 14:45:02 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -47,7 +47,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
      :TH1(name,title,nbinsx,xlow,xup)
 {
    // see comments in the TH1 base class constructors
-   
+
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -136,7 +136,7 @@ Int_t TH2::BufferEmpty(Int_t action)
 // action =  0 histogram is filled from the buffer
 // action =  1 histogram is filled and buffer is deleted
 //             The buffer is automatically deleted when the number of entries
-//             in the buffer is greater than the number of entries in the histogram   
+//             in the buffer is greater than the number of entries in the histogram
 
    // do we need to compute the bin size?
    if (!fBuffer) return 0;
@@ -177,13 +177,13 @@ Int_t TH2::BufferEmpty(Int_t action)
          fBufferSize = keep;
       }
    }
-   
-   fBuffer = 0;   
+
+   fBuffer = 0;
    for (Int_t i=0;i<nbentries;i++) {
       Fill(buffer[3*i+2],buffer[3*i+3],buffer[3*i+1]);
    }
    fBuffer = buffer;
-   
+
    if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
    else {
       if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
@@ -191,7 +191,7 @@ Int_t TH2::BufferEmpty(Int_t action)
    }
    return nbentries;
 }
- 
+
 //______________________________________________________________________________
 Int_t TH2::BufferFill(Axis_t x, Axis_t y, Stat_t w)
 {
@@ -222,9 +222,9 @@ Int_t TH2::BufferFill(Axis_t x, Axis_t y, Stat_t w)
    fBuffer[0] += 1;
    return -3;
 }
-Double_t TH2::Chi2Test(TH1 *h, Option_t *option, Int_t constraint) 
+Double_t TH2::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
 {
-  //The Chi2 (Pearson's) test for differences between h and this histogram. 
+  //The Chi2 (Pearson's) test for differences between h and this histogram.
   //a small value of prob indicates a significant difference between the distributions
   //
   //if the data was collected in such a way that the number of entries
@@ -244,7 +244,7 @@ Double_t TH2::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
 
   //algorithm taken from "Numerical Recipes in C++"
   // implementation by Anna Kreshuk
-  
+
   Int_t df;
   Double_t chsq = 0;
   Double_t prob;
@@ -253,7 +253,7 @@ Double_t TH2::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
   Double_t nen1, nen2;
   Double_t bin1, bin2;
   Int_t i_start, i_end, j_start, j_end;
-  
+
   TString opt = option;
   opt.ToUpper();
 
@@ -266,7 +266,7 @@ Double_t TH2::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
   Int_t nbinx2   = xaxis2->GetNbins();
   Int_t nbiny1   = yaxis1->GetNbins();
   Int_t nbiny2   = yaxis2->GetNbins();
-  
+
   //check dimensions
   if (this->GetDimension() != 2 || h->GetDimension() != 2) {
      Error("Chi2Test","Histograms must be 2-D");
@@ -278,7 +278,7 @@ Double_t TH2::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
   if((nen1==0)||(nen2==0)){
      Error("Chi2Test","one of the histograms is empty");
      return 0;
-  } 
+  }
   //check channels
   if (nbinx1 != nbinx2) {
      Error("Chi2Test", "different number of x channels 1 - %d and 2 - %d", nbinx1, nbinx2);
@@ -304,7 +304,7 @@ Double_t TH2::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
      Error("Chi2Test","histograms with different binning along Y");
      return 0;
   }
- 
+
 
   //check options
   i_start=1; j_start=1;
@@ -346,7 +346,7 @@ Double_t TH2::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
   }
 
    prob = TMath::Prob(0.5*chsq, Int_t(0.5*df));
-  
+
   if (opt.Contains("P")){
      Printf("the value of chi2 = %f\n", chsq);
      Printf("the number of degrees of freedom = %d\n", df);
@@ -384,7 +384,7 @@ Int_t TH2::Fill(Axis_t x,Axis_t y)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    if (fBuffer) return BufferFill(x,y,1);
-   
+
    Int_t binx, biny, bin;
    fEntries++;
    binx = fXaxis.FindBin(x);
@@ -439,7 +439,7 @@ Int_t TH2::Fill(Axis_t x, Axis_t y, Stat_t w)
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
-   }      
+   }
    Stat_t z= (w > 0 ? w : -w);
    fTsumw   += z;
    fTsumw2  += z*z;
@@ -757,7 +757,7 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    if (opt.Contains("g3")) {ngroup = 3; opt.ReplaceAll("g3","");}
    if (opt.Contains("g4")) {ngroup = 4; opt.ReplaceAll("g4","");}
    if (opt.Contains("g5")) {ngroup = 5; opt.ReplaceAll("g5","");}
-   
+
    //default is to fit with a gaussian
    if (f1 == 0) {
       f1 = (TF1*)gROOT->GetFunction("gaus");
@@ -1012,7 +1012,7 @@ void TH2::GetStats(Stat_t *stats) const
    // stats[6] = sumwxy
 
    if (fBuffer) ((TH2*)this)->BufferEmpty();
-   
+
    Int_t bin, binx, biny;
    Stat_t w,err;
    Double_t x,y;
@@ -1067,7 +1067,7 @@ Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_
 // the bin contents multiplied by the bin width in x and in y.
 
    if (fBuffer) ((TH2*)this)->BufferEmpty();
-   
+
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
    if (binx1 < 0) binx1 = 0;
@@ -1093,7 +1093,7 @@ Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_
    }
    return integral;
 }
-        
+
 //______________________________________________________________________________
 Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option) const
 {
@@ -1103,7 +1103,7 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option) const
 //
 //     option is a character string to specify options
 //         "U" include Underflows in test
-//         "O" include Overflows 
+//         "O" include Overflows
 //         "N" include comparison of normalizations
 //         "D" Put out a line of "Debug" printout
 //
@@ -1114,7 +1114,7 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option) const
 
    TString opt = option;
    opt.ToUpper();
-   
+
    Double_t prb = 0;
    TH1 *h1 = (TH1*)this;
    if (h2 == 0) return 0;
@@ -1142,7 +1142,7 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option) const
       Error("KolmogorovTest","Number of channels in Y is different, %d and %d\n",ncy1,ncy2);
       return 0;
    }
-    
+
      // Check consistency in channel edges
    Bool_t afunc1 = kFALSE;
    Bool_t afunc2 = kFALSE;
@@ -1165,7 +1165,7 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option) const
    Int_t iend = ncx1, jend = ncy1;
    if (opt.Contains("U")) {ibeg = 0; jbeg = 0;}
    if (opt.Contains("O")) {iend = ncx1+1; jend = ncy1+1;}
-   
+
    Int_t i,j;
    Double_t hsav;
    Double_t sum1  = 0;
@@ -1220,7 +1220,7 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option) const
       }
    }
 
-   //   Find second Kolmogorov distance 
+   //   Find second Kolmogorov distance
    Double_t dfmax2 = 0;
    rsum1=0, rsum2=0;
    for (j=jbeg;j<=jend;j++) {
@@ -1238,7 +1238,7 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option) const
    else             factnm = TMath::Sqrt(sum1*sum2/(sum1+sum2));
    Double_t z  = dfmax*factnm;
    Double_t z2 = dfmax2*factnm;
-   
+
    prb = TMath::KolmogorovProb(0.5*(z+z2));
 
    Double_t prb1=0, prb2=0;
@@ -1260,7 +1260,7 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option) const
       printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
       printf(" Kolmo Prob  h2 = %s, sum2=%g\n",h2->GetName(),sum2);
       printf(" Kolmo Probabil = %f, Max Dist = %g\n",prb,dfmax);
-      if (opt.Contains("N")) 
+      if (opt.Contains("N"))
       printf(" Kolmo Probabil = %f for shape alone, =%f for normalisation alone\n",prb1,prb2);
    }
       // This numerical error condition should never occur:
@@ -1268,8 +1268,8 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option) const
    if (TMath::Abs(rsum2-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h2=%s\n",h2->GetName());
 
    return prb;
-}   
-   
+}
+
 //______________________________________________________________________________
 Int_t TH2::Merge(TCollection *list)
 {
@@ -1277,13 +1277,13 @@ Int_t TH2::Merge(TCollection *list)
    //This function computes the min/max for the axes,
    //compute a new number of bins, if necessary,
    //add bin contents, errors and statistics.
-   //The function returns the merged number of entries if the merge is 
+   //The function returns the merged number of entries if the merge is
    //successfull, -1 otherwise.
    //
    //IMPORTANT remark. The 2 axis x and y may have different number
    //of bins and different limits, BUT the largest bin width must be
    //a multiple of the smallest bin width.
-   
+
    if (!list) return 0;
    TIter next(list);
    Double_t umin,umax,vmin,vmax;
@@ -1304,7 +1304,7 @@ Int_t TH2::Merge(TCollection *list)
    for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
    GetStats(totstats);
    Bool_t same = kTRUE;
-   while ((h=(TH2*)next())) {     
+   while ((h=(TH2*)next())) {
       if (!h->InheritsFrom(TH2::Class())) {
          Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
          return -1;
@@ -1313,7 +1313,7 @@ Int_t TH2::Merge(TCollection *list)
       h->GetStats(stats);
       for (i=0;i<kNstat;i++) totstats[i] += stats[i];
       nentries += (Int_t)h->GetEntries();
-      
+
       // find min/max of the axes
       umin = h->GetXaxis()->GetXmin();
       umax = h->GetXaxis()->GetXmax();
@@ -1324,27 +1324,27 @@ Int_t TH2::Merge(TCollection *list)
       if (nx != nbix || ny != nbiy ||
               umin != xmin || umax != xmax || vmin != ymin || vmax != ymax) {
          same = kFALSE;
-         if (umin < xmin) xmin = umin;  
-         if (umax > xmax) xmax = umax;  
-         if (vmin < ymin) ymin = vmin;  
-         if (vmax > ymax) ymax = vmax;  
-         if (h->GetXaxis()->GetBinWidth(1) > bwix) bwix = h->GetXaxis()->GetBinWidth(1);     
-         if (h->GetYaxis()->GetBinWidth(1) > bwiy) bwiy = h->GetYaxis()->GetBinWidth(1);     
+         if (umin < xmin) xmin = umin;
+         if (umax > xmax) xmax = umax;
+         if (vmin < ymin) ymin = vmin;
+         if (vmax > ymax) ymax = vmax;
+         if (h->GetXaxis()->GetBinWidth(1) > bwix) bwix = h->GetXaxis()->GetBinWidth(1);
+         if (h->GetYaxis()->GetBinWidth(1) > bwiy) bwiy = h->GetYaxis()->GetBinWidth(1);
       }
    }
-   
+
    //  if different binning compute best binning
    if (!same) {
       nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > 100) nbix /= 2;
       nbiy = (Int_t) ((ymax-ymin)/bwiy +0.1); while(nbiy > 100) nbiy /= 2;
       SetBins(nbix,xmin,xmax,nbiy,ymin,ymax);
    }
-   
+
    //merge bin contents and errors
    next.Reset();
    Int_t ibin, bin, binx, biny, ix, iy;
    Double_t cu;
-   while ((h=(TH2*)next())) {     
+   while ((h=(TH2*)next())) {
       nx   = h->GetXaxis()->GetNbins();
       ny   = h->GetYaxis()->GetNbins();
       for (biny=0;biny<=ny+1;biny++) {
@@ -1362,21 +1362,21 @@ Int_t TH2::Merge(TCollection *list)
          }
       }
    }
-   
+
    //copy merged stats
    PutStats(totstats);
    SetEntries(nentries);
-   
+
    return nentries;
-}   
+}
 
 //______________________________________________________________________________
 
 TH2 *TH2::RebinX(Int_t ngroup, const char *newname)
 {
-   // Rebin only the X axis 
+   // Rebin only the X axis
    // see Rebin2D
-   
+
    return Rebin2D(ngroup, 1, newname);
 }
 
@@ -1384,13 +1384,13 @@ TH2 *TH2::RebinX(Int_t ngroup, const char *newname)
 
 TH2 *TH2::RebinY(Int_t ngroup, const char *newname)
 {
-   // Rebin only the Y axis 
+   // Rebin only the Y axis
    // see Rebin2D
-   
+
    return Rebin2D(1, ngroup, newname);
 }
 
-   
+
 //______________________________________________________________________________
 
 
@@ -1400,7 +1400,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
 //         =================================================================================
 //   if newname is not blank a new temporary histogram hnew is created.
 //   else the current histogram is modified (default)
-//   The parameter nxgroup/nygroup indicate how many bins along the xaxis/yaxis of this 
+//   The parameter nxgroup/nygroup indicate how many bins along the xaxis/yaxis of this
 //   have to me merged into one bin of hnew
 //   If the original histogram has errors stored (via Sumw2), the resulting
 //   histograms has new errors correctly calculated.
@@ -1412,14 +1412,12 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
 //     TH2 *hnew = hpxpy->RebinY(5,"hnew"); // creates a new histogram hnew
 //                                          // merging 5 bins of h1 along the yaxis in one bin
 //
-//   NOTE1: If nxgroup/nygroup is not an exact divider of the number of bins,
-//          along the xaxis/yaxis the top limit(s) of the rebinned histogram 
-//          is changed to the upper edge of the xbin=newxbins*nxgroup resp. 
-//          ybin=newybins*nygroup and the corresponding bins are added to 
+//   NOTE : If nxgroup/nygroup is not an exact divider of the number of bins,
+//          along the xaxis/yaxis the top limit(s) of the rebinned histogram
+//          is changed to the upper edge of the xbin=newxbins*nxgroup resp.
+//          ybin=newybins*nygroup and the corresponding bins are added to
 //          the overflow bin.
 //          Statistics will be recomputed from the new bin contents.
-//
-//   NOTE2: This function cannot be used with variable bin size histograms.
 
    Int_t nxbins  = fXaxis.GetNbins();
    Int_t nybins  = fYaxis.GetNbins();
@@ -1435,17 +1433,9 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
       Error("Rebin", "Illegal value of nygroup=%d",nygroup);
       return 0;
    }
-   if (fDimension != 2 || InheritsFrom("TProfile")) {
-      Error("Rebin", "Operation valid on 2-D histograms only");
-      return 0;
-   }
-   if (fXaxis.GetXbins()->GetSize() > 0 || fYaxis.GetXbins()->GetSize() > 0) {
-      Error("Rebin", "Cannot rebin variable bin size histograms");
-      return 0;
-   }
 
    Int_t newxbins = nxbins/nxgroup;
-   Int_t newybins = nybins/nygroup;   
+   Int_t newybins = nybins/nygroup;
 
    // Save old bin contents into a new array
    Double_t entries = fEntries;
@@ -1459,12 +1449,12 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    if (fSumw2.fN != 0) {
       oldErrors = new Double_t[nxbins*nybins];
       for (Int_t xbin = 0; xbin < nxbins; xbin++) {
-         for (Int_t ybin = 0; ybin < nybins; ybin++) {    
+         for (Int_t ybin = 0; ybin < nybins; ybin++) {
 	    oldErrors[xbin*nybins+ybin] = GetBinError(xbin+1, ybin+1);
 	 }
       }
    }
-   
+
    // create a clone of the old histogram if newname is specified
    TH2 *hnew = this;
    if (newname && strlen(newname)) {
@@ -1480,7 +1470,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    if(newybins*nygroup != nybins) {
       ymax = fYaxis.GetBinUpEdge(newybins*nygroup);
       hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
-   }      
+   }
    // save the TAttAxis members (reset by SetBins) for x axis
         Int_t    NXdivisions  = fXaxis.GetNdivisions();
         Color_t  XAxisColor   = fXaxis.GetAxisColor();
@@ -1509,15 +1499,27 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
 
    // copy merged bin contents (ignore under/overflows)
    if (nxgroup != 1 || nygroup != 1) {
-      hnew->SetBins(newxbins,xmin,xmax, newybins, ymin, ymax); //this also changes errors array (if any)
+      if(fXaxis.GetXbins()->GetSize() > 0 || fYaxis.GetXbins()->GetSize() > 0){
+	 // variable bin sizes in x or y, don't treat both cases separately
+	 Axis_t *xbins = new Axis_t[newxbins+1];
+	 for(Int_t i = 0; i <= newxbins; ++i) xbins[i] = fXaxis.GetBinLowEdge(1+i*nxgroup);
+	 Axis_t *ybins = new Axis_t[newybins+1];
+	 for(Int_t i = 0; i <= newybins; ++i) ybins[i] = fYaxis.GetBinLowEdge(1+i*nygroup);
+	 hnew->SetBins(newxbins,xbins, newybins, ybins);//changes also errors array (if any)
+         delete [] xbins;
+	 delete [] ybins;
+      } else {
+	 hnew->SetBins(newxbins, xmin, xmax, newybins, ymin, ymax);//changes also errors array
+      }
+
       Double_t binContent, binError;
-      Int_t oldxbin = 0;      
+      Int_t oldxbin = 0;
       for (Int_t xbin = 0; xbin <= newxbins; xbin++) {
          Int_t oldybin = 0;
-         for (Int_t ybin = 0; ybin <= newybins; ybin++) {          
+         for (Int_t ybin = 0; ybin <= newybins; ybin++) {
             binContent = 0;
             binError   = 0;
-            for (Int_t i = 0; i < nxgroup; i++) { 
+            for (Int_t i = 0; i < nxgroup; i++) {
                if (oldxbin+i >= nxbins) break;
 	       for (Int_t j =0; j < nygroup; j++) {
 	          if (oldybin+j >= nybins) break;
@@ -1557,14 +1559,14 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    fYaxis.SetTitleSize(YTitleSize);
    fYaxis.SetTitleColor(YTitleColor);
    fYaxis.SetTitleFont(YTitleFont);
-   
+
    hnew->SetEntries(entries); //was modified by SetBinContent
 
    delete [] oldBins;
    if (oldErrors) delete [] oldErrors;
    return hnew;
 }
-  
+
 //______________________________________________________________________________
 TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Option_t *option) const
 {
@@ -1632,7 +1634,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
      }
   }
   if (pname != name)  delete [] pname;
-  
+
 // Copy attributes
   h1->GetXaxis()->ImportAttributes(this->GetXaxis());
   h1->SetLineColor(this->GetLineColor());
@@ -1645,7 +1647,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
   for (Int_t binx =0;binx<=nx+1;binx++) {
      for (Int_t biny=firstybin;biny<=lastybin;biny++) {
         if (ncuts) {
-           if (!fPainter->IsInside(binx,biny)) continue; 
+           if (!fPainter->IsInside(binx,biny)) continue;
         }
         cont =  GetCellContent(binx,biny);
         if (cont) {
@@ -1654,7 +1656,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
      }
   }
   if (firstybin <=1 && lastybin >= ny) h1->SetEntries(fEntries);
-  
+
   if (opt.Contains("d")) {
      TVirtualPad *padsav = gPad;
      TVirtualPad *pad = gROOT->GetSelectedPad();
@@ -1662,7 +1664,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
      char optin[100];
      strcpy(optin,opt.Data());
      char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
-     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}        
+     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
      if (!gPad->FindObject(h1)) {
         h1->Draw(optin);
      } else {
@@ -1740,7 +1742,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
      }
   }
   if (pname != name)  delete [] pname;
-  
+
 // Copy attributes
   h1->GetXaxis()->ImportAttributes(this->GetYaxis());
   h1->SetLineColor(this->GetLineColor());
@@ -1753,7 +1755,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
   for (Int_t biny =0;biny<=ny+1;biny++) {
      for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
         if (ncuts) {
-           if (!fPainter->IsInside(binx,biny)) continue; 
+           if (!fPainter->IsInside(binx,biny)) continue;
         }
         cont =  GetCellContent(binx,biny);
         if (cont) {
@@ -1762,7 +1764,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
      }
   }
   if (firstxbin <=1 && lastxbin >= nx) h1->SetEntries(fEntries);
-  
+
   if (opt.Contains("d")) {
      TVirtualPad *padsav = gPad;
      TVirtualPad *pad = gROOT->GetSelectedPad();
@@ -1770,7 +1772,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
      char optin[100];
      strcpy(optin,opt.Data());
      char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
-     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}        
+     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
      if (!gPad->FindObject(h1)) {
         h1->Draw(optin);
      } else {
@@ -1854,21 +1856,21 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      if (opt.Contains("e")) h1->Sumw2();
   }
   if (pname != name)  delete [] pname;
-  
+
 // Copy attributes
   h1->GetXaxis()->ImportAttributes(this->GetXaxis());
   h1->SetLineColor(this->GetLineColor());
   h1->SetFillColor(this->GetFillColor());
   h1->SetMarkerColor(this->GetMarkerColor());
   h1->SetMarkerStyle(this->GetMarkerStyle());
-  
+
 // Fill the projected histogram
   Double_t cont,err,err2;
   for (Int_t binx =0;binx<=nx+1;binx++) {
      err2 = 0;
      for (Int_t biny=firstybin;biny<=lastybin;biny++) {
         if (ncuts) {
-           if (!fPainter->IsInside(binx,biny)) continue; 
+           if (!fPainter->IsInside(binx,biny)) continue;
         }
         cont  = GetCellContent(binx,biny);
         err   = GetCellError(binx,biny);
@@ -1880,7 +1882,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      if (h1->GetSumw2N()) h1->SetBinError(binx,TMath::Sqrt(err2));
   }
   if (firstybin <=1 && lastybin >= ny) h1->SetEntries(fEntries);
-  
+
   if (opt.Contains("d")) {
      TVirtualPad *padsav = gPad;
      TVirtualPad *pad = gROOT->GetSelectedPad();
@@ -1888,7 +1890,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      char optin[100];
      strcpy(optin,opt.Data());
      char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
-     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}        
+     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
      if (!gPad->FindObject(h1)) {
         h1->Draw(optin);
      } else {
@@ -1896,7 +1898,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      }
      if (padsav) padsav->cd();
   }
-  
+
   return h1;
 }
 
@@ -1973,7 +1975,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      if (opt.Contains("e")) h1->Sumw2();
   }
   if (pname != name)  delete [] pname;
-  
+
 // Copy attributes
   h1->GetXaxis()->ImportAttributes(this->GetYaxis());
   h1->SetLineColor(this->GetLineColor());
@@ -1987,7 +1989,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      err2 = 0;
      for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
         if (ncuts) {
-           if (!fPainter->IsInside(binx,biny)) continue; 
+           if (!fPainter->IsInside(binx,biny)) continue;
         }
         cont  = GetCellContent(binx,biny);
         err   = GetCellError(binx,biny);
@@ -1999,7 +2001,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      if (h1->GetSumw2N()) h1->SetBinError(biny,TMath::Sqrt(err2));
   }
   if (firstxbin <=1 && lastxbin >= nx) h1->SetEntries(fEntries);
-  
+
   if (opt.Contains("d")) {
      TVirtualPad *padsav = gPad;
      TVirtualPad *pad = gROOT->GetSelectedPad();
@@ -2007,7 +2009,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      char optin[100];
      strcpy(optin,opt.Data());
      char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
-     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}        
+     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
      if (!gPad->FindObject(h1)) {
         h1->Draw(optin);
      } else {
@@ -2015,7 +2017,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      }
      if (padsav) padsav->cd();
   }
-  
+
   return h1;
 }
 
@@ -2044,7 +2046,7 @@ void TH2::Reset(Option_t *option)
 
 //______________________________________________________________________________
 void TH2::Streamer(TBuffer &R__b)
-{ 
+{
    // Stream an object of class TH2.
 
    if (R__b.IsReading()) {
@@ -2061,7 +2063,7 @@ void TH2::Streamer(TBuffer &R__b)
       R__b >> fTsumwy2;
       R__b >> fTsumwxy;
       //====end of old versions
-      
+
    } else {
       TH2::Class()->WriteBuffer(R__b,this);
    }
@@ -2203,7 +2205,7 @@ void TH2C::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
-   
+
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
    TArrayC::Set(n);
@@ -2237,7 +2239,7 @@ void TH2C::Streamer(TBuffer &R__b)
          R__b.CheckByteCount(R__s, R__c, TH2C::IsA());
       }
       //====end of old versions
-      
+
    } else {
       TH2C::Class()->WriteBuffer(R__b,this);
    }
@@ -2433,7 +2435,7 @@ void TH2S::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
-   
+
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
    TArrayS::Set(n);
@@ -2467,7 +2469,7 @@ void TH2S::Streamer(TBuffer &R__b)
          R__b.CheckByteCount(R__s, R__c, TH2S::IsA());
       }
       //====end of old versions
-      
+
    } else {
       TH2S::Class()->WriteBuffer(R__b,this);
    }
@@ -2663,7 +2665,7 @@ void TH2I::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
-   
+
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
    TArrayI::Set(n);
@@ -2791,7 +2793,7 @@ TH2F::TH2F(const TMatrixFBase &m)
       for (Int_t j=jlow;j<=jup;j++) {
          SetCellContent(j-jlow+1,i-ilow+1,m(i,j));
       }
-   }     
+   }
 }
 
 //______________________________________________________________________________
@@ -2855,7 +2857,7 @@ void TH2F::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
-   
+
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
    TArrayF::Set(n);
@@ -2889,7 +2891,7 @@ void TH2F::Streamer(TBuffer &R__b)
          R__b.CheckByteCount(R__s, R__c, TH2F::IsA());
       }
       //====end of old versions
-      
+
    } else {
       TH2F::Class()->WriteBuffer(R__b,this);
    }
@@ -3025,7 +3027,7 @@ TH2D::TH2D(const TMatrixDBase &m)
       for (Int_t j=jlow;j<=jup;j++) {
          SetCellContent(j-jlow+1,i-ilow+1,m(i,j));
       }
-   }     
+   }
 }
 
 //______________________________________________________________________________
@@ -3089,7 +3091,7 @@ void TH2D::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
 // Reallocate bin contents array
-   
+
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
    TArrayD::Set(n);
@@ -3123,7 +3125,7 @@ void TH2D::Streamer(TBuffer &R__b)
          R__b.CheckByteCount(R__s, R__c, TH2D::IsA());
       }
       //====end of old versions
-      
+
    } else {
       TH2D::Class()->WriteBuffer(R__b,this);
    }
