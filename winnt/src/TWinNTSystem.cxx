@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.28 2002/01/30 06:48:23 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.29 2002/02/26 17:57:20 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1652,8 +1652,8 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
 
    if ( (opt.First('L')!=kNPOS) ) {
       TRegexp separator("[^ \\t\\s]+");
-      TRegexp user_dll("\.dll$", kFALSE);
-      TRegexp user_lib("\.lib$", kFALSE);
+      TRegexp user_dll("\\.dll$", kFALSE);
+      TRegexp user_lib("\\.lib$", kFALSE);
       TString s;
       Ssiz_t start, index, end;
       start = index = end = 0;
@@ -1661,6 +1661,8 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
       while ((start < libs.Length()) && (index != kNPOS)) {
          index = libs.Index(separator,&end,start);
          if (index >= 0) {
+            // Change .dll into .lib and remove the
+            // path info if it not accessible.
             s = libs(index,end);
             if (s.Index(user_dll) != kNPOS) {
                s.ReplaceAll(".dll",".lib");
@@ -1683,7 +1685,7 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
       ntlibs = libs;
    }
 
-   fListLibs = ntlibs;
+   fListLibs.ReplaceAll("/","\\");
    return fListLibs;
 }
 
