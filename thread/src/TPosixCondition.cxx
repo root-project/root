@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name$:$Id$
+// @(#)root/thread:$Name:  $:$Id: TPosixCondition.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -33,7 +33,7 @@ TPosixCondition::TPosixCondition(TMutexImp *m)
    // Create Condition variable. Ctor must be given a pointer to an
    // existing mutex. The condition variable is then linked to the mutex,
    // so that there is an implicit unlock and lock around Wait() and
-   // TImedWait().
+   // TimedWait().
 
    fMutex = (TPosixMutex *) m;
 
