@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.91 2004/11/16 17:15:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.92 2004/11/19 14:28:17 rdm Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -222,6 +222,79 @@ Double_t *TMath::Cross(Double_t v1[3],Double_t v2[3],Double_t out[3])
     out[1] = v1[2] * v2[0] - v1[0] * v2[2];
     out[2] = v1[0] * v2[1] - v1[1] * v2[0];
     return out;
+}
+
+//______________________________________________________________________________
+Double_t TMath::DiLog(Double_t x)
+{
+   // The DiLogarithm function
+   // Code translated by R.Brun from CERNLIB DILOG function C332
+
+   const Double_t HF  = 0.5;
+   const Double_t PI  = TMath::Pi();
+   const Double_t PI2 = PI*PI;
+   const Double_t PI3 = PI2/3;
+   const Double_t PI6 = PI2/6;
+   const Double_t PI12 = PI2/12;
+   const Double_t C[20] = {0.42996693560813697, 0.40975987533077105,
+     -0.01858843665014592, 0.00145751084062268,-0.00014304184442340,
+      0.00001588415541880,-0.00000190784959387, 0.00000024195180854,
+     -0.00000003193341274, 0.00000000434545063,-0.00000000060578480,
+      0.00000000008612098,-0.00000000001244332, 0.00000000000182256,
+     -0.00000000000027007, 0.00000000000004042,-0.00000000000000610,
+      0.00000000000000093,-0.00000000000000014, 0.00000000000000002};
+   
+   Double_t T,H,Y,S,A,ALFA,B1,B2,B0;
+   
+   if (x == 1) {
+       H = PI6;
+   } else if (x == -1) {
+       H = -PI12;
+   } else {
+       T = -x;
+       if (T <= -2) {
+           Y = -1/(1+T);
+           S = 1;
+           B1= TMath::Log(-T);
+           B2= TMath::Log(1+1/T);
+           A = -PI3+HF*(B1*B1-B2*B2);
+       } else if (T < -1) {
+           Y = -1-T;
+           S = -1;
+           A = TMath::Log(-T);
+           A = -PI6+A*(A+TMath::Log(1+1/T));
+       } else if (T <= -0.5) {
+           Y = -(1+T)/T;
+           S = 1;
+           A = TMath::Log(-T);
+           A = -PI6+A*(-HF*A+TMath::Log(1+T));
+       } else if (T < 0) {
+           Y = -T/(1+T);
+           S = -1;
+           B1= TMath::Log(1+T);
+           A = HF*B1*B1;
+       } else if (T <= 1) {
+           Y = T;
+           S = 1;
+           A = 0;
+       } else {
+           Y = 1/T;
+           S = -1;
+           B1= TMath::Log(T);
+           A = PI6+HF*B1*B1;
+       }
+       H    = Y+Y-1;
+       ALFA = H+H;
+       B1   = 0;
+       B2   = 0;
+       for (Int_t i=19;i>=0;i--){
+          B0 = C[i] + ALFA*B1-B2;
+          B2 = B1;
+          B1 = B0;
+       }
+       H = -(S*(B0-H*B2)+A);
+    }
+    return H;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.57 2004/11/15 22:28:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.58 2004/11/16 17:15:34 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -344,6 +344,7 @@ namespace TMath {
           Double_t Binomial(Int_t n,Int_t k);  // Calculate the binomial coefficient n over k
           Double_t BinomialI(Double_t p, Int_t n, Int_t k);
           Double_t CauchyDist(Double_t x, Double_t t=0, Double_t s=1);
+          Double_t DiLog(Double_t x);
           Double_t Erf(Double_t x);
           Double_t ErfInverse(Double_t x);
           Double_t Erfc(Double_t x);
