@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.3 2004/08/16 15:05:52 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.4 2004/09/15 14:56:35 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -103,13 +103,13 @@ void TGedFrame::SetActive(Bool_t active)
 }
 
 //______________________________________________________________________________
- void TGedFrame::RecursiveRemove(TObject* obj)
+ void TGedFrame::RecursiveRemove(TObject* /*obj*/)
 {
    // Remove references to fModel in case the fModel is being deleted
    // Deactivate attribute frames if they point to obj
 
-   if (fModel != obj ) return;
-      SetModel(fPad,0,0);
+//   if (fModel != obj ) return;
+//      SetModel(fPad,0,0);
 }
 
 //______________________________________________________________________________
@@ -147,8 +147,10 @@ void TGedFrame::Update()
 {
    // Update the current pad when an attribute is changed via GUI.
 
-   fPad->Modified();
-   fPad->Update();
+   if (fPad) {
+      fPad->Modified();
+      fPad->Update();
+   }
 }
 
 //______________________________________________________________________________
@@ -193,12 +195,13 @@ void TGedNameFrame::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = obj;
    fPad = pad;
 
+   TString string;
+
    if (obj == 0) {
       SetActive(kFALSE);
       return;
    }
 
-   TString string;
    string.Append(fModel->GetName());
    string.Append("::");
    string.Append(fModel->ClassName());

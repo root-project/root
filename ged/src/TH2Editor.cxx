@@ -621,9 +621,6 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
    // Pick up the used values of histogram attributes.
    
-   fModel = 0;
-   fPad = 0;
-
    if (obj == 0 || !obj->InheritsFrom("TH2")) {
       SetActive(kFALSE);
       fTab->SetEnabled(1,kFALSE);

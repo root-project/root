@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.8 2004/06/25 17:13:23 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.9 2004/07/24 16:26:31 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -58,6 +58,7 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
       fClass  = fModel->IsA();
       GetEditors();
       ConnectToCanvas(canvas);
+      SetWindowName(Form("%s", canvas->GetName()));
    } else {
       fModel  = 0;
       fPad    = 0;
@@ -68,7 +69,8 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
    MapSubwindows();
    Resize(GetDefaultSize());
    MapWindow();
-   Resize(GetWidth(), canvas->GetWh());
+   if (canvas) Resize(GetWidth(), canvas->GetWh());
+   gROOT->GetListOfCleanups()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -76,8 +78,9 @@ void TGedEditor::CloseWindow()
 {
    // When closed via WM close button, just unmap (i.e. hide) editor
    // for later use.
-
+   
    Hide();
+   gROOT->GetListOfCleanups()->Remove(this);
 }
 
 //______________________________________________________________________________
@@ -196,16 +199,27 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
    fModel = obj;
    fPad   = pad;
 
-   if ((obj->IsA() != fClass) && !obj->IsA()->InheritsFrom(fClass)) {
+   if ((obj != 0) && (obj->IsA() != fClass) && !obj->IsA()->InheritsFrom(fClass)) {
       fClass = obj->IsA();
       GetEditors();
+   } else if ((obj == 0) && fPad) {
+      TCanvas *canvas = fPad->GetCanvas();
+      if (canvas) {
+         fPad->SetSelected(fPad);
+         canvas->Selected(fPad, fPad, 0);
+         return;
+      } else {
+         DeleteEditors();
+         DeleteWindow();
+         return;
+      }
    }
 
    TGFrameElement *el;
    TIter next(fStyle->GetList());
    while ((el = (TGFrameElement *) next())) {
       if ((el->fFrame)->InheritsFrom("TGedFrame"))
-         ((TGedFrame *)(el->fFrame))->SetModel(pad, obj, event);
+         ((TGedFrame *)(el->fFrame))->SetModel(fPad, fModel, event);
    }
 }
 
@@ -215,6 +229,8 @@ void TGedEditor::Show()
    // Show editor.
 
    MapWindow();
+   if (!gROOT->GetListOfCleanups()->FindObject(this))
+      gROOT->GetListOfCleanups()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -242,6 +258,7 @@ void TGedEditor::Hide()
 {
    // Hide editor.
 
+   gROOT->GetListOfCleanups()->Remove(this);
    UnmapWindow();
 }
 
@@ -250,6 +267,7 @@ TGedEditor::~TGedEditor()
 {
   // Editor destructor.
 
+  gROOT->GetListOfCleanups()->Remove(this);
   fStyle->Cleanup();
   Cleanup();
 }
@@ -260,6 +278,10 @@ TGedEditor::~TGedEditor()
    // Remove references to fModel in case the fModel is being deleted
    // Deactivate attribute frames if they point to obj
 
-   if (fModel != obj ) return;
-   SetModel(fPad,0,0);
+
+   if (fModel != obj) return;
+   if (obj == fPad) 
+      SetModel(fCanvas, fCanvas, 0);
+   else
+      SetModel(fPad, fPad, 0);
 }

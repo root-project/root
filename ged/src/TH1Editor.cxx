@@ -358,8 +358,6 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
    // Pick up the used values of histogram attributes.
    
-   fModel = 0;
-   fPad = 0;
    if (obj == 0 || !obj->InheritsFrom("TH1") /*|| obj->InheritsFrom("TH2")  || obj->InheritsFrom("TProfile")*/) {
       SetActive(kFALSE);
       fTab->SetEnabled(1, kFALSE);  // deactivate the second tab (tab id is 1)
@@ -390,7 +388,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    fModel = obj;
    fPad = pad;
-
+   fBinHist = (TH1*)fPad->GetPrimitive("BinHist");
    TGListBox* lb;
    fHist = (TH1*)fModel;
    const char *text = fHist->GetTitle();
@@ -1341,10 +1339,10 @@ void TH1Editor::DoBinMoved(Int_t numx)
       fBinHist = (TH1*)fHist->Clone("BinHist");
       fDrawOpt = GetDrawOption();
       fName = fHist->GetName();
-      if (fDelaydraw->GetState()!=kButtonDown) {
-         delete fHist;
-         fHist=0;
-      }
+      //if (fDelaydraw->GetState()!=kButtonDown) {
+      //   delete fHist;
+      //   fHist=0;
+      //}
    } 
    // if the slider already has been moved and the clone is saved
    Int_t nx = fBinHist->GetXaxis()->GetNbins();
@@ -1357,19 +1355,22 @@ void TH1Editor::DoBinMoved(Int_t numx)
    Int_t maxx = (Int_t)nx/divx[numx];
    if (maxx==1) maxx=2;
    if (fDelaydraw->GetState()==kButtonUp){
-      if (fPad->GetPrimitive(fName)) {
-         delete fHist; 
-         fHist=0;
-      }
+      //if (fPad->GetPrimitive(fName)) {
+      //   delete fHist; 
+      //   fHist=0;
+      //}
       fPad->cd();
-      fHist = (TH1*)fBinHist->Clone(fName + "_Bin");
+      //fHist = (TH1*)fBinHist->Clone(fName + "_Bin");
+      fHist->Reset();
+      fHist->SetBins(nx,fBinHist->GetXaxis()->GetXmin(),fBinHist->GetXaxis()->GetXmax());
+      fHist->Add(fBinHist);
       fHist->ResetBit(TH1::kCanRebin);
       fHist->Rebin(divx[numx]);
       if (fDim->GetState()==kButtonDown) str = GetHistErrorLabel()+GetHistAddLabel();
       else if (fDim0->GetState()==kButtonDown) str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistErrorLabel();
       if (fAddLine->GetState()==kButtonDown) str += "HIST";   
       fHist->Draw(str);
-      fHist->SetName(fName + "_Bin");
+      //fHist->SetName(fName + "_Bin");
       fModel=fHist;
       TAxis* xaxis = fHist->GetXaxis();
       Axis_t XBinWidth = xaxis->GetBinWidth(1);
