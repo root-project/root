@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.121 2004/03/17 07:52:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.122 2004/03/18 13:52:05 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -689,8 +689,9 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
       if (opt.Contains("s")) {
          // spline interpolation creating a new spline
          TSpline3 *s = new TSpline3("",this);
-         return s->Eval(x);
+         Double_t result = s->Eval(x);
          delete s;
+         return result;
       }
       //linear interpolation
       //find point in graph immediatly below x
