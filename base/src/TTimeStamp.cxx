@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.1 2002/01/31 14:09:25 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -94,7 +94,7 @@ TTimeStamp::TTimeStamp(UInt_t year, UInt_t month,
                        UInt_t day,  UInt_t hour,
                        UInt_t min,  UInt_t sec,
                        UInt_t nsec,
-                       Bool_t isUTC, const Int_t secOffset)
+                       Bool_t isUTC, Int_t secOffset)
 {
    // Create a TTimeStamp and set it to the specified year, month,
    // day, time, hour, minute, second and nanosec.
