@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.5 2000/12/19 14:32:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.6 2001/01/18 10:51:34 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -17,6 +17,10 @@
 // and proofd.                                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#ifdef HAVE_CONFIG
+#include "config.h"
+#endif
 
 #ifndef R__LYNXOS
 #include <sys/stat.h>
@@ -87,7 +91,11 @@ Bool_t TAuthenticate::Authenticate()
    if (fSecurity == kSRP && fUser != "anonymous" && fUser != "rootd") {
       if (!fgSecAuthHook) {
          char *p;
+#ifdef ROOTLIBDIR
+         TString lib = TString(ROOTLIBDIR) + "/libSRPAuth";
+#else
          TString lib = TString(gRootDir) + "/lib/libSRPAuth";
+#endif
          if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
             delete [] p;
             gSystem->Load(lib);
