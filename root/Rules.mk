@@ -17,6 +17,8 @@ TEST_TARGETS += $(TEST_TARGETS_DIR)
 CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
 CLEAN_TARGETS += 
 
+ALL_LIBRARIES += *.d *.o *.so *.def *.exp *.dll *.lib 
+
 tests: $(TEST_TARGETS)
 	@echo "All test succeeded in `pwd`"
 
@@ -33,7 +35,7 @@ else
 endif
 
 clean:  $(CLEAN_TARGETS_DIR)
-	$(CMDECHO) rm -f main *Dict* Event.root *~ $(CLEAN_TARGETS)
+	$(CMDECHO) rm -f main *Dict\.* Event.root *~ $(CLEAN_TARGETS)
 
 
 # here we guess the platform
@@ -111,6 +113,12 @@ endif
 
 %.o: %.cxx
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
+
+%_cpp.$(DllSuf) : %.cpp
+	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\)
+
+%_C.$(DllSuf) : %.C
+	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\)
 
 define WarnFailTest
 	@echo Warning $@ has some known skipped failures "(in `pwd`)"
