@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.4 2003/01/13 15:04:30 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.5 2003/01/17 17:48:09 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -56,6 +56,7 @@ TSelectorDraw::TSelectorDraw()
    fDraw           = 0;
    fObject         = 0;
    fOldHistogram   = 0;
+   fObjEval        = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -694,6 +695,7 @@ void TSelectorDraw::CompileVariables(const char *varexp, const char *selection)
    fDimension = 0;
    ClearFormula();
    fMultiplicity = 0;
+   fObjEval = kFALSE;
 
    if (strlen(selection)) {
       fSelect = new TTreeFormula("Selection",selection,fTree);
@@ -734,6 +736,13 @@ void TSelectorDraw::CompileVariables(const char *varexp, const char *selection)
    if (fManager->GetMultiplicity()>=1) fMultiplicity = fManager->GetMultiplicity();
 
    fDimension    = ncols;
+
+   if (ncols==1) {
+      TClass *cl = fVar1->EvalClass();
+      if (cl) {
+         fObjEval = kTRUE;
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -788,6 +797,11 @@ void TSelectorDraw::ProcessFill(Int_t entry)
 {
    // Called in the entry loop for all entries accepted by Select.
 
+   if (fObjEval) {
+      ProcessFillObject(entry);
+      return;
+   }
+
    if (fMultiplicity) {
       ProcessFillMultiple(entry);
       return;
@@ -815,6 +829,7 @@ void TSelectorDraw::ProcessFill(Int_t entry)
       fNfill = 0;
    }
 }
+
 //______________________________________________________________________________
 void TSelectorDraw::ProcessFillMultiple(Int_t /*entry*/)
 {
@@ -877,6 +892,62 @@ void TSelectorDraw::ProcessFillMultiple(Int_t /*entry*/)
          fNfill = 0;
       }
    }
+}
+
+//______________________________________________________________________________
+void TSelectorDraw::ProcessFillObject(Int_t /*entry*/)
+{
+   // Called in the entry loop for all entries accepted by Select.
+   // Case where the only variable returns an object (or pointer to).
+
+   // Complex case with multiplicity.
+
+   // Grab the array size of the formulas for this entry
+   Int_t ndata = fManager->GetNdata();
+   
+   // No data at all, let's move on to the next entry.
+   if (!ndata) return;
+
+   Int_t nfill0 = fNfill;   
+   Double_t ww = 0;
+
+   for (Int_t i=0;i<ndata;i++) {
+      if (i==0) {
+         if (fSelect) {
+            fW[fNfill] = fWeight*fSelect->EvalInstance(0);
+            if (!fW[fNfill] && !fSelectMultiple) return;
+         } else fW[fNfill] = fWeight;
+         ww = fW[nfill0];
+      } else if (fSelectMultiple) {
+         ww = fWeight*fSelect->EvalInstance(i);
+         if (ww == 0) continue;
+      }
+      if (fVar1) {
+         TClass *cl = fVar1->EvalClass();
+         if (cl==TBits::Class()) {
+
+            void *obj = fVar1->EvalObject();
+
+            TBits *bits = (TBits*)obj;
+            Int_t nbits = bits->GetNbits();
+            
+            Int_t nextbit = -1;
+            while(1) {
+               nextbit = bits->FirstSetBit(nextbit+1);
+               if (nextbit >= nbits) break;
+               fV1[fNfill] = nextbit;
+               fW[fNfill] =  ww;
+               fNfill++;
+            }
+            
+         }
+      }
+   }
+   if (fNfill >= fTree->GetEstimate()) {
+      TakeAction();
+      fNfill = 0;
+   }
+
 }
 
 //_______________________________________________________________________

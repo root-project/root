@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.3 2003/01/11 12:47:02 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.4 2003/01/13 15:04:30 rdm Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -63,6 +63,7 @@ protected:
     Bool_t         fVar3Multiple;   //  true if var3 has a variable index
     Bool_t         fSelectMultiple; //  true if selection has a variable index
     Bool_t         fCleanElist;     //  true if original Tree elist must be saved
+    Bool_t         fObjEval;        //  true if fVar1 returns an object (or pointer to).
 
 protected:
     virtual void      ClearFormula();
@@ -97,6 +98,7 @@ public:
     virtual Bool_t    Process(Int_t /*entry*/) { return kFALSE; }
     virtual void      ProcessFill(Int_t entry);
     virtual void      ProcessFillMultiple(Int_t entry);
+    virtual void      ProcessFillObject(Int_t entry);
     virtual void      SetEstimate(Int_t n);
     virtual void      TakeAction();
     virtual void      TakeEstimate();

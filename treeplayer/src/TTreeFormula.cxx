@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.106 2002/12/02 22:07:08 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.107 2003/01/17 17:48:09 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -137,6 +137,12 @@ public:
         //         fElementClassOwnerName = cl->GetName();
          fElementName.Append(".").Append(element->GetName());
       }
+   }
+
+   virtual TClass*   GetClass() const {
+      if (fNext) return fNext->GetClass();
+      if (fElement) return fElement->GetClassPointer();
+      return fClass;
    }
 
    virtual Int_t     GetCounterValue(TLeaf* leaf);
@@ -853,16 +859,43 @@ class TFormLeafInfoMethod : public TFormLeafInfo {
    TString fMethodName;
    TString fParams;
    Double_t fResult;
+   TString  fCopyFormat;
+   TString  fDeleteFormat;
+   void    *fValuePointer;
+  Bool_t    fIsByValue;
 public:
 
    TFormLeafInfoMethod(TClass* classptr = 0, TMethodCall *method = 0) :
-     TFormLeafInfo(classptr,0,0),fMethod(method) {
+     TFormLeafInfo(classptr,0,0),fMethod(method),
+     fCopyFormat(),fDeleteFormat(),fValuePointer(0),fIsByValue(kFALSE)
+  {
       if (method) {
-        fMethodName = method->GetMethodName();
-        fParams = method->GetParams();
+         fMethodName = method->GetMethodName();
+         fParams = method->GetParams();
+         TMethodCall::EReturnType r = fMethod->ReturnType();
+         if (r == TMethodCall::kOther) {
+            const char* rtype = fMethod->GetMethod()->GetReturnTypeName();
+            Long_t rprop = fMethod->GetMethod()->Property();
+            if (rtype[strlen(rtype)-1]!='*' &&
+                rtype[strlen(rtype)-1]!='&' &&
+                !(rprop & (kIsPointer|kIsReference)) ) {
+               fCopyFormat = "new ";
+               fCopyFormat += rtype;
+               fCopyFormat += "(*(";
+               fCopyFormat += rtype;
+               fCopyFormat += "*)%p)";
+               
+               fDeleteFormat  = "delete (";
+               fDeleteFormat += rtype;
+               fDeleteFormat += "*)%p;";
+
+               fIsByValue = kTRUE;
+            }
+         }
       }
    };
-   TFormLeafInfoMethod(const TFormLeafInfoMethod& orig) : TFormLeafInfo(orig) {
+   TFormLeafInfoMethod(const TFormLeafInfoMethod& orig) : TFormLeafInfo(orig) 
+  {
       fMethodName = orig.fMethodName;
       fParams = orig.fParams ;
       fResult = orig.fResult;
@@ -871,12 +904,27 @@ public:
       } else {
          fMethod = 0;
       }
+      fCopyFormat = orig.fCopyFormat;
+      fDeleteFormat = orig.fDeleteFormat;
+      fValuePointer = 0;
+      fIsByValue = orig.fIsByValue;
    }
    ~TFormLeafInfoMethod() {
+      if (fValuePointer) {
+         gROOT->ProcessLine(Form(fDeleteFormat.Data(),fValuePointer));
+      }
       delete fMethod;
    }
    virtual TFormLeafInfo* DeepCopy() const {
       return new TFormLeafInfoMethod(*this);
+   }
+
+   virtual TClass* GetClass() const {
+      if (fNext) return fNext->GetClass();
+      TMethodCall::EReturnType r = fMethod->ReturnType();
+      if (r!=TMethodCall::kOther) return 0;
+      TString return_type = gInterpreter->TypeName(fMethod->GetMethod()->GetReturnTypeName());
+      return gROOT->GetClass(return_type.Data());
    }
 
    virtual Bool_t    IsInteger() const {
@@ -904,7 +952,7 @@ public:
       return TFormLeafInfo::GetLocalValuePointer( from, instance);
    }
 
-   virtual void *GetLocalValuePointer(char *from, Int_t /*instance*/ = 0) {
+   virtual void *GetLocalValuePointer(char *from, Int_t instance = 0) {
 
       void *thisobj = from;
       if (!thisobj) return 0;
@@ -934,13 +982,22 @@ public:
          gInterpreter->ClearStack();
          return returntext;
 
-      } else if (fNext) {
+      } else if (r == TMethodCall::kOther) {
          char * char_result = 0;
+         if (fIsByValue) {
+            if (fValuePointer) {
+               gROOT->ProcessLine(Form(fDeleteFormat.Data(),fValuePointer));
+               fValuePointer = 0;
+            }
+         }
          fMethod->Execute(thisobj, &char_result);
+         if (fIsByValue) {
+            fValuePointer = (char*)gInterpreter->Calc(Form(fCopyFormat.Data(),char_result));
+            char_result = (char*)fValuePointer;
+         }
          gInterpreter->ClearStack();
-         Warning("TTreeFormula","Temporary object have been deleted before possible usage!");
          return char_result;
-
+         
       }
       return 0;
     }
@@ -2964,6 +3021,86 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
 }
 
 //______________________________________________________________________________
+TClass* TTreeFormula::EvalClass()
+{
+//*-*-*-*-*-*-*-*-*-*-*Evaluate the class of this treeformula*-*-*-*-*-*-*-*-*-*
+//*-*                  ======================================
+//
+//  If the 'value' of this formula is a simple pointer to an object,
+//  this function returns the TClass corresponding to its type.
+
+   if (fNoper != 1 || fNcodes <=0 ) return 0;
+
+   TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
+   switch(fLookupType[0]) {
+      case kDirect: {
+         if (leaf->IsA()==TLeafObject::Class()) {
+            return ((TLeafObject*)leaf)->GetClass();
+         } else if ( leaf->IsA()==TLeafElement::Class()) {
+            TBranchElement * br = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
+            return gROOT->GetClass( br->GetTypeName() );
+         } else {
+            return 0;
+         }
+      }
+      case kMethod: return 0; // kMethod is deprecated so let's no waste time implementing this.
+      case kDataMember: {
+        return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetClass();
+      }
+      default: return 0;
+   }
+
+
+}
+
+//______________________________________________________________________________
+void* TTreeFormula::EvalObject(int instance)
+{
+//*-*-*-*-*-*-*-*-*-*-*Evaluate this treeformula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                  =========================
+//
+//  Return the address of the object pointed to by the formula.
+//  Return 0 if the formula is not a single object
+//  The object type can be retrieved using by call EvalClass();
+
+   if (fNoper != 1 || fNcodes <=0 ) return 0;
+   
+
+   switch (fLookupType[0]) {
+      case kIndexOfEntry: 
+      case kEntries:      
+      case kLength:       
+      case kIteration:    
+        return 0;
+   }
+
+   TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
+
+   Int_t real_instance = GetRealInstance(instance,0);
+
+   if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());
+   else if (real_instance>fNdata[0]) return 0;
+   if (fAxis) {
+      return 0;
+   }
+   switch(fLookupType[0]) {
+      case kDirect: {
+        if (real_instance) {
+          Warning("EvalObject","Not yet implement for kDirect and arrays.\nPlease contact the developers (%s)\n",GetName());
+        }
+        return leaf->GetValuePointer();
+      }
+      case kMethod: return GetValuePointerFromMethod(0,leaf);
+      case kDataMember: return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetValuePointer(leaf,real_instance);
+      default: return 0;
+   }
+
+
+}
+
+
+
+//______________________________________________________________________________
 Double_t TTreeFormula::EvalInstance(Int_t instance)
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this treeformula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -3285,6 +3422,51 @@ Double_t TTreeFormula::GetValueFromMethod(Int_t i, TLeaf *leaf) const
       Double_t d;
       m->Execute(thisobj, d);
       return (Double_t) d;
+   }
+   m->Execute(thisobj);
+
+   return 0;
+
+}
+
+//______________________________________________________________________________
+void* TTreeFormula::GetValuePointerFromMethod(Int_t i, TLeaf *leaf) const
+{
+//*-*-*-*-*-*-*-*Return result of a leafobject method*-*-*-*-*-*-*-*
+//*-*            ====================================
+//
+
+   TMethodCall *m = GetMethodCall(i);
+
+   if (m==0) return 0;
+
+   void *thisobj;
+   if (leaf->InheritsFrom("TLeafObject") ) thisobj = ((TLeafObject*)leaf)->GetObject();
+   else {
+      TBranchElement * branch = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
+      Int_t offset =  branch->GetInfo()->GetOffsets()[branch->GetID()];
+      char* address = (char*)branch->GetAddress();
+
+      if (address) thisobj = (char*) *(void**)(address+offset);
+      else thisobj = branch->GetObject();
+   }
+
+   TMethodCall::EReturnType r = m->ReturnType();
+
+   if (r == TMethodCall::kLong) {
+      Long_t l;
+      m->Execute(thisobj, l);
+      return 0; 
+   }
+   if (r == TMethodCall::kDouble) {
+      Double_t d;
+      m->Execute(thisobj, d);
+      return 0;
+   }
+   if (r == TMethodCall::kOther) {
+      char *c;
+      m->Execute(thisobj, &c);
+      return c;
    }
    m->Execute(thisobj);
 
