@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.59 2004/06/25 17:15:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.60 2004/08/05 10:06:13 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -800,7 +800,8 @@ void TGCompositeFrame::Cleanup()
 //______________________________________________________________________________
 void TGCompositeFrame::SetCleanup(Bool_t on)
 {
-   // If fCleanup is kTRUE Cleanup() method is called automatically at destructor
+   // If fCleanup is kTRUE Cleanup() method is called automatically
+   // by the destructor.
 
    fCleanup = on;
 }
@@ -1491,7 +1492,7 @@ void TGGroupFrame::DrawBorder()
    TGLayoutManager * lm = GetLayoutManager();
    if (lm->InheritsFrom(TGHorizontalLayout::Class())) b = fHeight - 1;
    else b = fHeight - t;
-   
+
    sep = 3;
    UInt_t rr = 5 + (sep << 1) + tw;
 

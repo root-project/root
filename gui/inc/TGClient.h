@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.15 2004/07/08 08:17:52 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.16 2004/08/02 11:43:12 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -130,8 +130,8 @@ public:
    TGFont          *GetFont(const TGFont *font);
    void             FreeFont(const TGFont *font);
 
-   Colormap_t   GetDefaultColormap() const { return fDefaultColormap; }
-   TGMimeTypes *GetMimeTypeList() const { return fMimeTypeList; }
+   Colormap_t       GetDefaultColormap() const { return fDefaultColormap; }
+   TGMimeTypes     *GetMimeTypeList() const { return fMimeTypeList; }
 
    THashList       *GetListOfWindows() const { return fWlist; }
    TList           *GetListOfPopups() const { return fPlist; }
