@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.24 2001/07/10 16:09:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.25 2001/09/25 07:10:47 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -465,17 +465,29 @@ void TBranch::FillLeaves(TBuffer &b)
 }
 
 //______________________________________________________________________________
-TBranch *TBranch::FindBranch(const char* branchname) 
+TBranch *TBranch::FindBranch(const char* searchname) 
 {
-   char name[kMaxLen];
+   char brname[kMaxLen];
+   char longsearchname[kMaxLen];
    TIter next(GetListOfBranches());
    
+   // For branches we allow for one level up to be prefixed to the
+   // name
+   
+   strcpy(longsearchname,GetName());
+   char *dim = (char*)strstr(longsearchname,"[");
+   if (dim) dim[0]='\0';
+   strcat(longsearchname,".");
+   strcat(longsearchname,searchname);
+
    TBranch *branch;
    while ((branch = (TBranch*)next())) {
-      strcpy(name,branch->GetName());
-      char *dim = (char*)strstr(name,"[");
+      strcpy(brname,branch->GetName());
+      dim = (char*)strstr(brname,"[");
       if (dim) dim[0]='\0';
-      if (!strcmp(branchname,name)) return branch;
+      if (!strcmp(searchname,brname)) return branch;
+
+      if (!strcmp(longsearchname,brname)) return branch;
    }
    
    //search in list of friends
