@@ -628,6 +628,25 @@ array pow(array& a,array& b)
   return(c);
 }
 
+/***********************************************
+* FIT filter
+***********************************************/
+array fir(array& in,array& filter) 
+{
+  // convolution is done in conv(). This function
+  // simply does energy normalization 
+  array out(0.0,0.0,in.getsize());
+  int i,j,k;
+  array fil=array(0.0,0.0 ,filter.n);
+  double sum=0;
+  k=fil.n;
+  for(i=0;i<k;i++) sum += filter.dat[i];
+  fil = filter/sum;
+  out=conv(in,fil);
+  return(out);
+}
+
+//////////////////////////////////////////////////////////
 
 #ifndef G__ARRAY_H
 #include <array.h>

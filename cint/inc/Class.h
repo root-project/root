@@ -131,8 +131,9 @@ G__ClassInfo {
 					,MatchMode mode=ConversionMatch
 					);
   G__MethodInfo GetMethod(const char *fname,const char *arg,long* poffset
-			  ,MatchMode mode=ConversionMatch
-			  );
+			  ,MatchMode mode=ConversionMatch);
+  G__MethodInfo GetMethod(const char *fname,struct G__param* libp,long* poffset
+			  ,MatchMode mode=ConversionMatch);
 #ifndef G__OLDIMPLEMENTATION2059
   G__MethodInfo GetDefaultConstructor();
   G__MethodInfo GetCopyConstructor();

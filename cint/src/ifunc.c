@@ -256,6 +256,7 @@ int hash; /* not used */
   struct G__var_array *var;
 #endif
 #ifndef G__OLDIMPLEMENTATION2058
+  int store_scopelevel = G__scopelevel;
   void *ptmpbuf;
 #endif
 
@@ -270,7 +271,13 @@ int hash; /* not used */
 #endif
 
 #ifndef G__OLDIMPLEMENTATION2058
-  ptmpbuf=G__allocheapobjectstack(bytecode->ifunc,bytecode->ifn,++G__scopelevel);
+  ptmpbuf=G__allocheapobjectstack(bytecode->ifunc,bytecode->ifn
+				  ,++G__scopelevel);
+#ifdef G__ASM_DBG
+  if(G__asm_dbg) {
+    fprintf(G__serr,"tmpobj=%p scope%d\n",ptmpbuf,G__scopelevel);
+  }
+#endif
 #endif
 
 #ifdef G__ASM_DBG
@@ -482,7 +489,8 @@ int hash; /* not used */
 
 #ifndef G__OLDIMPLEMENTATION2058
   if(ptmpbuf) G__copyheapobjectstack(ptmpbuf,result7,bytecode->ifunc,bytecode->ifn);
-  G__delete_autoobjectstack(--G__scopelevel);
+  G__scopelevel = store_scopelevel;
+  G__delete_autoobjectstack(G__scopelevel+1);
 #endif
 
   return(0);
@@ -1100,6 +1108,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
        char *pt2;
        pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );
        pt1 = funcheader + strlen( "operator<" );
+       /*char *pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );*/
        if ( *(pt2+2)=='<' ) {
           /* we have operator<< <...> */
           ++pt2;
@@ -5558,11 +5567,11 @@ int isrecursive;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1727
+  if(
 #ifndef G__OLDIMPLEMENTATION2061
-  if(!templatedConstructor && (pexplicitarg=strchr(funcname,'<'))) {
-#else
-  if((pexplicitarg=strchr(funcname,'<'))) {
+      !templatedConstructor &&
 #endif
+      (pexplicitarg=strchr(funcname,'<'))) {
     /* funcname="f<int>" ->  funcname="f" , pexplicitarg="int>" */
     int tmp=0;
     *pexplicitarg = 0;
@@ -8659,6 +8668,187 @@ int withConversion;
 #endif /* 1313 */
   for(match=G__EXACT;match<=G__STDCONV;match++) {
     ifunc=G__get_ifunchandle_base(funcname,&para,hash,p_ifunc,pifn,poffset
+#ifndef G__OLDIMPLEMENTATION912
+				  ,G__PUBLIC_PROTECTED_PRIVATE
+#else
+				  ,G__PUBLIC
+#endif
+				  ,match);
+    if(ifunc) return(ifunc);
+  }
+#endif /* 1928 */
+#endif /* 1989 */
+  return(ifunc);
+}
+
+
+/**************************************************************************
+* G__get_methodhandle2
+*
+*
+**************************************************************************/
+struct G__ifunc_table *G__get_methodhandle2(funcname,libp,p_ifunc
+					   ,pifn,poffset
+#ifndef G__OLDIMPLEMENTATION1989
+					   ,withConversion
+#endif
+					   )
+char *funcname;
+struct G__param *libp;
+struct G__ifunc_table *p_ifunc; 
+long *pifn;
+long *poffset;
+#ifndef G__OLDIMPLEMENTATION1989
+int withConversion;
+#endif
+{
+#ifdef G__OLDIMPLEMENTATION1928
+  int match;
+#endif
+  struct G__ifunc_table *ifunc;
+  int hash;
+  int temp;
+#ifdef G__OLDIMPLEMENTATION1928
+#ifndef G__OLDIMPLEMENTATION1313
+  struct G__funclist *funclist = (struct G__funclist*)NULL;
+#endif
+#endif
+#ifndef G__OLDIMPLEMENTATION1989
+  struct G__funclist *funclist = (struct G__funclist*)NULL;
+  int match;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1523
+  int store_def_tagnum = G__def_tagnum;
+  int store_tagdefining = G__tagdefining;
+  G__def_tagnum = p_ifunc->tagnum;
+  G__tagdefining = p_ifunc->tagnum;
+#endif
+#ifndef G__OLDIMPLEMENTATION1523
+  G__def_tagnum = store_def_tagnum;
+  G__tagdefining = store_tagdefining;
+#endif
+  G__hash(funcname,hash,temp);
+
+#ifndef G__OLDIMPLEMENTATION1989
+
+ if(withConversion) {
+   int tagnum = p_ifunc->tagnum;
+   int ifn = (int)(*pifn);
+
+#ifndef G__OLDIMPLEMENTATION1931
+   if(-1!=tagnum) G__incsetup_memfunc(tagnum);
+#endif
+
+   ifunc = G__overload_match(funcname,libp,hash,p_ifunc,G__TRYNORMAL
+			     ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
+   *poffset = 0;
+   *pifn = ifn;
+   if(ifunc) return(ifunc);
+   if(-1!=tagnum) {
+     int basen=0;
+     struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
+     while(basen<baseclass->basen) {
+       if(baseclass->baseaccess[basen]&G__PUBLIC) {
+#ifndef G__OLDIMPLEMENTATION1934
+	 G__incsetup_memfunc(baseclass->basetagnum[basen]);
+#endif
+	 *poffset = baseclass->baseoffset[basen];
+	 p_ifunc = G__struct.memfunc[baseclass->basetagnum[basen]];
+	 ifunc = G__overload_match(funcname,libp,hash,p_ifunc,G__TRYNORMAL
+				   ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
+	 *pifn = ifn;
+	 if(ifunc) return(ifunc);
+       }
+       ++basen;
+     }
+   }
+ }
+ else {
+#ifndef G__OLDIMPLEMENTATION1313
+   /* first, search for exact match */
+   ifunc=G__get_ifunchandle_base(funcname,libp,hash,p_ifunc,pifn,poffset
+				 ,G__PUBLIC_PROTECTED_PRIVATE,G__EXACT);
+   if(ifunc) return(ifunc);
+   
+   /* if no exact match, try to instantiate template function */
+   funclist = G__add_templatefunc(funcname,libp,hash,funclist,p_ifunc,0);
+   if(funclist && funclist->rate==G__EXACTMATCH) {
+     ifunc = funclist->ifunc;
+     *pifn = funclist->ifn;
+     G__funclist_delete(funclist);
+     return(ifunc);
+   }
+   G__funclist_delete(funclist);
+   
+#endif /* 1313 */
+   for(match=G__EXACT;match<=G__STDCONV;match++) {
+     ifunc=G__get_ifunchandle_base(funcname,libp,hash,p_ifunc,pifn,poffset
+#ifndef G__OLDIMPLEMENTATION912
+				   ,G__PUBLIC_PROTECTED_PRIVATE
+#else
+				   ,G__PUBLIC
+#endif
+				   ,match);
+     if(ifunc) return(ifunc);
+   }
+ }
+ 
+#else /* 1989 */
+
+#ifndef G__OLDIMPLEMENTATION1928
+ {
+   int tagnum = p_ifunc->tagnum;
+   int ifn = (int)(*pifn);
+
+#ifndef G__OLDIMPLEMENTATION1931
+   if(-1!=tagnum) G__incsetup_memfunc(tagnum);
+#endif
+
+   ifunc = G__overload_match(funcname,libp,hash,p_ifunc,G__TRYNORMAL
+			     ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
+   *poffset = 0;
+   *pifn = ifn;
+   if(ifunc) return(ifunc);
+   if(-1!=tagnum) {
+     int basen=0;
+     struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
+     while(basen<baseclass->basen) {
+       if(baseclass->baseaccess[basen]&G__PUBLIC) {
+#ifndef G__OLDIMPLEMENTATION1934
+	 G__incsetup_memfunc(baseclass->basetagnum[basen]);
+#endif
+	 *poffset = baseclass->baseoffset[basen];
+	 p_ifunc = G__struct.memfunc[baseclass->basetagnum[basen]];
+	 ifunc = G__overload_match(funcname,libp,hash,p_ifunc,G__TRYNORMAL
+				   ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
+	 *pifn = ifn;
+	 if(ifunc) return(ifunc);
+       }
+       ++basen;
+     }
+   }
+ }
+#else /* 1928 */
+#ifndef G__OLDIMPLEMENTATION1313
+  /* first, search for exact match */
+  ifunc=G__get_ifunchandle_base(funcname,libp,hash,p_ifunc,pifn,poffset
+				,G__PUBLIC_PROTECTED_PRIVATE,G__EXACT);
+  if(ifunc) return(ifunc);
+
+  /* if no exact match, try to instantiate template function */
+  funclist = G__add_templatefunc(funcname,libp,hash,funclist,p_ifunc,0);
+  if(funclist && funclist->rate==G__EXACTMATCH) {
+    ifunc = funclist->ifunc;
+    *pifn = funclist->ifn;
+    G__funclist_delete(funclist);
+    return(ifunc);
+  }
+  G__funclist_delete(funclist);
+
+#endif /* 1313 */
+  for(match=G__EXACT;match<=G__STDCONV;match++) {
+    ifunc=G__get_ifunchandle_base(funcname,libp,hash,p_ifunc,pifn,poffset
 #ifndef G__OLDIMPLEMENTATION912
 				  ,G__PUBLIC_PROTECTED_PRIVATE
 #else

@@ -1231,6 +1231,20 @@ int G__skip_comment()
 /***********************************************************************
 * G__pp_command()
 *
+*  # if      COND
+*  # ifdef   MACRO
+*  # ifndef  MACRO
+*
+*  # elif    COND
+*  # else
+*
+*  # endif
+*   ^
+*
+* to be added
+*  # num
+*  # define MACRO
+*
 ***********************************************************************/
 int G__pp_command()
 {

@@ -50,6 +50,8 @@ using namespace std;
 #pragma link C++ function operator<=(const string&,const string&);
 #pragma link C++ function operator>=(const string&,const string&);
 #pragma link C++ function operator+(const string&,const string&);
+#pragma link C++ function operator+(char,const string&);
+#pragma link C++ function operator+(const string&,char);
 #endif
 
 //#if G__ROOT

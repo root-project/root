@@ -22,11 +22,11 @@
 #define G__CI_H
 
 #ifdef G__CINT_VER6
-#define G__CINTVERSION      6000001
-#define G__CINTVERSIONSTR  "6.0.1, May 17 2004"
+#define G__CINTVERSION      6000002
+#define G__CINTVERSIONSTR  "6.0.2, May 23 2004"
 #else
-#define G__CINTVERSION      50150137
-#define G__CINTVERSIONSTR  "5.15.137, May 17 2004"
+#define G__CINTVERSION      50150138
+#define G__CINTVERSIONSTR  "5.15.138, May 23 2004"
 #endif
 
 #define G__ALWAYS
@@ -36,6 +36,7 @@
 **********************************************************************/
 
 #ifndef G__CINT_VER6
+#define G__OLDIMPLEMENTATION2062
 #define G__OLDIMPLEMENTATION2058
 /* #define G__OLDIMPLEMENTATION2057 */
 /* #define G__OLDIMPLEMENTATION2056 */
@@ -1656,6 +1657,11 @@ extern int G__del_refcount G__P((void* allocedmem,void** storedmem));
 extern int G__disp_garbagecollection G__P((FILE* fout));
 #ifndef G__OLDIMPLEMENTATION1989
 struct G__ifunc_table *G__get_methodhandle G__P((char *funcname,char *argtype
+					   ,struct G__ifunc_table *p_ifunc
+					   ,long *pifn,long *poffset
+					   ,int withConversion));
+struct G__ifunc_table *G__get_methodhandle2 G__P((char *funcname
+					   ,struct G__param* libp
 					   ,struct G__ifunc_table *p_ifunc
 					   ,long *pifn,long *poffset
 					   ,int withConversion));

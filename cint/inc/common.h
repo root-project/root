@@ -442,12 +442,10 @@
 #define G__RESETARYINDEX      0x0045
 #define G__GETARYINDEX        0x0046
 
-#ifndef G__OLDIMPLEMENTATION2042
 #define G__ENTERSCOPE         0x0047
 #define G__EXITSCOPE          0x0048
 #define G__PUTAUTOOBJ         0x0049
 #define G__PUTHEAPOBJ         0x0050 /* not implemented yet */
-#endif
 #define G__CASE               0x0051
 
 #define G__NOP                0x00ff

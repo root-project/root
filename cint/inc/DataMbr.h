@@ -42,6 +42,8 @@ G__DataMemberInfo {
   void Init(class G__ClassInfo &a);
   void Init(long handlinin,long indexin,G__ClassInfo *belongingclassin);
 
+  long Handle() { return(handle); }
+  int Index() { return ((int)index); }
   const char *Name() ;
   const char *Title() ;
   G__TypeInfo* Type() { return(&type); }

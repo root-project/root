@@ -767,6 +767,9 @@ long localmem;
 	G__pause();
 	G__ifile.line_number=sp;
       }
+#ifndef G__OLDIMPLEMENTATION2062
+      G__delete_autoobjectstack(G__scopelevel);
+#endif /* 2062 */
       pc+=2;
       sp=0;
       strosp=0;
@@ -2437,13 +2440,13 @@ long localmem;
       * inst
       * 0 G__INIT_REF
       * 1 index
-      * 2 paran
+      * 2 paran       // not used, always 0?
       * 3 point_level
       * 4 var_array pointer
       * stack
-      * sp-paran        <- sp-paran
+      * sp-paran 
       * sp-2
-      * sp-1
+      * sp-1            <-
       * sp
       ***************************************/
 #ifdef G__ASM_DBG

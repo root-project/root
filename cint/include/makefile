@@ -37,3 +37,5 @@ RegE.dll : RegE.h RegE.C ../cint
 	makecint -mk Makeit  -dl RegE.dll -H RegE.h -C++ RegE.C -cint -Z0
 	make -f Makeit
 
+matrix.dll : matrix.h matrix.cxx ../cint
+	makecint -mk Makeit -dl matrix.dll -H matrix.h -C++ matrix.cxx ReadF.C

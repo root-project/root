@@ -48,9 +48,14 @@ G__TypeInfo : public G__ClassInfo  {
     type    = buf.type; 
     typenum = buf.typenum; 
     tagnum  = buf.tagnum;
+#ifndef G__OLDIMPLEMENTATION2063
+    if(type!='d' && type!='f') reftype=buf.obj.reftype.reftype;
+    isconst = buf.isconst;
+#else
     if(isupper((int)type)) reftype=buf.obj.reftype.reftype;
     else              reftype=0;
     isconst = 0;
+#endif
   }
 #endif
   int operator==(const G__TypeInfo& a);

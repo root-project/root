@@ -650,6 +650,27 @@ G__MethodInfo G__ClassInfo::GetMethod(const char* fname,const char* arg
   method.Init((long)ifunc,index,this);
   return(method);
 }
+///////////////////////////////////////////////////////////////////////////
+G__MethodInfo G__ClassInfo::GetMethod(const char* fname,struct G__param* libp
+				      ,long* poffset
+				      ,MatchMode mode)
+{
+  struct G__ifunc_table *ifunc;
+  char *funcname = (char*)fname;
+  long index;
+
+  /* Search for method */
+  if(-1==tagnum) ifunc = &G__ifunc;
+  else           ifunc = G__struct.memfunc[tagnum];
+
+  ifunc = G__get_methodhandle2(funcname,libp,ifunc,&index,poffset
+			       ,(mode==ConversionMatch)?1:0);
+
+  /* Initialize method object */
+  G__MethodInfo method;
+  method.Init((long)ifunc,index,this);
+  return(method);
+}
 #ifndef G__OLDIMPLEMENTATION2059
 ///////////////////////////////////////////////////////////////////////////
 G__MethodInfo G__ClassInfo::GetDefaultConstructor() {
@@ -1128,3 +1149,4 @@ struct G__friendtag* G__ClassInfo::GetFriendInfo() {
 }
 ///////////////////////////////////////////////////////////////////////////
 #endif /* ON644 */
+
