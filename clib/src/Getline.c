@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.22 2004/02/07 10:42:19 brun Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.24 2004/02/09 09:34:42 brun Exp $ */
 /* Author: */
 
 /*
@@ -505,7 +505,6 @@ gl_char_cleanup()               /* undo effects of gl_char_init */
 }
 
 #if defined(MSDOS) && !defined(WIN32)
-// +DECK, PAUSE, T=XCC, IF=WINNT. (from KERNDOS.CAR )
 #  include <conio.h>
    int pause_()
    {
@@ -517,7 +516,6 @@ gl_char_cleanup()               /* undo effects of gl_char_init */
 #endif
 
 #if defined(MSDOS) && defined(WIN32)
-//______________________________________________________________________________
 int pause_()
 {
  static HANDLE hConsoleInput = NULL;
@@ -531,7 +529,7 @@ int pause_()
 
  if (!hConsoleInput) hConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
 
- if (iCharCount) iCharCount--;      // Whether several symbols had been read
+ if (iCharCount) iCharCount--;      /* Whether several symbols had been read */
  else {
    chLastChar = 0;
    while (chLastChar == 0) {
@@ -1174,8 +1172,8 @@ gl_redraw()
 
 static void setCursorPosition(int x)
 {
-   // Set console cursor position.
-   // Restore console parameters in case of console corruption
+   /* Set console cursor position.
+      Restore console parameters in case of console corruption */
 
 #ifdef WIN32
    CONSOLE_SCREEN_BUFFER_INFO ci;
@@ -1324,7 +1322,7 @@ gl_fixup(const char *prompt, int change, int cursor)
         }
     }
     gl_pos = cursor;
-    setCursorPosition(gl_pos + strlen(prompt) - gl_shift); // bb&vo
+    setCursorPosition(gl_pos + strlen(prompt) - gl_shift); 
 }
 
 static int
