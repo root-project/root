@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.15 2004/04/13 17:41:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.16 2004/04/14 11:31:23 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -414,15 +414,16 @@ TQConnection::TQConnection(const char *class_name, void *receiver,
 }
 
 //______________________________________________________________________________
-TQConnection::TQConnection(const TQConnection &con)
+TQConnection::TQConnection(const TQConnection &con): TList(), TQObject()
 {
-   // copy constructor
+   // copy constructor. Ignore connections to this TQConnections
 
    fClassName = con.fClassName;
    fSlot = con.fSlot;
    fSlot->AddReference();
    fReceiver = con.fReceiver;
 }
+
 //______________________________________________________________________________
 TQConnection::~TQConnection()
 {
