@@ -27,6 +27,10 @@ HWORLDO       = hworld.$(ObjSuf)
 HWORLDS       = hworld.$(SrcSuf)
 HWORLD        = hworld$(ExeSuf)
 
+CTORTUREO     = ctorture.$(ObjSuf)
+CTORTURES     = ctorture.$(SrcSuf)
+CTORTURE      = ctorture$(ExeSuf)
+
 HSIMPLEO      = hsimple.$(ObjSuf)
 HSIMPLES      = hsimple.$(SrcSuf)
 HSIMPLE       = hsimple$(ExeSuf)
@@ -107,12 +111,12 @@ TESTBITS      = testbits$(ExeSuf)
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
-                $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO) $(TESTBITSO)
+                $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO) $(TESTBITSO) $(CTORTUREO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
-                $(STRESSGEOM) $(STRESSL) $(TESTBITS)
+                $(STRESSGEOM) $(STRESSL) $(TESTBITS) $(CTORTURE)
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(GUIVIEWER) $(TETRISSO)
@@ -157,6 +161,10 @@ $(EVENT):       $(EVENTSO) $(MAINEVENTO)
 		@echo "$@ done"
 
 $(HWORLD):      $(HWORLDO)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(CTORTURE):    $(CTORTUREO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
