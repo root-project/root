@@ -1,3 +1,9 @@
+#include "TROOT.h"
+#include "TSystem.h"
+#include "TRolke.h"
+#include "Riostream.h"
+   
+   
 void Rolke()
 {
 //////////////////////////////////////////////////
@@ -5,7 +11,7 @@ void Rolke()
 // limits for  7 different model assumptions
 // on systematic/statistical uncertainties
 //
-// using the TRolke class
+// You must load libPhysics before executing this script.
 //
 // Author : Jan Conrad (CERN) <Jan.Conrad@cern.ch>
 //////////////////////////////////////////////////
@@ -26,23 +32,25 @@ void Rolke()
 // alpha = 0.9 Confidence Level
 //////////////////////////////////////////////////////////////
 
-Double_t bm = 0.0;
-Double_t tau = 2.5;
-Int_t mid = 1;
-Int_t m = 100;
-Int_t z = 50;
-Int_t y = 10;
-Int_t x = 5;
-// Initialize parameters not used.
-Double_t e = 0.0;
-Double_t em = 0.0;
-Double_t sde=0.0;
-Double_t sdb=0.0;
-Double_t b = 0.0;
-gSystem->Load("libPhysics");
-TRolke g;
+    //gSystem->Load("libPhysics");
+ Double_t bm = 0.0;
+ Double_t tau = 2.5;
+ Int_t mid = 1;
+ Int_t m = 100;
+ Int_t z = 50;
+ Int_t y = 10;
+ Int_t x = 5;
+ // Initialize parameters not used.
+ Double_t e = 0.0;
+ Double_t em = 0.0;
+ Double_t sde=0.0;
+ Double_t sdb=0.0;
+ Double_t b = 0.0;
+
+
+ TRolke g;
  
-g.SetCL(0.90);
+ g.SetCL(0.90);
  
  Double_t ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
  Double_t ll = g.GetLowerLimit();
@@ -67,17 +75,17 @@ g.SetCL(0.90);
 //////////////////////////////////////////////////////////////
 
 
-tau = 2.5;
-mid = 2;
-y = 3;
-x = 10;
-em=0.9;
-sde=0.05;
+ tau = 2.5;
+ mid = 2;
+ y = 3;
+ x = 10;
+ em=0.9;
+ sde=0.05;
 
-g.SetCL(0.95);
+ g.SetCL(0.95);
 
- Double_t ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
- Double_t ll = g.GetLowerLimit();
+ ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
+ ll = g.GetLowerLimit();
  
   cout << "Assuming MODEL 2" << endl; 
   cout <<  "the Profile Likelihood interval is :" << endl;
@@ -100,18 +108,18 @@ g.SetCL(0.95);
 
 
 
-Int_t mid = 3;
-Double_t bm = 5.0;
-Int_t x = 10;
-Double_t em = 0.9;
-Double_t sde=0.05;
-Double_t sdb=0.5;
+ mid = 3;
+ bm = 5.0;
+ x = 10;
+ em = 0.9;
+ sde=0.05;
+ sdb=0.5;
 
-g.SetCL(0.99);
+ g.SetCL(0.99);
 
 
-Double_t ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
-Double_t ll = g.GetLowerLimit();
+ ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
+ ll = g.GetLowerLimit();
  
 cout << "Assuming Model 3" << endl; 
 cout <<  "the Profile Likelihood interval is :" << endl;
@@ -135,17 +143,17 @@ cout << "[" << ll << "," << ul << "]" << endl;
 //////////////////////////////////////////////////////////////
 
 
-tau = 5;
-mid = 4;
-y = 7;
-x = 1;
-e = 0.25;
+ tau = 5;
+ mid = 4;
+ y = 7;
+ x = 1;
+ e = 0.25;
 
 
-g.SetCL(0.68);
+ g.SetCL(0.68);
 
- Double_t ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
- Double_t ll = g.GetLowerLimit();
+ ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
+ ll = g.GetLowerLimit();
  
   cout << "Assuming Model 4" << endl; 
     cout <<  "the Profile Likelihood interval is :" << endl;
@@ -169,16 +177,16 @@ g.SetCL(0.68);
 ///////////////////////////////////////////////////////
 
 
-mid = 5;
-bm = 0.0;
-x = 1;
-e = 0.65;
-sdb=1.0;
+ mid = 5;
+ bm = 0.0;
+ x = 1;
+ e = 0.65;
+ sdb=1.0;
 
  g.SetCL(0.80);
 
-  Double_t ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
-  Double_t ll = g.GetLowerLimit();
+ ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
+ ll = g.GetLowerLimit();
  
   cout << "Assuming Model 5" << endl; 
   cout <<  "the Profile Likelihood interval is :" << endl;
@@ -198,26 +206,22 @@ sdb=1.0;
 // alpha =0.9   Confidence L evel
 ///////////////////////////////////////////////////////
 
-y = 1;
-mid = 6;
-m = 750;
-z = 500;
-x = 25;
-b = 10.0;
+ y = 1;
+ mid = 6;
+ m = 750;
+ z = 500;
+ x = 25;
+ b = 10.0;
 
  TRolke p; 
  p.SetCL(0.90);
- Double_t ul = p.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
+ ul = p.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
  Double_t newll = p.GetLowerLimit();
   
   cout << "Assuming Model 6" << endl; 
   cout <<  "the Profile Likelihood interval is :" << endl;
   cout << "[" << newll << "," << ul << "]" << endl;
   
-
-
-
-
 
 
 ////////////////////////////////////////////////////////
@@ -234,29 +238,19 @@ b = 10.0;
 ///////////////////////////////////////////////////////
 
 
-
-
-
-mid = 7;
-x = 15;
-em = 0.77;
-sde=0.15;
-b = 10.0;
-
-
+ mid = 7;
+ x = 15;
+ em = 0.77;
+ sde=0.15;
+ b = 10.0;
 
  g.SetCL(0.95);
  
-  Double_t ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
-  Double_t ll = g.GetLowerLimit();
+  ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
+  ll = g.GetLowerLimit();
   
   cout << "Assuming Model 7 " << endl; 
   cout <<  "the Profile Likelihood interval is :" << endl;
   cout << "[" << ll << "," << ul << "]" << endl;
-  
-
-
-
-
 }
 
