@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.71 2002/05/10 11:07:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.72 2002/05/10 21:32:09 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -96,7 +96,7 @@
 #include "TVirtualGL.h"
 #include "TFolder.h"
 #include "TQObject.h"
-#include "TProcessID.h"
+#include "TProcessUUID.h"
 #include "TPluginManager.h"
 #include "TMap.h"
 #include "TObjString.h"
@@ -362,6 +362,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fPluginManager->LoadHandlersFromEnv(gEnv);
 
    TProcessID::AddProcessID();
+   fUUIDs = new TProcessUUID();
 
    fRootFolder = new TFolder();
    fRootFolder->SetName("root");
@@ -479,6 +480,7 @@ TROOT::~TROOT()
       fFiles->Delete("slow"); SafeDelete(fFiles);       // and files
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
       fMappedFiles->Delete("slow");                     // and mapped files
+      delete fUUIDs;
       TProcessID::Cleanup();                            // and list of ProcessIDs
       TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
 
