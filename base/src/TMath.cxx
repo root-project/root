@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.24 2002/08/16 13:43:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.25 2002/08/16 13:48:28 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -755,20 +755,21 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
    // and
    // lorentz(x) = (1/pi) * (lg/2) / (x*x + g*g/4)
    // functions.
-
+   //
    // The Voigt function is known to be the real part of Faddeeva function also 
    // called complex error function [2].
-
+   //
    // The algoritm was developed by J. Humlicek [1].
    // This code is based on fortran code presented by R. J. Wells [2]. 
    // Translated and adapted by Miha D. Puc
- 
+   //
    // To calculate the Faddeeva function with relative error less than 10^(-R). 
    // R can be set by the the user subject to the constraints 2 <= R <= 5. 
-
+   //
    // [1] J. Humlicek, JQSRT, 21, 437 (1982).
-   // [2] R. J. Wells, Rapid Approximation to the Voigt/Faddeeva Function and
-   // it's Derivatives.
+   // [2] R.J. Wells "Rapid Approximation to the Voigt/Faddeeva Function and its 
+   // Derivatives" JQSRT 62 (1999), pp 29-48.
+   // http://www-atm.physics.ox.ac.uk/user/wells/voigt.html
 
    Double_t R0, R1;
 
