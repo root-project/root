@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.10 2001/05/09 13:08:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.11 2001/05/09 17:50:52 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -598,7 +598,10 @@ void TApplication::ProcessFile(const char *name)
 
    char *fname = Strip(name);
    if (fname[nch-1] == ';') { nch--; fname[nch] = 0; }
-   char *arg = strrchr(fname, '(');
+   char *arg = strchr(fname, '(');
+   // special case for $(HOME)/aap.C(10)
+   while (arg && *(arg-1) == '$' && *(arg+1))
+      arg = strchr(arg+1, '(');
    if (arg) {
       *arg = 0;
       char *t = arg-1;
