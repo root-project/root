@@ -9,6 +9,8 @@
 #include "TClass.h"
 
 THit hit;
+char *demofile = "/tmp/bench.root";
+
 //-------------------------------------------------------------
 ClassImp(THit)
 //-------------------------------------------------------------
@@ -104,7 +106,7 @@ Int_t TSTLhit::MakeTree(int mode, int nevents, int compression, int split, float
   TTree *T=0;
   TSTLhit *top = this;
   if (mode > 0) {
-     f = new TFile("demoSTLhit.root","recreate","STLhit",compression);  
+     f = new TFile(demofile,"recreate","STLhit",compression);  
      T = new TTree("T","Demo tree");
      T->Bronch("event","TSTLhit",&top,64000,split);
   }
@@ -116,7 +118,7 @@ Int_t TSTLhit::MakeTree(int mode, int nevents, int compression, int split, float
   if (mode == 0) return 0;
   T->Write();
   delete f;
-  f = new TFile("demoSTLhit.root");
+  f = new TFile(demofile);
   Int_t nbytes = f->GetEND();
   cx = f->GetCompressionFactor();
   delete f;
@@ -126,7 +128,7 @@ Int_t TSTLhit::MakeTree(int mode, int nevents, int compression, int split, float
 Int_t TSTLhit::ReadTree()
 {
   TSTLhit *top = this;
-  TFile *f = new TFile("demoSTLhit.root");  
+  TFile *f = new TFile(demofile);  
   TTree *T = (TTree*)f->Get("T");
   T->SetBranchAddress("event",&top);
   Int_t nevents = (Int_t)T->GetEntries();
@@ -178,7 +180,7 @@ Int_t TSTLhitStar::MakeTree(int mode, int nevents, int compression, int split, f
   TTree *T=0;
   TSTLhitStar *top = this;
   if (mode > 0) {
-     f = new TFile("demoSTLhitStar.root","recreate","STLhitStar",compression);  
+     f = new TFile(demofile,"recreate","STLhitStar",compression);  
      T = new TTree("T","Demo tree");
      T->Bronch("event","TSTLhitStar",&top,64000,split);
   }
@@ -190,7 +192,7 @@ Int_t TSTLhitStar::MakeTree(int mode, int nevents, int compression, int split, f
   if (mode == 0) return 0;
   T->Write();
   delete f;
-  f = new TFile("demoSTLhitStar.root");
+  f = new TFile(demofile);
   Int_t nbytes = f->GetEND();
   cx = f->GetCompressionFactor();
   delete f;
@@ -200,7 +202,7 @@ Int_t TSTLhitStar::MakeTree(int mode, int nevents, int compression, int split, f
 Int_t TSTLhitStar::ReadTree()
 {
   TSTLhitStar *top = this;
-  TFile *f = new TFile("demoSTLhitStar.root");  
+  TFile *f = new TFile(demofile);  
   TTree *T = (TTree*)f->Get("T");
   T->SetBranchAddress("event",&top);
   Int_t nevents = (Int_t)T->GetEntries();
@@ -252,7 +254,7 @@ Int_t TCloneshit::MakeTree(int mode, int nevents, int compression, int split, fl
   TTree *T=0;
   TCloneshit *top = this;
   if (mode > 0) {
-     f = new TFile("demoCloneshit.root","recreate","Cloneshit",compression);  
+     f = new TFile(demofile,"recreate","Cloneshit",compression);  
      T = new TTree("T","Demo tree");
      T->Bronch("event","TCloneshit",&top,64000,split);
   }
@@ -264,7 +266,7 @@ Int_t TCloneshit::MakeTree(int mode, int nevents, int compression, int split, fl
   if (mode == 0) return 0;
   T->Write();
   delete f;
-  f = new TFile("demoCloneshit.root");
+  f = new TFile(demofile);
   Int_t nbytes = f->GetEND();
   cx = f->GetCompressionFactor();
   delete f;
@@ -274,7 +276,7 @@ Int_t TCloneshit::MakeTree(int mode, int nevents, int compression, int split, fl
 Int_t TCloneshit::ReadTree()
 {
   TCloneshit *top = this;
-  TFile *f = new TFile("demoCloneshit.root");  
+  TFile *f = new TFile(demofile);  
   TTree *T = (TTree*)f->Get("T");
   T->SetBranchAddress("event",&top);
   Int_t nevents = (Int_t)T->GetEntries();
