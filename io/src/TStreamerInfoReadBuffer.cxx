@@ -107,9 +107,11 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, void *ptr, Int_t first,
    TMemberStreamer *pstreamer=0;
    Int_t isPreAlloc = 0;
    for (Int_t i=first;i<last;i++) {
-      TStreamerElement * aElement  = (TStreamerElement*)fElem[i];
-      
+
+      b.SetStreamerElementNumber(i);      
+      TStreamerElement * aElement  = (TStreamerElement*)fElem[i];      
       fgElement = aElement;
+      
       const Int_t ioffset = fOffset[i]+eoffset;   
 
       if (gDebug > 1) {

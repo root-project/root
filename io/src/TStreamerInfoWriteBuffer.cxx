@@ -97,7 +97,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, char **arr, Int_t first,
 
    for (Int_t i=first;i<last;i++) {
 
+      b.SetStreamerElementNumber(i);    
       TStreamerElement *aElement = (TStreamerElement*)fElem[i];
+ 
       const Int_t ioffset = eoffset+fOffset[i];
 
       if (gDebug > 1) {
