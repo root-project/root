@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.52 2001/10/26 16:23:33 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.53 2001/10/31 11:29:28 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2091,8 +2091,8 @@ void THistPainter::PaintErrors()
 
    s2x    = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
    s2y    =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
-   bxsize = 0.5*s2x;
-   bysize = 0.5*s2y;
+   bxsize = 2*xerror*s2x;
+   bysize = 2*xerror*s2y;
 
 //*-*-      initialize the first point
 
