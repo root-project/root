@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TVirtualMC.h,v 1.5 2002/09/17 14:23:22 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TVirtualMC.h,v 1.6 2002/11/15 15:48:42 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -16,7 +16,7 @@
 #include "TVirtualMCApplication.h"
 #include "TVirtualMCStack.h"
 #include "TVirtualMCDecayer.h"
-#include "TRandom3.h"
+#include "TRandom.h"
 
 class TLorentzVector;
 class TArrayI;
