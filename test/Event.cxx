@@ -1,4 +1,4 @@
-// @(#)root/test:$Name$:$Id$
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.5 2000/07/11 18:05:26 rdm Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -97,6 +97,7 @@ Event::Event()
 Event::~Event()
 {
    Clear();
+   if (fH == fgHist) fgHist = 0;
    delete fH;
    fH = 0;
 }
