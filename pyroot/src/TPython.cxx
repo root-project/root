@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.4 2004/07/17 06:32:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.5 2004/10/30 06:26:43 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -85,7 +85,7 @@ Bool_t TPython::Initialize()  {
       PySys_SetArgv( sizeof(argv)/sizeof(argv[0]), argv );
 
    // force loading of ROOT
-      PyRun_SimpleString( const_cast< char* >( "import ROOT" ) );
+      PyRun_SimpleString( const_cast< char* >( "from ROOT import *" ) );
    }
 
    if ( ! g_maindict ) {

@@ -1,10 +1,16 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.14 2004/11/05 09:05:45 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.15 2004/11/13 12:58:20 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 11/11/04
+# Last: 11/15/04
 
-"""Modify the exception hook to add ROOT classes as requested. Ideas stolen from
-LazyPython (Nathaniel Gray <n8gray@caltech.edu>)."""
+"""PyROOT user module.
+
+ o) install lazy ROOT class/variable lookup as appropriate
+ o) feed gSystem and gInterpreter for display updates
+ o) enable some ROOT/CINT style commands
+ o) handle a few special cases such as gPad
+
+"""
 
 ## system modules
 import os, sys, exceptions, inspect, re
@@ -23,7 +29,7 @@ try:
 except:
   pass
 
-## load PyROOT C++ extension module
+## load PyROOT C++ extension module, special case for linux
 isLinux = 0 <= pystring.find( sys.platform, 'linux' )
 if isLinux:
  # change dl flags to load dictionaries from pre-linked .so's
@@ -42,13 +48,10 @@ sys.setcheckinterval( 100 )
 
 
 ### data ________________________________________________________________________
-__version__ = '2.1.0'
+__version__ = '3.0.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
-__all__ = [ 'makeRootClass', 'gROOT', 'gSystem', 'gInterpreter', 'gPad' ]
-
-_NAME = 'name'
-_NAMEREX = re.compile( r"named? '?(?P<%s>[\w\d]+)'?" % _NAME )
+__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad' ]
 
 _orig_ehook = sys.excepthook
 
@@ -82,61 +85,8 @@ gPad = _TVirtualPad()
 
 ### exeption hook replacement ---------------------------------------------------
 def _excepthook( exctype, value, traceb ):
- # catch name errors starting and fix if they are requests for ROOT classes
-   if isinstance( value, exceptions.NameError ) or isinstance( value, exceptions.ImportError ):
-      try:
-         name = _NAMEREX.search( str(value) ).group( _NAME )
-      except AttributeError:
-         name = ''
-
-      if not name:
-         _orig_ehook( exctype, value, traceb )
-         return
-
-    # get last frame from the exception stack (for its dictionaries and code)
-      lfr = inspect.getinnerframes( traceb )[-1][0]
-
-      if isinstance( value, exceptions.NameError ):
-         glbdct, locdct = lfr.f_globals, lfr.f_locals
-      else:
-         glbdct = sys.modules[ __name__ ].__dict__
-         locdct = glbdct
-
-    # attempt to construct a ROOT class ...
-      if glbdct.has_key( 'makeRootClass' ) or locdct.has_key( 'makeRootClass' ):
-         try:
-          # construct the ROOT shadow class in the current and the ROOT module (may throw)
-            try:
-               exec '%s = makeRootClass( "%s" )' % (name,name) in glbdct, locdct
-            except:
-             # try global variables and global enums
-               gGlobal = gROOT.GetGlobal( name, 1 )
-               if not gGlobal:
-                  gGlobal = getRootGlobalEnum( name )
-
-               if gGlobal != None:
-                  glbdct[ name ] = gGlobal
-               else:
-                  raise NameError
-         except (NameError, TypeError):      # ROOT not loaded or class lookup failed
-            _orig_ehook( exctype, value, traceb )
-         else:
-            try:                             # ok, once again (may still fail)
-               exec lfr.f_code in lfr.f_globals, lfr.f_locals
-            except (NameError, ImportError): # recurse
-               info = sys.exc_info()[:2]
-               _excepthook( info[0], info[1], traceb )
-            except:                          # new error, report on old traceback
-               info = sys.exc_info()[:2]
-               _orig_ehook( info[0], info[1], traceb )
-      else:
-         _orig_ehook( exctype, value, traceb )
-
-      del lfr                                # no cycles, please ...
-      return
-
- # catch syntax errors to mimic ROOT commands
-   elif isinstance( value, exceptions.SyntaxError ):
+ # catch syntax errors to mimic ROOT/CINT commands
+   if isinstance( value, exceptions.SyntaxError ):
       cmd, arg = split( value.text[:-1] )
 
       if cmd == '.q':
@@ -145,38 +95,26 @@ def _excepthook( exctype, value, traceb ):
          return os.system( arg )
       elif cmd == '.x':
          import __main__
-         execfile( arg, __main__.__dict__, __main__.__dict__ )
+         fn = os.path.expanduser( os.path.expandvars( arg ) )
+         execfile( fn, __main__.__dict__, __main__.__dict__ )
          return
       elif cmd == '.cd':
          os.chdir( arg )
          return
+      elif cmd == '.ls':
+         return sys.modules[ __name__ ].gDirectory.ls()
+      elif cmd == '.pwd':
+         return sys.modules[ __name__ ].gDirectory.pwd()
 
  # normal exception processing
    _orig_ehook( exctype, value, traceb )
 
-
-if __builtins__.has_key( '__IPYTHON__' ):
- # ouch! :P the following is going to be tricky ...
-   _orig_stback = __IPYTHON__.showtraceback
-
-   def _showtraceback( exc_tuple = None ):
-      if not exc_tuple:
-         type, value, tb = sys.exc_info()
-      else:
-         type, value, tb = exc_tuple
-
-      _excepthook( type, value, tb )
-
-   def _call_orig_stback( type, value, tb ):
-      _orig_stback( (type,value,tb) )
-
-   _orig_ehook = _call_orig_stback
-   __IPYTHON__.showtraceback = _showtraceback
-else:
+if not __builtins__.has_key( '__IPYTHON__' ):
+ # IPython has its own ways of executing shell commands etc.
    sys.excepthook = _excepthook
 
 
-### call EndOfLineAction after each interactive command
+### call EndOfLineAction after each interactive command (to update display etc.)
 def _displayhook( v ):
    gInterpreter.EndOfLineAction()
    return _orig_dhook( v )
@@ -200,22 +138,46 @@ _thismodule = sys.modules[ __name__ ]
 
 class ModuleFacade:
    def __init__( self ):
-    # allow "from ROOT import *" and name-completion
-      self.__dict__[ '__all__' ] = __all__
-      for name in __all__:
-         exec 'self.__dict__[ "%s" ] = %s' % (name,name)
+    # store already available ROOT objects to prevent spurious lookups
+      for name in _thismodule.__pseudo__all__:
+          self.__dict__[ name ] = getattr( _thismodule, name )
+
+      self.__dict__[ '__doc__' ] = _thismodule.__doc__
 
    def __getattr__( self, name ):
-      if not hasattr( _thismodule, name ):
-         try:
-            exec 'global %s; %s = makeRootClass( "%s" )' % (name,name,name)
-         except:
-            aGlobal = gROOT.GetGlobal( name, 1 )
-            if aGlobal == None:
-               aGlobal = getRootGlobalEnum( name )
+    # support for "from ROOT import *" at the module level
+      if name == '__all__':
+         caller = sys.modules[ sys._getframe( 1 ).f_globals[ '__name__' ] ]
 
-            if aGlobal:
-               _thismodule.__dict__[ name ] = aGlobal
-      return getattr( _thismodule, name )
+         for name in _thismodule.__pseudo__all__:
+            caller.__dict__[ name ] = getattr( _thismodule, name )
+
+         sys.modules[ 'libPyROOT' ].gPad = gPad
+
+       # make the distionary of the calling module ROOT lazy
+         _thismodule.setRootLazyLookup( caller.__dict__ )
+
+       # pretend it was a failure to prevent further copying
+         raise AttributeError( name )
+
+    # block search for privates
+      if name[0:2] == '__':
+         raise AttributeError( name )
+
+      try:
+       # attempt to construct "name" as a ROOT class
+         attr = makeRootClass( name )
+      except:
+       # no such class ... try global variable or global enum
+         attr = getRootGlobal( name )
+
+    # cache value locally so that we don't come back here
+      if attr != None:
+         self.__dict__[ name ] = attr
+      else:
+         raise AttributeError( name )
+
+    # success!
+      return attr
 
 sys.modules[ __name__ ] = ModuleFacade()

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorDispatcher.cxx,v 1.4 2004/08/04 04:45:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorDispatcher.cxx,v 1.5 2004/11/05 09:05:45 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -12,6 +12,9 @@
 #include "TClass.h"
 #include "TMethod.h"
 #include "TMethodCall.h"
+
+// Standard
+#include <string>
 
 
 //- constructor -----------------------------------------------------------------
@@ -32,27 +35,33 @@ PyObject* PyROOT::ConstructorDispatcher::operator()( PyObject* aTuple, PyObject*
 
    TClass* cls = getClass();
 
-// perform the call, return object if successful
+// perform the call (TODO: fails for loaded macro's, and New() is insufficient)
    long address = 0;
-   if ( execute( cls, address ) && address != 0 ) {
+   if ( ! execute( cls, address ) || ! address ) {
+   // we're probably dealing with an interpreted class
+      if ( PyTuple_GET_SIZE( aTuple ) == 1 )
+         address = (long) cls->New();        // attempt default ctor
+
+   // else fail ...
+
+   // CAUTION: creating an interpreted class doesn't work if it has STL type data
+   // members that are initialized or otherwise touched in the ctor!
+   }
+
+// return object if successful, lament if not
+   if ( address != 0 ) {
       PyObject* self = PyTuple_GetItem( aTuple, 0 );
       Py_INCREF( self );
 
-   // special case when destroying TObjects
-      TObject* tobj = (TObject*) cls->DynamicCast( TObject::Class(), (void*)address );
-      if ( tobj )
-         tobj->SetBit( kMustCleanup );
-
-   // Note "false" (== default) for ROOT object deletion from the python side!
-   // The reason for this is that ROOT does not share in python's reference counting
-   // and scopes between C++ and python are different. Thus, ROOT could hold on to
-   // objects internally, even though objects have phased out on the python side.
+   // note "true" (== default) for ROOT object deletion from the python side
       PyObject* cobj = PyCObject_FromVoidPtr(
          new ObjectHolder( (void*)address, cls ), &destroyObjectHolder );
       PyObject_SetAttr( self, Utility::theObjectString_, cobj );
 
-   // allow lookup upon destruction on the ROOT/CINT side
-      MemoryRegulator::RegisterObject( self, (void*)address );
+   // allow lookup upon destruction on the ROOT/CINT side for TObjects
+      TObject* tobj = (TObject*) cls->DynamicCast( TObject::Class(), (void*)address );
+      if ( tobj )
+         MemoryRegulator::RegisterObject( self, tobj );
 
    // done with this object
       Py_DECREF( cobj );
@@ -63,6 +72,9 @@ PyObject* PyROOT::ConstructorDispatcher::operator()( PyObject* aTuple, PyObject*
       Py_INCREF( Py_None );
       return Py_None;                        // by definition
    }
+
+   PyErr_SetString( PyExc_TypeError, const_cast< char* >(
+      ( std::string( cls->GetName() ) + " constructor failed" ).c_str() ) );
 
 // do not throw an exception, '0' might trigger the overload handler to choose a
 // different constructor, which if all fails will throw an exception

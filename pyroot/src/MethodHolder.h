@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.8 2004/08/11 04:42:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.9 2004/11/05 09:05:45 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_METHODHOLDER_H
@@ -80,6 +80,7 @@ namespace PyROOT {
       TClass*      m_class;
       TMethod*     m_method;
       G__CallFunc* m_methodCall;
+      int          m_argRequired;
       Utility::EDataType m_returnType;
       std::string  m_rtShortName;
       long         m_offset;

@@ -35,7 +35,7 @@ namespace PyROOT {
       }
 
       virtual PyObject* get( PyObject* aTuple, PyObject* aDict );
-      virtual void set( PyObject* aTuple, PyObject* aDict );
+      virtual PyObject* set( PyObject* aTuple, PyObject* aDict );
 
    protected:
       static PyObject* invoke_get( PyObject*, PyObject*, PyObject* );

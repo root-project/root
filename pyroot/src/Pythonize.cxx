@@ -146,6 +146,18 @@ namespace {
       return callPyObjMethod( self, "Compare", obj );
    }
 
+   PyObject* isequal( PyObject* /* None */, PyObject* aTuple ) {
+      PyObject* self = 0, *obj = 0;
+      if ( ! PyArg_ParseTuple( aTuple, const_cast< char* >( "OO:__eq__" ), &self, &obj ) )
+         return 0;
+
+      if ( ! Utility::getObjectHolder( obj ) )
+         return PyInt_FromLong( 0l );
+
+      return callPyObjMethod( self, "IsEqual", obj );
+   }
+
+
 
 //- TCollection behaviour ------------------------------------------------------
    PyObject* collectionAppend( PyObject* /* None */, PyObject* aTuple ) {
@@ -245,11 +257,16 @@ namespace {
       int count = 0;
       for ( int i = 0; i < PySequence_Size( self ); ++i ) {
          PyObject* item = PySequence_GetItem( self, i );
-         PyObject* found = callPyObjMethod( item, "IsEqual", obj );
+         PyObject* found = PyObject_RichCompare( item, obj, Py_EQ );
+
+         Py_DECREF( item );
+
+         if ( ! found )
+            return 0;                        // internal problem
+
          if ( PyObject_IsTrue( found ) )
             count += 1;
          Py_DECREF( found );
-         Py_DECREF( item );
       }
 
       return PyLong_FromLong( count );
@@ -483,6 +500,10 @@ namespace {
       return repr;
    }
 
+   PyObject* stringStr( PyObject* /* None */, PyObject* aTuple ) {
+      return callPyObjMethod( PyTuple_GET_ITEM( aTuple, 0 ), "Data" );
+   }
+
    PyObject* stringCompare( PyObject* /* None */, PyObject* aTuple ) {
       return callSelfPyObject( aTuple, "CompareTo", "OO:__cmp__" );
    }
@@ -500,6 +521,10 @@ namespace {
       return repr;
    }
 
+    PyObject* objStringStr( PyObject* /* None */, PyObject* aTuple ) {
+      return callPyObjMethod( PyTuple_GET_ITEM( aTuple, 0 ), "GetName" );
+   }
+
    PyObject* objStringCompare( PyObject* /* None */, PyObject* aTuple ) {
       PyObject* data = callPyObjMethod( PyTuple_GET_ITEM( aTuple, 0 ), "GetName" );
       int result = PyObject_Compare( data, PyTuple_GET_ITEM( aTuple, 1 ) );
@@ -509,6 +534,18 @@ namespace {
          return 0;
 
       return PyInt_FromLong( result );
+   }
+
+
+   PyObject* objStringIsequal( PyObject* /* None */, PyObject* aTuple ) {
+      PyObject* data = callPyObjMethod( PyTuple_GET_ITEM( aTuple, 0 ), "GetName" );
+      PyObject* result = PyObject_RichCompare( data, PyTuple_GET_ITEM( aTuple, 1 ), Py_EQ );
+      Py_DECREF( data );
+
+      if ( ! result )
+         return 0;
+
+      return result;
    }
 
    PyObject* objStringLength( PyObject* /* None */, PyObject* aTuple ) {
@@ -638,28 +675,39 @@ namespace {
 //- TF1 behaviour --------------------------------------------------------------
    std::map< int, std::pair< PyObject*, int > > s_PyObjectCallbacks;
 
+   int s_lastTag = -99;
+   std::pair< PyObject*, int > s_lastCallInfo;
+
    int pyFuncCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash ) {
-   // retrieve function information
-      std::pair< PyObject*, int > info = s_PyObjectCallbacks[ res->tagnum ];
-      PyObject* pyfunc = info.first;
-
-   // prepare arguments and call
-      PyObject* arg1 = PyBufferFactory::getInstance()->PyBuffer_FromMemory(
-         (double*)G__int(libp->para[0]), 4 );
-
       PyObject* result = 0;
-      if ( info.second != 0 ) {
-         PyObject* arg2 = PyBufferFactory::getInstance()->PyBuffer_FromMemory(
-            (double*)G__int(libp->para[1]), info.second );
 
-         result = PyObject_CallFunction( pyfunc, const_cast< char* >( "OO" ), arg1, arg2 );
-
-         Py_DECREF( arg2 );
+   // retrieve function information
+      int tag = res->tagnum;
+      if ( s_lastTag != tag ) {
+         s_lastTag = tag;
+         s_lastCallInfo = s_PyObjectCallbacks[ tag ];
       }
-      else
-         result = PyObject_CallFunction( pyfunc, const_cast< char* >( "O" ), arg1 );
 
-      Py_DECREF( arg1 );
+      if ( s_lastCallInfo.first != 0 ) {
+      // prepare arguments and call
+         PyObject* arg1 = PyBufferFactory::getInstance()->PyBuffer_FromMemory(
+            (double*)G__int(libp->para[0]), 4 );
+
+         if ( s_lastCallInfo.second != 0 ) {
+            PyObject* arg2 = PyBufferFactory::getInstance()->PyBuffer_FromMemory(
+               (double*)G__int(libp->para[1]), s_lastCallInfo.second );
+
+            result = PyObject_CallFunction(
+               s_lastCallInfo.first, const_cast< char* >( "OO" ), arg1, arg2 );
+
+            Py_DECREF( arg2 );
+         }
+         else
+            result = PyObject_CallFunction(
+               s_lastCallInfo.first, const_cast< char* >( "O" ), arg1 );
+
+         Py_DECREF( arg1 );
+      }
 
    // translate result, throw if an error has occurred
       double d = 0.;
@@ -735,8 +783,8 @@ namespace {
          s_PyObjectCallbacks[ tag ] = std::make_pair( fcn, npar );
 
       // get constructor
-         PyObject* pymeth =
-            PyObject_GetAttrString( PyTuple_GET_ITEM( aTuple, 0 ), const_cast< char* >( "__init__" ) );
+         PyObject* pymeth = PyObject_GetAttrString(
+            PyTuple_GET_ITEM( aTuple, 0 ), const_cast< char* >( "__init__" ) );
 
       // build new argument array
          PyObject* args = PyTuple_New( 6 - 1 );   // skip self
@@ -785,7 +833,8 @@ bool PyROOT::pythonize( PyObject* pyclass, const std::string& name ) {
       Utility::addToClass( "__contains__", (PyCFunction) contains, pyclass );
 
    // comparing for lists
-      Utility::addToClass( "__cmp__", (PyCFunction) compare,  pyclass );
+      Utility::addToClass( "__cmp__", (PyCFunction) compare, pyclass );
+      Utility::addToClass( "__eq__",  (PyCFunction) isequal, pyclass );
 
       return true;
    }
@@ -828,6 +877,7 @@ bool PyROOT::pythonize( PyObject* pyclass, const std::string& name ) {
       Utility::addToClass( "__nonzero__", (PyCFunction) isNotZero, pyclass );
 
       Utility::addToClass( "__repr__", (PyCFunction) stringRepr,   pyclass );
+      Utility::addToClass( "__str__",  (PyCFunction) stringStr,    pyclass );
       Utility::addToClass( "__len__",  (PyCFunction) stringLength, pyclass );
 
       Utility::addToClass( "__cmp__", (PyCFunction) stringCompare, pyclass );
@@ -837,9 +887,11 @@ bool PyROOT::pythonize( PyObject* pyclass, const std::string& name ) {
 
    if ( name == "TObjString" ) {
       Utility::addToClass( "__repr__", (PyCFunction) objStringRepr,   pyclass );
+      Utility::addToClass( "__str__",  (PyCFunction) objStringStr,    pyclass );
       Utility::addToClass( "__len__",  (PyCFunction) objStringLength, pyclass );
 
       Utility::addToClass( "__cmp__", (PyCFunction) objStringCompare, pyclass );
+      Utility::addToClass( "__eq__",  (PyCFunction) objStringIsequal, pyclass );
 
       return true;
    }

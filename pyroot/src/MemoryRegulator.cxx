@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.5 2004/07/30 06:31:18 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.6 2004/11/05 09:05:45 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -6,6 +6,9 @@
 #include "MemoryRegulator.h"
 #include "Utility.h"
 #include "ObjectHolder.h"
+
+#include "TObject.h"
+#include "TClass.h"
 
 // Standard
 #include <string.h>
@@ -103,7 +106,7 @@ void PyROOT::MemoryRegulator::RecursiveRemove( TObject* obj ) {
    objmap_t::iterator ppo = s_objectTable.find( obj );
 
    if ( ppo != s_objectTable.end() ) {
-   // nullify the object
+   // get the tracked object
       PyObject* pyobj = PyWeakref_GetObject( ppo->second );
       if ( ! pyobj )
          return;
@@ -111,6 +114,7 @@ void PyROOT::MemoryRegulator::RecursiveRemove( TObject* obj ) {
    // clean up the weak reference.
       Py_DECREF( ppo->second );
 
+   // nullify the object
       if ( pyobj != Py_None ) {
          if ( ! PyROOT_NoneType.tp_traverse ) {
          // take a reference as we're copying its function pointers
@@ -147,19 +151,24 @@ void PyROOT::MemoryRegulator::RecursiveRemove( TObject* obj ) {
 }
 
 
-void PyROOT::MemoryRegulator::RegisterObject( PyObject* obj, void* ptr ) {
-   if ( obj == 0 && ptr == 0 )
+void PyROOT::MemoryRegulator::RegisterObject( PyObject* obj, TObject* ptr ) {
+   if ( ! ( obj && ptr ) )
       return;
 
    objmap_t::iterator ppo = s_objectTable.find( ptr );
    if ( ppo != s_objectTable.end() )
       Py_INCREF( ppo->second );
-   else
+   else {
+      ptr->SetBit( kMustCleanup );
       s_objectTable[ ptr ] = PyWeakref_NewRef( obj, g_objectEraseCallback );
+   }
 }
 
 
-PyObject* PyROOT::MemoryRegulator::RetrieveObject( void* ptr ) {
+PyObject* PyROOT::MemoryRegulator::RetrieveObject( TObject* ptr ) {
+   if ( ! ptr )
+      return 0;
+
    objmap_t::iterator ppo = s_objectTable.find( ptr );
    if ( ppo != s_objectTable.end() ) {
       PyObject* pyobj = PyWeakref_GetObject( ppo->second );
@@ -178,16 +187,21 @@ PyObject* PyROOT::MemoryRegulator::objectEraseCallback( PyObject* /* self */, Py
 
    if ( pyobj != 0 && pyobj != Py_None ) {
    // get holder if root object
-      PyROOT::ObjectHolder* holder = Utility::getObjectHolder( pyobj );
-      void* rootobj = holder ? holder->getObject() : 0;
+      PyROOT::ObjectHolder* obh = Utility::getObjectHolder( pyobj );
+      if ( obh != 0 && obh->objectIsA() != 0 ) {
 
-      if ( rootobj != 0 ) {
-      // erase if tracked
-         objmap_t::iterator ppo = s_objectTable.find( rootobj );
-         if ( ppo != s_objectTable.end() ) {
-         // cleanup weak reference, and table entry
-            Py_DECREF( ppo->second );
-            s_objectTable.erase( ppo );
+      // get TObject pointer to the object
+         TObject* tobj = (TObject*) obh->objectIsA()->DynamicCast(
+            TObject::Class(), obh->getObject() );
+
+         if ( tobj != 0 ) {
+         // erase if tracked
+            objmap_t::iterator ppo = s_objectTable.find( tobj );
+            if ( ppo != s_objectTable.end() ) {
+            // cleanup weak reference2, and table entry
+               Py_DECREF( ppo->second );
+               s_objectTable.erase( ppo );
+            }
          }
       }
    }

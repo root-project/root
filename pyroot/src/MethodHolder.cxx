@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.25 2004/11/02 10:13:06 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.26 2004/11/05 09:05:45 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -324,6 +324,7 @@ inline void PyROOT::MethodHolder::copy_( const MethodHolder& om ) {
    m_class       = om.m_class;
    m_method      = om.m_method;
    m_methodCall  = 0;
+   m_argRequired = om.m_argRequired;
    m_returnType  = om.m_returnType;
    m_rtShortName = om.m_rtShortName;
    m_offset      = 0;
@@ -355,7 +356,7 @@ inline void PyROOT::MethodHolder::destroy_() const {
 
 bool PyROOT::MethodHolder::initDispatch_( std::string& callString ) {
 // buffers for argument dispatching
-   const int nArgs = m_method->GetNargs();
+   const int nArgs = m_method ? m_method->GetNargs() : 0;
    if ( nArgs == 0 )
       return true;
 
@@ -421,12 +422,13 @@ void PyROOT::MethodHolder::calcOffset_( void* obj, TClass* cls ) {
 //- constructors and destructor ------------------------------------------------
 PyROOT::MethodHolder::MethodHolder( TClass* cls, TMethod* tm ) :
       m_class( cls ), m_method( tm ), m_rtShortName( "" ) {
-   m_methodCall = 0;
-   m_offset     = 0;
-   m_tagnum     = -1;
-   m_refSelf    = 0;
-   m_refHolder  = 0;
-   m_returnType = Utility::kOther;
+   m_methodCall    = 0;
+   m_argRequired   = 0;
+   m_offset        = 0;
+   m_tagnum        = -1;
+   m_refSelf       = 0;
+   m_refHolder     = 0;
+   m_returnType    = Utility::kOther;
    m_isInitialized = false;
 }
 
@@ -510,7 +512,7 @@ bool PyROOT::MethodHolder::initialize() {
       return false;
 
 // determine effective return type
-   std::string returnType = m_method->GetReturnTypeName();
+   std::string returnType = m_method ? m_method->GetReturnTypeName() : m_class->GetName();
    m_rtShortName = TClassEdit::ShortType( G__TypeInfo( returnType.c_str() ).TrueName(), 1 );
    m_returnType = Utility::effectiveType( returnType );
 
@@ -518,8 +520,11 @@ bool PyROOT::MethodHolder::initialize() {
    assert( m_methodCall == 0 );
 
    m_methodCall = new G__CallFunc();
-   m_methodCall->SetFuncProto(
-      m_class->GetClassInfo(), m_method->GetName(), callString.c_str(), &m_offset );
+   m_methodCall->SetFuncProto( m_class->GetClassInfo(),
+      m_method ? m_method->GetName() : m_class->GetName(), callString.c_str(), &m_offset );
+
+// minimum number of arguments when calling
+   m_argRequired = m_method ? m_method->GetNargs() - m_method->GetNargsOpt() : 0;
 
 // init done
    m_isInitialized = true;
@@ -535,21 +540,20 @@ bool PyROOT::MethodHolder::setMethodArgs( PyObject* aTuple, int offset ) {
    int argc = PyTuple_GET_SIZE( aTuple );
 
    int argGiven = argc - offset;
-   int argRequired = m_method->GetNargs() - m_method->GetNargsOpt();
    int argMax = m_argsBuffer.size();
 
 // argc must be between min and max number of arguments
-   if ( argGiven < argRequired ) {
+   if ( argGiven < m_argRequired ) {
       char txt[ 256 ];
       sprintf( txt, "%s() takes at least %d arguments (%d given)",
-         m_method->GetName(), argRequired, argGiven );
+         m_method ? m_method->GetName() : m_class->GetName(), m_argRequired, argGiven );
       PyErr_SetString( PyExc_TypeError, txt );
       return false;
    }
    else if ( argMax < argGiven ) {
       char txt[ 256 ];
       sprintf( txt, "%s() takes at most %d arguments (%d given)",
-         m_method->GetName(), argMax, argGiven );
+         m_method ? m_method->GetName() : m_class->GetName(), argMax, argGiven );
       PyErr_SetString( PyExc_TypeError, txt );
       return false;
    }
@@ -636,33 +640,18 @@ PyObject* PyROOT::MethodHolder::callMethod( void* self ) {
             return Py_None;
          }
 
-      // upgrade to real class for TObject and TGlobal returns
-         ObjectHolder* obh = 0;
-         if ( m_rtShortName == "TGlobal" ) {
-            TGlobal* g = (TGlobal*)address;
-            cls = gROOT->GetClass( g->GetTypeName() );
-            if ( ! cls )
-               cls = TGlobal::Class();
-            else {
-               if ( Utility::isPointer( g->GetFullTypeName() ) ) {
-                  obh = new AddressHolder( (void**)g->GetAddress(), cls, false );
-                  return bindRootObject( obh, true );
-               }
-               else
-                  obh = new ObjectHolder( (void*)g->GetAddress(), cls, false );
-            }
-         }
-         else {
-            TClass* clActual = cls->GetActualClass( (void*)address );
-            if ( clActual ) {
-               int offset = (cls != clActual) ? clActual->GetBaseClassOffset( cls ) : 0;
-               address -= offset;
-            }
+      // special case: cross-cast to real class for TGlobal returns
+         if ( m_rtShortName == "TGlobal" )
+            return bindRootGlobal( (TGlobal*)address );
 
-            obh = new ObjectHolder( (void*)address, clActual, false );
+      // upgrade to real class for TObject returns
+         TClass* clActual = cls->GetActualClass( (void*)address );
+         if ( clActual ) {
+            int offset = (cls != clActual) ? clActual->GetBaseClassOffset( cls ) : 0;
+            address -= offset;
          }
 
-         return bindRootObject( obh );
+         return bindRootObject( new ObjectHolder( (void*)address, clActual, false ) );
       }
 
    // confused ...
