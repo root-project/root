@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.13 2001/06/22 16:10:21 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.14 2001/09/22 10:43:34 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -40,6 +40,7 @@ protected:
     TObjArray   *fFiles;            //->  List of file names containing the Trees
     TList       *fStatus;           //->  List of active/inactive branches
     TObject     *fNotify;           //! Object to be notified when loading a new file
+  static Int_t   fgMaxMergeSize;    //  Maximum size of a merged file
 
 public:
     TChain();
@@ -68,6 +69,7 @@ public:
     TObjArray        *GetListOfBranches();
     TObjArray        *GetListOfFiles() const {return fFiles;}
     TObjArray        *GetListOfLeaves();
+    static  Int_t     GetMaxMergeSize();
     virtual Double_t  GetMaximum(const char *columname);
     virtual Double_t  GetMinimum(const char *columname);
     virtual Int_t     GetNbranches();
@@ -80,13 +82,14 @@ public:
             Int_t     LoadTree(Int_t entry);
     virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual void      ls(Option_t *option="") const;
-    virtual void      Merge(const char *name);
-    virtual void      Merge(TFile *file, Int_t basketsize, Option_t *option="");
+    virtual Int_t     Merge(const char *name);
+    virtual Int_t     Merge(TFile *file, Int_t basketsize, Option_t *option="");
     virtual void      Print(Option_t *option="") const;
     virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      SetBranchAddress(const char *bname,void *add);
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
+    static  void      SetMaxMergeSize(Int_t maxsize=1900000);
     virtual void      SetPacketSize(Int_t size = 100);
     virtual void      SetNotify(TObject *obj) {fNotify = obj;}
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.28 2001/12/03 16:47:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.29 2001/12/04 14:40:20 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -38,6 +38,8 @@
 #include "TFriendElement.h"
 #include "TSystem.h"
 #include "TRegexp.h"
+
+Int_t TChain::fgMaxMergeSize = 1900000;
 
 ClassImp(TChain)
 
@@ -515,6 +517,15 @@ TObjArray *TChain::GetListOfLeaves()
 }
 
 //______________________________________________________________________________
+Int_t TChain::GetMaxMergeSize()
+{
+// static function
+// return maximum size of a merged file
+   
+   return fgMaxMergeSize;
+}
+
+//______________________________________________________________________________
 Double_t TChain::GetMaximum(const char *columname)
 {
 //*-*-*-*-*-*-*-*-*Return maximum of column with name columname*-*-*-*-*-*-*
@@ -684,20 +695,23 @@ void TChain::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TChain::Merge(const char *name)
+Int_t TChain::Merge(const char *name)
 {
 //     Merge all files in this chain into a new file
 // see important note in the following function Merge
 
    TFile *file = TFile::Open(name,"recreate","chain files",1);
-   Merge(file,0,"");
-   file->Close();
-   delete file;
+   Int_t nFiles = Merge(file,0,"");
+   if (nFiles <= 1) {
+      file->Close();
+      delete file;
+   }
+   return nFiles;
 }
 
 
 //______________________________________________________________________________
-void TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
+Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 {
 //     Merge all files in this chain into a new file
 //     if option ="C" is given, the compression level for all branches
@@ -725,11 +739,22 @@ void TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 //  contains only basic types (case of files converted from hbook)
 //
 //  NOTE that the merged Tree contains only the active branches.
+//
+//  AUTOMATIC FILE OVERFLOW
+//  -----------------------
+// When merging many files, it may happen that the resulting file
+// reaches a size > fgMaxMergeSize (default = 1.9 GBytes). In this case
+// the current file is automatically closed and a new file started.
+// If the name of the merged file was "merged.root", the subsequent files
+// will be named "merged_1.root", "merged_2.root", etc.
+// fgMaxMergeSize may be modified via the static function SetMaxMergeSize.
+//
+// The function returns the total number of files produced.
 
-   if (!file) return;
+   if (!file) return 0;
    TObjArray *lbranches = GetListOfBranches();
-   if (!lbranches) return;
-   if (!fTree) return;
+   if (!lbranches) return 0;
+   if (!fTree) return 0;
 
 // Clone Chain tree
    //file->cd();  //in case a user wants to write in a file/subdir
@@ -753,7 +778,12 @@ void TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
       }
       nextb.Reset();
    }
+   
+   char *firstname = new char[1000];
+   firstname[0] = 0;
+   strcpy(firstname,gFile->GetName());
 
+   Int_t nFiles = 0;
    Int_t treeNumber = -1;
    Int_t nentries = Int_t(GetEntries());
    for (Int_t i=0;i<nentries;i++) {
@@ -787,10 +817,45 @@ void TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
          }
       }
       hnew->Fill();
+      
+      //check that output file is still below the maximum size.
+      //If above, close the current file and continue on a new file.
+      if (gFile->GetBytesWritten() > (Double_t)fgMaxMergeSize) {
+         hnew->Write();
+         hnew->SetDirectory(0);
+         hnew->Reset();
+         nFiles++;
+         char *fname = new char[1000];
+         fname[0] = 0;
+         strcpy(fname,firstname);
+         char *cdot = strrchr(fname,'.');
+         if (cdot) {
+            sprintf(cdot,"_%d",nFiles);
+            strcat(fname,strrchr(firstname,'.'));
+         } else {
+            char fcount[10];
+            sprintf(fcount,"_%d",nFiles);
+            strcat(fname,fcount);
+         }
+         delete file;
+         file = TFile::Open(fname,"recreate","chain files",1);
+         Printf("Merge: Switching to new file: %s at entry: %d",fname,i);
+         hnew->SetDirectory(file);
+         nextb.Reset();
+         while ((branch = (TBranch*)nextb())) {
+            branch->SetFile(file);
+         }
+         delete [] fname; 
+      }
    }
 
 // Write new tree header 
    hnew->Write();
+   delete [] firstname;
+   if (nFiles) {
+      delete file;
+   }
+   return nFiles+1;
 }
 
 
@@ -873,6 +938,19 @@ void TChain::SetBranchStatus(const char *bname, Bool_t status)
 
    // invalidate current Tree
    fTreeNumber = -1;
+}
+
+//______________________________________________________________________________
+void TChain::SetMaxMergeSize(Int_t maxsize)
+{
+// static function
+// Set the maximum size of a merged file.
+// In TChain::Merge, when the merged file has a size > fgMaxMergeSize,
+// the function closes the current merged file and starts writing into
+// a new file with a name of the style "merged_1.root" if the original
+// requested file name was "merged.root"
+   
+   fgMaxMergeSize = maxsize;
 }
 
 //_______________________________________________________________________
