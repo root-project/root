@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGExpModel.cc,v 1.2 2001/09/20 01:41:48 verkerke Exp $
+ *    File: $Id: RooGExpModel.cc,v 1.3 2001/09/24 23:08:56 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -16,9 +16,37 @@
 #include <iostream.h>
 #include "RooFitModels/RooGExpModel.hh"
 #include "RooFitCore/RooMath.hh"
+#include "RooFitCore/RooRealConstant.hh"
 
 ClassImp(RooGExpModel) 
 ;
+
+
+RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& x, 
+			   RooAbsReal& _sigma, RooAbsReal& _rlife, 
+			   Bool_t nlo, Type type) : 
+  RooResolutionModel(name,title,x), 
+  sigma("sigma","Width",this,_sigma),
+  rlife("rlife","Life time",this,_rlife),
+  ssf("ssf","Sigma Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
+  rsf("rsf","RLife Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
+  _nlo(nlo), _flip(type==Flipped)
+{  
+}
+
+
+RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& x, 
+			   RooAbsReal& _sigma, RooAbsReal& _rlife, 
+			   RooAbsReal& _rsSF,
+			   Bool_t nlo, Type type) : 
+  RooResolutionModel(name,title,x), 
+  sigma("sigma","Width",this,_sigma),
+  rlife("rlife","Life time",this,_rlife),
+  ssf("ssf","Sigma Scale Factor",this,_rsSF),
+  rsf("rsf","RLife Scale Factor",this,_rsSF),
+  _nlo(nlo), _flip(type==Flipped)
+{  
+}
 
 
 RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& x, 

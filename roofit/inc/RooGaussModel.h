@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.rdl,v 1.6 2001/09/20 01:41:49 verkerke Exp $
+ *    File: $Id: RooGaussModel.rdl,v 1.7 2001/09/24 23:08:56 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -26,6 +26,10 @@ public:
 
   // Constructors, assignment etc
   inline RooGaussModel() { }
+  RooGaussModel(const char *name, const char *title, RooRealVar& x, 
+		RooAbsReal& mean, RooAbsReal& sigma) ; 
+  RooGaussModel(const char *name, const char *title, RooRealVar& x, 
+		RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& msSF) ; 
   RooGaussModel(const char *name, const char *title, RooRealVar& x, 
 		RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& meanSF, RooAbsReal& sigmaSF) ; 
   RooGaussModel(const RooGaussModel& other, const char* name=0);
@@ -59,7 +63,7 @@ protected:
     return (z.im()>-4.0) ? RooMath::FastComplexErrFuncIm(z)*exp(-u*u) : evalCerfApprox(swt,u,c).im() ;
   }
   
-
+  
   RooRealProxy mean ;
   RooRealProxy sigma ;
   RooRealProxy msf ;

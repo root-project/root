@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.10 2001/09/20 01:41:48 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.11 2001/09/24 23:08:56 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -16,9 +16,33 @@
 #include <iostream.h>
 #include "RooFitModels/RooGaussModel.hh"
 #include "RooFitCore/RooMath.hh"
+#include "RooFitCore/RooRealConstant.hh"
 
 ClassImp(RooGaussModel) 
 ;
+
+
+RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& x, 
+			     RooAbsReal& _mean, RooAbsReal& _sigma) :
+  RooResolutionModel(name,title,x), 
+  mean("mean","Mean",this,_mean),
+  sigma("sigma","Width",this,_sigma),
+  msf("msf","Mean Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
+  ssf("ssf","Sigma Scale Factor",this,(RooRealVar&)RooRealConstant::value(1))
+{  
+}
+
+
+RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& x, 
+			     RooAbsReal& _mean, RooAbsReal& _sigma, 
+			     RooAbsReal& _msSF) : 
+  RooResolutionModel(name,title,x), 
+  mean("mean","Mean",this,_mean),
+  sigma("sigma","Width",this,_sigma),
+  msf("msf","Mean Scale Factor",this,_msSF),
+  ssf("ssf","Sigma Scale Factor",this,_msSF)
+{  
+}
 
 
 RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& x, 

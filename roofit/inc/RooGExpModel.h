@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGExpModel.rdl,v 1.2 2001/09/20 01:41:48 verkerke Exp $
+ *    File: $Id: RooGExpModel.rdl,v 1.3 2001/09/24 23:08:56 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -27,6 +27,15 @@ public:
 
   // Constructors, assignment etc
   inline RooGExpModel() { }
+  RooGExpModel(const char *name, const char *title, RooRealVar& x, 
+	       RooAbsReal& sigma, RooAbsReal& rlife, 
+	       Bool_t nlo=kFALSE, Type type=Normal) ; 
+
+  RooGExpModel(const char *name, const char *title, RooRealVar& x, 
+	       RooAbsReal& sigma, RooAbsReal& rlife, 
+	       RooAbsReal& srSF, 
+	       Bool_t nlo=kFALSE, Type type=Normal) ; 
+
   RooGExpModel(const char *name, const char *title, RooRealVar& x, 
 	       RooAbsReal& sigma, RooAbsReal& rlife, 
 	       RooAbsReal& sigmaSF, RooAbsReal& rlifeSF,
