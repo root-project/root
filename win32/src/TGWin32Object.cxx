@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32Object.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32Object.cxx,v 1.2 2001/05/23 16:41:24 brun Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************
@@ -88,29 +88,15 @@
 // ClassImp(TGWin32Switch)
 
 //______________________________________________________________________________
-TGWin32Switch::TGWin32Switch(){
-    fMasterIsActive = -1;
+TGWin32Switch::TGWin32Switch(TGWin32Object *master, TGWin32Switch *mirror, Bool_t ownmaster)
+ :fMasterIsActive(1),flpMasterObject(master),flpMirror(mirror),fOwnMasterFlag(ownmaster)
+{
 }
 
 //______________________________________________________________________________
-TGWin32Switch::TGWin32Switch(TGWin32Object *master, TGWin32Switch *mirror, Bool_t ownmaster){
-
-//    fDoubleBuffer   = 0;
-    fMasterIsActive = 1;
-    flpMasterObject = master;
-    flpMirror       = mirror;
-    fOwnMasterFlag  = ownmaster;
-
-}
-
-//______________________________________________________________________________
-TGWin32Switch::TGWin32Switch(TGWin32Object *master, Bool_t ownmaster){
-
-//    fDoubleBuffer   = 0;
-    fMasterIsActive = 1;
-    flpMasterObject = master;
-    fOwnMasterFlag  = ownmaster;
-    flpMirror       = 0;
+TGWin32Switch::TGWin32Switch(TGWin32Object *master, Bool_t ownmaster)
+ :fMasterIsActive(1),flpMasterObject(master),flpMirror(0),fOwnMasterFlag(ownmaster)
+{   
 }
 
 //______________________________________________________________________________
@@ -407,7 +393,43 @@ TGWin32Object *TGWin32Switch::GetMasterObject()
 //______________________________________________________________________________
 TGWin32Object::TGWin32Object()
 {
-  fTypeFlag = -1;
+  fTypeFlag    = -1;   // = 2 means text window
+  fIsPixmap    = 0;    // 1 object contains NON windows object (pixmap, for instance)
+  fWin32Mother = 0;    // Pointer to the mother object
+
+  fBufferObj   = 0;    // Double buffering object (pixmap usually)
+
+  fDoubleBuffer= 0;    // Double buffer on flag
+
+  fhSemaphore  = 0;    // Win32 semaphore to synch events
+  fObjectDC    = 0;    // WIN32 Device Context handle;
+  fObjectClipRegion = 0;
+  memset(&fWin32WindowSize,0,sizeof(RECT));
+
+  memset(&fPosition,0,sizeof(RECT));
+  memset(&fWinSize,0,sizeof(SIZE));  // width(cx)&height(cy) of the window
+  memset(&fSizeFull,0,sizeof(SIZE)); // width(cx)&height(cy) of the window (size of the bord is included)
+  fClip  = 0;        // 1 if the clipping is on
+  fXclip = 0;        // x coordinate of the clipping rectangle
+  fYclip = 0;        // y coordinate of the clipping rectangle
+  fWclip = 1000;     // width of the clipping rectangle
+  fHclip = 1000;     // height of the clipping rectangle
+
+  fdwCharX  = 0;
+  fdwCharY  = 0;
+  fdwAscent = 0;
+
+
+//*-*
+//*-*   Input echo Graphic Context global for all windows
+//*-*
+
+  fFill_hollow  =  0; // Flag if fill style is hollow
+  fCurrent_fasi =  0; // Current fill area style index
+  fAlign_hori   = -1; // Align text left, center, right
+  fAlign_vert   = -1; // Align text bottom, middle, top
+
+  fCurrent_font_number = 0; // current font number in font[]
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name$:$Id$
+// @(#)root/win32:$Name:  $:$Id: TGWin32WindowsObject.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Valery Fine   11/03/96
 
 /*************************************************************************
@@ -54,6 +54,7 @@ protected:
     friend class TWin32Canvas;
     friend class TWin32BrowserImp;
     friend class TWin32GLViewerImp;
+    friend class TWin32InventorViewerImp;
 
 //***    TCanvas           *fCanvas;
     TWin32Canvas      *fCanvasImp;

@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32Marker.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32Marker.cxx,v 1.2 2001/06/27 15:58:15 brun Exp $
 // Author: Valery Fine   27/01/96
 
 /*************************************************************************
@@ -12,7 +12,9 @@
 #include "TGWin32Marker.h"
 
 //______________________________________________________________________________
-TGWin32Marker::TGWin32Marker(int n, TPoint *xy, int type){
+TGWin32Marker::TGWin32Marker(int n, TPoint *xy, int type) : fNumNode(n),
+               fChain(0), fCindex(0), fMarkerType(type)
+{
   fNumNode = n;
   fMarkerType = type;
   if (type >= 2) {
@@ -21,11 +23,7 @@ TGWin32Marker::TGWin32Marker(int n, TPoint *xy, int type){
            fChain[i].x = xy[i].GetX();
            fChain[i].y = xy[i].GetY();
         }
-     } else {
-        fChain = 0;
      }
-  } else {
-     fChain = 0;
   }
 }
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name$:$Id$
+// @(#)root/win32:$Name:  $:$Id: TGWin32Object.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************
@@ -45,11 +45,11 @@ private:
  Int_t          fMasterIsActive;  // = 0 Master object is passive
  TGWin32Object *flpMasterObject;  // Object to implement WIN32 direct opeartions
  TGWin32Switch *flpMirror;        // Object to implement double buffering and "mirror" operation
- Bool_t         fOwnMasterFlag;   // Whether sthis object "owns" the Master object and gas to delete it alone
+ Bool_t         fOwnMasterFlag;   // Whether this object "owns" the Master object and gas to delete it alone
 
 public:
 
-    TGWin32Switch();
+    TGWin32Switch():fMasterIsActive(-1),flpMasterObject(0),flpMirror(0),fOwnMasterFlag(kFALSE){}
     TGWin32Switch(TGWin32Object *master, TGWin32Switch *mirror = 0, Bool_t ownmaster = kTRUE );
     TGWin32Switch(TGWin32Object *master,  Bool_t ownmaster);
     virtual ~TGWin32Switch();

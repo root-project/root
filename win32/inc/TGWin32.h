@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.8 2001/05/29 10:22:57 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.9 2001/05/29 15:25:27 rdm Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -77,6 +77,7 @@ class TGWin32  :  public TVirtualX  {
    friend class TGWin32WindowsObject;
    friend class TGWin32PixmapObject;
    friend class TWin32GLViewerImp;
+   friend class TWin32InventorViewerImp;
    friend class TPadOpenGLView;
 
 protected:

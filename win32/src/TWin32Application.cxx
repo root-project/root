@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32Application.cxx,v 1.2 2001/04/22 16:00:56 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32Application.cxx,v 1.3 2001/04/23 08:11:52 brun Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************
@@ -72,7 +72,7 @@ unsigned int _stdcall ROOT_CmdLoop(HANDLE ThrSem)
 //*-*     the return value is -1.
 //*-*
 
-       if (msg.hwnd == NULL & (msg.message == ROOT_CMD || msg.message == ROOT_SYNCH_CMD)) {
+       if ((msg.hwnd == NULL) && (msg.message == ROOT_CMD || msg.message == ROOT_SYNCH_CMD)) {
 
            if (TWin32HookViaThread::ExecuteEvent(&msg, msg.message==ROOT_SYNCH_CMD)) continue;
        }

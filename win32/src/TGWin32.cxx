@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.2 2001/05/29 06:57:42 brun Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -208,6 +208,7 @@ Bool_t TGWin32::Init(void *display)
   fDrawMode        = kCopy;
   fTextFontModified = 1;
 
+  fGLKernel = 0;
  // fGLKernel = new TWin32GLKernel();
 
   //
@@ -456,7 +457,6 @@ Bool_t TGWin32::Init(void *display)
 
 //*-*  Check whether we can use palette
 
-  static LPLOGPALETTE flpPalette = 0;
   flpPalette = 0;
   fMaxCol    = 0;
 //*-*
