@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.117 2003/06/02 09:37:01 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.118 2003/06/21 06:07:46 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2156,13 +2156,17 @@ void TClass::Streamer(void *object, TBuffer &b)
 
    } else if (fClassInfo && !IsForeign()) {   // Instrumented class
 
-      if (!fInterStreamer)  {
-         G__CallFunc* f  = new G__CallFunc;
-         f->SetFunc(fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer));
-         fInterStreamer = f;
+      G__CallFunc* func = (G__CallFunc*)fInterStreamer;
+
+      if (!func)  {
+         func  = new G__CallFunc;
+         func->SetFunc(fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer));
+         fInterStreamer = func;
+      } else {
+         // Reset the argument list!
+         func->SetArgs("");
       }
 
-      G__CallFunc* func = (G__CallFunc*)fInterStreamer;
       // set arguments
       func->SetArg((Long_t)&b);
       // call function
