@@ -1,11 +1,11 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.12 2004/02/12 13:46:53 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.13 2004/02/13 20:12:44 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 // TPythia6                                                                   //
 //                                                                            //
-// TPythia is an interface class to F77 version of Pythia 6.1                 //
+// TPythia is an interface class to F77 version of Pythia 6.2                 //
 // CERNLIB event generators, written by T.Sjostrand.                          //
 // For the details about these generators look at Pythia/Jetset manual:       //
 //                                                                            //
