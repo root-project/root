@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.1 2004/09/13 12:47:35 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.2 2004/09/20 15:33:26 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -69,6 +69,7 @@ private:
    void           DrawGrabRect(Int_t i, Int_t x, Int_t y);
    TGCompositeFrame *FindLayoutFrame(TGFrame *f);
    Bool_t         IsSelectedVisible();
+   void           CloseMenus();
 
 public:
    TGFrame       *InEditable(Window_t id);

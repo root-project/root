@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.h,v 1.2 2004/09/20 15:33:26 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.h,v 1.3 2004/09/20 19:07:23 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -61,7 +61,6 @@ private:
    void EnableLassoButtons(Bool_t on = kTRUE);
    void EnableSelectedButtons(Bool_t on = kTRUE);
    void EnableEditButtons(Bool_t on = kTRUE);
-   TGMdiFrame *FindEditableMdiFrame(const TGWindow *win);
 
 public:
    TGuiBuilder(const TGWindow *p = 0);
@@ -86,6 +85,8 @@ public:
    virtual void      HandleWindowClosed(Int_t id);
    virtual void      UpdateStatusBar();
    virtual void      EraseStatusBar();
+
+   TGMdiFrame *FindEditableMdiFrame(const TGWindow *win);
 
    TGuiBldEditor    *GetEditor() const { return fEditor; }
 

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.4 2004/09/14 07:45:38 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.5 2004/09/20 15:33:26 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -955,7 +955,6 @@ Bool_t TGuiBldDragManager::RecognizeGesture(Event_t *event, TGFrame *frame)
       SelectFrame(frame);
       HandleButon3Pressed(event, frame);
       return kTRUE;
-
    } else if (((event->fCode == kButton1) && (event->fState & kKeyControlMask)) ||
              ((event->fCode == kButton1) && fBuilder && fBuilder->IsSelectMode())) {
       SwitchEditable(frame);
@@ -1064,6 +1063,8 @@ Bool_t TGuiBldDragManager::HandleButton(Event_t *event)
 {
    // handle button event occured in some ROOT frame
 
+   if (event->fCode != kButton3) CloseMenus();
+
    if (event->fType == kButtonPress) return HandleButtonPress(event);
    else return HandleButtonRelease(event);
 }
@@ -1139,6 +1140,7 @@ Bool_t TGuiBldDragManager::HandleEvent(Event_t *event)
             static UInt_t gLastButton = 0;
             static Int_t gDbx = 0;
             static Int_t gDby = 0;
+
 
             if ((event->fTime - gLastClick < 350) &&
                 (event->fCode == gLastButton) &&
@@ -1274,7 +1276,9 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
    TGFileInfo fi;
    static TString dir(".");
    const char *fname;
-     
+
+   CloseMenus();
+
    fi.fFileTypes = gSaveMacroTypes;
    fi.fIniDir    = StrDup(dir);
 
@@ -2467,7 +2471,8 @@ void TGuiBldDragManager::Compact(Bool_t global)
    if (!fClient || !fClient->IsEditable()) return;
 
    if (global) {
-      comp = (TGCompositeFrame*)fClient->GetRoot()->GetMainFrame();
+      if (!fBuilder) comp = (TGCompositeFrame*)fClient->GetRoot()->GetMainFrame();
+      else comp = fBuilder->FindEditableMdiFrame(fClient->GetRoot());
    } else {
       if (fPimpl->fGrab &&
           fPimpl->fGrab->InheritsFrom(TGCompositeFrame::Class())) {
@@ -2481,7 +2486,6 @@ void TGuiBldDragManager::Compact(Bool_t global)
    TIter next(comp->GetList());
 
    TGFrame *root = (TGFrame *)fClient->GetRoot();
-
    root->SetEditable(kFALSE);
 
    if (global) {
@@ -2704,7 +2708,7 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
    fFrameMenu->AddLabel(title.Data());
    fFrameMenu->AddSeparator();
 
-   if (!fEditor) fFrameMenu->AddEntry("Gui Builder", kPropertyAct);
+   if (!fBuilder) fFrameMenu->AddEntry("Gui Builder", kPropertyAct);
 
    if (!frame->IsEditable() && !InEditable(frame->GetId())) {
       fPimpl->fSaveGrab = frame;
@@ -2881,7 +2885,6 @@ void TGuiBldDragManager::HandleLayoutOrder(Bool_t forward)
    Bool_t sav = comp->IsLayoutBroken();
    comp->SetLayoutBroken(kFALSE);
    TGWindow *root = (TGWindow *)fClient->GetRoot();
-
    root->SetEditable(kFALSE);
    comp->Layout();
    DoRedraw();
@@ -2920,6 +2923,7 @@ void TGuiBldDragManager::HandleGrid()
          }
       }
    }
+
    root->SetEditable(kFALSE);
    DoRedraw();
    root->SetEditable(kTRUE);
@@ -3105,3 +3109,12 @@ TGFrame *TGuiBldDragManager::GetSelected() const
    return (fPimpl ?  fPimpl->fGrab : 0);
 }
 
+//______________________________________________________________________________
+void TGuiBldDragManager::CloseMenus()
+{
+   //
+
+   void *ud;
+   if (fFrameMenu) fFrameMenu->EndMenu(ud);
+   if (fLassoMenu) fLassoMenu->EndMenu(ud);
+}

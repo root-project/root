@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.3 2004/09/20 15:33:26 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.4 2004/09/20 19:07:23 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -660,8 +660,6 @@ Bool_t TGuiBuilder::HandleKey(Event_t *event)
 
 
    if ((event->fType == kGKeyPress) && (event->fState & kKeyControlMask)) {
-      root->SetEditable(kFALSE);
-
       UInt_t keysym;
       char str[2];
       gVirtualX->LookupString(event, str, sizeof(str), keysym);
@@ -692,6 +690,7 @@ Bool_t TGuiBuilder::NewProject(Event_t *)
    fEditable->MapRaised();
    fEditable->AddInput(kButtonPressMask);
    fEditable->SetEditable(kTRUE);
+   fEditable->AddInput(kKeyPressMask);
 
    return kTRUE;
 }
