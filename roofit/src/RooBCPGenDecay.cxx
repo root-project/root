@@ -103,14 +103,14 @@ Double_t RooBCPGenDecay::coefficient(Int_t basisIndex) const
   }
 
   if (basisIndex==_basisSin) {
-    //sin term: -(+/- (1-2w) + _mu*(1 +/- delw))*S
-    return (_tag*(1-2*_avgMistag) + _mu*(1. + _tag*_delMistag))*_avgS ;
+    //sin term: (+/- (1-2w) + _mu*(1 -/+ delw))*S
+    return (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgS ;
     // =   (_tag*avgDil + _mu*(1 + tag*deltaDil/2)) * S
   }
   
   if (basisIndex==_basisCos) {
-    //cos term: (+/- (1-2w) + _mu*(1 +/- delw))*C
-    return 1.*(_tag*(1-2*_avgMistag) + _mu*(1. + _tag*_delMistag))*_avgC ;
+    //cos term: -(+/- (1-2w) + _mu*(1 -/+ delw))*C
+    return -1.*(_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgC ;
     // =   -(_tag*avgDil + _mu*(1 + _tag*deltaDil/2) )* C
   } 
   
@@ -205,8 +205,8 @@ void RooBCPGenDecay::generateEvent(Int_t code)
 // 2 in next line is conservative and inefficient - allows for delMistag=1!
     Double_t maxAcceptProb = 2 + fabs(maxDil*_avgS) + fabs(maxDil*_avgC);        
     Double_t acceptProb    = (1-_tag*_delMistag + _mu*_tag*(1. - 2.*_avgMistag)) 
-                           + (_tag*(1-2*_avgMistag) + _mu*(1. + _tag*_delMistag))*_avgS*sin(_dm*tval) 
-                           - (_tag*(1-2*_avgMistag) + _mu*(1. + _tag*_delMistag))*_avgC*cos(_dm*tval);
+                           + (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgS*sin(_dm*tval) 
+                           - (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgC*cos(_dm*tval);
 
     Bool_t accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
     
