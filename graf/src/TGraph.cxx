@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.36 2001/03/05 22:48:46 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.37 2001/03/07 07:24:25 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1736,9 +1736,6 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
 //*-*  Set Clipping option
   gPad->SetBit(kClipFrame, TestBit(kClipFrame));
-
-//*-*-           If necessary the adresses of the vectors are saved in
-//*-*-           a link area.
 
   OptionZ = 1;
 
