@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.197 2004/02/13 07:12:57 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.198 2004/05/07 09:11:03 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1329,10 +1329,35 @@ TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember, Int_
 //______________________________________________________________________________
 TStreamerElement* TStreamerInfo::GetStreamerElementReal(Int_t i, Int_t j) const
 {
-   //  if i is the index in the compressed array fElems and 
-   //  ise the corresponding serial number in the uncompressed array fElements
-   //  the function returns the TStreamerElement corresponding to "ise+j"
-   //  in fElements.
+   //  TStreamerInfo  holds two types of data structures
+   //    -TObjArray* fElements; containing the list of all TStreamerElement
+   //       objects for this class version.
+   //    -ULong_t*  fElem;  containing the preprocessed information 
+   //       by TStreamerInfo::Compile In case consecutive data members
+   //       are of the same type, the Compile function declares the consecutive
+   //       elements as one single element in fElems.
+   //
+   //  example with the class TAttLine
+   //   gROOT->GetClass("TAttLine")->GetStreamerInfo()->ls(); produces;
+   //      StreamerInfo for class: TAttLine, version=1
+   //       short        fLineColor      offset=  4 type= 2 line color
+   //       short        fLineStyle      offset=  6 type= 2 line style
+   //       short        fLineWidth      offset=  8 type= 2 line width
+   //        i= 0, fLineColor      type= 22, offset=  4, len=3, method=0
+   //  For I/O implementations (eg. XML) , one has to know the original name
+   //  of the data member. This function can be used to return a pointer
+   //  to the original TStreamerElement object corresponding to the j-th
+   //  element of a compressed array in fElems.
+   //
+   //  parameters description:
+   //    - i: the serial number in array fElem
+   //    - j: the element number in the array of consecutive types
+   //  In the above example the class TAttLine has 3 consecutive data members
+   //  of the same type "short". Compile makes one single array of 3 elements.
+   //  To access the TStreamerElement for the second element
+   //  of this array, one can call:
+   //     TStreamerElement *el = GetStreamerElementReal(0,1);
+   //     const char* membername = el->GetName();
    //  This function is typically called from Tbuffer, TXmlBuffer
    
    if (i < 0 || i >= fNdata) return 0;
@@ -1341,7 +1366,7 @@ TStreamerElement* TStreamerInfo::GetStreamerElementReal(Int_t i, Int_t j) const
    TStreamerElement *se = (TStreamerElement*)fElem[i];
    if (!se) return 0;
    Int_t nelems = fElements->GetEntriesFast();
-   for (Int_t ise=0;ise<fNdata;ise++) {
+   for (Int_t ise=0;ise<nelems;ise++) {
       if (se != (TStreamerElement*)fElements->UncheckedAt(ise)) continue;   
       if (ise+j >= nelems) return 0;
       return (TStreamerElement*)fElements->UncheckedAt(ise+j);   
