@@ -99,9 +99,18 @@ ifeq ($(ARCH),solarisgcc)
 # Solaris gcc
 CXX           = g++
 CXXFLAGS      = -O -fPIC
-LD            = CC
+LD            = g++
 LDFLAGS       = -O
-SOFLAGS       = -G
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),solariskcc)
+# Solaris kcc
+CXX           = KCC
+CXXFLAGS      = -O4 -KPIC
+LD            = KCC
+LDFLAGS       = -O4
+SOFLAGS       =
 endif
 
 ifeq ($(ARCH),solarisx86)
@@ -300,6 +309,24 @@ CXXFLAGS      = -O -Wall -fPIC
 LD            = g++
 LDFLAGS       = -O
 SOFLAGS       = -shared -Wl,-soname,
+endif
+
+ifeq ($(ARCH),freebsd)
+# FreeBSD with libc5
+CXX           = g++
+CXXFLAGS      = -O -pipe -W -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared -Wl,-x
+endif
+
+ifeq ($(ARCH),freebsd4)
+# FreeBSD with glibc
+CXX           = g++
+CXXFLAGS      = -O -pipe -W -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared -Wl,-x
 endif
 
 ifeq ($(ARCH),hiux)
