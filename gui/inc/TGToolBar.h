@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.2 2000/09/07 00:33:33 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.3 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -43,7 +43,6 @@ struct ToolBarData_t {
 class TGToolBar : public TGCompositeFrame {
 
 private:
-   TList   *fWidgets;     // list of buttons and layouthints to be deleted
    TList   *fPictures;    // list of pictures that should be freed
 
 public:
