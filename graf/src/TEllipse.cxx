@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.6 2001/02/15 21:14:56 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.7 2001/03/23 17:11:26 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -477,7 +477,7 @@ void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phi
          else                      gPad->PaintPolyLine(np+3,x,y);
       }
    }
-}   
+}
 
 
 //______________________________________________________________________________
@@ -486,7 +486,7 @@ void TEllipse::Print(Option_t *) const
 //*-*-*-*-*-*-*-*-*-*-*Dump this ellipse with its attributes*-*-*-*-*-*-*-*-*
 //*-*                  =====================================
 
-   printf("Ellipse:  X1= %f Y1=%f R1=%f R2=%f",fX1,fY1,fR1,fR2);
+   printf("Ellipse:  X1=%f Y1=%f R1=%f R2=%f",fX1,fY1,fR1,fR2);
    if (GetLineColor() != 1) printf(" Color=%d",GetLineColor());
    if (GetLineStyle() != 1) printf(" Style=%d",GetLineStyle());
    if (GetLineWidth() != 1) printf(" Width=%d",GetLineWidth());
@@ -539,7 +539,7 @@ void TEllipse::Streamer(TBuffer &R__b)
       R__b >> theta;  fTheta  = theta;
       R__b.CheckByteCount(R__s, R__c, TEllipse::IsA());
       //====end of old versions
-      
+
    } else {
       TEllipse::Class()->WriteBuffer(R__b,this);
    }
