@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.194 2004/11/08 20:06:36 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.195 2004/11/10 06:22:38 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -828,39 +828,29 @@ int NeedTemplateKeyword(G__ClassInfo &cl)
       if (loc) *loc = 0;
       struct G__Definedtemplateclass *templ = G__defined_templateclass(templatename);
       if (templ) {
-         G__SourceFileInfo fileinfo(templ->filenum);
-         // We are trying to discover wether the class was automatically
-         // instantiated or not.  Sorrowfully CINT reports the starting line of
-         // a class template as the line containing the 'template' keyword.  BUT it
-         // reports the stating line of an automatically instantiated class as the
-         // line containing the keyword 'class'.  Those 2 can be different:
-         //            template <class T>
-         //            class Class2 { .....
-         // So until we get a better idea, we use the heuristic that the 2 keywords
-         // should be within 3 lines.
 
-         //fprintf(stderr,"DEBUG: temp line %d, cl line %d\ntemp file %s, cl file %s\n",
-         //        templ->line ,cl.LineNumber(),
-         //        cl.FileName(),
-         //        fileinfo.Name());
-         if (abs(templ->line-cl.LineNumber())<=3 &&
-             strcmp(cl.FileName(), fileinfo.Name())==0) {
-
-            delete [] templatename;
-            // This is an automatically instantiated templated class.
+         int current = cl.Tagnum();
+         G__IntList * ilist = templ->instantiatedtagnum;
+         while(ilist) {
+            if (ilist->i == current) {
+               delete [] templatename;
+               // This is an automatically instantiated templated class.
 #ifdef __KCC
-            // for now KCC works better without it !
-            return 0;
+               // for now KCC works better without it !
+               return 0;
 #else
-            return 1;
+               return 1;
 #endif
-         } else {
-
-            delete [] templatename;
-            // This is a specialized templated class
-            return 0;
+            }
+            ilist = ilist->next;
          }
+         
+         delete [] templatename;
+         // This is a specialized templated class
+         return 0;
+
       } else {
+
         delete [] templatename;
          // It might be a specialization without us seeing the template definition
          return 0;
