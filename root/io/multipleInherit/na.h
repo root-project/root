@@ -18,7 +18,7 @@ class  TMrbNamedArrayI: public TArrayI, public TNamed {
    public:
       TMrbNamedArrayI(){};
       TMrbNamedArrayI(const char* name, const char* title, 
-                      const Int_t len = 0, const Int_t * val = 0);
+                      Int_t len = 0, const Int_t * val = 0);
       ~TMrbNamedArrayI(){};
 
 ClassDef(TMrbNamedArrayI, 1)
