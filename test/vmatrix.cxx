@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.24 2004/01/27 08:12:26 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.25 2004/03/20 17:29:43 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -1272,7 +1272,7 @@ void stress_sym_mm_multiplications(Int_t msize)
     for (i = v.GetLwb(); i <= v.GetUpb(); i++)
       v(i) = 1+i;
     TMatrixDSym diag(msize);
-    TMatrixDDiag(diag,0) = v;
+    TMatrixDDiag d(diag); d = v;
     TMatrixDSym eth = m;
     for (i = eth.GetRowLwb(); i <= eth.GetRowUpb(); i++)
       for (j = eth.GetColLwb(); j <= eth.GetColUpb(); j++)

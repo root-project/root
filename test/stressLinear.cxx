@@ -836,7 +836,6 @@ public:
 };
 
 #if !defined (__CINT__) || defined (__MAKECINT__)
-//#ifndef __CINT__
 class TestUnit : public TElementPosActionD {
   mutable Int_t fIsUnit;
   void Operation(Double_t &element) const
@@ -1362,7 +1361,7 @@ void mstress_mm_multiplications()
       for (i = v.GetLwb(); i <= v.GetUpb(); i++)
         v(i) = 1+i;
       TMatrixD diag(msize,msize);
-      TMatrixDDiag d = TMatrixDDiag(diag);
+      TMatrixDDiag d(diag);
       d = v;
       TMatrixD eth = m;
       for (i = eth.GetRowLwb(); i <= eth.GetRowUpb(); i++)
@@ -1553,7 +1552,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
     for (i = v.GetLwb(); i <= v.GetUpb(); i++)
       v(i) = 1+i;
     TMatrixDSym diag(msize);
-    TMatrixDDiag(diag,0) = v;
+    TMatrixDDiag d(diag); d = v;
     TMatrixDSym eth = ms;
     for (i = eth.GetRowLwb(); i <= eth.GetRowUpb(); i++)
       for (j = eth.GetColLwb(); j <= eth.GetColUpb(); j++)
@@ -2482,17 +2481,14 @@ void vstress_matrix_slices(Int_t vsize)
   if (gVerbose)
     cout << "\nCheck modifying the matrix diagonal" << endl;
   m = pattern;
-  //(TMatrixDDiag)m = pattern-3;
   TMatrixDDiag td = m;
   td = pattern-3;
   ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
   vc = TMatrixDDiag(m);
   ok &= VerifyVectorValue(vc,pattern-3,gVerbose,EPSILON);
-  //TMatrixDDiag(m) += 3;
   td += 3;
   ok &= ( m == pattern ) ? kTRUE : kFALSE;
   vc = pattern+3;
-  //(TMatrixDDiag)m = vc;
   td = vc;
   ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
   {
@@ -2523,7 +2519,6 @@ void vstress_matrix_slices(Int_t vsize)
   m1 = pattern+10;
   for (i = vr.GetLwb(); i <= vr.GetUpb(); i++)
     vr(i) = i+2;
-  //(TMatrixDDiag)m1 = vr;               // Make the other multiplicand
   TMatrixDDiag td2 = m1;
   td2 = vr;
   ok &= ( !(m1 == pattern+10) ) ? kTRUE : kFALSE;
@@ -2668,7 +2663,7 @@ Bool_t test_svd_expansion(const TMatrixD &A)
     const Int_t nRows = svd.GetU().GetNrows();
     const Int_t nCols = svd.GetV().GetNcols();
     TMatrixD s(nRows,nCols);
-    TMatrixDDiag(s,0) = svd.GetSig();
+    TMatrixDDiag diag(s); diag = svd.GetSig();
     TMatrixD vt(TMatrixDBase::kTransposed,svd.GetV());
     TMatrixD tmp = s * vt;
     ok &= VerifyMatrixIdentity(A,svd.GetU() * tmp,gVerbose,100*EPSILON);
@@ -2825,7 +2820,7 @@ void astress_lineqn()
     // dominant one fore sizes > 100, otherwise the verification might fail
 
     TMatrixDSym m = THilbertMatrixDSym(msize);
-    TMatrixDDiag diag = TMatrixDDiag(m,0);
+    TMatrixDDiag diag(m);
     diag += 1.;
 
     TVectorD rowsum(msize); rowsum.Zero();

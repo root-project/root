@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.17 2004/01/26 13:58:21 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.18 2004/01/26 22:29:25 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -609,17 +609,14 @@ void stress_matrix_slices(Int_t vsize)
   if (gVerbose)
     cout << "\nCheck modifying the matrix diagonal" << endl;
   m = pattern;
-  //(TMatrixDDiag)m = pattern-3;
   TMatrixDDiag td = m;
   td = pattern-3;
   ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
   vc = TMatrixDDiag(m);
   ok &= VerifyVectorValue(vc,pattern-3,gVerbose,EPSILON);
-  //TMatrixDDiag(m) += 3;
   td += 3;
   ok &= ( m == pattern ) ? kTRUE : kFALSE;
   vc = pattern+3;
-  //(TMatrixDDiag)m = vc;
   td = vc;
   ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
   {
@@ -650,7 +647,6 @@ void stress_matrix_slices(Int_t vsize)
   m1 = pattern+10;
   for (i = vr.GetLwb(); i <= vr.GetUpb(); i++)
     vr(i) = i+2;
-  //(TMatrixDDiag)m1 = vr;               // Make the other multiplicand
   TMatrixDDiag td2 = m1;
   td2 = vr;
   ok &= ( !(m1 == pattern+10) ) ? kTRUE : kFALSE;

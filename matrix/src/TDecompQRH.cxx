@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.6 2004/02/12 13:03:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.8 2004/03/22 08:34:36 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -140,7 +140,7 @@ Int_t TDecompQRH::Decompose()
       for (Int_t j = ic ; j < nCol; j++)
         fR(i,j) = fQ(i,j);
     }
-    TMatrixDDiag(fR,0) = diagR;
+    TMatrixDDiag diag(fR); diag = diagR;
 
     fQ.Shift(rowLwb,0);
     fR.Shift(0,colLwb);

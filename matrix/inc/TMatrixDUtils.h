@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.20 2004/01/27 17:26:20 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.21 2004/03/19 14:20:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -226,7 +226,7 @@ protected:
 
 public:
   TMatrixDDiag_const() { fMatrix = 0; fInc = 0; fNdiag = 0; fPtr = 0; }
-  TMatrixDDiag_const(const TMatrixDBase &matrix,Int_t dummy=0);
+  TMatrixDDiag_const(const TMatrixDBase &matrix);
 
   inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
   inline const Double_t     *GetPtr   () const { return fPtr; }
@@ -244,7 +244,7 @@ class TMatrixDDiag : public TMatrixDDiag_const {
 
 public:
   TMatrixDDiag() {}
-  TMatrixDDiag(TMatrixDBase &matrix,Int_t dummy=0);
+  TMatrixDDiag(TMatrixDBase &matrix);
   TMatrixDDiag(const TMatrixDDiag &md);
 
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }
@@ -284,7 +284,7 @@ protected:
 
 public:
   TMatrixDFlat_const() { fMatrix = 0; fPtr = 0; }
-  TMatrixDFlat_const(const TMatrixDBase &matrix,Int_t dummy=0);
+  TMatrixDFlat_const(const TMatrixDBase &matrix);
 
   inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
   inline const Double_t     *GetPtr   () const { return fPtr; }
@@ -298,7 +298,7 @@ class TMatrixDFlat : public TMatrixDFlat_const {
 
 public:
   TMatrixDFlat() {}
-  TMatrixDFlat(TMatrixDBase &matrix,Int_t dummy=0);
+  TMatrixDFlat(TMatrixDBase &matrix);
   TMatrixDFlat(const TMatrixDFlat &mf);
 
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.9 2004/02/12 13:03:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.11 2004/03/22 08:34:36 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -157,7 +157,7 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
 //    TMatrixD Q(TMatrixDBase::kTransposed,Qt);
 //    ok &= VerifyMatrixIdentity(Q * Qt,E2,kTRUE,1.0e-13);
 //    TMatrixD C(nRow,nCol);
-//    TMatrixDDiag(C,0) = sDiag;
+//    TMatrixDDiag(C) = sDiag;
 //    for (Int_t i = 0; i < nCol-1; i++)
 //      C(i,i+1) = oDiag(i+1);
 //    TMatrixD A = Q*C*Ht;
@@ -273,7 +273,7 @@ Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD 
 //    TMatrixD Uprimet = u*Q;
 //    TMatrixD Uprime(TMatrixDBase::kTransposed,Uprimet);
 //    TMatrixD Sprime(nRow,nCol);
-//    TMatrixDDiag(Sprime,0) = sDiag;
+//    TMatrixDDiag(Sprime) = sDiag;
 //    ok &= VerifyMatrixIdentity(Uprimet * C * Vprime,Sprime,kTRUE,1.0e-13);
 //    ok &= VerifyMatrixIdentity(Q*Uprime * Sprime * Vprimet * Ht,a,kTRUE,1.0e-13);
 
@@ -515,7 +515,7 @@ const TMatrixD TDecompSVD::GetMatrix()
   const Int_t nRows = fU.GetNrows();
   const Int_t nCols = fV.GetNcols();
   TMatrixD s(nRows,nCols);
-  TMatrixDDiag(s,0) = fSig;
+  TMatrixDDiag diag(s); diag = fSig;
   const TMatrixD vt(TMatrixDBase::kTransposed,fV);
   return fU * s * vt;
 }

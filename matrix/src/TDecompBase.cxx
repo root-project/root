@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.8 2004/02/12 13:03:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.10 2004/03/22 08:34:36 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -306,7 +306,7 @@ void TDecompBase::Invert(TMatrixD &inv)
   }
 
   memset(inv.GetMatrixArray(),0,inv.GetNoElements()*sizeof(Double_t));
-  TMatrixDDiag(inv,0) = 1.;
+  TMatrixDDiag diag(inv); diag = 1.;
   MultiSolve(inv);
 }
 
