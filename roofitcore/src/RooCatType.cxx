@@ -11,8 +11,8 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-#include "RooFitCore/RooCat.hh"
+#include "RooFitCore/RooCatType.hh"
 
-ClassImp(RooCat)
+ClassImp(RooCatType)
 
 

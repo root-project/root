@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooValue.cc,v 1.4 2001/03/16 21:31:21 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,14 +16,14 @@
 #include <string.h>
 #include "TObjString.h"
 #include "TTree.h"
-#include "RooFitCore/RooValue.hh"
+#include "RooFitCore/RooRealVar.hh"
 
-ClassImp(RooValue)
+ClassImp(RooRealVar)
 
 
-RooValue::RooValue(const char *name, const char *title,
+RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, const char *unit, RooBlindBase* blinder) :
-  RooAbsValue(name, title, 0, 0, unit), _error(0), _blinder(blinder),
+  RooAbsReal(name, title, 0, 0, unit), _error(0), _blinder(blinder),
   _integMin(-1e10), _integMax(1e10)
 {
   _value = value ;
@@ -32,10 +32,10 @@ RooValue::RooValue(const char *name, const char *title,
   setShapeDirty(kTRUE) ;
 }  
 
-RooValue::RooValue(const char *name, const char *title,
+RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t minValue, Double_t maxValue,
 		       const char *unit, RooBlindBase* blinder) :
-  RooAbsValue(name, title, minValue, maxValue, unit), _blinder(blinder),
+  RooAbsReal(name, title, minValue, maxValue, unit), _blinder(blinder),
   _integMin(minValue), _integMax(maxValue)
 
 {
@@ -44,10 +44,10 @@ RooValue::RooValue(const char *name, const char *title,
   setShapeDirty(kTRUE) ;
 }  
 
-RooValue::RooValue(const char *name, const char *title,
+RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, Double_t minValue, Double_t maxValue,
 		       const char *unit, RooBlindBase* blinder) :
-  RooAbsValue(name, title, minValue, maxValue, unit), _error(0), _blinder(blinder),
+  RooAbsReal(name, title, minValue, maxValue, unit), _error(0), _blinder(blinder),
   _integMin(minValue), _integMax(maxValue)
 {
 //   if (_blinder) _blinder->redoBlind() ;
@@ -56,8 +56,8 @@ RooValue::RooValue(const char *name, const char *title,
   setShapeDirty(kTRUE) ;
 }  
 
-RooValue::RooValue(const RooValue& other) :
-  RooAbsValue(other), 
+RooRealVar::RooRealVar(const RooRealVar& other) :
+  RooAbsReal(other), 
   _error(other._error),
   _blinder(other._blinder),
   _integMin(other._integMin),
@@ -67,20 +67,20 @@ RooValue::RooValue(const RooValue& other) :
   setProjected(other.isProjected()) ;
 }
 
-RooValue::~RooValue() 
+RooRealVar::~RooRealVar() 
 {
 }
 
-RooValue::operator Double_t&() {
+RooRealVar::operator Double_t&() {
   return _value;
 }
 
-RooValue::operator Double_t() {
+RooRealVar::operator Double_t() {
   return this->getVal();
 }
 
 
-void RooValue::setVal(Double_t value) {
+void RooRealVar::setVal(Double_t value) {
 
   // Set current value
   Double_t clipValue ;
@@ -91,11 +91,11 @@ void RooValue::setVal(Double_t value) {
 }
 
 
-void RooValue::setIntegMin(Double_t value) 
+void RooRealVar::setIntegMin(Double_t value) 
 {
   // Check if new limit is consistent
   if (_integMin>_integMax) {
-    cout << "RooValue::setIntegMin(" << GetName() 
+    cout << "RooRealVar::setIntegMin(" << GetName() 
 	 << "): Proposed new integration min. larger than max., setting min. to max." << endl ;
     _integMin = _integMax ;
   } else {
@@ -112,11 +112,11 @@ void RooValue::setIntegMin(Double_t value)
 }
 
 
-void RooValue::setIntegMax(Double_t value)
+void RooRealVar::setIntegMax(Double_t value)
 {
   // Check if new limit is consistent
   if (_integMax<_integMin) {
-    cout << "RooValue::setIntegMax(" << GetName() 
+    cout << "RooRealVar::setIntegMax(" << GetName() 
 	 << "): Proposed new integration max. smaller than min., setting max. to min." << endl ;
     _integMax = _integMax ;
   } else {
@@ -133,7 +133,7 @@ void RooValue::setIntegMax(Double_t value)
 }
 
 
-Double_t RooValue::operator=(Double_t newValue) 
+Double_t RooRealVar::operator=(Double_t newValue) 
 {
   // Clip 
   inIntegRange(newValue,&_value) ;
@@ -144,7 +144,7 @@ Double_t RooValue::operator=(Double_t newValue)
 
 
 
-Bool_t RooValue::inIntegRange(Double_t value, Double_t* clippedValPtr) const
+Bool_t RooRealVar::inIntegRange(Double_t value, Double_t* clippedValPtr) const
 {
   // Check which limit we exceeded and truncate. Print a warning message
   // unless we are very close to the boundary.  
@@ -157,7 +157,7 @@ Bool_t RooValue::inIntegRange(Double_t value, Double_t* clippedValPtr) const
     if(value > _integMax) {
       if(value - _integMax > 1e-6*range) {
 	if (clippedValPtr)
-	  cout << "RooValue::inIntegRange(" << GetName() << "): value " << value
+	  cout << "RooRealVar::inIntegRange(" << GetName() << "): value " << value
 	       << " rounded down to max limit " << _integMax << endl;
       }
       clippedValue = _integMax;
@@ -166,7 +166,7 @@ Bool_t RooValue::inIntegRange(Double_t value, Double_t* clippedValPtr) const
     else if(value < _integMin) {
       if(_integMin - value > 1e-6*range) {
 	if (clippedValPtr)
-	  cout << "RooValue::inIntegRange(" << GetName() << "): value " << value
+	  cout << "RooRealVar::inIntegRange(" << GetName() << "): value " << value
 	       << " rounded up to min limit " << _integMin << endl;
       }
       clippedValue = _integMin;
@@ -181,25 +181,25 @@ Bool_t RooValue::inIntegRange(Double_t value, Double_t* clippedValPtr) const
 
 
 
-Bool_t RooValue::isValid() 
+Bool_t RooRealVar::isValid() 
 {
   return isValid(getVal()) ;
 }
 
 
-Bool_t RooValue::isValid(Double_t value) {
+Bool_t RooRealVar::isValid(Double_t value) {
   return inIntegRange(value) ;
 }
 
 
 
-void RooValue::attachToTree(TTree& t, Int_t bufSize)
+void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
 {
   // Attach object to a branch of given TTree
 
   // First determine if branch is taken
   if (t.GetBranch(GetName())) {
-    //cout << "RooValue::attachToTree(" << GetName() << "): branch in tree " << t.GetName() << " already exists" << endl ;
+    //cout << "RooRealVar::attachToTree(" << GetName() << "): branch in tree " << t.GetName() << " already exists" << endl ;
     t.SetBranchAddress(GetName(),&_value) ;
   } else {    
     TString format(GetName());
@@ -209,7 +209,7 @@ void RooValue::attachToTree(TTree& t, Int_t bufSize)
 }
 
 
-Bool_t RooValue::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   // Read object contents from given stream
 
@@ -224,7 +224,7 @@ Bool_t RooValue::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   int nscan = endptr-((const char *)token.Data()) ;	  
   if (nscan<token.Length() && !token.IsNull()) {
     if (verbose) {
-      cout << "RooValue::readFromStream(" << GetName() 
+      cout << "RooRealVar::readFromStream(" << GetName() 
 	   << "): cannot convert token \"" << token 
 	   << "\" to floating point number" << endl ;
     }
@@ -236,7 +236,7 @@ Bool_t RooValue::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
     return kFALSE ;  
   } else {
     if (verbose) {
-      cout << "RooValue::readFromStream(" << GetName() 
+      cout << "RooRealVar::readFromStream(" << GetName() 
 	   << "): value out of range: " << value << endl ;
     }
     return kTRUE;
@@ -245,7 +245,7 @@ Bool_t RooValue::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 
 
 
-void RooValue::writeToStream(ostream& os, Bool_t compact)
+void RooRealVar::writeToStream(ostream& os, Bool_t compact)
 {
   // Write object contents to given stream
 
@@ -256,12 +256,12 @@ void RooValue::writeToStream(ostream& os, Bool_t compact)
 
 
 RooAbsArg&
-RooValue::operator=(RooAbsArg& aorig)
+RooRealVar::operator=(RooAbsArg& aorig)
 {
-  // Assignment operator for RooValue
-  RooAbsValue::operator=(aorig) ;
+  // Assignment operator for RooRealVar
+  RooAbsReal::operator=(aorig) ;
 
-  RooValue& orig = (RooValue&)aorig ;
+  RooRealVar& orig = (RooRealVar&)aorig ;
   _error = orig._error ;
   _blinder = orig._blinder ;
   _integMin = orig._integMin ;
@@ -270,7 +270,7 @@ RooValue::operator=(RooAbsArg& aorig)
   return (*this) ;
 }
 
-void RooValue::printToStream(ostream& os, PrintOption opt) {
+void RooRealVar::printToStream(ostream& os, PrintOption opt) {
   switch(opt) {
   case Verbose:
     os << fName << " = " << getVal() << " +/- " << _error;    
@@ -293,7 +293,7 @@ void RooValue::printToStream(ostream& os, PrintOption opt) {
     break ;
     
   case Standard:
-    os << "RooValue: " << GetName() << " = " << getVal();
+    os << "RooRealVar: " << GetName() << " = " << getVal();
     if (_blinder) os << " (blind)" ; 
     if(!_unit.IsNull()) os << ' ' << _unit;
     os << " : " << GetTitle() ;
@@ -307,7 +307,7 @@ void RooValue::printToStream(ostream& os, PrintOption opt) {
 }
 
 
-TString *RooValue::format(Int_t sigDigits, const char *options) {
+TString *RooRealVar::format(Int_t sigDigits, const char *options) {
   // Format numeric value in a variety of ways
 
   // parse the options string
@@ -365,7 +365,7 @@ TString *RooValue::format(Int_t sigDigits, const char *options) {
   return text;
 }
 
-Double_t RooValue::chopAt(Double_t what, Int_t where) {
+Double_t RooRealVar::chopAt(Double_t what, Int_t where) {
   // What does this do?
   Double_t scale= pow(10.0,where);
   Int_t trunc= (Int_t)floor(what/scale + 0.5);

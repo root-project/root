@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.2 2001/03/15 23:19:12 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.3 2001/03/16 07:59:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,8 +42,8 @@
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooValue.hh"
-#include "RooFitCore/RooAbsValue.hh"
+#include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooAbsReal.hh"
 
 ClassImp(RooDataSet)
 
@@ -224,12 +224,12 @@ void RooDataSet::add(const RooArgSet& data) {
 }
 
 
-TH1F* RooDataSet::Plot(RooAbsValue& var, const char* cuts, const char* opts)
+TH1F* RooDataSet::Plot(RooAbsReal& var, const char* cuts, const char* opts)
 {
   // Plot distribution given variable for this data set 
   
   // First see if var is in data set 
-  RooAbsValue* plotVar = (RooAbsValue*) _vars.find(var.GetName()) ;
+  RooAbsReal* plotVar = (RooAbsReal*) _vars.find(var.GetName()) ;
   Bool_t ownPlotVar(kFALSE) ;
   if (!plotVar) {
     if (!var.dependsOn(_vars)) {
@@ -238,7 +238,7 @@ TH1F* RooDataSet::Plot(RooAbsValue& var, const char* cuts, const char* opts)
     }
 
     // Clone derived variable 
-    plotVar = (RooAbsValue*) var.Clone()  ;
+    plotVar = (RooAbsReal*) var.Clone()  ;
     ownPlotVar = kTRUE ;    
 
     //Redirect servers of derived clone to internal ArgSet representing the data in this set

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooMappedCategory.rdl,v 1.1 2001/03/17 00:09:29 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -13,14 +13,14 @@
 #define ROO_MAPPED_CATEGORY
 
 #include "TObjArray.h"
-#include "RooFitCore/RooAbsIndex.hh"
-#include "RooFitCore/RooCat.hh"
+#include "RooFitCore/RooAbsCategory.hh"
+#include "RooFitCore/RooCatType.hh"
 
-class RooMappedCategory : public RooAbsIndex {
+class RooMappedCategory : public RooAbsCategory {
 public:
   // Constructors etc.
   inline RooMappedCategory() { }
-  RooMappedCategory(const char *name, const char *title, RooAbsIndex& inputCat);
+  RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat);
   virtual ~RooMappedCategory();
 
   // Mapping definition functions
@@ -48,12 +48,12 @@ protected:
   TObjArray _inlo ;
   TObjArray _inhi ;
   TObjArray _out ;
-  RooCat _defout ;
+  RooCatType _defout ;
 
-  inline RooAbsIndex* inputCat() const { return (RooAbsIndex*)_serverList.First() ; }
-  Bool_t addMap(const RooCat* inlo, const RooCat* inhi, const RooCat* out) ;
+  inline RooAbsCategory* inputCat() const { return (RooAbsCategory*)_serverList.First() ; }
+  Bool_t addMap(const RooCatType* inlo, const RooCatType* inhi, const RooCatType* out) ;
 
-  virtual RooCat evaluate() ; 
+  virtual RooCatType evaluate() ; 
 
   ClassDef(RooMappedCategory,1) // a integer-valued category variable
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsValue.rdl,v 1.2 2001/03/16 07:59:11 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,23 +10,23 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
-#ifndef ROO_ABS_VALUE
-#define ROO_ABS_VALUE
+#ifndef ROO_ABS_REAL
+#define ROO_ABS_REAL
 
 #include "RooFitCore/RooAbsArg.hh"
 class RooArgSet ;
 class TH1F ;
 
-class RooAbsValue : public RooAbsArg {
+class RooAbsReal : public RooAbsArg {
 public:
 
   // Constructors, assignment etc
-  inline RooAbsValue() { }
-  RooAbsValue(const char *name, const char *title, const char *unit= "") ;
-  RooAbsValue(const char *name, const char *title, Double_t minVal, Double_t maxVal, const char *unit= "") ;
-  RooAbsValue(const RooAbsValue& other);
+  inline RooAbsReal() { }
+  RooAbsReal(const char *name, const char *title, const char *unit= "") ;
+  RooAbsReal(const char *name, const char *title, Double_t minVal, Double_t maxVal, const char *unit= "") ;
+  RooAbsReal(const RooAbsReal& other);
   RooAbsArg& operator=(RooAbsArg& other) ;
-  virtual ~RooAbsValue();
+  virtual ~RooAbsReal();
 
   // Return value and unit accessors
   virtual Double_t getVal() ;
@@ -72,7 +72,7 @@ protected:
   TString  _unit ;
   TString  _label ;
 
-  ClassDef(RooAbsValue,1) // a real-valued variable and its value
+  ClassDef(RooAbsReal,1) // a real-valued variable and its value
 };
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooMappedCategory.cc,v 1.1 2001/03/17 00:09:29 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -21,8 +21,8 @@
 ClassImp(RooMappedCategory)
 
 
-RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbsIndex& inputCat) :
-  RooAbsIndex(name, title)
+RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat) :
+  RooAbsCategory(name, title)
 {
   addServer(inputCat) ;
 }
@@ -36,7 +36,7 @@ RooMappedCategory::~RooMappedCategory()
 
 
 Bool_t RooMappedCategory::setDefault(int def) {
-  const RooCat* defType = lookupType(def,kTRUE) ;
+  const RooCatType* defType = lookupType(def,kTRUE) ;
   if (!defType) 
     return kTRUE ;
 
@@ -45,7 +45,7 @@ Bool_t RooMappedCategory::setDefault(int def) {
 }
 
 Bool_t RooMappedCategory::setDefault(char* def_key) {
-  const RooCat* defType = lookupType(def_key) ;
+  const RooCatType* defType = lookupType(def_key) ;
   if (!defType)
     return kTRUE ;
 
@@ -56,83 +56,83 @@ Bool_t RooMappedCategory::setDefault(char* def_key) {
 
 Bool_t RooMappedCategory::mapValue(char* in_key, int out_idx) 
 {
-  const RooCat* inType  = inputCat()->lookupType(in_key,kTRUE) ;
-  const RooCat* outType = lookupType(out_idx,kTRUE) ;
+  const RooCatType* inType  = inputCat()->lookupType(in_key,kTRUE) ;
+  const RooCatType* outType = lookupType(out_idx,kTRUE) ;
   return addMap(outType,inType,inType) ;
 }
 
 
 Bool_t RooMappedCategory::mapValue(int in_idx, char* out_key) {
-  const RooCat* inType  = inputCat()->lookupType(in_idx,kTRUE) ;
-  const RooCat* outType = lookupType(out_key,kTRUE) ;
+  const RooCatType* inType  = inputCat()->lookupType(in_idx,kTRUE) ;
+  const RooCatType* outType = lookupType(out_key,kTRUE) ;
   return addMap(outType,inType,inType) ;
 }
 
 
 Bool_t RooMappedCategory::mapValue(char* in_key, char* out_key) 
 {
-  const RooCat* inType  = inputCat()->lookupType(in_key,kTRUE) ;
-  const RooCat* outType = lookupType(out_key,kTRUE) ;
+  const RooCatType* inType  = inputCat()->lookupType(in_key,kTRUE) ;
+  const RooCatType* outType = lookupType(out_key,kTRUE) ;
   return addMap(outType,inType,inType) ;
 }
 
 
 Bool_t RooMappedCategory::mapValue(int in_idx, int out_idx) {
-  const RooCat* inType  = inputCat()->lookupType(in_idx) ;
-  const RooCat* outType = lookupType(out_idx) ;
+  const RooCatType* inType  = inputCat()->lookupType(in_idx) ;
+  const RooCatType* outType = lookupType(out_idx) ;
   return addMap(outType,inType,inType) ;
 }
 
 
 Bool_t RooMappedCategory::mapRange(int inlo_idx, int inhi_idx, int out_idx) 
 {
-  const RooCat* inTypeLo = inputCat()->lookupType(inlo_idx,kTRUE) ;
-  const RooCat* inTypeHi = inputCat()->lookupType(inhi_idx,kTRUE) ;
-  const RooCat* outType  = lookupType(out_idx,kTRUE) ;
+  const RooCatType* inTypeLo = inputCat()->lookupType(inlo_idx,kTRUE) ;
+  const RooCatType* inTypeHi = inputCat()->lookupType(inhi_idx,kTRUE) ;
+  const RooCatType* outType  = lookupType(out_idx,kTRUE) ;
   return addMap(outType,inTypeLo,inTypeHi) ;
 }
 
 Bool_t RooMappedCategory::mapRange(int inlo_idx, int inhi_idx, char* out_key) 
 {
-  const RooCat* inTypeLo = inputCat()->lookupType(inlo_idx,kTRUE) ;
-  const RooCat* inTypeHi = inputCat()->lookupType(inhi_idx,kTRUE) ;
-  const RooCat* outType  = lookupType(out_key,kTRUE) ;
+  const RooCatType* inTypeLo = inputCat()->lookupType(inlo_idx,kTRUE) ;
+  const RooCatType* inTypeHi = inputCat()->lookupType(inhi_idx,kTRUE) ;
+  const RooCatType* outType  = lookupType(out_key,kTRUE) ;
   return addMap(outType,inTypeLo,inTypeHi) ;
 }
 
 Bool_t RooMappedCategory::mapRange(char* inlo_key, char* inhi_key, int out_idx) {
-  const RooCat* inTypeLo = inputCat()->lookupType(inlo_key,kTRUE) ;
-  const RooCat* inTypeHi = inputCat()->lookupType(inhi_key,kTRUE) ;
-  const RooCat* outType  = lookupType(out_idx,kTRUE) ;
+  const RooCatType* inTypeLo = inputCat()->lookupType(inlo_key,kTRUE) ;
+  const RooCatType* inTypeHi = inputCat()->lookupType(inhi_key,kTRUE) ;
+  const RooCatType* outType  = lookupType(out_idx,kTRUE) ;
   return addMap(outType,inTypeLo,inTypeHi) ;
 }
 
 Bool_t RooMappedCategory::mapRange(char* inlo_key, char* inhi_key, char* out_key) {
-  const RooCat* inTypeLo = inputCat()->lookupType(inlo_key,kTRUE) ;
-  const RooCat* inTypeHi = inputCat()->lookupType(inhi_key,kTRUE) ;
-  const RooCat* outType  = lookupType(out_key,kTRUE) ;
+  const RooCatType* inTypeLo = inputCat()->lookupType(inlo_key,kTRUE) ;
+  const RooCatType* inTypeHi = inputCat()->lookupType(inhi_key,kTRUE) ;
+  const RooCatType* outType  = lookupType(out_key,kTRUE) ;
   return addMap(outType,inTypeLo,inTypeHi) ;
 }
 
 
-Bool_t RooMappedCategory::addMap( const RooCat* out, const RooCat* inlo, const RooCat* inhi)
+Bool_t RooMappedCategory::addMap( const RooCatType* out, const RooCatType* inlo, const RooCatType* inhi)
 {
   if (!inlo || !inhi || !out) return kTRUE ;
-  _inlo.Add(new RooCat(*inlo)) ;
-  _inhi.Add(new RooCat(*inhi)) ;
-  _out.Add(new RooCat(*out)) ;
+  _inlo.Add(new RooCatType(*inlo)) ;
+  _inhi.Add(new RooCatType(*inhi)) ;
+  _out.Add(new RooCatType(*out)) ;
 }
 
 
-RooCat
+RooCatType
 RooMappedCategory::evaluate() 
 {
   int i=0 ;
   int input = inputCat()->getIndex() ;
     for (i=0 ; i<_out.GetEntries() ; i++) {
-      if (input>= ((RooCat*)_inlo.At(i))->getVal() && 
-	  input<= ((RooCat*)_inhi.At(i))->getVal()) 
-	return *((RooCat*)_out.At(i)) ;
+      if (input>= ((RooCatType*)_inlo.At(i))->getVal() && 
+	  input<= ((RooCatType*)_inhi.At(i))->getVal()) 
+	return *((RooCatType*)_out.At(i)) ;
     }  
   return _defout ;
 }
@@ -147,9 +147,9 @@ void RooMappedCategory::printToStream(ostream& os, PrintOption opt)
     os << "RooMappedCategory: value mapping:" << endl ;
 
     int i ; for (i=0 ; i<_out.GetEntries() ; i++) {
-      RooCat* inlo = (RooCat*) _inlo.At(i) ;
-      RooCat* inhi = (RooCat*) _inhi.At(i) ;
-      RooCat* out  = (RooCat*) _out.At(i) ;
+      RooCatType* inlo = (RooCatType*) _inlo.At(i) ;
+      RooCatType* inhi = (RooCatType*) _inhi.At(i) ;
+      RooCatType* out  = (RooCatType*) _out.At(i) ;
 
       if (*inlo==*inhi) {
 	os << "   " << inlo->GetName() << " -> " << out->GetName() 

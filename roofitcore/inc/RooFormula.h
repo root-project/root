@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.rdl,v 1.2 2001/03/15 23:19:12 verkerke Exp $
+ *    File: $Id: RooFormula.rdl,v 1.3 2001/03/16 07:59:12 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -15,7 +15,7 @@
 #include "Rtypes.h"
 #include "TFormula.h"
 #include "TObjArray.h"
-#include "RooFitCore/RooAbsValue.hh"
+#include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooArgSet.hh"
 
 class RooArgSet ;

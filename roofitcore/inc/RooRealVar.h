@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooValue.rdl,v 1.3 2001/03/16 07:59:12 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,37 +10,37 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
-#ifndef ROO_VALUE
-#define ROO_VALUE
+#ifndef ROO_REAL_VAR
+#define ROO_REAL_VAR
 
 #include <iostream.h>
 
 #include "TString.h"
 
-#include "RooFitCore/RooAbsValue.hh"
+#include "RooFitCore/RooAbsReal.hh"
 class RooArgSet ;
 class RooBlindBase ;
 
-class RooValue : public RooAbsValue {
+class RooRealVar : public RooAbsReal {
 public:
   // Constructors, assignment etc.
-  inline RooValue() { }
-  RooValue(const char *name, const char *title,
+  inline RooRealVar() { }
+  RooRealVar(const char *name, const char *title,
   	   Double_t value, const char *unit= "", RooBlindBase* blinder=0) ;
-  RooValue(const char *name, const char *title, Double_t minValue, 
+  RooRealVar(const char *name, const char *title, Double_t minValue, 
 	   Double_t maxValue, const char *unit= "", RooBlindBase* blinder=0);
-  RooValue(const char *name, const char *title, Double_t value, 
+  RooRealVar(const char *name, const char *title, Double_t value, 
 	   Double_t minValue, Double_t maxValue, const char *unit= "", 
 	   RooBlindBase* blinder=0);
-  RooValue(const RooValue& other);
-  virtual ~RooValue();
+  RooRealVar(const RooRealVar& other);
+  virtual ~RooRealVar();
   virtual RooAbsArg& operator=(RooAbsArg& other) ;
   
   // Parameter value and error accessors
   virtual operator Double_t&();
   virtual operator Double_t() ;
   inline Double_t getError() const { return _error; }
-  virtual Double_t getVal() { return _value ; } // overrides RooAbsValue::GetVar()
+  virtual Double_t getVal() { return _value ; } // overrides RooAbsReal::GetVar()
   virtual void setVal(Double_t value);
   inline void setError(Double_t value) { _error= value; }
   virtual Double_t operator=(Double_t newValue);
@@ -81,7 +81,7 @@ protected:
   Double_t _error;
   RooBlindBase* _blinder ; //! unowned ptr
 
-  ClassDef(RooValue,1) // a real-valued variable and its value
+  ClassDef(RooRealVar,1) // a real-valued variable and its value
 };
 
 #endif

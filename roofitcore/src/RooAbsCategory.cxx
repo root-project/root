@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsIndex.cc,v 1.3 2001/03/16 21:31:20 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,14 +15,14 @@
 #include <stdlib.h>
 #include "TString.h"
 #include "TH1.h"
-#include "RooFitCore/RooAbsIndex.hh"
+#include "RooFitCore/RooAbsCategory.hh"
 #include "RooFitCore/RooArgSet.hh"
 
-ClassImp(RooAbsIndex) 
+ClassImp(RooAbsCategory) 
 ;
 
 
-RooAbsIndex::RooAbsIndex(const char *name, const char *title) : 
+RooAbsCategory::RooAbsCategory(const char *name, const char *title) : 
   RooAbsArg(name,title)
 {
   setValueDirty(kTRUE) ;  
@@ -30,7 +30,7 @@ RooAbsIndex::RooAbsIndex(const char *name, const char *title) :
 }
 
 
-RooAbsIndex::RooAbsIndex(const RooAbsIndex& other) :
+RooAbsCategory::RooAbsCategory(const RooAbsCategory& other) :
   RooAbsArg(other), _value(other._value) 
 {
   TIterator* iter=other._types.MakeIterator() ;
@@ -45,17 +45,17 @@ RooAbsIndex::RooAbsIndex(const RooAbsIndex& other) :
 }
 
 
-RooAbsIndex::~RooAbsIndex()
+RooAbsCategory::~RooAbsCategory()
 {
   // We own the contents of _types 
   _types.Delete() ;
 }
 
 
-RooAbsArg& RooAbsIndex::operator=(RooAbsArg& aother)
+RooAbsArg& RooAbsCategory::operator=(RooAbsArg& aother)
 {
   RooAbsArg::operator=(aother) ;
-  RooAbsIndex& other=(RooAbsIndex&)aother ;
+  RooAbsCategory& other=(RooAbsCategory&)aother ;
 
   _value = other._value ;
 
@@ -72,13 +72,13 @@ RooAbsArg& RooAbsIndex::operator=(RooAbsArg& aother)
 }
 
 
-TIterator* RooAbsIndex::typeIterator()
+TIterator* RooAbsCategory::typeIterator()
 {
   return _types.MakeIterator() ;
 }
 
 
-Int_t RooAbsIndex::getIndex()
+Int_t RooAbsCategory::getIndex()
 {
   if (isValueDirty()) {
     setValueDirty(false) ;
@@ -89,7 +89,7 @@ Int_t RooAbsIndex::getIndex()
 }
 
 
-const char* RooAbsIndex::getLabel()
+const char* RooAbsCategory::getLabel()
 {
   if (isValueDirty()) {
     setValueDirty(false) ;
@@ -101,25 +101,25 @@ const char* RooAbsIndex::getLabel()
 
 
 
-Bool_t RooAbsIndex::isValidIndex(Int_t index) 
+Bool_t RooAbsCategory::isValidIndex(Int_t index) 
 {
   return lookupType(index)?kTRUE:kFALSE ;
 }
 
 
-Bool_t RooAbsIndex::isValidLabel(char* label)
+Bool_t RooAbsCategory::isValidLabel(char* label)
 {
   return lookupType(label)?kTRUE:kFALSE ;
 }
 
 
-RooCat RooAbsIndex::traceEval()
+RooCatType RooAbsCategory::traceEval()
 {
-  RooCat value = evaluate() ;
+  RooCatType value = evaluate() ;
   
   //Standard tracing code goes here
   if (!isValid(value)) {
-    cout << "RooAbsIndex::traceEval(" << GetName() << "): validation failed: " << value << endl ;
+    cout << "RooAbsCategory::traceEval(" << GetName() << "): validation failed: " << value << endl ;
   }
 
   //Call optional subclass tracing code
@@ -128,48 +128,48 @@ RooCat RooAbsIndex::traceEval()
 }
 
 
-Int_t RooAbsIndex::getOrdinalIndex() 
+Int_t RooAbsCategory::getOrdinalIndex() 
 {
   for (int i=0 ; i<_types.GetEntries() ; i++) {
-    if (*(RooCat*)_types.At(i) == _value) return i ;
+    if (*(RooCatType*)_types.At(i) == _value) return i ;
   }
   // This should never happen
-  cout << "RooAbsIndex::getOrdinalIndex(" << GetName() << "): Internal error: current type is illegal" << endl ;
+  cout << "RooAbsCategory::getOrdinalIndex(" << GetName() << "): Internal error: current type is illegal" << endl ;
   return -1 ;
 }
 
 
 
-Bool_t RooAbsIndex::setOrdinalIndex(Int_t newIndex) 
+Bool_t RooAbsCategory::setOrdinalIndex(Int_t newIndex) 
 {
   if (newIndex<0 || newIndex>=_types.GetEntries()) {
-    cout << "RooAbsIndex::setOrdinalIndex(" << GetName() << "): ordinal index out of range: " 
+    cout << "RooAbsCategory::setOrdinalIndex(" << GetName() << "): ordinal index out of range: " 
 	 << newIndex << " (0," << _types.GetEntries() << ")" << endl ;
     return kTRUE ;
   }
-  _value = *(RooCat*)_types.At(newIndex) ;
+  _value = *(RooCatType*)_types.At(newIndex) ;
   return kFALSE ;
 }
 
 
 
-Bool_t RooAbsIndex::defineType(Int_t index, char* label) 
+Bool_t RooAbsCategory::defineType(Int_t index, char* label) 
 {
   if (isValidIndex(index)) {
-    cout << "RooAbsIndex::defineType(" << GetName() << "): index " << index << " already assigned" << endl ;
+    cout << "RooAbsCategory::defineType(" << GetName() << "): index " << index << " already assigned" << endl ;
     return kTRUE ;
   }
 
   if (isValidLabel(label)) {
-    cout << "RooAbsIdex::defineType(" << GetName() << "): label " << label << " already assigned" << endl ;
+    cout << "RooAbsCategory::defineType(" << GetName() << "): label " << label << " already assigned" << endl ;
     return kTRUE ;
   }
 
   
   Bool_t first = _types.GetEntries()?kFALSE:kTRUE ;
-  _types.Add(new RooCat(label,index)) ;
+  _types.Add(new RooCatType(label,index)) ;
 
-  if (first) _value = RooCat(label,index) ;
+  if (first) _value = RooCatType(label,index) ;
   setShapeDirty(kTRUE) ;
 
   return kFALSE ;
@@ -177,16 +177,16 @@ Bool_t RooAbsIndex::defineType(Int_t index, char* label)
 
 
 
-const RooCat* RooAbsIndex::lookupType(Int_t index, Bool_t printError) const
+const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) const
 {
-  RooCat* type ;
+  RooCatType* type ;
   for (int i=0 ; i<_types.GetEntries() ; i++) {
-    type = (RooCat*)_types.At(i) ;
+    type = (RooCatType*)_types.At(i) ;
     if (type->getVal()==index) return type ;
   }  
 
   if (printError) {
-    cout << "RooAbsIndex::lookupType(" << GetName() 
+    cout << "RooAbsCategory::lookupType(" << GetName() 
 	 << "): type " << index << " undefined" << endl ;
   }
   return 0 ;
@@ -194,7 +194,7 @@ const RooCat* RooAbsIndex::lookupType(Int_t index, Bool_t printError) const
 
 
 
-const RooCat* RooAbsIndex::lookupType(const char* label, Bool_t printError) const 
+const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printError) const 
 {
   char *endptr(0) ;
   Int_t val = strtol(label,&endptr,10) ;
@@ -202,61 +202,61 @@ const RooCat* RooAbsIndex::lookupType(const char* label, Bool_t printError) cons
     return lookupType(val) ;
   }
 
-  RooCat* type ;
+  RooCatType* type ;
   for (int i=0 ; i<_types.GetEntries() ; i++) {
-    type = (RooCat*)_types.At(i) ;
+    type = (RooCatType*)_types.At(i) ;
     if (!TString(type->GetName()).CompareTo(label)) return type ;
   }  
 
   if (printError) {
-    cout << "RooAbsIndex::lookupType(" << GetName() 
+    cout << "RooAbsCategory::lookupType(" << GetName() 
 	 << "): type " << label << " undefined" << endl ;
   }
   return 0 ;
 }
 
 
-Bool_t RooAbsIndex::isValid()
+Bool_t RooAbsCategory::isValid()
 {
   return isValid(_value) ;
 }
 
 
-Bool_t RooAbsIndex::isValid(RooCat value) 
+Bool_t RooAbsCategory::isValid(RooCatType value) 
 {
   return isValidIndex(value.getVal()) ;
 }
 
 
-Bool_t RooAbsIndex::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooAbsCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   //Read object contents from stream (dummy for now)
 } 
 
-void RooAbsIndex::writeToStream(ostream& os, Bool_t compact)
+void RooAbsCategory::writeToStream(ostream& os, Bool_t compact)
 {
   //Write object contents to stream (dummy for now)
 }
 
-void RooAbsIndex::printToStream(ostream& os, PrintOption opt) 
+void RooAbsCategory::printToStream(ostream& os, PrintOption opt) 
 {
   if (_types.GetEntries()==0) {
-    os << "RooAbsIndex: " << GetName() << " has no types defined" << endl ;
+    os << "RooAbsCategory: " << GetName() << " has no types defined" << endl ;
     return ;
   }
 
   //Print object contents
   if (opt==Shape) {
     // list all of the types defined by this object
-    os << "RooAbsIndex: " << GetName() << ": \"" << GetTitle()
+    os << "RooAbsCategory: " << GetName() << ": \"" << GetTitle()
        << "\" defines the following categories:"
        << endl;
     for (int i=0 ; i<_types.GetEntries() ; i++) {
-      os << "  [" << i << "] \"" << ((RooCat*)_types.At(i))->GetName() << "\" (code = "
-	 << ((RooCat*)_types.At(i))->getVal() << ")" << endl;      
+      os << "  [" << i << "] \"" << ((RooCatType*)_types.At(i))->GetName() << "\" (code = "
+	 << ((RooCatType*)_types.At(i))->getVal() << ")" << endl;      
     }
   } else {
-    os << "RooAbsIndex: " << GetName() << " = " << getLabel() << " (" << getIndex() << ")" ;
+    os << "RooAbsCategory: " << GetName() << " = " << getLabel() << " (" << getIndex() << ")" ;
     os << " : \"" << fTitle << "\"" ;
 
     printAttribList(os) ;

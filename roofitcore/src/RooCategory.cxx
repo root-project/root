@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIndex.cc,v 1.2 2001/03/16 07:59:12 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,38 +17,38 @@
 #include "TTree.h"
 #include "TString.h"
 #include "TH1.h"
-#include "RooFitCore/RooIndex.hh"
+#include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooArgSet.hh"
 
-ClassImp(RooIndex) 
+ClassImp(RooCategory) 
 ;
 
 
-RooIndex::RooIndex(const char *name, const char *title) : 
-  RooAbsIndex(name,title)
+RooCategory::RooCategory(const char *name, const char *title) : 
+  RooAbsCategory(name,title)
 {
   setValueDirty(kTRUE) ;  
   setShapeDirty(kTRUE) ;  
 }
 
 
-RooIndex::RooIndex(const RooIndex& other) :
-  RooAbsIndex(other)
+RooCategory::RooCategory(const RooCategory& other) :
+  RooAbsCategory(other)
 {
   setValueDirty(kTRUE) ;  
   setShapeDirty(kTRUE) ;  
 }
 
 
-RooIndex::~RooIndex()
+RooCategory::~RooCategory()
 {
 }
 
 
-RooAbsArg& RooIndex::operator=(RooAbsArg& aother)
+RooAbsArg& RooCategory::operator=(RooAbsArg& aother)
 {
   RooAbsArg::operator=(aother) ;
-  RooIndex& other=(RooIndex&)aother ;
+  RooCategory& other=(RooCategory&)aother ;
 
   setValueDirty(kTRUE) ;
   setShapeDirty(kTRUE) ;
@@ -56,11 +56,11 @@ RooAbsArg& RooIndex::operator=(RooAbsArg& aother)
 
 
 
-Bool_t RooIndex::setIndex(Int_t index) 
+Bool_t RooCategory::setIndex(Int_t index) 
 {
-  RooCat* type ;  
+  RooCatType* type ;  
   for (int i=0 ; i<_types.GetEntries() ; i++) {
-    RooCat& entry = *(RooCat*)_types.At(i) ;
+    RooCatType& entry = *(RooCatType*)_types.At(i) ;
     if (entry == index) {      
       _value = entry ;
       setValueDirty(kTRUE) ;
@@ -73,11 +73,11 @@ Bool_t RooIndex::setIndex(Int_t index)
 
 
 
-Bool_t RooIndex::setLabel(char* label) 
+Bool_t RooCategory::setLabel(char* label) 
 {
-  RooCat* type ;  
+  RooCatType* type ;  
   for (int i=0 ; i<_types.GetEntries() ; i++) {
-    RooCat& entry = *(RooCat*)_types.At(i) ;
+    RooCatType& entry = *(RooCatType*)_types.At(i) ;
     if (entry==label) {
       _value = entry ;
       setValueDirty(kTRUE) ;
@@ -90,7 +90,7 @@ Bool_t RooIndex::setLabel(char* label)
 
 
 
-Bool_t RooIndex::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   // Read object contents from given stream
 
@@ -105,7 +105,7 @@ Bool_t RooIndex::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   int nscan = endptr-((const char *)token.Data()) ;	  
   if (nscan<token.Length() && !token.IsNull()) {
     if (verbose) {
-      cout << "RooIndex::readFromStream(" << GetName() 
+      cout << "RooCategory::readFromStream(" << GetName() 
 	   << "): cannot convert token \"" << token 
 	   << "\" to integer number" << endl ;
     }
@@ -117,7 +117,7 @@ Bool_t RooIndex::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
     return kFALSE ;  
   } else {
     if (verbose) {
-      cout << "RooIndex::readFromStream(" << GetName() 
+      cout << "RooCategory::readFromStream(" << GetName() 
 	   << "): index undefined: " << index << endl ;
     }
     return kTRUE;
@@ -126,7 +126,7 @@ Bool_t RooIndex::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 
 
 
-void RooIndex::writeToStream(ostream& os, Bool_t compact)
+void RooCategory::writeToStream(ostream& os, Bool_t compact)
 {
   // Write object contents to given stream
 
@@ -136,13 +136,13 @@ void RooIndex::writeToStream(ostream& os, Bool_t compact)
 
 
 
-void RooIndex::attachToTree(TTree& t, Int_t bufSize)
+void RooCategory::attachToTree(TTree& t, Int_t bufSize)
 {
   // Attach object to a branch of given TTree
 
   // First determine if branch is taken
   if (t.GetBranch(GetName())) {
-    //cout << "RooValue::attachToTree(" << GetName() << "): branch in tree " << t.GetName() << " already exists" << endl ;
+    //cout << "RooRealVar::attachToTree(" << GetName() << "): branch in tree " << t.GetName() << " already exists" << endl ;
     t.SetBranchAddress(GetName(),&((Int_t&)_value)) ;
   } else {    
     TString format(GetName());
@@ -152,18 +152,18 @@ void RooIndex::attachToTree(TTree& t, Int_t bufSize)
 }
 
 
-void RooIndex::printToStream(ostream& os, PrintOption opt) 
+void RooCategory::printToStream(ostream& os, PrintOption opt) 
 {
   if (_types.GetEntries()==0) {
-    os << "RooIndex: " << GetName() << " has no types defined" << endl ;
+    os << "RooCategory: " << GetName() << " has no types defined" << endl ;
     return ;
   }
 
   //Print object contents
   if (opt==Shape) {
-    RooAbsIndex::printToStream(os,Shape) ;
+    RooAbsCategory::printToStream(os,Shape) ;
   } else {
-    os << "RooIndex: " << GetName() << " = " << getLabel() << "(" << getIndex() << ")" ;
+    os << "RooCategory: " << GetName() << " = " << getLabel() << "(" << getIndex() << ")" ;
     os << " : \"" << fTitle << "\"" ;
     
     printAttribList(os) ;

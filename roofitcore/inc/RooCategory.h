@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIndex.rdl,v 1.2 2001/03/16 07:59:12 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,19 +10,19 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
-#ifndef ROO_INDEX
-#define ROO_INDEX
+#ifndef ROO_CATEGORY
+#define ROO_CATEGORY
 
 #include <iostream.h>
-#include "RooFitCore/RooAbsIndex.hh"
+#include "RooFitCore/RooAbsCategory.hh"
 
-class RooIndex : public RooAbsIndex {
+class RooCategory : public RooAbsCategory {
 public:
   // Constructor, assignment etc.
-  RooIndex() {} ;
-  RooIndex(const char *name, const char *title);
-  RooIndex(const RooIndex& other) ;
-  virtual ~RooIndex();
+  RooCategory() {} ;
+  RooCategory(const char *name, const char *title);
+  RooCategory(const RooCategory& other) ;
+  virtual ~RooCategory();
   virtual RooAbsArg& operator=(RooAbsArg& other) ; 
 
   // Value modifiers
@@ -44,7 +44,7 @@ protected:
 
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
 
-  ClassDef(RooIndex,1) // a real-valued variable and its value
+  ClassDef(RooCategory,1) // a real-valued variable and its value
 };
 
 #endif

@@ -69,7 +69,7 @@ void RooFormula::dump() {
   int i ;
   cout << "RooFormula::dump()" << endl ;
   for (i=0 ; i<_useList.GetEntries() ; i++) {
-    cout << "[" << i << "] = " << (void*) _useList.At(i) << " = " << ((RooAbsValue*)_useList.At(i))->getVal() << endl ;
+    cout << "[" << i << "] = " << (void*) _useList.At(i) << " = " << ((RooAbsReal*)_useList.At(i))->getVal() << endl ;
   }
 }
 
@@ -80,7 +80,7 @@ Bool_t RooFormula::changeDependents(RooArgSet& newDeps, Bool_t mustReplaceAll)
   Bool_t errorStat(kFALSE) ;
   int i ;
   for (i=0 ; i<_useList.GetEntries() ; i++) {
-    RooAbsValue* replace = (RooAbsValue*) newDeps.find(_useList[i]->GetName()) ;
+    RooAbsReal* replace = (RooAbsReal*) newDeps.find(_useList[i]->GetName()) ;
     if (replace) {
       _useList[i] = replace ;
     } else if (mustReplaceAll) {
@@ -103,7 +103,7 @@ Double_t RooFormula::eval()
 Double_t
 RooFormula::DefinedValue(Int_t code) {
   // Return current value for parameter indicated by internal reference code
-  return ((RooAbsValue*)_useList.At(code))->getVal() ;
+  return ((RooAbsReal*)_useList.At(code))->getVal() ;
 }
 
 
@@ -111,7 +111,7 @@ Int_t
 RooFormula::DefinedVariable(TString &name)
 {
   // Defined internal reference code for given named variable 
-  RooAbsValue* rrv= (RooAbsValue*) _origList->find(name) ;
+  RooAbsReal* rrv= (RooAbsReal*) _origList->find(name) ;
   if (!rrv) return -1 ;
   _useList.Add(rrv) ;
 

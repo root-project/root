@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsValue.cc,v 1.2 2001/03/16 07:59:11 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,21 +14,21 @@
 #include <iostream.h>
 #include "TObjString.h"
 #include "TH1.h"
-#include "RooFitCore/RooAbsValue.hh"
+#include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooArgSet.hh"
 
-ClassImp(RooAbsValue) 
+ClassImp(RooAbsReal) 
 ;
 
 
-RooAbsValue::RooAbsValue(const char *name, const char *title, const char *unit= "") : 
+RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit= "") : 
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), _plotMin(0), _plotMax(0)
 {
   setValueDirty(kTRUE) ;
   setShapeDirty(kTRUE) ;
 }
 
-RooAbsValue::RooAbsValue(const char *name, const char *title, Double_t minVal, Double_t maxVal, const char *unit= "") :
+RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal, Double_t maxVal, const char *unit= "") :
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), _plotMin(minVal), _plotMax(maxVal)
 {
   setValueDirty(kTRUE) ;
@@ -36,7 +36,7 @@ RooAbsValue::RooAbsValue(const char *name, const char *title, Double_t minVal, D
 }
 
 
-RooAbsValue::RooAbsValue(const RooAbsValue& other) : 
+RooAbsReal::RooAbsReal(const RooAbsReal& other) : 
   RooAbsArg(other), _unit(other._unit), _plotBins(other._plotBins), 
   _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value)
 {
@@ -45,16 +45,16 @@ RooAbsValue::RooAbsValue(const RooAbsValue& other) :
 }
 
 
-RooAbsValue::~RooAbsValue()
+RooAbsReal::~RooAbsReal()
 {
 }
 
 
-RooAbsArg& RooAbsValue::operator=(RooAbsArg& aother)
+RooAbsArg& RooAbsReal::operator=(RooAbsArg& aother)
 {
   RooAbsArg::operator=(aother) ;
 
-  RooAbsValue& other=(RooAbsValue&)aother ;
+  RooAbsReal& other=(RooAbsReal&)aother ;
   _value    = other._value ;
   _unit     = other._unit ;
   _plotMin  = other._plotMin ;
@@ -67,7 +67,7 @@ RooAbsArg& RooAbsValue::operator=(RooAbsArg& aother)
 }
 
 
-Double_t RooAbsValue::getVal() 
+Double_t RooAbsReal::getVal() 
 {
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty()) {
@@ -79,32 +79,32 @@ Double_t RooAbsValue::getVal()
 }
 
 
-const char *RooAbsValue::getPlotLabel() const {
+const char *RooAbsReal::getPlotLabel() const {
   // Get the label associated with the variable
   return _label.IsNull() ? fName.Data() : _label.Data();
 }
 
-void RooAbsValue::setPlotLabel(const char *label) {
+void RooAbsReal::setPlotLabel(const char *label) {
   // Set the label associated with this variable
   _label= label;
 }
 
 
 
-Bool_t RooAbsValue::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooAbsReal::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   //Read object contents from stream (dummy for now)
 } 
 
-void RooAbsValue::writeToStream(ostream& os, Bool_t compact)
+void RooAbsReal::writeToStream(ostream& os, Bool_t compact)
 {
   //Write object contents to stream (dummy for now)
 }
 
-void RooAbsValue::printToStream(ostream& os, PrintOption opt) 
+void RooAbsReal::printToStream(ostream& os, PrintOption opt) 
 {
   //Print object contents
-  os << "RooAbsValue: " << GetName() << " = " << getVal();
+  os << "RooAbsReal: " << GetName() << " = " << getVal();
   if(!_unit.IsNull()) os << ' ' << _unit;
   os << " : \"" << fTitle << "\"" ;
 
@@ -113,12 +113,12 @@ void RooAbsValue::printToStream(ostream& os, PrintOption opt)
 }
 
 
-void RooAbsValue::setPlotMin(Double_t value) {
+void RooAbsReal::setPlotMin(Double_t value) {
   // Set minimum value of output associated with this object
 
   // Check if new limit is consistent
   if (_plotMin>_plotMax) {
-    cout << "RooValue::setIntegMin(" << GetName() 
+    cout << "RooRealVar::setIntegMin(" << GetName() 
 	 << "): Proposed new integration min. larger than max., setting min. to max." << endl ;
     _plotMin = _plotMax ;
   } else {
@@ -128,12 +128,12 @@ void RooAbsValue::setPlotMin(Double_t value) {
   setShapeDirty(kTRUE) ;
 }
 
-void RooAbsValue::setPlotMax(Double_t value) {
+void RooAbsReal::setPlotMax(Double_t value) {
   // Set maximum value of output associated with this object
 
   // Check if new limit is consistent
   if (_plotMax<_plotMin) {
-    cout << "RooValue::setIntegMax(" << GetName() 
+    cout << "RooRealVar::setIntegMax(" << GetName() 
 	 << "): Proposed new integration max. smaller than min., setting max. to min." << endl ;
     _plotMax = _plotMin ;
   } else {
@@ -145,37 +145,37 @@ void RooAbsValue::setPlotMax(Double_t value) {
 
 
 
-void RooAbsValue::setPlotBins(Int_t value) {
+void RooAbsReal::setPlotBins(Int_t value) {
   // Set number of histogram bins 
   _plotBins = value ;  
 }
 
 
-Bool_t RooAbsValue::inPlotRange(Double_t value) const {
+Bool_t RooAbsReal::inPlotRange(Double_t value) const {
   // Check if given value is in the min-max range for this object
   return (value >= _plotMin && value <= _plotMax) ? kTRUE : kFALSE;
 }
 
 
 
-Bool_t RooAbsValue::isValid() {
+Bool_t RooAbsReal::isValid() {
   return isValid(getVal()) ;
 }
 
 
-Bool_t RooAbsValue::isValid(Double_t value) {
+Bool_t RooAbsReal::isValid(Double_t value) {
   return kTRUE ;
 }
 
 
 
-Double_t RooAbsValue::traceEval()
+Double_t RooAbsReal::traceEval()
 {
   Double_t value = evaluate() ;
   
   //Standard tracing code goes here
   if (!isValid(value)) {
-    cout << "RooAbsValue::traceEval(" << GetName() << "): validation failed: " << value << endl ;
+    cout << "RooAbsReal::traceEval(" << GetName() << "): validation failed: " << value << endl ;
   }
 
   //Call optional subclass tracing code
@@ -186,13 +186,13 @@ Double_t RooAbsValue::traceEval()
 
 
 
-TH1F *RooAbsValue::createHistogram(const char *label, const char *axis,
+TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
 				  Int_t bins) {
   // Create a 1D-histogram with appropriate scale and labels for this variable
   return createHistogram(label, axis, _plotMin, _plotMax, bins);
 }
 
-TH1F *RooAbsValue::createHistogram(const char *label, const char *axis,
+TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
 				  Double_t lo, Double_t hi, Int_t bins) {
   // Create a 1D-histogram with appropriate scale and labels for this variable
   char buffer[256];
