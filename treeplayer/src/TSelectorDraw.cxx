@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.28 2004/04/27 12:31:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.29 2004/05/19 19:41:38 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -552,6 +552,7 @@ void TSelectorDraw::Begin(TTree *tree)
          if (opt.Contains("p")     || opt.Contains("*")    || opt.Contains("l"))    graph = kTRUE;
          if (opt.Contains("surf")  || opt.Contains("lego") || opt.Contains("cont")) graph = kFALSE;
          if (opt.Contains("col")   || opt.Contains("hist") || opt.Contains("scat")) graph = kFALSE;
+         if (opt.Contains("box"))                                                   graph = kFALSE;
          fObject = h2;
          if (graph) {
             fAction = 12;
