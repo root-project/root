@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.26 2004/01/10 10:52:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.27 2004/08/03 14:50:51 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -157,13 +157,43 @@ void TBasket::MoveEntries(Int_t dentries)
    // remove the first dentries of this basket, moving entries at dentries
    // to the start of the buffer
    
+   Int_t i;
+
    if (dentries >= fNevBuf) return;
    Int_t bufbegin;
-   if (fEntryOffset) bufbegin = fEntryOffset[dentries];
-   else              bufbegin = GetKeylen() + dentries*fNevBufSize;
+   Int_t moved;
+
+   if (fEntryOffset) {
+      bufbegin = fEntryOffset[dentries];
+      moved = bufbegin-GetKeylen();
+
+      // First store the original location in the fDisplacement array
+      // and record the new start offset
+
+      if (!fDisplacement) {
+         fDisplacement = new Int_t[fNevBufSize];
+      }
+      for (i = 0; i<(fNevBufSize-dentries); ++i) {
+         fDisplacement[i] = fEntryOffset[i+dentries];
+         fEntryOffset[i]  = fEntryOffset[i+dentries] - moved;
+      }
+      for (i = fNevBufSize-dentries; i<fNevBufSize; ++i) {
+         fDisplacement[i] = 0;      
+         fEntryOffset[i]  = 0;
+      }
+
+   } else {
+      // If there is no EntryOffset array, this means
+      // that each entry has the same size and that 
+      // it does not point to other objects (hence there
+      // is no need for a displacement array).
+      bufbegin = GetKeylen() + dentries*fNevBufSize;
+      moved = bufbegin-GetKeylen();
+   }
    TBuffer *buf = GetBufferRef();
    char *buffer = buf->Buffer();
    memmove(buffer+GetKeylen(),buffer+bufbegin,buf->Length()-bufbegin);
+   buf->SetBufferOffset(buf->Length()-moved);
    fNevBuf -= dentries;
 }
 
