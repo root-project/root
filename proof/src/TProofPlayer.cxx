@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.20 2003/03/18 14:29:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.21 2003/04/04 10:21:16 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -75,11 +75,12 @@ TProofPlayer::TProofPlayer()
 {
    // Default ctor.
 
-   fAutoBins = 0;
-   fInput    = new TList;
-   fOutput   = 0;
-   fSelector = 0;
+   fAutoBins      = 0;
+   fInput         = new TList;
+   fOutput        = 0;
+   fSelector      = 0;
    fFeedbackTimer = 0;
+   fEvIter        = 0;
 }
 
 //______________________________________________________________________________
@@ -88,6 +89,13 @@ TProofPlayer::~TProofPlayer()
    delete fInput;
    delete fSelector;
    delete fFeedbackTimer;
+   delete fEvIter;
+}
+
+//______________________________________________________________________________
+void TProofPlayer::StopProcess(Bool_t abort)
+{
+   if (fEvIter != 0) fEvIter->StopProcess(abort);
 }
 
 //______________________________________________________________________________
@@ -179,7 +187,7 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    dset->Reset();
 
-   TEventIter *evIter = TEventIter::Create(dset, fSelector, first, nentries);
+   fEvIter = TEventIter::Create(dset, fSelector, first, nentries);
 
    PDB(kLoop,1) Info("Process","Call Begin(0)");
 
@@ -189,7 +197,7 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    // Loop over range
    Long64_t entry;
-   while ((entry = evIter->GetNextEvent()) >= 0) {
+   while ((entry = fEvIter->GetNextEvent()) >= 0) {
 
       PDB(kLoop,3)Info("Process","Call Process(%ld)", entry);
 
@@ -203,7 +211,7 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    StopFeedback();
 
-   delete evIter;
+   delete fEvIter; fEvIter = 0;
 
    // Finalize
    PDB(kLoop,1) Info("Process","Call Terminate");
@@ -427,6 +435,12 @@ void TProofPlayerRemote::MergeOutput()
 
    delete fOutputLists; fOutputLists = 0;
    PDB(kOutput,1) Info("MergeOutput","Leave (%d object(s))", fOutput->GetSize());
+}
+
+//______________________________________________________________________________
+void TProofPlayerRemote::StopProcess(Bool_t abort)
+{
+   if (fPacketizer != 0) fPacketizer->StopProcess(abort);
 }
 
 //______________________________________________________________________________

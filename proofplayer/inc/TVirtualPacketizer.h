@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.h,v 1.2 2002/10/07 10:43:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.h,v 1.3 2003/04/11 11:48:11 rdm Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -46,7 +46,8 @@ private:
    void operator=(const TVirtualPacketizer &);      // error on accidental usage
 
 protected:
-   Bool_t   fValid;           // Constructed properly ?
+   Bool_t   fValid;           // Constructed properly?
+   Bool_t   fStop;            // Termination of Process() requested?
 
    TVirtualPacketizer();
    Long64_t GetEntries(Bool_t tree, TDSetElement *e); // Num of entries or objects
@@ -58,6 +59,7 @@ public:
    virtual Long64_t        GetEntriesProcessed() const;
    virtual Long64_t        GetEntriesProcessed(TSlave *sl) const;
    virtual TDSetElement   *GetNextPacket(TSlave *sl, TMessage *r);
+   virtual void            StopProcess(Bool_t abort);
 
    ClassDef(TVirtualPacketizer,0)  //Generate work packets for parallel processing
 };

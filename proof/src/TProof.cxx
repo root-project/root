@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.42 2003/04/04 10:21:16 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.43 2003/04/08 10:53:20 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1153,6 +1153,12 @@ Int_t TProof::DrawSelect(TDSet *set, const char *varexp, const char *selection, 
       fPlayer = new TProofPlayerRemote(this);
 
    return fPlayer->DrawSelect(set, varexp, selection, option, nentries, first);
+}
+
+//______________________________________________________________________________
+void TProof::StopProcess(Bool_t abort)
+{
+   if (fPlayer != 0) fPlayer->StopProcess(abort);
 }
 
 //______________________________________________________________________________

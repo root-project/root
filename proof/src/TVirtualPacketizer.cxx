@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.3 2002/10/07 10:43:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.4 2002/12/02 18:50:05 rdm Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -38,6 +38,7 @@ ClassImp(TVirtualPacketizer)
 TVirtualPacketizer::TVirtualPacketizer()
 {
    fValid = kTRUE;
+   fStop = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -118,4 +119,11 @@ TDSetElement *TVirtualPacketizer::GetNextPacket(TSlave *, TMessage *)
    AbstractMethod("GetNextPacket");
 
    return 0;
+}
+
+
+//______________________________________________________________________________
+void TVirtualPacketizer::StopProcess(Bool_t abort)
+{
+   fStop = kTRUE;
 }

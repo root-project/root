@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.33 2003/04/04 00:52:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.34 2003/04/08 10:53:20 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -198,6 +198,7 @@ public:
                           Option_t *option = "", Long64_t nentries = -1,
                           Long64_t firstentry = 0);
 
+   void        StopProcess(Bool_t abort);
    void        AddInput(TObject *obj);
    void        ClearInput();
    TObject    *GetOutput(const char *name);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.6 2003/03/18 14:29:58 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.7 2003/04/11 11:48:10 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -58,6 +58,7 @@ public:
                                   Long64_t nentries = -1,
                                   Long64_t firstentry = 0) = 0;
 
+   virtual void        StopProcess(Bool_t abort) = 0;
    virtual void        AddInput(TObject *obj) = 0;
    virtual void        ClearInput() = 0;
    virtual TObject    *GetOutput(const char *name) = 0;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.12 2003/03/18 14:29:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.13 2003/04/11 11:48:11 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -41,6 +41,7 @@ class TSocket;
 class TVirtualPacketizer;
 class TMessage;
 class TSlave;
+class TEventIter;
 
 
 //------------------------------------------------------------------------
@@ -55,6 +56,7 @@ protected:
    TList      *fOutput;        //   list with output objects
    TSelector  *fSelector;      //!  the latest selector
    TTimer     *fFeedbackTimer; //!  timer for sending intermediate results
+   TEventIter *fEvIter;        //   Iterator on events or objects
 
    void       *GetSender() { return this; }  //used to set gTQSender
 
@@ -73,6 +75,7 @@ public:
                                 const char *selection, Option_t *option = "",
                                 Long64_t nentries = -1, Long64_t firstentry = 0);
 
+   virtual void      StopProcess(Bool_t abort);
    virtual void      AddInput(TObject *inp);
    virtual void      ClearInput();
    virtual TObject  *GetOutput(const char *name) const;
@@ -133,6 +136,8 @@ public:
    Int_t    DrawSelect(TDSet *set, const char *varexp,
                        const char *selection, Option_t *option = "",
                        Long64_t nentries = -1, Long64_t firstentry = 0);
+
+   void     StopProcess(Bool_t abort);
 
    void     StoreOutput(TList *out);   // Adopts the list
    void     StoreFeedback(TSlave *slave, TList *out); // Adopts the list

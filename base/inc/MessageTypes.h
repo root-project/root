@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.16 2002/12/10 02:19:46 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.17 2003/03/04 17:06:03 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -57,6 +57,7 @@ enum EMessageTypes {
    kPROOF_REPORTSIZE,                    //report back number of events to master
    kPROOF_PROGRESS,                      //event loop progress
    kPROOF_FEEDBACK,                      //intermediate version of objects
+   kPROOF_STOPPROCESS,                   //stop or abort the current process call
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows

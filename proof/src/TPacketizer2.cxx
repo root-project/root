@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.15 2003/03/18 14:29:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.16 2003/04/04 00:55:30 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -493,6 +493,11 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
          HandleTimer(0);   // Send last timer message
          delete fProgress; fProgress = 0;
       }
+   }
+
+   if ( fStop ) {
+      HandleTimer(0);
+      return 0;
    }
 
    // get a file if needed

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.8 2003/03/18 14:29:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.9 2003/04/04 10:21:16 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -43,6 +43,7 @@ TEventIter::TEventIter()
    fFirst = 0;
    fCur   = -1;
    fNum   = 0;
+   fStop  = kFALSE;
 }
 
 
@@ -56,6 +57,7 @@ TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num
    fFirst = first;
    fCur   = -1;
    fNum   = num;
+   fStop  = kFALSE;
 }
 
 
@@ -63,6 +65,13 @@ TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num
 TEventIter::~TEventIter()
 {
    delete fFile;
+}
+
+
+//______________________________________________________________________________
+void TEventIter::StopProcess(Bool_t abort)
+{
+   fStop = kTRUE;
 }
 
 
@@ -162,7 +171,7 @@ TEventIterObj::~TEventIterObj()
 //______________________________________________________________________________
 Long64_t TEventIterObj::GetNextEvent()
 {
-   if ( fNum == 0 ) return -1;
+   if ( fStop || fNum == 0 ) return -1;
 
    while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 ) {
 
@@ -267,7 +276,7 @@ TEventIterTree::~TEventIterTree()
 //______________________________________________________________________________
 Long64_t TEventIterTree::GetNextEvent()
 {
-   if ( fNum == 0 ) return -1;
+   if ( fStop || fNum == 0 ) return -1;
 
    Bool_t attach = kFALSE;
 

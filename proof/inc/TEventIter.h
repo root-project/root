@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.4 2002/04/19 18:23:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.5 2003/04/11 11:48:11 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -57,6 +57,7 @@ protected:
    Long64_t       fFirst;     // first entry to process
    Long64_t       fNum;       // number of entries to process
    Long64_t       fCur;       // current entry
+   Bool_t         fStop;      // termination of run requested
 
    Int_t    LoadDir();        // Load the directory pointed to by fElem
 
@@ -66,6 +67,7 @@ public:
    virtual ~TEventIter();
 
    virtual Long64_t  GetNextEvent() = 0;
+   virtual void      StopProcess(Bool_t abort);
 
    static TEventIter *Create(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
 
