@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.3 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.4 2004/04/22 14:07:15 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -738,16 +738,13 @@ Double_t TGeoXtru::Safety(Double_t *point, Bool_t in) const
       return safmin;
    }
    iz = TMath::BinarySearch(fNz, fZ, point[2]);
-   Bool_t endcap = kFALSE;
    if (iz<0) {
       iz = 0;
       safz = fZ[0] - point[2];
-      endcap = kTRUE;
    } else {
       if (iz==fNz-1) {
          iz = fNz-2;
          safz = point[2] - fZ[fNz-1];
-         endcap = kTRUE;
       }
    }
    // loop segments from iz up
