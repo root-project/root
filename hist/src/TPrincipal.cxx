@@ -657,8 +657,8 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.7 2000/08/15 09:22:33 brun Exp $
-// $Date: 2000/08/15 09:22:33 $
+// $Id: TPrincipal.cxx,v 1.8 2000/08/15 09:49:21 brun Exp $
+// $Date: 2000/08/15 09:49:21 $
 // $Author: brun $
 
 #include "TPrincipal.h"
@@ -983,19 +983,19 @@ void TPrincipal::MakeCode(const char *filename, Option_t *opt)
   //
   // The file contains the implementation of two functions
   //
-  //    void X2P(Double_t* x, Double* p)
-  //    void P2X(Double_t* p, Double* x, Int_t nTest)
+  //    void X2P(Double_t *x, Double *p)
+  //    void P2X(Double_t *p, Double *x, Int_t nTest)
   // 
   // which does the same as  TPrincipal::X2P and TPrincipal::P2X
   // respectively. Please refer to these methods.
   // 
   // Further, the static variables:
   //
-  //    Int_t    fgNVariables
-  //    Double_t fgEigenValues[]
-  //    Double_t fgEigenVectors[]
-  //    Double_t fgMeanValues[]
-  //    Double_t fgSigmaValues[]
+  //    Int_t    gNVariables
+  //    Double_t gEigenValues[]
+  //    Double_t gEigenVectors[]
+  //    Double_t gMeanValues[]
+  //    Double_t gSigmaValues[]
   // 
   // are initialized. The only ROOT header file needed is Rtypes.h
   //
@@ -1388,9 +1388,9 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
 
   }
   for (i = 0; i < fNumberOfDataPoints; i++) {
-    Double_t* x = 0;
-    Double_t* p = new Double_t[fNumberOfVariables];
-    Double_t* d = new Double_t[fNumberOfVariables];
+    Double_t *x = 0;
+    Double_t *p = new Double_t[fNumberOfVariables];
+    Double_t *d = new Double_t[fNumberOfVariables];
 
     if (makeX||makeP||makeD||makeS)
       // update the original data histogram 
@@ -1476,8 +1476,8 @@ void TPrincipal::MakeMethods(const char *classname, Option_t *opt)
   // Generate the file <classname>PCA.cxx which contains the
   // implementation of two methods:
   // 
-  //    void <classname>::X2P(Double_t* x, Double* p)
-  //    void <classname>::P2X(Double_t* p, Double* x, Int_t nTest)
+  //    void <classname>::X2P(Double_t *x, Double *p)
+  //    void <classname>::P2X(Double_t *p, Double *x, Int_t nTest)
   // 
   // which does the same as  TPrincipal::X2P and TPrincipal::P2X
   // respectivly. Please refer to these methods.
@@ -1506,8 +1506,8 @@ void TPrincipal::MakeMethods(const char *classname, Option_t *opt)
   //     static Double_t fgMeanValues[];
   //     static Double_t fgSigmaValues[];
   //     
-  //     void X2P(Double_t* x, Double_t* p);
-  //     void P2X(Double_t* p, Double_t* x, Int_t nTest);
+  //     void X2P(Double_t *x, Double_t *p);
+  //     void P2X(Double_t *p, Double_t *x, Int_t nTest);
   //   };
   // 
   // Whether the methods <classname>::X2P and <classname>::P2X should
@@ -1622,9 +1622,9 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname, Optio
   outFile << "// This file contains the functions " << endl
 	  << "//" << endl
 	  << "//    void  " << prefix 
-	  << "X2P(Double_t* x, Double_t* p); " << endl 
+	  << "X2P(Double_t *x, Double_t *p); " << endl 
 	  << "//    void  " << prefix 
-	  << "P2X(Double_t* p, Double_t* x, Int_t nTest);" 
+	  << "P2X(Double_t *p, Double_t *x, Int_t nTest);" 
 	  << endl << "//" << endl
 	  << "// The first for transforming original data x in " << endl
 	  << "// pattern space, to principal components p in " << endl
@@ -1655,7 +1655,7 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname, Optio
   outFile << "//" << endl 
 	  << "// Static data variables"  << endl
 	  << "//" << endl;
-  outFile << cv_qual << "Int_t    " << prefix << "fgNVariables = " 
+  outFile << cv_qual << "Int_t    " << prefix << "gNVariables = " 
 	  << fNumberOfVariables << ";" << endl;
 
   // Assign the values to the Eigenvector matrix. The elements are
@@ -1667,7 +1667,7 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname, Optio
 	  << "//    M[i][j] = e[i * nVariables + j] " << endl
 	  << "// where i and j are zero-based" << endl;
   outFile << cv_qual << "Double_t " << prefix 
-	  << "fgEigenVectors[] = {" << flush;
+	  << "gEigenVectors[] = {" << flush;
   Int_t i,j;
   for (i = 0; i < fNumberOfVariables; i++) {
     for (j = 0; j < fNumberOfVariables; j++) {
@@ -1681,7 +1681,7 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname, Optio
   // Assignment to eigenvalue vector. Zero-based.
   outFile << "// Assignment to eigen value vector. Zero-based." << endl;
   outFile << cv_qual << "Double_t " << prefix 
-	  << "fgEigenValues[] = {" << flush;
+	  << "gEigenValues[] = {" << flush;
   for (i = 0; i < fNumberOfVariables; i++) 
     outFile << (i != 0 ? "," : "") << endl
 	    << "  " << fEigenValues(i+1) << flush;
@@ -1690,7 +1690,7 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname, Optio
   // Assignment to mean Values vector. Zero-based.
   outFile << "// Assignment to mean value vector. Zero-based." << endl;
   outFile << cv_qual << "Double_t " << prefix 
-	  << "fgMeanValues[] = {" << flush;
+	  << "gMeanValues[] = {" << flush;
   for (i = 0; i < fNumberOfVariables; i++) 
     outFile << (i != 0 ? "," : "") << endl
 	    << "  " << fMeanValues(i+1) << flush;
@@ -1699,7 +1699,7 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname, Optio
   // Assignment to mean Values vector. Zero-based.
   outFile << "// Assignment to sigma value vector. Zero-based." << endl;
   outFile << cv_qual << "Double_t " << prefix 
-	  << "fgSigmaValues[] = {" << flush;
+	  << "gSigmaValues[] = {" << flush;
   for (i = 0; i < fNumberOfVariables; i++) 
     outFile << (i != 0 ? "," : "") << endl
 	    << "  " << fSigmas(i+1) << flush;
@@ -1708,38 +1708,38 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname, Optio
   // 
   // Finally we reach the functions themselves
   // 
-  // First: void x2p(Double_t* x, Double_t* p);
+  // First: void x2p(Double_t *x, Double_t *p);
   //
   outFile << "// " << endl
 	  << "// The " 
     	  << (isMethod ? "method " : "function ")
 	  << "  void " << prefix 
-	  << "X2P(Double_t* x, Double_t* p)" 
+	  << "X2P(Double_t *x, Double_t *p)" 
 	  << endl << "// " << endl;
   outFile << "void " << prefix 
-	  << "X2P(Double_t* x, Double_t* p) {" << endl
-	  << "  for (Int_t i = 0; i < fgNVariables; i++) {" << endl
+	  << "X2P(Double_t *x, Double_t *p) {" << endl
+	  << "  for (Int_t i = 0; i < gNVariables; i++) {" << endl
 	  << "    p[i] = 0;" << endl
-	  << "    for (Int_t j = 0; j < fgNVariables; j++)" << endl
-	  << "      p[i] += (x[j] - fgMeanValues[j]) " << endl
-	  << "        * fgEigenVectors[j *  fgNVariables + i] " 
-	  << "/ fgSigmaValues[j];" << endl << endl << "  }" 
+	  << "    for (Int_t j = 0; j < gNVariables; j++)" << endl
+	  << "      p[i] += (x[j] - gMeanValues[j]) " << endl
+	  << "        * gEigenVectors[j *  gNVariables + i] " 
+	  << "/ gSigmaValues[j];" << endl << endl << "  }" 
 	  << endl << "}" << endl << endl;
   // 
-  // Now: void p2x(Double_t* p, Double_t* x, Int_t nTest);
+  // Now: void p2x(Double_t *p, Double_t *x, Int_t nTest);
   // 
   outFile << "// " << endl << "// The " 
 	  << (isMethod ? "method " : "function ")
 	  << "  void " << prefix 
-	  << "P2X(Double_t* p, Double_t* x, Int_t nTest)" 
+	  << "P2X(Double_t *p, Double_t *x, Int_t nTest)" 
 	  << endl << "// " << endl;
   outFile << "void " << prefix 
-	  << "P2X(Double_t* p, Double_t* x, Int_t nTest) {" << endl
-	  << "  for (Int_t i = 0; i < fgNVariables; i++) {" << endl
-	  << "    x[i] = fgMeanValues[i];" << endl
+	  << "P2X(Double_t *p, Double_t *x, Int_t nTest) {" << endl
+	  << "  for (Int_t i = 0; i < gNVariables; i++) {" << endl
+	  << "    x[i] = gMeanValues[i];" << endl
 	  << "    for (Int_t j = 0; j < nTest; j++)" << endl
-	  << "      x[i] = p[j] * fgSigmaValues[i] " << endl
-	  << "        * fgEigenValues[j *  fgNVariables + i];" << endl
+	  << "      x[i] = p[j] * gSigmaValues[i] " << endl
+	  << "        * gEigenValues[j *  gNVariables + i];" << endl
 	  << "  }" << endl << "}" << endl << endl;
   
   // EOF
