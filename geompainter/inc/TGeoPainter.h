@@ -100,6 +100,7 @@ public:
    TGeoChecker       *GetChecker();
    virtual Int_t      GetColor(Int_t base, Float_t light) const;
    virtual const char *GetDrawPath() const     {return fVisBranch;}
+   virtual TGeoVolume *GetDrawnVolume() const;
    virtual Int_t      GetVisLevel() const      {return fVisLevel;}
    virtual Int_t      GetVisOption() const     {return fVisOption;}
    Int_t              GetNsegments() const     {return fNsegments;}
