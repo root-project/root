@@ -255,7 +255,8 @@ void TGeoNodeCache::CleanCache()
    memcpy(&branch[0], fBranch, kGeoCacheMaxLevels*sizeof(Int_t));
    // mark all nodes in the current branch as not-dumpable
    Bool_t flags[kGeoCacheMaxLevels];
-   for (Int_t i=0; i<level+1; i++) {
+   Int_t i;
+   for (i=0; i<level+1; i++) {
       Int_t ic = CacheId(branch[i]);
       Int_t index = Index(branch[i]);
       fCache[ic]->cd(index);
@@ -268,7 +269,7 @@ void TGeoNodeCache::CleanCache()
    // copy back the current branch
    memcpy(fBranch, &branch[0], kGeoCacheMaxLevels*sizeof(Int_t));
    // restore persistency flags
-   for (Int_t i=0; i<level+1; i++) {
+   for (i=0; i<level+1; i++) {
       Int_t ic = CacheId(branch[i]);
       Int_t index = Index(branch[i]);
       fCache[ic]->cd(index);

@@ -888,7 +888,8 @@ void TGeoManager::Test(Int_t npoints, Option_t *option)
    TStopwatch *timer = new TStopwatch();
    printf("Random box : %f, %f, %f\n", dx, dy, dz);
    timer->Start(kFALSE);
-   for (Int_t i=0; i<npoints; i++) {
+   Int_t i;
+   for (i=0; i<npoints; i++) {
       xyz[3*i] = -dx+2*dx*gRandom->Rndm();
       xyz[3*i+1] = -dy+2*dy*gRandom->Rndm();
       xyz[3*i+2] = -dz+2*dz*gRandom->Rndm();
@@ -900,7 +901,7 @@ void TGeoManager::Test(Int_t npoints, Option_t *option)
    TGeoNode *node, *node1;
    printf("Start... %i points\n", npoints);
    timer->Start(kFALSE);
-   for (Int_t i=0; i<npoints; i++) {
+   for (i=0; i<npoints; i++) {
       SetCurrentPoint(xyz+3*i);
       if (recheck) CdTop();
       node = FindNode();
