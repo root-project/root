@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.68 2002/08/06 20:50:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.69 2002/08/06 21:29:55 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -549,13 +549,15 @@ void TFile::Close(Option_t *)
    }
 
    //delete the TProcessIDs
+   TList pidDeleted;
    TIter next(fProcessIDs);
    TProcessID *pid;
    while ((pid = (TProcessID*)next())) {
       if (!pid->DecrementCount()) {
-         if (pid != TProcessID::GetSessionProcessID()) delete pid;
+         if (pid != TProcessID::GetSessionProcessID()) pidDeleted.Add(pid);
       }
-  }
+   }
+   pidDeleted.Delete();
 
    gROOT->GetListOfFiles()->Remove(this);
 
