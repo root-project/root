@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.9 2002/05/18 08:21:58 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.10 2002/05/18 10:45:10 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -654,21 +654,19 @@ TObject *TRefArrayIter::Next()
 {
    // Return next object in array. Returns 0 when no more objects in array.
 
-/*
    if (fDirection == kIterForward) {
-      for ( ; fCursor < fArray->Capacity() && fArray->fCont[fCursor] == 0;
+      for ( ; fCursor < fArray->Capacity() && fArray->At(fCursor) == 0;
               fCursor++) { }
 
       if (fCursor < fArray->Capacity())
-         return fArray->fUIDs[fCursor++];
+         return fArray->At(fCursor++);
    } else {
-      for ( ; fCursor >= 0 && fArray->fUIDs[fCursor] == 0;
+      for ( ; fCursor >= 0 && fArray->At(fCursor) == 0;
               fCursor--) { }
 
       if (fCursor >= 0)
-         return fArray->fUIDs[fCursor--];
+         return fArray->At(fCursor--);
    }
-*/
    return 0;
 }
 
