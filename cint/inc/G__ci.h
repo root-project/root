@@ -107,11 +107,9 @@
 /* Define G__ERRORCALLBACK to activat error message redirection. If
  * G__ERRORCALLBACK is defined, a user can set a callback routine for
  * handling error message by G__set_errmsgcallback() API */
-/*
 #ifndef G__ERRORCALLBACK
 #define G__ERRORCALLBACK
 #endif
-*/
 
 /* 2001 masks G__ateval overloading resolution error. It turns out this is
  * not a good way, the feature is turned off */
@@ -830,8 +828,11 @@ typedef struct {
 #define G__USERHEADER 1
 #define G__SYSHEADER  2
 
-
-/* #define G__ANSI */
+#if (__GNUC__ >= 3) || defined(__sun)
+#ifndef G__ANSI
+#define G__ANSI
+#endif
+#endif
 
 #ifdef __cplusplus
 
