@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsPdf.cc,v 1.1 2001/05/03 02:15:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -59,24 +59,32 @@ RooAbsPdf::~RooAbsPdf()
 }
 
 
-
 Double_t RooAbsPdf::getVal(const RooDataSet* dset) const
 {
-  // Process change in last data set used
-  if (dset && dset != _lastDataSet) {
-    _lastDataSet = (RooDataSet*) dset ;
+  // Unnormalized values are not cached
+  // Doing so would be complicated as _norm->getVal() could
+  // spoil the cache and interfere with returning the cached
+  // return value. Since unnormalized calls are typically
+  // done in integration calls, there is no performance hit.
+  if (!dset) {
+    return traceEval() ;
+  }
 
+  // Process change in last data set used
+  if (dset != _lastDataSet) {
+    _lastDataSet = (RooDataSet*) dset ;
+ 
     // Update dataset pointers of proxies
     for (int i=0 ; i<numProxies() ; i++) {
       getProxy(i).changeDataSet(dset) ;
-    }    
-
+    }
+ 
     // Destroy old normalization & create new
     RooArgSet* depList = getDependents(dset) ;
     if (_norm) delete _norm ;
     _norm = new RooRealIntegral(TString(GetName()).Append("Norm"),
-				TString(GetTitle()).Append(" Integral"),*this,*depList) ;
-    delete depList ;    
+                                TString(GetTitle()).Append(" Integral"),*this,*depList) ;
+    delete depList ;
   }
 
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
@@ -84,19 +92,12 @@ Double_t RooAbsPdf::getVal(const RooDataSet* dset) const
     _value = traceEval() ;
     setValueDirty(kFALSE) ;
     setShapeDirty(kFALSE) ;
-  } 
+  }
 
-
-  if (dset)
-    // Return normalized answer
-    return _value / _norm->getVal() ;
-  else
-    // Return raw answer
-    return _value ;
+  return _value / _norm->getVal() ;
 }
 
-
-
+                                                                                                                          
 RooAbsPdf& RooAbsPdf::operator=(const RooAbsPdf& other)
 {
   RooAbsReal::operator=(other) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsPdf.rdl,v 1.3 2001/05/03 02:15:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -58,6 +58,11 @@ public:
   // Support for extended maximum likelihood, switched off by default
   virtual Bool_t canBeExtended() const { return kFALSE ; } 
   virtual Double_t expectedEvents() const { return 0 ; } 
+
+private:
+
+  // This forces definition copy ctor in derived classes 
+  RooAbsPdf(const RooAbsPdf& other);
 
 protected:
 

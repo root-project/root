@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.6 2001/04/22 18:15:32 david Exp $
+ *    File: $Id: RooPlot.cc,v 1.7 2001/05/02 18:09:00 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -27,6 +27,7 @@
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooHist.hh"
+#include "RooFitCore/RooArgSet.hh"
 
 #include "TAttLine.h"
 #include "TAttFill.h"
@@ -40,36 +41,42 @@
 ClassImp(RooPlot)
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.6 2001/04/22 18:15:32 david Exp $";
+"$Id: RooPlot.cc,v 1.7 2001/05/02 18:09:00 david Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
-  TH1("frame","RooPlotFrame",0,xmin,xmax), _plotVarClone(0), _items()
+  TH1(histName(),"RooPlotFrame",0,xmin,xmax), _plotVarClone(0), 
+  _plotVarSet(0), _items()
 {
+  fDimension=1 ;
   // Create an empty frame with the specified x-axis limits.
-
   initialize();
 }
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax) :
-  TH1("frame","RooPlotFrame",0,xmin,xmax), _plotVarClone(0), _items()
+  TH1(histName(),"RooPlotFrame",0,xmin,xmax), _plotVarClone(0), 
+  _plotVarSet(0), _items()
 {
   // Create an empty frame with the specified x- and y-axis limits.
-
+  fDimension=1 ;
   SetMinimum(ymin);
   SetMaximum(ymax);
   initialize();
 }
 
 RooPlot::RooPlot(const RooAbsReal &var) :
-  TH1("frame",var.GetTitle(),0,var.getPlotMin(),var.getPlotMax()),
-  _plotVarClone(0), _items()
+  TH1(histName(),var.GetTitle(),0,var.getPlotMin(),var.getPlotMax()),
+  _plotVarClone(0), _plotVarSet(0), _items()
 {
   // Create an empty frame with its title and x-axis range and label taken
   // from the specified real variable. We keep a clone of the variable
   // so that we do not depend on its lifetime and are decoupled from
   // any later changes to its state.
-
-  _plotVarClone= (RooAbsReal*)var.Clone();
+  fDimension=1 ;
+  
+  // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
+  _plotVarSet = RooArgSet("",var).snapshot() ;
+  _plotVarClone= (RooAbsReal*)_plotVarSet->find(var.GetName()) ;
+  _plotVarSet->Print("v") ;
   
   if(0 != strlen(var.getUnit())) {
     fTitle.Append(" (");
@@ -88,18 +95,25 @@ void RooPlot::initialize() {
   assert(0 != _iterator);
 }
 
+
+TString RooPlot::histName() const 
+{
+  char buf[128] ;
+  sprintf(buf,"frame(%08x)",this) ;
+  return TString(buf) ;
+}
+
 RooPlot::~RooPlot() {
   // Delete the items in our container and our iterator.
 
   _items.Delete();
   delete _iterator;
-  if(_plotVarClone) delete _plotVarClone;
+  if(_plotVarSet) delete _plotVarSet;
 }
 
-Stat_t RooPlot::GetBinContent(Int_t) const {
+Stat_t RooPlot::GetBinContent(Int_t i) const {
   // A plot object is a frame without any bin contents of its own so this
   // method always returns zero.
-
   return 0;
 }
 

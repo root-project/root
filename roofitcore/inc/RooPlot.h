@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.5 2001/04/21 01:13:11 david Exp $
+ *    File: $Id: RooPlot.rdl,v 1.6 2001/04/22 18:15:32 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -17,6 +17,7 @@
 #include "RooFitCore/RooPrintable.hh"
 
 class RooAbsReal;
+class RooArgSet ;
 class RooHist;
 class TAttLine;
 class TAttFill;
@@ -55,12 +56,16 @@ public:
   TString getDrawOptions(const char *name) const;
   Bool_t setDrawOptions(const char *name, TString options);
 
+  inline void origPrint(Option_t* opt) { TH1::Print(opt) ; }
+
 protected:
   void initialize();
+  TString histName() const ; 
   TString caller(const char *method) const;
   Double_t _padFactor; // Scale our y-axis to _padFactor of our maximum contents.
   RooList _items;    // A list of the items we contain.
   RooAbsReal *_plotVarClone; // A clone of the variable we are plotting.
+  RooArgSet *_plotVarSet; // A list owning the cloned tree nodes of the plotVarClone ;
   TIterator *_iterator;  //! non-persistent
   RooPlot(const RooPlot& other); // object cannot be copied
   ClassDef(RooPlot,1) // A plot frame and container for graphics objects

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.13 2001/05/02 18:09:00 david Exp $
+ *    File: $Id: RooRealVar.cc,v 1.14 2001/05/03 02:15:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -37,7 +37,8 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   RooAbsReal(name, title, minValue, maxValue, unit)
 {
   _value= 0.5*(minValue + maxValue);
-  removeFitRange();
+  setFitRange(minValue,maxValue) ;
+  //removeFitRange();
 }  
 
 RooRealVar::RooRealVar(const char *name, const char *title,
@@ -46,7 +47,8 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   RooAbsReal(name, title, minValue, maxValue, unit), _error(0)
 {
   _value = value ;
-  removeFitRange();
+  setFitRange(minValue,maxValue) ;
+  //removeFitRange();
 }  
 
 RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :

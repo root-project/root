@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.10 2001/05/02 18:08:59 david Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.11 2001/05/03 02:15:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -270,11 +270,14 @@ RooPlot *RooAbsReal::plot(RooPlot* frame, Option_t* drawOptions) const {
     cout << GetName() << "::plot: variable is not a dependent: " << realVar->GetName() << endl;
     return 0;
   }
-  // clone ourselves
-  RooAbsReal *clone= (RooAbsReal*)Clone();
-  // redirect our clone to use the plot variable
+
+  // deep-clone ourselves
+  RooArgSet *cloneList = RooArgSet("",*this).snapshot() ;
+  RooAbsReal *clone= (RooAbsReal*) cloneList->find(GetName()) ;
+
+  // redirect our clone to use the plot variable !!! WVE Check!
   RooArgSet args("args",*realVar);
-  clone->redirectServers(args);
+  clone->recursiveRedirectServers(args);
 
   // create a temporary curve of our function using our redirected clone
   RooCurve *curve= new RooCurve(*clone,*realVar);
@@ -283,7 +286,7 @@ RooPlot *RooAbsReal::plot(RooPlot* frame, Option_t* drawOptions) const {
   frame->addObject(curve, drawOptions);
 
   // cleanup
-  delete clone; // this will remove the plot var's client relationship to this clone
+  delete cloneList; // this will remove the plot var's client relationship to this clone
   delete curve;
   return frame;
 }
