@@ -1,3 +1,7 @@
+#include "TFile.h"
+#include "TTree.h"
+#include "Riostream.h"
+
 void macos(char* name)
 {
   static Char_t cHead1[10]="123456789"; 
@@ -14,7 +18,7 @@ void macos(char* name)
   // create a TTree
   TTree *tree=new TTree("tree","test");
 
-  tree->Branch("cHead1",&cHead1,"cHead1[10]/C");
+  tree->Branch("cHead1",&cHead1,"cHead1[9]/C");
   tree->Branch("nCh2",&nCh2,"nCh2/s");
 
   tree->Fill();
