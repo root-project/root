@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooCPMixFit.cc,v 1.5 2002/02/15 11:18:22 gautier Exp $
+ *    File: $Id: RooCPMixFit.cc,v 1.6 2002/02/26 03:39:44 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -330,7 +330,7 @@ void RooCPMixFit::buildDeltatPdfs()
 
   // Construct composite signal and gaussian resolution models 
   sigResModel = new RooAddModel("sigResModel","Signal 3Gauss resolution model",
-				RooArgList(*sigC_gauss,*outl_gauss,*sigT_gexp),RooArgList(*sigC_frac,*sigO_frac)) ;
+				RooArgList(*sigC_gauss,*outl_gauss,*sigT_gauss),RooArgList(*sigC_frac,*sigO_frac)) ;
   bkgResModel = new RooAddModel("bkgResModel","Backgd 2Gauss resolution model",
 				RooArgList(*bkgC_gauss,*outl_gauss),*bkgC_frac) ;
   kbgResModel = new RooAddModel("kbgResModel","JPsiKLong Backgd 3Gauss resolution model",
