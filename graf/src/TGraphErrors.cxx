@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.41 2004/09/13 12:27:11 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.42 2004/10/12 10:37:25 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -19,6 +19,8 @@
 #include "TArrow.h"
 #include "TVirtualPad.h"
 #include "TF1.h"
+#include "TVector.h"
+#include "TVectorD.h"
 #include "TStyle.h"
 
 ClassImp(TGraphErrors)
@@ -119,6 +121,49 @@ TGraphErrors::TGraphErrors(Int_t n, const Double_t *x, const Double_t *y, const 
    else    memset(fEY, 0, n);
 }
 
+
+//______________________________________________________________________________
+TGraphErrors::TGraphErrors(const TVector  &vx, const TVector  &vy, const TVector  &vex, const TVector  &vey)
+             :TGraph()
+{
+// constructor with four vectors of floats in input
+// A grapherrors is built with the X coordinates taken from vx and Y coord from vy
+// and the errors from vectors vex and vey.
+// The number of points in the graph is the minimum of number of points
+// in vx and vy.
+
+   fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
+   if (!CtorAllocate()) return;
+   for (Int_t i=0; i < fNpoints; i++) {
+      fX[i]  = vx(i);
+      fY[i]  = vy(i);
+      fEX[i] = vex(i);
+      fEY[i] = vey(i);
+   }
+}
+
+
+//______________________________________________________________________________
+TGraphErrors::TGraphErrors(const TVectorD  &vx, const TVectorD  &vy, const TVectorD  &vex, const TVectorD  &vey)
+             :TGraph()
+{
+// constructor with four vectors of doubles in input
+// A grapherrors is built with the X coordinates taken from vx and Y coord from vy
+// and the errors from vectors vex and vey.
+// The number of points in the graph is the minimum of number of points
+// in vx and vy.
+
+
+   fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
+   if (!CtorAllocate()) return;
+   for (Int_t i=0; i < fNpoints; i++) {
+      fX[i]  = vx(i);
+      fY[i]  = vy(i);
+      fEX[i] = vex(i);
+      fEY[i] = vey(i);
+   }
+}
+   
 //______________________________________________________________________________
 TGraphErrors::TGraphErrors(const TGraphErrors &gr)
        : TGraph(gr)

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.141 2004/09/13 15:18:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.142 2004/10/01 16:30:58 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -21,7 +21,6 @@
 #include "TStyle.h"
 #include "TMath.h"
 #include "TFrame.h"
-#include "TVector.h"
 #include "TVector.h"
 #include "TVectorD.h"
 #include "Foption.h"

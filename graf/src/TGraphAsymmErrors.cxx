@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.44 2004/09/13 12:27:11 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.45 2004/10/12 10:37:25 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -20,6 +20,8 @@
 #include "TVirtualPad.h"
 #include "TF1.h"
 #include "TH1.h"
+#include "TVector.h"
+#include "TVectorD.h"
 
 ClassImp(TGraphAsymmErrors)
 
@@ -151,6 +153,52 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t 
    } else { memset(fEYlow, 0, n); }
    if(eyh) { memcpy(fEYhigh, eyh, n);
    } else { memset(fEYhigh, 0, n); }
+}
+
+
+//______________________________________________________________________________
+TGraphAsymmErrors::TGraphAsymmErrors(const TVector  &vx, const TVector  &vy, const TVector  &vexl, const TVector  &vexh, const TVector  &veyl, const TVector  &veyh)
+                  :TGraph()
+{
+// constructor with six vectors of floats in input
+// A grapherrors is built with the X coordinates taken from vx and Y coord from vy
+// and the errors from vectors vexl/h and veyl/h.
+// The number of points in the graph is the minimum of number of points
+// in vx and vy.
+
+   fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
+   if (!CtorAllocate()) return;
+   for (Int_t i=0; i < fNpoints; i++) {
+      fX[i]      = vx(i);
+      fY[i]      = vy(i);
+      fEXlow[i]  = vexl(i);
+      fEYlow[i]  = veyl(i);
+      fEXhigh[i] = vexh(i);
+      fEYhigh[i] = veyh(i);
+   }
+}
+
+
+//______________________________________________________________________________
+TGraphAsymmErrors::TGraphAsymmErrors(const TVectorD &vx, const TVectorD &vy, const TVectorD &vexl, const TVectorD &vexh, const TVectorD &veyl, const TVectorD &veyh)
+                  :TGraph()
+{
+// constructor with six vectors of doubles in input
+// A grapherrors is built with the X coordinates taken from vx and Y coord from vy
+// and the errors from vectors vexl/h and veyl/h.
+// The number of points in the graph is the minimum of number of points
+// in vx and vy.
+
+   fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
+   if (!CtorAllocate()) return;
+   for (Int_t i=0; i < fNpoints; i++) {
+      fX[i]      = vx(i);
+      fY[i]      = vy(i);
+      fEXlow[i]  = vexl(i);
+      fEYlow[i]  = veyl(i);
+      fEXhigh[i] = vexh(i);
+      fEYhigh[i] = veyh(i);
+   }
 }
 
 //______________________________________________________________________________
