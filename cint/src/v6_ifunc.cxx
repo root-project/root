@@ -6634,7 +6634,7 @@ asm_ifunc_start:   /* loop compilation execution label */
   /* recover line number and filename*/
   G__ifile.line_number = G_local.prev_line_number;
   G__ifile.filenum=G_local.prev_filenum;
-  if(-1!=G__ifile.filenum) 
+  if(-1!=G__ifile.filenum && 0!=G__srcfile[G__ifile.filenum].filename) 
     strcpy(G__ifile.name,G__srcfile[G__ifile.filenum].filename);
   else {
     G__ifile.name[0]='\0';
