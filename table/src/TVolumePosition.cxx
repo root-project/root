@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.2 2003/01/27 20:41:37 brun Exp $
+// @(#)root/star:$Name: v3-05-05-28May03 $:$Id: TVolumePosition.cxx,v 1.1.1.3 2003/05/28 16:19:01 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TVolumePosition.cxx,v 1.2 2003/01/27 20:41:37 brun Exp $
+// $Id: TVolumePosition.cxx,v 1.1.1.3 2003/05/28 16:19:01 fisyak Exp $
 
 #include "Riostream.h"
 
@@ -87,6 +87,55 @@ TVolumePosition::TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t 
    fX[0] = x; fX[1] = y; fX[2] = z;
    if (!fMatrix) fMatrix = TVolume::GetIdentity();
 }
+//______________________________________________________________________________
+TVolumePosition::TVolumePosition(const TVolumePosition* oldPosition, const TVolumePosition* curPosition){
+  // Pick the "old" position by pieces
+  SetMatrixOwner(kFALSE);
+  TVolume *curNode = 0;
+  UInt_t curPositionId    = 0;
+  TRotMatrix *curMatrix = 0;
+  if (curPosition) {
+      curNode       = curPosition->GetNode();
+      curPositionId = curPosition->GetId();
+      curMatrix     = (TRotMatrix *) curPosition->GetMatrix();
+  }
+  TRotMatrix *oldMatrix = 0;
+  Double_t oldTranslation[] = { 0, 0, 0 };
+  if (oldPosition)
+    {
+      oldMatrix         = (TRotMatrix *) oldPosition->GetMatrix();
+      oldTranslation[0] = oldPosition->GetX();
+      oldTranslation[1] = oldPosition->GetY();
+      oldTranslation[2] = oldPosition->GetZ();
+    }
+  
+  // Pick the "current" position by pieces
+
+  // Create a new position
+  Double_t newMatrix[9];
+  
+  if(oldMatrix)
+    {
+      TGeometry::UpdateTempMatrix(oldTranslation,oldMatrix->GetMatrix(),
+                                 curPosition->GetX(),curPosition->GetY(),curPosition->GetZ(),
+                                 curMatrix->GetMatrix(),
+                                 fX,newMatrix);
+      Int_t num = gGeometry->GetListOfMatrices()->GetSize();
+      Char_t anum[100];
+      sprintf(anum,"%d",num+1);
+      fMatrix = new TRotMatrix(anum,"NodeView",newMatrix);
+      SetMatrixOwner(kTRUE);
+    }
+    else {
+       fX[0] = oldTranslation[0] + curPosition->GetX();
+       fX[1] = oldTranslation[1] + curPosition->GetY();
+       fX[2] = oldTranslation[2] + curPosition->GetZ();
+       fMatrix = curMatrix;
+    }
+  fId = curPositionId;
+  fNode = curNode;
+}
+//______________________________________________________________________________
 //______________________________________________________________________________
 TVolumePosition::TVolumePosition(const TVolumePosition&pos): TObject()
       , fMatrix(((TVolumePosition &)pos).GetMatrix()),fNode(pos.GetNode()),fId(pos.GetId())
@@ -391,26 +440,7 @@ void TVolumePosition::Paint(Option_t *)
 //_______________________________________________________________________
 void TVolumePosition::Print(Option_t *) const
 {
-   cout << " Node: " <<   GetNode()->GetName() << endl;
-   cout << " Position: x=" <<
-      GetX() << " : y=" <<
-      GetY() << " : z=" <<
-      GetZ() << endl;
-
-   if (fMatrix){
-      fMatrix->Print();
-      Double_t *matrix = ((TRotMatrix *)fMatrix)->GetMatrix();
-      Int_t i = 0;
-      cout << setw(4) <<" " ;
-      for (i=0;i<3;i++) cout << setw(3) << i+1 << setw(3) << ":" ;
-      cout << endl;
-      for (i=0;i<3;i++) {
-         cout << i+1 << ". ";
-         for (Int_t j=0;j<3;j++)
-            cout << setw(6) << *matrix++ << " : " ;
-         cout << endl;
-      }
-   }
+  cout << *this << endl;
 }
 
 //______________________________________________________________________________
@@ -524,7 +554,7 @@ TVolumePosition &TVolumePosition::Mult(const TVolumePosition &curPosition) {
       Reset(curNode
                            ,newTranslation[0],newTranslation[1],newTranslation[2]
                            ,new TRotMatrix(anum,"NodeView",newMatrix));
-
+      SetMatrixOwner(kTRUE);
    } else {
       newTranslation[0] = oldTranslation[0] + curPosition.GetX();
       newTranslation[1] = oldTranslation[1] + curPosition.GetY();
@@ -559,27 +589,19 @@ void TVolumePosition::Streamer(TBuffer &R__b)
 }
 //______________________________________________________________________________
 ostream& operator<<(ostream& s,const TVolumePosition &target) {
-   static const int width = 10;
    s << " Node: ";
    if (target.GetNode()) s <<  target.GetNode()->GetName() << endl;
    else                  s << "NILL" << endl;
-   s.setf(ios::fixed,ios::scientific);
-   s.setf(ios::showpos);
-   s << " Position: x=" << std::setw(width) << std::setprecision(width-3) << target.GetX() 
-      << " : y=" << std::setw(width) << std::setprecision(width-3) << target.GetY() 
-      << " : z=" << std::setw(width) << std::setprecision(width-3) << target.GetZ() << endl;
-
+   s << Form(" Position: x=%10.5f : y=%10.5f : z=%10.5f\n", target.GetX(), target.GetY(), target.GetZ());
    TRotMatrix *rot = (TRotMatrix *) target.GetMatrix(); 
    if (rot){
       s << rot->IsA()->GetName() << "\t" << rot->GetName() << "\t" << rot->GetTitle() << endl;
       Double_t *matrix = rot->GetMatrix();
       Int_t i = 0;
       for (i=0;i<3;i++) {
-         for (Int_t j=0;j<3;j++)
-            s << std::setw(width) << std::setprecision(width-3) << *matrix++ << ":";
+         for (Int_t j=0;j<3;j++) s << Form("%10.5f:", *matrix++);
          s << endl;
       }
    }
-   s.unsetf(ios::showpos);
    return s;
 }
