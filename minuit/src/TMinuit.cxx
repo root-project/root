@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.34 2003/09/10 07:40:10 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.35 2003/09/18 10:16:21 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -1186,7 +1186,7 @@ L240:
     } else {
         Printf("        %12.4g%s%12.4g%s%12.4g",xlo,(const char*)chln,xsav,(const char*)chln,xup);
     }
-    Printf("       X-AXIS: PARAMETER%3d: %s  ONE COLUMN=%12.4g"
+    Printf("       X-AXIS: PARAMETER %3d %s  ONE COLUMN=%12.4g"
             ,ke1,(const char*)fCpnam[ke1-1],bwidx);
     Printf(" FUNCTION VALUES: F(I)=%12.4g +%12.4g *I**2",fAmin,fUp);
 //*-*-                finished.  reset input values
@@ -1341,14 +1341,14 @@ void TMinuit::mncont(Int_t ike1, Int_t ike2, Int_t nptu, Double_t *xptu, Double_
     fCfrom = "MNContour ";
     fNfcnfr = nfcnco;
     if (fISW[4] >= 0) {
-        Printf(" START MNCONTOUR CALCULATION OF%4d POINTS ON CONTOUR.",nptu);
+        Printf(" START MNCONTOUR CALCULATION OF %4d POINTS ON CONTOUR.",nptu);
 	if (fNpar > 2) {
 	    if (fNpar == 3) {
 		ki3 = 6 - ki1 - ki2;
 		ke3 = fNexofi[ki3-1];
 		Printf(" EACH POINT IS A MINIMUM WITH RESPECT TO PARAMETER %3d  %s",ke3,(const char*)fCpnam[ke3-1]);
 	    } else {
-		Printf(" EACH POINT IS A MINIMUM WITH RESPECT TO THE OTHER%3d VARIABLE PARAMETERS.",fNpar - 2);
+		Printf(" EACH POINT IS A MINIMUM WITH RESPECT TO THE OTHER %3d VARIABLE PARAMETERS.",fNpar - 2);
 	    }
 	}
     }
@@ -1470,7 +1470,7 @@ L300:
 //*-*-             If cannot find mid-point, try closer to point 1
 	    if (a1 > .5) {
 		if (fISW[4] >= 0) {
-		    Printf(" MNCONT CANNOT FIND NEXT POINT ON CONTOUR.  ONLY%3d POINTS FOUND.",nowpts);
+		    Printf(" MNCONT CANNOT FIND NEXT POINT ON CONTOUR.  ONLY %3d POINTS FOUND.",nowpts);
 		}
 		goto L950;
 	    }
@@ -1681,7 +1681,7 @@ L450:
 	if (llist > mxp) {
 	    nreq = nelmnt - ielmnt + 1;
 	    Printf(" MINUIT WARNING IN MNCRCK: ");
-            Printf(" COMMAND HAS INPUT%5d NUMERIC FIELDS, BUT MINUIT CAN ACCEPT ONLY%3d",nreq,mxp);
+            Printf(" COMMAND HAS INPUT %5d NUMERIC FIELDS, BUT MINUIT CAN ACCEPT ONLY%3d",nreq,mxp);
 	    goto L900;
 	}
 	if (celmnt[ifld-1] == cnull) plist[llist-1] = 0;
@@ -2836,7 +2836,7 @@ L901:
 	}
 	continue;
 L930:
-	Printf(" PARAMETER%4d %s IGNORED.",iext,(const char*)chwhy);
+	Printf(" PARAMETER %4d %s IGNORED.",iext,(const char*)chwhy);
     }
     if (lfreed || lfixed) mnrset(0);
     if (lfreed) {
@@ -2881,7 +2881,7 @@ L1210:
     mnscan();
     return;
 L1250:
-    Printf(" PARAMETER%4d NOT VARIABLE.",iext);
+    Printf(" PARAMETER %4d NOT VARIABLE.",iext);
     ierflg = 3;
     return;
 //*-*-                                       . . . . . . . . . . contour
@@ -3047,7 +3047,7 @@ L4000:
     cneway = "SAVE      ";
 //*-*-                               ....... come from obsolete commands
 L3100:
-    Printf(" OBSOLETE COMMAND:%s   PLEASE USE: %s",(const char*)fCword
+    Printf(" OBSOLETE COMMAND:%s   PLEASE USE:%s",(const char*)fCword
                                                  ,(const char*)cneway);
     fCword = cneway;
     if (fCword == "SAVE      ") goto L1500;
@@ -3098,7 +3098,7 @@ void TMinuit::mnfixp(Int_t iint1, Int_t &ierr)
     iext = fNexofi[iint-1];
     if (fNpfix >= fMaxpar) {
 	ierr = 1;
-	Printf(" MINUIT CANNOT FIX PARAMETER%4d MAXIMUM NUMBER THAT CAN BE FIXED IS %d",iext,fMaxpar);
+	Printf(" MINUIT CANNOT FIX PARAMETER %4d MAXIMUM NUMBER THAT CAN BE FIXED IS %d",iext,fMaxpar);
 	return;
     }
 //*-*-                          reduce number of variable parameters by one
@@ -3192,7 +3192,7 @@ L15:
     if (fNpfix < 1) goto L21;
     for (ik = 1; ik <= fNpfix; ++ik) { if (fIpfix[ik-1] == ka) goto L24; }
 L21:
-    Printf(" PARAMETER%4d NOT FIXED.  CANNOT BE RELEASED.",ka);
+    Printf(" PARAMETER %4d NOT FIXED.  CANNOT BE RELEASED.",ka);
     return;
 L24:
     if (ik == fNpfix) goto L40;
@@ -3257,7 +3257,7 @@ L40:
     fISW[1] = 0;
     fDcovar = 1;
     if (fISW[4] - fItaur >= 1) {
-	Printf("                    PARAMETER%4d  %s RESTORED TO VARIABLE.",ir,
+	Printf("                   PARAMETER %4d  %s RESTORED TO VARIABLE.",ir,
                       (const char*)fCpnam[ir-1]);
     }
     if (k == 0) goto L40;
@@ -4898,7 +4898,7 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
 	mnwarn("D", "MNLINE", " LINE SEARCH FINDS NO IMPROVEMENT ");
     }
     if (ldebug) {
-        Printf(" AFTER%3d POINTS,%s",nxypt,(const char*)cmess);
+        Printf(" AFTER %3d POINTS,%s",nxypt,(const char*)cmess);
 	mnplot(xpq, ypq, chpq, nxypt, fNpagwd, fNpagln);
     }
 } /* mnline_ */
@@ -5018,7 +5018,7 @@ void TMinuit::mnmigr()
     fISW[3] = -1;
     rhotol  = fApsi*.001;
     if (iswtr >= 1) {
-	Printf(" START MIGRAD MINIMIZATION.  STRATEGY%2d.  CONVERGENCE WHEN EDM .LT.%9.2e",fIstrat,rhotol);
+	Printf(" START MIGRAD MINIMIZATION.  STRATEGY %2d.  CONVERGENCE WHEN EDM .LT.%9.2e",fIstrat,rhotol);
     }
 //*-*-                                          initialization strategy
     if (fIstrat < 2 || fISW[1] >= 3) goto L2;
@@ -5352,7 +5352,7 @@ void TMinuit::mnmnos()
 	    if (ilax > 0 && ilax <= fNu) {
 		if (fNiofex[ilax-1] > 0) goto L565;
 	    }
-            Printf(" PARAMETER NUMBER %3d NOT VARIABLE. IGNORED.",ilax);
+            Printf(" PARAMETER NUMBER %3d NOT A VARIABLE. IGNORED.",ilax);
 	    continue;
 	}
 L565:
@@ -5461,7 +5461,7 @@ void TMinuit::mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi
 //*-*-                          fix the parameter in question
     mnfixp(it-1, ierr);
     if (ierr > 0) {
-	Printf(" MINUIT ERROR. CANNOT FIX PARAMETER%4d    INTERNAL%3d",ilax,it);
+	Printf(" MINUIT ERROR. CANNOT FIX PARAMETER %4d   INTERNAL %3d",ilax,it);
 	goto L700;
     }
 //*-*-                      . . . . . Nota Bene: from here on, NPAR=MPAR-1
@@ -5477,7 +5477,7 @@ void TMinuit::mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi
 	}
 //*-*-                                       . sig=sign of error being calcd
 	if (fISW[4] > 1) {
-	    Printf(" DETERMINATION OF %sTIVE MINOS ERROR FOR PARAMETER%d"
+	    Printf(" DETERMINATION OF %sTIVE MINOS ERROR FOR PARAMETER %d"
                             ,(const char*)csig,ilax
                             ,(const char*)fCpnam[ilax-1]);
 	}
@@ -5498,7 +5498,7 @@ void TMinuit::mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi
 	    fX[i-1] = fXt[i-1] + fac*fMNOTxdev[i-1];
 	}
 	if (fISW[4] > 1) {
-	    Printf(" PARAMETER%4d SET TO%11.3e + %10.3e = %12.3e",ilax,ut,delu,fU[ilax-1]);
+	    Printf(" PARAMETER %4d SET TO%11.3e + %10.3e = %12.3e",ilax,ut,delu,fU[ilax-1]);
 	}
 //*-*-                                       loop to hit AMIN+UP
 	fKe1cr  = ilax;
@@ -5516,7 +5516,7 @@ void TMinuit::mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi
 //*-*-                                       . error successfully calculated
 	eros = fXmidcr - ut + aopt*fXdircr;
 	if (fISW[4] > 1) {
-	    Printf("         THE %4sTIVE MINOS ERROR OF PARAMETER%3d  %10s, IS %12.4e"
+	    Printf("        THE %4sTIVE MINOS ERROR OF PARAMETER %3d  %10s, IS %12.4e"
                            ,(const char*)csig,ilax
                            ,(const char*)fCpnam[ilax-1],eros);
 	}
@@ -5524,7 +5524,7 @@ void TMinuit::mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi
 //*-*-                                       . . . . . . . . failure returns
 L440:
 	if (fISW[4] >= 1) {
-	    Printf("     THE %4sTIVE MINOS ERROR OF PARAMETER%3d, %s EXCEEDS ITS LIMIT."
+	    Printf("    THE %4sTIVE MINOS ERROR OF PARAMETER %3d, %s EXCEEDS ITS LIMIT."
                               ,(const char*)csig,ilax
                               ,(const char*)fCpnam[ilax-1]);
 	}
@@ -5532,14 +5532,14 @@ L440:
 	goto L480;
 L450:
 	if (fISW[4] >= 1) {
-	    Printf("         THE %4sTIVE MINOS ERROR%4d REQUIRES MORE THAN%5d FUNCTION CALLS."
+	    Printf("       THE %4sTIVE MINOS ERROR %4d REQUIRES MORE THAN %5d FUNCTION CALLS."
                          ,(const char*)csig,ilax,nfmxin);
 	}
 	eros = 0;
 	goto L480;
 L460:
 	if (fISW[4] >= 1) {
-	    Printf("                         %4sTIVE MINOS ERROR NOT CALCULATED FOR PARAMETER%d"
+	    Printf("                         %4sTIVE MINOS ERROR NOT CALCULATED FOR PARAMETER %d"
                          ,(const char*)csig,ilax);
 	}
 	eros = 0;
