@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.18 2002/02/20 16:48:42 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.19 2002/02/23 15:45:57 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #endif
 
 class TTreeFormula;
+class TTreeFormulaManager;
 class TH1;
 class TSlave;
 class TPacketGenerator;
@@ -51,11 +52,12 @@ protected:
     TTreeFormula  *fVar3;           //  Pointer to third variable formula
     TTreeFormula  *fVar4;           //  Pointer to fourth variable formula
     TTreeFormula  *fSelect;         //  Pointer to selection formula
-    TTreeFormula  *fMultiplicity;   //  Pointer to formula giving ndata per entry
+    TTreeFormulaManager *fManager;  //  Pointer to the formula manager
     Bool_t         fScanRedirect;   //  Switch to redirect TTree::Scan output to a file
     const char    *fScanFileName;   //  Name of the file where Scan is redirected
     Int_t          fDraw;           //! Last entry loop number when object was drawn
     Int_t          fNfill;          //! Local for EntryLoop
+    Int_t          fMultiplicity;   //  Indicator of the variability of the size of entries
     Int_t          fDimension;      //  Dimension of the current expression
     Int_t          fSelectedRows;   //  Number of selected entries
     Int_t          fPacketSize;     //  Number of entries in one packet for parallel root
@@ -92,7 +94,7 @@ public:
                        ,Int_t nentries, Int_t firstentry);
     virtual Int_t     GetDimension() const {return fDimension;}
     TH1              *GetHistogram() const {return fHistogram;}
-    TTreeFormula     *GetMultiplicity() const   {return fMultiplicity;}
+    Int_t             GetMultiplicity() const   {return fMultiplicity;}
     virtual void      GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed);
     virtual Int_t     GetNfill() const {return fNfill;}
     TPacketGenerator *GetPacketGenerator() const { return fPacketGen; }
@@ -130,7 +132,7 @@ public:
                        ,Int_t nentries, Int_t firstentry);
     virtual void      UpdateFormulaLeaves();
 
-    ClassDef(TTreePlayer,1)  //Manager class to play with TTrees
+    ClassDef(TTreePlayer,2)  //Manager class to play with TTrees
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.11 2001/04/09 08:25:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.12 2002/02/20 16:48:42 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -53,7 +53,7 @@ public:
     virtual void           GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed) = 0;
     virtual Int_t          GetNfill() const = 0;
     virtual Int_t          GetSelectedRows() const = 0;
-    virtual TTreeFormula  *GetMultiplicity() const = 0;
+    virtual Int_t          GetMultiplicity() const = 0;
     virtual TTreeFormula  *GetSelect() const = 0;
     virtual TTreeFormula  *GetVar1() const = 0;
     virtual TTreeFormula  *GetVar2() const = 0;

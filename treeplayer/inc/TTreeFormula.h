@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.21 2002/01/15 10:31:28 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.22 2002/03/19 17:05:50 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -48,19 +48,21 @@ class TFormLeafInfoMultiVarDim;
 class TFormLeafInfo;
 class TBranchElement;
 class TAxis;
+class TTreeFormulaManager;
 
 class TTreeFormula : public TFormula {
 
 protected:
    enum { kIsCharacter = BIT(12) };
-   enum { kDirect, kDataMember, kMethod, kIndexOfEntry };
+   enum { kDirect, kDataMember, kMethod, 
+          kIndexOfEntry, kEntries, kLength, kIteration };
 
    TTree       *fTree;            //! pointer to Tree
    Short_t     fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula
    Int_t       fNdata[kMAXCODES]; //! This caches the physical number of element in the leaf or datamember.
    Int_t       fNcodes;           //  Number of leaves referenced in formula
-   Int_t       fMultiplicity;     //  Number of array elements in leaves in case of a TClonesArray
-   Bool_t      fMultiVarDim;      //  True if one of the variable has 2 variable size dimensions.
+   Bool_t      fHasCast;          //  Record whether the formula contain a cast operation or not
+   Int_t       fMultiplicity;     //  Indicator of the variability of the formula
    Int_t       fInstance;         //  Instance number for GetValue
    Int_t       fNindex;           //  Size of fIndex
    Int_t      *fLookupType;       //[fNindex] array indicating how each leaf should be looked-up
@@ -71,17 +73,11 @@ protected:
    
    Int_t         fNdimensions[kMAXCODES];              //Number of array dimensions in each leaf
    Int_t         fFixedSizes[kMAXCODES][kMAXFORMDIM];  //Physical sizes of lower dimensions for each leaf
+
    //the next line should have a mutable in front. See GetNdata()
    Int_t         fCumulSizes[kMAXCODES][kMAXFORMDIM];  //Accumulated sizes of lower dimensions for each leaf after variable dimensions has been calculated
-   //the next line should be: mutable Int_t fUsedSizes[kMAXFORMDIM+1]; See GetNdata()
-   Int_t         fUsedSizes[kMAXFORMDIM+1];           //Actual size of the dimensions as seen for this entry.
-   //the next line should be: mutable Int_t fCumulUsedSizes[kMAXFORMDIM+1]; See GetNdata()
-   Int_t         fCumulUsedSizes[kMAXFORMDIM+1];      //Accumulated size of lower dimensions as seen for this entry.
-   Int_t         fVirtUsedSizes[kMAXFORMDIM+1];       //Virtual size of lower dimensions as seen for this formula
    Int_t         fIndexes[kMAXCODES][kMAXFORMDIM];    //Index of array selected by user for each leaf
    TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM]; //Pointer to a variable index.
-   TArrayI      *fVarDims[kMAXFORMDIM+1];             //List of variable sizes dimensions.
-   TArrayI      *fCumulUsedVarDims;                   //fCumulUsedSizes(1) for multi variable dimensions case
 
    void        DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * multidim = 0);
    void        DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * info, Int_t& virt_dim);
@@ -100,6 +96,12 @@ protected:
 
    TList      *fDimensionSetup; //! list of dimension setups, for delayed creation of the dimension information.
    TAxis      *fAxis;           //! pointer to histogram axis if this is a string
+
+   TTreeFormulaManager *fManager; //! The dimension coordinator.
+   friend TTreeFormulaManager;
+
+   void       ResetDimensions();
+   Bool_t     LoadCurrentDim();
 
 public:
              TTreeFormula();

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.10 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.11 2002/03/15 22:11:47 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -93,19 +93,26 @@ TCutG::TCutG(const char *name, Int_t n)
       TPaveText *ptitle = (TPaveText*)gPad->FindObject("title");
       if (!ptitle) return;
       TText *ttitle = ptitle->GetLineWith(":");
+      if (!ttitle) ttitle = ptitle->GetLineWith("{");
+      if (!ttitle) ttitle = ptitle->GetLine(0);
       if (!ttitle) return;
       const char *title = ttitle->GetTitle();
       Int_t nch = strlen(title);
       char *vars = new char[nch+1];
       strcpy(vars,title);
       char *col = strstr(vars,":");
-      if (!col) return;
-      *col = 0;
-      col++;
-      char *brak = strstr(col," {");
-      if (brak) *brak = 0;
-      fVarY = vars;
-      fVarX = col;
+      if (col) {
+         *col = 0;
+         col++;
+         char *brak = strstr(col," {");
+         if (brak) *brak = 0;
+         fVarY = vars;
+         fVarX = col;
+      } else {
+         char *brak = strstr(vars," {");
+         if (brak) *brak = 0;
+         fVarX = vars;
+      }        
       delete [] vars;
    }
 }
@@ -125,19 +132,26 @@ TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
       TPaveText *ptitle = (TPaveText*)gPad->FindObject("title");
       if (!ptitle) return;
       TText *ttitle = ptitle->GetLineWith(":");
+      if (!ttitle) ttitle = ptitle->GetLineWith("{");
+      if (!ttitle) ttitle = ptitle->GetLine(0);
       if (!ttitle) return;
       const char *title = ttitle->GetTitle();
       Int_t nch = strlen(title);
       char *vars = new char[nch+1];
       strcpy(vars,title);
       char *col = strstr(vars,":");
-      if (!col) return;
-      *col = 0;
-      col++;
-      char *brak = strstr(col," {");
-      if (brak) *brak = 0;
-      fVarY = vars;
-      fVarX = col;
+      if (col) {
+         *col = 0;
+         col++;
+         char *brak = strstr(col," {");
+         if (brak) *brak = 0;
+         fVarY = vars;
+         fVarX = col;
+      } else {
+         char *brak = strstr(vars," {");
+         if (brak) *brak = 0;
+         fVarX = vars;
+      }        
       delete [] vars;
    }
 }
@@ -157,19 +171,26 @@ TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
       TPaveText *ptitle = (TPaveText*)gPad->FindObject("title");
       if (!ptitle) return;
       TText *ttitle = ptitle->GetLineWith(":");
+      if (!ttitle) ttitle = ptitle->GetLineWith("{");
+      if (!ttitle) ttitle = ptitle->GetLine(0);
       if (!ttitle) return;
       const char *title = ttitle->GetTitle();
       Int_t nch = strlen(title);
       char *vars = new char[nch+1];
       strcpy(vars,title);
       char *col = strstr(vars,":");
-      if (!col) return;
-      *col = 0;
-      col++;
-      char *brak = strstr(col," {");
-      if (brak) *brak = 0;
-      fVarY = vars;
-      fVarX = col;
+      if (col) {
+         *col = 0;
+         col++;
+         char *brak = strstr(col," {");
+         if (brak) *brak = 0;
+         fVarY = vars;
+         fVarX = col;
+      } else {
+         char *brak = strstr(vars," {");
+         if (brak) *brak = 0;
+         fVarX = vars;
+      }        
       delete [] vars;
    }
 }

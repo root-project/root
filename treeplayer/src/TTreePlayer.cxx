@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.91 2002/02/26 21:55:58 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.92 2002/03/19 17:05:50 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -242,7 +242,7 @@
 #include "TVirtualPad.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
-#include "TTreeFormula.h"
+#include "TTreeFormulaManager.h"
 #include "TGaxis.h"
 #include "TBrowser.h"
 #include "TStyle.h"
@@ -286,6 +286,7 @@ TTreePlayer::TTreePlayer()
    fVar2           = 0;
    fVar3           = 0;
    fVar4           = 0;
+   fManager        = 0;
    fMultiplicity   = 0;
    fScanFileName   = 0;
    fScanRedirect   = kFALSE;
@@ -322,6 +323,8 @@ void TTreePlayer::ClearFormula()
    delete fVar3;   fVar3 = 0;
    delete fVar4;   fVar4 = 0;
    delete fSelect; fSelect = 0;
+   fManager = 0;
+   fMultiplicity = 0;
 }
 
 //______________________________________________________________________________
@@ -353,12 +356,10 @@ void TTreePlayer::CompileVariables(const char *varexp, const char *selection)
    fDimension = 0;
    ClearFormula();
    fMultiplicity = 0;
-   Int_t force = 0;
+
    if (strlen(selection)) {
       fSelect = new TTreeFormula("Selection",selection,fTree);
       if (!fSelect->GetNdim()) {delete fSelect; fSelect = 0; return; }
-      if (fSelect->GetMultiplicity() >= 1) fMultiplicity = fSelect;
-      if (fSelect->GetMultiplicity() == -1) force = 4;
    }
 //*-*- if varexp is empty, take first column by default
    nch = strlen(varexp);
@@ -371,26 +372,28 @@ void TTreePlayer::CompileVariables(const char *varexp, const char *selection)
    if (ncols > 3 ) return;
    MakeIndex(title,index);
 
+   fManager = new TTreeFormulaManager();
+   if (fSelect) fManager->Add(fSelect);
    fTree->ResetBit(TTree::kForceRead);
    if (ncols >= 1) {
       fVar1 = new TTreeFormula("Var1",GetNameByIndex(title,index,0),fTree);
       if (!fVar1->GetNdim()) { ClearFormula(); return;}
-      if (!fMultiplicity && fVar1->GetMultiplicity() >= 1) fMultiplicity = fVar1;
-      if (!force && fVar1->GetMultiplicity() == -1) force = 1;
+      fManager->Add(fVar1);
    }
    if (ncols >= 2) {
       fVar2 = new TTreeFormula("Var2",GetNameByIndex(title,index,1),fTree);
       if (!fVar2->GetNdim()) { ClearFormula(); return;}
-      if (!fMultiplicity && fVar2->GetMultiplicity() >= 1) fMultiplicity = fVar2;
-      if (!force && fVar2->GetMultiplicity() == -1) force = 2;
+      fManager->Add(fVar2);
    }
    if (ncols >= 3) {
       fVar3 = new TTreeFormula("Var3",GetNameByIndex(title,index,2),fTree);
       if (!fVar3->GetNdim()) { ClearFormula(); return;}
-      if (!fMultiplicity && fVar3->GetMultiplicity()  >= 1) fMultiplicity = fVar3;
-      if (!force && fVar3->GetMultiplicity() == -1) force = 3;
+      fManager->Add(fVar3);
    }
-   if (force) fTree->SetBit(TTree::kForceRead);
+   fManager->Sync();
+
+   if (fManager->GetMultiplicity()==-1) fTree->SetBit(TTree::kForceRead);
+   if (fManager->GetMultiplicity()>=1) fMultiplicity = fManager->GetMultiplicity();
 
    fDimension    = ncols;
 }
@@ -1417,20 +1420,18 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
          if (gROOT->IsInterrupted()) break;
          localEntry = fTree->LoadTree(entryNumber);
          if (localEntry < 0) break;
+         if ( force && fManager->GetNdata() <= 0) continue;
+
          if (fSelect) {
-            if (force && fSelect->GetNdata()<=0) continue;
             fW[fNfill] = treeWeight*fSelect->EvalInstance(0);
             if (!fW[fNfill]) continue;
          } else fW[fNfill] = treeWeight;
          if (fVar1) {
-            if (force && fVar1->GetNdata()<=0) continue;
             fV1[fNfill] = fVar1->EvalInstance(0);
          }
          if (fVar2) {
-            if (force && fVar2->GetNdata()<=0) continue;
             fV2[fNfill] = fVar2->EvalInstance(0);
             if (fVar3) {
-               if (force && fVar3->GetNdata()<=0) continue;
                fV3[fNfill] = fVar3->EvalInstance(0);
             }
          }
@@ -1468,23 +1469,16 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
       if (localEntry < 0) break;
       nfill0 = fNfill;
 
-      // Look for the lowest common array size amongst the
-      // variable and selection cut.
-      ndata = fMultiplicity->GetNdata();
-      if (Var1Multiple && (fMultiplicity!=fVar1))
-        ndata = TMath::Min(ndata,fVar1->GetNdata());
-      if (Var2Multiple && (fMultiplicity!=fVar2))
-        ndata = TMath::Min(ndata,fVar2->GetNdata());
-      if (Var3Multiple && (fMultiplicity!=fVar3))
-        ndata = TMath::Min(ndata,fVar3->GetNdata());
-
+      // Grab the array size of the formulas for this entry
+      ndata = fManager->GetNdata();
+      
       // no data at all, let's move on to the next entry.
       if (!ndata) continue;
 
       // Calculate the first values
       if (fSelect) {
          fW[fNfill] = treeWeight*fSelect->EvalInstance(0);
-         if (!fW[fNfill]  && !SelectMultiple) continue;
+         if (!fW[fNfill] && !SelectMultiple) continue;
       } else fW[fNfill] = treeWeight;
       if (fVar1) {
          fV1[fNfill] = fVar1->EvalInstance(0);
@@ -3538,5 +3532,4 @@ void TTreePlayer::UpdateFormulaLeaves()
    if (fVar3) fVar3->UpdateFormulaLeaves();
    if (fVar4) fVar4->UpdateFormulaLeaves();
    if (fSelect) fSelect->UpdateFormulaLeaves();
-   if (fMultiplicity) fMultiplicity->UpdateFormulaLeaves();
 }
