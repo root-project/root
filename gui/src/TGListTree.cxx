@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.34 2005/01/18 11:23:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.35 2005/01/18 15:08:51 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -1096,6 +1096,8 @@ void TGListTree::PDeleteChildren(TGListTreeItem *item)
          item->fFirstchild = 0;
       }
       sibling = item->fNextsibling;
+      if (fSelected == item)
+         fSelected = 0;
       delete item;
       item = sibling;
    }
