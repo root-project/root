@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.4 2004/06/18 15:50:43 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.5 2004/06/25 17:13:23 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #endif
 
 class TCanvas;
+class TGCanvas;
 class TGTab;
 class TVirtualPad;
 class TGedFrame;
@@ -39,6 +40,7 @@ class TGedElement;
 class TGedEditor : public TVirtualPadEditor, public TGMainFrame {
 
 protected:
+   TGCanvas         *fCan;              //provides scroll bars
    TGTab            *fTab;              //tab widget holding the editor
    TGCompositeFrame *fTabContainer;     //main tab container
    TGCompositeFrame *fStyle;            //style tab container frame

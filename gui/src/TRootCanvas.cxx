@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.60 2004/10/22 15:21:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.61 2004/10/25 12:06:50 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -518,8 +518,8 @@ void TRootCanvas::CreateCanvas(const char *name)
    fMainFrameLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
 
    // Create editor frame that will host the pad editor
-   fEditorFrame = new TGCompositeFrame(fMainFrame, 145, fMainFrame->GetHeight(), kFixedWidth);
-   fEditorLayout = new TGLayoutHints(kLHintsExpandY | kLHintsLeft, 0, 2, 0, 0);
+   fEditorFrame = new TGCompositeFrame(fMainFrame, 160, fMainFrame->GetHeight()+4, kFixedWidth);
+   fEditorLayout = new TGLayoutHints(kLHintsExpandY | kLHintsLeft);
    fMainFrame->AddFrame(fEditorFrame, fEditorLayout);
 
    // Create canvas and canvas container that will host the ROOT graphics
@@ -1342,7 +1342,6 @@ Bool_t TRootCanvas::HandleContainerConfigure(Event_t *)
                              fCanvas->GetAspectRatio()) + dh;
       SetWindowSize(GetWidth(), h);
    }
-
    return kTRUE;
 }
 

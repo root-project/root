@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.11 2004/09/21 17:53:10 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.12 2004/11/09 16:08:52 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 
 #include "TGedEditor.h"
 #include "TCanvas.h"
+#include "TGCanvas.h"
 #include "TGTab.h"
 #include "TGedFrame.h"
 #include "TGLabel.h"
@@ -34,17 +35,20 @@ ClassImp(TGedEditor)
 
 //______________________________________________________________________________
 TGedEditor::TGedEditor(TCanvas* canvas) :
-   TGMainFrame(gClient->GetRoot(), 110, 20)
+   TGMainFrame(gClient->GetRoot(), 155, 20)
 {
 
-   fTab = new TGTab(this, 110, 30);
-   AddFrame(fTab, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
+   fCan = new TGCanvas(this, 160, 10, kFixedWidth); 
+   fTab = new TGTab(fCan->GetViewPort(), 10, 10);
+   fCan->SetContainer(fTab);
+   AddFrame(fCan, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
+   fTab->Associate(fCan);
    fTabContainer = fTab->AddTab("Style");
    fStyle = new TGCompositeFrame(fTabContainer, 110, 30, kVerticalFrame);
    fStyle->AddFrame(new TGedNameFrame(fStyle, 1),\
                     new TGLayoutHints(kLHintsTop | kLHintsExpandX,0, 0, 2, 2));
    fTabContainer->AddFrame(fStyle, new TGLayoutHints(kLHintsTop | kLHintsExpandX,\
-                                                     0, 0, 2, 2));
+                                                     5, 0, 2, 2));
    fWid = 1;
 
    if (canvas) {
@@ -58,7 +62,7 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
       fClass  = fModel->IsA();
       GetEditors();
       ConnectToCanvas(canvas);
-      SetWindowName(Form("%s", canvas->GetName()));
+      SetWindowName(Form("%s_Editor", canvas->GetName()));
    } else {
       fModel  = 0;
       fPad    = 0;
@@ -69,7 +73,7 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
    MapSubwindows();
    Resize(GetDefaultSize());
    MapWindow();
-   if (canvas) Resize(GetWidth(), canvas->GetWh());
+   if (canvas) Resize(GetWidth(), canvas->GetWh()+4);  // 4 canvas borders
    gROOT->GetListOfCleanups()->Add(this);
 }
 
@@ -275,13 +279,13 @@ TGedEditor::~TGedEditor()
 //______________________________________________________________________________
  void TGedEditor::RecursiveRemove(TObject* obj)
 {
-   // Remove references to fModel in case the fModel is being deleted
-   // Deactivate attribute frames if they point to obj
+   // Remove references to fModel in case the fModel is being deleted.
+   // Deactivate attribute frames if they point to obj.
 
 
    if (fModel != obj) return;
    if (obj == fPad) 
-      SetModel(fCanvas, fCanvas, 0);
+      SetModel(fCanvas, fCanvas, kButton1Down);
    else
-      SetModel(fPad, fPad, 0);
+      SetModel(fPad, fPad, kButton1Down);
 }
