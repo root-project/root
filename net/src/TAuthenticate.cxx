@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.11 2003/08/29 17:23:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.12 2003/09/02 15:10:17 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -60,7 +60,7 @@ SecureAuth_t TAuthenticate::fgSecAuthHook;
 Krb5Auth_t TAuthenticate::fgKrb5AuthHook;
 GlobusAuth_t TAuthenticate::fgGlobusAuthHook;
 
-TList TAuthenticate::fgAuthInfo;
+TList *TAuthenticate::fgAuthInfo = 0;
 
 
 // For fast name-to-number translation for authentication methods
@@ -136,10 +136,10 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    if (gDebug > 3)
       Info("TAuthenticate",
            "number of HostAuth Instantiations in memory: %d",
-           fgAuthInfo.GetSize());
+           GetAuthInfo()->GetSize());
 
    // Check list of auth info for already loaded info about this host
-   TIter next(&fgAuthInfo);
+   TIter next(GetAuthInfo());
    THostAuth *ai;
    while ((ai = (THostAuth *) next())) {
       if (gDebug > 4) {
@@ -184,7 +184,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
       // Create THostAuth object
       fHostAuth = new THostAuth(fqdn, fUser, nm, am, det);
       // ... and add it to the list
-      fgAuthInfo.Add(fHostAuth);
+      GetAuthInfo()->Add(fHostAuth);
       if (gDebug > 4)
          fHostAuth->Print();
       for (i = 0; i < nmeth[0]; i++) {   // what if nu > 0? (rdm)
@@ -905,7 +905,9 @@ TList *TAuthenticate::GetAuthInfo()
 {
    // Static method returning the list with authentication details.
 
-   return &fgAuthInfo;
+   if (!fgAuthInfo)
+      fgAuthInfo = new TList;
+   return fgAuthInfo;
 }
 
 //______________________________________________________________________________
@@ -2666,7 +2668,7 @@ void TAuthenticate::SetHostAuth(const char *host, const char *user)
    SetUser(user);
 
    // Check list of auth info for already loaded info about this host
-   TIter next(&fgAuthInfo);
+   TIter next(GetAuthInfo());
    THostAuth *ai;
    while ((ai = (THostAuth *) next())) {
       if (gDebug > 3)
@@ -2691,7 +2693,7 @@ THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user)
    THostAuth *rHA = 0;
 
    // Check list of auth info for already loaded info about this host
-   TIter next(&fgAuthInfo);
+   TIter next(GetAuthInfo());
    THostAuth *ai;
    while ((ai = (THostAuth *) next())) {
       if (gDebug > 3)
@@ -2837,7 +2839,7 @@ void TAuthenticate::RemoveHostAuth(THostAuth * ha)
    // Remove THostAuth instance from the list
 
    // Remove from the list ...
-   fgAuthInfo.Remove(ha);
+   GetAuthInfo()->Remove(ha);
 
    // ... destroy it
    delete ha;
@@ -2862,7 +2864,7 @@ void TAuthenticate::ReadAuthRc(const char *host, const char *user)
    if (gDebug > 3)
       ::Info("ReadAuthRc",
              "number of HostAuth Instantiations in memory: %d",
-             fgAuthInfo.GetSize());
+             GetAuthInfo()->GetSize());
 
    // Determine applicable auth methods from client choices
    Int_t *nmeth, *security[kMAXSEC];
@@ -2898,7 +2900,7 @@ void TAuthenticate::ReadAuthRc(const char *host, const char *user)
       }
       // Check list of auth info for already loaded info about this (host,user)
       THostAuth *hostAuth = 0;
-      TIter next(&fgAuthInfo);
+      TIter next(GetAuthInfo());
       THostAuth *ai;
       while ((ai = (THostAuth *) next())) {
          if (gDebug > 3)
@@ -2914,7 +2916,7 @@ void TAuthenticate::ReadAuthRc(const char *host, const char *user)
          // Create THostAuth object
          hostAuth = new THostAuth(fqdn, usr[ju], nm, am, det);
          // ... and add it to the list
-         fgAuthInfo.Add(hostAuth);
+         GetAuthInfo()->Add(hostAuth);
       } else {
          // Modify existing entry ...
          for (i = 0; i < nmeth[0]; i++) {
@@ -2958,7 +2960,7 @@ void TAuthenticate::PrintHostAuth()
 {
    // Print info abour existing HostAuth instantiations
 
-   TIter next(&fgAuthInfo);
+   TIter next(GetAuthInfo());
    THostAuth *ai;
    while ((ai = (THostAuth *) next())) {
       ai->Print();

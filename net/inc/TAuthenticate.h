@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.6 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.7 2003/08/29 17:23:31 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -78,7 +78,7 @@ private:
    static Krb5Auth_t     fgKrb5AuthHook;
    static GlobusAuth_t   fgGlobusAuthHook;
 
-   static TList          fgAuthInfo;
+   static TList         *fgAuthInfo;
 
    static Int_t          fgRSAInit;
    static rsa_KEY        fgRSAPriKey;
