@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.3 2004/01/30 01:54:44 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.4 2004/10/05 23:00:04 rdm Exp $ */
 /* Author: Tomi Salo & Fons Rademakers */
 
 /*
@@ -43,11 +43,11 @@
 #endif
 
 #if defined(R__WIN32) && !defined(__CINT__)
-typedef __int64            Long64_t;  //Portable signed long integer 8 bytes
-typedef unsigned __int64   ULong64_t; //Portable unsigned long integer 8 bytes
+typedef __int64            Long64_t;  /* Portable signed long integer 8 bytes */
+typedef unsigned __int64   ULong64_t; /* Portable unsigned long integer 8 bytes */
 #else
-typedef long long          Long64_t;  //Portable signed long integer 8 bytes
-typedef unsigned long long ULong64_t; //Portable unsigned long integer 8 bytes
+typedef long long          Long64_t;  /* Portable signed long integer 8 bytes */
+typedef unsigned long long ULong64_t; /* Portable unsigned long integer 8 bytes */
 #endif
 
 #undef isdigit
