@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.132 2004/07/12 20:06:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.133 2004/07/20 07:23:34 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -607,7 +607,7 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
    TObject *f;
    TIter   next(fFunctions);
    while ((f = (TObject*) next())) {
-      Int_t dist = f->DistancetoPrimitive(px,py);
+      Int_t dist = f->DistancetoPrimitive(-px,py);
       if (dist < kMaxDiff) {
          gPad->SetSelected(f);
          return 0; //must be o and not dist in case of TMultiGraph
