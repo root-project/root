@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.16 2003/07/07 16:14:37 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.17 2004/08/03 16:01:18 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -460,8 +460,9 @@ void TPolyLine3D::Paint(Option_t *option)
    for (i=0; i<3*NbPnts; i++) buff->fPnts[i] = (Double_t)fP[i];
 
    // Basic colors: 0, 1, ... 8
-   Int_t c = ((GetLineColor() % 8) - 1) * 4;
+   Int_t c = GetLineColor();
    if (c < 0) c = 0;
+   buff->fColor = c;
 
    // Allocate memory for segments *-*
    for (i = 0; i < NbSegs; i++) {

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.38 2004/08/30 07:04:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.39 2004/09/06 16:42:33 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -613,8 +613,9 @@ void TGeoTube::Paint(Option_t *option)
    TransformPoints(buff);
 
    // Basic colors: 0, 1, ... 7
-   Int_t c = ((gGeoManager->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;
+   Int_t c = gGeoManager->GetCurrentVolume()->GetLineColor();
    if (c < 0) c = 0;
+   buff->fColor = c;
 
    for (i = 0; i < 4; i++) {
       for (j = 0; j < n; j++) {

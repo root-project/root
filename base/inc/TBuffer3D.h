@@ -47,7 +47,7 @@ public:
    void ReAllocate(Int_t n1, Int_t n2, Int_t n3);
    void Paint(Option_t *option);
 
-   char      fTransparency;  //percentage of tranparency [0,100]
+   char      fTransparency;  // percentage of tranparency [0,100]
    TObject  *fId;            // Pointer to he original object
    Int_t     fOption;        // Option (see EBuffer3DOption)
    Int_t     fType;          // Primitive type (see EBuffer3DType)
@@ -59,6 +59,7 @@ public:
    Int_t     fPntsSize;      // Current size of fPnts
    Int_t     fSegsSize;      // Current size of fSegs
    Int_t     fPolsSize;      // Current size of fSegs
+   Int_t     fColor;         // Color index
    Double_t *fPnts;          // x0, y0, z0, x1, y1, z1, ..... ..... ....
 
    ClassDef(TBuffer3D,0) // 3D primitives description

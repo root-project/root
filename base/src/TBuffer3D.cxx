@@ -33,6 +33,7 @@ TBuffer3D::TBuffer3D()
    fPntsSize     = 0;
    fSegsSize     = 0;
    fPolsSize     = 0;
+   fColor        = 0;
 }
 
 
@@ -55,6 +56,7 @@ TBuffer3D::TBuffer3D(Int_t n1, Int_t n2, Int_t n3)
    fPnts         = 0;
    fSegs         = 0;
    fPols         = 0;
+   fColor        = 0;
    if ( fPntsSize>0 ) fPnts = new Double_t[fPntsSize];
    if ( fSegsSize>0 ) fSegs = new Int_t[fSegsSize];
    if ( fPolsSize>0 ) fPols = new Int_t[fPolsSize];

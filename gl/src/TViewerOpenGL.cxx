@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.16 2004/09/08 09:54:47 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.17 2004/09/13 09:56:33 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include <TPoint.h>
 #include <TROOT.h>
 #include <TMath.h>
+#include <TColor.h>
 ///////////////////////////
 #include <TGSplitter.h>
 #include <TGButton.h>
@@ -37,36 +38,6 @@
 #include "TGLCamera.h"
 #include "TArcBall.h"
 
-const Float_t colors[] = {
-   92.f / 255, 92.f / 255, 92.f / 255,
-   122.f / 255, 122.f / 255, 122.f / 255,
-   184.f / 255, 184.f / 255, 184.f / 255,
-   215.f / 255, 215.f / 255, 215.f / 255,
-   138.f / 255, 15.f / 255, 15.f / 255,
-   184.f / 255, 20.f / 255, 20.f / 255,
-   235.f / 255, 71.f / 255, 71.f / 255,
-   240.f / 255, 117.f / 255, 117.f / 255,
-   15.f / 255, 138.f / 255, 15.f / 255,
-   20.f / 255, 184.f / 255, 20.f / 255,
-   71.f / 255, 235.f / 255, 71.f / 255,
-   117.f / 255, 240.f / 255, 117.f / 255,
-   15.f / 255, 15.f / 255, 138.f / 255,
-   20.f / 255, 20.f / 255, 184.f / 255,
-   71.f / 255, 71.f / 255, 235.f / 255,
-   117.f / 255, 117.f / 255, 240.f / 255,
-   138.f / 255, 138.f / 255, 15.f / 255,
-   184.f / 255, 184.f / 255, 20.f / 255,
-   235.f / 255, 235.f / 255, 71.f / 255,
-   240.f / 255, 240.f / 255, 117.f / 255,
-   138.f / 255, 15.f / 255, 138.f / 255,
-   184.f / 255, 20.f / 255, 184.f / 255,
-   235.f / 255, 71.f / 255, 235.f / 255,
-   240.f / 255, 117.f / 255, 240.f / 255,
-   15.f / 255, 138.f / 255, 138.f / 255,
-   20.f / 255, 184.f / 255, 184.f / 255,
-   71.f / 255, 235.f / 255, 235.f / 255,
-   117.f / 255, 240.f / 255, 240.f / 255
-};
 
 const char gHelpViewerOpenGL[] = "\
      PRESS \n\
@@ -433,16 +404,23 @@ void TViewerOpenGL::UpdateScene(Option_t *)
    if (buff->fOption == buff->kOGL) {
       ++fNbShapes;
       TGLSceneObject *addObj = 0;
+      TColor *color = gROOT->GetColor(buff->fColor);
+      Float_t rgb[3];
+      if (color) {
+         rgb[0] = color->GetRed();
+         rgb[1] = color->GetGreen();
+         rgb[2] = color->GetBlue();
+      }
 
       switch (buff->fType) {
       case TBuffer3D::kLINE:
-         addObj = new TGLPolyLine(*buff, colors + buff->fSegs[0] * 3);
+         addObj = new TGLPolyLine(*buff, rgb);
   	      break;
       case TBuffer3D::kMARKER:
-         addObj = new TGLPolyMarker(*buff, colors + buff->fSegs[0] * 3);
+         addObj = new TGLPolyMarker(*buff, rgb);
          break;
       default:
-         addObj = new TGLFaceSet(*buff, colors + buff->fSegs[0] * 3, fNbShapes, buff->fId);
+         addObj = new TGLFaceSet(*buff, rgb, fNbShapes, buff->fId);
          break;
       }
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.27 2004/08/09 15:23:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.28 2004/09/06 16:42:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -825,8 +825,9 @@ void TGeoSphere::Paint(Option_t *option)
    TransformPoints(buff);
 
    // Basic colors: 0, 1, ... 7
-   Int_t c = ((gGeoManager->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;
+   Int_t c = gGeoManager->GetCurrentVolume()->GetLineColor();
    if (c < 0) c = 0;
+   buff->fColor = c;
 
    Int_t indx, indx2, k;
    indx = indx2 = 0;

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBS.cxx,v 1.2 2002/11/11 11:21:16 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBS.cxx,v 1.3 2004/08/03 16:01:18 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -158,8 +158,9 @@ void TTUBS::Paint(Option_t *option)
    TransformPoints(buff);
 
    // Basic colors: 0, 1, ... 7
-   Int_t c = ((GetLineColor() % 8) - 1) * 4;
+   Int_t c = GetLineColor();
    if (c < 0) c = 0;
+   buff->fColor = c;
 
    memset(buff->fSegs, 0, buff->fNbSegs*3*sizeof(Int_t));
    for (i = 0; i < 4; i++) {

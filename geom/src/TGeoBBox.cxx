@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.28 2004/08/03 16:01:18 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.29 2004/09/06 16:42:32 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
 
@@ -466,8 +466,9 @@ void TGeoBBox::Paint(Option_t *option)
    TransformPoints(buff);
 
    // Basic colors: 0, 1, ... 7
-   Int_t c = ((gGeoManager->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;
+   Int_t c = gGeoManager->GetCurrentVolume()->GetLineColor();
    if (c < 0) c = 0;
+   buff->fColor = c;
    
    buff->fSegs[ 0] = c   ; buff->fSegs[ 1] = 0   ; buff->fSegs[ 2] = 1   ;
    buff->fSegs[ 3] = c+1 ; buff->fSegs[ 4] = 1   ; buff->fSegs[ 5] = 2   ;

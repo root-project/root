@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.16 2003/07/02 20:04:01 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.17 2004/08/03 16:01:18 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -325,6 +325,7 @@ void TPolyMarker3D::Paint(Option_t *option)
    // Paint gPad->fBuffer3D
    buff->fSegs[0] = ((GetMarkerColor() % 8) - 1) * 4;
    if ( buff->fSegs[0]<0 ) buff->fSegs[0] = 0;
+   buff->fColor = buff->fSegs[0];
    TAttMarker::Modify();
    buff->Paint(option);
 }

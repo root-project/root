@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.12 2004/08/09 15:23:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.13 2004/09/06 16:42:33 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -548,8 +548,9 @@ void TGeoTorus::Paint(Option_t *option)
    TransformPoints(buff);
 
    // Basic colors: 0, 1, ... 7
-   Int_t c = ((gGeoManager->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;
+   Int_t c = gGeoManager->GetCurrentVolume()->GetLineColor();
    if (c < 0) c = 0;
+   buff->fColor = c;
 
    indp = n*(n-1); // start index for points on inner surface
    memset(buff->fSegs, 0, buff->fNbSegs*3*sizeof(Int_t));

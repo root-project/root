@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.7 2002/02/02 11:56:14 brun Exp $
+
 // Author: "Valery fine"   31/10/97
 
 
@@ -182,8 +182,9 @@ void TMarker3DBox::Paint(Option_t *option)
    }
 
    // Basic colors: 0, 1, ... 7
-   Int_t c = ((GetLineColor() % 8) - 1) * 4;
+   Int_t c = GetLineColor();
    if (c < 0) c = 0;
+   buff->fColor = c;
 
    buff->fSegs[ 0] = c   ; buff->fSegs[ 1] = 0 ; buff->fSegs[ 2] = 1;
    buff->fSegs[ 3] = c+1 ; buff->fSegs[ 4] = 1 ; buff->fSegs[ 5] = 2;
