@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.9 2004/03/12 23:01:55 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.10 2004/10/05 17:41:08 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -23,6 +23,8 @@
 //  Alex Read, "Modified Frequentist Analysis of Search Results (The CLs Method)"
 //  CERN 2000-005 (30 May 2000)
 //
+// see note about: "Should I use TRolke, TFeldmanCousins, TLimit?"
+//  in the TRolke class description.
 //
 ///////////////////////////////////////////////////////////////////////////
 

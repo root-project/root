@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.4 2004/08/31 07:22:48 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.5 2004/09/10 17:00:34 brun Exp $
 // Author: Jan Conrad    9/2/2004
 
 /*************************************************************************
@@ -72,6 +72,27 @@
 //  W.Rolke, A. Lopez, J. Conrad and Fred James
 //  "Limits and Confidence Intervals in presence of nuisance parameters"
 //   http://lanl.arxiv.org/abs/physics/0403059
+//
+//  Should I use TRolke, TFeldmanCousins, TLimit?
+//  ============================================
+//  1. I guess TRolke makes TFeldmanCousins obsolete?
+//
+//  Certainly not. TFeldmanCousins is the fully frequentist construction and 
+//  should be used in case of no (or small uncertainties). TRolke applies the 
+//  so called lnL + 1/2 approximation, which is inferior. It is however shown 
+//  in the reference mentioned in the class that it has good coverage 
+//  properties, i.e it might be used where FC can't.
+//
+//  2. What are the advantages of TRolke over TLimit?
+//
+//  TRolke is fully frequentist. TLimit treats nuisance parameters Bayesian. 
+//  For a coverage study of a Bayesian method refer to 
+//  physics/0408039 (Tegenfeldt & J.C). However, this note studies 
+//  the coverage of Feldman&Cousins with Bayesian treatment of nuisance 
+//  parameters. To make a long story short: using the Bayesian method you 
+//  might introduce a small amount of over-coverage (though I haven't shown it 
+//  for TLimit). On the other hand, coverage of course is a not so interesting 
+//  when you consider yourself a Bayesian.
 //
 // Author: Jan Conrad (CERN)
 //
