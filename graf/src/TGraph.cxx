@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.103 2003/07/12 12:54:32 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.104 2003/07/12 13:38:48 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -19,6 +19,8 @@
 #include "TF1.h"
 #include "TStyle.h"
 #include "TMath.h"
+#include "TFrame.h"
+#include "TVector.h"
 #include "TVector.h"
 #include "TVectorD.h"
 #include "Foption.h"
@@ -2426,6 +2428,15 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
   else            {wmin = y[0];   wmax = y[1];}
 
   if (!OptionBins) delta = (wmax - wmin)/ Double_t(nbins);
+  
+  Int_t fwidth = gPad->GetFrameLineWidth();
+  TFrame *frame = gPad->GetFrame();
+  if (frame) fwidth = frame->GetLineWidth();
+  Double_t dxframe = 0.5*(gPad->AbsPixeltoX(fwidth) - gPad->AbsPixeltoX(0));
+  Double_t vxmin = gPad->GetUxmin() + dxframe;
+  Double_t vxmax = gPad->GetUxmax() - dxframe;
+  Double_t dyframe = 0.5*(-gPad->AbsPixeltoY(fwidth) + gPad->AbsPixeltoY(0));
+  Double_t vymin = gPad->GetUymin() + dyframe;
 
 //*-*-           Draw the histogram with a fill area
 
@@ -2445,6 +2456,8 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
            if (!OptionBins) {
               gxwork[npt-1]   = gxwork[npt-2];
               gxwork[npt]     = wmin+((j-first+1)*delta);
+              if (gxwork[npt] < gxwork[0]) gxwork[npt] = gxwork[0];
+              
            }
            else {
               xj1 = x[j];      xj  = x[j-1];
@@ -2462,6 +2475,13 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
            if (j == last) {
               gxwork[npt-1] = gxwork[npt-2];
               gywork[npt-1] = gywork[0];
+              //make sure that the fill area does not overwrite the frame
+              //take into account the frame linewidth
+              if (gxwork[0    ] < vxmin) {gxwork[0    ] = vxmin; gxwork[1    ] = vxmin;}
+              if (gxwork[npt-1] > vxmax) {gxwork[npt-1] = vxmax; gxwork[npt-2] = vxmax;}
+              if (gywork[0] < vymin) {gywork[0] = vymin; gywork[npt-1] = vymin;}
+              
+              //transform to log ?
               ComputeLogs(npt, OptionZ);
               gPad->PaintFillArea(npt,gxworkl,gyworkl);
               if (drawborder) {
@@ -2515,7 +2535,6 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
   if ((OptionHist) || strlen(chopt) == 0) {
      if (!OptionRot) {
         gxwork[0] = wmin;
-//      gywork[0] = TMath::Max((Double_t)0,gPad->GetUymin());
         gywork[0] = gPad->GetUymin();
         ywmin    = gywork[0];
         npt      = 2;
@@ -2540,8 +2559,14 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
            if (i == last) {
               gxwork[npt-1] = gxwork[npt-2];
               gywork[npt-1] = ywmin;
+              //make sure that the fill area does not overwrite the frame
+              //take into account the frame linewidth
+              if (gxwork[0    ] < vxmin) {gxwork[0    ] = vxmin; gxwork[1    ] = vxmin;}
+              if (gxwork[npt-1] > vxmax) {gxwork[npt-1] = vxmax; gxwork[npt-2] = vxmax;}
+              if (gywork[0] < vymin) {gywork[0] = vymin; gywork[npt-1] = vymin;}
+
               ComputeLogs(npt, OptionZ);
-              //gPad->PaintPolyLine(npt,gxworkl,gyworkl);
+
               //do not draw the two vertical lines on the edges
               Int_t npoints = npt-2;
               Int_t point1  = 1;
