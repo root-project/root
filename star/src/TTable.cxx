@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.17 2001/05/29 19:10:04 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.20 2001/07/11 06:46:19 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -97,6 +97,9 @@
 //  -----------------------                                               //
 //                                                                        //
 // $Log: TTable.cxx,v $
+// Revision 1.20  2001/07/11 06:46:19  brun
+// New version of the Star classes from Valery.
+//
 // Revision 1.17  2001/05/29 19:10:04  brun
 // // New methods:
 // // ------------
@@ -1390,8 +1393,9 @@ Bool_t TTable::IsFolder() const {
 # ifndef finite
 #   define finite _finite
 # endif
-#else
-//  extern "C" {int finite( double x );}
+#endif
+#ifdef R__SOLARIS
+  extern "C" {int finite( double x );}
 #endif
 
 //______________________________________________________________________________
