@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.84 2004/08/09 15:35:52 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.85 2004/08/24 12:06:19 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -589,6 +589,7 @@ static void _ChangeProperty(HWND w, char *np, char *dp, int n, Atom_t type)
    memcpy(p + sizeof(Atom_t), dp, n);
    ::GlobalUnlock(hMem);
    ::SetProp(w, np, hMem);
+   ::GlobalFree(hMem);
 }
 
 //______________________________________________________________________________
