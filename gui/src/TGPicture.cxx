@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.11 2004/08/21 09:32:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.12 2004/08/24 09:46:41 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "TSystem.h"
 #include "TGWindow.h"
 #include "TVirtualX.h"
+#include "TImage.h"
 
 TGGC *TGSelectedPicture::fgSelectedGC = 0;
 
@@ -55,12 +56,20 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
       fPicList = new THashTable(50);
 
    TString pname = name;
+   pname.Strip();
+   TString ext = strrchr(pname.Data(), '.');
+   ext.ToLower();
 
-   if (pname.EndsWith(".xpm")) {
+   if (ext.Length()) { // ".xpm", ".gif" etc
       char *pxname = gSystem->ExpandPathName(gSystem->UnixPathName(pname));
       pname = pxname;
       delete [] pxname;
    }
+   if (ext != ".xpm") {
+      TImage *img = TImage::Open(pname.Data());
+      return img->GetPicture();
+   }
+
    TGPicture *pic;
 
    pic = (TGPicture *)fPicList->FindObject(pname);
@@ -225,6 +234,34 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
 }
 
 //______________________________________________________________________________
+const TGPicture *TGPicturePool::GetPicture(const char *name, Pixmap_t pxmap)
+{
+   // ctor
+
+   if (!fPicList) {
+      fPicList = new THashTable(50);
+   }
+
+   Int_t xy;
+   UInt_t w, h;
+
+   gVirtualX->GetWindowSize(pxmap, xy, xy, w, h);
+
+   const char *hname = TGPicture::HashName(name, w, h);
+   TGPicture *pic = (TGPicture *)fPicList->FindObject(hname);
+
+   if (pic) {
+      pic->AddReference();
+      return pic;
+   }
+
+   pic = new TGPicture(hname, pxmap);
+   fPicList->Add(pic);
+
+   return pic;
+}
+
+//______________________________________________________________________________
 void TGPicturePool::FreePicture(const TGPicture *fpic)
 {
    // Remove picture from cache if nobody is using it anymore.
@@ -260,6 +297,26 @@ void TGPicturePool::Print(Option_t *) const
       fPicList->Print();
    else
       Info("Print", "no pictures in picture pool");
+}
+
+//______________________________________________________________________________
+TGPicture::TGPicture(const char *name, Pixmap_t pxmap)
+{
+   // ctor
+
+   fName   = name;
+   fScaled = kFALSE;
+   fPic    = pxmap;
+   fMask   = 0;   // no mask
+   Int_t xy;
+
+   fAttributes.fColormap  = gClient->GetDefaultColormap();
+   fAttributes.fCloseness = 40000; // Allow for "similar" colors
+   fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
+   fAttributes.fPixels    = 0;
+
+   gVirtualX->GetWindowSize(fPic, xy, xy, fAttributes.fWidth, fAttributes.fHeight);
+   SetRefCount(1);   
 }
 
 //______________________________________________________________________________

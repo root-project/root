@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.2 2002/08/23 14:51:44 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.3 2004/01/05 12:31:48 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -109,6 +109,7 @@ public:
    UInt_t GetScaledHeight() const;
    Bool_t IsValid() const { return fImage ? kTRUE : kFALSE; }
    const ASImage *GetImage() const { return fImage; }
+   const TGPicture *GetPicture();
 
    static const ASVisual *GetVisual() { return fgVisual; }
 

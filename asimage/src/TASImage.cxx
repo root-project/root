@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.6 2004/01/05 12:31:48 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.7 2004/01/27 08:12:25 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   28/11/2001
 
 /*************************************************************************
@@ -44,6 +44,7 @@
 #include "TColor.h"
 #include "TObjArray.h"
 #include "TASPaletteEditor.h"
+#include "TGPicture.h"
 
 #include <X11/Xlib.h>
 extern "C" {
@@ -1342,4 +1343,21 @@ void TASImage::StartPaletteEditor()
    TAttImage::StartPaletteEditor();
 }
 
+//______________________________________________________________________________
+const TGPicture *TASImage::GetPicture()
+{
+   // convert image into picture
 
+   const TGPicture *ret = 0;
+   Pixmap_t pxmap;
+
+   if (!InitVisual()) return 0;
+
+   if (gVirtualX->InheritsFrom("TGX11")) {
+      pxmap = (Pixmap_t)asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(), 
+                                       fImage, 0, kTRUE);
+      ret = gClient->GetPicturePool()->GetPicture(fName, pxmap);
+   } 
+   
+   return ret;
+}

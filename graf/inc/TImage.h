@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:$:$Id:$
+// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.1 2002/08/09 13:56:00 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************
@@ -36,7 +36,7 @@ class TVirtualPad;
 class TImage;
 class TArrayD;
 class TVectorD;
-
+class TGPicture;
 
 class TImage : public TNamed, public TAttImage {
 
@@ -69,6 +69,7 @@ public:
    TImage(const TImage &img) : TNamed(img), TAttImage(img) { }
    TImage &operator=(const TImage &img)
             { TNamed::operator=(img); TAttImage::operator=(img); return *this; }
+
    virtual ~TImage() { }
 
    // Input / output
@@ -80,7 +81,7 @@ public:
 
    // Pad conversions
    virtual void FromPad(TVirtualPad *pad, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) = 0;
-
+ 
    // Transformations
    virtual void Scale(UInt_t toWidth, UInt_t toHeight) = 0;
    virtual void Zoom(UInt_t offX, UInt_t offY, UInt_t width, UInt_t height) = 0; //*MENU*
@@ -92,6 +93,8 @@ public:
    virtual UInt_t GetWidth() const = 0;
    virtual UInt_t GetHeight() const = 0;
    virtual Bool_t IsValid() const = 0;
+
+   virtual const TGPicture *GetPicture() { return 0; }
 
    static TImage *Create();
    static TImage *Open(const char *file, EImageFileTypes type = kUnknown);

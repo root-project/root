@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.4 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.5 2004/08/21 09:32:52 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -63,6 +63,8 @@ protected:
       SetRefCount(1);
    }
 
+   TGPicture(const char *name, Pixmap_t pxmap);
+
    // override default of TObject
    void Draw(Option_t * = "") { MayNotUse("Draw(Option_t*)"); }
 
@@ -120,6 +122,7 @@ public:
    const char      *GetPath() const { return fPath; }
    const TGPicture *GetPicture(const char *name);
    const TGPicture *GetPicture(const char *name, UInt_t new_width, UInt_t new_height);
+   const TGPicture *GetPicture(const char *name, Pixmap_t pxmap);
    void             FreePicture(const TGPicture *pic);
 
    void             Print(Option_t *option="") const;
