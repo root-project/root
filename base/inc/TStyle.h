@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.17 2004/02/18 20:13:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.18 2004/11/22 15:55:03 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -126,6 +126,7 @@ private:
         Float_t       fStatW;             //width of stat box
         Float_t       fStatH;             //height of stat box
         Bool_t        fStripDecimals;     //Strip decimals in axis labels
+        Int_t         fTitleAlign;        //title box alignment
         Color_t       fTitleColor;        //title fill area color
         Color_t       fTitleTextColor;    //title text color
         Width_t       fTitleBorderSize;   //border size of Title PavelLabel
@@ -252,6 +253,7 @@ public:
         Float_t          GetStatH() const     {return fStatH;}
         Int_t            GetStripDecimals() const {return fStripDecimals;}
         Double_t         GetTimeOffset() const {return fTimeOffset;} //return axis time offset
+        Int_t            GetTitleAlign() {return fTitleAlign;} // return the histogram title TPaveLabel alignment
         Color_t          GetTitleFillColor() const {return fTitleColor;}  //return histogram title fill area color
         Color_t          GetTitleTextColor() const {return fTitleTextColor;}  //return histogram title text color
         Style_t          GetTitleStyle() const  {return fTitleStyle;}
@@ -360,6 +362,7 @@ public:
         void             SetStatH(Float_t h=0.1)  {fStatH=h;}
         void             SetStripDecimals(Bool_t strip=kTRUE);
         void             SetTimeOffset(Double_t toffset);
+        void             SetTitleAlign(Int_t a=13) {fTitleAlign=a;}
         void             SetTitleFillColor(Color_t color=1)   {fTitleColor=color;}
         void             SetTitleTextColor(Color_t color=1)   {fTitleTextColor=color;}
         void             SetTitleStyle(Style_t style=1001)  {fTitleStyle=style;}

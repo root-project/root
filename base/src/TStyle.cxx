@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.36 2004/07/08 12:18:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.37 2004/11/22 15:55:03 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 #include "TVirtualPad.h"
 
 TStyle  *gStyle;
-const UInt_t kTakeStyle = BIT(17); 
+const UInt_t kTakeStyle = BIT(17);
 
 ClassImp(TStyle)
 
@@ -321,6 +321,7 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fStatH          = fStatH ;
    ((TStyle&)obj).fStatX          = fStatX;
    ((TStyle&)obj).fStatY          = fStatY;
+   ((TStyle&)obj).fTitleAlign     = fTitleAlign;
    ((TStyle&)obj).fTitleColor     = fTitleColor;
    ((TStyle&)obj).fTitleTextColor = fTitleTextColor;
    ((TStyle&)obj).fTitleFont      = fTitleFont;
@@ -433,6 +434,7 @@ void TStyle::Reset(Option_t *)
    SetStatFormat();
    SetFitFormat();
    SetPaintTextFormat();
+   fTitleAlign     = 13;
    fTitleColor     = fCanvasColor;
    fTitleTextColor = 1;
    fTitleFont      = 62;
@@ -628,10 +630,10 @@ void TStyle::SetHistMinimumZero(Bool_t zero)
 // is set to 0 if the minimum bin content is greater than 0 and TH1::SetMinimum
 // has not been called.
 // Otherwise the minimum is based on the minimum bin content.
-   
+
    fHistMinimumZero = zero;
 }
-   
+
 //______________________________________________________________________________
 void TStyle::SetNdivisions(Int_t n, Option_t *axis)
 {
@@ -678,7 +680,7 @@ void TStyle::SetEndErrorSize(Float_t np)
 // end of the error bars (TH1 or TGraphErrors).
 // The default value is 2 pixels.
 // Set np=0 to remove these lines
-   
+
    if (np >= 0) fEndErrorSize = np;
    else         fEndErrorSize = 0;
 }
@@ -693,7 +695,7 @@ void TStyle::SetHeaderPS(const char *header)
 //      200 200 translate
 // the following header string will print the string "my annotation" at the
 // bottom left corner of the page (outside the user area)
-//  "gsave 100 -100 t 0 r 0 0 m /Helvetica-Bold findfont 56 sf 0 0 m ( my annotation ) show gr"   
+//  "gsave 100 -100 t 0 r 0 0 m /Helvetica-Bold findfont 56 sf 0 0 m ( my annotation ) show gr"
 // This information is used in TPostScript::Initialize
 
    fHeaderPS = header;
@@ -807,12 +809,12 @@ void TStyle::SetLineStyleString(Int_t i, const char *text)
 void TStyle::SetNumberContours(Int_t number)
 {
 // set the default number of contour levels when drawing 2-d plots
-   
+
    if (number > 0 && number < 1000) {
       fNumberContours = number;
       return;
    }
-   
+
    Error("SetNumberContours","Illegal number of contours: %d, myst be > 0 and < 1000",number);
 }
 
@@ -887,7 +889,7 @@ void TStyle::SetOptFit(Int_t mode)
 //    When "v"=1 is specified, only the non-fixed parameters are shown.
 //    When "v"=2 all parameters are shown.
 // see also SetOptStat below.
-   
+
    fOptFit = mode;
    if (gPad) {
       TObject *obj;
@@ -966,7 +968,7 @@ void TStyle::SetOptStat(Option_t *stat)
   if (opt.Contains("o")) mode+=100000;
   if (opt.Contains("i")) mode+=1000000;
   if (mode == 1) mode = 10000001;
-  
+
   SetOptStat(mode);
 }
 

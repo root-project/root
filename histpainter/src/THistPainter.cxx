@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.201 2004/12/03 15:18:32 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.202 2004/12/06 16:44:08 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -5294,8 +5294,17 @@ void THistPainter::PaintTF3()
 //______________________________________________________________________________
 void THistPainter::PaintTitle()
 {
-//    *-*-*-*-*-*-*-*-*-*Draw the histogram title*-*-*-*-*-*-*-*-*-*-*-*-*
-//                       ========================
+   // Draw the histogram title
+   //
+   // The title is drawn according to the title alignment returned by
+   // GetTitleAlign. It is a 2 digits integer): hv
+   //
+   // where "h" is the horizontal alignment and "v" is the vertical alignment.
+   // "h" can get the values 1 2 3 for left, center, and right
+   // "v" can get the values 1 2 3 for bottom, middle and top
+   //
+   // for instance the default alignment is: 13 (left top)
+
    if (Hoption.Same) return;
    if (fH->TestBit(TH1::kNoTitle)) return;
    Int_t nt = strlen(fH->GetTitle());
@@ -5334,11 +5343,19 @@ void THistPainter::PaintTitle()
       return;
    }
 
-   TPaveText *ptitle = new TPaveText(
-             gStyle->GetTitleX(),
-             gStyle->GetTitleY()-ht,
-             gStyle->GetTitleX()+wt,
-             gStyle->GetTitleY(),"blNDC");
+   Int_t talh = gStyle->GetTitleAlign()/10;
+   if (talh < 1) talh = 1; if (talh > 3) talh = 3;
+   Int_t talv = gStyle->GetTitleAlign()%10;
+   if (talv < 1) talv = 1; if (talv > 3) talv = 3;
+   Double_t xpos, ypos;
+   xpos = gStyle->GetTitleX();
+   ypos = gStyle->GetTitleY();
+   if (talh == 2) xpos = xpos-wt/2.;
+   if (talh == 3) xpos = xpos-wt;
+   if (talv == 2) ypos = ypos+ht/2.;
+   if (talv == 1) ypos = ypos+ht;
+
+   TPaveText *ptitle = new TPaveText(xpos, ypos-ht, xpos+wt, ypos,"blNDC");
 
 //     box with the histogram title
    ptitle->SetFillColor(gStyle->GetTitleFillColor());
