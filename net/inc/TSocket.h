@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.11 2004/03/23 00:12:42 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.12 2004/05/05 14:43:34 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -94,9 +94,9 @@ protected:
 private:
    void         operator=(const TSocket &);  // not implemented
    Option_t    *GetOption() const { return TObject::GetOption(); }
-   Int_t        RecvHostAuth(Option_t *Opt, const char *proofconf = 0);
-   Int_t        SecureRecv(TString &Out, Int_t Key = 1);
-   Int_t        SecureSend(const char *In, Int_t KeyType = 1);
+   Int_t        RecvHostAuth(Option_t *opt, const char *proofconf = 0);
+   Int_t        SecureRecv(TString &str, Int_t key = 1);
+   Int_t        SecureSend(const char *in, Int_t keyType = 1);
    Int_t        SendHostAuth();
    void         SetDescriptor(Int_t desc) { fSocket = desc; }
 
@@ -145,12 +145,13 @@ public:
    void                  SetSecContext(TSecContext *ctx) { fSecContext = ctx; }
    void                  SetUrl(const char *url) { fUrl = url; }
 
+   static UInt_t         GetSocketBytesSent() { return fgBytesSent; }
+   static UInt_t         GetSocketBytesRecv() { return fgBytesRecv; }
+
    static TSocket       *CreateAuthSocket(const char *user, const char *host, Int_t port,
                                           Int_t size = 0, Int_t tcpwindowsize = -1);
    static TSocket       *CreateAuthSocket(const char *url,
                                           Int_t size = 0, Int_t tcpwindowsize = -1);
-   static  UInt_t        GetSocketBytesSent() { return fgBytesSent; }
-   static  UInt_t        GetSocketBytesRecv() { return fgBytesRecv; }
 
    ClassDef(TSocket,1)  //This class implements client sockets
 };

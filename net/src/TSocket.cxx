@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.18 2004/05/10 16:00:02 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.19 2004/05/18 11:56:38 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -735,7 +735,7 @@ Bool_t TSocket::Authenticate(const char *user)
    Int_t kind;
    // Warning: for backward compatibility reasons here we have to
    // send exactly 4 bytes: for fgClientClientProtocol > 99
-   // the space in the format must be dropped 
+   // the space in the format must be dropped
    Send(Form(" %d", TAuthenticate::GetClientProtocol()), kROOTD_PROTOCOL);
    Recv(fRemoteProtocol, kind);
 
@@ -769,7 +769,7 @@ Bool_t TSocket::Authenticate(const char *user)
       // Init authentication
       TAuthenticate *auth = new TAuthenticate(this,Host,
                      Form("%s:%d",SProtocol.Data(),fRemoteProtocol), user);
-      
+
       // If PROOF client and trasmission of the SRP password is
       // requested make sure that ReUse is switched on to get and
       // send also the Public Key
@@ -792,7 +792,7 @@ Bool_t TSocket::Authenticate(const char *user)
             }
          }
       }
-      
+
       // Attempt authentication
       if (!auth->Authenticate()) {
          // Close the socket if unsuccessful
@@ -833,13 +833,13 @@ Bool_t TSocket::Authenticate(const char *user)
 
             // Authentication was not required: create inactive
             // security context for consistency
-            TSecContext *ctx = new TSecContext(user, Host,0, -4, 0, 0); 
+            TSecContext *ctx = new TSecContext(user, Host,0, -4, 0, 0);
             if (gDebug > 3)
                Info("Authenticate", "no authentication required remotely");
-            
+
             // Save pointer
             SetSecContext(ctx);
-            
+
             // Set return flag;
             rc = kTRUE;
          } else {
@@ -1014,14 +1014,14 @@ TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
 }
 
 //______________________________________________________________________________
-Int_t TSocket::SecureSend(const char *In, Int_t ktyp)
+Int_t TSocket::SecureSend(const char *in, Int_t keyType)
 {
    // If authenticated and related SecContext is active
-   // secure-sends In to host using RSA ktyp stores in TAuthenticate
-   // Returns # bytes send or -1 in case of error
+   // secure-sends "in" to host using RSA "keyType" stored in TAuthenticate.
+   // Returns # bytes send or -1 in case of error.
 
-   if (IsAuthenticated() && fSecContext->IsActive() )
-      return TAuthenticate::SecureSend(this, ktyp, In);
+   if (IsAuthenticated() && fSecContext->IsActive())
+      return TAuthenticate::SecureSend(this, keyType, in);
    return -1;
 }
 
@@ -1061,7 +1061,7 @@ Int_t TSocket::SendHostAuth()
 }
 
 //______________________________________________________________________________
-Int_t TSocket::RecvHostAuth(Option_t *Opt, const char *proofconf)
+Int_t TSocket::RecvHostAuth(Option_t *opt, const char *proofconf)
 {
    // Receive from client/master directives for authentications, create
    // related THostAuth and add them to the TAuthenticate::ProofAuthInfo
@@ -1069,7 +1069,7 @@ Int_t TSocket::RecvHostAuth(Option_t *Opt, const char *proofconf)
    // The 'proofconf' file is read only if Master
 
    // Check if Master
-   Bool_t Master = !strncasecmp(Opt,"M",1) ? kTRUE : kFALSE;
+   Bool_t Master = !strncasecmp(opt,"M",1) ? kTRUE : kFALSE;
 
    // First read directives from <rootauthrc>, <proofconf> and alike files
    if (Master)
@@ -1169,14 +1169,14 @@ Int_t TSocket::RecvHostAuth(Option_t *Opt, const char *proofconf)
 }
 
 //______________________________________________________________________________
-Int_t TSocket::SecureRecv(TString &Str, Int_t Key)
+Int_t TSocket::SecureRecv(TString &str, Int_t key)
 {
    // Receive encoded string and decode it with 'key' type
 
-   char *Buf = 0;
-   Int_t rc = TAuthenticate::SecureRecv(this, Key, &Buf);
-   Str = TString(Buf);
-   if (Buf) delete[] Buf;
+   char *buf = 0;
+   Int_t rc = TAuthenticate::SecureRecv(this, key, &buf);
+   str = TString(buf);
+   if (buf) delete[] buf;
 
    return rc;
 }
