@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.25 2000/11/21 21:00:05 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.26 2000/11/22 16:46:09 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1536,8 +1536,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          else                     sprintf(blen,"%d",len);
 	 // Dimensions can be in the branchname for a split Object with a fix length C array.
 	 // Theses dimensions HAVE TO be placed after the dimension explicited by leafcount
-	 char *dimInName = (char*) strstr(branchname,"[");
 	 char *dimensions = 0;
+         char *dimInName = (char*) strstr(branchname,"[");
 	 if ( twodim || dimInName ) {
 	   int dimlen = 0;
 	   if (dimInName) dimlen += strlen(dimInName) + 1;
@@ -1562,9 +1562,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       } else {
          if (strstr(branchname,"[")) len = 1;
          if (len < 2) fprintf(fp,"   %-15s %s;\n",leaf->GetTypeName(), branchname);
-         else         fprintf(fp,"   %-15s %s[%d];\n",leaf->GetTypeName(), branchname,len);
+         else {
+            if (twodim) fprintf(fp,"   %-15s %s%s;\n",leaf->GetTypeName(), branchname,(char*)strstr(leaf->GetTitle(),"["));
+            else        fprintf(fp,"   %-15s %s[%d];\n",leaf->GetTypeName(), branchname,len);
+         }
       }
-   }
+  }
 
 // generate list of branches
    fprintf(fp,"\n");
