@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.19 2000/12/13 15:13:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.20 2001/02/21 07:31:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -166,10 +166,6 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    // which is placed in a TGFrame. This ctor is only called via the
    // TRootEmbeddedCanvas class.
 
-   // Allow embedded canvas with same name.
-   //TCanvas *old = (TCanvas*)gROOT->FindObject(name);
-   //if (old && old->IsOnHeap()) delete old;
-
    fCanvas       = 0;
    fCanvasID     = winid;
    fWindowTopX   = 0;
@@ -222,6 +218,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       if ((*gThreadXAR)("CANV", 5, arr, NULL)) return;
    }
 
+   // Make sure the application environment exists.
+   if (!gApplication)
+      TApplication::CreateApplication();
+
    fMenuBar = kTRUE;
    if (form < 0) {
       form     = -form;
@@ -232,7 +232,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
    if (old && old->IsOnHeap()) delete old;
    if (strlen(name) == 0 || gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX   = fWindowTopY = 0;
-      fWindowWidth  = gStyle->GetCanvasDefW()-4; 
+      fWindowWidth  = gStyle->GetCanvasDefW()-4;
       fWindowHeight = gStyle->GetCanvasDefH()-28;
       fCw           = fWindowWidth;
       fCh           = fWindowHeight;
@@ -287,6 +287,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
        arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
        if ((*gThreadXAR)("CANV", 6, arr, NULL)) return;
    }
+
+   // Make sure the application environment exists.
+   if (!gApplication)
+      TApplication::CreateApplication();
 
    fMenuBar = kTRUE;
    if (ww < 0) {
@@ -347,6 +351,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       arr[4] = &wtopx; arr[5] = &wtopy; arr[6] = &ww; arr[7] = &wh;
       if ((*gThreadXAR)("CANV", 8, arr, NULL)) return;
    }
+
+   // Make sure the application environment exists.
+   if (!gApplication)
+      TApplication::CreateApplication();
 
    fMenuBar = kTRUE;
    if (wtopx < 0) {
