@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.33 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.34 2003/08/08 09:22:18 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -787,7 +787,7 @@ void TGeoVolume::Draw(Option_t *option)
    else old_vol=0;
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
-   painter->SetRaytracing(kFALSE);
+   //painter->SetRaytracing(kFALSE);
    painter->Draw(option);   
 }
 
