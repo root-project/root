@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.93 2002/07/23 10:02:43 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.94 2002/07/30 22:30:22 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1230,9 +1230,9 @@ void WriteInputOperator(G__ClassInfo &cl)
    fprintf(fp, "//_______________________________________");
    fprintf(fp, "_______________________________________\n");
 
-   G__ClassInfo space = cl.EnclosingSpace();
    char space_prefix[256] = "";
 #ifdef WIN32
+   G__ClassInfo space = cl.EnclosingSpace();
    if (space.Property() & G__BIT_ISNAMESPACE)
       sprintf(space_prefix,"%s::",space.Fullname());
 #endif
@@ -1413,10 +1413,7 @@ void WriteClassInit(G__ClassInfo &cl)
    fprintf(fp, "      return &instance;\n");
    fprintf(fp, "   }\n");
    fprintf(fp, "   // Static variable to force the class initialization\n");
-   //   fprintf(fp, "   static ROOT::ClassInfo< %s > &_R__UNIQUE_(Init)\n",
-   //        cl.Fullname() );
-   fprintf(fp, "   static ROOT::TGenericClassInfo *_R__UNIQUE_(Init)\n" );
-   fprintf(fp, "      = GenerateInitInstance((const %s*)0x0);\n", cl.Fullname());
+   fprintf(fp, "   R__GenerateInitInstance(const %s);\n", cl.Fullname());
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt()) {
       fprintf(fp, "\n   // Dictionary for non-ClassDef classes\n");
@@ -2439,7 +2436,7 @@ void WriteShadowClass(G__ClassInfo &cl)
             prefix="::";
          else
             prefix = "";
-         if ((d.Type()->Property() & G__BIT_ISENUM) && 
+         if ((d.Type()->Property() & G__BIT_ISENUM) &&
              (type_name.length()==0 || type_name=="enum") || type_name.find("::")==type_name.length()-2 ) {
             // We have unamed enums, let's fake it:
             fprintf(fp,"         enum {kDummy} %s", d.Name());

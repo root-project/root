@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.6 2002/01/24 11:39:30 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.1 2002/05/27 16:27:00 rdm Exp $
 // Author: Valery Fine   10/12/98
 //
 /*************************************************************************
@@ -26,7 +26,7 @@
 #include "TVolumePosition.h"
 
 //const Int_t kMAXLEVELS = 20;
-const Int_t kSonsInvisible = BIT(17);
+//const Int_t kSonsInvisible = BIT(17);
 
 #if 0
 const Int_t kVectorSize = 3;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.1 2002/02/14 16:12:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.2 2002/02/22 09:37:29 brun Exp $
 // Author: Fons Rademakers   14/07/2002
 
 /*************************************************************************
@@ -81,7 +81,7 @@ R__EXTERN TVirtualMutex *gCINTMutex;
 #ifdef _REENTRANT
 #define R__LOCKGUARD(mutex) TLockGuard R__guard(mutex)
 #else
-#define R__LOCKGUARD
+#define R__LOCKGUARD(mutex) if (mutex) { }
 #endif
 
 #endif

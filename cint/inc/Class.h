@@ -41,7 +41,7 @@ G__EXPORT
 #endif
 G__ClassInfo {
  public:
-  ~G__ClassInfo() {}
+  virtual ~G__ClassInfo() {}
   G__ClassInfo() { Init(); }
   void Init();
   G__ClassInfo(const char *classname) { Init(classname); } 

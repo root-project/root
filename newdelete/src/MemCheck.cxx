@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.8 2002/01/22 10:53:28 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.1 2002/03/07 01:48:32 rdm Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
@@ -64,9 +64,6 @@
 #include "TError.h"
 
 #define stack_history_size 20
-
-
-static TMemHashTable gMemHashTable;
 
 
 //****************************************************************************//

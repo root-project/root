@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.38 2002/05/03 14:30:43 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.40 2002/05/09 20:22:01 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1400,7 +1400,6 @@ TInetAddress TUnixSystem::GetHostByName(const char *hostname)
    // TInetAddress::IsValid().
 
    struct hostent *host_ptr;
-   struct in_addr  ad;
    const char     *host;
    int             type;
    UInt_t          addr;    // good for 4 byte addresses
@@ -1408,6 +1407,7 @@ TInetAddress TUnixSystem::GetHostByName(const char *hostname)
 #ifdef HASNOT_INETATON
    if ((addr = (UInt_t)inet_addr(hostname)) != INADDR_NONE) {
 #else
+   struct in_addr ad;
    if (inet_aton(hostname, &ad)) {
       memcpy(&addr, &ad.s_addr, sizeof(ad.s_addr));
 #endif

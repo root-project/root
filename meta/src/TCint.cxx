@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.56 2002/05/30 21:07:34 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.57 2002/06/27 23:57:24 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -535,7 +535,7 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
       // assumes that the TClass is well formed to do a lot of information
       // caching. The method SetClassInfo (i.e. here) is usually called during
       // the building phase of the TClass, hence it is NOT well formed yet.
-      if (cl->fClassInfo->Property()  & (kIsClass|kIsStruct) == 0) {
+      if ((cl->fClassInfo->Property() & (kIsClass|kIsStruct)) == 0) {
          cl->MakeZombie();
       }
 
@@ -785,11 +785,10 @@ Int_t TCint::ExecuteMacro(const char *filename, EErrorCode *error)
 {
    // Execute a CINT macro.
 
-   G__value result;
    if (gApplication)
       gApplication->ProcessFile(filename, (int*)error);
    else
-      result = G__exec_tempfile((char*)filename);
+      /*G__value result =*/ G__exec_tempfile((char*)filename);
    return 0;  // could get return value from result, but what about return type?
 }
 

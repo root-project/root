@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.30 2002/07/19 11:41:01 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.31 2002/07/27 13:44:58 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -121,7 +121,7 @@ template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj);
 namespace ROOT {
 
    class TGenericClassInfo;
-   template <class RootClass> Short_t SetClassVersion();
+   template <class RootClass> Short_t SetClassVersion(RootClass *);
 
    extern TClass *CreateClass(const char *cname, Version_t id,
                               const type_info &info, IsAFunc_t isa,
@@ -216,7 +216,7 @@ public: \
 
 #define ClassDef(name,id) \
    _ClassDef_(name,id) \
-   static int DeclFileLine() { return __LINE__; } 
+   static int DeclFileLine() { return __LINE__; }
 
 #else
 
@@ -224,7 +224,7 @@ public: \
    _ClassDef_(name,id) \
    friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp, \
                                      char *R__parent); \
-   static int DeclFileLine() { return __LINE__; } 
+   static int DeclFileLine() { return __LINE__; }
 
 #endif
 
@@ -234,15 +234,19 @@ public: \
    _ClassDef_(name,id) \
    friend TBuffer &operator>>(TBuffer &buf, name *&obj); \
    friend TBuffer &operator>>(TBuffer &buf, const name *&obj); \
-   static int DeclFileLine() { return __LINE__; } 
+   static int DeclFileLine() { return __LINE__; }
 
 #endif
+
+#define R__UseDummy(name) \
+   class _NAME2_(name,_c) { _NAME2_(name,_c)() { if (name) { } } }
 
 #define ClassImpUnique(name,key) \
 namespace ROOT { \
    TGenericClassInfo *GenerateInitInstance(const name*); \
    static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
-            GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
+      GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
+   R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
 }
 
 #if defined(__CINT__)
@@ -266,7 +270,7 @@ namespace ROOT { \
 
 #define ClassDefT(name,id) \
    _ClassDef_(name,id) \
-   static int DeclFileLine() { return __LINE__; } 
+   static int DeclFileLine() { return __LINE__; }
 
 #else
 
@@ -274,7 +278,7 @@ namespace ROOT { \
    _ClassDef_(name,id) \
    friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp, \
                                      char *R__parent); \
-   static int DeclFileLine() { return __LINE__; } 
+   static int DeclFileLine() { return __LINE__; }
 
 #endif
 
@@ -285,7 +289,8 @@ namespace ROOT { \
 #else
 #define templateClassImp(name) \
 static TNamed *_R__UNIQUE_(R__dummyholder) = \
-                ROOT::RegisterClassTemplate(_QUOTE_(name), __FILE__, __LINE__);
+   ROOT::RegisterClassTemplate(_QUOTE_(name), __FILE__, __LINE__); \
+R__UseDummy(_R__UNIQUE_(R__dummyholder));
 #endif
 
 #define ClassImpT(name,Tmpl) templateClassImp(name)
@@ -315,6 +320,7 @@ namespace ROOT { \
    TGenericClassInfo *GenerateInitInstance(const name*); \
    static Short_t _R__UNIQUE_(R__dummyVersionNumber) = \
            GenerateInitInstance((name*)0x0)->SetVersion(VersionNumber); \
+   R__UseDummy(_R__UNIQUE_(R__dummyVersionNumber)); \
 }
 
 #endif

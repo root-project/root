@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.1 2002/05/27 16:27:00 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.2 2002/05/27 16:46:21 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 #include <assert.h>
@@ -788,11 +788,9 @@ TString TVolumeView::PathP() const
        str += "/";
    }
    str +=  GetName();
-   UInt_t positionId = 0;
    TVolumePosition *p = GetPosition();
    if (p) {
       char buffer[10];
-      positionId = p->GetId();
       sprintf(buffer,";%d",p->GetId());
       str +=  buffer;
    }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TException.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   21/09/95
 
 /*************************************************************************
@@ -51,7 +51,7 @@ struct ExceptionContext_t {
       ExceptionContext_t __curr, *__old = gException; \
       int __code; \
       gException = &__curr; \
-      __code = SETJMP(gException->buf); {
+      __code = SETJMP(gException->buf); if (__code) { }; {
 
 #define TRY \
    { \

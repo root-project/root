@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.8 2002/07/01 22:56:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.9 2002/07/11 19:45:14 brun Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -26,10 +26,10 @@ namespace ROOT {
    {
       // This could be faster if we implemented this either as a templated
       // function or by rootcint-generated code using the typeid (i.e. the
-      // difference is a lookup a in TList instead of in a map).
+      // difference is a lookup in a TList instead of in a map).
 
-      // To avoid a spurrious error message in case the data member is transient
-      // and does not have a dictionary we check first.
+      // To avoid a spurrious error message in case the data member is
+      // transient and does not have a dictionary we check first.
       if (transientMember) {
          G__ClassInfo b(topClassName);
          if (!b.IsLoaded()) return;
@@ -42,5 +42,11 @@ namespace ROOT {
       }
    }
 }
+
+// macro used in dictionary
+#define R__GenerateInitInstance(name) \
+   static ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = \
+      GenerateInitInstance((name*)0x0); \
+   R__UseDummy(_R__UNIQUE_(Init))
 
 #endif
