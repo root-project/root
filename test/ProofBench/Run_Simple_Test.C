@@ -1,4 +1,4 @@
-// $Id: Run_Simple_Test.C,v 1.3 2005/02/07 18:02:37 rdm Exp $
+// $Id: Run_Simple_Test.C,v 1.4 2005/02/08 22:38:23 rdm Exp $
 //
 //
 
@@ -22,6 +22,8 @@
 const char data_dir[] = "/var/tmp";
 const bool show_feedback = true;
 const bool show_stats = true;
+const int  files_per_node = 2;
+const int  max_files_per_slave = 1;
 
 
 void Run_Simple_Test()
@@ -38,9 +40,10 @@ void Run_Simple_Test()
    gProof->UploadPackage("event.par");
    gProof->EnablePackage("event");
 
-   make_event_trees(data_dir, 10000, 2);
+   make_event_trees(data_dir, 10000, files_per_node);
 
-   TDSet *d = make_tdset(data_dir, 1);
+   TDSet *d = make_tdset(data_dir, max_files_per_slave,
+                         files_per_node);
 
    d->Print("a");
 

@@ -1,4 +1,4 @@
-// $Id:$
+// $Id: make_tdset.C,v 1.5 2005/02/08 22:38:23 rdm Exp $
 //
 //
 
@@ -11,7 +11,7 @@
 #include "TProof.h"
 
 
-TDSet *make_tdset(const Char_t* basedir, Int_t files_per_slave)
+TDSet *make_tdset(const Char_t* basedir, Int_t files_per_slave, Int_t max_per_node = 0)
 {
    // This script creates a TDSet object that can be used to process
    // the files generated with the make_event_trees.C script.
@@ -19,6 +19,7 @@ TDSet *make_tdset(const Char_t* basedir, Int_t files_per_slave)
    //
    // basedir:         location of files local to proof slaves
    // files_per_slave: number of files per slave to process
+   // max_per_node:    maximum available number of file per node
 
    if (!gProof) {
       cout << "Must Start PROOF before using make_tdset.C" << endl;
@@ -61,7 +62,10 @@ TDSet *make_tdset(const Char_t* basedir, Int_t files_per_slave)
    for(Int_t i=0; i < nodelist.GetSize() ; i++){
       TObjString* node = dynamic_cast<TObjString*>(nodelist.At(i));
       TObjString* msd = dynamic_cast<TObjString*>(msdlist.At(i));
-      for(Int_t j=1; j <= files_per_slave*nslaves[i]; j++) {
+      for(Int_t j=1;
+          (j <= files_per_slave*nslaves[i])
+          && (max_per_node==0 || j<=max_per_node) ;
+          j++) {
 
          TString filestr = "root://";
          filestr += node->GetName();
