@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.42 2003/07/14 07:52:31 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.43 2003/09/02 17:16:30 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2793,7 +2793,7 @@ char *THtml::GetHtmlFileName(TClass * classPtr)
          else
             found = kTRUE;
       } else {
-         strcpy(htmlFileName, ".");
+         strcpy(htmlFileName, "./");
          found = kTRUE;
       }
       delete[]tmp;
