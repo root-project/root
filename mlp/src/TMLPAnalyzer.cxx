@@ -104,8 +104,11 @@ void TMLPAnalyzer::CheckNetwork()
    cout << "Network with structure: " << fStructure.Data() << endl;
    cout << "an input with lower values may not be needed" << endl;
    // Checks if some input variable is not needed
+   char var[20],sel[20];
    for(Int_t i=0;i<GetNeurons(1);i++) {
-      analysisTree->Draw(Form("Diff>>tmp%i",i),Form("InNeuron==%i",i),"goff");
+      sprintf(var,"Diff>>tmp%d",i);
+	  sprintf(sel,"InNeuron==%d",i);
+	  analysisTree->Draw(var,sel,"goff");
       TH1F* tmp = (TH1F*)gDirectory->Get(Form("tmp%i",i));
       cout << GetNeuronFormula(i) << " -> " << tmp->GetMean() 
            << " +/- " << tmp->GetRMS() << endl;
