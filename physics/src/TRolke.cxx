@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.5 2004/09/10 17:00:34 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.6 2004/11/11 07:48:31 brun Exp $
 // Author: Jan Conrad    9/2/2004
 
 /*************************************************************************
@@ -78,10 +78,11 @@
 //  1. I guess TRolke makes TFeldmanCousins obsolete?
 //
 //  Certainly not. TFeldmanCousins is the fully frequentist construction and 
-//  should be used in case of no (or small uncertainties). TRolke applies the 
-//  so called lnL + 1/2 approximation, which is inferior. It is however shown 
-//  in the reference mentioned in the class that it has good coverage 
-//  properties, i.e it might be used where FC can't.
+//  should be used in case of no (or negligible uncertainties). It is however 
+//  not capable of treating uncertainties in nuisance parameters.
+//  TRolke is desined for this case and it is shown in the reference above
+//  that it has good coverage properties for most cases, ie it might be
+//  used where FeldmannCousins can't.
 //
 //  2. What are the advantages of TRolke over TLimit?
 //

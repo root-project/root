@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.13 2004/11/02 10:13:06 rdm Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.14 2004/11/05 09:05:45 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 11/02/04
+# Last: 11/11/04
 
 """Modify the exception hook to add ROOT classes as requested. Ideas stolen from
 LazyPython (Nathaniel Gray <n8gray@caltech.edu>)."""
@@ -23,12 +23,18 @@ try:
 except:
   pass
 
-## PyROOT C++ extension module
-dlflags = sys.getdlopenflags()
-if 0 <= pystring.find( sys.platform, 'linux' ):
+## load PyROOT C++ extension module
+isLinux = 0 <= pystring.find( sys.platform, 'linux' )
+if isLinux:
+ # change dl flags to load dictionaries from pre-linked .so's
+   dlflags = sys.getdlopenflags()
    sys.setdlopenflags( 0x100 | 0x2 )    # RTLD_GLOBAL | RTLD_NOW
+
 from libPyROOT import *
-sys.setdlopenflags( dlflags )
+
+# reset dl flags if needed
+if isLinux:
+   sys.setdlopenflags( dlflags )
 
 
 ## 2.2 has 10 instructions as default, 2.3 has 100 ... make same
