@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.60 2004/11/23 14:45:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.61 2004/12/20 10:01:41 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1419,6 +1419,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
 //          the overflow bin.
 //          Statistics will be recomputed from the new bin contents.
 
+   Int_t i,j,xbin,ybin;
    Int_t nxbins  = fXaxis.GetNbins();
    Int_t nybins  = fYaxis.GetNbins();
    Axis_t xmin  = fXaxis.GetXmin();
@@ -1440,16 +1441,16 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    // Save old bin contents into a new array
    Double_t entries = fEntries;
    Double_t *oldBins = new Double_t[nxbins*nybins];
-   for (Int_t xbin = 0; xbin < nxbins; xbin++) {
-      for (Int_t ybin = 0; ybin < nybins; ybin++) {
+   for (xbin = 0; xbin < nxbins; xbin++) {
+      for (ybin = 0; ybin < nybins; ybin++) {
          oldBins[xbin*nybins+ybin] = GetBinContent(xbin+1, ybin+1);
       }
    }
    Double_t *oldErrors = 0;
    if (fSumw2.fN != 0) {
       oldErrors = new Double_t[nxbins*nybins];
-      for (Int_t xbin = 0; xbin < nxbins; xbin++) {
-         for (Int_t ybin = 0; ybin < nybins; ybin++) {
+      for (xbin = 0; xbin < nxbins; xbin++) {
+         for (ybin = 0; ybin < nybins; ybin++) {
 	    oldErrors[xbin*nybins+ybin] = GetBinError(xbin+1, ybin+1);
 	 }
       }
@@ -1502,9 +1503,9 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
       if(fXaxis.GetXbins()->GetSize() > 0 || fYaxis.GetXbins()->GetSize() > 0){
 	 // variable bin sizes in x or y, don't treat both cases separately
 	 Axis_t *xbins = new Axis_t[newxbins+1];
-	 for(Int_t i = 0; i <= newxbins; ++i) xbins[i] = fXaxis.GetBinLowEdge(1+i*nxgroup);
+	 for(i = 0; i <= newxbins; ++i) xbins[i] = fXaxis.GetBinLowEdge(1+i*nxgroup);
 	 Axis_t *ybins = new Axis_t[newybins+1];
-	 for(Int_t i = 0; i <= newybins; ++i) ybins[i] = fYaxis.GetBinLowEdge(1+i*nygroup);
+	 for(i = 0; i <= newybins; ++i) ybins[i] = fYaxis.GetBinLowEdge(1+i*nygroup);
 	 hnew->SetBins(newxbins,xbins, newybins, ybins);//changes also errors array (if any)
          delete [] xbins;
 	 delete [] ybins;
@@ -1514,14 +1515,14 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
 
       Double_t binContent, binError;
       Int_t oldxbin = 0;
-      for (Int_t xbin = 0; xbin <= newxbins; xbin++) {
+      for (xbin = 0; xbin <= newxbins; xbin++) {
          Int_t oldybin = 0;
-         for (Int_t ybin = 0; ybin <= newybins; ybin++) {
+         for (ybin = 0; ybin <= newybins; ybin++) {
             binContent = 0;
             binError   = 0;
-            for (Int_t i = 0; i < nxgroup; i++) {
+            for (i = 0; i < nxgroup; i++) {
                if (oldxbin+i >= nxbins) break;
-	       for (Int_t j =0; j < nygroup; j++) {
+	       for (j =0; j < nygroup; j++) {
 	          if (oldybin+j >= nybins) break;
                   binContent += oldBins[oldybin+j + (oldxbin+i)*nybins];
                   if (oldErrors) binError += oldErrors[oldybin+ j + (oldxbin+i)*nybins]*oldErrors[oldybin + j + (oldxbin+i)*nybins];
