@@ -75,7 +75,7 @@ elif [ $PLATFORM = "fbsd" ]; then
     echo $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
     $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
 elif [ $PLATFORM = "macosx" ]; then
-   macosx_minor=`sw_vers -productVersion | cut -d'.' -f2`
+   macosx_minor=`sw_vers | sed -n 's/ProductVersion:[[:blank:]]*[0-9]*.\([0-9]*\).[0-9]*/\1/p'`
    # Look for a fink installation
    FINKDIR=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    if [ $macosx_minor -ge 3 ]; then

@@ -37,7 +37,7 @@ CINTCFLAGS    = -pipe -W -Wall -fsigned-char -fno-common \
 COMPILER      = gnu
 
 # OS version
-MACOSX_MINOR := $(shell sw_vers -productVersion | cut -d'.' -f2)
+MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion:[[:blank:]]*[0-9]*.\([0-9]*\).[0-9]*/\1/p')
 
 # Linker:
 LD            = g++
