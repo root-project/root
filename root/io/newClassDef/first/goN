@@ -1,0 +1,7 @@
+g++ -g -pipe -Wall -Woverloaded-virtual -fPIC -I$ROOTSYS/include  -D_REENTRANT -o rootcint.o -c rootcint.cxx
+g++ -g  -o rootcint rootcint.o -L$ROOTSYS/lib -lCint -lm -ldl -rdynamic
+./rootcint -f namespacedict.cxx -c ./Rtypes.h namespace.h namespacelinkdef.h
+g++ -include ./Rtypes.h -c -I$ROOTSYS/include -g3 namespacedict.cxx
+g++ -include ./Rtypes.h  -c -I$ROOTSYS/include -g3 namespace.C
+g++ -shared -o namespace.so -shared namespace.o namespacedict.o
+

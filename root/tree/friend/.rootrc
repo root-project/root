@@ -1,0 +1,141 @@
+
+# ROOT Environment settings are handled via the class TEnv. To see
+# which values are active do: gEnv->Print().
+
+# Path used by dynamic loader to find shared libraries and macros
+# Paths are different for Unix and Windows. The example shows the defaults
+# for all ROOT applications for either Unix or Windows.
+Unix.*.Root.DynamicPath:    .:$(ROOTSYS)/lib
+Unix.*.Root.MacroPath:      .:$(ROOTSYS)/macros
+WinNT.*.Root.DynamicPath:   .;$(ROOTSYS)/bin;$(PATH)
+WinNT.*.Root.MacroPath:     .;$(ROOTSYS)/macros
+
+# Path where to look for TrueType fonts
+Unix.*.Root.UseTTFonts:     true
+Unix.*.Root.TTFontPath:     
+
+# Use thread library (if exists)
+Unix.*.Root.UseThreads:     false
+
+# Show where item is found in the specified path
+Root.ShowPath:           false
+
+# Activate memory statistics (size and cnt is used to trap allocation of
+# blocks of a certain size after cnt times)
+Root.MemStat:            1
+Root.MemStat.size:      -1
+Root.MemStat.cnt:       -1
+Root.ObjectStat:         1
+
+# Activate memory leak checker (use in conjunction with $ROOTSYS/bin/memprobe)
+# Currently only works on Linux with gcc.
+Root.MemCheck:           0
+Root.MemCheckFile:       memcheck.out
+
+# Global debug mode. When >0 turns on progressively more details debugging.
+Root.Debug:              0
+
+# Settings for X11 behaviour.
+X11.Sync:                no
+X11.FindBestVisual:      yes
+
+# Default editor
+Unix.*.Editor:           vi
+WinNT.*.Editor:          notepad
+
+# Specify list of file endings which TTabCom (TAB completion) should ignore.
+#TabCom.FileIgnore:       .cpp:.h:.cmz
+
+# TCanvas specific settings. Opaque move and resize show full pad during
+# the operation instead of only the outline. Especially for resize you'll
+# need serious CPU power. UseScreenFactor=true means to size canvas according
+# to size of screen, so a canvas still looks good on a low resolution
+# laptop screen without having to change canvas size in macros.
+# HighLightColor 2 = red. ShowEventStatus allows the event status bar to
+# be turned on by default. AutoExec allows TExec objects to be executed
+# on mouse and key events.
+Canvas.MoveOpaque:          false
+Canvas.ResizeOpaque:        false
+Canvas.UseScreenFactor:     true
+Canvas.HighLightColor:      2
+Canvas.ShowEventStatus:     false
+Canvas.AutoExec:            true
+
+# Default histogram binnings for TTree::Draw()
+Hist.Binning.1D.x:          100
+
+Hist.Binning.2D.x:           40
+Hist.Binning.2D.y:           40
+Hist.Binning.2D.Prof:       100
+
+Hist.Binning.3D.x:           20
+Hist.Binning.3D.y:           20
+Hist.Binning.3D.z:           20
+Hist.Binning.3D.Profx:      100
+Hist.Binning.3D.Profy:      100
+
+# THtml specific settings (for more see doc of THtml class)
+Unix.*.Root.Html.SourceDir:  .:src:include
+WinNT.*.Root.Html.SourceDir: .;src;include
+#Root.Html.OutputDir:        htmldoc/
+#Root.Html.Homepage:
+#Root.Html.Header:
+#Root.Html.Footer:
+#Root.Html.Description:      //____________________
+#Root.Html.Author:           // Author:
+#Root.Html.LastUpdate:       // @(#)
+#Root.Html.Copyright:        * Copyright
+
+# GUI specific settings
+Unix.*.Gui.NormalFont:      -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Unix.*.Gui.BoldFont:        -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
+Unix.*.Gui.SmallFont:       -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
+Unix.*.Gui.ProportionalFont: -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.NormalFont:     -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.BoldFont:       -adobe-helvetica-bold-r-*-*-15-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.SmallFont:      -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.ProportionalFont: -adobe-courier-medium-r-*-*-15-*-*-*-*-*-iso8859-1
+Gui.BackgroundColor:        #c0c0c0
+Gui.ForegroundColor:        black
+Gui.SelectForegroundColor:  white
+Gui.SelectBackgroundColor:  #000080
+Gui.IconPath:               $(HOME)/icons:$(ROOTSYS)/icons:.
+Gui.MimeTypeFile:           $(HOME)/.root.mimes
+# If above does not exists defaults to this:
+#Gui.MimeTypeFile:           $(ROOTSYS)/etc/root.mimes
+# Can be either small, big, list, details
+Browser.IconStyle:          small
+# Can be either name, type, size, date
+Browser.SortBy:             name
+
+# Rint (interactive ROOT executable) specific alias, logon and logoff macros
+Rint.Load:               rootalias.C
+Rint.Logon:              rootlogon.C
+Rint.Logoff:             rootlogoff.C
+# Record session commands, set to "-" to turn off command recording
+Rint.History:            $(HOME)/.root_hist
+
+# ACLiC customization.
+# ACLiC.Linkdef specifies the suffix that will be added to the script name to
+# try to locate a custom linkdef file when generating the dictionary.
+ACLiC.Linkdef:          _linkdef
+
+# Default authentication method for rootd (0=clear, 1=SRP, 2=Krb5)
+Rootd.Authentication:   0
+
+# Default authentication method for proofd (0=clear, 1=SRP, 2=Krb5)
+Proofd.Authentication:  0
+
+# Plugin library handlers
++Plugin.TFile:       ^rfio:    TRFIOFile     RFIO
++Plugin.TFile:       ^dcache:  TDCacheFile   DCache
++Plugin.TSQLServer:  ^mysql:   TMySQLServer  MySQL
++Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL
++Plugin.TSQLServer:  ^sapdb:   TSapDBServer  SapDB
++Plugin.TSQLServer:  ^oracle:  TOracleServer Oracle
++Plugin.TGrid:       ^alien    TAlien        RAliEn
+
+# Example of custom setting for the Rint application (root.exe).
+# This overrides the default specified above for a generic application.
+# Color 5 is yellow.
+Rint.Canvas.HighLightColor:      5

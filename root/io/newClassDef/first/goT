@@ -1,0 +1,7 @@
+g++ -g -pipe -Wall -Woverloaded-virtual -fPIC -I$ROOTSYS/include  -D_REENTRANT -o rootcint.o -c rootcint.cxx
+g++ -g  -o rootcint rootcint.o -L$ROOTSYS/lib -lCint -lm -ldl -rdynamic
+./rootcint -f templatedict.cxx -c ./Rtypes.h template.h templatelinkdef.h
+g++ -include ./Rtypes.h -c -I$ROOTSYS/include -g3 templatedict.cxx
+g++ -include ./Rtypes.h  -c -I$ROOTSYS/include -g3 template.C
+g++ -shared -o template.so -shared template.o templatedict.o
+

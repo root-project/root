@@ -1,0 +1,2 @@
+g++ -g -pipe -Wall -Woverloaded-virtual -fPIC -I$ROOTSYS/include  -D_REENTRANT -o rootcint.o -c rootcint.cxx
+g++ -g  -o rootcint rootcint.o -L$ROOTSYS/lib -lCint -lm -ldl -rdynamic

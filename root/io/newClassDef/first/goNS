@@ -1,0 +1,7 @@
+g++ -g -pipe -Wall -Woverloaded-virtual -fPIC -I$ROOTSYS/include  -D_REENTRANT -o rootcint.o -c rootcint.cxx
+g++ -g  -o rootcint rootcint.o -L$ROOTSYS/lib -lCint -lm -ldl -rdynamic
+./rootcint -f nstemplatedict.cxx -c ./Rtypes.h nstemplate.h nstemplatelinkdef.h
+g++ -include ./Rtypes.h -c -I$ROOTSYS/include -g3 nstemplatedict.cxx
+g++ -include ./Rtypes.h  -c -I$ROOTSYS/include -g3 nstemplate.C
+g++ -shared -o nstemplate.so -shared nstemplate.o nstemplatedict.o
+

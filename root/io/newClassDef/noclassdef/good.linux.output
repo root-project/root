@@ -1,0 +1,110 @@
+Writing Hit
+Warning in <TClass::TClass>: no dictionary for class crap is available
+Warning in <TClass::TClass>: no dictionary for class RootPCnodict is available
+Warning in <TStreamerInfo::Build:>: RootCaloHit: RootPCnodict has no streamer or dictionary, data member "mynocell" will not be saved
+Warning in <TStreamerInfo::Build:>: RootPCellID: base class crap has no streamer or dictionary it will not be saved
+Warning in <TStreamerInfo::WriteBuffer>: The actual class of RootCaloHit::mynocellp is not available. Only the "RootPCellID" part will be written
+
+==>Dumping object, name=RootCaloHit, class=RootCaloHit
+
+energy                        1.1         
+time                          1.2         
+itra                          2           
+mycell.id                     3           
+mycell.base[4]                116         
+*mycellnull                   ->0         
+fUniqueID                     0           object unique identifier
+fBits                         33554432    bit field status word
+base 	t e s t 
+id 	3
+base 	n o d i 
+id 	7
+nodict 	55
+base 	f i x 1 
+id 	4
+fix 	33
+base 	v i r t 
+id 	5
+virt 	44
+base 	n o d i 
+id 	8
+nodict 	55
+
+Reading Hit
+==>Dumping object, name=RootCaloHit, class=RootCaloHit
+
+energy                        1.1         
+time                          1.2         
+itra                          2           
+mycell.id                     3           
+mycell.base[4]                116         
+*mycellnull                   ->0         
+fUniqueID                     0           object unique identifier
+fBits                         50331648    bit field status word
+base 	t e s t 
+id 	3
+base 	n o n e 
+id 	0
+nodict 	0
+base 	f i x 1 
+id 	4
+fix 	33
+base 	v i r t 
+id 	5
+virt 	44
+base 	n o d i 
+id 	8
+
+Writing Data
+Warning in <TStreamerInfo::WriteBuffer>: The actual class of RootCaloHit::mynocellp is not available. Only the "RootPCellID" part will be written
+
+==>Dumping object, name=RootCaloHit, class=RootCaloHit
+
+energy                        1.1         
+time                          1.2         
+itra                          2           
+mycell.id                     3           
+mycell.base[4]                116         
+*mycellnull                   ->0         
+fUniqueID                     0           object unique identifier
+fBits                         33554432    bit field status word
+base 	t e s t 
+id 	3
+base 	n o d i 
+id 	7
+nodict 	55
+base 	f i x 1 
+id 	4
+fix 	33
+base 	v i r t 
+id 	5
+virt 	44
+base 	n o d i 
+id 	8
+nodict 	55
+
+Reading Data
+==>Dumping object, name=RootCaloHit, class=RootCaloHit
+
+energy                        1.1         
+time                          1.2         
+itra                          2           
+mycell.id                     3           
+mycell.base[4]                116         
+*mycellnull                   ->0         
+fUniqueID                     0           object unique identifier
+fBits                         50331648    bit field status word
+base 	t e s t 
+id 	3
+base 	n o n e 
+id 	0
+nodict 	0
+base 	f i x 1 
+id 	4
+fix 	33
+base 	v i r t 
+id 	5
+virt 	44
+base 	n o d i 
+id 	8
+
