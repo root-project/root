@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.123 2003/12/08 15:55:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.124 2003/12/25 17:55:20 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -830,18 +830,23 @@ void TBranchElement::FillLeaves(TBuffer &b)
           n *= leaf->GetLenStatic();
        }
        switch (atype) {
-          case  1:  {b.WriteFastArray((Char_t*)  fAddress, n); break;}
-          case  2:  {b.WriteFastArray((Short_t*) fAddress, n); break;}
-          case  3:  {b.WriteFastArray((Int_t*)   fAddress, n); break;}
-          case  4:  {b.WriteFastArray((Long_t*)  fAddress, n); break;}
-          case  5:  {b.WriteFastArray((Float_t*) fAddress, n); break;}
-          case  6:  {b.WriteFastArray((Int_t*)   fAddress, n); break;}
-          case  8:  {b.WriteFastArray((Double_t*)fAddress, n); break;}
-          case 11:  {b.WriteFastArray((UChar_t*) fAddress, n); break;}
-          case 12:  {b.WriteFastArray((UShort_t*)fAddress, n); break;}
-          case 13:  {b.WriteFastArray((UInt_t*)  fAddress, n); break;}
-          case 14:  {b.WriteFastArray((ULong_t*) fAddress, n); break;}
-          case 15:  {b.WriteFastArray((UInt_t*)  fAddress, n); break;}
+          case  1:  {b.WriteFastArray((Char_t*)   fAddress, n); break;}
+          case  2:  {b.WriteFastArray((Short_t*)  fAddress, n); break;}
+          case  3:  {b.WriteFastArray((Int_t*)    fAddress, n); break;}
+          case  4:  {b.WriteFastArray((Long_t*)   fAddress, n); break;}
+          case  5:  {b.WriteFastArray((Float_t*)  fAddress, n); break;}
+          case  6:  {b.WriteFastArray((Int_t*)    fAddress, n); break;}
+          case  8:  {b.WriteFastArray((Double_t*) fAddress, n); break;}
+          case 11:  {b.WriteFastArray((UChar_t*)  fAddress, n); break;}
+          case 12:  {b.WriteFastArray((UShort_t*) fAddress, n); break;}
+          case 13:  {b.WriteFastArray((UInt_t*)   fAddress, n); break;}
+          case 14:  {b.WriteFastArray((ULong_t*)  fAddress, n); break;}
+          case 15:  {b.WriteFastArray((UInt_t*)   fAddress, n); break;}
+          case 16:  {b.WriteFastArray((Long64_t*) fAddress, n); break;}
+          case 17:  {b.WriteFastArray((ULong64_t*)fAddress, n); break;}
+		  case  9:  {Double_t *xx = (Double_t*)fAddress;
+		             for (Int_t ii=0;ii<n;ii++) b << (Float_t)xx[ii]; 
+					 break;}
        }
        return; 
     }
@@ -1254,17 +1259,19 @@ void TBranchElement::ReadLeaves(TBuffer &b)
              delete [] *where;
              *where = 0;
              switch(len_atype) {
-                case  1:  {length = ((Char_t*)len_where)[k]; break;}
-                case  2:  {length = ((Short_t*) len_where)[k]; break;}
-                case  3:  {length = ((Int_t*)   len_where)[k]; break;}
-                case  4:  {length = ((Long_t*)  len_where)[k]; break;}
+                case  1:  {length = ((Char_t*)   len_where)[k]; break;}
+                case  2:  {length = ((Short_t*)  len_where)[k]; break;}
+                case  3:  {length = ((Int_t*)    len_where)[k]; break;}
+                case  4:  {length = ((Long_t*)   len_where)[k]; break;}
                    //case  5:  {length = ((Float_t*) len_where)[k]; break;}
-                case  6:  {length = ((Int_t*)   len_where)[k]; break;}
+                case  6:  {length = ((Int_t*)    len_where)[k]; break;}
                    //case  8:  {length = ((Double_t*)len_where)[k]; break;}
-                case 11:  {length = ((UChar_t*) len_where)[k]; break;}
-                case 12:  {length = ((UShort_t*)len_where)[k]; break;}
-                case 13:  {length = ((UInt_t*)  len_where)[k]; break;}
-                case 14:  {length = ((ULong_t*) len_where)[k]; break;}
+                case 11:  {length = ((UChar_t*)  len_where)[k]; break;}
+                case 12:  {length = ((UShort_t*) len_where)[k]; break;}
+                case 13:  {length = ((UInt_t*)   len_where)[k]; break;}
+                case 14:  {length = ((ULong_t*)  len_where)[k]; break;}
+                case 15:  {length = ((Long64_t*) len_where)[k]; break;}
+                case 16:  {length = ((ULong64_t*)len_where)[k]; break;}
                 default: continue;
              }
              b >> isArray;
@@ -1282,7 +1289,8 @@ void TBranchElement::ReadLeaves(TBuffer &b)
                 case 12:  {*where=new char[sizeof(UShort_t)*length]; b.ReadFastArray((UShort_t*)*where, length); break;}
                 case 13:  {*where=new char[sizeof(UInt_t)*length]; b.ReadFastArray((UInt_t*)  *where, length); break;}
                 case 14:  {*where=new char[sizeof(ULong_t)*length]; b.ReadFastArray((ULong_t*) *where, length); break;}
-                case 15:  {*where=new char[sizeof(UInt_t)*length]; b.ReadFastArray((UInt_t*)  *where, length); break;}
+                case 15:  {*where=new char[sizeof(Long64_t)*length]; b.ReadFastArray((Long64_t*)  *where, length); break;}
+                case 16:  {*where=new char[sizeof(ULong64_t)*length]; b.ReadFastArray((ULong64_t*)*where, length); break;}
              }
           }
           return;
@@ -1304,7 +1312,13 @@ void TBranchElement::ReadLeaves(TBuffer &b)
           case 12:  {b.ReadFastArray((UShort_t*)fAddress, n); break;}
           case 13:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
           case 14:  {b.ReadFastArray((ULong_t*) fAddress, n); break;}
-          case 15:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
+          case 15:  {b.ReadFastArray((Long64_t*)fAddress, n); break;}
+          case 16:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
+		  case  9:  {Double_t *xx = (Double_t*)fAddress;
+			            Float_t afloat;
+						for (Int_t ii=0;ii<n;ii++) {
+				            b>> afloat; xx[ii] = Double_t(afloat);
+						} break;}
        }
        return;
      } else if (fType <= 2) {     // branch in split mode
@@ -1326,7 +1340,13 @@ void TBranchElement::ReadLeaves(TBuffer &b)
              case 12:  {b.ReadFastArray((UShort_t*)fAddress, n); break;}
              case 13:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
              case 14:  {b.ReadFastArray((ULong_t*) fAddress, n); break;}
-             case 15:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
+             case 15:  {b.ReadFastArray((Long64_t*) fAddress, n); break;}
+             case 16:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
+			 case  9:  {Double_t *xx = (Double_t*)fAddress;
+			            Float_t afloat;
+						for (Int_t ii=0;ii<n;ii++) {
+				            b>> afloat; xx[ii] = Double_t(afloat);
+						} break;}
           }
        } else {
           fNdata = 1;
