@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:$:$Id:$
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.1 2002/02/18 18:02:57 rdm Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -355,6 +355,7 @@ TObject *THbookFile::Get(Int_t idd)
      hdelet(id);
      return obj;
   }
+  return 0;
 }
 
 
@@ -394,7 +395,6 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 
   const int Nchar=9;
   int nvar;
-  int ier=0;
   int i,j;
   int nsub,itype,isize,ielem;
   char *chtag_out;
@@ -545,7 +545,6 @@ TObject *THbookFile::ConvertRWN(Int_t id)
 
   const int Nchar=9;
   int nvar;
-  int ier=0;
   int i,j;
   char *chtag_out;
   float rmin[1000], rmax[1000];
