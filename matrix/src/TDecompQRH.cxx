@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.12 2004/05/27 20:20:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.13 2004/06/13 14:53:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -186,12 +186,13 @@ Bool_t TDecompQRH::QRH(TMatrixD &q,TVectorD &diagR,TVectorD &up,TVectorD &w,Doub
 void TDecompQRH::SetMatrix(const TMatrixD &a)
 {
   Assert(a.IsValid());
+
+  ResetStatus();
   if (a.GetNrows() < a.GetNcols()) {
     Error("TDecompQRH(const TMatrixD &","matrix rows should be >= columns");
     return;
   }
 
-  ResetStatus();
   SetBit(kMatrixSet);
   fCondition = a.Norm1();
 
@@ -219,11 +220,15 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
 // has *not* been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b.Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b.Invalidate();
       return kFALSE;
+    }
   }
 
   if (fQ.GetNrows() != b.GetNrows() || fQ.GetRowLwb() != b.GetLwb()) { 
@@ -256,6 +261,7 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
     if (TMath::Abs(pR[off_i+i]) < fTol)
     {
       Error("Solve(TVectorD &)","R[%d,%d]=%.4e < %.4e",i,i,pR[off_i+i],fTol);
+      b.Invalidate();
       return kFALSE;
     }
     pb[i] = r/pR[off_i+i];
@@ -281,18 +287,23 @@ TVectorD TDecompQRH::Solve(const TVectorD &b,Bool_t &ok)
 //______________________________________________________________________________
 Bool_t TDecompQRH::Solve(TMatrixDColumn &cb)
 { 
-  const TMatrixDBase *b = cb.GetMatrix();
+  TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
   Assert(b->IsValid());
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b->Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b->Invalidate();
       return kFALSE;
+    }
   }
 
   if (fQ.GetNrows() != b->GetNrows() || fQ.GetRowLwb() != b->GetRowLwb())
   {
     Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
+    b->Invalidate();
     return kFALSE; 
   }
   
@@ -322,6 +333,7 @@ Bool_t TDecompQRH::Solve(TMatrixDColumn &cb)
     if (TMath::Abs(pR[off_i+i]) < fTol)
     {
       Error("Solve(TMatrixDColumn &)","R[%d,%d]=%.4e < %.4e",i,i,pR[off_i+i],fTol);
+      b->Invalidate();
       return kFALSE;
     }
     pcb[off_i2] = r/pR[off_i+i];
@@ -337,11 +349,15 @@ Bool_t TDecompQRH::TransSolve(TVectorD &b)
 // has *not* been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b.Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b.Invalidate();
       return kFALSE;
+    }
   }
 
   if (fQ.GetNrows() != fQ.GetNcols() || fQ.GetRowLwb() != fQ.GetColLwb()) {
@@ -372,6 +388,7 @@ Bool_t TDecompQRH::TransSolve(TVectorD &b)
     if (TMath::Abs(pR[off_i+i]) < fTol)
     {
       Error("TransSolve(TVectorD &)","R[%d,%d]=%.4e < %.4e",i,i,pR[off_i+i],fTol);
+      b.Invalidate();
       return kFALSE;
     }
     pb[i] = r/pR[off_i+i];
@@ -403,22 +420,28 @@ TVectorD TDecompQRH::TransSolve(const TVectorD &b,Bool_t &ok)
 //______________________________________________________________________________
 Bool_t TDecompQRH::TransSolve(TMatrixDColumn &cb)
 {
-  const TMatrixDBase *b = cb.GetMatrix();
+  TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
   Assert(b->IsValid());
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b->Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b->Invalidate();
       return kFALSE;
+    }
   }
 
   if (fQ.GetNrows() != fQ.GetNcols() || fQ.GetRowLwb() != fQ.GetColLwb()) {
     Error("TransSolve(TMatrixDColumn &","matrix should be square");
+    b->Invalidate();
     return kFALSE;
   }
   
   if (fR.GetNrows() != b->GetNrows() || fR.GetRowLwb() != b->GetRowLwb()) {
     Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");
+    b->Invalidate();
     return kFALSE;
   }
   
@@ -440,6 +463,7 @@ Bool_t TDecompQRH::TransSolve(TMatrixDColumn &cb)
     if (TMath::Abs(pR[off_i+i]) < fTol)
     {
       Error("TransSolve(TMatrixDColumn &)","R[%d,%d]=%.4e < %.4e",i,i,pR[off_i+i],fTol);
+      b->Invalidate();
       return kFALSE;
     }
     pcb[off_i2] = r/pR[off_i+i];

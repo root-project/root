@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.10 2004/05/27 20:20:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.11 2004/06/13 14:53:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -114,7 +114,6 @@ Bool_t TDecompChol::Decompose()
       {
         if (pU[rowOff+irow] <= 0) {
           Error("Decompose(const TMatrixDBase &","matrix not positive definite");
-          fU.Invalidate();
           return kFALSE;
         }
         pU[rowOff+irow] = TMath::Sqrt(pU[rowOff+irow]);
@@ -134,11 +133,15 @@ const TMatrixD TDecompChol::GetMatrix()
 {
 // Reconstruct the original matrix using the decomposition parts
 
-  if (TestBit(kSingular))
-    return TMatrixD();
+  if (TestBit(kSingular)) {
+    TMatrixD tmp; tmp.Invalidate();
+    return tmp;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
-      return TMatrixD();
+    if (!Decompose()) {
+      TMatrixD tmp; tmp.Invalidate();
+      return tmp;
+    }
   }
 
   const TMatrixD ut(TMatrixDBase::kTransposed,fU);
@@ -150,12 +153,12 @@ void TDecompChol::SetMatrix(const TMatrixDSym &a)
 {
   Assert(a.IsValid());
   
+  ResetStatus();
   if (a.GetNrows() != a.GetNcols() || a.GetRowLwb() != a.GetColLwb()) {
-    Error("SetMatrix(const TMatrixDBase &","matrix should be square");
+    Error("SetMatrix(const TMatrixDSym &","matrix should be square");
     return;
   } 
   
-  ResetStatus();
   SetBit(kMatrixSet);
   fCondition = -1.0;
     
@@ -174,11 +177,15 @@ Bool_t TDecompChol::Solve(TVectorD &b)
 // element is zero. The solution is returned in b.
 
   Assert(b.IsValid());
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b.Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b.Invalidate();
       return kFALSE;
+    }
   }
 
   if (fU.GetNrows() != b.GetNrows() || fU.GetRowLwb() != b.GetLwb()) {
@@ -199,6 +206,7 @@ Bool_t TDecompChol::Solve(TVectorD &b)
     if (pU[off_i+i] < fTol)
     {
       Error("Solve(TVectorD &b)","u[%d,%d]=%.4e < %.4e",i,i,pU[off_i+i],fTol);
+      b.Invalidate();
       return kFALSE;
     }
     Double_t r = pb[i];
@@ -237,18 +245,23 @@ TVectorD TDecompChol::Solve(const TVectorD &b,Bool_t &ok)
 //______________________________________________________________________________
 Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
 { 
-  const TMatrixDBase *b = cb.GetMatrix();
+  TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
   Assert(b->IsValid());
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b->Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b->Invalidate();
       return kFALSE;
+    }
   }
 
   if (fU.GetNrows() != b->GetNrows() || fU.GetRowLwb() != b->GetRowLwb())
   { 
     Error("Solve(TMatrixDColumn &cb","vector and matrix incompatible");
+    b->Invalidate();
     return kFALSE; 
   }
       
@@ -266,6 +279,7 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
     if (pU[off_i+i] < fTol)
     {
       Error("Solve(TMatrixDColumn &cb)","u[%d,%d]=%.4e < %.4e",i,i,pU[off_i+i],fTol);
+      b->Invalidate();
       return kFALSE;
     }
     Double_t r = pcb[off_i2];
@@ -375,7 +389,8 @@ TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b,const TVectorD &std)
 
   if (!AreCompatible(b,std)) {
     ::Error("NormalEqn","vectors b and std are not compatible");
-    return TVectorD();
+    TVectorD tmp; tmp.Invalidate();
+    return tmp;
   }
 
   TMatrixD Aw = A;

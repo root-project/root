@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.12 2004/06/11 07:29:39 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.13 2004/06/13 14:53:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -118,11 +118,8 @@ Bool_t TDecompLU::Decompose()
   else
     ok = DecomposeLUGauss(fLU,fIndex,fSign,fTol,nrZeros);
 
-  if (!ok) {
-    fLU.Invalidate();
-    SetBit(kSingular);
-  }
-  SetBit(kDecomposed);
+  if (!ok) SetBit(kSingular);
+  else     SetBit(kDecomposed);
 
   return ok;
 }
@@ -132,11 +129,15 @@ const TMatrixD TDecompLU::GetMatrix()
 {
 // Reconstruct the original matrix using the decomposition parts
 
-  if (TestBit(kSingular))
-    return TMatrixD();
+  if (TestBit(kSingular)) {
+    TMatrixD tmp; tmp.Invalidate();
+    return tmp;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
-      return TMatrixD();
+    if (!Decompose()) {
+      TMatrixD tmp; tmp.Invalidate();
+      return tmp;
+    }
   }
 
   TMatrixD L = fLU;
@@ -179,12 +180,12 @@ void TDecompLU::SetMatrix(const TMatrixD &a)
 {
   Assert(a.IsValid());
 
+  ResetStatus();
   if (a.GetNrows() != a.GetNcols() || a.GetRowLwb() != a.GetColLwb()) {
     Error("TDecompLU(const TMatrixD &","matrix should be square");
     return;
   }
 
-  ResetStatus();
   SetBit(kMatrixSet);
   fCondition = -1.0;
 
@@ -209,11 +210,15 @@ Bool_t TDecompLU::Solve(TVectorD &b)
 // been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b.Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b.Invalidate();
       return kFALSE;
+    }
   }
 
   if (fLU.GetNrows() != b.GetNrows() || fLU.GetRowLwb() != b.GetLwb()) {
@@ -234,6 +239,7 @@ Bool_t TDecompLU::Solve(TVectorD &b)
     const Int_t off_i = i*n;
     if (TMath::Abs(pLU[off_i+i]) < fTol) {
       Error("Solve(TVectorD &b)","LU[%d,%d]=%.4e < %.4e",i,i,pLU[off_i+i],fTol);
+      b.Invalidate();
       return kFALSE;
     }
   }
@@ -283,17 +289,22 @@ Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
 // Solve Ax=b assuming the LU form of A is stored in fLU, but assume b has *not*
 // been transformed.  Solution returned in b.
     
-  const TMatrixDBase *b = cb.GetMatrix();
+  TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
   Assert(b->IsValid());
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b->Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b->Invalidate();
       return kFALSE;
+    }
   }
     
   if (fLU.GetNrows() != b->GetNrows() || fLU.GetRowLwb() != b->GetRowLwb()) {
     Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
+    b->Invalidate();
     return kFALSE; 
   }   
     
@@ -307,6 +318,7 @@ Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
     const Int_t off_i = i*n;
     if (TMath::Abs(pLU[off_i+i]) < fTol) {
       Error("Solve(TMatrixDColumn &cb)","LU[%d,%d]=%.4e < %.4e",i,i,pLU[off_i+i],fTol);
+      b->Invalidate();
       return kFALSE;
     }
   }
@@ -352,11 +364,15 @@ Bool_t TDecompLU::TransSolve(TVectorD &b)
 // been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b.Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b.Invalidate();
       return kFALSE;
+    }
   }
 
   if (fLU.GetNrows() != b.GetNrows() || fLU.GetRowLwb() != b.GetLwb()) {
@@ -377,6 +393,7 @@ Bool_t TDecompLU::TransSolve(TVectorD &b)
     const Int_t off_i = i*n;
     if (TMath::Abs(pLU[off_i+i]) < fTol) {
       Error("TransSolve(TVectorD &b)","LU[%d,%d]=%.4e < %.4e",i,i,pLU[off_i+i],fTol);
+      b.Invalidate();
       return kFALSE;
     }
   }
@@ -429,17 +446,22 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
 // Solve A^T x=b assuming the LU form of A^T is stored in fLU, but assume b has *not*
 // been transformed.  Solution returned in b.
 
-  const TMatrixDBase *b = cb.GetMatrix();
+  TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
   Assert(b->IsValid());
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b->Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b->Invalidate();
       return kFALSE;
+    }
   }
 
   if (fLU.GetNrows() != b->GetNrows() || fLU.GetRowLwb() != b->GetRowLwb()) {
     Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");
+    b->Invalidate();
     return kFALSE;
   }
 
@@ -455,6 +477,7 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
     const Int_t off_i = i*n;
     if (TMath::Abs(pLU[off_i+i]) < fTol) {
       Error("TransSolve(TMatrixDColumn &cb)","LU[%d,%d]=%.4e < %.4e",i,i,pLU[off_i+i],fTol);
+      b->Invalidate();
       return kFALSE;
     }
   }
@@ -525,6 +548,7 @@ void TDecompLU::Det(Double_t &d1,Double_t &d2)
   d2 = fDet2;
 }
 
+//______________________________________________________________________________
 void TDecompLU::Print(Option_t *opt) const
 {
   TDecompBase::Print(opt);
@@ -536,7 +560,6 @@ void TDecompLU::Print(Option_t *opt) const
   fLU.Print("fLU");
 }
 
-//______________________________________________________________________________
 //______________________________________________________________________________
 TDecompLU &TDecompLU::operator=(const TDecompLU &source)
 { 
@@ -734,12 +757,48 @@ Bool_t TDecompLU::DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
 }
 
 //______________________________________________________________________________
-Bool_t TDecompLU::InvertLU(TMatrixD &lu,Int_t *index,Double_t tol)
+Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
 {
   // Calculate matrix inversion through in place forward/backward substitution
+ 
+  if (lu.GetNrows() != lu.GetNcols() || lu.GetRowLwb() != lu.GetColLwb()) {
+    ::Error("InvertLU","matrix should be square");
+    lu.Invalidate();
+    return kFALSE;
+  }
 
   const Int_t     n   = lu.GetNcols();
         Double_t *pLU = lu.GetMatrixArray();
+
+  Int_t worki[kWorkMax];
+  Bool_t isAllocatedI = kFALSE;
+  Int_t *index = worki;
+  if (n > kWorkMax) {
+    isAllocatedI = kTRUE;
+    index = new Int_t[n];
+  }
+
+  Double_t sign = 1.0;
+  Int_t nrZeros = 0;
+  if (!DecomposeLUCrout(lu,index,sign,tol,nrZeros) || nrZeros > 0) {
+    if (isAllocatedI)
+      delete [] index;
+    lu.Invalidate();
+    return kFALSE;
+  }
+
+  if (det) {
+    Double_t d1;
+    Double_t d2;
+    const TVectorD diagv = TMatrixDDiag_const(lu);
+    DiagProd(diagv,tol,d1,d2);
+    d1 *= sign;
+    if (TMath::Abs(d2) > 52.0) {
+      ::Warning("InvertLU","Determinant under/over-flows double: det= %.4f 2^%.0f",d1,d2);
+      *det =  0.0;
+    } else
+      *det = d1*TMath::Power(2.0,d2);
+  }
 
   //  Form inv(U).
 
@@ -747,13 +806,6 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Int_t *index,Double_t tol)
 
   for (j = 0; j < n; j++) {
     const Int_t off_j = j*n;
-
-    // Check for zero diagonals
-    if (TMath::Abs(pLU[off_j+j]) < tol) {
-      ::Error("InvertLU()","LU[%d,%d]=%.4e < %.4e",j,j,pLU[off_j+j],tol);
-      lu.Invalidate();
-      return kFALSE;
-    }
 
     pLU[off_j+j] = 1./pLU[off_j+j];
     const Double_t LU_jj = -pLU[off_j+j];
@@ -781,12 +833,12 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Int_t *index,Double_t tol)
 
   // Solve the equation inv(A)*L = inv(U) for inv(A).
 
-  Double_t work[kWorkMax];
-  Bool_t isAllocated = kFALSE;
-  Double_t *pWork = work;
+  Double_t workd[kWorkMax];
+  Bool_t isAllocatedD = kFALSE;
+  Double_t *pWorkd = workd;
   if (n > kWorkMax) {
-    isAllocated = kTRUE;
-    pWork = new Double_t[n];
+    isAllocatedD = kTRUE;
+    pWorkd = new Double_t[n];
   }
 
   for (j = n-1; j >= 0; j--) {
@@ -794,7 +846,7 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Int_t *index,Double_t tol)
   // Copy current column j of L to WORK and replace with zeros.
     for (Int_t i = j+1; i < n; i++) {
       const Int_t off_i = i*n;
-      pWork[i] = pLU[off_i+j];
+      pWorkd[i] = pLU[off_i+j];
       pLU[off_i+j] = 0.0;
     }
 
@@ -806,7 +858,7 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Int_t *index,Double_t tol)
 
       for (Int_t irow = 0; irow < n; irow++) {
         Double_t sum = 0.;
-        const Double_t *sp = pWork+j+1; // Source vector ptr
+        const Double_t *sp = pWorkd+j+1; // Source vector ptr
         for (Int_t icol = 0; icol < n-1-j ; icol++)
           sum += *mp++ * *sp++;
         *tp = -sum + *tp;
@@ -816,8 +868,8 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Int_t *index,Double_t tol)
     }
   }
 
-  if (isAllocated)
-    delete [] pWork;
+  if (isAllocatedD)
+    delete [] pWorkd;
 
   // Apply column interchanges.
   for (j = n-1; j >= 0; j--) {
@@ -831,6 +883,9 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Int_t *index,Double_t tol)
       }
     }
   }
+
+  if (isAllocatedI)
+    delete [] index;
 
   return kTRUE;
 }

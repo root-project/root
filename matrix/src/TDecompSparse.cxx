@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.6 2004/06/02 15:42:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.7 2004/06/13 14:53:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Apr 2004
 
 /*************************************************************************
@@ -133,6 +133,8 @@ void TDecompSparse::CopyUpperTriang(const TMatrixDSparse &a,Double_t *b)
 //______________________________________________________________________________
 void TDecompSparse::SetMatrix(const TMatrixDSparse &a)
 {
+  ResetStatus();
+
   fA.Use(*const_cast<TMatrixDSparse *>(&a));
   fRowLwb    = fA.GetRowLwb();
   fColLwb    = fA.GetColLwb();
@@ -195,7 +197,6 @@ void TDecompSparse::SetMatrix(const TMatrixDSparse &a)
 //  fFact.Set((Int_t) 1.2*this->MinRealWorkspace()+1);
   fFact.Set((Int_t) 3*this->MinRealWorkspace()+1);
 
-  ResetStatus();
   SetBit(kMatrixSet);
 }
 
@@ -306,11 +307,15 @@ Bool_t TDecompSparse::Solve(TVectorD &b)
 // Solve Ax=b . Solution returned in b.
 
   Assert(b.IsValid());
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b.Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b.Invalidate();
       return kFALSE;
+    }
   }
 
   if (fNrows != b.GetNrows() || fRowLwb != b.GetLwb())

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixDCramerInv.h,v 1.28 2003/12/11 13:39:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixDCramerInv.h,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Jan 2004
 
 /*************************************************************************
@@ -34,11 +34,11 @@
 class TMatrixDCramerInv {
 
 public:
-  static Int_t Inv2x2(TMatrixD &m,Double_t *determ);
-  static Int_t Inv3x3(TMatrixD &m,Double_t *determ);
-  static Int_t Inv4x4(TMatrixD &m,Double_t *determ);
-  static Int_t Inv5x5(TMatrixD &m,Double_t *determ);
-  static Int_t Inv6x6(TMatrixD &m,Double_t *determ);
+  static Bool_t Inv2x2(TMatrixD &m,Double_t *determ);
+  static Bool_t Inv3x3(TMatrixD &m,Double_t *determ);
+  static Bool_t Inv4x4(TMatrixD &m,Double_t *determ);
+  static Bool_t Inv5x5(TMatrixD &m,Double_t *determ);
+  static Bool_t Inv6x6(TMatrixD &m,Double_t *determ);
 
   ClassDef(TMatrixDCramerInv,0)  //Interface to math routines
 };

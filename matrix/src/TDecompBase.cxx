@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.13 2004/05/27 06:39:53 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.14 2004/06/13 14:53:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -18,17 +18,6 @@
 // It or its derived classes have installed the methods to solve         //
 // equations,invert matrices and calculate determinants while monitoring //
 // the accuracy.                                                         //
-//                                                                       //
-// When the constructor is called with a "const" matrix, the original    //
-// matrix "survives" (of course) . Some classes (LU) have also a non-    //
-// "const" constructor available . Here the original matrix is adopted   //
-// by the decomposition class (See Use in TMatrixDBase) to store the     //
-// decomposed matrix, thereby avoiding new memory allocation.            //
-//                                                                       //
-// The decomposition (which is called by the constructor) fails when the //
-// matrix is singular  or not positive-definite in case of Cholesky      //
-// This can be checked before applying the decomposition by checking the //
-// matrix through GetDecompMatrix()                                      //
 //                                                                       //
 // Each derived class has always the following methods available:        //
 //                                                                       //
@@ -75,7 +64,6 @@
 //  with the solution .                                                  //
 //                                                                       //
 // MultiSolve(TMatrixD    &B)                                            //
-// MultiSolve(TMatrixDSym &B)                                            //
 //  Solve A X = B . where X and are now matrices . X is supplied through //
 //  the argument and replaced with the solution .                        //
 //                                                                       //
@@ -116,10 +104,7 @@
 // procedure) .                                                          //
 //                                                                       //
 // Code for this could look as follows:                                  //
-// const TMatrixD ab = Abs(a);                                           //
-// const Int_t imax = TMath::LocMax(ab.GetNoElements(),                  //
-//                                    ab.GetMatrixArray());              //
-// const Double_t max_abs = ab.GetMatrixArray()[imax];                   //
+// const Double_t max_abs = Abs(a).Max();                                //
 // const Double_t scale = TMath::Min(max_abs,1.);                        //
 // a.SetTol(a.GetTol()*scale);                                           //
 //                                                                       //
@@ -271,28 +256,6 @@ Double_t TDecompBase::Condition()
 
 //______________________________________________________________________________
 Bool_t TDecompBase::MultiSolve(TMatrixD &B)
-{
-// Solve set of equations with RHS in columns of B
-
-  const TMatrixDBase &m = GetDecompMatrix();
-  Assert(m.IsValid() && B.IsValid());
-
-  const Int_t colLwb = B.GetColLwb();
-  const Int_t colUpb = B.GetColUpb();
-  Bool_t status = kTRUE;
-  for (Int_t icol = colLwb; icol <= colUpb && status; icol++) {
-    TMatrixDColumn b(B,icol);
-    status &= Solve(b);
-  }
-
-  if (!status)
-    B.Invalidate();
-
-  return status;
-}
-
-//______________________________________________________________________________
-Bool_t TDecompBase::MultiSolve(TMatrixDSym &B)
 {
 // Solve set of equations with RHS in columns of B
 

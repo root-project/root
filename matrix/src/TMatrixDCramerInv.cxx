@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixDCramerInv.cxx,v 1.4 2004/02/18 14:36:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixDCramerInv.cxx,v 1.5 2004/02/19 17:43:27 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Jan 2004
 
 /*************************************************************************
@@ -35,8 +35,14 @@
 #include "TMatrixDCramerInv.h"
 
 //______________________________________________________________________________
-Int_t TMatrixDCramerInv::Inv2x2(TMatrixD &m,Double_t *determ)
+Bool_t TMatrixDCramerInv::Inv2x2(TMatrixD &m,Double_t *determ)
 {
+  if (m.GetNrows() != 2 || m.GetNcols() != 2 || m.GetRowLwb() != m.GetColLwb()) {
+    Error("Inv2x2","matrix should be square 2x2");
+    m.Invalidate();
+    return kFALSE;
+  }
+
   Double_t *pM = m.GetMatrixArray();
 
   const Double_t det = pM[0] * pM[3] - pM[2] * pM[1];
@@ -58,8 +64,14 @@ Int_t TMatrixDCramerInv::Inv2x2(TMatrixD &m,Double_t *determ)
 }
 
 //______________________________________________________________________________
-Int_t TMatrixDCramerInv::Inv3x3(TMatrixD &m,Double_t *determ)
+Bool_t TMatrixDCramerInv::Inv3x3(TMatrixD &m,Double_t *determ)
 {
+  if (m.GetNrows() != 3 || m.GetNcols() != 3 || m.GetRowLwb() != m.GetColLwb()) {
+    Error("Inv3x3","matrix should be square 3x3");
+    m.Invalidate();
+    return kFALSE;
+  }
+
   Double_t *pM = m.GetMatrixArray();
 
   const Double_t c00 = pM[4] * pM[8] - pM[5] * pM[7];
@@ -136,8 +148,14 @@ Int_t TMatrixDCramerInv::Inv3x3(TMatrixD &m,Double_t *determ)
 #define F33 15
 
 //______________________________________________________________________________
-Int_t TMatrixDCramerInv::Inv4x4(TMatrixD &m,Double_t *determ)
+Bool_t TMatrixDCramerInv::Inv4x4(TMatrixD &m,Double_t *determ)
 {
+  if (m.GetNrows() != 4 || m.GetNcols() != 4 || m.GetRowLwb() != m.GetColLwb()) {
+    Error("Inv4x4","matrix should be square 4x4");
+    m.Invalidate();
+    return kFALSE;
+  }
+
   Double_t *pM = m.GetMatrixArray();
 
   // Find all NECESSARY 2x2 dets:  (18 of them)
@@ -265,8 +283,14 @@ Int_t TMatrixDCramerInv::Inv4x4(TMatrixD &m,Double_t *determ)
 #define M44 24
 
 //______________________________________________________________________________
-Int_t TMatrixDCramerInv::Inv5x5(TMatrixD &m,Double_t *determ)
+Bool_t TMatrixDCramerInv::Inv5x5(TMatrixD &m,Double_t *determ)
 {
+  if (m.GetNrows() != 5 || m.GetNcols() != 5 || m.GetRowLwb() != m.GetColLwb()) {
+    Error("Inv5x5","matrix should be square 5x5");
+    m.Invalidate();
+    return kFALSE;
+  }
+
   Double_t *pM = m.GetMatrixArray();
 
   // Find all NECESSARY 2x2 dets:  (30 of them)
@@ -489,8 +513,14 @@ Int_t TMatrixDCramerInv::Inv5x5(TMatrixD &m,Double_t *determ)
 #define A55 35
 
 //______________________________________________________________________________
-Int_t TMatrixDCramerInv::Inv6x6(TMatrixD &m,Double_t *determ)
+Bool_t TMatrixDCramerInv::Inv6x6(TMatrixD &m,Double_t *determ)
 {
+  if (m.GetNrows() != 6 || m.GetNcols() != 6 || m.GetRowLwb() != m.GetColLwb()) {
+    Error("Inv6x6","matrix should be square 6x6");
+    m.Invalidate();
+    return kFALSE;
+  }
+
   Double_t *pM = m.GetMatrixArray();
 
   // Find all NECESSARY 2x2 dets:  (45 of them)

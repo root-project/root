@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.15 2004/05/27 20:20:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.16 2004/06/13 14:53:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -505,11 +505,15 @@ const TMatrixD TDecompSVD::GetMatrix()
 {
 // Reconstruct the original matrix using the decomposition parts
 
-  if (TestBit(kSingular))
-    return TMatrixD();
+  if (TestBit(kSingular)) {
+    TMatrixD tmp; tmp.Invalidate();
+    return tmp;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
-      return TMatrixD();
+    if (!Decompose()) {
+      TMatrixD tmp; tmp.Invalidate();
+      return tmp;
+    }
   }
 
   const Int_t nRows = fU.GetNrows();
@@ -524,12 +528,13 @@ const TMatrixD TDecompSVD::GetMatrix()
 void TDecompSVD::SetMatrix(const TMatrixD &a)
 {
   Assert(a.IsValid());
+
+  ResetStatus();
   if (a.GetNrows() < a.GetNcols()) {
     Error("TDecompSVD(const TMatrixD &","matrix rows should be >= columns");
     return;
   }
 
-  ResetStatus();
   SetBit(kMatrixSet);
   fCondition = -1.0;
 
@@ -556,11 +561,15 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
 // For m > n , x  is the least-squares solution of min(A . x - b)
 
   Assert(b.IsValid());
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b.Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b.Invalidate();
       return kFALSE;
+    }
   }
 
   if (fU.GetNrows() != b.GetNrows() || fU.GetRowLwb() != b.GetLwb())
@@ -618,18 +627,23 @@ TVectorD TDecompSVD::Solve(const TVectorD &b,Bool_t &ok)
 //______________________________________________________________________________
 Bool_t TDecompSVD::Solve(TMatrixDColumn &cb)
 { 
-  const TMatrixDBase *b = cb.GetMatrix();
+  TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
   Assert(b->IsValid());    
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b->Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b->Invalidate();
       return kFALSE;
+    }
   }
 
   if (fU.GetNrows() != b->GetNrows() || fU.GetRowLwb() != b->GetRowLwb())
   { 
     Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
+    b->Invalidate();
     return kFALSE; 
   }     
       
@@ -670,11 +684,15 @@ Bool_t TDecompSVD::TransSolve(TVectorD &b)
 // Solve A^T x=b assuming the SVD form of A is stored . Solution returned in b.
 
   Assert(b.IsValid());
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b.Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b.Invalidate();
       return kFALSE;
+    }
   }
 
   if (fU.GetNcols() != fU.GetNrows()) {
@@ -726,23 +744,29 @@ TVectorD TDecompSVD::TransSolve(const TVectorD &b,Bool_t &ok)
 //______________________________________________________________________________
 Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
 {
-  const TMatrixDBase *b = cb.GetMatrix();
+  TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
   Assert(b->IsValid());
-  if (TestBit(kSingular))
+  if (TestBit(kSingular)) {
+    b->Invalidate();
     return kFALSE;
+  }
   if ( !TestBit(kDecomposed) ) {
-    if (!Decompose())
+    if (!Decompose()) {
+      b->Invalidate();
       return kFALSE;
+    }
   }
 
   if (fU.GetNcols() != fU.GetNrows()) {
     Error("TransSolve(TMatrixDColumn &","matrix should be square");
+    b->Invalidate();
     return kFALSE;
   }
   
   if (fV.GetNrows() != b->GetNrows() || fV.GetRowLwb() != b->GetRowLwb())
   {
     Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");
+    b->Invalidate();
     return kFALSE;
   } 
     

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.17 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.18 2004/06/22 19:57:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -869,42 +869,9 @@ TMatrixF &TMatrixF::Invert(Double_t *det)
 
   Assert(IsValid());
 
-  if (GetNrows() != GetNcols() || GetRowLwb() != GetColLwb()) {
-    Error("Invert()","matrix should be square");
-    Invalidate();
-    return *this;
-  }
-
-  Int_t work[kWorkMax];
-  Bool_t isAllocated = kFALSE;
-  Int_t *index = work;
-  if (fNcols > kWorkMax) {
-    isAllocated = kTRUE;
-    index = new Int_t[fNcols];
-  }
-
-  TMatrixD tmp(*this);
-  Double_t sign = 1.0;
-  Int_t nrZeros = 0;
-  TDecompLU::DecomposeLUCrout(tmp,index,sign,fTol,nrZeros);
-  if (det) {
-    Double_t d1;
-    Double_t d2;
-    const TVectorD diagv = TMatrixDDiag_const(tmp);
-    TDecompBase::DiagProd(diagv,fTol,d1,d2);
-    d1 *= sign;
-    if (TMath::Abs(d2) > 52.0) {
-      Warning("Invert(Double_t *)","Determinant under/over-flows double: det= %.4f 2^%.0f",d1,d2);
-      *det =  0.0;
-    } else
-      *det = d1*TMath::Power(2.0,d2);
-  }
-
-  TDecompLU::InvertLU(tmp,index,fTol);
+  TMatrixD tmp = *this;
+  TDecompLU::InvertLU(tmp,fTol,det);
   *this = tmp;
-
-  if (isAllocated)
-    delete [] index;
 
   return *this;
 }
@@ -916,85 +883,51 @@ TMatrixF &TMatrixF::InvertFast(Double_t *det)
 
   Assert(IsValid());
 
-  if (GetNrows() != GetNcols() || GetRowLwb() != GetColLwb()) {
-    Error("Invert()","matrix should be square");
-    Invalidate();
-    return *this;
-  }
-
   const Char_t nRows = Char_t(GetNrows());
   switch (nRows) {
     case 1:
     {
-      Float_t *pM = this->GetMatrixArray();
-      if (*pM == 0.) Invalidate();
-      else           *pM = 1.0/(*pM);
+     if (GetNrows() != GetNcols() || GetRowLwb() != GetColLwb()) {
+        Error("Invert()","matrix should be square");
+        Invalidate();
+      } else {
+        Float_t *pM = this->GetMatrixArray();
+        if (*pM == 0.) Invalidate();
+        else           *pM = 1.0/(*pM);
+      }
       return *this;
     }
     case 2:
     {
-      if (!TMatrixFCramerInv::Inv2x2(*this,det))
-        Invalidate();
+      TMatrixFCramerInv::Inv2x2(*this,det);
       return *this;
     }
     case 3:
     {
-      if (!TMatrixFCramerInv::Inv3x3(*this,det))
-        Invalidate();
+      TMatrixFCramerInv::Inv3x3(*this,det);
       return *this;
     }
     case 4:
     {
-      if (!TMatrixFCramerInv::Inv4x4(*this,det))
-        Invalidate();
+      TMatrixFCramerInv::Inv4x4(*this,det);
       return *this;
     }
     case 5:
     {
-      if (!TMatrixFCramerInv::Inv5x5(*this,det))
-        Invalidate();
+      TMatrixFCramerInv::Inv5x5(*this,det);
       return *this;
     }
     case 6:
     {
-      if (!TMatrixFCramerInv::Inv6x6(*this,det))
-        Invalidate();
+      TMatrixFCramerInv::Inv6x6(*this,det);
       return *this;
     }
 
     default:
     {
-      Int_t work[kWorkMax];
-      Bool_t isAllocated = kFALSE;
-      Int_t *index = work;
-      if (fNcols > kWorkMax) {
-        isAllocated = kTRUE;
-        index = new Int_t[fNcols];
-      }
-
-      TMatrixD tmp(*this);
-      Double_t sign = 1.0;
-      Int_t nrZeros;
-      TDecompLU::DecomposeLUCrout(tmp,index,sign,fTol,nrZeros);
-      if (det) {
-        Double_t d1;
-        Double_t d2;
-        const TVectorD diagv = TMatrixDDiag_const(tmp);
-        TDecompBase::DiagProd(diagv,fTol,d1,d2);
-        d1 *= sign;
-        if (TMath::Abs(d2) > 52.0) {
-          Warning("Invert(Double_t *)","Determinant under/over-flows double: det= %.4f 2^%.0f",d1,d2);
-          *det =  0.0;
-        } else
-          *det = d1*TMath::Power(2.0,d2);
-      }
-
-      TDecompLU::InvertLU(tmp,index,fTol);
+      TMatrixD tmp = *this;
+      TDecompLU::InvertLU(tmp,fTol,det);
       *this = tmp;
-
-      if (isAllocated)
-        delete [] index;
-
       return *this;
     }
   }

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.8 2004/05/27 20:20:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.9 2004/06/13 14:53:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -37,8 +37,9 @@ protected :
   Int_t    fRowLwb;    // Row    lower bound of decomposed matrix
   Int_t    fColLwb;    // Column lower bound of decomposed matrix
 
-  void  ResetStatus() { for (Int_t i = 14; i < 22; i++) ResetBit(BIT(i)); }
-  Int_t Hager      (Double_t& est,Int_t iter=5);
+          void  ResetStatus() { for (Int_t i = 14; i < 22; i++) ResetBit(BIT(i)); }
+          Int_t Hager      (Double_t& est,Int_t iter=5);
+  static  void  DiagProd   (const TVectorD &diag,Double_t tol,Double_t &d1,Double_t &d2);
 
   virtual const TMatrixDBase &GetDecompMatrix() const = 0;
 
@@ -80,12 +81,9 @@ public :
   virtual TVectorD TransSolve (const TVectorD &b,Bool_t &ok) = 0;
   virtual Bool_t   TransSolve (      TMatrixDColumn& b)      = 0;
 
-  virtual Bool_t   MultiSolve (TMatrixD    &B);
-  virtual Bool_t   MultiSolve (TMatrixDSym &B);
-  virtual void     Invert     (TMatrixD    &inv);
+  virtual Bool_t   MultiSolve (TMatrixD &B);
+  virtual void     Invert     (TMatrixD &inv);
   virtual TMatrixD Invert     ();
-
-  static  void     DiagProd   (const TVectorD &diag,Double_t tol,Double_t &d1,Double_t &d2);
 
   void Print(Option_t *opt="") const;
 
