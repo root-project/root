@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.7 2003/10/07 14:03:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.8 2005/02/07 18:02:37 rdm Exp $
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************
@@ -93,7 +93,7 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char *cmd)
 //    gSystem->Exec(reinitCmd.Data());
    Int_t port = 0;
 
-   TString claimCmd = Form("condor_cod request -name %s -timeout 10 2>/tmp/error.condor.proof.$$", vm );
+   TString claimCmd = Form("condor_cod request -name %s -timeout 10 2>>/tmp/condor.proof.%d", vm, gSystem->GetUid() );
 
    PDB(kCondor,2) Info("ClaimVM","command: %s", claimCmd.Data());
    FILE  *pipe = gSystem->OpenPipe(claimCmd, "r");
@@ -272,8 +272,8 @@ TCondorSlave *TCondor::Claim(const char *vmname, const char *cmd)
 //______________________________________________________________________________
 Bool_t TCondor::SetState(EState state)
 {
-   PDB(kCondor,1) Info("SetState","state: %s",
-                       state == kSuspended ? "kSuspended" : "kActive");
+   PDB(kCondor,1) Info("SetState","state: %s (%ld)",
+                       state == kSuspended ? "kSuspended" : "kActive", long(gSystem->Now()));
    TIter next(fClaims);
    TCondorSlave *claim;
    while((claim = (TCondorSlave*) next()) != 0) {
