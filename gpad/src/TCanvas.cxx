@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.57 2004/03/08 08:04:25 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.58 2004/03/10 16:23:24 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -743,7 +743,7 @@ TObject *TCanvas::DrawClonePad()
   pad->ResizePad();
   pad->Modified();
   pad->Update();
-  padsav->cd();
+  if (padsav) padsav->cd();
   return 0;
 }
 
@@ -874,7 +874,7 @@ void TCanvas::Flush()
       CopyPixmaps();
       gVirtualX->UpdateWindow(1);
    }
-   padsav->cd();
+   if (padsav) padsav->cd();
 }
 
 //______________________________________________________________________________
