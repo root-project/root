@@ -76,8 +76,15 @@ endif
 ifneq ($(SHIFTLIB),)
 MODULES      += rfio
 endif
+ifneq ($(DCAPINCDIR),)
 ifneq ($(DCAPLIB),)
 MODULES      += dcache
+endif
+endif
+ifneq ($(ALIENINCDIR),)
+ifneq ($(ALIENCLILIB),)
+MODULES      += alien
+endif
 endif
 ifneq ($(OSTHREADLIB),)
 MODULES      += thread
@@ -107,7 +114,7 @@ endif
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread pythia \
                 pythia6 venus star mysql pgsql sapdb srputils x3d rootx \
-                rootd proofd dcache hbook
+                rootd proofd dcache hbook alien
 MODULES      := $(sort $(MODULES))  # removes duplicates
 endif
 

@@ -72,6 +72,10 @@ DCAPLIBDIR     := @dcaplibdir@
 DCAPLIB        := @dcaplib@
 DCAPINCDIR     := @dcapincdir@
 
+ALIENLIBDIR    := @alienlibdir@
+ALIENCLILIB    := @alienlib@
+ALIENINCDIR    := @alienincdir@
+
 FPYTHIALIBDIR  := @pythialibdir@
 FPYTHIALIB     := @pythialib@
 

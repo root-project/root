@@ -20,6 +20,7 @@ found_hdr=no
 noact="no"
 
 enable_afs=no
+enable_alien=yes
 enable_cern=yes
 enable_dcache=yes
 enable_krb5=yes
@@ -47,7 +48,7 @@ options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
          enable_pythia enable_pythia6 enable_rfio enable_dcache enable_rpath \
          enable_sapdb enable_shadowpw enable_shared enable_soversion \
          enable_srp enable_star enable_thread enable_ttf enable_venus \
-         enable_krb5 enable_exceptions enable_openiv"
+         enable_krb5 enable_exceptions enable_openiv enable_alien"
 
 
 ######################################################################
@@ -300,8 +301,9 @@ confhelp() {
     echo "   mysql           MySQL support, requires libmysqlclient"
     echo "   pgsql           PostgreSQL support, requires libpq"
     echo "   sapdb           SapDB support, requires libsqlod and libsqlrte"
-    echo "   rfio            SHIFT support, requires libshift.a from CERN"
-    echo "   dcache          dCache support, requires dcap library from DESY"
+    echo "   rfio            SHIFT support, requires libshift from CERN"
+    echo "   dcache          dCache support, requires libdcap from DESY"
+    echo "   alien           AliEn support, requires libAliEn from ALICE"
     echo "   srp             SRP support, requires SRP source tree"
     echo "   afs             AFS support, requires AFS libs and objects"
     echo "   krb5            Kerberos5 support, requires Kerberos libs"
@@ -333,6 +335,8 @@ confhelp() {
     echo "   shift-libdir    RFIO support, location of libshift"
     echo "   dcap-incdir     dCache support, location of dcap.h"
     echo "   dcap-libdir     dCache support, location of libdcap"
+    echo "   alien-incdir    AliEn support, location of AliEn.h"
+    echo "   alien-libdir    AliEn support, location of libAliEn"
     echo "   srp             Secure Remote Passwd support, location of SRP distribution"
     echo "   srp-incdir      SRP support, location header of t_server.h"
     echo "   srp-libdir      SRP support, location header of libsrp.a"
@@ -421,6 +425,8 @@ if test $# -gt 0 ; then
       --with-shift-libdir=*)   shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
+      --with-alien-incdir=*)   alienincdir=$optarg   ; enable_alien="yes"   ;;
+      --with-alien-libdir=*)   alienlibdir=$optarg   ; enable_alien="yes"   ;;
       --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-srp-incdir=*)     srpincdir=$optarg     ; enable_srp="yes"     ;;
       --with-srp-libdir=*)     srplibdir=$optarg     ; enable_srp="yes"     ;;
@@ -815,20 +821,20 @@ if test ! "x$enable_sapdb" = "xno"; then
     check_header "sql.h" "$sapdbincdir" $SAPDB $SAPDB/include \
 	/opt/sapdb/interfaces/odbc/incl /usr/sapdb/interfaces/odbc/incl \
 	/usr/sapdb/include /usr/local/sapdb/interfaces/odbc/incl \
-        /usr/sapdb/web/incl /usr/include/sapdb /usr/local/include/sapdb \
+	/usr/sapdb/web/incl /usr/include/sapdb /usr/local/include/sapdb \
 	/usr/local/sapdb/include /usr/local/sapdb/web/incl /usr/sapdb \
-        /usr/local/sapdb /opt/sapdb /opt/sapdb/include /opt/sapdb/web/incl
+	/usr/local/sapdb /opt/sapdb /opt/sapdb/include /opt/sapdb/web/incl
     sapdbinc=$found_hdr
     sapdbincdir=$found_dir
 
     check_library "libsqlod" "$enable_shared" "$sapdblibdir" \
 	$SAPDB $SAPDB/lib /opt/sapdb/interfaces/odbc/lib \
-                 /usr/sapdb/interfaces/odbc/lib /usr/spadb/lib \
-                 /usr/local/sapdb/interfaces/odbc/lib /usr/local/sapdb/lib \
-                 /usr/lib/sapdb /usr/local/lib/sapdb /usr/sapdb/lib \
-                 /usr/local/sapdb/lib /usr/sapdb /usr/local/sapdb \
-                 /opt/sapdb /opt/sapdb/lib /usr/sapdb/web/lib \
-            /usr/local/sapdb/web/lib /opt/sapdb/web/lib
+	/usr/sapdb/interfaces/odbc/lib /usr/spadb/lib \
+	/usr/local/sapdb/interfaces/odbc/lib /usr/local/sapdb/lib \
+	/usr/lib/sapdb /usr/local/lib/sapdb /usr/sapdb/lib \
+	/usr/local/sapdb/lib /usr/sapdb /usr/local/sapdb \
+	/opt/sapdb /opt/sapdb/lib /usr/sapdb/web/lib \
+	/usr/local/sapdb/web/lib /opt/sapdb/web/lib
     sapdblib=$found_lib
     sapdblibdir=$found_dir
 
@@ -965,9 +971,8 @@ fi
 # Check for libdcap
 #
 if test ! "x$enable_dcache" = "xno" ; then
-    check_header "dcap.h" /products/dcache/include /opt/dcache/include \
-	/usr/include /usr/local/include
-
+    check_header "dcap.h" "$dcapincdir" /products/dcache/include \
+	/opt/dcache/include /usr/include /usr/local/include
     dcapincdir=$found_dir
 
     check_library "libdcap" "$enable_shared" "$dcaplibdir" \
@@ -975,8 +980,33 @@ if test ! "x$enable_dcache" = "xno" ; then
     dcaplib=$found_lib
     dcaplibdir=$found_dir
 
-    if test "x$dcapnincdir" = "x" || test "x$dcaplib" = "x"; then
+    if test "x$dcapincdir" = "x" || test "x$dcaplib" = "x"; then
         enable_dcache="no"
+    fi
+fi
+
+######################################################################
+#
+### echo %%% AliEn Support - Third party libraries
+#
+# (See http://alien.cern.ch)
+#
+# Check for libAliEn
+#
+if test ! "x$enable_alien" = "xno" ; then
+    check_header "AliEn.h" "$alienincdir" $ALIEN $ALIEN/include \
+	/opt/alien/include /usr/local/alien/include /usr/include \
+	/usr/local/include
+    alienincdir=$found_dir
+
+    check_library "libAliEn" "$enable_shared" "$alienlibdir" \
+	$ALIEN $ALIEN/lib /opt/alien/lib /usr/local/alien/lib \
+	/usr/lib /usr/local/lib
+    alienlib=$found_lib
+    alienlibdir=$found_dir
+
+    if test "x$alienincdir" = "x" || test "x$alienlib" = "x"; then
+        enable_alien="no"
     fi
 fi
 
@@ -1415,6 +1445,9 @@ sed -e "s|@architecture@|$arch|"            \
     -e "s|@dcapincdir@|$dcapincdir|"        \
     -e "s|@dcaplibdir@|$dcaplibdir|"        \
     -e "s|@dcaplib@|$dcaplib|"              \
+    -e "s|@alienincdir@|$alienincdir|"      \
+    -e "s|@alienlibdir@|$alienlibdir|"      \
+    -e "s|@alienlib@|$alienlib|"            \
     -e "s|@srplib@|$srplib|"                \
     -e "s|@srpincdir@|$srpincdir|"          \
     -e "s|@srplibdir@|$srplibdir|"          \
