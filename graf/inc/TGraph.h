@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.27 2002/07/16 08:04:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.28 2002/07/16 21:59:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -108,7 +108,6 @@ public:
         virtual void     PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *option="");
         virtual void     PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *option="");
         virtual void     Print(Option_t *chopt="") const;
-        static  void     RemoveFunction(TGraph *gr, TObject *obj);
         virtual Int_t    RemovePoint(); // *MENU*
         virtual Int_t    RemovePoint(Int_t ipoint);
         virtual void     SavePrimitive(ofstream &out, Option_t *option);

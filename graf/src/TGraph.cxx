@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.81 2002/09/06 16:32:56 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.82 2002/09/13 16:32:25 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -24,8 +24,10 @@
 #include "Foption.h"
 #include "TRandom.h"
 #include "TPaveStats.h"
+#include "TPluginManager.h"
 #include "TVirtualFitter.h"
 #include "TVirtualPad.h"
+#include "TVirtualUtilPad.h"
 #include "TVirtualHistPainter.h"
 
 TVirtualFitter *grFitter;
@@ -1190,14 +1192,19 @@ void TGraph::FitPanel()
       Error("FitPanelGraph", "need to draw graph first");
       return;
    }
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   if (!lc->FindObject("R__fitpanelgraph")) {
-      gROOT->ProcessLine("TFitPanelGraph *R__fitpanel = "
-                         "new TFitPanelGraph(\"R__fitpanelgraph\",\"Fit Panel\","
-                         "300,400);");
-      return;
+
+   //The pad utility manager is required (a plugin)
+   TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+   if (!util) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
+          if (h->LoadPlugin() == -1)
+            return;
+          h->ExecPlugin(0);
+          util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+      }
    }
-   gROOT->ProcessLine("R__fitpanelgraph->SetDefaults(); R__fitpanelgraph->Show();");
+   util->FitPanelGraph();
 }
 //______________________________________________________________________________
 Double_t TGraph::GetCorrelationFactor() const
@@ -3051,16 +3058,6 @@ void TGraph::Print(Option_t *) const
    for (Int_t i=0;i<fNpoints;i++) {
       printf("x[%d]=%g, y[%d]=%g\n",i,fX[i],i,fY[i]);
    }
-}
-
-
-//______________________________________________________________________________
-void TGraph::RemoveFunction(TGraph *gr, TObject *obj)
-{
-//   Remove obj from the list of functions of the TGraph gr
-//   this function is called by TF1 destructor
-
-   gr->GetListOfFunctions()->Remove(obj);
 }
 
 //______________________________________________________________________________
