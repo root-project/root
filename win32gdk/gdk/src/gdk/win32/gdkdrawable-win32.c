@@ -410,6 +410,7 @@ gdk_win32_draw_polygon(GdkDrawable * drawable,
 {
    GdkGCPrivate *gc_private = (GdkGCPrivate *) gc;
    GdkGCWin32Data *gc_data = GDK_GC_WIN32DATA(gc_private);
+   HGDIOBJ oldpen_or_brush;
    HDC hdc;
    POINT *pts;
    gboolean ok = TRUE;
@@ -440,7 +441,7 @@ gdk_win32_draw_polygon(GdkDrawable * drawable,
       if (pts[0].x == pts[npoints - 1].x && pts[0].y == pts[npoints - 1].y)
          npoints--;
 
-      if (ok && !Polyline(hdc, pts, 4))
+      if (ok && !Polyline(hdc, pts, npoints))
          WIN32_GDI_FAILED("Polyline"), ok = FALSE;
 
       if (ok && !CloseFigure(hdc))
@@ -455,6 +456,38 @@ gdk_win32_draw_polygon(GdkDrawable * drawable,
 
       if (ok && !FillPath(hdc))
          WIN32_GDI_FAILED("FillPath"), ok = FALSE;
+   }
+   else if (gc_data->fill_style == GDK_STIPPLED) {
+      HBRUSH hbr = CreatePatternBrush(GDK_DRAWABLE_XID(gc_data->stipple));
+      SetBkMode(hdc, TRANSPARENT);
+      SetROP2(hdc, R2_MASKPEN);
+      oldpen_or_brush = SelectObject(hdc, hbr);
+
+      if (!BeginPath(hdc))
+         WIN32_GDI_FAILED("BeginPath"), ok = FALSE;
+
+      MoveToEx(hdc, points[0].x, points[0].y, NULL);
+
+      if (pts[0].x == pts[npoints - 1].x && pts[0].y == pts[npoints - 1].y)
+         npoints--;
+
+      if (ok && !Polyline(hdc, pts, npoints))
+         WIN32_GDI_FAILED("Polyline"), ok = FALSE;
+
+      if (ok && !CloseFigure(hdc))
+         WIN32_GDI_FAILED("CloseFigure"), ok = FALSE;
+
+      if (ok && !EndPath(hdc))
+         WIN32_GDI_FAILED("EndPath"), ok = FALSE;
+
+      if (ok && !filled)
+         if (!WidenPath(hdc))
+            WIN32_GDI_FAILED("WidenPath"), ok = FALSE;
+
+      if (ok && !FillPath(hdc))
+         WIN32_GDI_FAILED("FillPath"), ok = FALSE;
+      SelectObject(hdc, oldpen_or_brush);
+      DeleteObject(hbr);
    } else {
       if (points[0].x != points[npoints - 1].x
           || points[0].y != points[npoints - 1].y) {
