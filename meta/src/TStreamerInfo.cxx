@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.91 2001/10/03 08:35:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.92 2001/10/03 16:43:18 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -115,7 +115,9 @@ void TStreamerInfo::Build()
    // one by one the list of data members of the analyzed class.
 
    TStreamerElement::Class()->IgnoreTObjectStreamer();
-
+   if (!strcmp(fClass->GetName(),"TLorentzVector")) fClass->IgnoreTObjectStreamer();
+   if (!strcmp(fClass->GetName(),"TVector3"))       fClass->IgnoreTObjectStreamer();
+   
    fClass->BuildRealData();
 
    fCheckSum = fClass->GetCheckSum();
