@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name$:$Id$
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -155,8 +155,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMatrix.h"
-
-
+#include "TROOT.h"
 
 ClassImp(TMatrix)
 
@@ -214,6 +213,16 @@ TMatrix::~TMatrix()
    }
 
    Invalidate();
+}
+
+//______________________________________________________________________________
+void TMatrix::Draw(Option_t *option)
+{
+   // Draw this matrix using an intermediate histogram
+   // The histogram is named "TMatrix" by default and no title
+   
+   gROOT->ProcessLine(Form("TH2F *R__TV = new TH2F((TMatrix&)((TMatrix*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
+      (Long_t)this,option));
 }
 
 //______________________________________________________________________________

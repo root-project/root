@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name$:$Id$
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -94,6 +94,7 @@ public:
 
    virtual ~TMatrix();
 
+   void Draw(Option_t *option="");
    void ResizeTo(Int_t nrows, Int_t ncols);
    void ResizeTo(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb);
    void ResizeTo(const TMatrix &m);
