@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.8 2004/11/22 23:38:31 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.9 2004/11/23 14:00:29 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -49,7 +49,7 @@ private:
 
 public:
    TGLRender();
-   ~TGLRender();
+   virtual ~TGLRender();
    void Traverse();
    void SetAllActive()
    {
@@ -89,6 +89,8 @@ private:
 
    TGLRender(const TGLRender &);
    TGLRender & operator = (const TGLRender &);
+   
+   ClassDef(TGLRender,0)
 };
 
 #endif

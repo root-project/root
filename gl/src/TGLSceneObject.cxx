@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.17 2004/11/18 14:37:02 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.18 2004/11/19 06:36:28 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -20,6 +20,8 @@
 #include "TError.h"
 
 #include "TGLSceneObject.h"
+
+ClassImp(TGLSceneObject)
 
 static GLUtriangulatorObj *GetTesselator()
 {

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.4 2004/09/14 15:37:34 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.5 2004/11/15 14:59:02 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -19,6 +19,8 @@
 #include <GL/glu.h>
 
 #include "TGLCamera.h"
+
+ClassImp(TGLCamera)
 
 TGLCamera::TGLCamera(const Double_t *vv, const Int_t *vp)
               :fViewVolume(vv), fViewPort(vp),

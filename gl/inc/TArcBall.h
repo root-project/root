@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.5 2004/09/14 15:37:34 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.6 2004/09/17 19:33:31 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -49,6 +49,7 @@ public:
    {
       return fTransform;
    }
+   ClassDef(TArcBall,0)
 };
 
 class TEqRow {

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.3 2004/09/14 15:37:34 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.4 2004/11/15 14:59:02 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -43,6 +43,8 @@ public:
 private:
    TGLCamera(const TGLCamera &);
    TGLCamera & operator = (const TGLCamera &);
+   
+   ClassDef(TGLCamera,0)
 };
 
 class TGLTransformation {

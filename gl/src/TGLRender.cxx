@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.14 2004/11/22 23:38:31 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.15 2004/11/23 14:00:29 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -24,6 +24,8 @@
 #include "TGLSceneObject.h"
 #include "TGLRender.h"
 #include "TGLCamera.h"
+
+ClassImp(TGLRender)
 
 namespace std {} using namespace std;
 

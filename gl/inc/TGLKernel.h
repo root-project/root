@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.14 2004/09/13 09:56:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.15 2004/09/29 06:55:13 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -145,6 +145,8 @@ public:
 
 private:
    void DrawStars(const Double_t * vertex, Style_t marker_style, UInt_t size);
+
+   ClassDef(TGLKernel,0) //Concrete GL interface on top of TVirtualGL
 };
 
 #endif
