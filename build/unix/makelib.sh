@@ -43,13 +43,13 @@ elif [ $PLATFORM = "alpha" ] && [ $LD = "cxx" ]; then
    echo $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA
    if [ $LIB = "lib/libCore.so" ]; then
       #$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS hist/src/*.o graf/src/*.o \
-      #   g3d/src/*.o $EXTRA
+      #   g3d/src/*.o matrix/src/*.o $EXTRA
       ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
          -expect_unresolved "*" -g0 -O1 -msym -shared \
          /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
-         -o $LIB $OBJS hist/src/*.o graf/src/*.o g3d/src/*.o $EXTRA
-   elif [ $LIB = "lib/libHist.so" ] || [ $LIB = "lib/libGraf.so" ] || \
-        [ $LIB = "lib/libGraf3d.so" ]; then
+         -o $LIB $OBJS hist/src/*.o graf/src/*.o g3d/src/*.o matrix/src/*.o $EXTRA
+   elif [ $LIB = "lib/libHist.so" ]   || [ $LIB = "lib/libGraf.so" ] || \
+        [ $LIB = "lib/libGraf3d.so" ] || [ $LIB = "lib/libMatrix.so" ]; then
       #$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB /usr/lib/cmplrs/cc/crt0.o
       ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
          -expect_unresolved "*" -g0 -O1 -msym -shared \
