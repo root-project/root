@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.97 2004/11/04 10:38:21 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.98 2004/11/08 09:56:24 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -449,9 +449,87 @@ ClassImp(TGeoManager)
 TGeoManager::TGeoManager()
 {
 // Default constructor.
-   if (TClass::IsCallingNew() == TClass::kDummyNew)
-      fBits = (UChar_t*) -1;
-   else {
+   if (TClass::IsCallingNew() == TClass::kDummyNew) {
+      printf("WARNING fBITS=-1 !!!\n");
+      fTimeCut = kFALSE;
+      fTmin = 0.;
+      fTmax = 999.;
+      fPhiCut = kFALSE;
+      fPhimin = 0;
+      fPhimax = 360;
+      fDrawExtra = kFALSE;
+      fStreamVoxels = kFALSE;
+      fIsGeomReading = kFALSE;
+      fSearchOverlaps = kFALSE;
+      fLoopVolumes = kFALSE;
+      fStartSafe = kTRUE;
+      fSafety = 0;
+      fLastSafety = 0.;
+      fStep = 0;
+      fBits = 0;
+      fMaterials = 0;
+      fMatrices = 0;
+      fNodes = 0;
+      fOverlaps = 0;
+      fNNodes = 0;
+      fLevel = 0;
+      fMaxVisNodes = 10000;
+   
+      memset(fLastPoint, 0, kN3);
+      fPoint = 0;
+      fDirection = 0;
+      fCldirChecked = 0;
+      memset(fNormal, 0, kN3);
+      fCldir = 0;
+      fVolumes = 0;
+      fPhysicalNodes = 0;
+      fShapes = 0;
+      fGVolumes = 0;
+      fGShapes = 0;
+      fTracks = 0;
+      fMedia = 0;
+      fNtracks = 0;
+      fNpdg = 0;
+      fPdgNames = 0;
+      fCurrentTrack = 0;
+      fTopVolume = 0;
+      fTopNode = 0;
+      fCurrentVolume = 0;
+      fMasterVolume = 0;
+      fCurrentNode = 0;
+      fLastNode = 0;
+      fCurrentOverlapping = kFALSE;
+      fPath = "";
+      fCache = 0;
+      fPainter = 0;
+      fIsEntering = kFALSE;
+      fIsExiting = kFALSE;
+      fIsStepEntering = kFALSE;
+      fIsStepExiting = kFALSE;
+      fIsOutside = kFALSE;
+      fIsOnBoundary = kFALSE;
+      fIsSameLocation = kTRUE;
+      fIsNullStep = kFALSE;
+      fVisDensity = 0.;
+      fVisLevel = 3;
+      fVisOption = 1;
+      fExplodedView = 0;
+      fNsegments = 20;
+      fCurrentMatrix = 0;
+      fUniqueVolumes = 0;
+      fNodeIdArray = 0;
+      fClippingShape = 0;
+      fIntSize = fDblSize = 1000;
+      fIntBuffer = 0;
+      fDblBuffer = 0;
+      fOverlapMark = 0;
+      fOverlapSize = 1000;
+      fOverlapClusters = 0;
+      fMatrixTransform = kFALSE;
+      fMatrixReflection = kFALSE;
+      fGLMatrix = 0;
+      fPaintVolume = 0;
+    } else {
       Init();
       gGeoIdentity = 0;
    }
@@ -566,8 +644,7 @@ TGeoManager::~TGeoManager()
 {
 // Destructor
 
-   if (fBits == (UChar_t*) -1)
-      return;
+   if (!gGeoManager) return;
 
    Warning("dtor", "deleting previous geometry: %s/%s",GetName(),GetTitle());
 //   gROOT->GetListOfGeometries()->Remove(this);
