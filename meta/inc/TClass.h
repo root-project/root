@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.26 2002/11/11 11:27:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.27 2002/11/11 16:23:16 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -43,6 +43,12 @@ class TClass : public TDictionary {
 friend class TCint;
 friend void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
 
+public:
+   // TClass status bits
+   enum { kClassSaved = BIT(12) , kIgnoreTObjectStreamer = BIT(13),
+          kUnloaded = BIT(15), kIsTObject = BIT(16), kIsForeign = BIT(17) };
+   enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
+
 private:
    TString            fName;            //name of class
    TObjArray         *fStreamerInfo;    //Array of TStreamerInfo
@@ -70,13 +76,13 @@ private:
    ROOT::DelFunc_t    fDelete;          //pointer to a function deleting one object.
    ROOT::DelArrFunc_t fDeleteArray;     //pointer to a function deleting an array of objects.
    ROOT::DesFunc_t    fDestructor;      //pointer to a function call an object's destructor.
-   
+
    Bool_t             fVersionUsed;     //!Indicated whether GetClassVersion has been called
    Long_t             fProperty;        //!Property
 
    void              *fInterStreamer;   //!saved info to call Streamer
    Long_t             fOffsetStreamer;  //!saved info to call Streamer
-   
+
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *GetClassMethod(const char*name, const char* signature);
    void Init(const char *name, Version_t cversion, const type_info *info,
@@ -86,17 +92,13 @@ private:
 
    void               SetClassVersion(Version_t version) { fClassVersion = version; }
 
-   static Bool_t      fgCallingNew;     //True when TClass:New is executing
+   static ENewType    fgCallingNew;     //Intent of why/how TClass::New() is called
    static Int_t       fgClassCount;     //provides unique id for a each class
-                                       //stored in TObject::fUniqueID
+                                        //stored in TObject::fUniqueID
    // Internal status bits
    enum { kLoading = BIT(14) };
 
 public:
-   // TClass status bits
-   enum { kClassSaved = BIT(12) , kIgnoreTObjectStreamer = BIT(13),
-          kUnloaded = BIT(15), kIsTObject = BIT(16), kIsForeign = BIT(17) };
-
    TClass();
    TClass(const char *name);
    TClass(const char *name, Version_t cversion,
@@ -164,11 +166,11 @@ public:
    Bool_t             InheritsFrom(const TClass *cl) const;
    Bool_t             IsFolder() const {return kTRUE;}
    Bool_t             IsLoaded() const;
-   Bool_t             IsForeign() const; 
-   Bool_t             IsTObject() const; 
+   Bool_t             IsForeign() const;
+   Bool_t             IsTObject() const;
    void               MakeCustomMenuList();
-   void              *New(Bool_t defConstructor = kTRUE);
-   void              *New(void *arena, Bool_t defConstructor = kTRUE);
+   void              *New(ENewType defConstructor = kClassNew);
+   void              *New(void *arena, ENewType defConstructor = kClassNew);
    Long_t             Property() const;
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t              ReadBuffer(TBuffer &b, void *pointer);
@@ -186,7 +188,7 @@ public:
    Int_t              WriteBuffer(TBuffer &b, void *pointer, const char *info="");
 
    static Int_t       AutoBrowse(TObject *obj,TBrowser *browser);
-   static Bool_t      IsCallingNew();
+   static ENewType    IsCallingNew();
    static TClass     *Load(TBuffer &b);
    void               Store(TBuffer &b) const;
    void               Streamer(void *object, TBuffer &b);
@@ -195,9 +197,8 @@ public:
 
 namespace ROOT {
    extern TClass *CreateClass(const char *cname, Version_t id,
-                           const char *dfil, const char *ifil,
-                           Int_t dl, Int_t il);
-
+                              const char *dfil, const char *ifil,
+                              Int_t dl, Int_t il);
 }
 
 #endif
