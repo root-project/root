@@ -599,13 +599,13 @@ void TTreeView::BuildInterface()
    fWidgets->Add(lo);
    fBFrame->AddFrame(fStatusBar, lo);
    //--- RESET button
-   TGTextButton* fbRESET = new TGTextButton(fBFrame,"RESET",kRESET);
-   fbRESET->SetToolTipText("Reset variable's fields and drawing options");
-   fbRESET->Associate(this);
+   TGTextButton* fReset = new TGTextButton(fBFrame,"RESET",kRESET);
+   fReset->SetToolTipText("Reset variable's fields and drawing options");
+   fReset->Associate(this);
    lo = new TGLayoutHints(kLHintsTop | kLHintsRight, 2,2,2,2);
    fWidgets->Add(lo);
 
-   fBFrame->AddFrame(fbRESET,lo);
+   fBFrame->AddFrame(fReset,lo);
    lo = new TGLayoutHints(kLHintsExpandX,2,2,2,0);
    fWidgets->Add(lo);
    AddFrame(fBFrame,lo);
@@ -626,21 +626,21 @@ void TTreeView::BuildInterface()
    symbol = 'X';
    entry->SetUserData(new ULong_t((symbol << 8) | kLTExpressionType | kLTTreeType));
    //--- X item
-   fLVContainer->AddItem(entry);
+   fLVContainer->AddThisItem(entry);
    entry->MapWindow();
 
    entry = new TGLVTreeEntry(fLVContainer,fPicY,fPicY,new TGString(),0,kLVSmallIcons);
    symbol = 'Y';
    entry->SetUserData(new ULong_t((symbol << 8) | kLTExpressionType | kLTTreeType));
    //--- Y item
-   fLVContainer->AddItem(entry);
+   fLVContainer->AddThisItem(entry);
    entry->MapWindow();
 
    entry = new TGLVTreeEntry(fLVContainer,fPicZ,fPicZ,new TGString(),0,kLVSmallIcons);
    symbol = 'Z';
    entry->SetUserData(new ULong_t((symbol << 8) | kLTExpressionType | kLTTreeType));
    //--- Z item
-   fLVContainer->AddItem(entry);
+   fLVContainer->AddThisItem(entry);
    entry->MapWindow();
 
    pic = gClient->GetPicture("cut_t.xpm");
@@ -648,7 +648,7 @@ void TTreeView::BuildInterface()
    entry = new TGLVTreeEntry(fLVContainer,pic,spic,new TGString(),0,kLVSmallIcons);
    entry->SetUserData(new ULong_t(kLTExpressionType | kLTCutType));
    //--- Cut item (scissors icon)
-   fLVContainer->AddItem(entry);
+   fLVContainer->AddThisItem(entry);
    entry->MapWindow();
 
    pic = gClient->GetPicture("pack_t.xpm");
@@ -656,7 +656,7 @@ void TTreeView::BuildInterface()
    entry = new TGLVTreeEntry(fLVContainer,pic,spic,new TGString("Scan box"),0,kLVSmallIcons);
    entry->SetUserData(new ULong_t(kLTExpressionType | kLTPackType));
    //--- Cut item (scissors icon)
-   fLVContainer->AddItem(entry);
+   fLVContainer->AddThisItem(entry);
    entry->MapWindow();
    entry->SetTrueName("");
    
@@ -666,7 +666,7 @@ void TTreeView::BuildInterface()
    for (Int_t i=0; i<10; i++) {
       entry = new TGLVTreeEntry(fLVContainer,pic,spic,new TGString(),0,kLVSmallIcons);
       entry->SetUserData(new ULong_t(kLTExpressionType | kLTDragType));
-      fLVContainer->AddItem(entry);
+      fLVContainer->AddThisItem(entry);
       entry->MapWindow();   
    }
 
@@ -733,7 +733,7 @@ TTreeView::~TTreeView()
 
    delete fbDRAW;
    delete fbSTOP;
-   delete fbRESET;  
+   delete fReset;  
    delete fBFrame;
 
    delete fMenuBar;
@@ -1607,7 +1607,7 @@ void TTreeView::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t listIt
          }
          entry = new TGLVTreeEntry(fLVContainer,pic,spic,textEntry,0,kLVSmallIcons);
          entry->SetUserData(new UInt_t(kLTBranchType));
-         fLVContainer->AddItem(entry);
+         fLVContainer->AddThisItem(entry);
          entry->MapWindow();
       } else {
          pic = (gClient->GetMimeTypeList())->GetIcon("TLeaf",kFALSE);
@@ -1616,7 +1616,7 @@ void TTreeView::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t listIt
          if (!spic) spic = gClient->GetPicture("leaf_t.xpm");
          entry = new TGLVTreeEntry(fLVContainer,pic,spic,textEntry,0,kLVSmallIcons);
          entry->SetUserData(new UInt_t(kLTDragType));
-         fLVContainer->AddItem(entry);
+         fLVContainer->AddThisItem(entry);
          entry->MapWindow();
       }
    }

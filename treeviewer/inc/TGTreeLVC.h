@@ -25,7 +25,7 @@ public:
                  const TGPicture *bigpic, const TGPicture *smallpic,
                  TGString *name, TGString **subnames, EListViewMode ViewMode);
    virtual      ~TGLVTreeEntry() {}
-   void         Copy(TGLVTreeEntry *dest);
+   void         CopyItem(TGLVTreeEntry *dest);
    const char*  GetAlias() {return fAlias.Data();}
    const char*  GetTrueName() {return fTrueName.Data();}
    Bool_t       HasAlias();
@@ -58,7 +58,7 @@ private:
 public:
    TGTreeLVC(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options=kSunkenFrame);
    virtual ~TGTreeLVC() {}
-   virtual void AddItem(TGLVTreeEntry *item)
+   virtual void AddThisItem(TGLVTreeEntry *item)
                 { AddFrame(item, fItemLayout); item->SetColumns(fCpos, fJmode);}
    const char*  Cut();
    void         EmptyAll();     // empty all items of expression type

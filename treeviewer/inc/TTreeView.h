@@ -123,7 +123,7 @@ private:
    TGPictureButton      *fbDRAW;        // DRAW button
    TGPictureButton      *fbSTOP;        // interrupt current command (not yet)
    TGStatusBar          *fStatusBar;    // status bar
-   TGTextButton         *fbRESET;       // clear expression's entries 
+   TGTextButton         *fReset;        // clear expression's entries 
 // ListTree
    TGCanvas             *fTreeView;     // ListTree canvas container
    TGListTree           *fLt;           // ListTree with file and tree items

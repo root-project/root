@@ -20,7 +20,7 @@ TGLVTreeEntry::TGLVTreeEntry(const TGWindow *p,
    fTrueName = name->GetString();
 }
 //______________________________________________________________________________
-void TGLVTreeEntry::Copy(TGLVTreeEntry *dest)
+void TGLVTreeEntry::CopyItem(TGLVTreeEntry *dest)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Copy this item's name and alias to an other*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ===========================================
@@ -213,7 +213,7 @@ Bool_t TGTreeLVC::HandleButton(Event_t *event)
                  ULong_t *itemType = (ULong_t *) f->GetUserData();
                  fLastActive->Activate(kFALSE);
                  if (!(*itemType & kLTPackType)) { 
-		    ((TGLVTreeEntry *) fLastActive)->Copy(f);
+		    ((TGLVTreeEntry *) fLastActive)->CopyItem(f);
 		 } else {
 		    if (!strlen(f->GetTrueName())) {
 		       f->SetTrueName(((TGLVTreeEntry *)fLastActive)->GetTrueName());
