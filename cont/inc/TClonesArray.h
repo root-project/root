@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.5 2001/02/24 11:18:30 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.6 2001/03/11 23:10:00 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -37,9 +37,10 @@ protected:
 
 public:
    enum {
-      kForgetBits     = BIT(0),        // Do not create branches for fBits, fUniqueID
-      kNoSplit        = BIT(1),        // array not split by TTree::Branch
-      kBypassStreamer = BIT(12)};      // class Streamer not called (default)
+      kForgetBits     = BIT(0),   // Do not create branches for fBits, fUniqueID
+      kNoSplit        = BIT(1),   // Array not split by TTree::Branch
+      kBypassStreamer = BIT(12)   // Class Streamer not called (default)
+   };
 
    TClonesArray();
    TClonesArray(const char *classname, Int_t size = 1000, Bool_t call_dtor = kFALSE);
@@ -66,15 +67,16 @@ public:
    virtual TObject *Remove(TObject *obj);
    virtual void     Sort(Int_t upto = kMaxInt);
 
-   TObject         *AddrAt(Int_t i);
-   TObject         *&operator[](Int_t i);
+   TObject         *New(Int_t idx);
+   TObject         *AddrAt(Int_t idx);
+   TObject         *&operator[](Int_t idx);
 
    ClassDef(TClonesArray,4)  //An array of clone objects
 };
 
-inline TObject *TClonesArray::AddrAt(Int_t i)
+inline TObject *TClonesArray::AddrAt(Int_t idx)
 {
-   return operator[](i);
+   return operator[](idx);
 }
 
 #endif

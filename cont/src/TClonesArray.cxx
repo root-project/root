@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.12 2001/03/29 10:58:27 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.13 2001/04/12 06:29:47 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -484,7 +484,9 @@ TObject *&TClonesArray::operator[](Int_t idx)
    // Return pointer to reserved area in which a new object of clones
    // class can be constructed. This operator should not be used for
    // lefthand side assignments, like a[2] = xxx. Only like,
-   // new (a[2]) myClass, or xxx = a[2]. To remove elements from
+   // new (a[2]) myClass, or xxx = a[2]. Of course right hand side usage
+   // is only legal after the object has been constructed via the
+   // new operator or via the New() method. To remove elements from
    // the clones array use Remove() or RemoveAt().
 
    if (idx < 0) {
@@ -509,3 +511,20 @@ TObject *&TClonesArray::operator[](Int_t idx)
    return fCont[idx];
 }
 
+//______________________________________________________________________________
+TObject *TClonesArray::New(Int_t idx)
+{
+   // Create an object of type fClass with the default ctor at the specified
+   // index. Returns 0 in case of error.
+
+   if (idx < 0) {
+      Error("New", "out of bounds at %d in %x", idx, this);
+      return 0;
+   }
+   if (!fClass) {
+      Error("New", "invalid class specified in TClonesArray ctor");
+      return 0;
+   }
+
+   return (TObject *)fClass->New(operator[](idx));
+}
