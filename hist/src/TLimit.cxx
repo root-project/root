@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.2 2002/09/06 20:24:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.3 2002/09/06 21:41:23 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -6,7 +6,7 @@
 // TLimit
 //
 // Class to compute 95% CL limits
-// 
+//
 ///////////////////////////////////////////////////////////////////////////
 
 /*************************************************************************
@@ -41,38 +41,38 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
                                                              Double_t))
 {
    // class TLimit
-   // ------------ 
-   //  
+   // ------------
+   //
    // Algorithm to compute 95% C.L. limits using the Likelihood ratio
    // semi-bayesian method.
    // It takes signal, background and data histograms wrapped in a
    // TLimitDataSource as input and runs a set of Monte Carlo experiments in
    // order to compute the limits. If needed, inputs are fluctuated according
    // to systematics. The output is a TConfidenceLevel.
-   //  
-   // class TLimitDataSource 
+   //
+   // class TLimitDataSource
    // ----------------------
-   //  
+   //
    // Takes the signal, background and data histograms as well as different
-   // systematics sources to form the TLimit input. 
-   //  
-   //  class TConfidenceLevel 
+   // systematics sources to form the TLimit input.
+   //
+   //  class TConfidenceLevel
    //  ----------------------
-   //  
+   //
    // Final result of the TLimit algorithm. It is created just after the
    // time-consuming part and can be stored in a TFile for further processing.
    // It contains light methods to return CLs, CLb and other interesting
-   // quantities.  
-   //        
+   // quantities.
+   //
    // The actual algorithm...
    // From an input (TLimitDataSource) it produces an output TConfidenceLevel.
    // For this, nmc Monte Carlo experiments are performed.
-   // As usual, the larger this number, the longer the compute time, 
+   // As usual, the larger this number, the longer the compute time,
    // but the better the result.
    //Begin_Html
    /*
    <FONT SIZE=+0>
-   <p>Supposing that there is a plotfile.root file containing 3 histograms 
+   <p>Supposing that there is a plotfile.root file containing 3 histograms
            (signal, background and data), you can imagine doing things like:</p>
    <p>
    <BLOCKQUOTE><PRE>
@@ -94,7 +94,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
     infile->Close();
    </PRE></BLOCKQUOTE></p>
    <p></p>
-   <p>More informations can still be found on 
+   <p>More informations can still be found on
    <a HREF="http://cern.ch/aleph-proj-alphapp/doc/tlimit.html">this</a> page.</p>
    </FONT>
    */
@@ -113,7 +113,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
    Int_t i;
    for (i = 0; i <= data->GetSignal()->GetLast(); i++) {
       nbins  += ((TH1F *) (data->GetSignal()->At(i)))->GetNbinsX();
-      maxbins = ((TH1F *) (data->GetSignal()->At(i)))->GetNbinsX() > maxbins ? 
+      maxbins = ((TH1F *) (data->GetSignal()->At(i)))->GetNbinsX() > maxbins ?
 	        ((TH1F *) (data->GetSignal()->At(i)))->GetNbinsX() + 1 : maxbins;
       nsig   += ((TH1F *) (data->GetSignal()->At(i)))->Integral();
       nbg    += ((TH1F *) (data->GetBackground()->At(i)))->Integral();
@@ -133,7 +133,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
          Double_t d = (Double_t) ((TH1F *) (data->GetCandidates()->At(channel)))->GetBinContent(bin);
          // Compute the value of the "-2lnQ" for the actual data
          if ((b == 0) && (s > 0)) {
-            cout << "WARNING: Ignoring bin " << bin << " of channel " 
+            cout << "WARNING: Ignoring bin " << bin << " of channel "
                  << channel << " which has s=" << s << " but b=" << b << endl;
             cout << "         Maybe the MC statistic has to be improved..." << endl;
          }
@@ -168,7 +168,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
       for (Int_t channel = 0;
            channel <= fluctuated->GetSignal()->GetLast(); channel++) {
          for (Int_t bin = 0;
-              bin <=((TH1F *) (fluctuated->GetSignal()->At(channel)))->GetNbinsX(); 
+              bin <=((TH1F *) (fluctuated->GetSignal()->At(channel)))->GetNbinsX();
               bin++) {
             if ((Double_t) ((TH1F *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin) != 0) {
                // s+b hypothesis
@@ -180,7 +180,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
                Double_t b = (Double_t) ((TH1F *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
                if ((s > 0) && (b > 0))
                   lrs[i] += statistic(s, b, rand) - s;
-               else if ((s > 0) && (b = 0))
+               else if ((s > 0) && (b == 0))
                   lrs[i] += 20 * rand - s;
                // b hypothesis
                rate = (Double_t) ((TH1F *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
@@ -188,7 +188,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
                tsb[i] += rand * fgTable->At((channel * maxbins) + bin);
                if ((s > 0) && (b > 0))
                   lrb[i] += statistic(s, b, rand) - s;
-               else if ((s > 0) && (b = 0))
+               else if ((s > 0) && (b == 0))
                   lrb[i] += 20 * rand - s;
             }
          }
@@ -248,13 +248,13 @@ TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
       retoss = kFALSE;
       serrf = new Double_t[(input->GetSignal()->GetLast()) + 1];
       berrf = new Double_t[(input->GetSignal()->GetLast()) + 1];
-      for (Int_t channel = 0; 
+      for (Int_t channel = 0;
            channel <= input->GetSignal()->GetLast();
            channel++) {
          serrf[channel] = 0;
          berrf[channel] = 0;
          for (Int_t bin = 0;
-              bin <=((TH1F *) (input->GetErrorOnSignal()->At(channel)))->GetNbinsX(); 
+              bin <=((TH1F *) (input->GetErrorOnSignal()->At(channel)))->GetNbinsX();
 	      bin++) {
             serrf[channel] += ((TH1F *) (input->GetErrorOnSignal()->At(channel)))->GetBinContent(bin) *
                 toss[fgSystNames->BinarySearch((TObjString*) (((TObjArray *) (input->GetErrorNames()->At(channel)))->At(bin)))];
