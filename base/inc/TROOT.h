@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.15 2001/09/25 16:14:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.16 2001/10/01 10:38:37 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -98,7 +98,6 @@ protected:
    TSeqCollection  *fCleanups;            //List of recursiveRemove collections
    TSeqCollection  *fMessageHandlers;     //List of message handlers
    TSeqCollection  *fStreamerInfo;        //List of active StreamerInfo classes
-   TSeqCollection  *fProcessIDs;          //List of TProcessIDs
    TFolder         *fRootFolder;          //top level folder //root
    TList           *fBrowsables;          //List of browsables
    TString         fCutClassName;         //Name of default CutG class in graphics editor
@@ -156,7 +155,6 @@ public:
    TSeqCollection   *GetListOfCleanups() const   {return fCleanups;}
    TSeqCollection   *GetListOfStreamerInfo() const    {return fStreamerInfo;}
    TSeqCollection   *GetListOfMessageHandlers() const {return fMessageHandlers;}
-   TSeqCollection   *GetListOfProcessIDs() const {return fProcessIDs;}
    TList            *GetListOfBrowsables() const {return fBrowsables;}
    TDataType        *GetType(const char *name, Bool_t load = kFALSE);
    TFile            *GetFile() const {return fFile;}
