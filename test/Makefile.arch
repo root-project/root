@@ -403,6 +403,15 @@ LDFLAGS       = -O
 SOFLAGS       = -shared -Wl,-x
 endif
 
+ifeq ($(ARCH),openbsd)
+# OpenBSD with libc
+CXX           = g++
+CXXFLAGS      = -O -pipe -W -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared -Wl,-x
+endif
+
 ifeq ($(ARCH),macosx)
 # MacOS X with cc (GNU cc 2.95.2 and gcc 3.3)
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)

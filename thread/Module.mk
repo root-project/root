@@ -72,10 +72,17 @@ CFLAGS       += -pthread
 CINTCXXFLAGS += -pthread
 CINTCFLAGS   += -pthread
 else
+ifeq ($(PLATFORM),obsd)
+CXXFLAGS     += -pthread
+CFLAGS       += -pthread
+CINTCXXFLAGS += -pthread
+CINTCFLAGS   += -pthread
+else
 CXXFLAGS     += -D_REENTRANT
 CFLAGS       += -D_REENTRANT
 CINTCXXFLAGS += -D_REENTRANT
 CINTCFLAGS   += -D_REENTRANT
+endif
 endif
 endif
 ifeq ($(PLATFORM),win32)

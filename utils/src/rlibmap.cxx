@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.14 2004/06/02 13:58:36 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.15 2004/07/16 00:00:10 rdm Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -39,7 +39,7 @@
 #ifdef __APPLE__
 #include <AvailabilityMacros.h>
 #endif
-#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || \
+#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__OpenBSD__) || \
     (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
      (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)))
 #include <sys/file.h>
@@ -341,7 +341,8 @@ int main(int argc, char **argv)
    }
 
    if (replace) {
-#if !defined(WIN32) && !defined(__CYGWIN__) && !defined(__FreeBSD__)
+#if !defined(WIN32) && !defined(__CYGWIN__) && !defined(__FreeBSD__) && \
+    !defined(__OpenBSD__)
       // lock file
       if (lockf(fileno(fp), F_LOCK, (off_t)1) == -1) {
          fprintf(stderr, "rlibmap: error locking output file\n");
@@ -357,7 +358,8 @@ int main(int argc, char **argv)
    LibMap(solib, solibdeps, linkdefs, fullpath, fp);
 
    if (replace) {
-#if !defined(WIN32) && !defined(__CYGWIN__) && !defined(__FreeBSD__)
+#if !defined(WIN32) && !defined(__CYGWIN__) && !defined(__FreeBSD__) && \
+    !defined(__OpenBSD__)
       // remove lock
       lseek(fileno(fp), 0, SEEK_SET);
       if (lockf(fileno(fp), F_ULOCK, (off_t)1) == -1) {
