@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooUnblindCPAsymVar.cc,v 1.5 2001/08/23 01:23:35 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -13,8 +13,8 @@
 
 // -- CLASS DESCRIPTION [REAL] --
 //
-// Implementation of BlindTools' CP asymmetry blinding method
-// A RooUnblindCPAsymVar object is a real valued function
+// Implementation of BlindTools' offset blinding method
+// A RooUnblindOffset object is a real valued function
 // object, constructed from a blind value holder and a 
 // set of unblinding parameters. When supplied to a PDF
 // in lieu of a regular parameter, the blind value holder
@@ -25,44 +25,45 @@
 // of the unblind parameter
 
 #include "RooFitCore/RooArgSet.hh"
-#include "RooFitModels/RooUnblindCPAsymVar.hh"
+#include "RooFitModels/RooUnblindOffset.hh"
 
 
-ClassImp(RooUnblindCPAsymVar)
+ClassImp(RooUnblindOffset)
 ;
 
 
-RooUnblindCPAsymVar::RooUnblindCPAsymVar() : _blindEngine("") 
+RooUnblindOffset::RooUnblindOffset() : _blindEngine("") 
 {
   // Default constructor
 }
 
 
-RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
-					     const char *blindString, RooAbsReal& cpasym)
-  : RooAbsHiddenReal(name,title), _blindEngine(blindString), _asym("asym","CP Asymmetry",this,cpasym) 
+RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
+					 const char *blindString, Double_t scale, RooAbsReal& cpasym)
+  : RooAbsHiddenReal(name,title), _blindEngine(blindString,RooBlindTools::full,0.,scale), _value("value","Offset blinded value",this,cpasym) 
 {  
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
 
 
-RooUnblindCPAsymVar::RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const char* name) : 
-  RooAbsHiddenReal(other, name), _blindEngine(other._blindEngine), _asym("asym",this,other._asym)
+RooUnblindOffset::RooUnblindOffset(const RooUnblindOffset& other, const char* name) : 
+  RooAbsHiddenReal(other, name), _blindEngine(other._blindEngine), _value("asym",this,other._value)
 {
   // Copy constructor
+
 }
 
 
-RooUnblindCPAsymVar::~RooUnblindCPAsymVar() 
+RooUnblindOffset::~RooUnblindOffset() 
 {
-  // Copy constructor
+  // Destructor
 }
 
 
-Double_t RooUnblindCPAsymVar::evaluate() const
+Double_t RooUnblindOffset::evaluate() const
 {
-  // Evaluate RooBlindTools unhide-asymmetry method on blind value
-  return _blindEngine.UnHideAsym(_asym);
+  // Evaluate RooBlindTools unhide-offset method on blind value
+  return _blindEngine.UnHideOffset(_value);
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.8 2001/08/03 18:13:02 verkerke Exp $
+ *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.9 2001/08/23 01:23:35 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -12,12 +12,12 @@
 #ifndef ROO_UNBLIND_CPASYM_VAR
 #define ROO_UNBLIND_CPASYM_VAR
 
-#include "RooFitCore/RooAbsReal.hh"
+#include "RooFitCore/RooAbsHiddenReal.hh"
 #include "RooFitCore/RooAbsCategory.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitModels/RooBlindTools.hh"
 
-class RooUnblindCPAsymVar : public RooAbsReal {
+class RooUnblindCPAsymVar : public RooAbsHiddenReal {
 public:
   // Constructors, assignment etc
   RooUnblindCPAsymVar() ;
@@ -27,23 +27,10 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooUnblindCPAsymVar(*this,newname); }  
   virtual ~RooUnblindCPAsymVar();
 
-  // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) const ;
-
-  // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
-
 protected:
 
-  // Only PDFs can access the unblinded values
-  friend class RooAbsPdf ;
-  
   // Function evaluation
   virtual Double_t evaluate() const ;
-
-  virtual Bool_t isValid() const ;
-  virtual Bool_t isValid(Double_t value, Bool_t verbose=kFALSE) const ;
 
   RooRealProxy _asym ;
   RooBlindTools _blindEngine ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBlindTools.cc,v 1.1 2001/03/29 01:06:43 verkerke Exp $
+ *    File: $Id: RooBlindTools.cc,v 1.1 2001/05/07 06:14:53 verkerke Exp $
  * Authors:
  *   AR, Aaron Roodman, Stanford University, roodman@slac.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,17 +30,27 @@ ClassImp(RooBlindTools)
 //----------------
 // Constructors --
 //----------------
-RooBlindTools::RooBlindTools(const char *stSeed, blindMode Mode):
-  _mode(Mode)
+RooBlindTools::RooBlindTools(const char *stSeed, blindMode Mode,
+			     Double_t centralValue, Double_t sigmaOffset) :
+
+  _mode(Mode),
+  _PrecisionOffsetScale(sigmaOffset),
+  _PrecisionCentralValue(centralValue)
 {
   setup(stSeed);
 }
 
+
+
 RooBlindTools::RooBlindTools(const RooBlindTools& blindTool):
+  _PrecisionOffsetScale(blindTool.getPrecisionOffsetScale()),
+  _PrecisionCentralValue(blindTool.getPrecisionCentralValue()),
   _mode(blindTool.mode())
 {
   setup(blindTool.stSeed());
 }
+
+
 
 void RooBlindTools::setup(const char *stSeed)
 {
@@ -64,7 +74,17 @@ void RooBlindTools::setup(const char *stSeed)
   _MysteryPhase = 3.14159 * 
                   MakeOffset("wxyzabcdefghijklmnopqrstuv");
 
+  _PrecisionSignFlip = MakeSignFlip("klmnopqrstuvwxyzabcdefghij");
+
+  _PrecisionOffset = _PrecisionOffsetScale*MakeGaussianOffset("opqrstuvwxyzabcdefghijklmn");
+
   _STagConstant = Randomizer("fghijklmnopqrstuvwxyzabcde");
+
+  cout << "RooBlindTools: _PrecisionOffsetScale  =  " << _PrecisionOffsetScale << endl ;
+  cout << "RooBlindTools: _PrecisionCentralValue  = " << _PrecisionCentralValue << endl ;
+  cout << "RooBlindTools: _PrecisionSignFlip      = " << _PrecisionSignFlip << endl ;
+  cout << "RooBlindTools: _PrecisionOffset        = " << _PrecisionOffset << endl ;
+  
 
 }
 
@@ -173,6 +193,60 @@ Double_t RooBlindTools::HiAsPdG(Double_t Asym, Double_t PdG) const{
   return AsymPrime;
 }
 
+Double_t RooBlindTools::UnHidePrecision(Double_t PrecisionPrime) const{
+
+  if(mode()==dataonly) return PrecisionPrime;
+
+  Double_t Precision(0.);
+
+  if (_PrecisionSignFlip>0) {
+    Precision = PrecisionPrime - _PrecisionOffset;
+  }
+  else {
+    Precision = 2.0*_PrecisionCentralValue - PrecisionPrime + _PrecisionOffset;
+  }
+
+
+  return Precision;
+}
+
+
+Double_t RooBlindTools::HidePrecision(Double_t Precision) const{
+
+  if(mode()==dataonly) return Precision;
+
+  Double_t PrecisionPrime(0.);
+
+  if (_PrecisionSignFlip>0) {
+    PrecisionPrime = Precision + _PrecisionOffset;
+  }
+  else {
+    PrecisionPrime = 2.0*_PrecisionCentralValue - Precision + _PrecisionOffset;
+  }
+
+  return PrecisionPrime;
+}
+
+
+
+Double_t RooBlindTools::UnHideOffset(Double_t PrecisionPrime) const{
+
+  if(mode()==dataonly) return PrecisionPrime;
+
+  return PrecisionPrime - _PrecisionOffset;
+}
+
+
+
+Double_t RooBlindTools::HideOffset(Double_t Precision) const{
+
+  if(mode()==dataonly) return Precision;
+  
+  return Precision + _PrecisionOffset;
+}
+
+
+
 
 Double_t RooBlindTools::RandomizeTag(Double_t STag, Int_t EventNumber) const{
 
@@ -191,7 +265,7 @@ Double_t RooBlindTools::RandomizeTag(Double_t STag, Int_t EventNumber) const{
 }
    
 
-Double_t RooBlindTools::Randomizer(char *StringAlphabet) const{
+Double_t RooBlindTools::Randomizer(const char *StringAlphabet) const{
 
   char lowerseed[1024] ;
   strcpy(lowerseed,_stSeed) ;
@@ -252,7 +326,7 @@ Double_t RooBlindTools::PseudoRandom(Int_t Seed) const{
 
 
 
-Double_t RooBlindTools::MakeOffset(char *StringAlphabet) const{
+Double_t RooBlindTools::MakeOffset(const char *StringAlphabet) const{
 
   Double_t theRan = Randomizer(StringAlphabet);
 
@@ -263,7 +337,7 @@ Double_t RooBlindTools::MakeOffset(char *StringAlphabet) const{
 
 
 
-Double_t RooBlindTools::MakeGaussianOffset(char *StringAlphabet) const{
+Double_t RooBlindTools::MakeGaussianOffset(const char *StringAlphabet) const{
 
   Double_t theRan1 = Randomizer(StringAlphabet);
   Double_t theRan2 = Randomizer("cdefghijklmnopqrstuvwxyzab");
@@ -281,7 +355,7 @@ Double_t RooBlindTools::MakeGaussianOffset(char *StringAlphabet) const{
 }
 
 
-Double_t RooBlindTools::MakeSignFlip(char *StringAlphabet) const{
+Double_t RooBlindTools::MakeSignFlip(const char *StringAlphabet) const{
 
   Double_t theRan = Randomizer(StringAlphabet);
 

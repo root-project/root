@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBlindTools.rdl,v 1.1 2001/05/07 06:14:53 verkerke Exp $
+ *    File: $Id: RooBlindTools.rdl,v 1.2 2001/05/14 22:55:11 verkerke Exp $
  * Authors:
  *   AR, Aaron Roodman, Stanford University, roodman@slac.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -41,7 +41,9 @@ public:
   // Constructors
   RooBlindTools
   (const char *stSeed,	// blinding seed string
-   blindMode Mode=full	// blinding mode
+   blindMode Mode=full,	// blinding mode
+   Double_t centralValue=0.0,     // Central value for Precision measurements
+   Double_t sigmaOffset=1.0       // range for Offset
    );
 
   // Copy
@@ -52,15 +54,15 @@ public:
 
   // Operators
 
-  Double_t Randomizer(char *StringAlphabet) const;
+  Double_t Randomizer(const char *StringAlphabet) const;
 
   Double_t PseudoRandom(Int_t Seed) const;
 
-  Double_t MakeOffset(char *StringAlphabet) const;
+  Double_t MakeOffset(const char *StringAlphabet) const;
 
-  Double_t MakeGaussianOffset(char *StringAlphabet) const;
+  Double_t MakeGaussianOffset(const char *StringAlphabet) const;
 
-  Double_t MakeSignFlip(char *StringAlphabet) const;
+  Double_t MakeSignFlip(const char *StringAlphabet) const;
 
   Int_t SignOfTag(Double_t STag) const;
   
@@ -88,11 +90,24 @@ public:
 
   Double_t RandomizeTag(Double_t STag, Int_t EventNumber) const;
 
+  Double_t HidePrecision(Double_t Precision) const;
+
+  Double_t UnHidePrecision(Double_t PrecisionPrime) const;
+
+  Double_t HideOffset( Double_t Precision ) const;
+  
+  Double_t UnHideOffset( Double_t PrecisionBlind ) const;
+
+
   const char *stSeed()const {return _stSeed;}
 
   const blindMode& mode()const {return _mode;}
 
   void setMode(blindMode mode) {_mode=mode;}
+
+  const Double_t getPrecisionCentralValue() const {return _PrecisionCentralValue;}
+
+  const Double_t getPrecisionOffsetScale() const {return _PrecisionOffsetScale;}
 
 private:
 
@@ -109,6 +124,10 @@ private:
   Double_t _DeltaMOffset;
   Double_t _MysteryPhase;
   Double_t _STagConstant;
+  Double_t _PrecisionSignFlip;
+  Double_t _PrecisionOffsetScale;
+  Double_t _PrecisionOffset;
+  Double_t _PrecisionCentralValue;
   blindMode _mode;
   
   // setup data members from string seed  

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooUnblindCPAsymVar.cc,v 1.5 2001/08/23 01:23:35 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -13,8 +13,8 @@
 
 // -- CLASS DESCRIPTION [REAL] --
 //
-// Implementation of BlindTools' CP asymmetry blinding method
-// A RooUnblindCPAsymVar object is a real valued function
+// Implementation of BlindTools' precision blinding method
+// A RooUnblindPrecision object is a real valued function
 // object, constructed from a blind value holder and a 
 // set of unblinding parameters. When supplied to a PDF
 // in lieu of a regular parameter, the blind value holder
@@ -25,44 +25,44 @@
 // of the unblind parameter
 
 #include "RooFitCore/RooArgSet.hh"
-#include "RooFitModels/RooUnblindCPAsymVar.hh"
+#include "RooFitModels/RooUnblindPrecision.hh"
 
 
-ClassImp(RooUnblindCPAsymVar)
+ClassImp(RooUnblindPrecision)
 ;
 
 
-RooUnblindCPAsymVar::RooUnblindCPAsymVar() : _blindEngine("") 
+RooUnblindPrecision::RooUnblindPrecision() : _blindEngine("") 
 {
   // Default constructor
 }
 
 
-RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
-					     const char *blindString, RooAbsReal& cpasym)
-  : RooAbsHiddenReal(name,title), _blindEngine(blindString), _asym("asym","CP Asymmetry",this,cpasym) 
+RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
+					 const char *blindString, Double_t centralValue, Double_t scale, RooAbsReal& value)
+  : RooAbsHiddenReal(name,title), _blindEngine(blindString,RooBlindTools::full,centralValue,scale), _value("value","Precision blinded value",this,value) 
 {  
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
 
 
-RooUnblindCPAsymVar::RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const char* name) : 
-  RooAbsHiddenReal(other, name), _blindEngine(other._blindEngine), _asym("asym",this,other._asym)
+RooUnblindPrecision::RooUnblindPrecision(const RooUnblindPrecision& other, const char* name) : 
+  RooAbsHiddenReal(other, name), _blindEngine(other._blindEngine), _value("asym",this,other._value)
 {
   // Copy constructor
 }
 
 
-RooUnblindCPAsymVar::~RooUnblindCPAsymVar() 
+RooUnblindPrecision::~RooUnblindPrecision() 
 {
-  // Copy constructor
+  // Destructor
 }
 
 
-Double_t RooUnblindCPAsymVar::evaluate() const
+Double_t RooUnblindPrecision::evaluate() const
 {
-  // Evaluate RooBlindTools unhide-asymmetry method on blind value
-  return _blindEngine.UnHideAsym(_asym);
+  // Evaluate RooBlindTools unhide-precision method on blind value
+  return _blindEngine.UnHidePrecision(_value);
 }
 
 
