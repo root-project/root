@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.3 2003/07/08 16:39:44 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.4 2004/10/20 13:11:38 rdm Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -891,7 +891,6 @@ void TASPaletteEditor::UpdateRange()
 void TASPaletteEditor::PaintPalette::Paint(Option_t *)
 {
    // Actually paint the paletter.
-
 #ifdef WIN32
    void *bmbits = NULL ;
    BITMAPINFO *bmi = NULL ;

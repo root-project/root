@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.30 2004/08/09 15:35:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.31 2004/10/20 13:11:39 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -318,5 +318,6 @@ R__EXTERN TVirtualX  *gGXBatch;
 
 R__EXTERN void (*gDrawDIB)(ULong_t bmi, ULong_t bmbits, Int_t xpos, Int_t ypos);
 R__EXTERN unsigned char *(*gGetBmBits)(Drawable_t wid, Int_t w, Int_t h);
+R__EXTERN Pixmap_t (*gDIB2Pixmap)(ULong_t bmbits, ULong_t bmi);
 
 #endif

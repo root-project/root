@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.9 2004/10/19 17:13:27 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.10 2004/10/20 13:11:38 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   28/11/2001
 
 /*************************************************************************
@@ -67,7 +67,6 @@ extern "C" {
 
 ASVisual *TASImage::fgVisual;
 Bool_t TASImage::fgInit = kFALSE;
-
 
 ClassImp(TASImage)
 
@@ -669,7 +668,6 @@ void TASImage::Draw(Option_t *option)
 void TASImage::Paint(Option_t *option)
 {
    // Paint image in current pad. See Draw() function for drawing options.
-
 #ifdef WIN32
    void *bmbits = NULL ;
    BITMAPINFO *bmi = NULL ;
@@ -1392,20 +1390,32 @@ void TASImage::StartPaletteEditor()
 const TGPicture *TASImage::GetPicture()
 {
    // convert image into picture
+#ifdef WIN32
+   void *bmbits = NULL ;
+   BITMAPINFO *bmi = NULL ;
+#endif
 
    const TGPicture *ret = 0;
    Pixmap_t pxmap;
 
    if (!InitVisual()) return 0;
 
-   if (gVirtualX->InheritsFrom("TGX11")) {
-      pxmap = (Pixmap_t)asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(), 
-                                       fImage, 0, kTRUE);
-      ret = gClient->GetPicturePool()->GetPicture(fName, pxmap);
-   } 
+#ifndef WIN32
+   pxmap = (Pixmap_t)asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(), 
+                                    fImage, 0, kTRUE);
+#else
+   bmi = ASImage2DBI( fgVisual, fImage, 0, 0, fImage->width, fImage->height, &bmbits );
+   if(gDIB2Pixmap != 0) {
+       pxmap = gDIB2Pixmap((ULong_t)bmi, (ULong_t)bmbits);
+       free(bmbits);
+       free(bmi);
+   }
+#endif
+   ret = gClient->GetPicturePool()->GetPicture(fName, pxmap);
    
    return ret;
 }
+
 
 //______________________________________________________________________________
 void TASImage::SetImage(Pixmap_t pxm)

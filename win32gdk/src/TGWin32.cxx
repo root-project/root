@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.86 2004/08/26 17:05:23 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.87 2004/10/20 13:11:39 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -984,6 +984,7 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title)
    }
    gDrawDIB  = &(TGWin32::DrawDIB);
    gGetBmBits  = &(TGWin32::GetBmBits);
+   gDIB2Pixmap = &(TGWin32::DIB2Pixmap);
    TGWin32SetConsoleWindowName();
 }
 
@@ -6669,7 +6670,14 @@ void TGWin32::GetWindowSize(Drawable_t id, Int_t & x, Int_t & y,
    // already used).
 
    Int_t ddum;
-   gdk_window_get_geometry((GdkDrawable *) id, &x, &y, (int*)&w, (int*)&h, &ddum);
+   if (GDK_DRAWABLE_TYPE(id) == GDK_DRAWABLE_PIXMAP) {
+      x = y = 0;
+      gdk_drawable_get_size((GdkDrawable *)id, (int*)&w, (int*)&h);
+   }
+   else {
+      gdk_window_get_geometry((GdkDrawable *) id, &x, &y, (int*)&w, 
+                              (int*)&h, &ddum);
+   }
 }
 
 //______________________________________________________________________________
@@ -7082,6 +7090,36 @@ unsigned char *TGWin32::GetBmBits(Drawable_t wid, Int_t width, Int_t height)
       ::ReleaseDC((HWND)GDK_DRAWABLE_XID(wid), hdc);
    }
    return (unsigned char *)bmbits;
+}
+
+//______________________________________________________________________________
+Pixmap_t TGWin32::DIB2Pixmap(ULong_t bmi, ULong_t bmbits)
+{
+   // Converts a DIB (Device Independant Bitmap) into 
+   // a GdkPixmap (added for libAfterImage on Win32)
+   // bmi        - pointer on bitmap info structure
+   // bmbits     - pointer on bitmap bits array
+   // returns Pixmap_t (pointer on a GdkPixmap)
+   GdkPixmap *pixmap = 0;
+   void *pbmbits;
+   BITMAPINFO *lpbmi = (BITMAPINFO *)bmi;
+   SIZE size;
+
+   HDC hdc = ::GetDC( NULL );
+
+   HBITMAP bitmap = ::CreateDIBitmap(hdc, &lpbmi->bmiHeader, CBM_INIT,
+                                (void *)bmbits, lpbmi, DIB_RGB_COLORS);
+   ::ReleaseDC(NULL, hdc);
+
+   // For an obscure reason, we have to set the size of the 
+   // bitmap this way before to call gdk_pixmap_foreign_new
+   // otherwise, it fails...
+   ::SetBitmapDimensionEx(bitmap, lpbmi->bmiHeader.biWidth, 
+                          lpbmi->bmiHeader.biHeight, &size);
+
+   pixmap = gdk_pixmap_foreign_new((guint32)bitmap);
+
+   return (Pixmap_t) pixmap;
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.24 2004/08/09 15:35:52 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.25 2004/10/20 13:11:39 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -378,6 +378,7 @@ public:
 
    static void         DrawDIB(ULong_t bmi, ULong_t bmbits, Int_t xpos, Int_t ypos);
    static unsigned char *GetBmBits(Drawable_t wid, Int_t w, Int_t h);
+   static Pixmap_t     DIB2Pixmap(ULong_t bmi, ULong_t bmbits);
 
    static void Lock();
    static void Unlock();
