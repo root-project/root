@@ -1503,6 +1503,7 @@ void G__declare_template()
 #ifndef G__OLDIMPLEMENTATION691
   int isforwarddecl = 0;
 #endif
+  int isfrienddecl = 0;
 
 #ifndef G__OLDIMPLEMENTATION1412
 #ifndef G__OLDIMPLEMENTATION1601
@@ -1541,6 +1542,10 @@ void G__declare_template()
 
   do {
     c=G__fgetname_template(temp,"(<");
+    if (strcmp(temp,"friend")==0) {
+       isfrienddecl = 1;
+       c=G__fgetname_template(temp,"(<");
+    }
   } while(strcmp(temp,"inline")==0||strcmp(temp,"const")==0
 #ifndef G__OLDIMPLEMENTATION1463
 	  || strcmp(temp,"typename")==0
