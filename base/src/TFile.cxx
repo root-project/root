@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.12 2000/11/27 10:44:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.13 2000/11/30 08:34:12 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1437,10 +1437,16 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle, Int_t
    // TRFIOFile and with "file:" or the default a local TFile. However,
    // before opening a file via TNetFile a check is made to see if the URL
    // specifies a local file. If that is the case the file will be opened
-   // via a normal TFile. To force the opening of a local file via a
+   // via a normal TFile (+). To force the opening of a local file via a
    // TNetFile use either TNetFile directly or specify as host "localhost".
    // For the meaning of the options and other arguments see the constructors
    // of the individual file classes.
+
+   // (+) Unless PROOF is active and this is not a PROOF master server, i.e.
+   // this is a PROOF client, in that case open as a TNetFile so the TNetFile
+   // gets propagated to PROOF to be opened there too (a TFile open does
+   // get propagated to PROOF since it makes not much sense trying to open
+   // a local file on a remote machine).
 
    TFile *f = 0;
 
@@ -1448,7 +1454,10 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle, Int_t
       TUrl url(name);
       TInetAddress a(gSystem->GetHostByName(url.GetHost()));
       TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
-      if (strcmp(a.GetHostName(), b.GetHostName()))
+      if (strcmp(a.GetHostName(), b.GetHostName()) ||
+          (TClassTable::GetDict("TProof") &&
+           gROOT->ProcessLineFast("TProof::IsActive()") &&
+           !gROOT->ProcessLineFast("TProof::This()->IsMaster()")))
          f = new TNetFile(name, option, ftitle, compress);
       else {
          const char *fname = url.GetFile();
