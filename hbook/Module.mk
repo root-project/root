@@ -40,7 +40,7 @@ include/%.h:    $(HBOOKDIRI)/%.h
 $(HBOOKLIB):    $(HBOOKO) $(HBOOKDO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libHbook.$(SOEXT) $@ "$(HBOOKO) $(HBOOKDO)" \
-		   "$(CERNLIBDIR) $(CERNLIBS) $(F77LIBS)"
+		   "$(CERNLIBDIR) $(CERNLIBS) $(HBOOKLIBEXTRA) $(F77LIBS)"
 
 $(HBOOKDS):     $(HBOOKH) $(HBOOKL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
