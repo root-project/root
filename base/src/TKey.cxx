@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.32 2003/04/28 16:28:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.33 2003/06/25 15:35:09 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -528,6 +528,7 @@ TObject *TKey::ReadObj()
          delete [] fBuffer;
          delete pobj;
          pobj = 0;
+         tobj = 0;
          goto CLEAR;
       }
    } else {
