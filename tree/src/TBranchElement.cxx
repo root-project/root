@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.149 2004/10/17 20:59:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.150 2004/10/29 18:03:11 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -254,7 +254,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          clm = fCollProxy->GetValueClass();
 
          // See if we can split:
-         Bool_t cansplit = kTRUE;
+         Bool_t cansplit = abs(stl)<=TClassEdit::kDeque;//kTRUE;
          if (clm==0) {
             cansplit = kFALSE;
          } else if (clm==TString::Class() || clm==gROOT->GetClass("string")) {
@@ -1164,32 +1164,11 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       if ( fType == 3 || fType == 4 )  {
         nbytes += TBranch::GetEntry(entry, getall);
       }
-      if ( fType == 4)   {
-        // Note: Proxy-helper needs to "embrace" the entire
-        //       streaming of this STL container if the container
-        //       is a set/multiset/map/multimap (what we do not
-        //       know here).
-        //       For vector/list/deque Allocate == Resize
-        //                         and Commit   == noop.
-        // TODO: Exception safety a la TPushPop
-        TVirtualCollectionProxy* proxy = GetCollectionProxy();
-        TVirtualCollectionProxy::TPushPop helper(proxy,fAddress);
-        void* env = proxy->Allocate(fNdata,true);
-        for (Int_t i=0;i<nbranches;i++)  {
-          TBranch *branch = (TBranch*)fBranches[i];
-          Int_t    nb = branch->GetEntry(entry, getall);
-          if (nb < 0) return nb;
-          nbytes += nb;
-        }
-        proxy->Commit(env);
-      }
-      else  {
-        for (Int_t i=0;i<nbranches;i++)  {
-          TBranch *branch = (TBranch*)fBranches[i];
-          Int_t    nb = branch->GetEntry(entry, getall);
-          if (nb < 0) return nb;
-          nbytes += nb;
-        }
+      for (Int_t i=0;i<nbranches;i++)  {
+        TBranch *branch = (TBranch*)fBranches[i];
+        Int_t    nb = branch->GetEntry(entry, getall);
+        if (nb < 0) return nb;
+        nbytes += nb;
       }
    } else {
       //terminal branch
@@ -1697,10 +1676,12 @@ void TBranchElement::ReadLeaves(TBuffer &b)
         }
      }
      fNdata = n;
+     TVirtualCollectionProxy* proxy = GetCollectionProxy();
+     TVirtualCollectionProxy::TPushPop helper(proxy,fAddress);
+     void* env = proxy->Allocate(fNdata,true);
+     proxy->Commit(env);
      if (!fObject) return;
   } else if (fType == 41) {    // sub branch of an STL class
-     //Error("ReadLeaves","STL split mode not yet implemented (error 2)\n");
-     //char **ppointer = (char**)fAddress;
      fNdata = fBranchCount->GetNdata();
      if (!fObject) return;
      TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(),fObject);
