@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.77 2004/01/30 08:12:56 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.78 2004/01/31 08:59:09 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -36,6 +36,8 @@
 #include "TVirtualPad.h"
 #include "TSystem.h"
 #include "TVirtualMutex.h"
+#include "TError.h"
+#include "TEnv.h"
 
 #ifdef WIN32
 #  ifndef ROOT_TGWin32Command
@@ -76,7 +78,11 @@ extern "C" void TCint_UpdateClassInfo(char *c, Long_t l) {
   TCint::UpdateClassInfo(c, l);
 }
 
-extern "C" void* TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, void **p2) {
+extern "C" int TCint_AutoLoadClass(char *c) {
+  return TCint::AutoLoadClass(c);
+}
+
+extern "C" void *TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, void **p2) {
   return TCint::FindSpecialObject(c, ci, p1, p2);
 }
 
@@ -98,6 +104,7 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
    G__RegisterScriptCompiler(&ScriptCompiler);
    G__set_ignoreinclude(&IgnoreInclude);
    G__InitUpdateClassInfo(&TCint_UpdateClassInfo);
+   G__set_autoloading(&TCint_AutoLoadClass);
    G__InitGetSpecialObject(&TCint_FindSpecialObject);
 
    ResetAll();
@@ -236,10 +243,10 @@ Int_t TCint::Load(const char *filename, Bool_t system)
    if (!system)
       i = G__loadfile(filename);
    else
-      i = G__loadsystemfile(filename); 
-   
+      i = G__loadsystemfile(filename);
+
    UpdateListOfTypes();
-     
+
    return i;
 }
 
@@ -274,7 +281,7 @@ Long_t TCint::ProcessLine(const char *line, EErrorCode *error)
             TCint::UpdateAllCanvases();
          } else {
             int local_error = 0;
-            
+
             ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, &local_res);
             if (local_error == 0 && G__get_return(&fExitCode) == G__RETURN_EXIT2) {
                ResetGlobals();
@@ -283,7 +290,7 @@ Long_t TCint::ProcessLine(const char *line, EErrorCode *error)
             if (error)
                *error = (EErrorCode)local_error;
          }
-         
+
          if (ret==0) ret = G__int(local_res);
 
          gROOT->SetLineHasBeenProcessed();
@@ -533,14 +540,14 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
              !(cl->fClassInfo->Property() & (kIsClass|kIsStruct))) {
             cl->MakeZombie();
          }
-         
+
          if (!cl->fClassInfo->IsLoaded()) {
             // this happens when no CINT dictionary is available
             delete cl->fClassInfo;
             cl->fClassInfo = 0;
          }
 
-      } 
+      }
    }
 }
 
@@ -563,9 +570,9 @@ Bool_t TCint::CheckClassInfo(const char *name)
 
       while (*current && *current != ':' && *current != '<')
          current++;
-      
+
       if (!*current) break;
-      
+
       if (*current == '<') {
          int level = 1;
          current++;
@@ -769,14 +776,14 @@ void *TCint::GetInterfaceMethodWithPrototype(TClass *cl, const char *method,
 }
 
 //______________________________________________________________________________
-const char *TCint::GetInterpreterTypeName(const char *name) 
+const char *TCint::GetInterpreterTypeName(const char *name)
 {
    // The 'name' is known to the interpreter, this function returns
    // the internal version of this name (usually just resolving typedefs)
    // This is used in particular to synchronize between the name used
    // by rootcint and by the run-time enviroment (TClass)
    // Return 0 if the name is not known.
-   
+
    if (!gInterpreter->CheckClassInfo(name)) return 0;
    G__ClassInfo cl(name);
    if (cl.IsValid()) return cl.Name();
@@ -930,15 +937,56 @@ const char *TCint::TypeName(const char *typeDesc)
 }
 
 //______________________________________________________________________________
-void *TCint::FindSpecialObject(char *item, G__ClassInfo *type, void **prevObj,
-                        void **assocPtr)
+int TCint::AutoLoadClass(const char *cls)
+{
+   // Load library containing specified class. Returns 0 in case of error
+   // and 1 in case of success.
+
+   // open the [system].rootmap files
+   static TEnv *mapfile = 0;
+   if (!mapfile)
+      mapfile = new TEnv(".rootmap");
+
+   // The cls string is in the form:
+   //    {new Type
+   //    {Type a
+   //    {Type *a
+   int i = 0, j = 0;
+   char classname[1024];
+   while (cls[i] && !isalpha(cls[i])) i++;
+   while (cls[i] && (isalnum(cls[i]) || '_' == cls[i]))
+      classname[j++] = cls[i++];
+   classname[j] = 0;
+   if (!strcmp(classname,"new")) {
+      j = 0;
+      while (cls[i] && !isalpha(cls[i])) i++;
+      while (cls[i] && (isalnum(cls[i]) || '_' == cls[i]))
+         classname[j++] = cls[i++];
+      classname[j] = 0;
+   }
+   if (classname[0]) {
+      TString key = TString("Library.") + classname;
+      const char *lib = mapfile->GetValue(key, "");
+      if (lib && strlen(lib)) {
+         ::Info("TCint::AutoLoadClass", "loading library %s for class %s", lib, classname);
+         G__security_recover(G__sout);
+         if (gSystem->Load(lib) == 0)
+            return 1;
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+void *TCint::FindSpecialObject(const char *item, G__ClassInfo *type,
+                               void **prevObj, void **assocPtr)
 {
    // Static function called by CINT when it finds an un-indentified object.
    // This function tries to find the UO in the ROOT files, directories, etc.
    // This functions has been registered by the TCint ctor.
 
    if (!*prevObj || *assocPtr != gDirectory) {
-      *prevObj  = gROOT->FindSpecialObject(item,*assocPtr);
+      *prevObj = gROOT->FindSpecialObject(item, *assocPtr);
    }
 
    if (*prevObj) type->Init(((TObject *)*prevObj)->ClassName());
@@ -962,7 +1010,7 @@ void TCint::UpdateClassInfo(char *item, Long_t tagnum)
 
          TIter next( gROOT->GetListOfClasses() );
          TClass *cl;
-         
+
          TString resolvedItem(
             TClassEdit::ResolveTypedef(TClassEdit::ShortType(item,TClassEdit::kDropStlDefault).c_str()
                                        ,kTRUE) );
@@ -978,7 +1026,7 @@ void TCint::UpdateClassInfo(char *item, Long_t tagnum)
             }
          }
       }
-      
+
       TClass *cl = gROOT->GetClass(item, load);
       if (cl) {
          G__ClassInfo *info = cl->GetClassInfo();
