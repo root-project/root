@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.84 2005/01/27 20:34:02 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.85 2005/01/30 07:16:55 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1691,15 +1691,17 @@ void TCanvas::Streamer(TBuffer &b)
       //restore the colors
       TObjArray *colors = (TObjArray*)fPrimitives->FindObject("ListOfColors");
       if (colors) {
-         Int_t ncolors = colors->GetEntries();
-         for (Int_t i=0;i<ncolors;i++) {
-            TColor *colold = (TColor*)colors->At(i);
-            TColor *colcur = gROOT->GetColor(i);
+         TIter next(colors);
+         TColor *colold;
+         while ((colold = (TColor*)next())) {
             if (colold) {
+               Int_t cn = 0;
+               if (colold) cn = colold->GetNumber();
+               TColor *colcur = gROOT->GetColor(cn);
                if (colcur) {
                   colcur->SetRGB(colold->GetRed(),colold->GetGreen(),colold->GetBlue());
                } else {
-                  colcur = new TColor(i,colold->GetRed(),
+                  colcur = new TColor(cn,colold->GetRed(),
                                         colold->GetGreen(),
                                         colold->GetBlue(),
                                         colold->GetName());
