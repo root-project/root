@@ -18,6 +18,10 @@
  * purpose.  It is provided "as is" without express or implied warranty.
  ************************************************************************/
 
+#if (__GNUC__>=3) 
+#define G__NEWSTDHEADER
+#endif
+
 #ifndef G__LONGLONG_H
 #define G__LONGLONG_H
 
