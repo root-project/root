@@ -12,13 +12,14 @@ if [ $# -lt 2 ] ; then printUSAGE "for the test" ; fi
 
 cd $2
 
-sed -e "s/TEST_TARGETS += /TEST_TARGETS += $1.* /g" Makefile > Makefile1
+sed -e "s/TEST_TARGETS += /TEST_TARGETS += $1 /g" Makefile > Makefile1
 rm Makefile
+mv Makefile1 Makefile
 
 #sed -e "s/testWithDiff/$1/g" Makefile1 > Makefile
 #rm Makefile1
 
 echo "$1 : $1.log" >> Makefile
-echo "\$(TestDiff)" >> Makefile
+echo "	\$(TestDiff)" >> Makefile
 
 touch $1.ref

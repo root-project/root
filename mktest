@@ -21,7 +21,7 @@ r=`echo $1 | grep '/'`
 mkdir $1
 
 #Copy Makefile.template to the new test directory
-cp root/Makefile.template $1
+cp scripts/Makefile.template $1
 
 #Add to CVS
 #cvs add $1
