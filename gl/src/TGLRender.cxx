@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.16 2004/11/24 14:48:02 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.17 2004/11/24 15:16:45 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -84,13 +84,13 @@ void TGLRender::Traverse()
       fGLInit = kTRUE;
       Init();
    }
-   if (!fDList) {
+/*   if (!fDList) {
       if (!(fDList = glGenLists(1))) {
          Error("TGLRender::Traverse", "could not create gl list");
          return;
       }
       BuildGLList();
-   }
+   }*/
 
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    Int_t start = 0, end = fGLCameras.GetEntriesFast();
@@ -215,20 +215,20 @@ void TGLRender::EndMovement()
 {
    if (fIsPicking) {
       fIsPicking = kFALSE;
-      glDeleteLists(fDList, 1);
+/*      glDeleteLists(fDList, 1);
       if (!(fDList = glGenLists(1))) {
          Error("TGLSceneGraph::EndMovement", "could not create display list");
          return;
       }
       fFirstT = 0;
-      BuildGLList();
+      BuildGLList();*/
    }
 }
 
 //______________________________________________________________________________
 void TGLRender::BuildGLList(Bool_t exec)
 {
-   glNewList(fDList, exec ? GL_COMPILE_AND_EXECUTE : GL_COMPILE);
+//   glNewList(fDList, exec ? GL_COMPILE_AND_EXECUTE : GL_COMPILE);
    Bool_t isTr = kFALSE;
    if (fSelectedObj && !(isTr = fSelectedObj->IsTransparent())) {
       fSelectedObj->GLDraw();
@@ -252,26 +252,27 @@ void TGLRender::BuildGLList(Bool_t exec)
       fFirstT = fFirstT->GetNextT();
    }
 
-   glEndList();
+//   glEndList();
 }
 
 //______________________________________________________________________________
 void TGLRender::RunGLList()
 {
-   glCallList(fDList);
+  // glCallList(fDList);
+   BuildGLList();
 }
 
 //______________________________________________________________________________
 void TGLRender::Invalidate()
 {
-   if(fDList)
+/*   if(fDList)
       glDeleteLists(fDList, 1);
    if (!(fDList = glGenLists(1))) {
       Error("TGLSceneGraph::EndMovement", "could not create display list");
       return;
    }
    fFirstT = 0;
-   BuildGLList();
+   BuildGLList();*/
 }
 
 //______________________________________________________________________________
