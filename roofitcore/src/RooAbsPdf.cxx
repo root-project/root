@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.33 2001/09/20 01:40:09 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.34 2001/09/22 00:30:56 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -188,11 +188,16 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
 //     }
 //   }
 
-  if (_verboseEval>0) cout << "RooAbsPdf:syncNormalization(" << GetName() 
-			 << ") recreating normalization integral(" 
-			 << _lastNormSet << " -> " << nset << ")" << endl ;
+  if (_verboseEval>0) {
+    cout << "RooAbsPdf:syncNormalization(" << GetName() 
+	 << ") recreating normalization integral(" 
+	 << _lastNormSet << " -> " << nset << "=" ;
+    if (nset) nset->Print("1") ; else cout << "<none>" ;
+    cout << ")" << endl ;
+  }
+
   _lastNormSet = (RooArgSet*) nset ;
-  _lastNameSet.refill(*nset) ;
+  //_lastNameSet.refill(*nset) ;
 
   // Update dataset pointers of proxies
   ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
@@ -364,7 +369,7 @@ void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) cons
   }
 }
 
-RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents) const {
+RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t verbose) const {
   // Generate a new dataset containing the specified variables with
   // events sampled from our distribution. Generate the specified
   // number of events or else try to use expectedEvents() if nEvents <= 0.
@@ -374,13 +379,13 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents) const 
   // dataset.
 
   RooDataSet *generated(0);
-  RooGenContext *context= new RooGenContext(*this, whatVars);
+  RooGenContext *context= new RooGenContext(*this, whatVars,0,verbose);
   if(context->isValid()) generated= context->generate(nEvents);
   delete context;
   return generated;
 }
 
-RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &prototype) const {
+RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &prototype, Bool_t verbose) const {
   // Generate a new dataset with values of the whatVars variables
   // sampled from our distribution. Use the specified existing dataset
   // as a prototype: the new dataset will contain the same number of
@@ -532,8 +537,6 @@ void RooAbsPdf::generateEvent(Int_t code) {
 //    }
 //    return histogram;
 //  }
-
-
 
 
 

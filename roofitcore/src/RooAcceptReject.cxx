@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.9 2001/09/11 00:30:31 verkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.10 2001/09/17 18:48:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.9 2001/09/11 00:30:31 verkerke Exp $";
+"$Id: RooAcceptReject.cc,v 1.10 2001/09/17 18:48:11 verkerke Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose)
@@ -52,7 +52,8 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   // Check that each argument is fundamental, and separate them into
   // sets of categories and reals. Check that the area of the generating
   // space is finite.
-  _sampleDim= 0;
+  _realSampleDim= 0;
+  _catSampleMult= 1;
   _isValid= kTRUE;
   TIterator *iterator= genVars.createIterator();
   const RooAbsArg *found(0),*arg(0);
@@ -67,7 +68,12 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
     found= (const RooAbsArg*)_cloneSet->find(arg->GetName());
     if(found) {
       arg= found;
-      _sampleDim++;
+      const RooAbsCategory * cat = dynamic_cast<const RooAbsCategory*>(found) ;
+      if (cat) {
+	_catSampleMult *= cat->numTypes() ;
+      } else {
+	_realSampleDim++;
+      }
     }
     else {
       // clone any variables we generate that we haven't cloned already
@@ -101,21 +107,25 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
     cout << fName << "::" << ClassName() << ": constructor failed with errors" << endl;
     return;
   }
+
   // calculate the minimum number of trials needed to estimate our integral and max value
-  if(_sampleDim > _maxSampleDim) {
-    _minTrials= _minTrialsArray[_maxSampleDim];
-    cout << fName << "::" << ClassName() << ": WARNING: generating " << _sampleDim
+  if(_realSampleDim > _maxSampleDim) {
+    _minTrials= _minTrialsArray[_maxSampleDim]*_catSampleMult;
+    cout << fName << "::" << ClassName() << ": WARNING: generating " << _realSampleDim
 	 << " variables with accept-reject may not be accurate" << endl;
   }
   else {
-    _minTrials= _minTrialsArray[_sampleDim];
+    _minTrials= _minTrialsArray[_realSampleDim]*_catSampleMult;
   }
+
+
   // print a verbose summary of our configuration, if requested
   if(_verbose) {
     cout << fName << "::" << ClassName() << ":" << endl
 	 << "  Initializing accept-reject generator for" << endl << "    ";
     _funcClone->Print();
-    cout << "  Sampling dimension is " << _sampleDim << endl;
+    cout << "  Real sampling dimension is " << _realSampleDim << endl;
+    cout << "  Number of sampled category states is " << _catSampleMult << endl ;
     cout << "  Min sampling trials is " << _minTrials << endl;
     cout << "  Will generate category vars ";
     TString indent("  ");
@@ -191,7 +201,7 @@ void RooAcceptReject::generateEvents(Int_t nEvents, RooDataSet &container) {
       _eventsUsed= 0;
       // Calculate how many more events to generate using our best estimate of our efficiency.
       // Always generate at least one more event so we don't get stuck.
-      Int_t extra= 1 + (Int_t)((nEvents - generatedEvts)/eff());
+      Int_t extra= 1 + (Int_t)(1.02*(nEvents - generatedEvts)/eff());
       if(_verbose) cout << "generating " << extra << " events into reset cache" << endl;
       Double_t oldMax(_maxFuncVal);
       while(extra--) addEvent(cache,nextCatVar,nextRealVar,funcVal);
@@ -222,8 +232,10 @@ Bool_t RooAcceptReject::acceptEvent(const RooDataSet &cache, RooRealVar *funcVal
     Double_t r= RooRandom::uniform();
     if(r*_maxFuncVal > funcVal->getVal()) continue;
     // copy this event into the output container
-    if(_verbose) cout << "accepted event (used " << _eventsUsed << " of "
-		      << cache.numEntries() << " so far)" << endl;
+    if(_verbose && (_eventsUsed%1000==0)) {
+      cout << "RooAcceptReject: accepted event (used " << _eventsUsed << " of "
+	   << cache.numEntries() << " so far)" << endl;
+    }
     container.add(*event);
     return kTRUE;
   }
@@ -257,8 +269,12 @@ void RooAcceptReject::addEvent(RooDataSet &cache, TIterator *nextCatVar, TIterat
   cache.fill();
   _totalEvents++;
 
-  if(_verbose) cout << "=== [" << _totalEvents << "] " << val << " (I = "
-		    << _funcSum/_totalEvents << ")" << endl;
+  if (_verbose &&_totalEvents%10000==0) {
+    cout << "RooAccepReject: generated " << _totalEvents << " events so far." << endl ;
+  }
+
+//   if(_verbose) cout << "=== [" << _totalEvents << "] " << val << " (I = "
+// 		    << _funcSum/_totalEvents << ")" << endl;
 }
 
 const int RooAcceptReject::_maxSampleDim= 3,
