@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.7 2001/11/12 14:17:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.8 2002/01/15 00:57:14 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -44,7 +44,7 @@
 #include "TGScrollBar.h"
 #include "TList.h"
 #include "TMath.h"
-
+#include "TSystem.h"
 
 ClassImp(TGLVEntry)
 ClassImp(TGLVContainer)
@@ -97,6 +97,14 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
 
    fViewMode = (EListViewMode)-1;
    SetViewMode(viewMode);
+
+   if (p->InheritsFrom(TGContainer::Class())) {
+      TGContainer* cont = (TGContainer*)p;
+      if (!cont->IsMapSubwindows()) {
+         fClient->UnregisterWindow(this);
+         fClient = 0;
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -124,7 +132,7 @@ void TGLVEntry::Activate(Bool_t a)
    fActive = a;
 
    if (fActive) {
-      fSelPic = new TGSelectedPicture(fClient, fCurrent);
+      fSelPic = new TGSelectedPicture(gClient, fCurrent);
    } else {
       if (fSelPic) delete fSelPic;
       fSelPic = 0;
@@ -145,11 +153,11 @@ void TGLVEntry::SetViewMode(EListViewMode viewMode)
          fCurrent = fSmallPic;
       if (fActive) {
          if (fSelPic) delete fSelPic;
-         fSelPic = new TGSelectedPicture(fClient, fCurrent);
+         fSelPic = new TGSelectedPicture(gClient, fCurrent);
       }
       gVirtualX->ClearWindow(fId);
       Resize(GetDefaultSize());
-      fClient->NeedRedraw(this);
+      if(fClient) fClient->NeedRedraw(this);
    }
 }
 
@@ -157,8 +165,25 @@ void TGLVEntry::SetViewMode(EListViewMode viewMode)
 void TGLVEntry::DoRedraw()
 {
    // Redraw list view item.
+   // List view item is placed and layouted in the container frame,
+   // but is drawn in viewport.
+
+   if(IsMapped()) DrawCopy(fId,0,0);
+}
+
+//______________________________________________________________________________
+void TGLVEntry::DrawCopy(Handle_t id,Int_t x, Int_t y)
+{
+   // Draw list view item in other window.
+   // List view item is placed and layouted in the container frame,
+   // but is drawn in viewport.
 
    int ix, iy, lx, ly;
+   int max_ascent, max_descent;
+
+   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
+   fTWidth = gVirtualX->TextWidth(fFontStruct, fName->GetString(), fName->GetLength());
+   fTHeight = max_ascent + max_descent;
 
    if (fViewMode == kLVLargeIcons) {
       ix = (fWidth - fCurrent->GetWidth()) >> 1;
@@ -173,21 +198,18 @@ void TGLVEntry::DoRedraw()
    }
 
    if (fActive) {
-      if (fSelPic) fSelPic->Draw(fId, fNormGC, ix, iy);
+      if (fSelPic) fSelPic->Draw(id, fNormGC, x+ix, y+iy);
       gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground);
-      gVirtualX->FillRectangle(fId, fNormGC, lx, ly, fTWidth, fTHeight+1);
+      gVirtualX->FillRectangle(id, fNormGC, x+lx, y+ly, fTWidth, fTHeight+1);
       gVirtualX->SetForeground(fNormGC, fgSelPixel);
    } else {
-      fCurrent->Draw(fId, fNormGC, ix, iy);
+      fCurrent->Draw(id, fNormGC, x+ix, y+iy);
       gVirtualX->SetForeground(fNormGC, fgWhitePixel);
-      gVirtualX->FillRectangle(fId, fNormGC, lx, ly, fTWidth, fTHeight+1);
+      gVirtualX->FillRectangle(id, fNormGC, x+lx, y+ly, fTWidth, fTHeight+1);
       gVirtualX->SetForeground(fNormGC, fgBlackPixel);
    }
 
-   int max_ascent, max_descent;
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   fName->Draw(fId, fNormGC, lx, ly + max_ascent);
-
+   fName->Draw(id, fNormGC, x+lx, y+ly + max_ascent);
    gVirtualX->SetForeground(fNormGC, fgBlackPixel);
 
    if (fViewMode == kLVDetails) {
@@ -201,7 +223,7 @@ void TGLVEntry::DoRedraw()
                lx = (fCpos[i] + fCpos[i+1] - fCtw[i]) >> 1;
             else // default to TEXT_LEFT
                lx = fCpos[i] + 2;
-            fSubnames[i]->Draw(fId, fNormGC, lx, ly + max_ascent);
+            fSubnames[i]->Draw(id, fNormGC, x+lx, y+ly + max_ascent);
          }
       }
    }
@@ -238,28 +260,19 @@ TGDimension TGLVEntry::GetDefaultSize() const
 //______________________________________________________________________________
 TGLVContainer::TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
                              UInt_t options, ULong_t back) :
-   TGCompositeFrame(p, w, h, options, back)
+   TGContainer(p, w, h, options, back)
 {
    // Create a list view container. This is the (large) frame that contains
    // all the list items. It will be shown through a TGViewPort (which is
    // created by the TGCanvas derived TGListView).
 
-   fMsgWindow  = p;
    fListView   = 0;
-   fLastActive = 0;
-   fDragging   = kFALSE;
-   fTotal = fSelected = 0;
-
    fCpos = fJmode = 0;
 
    fViewMode = kLVLargeIcons;
    fItemLayout = new TGLayoutHints(kLHintsExpandY | kLHintsCenterX);
 
    SetLayoutManager(new TGTileLayout(this, 8));
-
-   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                    kButtonPressMask | kButtonReleaseMask |
-                    kPointerMotionMask, kNone, kNone);
 }
 
 //______________________________________________________________________________
@@ -311,8 +324,9 @@ void TGLVContainer::SetViewMode(EListViewMode viewMode)
             SetLayoutManager(new TGListDetailsLayout(this, 2));
             break;
       }
-      //TGCanvas *canvas = (TGCanvas *) this->GetParent()->GetParent();
-      //canvas->Layout();
+
+      TGCanvas *canvas = (TGCanvas *) this->GetParent()->GetParent();
+      canvas->Layout();
    }
 }
 
@@ -377,253 +391,6 @@ Int_t TGLVContainer::GetMaxSubnameWidth(Int_t idx) const
 }
 
 //______________________________________________________________________________
-Bool_t TGLVContainer::HandleButton(Event_t *event)
-{
-   // Handle mouse button event in container.
-
-   Int_t total, selected, page = 0;
-
-   if (event->fCode == kButton4 || event->fCode == kButton5) {
-      if (!fListView) return kTRUE;
-      if (fListView->GetContainer()->GetHeight())
-         page = Int_t(Float_t(fListView->GetViewPort()->GetHeight() *
-                              fListView->GetViewPort()->GetHeight()) /
-                              fListView->GetContainer()->GetHeight());
-   }
-
-   if (event->fCode == kButton4) {
-      //scroll up
-      Int_t newpos = fListView->GetVsbPosition() - page;
-      if (newpos < 0) newpos = 0;
-      fListView->SetVsbPosition(newpos);
-      return kTRUE;
-   }
-   if (event->fCode == kButton5) {
-      // scroll down
-      Int_t newpos = fListView->GetVsbPosition() + page;
-      fListView->SetVsbPosition(newpos);
-      return kTRUE;
-   }
-
-   if (event->fType == kButtonPress) {
-
-      fXp = event->fX;
-      fYp = event->fY;
-
-      if (fLastActive) {
-         fLastActive->Activate(kFALSE);
-         fLastActive = 0;
-      }
-      total = selected = 0;
-
-      TGFrameElement *el;
-      TIter next(fList);
-      while ((el = (TGFrameElement *) next())) {
-         TGLVEntry *f = (TGLVEntry *) el->fFrame;
-         ++total;
-         if (f->GetId() == (Window_t)event->fUser[0]) {  // fUser[0] = subwindow
-            f->Activate(kTRUE);
-            ++selected;
-            fLastActive = f;
-         } else {
-            f->Activate(kFALSE);
-         }
-      }
-
-      if (fTotal != total || fSelected != selected) {
-         fTotal = total;
-         fSelected = selected;
-         SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
-                     fTotal, fSelected);
-      }
-
-      if (selected == 0) {
-         fDragging = kTRUE;
-         fX0 = fXf = fXp;
-         fY0 = fYf = fYp;
-         gVirtualX->DrawRectangle(fId, fgLineGC(), fX0, fY0, fXf-fX0, fYf-fY0);
-      }
-   }
-
-   if (event->fType == kButtonRelease) {
-      if (fDragging) {
-         fDragging = kFALSE;
-         gVirtualX->DrawRectangle(fId, fgLineGC(), fX0, fY0, fXf-fX0, fYf-fY0);
-      } else {
-         SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
-                     event->fCode, (event->fYRoot << 16) | event->fXRoot);
-      }
-   }
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGLVContainer::HandleDoubleClick(Event_t *event)
-{
-   // Handle double click mouse event.
-
-   TGFrameElement *el;
-   TIter next(fList);
-   while ((el = (TGFrameElement *) next())) {
-      TGLVEntry *f = (TGLVEntry *) el->fFrame;
-      if (f->GetId() == (Window_t)event->fUser[0]) {   // fUser[0] = subwindow
-         SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMDBLCLICK),
-                     event->fCode, (event->fYRoot << 16) | event->fXRoot);
-         break;
-      }
-   }
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGLVContainer::HandleMotion(Event_t *event)
-{
-   // Handle mouse motion events.
-
-   int xf0, yf0, xff, yff, total, selected;
-
-   if (fDragging) {
-      gVirtualX->DrawRectangle(fId, fgLineGC(), fX0, fY0, fXf-fX0, fYf-fY0);
-      fX0 = TMath::Min(fXp, event->fX);
-      fXf = TMath::Max(fXp, event->fX);
-      fY0 = TMath::Min(fYp, event->fY);
-      fYf = TMath::Max(fYp, event->fY);
-
-      total = selected = 0;
-
-      TGFrameElement *el;
-      TIter next(fList);
-      while ((el = (TGFrameElement *) next())) {
-         TGLVEntry *f = (TGLVEntry *) el->fFrame;
-         ++total;
-         xf0 = f->GetX() + (f->GetWidth() >> 3);
-         yf0 = f->GetY() + (f->GetHeight() >> 3);
-         xff = xf0 + f->GetWidth() - (f->GetWidth() >> 2);
-         yff = yf0 + f->GetHeight() - (f->GetHeight() >> 2);
-
-         if (((xf0 > fX0 && xf0 < fXf) ||
-              (xff > fX0 && xff < fXf)) &&
-             ((yf0 > fY0 && yf0 < fYf) ||
-              (yff > fY0 && yff < fYf))) {
-            f->Activate(kTRUE);
-            ++selected;
-         } else {
-            f->Activate(kFALSE);
-         }
-      }
-
-      gVirtualX->DrawRectangle(fId, fgLineGC(), fX0, fY0, fXf-fX0, fYf-fY0);
-
-      if (fTotal != total || fSelected != selected) {
-         fTotal = total;
-         fSelected = selected;
-         SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
-                     fTotal, fSelected);
-      }
-   }
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-void TGLVContainer::UnSelectAll()
-{
-   // Unselect all items in the container.
-
-   TGFrameElement *el;
-   TIter next(fList);
-   while ((el = (TGFrameElement *) next())) {
-      TGLVEntry *f = (TGLVEntry *) el->fFrame;
-      f->Activate(kFALSE);
-   }
-
-   fSelected = 0;
-   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
-               fTotal, fSelected);
-}
-
-//______________________________________________________________________________
-void TGLVContainer::SelectAll()
-{
-   // Select all items in the container.
-
-   TGFrameElement *el;
-   TIter next(fList);
-   while ((el = (TGFrameElement *) next())) {
-      TGLVEntry *f = (TGLVEntry *) el->fFrame;
-      f->Activate(kTRUE);
-   }
-
-   fSelected = fTotal;
-   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
-               fTotal, fSelected);
-}
-
-//______________________________________________________________________________
-void TGLVContainer::InvertSelection()
-{
-   // Incert the selection, all selected items become unselected and
-   // vice versa.
-
-   int selected = 0;
-
-   TGFrameElement *el;
-   TIter next(fList);
-   while ((el = (TGFrameElement *) next())) {
-      TGLVEntry *f = (TGLVEntry *) el->fFrame;
-      if (f->IsActive()) {
-         f->Activate(kFALSE);
-      } else {
-         f->Activate(kTRUE);
-         ++selected;
-      }
-   }
-
-   fSelected = selected;
-   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
-               fTotal, fSelected);
-}
-
-//______________________________________________________________________________
-void TGLVContainer::RemoveAll()
-{
-   // Remove all items from the container.
-
-   TGFrameElement *el;
-   TIter next(fList);
-   while ((el = (TGFrameElement *) next())) {
-      el->fFrame->DestroyWindow();
-      delete el->fFrame;
-   }
-   fList->Delete();
-
-   fSelected = fTotal = 0;
-   fLastActive = 0;
-   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
-               fTotal, fSelected);
-}
-
-//______________________________________________________________________________
-void TGLVContainer::RemoveItem(TGLVEntry *item)
-{
-   // Remove item from container.
-
-   TGFrameElement *el;
-   TIter next(fList);
-   while ((el = (TGFrameElement *) next())) {
-      if (item == el->fFrame) {
-         if (item == fLastActive) fLastActive = 0;
-         if (item->IsActive()) fSelected--;
-         fTotal--;
-         item->DestroyWindow();
-         delete item;
-         fList->Remove(el);
-         delete el;
-         break;
-      }
-   }
-}
-
-//______________________________________________________________________________
 void TGLVContainer::RemoveItemWithData(void *userData)
 {
    // Remove item with fUserData == userData from container.
@@ -640,26 +407,13 @@ void TGLVContainer::RemoveItemWithData(void *userData)
 }
 
 //______________________________________________________________________________
-const TGLVEntry *TGLVContainer::GetNextSelected(void **current)
+void TGLVContainer::ActivateItem(TGFrameElement* el)
 {
-   // Return next selected item.
+   // Select/activate item.
 
-   TGLVEntry *f;
-   TObjLink *lnk = (TObjLink *) *current;
-
-   lnk = (lnk == 0) ? fList->FirstLink() : lnk->Next();
-   while (lnk) {
-      f = (TGLVEntry *) ((TGFrameElement *) lnk->GetObject())->fFrame;
-      if (f->IsActive()) {
-         *current = (void *) lnk;
-         return f;
-      }
-      lnk = lnk->Next();
-   }
-   return 0;
+   TGContainer::ActivateItem(el);
+   fLastActive = (TGLVEntry*)el->fFrame;
 }
-
-
 
 //______________________________________________________________________________
 TGListView::TGListView(const TGWindow *p, UInt_t w, UInt_t h,
@@ -824,6 +578,7 @@ void TGListView::Layout()
    UInt_t w, h = 0;
 
    TGLVContainer *container = (TGLVContainer *) fVport->GetContainer();
+
    if (!container) {
       Error("Layout", "no listview container set yet");
       return;
@@ -854,11 +609,7 @@ void TGListView::Layout()
    }
 
    TGCanvas::Layout();
-   if (fViewMode == kLVList) {
-      if (fMaxSize.fWidth > 0)
-         fHScrollbar->SetRange(container->GetWidth()/fMaxSize.fWidth,
-                               fVport->GetWidth()/fMaxSize.fWidth);
-   }
+
    if (fViewMode == kLVDetails) {
       fColHeader[i]->MoveResize(xl, fBorderWidth, fVport->GetWidth()-xl+fBorderWidth, h);
       fVport->MoveResize(fBorderWidth, fBorderWidth+h, fVport->GetWidth(), fVport->GetHeight()-h);
@@ -871,48 +622,37 @@ Bool_t TGListView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
    // Handle messages generated by the list view components.
 
-   if ((fViewMode == kLVList) && (GET_MSG(msg) == kC_HSCROLL)) {
-      switch (GET_SUBMSG(msg)) {
-         case kSB_SLIDERTRACK:
-         case kSB_SLIDERPOS:
-            fVport->SetHPos((Int_t)-parm1 * fMaxSize.fWidth);
-            break;
-         default:
-            break;
-      }
-   } else {
-      TGLVContainer *cnt = (TGLVContainer*)GetContainer();
-      const TGLVEntry *entry;
-      void *p = 0;
+   TGLVContainer *cnt = (TGLVContainer*)GetContainer();
 
-      entry = cnt->GetNextSelected(&p);
+   const TGLVEntry *entry;
+   void *p = 0;
 
-      switch (GET_SUBMSG(msg)) {
-         case kCT_ITEMCLICK:
-            if ((cnt->NumSelected() == 1) && (entry != 0)) {
-               Int_t x = (Int_t)(parm2 & 0xffff);
-               Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
-               Clicked((TGLVEntry*)entry, (Int_t)parm1);
-               Clicked((TGLVEntry*)entry, (Int_t)parm1, x, y);
-            }
-            break;
-         case kCT_ITEMDBLCLICK:
-            if ((cnt->NumSelected() == 1) && (entry!=0)) {
-               Int_t x = (Int_t)(parm2 & 0xffff);
-               Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
-               DoubleClicked((TGLVEntry*)entry, (Int_t)parm1);
-               DoubleClicked((TGLVEntry*)entry, (Int_t)parm1, x, y);
-            }
-            break;
-         case kCT_SELCHANGED:
-            SelectionChanged();
-            break;
-         default:
-            break;
-      }
-      return TGCanvas::ProcessMessage(msg, parm1, parm2);
+   entry = cnt->GetNextSelected(&p);
+
+   switch (GET_SUBMSG(msg)) {
+      case kCT_ITEMCLICK:
+         if ((cnt->NumSelected() == 1) && (entry != 0)) {
+            Int_t x = (Int_t)(parm2 & 0xffff);
+            Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
+            Clicked((TGLVEntry*)entry, (Int_t)parm1);
+            Clicked((TGLVEntry*)entry, (Int_t)parm1, x, y);
+         }
+         break;
+      case kCT_ITEMDBLCLICK:
+         if ((cnt->NumSelected() == 1) && (entry!=0)) {
+            Int_t x = (Int_t)(parm2 & 0xffff);
+            Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
+            DoubleClicked((TGLVEntry*)entry, (Int_t)parm1);
+            DoubleClicked((TGLVEntry*)entry, (Int_t)parm1, x, y);
+         }
+         break;
+      case kCT_SELCHANGED:
+         SelectionChanged();
+         break;
+      default:
+         break;
    }
-   return kTRUE;
+   return TGCanvas::ProcessMessage(msg, parm1, parm2);
 }
 
 //______________________________________________________________________________

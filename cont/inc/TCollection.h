@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.8 2001/03/29 11:25:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.9 2001/07/05 16:50:50 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -86,7 +86,7 @@ public:
    virtual Int_t      GrowBy(Int_t delta) const;
    Bool_t             IsArgNull(const char *where, const TObject *obj) const;
    virtual Bool_t     IsEmpty() const { return GetSize() <= 0; }
-   Bool_t             IsFolder() const { return kTRUE; }
+   virtual Bool_t     IsFolder() const { return kTRUE; }
    Bool_t             IsOwner() const { return TestBit(kIsOwner); }
    virtual void       ls(Option_t *option="") const ;
    virtual TIterator *MakeIterator(Bool_t dir = kIterForward) const = 0;

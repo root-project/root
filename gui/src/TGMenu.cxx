@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.6 2002/01/23 15:48:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.7 2002/04/22 18:24:06 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -781,7 +781,7 @@ Bool_t TGPopupMenu::HandleCrossing(Event_t *event)
       }
       Activate(ptr);
    } else {
-      Activate(0);
+      Activate((TGMenuEntry*)0);
    }
 
    return kTRUE;

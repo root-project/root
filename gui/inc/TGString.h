@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGString.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGString.h,v 1.2 2001/05/29 14:26:17 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -46,11 +46,13 @@ public:
 
    Int_t GetLength() const { return fString.Length(); }
    const char *GetString() const { return (const char *)fString; }
+   void SetString(const char *s) { fString = s; }
 
    virtual void Draw(Drawable_t id, GContext_t gc, Int_t x, Int_t y);
    virtual void DrawWrapped(Drawable_t id, GContext_t gc,
                             Int_t x, Int_t y, UInt_t w, FontStruct_t font);
    virtual Int_t GetLines(FontStruct_t font, UInt_t w);
+   TGString     &operator=(const char *s) { fString = s; return *this; }
 
    ClassDef(TGString,0)  // Graphics string
 };

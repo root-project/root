@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.9 2000/10/22 19:28:57 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.10 2001/06/05 16:42:18 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -47,6 +47,7 @@
 #pragma link C++ class TGDoubleVSlider;
 #pragma link C++ class TGDoubleHSlider;
 #pragma link C++ class TGLVEntry;
+#pragma link C++ class TGContainer;
 #pragma link C++ class TGLVContainer;
 #pragma link C++ class TGListView;
 #pragma link C++ class TGMimeTypes;

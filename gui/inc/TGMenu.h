@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.8 2001/11/18 17:25:24 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.9 2002/05/30 21:27:22 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -187,6 +187,7 @@ public:
 
    virtual void Highlighted(Int_t id) { Emit("Highlighted(Int_t)", id); }  //*SIGNAL*
    virtual void Activated(Int_t id) { Emit("Activated(Int_t)", id); }  //*SIGNAL*
+   virtual void Activate(Bool_t) { }
 
    ClassDef(TGPopupMenu,0)  // Popup menu
 };

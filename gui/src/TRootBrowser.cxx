@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.11 2001/06/27 16:54:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.12 2001/07/05 16:50:12 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -78,6 +78,7 @@ enum ERootBrowserCommands {
    kViewArrangeBySize,
    kViewArrangeByDate,
    kViewArrangeAuto,
+   kViewGroupLV,
 
    kOptionShowCycles,
 
@@ -132,7 +133,6 @@ static const char *gOpenTypes[] = { "ROOT files",   "*.root",
                                     "All files",    "*",
                                     0,              0 };
 
-
 //----- Special ROOT object item (this are items in the icon box, see
 //----- TRootIconBox)
 
@@ -167,18 +167,85 @@ TRootObjItem::TRootObjItem(const TGWindow *p, const TGPicture *bpic,
                                      fSubnames[i]->GetLength());
 }
 
+class TRootIconBox;
+class TRootIconList : public TList {
+
+private:
+   TRootIconBox    *fIconBox; //
+   const TGPicture *fPic;     // list view icon
+   TString          fName;    // the name of the list
+
+public:
+   TRootIconList(TRootIconBox* box = 0);
+   ~TRootIconList();
+   const char       *GetName() const { return fName.Data(); }
+   void              UpdateName();
+   const char       *GetTitle() const { return "ListView Container"; }
+   Bool_t            IsFolder() const { return kFALSE; }
+   void              Browse(TBrowser *b);
+   const TGPicture  *GetPicture() const { return fPic; }
+};
+
+//______________________________________________________________________________
+TRootIconList::TRootIconList(TRootIconBox* box)
+{
+   // ctor
+
+   fPic = gClient->GetPicture("listview.xpm");
+   fIconBox = box;
+   fName = "empty";
+}
+
+//______________________________________________________________________________
+TRootIconList::~TRootIconList()
+{
+   // dtor
+
+   gClient->FreePicture(fPic);
+}
+
+//______________________________________________________________________________
+void TRootIconList::UpdateName()
+{
+   // composite name
+
+   if (!First()) return;
+
+   if (fSize==1) {
+      fName = First()->GetName();
+      return;
+   }
+
+   fName = First()->GetName();
+   fName += "-";
+   fName += Last()->GetName();
+}
+
 //----- Special ROOT object container (this is the icon box on the
 //----- right side of the browser)
 
 class TRootIconBox : public TGFileContainer {
+friend class TRootIconList;
 
 private:
-   Bool_t  fCheckHeaders;   // if true check headers
+   Bool_t           fCheckHeaders;   // if true check headers
+   TRootIconList   *fCurrentList;    //
+   TRootObjItem    *fCurrentItem;    //
+   Bool_t           fGrouped;        //
+   TString          fCachedPicName;  //
+   TList           *fGarbage;        // garbage for  TRootIconList's
+   Int_t            fGroupSize;   // the total number of items when icon box switched to "global view" mode
+   TGString        *fCurrentName;    //
+   const TGPicture *fLargeCachedPic;  //
+   const TGPicture *fSmallCachedPic;  //
+   Bool_t           fWasGrouped;
 
 public:
    TRootIconBox(const TGWindow *p, TGListView *lv, UInt_t w, UInt_t h,
                 UInt_t options = kSunkenFrame,
                 ULong_t back = fgDefaultFrameBackground);
+
+   virtual ~TRootIconBox();
 
    void   AddObjItem(const char *name, TObject *obj, TClass *cl);
    void   GetObjPictures(const TGPicture **pic, const TGPicture **spic,
@@ -186,6 +253,9 @@ public:
    void   SetObjHeaders();
    void   Refresh();
    void   RemoveAll();
+   void   SetGroupSize(Int_t siz) { fGroupSize = siz; }
+   Int_t  GetGroupSize() const { return fGroupSize; }
+   Bool_t WasGrouped() const { return fWasGrouped; }
 };
 
 //______________________________________________________________________________
@@ -197,10 +267,27 @@ TRootIconBox::TRootIconBox(const TGWindow *p, TGListView *lv, UInt_t w,
 
    fListView = lv;
    fCheckHeaders = kTRUE;
+   fTotal = 0;
+   fGarbage = new TList();
+   fCurrentList = 0;
+   fCurrentItem = 0;
+   fGrouped = kFALSE;
+   fGroupSize = 1000;
+   fCurrentName = 0;
+   fWasGrouped = kFALSE;
 
    // Don't use timer HERE (timer is set in TBrowser).
    delete fRefresh;
    fRefresh = 0;
+}
+
+//______________________________________________________________________________
+TRootIconBox::~TRootIconBox()
+{
+   // dtor
+
+   fGarbage->Delete();
+   delete fGarbage;
 }
 
 //______________________________________________________________________________
@@ -210,20 +297,32 @@ void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
    // Retrieve icons associated with class "name". Association is made
    // via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
 
-   *pic  = fClient->GetMimeTypeList()->GetIcon(name, kFALSE);
+   if(fCachedPicName==name) {
+      *pic = fLargeCachedPic;
+      *spic = fSmallCachedPic;
+      return;
+   }
+
+   *pic = fClient->GetMimeTypeList()->GetIcon(name, kFALSE);
+
    if (*pic == 0) {
       if (obj->IsFolder())
          *pic = fFolder_s;
       else
          *pic = fDoc_s;
    }
+   fLargeCachedPic = *pic;
+
    *spic = fClient->GetMimeTypeList()->GetIcon(name, kTRUE);
+
    if (*spic == 0) {
       if (obj->IsFolder())
          *spic = fFolder_t;
       else
          *spic = fDoc_t;
    }
+   fSmallCachedPic = *spic;
+   fCachedPicName = name;
 }
 
 //______________________________________________________________________________
@@ -233,8 +332,10 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
    // via the mime file (see GetObjPictures()).
 
    if (!cl) return;
+   TRootBrowser *browser = (TRootBrowser *)fListView->GetParent()->GetParent()->GetParent();
 
    TGFileItem *fi;
+   fWasGrouped = kFALSE;
 
    if (obj->IsA() == TSystemFile::Class() ||
        obj->IsA() == TSystemDirectory::Class()) {
@@ -248,22 +349,114 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
       return;
    }
 
-   const TGPicture *pic, *spic;
-
-   GetObjPictures(&pic, &spic, obj, obj->GetIconName() ?
-                  obj->GetIconName() : cl->GetName());
-
-   if (fCheckHeaders) {
-      if (strcmp(fListView->GetHeader(1), "Title"))
-         SetObjHeaders();
-      fCheckHeaders = kFALSE;
+   if (!fCurrentList) {
+      fCurrentList = new TRootIconList(this);
+      fGarbage->Add(fCurrentList);
    }
-   fi = new TRootObjItem(this, pic, spic, new TGString(name), obj, cl, fViewMode);
-   if (fi) fi->SetUserData(obj);
 
-   AddItem(fi);
+   fCurrentList->Add(obj);
+   fCurrentList->UpdateName();
 
-   fTotal++;
+   if (fGrouped && fCurrentItem && (fCurrentList->GetSize()>1)) {
+      fCurrentName->SetString(fCurrentList->GetName());
+   }
+
+   //
+   if ((fCurrentList->GetSize()<fGroupSize) && !fGrouped) {
+      const TGPicture *pic = 0;
+      const TGPicture *spic = 0;
+
+      GetObjPictures(&pic, &spic, obj, obj->GetIconName() ?
+                     obj->GetIconName() : cl->GetName());
+
+      if (fCheckHeaders) {
+         if (strcmp(fListView->GetHeader(1), "Title"))
+            SetObjHeaders();
+         fCheckHeaders = kFALSE;
+      }
+
+      fi = new TRootObjItem(this, pic, spic, new TGString(name), obj, cl, fViewMode);
+
+      fi->SetUserData(obj);
+      AddItem(fi);
+      fTotal++;
+      return;
+   }
+
+   if (fGrouped && (fCurrentList->GetSize()==1)) {
+      fCurrentName = new TGString(fCurrentList->GetName());
+      fCurrentItem = new TRootObjItem(this, fCurrentList->GetPicture(), fCurrentList->GetPicture(),
+                                      fCurrentName,fCurrentList, TList::Class(), fViewMode);
+      fCurrentItem->SetUserData(fCurrentList);
+      AddItem(fCurrentItem);
+      fTotal = fList->GetSize();
+      return;
+   }
+
+   if ((fCurrentList->GetSize()==fGroupSize) && !fGrouped) {
+      browser->SetViewMode(kLVLargeIcons,kTRUE);
+      fGrouped = kTRUE;
+      fList->Delete();
+      fCurrentName = new TGString(fCurrentList->GetName());
+      fi = new TRootObjItem(this, fCurrentList->GetPicture(), fCurrentList->GetPicture(),
+                            fCurrentName, fCurrentList, TList::Class(), fViewMode);
+      fi->SetUserData(fCurrentList);
+      AddItem(fi);
+
+      fCurrentList = new TRootIconList(this);
+      fGarbage->Add(fCurrentList);
+      fTotal = 1;
+      return;
+   }
+
+   if ((fCurrentList->GetSize()==fGroupSize) && fGrouped) {
+      fCurrentList = new TRootIconList(this);
+      fGarbage->Add(fCurrentList);
+      return;
+   }
+}
+
+//______________________________________________________________________________
+void TRootIconList::Browse(TBrowser *b)
+{
+   // browse icon list
+
+   if (!fIconBox) return;
+
+   gVirtualX->SetCursor(fIconBox->fId, gVirtualX->CreateCursor(kWatch));
+   gVirtualX->Update();
+
+   TObject *obj;
+   TGFileItem *fi;
+   const TGPicture *pic = 0;
+   const TGPicture *spic = 0;
+   TClass *cl;
+   const char *name;
+
+   fIconBox->RemoveAll();
+   TObjLink *lnk = FirstLink();
+
+   while (lnk) {
+      obj = lnk->GetObject();
+      lnk = lnk->Next();
+      cl = obj->IsA();
+      name = obj->GetName();
+
+      fIconBox->GetObjPictures(&pic, &spic, obj, obj->GetIconName() ?
+                               obj->GetIconName() : cl->GetName());
+
+      fi = new TRootObjItem((const TGWindow*)fIconBox, pic, spic, new TGString(name),
+                             obj, cl, (EListViewMode)fIconBox->GetViewMode());
+      fi->SetUserData(obj);
+      fIconBox->AddItem(fi);
+      fIconBox->fTotal++;
+   }
+   fIconBox->fGarbage->Remove(this);
+   fIconBox->fGarbage->Delete();
+   fIconBox->fGarbage->Add(this);
+   fIconBox->Refresh();
+   fIconBox->fWasGrouped = kTRUE;
+   gVirtualX->SetCursor(fIconBox->fId, kNone);
 }
 
 //______________________________________________________________________________
@@ -287,19 +480,19 @@ void TRootIconBox::Refresh()
    Sort(fSortType);
 
    // Make TRootBrowser display total objects in status bar
-   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
-               fTotal, fSelected);
-
-   MapSubwindows();
+   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),fTotal, fSelected);
 }
 
 //______________________________________________________________________________
 void TRootIconBox::RemoveAll()
 {
-   // Reset the fCheckHeaders flag.
+   // Remove all items from icon box
 
    fCheckHeaders = kTRUE;
    TGFileContainer::RemoveAll();
+   fGrouped = kFALSE;
+   fCurrentItem = 0;
+   fCurrentList = 0;
 }
 
 
@@ -337,6 +530,7 @@ TRootBrowser::~TRootBrowser()
 {
    // Browser destructor.
 
+   UnmapWindow();
    delete fToolBarSep;
    delete fToolBar;
    delete fFSComboBox;
@@ -418,6 +612,8 @@ void TRootBrowser::CreateBrowser(const char *name)
    fViewMenu->AddSeparator();
    fViewMenu->AddPopup("Arrange &Icons",      fSortMenu);
    fViewMenu->AddEntry("Lin&e up Icons",      kViewLineUp);
+   fViewMenu->AddEntry("&Group Icons",        kViewGroupLV);
+
    fViewMenu->AddSeparator();
    fViewMenu->AddEntry("&Refresh",            kViewRefresh);
 
@@ -526,7 +722,6 @@ void TRootBrowser::CreateBrowser(const char *name)
    fHf->AddFrame(fV2, lo);
 
    // Create tree
-
    fTreeView = new TGCanvas(fV1, 10, 10, kSunkenFrame | kDoubleBorder);
    fLt = new TGListTree(fTreeView->GetViewPort(), 10, 10, kHorizontalFrame,
                         fgWhitePixel);
@@ -545,6 +740,15 @@ void TRootBrowser::CreateBrowser(const char *name)
    fIconBox = new TRootIconBox(fListView->GetViewPort(), fListView, 520, 250,
                                kHorizontalFrame, fgWhitePixel);
    fIconBox->Associate(this);
+
+   TString gv = gEnv->GetValue("Browser.GroupView","1000");
+   Int_t igv = atoi(gv.Data());
+
+   if (igv>10) {
+      fViewMenu->CheckEntry(kViewGroupLV);
+      fIconBox->SetGroupSize(igv);
+   }
+
 
    fListView->GetViewPort()->SetBackgroundColor(fgWhitePixel);
    fListView->SetContainer(fIconBox);
@@ -802,6 +1006,20 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kViewRefresh:
                      Refresh(kTRUE);
                      break;
+                  case kViewGroupLV:
+                     if (!fViewMenu->IsEntryChecked(kViewGroupLV)) {
+                        fViewMenu->CheckEntry(kViewGroupLV);
+                        TString gv = gEnv->GetValue("Browser.GroupView","1000");
+                        Int_t igv = atoi(gv.Data());
+
+                        if (igv>10) {
+                           fIconBox->SetGroupSize(igv);
+                        }
+                     } else {
+                        fViewMenu->UnCheckEntry(kViewGroupLV);
+                        fIconBox->SetGroupSize(10000000); // very large value
+                     }
+                     break;
 
                   // Handle Option menu items...
                   case kOptionShowCycles:
@@ -810,6 +1028,14 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
                   // Handle toolbar button...
                   case kOneLevelUp:
+                     if (fListLevel && fIconBox->WasGrouped()) {
+                        gVirtualX->SetCursor(fIconBox->GetId(),fWaitCursor);
+                        gVirtualX->Update();
+                        TObject *obj = (TObject *) fListLevel->GetUserData();
+                        if (fListLevel->IsActive()) BrowseObj(obj);
+                        gVirtualX->SetCursor(fIconBox->GetId(),kNone);
+                        break;
+                     }
                      if (fListLevel)
                         fListLevel = fListLevel->GetParent();
                      fLt->ClearHighlighted();
@@ -962,6 +1188,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       default:
          break;
    }
+   fClient->NeedRedraw(fIconBox);
    return kTRUE;
 }
 
@@ -1027,8 +1254,9 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
                   itm->SetUserData(k_obj);
                   fListLevel = itm;
                   obj = k_obj;
-               } else
+               } else {
                   fListLevel = parent;
+               }
                fLt->HighlightItem(fListLevel);
             }
          } else if (obj->IsA() == TDirectory::Class())
@@ -1114,8 +1342,9 @@ void TRootBrowser::IconBoxAction(TObject *obj)
          fIconBox->Refresh();
          if (fBrowser)
             fBrowser->SetRefreshFlag(kFALSE);
-      } else
+      } else {
          Refresh();
+      }
 
       gVirtualX->SetCursor(fId, kNone);
    }
@@ -1144,14 +1373,17 @@ void TRootBrowser::Refresh(Bool_t force)
 {
    // Refresh the browser contents.
 
-   if ((fBrowser && fBrowser->GetRefreshFlag()) || force) {
+   if ( ((fBrowser && fBrowser->GetRefreshFlag()) || force) &&
+         fIconBox->NumItems()<fIconBox->GetGroupSize() ) {
       gVirtualX->SetCursor(fId, fWaitCursor);
       gVirtualX->Update();
 
       // Refresh the IconBox
       if (fListLevel) {
          fIconBox->RemoveAll();
+
          TObject *obj = (TObject *) fListLevel->GetUserData();
+
          if (obj) {
             fTreeLock = kTRUE;
             BrowseObj(obj);
@@ -1161,7 +1393,6 @@ void TRootBrowser::Refresh(Bool_t force)
          BrowseObj(gROOT);
 
       fClient->NeedRedraw(fLt);
-
       gVirtualX->SetCursor(fId, kNone);
    }
 }
@@ -1277,6 +1508,7 @@ void TRootBrowser::SetViewMode(Int_t new_mode, Bool_t force)
          gToolBarData[i].fButton->SetState((i == bnum) ? kButtonEngaged : kButtonUp);
 
       fListView->SetViewMode(lv);
+      fIconBox->AdjustPosition();
    }
 }
 

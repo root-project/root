@@ -107,6 +107,7 @@ Gui.MimeTypeFile:           $(HOME)/.root.mimes
 Browser.IconStyle:          small
 # Can be either name, type, size, date
 Browser.SortBy:             name
+Browser.GroupView:          1000
 
 # Rint (interactive ROOT executable) specific alias, logon and logoff macros
 Rint.Load:               rootalias.C

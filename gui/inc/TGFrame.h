@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.14 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.15 2001/06/05 16:42:47 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -145,10 +145,12 @@ protected:
 
    static Time_t      GetLastClick();
 
-   virtual void   DoRedraw();
+
    virtual void  *GetSender() { return this; }  //used to set gTQSender
+   virtual void   DoRedraw();
 
 public:
+
    // Default colors and graphics contexts
    static ULong_t     GetDefaultFrameBackground();
    static ULong_t     GetDefaultSelectedBackground();
@@ -205,6 +207,10 @@ public:
    virtual void    MapSubwindows() { }  // Simple frames do not have subwindows
                                         // Redefine this in TGCompositeFrame!
    virtual void    DrawBorder();
+   virtual void    DrawCopy(Handle_t id,Int_t x, Int_t y) { }
+   virtual void    Activate(Bool_t a) {}
+   virtual Bool_t  IsActive() const { return kFALSE; }
+
    virtual const TGWindow *GetMainFrame() const { return TGWindow::GetMainFrame(); }
 
    UInt_t GetWidth() const { return fWidth; }

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.6 2001/12/20 10:19:26 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.7 2002/01/23 15:48:05 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -85,6 +85,7 @@ TTVLVEntry::TTVLVEntry(const TGWindow *p,
    // both alias and true name are initialized to name
    fTrueName.InitialCapacity(1000);
    fContainer = (TTVLVContainer *) p;
+
    fTip = 0;
    fIsCut = kFALSE;
    fTrueName = name->GetString();
@@ -277,6 +278,7 @@ TTVLVContainer::TTVLVContainer(const TGWindow *p, UInt_t w, UInt_t h, UInt_t opt
    fExpressionList = new TList;
    fCursor = gVirtualX->CreateCursor(kMove);
    fDefaultCursor = gVirtualX->CreateCursor(kPointer);
+   fMapSubwindows = kTRUE;
 }
 //______________________________________________________________________________
 TTVLVContainer::~TTVLVContainer()
