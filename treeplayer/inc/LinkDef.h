@@ -1,4 +1,4 @@
-/* @(#)root/treeplayer:$Name:  $:$Id: LinkDef.h,v 1.16 2004/07/20 09:40:19 brun Exp $ */
+/* @(#)root/treeplayer:$Name:  $:$Id: LinkDef.h,v 1.17 2005/01/27 06:16:43 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -20,6 +20,7 @@
 #pragma link C++ class TFileDrawMap+;
 #pragma link C++ class TTreeIndex-;
 #pragma link C++ class TTreeFormulaManager;
+#pragma link C++ class TTreeDrawArgsParser+;
 
 #pragma link C++ nestedtypedefs;
 #pragma link C++ namespace ROOT;
@@ -80,7 +81,6 @@
 #pragma link C++ class ROOT::TClaArrayProxy<Short_t>+;
 #pragma link C++ class ROOT::TClaArrayProxy<Char_t>+;
 #pragma link C++ class ROOT::TClaArrayProxy<Bool_t>+;
-
 
 #if !defined(_MSC_VER) || (_MSC_VER>1300)
 #pragma link C++ class ROOT::TImpProxy<Long64_t>+;

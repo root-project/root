@@ -1,4 +1,4 @@
-/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.24 2005/03/17 10:43:30 rdm Exp $ */
+/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.25 2005/03/19 16:39:39 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -57,7 +57,6 @@
 #pragma link C++ class TCollectionPropertyBrowsable+;
 #pragma link C++ class TCollectionMethodBrowsable+;
 #pragma link C++ class TSelectorScalar+;
-#pragma link C++ class TTreeDrawArgsParser+;
 
 #pragma link C++ function operator+(const TCut&, const char*);
 #pragma link C++ function operator+(const char*, const TCut&);
