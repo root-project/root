@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooHtml.cc,v 1.7 2002/09/05 04:33:33 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -61,22 +61,22 @@ void RooHtml::WriteHtmlHeader(ofstream &out, const char *title) {
     << endl
     << "<a name=\"TopOfPage\"></a>" << endl;
   out
-    << "<center><table BORDER=0 CELLSPACING=0 COLS=2 WIDTH=\"100%\" BGCOLOR=\"#FFCC00\" NOSAVE >" << endl
-    << "  <tr NOSAVE><td NOSAVE><b><i><font color=\"#000000\"><font size=+2>" << endl
+    << "<center><table BORDER=0 CELLSPACING=0 COLS=2 WIDTH=\"100%\" BGCOLOR=\"" << _hfColor << "\" NOSAVE >" << endl
+    << "  <tr NOSAVE><td NOSAVE><b><i><font color=\"#000000\">" << endl
     //-------------------------------------------------
-    << "    <a href=\"http://www.slac.stanford.edu/BFROOT/www/Computing/Offline/ROOT/RooFit\"" << endl
+    << "    <a href=\"http://roofit.sourceforge.net\"" << endl
     << "      title=\"Visit RooFit Home Page\">" << endl
     << "    RooFit Toolkit for Data Modeling</a>" << endl
     //-------------------------------------------------
-    << "  </font></font></i></b></td>" << endl
-    << "  <td><div align=right><b><i><font color=\"#000000\"><font size=+2>" << endl
+    << "  </font></i></b></td>" << endl
+    << "  <td><div align=right><b><i><font color=\"#000000\">" << endl
     //-------------------------------------------------
     << "    <a href=\"IndexByTopic.html\"" << endl
     << "      title=\"Visit List of Classes\">" << endl;
   out << getVersion() << " Version</a>" << endl;
   //-------------------------------------------------
   out
-    << "  </font></font></i></b></div></td></tr>" << endl
+    << "  </font></i></b></div></td></tr>" << endl
     << "</table></center>" << endl;
 }
 
@@ -89,12 +89,13 @@ void RooHtml::WriteHtmlFooter(ofstream &out, const char *dir, const char *lastUp
   TString update = comma ? comma+1 : lastUpdate;
   if(update.EndsWith(" Exp $")) update.Remove(update.Length()-6,6);
 
-  out << "<center><table BORDER=0 CELLSPACING=0 COLS=2 WIDTH=\"100%\" BGCOLOR=\"#FFCC00\" NOSAVE >" << endl
+  out << "<center><table BORDER=0 CELLSPACING=0 COLS=2 WIDTH=\"100%\" BGCOLOR=\"" << _hfColor << "\" NOSAVE >" << endl
       << "<tr NOSAVE>" << endl
       << "<td>Last CVS Update: " << update << "</td>" << endl
       << "<td NOSAVE align=right><b><a href=\"#TopOfPage\">Top</a></b></td>" << endl
       << "</tr></table></center>" << endl
-      << "<center>Copyright &copy 2001 University of California</center>" << endl;
+      << "<center>Copyright &copy 2001 University of California</center>" << endl
+      << "</body>" << endl ;
 }
 
 

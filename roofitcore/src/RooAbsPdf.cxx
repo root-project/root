@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsPdf.cc,v 1.75 2002/09/05 04:33:07 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -857,7 +857,7 @@ RooCmdArg Components(const char* compSpec) { return RooCmdArg("SelectCompSpec",0
 RooCmdArg Normalization(Double_t scaleFactor, RooAbsPdf::ScaleType scaleType) 
                          { return RooCmdArg("Normalization",scaleType,0,scaleFactor,0,0,0,0,0) ; }
 
-RooPlot* RooAbsPdf::plotOn(RooPlot* frame, TList& cmdList) const
+RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 {
   // New experimental plotOn() with varargs...
 

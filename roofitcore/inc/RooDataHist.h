@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooDataHist.rdl,v 1.20 2002/09/05 04:33:22 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,6 +27,7 @@ class RooAbsCategory ;
 class Roo1DTable ;
 class RooPlot;
 class RooArgSet ;
+class RooLinkedList ;
 
 class RooDataHist : public RooTreeData, public RooDirItem {
 public:
@@ -98,7 +99,7 @@ protected:
 
   virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) ;
 
-  virtual RooPlot* plotOn(RooPlot* frame, TList& cmdList) const {
+  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const {
     return RooTreeData::plotOn(frame,cmdList) ;
   }
 

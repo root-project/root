@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.50 2002/09/05 04:34:03 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.51 2002/09/06 00:27:53 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -846,7 +846,7 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmd
 			     const RooCmdArg& arg5, const RooCmdArg& arg6,
 			     const RooCmdArg& arg7, const RooCmdArg& arg8) const 
 {
-  TList l ;
+  RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
   l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
   l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
@@ -854,7 +854,7 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmd
   return plotOn(frame,l) ;
 }
 
-RooPlot* RooTreeData::plotOn(RooPlot* frame, TList& argList) const
+RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
 {
 
   // New experimental plotOn() with varargs...

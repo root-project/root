@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsPdf.rdl,v 1.63 2002/09/05 04:33:08 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,6 +34,7 @@ class TPaveText;
 class TH1F;
 class TH2F;
 class TList ;
+class RooLinkedList ;
 class RooIntegratorConfig ;
 
 class RooAbsPdf : public RooAbsReal {
@@ -161,7 +162,7 @@ private:
 
 protected:
 
-  virtual RooPlot* plotOn(RooPlot* frame, TList& cmdList) const ;
+  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
   void plotOnCompSelect(RooArgSet* selNodes) const ;
 
   friend class RooAddGenContext ;

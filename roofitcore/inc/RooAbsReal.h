@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsReal.rdl,v 1.54 2002/09/05 04:33:09 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,6 +28,7 @@ class RooRealVar;
 class RooAbsFunc;
 class RooAbsCategoryLValue ;
 class RooCategory ;
+class RooLinkedList ;
 
 class TH1;
 class TH1F;
@@ -125,7 +126,7 @@ public:
 protected:
 
   // PlotOn with command list
-  virtual RooPlot* plotOn(RooPlot* frame, TList& cmdList) const ;
+  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
 
   // Hook for objects with normalization-dependent parameters interperetation
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) {} ;

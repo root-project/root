@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooSimultaneous.cc,v 1.45 2002/09/05 04:33:58 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -309,7 +309,7 @@ Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* norm
 
 
 
-RooPlot* RooSimultaneous::plotOn(RooPlot *frame, TList& cmdList) const
+RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 {
   // New experimental plotOn() with varargs...
 
@@ -476,13 +476,14 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, TList& cmdList) const
 // 					   stype,projDataTmp,projSet) ;
     
     // Override normalization and projection dataset
+    RooLinkedList cmdList2(cmdList) ;
     RooCmdArg tmp1 = Normalization(scaleFactor*wTable->getFrac(_indexCat.arg().getLabel()),stype) ;
     RooCmdArg tmp2 = ProjWData(*projDataSet,*projDataTmp) ;
-    cmdList.Add(&tmp1) ;
-    cmdList.Add(&tmp2) ;
+    cmdList2.Add(&tmp1) ;
+    cmdList2.Add(&tmp2) ;
 
     // Plot single component
-    RooPlot* retFrame =  getPdf(_indexCat.arg().getLabel())->plotOn(frame,cmdList) ;
+    RooPlot* retFrame =  getPdf(_indexCat.arg().getLabel())->plotOn(frame,cmdList2) ;
 
     delete wTable ;
     return retFrame ;
@@ -604,8 +605,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, TList& cmdList) const
 
 
   // Override normalization and projection dataset
-  TList cmdList2 ;
-  cmdList2.AddAll(&cmdList) ;
+  RooLinkedList cmdList2(cmdList) ;
 
   RooCmdArg tmp1 = Normalization(scaleFactor*sumWeight,stype) ;
   RooCmdArg tmp2 = ProjWData(*projDataSet,*projDataTmp) ;
@@ -646,11 +646,11 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
   // Forward to new implementation
 
   // Make command list
-  TList cmdList ;
-  cmdList.Add(DrawOption(drawOptions).Clone()) ;
-  cmdList.Add(Normalization(scaleFactor,stype).Clone()) ;
-  if (projData) cmdList.Add(ProjWData(*projData).Clone()) ;
-  if (projSet) cmdList.Add(Project(*projSet).Clone()) ;
+  RooLinkedList cmdList ;
+  cmdList.Add(new RooCmdArg(DrawOption(drawOptions))) ;
+  cmdList.Add(new RooCmdArg(Normalization(scaleFactor,stype))) ;
+  if (projData) cmdList.Add(new RooCmdArg(ProjWData(*projData))) ;
+  if (projSet) cmdList.Add(new RooCmdArg(Project(*projSet))) ;
 
   // Call new method
   RooPlot* ret = plotOn(frame,cmdList) ;

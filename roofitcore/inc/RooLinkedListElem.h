@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooLinkedListElem.rdl,v 1.5 2002/09/05 04:33:38 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,22 +17,22 @@
 #define ROO_LINKED_LIST_ELEM
 
 #include "Rtypes.h"
-#include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooLinkedListElem.hh"
 
+class TObject ;
 class RooLinkedListElem ;
 class TBuffer ;
 
 class RooLinkedListElem {
 public:
   // Initial element ctor
-  RooLinkedListElem(RooAbsArg* arg) : 
-    _arg(arg), _prev(0), _next(0){
+  RooLinkedListElem(TObject* arg) : 
+    _arg(arg), _prev(0), _next(0), _refCount(1) {
   }
 
   // Link element ctor
-  RooLinkedListElem(RooAbsArg* arg, RooLinkedListElem* after) : 
-    _arg(arg), _prev(after), _next(after->_next) {
+  RooLinkedListElem(TObject* arg, RooLinkedListElem* after) : 
+    _arg(arg), _prev(after), _next(after->_next), _refCount(1) {
 
     // Insert self in link
     after->_next = this ;
@@ -46,12 +46,17 @@ public:
     if (_next) _next->_prev = _prev ;
   }
 
+  Int_t refCount() const { return _refCount ; }
+  Int_t incRefCount() { return ++_refCount ; }
+  Int_t decRefCount() { return --_refCount ; }
+
 protected:
   friend class RooLinkedList ;
   friend class RooLinkedListIter ;
   RooLinkedListElem* _prev ; // Link to previous element in list
   RooLinkedListElem* _next ; // Link to next element in list
-  RooAbsArg* _arg ;          // Link to contents
+  TObject*   _arg ;          // Link to contents
+  Int_t      _refCount ;     //! Reference count
 
 protected:
 

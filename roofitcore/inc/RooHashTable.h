@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooHashTable.rdl,v 1.5 2002/09/05 04:33:31 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,10 +30,10 @@ public:
   // Destructor
   virtual ~RooHashTable() ;
 
-  void add(RooAbsArg* arg) ;
-  Bool_t remove(RooAbsArg* arg) ;
-  RooAbsArg* find(const char* name) const ;
-  Bool_t replace(const RooAbsArg* oldArg, const RooAbsArg* newArg) ;
+  void add(TObject* arg) ;
+  Bool_t remove(TObject* arg) ;
+  TObject* find(const char* name) const ;
+  Bool_t replace(const TObject* oldArg, const TObject* newArg) ;
   Int_t size() const { return _size ; }
   Double_t avgCollisions() const ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooCmdConfig.rdl,v 1.3 2002/09/05 04:33:18 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -47,7 +47,7 @@ public:
   Bool_t defineObject(const char* name, const char* argName, Int_t setNum, const TObject* obj=0) ;
 
   Bool_t process(const RooCmdArg& arg) ;
-  Bool_t process(TList& argList) ;
+  Bool_t process(RooLinkedList& argList) ;
 
   Int_t getInt(const char* name, Int_t defaultValue=0) ;
   Double_t getDouble(const char* name, Double_t defaultValue=0) ;
@@ -58,7 +58,7 @@ public:
 
   const char* missingArgs() const ;
 
-  void stripCmdList(TList& cmdList, const char* cmdsToPurge) ;
+  void stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge) ;
 
   void print() ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooRefCountList.cc,v 1.1 2002/09/06 22:41:29 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -15,7 +15,7 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [AUX] --
-// A RooRefCountList is a THashList that keeps a reference counter
+// A RooRefCountList is a RooLinkedList that keeps a reference counter
 // with each added node. Multiple Add()s of the same object will increase
 // the counter instead of adding multiple copies. Remove() decrements the 
 // reference count until zero, when the object is actually removed.
@@ -29,61 +29,50 @@ ClassImp(RooRefCountList)
   ;
 
 
-void RooRefCountList::AddLast(TObject* obj) 
+void RooRefCountList::Add(TObject* obj, Int_t count) 
 {
   // Check if we already have it
-  Int_t idx ;
-  TObjLink* link = FindLink(obj,idx) ;
+  RooLinkedListElem* link = findLink(obj) ;
   if (!link) {
-    // Add to list with reference count 1
-    THashList::AddLast(obj,"1") ;
+    // Add to list with reference count 
+    RooLinkedList::Add(obj, count) ;
     //cout << "RooRefCountList::AddLast(" << obj << ") adding object" << endl ;
   } else {
-    const char* opt = link->GetOption() ;
-    Int_t count = atoi(opt) ;
-    link->SetOption(Form("%d",++count)) ;
-    //cout << "RooRefCountList::AddLast(" << obj << ") incremented reference count to " << count << endl ;
+    while(count--) link->incRefCount() ;    
+    //cout << "RooRefCountList::AddLast(" << obj << ") incremented reference count to " << link->refCount() << endl ;
   }
 
 }
 
 
-TObject* RooRefCountList::Remove(TObject* obj) 
+Bool_t RooRefCountList::Remove(TObject* obj) 
 {
-  Int_t idx ;
-  TObjLink* link = FindLink(obj,idx) ;
+  RooLinkedListElem* link = findLink(obj) ;
   if (!link) {
     return 0 ;
   } else {
-    const char* opt = link->GetOption() ;
-    Int_t count = atoi(opt) ;
-    if (count==1) {
+    if (link->decRefCount()==0) {
       //cout << "RooRefCountList::AddLast(" << obj << ") removed object" << endl ;
-      return THashList::Remove(obj) ;
+      return RooLinkedList::Remove(obj) ;
     }
-
-    link->SetOption(Form("%d",--count)) ;
-    //cout << "RooRefCountList::AddLast(" << obj << ") decremented reference count to " << count << endl ;
+    //cout << "RooRefCountList::AddLast(" << obj << ") decremented reference count to " << link->refCount() << endl ;
   }
-  return obj ;
+  return 0 ;
+}
+
+
+Bool_t RooRefCountList::RemoveAll(TObject* obj)
+{
+  return RooLinkedList::Remove(obj) ;
 }
 
 
 Int_t RooRefCountList::refCount(TObject* obj) 
 {
-  Int_t idx ;
-   TObjLink* link = FindLink(obj,idx) ;
-   if (!link) {
-     return 0 ;
-   } else {
-     const char* opt = link->GetOption() ;
-     Int_t count = atoi(opt) ;
-     return count ;
-   }
-}
-
-
-TObject* RooRefCountList::RemoveAll(TObject* obj) 
-{
-  return THashList::Remove(obj) ;
+  RooLinkedListElem* link = findLink(obj) ;
+  if (!link) {
+    return 0 ;
+  } else {
+    return link->refCount() ;
+  }
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooFormula.cc,v 1.42 2002/09/05 04:33:27 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -124,7 +124,7 @@ RooArgSet& RooFormula::actualDependents() const
   _actual.removeAll();
   
   int i ;
-  for (i=0 ; i<_useList.GetEntries() ; i++) {
+  for (i=0 ; i<_useList.GetSize() ; i++) {
     _actual.add((RooAbsArg&)*_useList.At(i),kTRUE) ;
   }
 
@@ -137,11 +137,11 @@ void RooFormula::dump() {
   int i ;
   cout << "RooFormula::dump()" << endl ;
   cout << "useList:" << endl ;
-  for (i=0 ; i<_useList.GetEntries() ; i++) {
+  for (i=0 ; i<_useList.GetSize() ; i++) {
     cout << "[" << i << "] = " << (void*) _useList.At(i) << " " << _useList.At(i)->GetName() << endl ;
   }
   cout << "labelList:" << endl ;
-  for (i=0 ; i<_labelList.GetEntries() ; i++) {
+  for (i=0 ; i<_labelList.GetSize() ; i++) {
     cout << "[" << i << "] = " << (void*) _labelList.At(i) << " " << _labelList.At(i)->GetName() <<  endl ;
   }
   cout << "origList:" << endl ;
@@ -159,14 +159,13 @@ Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t must
   Bool_t errorStat(kFALSE) ;
   int i ;
 
-  for (i=0 ; i<_useList.GetEntries() ; i++) {
-
-    RooAbsReal* replace = (RooAbsReal*) ((RooAbsArg*)_useList[i])->findNewServer(newDeps,nameChange) ;
+  for (i=0 ; i<_useList.GetSize() ; i++) {
+    RooAbsReal* replace = (RooAbsReal*) ((RooAbsArg*)_useList.At(i))->findNewServer(newDeps,nameChange) ;
     if (replace) {
-      _useList[i] = replace ;
+      _useList.Replace(_useList.At(i),replace) ;
     } else if (mustReplaceAll) {
       cout << "RooFormula::changeDependents(1): cannot find replacement for " 
-	   << _useList[i]->GetName() << endl ;
+	   << _useList.At(i)->GetName() << endl ;
       errorStat = kTRUE ;
     }
   }  
@@ -176,11 +175,8 @@ Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t must
   while (arg=(RooAbsArg*)iter->Next()) {
     RooAbsReal* replace = (RooAbsReal*) arg->findNewServer(newDeps,nameChange) ;
     if (replace) {
-      _origList.AddBefore(arg,replace) ;
-      _origList.Remove(arg) ;
+      _origList.Replace(arg,replace) ;
     } else if (mustReplaceAll) {
-//       cout << "RooFormula::changeDependents(3): cannot find replacement for " 
-// 	   << arg->GetName() << "(" << arg << ")" << endl ;
       errorStat = kTRUE ;
     }
   }
@@ -214,7 +210,7 @@ Double_t RooFormula::eval(const RooArgSet* nset)
 Double_t
 RooFormula::DefinedValue(Int_t code) {
   // Return current value for variable indicated by internal reference code
-  if (code>=_useList.GetEntries()) return 0 ;
+  if (code>=_useList.GetSize()) return 0 ;
   RooAbsArg* arg=(RooAbsArg*)_useList.At(code) ;
 
   const RooAbsReal *absReal= dynamic_cast<const RooAbsReal*>(arg);  
@@ -291,7 +287,7 @@ RooFormula::DefinedVariable(TString &name)
 
   // Check if already registered
   Int_t i ;
-  for(i=0 ; i<_useList.GetEntries() ; i++) {
+  for(i=0 ; i<_useList.GetSize() ; i++) {
     RooAbsArg* var = (RooAbsArg*) _useList.At(i) ;
     Bool_t varMatch = !TString(var->GetName()).CompareTo(arg->GetName()) ;
 
@@ -326,7 +322,7 @@ RooFormula::DefinedVariable(TString &name)
 //   if (labelName) cout << "::" << labelName ;
 //   cout << " registered with code " << _useList.GetEntries()-1 << endl ;
 
-  return (_useList.GetEntries()-1) ;
+  return (_useList.GetSize()-1) ;
 }
 
 

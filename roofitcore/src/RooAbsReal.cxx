@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsReal.cc,v 1.86 2002/09/05 04:33:08 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -659,7 +659,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
 			    const RooCmdArg& arg5, const RooCmdArg& arg6,
 			    const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
-  TList l ;
+  RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
   l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
   l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
@@ -667,7 +667,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   return plotOn(frame,l) ;
 }
 
-RooPlot* RooAbsReal::plotOn(RooPlot* frame, TList& argList) const
+RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 {
 
   // New experimental plotOn() with varargs...

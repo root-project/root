@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooTreeData.rdl,v 1.26 2002/09/05 04:34:03 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -31,6 +31,7 @@ class RooAbsString ;
 class Roo1DTable ;
 class RooPlot;
 class RooFormulaVar ;
+class RooLinkedList ;
 
 class RooTreeData : public RooAbsData {
 public:
@@ -156,7 +157,7 @@ protected:
 
 
   // PlotOn with command list
-  virtual RooPlot* plotOn(RooPlot* frame, TList& cmdList) const ;
+  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
 
   void createTree(const char* name, const char* title) ; 
   TTree *_tree ;           // TTree holding the data points

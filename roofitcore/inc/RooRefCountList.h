@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRefCountList.rdl,v 1.1 2002/09/06 22:41:29 verkerke Exp $
+ *    File: $Id: RooRefCountList.rdl,v 1.2 2002/09/09 21:43:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,23 +16,21 @@
 #ifndef ROO_REF_COUNT_LIST
 #define ROO_REF_COUNT_LIST
 
-#include "THashList.h"
+#include "RooFitCore/RooLinkedList.hh"
 
-class RooRefCountList : public THashList {
+class RooRefCountList : public RooLinkedList {
 public:
-  inline RooRefCountList() : THashList() { }
+  inline RooRefCountList() : RooLinkedList() { }
   virtual ~RooRefCountList() {} ;
 
-  virtual void AddLast(TObject* obj) ;
-  virtual void AddLast(TObject* obj, Option_t* opt) { AddLast(obj) ; }
-  virtual TObject* Remove(TObject* obj) ;
-  virtual TObject* Remove(TObjLink* link) { return Remove(link->GetObject()) ; } ;
-  virtual TObject* RemoveAll(TObject* obj) ;
-  virtual void RemoveAll(TCollection* coll) { return THashList::RemoveAll(coll) ; } ;
+  virtual void Add(TObject* arg) { Add(arg,1) ; }
+  virtual void Add(TObject* obj, Int_t count) ;
+  virtual Bool_t Remove(TObject* obj) ;
+  virtual Bool_t RemoveAll(TObject* obj) ;
   Int_t refCount(TObject* obj) ;
   
 protected:  
-  ClassDef(RooRefCountList,1) // TList with extra support for Option_t associations
+  ClassDef(RooRefCountList,1) // RooLinkedList with reference counting
 };
 
 #endif

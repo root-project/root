@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooLinkedListIter.rdl,v 1.5 2002/09/05 04:33:38 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -54,7 +54,7 @@ public:
 
   virtual TObject *Next() { 
     if (!_ptr) return 0 ;
-    RooAbsArg* arg = _ptr->_arg ;      
+    TObject* arg = _ptr->_arg ;      
       _ptr = _forward ? _ptr->_next : _ptr->_prev ;
       return arg ;
   }

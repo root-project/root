@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooSimultaneous.rdl,v 1.28 2002/09/05 04:33:58 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,6 +26,7 @@ class RooAbsCategoryLValue ;
 class RooFitResult ;
 class RooPlot ;
 class RooAbsData ;
+class RooLinkedList ;
 
 class RooSimultaneous : public RooAbsPdf {
 public:
@@ -73,7 +74,7 @@ public:
   
 protected:
 
-  virtual RooPlot* plotOn(RooPlot* frame, TList& cmdList) const ;
+  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
 
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
   mutable RooSetProxy _plotCoefNormSet ;

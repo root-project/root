@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooTrace.cc,v 1.12 2002/09/05 04:34:02 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,6 +17,7 @@
 // -- CLASS DESCRIPTION [AUX] --
 
 #include "RooFitCore/RooTrace.hh"
+#include "RooFitCore/RooAbsArg.hh"
 
 #include <iomanip.h>
 

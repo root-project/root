@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooCmdConfig.cc,v 1.3 2002/09/05 04:33:18 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -312,7 +312,7 @@ void RooCmdConfig::print()
 }
 
 
-Bool_t RooCmdConfig::process(TList& argList) 
+Bool_t RooCmdConfig::process(RooLinkedList& argList) 
 {
   Bool_t ret(kFALSE) ;
   TIterator* iter = argList.MakeIterator() ;
@@ -494,7 +494,7 @@ Bool_t RooCmdConfig::ok(Bool_t verbose) const
 }
 
 
-void RooCmdConfig::stripCmdList(TList& cmdList, const char* cmdsToPurge) 
+void RooCmdConfig::stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge) 
 {
   // Strip command names listed (comma separated) in cmdsToPurge from cmdList
 
