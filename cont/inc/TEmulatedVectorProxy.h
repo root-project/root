@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.h,v 1.5 2004/08/26 16:59:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.h,v 1.6 2004/10/07 17:08:53 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -61,7 +61,6 @@ public:
    void   *New() const;
    void   *New(void *arena) const;
    UInt_t  Sizeof() const;
-   void    SetProxy(void *objstart) { fProxied = objstart; }
    void    PushProxy(void *objstart) { fProxyList.push_back(fProxied); fProxied = objstart;  }
    void    PopProxy() { fProxied = fProxyList.back(); fProxyList.pop_back(); }
 

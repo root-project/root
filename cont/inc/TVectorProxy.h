@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.9 2004/08/23 16:05:43 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.10 2004/10/07 17:08:53 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -53,7 +53,6 @@ namespace ROOT {
       TVirtualCollectionProxy* Generate() const  { return new TVectorProxy<vec>(); }
       TVectorProxy() : fValueClass(0), fType(kNoType_t) {}
    
-      void    SetProxy(void *objstart) { fProxied = (vec*)objstart; }
       void    PushProxy(void *objstart) { 
          fProxyList.push_back(fProxied);
          fProxied = (vec*)objstart;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.145 2004/09/29 10:56:53 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.146 2004/10/07 08:19:31 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -951,7 +951,7 @@ void TBranchElement::FillLeaves(TBuffer &b)
      if (!fObject) {
         b << 0;
      } else {
-        GetCollectionProxy()->SetProxy(fObject);
+        TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(),fObject);
         Int_t n = fCollProxy->Size();
         if (n > fMaximum) fMaximum = n;
         b << n;
@@ -960,7 +960,7 @@ void TBranchElement::FillLeaves(TBuffer &b)
 
      //char **ppointer = (char**)fAddress;
      if (!fObject) return;
-     GetCollectionProxy()->SetProxy(fObject); // NOTE: this wont work if a pointer to vector is split!
+     TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(),fObject);// NOTE: this wont work if a pointer to vector is split!
      Int_t n = fCollProxy->Size();
      fInfo->WriteBufferSTL(b,fCollProxy,n,fID,fOffset);
 
@@ -1269,7 +1269,7 @@ Double_t TBranchElement::GetValue(Int_t j, Int_t len, Bool_t subarr) const
       if (subarr) return fInfo->GetValueClones(clones,fID, j, len,fOffset);
       else return fInfo->GetValueClones(clones,fID, j/len, j%len,fOffset);
    }  else if (fType == 41) {
-      fCollProxy->SetProxy((void*)fObject);
+      TVirtualCollectionProxy::TPushPop helper(fCollProxy,fObject);
       if (subarr) return fInfo->GetValueSTL(fCollProxy,fID, j, len,fOffset);
       else return fInfo->GetValueSTL(fCollProxy,fID, j/len, j%len,fOffset);
    } else {
@@ -1463,7 +1463,7 @@ void TBranchElement::PrintValue(Int_t lenmax) const
       TClonesArray *clones = (TClonesArray*)fObject;
       if (fInfo) fInfo->PrintValueClones(GetName(),clones,fID,fOffset,lenmax);
    } else if (fType == 41) {
-      fCollProxy->SetProxy((void*)fObject); // Object);
+      TVirtualCollectionProxy::TPushPop helper(fCollProxy,fObject); // Object);
       if (fInfo) fInfo->PrintValueSTL(GetName(),fCollProxy,fID,fOffset,lenmax);
    } else {
       if (fInfo) fInfo->PrintValue(GetName(),fObject,fID,-1,lenmax);
@@ -1639,14 +1639,14 @@ void TBranchElement::ReadLeaves(TBuffer &b)
      }
      fNdata = n;
      if (!fObject) return;
-     GetCollectionProxy()->SetProxy((void*)fAddress);
+     TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(),fAddress);
      fCollProxy->Resize(fNdata,true);
   } else if (fType == 41) {    // sub branch of an STL class
      //Error("ReadLeaves","STL split mode not yet implemented (error 2)\n");
      //char **ppointer = (char**)fAddress;
      fNdata = fBranchCount->GetNdata();
      if (!fObject) return;
-     GetCollectionProxy()->SetProxy(fObject);
+     TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(),fObject);
      fInfo->ReadBufferSTL(b,fCollProxy,fNdata,fID,fOffset);
   } else if (fType == 3) {    //top level branch of a TClonesArray
      Int_t n;

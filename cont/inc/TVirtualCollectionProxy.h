@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.4 2004/10/07 17:08:53 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.5 2004/10/07 17:15:13 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -34,6 +34,16 @@ protected:
    friend class TClass;
 
 public:
+   class TPushPop {
+      // Helper class that insures that push and pop are done when entering
+      // and leaving a C++ context (even in the presence of exceptions)
+   public:
+      TVirtualCollectionProxy *fProxy;
+      inline TPushPop(TVirtualCollectionProxy *proxy, 
+         void *objectstart) : fProxy(proxy) { fProxy->PushProxy(objectstart); }
+      inline ~TPushPop() { fProxy->PopProxy(); }
+   };
+
    TVirtualCollectionProxy() : fClass(0) {};
    TVirtualCollectionProxy(TClass *cl) : fClass(cl) {};
   
@@ -47,7 +57,6 @@ public:
 
    virtual UInt_t    Sizeof() const = 0; // Return the sizeof the collection object.
 
-   virtual void      SetProxy(void *objstart) = 0;     // Set the address of the container being proxied
    virtual void      PushProxy(void *objectstart) = 0; // Set the address of the container being proxied and keep track of the previous one.
    virtual void      PopProxy() = 0;                   // Reset the address of the container being proxied to the previous container
 

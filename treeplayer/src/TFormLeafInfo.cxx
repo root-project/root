@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.4 2004/10/05 20:27:32 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.5 2004/10/07 22:19:42 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -1143,7 +1143,7 @@ Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf) {
 
    if (fCounter) { return (Int_t)fCounter->ReadValue((char*)GetLocalValuePointer(leaf)); }
    Assert(fCollProxy);
-   fCollProxy->SetProxy( GetLocalValuePointer(leaf) );
+   TVirtualCollectionProxy::TPushPop helper(fCollProxy, GetLocalValuePointer(leaf) );
    return (Int_t)fCollProxy->Size();
 }
 
@@ -1164,7 +1164,7 @@ Double_t TFormLeafInfoCollection::ReadValue(char *where, Int_t instance) {
    }
 
    Assert(fCollProxy);
-   fCollProxy->SetProxy( where );
+   TVirtualCollectionProxy::TPushPop helper(fCollProxy, where);
 
    // Note we take advantage of having only one physically variable
    // dimension:
@@ -1218,7 +1218,7 @@ Double_t TFormLeafInfoCollection::GetValue(TLeaf *leaf, Int_t instance) {
    }
 
    Assert(fCollProxy);
-   fCollProxy->SetProxy(GetLocalValuePointer(leaf));
+   TVirtualCollectionProxy::TPushPop helper(fCollProxy,GetLocalValuePointer(leaf));
 
    // Note we take advantage of having only one physically variable
    // dimension:
@@ -1246,7 +1246,7 @@ void * TFormLeafInfoCollection::GetValuePointer(TLeaf *leaf, Int_t instance) {
          index = instance;
          sub_instance = 0;
       }
-      fCollProxy->SetProxy(collection);
+      TVirtualCollectionProxy::TPushPop helper(fCollProxy,collection);
       return fNext->GetValuePointer((char*)fCollProxy->At(index),
                                     sub_instance);
    }
@@ -1272,7 +1272,7 @@ void * TFormLeafInfoCollection::GetValuePointer(char *where, Int_t instance) {
          index = instance;
          sub_instance = 0;
       }
-      fCollProxy->SetProxy(collection);
+      TVirtualCollectionProxy::TPushPop helper(fCollProxy,collection);
       return fNext->GetValuePointer((char*)fCollProxy->At(index),
                                     sub_instance);
    }
