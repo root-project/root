@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.25 2001/01/17 12:12:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.26 2001/01/17 23:59:57 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -678,7 +678,7 @@ Seek_t TFile::GetSize() const
    // Returns the current file size.
 
    Long_t id, size, flags, modtime;
-#ifdef R__AIX
+#if defined(R__AIX) || defined(R__HPUX)
    if (((TFile*)this)->SysStat(fD, &id, &size, &flags, &modtime)) {
 #else
    if (const_cast<TFile*>(this)->SysStat(fD, &id, &size, &flags, &modtime)) {
