@@ -17,5 +17,7 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
+PyROOT_memorytests.log: MemTester_C.$(DllSuf)
 
 PyROOT_memorytests: PyROOT_memorytests.log
+	$(TestDiff)

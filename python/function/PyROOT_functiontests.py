@@ -5,7 +5,7 @@
 
 """Unit tests for PyROOT python/TF1 function interactions."""
 
-import unittest, sys
+import os, sys, unittest
 from math import exp
 from ROOT import *
 
@@ -81,10 +81,13 @@ class FitFunctionTestCase( unittest.TestCase ):
 
 ## actual test run
 if __name__ == '__main__':
+   sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+   from MyTextTestRunner import MyTextTestRunner
+
    loader = unittest.TestLoader()
    testSuite = loader.loadTestsFromModule( sys.modules[ __name__ ] )
 
-   runner = unittest.TextTestRunner( verbosity = 2 )
+   runner = MyTextTestRunner( verbosity = 2 )
    result = not runner.run( testSuite ).wasSuccessful()
 
    sys.exit( result )

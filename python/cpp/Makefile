@@ -19,3 +19,4 @@ endif
 
 
 PyROOT_cpptests: PyROOT_cpptests.log
+	$(TestDiff)

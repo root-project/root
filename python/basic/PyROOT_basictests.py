@@ -46,7 +46,7 @@ class Basic2SetupTestCase( unittest.TestCase ):
    def test3MacroLoading( self ):
       """Test accessibility to macro classes"""
 
-      gROOT.LoadMacro( os.path.join( os.path.dirname( __file__ ), 'SimpleClass.C' ) )
+      gROOT.LoadMacro( 'SimpleClass.C' )
 
       c = SimpleClass()
       self.assertEqual( c.m_data, c.GetData() )
@@ -196,10 +196,13 @@ class Basic4PythonizationTestCase( unittest.TestCase ):
 
 ## actual test run
 if __name__ == '__main__':
+   sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+   from MyTextTestRunner import MyTextTestRunner
+
    loader = unittest.TestLoader()
    testSuite = loader.loadTestsFromModule( sys.modules[ __name__ ] )
 
-   runner = unittest.TextTestRunner( verbosity = 2 )
+   runner = MyTextTestRunner( verbosity = 2 )
    result = not runner.run( testSuite ).wasSuccessful()
 
    sys.exit( result )

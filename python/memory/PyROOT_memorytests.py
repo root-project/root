@@ -18,7 +18,7 @@ class Memory1TestCase( unittest.TestCase ):
    def test1ObjectCreationDestruction( self ):
       """Test object creation and destruction"""
 
-      gROOT.LoadMacro( os.path.join( os.path.dirname( __file__ ), 'MemTester.C+' ) )
+      gROOT.LoadMacro( 'MemTester.C+' )
       self.assertEqual( MemTester.counter, 0 )
 
     # test creation
@@ -57,10 +57,13 @@ class Memory1TestCase( unittest.TestCase ):
 
 ## actual test run
 if __name__ == '__main__':
+   sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+   from MyTextTestRunner import MyTextTestRunner
+
    loader = unittest.TestLoader()
    testSuite = loader.loadTestsFromModule( sys.modules[ __name__ ] )
 
-   runner = unittest.TextTestRunner( verbosity = 2 )
+   runner = MyTextTestRunner( verbosity = 2 )
    result = not runner.run( testSuite ).wasSuccessful()
 
    sys.exit( result )
