@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.4 2003/07/21 12:42:36 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.5 2003/10/07 13:41:33 brun Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -104,8 +104,8 @@ TControlBar::TControlBar(const char *orientation, const char *title)
             : TControlBarButton(title, "", "", "button")
 
 {
-    Initialize(-999, -999);
     SetOrientation( orientation );
+    Initialize(-999, -999);
 }
 
 //_______________________________________________________________________
@@ -115,8 +115,8 @@ TControlBar::TControlBar(const char *orientation, const char *title, Int_t x, In
 {
     Int_t xs = (Int_t)(x*gStyle->GetScreenFactor());
     Int_t ys = (Int_t)(y*gStyle->GetScreenFactor());
-    Initialize(xs, ys);
     SetOrientation( orientation );
+    Initialize(xs, ys);
 }
 
 //_______________________________________________________________________
