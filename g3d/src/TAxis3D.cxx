@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.6 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.7 2002/01/24 11:39:27 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 // ***********************************************************************
@@ -146,7 +146,7 @@ void TAxis3D::InitSet()
 
 //______________________________________________________________________________
 void TAxis3D::Browse(TBrowser *b){
-   // Add all 3 axices to the TBrowser
+   // Add all 3 axes to the TBrowser
    for (Int_t i=0;i<3;i++) b->Add(&fAxis[i],fAxis[i].GetTitle());
 }
 
@@ -156,7 +156,8 @@ Int_t TAxis3D::DistancetoPrimitive(Int_t px, Int_t py)
 //*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a line*-*-*-*-*-*
 //*-*                  ===========================================
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   Int_t dist = 9999999;
+
+   Int_t dist = 9;
    for (int i=0;i<3;i++) {
      Int_t axDist = fAxis[i].DistancetoPrimitive(px,py);
      if (dist > axDist) { dist = axDist; fSelected = &fAxis[i]; }
@@ -174,7 +175,9 @@ void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //*-*  This member function is called when an axis is clicked with the locator
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   
  if (fSelected) fSelected->ExecuteEvent(event,px,py);
+ 
  //  Execute action corresponding to the mouse event
 
    static Double_t x0, y0, x1, y1;
