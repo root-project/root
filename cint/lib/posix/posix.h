@@ -98,6 +98,11 @@ extern struct dirent *readdir(DIR *dir);
 
 #if defined(G__KCC) || defined(__KCC)
 extern void seekdir(DIR* dir,off_t loc);
+
+#elif (defined(G__alpha)||defined(__alpha)) && defined(G__GNU)
+
+extern int seekdir(DIR *, long);
+
 #elif (defined(G__SGI) || defined(__sgi)) && !(defined(G__GNU)||defined(__GNUC__))
 extern void seekdir( DIR *, off_t );
 
@@ -168,8 +173,13 @@ int uname(struct utsname *buf);
  * unistd.h
  ********************************************************************/
 extern int close(int fd);
+#if defined(G__ALPHA) && !defined(G__GNU)
+extern int     read();
+extern int     write();
+#else
 extern ssize_t read(int fd,void *buf, size_t nbytes);
 extern ssize_t write(int fd,const void *buf, size_t n);
+#endif
 
 extern int dup(int oldfd);
 extern int dup2(int oldfd,int newfd);
@@ -246,7 +256,7 @@ extern char *getwd(char *buf);
 
 #if defined(G__SUN) || defined(__sun)
 extern long setpgrp(void);
-#elif defined(G__FBSD) || defined(__FreeBSD__)
+#elif defined(G__FBSD) || defined(__FreeBSD__) || (defined(G__ALPHA)&&defined(G__GNU))
 extern int setpgrp(pid_t _pid, pid_t _pgrp);
 #elif defined(G__KCC) || defined(__KCC)
 extern pid_t setpgrp(void);
