@@ -12,10 +12,11 @@ ASIMAGEDIRS  := $(ASIMAGEDIR)/src
 ASIMAGEDIRI  := $(ASIMAGEDIR)/inc
 
 ASTEPVERS    := libAfterImage
+ASTEPDIRS    := $(MODDIRS)/$(ASTEPVERS)
 ASTEPDIRI    := $(MODDIRS)/$(ASTEPVERS)
 
 ##### libAfterImage #####
-ASTEPLIBA    := $(MODDIRS)/$(ASTEPVERS)/libAfterImage.a
+ASTEPLIBA    := $(ASTEPDIRS)/libAfterImage.a
 ASTEPLIB     := $(LPATH)/libAfterImage.a
 
 ##### libASImage #####
@@ -76,7 +77,8 @@ $(ASTEPLIBA):
 			$(MAKE); \
 		fi)
 
-$(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPLIB) $(MAINLIBS) $(ASIMAGELIBDEP)
+$(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPLIB) $(MAINLIBS) \
+                $(ASIMAGELIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
 		   "$(ASIMAGEO) $(ASIMAGEDO)" \
@@ -89,12 +91,12 @@ $(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMP)
 $(ASIMAGEDO):   $(ASIMAGEDS) $(ASTEPLIB)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I$(ASTEPDIRI) -I. -o $@ -c $<
 
-all-asimage:    $(ASTEPLIB) $(ASIMAGELIB)
+all-asimage:    $(ASIMAGELIB)
 
 clean-asimage:
 		@rm -f $(ASIMAGEO) $(ASIMAGEDO)
-		-@(if [ -d $(ASIMAGEDIRS)/$(ASTEPVERS) ]; then \
-			cd $(ASIMAGEDIRS)/$(ASTEPVERS); \
+		-@(if [ -d $(ASTEPDIRS) ]; then \
+			cd $(ASTEPDIRS); \
 			$(MAKE) clean; \
 		fi)
 
@@ -102,7 +104,7 @@ clean::         clean-asimage
 
 distclean-asimage: clean-asimage
 		@rm -f $(ASIMAGEDEP) $(ASIMAGEDS) $(ASIMAGEDH) $(ASIMAGELIB)
-		@rm -rf $(ASTEPLIB) $(ASIMAGEDIRS)/$(ASTEPVERS)
+		@rm -rf $(ASTEPLIB) $(ASTEPDIRS)
 
 distclean::     distclean-asimage
 
