@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: ZInflate.c,v 1.3 2004/05/05 14:27:28 rdm Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: ZInflate.c,v 1.4 2004/12/09 15:40:46 brun Exp $ */
 /* Author: */
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +15,6 @@
 #define NULL 0L
 #endif
 
-#define DEFLATE 8
 static int qflag = 0;
 
 #include "zlib.h"
@@ -1144,7 +1143,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 
   if ((src[0] != 'C' && src[0] != 'Z') ||
       (src[1] != 'S' && src[1] != 'L') ||
-      src[2] != DEFLATE) {
+      src[2] != Z_DEFLATED) {
     fprintf(stderr,"R__unzip: error in header\n");
     return;
   }

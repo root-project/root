@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.4 2004/07/19 12:56:43 rdm Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.5 2004/12/09 15:40:46 brun Exp $ */
 /* Author: */
 /*
 
@@ -323,7 +323,7 @@ ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
     ush att      = (ush)UNKNOWN;
     ush flags    = 0;
     ulg crc      = 0;
-    int method   = DEFLATE;
+    int method   = Z_DEFLATED;
 
     if (tgtsize <= 6L) R__error("target buffer too small");
 #if 0
@@ -418,7 +418,7 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
     if (*srcsize > 0xffffff) R__error("source buffer too big");
     if (error_flag != 0) return;
 
-    int method   = DEFLATE;
+    int method   = Z_DEFLATED;
 
     stream.next_in   = (Bytef*)src;
     stream.avail_in  = (uInt)(*srcsize);
@@ -463,7 +463,7 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
   } else {
     ush att      = (ush)UNKNOWN;
     ush flags    = 0;
-    int method   = DEFLATE;
+    int method   = Z_DEFLATED;
     level        = cxlevel;
 
     *irep        = 0;
