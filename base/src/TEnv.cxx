@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.11 2002/07/19 08:28:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.12 2002/08/18 17:43:48 brun Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -46,6 +46,15 @@
 //                                                                      //
 // Note that the .rootrc config files contain the config for all ROOT   //
 // based applications.                                                  //
+//                                                                      //
+// To add new entries to a TEnv:                                        //
+// TEnv env(".myfile");                                                 //
+// env.SetValue("myname","value");                                      //
+// env.SaveLevel(kEnvLocal);                                            //
+//                                                                      //
+// All new entries will be saved in the file corresponding to the       //
+// first SaveLevel() command.  If Save() is used, new entries go        //
+// into the local file by default.                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -562,24 +571,15 @@ void TEnv::Save()
    // Write the resource files for each level. The new files have the same
    // name as the original files. The old files are renamed to *.bak.
 
-   SaveLevel(kEnvGlobal);
+   SaveLevel(kEnvLocal);  // Be default, new items will be put into Local.
    SaveLevel(kEnvUser);
-   SaveLevel(kEnvLocal);
+   SaveLevel(kEnvGlobal);
 }
 
 //______________________________________________________________________________
 void TEnv::SaveLevel(EEnvLevel level)
 {
    // Write the resource file for a certain level.
-
-   TIter next(fTable);
-   TEnvRec *er;
-
-   while ((er = (TEnvRec*) next()))
-      if (er->fLevel == level)
-         break;
-
-   if (!er) return;
 
    TString   rootrcdir;
    FILE     *ifp, *ofp;
@@ -616,13 +616,20 @@ void TEnv::SaveLevel(EEnvLevel level)
          TWriteEnvParser wp(this, ifp, ofp);
          wp.Parse();
 
-         next.Reset();
-         while ((er = (TEnvRec*) next()))
+         TIter next(fTable);
+         TEnvRec *er;
+         while ((er = (TEnvRec*) next())) {
             if (er->fModified) {
-               er->fModified = kFALSE;
-               fprintf(ofp, "%-40s %s\n", Form("%s:", er->fName.Data()),
-                       er->fValue.Data());
+
+               // If it doesn't have a level yet, make it this one.
+               if (er->fLevel == kEnvChange) er->fLevel = level;
+               if (er->fLevel == level) {
+                  er->fModified = kFALSE;
+                  fprintf(ofp, "%-40s %s\n", Form("%s:", er->fName.Data()),
+                          er->fValue.Data());
+               }
             }
+         }
          fclose(ifp);
          fclose(ofp);
          gSystem->Rename(rootrcdir.Data(), Form("%s.bak", rootrcdir.Data()));
