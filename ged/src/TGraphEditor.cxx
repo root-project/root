@@ -161,12 +161,12 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    fModel = obj;
    fPad = pad;
-   fGraph = dynamic_cast<TGraph *>(obj);
+   fGraph = (TGraph *)(obj);
 
    const char *text = fGraph->GetTitle();
    fTitle->SetText(text);
 
-   TString opt = fGraph->GetDrawOption();
+   TString opt = GetDrawOption();
    opt.ToUpper();
    Int_t i=0;
    TString dum  = opt;
@@ -227,14 +227,15 @@ void TGraphEditor::DoShape()
 {
    // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area).
    
-   TString opt = fGraph->GetDrawOption();
+   TString opt = GetDrawOption();
    opt.ToUpper();
-   opt.Remove(opt.First(fDrawShape),1); 
+   Int_t first = opt.First(fDrawShape);
+   if (first < 0) return;
+   opt.Remove(first,1); 
    fDrawShape = ' ';
    if (opt=="A") opt += "P";
    fMarkerOnOff->SetState(kButtonDisabled);
-   fGraph->SetDrawOption(opt);
-   Update();    
+   SetDrawOption(opt);
 }
 
 //______________________________________________________________________________
@@ -243,21 +244,22 @@ void TGraphEditor::DoShape0()
 {
    // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area).
    
-   TString opt = fGraph->GetDrawOption();
+   TString opt = GetDrawOption();
    opt.ToUpper();
    if (opt.Contains("P")) fMarkerOnOff->SetState(kButtonDown);
    else fMarkerOnOff->SetState(kButtonUp);
    if (fDrawShape == ' ') opt +="C";
    else {
-      opt.Replace(opt.First(fDrawShape),1,'C'); 
+      Int_t first = opt.First(fDrawShape);
+      if (first < 0) return;
+      opt.Replace(first,1,'C'); 
       if (opt=="A" || opt=="AP" || opt=="PA" || opt == "P") {
          if (!opt.Contains("P")) opt +="P"; 
 	 fMarkerOnOff->SetState(kButtonDisabled);
       }
    }
    fDrawShape = 'C';
-   fGraph->SetDrawOption(opt);  
-   Update();    
+   SetDrawOption(opt);  
 }
 
 //______________________________________________________________________________
@@ -266,21 +268,22 @@ void TGraphEditor::DoShape1()
 {
    // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area).
    
-   TString opt = fGraph->GetDrawOption();
+   TString opt = GetDrawOption();
    opt.ToUpper();
    if (opt.Contains("P")) fMarkerOnOff->SetState(kButtonDown);
    else fMarkerOnOff->SetState(kButtonUp);
    if (fDrawShape == ' ') opt +="L";
    else {
-      opt.Replace(opt.First(fDrawShape),1,'L'); 
+      Int_t first = opt.First(fDrawShape);
+      if (first < 0) return;
+      opt.Replace(first,1,'L'); 
       if (opt=="A" || opt=="AP" || opt=="PA" || opt == "P") {
          if (!opt.Contains("P")) opt +="P"; 
 	 fMarkerOnOff->SetState(kButtonDisabled);
       }
    }
    fDrawShape='L';
-   fGraph->SetDrawOption(opt);
-   Update();    
+   SetDrawOption(opt);
 }
 
 //______________________________________________________________________________
@@ -289,21 +292,22 @@ void TGraphEditor::DoShape2()
 {
    // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area).
    
-   TString opt = fGraph->GetDrawOption();
+   TString opt = GetDrawOption();
    opt.ToUpper();
    if (opt.Contains("P")) fMarkerOnOff->SetState(kButtonDown);
    else fMarkerOnOff->SetState(kButtonUp);
    if (fDrawShape == ' ') opt +="B";
    else { 
-      opt.Replace(opt.First(fDrawShape),1,'B'); 
+      Int_t first = opt.First(fDrawShape);
+      if (first < 0) return;
+      opt.Replace(first,1,'B'); 
       if (opt=="A" || opt=="AP" || opt=="PA" || opt == "P") {
          if (!opt.Contains("P")) opt +="P"; 
 	 fMarkerOnOff->SetState(kButtonDisabled);
       }
    }
    fDrawShape='B';
-   fGraph->SetDrawOption(opt);
-   Update();    
+   SetDrawOption(opt);
 }
 
 //______________________________________________________________________________
@@ -318,15 +322,16 @@ void TGraphEditor::DoShape3()
    else fMarkerOnOff->SetState(kButtonUp);
    if (fDrawShape == ' ') opt +="F";
    else {
-      opt.Replace(opt.First(fDrawShape),1,'F'); 
+      Int_t first = opt.First(fDrawShape);
+      if (first < 0) return;
+      opt.Replace(first,1,'F'); 
       if (opt=="A" || opt=="AP" || opt=="PA" || opt == "P") {
          if (!opt.Contains("P")) opt +="P"; 
 	 fMarkerOnOff->SetState(kButtonDisabled);
       }
    }
    fDrawShape='F';
-   fGraph->SetDrawOption(opt);
-   Update();    
+   SetDrawOption(opt);
 }
 
 //______________________________________________________________________________
@@ -335,7 +340,7 @@ void TGraphEditor::DoAxisOnOff()
 {
    // Slot connected to axis: Set axis visible/invisible.
    
-   TString t = fGraph->GetDrawOption();
+   TString t = GetDrawOption();
    t.ToUpper();
    if (fAxisOnOff->GetState()==kButtonDown) fGraph->SetDrawOption((t+="A"));
    else if (fAxisOnOff->GetState()==kButtonUp)fGraph->SetDrawOption((t.Remove(t.First("A"),1)));   
@@ -348,7 +353,7 @@ void TGraphEditor::DoMarkerOnOff()
 {
    // Slot connected to Marker: Set marker visible/invisible.
    
-   TString t = fGraph->GetDrawOption();
+   TString t = GetDrawOption();
    t.ToUpper();
    if (fMarkerOnOff->GetState()==kButtonDown) {
       if (!t.Contains("P")) t+="P";
@@ -358,8 +363,7 @@ void TGraphEditor::DoMarkerOnOff()
       while(t.Contains("P")) t.Remove(t.First("P"),1);
       fShape->SetState(kButtonDisabled);
    }   
-   fGraph->SetDrawOption(t);
-   Update();
+   SetDrawOption(t);
 }
    
 //______________________________________________________________________________
