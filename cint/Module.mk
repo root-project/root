@@ -76,6 +76,9 @@ endif
 ifeq ($(PLATFORM),aix)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
+ifeq ($(PLATFORM),aix5)
+CINTS2       += $(MODDIRS)/libstrm.cxx
+endif
 ifeq ($(PLATFORM),sgi)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
