@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.14 2001/04/25 14:03:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.15 2001/07/09 20:30:36 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -616,9 +616,10 @@ Stat_t TProfile::GetBinError(Int_t bin) const
    if (err2 != 0 && sum < 5) test = eprim2*sum/err2;
 //printf("bin=%d, cont=%g, sum=%g, err2=%g, eprim2=%g, test=%g\n",bin,cont,sum,err2,eprim2,test);
    //if statistics is unsufficient, take approximation.
-   // error is set to the average error on all bins
-   //if (eprim <= 0) { test in version 2.25/03
-   if (test < 1.e-4) {
+   // error is set to the (average error on all bins) * 2
+   //if (eprim <= 0) {   test in version 2.25/03
+   //if (test < 1.e-4) { test in version 3.01/06
+   if (test < 1.e-4 || eprim2 < 1e-6) {
       Stat_t scont, ssum, serr2;
       scont = ssum = serr2 = 0;
       for (Int_t i=1;i<fNcells;i++) {
@@ -628,7 +629,8 @@ Stat_t TProfile::GetBinError(Int_t bin) const
       }
       Stat_t scontsum = scont/ssum;
       Stat_t seprim2  = TMath::Abs(serr2/ssum - scontsum*scontsum);
-      eprim           = TMath::Sqrt(seprim2);
+      eprim           = 2*TMath::Sqrt(seprim2);
+      sum = ssum;
    }
    if (fErrorMode == kERRORMEAN) return eprim/TMath::Sqrt(sum);
    else if (fErrorMode == kERRORSPREAD) return eprim;
