@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.20 2004/12/13 16:56:22 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.21 2005/03/09 18:19:26 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -466,6 +466,11 @@ Int_t TPolyLine3D::Merge(TCollection *list)
 //______________________________________________________________________________
 void TPolyLine3D::Paint(Option_t * /* option */ )
 {
+   // Paint a TPolyLine3D. 
+
+   // No need to continue if there is nothing to paint
+   if (Size() <= 0) return;
+
    static TBuffer3D buffer(TBuffer3DTypes::kLine);
    
    // TPolyLine3D can only be described by filling the TBuffer3D 'tesselation'

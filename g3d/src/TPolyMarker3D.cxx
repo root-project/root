@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.22 2005/03/11 15:02:43 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.23 2005/03/18 22:41:26 rdm Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -305,6 +305,11 @@ Int_t TPolyMarker3D::Merge(TCollection *list)
 //______________________________________________________________________________
 void TPolyMarker3D::Paint(Option_t * /*option*/ )
 {
+   // Paint a TPolyMarker3D.
+
+   // No need to continue if there is nothing to paint
+   if (Size() <= 0) return;
+
    static TBuffer3D buffer(TBuffer3DTypes::kMarker);
 
    buffer.ClearSectionsValid();
