@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.4 2003/07/18 23:51:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.5 2003/07/21 12:42:36 brun Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -178,7 +178,9 @@ void TRootControlBar::SetTextColor(const char *colorName)
 
    Pixel_t color;
    gClient->GetColorByName(colorName, color);
-
+   
+   if (!fWidgets) Create();
+   
    TIter next(fWidgets);
 
    TObject *obj;
