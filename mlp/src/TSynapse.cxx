@@ -1,11 +1,19 @@
-// @(#)root/mlp:$Name:  $:$Id: TSynapse.cxx,v 1.3 2003/12/16 14:09:38 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TSynapse.cxx,v 1.4 2004/05/04 07:59:33 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
+
+/*************************************************************************
+ * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 ///////////////////////////////////////////////////////////////////////////
 //
 // TSynapse
 //
-// This is a simple weighted bidirectionnal connection between 
+// This is a simple weighted bidirectionnal connection between
 // two neurons.
 // A network is built connecting two neurons by a synapse.
 // In addition to the value, the synapse can return the DeDw
@@ -83,20 +91,20 @@ Double_t TSynapse::GetDeDw() const
 }
 
 //______________________________________________________________________________
-void TSynapse::SetWeight(Double_t w) 
-{ 
+void TSynapse::SetWeight(Double_t w)
+{
    // Sets the weight of the synapse.
-   // This weight is the multiplying factor applied on the 
-   // output of a neuron in the linear combination given as input 
+   // This weight is the multiplying factor applied on the
+   // output of a neuron in the linear combination given as input
    // of another neuron.
-   fweight = w; 
+   fweight = w;
 }
 
 //______________________________________________________________________________
-void TSynapse::SetDEDw(Double_t in) 
-{ 
+void TSynapse::SetDEDw(Double_t in)
+{
    // Sets the derivative of the total error wrt the synapse weight
-   fDEDw = in; 
+   fDEDw = in;
 }
 
 

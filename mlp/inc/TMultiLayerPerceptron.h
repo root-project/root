@@ -1,5 +1,13 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.5 2004/05/03 16:30:12 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.6 2004/05/26 12:30:31 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
+
+/*************************************************************************
+ * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TMultiLayerPerceptron
 #define ROOT_TMultiLayerPerceptron
@@ -28,18 +36,18 @@ class TTreeFormulaManager;
 //
 // This class decribes a Neural network.
 // There are facilities to train the network and use the output.
-// 
-// The input layer is made of inactive neurons (returning the 
-// normalized input), hidden layers are made of sigmoids and output 
+//
+// The input layer is made of inactive neurons (returning the
+// normalized input), hidden layers are made of sigmoids and output
 // neurons are linear.
 //
 // The basic input is a TTree and two (training and test) TEventLists.
-// For classification jobs, a branch (maybe in a TFriend) must contain 
+// For classification jobs, a branch (maybe in a TFriend) must contain
 // the expected output.
-// 6 learning methods are available: kStochastic, kBatch, 
+// 6 learning methods are available: kStochastic, kBatch,
 // kSteepestDescent, kRibierePolak, kFletcherReeves and kBFGS.
 //
-// This implementation is *inspired* from the mlpfit package from 
+// This implementation is *inspired* from the mlpfit package from
 // J.Schwindling et al.
 //
 //____________________________________________________________________
@@ -52,38 +60,38 @@ class TMultiLayerPerceptron : public TObject {
                          kRibierePolak, kFletcherReeves, kBFGS };
    enum DataSet { kTraining, kTest };
    TMultiLayerPerceptron();
-   TMultiLayerPerceptron(const char* layout, TTree* data = NULL, 
-                         const char* training = "Entry$%2==0", 
+   TMultiLayerPerceptron(const char* layout, TTree* data = NULL,
+                         const char* training = "Entry$%2==0",
                          const char* test = "");
    TMultiLayerPerceptron(const char* layout, const char* weight, TTree* data = NULL,
                          const char* training = "Entry$%2==0",
                          const char* test = "");
-   TMultiLayerPerceptron(const char* layout, TTree* data, 
-                         TEventList* training, 
+   TMultiLayerPerceptron(const char* layout, TTree* data,
+                         TEventList* training,
                          TEventList* test);
    TMultiLayerPerceptron(const char* layout, const char* weight, TTree* data,
                          TEventList* training,
                          TEventList* test);
-   virtual ~TMultiLayerPerceptron();  
+   virtual ~TMultiLayerPerceptron();
    void SetData(TTree*);
    void SetTrainingDataSet(TEventList* train);
    void SetTestDataSet(TEventList* test);
    void SetTrainingDataSet(const char* train);
    void SetTestDataSet(const char* test);
-   void SetLearningMethod(TMultiLayerPerceptron::LearningMethod method); 
+   void SetLearningMethod(TMultiLayerPerceptron::LearningMethod method);
    void SetEventWeight(const char*);
    void Train(Int_t nEpoch, Option_t* option = "text");
    Double_t Result(Int_t event, Int_t index = 0) const;
    Double_t GetError(Int_t event) const;
    Double_t GetError(TMultiLayerPerceptron::DataSet set) const;
-   void ComputeDEDw() const; 
+   void ComputeDEDw() const;
    void Randomize() const;
    void SetEta(Double_t eta);
    void SetEpsilon(Double_t eps);
    void SetDelta(Double_t delta);
-   void SetEtaDecay(Double_t ed); 
+   void SetEtaDecay(Double_t ed);
    void SetTau(Double_t tau);
-   void SetReset(Int_t reset); 
+   void SetReset(Int_t reset);
    inline Double_t GetEta()      const { return fEta; }
    inline Double_t GetEpsilon()  const { return fEpsilon; }
    inline Double_t GetDelta()    const { return fDelta; }
@@ -97,7 +105,7 @@ class TMultiLayerPerceptron : public TObject {
    Double_t Evaluate(Int_t index, Double_t* params) const;
    void Export(Option_t* filename = "NNfunction", Option_t* language = "C++") const;
    virtual void Draw(const Option_t*);
-   
+
  protected:
    void AttachData();
    void BuildNetwork();
@@ -112,14 +120,14 @@ class TMultiLayerPerceptron : public TObject {
    bool GetBFGSH(TMatrixD&, TMatrixD &, TMatrixD&);
    void BFGSDir(TMatrixD&, Double_t*);
    Double_t DerivDir(Double_t*);
-   
+
  private:
    void BuildFirstLayer(TString&);
    void BuildHiddenLayers(TString&);
    void BuildLastLayer(TString&, Int_t);
    void Shuffle(Int_t*, Int_t) const;
    void MLP_Line(Double_t*, Double_t*, Double_t);
-   
+
    TTree* fData;                   //! pointer to the tree used as datasource
    Int_t fCurrentTree;             //! index of the current tree in a chain
    Double_t fCurrentTreeWeight;    //! weight of the current tree in a chain

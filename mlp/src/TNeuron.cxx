@@ -1,5 +1,13 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.10 2004/05/04 07:59:33 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.11 2004/05/26 12:30:31 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
+
+/*************************************************************************
+ * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -10,13 +18,13 @@
 // A network is built connecting neurons by synapses.
 // There are different types of neurons: linear (a+bx),
 // sigmoid (1/(1+exp(-x)), tanh or gaussian.
-// In a Multi Layer Perceptron, the input layer is made of 
+// In a Multi Layer Perceptron, the input layer is made of
 // inactive neurons (returning the normalized input), hidden layers
 // are made of sigmoids and output neurons are linear.
 //
-// This implementation contains several methods to compute the value, 
+// This implementation contains several methods to compute the value,
 // the derivative, the DeDw, ...
-// Values are stored in local buffers. The SetNewEvent() method is 
+// Values are stored in local buffers. The SetNewEvent() method is
 // there to inform buffered values are outdated.
 //
 ///////////////////////////////////////////////////////////////////////////
@@ -56,16 +64,16 @@ TNeuron::TNeuron(TNeuron::NeuronType type)
 Double_t TNeuron::Sigmoid(Double_t x) const
 {
    // The Sigmoid.
-   // Fast computation of the values of the sigmoid function. 
-   // Uses values of the function up  to the seventh order    
-   // tabulated at 700 points.                                
+   // Fast computation of the values of the sigmoid function.
+   // Uses values of the function up  to the seventh order
+   // tabulated at 700 points.
    // Values were computed in long double precision (16 bytes,
-   // precision to about 37 digits) on a hp computer.         
-   // Some values were checked with Mathematica.              
-   // Result should be correct to ~ 15 digits (about double   
-   // precision)                     
-   //                        
-   // From the mlpfit package (J.Schwindling   20-Jul-1999)   
+   // precision to about 37 digits) on a hp computer.
+   // Some values were checked with Mathematica.
+   // Result should be correct to ~ 15 digits (about double
+   // precision)
+   //
+   // From the mlpfit package (J.Schwindling   20-Jul-1999)
 
    static Double_t sigval[7000] = {
    -3.500000e+01, 6.30511676014698530e-16, 6.30511676014698130e-16, 3.15255838007348670e-16, 1.05085279335782620e-16, 2.62713198339455210e-17, 5.25426396678905190e-18, 8.75710661131491060e-19, 1.25101523018779380e-19, 1.56376903773461590e-20,
@@ -768,7 +776,7 @@ Double_t TNeuron::Sigmoid(Double_t x) const
    3.470000e+01, 9.99999999999999110e-01, 8.51101739147944780e-16, -4.25550869573971700e-16, 1.41850289857990070e-16, -3.54625724644972780e-17, 7.09251449289935940e-18, -1.18208574881652830e-18, 1.68869392688066110e-19, -2.11086740860057180e-20,
    3.480000e+01, 9.99999999999999220e-01, 7.70108700136545650e-16, -3.85054350068272230e-16, 1.28351450022757000e-16, -3.20878625056890530e-17, 6.41757250113773230e-18, -1.06959541685626230e-18, 1.52799345265172830e-19, -1.90999181581443530e-20,
    3.490000e+01, 9.99999999999999330e-01, 6.96823167838575130e-16, -3.48411583919287070e-16, 1.16137194639762020e-16, -2.90342986599403450e-17, 5.80685973198800470e-18, -9.67809955331312550e-19, 1.38258565047323660e-19, -1.72823206309143410e-20 };
-      
+
    Int_t i = (Int_t)(10*x+350.5);
    if(i<0)   return TMath::Exp(x);
    if(i>699) return 1;
@@ -786,7 +794,7 @@ Double_t TNeuron::Sigmoid(Double_t x) const
 }
 
 //______________________________________________________________________________
-Double_t TNeuron::DSigmoid(Double_t x) const 
+Double_t TNeuron::DSigmoid(Double_t x) const
 {
    // The Derivative of the Sigmoid.
 
@@ -803,7 +811,7 @@ Double_t TNeuron::DSigmoid(Double_t x) const
 void TNeuron::AddPre(TSynapse * pre)
 {
    // Adds a synapse to the neuron as an input
-   // This method is used by the TSynapse while 
+   // This method is used by the TSynapse while
    // connecting two neurons.
    fpre.AddLast(pre);
 }
@@ -812,7 +820,7 @@ void TNeuron::AddPre(TSynapse * pre)
 void TNeuron::AddPost(TSynapse * post)
 {
    // Adds a synapse to the neuron as an output
-   // This method is used by the TSynapse while 
+   // This method is used by the TSynapse while
    // connecting two neurons.
    fpost.AddLast(post);
 }
@@ -822,7 +830,7 @@ TTreeFormula* TNeuron::UseBranch(TTree* input, const char* formula)
 {
    // Sets a formula that can be used to make the neuron an input.
    // The formula is automatically normalized to mean=0, RMS=1.
-   // This normalisation is used by GetValue() (input neurons) 
+   // This normalisation is used by GetValue() (input neurons)
    // and GetError() (output neurons)
    if (fFormula) delete fFormula;
    fFormula = new TTreeFormula(Form("NF%d",this),formula,input);
@@ -846,7 +854,7 @@ Double_t TNeuron::GetBranch() const
 //______________________________________________________________________________
 Double_t TNeuron::GetValue() const
 {
-   // Computes the output using the appropriate function and all 
+   // Computes the output using the appropriate function and all
    // the weighted inputs, or uses the branch as input.
    // In that case, the branch normalisation is also used.
    if (!fNewValue) {
@@ -881,7 +889,7 @@ Double_t TNeuron::GetValue() const
           value = TMath::TanH(input);
           break;
         }
-      case TNeuron::kGauss: { 
+      case TNeuron::kGauss: {
           value = TMath::Exp(-input * input);
           break;
         }
@@ -967,39 +975,39 @@ void TNeuron::ForceExternalValue(Double_t value)
 }
 
 //______________________________________________________________________________
-void TNeuron::SetNormalisation(Double_t mean, Double_t RMS) 
+void TNeuron::SetNormalisation(Double_t mean, Double_t RMS)
 {
-   // Sets the normalization variables. 
+   // Sets the normalization variables.
    // Any input neuron will return (branch-mean)/RMS.
    // When UseBranch is called, mean and RMS are automatically set
    // to the actual branch mean and RMS.
-   fNorm[0] = RMS; 
-   fNorm[1] = mean; 
+   fNorm[0] = RMS;
+   fNorm[1] = mean;
 }
 
 //______________________________________________________________________________
-void TNeuron::SetWeight(Double_t w) 
-{ 
+void TNeuron::SetWeight(Double_t w)
+{
    // Sets the neuron weight to w.
-   // The neuron weight corresponds to the bias in the 
+   // The neuron weight corresponds to the bias in the
    // linear combination of the inputs.
-   fWeight = w; 
+   fWeight = w;
 }
 
 //______________________________________________________________________________
 void TNeuron::SetNewEvent() const
-{ 
+{
    // Inform the neuron that inputs of the network have changed,
    // so that the buffered values have to be recomputed.
-   ((TNeuron*)this)->fNewValue = true; 
-   ((TNeuron*)this)->fNewDeriv = true; 
-   ((TNeuron*)this)->fNewDeDw = true; 
+   ((TNeuron*)this)->fNewValue = true;
+   ((TNeuron*)this)->fNewDeriv = true;
+   ((TNeuron*)this)->fNewDeDw = true;
 }
 
 //______________________________________________________________________________
-void TNeuron::SetDEDw(Double_t in) 
-{ 
+void TNeuron::SetDEDw(Double_t in)
+{
    // Sets the derivative of the total error wrt the neuron weight.
-   fDEDw = in; 
+   fDEDw = in;
 }
 
