@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.126 2003/07/31 17:49:01 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.127 2003/11/14 17:27:51 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2062,7 +2062,7 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start,
    //deserialize the object
    sinfo->ReadBuffer(b, (char*)pointer,-1);
 
-   //check that the buffer position correesponds to the byte count
+   //check that the buffer position corresponds to the byte count
    b.CheckByteCount(start,count,this);
    return 0;
 }
@@ -2075,8 +2075,7 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
 
    // read the class version from the buffer
    UInt_t R__s, R__c;
-   Version_t version = b.ReadVersion(&R__s, &R__c);
-
+   Version_t version = b.ReadVersion(&R__s, &R__c, this);
    TFile *file = (TFile*)b.GetParent();
    if (file && file->GetVersion() < 30000) version = -1; //This is old file
 
@@ -2105,7 +2104,7 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
    //deserialize the object
    sinfo->ReadBuffer(b, (char*)pointer,-1);
 
-   //check that the buffer position correesponds to the byte count
+   //check that the buffer position corresponds to the byte count
    b.CheckByteCount(R__s, R__c,this);
 
    if (gDebug > 2) printf(" ReadBuffer for class: %s has read %d bytes\n",GetName(),R__c);
