@@ -99,6 +99,27 @@ std::istream& operator<<(std::istream& istr,std::G__CINT_NOSUPPORT& i) {
   return(istr);
 }
 
+#ifdef G__NATIVELONGLONG
+std::ostream& operator<<(std::ostream& ostr,long long i) {
+  char buf[200];
+  sprintf(buf,"%lld",i);
+  cout << buf ;
+  return(ostr);
+}
+std::ostream& operator<<(std::ostream& ostr,unsigned long long i) {
+  char buf[200];
+  sprintf(buf,"%llu",i);
+  cout << buf ;
+  return(ostr);
+}
+std::ostream& operator<<(std::ostream& ostr,long double i) {
+  char buf[200];
+  sprintf(buf,"%g",i);
+  cout << buf ;
+  return(ostr);
+}
+#endif
+
 // Value evaluation
 //template<class T> int G__ateval(const T* x) {return(0);}
 //template<class T> int G__ateval(const T& x) {return(0);}

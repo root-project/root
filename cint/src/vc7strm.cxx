@@ -1964,7 +1964,7 @@ static int G__G__stream__9_16(G__value *result7,G__CONST char *funcname,struct G
 
 static int G__G__stream__0_17(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
-        const istream& obj=operator>>(*(istream*)libp->para[0].ref,*(bool*)G__UCharref(&libp->para[1]));
+        const istream& obj=operator>>(*(istream*)libp->para[0].ref,*(bool*)G__Boolref(&libp->para[1]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
       }
    return(1 || funcname || hash || result7 || libp) ;

@@ -55,6 +55,10 @@ void G__scratch_all()
   G__LockCriticalSection();
 #endif
 
+  G__lasterrorpos.line_number = 0;
+  G__lasterrorpos.filenum = -1;
+  
+
 #ifndef G__OLDIMPLEMENTATION563
   G__cintready=0; /* reset ready flag for embedded use */
 #endif

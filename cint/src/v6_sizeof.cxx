@@ -68,7 +68,11 @@ G__value *object;
   case 'C':
   case 'E': /* file ? */
   case 'Y': /* void */
+#ifndef G__OLDIMPLEMENTATION2191
+  case '1': /* pointer to function */
+#else
   case 'Q': /* pointer to function */
+#endif
     return(G__CHARALLOC);
   case 'R':
   case 'S':
@@ -93,6 +97,15 @@ G__value *object;
     return(G__INTALLOC);
 #else
     return(G__CHARALLOC);
+#endif
+#endif
+#ifndef G__OLDIMPLEMENTATION2189
+  case 'N':
+  case 'M':
+    return(G__LONGLONGALLOC);
+#ifndef G__OLDIMPLEMENTATION2191
+  case 'Q':
+    return(G__LONGDOUBLEALLOC);
 #endif
 #endif
   }
@@ -191,6 +204,15 @@ char *typename;
   typenum = G__defined_typename(typename);
   if(-1 != typenum) {
     switch(G__newtype.type[typenum]) {
+#ifndef G__OLDIMPLEMENTATION2189
+    case 'n':
+    case 'm':
+      result = sizeof(long long);
+      break;
+    case 'q':
+      result = sizeof(long double);
+      break;
+#endif
 #ifndef G__OLDIMPLEMENTATION1604
     case 'g':
 #ifdef G__BOOL4BYTE
@@ -485,6 +507,17 @@ char *typenamein;
     }
     else {
       switch(tolower(type)) {
+#ifndef G__OLDIMPLEMENTATION2189
+      case 'n':
+      case 'm':
+	size = G__LONGLONGALLOC;
+	break;
+#if 0
+      case 'q':
+	size = G__LONGDOUBLEALLOC;
+	break;
+#endif
+#endif
 #ifndef G__OLDIMPLEMENTATION1604
       case 'g':
 #ifdef G__BOOL4BYTE
@@ -1285,6 +1318,12 @@ int objsize;
 #endif
 #endif
   switch(t) {
+#ifndef G__OLDIMPLEMENTATION2189
+  case 'n':
+  case 'm':
+    *(long long*)(p) = (long long)G__Longlong(*pval);
+    break;
+#endif
 #ifndef G__OLDIMPLEMENTATION1604
   case 'g':
 #ifdef G__BOOL4BYTE

@@ -223,7 +223,8 @@ char *new_name;
       int store_tagnum = G__tagnum;
       int store_typenum = G__typenum;
       int store_decl = G__decl;
-#ifndef G__OLDIMPLEMENTATION1836
+#if !defined(G__OLDIMPLEMENTATION2189)
+#elif !defined(G__OLDIMPLEMENTATION1836)
       if(-1==G__unsigned) {
 	G__loadlonglong(&G__tagnum,&G__typenum,G__ULONGLONG);
       }
@@ -265,6 +266,12 @@ char *new_name;
 #endif
 #endif /* 1836 */
       if(strcmp(new_name,"long")==0) {
+#ifndef G__OLDIMPLEMENTATION2189
+	G__var_type='n' + G__unsigned;
+	G__tagnum = -1;
+	G__typenum = -1;
+	G__reftype = G__PARANORMAL;
+#else
 	fpos_t pos;
 	int xlinenum = G__ifile.line_number;
 	fgetpos(G__ifile.fp,&pos); 
@@ -275,18 +282,40 @@ char *new_name;
 	}
 	G__var_type='u';
 	G__reftype = G__PARANORMAL;
+#endif
       }
       else if(strcmp(new_name,"long*")==0) {
+#ifndef G__OLDIMPLEMENTATION2189
+	G__var_type='N' + G__unsigned;
+	G__tagnum = -1;
+	G__typenum = -1;
+	G__reftype = G__PARANORMAL;
+#else
 	G__var_type='U';
 	G__reftype = G__PARANORMAL;
+#endif
       }
       else if(strcmp(new_name,"long**")==0) {
+#ifndef G__OLDIMPLEMENTATION2189
+	G__var_type='N' + G__unsigned;
+	G__tagnum = -1;
+	G__typenum = -1;
+	G__reftype = G__PARAP2P;
+#else
 	G__var_type='U';
 	G__reftype = G__PARAP2P;
+#endif
       }
       else if(strcmp(new_name,"long&")==0) {
+#ifndef G__OLDIMPLEMENTATION2189
+	G__var_type='n' + G__unsigned;
+	G__tagnum = -1;
+	G__typenum = -1;
+	G__reftype = G__PARAREFERENCE;
+#else
 	G__var_type='u';
 	G__reftype = G__PARAREFERENCE;
+#endif
       }
       G__define_var(G__tagnum,G__typenum);
       G__var_type='p';
@@ -306,7 +335,8 @@ char *new_name;
       int store_tagnum = G__tagnum;
       int store_typenum = G__typenum;
       int store_decl = G__decl;
-#ifndef G__OLDIMPLEMENTATION1836
+#if !defined(G__OLDIMPLEMENTATION2189)
+#elif !defined(G__OLDIMPLEMENTATION1836)
       G__loadlonglong(&G__tagnum,&G__typenum,G__LONGDOUBLE);
 #else /* 1836 */
       if(0==G__defined_macro("G__LONGLONG_H")) {
@@ -334,20 +364,48 @@ char *new_name;
       G__typenum=G__search_typename("long double",'u',G__tagnum,G__PARANORMAL);
 #endif /* 1836 */
       if(strcmp(new_name,"double")==0) {
+#ifndef G__OLDIMPLEMENTATION2189
+	G__var_type='q';
+	G__tagnum = -1;
+	G__typenum = -1;
+	G__reftype = G__PARANORMAL;
+#else
 	G__var_type='u';
 	G__reftype = G__PARANORMAL;
+#endif
       }
       else if(strcmp(new_name,"double*")==0) {
+#ifndef G__OLDIMPLEMENTATION2189
+	G__var_type='Q';
+	G__tagnum = -1;
+	G__typenum = -1;
+	G__reftype = G__PARANORMAL;
+#else
 	G__var_type='U';
 	G__reftype = G__PARANORMAL;
+#endif
       }
       else if(strcmp(new_name,"double**")==0) {
+#ifndef G__OLDIMPLEMENTATION2189
+	G__var_type='Q';
+	G__tagnum = -1;
+	G__typenum = -1;
+	G__reftype = G__PARAP2P;
+#else
 	G__var_type='U';
 	G__reftype = G__PARAP2P;
+#endif
       }
       else if(strcmp(new_name,"double&")==0) {
+#ifndef G__OLDIMPLEMENTATION2189
+	G__var_type='q';
+	G__tagnum = -1;
+	G__typenum = -1;
+	G__reftype = G__PARAREFERENCE;
+#else
 	G__var_type='u';
 	G__reftype = G__PARAREFERENCE;
+#endif
       }
       G__define_var(G__tagnum,G__typenum);
       G__var_type='p';
@@ -786,6 +844,7 @@ char *new_name;
   int ig15;
   int i;
   int hash;
+  unsigned int j,nest,scope;
   char name[G__MAXNAME];
   char *p;
 
@@ -795,6 +854,23 @@ char *new_name;
   strcpy(name,new_name);
   p=strchr(name,'[');
   if(p) *p='\0';
+
+  /* Check to see if we were passed a qualified name or name */
+  for(j=0,nest=0,scope=0;j<strlen(name);++j) {
+     switch(name[j]) {
+       case '<': ++nest; break;
+       case '>': --nest; break;
+       case ':': 
+          if (nest==0 && name[j+1]==':') {
+             scope = j;
+          }; break;
+     };
+  }
+  
+  if (scope==0) {
+     /* If scope is not null, this means that we are not really inside the
+        class declaration.  This might actually be an instantiation inside
+        a namespace */
   
   G__hash(name,hash,i)
   /* only interpretation. no need to check for cpplink memvar setup */
@@ -807,6 +883,7 @@ char *new_name;
   else {
     G__fprinterr(G__serr,"Internal warning: %s comment can not set",new_name);
     G__printlinenum();
+  }
   }
 #endif
   return(0);

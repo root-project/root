@@ -1034,7 +1034,13 @@ int startin;
       sprintf(msg,"%-15s     " ,"(compiled)");
     if(G__more(fout,msg)) return(1);
 #endif
-    if('Q'==G__newtype.type[i]) {
+    if(
+#ifndef G__OLDIMPLEMENTATION2191
+       '1'==G__newtype.type[i]
+#else
+       'Q'==G__newtype.type[i]
+#endif
+       ) {
       /* pointer to statuc function */
       sprintf(msg,"typedef void* %s",G__newtype.name[i]); 
       if(G__more(fout,msg)) return(1);
@@ -1959,7 +1965,11 @@ long offset;
 	  if(G__more(fout,msg)) return(1);
 	  break;
 #endif
+#ifndef G__OLDIMPLEMENTATION2191
+	case 'j': break;
+#else
 	case 'm': break;
+#endif
 	case 'p':
 	case 'o': 
 	  sprintf(msg,"=%d",*(int*)addr); 
@@ -2042,6 +2052,20 @@ long offset;
 #else
 	  sprintf(msg,"=%d",(*(unsigned char*)addr)?1:0); 
 #endif
+	  if(G__more(fout,msg)) return(1);
+	  break;
+#endif
+#ifndef G__OLDIMPLEMENTATION2189
+	case 'n': /* long long */
+	  sprintf(msg,"=%lld",(*(long long*)addr)); 
+	  if(G__more(fout,msg)) return(1);
+	  break;
+	case 'm': /* unsigned long long */
+	  sprintf(msg,"=%llu",(*(unsigned long long*)addr)); 
+	  if(G__more(fout,msg)) return(1);
+	  break;
+	case 'q': /* long double */
+	  sprintf(msg,"=%Lg",(*(long double*)addr)); 
 	  if(G__more(fout,msg)) return(1);
 	  break;
 #endif

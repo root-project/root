@@ -531,6 +531,8 @@ int G__do_setmemfuncenv = 0;
 int G__scopelevel=0;
 int G__cintv6 = 0;
 
+struct G__input_file G__lasterrorpos;
+
 
 /*
  * Local Variables:
