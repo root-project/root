@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.cxx,v 1.4 2001/08/07 13:44:45 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.cxx,v 1.5 2001/09/28 12:34:50 brun Exp $
 // Author: Rene Brun   26/11/96
 
 /*************************************************************************
@@ -49,16 +49,16 @@ TDrawPanelHist::TDrawPanelHist() : TDialogCanvas()
 }
 
 //_____________________________________________________________________________
-TDrawPanelHist::TDrawPanelHist(const char *name, const char *title, UInt_t ww, UInt_t wh)
+TDrawPanelHist::TDrawPanelHist(const char *name, const char *title, UInt_t ww, UInt_t wh, const TVirtualPad *pad, const TObject *obj)
           : TDialogCanvas(name, title,ww,wh)
 {
    // DrawPanelHist constructor.
 
    TGroupButton *b;
    fOption    = "";
-   fRefPad    = (TPad*)gROOT->GetSelectedPad();
+   fRefPad    = (TPad*)pad;
    fRefObject = this;
-   fHistogram = gROOT->GetSelectedPrimitive();
+   fHistogram = (TObject*)obj;
 
    BuildStandardButtons();
 

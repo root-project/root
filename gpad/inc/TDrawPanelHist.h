@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.h,v 1.2 2000/12/13 15:13:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.h,v 1.3 2001/08/07 13:44:45 brun Exp $
 // Author: Rene Brun   26/11/96
 
 /*************************************************************************
@@ -39,7 +39,7 @@ protected:
 
 public:
         TDrawPanelHist();
-        TDrawPanelHist(const char *name, const char *title, UInt_t ww=500, UInt_t wh=600);
+        TDrawPanelHist(const char *name, const char *title, UInt_t ww, UInt_t wh, const TVirtualPad *pad, const TObject *obj);
         virtual ~TDrawPanelHist();
         virtual void  AddOption(Option_t *option);
         virtual void  Apply(const char *action="");

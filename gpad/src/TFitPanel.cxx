@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.5 2001/08/07 13:44:45 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.6 2001/09/28 12:34:50 brun Exp $
 // Author: Rene Brun   24/11/96
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TFitPanel::TFitPanel() : TDialogCanvas()
 }
 
 //_____________________________________________________________________________
-TFitPanel::TFitPanel(const char *name, const char *title, UInt_t ww, UInt_t wh)
+TFitPanel::TFitPanel(const char *name, const char *title, UInt_t ww, UInt_t wh, const TVirtualPad *pad, const TObject *obj)
           : TDialogCanvas(name, title,ww,wh)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*FitPanel constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -60,9 +60,9 @@ TFitPanel::TFitPanel(const char *name, const char *title, UInt_t ww, UInt_t wh)
    fOption    = "r";
    fFunction  = "";
    fSame      = "";
-   fRefPad    = (TPad*)gROOT->GetSelectedPad();
+   fRefPad    = (TPad*)pad;
    fRefObject = this;
-   fObjectFit = gROOT->GetSelectedPrimitive();
+   fObjectFit = (TObject*)obj;
 
    BuildStandardButtons();
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.81 2004/06/22 15:36:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.82 2004/07/05 07:02:53 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -800,11 +800,6 @@ void TF1::DrawPanel()
 //*-*
 //*-*   See class TDrawPanelHist for example
 
-   if (gPad) {
-      gROOT->SetSelectedPrimitive(this);
-      gROOT->SetSelectedPad(gPad);
-   }
-
    //The pad utility manager is required (a plugin)
    TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
    if (!util) {
@@ -816,7 +811,7 @@ void TF1::DrawPanel()
           util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
       }
    }
-   util->DrawPanel();
+   util->DrawPanel(gPad,this);
 }
 
 //______________________________________________________________________________

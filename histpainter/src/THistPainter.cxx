@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.179 2004/07/08 12:18:50 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.180 2004/07/19 12:36:32 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -244,16 +244,7 @@ void THistPainter::DrawPanel()
 //      See class TDrawPanelHist for example
 
    gCurrentHist = fH;
-   if (gPad) {
-      //TObject *pr = gPad->GetSelected();
-      TObject *pr = 0;
-      if (!pr) pr = fH;
-      //TVirtualPad *pad = gPad->GetSelectedPad();
-      TVirtualPad *pad = 0;
-      if (!pad) pad = gPad;
-      gROOT->SetSelectedPrimitive(pr);
-      gROOT->SetSelectedPad(pad);
-   } else {
+   if (!gPad) {
       Error("DrawPanel", "need to draw histogram first");
       return;
    }
@@ -269,7 +260,7 @@ void THistPainter::DrawPanel()
           util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
       }
    }
-   util->DrawPanel();
+   util->DrawPanel(gPad,fH);
 }
 
 //______________________________________________________________________________
@@ -388,10 +379,7 @@ void THistPainter::FitPanel()
 //      See class TFitPanel for example
 
    gCurrentHist = fH;
-   if (gPad) {
-      gROOT->SetSelectedPrimitive(fH);
-      gROOT->SetSelectedPad(gPad);
-   } else {
+   if (!gPad) {
       Error("FitPanel", "need to draw histogram first");
       return;
    }
@@ -407,7 +395,7 @@ void THistPainter::FitPanel()
           util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
       }
    }
-   util->FitPanel();
+   util->FitPanel(gPad,fH);
 }
 
 //______________________________________________________________________________

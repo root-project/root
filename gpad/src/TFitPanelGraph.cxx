@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TFitPanelGraph.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TFitPanelGraph.cxx,v 1.2 2000/06/13 12:16:22 brun Exp $
 // Author: Rene Brun   28/11/96
 
 /*************************************************************************
@@ -47,8 +47,8 @@ TFitPanelGraph::TFitPanelGraph() : TFitPanel()
 }
 
 //_____________________________________________________________________________
-TFitPanelGraph::TFitPanelGraph(const char *name, const char *title, UInt_t ww, UInt_t wh)
-          : TFitPanel(name, title,ww,wh)
+TFitPanelGraph::TFitPanelGraph(const char *name, const char *title, UInt_t ww, UInt_t wh, const TVirtualPad *pad, const TObject *obj)
+          : TFitPanel(name, title,ww,wh,pad,obj)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*FitPanelGraph constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ========================

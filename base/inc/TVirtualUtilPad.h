@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualUtilPad.h,v 1.1 2002/09/14 16:19:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualUtilPad.h,v 1.1 2002/09/15 19:41:51 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -36,15 +36,17 @@
 #include "TNamed.h"
 #endif 
 
+class TVirtualPad;
+
 class TVirtualUtilPad : public TNamed {
 
 
 public:
    TVirtualUtilPad();
    virtual     ~TVirtualUtilPad();
-   virtual void  DrawPanel() = 0;
-   virtual void  FitPanel() = 0;
-   virtual void  FitPanelGraph() = 0;
+   virtual void  DrawPanel(const TVirtualPad *pad, const TObject *obj) = 0;
+   virtual void  FitPanel(const TVirtualPad *pad, const TObject *obj) = 0;
+   virtual void  FitPanelGraph(const TVirtualPad *pad, const TObject *obj) = 0;
    virtual void  InspectCanvas(const TObject *obj) = 0;
    virtual void  MakeCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, Int_t ww, Int_t wh) = 0;
    virtual void  RemoveObject(TObject *parent, const TObject *obj) = 0;

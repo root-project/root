@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TFitPanel.h,v 1.2 2000/12/13 15:13:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TFitPanel.h,v 1.3 2001/08/07 13:44:45 brun Exp $
 // Author: Rene Brun   24/11/96
 
 /*************************************************************************
@@ -41,7 +41,7 @@ protected:
 
 public:
         TFitPanel();
-        TFitPanel(const char *name, const char *title, UInt_t ww=300, UInt_t wh=400);
+        TFitPanel(const char *name, const char *title, UInt_t ww, UInt_t wh, const TVirtualPad *pad, const TObject *obj);
         virtual ~TFitPanel();
         virtual void  AddOption(Option_t *option);
         virtual void  Apply(const char *action="");

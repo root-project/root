@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.131 2004/07/06 14:48:42 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.132 2004/07/12 20:06:33 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1323,10 +1323,7 @@ void TGraph::FitPanel()
 //
 //   See class TFitPanel for example
 
-   if (gPad) {
-      gROOT->SetSelectedPrimitive(this);
-      gROOT->SetSelectedPad(gPad);
-   } else {
+   if (!gPad) {
       Error("FitPanelGraph", "need to draw graph first");
       return;
    }
@@ -1342,7 +1339,7 @@ void TGraph::FitPanel()
           util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
       }
    }
-   util->FitPanelGraph();
+   util->FitPanelGraph(gPad,this);
 }
 //______________________________________________________________________________
 Double_t TGraph::GetCorrelationFactor() const

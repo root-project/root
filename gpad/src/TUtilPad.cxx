@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TUtilPad.cxx,v 1.1 2002/09/15 19:41:52 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TUtilPad.cxx,v 1.2 2004/07/02 13:46:09 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -43,14 +43,14 @@ TUtilPad::~TUtilPad()
 }
 
 //______________________________________________________________________________
-void TUtilPad::DrawPanel()
+void TUtilPad::DrawPanel(const TVirtualPad *pad, const TObject *obj)
 {
 // interface to the TDrawPanelHist
    
    if (fgPanelVersion > 0) {
       //new DrawPanel by Marek Biskup
       gROOT->ProcessLine(Form("TGedDrawPanel::ShowPanel((TObject*)0x%x,(TPad*)0x%x);",
-                          gROOT->GetSelectedPrimitive(),gROOT->GetSelectedPad()));
+                          obj,pad));
       return;
    }
    
@@ -58,7 +58,7 @@ void TUtilPad::DrawPanel()
    TList *lc = (TList*)gROOT->GetListOfCanvases();
    TDrawPanelHist *R__drawpanelhist = (TDrawPanelHist*)lc->FindObject("R__drawpanelhist");
    if (!R__drawpanelhist) {
-      new TDrawPanelHist("R__drawpanelhist","Hist Draw Panel",330,450);
+      new TDrawPanelHist("R__drawpanelhist","Hist Draw Panel",330,450,pad,obj);
       return; 
    }
    R__drawpanelhist->SetDefaults(); 
@@ -66,14 +66,14 @@ void TUtilPad::DrawPanel()
 }
 
 //______________________________________________________________________________
-void TUtilPad::FitPanel()
+void TUtilPad::FitPanel(const TVirtualPad *pad, const TObject *obj)
 {
 // interface to the TFitPanel
    
    TList *lc = (TList*)gROOT->GetListOfCanvases();
    TFitPanel *R__fitpanel = (TFitPanel*)lc->FindObject("R__fitpanel");
    if (!R__fitpanel) {
-      new TFitPanel("R__fitpanel","Fit Panel",300,400);
+      new TFitPanel("R__fitpanel","Fit Panel",300,400,pad,obj);
       return;
    }
    R__fitpanel->SetDefaults();
@@ -81,14 +81,14 @@ void TUtilPad::FitPanel()
 }
 
 //______________________________________________________________________________
-void TUtilPad::FitPanelGraph()
+void TUtilPad::FitPanelGraph(const TVirtualPad *pad, const TObject *obj)
 {
 // interface to the TFitPanelGraph
    
    TList *lc = (TList*)gROOT->GetListOfCanvases();
    TFitPanelGraph *R__fitpanel = (TFitPanelGraph*)lc->FindObject("R__fitpanelgraph");
    if (!R__fitpanel) { 
-      new TFitPanelGraph("R__fitpanelgraph","Fit Panel",300,400);
+      new TFitPanelGraph("R__fitpanelgraph","Fit Panel",300,400,pad,obj);
       return;
    }
    R__fitpanel->SetDefaults(); 

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TUtilPad.h,v 1.1 2002/09/15 19:41:52 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TUtilPad.h,v 1.2 2004/07/02 13:46:09 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -34,9 +34,9 @@ private:
 public:
    TUtilPad();
    virtual     ~TUtilPad();
-   virtual void  DrawPanel();
-   virtual void  FitPanel();
-   virtual void  FitPanelGraph();
+   virtual void  DrawPanel(const TVirtualPad *pad, const TObject *obj);
+   virtual void  FitPanel(const TVirtualPad *pad, const TObject *obj);
+   virtual void  FitPanelGraph(const TVirtualPad *pad, const TObject *obj);
    virtual void  InspectCanvas(const TObject *obj);
    virtual void  MakeCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, Int_t ww, Int_t wh);
    virtual void  RemoveObject(TObject *parent, const TObject *obj);
