@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.84 2004/05/13 11:41:14 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.85 2004/05/13 17:47:46 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -996,7 +996,7 @@ int TCint::AutoLoadCallback(const char *cls, const char *lib)
    if (strstr(lib, "libCore")) return 1;
 
    // lookup class to find list of dependent libraries
-   TEnv *mapfile = ((TCint*)gInterpreter)->fMapfile;
+   TEnv *mapfile = dynamic_cast<TCint*>(gInterpreter)->fMapfile;
    if (mapfile) {
       TString c = TString("Library.") + cls;
       c.ReplaceAll("::", "@@");
