@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.15 2003/01/27 18:04:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.16 2003/02/17 13:23:55 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -155,7 +155,7 @@ void TGeoNodeCache::DeleteCaches()
       delete fCache[ic]; 
    }
    delete fCache[fGeoCacheObjArrayInd];
-   delete fCache;
+   delete [] fCache;
 }
 
 //_____________________________________________________________________________
