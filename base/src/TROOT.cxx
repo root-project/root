@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.46 2001/09/22 06:18:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.47 2001/09/25 16:14:51 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 //       gROOT->GetListOfBrowsers
 //       gROOT->GetListOfCleanups
 //       gROOT->GetListOfMessageHandlers
+//       gROOT->GetListOfProcessIDs
 //
 //   The TROOT class provides also many useful services:
 //     - Get pointer to an object in any of the lists above
@@ -95,6 +96,7 @@
 #include "TVirtualGL.h"
 #include "TFolder.h"
 #include "TQObject.h"
+#include "TProcessID.h"
 
 #if defined(R__UNIX)
 #include "TUnixSystem.h"
@@ -281,9 +283,11 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fSpecials    = new TList;
    fBrowsables  = new TList;
    fCleanups    = new TList;
-   fStreamerInfo    = new TObjArray(100);
+   fStreamerInfo= new TObjArray(100);
+   fProcessIDs  = new TList;
    fMessageHandlers = new TList;
-
+   fProcessIDs->Add(new TProcessID(0));
+   
    fRootFolder = new TFolder();
    fRootFolder->SetName("root");
    fRootFolder->SetTitle("root of all folders");
@@ -398,6 +402,7 @@ TROOT::~TROOT()
       fFiles->Delete("slow"); SafeDelete(fFiles);       // and files
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
       fMappedFiles->Delete("slow");                     // and mapped files
+      fProcessIDs->Delete();                            // and list of ProcessIDs
       TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
 
 //      fProcesses->Delete();  SafeDelete(fProcesses);   // then terminate processes
