@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBCPEffDecay.cc,v 1.5 2001/11/05 18:53:47 verkerke Exp $
+ *    File: $Id: RooBCPEffDecay.cc,v 1.6 2001/11/14 19:15:30 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -140,7 +140,7 @@ Double_t RooBCPEffDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code) co
       return (1+_absLambda*_absLambda) ;
     }
     
-    if (basisIndex==_basisSin || _basisCos) {
+    if (basisIndex==_basisSin || basisIndex==_basisCos) {
       return 0 ;
     }
   default:

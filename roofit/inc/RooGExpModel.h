@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGExpModel.rdl,v 1.3 2001/09/24 23:08:56 verkerke Exp $
+ *    File: $Id: RooGExpModel.rdl,v 1.4 2001/10/03 16:17:55 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -20,9 +20,11 @@
 class RooGExpModel : public RooResolutionModel {
 public:
 
-  enum RooGaussBasis { noBasis=0, expBasisPlus=1, expBasisMinus=2,
-                                  sinBasisPlus=3, sinBasisMinus=4,
-                                  cosBasisPlus=5, cosBasisMinus=6 } ;
+  enum RooGExpBasis { noBasis=0, expBasisMinus= 1, expBasisSum= 2, expBasisPlus= 3,
+		                 sinBasisMinus=11, sinBasisSum=12, sinBasisPlus=13,
+                                 cosBasisMinus=21, cosBasisSum=22, cosBasisPlus=23 } ;
+  enum BasisType { none=0, expBasis=1, sinBasis=2, cosBasis=3 } ;
+  enum BasisSign { Both=0, Plus=+1, Minus=-1 } ;
   enum Type { Normal, Flipped };
 
   // Constructors, assignment etc
@@ -50,6 +52,10 @@ public:
   virtual Double_t analyticalIntegral(Int_t code) const ;
 
 protected:
+
+  Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau) const ;
+  RooComplex calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t omega, Double_t rtau, Double_t fsign) const ;
+  RooComplex calcSinConvNorm(Double_t sign, Double_t tau, Double_t omega) const ;
 
   virtual Double_t evaluate() const ;
   RooComplex evalCerfApprox(Double_t swt, Double_t u, Double_t c) const ;
