@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.20 2003/09/26 13:15:04 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.21 2003/10/28 14:09:48 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -367,7 +367,27 @@ Bool_t TRint::HandleTermInput()
 
       if (gROOT->Timer()) timer.Start();
 
-      ProcessLine(sline);
+      Bool_t added = kFALSE;
+#ifdef R__EH
+      try {
+#endif
+         TRY {
+            ProcessLine(sline);
+         } CATCH(excode) {
+            // enable again input handler
+            fInputHandler->Add();
+            added = kTRUE;
+            Throw(excode);
+         } ENDTRY;
+#ifdef R__EH
+      }
+      // handle every exception
+      catch (...) {
+         // enable again intput handler
+         if (!added) fInputHandler->Add();
+         throw;
+      }
+#endif
 
       if (gROOT->Timer()) timer.Print();
 
