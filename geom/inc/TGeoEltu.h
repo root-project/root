@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.h,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.h,v 1.4 2002/09/27 16:16:05 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -46,7 +46,6 @@ public:
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
    virtual Double_t      GetA() const    {return fRmin;}
    virtual Double_t      GetB() const    {return fRmax;}
    virtual void          GetBoundingCylinder(Double_t *param) const;
@@ -54,7 +53,7 @@ public:
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
+   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetEltuDimensions(Double_t a, Double_t b, Double_t dz);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;

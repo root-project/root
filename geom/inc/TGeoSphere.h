@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.5 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.6 2002/12/06 16:45:03 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -59,9 +59,10 @@ public:
                                    Double_t step=0, Double_t *safe=0) const;
    Double_t              DistToSphere(Double_t *point, Double_t *dir, Double_t rsph, Bool_t check=kTRUE, Bool_t firstcross=kTRUE) const;
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
-                                Double_t /*start*/, Double_t /*step*/) {return voldiv;}
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+                                Double_t start, Double_t step);
+   virtual const char   *GetAxisName(Int_t iaxis) const;
+   virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 42;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/) const {return 0;}
@@ -79,7 +80,7 @@ public:
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
+   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
                                        Double_t theta2, Double_t phi1, Double_t phi2);
    void                  SetNumberOfDivisions(Int_t p);

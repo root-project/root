@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.5 2002/12/03 16:01:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.6 2002/12/06 16:45:03 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -70,8 +70,9 @@ public:
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
 
+   virtual const char   *GetAxisName(Int_t iaxis) const;
+   virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 56;}
    virtual Double_t      GetDz() const    {return fDz;}
@@ -86,7 +87,7 @@ public:
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
+   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                                        Double_t rmin2, Double_t rmax2);
    virtual void          SetDimensions(Double_t *param);
@@ -150,7 +151,7 @@ public:
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
+   virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 64;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
@@ -160,7 +161,7 @@ public:
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
+   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetConsDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                                        Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.5 2002/10/21 15:21:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.6 2002/12/06 16:45:03 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -100,7 +100,8 @@ public:
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const = 0;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step)   = 0; 
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) = 0;
+   virtual const char   *GetAxisName(Int_t iaxis) const = 0;
+   virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const = 0;
    virtual void          GetBoundingCylinder(Double_t *param) const = 0;
    virtual Int_t         GetByteCount() const                          = 0;
    Int_t                 GetId() const  {return fShapeId;}
@@ -115,7 +116,7 @@ public:
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const = 0;
    virtual void          Paint(Option_t *option)                 = 0;
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option) = 0;
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const = 0;
+   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
    virtual void          SetDimensions(Double_t *param)          = 0;
    void                  SetId(Int_t id) {fShapeId = id;}
    virtual void          SetPoints(Double_t *buff) const         = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.15 2003/01/13 18:00:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.16 2003/01/15 18:43:44 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -871,26 +871,13 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    switch (iaxis) {
       case 1:  //---                R division
          Error("Divide", "makes no sense dividing a pgon on radius");
-         return voldiv;
+         return 0;
       case 2:  //---                Phi division
-         if (!ndiv) {
-            if (step>1E-10) {
-               ndiv = (Int_t)(fDphi/step);
-               start = fPhi1;
-            } else {   
-               Error("Divide", "ndiv=0");
-               return voldiv;
-            }   
-         }  
          if (fNedges%ndiv) {
             Error("Divide", "ndiv should divide number of pgon edges");
-            return voldiv;
+            return 0;
          }
          nedges = fNedges/ndiv;
-         if (step<1E-10) {
-            step  = fDphi/ndiv;
-            start = fPhi1;
-         }   
          finder = new TGeoPatternCylPhi(voldiv, ndiv, start, start+ndiv*step);
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          voldiv->SetFinder(finder);
@@ -918,7 +905,7 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          }
          if (isect<0) {
             Error("Divide", "cannot divide pcon on Z if divided region is not between 2 consecutive planes");
-            return voldiv;
+            return 0;
          }
          finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
@@ -943,16 +930,10 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          return vmulti;
       default:
          Error("Divide", "Wrong axis type for division");
-         return voldiv;            
+         return 0;            
    }
 }
-//-----------------------------------------------------------------------------
-TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
-{
-// Divide all range of iaxis in range/step cells 
-   Error("Divide", "Division in all range not implemented");
-   return voldiv;
-}      
+
 //-----------------------------------------------------------------------------
 void TGeoPgon::GetBoundingCylinder(Double_t *param) const
 {
@@ -1007,7 +988,7 @@ void TGeoPgon::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPgon::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
+Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.14 2003/01/12 14:49:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.15 2003/01/13 16:01:06 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -289,37 +289,15 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
 //      printf("  zmin1=%g  zmax1=%g\n", zmin1, zmax1);
 
 
-      ddx1 = TMath::Abs(xmin1-xmax);
-      ddx2 = TMath::Abs(xmax1-xmin);
-         if ((ddx1<1E-12)||(ddx2<1E-12)) continue;
-         if ((xmin1==xmin)||(xmax1==xmax)) in = kTRUE;
-         if (((xmin1>xmin)&&(xmin1<xmax))||((xmax1>xmin)&&(xmax1<xmax)) ||
-             ((xmin>xmin1)&&(xmin<xmax1))||((xmax>xmin1)&&(xmax<xmax1)))
-                in = kTRUE;
-      if (!in) continue;
-//      printf("x overlap...\n");
-      in = kFALSE;
-
-      ddx1 = TMath::Abs(ymin1-ymax);
-      ddx2 = TMath::Abs(ymax1-ymin);
-         if ((ddx1<1E-12)||(ddx2<1E-12)) continue;
-         if ((ymin1==ymin)||(ymax1==ymax)) in = kTRUE;
-         if (((ymin1>ymin)&&(ymin1<ymax))||((ymax1>ymin)&&(ymax1<ymax)) ||
-             ((ymin>ymin1)&&(ymin<ymax1))||((ymax>ymin1)&&(ymax<ymax1)))
-                in = kTRUE;
-      if (!in) continue;
-//      printf("y overlap...\n");
-      in = kFALSE;
-
-      ddx1 = TMath::Abs(zmin1-zmax);
-      ddx2 = TMath::Abs(zmax1-zmin);
-         if ((ddx1<1E-12)||(ddx2<1E-12)) continue;
-         if ((zmin1==zmin)||(zmax1==zmax)) in = kTRUE;
-         if (((zmin1>zmin)&&(zmin1<zmax))||((zmax1>zmin)&&(zmax1<zmax)) ||
-             ((zmin>zmin1)&&(zmin<zmax1))||((zmax>zmin1)&&(zmax<zmax1)))
-                in = kTRUE;
-      if (!in) continue;
-//      printf("Overlapping %i\n", ib);
+      ddx1 = xmin1-xmax;
+      ddx2 = xmax1-xmin;
+      if ((ddx1>-1E-10)||(ddx2<1E-10)) continue;
+      ddx1 = ymin1-ymax;
+      ddx2 = ymax1-ymin;
+      if ((ddx1>-1E-10)||(ddx2<1E-10)) continue;
+      ddx1 = zmin1-zmax;
+      ddx2 = zmax1-zmin;
+      if ((ddx1>-1E-10)||(ddx2<1E-10)) continue;
       otmp[novlp++] = ib;
    }
    if (!novlp) {

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.h,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.h,v 1.4 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -53,7 +53,7 @@ public:
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
+   virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 56;}
    Double_t              GetDx1() const {return fDx1;}
@@ -67,7 +67,7 @@ public:
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
+   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;

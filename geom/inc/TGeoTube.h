@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.5 2002/10/08 16:17:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.6 2003/01/13 14:53:49 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -58,7 +58,8 @@ public:
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
+   virtual const char   *GetAxisName(Int_t iaxis) const;
+   virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 48;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
@@ -70,7 +71,7 @@ public:
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
+   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
@@ -123,7 +124,7 @@ public:
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
+   virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 56;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
@@ -133,7 +134,7 @@ public:
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
+   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                                        Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param);
@@ -180,7 +181,7 @@ public:
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
+   virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual Int_t         GetByteCount() const {return 98;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
    const Double_t       *GetNlow() const {return &fNlow[0];}
@@ -188,7 +189,7 @@ public:
    Double_t              GetZcoord(Double_t xc, Double_t yc, Double_t zc) const;
    virtual void          InspectShape() const;
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
+   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetCtubDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                                        Double_t phi1, Double_t phi2, Double_t lx, Double_t ly, Double_t lz,
                                        Double_t tx, Double_t ty, Double_t tz);

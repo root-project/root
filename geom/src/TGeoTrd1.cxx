@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.10 2003/01/12 14:49:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.11 2003/01/20 14:35:48 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -432,10 +432,6 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // to created division cell volume in case of Y divisions. For Z divisions just
 // return the pointer to the volume to be divided. In case a wrong 
 // division axis is supplied, returns pointer to volume that was divided.
-   if (ndiv<=0) {
-      Error("Divide", "cannot divide %s with ndiv=%i", voldiv->GetName(), ndiv);
-      return 0;
-   }   
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
@@ -447,12 +443,8 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    switch (iaxis) {
       case 1:
          Warning("Divide", "dividing a Trd1 on X not implemented");
-         return voldiv;
+         return 0;
       case 2:
-         if (step<=0) {step=2*fDy/ndiv; start=-fDy; end=start+ndiv*step;}
-         if (((start+fDy)<-1E-3) || ((end-fDy)>1E-3)) {
-            Warning("Divide", "y division of %s exceed shape range", voldiv->GetName());
-         }
          finder = new TGeoPatternY(voldiv, ndiv, start, end);
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
@@ -467,10 +459,6 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          }
          return vmulti;
       case 3:
-         if (step<=0) {step=2*fDz/ndiv; start=-fDz; end=start+ndiv*step;}
-         if (((start+fDz)<-1E-3) || ((end-fDz)>1E-3)) {
-            Warning("Divide", "z division of %s exceed shape range", voldiv->GetName());
-         }
          finder = new TGeoPatternZ(voldiv, ndiv, start, end);
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
@@ -490,16 +478,32 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          return vmulti;
       default:
          Error("Divide", "Wrong axis type for division");
-         return voldiv;
+         return 0;
    }
 }
+
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
+Double_t TGeoTrd1::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
-// Divide all range of iaxis in range/step cells 
-   Error("Divide", "Division in all range not implemented");
-   return voldiv;
-}      
+// Get range of shape for a given axis.
+   xlo = 0;
+   xhi = 0;
+   Double_t dx = 0;
+   switch (iaxis) {
+      case 2:
+         xlo = -fDy;
+         xhi = fDy;
+         dx = xhi-xlo;
+         return dx;
+      case 3:
+         xlo = -fDz;
+         xhi = fDz;
+         dx = xhi-xlo;
+         return dx;
+   }
+   return dx;
+}         
+
 //-----------------------------------------------------------------------------
 void TGeoTrd1::GetBoundingCylinder(Double_t *param) const
 {
@@ -546,7 +550,7 @@ void TGeoTrd1::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTrd1::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
+Double_t TGeoTrd1::Safety(Double_t *, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.31 2003/01/15 18:43:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.32 2003/01/20 14:35:48 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -662,33 +662,26 @@ void TGeoManager::BuildCache(Bool_t dummy)
 
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoManager::Division(const char *name, const char *mother, Int_t iaxis,
-                                        Int_t ndiv, Double_t start, Double_t step)
+                                  Int_t ndiv, Double_t start, Double_t step, Int_t numed, Option_t *option)
 {
 // Create a new volume by dividing an existing one (GEANT3 like)
 // 
-// Divides <mother> into <ndiv> divisions called <name>
-// along axis <iaxis> starting at coordinate value <start> 
-// and having size <step>.
-   TGeoVolume *amother;
-   amother = (TGeoVolume*)fGVolumes->FindObject(mother);
-   if (!amother) amother = GetVolume(mother);
-   if (amother) return amother->Divide(name,iaxis,ndiv,start,step);
+// Divides MOTHER into NDIV divisions called NAME
+// along axis IAXIS starting at coordinate value START 
+// and having size STEP. The created volumes will have tracking
+// media ID=NUMED (if NUMED=0 -> same media as MOTHER)
+//    The behavior of the division operation can be triggered using OPTION :
+// OPTION (case insensitive) :
+//  N  - divide all range in NDIV cells (same effect as STEP<=0) (GSDVN in G3)
+//  NX - divide range starting with START in NDIV cells          (GSDVN2 in G3)
+//  S  - divide all range with given STEP. NDIV is computed and divisions will be centered
+//         in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
+//  SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
    
-   Error("Division","mother: %s is null",mother);
-   return 0;
-}   
-//-----------------------------------------------------------------------------
-TGeoVolume *TGeoManager::Division(const char *name, const char *mother, Int_t iaxis, Double_t step)
-{
-// Create a new volume by dividing an existing one (GEANT3 like)
-// 
-// Divides <mother> into divisions called <name>
-// in all range on axis <iaxis> starting at lower coordinate value
-// and having size <step>.
    TGeoVolume *amother;
    amother = (TGeoVolume*)fGVolumes->FindObject(mother);
    if (!amother) amother = GetVolume(mother);
-   if (amother) return amother->Divide(name,iaxis,step);
+   if (amother) return amother->Divide(name,iaxis,ndiv,start,step,numed, option);
    
    Error("Division","mother: %s is null",mother);
    return 0;
@@ -1027,17 +1020,10 @@ TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
    Int_t i;
    TGeoVolume *volume = 0;
    TIter next(fMedia);
-   TGeoMedium *medium = 0;
-   while ((medium = (TGeoMedium*)next())) {
-      if (medium->GetId() == nmed) break;
-   }
+   TGeoMedium *medium = GetMedium(nmed);
    if (!medium) {
       Error("Volume","cannot create volume: %s, medium: %d is unknown",name,nmed);
       return 0;
-   }
-   if (medium->GetId() != nmed) {
-      Error("Volume","cannot create volume: %s, medium: %d is unknown",name,nmed);
-     return 0;
    }
    TString sh = shape;
    if (gDebug > 0) {
@@ -1120,17 +1106,10 @@ TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
    Int_t i;
    TGeoVolume *volume = 0;
    TIter next(fMedia);
-   TGeoMedium *medium = 0;
-   while ((medium = (TGeoMedium*)next())) {
-      if (medium->GetId() == nmed) break;
-   }
+   TGeoMedium *medium = GetMedium(nmed);
    if (!medium) {
       Error("Volume","cannot create volume: %s, medium: %d is unknown",name,nmed);
       return 0;
-   }
-   if (medium->GetId() != nmed) {
-      Error("Volume","cannot create volume: %s, medium: %d is unknown",name,nmed);
-     return 0;
    }
    TString sh = shape;
    if (gDebug > 0) {
@@ -2015,6 +1994,7 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
    // convert current point and direction to local reference
 //   printf("-------- currently : %s\n", fCurrentNode->GetName());
    fStep = TGeoShape::kBig;
+   fSafety = TGeoShape::kBig;
    Double_t point[3];
    Double_t dir[3];
    if (strlen(path)) {
@@ -2028,11 +2008,11 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
       MasterToLocal(fPoint, &point[0]);
       MasterToLocalVect(fDirection, &dir[0]);
       if (tvol->Contains(&point[0])) {
-         fStep=tvol->GetShape()->DistToOut(&point[0], &dir[0], 3, TGeoShape::kBig, &fSafety);
+         fStep=tvol->GetShape()->DistToOut(&point[0], &dir[0], 2, TGeoShape::kBig, &fSafety);
          fIsStepEntering=kFALSE;
          fIsStepExiting=kTRUE;
       } else {
-         fStep=tvol->GetShape()->DistToIn(&point[0], &dir[0], 3, TGeoShape::kBig, &fSafety);
+         fStep=tvol->GetShape()->DistToIn(&point[0], &dir[0], 2, TGeoShape::kBig, &fSafety);
          fIsStepEntering=kTRUE;
          fIsStepExiting=kFALSE;
       }
@@ -2046,7 +2026,7 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
    TGeoVolume *vol = fCurrentNode->GetVolume();
    // if point is outside, just check the top node
    if (fIsOutside) {
-      fStep = fTopVolume->GetShape()->DistToIn(fPoint, fDirection, 3, TGeoShape::kBig, &fSafety);
+      fStep = fTopVolume->GetShape()->DistToIn(fPoint, fDirection, 2, TGeoShape::kBig, &fSafety);
       fIsStepEntering=kTRUE;
       fIsStepExiting=kFALSE;
       return fTopNode;
@@ -2201,6 +2181,43 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
    return clnode;
 }
 //-----------------------------------------------------------------------------
+TGeoNode *TGeoManager::FindNode(Bool_t safe_start)
+{
+// Returns deepest node containing current point.
+   fSearchOverlaps = kFALSE;
+   fIsOutside = kFALSE;
+   fStartSafe = safe_start;
+   TGeoNode *node = SearchNode();
+   if (fIsOutside) node = 0;
+//   printf("CURRENT POINT (%g, %g, %g) in %s\n", fPoint[0], fPoint[1], fPoint[2], GetPath());
+   return node;
+}
+   
+//-----------------------------------------------------------------------------
+TGeoNode *TGeoManager::FindNode(Double_t x, Double_t y, Double_t z)
+{
+// Returns deepest node containing current point.
+   SetCurrentPoint(x,y,z);
+   return FindNode();
+}
+   
+//-----------------------------------------------------------------------------
+Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z)
+{
+// Checks if point (x,y,z) is still in the current node.
+//---> save current point and path.
+   TGeoNode *old = fCurrentNode;
+   Int_t oldid = GetNodeId();
+   PushPoint();
+   // check if still in current volume.
+   TGeoNode *node = FindNode();
+   Int_t id = GetNodeId();
+   PopPoint();
+   Bool_t same = ((node==old) && (id==oldid))?kTRUE:kFALSE;
+   return same;
+}   
+
+//-----------------------------------------------------------------------------
 Bool_t TGeoManager::IsInPhiRange() const
 {
 // True if current node is in phi range
@@ -2237,7 +2254,7 @@ TGeoNode *TGeoManager::InitTrack(Double_t x, Double_t y, Double_t z, Double_t nx
 const char *TGeoManager::GetPath() const
 {
 // Get path to the current node in the form /node0/node1/...
-   if (fIsOutside && !fPainter) return kGeoOutsidePath;
+   if (fIsOutside) return kGeoOutsidePath;
    return fCache->GetPath();
 }
 //-----------------------------------------------------------------------------
@@ -2285,6 +2302,7 @@ TGeoVolume *TGeoManager::GetVolume(const char *name) const
    return vol;
 //   return (TGeoVolume*)fGVolumes->FindObject(name);
 }
+
 //-----------------------------------------------------------------------------
 TGeoMaterial *TGeoManager::GetMaterial(const char *matname) const
 {
@@ -2292,6 +2310,7 @@ TGeoMaterial *TGeoManager::GetMaterial(const char *matname) const
    TGeoMaterial *mat = (TGeoMaterial*)fMaterials->FindObject(matname);
    return mat;
 }
+
 //-----------------------------------------------------------------------------
 TGeoMedium *TGeoManager::GetMedium(const char *medium) const
 {
@@ -2299,6 +2318,19 @@ TGeoMedium *TGeoManager::GetMedium(const char *medium) const
    TGeoMedium *med = (TGeoMedium*)fMedia->FindObject(medium);
    return med;
 }
+
+//-----------------------------------------------------------------------------
+TGeoMedium *TGeoManager::GetMedium(Int_t numed) const
+{
+// Search for a tracking medium with a given ID.
+   TIter next(fMedia);
+   TGeoMedium *med;
+   while ((med=(TGeoMedium*)next())) {
+      if (med->GetId()==numed) return med;
+   }   
+   return 0;
+}
+
 //-----------------------------------------------------------------------------
 TGeoMaterial *TGeoManager::GetMaterial(Int_t id) const
 {

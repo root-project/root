@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.4 2002/09/27 16:16:05 brun Exp $
 // Author: Andrei Gheata   24/10/01
    
 /*************************************************************************
@@ -57,7 +57,8 @@ public:
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
+   virtual const char   *GetAxisName(Int_t iaxis) const;
+   virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 36;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
@@ -72,7 +73,7 @@ public:
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
+   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t *origin=0);
    virtual void          SetDimensions(Double_t *param);
    void                  SetBoxPoints(Double_t *buff) const;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.9 2003/01/13 22:06:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.10 2003/01/13 22:17:22 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -598,12 +598,56 @@ Double_t TGeoSphere::DistToSphere(Double_t *point, Double_t *dir, Double_t rsph,
 }
 
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoSphere::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
+TGeoVolume *TGeoSphere::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
+                               Double_t /*start*/, Double_t /*step*/) 
 {
 // Divide all range of iaxis in range/step cells 
-   Error("Divide", "Division in all range not implemented");
-   return voldiv;
+   Error("Divide", "Division of a sphere not implemented");
+   return 0;
 }      
+
+//-----------------------------------------------------------------------------
+const char *TGeoSphere::GetAxisName(Int_t iaxis) const
+{
+// Returns name of axis IAXIS.
+   switch (iaxis) {
+      case 1:
+         return "R";
+      case 2:
+         return "THETA";
+      case 3:
+         return "PHI";
+      default:
+         return "UNDEFINED";
+   }
+}   
+
+//-----------------------------------------------------------------------------
+Double_t TGeoSphere::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
+{
+// Get range of shape for a given axis.
+   xlo = 0;
+   xhi = 0;
+   Double_t dx = 0;
+   switch (iaxis) {
+      case 1:
+         xlo = fRmin;
+         xhi = fRmax;
+         dx = xhi-xlo;
+         return dx;
+      case 2:
+         xlo = fPhi1;
+         xhi = fPhi2;
+         dx = xhi-xlo;
+         return dx;
+      case 3:
+         xlo = fTheta1;
+         xhi = fTheta2;
+         dx = xhi-xlo;
+         return dx;
+   }
+   return dx;
+}         
 //-----------------------------------------------------------------------------
 void TGeoSphere::GetBoundingCylinder(Double_t *param) const
 {
@@ -666,7 +710,7 @@ void TGeoSphere::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) cons
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoSphere::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
+Double_t TGeoSphere::Safety(Double_t *, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

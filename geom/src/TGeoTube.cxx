@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.11 2003/01/13 22:06:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.12 2003/01/20 14:35:48 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -341,10 +341,6 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // creates all volumes with different shapes and returns pointer to volume that
 // was divided. In case a wrong division axis is supplied, returns pointer to 
 // volume that was divided.
-   if (ndiv<=0) {
-      Error("Divide", "cannot divide %s with ndiv=%i", voldiv->GetName(), ndiv);
-      return 0;
-   }   
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
@@ -354,10 +350,6 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    Double_t end = start+ndiv*step;
    switch (iaxis) {
       case 1:  //---                R division
-         if (step<=0) {step=(fRmax-fRmin)/ndiv; start=fRmin;end=fRmax;}
-         if (((start-fRmin)<-1E-3) || ((end-fRmax)>1E-3)) {
-            Warning("Divide", "R division of %s exceed shape range", voldiv->GetName());
-         }
          finder = new TGeoPatternCylR(voldiv, ndiv, start, end);
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          voldiv->SetFinder(finder);
@@ -372,7 +364,6 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          }
          return vmulti;
       case 2:  //---                Phi division
-         if (step<=0) {step=360./ndiv; end=start+ndiv*step;}
          finder = new TGeoPatternCylPhi(voldiv, ndiv, start, end);
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
@@ -387,10 +378,6 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          }
          return vmulti;
       case 3: //---                  Z division
-         if (step<=0) {step=2*fDz/ndiv; start=-fDz; end=fDz;}
-         if (((start+fDz)<-1E-3) || ((end-fDz)>1E-3)) {
-            Warning("Divide", "x division of %s exceed shape range", voldiv->GetName());
-         }
          finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
@@ -406,45 +393,52 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          return vmulti;
       default:
          Error("Divide", "Wrong axis type for division");
-         return voldiv;            
+         return 0;            
    }
 }   
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+const char *TGeoTube::GetAxisName(Int_t iaxis) const
 {
-// Divide all range of iaxis in range/step cells 
-   Double_t start=0, end=0;
-   Int_t ndiv;
+// Returns name of axis IAXIS.
    switch (iaxis) {
       case 1:
-         start = fRmin;
-         end = fRmax;
-         break;
+         return "R";
       case 2:
-         start = 0.;
-         end = 360.;
-         break;
+         return "PHI";
       case 3:
-         start = -fDz;
-         end = fDz;
-         break;
+         return "Z";
       default:
-         Error("Divide", "Wrong division axis");
-         return voldiv;   
-   }      
-   Double_t range = end - start;
-   ndiv = Int_t((range+0.01*step)/step);   
-   if (ndiv<=0) {
-      Error("Divide", "ndivisions=0, wrong type");
-      return voldiv;
+         return "UNDEFINED";
    }
-   Double_t err = range-ndiv*step;
-   if (err>(0.01*step)) {
-      start+=0.5*err;
-      end-=0.5*err;
-   }   
-   return voldiv->Divide(divname, iaxis, ndiv, start, step);
-}      
+}   
+
+//-----------------------------------------------------------------------------
+Double_t TGeoTube::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
+{
+// Get range of shape for a given axis.
+   xlo = 0;
+   xhi = 0;
+   Double_t dx = 0;
+   switch (iaxis) {
+      case 1:
+         xlo = fRmin;
+         xhi = fRmax;
+         dx = xhi-xlo;
+         return dx;
+      case 2:
+         xlo = 0;
+         xhi = 360;
+         dx = 360;
+         return dx;
+      case 3:
+         xlo = -fDz;
+         xhi = fDz;
+         dx = xhi-xlo;
+         return dx;
+   }
+   return dx;
+}         
+            
 //-----------------------------------------------------------------------------
 void TGeoTube::GetBoundingCylinder(Double_t *param) const
 {
@@ -513,7 +507,7 @@ void TGeoTube::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTube::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
+Double_t TGeoTube::Safety(Double_t *, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -1085,10 +1079,6 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
    Double_t end = start+ndiv*step;
    switch (iaxis) {
       case 1:  //---                 R division
-         if (step<=0) {step=(fRmax-fRmin)/ndiv; start=fRmin;end=fRmax;}
-         if (((start-fRmin)<-1E-4) || ((end-fRmax)>1E-4)) {
-            Warning("Divide", "R division of %s exceed shape range", voldiv->GetName());
-         }
          finder = new TGeoPatternCylR(voldiv, ndiv, start, end);
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          voldiv->SetFinder(finder);
@@ -1120,10 +1110,6 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
          }
          return vmulti;
       case 3: //---                  Z division
-         if (step<=0) {step=2*fDz/ndiv; start=-fDz; end=fDz;}
-         if (((start+fDz)<-1E-3) || ((end-fDz)>1E-3)) {
-            Warning("Divide", "z division of %s exceed shape range", voldiv->GetName());
-         }
          finder = new TGeoPatternZ(voldiv, ndiv, start, end);
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
@@ -1139,46 +1125,37 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
          return vmulti;
       default:
          Error("Divide", "Wrong axis type for division");
-         return voldiv;            
+         return 0;            
    }
 }
+
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+Double_t TGeoTubeSeg::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
-// Divide all range of iaxis in range/step cells 
-   Double_t start=0, end=0;
-   Int_t ndiv;
+// Get range of shape for a given axis.
+   xlo = 0;
+   xhi = 0;
+   Double_t dx = 0;
    switch (iaxis) {
       case 1:
-         start = fRmin;
-         end = fRmax;
-         break;
+         xlo = fRmin;
+         xhi = fRmax;
+         dx = xhi-xlo;
+         return dx;
       case 2:
-         start = fPhi1;
-         end = fPhi2;
-         if (end<start) end+=360.;
-         break;
+         xlo = fPhi1;
+         xhi = fPhi2;
+         dx = xhi-xlo;
+         return dx;
       case 3:
-         start = -fDz;
-         end = fDz;
-         break;
-      default:
-         Error("Divide", "Wrong division axis");
-         return voldiv;   
-   }      
-   Double_t range = end - start;
-   ndiv = Int_t((range+0.01*step)/step);   
-   if (ndiv<=0) {
-      Error("Divide", "ndivisions=0, wrong type");
-      return voldiv;
+         xlo = -fDz;
+         xhi = fDz;
+         dx = xhi-xlo;
+         return dx;
    }
-   Double_t err = range-ndiv*step;
-   if (err>(0.01*step)) {
-      start+=0.5*err;
-      end-=0.5*err;
-   }   
-   return voldiv->Divide(divname, iaxis, ndiv, start, step);
-}      
+   return dx;
+}         
+            
 //-----------------------------------------------------------------------------
 void TGeoTubeSeg::GetBoundingCylinder(Double_t *param) const
 {
@@ -1250,7 +1227,7 @@ void TGeoTubeSeg::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) con
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTubeSeg::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
+Double_t TGeoTubeSeg::Safety(Double_t *, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -1553,6 +1530,29 @@ Bool_t TGeoCtub::Contains(Double_t *point) const
    if (ddp > dphi) return kFALSE;
    return kTRUE;    
 }
+
+//-----------------------------------------------------------------------------
+Double_t TGeoCtub::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
+{
+// Get range of shape for a given axis.
+   xlo = 0;
+   xhi = 0;
+   Double_t dx = 0;
+   switch (iaxis) {
+      case 1:
+         xlo = fRmin;
+         xhi = fRmax;
+         dx = xhi-xlo;
+         return dx;
+      case 2:
+         xlo = fPhi1;
+         xhi = fPhi2;
+         dx = xhi-xlo;
+         return dx;
+   }
+   return dx;
+}         
+            
 //-----------------------------------------------------------------------------
 Double_t TGeoCtub::GetZcoord(Double_t xc, Double_t yc, Double_t zc) const
 {
@@ -1825,15 +1825,9 @@ TGeoVolume *TGeoCtub::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t
                              Double_t /*start*/, Double_t /*step*/) 
 {
    Warning("Divide", "Division of a cut tube not implemented");
-   return voldiv;
+   return 0;
 }   
-//-----------------------------------------------------------------------------
-TGeoVolume *TGeoCtub::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
-{
-// Divide all range of iaxis in range/step cells 
-   Error("Divide", "Division in all range not implemented");
-   return voldiv;
-}      
+
 //-----------------------------------------------------------------------------
 TGeoShape *TGeoCtub::GetMakeRuntimeShape(TGeoShape *mother) const
 {
@@ -1876,7 +1870,7 @@ void TGeoCtub::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoCtub::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
+Double_t TGeoCtub::Safety(Double_t *, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.19 2003/01/15 18:43:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.20 2003/01/20 14:35:48 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -358,62 +358,91 @@ void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeo
    node->SetVirtual();
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoVolume::Divide(const char * /*divname*/, Int_t /*ndiv*/, Option_t * /*option*/)
+TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed, Option_t *option)
 {
-   Error("Divide", "This type of division not implemenetd");
-   return this; 
-}
-//-----------------------------------------------------------------------------
-TGeoVolume *TGeoVolume::Divide(const char * /*divname*/, Int_t /*ndiv*/, Double_t /*start*/, Double_t /*step*/, Option_t * /*option*/)
-{
-// divide this volume in ndiv pieces from start, with given step
-   Error("Divide", "This type of division not implemenetd");
-   return this; 
-}
-//-----------------------------------------------------------------------------
-TGeoVolume *TGeoVolume::Divide(const char * /*divname*/, Double_t /*start*/, Double_t /*end*/, Double_t /*step*/, Option_t * /*option*/)
-{
-// divide this volume from start to end in pieces of length step
-   Error("Divide", "This type of division not implemenetd");
-   return this; 
-}
-//-----------------------------------------------------------------------------
-TGeoVolume *TGeoVolume::Divide(const char * /*divname*/, TObject * /*userdiv*/, Double_t * /*params*/, Option_t *)
-{
-// divide this volume according to userdiv
-   Error("Divide", "This type of division not implemenetd");
-   return this; 
-}
-//-----------------------------------------------------------------------------
-TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Double_t step)
-{
-// Divide all range of iaxis in range/step cells 
-   return fShape->Divide(this, divname, iaxis, step);
-}
-//-----------------------------------------------------------------------------
-TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step)
-{
-// division a la G3
-//   printf("--- dividing %s into %s, ndiv=%i\n", GetName(), divname, ndiv);
-   TString stype = fShape->ClassName();
-//   TGeoVolume *vol = 0;
-   if (!ndiv && start != 0) {
-      printf("Error : Divide %s type %s into %s- ndivisions=0\n",GetName(), stype.Data(), divname);
-      return this;
-   }
-   if (!fNodes) fNodes = new TObjArray();
-   if ((!ndiv) && (start == 0)) return fShape->Divide(this, divname, iaxis, step);
+// Division a la G3. The volume will be divided along IAXIS (see shape classes), in NDIV
+// slices, from START with given STEP. The division volumes will have medium number NUMED.
+// If NUMED=0 they will get the medium number of the divided volume (this). If NDIV<=0,
+// all range of IAXIS will be divided and the resulting number of divisions will be centered on
+// IAXIS. If STEP<=0, the real STEP will be computed as the full range of IAXIS divided by NDIV.
+// Options (case insensitive):
+//  N  - divide all range in NDIV cells (same effect as STEP<=0) (GSDVN in G3)
+//  NX - divide range starting with START in NDIV cells          (GSDVN2 in G3)
+//  S  - divide all range with given STEP. NDIV is computed and divisions will be centered
+//         in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
+//  SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
+
    if (fFinder) {
    // volume already divided.
       Error("Divide","volume %s already divided", GetName());
       return 0;
-//      for (Int_t idiv=0; idiv<fFinder->GetNdiv(); idiv++) {
-//         vol = fFinder->GetNodeOffset(idiv)->GetVolume();
-//         vol->Divide(divname, iaxis, ndiv, start, step);
-//      }
-//      return this;
    }
-   return fShape->Divide(this, divname, iaxis, ndiv, start, step);
+   TString opt(option);
+   opt.ToLower();
+   TString stype = fShape->ClassName();
+   if (!fNodes) fNodes = new TObjArray();
+   Double_t xlo, xhi, range;
+   range = fShape->GetAxisRange(iaxis, xlo, xhi);
+   // for phi divisions correct the range
+   if (!strcmp(fShape->GetAxisName(iaxis), "PHI") && range==360) {
+      xlo = start;
+      xhi = start+range;
+   }   
+   if (range <=0) {
+      Error("Divide", "cannot divide volume %s (%s) on %s axis", GetName(), stype.Data(), fShape->GetAxisName(iaxis));
+      return 0;
+   }
+   if (ndiv<=0 || opt.Contains("s")) {
+      if (step<=0) {
+         Error("Divide", "invalid division type for volume %s : ndiv=%i, step=%g", GetName(), ndiv, step);
+         return 0;
+      }   
+      if (opt.Contains("x")) {
+         if ((xlo-start)>1E-3 || (xhi-start)<-1E-3) {
+            Error("Divide", "invalid START=%g for division on axis %s of volume %s. Range is (%g, %g)",
+                  start, fShape->GetAxisName(iaxis), GetName(), xlo, xhi);
+            return 0;
+         }
+         xlo = start;
+         range = xhi-xlo;
+      }            
+      ndiv = Int_t((range+0.1*step)/step);
+      Double_t ddx = range - ndiv*step;
+      // always center the division in this case
+      if (ddx>1E-3) Warning("Divide", "division of volume %s on %s axis (ndiv=%d) will be centered in the full range",
+                            GetName(), fShape->GetAxisName(iaxis), ndiv);
+      start = xlo + 0.5*ddx;
+   }
+   if (step<=0 || opt.Contains("n")) {
+      if (opt.Contains("x")) {
+         if ((xlo-start)>1E-3 || (xhi-start)<-1E-3) {
+            Error("Divide", "invalid START=%g for division on axis %s of volume %s. Range is (%g, %g)",
+                  start, fShape->GetAxisName(iaxis), GetName(), xlo, xhi);
+            return 0;
+         }
+         xlo = start;
+         range = xhi-xlo;
+      }     
+      step  = range/ndiv;
+      start = xlo;
+   }
+   
+   Double_t end = start+ndiv*step;
+   if (((start-xlo)<-1E-3) || ((end-xhi)>1E-3)) {
+      Error("Divide", "division of volume %s on axis %s exceed range (%g, %g)",
+            GetName(), fShape->GetAxisName(iaxis), xlo, xhi);
+      return 0;
+   }         
+   TGeoVolume *voldiv = fShape->Divide(this, divname, iaxis, ndiv, start, step);
+   if (numed) {
+      TGeoMedium *medium = gGeoManager->GetMedium(numed);
+      if (!medium) {
+         Error("Divide", "invalid medium number %d for division volume %s", numed, divname);
+         return voldiv;
+      }   
+      voldiv->SetMedium(medium);
+   }   
+   return voldiv; 
 }
 //-----------------------------------------------------------------------------
 Int_t TGeoVolume::DistancetoPrimitive(Int_t px, Int_t py)
@@ -810,13 +839,14 @@ void TGeoVolume::FindOverlaps() const
       return;
    }   
    if (!fVoxels) return;
-   TIter next(fNodes);
+   Int_t nd = GetNdaughters();
+   if (!nd) return;
    TGeoNode *node=0;
    Int_t inode = 0;
-   while ((node=(TGeoNode*)next())) {
-      if (!node->IsOverlapping()) {inode++; continue;}
+   for (inode=0; inode<nd; inode++) {
+      node = GetNode(inode);
+      if (!node->IsOverlapping()) continue;
       fVoxels->FindOverlaps(inode);
-      inode++;
    }
 }
 //-----------------------------------------------------------------------------
@@ -891,6 +921,7 @@ TGeoVolumeMulti::TGeoVolumeMulti()
 // dummy constructor
    fVolumes   = 0;
    fDivision = 0;
+   fNumed = 0;
    fNdiv = 0;
    fAxis = 0;
    fStart = 0;
@@ -904,6 +935,7 @@ TGeoVolumeMulti::TGeoVolumeMulti(const char *name, const TGeoMedium *med)
 // default constructor
    fVolumes = new TObjArray();
    fDivision = 0;
+   fNumed = 0;
    fNdiv = 0;
    fAxis = 0;
    fStart = 0;
@@ -930,7 +962,7 @@ void TGeoVolumeMulti::AddVolume(TGeoVolume *vol)
    TGeoVolumeMulti *div;
    TGeoVolume *cell;
    if (fDivision) {
-      div = (TGeoVolumeMulti*)vol->Divide(fDivision->GetName(), fAxis, fNdiv, fStart, fStep);
+      div = (TGeoVolumeMulti*)vol->Divide(fDivision->GetName(), fAxis, fNdiv, fStart, fStep, fNumed, fOption.Data());
       div->MakeCopyNodes(fDivision);
       for (Int_t i=0; i<div->GetNvolumes(); i++) {
          cell = div->GetVolume(i);
@@ -975,8 +1007,9 @@ void TGeoVolumeMulti::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const
    }
 //   printf("--- vmulti %s : node ovlp %s added to %i components\n", GetName(), vol->GetName(), nvolumes);
 }
+
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoVolumeMulti::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step)
+TGeoVolume *TGeoVolumeMulti::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed, const char *option)
 {
 // division of multiple volumes
    if (fDivision) {
@@ -984,19 +1017,30 @@ TGeoVolume *TGeoVolumeMulti::Divide(const char *divname, Int_t iaxis, Int_t ndiv
       return 0;
    }   
    Int_t nvolumes = fVolumes->GetEntriesFast();
+   TGeoMedium *medium = fMedium;
+   if (numed) {
+      medium = gGeoManager->GetMedium(numed);
+      if (!medium) {
+         Error("Divide", "Invalid medium number %d for division volume %s", numed, divname);
+         medium = fMedium;
+      }
+   }      
    if (!nvolumes) {
       // this is a virtual volume
-      fDivision = new TGeoVolumeMulti(divname, fMedium);
+      fDivision = new TGeoVolumeMulti(divname, medium);
+      fNumed = medium->GetId();
+      fOption = option;
       fAxis = iaxis;
       fNdiv = ndiv;
       fStart = start;
       fStep = step;
       // nothing else to do at this stage
       return fDivision;
-   }   
-      
+   }      
    TGeoVolume *vol = 0;
-   fDivision = new TGeoVolumeMulti(divname, fMedium);
+   fDivision = new TGeoVolumeMulti(divname, medium);
+   fNumed = medium->GetId();
+   fOption = option;
    fAxis = iaxis;
    fNdiv = ndiv;
    fStart = start;
@@ -1007,9 +1051,10 @@ TGeoVolume *TGeoVolumeMulti::Divide(const char *divname, Int_t iaxis, Int_t ndiv
       vol->SetLineStyle(GetLineStyle());
       vol->SetLineWidth(GetLineWidth());
       vol->SetVisibility(IsVisible());
-      fDivision->AddVolume(vol->Divide(divname,iaxis,ndiv,start,step)); 
+      fDivision->AddVolume(vol->Divide(divname,iaxis,ndiv,start,step, numed, option)); 
    }
 //   printf("--- volume multi %s (%i volumes) divided\n", GetName(), nvolumes);
+   if (numed) fDivision->SetMedium(medium);
    return fDivision;
 }
 //-----------------------------------------------------------------------------
@@ -1045,6 +1090,19 @@ void TGeoVolumeMulti::SetLineWidth(Width_t lwidth)
       vol->SetLineWidth(lwidth); 
    }
 }
+//-----------------------------------------------------------------------------
+void TGeoVolumeMulti::SetMedium(const TGeoMedium *med)
+{
+// Set medium for a multiple volume.
+   TGeoVolume::SetMedium(med);
+   Int_t nvolumes = fVolumes->GetEntriesFast();
+   TGeoVolume *vol = 0;
+   for (Int_t ivo=0; ivo<nvolumes; ivo++) {
+      vol = GetVolume(ivo);
+      vol->SetMedium(med); 
+   }
+}   
+
 //-----------------------------------------------------------------------------
 void TGeoVolumeMulti::SetVisibility(Bool_t vis) 
 {

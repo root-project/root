@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.15 2003/01/12 14:49:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.16 2003/01/20 14:35:48 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -387,7 +387,7 @@ Double_t TGeoArb8::DistToIn(Double_t *point, Double_t *dir, Int_t /*iact*/, Doub
 //-----------------------------------------------------------------------------
 Double_t TGeoArb8::DistToOut(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
-// compute distance from outside point to surface of the arb8
+// compute distance from inside point to surface of the arb8
    Double_t dist[6];
    dist[0]=dist[1]=kBig;
    if (dir[2]<0) {
@@ -416,12 +416,20 @@ TGeoVolume *TGeoArb8::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t
    return voldiv;
 }      
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoArb8::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
+Double_t TGeoArb8::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
-// Divide all range of iaxis in range/step cells 
-   Error("Divide", "Division in all range not implemented");
-   return voldiv;
+   xlo = 0;
+   xhi = 0;
+   Double_t dx = 0;
+   if (iaxis==3) {
+      xlo = -fDz;
+      xhi = fDz;
+      dx = xhi-xlo;
+      return dx;
+   }
+   return dx;
 }
+      
 //-----------------------------------------------------------------------------
 void TGeoArb8::GetBoundingCylinder(Double_t *param) const
 {
@@ -457,7 +465,7 @@ void TGeoArb8::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoArb8::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
+Double_t TGeoArb8::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -633,6 +641,35 @@ TGeoTrap::~TGeoTrap()
 {
 // destructor
 }
+
+//-----------------------------------------------------------------------------
+Double_t TGeoTrap::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+{
+// compute distance from inside point to surface of the arb8
+   if (iact<3 && safe) {
+   // compute safe distance
+      *safe = Safety(point, kTRUE);
+      if (iact==0) return kBig;
+      if (iact==1 && step<*safe) return kBig;
+   }
+   // compute distance to get ouside this shape
+   return TGeoArb8::DistToOut(point, dir, iact, step, safe);
+}   
+
+//-----------------------------------------------------------------------------
+Double_t TGeoTrap::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+{
+// compute distance from outside point to surface of the arb8
+   if (iact<3 && safe) {
+   // compute safe distance
+      *safe = Safety(point, kFALSE);
+      if (iact==0) return kBig;
+      if (iact==1 && step<*safe) return kBig;
+   }
+   // compute distance to get ouside this shape
+   return TGeoArb8::DistToIn(point, dir, iact, step, safe);
+}   
+
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                              Double_t start, Double_t step) 
@@ -642,11 +679,6 @@ TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // are supported. For Z divisions just return the pointer to the volume to be 
 // divided. In case a wrong division axis is supplied, returns pointer to 
 // volume that was divided.
-   if (ndiv<=0) {
-      Error("Divide", "cannot divide %s with ndiv=%i", voldiv->GetName(), ndiv);
-      return 0;
-   }   
-   if (step<=0) {step=2*fDz/ndiv; start=-fDz;} 
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
@@ -654,12 +686,9 @@ TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    TString opt = "";           //--- option to be attached
    if (iaxis!=3) {
       Error("Divide", "cannot divide trapezoids on other axis than Z");
-      return voldiv;
+      return 0;
    }
    Double_t end = start+ndiv*step;
-   if (((start+fDz)<-1E-3) || ((end-fDz)>1E-3)) {
-      Warning("Divide", "z division of %s exceed shape range", voldiv->GetName());
-   }
    Double_t points_lo[8];
    Double_t points_hi[8];
    finder = new TGeoPatternTrapZ(voldiv, ndiv, start, end);
@@ -690,13 +719,6 @@ TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    }
    return vmulti;
 }   
-//-----------------------------------------------------------------------------
-TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
-{
-// Divide all range of iaxis in range/step cells 
-   Error("Divide", "Division in all range not implemented");
-   return voldiv;
-}      
 //-----------------------------------------------------------------------------
 TGeoShape *TGeoTrap::GetMakeRuntimeShape(TGeoShape *mother) const
 {
@@ -736,6 +758,60 @@ TGeoShape *TGeoTrap::GetMakeRuntimeShape(TGeoShape *mother) const
       tl2 = fTl2;
    return (new TGeoTrap(dz, fTheta, fPhi, h1, bl1, tl1, fAlpha1, h2, bl2, tl2, fAlpha2));
 }
+
+//-----------------------------------------------------------------------------
+Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
+{
+// Computes the closest distance from given point to this shape, according
+// to option. 
+   Double_t safe = kBig;
+   Double_t saf[5];
+   Double_t norm[3]; // normal to current facette
+   Int_t i;          // current facette index
+   Double_t x0, y0, x1, y1;     // lower coordinater
+   Double_t x0h, y0h, x1h, y1h; // upper coordinates
+   Double_t dl, dh;             // lengths of lower and upper segments
+   Double_t rl, rh, rlh;
+   Double_t st, ct, sp, cp;     // Sin/Cos of spherical angles of current normal
+   //---> compute safety for lateral planes
+   for (i=0; i<4; i++) {
+      x0 = fXY[i][0];
+      y0 = fXY[i][1];
+      x1 = fXY[(i+1)%4][0];
+      y1 = fXY[(i+1)%4][1];
+      x0h = fXY[i+4][0];
+      y0h = fXY[i+4][1];
+      x1h = fXY[4+((i+1)%4)][0];
+      y1h = fXY[4+((i+1)%4)][1];
+      dl = TMath::Sqrt((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0));
+      dh = TMath::Sqrt((x1h-x0h)*(x1h-x0h)+(y1h-y0h)*(y1h-y0h));
+      rl = TMath::Abs(x0*y1-x1*y0)/dl;
+      rh = TMath::Abs(x0h*y1h-x1h*y0h)/dh;
+      rlh = TMath::Sqrt((rl-rh)*(rl-rh)+4*fDz*fDz);
+      st = 2*fDz/rlh;
+      ct = (rl-rh)/rlh;
+      sp = (x1-x0)/dl;
+      cp = (y0-y1)/dl;
+      norm[0] = st*cp;
+      norm[1] = st*sp;
+      norm[2] = ct;
+      saf[i] = (x0-point[0])*norm[0]+(y0-point[1])*norm[1]+(-fDz-point[2])*norm[2];
+      if (in) {
+         saf[i]=TMath::Abs(saf[i]); // they should be all positive anyway
+      } else {
+         saf[i] = -saf[i];   // only negative values are interesting
+      }   
+   }
+   saf[4] = TMath::Abs(fDz-TMath::Abs(point[2]));
+   if (in) {
+      safe = saf[TMath::LocMin(5, saf)];
+   } else {
+      if (TMath::Abs(point[2]) <= fDz) saf[4]=-saf[4];
+      safe = saf[TMath::LocMax(5, saf)];
+   }
+   return safe;
+}
+
 
 ClassImp(TGeoGtra)
 

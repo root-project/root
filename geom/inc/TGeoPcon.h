@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.4 2002/09/27 16:16:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.5 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -59,7 +59,8 @@ public:
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
+   virtual const char   *GetAxisName(Int_t iaxis) const;
+   virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 60+12*fNz;}
    Double_t              GetPhi1() const {return fPhi1;}
@@ -75,7 +76,7 @@ public:
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
+   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;

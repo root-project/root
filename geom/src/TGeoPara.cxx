@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.8 2003/01/12 14:49:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.9 2003/01/20 14:35:48 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -294,10 +294,6 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // called divname, from start position with the given step. Returns pointer
 // to created division cell volume. In case a wrong division axis is supplied,
 // returns pointer to volume to be divided.
-   if (ndiv<=0) {
-      Error("Divide", "cannot divide %s with ndiv=%i", voldiv->GetName(), ndiv);
-      return 0;
-   }   
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
@@ -306,35 +302,23 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    Double_t end=start+ndiv*step;
     switch (iaxis) {
       case 1:                  //--- divide on X
-         if (step<=0) {step=2*fX/ndiv; start=-fX; end=start+ndiv*step;}
-         if (((start+fX)<-1E-3) || ((end-fX)>1E-3)) {
-            Warning("Divide", "x division of %s exceed shape range", voldiv->GetName());
-         }
          shape = new TGeoPara(step/2, fY, fZ,fAlpha,fTheta, fPhi);
          finder = new TGeoPatternParaX(voldiv, ndiv, start, end);
          opt = "X";
          break;
       case 2:                  //--- divide on Y
-         if (step<=0) {step=2*fY/ndiv; start=-fY; end=start+ndiv*step;}
-         if (((start+fY)<-1E-3) || ((end-fY)>1E-3)) {
-            Warning("Divide", "y division of %s exceed shape range", voldiv->GetName());
-         }
          shape = new TGeoPara(fX, step/2, fZ, fAlpha, fTheta, fPhi);
          finder = new TGeoPatternParaY(voldiv, ndiv, start, end);
          opt = "Y";
          break;
       case 3:                  //--- divide on Z
-         if (step<=0) {step=2*fZ/ndiv; start=-fZ; end=start+ndiv*step;}
-         if (((start+fZ)<-1E-3) || ((end-fZ)>1E-3)) {
-            Warning("Divide", "z division of %s exceed shape range", voldiv->GetName());
-         }
          shape = new TGeoPara(fX, fY, step/2, fAlpha, fTheta, fPhi);
          finder = new TGeoPatternParaZ(voldiv, ndiv, start, end);
          opt = "Z";
          break;
       default:
          Error("Divide", "Wrong axis type for division");
-         return voldiv;            
+         return 0;            
    }
    vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
    vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
@@ -349,12 +333,32 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    return vmulti;
 }   
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
+Double_t TGeoPara::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
-// Divide all range of iaxis in range/step cells 
-   Error("Divide", "Division in all range not implemented");
-   return voldiv;
-}      
+// Get range of shape for a given axis.
+   xlo = 0;
+   xhi = 0;
+   Double_t dx = 0;
+   switch (iaxis) {
+      case 1:
+         xlo = -fX;
+         xhi = fX;
+         dx = xhi-xlo;
+         return dx;
+      case 2:
+         xlo = -fY;
+         xhi = fY;
+         dx = xhi-xlo;
+         return dx;
+      case 3:
+         xlo = -fZ;
+         xhi = fZ;
+         dx = xhi-xlo;
+         return dx;
+   }
+   return dx;
+}         
+            
 //-----------------------------------------------------------------------------
 void TGeoPara::GetBoundingCylinder(Double_t *param) const
 {
@@ -400,7 +404,7 @@ void TGeoPara::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPara::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
+Double_t TGeoPara::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

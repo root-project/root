@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.12 2003/01/15 18:43:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.13 2003/01/20 14:35:48 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -127,10 +127,6 @@ TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // called divname, from start position with the given step. Returns pointer
 // to created division cell volume. In case a wrong division axis is supplied,
 // returns pointer to volume to be divided.
-   if (ndiv<=0) {
-      Error("Divide", "cannot divide %s with ndiv=%i", voldiv->GetName(), ndiv);
-      return 0;
-   }   
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
@@ -139,35 +135,23 @@ TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    Double_t end = start+ndiv*step;
    switch (iaxis) {
       case 1:                  //--- divide on X
-         if (step<=0) {step=2*fDX/ndiv; start=-fDX; end=start+ndiv*step;}
-         if (((start+fDX)<-1E-3) || ((end-fDX)>1E-3)) {
-            Warning("Divide", "x division of %s exceed shape range", voldiv->GetName());
-         }
          shape = new TGeoBBox(step/2., fDY, fDZ); 
          finder = new TGeoPatternX(voldiv, ndiv, start, end);
          opt = "X";
          break;
       case 2:                  //--- divide on Y
-         if (step<=0) {step=2*fDY/ndiv; start=-fDY; end=start+ndiv*step;}
-         if (((start+fDY)<-1E-3) || ((end-fDY)>1E-3)) {
-            Warning("Divide", "y division of %s exceed shape range", voldiv->GetName());
-         }
          shape = new TGeoBBox(fDX, step/2., fDZ); 
          finder = new TGeoPatternY(voldiv, ndiv, start, end);
          opt = "Y";
          break;
       case 3:                  //--- divide on Z
-         if (step<=0) {step=2*fDZ/ndiv; start=-fDZ; end=start+ndiv*step;}
-         if (((start+fDZ)<-1E-3) || ((end-fDZ)>1E-3)) {
-            Warning("Divide", "z division of %s exceed shape range", voldiv->GetName());
-         }
          shape = new TGeoBBox(fDX, fDY, step/2.); 
          finder = new TGeoPatternZ(voldiv, ndiv, start, end);
          opt = "Z";
          break;
       default:
          Error("Divide", "Wrong axis type for division");
-         return voldiv;
+         return 0;
    }
    vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
    vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
@@ -181,42 +165,6 @@ TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    }
    return vmulti;
 }     
-//-----------------------------------------------------------------------------
-TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
-{
-// Divide all range of iaxis in range/step cells 
-   Double_t start=0, end=0;
-   Int_t ndiv;
-   switch (iaxis) {
-      case 1:
-         start=-fDX;
-         end=fDX;
-         break;
-      case 2:
-         start=-fDY;
-         end=fDY;
-         break;
-      case 3:
-         start=-fDZ;
-         end=fDZ;
-         break;
-      default:
-         Error("Divide", "Wrong division axis");
-         return voldiv;   
-   }
-   Double_t range = end - start;
-   ndiv = Int_t((range+0.01*step)/step);   
-   if (ndiv<=0) {
-      Error("Divide", "ndivisions=0, wrong type");
-      return voldiv;
-   }
-   Double_t err = range-ndiv*step;
-   if (err>(0.01*step)) {
-      start+=0.5*err;
-      end-=0.5*err;
-   }
-   return voldiv->Divide(divname, iaxis, ndiv, start, step);            
-}      
 //-----------------------------------------------------------------------------   
 void TGeoBBox::ComputeBBox()
 {
@@ -322,6 +270,49 @@ Double_t TGeoBBox::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
    return kBig;
 }
 //-----------------------------------------------------------------------------
+const char *TGeoBBox::GetAxisName(Int_t iaxis) const
+{
+// Returns name of axis IAXIS.
+   switch (iaxis) {
+      case 1:
+         return "X";
+      case 2:
+         return "Y";
+      case 3:
+         return "Z";
+      default:
+         return "UNDEFINED";
+   }
+}   
+
+//-----------------------------------------------------------------------------
+Double_t TGeoBBox::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
+{
+// Get range of shape for a given axis.
+   xlo = 0;
+   xhi = 0;
+   Double_t dx = 0;
+   switch (iaxis) {
+      case 1:
+         xlo = -fDX;
+         xhi = fDX;
+         dx = xhi-xlo;
+         return dx;
+      case 2:
+         xlo = -fDY;
+         xhi = fDY;
+         dx = xhi-xlo;
+         return dx;
+      case 3:
+         xlo = -fDZ;
+         xhi = fDZ;
+         dx = xhi-xlo;
+         return dx;
+   }
+   return dx;
+}         
+            
+//-----------------------------------------------------------------------------
 void TGeoBBox::GetBoundingCylinder(Double_t *param) const
 {
 //--- Fill vector param[4] with the bounding cylinder parameters. The order
@@ -384,7 +375,7 @@ void TGeoBBox::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    painter->PaintBox(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoBBox::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
+Double_t TGeoBBox::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

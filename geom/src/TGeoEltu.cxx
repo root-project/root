@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.5 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.6 2003/01/06 17:05:44 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -249,15 +249,8 @@ TGeoVolume *TGeoEltu::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t
                              Double_t /*start*/, Double_t /*step*/) 
 {
    Error("Divide", "Elliptical tubes divisions not implemenetd");
-   return voldiv;
+   return 0;
 }   
-//-----------------------------------------------------------------------------
-TGeoVolume *TGeoEltu::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
-{
-// Divide all range of iaxis in range/step cells 
-   Error("Divide", "Division in all range not implemented");
-   return voldiv;
-}      
 //-----------------------------------------------------------------------------
 void TGeoEltu::GetBoundingCylinder(Double_t *param) const
 {
@@ -307,7 +300,7 @@ void TGeoEltu::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoEltu::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
+Double_t TGeoEltu::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

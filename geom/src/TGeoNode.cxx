@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.14 2003/01/07 09:48:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.15 2003/01/20 14:35:48 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -134,7 +134,7 @@ Bool_t TGeoNode::IsOnScreen() const
 void TGeoNode::InspectNode() const
 {
    printf("Inspecting node %s\n", GetName());
-   if (fNovlp) printf("### node is MANY\n");
+   if (IsOverlapping()) printf("### node is MANY\n");
    if (fOverlaps && fMother) {
       printf("### possibly overlaping with :\n");
       for (Int_t i=0; i<fNovlp; i++)

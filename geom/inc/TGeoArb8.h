@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.5 2002/09/27 16:16:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.6 2002/12/03 16:01:38 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -72,7 +72,7 @@ public:
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
+   virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 100;}
    Double_t              GetDz() const {return fDz;}
@@ -82,7 +82,7 @@ public:
    virtual void          InspectShape() const;
    Bool_t                IsTwisted() const {return (fTwist==0)?kFALSE:kTRUE;}
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
-   virtual Double_t      Safety(Double_t *point, Double_t *spoint, Option_t *option) const;
+   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetPlaneVertices(Double_t zpl, Double_t *vertices) const;
    virtual void          SetVertex(Int_t vnum, Double_t x, Double_t y);
    virtual void          SetDimensions(Double_t *param);
@@ -135,9 +135,12 @@ public:
             Double_t tl2, Double_t alpha2);
    // destructor
    virtual ~TGeoTrap();
+   virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
+                                   Double_t step=0, Double_t *safe=0) const;
+   virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
+                                   Double_t step=0, Double_t *safe=0) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
    Double_t              GetTheta() const {return fTheta;}
    Double_t              GetPhi() const   {return fPhi;}
    Double_t              GetH1() const    {return fH1;}
@@ -149,6 +152,7 @@ public:
    Double_t              GetTl2() const   {return fTl2;}
    Double_t              GetAlpha2() const   {return fAlpha2;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
+   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
 
   ClassDef(TGeoTrap, 1)         // G3 TRAP shape
 };

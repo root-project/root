@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.17 2003/01/12 14:49:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.18 2003/01/15 18:43:44 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -102,13 +102,7 @@ public:
    void            AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t offset=0, Option_t *option="");
    virtual void    AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat=0, Option_t *option="");
 
-   virtual TGeoVolume *Divide(const char *divname, Int_t ndiv, Option_t *option="");
-   virtual TGeoVolume *Divide(const char *divname, Int_t ndiv, Double_t start, Double_t step, Option_t *option="");
-   virtual TGeoVolume *Divide(const char *divname, Double_t start, Double_t end, Double_t step, Option_t *option="");
-   virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step);
-   virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Double_t step);
-   virtual TGeoVolume *Divide(const char *divname, TObject *userdiv, Double_t *params, Option_t *option="");
-
+   virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
    virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
    virtual void    Draw(Option_t *option=""); // *MENU*
    virtual void    DrawOnly(Option_t *option=""); // *MENU*
@@ -165,7 +159,7 @@ public:
    virtual void    SetLineStyle(Style_t lstyle);
    virtual void    SetLineWidth(Width_t lwidth);
    void            SetInvisible() {SetVisibility(kFALSE);} // *MENU*
-   void            SetMedium(const TGeoMedium *medium) {fMedium = (TGeoMedium*)medium;}
+   virtual void    SetMedium(const TGeoMedium *medium) {fMedium = (TGeoMedium*)medium;}
    void            SetVoxelFinder(const TGeoVoxelFinder *finder) {fVoxels=(TGeoVoxelFinder*)finder;}
    void            SetFinder(const TGeoPatternFinder *finder) {fFinder=(TGeoPatternFinder*)finder;}
    virtual void    Sizeof3D() const;
@@ -189,6 +183,7 @@ class TGeoVolumeMulti : public TGeoVolume
 private:
    TObjArray       *fVolumes;      // list of volumes
    TGeoVolumeMulti *fDivision;     // division of this volume
+   Int_t            fNumed;        // medium number for divisions
    Int_t            fNdiv;         // number of divisions
    Int_t            fAxis;         // axis of division
    Double_t         fStart;        // division start offset
@@ -203,12 +198,7 @@ public:
    TGeoVolume     *GetVolume(Int_t id) const {return (TGeoVolume*)fVolumes->At(id);}
    virtual void    AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option="");       // most general case
    virtual void    AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option="");
-   virtual TGeoVolume *Divide(const char *, Int_t, Option_t *) { return 0;}
-   virtual TGeoVolume *Divide(const char *, Int_t, Double_t, Double_t, Option_t *) {return 0;}
-   virtual TGeoVolume *Divide(const char *, Double_t, Double_t, Double_t, Option_t *) {return 0;}
-   virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step);
-   virtual TGeoVolume *Divide(const char *, Int_t, Double_t) {return 0;}
-   virtual TGeoVolume *Divide(const char *, TObject *, Double_t *, Option_t *) {return 0;}
+   virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
    TGeoShape      *GetLastShape() const {return GetVolume(fVolumes->GetEntriesFast()-1)->GetShape();}
    Int_t           GetNvolumes() const {return fVolumes->GetEntriesFast();}
    Int_t           GetAxis() const {return fNdiv;}
@@ -218,10 +208,11 @@ public:
    virtual void    SetLineColor(Color_t lcolor);
    virtual void    SetLineStyle(Style_t lstyle);
    virtual void    SetLineWidth(Width_t lwidth);
+   virtual void    SetMedium(const TGeoMedium *medium);
    virtual void    SetVisibility(Bool_t vis=kTRUE);
 
 
- ClassDef(TGeoVolumeMulti, 2)     // class to handle multiple volumes in one step
+ ClassDef(TGeoVolumeMulti, 3)     // class to handle multiple volumes in one step
 };
 
 inline Int_t TGeoVolume::GetNdaughters() const {

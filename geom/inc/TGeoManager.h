@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.18 2003/01/13 20:52:45 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.19 2003/01/20 14:35:47 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -157,8 +157,7 @@ public:
 
    //--- GEANT3-like geometry creation
    TGeoVolume            *Division(const char *name, const char *mother, Int_t iaxis, Int_t ndiv, 
-                                         Double_t start, Double_t step); 
-   TGeoVolume            *Division(const char *name, const char *mother, Int_t iaxis, Double_t step); 
+                                         Double_t start, Double_t step, Int_t numed=0, Option_t *option=""); 
    void                   Matrix(Int_t index, Double_t theta1, Double_t phi1, 
                                        Double_t theta2, Double_t phi2, 
                                        Double_t theta3, Double_t phi3); 
@@ -236,7 +235,8 @@ public:
    
    //--- geometry queries
    TGeoNode              *FindNextBoundary(const char *path="");
-   TGeoNode              *FindNode(Bool_t safe_start=kTRUE) {fSearchOverlaps=fIsOutside=kFALSE; fStartSafe=safe_start; return SearchNode();}
+   TGeoNode              *FindNode(Bool_t safe_start=kTRUE);
+   TGeoNode              *FindNode(Double_t x, Double_t y, Double_t z);
    TGeoNode              *InitTrack(Double_t *point, Double_t *dir);
    TGeoNode              *InitTrack(Double_t x, Double_t y, Double_t z, Double_t nx, Double_t ny, Double_t nz);
    TGeoNode              *SearchNode(Bool_t downwards=kFALSE, const TGeoNode *skipnode=0);
@@ -245,6 +245,7 @@ public:
    Bool_t                 GotoSafeLevel();
    Double_t               GetSafeDistance() const      {return fSafety;}
    Double_t               GetStep() const              {return fStep;}
+   Bool_t                 IsSameLocation(Double_t x, Double_t y, Double_t z);
    Bool_t                 IsStartSafe() const {return fStartSafe;}
    void                   SetStartSafe(Bool_t flag=kTRUE)   {fStartSafe=flag;}
    void                   SetStep(Double_t step) {fStep=step;}
@@ -333,7 +334,8 @@ public:
    //--- general use getters/setters
    TGeoMaterial          *GetMaterial(const char *matname) const;
    TGeoMaterial          *GetMaterial(Int_t id) const;
-   TGeoMedium            *GetMedium(const  char *medium) const;
+   TGeoMedium            *GetMedium(const char *medium) const;
+   TGeoMedium            *GetMedium(Int_t numed) const;
    Int_t                  GetMaterialIndex(const char *matname) const;
 //   TGeoShape             *GetShape(const char *name) const;
    TGeoVolume            *GetVolume(const char*name) const;
