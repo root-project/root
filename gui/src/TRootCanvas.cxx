@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.42 2004/05/10 12:09:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.43 2004/05/10 14:16:44 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -739,7 +739,8 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                             strstr(fi.fFilename, ".eps")  ||
                             strstr(fi.fFilename, ".pdf")  ||
                             strstr(fi.fFilename, ".svg")  ||
-                            strstr(fi.fFilename, ".gif"))
+                            strstr(fi.fFilename, ".gif")  ||
+                            strstr(fi.fFilename, ".xml"))
                            fCanvas->SaveAs(fi.fFilename);
                         else if (strstr(fi.fFilename, ".C"))
                            fCanvas->SaveSource(fi.fFilename);
