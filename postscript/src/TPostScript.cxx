@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.41 2003/07/21 15:20:28 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.42 2003/09/08 14:54:13 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -273,7 +273,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
 
    // open OS file
    fStream = new ofstream(fname,ios::out);
-   if (fStream == 0 || gSystem->AccessPathName(fname)) {
+   if (fStream == 0 || gSystem->AccessPathName(fname,kWritePermission)) {
       printf("ERROR in TPostScript::Open: Cannot open file:%s\n",fname);
       return;
    }
