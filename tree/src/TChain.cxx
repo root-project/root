@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.77 2003/07/25 17:41:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.78 2003/07/27 05:16:01 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -795,6 +795,7 @@ Int_t TChain::LoadTree(Int_t entry)
    TChainElement *element = (TChainElement*)fFiles->At(t);
    if (!element) return -4;
    fFile = TFile::Open(element->GetTitle());
+   if (fFile==0) return -3;
    if (fFile->IsZombie()) {
       delete fFile; fFile = 0;
       return -3;
