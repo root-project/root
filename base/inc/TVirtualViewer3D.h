@@ -8,6 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #ifndef ROOT_TVirtualViewer3D
 #define ROOT_TVirtualViewer3D
 
@@ -17,8 +18,9 @@
 //                                                                      //
 // Abstract 3D shapes viewer. The concrete implementations are:         //
 //                                                                      //
-// TViewX3D   : X3d viewer                                              //
-// TViewOpenGL: OpenGL viewer                                           //
+// TViewerX3D   : X3d viewer                                            //
+// TViewerOpenGL: OpenGL viewer                                         //
+// TViewerPad3D : visualise the 3D scene in the current Pad             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -26,15 +28,15 @@
 #include "TVirtualPad.h"
 #endif
 
-class  TVirtualViewer3D {
-	
+class TVirtualViewer3D {
+
 protected:
    TVirtualPad    *fPad;        // pad to be displayed in a 3D viewer
 
 public:
-   TVirtualViewer3D();
+   TVirtualViewer3D() : fPad(0) { }
    TVirtualViewer3D(TVirtualPad *pad);
-   virtual     ~TVirtualViewer3D();
+   virtual     ~TVirtualViewer3D() { }
    virtual void CreateScene(Option_t *option);
    virtual void UpdateScene(Option_t *option);
 
