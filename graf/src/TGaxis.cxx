@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.31 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.32 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -440,7 +440,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //       chopt='t': Plot times with a defined format instead of values
 //
 
-   static const char *where = "PaintAxis";
+   const char *where = "PaintAxis";
 
    Double_t alfa, beta, ratio1, ratio2, grid_side;
    Double_t axis_lengthN = 0;
@@ -499,9 +499,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    char *LABEL;
    char *CHTEMP;
    char *CODED;
-   static char CHLABEL[32];
-   static char kCHTEMP[36];
-   static char CHCODED[8];
+   char CHLABEL[32];
+   char kCHTEMP[36];
+   char CHCODED[8];
    TLine *linegrid;
    TString timeformat;
    time_t timelabel;
