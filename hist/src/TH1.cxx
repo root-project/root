@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.143 2003/05/05 10:13:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.144 2003/05/05 16:38:20 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1881,7 +1881,9 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //      ===============================================
 //     This function calls only the abstract fitter TVirtualFitter.
 //     The default fitter is TFitter (calls TMinuit).
-//     A different fitter can be set via TVirtualFitter::SetDefaultFitter.
+//     The default fitter can be set in the resource file in etc/system.rootrc
+//     Root.Fitter:      Fumili
+//     A different fitter can also be set via TVirtualFitter::SetDefaultFitter.
 //     For example, to call the "Fumili" fitter instead of "Minuit", do
 //          TVirtualFitter::SetDefaultFitter("Fumili");
 //     During the fitting process, the objective function: 
