@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.98 2002/11/26 23:53:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.99 2002/11/28 21:16:56 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1425,11 +1425,13 @@ void TBranchElement::SetAddress(void *add)
    if (fType == 31) {
       if (fClassName != fParentName) {
          if (clparent != clm) {
-            const char *clast = strchr(GetName(),'.');
+            const char *clast = strstr(GetName(),Form("%s.",fBranchCount->GetName()));
+            if (clast) clast += strlen(fBranchCount->GetName());
+            else       clast  = strchr(GetName(),'.');
             if (clast) {
                Int_t *offsets = clm->GetStreamerInfo()->GetOffsets();
                fOffset = clparent->GetDataMemberOffset(clast+1) - offsets[fID];
-               //printf("clast+1=%s, fOffset=%d\n",clast,fOffset);
+               //printf("clast+1=%s, fOffset=%d, offsets[%d]=%d, parentname=%s\n",clast,fOffset,fID,offsets[fID],fBranchCount->GetName());
             }
          }
       }
@@ -1439,7 +1441,12 @@ void TBranchElement::SetAddress(void *add)
       if (clparent) {
          Int_t *offsets = clm->GetStreamerInfo()->GetOffsets();
          if (clparent != clm) {
-            fObject += clparent->GetDataMemberOffset(GetName()) -offsets[fID];
+            const char *clast = strstr(GetName(),Form("%s.",fParentName.Data()));
+            if (clast) {
+               fObject += clparent->GetDataMemberOffset(clast+1) -offsets[fID];
+            } else {
+               fObject += clparent->GetDataMemberOffset(GetName()) -offsets[fID];
+            }
          }
       }
       return;
