@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.18 2004/12/07 19:11:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.19 2005/02/15 16:17:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -665,8 +665,10 @@ Bool_t TDecompLU::DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
           pLU[off_i+j] *= tmp;
         }
       }
-    } else
+    } else {
+      ::Error("TDecompLU::DecomposeLUCrout","matrix is singular");
       return kFALSE;
+    }
   }
 
   if (isAllocated)
@@ -739,8 +741,10 @@ Bool_t TDecompLU::DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
           pLU[off_i+k] = LUik-LUij*LUjk;
         }
       }
-    } else
+    } else {
+      ::Error("TDecompLU::DecomposeLUGauss","matrix is singular");
       return kFALSE;
+    }
   }
 
   return kTRUE;
@@ -774,6 +778,7 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
     if (isAllocatedI)
       delete [] index;
     lu.Invalidate();
+    ::Error("TDecompLU::InvertLU","matrix is singular, %d diag elements < tolerance of %.4e",nrZeros,tol);
     return kFALSE;
   }
 

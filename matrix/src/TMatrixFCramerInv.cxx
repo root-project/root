@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixFCramerInv.cxx,v 1.6 2004/07/12 20:00:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixFCramerInv.cxx,v 1.7 2005/01/06 06:37:14 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Jan 2004
 
 /*************************************************************************
@@ -51,8 +51,11 @@ Bool_t TMatrixFCramerInv::Inv2x2(TMatrixF &m,Double_t *determ)
     *determ = det;
 
   const Double_t s = 1./det;
-  if ( det == 0 )
+  if ( det == 0 ) {
+    Error("Inv2x2","matrix is singular");
+    m.Invalidate();
     return kFALSE;
+  }
 
   const Double_t tmp = s*pM[3];
   pM[1] *= -s;
@@ -105,8 +108,11 @@ Bool_t TMatrixFCramerInv::Inv3x3(TMatrixF &m,Double_t *determ)
     det = c02*c21-c01*c22;
   }
 
-  if ( det == 0 || tmp == 0)
+  if ( det == 0 || tmp == 0) {
+    Error("Inv3x3","matrix is singular");
+    m.Invalidate();
     return kFALSE;
+  }
 
   Double_t s = tmp/det;
 
@@ -222,8 +228,11 @@ Bool_t TMatrixFCramerInv::Inv4x4(TMatrixF &m,Double_t *determ)
   if (determ)
     *determ = det;
 
-  if ( det == 0 )
+  if ( det == 0 ) {
+    Error("Inv4x4","matrix is singular");
+    m.Invalidate();
     return kFALSE;
+  }
 
   const Double_t oneOverDet = 1.0/det;
   const Double_t mn1OverDet = - oneOverDet;
@@ -430,8 +439,11 @@ Bool_t TMatrixFCramerInv::Inv5x5(TMatrixF &m,Double_t *determ)
   if (determ)
     *determ = det;
 
-  if ( det == 0 )
+  if ( det == 0 ) {
+    Error("Inv5x5","matrix is singular");
+    m.Invalidate();
     return kFALSE;
+  }
 
   const Double_t oneOverDet = 1.0/det;
   const Double_t mn1OverDet = - oneOverDet;
@@ -890,8 +902,11 @@ Bool_t TMatrixFCramerInv::Inv6x6(TMatrixF &m,Double_t *determ)
   if (determ)
     *determ = det;
 
-  if ( det == 0 )
+  if ( det == 0 ) {
+    Error("Inv6x6","matrix is singular");
     m.Invalidate();
+    return kFALSE;
+  }
 
   const Double_t oneOverDet = 1.0/det;
   const Double_t mn1OverDet = - oneOverDet;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.78 2005/03/29 20:44:52 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.79 2005/03/30 07:19:46 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1315,8 +1315,12 @@ TMatrixD &TMatrixD::InvertFast(Double_t *det)
         Invalidate();
       } else {
         Double_t *pM = this->GetMatrixArray();
-        if (*pM == 0.) Invalidate();
-        else           *pM = 1.0/(*pM);
+        if (*pM == 0.) {
+           Error("InvertFast","matrix is singular");
+          Invalidate();
+        }
+        else
+          *pM = 1.0/(*pM);
       }
       return *this;
     }
