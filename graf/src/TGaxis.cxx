@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.33 2002/01/26 10:06:12 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.34 2002/02/04 23:31:02 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -778,7 +778,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       Lside = -1;
       if (OptionEqual) Lside=1;
    }
-   XLside = 1;
+   XLside = Lside;
    //printf("OptionPlus=%d, OptionMinus=%d, OptionEqual=%d, Mside=%d, Lside=%d\n",OptionPlus, OptionMinus,OptionEqual,Mside,Lside);
 
 //*-*-              Tick marks size
