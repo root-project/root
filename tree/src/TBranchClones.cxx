@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.2 2000/09/06 07:17:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.3 2000/09/29 07:51:12 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -82,11 +82,9 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
    fBranchCount->SetBit(kIsClone);
    TLeaf *leafcount = (TLeaf*)fBranchCount->GetListOfLeaves()->UncheckedAt(0);
 
-//*-*-  Add StreamerInfo to Tree list
    fTree       = gTree;
    fDirectory  = fTree->GetDirectory();
    fFileName   = "";
-   cl->FillStreamerInfoList(fTree->GetStreamerInfoList());
 
 //*-*-  Create the first basket
    TBasket *basket = new TBasket(branchcount,fTree->GetName(),this);

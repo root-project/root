@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.15 2000/11/21 20:48:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.16 2000/11/23 10:21:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -108,7 +108,6 @@ protected:
     TEventList   *fEventList;         //! Pointer to event selection list (if one)
     TArrayD       fIndexValues;       //  Sorted index values
     TArrayI       fIndex;             //  Index of sorted values
-    TList        *fStreamerInfoList;  //! list of StreamerInfo for all TBranchObjects
     TVirtualTreePlayer *fPlayer;      //! Pointer to current Tree player
     
 protected:
@@ -153,7 +152,6 @@ public:
     virtual Int_t     GetChainEntryNumber(Int_t entry) {return entry;}
     virtual Int_t     GetChainOffset() const { return fChainOffset; }
     TFile            *GetCurrentFile();
-    TList            *GetStreamerInfoList() {return fStreamerInfoList;}
     TDirectory       *GetDirectory() {return fDirectory;}
     virtual Stat_t    GetEntries()   {return fEntries;}
     virtual Int_t     GetEstimate() const { return fEstimate; }

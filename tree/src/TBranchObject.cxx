@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.2 2000/09/05 09:21:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.3 2000/09/29 07:51:12 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -91,11 +91,9 @@ TBranchObject::TBranchObject(const char *name, const char *classname, void *addo
 // It is foreseen to not set this bit in a future version.
    SetAutoDelete(kTRUE);
 
-//*-*-  Add StreamerInfo to Tree list
    fTree       = gTree;
    fDirectory  = fTree->GetDirectory();
    fFileName   = "";
-   cl->FillStreamerInfoList(fTree->GetStreamerInfoList());
 
 //*-*-  Create the first basket
    if (splitlevel) return;

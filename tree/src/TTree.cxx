@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.27 2000/11/22 20:57:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.28 2000/11/23 10:21:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -271,7 +271,6 @@ TTree::TTree(): TNamed()
    fPacketSize     = 100;
    fTimerInterval  = 0;
    fPlayer         = 0;
-   fStreamerInfoList  = new TList();
 }
 
 //______________________________________________________________________________
@@ -302,7 +301,6 @@ TTree::TTree(const char *name,const char *title, Int_t maxvirtualsize)
    fPacketSize     = 100;
    fTimerInterval  = 0;
    fPlayer         = 0;
-   fStreamerInfoList  = new TList();
 
    SetFillColor(gStyle->GetHistFillColor());
    SetFillStyle(gStyle->GetHistFillStyle());
@@ -329,8 +327,6 @@ TTree::~TTree()
    fBranches.Delete();
    fDirectory  = 0;
    delete fPlayer;
-   fStreamerInfoList->Delete();
-   delete fStreamerInfoList;
 }
 
 //______________________________________________________________________________
@@ -2097,7 +2093,11 @@ void TTree::Streamer(TBuffer &b)
       gDirectory->Append(this);
       if (R__v > 1) fIndexValues.Streamer(b);
       if (R__v > 2) fIndex.Streamer(b);
-      if (R__v > 3) fStreamerInfoList->Streamer(b);
+      if (R__v > 3) {
+         TList OldInfoList;
+         OldInfoList.Streamer(b);
+         OldInfoList.Delete();
+      }
       b.CheckByteCount(R__s, R__c, TTree::IsA());
       //====end of old versions
       
