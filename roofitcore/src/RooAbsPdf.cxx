@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.41 2001/10/06 06:19:51 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.42 2001/10/08 05:20:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,82 +15,95 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 //
-// RooAbsPdf is the abstract interface for all probability density functions
-// The class provides hybrid analytical/numerical normalization for its implementations,
-// error tracing and a MC generator interface.
+// RooAbsPdf is the abstract interface for all probability density
+// functions The class provides hybrid analytical/numerical
+// normalization for its implementations, error tracing and a MC
+// generator interface.
 //
-// A minimal implementation of a PDF class derived from RooAbsPdf should overload
-// the evaluate() function. This functions should return PDFs value.
+// A minimal implementation of a PDF class derived from RooAbsPdf
+// should overload the evaluate() function. This functions should
+// return PDFs value.
 //
-// Normalization/Integration issues
-// --------------------------------
 //
-// --> No explicit attempt should be made to normalize the functions output in 
-//     evaluate. 
+// [Normalization/Integration]
 //
-// RooAbsPdf objects do not have a static concept of what variables are 
-// parameters and what variables are dependents (which need to be integrated over for a 
-// correct PDF normalization). Instead the choice of normalization is always specified 
-// each time a normalized values is requested from the PDF via the getVal() method, so
-// there is not a unique choice of normalization
+// Although the normalization of a PDF is an integral part of a
+// probability density function, normalization is treated separately
+// in RooAbsPdf. The reason is that a RooAbsPdf object is more than a
+// PDF: it can be a building block for a more complex, composite PDF
+// if any of its variables are functions instead of fundamentals. In
+// such cases the normalization of the composite may not be simply the
+// integral over the dependents of the top level PDF as these are
+// functions with potentially non-trivial Jacobian terms themselves.
+// Therefore 
 //
-// Any variable of the PDF, including dependents that need to be integrated over,
-// may be a non-trivial function of other variables. A simple integration over the variable 
-// would miss possible Jacobian term leading to a wrong normalization.
+// --> No explicit attempt should be made to normalize 
+//     the functions output in evaluate(). 
 //
-// RooAbsPdf manages the entire normalization logic of each PDF with help of 
-// a RooRealIntegral object, which coordinates the integration of a given
-// choice of normalization. By default RooRealIntegral will perform a fully numeric
-// integration of all dependents. However, PDFs can advertise one or more (partial)
-// analytical integrals of their function, and these will be used by RooRealIntegral,
-// if it determines that this is safe (i.e. no hidden Jacobian terms, multiplication
-// with other PDFs that have one or more dependents in commen etc)
+// In addition, RooAbsPdf objects do not have a static concept of what
+// variables are parameters and what variables are dependents (which
+// need to be integrated over for a correct PDF normalization). 
+// Instead the choice of normalization is always specified each time a
+// normalized values is requested from the PDF via the getVal()
+// method.
+//
+// RooAbsPdf manages the entire normalization logic of each PDF with
+// help of a RooRealIntegral object, which coordinates the integration
+// of a given choice of normalization. By default, RooRealIntegral will
+// perform a fully numeric integration of all dependents. However,
+// PDFs can advertise one or more (partial) analytical integrals of
+// their function, and these will be used by RooRealIntegral, if it
+// determines that this is safe (i.e. no hidden Jacobian terms,
+// multiplication with other PDFs that have one or more dependents in
+// commen etc)
 //
 // To implement analytical integrals, two functions must be implemented. First,
 //
 // Int_t getAnalyticalIntegral(const RooArgSet& integSet, RooArgSet& anaIntSet)
 // 
-// advertises the analytical integrals that are supported. 'integSet' is the set
-// of dependents for which integration is requested. The function should copy
-// the subset of dependents it can analytically integrate to anaIntSet and
-// return a unique identification code for this integration configuration.
-// If no integration can be performed, zero should be returned.
-// Second,
+// advertises the analytical integrals that are supported. 'integSet'
+// is the set of dependents for which integration is requested. The
+// function should copy the subset of dependents it can analytically
+// integrate to anaIntSet and return a unique identification code for
+// this integration configuration.  If no integration can be
+// performed, zero should be returned.  Second,
 //
 // Double_t analyticalIntegral(Int_t code)
 //
-// Implements the actual analytical integral(s) advertised by getAnalyticalIntegral.
-// This functions will only be called with codes returned by getAnalyticalIntegral,
-// except code zero.
+// Implements the actual analytical integral(s) advertised by
+// getAnalyticalIntegral.  This functions will only be called with
+// codes returned by getAnalyticalIntegral, except code zero.
 //
-// The integration range for real each dependent to be integrated can be obtained
-// from the dependents' proxy functions min() and max(). Never call these proxy 
-// functions for any proxy not known to be a dependent via the integration code.
-// Doing so may be ill-defined, e.g. in case the proxy holds a function, and will
-// trigger an assert. Integrated category dependents should always be summed over
-// all of their states.
+// The integration range for real each dependent to be integrated can
+// be obtained from the dependents' proxy functions min() and
+// max(). Never call these proxy functions for any proxy not known to
+// be a dependent via the integration code.  Doing so may be
+// ill-defined, e.g. in case the proxy holds a function, and will
+// trigger an assert. Integrated category dependents should always be
+// summed over all of their states.
 //
 //
-// Direct generation of dependents 
-// -------------------------------
 //
-// Any PDF dependent can be generated with the accept/reject method, but for certain
-// PDFs more efficient methods may be implemented. To implement direct generation
-// of one or more dependents, two functions need to be implemented, similar to
-// those for analytical integrals
+// [Direct generation of dependents]
+//
+// Any PDF dependent can be generated with the accept/reject method,
+// but for certain PDFs more efficient methods may be implemented. To
+// implement direct generation of one or more dependents, two
+// functions need to be implemented, similar to those for analytical
+// integrals:
 //
 // Int_t getGenerator(const RooArgSet& generateVars, RooArgSet& directVars) and
 // void generateEvent(Int_t code)
 //
-// The first function advertises dependents that can be generated, similar to the way
-// analytical integrals are advertised. The second function implements the generator
-// for the advertised dependents
+// The first function advertises dependents that can be generated,
+// similar to the way analytical integrals are advertised. The second
+// function implements the generator for the advertised dependents
 //
-// The generated dependent values should be store in the proxy objects. For this
-// the assignment operator can be used (i.e. xProxy = 3.0 ). Never call assign
-// to any proxy not known to be a dependent via the generation code.
-// Doing so may be ill-defined, e.g. in case the proxy holds a function, and will
-// trigger an assert
+// The generated dependent values should be store in the proxy
+// objects. For this the assignment operator can be used (i.e. xProxy
+// = 3.0 ). Never call assign to any proxy not known to be a dependent
+// via the generation code.  Doing so may be ill-defined, e.g. in case
+// the proxy holds a function, and will trigger an assert
 
 
 #include <iostream.h>
@@ -201,7 +214,8 @@ Double_t RooAbsPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
   // Analytical integral with normalization (see RooAbsReal::analyticalIntegralWN() for further information)
   //
   // This function applies the normalization specified by 'normSet' to the integral returned
-  // by RooAbsReal::analyticalIntegral()
+  // by RooAbsReal::analyticalIntegral(). The passthrough scenario (code=0) is also changed
+  // to return a normalized answer
 
   if (code==0) return getVal(normSet) ;
   if (normSet) {
@@ -495,7 +509,7 @@ const RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, Option_t *fitOpt, Option_
   // The actual fit is performed to a temporary copy of both PDF and data set. Several optimization
   // algorithm are run to increase the efficiency of the likelihood calculation and may increase
   // the speed of complex fits up to an order of magnitude. All optimizations are exact, i.e the fit result
-  // of any fit should _exactly_ the same with and without optimization. We strongly encourage to keep
+  // of any fit should _exactly_ the same with and without optimization. We strongly encourage
   // to stick to the default optimizer setting (all on). If for any reason you see a difference in the result
   // with and without optimizer, please file a bug report.
   //
@@ -608,7 +622,16 @@ void RooAbsPdf::generateEvent(Int_t code) {
 RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions, 
 			   Double_t scaleFactor, ScaleType stype, const RooArgSet* projSet) const
 {
-  // Plot outself on 'frame'. See RooAbsReal::plotOn() for details.
+  // Plot outself on 'frame'. In addition to features detailed in  RooAbsReal::plotOn(),
+  // the scale factor for a PDF can be interpreted in three different ways. The interpretation
+  // is controlled by ScaleType
+  //
+  //  Relative  -  Scale factor is applied on top of PDF normalization scale factor 
+  //  NumEvents -  Scale factor is interpreted as a number of events. The surface area
+  //               under the PDF curve will match that of a histogram containing the specified
+  //               number of event
+  //  Raw       -  Scale factor is applied to the raw (projected) probability density.
+  //               Not too useful, option provided for completeness.
 
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
@@ -627,6 +650,9 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions,
 
 RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions) 
 {
+  // Plot the negative log likelihood of ourself when applied on the given data set,
+  // as function of the plot variable of the frame.
+
   // Sanity checks on frame
   if (plotSanityChecks(frame)) return frame ;
   RooAbsReal* plotVar = frame->getPlotVar() ;
@@ -678,7 +704,14 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
 			    Int_t sigDigits, Option_t *options, Double_t xmin,
 			    Double_t xmax ,Double_t ymax) 
 {
-  
+  // Add a text box with the current parameter values and their errors to the frame.
+  // Dependents of this PDF appearing in the 'data' dataset will be omitted.
+  //
+  // Optional label will be inserted as first line of the text box. Use 'sigDigits'
+  // to modify the default number of significant digits printed. The 'xmin,xmax,ymax'
+  // values specify the inital relative position of the text box in the plot frame  
+
+
   // parse the options
   TString opts = options;
   opts.ToLower();
@@ -734,6 +767,13 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
 
 TH2F* RooAbsPdf::plotNLLContours(RooAbsData& data, RooRealVar& var1, RooRealVar& var2, Double_t n1, Double_t n2, Double_t n3) 
 {
+  // Make a one or more 2D contour lines at n1,n2 and n3 sigma from the minimum in the 'var1' vs 'var2' plane.
+  //
+  // plotNLLContours call MIGRAD first to verify convergence and the existence of a NLL minimum, then calls TMinuit::Contour()
+  // for each sigma level. At the end of the calculations the contour lines are plotted on the current canvas pad on
+  // top of the returned histogram. The returned TH2F does not contain the contour lines, so please save the canvas to
+  // store the results.
+
   RooFitContext context(&data,this) ;
   return context.plotNLLContours(var1,var2,n1,n2,n3) ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.48 2001/10/06 06:19:51 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.49 2001/10/08 05:20:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -84,9 +84,9 @@ public:
 
   // Parameter & dependents interpretation of servers
   RooArgSet* getParameters(const RooAbsData* set) const ;
-  RooArgSet* getParameters(const RooArgSet* depList) const ;
+  virtual RooArgSet* getParameters(const RooArgSet* depList) const ;
   RooArgSet* getDependents(const RooAbsData* set) const ;
-  RooArgSet* getDependents(const RooArgSet* depList) const ;
+  virtual RooArgSet* getDependents(const RooArgSet* depList) const ;
   Bool_t dependentOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const ;
   Bool_t dependentOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
   virtual Bool_t checkDependents(const RooArgSet* nset) const ;
@@ -128,6 +128,9 @@ protected:
   inline OperMode operMode() const { return _operMode ; }
 
   virtual Bool_t isValid() const ;
+
+  virtual void getParametersHook(const RooArgSet* nset, RooArgSet* list) const {} ;
+  virtual void getDependentsHook(const RooArgSet* nset, RooArgSet* list) const {} ;
 
   // Dirty state accessor/modifiers
   inline Bool_t isShapeDirty() const { return isDerived()?_shapeDirty:kFALSE ; } 

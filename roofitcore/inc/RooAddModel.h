@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.rdl,v 1.9 2001/09/25 01:15:58 verkerke Exp $
+ *    File: $Id: RooAddModel.rdl,v 1.10 2001/10/06 06:19:52 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -44,11 +44,11 @@ protected:
 
   virtual Double_t getNormSpecial(const RooArgSet* nset=0) const ;
 
-  Bool_t _isCopy ;
-  TList _modelProxyList ;
-  TList _coefProxyList ;
-  TIterator* _modelProxyIter ;
-  TIterator* _coefProxyIter ;
+  Bool_t _isCopy ;              // Flag set if we own our components
+  TList _modelProxyList ;       // List of component resolution models
+  TList _coefProxyList ;        // List of coefficients
+  TIterator* _modelProxyIter ;  //! Iterator over list of models
+  TIterator* _coefProxyIter ;   //! Iterator over list of coefficients
 
 private:
 

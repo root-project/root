@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealConstant.cc,v 1.1 2001/10/03 16:16:31 verkerke Exp $
+ *    File: $Id: RooRealConstant.cc,v 1.2 2001/10/08 05:20:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -12,6 +12,15 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [REAL] --
+// RooRealConstant provides static functions to create and keep track
+// of RooRealVar constants. Instead of creating such constants by
+// hand (e.g. RooRealVar one("one","one",1)), simply use
+//
+//  RooRealConstant::value(1.0)
+//
+// whenever a reference to RooRealVar with constant value 1.0 is needed.
+// RooRealConstant keeps an internal database of previously created
+// RooRealVar objects and will recycle them as appropriate.
 
 #include "RooFitCore/RooRealConstant.hh"
 #include "RooFitCore/RooRealVar.hh"

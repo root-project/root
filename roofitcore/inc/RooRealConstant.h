@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooRealConstant.rdl,v 1.1 2001/10/03 16:16:31 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -28,8 +28,8 @@ protected:
 
   static void init() ;
 
-  static RooArgList* _constDB ;
-  static TIterator* _constDBIter ;
+  static RooArgList* _constDB ;    // List of already instantiated constants
+  static TIterator* _constDBIter ; // Iterator over constants list
 
   ClassDef(RooRealConstant,0) // RooRealVar constants factory
 };

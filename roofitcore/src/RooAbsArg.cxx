@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.53 2001/10/06 06:19:51 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.54 2001/10/08 05:20:10 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -370,6 +370,16 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset) const
   }
   delete sIter ;
 
+  // Call hook function for all branch nodes
+  RooArgSet branchList ;
+  branchNodeServerList(&branchList) ;
+  RooAbsArg* branch ;
+  TIterator* bIter = branchList.createIterator() ;
+  while(branch=(RooAbsArg*)bIter->Next()) {
+    branch->getParametersHook(nset, parList) ; 
+  }
+  delete bIter ;
+
   return parList ;
 }
 
@@ -410,9 +420,19 @@ RooArgSet* RooAbsArg::getDependents(const RooArgSet* dataList) const
     if (arg->dependsOn(*dataList)) {
       depList->add(*arg) ;
     }
-  }
-  
+  }  
   delete sIter ;
+
+  // Call hook function for all branch nodes
+  RooArgSet branchList ;
+  branchNodeServerList(&branchList) ;
+  RooAbsArg* branch ;
+  TIterator* bIter = branchList.createIterator() ;
+  while(branch=(RooAbsArg*)bIter->Next()) {
+    branch->getDependentsHook(dataList, depList) ;
+  }
+  delete bIter ;
+
   return depList ;
 }
 

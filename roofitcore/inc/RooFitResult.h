@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.rdl,v 1.2 2001/08/21 01:46:53 verkerke Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.3 2001/09/17 18:48:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -58,14 +58,13 @@ protected:
   inline void setEDM(Double_t val) { _edm = val ; }
   void fillCorrMatrix() ;
 
-  Double_t _minNLL ;
-  Double_t _edm ;
-  RooArgList* _constPars ;
-  RooArgList* _initPars ;
-  RooArgList* _finalPars ;
-  RooArgList* _globalCorr ;
-  TList       _corrMatrix ;
-  //pRooArgSet* _corrMatrix ;
+  Double_t _minNLL ;          // NLL at minimum
+  Double_t _edm ;             // Estimated distance to minimum
+  RooArgList* _constPars ;    // List of constant parameters
+  RooArgList* _initPars ;     // List of floating parameters with initial values
+  RooArgList* _finalPars ;    // List of floating parameters with final values
+  RooArgList* _globalCorr ;   // List of global correlation coefficients
+  TList       _corrMatrix ;   // Correlation matrix (list of RooArgLists)
 
   ClassDef(RooFitResult,1) // Container class for fit result
 };

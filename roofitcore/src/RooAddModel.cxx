@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.14 2001/10/06 06:19:52 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.15 2001/10/08 05:20:12 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -11,6 +11,23 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PDF] --
+// RooAddModel implements a sum of RooResolutionModels as a composite resolution model, i.e.
+// 
+//  ADDMODEL = c_1*MODEL_1 + c_2*MODEL_2 + ... (1-sum(c_1...c_n-1))*MODEL_n 
+//
+// The coefficients c_i weight the component models by their full integral
+// (-inf to +inf) over the convolution variable, regardless of the fit limits
+// defined in the convolution variable. (the RooConvolutedPdf using the resolution
+// model will honour those limits in its own normalization).
+// 
+// A RooAddModel only supports basis functions that are supported by all its 
+// components. Each component model must be independent (i.e. not share any
+// servers) with its coefficient variable.
+// 
+// RooAddModel is, like any other RooResolutionModel, also usable as a PDF. When
+// used as such, it functions like RooAddPdf but it doesn't support any of its
+// extended likelihood configurations.
+//
 
 #include "TIterator.h"
 #include "TList.h"
@@ -29,6 +46,13 @@ RooAddModel::RooAddModel(const char *name, const char *title,
   _coefProxyIter(_coefProxyList.MakeIterator()),
   _isCopy(kFALSE)
 {
+  // Constructor from list of PDFs and list of coefficients.
+  // Each model list element (i) is paired with coefficient list element (i).
+  // The number of coefficients must be one less than the number of PDFs.
+  //
+  // All modelss must inherit from RooResolutionModel. All
+  // coefficients must inherit from RooAbsReal
+
   // Check that lists have consistent size
   if (modelList.getSize() != coefList.getSize() + 1) {
     cout << "RooAddModel::ctor(" << GetName() 
@@ -97,7 +121,6 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
   // Copy constructor
 
   // If we own the components convolutions we should clone them here
-
   // Copy proxy lists
   TIterator *iter = other._coefProxyList.MakeIterator() ;
   RooRealProxy* proxy ;
@@ -153,6 +176,12 @@ RooAddModel::~RooAddModel()
 
 RooResolutionModel* RooAddModel::convolution(RooFormulaVar* basis, RooAbsArg* owner) const
 {
+  // Instantiate a clone of this resolution model representing a convolution with given
+  // basis function. The owners object name is incorporated in the clones name
+  // to avoid multiple convolution objects with the same name in complex PDF structures.
+  //
+  // RooAddModel will clone all the component models to create a composite convolution object
+
   // Check that primary variable of basis functions is our convolution variable  
   if (basis->findServer(0) != x.absArg()) {
     cout << "RooAddModel::convolution(" << GetName() 
@@ -199,7 +228,11 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* basis, RooAbsArg* ow
 
 Int_t RooAddModel::basisCode(const char* name) const 
 {
-  // Assign code of first component, or return 0 if any of the components return 0
+  // Return code for basis function representing by 'name' string.
+  // The basis code of the first component model will be returned,
+  // if the basis is supported by all components. Otherwise 0
+  // is returned
+
   TIterator* mIter = _modelProxyList.MakeIterator() ;
   RooRealProxy* model ;
   Bool_t first(kTRUE), code(0) ;
@@ -220,6 +253,10 @@ Int_t RooAddModel::basisCode(const char* name) const
 
 Double_t RooAddModel::evaluate() const 
 {
+  // Calculate current value of object
+  //
+  // MODEL = sum(i=0,n-1) coef_i * model_i + (1 - sum(i=0,n-1) coef_i) * model_n
+
   // Calculate the current value of this object
   _coefProxyIter->Reset() ;
   _modelProxyIter->Reset() ;
@@ -256,6 +293,10 @@ Double_t RooAddModel::evaluate() const
 
 Double_t RooAddModel::getNorm(const RooArgSet* nset) const
 {
+  // Calculate current normalization of object
+  //
+  // Norm = sum(i=0,n-1) coef_i * norm(model_i) + (1 - sum(i=0,n-1)coef_i) * norm(model_n)
+
   // Operate as regular PDF if we have no basis function
   if (!_basis) return RooAbsPdf::getNorm(nset) ;
 
@@ -300,6 +341,11 @@ Double_t RooAddModel::getNorm(const RooArgSet* nset) const
 
 Double_t RooAddModel::getNormSpecial(const RooArgSet* nset) const
 {
+  // Duplicate of getNorm() function that uses a separate cache for 
+  // RooRealIntegral objects. Used in RooConvolutedPdf::analyticalIntegralWN()
+  // to avoid 100% cache misses when calculating the normalizated projection
+  // integrals of convoluted functions.
+
   // Operate as regular PDF if we have no basis function
   if (!_basis) return RooAbsPdf::getNorm(nset) ;
 
@@ -345,9 +391,8 @@ Double_t RooAddModel::getNormSpecial(const RooArgSet* nset) const
 Bool_t RooAddModel::checkDependents(const RooArgSet* set) const 
 {
   // Check if model is valid with dependent configuration given by specified data set
+  // Each model may not share any dependents with its coefficient
 
-  // Special, more lenient dependent checking: Coeffient and model should
-  // be non-overlapping, but coef/model pairs can
   Bool_t ret(kFALSE) ;
 
   TIterator *pIter = _modelProxyList.MakeIterator() ;
@@ -390,7 +435,8 @@ void RooAddModel::normLeafServerList(RooArgSet& list) const
 
 void RooAddModel::syncNormalization(const RooArgSet* nset) const 
 {
-  // Fan out syncNormalization call to components
+  // Fan out syncNormalization call to component models
+
   if (_verboseEval>0) cout << "RooAddModel:syncNormalization(" << GetName() 
 			 << ") forwarding sync request to components (" 
 			 << _lastNormSet << " -> " << nset << ")" << endl ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooCutNorm.cc,v 1.2 2001/10/06 07:28:59 verkerke Exp $
+ *    File: $Id: RooCutNorm.cc,v 1.3 2001/10/08 05:20:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -142,7 +142,7 @@ Double_t RooCutNorm::expectedEvents() const
 {
   // Return the number of expected events, which is
   //
-  // n * [ Int(xC,yF) pdf(x,y) / Int(xF,yF) pdf(x,y) ]
+  // n / [ Int(xC,yF) pdf(x,y) / Int(xF,yF) pdf(x,y) ]
   //
   // Where x is the set of dependents with cuts defined
   // and y are the other dependents. xC is the integration
@@ -158,7 +158,7 @@ Double_t RooCutNorm::expectedEvents() const
 
   // Evaluate fraction integral and return normalized by full integral
   Double_t fracInt = _fracIntegral->getVal() ;
-  return  _n * fracInt / normInt ;
+  return  _n / ( fracInt / normInt ) ;
 }
 
 
@@ -195,4 +195,21 @@ void RooCutNorm::syncFracIntegral() const
 
   // Replace dependents involved in cut with internal set
   _fracIntegral->recursiveRedirectServers(_cutDepSet,kFALSE,kTRUE) ;
+}
+
+
+
+
+void RooCutNorm::getParametersHook(const RooArgSet* nset, RooArgSet* list) const 
+{
+  // Remove fake dependents from list
+  list->remove(_cutDepSet,kTRUE,kTRUE) ;
+}
+
+
+
+void RooCutNorm::getDependentsHook(const RooArgSet* nset, RooArgSet* list) const 
+{
+  // Remove fake dependents from list
+  list->remove(_cutDepSet,kTRUE,kTRUE) ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.5 2001/09/17 18:48:13 verkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.6 2001/10/08 05:20:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -12,6 +12,15 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [MISC] --
+// RooFitResult is a container class to hold the input and output
+// of a PDF fit to a dataset. It contains:
+//
+//   - Values of all constant parameters
+//   - Initial and final values of floating parameters with error
+//   - Correlation matrix and global correlation coefficients
+//   - NLL and EDM at mininum
+//
+// No references to the fitted PDF and dataset are stored
 
 #include <iomanip.h>
 #include "TMinuit.h"
@@ -25,10 +34,12 @@ ClassImp(RooFitResult)
 
 RooFitResult::RooFitResult() : _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0)
 {
+  // Constructor
 }
 
 RooFitResult::~RooFitResult() 
 {
+  // Destructor
   if (_constPars) delete _constPars ;
   if (_initPars)  delete _initPars ;
   if (_finalPars) delete _finalPars ;
@@ -39,6 +50,7 @@ RooFitResult::~RooFitResult()
 
 void RooFitResult::setConstParList(const RooArgList& list) 
 {
+  // Fill the list of constant parameters
   if (_constPars) delete _constPars ;
   _constPars = (RooArgList*) list.snapshot() ;
 }
@@ -46,6 +58,7 @@ void RooFitResult::setConstParList(const RooArgList& list)
 
 void RooFitResult::setInitParList(const RooArgList& list)
 {
+  // Fill the list of initial values of the floating parameters 
   if (_initPars) delete _initPars ;
   _initPars = (RooArgList*) list.snapshot() ;
 }
@@ -53,6 +66,7 @@ void RooFitResult::setInitParList(const RooArgList& list)
 
 void RooFitResult::setFinalParList(const RooArgList& list)
 {
+  // Fill the list of final values of the floating parameters 
   if (_finalPars) delete _finalPars ;
   _finalPars = (RooArgList*) list.snapshot() ;
 }
@@ -60,6 +74,8 @@ void RooFitResult::setFinalParList(const RooArgList& list)
 
 Double_t RooFitResult::correlation(const RooAbsArg& par1, const RooAbsArg& par2) const 
 {
+  // Return the correlation between parameters 'par1' and 'par2'
+
   const RooArgList* row = correlation(par1) ;
   if (!row) return 0. ;
   RooAbsArg* arg = _initPars->find(par2.GetName()) ;
@@ -73,6 +89,9 @@ Double_t RooFitResult::correlation(const RooAbsArg& par1, const RooAbsArg& par2)
 
 const RooArgList* RooFitResult::correlation(const RooAbsArg& par) const 
 {
+  // Return the set of correlation coefficients of parameter 'par' with
+  // all other floating parameters
+
   RooAbsArg* arg = _initPars->find(par.GetName()) ;
   if (!arg) {
     cout << "RooFitResult::correlation: variable " << par.GetName() << " not a floating parameter in fit" << endl ;
@@ -84,6 +103,10 @@ const RooArgList* RooFitResult::correlation(const RooAbsArg& par) const
 
 void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
+  // Print fit result to stream 'os'. In Verbose mode, the contant parameters and
+  // the initial and final values of the floating parameters are printed. 
+  // Standard mode only the final values of the floating parameters are printed
+
   os << endl 
      << "  RooFitResult: minimized NLL value: " << _minNLL << ", estimated distance to minimum: " << _edm 
      << endl 
@@ -136,6 +159,9 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
 
 void RooFitResult::fillCorrMatrix()
 {
+  // Extract the correlation matrix and the global correlation coefficients from the MINUIT memory buffer 
+  // and fill the internal arrays.
+
   // Sanity check
   if (gMinuit->fNpar <= 1) {
     cout << "RooFitResult::fillCorrMatrix: number of floating parameters <=1, correlation matrix not filled" << endl ;
