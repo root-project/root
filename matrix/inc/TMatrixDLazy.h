@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDLazy.h,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDLazy.h,v 1.3 2004/01/26 20:03:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -53,11 +53,11 @@ protected:
   Int_t fColUpb;
   Int_t fColLwb;
 
-private:
-  virtual void FillIn(TMatrixD &m) const = 0;
-
   TMatrixDLazy(const TMatrixDLazy &) : TObject() { }
   void operator=(const TMatrixDLazy &) { }
+
+private:
+  virtual void FillIn(TMatrixD &m) const = 0;
 
 public:
   TMatrixDLazy() { fRowUpb = fRowLwb = fColUpb = fColLwb = 0; }
@@ -94,11 +94,11 @@ protected:
   Int_t fRowUpb;
   Int_t fRowLwb;
 
-private:
-  virtual void FillIn(TMatrixDSym &m) const = 0;
-
   TMatrixDSymLazy(const TMatrixDSymLazy &) : TObject() { }
   void operator=(const TMatrixDSymLazy &) { }
+
+private:
+  virtual void FillIn(TMatrixDSym &m) const = 0;
 
 public:
   TMatrixDSymLazy() { fRowUpb = fRowLwb = 0; }
