@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.63 2003/06/19 10:21:13 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.64 2003/07/03 13:00:15 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1737,7 +1737,7 @@ void TUnixSystem::Syslog(ELogLevel level, const char *mess)
    // message that will be written on the log.
 
    // ELogLevel matches exactly the Unix values.
-   ::syslog(level, mess);
+   ::syslog(level, "%s", mess);
 }
 
 //______________________________________________________________________________
