@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.22 2002/05/09 20:16:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.23 2003/03/05 23:33:29 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -435,6 +435,9 @@ void TBranchObject::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       TBranchObject::Class()->ReadBuffer(R__b, this);
    } else {
+      TDirectory *dirsav = fDirectory;
+      fDirectory = 0;  // to avoid recursive calls
+      
       TBranchObject::Class()->WriteBuffer(R__b, this);
 
       // make sure that all TStreamerInfo objects referenced by
@@ -443,17 +446,23 @@ void TBranchObject::Streamer(TBuffer &R__b)
 
          // if branch is in a separate file save this branch
          // as an independent key
-      TBranch *mother = GetMother();
+      if (!dirsav) return;
+      if (!dirsav->IsWritable()) {fDirectory = dirsav; return;}
       TDirectory *pdirectory = fTree->GetDirectory();
-      if (mother) pdirectory = mother->GetDirectory();
-      if (fDirectory && fDirectory != pdirectory) {
+      if (!pdirectory) {fDirectory = dirsav; return;}
+      const char *treeFileName = pdirectory->GetFile()->GetName();
+      TBranch *mother = GetMother();
+      const char *motherFileName = treeFileName;
+      if (mother && mother != this) {
+         motherFileName = mother->GetFileName();
+      }
+      if (fFileName.Length() > 0 && strcmp(motherFileName,fFileName.Data())) {
          TDirectory *cursav = gDirectory;
-         fDirectory->cd();
-         fDirectory = 0;  // to avoid recursive calls
+         dirsav->cd();
          Write();
-         fDirectory = gDirectory;
          cursav->cd();
       }
+      fDirectory = dirsav;
    }
 }
 
