@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.2 2000/06/13 11:27:04 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.3 2000/12/26 14:24:39 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -121,16 +121,20 @@ void TGroupButton::ExecuteAction()
       Int_t npixels = Int_t((YtoPixel(0) - YtoPixel(1))*text->GetTextSize());
       Double_t dy;
       pad = gROOT->GetSelectedPad();
-      if (obj->InheritsFrom("TPaveLabel::Class()")) {
+      if (obj->InheritsFrom("TPaveLabel")) {
          TBox *pl = (TBox*)obj;
          dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
          sprintf(params,"%f",dy/(pl->GetY2() - pl->GetY1()));
          obj->Execute("SetTextSize",params);
       } else {
-         //dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
-         //sprintf(params,"%f",dy/(pad->GetY2() - pad->GetY1()));
-         sprintf(params,"%d",npixels);
-         obj->Execute("SetTextSizePixels",params);
+         if (obj->InheritsFrom("TPave")) {
+            dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
+            sprintf(params,"%f",dy/(pad->GetY2() - pad->GetY1()));
+            obj->Execute("SetTextSize",params);
+         } else {
+            sprintf(params,"%d",npixels);
+            obj->Execute("SetTextSizePixels",params);
+         }
       }
    }
 }
