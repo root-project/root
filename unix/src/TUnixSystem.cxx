@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.15 2001/01/25 18:37:47 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.16 2001/01/26 17:11:25 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -437,34 +437,18 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
 
    while (1) {
       // first handle any X11 events
-      if (gXDisplay && gXDisplay->Notify())
+      if (gXDisplay && gXDisplay->Notify()) {
+         if (fReadready.IsSet(gXDisplay->GetFd())) {
+            fReadready.Clr(gXDisplay->GetFd());
+            fNfd--;
+         }
          if (!pendingOnly) return;
+      }
 
       // check for file descriptors ready for reading/writing
-      if (fNfd > 0 && fFileHandler->GetSize() > 0) {
-         TFileHandler *fh;
-#if defined(R__LINUX) && defined(__alpha__)
-         // TOrdCollectionIter it(...) causes segv ?!?!? Also TIter fails.
-         int cursor = 0;
-         while (cursor < fFileHandler->GetSize()) {
-            fh = (TFileHandler*) fFileHandler->At(cursor++);
-#else
-         TOrdCollectionIter it((TOrdCollection*)fFileHandler);
-         while ((fh = (TFileHandler*) it.Next())) {
-#endif
-            int fd = fh->GetFd();
-            if (fd <= fMaxrfd && fReadready.IsSet(fd)) {
-               fReadready.Clr(fd);
-               if (fh->ReadNotify())
-                  if (!pendingOnly) return;
-            }
-            if (fd <= fMaxwfd && fWriteready.IsSet(fd)) {
-               fWriteready.Clr(fd);
-               if (fh->WriteNotify())
-                  if (!pendingOnly) return;
-            }
-         }
-      }
+      if (fNfd > 0 && fFileHandler->GetSize() > 0)
+         if (CheckDescriptors())
+            if (!pendingOnly) return;
       fNfd = 0;
       fReadready.Zero();
       fWriteready.Zero();
@@ -577,7 +561,7 @@ void TUnixSystem::DispatchSignals(ESignals sig)
    }
 
    // check a-synchronous signals
-   if (fSigcnt && fSignalHandler->GetSize() > 0)
+   if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
       CheckSignals(kFALSE);
 }
 
@@ -587,24 +571,27 @@ Bool_t TUnixSystem::CheckSignals(Bool_t sync)
    // Check if some signals were raised and call their Notify() member.
 
    TSignalHandler *sh;
+   Int_t sigdone = -1;
    {
       TOrdCollectionIter it((TOrdCollection*)fSignalHandler);
 
       while ((sh = (TSignalHandler*)it.Next())) {
          if (sync == sh->IsSync()) {
             ESignals sig = sh->GetSignal();
-            if (fSignals.IsSet(sig)) {
-               fSignals.Clr(sig);
-               fSigcnt--;
-               break;
+            if ((fSignals.IsSet(sig) && sigdone == -1) || sigdone == sig) {
+               if (sigdone == -1) {
+                  fSignals.Clr(sig);
+                  sigdone = sig;
+                  fSigcnt--;
+               }
+               sh->Notify();
             }
          }
       }
    }
-   if (sh) {
-      sh->Notify();
+   if (sigdone != -1)
       return kTRUE;
-   }
+
    return kFALSE;
 }
 
@@ -625,6 +612,52 @@ void TUnixSystem::CheckChilds()
          }
    }
 #endif
+}
+
+//______________________________________________________________________________
+Bool_t TUnixSystem::CheckDescriptors()
+{
+   // Check if there is activity on some file descriptors and call their
+   // Notify() member.
+
+   TFileHandler *fh;
+   Int_t  fddone = -1;
+   Bool_t read   = kFALSE;
+#if defined(R__LINUX) && defined(__alpha__)
+   // TOrdCollectionIter it(...) causes segv ?!?!? Also TIter fails.
+   Int_t cursor = 0;
+   while (cursor < fFileHandler->GetSize()) {
+      fh = (TFileHandler*) fFileHandler->At(cursor++);
+#else
+   TOrdCollectionIter it((TOrdCollection*)fFileHandler);
+   while ((fh = (TFileHandler*) it.Next())) {
+#endif
+      Int_t fd = fh->GetFd();
+      if ((fd <= fMaxrfd && fReadready.IsSet(fd) && fddone == -1) ||
+          (fddone == fd && read)) {
+         if (fddone == -1) {
+            fReadready.Clr(fd);
+            fddone = fd;
+            read = kTRUE;
+            fNfd--;
+         }
+         fh->ReadNotify();
+      }
+      if ((fd <= fMaxwfd && fWriteready.IsSet(fd) && fddone == -1) ||
+          (fddone == fd && !read)) {
+         if (fddone == -1) {
+            fWriteready.Clr(fd);
+            fddone = fd;
+            read = kFALSE;
+            fNfd--;
+         }
+         fh->WriteNotify();
+      }
+   }
+   if (fddone != -1)
+      return kTRUE;
+
+   return kFALSE;
 }
 
 //---- Directories -------------------------------------------------------------

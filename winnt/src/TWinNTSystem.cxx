@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.10 2001/01/23 19:01:55 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.11 2001/01/25 18:37:47 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -733,7 +733,7 @@ void TWinNTSystem::DispatchSignals(ESignals sig)
    }
 
    // check a-synchronous signals
-   if (fSigcnt && fSignalHandler->GetSize() > 0)
+   if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
       CheckSignals(kFALSE);
 #else
       if (TROOT::Initialized())
@@ -748,24 +748,27 @@ Bool_t TWinNTSystem::CheckSignals(Bool_t sync)
    // Check if some signals were raised and call their Notify() member.
 
    TSignalHandler *sh;
+   Int_t sigdone = -1;
    {
       TIter next(fSignalHandler);
 
       while (sh = (TSignalHandler*)next()) {
          if (sync == sh->IsSync()) {
             ESignals sig = sh->GetSignal();
-            if (fSignals.IsSet(sig)) {
-               fSignals.Clr(sig);
-               fSigcnt--;
-               break;
+            if ((fSignals.IsSet(sig) && sigdone == -1) || sigdone == sig) {
+               if (sigdone == -1) {
+                  fSignals.Clr(sig);
+                  sigdone = sig;
+                  fSigcnt--;
+               }
+               sh->Notify();
             }
          }
       }
    }
-   if (sh) {
-      sh->Notify();
+   if (sigdone != -1)
       return kTRUE;
-   }
+
    return kFALSE;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name:  $:$Id: TVmsSystem.h,v 1.3 2001/01/22 09:43:05 rdm Exp $
+// @(#)root/vms:$Name:  $:$Id: TVmsSystem.h,v 1.4 2001/01/23 19:01:55 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -83,11 +83,12 @@ public:
    const char       *HostName();
 
    //---- EventLoop --------------------------------------------
-   void              DispatchOneEvent();
+   void              DispatchOneEvent(Bool_t pendingOnly = kFALSE);
 
    //---- Handling of system events ----------------------------
    void              CheckChilds();
    Bool_t            CheckSignals(Bool_t sync);
+   Bool_t            CheckDescriptors();
    void              DispatchSignals(ESignals sig);
    void              AddSignalHandler(TSignalHandler *sh);
    TSignalHandler   *RemoveSignalHandler(TSignalHandler *sh);

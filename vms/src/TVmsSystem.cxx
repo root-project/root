@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.4 2001/01/23 19:01:55 rdm Exp $
+// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.5 2001/01/25 18:37:47 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -246,35 +246,24 @@ void TVmsSystem::IgnoreInterrupt(Bool_t ignore)
 }
 
 //______________________________________________________________________________
-void TVmsSystem::DispatchOneEvent()
+void TVmsSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
    // Dispatch a single event.
-//gROOT->GetApplication()->HandleTermInput();
 
    while (1) {
       // first handle any X11 events
-      if (gXDisplay && gXDisplay->Notify())
-         return;
+      if (gXDisplay && gXDisplay->Notify()) {
+         if (fReadready.IsSet(gXDisplay->GetFd())) {
+            fReadready.Clr(gXDisplay->GetFd());
+            fNfd--;
+         }
+         if (!pendingOnly) return;
+      }
 
       // check for file descriptors ready for reading/writing
-      if (fNfd > 0 && fFileHandler->GetSize() > 0) {
-         TFileHandler *fh;
-         TOrdCollectionIter it((TOrdCollection*)fFileHandler);
-
-         while ((fh = (TFileHandler*) it.Next())) {
-            int fd = fh->GetFd();
-            if (fd <= fMaxrfd && fReadready.IsSet(fd)) {
-               fReadready.Clr(fd);
-               if (fh->ReadNotify())
-                  return;
-            }
-            if (fd <= fMaxwfd && fWriteready.IsSet(fd)) {
-               fWriteready.Clr(fd);
-               if (fh->WriteNotify())
-                  return;
-            }
-         }
-      }
+      if (fNfd > 0 && fFileHandler->GetSize() > 0)
+         if (CheckDescriptors())
+            if (!pendingOnly) return;
       fNfd = 0;
       fReadready.Zero();
       fWriteready.Zero();
@@ -282,14 +271,20 @@ void TVmsSystem::DispatchOneEvent()
       // check synchronous signals
       if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
          if (CheckSignals(kTRUE))
-            return;
+            if (!pendingOnly) return;
       fSigcnt = 0;
       fSignals.Zero();
 
       // check synchronous timers
       if (fTimers && fTimers->GetSize() > 0)
-         if (DispatchTimers(kTRUE))
-            return;
+         if (DispatchTimers(kTRUE)) {
+            // prevent timers from blocking file descriptor monitoring
+            Long_t to = NextTimeOut(kTRUE);
+            if (to > kItimerResolution || to == -1)
+               return;
+         }
+
+      if (pendingOnly) return;
 
       // nothing ready, so setup select call
       fReadready  = fReadmask;
@@ -304,21 +299,21 @@ void TVmsSystem::DispatchOneEvent()
             if (fReadmask.IsSet(fd)) {
                rc = VmsSelect(fd+1, &t, 0, 0);
                if (rc < 0 && rc != -2) {
-                  fprintf(stderr, "select: read error on %d\n", fd);
+                  SysError("DispatchOneEvent", "select: read error on %d\n", fd);
                   fReadmask.Clr(fd);
                }
             }
             if (fWritemask.IsSet(fd)) {
                rc = VmsSelect(fd+1, 0, &t, 0);
                if (rc < 0 && rc != -2) {
-                  fprintf(stderr, "select: write error on %d\n", fd);
+                  SysError("DispatchOneEvent", "select: write error on %d\n", fd);
                   fWritemask.Clr(fd);
                }
             }
             t.Clr(fd);
          }
       }
-  }
+   }
 }
 
 //______________________________________________________________________________
@@ -372,7 +367,7 @@ void TVmsSystem::DispatchSignals(ESignals sig)
    }
 
    // check a-synchronous signals
-   if (fSigcnt && fSignalHandler->GetSize() > 0)
+   if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
       CheckSignals(kFALSE);
 }
 
@@ -382,24 +377,27 @@ Bool_t TVmsSystem::CheckSignals(Bool_t sync)
    // Check if some signals were raised and call their Notify() member.
 
    TSignalHandler *sh;
+   Int_t sigdone = -1;
    {
       TOrdCollectionIter it((TOrdCollection*)fSignalHandler);
 
       while ((sh = (TSignalHandler*)it.Next())) {
          if (sync == sh->IsSync()) {
             ESignals sig = sh->GetSignal();
-            if (fSignals.IsSet(sig)) {
-               fSignals.Clr(sig);
-               fSigcnt--;
-               break;
+            if ((fSignals.IsSet(sig) && sigdone == -1) || sigdone == sig) {
+               if (sigdone == -1) {
+                  fSignals.Clr(sig);
+                  sigdone = sig;
+                  fSigcnt--;
+               }
+               sh->Notify();
             }
          }
       }
    }
-   if (sh) {
-      sh->Notify();
+   if (sigdone != -1)
       return kTRUE;
-   }
+
    return kFALSE;
 }
 
@@ -420,6 +418,45 @@ void TVmsSystem::CheckChilds()
          }
    }
 #endif
+}
+
+//______________________________________________________________________________
+Bool_t TVmsSystem::CheckDescriptors()
+{
+   // Check if there is activity on some file descriptors and call their
+   // Notify() member.
+
+   TFileHandler *fh;
+   Int_t  fddone = -1;
+   Bool_t read   = kFALSE;
+   TOrdCollectionIter it((TOrdCollection*)fFileHandler);
+   while ((fh = (TFileHandler*) it.Next())) {
+      Int_t fd = fh->GetFd();
+      if ((fd <= fMaxrfd && fReadready.IsSet(fd) && fddone == -1) ||
+          (fddone == fd && read)) {
+         if (fddone == -1) {
+            fReadready.Clr(fd);
+            fddone = fd;
+            read = kTRUE;
+            fNfd--;
+         }
+         fh->ReadNotify();
+      }
+      if ((fd <= fMaxwfd && fWriteready.IsSet(fd) && fddone == -1) ||
+          (fddone == fd && !read)) {
+         if (fddone == -1) {
+            fWriteready.Clr(fd);
+            fddone = fd;
+            read = kFALSE;
+            fNfd--;
+         }
+         fh->WriteNotify();
+      }
+   }
+   if (fddone != -1)
+      return kTRUE;
+
+   return kFALSE;
 }
 
 //---- Directories -------------------------------------------------------------
