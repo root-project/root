@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:$:$Id:$
+// @(#)root/ldap:$Name:  $:$Id: CintLDAP.h,v 1.1 2002/11/24 22:42:31 rdm Exp $
 // Author: Oleksandr Grebenyuk   21/09/2001
 
 /*************************************************************************
@@ -12,6 +12,7 @@
 #if !defined(__CINT__) && !defined(G__DICTIONARY)
 
 #include <ldap.h>
+#include <lber.h>   // needed for older versions of ldap.h
 
 #else
 
