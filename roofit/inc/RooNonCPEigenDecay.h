@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooNonCPEigenDecay.rdl,v 1.1 2002/03/10 21:36:36 stark Exp $
+ *    File: $Id: RooNonCPEigenDecay.rdl,v 1.2 2002/03/13 04:54:58 stark Exp $
  * Authors:
  *   AH, Andreas Hoecker, Orsay, hoecker@slac.stanford.edu
  *   SL, Sandrine Laplace, Orsay, laplace@slac.stanford.edu
@@ -28,6 +28,27 @@ public:
 
   // Constructors, assignment etc
   inline RooNonCPEigenDecay( void ) { }
+
+  // with explicit mischarge
+  RooNonCPEigenDecay( const char *name, const char *title, 
+		      RooRealVar&     t, 
+	              RooAbsCategory& tag,
+		      RooAbsReal&     tau, 
+		      RooAbsReal&     dm,
+		      RooAbsReal&     avgW, 
+		      RooAbsReal&     delW, 
+		      RooAbsCategory& rhoQ, 
+		      RooAbsReal&     correctQ, 
+		      RooAbsReal&     wQ,
+		      RooAbsReal&     a,
+		      RooAbsReal&     a_cos_p,
+		      RooAbsReal&     a_cos_m,
+		      RooAbsReal&     a_sin_p,
+		      RooAbsReal&     a_sin_m,
+		      const RooResolutionModel& model, 
+		      DecayType       type = DoubleSided );
+
+  // no explicit mischarge (=> set to zero)
   RooNonCPEigenDecay( const char *name, const char *title, 
 		      RooRealVar&     t, 
 	              RooAbsCategory& tag,
@@ -54,7 +75,7 @@ public:
   virtual Double_t coefficient( Int_t basisIndex ) const;
 
   virtual Int_t getCoefAnalyticalIntegral( RooArgSet& allVars, 
-					   RooArgSet& analVars ) const;
+  					   RooArgSet& analVars ) const;
   virtual Double_t coefAnalyticalIntegral( Int_t coef, Int_t code ) const;
 
   Int_t getGenerator( const RooArgSet& directVars, 
@@ -77,6 +98,7 @@ protected:
   RooCategoryProxy _tag;
   RooCategoryProxy _rhoQ;
   RooRealProxy     _correctQ;
+  RooRealProxy     _wQ;
   Double_t         _genB0Frac;
   Double_t         _genRhoPlusFrac;
   
