@@ -1491,7 +1491,11 @@ echo "done"
 # bin/memprobe
 #
 echo $ac_n "Writing $MEMPROBEOUT ... $ac_c"
-perlexe=`which perl`
+if [ -x /usr/bin/env ]; then
+   perlexe="/usr/bin/env perl"
+else
+   perlexe=`which perl`
+fi
 sed -e "s|@perl@|$perlexe|"                \
    < memprobe.tmp > $MEMPROBEOUT
 rm -f memprobe.tmp
