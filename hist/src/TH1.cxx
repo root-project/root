@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.139 2003/04/17 07:55:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.140 2003/04/19 16:59:27 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2193,7 +2193,7 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
 
         // make sure there are some events, if not, then the errors are set = 0
 	// automatically.
-        if(b < 1){}
+        if(bot < 1){}
         else{
           // remember: da = sqrt(a), and form the error:
           error = TMath::Sqrt((1-as)*(1-as)*a
