@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDMixDecayHadronic.cc,v 1.2 2002/03/28 15:08:25 mwilson Exp $
+ *    File: $Id: RooDMixDecayHadronic.cc,v 1.1 2002/03/29 21:24:27 mwilson Exp $
  * Authors:
  *   MW, Michael Wilson, UC Santa Cruz, mwilson@slac.stanford.edu
  * History:
@@ -114,7 +114,7 @@ Double_t RooDMixDecayHadronic::coefficient(Int_t basisIndex) const
     return ( (R_M2*R_D2)/(4.0*R_DCS) * (xprime*xprime + yprime*yprime) );
   }
 
-  cerr << "Unknown basisIndex " << basisIndex << endl;
+  std::cerr << "Unknown basisIndex " << basisIndex << std::endl;
   assert(0);
   return 0.0;
 }
@@ -177,7 +177,7 @@ Double_t RooDMixDecayHadronic::coefAnalyticalIntegral(Int_t coef, Int_t code) co
     
   }
 
-  cerr << "Illegal code in coefAnalyticIntegral: " << code << endl;
+  std::cerr << "Illegal code in coefAnalyticIntegral: " << code << std::endl;
   assert(0);
   return 0.0;
 }
@@ -252,37 +252,30 @@ void RooDMixDecayHadronic::initGenerator(Int_t code)
     yP = yprime;
   }
 
-  // In here, we find a good shape for the exponential by fitting to two points.  The point
-  // at t/tau = 1 is chosen in case the linear term is positive, in which case the PDF
-  // will bend upwards slightly and we want our exponential to be above it always.  The
-  // point at t = genMaxT is chosen because the quadratic term dies off more slowly than
-  // a pure exponential.
+  // In here, we find a good shape for the generating exponential by calculating the PDF
+  // value and the value of its derivative at a point, and the exponential to have the
+  // same value and derivative at that point.  A good point to choose is near t/tau = 2,
+  // because this is where the t^2 term has its maximum, and the t term is still significant.
+  // The places where we run into danger are between 1 < t/tau < 2, and for t/tau -> inf.
 
-  // Finally, we make sure that the leading coefficient is not less than 1.0
 
   Double_t scale = R_M2 * R_D2 / R_DCS;
-  Double_t C1 = (scale/4.0) * (xprime*xprime + yprime*yprime) * 4.0;    // max at t/tau = 2
-  Double_t C2 = sqrt(scale) * yP * 1.0;                                 // max at t/tau = 1
-  Double_t C3 = 1.0;
+  Double_t tTerm = sqrt(scale) * yP;
+  Double_t t2Term = (scale/4.0)*(xprime*xprime+yprime*yprime);
 
-  Double_t y1 = (C1 + C2 + C3)*exp(-1.0);                               // eval at t/tau = 1
-  Double_t t1 = tau;
+  Double_t evalPt = 2;    // we evaluate at t/tau = 2
 
-  Double_t D1 = (scale/4.0) * (xprime*xprime + yprime*yprime) * (genMaxT/tau)*(genMaxT/tau);
-  Double_t D2 = sqrt(scale) * yP * (genMaxT/tau);
-  Double_t D3 = 1.0;
+  Double_t func = exp(-evalPt)*(1.0 + tTerm*(evalPt) + t2Term*(evalPt)*(evalPt));
+  Double_t deriv = (1/tau)*exp(-evalPt)*(tTerm - 1.0 + (2.0*t2Term - tTerm)*(evalPt)
+					      - t2Term*(evalPt)*(evalPt));
 
-  Double_t y2 = (D1 + D2 + D3)*exp(-genMaxT/tau);
-  Double_t t2 = genMaxT;
+  genMaxLife = -func/deriv;
+  genMaxCoeff = func*exp(5.0*tau/genMaxLife);
 
-  genMaxLife = (t2-t1)/(log(y1/y2));
-  genMaxCoeff = y1*exp(t1/genMaxLife);
-  if(genMaxCoeff < 1.0) genMaxCoeff = 1.0;
+  // sanity check, make sure that the coefficient is not too small!
 
-  // extra paranoia, just in case the exponential is very close (or identical)
-  // to the PDF
-
-  genMaxCoeff *= 1.1;
+  genMaxCoeff *= 1.05;
+  if(genMaxCoeff < 1.05) genMaxCoeff = 1.05;
 
   genMaxArea = genMaxCoeff * genMaxLife * (1 - exp(-genMaxT/genMaxLife));
 
@@ -332,8 +325,9 @@ void RooDMixDecayHadronic::generateEvent(Int_t code)
       
       // If the maximum probability is not always greated than the PDF, we
       // have a problem.
-      
-      if(maxProb < acceptProb) throw MaxProbError(maxProb,acceptProb,tval);
+
+      if(maxProb < acceptProb) throw MaxProbError(maxProb,acceptProb,tval,sqrt(scale)*yP,
+						  (scale/4.0)*(xprime*xprime+yprime*yprime));
       
       Bool_t accept = (prob < acceptProb) ? kTRUE : kFALSE;
       
@@ -344,11 +338,16 @@ void RooDMixDecayHadronic::generateEvent(Int_t code)
     }
   }
   catch(MaxProbError err) {
-    cerr << "maximum probability function is less than PDF:" << endl;
-    cerr << "  maxProb = "    << err.max << endl;
-    cerr << "  acceptProb = " << err.accept << endl;
-    cerr << "  tval = "       << err.tval << endl;
-    cerr << "Exiting now"     << endl;
+    std::cerr << "maximum probability function is less than PDF:" << std::endl;
+    std::cerr << "  maxProb = "    << err.max << "\t";
+    std::cerr << "acceptProb = " << err.accept << "\t";
+    std::cerr << "tval = "       << err.tval << std::endl;
+    std::cerr << "  genMaxLife = " << genMaxLife << "\t";
+    std::cerr << "genMaxCoeff = " << genMaxCoeff << std::endl;
+    std::cerr << "  tau = " << tau << "\t";
+    std::cerr << "t term = " << err.tTerm << "\t";
+    std::cerr << "t^2 term = " << err.t2Term << std::endl;
+    std::cerr << "Exiting now"     << std::endl;
     exit(1);
   }
 }
