@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.149 2004/01/16 17:52:16 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.150 2004/01/16 21:29:27 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1247,8 +1247,7 @@ void WriteAuxFunctions(G__ClassInfo &cl)
    string classname( GetLong64_Name(RStl::DropDefaultArg( cl.Fullname() ) ) );
    string mappedname = G__map_cpp_name((char*)classname.c_str());
 
-   if (    TClassEdit::IsSTLCont( classname.c_str() ) == 0 
-        && classname != "string" ) {
+   if ( ! TClassEdit::IsStdClass( classname.c_str() ) ) {
 
       // Prefix the full class name with '::' except for the STL
       // containers and std::string.  This is to request the
@@ -3154,6 +3153,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
        ||!strncmp(qual, "::set", strlen("::set"))
        ||!strncmp(qual, "::multiset", strlen("::multiset"))
        ||!strncmp(qual, "::allocator", strlen("::allocator"))
+       ||!strncmp(qual, "::pair", strlen("::pair"))
        ) {
       
       fullyQualifiedName.erase(0,2);
@@ -3184,6 +3184,7 @@ void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName)
        ||!strcmp(typeName, "set")
        ||!strcmp(typeName, "multiset")
        ||!strcmp(typeName, "allocator")
+       ||!strcmp(typeName, "pair")
       ) {
 
       GetFullyQualifiedName(type.Name(),fullyQualifiedName);
@@ -3196,6 +3197,7 @@ void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName)
        ||!strncmp(qual, "::set", strlen("::set"))
        ||!strncmp(qual, "::multiset", strlen("::multiset"))
        ||!strncmp(qual, "::allocator", strlen("::allocator"))
+       ||!strncmp(qual, "::pair", strlen("::pair"))
       ) {
 
          fullyQualifiedName.erase(0,2);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.1 2004/01/10 10:52:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.2 2004/01/16 21:29:27 brun Exp $
 // Author: Victor Perev   04/10/2003
 
 
@@ -462,6 +462,20 @@ int TClassEdit::IsSTLCont(const char *ty,int testAlloc)
  
    if(kind>2) kind = - kind;
    return kind;
+}
+
+//______________________________________________________________________________
+bool TClassEdit::IsStdClass(const char *classname) 
+{
+  // return true if the class belond to the std namespace
+
+  if ( strcmp(classname,"string")==0 ) return true;
+  if ( strncmp(classname,"pair<",strlen("pair<"))==0) return true;
+  if ( strcmp(classname,"allocator")==0) return true;
+  if ( strncmp(classname,"allocator<",strlen("allocator<"))==0) return true;
+ 
+  return IsSTLCont(classname) != 0;
+  
 }
 
 
