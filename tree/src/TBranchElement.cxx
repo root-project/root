@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.75 2002/01/02 21:46:53 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.76 2002/01/13 07:43:03 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -188,7 +188,8 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          } else {
             clones = (TClonesArray*)pointer;
          }
-         if (!clones) return; // TClonesArray must exist
+         basket->DeleteEntryOffset(); //entryoffset not require for the clonesarray counterif (!clones) return; // TClonesArray must exist
+         fEntryOffsetLen = 0;
          clm = clones->GetClass();
          if (!clm) return;
          // ===> Create a leafcount
@@ -198,8 +199,8 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          fLeaves.Add(leaf);
          fTree->GetListOfLeaves()->Add(leaf);
          // Create a basket for the leafcount
-         TBasket *basket = new TBasket(name,fTree->GetName(),this);
-         fBaskets.Add(basket);
+         TBasket *basket2 = new TBasket(name,fTree->GetName(),this);
+         fBaskets.Add(basket2);
          // ===> create sub branches for each data member of a TClonesArray
          fType = 3;
          //check that the contained objects class name is part of the element title
