@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.cxx,v 1.3 2003/06/30 15:45:52 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.cxx,v 1.4 2003/12/16 18:55:49 brun Exp $
 // Author: Philippe Canal   20/03/02
 
 /*************************************************************************
@@ -154,7 +154,7 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
 
       current = (TTreeFormula*)fFormulas.UncheckedAt(i);
       if (current->fMultiplicity!=1 && !current->fHasCast) continue;
-      if (!current->LoadCurrentDim() ) { 
+      if (!current->LoadCurrentDim() ) {
          if (forceLoadDim) {
             for(Int_t j=i+1; j<size; j++) {
                current = (TTreeFormula*)fFormulas.UncheckedAt(j);
@@ -162,8 +162,8 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
                current->LoadCurrentDim();
             }
          }
-         fNdata = 0; 
-         return 0; 
+         fNdata = 0;
+         return 0;
       }
    }
 
@@ -229,14 +229,14 @@ Bool_t TTreeFormulaManager::Sync() {
       current->ResetDimensions();
       switch (current->GetMultiplicity()) {
       case 0:
-        // nothing to do
-        break;
+         // nothing to do
+         break;
       case 1:
-        fMultiplicity = 1;
-        break;
+         fMultiplicity = 1;
+         break;
       case 2:
-        if (fMultiplicity!=1) fMultiplicity = 2;
-        break;
+         if (fMultiplicity!=1) fMultiplicity = 2;
+         break;
       default:
         Error("Sync","Unexpected case!");
       }
@@ -257,7 +257,7 @@ Bool_t TTreeFormulaManager::Sync() {
 
    // Now that we know the virtual dimension we know if a loop over EvalInstance
    // is needed or not.
-   if (fCumulUsedSizes[0]==1 && fMultiplicity!=0) {
+   if (fCumulUsedSizes[0]==1 && fMultiplicity>0) {
       // Case where even though we have an array.  We know that they will always
       // only be one element.
       fMultiplicity -= 2;
