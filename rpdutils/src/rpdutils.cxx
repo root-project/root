@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.76 2005/03/11 00:48:15 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.77 2005/03/16 17:29:07 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -1421,24 +1421,26 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
 
    struct passwd *pw = getpwnam(usr);
    if (pw) {
-      Int_t fromUid = getuid();
-      Int_t fromEUid = geteuid();
-      // The check should be done with user IDs
-      if (!getuid())
+      uid_t fromUid = getuid();
+      uid_t fromEUid = geteuid();
+      // The check must be done with 'usr' UIDs to prevent
+      // unauthorized users from forcing the server to read
+      // manipulated key files.
+      if (fromUid == 0)
          if (setresuid(pw->pw_uid, pw->pw_uid, fromEUid) == -1)
             // Since we could not set the user IDs, we will
             // not trust the client
             GoodOfs = 0;
 
       // Get the key now
-      if (GoodOfs) {
+      if (GoodOfs)
          if (RpdGetRSAKeys(pukfile.c_str(), 1) < 1)
             GoodOfs = 0;
 
-         // Reset original IDs
-         if (!getuid())
-            setresuid(fromUid,fromEUid,pw->pw_uid);
-      }
+      // Reset original IDs
+      if (getuid() != fromUid)
+         setresuid(fromUid,fromEUid,pw->pw_uid);
+
    } else {
       // Since we could not set the user IDs, we will
       // not trust the client
@@ -3522,7 +3524,7 @@ int RpdCheckSpecialPass(const char *passwd)
    char *rootdpass = gPasswd;
    int n = 0;
 
-   if (gClientProtocol > 8) {
+   if (gClientProtocol > 8 && gSaltRequired > 0) {
       n = strlen(rootdpass);
       if (strncmp(passwd, rootdpass, n + 1) != 0) {
          if (gDebug > 0)
