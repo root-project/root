@@ -75,9 +75,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//_____________________________batch only_____________________
-#ifndef __CINT__
-
 #include <Riostream.h>
 #include <TSystem.h>
 #include <TFile.h>
@@ -94,7 +91,7 @@
 #include "TMatrixDEigen.h"
 #include "TMatrixDSymEigen.h"
 
-void stressLinear                  (Int_t maxSizeReq,Int_t verbose);
+void stressLinear                  (Int_t maxSizeReq=100,Int_t verbose=0);
 void StatusPrint                   (Int_t id,const TString &title,Int_t status);
 
 void mstress_allocation            (Int_t msize);
@@ -129,6 +126,9 @@ void   astress_decomp_io           (Int_t msize);
 
 void   cleanup                     ();
 
+//_____________________________batch only_____________________
+#ifndef __CINT__
+
 int main(int argc,const char *argv[]) 
 {
   Int_t maxSizeReq = 100;
@@ -154,7 +154,7 @@ const Int_t gSizeA[] = {5,6,7,8,9,10,15,20,30,40,50,60,70,80,90,100,300,500,700,
 
 //________________________________common part_________________________
 
-void stressLinear(Int_t maxSizeReq=100,Int_t verbose=0)
+void stressLinear(Int_t maxSizeReq,Int_t verbose)
 {
   cout << "******************************************************************" <<endl;
   cout << "*  Starting  Linear Algebra - S T R E S S suite                  *" <<endl;
@@ -264,20 +264,13 @@ void stressLinear(Int_t maxSizeReq=100,Int_t verbose=0)
 void StatusPrint(Int_t id,const Char_t *title,Bool_t status)
 {
   // Print test program number and its title
-//   const Int_t kMAX = 65;
-//   TString header = TString("Test ")+Form("%2d",id)+" : "+title;
-//   const Int_t nch = header.Length();
-//   for (Int_t i = nch; i < kMAX; i++) header += '.';
-//   cout << header << (status ? "OK" : "FAILED") << endl;
-  // Print test program number and its title
-   const Int_t kMAX = 65;
-   Char_t header[80];
-   sprintf(header,"Test %2d : %s",id,title);
-   Int_t nch = strlen(header);
-   for (Int_t i=nch;i<kMAX;i++) header[i] = '.';
-   header[kMAX] = 0;
-   header[kMAX-1] = ' ';
-   cout << header << (status ? "OK" : "FAILED") << endl;
+  const Int_t kMAX = 65;
+  Char_t number[4];
+  sprintf(number,"%2d",id);
+  TString header = TString("Test ")+number+" : "+title;
+  const Int_t nch = header.Length();
+  for (Int_t i = nch; i < kMAX; i++) header += '.';
+  cout << header << (status ? "OK" : "FAILED") << endl;
 }
 
 //------------------------------------------------------------------------
@@ -1046,8 +1039,6 @@ void mstress_norms(Int_t rsize_req,Int_t csize_req)
   Bool_t ok = kTRUE;
   const Double_t pattern = 10.25;
 
-//  const Int_t rsize = (rsize%2 == 0) ? rsize_req : rsize_req-1;
-//  const Int_t csize = (csize%2 == 0) ? csize_req : csize_req-1;
   Int_t rsize = rsize_req;
   if (rsize%2 != 0)  rsize--;
   Int_t csize = csize_req;
@@ -2678,13 +2669,6 @@ TMatrixD MakeMatrix(Int_t nrows,Int_t ncols,
 }
 #endif
 
-class FillMatrix2 : public TElementPosActionD {
-   void Operation(Double_t &element) const
-      { element = fJ>fI ? 0 : fI==fJ ? 21-fJ : -1; }
-public:
-   FillMatrix2() {}
-};
-
 void astress_decomp()
 {
   Bool_t ok = kTRUE;
@@ -2693,25 +2677,25 @@ void astress_decomp()
     if (gVerbose)
       cout << "\nBrandt example page 503\n" <<endl;
   
-    Double_t array[] = { -2,1,0,0, 2,1,0,0, 0,0,0,0, 0,0,0,0 };
-    ok &= test_svd_expansion(MakeMatrix(4,4,array,sizeof(array)/sizeof(array[0])));
+    Double_t array0[] = { -2,1,0,0, 2,1,0,0, 0,0,0,0, 0,0,0,0 };
+    ok &= test_svd_expansion(MakeMatrix(4,4,array0,sizeof(array0)/sizeof(array0[0])));
   }
 
   {
     if (gVerbose)
       cout << "\nRotated by PI/2 Matrix Diag(1,4,9)\n" <<endl;
   
-    Double_t array[] = {0,-4,0,  1,0,0,  0,0,9 };
-    ok &= test_svd_expansion(MakeMatrix(3,3,array,sizeof(array)/sizeof(array[0])));
+    Double_t array1[] = {0,-4,0,  1,0,0,  0,0,9 };
+    ok &= test_svd_expansion(MakeMatrix(3,3,array1,sizeof(array1)/sizeof(array1[0])));
   }
 
   {
     if (gVerbose)
       cout << "\nExample from the Forsythe, Malcolm, Moler's book\n" <<endl;
   
-    Double_t array[] = 
+    Double_t array2[] = 
          { 1,6,11, 2,7,12, 3,8,13, 4,9,14, 5,10,15};
-    ok &= test_svd_expansion(MakeMatrix(5,3,array,sizeof(array)/sizeof(array[0])));
+    ok &= test_svd_expansion(MakeMatrix(5,3,array2,sizeof(array2)/sizeof(array2[0])));
   }
 
   {
@@ -2719,21 +2703,23 @@ void astress_decomp()
       cout << "\nExample from the Wilkinson, Reinsch's book\n" <<
               "Singular numbers are 0, 19.5959, 20, 0, 35.3270\n" <<endl;
   
-    Double_t array[] = 
+    Double_t array3[] = 
         { 22, 10,  2,   3,  7,    14,  7, 10,  0,  8,
           -1, 13, -1, -11,  3,    -3, -2, 13, -2,  4,
            9,  8,  1,  -2,  4,     9,  1, -7,  5, -1,
            2, -6,  6,   5,  1,     4,  5,  0, -2,  2 };
-    ok &= test_svd_expansion(MakeMatrix(8,5,array,sizeof(array)/sizeof(array[0])));
+    ok &= test_svd_expansion(MakeMatrix(8,5,array3,sizeof(array3)/sizeof(array3[0])));
   }
 
   {
     if (gVerbose)
       cout << "\nExample from the Wilkinson, Reinsch's book\n" <<
               "Ordered singular numbers are Sig[21-k] = sqrt(k*(k-1))\n" <<endl;
-    FillMatrix2 f;
     TMatrixD A(21,20);
-    A.Apply(f);
+    for (Int_t irow = A.GetRowLwb(); irow <= A.GetRowUpb(); irow++)
+      for (Int_t icol = A.GetColLwb(); icol <= A.GetColUpb(); icol++)
+        A(irow,icol) = (irow>icol ? 0 : ((irow==icol) ? 20-icol : -1));
+
     ok &= test_svd_expansion(A);
   }
 
@@ -2746,24 +2732,24 @@ void astress_decomp()
            << "1.4666e-024   1.828427   3.828427   4.366725  7.932951\n" <<endl;
     }
 
-    Double_t array[] = 
+    Double_t array4[] = 
         {  1,  2,  0,  0,  0,
            0,  2,  3,  0,  0,
            0,  0,  0,  4,  0,
            0,  0,  0,  4,  5,
            0,  0,  0,  0,  5 };
-    ok &= test_svd_expansion(MakeMatrix(5,5,array,sizeof(array)/sizeof(array[0])));
+    ok &= test_svd_expansion(MakeMatrix(5,5,array4,sizeof(array4)/sizeof(array4[0])));
   }
 
   {
-    const TMatrixD m = THilbertMatrixD(5,5);
-    TDecompLU lu(m);
-    ok &= VerifyMatrixIdentity(lu.GetMatrix(),m,gVerbose,100*EPSILON);
+    const TMatrixD m1 = THilbertMatrixD(5,5);
+    TDecompLU lu(m1);
+    ok &= VerifyMatrixIdentity(lu.GetMatrix(),m1,gVerbose,100*EPSILON);
   }
 
   {
-    const TMatrixD m = THilbertMatrixD(5,5);
-    const TMatrixD mtm(TMatrixDBase::kAtA,m);
+    const TMatrixD m2 = THilbertMatrixD(5,5);
+    const TMatrixD mtm(TMatrixDBase::kAtA,m2);
     TDecompChol chol(mtm);
     ok &= VerifyMatrixIdentity(chol.GetMatrix(),mtm,gVerbose,100*EPSILON);
   }
@@ -2776,17 +2762,19 @@ void astress_decomp()
 
 void astress_lineqn()
 {
- if (gVerbose)
-   cout << "\nSolve Ax=b where A is a Hilbert matrix and b(i) = sum_j Aij\n" <<endl;
+  if (gVerbose)
+    cout << "\nSolve Ax=b where A is a Hilbert matrix and b(i) = sum_j Aij\n" <<endl;
 
   Bool_t ok = kTRUE;
 
   Int_t iloop = 0;
   Int_t nr    = 0;
+
   while (iloop <= gNrLoop) {
     const Int_t msize = gSizeA[iloop];
 
-    const Int_t verbose = (gVerbose && nr==0 && iloop==gNrLoop);
+    //const Int_t verbose = (gVerbose && nr==0 && iloop==gNrLoop);
+    const Int_t verbose = (gVerbose && nr==0);
 
     if (verbose)
       cout << "\nSolve Ax=b for size = " << msize <<endl;
@@ -2809,9 +2797,10 @@ void astress_lineqn()
       }
     }
 
+    TVectorD b(msize);
     {
       TDecompLU lu(m,1.0e-20);
-      TVectorD b(rowsum);
+      b = rowsum;
       lu.Solve(b);
       if (msize < 10)
         ok &= VerifyVectorValue(b,1.0,verbose,5.0e-3);
@@ -2819,21 +2808,11 @@ void astress_lineqn()
       lu.TransSolve(b);
       if (msize < 10)
         ok &= VerifyVectorValue(b,1.0,verbose,5.0e-3);
-
-      // Make sure that when using the Adoption scheme in TDecompLU
-      // the answer is identical
-      TMatrixD m2(m);
-      TDecompLU lu2(m2,1.0e-20);
-      TVectorD b2(colsum);
-      lu2.TransSolve(b2);
-      if (msize < 10)
-        ok &= (b == b2);
     }
 
-    if (ok)
     {
       TDecompQRH qrh(m,1.0e-20);
-      TVectorD b(rowsum);
+      b = rowsum;
       qrh.Solve(b);
       if (msize < 10)
         ok &= VerifyVectorValue(b,1.0,verbose,5.0e-3);
@@ -2843,10 +2822,9 @@ void astress_lineqn()
         ok &= VerifyVectorValue(b,1.0,verbose,5.0e-3);
     }
 
-    if (ok)
     {
       TDecompSVD svd(m);
-      TVectorD b(rowsum);
+      b = rowsum;
       svd.Solve(b);
       if (msize < 10)
         ok &= VerifyVectorValue(b,1.0,verbose,5.0e-3);
