@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.56 2001/08/15 09:47:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.57 2001/08/15 14:51:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1584,12 +1584,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    if (opt.Contains("selector")) {
       fprintf(fp,"class %s : public TSelector {\n",classname);
       fprintf(fp,"   public :\n");
-      fprintf(fp,"   TTree          *fChain;   //pointer to the analyzed TTree or TChain\n");
+      fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
    } else {
       fprintf(fp,"class %s {\n",classname);
       fprintf(fp,"   public :\n");
-      fprintf(fp,"   TTree          *fChain;   //pointer to the analyzed TTree or TChain\n");
-      fprintf(fp,"   Int_t           fCurrent; //current Tree number in a TChain\n");
+      fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
+      fprintf(fp,"   Int_t           fCurrent; //!current Tree number in a TChain\n");
    }
    fprintf(fp,"//Declaration of leaves types\n");
    TLeaf *leafcount;
@@ -1698,14 +1698,14 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 	   if (twodim) strcat(dimensions,(char*)(twodim+1));
 	 }
          if (dimensions) {
-            if (kmax) fprintf(fp,"   %-15s %s[kMax%s]%s;\n",leaf->GetTypeName(),
-			                                    branchname,blen,dimensions);
-	    else      fprintf(fp,"   %-15s %s[%d]%s;\n",leaf->GetTypeName(),
-			                                branchname,len,dimensions);
+            if (kmax) fprintf(fp,"   %-15s %s[kMax%s]%s;   //[%s]\n",leaf->GetTypeName(),
+			                                    branchname,blen,dimensions,leafcount->GetName());
+	    else      fprintf(fp,"   %-15s %s[%d]%s;   //[%s]\n",leaf->GetTypeName(),
+			                                branchname,len,dimensions,leafcount->GetName());
 	    delete dimensions;
          } else {
-            if (kmax) fprintf(fp,"   %-15s %s[kMax%s];\n",leaf->GetTypeName(), branchname,blen);
-            else      fprintf(fp,"   %-15s %s[%d];\n",leaf->GetTypeName(), branchname,len);
+            if (kmax) fprintf(fp,"   %-15s %s[kMax%s];   //[%s]\n",leaf->GetTypeName(), branchname,blen,leafcount->GetName());
+            else      fprintf(fp,"   %-15s %s[%d];   //[%s]\n",leaf->GetTypeName(), branchname,len,leafcount->GetName());
          }
       } else {
          if (strstr(branchname,"[")) len = 1;
@@ -1730,7 +1730,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       char *twodim = (char*)strstr(bname,"[");
       if (twodim) *twodim = 0;
       while (*bname) {if (*bname == '.') *bname='_'; bname++;}
-      fprintf(fp,"   TBranch        *b_%s;\n",branchname);
+      fprintf(fp,"   TBranch        *b_%s;   //!\n",branchname);
    }
 
 // generate class member functions prototypes
