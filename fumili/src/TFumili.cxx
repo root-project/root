@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.5 2003/05/06 08:23:42 rdm Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.6 2003/05/06 09:24:30 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //BEGIN_HTML
@@ -143,7 +143,7 @@ TFumili::TFumili(Int_t maxpar)
   fENDFLG  = 0;
   fNlimMul = 2;
   fNmaxIter= 150;
-  fNstepDec= 5;
+  fNstepDec= 3;
   fLastFixed = -1;
   
   SetName("Fumili");
@@ -220,11 +220,14 @@ void TFumili::Clear(Option_t *)
   //
   // NB: this procedure doesn't reset parameter limits 
   //
+  fNpar = fMaxParam;
   for (Int_t i=0;i<fNpar;i++){
     fA[i]   =0.;
     fDF[i]  =0.;
     fPL0[i] =.1;
     fPL[i]  =.1;
+    fAMN[i] = kMINDOUBLE;
+    fAMX[i] = kMAXDOUBLE;
     fParamError[i]=0.;
     fANames[i]=Form("%d",i);
   }
@@ -475,6 +478,12 @@ Int_t TFumili::Minimize()
 
   Int_t NN2, N, FIXFLG,  IFIX1, FI, NN3, NN1, N0;
   Double_t T1;
+  Double_t SP, T, OLDS=0;
+  Double_t BI, AIMAX=0, AMB;
+  Double_t AFIX, SIGI, AKAP;
+  Double_t ALAMBD, AL, BM, ABI, ABM;
+  Int_t L1, K, IFIX;
+  
   NN2=0;
 
   // Number of parameters;
@@ -536,7 +545,6 @@ Int_t TFumili::Minimize()
     ijkl = SGZ();
   if(!ijkl) return 10; 
   if (ijkl == -1) fINDFLG[0]=1;
-  Double_t SP, T, OLDS=0;
 
   // SP - scaled on fS machine precision
   SP=fRP*TMath::Abs(fS);
@@ -625,8 +633,7 @@ Int_t TFumili::Minimize()
 	I1 = I1+1;
 	L = L + I1;
       }
-  Int_t L1, K, IFIX;
-  Double_t BI, AIMAX=0, AMB;
+
   N0 = I1 - 1;
   InvertZ(N0);
 
@@ -662,7 +669,6 @@ Int_t TFumili::Minimize()
 	}
     }
   //	  ... CHECK FOR PARAMETERS ON BOUNDARY
-  Double_t AFIX, SIGI, AKAP;
 
   AFIX=0.;
   IFIX = -1;
@@ -701,10 +707,10 @@ Int_t TFumili::Minimize()
     }
 
   //... CALCULATE STEP CORRECTION FACTOR
-  Double_t ALAMBD, AL, BM, ABI,ABM;
+
   ALAMBD = 1.;
   fAKAPPA = 0.;
-  Int_t IMAX=0;
+  Int_t IMAX;
   IMAX = -1;
 
 
