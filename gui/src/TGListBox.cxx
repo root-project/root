@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.13 2003/11/25 08:44:53 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.14 2003/12/18 13:17:15 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -436,15 +436,13 @@ void TGLBContainer::SetMultipleSelections(Bool_t multi)
    TGFrameElement *el;
 
    fMultiSelect = multi;
-   if (fMultiSelect)
-      fLastActive = 0;
-   else
-      {
+   if (!fMultiSelect) {
       // deselect all entries
       TIter next(fList);
       while ((el = (TGFrameElement *) next()))
          ((TGLBEntry *)(el->fFrame))->Activate(kFALSE);
-      }
+   }
+   fLastActive = 0;
 }
 
 //______________________________________________________________________________
