@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.7 2003/02/12 17:47:46 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.8 2003/09/01 09:39:39 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 /*************************************************************************
@@ -114,8 +114,8 @@ public:
   Int_t          Charm           ()  { return GetPDG()->Charm(); }
   Int_t          Strangeness     ()  { return GetPDG()->Strangeness();}
 
-  void Momentum(TLorentzVector &v) { v.SetPxPyPzE(fPx,fPy,fPz,fE);}
-  void ProductionVertex(TLorentzVector &v) { v.SetXYZT(fVx,fVy,fVz,fVt);}
+  void Momentum(TLorentzVector &v) const { v.SetPxPyPzE(fPx,fPy,fPz,fE);}
+  void ProductionVertex(TLorentzVector &v) const { v.SetXYZT(fVx,fVy,fVz,fVt);}
 
                                 // ****** redefine several most oftenly used
                                 // methods of LORENTZ_VECTOR
