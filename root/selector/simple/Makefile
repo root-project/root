@@ -25,6 +25,9 @@ endif
 testLoadingSelector.log: testSel_C.$(DllSuf)  testSelector_C.$(DllSuf)
 
 
+# ..... | sed -s/$(PWD)//g > testLoadingSelector.log
+
+
 testLoadingSelector: testLoadingSelector.log
 		  $(TestDiff)
 
