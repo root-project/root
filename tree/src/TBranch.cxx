@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.56 2003/04/24 19:00:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.57 2003/04/30 16:29:31 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1002,7 +1002,15 @@ void TBranch::Print(Option_t *) const
   if (fTotBytes > 2e9) {
      Printf("*Entries :%9d : Total  Size=%11g bytes  File Size  = %10d *",Int_t(fEntries),totBytes,Int_t(fZipBytes));
   } else {
-     Printf("*Entries :%9d : Total  Size=%11d bytes  File Size  = %10d *",Int_t(fEntries),Int_t(totBytes),Int_t(fZipBytes));
+     if (fZipBytes > 0) {
+        Printf("*Entries :%9d : Total  Size=%11d bytes  File Size  = %10d *",Int_t(fEntries),Int_t(totBytes),Int_t(fZipBytes));
+     } else {
+        if (fWriteBasket > 0) {
+           Printf("*Entries :%9d : Total  Size=%11d bytes  All baskets in memory   *",Int_t(fEntries),Int_t(totBytes));
+        } else {
+           Printf("*Entries :%9d : Total  Size=%11d bytes  One basket in memory    *",Int_t(fEntries),Int_t(totBytes));
+        }
+     }
   }
   Printf("*Baskets :%9d : Basket Size=%11d bytes  Compression= %6.2f     *",fWriteBasket,fBasketSize,cx);
   Printf("*............................................................................*");
