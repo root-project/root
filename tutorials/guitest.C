@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:$:$Id:$
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.1 2000/10/22 19:19:09 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -115,7 +115,7 @@ shutterData_t tree_data[] = {
 };
 
 
-const char *editortxt =
+const char *editortxt1 =
 "This is the ROOT text edit widget TGTextEdit. It is not intended as\n"
 "a full developers editor, but it is relatively complete and can ideally\n"
 "be used to edit scripts or to present users editable config files, etc.\n\n"
@@ -126,9 +126,9 @@ const char *editortxt =
 "standard X11 text handling application is supported.\n\n"
 "Text can be selected with the mouse while holding the left button\n"
 "or with the arrow keys while holding the shift key pressed. Use the\n"
-"middle mouse button to paste text at the current mouse location.\n"
+"middle mouse button to paste text at the current mouse location."
 ;
-#if 0
+const char *editortxt2 =
 "Mice with scroll-ball are properly supported.\n\n"
 "This are the currently defined key bindings:\n"
 "Left Arrow\n"
@@ -139,7 +139,9 @@ const char *editortxt =
 "    Scroll when cursor is out of frame.\n"
 "Backspace\n"
 "    Deletes the character on the left side of the text cursor and moves the\n"
-"    cursor one position to the left. If a text has been marked by the user\n"
+"    cursor one position to the left. If a text has been marked by the user"
+;
+const char *editortxt3 =
 "    (e.g. by clicking and dragging) the cursor will be put at the beginning\n"
 "    of the marked text and the marked text will be removed.\n"
 "Home\n"
@@ -150,7 +152,9 @@ const char *editortxt =
 "    Moves the text cursor to the right end of the line. If mark is TRUE text\n"
 "    will be marked towards the last position, if not any marked text will\n"
 "    be unmarked if the cursor is moved.\n"
-"Delete\n"
+"Delete"
+;
+const char *editortxt4 =
 "    Deletes the character on the right side of the text cursor. If a text\n"
 "    has been marked by the user (e.g. by clicking and dragging) the cursor\n"
 "    will be put at the beginning of the marked text and the marked text will\n"
@@ -162,7 +166,9 @@ const char *editortxt =
 "Control-A\n"
 "    Move the cursor to the beginning of the line.\n"
 "Control-B\n"
-"    Move the cursor one character leftwards.\n"
+"    Move the cursor one character leftwards."
+;
+const char *editortxt5 =
 "Control-C\n"
 "    Copy the marked text to the clipboard.\n"
 "Control-D\n"
@@ -175,7 +181,9 @@ const char *editortxt =
 "    Delete the character to the left of the cursor.\n"
 "Control-K\n"
 "    Delete marked text if any or delete all\n"
-"    characters to the right of the cursor.\n"
+"    characters to the right of the cursor."
+;
+const char *editortxt6 =
 "Control-U\n"
 "    Delete all characters on the line.\n"
 "Control-V\n"
@@ -183,10 +191,9 @@ const char *editortxt =
 "Control-X\n"
 "    Cut the marked text, copy to clipboard.\n"
 "Control-Y\n"
-"    Paste the clipboard text into line edit.\n"
-"\n"
+"    Paste the clipboard text into line edit.\n\n"
 "All other keys with valid ASCII codes insert themselves into the line.";
-#endif
+
 
 class TileFrame;
 
@@ -363,8 +370,6 @@ public:
 
 class Editor {
 
-RQ_OBJECT()
-
 private:
    TGTransientFrame *fMain;   // main frame of this widget
    TGTextEdit       *fEdit;   // text edit widget
@@ -376,8 +381,9 @@ public:
    Editor(const TGWindow *main, UInt_t w, UInt_t h);
    virtual ~Editor();
 
-   void   LoadBuffer(const char *buffer);
    void   LoadFile(const char *file);
+   void   LoadBuffer(const char *buffer);
+   void   AddBuffer(const char *buffer);
 
    TGTextEdit *GetEditor() const { return fEdit; }
 
@@ -395,6 +401,8 @@ public:
 
 class TileFrame {
 
+RQ_OBJECT()
+
 private:
    TGCompositeFrame *fFrame;
    TGCanvas         *fCanvas;
@@ -406,7 +414,7 @@ public:
    TGFrame *GetFrame() const { return fFrame; }
 
    void SetCanvas(TGCanvas *canvas) { fCanvas = canvas; }
-   Bool_t HandleButton(Event_t *event);
+   void HandleMouseWheel(Event_t *event);
 };
 
 TileFrame::TileFrame(const TGWindow *p)
@@ -415,6 +423,8 @@ TileFrame::TileFrame(const TGWindow *p)
 
    fFrame = new TGCompositeFrame(p, 10, 10, kHorizontalFrame,
                                  TGFrame::GetWhitePixel());
+   fFrame->Connect("ProcessedEvent(Event_t*)", "TileFrame", this,
+                   "HandleMouseWheel(Event_t*)");
    fCanvas = 0;
    fFrame->SetLayoutManager(new TGTileLayout(fFrame, 8));
 
@@ -423,17 +433,20 @@ TileFrame::TileFrame(const TGWindow *p)
                          kPointerMotionMask, kNone, kNone);
 }
 
-Bool_t TileFrame::HandleButton(Event_t *event)
+void TileFrame::HandleMouseWheel(Event_t *event)
 {
-   // Handle wheel mouse to scroll.
+   // Handle mouse wheel to scroll.
+
+   if (event->fType != kButtonPress && event->fType != kButtonRelease)
+      return;
 
    Int_t page = 0;
    if (event->fCode == kButton4 || event->fCode == kButton5) {
-   if (!fCanvas) return kTRUE;
-   if (fCanvas->GetContainer()->GetHeight())
-      page = Int_t(Float_t(fCanvas->GetViewPort()->GetHeight() *
-                           fCanvas->GetViewPort()->GetHeight()) /
-                           fCanvas->GetContainer()->GetHeight());
+      if (!fCanvas) return;
+      if (fCanvas->GetContainer()->GetHeight())
+         page = Int_t(Float_t(fCanvas->GetViewPort()->GetHeight() *
+                              fCanvas->GetViewPort()->GetHeight()) /
+                              fCanvas->GetContainer()->GetHeight());
    }
 
    if (event->fCode == kButton4) {
@@ -441,15 +454,12 @@ Bool_t TileFrame::HandleButton(Event_t *event)
       Int_t newpos = fCanvas->GetVsbPosition() - page;
       if (newpos < 0) newpos = 0;
       fCanvas->SetVsbPosition(newpos);
-      return kTRUE;
    }
    if (event->fCode == kButton5) {
       // scroll down
       Int_t newpos = fCanvas->GetVsbPosition() + page;
       fCanvas->SetVsbPosition(newpos);
-      return kTRUE;
    }
-   return kTRUE;
 }
 
 
@@ -626,7 +636,12 @@ void TestMainFrame::DoButton()
    // Handle button click.
 
    Editor *ed = new Editor(fMain, 600, 400);
-   ed->LoadBuffer(editortxt);
+   ed->LoadBuffer(editortxt1);
+   ed->AddBuffer(editortxt2);
+   ed->AddBuffer(editortxt3);
+   ed->AddBuffer(editortxt4);
+   ed->AddBuffer(editortxt5);
+   ed->AddBuffer(editortxt6);
    ed->Popup();
 }
 
@@ -1398,8 +1413,7 @@ void TestSliders::DoText(const char *text)
 {
    // Handle text entry widgets.
 
-   TQObject *oq = (TQObject*)gTQSender;
-   TGTextEntry *te = (TGTextEntry*)oq->IsA()->DynamicCast(TQObject::Class(), oq, kFALSE);
+   TGTextEntry *te = (TGTextEntry *) gTQSender;
    Int_t id = te->WidgetId();
 
    switch (id) {
@@ -1426,12 +1440,12 @@ void TestSliders::DoSlider(Int_t pos)
    // Handle slider widgets.
 
    Int_t id;
-   TQObject *oq = (TQObject*)gTQSender;
-   if (oq->IsA()->InheritsFrom(TGSlider::Class())) {
-      TGSlider *sl = (TGSlider*)oq->IsA()->DynamicCast(TQObject::Class(), oq, kFALSE);
+   TGFrame *frm = (TGFrame *) gTQSender;
+   if (frm->IsA()->InheritsFrom(TGSlider::Class())) {
+      TGSlider *sl = (TGSlider*) frm;
       id = sl->WidgetId();
    } else {
-      TGDoubleSlider *sd = (TGDoubleSlider*)oq->IsA()->DynamicCast(TQObject::Class(), oq, kFALSE);
+      TGDoubleSlider *sd = (TGDoubleSlider *) frm;
       id = sd->WidgetId();
    }
 
@@ -1778,6 +1792,15 @@ void Editor::LoadFile(const char *file)
    // Load a file in the editor.
 
    fEdit->LoadFile(file);
+}
+
+void Editor::AddBuffer(const  char *buffer)
+{
+   // Add text to the editor.
+
+   TGText txt;
+   txt.LoadBuffer(buffer);
+   fEdit->AddText(&txt);
 }
 
 void Editor::CloseWindow()
