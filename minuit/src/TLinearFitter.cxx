@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.1 2005/03/04 09:06:37 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.2 2005/03/04 09:14:26 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -973,7 +973,7 @@ Bool_t TLinearFitter::UpdateMatrix()
 }
 
 //______________________________________________________________________________
-Int_t TLinearFitter::ExecuteCommand(const char *command, Double_t */*args*/, Int_t /*nargs*/)
+Int_t TLinearFitter::ExecuteCommand(const char *command, Double_t * /*args*/, Int_t /*nargs*/)
 {
    //to use in TGraph::Fit and TH1::Fit
 
