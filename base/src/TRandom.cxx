@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.14 2002/11/17 17:04:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.15 2003/01/26 21:03:16 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -590,10 +590,11 @@ void TRandom::RndmArray(Int_t n, Double_t *array)
    const Int_t kMASK24 = 2147483392;
    
    Int_t i=0;
+   UInt_t jy;
    while (i<n) {
       fSeed *= 69069;      
-      fSeed &= kMASK31;            // keep only lower 31 bits      
-      UInt_t jy = (fSeed&kMASK24); // Set lower 8 bits to zero to assure exact float
+      fSeed &= kMASK31;       // keep only lower 31 bits      
+      jy = (fSeed&kMASK24);   // Set lower 8 bits to zero to assure exact float
       if (jy) {
          array[i] = Double_t(kCONS*jy);
          i++;
@@ -611,10 +612,11 @@ void TRandom::RndmArray(Int_t n, Float_t *array)
    const Int_t kMASK24 = 2147483392;
    
    Int_t i=0;
+   UInt_t jy;
    while (i<n) {
       fSeed *= 69069;      
-      fSeed &= kMASK31;            // keep only lower 31 bits      
-      UInt_t jy = (fSeed&kMASK24); // Set lower 8 bits to zero to assure exact float
+      fSeed &= kMASK31;      // keep only lower 31 bits      
+      jy = (fSeed&kMASK24);  // Set lower 8 bits to zero to assure exact float
       if (jy) {
          array[i] = Float_t(kCONS*jy);
          i++;
