@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.49 2004/08/05 17:20:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.50 2004/09/13 10:03:09 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1426,7 +1426,16 @@ TH1 *TH3::Project3D(Option_t *option) const
    // The projection is made for the selected bins only.
    // To select a bin range along an axis, use TAxis::SetRange, eg
    //    h3.GetYaxis()->SetRange(23,56);
-
+   //
+   // NOTE: The generated histogram is named th3name + option
+   // eg if the TH3* h histogram is named "myhist", then
+   // h->Project3D("xy"); produces a TH2D histogram named "myhist_xy"
+   // if a histogram of the same type already exists, it is overwritten.
+   // The following sequence
+   //    h->Project3D("xy");
+   //    h->Project3D("xy2");
+   //  will generate two TH2D histograms named "myhist_xy" and "myhist_xy2" 
+   
   TString opt = option; opt.ToLower();
   Int_t ixmin = fXaxis.GetFirst();
   Int_t ixmax = fXaxis.GetLast();
