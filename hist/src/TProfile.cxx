@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.17 2001/12/10 21:14:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.18 2002/01/02 21:45:08 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TProfile.h"
 #include "TMath.h"
+#include "THLimitsFinder.h"
 #include <fstream.h>
 
 ClassImp(TProfile)
@@ -324,6 +325,60 @@ void TProfile::Add(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2)
    }
 }
 
+
+//______________________________________________________________________________
+Int_t TProfile::BufferEmpty(Bool_t deleteBuffer)
+{
+// Fill histogram with all entries in the buffer.
+// The buffer is deleted if deleteBuffer is true.
+
+   // do we need to compute the bin size?
+   Int_t nbentries = (Int_t)fBuffer[0];
+   if (!nbentries) return 0;
+   if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
+      //find min, max of entries in buffer
+     Double_t xmin = fBuffer[2];
+     Double_t xmax = xmin;
+     for (Int_t i=1;i<nbentries;i++) {
+         Double_t x = fBuffer[3*i+2];
+         if (x < xmin) xmin = x;
+         if (x > xmax) xmax = x;
+      }
+      THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
+   }
+   
+   Double_t *buffer = fBuffer;  fBuffer = 0;
+   
+   for (Int_t i=0;i<nbentries;i++) {
+      Fill(buffer[3*i+2],buffer[3*i+3],buffer[3*i+1]);
+   }
+   
+   if (deleteBuffer) { delete buffer;    fBufferSize = 0;}
+   else              { fBuffer = buffer; fBuffer[0] = 0;}
+   return nbentries;
+}
+
+//______________________________________________________________________________
+Int_t TProfile::BufferFill(Axis_t x, Axis_t y, Stat_t w)
+{
+// accumulate arguments in buffer. When buffer is full, empty the buffer
+// fBuffer[0] = number of entries in buffer
+// fBuffer[1] = w of first entry
+// fBuffer[2] = x of first entry
+// fBuffer[3] = y of first entry
+
+   Int_t nbentries = (Int_t)fBuffer[0];
+   if (3*nbentries+3 >= fBufferSize) {
+      BufferEmpty(kTRUE);
+      return Fill(x,y,w);
+   }
+   fBuffer[3*nbentries+1] = w;
+   fBuffer[3*nbentries+2] = x;
+   fBuffer[3*nbentries+3] = y;
+   fBuffer[0] += 1;
+   return -2;
+}
+
 //______________________________________________________________________________
 void TProfile::Copy(TObject &obj)
 {
@@ -506,8 +561,10 @@ Int_t TProfile::Fill(Axis_t x, Axis_t y)
 {
 //*-*-*-*-*-*-*-*-*-*-*Fill a Profile histogram (no weights)*-*-*-*-*-*-*-*
 //*-*                  =====================================
-   Int_t bin;
 
+   if (fBuffer) return BufferFill(x,y,1);
+   
+   Int_t bin;
    if (fYmin != fYmax) {
       if (y <fYmin || y> fYmax) return -1;
    }
@@ -531,7 +588,6 @@ Int_t TProfile::Fill(const char *namex, Axis_t y)
 // Fill a Profile histogram (no weights)
 //
    Int_t bin;
-
    if (fYmin != fYmax) {
       if (y <fYmin || y> fYmax) return -1;
    }
@@ -555,8 +611,10 @@ Int_t TProfile::Fill(Axis_t x, Axis_t y, Stat_t w)
 {
 //*-*-*-*-*-*-*-*-*-*-*Fill a Profile histogram with weights*-*-*-*-*-*-*-*
 //*-*                  =====================================
-   Int_t bin;
 
+   if (fBuffer) return BufferFill(x,y,w);
+   
+   Int_t bin;
    if (fYmin != fYmax) {
       if (y <fYmin || y> fYmax) return -1;
    }
@@ -632,6 +690,8 @@ Stat_t TProfile::GetBinContent(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return bin content of a Profile histogram*-*-*-*-*-*-*-*-*-*
 //*-*          =========================================
+   
+   if (fBuffer) ((TProfile*)this)->BufferEmpty();
 
    if (bin < 0 || bin >= fNcells) return 0;
    if (fBinEntries.fArray[bin] == 0) return 0;
@@ -643,6 +703,8 @@ Stat_t TProfile::GetBinEntries(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return bin entries of a Profile histogram*-*-*-*-*-*-*-*-*-*
 //*-*          =========================================
+   
+   if (fBuffer) ((TProfile*)this)->BufferEmpty();
 
    if (bin < 0 || bin >= fNcells) return 0;
    return fBinEntries.fArray[bin];
@@ -653,6 +715,8 @@ Stat_t TProfile::GetBinError(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return bin error of a Profile histogram*-*-*-*-*-*-*-*-*-*
 //*-*          =======================================
+   
+   if (fBuffer) ((TProfile*)this)->BufferEmpty();
 
    if (bin < 0 || bin >= fNcells) return 0;
    Stat_t cont = fArray[bin];
@@ -1227,6 +1291,27 @@ void TProfile::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
    SetBinsLength(fNcells);
    fBinEntries.Set(fNcells);
    fSumw2.Set(fNcells);
+}
+
+
+//______________________________________________________________________________
+void TProfile::SetBuffer(Int_t buffersize, Option_t *option)
+{
+// set the buffer size in units of 8 bytes (double)
+   
+   if (fBuffer) {
+      BufferEmpty();
+      delete [] fBuffer;
+      fBuffer = 0;
+   }
+   if (buffersize <= 0) {
+      fBufferSize = 0;
+      return;
+   }
+   if (buffersize < 100) buffersize = 100;
+   fBufferSize = 1 + 3*buffersize;
+   fBuffer = new Double_t[fBufferSize];
+   memset(fBuffer,0,8*fBufferSize);
 }
 
 //______________________________________________________________________________

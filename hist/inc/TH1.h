@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.26 2002/01/02 21:43:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.27 2002/01/03 18:24:24 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -82,18 +82,23 @@ protected:
     TArrayD       fSumw2;           //Array of sum of squares of weights
     TString       fOption;          //histogram options
     TList        *fFunctions;       //->Pointer to list of functions (fits and user)
+    Int_t         fBufferSize;      //fBuffer size
+    Double_t     *fBuffer;          //[fBufferSize] entry buffer
     TDirectory   *fDirectory;       //!Pointer to directory holding this histogram
     Int_t         fDimension;       //!Histogram dimension (1, 2 or 3 dim)
     Double_t     *fIntegral;        //!Integral of bins used by GetRandom
     TVirtualHistPainter *fPainter;  //!pointer to histogram painter
+    static Int_t  fgBufferSize;     //!default buffer size for automatic histograms
     static Bool_t fgAddDirectory;   //!flag to add histograms to the directory
+    
 private:
     Int_t   AxisChoice(Option_t *axis) const;
     void    Build();
     Int_t   FitOptionsMake(Option_t *option);
 
 protected:
-    virtual void    Copy(TObject &hnew);
+    virtual void     Copy(TObject &hnew);
+    virtual Int_t    BufferFill(Axis_t x, Stat_t w);
 
 public:
     // TH1 status bits
@@ -126,6 +131,7 @@ public:
     virtual void     Draw(Option_t *option="");
     virtual TH1     *DrawCopy(Option_t *option="");
     virtual void     DrawPanel(); // *MENU*
+    virtual Int_t    BufferEmpty(Bool_t deleteBuffer=kFALSE);
     virtual void     Eval(TF1 *f1, Option_t *option="");
     virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
     virtual Int_t    Fill(Axis_t x);
@@ -139,6 +145,10 @@ public:
     virtual void     Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
     virtual void     Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0);
     virtual void     FitPanel(); // *MENU*
+    Int_t            GetBufferLength() const {return (Int_t)fBuffer[0];}
+    Int_t            GetBufferSize  () const {return fBufferSize;}
+    const   Double_t *GetBuffer() const {return fBuffer;}
+    static  Int_t    GetDefaultBufferSize();
     virtual Double_t *GetIntegral() {return fIntegral;}
 
     TList           *GetListOfFunctions() const { return fFunctions; }
@@ -171,7 +181,7 @@ public:
     virtual Stat_t   GetCellError(Int_t binx, Int_t biny) const;
     virtual void     GetCenter(Axis_t *center) {fXaxis.GetCenter(center);}
     TDirectory      *GetDirectory() const {return fDirectory;}
-    virtual Stat_t   GetEntries() const {return fEntries;}
+    virtual Stat_t   GetEntries() const;
     virtual TF1     *GetFunction(const char *name) const;
     virtual Int_t    GetDimension() const { return fDimension; }
     virtual void     GetLowEdge(Axis_t *edge) {fXaxis.GetLowEdge(edge);}
@@ -236,11 +246,13 @@ public:
     virtual void     SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axis_t ymax,
                              Int_t nz, Axis_t zmin, Axis_t zmax);
     virtual void     SetBinsLength(Int_t) {;} //refefined in derived classes
+    virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
     virtual void     SetCellContent(Int_t binx, Int_t biny, Stat_t content);
     virtual void     SetCellError(Int_t binx, Int_t biny, Stat_t content);
     virtual void     SetContent(const Stat_t *content);
     virtual void     SetContour(Int_t nlevels, const Double_t *levels=0);
     virtual void     SetContourLevel(Int_t level, Double_t value);
+    static  void     SetDefaultBufferSize(Int_t buffersize=1000);
     virtual void     SetDirectory(TDirectory *dir);
     virtual void     SetEntries(Stat_t n) {fEntries = n;};
     virtual void     SetError(const Stat_t *error);
@@ -266,11 +278,10 @@ public:
     virtual void     Smooth(Int_t ntimes=1); // *MENU*
     static  void     SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes=1);
     static Double_t  SmoothMedian(Int_t n, Double_t *a);
-
     virtual void     Sumw2();
     void             UseCurrentStyle();
 
-    ClassDef(TH1,3)  //1-Dim histogram base class
+    ClassDef(TH1,4)  //1-Dim histogram base class
 };
 
 //________________________________________________________________________

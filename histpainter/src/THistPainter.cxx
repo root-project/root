@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.60 2002/01/07 18:11:00 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.61 2002/01/10 07:26:42 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1210,6 +1210,8 @@ void THistPainter::Paint(Option_t *option)
 //
 //
 //--------------------------------------------------------------------
+   
+   if (fH->GetBuffer()) fH->BufferEmpty();
    
    gPad->SetVertical(kTRUE);
    

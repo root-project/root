@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.13 2001/08/08 07:20:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.14 2002/01/02 21:44:10 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -36,6 +36,9 @@ protected:
    Stat_t     fTsumwy;          //Total Sum of weight*Y
    Stat_t     fTsumwy2;         //Total Sum of weight*Y*Y
    Stat_t     fTsumwxy;         //Total Sum of weight*X*Y
+   
+   virtual Int_t    BufferFill(Axis_t x, Stat_t w) {return -2;} //may not use
+   virtual Int_t    BufferFill(Axis_t x, Axis_t y, Stat_t w);
 
 public:
    TH2();
@@ -50,6 +53,7 @@ public:
    TH2(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins
                                          ,Int_t nbinsy,const Float_t  *ybins);
    virtual ~TH2();
+   virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
    virtual void    Copy(TObject &hnew);
            Int_t   Fill(Axis_t) {return -1;} //MayNotUse
            Int_t   Fill(const char*, Stat_t) {return -1;} //MayNotUse

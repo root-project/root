@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.6 2001/02/21 14:57:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.7 2002/01/02 21:45:28 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TProfile2D.h"
 #include "TMath.h"
+#include "THLimitsFinder.h"
 
 ClassImp(TProfile2D)
 
@@ -302,6 +303,65 @@ void TProfile2D::Add(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2)
    }
 }
 
+
+//______________________________________________________________________________
+Int_t TProfile2D::BufferEmpty(Bool_t deleteBuffer)
+{
+// Fill histogram with all entries in the buffer.
+// The buffer is deleted if deleteBuffer is true.
+
+   // do we need to compute the bin size?
+   Int_t nbentries = (Int_t)fBuffer[0];
+   if (!nbentries) return 0;
+   if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
+      //find min, max of entries in buffer
+     Double_t xmin = fBuffer[2];
+     Double_t xmax = xmin;
+     Double_t ymin = fBuffer[3];
+     Double_t ymax = ymin;
+    for (Int_t i=1;i<nbentries;i++) {
+         Double_t x = fBuffer[4*i+2];
+         if (x < xmin) xmin = x;
+         if (x > xmax) xmax = x;
+         Double_t y = fBuffer[4*i+3];
+         if (y < ymin) ymin = y;
+         if (y > ymax) ymax = y;
+     }
+      THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
+   }
+   
+   Double_t *buffer = fBuffer; fBuffer = 0;
+   
+   for (Int_t i=0;i<nbentries;i++) {
+      Fill(buffer[4*i+2],buffer[4*i+3],buffer[4*i+4],buffer[4*i+1]);
+   }
+   
+   if (deleteBuffer) { delete buffer;    fBufferSize = 0;}
+   else              { fBuffer = buffer; fBuffer[0] = 0;}
+   return nbentries;
+}
+
+//______________________________________________________________________________
+Int_t TProfile2D::BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
+{
+// accumulate arguments in buffer. When buffer is full, empty the buffer
+// fBuffer[0] = number of entries in buffer
+// fBuffer[1] = w of first entry
+// fBuffer[2] = x of first entry
+
+   Int_t nbentries = (Int_t)fBuffer[0];
+   if (nbentries >= fBufferSize) {
+      BufferEmpty(kTRUE);
+      return Fill(x,y,z,w);
+   }
+   fBuffer[4*nbentries+1] = w;
+   fBuffer[4*nbentries+2] = x;
+   fBuffer[4*nbentries+3] = y;
+   fBuffer[4*nbentries+4] = z;
+   fBuffer[0] += 1;
+   return -2;
+}
+
 //______________________________________________________________________________
 void TProfile2D::Copy(TObject &obj)
 {
@@ -500,6 +560,9 @@ Int_t TProfile2D::Fill(Axis_t x, Axis_t y, Axis_t z)
 {
 //*-*-*-*-*-*-*-*-*-*-*Fill a Profile2D histogram (no weights)*-*-*-*-*-*-*-*
 //*-*                  =======================================
+
+   if (fBuffer) return BufferFill(x,y,z,1);
+   
    Int_t bin,binx,biny;
 
    if (fZmin != fZmax) {
@@ -624,6 +687,9 @@ Int_t TProfile2D::Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
 {
 //*-*-*-*-*-*-*-*-*-*-*Fill a Profile2D histogram with weights*-*-*-*-*-*-*-*
 //*-*                  =======================================
+
+   if (fBuffer) return BufferFill(x,y,z,w);
+   
    Int_t bin,binx,biny;
 
    if (fZmin != fZmax) {
@@ -656,6 +722,8 @@ Stat_t TProfile2D::GetBinContent(Int_t bin) const
 //*-*-*-*-*-*-*Return bin content of a Profile2D histogram*-*-*-*-*-*-*-*-*
 //*-*          ===========================================
 
+   if (fBuffer) ((TProfile2D*)this)->BufferEmpty();
+   
    if (bin < 0 || bin >= fNcells) return 0;
    if (fBinEntries.fArray[bin] == 0) return 0;
    return fArray[bin]/fBinEntries.fArray[bin];
@@ -667,6 +735,8 @@ Stat_t TProfile2D::GetBinEntries(Int_t bin) const
 //*-*-*-*-*-*-*Return bin entries of a Profile2D histogram*-*-*-*-*-*-*-*-*
 //*-*          ===========================================
 
+   if (fBuffer) ((TProfile2D*)this)->BufferEmpty();
+   
    if (bin < 0 || bin >= fNcells) return 0;
    return fBinEntries.fArray[bin];
 }
@@ -677,6 +747,8 @@ Stat_t TProfile2D::GetBinError(Int_t bin) const
 //*-*-*-*-*-*-*Return bin error of a Profile2D histogram*-*-*-*-*-*-*-*-*
 //*-*          =========================================
 
+   if (fBuffer) ((TProfile2D*)this)->BufferEmpty();
+   
    if (bin < 0 || bin >= fNcells) return 0;
    Stat_t cont = fArray[bin];
    Stat_t sum  = fBinEntries.fArray[bin];
@@ -1137,6 +1209,27 @@ void TProfile2D::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Doubl
    fNcells = (nx+2)*(ny+2);
    fBinEntries.Set(fNcells);
    fSumw2.Set(fNcells);
+}
+
+
+//______________________________________________________________________________
+void TProfile2D::SetBuffer(Int_t buffersize, Option_t *option)
+{
+// set the buffer size in units of 8 bytes (double)
+   
+   if (fBuffer) {
+      BufferEmpty();
+      delete [] fBuffer;
+      fBuffer = 0;
+   }
+   if (buffersize <= 0) {
+      fBufferSize = 0;
+      return;
+   }
+   if (buffersize < 100) buffersize = 100;
+   fBufferSize = 1 + 4*buffersize;
+   fBuffer = new Double_t[fBufferSize];
+   memset(fBuffer,0,8*fBufferSize);
 }
 
 //______________________________________________________________________________

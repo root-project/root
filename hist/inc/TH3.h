@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.13 2001/08/08 07:20:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.14 2002/01/02 21:44:35 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -32,6 +32,12 @@
 
 class TH3 : public TH1, public TAtt3D {
 
+protected:
+   
+   virtual Int_t    BufferFill(Axis_t x, Stat_t w) {return -2;} //may not use
+   virtual Int_t    BufferFill(Axis_t x, Axis_t y, Stat_t w) {return -2;} //may not use
+   virtual Int_t    BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w);
+   
 public:
    TH3();
    TH3(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
@@ -44,6 +50,7 @@ public:
                                          ,Int_t nbinsy,const Double_t *ybins
                                          ,Int_t nbinsz,const Double_t *zbins);
    virtual ~TH3();
+   virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
    virtual void    Copy(TObject &hnew);
            Int_t   Fill(Axis_t) {return -1;}        //MayNotUse
            Int_t   Fill(Axis_t,Stat_t) {return -1;} //MayNotUse

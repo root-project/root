@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.20 2001/10/10 20:57:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.21 2002/01/02 21:44:10 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #include "TRandom.h"
 #include "TMatrix.h"
 #include "TMatrixD.h"
+#include "THLimitsFinder.h"
 
 ClassImp(TH2)
 
@@ -112,6 +113,63 @@ TH2::~TH2()
 }
 
 //______________________________________________________________________________
+Int_t TH2::BufferEmpty(Bool_t deleteBuffer)
+{
+// Fill histogram with all entries in the buffer.
+// The buffer is deleted if deleteBuffer is true.
+
+   // do we need to compute the bin size?
+   Int_t nbentries = (Int_t)fBuffer[0];
+   if (!nbentries) return 0;
+   if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
+      //find min, max of entries in buffer
+      Double_t xmin = fBuffer[2];
+      Double_t xmax = xmin;
+      Double_t ymin = fBuffer[3];
+      Double_t ymax = ymin;
+      for (Int_t i=1;i<nbentries;i++) {
+         Double_t x = fBuffer[3*i+2];
+         if (x < xmin) xmin = x;
+         if (x > xmax) xmax = x;
+         Double_t y = fBuffer[3*i+3];
+         if (y < ymin) ymin = y;
+         if (y > ymax) ymax = y;
+      }
+      THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
+   }
+   Double_t *buffer = fBuffer; fBuffer = 0;
+   
+   for (Int_t i=0;i<nbentries;i++) {
+      Fill(buffer[3*i+2],buffer[3*i+3],buffer[3*i+1]);
+   }
+   
+   if (deleteBuffer) { delete buffer;    fBufferSize = 0;}
+   else              { fBuffer = buffer; fBuffer[0] = 0;}
+   return nbentries;
+}
+ 
+//______________________________________________________________________________
+Int_t TH2::BufferFill(Axis_t x, Axis_t y, Stat_t w)
+{
+// accumulate arguments in buffer. When buffer is full, empty the buffer
+// fBuffer[0] = number of entries in buffer
+// fBuffer[1] = w of first entry
+// fBuffer[2] = x of first entry
+// fBuffer[3] = y of first entry
+
+   Int_t nbentries = (Int_t)fBuffer[0];
+   if (3*nbentries+3 >= fBufferSize) {
+      BufferEmpty(kTRUE);
+      return Fill(x,y,w);
+   }
+   fBuffer[3*nbentries+1] = w;
+   fBuffer[3*nbentries+2] = x;
+   fBuffer[3*nbentries+3] = y;
+   fBuffer[0] += 1;
+   return -3;
+}
+
+//______________________________________________________________________________
 void TH2::Copy(TObject &obj)
 {
    TH1::Copy(obj);
@@ -137,6 +195,9 @@ Int_t TH2::Fill(Axis_t x,Axis_t y)
 //*-* by 1in the cell corresponding to x,y.
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   if (fBuffer) BufferFill(x,y,1);
+   
    Int_t binx, biny, bin;
    fEntries++;
    binx = fXaxis.FindBin(x);
@@ -172,6 +233,8 @@ Int_t TH2::Fill(Axis_t x, Axis_t y, Stat_t w)
 //*-* by w^2 in the cell corresponding to x,y.
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   if (fBuffer) BufferFill(x,y,w);
 
    Int_t binx, biny, bin;
    fEntries++;
@@ -719,6 +782,8 @@ void TH2::GetStats(Stat_t *stats) const
    // stats[5] = sumwy2
    // stats[6] = sumwxy
 
+   if (fBuffer) ((TH2*)this)->BufferEmpty();
+   
    Int_t bin, binx, biny;
    Stat_t w;
    Float_t x,y;
@@ -770,6 +835,8 @@ Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_
 // By default the integral is computed as the sum of bin contents in the range.
 // if option "width" is specified, the integral is the sum of
 // the bin contents multiplied by the bin width in x and in y.
+
+   if (fBuffer) BufferEmpty();
    
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
@@ -1347,6 +1414,7 @@ TH1 *TH2C::DrawCopy(Option_t *option)
 //______________________________________________________________________________
 Stat_t TH2C::GetBinContent(Int_t bin) const
 {
+   if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    return Stat_t (fArray[bin]);
@@ -1554,6 +1622,7 @@ TH1 *TH2S::DrawCopy(Option_t *option)
 //______________________________________________________________________________
 Stat_t TH2S::GetBinContent(Int_t bin) const
 {
+   if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    return Stat_t (fArray[bin]);
@@ -1757,6 +1826,7 @@ TH1 *TH2F::DrawCopy(Option_t *option)
 //______________________________________________________________________________
 Stat_t TH2F::GetBinContent(Int_t bin) const
 {
+   if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    return Stat_t (fArray[bin]);
@@ -1968,6 +2038,7 @@ TH1 *TH2D::DrawCopy(Option_t *option)
 //______________________________________________________________________________
 Stat_t TH2D::GetBinContent(Int_t bin) const
 {
+   if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    return Stat_t (fArray[bin]);

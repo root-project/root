@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.78 2002/01/12 08:44:28 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.79 2002/01/12 08:57:22 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 #include "TMath.h"
 #include "TRandom.h"
 #include "TVirtualFitter.h"
+#include "THLimitsFinder.h"
 #include "TProfile.h"
 #include "TStyle.h"
 #include "TVector.h"
@@ -186,6 +187,15 @@
 //     This operation is automatic when using TTree::Draw.
 //     Once bin labels have been created, they become persistent if the histogram
 //     is written to a file or when generating the C++ code via SavePrimitive.
+// 
+//     Histograms with automatic bins
+//     ==============================
+//     When an histogram is created with an axis lower limit greater or equal
+//     to its upper limit, the SetBuffer is automatically called with an
+//     argument fBufferSize equal to fgBufferSize (default value=1000).
+//     fgBufferSize may be reset via the static function TH1::SetDefaultBufferSize.
+//     The axis limits will be automatically computed when the buffer will
+//     be full or when the function BufferEmpty is called.
 // 
 //     Filling histograms
 //     ==================
@@ -403,7 +413,6 @@
 //End_Html
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-Bool_t TH1::fgAddDirectory = kTRUE;
 
 Foption_t Foption;
 
@@ -414,6 +423,8 @@ TAxis *zaxis=0;
 TF1 *gF1=0;
 
 TVirtualFitter *hFitter=0;
+Int_t  TH1::fgBufferSize   = 1000;
+Bool_t TH1::fgAddDirectory = kTRUE;
 
 static Int_t xfirst,xlast,yfirst,ylast,zfirst,zlast;
 static Axis_t xmin, xmax, ymin, ymax, zmin, zmax, binwidx, binwidy, binwidz;
@@ -426,7 +437,6 @@ extern void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
 extern void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a);
 extern void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail);
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
-
 
 ClassImp(TH1)
 
@@ -445,6 +455,8 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
    fTsumw         = fTsumw2=fTsumwx=fTsumwx2=0;
    fMaximum       = -1111;
    fMinimum       = -1111;
+   fBufferSize    = 0;
+   fBuffer        = 0;
    fXaxis.SetName("xaxis");
    fYaxis.SetName("yaxis");
    fZaxis.SetName("zaxis");
@@ -461,6 +473,7 @@ TH1::~TH1()
 
    if (!TestBit(kNotDeleted)) return;
    if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
+   if (fBuffer)   {delete [] fBuffer;   fBuffer   = 0;}
    if (fFunctions) { fFunctions->Delete(); delete fFunctions; }
    if (fDirectory) {
       if (!fDirectory->TestBit(TDirectory::kCloseDirectory))
@@ -572,6 +585,8 @@ void TH1::Build()
    fTsumw         = fTsumw2=fTsumwx=fTsumwx2=0;
    fMaximum       = -1111;
    fMinimum       = -1111;
+   fBufferSize    = 0;
+   fBuffer        = 0;
    fXaxis.SetName("xaxis");
    fYaxis.SetName("yaxis");
    fZaxis.SetName("zaxis");
@@ -830,6 +845,54 @@ void TH1::AddDirectory(Bool_t add)
 //     TH1::AddDirectory
 
    fgAddDirectory = add;
+}
+
+
+//______________________________________________________________________________
+Int_t TH1::BufferEmpty(Bool_t deleteBuffer)
+{
+// Fill histogram with all entries in the buffer.
+// The buffer is deleted if deleteBuffer is true.
+   
+   // do we need to compute the bin size?
+   Int_t nbentries = (Int_t)fBuffer[0];
+   if (!nbentries) return 0;
+   if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
+      //find min, max of entries in buffer
+      Double_t xmin = fBuffer[2];
+      Double_t xmax = xmin;
+      for (Int_t i=1;i<nbentries;i++) {
+         Double_t x = fBuffer[2*i+2];
+         if (x < xmin) xmin = x;
+         if (x > xmax) xmax = x;
+      }
+      THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
+   }
+   
+   FillN(nbentries,&fBuffer[2],&fBuffer[1],2);
+
+   if (deleteBuffer) { delete fBuffer; fBuffer = 0; fBufferSize = 0;}
+   else fBuffer[0] = 0;
+   return nbentries;
+}
+
+//______________________________________________________________________________
+Int_t TH1::BufferFill(Axis_t x, Stat_t w)
+{
+// accumulate arguments in buffer. When buffer is full, empty the buffer
+// fBuffer[0] = number of entries in buffer
+// fBuffer[1] = w of first entry
+// fBuffer[2] = x of first entry
+
+   Int_t nbentries = (Int_t)fBuffer[0];
+   if (2*nbentries+2 >= fBufferSize) {
+      BufferEmpty(kTRUE);
+      return Fill(x,w);
+   }
+   fBuffer[2*nbentries+1] = w;
+   fBuffer[2*nbentries+2] = x;
+   fBuffer[0] += 1;
+   return -2;
 }
 
 //______________________________________________________________________________
@@ -1324,6 +1387,8 @@ Int_t TH1::Fill(Axis_t x)
 //   
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
+   if (fBuffer) return BufferFill(x,1);
+   
    Int_t bin;
    fEntries++;
    bin =fXaxis.FindBin(x);
@@ -1335,7 +1400,7 @@ Int_t TH1::Fill(Axis_t x)
    fTsumwx  += x;
    fTsumwx2 += x*x;
    return bin;
-}
+} 
 
 //______________________________________________________________________________
 Int_t TH1::Fill(Axis_t x, Stat_t w)
@@ -1351,6 +1416,8 @@ Int_t TH1::Fill(Axis_t x, Stat_t w)
 //    by w^2 in the bin corresponding to x.
 //   
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   if (fBuffer) return BufferFill(x,w);
 
    Int_t bin;
    fEntries++;
@@ -1902,6 +1969,26 @@ void TH1::FitPanel()
 
    if (fPainter) fPainter->FitPanel();
 }
+
+//______________________________________________________________________________
+Int_t TH1::GetDefaultBufferSize()
+{
+// return the default buffer size for automatic histograms
+// the parameter fgBufferSize may be changed via SetDefaultBufferSize
+   
+   return fgBufferSize;
+}   
+
+
+//______________________________________________________________________________
+Double_t TH1::GetEntries() const
+{
+// return the current number of entries
+
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+   
+   return fEntries;
+}   
 
 //______________________________________________________________________________
 char *TH1::GetObjectInfo(Int_t px, Int_t py) const
@@ -3373,6 +3460,20 @@ void TH1::Scale(Double_t c1)
       levels[i] *= c1;
    }
 }
+
+
+//______________________________________________________________________________
+void TH1::SetDefaultBufferSize(Int_t buffersize)
+{
+// static function to set the default buffer size for automatic histograms.
+// When an histogram is created with one of its axis lower limit greater
+// or equal to its upper limit, the function SetBuffer is automatically
+// called with the default buffer size.
+   
+   if (buffersize < 0) buffersize = 0;
+   fgBufferSize = buffersize;
+}
+   
 // -------------------------------------------------------------------------
 void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
 {
@@ -3751,6 +3852,7 @@ void TH1::Reset(Option_t *option)
    if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
 
    if (opt.Contains("ICE")) return;
+   if (fBuffer) BufferEmpty();
    fTsumw       = 0;
    fTsumw2      = 0;
    fTsumwx      = 0;
@@ -3930,6 +4032,8 @@ void TH1::GetStats(Stat_t *stats) const
    // If a sub-range is specified, the function recomputes these quantities
    // from the bin contents in the current axis range.
 
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+   
    // Loop on bins (possibly including underflows/overflows)
    Int_t bin, binx;
    Stat_t w;
@@ -4225,6 +4329,26 @@ Double_t TH1::GetContourLevel(Int_t level) const
   return zlevel;
 }
 
+
+//______________________________________________________________________________
+void TH1::SetBuffer(Int_t buffersize, Option_t *option)
+{
+// set the maximum number of entries to be kept in the buffer
+   
+   if (fBuffer) {
+      BufferEmpty();
+      delete [] fBuffer;
+      fBuffer = 0;
+   }
+   if (buffersize <= 0) {
+      fBufferSize = 0;
+      return;
+   }
+   if (buffersize < 100) buffersize = 100;
+   fBufferSize = 1 + buffersize*(fDimension+1);
+   fBuffer = new Double_t[fBufferSize];
+   memset(fBuffer,0,8*fBufferSize);
+}
 
 //______________________________________________________________________________
 void TH1::SetContour(Int_t  nlevels, const Double_t *levels)
@@ -4640,6 +4764,7 @@ Stat_t TH1::GetBinError(Int_t bin) const
 
   if (bin < 0) bin = 0;
   if (bin >= fNcells) bin = fNcells-1;
+  if (fBuffer) ((TH1*)this)->BufferEmpty();
   if (fSumw2.fN) return TMath::Sqrt(fSumw2.fArray[bin]);
   Stat_t error2 = TMath::Abs(GetBinContent(bin));
   return TMath::Sqrt(error2);
@@ -4779,6 +4904,8 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 //
    fDimension = 1;
    TArrayC::Set(fNcells);
+   
+   if (xlow >= xup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -4864,6 +4991,7 @@ TH1 *TH1C::DrawCopy(Option_t *option)
 //______________________________________________________________________________
 Stat_t TH1C::GetBinContent(Int_t bin) const
 {
+   if (fBuffer) ((TH1C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (!fArray) return 0;
@@ -4970,6 +5098,8 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 //
    fDimension = 1;
    TArrayS::Set(fNcells);
+   
+   if (xlow >= xup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -5054,6 +5184,7 @@ TH1 *TH1S::DrawCopy(Option_t *option)
 //______________________________________________________________________________
 Stat_t TH1S::GetBinContent(Int_t bin) const
 {
+   if (fBuffer) ((TH1S*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (!fArray) return 0;
@@ -5160,6 +5291,8 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 //
    fDimension = 1;
    TArrayF::Set(fNcells);
+   
+   if (xlow >= xup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -5237,6 +5370,7 @@ TH1 *TH1F::DrawCopy(Option_t *option)
 //______________________________________________________________________________
 Stat_t TH1F::GetBinContent(Int_t bin) const
 {
+   if (fBuffer) ((TH1F*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (!fArray) return 0;
@@ -5344,6 +5478,8 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 //
    fDimension = 1;
    TArrayD::Set(fNcells);
+   
+   if (xlow >= xup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -5421,6 +5557,7 @@ TH1 *TH1D::DrawCopy(Option_t *option)
 //______________________________________________________________________________
 Stat_t TH1D::GetBinContent(Int_t bin) const
 {
+   if (fBuffer) ((TH1D*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (!fArray) return 0;
