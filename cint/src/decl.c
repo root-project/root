@@ -970,7 +970,7 @@ int tagnum,typenum;      /* overrides global variables */
 #else
   int  store_debug,store_step;
 #endif
-  char temp1[G__ONELINE];
+  char temp1[G__LONGLINE];
 
   char new_name[G__LONGLINE],temp[G__LONGLINE];
   int staticclassobject=0;
