@@ -356,10 +356,9 @@ Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
 
    Double_t thevalue;
 
-   Int_t IT, ntris_tried, tri, P, N, M;
+   Int_t IT, ntris_tried, P, N, M;
    Int_t I,J,K,L,Z,F,D,O1,O2,A,B,T1,T2,T3;
    Int_t ndegen=0,degen=0,fdegen=0,o1degen=0,o2degen=0;
-   Int_t thistri;
    Double_t vxN,vyN;
    Double_t d1,d2,d3,c1,c2,dko1,dko2,dfo1;
    Double_t dfo2,sin_sum,cfo1k,co2o1k,co2o1f;
@@ -446,8 +445,6 @@ Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
             // inside the circle that is defined by its vertices?)
 
             // test the triangle for Delaunay'ness
-
-            thistri = tri;
 
             // loop over all other points testing each to see if it's 
             // inside the triangle's circle
@@ -826,7 +823,7 @@ void TGraph2D::FindAllTriangles()
    // are too far beyond or too close to the non-shared sides. Fiddling with the 
    // size of the `alittlebit' parameter may help.
 
-   Double_t xcntr,ycntr,z,xc,yc,xm,ym,xx,yy;
+   Double_t xcntr,ycntr,xm,ym,xx,yy;
    Double_t sx,sy,nx,ny,mx,my,mdotn,nn,A;
    Int_t T1,T2,Pa,Na,Ma,Pb,Nb,Mb,P1=0,P2=0,M,N,P3=0;
    Bool_t s[3];
@@ -843,7 +840,7 @@ void TGraph2D::FindAllTriangles()
    xcntr = xcntr/fNhull;
    ycntr = ycntr/fNhull;
    // and calculate it's triangle
-   z = ComputeZ(xcntr,ycntr);
+   ComputeZ(xcntr,ycntr);
 
    // loop over all Delaunay triangles (including those constantly being 
    // produced within the loop) and check to see if their 3 sides also 
@@ -890,8 +887,6 @@ void TGraph2D::FindAllTriangles()
       // For each side, take a point a little bit beyond it and calculate 
       // the Delaunay triangle for that point, this should be the triangle 
       // which shares the side.
-      xc = (fXN[Pa]+fXN[Na]+fXN[Ma])/3.;
-      yc = (fYN[Pa]+fYN[Na]+fYN[Ma])/3.;
       for (M=1; M<=3; M++) {
          if (!s[M-1]) {
             // get the two points that make up this side
@@ -938,7 +933,7 @@ void TGraph2D::FindAllTriangles()
             xx = xm+nx*A;
             yy = ym+ny*A;
             // try and find a new Delaunay triangle for this point
-            z = ComputeZ(xx,yy);
+            ComputeZ(xx,yy);
             // this side of T1 should now, hopefully, if it's not part of the 
             // hull, be shared with a new Delaunay triangle just calculated by ComputeZ
          }
@@ -1356,7 +1351,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //  Root > st->SetX2NDC(newx2); //new x end position
    
    Int_t fitResult = 0;
-   Double_t xmin, xmax, ymin, ymax;
+   Double_t xmin=0, xmax=0;
    Int_t i, npar,nvpar,nparx;
    Double_t par, we, al, bl;
    Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
@@ -1392,11 +1387,6 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    if (opt.Contains("0")) fitOption.Nograph = 1;
    if (opt.Contains("+")) fitOption.Plus    = 1;
    if (opt.Contains("B")) fitOption.Bound   = 1;
-
-   xmin    = GetXmin();
-   xmax    = GetXmax();
-   ymin    = GetYmin();
-   ymax    = GetYmax();
 
 ///xmin    = fX[0];
 ///xmax    = fX[fNpoints-1];
