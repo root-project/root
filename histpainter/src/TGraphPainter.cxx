@@ -330,6 +330,8 @@ void TGraphPainter::Paint(Option_t *option)
    //   "TRI2" : the Delaunay triangles are painted with color levels.
    //   "P"    : Draw a marker at each vertex
    //   "P0"   : Draw a circle at each vertex. Each circle background is white.
+   //   "PCOL" : Draw a marker at each vertex. The color of each marker is 
+   //            defined according to its Z position. 
    //   "CONT" : Draw contours
 
    TString opt = option;
@@ -588,12 +590,15 @@ void TGraphPainter::PaintPolyMarker(Option_t *option)
 
    TString opt = option;
    opt.ToLower();
-   Bool_t markers0  = opt.Contains("p0");
+   Bool_t markers0 = opt.Contains("p0");
+   Bool_t colors   = opt.Contains("pcol");
+   Int_t  ncolors  = gStyle->GetNumberOfColors();
+   Int_t  IT, theColor;
 
    Double_t *xm = new Double_t[fNpoints]; 
    Double_t *ym = new Double_t[fNpoints];
    Int_t    npd = 0;
-   for (Int_t IT=0; IT<fNpoints; IT++) {
+   for (IT=0; IT<fNpoints; IT++) {
       if(fX[IT] < fXmin || fX[IT] > fXmax) continue;
       if(fY[IT] < fYmin || fY[IT] > fYmax) continue;
       npd++;
@@ -613,6 +618,13 @@ void TGraphPainter::PaintPolyMarker(Option_t *option)
    }
    if (markers0) {
       PaintPolyMarker0(npd,xm,ym);
+   } else if (colors) {
+      for (IT=0; IT<fNpoints; IT++) {
+         theColor = (Int_t)( ((fZ[IT]-fZmin)/(fZmax-fZmin))*(ncolors-1) );
+         fGraph2D->SetMarkerColor(gStyle->GetColorPalette(theColor));
+         fGraph2D->TAttMarker::Modify();
+         gPad->PaintPolyMarker(1,&xm[IT],&ym[IT]);
+      }
    } else {
       fGraph2D->SetMarkerStyle(fGraph2D->GetMarkerStyle());
       fGraph2D->SetMarkerSize(fGraph2D->GetMarkerSize());
