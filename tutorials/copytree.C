@@ -4,7 +4,7 @@
 // with   Event 1000 1 1 1
 
    gROOT->Reset();
-   gSystem->Load("$ROOTSYS/test/libEvent.so");
+   gSystem->Load("$ROOTSYS/test/libEvent");
 
    //Get old file, old tree and set top branch address
    TFile *oldfile = new TFile("$ROOTSYS/test/Event.root");

@@ -113,7 +113,7 @@ void tree4r()
   // check to see if the event class is in the dictionary
   // if it is not load the definition in libEvent.so
   if (!TClassTable::GetDict("Event")) {
-    gSystem->Load("$ROOTSYS/test/libEvent.so");
+    gSystem->Load("$ROOTSYS/test/libEvent");
   }    
    
   // read the tree generated with tree4w 
