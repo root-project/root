@@ -203,6 +203,12 @@ N: Christian Lacunza
 E: lacunza@cdfsg5.lbl.gov
 D: TTabCom [TAB] command line expansion class, #1 bug reporter
 
+N: Jiri Masik
+E: Jiri.Masik@fzu.cz
+D: Numerous contributions to the system
+D: has submitted many suggestions and ideas. Found and fixed many bugs
+D: pioneer on many fronts, installation, support
+
 N: Grzegorz Mazur
 E: mazur@mail.desy.de
 D: class TDCacheFile, interface to DESY's dCache system
