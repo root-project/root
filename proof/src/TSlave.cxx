@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.6 2000/12/13 15:13:53 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.7 2000/12/19 14:34:31 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -49,7 +49,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
    fInput    = 0;
 
    // Open connection to remote PROOF slave server.
-   fSocket = new TSocket(host, port);
+   fSocket = new TSocket(host, port, 65536);  // make tcpwindosize configurable
    if (fSocket->IsValid()) {
       // Remove socket from global TROOT socket list. Only the TProof object,
       // representing all slave sockets, will be added to this list. This will
@@ -161,9 +161,8 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
 
          fSocket->Send(mess);
 
+         // set some socket options
          fSocket->SetOption(kNoDelay, 1);
-         fSocket->SetOption(kSendBuffer, 65536);
-         fSocket->SetOption(kRecvBuffer, 65536);
       }
    } else
       SafeDelete(fSocket);
