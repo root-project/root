@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.47 2001/04/21 12:23:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.48 2001/05/08 14:01:25 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -389,10 +389,11 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
 {
 //*-*-*-*-*-*-*-*-*-*-*Histogram default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =============================
-   fDirectory = 0;
-   fFunctions = new TList;
-   fIntegral  = 0;
-   fPainter   = 0;
+   fDirectory     = 0;
+   fFunctions     = new TList;
+   fNcells        = 0;
+   fIntegral      = 0;
+   fPainter       = 0;
    fEntries       = 0;
    fNormFactor    = 0;
    fTsumw         = fTsumw2=fTsumwx=fTsumwx2=0;
@@ -4228,6 +4229,7 @@ Stat_t TH1C::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
    return Stat_t (fArray[bin]);
 }
 
@@ -4395,6 +4397,7 @@ Stat_t TH1S::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
    return Stat_t (fArray[bin]);
 }
 
@@ -4553,6 +4556,7 @@ Stat_t TH1F::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
    return Stat_t (fArray[bin]);
 }
 
@@ -4712,6 +4716,7 @@ Stat_t TH1D::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
    return Stat_t (fArray[bin]);
 }
 
