@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.151 2003/07/08 06:57:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.152 2003/07/08 07:26:30 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -818,6 +818,10 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    SetMinimum();
    SetMaximum();
 
+//    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
+//    would resize the axis limits!
+   ResetBit(kCanRebin);
+
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -1065,6 +1069,10 @@ void TH1::Divide(TF1 *f1, Double_t c1)
    SetMinimum();
    SetMaximum();
 
+//    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
+//    would resize the axis limits!
+   ResetBit(kCanRebin);
+
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -1145,6 +1153,10 @@ void TH1::Divide(const TH1 *h1)
 
 //   - Reset statistics
    fEntries = fTsumw = 0;
+
+//    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
+//    would resize the axis limits!
+   ResetBit(kCanRebin);
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -1243,6 +1255,10 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
    
    SetMinimum();
    SetMaximum();
+
+//    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
+//    would resize the axis limits!
+   ResetBit(kCanRebin);
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -3324,6 +3340,10 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
    SetMinimum();
    SetMaximum();
 
+//    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
+//    would resize the axis limits!
+   ResetBit(kCanRebin);
+
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
    Double_t cu,w;
@@ -3402,6 +3422,10 @@ void TH1::Multiply(const TH1 *h1)
    
    SetMinimum();
    SetMaximum();
+
+//    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
+//    would resize the axis limits!
+   ResetBit(kCanRebin);
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -3490,6 +3514,10 @@ void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
    SetMinimum();
    SetMaximum();
+
+//    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
+//    would resize the axis limits!
+   ResetBit(kCanRebin);
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
