@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.73 2003/11/04 14:34:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.74 2003/11/07 11:15:59 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -15,7 +15,6 @@
 #include "TF1.h"
 #include "TH1.h"
 #include "TVirtualPad.h"
-#include "TGraph.h"
 #include "TStyle.h"
 #include "TRandom.h"
 #include "Api.h"
@@ -1658,6 +1657,7 @@ Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_
    return 0;
 }
 
+#ifdef INTHEFUTURE
 //______________________________________________________________________________
 Double_t TF1::IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params)
 {
@@ -1665,6 +1665,7 @@ Double_t TF1::IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *pa
     if (!g) return 0;
     return IntegralFast(g->GetN(), g->GetX(), g->GetY(), a, b, params);
 }
+#endif
 
 //______________________________________________________________________________
 Double_t TF1::IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params)
@@ -2510,6 +2511,7 @@ Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *
 // some useful static utility functions to compute sampling points for IntegralFast
 //--------------------------------------------------------------------
 //______________________________________________________________________________
+#ifdef INTHEFUTURE
 void TF1::CalcGaussLegendreSamplingPoints(TGraph *g, Double_t eps)
 {
     //type safe interface (static method)
@@ -2534,6 +2536,7 @@ TGraph *TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t eps)
     CalcGaussLegendreSamplingPoints(g->GetN(), g->GetX(), g->GetY(), eps);
     return g;
 }
+#endif
 
 //______________________________________________________________________________
 void TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, Double_t eps)

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.39 2003/11/04 14:34:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.40 2003/11/07 11:15:59 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -42,7 +42,6 @@
 class TF1;
 class TH1;
 class TAxis;
-class TGraph;
 
 class TF1 : public TFormula, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -134,7 +133,7 @@ public:
    virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001);
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001);
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001);
-   virtual Double_t IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params=0);
+   //virtual Double_t IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params=0);
    virtual Double_t IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params=0);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsilon, Double_t &relerr);
    virtual Bool_t   IsInside(const Double_t *x) const;
@@ -172,8 +171,8 @@ public:
    virtual Double_t Variance(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001) {return CentralMoment(2,a,b,params,epsilon);}
 
    //some useful static utility functions to compute sampling points for Integral
-   static  void     CalcGaussLegendreSamplingPoints(TGraph *g, Double_t eps=3.0e-11);
-   static  TGraph  *CalcGaussLegendreSamplingPoints(Int_t num=21, Double_t eps=3.0e-11);
+   //static  void     CalcGaussLegendreSamplingPoints(TGraph *g, Double_t eps=3.0e-11);
+   //static  TGraph  *CalcGaussLegendreSamplingPoints(Int_t num=21, Double_t eps=3.0e-11);
    static  void     CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, Double_t eps=3.0e-11);
         
    ClassDef(TF1,7)  //The Parametric 1-D function
