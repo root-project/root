@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooNonCPEigenDecay.cc,v 1.3 2002/04/09 00:15:06 hoecker Exp $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.4 2002/04/10 01:19:36 hoecker Exp $
  * Authors:
  *   AH, Andreas Hoecker, Orsay, hoecker@slac.stanford.edu
  *   SL, Sandrine Laplace, Orsay, laplace@slac.stanford.edu
@@ -335,9 +335,11 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
 void RooNonCPEigenDecay::generateEvent( Int_t code )
 {
   // maximum probability density 
-  Double_t maxAcceptProb = (1 + fabs(_acp)) * fmax( 1 + sqrt(pow(_a_cos_m, 2) + pow(_a_sin_m, 2)), 
-						    1 + sqrt(pow(_a_cos_p, 2) + pow(_a_sin_p, 2)) );
-    
+  double a1 = 1 + sqrt(pow(_a_cos_m, 2) + pow(_a_sin_m, 2));
+  double a2 = 1 + sqrt(pow(_a_cos_p, 2) + pow(_a_sin_p, 2));
+ 
+  Double_t maxAcceptProb = (1 + fabs(_acp)) * (a1 > a2 ? a1 : a2);
+
   // Generate delta-t dependent
   while (kTRUE) {
 
