@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.38 2001/04/18 06:11:06 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.39 2001/04/18 10:21:42 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -241,6 +241,10 @@ TClass::TClass(const char *name) : TDictionary()
          ::Fatal("TClass::TClass", "gInterpreter not initialized");
 
       gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
+      if (!fClassInfo) {
+         gInterpreter->InitializeDictionaries();
+         gInterpreter->SetClassInfo(this);
+      }
       if (!fClassInfo)
          ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
    }
@@ -280,6 +284,10 @@ TClass::TClass(const char *name, Version_t cversion,
          ::Fatal("TClass::TClass", "gInterpreter not initialized");
 
       gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
+      if (!fClassInfo) {
+         gInterpreter->InitializeDictionaries();
+         gInterpreter->SetClassInfo(this);
+      }
       if (!fClassInfo)
          ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
    }
