@@ -91,8 +91,18 @@ void se::ProcessFill(Int_t entry)
       cout << meas1 << endl;
       cout << fClosestDistance[2] << endl;
       cout << fType[0] << endl;
+// there are problems with std::string in interpreted mode :(
+#ifdef __CINT__
+      // The aut-conversion to std::string does not work in CINT.
+      const char *ctype = fType.c_str();
+      string type = ctype;
+      // the operator<<(std::string) is not available in CINT.
+      //cout << type.c_str() << endl;
+      cout << ctype << endl;
+#else
       string type = fType;
       cout << type << endl;
+#endif
       cout << "fMatrix[2][1]: " << fMatrix[2][1] << endl;
       cout << "fH->GetMean() " << fH->GetMean() << endl;
 

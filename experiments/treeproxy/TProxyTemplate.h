@@ -1,8 +1,84 @@
-#ifndef TPROXY_H
+#if !defined(__CINT__) || defined(__MAKECINT__)
 #include "TProxy.h"
 #endif
 
-#ifndef TPROXY_TEMPLATE_H
-#define TPROXY_TEMPLATE_H
+#define InjectProxyInterface() \
+   void reset() { obj.reset(); } \
+   bool setup() { return obj.setup(); } \
+   bool IsInitialized() { return obj.IsInitialized(); } \
+   bool IsaPointer() const { return obj.IsaPointer(); } \
+   bool read() { return obj.read(); } 
 
-#endif // TPROXY_TEMPLATE_H
+template <class T> 
+class TObjProxy {
+  TProxy obj;
+public:
+  InjectProxyInterface();
+
+  TObjProxy() : obj() {}; 
+  TObjProxy(TProxyDirector *director, const char *name) : obj(director,name) {};
+  TObjProxy(TProxyDirector *director, const char *top, const char *name) : 
+      obj(director,top,name) {};
+  ~TObjProxy() {};
+
+   void Print() {
+      obj.Print();
+      cout << "fWhere " << obj.fWhere << endl;
+      if (obj.fWhere) cout << "address? " << (T*)obj.fWhere << endl;
+   }
+
+   T* ptr() {
+      static T default_val;
+      if (!obj.read()) return &default_val;
+      if (obj.IsaPointer()) {
+         if (obj.fWhere==0 || *(T**)obj.fWhere==0) return &default_val;
+         return *(T**)obj.fWhere;
+      } else {
+         if (obj.fWhere==0) return &default_val;
+         return (T*)obj.fWhere;
+      }
+   }
+ 
+   T* operator->() { return ptr(); }
+   operator T*() { return ptr(); }
+   operator T&() { return *ptr(); }
+
+};
+
+template <class T, int d2 >
+class TArray2Proxy {
+ public:
+   TProxy obj;
+   InjectProxyInterface();
+   
+   TArray2Proxy() : obj() {}
+   TArray2Proxy(TProxyDirector *director, const char *name) : obj(director,name) {};
+   TArray2Proxy(TProxyDirector *director, const char *top, const char *name) : 
+      obj(director,top,name) {};
+   ~TArray2Proxy() {};
+
+   typedef T array_t[d2];
+
+   void Print() {
+      TProxy::Print();
+      cout << "fWhere " << obj.fWhere << endl;
+      if (obj.fWhere) cout << "value? " << *(T*)obj.fWhere << endl;
+   }
+
+   const array_t &at(int i) {
+      static array_t default_val;
+      if (!obj.read()) return default_val;
+      // should add out-of bound test
+      array_t *arr = 0;
+      if (obj.IsaPointer()) {
+         arr = (array_t*)(*(T**)(obj.fWhere));
+      } else {
+         arr = (array_t*)((T*)(obj.fWhere));
+      }
+      return arr[i];
+   }
+
+   const array_t &operator [](int i) { return at(i); }
+
+};
+

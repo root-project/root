@@ -99,7 +99,7 @@ void senewcint::ProcessFill(Int_t entry)
       const char *ctype = fType.c_str();
       string type = ctype;
       // the operator<<(std::string) is not available in CINT.
-      cout << type.c_str() << endl;
+      //cout << type.c_str() << endl;
       cout << ctype << endl;
 #else
       string type = fType;
@@ -125,7 +125,12 @@ void senewcint::ProcessFill(Int_t entry)
       cout << "fTracks.fPointValue[0][0]: " << fTracks.fPointValue[0][0] << endl;
       cout << "fLastTrack: " << fLastTrack->GetUniqueID() << endl;
 #endif
-#ifdef WITH_EVENT
+#ifdef __CINT__
+      TClass *cl = gROOT->GetClass("Event");
+      bool hasEvent = cl!=0 && cl->IsLoaded();
+      if (hasEvent) {
+#endif
+#if defined(WITH_EVENT) || defined(__CINT__)
 #ifdef seold_cxx
 #else
       cout << "event->GetHeader()->GetEvtNum(): " << event->GetHeader()->GetEvtNum() << endl;
@@ -133,6 +138,10 @@ void senewcint::ProcessFill(Int_t entry)
       cout << "event->GetHeader()->GetEvtNum(): " << ((Event&)event).GetHeader()->GetEvtNum() << endl;
 #endif      
 #endif
+#ifdef __CINT__
+      }
+#endif
+
 
    }
 

@@ -83,11 +83,20 @@ class TProxy {
       fOffset(0), fIsaPointer(false) {
    };
 
-   TProxy(TProxyDirector* boss, const TString &name) : fBranchName(name),
+   TProxy(TProxyDirector* boss, const char* name) : fBranchName(name),
       fDataName(0), fDirector(boss), fBranch(0),
       fInitialized(false), fRead(-1), fLastTree(0), fWhere(0),
       fOffset(0), fIsaPointer(false)
       {
+         boss->attach(this);
+      }
+   TProxy(TProxyDirector* boss, const char* top, const char* name) : 
+      fBranchName(top),
+      fDataName(0), fDirector(boss), fBranch(0),
+      fInitialized(false), fRead(-1), fLastTree(0), fWhere(0),
+      fOffset(0), fIsaPointer(false)
+      {
+         ((TString&)fBranchName).Append(name); 
          boss->attach(this);
       }
    virtual ~TProxy() {};
@@ -148,7 +157,7 @@ class TProxy {
                fIsaPointer = false;
                fWhere = be->GetObject();
                
-            } if (be->GetType()==31) {
+            } else if (be->GetType()==31) {
 
                fWhere = be->GetObject();
 
@@ -208,7 +217,9 @@ public:
    }
 
    TArrayCharProxy() : TProxy() {}
-   TArrayCharProxy(TProxyDirector *director, const TString &name) : TProxy(director,name) {};
+   TArrayCharProxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
+   TArrayCharProxy(TProxyDirector *director, const char *top, const char *name) : 
+      TProxy(director,top,name) {};
    ~TArrayCharProxy() {};
 
    unsigned char at(int i) {
@@ -261,70 +272,23 @@ class TClaProxy : public TProxy {
    }
 
    TClaProxy() : TProxy() {}
-   TClaProxy(TProxyDirector *director, const TString &name) : TProxy(director,name) {};
+   TClaProxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
+   TClaProxy(TProxyDirector *director, const char *top, const char *name) : 
+      TProxy(director,top,name) {};
    ~TClaProxy() {};
 
-   const TClonesArray* operator->() {
+   const TClonesArray* ptr() {
       if (!read()) return 0;
       if (IsaPointer()) {
          return *(TClonesArray**)fWhere;
       } else {
          return (TClonesArray*)fWhere;
       }
-   }
+   }   
+
+   const TClonesArray* operator->() { return ptr(); }
 
 };
-
-template <class T> 
-class TObjProxy : public TProxy {
- public:
-   void Print() {
-      TProxy::Print();
-      cout << "fWhere " << fWhere << endl;
-      if (fWhere) cout << "address? " << (T*)fWhere << endl;
-   }
-
-   TObjProxy() : TProxy() {}; 
-   TObjProxy(TProxyDirector *director, const TString &name) : TProxy(director,name) {};
-   ~TObjProxy() {};
-
-   T* operator->() {
-      static T default_val;
-      if (!read()) return &default_val;
-      if (IsaPointer()) {
-         if (fWhere==0 || *(T**)fWhere==0) return &default_val;
-         return *(T**)fWhere;
-      } else {
-         if (fWhere==0) return &default_val;
-         return (T*)fWhere;
-      }
-   }
-
-   operator T*() {
-      static T default_val;
-      if (!read()) return &default_val;
-      if (IsaPointer()) {
-         if (fWhere==0 || *(T**)fWhere==0) return &default_val;
-         return *(T**)fWhere;
-      } else {
-         if (fWhere==0) return &default_val;
-         return (T*)fWhere;
-      }
-   }
-
-   operator T&() {
-      return *( (T*) (*this) );
-   }
-
- private:
-#ifndef __CINT__
-   // For now explicitly disable copying into the value (i.e. the proxy is read-only).
-   TObjProxy(T&);
-   TObjProxy &operator=(T&);
-#endif
-
-};
-
 
 template <class T> 
 class TImpProxy : public TProxy {
@@ -336,7 +300,9 @@ class TImpProxy : public TProxy {
    }
 
    TImpProxy() : TProxy() {}; 
-   TImpProxy(TProxyDirector *director, const TString &name) : TProxy(director,name) {};
+   TImpProxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
+   TImpProxy(TProxyDirector *director, const char *top, const char *name) : 
+      TProxy(director,top,name) {};
    ~TImpProxy() {};
 
    operator T() {
@@ -368,7 +334,9 @@ class TArrayProxy : public TProxy {
    }
 
    TArrayProxy() : TProxy() {}
-   TArrayProxy(TProxyDirector *director, const TString &name) : TProxy(director,name) {};
+   TArrayProxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
+   TArrayProxy(TProxyDirector *director, const char *top, const char *name) : 
+      TProxy(director,top,name) {};
    ~TArrayProxy() {};
 
    const T& at(int i) {
@@ -389,38 +357,6 @@ class TArrayProxy : public TProxy {
 
 };
 
-template <class T, int d2 > 
-class TArray2Proxy : public TProxy {
- public:
- typedef T array_t[d2];
-
-   void Print() {
-      TProxy::Print();
-      cout << "fWhere " << fWhere << endl;
-      if (fWhere) cout << "value? " << *(T*)fWhere << endl;
-   }
-
-   TArray2Proxy() : TProxy() {}
-   TArray2Proxy(TProxyDirector *director, const TString &name) : TProxy(director,name) {};
-   ~TArray2Proxy() {};
-
-   const array_t &at(int i) {
-      static array_t default_val;
-      if (!read()) return default_val;
-      // should add out-of bound test
-      array_t *arr = 0;
-      if (IsaPointer()) {
-         arr = (array_t*)(*(T**)fWhere);
-      } else {
-         arr = (array_t*)((T*)fWhere);
-      }
-      return arr[i];
-   }
-
-   const array_t &operator [](int i) { return at(i); }
-
-};
-
 template <class T, int d2, int d3 > 
 class TArray3Proxy : public TProxy {
  public:
@@ -433,7 +369,9 @@ class TArray3Proxy : public TProxy {
    }
 
    TArray3Proxy() : TProxy() {}
-   TArray3Proxy(TProxyDirector *director, const TString &name) : TProxy(director,name) {};
+   TArray3Proxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
+   TArray3Proxy(TProxyDirector *director, const char *top, const char *name) : 
+      TProxy(director,top,name) {};
    ~TArray3Proxy() {};
 
    const array_t* at(int i) {
@@ -465,7 +403,9 @@ class TClaImpProxy : public TProxy {
    }
 
    TClaImpProxy() : TProxy() {}; 
-   TClaImpProxy(TProxyDirector *director, const TString &name) : TProxy(director,name) {};
+   TClaImpProxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
+   TClaImpProxy(TProxyDirector *director,  const char *top, const char *name) : 
+      TProxy(director,top,name) {};
    ~TClaImpProxy() {};
 
    const T& at(int i) {
@@ -509,7 +449,9 @@ class TClaArrayProxy : public TProxy {
    }
 
    TClaArrayProxy() : TProxy() {}
-   TClaArrayProxy(TProxyDirector *director, const TString &name) : TProxy(director,name) {};
+   TClaArrayProxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
+   TClaArrayProxy(TProxyDirector *director, const char *top, const char *name) : 
+      TProxy(director,top,name) {};
    ~TClaArrayProxy() {};
 
    const array_t at(int i) {
@@ -547,7 +489,9 @@ class TClaArray2Proxy : public TProxy {
    }
 
    TClaArray2Proxy() : TProxy() {}
-   TClaArray2Proxy(TProxyDirector *director, const TString &name) : TProxy(director,name) {};
+   TClaArray2Proxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
+   TClaArray2Proxy(TProxyDirector *director, const char *top, const char *name) : 
+      TProxy(director,top,name) {};
    ~TClaArray2Proxy() {};
 
    const array_t &at(int i) {
@@ -586,7 +530,9 @@ class TClaArray3Proxy : public TProxy {
    }
 
    TClaArray3Proxy() : TProxy() {}
-   TClaArray3Proxy(TProxyDirector *director, const TString &name) : TProxy(director,name) {};
+   TClaArray3Proxy(TProxyDirector *director, const char *name) : TProxy(director,name) {};
+   TClaArray3Proxy(TProxyDirector *director, const char *top, const char *name) : 
+      TProxy(director,top,name) {};
    ~TClaArray3Proxy() {};
 
    const array_t* at(int i) {
@@ -645,6 +591,7 @@ typedef TClaImpProxy<Char_t>   TClaCharProxy;
 
 #ifdef __MAKECINT__
 #pragma link C++ class TClaArrayProxy<int>;
-#pragma link C++ class TClaArrayProxy<float>;
+#pragma link C++ class TClaArrayProxy<Float_t>;
 #pragma link C++ class TClaArrayProxy<double>;
 #endif
+

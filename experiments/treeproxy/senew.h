@@ -17,6 +17,7 @@
 #include <TRefArray.h>
 
 #include <TProxy.h>
+#include <TProxyTemplate.h>
 #include <string>
 
 #include <TH1F.h>
@@ -58,10 +59,10 @@ class senew : public TSelector {
    // we need a class and then a class proxy.
    // what about derivation?
    struct EventHeader {
-      EventHeader(TProxyDirector* director,const TString& top) :
-         fEvtNum(director,TString(top+".fEvtNum")),
-         fRun(director,TString(top+".fRun")),
-         fDate(director,TString(top+".fDate")) {};
+      EventHeader(TProxyDirector* director,const char *top) :
+         fEvtNum(director,top,".fEvtNum"),
+         fRun(director,top,".fRun"),
+         fDate(director,top,".fDate") {};
       TIntProxy           fEvtNum;
       TIntProxy           fRun;
       TIntProxy           fDate;
@@ -89,32 +90,38 @@ class senew : public TSelector {
       But we can use a real clones array for those that are not.
    */
 
-   class Tracks : public TClaProxy {
+   class Tracks {
    public:
-      Tracks(TProxyDirector* director,const TString& top) :
-         TClaProxy(director,top),
-         fUniqueID(director,TString(top+".fUniqueID")),
-         fBits(director,TString(top+".fBits")),
-         fPx(director,TString(top+".fPx")),
-         fPy(director,TString(top+".fPy")),
-         fPz(director,TString(top+".fPz")),
-         fRandom(director,TString(top+".fRandom")),
-         fMass2(director,TString(top+".fMass2")),
-         fBx(director,TString(top+".fBx")),
-         fBy(director,TString(top+".fBy")),
-         fMeanCharge(director,TString(top+".fMeanCharge")),
-         fXfirst(director,TString(top+".fXfirst")),
-         fXlast(director,TString(top+".fXlast")),
-         fYfirst(director,TString(top+".fYfirst")),
-         fYlast(director,TString(top+".fYlast")),
-         fZfirst(director,TString(top+".fZfirst")),
-         fZlast(director,TString(top+".fZlast")),
-         fCharge(director,TString(top+".fCharge")),
-         fVertex(director,TString(top+".fVertex")),
-         fNpoint(director,TString(top+".fNpoint")),
-         fValid(director,TString(top+".fValid")),
-         fNsp(director,TString(top+".fNsp")),
-         fPointValue(director,TString(top+".fPointValue"))
+      TClaProxy obj;
+      InjectProxyInterface();
+      const TClonesArray* operator->() { return obj.ptr(); }
+
+      Tracks(TProxyDirector* director,const char *top) :
+      //         TClaProxy(director,top),
+         obj(director,top),
+         fUniqueID(director,top,".fUniqueID"),
+         fBits(director,top,".fBits"),
+         fPx(director,top,".fPx"),
+         fPy(director,top,".fPy"),
+         fPz(director,top,".fPz"),
+         fRandom(director,top,".fRandom"),
+         fMass2(director,top,".fMass2"),
+         fBx(director,top,".fBx"),
+         fBy(director,top,".fBy"),
+         fMeanCharge(director,top,".fMeanCharge"),
+         fXfirst(director,top,".fXfirst"),
+         fXlast(director,top,".fXlast"),
+         fYfirst(director,top,".fYfirst"),
+         fYlast(director,top,".fYlast"),
+         fZfirst(director,top,".fZfirst"),
+         fZlast(director,top,".fZlast"),
+         fCharge(director,top,".fCharge"),
+         fVertex(director,top,".fVertex"),
+         fNpoint(director,top,".fNpoint"),
+         fValid(director,top,".fValid"),
+         fNsp(director,top,".fNsp"),
+         fPointValue(director,top,".fPointValue")
+         
          {
          };
       // TIntProxy           fTracks_; // hummm ? .. it is wrong!
