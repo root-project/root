@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.18 2001/07/17 09:07:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.19 2001/10/02 09:08:30 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -97,9 +97,10 @@ TApplication::TApplication(const char *appClassName,
    // method. The recognized options are removed from the argument array.
    // The original list of argument options can be retrieved via the Argc()
    // and Argv() methods. The appClassName "proofserv" is reserved for the
-   // PROOF system. The "options" and "numOptions" arguments are not used.
-   // Except numOptions<0 means: don't call GetOptions() (hack needed for
-   // PROOF).
+   // PROOF system. The "options" and "numOptions" arguments are not used,
+   // except if you want to by-pass the argv processing by GetOptions()
+   // in which case you should specify numOptions<0. All options will
+   // still be available via the Argv() method for later use.
 
    if (gApplication) {
       Error("TApplication", "only one instance of TApplication allowed");
