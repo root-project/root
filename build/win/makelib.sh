@@ -59,9 +59,9 @@ if [ "$R__PLATFORM" = "win32" ]; then
               lib/${name}.exp $syslibs
       elif [ "$R__LIB" = "lib/libCore.dll" ]; then
          echo $R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp lib/libCint.lib $syslibs WSock32.lib Oleaut32.lib netapi32.lib
+              lib/${name}.exp lib/libCint.lib $syslibs WSock32.lib Oleaut32.lib
          $R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp lib/libCint.lib $syslibs WSock32.lib Oleaut32.lib netapi32.lib
+              lib/${name}.exp lib/libCint.lib $syslibs WSock32.lib Oleaut32.lib
       else
          echo $R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
               lib/${name}.exp $R__EXTRA lib/libCore.lib lib/libCint.lib \

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.82 2004/04/21 10:13:32 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.83 2004/04/22 14:22:15 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -55,6 +55,16 @@ typedef void (*SigHandler_t)(ESignals);
 
 static HANDLE gConsoleEvent;
 static HANDLE gConsoleThreadHandle;
+typedef NET_API_STATUS (WINAPI* pfn1)(LPVOID);
+typedef NET_API_STATUS (WINAPI* pfn2)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*);
+typedef NET_API_STATUS (WINAPI* pfn3)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*,
+                                     DWORD, LPDWORD, LPDWORD, PDWORD);
+typedef NET_API_STATUS (WINAPI* pfn4)(LPCWSTR, DWORD, LPBYTE*, DWORD, LPDWORD,
+                                     LPDWORD, PDWORD);
+static pfn1 p2NetApiBufferFree;
+static pfn2 p2NetUserGetInfo;
+static pfn3 p2NetLocalGroupGetMembers;
+static pfn4 p2NetLocalGroupEnum;
 
 
 static struct signal_map {
@@ -621,6 +631,13 @@ Bool_t TWinNTSystem::Init()
       }
       fPasswords = (struct passwd *)calloc(fNbUsers, sizeof(struct passwd));
 
+      HINSTANCE netapi = ::LoadLibrary("netapi32.DLL");
+      if (!netapi) return kFALSE;
+  
+      p2NetApiBufferFree  = (pfn1)GetProcAddress(netapi, "NetApiBufferFree");
+      p2NetUserGetInfo  = (pfn2)GetProcAddress(netapi, "NetUserGetInfo");
+      p2NetLocalGroupGetMembers  = (pfn3)GetProcAddress(netapi, "NetLocalGroupGetMembers");
+      p2NetLocalGroupEnum = (pfn4)GetProcAddress(netapi, "NetLocalGroupEnum");
       CollectGroups();
    }
    return kFALSE;
@@ -2027,13 +2044,13 @@ Bool_t TWinNTSystem::CountMembers(const char *lpszGroupName)
    if (iRetOp == 0) {
       dwLastError = GetLastError();
       if (Data)
-         NetApiBufferFree(Data);
+         p2NetApiBufferFree(Data);
       return FALSE;
    }
 
    // The NetLocalGroupGetMembers() API retrieves a list of the members
    // of a particular local group.
-   NetStatus = NetLocalGroupGetMembers (NULL, wszGroupName, 1,
+   NetStatus = p2NetLocalGroupGetMembers (NULL, wszGroupName, 1,
                             &Data, 8192, &Index, &Total, &ResumeHandle );
 
    if (NetStatus != NERR_Success || Data == NULL) {
@@ -2045,12 +2062,12 @@ Bool_t TWinNTSystem::CountMembers(const char *lpszGroupName)
          // This time, we set the level to 0.
          // We do this just to confirm that the number of members in
          // this group is zero.
-         NetStatus = NetLocalGroupGetMembers ( NULL, wszGroupName, 0,
+         NetStatus = p2NetLocalGroupGetMembers ( NULL, wszGroupName, 0,
                                   &Data, 8192, &Index, &Total, &ResumeHandle );
       }
 
       if (Data)
-         NetApiBufferFree(Data);
+         p2NetApiBufferFree(Data);
       return FALSE;
    }
 
@@ -2058,7 +2075,7 @@ Bool_t TWinNTSystem::CountMembers(const char *lpszGroupName)
    MemberInfo = (LOCALGROUP_MEMBERS_INFO_1 *)Data;
 
    if (Data)
-      NetApiBufferFree(Data);
+      p2NetApiBufferFree(Data);
 
    return TRUE;
 }
@@ -2077,13 +2094,13 @@ Bool_t TWinNTSystem::GetNbGroups()
    if (::GetVersion() >= 0x80000000)  // Not Windows NT/2000/XP
        return kFALSE;
 
-   NetStatus = NetLocalGroupEnum(NULL, 0, &Data, 8192, &Index,
+   NetStatus = p2NetLocalGroupEnum(NULL, 0, &Data, 8192, &Index,
                                     &Total, &ResumeHandle );
 
    if (NetStatus != NERR_Success || Data == NULL) {
       dwLastError = GetLastError();
       if (Data)
-         NetApiBufferFree(Data);
+         p2NetApiBufferFree(Data);
       return FALSE;
    }
 
@@ -2109,7 +2126,7 @@ Bool_t TWinNTSystem::GetNbGroups()
    }
 
    if (Data)
-      NetApiBufferFree(Data);
+      p2NetApiBufferFree(Data);
 
    return TRUE;
 }
@@ -2199,6 +2216,9 @@ Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what,
 Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
                                     int &memberIdx)
 {
+   //
+
+
    NET_API_STATUS NetStatus = NERR_Success;
    LPBYTE Data = NULL;
    DWORD Index = 0, ResumeHandle = 0, Total = 0, i;
@@ -2228,7 +2248,7 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
    if (iRetOp == 0) {
       dwLastError = GetLastError();
       if (Data)
-         NetApiBufferFree(Data);
+         p2NetApiBufferFree(Data);
       return FALSE;
    }
 
@@ -2236,7 +2256,7 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
 
    // The NetLocalGroupGetMembers() API retrieves a list of the members
    // of a particular local group.
-   NetStatus = NetLocalGroupGetMembers (NULL, wszGroupName, 1,
+   NetStatus = p2NetLocalGroupGetMembers (NULL, wszGroupName, 1,
                             &Data, 8192, &Index, &Total, &ResumeHandle );
 
    if (NetStatus != NERR_Success || Data == NULL) {
@@ -2248,12 +2268,12 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
          // This time, we set the level to 0.
          // We do this just to confirm that the number of members in
          // this group is zero.
-         NetStatus = NetLocalGroupGetMembers ( NULL, wszGroupName, 0,
+         NetStatus = p2NetLocalGroupGetMembers ( NULL, wszGroupName, 0,
                                   &Data, 8192, &Index, &Total, &ResumeHandle );
       }
 
       if (Data)
-         NetApiBufferFree(Data);
+         p2NetApiBufferFree(Data);
       return FALSE;
    }
 
@@ -2286,7 +2306,7 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
       //
       // Call the NetUserGetInfo function; specify level 10.
       //
-      nStatus = NetUserGetInfo(NULL, (LPCWSTR)szUserName, 11, (LPBYTE *)&pUI11Buf);
+      nStatus = p2NetUserGetInfo(NULL, (LPCWSTR)szUserName, 11, (LPBYTE *)&pUI11Buf);
       //
       // If the call succeeds, print the user information.
       //
@@ -2306,7 +2326,7 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
       // Free the allocated memory.
       //
       if (pUI11Buf != NULL) {
-         NetApiBufferFree(pUI11Buf);
+         p2NetApiBufferFree(pUI11Buf);
          pUI11Buf = NULL;
       }
 
@@ -2325,7 +2345,7 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
    if(fActUser == -1)  fActUser = 0; 
    
    if (Data)
-      NetApiBufferFree(Data);
+      p2NetApiBufferFree(Data);
 
    return TRUE;
 }
@@ -2333,6 +2353,8 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
 //________________________________________________________________________________
 Bool_t TWinNTSystem::CollectGroups()
 {
+   //
+
    NET_API_STATUS NetStatus = NERR_Success;
    LPBYTE Data = NULL;
    DWORD Index = 0, ResumeHandle = 0, Total = 0, i;
@@ -2344,13 +2366,13 @@ Bool_t TWinNTSystem::CollectGroups()
    if (::GetVersion() >= 0x80000000)  // Not Windows NT/2000/XP
        return kFALSE;
 
-   NetStatus = NetLocalGroupEnum(NULL, 0, &Data, 8192, &Index,
+   NetStatus = p2NetLocalGroupEnum(NULL, 0, &Data, 8192, &Index,
                                     &Total, &ResumeHandle );
 
    if (NetStatus != NERR_Success || Data == NULL) {
       dwLastError = GetLastError();
       if (Data)
-         NetApiBufferFree(Data);
+         p2NetApiBufferFree(Data);
       return FALSE;
    }
 
@@ -2381,7 +2403,7 @@ Bool_t TWinNTSystem::CollectGroups()
    }
 
    if (Data)
-      NetApiBufferFree(Data);
+      p2NetApiBufferFree(Data);
 
    return TRUE;
 }
