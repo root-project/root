@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.51 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.52 2003/11/05 15:52:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -731,6 +731,7 @@ TObject *TCanvas::DrawClonePad()
      clone = obj->Clone();
      pad->GetListOfPrimitives()->Add(clone,obj->GetDrawOption());
   }
+  pad->ResizePad();
   pad->Modified();
   pad->Update();
   padsav->cd();
