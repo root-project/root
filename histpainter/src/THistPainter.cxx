@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.122 2003/02/21 15:08:44 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.123 2003/02/22 16:21:11 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1928,19 +1928,11 @@ void THistPainter::PaintColorLevels(Option_t *)
          if (yup  > gPad->GetUymax()) continue;
 
          if (fH->TestBit(TH1::kUserContour)) {
-            zc = fH->GetContourLevel(0);
-            if (Hoption.Logz) {
-               if (zc > 0) zc = TMath::Log10(zc);
-               else        zc = zmin;
-            }
+            zc = fH->GetContourLevelPad(0);
             if (z < zc) continue;
             color = -1;
             for (Int_t k=0; k<ndiv; k++) {
-               zc = fH->GetContourLevel(k);
-               if (Hoption.Logz) {
-                  if (zc > 0) zc = TMath::Log10(zc);
-                  else        zc = zmin;
-               }
+               zc = fH->GetContourLevelPad(k);
 	       if (z < zc) {
                   continue;
                } else {
@@ -2038,7 +2030,7 @@ void THistPainter::PaintContour(Option_t *option)
       ncontour = kMAXCONTOUR-1;
    }
 
-   for (i=0;i<ncontour;i++) levels[i] = fH->GetContourLevel(i);
+   for (i=0;i<ncontour;i++) levels[i] = fH->GetContourLevelPad(i);
    //for (i=0;i<ncontour;i++)
    //   levels[i] = Hparam.zmin+(Hparam.zmax-Hparam.zmin)/ncontour*i;
    Int_t linesav   = fH->GetLineStyle();

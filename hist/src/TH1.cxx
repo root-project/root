@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.126 2003/01/31 11:21:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.127 2003/02/19 10:12:13 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4784,6 +4784,35 @@ Double_t TH1::GetContourLevel(Int_t level) const
   return zlevel;
 }
 
+//______________________________________________________________________________
+Double_t TH1::GetContourLevelPad(Int_t level) const
+{
+// Return the value of contour number "level" in Pad coordinates ie: if the Pad
+// is in log scale along Z it returns le log of the contour level value.
+// see GetContour to return the array of all contour levels
+
+  if (level <0 || level >= fContour.fN) return 0;
+  Double_t zlevel = fContour.fArray[level];
+
+  // In case of user defined contours and Pad in log scale along Z, 
+  // fContour.fArray doesn't contain the log of the contour whereas it does 
+  // in case of equidistant contours.
+  if (gPad && gPad->GetLogz() && TestBit(kUserContour)) {
+     if (zlevel <= 0) return 0;
+     Double_t zmin = GetMinimum();
+     Double_t zmax = GetMaximum();
+     if ((zmin == zmax) && (zmin != 0)) {
+        zmax += 0.01*TMath::Abs(zmax);
+        zmin -= 0.01*TMath::Abs(zmin);
+     }
+     if (zmax <= 0) return 0;
+     if (zmin <= 0) zmin = 0.001*zmax;
+     Double_t lzmin = TMath::Log10(zmin);
+     Double_t lzmax = TMath::Log10(zmax);
+     zlevel = (((zlevel-zmin)/(zmax-zmin))*(lzmax-lzmin))+lzmin;
+  }
+  return zlevel;
+}
 
 //______________________________________________________________________________
 void TH1::SetBuffer(Int_t buffersize, Option_t * /*option*/)

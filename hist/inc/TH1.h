@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.38 2002/12/04 10:38:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.39 2002/12/16 20:29:06 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -172,6 +172,7 @@ public:
     virtual Float_t  GetBarWidth() const  {return Float_t(0.001*Float_t(fBarWidth));}
     virtual Int_t    GetContour(Double_t *levels=0);
     virtual Double_t GetContourLevel(Int_t level) const;
+    virtual Double_t GetContourLevelPad(Int_t level) const;
 
     virtual Int_t    GetBin(Int_t binx, Int_t biny=0, Int_t binz=0) const;
     virtual Axis_t   GetBinCenter(Int_t bin) const {return fXaxis.GetBinCenter(bin);}
