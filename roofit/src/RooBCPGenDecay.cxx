@@ -148,9 +148,11 @@ Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code) co
 
 
 
-Int_t RooBCPGenDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const
+Int_t RooBCPGenDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
 {
-  if (matchArgs(directVars,generateVars,_t,_tag)) return 2 ;  
+  if (staticInitOK) {
+    if (matchArgs(directVars,generateVars,_t,_tag)) return 2 ;
+  }
   if (matchArgs(directVars,generateVars,_t)) return 1 ;  
   return 0 ;
 }
@@ -197,7 +199,8 @@ void RooBCPGenDecay::generateEvent(Int_t code)
 
     // Accept event if T is in generated range
     Double_t maxDil = 1.0 ;
-    Double_t maxAcceptProb = 1 + fabs(maxDil*_S) + fabs(maxDil*_C);        
+// 2 in next line is conservative and inefficient - allows for delMistag=1!
+    Double_t maxAcceptProb = 2 + fabs(maxDil*_S) + fabs(maxDil*_C);        
     Double_t acceptProb    = (1-_tag*_delMistag) 
                            + (_tag*(1-2*_avgMistag))*_S*sin(_dm*tval) 
                            - (_tag*(1-2*_avgMistag))*_C*cos(_dm*tval);
