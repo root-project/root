@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.100 2002/11/29 14:48:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.101 2002/12/02 18:50:06 rdm Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1397,22 +1397,22 @@ void TBranchElement::SetAddress(void *add)
    //special case for a TClonesArray when address is not yet set
    //we must create the clonesarray first
    if (fType ==3) {
-      if (fAddress) {
-         if (fStreamerType==61) {
-            // Case of an embedded ClonesArray
-            fObject = fAddress;
-         } else {
-            TClonesArray **ppointer;
-            ppointer = (TClonesArray**)fAddress;
-            fObject = (char*)*ppointer;
-         }
-         if (!fObject) fAddress = 0;
-      }
       TClass *clm = gROOT->GetClass(fClonesName.Data());
       if (clm) {
 			clm->BuildRealData(); //just in case clm derives from an abstract class
 			clm->GetStreamerInfo();
 		}
+      if (fAddress) {
+         if (fStreamerType==61) {
+            // Case of an embedded ClonesArray
+            fObject = fAddress;
+         } else {
+            TClonesArray **ppointer = (TClonesArray**)fAddress;
+            if (!*ppointer) *ppointer = new TClonesArray(fClonesName.Data());
+            fObject = (char*)*ppointer;
+         }
+         if (!fObject) fAddress = 0;
+      }
       if (!fAddress) {
          //SetBit(kDeleteObject);
          fObject = (char*)new TClonesArray(fClonesName.Data());
