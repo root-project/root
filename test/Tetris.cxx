@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.20 2003/10/16 16:39:31 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.21 2003/11/11 11:04:25 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -842,11 +842,11 @@ KeyHandler::KeyHandler() : TGFrame(gClient->GetRoot(),0,0)
    TRootCanvas *main_frame = (TRootCanvas*)(gTetris->GetCanvasImp());
 
    // bind arrow keys and space-bar key
-   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Up),    kAnyModifier);
-   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Left),  kAnyModifier);
-   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
-   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Down),  kAnyModifier);
-   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Space), kAnyModifier);
+   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Up),    0);
+   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Left),  0);
+   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Right), 0);
+   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Down),  0);
+   main_frame->BindKey((const TGWindow*)this, gVirtualX->KeysymToKeycode(kKey_Space), 0);
 }
 
 KeyHandler::~KeyHandler()
@@ -857,11 +857,11 @@ KeyHandler::~KeyHandler()
    TRootCanvas *main_frame = (TRootCanvas*)(gTetris->GetCanvasImp());
 
    // remove binding of arrow keys and space-bar key
-   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Up),    kAnyModifier);
-   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Left),  kAnyModifier);
-   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
-   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Down),  kAnyModifier);
-   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Space), kAnyModifier);
+   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Up),    0);
+   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Left),  0);
+   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Right), 0);
+   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Down),  0);
+   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Space), 0);
    // restore key auto repeat functionality, was turned off in TGMainFrame::HandleKey()
    gVirtualX->SetKeyAutoRepeat(kTRUE);
 }
