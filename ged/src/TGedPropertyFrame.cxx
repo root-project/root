@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedpropertyFrame.cxx,v 1.5 2003/07/24 13:41:59 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPropertyFrame.cxx,v 1.1 2004/02/18 20:13:42 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 15/08/2003
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 #include "TROOT.h"
 #include "TRootCanvas.h"
 #include "TCanvas.h"
-#include "TGedPadEditor.h"
+#include "TGedEditor.h"
 #include "TGedAttFrame.h"
 #include "TGClient.h"
 #include "TH1.h"
