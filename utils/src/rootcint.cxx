@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.81 2002/06/18 06:58:47 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.82 2002/06/28 22:56:01 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -255,7 +255,7 @@ const unsigned int kFatal    =   4000;
 static unsigned int gErrorIgnoreLevel = kError;
 
 //______________________________________________________________________________
-void LevelPrint(bool prefix, int level, const char *location, 
+void LevelPrint(bool prefix, unsigned int level, const char *location, 
                 const char *fmt, va_list ap) {
 
    if (level < gErrorIgnoreLevel)
@@ -284,29 +284,8 @@ void LevelPrint(bool prefix, int level, const char *location,
    }
 
    fflush(stderr);
-/*
-   if (abort) {
-      fprintf(stderr, "aborting\n");
-      fflush(stderr);
-      if (gSystem) {
-         gSystem->StackTrace();
-         gSystem->Abort();
-      } else
-         ::abort();
-   }
-*/
 }
    
-//______________________________________________________________________________
-void LevelPrint(int level, const char *location, const char *va_(fmt), ...) {
-
-   va_list ap;
-   va_start(ap, va_(fmt));
- 
-   LevelPrint(false, level, location, fmt, ap);
-
-   va_end(ap);
-}
 
 //______________________________________________________________________________
 void Error(const char *location, const char *va_(fmt), ...)
