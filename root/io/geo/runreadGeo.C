@@ -4,5 +4,7 @@
   TGeoManager::Import("cms.root");
   TGeoManager::Import("hades.root");
   TGeoManager::Import("lhcbfull.root");
-  TGeoManager::Import("lhcbnobool.root");
+  p = TGeoManager::Import("lhcbnobool.root");
+  (p==0);
+
 }

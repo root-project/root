@@ -1,0 +1,70 @@
+
+Processing runreadGeo.C...
+Warning in <TGeoManager::dtor>: deleting previous geometry: Geometry/default geometry
+Warning in <TGeoManager::dtor>: deleting previous geometry: atlas/atlas.C
+Warning in <TClass::TClass>: no dictionary for class CbmMCTrack is available
+Warning in <TClass::TClass>: no dictionary for class HadesMdcPoint is available
+Warning in <TClass::TClass>: no dictionary for class CbmMCPoint is available
+Warning in <TClass::TClass>: no dictionary for class HadesRichPoint is available
+Warning in <TClass::TClass>: no dictionary for class HadesShowerPoint is available
+Warning in <TClass::TClass>: no dictionary for class HadesTofPoint is available
+Warning in <TClass::TClass>: no dictionary for class CbmMCApplication is available
+Warning in <TClass::TClass>: no dictionary for class CbmTask is available
+Warning in <TClass::TClass>: no dictionary for class HadesCave is available
+Warning in <TClass::TClass>: no dictionary for class CbmModule is available
+Warning in <TClass::TClass>: no dictionary for class HadesSectors is available
+Warning in <TClass::TClass>: no dictionary for class HadesMdc is available
+Warning in <TClass::TClass>: no dictionary for class CbmDetector is available
+Warning in <TClass::TClass>: no dictionary for class HadesRich is available
+Warning in <TClass::TClass>: no dictionary for class HadesTof is available
+Warning in <TClass::TClass>: no dictionary for class HadesShower is available
+Warning in <TClass::TClass>: no dictionary for class CbmMagField is available
+Warning in <TClass::TClass>: no dictionary for class CbmPrimaryGenerator is available
+Warning in <TClass::TClass>: no dictionary for class CbmStack is available
+Warning in <TClass::TClass>: no dictionary for class CbmParticleGenerator is available
+Warning in <TClass::TClass>: no dictionary for class CbmGenerator is available
+Warning in <TGeoManager::dtor>: deleting previous geometry: cms/cms.C
+Warning in <TGeoManager::dtor>: deleting previous geometry: CBMGeom/CBM geometry
+Warning in <TGeoManager::dtor>: deleting previous geometry: VGM Root geometry/VGM Root geometry
+===> ,  created
+### Geometry loaded from file...
+Top volume is ALIC. Master volume is ALIC
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 1845498 nodes/ 2782 volume UID's in default geometry
+----------------modeler ready----------------
+===> ,  created
+### Geometry loaded from file...
+Top volume is ATLS. Master volume is ATLS
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 29046966 nodes/ 7144 volume UID's in atlas.C
+----------------modeler ready----------------
+===> ,  created
+### Geometry loaded from file...
+Top volume is OCMS. Master volume is OCMS
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 1166318 nodes/ 1538 volume UID's in cms.C
+----------------modeler ready----------------
+===> ,  created
+### Geometry loaded from file...
+Top volume is CAVE. Master volume is CAVE
+Voxelizing...
+--- node ID tracking disabled
+### 2238 nodes/ 373 volume UID's in CBM geometry
+----------------modeler ready----------------
+===> ,  created
+### Geometry loaded from file...
+Top volume is World. Master volume is World
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 18491756 nodes/ 710 volume UID's in VGM Root geometry
+----------------modeler ready----------------
+===> ,  created
+### Geometry loaded from file...
+Top volume is World. Master volume is World
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 18488018 nodes/ 641 volume UID's in VGM Root geometry
+----------------modeler ready----------------
