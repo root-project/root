@@ -1,11 +1,19 @@
 all: tests
 test: tests
 
-SUBDIRS =  
+
 TEST_TARGETS += ArraySyntax
 CLEAN_TARGETS += *Dict* *.root main$(ExeSuf)
 
-include ../../Rules.mk
+
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 #ArraySyntax: Event.root
 #	@echo built

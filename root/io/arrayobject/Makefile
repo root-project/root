@@ -1,7 +1,12 @@
 CLEAN_TARGETS += main *Dict* Event.root *~  *.log $(ALL_LIBRARIES)
 TEST_TARGETS += ArraySave
 
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 ifneq ($(FAIL),)
 ArraySave: RealArraySave

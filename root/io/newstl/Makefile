@@ -13,7 +13,12 @@ else
 RULES_DIR=.
 endif
 
-include $(RULES_DIR)/Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 VERSION := $(subst .,-,$(subst /,-,$(shell root-config --version)))
 LPWD := $(shell echo `pwd -P`)

@@ -1,7 +1,12 @@
 TEST_TARGETS += scopeTest scopeTest2
 CLEAN_TARGETS += $(ALL_LIBRARIES) output
 
-include ../../root/Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 
 badDict.C: mycl.C LinkDef.h

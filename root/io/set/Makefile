@@ -7,7 +7,12 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.root dict* set_problem
 TEST_TARGETS += setLong64Test
 
 # adjust the location of Rules.mk as needed.
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 setLong64Test.log: set_problem_cxx.$(DllSuf) runSetProblem.C
 	$(CMDECHO) root.exe -b -l -q runSetProblem.C > setLong64Test.log

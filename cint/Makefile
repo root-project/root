@@ -1,11 +1,14 @@
+
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
+
 all: tests
 
 test: tests
 
-
-
-SUBDIRS = stl specialobj template other typedef_global const typedef templateMembers \
-	function array operator
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 CLEAN_TARGETS = $(SUBDIRS:%=%.clean)

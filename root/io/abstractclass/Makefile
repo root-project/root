@@ -87,7 +87,12 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.o *~ core a.out $(CXXSO) DataCint.* Makefile
 
 TEST_TARGETS += read_test
 
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 read_test.log:
 	$(CMDECHO) root.exe -b -l -q read_test.C > read_test.log

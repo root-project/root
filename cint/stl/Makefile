@@ -1,9 +1,15 @@
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
+
+
 all: tests
 
 test: tests
 
 
-SUBDIRS = string default dicts  map  vector list
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 CLEAN_TARGETS = $(SUBDIRS:%=%.clean)

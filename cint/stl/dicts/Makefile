@@ -7,7 +7,12 @@ CLEAN_TARGETS += *.o MyDict*
 TEST_TARGETS += stldictTest
 
 # adjust the location of Rules.mk as needed.
-include ../../../root/Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 stldictTest: MyDict1.o MyDict2.o MyDict3.o
 	$(CMDECHO) echo mytest > /dev/null

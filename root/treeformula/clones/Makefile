@@ -7,7 +7,12 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 TEST_TARGETS += nestedClones nestedClones2
 
 # adjust the location of Rules.mk as needed.
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 nestedClones2.log: digiRun.C
 	$(CMDECHO) root.exe -q -l -b digiRun.C >nestedClones2.log 2>&1

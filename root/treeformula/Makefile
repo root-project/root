@@ -1,8 +1,13 @@
+
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
+
 all: tests
 test: tests
-
-SUBDIRS = morrison sync casting depth parse function array \
-	clones formulaio
-
-include ../Rules.mk
 

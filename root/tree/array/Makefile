@@ -7,7 +7,12 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) test.root *.log
 TEST_TARGETS += objArrayTest objArrayTest2
 
 # adjust the location of Rules.mk as needed.
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 objArrayTest.log: TestObj_cpp.so
 	$(CMDECHO) root.exe -q -b -l run.C > $@

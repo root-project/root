@@ -1,6 +1,11 @@
-all: tests
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
 
-SUBDIRS = current featuretest new noclassdef
+SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
+
+
+all: tests
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 CLEAN_TARGETS = $(SUBDIRS:%=%.clean)

@@ -7,7 +7,12 @@ CLEAN_TARGETS += filltree.output arrayDrawTest.output myTree.root $(ALL_LIBRARIE
 TEST_TARGETS += arrayDrawTest arrayEventListTest boolOptTest indexMultiDimTest
 
 # adjust the location of Rules.mk as needed.
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 ifneq ($(FAIL),)
    #force re-execution in the fail case

@@ -1,8 +1,15 @@
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
+
+
 all: tests
 
 test: tests
 
-SUBDIRS = treeformula aclic tree io hist
+
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 CLEAN_TARGETS = $(SUBDIRS:%=%.clean)

@@ -1,7 +1,12 @@
 TEST_TARGETS += constTest constCharTest
 CLEAN_TARGET += $(ALL_LIBRARIES) output
 
-include ../../root/Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 
 constTest: const.C

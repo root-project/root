@@ -7,7 +7,12 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) little.root empty.root testbase.root t01.out *
 TEST_TARGETS += forwardDeclAndFake littleTest
 
 # adjust the location of Rules.mk as needed.
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 forwardDeclAndFake: t01.out
 		  $(CMDECHO)diff t01.out t01.good

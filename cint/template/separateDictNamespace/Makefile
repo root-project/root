@@ -2,7 +2,12 @@
 TEST_TARGETS += sepDictLibs
 CLEAN_TARGETS +=  *.o *.so *Dict* run.output
 
-include ../../../root/Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 ROOTCFLAGS   := $(shell root-config --cflags) -DUSE_ROOT
 ROOTLIBS     := $(patsubst -lCore, -lThread -lCore, $(shell root-config --libs))

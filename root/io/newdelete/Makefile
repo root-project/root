@@ -1,7 +1,12 @@
 TEST_TARGETS += OperatorNewTest
 CLEAN_TARGETS += *Dict* output *.o *.so
 
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 ifeq ($(ARCH),linuxicc)
 CXXFLAGS += -wd873

@@ -1,7 +1,12 @@
 CLEAN_TARGETS += $(local_clean)
 TEST_TARGETS += bigeventTest
 
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 #.SUFFIXES: .cxx .o .so
 

@@ -7,7 +7,12 @@ CLEAN_TARGETS += *.log *.root $(ALL_LIBRARIES)
 TEST_TARGETS += constTest
 
 # adjust the location of Rules.mk as needed.
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 constTest.log: constTest.C
 	$(CMDECHO) root -q -b -l constTest.C+ > constTest.log 

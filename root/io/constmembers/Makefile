@@ -1,7 +1,12 @@
 TEST_TARGETS = FileInfoTest
 CLEAN_TARGETS = dict.* dictold.*
 
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 FileInfoTest: dict.o dictold.o
 

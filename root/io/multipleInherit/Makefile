@@ -1,7 +1,12 @@
 TEST_TARGETS = multipleInheritTest
 CLEAN_TARGETS = na_cxx.$(DllSuf) hout.root
 
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 multipleInheritTest: na_cxx.$(DllSuf) hout.root
 	$(CMDECHO) root.exe -q -l -b re.C > run.C 

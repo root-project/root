@@ -2,7 +2,12 @@ CLEAN_TARGETS += *.root *~ *.$(ObjSuf) *Dict.cxx *Dict.h *.$(DllSuf) reader writ
 	 write.out
 TEST_TARGETS +=  check
 
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 LIBS = $(ROOTLIBS)
 

@@ -1,8 +1,13 @@
-SUBDIRS =  
 TEST_TARGETS = Simple 
 CLEAN_TARGETS += main *Dict* Event.root *~ $(ALL_LIBRARIES) *.log
 
-include ../../Rules.mk
+
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
+
 
 $(ROOTSYS)/test/Event:
 	(cd $ROOTSYS/test; gmake Event)

@@ -7,7 +7,12 @@ CLEAN_TARGETS += test.root output create.out def_C* *.log
 TEST_TARGETS += testForeignDraw
 
 # adjust the location of Rules.mk as needed.
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 test.root: def.C def.h
 	$(CMDECHO) root.exe -b -l -q def.C+ > create.log

@@ -7,7 +7,12 @@ CLEAN_TARGETS += testFormulaFuncCall.log
 TEST_TARGETS += testFormulaFuncCall testNestedFunc
 
 # adjust the location of Rules.mk as needed.
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 testFormulaFuncCall.log: func.C testcl.C
 	$(CMDECHO) root.exe -q -l -b func.C	> testFormulaFuncCall.log 2>&1

@@ -7,7 +7,12 @@ CLEAN_TARGETS +=  *.log $(ALL_LIBRARIES) *.d
 TEST_TARGETS += headerTest clonesATest EmbeddedTest inheritTest relationsTest
 
 # adjust the location of Rules.mk as needed.
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 inherit_C.$(DllSuf): inherit.C buildInherit.C
 	$(CMDECHO) root.exe -q -b -l buildInherit.C > buildInherit.log

@@ -2,12 +2,19 @@
 all: tests
 test: tests ChainFriend ChainFriendStatus
 
-override SUBDIRS =  
+
 
 CLEAN_TARGETS += main *Dict* *~ createfile.out run.out unevenFriend.out treeChainFriend.log $(ALL_LIBRARIES)
 TEST_TARGETS += ChainFriend unevenFriend treeChainFriend ChainFriendStatus
 
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+override SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 
 files: Event.root Event2.root

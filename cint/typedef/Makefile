@@ -7,7 +7,12 @@ CLEAN_TARGETS += $(ALL_LIBRARIES)
 TEST_TARGETS += typedefAndScope
 
 # adjust the location of Rules.mk as needed.
-include ../../root/Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 typedefAndScope.log: testclass.h
 	$(CMDECHO) root.exe -q -b -l testclass.h+ > typedefAndScope.log

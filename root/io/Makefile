@@ -1,13 +1,16 @@
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
+
+
 all: tests
 test: tests
 
-SUBDIRS = arrayobject bigevent namespacedict newdelete \
-	multipleInherit evolution references fakeClass tree treeForeign \
-	longlong const newClassDef tclass rootcint rootcint/stl set heritstl \
-	abstractclass
 
+include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-include ../Rules.mk
 
 
 
