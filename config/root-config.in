@@ -270,12 +270,6 @@ macosx)
    expl2="-u _G__cpp_setup_initializerG__G3D"
    auxlibs="$expl1 $expl2 -lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
    auxglibs=${auxlibs}
-   for f in $features ; do
-      if test "x$f" = "xthread" ; then
-	 auxcflags="-D_REENTRANT $auxcflags"
-	 auxlibs="-lpthread $auxlibs"
-      fi
-   done
    ;;
 macosxxlc)
    # MacOS X with IBM xl compiler and possible fink (fink.sf.net)
@@ -334,7 +328,7 @@ case $arch in
       auxldflags="--exceptions $auxldflags"
    fi
    ;;
-linux*)
+*)
    for f in $features ; do
       if test "x$f" = "xthread" ; then
 	 auxcflags="-D_REENTRANT $auxcflags"
