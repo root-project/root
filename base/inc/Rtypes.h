@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.5 2000/11/21 21:45:32 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.6 2000/12/02 16:24:58 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -63,8 +63,7 @@ typedef float          Real_t;      //TVector and TMatrix element type
 
 typedef void         (*VoidFuncPtr_t)();  //pointer to void function
 class TBuffer;
-typedef void (*Streamer_t)(TBuffer &, void*);
-
+typedef void (*Streamer_t)(TBuffer &, void*, int);
 
 //---- constants ---------------------------------------------------------------
 
