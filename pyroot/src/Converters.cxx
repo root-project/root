@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.1 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.2 2005/03/16 06:15:06 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -106,8 +106,8 @@ bool PyROOT::VoidArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
       void* buf = 0;
       int buflen = (*(bufprocs->bf_getwritebuffer))( pyobject, 0, &buf );
 
-   // determine buffer compatibility
-      if ( buflen / (*(seqmeths->sq_length))( pyobject ) == sizeof( void* ) ) {
+   // ok if buffer exists (can't perform any useful size checks)
+      if ( buflen ) {
       // this is a gamble ... may or may not be ok, but that's for the user
          func->SetArg( (long) buf );
          return true;

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.21 2005/03/30 05:16:19 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.22 2005/03/30 19:20:32 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -77,11 +77,11 @@ void PyROOT::InitRoot()
    // retrieve arg list from python, translate to raw C, pass on
       PyObject* argl = PySys_GetObject( "argv" );
 
-      int argc = PyList_Size( argl );
+      int argc = argl ? PyList_Size( argl ) : 1;
       char** argv = new char*[ argc ];
-      for ( int i = 0; i < argc; ++i )
+      for ( int i = 1; i < argc; ++i )
          argv[ i ] = PyString_AS_STRING( PyList_GET_ITEM( argl, i ) );
-      argv[0] = Py_GetProgramName();
+      argv[ 0 ] = Py_GetProgramName();
 
       gApplication = new PyROOTApplication( "PyROOT", &argc, argv );
    }
