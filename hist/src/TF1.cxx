@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.74 2003/11/07 11:15:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.75 2003/11/07 16:27:31 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -452,8 +452,9 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fNdim       = 1;
 //*-*- Store formula in linked list of formula in ROOT
 
+   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
+   if (f1old) delete f1old;
    SetName(name);
-   if (gROOT->GetListOfFunctions()->FindObject(name)) return;
    gROOT->GetListOfFunctions()->Add(this);
 
    if (!gStyle) return;
