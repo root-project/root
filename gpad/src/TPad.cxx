@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.71 2002/03/05 16:59:08 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.72 2002/03/07 01:02:26 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2731,7 +2731,6 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 //*-*-*-*-*-*-*-*-*Paint box in CurrentPad World coordinates*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
 
-   Color_t fcolor;
    if (!gPad->IsBatch()) {
       Int_t px1 = XtoPixel(x1);
       Int_t px2 = XtoPixel(x2);
@@ -2744,11 +2743,9 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
       Int_t style = gVirtualX->GetFillStyle();
       if (style) {
          if (style > 3000 && style < 4000) {
-            fcolor = -1;
 #ifndef WIN32
-            if (style < 3020) {
-               // set solid background color
-               gVirtualX->SetFillStyle(1001);
+            if (style < 3026) {
+               // draw stipples
                gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
             }
 
@@ -2758,18 +2755,16 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
                TNamed *gifnamed = (TNamed*)gROOT->GetListOfSpecials()->FindObject(gifname);
                if (gifnamed) gVirtualX->ReadGIF(px1,py2,gifnamed->GetTitle());
             }
-            if (style > 3020 && style < 3100) {
-               gVirtualX->SetFillStyle(style-10);
-            } else {
-               fcolor = gVirtualX->GetFillColor(); // save fill color
+               //special case for TAttFillCanvas
+            if (gVirtualX->GetFillColor() == 10) {
                gVirtualX->SetFillColor(1);
-               gVirtualX->SetFillStyle(style);
+               gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
+               gVirtualX->SetFillColor(10);
             }
 #else
 #ifdef GDK_WIN32
-            if (style < 3020) {
-               // set solid background color
-               gVirtualX->SetFillStyle(1001);
+            if (style < 3026) {
+               // draw stipples
                gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
             }
 
@@ -2779,28 +2774,11 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
                TNamed *gifnamed = (TNamed*)gROOT->GetListOfSpecials()->FindObject(gifname);
                if (gifnamed) gVirtualX->ReadGIF(px1,py2,gifnamed->GetTitle());
             }
-            if (style > 3020 && style < 3100) {
-               gVirtualX->SetFillStyle(style-10);
-            } else {
-               fcolor = gVirtualX->GetFillColor(); // save fill color
+               //special case for TAttFillCanvas
+            if (gVirtualX->GetFillColor() == 10) {
                gVirtualX->SetFillColor(1);
-               gVirtualX->SetFillStyle(style);
-            }
-#endif
-#endif
-            // draw stipples
-            gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
-
-#ifndef WIN32
-            // restore fill color
-            if (fcolor >= 0) {
-               gVirtualX->SetFillColor(fcolor);
-            }
-#else
-#ifdef GDK_WIN32
-            // restore fill color
-            if (fcolor >= 0) {
-               gVirtualX->SetFillColor(fcolor);
+               gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
+               gVirtualX->SetFillColor(10);
             }
 #endif
 #endif
