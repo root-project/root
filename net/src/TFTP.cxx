@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.9 2001/03/05 15:27:26 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.10 2002/02/03 18:40:08 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -248,7 +248,7 @@ Seek_t TFTP::PutFile(const char *file, const char *remoteName)
    Int_t fd = open(file, O_RDONLY | O_BINARY);
 #endif
    if (fd < 0) {
-      Error("PutFile", "cannot open %s", file);
+      Error("PutFile", "cannot open %s in read mode", file);
       return -1;
    }
 
@@ -259,8 +259,11 @@ Seek_t TFTP::PutFile(const char *file, const char *remoteName)
          close(fd);
          return -1;
       }
-   } else
-      Warning("PutFile", "could not stat file, assuming it is a regular file");
+   } else {
+      Warning("PutFile", "could not stat %s", file);
+      close(fd);
+      return -1;
+   }
 
    if (!remoteName)
       remoteName = file;
@@ -476,6 +479,7 @@ Seek_t TFTP::GetFile(const char *file, const char *localName)
          if (space < size - restartat) {
             Error("GetFile", "not enough space to store file %s", localName);
             // send urgent message to rootd to stop tranfer
+            close(fd);
             return -1;
          }
       } else
