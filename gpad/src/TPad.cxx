@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.151 2004/10/29 16:07:32 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.152 2004/11/04 10:34:04 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2951,6 +2951,13 @@ void TPad::PaintFillArea(Int_t nn, Float_t *xx, Float_t *yy, Option_t *)
       return;
    }
 
+//*-*- Paint the fill area with hatches
+   Int_t fillstyle = gVirtualX->GetFillStyle();
+   if (fillstyle/1000 == 3 && fillstyle%1000 > 100) {
+      PaintFillAreaHatches(nn, x, y, fillstyle);
+      return;
+   }
+
    TPoint *pxy;
 
 //*-*- Create temporary array to store array in pixel coordinates
@@ -2964,7 +2971,7 @@ void TPad::PaintFillArea(Int_t nn, Float_t *xx, Float_t *yy, Option_t *)
          pxy[i].fY = gPad->YtoPixel(y[i]);
       }
 //*-*- invoke the graphics subsystem
-      if (gVirtualX->GetFillStyle() == 0) {
+      if (fillstyle == 0) {
          pxy[n].fX = pxy[0].fX;
          pxy[n].fY = pxy[0].fY;
          gVirtualX->DrawFillArea(n+1,pxy);
@@ -3036,6 +3043,13 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
       return;
    }
 
+//*-*- Paint the fill area with hatches
+   Int_t fillstyle = gVirtualX->GetFillStyle();
+   if (fillstyle/1000 == 3 && fillstyle%1000 > 100) {
+      PaintFillAreaHatches(nn, x, y, fillstyle);
+      return;
+   }
+
    TPoint *pxy;
 
 //*-*- Create temporary array to store array in pixel coordinates
@@ -3049,7 +3063,7 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
          pxy[i].fY = gPad->YtoPixel(y[i]);
       }
 //*-*- invoke the graphics subsystem
-      if (gVirtualX->GetFillStyle() == 0) {
+      if (fillstyle == 0) {
          pxy[n].fX = pxy[0].fX;
          pxy[n].fY = pxy[0].fY;
          gVirtualX->DrawFillArea(n+1,pxy);
@@ -3065,6 +3079,192 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
    delete [] x;
    delete [] y;
    Modified();
+}
+
+//______________________________________________________________________________
+void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t FillStyle)
+{
+  //   This function paints hatched fill area arcording to the FillStyle value
+  // The convention for the Hatch is the following:
+  //
+  //            FillStyle = 3ijk
+  //
+  //    i (1-9) : specify the space between each hatch
+  //              1 = 1/2mm  9 = 6mm
+  //
+  //    j (0-9) : specify angle between 0 and 90 degrees
+  //
+  //              0 = 0
+  //              1 = 10
+  //              2 = 20
+  //              3 = 30
+  //              4 = 45
+  //              5 = Not drawn
+  //              6 = 60
+  //              7 = 70
+  //              8 = 80
+  //              9 = 90
+  //
+  //    k (0-9) : specify angle between 90 and 180 degrees
+  //              0 = 180
+  //              1 = 170
+  //              2 = 160
+  //              3 = 150
+  //              4 = 135
+  //              5 = Not drawn
+  //              6 = 120
+  //              7 = 110
+  //              8 = 100
+  //              9 = 90
+
+   static Double_t Ang1[10] = {0., 10., 20., 30., 45.,5., 60., 70., 80., 90.};
+   static Double_t Ang2[10] = {180.,170.,160.,150.,135.,5.,120.,110.,100., 90.};
+
+   Int_t fasi  = FillStyle%1000;
+   Int_t IDSPA = (Int_t)(fasi/100);
+   Int_t IAng2 = (Int_t)((fasi-100*IDSPA)/10);
+   Int_t IAng1 = fasi%10;
+   Double_t dy = 0.003*(Double_t)(IDSPA);
+   if (Ang1[IAng1] != 5.) PaintHatches(dy, Ang1[IAng1], nn, xx, yy);
+   if (Ang2[IAng2] != 5.) PaintHatches(dy, Ang2[IAng2], nn, xx, yy);
+}
+
+//______________________________________________________________________________
+void TPad::PaintHatches(Double_t dy, Double_t angle,
+                        Int_t nn, Double_t *xx, Double_t *yy)
+{
+   // This routine draw hatches inclined with the
+   // angle "angle" and spaced of "dy" in normalized device
+   // coordinates in the surface defined by n,xx,yy.
+
+   Int_t i, i1, i2, nbi, m, inv;
+   Double_t ratio1, ratio2, ymin, ymax, yrot, ycur;
+   const Double_t angr  = TMath::Pi()*(180-angle)/180.;
+   const Double_t epsil = 0.0001;
+   const Int_t maxnbi = 100;
+   Double_t xli[maxnbi], xlh[2], ylh[2], xt1, xt2, yt1, yt2;
+   Double_t ll, x, y, x1, x2, y1, y2, a, b, xi, xip, xin, yi, yip;
+
+   Double_t RWxmin = gPad->GetX1();
+   Double_t RWxmax = gPad->GetX2();
+   Double_t RWymin = gPad->GetY1();
+   Double_t RWymax = gPad->GetY2();
+   ratio1 = 1/(RWxmax-RWxmin);
+   ratio2 = 1/(RWymax-RWymin);
+
+   Double_t sina = TMath::Sin(angr), sinb;
+   Double_t cosa = TMath::Cos(angr), cosb;
+   if (TMath::Abs(cosa) <= epsil) cosa=0.;
+   if (TMath::Abs(sina) <= epsil) sina=0.;
+   sinb = -sina;
+   cosb = cosa;
+
+   // Search ymin and ymax
+   ymin = 1.;
+   ymax = 0.;
+   for (i=1; i<=nn; i++) {
+      x    = ratio1*(xx[i-1]-RWxmin);
+      y    = ratio2*(yy[i-1]-RWymin);
+      yrot = sina*x+cosa*y;
+      if (yrot > ymax) ymax = yrot;
+      if (yrot < ymin) ymin = yrot;
+   }
+   ymax = (Double_t)((Int_t)(ymax/dy))*dy;
+
+   for (ycur=ymax; ycur>=ymin; ycur=ycur-dy) {
+      nbi = 0;
+      for (i=2; i<=nn+1; i++) {
+         i2 = i;
+         i1 = i-1;
+         if (i == nn+1) i2=1;
+         x1  = ratio1*(xx[i1-1]-RWxmin);
+         y1  = ratio2*(yy[i1-1]-RWymin);
+         x2  = ratio1*(xx[i2-1]-RWxmin);
+         y2  = ratio2*(yy[i2-1]-RWymin);
+         xt1 = cosa*x1-sina*y1;
+         yt1 = sina*x1+cosa*y1;
+         xt2 = cosa*x2-sina*y2;
+         yt2 = sina*x2+cosa*y2;
+
+         // Line segment parallel to oy
+         if (xt1 == xt2) {
+            if (yt1 < yt2) {
+               yi  = yt1;
+               yip = yt2;
+            } else {
+               yi  = yt2;
+               yip = yt1;
+            }
+            if ((yi <= ycur) && (ycur < yip)) {
+               nbi++;
+	       if (nbi >= maxnbi) return;
+               xli[nbi-1] = xt1;
+            }
+            continue;
+         }
+
+         // Line segment parallel to ox
+         if (yt1 == yt2) {
+            if (yt1 == ycur) {
+               nbi++;
+	       if (nbi >= maxnbi) return;
+               xli[nbi-1] = xt1;
+               nbi++;
+	       if (nbi >= maxnbi) return;
+               xli[nbi-1] = xt2;
+            }
+            continue;
+         }
+
+         // Other line segment
+         a = (yt1-yt2)/(xt1-xt2);
+         b = (yt2*xt1-xt2*yt1)/(xt1-xt2);
+         if (xt1 < xt2) {
+            xi  = xt1;
+            xip = xt2;
+         } else {
+            xi  = xt2;
+            xip = xt1;
+         }
+         xin = (ycur-b)/a;
+         if  ((xi <= xin) && (xin < xip) &&
+              (TMath::Min(yt1,yt2) <= ycur) &&
+              (ycur < TMath::Max(yt1,yt2))) {
+            nbi++;
+	    if (nbi >= maxnbi) return;
+            xli[nbi-1] = xin;
+         }
+      }
+
+      // Sorting of the x coordinates intersections
+      inv = 0;
+      m   = nbi-1;
+L30:
+      for (i=1; i<=m; i++) {
+         if (xli[i] < xli[i-1]) {
+            inv++;
+            ll       = xli[i-1];
+            xli[i-1] = xli[i];
+            xli[i]   = ll;
+         }
+      }
+      m--;
+      if (inv == 0) goto L50;
+      inv = 0;
+      goto L30;
+
+      // Draw the hatches
+L50:
+      if (nbi%2 != 0) continue;
+
+      for (i=1; i<=nbi; i=i+2) {
+         xlh[0] = cosb*xli[i-1]-sinb*ycur;
+         ylh[0] = sinb*xli[i-1]+cosb*ycur;
+         xlh[1] = cosb*xli[i]-sinb*ycur;
+         ylh[1] = sinb*xli[i]+cosb*ycur;
+         gPad->PaintLineNDC(xlh[0], ylh[0], xlh[1], ylh[1]);
+      }
+   }
 }
 
 //______________________________________________________________________________
