@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: Roo2DKeysPdf.rdl,v 1.3 2001/09/08 02:29:49 bevan Exp $
+ *    File: $Id: Roo2DKeysPdf.rdl,v 1.5 2002/01/30 09:08:51 bevan Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -26,7 +26,7 @@
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooDataSet.hh"
-#include <iostream>
+#include <iostream.h>
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Use of the PDF:
