@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.42 2004/01/26 09:49:26 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.43 2004/01/28 11:28:28 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -921,6 +921,9 @@ void TGWin32::CloseDisplay()
    fWindows = 0;
 
    if (fXEvent) gdk_event_free((GdkEvent*)fXEvent);
+
+   gPtr2VirtualX = &TGWin32VirtualXProxy::RealObject;
+   gPtr2Interpreter = &TGWin32InterpreterProxy::RealObject;
 }
 
 //______________________________________________________________________________
@@ -1551,6 +1554,8 @@ void TGWin32::CloseWindow1()
 
    int wid;
 
+   if (!fWindows) return;
+
    if (gCws->ispixmap) {
       gdk_pixmap_unref(gCws->window);
    } else {
@@ -1585,6 +1590,8 @@ void TGWin32::CloseWindow1()
 void TGWin32::CopyPixmap(int wid, int xpos, int ypos)
 {
    // Copy the pixmap wid at the position xpos, ypos in the current window.
+
+   if (!fWindows) return;
 
    gTws = &fWindows[wid];
    gdk_window_copy_area(gCws->drawing, gGCpxmp, xpos, ypos, gTws->drawing,
@@ -1903,6 +1910,8 @@ Int_t TGWin32::GetDoubleBuffer(int wid)
 {
    // Query the double buffer value for the window wid.
 
+   if (!fWindows) return 0;
+
    gTws = &fWindows[wid];
 
    if (!gTws->open) {
@@ -1921,6 +1930,8 @@ void TGWin32::GetGeometry(int wid, int &x, int &y, unsigned int &w,
    // x,y        : window position (output)
    // w,h        : window size (output)
    // if wid < 0 the size of the display is returned
+
+   if (!fWindows) return;
 
    if (wid < 0) {
       x = 0;
@@ -1992,6 +2003,7 @@ Window_t TGWin32::GetWindowID(int wid)
    // Return the X11 window identifier.
    // wid      : Workstation identifier (input)
 
+   if (!fWindows) return 0;
    return (Window_t) fWindows[wid].window;
 }
 
@@ -2002,6 +2014,8 @@ void TGWin32::MoveWindow(int wid, int x, int y)
    // wid  : GdkWindow identifier.
    // x    : x new window position
    // y    : y new window position
+
+   if (!fWindows) return;
 
    gTws = &fWindows[wid];
    if (!gTws->open) return;
@@ -2672,6 +2686,8 @@ void TGWin32::ResizeWindow(int wid)
    GdkWindow *win, *root = NULL;
    int wval = 0, hval = 0, depth = 0;
 
+   if (!fWindows) return;
+
    gTws = &fWindows[wid];
 
    win = (GdkWindow *) gTws->window;
@@ -2717,7 +2733,7 @@ void TGWin32::SelectWindow(int wid)
    int i;
    GdkRectangle rect;
 
-   if (wid < 0 || wid >= fMaxNumberOfWindows || !fWindows[wid].open) {
+   if (!fWindows || wid < 0 || wid >= fMaxNumberOfWindows || !fWindows[wid].open) {
       return;
    }
 
@@ -2773,6 +2789,8 @@ void TGWin32::SetClipOFF(int wid)
 {
    // Turn off the clipping for the window wid.
 
+   if (!fWindows) return;
+
    gTws = &fWindows[wid];
    gTws->clip = 0;
 
@@ -2789,6 +2807,8 @@ void TGWin32::SetClipRegion(int wid, int x, int y, unsigned int w,
    // wid        : GdkWindow indentifier
    // x,y        : origin of clipping rectangle
    // w,h        : size of clipping rectangle;
+
+   if (!fWindows) return;
 
    gTws = &fWindows[wid];
    gTws->xclip = x;
@@ -2885,6 +2905,8 @@ void TGWin32::SetCursor(int wid, ECursor cursor)
 {
    // Set the cursor.
 
+   if (!fWindows) return;
+
    gTws = &fWindows[wid];
    gdk_window_set_cursor((GdkWindow *)gTws->window, (GdkCursor *)fCursors[cursor]);
 }
@@ -2912,6 +2934,8 @@ void TGWin32::SetDoubleBuffer(int wid, int mode)
    //        999 means all the opened windows.
    // mode : 1 double buffer is on
    //        0 double buffer is off
+
+   if (!fWindows) return;
 
    if (wid == 999) {
       for (int i = 0; i < fMaxNumberOfWindows; i++) {
@@ -2947,6 +2971,8 @@ void TGWin32::SetDoubleBufferOFF()
 {
    // Turn double buffer mode off.
 
+   if (!fWindows) return;
+
    if (!gTws->double_buffer) return;
    gTws->double_buffer = 0;
    gTws->drawing = gTws->window;
@@ -2959,7 +2985,7 @@ void TGWin32::SetDoubleBufferON()
 
    Int_t depth;
 
-   if (gTws->double_buffer || gTws->ispixmap) return;
+   if (!fWindows || gTws->double_buffer || gTws->ispixmap) return;
 
    if (!gTws->buffer) {
       gTws->buffer = gdk_pixmap_new(GDK_ROOT_PARENT(),	//NULL,
@@ -3929,6 +3955,8 @@ void TGWin32::Warp(int ix, int iy)
    // iy       : New Y coordinate of pointer
    // (both coordinates are relative to the origin of the current window)
 
+   if (!fWindows) return;
+
    POINT cpt, tmp;
    HWND dw = (HWND) GDK_DRAWABLE_XID((GdkWindow *)gCws->window);
    GetCursorPos(&cpt);
@@ -3951,6 +3979,7 @@ void TGWin32::WritePixmap(int wid, unsigned int w, unsigned int h,
    wval = w;
    hval = h;
 
+   if (!fWindows) return;
    gTws = &fWindows[wid];
 //   XWriteBitmapFile(fDisplay,pxname,(Pixmap)gTws->drawing,wval,hval,-1,-1);
 }
