@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.12 2000/09/05 10:13:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.13 2000/09/05 10:55:30 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 //       gROOT->GetListOfSpecials (for example graphical cuts)
 //       gROOT->GetListOfGeometries
 //       gROOT->GetListOfBrowsers
+//       gROOT->GetListOfCleanups
 //       gROOT->GetListOfMessageHandlers
 //
 //   The TROOT class provides also many useful services:
@@ -242,6 +243,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fTypes       = 0;
    fGlobals     = 0;
    fGlobalFunctions = 0;
+   fList        = new TList(this);
    fFiles       = new TList(this);
    fMappedFiles = new TList(this);
    fSockets     = new TList(this);
@@ -253,12 +255,14 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fBrowsers    = new TList(this);
    fSpecials    = new TList(this);
    fBrowsables  = new TList(this);
+   fCleanups    = new TList(this);
    fMessageHandlers = new TList(this);
    
-   fRootFolder = new TFolder("root","root of all folders");
+   fRootFolder = new TFolder();
+   fRootFolder->SetName("root");
+   fRootFolder->SetTitle("root of all folders");
    fRootFolder->AddFolder("Classes",   "List of active classes",fClasses);
    fRootFolder->AddFolder("Colors",    "List of active colors",fColors);
-   fRootFolder->AddFolder("Files",     "List of connected root files",fFiles);
    fRootFolder->AddFolder("MapFiles",  "List of MapFiles",fMappedFiles);
    fRootFolder->AddFolder("Sockets",   "List of Socket connections",fSockets);
    fRootFolder->AddFolder("Canvases",  "List of Canvases",fCanvases);
@@ -269,7 +273,14 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fRootFolder->AddFolder("Browsers",  "List of Browsers",fBrowsers);
    fRootFolder->AddFolder("Specials",  "List of Special objects",fSpecials);
    fRootFolder->AddFolder("Handlers",  "List of Message Handlers",fMessageHandlers);
+   fRootFolder->AddFolder("Cleanups",  "List of RecursiveRemove collections",fCleanups);
+   fRootFolder->AddFolder("ROOT Files","List of connected root files",fFiles);
 
+   // by default, add the list of tasks, canvases and browsers in the Cleanups list
+   fCleanups->Add(fCanvases);
+   fCleanups->Add(fBrowsers);
+   fCleanups->Add(fTasks);
+   
    fForceStyle    = kFALSE;
    fFromPopUp     = kFALSE;
    fReadingBasket = kFALSE;
@@ -324,10 +335,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    // Set initial/default list of browsable objects
    fBrowsables->Add(fRootFolder, "root");
-   fBrowsables->Add(fClasses, "Classes");
-   fBrowsables->Add(fGeometries, "Geometries");
-   fBrowsables->Add(fStyles, "Styles");
-   fBrowsables->Add(fFunctions, "Functions");
    fBrowsables->Add(workdir, gSystem->WorkingDirectory());
    fBrowsables->Add(fFiles, "ROOT Files");
 
@@ -459,29 +466,27 @@ TObject *TROOT::FindObject(const char *name) const
 
    TObject *temp = 0;
 
-   if (!temp && !strcmp(name, "gPad")) temp = gPad;
-   if (!temp) temp   = fFiles->FindObject(name);
-   if (!temp) temp   = fMappedFiles->FindObject(name);
-   if (!temp) temp   = fFunctions->FindObject(name);
-   if (!temp) temp   = fGeometries->FindObject(name);
-   if (!temp) temp   = fCanvases->FindObject(name);
-   if (!temp) temp   = fStyles->FindObject(name);
-   if (!temp) temp   = fSpecials->FindObject(name);
-   if (!temp && TClassTable::GetDict("TGeometry")) {
-      TObjArray *loc = (TObjArray*)((TROOT*)this)->ProcessLineFast(Form("TGeometry::Get(\"%s\")",name));
-      if (loc) temp   = loc->At(0);
-   }
-   if (!temp && gDirectory) temp   = gDirectory->Get(name);
-   if (!temp && gPad) {
+   temp   = fFiles->FindObject(name);       if (temp) return temp;
+   temp   = fMappedFiles->FindObject(name); if (temp) return temp;
+   temp   = fFunctions->FindObject(name);   if (temp) return temp;
+   temp   = fGeometries->FindObject(name);  if (temp) return temp;
+   temp   = fCanvases->FindObject(name);    if (temp) return temp;
+   temp   = fStyles->FindObject(name);      if (temp) return temp;
+   temp   = fSpecials->FindObject(name);    if (temp) return temp;
+   TIter next(fGeometries);
+   TObject *obj;
+   while ((obj=next())) {
+      temp = obj->FindObject(name);         if (temp) return temp;
+   }      
+   if (gDirectory) temp = gDirectory->Get(name); if (temp) return temp;
+   if (gPad) {
       TVirtualPad *canvas = gPad->GetVirtCanvas();
       if (fCanvases->FindObject(canvas)) {  //this check in case call from TCanvas ctor
-         temp   = canvas->GetPrimitive(name);
-         if (!temp && canvas != gPad) temp  = gPad->GetPrimitive(name);
+         temp   = canvas->FindObject(name);
+         if (!temp && canvas != gPad) temp  = gPad->FindObject(name);
       }
    }
-   if (!temp) return 0;
-   if (temp->TestBit(kNotDeleted)) return temp;
-   return 0;
+   return temp;
 }
 
 //______________________________________________________________________________
@@ -532,8 +537,8 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
       where = fFunctions;
    }
    if (!temp) {
-      temp   = fGeometries->FindObject(name);
-      where = fGeometries;
+//      temp   = fGeometries->FindObject(name);
+//      where = fGeometries;
    }
    if (!temp) {
       temp   = fCanvases->FindObject(name);
@@ -561,10 +566,10 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
    if (!temp && gPad) {
       TVirtualPad *canvas = gPad->GetVirtCanvas();
       if (fCanvases->FindObject(canvas)) {  //this check in case call from TCanvas ctor
-         temp   = canvas->GetPrimitive(name);
+         temp   = canvas->FindObject(name);
          where = canvas;
          if (!temp && canvas != gPad) {
-            temp  = gPad->GetPrimitive(name);
+            temp  = gPad->FindObject(name);
             where = gPad;
          }
       }
@@ -572,6 +577,14 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
    if (!temp) return 0;
    if (temp->TestBit(kNotDeleted)) return temp;
    return 0;
+}
+
+//______________________________________________________________________________
+TObject *TROOT::FindObjectAny(const char *name) const
+{
+// return a pointer to the first object with name starting at //root
+   
+   return fRootFolder->FindObjectAny(name);
 }
 
 //______________________________________________________________________________
@@ -589,6 +602,19 @@ const char *TROOT::FindObjectClassName(const char *name) const
    if (g) return g->GetTypeName();
 
    return 0;
+}
+
+//______________________________________________________________________________
+const char *TROOT::FindObjectPathName(TObject *obj) const
+{
+// Return path name of obj somewhere in the //root/.. path
+// The function returns the first occurence of the object in the list of folders
+// The returned string points to a static char array in TROOT.
+// If this function is called in a loop or recursively, it is the
+// user's responsability to copy this string in his area.
+   
+   Error("FindObjectPathName","Not yet implemented");
+   return "??";
 }
 
 //______________________________________________________________________________

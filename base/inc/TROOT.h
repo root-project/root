@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.4 2000/09/05 09:12:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.5 2000/09/05 10:55:30 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -37,7 +37,6 @@ class TColor;
 class TDataType;
 class TFile;
 class TStyle;
-class TDirectory;
 class TVirtualPad;
 class TApplication;
 class TInterpreter;
@@ -93,11 +92,12 @@ protected:
    TSeqCollection  *fGeometries;          //List of geometries
    TSeqCollection  *fBrowsers;            //List of browsers
    TSeqCollection  *fSpecials;            //List of special objects
+   TSeqCollection  *fCleanups;            //List of recursiveRemove collections
    TSeqCollection  *fMessageHandlers;     //List of message handlers
+   TFolder         *fRootFolder;          //top level folder //root
    TList           *fBrowsables;          //List of browsables
-   TFolder         *fRootFolder;          //Pointer to the top Root folder
-   TString         fDefCanvasName;        //Name of default canvas
    TString         fCutClassName;         //Name of default CutG class in graphics editor
+   TString         fDefCanvasName;        //Name of default canvas
 
    static VoidFuncPtr_t fgMakeDefCanvas;  //Pointer to default canvas constructor
 
@@ -112,10 +112,12 @@ public:
    virtual           ~TROOT();
    void              Browse(TBrowser *b);
    Bool_t            ClassSaved(TClass *cl);
-   TObject          *FindObject(const char *name) const;
+   virtual TObject  *FindObject(const char *name) const;
+   virtual TObject  *FindObject(TObject *obj) const;
+   virtual TObject  *FindObjectAny(const char *name) const;
    TObject          *FindSpecialObject(const char *name, void *&where);
    const char       *FindObjectClassName(const char *name) const;
-   virtual TObject  *FindObject(TObject *obj) const;
+   const char       *FindObjectPathName(TObject *obj) const;
    void              ForceStyle(Bool_t force=kTRUE) {fForceStyle = force;}
    Bool_t            FromPopUp() {return fFromPopUp;}
    TApplication     *GetApplication() {return fApplication;}
@@ -146,6 +148,7 @@ public:
    TSeqCollection   *GetListOfBrowsers()   {return fBrowsers;}
    TSeqCollection   *GetListOfSpecials()   {return fSpecials;}
    TSeqCollection   *GetListOfTasks()      {return fTasks;}
+   TSeqCollection   *GetListOfCleanups()   {return fCleanups;}
    TSeqCollection   *GetListOfMessageHandlers()   {return fMessageHandlers;}
    TList            *GetListOfBrowsables() {return fBrowsables;}
    TDataType        *GetType(const char *name, Bool_t load = kFALSE);
