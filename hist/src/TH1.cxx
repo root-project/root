@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.168 2004/02/16 09:24:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.169 2004/02/16 09:34:59 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2814,7 +2814,7 @@ Int_t TH1::GetBin(Int_t binx, Int_t biny, Int_t binz) const
 }
 
 //______________________________________________________________________________
-Axis_t TH1::GetRandom()
+Axis_t TH1::GetRandom() const
 {
 // return a random number distributed according the histogram bin contents.
 // This function checks if the bins integral exists. If not, the integral
@@ -2830,9 +2830,9 @@ Axis_t TH1::GetRandom()
    Int_t nbinsx = GetNbinsX();
    Double_t integral;
    if (fIntegral) {
-      if (fIntegral[nbinsx+1] != fEntries) integral = ComputeIntegral();
+      if (fIntegral[nbinsx+1] != fEntries) integral = ((TH1*)this)->ComputeIntegral();
    } else {
-      integral = ComputeIntegral();
+      integral = ((TH1*)this)->ComputeIntegral();
       if (integral == 0 || fIntegral == 0) return 0;
    }
    Double_t r1 = gRandom->Rndm();
