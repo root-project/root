@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.10 2002/08/15 18:15:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.11 2002/12/02 18:50:01 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TMD5.h"
 #include "TError.h"
 #include "TSystem.h"
+#include "Bytes.h"
 #include <string.h>
 #include <errno.h>
 #ifdef R__WIN32
@@ -261,8 +262,7 @@ void TMD5::ByteReverse(UChar_t *buf, UInt_t longs)
 #ifdef R__BYTESWAP
    UInt_t t;
    do {
-      t = (UInt_t) ((UInt_t) buf[3] << 8 | buf[2]) << 16 |
-                   ((UInt_t) buf[1] << 8 | buf[0]);
+      t = host2net(*(UInt_t *)buf);
       *(UInt_t *) buf = t;
       buf += 4;
    } while (--longs);
