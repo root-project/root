@@ -9,10 +9,6 @@ void graph2dfit()
 {
    gStyle->SetOptStat(0);
    gStyle->SetOptFit();
-   gStyle->SetPadBorderMode(0);
-   gStyle->SetFrameBorderMode(0);
-   gStyle->SetCanvasBorderMode(0);
-   gStyle->SetCanvasColor(0);
 
    TCanvas *c = new TCanvas("c","Graph2D example",0,0,800,800);
    c->Divide(2,3);
@@ -63,8 +59,8 @@ void graph2dfit()
    gStyle->SetPalette(1);
    c->cd(1);
    f2->SetTitle("Original function with Graph2D points on top");
-   f2->Draw("surf");
-   dt->Draw("same p");
+   f2->Draw("surf1");
+   dt->Draw("same p0");
 
    c->cd(3);
    dt->SetMargin(0.1);
@@ -83,4 +79,5 @@ void graph2dfit()
    c->cd(2); h1->Fit("gaus","Q") ; h1->Draw();
    c->cd(4); h2->Fit("gaus","Q") ; h2->Draw();
    c->cd(6); h3->Fit("gaus","Q") ; h3->Draw();
+   c->cd();
 }
