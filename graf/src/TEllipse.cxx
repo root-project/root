@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.12 2002/05/18 08:21:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.13 2002/10/31 07:27:35 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -443,16 +443,21 @@ void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phi
 //*-*-*-*-*-*-*-*-*-*-*Draw this ellipse with new coordinates*-*-*-*-*-*-*-*-*
 //*-*                  ======================================
 
-   const Int_t np = 40;
+   const Int_t np = 200;
    static Double_t x[np+3], y[np+3];
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill attributes only if necessary
 
+   //set number of points approximatively proportional to the ellipse circumference
+   Double_t circ = kPI*(fR1+fR2)*(phimax-phimin)/360;
+   Int_t n = (Int_t)(np*circ/((gPad->GetX2()-gPad->GetX1())+(gPad->GetY2()-gPad->GetY1())));
+   if (n < 8) n= 8;
+   if (n > np) n = np;
    Double_t angle,dx,dy;
-   Double_t dphi = (phimax-phimin)*kPI/(180*np);
+   Double_t dphi = (phimax-phimin)*kPI/(180*n);
    Double_t ct   = TMath::Cos(kPI*theta/180);
    Double_t st   = TMath::Sin(kPI*theta/180);
-   for (Int_t i=0;i<=np;i++) {
+   for (Int_t i=0;i<=n;i++) {
       angle = phimin*kPI/180 + Double_t(i)*dphi;
       dx    = fR1*TMath::Cos(angle);
       dy    = fR2*TMath::Sin(angle);
@@ -462,17 +467,17 @@ void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phi
    TString opt = option;
    opt.ToLower();
    if (phimax-phimin >= 360 ) {
-      if (GetFillColor()) gPad->PaintFillArea(np,x,y);
-      if (GetLineStyle()) gPad->PaintPolyLine(np+1,x,y);
+      if (GetFillColor()) gPad->PaintFillArea(n,x,y);
+      if (GetLineStyle()) gPad->PaintPolyLine(n+1,x,y);
    } else {
-      x[np+1] = fX1;
-      y[np+1] = fY1;
-      x[np+2] = x[0];
-      y[np+2] = y[0];
-      if (GetFillColor()) gPad->PaintFillArea(np+2,x,y);
+      x[n+1] = fX1;
+      y[n+1] = fY1;
+      x[n+2] = x[0];
+      y[n+2] = y[0];
+      if (GetFillColor()) gPad->PaintFillArea(n+2,x,y);
       if (GetLineStyle()) {
-         if (opt.Contains("only")) gPad->PaintPolyLine(np+1,x,y);
-         else                      gPad->PaintPolyLine(np+3,x,y);
+         if (opt.Contains("only")) gPad->PaintPolyLine(n+1,x,y);
+         else                      gPad->PaintPolyLine(n+3,x,y);
       }
    }
 }
