@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.41 2003/05/23 16:20:24 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.42 2003/05/28 11:55:32 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -284,7 +284,7 @@ TRootIconBox::TRootIconBox(TGListView *lv, UInt_t options, ULong_t back) :
    fActiveObject = 0;
 
    // Don't use timer HERE (timer is set in TBrowser).
-   delete fRefresh;
+   StopRefreshTimer();
    fRefresh = 0;
 }
 

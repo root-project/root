@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.14 2002/11/15 13:24:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.15 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -50,6 +50,7 @@ enum EListViewMode {
 class TGSelectedPicture;
 class TGTextButton;
 class TGListView;
+class TGLVContainer;
 
 
 class TGLVEntry : public TGFrame {
@@ -86,6 +87,11 @@ public:
              TGString *name, TGString **subnames, EListViewMode ViewMode,
              UInt_t options = kChildFrame,
              Pixel_t back = GetWhitePixel());
+
+   TGLVEntry(const TGLVContainer *p,
+             const TString& name, const TString& cname, TGString **subnames = 0,
+             UInt_t options = kChildFrame, Pixel_t back = GetWhitePixel());
+
    virtual ~TGLVEntry();
 
    virtual void SetViewMode(EListViewMode ViewMode);

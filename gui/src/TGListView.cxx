@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.14 2002/11/15 13:24:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.15 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -46,7 +46,7 @@
 #include "TList.h"
 #include "TMath.h"
 #include "TSystem.h"
-
+#include "TGMimeTypes.h"
 
 const TGFont *TGLVEntry::fgDefaultFont = 0;
 TGGC         *TGLVEntry::fgDefaultGC = 0;
@@ -111,6 +111,57 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
       if (!cont->IsMapSubwindows()) {
          fClient->UnregisterWindow(this);
       }
+   }
+}
+
+//______________________________________________________________________________
+TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name, 
+                     const TString& cname, TGString **subnames,
+                     UInt_t options, Pixel_t back) :
+   TGFrame(p, 10, 10, options, back)
+{
+   // Create a list view item.
+
+   fSelPic = 0;
+
+   fCurrent  =
+   fBigPic   = fClient->GetMimeTypeList()->GetIcon(cname, kFALSE);
+   fSmallPic = fClient->GetMimeTypeList()->GetIcon(cname, kTRUE);
+
+   fName = new TGString(name);
+   fSubnames = subnames;
+   fUserData = 0;
+
+   fCpos  =
+   fJmode = 0;
+
+   fActive = kFALSE;
+
+   fFontStruct = GetDefaultFontStruct();
+   fNormGC     = GetDefaultGC()();
+
+   Int_t max_ascent, max_descent;
+   fTWidth = gVirtualX->TextWidth(fFontStruct, fName->GetString(), fName->GetLength());
+   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
+   fTHeight = max_ascent + max_descent;
+
+   if (fSubnames) {
+      Int_t i;
+      for (i = 0; fSubnames[i] != 0; ++i)
+         ;
+      fCtw = new int[i];
+      for (i = 0; fSubnames[i] != 0; ++i)
+         fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
+                                        fSubnames[i]->GetLength());
+   } else {
+      fCtw = 0;
+   }
+
+   fViewMode = (EListViewMode)-1;
+   SetViewMode((EListViewMode)p->GetViewMode());
+
+   if (!p->IsMapSubwindows()) {
+      fClient->UnregisterWindow(this);
    }
 }
 

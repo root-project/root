@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.30 2003/07/02 11:40:06 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.31 2003/07/03 11:41:02 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -15,6 +15,7 @@
 #include <TGResourcePool.h>
 #include <TGListBox.h>
 #include <TGListTree.h>
+#include <TGFSContainer.h>
 #include <TGClient.h>
 #include <TGFrame.h>
 #include <TGIcon.h>
@@ -42,6 +43,9 @@
 #include <TSystem.h>
 #include <TSystemDirectory.h>
 #include <TEnv.h>
+#include <TFile.h>
+#include <TKey.h>
+
 
 
 enum ETestCommandIdentifiers {
@@ -57,6 +61,7 @@ enum ETestCommandIdentifiers {
    M_TEST_SLIDER,
    M_TEST_SHUTTER,
    M_TEST_DIRLIST,
+   M_TEST_FILELIST,
    M_TEST_PROGRESS,
    M_TEST_NUMBERENTRY,
    M_TEST_NEWMENU,
@@ -337,6 +342,27 @@ public:
 };
 
 
+
+class TestFileList  : public TGTransientFrame {
+
+protected:
+   TGFileContainer  *fContents;
+   TList            *fTrash;
+
+   virtual void DisplayFile(const TString &fname);
+   virtual void DisplayDirectory(const TString &fname);
+   virtual void DisplayObject(const TString& fname,const TString& name);
+   virtual void OnDoubleClick(TGLVEntry*,Int_t);
+   virtual void DoMenu(Int_t);
+
+public:
+   TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
+   virtual ~TestFileList();
+
+   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+};
+
+
 class TestProgress : public TGTransientFrame {
 
 private:
@@ -526,6 +552,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuTest->AddEntry("&Sliders...", M_TEST_SLIDER);
    fMenuTest->AddEntry("Sh&utter...", M_TEST_SHUTTER);
    fMenuTest->AddEntry("&List Directory...", M_TEST_DIRLIST);
+   fMenuTest->AddEntry("&File List...", M_TEST_FILELIST);
    fMenuTest->AddEntry("&Progress...", M_TEST_PROGRESS);
    fMenuTest->AddEntry("&Number Entry...", M_TEST_NUMBERENTRY);
    fMenuTest->AddSeparator();
@@ -728,6 +755,10 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case M_TEST_DIRLIST:
                      new TestDirList(gClient->GetRoot(), this, 400, 200);
+                     break;
+
+                  case M_TEST_FILELIST:
+                     new TestFileList(gClient->GetRoot(), this, 400, 200);
                      break;
 
                   case M_TEST_PROGRESS:
@@ -1669,7 +1700,7 @@ TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
    TGLayoutHints *lo;
    fIcon = gClient->GetPicture("rootdb_t.xpm");
 
-   TGCanvas* canvas = new TGCanvas(this, 500, 300);
+   TGCanvas* canvas = new TGCanvas(this, w, h);
    fTrash->Add(canvas);
    fContents = new TGListTree(canvas, kHorizontalFrame);
    fContents->Associate(this);
@@ -1703,10 +1734,8 @@ TestDirList::~TestDirList()
    // dtor.
 
    delete fContents;
-
    fTrash->Delete();
    delete fTrash;
-   delete fMain;
 }
 
 TString TestDirList::DirName(TGListTreeItem* item)
@@ -1763,6 +1792,168 @@ Bool_t TestDirList::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
    return kTRUE;
 }
+
+
+
+TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h) :
+              TGTransientFrame(p, main, w, h)
+{
+   // Create transient frame containing a filelist widget.
+   
+   fTrash = new TList();
+   TGLayoutHints *lo;
+
+   TGMenuBar* mb = new TGMenuBar(this);
+   lo = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1);
+   AddFrame(mb, lo);
+   fTrash->Add(mb);
+   fTrash->Add(lo);
+
+   TGPopupMenu *menu = mb->AddPopup("&View");
+   menu->AddEntry("Lar&ge Icons",kLVLargeIcons);
+   menu->AddEntry("S&mall Icons",kLVSmallIcons);
+   menu->AddEntry("&List",       kLVList);
+   menu->AddEntry("&Details",    kLVDetails);
+   menu->AddEntry("&Close",      10);
+   menu->Associate(this);
+
+   TGListView* lv = new TGListView(this, w, h);
+   lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
+   AddFrame(lv,lo);
+   fTrash->Add(lv);
+   fTrash->Add(lo);
+
+   Pixel_t white;
+   gClient->GetColorByName("white",white);
+   fContents = new TGFileContainer(lv,kSunkenFrame,white);
+   fContents->Associate(this);
+
+   // position relative to the parent's window
+   Window_t wdum;
+   int ax, ay;
+   gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
+             (Int_t)(((TGFrame *) main)->GetWidth() - GetWidth()) >> 1,
+             (Int_t)(((TGFrame *) main)->GetHeight() - GetHeight()) >> 1,
+             ax, ay, wdum);
+   Move(ax, ay);
+   SetWindowName("File List Test");
+   Resize(GetDefaultSize());
+   MapSubwindows();
+   MapWindow();
+   fContents->DisplayDirectory();
+   fContents->AddFile("..");  // up level directory
+   fContents->Layout();
+}
+
+TestFileList::~TestFileList()
+{
+   // dtor.
+
+   delete fContents;
+   fTrash->Delete();
+   delete fTrash;
+}
+
+void TestFileList::DisplayFile(const TString &fname)
+{
+   // display content of ROOT file
+
+   TFile file(fname);
+   fContents->RemoveAll();
+   fContents->AddFile(".");
+   fContents->SetPagePosition(0,0);
+
+   TIter next(file.GetListOfKeys());
+   TKey *key;
+
+   while ((key=(TKey*)next())) {
+      TString cname = key->GetClassName();
+      TString name = key->GetName();
+      TGLVEntry *entry = new TGLVEntry(fContents,name,cname);
+      fContents->AddItem(entry);
+
+      // user data is a filename
+      entry->SetUserData((void*)strdup(fname.Data()));
+   }
+   fContents->Layout();
+}
+
+void TestFileList::DisplayDirectory(const TString &fname)
+{
+   // display content of directory
+
+   gSystem->ChangeDirectory(fname);
+   fContents->ChangeDirectory(fname);
+   fContents->DisplayDirectory();
+   fContents->AddFile("..");  // up level directory
+   fContents->Layout();
+}
+
+void TestFileList::DisplayObject(const TString& fname,const TString& name)
+{
+   // browse object located in file
+
+   TDirectory *sav = gDirectory;
+   TFile f(fname);
+   TObject* obj = f.Get(name);
+   if (obj) obj->Browse(0);
+   gDirectory = sav;
+}
+
+
+void TestFileList::DoMenu(Int_t mode)
+{
+   // switch view mode
+
+   if (mode<10) {
+      fContents->SetViewMode((EListViewMode)mode);
+   } else {
+      delete this;
+   }
+}
+
+void TestFileList::OnDoubleClick(TGLVEntry* f, Int_t btn)
+{
+   // handle double click
+
+   if (btn!=kButton1) return;
+ 
+   TString name(f->GetName());
+   const char* fname = (const char*)f->GetUserData();
+
+   if (fname) {
+      DisplayObject(fname,name); 
+   } else if (name.EndsWith(".root")) {
+      DisplayFile(name);
+   } else {
+      DisplayDirectory(name);
+   }
+}
+
+Bool_t TestFileList::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+{
+   // process message sent to this widget.
+
+   switch (GET_MSG(msg)) {
+
+      case kC_CONTAINER:
+         switch (GET_SUBMSG(msg)) {
+            case kCT_ITEMDBLCLICK:
+               OnDoubleClick((TGLVEntry*)fContents->GetLastActive(), parm1);
+               break;
+         }
+         break;
+      case kC_COMMAND:
+         switch (GET_SUBMSG(msg)) {
+            case kCM_MENU:
+               DoMenu(parm1);
+               break;
+         }
+         break;
+   }
+   return kTRUE;
+}
+
 
 TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
                            UInt_t w, UInt_t h) :

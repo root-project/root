@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.25 2003/07/02 11:40:07 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.26 2003/07/03 11:41:02 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -16,6 +16,7 @@
 #include <TGResourcePool.h>
 #include <TGListBox.h>
 #include <TGListTree.h>
+#include <TGFSContainer.h>
 #include <TGClient.h>
 #include <TGFrame.h>
 #include <TGIcon.h>
@@ -44,7 +45,8 @@
 #include <TSystem.h>
 #include <TSystemDirectory.h>
 #include <TEnv.h>
-
+#include <TFile.h>
+#include <TKey.h>
 
 enum ETestCommandIdentifiers {
    M_FILE_OPEN,
@@ -59,6 +61,7 @@ enum ETestCommandIdentifiers {
    M_TEST_SLIDER,
    M_TEST_SHUTTER,
    M_TEST_DIRLIST,
+   M_TEST_FILELIST,
    M_TEST_PROGRESS,
    M_TEST_NUMBERENTRY,
    M_TEST_NEWMENU,
@@ -385,6 +388,28 @@ public:
 };
 
 
+class TestFileList {
+
+RQ_OBJECT("TestFileList")
+
+protected:
+   TGMainFrame      *fMain;
+   TGFileContainer  *fContents;
+   TList            *fTrash;
+
+   virtual void DisplayFile(const TString &fname);
+   virtual void DisplayDirectory(const TString &fname);
+   virtual void DisplayObject(const TString& fname,const TString& name);
+
+public:
+   TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
+   virtual ~TestFileList();
+
+   // slots
+   virtual void OnDoubleClick(TGLVEntry*,Int_t);
+   virtual void DoMenu(Int_t);
+};
+
 class TestProgress {
 
 private:
@@ -594,6 +619,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuTest->AddEntry("&Sliders...", M_TEST_SLIDER);
    fMenuTest->AddEntry("Sh&utter...", M_TEST_SHUTTER);
    fMenuTest->AddEntry("&List Directory...", M_TEST_DIRLIST);
+   fMenuTest->AddEntry("&File List...", M_TEST_FILELIST);
    fMenuTest->AddEntry("&Progress...", M_TEST_PROGRESS);
    fMenuTest->AddEntry("&Number Entry...", M_TEST_NUMBERENTRY);
    fMenuTest->AddSeparator();
@@ -803,6 +829,10 @@ void TestMainFrame::HandleMenu(Int_t id)
 
       case M_TEST_DIRLIST:
          new TestDirList(gClient->GetRoot(), fMain, 400, 200);
+         break;
+
+     case M_TEST_FILELIST:
+         new TestFileList(gClient->GetRoot(), fMain, 400, 200);
          break;
 
       case M_TEST_PROGRESS:
@@ -1151,7 +1181,7 @@ void TestDialog::DoOK()
 
    // The same effect can be obtained by using a singleshot timer:
    //TTimer::SingleShot(50, "TestDialog", this, "CloseWindow()");
-}Contents->AddItem(0,"/");  // browse the upper directory
+}
 
 
 void TestDialog::DoCancel()
@@ -1852,6 +1882,145 @@ void TestDirList::OnDoubleClick(TGListTreeItem* item, Int_t btn)
          }
       }
       delete files;
+   }
+}
+
+
+TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h)
+{
+   // Create transient frame containing a filelist widget.
+   
+   fTrash = new TList();
+   TGLayoutHints *lo;
+
+   fMain = new TGTransientFrame(p, main, w, h);
+
+   TGMenuBar* mb = new TGMenuBar(fMain);
+   lo = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1);
+   fMain->AddFrame(mb, lo);
+   fTrash->Add(mb);
+   fTrash->Add(lo);
+
+   TGPopupMenu *menu = mb->AddPopup("&View");
+   menu->AddEntry("Lar&ge Icons",kLVLargeIcons);
+   menu->AddEntry("S&mall Icons",kLVSmallIcons);
+   menu->AddEntry("&List",       kLVList);
+   menu->AddEntry("&Details",    kLVDetails);
+   menu->AddEntry("&Close",      10);
+   menu->Connect("Activated(Int_t)","TestFileList",this,"DoMenu(Int_t)");
+
+   TGListView* lv = new TGListView(fMain, w, h);
+   lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
+   fMain->AddFrame(lv,lo);
+   fTrash->Add(lv);
+   fTrash->Add(lo);
+
+   Pixel_t white;
+   gClient->GetColorByName("white",white);
+   fContents = new TGFileContainer(lv,kSunkenFrame,white);
+   fContents->Connect("DoubleClicked(TGFrame*,Int_t)","TestFileList",this,
+                      "OnDoubleClick(TGLVEntry*,Int_t)");
+
+   // position relative to the parent's window
+   Window_t wdum;
+   int ax, ay;
+   gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
+             (Int_t)(((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
+             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
+             ax, ay, wdum);
+   fMain->Move(ax, ay);
+
+   fMain->SetWindowName("File List Test");
+   fMain->Resize(fMain->GetDefaultSize());
+   fMain->MapSubwindows();
+   fMain->MapWindow();
+   fContents->DisplayDirectory();
+   fContents->AddFile("..");  // up level directory
+   fContents->Layout();
+}
+
+TestFileList::~TestFileList()
+{
+   // dtor.
+
+   delete fContents;
+   fTrash->Delete();
+   delete fTrash;
+   delete fMain;
+}
+
+void TestFileList::DoMenu(Int_t mode)
+{
+   // switch view mode
+
+   if (mode<10) {
+      fContents->SetViewMode((EListViewMode)mode);
+   } else {
+      delete this;
+   }
+}
+
+void TestFileList::DisplayFile(const TString &fname)
+{
+   // display content of ROOT file
+
+   TFile file(fname);
+   fContents->RemoveAll();
+   fContents->AddFile(".");
+   fContents->SetPagePosition(0,0);
+
+   TIter next(file.GetListOfKeys());
+   TKey *key;
+
+   while ((key=(TKey*)next())) {
+      TString cname = key->GetClassName();
+      TString name = key->GetName();
+      TGLVEntry *entry = new TGLVEntry(fContents,name,cname);
+      fContents->AddItem(entry);
+
+      // user data is a filename
+      entry->SetUserData((void*)strdup(fname.Data()));
+   }
+   fContents->Layout();
+}
+
+void TestFileList::DisplayDirectory(const TString &fname)
+{
+   // display content of directory
+
+   gSystem->ChangeDirectory(fname);
+   fContents->ChangeDirectory(fname);
+   fContents->DisplayDirectory();
+   fContents->AddFile("..");  // up level directory
+   fContents->Layout();
+}
+
+void TestFileList::DisplayObject(const TString& fname,const TString& name)
+{
+   // browse object located in file
+
+   TDirectory *sav = gDirectory;
+   TFile f(fname);
+   TObject* obj = f.Get(name);
+   if (obj) obj->Browse(0);
+   gDirectory = sav;
+}
+
+void TestFileList::OnDoubleClick(TGLVEntry* f, Int_t btn)
+{
+   // handle double click
+
+   if (btn!=kButton1) return;
+ 
+   TString name(f->GetName());
+   const char* fname = (const char*)f->GetUserData();
+
+   if (fname) {
+      DisplayObject(fname,name); 
+   } else if (name.EndsWith(".root")) {
+      DisplayFile(name);
+   } else {
+      DisplayDirectory(name);
    }
 }
 

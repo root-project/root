@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.14 2003/03/15 14:19:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.15 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -270,12 +270,13 @@ protected:
    TList        *fTitles;        // list of menu titles
    Cursor_t      fDefaultCursor; // right pointing cursor
    Bool_t        fStick;         // stick mode (popup menu stays sticked on screen)
+   TList        *fTrash;         // garabge 
 
    virtual void AddFrameBefore(TGFrame *f, TGLayoutHints *l = 0,
                                TGPopupMenu *before = 0);
 
 public:
-   TGMenuBar(const TGWindow *p, UInt_t w, UInt_t h,
+   TGMenuBar(const TGWindow *p, UInt_t w = 60, UInt_t h = 20,
              UInt_t options = kHorizontalFrame | kRaisedFrame);
    virtual ~TGMenuBar();
 
@@ -283,6 +284,9 @@ public:
                          TGPopupMenu *before = 0);
    virtual void AddPopup(const char *s, TGPopupMenu *menu, TGLayoutHints *l,
                          TGPopupMenu *before = 0);
+   virtual TGPopupMenu *AddPopup(const TString &s, Int_t padleft = 0, Int_t padright = 4,
+                                 Int_t padtop = 0, Int_t padbottom = 0);
+
    virtual TGPopupMenu *GetPopup(const char *s);
    virtual TGPopupMenu *RemovePopup(const char *s);
 

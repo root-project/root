@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.6 2002/11/15 13:24:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.7 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -47,36 +47,11 @@ enum EFSSortMode {
 class TRegexp;
 class TGPicture;
 class TGFileContainer;
+class TViewUpdateTimer;
+class TGFileIcon;
+class TGFileItem;
 
-
-
-class TViewUpdateTimer : public TTimer {
-
-private:
-   TGFileContainer   *fContainer;
-
-public:
-   TViewUpdateTimer(TGFileContainer *t, Long_t ms) : TTimer(ms, kTRUE) { fContainer = t; }
-   Bool_t Notify();
-};
-
-
-
-class TGFileIcon : public TGIcon {
-
-protected:
-   const TGPicture *fLpic;
-
-   virtual void DoRedraw();
-
-public:
-   TGFileIcon(const TGWindow *p, const TGPicture *pic, const TGPicture *lpic,
-              UInt_t options = kChildFrame, Pixel_t back = GetWhitePixel()) :
-      TGIcon(p, pic, 0, 0, options, back) { fLpic = lpic; }
-};
-
-
-
+#ifndef __CINT__
 class TGFileItem : public TGLVEntry {
 
 protected:
@@ -105,8 +80,7 @@ public:
    Int_t   GetType() const { return fType; }
    ULong_t GetSize() const { return fSize; }
 };
-
-
+#endif
 
 class TGFileContainer : public TGLVContainer {
 
@@ -139,6 +113,8 @@ public:
    virtual ~TGFileContainer();
 
    virtual Bool_t HandleTimer(TTimer *t);
+   void StopRefreshTimer();
+   void StartRefreshTimer(ULong_t msec=1000);
 
    virtual TGFileItem *AddFile(const char *name);
    virtual void AddFrame(TGFrame *f, TGLayoutHints *l = 0);
