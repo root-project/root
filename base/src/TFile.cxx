@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.43 2001/12/18 18:10:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.44 2002/01/11 15:47:59 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -306,7 +306,7 @@ TFile::~TFile()
    Close();
 
    delete fProcessIDs; fProcessIDs = 0;
-   
+
    SafeDelete(fFree);
    SafeDelete(fCache);
 
@@ -431,19 +431,13 @@ void TFile::Init(Bool_t create)
       }
    }
    gROOT->GetListOfFiles()->Add(this);
-   
+
    // Create StreamerInfo index
    {
       Int_t lenIndex = gROOT->GetListOfStreamerInfo()->GetSize()+1;
       if (lenIndex < 5000) lenIndex = 5000;
       fClassIndex = new TArrayC(lenIndex);
       if (fSeekFree > fBEGIN) ReadStreamerInfo();
-   }
-
-   if (TClassTable::GetDict("TProof")) {
-      if (gROOT->ProcessLineFast("TProof::IsActive()"))
-         gROOT->ProcessLineFast(Form("TProof::This()->ConnectFile((TFile *)0x%lx);",
-                                (Long_t)this));
    }
 
    fProcessIDs = new TObjArray(10);
@@ -522,14 +516,8 @@ void TFile::Close(Option_t *)
          if (pid != TProcessID::GetProcessID(0)) delete pid;
       }
    }
-   
-   gROOT->GetListOfFiles()->Remove(this);
 
-   if (TClassTable::GetDict("TProof")) {
-      if (gROOT->ProcessLineFast("TProof::IsActive()"))
-         gROOT->ProcessLineFast(Form("TProof::This()->DisConnectFile((TFile *)0x%lx);",
-                                (Long_t)this));
-   }
+   gROOT->GetListOfFiles()->Remove(this);
 
    TCollection::EmptyGarbageCollection();
 }
@@ -804,7 +792,7 @@ void TFile::Map()
 //     Date/Time  Record_Adress Logical_Record_Length  ClassName  CompressionFactor
 //
 //  Example of output
-//  20010404/150437  At:64        N=150       TFile         
+//  20010404/150437  At:64        N=150       TFile
 //  20010404/150440  At:214       N=28326     TBasket        CX =  1.13
 //  20010404/150440  At:28540     N=29616     TBasket        CX =  1.08
 //  20010404/150440  At:58156     N=29640     TBasket        CX =  1.08
@@ -824,10 +812,10 @@ void TFile::Map()
 //  20010404/150442  At:380771    N=1769      TH2F           CX =  4.32
 //  20010404/150442  At:382540    N=1849      TProfile       CX =  1.65
 //  20010404/150442  At:384389    N=18434     TNtuple        CX =  4.51
-//  20010404/150442  At:402823    N=307       KeysList      
+//  20010404/150442  At:402823    N=307       KeysList
 //  20010404/150443  At:403130    N=4548      StreamerInfo   CX =  3.65
-//  20010404/150443  At:407678    N=86        FreeSegments  
-//  20010404/150443  At:407764    N=1         END           
+//  20010404/150443  At:407678    N=86        FreeSegments
+//  20010404/150443  At:407764    N=1         END
 //
    Short_t  keylen,cycle;
    UInt_t   datime;
@@ -842,7 +830,7 @@ void TFile::Map()
 
    char header[kBegin];
    char classname[512];
-   
+
    while (idcur < fEND) {
       Seek(idcur);
       if (idcur+nread >= fEND) nread = fEND-idcur-1;
@@ -1632,16 +1620,10 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    // TRFIOFile and with "file:" or the default a local TFile. However,
    // before opening a file via TNetFile a check is made to see if the URL
    // specifies a local file. If that is the case the file will be opened
-   // via a normal TFile (+). To force the opening of a local file via a
+   // via a normal TFile. To force the opening of a local file via a
    // TNetFile use either TNetFile directly or specify as host "localhost".
    // For the meaning of the options and other arguments see the constructors
    // of the individual file classes. In case of error returns 0.
-
-   // (+) Unless PROOF is active and this is not a PROOF master server, i.e.
-   // this is a PROOF client, in that case open as a TNetFile so the TNetFile
-   // gets propagated to PROOF to be opened there too (a TFile open does not
-   // get propagated to PROOF since it makes not much sense trying to open
-   // a local file on a remote machine).
 
    TFile *f = 0;
 
@@ -1649,10 +1631,7 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
       TUrl url(name);
       TInetAddress a(gSystem->GetHostByName(url.GetHost()));
       TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
-      if (strcmp(a.GetHostName(), b.GetHostName()) ||
-          (TClassTable::GetDict("TProof") &&
-           gROOT->ProcessLineFast("TProof::IsActive()") &&
-           !gROOT->ProcessLineFast("TProof::This()->IsMaster()")))
+      if (strcmp(a.GetHostName(), b.GetHostName()))
          f = new TNetFile(name, option, ftitle, compress, netopt);
       else {
          const char *fname = url.GetFile();
