@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.13 2002/12/02 18:50:01 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.14 2003/08/08 18:07:42 rdm Exp $ */
 /* Author: */
 
 /*
@@ -773,7 +773,7 @@ char *
 Getlinem(int mode, const char *prompt)
 {
     int             c, loc, tmp;
-    int             sig;   
+    int             sig;
 
     if (mode == 2) {
        gl_cleanup();
@@ -806,7 +806,7 @@ Getlinem(int mode, const char *prompt)
                gl_addchar(c);
         } else {
             if (gl_search_mode) {
-                if (c == '\033' || c == '\016' || c == '\020') {
+                if (c == '\016' || c == '\020') {
                     search_term();
                     c = 0;              /* ignore the character */
                 } else if (c == '\010' || c == '\177') {
@@ -927,7 +927,7 @@ Getlinem(int mode, const char *prompt)
                       switch(c = gl_getc())
                       {
                       case 'A':                           /* up */
- 
+
                            strcpy(gl_buf, hist_prev());
                            if (Gl_in_hook)
                                 Gl_in_hook(gl_buf);
@@ -942,6 +942,10 @@ Getlinem(int mode, const char *prompt)
                       case 'C': gl_fixup(gl_prompt, -1, gl_pos+1);  /* right */
                            break;
                       case 'D': gl_fixup(gl_prompt, -1, gl_pos-1);  /* left */
+                           break;
+                      case '3':  /* delete */
+                           gl_del(0);
+                           c = gl_getc(); /* ignore ~ */
                            break;
                       default:                                 /* who knows */
                            gl_putc('\007');
