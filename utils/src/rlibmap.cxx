@@ -23,7 +23,7 @@
 
 const char *usage = "Usage: %s [-f] [-o <libmapfile>] <sofile> <sofile> ...\n";
 
-#if defined(__linux)
+#if defined(__linux) || defined(__FreeBSD__)
 #if defined(__INTEL_COMPILER) || (__GNUC__ >= 3)
 const char *kNM = "nm --demangle=gnu-v3";
 #else
