@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooUniformBinning.rdl,v 1.1 2002/03/07 06:22:24 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
@@ -20,6 +20,7 @@ class TIterator ;
 class RooUniformBinning : public RooAbsBinning {
 public:
 
+  RooUniformBinning() ;
   RooUniformBinning(Double_t xlo, Double_t xhi, Int_t nBins) ;
   RooUniformBinning(const RooUniformBinning& other) ;
   RooAbsBinning* clone() const { return new RooUniformBinning(*this) ; }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooLinTransBinning.rdl,v 1.1 2002/03/07 06:22:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
@@ -19,6 +19,7 @@
 class RooLinTransBinning : public RooAbsBinning {
 public:
 
+  RooLinTransBinning() {} ; 
   RooLinTransBinning(const RooAbsBinning& input, Double_t slope=1.0, Double_t offset=0.0) ;
   RooLinTransBinning(const RooLinTransBinning&) ;
   virtual RooLinTransBinning* clone() const { return new RooLinTransBinning(*this) ; }
@@ -51,7 +52,7 @@ protected:
 
   Double_t _slope ;
   Double_t _offset ;
-  RooAbsBinning* _input ; //!
+  RooAbsBinning* _input ; 
   mutable Double_t *_array ; //!
 
   ClassDef(RooLinTransBinning,1) // Linear transformation of binning specification

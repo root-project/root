@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooDouble.rdl,v 1.1 2002/03/07 06:22:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
@@ -19,6 +19,7 @@
 class RooDouble : public TObject {
 public:
 
+  RooDouble() {} ;
   RooDouble(Double_t value) : TObject(), _value(value) {} ;
   RooDouble(const RooDouble& other) : TObject(other), _value(other._value) {}
   virtual ~RooDouble() {} ;

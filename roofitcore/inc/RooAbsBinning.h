@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsBinning.rdl,v 1.1 2002/03/07 06:22:18 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
@@ -15,9 +15,10 @@
 
 #include "Rtypes.h"
 #include "RooFitCore/RooPrintable.hh"
+#include "TObject.h" 
 class TIterator ;
 
-class RooAbsBinning : public RooPrintable {
+class RooAbsBinning : public TObject, public RooPrintable {
 public:
 
   RooAbsBinning() ;

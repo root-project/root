@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.35 2002/03/07 06:22:23 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.36 2002/03/08 01:15:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,6 +34,11 @@ ClassImp(RooRealVar)
 Bool_t RooRealVar::_printScientific(kFALSE) ;
 Int_t  RooRealVar::_printSigDigits(5) ;
 
+
+RooRealVar::RooRealVar() 
+{
+  // Default constructor
+}
 
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, const char *unit) :
