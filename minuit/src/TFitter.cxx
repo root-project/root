@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.17 2004/07/06 14:57:18 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.18 2004/07/09 08:02:46 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -444,7 +444,7 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
 //      becomes suddenly a non-linear case , which takes several iterations
 //      instead of 0 as in the linear case .
 //
-//  2) The effective variance technique assumes that there is correlation 
+//  2) The effective variance technique assumes that there is no correlation 
 //      between the x and y coordinate .
 //
 //    The book by Sigmund Brandt (Data  Analysis) contains an interesting
