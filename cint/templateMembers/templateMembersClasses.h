@@ -23,7 +23,7 @@ template <class T>
 class TemplateClass {
  public:
   TemplateClass() { SHOW; }
-  ~TemplateClass() { SHOW; }
+  virtual ~TemplateClass() { SHOW; }
   ClassDef(TemplateClass,0);
 };
 
@@ -86,7 +86,7 @@ class shared_ptr {
 /*   template <class U> */
 /*     shared_ptr<T>() { SHOW; } //rootcint can't find this */
 
-  ~shared_ptr() { SHOW; }
+  virtual ~shared_ptr() { SHOW; }
 
   ClassDef(shared_ptr, 0);
 };
