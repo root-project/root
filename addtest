@@ -31,22 +31,12 @@ if [ $# -lt 2 ] ; then
 fi
 
 check_target=`grep -F " $1 " $2/Makefile`
-#echo $check_target
-
-
-#if [ "$check_target" != "" ]; then
-	#printALREADY_EXIST ;
-#fi
-
-check_target2=`grep -F "$1:" $2/Makefile`
-#echo $check_target2
 
 
 if [ "$check_target" != "" ]; then
 	printALREADY_EXIST $1 $2;
 fi
 
-#printERROR ;
 
 check_target2=`grep "$1 *:" $2/Makefile`
 
@@ -83,9 +73,6 @@ sed -e "s/TEST_TARGETS += /TEST_TARGETS += $1 /g" Makefile > Makefile1
 rm Makefile
 
 mv Makefile1 Makefile
-
-#sed -e "s/mytest/$1/g" Makefile1 > Makefile
-#rm Makefile1
 
 echo "" >> Makefile
 echo "$1: $1.log" >> Makefile
