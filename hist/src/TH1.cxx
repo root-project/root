@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.121 2002/12/16 20:29:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.122 2003/01/11 12:54:20 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -597,6 +597,7 @@ void TH1::Build()
    fXaxis.SetParent(this);
    fYaxis.SetParent(this);
    fZaxis.SetParent(this);
+   fFunctions = new TList;
 
    UseCurrentStyle();
 
@@ -610,7 +611,6 @@ void TH1::Build()
       gDirectory->Append(this);
       fDirectory = gDirectory;
    }
-   fFunctions = new TList;
 }
 
 //______________________________________________________________________________
@@ -5145,7 +5145,7 @@ void TH1::SetStats(Bool_t stats)
    if (!stats) {
       SetBit(kNoStats);
       //remove the "stats" object from the list of functions
-      delete fFunctions->FindObject("stats");
+      if (fFunctions) delete fFunctions->FindObject("stats");
    }
 }
 
