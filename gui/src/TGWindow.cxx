@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.16 2004/09/11 16:27:09 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.17 2004/09/12 10:55:26 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -114,12 +114,15 @@ void TGWindow::SetWindowName(const char *name)
 {
    // Set window name.
 
-   TString wname = name;
+   TString wname;
 
    if (!name) {
       wname = ClassName();
       wname += "::" + fName;
+   } else {
+      wname = name;
    }
+
    gVirtualX->SetWindowName(fId, (char *)wname.Data());
 }
 
