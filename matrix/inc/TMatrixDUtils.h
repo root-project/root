@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.27 2004/06/01 06:16:35 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.28 2004/06/21 15:53:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -416,6 +416,8 @@ public:
                                                       const Int_t index = (rown+fRowOff)*fMatrix->GetNcols()+coln+fColOff;
                                                       const Double_t *ptr = fMatrix->GetMatrixArray();
                                                       return (const_cast<Double_t *>(ptr))[index]; }
+
+  void Rank1Update(const TVectorD &vec,Double_t alpha=1.0);
 
   void operator= (Double_t val);
   void operator+=(Double_t val);

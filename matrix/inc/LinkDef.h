@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.17 2004/05/18 14:01:04 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.18 2004/06/21 15:53:12 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -138,6 +138,7 @@
 #pragma link C++ class TMatrixDSymEigen+;
 
 #pragma link C++ class TDecompBase+;
+#pragma link C++ class TDecompBK+;
 #pragma link C++ class TDecompChol+;
 #pragma link C++ class TDecompLU+;
 #pragma link C++ class TDecompQRH+;

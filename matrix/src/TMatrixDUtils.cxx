@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.23 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.24 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -763,6 +763,33 @@ TMatrixDSub::TMatrixDSub(const TMatrixDSub &ms) : TMatrixDSub_const(ms)
 }
 
 //______________________________________________________________________________
+void TMatrixDSub::Rank1Update(const TVectorD &v,Double_t alpha)       
+{
+  // Perform a rank 1 operation on the matrix:                          
+  //     A += alpha * v * v^T
+
+  Assert(fMatrix->IsValid());
+  Assert(v.IsValid());
+
+  if (v.GetNoElements() < TMath::Max(fNrowsSub,fNcolsSub)) {
+    Error("Rank1Update","vector too short");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
+    return;
+  }
+
+  const Double_t * const pv = v.GetMatrixArray();
+        Double_t *mp = (const_cast<TMatrixDBase *>(fMatrix))->GetMatrixArray();
+
+  const Int_t ncols = fMatrix->GetNcols();
+  for (Int_t irow = 0; irow < fNrowsSub; irow++) {
+    const Int_t off = (irow+fRowOff)*ncols+fColOff;
+    const Double_t tmp = alpha*pv[irow];
+    for (Int_t icol = 0; icol < fNcolsSub; icol++)
+      mp[off+icol] += tmp*pv[icol];
+  }
+}
+
+//______________________________________________________________________________
 void TMatrixDSub::operator=(Double_t val)
 {
   // Assign val to every element of the sub matrix.
@@ -790,7 +817,7 @@ void TMatrixDSub::operator+=(Double_t val)
   for (Int_t irow = 0; irow < fNrowsSub; irow++) {
     const Int_t off = (irow+fRowOff)*ncols+fColOff;
     for (Int_t icol = 0; icol < fNcolsSub; icol++)
-      p[off+icol] = val;
+      p[off+icol] += val;
   }
 }
 
@@ -806,7 +833,7 @@ void TMatrixDSub::operator*=(Double_t val)
   for (Int_t irow = 0; irow < fNrowsSub; irow++) {
     const Int_t off = (irow+fRowOff)*ncols+fColOff;
     for (Int_t icol = 0; icol < fNcolsSub; icol++)
-      p[off+icol] = val;
+      p[off+icol] *= val;
   }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.14 2004/07/12 20:00:41 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.15 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -81,6 +81,7 @@ TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol,Int_t implicit)
   }
 
   SetBit(kMatrixSet);
+  fCondition = a.Norm1();
   fImplicitPivot = implicit;
   fTol = a.GetTol();
   if (tol > 0)
@@ -187,7 +188,7 @@ void TDecompLU::SetMatrix(const TMatrixD &a)
   }
 
   SetBit(kMatrixSet);
-  fCondition = -1.0;
+  fCondition = a.Norm1();
 
   fSign = 1.0;
   if (fNIndex != a.GetNcols()) {
@@ -269,18 +270,6 @@ Bool_t TDecompLU::Solve(TVectorD &b)
   }
 
   return kTRUE;
-}
-
-//______________________________________________________________________________
-TVectorD TDecompLU::Solve(const TVectorD &b,Bool_t &ok)
-{
-// Solve Ax=b assuming the LU form of A is stored in fLU, but assume b has *not*
-// been transformed.
-
-  TVectorD x = b;
-  ok = Solve(x);
-
-  return x;
 }
 
 //______________________________________________________________________________
@@ -429,18 +418,6 @@ Bool_t TDecompLU::TransSolve(TVectorD &b)
 }
 
 //______________________________________________________________________________
-TVectorD TDecompLU::TransSolve(const TVectorD &b,Bool_t &ok)
-{
-// Solve A^T x=b assuming the LU form of A^T is stored in fLU, but assume b has *not*
-// been transformed.
-
-  TVectorD x = b;
-  ok = TransSolve(x);
-
-  return x;
-}
-
-//______________________________________________________________________________
 Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
 {
 // Solve A^T x=b assuming the LU form of A^T is stored in fLU, but assume b has *not*
@@ -513,28 +490,6 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
 }
 
 //______________________________________________________________________________
-Double_t TDecompLU::Condition()
-{
-  if ( !TestBit(kCondition) ) {
-    fCondition = -1;
-    if (TestBit(kSingular))
-      return fCondition;
-    if ( !TestBit(kDecomposed) ) {
-      if (!Decompose())
-        return fCondition;
-    }
-    const Double_t norm = (GetMatrix()).Norm1();
-    Double_t invNorm;
-    if (Hager(invNorm))
-      fCondition = norm*invNorm;
-    else // no convergence in Hager
-      Error("Condition()","Hager procedure did NOT converge");
-    SetBit(kCondition);
-  }
-  return fCondition;
-}
-
-//______________________________________________________________________________
 void TDecompLU::Det(Double_t &d1,Double_t &d2)
 {
   if ( !TestBit(kDetermined) ) {
@@ -546,6 +501,39 @@ void TDecompLU::Det(Double_t &d1,Double_t &d2)
   }
   d1 = fDet1;
   d2 = fDet2;
+}
+
+//______________________________________________________________________________
+void TDecompLU::Invert(TMatrixD &inv)
+{
+  // For a matrix A(m,m), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+  // (m x m) Ainv is returned .
+
+  if (inv.GetNrows()  != GetNrows()  || inv.GetNcols()  != GetNcols() ||
+      inv.GetRowLwb() != GetRowLwb() || inv.GetColLwb() != GetColLwb()) {
+    Error("Invert(TMatrixD &","Input matrix has wrong shape");
+    inv.Invalidate();
+    return;
+  }
+
+  inv.UnitMatrix();
+  MultiSolve(inv);
+}
+
+//______________________________________________________________________________
+TMatrixD TDecompLU::Invert()
+{  
+  // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+  // (n x m) Ainv is returned .
+
+  const Int_t rowLwb = GetRowLwb();
+  const Int_t rowUpb = rowLwb+GetNrows()-1;
+
+  TMatrixD inv(rowLwb,rowUpb,rowLwb,rowUpb);
+  inv.UnitMatrix();
+  MultiSolve(inv);
+
+  return inv;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.16 2004/06/13 14:53:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.17 2004/07/12 20:00:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -609,22 +609,6 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
 }
 
 //______________________________________________________________________________
-TVectorD TDecompSVD::Solve(const TVectorD &b,Bool_t &ok)
-{    
-// Solve Ax=b assuming the SVD form of A is stored .
-// If A is of size (m x n), the solution will be of size (n) .
-//
-// For m > n , x  is the least-squares solution of min(A . x - b)
-    
-  TVectorD x = b; 
-  ok = Solve(x);
-  if (GetNrows() != GetNcols())
-    x.ResizeTo(GetNcols());
-     
-  return x;
-}   
-
-//______________________________________________________________________________
 Bool_t TDecompSVD::Solve(TMatrixDColumn &cb)
 { 
   TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
@@ -731,17 +715,6 @@ Bool_t TDecompSVD::TransSolve(TVectorD &b)
 }
 
 //______________________________________________________________________________
-TVectorD TDecompSVD::TransSolve(const TVectorD &b,Bool_t &ok)
-{ 
-// Solve A^T x=b assuming the SVD form of A is stored .
-
-  TVectorD x = b;
-  ok = TransSolve(x);
-
-  return x;
-}  
-
-//______________________________________________________________________________
 Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
 {
   TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
@@ -829,6 +802,43 @@ void TDecompSVD::Det(Double_t &d1,Double_t &d2)
   }
   d1 = fDet1;
   d2 = fDet2;
+}
+
+//______________________________________________________________________________
+void TDecompSVD::Invert(TMatrixD &inv)
+{
+  // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+  // The user should always supply a matrix of size (m x m) !
+  // If m > n , only the (n x m) part of the returned (pseudo inverse) matrix
+  // should be used .
+
+  if (inv.GetNrows()  != GetNrows()  || inv.GetNcols()  != GetNrows() ||
+      inv.GetRowLwb() != GetRowLwb() || inv.GetColLwb() != GetColLwb()) {
+    Error("Invert(TMatrixD &","Input matrix has wrong shape");
+    inv.Invalidate();
+    return;
+  }
+
+  inv.UnitMatrix();
+  MultiSolve(inv);
+}
+
+//______________________________________________________________________________
+TMatrixD TDecompSVD::Invert()
+{  
+  // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+  // (n x m) Ainv is returned .
+
+  const Int_t rowLwb = GetRowLwb();
+  const Int_t colLwb = GetColLwb();
+  const Int_t rowUpb = rowLwb+GetNrows()-1;
+  const Int_t colUpb = colLwb+GetNcols()-1;
+  TMatrixD inv(rowLwb,rowUpb,colLwb,colLwb+GetNrows()-1);
+  inv.UnitMatrix();
+  MultiSolve(inv);
+  inv.ResizeTo(rowLwb,rowUpb,colLwb,colUpb);
+
+  return inv;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.14 2004/06/13 14:53:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.15 2004/07/12 20:00:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -274,39 +274,6 @@ Bool_t TDecompBase::MultiSolve(TMatrixD &B)
     B.Invalidate();
 
   return status;
-}
-
-//______________________________________________________________________________
-void TDecompBase::Invert(TMatrixD &inv)
-{
-  // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
-  // The user should always supply a matrix of size (m x m) !
-  // If m > n , only the (n x m) part of the returned (pseudo inverse) matrix
-  // should be used .
-
-  if (inv.GetNrows() != GetNrows() || inv.GetNcols() != GetNrows()) {
-    Error("Invert(TMatrixDBase &","Input matrix has wrong shape");
-    inv.Invalidate();
-    return;
-  }
-
-  memset(inv.GetMatrixArray(),0,inv.GetNoElements()*sizeof(Double_t));
-  TMatrixDDiag diag(inv); diag = 1.;
-  MultiSolve(inv);
-}
-
-//______________________________________________________________________________
-TMatrixD TDecompBase::Invert()
-{   
-  // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
-  // (n x m) Ainv is returned . 
-
-  TMatrixD inv(GetNrows(),GetNrows());
-  inv.UnitMatrix();
-  MultiSolve(inv);
-  inv.ResizeTo(GetNcols(),GetNrows());
-
-  return inv;
 }
 
 //______________________________________________________________________________

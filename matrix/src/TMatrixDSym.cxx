@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.18 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.19 2004/09/07 19:36:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -24,7 +24,9 @@
 #include "TMatrixDSym.h"
 #include "TMatrixFSym.h"
 #include "TMatrixDLazy.h"
+#include "TMatrixDSymCramerInv.h"
 #include "TDecompLU.h"
+#include "TDecompBK.h"
 #include "TMatrixDSymEigen.h"
 
 ClassImp(TMatrixDSym)
@@ -95,7 +97,7 @@ TMatrixDSym::TMatrixDSym(EMatrixCreatorsOp1 op,const TMatrixDSym &prototype)
 {
   // Create a matrix applying a specific operation to the prototype.
   // Example: TMatrixDSym a(10,12); ...; TMatrixDSym b(TMatrixDBase::kTransposed, a);
-  // Supported operations are: kZero, kUnit, and kTransposed .
+  // Supported operations are: kZero, kUnit, kTransposed, kInverted and kAtA.
 
   Assert(this != &prototype);
   Invalidate();
@@ -119,6 +121,19 @@ TMatrixDSym::TMatrixDSym(EMatrixCreatorsOp1 op,const TMatrixDSym &prototype)
                prototype.GetColLwb(),prototype.GetRowLwb());
       Transpose(prototype);
       break;
+
+    case kInverted:
+    { 
+      Allocate(prototype.GetNrows(),prototype.GetNcols(),
+               prototype.GetRowLwb(),prototype.GetColLwb(),1);
+      *this = prototype;
+      // Since the user can not control the tolerance of this newly created matrix
+      // we put it to the smallest possible number 
+      const Double_t oldTol = this->SetTol(DBL_MIN);
+      this->Invert();
+      this->SetTol(oldTol);
+      break;
+    }
 
     case kAtA:
       AtMultA(prototype);
@@ -618,6 +633,71 @@ void TMatrixDSym::Determinant(Double_t &d1,Double_t &d2) const
 }
 
 //______________________________________________________________________________
+TMatrixDSym &TMatrixDSym::Invert(Double_t *det)
+{     
+  // Invert the matrix and calculate its determinant
+    
+  if (det)
+    *det = this->Determinant();
+  TDecompBK bk(*this,fTol);
+  bk.Invert(*this);
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixDSym &TMatrixDSym::InvertFast(Double_t *det)
+{
+  // Invert the matrix and calculate its determinant
+
+  Assert(IsValid());
+
+  const Char_t nRows = Char_t(GetNrows());
+  switch (nRows) {
+    case 1:
+    {
+      Double_t *pM = this->GetMatrixArray();
+      if (*pM == 0.) Invalidate();
+      else           *pM = 1.0/(*pM);
+      return *this;
+    }
+    case 2:
+    {
+      TMatrixDSymCramerInv::Inv2x2(*this,det);
+      return *this;
+    }
+    case 3:
+    {
+      TMatrixDSymCramerInv::Inv3x3(*this,det);
+      return *this;
+    }
+    case 4:
+    {
+      TMatrixDSymCramerInv::Inv4x4(*this,det);
+      return *this;
+    }
+    case 5:
+    {
+      TMatrixDSymCramerInv::Inv5x5(*this,det);
+      return *this;
+    }
+    case 6:
+    {
+      TMatrixDSymCramerInv::Inv6x6(*this,det);
+      return *this;
+    }
+
+    default:
+    {
+      if (det)
+        *det = this->Determinant();
+      TDecompBK bk(*this,fTol);
+      bk.Invert(*this);
+      return *this;
+    }
+  }
+}
+
+//______________________________________________________________________________
 TMatrixDSym &TMatrixDSym::Transpose(const TMatrixDSym &source)
 {
   // Transpose a matrix.
@@ -633,6 +713,39 @@ TMatrixDSym &TMatrixDSym::Transpose(const TMatrixDSym &source)
   }
 
   *this = source;
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixDSym &TMatrixDSym::Rank1Update(const TVectorD &v,Double_t alpha)
+{
+  // Perform a rank 1 operation on the matrix:                          
+  //     A += alpha * v * v^T
+
+  Assert(IsValid());
+  Assert(v.IsValid());
+
+  if (v.GetNoElements() < fNrows) {
+    Error("Rank1Update","vector too short");
+    Invalidate();
+    return *this;
+  }
+
+  const Double_t * const pv = v.GetMatrixArray();
+        Double_t *trp = this->GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp = trp;                    // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < fNrows; i++) {
+    trp += i;         // point to [i,i]
+    tcp += i*fNcols;  // point to [i,i]
+    const Double_t tmp = alpha*pv[i];
+    for (Int_t j = i; j < fNcols; j++) {
+      if (j > i) *tcp += tmp*pv[j];
+      *trp++ += tmp*pv[j];
+      tcp += fNcols;
+    }
+    tcp -= fNelems-1; // point to [0,i]
+  }
+
   return *this;
 }
 
@@ -763,7 +876,7 @@ TMatrixDSym &TMatrixDSym::operator+=(const TMatrixDSym &source)
 
   const Double_t *sp  = source.GetMatrixArray();
         Double_t *trp = this->GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
-        Double_t *tcp = trp;                 // pointer to LL part,              traverse col-wise
+        Double_t *tcp = trp;                    // pointer to LL part,              traverse col-wise
   for (Int_t i = 0; i < fNrows; i++) {
     sp  += i;
     trp += i;         // point to [i,i]
@@ -815,7 +928,7 @@ TMatrixDBase &TMatrixDSym::Apply(const TElementActionD &action)
   
   Double_t val = 0;
   Double_t *trp = this->GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
-  Double_t *tcp = trp;                 // pointer to LL part,              traverse col-wise
+  Double_t *tcp = trp;                    // pointer to LL part,              traverse col-wise
   for (Int_t i = 0; i < fNrows; i++) {
     trp += i;         // point to [i,i]
     tcp += i*fNcols;  // point to [i,i]
@@ -841,7 +954,7 @@ TMatrixDBase &TMatrixDSym::Apply(const TElementPosActionD &action)
 
   Double_t val = 0;
   Double_t *trp = this->GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
-  Double_t *tcp = trp;                 // pointer to LL part,              traverse col-wise
+  Double_t *tcp = trp;                    // pointer to LL part,              traverse col-wise
   for (Int_t i = 0; i < fNrows; i++) {
     action.fI = i+fRowLwb;
     trp += i;         // point to [i,i]

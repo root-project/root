@@ -106,6 +106,7 @@
 #include "TDecompChol.h"
 #include "TDecompQRH.h"
 #include "TDecompSVD.h"
+#include "TDecompBK.h"
 #include "TMatrixDEigen.h"
 #include "TMatrixDSymEigen.h"
 
@@ -1348,6 +1349,13 @@ void mstress_determinant(Int_t msize)
     cout  << "\n svd det = " << d1*TMath::Power(2.0,d2) <<endl;
   }
 
+  if (gVerbose) {
+    TDecompBK bk(H);
+    Double_t d1,d2;
+    bk.Det(d1,d2);
+    cout  << "\n bk det = " << d1*TMath::Power(2.0,d2) <<endl;
+  }
+
   H.ResizeTo(7,7);
   H = THilbertMatrixDSym(7);
   H.SetTol(1.0e-20);
@@ -1901,16 +1909,18 @@ void mstress_inversion()
         cout << "Test inversion through LU" << endl;
       TMatrixD inv_lu  (msize,msize); TDecompLU   lu  (ms); lu.Invert(inv_lu);
       ok &= VerifyMatrixIdentity(inv_lu,m,verbose,epsilon);
-      if (msize <= 10) {
-        if (verbose)
-          cout << "Test inversion through Cholesky" << endl;
-        TMatrixD inv_chol(msize,msize); TDecompChol chol(ms); chol.Invert(inv_chol);
-        ok &= VerifyMatrixIdentity(inv_chol,m,verbose,epsilon);
-      }
+      if (verbose)
+        cout << "Test inversion through Cholesky" << endl;
+      TMatrixDSym inv_chol(msize); TDecompChol chol(ms); chol.Invert(inv_chol);
+      ok &= VerifyMatrixIdentity(inv_chol,m,verbose,epsilon);
       if (verbose)
         cout << "Test inversion through QRH" << endl;
       TMatrixD inv_qrh (msize,msize); TDecompQRH  qrh (ms); qrh.Invert(inv_qrh);
       ok &= VerifyMatrixIdentity(inv_qrh,m,verbose,epsilon);
+      if (verbose)
+        cout << "Test inversion through Bunch-Kaufman" << endl;
+      TMatrixDSym inv_bk(msize); TDecompBK bk(ms); chol.Invert(inv_bk);
+      ok &= VerifyMatrixIdentity(inv_bk,m,verbose,epsilon);
 
       if (verbose)
         cout << "\tcheck to see M * M^(-1) is E" << endl;
@@ -1944,6 +1954,22 @@ void mstress_inversion()
       TMatrixD m1 = THilbertMatrixD(size,size);
       TMatrixDDiag(m1) += 1;
       TMatrixD m2 = m1;
+      Double_t det1 = 0.0;
+      Double_t det2 = 0.0;
+      m1.Invert(&det1);
+      m2.InvertFast(&det2);
+      ok &= VerifyMatrixIdentity(m1,m2,gVerbose,EPSILON);
+      ok &= (TMath::Abs(det1-det2) < EPSILON);
+      if (gVerbose) {
+        cout << "det(Invert)= " << det1 << "  det(InvertFast)= " << det2 <<endl;
+        cout << " deviation= " << TMath::Abs(det1-det2);
+        cout << ( (TMath::Abs(det1-det2) <  EPSILON) ? " OK" : " too large") <<endl;
+      }
+    }
+    for (Int_t size = 2; size < 7; size++) {
+      TMatrixDSym m1 = THilbertMatrixDSym(size);
+      TMatrixDDiag(m1) += 1;
+      TMatrixDSym m2 = m1;
       Double_t det1 = 0.0;
       Double_t det2 = 0.0;
       m1.Invert(&det1);
@@ -3868,7 +3894,7 @@ void astress_decomp()
 
   {
     const TMatrixD m2 = THilbertMatrixD(5,5);
-    const TMatrixD mtm(TMatrixDBase::kAtA,m2);
+    const TMatrixDSym mtm(TMatrixDBase::kAtA,m2);
     TDecompChol chol(mtm);
     ok &= VerifyMatrixIdentity(chol.GetMatrix(),mtm,gVerbose,100*EPSILON);
   }
@@ -3959,6 +3985,18 @@ void astress_lineqn()
         ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
       b = colsum;
       svd.TransSolve(b);
+      if (msize < 10)
+        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
+    }
+
+    {
+      TDecompBK bk(m,1.0e-20);
+      b = rowsum;
+      bk.Solve(b);
+      if (msize < 10)
+        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
+      b = colsum;
+      bk.TransSolve(b);
       if (msize < 10)
         ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
     }
@@ -4132,11 +4170,13 @@ void astress_decomp_io(Int_t msize)
   TDecompQRH  qrh(m,1.0e-20);
   TDecompChol chol(m,1.0e-20);
   TDecompSVD  svd(m);
+  TDecompBK   bk(m,1.0e-20);
 
   lu.Write("lu");
   qrh.Write("qrh");
   chol.Write("chol");
   svd.Write("svd");
+  bk.Write("bk");
 
   if (gVerbose)
     cout << "\nClose database" << endl;
@@ -4201,6 +4241,20 @@ void astress_decomp_io(Int_t msize)
     svd.TransSolve(b1);
     b2 = colsum;
     rsvd->TransSolve(b2);
+    ok &= (b1 == b2);
+  }
+
+  {
+    TDecompBK *rbk = (TDecompBK*) f1->Get("bk");
+    TVectorD b1(rowsum);
+    bk.Solve(b1);
+    TVectorD b2(rowsum);
+    rbk->Solve(b2);
+    ok &= (b1 == b2);
+    b1 = colsum;
+    bk.TransSolve(b1);
+    b2 = colsum;
+    rbk->TransSolve(b2);
     ok &= (b1 == b2);
   }
 

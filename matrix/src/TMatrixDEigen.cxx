@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.6 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.7 2004/04/08 17:58:32 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -75,6 +75,10 @@ TMatrixDEigen::TMatrixDEigen(const TMatrixD &a)
 
   // Reduce Hessenberg to real Schur form.
   MakeSchurr(fEigenVectors,fEigenValuesRe,fEigenValuesIm,H);
+
+  // Sort eigenvalues and corresponding vectors in descending order of Re^2+Im^2
+  // of the complex eigenvalues .
+  Sort(fEigenVectors,fEigenValuesRe,fEigenValuesIm);
 }
 
 //______________________________________________________________________________
@@ -668,6 +672,49 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
         z = z+pV[off_i+k]*pH[off_k+j];
       }
       pV[off_i+j] = z;
+    }
+  }
+
+}
+
+//______________________________________________________________________________
+void TMatrixDEigen::Sort(TMatrixD &v,TVectorD &d,TVectorD &e)
+{
+// Sort eigenvalues and corresponding vectors in descending order of Re^2+Im^2
+// of the complex eigenvalues .
+
+  // Sort eigenvalues and corresponding vectors.
+  Double_t *pV = v.GetMatrixArray();
+  Double_t *pD = d.GetMatrixArray();
+  Double_t *pE = e.GetMatrixArray();
+
+  const Int_t n = v.GetNrows();
+
+  for (Int_t i = 0; i < n-1; i++) {
+    Int_t k = i;
+    Double_t norm = pD[i]*pD[i]+pE[i]*pE[i];
+    Int_t j;
+    for (j = i+1; j < n; j++) {
+      const Double_t norm_new = pD[j]*pD[j]+pE[j]*pE[j];
+      if (norm_new > norm) { 
+        k = j;  
+        norm = norm_new;
+      }
+    }
+    if (k != i) { 
+      Double_t tmp;
+      tmp   = pD[k];
+      pD[k] = pD[i];
+      pD[i] = tmp;
+      tmp   = pE[k];
+      pE[k] = pE[i];
+      pE[i] = tmp;
+      for (j = 0; j < n; j++) {
+        const Int_t off_j = j*n; 
+        tmp = pV[off_j+i];
+        pV[off_j+i] = pV[off_j+k];
+        pV[off_j+k] = tmp;
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.h,v 1.2 2004/06/02 15:42:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.h,v 1.3 2004/06/13 14:53:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Apr 2004
 
 /*************************************************************************
@@ -155,8 +155,6 @@ public :
   TDecompSparse(const TDecompSparse &another);
   virtual ~TDecompSparse() {}
 
-  const   TMatrixDSparse GetMatrix  () { MayNotUse("GetMatrix"); return TMatrixDSparse(); }
-
   inline  void     SetVerbose (Int_t v) { fVerbose = (v) ? 1 : 0;
                                           if (fVerbose) { fIcntl[1] = fIcntl[2] = 1; fIcntl[3] = 2; }
                                           else          { fIcntl[1] = fIcntl[2] = fIcntl[3] = 0; }
@@ -176,8 +174,8 @@ public :
   virtual Bool_t   TransSolve (      TMatrixDColumn & /*b*/)
                               { MayNotUse("TransSolve(TMatrixDColumn &)"); return kFALSE; }
 
-  virtual void     Det       (Double_t &/*d1*/,Double_t &/*d2*/)
-                              { MayNotUse("Det(Double_t&,Double_t&)"); }
+  virtual void     Det        (Double_t &/*d1*/,Double_t &/*d2*/)
+                               { MayNotUse("Det(Double_t&,Double_t&)"); }
 
   void Print(Option_t *opt ="") const; // *MENU*
 

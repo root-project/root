@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.13 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.14 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #endif
 
 class TMatrixF;
+class TMatrixDSym;
 class TMatrixFSymLazy;
 class TVectorF;
 
@@ -58,6 +59,7 @@ public:
   TMatrixFSym(Int_t nrows,const Float_t *data,Option_t *option="");
   TMatrixFSym(Int_t row_lwb,Int_t row_upb,const Float_t *data,Option_t *option="");
   TMatrixFSym(const TMatrixFSym &another);
+  TMatrixFSym(const TMatrixDSym &another);
 
   TMatrixFSym(EMatrixCreatorsOp1 op,const TMatrixFSym &prototype);
   TMatrixFSym(EMatrixCreatorsOp1 op,const TMatrixF    &prototype);
@@ -98,11 +100,14 @@ public:
   inline  TMatrixFBase &ResizeTo      (const TMatrixFSym &m) {
                                         return ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb()); }
 
-  virtual Double_t Determinant   () const;
-  virtual void     Determinant   (Double_t &d1,Double_t &d2) const;
+  virtual Double_t      Determinant   () const;
+  virtual void          Determinant   (Double_t &d1,Double_t &d2) const;
 
-          TMatrixFSym &Transpose (const TMatrixFSym &source);
-  inline  TMatrixFSym &T         () { return this->Transpose(*this); }
+          TMatrixFSym  &Invert        (Double_t *det=0);
+          TMatrixFSym  &InvertFast    (Double_t *det=0);
+          TMatrixFSym  &Transpose     (const TMatrixFSym &source);
+  inline  TMatrixFSym  &T             () { return this->Transpose(*this); }
+          TMatrixFSym  &Rank1Update   (const TVectorF &v,Float_t alpha=1.0);
 
   // Either access a_ij as a(i,j)
   inline Float_t            operator()(Int_t rown,Int_t coln) const;
@@ -113,6 +118,7 @@ public:
   inline       TMatrixFRow        operator[](Int_t rown)       { return TMatrixFRow      (*this,rown); }
 
   TMatrixFSym &operator= (const TMatrixFSym     &source);
+  TMatrixFSym &operator= (const TMatrixDSym     &source);
   TMatrixFSym &operator= (const TMatrixFSymLazy &source);
   TMatrixFSym &operator= (Float_t val);
   TMatrixFSym &operator-=(Float_t val);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.71 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.72 2004/09/07 19:36:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -66,6 +66,7 @@ TMatrixD::TMatrixD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
 //______________________________________________________________________________
 TMatrixD::TMatrixD(const TMatrixD &another) : TMatrixDBase(another)
 {
+  Assert(another.IsValid());
   Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
   *this = another;
 }
@@ -73,6 +74,7 @@ TMatrixD::TMatrixD(const TMatrixD &another) : TMatrixDBase(another)
 //______________________________________________________________________________
 TMatrixD::TMatrixD(const TMatrixF &another)
 {
+  Assert(another.IsValid());
   Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
   *this = another;
 }
@@ -80,6 +82,7 @@ TMatrixD::TMatrixD(const TMatrixF &another)
 //______________________________________________________________________________
 TMatrixD::TMatrixD(const TMatrixDSym &another)
 {
+  Assert(another.IsValid());
   Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
   *this = another;
 }
@@ -87,6 +90,7 @@ TMatrixD::TMatrixD(const TMatrixDSym &another)
 //______________________________________________________________________________
 TMatrixD::TMatrixD(const TMatrixDSparse &another)
 {
+  Assert(another.IsValid());
   Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
   *this = another;
 }
@@ -96,7 +100,7 @@ TMatrixD::TMatrixD(EMatrixCreatorsOp1 op,const TMatrixD &prototype)
 {
   // Create a matrix applying a specific operation to the prototype.
   // Example: TMatrixD a(10,12); ...; TMatrixD b(TMatrixDBase::kTransposed, a);
-  // Supported operations are: kZero, kUnit, kTransposed,  and kInverted .
+  // Supported operations are: kZero, kUnit, kTransposed, kInverted and kAtA.
 
   Assert(this != &prototype);
   Invalidate();
@@ -1008,6 +1012,68 @@ TMatrixD &TMatrixD::Transpose(const TMatrixD &source)
 }
 
 //______________________________________________________________________________
+TMatrixD &TMatrixD::Rank1Update(const TVectorD &v,Double_t alpha)
+{
+  // Perform a rank 1 operation on the matrix:
+  //     A += alpha * v * v^T
+      
+  Assert(IsValid());
+  Assert(v.IsValid());
+
+  if (v.GetNoElements() < TMath::Max(fNrows,fNcols)) {
+    Error("Rank1Update","vector too short");
+    Invalidate();
+    return *this;
+  }
+
+  const Double_t * const pv = v.GetMatrixArray();
+        Double_t *mp = this->GetMatrixArray();
+
+  for (Int_t i = 0; i < fNrows; i++) {
+    const Double_t tmp = alpha*pv[i];
+    for (Int_t j = 0; j < fNcols; j++)
+      *mp++ += tmp*pv[j];
+  }
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixD &TMatrixD::Rank1Update(const TVectorD &v1,const TVectorD &v2,Double_t alpha)       
+{
+  // Perform a rank 1 operation on the matrix:                          
+  //     A += alpha * v1 * v2^T
+
+  Assert(IsValid());
+  Assert(v1.IsValid());
+  Assert(v2.IsValid());
+
+  if (v1.GetNoElements() < fNrows) {
+    Error("Rank1Update","vector v1 too short");
+    Invalidate();
+    return *this;
+  }
+
+  if (v2.GetNoElements() < fNcols) {
+    Error("Rank1Update","vector v2 too short");
+    Invalidate();
+    return *this;
+  }
+
+  const Double_t * const pv1 = v1.GetMatrixArray();
+  const Double_t * const pv2 = v2.GetMatrixArray();
+        Double_t *mp = this->GetMatrixArray();
+
+  for (Int_t i = 0; i < fNrows; i++) {
+    const Double_t tmp = alpha*pv1[i];
+    for (Int_t j = 0; j < fNcols; j++)
+      *mp++ += tmp*pv2[j];
+  }
+
+  return *this;
+}
+
+//______________________________________________________________________________
 TMatrixD &TMatrixD::NormByColumn(const TVectorD &v,Option_t *option)
 {
   // Multiply/divide matrix columns by a vector:
@@ -1668,7 +1734,8 @@ TMatrixD &TMatrixD::operator/=(const TMatrixDRow_const &row)
 //______________________________________________________________________________
 const TMatrixD TMatrixD::EigenVectors(TVectorD &eigenValues) const
 {
-  // Return a matrix containing the eigen-vectors ordered by descending eigen-values
+  // Return a matrix containing the eigen-vectors ordered by descending values
+  // of Re^2+Im^2 of the complex eigen-values .
   // If the matrix is asymmetric, only the real part of the eigen-values is
   // returned . For full functionality use TMatrixDEigen .
 

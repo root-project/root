@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.12 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.13 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -101,10 +101,12 @@ public:
   virtual Double_t Determinant() const;
   virtual void     Determinant(Double_t &d1,Double_t &d2) const;
 
-  TMatrixF &Invert      (Double_t *det=0);
-  TMatrixF &InvertFast  (Double_t *det=0);
-  TMatrixF &Transpose   (const TMatrixF &source);
-  inline TMatrixF &T    () { return this->Transpose(*this); }
+          TMatrixF &Invert      (Double_t *det=0);
+          TMatrixF &InvertFast  (Double_t *det=0);
+          TMatrixF &Transpose   (const TMatrixF &source);
+  inline  TMatrixF &T           () { return this->Transpose(*this); }
+          TMatrixF &Rank1Update (const TVectorF &v,Float_t alpha=1.0);
+          TMatrixF &Rank1Update (const TVectorF &v1,const TVectorF &v2,Float_t alpha=1.0);
 
   TMatrixF &NormByColumn(const TVectorF &v,Option_t *option="D");
   TMatrixF &NormByRow   (const TVectorF &v,Option_t *option="D");

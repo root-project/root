@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.8 2004/06/01 06:16:35 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.9 2004/06/21 15:53:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -412,6 +412,8 @@ public:
                                                       const Int_t index = (rown+fRowOff)*fMatrix->GetNcols()+coln+fRowOff;
                                                       const Float_t  *ptr = fMatrix->GetMatrixArray();
                                                       return (const_cast<Float_t  *>(ptr))[index]; }
+
+  void Rank1Update(const TVectorF &vec,Float_t alpha=1.0);
 
   void operator= (Float_t  val);
   void operator+=(Float_t  val);

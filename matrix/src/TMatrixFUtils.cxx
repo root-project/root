@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.cxx,v 1.6 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.cxx,v 1.7 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -759,6 +759,33 @@ TMatrixFSub::TMatrixFSub(const TMatrixFSub &ms) : TMatrixFSub_const(ms)
 }
 
 //______________________________________________________________________________
+void TMatrixFSub::Rank1Update(const TVectorF &v,Float_t alpha)
+{
+  // Perform a rank 1 operation on the matrix:
+  //     A += alpha * v * v^T
+
+  Assert(fMatrix->IsValid());
+  Assert(v.IsValid());
+
+  if (v.GetNoElements() < TMath::Max(fNrowsSub,fNcolsSub)) {
+    Error("Rank1Update","vector too short");
+    (const_cast<TMatrixFBase *>(fMatrix))->Invalidate();
+    return;
+  }
+
+  const Float_t * const pv = v.GetMatrixArray();
+        Float_t *mp = (const_cast<TMatrixFBase *>(fMatrix))->GetMatrixArray();
+
+  const Int_t ncols = fMatrix->GetNcols();
+  for (Int_t irow = 0; irow < fNrowsSub; irow++) {
+    const Int_t off = (irow+fRowOff)*ncols+fColOff;
+    const Float_t tmp = alpha*pv[irow];
+    for (Int_t icol = 0; icol < fNcolsSub; icol++)
+      mp[off+icol] += tmp*pv[icol];
+  }
+}
+
+//______________________________________________________________________________
 void TMatrixFSub::operator=(Float_t val)
 {
   // Assign val to every element of the sub matrix.
@@ -786,7 +813,7 @@ void TMatrixFSub::operator+=(Float_t val)
   for (Int_t irow = 0; irow < fNrowsSub; irow++) {
     const Int_t off = (irow+fRowOff)*ncols+fColOff;
     for (Int_t icol = 0; icol < fNcolsSub; icol++)
-      p[off+icol] = val;
+      p[off+icol] += val;
   }
 }
 
@@ -802,7 +829,7 @@ void TMatrixFSub::operator*=(Float_t val)
   for (Int_t irow = 0; irow < fNrowsSub; irow++) {
     const Int_t off = (irow+fRowOff)*ncols+fColOff;
     for (Int_t icol = 0; icol < fNcolsSub; icol++)
-      p[off+icol] = val;
+      p[off+icol] *= val;
   }
 }
 

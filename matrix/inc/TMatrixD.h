@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.38 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.39 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -100,13 +100,15 @@ public:
           TMatrixD      GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
   virtual TMatrixDBase &SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
 
-  virtual Double_t Determinant() const;
-  virtual void     Determinant(Double_t &d1,Double_t &d2) const;
+  virtual Double_t Determinant  () const;
+  virtual void     Determinant  (Double_t &d1,Double_t &d2) const;
 
-  TMatrixD &Invert      (Double_t *det=0);
-  TMatrixD &InvertFast  (Double_t *det=0);
-  TMatrixD &Transpose   (const TMatrixD &source);
-  inline TMatrixD &T    () { return this->Transpose(*this); }
+          TMatrixD &Invert      (Double_t *det=0);
+          TMatrixD &InvertFast  (Double_t *det=0);
+          TMatrixD &Transpose   (const TMatrixD &source);
+  inline  TMatrixD &T           () { return this->Transpose(*this); }
+          TMatrixD &Rank1Update (const TVectorD &v,Double_t alpha=1.0);
+          TMatrixD &Rank1Update (const TVectorD &v1,const TVectorD &v2,Double_t alpha=1.0);
 
   TMatrixD &NormByColumn(const TVectorD &v,Option_t *option="D");
   TMatrixD &NormByRow   (const TVectorD &v,Option_t *option="D");

@@ -1,5 +1,5 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixDCramerInv.h,v 1.2 2004/07/12 20:00:41 brun Exp $
-// Authors: Fons Rademakers, Eddy Offermann  Jan 2004
+// @(#)root/base:$Name:  $:$Id: TMatrixDSymCramerInv.h,v 1.2 2004/07/12 20:00:41 brun Exp $
+// Authors: Fons Rademakers, Eddy Offermann  Oct 2004
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TMatrixDCramerInv
-#define ROOT_TMatrixDCramerInv
+#ifndef ROOT_TMatrixDSymCramerInv
+#define ROOT_TMatrixDSymCramerInv
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TMatrixDCramerInv                                                    //
+// TMatrixDSymCramerInv                                                 //
 //                                                                      //
 // Encapsulate Cramer Inversion routines.                               //
 //                                                                      //
@@ -27,20 +27,20 @@
 #include "Rtypes.h"
 #endif
 
-#ifndef ROOT_TMatrixD
-#include "TMatrixD.h"
+#ifndef ROOT_TMatrixDSym
+#include "TMatrixDSym.h"
 #endif
 
-class TMatrixDCramerInv {
+class TMatrixDSymCramerInv {
 
 public:
-  static Bool_t Inv2x2(TMatrixD &m,Double_t *determ);
-  static Bool_t Inv3x3(TMatrixD &m,Double_t *determ);
-  static Bool_t Inv4x4(TMatrixD &m,Double_t *determ);
-  static Bool_t Inv5x5(TMatrixD &m,Double_t *determ);
-  static Bool_t Inv6x6(TMatrixD &m,Double_t *determ);
+  static Bool_t Inv2x2(TMatrixDSym &m,Double_t *determ);
+  static Bool_t Inv3x3(TMatrixDSym &m,Double_t *determ);
+  static Bool_t Inv4x4(TMatrixDSym &m,Double_t *determ);
+  static Bool_t Inv5x5(TMatrixDSym &m,Double_t *determ);
+  static Bool_t Inv6x6(TMatrixDSym &m,Double_t *determ);
 
-  ClassDef(TMatrixDCramerInv,0)  //Cramer Inversion routines for general matrix
+  ClassDef(TMatrixDSymCramerInv,0)  //Cramer Inversion routines for symmetric matrix
 };
 
 #endif

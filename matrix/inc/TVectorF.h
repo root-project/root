@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.12 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.13 2004/06/22 19:57:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -154,6 +154,7 @@ public :
   TVector(Int_t lwb,Int_t upb,const Float_t *elements) : TVectorF(lwb,upb,elements) {}
   TVector(const TVectorF             &another)         : TVectorF(another) {}
   TVector(const TVectorD             &another)         : TVectorF(another) {}
+  TVector(const TVector              &another)         : TVectorF(another) {}
   TVector(const TMatrixFRow_const    &mr)              : TVectorF(mr) {}
   TVector(const TMatrixFColumn_const &mc)              : TVectorF(mc) {}
   TVector(const TMatrixFDiag_const   &md)              : TVectorF(md) {}

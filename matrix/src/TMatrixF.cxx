@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.22 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.23 2004/09/07 19:36:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -67,6 +67,7 @@ TMatrixF::TMatrixF(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
 //______________________________________________________________________________
 TMatrixF::TMatrixF(const TMatrixF &another) : TMatrixFBase(another)
 {
+  Assert(another.IsValid());
   Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
   *this = another;
 }
@@ -74,6 +75,7 @@ TMatrixF::TMatrixF(const TMatrixF &another) : TMatrixFBase(another)
 //______________________________________________________________________________
 TMatrixF::TMatrixF(const TMatrixD &another)
 {
+  Assert(another.IsValid());
   Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
   *this = another;
 }
@@ -81,6 +83,7 @@ TMatrixF::TMatrixF(const TMatrixD &another)
 //______________________________________________________________________________
 TMatrixF::TMatrixF(const TMatrixFSym &another)
 {
+  Assert(another.IsValid());
   Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
   *this = another;
 }
@@ -1001,6 +1004,68 @@ TMatrixF &TMatrixF::Transpose(const TMatrixF &source)
       }
     }
     Assert(tp == tp_last && scp == sp1+fNrows);
+  }
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixF &TMatrixF::Rank1Update(const TVectorF &v,Float_t alpha)
+{
+  // Perform a rank 1 operation on the matrix:
+  //     A += alpha * v * v^T
+
+  Assert(IsValid());
+  Assert(v.IsValid());
+
+  if (v.GetNoElements() < TMath::Max(fNrows,fNcols)) {
+    Error("Rank1Update","vector too short");
+    Invalidate();
+    return *this;
+  }
+
+  const Float_t * const pv = v.GetMatrixArray();
+        Float_t *mp = this->GetMatrixArray();
+
+  for (Int_t i = 0; i < fNrows; i++) {
+    const Float_t tmp = alpha*pv[i];
+    for (Int_t j = 0; j < fNcols; j++)
+      *mp++ += tmp*pv[j];
+  }
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixF &TMatrixF::Rank1Update(const TVectorF &v1,const TVectorF &v2,Float_t alpha)
+{
+  // Perform a rank 1 operation on the matrix:
+  //     A += alpha * v1 * v2^T
+
+  Assert(IsValid());
+  Assert(v1.IsValid());
+  Assert(v2.IsValid());
+
+  if (v1.GetNoElements() < fNrows) {
+    Error("Rank1Update","vector v1 too short");
+    Invalidate();
+    return *this;
+  }
+
+  if (v2.GetNoElements() < fNcols) {
+    Error("Rank1Update","vector v2 too short");
+    Invalidate();
+    return *this;
+  }
+
+  const Float_t * const pv1 = v1.GetMatrixArray();
+  const Float_t * const pv2 = v2.GetMatrixArray();
+        Float_t *mp = this->GetMatrixArray();
+
+  for (Int_t i = 0; i < fNrows; i++) {
+    const Float_t tmp = alpha*pv1[i];
+    for (Int_t j = 0; j < fNcols; j++)
+      *mp++ += tmp*pv2[j];
   }
 
   return *this;

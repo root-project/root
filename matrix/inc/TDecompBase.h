@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.11 2004/07/22 17:07:47 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.12 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -88,8 +88,6 @@ public :
   virtual Bool_t   TransSolve (      TMatrixDColumn& b)      = 0;
 
   virtual Bool_t   MultiSolve (TMatrixD &B);
-  virtual void     Invert     (TMatrixD &inv);
-  virtual TMatrixD Invert     ();
 
   void Print(Option_t *opt="") const;
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.11 2004/06/13 14:53:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.12 2004/07/12 20:00:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -29,7 +29,6 @@ ClassImp(TDecompChol)
 //______________________________________________________________________________
 TDecompChol::TDecompChol(Int_t nrows)
 {
-  fA.ResizeTo(nrows,nrows);
   fU.ResizeTo(nrows,nrows);
 }
 
@@ -39,7 +38,6 @@ TDecompChol::TDecompChol(Int_t row_lwb,Int_t row_upb)
   const Int_t nrows = row_upb-row_lwb+1;
   fRowLwb = row_lwb;
   fColLwb = row_lwb;
-  fA.ResizeTo(nrows,nrows);
   fU.ResizeTo(nrows,nrows);
 }
 
@@ -49,15 +47,15 @@ TDecompChol::TDecompChol(const TMatrixDSym &a,Double_t tol)
   Assert(a.IsValid());
 
   SetBit(kMatrixSet);
+  fCondition = a.Norm1();
   fTol = a.GetTol();
   if (tol > 0)
     fTol = tol;
 
   fRowLwb = a.GetRowLwb();
   fColLwb = a.GetColLwb();
-  fA.ResizeTo(a);
-  fA = a;
   fU.ResizeTo(a);
+  fU = a;
 }
 
 //______________________________________________________________________________
@@ -71,15 +69,15 @@ TDecompChol::TDecompChol(const TMatrixD &a,Double_t tol)
   }
 
   SetBit(kMatrixSet);
+  fCondition = a.Norm1();
   fTol = a.GetTol();
   if (tol > 0)
     fTol = tol;
 
   fRowLwb = a.GetRowLwb();
   fColLwb = a.GetColLwb();
-  fA.ResizeTo(a);
-  fA = a;
   fU.ResizeTo(a);
+  fU = a;
 }
 
 //______________________________________________________________________________
@@ -94,33 +92,40 @@ Bool_t TDecompChol::Decompose()
   if ( !TestBit(kMatrixSet) )
     return kFALSE;
 
-  const Int_t     n  = fA.GetNrows();
-  const Double_t *pA = fA.GetMatrixArray();
+  const Int_t     n  = fU.GetNrows();
         Double_t *pU = fU.GetMatrixArray();
-  for (Int_t irow = 0; irow < n; irow++)
-  {
-    const Int_t rowOff = irow*n;
-    for (Int_t icol = irow; icol < n; icol++)
-    {    
-      Double_t sum = 0.;
-      for (Int_t l = 0; l < irow; l++)
-      { 
-        const Int_t off_l = l*n;
-        sum += pU[off_l+irow]*pU[off_l+icol];
-      }
-
-      pU[rowOff+icol] = pA[rowOff+icol]-sum;
-      if (irow == icol)
-      {
-        if (pU[rowOff+irow] <= 0) {
-          Error("Decompose(const TMatrixDBase &","matrix not positive definite");
-          return kFALSE;
-        }
-        pU[rowOff+irow] = TMath::Sqrt(pU[rowOff+irow]);
-      }
-      else
-        pU[rowOff+icol] /= pU[rowOff+irow];
+  for (Int_t icol = 0; icol < n; icol++) {
+    const Int_t rowOff = icol*n;
+   
+    //Compute fU(j,j) and test for non-positive-definiteness.
+    Double_t ujj = pU[rowOff+icol];
+    for (Int_t irow = 0; irow < icol; irow++) {
+      const Int_t pos_ij = irow*n+icol;
+      ujj -= pU[pos_ij]*pU[pos_ij];
     }
+    if (ujj <= 0) {
+      Error("Decompose()","matrix not positive definite");
+      return kFALSE;
+    }
+    ujj = TMath::Sqrt(ujj);
+    pU[rowOff+icol] = ujj;
+
+    if (icol < n-1) {
+      for (Int_t j = icol+1; j < n; j++) {
+        for (Int_t i = 0; i < icol; i++) {
+          const Int_t rowOff2 = i*n;
+          pU[rowOff+j] -= pU[rowOff2+j]*pU[rowOff2+icol];
+        }
+      }
+      for (Int_t j = icol+1; j < n; j++)
+        pU[rowOff+j] /= ujj;
+    }
+  }
+
+  for (Int_t irow = 0; irow < n; irow++) {
+    const Int_t rowOff = irow*n;
+    for (Int_t icol = 0; icol < irow; icol++)
+      pU[rowOff+icol] = 0.;
   }
 
   SetBit(kDecomposed);
@@ -129,23 +134,22 @@ Bool_t TDecompChol::Decompose()
 }
 
 //______________________________________________________________________________
-const TMatrixD TDecompChol::GetMatrix()
+const TMatrixDSym TDecompChol::GetMatrix()
 {
 // Reconstruct the original matrix using the decomposition parts
 
   if (TestBit(kSingular)) {
-    TMatrixD tmp; tmp.Invalidate();
+    TMatrixDSym tmp; tmp.Invalidate();
     return tmp;
   }
   if ( !TestBit(kDecomposed) ) {
     if (!Decompose()) {
-      TMatrixD tmp; tmp.Invalidate();
+      TMatrixDSym tmp; tmp.Invalidate();
       return tmp;
     }
   }
 
-  const TMatrixD ut(TMatrixDBase::kTransposed,fU);
-  return ut * fU;
+  return TMatrixDSym(TMatrixDSym::kAtA,fU);
 }
 
 //______________________________________________________________________________
@@ -164,9 +168,8 @@ void TDecompChol::SetMatrix(const TMatrixDSym &a)
     
   fRowLwb = a.GetRowLwb();
   fColLwb = a.GetColLwb();
-  fA.ResizeTo(a);
-  fA = a;
   fU.ResizeTo(a);
+  fU = a;
 }
 
 //______________________________________________________________________________
@@ -227,19 +230,6 @@ Bool_t TDecompChol::Solve(TVectorD &b)
   }
 
   return kTRUE;
-}
-
-//______________________________________________________________________________
-TVectorD TDecompChol::Solve(const TVectorD &b,Bool_t &ok)
-{    
-// Solve equations Ax=b assuming A has been factored by Cholesky. The factor U is
-// assumed to be in upper triang of fU. fTol is used to determine if diagonal
-// element is zero.
-    
-  TVectorD x = b; 
-  ok = Solve(x);
-      
-  return x;
 }
 
 //______________________________________________________________________________
@@ -304,28 +294,6 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
 }
 
 //______________________________________________________________________________
-Double_t TDecompChol::Condition()
-{
-  if ( !TestBit(kCondition) ) {
-    fCondition = -1;
-    if (TestBit(kSingular))
-      return fCondition;
-    if ( !TestBit(kDecomposed) ) {
-      if (!Decompose())
-        return fCondition;
-    }
-    const Double_t norm = fA.Norm1();
-    Double_t invNorm;
-    if (Hager(invNorm))
-      fCondition = norm*invNorm;
-    else // no convergence in Hager
-      Error("Condition()","Hager procedure did NOT converge");
-    SetBit(kCondition);
-  }
-  return fCondition;
-}
-
-//______________________________________________________________________________
 void TDecompChol::Det(Double_t &d1,Double_t &d2)
 {
   // determinant is square of diagProd of cholesky factor
@@ -344,10 +312,49 @@ void TDecompChol::Det(Double_t &d1,Double_t &d2)
 }
 
 //______________________________________________________________________________
+void TDecompChol::Invert(TMatrixDSym &inv)
+{
+  // For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
+
+  if (inv.GetNrows() != GetNrows() || inv.GetRowLwb() != GetRowLwb()) {
+    Error("Invert(TMatrixDSym &","Input matrix has wrong shape");
+    inv.Invalidate();
+    return;
+  }
+
+  inv.UnitMatrix();
+
+  const Int_t colLwb = inv.GetColLwb();
+  const Int_t colUpb = inv.GetColUpb();
+  Bool_t status = kTRUE;
+  for (Int_t icol = colLwb; icol <= colUpb && status; icol++) {
+    TMatrixDColumn b(inv,icol);
+    status &= Solve(b);
+  }
+  
+  if (!status)
+    inv.Invalidate();
+}
+
+//______________________________________________________________________________
+TMatrixDSym TDecompChol::Invert()
+{ 
+  // For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
+
+  const Int_t rowLwb = GetRowLwb();
+  const Int_t rowUpb = rowLwb+GetNrows()-1;
+
+  TMatrixDSym inv(rowLwb,rowUpb);
+  inv.UnitMatrix();
+  Invert(inv);
+
+  return inv;
+}
+
+//______________________________________________________________________________
 void TDecompChol::Print(Option_t *opt) const
 {
   TDecompBase::Print(opt);
-  fA.Print("fA");
   fU.Print("fU");
 }
 
@@ -356,8 +363,6 @@ TDecompChol &TDecompChol::operator=(const TDecompChol &source)
 { 
   if (this != &source) {
     TDecompBase::operator=(source);
-    fA.ResizeTo(source.fA);
-    fA = source.fA;
     fU.ResizeTo(source.fU);
     fU = source.fU;
   }

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.12 2004/06/13 14:53:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.13 2004/07/12 20:00:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -51,23 +51,23 @@ public :
           const TMatrixD  GetMatrix ();
   virtual       Int_t     GetNrows  () const { return fLU.GetNrows(); }
   virtual       Int_t     GetNcols  () const { return fLU.GetNcols(); }
-                TMatrixD &GetLU     ()       { if ( !TestBit(kDecomposed) ) Decompose();
+          const TMatrixD &GetLU     ()       { if ( !TestBit(kDecomposed) ) Decompose();
                                                return fLU; }
 
   virtual       void      SetMatrix (const TMatrixD &a);
 
   virtual Bool_t   Decompose  ();
   virtual Bool_t   Solve      (      TVectorD &b);
-  virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok);
+  virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = Solve(x); return x; }
   virtual Bool_t   Solve      (      TMatrixDColumn &b);
   virtual Bool_t   TransSolve (      TVectorD &b);
-  virtual TVectorD TransSolve (const TVectorD& b,Bool_t &ok);
+  virtual TVectorD TransSolve (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = TransSolve(x); return x; }
   virtual Bool_t   TransSolve (      TMatrixDColumn &b);
-
-  virtual Double_t Condition ();
-  virtual void     Det       (Double_t &d1,Double_t &d2);
+  virtual void     Det        (Double_t &d1,Double_t &d2);
 
   static  Bool_t   InvertLU  (TMatrixD &a,Double_t tol,Double_t *det=0);
+          void     Invert    (TMatrixD &inv);
+          TMatrixD Invert    ();
 
   void Print(Option_t *opt ="") const; // *MENU*
 

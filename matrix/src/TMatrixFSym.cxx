@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.15 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.16 2004/09/07 19:36:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -25,7 +25,9 @@
 #include "TMatrixF.h"
 #include "TMatrixDSym.h"
 #include "TMatrixFLazy.h"
+#include "TMatrixFSymCramerInv.h"
 #include "TDecompLU.h"
+#include "TDecompBK.h"
 #include "TMatrixDSymEigen.h"
 #include "TVectorF.h"
 
@@ -78,6 +80,14 @@ TMatrixFSym::TMatrixFSym(Int_t row_lwb,Int_t row_upb,const Float_t *elements,Opt
 
 //______________________________________________________________________________
 TMatrixFSym::TMatrixFSym(const TMatrixFSym &another) : TMatrixFBase(another)
+{
+  Assert(another.IsValid());
+  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
+  *this = another;
+}
+
+//______________________________________________________________________________
+TMatrixFSym::TMatrixFSym(const TMatrixDSym &another)
 {
   Assert(another.IsValid());
   Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
@@ -611,6 +621,76 @@ void TMatrixFSym::Determinant(Double_t &d1,Double_t &d2) const
 }
 
 //______________________________________________________________________________
+TMatrixFSym &TMatrixFSym::Invert(Double_t *det)
+{     
+  // Invert the matrix and calculate its determinant
+    
+  if (det)
+    *det = this->Determinant();
+  TMatrixDSym tmp = *this;
+  TDecompBK bk(tmp,fTol);
+  bk.Invert(tmp);
+  *this = tmp;
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixFSym &TMatrixFSym::InvertFast(Double_t *det)
+{
+  // Invert the matrix and calculate its determinant
+
+  Assert(IsValid());
+
+  const Char_t nRows = Char_t(GetNrows());
+  switch (nRows) {
+    case 1:
+    {
+      Float_t *pM = this->GetMatrixArray();
+      if (*pM == 0.) Invalidate();
+      else           *pM = 1.0/(*pM);
+      return *this;
+    }
+    case 2:
+    {
+      TMatrixFSymCramerInv::Inv2x2(*this,det);
+      return *this;
+    }
+    case 3:
+    {
+      TMatrixFSymCramerInv::Inv3x3(*this,det);
+      return *this;
+    }
+    case 4:
+    {
+      TMatrixFSymCramerInv::Inv4x4(*this,det);
+      return *this;
+    }
+    case 5:
+    {
+      TMatrixFSymCramerInv::Inv5x5(*this,det);
+      return *this;
+    }
+    case 6:
+    {
+      TMatrixFSymCramerInv::Inv6x6(*this,det);
+      return *this;
+    }
+
+    default:
+    {
+      if (det)
+        *det = this->Determinant();
+      TMatrixDSym tmp = *this;
+      TDecompBK bk(tmp,fTol);
+      bk.Invert(tmp);
+      *this = tmp;
+      return *this;
+    }
+  }
+}
+
+//______________________________________________________________________________
 TMatrixFSym &TMatrixFSym::Transpose(const TMatrixFSym &source)
 {
   // Transpose a matrix.
@@ -630,10 +710,43 @@ TMatrixFSym &TMatrixFSym::Transpose(const TMatrixFSym &source)
 }
 
 //______________________________________________________________________________
+TMatrixFSym &TMatrixFSym::Rank1Update(const TVectorF &v,Float_t alpha)
+{
+  // Perform a rank 1 operation on the matrix:                          
+  //     A += alpha * v * v^T
+
+  Assert(IsValid()); 
+  Assert(v.IsValid());                                                  
+
+  if (v.GetNoElements() < fNrows) {
+    Error("Rank1Update","vector too short");
+    Invalidate();
+    return *this;
+  }
+
+  const Float_t * const pv = v.GetMatrixArray();
+        Float_t *trp = this->GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Float_t *tcp = trp;                    // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < fNrows; i++) {
+    trp += i;         // point to [i,i]
+    tcp += i*fNcols;  // point to [i,i]
+    const Float_t tmp = alpha*pv[i];
+    for (Int_t j = i; j < fNcols; j++) {
+      if (j > i) *tcp += tmp*pv[j];
+      *trp++ += tmp*pv[j];
+      tcp += fNcols;
+    }
+    tcp -= fNelems-1; // point to [0,i]
+  }
+
+  return *this;
+}
+
+//______________________________________________________________________________
 TMatrixFSym &TMatrixFSym::operator=(const TMatrixFSym &source)
 {
   if (!AreCompatible(*this,source)) {
-    Error("operator=","matrices not compatible");
+    Error("operator=(const TMatrixFSym &","matrices not compatible");
     Invalidate();
     return *this;
   }
@@ -641,6 +754,26 @@ TMatrixFSym &TMatrixFSym::operator=(const TMatrixFSym &source)
   if (this != &source) {
     TObject::operator=(source);
     memcpy(this->GetMatrixArray(),source.fElements,fNelems*sizeof(Float_t));
+    fTol = source.GetTol();
+  }
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixFSym &TMatrixFSym::operator=(const TMatrixDSym &source)
+{ 
+  if (!AreCompatible(*this,source)) {
+    Error("operator=(const TMatrixDSym &","matrices not compatible");
+    Invalidate();
+    return *this;
+  }
+
+  if (dynamic_cast<TMatrixDSym *>(this) != &source) {
+    TObject::operator=(source);
+    const Double_t * const ps = source.GetMatrixArray();
+          Float_t  * const pt = GetMatrixArray();
+    for (Int_t i = 0; i < fNelems; i++)
+      pt[i] = (Float_t) ps[i];
     fTol = source.GetTol();
   }
   return *this;
