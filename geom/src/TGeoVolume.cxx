@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.17 2003/01/12 14:49:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.18 2003/01/13 16:01:06 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -889,6 +889,11 @@ TGeoVolumeMulti::TGeoVolumeMulti()
 { 
 // dummy constructor
    fVolumes   = 0;
+   fDivision = 0;
+   fNdiv = 0;
+   fAxis = 0;
+   fStart = 0;
+   fStep = 0;
    fAttSet = kFALSE;
    TObject::SetBit(kVolumeMulti);
 }
@@ -897,6 +902,11 @@ TGeoVolumeMulti::TGeoVolumeMulti(const char *name, const TGeoMedium *med)
 {
 // default constructor
    fVolumes = new TObjArray();
+   fDivision = 0;
+   fNdiv = 0;
+   fAxis = 0;
+   fStart = 0;
+   fStep = 0;
    fAttSet = kFALSE;
    TObject::SetBit(kVolumeMulti);
    SetName(name);
@@ -916,6 +926,16 @@ void TGeoVolumeMulti::AddVolume(TGeoVolume *vol)
 // Add a volume with valid shape to the list of volumes. Copy all existing nodes
 // to this volume
    fVolumes->Add(vol);
+   TGeoVolumeMulti *div;
+   TGeoVolume *cell;
+   if (fDivision) {
+      div = (TGeoVolumeMulti*)vol->Divide(fDivision->GetName(), fAxis, fNdiv, fStart, fStep);
+      div->MakeCopyNodes(fDivision);
+      for (Int_t i=0; i<div->GetNvolumes(); i++) {
+         cell = div->GetVolume(i);
+         cell->MakeCopyNodes(fDivision);
+      }
+   }      
    if (fNodes)
       vol->MakeCopyNodes(this);
 }
@@ -958,19 +978,38 @@ void TGeoVolumeMulti::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const
 TGeoVolume *TGeoVolumeMulti::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step)
 {
 // division of multiple volumes
+   if (fDivision) {
+      Error("Divide", "volume %s already divided", GetName());
+      return 0;
+   }   
    Int_t nvolumes = fVolumes->GetEntriesFast();
+   if (!nvolumes) {
+      // this is a virtual volume
+      fDivision = new TGeoVolumeMulti(divname, fMedium);
+      fAxis = iaxis;
+      fNdiv = ndiv;
+      fStart = start;
+      fStep = step;
+      // nothing else to do at this stage
+      return fDivision;
+   }   
+      
    TGeoVolume *vol = 0;
-   TGeoVolumeMulti *div = new TGeoVolumeMulti(divname, fMedium);
+   fDivision = new TGeoVolumeMulti(divname, fMedium);
+   fAxis = iaxis;
+   fNdiv = ndiv;
+   fStart = start;
+   fStep = step;
    for (Int_t ivo=0; ivo<nvolumes; ivo++) {
       vol = GetVolume(ivo);
       vol->SetLineColor(GetLineColor());
       vol->SetLineStyle(GetLineStyle());
       vol->SetLineWidth(GetLineWidth());
       vol->SetVisibility(IsVisible());
-      div->AddVolume(vol->Divide(divname,iaxis,ndiv,start,step)); 
+      fDivision->AddVolume(vol->Divide(divname,iaxis,ndiv,start,step)); 
    }
 //   printf("--- volume multi %s (%i volumes) divided\n", GetName(), nvolumes);
-   return div;
+   return fDivision;
 }
 //-----------------------------------------------------------------------------
 void TGeoVolumeMulti::SetLineColor(Color_t lcolor) 

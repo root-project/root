@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.21 2002/09/21 21:58:07 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.22 2003/01/10 14:51:50 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -63,6 +63,7 @@ public:
 
     virtual TTree    *CopyTree(const char *selection, Option_t *option
                        ,Int_t nentries, Int_t firstentry);
+    virtual void      DrawMap(const char *branch, Option_t *option);
     virtual Int_t     DrawSelect(const char *varexp, const char *selection, Option_t *option
                        ,Int_t nentries, Int_t firstentry);
     virtual Int_t     Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,

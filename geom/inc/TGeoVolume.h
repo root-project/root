@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.16 2003/01/07 09:48:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.17 2003/01/12 14:49:31 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -62,15 +62,6 @@ class TGeoVolume : public TNamed,
                    public TAtt3D
 {
 protected :
-   enum EGeoVolumeTypes {
-      kVolumeDiv     =     BIT(16),
-      kVolumeOverlap =     BIT(17),
-      kVolumeImportNodes = BIT(18),
-      kVolumeMulti   =     BIT(19),
-      kVoxelsXYZ     =     BIT(20),
-      kVoxelsCyl     =     BIT(21)
-   };
-// data members
    TObjArray         *fNodes;          // array of nodes inside this volume
    TGeoShape         *fShape;          // shape
    TGeoMedium        *fMedium;         // tracking medium
@@ -79,8 +70,16 @@ protected :
 
    TObject           *fField;          //! just a hook for now
    TString            fOption;         //! option - if any
-// methods
+
 public:
+   enum EGeoVolumeTypes {
+      kVolumeDiv     =     BIT(16),
+      kVolumeOverlap =     BIT(17),
+      kVolumeImportNodes = BIT(18),
+      kVolumeMulti   =     BIT(19),
+      kVoxelsXYZ     =     BIT(20),
+      kVoxelsCyl     =     BIT(21)
+   };
    // constructors
    TGeoVolume();
    TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMedium *med=0);
@@ -188,8 +187,13 @@ public:
 class TGeoVolumeMulti : public TGeoVolume
 {
 private:
-   TObjArray      *fVolumes;      // list of volumes
-   Bool_t          fAttSet;       // flag attributes set
+   TObjArray       *fVolumes;      // list of volumes
+   TGeoVolumeMulti *fDivision;     // division of this volume
+   Int_t            fNdiv;         // number of divisions
+   Int_t            fAxis;         // axis of division
+   Double_t         fStart;        // division start offset
+   Double_t         fStep;         // division step
+   Bool_t           fAttSet;       // flag attributes set
 public:
    TGeoVolumeMulti();
    TGeoVolumeMulti(const char* name, const TGeoMedium *med=0);
@@ -206,13 +210,18 @@ public:
    virtual TGeoVolume *Divide(const char *, Int_t, Double_t) {return 0;}
    virtual TGeoVolume *Divide(const char *, TObject *, Double_t *, Option_t *) {return 0;}
    TGeoShape      *GetLastShape() const {return GetVolume(fVolumes->GetEntriesFast()-1)->GetShape();}
+   Int_t           GetNvolumes() const {return fVolumes->GetEntriesFast();}
+   Int_t           GetAxis() const {return fNdiv;}
+   Int_t           GetNdiv() const {return fNdiv;}
+   Double_t        GetStart() const {return fStart;}
+   Double_t        GetStep() const {return fStep;}
    virtual void    SetLineColor(Color_t lcolor);
    virtual void    SetLineStyle(Style_t lstyle);
    virtual void    SetLineWidth(Width_t lwidth);
    virtual void    SetVisibility(Bool_t vis=kTRUE);
 
 
- ClassDef(TGeoVolumeMulti, 1)     // class to handle multiple volumes in one step
+ ClassDef(TGeoVolumeMulti, 2)     // class to handle multiple volumes in one step
 };
 
 inline Int_t TGeoVolume::GetNdaughters() const {

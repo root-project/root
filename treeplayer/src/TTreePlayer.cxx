@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.116 2003/01/11 12:47:02 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.117 2003/01/11 14:21:29 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -262,6 +262,7 @@
 #include "THLimitsFinder.h"
 #include "TSelectorDraw.h"
 #include "TPluginManager.h"
+#include "TTreeFileMap.h"
 
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;
@@ -377,6 +378,28 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Int_t nentries,
    }
    delete select;
    return tree;
+}
+
+
+//______________________________________________________________________________
+void TTreePlayer::DrawMap(const char *branch, Option_t *option)
+{
+// draw a 2-d map of the branches of this Tree on its file
+//   By default all branches are shown.
+//   Specify option "same" to superimpose on the same picture
+//   One can select a fillcolor/style for a branch with
+//      tree->GetBranch("branchname")->setFillColor(color);
+
+   if (!fTree->GetDirectory()) {
+      Error("Drawmap","No file associated to tree: %s",fTree->GetName());
+      return;
+   }
+   if (!fTree->GetDirectory()->GetFile()) {
+      Error("Drawmap","No file associated to tree: %s",fTree->GetName());
+      return;
+   }
+   TTreeFileMap *map = new TTreeFileMap(fTree, branch,option);
+   map->Draw(option);
 }
 
 //______________________________________________________________________________

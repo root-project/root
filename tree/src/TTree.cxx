@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.141 2002/12/06 06:35:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.142 2003/01/10 14:45:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1946,6 +1946,20 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
    else return -1;
 }
 
+
+//______________________________________________________________________________
+void TTree::DrawMap(const char *branch, Option_t *option)
+{
+// draw a 2-d map of the branches of this Tree on its file
+//   By default all branches are shown.
+//   Specify option "same" to superimpose on the same picture
+//   One can select a fillcolor/style for a branch with
+//      tree->GetBranch("branchname")->setFillColor(color);
+
+   GetPlayer();
+   if (fPlayer) fPlayer->DrawMap(branch,option);
+}
+    
 
 //______________________________________________________________________________
 void TTree::DropBuffers(Int_t)

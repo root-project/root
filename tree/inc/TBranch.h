@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.13 2002/01/23 08:38:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.14 2002/04/19 09:36:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -36,6 +36,10 @@
 #include "TStringLong.h"
 #endif
 
+#ifndef ROOT_TAttFill
+#include "TAttFill.h"
+#endif
+
 #ifndef ROOT_Htypes
 #include "Htypes.h"
 #endif
@@ -52,7 +56,7 @@ class TClonesArray;
    const Int_t kIsClone      = BIT(11); // to indicate a TBranchClones
    const Int_t kBranchObject = BIT(12); // branch is a TObject*
 
-class TBranch : public TNamed {
+class TBranch : public TNamed , public TAttFill {
 
 protected:
     // TBranch status bits
@@ -152,7 +156,7 @@ public:
     
     static  void     ResetCount() {fgCount = 0;}
 
-    ClassDef(TBranch,7)  //Branch descriptor
+    ClassDef(TBranch,8)  //Branch descriptor
 };
 
 #endif

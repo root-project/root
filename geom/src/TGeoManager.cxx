@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.29 2003/01/12 14:49:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.30 2003/01/13 20:52:45 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -818,6 +818,10 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
          Error("Node","volume: %s is null",name);
          return;
       }
+      if (((TObject*)volume)->TestBit(TGeoVolume::kVolumeMulti)) {
+         Error("Node", "cannot add multiple-volume object %s as node", volume->GetName());
+         return;
+      }   
    } else {
    //---> acting as G3 gsposp  
       TGeoVolumeMulti *vmulti  = (TGeoVolumeMulti*)fGVolumes->FindObject(name);
@@ -829,10 +833,6 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
             return;
          }   
          Error("Node","volume: %s not yet defined ",name);
-         return;
-      }
-      if (!vmulti->InheritsFrom(TGeoVolumeMulti::Class())) {
-         Error("Node","volume: %s was not defined as a TGeoVolumeMulti",name);
          return;
       }
       TGeoMedium *medium = vmulti->GetMedium();
@@ -935,6 +935,10 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
          Error("Node","volume: %s is null",name);
          return;
       }
+      if (((TObject*)volume)->TestBit(TGeoVolume::kVolumeMulti)) {
+         Error("Node", "cannot add multiple-volume object %s as node", volume->GetName());
+         return;
+      }   
    } else {
    //---> acting as G3 gsposp  
       TGeoVolumeMulti *vmulti  = (TGeoVolumeMulti*)fGVolumes->FindObject(name);
@@ -946,10 +950,6 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
             return;
          }   
          Error("Node","volume: %s not yet defined ",name);
-         return;
-      }
-      if (!vmulti->InheritsFrom(TGeoVolumeMulti::Class())) {
-         Error("Node","volume: %s was not defined as a TGeoVolumeMulti",name);
          return;
       }
       TGeoMedium *medium = vmulti->GetMedium();

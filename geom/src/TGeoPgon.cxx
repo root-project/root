@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.14 2003/01/13 17:45:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.15 2003/01/13 18:00:59 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -855,6 +855,9 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // allowed only if nedges%ndiv=0 and create polygone "segments" with nedges/ndiv edges.
 // Z divisions can be performed if the divided range is in between two consecutive Z planes.
 // In case a wrong division axis is supplied, returns pointer to volume that was divided.
+
+//   printf("Dividing %s : nz=%d nedges=%d phi1=%g dphi=%g (ndiv=%d iaxis=%d start=%g step=%g)\n",
+//          voldiv->GetName(), fNz, fNedges, fPhi1, fDphi, ndiv, iaxis, start, step);
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
@@ -870,26 +873,39 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          Error("Divide", "makes no sense dividing a pgon on radius");
          return voldiv;
       case 2:  //---                Phi division
-         if (nedges%ndiv) {
+         if (!ndiv) {
+            if (step>1E-10) {
+               ndiv = (Int_t)(fDphi/step);
+               start = fPhi1;
+            } else {   
+               Error("Divide", "ndiv=0");
+               return voldiv;
+            }   
+         }  
+         if (fNedges%ndiv) {
             Error("Divide", "ndiv should divide number of pgon edges");
             return voldiv;
          }
-         nedges = nedges/ndiv;
+         nedges = fNedges/ndiv;
+         if (step<1E-10) {
+            step  = fDphi/ndiv;
+            start = fPhi1;
+         }   
          finder = new TGeoPatternCylPhi(voldiv, ndiv, start, start+ndiv*step);
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoPgon(-step/2, step, nedges, fNz);
+         vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+         vmulti->AddVolume(vol);
          for (is=0; is<fNz; is++)
             ((TGeoPgon*)shape)->DefineSection(is, fZ[is], fRmin[is], fRmax[is]); 
-            vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
-            vmulti->AddVolume(vol);
-            opt = "Phi";
-            for (id=0; id<ndiv; id++) {
-               voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
-               ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
-            }
-            return vmulti;
+         opt = "Phi";
+         for (id=0; id<ndiv; id++) {
+            voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
+            ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
+         }
+         return vmulti;
       case 3: // ---                Z division
          // find start plane
          for (ipl=0; ipl<fNz-1; ipl++) {

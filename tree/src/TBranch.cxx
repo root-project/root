@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.47 2002/07/17 22:06:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.48 2002/12/02 18:50:06 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -59,7 +59,7 @@ ClassImp(TBranch)
 //////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-TBranch::TBranch(): TNamed()
+TBranch::TBranch(): TNamed(), TAttFill(0,1001)
 {
 //*-*-*-*-*-*Default constructor for Branch*-*-*-*-*-*-*-*-*-*
 //*-*        ===================================
@@ -92,7 +92,7 @@ TBranch::TBranch(): TNamed()
 
 //______________________________________________________________________________
 TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t basketsize, Int_t compress)
-    :TNamed(name,leaflist)
+    :TNamed(name,leaflist), TAttFill(0,1001)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a Branch*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                =====================

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.10 2003/01/06 17:05:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.11 2003/01/12 14:49:32 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -236,7 +236,8 @@ Double_t TGeoBBox::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    Double_t saf[6];
    Double_t newpt[3];
    memcpy(&newpt[0], point, 3*sizeof(Double_t));
-   for (Int_t i=0; i<3; i++) newpt[i]-=fOrigin[i];
+   Int_t i;
+   for (i=0; i<3; i++) newpt[i]-=fOrigin[i];
    saf[0] = fDX+newpt[0];
    saf[1] = fDX-newpt[0];
    saf[2] = fDY+newpt[1];
@@ -251,7 +252,7 @@ Double_t TGeoBBox::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    }
    // compute distance to surface
    Double_t s[3];
-   Int_t i, ipl;
+   Int_t ipl;
    for (i=0; i<3; i++) {
       if (dir[i]!=0) {
          s[i] = (dir[i]>0)?(saf[(i<<1)+1]/dir[i]):(-saf[i<<1]/dir[i]);
