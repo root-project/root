@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.cxx,v 1.2 2001/06/14 21:48:17 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.cxx,v 1.3 2001/08/01 15:13:58 rdm Exp $
 // Author: Rene Brun   26/11/96
 
 /*************************************************************************
@@ -181,6 +181,10 @@ TDrawPanelHist::TDrawPanelHist(const char *name, const char *title, UInt_t ww, U
    Update();
    SetEditable(kFALSE);
 
+   //add this TDrawPanelHist to the list of cleanups such that in case
+   //the referenced object is deleted, its pointer be reset
+   gROOT->GetListOfCleanups()->Add(this);
+   
    fRefPad->cd();
 }
 
@@ -188,6 +192,7 @@ TDrawPanelHist::TDrawPanelHist(const char *name, const char *title, UInt_t ww, U
 TDrawPanelHist::~TDrawPanelHist()
 {
    // DrawPanelHist destructor.
+   gROOT->GetListOfCleanups()->Remove(this);
 
 }
 
@@ -204,6 +209,7 @@ void TDrawPanelHist::Apply(const char *action)
 {
    // Collect all options and draw histogram.
 
+   if (!fHistogram) return;
    if (!fRefPad) return;
    fRefPad->cd();
 
@@ -360,6 +366,14 @@ void TDrawPanelHist::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       break;
    }
+}
+
+//______________________________________________________________________________
+void TDrawPanelHist::RecursiveRemove(TObject *obj)
+{
+//  when obj is deleted, clear fHistogram if fHistogram=obj
+   
+   if (obj == fHistogram) fHistogram = 0;
 }
 
 //______________________________________________________________________________

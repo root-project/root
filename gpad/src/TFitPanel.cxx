@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.3 2001/05/28 06:24:22 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.4 2001/08/01 15:13:58 rdm Exp $
 // Author: Rene Brun   24/11/96
 
 /*************************************************************************
@@ -163,6 +163,10 @@ TFitPanel::TFitPanel(const char *name, const char *title, UInt_t ww, UInt_t wh)
    Update();
    SetEditable(kFALSE);
 
+   //add this TFitPanel to the list of cleanups such that in case
+   //the referenced object is deleted, its pointer be reset
+   gROOT->GetListOfCleanups()->Add(this);
+   
    fRefPad->cd();
 }
 
@@ -171,6 +175,7 @@ TFitPanel::~TFitPanel()
 {
 //*-*-*-*-*-*-*-*-*-*-*FitPanel default destructor*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===============================
+   gROOT->GetListOfCleanups()->Remove(this);
 }
 
 //______________________________________________________________________________
@@ -188,6 +193,7 @@ void TFitPanel::Apply(const char *action)
 //*-*-*-*-*-*-*-*-*-*Collect all options and fit histogram*-*-*-*-*-*-*
 //*-*                =====================================
 
+   if (!fObjectFit) return;
    if (!fRefPad) return;
    fRefPad->cd();
 
@@ -317,6 +323,14 @@ void TFitPanel::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       break;
    }
+}
+
+//______________________________________________________________________________
+void TFitPanel::RecursiveRemove(TObject *obj)
+{
+//  when obj is deleted, clear fObjectFit if fObjectFit=obj
+   
+   if (obj == fObjectFit) fObjectFit = 0;
 }
 
 //______________________________________________________________________________
