@@ -1141,6 +1141,28 @@ char *funcheader;   /* funcheader = 'funcname(' */
 
   isparam=0;
   cin=G__fgetname_template(paraname,"<*&,)=");
+#ifndef G__PHILIPPE8
+  if (strlen(paraname) && isspace(cin)) {
+    /* There was an argument and the parsing was stopped by a white
+     * space rather than on of ",)*&<=", it is possible that 
+     * we have a namespace followed by '::' in which case we have
+     * to grab more before stopping!
+    */
+    int namespace_tagnum;
+    char more[G__LONGLINE];
+    
+    namespace_tagnum = G__defined_tagname(paraname,2);
+    while ( ( ( (namespace_tagnum!=-1)
+                && (G__struct.type[namespace_tagnum]=='n') )
+              || (strcmp("std",paraname)==0)
+              || (paraname[strlen(paraname)-1]==':') )
+            && isspace(cin) ) {
+      cin = G__fgetname(more,"<*&,)=");
+      strcat(paraname,more);
+      namespace_tagnum = G__defined_tagname(paraname,2);
+    }
+  }
+#endif           
 
   if(paraname[0]) {
     if(strcmp("void",paraname)==0) {
@@ -1781,6 +1803,28 @@ int func_now;
 
     /* read typename */
     c=G__fgetname_template(paraname,",)&*[(=");
+#ifndef G__PHILIPPE8
+  if (strlen(paraname) && isspace(c)) {
+    /* There was an argument and the parsing was stopped by a white
+     * space rather than on of ",)*&<=", it is possible that 
+     * we have a namespace followed by '::' in which case we have
+     * to grab more before stopping!
+    */
+    int namespace_tagnum;
+    char more[G__LONGLINE];
+    
+    namespace_tagnum = G__defined_tagname(paraname,2);
+    while ( ( ( (namespace_tagnum!=-1)
+                && (G__struct.type[namespace_tagnum]=='n') )
+              || (strcmp("std",paraname)==0)
+              || (paraname[strlen(paraname)-1]==':') )
+            && isspace(c) ) {
+      c = G__fgetname(more,",)&*[(=");
+      strcat(paraname,more);
+      namespace_tagnum = G__defined_tagname(paraname,2);
+    }
+  }
+#endif           
 
     /* check const and unsigned keyword */
     if(strcmp(paraname,"...")==0) {
