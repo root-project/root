@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.3 2004/08/13 06:05:17 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.4 2004/11/20 06:50:42 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -1612,6 +1612,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
  void         TGQt::SetWindowName(Window_t id, char *name)
  {
     // Set window name.
+   if (id == kNone || id == kDefault ) return;
 
     winid(id)->setCaption(name);
  }
@@ -1619,6 +1620,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
  void         TGQt::SetIconName(Window_t id, char *name)
  {
     // Set window icon name.
+   if (id == kNone || id == kDefault ) return;
     winid(id)->setIconText(name);
  }
 //______________________________________________________________________________
@@ -1809,6 +1811,7 @@ void TGQt::GetFontProperties(FontStruct_t fs, Int_t &max_ascent, Int_t &max_desc
  void         TGQt::ClearWindow(Window_t id)
  {
     // Clear window.
+   if (id == kNone || id == kDefault ) return;
     wid(id)->erase();
  }
  
