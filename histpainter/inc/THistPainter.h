@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.16 2002/08/13 21:17:59 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.17 2003/02/20 22:39:51 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -102,6 +102,8 @@ public:
     virtual void       SetHistogram(TH1 *h);
     virtual void       SetStack(TList *stack) {fStack = stack;}
     virtual Int_t      TableInit();
+
+    static const char * GetBestFormat(Double_t v, Double_t e, const char *f);
 
     ClassDef(THistPainter,0)  //Helper class to draw histograms
 };

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.148 2003/08/05 10:25:30 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.149 2003/08/06 16:09:30 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4132,7 +4132,8 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       if (print_fval || print_ferrors) {
          for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
             if (print_ferrors) {
-               sprintf(textstats,"%-8s = %s%s #pm %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat(),"%",stats->GetFitFormat());
+               sprintf(textstats,"%-8s = %s%s #pm %s ",fit->GetParName(ipar), "%",stats->GetFitFormat(),
+                       GetBestFormat(fit->GetParameter(ipar), fit->GetParError(ipar), stats->GetFitFormat()));
                sprintf(t,textstats,(Float_t)fit->GetParameter(ipar)
                                ,(Float_t)fit->GetParError(ipar));
             } else {
@@ -5062,4 +5063,53 @@ LZMIN:
    Hparam.barwidth  = fH->GetBarWidth();
 
    return 1;
+}
+
+//______________________________________________________________________________
+const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
+{
+   // This function returns the best format to print the error value (e)
+   // knowing the parameter value (v) and the format (f) used to print it. 
+
+   char tf[20], ef[20], tv[64];
+
+   // print v with the format f in tv.
+   sprintf(tf,"%s%s","%",f);
+   sprintf(tv,tf,v);
+
+   // Analyse tv.
+   TString sv = tv;
+   int ie = sv.Index("e");
+   int iE = sv.Index("E");
+   int id = sv.Index(".");
+
+   // v has been printed with the exponent notation. 
+   // There is 2 cases, the exponent is positive or negative
+   if (ie >= 0 || iE >= 0) {
+      if (sv.Index("+") >= 0) {
+         if (e < 1) {
+            sprintf(ef,"%s.1f","%");
+         } else {
+            sprintf(ef,"%s.0f","%");
+         }
+      } else {
+         if (ie >= 0) {
+            sprintf(ef,"%s.%de","%",ie-id-1);
+         } else {
+            sprintf(ef,"%s.%dE","%",iE-id-1);
+         }
+      }
+
+   // The is not '.' in tv. e will be printed with one decimal digit.
+   } else if (id < 0) {
+      sprintf(ef,"%s.1f","%");
+
+   // There is a '.' in tv and no exponent notation. e's decimal part will
+   // have the same number of digits as v's one.
+   } else {
+      sprintf(ef,"%s.%df","%",sv.Length()-id-1);
+   }
+
+   TString ff = ef;
+   return ff.Data();
 }
