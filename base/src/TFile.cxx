@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.100 2003/09/12 12:41:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.101 2003/09/21 21:38:31 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -74,108 +74,108 @@ TFile::TFile() : TDirectory()
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
            :TDirectory()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*File Constructor*-*--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ================
-//  If Option = NEW or CREATE   create a new file and open it for writing,
-//                              if the file already exists the file is
-//                              not opened.
-//            = RECREATE        create a new file, if the file already
-//                              exists it will be overwritten.
-//            = UPDATE          open an existing file for writing.
-//                              if no file exists, it is created.
-//            = READ            open an existing file for reading.
-//  If the constructor failed in any way IsZombie() will return true.
-//  Use IsOpen() to check if the file is (still) open.
-//
-//  The parameter name is used to identify the file in the current job
-//    name may be different in a job writing the file and another job
-//    reading/writing the file.
-//  When the file is created, the name of the file seen from the file system
-//    is fname. It is recommended to specify fname as "file.root"
-//    The suffix root will be used by object browsers to automatically
-//    identify ROOT files.
-//  The title of the file (ftitle) will be shown by the ROOT browsers.
-//
-//  A ROOT file (like a Unix file system) may contain objects and
-//    directories. There are no restrictions for the number of levels
-//    of directories.
-//
-//  A ROOT file is designed such that one can write in the file in pure
-//    sequential mode (case of BATCH jobs). In this case, the file may be
-//    read sequentially again without using the file index written
-//    at the end of the file. In case of a job crash, all the information
-//    on the file is therefore protected.
-//  A ROOT file can be used interactively. In this case, one has the
-//    possibility to delete existing objects and add new ones.
-//  When an object is deleted from the file, the freed space is added
-//  into the FREE linked list (fFree). The FREE list consists of a chain
-//  of consecutive free segments on the file. At the same time, the first
-//  4 bytes of the freed record on the file are overwritten by GAPSIZE
-//  where GAPSIZE = -(Number of bytes occupied by the record).
-//
-//  compress = 0 objects written to this file will not be compressed.
-//  compress = 1 minimal compression level but fast.
-//  ....
-//  compress = 9 maximal compression level but slow.
-//
-//  Note that the compression level may be changed at any time.
-//  The new compression level will only apply to newly written objects.
-//  The function TFile::Map shows the compression factor
-//  for each object written to this file.
-//  The function TFile::GetCompressionFactor returns the global
-//  compression factor for this file.
-//
-//  In case the file does not exist or is not a valid Root file,
-//  it is made a Zombie. One can detect this situation with a code like:
-//     TFile f("file.root");
-//     if ( f.IsZombie() ) {
-//     cout << "Error opening file" << endl;
-//     exit(-1);
-//     }else {
-//
-//  A ROOT file is a suite of consecutive data records with the following
-//    format (see also the TKey class);
-// TKey ---------------------
-//      byte 1->4  Nbytes    = Length of compressed object (in bytes)
-//           5->6  Version   = TKey version identifier
-//           7->10 ObjLen    = Length of uncompressed object
-//          11->14 Datime    = Date and time when object was written to file
-//          15->16 KeyLen    = Length of the key structure (in bytes)
-//          17->18 Cycle     = Cycle of key
-//          19->22 SeekKey   = Pointer to record itself (consistency check)
-//          23->26 SeekPdir  = Pointer to directory header
-//          27->27 lname     = Number of bytes in the class name
-//          28->.. ClassName = Object Class Name
-//          ..->.. lname     = Number of bytes in the object name
-//          ..->.. Name      = lName bytes with the name of the object
-//          ..->.. lTitle    = Number of bytes in the object title
-//          ..->.. Title     = Title of the object
-//          -----> DATA      = Data bytes associated to the object
-//
-//  The first data record starts at byte fBEGIN (currently set to kBEGIN)
-//  Bytes 1->kBEGIN contain the file description:
-//       byte  1->4  "root"      = Root file identifier
-//             5->8  fVersion    = File format version
-//             9->12 fBEGIN      = Pointer to first data record
-//            13->16 fEND        = Pointer to first free word at the EOF
-//            17->20 fSeekFree   = Pointer to FREE data record
-//            21->24 fNbytesFree = Number of bytes in FREE data record
-//            25->28 nfree       = Number of free data records
-//            29->32 fNbytesName = Number of bytes in TNamed at creation time
-//            33->33 fUnits      = Number of bytes for file pointers
-//            34->37 fCompress   = Zip compression level
-//            38->41 fSeekInfo   = Pointer to TStreamerInfo record
-//            42->45 fNbytesInfo = Number of bytes in TStreamerInfo record
-//            46->63 fUUID       = Universal Unique ID
+   // Opens or creates a local ROOT file whose name is fname1. It is
+   // recommended to specify fname1 as "<file>.root". The suffix ".root"
+   // will be used by object browsers to automatically identify the file as
+   // a ROOT file. If the constructor fails in any way IsZombie() will
+   // return true. Use IsOpen() to check if the file is (still) open.
+   //
+   // To open non-local files use the static TFile::Open() method, that
+   // will take care of opening the files using the correct remote file
+   // access plugin.
+   //
+   // If option = NEW or CREATE   create a new file and open it for writing,
+   //                             if the file already exists the file is
+   //                             not opened.
+   //           = RECREATE        create a new file, if the file already
+   //                             exists it will be overwritten.
+   //           = UPDATE          open an existing file for writing.
+   //                             if no file exists, it is created.
+   //           = READ            open an existing file for reading.
+   //
+   // The title of the file (ftitle) will be shown by the ROOT browsers.
+   //
+   // A ROOT file (like a Unix file system) may contain objects and
+   // directories. There are no restrictions for the number of levels
+   // of directories.
+   //
+   // A ROOT file is designed such that one can write in the file in pure
+   // sequential mode (case of BATCH jobs). In this case, the file may be
+   // read sequentially again without using the file index written
+   // at the end of the file. In case of a job crash, all the information
+   // on the file is therefore protected.
+   //
+   // A ROOT file can be used interactively. In this case, one has the
+   // possibility to delete existing objects and add new ones.
+   // When an object is deleted from the file, the freed space is added
+   // into the FREE linked list (fFree). The FREE list consists of a chain
+   // of consecutive free segments on the file. At the same time, the first
+   // 4 bytes of the freed record on the file are overwritten by GAPSIZE
+   // where GAPSIZE = -(Number of bytes occupied by the record).
+   //
+   // Option compress is used to specify the compression level:
+   //  compress = 0 objects written to this file will not be compressed.
+   //  compress = 1 minimal compression level but fast.
+   //  ....
+   //  compress = 9 maximal compression level but slow.
+   //
+   // Note that the compression level may be changed at any time.
+   // The new compression level will only apply to newly written objects.
+   // The function TFile::Map() shows the compression factor
+   // for each object written to this file.
+   // The function TFile::GetCompressionFactor returns the global
+   // compression factor for this file.
+   //
+   // In case the file does not exist or is not a valid ROOT file,
+   // it is made a Zombie. One can detect this situation with a code like:
+   //    TFile f("file.root");
+   //    if (f.IsZombie()) {
+   //       cout << "Error opening file" << endl;
+   //       exit(-1);
+   //    }
+   //
+   // A ROOT file is a suite of consecutive data records with the following
+   // format (see also the TKey class):
+   // TKey ---------------------
+   //      byte 1->4  Nbytes    = Length of compressed object (in bytes)
+   //           5->6  Version   = TKey version identifier
+   //           7->10 ObjLen    = Length of uncompressed object
+   //          11->14 Datime    = Date and time when object was written to file
+   //          15->16 KeyLen    = Length of the key structure (in bytes)
+   //          17->18 Cycle     = Cycle of key
+   //          19->22 SeekKey   = Pointer to record itself (consistency check)
+   //          23->26 SeekPdir  = Pointer to directory header
+   //          27->27 lname     = Number of bytes in the class name
+   //          28->.. ClassName = Object Class Name
+   //          ..->.. lname     = Number of bytes in the object name
+   //          ..->.. Name      = lName bytes with the name of the object
+   //          ..->.. lTitle    = Number of bytes in the object title
+   //          ..->.. Title     = Title of the object
+   //          -----> DATA      = Data bytes associated to the object
+   //
+   // The first data record starts at byte fBEGIN (currently set to kBEGIN)
+   // Bytes 1->kBEGIN contain the file description:
+   //       byte  1->4  "root"      = Root file identifier
+   //             5->8  fVersion    = File format version
+   //             9->12 fBEGIN      = Pointer to first data record
+   //            13->16 fEND        = Pointer to first free word at the EOF
+   //            17->20 fSeekFree   = Pointer to FREE data record
+   //            21->24 fNbytesFree = Number of bytes in FREE data record
+   //            25->28 nfree       = Number of free data records
+   //            29->32 fNbytesName = Number of bytes in TNamed at creation time
+   //            33->33 fUnits      = Number of bytes for file pointers
+   //            34->37 fCompress   = Zip compression level
+   //            38->41 fSeekInfo   = Pointer to TStreamerInfo record
+   //            42->45 fNbytesInfo = Number of bytes in TStreamerInfo record
+   //            46->63 fUUID       = Universal Unique ID
 //Begin_Html
 /*
 <img src="gif/file_layout.gif">
 */
 //End_Html
-//
-//  The structure of a directory is shown in TDirectory::TDirectory
-//
-//
+   //
+   // The structure of a directory is shown in TDirectory::TDirectory
+   //
 
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
@@ -1912,14 +1912,15 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    // type of TFile depends on the file name. If the file starts with
    // "root:", "roots:" or "rootk:" a TNetFile object will be returned,
    // with "http:" a TWebFile, with "file:" a local TFile, etc. (see the
-   // list of TFile plugin handlers for regular axpressions that will be
-   // checked) and as last a local file will be tried.
+   // list of TFile plugin handlers in $ROOTSYS/etc/system.rootrc for regular
+   // expressions that will be checked) and as last a local file will be tried.
    // Before opening a file via TNetFile a check is made to see if the URL
    // specifies a local file. If that is the case the file will be opened
    // via a normal TFile. To force the opening of a local file via a
    // TNetFile use either TNetFile directly or specify as host "localhost".
-   // For the meaning of the options and other arguments see the constructors
-   // of the individual file classes. In case of error returns 0.
+   // The netopt argument is only used by TNetFile. For the meaning of the
+   // options and other arguments see the constructors of the individual
+   // file classes. In case of error returns 0.
 
    TPluginHandler *h;
    TFile *f = 0;
