@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.35 2000/12/18 07:12:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.36 2000/12/19 10:42:59 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -246,16 +246,11 @@
 #include "TVirtualPad.h"
 #include "TInterpreter.h"
 #include "TRegexp.h"
-#include "TF1.h"
 #include "TArrayC.h"
 #include "TStreamerInfo.h"
 #include "TVirtualFitter.h"
 
 TTree *gTree;
-
-TVirtualFitter *tFitter=0;
-
-extern void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
 ClassImp(TTree)
 
@@ -2140,38 +2135,9 @@ void TTree::Streamer(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
-void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &r, Double_t *par, Int_t flag)
-{
-// The fit function used by the unbinned likelihood fit.
-   
-  TF1 *fitfunc = (TF1*)tFitter->GetObjectFit();
-  Int_t n = gTree->GetSelectedRows();
-  Double_t  *data1 = gTree->GetV1();
-  Double_t  *data2 = gTree->GetV2();
-  Double_t  *data3 = gTree->GetV3();
-  Double_t *weight = gTree->GetW();
-  Double_t logEpsilon = -230;   // protect against negative probabilities
-  Double_t logL = 0.0, prob;
-  Double_t sum = fitfunc->GetChisquare();
-  
-  Double_t x[3];
-  for(Int_t i = 0; i < n; i++) {
-    x[0] = data1[i];
-    if (data2) x[1] = data2[i];
-    if (data3) x[2] = data3[i];
-    prob = fitfunc->EvalPar(x,par) * weight[i]/sum;
-    if(prob > 0) logL += TMath::Log(prob);
-    else         logL += logEpsilon;
-  }
-  
-  r = -logL;
-}
-
-
 
 //______________________________________________________________________________
-void TTree::UnbinnedFit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Int_t nentries, Int_t firstentry)
+Int_t TTree::UnbinnedFit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*Unbinned fit of one or more variable(s) from a Tree*-*-*-*-*-*
 //*-*        ===================================================
@@ -2219,128 +2185,10 @@ void TTree::UnbinnedFit(const char *funcname ,const char *varexp, const char *se
 //   1, 2 and 3 Dimensional fits are supported.
 //   See also TTree::Fit
 
-  Int_t i, npar,nvpar,nparx;
-  Double_t par, we, al, bl;
-  Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
-  Double_t arglist[10];
-  
-  // Set the global fit function so that TreeUnbinnedFitLikelihood can find it. 
-  TF1* fitfunc = (TF1*)gROOT->GetFunction(funcname);
-  if (!fitfunc) { Error("UnbinnedFit", "Unknown function: %s",funcname); return; }
-  npar = fitfunc->GetNpar();
-  if (npar <=0) { Error("UnbinnedFit", "Illegal number of parameters = %d",npar); return; }
-  
-  // Spin through the data to select out the events of interest
-  // Make sure that the arrays V1,etc are created large enough to accomodate
-  // all entries
-  Int_t oldEstimate = fEstimate;
-  Int_t nent = Int_t(fEntries);
-  fEstimate = TMath::Min(nent,nentries);
-  
-  Draw(varexp, selection, "goff", nentries, firstentry);
 
-  fEstimate = oldEstimate;
-
-  //if no selected entries return
-  Int_t nrows = GetSelectedRows();
-  if (nrows <= 0) {
-     Error("UnbinnedFit", "Cannot fit: no entries selected"); 
-     return;
-  }
-     
-  // Check that function has same dimension as number of variables
-  Int_t ndim = fPlayer->GetDimension();
-  if (ndim != fitfunc->GetNdim()) {
-     Error("UnbinnedFit", "Function dimension=%d not equal to expression dimension=%d",fitfunc->GetNdim(),ndim); 
-     return;
-  }
-       
-  //Compute total sum of weights to set the normalization factor
-  Double_t sum = 0;
-  Double_t *w = GetW();
-  for (i=0;i<nrows;i++) {
-     sum += w[i];
-  }
-  fitfunc->SetChisquare(sum); //this info can be used in fitfunc
-  
-  // Create and set up the fitter
-  gTree = this;
-  tFitter = TVirtualFitter::Fitter(this);
-  tFitter->Clear();
-  tFitter->SetFCN(TreeUnbinnedFitLikelihood);
-
-  tFitter->SetObjectFit(fitfunc);
- 
-  TString opt = option;
-  opt.ToLower();
-  // Some initialisations
-   if (!opt.Contains("v")) {
-      arglist[0] = -1;
-      tFitter->ExecuteCommand("SET PRINT", arglist,1);
-      arglist[0] = 0;
-      tFitter->ExecuteCommand("SET NOW",   arglist,0);
-   }
-
-  // Setup the parameters (#, name, start, step, min, max)
-  Double_t min, max;
-  for(i = 0; i < npar; i++) {
-    fitfunc->GetParLimits(i, min, max);
-    if(min < max) {
-      tFitter->SetParameter(i, fitfunc->GetParName(i),
-                               fitfunc->GetParameter(i),
-                               fitfunc->GetParameter(i)/100.0, min, max);
-    } else {
-      tFitter->SetParameter(i, fitfunc->GetParName(i),
-                               fitfunc->GetParameter(i),
-                               fitfunc->GetParameter(i)/100.0, 0, 0);
-    }
-
-
-    // Check for a fixed parameter
-    if(max <= min && min > 0.0) {
-       tFitter->FixParameter(i);
-    }
-  }  // end for loop through parameters
-
-   // Reset Print level
-   if (opt.Contains("v")) {
-      arglist[0] = 0; 
-      tFitter->ExecuteCommand("SET PRINT", arglist,1);
-   }
-
-  // Now ready for minimization step
-  arglist[0] = TVirtualFitter::GetMaxIterations();
-  arglist[1] = 1;
-  tFitter->ExecuteCommand("MIGRAD", arglist, 2);
-  if (opt.Contains("m")) {
-     tFitter->ExecuteCommand("IMPROVE",arglist,0);
-  }
-  if (opt.Contains("e")) {
-     tFitter->ExecuteCommand("HESSE",arglist,0);
-     tFitter->ExecuteCommand("MINOS",arglist,0);
-  }
-  fitfunc->SetChisquare(0); //to not confuse user with the stored sum of w**2
-
-   // Get return status into function
-   char parName[50];
-   for (i=0;i<npar;i++) {
-      tFitter->GetParameter(i,parName, par,we,al,bl);
-      if (opt.Contains("e")) werr = we;
-      else {
-         tFitter->GetErrors(i,eplus,eminus,eparab,globcc);
-         if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
-         else                         werr = we;
-      }
-      fitfunc->SetParameter(i,par);
-      fitfunc->SetParError(i,werr);
-   }
-   tFitter->GetStats(amin,edm,errdef,nvpar,nparx);
-
-   // Print final values of parameters.
-   if (!opt.Contains("q")) {
-      amin = 0;
-      tFitter->PrintResults(1, amin);
-   }
+   GetPlayer();
+   if (fPlayer) return fPlayer->UnbinnedFit(funcname,varexp,selection,option,nentries,firstentry);
+   else         return -1;
 }
 
 //______________________________________________________________________________
