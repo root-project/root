@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.33 2003/01/30 11:59:40 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.34 2003/01/30 13:34:48 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -4155,7 +4155,6 @@ printf("FOUND CLASS: %s in \n%s\n", cClName, fLine);
                }
                Int_t iPosBracket=strOldType.Index('(');
                if (iPosBracket!=kNPOS) {
-                  char* end;
                   strOldType+=strNewType;
                   strNewType="";
                   iPosBracket++; // skip '('
@@ -4163,7 +4162,6 @@ printf("FOUND CLASS: %s in \n%s\n", cClName, fLine);
                      iPosBracket++;
 		  Int_t step;
                   ParseWord(&(strOldType.Data()[iPosBracket]), step, strNewType);
-		  end=c+step;
                   strOldType="void*";
                }
                parseStack.GetFQI(strNewType);
