@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.104 2002/10/21 17:32:58 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.105 2002/10/22 06:43:20 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -437,6 +437,8 @@ int GetClassVersion(G__ClassInfo &cl)
 //______________________________________________________________________________
 string GetNonConstTypeName(G__DataMemberInfo &m)
 {
+   // Return the type of the data member, without ANY const keyword
+
    if (m.Property() & (G__BIT_ISCONSTANT|G__BIT_ISPCONSTANT)) {
       G__TypeInfo* type = m.Type();
       const char *typeName = type->Name();
@@ -462,20 +464,21 @@ string GetNonConstTypeName(G__DataMemberInfo &m)
 }
 
 //______________________________________________________________________________
-string GetNonConstMemberName(G__DataMemberInfo &m)
+string GetNonConstMemberName(G__DataMemberInfo &m, const string &prefix = "")
 {
    // Return the name of the data member so that it can be used
-   // by non-const operation (so it includes a const_cast if necessary.
-
+   // by non-const operation (so it includes a const_cast if necessary).
+   
    if (m.Property() & (G__BIT_ISCONSTANT|G__BIT_ISPCONSTANT)) {
       string ret = "const_cast< ";
       ret += GetNonConstTypeName(m);
       ret += " &>( ";
+      ret += prefix;
       ret += m.Name();
-      ret += " ) ";
+      ret += " )";
       return ret;
    } else {
-      return m.Name();
+      return prefix+m.Name();
    }
 }
 
@@ -607,13 +610,17 @@ int IsStreamable(G__DataMemberInfo &m)
 {
    // Is this member a Streamable object?
 
+   const char* mTypeName = ShortTypeName(m.Type()->Name());
+
    if ((m.Property() & G__BIT_ISSTATIC) ||
          strncmp(m.Title(), "!", 1) == 0        ||
          strcmp(m.Name(), "G__virtualinfo") == 0) return 0;
    if (((m.Type())->Property() & G__BIT_ISFUNDAMENTAL) ||
        ((m.Type())->Property() & G__BIT_ISENUM)) return 0;
+   
+   if (m.Property() & G__BIT_ISREFERENCE) return 0;
    if (IsSTLContainer(m)) return 1;
-   if (!strcmp(m.Type()->Name(), "string") || !strcmp(m.Type()->Name(), "string*")) return 1;
+   if (!strcmp(mTypeName, "string")) return 1;
    if ((m.Type())->HasMethod("Streamer")) {
       if (!(m.Type())->HasMethod("Class_Version")) return 1;
       int version = GetClassVersion(*m.Type());
@@ -1034,8 +1041,8 @@ int STLStringStreamer(G__DataMemberInfo &m, int rwmode)
    // member was a standard string and if Streamer code has been created,
    // 0 otherwise.
 
-   if (!strcmp(m.Type()->Name(), "string") ||
-       !strcmp(m.Type()->Name(), "string*")) {
+   const char *mTypeName = ShortTypeName(m.Type()->Name());
+   if (!strcmp(mTypeName, "string")) {
       if (rwmode == 0) {
          // create read mode
          if ((m.Property() & G__BIT_ISPOINTER) &&
@@ -1499,6 +1506,7 @@ const char *ShortTypeName(const char *typeDesc)
 {
    // Return the absolute type of typeDesc.
    // E.g.: typeDesc = "class TNamed**", returns "TNamed".
+   // we remove * and const keywords. (we do not want to remove & ).
    // You need to use the result immediately before it is being overwritten.
 
   static char t[1024];
@@ -1920,16 +1928,19 @@ void WritePointersSTL(G__ClassInfo &cl)
       }
 
       //member is a string
-      if (!strcmp(m.Type()->Name(), "string") || !strcmp(m.Type()->Name(), "string*")) {
+      const char*shortTypeName = ShortTypeName(m.Type()->Name());
+      if (!strcmp(shortTypeName, "string")) {
+         // remove all 'const' keyword.
+         string mTypeName = GetNonConstTypeName(m).c_str();
          fprintf(fp, "//_______________________________________");
          fprintf(fp, "_______________________________________\n");
          fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *R__p, int)\n",clName,m.Name());
          fprintf(fp, "{\n");
          if (m.Property() & G__BIT_ISPOINTER) {
             //fprintf(fp, "   %s %s = (%s)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
-            fprintf(fp, "   %s* %s = (%s*)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+            fprintf(fp, "   %s* %s = (%s*)R__p;\n",mTypeName.c_str(),m.Name(),mTypeName.c_str());
          } else {
-            fprintf(fp, "   %s &%s = *(%s *)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+            fprintf(fp, "   %s &%s = *(%s *)R__p;\n",mTypeName.c_str(),m.Name(),mTypeName.c_str());
          }
          fprintf(fp, "   if (R__b.IsReading()) {\n");
          STLStringStreamer(m,0);
@@ -1950,7 +1961,7 @@ void WritePointersSTL(G__ClassInfo &cl)
          fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *R__p, int)\n",clName,m.Name());
       }
       fprintf(fp, "{\n");
-      // remove A leading 'const' keyword.
+      // remove all 'const' keyword.
       string mTypeName = GetNonConstTypeName(m).c_str();
       // Define a variable for easy access to the data member.
       if (m.Property() & G__BIT_ISARRAY) {
@@ -2181,12 +2192,15 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", %s%s);\n",
                        cvar, prefix, m.Name());
                if (clflag && IsStreamable(m)) fprintf(fp, "      R__cl->SetStreamer(\"%s\",R__%s_%s);\n", cvar, clName, m.Name());
+            } else if (m.Property() & G__BIT_ISREFERENCE) {
+               // For reference we do not know what do not ... let's do nothing (hopefully the referenced objects is saved somewhere else!
+               
             } else {
                if ((m.Type())->HasMethod("ShowMembers")) {
                   fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", &%s%s);\n",
                           m.Name(), prefix, m.Name());
-                  fprintf(fp, "      %s%s.ShowMembers(R__insp, strcat(R__parent,\"%s.\")); R__parent[R__ncp] = 0;\n",
-                          prefix,GetNonConstMemberName(m).c_str(), m.Name());
+                  fprintf(fp, "      %s.ShowMembers(R__insp, strcat(R__parent,\"%s.\")); R__parent[R__ncp] = 0;\n",
+                          GetNonConstMemberName(m,prefix).c_str(), m.Name());
                   if (clflag && IsStreamable(m)) fprintf(fp, "      R__cl->SetStreamer(\"%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
                } else {
                   // NOTE: something to be added here!
@@ -2201,7 +2215,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                   if (strlen(m.Type()->Name()) &&
                       strcmp(compareName,m.Type()->Name())!=0 ) {
                      // Filter out the unamed type from with a the class.
-                     fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", &%s%s, R__insp, strcat(R__parent,\"%s.\"),%s);\n"
+                     fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", (void*)&%s%s, R__insp, strcat(R__parent,\"%s.\"),%s);\n"
                                  "      R__parent[R__ncp] = 0;\n",
                                  m.Type()->Name(), prefix, m.Name(), m.Name(),!strncmp(m.Title(), "!", 1)?"true":"false");
                   }
@@ -2511,13 +2525,18 @@ void WriteShadowClass(G__ClassInfo &cl)
          if (d.Property() & G__BIT_ISSTATIC) continue;
          if (strcmp("G__virtualinfo",d.Name())==0) continue;
 
-         string type_name = d.Type()->Name();
+         string type_name = GetNonConstTypeName(d); // .Type()->Name();
 
          if ((d.Type()->Property() & G__BIT_ISENUM) &&
              (type_name.length()==0 || type_name=="enum") || type_name.find("::")==type_name.length()-2 ) {
             // We have unamed enums, let's fake it:
             fprintf(fp,"         enum {kDummy} %s", d.Name());
-         } else {
+         }// if (d.Property() & G__BIT_ISREFERENCE) {
+            // foreach(type_name.begin(),type_name.end(),replace_if('&','*')) ??
+         else {
+            if (type_name[type_name.length()-1]=='&') {
+               type_name[type_name.length()-1]='*';
+            }
             // Add the '::' prefix in the case the datamember's class is nested in the local class or in a namespace.
             const char *prefix = "";
             if ( (type_name.find(cl.Fullname())==0) || (type_name.find("::")!= string::npos) )
