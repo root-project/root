@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.14 2002/05/18 08:21:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.15 2002/10/31 07:27:35 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -169,7 +169,7 @@ void TLegend::DeleteEntry()
 {
   // Delete entry at the mouse position
   if ( !fPrimitives ) return;
-  TLegendEntry* entry = GetEntry();   // get entry pointed to be mouse
+  TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
   if ( !entry ) return;
   fPrimitives->Remove(entry);
   delete entry;
@@ -185,8 +185,8 @@ void TLegend::Draw( Option_t *option )
 //____________________________________________________________________________
 void TLegend::EditEntryAttFill()
 {
-  // Edit the fill attributes for the entry pointed to be the mouse
-  TLegendEntry* entry = GetEntry();   // get entry pointed to be mouse
+  // Edit the fill attributes for the entry pointed by the mouse
+  TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
   if ( !entry ) return;
   gROOT->SetSelectedPrimitive( entry );
   entry->SetFillAttributes();
@@ -195,8 +195,8 @@ void TLegend::EditEntryAttFill()
 //____________________________________________________________________________
 void TLegend::EditEntryAttLine()
 {
-  // Edit the line attributes for the entry pointed to be the mouse
-  TLegendEntry* entry = GetEntry();   // get entry pointed to be mouse
+  // Edit the line attributes for the entry pointed by the mouse
+  TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
   if ( !entry ) return;
   gROOT->SetSelectedPrimitive( entry );
   entry->SetLineAttributes();
@@ -205,8 +205,8 @@ void TLegend::EditEntryAttLine()
 //____________________________________________________________________________
 void TLegend::EditEntryAttMarker()
 {
-  // Edit the marker attributes for the entry pointed to be the mouse
-  TLegendEntry* entry = GetEntry();   // get entry pointed to be mouse
+  // Edit the marker attributes for the entry pointed by the mouse
+  TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
   if ( !entry ) return;
   gROOT->SetSelectedPrimitive( entry );
   entry->SetMarkerAttributes();
@@ -215,8 +215,8 @@ void TLegend::EditEntryAttMarker()
 //____________________________________________________________________________
 void TLegend::EditEntryAttText()
 {
-  // Edit the text attributes for the entry pointed to be the mouse
-  TLegendEntry* entry = GetEntry();   // get entry pointed to be mouse
+  // Edit the text attributes for the entry pointed by the mouse
+  TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
   if ( !entry ) return;
   gROOT->SetSelectedPrimitive( entry );
   entry->SetTextAttributes();
@@ -265,7 +265,7 @@ void TLegend::InsertEntry( const char* objectName, const char* label, Option_t* 
 {
   // Add a new entry before the entry at the mouse position
 
-  TLegendEntry* beforeEntry = GetEntry();   // get entry pointed to be mouse
+  TLegendEntry* beforeEntry = GetEntry();   // get entry pointed by the mouse
   TObject *obj = gPad->FindObject( objectName );
 
   // note either obj OR beforeEntry may be zero at this point
@@ -549,7 +549,7 @@ void TLegend::SavePrimitive( ofstream &out, Option_t* )
 void TLegend::SetEntryLabel( const char* label )
 {
   // edit the label of the entry pointed to by the mouse
-  TLegendEntry* entry = GetEntry();   // get entry pointed to be mouse
+  TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
   if ( entry ) entry->SetLabel( label );
 }
 
@@ -557,7 +557,7 @@ void TLegend::SetEntryLabel( const char* label )
 void TLegend::SetEntryOption( Option_t* option )
 {
   // edit the option of the entry pointed to by the mouse
-  TLegendEntry* entry = GetEntry();   // get entry pointed to be mouse
+  TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
   if ( entry ) entry->SetOption( option );
 }
 
