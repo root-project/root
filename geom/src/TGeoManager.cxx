@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.42 2003/02/07 13:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.43 2003/02/10 17:23:14 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2901,6 +2901,15 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
    printf("   number of illegal overlaps/extrusions : %d\n", novlps);
 }
 
+//_____________________________________________________________________________
+void TGeoManager::PrintOverlaps() const
+{
+// Prints the current list of overlaps.
+   if (!fOverlaps) return;
+   Int_t novlp = fOverlaps->GetEntriesFast();
+   if (!novlp) return;
+   fPainter->PrintOverlaps();
+}   
 //_____________________________________________________________________________
 void TGeoManager::UpdateCurrentPosition(Double_t * /*nextpoint*/)
 {

@@ -105,6 +105,7 @@ public:
    void               PaintSphere(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
    virtual void       PaintNode(TGeoNode *node, Option_t *option="");
    void               PaintPcon(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
+   virtual void       PrintOverlaps() const;
    virtual void       RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option="");
    virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
    virtual TGeoNode  *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.12 2003/01/31 16:38:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.13 2003/02/07 13:46:47 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -101,6 +101,7 @@ public:
    virtual void       PaintSphere(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintPcon(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintNode(TGeoNode *node, Option_t *option="") = 0;
+   virtual void       PrintOverlaps() const = 0;
    virtual void       RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option="") = 0;
    virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) = 0;
    virtual TGeoNode  *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path) = 0;

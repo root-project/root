@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: $
+// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.1 2003/02/10 17:23:14 brun Exp $
 // Author: Andrei Gheata   09-02-03
 
 /*************************************************************************
@@ -154,9 +154,8 @@ void TGeoExtrusion::Draw(Option_t *option)
 //______________________________________________________________________________
 void TGeoExtrusion::PrintInfo() const
 {
-   printf("***  TGeoExtrusion : %s ***\n", GetTitle());
-   printf(" Node %s extruding its mother volume %s\n", fNode->GetName(), fVolume->GetName());
-   printf(" Maximum extruding distance : %g\n", fOverlap);
+   printf("* extrusion %s/%s: vol=%s node=%s extr=%g\n", GetName(), GetTitle(), 
+          fVolume->GetName(), fNode->GetName(), fOverlap);
 }
 
 ClassImp(TGeoNodeOverlap)
@@ -224,8 +223,7 @@ void TGeoNodeOverlap::Draw(Option_t *option)
 //______________________________________________________________________________
 void TGeoNodeOverlap::PrintInfo() const
 {
-   printf("***  TGeoNodeOverlap : %s ***\n", GetTitle());
-   printf(" Nodes : %s - %s overlapping inside mother volume %s\n", fNode1->GetName(), fNode2->GetName(), fVolume->GetName());
-   printf(" Maximum overlapping distance : %g\n", fOverlap);
+   printf("* overlap %s/%s: vol=%s <%s<->%s> ovlp=%g\n", GetName(), GetTitle(), 
+          fVolume->GetName(), fNode1->GetName(), fNode2->GetName(), fOverlap);
 }
    

@@ -1436,6 +1436,13 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
          return;
    }
 } 
+
+//______________________________________________________________________________
+void TGeoPainter::PrintOverlaps() const
+{
+   fChecker->PrintOverlaps();
+}
+   
 //______________________________________________________________________________
 void TGeoPainter::RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option)
 {

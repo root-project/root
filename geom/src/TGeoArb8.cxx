@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.18 2003/01/24 08:38:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.19 2003/02/07 13:46:47 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -768,7 +768,7 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
    Double_t saf[5];
    Double_t norm[3]; // normal to current facette
    Int_t i;          // current facette index
-   Double_t x0, y0, z0, x1, y1, z1, x2, y2, z2;
+   Double_t x0, y0, z0, x1, y1, z1, x2, y2;
    Double_t ax, ay, az, bx, by;
    Double_t fn;
    //---> compute safety for lateral planes
@@ -784,13 +784,11 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
       az = z1-z0;
       x2 = fXY[(i+1)%4][0];
       y2 = fXY[(i+1)%4][1];
-      z2 = -fDz;
       bx = x2-x0;
       by = y2-y0;
       if (bx==0 && by==0) {
          x2 = fXY[4+((i+1)%4)][0];
          y2 = fXY[4+((i+1)%4)][1];
-         z2 = fDz;
          bx = x2-x1;
          by = y2-y1;
          if (bx==0 && by==0) continue;

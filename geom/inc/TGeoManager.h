@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.26 2003/02/07 13:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.27 2003/02/10 17:23:14 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -157,6 +157,7 @@ public:
    void                   CheckPoint(Double_t x=0,Double_t y=0, Double_t z=0, Option_t *option=""); // *MENU*
    void                   DrawCurrentPoint(Int_t color=2); // *MENU*
    void                   DrawPath(const char *path);
+   void                   PrintOverlaps() const; // *MENU*
    void                   RandomPoints(const TGeoVolume *vol, Int_t npoints=10000, Option_t *option="");
    void                   RandomRays(Int_t nrays=1000, Double_t startx=0, Double_t starty=0, Double_t startz=0);
    TGeoNode              *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil=1E-5,

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.24 2003/02/10 09:55:21 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.25 2003/02/10 17:23:14 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -398,6 +398,16 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
       }   	     
       node->SetOverlaps(0,0);
    }
+}
+
+//-----------------------------------------------------------------------------
+void TGeoChecker::PrintOverlaps() const
+{
+// Print the current list of overlaps held by the manager class.
+   TIter next(fGeom->GetListOfOverlaps());
+   TGeoOverlap *ov;
+   printf("=== Overlaps for %s ===\n", fGeom->GetName());
+   while ((ov=(TGeoOverlap*)next())) ov->PrintInfo();
 }
 
 //-----------------------------------------------------------------------------
