@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.7 2002/01/20 14:23:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.8 2002/06/11 13:25:25 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -104,12 +104,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TROOT.h"
 #include "TUUID.h"
 #include "TError.h"
 #include "TSystem.h"
 #include "TRandom.h"
 #include "TInetAddress.h"
 #include "TMD5.h"
+#include "Bytes.h"
 #include <string.h>
 #ifdef R__WIN32
 #include "Windows4Root.h"
@@ -143,7 +145,6 @@ typedef unsigned long long ULong64_t;   //Unsigned long integer 8 bytes
 #else
 #define R__LL(long) _NAME2_(long,LL)
 #endif
-
 
 
 ClassImp(TUUID)
@@ -181,6 +182,15 @@ TUUID::TUUID()
    Format(clockseq, timestamp);
 
    time_last = timestamp;
+   fUUIDNumber = 1<<31;
+}
+
+//______________________________________________________________________________
+TUUID::~TUUID()
+{
+   // delete this TUUID
+
+   //gROOT->GetUUIDs()->RemoveUUID(fUUIDNumber);
 }
 
 //______________________________________________________________________________
@@ -230,6 +240,7 @@ void TUUID::SetFromString(const char *uuid)
    fNode[3]               = (UChar_t) node[3];
    fNode[4]               = (UChar_t) node[4];
    fNode[5]               = (UChar_t) node[5];
+   fUUIDNumber            = 1<<31;
 }
 
 //______________________________________________________________________________
@@ -248,6 +259,32 @@ TUUID::TUUID(const char *uuid)
       Error("TUUID", "null string not allowed");
 
    SetFromString(uuid);
+}
+
+//______________________________________________________________________________
+void TUUID::FillBuffer(char *&buffer)
+{
+// Stream UUID into output buffer
+   
+   tobuf(buffer, fTimeLow);
+   tobuf(buffer, fTimeMid);
+   tobuf(buffer, fTimeHiAndVersion);
+   tobuf(buffer, fClockSeqHiAndReserved);
+   tobuf(buffer, fClockSeqLow);
+   for (Int_t i=0;i<6;i++) tobuf(buffer, fNode[i]);
+}
+
+//______________________________________________________________________________
+void TUUID::ReadBuffer(char *&buffer)
+{
+// Stream UUID from input buffer
+   
+   frombuf(buffer, &fTimeLow);
+   frombuf(buffer, &fTimeMid);
+   frombuf(buffer, &fTimeHiAndVersion);
+   frombuf(buffer, &fClockSeqHiAndReserved);
+   frombuf(buffer, &fClockSeqLow);
+   for (Int_t i=0;i<6;i++) frombuf(buffer, &fNode[i]);
 }
 
 //______________________________________________________________________________
