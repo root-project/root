@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.10 2003/02/08 21:31:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.11 2003/02/11 20:25:08 brun Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -71,6 +71,13 @@ TBits::~TBits()
    // TBits destructor
 
    delete [] fAllBits;
+}
+
+//______________________________________________________________________________
+void TBits::Clear(Option_t * /*option*/)
+{
+   delete [] fAllBits;
+   fAllBits = 0;
 }
 
 //______________________________________________________________________________

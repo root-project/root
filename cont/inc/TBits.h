@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.5 2001/12/06 15:53:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.6 2001/12/19 15:40:59 brun Exp $
 // Author: Philippe Canal 05/02/01
 
 /*************************************************************************
@@ -58,6 +58,7 @@ public:
    Bool_t TestBitNumber(UInt_t bitnumber) const;
 
    //----- Utilities
+   void    Clear(Option_t *option="");
    void    Compact();               // Reduce the space used.
    UInt_t  CountBits(UInt_t startBit=0)     const ;  // return number of bits set to 1
    UInt_t  FirstNullBit(UInt_t startBit=0)  const;
