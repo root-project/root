@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.17 2004/07/12 20:00:41 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.18 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -611,6 +611,13 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
 //______________________________________________________________________________
 Bool_t TDecompSVD::Solve(TMatrixDColumn &cb)
 { 
+// Solve Ax=b assuming the SVD form of A is stored . Solution returned in the
+// matrix column cb b.
+// If A is of size (m x n), input vector b should be of size (m), however,
+// the solution, returned in b, will be in the first (n) elements .
+//
+// For m > n , x  is the least-squares solution of min(A . x - b)
+
   TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
   Assert(b->IsValid());    
   if (TestBit(kSingular)) {
@@ -679,7 +686,7 @@ Bool_t TDecompSVD::TransSolve(TVectorD &b)
     }
   }
 
-  if (fU.GetNcols() != fU.GetNrows()) {
+  if (fU.GetNrows() != fU.GetNcols() || fU.GetRowLwb() != fU.GetColLwb()) {
     Error("TransSolve(TVectorD &","matrix should be square");
     b.Invalidate();
     return kFALSE;
@@ -730,7 +737,7 @@ Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
     }
   }
 
-  if (fU.GetNcols() != fU.GetNrows()) {
+  if (fU.GetNrows() != fU.GetNcols() || fU.GetRowLwb() != fU.GetColLwb()) {
     Error("TransSolve(TMatrixDColumn &","matrix should be square");
     b->Invalidate();
     return kFALSE;
@@ -812,8 +819,13 @@ void TDecompSVD::Invert(TMatrixD &inv)
   // If m > n , only the (n x m) part of the returned (pseudo inverse) matrix
   // should be used .
 
-  if (inv.GetNrows()  != GetNrows()  || inv.GetNcols()  != GetNrows() ||
-      inv.GetRowLwb() != GetRowLwb() || inv.GetColLwb() != GetColLwb()) {
+  const Int_t rowLwb = GetRowLwb();
+  const Int_t colLwb = GetColLwb();
+  const Int_t nRows  = GetNrows();
+  const Int_t nCols  = GetNcols();
+
+  if (inv.GetNrows()  != nRows  || inv.GetNcols()  != nCols ||
+      inv.GetRowLwb() != rowLwb || inv.GetColLwb() != colLwb) {
     Error("Invert(TMatrixD &","Input matrix has wrong shape");
     inv.Invalidate();
     return;
@@ -832,11 +844,10 @@ TMatrixD TDecompSVD::Invert()
   const Int_t rowLwb = GetRowLwb();
   const Int_t colLwb = GetColLwb();
   const Int_t rowUpb = rowLwb+GetNrows()-1;
-  const Int_t colUpb = colLwb+GetNcols()-1;
   TMatrixD inv(rowLwb,rowUpb,colLwb,colLwb+GetNrows()-1);
   inv.UnitMatrix();
   MultiSolve(inv);
-  inv.ResizeTo(rowLwb,rowUpb,colLwb,colUpb);
+  inv.ResizeTo(rowLwb,rowLwb+GetNcols()-1,colLwb,colLwb+GetNrows()-1);
 
   return inv;
 }

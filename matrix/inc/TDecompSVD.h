@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.10 2004/06/13 14:53:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.11 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -65,10 +65,16 @@ public :
 
   virtual Bool_t   Decompose  ();
   virtual Bool_t   Solve      (      TVectorD &b);
-  virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = Solve(x); return x; }
+  virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = Solve(x); 
+                                                               const Int_t rowLwb = GetRowLwb();
+                                                               x.ResizeTo(rowLwb,rowLwb+GetNcols()-1);
+                                                               return x; }
   virtual Bool_t   Solve      (      TMatrixDColumn &b);
   virtual Bool_t   TransSolve (      TVectorD &b);
-  virtual TVectorD TransSolve (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = TransSolve(x); return x; }
+  virtual TVectorD TransSolve (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = TransSolve(x);
+                                                               const Int_t rowLwb = GetRowLwb();
+                                                               x.ResizeTo(rowLwb,rowLwb+GetNcols()-1);
+                                                               return x; }
   virtual Bool_t   TransSolve (      TMatrixDColumn &b);
   virtual Double_t Condition  ();
   virtual void     Det        (Double_t &d1,Double_t &d2);
