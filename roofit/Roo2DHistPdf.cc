@@ -1,6 +1,6 @@
 /***************************************************************************** * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: Roo2DHistPdf.cc,v 1.6 2002/02/26 03:39:43 verkerke Exp $
+ *    File: $Id: Roo2DHistPdf.cc,v 1.1.2.3 2002/04/30 17:47:40 zhanglei Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -8,6 +8,7 @@
  *   08-Aug-2001 AB Created Roo2DHistPdf
  *   25-Aug-2001 AB Ported to RooFitCore/RooFitModels
  *   11-Apr-2002 AB Some ctor bug fixes.
+ *   17-Apr-2002 LZ event generator for Roo2DHistPdf zhanglei@slac.stanford.edu
  *
  * Copyright (C) 2001, Liverpool University
  *****************************************************************************/
@@ -29,7 +30,8 @@ Roo2DHistPdf::Roo2DHistPdf(const char * name, const char *title,
                            RooAbsReal& xx, RooAbsReal &yy, const char * rootFile, const char * histName, TString opt):
   RooAbsPdf(name,title),
   x("x", "x dimension",this, xx),
-  y("y", "y dimension",this, yy)
+  y("y", "y dimension",this, yy),
+  _MaxP(0)
 {
   // instigate a memory leak by only opening the file the once and never closing it.
   // this seems to allow toy MCs to continue to work ok.  I am confused and suspect a 
@@ -56,7 +58,8 @@ Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
                        RooAbsRealLValue& xx, RooAbsRealLValue & yy, RooDataSet& data, TString opt):
   RooAbsPdf(name,title),
   x("x", "x dimension",this, xx),
-  y("y", "y dimension",this, yy)
+  y("y", "y dimension",this, yy),
+  _MaxP(0)
 {
   TH2F * hist = (TH2F*)data.createHistogram(xx,yy);
   loadNewHist(hist, opt);
@@ -66,7 +69,8 @@ Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
                        RooAbsReal& xx, RooAbsReal & yy, TH2F * hist, TString opt):
   RooAbsPdf(name,title),
   x("x", "x dimension",this, xx),
-  y("y", "y dimension",this, yy)
+  y("y", "y dimension",this, yy),
+  _MaxP(0)
 {
   loadNewHist(hist, opt);
 }
@@ -75,7 +79,8 @@ Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
                        RooAbsReal& xx, RooAbsReal & yy, TH2D * hist, TString opt):
   RooAbsPdf(name,title),
   x("x", "x dimension",this, xx),
-  y("y", "y dimension",this, yy)
+  y("y", "y dimension",this, yy),
+  _MaxP(0)
 {
   _iWantToExtrapolate = 0;
   loadNewHist( (TH2F*)hist, opt);
@@ -84,7 +89,8 @@ Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
 Roo2DHistPdf::Roo2DHistPdf(const Roo2DHistPdf & other, const char* name) :
   RooAbsPdf(other,name),
   x("x", this, other.x),
-  y("y", this, other.y)
+  y("y", this, other.y),
+  _MaxP(other._MaxP)
 {
   _nPointsx = other._nPointsx;
   _nPointsy = other._nPointsy;
@@ -143,6 +149,7 @@ void Roo2DHistPdf::SetOptions(TString opt)
 //====================//
 //calculate the LUT   //
 //====================//
+
 Int_t Roo2DHistPdf::GetProbability(TH2F * theHist)
 {
   if(theHist == 0)
@@ -186,6 +193,7 @@ Int_t Roo2DHistPdf::GetProbability(TH2F * theHist)
     for(Int_t j = 1; j <= ny; j++)
     {
       _p[i-1][j-1] = (Double_t)theHist->GetBinContent(i, j);
+      if (_p[i-1][j-1]>_MaxP) _MaxP=_p[i-1][j-1];
       if(_p[i-1][j-1] < 0.0)
       {
         cout << "Roo2DHistPdf::GetProbability histogram bin content: "<< _p[i-1][j-1] <<" < 0; setting to probability to 0.0"<<endl;
@@ -259,3 +267,37 @@ Double_t Roo2DHistPdf::evaluate() const
   }
 }
 
+Bool_t Roo2DHistPdf::isDirectGenSafe(const RooAbsArg& arg) const
+{
+  return kTRUE;
+}
+
+Int_t Roo2DHistPdf::getGenerator(const RooArgSet& directVars,
+				 RooArgSet &generateVars)const
+{
+
+  Int_t haveGen=0;
+  if (matchArgs(directVars, generateVars, x)) haveGen=1;
+  if (matchArgs(directVars, generateVars, y)) haveGen=2;
+  
+  return haveGen;
+}
+
+void Roo2DHistPdf::generateEvent(Int_t code)
+{
+
+  assert(0!=code);
+  Double_t r, rx, ry;
+  while(1) {
+    r=RooRandom::uniform();
+    rx=RooRandom::uniform()*(_hix-_lox);
+    ry=RooRandom::uniform()*(_hiy-_loy);
+    Int_t xBin=rx/_xbinWidth;
+    Int_t yBin=ry/_ybinWidth;
+    if ((xBin<0)||(yBin<0)) continue;
+    if (r*_MaxP<=_p[xBin][yBin]) break;
+  }
+  x=rx+_lox;
+  y=ry+_loy;
+  return;
+}

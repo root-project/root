@@ -1,13 +1,14 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: Roo2DHistPdf.rdl,v 1.2 2001/09/08 02:29:49 bevan Exp $
+ *    File: $Id: Roo2DHistPdf.rdl,v 1.1.2.3 2002/04/30 17:47:43 zhanglei Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
  * History:
  *   08-Aug-2001 AB Created Roo2DHistPdf
  *   25-Aug-2001 AB Ported to RooFitCore/RooFitModels
+ *   17-Apr-2002 LZ event generator for Roo2DHistPdf zhanglei@slac.stanford.edu
  *
  * Copyright (C) 2001, Liverpool University
  *****************************************************************************/
@@ -18,6 +19,7 @@
 #include "RooFitCore/RooRealProxy.hh"
 #include "TH2.h"
 #include "TFile.h"
+#include "RooFitCore/RooRandom.hh"
 
 class RooRealVar;
 class RooDataSet;
@@ -47,6 +49,11 @@ public:
   RooRealProxy x;
   RooRealProxy y;
 
+  // generator of our own
+  virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const;
+  virtual Int_t getGenerator(const RooArgSet& directVars,RooArgSet &generateVars)const;
+  virtual void generateEvent(Int_t code);
+  
 protected:
   Int_t    GetProbability(TH2F * theHist);      //calculate PDF LUT, _p[];
   Double_t evaluate() const;
@@ -68,6 +75,7 @@ private:
                                      //to improve upon the resolution
 
   Double_t _p[_nPoints][_nPoints];   //probability of the PDF in (x,y) plane [granularity fixed by _nPoints]
+  Double_t _MaxP;
 
   ClassDef(Roo2DHistPdf,0) //2D Hist PDF builder
 };
