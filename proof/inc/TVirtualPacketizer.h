@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.h,v 1.1 2002/07/17 12:29:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.h,v 1.2 2002/10/07 10:43:51 rdm Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -37,7 +37,6 @@ class TDSetElement;
 class TSlave;
 class TMessage;
 
-typedef long Long64_t;
 
 
 class TVirtualPacketizer : public TObject {

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:$:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.1 2003/04/04 00:40:27 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -31,8 +31,6 @@ class TGTextButton;
 class TGCheckButton;
 class TGLabel;
 class TVirtualProof;
-
-typedef long Long64_t;
 
 
 class TProofProgressDialog {

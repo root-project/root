@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.47 2003/03/11 14:27:15 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.48 2003/04/10 15:25:25 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -537,17 +537,14 @@ Int_t TBuffer::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss)
             Warning("CheckByteCount","%s::Streamer() not in sync with data on file, fix Streamer()",
                     clss->GetName());
       }
-      if ( ((char *)endpos) > fBufMax ) {
-         offset = fBufMax-fBufCur;
-         Error("CheckByteCount", 
-               "Byte count probably corrupted around buffer position %d:\n\t%d for a possible maximum of %d.",
+      if ((char *)endpos > fBufMax) {
+         offset = fBufMax - fBufCur;
+         Error("CheckByteCount",
+               "byte count probably corrupted around buffer position %d:\n\t%d for a possible maximum of %d",
                startpos, bcnt, offset);
          fBufCur = fBufMax;
-
       } else {
-
          fBufCur = (char *) endpos;
-         
       }
    }
    return offset;
@@ -765,6 +762,35 @@ Int_t TBuffer::ReadArray(Long_t *&ll)
    }
    return n;
 }
+
+//______________________________________________________________________________
+Int_t TBuffer::ReadArray(Long64_t *&ll)
+{
+   // Read array of long longs from the I/O buffer. Returns the number of
+   // long longs read. If argument is a 0 pointer then space will be
+   // allocated for the array.
+
+   Assert(IsReading());
+
+   Int_t n;
+   *this >> n;
+
+   if (n <= 0 || n > fBufSize) return 0;
+
+   if (!ll) ll = new Long64_t[n];
+
+#ifdef R__BYTESWAP
+   for (int i = 0; i < n; i++)
+      frombuf(fBufCur, &ll[i]);
+#else
+   Int_t l = sizeof(Long64_t)*n;
+   memcpy(ll, fBufCur, l);
+   fBufCur += l;
+#endif
+
+   return n;
+}
+
 //______________________________________________________________________________
 Int_t TBuffer::ReadArray(Float_t *&f)
 {
@@ -964,6 +990,33 @@ Int_t TBuffer::ReadStaticArray(Long_t *ll)
 }
 
 //______________________________________________________________________________
+Int_t TBuffer::ReadStaticArray(Long64_t *ll)
+{
+   // Read array of long longs from the I/O buffer. Returns the number of
+   // long longs read.
+
+   Assert(IsReading());
+
+   Int_t n;
+   *this >> n;
+
+   if (n <= 0 || n > fBufSize) return 0;
+
+   if (!ll) return 0;
+
+#ifdef R__BYTESWAP
+   for (int i = 0; i < n; i++)
+      frombuf(fBufCur, &ll[i]);
+#else
+   Int_t l = sizeof(Long64_t)*n;
+   memcpy(ll, fBufCur, l);
+   fBufCur += l;
+#endif
+
+   return n;
+}
+
+//______________________________________________________________________________
 Int_t TBuffer::ReadStaticArray(Float_t *f)
 {
    // Read array of floats from the I/O buffer. Returns the number of floats
@@ -1085,16 +1138,8 @@ void TBuffer::ReadFastArray(Int_t *ii, Int_t n)
    bswapcpy32(ii, fBufCur, n);
    fBufCur += sizeof(Int_t)*n;
 # else
-   //char *sw = (char*)ii;
-   for (int i = 0; i < n; i++) {
+   for (int i = 0; i < n; i++)
       frombuf(fBufCur, &ii[i]);
-      //sw[0] = fBufCur[3];
-      //sw[1] = fBufCur[2];
-      //sw[2] = fBufCur[1];
-      //sw[3] = fBufCur[0];
-      //fBufCur += 4;
-      //sw += 4;
-   }
 # endif
 #else
    Int_t l = sizeof(Int_t)*n;
@@ -1119,6 +1164,23 @@ void TBuffer::ReadFastArray(Long_t *ll, Int_t n)
 }
 
 //______________________________________________________________________________
+void TBuffer::ReadFastArray(Long64_t *ll, Int_t n)
+{
+   // Read array of n long longs from the I/O buffer.
+
+   if (n <= 0 || n > fBufSize) return;
+
+#ifdef R__BYTESWAP
+   for (int i = 0; i < n; i++)
+      frombuf(fBufCur, &ll[i]);
+#else
+   Int_t l = sizeof(Long64_t)*n;
+   memcpy(ll, fBufCur, l);
+   fBufCur += l;
+#endif
+}
+
+//______________________________________________________________________________
 void TBuffer::ReadFastArray(Float_t *f, Int_t n)
 {
    // Read array of n floats from the I/O buffer.
@@ -1130,16 +1192,8 @@ void TBuffer::ReadFastArray(Float_t *f, Int_t n)
    bswapcpy32(f, fBufCur, n);
    fBufCur += sizeof(Float_t)*n;
 # else
-//   char *sw = (char*)f;
-   for (int i = 0; i < n; i++) {
+   for (int i = 0; i < n; i++)
       frombuf(fBufCur, &f[i]);
-      //sw[0] = fBufCur[3];
-      //sw[1] = fBufCur[2];
-      //sw[2] = fBufCur[1];
-      //sw[3] = fBufCur[0];
-      //fBufCur += 4;
-      //sw += 4;
-   }
 # endif
 #else
    Int_t l = sizeof(Float_t)*n;
@@ -1309,6 +1363,31 @@ void TBuffer::WriteArray(const ULong_t *ll, Int_t n)
 }
 
 //______________________________________________________________________________
+void TBuffer::WriteArray(const Long64_t *ll, Int_t n)
+{
+   // Write array of n long longs into the I/O buffer.
+
+   Assert(IsWriting());
+
+   *this << n;
+
+   if (n <= 0) return;
+
+   Assert(ll);
+
+   Int_t l = sizeof(Long64_t)*n;
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
+
+#ifdef R__BYTESWAP
+   for (int i = 0; i < n; i++)
+      tobuf(fBufCur, ll[i]);
+#else
+   memcpy(fBufCur, ll, l);
+   fBufCur += l;
+#endif
+}
+
+//______________________________________________________________________________
 void TBuffer::WriteArray(const Float_t *f, Int_t n)
 {
    // Write array of n floats into the I/O buffer.
@@ -1470,6 +1549,25 @@ void TBuffer::WriteFastArray(const ULong_t *ll, Int_t n)
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
    for (int i = 0; i < n; i++) tobuf(fBufCur, ll[i]);
+}
+
+//______________________________________________________________________________
+void TBuffer::WriteFastArray(const Long64_t *ll, Int_t n)
+{
+   // Write array of n long longs into the I/O buffer.
+
+   if (n <= 0) return;
+
+   Int_t l = sizeof(Long64_t)*n;
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
+
+#ifdef R__BYTESWAP
+   for (int i = 0; i < n; i++)
+      tobuf(fBufCur, ll[i]);
+#else
+   memcpy(fBufCur, ll, l);
+   fBufCur += l;
+#endif
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.61 2002/11/04 17:22:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.62 2003/04/04 00:39:12 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -822,11 +822,13 @@ const char *TCint::TypeName(const char *typeDesc)
    if (!strstr(typeDesc, "(*)(")) {
       s = (char*)strchr(typeDesc, ' ');
       template_start = (char*)strchr(typeDesc, '<');
+      if (!strcmp(typeDesc, "long long"))
+         strcpy(t, typeDesc);
       // s is the position of the second 'word' (if any)
       // except in the case of templates where there will be a space
       // just before any closing '>': eg.
       //    TObj<std::vector<UShort_t,__malloc_alloc_template<0> > >*
-      if (s && (template_start==0 || (s < template_start)) )
+      else if (s && (template_start==0 || (s < template_start)) )
          strcpy(t, s+1);
       else
          strcpy(t, typeDesc);

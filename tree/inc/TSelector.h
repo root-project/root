@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.12 2002/12/02 18:50:06 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.13 2003/01/10 14:44:08 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -29,9 +29,9 @@
 #include "TString.h"
 #endif
 
-typedef long Long64_t;
 
 class TTree;
+
 
 class TSelector : public TObject {
 protected:

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.164 2003/04/03 14:38:42 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.165 2003/04/08 17:07:48 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -398,8 +398,8 @@ void TStreamerInfo::BuildCheck()
             }
       } else {
          if (info) {
-            Error("BuildCheck","Wrong class info"); 
-            SetBit(kCanDelete); 
+            Error("BuildCheck","Wrong class info");
+            SetBit(kCanDelete);
             return;
          }
       }
@@ -470,7 +470,7 @@ void TStreamerInfo::BuildOld()
    if (gDebug > 0) printf("\n====>Rebuilding TStreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
 
    fClass->BuildRealData();
-   
+
    TIter next(fElements);
    TStreamerElement *element;
    Int_t offset = 0;
@@ -497,7 +497,7 @@ void TStreamerInfo::BuildOld()
          offset += baseclass->Size();
          continue;
       }
-      
+
       TDataMember *dm = (TDataMember*)fClass->GetListOfDataMembers()->FindObject(element->GetName());
       // may be a fake class
       if (!dm && fClass->GetDeclFileLine() < 0) {
@@ -806,7 +806,7 @@ void TStreamerInfo::ForceWriteInfo(TFile *file, Bool_t force)
    // TStreamerInfo of all the classes referenced by the class.
    //
    // if argument force > 0 the loop on class dependencies is forced
-   
+
    // flag this class
    if (!file) return;
    TArrayC *cindex = file->GetClassIndex();
@@ -1129,43 +1129,49 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
    }
    switch (atype) {
          // basic types
-      case kChar:              {Char_t *val   = (Char_t*)ladd;   return Double_t(*val);}
-      case kShort:             {Short_t *val  = (Short_t*)ladd;  return Double_t(*val);}
-      case kInt:               {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
-      case kLong:              {Long_t *val   = (Long_t*)ladd;   return Double_t(*val);}
-      case kFloat:             {Float_t *val  = (Float_t*)ladd;  return Double_t(*val);}
-      case kDouble:            {Double_t *val = (Double_t*)ladd; return Double_t(*val);}
-      case kUChar:             {UChar_t *val  = (UChar_t*)ladd;  return Double_t(*val);}
-      case kUShort:            {UShort_t *val = (UShort_t*)ladd; return Double_t(*val);}
-      case kUInt:              {UInt_t *val   = (UInt_t*)ladd;   return Double_t(*val);}
-      case kULong:             {ULong_t *val  = (ULong_t*)ladd;  return Double_t(*val);}
-      case kBits:              {UInt_t *val   = (UInt_t*)ladd;   return Double_t(*val);}
+      case kChar:              {Char_t *val    = (Char_t*)ladd;    return Double_t(*val);}
+      case kShort:             {Short_t *val   = (Short_t*)ladd;   return Double_t(*val);}
+      case kInt:               {Int_t *val     = (Int_t*)ladd;     return Double_t(*val);}
+      case kLong:              {Long_t *val    = (Long_t*)ladd;    return Double_t(*val);}
+      case kLong64:            {Long64_t *val  = (Long64_t*)ladd;  return Double_t(*val);}
+      case kFloat:             {Float_t *val   = (Float_t*)ladd;   return Double_t(*val);}
+      case kDouble:            {Double_t *val  = (Double_t*)ladd;  return Double_t(*val);}
+      case kUChar:             {UChar_t *val   = (UChar_t*)ladd;   return Double_t(*val);}
+      case kUShort:            {UShort_t *val  = (UShort_t*)ladd;  return Double_t(*val);}
+      case kUInt:              {UInt_t *val    = (UInt_t*)ladd;    return Double_t(*val);}
+      case kULong:             {ULong_t *val   = (ULong_t*)ladd;   return Double_t(*val);}
+      case kULong64:           {ULong64_t *val = (ULong64_t*)ladd; return Double_t(*val);}
+      case kBits:              {UInt_t *val    = (UInt_t*)ladd;    return Double_t(*val);}
 
          // array of basic types  array[8]
-      case kOffsetL + kChar:   {Char_t *val   = (Char_t*)ladd;   return Double_t(val[j]);}
-      case kOffsetL + kShort:  {Short_t *val  = (Short_t*)ladd;  return Double_t(val[j]);}
-      case kOffsetL + kInt:    {Int_t *val    = (Int_t*)ladd;    return Double_t(val[j]);}
-      case kOffsetL + kLong:   {Long_t *val   = (Long_t*)ladd;   return Double_t(val[j]);}
-      case kOffsetL + kFloat:  {Float_t *val  = (Float_t*)ladd;  return Double_t(val[j]);}
-      case kOffsetL + kDouble: {Double_t *val = (Double_t*)ladd; return Double_t(val[j]);}
-      case kOffsetL + kUChar:  {UChar_t *val  = (UChar_t*)ladd;  return Double_t(val[j]);}
-      case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; return Double_t(val[j]);}
-      case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   return Double_t(val[j]);}
-      case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  return Double_t(val[j]);}
+      case kOffsetL + kChar:    {Char_t *val    = (Char_t*)ladd;    return Double_t(val[j]);}
+      case kOffsetL + kShort:   {Short_t *val   = (Short_t*)ladd;   return Double_t(val[j]);}
+      case kOffsetL + kInt:     {Int_t *val     = (Int_t*)ladd;     return Double_t(val[j]);}
+      case kOffsetL + kLong:    {Long_t *val    = (Long_t*)ladd;    return Double_t(val[j]);}
+      case kOffsetL + kLong64:  {Long64_t *val  = (Long64_t*)ladd;  return Double_t(val[j]);}
+      case kOffsetL + kFloat:   {Float_t *val   = (Float_t*)ladd;   return Double_t(val[j]);}
+      case kOffsetL + kDouble:  {Double_t *val  = (Double_t*)ladd;  return Double_t(val[j]);}
+      case kOffsetL + kUChar:   {UChar_t *val   = (UChar_t*)ladd;   return Double_t(val[j]);}
+      case kOffsetL + kUShort:  {UShort_t *val  = (UShort_t*)ladd;  return Double_t(val[j]);}
+      case kOffsetL + kUInt:    {UInt_t *val    = (UInt_t*)ladd;    return Double_t(val[j]);}
+      case kOffsetL + kULong:   {ULong_t *val   = (ULong_t*)ladd;   return Double_t(val[j]);}
+      case kOffsetL + kULong64: {ULong64_t *val = (ULong64_t*)ladd; return Double_t(val[j]);}
 
          // pointer to an array of basic types  array[n]
-      case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   return Double_t((*val)[j]);}
-      case kOffsetP + kShort:  {Short_t **val  = (Short_t**)ladd;  return Double_t((*val)[j]);}
-      case kOffsetP + kInt:    {Int_t **val    = (Int_t**)ladd;    return Double_t((*val)[j]);}
-      case kOffsetP + kLong:   {Long_t **val   = (Long_t**)ladd;   return Double_t((*val)[j]);}
-      case kOffsetP + kFloat:  {Float_t **val  = (Float_t**)ladd;  return Double_t((*val)[j]);}
-      case kOffsetP + kDouble: {Double_t **val = (Double_t**)ladd; return Double_t((*val)[j]);}
-      case kOffsetP + kUChar:  {UChar_t **val  = (UChar_t**)ladd;  return Double_t((*val)[j]);}
-      case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; return Double_t((*val)[j]);}
-      case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   return Double_t((*val)[j]);}
-      case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  return Double_t((*val)[j]);}
+      case kOffsetP + kChar:    {Char_t **val    = (Char_t**)ladd;    return Double_t((*val)[j]);}
+      case kOffsetP + kShort:   {Short_t **val   = (Short_t**)ladd;   return Double_t((*val)[j]);}
+      case kOffsetP + kInt:     {Int_t **val     = (Int_t**)ladd;     return Double_t((*val)[j]);}
+      case kOffsetP + kLong:    {Long_t **val    = (Long_t**)ladd;    return Double_t((*val)[j]);}
+      case kOffsetP + kLong64:  {Long64_t **val  = (Long64_t**)ladd;  return Double_t((*val)[j]);}
+      case kOffsetP + kFloat:   {Float_t **val   = (Float_t**)ladd;   return Double_t((*val)[j]);}
+      case kOffsetP + kDouble:  {Double_t **val  = (Double_t**)ladd;  return Double_t((*val)[j]);}
+      case kOffsetP + kUChar:   {UChar_t **val   = (UChar_t**)ladd;   return Double_t((*val)[j]);}
+      case kOffsetP + kUShort:  {UShort_t **val  = (UShort_t**)ladd;  return Double_t((*val)[j]);}
+      case kOffsetP + kUInt:    {UInt_t **val    = (UInt_t**)ladd;    return Double_t((*val)[j]);}
+      case kOffsetP + kULong:   {ULong_t **val   = (ULong_t**)ladd;   return Double_t((*val)[j]);}
+      case kOffsetP + kULong64: {ULong64_t **val = (ULong64_t**)ladd; return Double_t((*val)[j]);}
          // array counter //[n]
-      case kCounter:           {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
+      case kCounter:            {Int_t *val      = (Int_t*)ladd;      return Double_t(*val);}
    }
    return 0;
 }
@@ -1185,43 +1191,49 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
    char *ladd    = pointer + eoffset + fOffset[i];
    switch (fType[i]) {
          // basic types
-      case kChar:              {Char_t *val   = (Char_t*)ladd;   return Double_t(*val);}
-      case kShort:             {Short_t *val  = (Short_t*)ladd;  return Double_t(*val);}
-      case kInt:               {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
-      case kLong:              {Long_t *val   = (Long_t*)ladd;   return Double_t(*val);}
-      case kFloat:             {Float_t *val  = (Float_t*)ladd;  return Double_t(*val);}
-      case kDouble:            {Double_t *val = (Double_t*)ladd; return Double_t(*val);}
-      case kUChar:             {UChar_t *val  = (UChar_t*)ladd;  return Double_t(*val);}
-      case kUShort:            {UShort_t *val = (UShort_t*)ladd; return Double_t(*val);}
-      case kUInt:              {UInt_t *val   = (UInt_t*)ladd;   return Double_t(*val);}
-      case kULong:             {ULong_t *val  = (ULong_t*)ladd;  return Double_t(*val);}
-      case kBits:              {UInt_t *val   = (UInt_t*)ladd;   return Double_t(*val);}
+      case kChar:              {Char_t *val    = (Char_t*)ladd;    return Double_t(*val);}
+      case kShort:             {Short_t *val   = (Short_t*)ladd;   return Double_t(*val);}
+      case kInt:               {Int_t *val     = (Int_t*)ladd;     return Double_t(*val);}
+      case kLong:              {Long_t *val    = (Long_t*)ladd;    return Double_t(*val);}
+      case kLong64:            {Long64_t *val  = (Long64_t*)ladd;  return Double_t(*val);}
+      case kFloat:             {Float_t *val   = (Float_t*)ladd;   return Double_t(*val);}
+      case kDouble:            {Double_t *val  = (Double_t*)ladd;  return Double_t(*val);}
+      case kUChar:             {UChar_t *val   = (UChar_t*)ladd;   return Double_t(*val);}
+      case kUShort:            {UShort_t *val  = (UShort_t*)ladd;  return Double_t(*val);}
+      case kUInt:              {UInt_t *val    = (UInt_t*)ladd;    return Double_t(*val);}
+      case kULong:             {ULong_t *val   = (ULong_t*)ladd;   return Double_t(*val);}
+      case kULong64:           {ULong64_t *val = (ULong64_t*)ladd; return Double_t(*val);}
+      case kBits:              {UInt_t *val    = (UInt_t*)ladd;    return Double_t(*val);}
 
          // array of basic types  array[8]
-      case kOffsetL + kChar:   {Char_t *val   = (Char_t*)ladd;   return Double_t(val[k]);}
-      case kOffsetL + kShort:  {Short_t *val  = (Short_t*)ladd;  return Double_t(val[k]);}
-      case kOffsetL + kInt:    {Int_t *val    = (Int_t*)ladd;    return Double_t(val[k]);}
-      case kOffsetL + kLong:   {Long_t *val   = (Long_t*)ladd;   return Double_t(val[k]);}
-      case kOffsetL + kFloat:  {Float_t *val  = (Float_t*)ladd;  return Double_t(val[k]);}
-      case kOffsetL + kDouble: {Double_t *val = (Double_t*)ladd; return Double_t(val[k]);}
-      case kOffsetL + kUChar:  {UChar_t *val  = (UChar_t*)ladd;  return Double_t(val[k]);}
-      case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; return Double_t(val[k]);}
-      case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   return Double_t(val[k]);}
-      case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  return Double_t(val[k]);}
+      case kOffsetL + kChar:    {Char_t *val    = (Char_t*)ladd;    return Double_t(val[k]);}
+      case kOffsetL + kShort:   {Short_t *val   = (Short_t*)ladd;   return Double_t(val[k]);}
+      case kOffsetL + kInt:     {Int_t *val     = (Int_t*)ladd;     return Double_t(val[k]);}
+      case kOffsetL + kLong:    {Long_t *val    = (Long_t*)ladd;    return Double_t(val[k]);}
+      case kOffsetL + kLong64:  {Long64_t *val  = (Long64_t*)ladd;  return Double_t(val[k]);}
+      case kOffsetL + kFloat:   {Float_t *val   = (Float_t*)ladd;   return Double_t(val[k]);}
+      case kOffsetL + kDouble:  {Double_t *val  = (Double_t*)ladd;  return Double_t(val[k]);}
+      case kOffsetL + kUChar:   {UChar_t *val   = (UChar_t*)ladd;   return Double_t(val[k]);}
+      case kOffsetL + kUShort:  {UShort_t *val  = (UShort_t*)ladd;  return Double_t(val[k]);}
+      case kOffsetL + kUInt:    {UInt_t *val    = (UInt_t*)ladd;    return Double_t(val[k]);}
+      case kOffsetL + kULong:   {ULong_t *val   = (ULong_t*)ladd;   return Double_t(val[k]);}
+      case kOffsetL + kULong64: {ULong64_t *val = (ULong64_t*)ladd; return Double_t(val[k]);}
 
          // pointer to an array of basic types  array[n]
-      case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   return Double_t((*val)[k]);}
-      case kOffsetP + kShort:  {Short_t **val  = (Short_t**)ladd;  return Double_t((*val)[k]);}
-      case kOffsetP + kInt:    {Int_t **val    = (Int_t**)ladd;    return Double_t((*val)[k]);}
-      case kOffsetP + kLong:   {Long_t **val   = (Long_t**)ladd;   return Double_t((*val)[k]);}
-      case kOffsetP + kFloat:  {Float_t **val  = (Float_t**)ladd;  return Double_t((*val)[k]);}
-      case kOffsetP + kDouble: {Double_t **val = (Double_t**)ladd; return Double_t((*val)[k]);}
-      case kOffsetP + kUChar:  {UChar_t **val  = (UChar_t**)ladd;  return Double_t((*val)[k]);}
-      case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; return Double_t((*val)[k]);}
-      case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   return Double_t((*val)[k]);}
-      case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  return Double_t((*val)[k]);}
+      case kOffsetP + kChar:    {Char_t **val    = (Char_t**)ladd;    return Double_t((*val)[k]);}
+      case kOffsetP + kShort:   {Short_t **val   = (Short_t**)ladd;   return Double_t((*val)[k]);}
+      case kOffsetP + kInt:     {Int_t **val     = (Int_t**)ladd;     return Double_t((*val)[k]);}
+      case kOffsetP + kLong:    {Long_t **val    = (Long_t**)ladd;    return Double_t((*val)[k]);}
+      case kOffsetP + kLong64:  {Long64_t **val  = (Long64_t**)ladd;  return Double_t((*val)[k]);}
+      case kOffsetP + kFloat:   {Float_t **val   = (Float_t**)ladd;   return Double_t((*val)[k]);}
+      case kOffsetP + kDouble:  {Double_t **val  = (Double_t**)ladd;  return Double_t((*val)[k]);}
+      case kOffsetP + kUChar:   {UChar_t **val   = (UChar_t**)ladd;   return Double_t((*val)[k]);}
+      case kOffsetP + kUShort:  {UShort_t **val  = (UShort_t**)ladd;  return Double_t((*val)[k]);}
+      case kOffsetP + kUInt:    {UInt_t **val    = (UInt_t**)ladd;    return Double_t((*val)[k]);}
+      case kOffsetP + kULong:   {ULong_t **val   = (ULong_t**)ladd;   return Double_t((*val)[k]);}
+      case kOffsetP + kULong64: {ULong64_t **val = (ULong64_t**)ladd; return Double_t((*val)[k]);}
          // array counter //[n]
-      case kCounter:           {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
+      case kCounter:            {Int_t *val      = (Int_t*)ladd;      return Double_t(*val);}
    }
    return 0;
 }
@@ -1332,41 +1344,47 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
    TStreamerElement * aElement  = (TStreamerElement*)fElem[i];
    switch (atype) {
          // basic types
-      case kChar:              {Char_t *val   = (Char_t*)ladd;   printf("%d",*val);  break;}
-      case kShort:             {Short_t *val  = (Short_t*)ladd;  printf("%d",*val);  break;}
-      case kInt:               {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
-      case kLong:              {Long_t *val   = (Long_t*)ladd;   printf("%ld",*val); break;}
-      case kFloat:             {Float_t *val  = (Float_t*)ladd;  printf("%f",*val);  break;}
-      case kDouble:            {Double_t *val = (Double_t*)ladd; printf("%g",*val);  break;}
-      case kUChar:             {UChar_t *val  = (UChar_t*)ladd;  printf("%d",*val);  break;}
-      case kUShort:            {UShort_t *val = (UShort_t*)ladd; printf("%d",*val);  break;}
-      case kUInt:              {UInt_t *val   = (UInt_t*)ladd;   printf("%d",*val);  break;}
-      case kULong:             {ULong_t *val  = (ULong_t*)ladd;  printf("%ld",*val); break;}
-      case kBits:              {UInt_t *val   = (UInt_t*)ladd;   printf("%d",*val);  break;}
+      case kChar:              {Char_t *val    = (Char_t*)ladd;    printf("%d",*val);   break;}
+      case kShort:             {Short_t *val   = (Short_t*)ladd;   printf("%d",*val);   break;}
+      case kInt:               {Int_t *val     = (Int_t*)ladd;     printf("%d",*val);   break;}
+      case kLong:              {Long_t *val    = (Long_t*)ladd;    printf("%ld",*val);  break;}
+      case kLong64:            {Long64_t *val  = (Long64_t*)ladd;  printf("%lld",*val); break;}
+      case kFloat:             {Float_t *val   = (Float_t*)ladd;   printf("%f",*val);   break;}
+      case kDouble:            {Double_t *val  = (Double_t*)ladd;  printf("%g",*val);   break;}
+      case kUChar:             {UChar_t *val   = (UChar_t*)ladd;   printf("%u",*val);   break;}
+      case kUShort:            {UShort_t *val  = (UShort_t*)ladd;  printf("%u",*val);   break;}
+      case kUInt:              {UInt_t *val    = (UInt_t*)ladd;    printf("%u",*val);   break;}
+      case kULong:             {ULong_t *val   = (ULong_t*)ladd;   printf("%lu",*val);  break;}
+      case kULong64:           {ULong64_t *val = (ULong64_t*)ladd; printf("%llu",*val); break;}
+      case kBits:              {UInt_t *val    = (UInt_t*)ladd;    printf("%d",*val);   break;}
 
          // array of basic types  array[8]
-      case kOffsetL + kChar:   {Char_t *val   = (Char_t*)ladd;   for(j=0;j<aleng;j++) printf("%c", val[j]); printf(" "); break; }
-      case kOffsetL + kShort:  {Short_t *val  = (Short_t*)ladd;  for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kInt:    {Int_t *val    = (Int_t*)ladd;    for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kLong:   {Long_t *val   = (Long_t*)ladd;   for(j=0;j<aleng;j++) printf("%ld ",val[j]); break;}
-      case kOffsetL + kFloat:  {Float_t *val  = (Float_t*)ladd;  for(j=0;j<aleng;j++) printf("%f ",val[j]);  break;}
-      case kOffsetL + kDouble: {Double_t *val = (Double_t*)ladd; for(j=0;j<aleng;j++) printf("%g ",val[j]);  break;}
-      case kOffsetL + kUChar:  {UChar_t *val  = (UChar_t*)ladd;  for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  for(j=0;j<aleng;j++) printf("%ld ",val[j]); break;}
+      case kOffsetL + kChar:    {Char_t *val    = (Char_t*)ladd;    for(j=0;j<aleng;j++) printf("%d", val[j]);   break; }
+      case kOffsetL + kShort:   {Short_t *val   = (Short_t*)ladd;   for(j=0;j<aleng;j++) printf("%d ",val[j]);   break;}
+      case kOffsetL + kInt:     {Int_t *val     = (Int_t*)ladd;     for(j=0;j<aleng;j++) printf("%d ",val[j]);   break;}
+      case kOffsetL + kLong:    {Long_t *val    = (Long_t*)ladd;    for(j=0;j<aleng;j++) printf("%ld ",val[j]);  break;}
+      case kOffsetL + kLong64:  {Long64_t *val  = (Long64_t*)ladd;  for(j=0;j<aleng;j++) printf("%lld ",val[j]); break;}
+      case kOffsetL + kFloat:   {Float_t *val   = (Float_t*)ladd;   for(j=0;j<aleng;j++) printf("%f ",val[j]);   break;}
+      case kOffsetL + kDouble:  {Double_t *val  = (Double_t*)ladd;  for(j=0;j<aleng;j++) printf("%g ",val[j]);   break;}
+      case kOffsetL + kUChar:   {UChar_t *val   = (UChar_t*)ladd;   for(j=0;j<aleng;j++) printf("%u ",val[j]);   break;}
+      case kOffsetL + kUShort:  {UShort_t *val  = (UShort_t*)ladd;  for(j=0;j<aleng;j++) printf("%u ",val[j]);   break;}
+      case kOffsetL + kUInt:    {UInt_t *val    = (UInt_t*)ladd;    for(j=0;j<aleng;j++) printf("%u ",val[j]);   break;}
+      case kOffsetL + kULong:   {ULong_t *val   = (ULong_t*)ladd;   for(j=0;j<aleng;j++) printf("%lu ",val[j]);  break;}
+      case kOffsetL + kULong64: {ULong64_t *val = (ULong64_t*)ladd; for(j=0;j<aleng;j++) printf("%llu ",val[j]); break;}
 
          // pointer to an array of basic types  array[n]
-      case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
-      case kOffsetP + kShort:  {Short_t **val  = (Short_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
-      case kOffsetP + kInt:    {Int_t **val    = (Int_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
-      case kOffsetP + kLong:   {Long_t **val   = (Long_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]); break;}
-      case kOffsetP + kFloat:  {Float_t **val  = (Float_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%f ",(*val)[j]);  break;}
-      case kOffsetP + kDouble: {Double_t **val = (Double_t**)ladd; Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%g ",(*val)[j]);  break;}
-      case kOffsetP + kUChar:  {UChar_t **val  = (UChar_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
-      case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
-      case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
-      case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]); break;}
+      case kOffsetP + kChar:    {Char_t **val    = (Char_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);   break;}
+      case kOffsetP + kShort:   {Short_t **val   = (Short_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);   break;}
+      case kOffsetP + kInt:     {Int_t **val     = (Int_t**)ladd;     Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);   break;}
+      case kOffsetP + kLong:    {Long_t **val    = (Long_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]);  break;}
+      case kOffsetP + kLong64:  {Long64_t **val  = (Long64_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%lld ",(*val)[j]); break;}
+      case kOffsetP + kFloat:   {Float_t **val   = (Float_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%f ",(*val)[j]);   break;}
+      case kOffsetP + kDouble:  {Double_t **val  = (Double_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%g ",(*val)[j]);   break;}
+      case kOffsetP + kUChar:   {UChar_t **val   = (UChar_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%u ",(*val)[j]);   break;}
+      case kOffsetP + kUShort:  {UShort_t **val  = (UShort_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%u ",(*val)[j]);   break;}
+      case kOffsetP + kUInt:    {UInt_t **val    = (UInt_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%u ",(*val)[j]);   break;}
+      case kOffsetP + kULong:   {ULong_t **val   = (ULong_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%lu ",(*val)[j]);  break;}
+      case kOffsetP + kULong64: {ULong64_t **val = (ULong64_t**)ladd; Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%llu ",(*val)[j]); break;}
          // array counter //[n]
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
          // char *
@@ -1510,43 +1528,49 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
       char *ladd = pointer+offset;
       switch (fType[i]) {
          // basic types
-      case kChar:              {Char_t *val   = (Char_t*)ladd;   printf("%d",*val);  break;}
-      case kShort:             {Short_t *val  = (Short_t*)ladd;  printf("%d",*val);  break;}
-      case kInt:               {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
-      case kLong:              {Long_t *val   = (Long_t*)ladd;   printf("%ld",*val); break;}
-      case kFloat:             {Float_t *val  = (Float_t*)ladd;  printf("%f",*val);  break;}
-      case kDouble:            {Double_t *val = (Double_t*)ladd; printf("%g",*val);  break;}
-      case kUChar:             {UChar_t *val  = (UChar_t*)ladd;  printf("%d",*val);  break;}
-      case kUShort:            {UShort_t *val = (UShort_t*)ladd; printf("%d",*val);  break;}
-      case kUInt:              {UInt_t *val   = (UInt_t*)ladd;   printf("%d",*val);  break;}
-      case kULong:             {ULong_t *val  = (ULong_t*)ladd;  printf("%ld",*val); break;}
-      case kBits:              {UInt_t *val   = (UInt_t*)ladd;   printf("%d",*val);  break;}
+      case kChar:              {Char_t *val    = (Char_t*)ladd;    printf("%d",*val);  break;}
+      case kShort:             {Short_t *val   = (Short_t*)ladd;   printf("%d",*val);  break;}
+      case kInt:               {Int_t *val     = (Int_t*)ladd;     printf("%d",*val);  break;}
+      case kLong:              {Long_t *val    = (Long_t*)ladd;    printf("%ld",*val); break;}
+      case kLong64:            {Long64_t *val  = (Long64_t*)ladd;  printf("%lld",*val); break;}
+      case kFloat:             {Float_t *val   = (Float_t*)ladd;   printf("%f",*val);  break;}
+      case kDouble:            {Double_t *val  = (Double_t*)ladd;  printf("%g",*val);  break;}
+      case kUChar:             {UChar_t *val   = (UChar_t*)ladd;   printf("%u",*val);  break;}
+      case kUShort:            {UShort_t *val  = (UShort_t*)ladd;  printf("%u",*val);  break;}
+      case kUInt:              {UInt_t *val    = (UInt_t*)ladd;    printf("%u",*val);  break;}
+      case kULong:             {ULong_t *val   = (ULong_t*)ladd;   printf("%lu",*val); break;}
+      case kULong64:           {ULong64_t *val = (ULong64_t*)ladd; printf("%llu",*val); break;}
+      case kBits:              {UInt_t *val    = (UInt_t*)ladd;    printf("%d",*val);  break;}
 
          // array of basic types  array[8]
-      case kOffsetL + kChar:   {Char_t *val   = (Char_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kShort:  {Short_t *val  = (Short_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kInt:    {Int_t *val    = (Int_t*)ladd;    for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kLong:   {Long_t *val   = (Long_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%ld ",val[j]); break;}
-      case kOffsetL + kFloat:  {Float_t *val  = (Float_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%f ",val[j]);  break;}
-      case kOffsetL + kDouble: {Double_t *val = (Double_t*)ladd; for(j=0;j<fLength[i];j++) printf("%g ",val[j]);  break;}
-      case kOffsetL + kUChar:  {UChar_t *val  = (UChar_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%ld ",val[j]); break;}
+      case kOffsetL + kChar:    {Char_t *val    = (Char_t*)ladd;    for(j=0;j<fLength[i];j++) printf("%d ",val[j]);   break;}
+      case kOffsetL + kShort:   {Short_t *val   = (Short_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%d ",val[j]);   break;}
+      case kOffsetL + kInt:     {Int_t *val     = (Int_t*)ladd;     for(j=0;j<fLength[i];j++) printf("%d ",val[j]);   break;}
+      case kOffsetL + kLong:    {Long_t *val    = (Long_t*)ladd;    for(j=0;j<fLength[i];j++) printf("%ld ",val[j]);  break;}
+      case kOffsetL + kLong64:  {Long64_t *val  = (Long64_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%lld ",val[j]); break;}
+      case kOffsetL + kFloat:   {Float_t *val   = (Float_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%f ",val[j]);   break;}
+      case kOffsetL + kDouble:  {Double_t *val  = (Double_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%g ",val[j]);   break;}
+      case kOffsetL + kUChar:   {UChar_t *val   = (UChar_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%d ",val[j]);   break;}
+      case kOffsetL + kUShort:  {UShort_t *val  = (UShort_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%d ",val[j]);   break;}
+      case kOffsetL + kUInt:    {UInt_t *val    = (UInt_t*)ladd;    for(j=0;j<fLength[i];j++) printf("%d ",val[j]);   break;}
+      case kOffsetL + kULong:   {ULong_t *val   = (ULong_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%ld ",val[j]);  break;}
+      case kOffsetL + kULong64: {ULong64_t *val = (ULong64_t*)ladd; for(j=0;j<fLength[i];j++) printf("%llu ",val[j]); break;}
 
          // pointer to an array of basic types  array[n]
-      case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
-      case kOffsetP + kShort:  {Short_t **val  = (Short_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
-      case kOffsetP + kInt:    {Int_t **val    = (Int_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
-      case kOffsetP + kLong:   {Long_t **val   = (Long_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]); break;}
-      case kOffsetP + kFloat:  {Float_t **val  = (Float_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%f ",(*val)[j]);  break;}
-      case kOffsetP + kDouble: {Double_t **val = (Double_t**)ladd; Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%g ",(*val)[j]);  break;}
-      case kOffsetP + kUChar:  {UChar_t **val  = (UChar_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
-      case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
-      case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
-      case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]); break;}
+      case kOffsetP + kChar:    {Char_t **val    = (Char_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);   break;}
+      case kOffsetP + kShort:   {Short_t **val   = (Short_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);   break;}
+      case kOffsetP + kInt:     {Int_t **val     = (Int_t**)ladd;     Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);   break;}
+      case kOffsetP + kLong:    {Long_t **val    = (Long_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]);  break;}
+      case kOffsetP + kLong64:  {Long64_t **val  = (Long64_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%lld ",(*val)[j]); break;}
+      case kOffsetP + kFloat:   {Float_t **val   = (Float_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%f ",(*val)[j]);   break;}
+      case kOffsetP + kDouble:  {Double_t **val  = (Double_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%g ",(*val)[j]);   break;}
+      case kOffsetP + kUChar:   {UChar_t **val   = (UChar_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%u ",(*val)[j]);   break;}
+      case kOffsetP + kUShort:  {UShort_t **val  = (UShort_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%u ",(*val)[j]);   break;}
+      case kOffsetP + kUInt:    {UInt_t **val    = (UInt_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%u ",(*val)[j]);   break;}
+      case kOffsetP + kULong:   {ULong_t **val   = (ULong_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%lu ",(*val)[j]);  break;}
+      case kOffsetP + kULong64: {ULong64_t **val = (ULong64_t**)ladd; Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%llu ",(*val)[j]); break;}
          // array counter //[n]
-      case kCounter:           {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
+      case kCounter:            {Int_t *val      = (Int_t*)ladd;      printf("%d",*val);  break;}
          // char *
       case kCharStar: {
                        char **val = (char**)ladd;
@@ -1734,36 +1758,42 @@ SWIT: switch (kase) {
          case kShort:             ReadBasicType(Short_t)
          case kInt:               ReadBasicType(Int_t)
          case kLong:              ReadBasicType(Long_t)
+         case kLong64:            ReadBasicType(Long64_t)
          case kFloat:             ReadBasicType(Float_t)
          case kDouble:            ReadBasicType(Double_t)
          case kUChar:             ReadBasicType(UChar_t)
          case kUShort:            ReadBasicType(UShort_t)
          case kUInt:              ReadBasicType(UInt_t)
          case kULong:             ReadBasicType(ULong_t)
+         case kULong64:           ReadBasicType(ULong64_t)
 
          // read array of basic types  array[8]
-         case kOffsetL + kChar:   ReadBasicArray(Char_t)
-         case kOffsetL + kShort:  ReadBasicArray(Short_t)
-         case kOffsetL + kInt:    ReadBasicArray(Int_t)
-         case kOffsetL + kLong:   ReadBasicArray(Long_t)
-         case kOffsetL + kFloat:  ReadBasicArray(Float_t)
-         case kOffsetL + kDouble: ReadBasicArray(Double_t)
-         case kOffsetL + kUChar:  ReadBasicArray(UChar_t)
-         case kOffsetL + kUShort: ReadBasicArray(UShort_t)
-         case kOffsetL + kUInt:   ReadBasicArray(UInt_t)
-         case kOffsetL + kULong:  ReadBasicArray(ULong_t)
+         case kOffsetL + kChar:    ReadBasicArray(Char_t)
+         case kOffsetL + kShort:   ReadBasicArray(Short_t)
+         case kOffsetL + kInt:     ReadBasicArray(Int_t)
+         case kOffsetL + kLong:    ReadBasicArray(Long_t)
+         case kOffsetL + kLong64:  ReadBasicArray(Long64_t)
+         case kOffsetL + kFloat:   ReadBasicArray(Float_t)
+         case kOffsetL + kDouble:  ReadBasicArray(Double_t)
+         case kOffsetL + kUChar:   ReadBasicArray(UChar_t)
+         case kOffsetL + kUShort:  ReadBasicArray(UShort_t)
+         case kOffsetL + kUInt:    ReadBasicArray(UInt_t)
+         case kOffsetL + kULong:   ReadBasicArray(ULong_t)
+         case kOffsetL + kULong64: ReadBasicArray(ULong64_t)
 
          // read pointer to an array of basic types  array[n]
-         case kOffsetP + kChar:   ReadBasicPointer(Char_t)
-         case kOffsetP + kShort:  ReadBasicPointer(Short_t)
-         case kOffsetP + kInt:    ReadBasicPointer(Int_t)
-         case kOffsetP + kLong:   ReadBasicPointer(Long_t)
-         case kOffsetP + kFloat:  ReadBasicPointer(Float_t)
-         case kOffsetP + kDouble: ReadBasicPointer(Double_t)
-         case kOffsetP + kUChar:  ReadBasicPointer(UChar_t)
-         case kOffsetP + kUShort: ReadBasicPointer(UShort_t)
-         case kOffsetP + kUInt:   ReadBasicPointer(UInt_t)
-         case kOffsetP + kULong:  ReadBasicPointer(ULong_t)
+         case kOffsetP + kChar:    ReadBasicPointer(Char_t)
+         case kOffsetP + kShort:   ReadBasicPointer(Short_t)
+         case kOffsetP + kInt:     ReadBasicPointer(Int_t)
+         case kOffsetP + kLong:    ReadBasicPointer(Long_t)
+         case kOffsetP + kLong64:  ReadBasicPointer(Long64_t)
+         case kOffsetP + kFloat:   ReadBasicPointer(Float_t)
+         case kOffsetP + kDouble:  ReadBasicPointer(Double_t)
+         case kOffsetP + kUChar:   ReadBasicPointer(UChar_t)
+         case kOffsetP + kUShort:  ReadBasicPointer(UShort_t)
+         case kOffsetP + kUInt:    ReadBasicPointer(UInt_t)
+         case kOffsetP + kULong:   ReadBasicPointer(ULong_t)
+         case kOffsetP + kULong64: ReadBasicPointer(ULong64_t)
 
          // char*
          case kCharStar: {
@@ -2102,37 +2132,43 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, char *pointer, Int_t i,Int_t kas
       case kSkip + kShort:   SkipBasicType(Short_t)
       case kSkip + kInt:     SkipBasicType(Int_t)
       case kSkip + kLong:    SkipBasicType(Long_t)
+      case kSkip + kLong64:  SkipBasicType(Long64_t)
       case kSkip + kFloat:   SkipBasicType(Float_t)
       case kSkip + kDouble:  SkipBasicType(Double_t)
       case kSkip + kUChar:   SkipBasicType(UChar_t)
       case kSkip + kUShort:  SkipBasicType(UShort_t)
       case kSkip + kUInt:    SkipBasicType(UInt_t)
       case kSkip + kULong:   SkipBasicType(ULong_t)
+      case kSkip + kULong64: SkipBasicType(ULong64_t)
       case kSkip + kBits:    SkipBasicType(UInt_t)
 
       // skip array of basic types  array[8]
-      case kSkipL + kChar:   SkipBasicArray(Char_t)
-      case kSkipL + kShort:  SkipBasicArray(Short_t)
-      case kSkipL + kInt:    SkipBasicArray(Int_t)
-      case kSkipL + kLong:   SkipBasicArray(Long_t)
-      case kSkipL + kFloat:  SkipBasicArray(Float_t)
-      case kSkipL + kDouble: SkipBasicArray(Double_t)
-      case kSkipL + kUChar:  SkipBasicArray(UChar_t)
-      case kSkipL + kUShort: SkipBasicArray(UShort_t)
-      case kSkipL + kUInt:   SkipBasicArray(UInt_t)
-      case kSkipL + kULong:  SkipBasicArray(ULong_t)
+      case kSkipL + kChar:    SkipBasicArray(Char_t)
+      case kSkipL + kShort:   SkipBasicArray(Short_t)
+      case kSkipL + kInt:     SkipBasicArray(Int_t)
+      case kSkipL + kLong:    SkipBasicArray(Long_t)
+      case kSkipL + kLong64:  SkipBasicArray(Long64_t)
+      case kSkipL + kFloat:   SkipBasicArray(Float_t)
+      case kSkipL + kDouble:  SkipBasicArray(Double_t)
+      case kSkipL + kUChar:   SkipBasicArray(UChar_t)
+      case kSkipL + kUShort:  SkipBasicArray(UShort_t)
+      case kSkipL + kUInt:    SkipBasicArray(UInt_t)
+      case kSkipL + kULong:   SkipBasicArray(ULong_t)
+      case kSkipL + kULong64: SkipBasicArray(ULong64_t)
 
       // skip pointer to an array of basic types  array[n]
-      case kSkipP + kChar:   SkipBasicPointer(Char_t)
-      case kSkipP + kShort:  SkipBasicPointer(Short_t)
-      case kSkipP + kInt:    SkipBasicPointer(Int_t)
-      case kSkipP + kLong:   SkipBasicPointer(Long_t)
-      case kSkipP + kFloat:  SkipBasicPointer(Float_t)
-      case kSkipP + kDouble: SkipBasicPointer(Double_t)
-      case kSkipP + kUChar:  SkipBasicPointer(UChar_t)
-      case kSkipP + kUShort: SkipBasicPointer(UShort_t)
-      case kSkipP + kUInt:   SkipBasicPointer(UInt_t)
-      case kSkipP + kULong:  SkipBasicPointer(ULong_t)
+      case kSkipP + kChar:    SkipBasicPointer(Char_t)
+      case kSkipP + kShort:   SkipBasicPointer(Short_t)
+      case kSkipP + kInt:     SkipBasicPointer(Int_t)
+      case kSkipP + kLong:    SkipBasicPointer(Long_t)
+      case kSkipP + kLong64:  SkipBasicPointer(Long64_t)
+      case kSkipP + kFloat:   SkipBasicPointer(Float_t)
+      case kSkipP + kDouble:  SkipBasicPointer(Double_t)
+      case kSkipP + kUChar:   SkipBasicPointer(UChar_t)
+      case kSkipP + kUShort:  SkipBasicPointer(UShort_t)
+      case kSkipP + kUInt:    SkipBasicPointer(UInt_t)
+      case kSkipP + kULong:   SkipBasicPointer(ULong_t)
+      case kSkipP + kULong64: SkipBasicPointer(ULong64_t)
 
       // skip char*
       case kSkip + kCharStar: {
@@ -2237,16 +2273,18 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
 { \
    name  dummy;   b >> dummy; \
    switch(fNewType[i]) { \
-      case kChar:   {Char_t   *x=(Char_t*)(pointer+fOffset[i]);   *x = (Char_t)dummy;   break;} \
-      case kShort:  {Short_t  *x=(Short_t*)(pointer+fOffset[i]);  *x = (Short_t)dummy;  break;} \
-      case kInt:    {Int_t    *x=(Int_t*)(pointer+fOffset[i]);    *x = (Int_t)dummy;    break;} \
-      case kLong:   {Long_t   *x=(Long_t*)(pointer+fOffset[i]);   *x = (Long_t)dummy;   break;} \
-      case kFloat:  {Float_t  *x=(Float_t*)(pointer+fOffset[i]);  *x = (Float_t)dummy;  break;} \
-      case kDouble: {Double_t *x=(Double_t*)(pointer+fOffset[i]); *x = (Double_t)dummy; break;} \
-      case kUChar:  {UChar_t  *x=(UChar_t*)(pointer+fOffset[i]);  *x = (UChar_t)dummy;  break;} \
-      case kUShort: {UShort_t *x=(UShort_t*)(pointer+fOffset[i]); *x = (UShort_t)dummy; break;} \
-      case kUInt:   {UInt_t   *x=(UInt_t*)(pointer+fOffset[i]);   *x = (UInt_t)dummy;   break;} \
-      case kULong:  {ULong_t  *x=(ULong_t*)(pointer+fOffset[i]);  *x = (ULong_t)dummy;  break;} \
+      case kChar:    {Char_t    *x=(Char_t*)(pointer+fOffset[i]);    *x = (Char_t)dummy;    break;} \
+      case kShort:   {Short_t   *x=(Short_t*)(pointer+fOffset[i]);   *x = (Short_t)dummy;   break;} \
+      case kInt:     {Int_t     *x=(Int_t*)(pointer+fOffset[i]);     *x = (Int_t)dummy;     break;} \
+      case kLong:    {Long_t    *x=(Long_t*)(pointer+fOffset[i]);    *x = (Long_t)dummy;    break;} \
+      case kLong64:  {Long64_t  *x=(Long64_t*)(pointer+fOffset[i]);  *x = (Long64_t)dummy;  break;} \
+      case kFloat:   {Float_t   *x=(Float_t*)(pointer+fOffset[i]);   *x = (Float_t)dummy;   break;} \
+      case kDouble:  {Double_t  *x=(Double_t*)(pointer+fOffset[i]);  *x = (Double_t)dummy;  break;} \
+      case kUChar:   {UChar_t   *x=(UChar_t*)(pointer+fOffset[i]);   *x = (UChar_t)dummy;   break;} \
+      case kUShort:  {UShort_t  *x=(UShort_t*)(pointer+fOffset[i]);  *x = (UShort_t)dummy;  break;} \
+      case kUInt:    {UInt_t    *x=(UInt_t*)(pointer+fOffset[i]);    *x = (UInt_t)dummy;    break;} \
+      case kULong:   {ULong_t   *x=(ULong_t*)(pointer+fOffset[i]);   *x = (ULong_t)dummy;   break;} \
+      case kULong64: {ULong64_t *x=(ULong64_t*)(pointer+fOffset[i]); *x = (ULong64_t)dummy; break;} \
    } break; \
 }
 
@@ -2270,6 +2308,10 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
        case kLong:   {Long_t   **f=(Long_t**)(pointer+fOffset[i]); \
                         delete [] *f; *f = 0; \
                         if (fNewType[i] > 40 && len > 0) *f = new Long_t[len]; \
+                        b.ReadFastArray(*f,len); break;} \
+       case kLong64: {Long64_t **f=(Long64_t**)(pointer+fOffset[i]); \
+                        delete [] *f; *f = 0; \
+                        if (fNewType[i] > 40 && len > 0) *f = new Long64_t[len]; \
                         b.ReadFastArray(*f,len); break;} \
        case kFloat:  {Float_t  **f=(Float_t**)(pointer+fOffset[i]); \
                         delete [] *f; *f = 0; \
@@ -2295,6 +2337,10 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
        case kULong:  {ULong_t  **f=(ULong_t**)(pointer+fOffset[i]); \
                         delete [] *f; *f = 0; \
                         if (fNewType[i] > 40 && len > 0) *f = new ULong_t[len]; \
+                        b.ReadFastArray(*f,len); break;} \
+       case kULong64: {ULong64_t **f=(ULong64_t**)(pointer+fOffset[i]); \
+                        delete [] *f; *f = 0; \
+                        if (fNewType[i] > 40 && len > 0) *f = new ULong64_t[len]; \
                         b.ReadFastArray(*f,len); break;} \
    } break; \
 }
@@ -2333,6 +2379,12 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
                        f[j] = new Long_t[*l]; Long_t *af = f[j]; \
                        for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Long_t)dummy;} \
                     } break;} \
+      case kLong64: {Long64_t **f=(Long64_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new Long64_t[*l]; Long64_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Long64_t)dummy;} \
+                    } break;} \
       case kFloat:  {Float_t  **f=(Float_t**)(pointer+fOffset[i]); \
                     for (j=0;j<len;j++) { \
                        delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
@@ -2369,6 +2421,12 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
                        f[j] = new ULong_t[*l]; ULong_t *af = f[j]; \
                        for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (ULong_t)dummy;} \
                     } break;} \
+      case kULong64: {ULong64_t **f=(ULong64_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new ULong64_t[*l]; ULong64_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (ULong64_t)dummy;} \
+                    } break;} \
    } break; \
 }
 
@@ -2381,37 +2439,43 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
       case kConv + kShort:   ConvBasicType(Short_t)
       case kConv + kInt:     ConvBasicType(Int_t)
       case kConv + kLong:    ConvBasicType(Long_t)
+      case kConv + kLong64:  ConvBasicType(Long64_t)
       case kConv + kFloat:   ConvBasicType(Float_t)
       case kConv + kDouble:  ConvBasicType(Double_t)
       case kConv + kUChar:   ConvBasicType(UChar_t)
       case kConv + kUShort:  ConvBasicType(UShort_t)
       case kConv + kUInt:    ConvBasicType(UInt_t)
       case kConv + kULong:   ConvBasicType(ULong_t)
+      case kConv + kULong64: ConvBasicType(ULong64_t)
       case kConv + kBits:    ConvBasicType(UInt_t)
 
       // convert array of basic types  array[8]
-      case kConvL + kChar:   ConvBasicArray(Char_t)
-      case kConvL + kShort:  ConvBasicArray(Short_t)
-      case kConvL + kInt:    ConvBasicArray(Int_t)
-      case kConvL + kLong:   ConvBasicArray(Long_t)
-      case kConvL + kFloat:  ConvBasicArray(Float_t)
-      case kConvL + kDouble: ConvBasicArray(Double_t)
-      case kConvL + kUChar:  ConvBasicArray(UChar_t)
-      case kConvL + kUShort: ConvBasicArray(UShort_t)
-      case kConvL + kUInt:   ConvBasicArray(UInt_t)
-      case kConvL + kULong:  ConvBasicArray(ULong_t)
+      case kConvL + kChar:    ConvBasicArray(Char_t)
+      case kConvL + kShort:   ConvBasicArray(Short_t)
+      case kConvL + kInt:     ConvBasicArray(Int_t)
+      case kConvL + kLong:    ConvBasicArray(Long_t)
+      case kConvL + kLong64:  ConvBasicArray(Long64_t)
+      case kConvL + kFloat:   ConvBasicArray(Float_t)
+      case kConvL + kDouble:  ConvBasicArray(Double_t)
+      case kConvL + kUChar:   ConvBasicArray(UChar_t)
+      case kConvL + kUShort:  ConvBasicArray(UShort_t)
+      case kConvL + kUInt:    ConvBasicArray(UInt_t)
+      case kConvL + kULong:   ConvBasicArray(ULong_t)
+      case kConvL + kULong64: ConvBasicArray(ULong64_t)
 
       // convert pointer to an array of basic types  array[n]
-      case kConvP + kChar:   ConvBasicPointer(Char_t)
-      case kConvP + kShort:  ConvBasicPointer(Short_t)
-      case kConvP + kInt:    ConvBasicPointer(Int_t)
-      case kConvP + kLong:   ConvBasicPointer(Long_t)
-      case kConvP + kFloat:  ConvBasicPointer(Float_t)
-      case kConvP + kDouble: ConvBasicPointer(Double_t)
-      case kConvP + kUChar:  ConvBasicPointer(UChar_t)
-      case kConvP + kUShort: ConvBasicPointer(UShort_t)
-      case kConvP + kUInt:   ConvBasicPointer(UInt_t)
-      case kConvP + kULong:  ConvBasicPointer(ULong_t)
+      case kConvP + kChar:    ConvBasicPointer(Char_t)
+      case kConvP + kShort:   ConvBasicPointer(Short_t)
+      case kConvP + kInt:     ConvBasicPointer(Int_t)
+      case kConvP + kLong:    ConvBasicPointer(Long_t)
+      case kConvP + kLong64:  ConvBasicPointer(Long64_t)
+      case kConvP + kFloat:   ConvBasicPointer(Float_t)
+      case kConvP + kDouble:  ConvBasicPointer(Double_t)
+      case kConvP + kUChar:   ConvBasicPointer(UChar_t)
+      case kConvP + kUShort:  ConvBasicPointer(UShort_t)
+      case kConvP + kUInt:    ConvBasicPointer(UInt_t)
+      case kConvP + kULong:   ConvBasicPointer(ULong_t)
+      case kConvP + kULong64: ConvBasicPointer(ULong64_t)
 
       default:
         //Error("ReadBuffer","The element type %d is not supported yet\n",fType[i]);
@@ -2489,36 +2553,42 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kShort:             ReadCBasicType(Short_t)
          case kInt:               ReadCBasicType(Int_t)
          case kLong:              ReadCBasicType(Long_t)
+         case kLong64:            ReadCBasicType(Long64_t)
          case kFloat:             ReadCBasicType(Float_t)
          case kDouble:            ReadCBasicType(Double_t)
          case kUChar:             ReadCBasicType(UChar_t)
          case kUShort:            ReadCBasicType(UShort_t)
          case kUInt:              ReadCBasicType(UInt_t)
          case kULong:             ReadCBasicType(ULong_t)
+         case kULong64:           ReadCBasicType(ULong64_t)
 
          // read array of basic types  array[8]
-         case kOffsetL + kChar:   ReadCBasicArray(Char_t)
-         case kOffsetL + kShort:  ReadCBasicArray(Short_t)
-         case kOffsetL + kInt:    ReadCBasicArray(Int_t)
-         case kOffsetL + kLong:   ReadCBasicArray(Long_t)
-         case kOffsetL + kFloat:  ReadCBasicArray(Float_t)
-         case kOffsetL + kDouble: ReadCBasicArray(Double_t)
-         case kOffsetL + kUChar:  ReadCBasicArray(UChar_t)
-         case kOffsetL + kUShort: ReadCBasicArray(UShort_t)
-         case kOffsetL + kUInt:   ReadCBasicArray(UInt_t)
-         case kOffsetL + kULong:  ReadCBasicArray(ULong_t)
+         case kOffsetL + kChar:    ReadCBasicArray(Char_t)
+         case kOffsetL + kShort:   ReadCBasicArray(Short_t)
+         case kOffsetL + kInt:     ReadCBasicArray(Int_t)
+         case kOffsetL + kLong:    ReadCBasicArray(Long_t)
+         case kOffsetL + kLong64:  ReadCBasicArray(Long64_t)
+         case kOffsetL + kFloat:   ReadCBasicArray(Float_t)
+         case kOffsetL + kDouble:  ReadCBasicArray(Double_t)
+         case kOffsetL + kUChar:   ReadCBasicArray(UChar_t)
+         case kOffsetL + kUShort:  ReadCBasicArray(UShort_t)
+         case kOffsetL + kUInt:    ReadCBasicArray(UInt_t)
+         case kOffsetL + kULong:   ReadCBasicArray(ULong_t)
+         case kOffsetL + kULong64: ReadCBasicArray(ULong64_t)
 
          // read pointer to an array of basic types  array[n]
-         case kOffsetP + kChar:   ReadCBasicPointer(Char_t)
-         case kOffsetP + kShort:  ReadCBasicPointer(Short_t)
-         case kOffsetP + kInt:    ReadCBasicPointer(Int_t)
-         case kOffsetP + kLong:   ReadCBasicPointer(Long_t)
-         case kOffsetP + kFloat:  ReadCBasicPointer(Float_t)
-         case kOffsetP + kDouble: ReadCBasicPointer(Double_t)
-         case kOffsetP + kUChar:  ReadCBasicPointer(UChar_t)
-         case kOffsetP + kUShort: ReadCBasicPointer(UShort_t)
-         case kOffsetP + kUInt:   ReadCBasicPointer(UInt_t)
-         case kOffsetP + kULong:  ReadCBasicPointer(ULong_t)
+         case kOffsetP + kChar:    ReadCBasicPointer(Char_t)
+         case kOffsetP + kShort:   ReadCBasicPointer(Short_t)
+         case kOffsetP + kInt:     ReadCBasicPointer(Int_t)
+         case kOffsetP + kLong:    ReadCBasicPointer(Long_t)
+         case kOffsetP + kLong64:  ReadCBasicPointer(Long64_t)
+         case kOffsetP + kFloat:   ReadCBasicPointer(Float_t)
+         case kOffsetP + kDouble:  ReadCBasicPointer(Double_t)
+         case kOffsetP + kUChar:   ReadCBasicPointer(UChar_t)
+         case kOffsetP + kUShort:  ReadCBasicPointer(UShort_t)
+         case kOffsetP + kUInt:    ReadCBasicPointer(UInt_t)
+         case kOffsetP + kULong:   ReadCBasicPointer(ULong_t)
+         case kOffsetP + kULong64: ReadCBasicPointer(ULong64_t)
 
          // char*
          case kCharStar: {
@@ -2895,37 +2965,43 @@ Int_t TStreamerInfo::ReadBufferClonesSkip(TBuffer &b, TClonesArray * /*clones*/,
       case kSkip + kShort:   SkipCBasicType(Short_t)
       case kSkip + kInt:     SkipCBasicType(Int_t)
       case kSkip + kLong:    SkipCBasicType(Long_t)
+      case kSkip + kLong64:  SkipCBasicType(Long64_t)
       case kSkip + kFloat:   SkipCBasicType(Float_t)
       case kSkip + kDouble:  SkipCBasicType(Double_t)
       case kSkip + kUChar:   SkipCBasicType(UChar_t)
       case kSkip + kUShort:  SkipCBasicType(UShort_t)
       case kSkip + kUInt:    SkipCBasicType(UInt_t)
       case kSkip + kULong:   SkipCBasicType(ULong_t)
+      case kSkip + kULong64: SkipCBasicType(ULong64_t)
       case kSkip + kBits:    SkipCBasicType(UInt_t)
 
       // skip array of basic types  array[8]
-      case kSkipL + kChar:   SkipCBasicArray(Char_t)
-      case kSkipL + kShort:  SkipCBasicArray(Short_t)
-      case kSkipL + kInt:    SkipCBasicArray(Int_t)
-      case kSkipL + kLong:   SkipCBasicArray(Long_t)
-      case kSkipL + kFloat:  SkipCBasicArray(Float_t)
-      case kSkipL + kDouble: SkipCBasicArray(Double_t)
-      case kSkipL + kUChar:  SkipCBasicArray(UChar_t)
-      case kSkipL + kUShort: SkipCBasicArray(UShort_t)
-      case kSkipL + kUInt:   SkipCBasicArray(UInt_t)
-      case kSkipL + kULong:  SkipCBasicArray(ULong_t)
+      case kSkipL + kChar:    SkipCBasicArray(Char_t)
+      case kSkipL + kShort:   SkipCBasicArray(Short_t)
+      case kSkipL + kInt:     SkipCBasicArray(Int_t)
+      case kSkipL + kLong:    SkipCBasicArray(Long_t)
+      case kSkipL + kLong64:  SkipCBasicArray(Long64_t)
+      case kSkipL + kFloat:   SkipCBasicArray(Float_t)
+      case kSkipL + kDouble:  SkipCBasicArray(Double_t)
+      case kSkipL + kUChar:   SkipCBasicArray(UChar_t)
+      case kSkipL + kUShort:  SkipCBasicArray(UShort_t)
+      case kSkipL + kUInt:    SkipCBasicArray(UInt_t)
+      case kSkipL + kULong:   SkipCBasicArray(ULong_t)
+      case kSkipL + kULong64: SkipCBasicArray(ULong64_t)
 
       // skip pointer to an array of basic types  array[n]
-      case kSkipP + kChar:   SkipCBasicPointer(Char_t)
-      case kSkipP + kShort:  SkipCBasicPointer(Short_t)
-      case kSkipP + kInt:    SkipCBasicPointer(Int_t)
-      case kSkipP + kLong:   SkipCBasicPointer(Long_t)
-      case kSkipP + kFloat:  SkipCBasicPointer(Float_t)
-      case kSkipP + kDouble: SkipCBasicPointer(Double_t)
-      case kSkipP + kUChar:  SkipCBasicPointer(UChar_t)
-      case kSkipP + kUShort: SkipCBasicPointer(UShort_t)
-      case kSkipP + kUInt:   SkipCBasicPointer(UInt_t)
-      case kSkipP + kULong:  SkipCBasicPointer(ULong_t)
+      case kSkipP + kChar:    SkipCBasicPointer(Char_t)
+      case kSkipP + kShort:   SkipCBasicPointer(Short_t)
+      case kSkipP + kInt:     SkipCBasicPointer(Int_t)
+      case kSkipP + kLong:    SkipCBasicPointer(Long_t)
+      case kSkipP + kLong64:  SkipCBasicPointer(Long64_t)
+      case kSkipP + kFloat:   SkipCBasicPointer(Float_t)
+      case kSkipP + kDouble:  SkipCBasicPointer(Double_t)
+      case kSkipP + kUChar:   SkipCBasicPointer(UChar_t)
+      case kSkipP + kUShort:  SkipCBasicPointer(UShort_t)
+      case kSkipP + kUInt:    SkipCBasicPointer(UInt_t)
+      case kSkipP + kULong:   SkipCBasicPointer(ULong_t)
+      case kSkipP + kULong64: SkipCBasicPointer(ULong64_t)
 
       // skip char*
       case kSkip + kCharStar: {
@@ -3061,16 +3137,18 @@ char *pointer = 0;
       name u; \
       b >> u; \
       switch(fNewType[i]) { \
-         case kChar:   {Char_t   *x=(Char_t*)(pointer+fOffset[i]);   *x = (Char_t)u;   break;} \
-         case kShort:  {Short_t  *x=(Short_t*)(pointer+fOffset[i]);  *x = (Short_t)u;  break;} \
-         case kInt:    {Int_t    *x=(Int_t*)(pointer+fOffset[i]);    *x = (Int_t)u;    break;} \
-         case kLong:   {Long_t   *x=(Long_t*)(pointer+fOffset[i]);   *x = (Long_t)u;   break;} \
-         case kFloat:  {Float_t  *x=(Float_t*)(pointer+fOffset[i]);  *x = (Float_t)u;  break;} \
-         case kDouble: {Double_t *x=(Double_t*)(pointer+fOffset[i]); *x = (Double_t)u; break;} \
-         case kUChar:  {UChar_t  *x=(UChar_t*)(pointer+fOffset[i]);  *x = (UChar_t)u;  break;} \
-         case kUShort: {UShort_t *x=(UShort_t*)(pointer+fOffset[i]); *x = (UShort_t)u; break;} \
-         case kUInt:   {UInt_t   *x=(UInt_t*)(pointer+fOffset[i]);   *x = (UInt_t)u;   break;} \
-         case kULong:  {ULong_t  *x=(ULong_t*)(pointer+fOffset[i]);  *x = (ULong_t)u;  break;} \
+         case kChar:    {Char_t    *x=(Char_t*)(pointer+fOffset[i]);    *x = (Char_t)u;    break;} \
+         case kShort:   {Short_t   *x=(Short_t*)(pointer+fOffset[i]);   *x = (Short_t)u;   break;} \
+         case kInt:     {Int_t     *x=(Int_t*)(pointer+fOffset[i]);     *x = (Int_t)u;     break;} \
+         case kLong:    {Long_t    *x=(Long_t*)(pointer+fOffset[i]);    *x = (Long_t)u;    break;} \
+         case kLong64:  {Long64_t  *x=(Long64_t*)(pointer+fOffset[i]);  *x = (Long64_t)u;  break;} \
+         case kFloat:   {Float_t   *x=(Float_t*)(pointer+fOffset[i]);   *x = (Float_t)u;   break;} \
+         case kDouble:  {Double_t  *x=(Double_t*)(pointer+fOffset[i]);  *x = (Double_t)u;  break;} \
+         case kUChar:   {UChar_t   *x=(UChar_t*)(pointer+fOffset[i]);   *x = (UChar_t)u;   break;} \
+         case kUShort:  {UShort_t  *x=(UShort_t*)(pointer+fOffset[i]);  *x = (UShort_t)u;  break;} \
+         case kUInt:    {UInt_t    *x=(UInt_t*)(pointer+fOffset[i]);    *x = (UInt_t)u;    break;} \
+         case kULong:   {ULong_t   *x=(ULong_t*)(pointer+fOffset[i]);   *x = (ULong_t)u;   break;} \
+         case kULong64: {ULong64_t *x=(ULong64_t*)(pointer+fOffset[i]); *x = (ULong64_t)u; break;} \
       } \
    } break; \
 }
@@ -3098,6 +3176,10 @@ char *pointer = 0;
                            delete [] *f;  *f = 0;\
                            if (fNewType[i] > 40 && len > 0) *f = new Long_t[len]; \
                            b.ReadFastArray(*f,len); break;} \
+          case kLong64: {Long64_t **f=(Long64_t**)(pointer+fOffset[i]); \
+                           delete [] *f;  *f = 0;\
+                           if (fNewType[i] > 40 && len > 0) *f = new Long64_t[len]; \
+                           b.ReadFastArray(*f,len); break;} \
           case kFloat:  {Float_t  **f=(Float_t**)(pointer+fOffset[i]); \
                            delete [] *f;  *f = 0;\
                            if (fNewType[i] > 40 && len > 0) *f = new Float_t[len]; \
@@ -3121,6 +3203,10 @@ char *pointer = 0;
           case kULong:  {ULong_t  **f=(ULong_t**)(pointer+fOffset[i]); \
                            delete [] *f;  *f = 0;\
                            if (fNewType[i] > 40 && len > 0) *f = new ULong_t[len]; \
+                           b.ReadFastArray(*f,len); break;} \
+          case kULong64: {ULong64_t **f=(ULong64_t**)(pointer+fOffset[i]); \
+                           delete [] *f;  *f = 0;\
+                           if (fNewType[i] > 40 && len > 0) *f = new ULong64_t[len]; \
                            b.ReadFastArray(*f,len); break;} \
        } \
    } break; \
@@ -3162,6 +3248,12 @@ char *pointer = 0;
                        f[j] = new Long_t[*l]; Long_t *af = f[j]; \
                        for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (Long_t)u;} \
                     } break;} \
+         case kLong64: {Long64_t **f=(Long64_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new Long64_t[*l]; Long64_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (Long64_t)u;} \
+                    } break;} \
          case kFloat:  {Float_t  **f=(Float_t**)(pointer+fOffset[i]); \
                     for (j=0;j<len;j++) { \
                        delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
@@ -3198,6 +3290,12 @@ char *pointer = 0;
                        f[j] = new ULong_t[*l]; ULong_t *af = f[j]; \
                        for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (ULong_t)u;} \
                     } break;} \
+         case kULong64: {ULong64_t **f=(ULong64_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new ULong64_t[*l]; ULong64_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (ULong64_t)u;} \
+                    } break;} \
       } \
    } break; \
 }
@@ -3211,38 +3309,44 @@ char *pointer = 0;
       case kConv + kShort:   ConvCBasicType(Short_t)
       case kConv + kInt:     ConvCBasicType(Int_t)
       case kConv + kLong:    ConvCBasicType(Long_t)
+      case kConv + kLong64:  ConvCBasicType(Long64_t)
       case kConv + kFloat:   ConvCBasicType(Float_t)
       case kConv + kDouble:  ConvCBasicType(Double_t)
       case kConv + kUChar:   ConvCBasicType(UChar_t)
       case kConv + kUShort:  ConvCBasicType(UShort_t)
       case kConv + kUInt:    ConvCBasicType(UInt_t)
       case kConv + kULong:   ConvCBasicType(ULong_t)
+      case kConv + kULong64: ConvCBasicType(ULong64_t)
       case kConv + kBits:    ConvCBasicType(UInt_t)
 
       // convert array of basic types  array[8]
-      case kConvL + kChar:   ConvCBasicArray(Char_t)
-      case kConvL + kShort:  ConvCBasicArray(Short_t)
-      case kConvL + kInt:    ConvCBasicArray(Int_t)
-      case kConvL + kLong:   ConvCBasicArray(Long_t)
-      case kConvL + kFloat:  ConvCBasicArray(Float_t)
-      case kConvL + kDouble: ConvCBasicArray(Double_t)
-      case kConvL + kUChar:  ConvCBasicArray(UChar_t)
-      case kConvL + kUShort: ConvCBasicArray(UShort_t)
-      case kConvL + kUInt:   ConvCBasicArray(UInt_t)
-      case kConvL + kULong:  ConvCBasicArray(ULong_t)
+      case kConvL + kChar:    ConvCBasicArray(Char_t)
+      case kConvL + kShort:   ConvCBasicArray(Short_t)
+      case kConvL + kInt:     ConvCBasicArray(Int_t)
+      case kConvL + kLong:    ConvCBasicArray(Long_t)
+      case kConvL + kLong64:  ConvCBasicArray(Long64_t)
+      case kConvL + kFloat:   ConvCBasicArray(Float_t)
+      case kConvL + kDouble:  ConvCBasicArray(Double_t)
+      case kConvL + kUChar:   ConvCBasicArray(UChar_t)
+      case kConvL + kUShort:  ConvCBasicArray(UShort_t)
+      case kConvL + kUInt:    ConvCBasicArray(UInt_t)
+      case kConvL + kULong:   ConvCBasicArray(ULong_t)
+      case kConvL + kULong64: ConvCBasicArray(ULong64_t)
 
       // convert pointer to an array of basic types  array[n]
-      case kConvP + kChar:   ConvCBasicPointer(Char_t)
-      case kConvP + kShort:  ConvCBasicPointer(Short_t)
-      case kConvP + kInt:    ConvCBasicPointer(Int_t)
-      case kConvP + kLong:   ConvCBasicPointer(Long_t)
-      case kConvP + kFloat:  ConvCBasicPointer(Float_t)
-      case kConvP + kDouble: ConvCBasicPointer(Double_t)
-      case kConvP + kUChar:  ConvCBasicPointer(UChar_t)
-      case kConvP + kUShort: ConvCBasicPointer(UShort_t)
-      case kConvP + kUInt:   ConvCBasicPointer(UInt_t)
-      case kConvP + kULong:  ConvCBasicPointer(ULong_t)
-      
+      case kConvP + kChar:    ConvCBasicPointer(Char_t)
+      case kConvP + kShort:   ConvCBasicPointer(Short_t)
+      case kConvP + kInt:     ConvCBasicPointer(Int_t)
+      case kConvP + kLong:    ConvCBasicPointer(Long_t)
+      case kConvP + kLong64:  ConvCBasicPointer(Long64_t)
+      case kConvP + kFloat:   ConvCBasicPointer(Float_t)
+      case kConvP + kDouble:  ConvCBasicPointer(Double_t)
+      case kConvP + kUChar:   ConvCBasicPointer(UChar_t)
+      case kConvP + kUShort:  ConvCBasicPointer(UShort_t)
+      case kConvP + kUInt:    ConvCBasicPointer(UInt_t)
+      case kConvP + kULong:   ConvCBasicPointer(ULong_t)
+      case kConvP + kULong64: ConvCBasicPointer(ULong64_t)
+
       default:
         //Error("ReadBufferClones","The element type %d is not supported yet\n",fType[i]);
         break;
@@ -3363,36 +3467,42 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          case kShort:             WriteBasicType(Short_t)
          case kInt:               WriteBasicType(Int_t)
          case kLong:              WriteBasicType(Long_t)
+         case kLong64:            WriteBasicType(Long64_t)
          case kFloat:             WriteBasicType(Float_t)
          case kDouble:            WriteBasicType(Double_t)
          case kUChar:             WriteBasicType(UChar_t)
          case kUShort:            WriteBasicType(UShort_t)
          case kUInt:              WriteBasicType(UInt_t)
          case kULong:             WriteBasicType(ULong_t)
+         case kULong64:           WriteBasicType(ULong64_t)
 
          // write array of basic types  array[8]
-         case kOffsetL + kChar:   WriteBasicArray(Char_t)
-         case kOffsetL + kShort:  WriteBasicArray(Short_t)
-         case kOffsetL + kInt:    WriteBasicArray(Int_t)
-         case kOffsetL + kLong:   WriteBasicArray(Long_t)
-         case kOffsetL + kFloat:  WriteBasicArray(Float_t)
-         case kOffsetL + kDouble: WriteBasicArray(Double_t)
-         case kOffsetL + kUChar:  WriteBasicArray(UChar_t)
-         case kOffsetL + kUShort: WriteBasicArray(UShort_t)
-         case kOffsetL + kUInt:   WriteBasicArray(UInt_t)
-         case kOffsetL + kULong:  WriteBasicArray(ULong_t)
+         case kOffsetL + kChar:    WriteBasicArray(Char_t)
+         case kOffsetL + kShort:   WriteBasicArray(Short_t)
+         case kOffsetL + kInt:     WriteBasicArray(Int_t)
+         case kOffsetL + kLong:    WriteBasicArray(Long_t)
+         case kOffsetL + kLong64:  WriteBasicArray(Long64_t)
+         case kOffsetL + kFloat:   WriteBasicArray(Float_t)
+         case kOffsetL + kDouble:  WriteBasicArray(Double_t)
+         case kOffsetL + kUChar:   WriteBasicArray(UChar_t)
+         case kOffsetL + kUShort:  WriteBasicArray(UShort_t)
+         case kOffsetL + kUInt:    WriteBasicArray(UInt_t)
+         case kOffsetL + kULong:   WriteBasicArray(ULong_t)
+         case kOffsetL + kULong64: WriteBasicArray(ULong64_t)
 
          // write pointer to an array of basic types  array[n]
-         case kOffsetP + kChar:   WriteBasicPointer(Char_t)
-         case kOffsetP + kShort:  WriteBasicPointer(Short_t)
-         case kOffsetP + kInt:    WriteBasicPointer(Int_t)
-         case kOffsetP + kLong:   WriteBasicPointer(Long_t)
-         case kOffsetP + kFloat:  WriteBasicPointer(Float_t)
-         case kOffsetP + kDouble: WriteBasicPointer(Double_t)
-         case kOffsetP + kUChar:  WriteBasicPointer(UChar_t)
-         case kOffsetP + kUShort: WriteBasicPointer(UShort_t)
-         case kOffsetP + kUInt:   WriteBasicPointer(UInt_t)
-         case kOffsetP + kULong:  WriteBasicPointer(ULong_t)
+         case kOffsetP + kChar:    WriteBasicPointer(Char_t)
+         case kOffsetP + kShort:   WriteBasicPointer(Short_t)
+         case kOffsetP + kInt:     WriteBasicPointer(Int_t)
+         case kOffsetP + kLong:    WriteBasicPointer(Long_t)
+         case kOffsetP + kLong64:  WriteBasicPointer(Long64_t)
+         case kOffsetP + kFloat:   WriteBasicPointer(Float_t)
+         case kOffsetP + kDouble:  WriteBasicPointer(Double_t)
+         case kOffsetP + kUChar:   WriteBasicPointer(UChar_t)
+         case kOffsetP + kUShort:  WriteBasicPointer(UShort_t)
+         case kOffsetP + kUInt:    WriteBasicPointer(UInt_t)
+         case kOffsetP + kULong:   WriteBasicPointer(ULong_t)
+         case kOffsetP + kULong64: WriteBasicPointer(ULong64_t)
 
          // char*
          case kCharStar: {
@@ -3707,36 +3817,42 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          case kShort:             WriteCBasicType(Short_t)
          case kInt:               WriteCBasicType(Int_t)
          case kLong:              WriteCBasicType(Long_t)
+         case kLong64:            WriteCBasicType(Long64_t)
          case kFloat:             WriteCBasicType(Float_t)
          case kDouble:            WriteCBasicType(Double_t)
          case kUChar:             WriteCBasicType(UChar_t)
          case kUShort:            WriteCBasicType(UShort_t)
          case kUInt:              WriteCBasicType(UInt_t)
          case kULong:             WriteCBasicType(ULong_t)
+         case kULong64:           WriteCBasicType(ULong64_t)
 
          // write array of basic types  array[8]
-         case kOffsetL + kChar:   WriteCBasicArray(Char_t)
-         case kOffsetL + kShort:  WriteCBasicArray(Short_t)
-         case kOffsetL + kInt:    WriteCBasicArray(Int_t)
-         case kOffsetL + kLong:   WriteCBasicArray(Long_t)
-         case kOffsetL + kFloat:  WriteCBasicArray(Float_t)
-         case kOffsetL + kDouble: WriteCBasicArray(Double_t)
-         case kOffsetL + kUChar:  WriteCBasicArray(UChar_t)
-         case kOffsetL + kUShort: WriteCBasicArray(UShort_t)
-         case kOffsetL + kUInt:   WriteCBasicArray(UInt_t)
-         case kOffsetL + kULong:  WriteCBasicArray(ULong_t)
+         case kOffsetL + kChar:    WriteCBasicArray(Char_t)
+         case kOffsetL + kShort:   WriteCBasicArray(Short_t)
+         case kOffsetL + kInt:     WriteCBasicArray(Int_t)
+         case kOffsetL + kLong:    WriteCBasicArray(Long_t)
+         case kOffsetL + kLong64:  WriteCBasicArray(Long64_t)
+         case kOffsetL + kFloat:   WriteCBasicArray(Float_t)
+         case kOffsetL + kDouble:  WriteCBasicArray(Double_t)
+         case kOffsetL + kUChar:   WriteCBasicArray(UChar_t)
+         case kOffsetL + kUShort:  WriteCBasicArray(UShort_t)
+         case kOffsetL + kUInt:    WriteCBasicArray(UInt_t)
+         case kOffsetL + kULong:   WriteCBasicArray(ULong_t)
+         case kOffsetL + kULong64: WriteCBasicArray(ULong64_t)
 
          // write pointer to an array of basic types  array[n]
-         case kOffsetP + kChar:   WriteCBasicPointer(Char_t)
-         case kOffsetP + kShort:  WriteCBasicPointer(Short_t)
-         case kOffsetP + kInt:    WriteCBasicPointer(Int_t)
-         case kOffsetP + kLong:   WriteCBasicPointer(Long_t)
-         case kOffsetP + kFloat:  WriteCBasicPointer(Float_t)
-         case kOffsetP + kDouble: WriteCBasicPointer(Double_t)
-         case kOffsetP + kUChar:  WriteCBasicPointer(UChar_t)
-         case kOffsetP + kUShort: WriteCBasicPointer(UShort_t)
-         case kOffsetP + kUInt:   WriteCBasicPointer(UInt_t)
-         case kOffsetP + kULong:  WriteCBasicPointer(ULong_t)
+         case kOffsetP + kChar:    WriteCBasicPointer(Char_t)
+         case kOffsetP + kShort:   WriteCBasicPointer(Short_t)
+         case kOffsetP + kInt:     WriteCBasicPointer(Int_t)
+         case kOffsetP + kLong:    WriteCBasicPointer(Long_t)
+         case kOffsetP + kLong64:  WriteCBasicPointer(Long64_t)
+         case kOffsetP + kFloat:   WriteCBasicPointer(Float_t)
+         case kOffsetP + kDouble:  WriteCBasicPointer(Double_t)
+         case kOffsetP + kUChar:   WriteCBasicPointer(UChar_t)
+         case kOffsetP + kUShort:  WriteCBasicPointer(UShort_t)
+         case kOffsetP + kUInt:    WriteCBasicPointer(UInt_t)
+         case kOffsetP + kULong:   WriteCBasicPointer(ULong_t)
+         case kOffsetP + kULong64: WriteCBasicPointer(ULong64_t)
 
          // char*
          case kCharStar: {

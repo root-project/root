@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.15 2003/01/11 23:49:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.16 2003/04/03 13:46:49 brun Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -121,29 +121,6 @@
 #if defined(R__LINUX) && !defined(R__WINGCC)
 #include <sys/sysinfo.h>
 #endif
-#endif
-
-#define R__LONGLONG
-
-#ifdef R__LONGLONG  // should go into Rtypes.h
-#ifdef R__B64
-typedef long               Long64_t;    //Signed long integer 8 bytes
-typedef unsigned long      ULong64_t;   //Unsigned long integer 8 bytes
-#else
-#ifdef R__WIN32
-typedef __int64            Long64_t;    //Signed long integer 8 bytes
-typedef unsigned __int64   ULong64_t;   //Unsigned long integer 8 bytes
-#else
-typedef long long          Long64_t;    //Signed long integer 8 bytes
-typedef unsigned long long ULong64_t;   //Unsigned long integer 8 bytes
-#endif
-#endif
-#endif
-
-#ifdef R__WIN32
-#define R__LL(long) long
-#else
-#define R__LL(long) _NAME2_(long,LL)
 #endif
 
 

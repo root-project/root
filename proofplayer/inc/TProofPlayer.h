@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.11 2003/01/20 10:25:58 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.12 2003/03/18 14:29:59 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -29,8 +29,6 @@
 #include "TQObject.h"
 #endif
 
-
-typedef long Long64_t;
 
 class TList;
 class TSelector;

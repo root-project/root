@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.11 2003/03/20 13:07:16 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.12 2003/04/09 20:38:54 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -41,7 +41,7 @@
 #endif
 
 
-#if defined(__linux) && defined(__i386__) && !defined __CINT__
+#if defined(__linux) && defined(__i386__) && !defined(__CINT__)
 #include "Byteswap.h"
 #endif
 
@@ -179,14 +179,38 @@ inline void tobuf(char *&buf, Long_t x)
    buf += 8;
 }
 
+inline void tobuf(char *&buf, ULong64_t x)
+{
+#ifdef R__BYTESWAP
+# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
+     defined(__GNUC__) && __GNUC__ >= 2
+   *((ULong64_t *)buf) = Rbswap_64(x));
+# else
+   char *sw = (char *)&x;
+   buf[0] = sw[7];
+   buf[1] = sw[6];
+   buf[2] = sw[5];
+   buf[3] = sw[4];
+   buf[4] = sw[3];
+   buf[5] = sw[2];
+   buf[6] = sw[1];
+   buf[7] = sw[0];
+# endif
+#else
+   memcpy(buf, &x, sizeof(ULong64_t));
+#endif
+   buf += sizeof(ULong64_t);
+}
+
 inline void tobuf(char *&buf, Float_t x)
 {
 #ifdef R__BYTESWAP
-# if defined(__linux) && defined(__i386__)  && defined __GNUC__ && __GNUC__ >= 2
+# if defined(__linux) && defined(__i386__)  && \
+     defined(__GNUC__) && __GNUC__ >= 2
    *((UInt_t *)buf) = Rbswap_32(*((UInt_t *)&x));
 # elif defined(R__KCC)
    // Use an union to prevent over-zealous optimization by KCC
-   // related to aliasing double.
+   // related to aliasing float.
    // + Use a volatile here to work around error in KCC optimizer
    union {
      volatile char  c[4];
@@ -213,8 +237,9 @@ inline void tobuf(char *&buf, Float_t x)
 inline void tobuf(char *&buf, Double_t x)
 {
 #ifdef R__BYTESWAP
-# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
-   *((unsigned long long *)buf) = Rbswap_64(*((unsigned long long *)&x));
+# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
+     defined(__GNUC__) && __GNUC__ >= 2
+   *((ULong64_t *)buf) = Rbswap_64(*((ULong64_t *)&x));
 # elif defined(R__KCC)
    // Use an union to prevent over-zealous optimization by KCC
    // related to aliasing double.
@@ -324,11 +349,35 @@ inline void frombuf(char *&buf, ULong_t *x)
    buf += 8;
 }
 
+inline void frombuf(char *&buf, ULong64_t *x)
+{
+#ifdef R__BYTESWAP
+# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
+     defined(__GNUC__) && __GNUC__ >= 2
+   *x = Rbswap_64(*((ULong64_t *)buf));
+# else
+   char *sw = (char *)x;
+   sw[0] = buf[7];
+   sw[1] = buf[6];
+   sw[2] = buf[5];
+   sw[3] = buf[4];
+   sw[4] = buf[3];
+   sw[5] = buf[2];
+   sw[6] = buf[1];
+   sw[7] = buf[0];
+# endif
+#else
+   memcpy(x, buf, sizeof(ULong64_t));
+#endif
+   buf += sizeof(ULong64_t);
+}
+
 inline void frombuf(char *&buf, Float_t *x)
 {
 #ifdef R__BYTESWAP
-# if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
-   *((UInt_t*)x) = Rbswap_32(*((UInt_t *)buf));
+# if defined(__linux) && defined(__i386__) && \
+     defined(__GNUC__) && __GNUC__ >= 2
+   *((UInt_t *)x) = Rbswap_32(*((UInt_t *)buf));
 # elif defined(R__KCC)
    // Use an union to prevent over-zealous optimization by KCC
    // related to aliasing double.
@@ -358,8 +407,9 @@ inline void frombuf(char *&buf, Float_t *x)
 inline void frombuf(char *&buf, Double_t *x)
 {
 #ifdef R__BYTESWAP
-# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
-   *((unsigned long long*)x) = Rbswap_64(*((unsigned long long *)buf));
+# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
+     defined(__GNUC__) && __GNUC__ >= 2
+   *((ULong64_t *)x) = Rbswap_64(*((ULong64_t *)buf));
 # elif defined(R__KCC)
    // Use an union to prevent over-zealous optimization by KCC
    // related to aliasing double.
@@ -394,32 +444,34 @@ inline void frombuf(char *&buf, Double_t *x)
    buf += sizeof(Double_t);
 }
 
-inline void tobuf(char *&buf, Char_t x)  { tobuf(buf, (UChar_t) x); }
-inline void tobuf(char *&buf, Short_t x) { tobuf(buf, (UShort_t) x); }
-inline void tobuf(char *&buf, Int_t x)   { tobuf(buf, (UInt_t) x); }
+inline void tobuf(char *&buf, Char_t x)   { tobuf(buf, (UChar_t) x); }
+inline void tobuf(char *&buf, Short_t x)  { tobuf(buf, (UShort_t) x); }
+inline void tobuf(char *&buf, Int_t x)    { tobuf(buf, (UInt_t) x); }
+inline void tobuf(char *&buf, Long64_t x) { tobuf(buf, (ULong64_t) x); }
 
-inline void frombuf(char *&buf, Char_t *x)  { frombuf(buf, (UChar_t *) x); }
-inline void frombuf(char *&buf, Short_t *x) { frombuf(buf, (UShort_t *) x); }
-inline void frombuf(char *&buf, Int_t *x)   { frombuf(buf, (UInt_t *) x); }
-inline void frombuf(char *&buf, Long_t *x)  { frombuf(buf, (ULong_t *) x); }
+inline void frombuf(char *&buf, Char_t *x)   { frombuf(buf, (UChar_t *) x); }
+inline void frombuf(char *&buf, Short_t *x)  { frombuf(buf, (UShort_t *) x); }
+inline void frombuf(char *&buf, Int_t *x)    { frombuf(buf, (UInt_t *) x); }
+inline void frombuf(char *&buf, Long_t *x)   { frombuf(buf, (ULong_t *) x); }
+inline void frombuf(char *&buf, Long64_t *x) { frombuf(buf, (ULong64_t *) x); }
 
 
 //______________________________________________________________________________
 #ifdef R__BYTESWAP
 inline UShort_t host2net(UShort_t x)
 {
-# if defined(__linux) && defined(__i386__)
+#if defined(__linux) && defined(__i386__)
    return Rbswap_16(x);
-# else
+#else
    return (((x & 0x00ff) << 8) | ((x & 0xff00) >> 8));
 #endif
 }
 
 inline UInt_t host2net(UInt_t x)
 {
-# if defined(__linux) && defined(__i386__)
+#if defined(__linux) && defined(__i386__)
    return Rbswap_32(x);
-# else
+#else
    return (((x & 0x000000ffU) << 24) | ((x & 0x0000ff00U) <<  8) |
            ((x & 0x00ff0000U) >>  8) | ((x & 0xff000000U) >> 24));
 #endif
@@ -428,7 +480,8 @@ inline UInt_t host2net(UInt_t x)
 inline ULong_t host2net(ULong_t x)
 {
 #ifdef R__B64
-# if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
+# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
+     defined(__GNUC__) && __GNUC__ >= 2
    return Rbswap_64(x);
 # else
    char sw[sizeof(ULong_t)];
@@ -444,18 +497,41 @@ inline ULong_t host2net(ULong_t x)
    sb[6] = sw[1];
    sb[7] = sw[0];
    return x;
-#endif
+# endif
 #else
    return (ULong_t)host2net((UInt_t) x);
 #endif
 }
 
+inline ULong64_t host2net(ULong64_t x)
+{
+#if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
+    defined(__GNUC__) && __GNUC__ >= 2
+   return Rbswap_64(x);
+#else
+   char sw[sizeof(ULong64_t)];
+   *(ULong64_t *)sw = x;
+
+   char *sb = (char *)&x;
+   sb[0] = sw[7];
+   sb[1] = sw[6];
+   sb[2] = sw[5];
+   sb[3] = sw[4];
+   sb[4] = sw[3];
+   sb[5] = sw[2];
+   sb[6] = sw[1];
+   sb[7] = sw[0];
+   return x;
+#endif
+}
+
 inline Float_t host2net(Float_t xx)
 {
-# if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
+#if defined(__linux) && defined(__i386__) && \
+    defined(__GNUC__) && __GNUC__ >= 2
    UInt_t t = Rbswap_32(*((UInt_t *)&xx));
    return *(Float_t *)&t;
-# else
+#else
    UInt_t *x = (UInt_t *)&xx;
    *x = (((*x & 0x000000ffU) << 24) | ((*x & 0x0000ff00U) <<  8) |
          ((*x & 0x00ff0000U) >>  8) | ((*x & 0xff000000U) >> 24));
@@ -465,8 +541,9 @@ inline Float_t host2net(Float_t xx)
 
 inline Double_t host2net(Double_t x)
 {
-# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
-   unsigned long long t = Rbswap_64(*((unsigned long long *)&x));
+#if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
+    defined(__GNUC__) && __GNUC__ >= 2
+   ULong64_t t = Rbswap_64(*((ULong64_t *)&x));
    return *(Double_t *)&t;
 # else
    char sw[sizeof(Double_t)];
@@ -485,24 +562,28 @@ inline Double_t host2net(Double_t x)
 #endif
 }
 #else  /* R__BYTESWAP */
-inline UShort_t host2net(UShort_t x) { return x; }
-inline UInt_t   host2net(UInt_t x)   { return x; }
-inline ULong_t  host2net(ULong_t x)  { return x; }
-inline Float_t  host2net(Float_t x)  { return x; }
-inline Double_t host2net(Double_t x) { return x; }
+inline UShort_t host2net(UShort_t x)   { return x; }
+inline UInt_t   host2net(UInt_t x)     { return x; }
+inline ULong_t  host2net(ULong_t x)    { return x; }
+inline ULong_t  host2net(ULong64_t x)  { return x; }
+inline Float_t  host2net(Float_t x)    { return x; }
+inline Double_t host2net(Double_t x)   { return x; }
 #endif
 
-inline Short_t  host2net(Short_t x) { return host2net((UShort_t)x); }
-inline Int_t    host2net(Int_t x)   { return host2net((UInt_t)x); }
-inline Long_t   host2net(Long_t x)  { return host2net((ULong_t)x); }
+inline Short_t  host2net(Short_t x)    { return host2net((UShort_t)x); }
+inline Int_t    host2net(Int_t x)      { return host2net((UInt_t)x); }
+inline Long_t   host2net(Long_t x)     { return host2net((ULong_t)x); }
+inline Long64_t host2net(Long64_t x)   { return host2net((ULong64_t)x); }
 
-inline UShort_t net2host(UShort_t x) { return host2net(x); }
-inline Short_t  net2host(Short_t x)  { return host2net(x); }
-inline UInt_t   net2host(UInt_t x)   { return host2net(x); }
-inline Int_t    net2host(Int_t x)    { return host2net(x); }
-inline ULong_t  net2host(ULong_t x)  { return host2net(x); }
-inline Long_t   net2host(Long_t x)   { return host2net(x); }
-inline Float_t  net2host(Float_t x)  { return host2net(x); }
-inline Double_t net2host(Double_t x) { return host2net(x); }
+inline UShort_t  net2host(UShort_t x)  { return host2net(x); }
+inline Short_t   net2host(Short_t x)   { return host2net(x); }
+inline UInt_t    net2host(UInt_t x)    { return host2net(x); }
+inline Int_t     net2host(Int_t x)     { return host2net(x); }
+inline ULong_t   net2host(ULong_t x)   { return host2net(x); }
+inline Long_t    net2host(Long_t x)    { return host2net(x); }
+inline ULong64_t net2host(ULong64_t x) { return host2net(x); }
+inline Long64_t  net2host(Long64_t x)  { return host2net(x); }
+inline Float_t   net2host(Float_t x)   { return host2net(x); }
+inline Double_t  net2host(Double_t x)  { return host2net(x); }
 
 #endif

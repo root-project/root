@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.1 2003/03/19 13:07:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.2 2003/03/19 14:01:50 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -46,9 +46,6 @@
 #include "TNamed.h"
 #endif
 
-
-// typedef can be removed as soon as Long64_t becomes real 64 bit type
-typedef Long_t  Long64_t;
 
 class TList;
 class TDSet;

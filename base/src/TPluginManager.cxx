@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.14 2003/04/03 16:55:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.15 2003/04/04 00:10:16 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -272,6 +272,8 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
          else if (type == "int" || type == "unsigned int")
             args[i] = (Long_t) va_arg(ap, int);
          else if (type == "long" || type == "unsigned long")
+            args[i] = (Long_t) va_arg(ap, long);
+         else if (type == "long long" || type == "unsigned long long")
             args[i] = (Long_t) va_arg(ap, long);
          else if (type == "float") {
             u.f = (Float_t) va_arg(ap, double);  // float is promoted to double

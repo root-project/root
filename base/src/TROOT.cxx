@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.89 2003/04/04 00:10:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.90 2003/04/04 00:39:12 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1094,7 +1094,7 @@ TSeqCollection *TROOT::GetListOfTypes(Bool_t load)
       fTypes = new THashList(100, 3);
       load = kTRUE;
 
-      // Add also basic types (like a identity typedef "typedef int int"
+      // Add also basic types (like a identity typedef "typedef int int")
       fTypes->Add(new TDataType("char"));
       fTypes->Add(new TDataType("unsigned char"));
       fTypes->Add(new TDataType("short"));
@@ -1103,6 +1103,8 @@ TSeqCollection *TROOT::GetListOfTypes(Bool_t load)
       fTypes->Add(new TDataType("unsigned int"));
       fTypes->Add(new TDataType("long"));
       fTypes->Add(new TDataType("unsigned long"));
+      fTypes->Add(new TDataType("long long"));
+      fTypes->Add(new TDataType("unsigned long long"));
       fTypes->Add(new TDataType("float"));
       fTypes->Add(new TDataType("double"));
       fTypes->Add(new TDataType("void"));

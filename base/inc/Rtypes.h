@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.35 2002/11/11 11:27:47 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.36 2002/11/11 16:23:15 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -73,6 +73,13 @@ typedef short          Version_t;   //Class version identifier (short)
 typedef const char     Option_t;    //Option string (const char)
 typedef int            Ssiz_t;      //String size (int)
 typedef float          Real_t;      //TVector and TMatrix element type (float)
+#ifdef R__WIN32
+typedef __int64            Long64_t;  //Portable signed long integer 8 bytes
+typedef unsigned __int64   ULong64_t; //Portable unsigned long integer 8 bytes
+#else
+typedef long long          Long64_t;  //Portable signed long integer 8 bytes
+typedef unsigned long long ULong64_t; //Portable unsigned long integer 8 bytes
+#endif
 
 typedef void         (*Streamer_t)(TBuffer&, void*, Int_t);
 typedef void         (*VoidFuncPtr_t)();  //pointer to void function
@@ -301,7 +308,7 @@ public: \
       static TNamed *_R__UNIQUE_(_NAME2_(R__dummyholder,key)) = \
          ROOT::RegisterClassTemplate(_QUOTE_(name), __FILE__, __LINE__); \
       R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyholder,key))); \
-   } 
+   }
 #define templateClassImp(name) templateClassImpUnique(name,default)
 #endif
 

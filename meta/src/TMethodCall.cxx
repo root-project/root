@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.10 2002/02/23 16:05:46 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.11 2003/04/03 16:55:12 rdm Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -371,15 +371,17 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
            !strcmp("const unsigned char*", name) || !strcmp("const char*", name)  ||
            !strcmp("const UChar_t*", name)       || !strcmp("const Char_t*", name)))
          fRetType = kString;
-      else if (!strcmp("unsigned int", name)   || !strcmp("int", name)     ||
-               !strcmp("unsigned long", name)  || !strcmp("long", name)    ||
-               !strcmp("unsigned short", name) || !strcmp("short", name)   ||
-               !strcmp("unsigned char", name)  || !strcmp("char", name)    ||
-               !strcmp("UInt_t", name)         || !strcmp("Int_t", name)   ||
-               !strcmp("ULong_t", name)        || !strcmp("Long_t", name)  ||
-               !strcmp("UShort_t", name)       || !strcmp("Short_t", name) ||
-               !strcmp("UChar_t", name)        || !strcmp("Char_t", name)  ||
-               !strcmp("Bool_t", name)         || !strcmp("bool", name)    ||
+      else if (!strcmp("unsigned int", name)   || !strcmp("int", name)      ||
+               !strcmp("unsigned long", name)  || !strcmp("long", name)     ||
+               !strcmp("unsigned long long", name) || !strcmp("long long", name) ||
+               !strcmp("unsigned short", name) || !strcmp("short", name)    ||
+               !strcmp("unsigned char", name)  || !strcmp("char", name)     ||
+               !strcmp("UInt_t", name)         || !strcmp("Int_t", name)    ||
+               !strcmp("ULong_t", name)        || !strcmp("Long_t", name)   ||
+               !strcmp("ULong64_t", name)      || !strcmp("Long_t64", name) ||
+               !strcmp("UShort_t", name)       || !strcmp("Short_t", name)  ||
+               !strcmp("UChar_t", name)        || !strcmp("Char_t", name)   ||
+               !strcmp("Bool_t", name)         || !strcmp("bool", name)     ||
                strstr(name, "enum"))
          fRetType = kLong;
       else if (!strcmp("float", name)   || !strcmp("double", name)    ||

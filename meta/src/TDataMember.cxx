@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.15 2002/11/26 17:26:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.16 2003/03/14 08:45:44 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -197,7 +197,7 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
    if (fInfo) {
       fFullTypeName = fInfo->Type()->Name();
       fTrueTypeName = fInfo->Type()->TrueName();
-      fTypeName     = gInterpreter->TypeName(fFullTypeName.Data());
+      fTypeName     = gInterpreter->TypeName(fFullTypeName);
       SetName(fInfo->Name());
       const char *t = fInfo->Title();
       SetTitle(t);
@@ -210,6 +210,7 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
                 strncmp(name, "unsigned short", sizeof ("unsigned short")) != 0 &&
                 strcmp(name, "unsigned int") != 0 &&
                 strncmp(name, "unsigned long", sizeof ("unsigned long")) != 0)
+                // strncmp() also covers "unsigned long long"
                name = GetTypeName();
             fDataType = gROOT->GetType(name);
          } else {
@@ -498,7 +499,7 @@ Int_t TDataMember::GetOffset() const
       //next statement required in case a class and one of its parent class
       //have data members with the same name
       if (this->IsaPointer() && rdmc[0] == '*') rdmc++;
-      
+
       if (rdm->GetDataMember() != this) continue;
       if (strcmp(rdmc,this->GetName()) == 0) {
          return rdm->GetThisOffset();

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.4 2002/02/23 15:45:05 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.5 2002/11/26 10:24:09 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -107,6 +107,10 @@ const char *TDataType::AsString(void *buf) const
       sprintf(line, "%lu", *(unsigned long *)buf);
    else if (!strcmp("long", name))
       sprintf(line, "%ld", *(long *)buf);
+   else if (!strcmp("unsigned long long", name))
+      sprintf(line, "%llu", *(unsigned long long *)buf);
+   else if (!strcmp("long long", name))
+      sprintf(line, "%lld", *(long long *)buf);
    else if (!strcmp("unsigned short", name))
       sprintf(line, "%hu", *(unsigned short *)buf);
    else if (!strcmp("short", name))
@@ -156,6 +160,12 @@ void TDataType::SetType(const char *name)
    } else if (!strcmp("long", name)) {
       fType = kLong_t;
       fSize = sizeof(Long_t);
+   } else if (!strcmp("unsigned long long", name)) {
+      fType = kULong64_t;
+      fSize = sizeof(ULong64_t);
+   } else if (!strcmp("long long", name)) {
+      fType = kLong64_t;
+      fSize = sizeof(Long64_t);
    } else if (!strcmp("unsigned short", name)) {
       fType = kUShort_t;
       fSize = sizeof(UShort_t);

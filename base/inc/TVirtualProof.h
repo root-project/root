@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.5 2003/03/05 16:08:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.6 2003/03/18 14:29:58 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -29,7 +29,6 @@
 #include "TQObject.h"
 #endif
 
-typedef long Long64_t;
 
 class TList;
 class TDSet;

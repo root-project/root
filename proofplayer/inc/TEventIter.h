@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.3 2002/03/13 01:52:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.4 2002/04/19 18:23:59 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -25,7 +25,6 @@
 #include "TString.h"
 #endif
 
-typedef long Long64_t;
 
 class TDSet;
 class TDSetElement;

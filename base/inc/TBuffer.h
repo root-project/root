@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.27 2003/02/05 15:03:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.28 2003/03/11 14:27:14 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -126,95 +126,109 @@ public:
    void     SetBufferDisplacement() { fDisplacement = 0; }
    Int_t    GetBufferDisplacement() const { return fDisplacement; }
 
-   Int_t    ReadArray(Bool_t   *&b);
-   Int_t    ReadArray(Char_t   *&c);
-   Int_t    ReadArray(UChar_t  *&c);
-   Int_t    ReadArray(Short_t  *&h);
-   Int_t    ReadArray(UShort_t *&h);
-   Int_t    ReadArray(Int_t    *&i);
-   Int_t    ReadArray(UInt_t   *&i);
-   Int_t    ReadArray(Long_t   *&l);
-   Int_t    ReadArray(ULong_t  *&l);
-   Int_t    ReadArray(Float_t  *&f);
-   Int_t    ReadArray(Double_t *&d);
+   Int_t    ReadArray(Bool_t    *&b);
+   Int_t    ReadArray(Char_t    *&c);
+   Int_t    ReadArray(UChar_t   *&c);
+   Int_t    ReadArray(Short_t   *&h);
+   Int_t    ReadArray(UShort_t  *&h);
+   Int_t    ReadArray(Int_t     *&i);
+   Int_t    ReadArray(UInt_t    *&i);
+   Int_t    ReadArray(Long_t    *&l);
+   Int_t    ReadArray(ULong_t   *&l);
+   Int_t    ReadArray(Long64_t  *&l);
+   Int_t    ReadArray(ULong64_t *&l);
+   Int_t    ReadArray(Float_t   *&f);
+   Int_t    ReadArray(Double_t  *&d);
 
-   Int_t    ReadStaticArray(Bool_t   *b);
-   Int_t    ReadStaticArray(Char_t   *c);
-   Int_t    ReadStaticArray(UChar_t  *c);
-   Int_t    ReadStaticArray(Short_t  *h);
-   Int_t    ReadStaticArray(UShort_t *h);
-   Int_t    ReadStaticArray(Int_t    *i);
-   Int_t    ReadStaticArray(UInt_t   *i);
-   Int_t    ReadStaticArray(Long_t   *l);
-   Int_t    ReadStaticArray(ULong_t  *l);
-   Int_t    ReadStaticArray(Float_t  *f);
-   Int_t    ReadStaticArray(Double_t *d);
+   Int_t    ReadStaticArray(Bool_t    *b);
+   Int_t    ReadStaticArray(Char_t    *c);
+   Int_t    ReadStaticArray(UChar_t   *c);
+   Int_t    ReadStaticArray(Short_t   *h);
+   Int_t    ReadStaticArray(UShort_t  *h);
+   Int_t    ReadStaticArray(Int_t     *i);
+   Int_t    ReadStaticArray(UInt_t    *i);
+   Int_t    ReadStaticArray(Long_t    *l);
+   Int_t    ReadStaticArray(ULong_t   *l);
+   Int_t    ReadStaticArray(Long64_t  *l);
+   Int_t    ReadStaticArray(ULong64_t *l);
+   Int_t    ReadStaticArray(Float_t   *f);
+   Int_t    ReadStaticArray(Double_t  *d);
 
-   void     WriteArray(const Bool_t   *b, Int_t n);
-   void     WriteArray(const Char_t   *c, Int_t n);
-   void     WriteArray(const UChar_t  *c, Int_t n);
-   void     WriteArray(const Short_t  *h, Int_t n);
-   void     WriteArray(const UShort_t *h, Int_t n);
-   void     WriteArray(const Int_t    *i, Int_t n);
-   void     WriteArray(const UInt_t   *i, Int_t n);
-   void     WriteArray(const Long_t   *l, Int_t n);
-   void     WriteArray(const ULong_t  *l, Int_t n);
-   void     WriteArray(const Float_t  *f, Int_t n);
-   void     WriteArray(const Double_t *d, Int_t n);
+   void     ReadFastArray(Bool_t    *b, Int_t n);
+   void     ReadFastArray(Char_t    *c, Int_t n);
+   void     ReadFastArray(UChar_t   *c, Int_t n);
+   void     ReadFastArray(Short_t   *h, Int_t n);
+   void     ReadFastArray(UShort_t  *h, Int_t n);
+   void     ReadFastArray(Int_t     *i, Int_t n);
+   void     ReadFastArray(UInt_t    *i, Int_t n);
+   void     ReadFastArray(Long_t    *l, Int_t n);
+   void     ReadFastArray(ULong_t   *l, Int_t n);
+   void     ReadFastArray(Long64_t  *l, Int_t n);
+   void     ReadFastArray(ULong64_t *l, Int_t n);
+   void     ReadFastArray(Float_t   *f, Int_t n);
+   void     ReadFastArray(Double_t  *d, Int_t n);
 
-   void     ReadFastArray(Bool_t   *b, Int_t n);
-   void     ReadFastArray(Char_t   *c, Int_t n);
-   void     ReadFastArray(UChar_t  *c, Int_t n);
-   void     ReadFastArray(Short_t  *h, Int_t n);
-   void     ReadFastArray(UShort_t *h, Int_t n);
-   void     ReadFastArray(Int_t    *i, Int_t n);
-   void     ReadFastArray(UInt_t   *i, Int_t n);
-   void     ReadFastArray(Long_t   *l, Int_t n);
-   void     ReadFastArray(ULong_t  *l, Int_t n);
-   void     ReadFastArray(Float_t  *f, Int_t n);
-   void     ReadFastArray(Double_t *d, Int_t n);
+   void     WriteArray(const Bool_t    *b, Int_t n);
+   void     WriteArray(const Char_t    *c, Int_t n);
+   void     WriteArray(const UChar_t   *c, Int_t n);
+   void     WriteArray(const Short_t   *h, Int_t n);
+   void     WriteArray(const UShort_t  *h, Int_t n);
+   void     WriteArray(const Int_t     *i, Int_t n);
+   void     WriteArray(const UInt_t    *i, Int_t n);
+   void     WriteArray(const Long_t    *l, Int_t n);
+   void     WriteArray(const ULong_t   *l, Int_t n);
+   void     WriteArray(const Long64_t  *l, Int_t n);
+   void     WriteArray(const ULong64_t *l, Int_t n);
+   void     WriteArray(const Float_t   *f, Int_t n);
+   void     WriteArray(const Double_t  *d, Int_t n);
+
+   void     WriteFastArray(const Bool_t    *b, Int_t n);
+   void     WriteFastArray(const Char_t    *c, Int_t n);
+   void     WriteFastArray(const UChar_t   *c, Int_t n);
+   void     WriteFastArray(const Short_t   *h, Int_t n);
+   void     WriteFastArray(const UShort_t  *h, Int_t n);
+   void     WriteFastArray(const Int_t     *i, Int_t n);
+   void     WriteFastArray(const UInt_t    *i, Int_t n);
+   void     WriteFastArray(const Long_t    *l, Int_t n);
+   void     WriteFastArray(const ULong_t   *l, Int_t n);
+   void     WriteFastArray(const Long64_t  *l, Int_t n);
+   void     WriteFastArray(const ULong64_t *l, Int_t n);
+   void     WriteFastArray(const Float_t   *f, Int_t n);
+   void     WriteFastArray(const Double_t  *d, Int_t n);
 
    void     StreamObject(void *obj, const type_info &typeinfo);
    void     StreamObject(void *obj, const char *className);
    void     StreamObject(void *obj, TClass *cl);
 
-   void     WriteFastArray(const Bool_t   *b, Int_t n);
-   void     WriteFastArray(const Char_t   *c, Int_t n);
-   void     WriteFastArray(const UChar_t  *c, Int_t n);
-   void     WriteFastArray(const Short_t  *h, Int_t n);
-   void     WriteFastArray(const UShort_t *h, Int_t n);
-   void     WriteFastArray(const Int_t    *i, Int_t n);
-   void     WriteFastArray(const UInt_t   *i, Int_t n);
-   void     WriteFastArray(const Long_t   *l, Int_t n);
-   void     WriteFastArray(const ULong_t  *l, Int_t n);
-   void     WriteFastArray(const Float_t  *f, Int_t n);
-   void     WriteFastArray(const Double_t *d, Int_t n);
+   TBuffer  &operator>>(Bool_t    &b);
+   TBuffer  &operator>>(Char_t    &c);
+   TBuffer  &operator>>(UChar_t   &c);
+   TBuffer  &operator>>(Short_t   &h);
+   TBuffer  &operator>>(UShort_t  &h);
+   TBuffer  &operator>>(Int_t     &i);
+   TBuffer  &operator>>(UInt_t    &i);
+   TBuffer  &operator>>(Long_t    &l);
+   TBuffer  &operator>>(ULong_t   &l);
+   TBuffer  &operator>>(Long64_t  &l);
+   TBuffer  &operator>>(ULong64_t &l);
+   TBuffer  &operator>>(Float_t   &f);
+   TBuffer  &operator>>(Double_t  &d);
+   TBuffer  &operator>>(Char_t    *c);
 
-   TBuffer  &operator>>(Bool_t   &b);
-   TBuffer  &operator>>(Char_t   &c);
-   TBuffer  &operator>>(UChar_t  &c);
-   TBuffer  &operator>>(Short_t  &h);
-   TBuffer  &operator>>(UShort_t &h);
-   TBuffer  &operator>>(Int_t    &i);
-   TBuffer  &operator>>(UInt_t   &i);
-   TBuffer  &operator>>(Long_t   &l);
-   TBuffer  &operator>>(ULong_t  &l);
-   TBuffer  &operator>>(Float_t  &f);
-   TBuffer  &operator>>(Double_t &d);
-   TBuffer  &operator>>(Char_t   *c);
-
-   TBuffer  &operator<<(Bool_t   b);
-   TBuffer  &operator<<(Char_t   c);
-   TBuffer  &operator<<(UChar_t  c);
-   TBuffer  &operator<<(Short_t  h);
-   TBuffer  &operator<<(UShort_t h);
-   TBuffer  &operator<<(Int_t    i);
-   TBuffer  &operator<<(UInt_t   i);
-   TBuffer  &operator<<(Long_t   l);
-   TBuffer  &operator<<(ULong_t  l);
-   TBuffer  &operator<<(Float_t  f);
-   TBuffer  &operator<<(Double_t d);
-   TBuffer  &operator<<(const Char_t  *c);
+   TBuffer  &operator<<(Bool_t    b);
+   TBuffer  &operator<<(Char_t    c);
+   TBuffer  &operator<<(UChar_t   c);
+   TBuffer  &operator<<(Short_t   h);
+   TBuffer  &operator<<(UShort_t  h);
+   TBuffer  &operator<<(Int_t     i);
+   TBuffer  &operator<<(UInt_t    i);
+   TBuffer  &operator<<(Long_t    l);
+   TBuffer  &operator<<(ULong_t   l);
+   TBuffer  &operator<<(Long64_t  l);
+   TBuffer  &operator<<(ULong64_t l);
+   TBuffer  &operator<<(Float_t   f);
+   TBuffer  &operator<<(Double_t  d);
+   TBuffer  &operator<<(const Char_t *c);
 
    //friend TBuffer  &operator>>(TBuffer &b, TObject *&obj);
    //friend TBuffer  &operator>>(TBuffer &b, const TObject *&obj);
@@ -325,6 +339,15 @@ inline TBuffer &TBuffer::operator<<(ULong_t l)
 }
 
 //______________________________________________________________________________
+inline TBuffer &TBuffer::operator<<(Long64_t ll)
+{
+   if (fBufCur + sizeof(Long64_t) > fBufMax) Expand(2*fBufSize);
+
+   tobuf(fBufCur, ll);
+   return *this;
+}
+
+//______________________________________________________________________________
 inline TBuffer &TBuffer::operator<<(Float_t f)
 {
    if (fBufCur + sizeof(Float_t) > fBufMax) Expand(2*fBufSize);
@@ -377,12 +400,14 @@ inline TBuffer &TBuffer::operator>>(Int_t &i)
    return *this;
 }
 
+// Version for Long_t and ULong_t are in TBuffer.cxx
+
 //______________________________________________________________________________
-//inline TBuffer &TBuffer::operator>>(Long_t &l)
-//{
-//   frombuf(fBufCur, &l);
-//   return *this;
-//}
+inline TBuffer &TBuffer::operator>>(Long64_t &ll)
+{
+   frombuf(fBufCur, &ll);
+   return *this;
+}
 
 //______________________________________________________________________________
 inline TBuffer &TBuffer::operator>>(Float_t &f)
@@ -414,6 +439,9 @@ inline TBuffer &TBuffer::operator<<(UShort_t h)
 //______________________________________________________________________________
 inline TBuffer &TBuffer::operator<<(UInt_t i)
    { return TBuffer::operator<<((Int_t)i); }
+//______________________________________________________________________________
+inline TBuffer &TBuffer::operator<<(ULong64_t ll)
+   { return TBuffer::operator<<((Long64_t)ll); }
 
 //______________________________________________________________________________
 inline TBuffer &TBuffer::operator>>(UChar_t &c)
@@ -427,6 +455,9 @@ inline TBuffer &TBuffer::operator>>(UInt_t &i)
 //______________________________________________________________________________
 inline TBuffer &TBuffer::operator>>(ULong_t &l)
    { return TBuffer::operator>>((Long_t&)l); }
+//______________________________________________________________________________
+inline TBuffer &TBuffer::operator>>(ULong64_t &ll)
+   { return TBuffer::operator>>((Long64_t&)ll); }
 
 //______________________________________________________________________________
 #if defined(R__TEMPLATE_OVERLOAD_BUG)
@@ -454,6 +485,9 @@ inline Int_t TBuffer::ReadArray(UInt_t *&i)
 //______________________________________________________________________________
 inline Int_t TBuffer::ReadArray(ULong_t *&l)
    { return TBuffer::ReadArray((Long_t *&)l); }
+//______________________________________________________________________________
+inline Int_t TBuffer::ReadArray(ULong64_t *&ll)
+   { return TBuffer::ReadArray((Long64_t *&)ll); }
 
 //______________________________________________________________________________
 inline Int_t TBuffer::ReadStaticArray(UChar_t *c)
@@ -467,6 +501,9 @@ inline Int_t TBuffer::ReadStaticArray(UInt_t *i)
 //______________________________________________________________________________
 inline Int_t TBuffer::ReadStaticArray(ULong_t *l)
    { return TBuffer::ReadStaticArray((Long_t *)l); }
+//______________________________________________________________________________
+inline Int_t TBuffer::ReadStaticArray(ULong64_t *ll)
+   { return TBuffer::ReadStaticArray((Long64_t *)ll); }
 
 //______________________________________________________________________________
 inline void TBuffer::ReadFastArray(UChar_t *c, Int_t n)
@@ -480,6 +517,9 @@ inline void TBuffer::ReadFastArray(UInt_t *i, Int_t n)
 //______________________________________________________________________________
 inline void TBuffer::ReadFastArray(ULong_t *l, Int_t n)
    { TBuffer::ReadFastArray((Long_t *)l, n); }
+//______________________________________________________________________________
+inline void TBuffer::ReadFastArray(ULong64_t *ll, Int_t n)
+   { TBuffer::ReadFastArray((Long64_t *)ll, n); }
 
 //______________________________________________________________________________
 inline void TBuffer::WriteArray(const UChar_t *c, Int_t n)
@@ -490,6 +530,9 @@ inline void TBuffer::WriteArray(const UShort_t *h, Int_t n)
 //______________________________________________________________________________
 inline void TBuffer::WriteArray(const UInt_t *i, Int_t n)
    { TBuffer::WriteArray((const Int_t *)i, n); }
+//______________________________________________________________________________
+inline void TBuffer::WriteArray(const ULong64_t *ll, Int_t n)
+   { TBuffer::WriteArray((const Long64_t *)ll, n); }
 
 //______________________________________________________________________________
 inline void TBuffer::WriteFastArray(const UChar_t *c, Int_t n)
@@ -500,5 +543,8 @@ inline void TBuffer::WriteFastArray(const UShort_t *h, Int_t n)
 //______________________________________________________________________________
 inline void TBuffer::WriteFastArray(const UInt_t *i, Int_t n)
    { TBuffer::WriteFastArray((const Int_t *)i, n); }
+//______________________________________________________________________________
+inline void TBuffer::WriteFastArray(const ULong64_t *ll, Int_t n)
+   { TBuffer::WriteFastArray((const Long64_t *)ll, n); }
 
 #endif

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.52 2003/04/03 13:46:49 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.53 2003/04/06 21:30:12 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -404,5 +404,10 @@
 #   define SafeDelete(p) { delete p; p = 0; }
 #endif
 
+#ifdef R__WIN32
+#define R__LL(longlong) longlong
+#else
+#define R__LL(longlong) _NAME2_(longlong,LL)
 #endif
 
+#endif
