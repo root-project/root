@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.8 2003/05/15 18:01:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.9 2003/09/19 12:05:23 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -63,94 +63,42 @@
 // slot has been connected to it, so it disappears into hyperspace.
 //
 
-#define RQ_OBJECT(sender_class) \
-private: \
-   TQObjSender fQObject; \
-public: \
-   TList   *GetListOfSignals() const { \
-      return fQObject.GetListOfSignals(); \
-   } \
-   Bool_t Connect(const char *sig, const char *cl, \
-                  void *rcvr, const char *slt) \
-   { \
-      fQObject.SetSender(this); \
-      fQObject.SetSenderClassName(sender_class); \
-      return fQObject.Connect(sig, cl, rcvr, slt); \
-   } \
-   Bool_t Disconnect(const char *sig = 0, \
-                     void *rcvr = 0, const char *slt = 0) \
-   { \
-      return fQObject.Disconnect(sig, rcvr, slt); \
-   } \
-   void HighPriority(const char *signal_name, \
-                     const char *slot_name = 0) \
-   { \
-      fQObject.HighPriority(signal_name, slot_name); \
-   } \
-   void LowPriority(const char *signal_name, \
-                    const char * slot_name = 0) \
-   { \
-      fQObject.LowPriority(signal_name, slot_name); \
-   } \
-   void Emit(const char *signal) \
-   { \
-      fQObject.Emit(signal); \
-   } \
-   void Emit(const char *signal, const char *params) \
-   { \
-      fQObject.Emit(signal, params); \
-   } \
-   void Emit(const char *signal, Long_t *paramArr) \
-   { \
-      fQObject.Emit(signal, paramArr); \
-   } \
-   void Emit(const char *signal, Double_t param) \
-   { \
-      fQObject.Emit(signal, param); \
-   } \
-   void Emit(const char *signal, Long_t param) \
-   { \
-      fQObject.Emit(signal, param); \
-   } \
-   void Emit(const char *signal, Long64_t param) \
-   { \
-      fQObject.Emit(signal, param); \
-   } \
-   void Emit(const char *signal, ULong64_t param) \
-   { \
-      fQObject.Emit(signal, param); \
-   } \
-   void Emit(const char *signal, Bool_t param) \
-      { Emit(signal,(Long_t)param); } \
-   void Emit(const char *signal, Char_t param) \
-      { Emit(signal,(Long_t)param); } \
-   void Emit(const char *signal, UChar_t param) \
-      { Emit(signal,(Long_t)param); } \
-   void Emit(const char *signal, Short_t param) \
-      { Emit(signal,(Long_t)param); } \
-   void Emit(const char *signal, UShort_t param) \
-      { Emit(signal,(Long_t)param); } \
-   void Emit(const char *signal, Int_t param) \
-      { Emit(signal,(Long_t)param); } \
-   void Emit(const char *signal, UInt_t param) \
-      { Emit(signal,(Long_t)param); } \
-   void Emit(const char *signal, ULong_t param) \
-      { Emit(signal,(Long_t)param); } \
-   void Emit(const char *signal, Float_t param) \
-      { Emit(signal,(Double_t)param); } \
-   void Destroyed() \
-      { Emit("Destroyed()"); } \
-   void ChangedBy(const char *method) \
-      { Emit("ChangedBy(char*)", method); } \
-   void Message(const char *msg)\
-      { Emit("Message(char*)", msg); } \
+#define RQ_OBJECT(sender_class)\
+private:\
+TQObjSender fQObject;\
+public:\
+TList *GetListOfSignals() const {return fQObject.GetListOfSignals();}\
+Bool_t Connect(const char *sig,const char *cl,void *rcvr,const char *slt)\
+{fQObject.SetSender(this); fQObject.SetSenderClassName(sender_class); return fQObject.Connect(sig,cl,rcvr,slt);}\
+Bool_t Disconnect(const char *sig=0,void *rcvr=0,const char *slt=0){return fQObject.Disconnect(sig,rcvr,slt);}\
+void HighPriority(const char *signal_name,const char *slot_name=0){fQObject.HighPriority(signal_name,slot_name);}\
+void LowPriority(const char *signal_name,const char * slot_name=0){fQObject.LowPriority(signal_name,slot_name);}\
+void Emit(const char *signal){fQObject.Emit(signal);}\
+void Emit(const char *signal,const char *params){fQObject.Emit(signal,params);}\
+void Emit(const char *signal,Long_t *paramArr){fQObject.Emit(signal,paramArr);}\
+void Emit(const char *signal,Double_t param){fQObject.Emit(signal,param);}\
+void Emit(const char *signal,Long_t param){fQObject.Emit(signal,param);}\
+void Emit(const char *signal,Long64_t param){fQObject.Emit(signal,param);}\
+void Emit(const char *signal,ULong64_t param){fQObject.Emit(signal, param);}\
+void Emit(const char *signal,Bool_t param){Emit(signal,(Long_t)param);}\
+void Emit(const char *signal,Char_t param){Emit(signal,(Long_t)param);}\
+void Emit(const char *signal,UChar_t param){Emit(signal,(Long_t)param);}\
+void Emit(const char *signal,Short_t param){Emit(signal,(Long_t)param);}\
+void Emit(const char *signal,UShort_t param){Emit(signal,(Long_t)param);}\
+void Emit(const char *signal,Int_t param){Emit(signal,(Long_t)param);}\
+void Emit(const char *signal,UInt_t param){Emit(signal,(Long_t)param);}\
+void Emit(const char *signal,ULong_t param){Emit(signal,(Long_t)param);}\
+void Emit(const char *signal,Float_t param){Emit(signal,(Double_t)param);}\
+void Destroyed(){Emit("Destroyed()");}\
+void ChangedBy(const char *method){Emit("ChangedBy(char*)",method);}\
+void Message(const char *msg){Emit("Message(char*)",msg);}\
 private:
 
-#define _QUOTE2_(string) \
+#define _QUOTE2_(string)\
    _QUOTE_(string)
 
-#define RQ_OBJECT_STRING \
-   _QUOTE_(#define RQ_OBJECT(sender_class)) \
+#define RQ_OBJECT_STRING\
+   _QUOTE_(#define RQ_OBJECT(sender_class))\
    _QUOTE2_(RQ_OBJECT(sender_class))
 
 #endif
