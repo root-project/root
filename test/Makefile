@@ -143,7 +143,7 @@ endif
 ifeq ($(ARCH),solariskcc)
 # Solaris kcc
 CXX           = KCC --one_instantiation_per_object
-CXXFLAGS      = -O4 -KPIC 
+CXXFLAGS      = -O4 -KPIC
 LD            = KCC
 LDFLAGS       = -O4
 SOFLAGS       =
@@ -225,7 +225,7 @@ ifeq ($(ARCH),alphakcc)
 # Alpha/OSF with kai compiler (not yet valid)
 CXX           = KCC --one_instantiation_per_object
 CXXFLAGS      = -O -fPIC
-LD            = KCC 
+LD            = KCC
 LDFLAGS       = -O
 SOFLAGS       = -Wl,-expect_unresolved,* -shared
 endif
@@ -283,7 +283,7 @@ LD            = g++
 LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
-  
+
 ifeq ($(ARCH),linuxdeb2ppc)
 # Debian/Linux on the PowerPC
 CXX           = g++
@@ -292,7 +292,7 @@ LD            = g++
 LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
- 
+
 
 ifeq ($(ARCH),linuxsuse6)
 # Linux with gcc 2.7.2.x
@@ -443,19 +443,19 @@ OutPutOpt     = -out:
 CXX           = cl
 CXXOPT        = -O2
 #CXXOPT        = -Z7
-CXXFLAGS      = $(CXXOPT) -EHsc  -G5 -GR -MD -DWIN32 -D_WINDOWS -nologo \
+CXXFLAGS      = $(CXXOPT) -G5 -GR -GX -MD -DWIN32 -D_WINDOWS -nologo \
                 -DVISUAL_CPLUSPLUS -D_X86_=1 -D_DLL
 LD            = link
 LDOPT         = -opt:ref
 #LDOPT         = -debug
-LDFLAGS       = $(LDOPT)
+LDFLAGS       = $(LDOPT) -pdb:none -nologo
 SOFLAGS       = -DLL
 
 ROOTLIBS     := $(shell root-config --nonew --libs)
 ROOTGLIBS    := $(shell root-config --nonew --glibs)
 EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
 endif
- 
+
 ifeq ($(ARCH),win32gcc)
 # Windows with gcc
 DllSuf        = dll
@@ -463,8 +463,8 @@ ExeSuf        = .exe
 CXX           = g++
 CXXFLAGS      = -O -Wall -Woverloaded-virtual -I/usr/X11R6/include
 LD            = g++
-LDFLAGS       = -O -Wl,--enable-auto-import 
-SOFLAGS       = -shared -D_DLL -Wl,--export-all-symbols 
+LDFLAGS       = -O -Wl,--enable-auto-import
+SOFLAGS       = -shared -D_DLL -Wl,--export-all-symbols
 EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
 endif
 
@@ -689,7 +689,7 @@ ifeq ($(ARCH),macosx)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@ 
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
 endif
 endif
 endif
@@ -708,7 +708,7 @@ ifeq ($(ARCH),macosx)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@ 
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
 endif
 endif
 endif
@@ -727,7 +727,7 @@ ifeq ($(ARCH),macosx)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 	 	   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@ 
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
 endif
 endif
 endif
@@ -745,7 +745,7 @@ ifeq ($(ARCH),macosx)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@ 
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
 endif
 endif
 endif
