@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.4 2004/05/12 18:24:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.5 2004/05/13 09:06:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -244,12 +244,12 @@ void TMatrixDSparse::Trim(Int_t nelems_new)
   // Increase/decrease the number of non-zero elements to nelems_new
 
   if (nelems_new != fNelems) {
-    const Int_t nr = TMath::Min(nelems_new,fNelems);
-    const Int_t *oIp = fColIndex;
+    Int_t nr = TMath::Min(nelems_new,fNelems);
+    Int_t *oIp = fColIndex;
     fColIndex = new Int_t[nelems_new];
     memmove(fColIndex,oIp,nr*sizeof(Int_t));
     if (oIp) delete [] oIp;
-    const Double_t *oDp = fElements;
+    Double_t *oDp = fElements;
     fElements = new Double_t[nelems_new];
     memmove(fElements,oDp,nr*sizeof(Double_t));
     if (oDp) delete [] oDp;
@@ -1212,12 +1212,12 @@ void TMatrixDSparse::ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros)
       return;
     }
 
-    const Double_t *elements_old = GetMatrixArray();
-    const Int_t    *rowIndex_old = GetRowIndexArray();
-    const Int_t    *colIndex_old = GetColIndexArray();
+    Double_t *elements_old = GetMatrixArray();
+    Int_t    *rowIndex_old = GetRowIndexArray();
+    Int_t    *colIndex_old = GetColIndexArray();
 
-    const Int_t nrows_old     = fNrows;
-    const Int_t nrowIndex_old = fNrowIndex;
+    Int_t nrows_old     = fNrows;
+    Int_t nrowIndex_old = fNrowIndex;
 
     Int_t nelems_new;
     if (nr_nonzeros > 0)
@@ -1308,9 +1308,9 @@ void TMatrixDSparse::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t co
       return;
     }
 
-    const Int_t    *rowIndex_old = GetRowIndexArray();
-    const Int_t    *colIndex_old = GetColIndexArray();
-    const Double_t *elements_old = GetMatrixArray();
+    Int_t    *rowIndex_old = GetRowIndexArray();
+    Int_t    *colIndex_old = GetColIndexArray();
+    Double_t *elements_old = GetMatrixArray();
 
     const Int_t  nrowIndex_old = fNrowIndex;
 
@@ -1526,12 +1526,12 @@ void TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDSparse &so
   const Int_t    *colIndex_s = source.GetColIndexArray();
   const Double_t *elements_s = source.GetMatrixArray();
 
-  const Int_t nelems_old = fNelems;
-  const Int_t    *rowIndex_old = GetRowIndexArray();
-  const Int_t    *colIndex_old = GetColIndexArray();
-  const Double_t *elements_old = GetMatrixArray();
+  Int_t nelems_old = fNelems;
+  Int_t    *rowIndex_old = GetRowIndexArray();
+  Int_t    *colIndex_old = GetColIndexArray();
+  Double_t *elements_old = GetMatrixArray();
 
-  const Int_t nelems_new = nelems_old+source.GetNoElements()-nr_nonzeros;
+  Int_t nelems_new = nelems_old+source.GetNoElements()-nr_nonzeros;
   Int_t    *rowIndex_new = new Int_t[fNrowIndex];
   Int_t    *colIndex_new = new Int_t[nelems_new];
   Double_t *elements_new = new Double_t[nelems_new];
@@ -1614,13 +1614,13 @@ TMatrixDSparse &TMatrixDSparse::Transpose(const TMatrixDSparse &source)
     return *this;
   }
 
-  const Int_t nr_nonzeros = source.GetNoElements();
+  Int_t nr_nonzeros = source.GetNoElements();
   if (nr_nonzeros <= 0)
     return *this;
 
-  const Int_t * const pRowIndex_s = source.GetRowIndexArray();
-  const Int_t * const pColIndex_s = source.GetColIndexArray();
-  Double_t * const pData = new Double_t[nr_nonzeros];
+  Int_t *pRowIndex_s = (Int_t*)source.GetRowIndexArray();
+  Int_t *pColIndex_s = (Int_t*)source.GetColIndexArray();
+  Double_t *pData = new Double_t[nr_nonzeros];
   memmove(pData,source.GetMatrixArray(),nr_nonzeros*sizeof(Double_t));
 
   Int_t * pColIndex_t = new Int_t[nr_nonzeros];
