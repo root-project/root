@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.16 2004/04/16 17:03:04 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.17 2004/04/29 17:05:39 brun Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 
@@ -61,13 +61,13 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
 {
    // Create a dCache file object. A dCache file is the same as a TFile
    // except that it is being accessed via a dCache server. The url
-   // argument must be of the form: dcache://path/file.root (where file.root
-   // is a symlink of type /shift/aaa/bbb/ccc) or dcap://path/file.root.
-   // If the file specified in the URL does not exist, is not accessable
-   // or can not be created the kZombie bit will be set in the TDCacheFile
-   // object. Use IsZombie() to see if the file is accessable.
-   // For a description of the option and other arguments see the TFile ctor.
-   // The preferred interface to this constructor is via TFile::Open().
+   // argument must be of the form: dcache://path/file.root or
+   // dcap://path/file.root. If the file specified in the URL does not
+   // exist, is not accessable or can not be created the kZombie bit will
+   // be set in the TDCacheFile object. Use IsZombie() to see if the file
+   // is accessable. For a description of the option and other arguments
+   // see the TFile ctor. The preferred interface to this constructor is
+   // via TFile::Open().
 
    TString pathString = GetDcapPath(path);
    path = pathString.Data();
@@ -453,7 +453,7 @@ Int_t TDCacheFile::SysStat(Int_t, Long_t *id, Long64_t *size,
      const char *path = GetName();
      TString pathString = GetDcapPath(path);
      path = pathString.Data();
-     
+
      if (path != 0 && dc_stat(path, &statbuf) >= 0) {
         fStatCached = kTRUE;
      }
