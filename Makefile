@@ -4,15 +4,15 @@
 # Author: Fons Rademakers, 29/2/2000
 
 
-##### include path/location macros (result of ./configure) ####
+##### include path/location macros (result of ./configure) #####
 
 include config/Makefile.config
 
-##### include machine dependent macros ####
+##### include machine dependent macros #####
 
 include config/Makefile.$(ARCH)
 
-##### allow local macros ####
+##### allow local macros #####
 
 -include MyConfig.mk
 
@@ -68,7 +68,7 @@ ifneq ($(SRPDIR),)
 MODULES      += srputils
 endif
 
-ifneq ($(findstring $(MAKECMDGOALS),distclean distsrc),)
+ifneq ($(findstring $(MAKECMDGOALS),distclean),)
 MODULES      += unix winnt x11 x11ttf win32 gl rfio thread pythia pythia6 \
                 venus star mysql srputils x3d rootx rootd proofd
 MODULES      := $(sort $(MODULES))  # removes duplicates
@@ -188,7 +188,8 @@ endif
 ##### TARGETS #####
 
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
-                clean distclean compiledata importcint version html changelog \
+                clean distclean compiledata importcint version html \
+                changelog install showbuild \
                 $(patsubst %,all-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
@@ -202,7 +203,7 @@ include $(patsubst %,%/Module.mk,$(MODULES))
 -include MyRules.mk            # allow local rules
 
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean dist distsrc version \
-      importcint install showbuild),)
+      importcint install showbuild changelog html),)
 ifeq ($(findstring $(MAKECMDGOALS),fast),)
 include $(INCLUDEFILES)
 endif
@@ -277,12 +278,12 @@ version: $(CINTTMP)
 importcint: distclean-cint
 	@$(IMPORTCINT)
 
-html: $(ROOTEXE)
-	@$(MAKELOGHTML)
-	@$(MAKEHTML)
-
 changelog:
 	@$(MAKECHANGELOG)
+
+html: $(ROOTEXE) changelog
+	@$(MAKELOGHTML)
+	@$(MAKEHTML)
 
 install:
 	@(inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
