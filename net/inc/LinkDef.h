@@ -1,4 +1,4 @@
-/* @(#)root/net:$Name$:$Id$ */
+/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -19,6 +19,7 @@
 #pragma link C++ enum ESendRecvOptions;
 
 #pragma link C++ class TInetAddress;
+#pragma link C++ class TAuthenticate;
 #pragma link C++ class TServerSocket;
 #pragma link C++ class TSocket;
 #pragma link C++ class TMessage;
