@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.8 2002/01/08 16:04:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.9 2002/12/02 18:50:02 rdm Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -87,7 +87,7 @@ void TBits::Compact()
       fAllBits = new UChar_t[needed];
 
       memcpy(fAllBits,old_location,needed);
-      delete old_location;
+      delete [] old_location;
 
       fNbytes = needed;
       fNbits = 8*fNbytes;
@@ -274,7 +274,7 @@ void TBits::SetBitNumber(UInt_t bitnumber, Bool_t value)
          memcpy(fAllBits,old_location,fNbytes);
          memset(fAllBits+fNbytes ,0, new_size-fNbytes);
          fNbytes = new_size;
-         delete old_location;
+         delete [] old_location;
       }
       fNbits = bitnumber+1;
    }
