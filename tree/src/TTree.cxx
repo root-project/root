@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.56 2001/03/12 07:19:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.57 2001/04/09 08:21:55 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -105,6 +105,48 @@
 //      loops on all defined branches and for each branch invokes the Fill function.
 //
 //         See also the class TNtuple (a simple Tree with branches of floats)
+//
+//       Adding a Branch to an Existing Tree
+//       ===================================
+// You may want to add a branch to an existing tree. For example, 
+// if one variable in the tree was computed with a certain algorithm, 
+// you may want to try another algorithm and compare the results.
+// One solution is to add a new branch, fill it, and save the tree. 
+// The code below adds a simple branch to an existing tree.
+// Note the kOverwrite option in the Write method, it overwrites the 
+// existing tree. If it is not specified, two copies of the tree headers 
+// are saved.
+// 
+// void tree3AddBranch(){
+//   TFile f("tree3.root","update");
+//   
+//   Float_t new_v;
+//   TTree *t3 = (TTree*)f->Get("t3");
+//   TBranch *newBranch = t3->Branch("new_v",&new_v,"new_v/F");
+//   
+//   //read the number of entries in the t3
+//   Int_t nentries = (Int_t)t3->GetEntries();
+//   
+//   for (Int_t i = 0; i < nentries; i++){
+//     new_v= gRandom->Gaus(0,1);
+//     newBranch->Fill();
+//   }
+//   // save only the new version of the tree
+//   t3->Write("",TObject::kOverwrite);
+// }
+// Adding a branch is often not possible because the tree is in a read-only 
+// file and you do not have permission to save the modified tree with the 
+// new branch. Even if you do have the permission, you risk loosing the 
+// original tree with an unsuccessful attempt to save  the modification. 
+// Since trees are usually large, adding a branch could extend it over the 
+// 2GB  limit. In this case, the attempt to write the tree fails, and the 
+// original data is erased.
+// In addition, adding a branch to a tree enlarges the tree and increases 
+// the amount of memory needed to read an entry, and therefore decreases 
+// the performance.
+// For these reasons, ROOT offers the concept of friends for trees (and chains). 
+// We encourage you to use TTree::AddFriend rather than adding a branch manually.
+//
 //Begin_Html
 /*
 <img src="gif/tree_layout.gif">
@@ -363,27 +405,69 @@ TFriendElement *TTree::AddFriend(const char *treename, const char *filename)
 // When a TFriendElement TF is added to the the list of friends of an
 // existing TTree T, any variable from TF can be referenced in a query
 // to T.
-// if filename = "", treename is assumed to be in the same file as this Tree.
-//   
-// Example:
-//   T.AddFriend("ft1","friendfile1.root");
-//   T.AddFriend("ft2","friendfile2.root");
-//   T.Draw("var:ft1.v1:ft2.v2");
-//     This command will generate a 3-d scatter plot of variable "var"
-//     in the TTree "T" versus variable "v1" in TTree "ft1" versus
-//     variable "v2" in TTree "ft2".   
 //
-// When this function is called, the filename is connected and treename
-// is loaded in memory. The created friend element is added to the list
-// of friends of this Tree (GetListOfFriends).
-// When this Tree is deleted, all its friend elements are also deleted.
+//   A tree keeps a list of friends. In the context of a tree (or a chain), 
+// friendship means unrestricted access to the friends data. In this way 
+// it is much like adding another branch to the tree without taking the risk 
+// of damaging it. To add a friend to the list, you can use the TTree::AddFriend 
+// method.  The tree in the diagram below has two friends (friend_tree1 and 
+// friend_tree2) and now has access to the variables a,b,c,i,j,k,l and m.
+// 
+//Begin_Html
+/*
+<img src="gif/tree_friend1.gif">
+*/
+//End_Html
+// 
+// The AddFriend method has two parameters, the first is the tree name and the 
+// second is the name of the ROOT file where the friend tree is saved. 
+// AddFriend automatically opens the friend file. If no file name is given, 
+// the tree called ft1 is assumed to be in the same file as the original tree.
+// 
+// tree.AddFriend("ft1","friendfile1.root");
+// If the friend tree has the same name as the original tree, you can give it 
+// an alias sin the context of the friendship:
+// 
+// tree.AddFriend("tree1 = tree","friendfile1.root");
+// Once the tree has friends, we can use TTree::Draw as if the friend's 
+// variables were in the original tree. To specify which tree to use in 
+// the Draw method, use the syntax:
+// 
+// <treeName>.<branchname>.<varname>
+// If the variablename is enough to uniquely identify the variable, you can 
+// leave out the tree and/or branch name.
+// For example, these commands generate a 3-d scatter plot of variable "var" 
+// in the TTree tree versus variable v1 in TTree ft1 versus variable v2 in 
+// TTree ft2.
+// 
+// tree.AddFriend("ft1","friendfile1.root");
+// tree.AddFriend("ft2","friendfile2.root");
+// tree.Draw("var:ft1.v1:ft2.v2");
 //
-// Note that the number of entries in the friend Tree treename must be equal
-// or greater to the number of entries of this Tree.
+//Begin_Html
+/*
+<img src="gif/tree_friend2.gif">
+*/
+//End_Html
 //
-// Note that it is possible to declare a friend Tree that has the same 
-// internal structure (same branches and leaves) than this Tree.
-// eg. T.Draw("var:ft1.var:ft2.var"). 
+// The picture illustrates the access of the tree and its friends with a 
+// Draw command.
+// When AddFriend is called, the ROOT file is automatically opened and the 
+// friend tree (ft1) is read into memory. The new friend (ft1) is added to 
+// the list of friends of tree. 
+// The number of entries in the friend must be equal or greater to the number 
+// of entries of the original tree. If the friend tree has fewer entries a 
+// warning is given and the missing entries are not included in the histogram.
+// To retrieve the list of friends from a tree use TTree::GetListOfFriends.
+// When the tree is written to file (TTree::Write), the friends list is saved 
+// with it. And when the tree is retrieved, the trees on the friends list are 
+// also retrieved and the friendship restored.
+// When a tree is deleted, the elements of the friend list are also deleted. 
+// It is possible to declare a friend tree that has the same internal 
+// structure (same branches and leaves) as the original tree, and compare the 
+// same values by specifying the tree.
+// 
+//  tree.Draw("var:ft1.var:ft2.var")
     
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,treename,filename);
@@ -1497,23 +1581,26 @@ TBranch *TTree::FindBranch(const char* branchname)
    char name[kMaxLen];
    TIter next(GetListOfBranches());
    
+   // This will allow the branchname to be preceded by
+   // the name of this tree.
+   char *subbranch = (char*)strstr(branchname,GetName());
+   if (subbranch!=branchname) subbranch = 0;
+   if (subbranch) {
+     subbranch += strlen(GetName());
+     if ( *subbranch != '.' ) subbranch = 0;
+     else subbranch ++;
+   }
    TBranch *branch;
    while ((branch = (TBranch*)next())) {
       strcpy(name,branch->GetName());
       char *dim = (char*)strstr(name,"[");
       if (dim) dim[0]='\0';
       if (!strcmp(branchname,name)) return branch;
+      if (subbranch && !strcmp(subbranch,name)) return branch;
    }
    
    //search in list of friends
-   if (!fFriends) return 0;
-   TIter nextf(fFriends);
-   TFriendElement *fe;
-   while ((fe = (TFriendElement*)nextf())) {
-      TTree *t = fe->GetTree();
-      branch = t->FindBranch(branchname);
-      if (branch) return branch;
-   }
+   if (fFriends) return GetBranch(branchname);
    return 0;
 }
 
@@ -1524,6 +1611,16 @@ TLeaf *TTree::FindLeaf(const char* searchname)
    char leafname[kMaxLen];
    char longname[kMaxLen];
    
+   // This will allow the branchname to be preceded by
+   // the name of this tree.
+   char *subsearchname = (char*)strstr(searchname,GetName());
+   if (subsearchname!=searchname) subsearchname = 0;
+   if (subsearchname) {
+     subsearchname += strlen(GetName());
+     if ( *subsearchname != '.' ) subsearchname = 0;
+     else subsearchname ++;
+   }
+
    // For leaves we allow for one level up to be prefixed to the
    // name
    
@@ -1535,13 +1632,15 @@ TLeaf *TTree::FindLeaf(const char* searchname)
       if (dim) dim[0]='\0';
       
       if (!strcmp(searchname,leafname)) return leaf;
-      
+      if (subsearchname && !strcmp(subsearchname,leafname)) return leaf;
+            
       TBranch * branch = leaf->GetBranch();
       if (branch) {
          sprintf(longname,"%s.%s",branch->GetName(),leafname);
          char *dim = (char*)strstr(longname,"[");
          if (dim) dim[0]='\0';
          if (!strcmp(searchname,longname)) return leaf;
+         if (subsearchname && !strcmp(subsearchname,longname)) return leaf;
 
          // The following is for the case where the branch is only
          // a sub-branch.  Since we do not see it through
@@ -1549,19 +1648,16 @@ TLeaf *TTree::FindLeaf(const char* searchname)
          // This is the less sturdy part of this search ... it may
          // need refining ... 
          if (strstr(searchname,".")
-             && !strcmp(searchname,branch->GetName())) return leaf;                //printf("found leaf3=%s/%s, branch=%s, i=%d\n",leaf->GetName(),leaf->GetTitle(),branch->GetName(),i);
+             && !strcmp(searchname,branch->GetName())) return leaf;                
+         if (subsearchname && strstr(subsearchname,".")
+             && !strcmp(subsearchname,branch->GetName())) return leaf;                
+
+         //printf("found leaf3=%s/%s, branch=%s, i=%d\n",leaf->GetName(),leaf->GetTitle(),branch->GetName(),i);
       }
    }
    
    //search in list of friends
-   if (!fFriends) return 0;
-   TIter nextf(fFriends);
-   TFriendElement *fe;
-   while ((fe = (TFriendElement*)nextf())) {
-      TTree *t = fe->GetTree();
-      leaf = t->FindLeaf(searchname);
-      if (leaf) return leaf;
-   }
+   if (fFriends) return GetLeaf(searchname);
    return 0;
 }
 
@@ -1642,9 +1738,9 @@ TBranch *TTree::GetBranch(const char *name)
    next.Reset();
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
-      char *subname = (char*)strstr(name,t->GetName());
+      char *subname = (char*)strstr(name,fe->GetName());
       if (subname != name) continue;
-      Int_t l = strlen(t->GetName());
+      Int_t l = strlen(fe->GetName());
       subname += l;
       if (*subname != '.') continue;
       subname++;
@@ -1793,9 +1889,9 @@ TLeaf *TTree::GetLeaf(const char *name)
    next.Reset();
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
-      char *subname = (char*)strstr(name,t->GetName());
+      char *subname = (char*)strstr(name,fe->GetName());
       if (subname != name) continue;
-      Int_t l = strlen(t->GetName());
+      Int_t l = strlen(fe->GetName());
       subname += l;
       if (*subname != '.') continue;
       subname++;
