@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.27 2001/01/16 16:21:59 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.28 2001/01/16 17:40:25 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -493,8 +493,8 @@ void TStreamerInfo::Compile()
 // Store predigested information into local arrays. This saves a huge amount
 // of time compared to an explicit iteration on all elements.
 
-   if (gROOT->GetListOfStreamerInfo()->At(fNumber) == 0)
-       gROOT->GetListOfStreamerInfo()->AddAt(this,fNumber);
+   TObjArray *infos = (TObjArray*)gROOT->GetListOfStreamerInfo();
+   infos->AddAtAndExpand(this,fNumber);
 
    if (fNdata) {
       delete [] fType;

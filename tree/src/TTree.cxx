@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.42 2001/01/15 07:39:04 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.43 2001/01/16 16:25:58 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2133,10 +2133,10 @@ void TTree::Streamer(TBuffer &b)
 //______________________________________________________________________________
 TBranch *TTree::Trunk(const char *name, const char *classname, void *addobj, Int_t bufsize, Int_t splitlevel)
 {
-//*-*-*-*-*-*-*-*-*-*-*Create a new TTree BranchObject*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===============================
+//*-*-*-*-*-*-*-*-*-*-*Create a new TTree BranchElement*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                  ================================
 //
-//    Build a TBranchObject for an object of class classname.
+//    Build a TBranchElement for an object of class classname.
 //    addobj is the address of a pointer to an object of class classname.
 //    IMPORTANT: classname must derive from TObject.
 //    The class dictionary must be available (ClassDef in class header).
@@ -2200,7 +2200,7 @@ TBranch *TTree::Trunk(const char *name, const char *classname, void *addobj, Int
    TStreamerElement *element;
    Int_t id = 0;
    while ((element = (TStreamerElement*)next())) {
-      TBranch *branch = new TBranchElement(element->GetName(),sinfo,id,addobj,bufsize);
+      TBranch *branch = new TBranchElement(element->GetName(),sinfo,id,addobj,bufsize,splitlevel-1);
       blist->Add(branch);
       id++;
    }

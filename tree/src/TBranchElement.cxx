@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.2 2001/01/16 16:24:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.3 2001/01/16 17:22:27 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -51,9 +51,10 @@ TBranchElement::TBranchElement(): TBranch()
 TBranchElement::TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id, void *addobj, Int_t basketsize, Int_t splitlevel, Int_t compress)
     :TBranch()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Create a BranchElement*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =====================
+// Create a BranchElement
 //
+// If splitlevel > 0 this branch in turn is split into sub branches
+   
    TClass *cl    = sinfo->GetClass();
    fInfo         = sinfo;
    fID           = id;
@@ -100,7 +101,7 @@ TBranchElement::TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id,
    fFileName   = "";
 
 //*-*-  Create the first basket
-   if (splitlevel) return;
+   if (splitlevel > 0) return;
    TBasket *basket = new TBasket(name,fTree->GetName(),this);
    fBaskets.Add(basket);
 }
