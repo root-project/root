@@ -10,36 +10,127 @@
 *      Program to convert an existing GEANT geometry/RZ file
 *      into a ROOT macro (C++ file).
 *
+*  Author: Rene Brun
+*  modified by Nikolay I. Root <nroot@inp.nsk.su> to support map_names
+*  modified by Mihaela Gheata for the new geometry format
+*
 *  To use this conversion program (in $ROOTSYS/bin),
 *        g2root [-f <map_names>] <geant_rzfile> <macro_name> [lrecl]
 *  run g2root without parameters to see the usage info.
 *
 *  for example
-*        g2root na49.geom na49.C
-*  will convert the GEANT RZ file na49.geom into a ROOT macro na49.C
+*        g2root brahms.geom brahms.C
+*  will convert the GEANT RZ file brahms.geom into a ROOT macro brahms.C
 *
 *  The default value for lrecl is 1024. The parameter lrecl must be specified
 *  if the record length of the Zebra file is greater than 1024.
 *
-*  You can use <map_names> file to rename generated TNode's.
-*  See an example of that file in the commented section below.
-*
 *
 *  To generate the Geometry structure within Root, do:
-*    Root > .x na49.C
-*    Root > na49.Draw()
-*    Root > c1.x3d()    (this invokes the 3-d Root viewver)
-*    Root > TFile gna49("na49.root","NEW")  //open a new root file
-*    Root > na49.Write()                    //Write the na49 geometry structure
-*    Root > gna49.Write()                   //Write all keys (in this case only one)
+*
+*         root[0]> .x brahms.C;
+*         root[0]> new TBrowser();
+*
+*  An interactive session
+* ------------------------
+*
+*   Provided that a geometry was successfully built and closed , the manager class will 
+*  register itself to ROOT and the logical/physical structures will become immediately 
+*  browsable. The ROOT browser will display starting from the geometry folder : the list of 
+*  transformations and materials, the top volume and the top logical node. These last 
+*  two can be fully expanded, any intermediate volume/node in the browser being subject 
+*  of direct access context menu operations (right mouse button click). All user
+*  utilities of classes TGeoManager, TGeoVolume and TGeoNode can be called via the
+*  context menu.
+*
+* see http://root.cern.ch/root/htmldoc/gif/t_browser.jpg
+* 
+*   --- Drawing the geometry
+* 
+*    Any logical volume can be drawn via TGeoVolume::Draw() member function.
+*  This can be direcly accessed from the context menu of the volume object
+*  directly from the browser. 
+*    There are several drawing options that can be set with
+*  TGeoManager::SetVisOption(Int_t opt) method :
+*  opt=0 - only the content of the volume is drawn, N levels down (default N=3).
+*     This is the default behavior. The number of levels to be drawn can be changed
+*     via TGeoManager::SetVisLevel(Int_t level) method.
+* 
+* see http://root.cern.ch/root/htmldoc/gif/t_frame0.jpg
+* 
+*  opt=1 - the final leaves (e.g. daughters with no containment) of the branch
+*     starting from volume are drawn down to the current number of levels. 
+*                                      WARNING : This mode is memory consuming
+*     depending of the size of geometry, so drawing from top level within this mode
+*     should be handled with care for expensive geometries. In future there will be 
+*     a limitation on the maximum number of nodes to be visualized.
+* 
+* see http://root.cern.ch/root/htmldoc/gif/t_frame1.jpg
+* 
+*  opt=2 - only the clicked volume is visualized. This is automatically set by
+*     TGeoVolume::DrawOnly() method
+*  opt=3 - only a given path is visualized. This is automatically set by
+*     TGeoVolume::DrawPath(const char *path) method
+* 
+*     The current view can be exploded in cartesian, cylindrical or spherical
+*  coordinates :
+*    TGeoManager::SetExplodedView(Int_t opt). Options may be :
+*  - 0  - default (no bombing)
+*  - 1  - cartesian coordinates. The bomb factor on each axis can be set with
+*         TGeoManager::SetBombX(Double_t bomb) and corresponding Y and Z.
+*  - 2  - bomb in cylindrical coordinates. Only the bomb factors on Z and R
+*         are considered
+* 
+* see http://root.cern.ch/root/htmldoc/gif/t_frameexpl.jpg
+* 
+*  - 3  - bomb in radial spherical coordinate : TGeoManager::SetBombR()
+* 
+*  Volumes themselves support different visualization settings :
+*     - TGeoVolume::SetVisibility() : set volume visibility.
+*     - TGeoVolume::VisibleDaughters() : set daughters visibility.
+*  All these actions automatically updates the current view if any.
+* 
+*   --- Checking the geometry
+* 
+*   Several checking methods are accesible from the volume context menu. They
+*  generally apply only to the visible parts of the drawn geometry in order to
+*  ease geometry checking, and their implementation is in the TGeoChecker class
+*  from the painting package.
+* 
+*  1. Checking a given point.
+*    Can be called from TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z).
+*  This method is drawing the daughters of the volume containing the point one
+*  level down, printing the path to the deepest physical node holding this point.
+*  It also computes the closest distance to any boundary. The point will be drawn
+*  in red.
+* 
+* see http://root.cern.ch/root/htmldoc/gif/t_checkpoint.jpg
+* 
+*   2. Shooting random points.
+*    Can be called from TGeoVolume::RandomPoints() (context menu function) and 
+*  it will draw this volume with current visualization settings. Random points
+*  are generated in the bounding box of the top drawn volume. The points are 
+*  classified and drawn with the color of their deepest container. Only points
+*  in visible nodes will be drawn.
+* 
+* see http://root.cern.ch/root/htmldoc/gif/t_random1.jpg
+* 
+* 
+*   3. Raytracing.
+*    Can be called from TGeoVolume::RandomRays() (context menu of volumes) and
+*  will shoot rays from a given point in the local reference frame with random
+*  directions. The intersections with displayed nodes will appear as segments
+*  having the color of the touched node. Drawn geometry will be then made invisible
+*  in order to enhance rays.
+* 
+* see http://root.cern.ch/root/htmldoc/gif/t_random2.jpg
 *
 *    IMPORTANT NOTE
 *    To be compiled, this program requires a Fortran compiler supporting
 *    recursive calls.
 *
-*  Author: Rene Brun
-*  modified by Nikolay I. Root <nroot@inp.nsk.su> to support map_names
-*
+**********************************************************************
+* NOT YET MAPPED FROM OLD g2root
 **********************************************************************
 * The following lines starting with the 2 characters ** are an example
 * of (map_names> file.
@@ -93,7 +184,7 @@
 *
 **********************************************************************
 
-      parameter (nwpaw=2000000)
+      parameter (nwpaw=4000000)
       common/pawc/paw(nwpaw)
 
       character *80 gname
@@ -102,6 +193,7 @@
       character *8 crecl
       integer npar, lrecl
 
+      
       call hlimit(nwpaw)
 
       npar = iargc()
@@ -182,7 +274,7 @@
 **********************************************************************
 *
 *KEEP,HCBOOK.
-      parameter (nwpaw=2000000)
+      parameter (nwpaw=4000000)
       common/pawc/paw(nwpaw)
 
       INTEGER   IQ(2), LQ(8000)
@@ -206,12 +298,12 @@ C
 
       parameter (MAXPOS=250000)
 *      parameter (MAXPOS=50000)
-      common/cnpos/nodepos(MAXPOS),nodediv(MAXPOS)
+      common/cnpos/nodepos(MAXPOS),nodediv(MAXPOS),nvflags(MAXPOS),
+     +npflags(MAXPOS),nppflags(MAXPOS)  
 
       CHARACTER*4 KSHAP(30),klshap(30)
-
       character*20 matname
-      character*16 cname,mname
+      character*16 cname,mname,pname, rname
       character*(*) fname
       character*256 line
       character*128 creals
@@ -239,10 +331,11 @@ C
      +'//  utility g2root from an interactive version of GEANT',/,
      +'//   (see ROOT class TGeometry header for an example of use)',/,
      +'//',/,
-     +'TMaterial *mat;',/,
-     +'TMixture  *mix;',/,
-     +'TRotMatrix *rot;',/,
-     +'TNode *Node, *Node1;')
+     +'gSystem->Load("libGeom");',/,
+     +'TGeoMaterial *mat;',/,
+     +'TGeoMixture  *mix;',/,
+     +'TGeoRotation *rot;',/,
+     +'TGeoNode *Node, *Node1;')
 
       do 1 i=1,30
          klshap(i) = kshap(i)
@@ -256,7 +349,8 @@ C
       nodediv(1) = 1
 
       write(51,490)fname(1:nct),fname(1:nct),fname(1:nch)
- 490  format(/,'TGeometry *',a,' = new TGeometry("',a,'","',a,'");',/)
+ 490  format(/,'TGeoManager *',a,' = new TGeoManager("',a,'","',a,'");'
+     +,/)
       IF(JVOLUM.NE.0 ) NVOLUM = IQ(JVOLUM-2)
       IF(JMATE.NE.0 )  NMATE  = IQ(JMATE-2)
       IF(JROTM.NE.0 )  NROTM  = IQ(JROTM-2)
@@ -283,7 +377,7 @@ C
             line=' '
             write(line,3000)astring(1:nc),matname(1:ncn)
      +        ,creals(1:ncr)
- 3000       format('mat = new TMaterial("mat',a,'","',a,'"',a,');')
+ 3000       format('mat = new TGeoMaterial("mat',a,'","',a,'"',a,');')
             nch = lenocc(line)
             write(51,'(a)')line(1:nch)
 *-*             Case of a mixture
@@ -299,7 +393,7 @@ C
             line=' '
             write(line,3010)astring(1:nc),matname(1:ncn)
      +          ,mname(1:ncm)
- 3010       format('mix = new TMixture("mix',a,'","',a,'",',a,');')
+ 3010       format('mix = new TGeoMixture("mix',a,'","',a,'",',a,');')
             nch = lenocc(line)
             write(51,'(a)')line(1:nch)
             do 292 im=1,nm
@@ -328,10 +422,10 @@ C
          line=' '
          ptrname = 'rot'//astring(1:nc)
          nch = nc+3
-         write(line,1000)ptrname(1:nch),ptrname(1:nch),ptrname(1:nch),
+         write(line,1000)ptrname(1:nch),ptrname(1:nch),
      +     creals(1:ncr)
- 1000    format('TRotMatrix *',a,
-     +        ' = new TRotMatrix("',a,'","',a,'"',a,');')
+ 1000    format('TGeoRotation *',a,
+     +        ' = new TGeoRotation("',a,'"',a,');')
          nch = lenocc(line)
          write(51,'(a)')line(1:nch)
  100  continue
@@ -358,66 +452,62 @@ C
                cname(i:i)='_'
   30        continue
          endif
-         do 32 i=1,4
-            if(cname(i:i).eq.' ')cname(i:i)='_'
-            if(cname(i:i).eq.'+')cname(i:i)='p'
-            if(cname(i:i).eq.'-')cname(i:i)='m'
-            if(cname(i:i).eq.'*')cname(i:i)='s'
-            if(cname(i:i).eq.'/')cname(i:i)='h'
-            if(cname(i:i).eq.'.')cname(i:i)='d'
-            if(cname(i:i).eq.'''')cname(i:i)='q'
-            if(cname(i:i).eq.';')cname(i:i)='s'
-            if(cname(i:i).eq.':')cname(i:i)='c'
-            if(cname(i:i).eq.',')cname(i:i)='v'
-            if(cname(i:i).eq.'<')cname(i:i)='l'
-            if(cname(i:i).eq.'>')cname(i:i)='g'
-            if(cname(i:i).eq.'!')cname(i:i)='e'
-            if(cname(i:i).eq.'@')cname(i:i)='a'
-            if(cname(i:i).eq.'#')cname(i:i)='d'
-            if(cname(i:i).eq.'$')cname(i:i)='d'
-            if(cname(i:i).eq.'%')cname(i:i)='p'
-            if(cname(i:i).eq.'^')cname(i:i)='e'
-            if(cname(i:i).eq.'&')cname(i:i)='a'
-            if(cname(i:i).eq.'(')cname(i:i)='l'
-            if(cname(i:i).eq.')')cname(i:i)='g'
-            if(cname(i:i).eq.'[')cname(i:i)='l'
-            if(cname(i:i).eq.']')cname(i:i)='g'
-            if(cname(i:i).eq.'{')cname(i:i)='l'
-            if(cname(i:i).eq.'}')cname(i:i)='g'
-            if(cname(i:i).eq.'=')cname(i:i)='e'
-            if(cname(i:i).eq.'~')cname(i:i)='t'
-            if(cname(i:i).eq.'|')cname(i:i)='b'
-  32     continue
-         call uctoh(cname,iq(jvolum+ivo),4,4)
   50  continue
 C----------------------------------------------
+      do 77 ivo = 1,nvolum
+ 77   nvflags(ivo) = 0
+      nlevel = 0
+      call markdiv(1,1)
+ 
       do 200 ivo = 1,nvolum
+         if (nvflags(ivo).eq.2) goto 200
          jv=lq(jvolum-ivo)
          if (jv.eq.0)go to 200
          cname=' '
          if(.not.map_found(iq(jvolum+ivo),cname)) then
             write(cname,'(a4)')iq(jvolum+ivo)
          endif
-         call volume(cname,q(jv+1))
+         call volume(cname,q(jv+1),0,0)
  200  continue
 
+      do 88 ivo = 1,nvolum
+         nvflags(ivo) = 0
+         npflags(ivo) = 0
+         nppflags(ivo) = 0
+ 88   continue
 * Print volume positioning (ROOT nodes)
 * ========================
-      write(51,3023)
- 3023 format(/,'//-----------List of Nodes--------------',/)
 
       nnodes = 1
       nlevel = 0
-      if (nvolum.gt.0) call node(1,1)
+      if (nvolum.gt.0) then
+         call node(1,1,1)
+         write(51,3023)
+ 3023    format(/,'//-----------List of Nodes--------------',/)
+         do 89 ivo = 1,nvolum
+ 89      nvflags(ivo) = 0
+         call node(1,1,0)
+      endif   
 
+      write(51,2223)
       write(51,2222)
 2222  format('}')
+2223  format(' gGeoManager->CloseGeometry();')
       close(51)
       end
+
 *_______________________________________________________________________
-      subroutine volume(cname,qjv)
+      Subroutine markdiv2(ivo,nuserm)
+      call markdiv(ivo,nuserm)
+      End
+
+*_______________________________________________________________________
+       Subroutine markdiv(ivo,nuserm)
+*
+*             Process one node (volume with contents)
 *KEEP,HCBOOK.
-      parameter (nwpaw=2000000)
+      parameter (nwpaw=4000000)
+      parameter (MAXPOS=250000)
       common/pawc/paw(nwpaw)
 
       INTEGER   IQ(2), LQ(8000)
@@ -432,26 +522,118 @@ C
      +      ,JROTM ,JRUNG ,JSET  ,JSTAK ,JGSTAT,JTMED ,JTRACK,JVERTX
      +      ,JVOLUM,JXYZ  ,JGPAR ,JGPAR2,JSKLT
 C
+      common/cnodes/nnodes
+      common/clevel/nodeold(20),nlevel
+
+      common/cnpos/nodepos(MAXPOS),nodediv(MAXPOS),nvflags(MAXPOS),
+     +npflags(MAXPOS),nppflags(MAXPOS)  
+
+*      dimension qjv(1000)
+      character*16 cname
+*---------------------------------------------------------------------
+      nlevel = nlevel + 1
+      nodeold(nlevel) = nnodes
+      jv=lq(jvolum-ivo)
+      ishape = q(jv+2)
+      nin = q(jv+3)
+*-  Loop subnodes
+      if(nin.eq.0)then
+         nlevel=nlevel-1
+         return
+      endif
+      call cdnode(nodeold(nlevel))
+      if(nin.gt.0)then
+            if (nvflags(ivo).ne.0) then
+               goto 996
+            endif
+            nvflags(ivo)=1
+*                    Volume has positioned contents
+         do 300 in=1,nin
+            jin=lq(jv-in)
+            ivom=q(jin+2)
+            nuser  = q(jin+3)
+            jinvom = lq(jvolum-ivom)
+            ninvom = q(jinvom+3)
+            cname=' '
+            write(cname,'(a4)')iq(jvolum+ivom)
+            n1=lenocc(cname)
+            if(ninvom.ge.0)then
+               nnodes = nnodes+1
+               if (nnodes.gt.MAXPOS) then
+                  print *,'Too many nodes =',nnodes
+                  go to 300
+               endif
+               if (nodepos(nnodes).eq.0) then
+                  nodepos(nnodes) = 1
+               endif
+            endif
+            if(ninvom.ne.0) then
+               call markdiv2(ivom,nuser)
+            endif
+ 300     continue
+      else
+         nnodes = nnodes+1
+         if (nodediv(nnodes).eq.0) then
+            nodediv(nnodes) = 1
+         endif
+         jin=lq(jv-1)
+         ivod=q(jin+2)
+         if (nvflags(ivod).gt.0) goto 996
+         cname=' '
+         write(cname,'(a4)')iq(jvolum+ivod)
+         n1=lenocc(cname)
+         Print 200, cname(1:n1)
+ 200     format('Division volume', a4)
+         call markdiv2(ivod,0)
+         nvflags(ivod) = 2
+      endif
+
+996   continue
+      nlevel = nlevel - 1
+      if (nlevel.gt.0)call cdnode(nodeold(nlevel))
+      end
+*_______________________________________________________________________
+      subroutine volume(cname,qjv,iposp,ifirst)
+*KEEP,HCBOOK.
+      parameter (nwpaw=4000000)
+      parameter (MAXPOS=250000)
+      common/pawc/paw(nwpaw)
+
+      INTEGER   IQ(2), LQ(8000)
+      REAL            Q(2)
+      EQUIVALENCE (LQ(1),paw(11)),(IQ(1),paw(19)),(Q(1),paw(19))
+
+      INTEGER       JDIGI ,JDRAW ,JHEAD ,JHITS ,JKINE ,JMATE ,JPART
+     +      ,JROTM ,JRUNG ,JSET  ,JSTAK ,JGSTAT,JTMED ,JTRACK,JVERTX
+     +      ,JVOLUM,JXYZ  ,JGPAR ,JGPAR2,JSKLT
+C
+      COMMON/GCLINK/JDIGI ,JDRAW ,JHEAD ,JHITS ,JKINE ,JMATE ,JPART
+     +      ,JROTM ,JRUNG ,JSET  ,JSTAK ,JGSTAT,JTMED ,JTRACK,JVERTX
+     +      ,JVOLUM,JXYZ  ,JGPAR ,JGPAR2,JSKLT
+C
+      common/cnpos/nodepos(MAXPOS),nodediv(MAXPOS),nvflags(MAXPOS),
+     +npflags(MAXPOS),nppflags(MAXPOS)  
       character *(*) cname
-      character*16 astring,cmater
+      character*16 astring,cmater, pname, rname
       character*128 creals
       character*256 line
       real qjv(100)
       double precision RADDEG
       dimension dummypars(100)
       DIMENSION NPARS(30)
-      CHARACTER*4 KSHAP(30)
+      CHARACTER*6 KSHAP(30)
       data dummypars/100*0./
 
-      DATA KSHAP/'BRIK','TRD1','TRD2','TRAP','TUBE','TUBS','CONE',
-     +           'CONS','SPHE','PARA','PGON','PCON','ELTU','HYPE',
-     + 13*'    ','GTRA','CTUB','    '/
+      DATA KSHAP/'Box','Trd1','Trd2','Trap','Tube','Tubs','Cone',
+     +           'Cons','Sphere','Para','Pgon','Pcon','Eltu','Hype',
+     + 13*'    ','Gtra','Ctub','    '/
       DATA NPARS/3,4,5,11,3,5,5,7,6,6,10,9,3,4,13*0,12,11,0/
 *________________________________________________________________________
 *
 
       RADDEG = 57.2957795130823209
       n1=lenocc(cname)
+
 **      print *, 'VOLUME n1=',n1,' cname=',cname(1:n1)
       ishape = qjv(2)
       numed  = qjv(4)
@@ -466,6 +648,7 @@ C
          cmater='mix'//astring(1:nc)
       endif
       ncmat = lenocc(cmater)
+      nord  = qjv(1)
       nin   = qjv(3)
       npar  = qjv(5)
       npar0 = npars(ishape)
@@ -509,19 +692,46 @@ C
          call toreals(npar0,qjv(7),creals,ncr)
       endif
       line=' '
-**      print 2000, kshap(ishape),cname(1:n1),kshap(ishape)
-**     +          ,cname(1:n1),cname(1:n1),cmater(1:ncmat),creals(1:ncr)
-      write(line,2000)kshap(ishape),cname(1:n1),kshap(ishape)
-     +          ,cname(1:n1),cname(1:n1),cmater(1:ncmat),creals(1:ncr)
+      nshape = lenocc(kshap(ishape))
+      call ptname(cname, pname)
+      np = lenocc(pname)
+      call realname(cname, rname)
+      nrr = lenocc(rname)
+      if (iposp.eq.0) then
+         write(line,2000)pname(1:np),kshap(ishape)(1:nshape)
+     +         ,rname(1:nrr),cmater(1:ncmat),creals(1:ncr)
+      else
+         if (ifirst.eq.1) then
+            write(line,2001)pname(1:np),rname(1:nrr),cmater(1:ncmat)
+            nch=lenocc(line)
+            write(51,'(a)')line(1:nch)
+         endif
+         line=' '
+         write(line,2002)pname(1:np),kshap(ishape)(1:nshape)
+     +         ,rname(1:nrr),cmater(1:ncmat),creals(1:ncr)
+         nch=lenocc(line)
+         write(51,'(a)')line(1:nch) 
+      endif           
+2000  format(
+     + 'TGeoVolume',' *',a,' = gGeoManager->Make',a,'("',a,'","'
+     +,a,'"',a,');')
+2001  format('TGeoVolumeMulti *',a,' = gGeoManager->MakeVolumeMulti("'
+     +,a,'", "',a,'");')
+2002  format(' ',a,'->AddVolume(gGeoManager->Make',a,'("',a,'","',
+     +a,'"',a,'));')          
       nch = lenocc(line)
-      write(51,'(a)')line(1:nch)
+      if (iposp.eq.0) write(51,'(a)')line(1:nch)
       if(ishape.eq.11)then
          ndz=qjv(10)
          do iz=1,ndz
             call toreals(3,qjv(11+(iz-1)*3),creals,ncr)
             line=' '
             call toint(iz-1,astring,nci)
-            write(line,2010)cname(1:n1),astring(1:nci),creals(1:ncr)
+            if (iposp.eq.0) then
+            write(line,2010)pname(1:np),astring(1:nci),creals(1:ncr)
+            else
+            write(line,2011)pname(1:np),astring(1:nci),creals(1:ncr)
+            endif
             nch = lenocc(line)
             write(51,'(a)')line(1:nch)
          enddo
@@ -532,11 +742,19 @@ C
             call toreals(3,qjv(10+(iz-1)*3),creals,ncr)
             line=' '
             call toint(iz-1,astring,nci)
-            write(line,2010)cname(1:n1),astring(1:nci),creals(1:ncr)
+            if (iposp.eq.0) then
+            write(line,2010)pname(1:np),astring(1:nci),creals(1:ncr)
+            else
+            write(line,2011)pname(1:np),astring(1:nci),creals(1:ncr)
+            endif
             nch = lenocc(line)
             write(51,'(a)')line(1:nch)
          enddo
       endif
+2010  format(2x,'((TGeoPcon*)',a,'->GetShape())->DefineSection(',
+     + a,a,');')
+2011  format(2x,'((TGeoPcon*)',a,'->GetLastShape())->DefineSection(',
+     + a,a,');')
 *   Any attributes set ?
       lseen  = qjv(npar+8)
       lstyle = qjv(npar+9)
@@ -544,47 +762,51 @@ C
       lcolor = qjv(npar+11)
       lfill  = qjv(npar+12)
 *      if(ivo.eq.1)lseen=0
+*      if(nord.lt.0)then
+*         print *,'ordering : ',-nord
+*         call toint(-nord,creals,ncr)
+*      endif
+      if ((iposp.eq.0).or.(ifirst.eq.1)) then
       if(lseen.ne.1)then
          call toint(lseen,creals,ncr)
-         write(51,195)cname(1:n1),creals(1:ncr)
+         write(51,195)pname(1:np),creals(1:ncr)
 195        format(2x,a,'->SetVisibility(',a,');')
       endif
       if(lstyle.ne.1)then
          call toint(lstyle,creals,ncr)
-         write(51,196)cname(1:n1),creals(1:ncr)
+         write(51,196)pname(1:np),creals(1:ncr)
 196        format(2x,a,'->SetLineStyle(',a,');')
       endif
       if(lwidth.ne.1)then
          call toint(lwidth,creals,ncr)
-         write(51,197)cname(1:n1),creals(1:ncr)
+         write(51,197)pname(1:np),creals(1:ncr)
 197        format(2x,a,'->SetLineWidth(',a,');')
       endif
       if(lcolor.ne.1)then
          call toint(lcolor,creals,ncr)
-         write(51,198)cname(1:n1),creals(1:ncr)
+         write(51,198)pname(1:np),creals(1:ncr)
 198        format(2x,a,'->SetLineColor(',a,');')
       endif
       if(lfill.ne.0)then
          call toint(lfill,creals,ncr)
-         write(51,199)cname(1:n1),creals(1:ncr)
+         write(51,199)pname(1:np),creals(1:ncr)
 199        format(2x,a,'->SetFillStyle(',a,');')
       endif
-2000  format(
-     + 'T',a,' *',a,' = new T',a,'("',a,'","',a,'","',a,'"',a,');')
-2010  format(2x,a,'->DefineSection(',a,a,');')
-
+      endif
       end
 
-      Subroutine node2(ivo,nuserm)
-      call node(ivo,nuserm)
+*_______________________________________________________________________
+      Subroutine node2(ivo,nuserm,iposp)
+      call node(ivo,nuserm,iposp)
       End
 
 *_______________________________________________________________________
-       Subroutine node(ivo,nuserm)
+       Subroutine node(ivo,nuserm,iposp)
 *
 *             Process one node (volume with contents)
 *KEEP,HCBOOK.
-      parameter (nwpaw=2000000)
+      parameter (nwpaw=4000000)
+      parameter (MAXPOS=250000)
       common/pawc/paw(nwpaw)
 
       INTEGER   IQ(2), LQ(8000)
@@ -602,19 +824,20 @@ C
       common/cnodes/nnodes
       common/clevel/nodeold(20),nlevel
 
-      parameter (MAXPOS=250000)
-      common/cnpos/nodepos(MAXPOS),nodediv(MAXPOS)
+      common/cnpos/nodepos(MAXPOS),nodediv(MAXPOS),nvflags(MAXPOS),
+     +npflags(MAXPOS),nppflags(MAXPOS)  
 
       dimension qjv(1000)
-      character*16 cnode,cname,mname,anode
+      character*16 cnode,cname,mname,anode,mother,pname, rname
+      integer nmother
       character*256 line
       character*128 creals
-      character*16 astring
-      character*12 matrix
+      character*16 astring,astring1
+      character*16 matrix
+      character*256 matrixs
       character *16 cblank
       Logical map_found
       data cblank/' '/
-
 *---------------------------------------------------------------------
       cblank = ' '
       nlevel = nlevel + 1
@@ -629,25 +852,39 @@ C
       n2=lenocc(mname)
       call toint(nuserm,astring,nci)
 *- If top volume, create the top node
-      if(ivo.eq.1)then
-         write(51,500)mname(1:n2),mname(1:n2),mname(1:n2)
-500      format('Node1 = new TNode("',a,'1","',a,'1","',a,'");')
+      call ptname(mname, mother)
+      nmother = lenocc(mother)
+      if((ivo.eq.1).and.(iposp.eq.0))then
+         write(51,510)mother(1:nmother)
+*         write(51,510)
+510      format('gGeoManager->SetTopVolume(',a,');')
       endif
 *-  Generate subnodes of this node (if any)
 **      print 2346, iq(jvolum+ivo), nin
-** 2346 format('Proc node:',a4,' nin=',i4)
+2346  format('Processing node:',a4,' nin=',i4)
       if(nin.eq.0)then
          nlevel=nlevel-1
          return
       endif
       call cdnode(nodeold(nlevel))
+*      print 520, mother(1:nmother), ivo
+520   format('mother ',a,' index ',i9)
       if(nin.gt.0)then
+            if (nvflags(ivo).ne.0) then
+               goto 996
+            endif
+            nvflags(ivo)=1
 *                    Volume has positioned contents
          do 300 in=1,nin
+            ifirst = 0
+            icurrent = 0
+            imulti = 0
+            nci1 = 0
             jin=lq(jv-in)
             ivom=q(jin+2)
             nuser  = q(jin+3)
-**            print *,'in=',in,' nuser=',nuser
+            imany = q(jin+8)
+*            print *,'in=',in,' nuser=',nuser
             jinvom = lq(jvolum-ivom)
             npar   = q(jinvom+5)
             ninvom = q(jinvom+3)
@@ -660,6 +897,19 @@ C
                jpar = jinvom+6
             else
                jpar = jin+9
+               if (iposp.eq.1) then
+                  if (npflags(ivom).eq.0) then
+                     ifirst = 1
+                     npflags(ivom) = 1
+                  else
+                     npflags(ivom) = npflags(ivom)+1   
+                  endif   
+               else
+                  icurrent = nppflags(ivom)
+                  call toint(icurrent,astring1,nci1)
+                  imulti = 1
+                  nppflags(ivom) = nppflags(ivom)+1   
+               endif   
                npar = q(jin+9)
                call ucopy(q(jinvom+1),qjv(1),6)
                qjv(5) = npar
@@ -667,14 +917,9 @@ C
                call ucopy(q(jinvom+7),qjv(7+npar),6)
                call toint(in,astring,nci)
                mname=cname(1:n1)//astring(1:nci)
-               cname = mname
-               n1 = lenocc(cname)
-               call volume(cname,qjv)
-*               print 4566, cname(1:n1),ninvom
-* 4566          format(' Positioning volume with 0 params:',a,
-*     +             ' ninvom=',i5)
+               if (iposp.eq.1) call volume(cname,qjv,iposp,ifirst)
             endif
-            if(ninvom.gt.0)then
+            if(ninvom.ge.0)then
                nnodes = nnodes+1
                if (nnodes.gt.MAXPOS) then
                   print *,'Too many nodes =',nnodes
@@ -683,84 +928,294 @@ C
                call toint(nnodes,anode,ncd)
                cnode = 'Node'//anode(1:ncd)
                if (nodepos(nnodes).eq.0) then
-                  write(51,4444)cblank(1:nlevel),anode(1:ncd)
+*                  write(51,4444)cblank(1:nlevel),anode(1:ncd)
  4444             format(a,'TNode *Node',a,';')
                   nodepos(nnodes) = 1
                endif
             else
                cnode = 'Node'
-*               print 4567,iq(jvolum+ivom)
-* 4567          format('Node divided:',a4)
             endif
             nd=lenocc(cnode)
+            call toreals(3,q(jin+5),creals,ncr)
+            itrans = 1
+            if ((abs(q(jin+5)).lt.1E-30).and.
+     +          (abs(q(jin+6)).lt.1E-30).and.
+     +          (abs(q(jin+7)).lt.1E-30)) then 
+               itrans = 0
+            endif
             irot=q(jin+4)
+            matrixs=''
             if(irot.eq.0)then
                matrix='0'
                ncmatrix=1
+               if (itrans.eq.0) then
+                  matrixs='gGeoIdentity'
+               else
+                  matrixs='new TGeoTranslation('//creals(2:ncr)//')'
+               endif
             else
                call toint(irot,astring,nci)
                matrix='rot'//astring(1:nci)
                ncmatrix=nci+3
+               if (itrans.eq.0) then
+                  matrixs=matrix(1:ncmatrix)
+               else
+                  matrixs='new TGeoCombiTrans('//creals(2:ncr)//','//
+     +               matrix(1:ncmatrix)//')'
+               endif
             endif
             call toint(nuser,astring,nci)
-            call toreals(3,q(jin+5),creals,ncr)
 **            print *,' cname=',cname(1:n1), ' astring=',astring(1:nci)
             mname=cname(1:n1)//astring(1:nci)
             n2=lenocc(mname)
+            ncmats=lenocc(matrixs)
             line=' '
-            write(line,3000)cblank(1:nlevel),cnode(1:nd)
-     +         ,mname(1:n2),mname(1:n2),cname(1:n1)
-     +         ,creals(1:ncr),matrix(1:ncmatrix)
- 3000       format(a,a,' = new TNode("',a,'","',a,'",'
-     +       ,a,a,',',a,');')
+
+            call ptname(cname, pname)
+            np = lenocc(pname)
+            if (imany.eq.1) then
+               if (imulti.eq.0) then
+               write(line,3000)cblank(1:nlevel),mother(1:nmother),
+     +               pname(1:np), astring(1:nci), matrixs(1:ncmats)
+ 3000          format(a,a,'->AddNode(',a,',',a,',',a,');')
+               else
+               write(line,3002)cblank(1:nlevel),mother(1:nmother),
+     +               pname(1:np), astring1(1:nci1),astring(1:nci), 
+     +               matrixs(1:ncmats)
+ 3002          format(a,a,'->AddNode(',a,'->GetVolume(',a,'),',a
+     +                ,',',a,');')
+               endif
+            else
+               if (imulti.eq.0) then
+               write(line,3001)cblank(1:nlevel),mother(1:nmother),
+     +               pname(1:np), astring(1:nci), matrixs(1:ncmats)
+ 3001          format(a,a,'->AddNodeOverlap(',a,',',a,',',a,');')
+               else
+               write(line,3003)cblank(1:nlevel),mother(1:nmother),
+     +               pname(1:np), astring1(1:nci1), astring(1:nci), 
+     +               matrixs(1:ncmats)
+ 3003          format(a,a,'->AddNodeOverlap(',a,'->GetVolume(',a,'),',a
+     +                ,',',a,');')
+               endif
+            endif 
             nch = lenocc(line)
-            write(51,'(a)')line(1:nch)
+            if (iposp.eq.0) write(51,'(a)')line(1:nch)
             npar=q(jv+5)
-            if(ninvom.gt.0) then
-               call node2(ivom,nuser)
+            if(ninvom.ne.0) then
+               call node2(ivom,nuser,iposp)
             endif
  300     continue
       else
+*         Print *,'===== DIVISION ====='
+*         Print 4567,mother(1:nmother)
          nnodes = nnodes+1
          call toint(nnodes,anode,ncd)
          cnode = 'Nodiv'//anode(1:ncd)
          nd=lenocc(cnode)
          if (nodediv(nnodes).eq.0) then
-             write(51,4445)cblank(1:nlevel),anode(1:ncd)
- 4445        format(a,'TNodeDiv *Nodiv',a,';')
              nodediv(nnodes) = 1
           endif
          jin=lq(jv-1)
          ivod=q(jin+2)
+         if (nvflags(ivod).eq.1) goto 996
          cname=' '
 *         if(.not.map_found(iq(jvolum+ivod),cname)) then
             write(cname,'(a4)')iq(jvolum+ivod)
 *         endif
+*         Print 4445,iq(jvolum+ivod)
+ 4445    format('daughter division', a4)
          n1=lenocc(cname)
-         if(cname(n1:n1).eq.'+')cname(n1:)='plus'
-         if(cname(n1:n1).eq.'-')cname(n1:)='minus'
-         n1=lenocc(cname)
-         cname=cname(1:n1)//'_0'
-         n2=lenocc(cname)
+*         if(cname(n1:n1).eq.'+')cname(n1:)='plus'
+*         if(cname(n1:n1).eq.'-')cname(n1:)='minus'
+*         n1=lenocc(cname)
+*         cname=cname(1:n1)//'_0'
+*         n2=lenocc(cname)
          iaxis=q(jin+1)
          call toint(iaxis,astring,nci)
          call toreals(3,q(jin+3),creals,ncr)
          line = ' '
-         write(line,995)cblank(1:nlevel),
-     +          cnode(1:nd),cname(1:n2),cname(1:n2),
-     +          cname(1:n1),astring(1:nci), creals(1:ncr)
- 995     format(a,
-     +   a,' = new TNodeDiv("',a,'","',a,'","',a,'",',a,a,');')
+         call ptname(cname, pname)
+         np = lenocc(pname)
+         call realname(cname, rname)
+         nrr = lenocc(rname)
+         write(line,995)cblank(1:nlevel),pname(1:np),mother(1:nmother),
+     +      rname(1:nrr),astring(1:nci), creals(1:ncr)
+ 995    format(a,'TGeoVolume *',a,' = ',a,'->Divide("',a,'",',a,a,');')
          nch = lenocc(line)
-         write(51,'(a)')line(1:nch)
+         if (iposp.eq.0) write(51,'(a)')line(1:nch)
 
-         call node2(ivod,0)
-
+         call node2(ivod,0,iposp)
+         nvflags(ivod) = 1
       endif
 
+996   continue
       nlevel = nlevel - 1
       if (nlevel.gt.0)call cdnode(nodeold(nlevel))
       end
+
+      subroutine realname(cname, pname)
+      character *4 cname
+      character *16 pname
+      nind = 0
+      pname = ''
+      write(pname,'(a4)')cname 
+      do i=1,4
+          nind = nind+1
+          pname(nind:nind)=cname(i:i)
+          if(ichar(cname(i:i)).eq.92) then 
+             pname(nind:nind)=char(92)
+             nind = nind+1
+             pname(nind:nind)=char(92)
+          endif
+          if(ichar(cname(i:i)).eq.34) then
+             pname(nind:nind)=char(92)
+             nind = nind+1
+             pname(nind:nind)=char(34)
+          endif 
+      enddo
+*------ supress blanks
+2333  if (pname(lenocc(pname):lenocc(pname)).eq.' ') then
+         pname = pname(1:lenocc(pname)-1)
+         goto 2333
+      endif
+      end      
+      
+      subroutine ptname(cname, pname)
+      character *4 cname
+      character *16 pname
+      pname = ''
+      write(pname,'(a4)')cname 
+      do i=1,4
+          if(ichar(cname(i:i)).eq.92) then 
+             pname(i:i)='a'
+             pname(5:5)='a'
+          endif
+          if(cname(i:i).eq.'?') then 
+             pname(i:i)='b'
+             pname(5:5)='b'
+          endif
+          if(cname(i:i).eq.'`') then
+             pname(i:i)='c'
+             pname(5:5)='c'
+          endif
+          if(cname(i:i).eq.' ') then
+             pname(i:i)='_'
+          endif
+          if(cname(i:i).eq.'+') then
+             pname(i:i)='d'
+             pname(5:5)='d'
+          endif
+          if(cname(i:i).eq.'-') then
+             pname(i:i)='e'
+             pname(5:5)='e'
+          endif
+          if(cname(i:i).eq.'*') then
+             pname(i:i)='f'
+             pname(5:5)='f'
+          endif
+          if(cname(i:i).eq.'/') then
+             pname(i:i)='g'
+             pname(5:5)='g'
+          endif
+          if(cname(i:i).eq.'.') then
+             pname(i:i)='h'
+             pname(5:5)='h'
+          endif
+          if(cname(i:i).eq.'''') then
+             pname(i:i)='i'
+             pname(5:5)='i'
+          endif
+          if(cname(i:i).eq.';') then
+             pname(i:i)='j'
+             pname(5:5)='j'
+          endif
+          if(cname(i:i).eq.':') then
+             pname(i:i)='k'
+             pname(5:5)='k'
+          endif
+          if(cname(i:i).eq.',') then
+             pname(i:i)='l'
+             pname(5:5)='l'
+          endif
+          if(cname(i:i).eq.'<') then
+             pname(i:i)='m'
+             pname(5:5)='m'
+          endif
+          if(cname(i:i).eq.'>') then
+             pname(i:i)='n'
+             pname(5:5)='n'
+          endif
+          if(cname(i:i).eq.'!') then
+             pname(i:i)='o'
+             pname(5:5)='o'
+          endif
+          if(cname(i:i).eq.'@') then
+             pname(i:i)='p'
+             pname(5:5)='p'
+          endif
+          if(cname(i:i).eq.'#') then
+             pname(i:i)='q'
+             pname(5:5)='q'
+          endif
+          if(cname(i:i).eq.'$') then
+             pname(i:i)='r'
+             pname(5:5)='r'
+          endif
+          if(cname(i:i).eq.'%') then
+             pname(i:i)='s'
+             pname(5:5)='s'
+          endif
+          if(cname(i:i).eq.'^') then
+             pname(i:i)='t'
+             pname(5:5)='t'
+          endif
+          if(cname(i:i).eq.'&') then
+             pname(i:i)='u'
+             pname(5:5)='u'
+          endif
+          if(cname(i:i).eq.'(') then
+             pname(i:i)='v'
+             pname(5:5)='v'
+          endif
+          if(cname(i:i).eq.')') then
+             pname(i:i)='x'
+             pname(5:5)='x'
+          endif
+          if(cname(i:i).eq.'[') then
+             pname(i:i)='y'
+             pname(5:5)='y'
+          endif
+          if(cname(i:i).eq.']') then
+             pname(i:i)='z'
+             pname(5:5)='z'
+          endif
+          if(cname(i:i).eq.'{') then
+             pname(i:i)='c'
+             pname(5:5)='a'
+          endif
+          if(cname(i:i).eq.'}') then
+             pname(i:i)='c'
+             pname(5:5)='b'
+          endif
+          if(cname(i:i).eq.'=') then
+             pname(i:i)='c'
+             pname(5:5)='d'
+          endif
+          if(cname(i:i).eq.'~') then
+             pname(i:i)='c'
+             pname(5:5)='e'
+          endif
+          if(cname(i:i).eq.'|') then
+             pname(i:i)='c'
+             pname(5:5)='f'
+          endif
+      enddo
+      if ((ichar(pname(1:1)).ge.48).and.
+     + (ichar(pname(1:1)).le.57)) then
+         pname='Z'//pname(1:lenocc(pname))
+      endif
+      end
+      
       subroutine cdnode(node)
       common/clevel/nodeold(20),nlevel
       character*16 anode
@@ -768,10 +1223,10 @@ C
       data cblank/' '/
       call toint(node,anode,ncd)
       if (nlevel.gt.1)then
-         write(51,1000)cblank(1:nlevel-1),anode(1:ncd)
+*         write(51,1000)cblank(1:nlevel-1),anode(1:ncd)
 1000     format(a,'Node',a,'->cd();')
       else
-         write(51,1001)anode(1:ncd)
+*         write(51,1001)anode(1:ncd)
 1001     format('Node',a,'->cd();')
       endif
       end
@@ -1038,7 +1493,7 @@ C.    *                                                                *
 C.    ******************************************************************
 C.
 *KEEP,HCBOOK.
-      parameter (nwpaw=2000000)
+      parameter (nwpaw=4000000)
       common/pawc/paw(nwpaw)
 
       INTEGER   IQ(2), LQ(8000)

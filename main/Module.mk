@@ -54,10 +54,18 @@ G2ROOTO      += $(H2ROOTS3:.c=.o) $(H2ROOTS4:.f=.o)
 endif
 G2ROOT       := bin/g2root$(EXEEXT)
 
+##### g2rootold #####
+G2ROOTOLDS      := $(MODDIRS)/g2rootold.f
+G2ROOTOLDO      := $(G2ROOTOLDS:.f=.o)
+ifeq ($(PLATFORM),win32)
+G2ROOTOLDO      += $(H2ROOTS3:.c=.o) $(H2ROOTS4:.f=.o)
+endif
+G2ROOTOLD       := bin/g2rootold$(EXEEXT)
+
 # used in the main Makefile
 ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD)
 ifneq ($(CERNLIBS),)
-ALLEXECS     += $(H2ROOT) $(G2ROOT)
+ALLEXECS     += $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
 endif
 
 # include all dependency files
@@ -94,20 +102,24 @@ $(G2ROOT):      $(G2ROOTO)
 		$(F77LD) $(F77LDFLAGS) -o $@ $(G2ROOTO) \
 		   $(CERNLIBDIR) $(CERNLIBS) $(F77LIBS) $(SYSLIBS)
 
+$(G2ROOTOLD):      $(G2ROOTOLDO)
+		$(F77LD) $(F77LDFLAGS) -o $@ $(G2ROOTOLDO) \
+		   $(CERNLIBDIR) $(CERNLIBS) $(F77LIBS) $(SYSLIBS)
+
 ifneq ($(CERNLIBS),)
-all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(H2ROOT) $(G2ROOT)
+all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
 else
 all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD)
 endif
 
 clean-main:
-		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(HADDO) $(H2ROOTO) $(G2ROOTO)
+		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(HADDO) $(H2ROOTO) $(G2ROOTO) $(G2ROOTOLDO)
 
 clean::         clean-main
 
 distclean-main: clean-main
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
 		   $(PROOFSERV) $(HADDDEP) $(HADD) $(H2ROOTDEP) $(H2ROOT) \
-		   $(G2ROOT)
+		   $(G2ROOT) $(G2ROOTOLD)
 
 distclean::     distclean-main
