@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.9 2003/12/10 15:36:32 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.10 2003/12/10 15:52:49 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -114,7 +114,8 @@ void TGVerticalLayout::Layout()
          if ((hints & kLHintsExpandY) || (hints & kLHintsCenterY)) {
             nb_expand++;
             exp += size.fHeight;
-            exp_max = TMath::Max(exp_max, (Int_t)size.fHeight);
+            if (hints & kLHintsExpandY) exp_max = 0;
+            else exp_max = TMath::Max(exp_max, (Int_t)size.fHeight);
          } else {
             remain -= size.fHeight;
             if (remain < 0)
@@ -144,8 +145,7 @@ void TGVerticalLayout::Layout()
          if (hints & kLHintsRight) {
             x = msize.fWidth - bw - csize.fWidth - pad_right;
          } else if (hints & kLHintsCenterX) {
-            int tmp = msize.fWidth - (bw << 1) - csize.fWidth;
-            x = tmp > 0 ? tmp >> 1 : 0;
+            x = (msize.fWidth - (bw << 1) - csize.fWidth) >> 1;
          } else { // defaults to kLHintsLeft
             x = pad_left + bw;
          }
@@ -172,10 +172,9 @@ void TGVerticalLayout::Layout()
             size.fHeight = csize.fHeight;
             if (hints & kLHintsCenterY) {
                if (size_expand >= exp_max) {
-                  int tmp = size_expand - pad_top - pad_bottom - size.fHeight;
-                  extra_space = tmp > 0 ? tmp >> 1 : 0;
+                  extra_space = (size_expand - pad_top - pad_bottom - size.fHeight) >> 1;
                } else {
-                  extra_space = esize_expand > 0 ? esize_expand >> 1 : 0;
+                  extra_space = esize_expand >> 1;
                }
                y += extra_space;
                top += extra_space;
@@ -266,7 +265,8 @@ void TGHorizontalLayout::Layout()
          if ((hints & kLHintsExpandX) || (hints & kLHintsCenterX)) {
             nb_expand++;
             exp += size.fWidth;
-            exp_max = TMath::Max(exp_max, (Int_t)size.fWidth);
+            if (hints & kLHintsExpandX) exp_max = 0;
+            else exp_max = TMath::Max(exp_max, (Int_t)size.fWidth);
          } else {
             remain -= size.fWidth;
             if (remain < 0)
@@ -296,9 +296,7 @@ void TGHorizontalLayout::Layout()
          if (hints & kLHintsBottom) {
             y = msize.fHeight - bw - csize.fHeight - pad_bottom;
          } else if (hints & kLHintsCenterY) {
-            int tmp = 0;
-            tmp = msize.fHeight - (bw << 1) - csize.fHeight;
-            y = tmp >> 1;
+            y = (msize.fHeight - (bw << 1) - csize.fHeight) >> 1;
          } else { // kLHintsTop by default
             y = pad_top + bw;
          }
@@ -326,8 +324,7 @@ void TGHorizontalLayout::Layout()
             size.fWidth = csize.fWidth;
             if (hints & kLHintsCenterX) {
                if (size_expand >= exp_max) {
-                  int tmp = size_expand - pad_left - pad_right - size.fWidth;
-                  extra_space = tmp > 0 ? tmp >> 1 : 0;
+                  extra_space = (size_expand - pad_left - pad_right - size.fWidth)>> 1;
                } else {
                   extra_space = esize_expand >> 1;
                }
