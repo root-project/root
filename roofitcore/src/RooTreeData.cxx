@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.28 2001/12/05 17:38:49 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.29 2001/12/05 20:07:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -472,7 +472,7 @@ void RooTreeData::dump() {
 }
 
 
-void RooTreeData::cacheArgs(RooArgSet& newVarSet) 
+void RooTreeData::cacheArgs(RooArgSet& newVarSet, const RooArgSet* nset) 
 {
   // Cache given RooAbsArgs with this tree: The tree is
   // given direct write access of the args internal cache
@@ -499,7 +499,7 @@ void RooTreeData::cacheArgs(RooArgSet& newVarSet)
     iter->Reset() ;
     while (arg=(RooAbsArg*)iter->Next()) {
       arg->setValueDirty() ;
-      arg->syncCache(&_vars) ;
+      arg->syncCache(nset) ;
       arg->fillTreeBranch(*_tree) ;
     }
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.rdl,v 1.11 2001/10/19 21:32:20 david Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.12 2001/10/19 22:19:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -74,7 +74,7 @@ protected:
   // RooFitContext optimizer interface
   friend class RooFitContext ;
   friend class RooSimFitContext ;
-  virtual void cacheArgs(RooArgSet& varSet) = 0 ;
+  virtual void cacheArgs(RooArgSet& varSet, const RooArgSet* nset=0) = 0 ;
   void setDirtyProp(Bool_t flag) { _doDirtyProp = flag ; }
 
   virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) = 0 ;

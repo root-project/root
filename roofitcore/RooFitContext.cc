@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.44 2001/11/27 23:19:05 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.45 2001/12/01 08:12:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -285,7 +285,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
     findCacheableBranches(_pdfClone,_dataClone,cacheList) ;
 
     // Add cached branches from the data set
-    _dataClone->cacheArgs(cacheList) ;
+    _dataClone->cacheArgs(cacheList,_normSet) ;
   }
 
 
@@ -392,7 +392,6 @@ Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooAbsData* dset,
   RooAbsPdf* server ;
 
   while(server=(RooAbsPdf*)sIter->Next()) {
-//     if (server->isDerived() && server->IsA()->InheritsFrom(RooAbsPdf::Class())) {
     if (server->isDerived()) {
       // Check if this branch node is eligible for precalculation
       Bool_t canOpt(kTRUE) ;
