@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.37 2001/03/22 07:26:06 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.38 2001/04/20 12:28:21 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3678,11 +3678,11 @@ void THistPainter::PaintSurface()
 //*-*- Initialize colors for the lighting model
    Color_t colormain = fH->GetFillColor();
 //   if (colormain == 1) colormain = 17; //avoid drawing with black
-   Color_t colordark = colormain + 100;
-   fLego->SetColorMain(colormain,0);
-   fLego->SetColorDark(colordark,0);
-   fLego->SetColorMain(colormain,-1);  // Set Bottom color
-   fLego->SetColorMain(colormain,99);  // Set Top color
+   //Color_t colordark = colormain + 100;
+   //fLego->SetColorMain(colormain,0);
+   //fLego->SetColorDark(colordark,0);
+   //fLego->SetColorMain(colormain,-1);  // Set Bottom color
+   //fLego->SetColorMain(colormain,99);  // Set Top color
    if (Hoption.Surf == 13) fLego->SetMesh(3);
    if (Hoption.Surf == 12 || Hoption.Surf == 14) fLego->SetMesh(0);
 
