@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.11 2002/01/08 08:34:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.12 2002/02/21 11:30:16 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -97,6 +97,7 @@ public:
    virtual void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    virtual const char *DisplayName(const char * = 0) { return "batch"; }
    virtual Handle_t  GetNativeEvent() const { return 0; }
+   virtual ULong_t   GetPixel(Color_t cindex) { return 0; }
    virtual void      GetPlanes(Int_t &nplanes) { nplanes = 0; }
    virtual void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
    virtual void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess);

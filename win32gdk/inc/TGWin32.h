@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.2 2002/01/08 08:34:22 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.3 2002/02/21 11:30:17 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -130,7 +130,7 @@ public:
    virtual ~TGWin32();
 
    Bool_t    Init();
-   UInt_t	 ExecCommand(TGWin32Command *);
+   UInt_t    ExecCommand(TGWin32Command *);
    void      ClearWindow();
    void      ClosePixmap();
    void      CloseWindow();
@@ -146,6 +146,7 @@ public:
    Int_t     GetDoubleBuffer(Int_t wid);
    void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    const char *DisplayName(const char *dpyName = 0);
+   ULong_t   GetPixel(Color_t cindex);
    void      GetPlanes(Int_t &nplanes);
    void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
    virtual void GetTextExtent(UInt_t &w, UInt_t &h, char *mess);

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.23 2002/05/18 08:22:01 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.24 2002/07/17 14:59:56 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -1018,6 +1018,21 @@ const char *TGX11::DisplayName(const char *dpyName)
    // Return hostname on which the display is opened.
 
    return XDisplayName(dpyName);
+}
+
+//______________________________________________________________________________
+ULong_t TGX11::GetPixel(Color_t ci)
+{
+   // Return pixel value associated to specified ROOT color number.
+
+   TColor *color = gROOT->GetColor(ci);
+   if (color)
+      SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
+   else
+      Warning("GetPixel", "color with index %d not defined", ci);
+
+   XColor_t &col = GetColor(ci);
+   return col.pixel;
 }
 
 //______________________________________________________________________________
@@ -3196,7 +3211,7 @@ Int_t TGX11::WriteGIF(char *name)
 
    if (out) {
       GIFencode(gCws->width, gCws->height,
-             ncol, r, g, b, scline, GetPixel, PutByte);
+             ncol, r, g, b, scline, ::GetPixel, PutByte);
       fclose(out);
       i = 1;
    } else {

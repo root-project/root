@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.4 2002/01/08 08:34:22 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.5 2002/02/21 11:30:17 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -1891,6 +1891,21 @@ void TGWin32::SetClipRegion(int wid, int x, int y, unsigned int w,
       for (int i = 0; i < kMAXGC; i++)
          gdk_gc_set_clip_rectangle(gGClist[i], &region);
    }
+}
+
+//______________________________________________________________________________
+ULong_t TGX11::GetPixel(Color_t ci)
+{
+   // Return pixel value associated to specified ROOT color number.
+
+   if (ci >= 0 && ci < kMAXCOL && !gColors[ci].defined) {
+      TColor *color = gROOT->GetColor(ci);
+      if (color)
+         SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
+      else
+         Warning("GetPixel", "color with index %d not defined", ci);
+   }
+   return gColors[ci].color.pixel;
 }
 
 //______________________________________________________________________________
