@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.50 2002/12/04 10:38:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.51 2002/12/20 15:26:50 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1668,11 +1668,11 @@ void TF1::Paint(Option_t *option)
          for (i=0;i<=fNpx;i++) {
             xbins[i] = gPad->PadtoX(xlogmin+ i*dlogx);
          }
-         fHistogram = new TH1F("Func",GetTitle(),fNpx,xbins);
+         fHistogram = new TH1D("Func",GetTitle(),fNpx,xbins);
          fHistogram->SetBit(TH1::kLogX);
          delete [] xbins;
       } else {
-         fHistogram = new TH1F("Func",GetTitle(),fNpx,xmin,xmax);
+         fHistogram = new TH1D("Func",GetTitle(),fNpx,xmin,xmax);
       }
       if (!fHistogram) return;
       fHistogram->SetDirectory(0);
