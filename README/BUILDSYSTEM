@@ -127,7 +127,10 @@ Porting to a new platform
 - add <platform> option to config/ARCHS
 - make a new config/Makefile.<platform>
 - add platform case to the file config/root-config.in
-- add platform case to the file test/Makefile.in
+- add platform case to the file test/Makefile
+- add platform case to base/inc/RConfig.h
+- add platform case to cint/inc/G__ci.h
+- add platform case to utils/src/rootcint.cxx
 
 
 Adding a new module
