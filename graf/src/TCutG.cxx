@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.12 2002/03/26 07:05:57 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.13 2002/07/15 16:23:39 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -224,18 +224,7 @@ Int_t TCutG::IsInside(Double_t x, Double_t y) const
 //*.         developed by R.Nierhaus.
 //*.
 
-   Double_t xint;
-   Int_t i;
-   Int_t inter = 0;
-   for (i=0;i<fNpoints-1;i++) {
-      if (fY[i] == fY[i+1]) continue;
-      if (y <= fY[i] && y <= fY[i+1]) continue;
-      if (fY[i] < y && fY[i+1] < y) continue;
-      xint = fX[i] + (y-fY[i])*(fX[i+1]-fX[i])/(fY[i+1]-fY[i]);
-      if (x < xint) inter++;
-   }
-   if (inter%2) return 1;
-   return 0;
+   return (Int_t)TMath::IsInside(x,y,fNpoints,fX,fY);
 }
 
 //______________________________________________________________________________
