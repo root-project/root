@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.5 2000/11/13 19:46:13 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.6 2000/11/21 15:59:30 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -18,6 +18,7 @@
 #pragma link C++ global gTQSlotParams;
 
 #pragma link C++ enum EAccessMode;
+#pragma link C++ enum ESignals;
 
 #pragma link C++ function operator+(const TTime&,const TTime&);
 #pragma link C++ function operator-(const TTime&,const TTime&);
