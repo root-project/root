@@ -13,6 +13,7 @@
 TWin32SplashThread *gSplash = 0;
 
 extern void CreateSplash(DWORD time, BOOL extended);
+extern void DestroySplashScreen();
 
 //______________________________________________________________________________
 static DWORD WINAPI HandleSplashThread(LPVOID extended)
@@ -29,7 +30,7 @@ static DWORD WINAPI HandleSplashThread(LPVOID extended)
 //______________________________________________________________________________
 TWin32SplashThread::TWin32SplashThread(Bool_t extended)
 {
-   //
+   // ctor.
    fHandle = 0;
    DWORD splashId = 0;
    fHandle = ::CreateThread( NULL, 0,&HandleSplashThread, (LPVOID)extended, 0, &splashId );
@@ -41,6 +42,8 @@ TWin32SplashThread::~TWin32SplashThread()
 {
    // dtor
 
+   DestroySplashScreen();
+   TerminateThread(fHandle, 0);
    if (fHandle) ::CloseHandle(fHandle);
    fHandle = 0;
 }
