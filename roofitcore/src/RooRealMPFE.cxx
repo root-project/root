@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealMPFE.cc,v 1.4 2002/10/23 00:44:55 wverkerke Exp $
+ *    File: $Id: RooRealMPFE.cc,v 1.5 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -244,7 +244,9 @@ void RooRealMPFE::calculate() const
 
   // Inline mode -- Calculate value now
   if (_state==Inline) {
+    //cout << "RooRealMPFE::calculate(" << GetName() << ") performing Inline calculation NOW" << endl ;
     _value = _arg ;
+    clearValueDirty() ;
   }
 
 #ifndef _WIN32
@@ -304,12 +306,15 @@ Double_t RooRealMPFE::getVal(const RooArgSet* nset) const
 {
   if (isValueDirty()) {
     // Cache is dirty, no calculation has been started yet
+    //cout << "RooRealMPFE::getVal(" << GetName() << ") cache is dirty, caling calculate and evaluate" << endl ;
     calculate() ;
     _value = evaluate() ;
   } else if (_calcInProgress) {
+    //cout << "RooRealMPFE::getVal(" << GetName() << ") calculation in progress, calling evaluate" << endl ;
     // Cache is clean and calculation is in progress
     _value = evaluate() ;    
   } else {
+    //cout << "RooRealMPFE::getVal(" << GetName() << ") cache is clean, doing nothing" << endl ;
     // Cache is clean and calculated value is in cache
   }
 
