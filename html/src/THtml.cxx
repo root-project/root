@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.63 2004/07/01 04:57:29 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.64 2004/07/30 07:23:19 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2547,6 +2547,9 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
 
    Bool_t hide;
    Bool_t mmf = 0;
+   Bool_t forceLoad = kTRUE;
+   if (strstr(text,"TClassEdit")) forceLoad= kFALSE;
+   
    static Bool_t pre_is_open = kFALSE;
 
    Int_t ichar=0;
@@ -2606,7 +2609,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
             while (IsName(*endNameSpace) && *endNameSpace)
                endNameSpace++;
             *endNameSpace = 0;
-            if (GetClass((const char *) keywordTmp) != 0,kFALSE)
+            if (GetClass((const char *) keywordTmp) != 0,forceLoad)
                end = keyword + (endNameSpace - keywordTmp);
             if (keywordTmp != 0)
                delete[]keywordTmp;
@@ -2736,7 +2739,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
       if (!flag && !hide && *keyword) {
 
          // get class
-         TClass *classPtr = GetClass((const char *) keyword,kFALSE);
+         TClass *classPtr = GetClass((const char *) keyword,forceLoad);
 
          if (classPtr) {
 
@@ -2829,7 +2832,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                   TClass *cdl = 0;
 
                   if (anyname) {
-                     cl = GetClass(anyname,kFALSE);
+                     cl = GetClass(anyname,forceLoad);
                      namePtr = (const char *) anyname;
                      cdl = cl;
                   } else if (ptr2class) {
@@ -2838,7 +2841,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                         namePtr = cl->GetName();
                         TDataMember *member = cl->GetDataMember(keyword);
                         if (member)
-                           cdl = GetClass(member->GetTypeName(),kFALSE);
+                           cdl = GetClass(member->GetTypeName(),forceLoad);
                      }
                   }
 
