@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.42 2004/04/17 06:38:26 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.43 2004/05/05 13:11:23 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -267,6 +267,47 @@ very quickly and lose accuracy.
 <P>
 The function may have unphysical local minima, especially at infinity in
 some variables.
+
+<H5>Minuit parameter errors in the presence of limits</H5>
+This concerns the way Minuit reports the symmetric (or parabolic)  errors
+on parameters.  It does not apply to the errors reported from Minos, which
+are in general asymmetric.
+<P>
+The symmetric errors reported by Minuit are always calculated from 
+the covariance matrix, assuming that this matrix has been calculated, 
+usually as the result of a Migrad minimization or a direct 
+calculation by Hesse which inverts the second derivative matrix.
+<P>
+When there are no limits on the parameter in question, the error reported 
+by Minuit should therefore be exactly equal to the square root of the 
+corresponding diagonal element of the error matrix reported by Minuit.
+<P>
+However, when there are limits on the parameter, there is a transformation
+between the internal parameter values seen by Minuit (which are unbounded)  
+and the external parameter values seen by the user in FCN (which remain
+inside the desired limits).  Therefore the internal error matrix kept by
+Minuit must be transformed to an external error matrix for the user.  
+This is done by multiplying the (I,J)th element by DEXDIN(I)*DEXDIN(J),
+where DEXDIN is the derivative of the external value with respect to the
+internal value at the minimum.  This is a linearization of the
+transformation, and is the only way to produce an error matrix in external
+coordinates meaningful to the user.  But when reporting the individual
+parabolic errors for limited parameters, Minuit can do a little better, so
+it does.  In this case, Minuit actually transforms the ends of the
+internal "error bar" to external coordinates and reports the length of
+this transformed interval.  Strictly speaking, it is now asymmetric, but
+since the origin of the asymmetry is only an artificial transformation it
+does not make much sense, so the transformed errors are symmetrized.
+<P>
+The result of all the above is that for parameters with limits, the error 
+reported by Minuit is not exactly equal to the square root of the diagonal 
+element of the error matrix.  The difference is a measure of how much the 
+limits deform the problem.  If possible, it is suggested not to use limits 
+on parameters, and the problem goes away.  If for some reason limits are 
+necessary, and you are sensitive to the difference between the two ways of 
+calculating the errors, it is suggested to use Minos errors which take 
+into account the non-linearities much more precisely.
+
 <!--*/
 // -->END_HTML
 
