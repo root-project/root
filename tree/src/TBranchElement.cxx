@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.144 2004/09/23 07:18:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.145 2004/09/29 10:56:53 rdm Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -2178,7 +2178,7 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
       elem = (TStreamerElement*)elems[i];
       Int_t offset = elem->GetOffset();
       char *oldPointer = fBranchPointer;
-      if (gDebug > 0) printf("Unroll name=%s, cltop=%s, cl=%s, i=%d, elem=%s, offset=%d, splitlevel=%d, fBranchPointer=%lx \n",name,cltop->GetName(),cl->GetName(),i,elem->GetName(),elem->GetOffset(),splitlevel,(Long_t)fBranchPointer);
+      if (gDebug > 0) printf("Unroll name=%s, cltop=%s, cl=%s, i=%d, elem=%s, offset=%d, splitlevel=%d, fBranchPointer=%lx, btype=%d \n",name,cltop->GetName(),cl->GetName(),i,elem->GetName(),elem->GetOffset(),splitlevel,(Long_t)fBranchPointer,btype);
       if (elem->IsA() == TStreamerBase::Class()) {
          clbase = gROOT->GetClass(elem->GetName());
          //here one should consider the case of a TClonesArray with a class
@@ -2247,7 +2247,7 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
 
          } else {
             //fBranchPointer may be null in case of a TClonesArray inside another TClonesArray
-            if (fBranchPointer &&
+            if ((btype != 31 && btype != 41) && fBranchPointer &&
                 ( elem->GetClassPointer() == TClonesArray::Class()
                   || (elem->IsA() == TStreamerSTL::Class() && !elem->CannotSplit())
                   )
