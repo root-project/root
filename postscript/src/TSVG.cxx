@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.10 2004/03/17 17:35:32 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.11 2004/06/08 12:57:18 brun Exp $
 // Author: Olivier Couet
 
 /*************************************************************************
@@ -729,14 +729,14 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       	 PrintStr("\" fill=\"none\"");
       	 PrintStr("/>");
       // Down triangle
-      } else if (ms == 23) {
+      } else if (ms == 26 || ms == 22) {
       	 PrintStr("<polygon points=\"");
       	 WriteReal(ix); PrintStr(","); WriteReal(iy-m2);
       	 WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m2);
       	 WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m2);
       	 PrintStr("\"/>");
       // Up triangle
-      } else if (ms == 26 || ms == 22) {
+      } else if (ms == 23) {
       	 PrintStr("<polygon points=\"");
       	 WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m2);
       	 WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m2);
@@ -947,14 +947,14 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       	 WriteReal(m);
       	 PrintStr("\"/>");
       // Down triangle
-      } else if (ms == 23) {
+      } else if (ms == 26 || ms == 22) {
       	 PrintStr("<polygon points=\"");
       	 WriteReal(ix); PrintStr(","); WriteReal(iy-m2);
       	 WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m2);
       	 WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m2);
          PrintStr("\"/>");
       // Up triangle
-      } else if (ms == 26 || ms == 22) {
+      } else if (ms == 23) {
       	 PrintStr("<polygon points=\"");
       	 WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m2);
       	 WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m2);
