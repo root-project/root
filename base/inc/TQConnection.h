@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.h,v 1.5 2003/09/19 14:06:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.h,v 1.6 2003/09/21 21:27:20 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -35,6 +35,8 @@
 #endif
 
 class TQSlot;
+
+
 class TQConnection : public TList, public TQObject {
 
 protected:
@@ -44,11 +46,11 @@ protected:
 
 public:
    TQConnection();
-   virtual ~TQConnection();
-
    TQConnection(TClass* cl, void *receiver, const char *method_name);
    TQConnection(const char *class_name, void *receiver,
                 const char *method_name);
+   TQConnection(const TQConnection &con);
+   virtual ~TQConnection();
 
    const char *GetName() const;
    void *GetReceiver() const { return fReceiver; }

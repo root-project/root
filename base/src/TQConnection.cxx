@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.14 2003/09/19 14:06:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.15 2004/04/13 17:41:16 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "G__ci.h"
 #include "Riostream.h"
 #include "TVirtualMutex.h"
+#include "THashTable.h"
 
 
 ClassImpQ(TQConnection)
@@ -232,7 +233,7 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t param)
 //______________________________________________________________________________
 inline void TQSlot::ExecuteMethod(void *object, Double_t param)
 {
-   //  ExecuteMethod the method for the specified object and
+   // ExecuteMethod the method for the specified object and
    // with single argument value.
 
    void *address = 0;
@@ -295,6 +296,78 @@ void TQSlot::Print(Option_t *) const
    << "Number of Connections = " << References() << endl;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+class TQSlotPool : public THashTable {
+public:
+   TQSlotPool() : THashTable(50) { }
+   virtual ~TQSlotPool() { Delete(); }
+
+   TQSlot  *New(const char *class_name, const char *funcname);
+   TQSlot  *New(TClass *cl, const char *method, const char *func);
+   void     Free(TQSlot *slot);
+};
+
+//______________________________________________________________________________
+TQSlot *TQSlotPool::New(const char *class_name, const char *funcname)
+{
+   // Create new slot or return already existing one.
+
+   TString name = class_name;
+   name += "::";
+   name += funcname;
+
+   TQSlot *slot = (TQSlot*)FindObject(name.Data());
+
+   if (!slot) {
+      slot = new TQSlot(class_name, funcname);
+      Add(slot);
+   }
+   slot->AddReference();
+   return slot;
+}
+
+//______________________________________________________________________________
+TQSlot *TQSlotPool::New(TClass *cl, const char *method, const char *func)
+{
+   // Create new slot or return already existing one.
+
+   TString name;
+
+   if (cl) {
+      name = cl->GetName();
+      name += "::";
+      name += method;
+   } else {
+      name = "::";
+      name += func;
+   }
+
+   TQSlot *slot = (TQSlot*)FindObject(name.Data());
+
+   if (!slot) {
+      slot = new TQSlot(cl, method, func);
+      Add(slot);
+   }
+   slot->AddReference();
+   return slot;
+}
+
+//______________________________________________________________________________
+void TQSlotPool::Free(TQSlot *slot)
+{
+   // Delete slot if there is no refernce to it.
+
+   slot->RemoveReference();  // decrease references to slot
+
+   if (slot->References() <= 0) {
+      Remove(slot);
+      if (!slot->IsExecuting()) SafeDelete(slot);
+   }
+}
+
+static TQSlotPool gSlotPool;  // global pool of slots
+
+////////////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
 TQConnection::TQConnection() : TList(), TQObject()
@@ -324,8 +397,7 @@ TQConnection::TQConnection(TClass *cl, void *receiver, const char *method_name)
    }
 
    if (cl) fClassName = cl->GetName();
-   fSlot = new TQSlot(cl, method_name, funcname);
-   fSlot->AddReference(); //update counter of references to slot
+   fSlot = gSlotPool.New(cl, method_name, funcname);
 }
 
 //______________________________________________________________________________
@@ -337,11 +409,20 @@ TQConnection::TQConnection(const char *class_name, void *receiver,
    //    it could be interpreted class and with method == funcname.
 
    fClassName = class_name;
-   fSlot = new TQSlot(class_name, funcname);  // new slot-method
-   fSlot->AddReference();     // update counter of references to slot
+   fSlot = gSlotPool.New(class_name, funcname);  // new slot-method
    fReceiver = receiver;      // fReceiver is pointer to receiver
 }
 
+//______________________________________________________________________________
+TQConnection::TQConnection(const TQConnection &con)
+{
+   // copy constructor
+
+   fClassName = con.fClassName;
+   fSlot = con.fSlot;
+   fSlot->AddReference();
+   fReceiver = con.fReceiver;
+}
 //______________________________________________________________________________
 TQConnection::~TQConnection()
 {
@@ -360,11 +441,7 @@ TQConnection::~TQConnection()
    Clear("nodelete");
 
    if (!fSlot) return;
-   fSlot->RemoveReference();  // decrease references to slot
-
-   if (fSlot->References() <= 0) {
-      if (!fSlot->IsExecuting()) SafeDelete(fSlot);
-   }
+   gSlotPool.Free(fSlot);
 }
 
 //______________________________________________________________________________
