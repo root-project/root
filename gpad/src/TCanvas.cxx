@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.40 2002/09/18 13:12:59 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.41 2002/11/25 16:29:01 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1506,6 +1506,13 @@ void TCanvas::SetFixedAspectRatio(Bool_t fixed)
       fFixedAspectRatio = kFALSE;
       fAspectRatio = 0;
    }
+}
+
+//______________________________________________________________________________
+void TCanvas::SetSelected(TObject *obj)
+{
+   fSelected = obj;
+   if (obj) obj->SetBit(kMustCleanup);
 }
 
 //______________________________________________________________________________
