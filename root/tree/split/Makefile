@@ -14,7 +14,7 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
-CollectionSplit.log: tobj_cxx.$(DllSuf)
+CollectionSplit.log: tobj_cxx.$(DllSuf) $(ROOTCORELIBS)
 	$(CMDECHO) root.exe -q -b -l tobj.cxx+ | grep Br > CollectionSplit.log
 
 CollectionSplit: CollectionSplit.log
