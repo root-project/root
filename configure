@@ -1040,13 +1040,16 @@ fi
 
 ######################################################################
 #
-# Cleanup obsolete links
+# Cleanup obsolete links and files
 #
 if [ -h opengl ]; then
    rm -f opengl
 fi
 if [ -h ttf ]; then
    rm -f ttf
+fi
+if [ -f system.rootrc ]; then
+   rm -f system.rootrc
 fi
 
 ######################################################################
