@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.4 2000/06/27 16:42:22 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.5 2000/11/23 15:53:02 rdm Exp $ */
 /* Author: */
 
 /*
@@ -920,6 +920,7 @@ Getlinem(int mode, char *prompt)
                       gl_fwd_1_word();
                       break;
                  case '[':                                /* ansi arrow keys */
+                 case 'O':                                /* xterm arrow keys */
                       switch(c = gl_getc())
                       {
                       case 'A':                           /* up */
@@ -1324,7 +1325,7 @@ Gl_histinit(char *file)
    gl_savehist = 0;
 
    hist_init();
-   
+
    if (!strcmp(file, "-")) return;
 
    sprintf(gl_histfile, "%s", file);
