@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPServerSocket.cxx,v 1.1 2001/01/26 16:55:08 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPServerSocket.cxx,v 1.2 2001/01/29 00:03:55 rdm Exp $
 // Author: Fons Rademakers   19/1/2001
 
 /*************************************************************************
@@ -109,20 +109,32 @@ TSocket *TPServerSocket::Accept()
    // client and establish 'n' connections
    setupSocket->Recv(port, size);
 
-   pSockets = new TSocket*[size];
+   // Check if client is running in single mode
+   if (size == 0) {
+      pSockets = new TSocket*[1];
 
-   for (int i = 0; i < size; i++) {
-      pSockets[i] = new TSocket(setupSocket->GetInetAddress(), port, fTcpWindowSize);
-      gROOT->GetListOfSockets()->Remove(pSockets[i]);
+      pSockets[0] = setupSocket;
+
+      // create TPSocket object with the original socket
+      newPSocket = new TPSocket(pSockets, 1);
+
+   } else {
+      pSockets = new TSocket*[size];
+      
+      for (int i = 0; i < size; i++) {
+         pSockets[i] = new TSocket(setupSocket->GetInetAddress(), port, fTcpWindowSize);
+         gROOT->GetListOfSockets()->Remove(pSockets[i]);
+      }
+      
+      // create TPSocket object with all the accepted sockets
+      newPSocket = new TPSocket(pSockets, size);
+      
+      // clean up
+      delete setupSocket;
+
    }
 
-   // create TPSocket object with all the accepted sockets
-   newPSocket = new TPSocket(pSockets, size);
-
-   // clean up
-   delete setupSocket;
-
-   // return the TPSocket object
+   // return the TSocket object
    return newPSocket;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.38 2004/01/27 19:52:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.39 2004/02/13 16:34:41 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -110,6 +110,7 @@ protected:
    TSeqCollection  *fMessageHandlers;     //List of message handlers
    TSeqCollection  *fStreamerInfo;        //List of active StreamerInfo classes
    TSeqCollection  *fClassGenerators;     //List of user defined class generators;
+   TSeqCollection  *fSecContexts;         //List of security contexts (TSecContext)
    TProcessUUID    *fUUIDs;               //Pointer to TProcessID managing TUUIDs
    TFolder         *fRootFolder;          //top level folder //root
    TList           *fBrowsables;          //List of browsables
@@ -178,6 +179,7 @@ public:
    TSeqCollection   *GetListOfStreamerInfo() const { return fStreamerInfo; }
    TSeqCollection   *GetListOfMessageHandlers() const { return fMessageHandlers; }
    TSeqCollection   *GetListOfClassGenerators() const { return fClassGenerators; }
+   TSeqCollection   *GetListOfSecContexts() const { return fSecContexts; }
    TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
    TFile            *GetFile() const { return fFile; }

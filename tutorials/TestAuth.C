@@ -233,6 +233,7 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
                   }
                }
                Krb5Details = TString("pt:0 ru:1 us:") + User + TString("@") + Realm;
+//               Krb5Details = TString("pt:0 ru:1 us:") + User;
                fclose(fc);
             } else {
                HaveMeth[2] = 0;
@@ -271,38 +272,53 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
    printf("   +                                                                             +\n");
    printf("   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 
+// Read local <RootAuthrc> now to avoid to be later superseeded
+   TAuthenticate::ReadRootAuthrc();
+   if (lDebug > 0) 
+      TAuthenticate::Show();
 
+   TFTP *t1 = 0;
 // UsrPwd method
    printf("   +                                                                             +\n");
    printf("   +   Testing UsrPwd ...                                                        +\n");
 
-   // Create a THostAuth instantiation for the local host
-   THostAuth *hawk = new THostAuth(Host.Data(),User.Data(),0,Details.Data());
-
-   // Add object to list
-   TAuthenticate::GetAuthInfo()->Add(hawk);
+   // Check if by any chance locally there is already an THostAuth matching 
+   // the one we want to use for testing
+   THostAuth *hasv1 = 0;
+   THostAuth *ha = TAuthenticate::HasHostAuth(Host.Data(),User.Data());
+   if (ha) {
+      // We need to save it to restore at the end
+      hasv1 = new THostAuth(*ha);
+      // We reset the existing one
+      ha->Reset();
+      // And update it with the info we want
+      ha->AddMethod(0,Details.Data());
+   } else {
+      // We create directly a new THostAuth
+      ha = new THostAuth(Host.Data(),User.Data(),0,Details.Data());
+      // And add object to list so that TAuthenticate has
+      // a chance to find it
+      TAuthenticate::GetAuthInfo()->Add(ha);
+   }
 
    // Print available host auth info
    if (lDebug > 0)
-      hawk->Print();
+      ha->Print();
 
    {
    // First authentication attempt
-   TFTP t1(TFTPPath.Data());
-   if (t1.IsOpen()) {
+   t1 = new TFTP(TFTPPath.Data(),2);
+   if (t1->IsOpen()) {
       TestMeth[0] = 1;
    } else {
       printf(" >>>>>>>>>>>>>>>> Test of UsrPwd authentication failed \n");
    }}
 
-   // Get pointer to relevant HostAuth
-   THostAuth *ha = TAuthenticate::GetHostAuth(Host.Data(),User.Data());
-
    // Try ReUse
    if (TestMeth[0] == 1) {
       TIter next(ha->Established());
-      TAuthDetails *ai;
-      while ((ai = (TAuthDetails *) next())) {
+      TSecContext *ai;
+      while ((ai = (TSecContext *) next())) {
          if (ai->GetMethod() == 0) {
             Int_t OffSet = ai->GetOffSet();
             TestReUse[0] = 0;
@@ -312,6 +328,8 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
          }
       }
    }
+   // Delete t1
+   if (t1) delete t1;
    // remove method from available list
    ha->RemoveMethod(0);
 
@@ -321,13 +339,13 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
       printf("   +   Testing SRP ...                                                           +\n");
 
      // Add relevant info to HostAuth
-      ha->SetFirst(1,Details.Data());
+      ha->AddFirst(1,Details.Data());
       if (lDebug > 0)
          ha->Print();
 
      // Authentication attempt
-      TFTP t1(TFTPPath.Data());
-      if (t1.IsOpen()) {
+      t1 = new TFTP(TFTPPath.Data(),2);
+      if (t1->IsOpen()) {
          TestMeth[1] = 1;
       } else {
          printf(" >>>>>>>>>>>>>>>> Test of SRP authentication failed \n");
@@ -336,8 +354,8 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
       // Try ReUse
       if (TestMeth[1] == 1) {
          TIter next(ha->Established());
-         TAuthDetails *ai;
-         while ((ai = (TAuthDetails *) next())) {
+         TSecContext *ai;
+         while ((ai = (TSecContext *) next())) {
             if (ai->GetMethod() == 1) {
                Int_t OffSet = ai->GetOffSet();
                TestReUse[1] = 0;
@@ -347,27 +365,46 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
             }
          }
       }
+      // Delete t1
+      if (t1) delete t1;
       // remove method from available list
       ha->RemoveMethod(1);
 
    }
 
 // Kerberos method
+   THostAuth *hak = 0;
+   THostAuth *hasv2 = 0;
    if ( HaveMeth[2] ) {
       printf("   +                                                                             +\n");
       printf("   +   Testing Krb5 ...                                                          +\n");
 
-      // Create a special THostAuth instantiation for kerberos
-      THostAuth *hak = new THostAuth(HostName.Data(),User.Data(),2,Krb5Details.Data());
 
-      // Add object to list
-      TAuthenticate::GetAuthInfo()->Add(hak);
+      // Check if by any chance locally there is already an THostAuth matching 
+      // the one we want to use for testing
+      hak = TAuthenticate::HasHostAuth(HostName.Data(),User.Data());
+      if (hak) {
+         if (lDebug > 0)
+            printf(" >>>>>>>>>>>>>>>> Krb5: existing THostAuth found \n");
+         // We need to save it to restore at the end
+         hasv2 = new THostAuth(*hak);
+         // We reset the existing one
+         hak->Reset();
+         // And update it with the info we want
+         hak->AddMethod(2,Krb5Details.Data());
+      } else {
+         // We create directly a new THostAuth
+         hak = new THostAuth(HostName.Data(),User.Data(),2,Krb5Details.Data());
+         // And add object to list so that TAuthenticate has
+         // a chance to find it
+         TAuthenticate::GetAuthInfo()->Add(hak);
+      }
       if (lDebug > 0)
          hak->Print();
 
      // Authentication attempt
-      TFTP t1(TFTPPathKrb5.Data());
-      if (t1.IsOpen()) {
+      t1 = new TFTP(TFTPPathKrb5.Data(),2);
+      if (t1->IsOpen()) {
          TestMeth[2] = 1;
       } else {
          printf(" >>>>>>>>>>>>>>>> Test of Kerberos authentication failed \n");
@@ -379,8 +416,8 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
       // Try ReUse
       if (TestMeth[2] == 1) {
          TIter next(hak->Established());
-         TAuthDetails *ai;
-         while ((ai = (TAuthDetails *) next())) {
+         TSecContext *ai;
+         while ((ai = (TSecContext *) next())) {
             if (ai->GetMethod() == 2) {
                Int_t OffSet = ai->GetOffSet();
                TestReUse[2] = 0;
@@ -390,10 +427,11 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
             }
          }
       }
+      // Delete t1
+      if (t1) delete t1;
       // remove method from available list
       hak->RemoveMethod(2);
    }
-
 
 // Globus method
    if ( HaveMeth[3] ) {
@@ -401,13 +439,13 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
       printf("   +   Testing Globus ...                                                        +\n");
 
      // Add relevant info to HostAuth
-      ha->SetFirst(3,GlobusDetails.Data());
+      ha->AddFirst(3,GlobusDetails.Data());
       if (lDebug > 0)
          ha->Print();
 
      // Authentication attempt
-      TFTP t1(TFTPPath.Data());
-      if (t1.IsOpen()) {
+      t1 = new TFTP(TFTPPath.Data(),2);
+      if (t1->IsOpen()) {
          TestMeth[3] = 1;
       } else {
          printf(" >>>>>>>>>>>>>>>> Test of Globus authentication failed \n");
@@ -431,8 +469,8 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
       // Try ReUse
       if (TestMeth[3] == 1) {
          TIter next(ha->Established());
-         TAuthDetails *ai;
-         while ((ai = (TAuthDetails *) next())) {
+         TSecContext *ai;
+         while ((ai = (TSecContext *) next())) {
             if (ai->GetMethod() == 3) {
                Int_t OffSet = ai->GetOffSet();
                TestReUse[3] = 0;
@@ -442,24 +480,26 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
             }
          }
       }
+      // Delete t1
+      if (t1) delete t1;
       // remove method from available list
       ha->RemoveMethod(3);
    }
 
-// SSH methodg
+// SSH method
 
    if ( HaveMeth[4] ) {
       printf("   +                                                                             +\n");
       printf("   +   Testing SSH ...                                                           +\n");
 
      // Add relevant info to HostAuth
-      ha->SetFirst(4,Details.Data());
+      ha->AddFirst(4,Details.Data());
       if (lDebug > 0)
          ha->Print();
 
      // Authentication attempt
-      TFTP t1(TFTPPath.Data());
-      if (t1.IsOpen()) {
+      t1 = new TFTP(TFTPPath.Data(),2);
+      if (t1->IsOpen()) {
          TestMeth[4] = 1;
       } else {
          printf(" >>>>>>>>>>>>>>>> Test of SSH authentication failed \n");
@@ -468,8 +508,8 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
       // Try ReUse
       if (TestMeth[4] == 1) {
          TIter next(ha->Established());
-         TAuthDetails *ai;
-         while ((ai = (TAuthDetails *) next())) {
+         TSecContext *ai;
+         while ((ai = (TSecContext *) next())) {
             if (ai->GetMethod() == 4) {
                Int_t OffSet = ai->GetOffSet();
                TestReUse[4] = 0;
@@ -479,6 +519,8 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
             }
          }
       }
+      // Delete t1
+      if (t1) delete t1;
       // remove method from available list
       ha->RemoveMethod(4);
    }
@@ -489,18 +531,21 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
    printf("   +   Testing UidGid ...                                                        +\n");
 
    // Add relevant info to HostAuth
-   ha->SetFirst(5,Details.Data());
+   ha->AddFirst(5,Details.Data());
    if (lDebug > 0)
       ha->Print();
 
    // Authentication attempt
    {
-   TFTP t1(TFTPPath.Data());
-   if (t1.IsOpen()) {
+   t1 = new TFTP(TFTPPath.Data(),2);
+   if (t1->IsOpen()) {
       TestMeth[5] = 1;
    } else {
       printf(" >>>>>>>>>>>>>>>> Test of UidGid authentication failed \n");
    }}
+
+   // Delete t1
+   if (t1) delete t1;
 
    // remove method from available list
    ha->RemoveMethod(5);
@@ -510,16 +555,21 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
 
    // Print available host auth info
    if (lDebug > 0)
-      TAuthenticate::PrintHostAuth();
+      TAuthenticate::Show();
 
-// Now cleanup host auth info used for the test
-   TAuthenticate::GetAuthInfo().Delete();
-
-// Delete file
-   gSystem->Unlink("TestFile.root");
-
-// Setting off test flag
-   gEnv->SetValue("Test.Auth",0);
+// Now restore initial configuration
+   if (hasv1) {
+      ha->Reset();
+      ha->Update(hasv1);
+   } else {
+      TAuthenticate::GetAuthInfo()->Remove(ha);
+   }
+   if (hasv2) {
+      hak->Reset();
+      hak->Update(hasv2);
+   } else {
+      TAuthenticate::GetAuthInfo()->Remove(hak);
+   }
 
 // Final Printout
    printf("\n   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");

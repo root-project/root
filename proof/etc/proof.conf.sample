@@ -2,7 +2,6 @@
 #
 # node <hostname> [image=<imagename>]
 # slave <hostname> [perf=<perfindex>] [image=<imagename>] [port=<portnumber>]
-#                  [usrpwd | srp | krb5 | globus | ssh | uidgid]
 # user <username> on <hostname>
 #
 # For each unique node in the cluster add a "node" line.
@@ -20,14 +19,16 @@
 # be unique for each different image). By default imagename is the hostname.
 # Port is used to tell PROOF to connect to the slave servers on the specified
 # port (in case proofd was started by the user as opposed to via inetd).
-# Srp is used to tell PROOF to use the SRP (Secure Remote Password) protocol
-# to authenticate to the slaves. If this flag is set it is necessary that
-# on the master server there is a file ~/.rootnetrc with the needed login
-# information and that on the slaves the file ~/.srootdpass exists.
-# Krb5 is used to tell PROOF to use Kerberos5 to authenticate the slaves.
 # 
 # Users can be redirected to have their master server run on a predetermined
 # node. For that use the "user" line.
+#
+# For backward compatibility it is still possible to specify the methods to 
+# used for slave authentication as a list following the 'slave <hostname>'
+# (eg slave <slave_name> uidgid usrpwd srp); this is however deprecated;
+# it is strongly advised to make use of the $ROOTSYS/etc/system.rootauthrc
+# and/or $HOME/.rootauthrc files to give authentication directives. See
+# $ROOTSYS/etc/system.rootauthrc for details
 #
 
 #node pcna49a image=nfs

@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.12 2003/11/20 23:00:46 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.13 2003/11/26 10:33:08 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -27,6 +27,7 @@ extern "C" {
 
 Int_t SRPAuthenticate(TAuthenticate *, const char *user, const char *passwd,
                       const char *remote, TString &, Int_t);
+Int_t SRPCheckSecCtx(const char *, TSecContext *);
 
 class SRPAuthInit {
 public:
@@ -69,10 +70,8 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
      Details = Form("pt:%d ru:%d us:%s",Prompt,ReUse,usr);
 
      // Create Options string
-     char *Options= new char[strlen(usr)+20];
      int Opt = ReUse * kAUTH_REUSE_MSK;
-     sprintf(Options,"%d %d %s",Opt,strlen(usr),usr);
-
+     TString Options(Form("%d %d %s",Opt,strlen(usr),usr));
 
      // Now we are ready to send a request to the rootd/proofd
      // daemons to check if we have already a valid security context
@@ -80,13 +79,11 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
      kind = kROOTD_SRPUSER;
      stat = ReUse;
      int rc = 0;
-     if ((rc = TAuthenticate::AuthExists(auth,
-               (Int_t)TAuthenticate::kSRP,Details,Options,&kind,&stat)) == 1) {
+     if ((rc = auth->AuthExists(TString(usr), TAuthenticate::kSRP,
+               Options, &kind, &stat, &SRPCheckSecCtx)) == 1) {
        // A valid authentication exists: we are done ...
-       if (Options) delete[] Options;
        return 1;
      }
-     if (Options) delete[] Options;
      if (rc == -2) {
        return rc;
      }
@@ -252,9 +249,15 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
          Token = StrDup("");
        }
 
-       // Create and save AuthDetails object
-       TAuthenticate::SaveAuthDetails(auth,
-          (Int_t)TAuthenticate::kSRP,OffSet,ReUse,Details,lUser,RSAKey,Token);
+       // Create SecContext object
+       TPwdCtx *pwdctx = new TPwdCtx((const char *)psswd,kFALSE);
+       TSecContext *ctx = 
+          auth->GetHostAuth()->CreateSecContext((const char *)lUser, 
+              remote, (Int_t)TAuthenticate::kSRP,OffSet,Details,
+              (const char *)Token, TAuthenticate::GetGlobalExpDate(), 
+              (void *)pwdctx, RSAKey);
+       // Transmit it to TAuthenticate
+       auth->SetSecContext(ctx);
        det = Details;
        if (Token) delete[] Token;
 
@@ -293,4 +296,22 @@ out:
    delete [] psswd;
 
    return result;
+}
+
+
+//______________________________________________________________________________
+Int_t SRPCheckSecCtx(const char *User, TSecContext *Ctx)
+{
+   // SRP version of CheckSecCtx to be passed to TAuthenticate::AuthExists
+   // Check if User is matches the one in Ctx
+   // Returns: 1 if ok, 0 if not
+   // Deactivates Ctx is not valid 
+ 
+   Int_t rc = 0;
+ 
+   if (Ctx->IsActive()) {
+      if (!strcmp(User,Ctx->GetUser()))
+         rc = 1;
+   }
+   return rc;
 }

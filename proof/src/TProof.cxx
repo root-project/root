@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.59 2003/12/02 08:37:41 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.60 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -31,10 +31,8 @@
 #endif
 
 #include "TProof.h"
-#include "TAuthenticate.h"
 #include "TSortedList.h"
 #include "TSlave.h"
-#include "TSocket.h"
 #include "TMonitor.h"
 #include "TMessage.h"
 #include "TSystem.h"
@@ -179,7 +177,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fParallel       = 0;
    fPlayer         = 0;
    fCondor         = 0;
-   fSecurity       = -1;
+   fSecContext     = 0;
    fUrlProt        = u->GetProtocol();
 
    delete u;
@@ -276,7 +274,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
                   // create slave server
                   TSlave *slave = new TSlave(word[1], sport, ord++, perfidx,
-                                             image, -1, this);
+                                             image, this);
 
                   fSlaves->Add(slave);
                   if (slave->IsValid()) {
@@ -327,7 +325,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             }
 
             TSlave *slave = new TSlave(c->fHostname, c->fPort, ord++,
-                                       c->fPerfIdx, c->fImage, -1, this);
+                                       c->fPerfIdx, c->fImage, this);
 
             fSlaves->Add(slave);
             if (slave->IsValid()) {
@@ -343,7 +341,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    } else {
 
       // create master server
-      TSlave *slave = new TSlave(fMaster, fPort, 0, 100, "master", -1, this);
+      TSlave *slave = new TSlave(fMaster, fPort, 0, 100, "master", this);
 
       if (slave->IsValid()) {
          // check protocol compatability
@@ -407,14 +405,17 @@ void TProof::Close(Option_t *)
       if (fIntHandler)
          fIntHandler->Remove();
 
-      // tell master and slaves to stop
-      if (!IsMaster())
+      // If local client ...
+      if (!IsMaster()) {
+         // ... tell master and slaves to stop
          Interrupt(kShutdownInterrupt, kAll);
+      }
 
       fSlaves->Delete();
-      if (fActiveSlaves) fActiveSlaves->Clear(); // is 0 if Init() returned 0
-      fUniqueSlaves->Clear();
-      fBadSlaves->Clear();
+      // is 0 if Init() returned 0
+      if (fActiveSlaves) fActiveSlaves->Clear("nodelete"); 
+      fUniqueSlaves->Clear("nodelete");
+      fBadSlaves->Clear("nodelete");
    }
 }
 
@@ -1150,8 +1151,10 @@ void TProof::Print(Option_t *option) const
                                              IsValid() ? "valid" : "invalid");
       Printf("Port number:              %d", GetPort());
       Printf("User:                     %s", GetUser());
-      Printf("Authentication method:    %d (%s)", GetSecurity(),
-                                             TAuthenticate::GetAuthMethod(GetSecurity()));
+      Printf("Security context:         %s", fSecContext->AsString());
+      TIter next(fActiveSlaves);
+      TSlave *sl = (TSlave *)next();
+      Printf("Proofd protocol version:  %d", sl->GetSocket()->GetRemoteProtocol());
       Printf("Client protocol version:  %d", GetClientProtocol());
       Printf("Remote protocol version:  %d", GetRemoteProtocol());
       Printf("Log level:                %d", GetLogLevel());

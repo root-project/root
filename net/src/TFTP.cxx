@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.20 2004/01/19 22:42:07 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.21 2004/01/26 11:14:01 brun Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -34,12 +34,11 @@
 
 #include "TFTP.h"
 #include "TPSocket.h"
-#include "TNetFile.h"
-#include "TAuthenticate.h"
 #include "TUrl.h"
 #include "TStopwatch.h"
 #include "TSystem.h"
 #include "TEnv.h"
+#include "TROOT.h"
 #include "TError.h"
 #include "NetErrors.h"
 
@@ -66,7 +65,7 @@ ClassImp(TFTP)
 TFTP::TFTP(const char *url, Int_t par, Int_t wsize)
 {
    // Open connection to host specified by the url using par parallel sockets.
-   // The url has the form: [root[s]://]host[:port].
+   // The url has the form: [root[s,k]://]host[:port].
    // If port is not specified the default rootd port (1094) will be used.
    // Using wsize one can specify the tcp window size. Normally this is not
    // needed when using parallel sockets.
@@ -76,7 +75,7 @@ TFTP::TFTP(const char *url, Int_t par, Int_t wsize)
    TString s = url;
    if (s.Contains("://")) {
       if (!s.BeginsWith("root")) {
-         Error("TFTP", "url must be of the form \"[root[s]://]host[:port]\"");
+         Error("TFTP", "url must be of the form \"[root[s,k]://]host[:port]\"");
          MakeZombie();
          return;
       }
@@ -91,60 +90,24 @@ void TFTP::Init(const char *surl, Int_t par, Int_t wsize)
 {
    // Set up the actual connection.
 
-   TAuthenticate *auth;
-
    TUrl url(surl);
-
-again:
-   if (par > 1) {
-      fSocket = new TPSocket(url.GetHost(), url.GetPort(), par, wsize);
-      if (!fSocket->IsValid()) {
-         Warning("TFTP", "can't open %d parallel connections to rootd on host %s at port %d",
-                 par, url.GetHost(), url.GetPort());
-         delete fSocket;
-         par = 1;
-         goto again;
-      }
-
-      // NoDelay is internally set by TPSocket
-
+   TString hurl(url.GetProtocol());
+   if (hurl.Contains("root")) {
+      hurl.Insert(4,"dp"); 
    } else {
-      fSocket = new TSocket(url.GetHost(), url.GetPort(), wsize);
-      if (!fSocket->IsValid()) {
-         Error("TFTP", "can't open connection to rootd on host %s at port %d",
-               url.GetHost(), url.GetPort());
-         goto zombie;
-      }
-
-      // Set some socket options
-      fSocket->SetOption(kNoDelay, 1);
-
-      // Tell rootd we want non parallel connection
-      fSocket->Send((Int_t) 0, (Int_t) 0);
+      hurl = "rootdp";
    }
-
-   // Get rootd protocol level
-   EMessageTypes tmpkind;
-   fSocket->Send(kROOTD_PROTOCOL);
-   Recv(fProtocol, tmpkind);
-   if (fProtocol > 6) {
-      fSocket->Send(Form("%d", TNetFile::GetClientProtocol()),
-                    kROOTD_PROTOCOL2);
-      Recv(fProtocol, tmpkind);
-   }
-
-   // Authenticate to remote rootd server
-   auth = new TAuthenticate(fSocket, url.GetHost(),
-                            Form("%s:%d", url.GetProtocol(), fProtocol),
-                            url.GetUser());
-   if (!auth->Authenticate()) {
-      Error("TFTP", "authentication failed for %s@%s",
-            auth->GetUser(), url.GetHost());
-      delete auth;
+   hurl += TString(Form("://%s@%s:%d",
+                        url.GetUser(),url.GetHost(),url.GetPort()));
+   fSocket = TSocket::CreateAuthSocket(hurl, par, wsize);
+   if (!fSocket || !fSocket->IsValid()) {
+      Error("TFTP", "can't open %d-fold connections to rootd on "
+            "host %s at port %d",par, url.GetHost(), url.GetPort());
       goto zombie;
    }
-   fUser = auth->GetUser();
-   delete auth;
+
+   fProtocol = fSocket->GetRemoteProtocol();
+   fUser = fSocket->GetSecContext()->GetUser();
 
    fHost       = url.GetHost();
    fPort       = url.GetPort();
@@ -156,6 +119,12 @@ again:
    fMode       = kBinary;
    fBytesWrite = 0;
    fBytesRead  = 0;
+
+   // Replace our socket in the list with this
+   // for consistency during the final cleanup
+   // (The socket will be delete by us when everything is ok remotely)
+   gROOT->GetListOfSockets()->Remove(fSocket);
+   gROOT->GetListOfSockets()->Add(this);
 
    return;
 
@@ -170,7 +139,6 @@ TFTP::~TFTP()
    // TFTP dtor. Send close message and close socket.
 
    Close();
-   SafeDelete(fSocket);
 }
 
 //______________________________________________________________________________
@@ -178,10 +146,16 @@ void TFTP::Print(Option_t *) const
 {
    // Print some info about the FTP connection.
 
+   Printf("Local host:           %s", gSystem->HostName());
    Printf("Remote host:          %s [%d]", fHost.Data(), fPort);
    Printf("Remote user:          %s", fUser.Data());
-   if (fParallel > 1)
+   if (fSocket->IsAuthenticated())
+      Printf("Security context:     %s",
+                                      fSocket->GetSecContext()->AsString());
+   Printf("Rootd protocol vers.: %d", fSocket->GetRemoteProtocol());
+   if (fParallel > 1) {
       Printf("Parallel sockets:     %d", fParallel);
+   }
    Printf("TCP window size:      %d", fWindowSize);
    Printf("Rootd protocol:       %d", fProtocol);
    Printf("Transfer block size:  %d", fBlockSize);
@@ -895,6 +869,16 @@ Int_t TFTP::Close()
       Error("Close", "error sending kROOTD_CLOSE command");
       return -1;
    }
+
+   // Ask for remote shutdown   
+   if (fProtocol > 6)
+      fSocket->Send(kROOTD_BYE);
+
+   // Remove from the list of Sockets
+   gROOT->GetListOfSockets()->Remove(this);
+
+   // Delete socket here
+   SafeDelete(fSocket);
 
    return 0;
 }

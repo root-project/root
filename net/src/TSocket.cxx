@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.9 2001/02/12 14:30:02 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.10 2002/05/18 08:22:00 brun Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -20,8 +20,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TSocket.h"
+#include "TAuthenticate.h"
+#include "THostAuth.h"
+#include "TUrl.h"
+#include "TPSocket.h"
 #include "TSystem.h"
+#include "TEnv.h"
 #include "TMessage.h"
 #include "Bytes.h"
 #include "TROOT.h"
@@ -49,6 +53,13 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    Assert(gSystem);
 
    fService = service;
+   fSecContext = 0;
+   fRemoteProtocol= -1;
+   fServType = kSOCKD;
+   if (fService.Contains("root"))
+      fServType = kROOTD;
+   if (fService.Contains("proof"))
+      fServType = kPROOFD;
    fAddress = addr;
    fAddress.fPort = gSystem->GetServiceByName(service);
    fBytesSent = 0;
@@ -60,6 +71,7 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
       if (fSocket != -1) gROOT->GetListOfSockets()->Add(this);
    } else
       fSocket = -1;
+
 }
 
 //______________________________________________________________________________
@@ -79,6 +91,13 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    Assert(gSystem);
 
    fService = gSystem->GetServiceByPort(port);
+   fSecContext = 0;
+   fRemoteProtocol= -1;
+   fServType = kSOCKD;
+   if (fService.Contains("root"))
+      fServType = kROOTD;
+   if (fService.Contains("proof"))
+      fServType = kPROOFD;
    fAddress = addr;
    fAddress.fPort = port;
    SetTitle(fService);
@@ -110,6 +129,13 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
    Assert(gSystem);
 
    fService = service;
+   fSecContext = 0;
+   fRemoteProtocol= -1;
+   fServType = kSOCKD;
+   if (fService.Contains("root"))
+      fServType = kROOTD;
+   if (fService.Contains("proof"))
+      fServType = kPROOFD;
    fAddress = gSystem->GetHostByName(host);
    fAddress.fPort = gSystem->GetServiceByName(service);
    SetName(fAddress.GetHostName());
@@ -118,16 +144,20 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
-      if (fSocket != -1) gROOT->GetListOfSockets()->Add(this);
+      if (fSocket != -1) 
+         gROOT->GetListOfSockets()->Add(this);
+
    } else
       fSocket = -1;
 }
 
 //______________________________________________________________________________
-TSocket::TSocket(const char *host, Int_t port, Int_t tcpwindowsize)
-         : TNamed(host, "")
+TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
+         : TNamed(TUrl(url).GetHost(), "")
 {
-   // Create a socket. Connect to specified port # on the remote host.
+   // Create a socket; see CreateAuthSocket for the form of url.
+   // Connect to the specified port # on the remote host.
+   // If user is specified in url, try authentication as user.
    // Use tcpwindowsize to specify the size of the receive buffer, it has
    // to be specified here to make sure the window scale option is set (for
    // tcpwindowsize > 65KB and for platforms supporting window scaling).
@@ -139,7 +169,17 @@ TSocket::TSocket(const char *host, Int_t port, Int_t tcpwindowsize)
    Assert(gROOT);
    Assert(gSystem);
 
+   fUrl = TString(url);
+   TString host(TUrl(fUrl).GetHost());
+
    fService = gSystem->GetServiceByPort(port);
+   fSecContext = 0;
+   fRemoteProtocol= -1;
+   fServType = kSOCKD;
+   if (fUrl.Contains("root"))
+      fServType = kROOTD;
+   if (fUrl.Contains("proof"))
+      fServType = kPROOFD;
    fAddress = gSystem->GetHostByName(host);
    fAddress.fPort = port;
    SetName(fAddress.GetHostName());
@@ -148,10 +188,11 @@ TSocket::TSocket(const char *host, Int_t port, Int_t tcpwindowsize)
    fBytesRecv = 0;
 
    fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
-   if (fSocket == -1)
+   if (fSocket == -1) {
       fAddress.fPort = -1;
-   else
+   } else {
       gROOT->GetListOfSockets()->Add(this);
+   }
 }
 
 //______________________________________________________________________________
@@ -162,9 +203,12 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
    Assert(gROOT);
    Assert(gSystem);
 
+   fSecContext = 0;
+   fRemoteProtocol= 0;
+   fService = kSOCKD;
    fBytesSent = 0;
    fBytesRecv = 0;
-
+ 
    if (desc >= 0) {
       fSocket  = desc;
       fAddress = gSystem->GetPeerName(fSocket);
@@ -184,6 +228,9 @@ TSocket::TSocket(const TSocket &s) : TNamed(s)
    fLocalAddress = s.fLocalAddress;
    fBytesSent    = s.fBytesSent;
    fBytesRecv    = s.fBytesRecv;
+   fSecContext   = s.fSecContext;
+   fRemoteProtocol = s.fRemoteProtocol;
+   fServType     = s.fServType;
 
    if (fSocket != -1) gROOT->GetListOfSockets()->Add(this);
 }
@@ -197,6 +244,20 @@ void TSocket::Close(Option_t *option)
    // option "force", call explicitely Close("force") if this is desired).
 
    Bool_t force = option ? (!strcmp(option, "force") ? kTRUE : kFALSE) : kFALSE;
+
+   // deactivate used sec context if talking to proofd daemon running
+   // an old protocol (sec context disactivated remotely)
+   if (fSecContext && fSecContext->IsActive()) {
+      TIter last(fSecContext->GetSecContextCleanup(),kIterBackward);
+      TSecContextCleanup *nscc = 0;
+      while ((nscc = (TSecContextCleanup *)last())) {
+         if (nscc->GetType() == TSocket::kPROOFD &&
+             nscc->GetProtocol() < 9) {
+            fSecContext->DeActivate("");
+            break;
+         }
+      }
+   }
 
    if (fSocket != -1) {
       gSystem->CloseConnection(fSocket, force);
@@ -533,4 +594,444 @@ Int_t TSocket::GetErrorCode() const
       return fSocket;
 
    return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TSocket::Authenticate(const char *user)
+{
+   // Authenticated the socket with specified user.
+   Bool_t rc = kFALSE;
+
+   // Parse protocol name
+   // For PROOF, send message with server role
+   Bool_t Master = kFALSE;
+   TString SProtocol = TUrl(fUrl).GetProtocol();
+   if (SProtocol == "") {
+      SProtocol = "root";
+   } else if (SProtocol.Contains("rootd")) {
+      SProtocol.ReplaceAll("d",1,"",0);
+      fServType = kROOTD;
+   } else if (SProtocol.Contains("proofd")) {
+      SProtocol.ReplaceAll("d",1,"",0);
+      TString Opt(TUrl(fUrl).GetOptions());
+
+      if (!strncasecmp(Opt.Data(),"M",1)) {
+         Send("slave");
+         Master = kTRUE;
+      } else if (!strncasecmp(Opt.Data(),"C",1)) {
+         Send("master");
+      } else {
+         Warning("Authenticate",
+                 "called by TSlave: unknown option '%s' %s",
+                 Opt.Data()," - assuming Master");
+         Send("slave");
+         Master = kTRUE;
+      }
+      fServType = kPROOFD;
+   }
+   if (gDebug > 2)
+      Info("Authenticate","Local protocol: %s",SProtocol.Data());
+
+   // Get server protocol level
+   Int_t kind;
+   Send(Form("%d", TAuthenticate::GetClientProtocol()), kROOTD_PROTOCOL);
+   Recv(fRemoteProtocol, kind);
+   if (fServType == kROOTD) {
+      if (fRemoteProtocol > 6 && fRemoteProtocol < 10) {
+         // Middle aged versions expect client protocol now
+         Send(Form("%d", TAuthenticate::GetClientProtocol()), kROOTD_PROTOCOL2);
+         Recv(fRemoteProtocol, kind);
+      }
+   }
+
+   // Remote Host
+   TString Host = GetInetAddress().GetHostName();
+
+   // Init authentication
+   TAuthenticate *auth = new TAuthenticate(this,Host,
+                  Form("%s:%d",SProtocol.Data(),fRemoteProtocol), user);
+
+   // If PROOF client and trasmission of the SRP password is 
+   // requested make sure that ReUse is switched on to get and 
+   // send also the Public Key
+   // Masters do this automatically upon reception of valid info
+   // (see TSlave.cxx)
+   if (!Master && fServType == kPROOFD) {
+      if (gEnv->GetValue("Proofd.SendSRPPwd",0)) {
+         Int_t kSRP = TAuthenticate::kSRP;
+         TString SRPDets(auth->GetHostAuth()->GetDetails(kSRP));
+         Int_t pos = SRPDets.Index("ru:0");
+         if (pos > -1) {
+            SRPDets.ReplaceAll("ru:0",4,"ru:1",4);
+            auth->GetHostAuth()->SetDetails(kSRP,SRPDets);
+         } else {
+            TSubString ss = SRPDets.SubString("ru:no",TString::kIgnoreCase);
+            if (!ss.IsNull()) {
+               SRPDets.ReplaceAll(ss.Data(),5,"ru:1",4);
+               auth->GetHostAuth()->SetDetails(kSRP,SRPDets);
+            }
+         }
+      }
+   }
+
+   // Attempt authentication
+   if (!auth->Authenticate()) {
+      // Close the socket if unsuccessful
+      Error("Authenticate", 
+            "authentication failed for %s@%s",auth->GetUser(),Host.Data());
+      // This is to terminate properly remote proofd in case of failure
+      if (fServType == kPROOFD) 
+         Send(Form("%d %s", gSystem->GetPid(), Host.Data()), kROOTD_CLEANUP);
+  } else {
+      // Set return flag;
+      rc = kTRUE;
+      // Search pointer to relevant TSecContext
+      SetSecContext(auth->GetSecContext());
+   }
+
+   delete auth;
+
+   return rc;
+}
+
+//______________________________________________________________________________
+TSocket *TSocket::CreateAuthSocket(const char *url,
+                                   Int_t size, Int_t tcpwindowsize)
+{
+   // Creates a socket or a parallel sockets and authenticates to the 
+   // remote server.
+   //
+   // url: [proto[p][auth]://][user@]host[:port][/service][?options]
+   //
+   // where  proto = "sockd", "rootd", "proofd"
+   //                indicates the type of remote server 
+   //                ("sockd" not operational yet)
+   //          [p] = for parallel sockets
+   //       [auth] = "up", "s", "k", "g", "h", "ug" to force UsrPwd, 
+   //                SRP, Krb5, Globus, SSH or UidGid authentication
+   //       [port] = is the remote port number
+   //    [service] = service name used to determine the port 
+   //                (for backward compatibility, specification of 
+   //                 port as priority)
+   //     options  = "m" or "s", when proto=proofd indicates whether
+   //                we are master or slave (used internally by 
+   //                TSlave)
+   //
+   // Example:
+   //
+   //   TSocket::CreateAuthSocket("rootdps://qwerty@machine.fq.dn:5051")
+   //
+   //   creates an authenticated socket to a rootd server running
+   //   on remote machine machine.fq.dn on port 5051; socket needs to
+   //   be declared as parallel because rootd expects parallel sockets;
+   //   however a simple socket will be created because the size is 0
+   //   (the default). 
+   //
+   // Returns pointer to an authenticated socket or 0 if creation or 
+   // authentication is unsuccessful
+
+   // Url to be passed to choosen constructor
+   TString eurl(url);
+
+   // Check if parallel
+   Bool_t Parallel = kFALSE;
+   Bool_t RootdSrv = kFALSE;
+   TString proto(TUrl(url).GetProtocol());
+   if (proto.Contains("sockd")) {
+      if (proto.Index("dp",1) > 1 || size > 1)
+         Parallel = kTRUE;
+      eurl.ReplaceAll("dp",2,"d",1);
+   }
+   if (proto.Contains("rootd")) {
+      Parallel = kTRUE;
+      RootdSrv = kTRUE;
+      eurl.ReplaceAll("dp",2,"d",1);
+   }
+
+   // For backward compatibility we need to now the protocol
+   // version of the remote rootd; the only way is to ask it
+   Int_t RemoteProtocol = -1;
+   if (RootdSrv) {
+      // Open simple parallel socket
+      TSocket *sock = new TPSocket(eurl.Data(),TUrl(url).GetPort(),1);
+      // Inquire remote protocol (sending our) 
+      sock->Send(Form("%d", TAuthenticate::GetClientProtocol()), kROOTD_PROTOCOL);
+      // Receive remote protocol
+      Int_t kind;
+      sock->Recv(RemoteProtocol, kind);
+      // Close connection     
+      sock->Send(kROOTD_BYE);
+      delete sock;
+   }
+
+   // Create the socket now
+   TSocket *sock = 0;
+   if (!Parallel) {
+
+      // Simple socket
+      sock = new TSocket(eurl.Data(), TUrl(url).GetPort(), tcpwindowsize);
+
+      // Authenticate now
+      if (sock && sock->IsValid()) {
+         if (!sock->Authenticate(TUrl(url).GetUser())) {
+            sock->Close();
+            delete sock;
+            sock = 0;
+         }
+      }
+
+   } else {
+
+      // Tell TPSocket that we want authentication, which has to
+      // be done using the original socket before creation of set
+      // of parallel sockets
+      if (eurl.Contains("?"))
+         eurl.Resize(eurl.Index("?"));
+      eurl += "?A";
+      eurl += RemoteProtocol;
+
+      // Parallel socket
+      sock = new TPSocket(eurl.Data(), TUrl(url).GetPort(), size, tcpwindowsize);
+
+      // Cleanup if failure ...
+      if (sock && !sock->IsAuthenticated()) {
+         // Nothing to do except setting sock to NULL
+         if (sock->IsValid())
+            // And except when the sock is valid; this typically 
+            // happens when talking to a old server, because the 
+            // the parallel socket system is open before authentication
+            delete sock;
+         sock = 0;
+      }
+   }
+
+   return sock;
+}
+
+//______________________________________________________________________________
+TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
+                                   Int_t port, Int_t size, Int_t tcpwindowsize)
+{
+   // Creates a socket or a parallel sockets and authenticates to the 
+   // remote server specified in 'url' on remote 'port' as 'user' 
+   //
+   // url: [proto[p][auth]://]host[/?options]
+   //
+   // where  proto = "sockd", "rootd", "proofd"
+   //                indicates the type of remote server 
+   //                ("sockd" not operational yet)
+   //          [p] = for parallel sockets
+   //       [auth] = "up", "s", "k", "g", "h", "ug" to force UsrPwd, 
+   //                SRP, Krb5, Globus, SSH or UidGid authentication
+   //    [options] = "m" or "s", when proto=proofd indicates whether
+   //                we are master or slave (used internally by TSlave)
+   //
+   // Example:
+   //
+   //   TSocket::CreateAuthSocket("qwerty","rootdps://machine.fq.dn",5051)
+   //
+   //   creates an authenticated socket to a rootd server running
+   //   on remote machine machine.fq.dn on port 5051, authenticating 
+   //   as 'qwerty'; socket needs to be declared as parallel because 
+   //   rootd expects parallel sockets; however, a simple socket will 
+   //   be created because the size is 0 (the default). 
+   //
+   // Returns pointer to an authenticated socket or 0 if creation or 
+   // authentication is unsuccessful
+   //
+
+   // Extended url to be passed to base call
+   TString eurl;
+
+   // Add protocol, if any
+   if (TString(TUrl(url).GetProtocol()).Length() > 0) {
+      eurl += TString(TUrl(url).GetProtocol());
+      eurl += TString("://");
+   }
+   // Add user, if any
+   if (!user || strlen(user) > 0) {
+      eurl += TString(user);
+      eurl += TString("@");
+   }
+   // Add host
+   eurl += TString(TUrl(url).GetHost());
+   // Add port
+   eurl += TString(":");
+   eurl += (port > 0 ? port : 0);
+   // Add options, if any
+   if (TString(TUrl(url).GetOptions()).Length() > 0) {
+      eurl += TString("/?");
+      eurl += TString(TUrl(url).GetOptions());
+   }
+
+   // Create the socket and return it
+   return TSocket::CreateAuthSocket(eurl,size,tcpwindowsize);
+}
+
+//______________________________________________________________________________
+Int_t TSocket::SecureSend(const char *In, Int_t ktyp)
+{
+   // If authenticated and related SecContext is active  
+   // secure-sends In to host using RSA ktyp stores in TAuthenticate
+   // Returns # bytes send or -1 in case of error 
+
+   if (IsAuthenticated() && fSecContext->IsActive() )
+      return TAuthenticate::SecureSend(this, ktyp, In);
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TSocket::SendHostAuth()
+{
+   // Sends the list of the relevant THostAuth objects to the master or
+   // to the active slaves, typically data servers external to the proof
+   // cluster. The list is of THostAuth to be sent is specified by
+   // TAuthenticate::fgProofAuthInfo after directives found in the
+   // .rootauthrc family files ('proofserv' key)
+   // Returns -1 if a problem sending THostAuth has occured, -2 in case
+   // of problems closing the transmission.
+
+   Int_t retval = 0, ns = 0;
+
+   TIter next(TAuthenticate::GetProofAuthInfo());
+   THostAuth *ha;
+   while ((ha = (THostAuth *)next())) {
+      TString Buf;
+      ha->AsString(Buf);
+      if((ns = Send(Buf, kPROOF_SENDHOSTAUTH)) < 1) {
+         retval = -1;
+         break;
+      }
+      if (gDebug > 2)
+         Info("SendHostAuth","sent %d bytes (%s)",ns,Buf.Data());
+   }
+
+   // End of transmission ...
+   if ((ns = Send("END", kPROOF_SENDHOSTAUTH)) < 1) 
+      retval = -2;
+   if (gDebug > 2)
+      Info("SendHostAuth","sent %d bytes for closing",ns);
+
+   return retval;
+}
+
+//______________________________________________________________________________
+Int_t TSocket::RecvHostAuth(Option_t *Opt, const char *proofconf)
+{
+   // Receive from client/master directives for authentications, create
+   // related THostAuth and add them to the TAuthenticate::ProofAuthInfo
+   // list. Opt = "M" or "m" if Master, "S" or "s" if Proof slave.
+   // The 'proofconf' file is read only if Master
+
+   // Check if Master
+   Bool_t Master = !strncasecmp(Opt,"M",1) ? kTRUE : kFALSE;
+
+   // First read directives from <rootauthrc>, <proofconf> and alike files
+   if (Master)
+      TAuthenticate::ReadRootAuthrc(proofconf);
+   else
+      TAuthenticate::ReadRootAuthrc();
+
+   // Receive buffer
+   Int_t kind;
+   char buf[kMAXSECBUF];
+   Int_t nr = Recv(buf, kMAXSECBUF, kind);
+   if (nr < 0 || kind != kPROOF_SENDHOSTAUTH) {
+      Error("RecvHostAuth", "received: kind: %d (%d bytes)", kind, nr);
+      return -1;
+   }
+   if (gDebug > 2)
+      Info("RecvHostAuth","received %d bytes (%s)",nr,buf);
+
+   while (strcmp(buf, "END")) {
+      // Clean buffer
+      Int_t nc = (nr < kMAXSECBUF)? nr : kMAXSECBUF ;
+      buf[nc] = '\0';
+
+      // Create THostAuth
+      THostAuth *ha = new THostAuth((const char *)&buf);
+
+      // Check if there is already one compatible
+      Int_t kExact = 0;
+      THostAuth *haex = 0;
+      Bool_t FromProofAI = kFALSE;
+      if (Master) {
+         // Look first in the proof list
+         haex = TAuthenticate::GetHostAuth(ha->GetHost(),ha->GetUser(),"P",&kExact);
+         // If nothing found, look also in the standard list
+         if (!haex) {
+            haex = 
+                TAuthenticate::GetHostAuth(ha->GetHost(),ha->GetUser(),"R",&kExact);
+         } else
+            FromProofAI = kTRUE;
+      } else {
+         // For slaves look first in the standard list only
+         haex = TAuthenticate::GetHostAuth(ha->GetHost(),ha->GetUser(),"R",&kExact);
+      }
+
+      if (haex) {
+         // If yes, action depends on whether it matches exactly or not
+         if (kExact == 1) {
+            // Update info in AuthInfo if Slave or in ProofAuthInfo
+            // if Master and the entry was already in ProofAuthInfo
+            if (!Master || FromProofAI) {
+               // update this existing one with the information found in 
+               // in the new one, if needed
+               haex->Update(ha);
+               // Delete temporary THostAuth
+               SafeDelete(ha);
+            } else
+               // Master, entry not already in ProofAuthInfo,
+               // Add it to the list
+               TAuthenticate::GetProofAuthInfo()->Add(ha);
+         } else {
+            // update this new one with the information found in 
+            // in the existing one (if needed) and ...
+            Int_t i = 0;
+            for (; i < haex->NumMethods(); i++) {
+               Int_t met = haex->GetMethod(i);
+               if (!ha->HasMethod(met))
+                  ha->AddMethod(met,haex->GetDetails(met));
+            }
+            if (Master)
+               // ... add the new one to the list
+               TAuthenticate::GetProofAuthInfo()->Add(ha);
+            else
+               // We add this one to the standard list
+               TAuthenticate::GetAuthInfo()->Add(ha);
+         }
+      } else {
+         if (Master) 
+            // We add this one to the list for forwarding
+            TAuthenticate::GetProofAuthInfo()->Add(ha);
+         else
+            // We add this one to the standard list
+            TAuthenticate::GetAuthInfo()->Add(ha);
+      }
+
+
+      // Get the next one
+      nr = Recv(buf, kMAXSECBUF, kind);
+      if (nr < 0 || kind != kPROOF_SENDHOSTAUTH) {
+         Info("RecvHostAuth","Error: received: kind: %d (%d bytes)", kind, nr);
+         return -1;
+      }
+      if (gDebug > 2)
+         Info("RecvHostAuth","received %d bytes (%s)",nr,buf);
+   }
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TSocket::SecureRecv(TString &Str, Int_t Key)
+{
+   // Receive encoded string and decode it with 'key' type
+
+   char *Buf = 0;
+   Int_t rc = TAuthenticate::SecureRecv(this, Key, &Buf);
+   Str = TString(Buf);
+   if (Buf) delete[] Buf;
+
+   return rc;
 }

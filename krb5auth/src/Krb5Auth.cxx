@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.15 2003/11/26 10:33:08 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.16 2003/12/18 18:31:20 brun Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -49,17 +49,20 @@
 #include "Krb5Auth.h"
 #include "TSocket.h"
 #include "TAuthenticate.h"
+#include "TSecContext.h"
+#include "TDatime.h"
 #include "TROOT.h"
 #include "THostAuth.h"
 #include "TError.h"
 #include "TSystem.h"
 #include "TEnv.h"
-#include "rpderr.h"
+#include "NetErrors.h"
 
 Int_t Krb5Authenticate(TAuthenticate *, TString &, TString &, Int_t);
 
 void  Krb5InitCred(char *ClientPrincipal);
-Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc, krb5_principal Principal);
+Int_t Krb5CheckCred(krb5_context, krb5_ccache, krb5_principal, TDatime &);
+Int_t Krb5CheckSecCtx(const char *, TSecContext *);
 
 class Krb5AuthInit {
 public:
@@ -121,10 +124,12 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    int Auth, kind;
    TSocket *sock = auth->GetSocket();
 
-   char answer[100];
+   char answer[256];
    int type;
+   Int_t Nsen = 0, Nrec = 0;
 
    TString targetUser(user);
+//   TString targetUser("ganis");
 
    // first check if protocol version supports kerberos, krb5 support
    // was introduced in rootd version 6
@@ -138,7 +143,8 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    cleanup.context = context;
 
    if (retval) {
-      com_err("<Krb5Authenticate>", retval, "while initializing krb5");
+      Error("Krb5Authenticate","failed <krb5_init_context>: %s\n",
+            error_message(retval));
       return -1;
    }
 
@@ -149,11 +155,17 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    // get our credentials cache
    krb5_ccache ccdef;
    if (gDebug > 2) {
-      Info("Krb5Authenticate","Use credential file from $KRB5CCNAME: %s\n",
-           gSystem->Getenv("KRB5CCNAME"));
+      if (gSystem->Getenv("KRB5CCNAME"))
+         Info("Krb5Authenticate",
+              "Use credential file from $KRB5CCNAME: %s\n",
+              gSystem->Getenv("KRB5CCNAME"));
+      else
+         Info("Krb5Authenticate",
+              "Use default credential file ($KRB5CCNAME undefined)");
    }
    if ((retval = krb5_cc_default(context, &ccdef))) {
-      com_err("<Krb5Authenticate>", retval, "while getting default cache");
+      Error("Krb5Authenticate","failed <krb5_cc_default>: %s\n",
+            error_message(retval));
       return -1;
    }
    cleanup.ccdef = ccdef;
@@ -172,7 +184,8 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
                  ClientPrincipal);
          Krb5InitCred(ClientPrincipal);
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
-            com_err("<Krb5Authenticate>", retval, "while getting client principal name");
+            Error("Krb5Authenticate","failed <krb5_cc_get_principal>: %s\n",
+                  error_message(retval));
             return -1;
          }
       } else {
@@ -183,7 +196,8 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    }
    cleanup.client = client;
 
-   if (Krb5CheckCred(context,ccdef,client) != 1) {
+   TDatime ExpDate;
+   if (Krb5CheckCred(context,ccdef,client,ExpDate) != 1) {
 
       if (isatty(0) && isatty(1)) {
 
@@ -193,9 +207,13 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
                   ClientPrincipal);
          Krb5InitCred(ClientPrincipal);
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
-            com_err("<Krb5Authenticate>", retval, "while getting client principal name");
+            Error("Krb5Authenticate","failed <krb5_cc_get_principal>: %s\n",
+                  error_message(retval));
             return -1;
          }
+         // Check credentials and get expiration time
+         if (Krb5CheckCred(context,ccdef,client,ExpDate) != 1)
+            return -1;
       } else {
          Warning("Krb5Authenticate",
                  "not a tty: cannot prompt for credentials, returning failure");
@@ -206,10 +224,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    cleanup.client = client;
 
    // Get a normal string for user
-   Int_t  lenUser=64;
-   char   User[64];
-   if (client->data->length<64) lenUser = client->data->length;
-   strncpy(User,client->data->data,lenUser);
+   TString User(client->data->data,client->data->length);
 
    if (gDebug > 3) {
       Info("Krb5Authenticate", "cc_get_principal: client: %.*s %.*s",
@@ -222,18 +237,20 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
 
    if (version > 1) {
 
+      // To check sec context
+      TString Principal(Form("%.*s@%.*s", client->data->length,
+          client->data->data, client->realm.length, client->realm.data));
+
       // Check ReUse
       ReUse  = TAuthenticate::GetAuthReUse();
       Prompt = TAuthenticate::GetPromptUser();
 
       // Build auth details
-      Details = Form("pt:%d ru:%d us:%s@%s",
-                     Prompt,ReUse,client->data->data,client->realm.data);
+      Details = Form("pt:%d ru:%d us:%s",Prompt,ReUse,Principal.Data());
 
       // Create Options string
-      char *Options= new char[strlen(User)+20];
       int Opt = ReUse * kAUTH_REUSE_MSK;
-      sprintf(Options,"%d %ld %s", Opt, (Long_t)strlen(User), User);
+      TString Options(Form("%d %ld %s", Opt, User.Length(), User.Data()));
 
       // Now we are ready to send a request to the rootd/proofd daemons
       // to check if we have already a valid security context and
@@ -241,13 +258,11 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       kind = kROOTD_KRB5;
       retval = ReUse;
       int rc = 0;
-      if ((rc = TAuthenticate::AuthExists(auth,(Int_t)TAuthenticate::kKrb5,
-                Details,Options,&kind,&retval)) == 1) {
+      if ((rc = auth->AuthExists(Principal, TAuthenticate::kKrb5,
+                Options, &kind, &retval, &Krb5CheckSecCtx)) == 1) {
          // A valid authentication exists: we are done ...
-         if (Options) delete[] Options;
          return 1;
       }
-      if (Options) delete[] Options;
       if (rc == -2) {
          return rc;
       }
@@ -257,8 +272,16 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
 
    } else {
 
-      sock->Send(kROOTD_KRB5);
-      sock->Recv(retval, kind);
+      Nsen = sock->Send(kROOTD_KRB5);
+      if (Nsen <= 0) {
+         Error("Krb5Authenticate","Sending kROOTD_KRB5");
+         return 0;
+      }
+      Nrec = sock->Recv(retval, kind);
+      if (Nrec <= 0) {
+         Error("Krb5Authenticate","Receiving kROOTD_KRB5");
+         return 0;
+      }
 
       if (kind == kROOTD_ERR) {
          TString Server = "sockd";
@@ -299,41 +322,28 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
 
    // test for CRC-32
    if (!valid_cksumtype(CKSUMTYPE_CRC32)) {
-      com_err("<Krb5Authenticate>", KRB5_PROG_SUMTYPE_NOSUPP,
-              "while using CRC-32");
+      Error("Krb5Authenticate","failed <valid_cksumtype>: %s\n",
+                  error_message(KRB5_PROG_SUMTYPE_NOSUPP));
       return 0;
    }
 
    // get service principal from service and host names --
    // hard coding of service names avoids having the have these
    // services in the local /etc/services file
-   const char *service;
-   if (sock->GetPort() == 1093)
-     service = "proofd";
-   else if (sock->GetPort() == 1094)
-     service = "rootd";
-   else {
-      service = sock->GetService();
+   const char *service = "host";
 
-      // if port is not 1093 or 1094 AND the
-      // service is not described in /etc/service
-      // let's default to "host"
-
-      int port = atoi(service);
-      if (port != 0) service = "host";
-   }
-
-   const char *serv_host = sock->GetInetAddress().GetHostName();
-
+   TString serv_host(sock->GetInetAddress().GetHostName());
    krb5_principal server;
 
    if (gDebug > 3)
-      Info("Krb5Authenticate","serv_host: %s service: %s",serv_host,service);
+      Info("Krb5Authenticate","serv_host: %s service: %s",
+           serv_host.Data(),service);
 
-   if ((retval = krb5_sname_to_principal(context, serv_host, service,
-                                         KRB5_NT_SRV_HST, &server))) {
-      com_err("<Krb5Authenticate>", retval, "while generating service "
-              "principal %s/%s", serv_host, service);
+   if ((retval = krb5_sname_to_principal(context, serv_host.Data(),
+                 service, KRB5_NT_SRV_HST, &server))) {
+
+      Error("Krb5Authenticate","failed <krb5_sname_to_principal>: %s\n",
+             error_message(retval));
       return 0;
    }
    cleanup.server = server;
@@ -349,14 +359,15 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    int sockd = sock->GetDescriptor();
    char proto_version[100] = "krootd_v_1";
    krb5_data cksum_data;
-   cksum_data.data = (char *)serv_host; // eeew yuck
-   cksum_data.length = strlen(serv_host);
+   cksum_data.data = (char *)serv_host.Data(); // eeew yuck
+   cksum_data.length = serv_host.Length();
    krb5_error *err_ret;
    krb5_ap_rep_enc_part *rep_ret;
 
    retval = krb5_auth_con_init(context,&auth_context);
-   if (retval)  Error("Krb5Authenticate","failed auth_con_init: %s\n",
-                      error_message(retval));
+   if (retval)
+      Error("Krb5Authenticate","failed auth_con_init: %s\n",
+            error_message(retval));
    cleanup.auth_context = auth_context;
 
    retval = krb5_auth_con_setflags(context, auth_context,
@@ -367,7 +378,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    if (gDebug > 1)
      Info("Krb5Authenticate",
           "Sending kerberos authentification to %s",
-          serv_host);
+          serv_host.Data());
 
    retval = krb5_sendauth(context, &auth_context, (krb5_pointer)&sockd,
                           proto_version, client, server,
@@ -379,13 +390,14 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    // handle the reply (this is a verbatim copy from the kerberos
    // sample client source)
    if (retval && retval != KRB5_SENDAUTH_REJECTED) {
-      com_err("<Krb5Authenticate>", retval, "while using sendauth");
+      Error("Krb5Authenticate","failed <krb5_sendauth>: %s\n",
+             error_message(retval));
       return 0;
    }
    if (retval == KRB5_SENDAUTH_REJECTED) {
       // got an error
       Error("Krb5Authenticate", "sendauth rejected, error reply "
-            "is:\n\t\"%*s\"",
+            "is:\n\t\"%.*s\"",
             err_ret->text.length, err_ret->text.data);
       return 0;
    } else if (!rep_ret) {
@@ -400,8 +412,12 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
 
      if (gDebug > 0)
         Info("Krb5Authenticate","client is %s target is %s",
-                                User,targetUser.Data());
-      sock->Send(targetUser.Data(),kROOTD_KRB5);
+                                User.Data(),targetUser.Data());
+      Nsen = sock->Send(targetUser.Data(),kROOTD_KRB5);
+      if (Nsen <= 0) {
+         Error("Krb5Authenticate","Sending <targetUser>");
+         return 0;
+      }
 
       krb5_data outdata;
       outdata.data = 0;
@@ -428,16 +444,24 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       if (gDebug > 3)
          Info("Krb5Authenticate",
               "Sending kerberos forward ticket to %s %p %d [%d,%d,%d,...]",
-              serv_host,outdata.data,outdata.length,
+              serv_host.Data(),outdata.data,outdata.length,
               outdata.data[0],outdata.data[1],outdata.data[2]);
 
       // Send length first
       char BufLen[20];
       sprintf(BufLen, "%d",outdata.length);
-      sock->Send(BufLen,kROOTD_KRB5);
+      Nsen = sock->Send(BufLen,kROOTD_KRB5);
+      if (Nsen <= 0) {
+         Error("Krb5Authenticate","Sending <BufLen>");
+         return 0;
+      }
 
       // Send Key. second ...
-      Int_t Nsen = sock->SendRaw(outdata.data, outdata.length);
+      Nsen = sock->SendRaw(outdata.data, outdata.length);
+      if (Nsen <= 0) {
+         Error("Krb5Authenticate","Sending <Key>");
+         return 0;
+      }
 
       if (gDebug>3)
          Info("Krb5Authenticate",
@@ -450,12 +474,20 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
 
    // returns user@realm
    type = kMESS_STRING;
-   sock->Recv(answer, 100, type);
+   Nrec = sock->Recv(answer, 100, type);
+   if (Nrec <= 0) {
+      Error("Krb5Authenticate","Receiving <user@realm>");
+      return 0;
+   }
 
    if (version > 1) {
 
       // Receive key request
-      int nrec=sock->Recv(retval, type);
+      Nrec=sock->Recv(retval, type);
+      if (Nrec <= 0) {
+         Error("Krb5Authenticate","Receiving <key request>");
+         return 0;
+      }
 
       Int_t RSAKey = 0;
       if (ReUse == 1) {
@@ -469,19 +501,27 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
          // Send the key securely
          TAuthenticate::SendRSAPublicKey(sock);
 
-         // returns user + OffSet
-         nrec = sock->Recv(retval, type);
-
+         // get length of user + OffSet string
+         Nrec = sock->Recv(retval, type);
+         if (Nrec <= 0) {
+            Error("Krb5Authenticate","Receiving <length of user+offset string>");
+            return 0;
+         }
       }
 
       if (type != kROOTD_KRB5 || retval < 1) {
          Warning("Krb5Auth",
                  "problems recvn (user,offset) length (%d:%d bytes:%d)",
-                  type,retval,nrec);
+                  type,retval,Nrec);
          return 0;
       }
       char *rfrm = new char[retval+1];
-      nrec = sock->Recv(rfrm,retval+1, type);  // receive user,offset) info
+      Nrec = sock->Recv(rfrm,retval+1, type);  // receive user,offset) info
+      if (Nrec <= 0) {
+         Error("Krb5Authenticate","Receiving <user+offset string>");
+         delete[] rfrm;
+         return 0;
+      }
 
       // Parse answer
       char *lUser= new char[retval];
@@ -503,19 +543,32 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
          Token = StrDup("");
       }
 
-      // Create and save AuthDetails object
-      TAuthenticate::SaveAuthDetails(auth,(Int_t)TAuthenticate::kKrb5,
-                                     OffSet,ReUse,Details,lUser,RSAKey,Token);
+      // Create SecContext object
+      TSecContext *ctx = 
+         auth->GetHostAuth()->CreateSecContext((const char *)lUser, 
+             auth->GetRemoteHost(), (Int_t)TAuthenticate::kKrb5, OffSet,
+             Details, (const char *)Token, ExpDate, 0, RSAKey);
+      // Transmit it to TAuthenticate
+      auth->SetSecContext(ctx);
+
       det = Details;
       if (Token) delete[] Token;
       if (lUser) delete[] lUser;
    } else {
-      sock->Recv(answer, 100, type);  // returns user
+      Nrec = sock->Recv(answer, 100, type);  // returns user
+      if (Nrec <= 0) {
+         Error("Krb5Authenticate","Receiving <user string>");
+         return 0;
+      }
       user = answer;
    }
 
    // Receive auth from remote login function
-   sock->Recv(Auth, kind);
+   Nrec = sock->Recv(Auth, kind);
+   if (Nrec <= 0) {
+      Error("Krb5Authenticate","Receiving <Auth flag>");
+      return 0;
+   }
 
    if (Auth && kind == kROOTD_AUTH)
       return 1;
@@ -531,25 +584,25 @@ void Krb5InitCred(char *ClientPrincipal)
    if (gDebug > 2)
        Info("Krb5InitCred","enter: %s", ClientPrincipal);
 
-   // Get klist output ...
-   char cmd[kMAXPATHLEN]= { 0 };
-
    // Prepare command
-   char *Krb5Init = R__KRB5INIT;
-   if (gDebug > 2) Info("Krb5InitCred","krb5init is %s",Krb5Init);
+   TString Cmd;
 
-   if (Krb5Init==0 || strlen(Krb5Init)<=0) {
-      if (Krb5Init!=0) delete[] Krb5Init;
-      Krb5Init = "/usr/kerberos/bin/kinit";
-  }
-  sprintf(cmd, "%s -f %s",Krb5Init,ClientPrincipal);
+   if (strlen(R__KRB5INIT) <= 0)
+      Cmd = Form("/usr/kerberos/bin/kinit -f %s",ClientPrincipal);
+   else
+      Cmd = Form("%s -f %s",R__KRB5INIT,ClientPrincipal);
 
-  if (gDebug > 2) Info("Krb5InitCred","executing: %s",cmd);
-  gSystem->Exec(cmd);
+   if (gDebug > 2) 
+      Info("Krb5InitCred","executing: %s",Cmd.Data());
+   Int_t rc = gSystem->Exec(Cmd);
+   if (rc)
+      if (gDebug > 0)
+         Info("Krb5InitCred", "error: return code: %d", rc);
 }
 
 //______________________________________________________________________________
-Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc, krb5_principal Principal)
+Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc, 
+                    krb5_principal Principal, TDatime &ExpDate)
 {
    // Checks if there are valid credentials.
 
@@ -558,12 +611,18 @@ Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc, krb5_principal Principal
    Int_t Valid = -1;
 
    if (gDebug > 2)
-      Info("Krb5CheckCred","enter: principal '%s@%s'",
-            Principal->data->data,Principal->realm.data);
+      Info("Krb5CheckCred","enter: principal '%.*s@%.*s'",
+            Principal->data->length, Principal->data->data,
+            Principal->realm.length, Principal->realm.data);
+
+   // Init to now
+   ExpDate = TDatime();
 
    krb5_cc_cursor Cur;
    if ((retval = krb5_cc_start_seq_get(kCont, Cc, &Cur))) {
-      if (gDebug > 2) com_err("<Krb5CheckCred>", retval, "while starting seq get");
+      if (gDebug > 2) 
+         Error("Krb5Authenticate","failed <krb5_cc_start_seq_get>: %s\n",
+                error_message(retval));
       return 0;
    }
 
@@ -573,24 +632,47 @@ Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc, krb5_principal Principal
       if (gDebug > 3) {
          Info("Krb5CheckCred","Creds.server->length: %d",
                Creds.server->length);
-         Info("Krb5CheckCred","Realms data: '%s' '%s'",
-               Creds.server->realm.data,Principal->realm.data);
-         Info("Krb5CheckCred","Srv data[0]: '%s' ",
-               Creds.server->data[0].data);
-         Info("Krb5CheckCred","Data data: '%s' '%s'",
-               Creds.server->data[1].data,Principal->realm.data);
+         Info("Krb5CheckCred","Realms data: '%.*s' '%.*s'",
+               Creds.server->realm.length, Creds.server->realm.data,
+               Principal->realm.length, Principal->realm.data);
+         Info("Krb5CheckCred","Srv data[0]: '%.*s' ",
+               Creds.server->data[0].length, Creds.server->data[0].data);
+         Info("Krb5CheckCred","Data data: '%.*s' '%.*s'",
+               Creds.server->data[1].length, Creds.server->data[1].data,
+               Principal->realm.length, Principal->realm.data);
          Info("Krb5CheckCred","Endtime: %d ",Creds.times.endtime);
       }
 
       if (Creds.server->length == 2 &&
-         strcmp(Creds.server->realm.data, Principal->realm.data) == 0 &&
-         strcmp((char *)Creds.server->data[0].data, "krbtgt") == 0 &&
-         strcmp((char *)Creds.server->data[1].data,Principal->realm.data) == 0) {
+         !strncmp(Creds.server->realm.data,
+                  Principal->realm.data,Creds.server->realm.length) &&
+         !strncmp((char *)Creds.server->data[0].data,
+                  "krbtgt",Creds.server->data[0].length) &&
+         !strncmp((char *)Creds.server->data[1].data,
+                  Principal->realm.data,Creds.server->data[1].length)) {
          // Check expiration time
          Valid = (Creds.times.endtime >= Now) ? 1 : 0;
+         // Return expiration time
+         ExpDate.Set(Creds.times.endtime);
       }
       krb5_free_cred_contents(kCont, &Creds);
    }
    return Valid;
 }
 
+//______________________________________________________________________________
+Int_t Krb5CheckSecCtx(const char *Principal, TSecContext *Ctx)
+{
+   // Krb5 version of CheckSecCtx to be passed to TAuthenticate::AuthExists
+   // Check if Principal is matches the one used to instantiate Ctx
+   // Returns: 1 if ok, 0 if not
+   // Deactivates Ctx is not valid 
+ 
+   Int_t rc = 0;
+
+   if (Ctx->IsActive()) {
+      if (strstr(Ctx->GetDetails(),Principal))
+         rc = 1;
+   }
+   return rc;
+}

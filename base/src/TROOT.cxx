@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.115 2004/02/13 16:34:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.116 2004/02/18 20:13:42 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 //       gROOT->GetListOfFiles
 //       gROOT->GetListOfMappedFiles
 //       gROOT->GetListOfSockets
+//       gROOT->GetListOfSecContexts
 //       gROOT->GetListOfCanvases
 //       gROOT->GetListOfStyles
 //       gROOT->GetListOfFunctions
@@ -101,11 +102,7 @@
 #include "TMap.h"
 #include "TObjString.h"
 #include "TVirtualUtilHist.h"
-#include "TSocket.h"
 #include "TAuthenticate.h"
-#include "TAuthDetails.h"
-#include "THostAuth.h"
-#include "TNetFile.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -382,6 +379,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fBrowsables  = new TList;
    fCleanups    = new TList;
    fMessageHandlers = new TList;
+   fSecContexts = new TList;
 
    TProcessID::AddProcessID();
    fUUIDs = new TProcessUUID();
@@ -403,6 +401,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fRootFolder->AddFolder("Handlers",  "List of Message Handlers",fMessageHandlers);
    fRootFolder->AddFolder("Cleanups",  "List of RecursiveRemove Collections",fCleanups);
    fRootFolder->AddFolder("StreamerInfo","List of Active StreamerInfo Classes",fStreamerInfo);
+   fRootFolder->AddFolder("SecContexts","List of Security Contexts",fSecContexts);
    fRootFolder->AddFolder("ROOT Memory","List of Objects in the gROOT Directory",fList);
    fRootFolder->AddFolder("ROOT Files","List of Connected ROOT Files",fFiles);
 
@@ -493,8 +492,8 @@ TROOT::~TROOT()
       // out of date
       if (!fVersionInt) return;
 
-      // Remote cleanup of authentication stuff
-      AuthCleanup();
+     // Remote cleanup of authentication stuff
+      TAuthenticate::CleanupSecContextAll();
 
       // ATTENTION!!! Order is important!
 
@@ -505,6 +504,7 @@ TROOT::~TROOT()
 #endif
       fFiles->Delete("slow"); SafeDelete(fFiles);       // and files
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
+      fSecContexts->Delete(); SafeDelete(fSecContexts); // and security contexts
       fMappedFiles->Delete("slow");                     // and mapped files
       delete fUUIDs;
       TProcessID::Cleanup();                            // and list of ProcessIDs
@@ -1884,105 +1884,4 @@ void TROOT::SetMakeDefCanvas(VoidFuncPtr_t makecanvas)
    // It is set as soon as the library containing the TCanvas class is loaded.
 
    fgMakeDefCanvas = makecanvas;
-}
-
-//______________________________________________________________________________
-void TROOT::AuthCleanup()
-{
-   // Cleanup authentication info on remote rootd's.
-
-   // Get list of istantiated THostAuths ...
-   TList *tha = TAuthenticate::GetAuthInfo();
-
-   // Number of HostAuth ...
-   Int_t Nha = tha->GetSize();
-   if (gDebug > 2)
-      Info("AuthCleanup", "found %d THostAuth instantiated ...", Nha);
-
-   if (Nha <= 0) return;
-
-   Int_t   Inot;
-   Int_t   Nnot  = 0;
-   Int_t  *rPnot = new Int_t[Nha];
-   const char **rHnot = new const char *[Nha];
-
-   // Iterator over HostAuths ...
-   TIter      next_ha(tha);
-   THostAuth *ha;
-
-   while ((ha = (THostAuth*) next_ha())) {
-
-      // Get List of Established authentications
-      TList *tai = ha->Established();
-
-      // Number of HostAuth ...
-      Int_t Nai = tai->GetSize();
-      if (gDebug > 2)
-         Info("AuthCleanup", "found %d TAuthDetails instantiated ...", Nai);
-
-      if (Nai > 0) {
-
-         // Iterator over AuthDetails ...
-         TIter next_ai(tai);
-         TAuthDetails *ai;
-
-         while ((ai = (TAuthDetails*) next_ai())) {
-
-            const char *rhost;
-            Int_t       rport, serv;
-
-            // This is host, port, serv
-            rhost = ai->GetHost();
-            rport = ai->GetPort();
-            serv  = ai->GetService();
-            if (gDebug > 3)
-               Info("AuthCleanup", "found entry for h:'%s' p:%d s:%d ...",
-                    rhost, rport, serv);
-
-            // Only rootd needs to be notified (serv==1),
-            // proofd is done via ProofServ
-            if (serv == 1) {
-
-               // make sure is not already been done ...
-               Inot = -1;
-               Int_t i = 0;
-               for ( ; i < Nnot; i++) {
-                  if (rport == rPnot[i] && !strcmp(rhost, rHnot[i])) Inot = i;
-               }
-               if (Inot == -1) {
-                  // Needs to be notified
-                  TSocket *newsock= new TSocket(rhost, rport, -1);
-                  if (newsock->IsValid()) {
-                     newsock->SetOption(kNoDelay, 1);        // Set some socket options
-                     newsock->Send((Int_t) 0, (Int_t) 0);    // Tell rootd we want non parallel connection
-                     // Ask remote protocol
-                     newsock->Send(kROOTD_PROTOCOL);
-                     int proto, kind;
-                     newsock->Recv(proto, kind);
-                     if (proto > 6) {
-                        newsock->Send(Form("%d", TNetFile::GetClientProtocol()), kROOTD_PROTOCOL2);
-                        newsock->Recv(proto, kind);
-                     }
-                     if (proto > 7) {
-                        newsock->Send(Form("%d", gSystem->GetPid()), kROOTD_CLEANUP);
-                        if (gDebug > 2)
-                           Info("AuthCleanup","remote rootd notified for cleanup (%s,%d)", rhost, rport);
-                     }
-                  } else
-                     if (gDebug > 2)
-                        Info("AuthCleanup","unable to open valid socket for cleanup (%s,%d)", rhost, rport);
-                  delete newsock;
-                  // save info
-                  rPnot[Nnot] = rport;
-                  rHnot[Nnot] = rhost;
-                  Nnot++;
-               }
-            }  // serv
-         }  // ai
-      }  // Nai
-   }  // ha
-
-   // cleanup memory
-   delete [] rHnot;
-   delete [] rPnot;
 }

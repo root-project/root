@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.35 2004/01/20 18:00:40 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.36 2004/01/26 11:15:44 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -21,10 +21,12 @@
 #include "config.h"
 
 #include "TAuthenticate.h"
+#include "TApplication.h"
 #include "THostAuth.h"
-#include "TAuthDetails.h"
+#include "TSecContext.h"
+#include "TPluginManager.h"
 #include "TNetFile.h"
-#include "TSocket.h"
+#include "TPSocket.h"
 #include "TSystem.h"
 #include "TError.h"
 #include "Getline.h"
@@ -54,27 +56,45 @@
 extern "C" char *crypt(const char *, const char *);
 #endif
 
+#ifdef R__GLBS
+#   include <sys/ipc.h>
+#   include <sys/shm.h>
+#endif
 
-Int_t TAuthenticate::fgRSAInit = 0;
-rsa_KEY TAuthenticate::fgRSAPriKey;
-rsa_KEY TAuthenticate::fgRSAPubKey;
+// Statics initialization
+TList         *TAuthenticate::fgAuthInfo = 0;
+TString        TAuthenticate::fgAuthMeth[] = { "UsrPwd", "SRP", "Krb5", 
+                                               "Globus", "SSH", "UidGid" };
+Bool_t         TAuthenticate::fgAuthReUse;
+TString        TAuthenticate::fgDefaultUser;
+TDatime        TAuthenticate::fgExpDate;
+GlobusAuth_t   TAuthenticate::fgGlobusAuthHook;
+Krb5Auth_t     TAuthenticate::fgKrb5AuthHook;
+TDatime        TAuthenticate::fgLastAuthrc;    // Time of last reading of fgRootAuthrc
+TString        TAuthenticate::fgOptAuthrc;    // Time of last reading option for fgRootAuthrc
+TString        TAuthenticate::fgPasswd;
+Bool_t         TAuthenticate::fgPromptUser;
+TList         *TAuthenticate::fgProofAuthInfo = 0;
+Bool_t         TAuthenticate::fgPwHash;
+TString        TAuthenticate::fgRootAuthrc;    // Path to last rootauthrc-like file read
+Int_t          TAuthenticate::fgRSAInit = 0;
+rsa_KEY        TAuthenticate::fgRSAPriKey;
 rsa_KEY_export TAuthenticate::fgRSAPubExport = { 0, 0 };
+rsa_KEY        TAuthenticate::fgRSAPubKey;
+SecureAuth_t   TAuthenticate::fgSecAuthHook;
+Bool_t         TAuthenticate::fgSRPPwd;
+TString        TAuthenticate::fgUser;
+Bool_t         TAuthenticate::fgUsrPwdCrypt;
 
-TString TAuthenticate::fgUser;
-TString TAuthenticate::fgPasswd;
-Bool_t TAuthenticate::fgPwHash;
-Bool_t TAuthenticate::fgSRPPwd;
-SecureAuth_t TAuthenticate::fgSecAuthHook;
-Krb5Auth_t TAuthenticate::fgKrb5AuthHook;
-GlobusAuth_t TAuthenticate::fgGlobusAuthHook;
-TString TAuthenticate::fgDefaultUser;
-Bool_t TAuthenticate::fgAuthReUse;
-Bool_t TAuthenticate::fgPromptUser;
-Bool_t TAuthenticate::fgUsrPwdCrypt;
+// Protocol changes (this was in TNetFile before)
+// 6 -> 7: added support for ReOpen(), kROOTD_BYE and kROOTD_PROTOCOL2
+// 7 -> 8: added support for update being a create (open stat = 2 and not 1)
+// 8 -> 9: added new authentication features (see README.AUTH)
+// 9 -> 10: added support for authenticated socket via TSocket::CreateAuthSocket(...)
+Int_t TAuthenticate::fgClientProtocol = 10;  // increase when client protocol changes
 
-TList *TAuthenticate::fgAuthInfo = 0;
-
-TString TAuthenticate::fgAuthMeth[] = { "UsrPwd", "SRP", "Krb5", "Globus", "SSH", "UidGid" };
+// Standar version of Sec Context match checking
+Int_t StdCheckSecCtx(const char *, TSecContext *);
 
 ClassImp(TAuthenticate)
 
@@ -97,6 +117,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    // Set protocol string.
    // Check if version should be different ...
    char *pdd;
+   Int_t ServType = TSocket::kSOCKD;
    if (proto && strlen(proto) > 0) {
       char *sproto = StrDup(proto);
       if ((pdd = strstr(sproto, ":")) != 0) {
@@ -111,6 +132,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
                      fVersion = 0;
                }
             }
+            ServType = TSocket::kROOTD;
          }
          if (strstr(sproto, "proof") != 0) {
             if (rproto < 8) {
@@ -118,6 +140,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
                if (rproto < 7)
                   fVersion = 1;
             }
+            ServType = TSocket::kPROOFD;
          }
          if (gDebug > 3)
             Info("TAuthenticate",
@@ -157,81 +180,90 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
       if (fqdn == "UnNamedHost")
          fqdn = addr.GetHostAddress();
    }
-   if (gDebug > 3)
+   TString fqdnsrv(Form("%s:%d",fqdn.Data(),ServType));
+
+   // Read directives from files; re-read if files have changed
+   TAuthenticate::ReadRootAuthrc();
+   
+   if (gDebug > 3) {
       Info("TAuthenticate",
            "number of HostAuth Instantiations in memory: %d",
            GetAuthInfo()->GetSize());
-
-   // Check list of auth info for already loaded info about this host
-   fHostAuth = GetHostAuth(fqdn, CheckUser);
-
-   // If we did not find a good THostAuth instantiation, create one
-   if (fHostAuth == 0) {
-      // Determine applicable auth methods from client choices
-      Int_t *nmeth;
-      Int_t *security[kMAXSEC];
-      char **details[kMAXSEC];
-      char **usr = new char *[1];
-      usr[0] = StrDup(fUser);
-      GetAuthMeth(fqdn, fProtocol, &usr, &nmeth, security, details);
-
-      // Translate to Input for THostAuth
-      int i, nm = nmeth[0], am[kMAXSEC];
-      char *det[kMAXSEC];
-      for (i = 0; i < kMAXSEC; i++) {
-         if (i < nm) {
-            am[i] = security[i][0];
-            det[i] = StrDup(details[i][0]);
-         } else {
-            am[i] = -1;
-            det[i] = 0;
-         }
-      }
-      if (gDebug > 3) {
-         Info("TAuthenticate", "got %d methods", nmeth[0]);
-         for (i = 0; i < nmeth[0]; i++) {
-            Info("TAuthenticate", "got (%d,0) security:%d details:%s", i,
-                 security[i][0], details[i][0]);
-         }
-      }
-      // Create THostAuth object
-      fHostAuth = new THostAuth(fqdn, fUser, nm, am, det);
-      // ... and add it to the list
-      GetAuthInfo()->Add(fHostAuth);
-      if (gDebug > 3)
-         fHostAuth->Print();
-      for (i = 0; i < nmeth[0]; i++) {   // what if nu > 0? (rdm)
-         if (security[i]) delete[] security[i];
-         if (details[i][0]) delete[] details[i][0];
-         if (det[i]) delete[] det[i];
-      }
-      if (nmeth) delete [] nmeth;
-      if (usr[0]) delete[] usr[0];
+      TAuthenticate::Show("H");
+      TAuthenticate::Show("P");
    }
 
-   // If a secific method has been requested via the protocol
+   // Check the list of auth info for already loaded info about this host
+   fHostAuth = GetHostAuth(fqdnsrv, CheckUser);
+
+   // If for whatever (and unlikely) reason nothing has been found 
+   // we look for the old envs defaulting to method 0 (UsrPwd) 
+   // if they are missing or meaningless
+   if (!fHostAuth) {
+
+      TString Tmp;
+      if (fProtocol.Contains("proof")) {
+         Tmp = TString(gEnv->GetValue("Proofd.Authentication", "0"));
+      } else if (fProtocol.Contains("root")) {
+         Tmp = TString(gEnv->GetValue("Rootd.Authentication", "0"));
+      }
+      char am[kMAXSEC][10];
+      Int_t nw = sscanf(Tmp.Data(), "%s %s %s %s %s %s", 
+                        am[0], am[1], am[2], am[3], am[4], am[5]);
+      
+      Int_t i = 0, nm = 0, me[kMAXSEC];
+      for( ; i < nw; i++) {  
+         Int_t met = -1;
+         if (strlen(am[i]) > 1) {
+            met = GetAuthMethodIdx(am[i]);
+         } else { 
+            met = atoi(am[i]);            
+         }
+         if (met > -1 && met < kMAXSEC) {
+            me[nm++] = met;
+         }
+      }
+      
+      // Create THostAuth
+      if (nm)
+         fHostAuth = new THostAuth(fRemote,fUser,nm,me,0);
+      else
+         fHostAuth = new THostAuth(fRemote,fUser,0,(const char *)0);
+   }
+
+   // If a specific method has been requested via the protocol
    // set it as first
    Int_t Sec = -1;
-   if (fProtocol.Contains("roots") || fProtocol.Contains("proofs")) {
-      Sec = TAuthenticate::kSRP;
-   } else if (fProtocol.Contains("rootk") || fProtocol.Contains("proofk")) {
-      Sec = TAuthenticate::kKrb5;
-   }
+   TString Tmp = fProtocol;
+   Tmp.ReplaceAll("root",4,"",0);
+   Tmp.ReplaceAll("proof",5,"",0);
+   if (!strncmp(Tmp.Data(),"up",2)) 
+      Sec = 0;
+   else if (!strncmp(Tmp.Data(),"s",1)) 
+      Sec = 1;
+   else if (!strncmp(Tmp.Data(),"k",1)) 
+      Sec = 2;
+   else if (!strncmp(Tmp.Data(),"g",1)) 
+      Sec = 3;
+   else if (!strncmp(Tmp.Data(),"h",1)) 
+      Sec = 4;
+   else if (!strncmp(Tmp.Data(),"ug",2)) 
+      Sec = 5;
    if (Sec > -1 && Sec < kMAXSEC) {
       if (fHostAuth->HasMethod(Sec)) {
          fHostAuth->SetFirst(Sec);
       } else {
          TString Det(GetDefaultDetails(Sec, 1, CheckUser));
-         fHostAuth->SetFirst(Sec, Det);
+         fHostAuth->AddFirst(Sec, Det);
       }
    }
 
    // This is what we have in memory
    if (gDebug > 3) {
       TIter next(fHostAuth->Established());
-      TAuthDetails *ad;
-      while ((ad = (TAuthDetails *) next()))
-         ad->Print("0");
+      TSecContext *ctx;
+      while ((ctx = (TSecContext *) next()))
+         ctx->Print("0");
    }
 }
 
@@ -266,7 +298,7 @@ Bool_t TAuthenticate::Authenticate()
    pwhash = kFALSE;
 
    // Security level from the list (if not in cleanup mode ...)
-   fSecurity = (ESecurity) fHostAuth->GetMethods(meth);
+   fSecurity = (ESecurity) fHostAuth->GetMethod(meth);
    fDetails = fHostAuth->GetDetails((Int_t) fSecurity);
    if (gDebug > 2)
       Info("Authenticate",
@@ -275,7 +307,7 @@ Bool_t TAuthenticate::Authenticate()
 
    // Keep track of tried methods in a list
    if (strlen(TriedMeth) > 0)
-      sprintf(TriedMeth, "%s/%s", TriedMeth, fgAuthMeth[fSecurity].Data());
+      sprintf(TriedMeth, "%s %s", TriedMeth, fgAuthMeth[fSecurity].Data());
    else
       sprintf(TriedMeth, "%s", fgAuthMeth[fSecurity].Data());
 
@@ -455,8 +487,15 @@ Bool_t TAuthenticate::Authenticate()
    // Analyse the result now ...
    Int_t kind, stat;
    if (st == 1) {
+      fHostAuth->CountSuccess((Int_t)fSecurity);
+      if (gDebug > 2)
+         fSecContext->Print();
+      if (fSecContext->IsActive())
+         fSecContext->AddForCleanup(fSocket->GetPort(),
+             fSocket->GetRemoteProtocol(),fSocket->GetServType());
       return kTRUE;
    } else {
+      fHostAuth->CountFailure((Int_t)fSecurity);
       if (fVersion > 2) {
          if (st == -2) {
             // Remote host does not accepts connections from local host
@@ -528,10 +567,12 @@ Bool_t TAuthenticate::Authenticate()
                        "remotely allowed methods not yet tried: %s",
                        answer);
             } else if (stat == 0) {
+               Info("Authenticate",
+                    "no more methods accepted remotely to be tried");
                if (strlen(NoSupport) > 0)
                   Info("Authenticate",
-                       "attempted methods %s are not supported by remote server version",
-                       NoSupport);
+                       "attempted methods %s are not supported"
+                       " by remote server version",NoSupport);
                Info("Authenticate",
                     "failure: list of attempted methods: %s", TriedMeth);
                return kFALSE;
@@ -540,8 +581,8 @@ Bool_t TAuthenticate::Authenticate()
             if (remloc < 1) {
                if (strlen(NoSupport) > 0)
                   Info("Authenticate",
-                       "attempted methods %s are not supported by remote server version",
-                       NoSupport);
+                       "attempted methods %s are not supported"
+                       " by remote server version",NoSupport);
                Info("Authenticate",
                     "failure: list of attempted methods: %s", TriedMeth);
                return kFALSE;
@@ -551,12 +592,12 @@ Bool_t TAuthenticate::Authenticate()
             char lav[40] = { 0 };
             for (i = 0; i < RemMeth; i++) {
                for (j = 0; j < nmet; j++) {
-                  if (fHostAuth->GetMethods(j) == rMth[i] && tMth[j] == 0) {
+                  if (fHostAuth->GetMethod(j) == rMth[i] && tMth[j] == 0) {
                      meth = j;
                      goto negotia;
                   }
                   if (i == 0)
-                     sprintf(lav, "%s %d", lav, fHostAuth->GetMethods(j));
+                     sprintf(lav, "%s %d", lav, fHostAuth->GetMethod(j));
                }
             }
             if (gDebug > 0)
@@ -565,8 +606,8 @@ Bool_t TAuthenticate::Authenticate()
                        lav);
             if (strlen(NoSupport) > 0)
                Info("Authenticate",
-                    "attempted methods %s are not supported by remote server version",
-                    NoSupport);
+                    "attempted methods %s are not supported by"
+                    " remote server version",NoSupport);
             Info("Authenticate",
                  "failure: list of attempted methods: %s", TriedMeth);
             return kFALSE;
@@ -604,8 +645,9 @@ void TAuthenticate::SetEnvironment()
    // Decode fDetails, is non empty ...
    if (fDetails != "") {
       char UsDef[kMAXPATHLEN] = { 0 };
-      int lDet = strlen(fDetails.Data()) + 2;
+      Int_t lDet = strlen(fDetails.Data()) + 2;
       char Pt[5] = { 0 }, Ru[5] = { 0 };
+      Int_t hh = 0, mm = 0;
       char *Us = 0, *Cd = 0, *Cf = 0, *Kf = 0, *Ad = 0, *Cp = 0;
       const char *ptr;
 
@@ -628,6 +670,19 @@ void TAuthenticate::SetEnvironment()
             strcpy(Ru,"0");
          else
             strcpy(Ru,"1");
+      }
+      TString UsrValidDef = TString(GetAuthMethod(fSecurity)) + ".Valid";
+      TString Hours(gEnv->GetValue(UsrValidDef,"24:00"));
+      Int_t pd = 0;
+      if ((pd = Hours.Index(":")) > -1) {
+         TString Minutes = Hours;
+         Hours.Resize(pd);
+         Minutes.Replace(0,pd+1,"");
+         hh = atoi(Hours.Data());
+         mm = atoi(Minutes.Data());
+      } else {
+         hh = atoi(Hours.Data());
+         mm = 0;
       }
 
       // Now action depends on method ...
@@ -690,6 +745,10 @@ void TAuthenticate::SetEnvironment()
             fgAuthReUse = kFALSE;
       }
 
+      // Set Expiring date
+      fgExpDate = TDatime();
+      fgExpDate.Set(fgExpDate.Convert() + hh*3600 + mm*60);
+
       // UnSet Crypt flag for UsrPwd, if requested
       if (fSecurity == kClear) {
          fgUsrPwdCrypt = kTRUE;
@@ -703,27 +762,32 @@ void TAuthenticate::SetEnvironment()
             strcat(UsDef," ");
             strcat(UsDef,Cd);
             delete[] Cd;
+            Cd = 0;
          }
          if (Cf != 0) {
             strcat(UsDef," ");
             strcat(UsDef,Cf);
             delete[] Cf;
+            Cf = 0;
          }
          if (Kf != 0) {
             strcat(UsDef," ");
             strcat(UsDef,Kf);
             delete[] Kf;
+            Kf = 0;
          }
          if (Ad != 0) {
             strcat(UsDef," ");
             strcat(UsDef,Ad);
             delete[] Ad;
+            Ad = 0;
          }
       } else {
          if (fUser == "") {
             if (Us != 0) {
                sprintf(UsDef, "%s", Us);
                delete[] Us;
+               Us = 0;
             }
          } else {
             if (fSecurity == kKrb5) {
@@ -759,6 +823,13 @@ void TAuthenticate::SetEnvironment()
 
       if (gDebug > 2)
          Info("SetEnvironment", "UsDef:%s", fgDefaultUser.Data());
+
+      if (Us) delete[] Us;
+      if (Cd) delete[] Cd;
+      if (Cf) delete[] Cf;
+      if (Kf) delete[] Kf;
+      if (Ad) delete[] Ad;
+      if (Cp) delete[] Cp;
    }
 }
 
@@ -975,14 +1046,6 @@ const char *TAuthenticate::GetGlobalUser()
 }
 
 //______________________________________________________________________________
-const char *TAuthenticate::GetGlobalPasswd()
-{
-   // Static method returning the global global password.
-
-   return fgPasswd;
-}
-
-//______________________________________________________________________________
 Bool_t TAuthenticate::GetGlobalPwHash()
 {
    // Static method returning the global password hash flag.
@@ -996,6 +1059,14 @@ Bool_t TAuthenticate::GetGlobalSRPPwd()
    // Static method returning the global SRP password flag.
 
    return fgSRPPwd;
+}
+
+//______________________________________________________________________________
+TDatime TAuthenticate::GetGlobalExpDate()
+{
+   // Static method returning default expiring date for new validity contexts
+
+   return fgExpDate;
 }
 
 //______________________________________________________________________________
@@ -1098,7 +1169,8 @@ char *TAuthenticate::PromptPasswd(const char *prompt)
    if (isatty(0) == 0 || isatty(1) == 0) {
       ::Warning("TAuthenticate::PromptPasswd",
                 "not tty: cannot prompt for passwd, returning -1");
-      return StrDup("-1");
+      static char noint[4] = {"-1"};
+      return StrDup(noint);
    }
 
    Gl_config("noecho", 1);
@@ -1154,6 +1226,17 @@ TList *TAuthenticate::GetAuthInfo()
 }
 
 //______________________________________________________________________________
+TList *TAuthenticate::GetProofAuthInfo()
+{
+   // Static method returning the list with authentication directives 
+   // to be sent to proof.
+
+   if (!fgProofAuthInfo)
+      fgProofAuthInfo = new TList;
+   return fgProofAuthInfo;
+}
+
+//______________________________________________________________________________
 void TAuthenticate::AuthError(const char *where, Int_t err)
 {
    // Print error string depending on error code.
@@ -1199,6 +1282,14 @@ void TAuthenticate::SetGlobalSRPPwd(Bool_t srppwd)
    // Set global SRP passwd flag to be used for authentication to rootd or proofd.
 
    fgSRPPwd = srppwd;
+}
+
+//______________________________________________________________________________
+void TAuthenticate::SetGlobalExpDate(TDatime expdate)
+{
+   // Set default expiring date for new validity contexts
+
+   fgExpDate = expdate;
 }
 
 //______________________________________________________________________________
@@ -1295,33 +1386,27 @@ Int_t TAuthenticate::SshAuth(TString &User)
    char SecName[kMAXPATHLEN] = { 0 };
 
    // Determine user name ...
-   User = GetSshUser();
+   User = GetSshUser(User);
 
    // Check ReUse
    Int_t ReUse = (int)fgAuthReUse;
    fDetails = TString(Form("pt:%d ru:%d us:",(int)fgPromptUser,(int)fgAuthReUse))
             + User;
 
-   int retval, kind;
-
    // Create Options string
-   char *Options = new char[strlen(User.Data()) + 40];
    int Opt = ReUse * kAUTH_REUSE_MSK;
-   sprintf(Options, "%d none %ld %s", Opt, (Long_t)strlen(User.Data()),
-           User.Data());
+   TString Options(Form("%d none %ld %s", Opt, 
+                       (Long_t)User.Length(),User.Data()));
 
    // Check established authentications
-   kind = kROOTD_SSH;
-   retval = ReUse;
+   Int_t kind = kROOTD_SSH;
+   Int_t retval = ReUse;
    Int_t rc = 0;
-   if ((rc =
-        AuthExists(this, (Int_t) TAuthenticate::kSSH, fDetails, Options,
-                   &kind, &retval)) == 1) {
+   if ((rc = AuthExists(User, (Int_t) TAuthenticate::kSSH, Options,
+                   &kind, &retval, &StdCheckSecCtx)) == 1) {
       // A valid authentication exists: we are done ...
-      if (Options) delete[] Options;
       return 1;
    }
-   if (Options) delete[] Options;
    if (rc == -2) {
       return rc;
    }
@@ -1383,26 +1468,71 @@ Int_t TAuthenticate::SshAuth(TString &User)
       Info("SshAuth", "system return code: %d", ssh_rc);
 
    if (ssh_rc) {
-      // This is bad ... needs to notify rootd by other means ...
-      TSocket *newsock =
-          new TSocket(fRemote.Data(), fSocket->GetInetAddress().GetPort(),
-                      -1);
-      newsock->SetOption(kNoDelay, 1);  // Set some socket options
-      newsock->Send((Int_t) 0, (Int_t) 0);  // Tell rootd we do not want parallel connection
-      char cd1[1024], pipe[1024];
-      int id1, id2, id3;
-      sscanf(CmdInfo, "%s %d %s %d %d", cd1, &id3, pipe, &id1, &id2);
-      sprintf(SecName, "%d -1 0 %s %ld %s None", -gSystem->GetPid(), pipe,
-              (Long_t)strlen(User), User.Data());
-      newsock->Send(SecName, kROOTD_SSH);
-      // Receive error message
-      fSocket->Recv(retval, kind);  // for consistency
-      if (kind == kROOTD_ERR) {
-         if (gDebug > 0)
-            AuthError("SshAuth", retval);
-      }
-      SafeDelete(newsock);
 
+      Int_t srvtyp = fSocket->GetServType();
+      Int_t rproto = fSocket->GetRemoteProtocol();
+      Int_t level = 2;
+      if ((srvtyp == TSocket::kROOTD && rproto < 10) || 
+          (srvtyp == TSocket::kPROOFD && rproto < 9))
+         level = 1;
+      if ((srvtyp == TSocket::kROOTD && rproto < 8) || 
+          (srvtyp == TSocket::kPROOFD && rproto < 7))
+         level = 0;
+      if (level) {
+         Int_t port = fSocket->GetPort();
+         TSocket *newsock = 0;
+         TString url(Form("sockd://%s",fRemote.Data()));
+         if (srvtyp == TSocket::kROOTD) {
+            // Parallel socket requested by 'rootd'
+            url.ReplaceAll("sockd",5,"rootd",5);
+            newsock = new TPSocket(url.Data(),port,1,-1); 
+         } else {
+            if (srvtyp == TSocket::kPROOFD)
+               url.ReplaceAll("sockd",5,"proofd",6);
+            newsock = new TSocket(fRemote.Data(),port,-1); 
+            if (srvtyp == TSocket::kPROOFD)
+               newsock->Send("failure notification");
+         }
+         // prepare info to send
+         char cd1[1024], pipe[1024];
+         int id1, id2, id3;
+         sscanf(CmdInfo, "%s %d %s %d %d", cd1, &id3, pipe, &id1, &id2);
+         sprintf(SecName, "%d -1 0 %s %ld %s None", -gSystem->GetPid(), pipe,
+                 (Long_t)strlen(User), User.Data());
+         newsock->Send(SecName, kROOTD_SSH);
+         if (level > 1) {
+            // Improved diagnostics
+            // Receive diagnostics message
+            newsock->Recv(retval, kind); 
+            char *Buf = new char[retval+1];
+            newsock->Recv(Buf, retval+1, kind);
+            if (strncmp(Buf,"OK",2)) {
+               Info("SshAuth", "from remote host %s:", fRemote.Data());
+               Info("SshAuth", ">> nothing listening on port %s %s",Buf,
+                               "(supposed to be associated to sshd)");
+               Info("SshAuth", ">> contact the daemon administrator at %s",
+                               fRemote.Data());
+            } else {
+               if (gDebug > 0) {
+                  Info("SshAuth", "from remote host %s:", fRemote.Data());
+                  Info("SshAuth", ">> something listening on the port %s",
+                               "supposed to be associated to sshd.");
+                  Info("SshAuth", ">> You have probably mistyped your password. %s",
+                               "If the problem persists");
+                  Info("SshAuth", ">> contact the daemon administrator at %s",
+                                  fRemote.Data());
+               }
+            }
+            delete[] Buf;
+         }
+         // Receive error message
+         fSocket->Recv(retval, kind);  // for consistency
+         if (kind == kROOTD_ERR) {
+            if (gDebug > 0)
+               AuthError("SshAuth", retval);
+         }
+         SafeDelete(newsock);
+      }
       return 0;
    }
 
@@ -1446,7 +1576,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
    nrec = fSocket->Recv(answer, retval + 1, kind);  // returns user
    if (kind != kMESS_STRING)
       Warning("SshAuth", "username and offset not received (%d:%d)", kind,
-              nrec);
+               nrec);
 
    // Parse answer
    char *lUser = new char[retval];
@@ -1469,9 +1599,10 @@ Int_t TAuthenticate::SshAuth(TString &User)
       Token = StrDup("");
    }
 
-   // Create and save AuthDetails object
-   SaveAuthDetails(this, (Int_t) TAuthenticate::kSSH, OffSet, ReUse,
-                   fDetails, lUser, fRSAKey, Token);
+   // Create SecContext object
+   fSecContext = fHostAuth->CreateSecContext((const char *)lUser, fRemote,
+                 (Int_t)kSSH, OffSet, fDetails, 
+                 (const char *)Token, fgExpDate, 0, fRSAKey);
 
    // Release allocated memory ...
    if (answer) delete[] answer;
@@ -1492,7 +1623,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
 }
 
 //______________________________________________________________________________
-const char *TAuthenticate::GetSshUser() const
+const char *TAuthenticate::GetSshUser(TString User) const
 {
    // Method returning the User to be used for the ssh login.
    // Looks first at SSH.Login and finally at env USER.
@@ -1500,591 +1631,19 @@ const char *TAuthenticate::GetSshUser() const
 
    static TString user = "";
 
-   if (fgPromptUser) {
-      user = PromptUser(fRemote);
-   } else {
-      user = fgDefaultUser;
-      if (user == "")
+   if (User == "") {
+      if (fgPromptUser) {
          user = PromptUser(fRemote);
+      } else {
+         user = fgDefaultUser;
+         if (user == "")
+            user = PromptUser(fRemote);
+      }
+   } else {
+      user = User;
    }
 
    return user;
-}
-
-//______________________________________________________________________________
-Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
-                                 char ***User, Int_t **NumMeth,
-                                 Int_t **AuthMeth, char ***Details)
-{
-   // This method looks for the available methods (as chosen by the user)
-   // for authentication vis-a-vis of host 'Host' and depending on protocol
-   // Proto (either root - rootd, roots, rootk - or proof - proofd, proofs,
-   // proofk - families).
-   // Information is looked for in ~/.rootauthrc and in the .rootrc family
-   // of files via Rootd.Authentication and Proofd.Authentication variables.
-   // Return number of methods, their codes in AuthMeth and strings with
-   // auth details in Details (login name, principals, etc ...).
-   // Space for AuthMeth and Details must be allocated outside
-   // Default method is SSH.
-
-   Int_t i;
-
-   if (gDebug > 2)
-      ::Info("TAuthenticate::GetAuthMeth", "enter: h:%s p:%s u:%s (0x%lx 0x%lx) ",
-              Host, Proto, *User[0], (Long_t) (*User), (Long_t) (*User[0]));
-
-   if (*User[0] == 0)
-      *User[0] = StrDup("");
-
-   // Check then .rootauthrc (if there)
-   char temp[kMAXPATHLEN];
-   Int_t *am[kMAXSEC], *nh, nu = 0, j = 0;
-   char **det[kMAXSEC];
-   if ((nu = CheckRootAuthrc(Host, User, &nh, am, det)) > 0) {
-      if (gDebug > 3)
-         ::Info("TAuthenticate::GetAuthMeth", "found %d users - nh: %d 0x%lx %s ", nu,
-                nh[0], (Long_t) (*User[0]), *User[0]);
-      *NumMeth = new int[nu];
-      for (i = 0; i < kMAXSEC; i++) {
-         AuthMeth[i] = new int[nu];
-         Details[i] = new char *[nu];
-         for (j = 0; j < nu; j++) {
-            (*NumMeth)[j] = nh[j];
-            Details[i][j] = 0;
-            AuthMeth[i][j] = -1;
-            if (i < nh[j]) {
-               AuthMeth[i][j] = am[i][j];
-               if (det[i][j] == 0 || strlen(det[i][j]) == 0) {
-                  strcpy(temp, "");
-                  // Set user
-                  char *usr = StrDup((*User)[j]);
-                  // Check env variables for more details, if any ...
-                  Details[i][j] = GetDefaultDetails(am[i][j], 1, usr);
-                  if (usr) delete[] usr;
-               } else {
-                  Details[i][j] = det[i][j];
-               }
-            }
-         }
-      }
-      if (gDebug > 3) {
-         ::Info("TAuthenticate::GetAuthMeth", "found %d users", nu);
-         for (j = 0; j < nu; j++) {
-            ::Info("TAuthenticate::GetAuthMeth", "returning %d ", nh[j]);
-            for (i = 0; i < nh[j]; i++) {
-               ::Info("TAuthenticate::GetAuthMeth", "method[%d]: %d - details[%d]: %s ",
-                      i, AuthMeth[i][j], i, Details[i][j]);
-            }
-         }
-      }
-      return nu;
-   }
-   // Check globals in .rootrc family of files ...
-   char auth[40] = { 0 };
-   if (strstr(Proto, "proof") != 0) {
-      sprintf(auth, "%s", gEnv->GetValue("Proofd.Authentication", "4"));
-   } else if (strstr(Proto, "root") != 0) {
-      sprintf(auth, "%s", gEnv->GetValue("Rootd.Authentication", "4"));
-   }
-   if (gDebug > 3)
-      ::Info("TAuthenticate::GetAuthMeth",
-             "Found method(s) '%s' from globals in .rootrc (User[0]=%s)",
-              auth,(*User)[0]);
-   nh = new int;
-   nh[0] = 0;
-   for (i = 0; i < kMAXSEC; i++) {
-      am[i] = new int[1];
-   }
-   if (strlen(auth) > 0) {
-      nh[0] =
-          sscanf(auth, "%d %d %d %d %d %d", &am[0][0], &am[1][0],
-                 &am[2][0], &am[3][0], &am[4][0], &am[5][0]);
-   }
-   if (nh[0] > 0) {
-      nu = 1;
-      *NumMeth = new int[1];
-      *NumMeth[0] = nh[0];
-      for (i = 0; i < kMAXSEC; i++) {
-         AuthMeth[i] = new int[1];
-         Details[i] = new char *[nh[0]];
-         if (i < nh[0]) {
-            AuthMeth[i][0] = am[i][0];
-            strcpy(temp, "");
-            Details[i][0] = GetDefaultDetails(am[i][0], 1, (*User)[0]);
-         } else {
-            AuthMeth[i][0] = -1;
-            Details[i][0] = 0;
-         }
-      }
-   }
-   if (gDebug > 2) {
-      ::Info("TAuthenticate::GetAuthMeth", "for user '%s' returning %d methods",
-             (*User)[0], nh[0]);
-      for (i = 0; i < nh[0]; i++) {
-         ::Info("TAuthenticate::GetAuthMeth", "   method[%d]: %d - details[%d]: %s ", i,
-                AuthMeth[i][0], i, Details[i][0]);
-      }
-   }
-   return nu;
-}
-
-//______________________________________________________________________________
-Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
-                                     Int_t **nh, Int_t **am, char ***det)
-{
-   // Try to get info about authetication policies for Host
-
-   int Nuser = 0, CheckUser = 0;
-   int nmeth = 0, found = 0;
-   char *net, *UserRq = 0;
-
-   if (gSystem->Getenv("ROOTAUTHRC") != 0) {
-      net = (char *) gSystem->Getenv("ROOTAUTHRC");
-   } else {
-      net = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".rootauthrc");
-   }
-   if (gDebug > 2)
-      ::Info("TAuthenticate::CheckRootAuthrc", "enter: host:%s user:%s file:%s", Host,
-             (*user)[0], net);
-
-   // Check if file can be read ...
-   if (gSystem->AccessPathName(net, kReadPermission)) {
-      if (gDebug > 1)
-         ::Info("TAuthenticate::CheckRootAuthrc",
-                "file %s cannot be read (errno: %d)", net, errno);
-      return 0;
-   }
-   // Variables for scan ...
-   char line[kMAXPATHLEN], rest[kMAXPATHLEN];
-
-   // Generate temporary file name and open it
-   int expand = 1;
-   TString filetmp = "rootauthrc";
-   FILE *ftmp = gSystem->TempFileName(filetmp);
-
-   if (gDebug > 2)
-      ::Info("TAuthenticate::CheckRootAuthrc", "got tmp file: %s open at 0x%lx",
-              filetmp.Data(), (Long_t)ftmp);
-   if (ftmp == 0)
-      expand = 0;  // Problems opening temporary file: ignore 'include' directives ...
-
-   FILE *fd = 0;
-   // If the temporary file is open, copy everything to the new file ...
-   if (expand == 1) {
-
-      TAuthenticate::FileExpand(net, ftmp);
-      fd = ftmp;
-      rewind(fd);
-
-   } else {
-      // Open file
-      fd = fopen(net, "r");
-      if (fd == 0) {
-         if (gDebug > 2)
-            ::Info("TAuthenticate::CheckRootAuthrc",
-                   "file %s cannot be opened (errno: %d)",
-                    net, errno);
-         return 0;
-      }
-   }
-   // If empty user you need first to count how many entries are to be read
-   char host[kMAXPATHLEN], info[kMAXPATHLEN];
-   if ((*user)[0] == 0 || strlen((*user)[0]) == 0) {
-      char usrtmp[256];
-      unsigned int tlen = kMAXPATHLEN;
-      char *Temp = new char[tlen];
-      Temp[0] = '\0';
-      while (fgets(line, sizeof(line), fd) != 0) {
-         // Skip comment lines
-         if (line[0] == '#')
-            continue;
-         if (!strncmp(line,"proofserv",9))
-            continue;
-         char *pstr = 0;
-         char *pdef = strstr(line, "default");
-         sscanf(line,"%s %s",host,info);
-         if (CheckHost(Host, host) || (pdef != 0 && pdef == line)) {
-
-            unsigned int hlen = strlen(Host);
-            if (strstr(Temp, Host) == 0) {
-               if ((strlen(Temp) + hlen + 2) > tlen) {
-                  char *NewTemp = StrDup(Temp);
-                  if (Temp) delete[] Temp;
-                  tlen += kMAXPATHLEN;
-                  Temp = new char[tlen];
-                  strcpy(Temp, NewTemp);
-                  if (NewTemp) delete[] NewTemp;
-               }
-               sprintf(Temp, "%s %s", Temp, Host);
-               Nuser++;
-            } else {
-               pstr = strstr(line, "user");
-               if (pstr != 0) {
-                  sscanf(pstr + 4, "%s %s", usrtmp, rest);
-                  if (strstr(Temp, usrtmp) == 0) {
-                     if ((strlen(Temp) + strlen(usrtmp) + 2) > tlen) {
-                        char *NewTemp = StrDup(Temp);
-                        if (Temp) delete[] Temp;
-                        tlen += kMAXPATHLEN;
-                        Temp = new char[tlen];
-                        strcpy(Temp, NewTemp);
-                        if (NewTemp) delete[] NewTemp;
-                     }
-                     sprintf(Temp, "%s %s", Temp, usrtmp);
-                     Nuser++;
-                  }
-               }
-            }
-         }
-      }
-      if (Temp) delete[] Temp;
-      if (gDebug > 3)
-         ::Info("TAuthenticate::CheckRootAuthrc",
-                "found %d different entries for host %s", Nuser, Host);
-
-      if (Nuser) {
-         if ((*user)[0]) delete[] (*user)[0];
-         (*user) = new char *[Nuser];
-         *nh = new int[Nuser];
-         int i;
-         for (i = 0; i < kMAXSEC; i++) {
-            am[i] = new int[Nuser];
-            det[i] = new char *[Nuser];
-         }
-         UserRq = StrDup("-1");
-      } else {
-         UserRq = StrDup("none");
-         if ((*user)[0]) delete[] (*user)[0];
-         (*user)[0] = StrDup("-1");
-      }
-   } else {
-      CheckUser = 1;
-      UserRq = StrDup((*user)[0]);
-      *nh = new int[1];
-      int i;
-      for (i = 0; i < kMAXSEC; i++) {
-         am[i] = new int[1];
-         det[i] = new char *[1];
-      }
-   }
-
-   // If nothing found return ...
-   if (!strncmp(UserRq,"none",4)) {
-      fclose(fd);
-      if (net) delete[] net;
-      if (UserRq) delete[] UserRq;
-      if (expand == 1)
-         gSystem->Unlink(filetmp);
-      return 0;
-   } else
-     // rewind the file and start scanning it ...
-      rewind(fd);
-
-   // Scan it ...
-   char opt[20];
-   int mth[6] = { 0 }, meth;
-   int ju = 0, nu = 0;
-   while (fgets(line, sizeof(line), fd) != 0) {
-      int i;
-      // Skip comment lines
-      if (line[0] == '#')
-         continue;
-
-      // Get rid of end of line '\n', if there ...
-      if (line[strlen(line) - 1] == '\n')
-         line[strlen(line) - 1] = '\0';
-
-      // scan line
-      int nw = sscanf(line, "%s %s %s", host, opt, rest);
-
-      // no useful info provided for this host
-      if (nw < 2)
-         continue;
-
-      // Notify
-      if (gDebug > 3)
-         ::Info("TAuthenticate::CheckRootAuthrc", "found line ... %s ", line);
-
-      // The list of data servers for proof is analyzed elsewhere (TProof ...)
-      if (!strcmp(host, "proofserv"))
-         continue;
-
-      if (strcmp(host, "default")) {
-         if (!CheckHost(Host, host))
-            continue;
-      } else {
-         // This is a default entry: ignore it if a host-specific entry was already
-         // found, analyse it otherwise ...
-         if (found == 1)
-            continue;
-      }
-
-      // Make sure that 'rest' contains all the rest ...
-      strcpy(rest, strstr(line, opt) + strlen(opt) + 1);
-
-      // Is there a user specified?
-      if (!strcmp(opt, "user")) {
-         // Yes: check if already entered ...
-         char *usr = new char[strlen(rest) + 5];
-         sscanf(rest, "%s %s", usr, rest);
-         if (gDebug > 3)
-            ::Info("TAuthenticate::CheckRootAuthrc",
-                   "found 'user': %s requested: \"%s\" (%d,%d) (rest:%s)",
-                   usr, UserRq, CheckUser, nu, rest);
-
-         if (CheckUser == 1) {
-            if (strcmp(UserRq, usr))
-               continue;
-         }
-         int newu = 1;
-         if (nu > 0) {
-            int j;
-            for (j = 0; j < nu; j++) {
-               if (!strcmp((*user)[j], usr)) {
-                  ju = j;
-                  newu = 0;
-               }
-            }
-         }
-         if (newu == 1) {
-            if (CheckUser == 0) {
-               ju = nu++;
-            } else {
-               ju = 0;
-               nu = 1;
-               if ((*user)[ju]) delete[] (*user)[ju];
-            }
-            (*user)[ju] = StrDup(usr);
-            (*nh)[ju] = 0;
-            for (i = 0; i < kMAXSEC; i++) {
-               am[i][ju] = -1;
-               det[i][ju] = 0;
-            }
-         }
-         if (usr) delete[] usr;
-         // Now reposition opt and rest ...
-         sscanf(rest, "%s %s", opt, rest);
-         strcpy(rest, strstr(line, opt) + strlen(opt) + 1);
-      } else {
-         // No: record an anonymous entry ...
-         int newu = 1;
-         if (nu > 0) {
-            int j;
-            for (j = 0; j < nu; j++) {
-               if (!strcmp((*user)[j], "-1")) {
-                  ju = j;
-                  newu = 0;
-               }
-            }
-         }
-         if (newu == 1) {
-            if (CheckUser == 0) {
-               ju = nu++;
-            } else {
-               ju = 0;
-               nu = 1;
-               if ((*user)[ju]) delete[] (*user)[ju];
-            }
-            (*user)[ju] = StrDup("-1");
-            (*nh)[ju] = 0;
-            for (i = 0; i < kMAXSEC; i++) {
-               am[i][ju] = -1;
-               det[i][ju] = 0;
-            }
-         }
-      }
-
-      // get rid of opt keyword
-      strcpy(rest, strstr(line, opt) + strlen(opt) + 1);
-      if (!strcmp(opt, "list")) {
-         if (gDebug > 3)
-            ::Info("TAuthenticate::CheckRootAuthrc", "found 'list': rest:%s", rest);
-         char cmth[kMAXSEC][20];
-         int nw =
-             sscanf(rest, "%s %s %s %s %s %s", cmth[0], cmth[1], cmth[2],
-                    cmth[3], cmth[4], cmth[5]);
-         nmeth = 0;
-         for (i = 0; i < nw; i++) {
-            int met = -1;
-            if (strlen(cmth[i]) > 1) {
-               // Method passed as string: translate it to number
-               met = GetAuthMethodIdx(cmth[i]);
-               if (met == -1 && gDebug > 2)
-                  ::Info("TAuthenticate::CheckRootAuthrc",
-                         "unrecognized method (%s): ", cmth[i]);
-            } else {
-               met = atoi(cmth[i]);
-            }
-            if (met >= 0 && met < kMAXSEC) {
-               mth[nmeth] = met;
-               nmeth++;
-            } else if (gDebug > 2)
-               ::Info("TAuthenticate::CheckRootAuthrc", "unrecognized method (%d): ",
-                      met);
-         }
-         int *tmp_am = 0;
-         char **tmp_det = 0;
-         if ((*nh)[ju] > 0) {
-            tmp_am = new int[(*nh)[ju]];
-            tmp_det = new char *[(*nh)[ju]];
-            for (i = 0; i < (*nh)[ju]; i++) {
-               tmp_am[i] = am[i][ju];
-               tmp_det[i] = StrDup(det[i][i]);
-            }
-         }
-         int k, j = nmeth;
-         for (i = 0; i < kMAXSEC; i++) {
-            if (i < nmeth) {
-               am[i][ju] = mth[i];
-               for (k = 0; k < (*nh)[ju]; k++) {
-                  if (tmp_am[k] == mth[i]) {
-                     det[i][ju] = StrDup(tmp_det[k]);
-                     if (tmp_det[k]) delete[] tmp_det[k];
-                     tmp_det[k] = 0;
-                  }
-               }
-            } else {
-               k = 0;
-               while (k < (*nh)[ju] && am[i][ju] == -1) {
-                  if (tmp_det[k] != 0) {
-                     j++;
-                     am[i][ju] = mth[k];
-                     det[i][ju] = StrDup(tmp_det[k]);
-                     delete[] tmp_det[k];
-                     tmp_det[k] = 0;
-                  }
-                  k++;
-               }
-            }
-         }
-         if (tmp_am) delete[] tmp_am;
-         if (tmp_det) delete[] tmp_det;
-         (*nh)[ju] = nmeth;
-      } else {
-
-         if (!strcmp(opt, "method")) {
-            if (gDebug > 3)
-               ::Info("TAuthenticate::CheckRootAuthrc", "found 'method': rest:%s", rest);
-
-            //         nw= sscanf(rest,"%d %s",&meth,info);
-            char cmeth[20];
-            nw = sscanf(rest, "%s %s", cmeth, info);
-            meth = -1;
-            if (strlen(cmeth) > 1) {
-               // Method passed as string: translate it to number
-               meth = GetAuthMethodIdx(cmeth);
-               if (meth == -1 && gDebug > 2)
-                  ::Info("TAuthenticate::CheckRootAuthrc",
-                         "unrecognized method (%s): ", cmeth);
-            } else {
-               meth = atoi(cmeth);
-            }
-            if (meth < 0 || meth > (kMAXSEC - 1)) {
-               if (gDebug > 2)
-                  ::Info("TAuthenticate::CheckRootAuthrc", "unrecognized method (%d): ",
-                         meth);
-               continue;
-            }
-
-            if (nw > 1) {
-               char *pinfo = strstr(rest, info);
-               strncpy(info, pinfo, strlen(rest));
-            } else
-               info[0] = '\0';
-
-            if (found == 0) {
-               for (i = 0; i < kMAXSEC; i++) {
-                  am[i][ju] = -1;
-               }
-            }
-            int j = -1;
-            for (i = 0; i < (*nh)[ju]; i++) {
-               if (am[i][ju] == meth) {
-                  j = i;
-                  if (strlen(info) > 0)
-                     det[i][ju] = StrDup(info);
-               }
-            }
-            if (j == -1) {
-               if ((*nh)[ju] < kMAXSEC) {
-                  am[(*nh)[ju]][ju] = meth;
-                  if (strlen(info) > 0)
-                     det[(*nh)[ju]][ju] = StrDup(info);
-                  ((*nh)[ju])++;
-               } else {
-                  char *ostr = new char[4 * kMAXSEC];
-                  ostr[4 * kMAXSEC] = '\0';
-                  for (i = 0; i < kMAXSEC; i++) {
-                     sprintf(ostr, "%s %d", ostr, am[i][ju]);
-                  }
-                  if (gDebug > 0)
-                     ::Warning("TAuthenticate::CheckRootAuthrc",
-                               "output am badly filled: %s", ostr);
-                  if (ostr) delete[] ostr;
-               }
-            }
-            if (gDebug > 3)
-               ::Info("TAuthenticate::CheckRootAuthrc",
-                      "method with info : %s has been recorded (ju:%d, nh:%d)",
-                      info, ju, (*nh)[ju]);
-         } else {               // Unknown option
-            ::Warning("TAuthenticate::CheckRootAuthrc", "found unknown option: %s", opt);
-            continue;
-         }
-      }
-      // Found new entry matching: superseed previous result
-      found = 1;
-   }
-
-   if (CheckUser == 1 && nu == 1) {
-      if (!strcmp((*user)[0], "-1")) {
-         if ((*user)[0]) delete[] (*user)[0];
-         (*user)[0] = StrDup(UserRq);
-      }
-   }
-
-   if (gDebug > 3) {
-      rewind(fd);
-      ::Info("TAuthenticate::CheckRootAuthrc",
-             "+----------- temporary file: %s -------------------------+",
-             filetmp.Data());
-      ::Info("TAuthenticate::CheckRootAuthrc", "+");
-      while (fgets(line, sizeof(line), fd) != 0) {
-         if (line[strlen(line) - 1] == '\n')
-            line[strlen(line) - 1] = '\0';
-         ::Info("TAuthenticate::CheckRootAuthrc", "+ %s", line);
-      }
-      ::Info("TAuthenticate::CheckRootAuthrc", "+");
-      ::Info("TAuthenticate::CheckRootAuthrc",
-             "+---------------------------------------------------------------------+");
-      ::Info("TAuthenticate::CheckRootAuthrc",
-             "+----------- Valid info fetched for this call ------------------------+");
-      ::Info("TAuthenticate::CheckRootAuthrc", "+");
-      ::Info("TAuthenticate::CheckRootAuthrc", "+   Host: %s - Number of users found: %d",
-             Host, nu);
-      for (ju = 0; ju < nu; ju++) {
-         ::Info("TAuthenticate::CheckRootAuthrc", "+");
-         ::Info("TAuthenticate::CheckRootAuthrc",
-                "+      Dumping user: %s ( %d methods found)", (*user)[ju],
-                (*nh)[ju]);
-         int i;
-         for (i = 0; i < (*nh)[ju]; i++) {
-            ::Info("TAuthenticate::CheckRootAuthrc", "+        %d: method: %d  det:'%s'",
-                   i, am[i][ju], det[i][ju]);
-         }
-      }
-      ::Info("TAuthenticate::CheckRootAuthrc", "+");
-      ::Info("TAuthenticate::CheckRootAuthrc",
-             "+---------------------------------------------------------------------+");
-   }
-
-   fclose(fd);
-   if (net) delete[] net;
-   if (UserRq) delete[] UserRq;
-   if (expand == 1)
-      gSystem->Unlink(filetmp);
-
-   return nu;
 }
 
 //______________________________________________________________________________
@@ -2195,9 +1754,10 @@ Int_t TAuthenticate::RfioAuth(TString &User)
 
          // Query result ...
          if (kind == kROOTD_AUTH && stat >= 1) {
-            // Authentication OK ...
-            SaveAuthDetails(this, (Int_t) TAuthenticate::kRfio, -1, 0,
-                            fDetails, pw->fUser, 0, 0);
+            // Create inactive SecContext object for use in TSocket
+            fSecContext = 
+               fHostAuth->CreateSecContext((const char *)pw->fUser,
+                                  fRemote, kRfio, -1, fDetails, 0);
             return 1;
          } else {
             TString Server = "sockd";
@@ -2260,39 +1820,34 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
 #ifdef R__WIN32
    Crypt = 0;
 #endif
-
-
    Int_t stat, kind;
 
    if (fVersion > 1) {
 
+      //
       // New protocol
-
+      //
       Int_t Anon = 0;
-      Int_t OffSet = -1;
       char *Salt = 0;
       char *PasHash = 0;
 
       // Create Options string
-      char *Options = new char[strlen(User.Data()) + 40];
       int Opt = (ReUse * kAUTH_REUSE_MSK) + (Crypt * kAUTH_CRYPT_MSK) +
                 (NeedSalt * kAUTH_SSALT_MSK);
-      sprintf(Options, "%d %ld %s", Opt, (Long_t)strlen(User), User.Data());
+      TString Options(Form("%d %ld %s", Opt, 
+                          (Long_t)User.Length(), User.Data()));
 
       // Check established authentications
       kind = kROOTD_USER;
       stat = ReUse;
       Int_t rc = 0;
-      if ((rc =
-           AuthExists(this, (Int_t) TAuthenticate::kClear, fDetails,
-                      Options, &kind, &stat)) == 1) {
+      if ((rc = AuthExists(User, (Int_t) TAuthenticate::kClear, Options, 
+                           &kind, &stat, &StdCheckSecCtx)) == 1) {
          // A valid authentication exists: we are done ...
-         if (Options) delete[] Options;
          if (gDebug > 3)
             Info("ClearAuth", "valid authentication exists: return 1");
          return 1;
       }
-      if (Options) delete[] Options;
       if (rc == -2) {
          return rc;
       }
@@ -2308,7 +1863,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
          ReUse = 0;
       }
 
-      if (OffSet == -1 && Anon == 0 && Crypt == 1) {
+      if (Anon == 0 && Crypt == 1) {
 
          // Check that we got the right thing ..
          if (kind != kROOTD_RSAKEY) {
@@ -2379,15 +1934,17 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
               Info("ClearAuth",
                    "automatically generated anonymous passwd: %s",
                    Passwd.Data());
-           }
+         }
 
       } else {
 
          if (Prompt == 1 || PasHash == 0) {
 
             if (Passwd == "") {
-               Passwd =
+               char *pwd =
                  PromptPasswd(Form("%s@%s password: ",User.Data(),fRemote.Data()));
+               Passwd = TString(pwd);
+               delete[] pwd;
                if (Passwd == "") {
                   Error("ClearAuth", "password not set");
                   if (PasHash) delete[] PasHash;
@@ -2460,81 +2017,76 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
          fgPasswd = "";
          return 0;
       }
-      if (OffSet == -1) {
 
-         if (kind != kROOTD_PASS || stat < 1)
-            Warning("ClearAuth",
-                    "problems recvn (user,offset) length (%d:%d bytes:%d)",
-                    kind, stat, nrec);
+      if (kind != kROOTD_PASS || stat < 1)
+         Warning("ClearAuth",
+                 "problems recvn (user,offset) length (%d:%d bytes:%d)",
+                 kind, stat, nrec);
 
-         // Get user and offset
-         char *answer = new char[stat + 1];
-         nrec = fSocket->Recv(answer, stat + 1, kind);
-         if (kind != kMESS_STRING)
-            Warning("ClearAuth",
-                    "username and offset not received (%d:%d)", kind,
-                    nrec);
+      // Get user and offset
+      char *answer = new char[stat + 1];
+      nrec = fSocket->Recv(answer, stat + 1, kind);
+      if (kind != kMESS_STRING)
+         Warning("ClearAuth",
+                 "username and offset not received (%d:%d)", kind,
+                 nrec);
 
-         // Parse answer
-         char *lUser = new char[stat];
-         sscanf(answer, "%s %d", lUser, &OffSet);
-         if (gDebug > 3)
-            Info("ClearAuth",
-                 "received from server: user: %s, offset: %d (%s)", lUser,
-                 OffSet, answer);
+      // Parse answer
+      Int_t OffSet = -1;
+      char *lUser = new char[stat];
+      sscanf(answer, "%s %d", lUser, &OffSet);
+      if (gDebug > 3)
+         Info("ClearAuth",
+              "received from server: user: %s, offset: %d (%s)", lUser,
+              OffSet, answer);
 
-         // Return username
-         User = lUser;
+      // Return username
+      User = lUser;
 
-         char *Token = 0;
-         if (ReUse == 1) {
-            // Receive Token
-            if (Crypt == 1) {
-               if (SecureRecv(fSocket, 1, &Token) == -1) {
-                  Warning("ClearAuth",
-                          "problems secure-receiving token - may result in corrupted token");
-               }
-            } else {
-               Int_t Tlen = 9;
-               Token = new char[Tlen];
-               fSocket->Recv(Token, Tlen, kind);
-               if (kind != kMESS_STRING)
-                  Warning("ClearAuth", "token not received (%d:%d)", kind,
-                          nrec);
-               // Invert Token
-               for (int i = 0; i < (int) strlen(Token); i++) {
-                  Token[i] = ~Token[i];
-               }
-
+      char *Token = 0;
+      if (ReUse == 1) {
+         // Receive Token
+         if (Crypt == 1) {
+            if (SecureRecv(fSocket, 1, &Token) == -1) {
+               Warning("ClearAuth",
+                       "problems secure-receiving token - may result in corrupted token");
             }
-            if (gDebug > 3)
-               Info("ClearAuth", "received from server: token: '%s' ",
-                    Token);
+         } else {
+            Int_t Tlen = 9;
+            Token = new char[Tlen];
+            fSocket->Recv(Token, Tlen, kind);
+            if (kind != kMESS_STRING)
+               Warning("ClearAuth", "token not received (%d:%d)", kind,
+                       nrec);
+            // Invert Token
+            for (int i = 0; i < (int) strlen(Token); i++) {
+               Token[i] = ~Token[i];
+            }
+
          }
-         // Create and save AuthDetails object
-         SaveAuthDetails(this, (Int_t) TAuthenticate::kClear, OffSet,
-                         ReUse, fDetails, lUser, fRSAKey, Token);
-
-         // This from remote login
-         fSocket->Recv(stat, kind);
-
-         if (answer) delete[] answer;
-         if (lUser) delete[] lUser;
+         if (gDebug > 3)
+            Info("ClearAuth", "received from server: token: '%s' ",
+                 Token);
       }
+      TPwdCtx *pwdctx = new TPwdCtx(fPasswd,fPwHash);
+      // Create SecContext object
+      fSecContext = fHostAuth->CreateSecContext((const char *)lUser, fRemote, 
+                    kClear, OffSet, fDetails, (const char *)Token,
+                    fgExpDate, (void *)pwdctx, fRSAKey);
+
+      // This from remote login
+      fSocket->Recv(stat, kind);
+
+      if (answer) delete[] answer;
+      if (lUser) delete[] lUser;
+
       // Release allocated memory ...
       if (Salt) delete[] Salt;
       if (PasHash) delete[] PasHash;
+      if (Token) delete[] Token;
 
 
       if (kind == kROOTD_AUTH && stat >= 1) {
-         if (stat == 2) {
-            int newOffSet;
-            // Receive new offset ...
-            fSocket->Recv(newOffSet, kind);
-            // ... and save it
-            SetOffSet(fHostAuth, (Int_t) TAuthenticate::kClear, fDetails,
-                      newOffSet);
-         }
          return 1;
       } else {
          fgPasswd = "";
@@ -2627,373 +2179,129 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::GetOffSet(TAuthenticate *Auth, Int_t Method,
-                               TString &Details, char **Token)
-{
-   // Check if already authenticated for Method with Details
-   // Return OffSet in the affirmative case or -1.
-
-   Int_t OffSet = -1;
-
-   if (gDebug > 2)
-      ::Info("TAuthenticate::GetOffSet", "analyzing: Method:%d, Details:%s", Method,
-             Details.Data());
-
-   THostAuth *HostAuth = Auth->GetHostAuth();
-   int Nw = 0, i = 0;
-   char Pt[5] = { 0 }, Ru[5] = {
-   0}, *Wd[4] = {
-   0};
-
-   if (Method == TAuthenticate::kGlobus) {
-      DecodeDetailsGlobus((char *) Details.Data(), Pt, Ru, &Wd[0], &Wd[1],
-                          &Wd[2], &Wd[3]);
-      Nw = 0;
-      for (i = 0; i < 4; i++) {
-         if (Wd[i] != 0 && strlen(Wd[i]) > 0)
-            Nw++;
-      }
-   } else {
-      DecodeDetails((char *) Details.Data(), Pt, Ru, &Wd[0]);
-      Nw = 0;
-      if (Wd[0] != 0 && strlen(Wd[0]) > 0)
-         Nw++;
-   }
-   if (gDebug > 3)
-      ::Info("TAuthenticate::GetOffSet", "found Nw: %d, Wd: %s %s %s %s", Nw, Wd[0],
-             Wd[1], Wd[2], Wd[3]);
-   if (Nw == 0) {
-      if (gDebug > 3)
-         ::Info("TAuthenticate::GetOffSet", "nothing to compare: return");
-      return OffSet;
-   }
-   // Check we already authenticated
-   TIter next(HostAuth->Established());
-   TAuthDetails *ai;
-   while ((ai = (TAuthDetails *) next())) {
-      if (gDebug > 3)
-         ::Info("TAuthenticate::GetOffSet", "found entry: met:%d det:%s off:%d",
-                ai->GetMethod(), ai->GetDetails(), ai->GetOffSet());
-      if (ai->GetMethod() == Method) {
-         int match = 1;
-         for (i = 0; i < Nw; i++) {
-            if (strstr(ai->GetDetails(), Wd[i]) == 0)
-               match = 0;
-         }
-         if (match == 1) {
-            OffSet = ai->GetOffSet();
-            //strcpy(*Token,ai->GetToken());
-            if (OffSet > -1) {
-               *Token = StrDup(ai->GetToken());
-               Auth->SetRSAKey(ai->GetRSAKey());
-            }
-         }
-      }
-   }
-   if (gDebug > 2)
-      ::Info("TAuthenticate::GetOffSet", "returning: %d", OffSet);
-   for (i = 0; i < Nw; i++) {
-      if (Wd[i] != 0)
-         delete[] Wd[i];
-   }
-   if (*Token == 0) {
-      Auth->SetRSAKey(0);
-   }
-   return OffSet;
-}
-
-//______________________________________________________________________________
-void TAuthenticate::SetOffSet(THostAuth *HostAuth, Int_t Method,
-                              TString &Details, Int_t OffSet)
-{
-   // Save new offset
-
-   TIter next(HostAuth->Established());
-   TAuthDetails *ai;
-   while ((ai = (TAuthDetails *) next())) {
-      if (ai->GetMethod() == Method) {
-         if (strstr(ai->GetDetails(), Details) != 0)
-            ai->SetOffSet(OffSet);
-      }
-   }
-}
-
-//______________________________________________________________________________
-char *TAuthenticate::GetRemoteLogin(THostAuth *HostAuth, Int_t Method,
-                                    const char *Details)
-{
-   // Check if already authenticated for Method with Details
-   // Return remote user login name in the affirmative case or 0
-   // The string should be freed by the caller with 'delete'.
-
-   char *rlogin = 0;
-
-   int Nw = 0, i = 0;
-   char Pt[5] = { 0 }, Ru[5] = {
-   0}, *Wd[4] = {
-   0};
-
-   if (Method == TAuthenticate::kGlobus) {
-      DecodeDetailsGlobus((char *) Details, Pt, Ru, &Wd[0], &Wd[1], &Wd[2],
-                          &Wd[3]);
-      Nw = 0;
-      for (i = 0; i < 4; i++) {
-         if (Wd[i] != 0 && strlen(Wd[i]) > 0)
-            Nw++;
-      }
-   } else {
-      DecodeDetails((char *) Details, Pt, Ru, &Wd[0]);
-      Nw = 0;
-      if (Wd[0] != 0 && strlen(Wd[0]) > 0)
-         Nw++;
-   }
-   if (gDebug > 2)
-      ::Info("TAuthenticate::GetRemoteLogin", "details:%s", Details);
-
-   // Check we already authenticated
-   TIter next(HostAuth->Established());
-   TAuthDetails *ai;
-   while ((ai = (TAuthDetails *) next())) {
-      if (ai->GetMethod() == Method) {
-         int match = 1;
-         for (i = 0; i < Nw; i++) {
-            if (strstr(ai->GetDetails(), Wd[i]) == 0)
-               match = 0;
-         }
-         if (match == 1) {
-            rlogin = StrDup(ai->GetLogin());
-         }
-      }
-   }
-   if (gDebug > 2)
-      ::Info("TAuthenticate::GetRemoteLogin", "returning: %s", rlogin);
-
-   for (i = 0; i < Nw; i++) {
-      if (Wd[i] != 0)
-         delete[] Wd[i];
-   }
-   return rlogin;
-}
-
-//______________________________________________________________________________
-void TAuthenticate::SaveAuthDetails(TAuthenticate *Auth, Int_t Method,
-                                    Int_t OffSet, Int_t ReUse,
-                                    TString &Details, const char *rlogin,
-                                    Int_t key, const char *token)
-{
-   THostAuth *HostAuth = Auth->GetHostAuth();
-   TSocket *Socket = Auth->GetSocket();
-   const char *Protocol = Auth->GetProtocol();
-
-   const char *remote = HostAuth->GetHost();
-   int port = Socket->GetPort();
-   int service = 1;
-   if (strstr(Protocol, "proof") != 0)
-      service = 2;
-
-   // If no meaningful offset is passed, then check if a
-   // similar entry already exist; if so, we do not need
-   // to create duplicates ...
-   if (OffSet == -1) {
-
-      TIter next(HostAuth->Established());
-      TAuthDetails *ai;
-      while ((ai = (TAuthDetails *) next())) {
-         if (ai->GetMethod() == Method) {
-            if (strstr(ai->GetDetails(), Details) != 0) {
-               if (ai->GetOffSet() == -1)
-                  return;
-            }
-         }
-      }
-   }
-
-   // Create AuthDetails object
-   TAuthDetails *fAuthDetails =
-       new TAuthDetails(Form("%s:%d:%d", remote, port, service),
-                        Method, OffSet, ReUse, (char *) Details.Data(),
-                        token, key, rlogin);
-   // Add it to the list
-   HostAuth->Established()->Add(fAuthDetails);
-
-   return;
-}
-
-//______________________________________________________________________________
-void TAuthenticate::DecodeDetails(char *details, char *Pt, char *Ru, char **Us)
-{
-   // Parse details looking for user info
-
-   if (gDebug > 2)
-      ::Info("TAuthenticate::DecodeDetails", "analyzing ... %s", details);
-
-   *Us = 0;
-
-   if (Pt == 0 || Ru == 0) {
-      ::Error("TAuthenticate::DecodeDetails",
-              "memory for Pt and Ru must be allocated elsewhere (Pt:0x%lx, Ru:0x%lx)",
-              (Long_t) Pt, (Long_t) Ru);
-      return;
-   }
-
-   if (strlen(details) > 0) {
-      int lDet = strlen(details) + 2;
-      char *ptr, *Temp = new char[lDet];
-      if ((ptr = strstr(details, "pt:")) != 0)
-         sscanf(ptr + 3, "%s %s", Pt, Temp);
-      if ((ptr = strstr(details, "ru:")) != 0)
-         sscanf(ptr + 3, "%s %s", Ru, Temp);
-      if ((ptr = strstr(details, "us:")) != 0) {
-         *Us = new char[lDet];
-         *Us[0] = '\0';
-         sscanf(ptr + 3, "%s %s", *Us, Temp);
-      }
-      if (gDebug > 3)
-         ::Info("TAuthenticate::DecodeDetails", "Pt:%s, Ru:%s, Us:%s", Pt, Ru, *Us);
-      if (Temp) delete[] Temp;
-   }
-}
-
-//______________________________________________________________________________
-void TAuthenticate::DecodeDetailsGlobus(char *details, char *Pt, char *Ru,
-                                        char **Cd, char **Cf, char **Kf,
-                                        char **Ad)
-{
-   // Parse details looking for globus authentication info
-
-   if (gDebug > 2)
-      ::Info("TAuthenticate::DecodeDetailsGlobus", "analyzing ... %s", details);
-
-   *Cd = 0, *Cf = 0, *Kf = 0, *Ad = 0;
-
-   if (Pt == 0 || Ru == 0) {
-      ::Error("TAuthenticate::DecodeDetailsGlobus",
-              "memory for Pt and Ru must be allocated elsewhere (Pt:0x%lx, Ru:0x%lx)",
-              (Long_t) Pt, (Long_t) Ru);
-      return;
-   }
-
-   if (strlen(details) > 0) {
-      int lDet = strlen(details) + 2;
-      char *ptr, *Temp = new char[lDet];
-      if ((ptr = strstr(details, "pt:")) != 0)
-         sscanf(ptr + 3, "%s %s", Pt, Temp);
-      if ((ptr = strstr(details, "ru:")) != 0)
-         sscanf(ptr + 3, "%s %s", Ru, Temp);
-      if ((ptr = strstr(details, "cd:")) != 0) {
-         *Cd = new char[lDet];
-         *Cd[0] = '\0';
-         sscanf(ptr, "%s %s", *Cd, Temp);
-      }
-      if ((ptr = strstr(details, "cf:")) != 0) {
-         *Cf = new char[lDet];
-         *Cf[0] = '\0';
-         sscanf(ptr, "%s %s", *Cf, Temp);
-      }
-      if ((ptr = strstr(details, "kf:")) != 0) {
-         *Kf = new char[lDet];
-         *Kf[0] = '\0';
-         sscanf(ptr, "%s %s", *Kf, Temp);
-      }
-      if ((ptr = strstr(details, "ad:")) != 0) {
-         *Ad = new char[lDet];
-         *Ad[0] = '\0';
-         sscanf(ptr, "%s %s", *Ad, Temp);
-      }
-
-      if (gDebug > 3)
-         ::Info("TAuthenticate::DecodeDetailsGlobus", "Pt:%s, Ru:%s, %s, %s, %s, %s", Pt,
-                Ru, *Cd, *Cf, *Kf, *Ad);
-
-      if (Temp) delete[] Temp;
-   }
-}
-
-//______________________________________________________________________________
-void TAuthenticate::SetHostAuth(const char *host, const char *user)
+THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user, 
+                                      Option_t *Opt, Int_t *Exact)
 {
    // Sets fUser=user and search fgAuthInfo for the entry pertaining to
    // (host,user), setting fHostAuth accordingly.
+   // If Opt = "P" use fgProofAuthInfo list instead 
    // If no entry is found fHostAuth is not changed
 
-   if (gDebug > 2)
-      Info("SetHostAuth", "enter ... %s ... %s", host, user);
-
-   // Set fUser
-   SetUser(user);
-
-   // Check list of auth info for already loaded info about this host
-   TIter next(GetAuthInfo());
-   THostAuth *ai;
-   while ((ai = (THostAuth *) next())) {
-      if (gDebug > 3)
-         ai->Print("Authenticate:SetHostAuth");
-      if (!strcmp(host, ai->GetHost()) && !strcmp(user, ai->GetUser())) {
-         fHostAuth = ai;
-         break;
-      }
-   }
-}
-
-//______________________________________________________________________________
-THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user)
-{
-   // Sets fUser=user and search fgAuthInfo for the entry pertaining to
-   // (host,user), setting fHostAuth accordingly.
-   // If no entry is found fHostAuth is not changed
-
+   if (Exact)
+      *Exact = 0;
    if (gDebug > 2)
       ::Info("TAuthenticate::GetHostAuth", "enter ... %s ... %s", host, user);
-   int ulen = strlen(user);
+
+   // Strip off the servertype, if any
+   Int_t SrvTyp = -1;
+   TString Host = host;
+   if (Host.Contains(":")) {
+      char *ps = strstr(host,":");
+      if (ps)
+         SrvTyp = atoi(ps+1);
+      Host.Remove(Host.Index(":"));
+   }
+   TString HostFQDN = Host;
+   if (strncmp(host,"default",7) && !HostFQDN.Contains("*")) {
+     TInetAddress addr = gSystem->GetHostByName(HostFQDN);
+     if (addr.IsValid()) {
+        HostFQDN = addr.GetHostName();
+        if (HostFQDN == "UnNamedHost")
+           HostFQDN = addr.GetHostAddress();
+     }
+   }
+   TString User = user;
+   if (!User.Length())
+      User = "*";
    THostAuth *rHA = 0;
 
-   // Check and save the host FQDN ...
-   TString lHost = host;
-   TInetAddress addr = gSystem->GetHostByName(lHost);
-   if (addr.IsValid()) {
-      lHost = addr.GetHostName();
-      if (lHost == "UnNamedHost")
-         lHost = addr.GetHostAddress();
+   // Check list of auth info for already loaded info about this host
+   TIter *next = new TIter(GetAuthInfo());
+   if (!strncasecmp(Opt,"P",1)) {
+      SafeDelete(next);
+      next = new TIter(GetProofAuthInfo());
    }
 
-   // Check list of auth info for already loaded info about this host
-   TIter next(GetAuthInfo());
    THostAuth *ai;
    Bool_t NotFound = kTRUE;
-   while ((ai = (THostAuth *) next())) {
+   Bool_t ServerOK = kTRUE;
+   while ((ai = (THostAuth *) (*next)())) {
       if (gDebug > 3)
-         ai->Print("Authenticate:GetHostAuth");
+         ai->Print("Authenticate::GetHostAuth");
+ 
+      // Server
+      if (!(ServerOK = (ai->GetServer() == -1) || 
+                       (ai->GetServer() == SrvTyp)))
+         continue;
 
       // Use default entry if existing and nothing more specific is found
-      if (!strcmp(ai->GetHost(),"default") && NotFound)
+      if (!strcmp(ai->GetHost(),"default") && ServerOK && NotFound)
          rHA = ai;
 
       // Check
-      if (ulen > 0) {
-         if (CheckHost(lHost,ai->GetHost()) && !strcmp(user, ai->GetUser())) {
-            rHA = ai;
-            NotFound = kFALSE;
-         }
-      } else {
-         if (CheckHost(lHost,ai->GetHost())) {
-            rHA = ai;
-            NotFound = kFALSE;
-         }
+      if (CheckHost(HostFQDN,ai->GetHost()) && 
+          CheckHost(User,ai->GetUser())     && ServerOK) {
+         rHA = ai;
+         NotFound = kFALSE;
       }
 
-      if (ulen > 0) {
-         if (lHost == ai->GetHost() && !strcmp(user, ai->GetUser())) {
-            rHA = ai;
-            break;
-         }
-      } else {
-         if (lHost == ai->GetHost()) {
-            rHA = ai;
-            break;
-         }
+      if (HostFQDN == ai->GetHost() && 
+          User == ai->GetUser()     && SrvTyp == ai->GetServer() ) {
+         rHA = ai;
+         if (Exact)
+            *Exact = 1;
+         break;
       }
    }
+   SafeDelete(next);
    return rHA;
+}
+
+//______________________________________________________________________________
+THostAuth *TAuthenticate::HasHostAuth(const char *host, const char *user, 
+                                      Option_t *Opt)
+{
+   // Checks if a THostAuth with exact match for {host,user} exists
+   // in the fgAuthInfo list 
+   // If Opt = "P" use ProofAuthInfo list instead 
+   // Returns pointer to it or 0
+
+   if (gDebug > 2)
+      ::Info("TAuthenticate::HasHostAuth", "enter ... %s ... %s", host, user);
+
+   // Strip off the servertype, if any
+   Int_t SrvTyp = -1;
+   TString hostFQDN = host;
+   if (hostFQDN.Contains(":")) {
+      char *ps = strstr(host,":");
+      if (ps)
+         SrvTyp = atoi(ps+1);
+      hostFQDN.Remove(hostFQDN.Index(":"));
+   }
+   if (strncmp(host,"default",7) && !hostFQDN.Contains("*")) {
+     TInetAddress addr = gSystem->GetHostByName(hostFQDN);
+     if (addr.IsValid()) {
+        hostFQDN = addr.GetHostName();
+        if (hostFQDN == "UnNamedHost")
+           hostFQDN = addr.GetHostAddress();
+     }
+   }
+
+   TIter *next = new TIter(GetAuthInfo());
+   if (!strncasecmp(Opt,"P",1)) {
+      SafeDelete(next);
+      next = new TIter(GetProofAuthInfo());
+   }
+   THostAuth *ai;
+   while ((ai = (THostAuth *) (*next)())) {
+
+      if (hostFQDN == ai->GetHost() && 
+          !strcmp(user, ai->GetUser()) && SrvTyp == ai->GetServer()) {
+         return ai;
+      }
+   }
+   SafeDelete(next);
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -3023,12 +2331,35 @@ void TAuthenticate::FileExpand(const char *fexp, FILE *ftmp)
       if (gDebug > 2)
          ::Info("TAuthenticate::FileExpand", "read line ... '%s'", line);
       int nw = sscanf(line, "%s %s", cinc, fileinc);
-      if (nw < 2)
+      if (nw < 1)
          continue;              // Not enough info in this line
       if (strcmp(cinc, "include") != 0) {
          // copy line in temporary file
          fprintf(ftmp, "%s\n", line);
       } else {
+
+         // Drop quotes or double quotes, if any
+         TString Line(line);
+         Line.ReplaceAll("\"",1,"",0);
+         Line.ReplaceAll("'",1,"",0);
+         sscanf(Line.Data(), "%s %s", cinc, fileinc);
+
+         // support environment directories ...
+         if (fileinc[0] == '$') {
+            TString FileInc(fileinc);
+            TString EnvDir(fileinc);
+            if (EnvDir.Contains("/")) {
+               EnvDir.Remove(EnvDir.Index("/"));
+               EnvDir.Remove(0,1);
+               if (gSystem->Getenv(EnvDir.Data())) {
+                  FileInc.Remove(0,1);
+                  FileInc.ReplaceAll(EnvDir.Data(),gSystem->Getenv(EnvDir.Data()));
+                  fileinc[0] = '\0';
+                  strcpy(fileinc,FileInc.Data()); 
+              }
+            }
+         }
+
          // open (expand) file in temporary file ...
          if (fileinc[0] == '~') {
             // needs to expand
@@ -3069,7 +2400,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 
    // UsrPwd
    if (sec == TAuthenticate::kClear) {
-      if (strlen(usr) == 0 || !strcmp(usr,"-1"))
+      if (strlen(usr) == 0 || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("UsrPwd.Login", "");
       sprintf(temp, "pt:%s ru:%s cp:%s us:%s",
               gEnv->GetValue("UsrPwd.LoginPrompt", copt[opt]),
@@ -3078,7 +2409,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 
       // SRP
    } else if (sec == TAuthenticate::kSRP) {
-      if (strlen(usr) == 0 || !strcmp(usr,"-1"))
+      if (strlen(usr) == 0 || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("SRP.Login", "");
       sprintf(temp, "pt:%s ru:%s us:%s",
               gEnv->GetValue("SRP.LoginPrompt", copt[opt]),
@@ -3086,7 +2417,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 
       // Kerberos
    } else if (sec == TAuthenticate::kKrb5) {
-      if (strlen(usr) == 0 || !strcmp(usr,"-1"))
+      if (strlen(usr) == 0 || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("Krb5.Login", "");
       sprintf(temp, "pt:%s ru:%s us:%s",
               gEnv->GetValue("Krb5.LoginPrompt", copt[opt]),
@@ -3101,7 +2432,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 
       // SSH
    } else if (sec == TAuthenticate::kSSH) {
-      if (strlen(usr) == 0 || !strcmp(usr,"-1"))
+      if (strlen(usr) == 0 || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("SSH.Login", "");
       sprintf(temp, "pt:%s ru:%s us:%s",
               gEnv->GetValue("SSH.LoginPrompt", copt[opt]),
@@ -3109,7 +2440,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 
       // Uid/Gid
    } else if (sec == TAuthenticate::kRfio) {
-      if (strlen(usr) == 0 || !strcmp(usr,"-1"))
+      if (strlen(usr) == 0 || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("UidGid.Login", "");
       sprintf(temp, "pt:%s us:%s",
               gEnv->GetValue("UidGid.LoginPrompt", copt[opt]), usr);
@@ -3121,219 +2452,169 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 }
 
 //______________________________________________________________________________
-void TAuthenticate::RemoveHostAuth(THostAuth *ha)
+void TAuthenticate::RemoveHostAuth(THostAuth * ha, Option_t *Opt)
 {
    // Remove THostAuth instance from the list
 
-   // Remove from the list ...
-   GetAuthInfo()->Remove(ha);
-
+   if (!strncasecmp(Opt,"P",1)) 
+      GetProofAuthInfo()->Remove(ha);
+   else
+      GetAuthInfo()->Remove(ha);
    // ... destroy it
    delete ha;
 }
 
 //______________________________________________________________________________
-void TAuthenticate::ReadAuthRc(const char *host, const char *user)
+void TAuthenticate::Show(Option_t *opt)
 {
-   // Read methods for a given host (and user) from .rootauthrc
+   // Print info about the authentication sector.
+   // If 'opt' contains 's' or 'S' prints information about established TSecContext, 
+   // else prints information about THostAuth (if 'opt' is 'p' or 'P', prints 
+   // Proof related information)
 
-   if (gDebug > 2)
-      ::Info("TAuthenticate::ReadAuthRc", "enter: host: '%s', user: '%s'", host, user);
+   TString Opt(opt);
+   
+   if (Opt.Contains("s",TString::kIgnoreCase)) {
 
-   // Check and save the host FQDN ...
-   TString fqdn;
-   TInetAddress addr = gSystem->GetHostByName(host);
-   if (addr.IsValid()) {
-      fqdn = addr.GetHostName();
-      if (fqdn == "UnNamedHost")
-         fqdn = addr.GetHostAddress();
-   }
-   if (gDebug > 3)
-      ::Info("TAuthenticate::ReadAuthRc",
-             "number of HostAuth Instantiations in memory: %d",
-             GetAuthInfo()->GetSize());
+      // Print established security contexts
+      TIter next(gROOT->GetListOfSecContexts());
+      TSecContext *sc = 0;
+      while ((sc = (TSecContext *)next())) 
+         sc->Print();
 
-   // Determine applicable auth methods from client choices
-   Int_t *nmeth, *security[kMAXSEC];
-   char **details[kMAXSEC];
-   char **usr = new char *[1];
-   if (strlen(user) > 0)
-      usr[0] = StrDup(user);
-   else
-      usr[0] = StrDup("");
+   } else {
 
-   int nu =
-       GetAuthMeth(fqdn.Data(), "rootd", &usr, &nmeth, security, details);
-   if (gDebug > 3)
-      ::Info("TAuthenticate::ReadAuthRc", "found %d users", nu);
-
-   int ju = 0, i, j;
-   for (ju = 0; ju < nu; ju++) {
-
-      // Translate to Input for THostAuth
-      int nm = nmeth[ju], am[kMAXSEC];
-      char *det[kMAXSEC];
-      for (i = 0; i < kMAXSEC; i++) {
-         if (i < nm) {
-            am[i] = security[i][ju];
-            det[i] = StrDup(details[i][ju]);
-         } else {
-            am[i] = -1;
-            det[i] = 0;
-         }
-      }
-      if (gDebug > 3) {
-         ::Info("TAuthenticate::ReadAuthRc", "got %d methods (ju: %d)", nm, ju);
-         for (i = 0; i < nm; i++) {
-            ::Info("TAuthenticate::ReadAuthRc", "got (%d,0) security:%d details:%s", i,
-                   am[i], det[i]);
-         }
-      }
-      // Check list of auth info for already loaded info about this (host,user)
-      THostAuth *hostAuth = 0;
-      TIter next(GetAuthInfo());
-      THostAuth *ai;
-      while ((ai = (THostAuth *) next())) {
-         if (gDebug > 3)
+      ::Info("::Print",
+         " +--------------------------- BEGIN --------------------------------+");
+      ::Info("::Print",
+         " +                                                                  +");
+      if (Opt.Contains("p",TString::kIgnoreCase)) {
+         ::Info("::Print",
+         " + List fgProofAuthInfo has %4d members                            +",
+           GetProofAuthInfo()->GetSize());
+         ::Info("::Print",
+         " +                                                                  +");
+         ::Info("::Print",
+         " +------------------------------------------------------------------+");
+         TIter next(GetProofAuthInfo());
+         THostAuth *ai;
+         while ((ai = (THostAuth *) next())) {
             ai->Print();
-         if (fqdn == ai->GetHost() && !strcmp(usr[ju], ai->GetUser())) {
-            hostAuth = ai;
-            break;
          }
-      }
-
-      if (hostAuth == 0) {
-         // Create THostAuth object
-         hostAuth = new THostAuth(fqdn, usr[ju], nm, am, det);
-         // ... and add it to the list
-         GetAuthInfo()->Add(hostAuth);
       } else {
-         // Modify existing entry ...
-         Bool_t *RemoveMethod = new Bool_t[hostAuth->NumMethods()];
-         for (i = 0; i < hostAuth->NumMethods(); i++)
-            RemoveMethod[i] = kTRUE;
-         for (i = 0; i < nmeth[0]; i++) {
-            int j, jm = -1;
-            for (j = 0; j < hostAuth->NumMethods(); j++) {
-               if (am[i] == hostAuth->GetMethods(j)) {
-                  hostAuth->SetDetails(am[i], det[i]);
-                  jm = j;
-                  RemoveMethod[j] = kFALSE;
-               }
-            }
-            if (jm == -1)
-               hostAuth->AddMethod(am[i], det[i]);
-         }
-         for (i = 0; i < hostAuth->NumMethods(); i++)
-            if (RemoveMethod[i])
-               hostAuth->RemoveMethod(hostAuth->GetMethods(i));
-      }
-      if (gDebug > 3)
-         hostAuth->Print();
-      for (i = 0; i < nm; i++) {
-         if (det[i] != 0)
-            delete[] det[i];
-      }
-   }
-   for (i = 0; i < kMAXSEC; i++) {
-      if (security[i] != 0)
-         delete[] security[i];
-      if (details[i] != 0) {
-         for (j = 0; j < nu; j++) {
-            if (details[i][j] != 0)
-               delete[] details[i][j];
+         ::Info("::Print",
+         " + List fgAuthInfo has %4d members                                 +",
+          GetAuthInfo()->GetSize());
+         ::Info("::Print",
+         " +                                                                  +");
+         ::Info("::Print",
+         " +------------------------------------------------------------------+");
+         TIter next(GetAuthInfo());
+         THostAuth *ai;
+         while ((ai = (THostAuth *) next())) {
+            ai->Print();
+            ai->PrintEstablished();
          }
       }
-   }
-   for (i = 0; i < nu; i++) {
-      if (usr[i]) delete[] usr[i];
-   }
-   if (nmeth) delete[] nmeth;
-   if (usr) delete[] usr;
-}
-
-//______________________________________________________________________________
-void TAuthenticate::PrintHostAuth()
-{
-   // Print info abour existing HostAuth instantiations
-
-   TIter next(GetAuthInfo());
-   THostAuth *ai;
-   while ((ai = (THostAuth *) next())) {
-      ai->Print();
-      ai->PrintEstablished();
+      ::Info("::Print",
+         " +---------------------------- END ---------------------------------+");
    }
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::AuthExists(TAuthenticate *Auth, Int_t Sec,
-                                TString &Details, const char *Options,
-                                Int_t *Message, Int_t *Rflag)
+Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
+                                Int_t *Message, Int_t *Rflag, 
+                                CheckSecCtx_t CheckSecCtx)
 {
    // Check if we have a valid established sec context in memory
    // Retrieves relevant info and negotiates with server.
    // Options = "Opt,strlen(User),User.Data()"
    // Message = kROOTD_USER, ...
 
-   THostAuth *HostAuth = Auth->GetHostAuth();
-   TSocket *Socket = Auth->GetSocket();
-
+   // Welcome message, if requested ...
    if (gDebug > 2)
-      ::Info("TAuthenticate::AuthExists", "%d: enter: msg: %d options: '%s'", Sec,
-             *Message, Options);
+      Info("AuthExists","%d: enter: msg: %d options: '%s'", 
+              Method,*Message, Options);
 
+   // Look for an existing security context matching this request
+   Bool_t NotHA = kFALSE;
 
-   // Check we already authenticated
-   Int_t OffSet = -1;
-   char *Token = 0;
-   //   char   *eTkn = 0;
-   Int_t ReUse = *Rflag;
-   //   Int_t  Len   = 0;
-   if (ReUse == 1) {
-
-      // Get OffSet and token, if any ...
-      OffSet = GetOffSet(Auth, Sec, Details, &Token);
-      if (gDebug > 3)
-         ::Info("TAuthenticate::AuthExists", "%d: offset in memory is: %d ('%s')", Sec,
-                OffSet, Token);
+   // First in the local list
+   TIter next(fHostAuth->Established());
+   TSecContext *SecCtx;
+   while ((SecCtx = (TSecContext *)next())) {
+      if (SecCtx->GetMethod() == Method) {
+         if (fRemote == SecCtx->GetHost()) {
+            if (CheckSecCtx && 
+              (*CheckSecCtx)(User,SecCtx) == 1)
+               break;
+         }
+      }
    }
+
+   // If nothing found, try the all list
+   if (!SecCtx) {
+      next = TIter(gROOT->GetListOfSecContexts());
+      while ((SecCtx = (TSecContext *)next())) {
+         if (SecCtx->GetMethod() == Method) {
+            if (fRemote == SecCtx->GetHost()) {
+               if (CheckSecCtx && 
+                  (*CheckSecCtx)(User,SecCtx) == 1) {
+                  NotHA = kTRUE;
+                  break;
+               }
+            }
+         }
+      }
+   }
+
+   // If we have been given a valid sec context retrieve some info
+   Int_t OffSet = -1;
+   TString Token;
+   if (SecCtx) {
+      OffSet = SecCtx->GetOffSet();
+      Token = SecCtx->GetToken();
+      if (gDebug > 2)
+         Info("AuthExists", 
+              "found valid TSecContext: OffSet: %d Token: '%s'", 
+              OffSet, Token.Data());
+   }
+
    // Prepare string to be sent to the server
-   char *sstr = new char[strlen(Options) + 20];
-   sprintf(sstr, "%d %d %s", gSystem->GetPid(), OffSet, Options);
+   TString sstr(Form("%d %d %s", gSystem->GetPid(), OffSet, Options));
 
    // Send Message
-   Socket->Send(sstr, *Message);
+   fSocket->Send(sstr, *Message);
 
+   Int_t ReUse = *Rflag;
    if (ReUse == 1 && OffSet > -1) {
 
-      Int_t RSAKey = Auth->GetRSAKey();
+      Int_t RSAKey = SecCtx->GetRSAKey();
       if (gDebug > 2)
-         ::Info("TAuthenticate::AuthExists", "key type: %d", RSAKey);
+         Info("AuthExists", "key type: %d", RSAKey);
 
       if (RSAKey > 0) {
          // Send Token encrypted
-         if (SecureSend(Socket, 1, Token) == -1) {
-            ::Warning("TAuthenticate::AuthExists",
-                      "problems secure-sending Token - may trigger problems in proofing Id ");
+         if (SecureSend(fSocket, 1, Token) == -1) {
+            Warning("AuthExists", "problems secure-sending Token %s",
+                    "- may trigger problems in proofing Id ");
          }
       } else {
-         // Send Token inverted
-         for (int i = 0; i < (int) strlen(Token); i++) {
-            Token[i] = ~Token[i];
+         // Send inverted
+         for (int i = 0; i < Token.Length(); i++) {
+            char inv = ~Token(i);
+            Token.Replace(i, 1, inv);
          }
-         Socket->Send(Token, kMESS_STRING);
+         fSocket->Send(Token, kMESS_STRING);
       }
 
    }
-   // Release allocated memory
-   if (Token) delete[] Token;
-   if (sstr) delete[] sstr;
 
    Int_t stat, kind;
-   Socket->Recv(stat, kind);
+   fSocket->Recv(stat, kind);
    if (gDebug > 3)
-      ::Info("TAuthenticate::AuthExists", "%d: after msg %d: kind= %d, stat= %d", Sec,
-             *Message, kind, stat);
+      Info("AuthExists","%d: after msg %d: kind= %d, stat= %d", 
+                        Method,*Message, kind, stat);
 
    // Return flags
    *Message = kind;
@@ -3341,27 +2622,27 @@ Int_t TAuthenticate::AuthExists(TAuthenticate *Auth, Int_t Sec,
 
    if (kind == kROOTD_ERR) {
       TString Server = "sockd";
-      if (strstr(Auth->GetProtocol(),"root"))
+      if (fSocket->GetServType() == TSocket::kROOTD)
          Server = "rootd";
-      if (strstr(Auth->GetProtocol(),"proof"))
+      if (fSocket->GetServType() == TSocket::kPROOFD)
          Server = "proofd";
       if (stat == kErrConnectionRefused) {
-         ::Error("TAuthenticate::AuthExists",
-                 "%s@%s does not accept connections from %s@%s",
-                 Server.Data(),Auth->GetRemoteHost(),
-                 Auth->GetUser(),gSystem->HostName());
+         Error("AuthExists","%s@%s does not accept connections from %s@%s",
+               Server.Data(),fRemote.Data(),fUser.Data(),gSystem->HostName());
          return -2;
       } else if (stat == kErrNotAllowed) {
          if (gDebug > 0)
-            ::Info("TAuthenticate::AuthExists",
-                   "%s@%s does not accept %s authentication from %s@%s",
-                   Server.Data(),Auth->GetRemoteHost(),
-                   TAuthenticate::fgAuthMeth[Sec].Data(),
-                   Auth->GetUser(),gSystem->HostName());
+            Info("AuthExists",
+                 "%s@%s does not accept %s authentication from %s@%s",
+                 Server.Data(),fRemote.Data(), fgAuthMeth[Method].Data(),
+                 fUser.Data(),gSystem->HostName());
       } else {
         if (gDebug > 0)
            AuthError("AuthExists", stat);
       }
+      // If the sec context was not valid, deactivate it ...
+      if (SecCtx) 
+         SecCtx->DeActivate("");
       return 0;
    }
 
@@ -3369,10 +2650,14 @@ Int_t TAuthenticate::AuthExists(TAuthenticate *Auth, Int_t Sec,
       if (stat == 2) {
          int newOffSet;
          // Receive new offset ...
-         Socket->Recv(newOffSet, kind);
+         fSocket->Recv(newOffSet, kind);
          // ... and save it
-         SetOffSet(HostAuth, Sec, Details, newOffSet);
+         SecCtx->SetOffSet(newOffSet);
       }
+      fSecContext = SecCtx;
+      // Add it to local list for later use (if not already there)
+      if (NotHA) 
+         fHostAuth->Established()->Add(SecCtx);
       return 1;
    }
    return 0;
@@ -3431,7 +2716,7 @@ Int_t TAuthenticate::GenRSAKeys()
    rsa_NUMBER p1, p2, rsa_n, rsa_e, rsa_d;
    Int_t l_n = 0, l_e = 0, l_d = 0;
    char buf_n[rsa_STRLEN], buf_e[rsa_STRLEN], buf_d[rsa_STRLEN];
-#if 0
+#if R__RSADEB
    char buf[rsa_STRLEN];
 #endif
 
@@ -3460,7 +2745,7 @@ Int_t TAuthenticate::GenRSAKeys()
          p1 = rsa_fun::fg_rsa_genprim(thePrimeLen, thePrimeExp);
          p2 = rsa_fun::fg_rsa_genprim(thePrimeLen+1, thePrimeExp);
       }
-#if 0
+#if R__RSADEB
       if (gDebug > 3) {
          rsa_fun::fg_rsa_num_sput(&p1, buf, rsa_STRLEN);
          Info("GenRSAKeys", "local: p1: '%s' ", buf);
@@ -3484,7 +2769,7 @@ Int_t TAuthenticate::GenRSAKeys()
       rsa_fun::fg_rsa_num_sput(&rsa_d, buf_d, rsa_STRLEN);
       l_d = strlen(buf_d);
 
-#if 0
+#if R__RSADEB
       if (gDebug > 3) {
          Info("GenRSAKeys", "local: n: '%s' length: %d", buf_n, l_n);
          Info("GenRSAKeys", "local: e: '%s' length: %d", buf_e, l_e);
@@ -3555,7 +2840,7 @@ Int_t TAuthenticate::GenRSAKeys()
    rsa_fun::fg_rsa_assign(&fgRSAPubKey.n, &rsa_n);
    rsa_fun::fg_rsa_assign(&fgRSAPubKey.e, &rsa_d);
 
-#if 0
+#if R__RSADEB
    if (gDebug > 2) {
       // Determine their lengths
       Info("GenRSAKeys", "local: generated keys are:");
@@ -3565,6 +2850,10 @@ Int_t TAuthenticate::GenRSAKeys()
    }
 #endif
    // Export form
+   if (fgRSAPubExport.keys) {
+      delete[] fgRSAPubExport.keys;
+      fgRSAPubExport.len = 0;
+   }
    fgRSAPubExport.len = l_n + l_d + 4;
    fgRSAPubExport.keys = new char[fgRSAPubExport.len];
 
@@ -3574,7 +2863,7 @@ Int_t TAuthenticate::GenRSAKeys()
    memcpy(fgRSAPubExport.keys + l_n + 2, buf_d, l_d);
    fgRSAPubExport.keys[l_n + l_d + 2] = '#';
    fgRSAPubExport.keys[l_n + l_d + 3] = 0;
-#if 0
+#if R__RSADEB
    if (gDebug > 2)
       Info("GenRSAKeys", "local: export pub: '%s'", fgRSAPubExport.keys);
 #else
@@ -3704,7 +2993,7 @@ Int_t TAuthenticate::SecureSend(TSocket *Socket, Int_t Key, const char *Str)
 //______________________________________________________________________________
 Int_t TAuthenticate::SecureRecv(TSocket *Socket, Int_t Key, char **Str)
 {
-   // Receive Len bytes from Socket and decode them in Str using key indicated by Key type
+   // Receive Str from Socket and decode it using key indicated by Key type
    // Return number of received bytes or -1 in case of error.
    // Key = 1 for private decoding, Key = 2 for public decoding
 
@@ -3730,14 +3019,17 @@ Int_t TAuthenticate::SecureRecv(TSocket *Socket, Int_t Key, char **Str)
       Nrec = Socket->RecvRaw(BufTmp, Len);
       rsa_fun::fg_rsa_decode(BufTmp, Len, fgRSAPriKey.n, fgRSAPriKey.e);
       if (gDebug > 3)
-         ::Info("TAuthenticate::SecureRecv", "local: decoded string is %d bytes long ", strlen(BufTmp));
+         ::Info("TAuthenticate::SecureRecv",
+                "local: decoded string is %d bytes long ", strlen(BufTmp));
    } else if (Key == 2) {
       Nrec = Socket->RecvRaw(BufTmp, Len);
       rsa_fun::fg_rsa_decode(BufTmp, Len, fgRSAPubKey.n, fgRSAPubKey.e);
       if (gDebug > 3)
-         ::Info("TAuthenticate::SecureRecv", "local: decoded string is %d bytes long ", strlen(BufTmp));
+         ::Info("TAuthenticate::SecureRecv",
+                "local: decoded string is %d bytes long ", strlen(BufTmp));
    } else {
-      ::Info("TAuthenticate::SecureRecv", "unknown key option (%d) - return", Key);
+      ::Info("TAuthenticate::SecureRecv",
+             "unknown key option (%d) - return", Key);
    }
 
    *Str = new char[strlen(BufTmp) + 1];
@@ -3850,4 +3142,837 @@ void TAuthenticate::SendRSAPublicKey(TSocket *Socket)
    if (gDebug > 3)
          ::Info("TAuthenticate::SendRSAPublicKey",
                 "local: sent %d bytes (expected: %d)", Nsen,Ttmp);
+}
+
+//______________________________________________________________________________
+Int_t TAuthenticate::GetClientProtocol()
+{
+   // Static method returning supported client protocol.
+
+   return fgClientProtocol;
+}
+
+//______________________________________________________________________________
+void TAuthenticate::CleanupSecContextAll()
+{
+   // Ask remote client to cleanup all active security context
+   // Static method called in TROOT for final cleanup
+
+   TIter next(gROOT->GetListOfSecContexts());
+   TSecContext *nsc ;
+   while ((nsc = (TSecContext *)next())) {
+      if (nsc->IsActive()) {
+         TAuthenticate::CleanupSecContext(nsc,kTRUE);
+         nsc->DeActivate("");
+         // All have been remotely Deactivated
+         TIter nxtl(gROOT->GetListOfSecContexts());
+         TSecContext *nscl;
+         while ((nscl = (TSecContext *)nxtl())) {
+            if (nscl != nsc && !strcmp(nscl->GetHost(),nsc->GetHost())) {
+               // Need to set ofs=-1 to avoid sending another 
+               // cleanup request
+               nscl->DeActivate("");
+            }
+         }
+      }
+   }
+
+   // We are quitting, so cleanup memory also memory
+   if (fgRSAPubExport.keys)
+      delete[] fgRSAPubExport.keys;
+   fgRSAPubExport.len = 0;
+}
+//______________________________________________________________________________
+Bool_t TAuthenticate::CleanupSecContext(TSecContext *ctx, Bool_t all)
+{
+   // Ask remote client to cleanup security context 'ctx'
+   // If 'all', all sec context with the same host as ctx
+   // are cleaned.
+   // Static method called by ~TSecContext
+
+   Bool_t cleaned = kFALSE;
+
+   // Nothing to do if inactive ...
+   if (!ctx->IsActive())
+      return kTRUE;
+
+   // Contact remote services that used this context,
+   // starting from the last ...
+   TIter last(ctx->GetSecContextCleanup(),kIterBackward);
+   TSecContextCleanup *nscc = 0;
+   while ((nscc = (TSecContextCleanup *)last()) && !cleaned) {
+
+      // First check if remote daemon supports cleaning
+      Int_t srvtyp = nscc->GetType();
+      Int_t rproto = nscc->GetProtocol();
+      Int_t level = 2;
+      if ((srvtyp == TSocket::kROOTD && rproto < 10) || 
+          (srvtyp == TSocket::kPROOFD && rproto < 9))
+         level = 1;
+      if ((srvtyp == TSocket::kROOTD && rproto < 8) || 
+          (srvtyp == TSocket::kPROOFD && rproto < 7))
+         level = 0;
+      if (level) {
+         TString rHost(ctx->GetHost());
+         Int_t port = nscc->GetPort();
+
+         TSocket *news = new TSocket(rHost.Data(),port,-1); 
+
+         if (news && news->IsValid()) {
+            if (srvtyp == TSocket::kPROOFD) {
+               news->SetOption(kNoDelay, 1); 
+               news->Send("cleaning request");
+            } else
+               news->SetOption(kNoDelay, 0); 
+
+            if (all || level == 1) {
+               news->Send(Form("%d",gSystem->GetPid()),
+                               kROOTD_CLEANUP);
+               cleaned = kTRUE;
+            } else {
+               news->Send(Form("%d %d %d %s",gSystem->GetPid(),ctx->GetMethod(),
+                               ctx->GetOffSet(),ctx->GetUser()),kROOTD_CLEANUP);
+               if (TAuthenticate::SecureSend(news, 1, 
+                  (char *)ctx->GetToken()) == -1) {
+                  ::Info("CleanupSecContext", "problems securesending token");
+               } else {
+                  cleaned = kTRUE;
+               }
+            }
+            if (cleaned && gDebug > 2) {
+               char srvname[3][10] = {"sockd", "rootd", "proofd"};
+               ::Info("CleanupSecContext", 
+                    "remote %s notified for cleanup (%s,%d)",
+                    srvname[srvtyp],rHost.Data(),port);
+            }
+         }
+         SafeDelete(news);
+      }
+   }
+
+   if (!cleaned)
+      if (gDebug > 2)
+         ::Info("CleanupSecContext",
+                "unable to open valid socket for cleanup for %s", 
+                 ctx->GetHost());
+
+   return cleaned;
+
+}
+
+//______________________________________________________________________________
+Int_t TAuthenticate::ReadRootAuthrc(const char *proofconf)
+{
+   // Read authentication directives from $ROOTAUTHRC, $HOME/.rootauthrc or 
+   // <Root_etc_dir>/system.rootauthrc and create related THostAuth objects.
+   // Files are read only if they changed since last reading   
+   // If 'proofconf' is defined, check also file proofconf for directives
+
+   // rootauthrc family
+   char *authrc = 0;
+   if (gSystem->Getenv("ROOTAUTHRC") != 0) {
+      authrc = (char *) gSystem->Getenv("ROOTAUTHRC");
+   } else {
+      authrc = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".rootauthrc");
+   }
+   if (gDebug > 2)
+      ::Info("TAuthenticate::ReadRootAuthrc", "Checking file: %s", authrc);
+   if (gSystem->AccessPathName(authrc, kReadPermission)) {
+      if (gDebug > 1)
+         ::Info("TAuthenticate::ReadRootAuthrc",
+                "file %s cannot be read (errno: %d)", authrc, errno);
+#ifdef ROOTETCDIR
+      authrc = gSystem->ConcatFileName(ROOTETCDIR,"system.rootauthrc");
+#else
+      char etc[1024];
+#ifdef WIN32
+      sprintf(etc, "%s\\etc", gRootDir);
+#else
+      sprintf(etc, "%s/etc", gRootDir);
+#endif
+      authrc = gSystem->ConcatFileName(etc,"system.rootauthrc");
+#endif    
+      if (gDebug > 2)
+         ::Info("TAuthenticate::ReadRootAuthrc", "Checking system file:%s",authrc);
+      if (gSystem->AccessPathName(authrc, kReadPermission)) {
+         if (gDebug > 1)
+            ::Info("TAuthenticate::ReadRootAuthrc",
+                   "file %s cannot be read (errno: %d)", authrc, errno);
+         return 0;
+      }  
+   }
+
+   // Check if file has changed since last read
+   TString tRootAuthrc((const char *)authrc);
+   if (tRootAuthrc == fgRootAuthrc) {
+      struct stat si;
+      stat(tRootAuthrc.Data(),&si);
+      if ((UInt_t)si.st_mtime < fgLastAuthrc.Convert()) {
+         if (gDebug > 1)
+            ::Info("TAuthenticate::ReadRootAuthrc",
+                   "file %s already read", authrc);
+         return 0;
+      }
+   }
+
+   // Save filename in static variable
+   fgRootAuthrc = tRootAuthrc;
+   fgLastAuthrc = TDatime();
+
+   // THostAuth lists
+   TList *AuthInfo = TAuthenticate::GetAuthInfo();
+   TList *ProofAuthInfo = TAuthenticate::GetProofAuthInfo();
+
+   // Expand File into temporary file name and open it
+   int expand = 1;
+   TString filetmp = "rootauthrc";
+   FILE *ftmp = gSystem->TempFileName(filetmp);
+   if (gDebug > 2)
+      ::Info("TAuthenticate::ReadRootAuthrc", "got tmp file: %s open at 0x%lx",
+              filetmp.Data(), (Long_t)ftmp);
+   if (ftmp == 0)
+      expand = 0;  // Problems opening temporary file: ignore 'include's ...
+
+   FILE *fd = 0;
+   // If the temporary file is open, copy everything to the new file ...
+   if (expand == 1) {
+      TAuthenticate::FileExpand(authrc, ftmp);
+      fd = ftmp;
+      rewind(fd);
+   } else {
+      // Open file
+      fd = fopen(authrc, "r");
+      if (fd == 0) {
+         if (gDebug > 2)
+            ::Info("TAuthenticate::ReadRootAuthrc",
+                   "file %s cannot be open (errno: %d)", authrc, errno);
+         return 0;
+      }
+   }
+
+   // Now scan file for meaningful directives
+   TList TmpAuthInfo;
+   char line[kMAXPATHLEN];
+   Bool_t cont = kFALSE;
+   TString ProofServ;
+   while (fgets(line, sizeof(line), fd) != 0) {
+
+      // Skip comment lines
+      if (line[0] == '#')
+         continue;
+
+      // Get rid of end of line '\n', if there ...
+      if (line[strlen(line) - 1] == '\n')
+         line[strlen(line) - 1] = '\0';
+
+      // Skip empty lines
+      if (strlen(line) == 0)
+         continue;
+
+      // Now scan
+      char *tmp = new char[strlen(line)+1];
+      strcpy(tmp,line);
+      char *nxt = strtok(tmp," ");
+
+      if (!strcmp(nxt, "proofserv") || cont) {
+
+         // Building the list of data servers for proof (analyzed at the end)
+         char *ph = 0;
+         if (cont) 
+            ph = nxt;
+         else
+            ph = strtok(0," ");
+         while (ph) {
+            if (*ph != 92) {
+               ProofServ += TString((const char *)ph);
+               ProofServ += TString(" ");
+               cont = kFALSE;
+            } else {
+               cont = kTRUE;
+            }
+            ph = strtok(0," ");
+         }
+
+      } else {
+
+         TString hostsrv((const char *)nxt); 
+         TString host   = hostsrv;
+         TString server = "";
+         if (hostsrv.Contains(":")) {
+            server = hostsrv;
+            host.Remove(host.Index(":"));
+            server.Remove(0,server.Index(":")+1);
+         }
+         Int_t srvtyp = -1;
+         if (server.Length()) {
+            if (server == "0" || server.BeginsWith("sock"))
+               srvtyp = TSocket::kSOCKD;
+            else if (server == "1" || server.BeginsWith("root"))
+               srvtyp = TSocket::kROOTD;
+            else if (server == "2" || server.BeginsWith("proof"))
+               srvtyp = TSocket::kPROOFD;
+         }
+
+         // Line with host info directives
+         TString user = "*";
+
+         char *nxt = strtok(0," ");
+         if (!strncmp(nxt,"user",4)) {
+            nxt = strtok(0," ");
+            if (strncmp(nxt,"list",4) && strncmp(nxt,"method",6)) {
+               user = TString((const char *)nxt); 
+               nxt = strtok(0," ");
+            }
+         }
+ 
+         // Get related THostAuth, if exists in the tmp list, 
+         TIter next(&TmpAuthInfo);
+         THostAuth *ha;
+         while ((ha = (THostAuth *)next())) {
+            if (host == ha->GetHost() && user == ha->GetUser() &&
+                srvtyp == ha->GetServer())
+               break;
+         }
+         if (!ha) {
+            // Create a new one
+            ha = new THostAuth(host,srvtyp,user);
+            TmpAuthInfo.Add(ha);
+         }
+
+         if (!strncmp(nxt,"list",4)) {
+            // list of methods for {host,usr}
+            Int_t nm = 0, me[kMAXSEC] = {0};
+            char *mth = strtok(0," ");
+            while (mth) {
+               Int_t met = -1;
+               if (strlen(mth) > 1) {
+                  // Method passed as string: translate it to number
+                  met = GetAuthMethodIdx(mth);
+                  if (met == -1 && gDebug > 2)
+                     ::Info("TAuthenticate::ReadRootAuthrc",
+                            "unrecognized method (%s): ", mth);
+               } else {
+                  met = atoi(mth);
+               }
+               if (met > -1 && met < kMAXSEC) 
+                  me[nm++] = met;
+               mth = strtok(0," ");
+            }
+            if (nm)
+               ha->ReOrder(nm,me);
+
+         } else if (!strncmp(nxt,"method",6)) {
+
+            // details for {host,usr,method}
+            char *mth = strtok(0," ");
+            Int_t met = -1;
+            if (strlen(mth) > 1) {
+               // Method passed as string: translate it to number
+               met = GetAuthMethodIdx(mth);
+               if (met == -1 && gDebug > 2)
+                  ::Info("TAuthenticate::ReadRootAuthrc",
+                         "unrecognized method (%s): ", mth);
+            } else {
+               met = atoi(mth);
+            }
+            if (met > -1 && met < kMAXSEC) {
+               const char *det = 0;
+               nxt = strtok(0," ");
+               if (nxt) {
+                  det = (const char *)strstr(line,nxt);
+               }
+               if (ha->HasMethod(met)) 
+                  ha->SetDetails(met,det);
+               else
+                  ha->AddMethod(met,det);
+            }
+         }      
+      }
+      if (tmp) delete[] tmp;
+   }
+   // Close file and remove it if temporary
+   fclose(fd);
+   if (expand == 1)
+      gSystem->Unlink(filetmp);
+   // Cleanup allocated memory
+   if (authrc) delete[] authrc;
+
+   // Update AuthInfo with new info found
+   TAuthenticate::MergeHostAuthList(AuthInfo,&TmpAuthInfo);
+
+   // Print those left, if requested ...
+   if (gDebug > 2) 
+      TAuthenticate::Show();      
+
+   // Now create the list of THostAuth to be sent over to 
+   // the Master/Slaves, if requested ...
+   TList TmpProofAuthInfo;
+   if (ProofServ.Length() > 0) {
+      char *tmp = new char[ProofServ.Length()+1];
+      strcpy(tmp,ProofServ.Data());
+      char *nxt = strtok(tmp," ");
+      while (nxt) {
+         TString Tmp((const char *)nxt);
+         Int_t pdd = -1;
+         // host
+         TString host;
+         if ((pdd = Tmp.Index(":")) == -1) { 
+            host = Tmp;
+         } else {
+            host = Tmp;
+            host.Resize(pdd);
+            if (!host.Length())
+               host = "*";
+            Tmp.Remove(0,pdd+1);
+         } 
+         // user
+         TString user; 
+         if ((pdd = Tmp.Index(":")) == -1) { 
+            user = Tmp;
+         } else {
+            user = Tmp;
+            user.Resize(pdd);
+            if (!user.Length())
+               user = "*";
+            Tmp.Remove(0,pdd+1);
+         } 
+         // method(s)
+         TString meth; 
+         Int_t nm = 0, me[kMAXSEC] = {0}, met = -1;
+         while (Tmp.Length() > 0) {
+            meth = Tmp;
+            if ((pdd = Tmp.Index(":")) > -1) 
+               meth.Resize(pdd);
+            if (meth.Length() > 1) {
+               // Method passed as string: translate it to number
+               met = GetAuthMethodIdx(meth.Data());
+               if (met == -1 && gDebug > 2)
+                  ::Info("TAuthenticate::ReadRootAuthrc",
+                         "unrecognized method (%s): ",meth.Data());
+            } else if (meth.Length() == 1) {
+               met = atoi(meth.Data());
+               if (met > -1 && met < kMAXSEC) 
+                  me[nm++] = met;
+            }
+            if (pdd > -1) 
+               Tmp.Remove(0,pdd+1);
+            else
+               Tmp.Resize(0);
+         }
+ 
+         // Get related THostAuth, if exists, or create a new one
+         THostAuth *ha = 0;
+         THostAuth *hatmp = TAuthenticate::GetHostAuth(host,user);
+         if (!hatmp) {
+            ha = new THostAuth(host,user,nm,me,0);
+         } else {
+            // Create an empty THostAuth
+            ha = new THostAuth(host,user);
+            // Update with hatmp info
+            ha->Update(hatmp);
+            // ReOrder following new directives
+            ha->ReOrder(nm,me);
+         }
+         // Add to the tmp list
+         TmpProofAuthInfo.Add(ha);         
+         // Go to next
+         nxt = strtok(0," ");
+      }
+      if (tmp) delete[] tmp;
+   }
+
+   // Update ProofAuthInfo with new info found
+   TAuthenticate::MergeHostAuthList(ProofAuthInfo,&TmpProofAuthInfo,"P");
+   // Print those, if requested ...
+   if (gDebug > 2) 
+      TAuthenticate::Show("P");
+
+   // If Proof Master scan also <proof.conf> alike files
+   if (proofconf) 
+      TAuthenticate::ReadProofConf(proofconf);
+
+   return AuthInfo->GetSize();
+}
+
+
+//______________________________________________________________________________
+void TAuthenticate::ReadProofConf(const char *conffile)
+{
+   // Collect information needed for authentication to slaves from
+   // $HOME/.proof.conf or <Root_Dir>/proof/etc/proof.conf 
+   // Update or create THostAuth objects accordingly
+   // Add them to the ProofAuthInfo list.
+
+   if (gDebug > 2) 
+      ::Info("ReadProofConf", "Enter ... (%s)", conffile);
+
+   // Get pointer to lists with authentication info
+   TList *AuthInfo = GetAuthInfo();
+
+   // Check authentication methods applicability
+   Int_t i = 0;
+   Bool_t AuthAvailable[kMAXSEC] = {0};
+   TString AuthDet[kMAXSEC];
+   for (; i < kMAXSEC; i++){
+      AuthAvailable[i] = kFALSE;
+      if (i == 0 && fgUser != "" && fgPasswd != "") {
+         AuthAvailable[i] = kTRUE;
+         AuthDet[i] = TString(Form("pt:0 ru:1 us:%s", fgUser.Data()));
+      } else {
+         AuthAvailable[i] = CheckProofAuth(i,AuthDet[i]);
+      }
+      if (gDebug > 2)
+         ::Info("ReadProofConf","meth:%d avail:%d det:%s",
+                i,AuthAvailable[i],AuthDet[i].Data());
+   }
+
+   // Check configuration file
+   Bool_t HaveConf = kTRUE;
+   char fconf[256];
+   sprintf(fconf, "%s/.%s", gSystem->Getenv("HOME"), conffile);
+   if (gDebug > 2) 
+      ::Info("ReadProofConf", "checking PROOF config file %s", fconf);
+   if (gSystem->AccessPathName(fconf, kReadPermission)) {
+      TApplication *lApp = gROOT->GetApplication();
+      sprintf(fconf, "%s/proof/etc/%s",lApp->Argv()[2], conffile);
+      if (gDebug > 2) 
+         ::Info("ReadProofConf", "checking PROOF config file %s", fconf);
+      if (gSystem->AccessPathName(fconf, kReadPermission)) {
+         if (gDebug > 1) 
+            ::Info("ReadProofConf", "no PROOF config file found");
+         HaveConf = kFALSE;
+      }
+   } else {
+      if (gDebug > 2) 
+         ::Info("ReadProofConf", "using PROOF config file: %s", fconf);
+   }
+
+   // Scan config file for authentication directives
+   if (HaveConf) {
+
+      FILE *pconf;
+      if ((pconf = fopen(fconf, "r"))) {
+
+         // read the config file
+         char line[256];
+         while (fgets(line, sizeof(line), pconf)) {
+
+            // Skip comment lines
+            if (line[0] == '#') 
+               continue;   
+
+            // Skip lines not containing slave info
+            if (!strstr(line,"slave")) 
+               continue;
+
+            // Get rid of end of line '\n', if there ...
+            if (line[strlen(line) - 1] == '\n')
+               line[strlen(line) - 1] = '\0';
+
+            // Now scan
+            char *tmp = new char[strlen(line)+1];
+            strcpy(tmp,line);
+            char *nxt = strtok(tmp," ");
+            
+            // First should "slave"
+            if (strncmp(nxt,"slave",5))
+               continue;
+
+            // Save slave host name
+            TString SlaveHost((const char *)strtok(0," "));
+
+            Int_t nm = 0, me[kMAXSEC] = {0};
+            TString det[kMAXSEC];
+            char *mth = strtok(0," ");
+            while (mth) {
+
+               // {port,perf,image} entries all have a '=' 
+               if (strncmp(mth,"=",1)) {
+
+                  Int_t met = -1;
+                  if (strlen(mth) > 1) {
+                     // Method passed as string: translate it to number
+                     met = GetAuthMethodIdx(mth);
+                     if (met == -1 && gDebug > 2)
+                        ::Info("ReadProofConf", 
+                               "unrecognized method (%s): ", mth);
+                  } else {
+                     met = atoi(mth);
+                  }
+                  if (met > -1 && met < kMAXSEC) {
+                     if (AuthAvailable[met]) {
+                        det[nm] = AuthDet[met];
+                        me[nm++] = met;
+                     }
+                  }
+               }
+               // Get next
+               mth = strtok(0," ");
+            }
+            if (mth) delete[] mth;
+
+            // Check if a HostAuth object for this (host,user) pair already exists
+            TString SlaveSrv(Form("%s:%d",SlaveHost.Data(),TSocket::kPROOFD));
+            THostAuth *ha = TAuthenticate::GetHostAuth(SlaveSrv,fgUser);
+
+            if (!ha || !strcmp(ha->GetHost(),"default")) {
+               if (ha) {
+                  // Got a default entry: create a new one from a copy
+                  THostAuth *han = new THostAuth(*ha);
+                  ha = han;
+                  ha->SetHost(SlaveHost);
+                  ha->SetServer(TSocket::kPROOFD);
+                  ha->SetUser(fgUser);
+                  // Reset list of established sec context;
+                  TList *nl = new TList;
+                  ha->SetEstablished(nl);
+               } else
+                  // Create new one and add it to the list
+                  ha = new THostAuth(SlaveHost,TSocket::kPROOFD,fgUser);
+
+               // Add UidGid if not already there
+               Int_t kRfio = TAuthenticate::kRfio;
+               if (!ha->HasMethod(kRfio))
+                  ha->AddMethod(kRfio,AuthDet[kRfio]);
+
+               // Add this ThostAuth to lists
+               AuthInfo->Add(ha);
+            }
+
+            // Reorder accordingly to new directives
+            Int_t i = nm;
+            for(; i > 0; i--)
+               ha->AddFirst(me[i-1],det[i-1]);
+
+            if (tmp) delete[] tmp;
+
+         } // fgets
+
+      } // fopen
+
+      // close file
+      fclose(pconf);
+   }
+
+}
+
+//______________________________________________________________________________
+Bool_t TAuthenticate::CheckProofAuth(Int_t cSec, TString &Out)
+{
+   // Check if the authentication method can be attempted for the client.
+
+   Bool_t rc = kFALSE;
+   const char sshid[3][20] = { "/.ssh/identity", "/.ssh/id_dsa", "/.ssh/id_rsa" };
+   const char netrc[2][20] = { "/.netrc", "/.rootnetrc" };
+   TString Details, User;
+ 
+   // Get user logon name
+   UserGroup_t *pw = gSystem->GetUserInfo();
+   if (pw) {
+      User = TString(pw->fUser);
+      delete pw;
+   } else {
+      ::Info("CheckProofAuth",
+             "not properly logged on (getpwuid unable to find relevant info)!");
+      Out = "";
+      return rc;
+   }
+
+   // UsrPwd
+   if (cSec == (Int_t) TAuthenticate::kClear) {
+      Int_t i = 0;
+      for (; i < 2; i++) {
+         TString infofile = TString(gSystem->HomeDirectory())+TString(netrc[i]);
+         if (!gSystem->AccessPathName(infofile, kReadPermission)) 
+            rc = kTRUE;
+      }
+      if (rc) 
+         Out = Form("pt:0 ru:1 us:%s",User.Data());
+   }
+
+   // SRP
+   if (cSec == (Int_t) TAuthenticate::kSRP) {
+#ifdef R__SRP
+      Out = Form("pt:0 ru:1 us:%s",User.Data());
+      rc = kTRUE;
+#endif
+   }
+
+   // Kerberos
+   if (cSec == (Int_t) TAuthenticate::kKrb5) {
+#ifdef R__KRB5
+      Out = Form("pt:0 ru:0 us:%s",User.Data());
+      rc = kTRUE;
+#endif
+   }
+
+   // Globus
+   if (cSec == (Int_t) TAuthenticate::kGlobus) {
+#ifdef R__GLBS
+      TApplication *lApp = gROOT->GetApplication();
+      if (lApp != 0 && lApp->Argc() > 10) {
+         if (gROOT->IsProofServ()) {
+            // Delegated Credentials
+            Int_t ShmId = atoi(lApp->Argv()[7]);
+            if (ShmId != -1) {
+               struct shmid_ds shm_ds;
+               if (shmctl(ShmId, IPC_STAT, &shm_ds) == 0)
+                  rc = kTRUE;
+            }
+            if (rc) {
+               // Build details .. CA dir
+               TString Adir(lApp->Argv()[8]);
+               // Usr Cert
+               TString Ucer(lApp->Argv()[9]);
+               // Usr Key
+               TString Ukey(lApp->Argv()[10]);
+               // Usr Dir
+               TString Cdir = Ucer; 
+               Cdir.Resize(Cdir.Last('/')+1);
+               // Create Output
+               Out = Form("pt=0 ru:1 cd:%s cf:%s kf:%s ad:%s",
+                          Cdir.Data(),Ucer.Data(),Ukey.Data(),Adir.Data());
+            }
+         }
+      }
+#endif
+   }
+
+   // SSH
+   if (cSec == (Int_t) TAuthenticate::kSSH) {
+      Int_t i = 0;
+      for (; i < 3; i++) {
+         TString infofile = TString(gSystem->HomeDirectory())+TString(sshid[i]);
+         if (!gSystem->AccessPathName(infofile,kReadPermission)) 
+            rc = kTRUE;
+      }
+      if (rc)
+         Out = Form("pt:0 ru:1 us:%s",User.Data());
+   }
+
+   // Rfio
+   if (cSec == (Int_t) TAuthenticate::kRfio) {
+      Out = Form("pt:0 ru:0 us:%s",User.Data());
+      rc = kTRUE;
+   }
+
+   if (gDebug > 3) {
+      if (strlen(Out) > 0)
+         ::Info("CheckProofAuth",
+                "meth: %d ... is available: details: %s", cSec, Out.Data());
+      else
+         ::Info("CheckProofAuth",
+                "meth: %d ... is NOT available", cSec);
+   }
+
+   // return
+   return rc;
+}
+
+
+//______________________________________________________________________________
+Int_t StdCheckSecCtx(const char *User, TSecContext *Ctx)
+{
+   // Standard version of CheckSecCtx to be passed to TAuthenticate::AuthExists
+   // Check if User is matches the one in Ctx
+   // Returns: 1 if ok, 0 if not
+   // Deactivates Ctx is not valid 
+ 
+   Int_t rc = 0;
+ 
+   if (Ctx->IsActive()) {
+      if (!strcmp(User,Ctx->GetUser()))
+         rc = 1;
+   }
+   return rc;
+}
+
+//______________________________________________________________________________
+void TAuthenticate::MergeHostAuthList(TList *Std, TList *New, Option_t *Opt)
+{
+   // Tool for updating fgAuthInfo or fgProofAuthInfo
+   // 'New' contains list of last input information through (re)reading
+   // of a rootauthrc-alike file. 'New' info has priority.
+   // 'Std' is cleaned from inactive members.
+   // 'New' members used to update existing members in 'Std' are
+   // removed from 'New', do that they do not leak
+   // Opt = "P" for ProofAuthInfo.
+
+   // Remove inactive from the 'Std'
+   TIter nxstd(Std);
+   THostAuth *ha;
+   while ((ha = (THostAuth *) nxstd())) {
+      if (!ha->IsActive()) {
+         Std->Remove(ha);
+         SafeDelete(ha);
+      }
+   }
+
+   // Merge 'New' info in 'Std'
+   TIter nxnew(New);
+   THostAuth *hanew;
+   while ((hanew = (THostAuth *)nxnew())) {
+      if (hanew->NumMethods()) {
+         TString HostSrv(Form("%s:%d",hanew->GetHost(),hanew->GetServer()));
+         THostAuth *hastd = 
+            TAuthenticate::HasHostAuth(HostSrv,hanew->GetUser(),Opt);
+         if (hastd) {
+            // Update with new info
+            hastd->Update(hanew);
+            // Flag for removal
+            hanew->DeActivate();
+         } else {
+            // Add new ThostAuth to Std
+            Std->Add(hanew);
+         }
+      } else
+         // Flag for removal empty objects
+         hanew->DeActivate();
+   }
+
+   // Cleanup memory before quitting
+   nxnew.Reset();
+   while ((hanew = (THostAuth *)nxnew())) {
+      if (!hanew->IsActive()) {
+         New->Remove(hanew);
+         SafeDelete(hanew);
+      }
+   }
+
+}
+
+//______________________________________________________________________________
+void TAuthenticate::RemoveSecContext(TSecContext *ctx)
+{
+   // Tool for removing SecContext ctx from THostAuth listed in 
+   // fgAuthInfo or fgProofAuthInfo
+
+   THostAuth *ha = 0;
+
+   // AuthInfo first
+   TIter nxai(GetAuthInfo());
+   while ((ha = (THostAuth *)nxai())) {
+      TIter next(ha->Established());
+      TSecContext *lctx = 0;
+      while ((lctx = (TSecContext *) next())) {
+         if (lctx == ctx) {
+            ha->Established()->Remove(ctx);
+            break;
+         }
+      }
+   }
+
+   // ProofAuthInfo second
+   TIter nxpa(GetProofAuthInfo());
+   while ((ha = (THostAuth *)nxpa())) {
+      TIter next(ha->Established());
+      TSecContext *lctx = 0;
+      while ((lctx = (TSecContext *) next())) {
+         if (lctx == ctx) {
+            ha->Established()->Remove(ctx);
+            break;
+         }
+      }
+   }
+
 }

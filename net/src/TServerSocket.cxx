@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.2 2001/01/22 09:43:05 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.3 2001/01/23 19:01:55 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -56,6 +56,7 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
 
    SetName("ServerSocket");
 
+   fSecContext = 0;
    int port = gSystem->GetServiceByName(service);
    fService = service;
 
@@ -94,6 +95,7 @@ TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
 
    SetName("ServerSocket");
 
+   fSecContext = 0;
    fService = gSystem->GetServiceByPort(port);
    SetTitle(fService);
 
@@ -123,6 +125,7 @@ TSocket *TServerSocket::Accept()
    if (soc == -2) { delete socket; return (TSocket*) -1; }
 
    socket->fSocket  = soc;
+   socket->fSecContext = 0;
    socket->fService = fService;
    socket->fAddress = gSystem->GetPeerName(socket->fSocket);
    if (socket->fSocket >= 0) gROOT->GetListOfSockets()->Add(socket);

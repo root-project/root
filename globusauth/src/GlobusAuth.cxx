@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.7 2003/11/20 23:00:46 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.8 2003/11/26 10:33:08 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -14,12 +14,28 @@
  * Please refer to www.globus.org for details
  */
 
+#include "config.h"
+
 #include <errno.h>
 #include <signal.h>
 #include <string.h>
 #include <stdlib.h>
 
+#include "TSocket.h"
+#include "TAuthenticate.h"
+#include "THostAuth.h"
+#include "TDatime.h"
+#include "TError.h"
+#include "TSystem.h"
+#include "TROOT.h"
+#include "TApplication.h"
+#include "TEnv.h"
+#include "Getline.h"
+#include "NetErrors.h"
+
+#define HAVE_MEMMOVE 1
 extern "C" {
+#include <globus_common.h>
 #include <globus_gss_assist.h>
 #include <openssl/x509.h>
 #include <openssl/pem.h>
@@ -27,32 +43,26 @@ extern "C" {
 #include <sys/shm.h>
 }
 
-#include "TSocket.h"
-#include "TAuthenticate.h"
-#include "THostAuth.h"
-#include "TError.h"
-#include "TSystem.h"
-#include "TROOT.h"
-#include "TApplication.h"
-#include "TEnv.h"
-#include "Getline.h"
-#include "rpderr.h"
-
 static gss_cred_id_t GlbDelCredHandle = GSS_C_NO_CREDENTIAL;
 static int gShmIdCred = -1;
 
-int GlobusGetDelCred();
-void GlobusCleanup();
-void GlobusError(char *, OM_uint32, OM_uint32, int);
-int GlobusStoreSecContext(char *, gss_ctx_id_t, char *);
-int GlobusGetLocalEnv(int *, TString);
-int GlobusGetNames(Int_t, TString &, TString &, Int_t &);
-int GlobusGetCredHandle(Int_t, Int_t, gss_cred_id_t *);
-int GlobusCheckSecContext(char *, char *);
-int GlobusUpdateSecContInfo(int);
-void GlobusSetCertificates(int,int,TString, TString &);
-
 Int_t GlobusAuthenticate(TAuthenticate *, TString &, TString &);
+Int_t GlobusCertFile(Int_t, TString &);
+Int_t GlobusCheckSecContext(const char *, gss_ctx_id_t);
+Int_t GlobusCheckSecContext(const char *, gss_ctx_id_t);
+Int_t GlobusCheckSecCtx(const char *, TSecContext *);
+Int_t GlobusCleanupContext(gss_ctx_id_t);
+void  GlobusCleanupShm();
+void  GlobusError(char *, OM_uint32, OM_uint32, Int_t);
+Int_t GlobusGetCredHandle(Int_t, Int_t, gss_cred_id_t *);
+Int_t GlobusGetDelCred();
+Int_t GlobusGetLocalEnv(Int_t *, TString);
+Int_t GlobusGetSecContLifeTime(gss_ctx_id_t);
+Int_t GlobusNameFromCred(gss_cred_id_t, TString &);
+Int_t GlobusNamesFromCert(TString, TString &, TString &);
+Int_t GlobusNeedProxy(TString);
+void  GlobusSetCertificates(Int_t,Int_t,TString, TString &);
+
 
 class GlobusAuthInit {
  public:
@@ -60,12 +70,6 @@ class GlobusAuthInit {
       TAuthenticate::SetGlobusAuthHook(&GlobusAuthenticate);
 }};
 static GlobusAuthInit globusauth_init;
-
-// For established Security Contexts
-static char **hostGlbSecCont = 0;
-static char **subjGlbSecCont = 0;
-static gss_ctx_id_t *sptrGlbSecCont = 0;
-static int NumGlbSecCont = 0;
 
 //______________________________________________________________________________
 Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
@@ -86,9 +90,22 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    OM_uint32 GssRetFlags = 0;
    OM_uint32 GssReqFlags = 0;
    int GlbTokenStatus = 0;
-   char *ssuj = 0;
    char *host_subj = 0;
-   gss_buffer_desc OutBuf;
+   TDatime ExpDate = TDatime();
+
+   // Check if called for cleanup
+   if (user == "-1") {
+      if (gDebug > 2)
+         Info("GlobusAuthenticate", " cleanup call (%s)",details.Data());
+      if (details == "context") {
+         // Security context cleaning
+         GlobusCleanupContext((gss_ctx_id_t)auth);
+      } else if (details == "shm") {
+         // Shared memory cleaning (TProofServ)
+         GlobusCleanupShm();
+      }
+      return 1;
+   }
 
    // From the calling TAuthenticate
    TSocket *sock = Auth->GetSocket();
@@ -98,11 +115,6 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
       Info("GlobusAuthenticate", " enter: protocol:'%s' user:'%s'", protocol.Data(),
            user.Data());
 
-   // If we are called for local cleanup, do it and return ...
-   if (protocol == "cleanup") {
-      GlobusCleanup();
-      return 1;
-   }
    Int_t ReUse = TAuthenticate::GetAuthReUse();
    Int_t Prompt = TAuthenticate::GetPromptUser();
    TString PromptReUse = TString(Form("pt:%d ru:%d", Prompt, ReUse));
@@ -127,19 +139,28 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    // Set local certificates according to user requests ...
    GlobusSetCertificates(LocalCallEnv,Prompt,PromptReUse,details);
 
-   // Now we send to the rootd/proofd daemons the issuer name of our globus certificates ..
-   // We get it the x509 relevant certificate ... the location depends on the calling environment
-   Int_t NeedProxy;
-   TString isuj, stmp;
-   if ((rc = GlobusGetNames(LocalCallEnv, isuj, stmp, NeedProxy))) {
+   // Now we send to the rootd/proofd daemons the issuer name 
+   // of our globus certificates ..
+   // We get it the x509 relevant certificate ... 
+   // The location depends on the calling environment
+   TString certfile;
+   if ((rc = GlobusCertFile(LocalCallEnv, certfile))) {
+      if (gDebug > 0)
+         Error("GlobusAuthenticate",
+               "PROOF Master: unable to determine cert file path (rc=%d)", rc);
+      return -1;
+   }
+
+   TString isuj, ssuj;
+   if ((rc = GlobusNamesFromCert(certfile, isuj, ssuj))) {
       if (gDebug > 0)
          Error("GlobusAuthenticate",
                "PROOF Master: unable to determine relevant names(rc=%d)", rc);
       return -1;
    }
-   if (gDebug > 2)
-      Info("GlobusAuthenticate", " Issuer name is %s (%d)",
-           isuj.Data(),isuj.Length());
+
+   // Find out if we need to init proxies
+   Int_t NeedProxy = GlobusNeedProxy(ssuj);
 
    // Get credential handle ... either genuine or delegated
    if (GlobusGetCredHandle(LocalCallEnv, NeedProxy, &GlbCredHandle)) {
@@ -152,55 +173,26 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
            GlbCredHandle);
 
    // Inquire credentials for Subject name and convert it in human readable form ...
-   gss_name_t Name;
-   OM_uint32 LifeTime;
-   gss_cred_usage_t CredUsage;
-   gss_OID_set Mech;
-   gss_OID NameType;
-   if ((MajStat =
-        gss_inquire_cred(&MinStat, GlbCredHandle, &Name, &LifeTime,
-                         &CredUsage, &Mech)) != GSS_S_COMPLETE) {
+   if ((rc = GlobusNameFromCred(GlbCredHandle, ssuj))) {
       if (gDebug > 0)
-         GlobusError("GlobusAuthenticate: gss_inquire_cred",
-             MajStat, MinStat,0);
+         Error("GlobusAuthenticate",
+               "PROOF Master: unable to determine name from cred (rc=%d)", rc);
       return -1;
    }
-   if ((MajStat =
-        gss_display_name(&MinStat, Name, &OutBuf,
-                         &NameType)) != GSS_S_COMPLETE) {
-      if (gDebug > 0)
-         GlobusError("GlobusAuthenticate: gss_inquire_cred",
-            MajStat, MinStat, 0);
-      return -1;
-   } else {
-      ssuj = StrDup((char *) OutBuf.value);
-   }
-   if (gDebug > 2)
-      Info("GlobusAuthenticate", " Subject name is %s (%d)", ssuj,
-           strlen(ssuj));
 
    // Create Options string
-   char *Options = new char[strlen(ssuj) + 20];
-   int Opt = ReUse * kAUTH_REUSE_MSK;
-   if (GlobusCheckSecContext((char *) hostFQDN, ssuj) > -1) {
-      sprintf(Options, "%d %d %s", Opt, strlen(ssuj), ssuj);
-   } else {
-      sprintf(Options, "%d 4 None", Opt);
-   }
+   Int_t Opt = ReUse * kAUTH_REUSE_MSK;
+   TString Options(Form("%d %d %s", Opt, ssuj.Length(), ssuj.Data()));
 
    // Check established authentications
    kind = kROOTD_GLOBUS;
    retval = ReUse;
-   rc = 0;
-   if ((rc =
-        TAuthenticate::AuthExists(Auth, (Int_t) TAuthenticate::kGlobus,
-                                  details, Options, &kind,
-                                  &retval)) == 1) {
+   if ((rc = Auth->AuthExists(ssuj, TAuthenticate::kGlobus, Options,
+             &kind, &retval, &GlobusCheckSecCtx)) == 1) {
       // A valid authentication exists: we are done ...
-      if (Options) delete[] Options;
       return 1;
    }
-   if (Options) delete[] Options;
+
    if (rc == -2) {
       return rc;
    }
@@ -214,9 +206,10 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
               retval, kind);
       return 2;
    }
+
    // Now we send the issuer to the server daemon
-   char *buf = new char[20];
-   sprintf(buf, "%d", (int) (strlen(isuj) + 1));
+   char buf[20];
+   sprintf(buf, "%d", (int) (isuj.Length() + 1));
    if ((bsnd = sock->Send(buf, kMESS_STRING)) != (int) (strlen(buf) + 1)) {
       if (gDebug > 0)
          Error("GlobusAuthenticate",
@@ -237,8 +230,8 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    if (kind != kROOTD_GLOBUS) {
       if (gDebug > 0)
          Error("GlobusAuthenticate",
-            "recv host subj: unexpected message from daemon: kind: %d (expecting: %d)",
-            kind, kROOTD_GLOBUS);
+            "recv host subj: unexpected message from daemon:"
+            " kind: %d (expecting: %d)",kind, kROOTD_GLOBUS);
    } else {
       if (retval == 0) {
          if (gDebug > 0)
@@ -251,14 +244,19 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
                  "recv host subj: buffer length is: %d", retval);
          host_subj = new char[retval + 1];
          brcv = sock->Recv(host_subj, retval, kind);
-         if (brcv < (retval - 1)) {
+         if (gDebug > 3)
+            Info("GlobusAuthenticate",
+                 "received host_subj: %s: (%d)", host_subj, brcv);
+         if (strlen(host_subj) < (UInt_t)(retval - 1) ||
+             retval <= 1) {
             if (gDebug > 0) {
                Error("GlobusAuthenticate",
-                  "recv host subj: did not receive all the bytes (recv: %d, due >%d)",
-                  brcv, retval);
+                  "recv host subj: did not receive all the bytes"
+                  " (recv: %d, due >%d)", brcv, retval);
                Error("GlobusAuthenticate", "recv host subj: (%d) %s",
                   strlen(host_subj), host_subj);
             }
+            if (host_subj) delete[] host_subj;
             return 0;
          }
       }
@@ -271,7 +269,6 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    // It will automatically closed when the socket will be closed ...
    int SockFd = sock->GetDescriptor();
    FILE *FILE_SockFd = fdopen(SockFd, "w+");
-
 
    // Type of request for credentials depend on calling environment
    GssReqFlags =
@@ -299,9 +296,12 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
       if (host_subj) delete[] host_subj;
       return 0;
    } else {
-      GlobusStoreSecContext((char *) hostFQDN, GlbContextHandle, ssuj);
-      if (gDebug > 2)
+      // Set expiration date
+      ExpDate.Set(ExpDate.Convert() + GlobusGetSecContLifeTime(GlbContextHandle));
+      if (gDebug > 2) {
          Info("GlobusAuthenticate", "authenticated to host %s", hostFQDN);
+         Info("GlobusAuthenticate", "expiring on '%s'", ExpDate.AsString());
+      }
       if (fflush(FILE_SockFd) != 0) {
          Warning("GlobusAuthenticate",
                  "unable to fflush socket: may cause Auth problems on server side\n");
@@ -365,10 +365,14 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
       Token = StrDup("");
    }
 
-   // Create and save AuthDetails object
-   TAuthenticate::SaveAuthDetails(Auth, (Int_t) TAuthenticate::kGlobus,
-                                  OffSet, ReUse, details, lUser, RSAKey,
-                                  Token);
+   // Create SecContext object
+   TSecContext *ctx = 
+      Auth->GetHostAuth()->CreateSecContext((const char *)lUser, 
+          hostFQDN, (Int_t)TAuthenticate::kGlobus, OffSet,
+          details, (const char *)Token, ExpDate, 
+          (void *)GlbContextHandle, RSAKey);
+   // Transmit it to TAuthenticate
+   Auth->SetSecContext(ctx);
 
    // receive status from server
    sock->Recv(server_auth, kind);
@@ -381,7 +385,6 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
               " it looks like server did not authenticate ");
 
    // free allocated memory ...
-   if (ssuj) delete[] ssuj;
    if (rfrm) delete[] rfrm;
    if (lUser) delete[] lUser;
    if (Token) delete[] Token;
@@ -463,77 +466,18 @@ void GlobusError(char *mess, OM_uint32 majs, OM_uint32 mins, int toks)
 {
    // Handle error ...
 
-   char *GlbErr;
+   char *GlbErr = 0;
 
    if (!globus_gss_assist_display_status_str
        (&GlbErr, mess, majs, mins, toks)) {
+        Error("GlobusError:","%s (majst=%d,minst=%d,tokst:%d)", 
+            GlbErr, majs, mins, toks);
    } else {
-      GlbErr = new char[kMAXPATHLEN];
-      sprintf(GlbErr, "%s: error messaged not resolved ", mess);
+      Error("GlobusError:","%s (not resolved) (majst=%d,minst=%d,tokst:%d)", 
+            mess, majs, mins, toks);
    }
-   Error(":Error: %s (majst=%d,minst=%d,tokst:%d)", GlbErr, majs, mins,
-         toks);
 
    if (GlbErr) delete[] GlbErr;
-}
-
-//______________________________________________________________________________
-int GlobusStoreSecContext(char *host, gss_ctx_id_t context_handle,
-                          char *client_name)
-{
-   // Store relevant info about an established security context for later use.
-   // On success returns number of stored security contexts; 0 otherwise.
-
-   if (gDebug > 2)
-      Info("GlobusStoreSecContext", "Enter: %s", host);
-
-   // Now we can count it
-   NumGlbSecCont++;
-
-   if (NumGlbSecCont > 1) {
-      char **tmph = hostGlbSecCont;
-      char **tmpc = subjGlbSecCont;
-      gss_ctx_id_t *tmps = sptrGlbSecCont;
-
-      hostGlbSecCont = new char *[NumGlbSecCont];
-      subjGlbSecCont = new char *[NumGlbSecCont];
-      sptrGlbSecCont = new gss_ctx_id_t[NumGlbSecCont];
-
-      int i;
-      for (i = 0; i < NumGlbSecCont - 1; i++) {
-         hostGlbSecCont[i] = strdup(tmph[i]);
-         subjGlbSecCont[i] = strdup(tmpc[i]);
-         sptrGlbSecCont[i] = tmps[i];
-
-      }
-
-      hostGlbSecCont[NumGlbSecCont - 1] = strdup(host);
-      subjGlbSecCont[NumGlbSecCont - 1] = strdup(client_name);
-      sptrGlbSecCont[NumGlbSecCont - 1] = context_handle;
-
-      if (tmph) delete[] tmph;
-      if (tmpc) delete[] tmpc;
-      if (tmps) delete[] tmps;
-
-   } else {
-
-      hostGlbSecCont = new char *[NumGlbSecCont];
-      subjGlbSecCont = new char *[NumGlbSecCont];
-      sptrGlbSecCont = new gss_ctx_id_t[NumGlbSecCont];
-      hostGlbSecCont[NumGlbSecCont - 1] = strdup(host);
-      subjGlbSecCont[NumGlbSecCont - 1] = strdup(client_name);
-      sptrGlbSecCont[NumGlbSecCont - 1] = context_handle;
-   }
-
-   if (gDebug > 2) {
-      int isave = NumGlbSecCont - 1;
-      Info("GlobusStoreSecContext",
-           "stored new sec context (session: %d, no:%d, ctx_id_t:0x%x) for client %s for host %s",
-           getpid(), NumGlbSecCont, sptrGlbSecCont[isave],
-           subjGlbSecCont[isave], hostGlbSecCont[isave]);
-   }
-
-   return NumGlbSecCont;
 }
 
 //______________________________________________________________________________
@@ -567,23 +511,13 @@ int GlobusGetLocalEnv(int *LocalEnv, TString protocol)
          }
          *LocalEnv = 2;
          gShmIdCred = atoi(lApp->Argv()[7]);
-         if (setenv("X509_CERT_DIR", lApp->Argv()[8], 1)) {
-            if (gDebug > 0)
-               Error("GlobusGetLocalEnv",
-                  "PROOF Master: unable to set X509_CERT_DIR ");
+         gSystem->Setenv("X509_CERT_DIR", lApp->Argv()[8]);
+         gSystem->Setenv("X509_USER_CERT", lApp->Argv()[9]);
+         gSystem->Setenv("X509_USER_KEY", lApp->Argv()[10]);
+         if (gShmIdCred <= 0) {
+            Info("GlobusGetLocalEnv",
+                    " Delegate credentials undefined");
             retval = 1;
-         }
-         if (setenv("X509_USER_CERT", lApp->Argv()[9], 1)) {
-            if (gDebug > 0)
-               Error("GlobusGetLocalEnv",
-                  "PROOF Master: unable to set X509_USER_CERT ");
-            retval = 2;
-         }
-         if (setenv("X509_USER_KEY", lApp->Argv()[10], 1)) {
-            if (gDebug > 0)
-               Error("GlobusGetLocalEnv",
-                  "PROOF Master: unable to set X509_USER_KEY ");
-            retval = 3;
          }
       } else {
          if (strstr(protocol.Data(), "proof") != 0) {
@@ -596,78 +530,43 @@ int GlobusGetLocalEnv(int *LocalEnv, TString protocol)
                Info("GlobusGetLocalEnv", " ROOT environment");
          } else {
             Warning("GlobusGetLocalEnv",
-                    " Unable to recognize the environment (protocol: %s)-> assume ROOT",
-                    protocol.Data());
+                    " Unable to recognize the environment"
+                    " (protocol: %s)-> assume ROOT",protocol.Data());
          }
       }
    } else {
       Warning("GlobusGetLocalEnv",
-              " Unable to get pointer to current application -> assume ROOT environment");
+              " Unable to get pointer to current application"
+              " -> assume ROOT environment");
    }
 
    return retval;
 }
 
 //______________________________________________________________________________
-int GlobusGetNames(int LocalEnv, TString &IssuerName, TString &SubjectName, Int_t &NeedProxy)
+Int_t GlobusNamesFromCert(TString CertFile, TString &IssuerName, TString &SubjectName)
 {
-   // Get Issuer and Client Names from local certificates.
+   // Get Issuer and Client Names from CertFile.
    // Returns 0 is successfull, 1 otherwise.
 
-   char *usercert_default = "/.globus/usercert.pem";
-   char *cert_file = 0;
-   X509 *xcert = 0;
-
    if (gDebug > 2)
-      Info("GlobusGetNames", "Enter: LocalEnv: %d", LocalEnv);
-
-   int retval = 0;
-
-   if (LocalEnv == 2) {
-      // We are a Proof master: the location is given by X509_USER_CERT ... if not exit;
-      if (getenv("X509_USER_CERT") != 0) {
-         int lcf = strlen(getenv("X509_USER_CERT"));
-         cert_file = new char[lcf];
-         strncpy(cert_file, getenv("X509_USER_CERT"), lcf + 1);
-      } else {
-         if (gDebug > 0)
-            Error("GlobusGetNames",
-               "PROOF Master: host certificate not defined");
-         retval = 1;
-      }
-   } else {
-      // We are a client: determine the location for user certificate ...
-      if (getenv("X509_USER_CERT") != 0) {
-         int lcf = strlen(getenv("X509_USER_CERT"));
-         cert_file = new char[lcf];
-         strncpy(cert_file, getenv("X509_USER_CERT"), lcf + 1);
-      } else {
-         char *userhome = getenv("HOME");
-         cert_file =
-             new char[strlen(userhome) + strlen(usercert_default) + 1];
-         strncpy(cert_file, userhome, strlen(userhome) + 1);
-         strncpy(cert_file + strlen(cert_file), usercert_default,
-                 strlen(usercert_default) + 1);
-      }
-   }
+      Info("GlobusNamesFromCert", "Enter: CertFile: %s", CertFile.Data());
 
    // Test the existence of the certificate file //
-   if (gSystem->AccessPathName(cert_file, kReadPermission)) {
+   if (gSystem->AccessPathName(CertFile, kReadPermission)) {
       if (gDebug > 0)
-         Error("GlobusGetNames", "cannot read requested file %s",
-            cert_file);
-      if (cert_file) delete[] cert_file;
-      return 4;
-   } else if (gDebug > 3) {
-      Info("GlobusGetNames", "File with certificate: %s", cert_file);
+         Error("GlobusNamesFromCert", "cannot read requested file %s",
+               CertFile.Data());
+      return 1;
    }
-   // Second: load the certificate ...
-   FILE *fcert = fopen(cert_file, "r");
+
+   // Load the certificate ...
+   X509 *xcert = 0;
+   FILE *fcert = fopen(CertFile.Data(), "r");
    if (fcert == 0 || !PEM_read_X509(fcert, &xcert, 0, 0)) {
       if (gDebug > 0)
-         Error("GlobusGetNames", "Unable to load user certificate ");
-      if (cert_file) delete[] cert_file;
-      return 5;
+         Error("GlobusNamesFromCert", "Unable to load user certificate ");
+      return 2;
    }
    fclose(fcert);
 
@@ -678,61 +577,139 @@ int GlobusGetNames(int LocalEnv, TString &IssuerName, TString &SubjectName, Int_
    SubjectName =
        TString(X509_NAME_oneline(X509_get_subject_name(xcert), 0, 0));
 
+   // Notify
    if (gDebug > 2) {
-      Info("GlobusGetNames", "Issuer Name: %s", IssuerName.Data());
-      Info("GlobusGetNames", "Subject Name: %s", SubjectName.Data());
+      Info("GlobusNamesFromCert", "Issuer Name: %s", IssuerName.Data());
+      Info("GlobusNamesFromCert", "Subject Name: %s", SubjectName.Data());
    }
 
-   if (cert_file) delete[] cert_file;
+   // Successful
+   return 0;
+}
 
-   // Now check if there is a proxy file associated with this user
+//______________________________________________________________________________
+Int_t GlobusNameFromCred(gss_cred_id_t Cred, TString &SubjName)
+{
+   // Get Subject Name from Credential handle Cred.
+   // Returns 0 is successfull, 1 otherwise.
+
+   if (gDebug > 2)
+      Info("GlobusNamesFromCred", "Enter: Handle: 0x%p", Cred);
+
+   // Inquire credentials for Subject name and convert it in human readable form ...
+   OM_uint32 MajStat = 0;
+   OM_uint32 MinStat = 0;
+   gss_name_t Name;
+   OM_uint32 LifeTime;
+   gss_cred_usage_t CredUsage;
+   gss_OID_set Mech;
+   gss_OID NameType;
+   if ((MajStat = gss_inquire_cred(&MinStat, Cred, &Name, 
+                  &LifeTime, &CredUsage, &Mech)) != GSS_S_COMPLETE) {
+      if (gDebug > 0)
+         GlobusError("GlobusNameFromCred: gss_inquire_cred",
+                     MajStat, MinStat,0);
+      return 1;
+   }
+   gss_buffer_desc OutBuf;
+   if ((MajStat = gss_display_name(&MinStat, Name, &OutBuf,
+                  &NameType)) != GSS_S_COMPLETE) {
+      if (gDebug > 0)
+         GlobusError("GlobusNameFromCred: gss_display_name",
+                     MajStat, MinStat, 0);
+      return 2;
+   } else
+      SubjName = TString((const char *)OutBuf.value);
+
+   // Notify
+   if (gDebug > 2)
+      Info("GlobusNameFromCred", "Subject Name: %s", SubjName.Data());
+
+   // Successful
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t GlobusCertFile(int LocalEnv, TString &CertFile)
+{
+   // Get path of local active certificate.
+   // Returns 0 is successfull, 1 otherwise.
+
+   if (gDebug > 2)
+      Info("GlobusCertFile", "Enter: LocalEnv: %d", LocalEnv);
+
+   TString usercert_default("/.globus/usercert.pem");
+
+   // Check Standard location first
+   if (gSystem->Getenv("X509_USER_CERT") != 0) {
+      CertFile = TString(gSystem->Getenv("X509_USER_CERT"));
+   } else {
+      // If it did not work, action depend on environment
+      if (LocalEnv == 2) {
+         // We are a Proof master: exit;
+         if (gDebug > 0)
+            Error("GlobusCertFile",
+                  "PROOF Master: host certificate not defined");
+         return 1;
+      } else {
+         // build default location
+         CertFile = TString(gSystem->Getenv("HOME")) + usercert_default;
+      }
+   }
+
+   if (gDebug > 2)
+      Info("GlobusCertFile", "Return: %s", CertFile.Data());
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t GlobusNeedProxy(TString SubjectName)
+{
+   // Returns kTRUE if user needs to initialize a proxy
+
+   // check if there is a proxy file associated with this user
    int nProxy = 1;
-   NeedProxy = 1;
    char proxy_file[256];
    sprintf(proxy_file, "/tmp/x509up_u%d", getuid());
+
  again:
 
    if (gDebug > 3)
-      Info("GlobusGetNames", "Testing Proxy file: %s", proxy_file);
+      Info("GlobusNeedProxy", "Testing Proxy file: %s", proxy_file);
 
    if (!gSystem->AccessPathName(proxy_file, kReadPermission)) {
       // Second: load the proxy certificate ...
-      fcert = fopen(proxy_file, "r");
+      X509 *xcert = 0;
+      FILE *fcert = fopen(proxy_file, "r");
       if (fcert == 0 || !PEM_read_X509(fcert, &xcert, 0, 0)) {
          if (gDebug > 0)
-            Error("GlobusGetNames",
+            Error("GlobusNeedProxy",
                   "Unable to load user proxy certificate ");
-         return 5;
+         if (fcert) fclose(fcert);
+         return 1;
       }
       fclose(fcert);
       // Get proxy names
       TString ProxyIssuerName(X509_NAME_oneline(X509_get_issuer_name(xcert),0,0));
-      TString ProxySubjectName(X509_NAME_oneline(X509_get_subject_name(xcert),0,0));
       if (gDebug > 3) {
-         Info("GlobusGetNames",
+         Info("GlobusNeedProxy",
               "Proxy Issuer Name: %s", ProxyIssuerName.Data());
-         Info("GlobusGetNames",
-              "Proxy Subject Name: %s",ProxySubjectName.Data());
       }
 
       if (ProxyIssuerName.Index(SubjectName) == 0) {
-         NeedProxy = 0;
-         setenv("X509_USER_PROXY", proxy_file, 1);
-         if (gDebug > 3)
-            Info("GlobusGetNames", "Using Proxy file:%s (NeedProxy:%d)",
-                 getenv("X509_USER_PROXY"), NeedProxy);
-         return retval;
+         gSystem->Setenv("X509_USER_PROXY", proxy_file);
+         return 0;
       } else {
          sprintf(proxy_file, "/tmp/x509up_u%d.%d", getuid(), nProxy);
          nProxy++;
          goto again;
       }
    } else {
-      setenv("X509_USER_PROXY", proxy_file, 1);
-      return retval;
+      gSystem->Setenv("X509_USER_PROXY", proxy_file);
+      return 1;
    }
 
-   return retval;
 }
 
 //______________________________________________________________________________
@@ -749,8 +726,9 @@ int GlobusGetCredHandle(Int_t LocalEnv, Int_t NeedProxy, gss_cred_id_t * CredHan
       Info("GlobusGetCredHandle", "Enter: LocalEnv: %d", LocalEnv);
 
    if (LocalEnv == 2) {
-      // If we are a PROOF Master autheticating vs Slaves we only need to fetch the delegated
-      // credentials from the shared memory segment the first time we are called ...
+      // If we are a PROOF Master autheticating vs Slaves
+      // we only need to fetch the delegated credentials 
+      // from the shared memory segment the first time we are called ...
       if (GlbDelCredHandle == GSS_C_NO_CREDENTIAL) {
          if (GlobusGetDelCred()) {
             if (gDebug > 0)
@@ -779,8 +757,7 @@ int GlobusGetCredHandle(Int_t LocalEnv, Int_t NeedProxy, gss_cred_id_t * CredHan
                     "Failed to acquire credentials: trying to initialize proxies ...");
 
             // Try to get credentials with usual command line ...
-            char *GlobusLocation = getenv("GLOBUS_LOCATION");
-            if (GlobusLocation == 0) {
+            if (!gSystem->Getenv("GLOBUS_LOCATION")) {
                if (gDebug > 0)
                   Error("GlobusGetCredHandle",
                      "Please define a valid GLOBUS_LOCATION");
@@ -788,53 +765,41 @@ int GlobusGetCredHandle(Int_t LocalEnv, Int_t NeedProxy, gss_cred_id_t * CredHan
                goto exit;
             }
             // First check if there are special requests for proxy duration ...
-            const char *duration =
-                gEnv->GetValue("Globus.ProxyDuration", "default");
-            char initdur[256] = { 0 };
-            if (strstr(duration, "default") == 0) {
-               sprintf(initdur, "-hours %s", duration);
-            }
+            TString InitDur(Form("-hours %s",
+               gEnv->GetValue("Globus.ProxyDuration", "default")));
             if (gDebug > 3)
-               Info("GlobusAutheticate", "initdur: %s (%s)", initdur,
-                    duration);
+               Info("GlobusAuthenticate", "InitDur: %s (%s)", InitDur.Data(),
+                    gEnv->GetValue("Globus.ProxyDuration", "default"));
 
             // ... and for number of bits in key ...
-            const char *keybits =
-                gEnv->GetValue("Globus.ProxyKeyBits", "default");
-            char initbit[256] = { 0 };
-            if (strstr(keybits, "default") == 0) {
-               sprintf(initbit, "-bits %s", keybits);
-            }
+            TString InitBit(Form("-bits %s",
+               gEnv->GetValue("Globus.ProxyKeyBits", "default")));
             if (gDebug > 3)
-               Info("GlobusAutheticate", "initbit: %s (%s)", initbit,
-                    keybits);
+               Info("GlobusAuthenticate", "InitBit: %s (%s)", InitBit.Data(),
+                    gEnv->GetValue("Globus.ProxyKeyBits", "default"));
 
-            // ... and for number of bits in key ...
-            char *usrpxy = getenv("X509_USER_PROXY");
-            char initpxy[256] = { 0 };
-            sprintf(initpxy, "-out %s", usrpxy);
+            // ... and the proxy ...
+            TString InitPxy(Form("-out %s", gSystem->Getenv("X509_USER_PROXY")));
             if (gDebug > 3)
-               Info("GlobusAutheticate", "initpxy: %s (%s)", initpxy,
-                    usrpxy);
+               Info("GlobusAutheticate", "InitPxy: %s", InitPxy.Data());
 
             // ... and environment variables
-            char *cerdir = getenv("X509_CERT_DIR");
-            char *usrcer = getenv("X509_USER_CERT");
-            char *usrkey = getenv("X509_USER_KEY");
-            char initenv[kMAXPATHLEN] = { 0 };
-            sprintf(initenv,
-                    "export X509_CERT_DIR=%s; export X509_USER_CERT=%s; export X509_USER_KEY=%s",
-                    cerdir, usrcer, usrkey);
+            TString InitEnv(Form("export X509_CERT_DIR=%s",
+               gSystem->Getenv("X509_CERT_DIR")));
+            InitEnv += TString(Form("; export X509_USER_CERT=%s",
+               gSystem->Getenv("X509_USER_CERT")));
+            InitEnv += TString(Form("; export X509_USER_KEY=%s",
+               gSystem->Getenv("X509_USER_KEY")));
+            if (gDebug > 3)
+               Info("GlobusAutheticate", "InitEnv: %s", InitEnv.Data());
 
             // to execute command to initiate the proxies one needs
             // to source the globus shell environment
-            char proxyinit[kMAXPATHLEN] = { 0 };
-            sprintf(proxyinit,
-                    "source $GLOBUS_LOCATION/etc/globus-user-env.sh; %s; grid-proxy-init %s %s %s",
-                    initenv, initdur, initbit, initpxy);
-            if (gDebug > 3)
-               Info("GlobusAutheticate", "Executing: %s", proxyinit);
-            gSystem->Exec(proxyinit);
+            TString ProxyInit("source $GLOBUS_LOCATION/etc/globus-user-env.sh; ");
+            ProxyInit += InitEnv;
+            ProxyInit += Form("; grid-proxy-init %s %s %s",
+                               InitDur.Data(), InitBit.Data(), InitPxy.Data());
+            gSystem->Exec(ProxyInit);
 
             //  retry now
             if ((MajStat =
@@ -861,159 +826,40 @@ int GlobusGetCredHandle(Int_t LocalEnv, Int_t NeedProxy, gss_cred_id_t * CredHan
 }
 
 //______________________________________________________________________________
-int GlobusCheckSecContext(char *Host, char *SubjName)
+Int_t GlobusGetSecContLifeTime(gss_ctx_id_t ctx)
 {
-   // Checks if there is already a valid security context established with
-   // remote host for subject ...
-   // On success returns entry number, -1 otherwise.
-
-   int retval = -1;
-   OM_uint32 MajStat = 0;
-   OM_uint32 MinStat = 0;
-   OM_uint32 GssRetFlags = 0;
-   OM_uint32 GlbContLifeTime = 0;
-
-   if (gDebug > 2) {
-      Info("GlobusCheckSecContext", "contacting host: %s", Host);
-      Info("GlobusCheckSecContext",
-           "we have got %d sec context handles in memory", NumGlbSecCont);
-   }
-
-   if (NumGlbSecCont > 0) {
-      int i;
-      for (i = 0; i < NumGlbSecCont; i++) {
-         if (!strcmp(hostGlbSecCont[i], Host)
-             && !strcmp(subjGlbSecCont[i], SubjName)) {
-            if (gDebug > 3)
-               Info("GlobusCheckSecContext",
-                    "we already have a sec context with host: %s for subj: %s",
-                    Host, SubjName);
-
-            // Check validity of the retrieved context ...
-            int Dum1, Dum2;
-            gss_OID MechType;
-            gss_name_t *TargName = 0, *Name = 0;
-            if (sptrGlbSecCont[i] != 0
-                && sptrGlbSecCont[i] != GSS_C_NO_CONTEXT) {
-               if ((MajStat =
-                    gss_inquire_context(&MinStat, sptrGlbSecCont[i], Name,
-                                        TargName, &GlbContLifeTime,
-                                        &MechType, &GssRetFlags, &Dum1,
-                                        &Dum2)) != GSS_S_COMPLETE) {
-                  if (gDebug > 0)
-                     GlobusError("GlobusCheckSecContext: gss_inquire_context",
-                              MajStat, MinStat, 0);
-                  GlobusUpdateSecContInfo(i);  // delete it from tables ...
-               } else {
-                  if (gDebug > 3)
-                     Info("GlobusCheckSecContext",
-                          "client (%s) already authenticated from host %s (remaining lifetime: %d sec)",
-                          SubjName, Host, GlbContLifeTime);
-                  retval = i;
-               }
-            }
-         }
-      }
-   }
-   return retval;
-}
-
-//______________________________________________________________________________
-int GlobusUpdateSecContInfo(int entry)
-{
-   // Removes entries corresponding to expired, unvalid or deleted security
-   // context. If entry=0 check the validity; if entry>0 remove 'entry'
-   // without checking. Returns number of valid sec contexts established.
+   // Returns lifetime of established sec context 'ctx'
 
    OM_uint32 MajStat = 0;
    OM_uint32 MinStat = 0;
    OM_uint32 GssRetFlags = 0;
    OM_uint32 GlbContLifeTime = 0;
-   int nGoodCont = 0;
-   char **Hosts = new char *[NumGlbSecCont];
-   char **Clien = new char *[NumGlbSecCont];
-   gss_ctx_id_t *SCPtr = new gss_ctx_id_t[NumGlbSecCont];
+   gss_OID   MechType;
+   gss_name_t *TargName = 0, *Name = 0;
+   int       Dum1, Dum2;
 
-   if (gDebug > 2)
-      Info("GlobusUpdateSecContInfo", "Enter: entry: %d", entry);
-
-   int i;
-   for (i = 0; i < NumGlbSecCont; i++) {
-      if (entry == 0) {
-         int Dum1, Dum2;
-         gss_OID MechType;
-         gss_name_t *TargName = 0, *client_name = 0;
-
-         // Check validity of the retrieved context ...
-         if (sptrGlbSecCont[i] != 0
-             && sptrGlbSecCont[i] != GSS_C_NO_CONTEXT) {
-            if ((MajStat =
-                 gss_inquire_context(&MinStat, sptrGlbSecCont[i],
-                                     client_name, TargName,
-                                     &GlbContLifeTime, &MechType,
-                                     &GssRetFlags, &Dum1,
-                                     &Dum2)) != GSS_S_COMPLETE) {
-               if (gDebug > 0)
-                  GlobusError("GlobusUpdateSecContInfo: gss_inquire_context",
-                           MajStat, MinStat, 0);
-            } else {
-               // This is a valid one ...
-               Hosts[nGoodCont] = strdup(hostGlbSecCont[i]);
-               Clien[nGoodCont] = strdup(subjGlbSecCont[i]);
-               SCPtr[nGoodCont] = sptrGlbSecCont[i];
-               nGoodCont++;
-            }
-         }
-      } else if (entry != i) {
-         Hosts[nGoodCont] = strdup(hostGlbSecCont[i]);
-         Clien[nGoodCont] = strdup(subjGlbSecCont[i]);
-         SCPtr[nGoodCont] = sptrGlbSecCont[i];
-         nGoodCont++;
-      }
-   }
-
-   // Update reference table
-   if (hostGlbSecCont) delete[] hostGlbSecCont;
-   if (subjGlbSecCont) delete[] subjGlbSecCont;
-   if (sptrGlbSecCont) delete[] sptrGlbSecCont;
-   NumGlbSecCont = nGoodCont;
-
-   if (NumGlbSecCont > 0) {
-
-      if (gDebug > 3)
-         Info("GlobusUpdateSecContInfo",
-              " %d valid established security contexts found");
-
-      hostGlbSecCont = new char *[NumGlbSecCont];
-      subjGlbSecCont = new char *[NumGlbSecCont];
-      sptrGlbSecCont = new gss_ctx_id_t[NumGlbSecCont];
-
-      for (i = 0; i < NumGlbSecCont; i++) {
-         hostGlbSecCont[i] = strdup(Hosts[i]);
-         subjGlbSecCont[i] = strdup(Clien[i]);
-         sptrGlbSecCont[i] = SCPtr[i];
+   if (ctx != 0 && ctx != GSS_C_NO_CONTEXT) {
+      if ((MajStat = gss_inquire_context(&MinStat, ctx, Name,
+                     TargName, &GlbContLifeTime, &MechType, &GssRetFlags, 
+                     &Dum1, &Dum2)) != GSS_S_COMPLETE) {
+         if (gDebug > 0)
+            GlobusError("GlobusGetSecContLifeTime: gss_inquire_context",
+                          MajStat, MinStat, 0);
+         return 0;
+      } else {
          if (gDebug > 3)
-            Info("GlobusUpdateSecContInfo",
-                 "Sec cont %d for subject %s with host %s", i, Clien[i],
-                 Hosts[i]);
+            Info("GlobusGetSecContLifeTime"," remaining lifetime: %d sec",
+                  GlbContLifeTime);
+         return (Int_t)GlbContLifeTime;
       }
-   } else if (gDebug > 3) {
-      Info("GlobusUpdateSecContInfo",
-           "No valid established security contexts remains");
-   }
-
-   return nGoodCont;
+   } 
+   return 0;
 }
 
 //______________________________________________________________________________
 void GlobusSetCertificates(int LocalEnv, int Prompt, TString PromptReUse, TString &Details)
 {
    // Defines certificate and key files to use, inquiring the client if needed.
-
-   char *userhome = getenv("HOME");
-   char *globusdef = ".globus";
-   char *locdet = 0;
-   Int_t nr, i;
 
    if (gDebug > 2)
       Info("GlobusSetCertificates", "Enter: LocalEnv: %d", LocalEnv);
@@ -1022,225 +868,169 @@ void GlobusSetCertificates(int LocalEnv, int Prompt, TString PromptReUse, TStrin
 
    if (LocalEnv < 2) {
 
-      char temp[kMAXPATHLEN] = { 0 };
-
+      TString LocDet;
       // Defaults
-      char tmpvar[4][kMAXPATHLEN];
-      char *ddir = 0, *dcer = 0, *dkey = 0, *dadi = 0;
       if (strlen(TAuthenticate::GetDefaultUser()) > 0) {
-         locdet = StrDup(TAuthenticate::GetDefaultUser());
+         LocDet = TAuthenticate::GetDefaultUser();
       } else {
-         locdet =
-         StrDup("cd:~/.globus cf:usercert.pem kf:userkey.pem ad:/etc/grid-security/certificates");
+         LocDet = TString("cd:~/.globus ");
+         LocDet+= TString("cf:usercert.pem ");
+         LocDet+= TString("kf:userkey.pem ");
+         LocDet+= TString("ad:/etc/grid-security/certificates");
       }
-
       if (gDebug > 3)
-         Info("GlobusSetCertificates", " locdet : %s", locdet);
+         Info("GlobusSetCertificates", " LocDet : %s", LocDet.Data());
+      
+      TString PromptString = LocDet;
+      PromptString.Insert(0," Local Globus Certificates (");
+      PromptString += TString(")\n Enter <key>:<new value> to change: ");
 
-      nr = sscanf(locdet, "%s %s %s %s", tmpvar[0], tmpvar[1], tmpvar[2],
-                  tmpvar[3]);
-      for (i = 0; i < nr; i++) {
-         if (!strncmp(tmpvar[i], "cd:", 3) || !strncmp(tmpvar[i], "Cd:", 3)
-             || !strncmp(tmpvar[i], "cD:", 3)
-             || !strncmp(tmpvar[i], "CD:", 3))
-            ddir = StrDup(tmpvar[i] + 3);
-         if (!strncmp(tmpvar[i], "cf:", 3) || !strncmp(tmpvar[i], "Cf:", 3)
-             || !strncmp(tmpvar[i], "cF:", 3)
-             || !strncmp(tmpvar[i], "CF:", 3))
-            dcer = StrDup(tmpvar[i] + 3);
-         if (!strncmp(tmpvar[i], "kf:", 3) || !strncmp(tmpvar[i], "Kf:", 3)
-             || !strncmp(tmpvar[i], "kF:", 3)
-             || !strncmp(tmpvar[i], "KF:", 3))
-            dkey = StrDup(tmpvar[i] + 3);
-         if (!strncmp(tmpvar[i], "ad:", 3) || !strncmp(tmpvar[i], "Ad:", 3)
-             || !strncmp(tmpvar[i], "aD:", 3)
-             || !strncmp(tmpvar[i], "AD:", 3))
-            dadi = StrDup(tmpvar[i] + 3);
+      TString ddir(""), dcer(""), dkey(""), dadi("");
+      char *tmp = StrDup(LocDet.Data());
+      char *nxt = strtok(tmp," ");
+      while (nxt) {
+         if (!strncasecmp(nxt, "cd:", 3))
+            ddir = TString(nxt + 3);
+         if (!strncasecmp(nxt, "cf:", 3))
+            dcer = TString(nxt + 3);
+         if (!strncasecmp(nxt, "kf:", 3))
+            dkey = TString(nxt + 3);
+         if (!strncasecmp(nxt, "ad:", 3))
+            dadi = TString(nxt + 3);
+         // Get next
+         nxt = strtok(0," ");
       }
-      if (ddir == 0)
-         ddir = StrDup("~/.globus");
-      if (dcer == 0)
-         dcer = StrDup("usercert.pem");
-      if (dkey == 0)
-         dkey = StrDup("userkey.pem");
-      if (dadi == 0)
-         dadi = StrDup("/etc/grid-security/certificates");
+      if (tmp) delete[] tmp;
+      // Fill in defaults where needed
+      if (ddir == "")
+         ddir = TString("~/.globus");
+      if (dcer == "")
+         dcer = TString("usercert.pem");
+      if (dkey == "")
+         dkey = TString("userkey.pem");
+      if (dadi == "")
+         dadi = TString("/etc/grid-security/certificates");
 
       // Check if needs to prompt the client
       char *det = 0;
       if (Prompt) {
-         char *dets = 0;
          if (!gROOT->IsProofServ()) {
-            dets =
-                Getline(Form
-                       (" Local Globus Certificates (%s)\n Enter <key>:<new value> to change: ",
-                         locdet));
+            det = Getline(PromptString.Data());
          } else {
             Warning("GlobusSetCertificate",
                     "proofserv: cannot prompt for info");
          }
-         if (dets && dets[0]) {
-            dets[strlen(dets) - 1] = '\0';  // get rid of \n
-            det = new char[strlen(dets)];
-            strcpy(det, dets);
-         } else
-            det = "";
-
-         if (gDebug > 3)
+         if (det && det[0])
+            det[strlen(det) - 1] = '\0';  // get rid of \n
+      }
+      if (gDebug > 3)
+         if (det)
             Info("GlobusSetCertificates", "got det: %s (%d)", det,
                  strlen(det));
 
-      } else {
-         det = "";
-      }
+      if (det && strlen(det) > 0) {
 
-      if (locdet) delete[] locdet;
-
-      if (strlen(det) > 0) {
-
-         nr = sscanf(det, "%s %s %s %s", tmpvar[0], tmpvar[1], tmpvar[2],
-                     tmpvar[3]);
-         for (i = 0; i < nr; i++) {
-            if (!strncmp(tmpvar[i], "cd:", 3)
-                || !strncmp(tmpvar[i], "Cd:", 3)
-                || !strncmp(tmpvar[i], "cD:", 3)
-                || !strncmp(tmpvar[i], "CD:", 3)) {
-               if (ddir) delete[] ddir;
-               ddir = StrDup(tmpvar[i] + 3);
-            }
-            if (!strncmp(tmpvar[i], "cf:", 3)
-                || !strncmp(tmpvar[i], "Cf:", 3)
-                || !strncmp(tmpvar[i], "cF:", 3)
-                || !strncmp(tmpvar[i], "CF:", 3)) {
-               if (dcer) delete[] dcer;
-               dcer = StrDup(tmpvar[i] + 3);
-            }
-            if (!strncmp(tmpvar[i], "kf:", 3)
-                || !strncmp(tmpvar[i], "Kf:", 3)
-                || !strncmp(tmpvar[i], "kF:", 3)
-                || !strncmp(tmpvar[i], "KF:", 3)) {
-               if (dkey) delete[] dkey;
-               dkey = StrDup(tmpvar[i] + 3);
-            }
-            if (!strncmp(tmpvar[i], "ad:", 3)
-                || !strncmp(tmpvar[i], "Ad:", 3)
-                || !strncmp(tmpvar[i], "aD:", 3)
-                || !strncmp(tmpvar[i], "AD:", 3)) {
-               if (dadi) delete[] dadi;
-               dadi = StrDup(tmpvar[i] + 3);
-            }
+         char *tmp = StrDup(det);
+         char *nxt = strtok(tmp," ");
+         while (nxt) {
+            if (!strncasecmp(nxt, "cd:", 3))
+               ddir = TString(nxt + 3);
+            if (!strncasecmp(nxt, "cf:", 3))
+               dcer = TString(nxt + 3);
+            if (!strncasecmp(nxt, "kf:", 3))
+               dkey = TString(nxt + 3);
+            if (!strncasecmp(nxt, "ad:", 3))
+               dadi = TString(nxt + 3);
+            // Get next
+            nxt = strtok(0," ");
          }
+         if (tmp) delete[] tmp;
       }
       // Build Details
-      Details = PromptReUse +
-         TString(Form(" cd:%s cf:%s kf:%s ad:%s", ddir, dcer, dkey, dadi));
+      Details = PromptReUse + TString(" ") + ddir + TString(" ") +
+         dcer + TString(" ") + dkey + TString(" ") + dadi;
 
-      // Perform "~" expansion ... or allow for paths relative to .globus
-      if (!strncmp(ddir, "~/", 2)) {
-         temp[0] = '\0';
-         sprintf(temp, "%s%s", userhome, ddir + 1);
-         if (ddir) delete[] ddir;
-         ddir = StrDup(temp);
-      } else if (strncmp(ddir, "/", 1)) {
-         temp[0] = '\0';
-         sprintf(temp, "%s/%s/%s", userhome, globusdef, ddir);
-         if (ddir) delete[] ddir;
-         ddir = StrDup(temp);
+      // Perform "~" expansion ... 
+      // or allow for paths relative to .globus
+      const char *globusdef = "/.globus/";
+      gSystem->ExpandPathName(ddir);
+      if (strncmp(ddir.Data(), "/", 1)) {
+         ddir.Insert(0,globusdef);
+         ddir.Insert(0,gSystem->HomeDirectory());
       }
-      if (!strncmp(dcer, "~/", 2)) {
-         temp[0] = '\0';
-         sprintf(temp, "%s%s", userhome, dcer + 1);
-         if (dcer) delete[] dcer;
-         dcer = StrDup(temp);
-      } else if (strncmp(dcer, "/", 1)) {
-         temp[0] = '\0';
-         sprintf(temp, "%s/%s", ddir, dcer);
-         if (dcer) delete[] dcer;
-         dcer = StrDup(temp);
+      gSystem->ExpandPathName(dcer);
+      if (strncmp(dcer.Data(), "/", 1)) {
+         dcer.Insert(0,"/");
+         dcer.Insert(0,ddir);
       }
-      if (!strncmp(dkey, "~/", 2)) {
-         temp[0] = '\0';
-         sprintf(temp, "%s%s", userhome, dkey + 1);
-         if (dkey) delete[] dkey;
-         dkey = StrDup(temp);
-      } else if (strncmp(dkey, "/", 1)) {
-         temp[0] = '\0';
-         sprintf(temp, "%s/%s", ddir, dkey);
-         if (dkey) delete[] dkey;
-         dkey = StrDup(temp);
+      gSystem->ExpandPathName(dkey);
+      if (strncmp(dkey.Data(), "/", 1)) {
+         dkey.Insert(0,"/");
+         dkey.Insert(0,ddir);
       }
-      if (!strncmp(dadi, "~/", 2)) {
-         temp[0] = '\0';
-         sprintf(temp, "%s%s", userhome, dadi + 1);
-         if (dadi) delete[] dadi;
-         dadi = StrDup(temp);
-      } else if (strncmp(dadi, "/", 1)) {
-         temp[0] = '\0';
-         sprintf(temp, "%s/%s/%s", userhome, globusdef, dadi);
-         if (dadi) delete[] dadi;
-         dadi = StrDup(temp);
+      gSystem->ExpandPathName(dadi);
+      if (strncmp(dadi.Data(), "/", 1)) {
+         dadi.Insert(0,globusdef);
+         dadi.Insert(0,gSystem->HomeDirectory());
       }
       if (gDebug > 3)
-         Info("GlobusSetCertificates", "after expansion: %s %s %s", dcer,
-              dkey, dadi);
+         Info("GlobusSetCertificates", "after expansion: %s %s %s",
+              dcer.Data(), dkey.Data(), dadi.Data());
 
       // Save them
-      setenv("X509_CERT_DIR", dadi, 1);
-      setenv("X509_USER_CERT", dcer, 1);
-      setenv("X509_USER_KEY", dkey, 1);
-
-      // Release allocated memory
-      if (ddir) delete[] ddir;
-      if (dcer) delete[] dcer;
-      if (dkey) delete[] dkey;
-      if (dadi) delete[] dadi;
-
+      gSystem->Setenv("X509_CERT_DIR", dadi);
+      gSystem->Setenv("X509_USER_CERT", dcer);
+      gSystem->Setenv("X509_USER_KEY", dkey);
    }
 
    return;
 }
 
 //______________________________________________________________________________
-void GlobusCleanup()
+Int_t GlobusCleanupContext(gss_ctx_id_t ctx)
 {
-   // This function cleans up any stuff related to Globus, releasing
-   // credentials, security contexts and allocated memory ...
+   // This function cleans up security context ctx
 
-   if (gDebug > 2)
-      Info("GlobusCleanup:", "cleaning up local Globus stuff ...");
-
-   if (NumGlbSecCont == 0) {
-      if (gDebug > 3)
-         Info("GlobusCleanup:", "Globus never used: nothing to clean");
-      return;
-   }
-
-   int status = 0;
    OM_uint32 MajStat = 0;
    OM_uint32 MinStat = 0;
-
-
-   // Now we can delete the sec context */
-   int i;
-   for (i = 0; i < NumGlbSecCont; i++) {
-      if ((MajStat =
-           gss_delete_sec_context(&MinStat, sptrGlbSecCont + i,
-                                  GSS_C_NO_BUFFER)) != GSS_S_COMPLETE) {
-         if (gDebug > 0)
-            GlobusError("GlobusCleanup: gss_delete_sec_context",
-               MajStat,MinStat, 0);
-         status = 1;
-      }
+   if ((MajStat = gss_delete_sec_context(&MinStat, &ctx,
+                  GSS_C_NO_BUFFER)) != GSS_S_COMPLETE) {
+      if (gDebug > 0)
+         GlobusError("GlobusCleanupContext: gss_delete_sec_context",
+            MajStat,MinStat, 0);
+      return 0;
    }
+   return 1;
+}
 
-   // Release memory allocated for security contexts ...
-   if (hostGlbSecCont) delete[] hostGlbSecCont;
-   if (subjGlbSecCont) delete[] subjGlbSecCont;
-   if (sptrGlbSecCont) delete[] sptrGlbSecCont;
-   NumGlbSecCont = 0;
+//______________________________________________________________________________
+Int_t GlobusCheckSecCtx(const char *subj, TSecContext *ctx)
+{
+   // Globus version of CheckSecCtx to be passed to TAuthenticate::AuthExists
+   // Check if Subj matches the one in Ctx
+   // Returns: 1 if ok, 0 if not
+   // Deactivates Ctx is not valid 
 
-   // Finally check if the shm for imported stuff has not yet been destroyed ...
-   // Recall the shm_id first ...
+   Int_t rc = 0;
+ 
+   if (ctx->IsActive()) {
+      rc = GlobusCheckSecContext(subj,(gss_ctx_id_t)(ctx->GetContext()));
+   } else {
+     // Security context deactivation
+      GlobusCleanupContext((gss_ctx_id_t)(ctx->GetContext()));
+#if 0
+      ctx->DeActivate();
+#endif
+   }
+   return rc;
+
+}
+
+//______________________________________________________________________________
+void GlobusCleanupShm()
+{
+   // This function cleans up shared memories associated with Globus
+
    TApplication *lApp = gROOT->GetApplication();
 
    if (lApp != 0) {
@@ -1253,21 +1043,99 @@ void GlobusCleanup()
             if ((rc = shmctl(gShmIdCred, IPC_RMID, &shm_ds)) != 0) {
                if ((rc == EINVAL) || (rc == EIDRM)) {
                   if (gDebug > 3)
-                     Info("GlobusCleanup:",
-                          "credentials shared memory segment already marked as destroyed");
+                     Info("GlobusCleanupShm:",
+                          "credentials shared memory segment %s","
+                           already marked as destroyed");
                } else {
-                  Warning("GlobusCleanup:",
+                  Warning("GlobusCleanupShm:",
                           "unable to mark segment as destroyed (error: 0x%x)",
                           rc);
                }
             } else if (gDebug > 3)
-               Info("GlobusCleanup:",
+               Info("GlobusCleanupShm:",
                     "shared memory segment %d marked for destruction",
                     gShmIdCred);
          } else if (gDebug > 3) {
-            Info("GlobusCleanup:",
+            Info("GlobusCleanupShm:",
                  "gShmIdCred not defined in this session");
          }
       }
    }
+}
+
+//______________________________________________________________________________
+Int_t GlobusCheckSecContext(const char *SubjName, gss_ctx_id_t Ctx)
+{
+   // Checks if SubjName match the one assigned to sec context Ctx
+   // Check also validity of Ctx.
+   // Returns 1 if everything is ok, 0 if non-matching
+   // -1 if Ctx is no more valid and should be discarded
+
+   if (!Ctx)
+      return 0;
+
+   int rc = 0;
+   OM_uint32 MajStat = 0;
+   OM_uint32 MinStat = 0;
+   OM_uint32 GssRetFlags = 0;
+   OM_uint32 GlbContLifeTime = 0;
+
+   if (gDebug > 2)
+      Info("GlobusCheckSecContext", 
+           "checking subj:%s", SubjName);
+
+   // Check validity of the retrieved context ...
+   Int_t Dum1, Dum2;
+   gss_OID MechType;
+   gss_name_t *TargName = 0;
+   gss_name_t Name;
+   if (Ctx != 0 && Ctx != GSS_C_NO_CONTEXT) {
+
+      if ((MajStat = gss_inquire_context(&MinStat, Ctx, &Name,
+                     TargName, &GlbContLifeTime, &MechType, 
+                     &GssRetFlags, &Dum1, &Dum2)) != GSS_S_COMPLETE) {
+         if (gDebug > 0)
+            GlobusError("GlobusCheckSecContext: gss_inquire_context",
+                                                MajStat, MinStat, 0);
+         rc = -1;
+      } else {
+         gss_buffer_desc Name_buffer;
+         // Get the subject name now
+         if ((MajStat = gss_display_name(&MinStat, Name, &Name_buffer, 
+                                        GLOBUS_NULL)) != GSS_S_COMPLETE) {
+            if (gDebug > 0)
+               GlobusError("GlobusCheckSecContext: gss_display_name",
+                                                 MajStat, MinStat, 0);
+            Name_buffer.length = 0;
+            Name_buffer.value = GLOBUS_NULL;
+         } else {
+            char *theName = new char[Name_buffer.length+1];
+            strncpy(theName,(char *)Name_buffer.value,(Int_t)Name_buffer.length);
+            theName[Name_buffer.length]= '\0';
+            if (gDebug > 2) 
+               Info("GlobusCheckSecContext","with Subject Name: %s (%d)",
+                                             theName,Name_buffer.length);
+            if (!strcmp(theName, SubjName)) {
+               if (gDebug > 2)
+                  Info("GlobusCheckSecContext",
+                       "client already authenticated (remaining lifetime: %d sec)",
+                        GlbContLifeTime);
+               rc = 1;
+            }
+            // Release allocated space
+            if (theName) delete[] theName;
+            if ((MajStat = gss_release_name(&MinStat, &Name)) 
+                                          != GSS_S_COMPLETE) {
+               if (gDebug > 0)
+                   GlobusError("GlobusCheckSecContext: gss_release_name",
+                                                      MajStat, MinStat, 0);
+            }
+         }
+      }
+
+   } else {
+      rc = -1;
+   }
+
+   return rc;
 }

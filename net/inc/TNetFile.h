@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.12 2003/09/21 21:38:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.13 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -45,8 +45,6 @@ protected:
    Int_t     fProtocol;   //rootd protocol level
    Int_t     fErrorCode;  //error code returned by rootd (matching gRootdErrStr)
 
-   static Int_t fgClientProtocol;  //client protocol level
-
    TNetFile(const char *url, const char *ftitle, Int_t comp, Bool_t);
    virtual void ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
                               Int_t tcpwindowsize, Bool_t forceOpen,
@@ -74,8 +72,6 @@ public:
    Bool_t  ReadBuffer(char *buf, Int_t len);
    Bool_t  WriteBuffer(const char *buf, Int_t len);
    void    Seek(Long64_t offset, ERelativeTo pos = kBeg);
-
-   static  Int_t GetClientProtocol();
 
    ClassDef(TNetFile,1)  //A ROOT file that reads/writes via a rootd server
 };

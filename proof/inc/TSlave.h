@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.9 2003/03/05 16:07:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.10 2003/08/29 10:41:28 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -30,11 +30,12 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
+#ifndef ROOT_TSocket
+#include "TSocket.h"
+#endif
 
-class TSocket;
 class TFileHandler;
 class TProof;
-
 
 class TSlave : public TObject {
 
@@ -48,7 +49,7 @@ private:
    Int_t         fPort;      //slave's port number
    Int_t         fOrdinal;   //slave's ordinal number
    Int_t         fPerfIdx;   //relative CPU performance index
-   Int_t         fSecurity;  //authentication method (0 = standard, 1 = SRP)
+   TSecContext  *fSecContext;//SecContext of the realetd authentication
    Int_t         fProtocol;  //slave's protocol level
    TSocket      *fSocket;    //socket to slave
    TProof       *fProof;     //proof cluster to which slave belongs
@@ -62,7 +63,7 @@ private:
    void operator=(const TSlave &) { }
 
    TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
-          const char *image, Int_t security, TProof *proof);
+          const char *image, TProof *proof);
 
 public:
    virtual ~TSlave();
@@ -79,7 +80,7 @@ public:
    Int_t         GetPort() const { return fPort; }
    Int_t         GetOrdinal() const { return fOrdinal; }
    Int_t         GetPerfIdx() const { return fPerfIdx; }
-   Int_t         GetSecurity() const { return fSecurity; }
+   Int_t         GetSecurity() const { return fSecContext->GetMethod(); }
    Int_t         GetProtocol() const { return fProtocol; }
    TSocket      *GetSocket() const { return fSocket; }
    TProof       *GetProof() const { return fProof; }
@@ -88,7 +89,6 @@ public:
    Float_t       GetCpuTime() const { return fCpuTime; }
    TFileHandler *GetInputHandler() const { return fInput; }
    void          SetInputHandler(TFileHandler *ih);
-   Int_t         SendHostAuth(TSlave *slave, Int_t opt);
 
    Bool_t        IsValid() const { return fSocket ? kTRUE : kFALSE; }
 

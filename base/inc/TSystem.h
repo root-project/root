@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.35 2004/01/25 17:59:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.36 2004/01/28 02:41:41 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -219,6 +219,7 @@ public:
    virtual void            IgnoreInterrupt(Bool_t ignore = kTRUE);
    virtual void            AddFileHandler(TFileHandler *fh);
    virtual TFileHandler   *RemoveFileHandler(TFileHandler *fh);
+   virtual TSeqCollection *GetListOfFileHandlers() const { return fFileHandler; }
 
    //---- Floating Point Exceptions Control
    virtual Int_t           GetFPEMask();

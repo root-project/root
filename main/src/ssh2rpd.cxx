@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.2 2003/08/29 17:23:31 rdm Exp $
 // Author: Gerardo Ganis    1/7/2003
 
 /*************************************************************************
@@ -23,11 +23,13 @@
 #include <stdlib.h>
 #include <syslog.h>
 #include <errno.h>
+#include <pwd.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include "Varargs.h"
+#include <netinet/in.h>
 
 
 char *gFileLog       = 0;
@@ -60,7 +62,9 @@ int main(int argc, char **argv)
    char *Pipe = 0; int ProId=-1, RemId=-1;
 
    if (argc < 2) {
-      Info("ssh2rpd: argc=%d : at least one additional argument required - exit\n", argc);
+      Info("ssh2rpd: argc=%d : %s",
+           "at least one additional argument required - exit\n", 
+           argc);
       exit(1);
    }
 
@@ -71,9 +75,9 @@ int main(int argc, char **argv)
    if (argc > 4) RemId    = atoi(argv[4]);
    if (argc > 5) gFileLog = strdup(argv[5]);
 
-
    if (gDebug > 0)
-      Info("ssh2rpd: forked with args: %d %s %d %d '%s'\n",gDebug,Pipe,ProId,RemId,gFileLog);
+      Info("ssh2rpd: forked with args: %d %s %d %d '%s'\n",
+            gDebug,Pipe,ProId,RemId,gFileLog);
 
    // Preparing socket connection
    struct sockaddr_un servAddr;
@@ -91,8 +95,18 @@ int main(int argc, char **argv)
       exit(1);
    }
 
-   // Sending "OK" ...
-   char *okbuf = "OK";
+   // Get logged username
+   struct passwd *pw = getpwuid(getuid());
+
+   // Sending 'OK <username>'
+   char okbuf[256];
+   sprintf(okbuf,"OK %s",pw->pw_name);
+   int lbuf = strlen(okbuf);
+   lbuf = htonl(lbuf);
+   rc = send(sd, &lbuf, sizeof(lbuf), 0);
+   if (rc != (int)sizeof(lbuf)) {
+      Info("ssh2rpd: sending might have been unsuccessful (bytes send: %d)",rc);
+   }
    rc = send(sd, okbuf, strlen(okbuf), 0);
    if (rc != (int)strlen(okbuf)) {
       Info("ssh2rpd: sending might have been unsuccessful (bytes send: %d)",rc);

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.10 2003/11/18 23:09:13 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.11 2004/01/08 23:10:29 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -37,6 +37,7 @@ typedef void (*SigPipe_t)(int);
 // Global consts
 const int  kMAXSEC           = 6;
 const int  kMAXSECBUF        = 2048;
+const int  kMAXRECVBUF       = 1024;
 const int  kAUTH_REUSE_MSK   = 0x1;
 const int  kAUTH_CRYPT_MSK   = 0x2;
 const int  kAUTH_SSALT_MSK   = 0x4;
@@ -54,10 +55,10 @@ enum  EService  { kROOTD = 1, kPROOFD };
 namespace ROOT {
 
 extern int  gAltSRP;
+extern int  gAuthListSent;
 extern int  gAnon;
 extern int  gAuth;
 extern int  gClientProtocol;
-extern int  gGlobus;
 extern int  gNumAllow;
 extern int  gNumLeft;
 extern int  gOffSet;
@@ -69,6 +70,8 @@ extern int  gRemPid;
 extern int  gReUseAllow;
 extern int  gReUseRequired;
 extern int  gSaltRequired;
+extern int  gServerProtocol;
+extern int  gSec;
 extern int  gSockFd;
 extern int  gSshdPort;
 
@@ -141,16 +144,22 @@ int  NetParRecv(void *buf, int len);
 void DaemonStart(int ignsigcld, int fdkeep, EService service);
 
 // rpdutils.cxx
+void RpdAuthenticate();
+void RpdProtocol(int);
 int  RpdGetAuthMethod(int kind);
 int  RpdUpdateAuthTab(int opt, char *line, char **token);
-int  RpdCleanupAuthTab(char *Host, int RemId);
+int  RpdCleanupAuthTab(char *Host, int RemId, int OffSet);
 int  RpdCheckAuthTab(int Sec, char *User, char *Host,int RemId, int *OffSet);
+int  RpdCheckOffSet(int Sec, char *User, char *Host, int RemId, 
+                    int *OffSet, char **tkn, int *shmid, char **glbsuser);
 bool RpdReUseAuth(const char *sstr, int kind);
 int  RpdCheckAuthAllow(int Sec, char *Host);
 int  RpdCheckHost(const char *Host, const char *host);
 char *RpdGetIP(const char *host);
 void RpdSendAuthList();
-void RpdCheckSession();
+void RpdInitAuth();
+int RpdInitSession(int,int);
+void RpdLogin(int);
 
 void RpdUser(const char *sstr);
 void RpdSshAuth(const char *sstr);
@@ -160,11 +169,11 @@ int  RpdCheckSpecialPass(const char *passwd);
 void RpdPass(const char *pass);
 void RpdGlobusAuth(const char *sstr);
 void RpdRfioAuth(const char *sstr);
-void RpdCleanup(const char *sstr);
+void RpdAuthCleanup(const char *sstr, int opt);
 
 void RpdDefaultAuthAllow();
 int  RpdCheckDaemon(const char *daemon);
-int  RpdCheckSshd();
+int  RpdCheckSshd(int opt);
 int  RpdGuessClientProt(const char *buf, EMessageTypes kind);
 char *RpdGetRandString(int Opt, int Len);
 bool RpdCheckToken(char *tknin, char *tknref);
@@ -186,6 +195,7 @@ int  RpdSecureRecv(char **Str);
 
 // Globus stuff ...
 #ifdef R__GLBS
+#define HAVE_MEMMOVE 1
 extern "C" {
 #ifdef R__GLBS22
    #include <globus_gsi_credential.h>
@@ -220,6 +230,7 @@ int   SshToolAllocateSocket(unsigned int, unsigned int, char **);
 void  SshToolDiscardSocket(const char *, int);
 int   SshToolNotifyFailure(const char *);
 int   SshToolGetAuth(int);
+int   SshToolGetAuth(int, const char *);
 
 } // namespace ROOT
 

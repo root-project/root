@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.43 2003/12/30 13:16:51 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.44 2004/01/19 18:31:13 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -63,7 +63,6 @@
 #include <errno.h>
 
 #include "TNetFile.h"
-#include "TAuthenticate.h"
 #include "TROOT.h"
 #include "TPSocket.h"
 #include "TSystem.h"
@@ -73,12 +72,7 @@
 #include "Bytes.h"
 #include "NetErrors.h"
 
-// Protocol changes:
-// 6 -> 7: added support for ReOpen(), kROOTD_BYE and kROOTD_PROTOCOL2
-// 7 -> 8: added support for update being a create (open stat = 2 and not 1)
-// 8 -> 9: added new authentication features (see README.AUTH)
-Int_t TNetFile::fgClientProtocol = 9;  // increase when client protocol changes
-
+// fgClientProtocol is now in TAuthenticate
 
 ClassImp(TNetFile)
 
@@ -427,74 +421,43 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
 {
    // Connect to remote rootd server.
 
-   TAuthenticate *auth;
-
-   if (netopt < -1) {
-      fSocket = new TPSocket(fUrl.GetHost(), fUrl.GetPort(), -netopt,
-                             tcpwindowsize);
-      if (!fSocket->IsValid()) {
-         Error("ConnectServer", "can't open %d parallel connections to rootd on "
-               "host %s at port %d", -netopt, fUrl.GetHost(), fUrl.GetPort());
-         goto zombie;
-      }
-
-      // kNoDelay is internally set by TPSocket
-
+   // Create Authenticated socket
+   Int_t sSize = netopt < -1 ? -netopt : 1;
+   TString Url(fUrl.GetProtocol());
+   if (Url.Contains("root")) {
+      Url.Insert(4,"dp");
    } else {
-      fSocket = new TSocket(fUrl.GetHost(), fUrl.GetPort(), tcpwindowsize);
-      if (!fSocket->IsValid()) {
-         Error("ConnectServer", "can't open connection to rootd on host %s at port %d",
-               fUrl.GetHost(), fUrl.GetPort());
-         goto zombie;
-      }
-
-      // Set some socket options
-      fSocket->SetOption(kNoDelay, 1);
-
-      // Tell rootd we want non parallel connection
-      fSocket->Send((Int_t) 0, (Int_t) 0);
+      Url = "rootdp";
    }
-
-   // Get rootd protocol level
-   EMessageTypes tmpkind;
-   fSocket->Send(kROOTD_PROTOCOL);
-   Recv(fProtocol, tmpkind);
-   *kind = tmpkind;
-   if (fProtocol > 6) {
-      fSocket->Send(Form("%d", fgClientProtocol), kROOTD_PROTOCOL2);
-      Recv(fProtocol, tmpkind);
-      *kind = tmpkind;
+   Url += TString(Form("://%s@%s:%d",
+                        fUrl.GetUser(),fUrl.GetHost(),fUrl.GetPort()));
+   fSocket = TSocket::CreateAuthSocket(Url, sSize, tcpwindowsize);
+   if (!fSocket || !fSocket->IsValid()) {
+      Error("TNetFile", "can't open %d-fold connections to rootd on "
+            "host %s at port %d",sSize, fUrl.GetHost(), fUrl.GetPort());
+      *kind = kROOTD_ERR;
+      *stat = (Int_t)kErrAuthNotOK;
+      goto zombie;
    }
 
    // Check if rootd supports new options
+   fProtocol = fSocket->GetRemoteProtocol();
    if (forceRead && fProtocol < 5) {
       Warning("ConnectServer", "rootd does not support \"+read\" option");
       forceRead = kFALSE;
    }
 
-   // Authenticate remotely
-   if (gDebug > 2) Info("ConnectServer", "user from Url: %s", fUrl.GetUser());
-   auth = new TAuthenticate(fSocket, fUrl.GetHost(),
-                Form("%s:%d",fUrl.GetProtocol(),fProtocol), fUrl.GetUser());
-
-   // Attempt authentication
-   if (!auth->Authenticate()) {
-      Error("ConnectServer", "authentication failed for %s@%s",
-            auth->GetUser(), fUrl.GetHost());
-      delete auth;
-      goto zombie;
-   }
-   fUser = auth->GetUser();
-   delete auth;
-
    // Open the file
    if (forceOpen)
-      fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower("f"+fOption).Data()), kROOTD_OPEN);
+      fSocket->Send(Form("%s %s", fUrl.GetFile(), 
+                              ToLower("f"+fOption).Data()), kROOTD_OPEN);
    else if (forceRead)
       fSocket->Send(Form("%s %s", fUrl.GetFile(), "+read"), kROOTD_OPEN);
    else
-      fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower(fOption).Data()), kROOTD_OPEN);
+      fSocket->Send(Form("%s %s", fUrl.GetFile(), 
+                              ToLower(fOption).Data()), kROOTD_OPEN);
 
+   EMessageTypes tmpkind;
    int  tmpstat;
    Recv(tmpstat, tmpkind);
    *stat = tmpstat;
@@ -621,12 +584,4 @@ zombie:
    MakeZombie();
    SafeDelete(fSocket);
    gDirectory = gROOT;
-}
-
-//______________________________________________________________________________
-Int_t TNetFile::GetClientProtocol()
-{
-   // Static method returning supported rootd client protocol.
-
-   return fgClientProtocol;
 }

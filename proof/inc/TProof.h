@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.40 2003/10/07 21:09:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.41 2003/12/02 08:37:41 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -39,6 +39,9 @@
 #ifndef ROOT_TMD5
 #include "TMD5.h"
 #endif
+#ifndef ROOT_TSocket
+#include "TSocket.h"
+#endif
 
 #include <map>
 
@@ -48,7 +51,6 @@ namespace std { using ::map; }
 
 
 class TMessage;
-class TSocket;
 class TMonitor;
 class TSignalHandler;
 class TPluginHandler;
@@ -60,7 +62,6 @@ class TProofPlayer;
 class TProofPlayerRemote;
 class TPacketizer2;
 class TCondor;
-
 
 // protocol changes:
 // 1 -> 2: new arguments for Process() command, option added
@@ -95,17 +96,14 @@ private:
    TString   fConfFile;      //file containing config information
    TString   fWorkDir;       //current work directory on remote servers
    TString   fUser;          //user under which to run
-   TString   fPasswd;        //user password
    TString   fImage;         //master's image name
    TString   fUrlProt;       //net protocol name
    Int_t     fPort;          //port we are connected to (proofd = 1093)
-   Int_t     fSecurity;      //security level used to connect to master server
+   TSecContext *fSecContext; //SecContext of the related authentication
    Int_t     fProtocol;      //remote PROOF server protocol version number
    Int_t     fLogLevel;      //server debug logging level
    Int_t     fStatus;        //remote return status (part of kPROOF_LOGDONE)
    Int_t     fParallel;      //number of active slaves (only set on client, on server use fActiveSlaves)
-   Bool_t    fPwHash;        //true if fPasswd is a passwd hash
-   Bool_t    fSRPPwd;        //true if fPasswd is a SRP passwd
    Bool_t    fMasterServ;    //true if we are a master server
    Bool_t    fSendGroupView; //if true send new group view
    TList    *fSlaves;        //list of all slave servers as in config file
@@ -234,7 +232,7 @@ public:
    const char *GetImage() const { return fImage; }
    const char *GetUrlProt() const { return fUrlProt; }
    Int_t       GetPort() const { return fPort; }
-   Int_t       GetSecurity() const { return fSecurity; }
+   Int_t       GetSecurity() const { return fSecContext->GetMethod(); }
    Int_t       GetRemoteProtocol() const { return fProtocol; }
    Int_t       GetClientProtocol() const { return kPROOF_Protocol; }
    Int_t       GetStatus() const { return fStatus; }

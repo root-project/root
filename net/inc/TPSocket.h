@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.h,v 1.5 2001/02/03 14:36:53 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.h,v 1.6 2001/02/07 16:38:18 rdm Exp $
 // Author: Fons Rademakers   20/1/2001
 
 /*************************************************************************
@@ -60,7 +60,7 @@ public:
    virtual ~TPSocket();
 
    void          Close(Option_t *opt="");
-   Int_t         GetDescriptor() const { return fSockets ? fSockets[0]->GetDescriptor() : -1; }
+   Int_t         GetDescriptor() const;
    TInetAddress  GetLocalInetAddress();
 
    Int_t   Send(const TMessage &mess);

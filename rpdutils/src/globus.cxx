@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.4 2003/10/22 18:48:36 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.5 2003/11/26 10:33:08 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -503,7 +503,7 @@ int GlbsToolStoreToShm(gss_buffer_t buffer, int *ShmId)
    int shm_flg = 0777;
 
    if (gDebug > 2)
-      ErrorInfo("GlbsToolStoreToShm: Enter: ShmId: %d", ShmId);
+      ErrorInfo("GlbsToolStoreToShm: Enter: ShmId: %d", *ShmId);
 
    // This is the size of the needed shared memory segment
    int shm_size = sizeof(gss_buffer_desc) + buffer->length;
@@ -594,7 +594,8 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
       ErrorInfo("GlbsToolCheckProxy: enter: %s", ClientIssuerName);
 
    if (gHostCertConf != 0) {
-      // The user/administrator provided a file ... check if it exists and can be read
+      // The user/administrator provided a file ... check if it
+      // exists and can be read
       FILE *fconf = 0;
       if (!access(gHostCertConf, R_OK) &&
           (fconf = fopen(gHostCertConf, "r")) != 0) {
@@ -622,8 +623,8 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
       } else {
          if (gDebug > 2)
             ErrorInfo
-                ("GlbsToolCheckProxy: host cert conf not existing or not readable (%s)",
-                 gHostCertConf);
+                ("GlbsToolCheckProxy: host cert conf not existing"
+                 " or not readable (%s)",gHostCertConf);
       }
    } else if (gDebug > 2)
       ErrorInfo("GlbsToolCheckProxy: HOSTCERTCONF undefined");
@@ -660,6 +661,7 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
          ErrorInfo("GlbsToolCheckProxy: unable to set X509_CERT_DIR ");
       }
    }
+   if (dir_tmp) delete[] dir_tmp;
 
    if (access(map_tmp, R_OK)) {
       if (gDebug > 0)
@@ -672,6 +674,7 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
          ErrorInfo("GlbsToolCheckProxy: unable to set GRIDMAP ");
       }
    }
+   if (map_tmp) delete[] map_tmp;
 
    // Needs to set this for consistency
    if (setenv("X509_USER_CERT", "/etc/grid-security/hostcert.pem", 1)) {
@@ -800,6 +803,11 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
 
 #endif
 
+   } else {
+      // Proxy file not existing or not readable 
+      ErrorInfo("GlbsToolCheckProxy: Proxy file not existing or"
+                     "not readable");
+      return 1;
    }
 
    return 0;

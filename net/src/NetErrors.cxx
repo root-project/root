@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:$:$Id:$
+// @(#)root/net:$Name:  $:$Id: NetErrors.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
 // Author: Fons Rademakers   28/08/2003
 
 /*************************************************************************
@@ -46,5 +46,6 @@ const char *gRootdErrStr[] = {
    "cannot seek to restart position",
    "server does not accept the requested authentication method from this host or from user@host",
    "server does not accept connection from this host: contact server administrator",
-   "authentication attempt unsuccessful"
+   "authentication attempt unsuccessful",
+   "failure: authenticated user not the same as requested login username"
 };

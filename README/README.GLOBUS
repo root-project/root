@@ -57,6 +57,7 @@ Checking for GLOBUS_LOCATION ... <Your_GLOBUS_LOCATION>
 Checking for openssl/x509.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
 Checking for openssl/pem.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
 Checking for globus_gss_assist.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
+Checking for globus_gss_common.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
 Checking for globus_gsi_credential.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
 Checking for gsi version ... yes
 Checking for libglobus_gss_assist_<flavour> ... <Your_GLOBUS_LOCATION>/lib
@@ -93,9 +94,9 @@ Applying experimental patch to globus_gsi_credential.c
         or
            source $GLOBUS_LOCATION/etc/globus-user-env.sh .
 
-        If you are sure about you capabilities to get valid credentials, you
+        If you are sure about your capabilities to get valid credentials, you
         don't need to initialize them outside the root session, for ROOT checks
-        the  credentials and prompts for the pass phrase if they are missing or
+        the credentials and prompts for the pass phrase if they are missing or
         invalid.
 
         There are three files/dirs relevant for proxy initialization:
@@ -112,7 +113,7 @@ Applying experimental patch to globus_gsi_credential.c
            setting the variable "X509_CERT_DIR" to the full path.
 
         All this variables can be changed by the user before running root or
-        during  a root session. Globus authentication can be requested by:
+        during a root session. Globus authentication can be requested by:
 
         1) Setting
 
@@ -153,10 +154,10 @@ Applying experimental patch to globus_gsi_credential.c
         2) Specifying an entry in .authrootrc (see README.AUTH for more details)
 
            This allows to be host and user specific and to initialize proxies
-           for two or more  different users in the same session.
+           for two or more different users in the same session.
 
         3) During a ROOT session by creating (or modifying) a THostAuth
-           instantiation  (see README.AUTH for more details)
+           instantiation (see README.AUTH for more details)
 
         Upon successful authentication the user is logged on remotely with the
         user name  specified in the gridmap file on the remote server; if there
@@ -274,7 +275,7 @@ May 27 12:49:46 pcepsft43 rootd[24031]: RootdLoop: kind:2004 -- buf:'/test.root 
    Some tips:
 
    .1) make sure that local and remote times are synchronized within 5 minutes
-   .2) if GlobusAuthenticate is not found and you using /etc/ld.so.conf for
+   .2) if GlobusAuthenticate is not found and you are using /etc/ld.so.conf for
        shared libraries you may need to run /sbin/ldconfig -v after compilation.
    .3) Make sure that remote node accepts Globus authentication from your
        local host
@@ -323,5 +324,5 @@ May 27 12:49:46 pcepsft43 rootd[24031]: RootdLoop: kind:2004 -- buf:'/test.root 
    .6) mailto: gerardo.ganis@cern.ch.
 
 --------------------------------------------------------------------------------------
-Last update: November 14, 2003
+Last update: December 17, 2003
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.10 2003/05/01 17:51:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.11 2003/05/06 08:23:43 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -102,9 +102,13 @@ Int_t TEventIter::LoadDir()
       fFile = TFile::Open(fFilename);
       if (dirsave) dirsave->cd();
 
-      if ( fFile->IsZombie() ) {
-         Error("Process","Cannot open file: %s (%s)",
-            fFilename.Data(), strerror(fFile->GetErrno()) );
+      if (!fFile || fFile->IsZombie() ) {
+         if (fFile)
+            Error("Process","Cannot open file: %s (%s)",
+               fFilename.Data(), strerror(fFile->GetErrno()) );
+         else
+            Error("Process","Cannot open file: %s (errno unavailable)",
+               fFilename.Data());
          // cleanup ?
          return -1;
       }

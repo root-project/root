@@ -3,32 +3,48 @@ Authentication to rootd/proofd servers
 
 The rootd/proofd daemon servers accept 6 methods of authentication, listed
 in Table 1, together with their internal codes and short names.
-Method 5 (rfio) is provided for fast access when security is not an issue.
+Method 5 (uidgid) is provided for fast access when security is not an issue.
 Method 0 is 'secured' by using a session public key, automatically
-generated, which allows to avoid direct exchange of passwords; since this
-may slow down the process, it can be switched of if not needed.
+generated, which allows to avoid direct exchange of passwords.
 
    Table 1: authentication methods available
-  +-------------------------------------------------------------------------+
-  |   Method                |  code  |  short name  |  in .rootrc  | Secure |
-  |-------------------------------------------------------------------------|
-  |   (user,password)       |   0    |  usrpwd      |  UsrPwd      | Yes/No |
-  |   (user,password) SRP   |   1    |  srp         |  SRP         |  Yes   |
-  |    Kerberos V           |   2    |  krb5        |  Krb5        |  Yes   |
-  |   Globus GSSAPI         |   3    |  globus      |  Globus      |  Yes   |
-  |   SSH                   |   4    |  ssh         |  SSH         |  Yes   |
-  |   (uid,gid)             |   5    |  uidgid      |  UidGid      |  No    |
-  +-------------------------------------------------------------------------+
+ +---------------------------------------------------------------------+
+ | Method              | code | short name | in .rootrc | Secure | Sfx |
+ |---------------------------------------------------------------------|
+ | (user,password)     |  0   | usrpwd     | UsrPwd     | Yes/No | up  |
+ | (user,password) SRP |  1   | srp        | SRP        |  Yes   | s   |
+ |  Kerberos V         |  2   | krb5       | Krb5       |  Yes   | k   |
+ | Globus GSSAPI       |  3   | globus     | Globus     |  Yes   | g   |
+ | SSH                 |  4   | ssh        | SSH        |  Yes   | h   |
+ | (uid,gid)           |  5   | uidgid     | UidGid     |  No    | ug  |
+ +---------------------------------------------------------------------+
 
-A specific method can be requested via the .rootrc family files (in order of
-priority $HOME/.rootrc, /etc/root/system.rootrc and
-$ROOTSYS/etc/system.rootrc), the file $HOME/.rootauthrc (superseded by the
-variable ROOTAUTHRC, if defined), or during the root session as explained
-below.
+By default method 0 (UsrPwd) is used. A specific method can be forced by 
+adding the suffix shown in the table (column Sfx) to the specified protocol:
+for example
+
+  TFile *f = TFile::Open("roots://host.doma.in/~fserv/TheFile.root","read")
+
+requires the use of the SRP method, and
+
+  gROOT->Proof("proofk://lxplus079.cern.ch")
+
+asks for Kerberos authentication in starting a proof session on node 
+lxplus079.cern.ch.
+
+Defaults can be changed on {host, user} base via the file $HOME/.rootauthrc;
+the header of the file $ROOTSYS/etc/system.rootauthrc, automatically generated
+upon configuration with system defaults based on the compilation options,
+contains the explanation of the syntax for the available directives and
+examples of use.
+Defaults specified by directives in the .rootrc family files (in order of 
+priority: $HOME/.rootrc, /etc/root/system.rootrc and $ROOTSYS/etc/system.rootrc)
+are still considered for backward compatibility but with the lowest priority.
+It is also possible to specify authentication directives interactively 
+as explained below.
 
 A test macro TestAuth.C is provided under the tutorials directory. Its use
 is explained at the end of this file.
-
 
 Controlling access
 ==================
@@ -63,7 +79,7 @@ Slave/Data_Server authentication. For slaves, the list of methods to be tried
 is specified in the proof.conf file as a list of methods short names. However,
 before build the corresponding entry in THostAuth (see below) TProofServ checks
 that the method can be applied, i.e. that there exist valid credentials.
-The way the latters are transmitted depends on the method and on the
+The way the latter are transmitted depends on the method and on the
 Client/Master authentication method.
 
  * UsrPwd: to authenticate 'usrpwd' to slaves, the master needs the relevant
@@ -74,20 +90,16 @@ Client/Master authentication method.
 
  * SRP:    to authenticate 'SRP' to slaves, the master needs the relevant entry
            in the .netrc or .rootnetrc files; the syntax is the same as for
-           'clear' authentication with the keyword 'secure' at the place of
+           'usrpwd' authentication with the keyword 'secure' at the place of
            'machine'. However, if the client/master authentication was also
            'SRP', the master can receive the password from the client; the
            password is sent encrypted with the internal RSA key generated for
            the session. To use this option, set 'Proofd.SendSRPPwd 1' in your
            .rootrc (default is 0).
 
- * Krb5    to authenticate 'Kerberos' to slaves, the master needs the Kerberos
-           tokens; these must be initialized by hand on the master, since for
-           the time being, ticket forwarding has not been implemented.
-
- * Globus  to authenticate 'Globus' to slaves, the master needs globus
+ * Krb5/Globus  to authenticate Krb5/Globus to slaves, the master needs globus
            credentials; this is possible (and automatic) only if the
-           client/master authentication was also 'globus'
+           client/master authentication was also Krb5/Globus.
 
  * SSH     to authenticate 'SSH' to slaves, the master needs the relevant
            private key files in $HOME/.ssh (on the master).
@@ -95,14 +107,14 @@ Client/Master authentication method.
  * UidGid  to authenticate 'uidgid' to slaves, the user must have the same
            (uid,gid) on master and slaves.
 
-Negotiation is active also between master and slaves, so may be a good habit
-to ask for 'uidgid' first to accelerate as possible the authentication process.
+Negotiation is active also between master and slaves, so asking for 'uidgid'
+first may accelerate the authentication process if the server accepts it.
 
-The method actually used is listed by gProof->Print().
+The method actually used is listed by gProof->Print("a").
 
 If the slaves need to access data servers which are not part of the proof
 cluster, the login info vis-a-vis of these may be specified with the proofserv
-card in the .rootauthrc files (see below and etc/example.rootauthrc for
+card in the .rootauthrc files (see below and etc/system.rootauthrc for
 details); the collected information is then transmitted to all the active
 slaves upon creation.
 
@@ -116,12 +128,13 @@ directives are the following:
 
 * General switchings
 
-   Rootd.Authentication:    <code> Proofd.Authentication   <code>
+   Rootd.Authentication:    <code> 
+   Proofd.Authentication   <code>
 
   These variables specify the default method to be attempted for remote
   authentication for rootd and proofd respectively; <code> is the internal code
   given in Table 1; these directives supersede the default ('ssh' for normal
-  users and 'clear' for anonymous users).
+  users and 'usrpwd' for anonymous users).
 
 * The <method>.Login directives specify the default login for the method:
 
@@ -157,14 +170,22 @@ directives are the following:
   For Krb5 it is implemented but switched OFF by default, since it does not improve
   on authentication time.
 
-  UsrPwd.ReUse:  yes
-  SRP.ReUse:     1
-  Krb5.ReUse:    0
-  Globus.ReUse:  yes
-  SSH.ReUse:     1
+  UsrPwd.ReUse   yes
+  SRP.ReUse      1
+  Krb5.ReUse     0
+  Globus.ReUse   yes
+  SSH.ReUse      1
 
   NB: unless 'UsrPwd.Crypt 0' (see below), for UsrPwd the password is always sent
       encrypted with the session RSA key, even if UsrPwd.ReUse is OFF.
+
+* The <method>.Valid directives specify the duration validity of the security
+  context for methods UsrPwd, SRP and SSH; values are passed in the form 
+  <hours>:<min>, the default being 24:00 .
+
+  UsrPwd.Valid  16:45
+  SRP.Valid     13:00
+  SSH.Valid      0:05
 
 * Other directives
 
@@ -197,7 +218,7 @@ directives are the following:
 ===========
 
 The .rootauthrc file allow to specify host and user specific instructions; all
-the possibilities are explained in etc/example.rootauthrc. The information read
+the possibilities are explained in etc/system.rootauthrc. The information read
 is used to instantiate THostAuth objects; these can be modified during the root
 session as explained in the next session.
 
@@ -223,41 +244,99 @@ The available methods are listed in order of preference: the first one is the
 one preferred, the others are tried in turn upon failure of the previous one,
 and if accepted by the remote daemon (see Negotiation below).
 
-THostAuth objects are instantiated by TAuthenticate upon creation based on the
-information found in the files mentioned above. A set of methods are available
-in the TAuthenticate and THostAuth classes to display/modify/create THostAuth
-classes:
+THostAuth objects are instantiated by TAuthenticate at first call using 
+the information found in $HOME/.rootauthrc or $ROOTSYS/etc/system.rootauthrc.
+The list of THostAuth is refreshed if any of the relevant file has changed
+since last TAuthenticate call, so the best way to change authentication
+directives during an interactive session is to edit the $HOME/.rootauthrc. 
+Nonetheless, a set of methods are available in the TAuthenticate and THostAuth
+classes to display/modify/create THostAuth interactively. 
 
- * void TAuthenticate::PrintHostAuth()
+ * void TAuthenticate::Show(<opt>)
 
-   Prints the content of the instantiated THostAuth objects
+   Prints information about authentication environment:
+
+      <opt> = "s" list of active security context (default)
+              "h" the content of the instantiated THostAuth objects in
+                  standard list
+              "p" the content of the instantiated THostAuth objects in
+                  the proof list
 
    Example:
 
-   root [1] TAuthenticate::PrintHostAuth()
-   Info in <THostAuth::Print>: +------------------------------------------------------------------+
-   Info in <THostAuth::Print>: + Host:pcepsft43.cern.ch - User:ganis - # of available methods:5
-   Info in <THostAuth::Print>: + Method: 3   Details:pt:no cd:~/.globus cf:usercert.pem kf:userkey.pem ad:certificates
-   Info in <THostAuth::Print>: + Method: 4   Details:pt:no ru:1 us:ganis
-   Info in <THostAuth::Print>: + Method: 0   Details:pt:no us:ganis
-   Info in <THostAuth::Print>: + Method: 1   Details:pt:no ru:1 us:ganis
-   Info in <THostAuth::Print>: + Method: 5   Details:pt:yes us:ganis
-   Info in <THostAuth::Print>: +------------------------------------------------------------------+
-   Info in <THostAuth::PrintEstablished>: +------------------------------------------------------------------+
-   Info in <THostAuth::PrintEstablished>: + Host:pcepsft43.cern.ch - Number of Established Authentications: 1
-   Info in <TAuthDetails::PrintEstblshd>: + Method:1 OffSet:278 Login:ganis Prompt:0 ReUse:1
-   Info in <TAuthDetails::PrintEstblshd>: +   Details:pt:0 ru:1 us:ganis
-   Info in <THostAuth::PrintEstablished>: +------------------------------------------------------------------+
-   root [2]
+root [6] TAuthenticate::Show()
+Info in <TSecContext::Print>: +------------------------------------------------------+
+Info in <TSecContext::Print>: + Host:pceple19.cern.ch Method:0 (UsrPwd) User:'ganis'
+Info in <TSecContext::Print>: +         OffSet:0 Details: 'pt:0 ru:1 cp:1 us:ganis'
+Info in <TSecContext::Print>: +         Expiration time: Sat Jan 10 13:18:41 2004
+Info in <TSecContext::Print>: +------------------------------------------------------+
+
+
+root [7] TAuthenticate::Show("h")
+Info in <::Print>:  +--------------------------- BEGIN --------------------------------+
+Info in <::Print>:  +                                                                  +
+Info in <::Print>:  + List fgAuthInfo has    5 members                                 +
+Info in <::Print>:  +                                                                  +
+Info in <::Print>:  +------------------------------------------------------------------+
+Info in <THostAuth::Print>:  +------------------------------------------------------------------+
+Info in <THostAuth::Print>:  + Host:default - User:* - # of available methods:6
+Info in <THostAuth::Print>:  + Method: 0 (UsrPwd) Ok:0 Ko:0 Dets:pt:no ru:yes cp:yes us:
+Info in <THostAuth::Print>:  + Method: 4 (SSH) Ok:0 Ko:0 Dets:pt:no ru:yes us:
+Info in <THostAuth::Print>:  + Method: 1 (SRP) Ok:0 Ko:0 Dets:pt:no ru:no us:
+Info in <THostAuth::Print>:  + Method: 2 (Krb5) Ok:0 Ko:0 Dets:pt:no ru:no us:
+Info in <THostAuth::Print>:  + Method: 3 (Globus) Ok:0 Ko:0 Dets:pt:no ru:yes
+Info in <THostAuth::Print>:  + Method: 5 (UidGid) Ok:0 Ko:0 Dets:pt:no us:
+Info in <THostAuth::Print>:  +------------------------------------------------------------------+
+Info in <THostAuth::PrintEstablished>: +------------------------------------------------------------------------------+
+Info in <THostAuth::PrintEstablished>: + Host:default - Number of active sec contexts: 0
+Info in <THostAuth::PrintEstablished>: +------------------------------------------------------------------------------+
+Info in <THostAuth::Print>:  +------------------------------------------------------------------+
+Info in <THostAuth::Print>:  + Host:pcep*.cern.ch - User:* - # of available methods:2
+Info in <THostAuth::Print>:  + Method: 0 (UsrPwd) Ok:1 Ko:0 Dets:pt:no ru:1 us:ganis
+Info in <THostAuth::Print>:  + Method: 1 (SRP) Ok:1 Ko:0 Dets:pt:yes ru:no us:ganis
+Info in <THostAuth::Print>:  +------------------------------------------------------------------+
+Info in <THostAuth::PrintEstablished>: +------------------------------------------------------------------------------+
+Info in <THostAuth::PrintEstablished>: + Host:pcep*.cern.ch - Number of active sec contexts: 1
+Info in <TSecContext::PrintEstblshed>: + 1) h:pceple19.cern.ch met:0 (UsrPwd) us:'ganis'
+Info in <TSecContext::PrintEstblshed>: +    offset:0 det: 'pt:0 ru:1 cp:1 us:ganis'
+Info in <TSecContext::PrintEstblshed>: +    expiring: Sat Jan 10 13:18:41 2004
+Info in <THostAuth::PrintEstablished>: +------------------------------------------------------------------------------+
+Info in <THostAuth::Print>:  +------------------------------------------------------------------+
+Info in <THostAuth::Print>:  + Host:lxplus*.cern.ch - User:* - # of available methods:2
+Info in <THostAuth::Print>:  + Method: 4 (SSH) Ok:0 Ko:0 Dets:pt:no ru:1 us:ganis
+Info in <THostAuth::Print>:  + Method: 1 (SRP) Ok:0 Ko:0 Dets:pt:no ru:1 us:ganis
+Info in <THostAuth::Print>:  +------------------------------------------------------------------+
+Info in <THostAuth::PrintEstablished>: +------------------------------------------------------------------------------+
+Info in <THostAuth::PrintEstablished>: + Host:lxplus*.cern.ch - Number of active sec contexts: 0
+Info in <THostAuth::PrintEstablished>: +------------------------------------------------------------------------------+
+Info in <::Print>:  +---------------------------- END ---------------------------------+
 
    The method THostAuth::PrintEstablished is also called, displaying the
-   relevant info about successful authentications saved in TAuthDetails (see
-   below for details about TAuthDetails).
+   relevant info about the established security context(s) saved in TSecContext.
 
- * THostAuth *TAuthenticate::GetHostAuth("<host_fqdn>","<user>")
+root [8] TAuthenticate::Show("p")
+Info in <::Print>:  +--------------------------- BEGIN --------------------------------+
+Info in <::Print>:  +                                                                  +
+Info in <::Print>:  + List fgProofAuthInfo has    1 members                            +
+Info in <::Print>:  +                                                                  +
+Info in <::Print>:  +------------------------------------------------------------------+
+Info in <THostAuth::Print>:  +------------------------------------------------------------------+
+Info in <THostAuth::Print>:  + Host:lxplus*.cern.ch - User:ganis - # of available methods:2
+Info in <THostAuth::Print>:  + Method: 1 (SRP) Ok:0 Ko:0 Dets:pt:no ru:1 us:ganis
+Info in <THostAuth::Print>:  + Method: 4 (SSH) Ok:0 Ko:0 Dets:pt:no ru:1 us:ganis
+Info in <THostAuth::Print>:  +------------------------------------------------------------------+
+Info in <::Print>:  +---------------------------- END ---------------------------------+
+
+  This is the list build following the 'proofserv' directives in .rootauthrc
+
+ * THostAuth *TAuthenticate::GetHostAuth(<host_fqdn>,<user>,<opt>,<kExact>);
 
    Returns a pointer to the THostAuth object pertaining to (host,user) if it
-   exist, 0 otherwise.
+   exist, 0 otherwise. If <opt>="R" (default) the search is performed in the 
+   standard list, if <opt>="P" in the proof list. The last argument <kExact> 
+   is a pointer to an integer: if defined (.ne. 0) the pointed location is 
+   filled with 1 if the match is exact, with 0 if an matching entry with wild
+   cards was found.
 
    Example:
 
@@ -268,11 +347,6 @@ classes:
    root [5] printf("ha: 0x%x\n",(int)ha);
    ha: 0x0
    root [6]
-
- * void TAuthenticate::ReadAuthRc("<host_fqdn>","<user>")
-
-   Loads information about (host,user) from .authrootrc or from the defaults in
-   .rootrc
 
  * void TAuthenticate::RemoveHostAuth(THostAuth *ha)
 
@@ -285,16 +359,16 @@ classes:
 
    Example:
 
-   root [7] THostAuth *ha = TAuthenticate::GetHostAuth("pcepsft43.cern.ch","ganis")
-   root [8] ha->Print()
-   Info in <THostAuth::Print>: +------------------------------------------------------------------+
-   Info in <THostAuth::Print>: + Host:pcepsft43.cern.ch - User:ganis - # of available methods:5
-   Info in <THostAuth::Print>: + Method: 3   Details:pt:no cd:~/.globus cf:usercert.pem kf:userkey.pem ad:certificates
-   Info in <THostAuth::Print>: + Method: 4   Details:pt:no ru:1 us:ganis
-   Info in <THostAuth::Print>: + Method: 1   Details:pt:no ru:1 us:ganis
-   Info in <THostAuth::Print>: + Method: 5   Details:pt:yes us:ganis
-   Info in <THostAuth::Print>: +------------------------------------------------------------------+
-   root [9]
+root [10] ha->Print()
+Info in <THostAuth::Print>:  +------------------------------------------------------------------+
+Info in <THostAuth::Print>:  + Host:pcep*.cern.ch - User:* - # of available methods:2
+Info in <THostAuth::Print>:  + Method: 0 (UsrPwd) Ok:1 Ko:0 Dets:pt:no ru:1 us:ganis
+Info in <THostAuth::Print>:  + Method: 1 (SRP) Ok:1 Ko:0 Dets:pt:yes ru:no us:ganis
+Info in <THostAuth::Print>:  +------------------------------------------------------------------+
+
+   The statistics for successful or unsuccessful use of the indicated methods
+   are shown after "Ok:" and "Ko:", respectively.
+
 
  * void THostAuth::AddMethod(<code>,<login_inf>)
 
@@ -367,7 +441,7 @@ classes:
    Info in <THostAuth::Print>: +------------------------------------------------------------------+
    root [15]
 
- * void THostAuth::SetFirst(<code>,<login_inf>)
+ * void THostAuth::AddFirst(<code>,<login_inf>)
 
    Set method with internal code <code> as the preferred one, and changes the
    login information to <login_inf>. If it does not exist, add a new method in
@@ -378,27 +452,40 @@ classes:
    Reorder the list of the available methods in such a way that the first nmet
    methods are the ones listed in meths[nmet].
 
+ * Bool_t  THostAuth::IsActive() const { return fActive; }
 
-TAuthDetails
+   Indicates if this THostAuth instantiation is active
+
+ * void    THostAuth::DeActivate() { fActive = kFALSE; }
+
+   Sets this THostAuth instantiation inactive
+
+ * void    THostAuth::Activate() { fActive = kTRUE; }
+
+   Sets this THostAuth instantiation active
+
+ * void    THostAuth::Reset();
+
+   Resets content of this THostAuth instantiation
+
+TSecContext
 ============
 
-The class TAuthDetails contains the relevant details about a successful
-authentication to be used to speed up access to the same (host,user) entity
-during the same session. Each THostAuth contains a list of TAuthDetails objects
-pertaining to {host,user)
-
+The class TSecContext contains the relevant details about an established security
+context, typically needed for re-usage of the context.
 
 TestAuth.C
 ==========
 
 This macro is provided to test the authentication methods available.
 The macro is located under $ROOTSYS/tutorials.
-Before executing it, start a rootd daemon on a separate window
+Before executing it, start a rootd daemon in the background or, to get 
+some debug printouts, on a separate window with 
 
   rootd -d 3 -f
 
-The "-d 3" option allows to get some debugging info, useful in the
-case something goes wrong.
+Remember to add "-p <port>" if the default port (1094) cannot be used
+for some reason.
 
 Then run
 
@@ -425,14 +512,14 @@ The macro assumes rootd accepting connections on port 1094; if this
 is not the case you can pass the port number as the first argument to
 the macro.
 
-The macro assumes hat you are trying to login as yourself to rootd,
+The macro assumes that you are trying to login as yourself to rootd,
 ie with the username your are logged in. You may change this passing
 a different username "newuser" as second argument. In this case you
 have to start rootd from the "newuser" account or as supersuser,
-to be avoid access problems. Also, for SSH, make sure that "newuser"
+to avoid access problems. Also, for SSH, make sure that "newuser"
 can execute $ROOTSYS/bin/ssh2rpd.
 
-The macro assumes that the kerberos principal is in the form
+The macro assumes that the Kerberos principal is in the form
 
      <current_user>@<DEFAULT_REALM>
 
@@ -440,7 +527,7 @@ where <DEFAULT_REALM> is searched for in the Kerberos conf file
 /etc/krb5.conf (or $KRB5_CONFIG). If the principal for the current
 user is different, you have to pass it as third argument to TestAuth.C.
 
-Finally, for Globus, if the certicate files and directories are not
+Finally, for Globus, if the certificate files and directories are not
 standard, you should pass the ones to be used as fourth argument, the
 syntax being the same as for $HOME/.rootauthrc .
 
@@ -459,3 +546,6 @@ This is a summary of the arguments to TestAuth.C:
    <globus_det>    = details for the globus authentication
                      ( default: ad:certificates cd:$HOME/.globus
                                 cf:usercert.pem kf:userkey.pem )
+
+--------------------------------------------------------------------------------------
+Last update: January 9, 2004

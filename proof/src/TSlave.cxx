@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.21 2003/11/26 10:33:08 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.22 2003/11/26 17:11:37 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -22,19 +22,17 @@
 
 #include "TSlave.h"
 #include "TProof.h"
-#include "TSocket.h"
 #include "TSystem.h"
 #include "TEnv.h"
 #include "TROOT.h"
-#include "TAuthenticate.h"
+#include "TUrl.h"
 #include "TMessage.h"
-#include "THostAuth.h"
 
 ClassImp(TSlave)
 
 //______________________________________________________________________________
 TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
-               const char *image, Int_t security, TProof *proof)
+               const char *image, TProof *proof)
 {
    // Create a PROOF slave object. Called via the TProof ctor.
 
@@ -44,14 +42,30 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
    fWorkDir  = kPROOF_WorkDir;
    fOrdinal  = ord;
    fPerfIdx  = perf;
-   fSecurity = security;
+   fSecContext = 0;
    fProof    = proof;
    fSocket   = 0;
    fInput    = 0;
 
-   // Open connection to remote PROOF slave server.
-   fSocket = new TSocket(host, port, 65536);  // make tcpwindosize configurable
-   if (fSocket->IsValid()) {
+   // The url contains information about the server type: make sure 
+   // it is 'proofd' or alike  
+   TString hurl(proof->GetUrlProt());
+   hurl.Insert(5,'d');
+   // Server expects additional message before protocol
+   // We include it in the protocol
+   TString Iam;
+   if (proof->IsMaster()) {
+      Iam = "Master";  
+      hurl += TString(Form("://%s:%d/?M",host,port));
+   } else {
+      Iam = "Local Client";  
+      hurl += TString(Form("://%s:%d/?C",host,port));
+   }
+
+   // Open authenticated connection to remote PROOF slave server.
+   Int_t wsize = 65536;
+   fSocket = TSocket::CreateAuthSocket(hurl,0,wsize);
+   if (fSocket && fSocket->IsValid()) {
 
       // Remove socket from global TROOT socket list. Only the TProof object,
       // representing all slave sockets, will be added to this list. This will
@@ -59,127 +73,23 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
       // root session terminates.
       gROOT->GetListOfSockets()->Remove(fSocket);
 
-      // Tell remote server to act as master or slave server
-      if (proof->IsMaster())
-         fSocket->Send("slave");
-      else
-         fSocket->Send("master");
+      // Fill some useful info
+      fSecContext        = fSocket->GetSecContext();
+      fUser              = fSecContext->GetUser();
+      proof->fSecContext = fSecContext;
+      proof->fUser       = fUser;
+      Int_t ProofdProto  = fSocket->GetRemoteProtocol();
 
-      // Inquire remote protocol
-      fSocket->Send(kROOTD_PROTOCOL);
-      Int_t    ProofdProto, what;
-      fSocket->Recv(ProofdProto, what);
-      if (ProofdProto <= 0) {
-         Warning("TSlave",
-                 "got negative protocol from proofd (%d) ... may indicate problems",
-                  ProofdProto);
-         ProofdProto = 7;
-         Warning("TSlave", "continuing with ProofdProto: %d)",ProofdProto);
+      PDB(kGlobal,3) {
+         fSocket->GetSecContext()->Print("e");
+         Info("TSlave", 
+              "%s: fUser is .... %s", Iam.Data(), proof->fUser.Data());
       }
 
-      TAuthenticate *auth;
-      auth = new TAuthenticate(fSocket, host,
-                               Form("%s:%d", proof->GetUrlProt(),ProofdProto), "");
-
-      // If trasmission of the SRP password is requested make sure
-      // that ReUse is switched on to get and send also the Public Key
-      // For masters this is already checked in TProofServ
-      if (!fProof->IsMaster()) {
-         if (gEnv->GetValue("Proofd.SendSRPPwd",0)) {
-            TString SRPDets(auth->GetHostAuth()->GetDetails(1));
-            Int_t pos = SRPDets.Index("ru:0");
-            if (pos > -1) {
-               SRPDets.ReplaceAll("ru:0",4,"ru:1",4);
-               auth->GetHostAuth()->SetDetails(1,SRPDets);
-            } else {
-               TSubString ss = SRPDets.SubString("ru:no",TString::kIgnoreCase);
-               if (!ss.IsNull()) {
-                  SRPDets.ReplaceAll(ss.Data(),5,"ru:1",4);
-                  auth->GetHostAuth()->SetDetails(1,SRPDets);
-               }
-            }
-         }
-      }
-
-      // Authenticate to proofd...
-      if (!proof->IsMaster()) {
-
-         // we are client... need full authentication procedure, either:
-         // - via TAuthenticate::SetGlobalUser()/SetGlobalPasswd())
-         // - ~/.rootnetrc or ~/.netrc
-         // - interactive
-         if (!auth->Authenticate()) {
-            Error("TSlave", "authentication failed for %s@%s",
-                            auth->GetUser(), host);
-            delete auth;
-            // This is to terminate properly remote proofd in case of failure
-            fSocket->Send(Form("%d %s", gSystem->GetPid(), host), kROOTD_CLEANUP);
-            SafeDelete(fSocket);
-            return;
-         }
-         proof->fUser     = auth->GetRemoteLogin(auth->GetHostAuth(),
-                                                 auth->GetSecurity(),auth->GetDetails());
-         proof->fPasswd   = TAuthenticate::GetGlobalPasswd();
-         proof->fPwHash   = TAuthenticate::GetGlobalPwHash();
-         proof->fSRPPwd   = TAuthenticate::GetGlobalSRPPwd();
-         proof->fSecurity = auth->GetSecurity();
-         fUser            = proof->fUser;
-         fSecurity        = proof->fSecurity;
-
-         PDB(kGlobal,3) {
-            auth->GetHostAuth()->PrintEstablished();
-            Info("TSlave", "Remote Client: fUser is .... %s", proof->fUser.Data());
-         }
-
-      } else {
-
-         // we are a master server... authenticate either:
-         // - stored user/passwd (coming from client)
-         // - ~/.rootnetrc or ~/.netrc
-         // - but NOT interactive (obviously)
-
-         // check for .rootnetrc
-         // if not in .rootnetrc and SRP -> fail
-         // if not in .rootnetrc and normal -> set global user/passwd
-         // Checks for (user,passwd) are done inside TAuthenticate now (4/2003)
-
-         if (!auth->Authenticate()) {
-            Error("TSlave", "authentication failed for %s@%s",
-                            auth->GetUser(), host);
-            delete auth;
-            // This is to terminate properly remote proofd in case of failure
-            fSocket->Send(Form("%d %s", gSystem->GetPid(), host), kROOTD_CLEANUP);
-            SafeDelete(fSocket);
-            return;
-         }
-
-         proof->fUser     = auth->GetRemoteLogin(auth->GetHostAuth(),
-                                                 auth->GetSecurity(),auth->GetDetails());
-         proof->fPasswd   = auth->GetPasswd();
-         proof->fPwHash   = auth->GetPwHash();
-         proof->fSRPPwd   = auth->GetSRPPwd();
-         proof->fSecurity = auth->GetSecurity();
-         fUser            = proof->fUser;
-         fSecurity        = proof->fSecurity;
-
-         PDB(kGlobal,3) {
-            auth->GetHostAuth()->PrintEstablished();
-            Info("TSlave", "Master Server: fUser is .... %s", fUser.Data());
-         }
-      }
-
-      // fSecurity is the method successfully tried ...
-      fSecurity = auth->GetSecurity();
-
-      char *Sdumm = 0;
-      TString Details = auth->GetDetails();
-      Int_t RemoteOffSet = auth->GetOffSet(auth,fSecurity,Details,&Sdumm);
-      if (Sdumm) delete[] Sdumm;
-
-      delete auth;
+      TString Details = fSocket->GetSecContext()->GetDetails();
+      Int_t RemoteOffSet = fSocket->GetSecContext()->GetOffSet();
 
       char buf[512];
-
       fSocket->Recv(buf, sizeof(buf));
 
       if (strcmp(buf, "Okay")) {
@@ -211,43 +121,49 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          Bool_t  srppwd = kFALSE;
          Bool_t  sndsrp = kFALSE;
 
+         TPwdCtx *pwdctx = 0;
+         if (fSecContext->IsA("UsrPwd") || fSecContext->IsA("SRP")) {
+            pwdctx = (TPwdCtx *)(fSecContext->GetContext());
+         }
+
+
          if (!fProof->IsMaster()) {
             if (gEnv->GetValue("Proofd.SendSRPPwd",0))
                if (RemoteOffSet > -1)
                   sndsrp = kTRUE;
          } else {
-            if (fProof->fSRPPwd && fProof->fPasswd != "")
-               if (RemoteOffSet > -1)
+            if (fSecContext->IsA("SRP") && pwdctx) {
+               if (pwdctx->GetPasswd() != "" && RemoteOffSet > -1)
                   sndsrp = kTRUE;
+            }
          }
 
-         if (fSecurity == TAuthenticate::kClear ||
-            (fSecurity == TAuthenticate::kSRP && sndsrp)) {
+         if (fSocket->GetSecContext()->IsA("UsrPwd") ||
+            (fSocket->GetSecContext()->IsA("SRP") && sndsrp)) {
 
             // Send offset to identify remotely the public part of RSA key
             fSocket->Send(RemoteOffSet,kROOTD_RSAKEY);
 
-            passwd = fProof->fPasswd;
-            pwhash = fProof->fPwHash;
-            srppwd = fProof->fSRPPwd;
+            if (pwdctx) {
+               passwd = pwdctx->GetPasswd();
+               pwhash = pwdctx->IsPwHash();
+            }
+            srppwd = fSecContext->IsA("SRP");
 
-            if (RemoteOffSet > -1) {
-
-               // Password should be encoded before sending
-               if (TAuthenticate::SecureSend(fSocket, 1, passwd) == -1) {
-                   Warning("TSlave",
-                      "problems secure-sending pass hash - may result in failures");
+            if (fSocket->SecureSend(passwd) == -1) {
+               if (RemoteOffSet > -1)
+                  Warning("TSlave","problems secure-sending pass hash %s",
+                          "- may result in failures");
+               // If non RSA encoding available try passwd inversion
+               if (fSocket->GetSecContext()->IsA("UsrPwd")) {
+                  for (int i = 0; i < passwd.Length(); i++) {
+                     char inv = ~passwd(i);
+                     passwd.Replace(i, 1, inv);
+                  }
+                  TMessage mess;
+                  mess << passwd;
+                  fSocket->Send(mess);
                }
-
-            } else if (fSecurity == TAuthenticate::kClear) {
-               // Non RSA encoding available: standard passwd inversion
-               for (int i = 0; i < passwd.Length(); i++) {
-                  char inv = ~passwd(i);
-                  passwd.Replace(i, 1, inv);
-               }
-               TMessage mess;
-               mess << passwd;
-               fSocket->Send(mess);
             }
 
          } else {
@@ -259,9 +175,9 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
 
          TMessage mess;
          if (!fProof->IsMaster())
-            mess << fProof->fUser << pwhash << srppwd << fProof->fConfFile;
+            mess << fUser << pwhash << srppwd << fProof->fConfFile;
          else
-            mess << fProof->fUser << pwhash << srppwd << fOrdinal;
+            mess << fUser << pwhash << srppwd << fOrdinal;
 
          fSocket->Send(mess);
 
@@ -270,10 +186,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
             // not in the proof cluster and to be propagated to slaves.
             // This is triggered by the 'proofserv <dserv1> <dserv2> ...'
             // card in .rootauthrc
-            if (!fProof->IsMaster())
-               SendHostAuth(this, 0);
-            else
-               SendHostAuth(this, 1);
+            fSocket->SendHostAuth();
          }
 
          // set some socket options
@@ -321,9 +234,8 @@ void TSlave::Print(Option_t *) const
    Printf("    Host name:               %s", GetName());
    Printf("    Port number:             %d", GetPort());
    Printf("    User:                    %s", GetUser());
-   Printf("    Authentication method:   %d (%s)", GetSecurity(),
-                                             TAuthenticate::GetAuthMethod(GetSecurity()));
-   Printf("    Slave protocol version:  %d", GetProtocol());
+   Printf("    Security context:        %s", fSecContext->AsString());
+   Printf("    Proofd protocol version: %d", fSocket->GetRemoteProtocol());
    Printf("    Image name:              %s", GetImage());
    Printf("    Working directory:       %s", GetWorkDir());
    Printf("    Performance index:       %d", GetPerfIdx());
@@ -342,211 +254,4 @@ void TSlave::SetInputHandler(TFileHandler *ih)
 
    fInput = ih;
    fInput->Add();
-}
-
-//______________________________________________________________________________
-Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
-{
-   // Sends the list of the relevant THostAuth objects to the master or
-   // to the active slaves.
-
-   int       retval = 0;
-   int       bsiz = 0;
-   char     *buf  = 0;
-   TList    *authInfo = 0;
-
-   // Get pointer to list with authentication info
-   authInfo = TAuthenticate::GetAuthInfo();
-
-   if (opt == 0) {
-      // We are a client notifying the Master for additional nodes to be
-      // considered (typically data servers not in the proof cluster ...).
-      // The list is specified in .rootauthrc (or ROOTAUTHRC) under the key
-      // 'proofserv'.
-      char *net;
-      if (gSystem->Getenv("ROOTAUTHRC")) {
-         net = (char *)gSystem->Getenv("ROOTAUTHRC");
-      } else {
-         net = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".rootauthrc");
-      }
-      PDB(kGlobal,3) Info("SendHostAuth","file: %s",net);
-
-      // Check if file can be read ...
-      //      if (gSystem->AccessPathName(net, kReadPermission)) { return 0; }
-
-      if (!gSystem->AccessPathName(net, kReadPermission)) {
-
-         // Open file
-         FILE *fd = fopen(net, "r");
-
-         // Scan it ...
-         char line[kMAXPATHLEN], host[kMAXPATHLEN], key[kMAXPATHLEN], rest[kMAXPATHLEN];
-         char *pnx = 0;
-         int  cont = 0;
-         while (fgets(line, sizeof(line), fd) != 0) {
-
-           // Skip comment lines
-           if (line[0] == '#') continue;
-           // Get rid of end of line '\n', if there ...
-           if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';
-           if (cont == 0) {
-              // scan line
-              int nw= sscanf(line, "%s %s", key, rest);
-              // no useful info provided for this line
-              if (nw < 2) continue;
-           }
-           // This is the list we are looking for ...
-           if (!strcmp(key, "proofserv") || cont == 1) {
-              PDB(kGlobal,3)
-                 Info("SendHostAuth","found proofserv: %s", rest);
-
-              if (cont == 0) {
-                 pnx = strstr(line, rest);
-              } else if (cont == 1) {
-                 pnx  = line;
-                 cont = 0;
-              }
-
-              while (pnx != 0 && cont == 0) {
-                 rest[0] = '\0';
-                 sscanf(pnx, "%s %s", host, rest);
-                 PDB(kGlobal,3)
-                    Info("SendHostAuth", "found host: %s %s (cont=%d)",
-                          host, rest, cont);
-
-                 // Check if a protocol is requested
-                 char *pd1 = 0, *pd2 = 0;
-                 char  meth[10] = { "" }, usr[256] = { "" };
-                 int   met = -1;
-                 pd1 = strchr(host,':');
-                 if (pd1 != 0) pd2 = strchr(pd1+1, ':');
-                 if (pd2 != 0) {
-                    strcpy(meth, pd2+1);
-                    if (strlen(meth) > 1) {
-                       // Method passed as string: translate it to number
-                       met = TAuthenticate::GetAuthMethodIdx(meth);
-                       if (met == -1)
-                          PDB(kGlobal,2)
-                             Info("SendHostAuth",
-                                  "unrecognized method (%s): ", meth);
-                    } else {
-                       met = atoi(meth);
-                    }
-                    int plen= (int)(pd2-host);
-                    host[plen]='\0';
-                 }
-                 if (pd1 != 0) {
-                    strcpy(usr, pd1+1);
-                    int plen = (int)(pd1-host);
-                    host[plen]='\0';
-                 }
-                 PDB(kGlobal,3)
-                    Info("SendHostAuth",
-                         "host user method: %s %s %d", host, usr, met);
-
-                 // Get methods from file .rootauthrc
-                 char **user; Int_t *nmeth,  *security[kMAXSEC]; char **details[kMAXSEC];
-                 user = new char*[1]; user[0] = StrDup(usr);
-                 Int_t Nuser =
-                    TAuthenticate::GetAuthMeth(host, "root", &user, &nmeth, security, details);
-                 // Now copy the info to send into buffer
-                 int ju = 0;
-                 for (ju = 0; ju < Nuser; ju++) {
-                    int i = 0;
-                    bsiz = strlen(host)+strlen(user[ju])+2+(nmeth[ju]+1)*3;
-                    int jm = -1;
-                    for (i = 0; i < nmeth[ju]; i++) {
-                       bsiz += strlen(details[i][ju])+1;
-                       if (security[i][ju] == met) jm = i;
-                    }
-                    bsiz += 20;
-                    if (jm == -1) {
-                       // Details for the method chosen were not found in the file
-                       // Get defaults ...
-                       char *newdet = TAuthenticate::GetDefaultDetails(met, 0, user[ju]);
-                       bsiz += strlen(newdet)+1;
-                       buf = new char[bsiz];
-                       sprintf(buf,"h:%s u:%s n:%d", host, user[ju], nmeth[ju]+1);
-                       sprintf(buf,"%s '%d %s' ", buf, met, newdet);
-                       for (i = 0; i < nmeth[ju]; i++) {
-                          sprintf(buf,"%s '%d %s' ", buf, security[i][ju], details[i][ju]);
-                       }
-                       delete [] newdet;
-                    } else {
-                       // Details for the method chosen were found in the file
-                       // Put them first ...
-                       buf = new char[bsiz];
-                       sprintf(buf,"h:%s u:%s n:%d", host, user[ju], nmeth[ju]);
-                       // First the one specified, if any
-                       for (i = 0; i < nmeth[ju]; i++) {
-                          if (security[i][ju] == met)
-                             sprintf(buf,"%s '%d %s' ", buf, security[i][ju], details[i][ju]);
-                       }
-                       for (i = 0; i < nmeth[ju]; i++) {
-                          if (security[i][ju] != met)
-                             sprintf(buf,"%s '%d %s' ", buf, security[i][ju], details[i][ju]);
-                       }
-                    }
-                    sl->GetSocket()->Send(buf, kPROOF_SENDHOSTAUTH);
-                    delete [] buf;
-                 }
-
-                 // Got to next, if any
-                 if (strlen(rest) > 0) {
-                    // Check if there is a continuation line
-                    if ((int)rest[0] == 92) cont = 1;
-                    pnx = strstr(pnx, rest);
-                 } else {
-                    pnx = 0;
-                 }
-              }
-           }
-        }
-
-        fclose(fd);
-
-      }
-      // End of transmission ...
-      sl->GetSocket()->Send("END", kPROOF_SENDHOSTAUTH);
-
-
-   } else if (opt == 1) {
-      // We are a Master notifying the Slaves for nodes to be considered
-      // This includes the other slaves and additional info received from the Client
-
-      PDB(kGlobal,3)
-         Info("SendHostAuth",
-              "Number of HostAuth instantiations in memory: %d",
-              authInfo->GetSize());
-
-      // Loop over list of auth info
-      if (authInfo->GetSize() > 0) {
-         TIter next(authInfo);
-         THostAuth *fHA;
-         while ((fHA = (THostAuth*) next())) {
-            PDB(kGlobal,3) fHA->Print();
-            // Now copy the info to send into buffer
-            int i = 0;
-            int nmeth = fHA->NumMethods();
-            bsiz = strlen(fHA->GetHost())+strlen(fHA->GetUser())+2+(nmeth+1)*3;
-            for (i = 0; i < nmeth; i++) {
-               bsiz += strlen(fHA->GetDetails(fHA->GetMethods(i)))+1;
-            }
-            bsiz += 20;
-            buf = new char[bsiz];
-            sprintf(buf,"h:%s u:%s n:%d",fHA->GetHost(),fHA->GetUser(),nmeth);
-            for (i = 0; i < nmeth; i++) {
-               sprintf(buf,"%s '%d %s' ", buf,
-                       fHA->GetMethods(i), fHA->GetDetails(fHA->GetMethods(i)));
-            }
-            sl->GetSocket()->Send(buf, kPROOF_SENDHOSTAUTH);
-            delete [] buf;
-         }
-      }
-
-      // End of transmission ...
-      sl->GetSocket()->Send("END", kPROOF_SENDHOSTAUTH);
-
-   }
-   return retval;
 }

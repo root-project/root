@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.6 2001/02/12 14:31:17 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.7 2004/01/28 10:00:52 rdm Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TPSocket.h"
+#include "TUrl.h"
 #include "TServerSocket.h"
 #include "TMonitor.h"
 #include "TSystem.h"
@@ -86,7 +87,8 @@ TPSocket::TPSocket(const char *host, const char *service, Int_t size,
 
 //______________________________________________________________________________
 TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
-                   Int_t tcpwindowsize) : TSocket(host, port)
+                   Int_t tcpwindowsize) 
+                  : TSocket(host, port, (Int_t)(size > 1 ? -1 : tcpwindowsize))
 {
    // Create a parallel socket. Connect to specified port # on the remote host.
    // Use tcpwindowsize to specify the size of the receive buffer, it has
@@ -97,8 +99,66 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
    // sockets list which will make sure that any open sockets are properly
    // closed on program termination.
 
-   fSize = size;
-   Init(tcpwindowsize);
+   // To avoid uninitialization pbs when Init is not called ...
+   fSockets        = 0;
+   fWriteMonitor   = 0;
+   fReadMonitor    = 0;
+   fWriteBytesLeft = 0;
+   fReadBytesLeft  = 0;
+   fWritePtr       = 0;
+   fReadPtr        = 0;
+
+   // Set to the real value only at end (except for old servers)
+   fSize           = 1;
+
+   // To control the flow
+   Bool_t valid = TSocket::IsValid();
+
+   // Check if we are calle from CreateAuthSocket
+   Bool_t authreq = kFALSE;
+   char *pauth = strstr(host,"?A"); 
+   if (pauth) {
+      authreq = kTRUE;
+      fRemoteProtocol= atoi(pauth+2);
+   }
+
+   // Perhaps we can use fServType here ... to be checked
+   Bool_t RootdSrv = (strstr(host,"rootd")) ? kTRUE : kFALSE;
+
+   // For older rootd servers, we need to open the parallel sockets
+   // before trying authentication ...
+   if (RootdSrv && fRemoteProtocol < 10) {
+      if (valid) {
+         fSize = size;
+         Init(tcpwindowsize);
+      }
+      valid = IsValid();
+   } else {
+      // For consistency at server side
+      SetOption(kNoDelay, 0);
+      TSocket::Send((Int_t)0, (Int_t)0);
+   }
+
+   // Try authentication , if required
+   if (authreq) {
+      if (valid) {
+         if (!Authenticate(TUrl(host).GetUser())) {
+            TSocket::Close();
+            valid = kFALSE;
+         }
+      }
+      // Reset url to the original state
+      *pauth = '\0';
+      SetUrl(host);
+   }
+   
+   // Open the sockets ...
+   if (!RootdSrv || fRemoteProtocol > 9) {
+      if (valid) {
+         fSize = size;
+         Init(tcpwindowsize);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -111,7 +171,8 @@ TPSocket::TPSocket(TSocket *pSockets[], Int_t size)
 
    // set socket options (no blocking and no delay)
    SetOption(kNoDelay, 1);
-   SetOption(kNoBlock, 1);
+   if (fSize > 1)
+      SetOption(kNoBlock, 1);
 
    fWriteMonitor   = new TMonitor;
    fReadMonitor    = new TMonitor;
@@ -157,11 +218,16 @@ void TPSocket::Close(Option_t *option)
    // for the parent of this process. Also called via the dtor (without
    // option "force", call explicitely Close("force") if this is desired).
 
-   if (!fSockets) return;
+   if (!IsValid())
+      return;
 
-   for (int i = 0; i < fSize; i++) {
-      if (fSockets[i]) fSockets[i]->Close(option);
-      delete fSockets[i];
+   if (fSize <= 1) {
+      TSocket::Close(option);
+   } else {
+      for (int i = 0; i < fSize; i++) {
+         fSockets[i]->Close(option);
+         delete fSockets[i];
+      }
    }
    delete [] fSockets;
    fSockets = 0;
@@ -173,6 +239,7 @@ void TPSocket::Close(Option_t *option)
 void TPSocket::Init(Int_t tcpwindowsize)
 {
    // Create a parallel socket to the specified host.
+   // If CheckServer = kTRUE, checks server version
 
    fSockets        = 0;
    fWriteMonitor   = 0;
@@ -185,26 +252,49 @@ void TPSocket::Init(Int_t tcpwindowsize)
    if (!TSocket::IsValid())
       return;
 
-   // create server that will be used to accept the parallel sockets from
-   // the remote host, use port=0 to scan for a free port
-   TServerSocket ss(0, kFALSE, fSize, tcpwindowsize);
+   Int_t i = 0;
+   // Check if single mode:
+   if (fSize <= 1) {
 
-   // send the local port number of the just created server socket and the
-   // number of desired parallel sockets
-   TSocket::Send(ss.GetLocalPort(), fSize);
+      fSize = 1;
 
-   fSockets = new TSocket*[fSize];
+      // set socket options (no blocking and no delay)
+      TSocket::SetOption(kNoDelay, 1);
 
-   // establish fSize parallel socket connections between client and server
-   int i;
-   for (i = 0; i < fSize; i++) {
-      fSockets[i] = ss.Accept();
-      gROOT->GetListOfSockets()->Remove(fSockets[i]);
+      // If yes, communicate this to server 
+      // (size = 0 for backward compatibility)
+      TSocket::Send((Int_t)0, (Int_t)0);
+
+      // Needs to fill additional private members
+      fSockets = new TSocket*[1];
+      fSockets[0]= (TSocket *)this;
+ 
+   } else {
+      // create server that will be used to accept the parallel sockets from
+      // the remote host, use port=0 to scan for a free port
+      TServerSocket ss(0, kFALSE, fSize, tcpwindowsize);
+      
+      // send the local port number of the just created server socket and the
+      // number of desired parallel sockets
+      TSocket::Send(ss.GetLocalPort(), fSize);
+
+      fSockets = new TSocket*[fSize];
+      
+      // establish fSize parallel socket connections between client and server
+      for (i = 0; i < fSize; i++) {
+         fSockets[i] = ss.Accept();
+         gROOT->GetListOfSockets()->Remove(fSockets[i]);
+      }
+      
+      // set socket options (no blocking and no delay)
+      SetOption(kNoDelay, 1);
+      SetOption(kNoBlock, 1);
+      
+      // Close original socket
+      gSystem->CloseConnection(fSocket, kFALSE);
+      gROOT->GetListOfSockets()->Remove(this);
+      fSocket = -1;
    }
-
-   // set socket options (no blocking and no delay)
-   SetOption(kNoDelay, 1);
-   SetOption(kNoBlock, 1);
 
    fWriteMonitor   = new TMonitor;
    fReadMonitor    = new TMonitor;
@@ -212,16 +302,14 @@ void TPSocket::Init(Int_t tcpwindowsize)
    fReadBytesLeft  = new Int_t[fSize];
    fWritePtr       = new char*[fSize];
    fReadPtr        = new char*[fSize];
-
+   
    for (i = 0; i < fSize; i++) {
       fWriteMonitor->Add(fSockets[i], TMonitor::kWrite);
       fReadMonitor->Add(fSockets[i], TMonitor::kRead);
    }
    fWriteMonitor->DeActivateAll();
    fReadMonitor->DeActivateAll();
-
-   TSocket::Close();
-
+   
    gROOT->GetListOfSockets()->Add(this);
 }
 
@@ -230,6 +318,9 @@ TInetAddress TPSocket::GetLocalInetAddress()
 {
    // Return internet address of local host to which the socket is bound.
    // In case of error TInetAddress::IsValid() returns kFALSE.
+
+   if (fSize<= 1)
+      return TSocket::GetLocalInetAddress();
 
    if (IsValid()) {
       if (fLocalAddress.GetPort() == -1)
@@ -240,6 +331,19 @@ TInetAddress TPSocket::GetLocalInetAddress()
 }
 
 //______________________________________________________________________________
+Int_t TPSocket::GetDescriptor() const
+{ 
+    // Return socket descriptor
+
+    if (fSize <= 1)
+       return TSocket::GetDescriptor();
+
+    return fSockets ? fSockets[0]->GetDescriptor() : -1;
+
+}
+
+
+//______________________________________________________________________________
 Int_t TPSocket::Send(const TMessage &mess)
 {
    // Send a TMessage object. Returns the number of bytes in the TMessage
@@ -248,7 +352,7 @@ Int_t TPSocket::Send(const TMessage &mess)
    // received an acknowledgement, making the sending process synchronous.
    // Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
 
-   if (!fSockets)
+   if (!fSockets || fSize <= 1)
       return TSocket::Send(mess);  // only the case when called via Init()
 
    if (mess.IsReading()) {
@@ -286,6 +390,9 @@ Int_t TPSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
 {
    // Send a raw buffer of specified length. Returns the number of bytes
    // send and -1 in case of error.
+
+   if (fSize == 1)
+      return TSocket::SendRaw(buffer,length,opt);
 
    if (!fSockets) return -1;
 
@@ -359,6 +466,9 @@ Int_t TPSocket::Recv(TMessage *&mess)
    // is closed) or -1 in case of error or -4 in case a non-blocking socket would
    // block (i.e. there is nothing to be read). In those case mess == 0.
 
+   if (fSize <= 1)
+      return TSocket::Recv(mess);
+
    if (!fSockets) {
       mess = 0;
       return -1;
@@ -399,6 +509,9 @@ Int_t TPSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
 {
    // Send a raw buffer of specified length. Returns the number of bytes
    // sent or -1 in case of error.
+
+   if (fSize <= 1)
+      return TSocket::RecvRaw(buffer,length,opt);
 
    if (!fSockets) return -1;
 
@@ -466,6 +579,9 @@ Int_t TPSocket::SetOption(ESockOptions opt, Int_t val)
 {
    // Set socket options.
 
+   if (fSize <= 1)
+      return TSocket::SetOption(opt,val);
+
    Int_t ret = 0;
    for (int i = 0; i < fSize; i++)
       ret = fSockets[i]->SetOption(opt, val);
@@ -476,6 +592,9 @@ Int_t TPSocket::SetOption(ESockOptions opt, Int_t val)
 Int_t TPSocket::GetOption(ESockOptions opt, Int_t &val)
 {
    // Get socket options. Returns -1 in case of error.
+
+   if (fSize <= 1)
+      return TSocket::GetOption(opt,val);
 
    Int_t ret = 0;
    for (int i = 0; i < fSize; i++)
@@ -488,6 +607,9 @@ Int_t TPSocket::GetErrorCode() const
 {
    // Returns error code. Meaning depends on context where it is called.
    // If no error condition returns 0 else a value < 0.
+
+   if (fSize <= 1)
+      return TSocket::GetErrorCode();
 
    return fSockets[0] ? fSockets[0]->GetErrorCode() : 0;
 }

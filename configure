@@ -466,6 +466,10 @@ RCONFIN=config/root-config.in
 RCONFOUT=bin/root-config
 ROOTRCIN=config/rootrc.in
 ROOTRCOUT=etc/system.rootrc
+ROOTAUTHRCIN=config/rootauthrc.in
+ROOTAUTHRCOUT=etc/system.rootauthrc
+ROOTDAEMONRCIN=config/rootdaemonrc.in
+ROOTDAEMONRCOUT=etc/system.rootdaemonrc
 MEMPROBEIN=config/memprobe.in
 MEMPROBEOUT=bin/memprobe
 MIMEUNIXIN=config/mimes.unix.in
@@ -665,7 +669,7 @@ fi
 ### echo %%% Some clean up
 #
 trap "rm -f Makefile.tmp config.tmp root-config.tmp rootrc.tmp \
-      memprobe.tmp; exit 1" 1 2 3 15
+      rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp; exit 1" 1 2 3 15
 
 ######################################################################
 #
@@ -795,6 +799,8 @@ if test "x$noact" = "xno"; then
     cp -f $CONFIN config.tmp
     cp -f $RCONFIN root-config.tmp
     cp -f $ROOTRCIN rootrc.tmp
+    cp -f $ROOTAUTHRCIN rootauthrc.tmp
+    cp -f $ROOTDAEMONRCIN rootdaemonrc.tmp
     cp -f $MEMPROBEIN memprobe.tmp
 fi
 
@@ -1502,6 +1508,7 @@ fi
 #
 glbextracflags=""
 glbpatchcflags=""
+haveglobus=""
 if test ! "x$enable_globus" = "xno"; then
    # Check if the GLOBUS_LOCATION variable is set
    if test "x$globusdir" = "x" ; then
@@ -1531,7 +1538,9 @@ if test "x$enable_globus" = "xyes"; then
     globuslibdir=""
     searchincdir=$globusdir/include
 
-    for i in "openssl/x509.h" "openssl/pem.h" "globus_gss_assist.h" ; do
+    inclist="openssl/x509.h openssl/pem.h globus_gss_assist.h globus_common.h"
+
+    for i in $inclist ; do
         check_header $i "" "$searchincdir/$flavour"
         if test "x$found_hdr" = "x" ; then
             globusinc=""
@@ -1672,6 +1681,8 @@ if test "x$enable_globus" = "xyes"; then
    if test "x$globusincdir" = "x" || test "x$globuslib" = "x"; then
       globuslib=""
       enable_globus="no"
+   else
+      haveglobus="globus"
    fi
 
 fi
@@ -1776,6 +1787,7 @@ fi
 # Check for SRP (libsrp.a)
 #
 srpextracflags=""
+havesrp=""
 if test ! "x$enable_srp" = "xno" ; then
     if test "x$srpincdir" = "x" && test ! "x$srpdir" = "x" ; then
 	srpincdir=$srpdir/include
@@ -1871,6 +1883,7 @@ if test ! "x$enable_srp" = "xno" ; then
 	srputillib=""
     else
         srpextracflags="-DR__SRP"
+        havesrp="srp"
     fi
 fi
 
@@ -1919,6 +1932,7 @@ fi
 # Check for krb5 (libkrb5.a)
 #
 krb5extracflags=""
+havekrb5=""
 if test ! "x$enable_krb5" = "xno" ; then
     enable_krb5="yes"
     if test "x$krb5incdir" = "x" && test ! "x$krb5dir" = "x" ; then
@@ -2016,6 +2030,7 @@ if test ! "x$enable_krb5" = "xno" ; then
         krb5libdir=""
     else
         krb5extracflags="-DR__KRB5"
+        havekrb5="krb5"
     fi
 fi
 
@@ -2481,6 +2496,28 @@ sed -e "s|@libdir@|$libdir|"               \
     -e "s|@iconpath@|$iconpath|"           \
    < rootrc.tmp > $ROOTRCOUT
 rm -f rootrc.tmp
+echo "done"
+
+#---------------------------------------------------------------------
+# etc/system.rootauthrc
+#
+message "Writing $ROOTAUTHRCOUT"
+sed -e "s|@havesrp@|$havesrp|"             \
+    -e "s|@havekrb5@|$havekrb5|"           \
+    -e "s|@haveglobus@|$haveglobus|"       \
+   < rootauthrc.tmp > $ROOTAUTHRCOUT
+rm -f rootauthrc.tmp
+echo "done"
+
+#---------------------------------------------------------------------
+# etc/system.rootdaemonrc
+#
+message "Writing $ROOTDAEMONRCOUT"
+sed -e "s|@havesrp@|$havesrp|"             \
+    -e "s|@havekrb5@|$havekrb5|"           \
+    -e "s|@haveglobus@|$haveglobus|"       \
+   < rootdaemonrc.tmp > $ROOTDAEMONRCOUT
+rm -f rootdaemonrc.tmp
 echo "done"
 
 #---------------------------------------------------------------------

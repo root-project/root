@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.24 2004/02/09 09:34:42 brun Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.25 2004/02/09 15:44:00 brun Exp $ */
 /* Author: */
 
 /*
@@ -796,7 +796,7 @@ Getlinem(int mode, const char *prompt)
         gl_extent = 0;          /* reset to full extent */
 
         if (Gl_in_key)
-            Gl_in_key(c); 
+            Gl_in_key(c);
 #ifndef WIN32
         if (isprint(c)) {
 #else
@@ -855,7 +855,7 @@ Getlinem(int mode, const char *prompt)
                  break;
             case '\001': gl_fixup(gl_prompt, -1, 0);          /* ^A */
                  break;
-            case '\002':                                      /* ^B */ 
+            case '\002':                                      /* ^B */
                  gl_fixup(gl_prompt, -1, gl_pos-1);
                  break;
             case '\004':                                      /* ^D */
@@ -1184,6 +1184,8 @@ static void setCursorPosition(int x)
 
    ci.dwCursorPosition.X = x;
    SetConsoleCursorPosition(out, ci.dwCursorPosition);
+#else
+   if (x) { }
 #endif
 }
 
@@ -1322,7 +1324,7 @@ gl_fixup(const char *prompt, int change, int cursor)
         }
     }
     gl_pos = cursor;
-    setCursorPosition(gl_pos + strlen(prompt) - gl_shift); 
+    setCursorPosition(gl_pos + strlen(prompt) - gl_shift);
 }
 
 static int

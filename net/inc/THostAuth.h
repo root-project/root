@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: THostAuth.h,v 1.2 2003/08/29 17:23:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: THostAuth.h,v 1.3 2003/11/07 03:29:41 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -32,50 +32,89 @@
 #ifndef ROOT_TList
 #include "TList.h"
 #endif
+#ifndef ROOT_TSecContext
+#include "TSecContext.h"
+#endif
+#ifndef ROOT_AuthConst
+#include "AuthConst.h"
+#endif
+
 
 
 class THostAuth : public TObject {
 
 private:
-   TString      fHost;         // Host
-   TString      fUser;         // Username
-   Int_t        fNumMethods;   // Number of AuthMethods
-   Int_t       *fMethods;      // AuthMethods
-   TString     *fDetails;      // AuthDetails
+   TString      fHost;             // Host
+   Char_t       fServer;           // Server (kSOCKD,kROOTD,kPROOFD)
+   TString      fUser;             // Username
+   Int_t        fNumMethods;       // Number of AuthMethods
+   Int_t        fMethods[kMAXSEC]; // AuthMethods
+   TString      fDetails[kMAXSEC]; // AuthDetails
+   Int_t        fSuccess[kMAXSEC]; // Statistics of successful attempts / per method
+   Int_t        fFailure[kMAXSEC]; // Statistics of failed attempts / per method
+   Bool_t       fActive;           // Flag used in cleaning/reset
 
-   TList       *fEstablished;  // List of (TAuthDetails) established authentications
+   TList       *fSecContexts;  // List of TSecContexts related to this THostAuth
 
+   void         Create(const char *host, const char *user, Int_t nmeth = 0,
+                       Int_t *authmeth = 0, char **details = 0);
 public:
 
-   THostAuth(const char *host = "localhost", const char *user = "",
+   THostAuth(const char *host, const char *user,
+             Int_t nmeth = 0, Int_t *authmeth = 0, char **details = 0);
+   THostAuth(const char *host, Int_t server, const char *user,
              Int_t nmeth = 0, Int_t *authmeth = 0, char **details = 0);
    THostAuth(const char *host, const char *user, Int_t authmeth,
              const char *details);
+   THostAuth(const char *host, Int_t server, const char *user, Int_t authmeth,
+             const char *details);
+   THostAuth(const char *asstring);
+   THostAuth(THostAuth &ha);
+
    virtual ~THostAuth();
 
+   void     AsString(TString &out);
+
    Int_t    NumMethods() const { return fNumMethods; }
-   Int_t    GetMethods(Int_t meth) const { return fMethods[meth]; }
-   Bool_t   HasMethod(Int_t level);
-   void     AddMethod(Int_t level, const char *details);
+   Int_t    GetMethod(Int_t idx) const { return fMethods[idx]; }
+   Bool_t   HasMethod(Int_t level, Int_t *pos = 0);
+   void     AddMethod(Int_t level, const char *details = 0);
    void     RemoveMethod(Int_t level);
    void     ReOrder(Int_t nmet, Int_t *fmet);
-   void     SetFirst(Int_t method);
-   void     SetFirst(Int_t level, const char *details);
+   void     Update(THostAuth *ha);
+   void     SetFirst(Int_t level);
+   void     AddFirst(Int_t level, const char *details = 0);
+   void     CountFailure(Int_t level);
+   void     CountSuccess(Int_t level);
+   Int_t    GetFailure(Int_t idx) const { return fFailure[idx]; }
+   Int_t    GetSuccess(Int_t idx) const { return fSuccess[idx]; }
+   Bool_t   IsActive() const { return fActive; }
+   void     DeActivate() { fActive = kFALSE; }
+   void     Activate() { fActive = kTRUE; }
+   void     Reset();
 
    const char *GetDetails(Int_t level);
+   const char *GetDetailsByIdx(Int_t idx) const { return fDetails[idx]; }
    void        SetDetails(Int_t level, const char *details);
 
    const char *GetHost() const { return fHost; }
+   Int_t    GetServer() const { return (Int_t)fServer; }
    const char *GetUser() const { return fUser; }
 
    void     SetHost(const char *host) { fHost = host; }
+   void     SetServer(Int_t server) { fServer = (Char_t)server; }
    void     SetUser(const char *user) { fUser = user; }
 
-   TList   *Established() const { return fEstablished; }
+   TList   *Established() const { return fSecContexts; }
+   void     SetEstablished(TList *nl) { fSecContexts = nl; }
 
-   void     Print(Option_t *option = "") const;
-   void     Print(const char *proc);
-   void     PrintEstablished();
+   virtual  void  Print(Option_t *option = "") const;
+   void     PrintEstablished() const;
+
+   TSecContext *CreateSecContext(const char *user, const char *host, Int_t meth, 
+                                 Int_t offset, const char *details,
+                                 const char *token, TDatime expdate = kROOTTZERO,
+                                 void *ctx = 0, Int_t key = 1);   
 
    ClassDef(THostAuth,0)  // Class providing host specific authentication information
 };

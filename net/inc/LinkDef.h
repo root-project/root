@@ -1,4 +1,4 @@
-/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.7 2003/08/29 10:41:28 rdm Exp $ */
+/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.8 2003/11/13 15:15:11 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -42,6 +42,7 @@
 #pragma link C++ class TGridResult;
 #pragma link C++ class TGridProof;
 #pragma link C++ class THostAuth;
-#pragma link C++ class TAuthDetails;
+#pragma link C++ class TSecContext;
+#pragma link C++ class TSecContextCleanup;
 
 #endif
