@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.27 2004/06/25 11:59:55 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.28 2004/08/03 16:01:18 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
 
@@ -448,7 +448,8 @@ void TGeoBBox::Paint(Option_t *option)
    if (!buff) return;
    
    buff->fType = TBuffer3D::kBRIK;
-   buff->fId   = this;
+   TObject *vol = gGeoManager->GetPaintVolume();
+   buff->fId   = (vol)?vol:this;
    
    // Fill gPad->fBuffer3D. Points coordinates are in Master space
    buff->fNbPnts = NbPnts;

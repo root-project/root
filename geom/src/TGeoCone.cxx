@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.29 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.30 2004/08/03 16:01:18 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -626,7 +626,8 @@ void TGeoCone::Paint(Option_t *option)
    if (!buff) return;
 
    buff->fType = TBuffer3D::kTUBE;
-   buff->fId   = this;
+   TObject *vol = gGeoManager->GetPaintVolume();
+   buff->fId   = (vol)?vol:this;
 
    // Fill gPad->fBuffer3D. Points coordinates are in Master space
    buff->fNbPnts = NbPnts;
@@ -1629,7 +1630,8 @@ void TGeoConeSeg::Paint(Option_t *option)
    if (!buff) return;
 
    buff->fType = TBuffer3D::kTUBS;
-   buff->fId   = this;
+   TObject *vol = gGeoManager->GetPaintVolume();
+   buff->fId   = (vol)?vol:this;
 
    // Fill gPad->fBuffer3D. Points coordinates are in Master space
    buff->fNbPnts = NbPnts;

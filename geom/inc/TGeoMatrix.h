@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.15 2004/09/03 16:08:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.16 2004/09/06 10:23:13 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -65,6 +65,7 @@ public :
    Bool_t               IsIdentity()    const {return !TestBit(kGeoGenTrans);}
    Bool_t               IsTranslation() const {return TestBit(kGeoTranslation);}
    Bool_t               IsRotation()    const {return TestBit(kGeoRotation);}
+   Bool_t               IsReflection()  const {return TestBit(kGeoReflection);}
    Bool_t               IsScale()       const {return TestBit(kGeoScale);}
    Bool_t               IsCombi()       const {return (TestBit(kGeoTranslation) 
                                                && TestBit(kGeoRotation));}
@@ -130,9 +131,9 @@ public :
    void                 Subtract(const TGeoTranslation *other);
    void                 SetTranslation(Double_t dx, Double_t dy, Double_t dz);
    void                 SetTranslation(const TGeoMatrix &other);
-   void                 SetDx(Double_t dx) {fTranslation[0]=dx;}
-   void                 SetDy(Double_t dy) {fTranslation[1]=dy;}
-   void                 SetDz(Double_t dz) {fTranslation[2]=dz;}
+   void                 SetDx(Double_t dx) {SetTranslation(dx, fTranslation[1], fTranslation[2]);}
+   void                 SetDy(Double_t dy) {SetTranslation(fTranslation[0], dy, fTranslation[2]);}
+   void                 SetDz(Double_t dz) {SetTranslation(fTranslation[0], fTranslation[1], dz);}
    
    virtual const Double_t    *GetTranslation() const {return &fTranslation[0];}
    virtual const Double_t    *GetRotationMatrix() const {return &kIdentityMatrix[0];}
@@ -167,7 +168,6 @@ public :
    TGeoRotation& operator=(const TGeoMatrix &matrix);
    TGeoRotation& operator=(const TGeoRotation &other) {return operator=((const TGeoMatrix&)other);};
    
-   Bool_t               IsReflection() const {return TestBit(kGeoReflection);}
    Bool_t               IsValid() const;
    virtual TGeoMatrix&  Inverse() const;
    void                 Clear(Option_t *option ="");
@@ -194,7 +194,7 @@ public :
    void                 SetAngles(Double_t theta1, Double_t phi1, Double_t theta2, Double_t phi2,
                                   Double_t theta3, Double_t phi3);
    void                 SetMatrix(const Double_t *rot) 
-                           {memcpy(&fRotationMatrix[0], rot, 9*sizeof(Double_t));}
+                           {memcpy(&fRotationMatrix[0], rot, 9*sizeof(Double_t));CheckMatrix();}
    void                 SetRotation(const TGeoMatrix &other);
    void                 GetInverse(Double_t *invmat) const;
    

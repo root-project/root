@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.26 2004/08/03 16:01:18 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.27 2004/08/09 15:23:40 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -807,7 +807,8 @@ void TGeoSphere::Paint(Option_t *option)
    if (!buff) return;
 
    buff->fType = TBuffer3D::kSPHE;
-   buff->fId   = this;
+   TObject *vol = gGeoManager->GetPaintVolume();
+   buff->fId   = (vol)?vol:this;
 
    // Fill gPad->fBuffer3D. Points coordinates are in Master space
    buff->fNbPnts = NbPnts;

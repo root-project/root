@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.40 2004/08/03 16:01:18 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.41 2004/08/13 07:38:11 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -2387,11 +2387,15 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
 // paint recursively a node and its content accordind to visualization options
    TGeoNode *daughter = 0;
    TGeoVolume *vol = node->GetVolume();
+   gGeoManager->SetPaintVolume(vol);
+   TGeoHMatrix *currentMatrix = gGeoManager->GetCurrentMatrix();
+   gGeoManager->SetMatrixReflection(currentMatrix->IsReflection());
    if (vol->GetShape()->IsComposite()) {
       TGeoHMatrix *glmat = gGeoManager->GetGLMatrix();
-      *glmat = gGeoManager->GetCurrentMatrix();
+      *glmat = currentMatrix;
       gGeoManager->SetMatrixTransform(kTRUE);
    } else {
+//      if (gGeoManager->GetCurrentMatrix()->IsReflection()) printf("matrix for node %s is reflection\n", node->GetName());
       gGeoManager->SetMatrixTransform(kFALSE);
    }   
 // Temporary solution must go in TGeovolume ...
@@ -2500,6 +2504,7 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
    TGeoShape *shape;
    TGeoHMatrix *matrix = fGeom->GetGLMatrix();
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
+   gGeoManager->SetPaintVolume(vol);
    TGeoVolume *vcrt;
    if (!node->IsVolAttributes()) {
       vol->SetLineColor(node->GetLineColor());
@@ -2517,6 +2522,7 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
       }     
       shape = vcrt->GetShape();
       *matrix = node->GetMatrix();
+      fGeom->SetMatrixReflection(matrix->IsReflection());
       shape->Paint(option);
    } else {
       // Paint full branch, except top node
@@ -2529,6 +2535,7 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
          }     
          shape = vcrt->GetShape();
          *matrix = node->GetMatrix(i);
+         fGeom->SetMatrixReflection(matrix->IsReflection());
          shape->Paint(option);
       }
    }      

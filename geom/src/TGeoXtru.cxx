@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name: HEAD $:$Id: TGeoXtru.cxx,v 1.9 2004/08/09 16:38:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.10 2004/08/30 07:04:39 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -665,7 +665,8 @@ void TGeoXtru::Paint(Option_t *option)
    if (!buff) return;
 
    buff->fType = TBuffer3D::kXTRU;
-   buff->fId   = this;
+   TObject *vol = gGeoManager->GetPaintVolume();
+   buff->fId   = (vol)?vol:this;
 
    // Fill gPad->fBuffer3D. Points coordinates are in Master space
    buff->fNbPnts = NbPnts;

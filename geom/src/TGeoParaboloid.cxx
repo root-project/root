@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.3 2004/08/03 16:01:18 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.4 2004/08/09 15:23:40 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -299,7 +299,8 @@ void TGeoParaboloid::Paint(Option_t *option)
    if (!buff) return;
 
    buff->fType = TBuffer3D::kPARA;
-   buff->fId   = this;
+   TObject *vol = gGeoManager->GetPaintVolume();
+   buff->fId   = (vol)?vol:this;
 
    // Fill gPad->fBuffer3D. Points coordinates are in Master space
    buff->fNbPnts = NbPnts;

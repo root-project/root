@@ -68,13 +68,13 @@ void rootgeom()
    bar3->SetLineColor(kRed);
    TGeoArb8 *arb = (TGeoArb8*)bar3->GetShape();
    arb->SetVertex(0, 15., -5.);
-   arb->SetVertex(1, 5., -5.);
+   arb->SetVertex(1, 0., -25.);
    arb->SetVertex(2, -10., -25.);
-   arb->SetVertex(3, 0., -25.);
+   arb->SetVertex(3, 5., -5.);
    arb->SetVertex(4, 15., -5.);
-   arb->SetVertex(5, 5., -5.);
+   arb->SetVertex(5, 0., -25.);
    arb->SetVertex(6, -10., -25.);
-   arb->SetVertex(7, 0., -25.);
+   arb->SetVertex(7, 5., -5.);
    R->AddNode(bar3, 1, gGeoIdentity);
    
    //--- make letter 'O'

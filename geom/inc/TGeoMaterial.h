@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.11 2004/06/28 08:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.12 2004/07/01 15:14:23 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -81,6 +81,7 @@ public:
    virtual Double_t         GetIntLen() const  {return fIntLen;}
    Int_t                    GetIndex();
    virtual TObject         *GetCerenkovProperties() const {return fCerenkov;}
+   Char_t                   GetTransparency() const {return (fFillStyle<3000 || fFillStyle>3100)?0:Char_t(fFillStyle-3000);}
    virtual Bool_t           IsEq(const TGeoMaterial *other) const;
    Bool_t                   IsUsed() const {return TObject::TestBit(kMatUsed);}
    virtual Bool_t           IsMixture() const {return kFALSE;}
@@ -89,6 +90,7 @@ public:
    virtual void             SetCerenkovProperties(TObject* cerenkov) {fCerenkov = cerenkov;}
    void                     SetRadLen(Double_t radlen, Double_t intlen=0.);
    void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kMatUsed, flag);}
+   void                     SetTransparency(Char_t transparency) {fFillStyle = 3000+transparency;}
    static  Double_t         ScreenFactor(Double_t z);
 
    

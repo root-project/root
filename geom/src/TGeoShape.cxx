@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.17 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.18 2004/08/03 16:01:18 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -314,19 +314,24 @@ void TGeoShape::SetShapeBit(UInt_t f, Bool_t set)
 void TGeoShape::TransformPoints(TBuffer3D *buff) const
 {
    // Tranform a buffer (LocalToMaster)
-
+   // Set reflection flag
    if (gGeoManager) {
+      Bool_t isReflection = gGeoManager->IsMatrixReflection();
+      if (isReflection) buff->SetBit(TBuffer3D::kIsReflection);
       Double_t dlocal[3];
       Double_t dmaster[3];
+      Bool_t bomb = (gGeoManager->GetBombMode()==0)?kFALSE:kTRUE;
       for (Int_t j = 0; j < buff->fNbPnts; j++) {
          dlocal[0] = buff->fPnts[3*j];
          dlocal[1] = buff->fPnts[3*j+1];
          dlocal[2] = buff->fPnts[3*j+2];
          if (gGeoManager->IsMatrixTransform()) {
             TGeoHMatrix *glmat = gGeoManager->GetGLMatrix();
-            glmat->LocalToMaster(&dlocal[0],&dmaster[0]);
+            if (bomb) glmat->LocalToMasterBomb(dlocal, dmaster);
+            else      glmat->LocalToMaster(dlocal, dmaster);
          } else {
-            gGeoManager->LocalToMaster(&dlocal[0],&dmaster[0]);
+            if (bomb) gGeoManager->LocalToMasterBomb(dlocal, dmaster);
+            else      gGeoManager->LocalToMaster(dlocal,dmaster);
          }
          buff->fPnts[3*j]   = dmaster[0];
          buff->fPnts[3*j+1] = dmaster[1];

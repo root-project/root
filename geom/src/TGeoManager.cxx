@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.86 2004/08/02 14:46:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.87 2004/09/01 07:48:10 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -551,7 +551,9 @@ void TGeoManager::Init()
    fOverlapSize = 1000;
    fOverlapClusters = new Int_t[fOverlapSize];
    fMatrixTransform = kFALSE;
+   fMatrixReflection = kFALSE;
    fGLMatrix = new TGeoHMatrix();
+   fPaintVolume = 0;
    printf("===> %s, %s created\n", GetName(), GetTitle());
 }
 

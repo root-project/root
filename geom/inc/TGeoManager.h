@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.49 2004/04/26 13:06:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.50 2004/06/25 11:59:55 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -83,6 +83,7 @@ private :
    Bool_t                fTimeCut;          // time cut for tracks
    Bool_t                fDrawExtra;        //! flag that the list of physical nodes has to be drawn
    Bool_t                fMatrixTransform;  //! flag for using GL matrix
+   Bool_t                fMatrixReflection; //! flag for GL reflections
    TGeoNodeCache        *fCache;            //! cache for physical nodes
    TVirtualGeoPainter   *fPainter;          //! current painter
 
@@ -120,7 +121,7 @@ private :
    Int_t                *fOverlapClusters;  //! internal array for overlaps
    Double_t             *fDblBuffer;        //! transient dbl buffer
    Double_t              fLastPoint[3];     //! last located point
-
+   TGeoVolume           *fPaintVolume;      //! volume currently painted
 //--- private methods
    void                   BuildCache(Bool_t dummy=kFALSE, Bool_t nodeid=kFALSE);
    void                   BuildIdArray();
@@ -175,6 +176,7 @@ public:
    void                   GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const;
    Bool_t                 GetTminTmax(Double_t &tmin, Double_t &tmax) const;
    Double_t               GetTmax() const {return fTmax;}
+   TGeoVolume            *GetPaintVolume() const {return fPaintVolume;}
    Int_t                  GetVisLevel() const;
    Int_t                  GetVisOption() const;
    Bool_t                 IsInPhiRange() const;
@@ -188,6 +190,7 @@ public:
    void                   SetPhiRange(Double_t phimin=0., Double_t phimax=360.); // *MENU*
    void                   SetNsegments(Int_t nseg); // *MENU*
    void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,                                         Double_t bombr=1.3); // *MENU* 
+   void                   SetPaintVolume(TGeoVolume *vol) {fPaintVolume = vol;}
    void                   SetTopVisible(Bool_t vis=kTRUE);
    void                   SetTminTmax(Double_t tmin=0, Double_t tmax=999);
    void                   SetDrawExtraPaths(Bool_t flag=kTRUE) {fDrawExtra=flag;}
@@ -334,12 +337,14 @@ public:
    Bool_t                 IsAnimatingTracks() const    {return fIsGeomReading;}
    Bool_t                 IsCheckingOverlaps() const   {return fSearchOverlaps;}
    Bool_t                 IsMatrixTransform() const    {return fMatrixTransform;}
+   Bool_t                 IsMatrixReflection() const   {return fMatrixReflection;}
    Bool_t                 IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t change=kFALSE);
    Bool_t                 IsSameLocation() const {return fIsSameLocation;}
    Bool_t                 IsSamePoint(Double_t x, Double_t y, Double_t z) const;
    Bool_t                 IsStartSafe() const {return fStartSafe;}
    void                   SetStartSafe(Bool_t flag=kTRUE)   {fStartSafe=flag;}
    void                   SetMatrixTransform(Bool_t on=kTRUE) {fMatrixTransform = on;}
+   void                   SetMatrixReflection(Bool_t flag=kTRUE) {fMatrixReflection = flag;}
    void                   SetStep(Double_t step) {fStep=step;}
    Bool_t                 IsCurrentOverlapping() const {return fCurrentOverlapping;}
    Bool_t                 IsEntering() const           {return fIsEntering;}
