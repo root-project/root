@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.61 2004/01/16 16:27:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.62 2004/03/22 14:49:42 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -546,15 +546,17 @@ Int_t TBuffer::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss, 
          if (offset > 0) {
             Error("CheckByteCount", "object of class %s read too many bytes: %d instead of %d",
                   name,bcnt+offset,bcnt);
-            const char *fname =" ";
-            if (fParent) fname = fParent->GetName();
-            Warning("CheckByteCount","%s::Streamer() not in sync with data on file: %s, fix Streamer()",
-                    name,fname);
+            if (fParent)
+               Warning("CheckByteCount","%s::Streamer() not in sync with data on file %s, fix Streamer()",
+                       name, fParent->GetName());
+            else
+               Warning("CheckByteCount","%s::Streamer() not in sync with data, fix Streamer()",
+                       name);
          }
       }
       if ( ((char *)endpos) > fBufMax ) {
          offset = fBufMax-fBufCur;
-         Error("CheckByteCount", 
+         Error("CheckByteCount",
                "Byte count probably corrupted around buffer position %d:\n\t%d for a possible maximum of %d",
                startpos, bcnt, offset);
          fBufCur = fBufMax;
@@ -562,7 +564,7 @@ Int_t TBuffer::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss, 
       } else {
 
          fBufCur = (char *) endpos;
-         
+
       }
    }
    return offset;
@@ -901,8 +903,8 @@ Int_t TBuffer::ReadArray(Double_t *&d)
 //______________________________________________________________________________
 Int_t TBuffer::ReadArrayDouble32(Double_t *&d)
 {
-   // Read array of doubles (written as float) from the I/O buffer. 
-   // Returns the number of doubles read. 
+   // Read array of doubles (written as float) from the I/O buffer.
+   // Returns the number of doubles read.
    // If argument is a 0 pointer then space will be allocated for the array.
 
    Assert(IsReading());
@@ -1340,16 +1342,16 @@ void TBuffer::ReadFastArray(void  *start, TClass *cl, Int_t n,
       (*streamer)(*this,start,0);
       return;
    }
-   
+
    int objectSize = cl->Size();
-   char *obj = (char*)start; 
+   char *obj = (char*)start;
    char *end = obj + n*objectSize;
 
    for(; obj<end; obj+=objectSize) cl->Streamer(obj,*this);
 }
 
 //______________________________________________________________________________
-void TBuffer::ReadFastArray(void **start, TClass *cl, Int_t n, 
+void TBuffer::ReadFastArray(void **start, TClass *cl, Int_t n,
                             Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
    // Read an array of 'n' objects from the I/O buffer.
@@ -1369,14 +1371,14 @@ void TBuffer::ReadFastArray(void **start, TClass *cl, Int_t n,
       (*streamer)(*this,(void*)start,0);
       return;
    }
-   
+
    if (!isPreAlloc) {
 
       for (Int_t j=0; j<n; j++){
          //delete the object or collection
          if (start[j] && TStreamerInfo::CanDelete()) cl->Destructor(start[j],kFALSE); // call delete and desctructor
          start[j] = ReadObjectAny(cl);
-      }     
+      }
 
    } else {	//case //-> in comment
 
@@ -1817,7 +1819,7 @@ void TBuffer::WriteFastArrayDouble32(const Double_t *d, Int_t n)
 }
 
 //______________________________________________________________________________
-void TBuffer::WriteFastArray(void  *start, TClass *cl, Int_t n, 
+void TBuffer::WriteFastArray(void  *start, TClass *cl, Int_t n,
                              TMemberStreamer *streamer)
 {
    // Write an array of object starting at the address 'start' and of length 'n'
@@ -1827,18 +1829,18 @@ void TBuffer::WriteFastArray(void  *start, TClass *cl, Int_t n,
       (*streamer)(*this, start, 0);
       return;
    }
-   
-   char *obj = (char*)start; 
+
+   char *obj = (char*)start;
    if (!n) n=1;
    int size = cl->Size();
-   
+
    for(Int_t j=0; j<n; j++,obj+=size) {
       cl->Streamer(obj,*this);
    }
 }
 
 //______________________________________________________________________________
-Int_t TBuffer::WriteFastArray(void **start, TClass *cl, Int_t n, 
+Int_t TBuffer::WriteFastArray(void **start, TClass *cl, Int_t n,
                              Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
    // Write an array of object starting at the address '*start' and of length 'n'
@@ -1848,26 +1850,26 @@ Int_t TBuffer::WriteFastArray(void **start, TClass *cl, Int_t n,
    //  0: success
    //  2: truncated success (i.e actual class is missing. Only ptrClass saved.)
 
-   // if isPreAlloc is true (data member has a ->) we can assume that the pointer 
+   // if isPreAlloc is true (data member has a ->) we can assume that the pointer
    // is never 0.
 
    if (streamer) {
       (*streamer)(*this,(void*)start,0);
       return 0;
    }
-   
+
    int strInfo = 0;
-     
+
    Int_t res = 0;
 
    if (!isPreAlloc) {
 
       for (Int_t j=0;j<n;j++) {
          //must write StreamerInfo if pointer is null
-         if (!strInfo && !start[j] ) cl->GetStreamerInfo()->ForceWriteInfo((TFile *)GetParent()); 
+         if (!strInfo && !start[j] ) cl->GetStreamerInfo()->ForceWriteInfo((TFile *)GetParent());
          strInfo = 2003;
          res |= WriteObjectAny(start[j],cl);
-      }         
+      }
 
    } else {	//case //-> in comment
 
