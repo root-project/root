@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.14 2004/10/07 17:07:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.15 2004/11/17 06:02:52 brun Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -298,11 +298,11 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
          if (done) continue;
       }
 
-      kbl = (!isalnum(c[ 0]) && c[ 0]!='_' && c[ 0]!='$');
+      kbl = (!isalnum(c[ 0]) && c[ 0]!='_' && c[ 0]!='$' && c[0]!='[' && c[0]!=']');
 
       if (*c == '<')   lev++;
       if (lev==0 && !isalnum(*c)) {
-         if (!strchr("*:_$ ",*c)) break;
+         if (!strchr("*:_$ []",*c)) break;
       }
       if (c[0]=='>' && result.size() && result[result.size()-1]=='>') result+=" ";
 
