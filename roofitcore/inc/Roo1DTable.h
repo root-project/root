@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: Roo1DTable.rdl,v 1.2 2001/03/19 15:57:29 verkerke Exp $
+ *    File: $Id: Roo1DTable.rdl,v 1.3 2001/03/21 15:14:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,7 +25,7 @@ public:
   // Constructors, cloning and assignment
   Roo1DTable() {} ;
   virtual ~Roo1DTable();
-  Roo1DTable(const char *name, const char *title, RooAbsCategory &cat);
+  Roo1DTable(const char *name, const char *title, const RooAbsCategory &cat);
   Roo1DTable(const Roo1DTable& other) ;
 
   virtual void fill(RooAbsCategory& cat) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.rdl,v 1.4 2001/03/22 15:31:24 verkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.5 2001/03/29 01:06:42 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,44 +34,42 @@ public:
   virtual RooAbsArg& operator=(RooAbsArg& other) ; 
 
   // Value accessors
-  virtual Int_t getIndex() ;
-  virtual const char* getLabel() ; 
-  Bool_t operator==(Int_t index) ;
-  Bool_t operator==(const char* label) ;
+  virtual Int_t getIndex() const ;
+  virtual const char* getLabel() const ; 
+  Bool_t operator==(Int_t index) const ;
+  Bool_t operator==(const char* label) const ;
   
   // Type definition management
   Bool_t defineType(Int_t index, const char* label) ;
-  Bool_t isValidIndex(Int_t index) ;
-  Bool_t isValidLabel(const char* label) ;  
+  Bool_t isValidIndex(Int_t index) const ;
+  Bool_t isValidLabel(const char* label) const ;  
   const RooCatType* lookupType(Int_t index, Bool_t printError=kFALSE) const ;
   const RooCatType* lookupType(const char* label, Bool_t printError=kFALSE) const ;
-  TIterator* typeIterator() ;
+  TIterator* typeIterator() const ;
 
-  Roo1DTable *createTable(const char *label) ;
+  Roo1DTable *createTable(const char *label) const ;
 
   // I/O streaming interface
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) ;
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) ;
-
-  void printValue() { _value.print() ; }
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard) const ;
 
 protected:
 
   // Ordinal index representation is strictly for internal use
-  Int_t getOrdinalIndex() ;
+  Int_t getOrdinalIndex() const ;
   Bool_t setOrdinalIndex(Int_t newIndex) ;
 
-  RooCatType     _value ; // Current value
+  mutable RooCatType _value ; // Current value
   TObjArray  _types ; // Array of allowed values
 
   // Function evaluation and error tracing
-  RooCatType traceEval() ;
-  virtual Bool_t traceEvalHook(RooCatType value) {}
-  virtual RooCatType evaluate() { return RooCatType("",0) ; }
+  RooCatType traceEval() const ;
+  virtual Bool_t traceEvalHook(RooCatType value) const {}
+  virtual RooCatType evaluate() const { return RooCatType("",0) ; }
 
-  virtual Bool_t isValid() ;
-  virtual Bool_t isValid(RooCatType value) ;
+  virtual Bool_t isValid() const ;
+  virtual Bool_t isValid(RooCatType value) const ;
 
   friend class RooMappedCategory ;
 

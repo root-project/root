@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.8 2001/03/27 01:20:18 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.9 2001/03/29 01:06:42 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,23 +31,22 @@ public:
   RooAbsArg(const char *name, const char *title);
   RooAbsArg(const RooAbsArg& other) ;
   virtual TObject* Clone() ;
-  virtual RooAbsArg& operator=(RooAbsArg& other) ; 
+  virtual RooAbsArg& operator=(const RooAbsArg& other) ; 
 
   // Accessors to client-server relation information 
   Bool_t isDerived() const { return _serverList.First()?kTRUE:kFALSE; }
-  Bool_t dependsOn(RooArgSet& serverList) ;
-  Bool_t dependsOn(RooAbsArg& server) ;
-  inline TIterator* clientIterator() { return _clientList.MakeIterator() ; }
-  inline TIterator* serverIterator() { return _serverList.MakeIterator() ; }
+  Bool_t dependsOn(const RooArgSet& serverList) const ;
+  Bool_t dependsOn(const RooAbsArg& server) const ;
+  inline TIterator* clientIterator() const { return _clientList.MakeIterator() ; }
+  inline TIterator* serverIterator() const { return _serverList.MakeIterator() ; }
   
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) = 0 ;
-  virtual void writeToStream(ostream& os, Bool_t compact) = 0 ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const = 0 ;
 
   // Printing interface (human readable)
   enum PrintOption { OneLine=0, Standard=1, Shape=2, Verbose=3 } ;
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) ;
-  //inline void print(PrintOption opt=Standard) const { printToStream(cout,opt) ; }
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard) const ;
   inline void Print(Option_t * = 0) const ;
 
   // Accessors to attributes
@@ -79,17 +78,17 @@ protected:
   // fundamental subclasses to always return false
   virtual Bool_t isValueDirty() const { return _valueDirty ; } 
   virtual Bool_t isShapeDirty() const { return _shapeDirty ; } 
-  void setValueDirty(Bool_t flag=kTRUE) { setValueDirty(flag,0) ; }
-  void setShapeDirty(Bool_t flag=kTRUE) { setShapeDirty(flag,0) ; } 
+  void setValueDirty(Bool_t flag=kTRUE) const { setValueDirty(flag,0) ; }
+  void setShapeDirty(Bool_t flag=kTRUE) const { setShapeDirty(flag,0) ; } 
 
   // Hooks for RooDataSet interface
   friend class RooDataSet ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   virtual void postTreeLoadHook() {} ;
-  virtual Bool_t isValid() ;
+  virtual Bool_t isValid() const ;
 
   // Global   
-  friend ostream& operator<<(ostream& os, RooAbsArg &arg);  
+  friend ostream& operator<<(ostream& os, const RooAbsArg &arg);  
   friend istream& operator>>(istream& is, RooAbsArg &arg) ;
   
   // Debug stuff
@@ -98,15 +97,15 @@ protected:
 private:
 
   // Value and Shape dirty state bits
-  void setValueDirty(Bool_t flag, RooAbsArg* source) ; 
-  void setShapeDirty(Bool_t flag, RooAbsArg* source) ; 
-  Bool_t _valueDirty ;
-  Bool_t _shapeDirty ;
+  void setValueDirty(Bool_t flag, const RooAbsArg* source) const ; 
+  void setShapeDirty(Bool_t flag, const RooAbsArg* source) const ; 
+  mutable Bool_t _valueDirty ;
+  mutable Bool_t _shapeDirty ;
 
   ClassDef(RooAbsArg,1) // a real-valued variable and its value
 };
 
-ostream& operator<<(ostream& os, RooAbsArg &arg);  
+ostream& operator<<(ostream& os, const RooAbsArg &arg);  
 istream& operator>>(istream& is, RooAbsArg &arg) ;
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooUnblindCPDeltaTVar.cc,v 1.1 2001/03/29 01:06:45 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -49,7 +49,7 @@ RooUnblindCPDeltaTVar::~RooUnblindCPDeltaTVar()
 }
 
 
-Double_t RooUnblindCPDeltaTVar::evaluate()
+Double_t RooUnblindCPDeltaTVar::evaluate() const
 {
   if (_state->getIndex()==0) {
     // Blinding not active for this event
@@ -61,19 +61,21 @@ Double_t RooUnblindCPDeltaTVar::evaluate()
 }
 
 
-Double_t RooUnblindCPDeltaTVar::getVal() {
+Double_t RooUnblindCPDeltaTVar::getVal() const
+{
   // Call parent class implementation
   return RooAbsReal::getVal() ;
 }
 
 
-Bool_t RooUnblindCPDeltaTVar::isValid() 
+Bool_t RooUnblindCPDeltaTVar::isValid() const
 {
   return isValid(getVal()) ;
 }
 
 
-Bool_t RooUnblindCPDeltaTVar::isValid(Double_t value, Bool_t verbose) {
+Bool_t RooUnblindCPDeltaTVar::isValid(Double_t value, Bool_t verbose) const
+{
   return kTRUE ;
 }
 
@@ -119,7 +121,7 @@ Bool_t RooUnblindCPDeltaTVar::redirectServersHook(RooArgSet& newServerList, Bool
 
 
 
-void RooUnblindCPDeltaTVar::printToStream(ostream& os, PrintOption opt)
+void RooUnblindCPDeltaTVar::printToStream(ostream& os, PrintOption opt) const
 {
   // Print current value and definition of formula
   os << "RooUnblindCPDeltaTVar: " << GetName() << " : (value hidden) deltat=" 
@@ -137,10 +139,9 @@ Bool_t RooUnblindCPDeltaTVar::readFromStream(istream& is, Bool_t compact, Bool_t
 }
 
 
-void RooUnblindCPDeltaTVar::writeToStream(ostream& os, Bool_t compact) 
+void RooUnblindCPDeltaTVar::writeToStream(ostream& os, Bool_t compact) const
 {
   cout << "RooUnblindCPDeltaTVar::writeToStream(" << GetName() << "): not allowed" << endl ;
-  return kTRUE ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsString.cc,v 1.1 2001/03/27 01:20:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -43,7 +43,7 @@ RooAbsString::~RooAbsString()
 }
 
 
-RooAbsArg& RooAbsString::operator=(RooAbsArg& aother)
+RooAbsArg& RooAbsString::operator=(const RooAbsArg& aother)
 {
   RooAbsArg::operator=(aother) ;
 
@@ -56,7 +56,7 @@ RooAbsArg& RooAbsString::operator=(RooAbsArg& aother)
 }
 
 
-TString RooAbsString::getVal() 
+TString RooAbsString::getVal() const
 {
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty()) {
@@ -69,7 +69,7 @@ TString RooAbsString::getVal()
 
 
 
-Bool_t RooAbsString::operator==(TString value) 
+Bool_t RooAbsString::operator==(TString value) const
 {
   return (getVal()==value) ;
 }
@@ -81,13 +81,13 @@ Bool_t RooAbsString::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   //Read object contents from stream (dummy for now)
 } 
 
-void RooAbsString::writeToStream(ostream& os, Bool_t compact)
+void RooAbsString::writeToStream(ostream& os, Bool_t compact) const
 {
   //Write object contents to stream (dummy for now)
 }
 
 
-void RooAbsString::printToStream(ostream& os, PrintOption opt) 
+void RooAbsString::printToStream(ostream& os, PrintOption opt) const
 {
   //Print object contents
   os << "RooAbsString: " << GetName() << " = " << getVal();
@@ -99,12 +99,14 @@ void RooAbsString::printToStream(ostream& os, PrintOption opt)
 
 
 
-Bool_t RooAbsString::isValid() {
+Bool_t RooAbsString::isValid() const 
+{
   return isValid(getVal()) ;
 }
 
 
-Bool_t RooAbsString::isValid(TString value) {
+Bool_t RooAbsString::isValid(TString value) const 
+{
 
   // Protect against string overflows
   if (value.Length()>1023) return kFALSE ;
@@ -114,7 +116,7 @@ Bool_t RooAbsString::isValid(TString value) {
 
 
 
-TString RooAbsString::traceEval()
+TString RooAbsString::traceEval() const
 {
   TString value = evaluate() ;
   

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.1 2001/03/17 00:32:54 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.2 2001/03/19 15:57:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,7 +29,7 @@ public:
   virtual ~RooAbsReal();
 
   // Return value and unit accessors
-  virtual Double_t getVal() ;
+  virtual Double_t getVal() const ;
   Bool_t operator==(Double_t value) ;
   inline const Text_t *getUnit() const { return _unit.Data(); }
   inline void setUnit(const char *unit) { _unit= unit; }
@@ -50,27 +50,27 @@ public:
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard) const ;
 
 protected:
   friend class RooDataSet ;
 
   // Function evaluation and error tracing
-  Double_t traceEval() ;
-  virtual Bool_t traceEvalHook(Double_t value) {}
-  virtual Double_t evaluate() { return 0 ; }
+  Double_t traceEval() const ;
+  virtual Bool_t traceEvalHook(Double_t value) const {}
+  virtual Double_t evaluate() const { return 0 ; }
 
   // Internal consistency checking (needed by RooDataSet)
-  virtual Bool_t isValid() ;
-  virtual Bool_t isValid(Double_t value) ;
+  virtual Bool_t isValid() const ;
+  virtual Bool_t isValid(Double_t value) const ;
 
   Double_t _plotMin ;
   Double_t _plotMax ;
   Int_t    _plotBins ;
-  Double_t _value ;
+  mutable Double_t _value ;
   TString  _unit ;
   TString  _label ;
 

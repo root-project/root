@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.5 2001/03/22 15:31:25 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.6 2001/03/28 00:21:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -75,7 +75,7 @@ RooRealVar::operator Double_t&() {
   return _value;
 }
 
-RooRealVar::operator Double_t() {
+RooRealVar::operator Double_t() const {
   return this->getVal();
 }
 
@@ -198,13 +198,13 @@ Bool_t RooRealVar::inFitRange(Double_t value, Double_t* clippedValPtr) const
 
 
 
-Bool_t RooRealVar::isValid() 
+Bool_t RooRealVar::isValid() const
 {
   return isValid(getVal()) ;
 }
 
 
-Bool_t RooRealVar::isValid(Double_t value, Bool_t verbose) {
+Bool_t RooRealVar::isValid(Double_t value, Bool_t verbose) const {
   if (!inFitRange(value)) {
     if (verbose)
       cout << "RooRealVar::isValid(" << GetName() << "): value " << value << " out of range" << endl ;
@@ -306,7 +306,7 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 }
 
 
-void RooRealVar::writeToStream(ostream& os, Bool_t compact)
+void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
 {
   // Write object contents to given stream
 
@@ -354,7 +354,7 @@ RooRealVar::operator=(RooAbsArg& aorig)
   return (*this) ;
 }
 
-void RooRealVar::printToStream(ostream& os, PrintOption opt) {
+void RooRealVar::printToStream(ostream& os, PrintOption opt) const {
   switch(opt) {
   case Verbose:
     os << fName << " = " << getVal() << " +/- " << _error;    

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooUnblindCPDeltaTVar.rdl,v 1.1 2001/03/29 01:06:45 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -29,25 +29,25 @@ public:
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard) const ;
 
 
 protected:
 
-  RooUnblindCPDeltaTVar& operator=(RooUnblindCPDeltaTVar& other) {} ;
+  RooUnblindCPDeltaTVar& operator=(const RooUnblindCPDeltaTVar& other) {} ;
   
   // Only PDFs can access the unblinded values
   friend class RooAbsPdf ;
-  virtual Double_t getVal() ;
+  virtual Double_t getVal() const ;
   
   // Function evaluation
-  virtual Double_t evaluate() ;
+  virtual Double_t evaluate() const ;
 
-  virtual Bool_t isValid() ;
-  virtual Bool_t isValid(Double_t value, Bool_t verbose=kFALSE) ;
+  virtual Bool_t isValid() const ;
+  virtual Bool_t isValid(Double_t value, Bool_t verbose=kFALSE) const ;
 
   // Post-processing of server redirection
   virtual Bool_t redirectServersHook(RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;

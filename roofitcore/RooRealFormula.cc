@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFormula.cc,v 1.1 2001/03/17 00:32:55 verkerke Exp $
+ *    File: $Id: RooRealFormula.cc,v 1.2 2001/03/19 15:57:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -43,14 +43,14 @@ RooRealFormula::~RooRealFormula()
 }
 
 
-Double_t RooRealFormula::evaluate()
+Double_t RooRealFormula::evaluate() const
 {
   // Evaluate embedded formula
   return _formula.eval() ;
 }
 
 
-Bool_t RooRealFormula::isValid() 
+Bool_t RooRealFormula::isValid() const
 {
   return isValid(getVal()) ;
 }
@@ -67,7 +67,7 @@ Bool_t RooRealFormula::setFormula(const char* formula)
 
 
 
-Bool_t RooRealFormula::isValid(Double_t value) {
+Bool_t RooRealFormula::isValid(Double_t value) const {
   return kTRUE ;
 }
 
@@ -79,7 +79,7 @@ Bool_t RooRealFormula::redirectServersHook(RooArgSet& newServerList, Bool_t must
 }
 
 
-void RooRealFormula::printToStream(ostream& os, PrintOption opt)
+void RooRealFormula::printToStream(ostream& os, PrintOption opt) const
 {
   // Print current value and definition of formula
   os << "RooRealFormula: " << GetName() << " = " << GetTitle() << " = " << getVal();
@@ -101,7 +101,7 @@ Bool_t RooRealFormula::readFromStream(istream& is, Bool_t compact, Bool_t verbos
 }
 
 
-void RooRealFormula::writeToStream(ostream& os, Bool_t compact) 
+void RooRealFormula::writeToStream(ostream& os, Bool_t compact) const
 {
   if (compact) {
     cout << "RooRealFormula::writeToStream(" << GetName() << "): can't write in compact mode" << endl ;

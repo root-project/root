@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: Roo1DTable.cc,v 1.1 2001/03/17 03:47:38 verkerke Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.2 2001/03/19 15:57:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,7 +18,8 @@
 
 ClassImp(Roo1DTable)
 
-Roo1DTable::Roo1DTable(const char *name, const char *title, RooAbsCategory& cat) : RooTable(name,title), _nOverflow(0)
+Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory& cat) : 
+  RooTable(name,title), _nOverflow(0)
 {
   //Take types from reference category
   Int_t nbin(0) ;

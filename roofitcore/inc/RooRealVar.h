@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.5 2001/03/28 00:21:53 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.6 2001/03/29 01:06:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,8 +36,8 @@ public:
   
   // Parameter value and error accessors
   virtual operator Double_t&();
-  virtual operator Double_t() ;
-  virtual Double_t getVal() { return _value ; } // overrides RooAbsReal::GetVar()
+  virtual operator Double_t() const ;
+  virtual Double_t getVal() const { return _value ; } // overrides RooAbsReal::GetVar()
   inline Double_t getError() const { return _error; }
   virtual void setVal(Double_t value);
   inline void setError(Double_t value) { _error= value; }
@@ -60,10 +60,10 @@ public:
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard) const ;
   TString* format(Int_t sigDigits, const char *options) ;
 
 protected:
@@ -71,8 +71,8 @@ protected:
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   Double_t chopAt(Double_t what, Int_t where) ;
 
-  virtual Bool_t isValid() ;
-  virtual Bool_t isValid(Double_t value, Bool_t verbose=kFALSE) ;
+  virtual Bool_t isValid() const ;
+  virtual Bool_t isValid(Double_t value, Bool_t verbose=kFALSE) const ;
 
   Double_t _fitMin ;
   Double_t _fitMax ;

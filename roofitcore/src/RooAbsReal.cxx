@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.1 2001/03/17 00:32:53 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.2 2001/03/19 15:57:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -67,7 +67,7 @@ RooAbsArg& RooAbsReal::operator=(RooAbsArg& aother)
 }
 
 
-Double_t RooAbsReal::getVal() 
+Double_t RooAbsReal::getVal() const
 {
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty()) {
@@ -104,12 +104,12 @@ Bool_t RooAbsReal::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   //Read object contents from stream (dummy for now)
 } 
 
-void RooAbsReal::writeToStream(ostream& os, Bool_t compact)
+void RooAbsReal::writeToStream(ostream& os, Bool_t compact) const
 {
   //Write object contents to stream (dummy for now)
 }
 
-void RooAbsReal::printToStream(ostream& os, PrintOption opt) 
+void RooAbsReal::printToStream(ostream& os, PrintOption opt) const
 {
   //Print object contents
   os << "RooAbsReal: " << GetName() << " = " << getVal();
@@ -181,18 +181,18 @@ Bool_t RooAbsReal::inPlotRange(Double_t value) const {
 
 
 
-Bool_t RooAbsReal::isValid() {
+Bool_t RooAbsReal::isValid() const {
   return isValid(getVal()) ;
 }
 
 
-Bool_t RooAbsReal::isValid(Double_t value) {
+Bool_t RooAbsReal::isValid(Double_t value) const {
   return kTRUE ;
 }
 
 
 
-Double_t RooAbsReal::traceEval()
+Double_t RooAbsReal::traceEval() const
 {
   Double_t value = evaluate() ;
   

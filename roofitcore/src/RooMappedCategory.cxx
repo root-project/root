@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.cc,v 1.3 2001/03/19 15:57:31 verkerke Exp $
+ *    File: $Id: RooMappedCategory.cc,v 1.4 2001/03/21 15:14:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -125,7 +125,7 @@ Bool_t RooMappedCategory::addMap( const RooCatType* out, const RooCatType* inlo,
 
 
 RooCatType
-RooMappedCategory::evaluate() 
+RooMappedCategory::evaluate() const
 {
   int i=0 ;
   int input = inputCat()->getIndex() ;
@@ -138,7 +138,7 @@ RooMappedCategory::evaluate()
 }
 
 
-void RooMappedCategory::printToStream(ostream& os, PrintOption opt) 
+void RooMappedCategory::printToStream(ostream& os, PrintOption opt) const
 {
   if (opt==Shape) {
     cout << "RooMappedCategory: input category:" << endl ;
@@ -230,7 +230,7 @@ Bool_t RooMappedCategory::readFromStream(istream& is, Bool_t compact, Bool_t ver
 
 
 
-void RooMappedCategory::writeToStream(ostream& os, Bool_t compact) 
+void RooMappedCategory::writeToStream(ostream& os, Bool_t compact) const
 {
   if (compact) {
     cout << "RooMappedCategory::writeToStream(" << GetName() << "): can't write in compact mode" << endl ;    

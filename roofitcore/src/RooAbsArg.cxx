@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.8 2001/03/28 19:21:48 davidk Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.9 2001/03/29 01:06:42 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -118,7 +118,7 @@ TObject* RooAbsArg::Clone() {
   return clone ;
 }
 
-RooAbsArg& RooAbsArg::operator=(RooAbsArg& other) 
+RooAbsArg& RooAbsArg::operator=(const RooAbsArg& other) 
 {  
   // Assignment operator.
 
@@ -221,7 +221,7 @@ void RooAbsArg::removeServer(RooAbsArg& server)
 } 
 
 
-Bool_t RooAbsArg::dependsOn(RooArgSet& serverList) 
+Bool_t RooAbsArg::dependsOn(const RooArgSet& serverList) const
 {
   // Test whether we depend on (ie, are served by) any object in the
   // specified collection. Uses the dependsOn(RooAbsArg&) member function.
@@ -235,7 +235,7 @@ Bool_t RooAbsArg::dependsOn(RooArgSet& serverList)
 }
 
 
-Bool_t RooAbsArg::dependsOn(RooAbsArg& server) 
+Bool_t RooAbsArg::dependsOn(const RooAbsArg& server) const
 {
   // Test whether we depend on (ie, are served by) the specified object.
   // Note that RooAbsArg objects are considered equivalent if they have
@@ -245,7 +245,7 @@ Bool_t RooAbsArg::dependsOn(RooAbsArg& server)
 }
 
 
-void RooAbsArg::setValueDirty(Bool_t flag, RooAbsArg* source) 
+void RooAbsArg::setValueDirty(Bool_t flag, const RooAbsArg* source) const
 { 
   // Mark this object as having changed its value, and propagate this status
   // change to all of our clients.
@@ -275,7 +275,7 @@ void RooAbsArg::setValueDirty(Bool_t flag, RooAbsArg* source)
 } 
 
 
-void RooAbsArg::setShapeDirty(Bool_t flag, RooAbsArg* source) 
+void RooAbsArg::setShapeDirty(Bool_t flag, const RooAbsArg* source) const
 { 
   // Set 'dirty' shape state for this object and propagate flag to all its clients
   if (source==0) {
@@ -353,14 +353,14 @@ void RooAbsArg::attachToTree(TTree& t, Int_t bufSize=32000)
 
 
 
-Bool_t RooAbsArg::isValid() 
+Bool_t RooAbsArg::isValid() const
 {
   return kTRUE ;
 }
 
 
 
-void RooAbsArg::printToStream(ostream& str, PrintOption opt) 
+void RooAbsArg::printToStream(ostream& str, PrintOption opt)  const
 {
   // Print the state of this object to the specified output stream.
   // With PrintOption=Verbose, print out lists of attributes, clients,

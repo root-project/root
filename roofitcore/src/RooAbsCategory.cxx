@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.3 2001/03/19 15:57:29 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.4 2001/03/29 01:06:42 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -73,13 +73,13 @@ RooAbsArg& RooAbsCategory::operator=(RooAbsArg& aother)
 }
 
 
-TIterator* RooAbsCategory::typeIterator()
+TIterator* RooAbsCategory::typeIterator() const
 {
   return _types.MakeIterator() ;
 }
 
 
-Int_t RooAbsCategory::getIndex()
+Int_t RooAbsCategory::getIndex() const
 {
   if (isValueDirty()) {
     setValueDirty(false) ;
@@ -90,7 +90,7 @@ Int_t RooAbsCategory::getIndex()
 }
 
 
-const char* RooAbsCategory::getLabel()
+const char* RooAbsCategory::getLabel() const
 {
   if (isValueDirty()) {
     setValueDirty(false) ;
@@ -102,32 +102,32 @@ const char* RooAbsCategory::getLabel()
 
 
 
-Bool_t RooAbsCategory::operator==(Int_t index) 
+Bool_t RooAbsCategory::operator==(Int_t index) const
 {
   return (index==getIndex()) ;
 }
 
 
 
-Bool_t RooAbsCategory::operator==(const char* label) 
+Bool_t RooAbsCategory::operator==(const char* label) const
 {
   return !TString(label).CompareTo(getLabel()) ;
 }
 
 
-Bool_t RooAbsCategory::isValidIndex(Int_t index) 
+Bool_t RooAbsCategory::isValidIndex(Int_t index) const
 {
   return lookupType(index)?kTRUE:kFALSE ;
 }
 
 
-Bool_t RooAbsCategory::isValidLabel(const char* label)
+Bool_t RooAbsCategory::isValidLabel(const char* label) const
 {
   return lookupType(label)?kTRUE:kFALSE ;
 }
 
 
-RooCatType RooAbsCategory::traceEval()
+RooCatType RooAbsCategory::traceEval() const
 {
   RooCatType value = evaluate() ;
   
@@ -142,7 +142,7 @@ RooCatType RooAbsCategory::traceEval()
 }
 
 
-Int_t RooAbsCategory::getOrdinalIndex() 
+Int_t RooAbsCategory::getOrdinalIndex() const
 {
   for (int i=0 ; i<_types.GetEntries() ; i++) {
     if (*(RooCatType*)_types.At(i) == _value) return i ;
@@ -230,19 +230,19 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
 }
 
 
-Bool_t RooAbsCategory::isValid()
+Bool_t RooAbsCategory::isValid() const
 {
   return isValid(_value) ;
 }
 
 
-Bool_t RooAbsCategory::isValid(RooCatType value) 
+Bool_t RooAbsCategory::isValid(RooCatType value)  const
 {
   return isValidIndex(value.getVal()) ;
 }
 
 
-Roo1DTable* RooAbsCategory::createTable(const char *label) 
+Roo1DTable* RooAbsCategory::createTable(const char *label)  const
 {
   return new Roo1DTable(GetName(),label,*this) ;
 }
@@ -253,12 +253,12 @@ Bool_t RooAbsCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbos
   //Read object contents from stream (dummy for now)
 } 
 
-void RooAbsCategory::writeToStream(ostream& os, Bool_t compact)
+void RooAbsCategory::writeToStream(ostream& os, Bool_t compact) const
 {
   //Write object contents to stream (dummy for now)
 }
 
-void RooAbsCategory::printToStream(ostream& os, PrintOption opt) 
+void RooAbsCategory::printToStream(ostream& os, PrintOption opt) const
 {
   if (_types.GetEntries()==0) {
     os << "RooAbsCategory: " << GetName() << " has no types defined" << endl ;

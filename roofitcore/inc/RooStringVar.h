@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooStringVar.rdl,v 1.1 2001/03/27 01:20:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,27 +25,27 @@ public:
   RooStringVar(const char *name, const char *title, const char* value) ; 
   RooStringVar(const RooStringVar& other);
   virtual ~RooStringVar();
-  virtual RooAbsArg& operator=(RooAbsArg& other) ;
+  virtual RooAbsArg& operator=(const RooAbsArg& other) ;
   
   // Parameter value and error accessors
   virtual operator TString() ;
-  virtual TString getVal() { return TString(_value) ; } // overrides RooAbsReal::getVal()
+  virtual TString getVal() const { return TString(_value) ; } // overrides RooAbsReal::getVal()
   virtual void setVal(TString value);
   virtual TString operator=(TString newValue);
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard) const ;
 
 protected:
 
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
 
-  virtual Bool_t isValid() ;
-  virtual Bool_t isValid(TString value, Bool_t verbose=kFALSE) ;
+  virtual Bool_t isValid() const ;
+  virtual Bool_t isValid(TString value, Bool_t verbose=kFALSE) const ;
 
   ClassDef(RooStringVar,1) // a real-valued variable and its value
 };

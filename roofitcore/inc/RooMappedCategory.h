@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.rdl,v 1.2 2001/03/17 00:32:55 verkerke Exp $
+ *    File: $Id: RooMappedCategory.rdl,v 1.3 2001/03/19 15:57:32 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -37,11 +37,11 @@ public:
   Bool_t mapRange(int   inlo,     int   inhi,     int   out) ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard) const ;
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
 protected:
   
@@ -53,7 +53,7 @@ protected:
   inline RooAbsCategory* inputCat() const { return (RooAbsCategory*)_serverList.First() ; }
   Bool_t addMap(const RooCatType* inlo, const RooCatType* inhi, const RooCatType* out) ;
 
-  virtual RooCatType evaluate() ; 
+  virtual RooCatType evaluate() const ; 
 
   ClassDef(RooMappedCategory,1) // a integer-valued category variable
 };

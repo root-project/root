@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStringVar.cc,v 1.1 2001/03/27 01:20:20 verkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.2 2001/03/29 01:06:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -76,13 +76,13 @@ TString RooStringVar::operator=(TString newValue)
 
 
 
-Bool_t RooStringVar::isValid() 
+Bool_t RooStringVar::isValid() const
 {
   return isValid(getVal()) ;
 }
 
 
-Bool_t RooStringVar::isValid(TString value, Bool_t verbose) {
+Bool_t RooStringVar::isValid(TString value, Bool_t verbose) const {
   return kTRUE ;
 }
 
@@ -124,7 +124,7 @@ Bool_t RooStringVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 }
 
 
-void RooStringVar::writeToStream(ostream& os, Bool_t compact)
+void RooStringVar::writeToStream(ostream& os, Bool_t compact) const
 {
   // Write object contents to given stream
   os << getVal() ;
@@ -133,7 +133,7 @@ void RooStringVar::writeToStream(ostream& os, Bool_t compact)
 
 
 RooAbsArg&
-RooStringVar::operator=(RooAbsArg& aorig)
+RooStringVar::operator=(const RooAbsArg& aorig)
 {
   // Assignment operator for RooStringVar
   RooAbsString::operator=(aorig) ;
@@ -142,7 +142,7 @@ RooStringVar::operator=(RooAbsArg& aorig)
   return (*this) ;
 }
 
-void RooStringVar::printToStream(ostream& os, PrintOption opt) {
+void RooStringVar::printToStream(ostream& os, PrintOption opt) const {
   switch(opt) {
   case Standard:
   case Verbose:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooUnblindCPAsymVar.cc,v 1.1 2001/03/29 01:06:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -43,25 +43,27 @@ RooUnblindCPAsymVar::~RooUnblindCPAsymVar()
 }
 
 
-Double_t RooUnblindCPAsymVar::evaluate()
+Double_t RooUnblindCPAsymVar::evaluate() const
 {
   return _blindEngine.UnHideAsym(_asym->getVal());
 }
 
 
-Double_t RooUnblindCPAsymVar::getVal() {
+Double_t RooUnblindCPAsymVar::getVal() const
+{
   // Call parent class implementation
   return RooAbsReal::getVal() ;
 }
 
 
-Bool_t RooUnblindCPAsymVar::isValid() 
+Bool_t RooUnblindCPAsymVar::isValid() const
 {
   return isValid(getVal()) ;
 }
 
 
-Bool_t RooUnblindCPAsymVar::isValid(Double_t value, Bool_t verbose) {
+Bool_t RooUnblindCPAsymVar::isValid(Double_t value, Bool_t verbose) const
+{
   return kTRUE ;
 }
 
@@ -83,7 +85,7 @@ Bool_t RooUnblindCPAsymVar::redirectServersHook(RooArgSet& newServerList, Bool_t
 }
 
 
-void RooUnblindCPAsymVar::printToStream(ostream& os, PrintOption opt)
+void RooUnblindCPAsymVar::printToStream(ostream& os, PrintOption opt) const
 {
   // Print current value and definition of formula
   os << "RooUnblindCPAsymVar: " << GetName() << " : (value hidden) asym=" 
@@ -101,7 +103,7 @@ Bool_t RooUnblindCPAsymVar::readFromStream(istream& is, Bool_t compact, Bool_t v
 }
 
 
-void RooUnblindCPAsymVar::writeToStream(ostream& os, Bool_t compact) 
+void RooUnblindCPAsymVar::writeToStream(ostream& os, Bool_t compact) const
 {
   cout << "RooUnblindCPAsymVar::writeToStream(" << GetName() << "): not allowed" << endl ;
 }
