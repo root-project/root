@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.2 2000/06/19 23:37:47 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.3 2000/08/01 23:45:48 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -243,7 +243,7 @@ void TClass::BuildRealData()
       }
    }
 
-   if (realDataObject != gROOT) {
+   if( realDataObject && realDataObject != gROOT) {
       if (InheritsFrom(TObject::Class())) {
          realDataObject->SetBit(kZombie); //this info useful in object destructor
          delete realDataObject;
