@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.26 2002/04/04 11:03:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.27 2002/04/19 16:43:16 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -160,9 +160,10 @@ TClonesArray::~TClonesArray()
       for (Int_t i = 0; i < fKeep->fSize; i++) {
          // remove any possible entries from the ObjectTable
          if (fClass->GetClassInfo()) {
-            if (TObject::GetObjectStat() && gObjectTable)
-               gObjectTable->RemoveQuietly(fKeep->fCont[i]);
-            ::operator delete(fKeep->fCont[i]);
+            //if (TObject::GetObjectStat() && gObjectTable)
+            //   gObjectTable->RemoveQuietly(fKeep->fCont[i]);
+            //::operator delete(fKeep->fCont[i]);
+            delete fCont[i];
          }
       }
    }
@@ -475,6 +476,9 @@ void TClonesArray::Streamer(TBuffer &b)
          b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
          return;
       }
+
+      if (GetEntriesFast() > 0) Delete();
+      
       b >> nobjects;
       if (nobjects < 0)
          nobjects = -nobjects;  // still there for backward compatibility
