@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.3 2000/11/21 20:40:18 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.4 2000/12/13 15:13:52 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -125,7 +125,7 @@
 //    {                                                                 //
 //       typedef  double (*dfunc_t)(double);                            //
 //       class ApplyFunction : public TElementAction {                  //
-//          dfunc_t *fFunc;                                             //
+//          dfunc_t fFunc;                                              //
 //          void Operation(Real_t &element) { element=fFunc(element); } //
 //       public:                                                        //
 //          ApplyFunction(dfunc_t func):fFunc(func) {}                  //
