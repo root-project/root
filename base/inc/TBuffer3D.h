@@ -30,8 +30,8 @@ class TBuffer3D : public TObject {
 private:
 
 public:
-   enum EBuffer3DType {kBRIK,   kPGON, kPCON, kSPHE,   kTUBE,   kTUBS,
-                       kTORUS,  kXTRU, kLINE, kCSHAPE, kPARA,
+   enum EBuffer3DType {kANY   , kBRIK , kPGON, kPCON, kSPHE  , kTUBE,
+                       kTUBS  , kTORUS, kXTRU, kLINE, kCSHAPE, kPARA,
                        kM3DBOX, kMARKER };
 
    enum EBuffer3DOption {kPAD, kRANGE, kSIZE, kX3D, kOGL};

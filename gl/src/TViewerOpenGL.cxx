@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.30 2004/10/19 13:04:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.31 2004/10/30 07:43:36 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -557,6 +557,9 @@ void TViewerOpenGL::UpdateScene(Option_t *)
   	      break;
       case TBuffer3D::kMARKER:
          addObj = new TGLPolyMarker(*buff, colorRGB, fNbShapes, buff->fId);
+         break;
+      case TBuffer3D::kSPHE:
+         addObj = new TGLSphere(*buff, colorRGB, fNbShapes, buff->fId);
          break;
       default:
          addObj = new TGLFaceSet(*buff, colorRGB, fNbShapes, buff->fId);

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.10 2004/09/14 15:15:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.11 2004/09/14 15:56:15 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -143,6 +143,28 @@ void TSPHE::Paint(Option_t *option)
 
    Int_t i, j;
    const Int_t n = GetNumberOfDivisions()+1;
+
+   // In case of OpenGL a simple sphere can be drawn with a specialized function
+   TBuffer3D *buff = gPad->AllocateBuffer3D(11, 0, 0);
+   if (!buff) return;
+   if (buff->fOption == TBuffer3D::kOGL &&
+       fRmin == 0 && fThemin == 0 && fThemax >= 180 && fPhimin == 0 && fPhimax >= 360) {
+      buff->fNbPnts  = 3;
+      buff->fNbSegs  = 0;
+      buff->fNbPols  = 0;
+      buff->fColor   = GetLineColor();
+      buff->fPnts[0] =      0; buff->fPnts[1] =      0; buff->fPnts[2] =      0;
+      buff->fPnts[3] =  fRmax; buff->fPnts[4] =  fRmax; buff->fPnts[5] =  fRmax;
+      buff->fPnts[6] = -fRmax; buff->fPnts[7] = -fRmax; buff->fPnts[8] = -fRmax;
+      buff->fPnts[9] = (Float_t)n;
+      buff->fPnts[10] = fRmax;
+      TransformPoints(buff);
+      buff->fId   = this;
+      buff->fType = TBuffer3D::kSPHE;
+      buff->Paint(option);
+      return;
+   }
+
    Int_t nz = fNz+1;
    if (nz < 2) return;
    Int_t NbPnts = 2*n*nz;
@@ -154,10 +176,11 @@ void TSPHE::Paint(Option_t *option)
    Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
    Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
 
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
    if (!buff) return;
 
-   buff->fType = TBuffer3D::kSPHE;
+   buff->fType = TBuffer3D::kANY;
+
    buff->fId   = this;
 
    // Fill gPad->fBuffer3D. Points coordinates are in Master space

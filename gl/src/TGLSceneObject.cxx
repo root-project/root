@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.10 2004/10/08 10:10:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.11 2004/10/18 09:10:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -569,6 +569,45 @@ void TGLPolyLine::GLDraw()const
       glVertex3d(fVertices[i], fVertices[i + 1], fVertices[i + 2]);
 
    glEnd();
+}
+
+//______________________________________________________________________________
+TGLSphere::TGLSphere(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
+                :TGLSceneObject(b.fPnts, b.fPnts + 3 * b.fNbPnts, c, n, r)
+{
+   // Default ctor
+   fX      = b.fPnts[0];
+   fY      = b.fPnts[1];
+   fZ      = b.fPnts[2];
+   fNdiv   = (Int_t)b.fPnts[9];
+   fRadius = b.fPnts[10];
+}
+
+//______________________________________________________________________________
+void TGLSphere::GLDraw()const
+{
+   // Draw a Sphere using OpenGL Sphere primitive gluSphere
+ 
+   GLUquadric *quadObj = GetQuadric();
+
+   glLoadName(GetGLName());
+   glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
+   glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
+   glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
+   glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
+   glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
+
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+   glLoadName(GetGLName());
+
+   glPushMatrix();
+   glTranslated(fX, fY, fZ);
+   gluSphere(quadObj, fRadius, fNdiv, fNdiv);
+   glPopMatrix();
+
+   glDisable(GL_BLEND);
 }
 
 //______________________________________________________________________________

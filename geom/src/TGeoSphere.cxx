@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.30 2004/09/14 15:56:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.31 2004/10/15 15:30:49 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -791,6 +791,29 @@ void TGeoSphere::Paint(Option_t *option)
    Int_t i, j, n = 20;  
    if (gGeoManager) SetNumberOfDivisions(gGeoManager->GetNsegments());
    n = GetNumberOfDivisions()+1;
+
+   // In case of OpenGL a simple sphere can be drawn with a specialized function
+   TBuffer3D *buff = gPad->AllocateBuffer3D(11, 0, 0);
+   if (!buff) return;
+   TGeoVolume *vol = gGeoManager->GetPaintVolume();
+   if (buff->fOption == TBuffer3D::kOGL &&
+       fRmin == 0 && fTheta1 == 0 && fTheta2 >= 180 && fPhi1 == 0 && fPhi2 >= 360) {
+      buff->fNbPnts  = 3;
+      buff->fNbSegs  = 0;
+      buff->fNbPols  = 0;
+      buff->fColor   = vol->GetLineColor();
+      buff->fPnts[0] =      0; buff->fPnts[1] =      0; buff->fPnts[2] =      0;
+      buff->fPnts[3] =  fRmax; buff->fPnts[4] =  fRmax; buff->fPnts[5] =  fRmax;
+      buff->fPnts[6] = -fRmax; buff->fPnts[7] = -fRmax; buff->fPnts[8] = -fRmax;
+      buff->fPnts[9] = (Float_t)n;
+      buff->fPnts[10] = fRmax;
+      TransformPoints(buff);
+      buff->fId   = vol;
+      buff->fType = TBuffer3D::kSPHE;
+      buff->Paint(option);
+      return;
+   }
+
    Double_t ph1 = GetPhi1();
    Double_t ph2 = GetPhi2();
    Int_t nz     = GetNz()+1;
@@ -803,11 +826,10 @@ void TGeoSphere::Paint(Option_t *option)
 
    Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
    Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
    if (!buff) return;
 
-   buff->fType = TBuffer3D::kSPHE;
-   TGeoVolume *vol = gGeoManager->GetPaintVolume();
+   buff->fType = TBuffer3D::kANY;
    buff->fId   = vol;
 
    // Fill gPad->fBuffer3D. Points coordinates are in Master space

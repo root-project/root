@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.7 2004/09/29 06:55:13 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.8 2004/10/04 07:38:37 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -162,6 +162,19 @@ class TGLPolyLine : public TGLSceneObject {
 public:
    TGLPolyLine(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
    void GLDraw()const;
+};
+
+// Utility class to draw a Sphere using OpenGL Sphere primitive
+class TGLSphere : public TGLSceneObject {
+public:
+   TGLSphere(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
+   void GLDraw()const;
+private:
+   Float_t fX;      // Sphere X center position
+   Float_t fY;      // Sphere Y center position
+   Float_t fZ;      // Sphere Z center position
+   Float_t fRadius; // Sphere radius
+   Int_t   fNdiv;   // Number of divisions
 };
 
 
