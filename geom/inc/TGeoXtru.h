@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.1 2004/02/09 14:03:34 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -47,7 +47,6 @@ public:
    // constructors
    TGeoXtru();
    TGeoXtru(Int_t nz);
-   TGeoXtru(const char *name, Int_t nz);
    TGeoXtru(Double_t *param);
    // destructor
    virtual ~TGeoXtru();
