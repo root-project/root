@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.7 2000/11/21 16:33:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.8 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -506,13 +506,21 @@ Int_t TKey::Read(TObject *obj)
    fBufferRef->SetBufferOffset(fKeylen);
    TDirectory *cursav = gDirectory;
    if (fObjlen > fNbytes-fKeylen) {
-      char *objbuf    = fBufferRef->Buffer() + fKeylen;
+      char *objbuf = fBufferRef->Buffer() + fKeylen;
       UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
-      Int_t nin = fNbytes-fKeylen;
-      Int_t nout;
-      R__unzip(&nin, bufcur, &fObjlen, objbuf, &nout);
-      if (nout != fObjlen) Error("Read", "fObjlen = %d, nout = %d", fObjlen, nout);
-      obj->Streamer(*fBufferRef);
+      Int_t nin, nout, nbuf;
+      Int_t noutot = 0;
+      while (1) {
+         nin  = 9 + ((Int_t)bufcur[3] | ((Int_t)bufcur[4] << 8) | ((Int_t)bufcur[5] << 16));
+         nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
+         R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
+         if (!nout) break;
+         noutot += nout;
+         if (noutot >= fObjlen) break;
+         bufcur += nin;
+         objbuf += nout;
+      }
+      if (nout) obj->Streamer(*fBufferRef);
       delete [] fBuffer;
    } else {
       obj->Streamer(*fBufferRef);
