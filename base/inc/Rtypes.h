@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name$:$Id$ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -101,7 +101,8 @@ class TMemberInspector;
 extern TClass *CreateClass(const char *cname, Version_t id,
                            const char *dfil, const char *ifil,
                            Int_t dl, Int_t il);
-extern void AddClass(const char *cname, Version_t id, VoidFuncPtr_t dict);
+extern void AddClass(const char *cname, Version_t id, VoidFuncPtr_t dict,
+                     Int_t pragmabits);
 extern void RemoveClass(const char *cname);
 
 // Cleanup this mess once HP-UX CC has been phased out (1-1-2001)
@@ -109,9 +110,9 @@ extern void RemoveClass(const char *cname);
 #define _ClassInit_(name) \
    class R__Init { \
       public: \
-         R__Init() { \
+         R__Init(Int_t pragmabits = 0) { \
             AddClass(name::Class_Name(), name::Class_Version(), \
-                     &name::Dictionary); \
+                     &name::Dictionary, pragmabits); \
          } \
          ~R__Init() { \
             RemoveClass(name::Class_Name()); \
@@ -123,9 +124,9 @@ extern void RemoveClass(const char *cname);
 #define _ClassInit_(name) \
    class R__Init { \
       public: \
-         R__Init() { \
+         R__Init(Int_t pragmabits = 0) { \
             AddClass(name::Class_Name(), name::Class_Version(), \
-                     &name::Dictionary); \
+                     &name::Dictionary, pragmabits); \
          } \
          ~R__Init() { \
             RemoveClass(name::Class_Name()); \
@@ -144,6 +145,7 @@ public: \
    virtual TClass *IsA() const { return name::Class(); } \
    virtual void ShowMembers(TMemberInspector &insp, char *parent); \
    virtual void Streamer(TBuffer &b); \
+   void StreamerNVirtual(TBuffer &b) { name::Streamer(b); } \
    friend TBuffer &operator>>(TBuffer &buf, name *&obj); \
    _ClassInit_(name) \
    static const char *DeclFileName() { return __FILE__; } \
@@ -160,19 +162,19 @@ public: \
 
 #define ClassImp(name) \
    void name::Dictionary() { \
-      TClass *c = CreateClass(Class_Name(), Class_Version(), \
-                              DeclFileName(), ImplFileName(), \
-                              DeclFileLine(), ImplFileLine()); \
-      fgIsA = c; \
+      fgIsA = CreateClass(Class_Name(),   Class_Version(), \
+                          DeclFileName(), ImplFileName(), \
+                          DeclFileLine(), ImplFileLine()); \
    } \
    _ClassImp_(name)
 
 #define ClassImp2(namespace,name) \
    ClassImp(name); \
    const char *namespace::name::Class_Name() { \
-          if (strlen(_QUOTE_(namespace))==0) \
-            return _QUOTE_(name); \
-          else return _QUOTE_(namespace) "::" _QUOTE_(name); \
+      if (strlen(_QUOTE_(namespace)) == 0) \
+         return _QUOTE_(name); \
+      else \
+         return _QUOTE_(namespace) "::" _QUOTE_(name); \
    } \
    static namespace::name::R__Init _NAME2_(__gR__Init,name);
 
@@ -193,6 +195,7 @@ public: \
    virtual TClass *IsA() const { return name::Class(); } \
    virtual void ShowMembers(TMemberInspector &, char *); \
    virtual void Streamer(TBuffer &); \
+   void StreamerNVirtual(TBuffer &b) { name::Streamer(b); } \
    static const char *DeclFileName() { return __FILE__; } \
    static int DeclFileLine() { return __LINE__; } \
    static const char *ImplFileName(); \
@@ -201,12 +204,12 @@ public: \
 #define _ClassInitT_(name,Tmpl) \
    template <class Tmpl> class _NAME2_(R__Init,name) { \
       public: \
-         _NAME2_(R__Init,name) () { \
+         _NAME2_(R__Init,name)(Int_t pragmabits) { \
             AddClass(name<Tmpl>::Class_Name(), \
                      name<Tmpl>::Class_Version(), \
-                     &name<Tmpl>::Dictionary); \
+                     &name<Tmpl>::Dictionary, pragmabits); \
          } \
-         _NAME3_(~,R__Init,name) () { \
+         _NAME3_(~,R__Init,name)() { \
             RemoveClass(name<Tmpl>::Class_Name()); \
          } \
    };
@@ -225,10 +228,9 @@ public: \
 
 #define ClassImpT(name,Tmpl) \
    template <class Tmpl> void name<Tmpl>::Dictionary() { \
-      TClass *c = CreateClass(Class_Name(),   Class_Version(), \
-                              DeclFileName(), ImplFileName(), \
-                              DeclFileLine(), ImplFileLine()); \
-      fgIsA = c; \
+      fgIsA = CreateClass(Class_Name(),   Class_Version(), \
+                          DeclFileName(), ImplFileName(), \
+                          DeclFileLine(), ImplFileLine()); \
    } \
    _ClassImpT_(name,Tmpl)
 
