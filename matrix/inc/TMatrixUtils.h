@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.17 2002/10/25 15:29:50 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.18 2002/12/10 14:00:48 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -115,7 +115,8 @@ public:
       : fRowUpb(nrows-1), fRowLwb(0), fColUpb(ncols-1), fColLwb(0) { }
    TLazyMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb)
       : fRowUpb(row_upb), fRowLwb(row_lwb), fColUpb(col_upb), fColLwb(col_lwb) { }
-
+   virtual ~TLazyMatrix() {}
+   
    ClassDef(TLazyMatrix,1)  // Lazy matrix
 };
 
@@ -126,7 +127,9 @@ private:
    void FillIn(TMatrix &m) const;
 
 public:
+   THaarMatrix() {}
    THaarMatrix(Int_t n, Int_t no_cols = 0);
+   virtual ~THaarMatrix() {}
 
    ClassDef(THaarMatrix,1)  // Haar matrix
 };
@@ -137,8 +140,10 @@ private:
    void FillIn(TMatrix &m) const;
 
 public:
+   THilbertMatrix() {}
    THilbertMatrix(Int_t no_rows, Int_t no_cols);
    THilbertMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb);
+   virtual ~THilbertMatrix() {}
 
    ClassDef(THilbertMatrix,1)  // Hilbert matrix
 };

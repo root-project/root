@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.14 2002/10/25 15:29:50 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.15 2002/12/10 14:00:48 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -117,6 +117,7 @@ public:
       : fRowUpb(nrows-1), fRowLwb(0), fColUpb(ncols-1), fColLwb(0) { }
    TLazyMatrixD(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb)
       : fRowUpb(row_upb), fRowLwb(row_lwb), fColUpb(col_upb), fColLwb(col_lwb) { }
+   virtual ~TLazyMatrixD() {}
 
    ClassDef(TLazyMatrixD,1)  // Lazy matrix with double precision
 };
@@ -128,7 +129,9 @@ private:
    void FillIn(TMatrixD &m) const;
 
 public:
+   THaarMatrixD() {}
    THaarMatrixD(Int_t n, Int_t no_cols = 0);
+   virtual ~THaarMatrixD() {}
 
    ClassDef(THaarMatrixD,1)  // Haar matrix with double precision
 };
@@ -139,8 +142,10 @@ private:
    void FillIn(TMatrixD &m) const;
 
 public:
+   THilbertMatrixD() {}
    THilbertMatrixD(Int_t no_rows, Int_t no_cols);
    THilbertMatrixD(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb);
+   virtual ~THilbertMatrixD() {}
 
    ClassDef(THilbertMatrixD,1)  // Hilbert matrix with double precision
 };
