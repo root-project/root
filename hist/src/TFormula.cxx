@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.57 2003/11/21 11:13:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.58 2003/11/22 14:50:26 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2594,13 +2594,17 @@ void TFormula::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
-   Int_t i;
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 3) {
          TFormula::Class()->ReadBuffer(b, this, v, R__s, R__c);
          if (!TestBit(kNotGlobal)) gROOT->GetListOfFunctions()->Add(this);
+
+         // We need to reinstate (if possible) the TMethodCall.
+         if (fFunctions.GetLast()>=0) {
+            Compile();
+         }
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2618,6 +2622,7 @@ void TFormula::Streamer(TBuffer &b)
       if (fNpar) {
          fNames  = new TString[fNpar];
       }
+      Int_t i;
       for (i=0;i<fNoper;i++)  fExpr[i].Streamer(b);
       for (i=0;i<fNpar;i++)   fNames[i].Streamer(b);
       if (gROOT->GetListOfFunctions()->FindObject(GetName())) return;
