@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.38 2004/08/17 15:06:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.39 2004/08/22 01:43:33 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -284,10 +284,14 @@ void TGClient::FreeFont(const TGFont *font)
 }
 
 //______________________________________________________________________________
-void TGClient::NeedRedraw(TGWindow *w)
+void TGClient::NeedRedraw(TGWindow *w, Bool_t force)
 {
    // Set redraw flags.
 
+   if (force) {
+      w->DoRedraw();
+      return;
+   }
    w->fNeedRedraw = kTRUE;
    fGlobalNeedRedraw = kTRUE;
 }

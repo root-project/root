@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.17 2004/08/13 17:03:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.18 2004/08/17 15:06:56 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -98,7 +98,7 @@ public:
    Pixel_t      GetShadow(Pixel_t base_color) const;
    void         FreeColor(Pixel_t color) const;
    void         ForceRedraw() { fForceRedraw = kTRUE; }
-   void         NeedRedraw(TGWindow *w);
+   void         NeedRedraw(TGWindow *w, Bool_t force = kFALSE);
    void         RegisterWindow(TGWindow *w);
    void         UnregisterWindow(TGWindow *w);
    void         RegisterPopup(TGWindow *w);
