@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.6 2002/05/18 08:43:30 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.7 2002/07/29 09:22:29 rdm Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -259,6 +259,27 @@ TObject *THashTable::Remove(TObject *obj)
             fUsedSlots--;
          }
          return ob;
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TObject *THashTable::RemoveSlow(TObject *obj)
+{
+   // Remove object from the hashtable without using the hash value.
+
+   for (int i = 0; i < fSize; i++) {
+      if (fCont[i]) {
+         TObject *ob = fCont[i]->Remove(obj);
+         if (ob) {
+            fEntries--;
+            if (fCont[i]->GetSize() == 0) {
+               SafeDelete(fCont[i]);
+               fUsedSlots--;
+            }
+            return ob;
+         }
       }
    }
    return 0;
