@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.2 2000/08/14 11:31:31 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -170,7 +170,7 @@ int NetOpen(int inetdflag)
       if (gDebug > 0) {
 #ifdef _AIX
          size_t clilen = sizeof(tcp_cli_addr);
-#elif defined(R__GLIBC)
+#elif defined(R__GLIBC) || (defined(__FreeBSD__) && defined(__alpha__))
          socklen_t clilen = sizeof(tcp_cli_addr);
 #else
          int clilen = sizeof(tcp_cli_addr);
@@ -204,7 +204,7 @@ int NetOpen(int inetdflag)
 again:
 #ifdef _AIX
    size_t clilen = sizeof(tcp_cli_addr);
-#elif defined(R__GLIBC)
+#elif defined(R__GLIBC) || (defined(__FreeBSD__) && defined(__alpha__))
    socklen_t clilen = sizeof(tcp_cli_addr);
 #else
    int clilen = sizeof(tcp_cli_addr);

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.5 2000/07/27 12:05:57 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.6 2000/08/14 11:29:29 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1348,9 +1348,9 @@ TInetAddress TUnixSystem::GetSockName(int sock)
    // Get Internet Protocol (IP) address of host and port #.
 
    struct sockaddr_in addr;
-#if defined(R__AIX) || defined(R__FBSD)
+#if defined(R__AIX) || (defined(R__FBSD) && !defined(R__ALPHA))
    size_t len = sizeof(addr);
-#elif defined(R__GLIBC)
+#elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA))
    socklen_t len = sizeof(addr);
 #else
    int len = sizeof(addr);
@@ -1386,9 +1386,9 @@ TInetAddress TUnixSystem::GetPeerName(int sock)
    // Get Internet Protocol (IP) address of remote host and port #.
 
    struct sockaddr_in addr;
-#if defined(R__AIX) || defined(R__FBSD)
+#if defined(R__AIX) || (defined(R__FBSD) && !defined(R__ALPHA))
    size_t len = sizeof(addr);
-#elif defined(R__GLIBC)
+#elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA))
    socklen_t len = sizeof(addr);
 #else
    int len = sizeof(addr);
@@ -1714,9 +1714,9 @@ int TUnixSystem::GetSockOpt(int sock, int opt, int *val)
 
    if (sock < 0) return -1;
 
-#if defined(R__GLIBC) || defined(_AIX43)
+#if defined(R__GLIBC) || defined(_AIX43) || (defined(R__FBSD) && defined(R__ALPHA))
    socklen_t optlen = sizeof(*val);
-#elif defined(R__FBSD)
+#elif defined(R__FBSD) && !defined(R__ALPHA)
    size_t optlen = sizeof(*val);
 #else
    int optlen = sizeof(*val);
