@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.10 2000/08/07 12:33:41 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.11 2000/08/14 16:49:28 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1135,6 +1135,7 @@ void THistPainter::PaintContour()
    for (i=0;i<ncontour;i++) levels[i] = fH->GetContourLevel(i);
    Int_t linesav   = fH->GetLineStyle();
    Int_t colorsav  = fH->GetLineColor();
+   Int_t fillsav  = fH->GetFillColor();
    if (Hoption.Contour == 13) {
       fH->TAttLine::Modify();
    }
@@ -1368,6 +1369,7 @@ void THistPainter::PaintContour()
 theEND:
    fH->SetLineStyle(linesav);
    fH->SetLineColor(colorsav);
+   fH->SetFillColor(fillsav);
    delete [] xarr;
    delete [] yarr;
    delete [] itarr;
