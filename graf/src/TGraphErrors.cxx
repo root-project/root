@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.10 2001/03/22 16:47:01 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.11 2001/04/06 07:10:06 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -360,7 +360,7 @@ void TGraphErrors::Set(Int_t n)
       ey = new Double_t[n];
    }
    Int_t i;
-   for (i=0; i<fNpoints;i++) {
+   for (i=0; i<fNpoints && i<n;i++) {
       if (fX)   x[i] = fX[i];
       if (fY)   y[i] = fY[i];
       if (fEX) ex[i] = fEX[i];
