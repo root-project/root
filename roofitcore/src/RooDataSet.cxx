@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.69 2002/03/01 19:57:18 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.70 2002/04/03 23:37:24 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -334,7 +334,7 @@ Bool_t RooDataSet::merge(const TList& dsetList)
     RooAbsArg* arg ;
     while (arg=(RooAbsArg*)data->_iterator->Next()) {
       RooAbsArg* clone = _vars.addClone(*arg,kTRUE) ;
-      if (clone) clone->attachToTree(*_tree) ;
+      if (clone) clone->attachToTree(*_tree,_defTreeBufSize) ;
     }
   }
 	   

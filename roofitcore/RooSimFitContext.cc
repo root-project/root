@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.18 2002/03/22 22:43:57 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.19 2002/04/03 23:37:26 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,7 +24,7 @@ ClassImp(RooSimFitContext)
 ;
 
 RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous* simpdf, const RooArgSet* projDeps) : 
-  RooFitContext(data,simpdf,kFALSE,kTRUE,projDeps), _nGlobEvents(-1)
+  RooFitContext(data,simpdf,kFALSE,kFALSE,projDeps), _nGlobEvents(-1)
 {
   RooAbsCategoryLValue& simCat = (RooAbsCategoryLValue&) simpdf->_indexCat.arg() ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.39 2002/04/03 23:37:27 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.40 2002/04/04 00:17:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -54,6 +54,8 @@
 
 ClassImp(RooTreeData)
 ;
+
+Int_t RooTreeData::_defTreeBufSize = 4096 ;
 
 
 RooTreeData::RooTreeData() 
@@ -288,7 +290,7 @@ void RooTreeData::initialize() {
   _iterator->Reset() ;
   RooAbsArg *var;
   while(0 != (var= (RooAbsArg*)_iterator->Next())) {
-    var->attachToTree(*_tree) ;
+    var->attachToTree(*_tree,_defTreeBufSize) ;
   }
 }
 
@@ -302,7 +304,7 @@ void RooTreeData::initCache(const RooArgSet& cachedVars)
   TIterator* iter = cachedVars.createIterator() ;
   RooAbsArg *var;
   while(0 != (var= (RooAbsArg*)iter->Next())) {
-    var->attachToTree(*_tree) ;
+    var->attachToTree(*_tree,_defTreeBufSize) ;
     _cachedVars.add(*var) ;
   }
   delete iter ;
@@ -406,7 +408,7 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select)
   TIterator* sourceIter =  sourceArgSet->createIterator() ;
   RooAbsArg* sourceArg = 0;
   while (sourceArg=(RooAbsArg*)sourceIter->Next()) {
-    sourceArg->attachToTree(*tClone) ;
+    sourceArg->attachToTree(*tClone,_defTreeBufSize) ;
   }
 
   // Redirect formula servers to sourceArgSet
@@ -510,7 +512,7 @@ void RooTreeData::cacheArgs(RooArgSet& newVarSet, const RooArgSet* nset)
     
   while (arg=(RooAbsArg*)iter->Next()) {
     // Attach original newVar to this tree
-    arg->attachToTree(*_tree) ;
+    arg->attachToTree(*_tree,_defTreeBufSize) ;
     _cachedVars.add(*arg) ;
   }
 
@@ -606,7 +608,7 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
   newVarClone->recursiveRedirectServers(_vars,kFALSE) ;
 
   // Attach value place holder to this tree
-  ((RooAbsArg*)valHolder)->attachToTree(*_tree) ;
+  ((RooAbsArg*)valHolder)->attachToTree(*_tree,_defTreeBufSize) ;
   _vars.addOwned(*valHolder) ;
 
   // Fill values of of placeholder
@@ -661,7 +663,7 @@ RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
     cloneSet.add(*newVarClone) ;
 
     // Attach value place holder to this tree
-    ((RooAbsArg*)valHolder)->attachToTree(*_tree) ;
+    ((RooAbsArg*)valHolder)->attachToTree(*_tree,_defTreeBufSize) ;
     _vars.addOwned(*valHolder) ;
   }
   delete vIter ;

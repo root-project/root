@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.rdl,v 1.19 2002/02/23 02:14:55 verkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.20 2002/03/07 06:22:24 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -118,6 +118,10 @@ protected:
   friend class RooFitContext ;
   virtual void cacheArgs(RooArgSet& varSet, const RooArgSet* nset=0) ;
 
+  // TTree Branch buffer size contro
+  void setBranchBufferSize(Int_t size) { _defTreeBufSize = size ; }
+  Int_t getBranchBufferSize() const { return _defTreeBufSize ; }
+
 protected:
 
   void checkInit() const {
@@ -142,12 +146,13 @@ protected:
   RooArgSet _truth;        // Truth variables   
   TString _blindString ;   // Blinding string (optionally read from ASCII files)
 
+  static Int_t _defTreeBufSize ;  
+
 private:
 
   void initialize();
   void initCache(const RooArgSet& cachedVars) ; 
 
-  enum { bufSize = 8192 };
   ClassDef(RooTreeData,1) // Abstract ttree based data collection
 };
 
