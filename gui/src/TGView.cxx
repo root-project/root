@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.2 2000/07/04 11:34:55 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.3 2000/07/06 16:47:54 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -234,11 +234,11 @@ Bool_t TGView::HandleCrossing(Event_t *event)
 }
 
 //______________________________________________________________________________
-Bool_t TGView::HandleTimer(TViewTimer *)
+Bool_t TGView::HandleTimer(TTimer *)
 {
    // Handle scroll timer.
 
-   TGPosition size;
+   TGLongPosition size;
 
    if (fIsMarked) {
       size.fY = ToObjYCoord(fVisible.fY + fCanvas->GetHeight()) - 1;
@@ -331,7 +331,7 @@ Bool_t TGView::HandleButton(Event_t *event)
    } else if (event->fCode == kButton5) {
       // move three lines down
       if ((Int_t)fCanvas->GetHeight() < ToScrYCoord(ReturnLineCount())) {
-         TGPosition size;
+         TGLongPosition size;
          size.fY = ToObjYCoord(fVisible.fY + fCanvas->GetHeight()) - 1;
          SetVsbPosition(fVisible.fY / fScrollVal.fY + 3);
          Mark(fMousePos.fX, size.fY + 3);
@@ -383,7 +383,7 @@ Bool_t TGView::HandleMotion(Event_t *event)
 }
 
 //______________________________________________________________________________
-Bool_t TGView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TGView::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
    // Process scrollbar messages.
 
@@ -453,7 +453,7 @@ void TGView::HLayout()
          fHsb->MoveResize(fBorderWidth, fHeight - fHsb->GetDefaultHeight()-fBorderWidth,
                           tcw+1+fBorderWidth, fHsb->GetDefaultHeight());
          fHsb->MapWindow();
-         fHsb->SetRange(cols/fScrollVal.fX, tcw/fScrollVal.fX);
+         fHsb->SetRange(Int_t(cols/fScrollVal.fX), Int_t(tcw/fScrollVal.fX));
       }
       fCanvas->MoveResize(fBorderWidth + fXMargin, fBorderWidth + fYMargin, tcw, tch);
    }
@@ -490,7 +490,7 @@ void TGView::VLayout()
          fVsb->MoveResize(fWidth - fVsb->GetDefaultWidth() - fBorderWidth, fBorderWidth,
                           fVsb->GetDefaultWidth(), tch+1+fBorderWidth);
          fVsb->MapWindow();
-         fVsb->SetRange(lines/fScrollVal.fY, tch/fScrollVal.fY);
+         fVsb->SetRange(Int_t(lines/fScrollVal.fY), Int_t(tch/fScrollVal.fY));
       }
       fCanvas->MoveResize(fBorderWidth + fXMargin, fBorderWidth + fYMargin, tcw, tch);
    }
@@ -512,8 +512,8 @@ void TGView::SetSBRange(Int_t direction)
       }
       if (!fVsb->IsMapped())
          VLayout();
-      fVsb->SetRange(ReturnHeighestColHeight()/fScrollVal.fY,
-                     fCanvas->GetHeight()/fScrollVal.fY);
+      fVsb->SetRange(Int_t(ReturnHeighestColHeight()/fScrollVal.fY),
+                     Int_t(fCanvas->GetHeight()/fScrollVal.fY));
    } else {
       if (!fHsb)
          return;
@@ -525,31 +525,31 @@ void TGView::SetSBRange(Int_t direction)
       }
       if (!fHsb->IsMapped())
          HLayout();
-      fHsb->SetRange(ReturnLongestLineWidth()/fScrollVal.fX,
-                     fCanvas->GetWidth()/fScrollVal.fX);
+      fHsb->SetRange(Int_t(ReturnLongestLineWidth()/fScrollVal.fX),
+                     Int_t(fCanvas->GetWidth()/fScrollVal.fX));
    }
 }
 
 //______________________________________________________________________________
-void TGView::SetHsbPosition(Int_t newPos)
+void TGView::SetHsbPosition(Long_t newPos)
 {
    // Set position of horizontal scrollbar.
 
    if (fHsb)
-     fHsb->SetPosition(newPos);
+     fHsb->SetPosition(Int_t(newPos));
    else
-     SetVisibleStart(newPos * fScrollVal.fX, kHorizontal);
+     SetVisibleStart(Int_t(newPos * fScrollVal.fX), kHorizontal);
 }
 
 //______________________________________________________________________________
-void TGView::SetVsbPosition(Int_t newPos)
+void TGView::SetVsbPosition(Long_t newPos)
 {
    // Set position of vertical scrollbar.
 
    if (fVsb)
-      fVsb->SetPosition(newPos);
+      fVsb->SetPosition(Int_t(newPos));
    else
-      SetVisibleStart(newPos * fScrollVal.fY, kVertical);
+      SetVisibleStart(Int_t(newPos * fScrollVal.fY), kVertical);
 }
 
 //______________________________________________________________________________
@@ -582,8 +582,7 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
    // Scroll the canvas to new_top in the kVertical or kHorizontal direction.
 
    Point_t points[4];
-   int xsrc, ysrc, xdest, ydest;
-   int cpyheight, cpywidth;
+   Int_t xsrc, ysrc, xdest, ydest, cpyheight, cpywidth;
 
    if (direction == kVertical) {
       points[0].fX = points[3].fX = 0;
@@ -592,7 +591,7 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
       cpywidth = 0;
       if (new_top < fVisible.fY) {
          ysrc = 0;
-         ydest = fVisible.fY - new_top;
+         ydest = Int_t(fVisible.fY - new_top);
          cpyheight = ydest;
          if (ydest > (Int_t)fCanvas->GetHeight())
             ydest = fCanvas->GetHeight();
@@ -600,7 +599,7 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
          points[3].fY = points[2].fY = ydest ; // -1;
       } else {
          ydest = 0;
-         ysrc = new_top - fVisible.fY;
+         ysrc = Int_t(new_top - fVisible.fY);
          cpyheight= ysrc;
          if (ysrc > (Int_t)fCanvas->GetHeight())
             ysrc = fCanvas->GetHeight();
@@ -617,7 +616,7 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
       cpyheight = 0;
       if (new_top < fVisible.fX) {
          xsrc = 0;
-         xdest = fVisible.fX - new_top;
+         xdest = Int_t(fVisible.fX - new_top);
          cpywidth = xdest;
          if (xdest < 0)
             xdest = fCanvas->GetWidth();
@@ -625,7 +624,7 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
          points[1].fX = points[2].fX = xdest ; // -1;
       } else {
          xdest = 0;
-         xsrc =  new_top - fVisible.fX;
+         xsrc =  Int_t(new_top - fVisible.fX);
          cpywidth = xsrc;
          if (xsrc > (Int_t)fCanvas->GetWidth())
             xsrc = fCanvas->GetWidth();

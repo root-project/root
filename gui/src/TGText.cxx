@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.2 2000/07/03 18:50:57 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.3 2000/07/06 16:47:54 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -114,8 +114,8 @@ void TGTextLine::DelText(ULong_t pos, ULong_t length)
       return;
    }
    newstring = new char[fLength - length+1];
-   strncpy(newstring, fString, pos);
-   strncpy(newstring+pos, fString+pos+length, fLength-pos-length);
+   strncpy(newstring, fString, (UInt_t)pos);
+   strncpy(newstring+pos, fString+pos+length, UInt_t(fLength-pos-length));
    delete fString;
    fString = newstring;
    fLength = fLength - length;
@@ -132,10 +132,10 @@ void TGTextLine::InsText(ULong_t pos, const char *text)
       return;
    newstring = new char[strlen(text)+fLength+1];
    if (fString != 0)
-      strncpy(newstring, fString, pos);
+      strncpy(newstring, fString, (UInt_t)pos);
    strcpy(newstring+pos, text);
    if (fLength - pos  > 0)
-      strncpy(newstring+pos+strlen(text), fString+pos, fLength-pos);
+      strncpy(newstring+pos+strlen(text), fString+pos, UInt_t(fLength-pos));
    fLength = fLength + strlen(text);
    delete fString;
    fString = newstring;
@@ -155,7 +155,7 @@ char *TGTextLine::GetText(ULong_t pos, ULong_t length)
       return 0;
    retstring = new char[length+1];
    retstring[length] = '\0';
-   strncpy(retstring, fString+pos, length);
+   strncpy(retstring, fString+pos, (UInt_t)length);
 
    return retstring;
 }
@@ -169,9 +169,9 @@ void TGTextLine::DelChar(ULong_t pos)
    if ((fLength <= 0) || (pos > fLength))
       return;
    newstring = new char[fLength -1];
-   strncpy(newstring, fString, pos-1);
+   strncpy(newstring, fString, (UInt_t)pos-1);
    if (pos < fLength)
-      strncpy(newstring+pos-1, fString+pos, fLength-pos);
+      strncpy(newstring+pos-1, fString+pos, UInt_t(fLength-pos));
    delete fString;
    fString = newstring;
    fLength--;
@@ -188,10 +188,10 @@ void TGTextLine::InsChar(ULong_t pos, char character)
    newstring = new char[fLength+2];
    newstring[fLength+1] = '\0';
    if (fLength > 0)
-     strncpy (newstring, fString, pos);
+     strncpy (newstring, fString, (UInt_t)pos);
    newstring[pos] = character;
    if (fLength - pos > 0)
-      strncpy(newstring+pos+1, fString+pos, fLength-pos);
+      strncpy(newstring+pos+1, fString+pos, UInt_t(fLength-pos));
    delete fString;
    fString = newstring;
    fLength++;
@@ -472,7 +472,7 @@ Bool_t TGText::Save(const char *fn)
    while (travel) {
       ULong_t i = 0;
       buffer = new char[travel->fLength+2];
-      strncpy(buffer, travel->fString, travel->fLength);
+      strncpy(buffer, travel->fString, (UInt_t)travel->fLength);
       buffer[travel->fLength]   = '\n';
       buffer[travel->fLength+1] = '\0';
       while (buffer[i] != '\0') {
@@ -511,7 +511,7 @@ Bool_t TGText::Append(const char *fn)
    while (travel) {
       ULong_t i = 0;
       buffer = new char[travel->fLength+2];
-      strncpy(buffer, travel->fString, travel->fLength);
+      strncpy(buffer, travel->fString, (UInt_t)travel->fLength);
       buffer[travel->fLength]   = '\n';
       buffer[travel->fLength+1] = '\0';
       while (buffer[i] != '\0') {

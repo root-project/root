@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.3 2000/07/04 11:35:36 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.4 2000/07/06 16:47:54 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -197,8 +197,8 @@ Bool_t TGTextView::Search(const char *string, Bool_t direction, Bool_t caseSensi
 
    SetVsbPosition((ToScrYCoord(pos.fY) + fVisible.fY)/fScrollVal.fY);
    SetHsbPosition((ToScrXCoord(pos.fX, pos.fY) + fVisible.fX)/fScrollVal.fX);
-   DrawRegion(0, ToScrYCoord(fMarkedStart.fY), fCanvas->GetWidth(),
-              ToScrYCoord(fMarkedEnd.fY+1) - ToScrYCoord(fMarkedEnd.fY));
+   DrawRegion(0, (Int_t)ToScrYCoord(fMarkedStart.fY), fCanvas->GetWidth(),
+              UInt_t(ToScrYCoord(fMarkedEnd.fY+1) - ToScrYCoord(fMarkedEnd.fY)));
 
    return kTRUE;
 }
@@ -258,7 +258,7 @@ Long_t TGTextView::ToScrXCoord(Long_t xCoord, Long_t line)
    if (xCoord > width)
       xCoord = width;
    buffer = fText->GetLine(pos, xCoord);
-   width = gVirtualX->TextWidth(fFont, buffer, xCoord) - fVisible.fX;
+   width = gVirtualX->TextWidth(fFont, buffer, (Int_t)xCoord) - fVisible.fX;
    delete [] buffer;
 
    return width;
@@ -407,7 +407,7 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
    rect.fHeight = UShort_t(h + ToScrYCoord(pos.fY+1) - ToScrYCoord(pos.fY));
    pos.fX = ToObjXCoord(fVisible.fX+w, pos.fY);
    rect.fWidth = UShort_t(w + ToScrXCoord(pos.fX+1,pos.fY) - ToScrXCoord(pos.fX, pos.fY));
-   Int_t yloc = rect.fY + fScrollVal.fY;
+   Int_t yloc = rect.fY + (Int_t)fScrollVal.fY;
    pos.fY = ToObjYCoord(fVisible.fY + rect.fY);
    while (pos.fY < line_count &&
           yloc - fScrollVal.fY <= (Int_t)fCanvas->GetHeight() &&
@@ -661,8 +661,8 @@ void TGTextView::Mark(Long_t xPos, Long_t yPos)
       if (fMarkedEnd.fX < 0)
          fMarkedEnd.fX = 0;
    }
-   DrawRegion(0, ToScrYCoord(posStart.fY), fCanvas->GetWidth(),
-              ToScrYCoord(posEnd.fY+1)-ToScrYCoord(posStart.fY));
+   DrawRegion(0, (Int_t)ToScrYCoord(posStart.fY), fCanvas->GetWidth(),
+              UInt_t(ToScrYCoord(posEnd.fY+1)-ToScrYCoord(posStart.fY)));
    return;
 }
 
@@ -688,5 +688,5 @@ void TGTextView::AdjustWidth()
    if (fVsb->IsMapped())
       size += fVsb->GetDefaultWidth();
    size += (fBorderWidth << 1) + fXMargin+1;
-   Resize(size, fHeight);
+   Resize((UInt_t)size, fHeight);
 }

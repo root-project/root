@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.1 2000/07/06 16:46:12 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -214,8 +214,8 @@ Bool_t TGTextEdit::Search(const char *string, Bool_t direction,
 
    SetVsbPosition((ToScrYCoord(pos.fY)+fVisible.fY)/fScrollVal.fY);
    SetHsbPosition((ToScrXCoord(pos.fX, pos.fY)+fVisible.fX)/fScrollVal.fX);
-   DrawRegion(0, ToScrYCoord(fMarkedStart.fY), fCanvas->GetWidth(),
-              ToScrYCoord(fMarkedEnd.fY+1)-ToScrYCoord(fMarkedEnd.fY));
+   DrawRegion(0, (Int_t)ToScrYCoord(fMarkedStart.fY), fCanvas->GetWidth(),
+              UInt_t(ToScrYCoord(fMarkedEnd.fY+1)-ToScrYCoord(fMarkedEnd.fY)));
 
    return kTRUE;
 }
@@ -252,8 +252,8 @@ Bool_t TGTextEdit::Replace(TGLongPosition textPos, const char *oldText,
 
    SetVsbPosition((ToScrYCoord(pos.fY)+fVisible.fY)/fScrollVal.fY);
    SetHsbPosition((ToScrXCoord(pos.fX, pos.fY)+fVisible.fX)/fScrollVal.fX);
-   DrawRegion(0, ToScrYCoord(fMarkedStart.fY), fCanvas->GetWidth(),
-              ToScrYCoord(fMarkedEnd.fY+1)-ToScrYCoord(fMarkedEnd.fY));
+   DrawRegion(0, (Int_t)ToScrYCoord(fMarkedStart.fY), fCanvas->GetWidth(),
+              UInt_t(ToScrYCoord(fMarkedEnd.fY+1)-ToScrYCoord(fMarkedEnd.fY)));
 
    return kTRUE;
 }
@@ -360,8 +360,8 @@ void TGTextEdit::DrawCursor(Int_t mode)
                                      ToScrXCoord(fCurrent.fX, fCurrent.fY)),
                                      UInt_t(ToScrYCoord(fCurrent.fY+1)-ToScrYCoord(fCurrent.fY)));
                if (count != -1)
-                  gVirtualX->DrawString(fCanvas->GetId(), fSelGC, ToScrXCoord(fCurrent.fX,fCurrent.fY),
-                       ToScrYCoord(fCurrent.fY+1) - fMaxDescent, &cursor, 1);
+                  gVirtualX->DrawString(fCanvas->GetId(), fSelGC, (Int_t)ToScrXCoord(fCurrent.fX,fCurrent.fY),
+                       Int_t(ToScrYCoord(fCurrent.fY+1) - fMaxDescent), &cursor, 1);
             } else {
                gVirtualX->ClearArea(fCanvas->GetId(),
                                     Int_t(ToScrXCoord(fCurrent.fX, fCurrent.fY)),
@@ -370,8 +370,8 @@ void TGTextEdit::DrawCursor(Int_t mode)
                                     ToScrXCoord(fCurrent.fX, fCurrent.fY)),
                                     UInt_t(ToScrYCoord(fCurrent.fY+1)-ToScrYCoord(fCurrent.fY)));
                if (count != -1)
-                  gVirtualX->DrawString(fCanvas->GetId(), fNormGC, ToScrXCoord(fCurrent.fX,fCurrent.fY),
-                       ToScrYCoord(fCurrent.fY+1) - fMaxDescent, &cursor, 1);
+                  gVirtualX->DrawString(fCanvas->GetId(), fNormGC, (Int_t)ToScrXCoord(fCurrent.fX,fCurrent.fY),
+                       Int_t(ToScrYCoord(fCurrent.fY+1) - fMaxDescent), &cursor, 1);
             }
          } else {
 //            gVirtualX->DrawLine(fCanvas->GetId(), fCursor0GC,
@@ -384,8 +384,8 @@ void TGTextEdit::DrawCursor(Int_t mode)
                                      Int_t(ToScrYCoord(fCurrent.fY)),
                                      2,
                                      UInt_t(ToScrYCoord(fCurrent.fY+1)-ToScrYCoord(fCurrent.fY)));
-            gVirtualX->DrawString(fCanvas->GetId(), fNormGC, ToScrXCoord(fCurrent.fX,fCurrent.fY),
-                       ToScrYCoord(fCurrent.fY+1) - fMaxDescent, &cursor, 1);
+            gVirtualX->DrawString(fCanvas->GetId(), fNormGC, (Int_t)ToScrXCoord(fCurrent.fX,fCurrent.fY),
+                       Int_t(ToScrYCoord(fCurrent.fY+1) - fMaxDescent), &cursor, 1);
          }
       } else
          if (mode == 1) {
@@ -425,9 +425,9 @@ void TGTextEdit::AdjustPos()
 }
 
 //______________________________________________________________________________
-Bool_t TGTextEdit::HandleTimer(TViewTimer *t)
+Bool_t TGTextEdit::HandleTimer(TTimer *t)
 {
-   // Handle timer cursor blink timer. Forward scroll timer.
+   // Handle timer cursor blink timer.
 
    if (t != fCurBlink) {
       TGTextView::HandleTimer(t);
@@ -560,8 +560,8 @@ Bool_t TGTextEdit::HandleMotion(Event_t *event)
                pos.fX++;
             while (fText->GetChar(pos) == 16);
       }
-      event->fY = ToScrYCoord(pos.fY);
-      event->fX = ToScrXCoord(pos.fX, pos.fY);
+      event->fY = (Int_t)ToScrYCoord(pos.fY);
+      event->fX = (Int_t)ToScrXCoord(pos.fX, pos.fY);
       if (pos.fY != fCurrent.fY || pos.fX != fCurrent.fX) {
          TGTextView::HandleMotion(event);
          SetCurrent(pos);
@@ -596,7 +596,6 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
          case kKey_NumLock:
          case kKey_ScrollLock:
             return kTRUE;
-            break;
          default:
             break;
       }
@@ -653,14 +652,11 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
             case kKey_Y:
               Paste();
                return kTRUE;
-               break;
             case kKey_X:
                Cut();
                return kTRUE;
-               break;
             default:
                return kTRUE;
-               break;
          }
       }
       if (n && keysym >= 32 && keysym < 127 &&     // printable keys
@@ -821,16 +817,16 @@ void TGTextEdit::InsChar(char character)
          SetHsbPosition(fVisible.fX/fScrollVal.fX+strlen(charstring));
       if (!fHsb)
          gVirtualX->DrawString(fCanvas->GetId(), fNormGC,
-                               ToScrXCoord(fCurrent.fX, fCurrent.fY),
-                               ToScrYCoord(fCurrent.fY+1) - fMaxDescent,
+                               (Int_t)ToScrXCoord(fCurrent.fX, fCurrent.fY),
+                               Int_t(ToScrYCoord(fCurrent.fY+1) - fMaxDescent),
                                charstring, strlen(charstring));
    } else {
       gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fNormGC,
-                          ToScrXCoord(fCurrent.fX, fCurrent.fY),
-                          ToScrYCoord(fCurrent.fY), fCanvas->GetWidth(),
-                          ToScrYCoord(fCurrent.fY+1)-ToScrYCoord(fCurrent.fY),
-                          ToScrXCoord(pos.fX, fCurrent.fY),
-                          ToScrYCoord(fCurrent.fY));
+                          (Int_t)ToScrXCoord(fCurrent.fX, fCurrent.fY),
+                          (Int_t)ToScrYCoord(fCurrent.fY), fCanvas->GetWidth(),
+                          UInt_t(ToScrYCoord(fCurrent.fY+1)-ToScrYCoord(fCurrent.fY)),
+                          (Int_t)ToScrXCoord(pos.fX, fCurrent.fY),
+                          (Int_t)ToScrYCoord(fCurrent.fY));
       gVirtualX->ClearArea(fCanvas->GetId(),
                            Int_t(ToScrXCoord(fCurrent.fX, fCurrent.fY)),
                            Int_t(ToScrYCoord(fCurrent.fY)),
@@ -838,8 +834,8 @@ void TGTextEdit::InsChar(char character)
                            ToScrXCoord(fCurrent.fX, fCurrent.fY)),
                            UInt_t(ToScrYCoord(fCurrent.fY+1)-ToScrYCoord(fCurrent.fY)));
       gVirtualX->DrawString(fCanvas->GetId(), fNormGC,
-                            ToScrXCoord(fCurrent.fX, fCurrent.fY),
-                            ToScrYCoord(fCurrent.fY+1) - fMaxDescent,
+                            Int_t(ToScrXCoord(fCurrent.fX, fCurrent.fY)),
+                            Int_t(ToScrYCoord(fCurrent.fY+1) - fMaxDescent),
                             charstring, strlen(charstring));
       fCursorState = 2;  // the ClearArea effectively turned off the cursor
    }
@@ -867,8 +863,8 @@ void TGTextEdit::DelChar()
             fText->DelChar(pos);
             pos.fX--;
          }
-         DrawRegion(0, ToScrYCoord(pos.fY), fCanvas->GetWidth(),
-                    ToScrYCoord(pos.fY+2)-ToScrYCoord(pos.fY));
+         DrawRegion(0, (Int_t)ToScrYCoord(pos.fY), fCanvas->GetWidth(),
+                    UInt_t(ToScrYCoord(pos.fY+2)-ToScrYCoord(pos.fY)));
       } else {
          pos.fX = fCurrent.fX;
          fText->DelChar(fCurrent);
@@ -877,8 +873,8 @@ void TGTextEdit::DelChar()
       if (ToScrXCoord(fCurrent.fX-1, fCurrent.fY) < 0)
          SetHsbPosition((fVisible.fX-fCanvas->GetWidth()/2)/fScrollVal.fX);
       SetSBRange(kHorizontal);
-      DrawRegion(0, ToScrYCoord(pos.fY), fCanvas->GetWidth(),
-                 ToScrYCoord(pos.fY+2)-ToScrYCoord(pos.fY));
+      DrawRegion(0, (Int_t)ToScrYCoord(pos.fY), fCanvas->GetWidth(),
+                 UInt_t(ToScrYCoord(pos.fY+2)-ToScrYCoord(pos.fY)));
    } else {
       if (fCurrent.fY > 0) {
          len = fText->GetLineLength(fCurrent.fY);
@@ -899,13 +895,13 @@ void TGTextEdit::DelChar()
             SetHsbPosition((ToScrXCoord(pos.fX, pos.fY)+fVisible.fX-fCanvas->GetWidth()/2)/fScrollVal.fX);
 
          gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fNormGC, 0,
-                             pos2.fY, fWidth,
-                             fCanvas->GetHeight() - ToScrYCoord(fCurrent.fY),
-                             0, ToScrYCoord(fCurrent.fY));
+                             Int_t(pos2.fY), fWidth,
+                             UInt_t(fCanvas->GetHeight() - ToScrYCoord(fCurrent.fY)),
+                             0, (Int_t)ToScrYCoord(fCurrent.fY));
          if (ToScrYCoord(pos.fY) < 0)
             SetVsbPosition(fVisible.fY/fScrollVal.fY-1);
-         DrawRegion(0, ToScrYCoord(pos.fY), fCanvas->GetWidth(),
-                    ToScrYCoord(pos.fY+1) - ToScrYCoord(pos.fY));
+         DrawRegion(0, (Int_t)ToScrYCoord(pos.fY), fCanvas->GetWidth(),
+                    UInt_t(ToScrYCoord(pos.fY+1) - ToScrYCoord(pos.fY)));
          SetSBRange(kVertical);
          SetSBRange(kHorizontal);
       }
@@ -922,12 +918,12 @@ void TGTextEdit::BreakLine()
    fText->BreakLine(fCurrent);
    if (ToScrYCoord(fCurrent.fY+2) <= (Int_t)fCanvas->GetHeight()) {
       gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fNormGC, 0,
-                          ToScrYCoord(fCurrent.fY+1), fCanvas->GetWidth(),
-                          fCanvas->GetHeight()-(ToScrYCoord(fCurrent.fY+2)-
-                          ToScrYCoord(fCurrent.fY)),
-                          0, ToScrYCoord(fCurrent.fY+2));
-      DrawRegion(0, ToScrYCoord(fCurrent.fY), fCanvas->GetWidth(),
-                 ToScrYCoord(fCurrent.fY+2) - ToScrYCoord(fCurrent.fY));
+                          (Int_t)ToScrYCoord(fCurrent.fY+1), fCanvas->GetWidth(),
+                          UInt_t(fCanvas->GetHeight()-(ToScrYCoord(fCurrent.fY+2)-
+                          ToScrYCoord(fCurrent.fY))),
+                          0, (Int_t)ToScrYCoord(fCurrent.fY+2));
+      DrawRegion(0, (Int_t)ToScrYCoord(fCurrent.fY), fCanvas->GetWidth(),
+                 UInt_t(ToScrYCoord(fCurrent.fY+2) - ToScrYCoord(fCurrent.fY)));
 
       if (fVisible.fX != 0)
          SetHsbPosition(0);
@@ -937,9 +933,9 @@ void TGTextEdit::BreakLine()
       SetSBRange(kHorizontal);
       SetSBRange(kVertical);
       SetVsbPosition(fVisible.fY/fScrollVal.fY + 1);
-      DrawRegion(0, ToScrYCoord(fCurrent.fY),
+      DrawRegion(0, (Int_t)ToScrYCoord(fCurrent.fY),
                  fCanvas->GetWidth(),
-                 ToScrYCoord(fCurrent.fY+1) - ToScrYCoord(fCurrent.fY));
+                 UInt_t(ToScrYCoord(fCurrent.fY+1) - ToScrYCoord(fCurrent.fY)));
    }
    pos.fY = fCurrent.fY+1;
    pos.fX = 0;
@@ -1049,7 +1045,7 @@ void TGTextEdit::LineUp()
          if (ToScrXCoord(len, pos.fY) <= 0) {
             if (ToScrXCoord(len, pos.fY) < 0)
                SetHsbPosition(ToScrXCoord(len, pos.fY)+
-                             (fVisible.fX-fCanvas->GetWidth()/2)/fScrollVal.fX);
+                            (fVisible.fX-fCanvas->GetWidth()/2)/fScrollVal.fX);
             else
                SetHsbPosition(0);
          }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.3 2000/07/04 11:35:36 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.4 2000/07/06 16:47:54 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -55,7 +55,7 @@ protected:
                         fgDefaultSelectedBackgroundGC;
    static FontStruct_t  fgDefaultFontStruct;
 
-   virtual void Init(ULong_t bg);
+   void Init(ULong_t bg);
    virtual void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void Mark(Long_t xPos, Long_t yPos);
    virtual void UnMark();

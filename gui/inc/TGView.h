@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.2 2000/07/04 11:34:55 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.3 2000/07/06 16:47:54 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -96,20 +96,20 @@ public:
    virtual void   HLayout();
    virtual void   VLayout();
    virtual void   SetSBRange(Int_t direction);
-   virtual void   SetHsbPosition(Int_t newPos);
-   virtual void   SetVsbPosition(Int_t newPos);
+   virtual void   SetHsbPosition(Long_t newPos);
+   virtual void   SetVsbPosition(Long_t newPos);
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
 
-   virtual Long_t ToObjXCoord(Long_t xCoord, Long_t line) { return xCoord; }
+   virtual Long_t ToObjXCoord(Long_t xCoord, Long_t line);
    virtual Long_t ToObjYCoord(Long_t yCoord) { return yCoord; }
-   virtual Long_t ToScrXCoord(Long_t xCoord, Long_t line) { return xCoord; }
+   virtual Long_t ToScrXCoord(Long_t xCoord, Long_t line);
    virtual Long_t ToScrYCoord(Long_t yCoord) { return yCoord; }
 
-   virtual void Mark(Long_t xPos, Long_t yPos) { }
+   virtual void Mark(Long_t xPos, Long_t yPos);
    virtual void UnMark() { }
-   virtual void DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height) { }
+   virtual void DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height);
 
-   virtual Long_t ReturnLineLength(Long_t line) { return 0; }
+   virtual Long_t ReturnLineLength(Long_t line);
    virtual Long_t ReturnLineCount() { return 0; }
    virtual Long_t ReturnHeighestColHeight() { return 0; }
    virtual Long_t ReturnLongestLineWidth() { return 0; }
@@ -121,10 +121,16 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleExpose(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
-   virtual Bool_t HandleTimer(TViewTimer *t);
+   virtual Bool_t HandleTimer(TTimer *t);
 
    ClassDef(TGView,0)  // Text view widget base class
 };
+
+inline Long_t TGView::ToObjXCoord(Long_t xCoord, Long_t) { return xCoord; }
+inline Long_t TGView::ToScrXCoord(Long_t xCoord, Long_t) { return xCoord; }
+inline void   TGView::Mark(Long_t, Long_t) { }
+inline void   TGView::DrawRegion(Int_t, Int_t, UInt_t, UInt_t) { }
+inline Long_t TGView::ReturnLineLength(Long_t) { return 0; }
 
 
 class TGViewFrame : public TGCompositeFrame {

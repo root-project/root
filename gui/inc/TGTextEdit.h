@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.1 2000/07/06 16:46:12 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -94,7 +94,7 @@ public:
    TGLongPosition GetCurrentPos() const { return fCurrent; }
    virtual Long_t ReturnLongestLineWidth();
 
-   virtual Bool_t HandleTimer(TViewTimer *t);
+   virtual Bool_t HandleTimer(TTimer *t);
    virtual Bool_t HandleSelection (Event_t *event);
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleKey(Event_t *event);
