@@ -1,7 +1,7 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TPoints3DABC.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   04/05/99
 
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TPoints3DABC.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 #include "TPoints3DABC.h"
@@ -87,12 +87,12 @@ Int_t TPoints3DABC::DistancetoLine(Int_t px, Int_t py, Float_t x1, Float_t y1, F
    Float_t B     = xx2*xx2   + yy2*yy2;
    Float_t C     = x1x2*x1x2 + y1y2*y1y2;
    if (C <= 0)  return 9999;
-   Float_t c     = TMath::Sqrt(C);
+   Float_t c     = TMath::Sqrt((Double_t)C);
    Float_t u     = (A - B + C)/(2*c);
    Float_t D     = TMath::Abs(A - u*u);
    if (D < 0)   return 9999;
 
-   return Int_t(TMath::Sqrt(D) - 0.5*float(lineWidth));
+   return Int_t(TMath::Sqrt((Double_t)D) - 0.5*float(lineWidth));
 }
 
 //______________________________________________________________________________

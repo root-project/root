@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.2 2000/11/21 20:18:43 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.3 2002/02/02 11:56:14 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -103,7 +103,7 @@ Int_t TShape::ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py)
      if (dpoint2 < dist) dist = (Int_t)dpoint2;
   }
   delete [] points;
-  return Int_t(TMath::Sqrt(Float_t(dist)));
+  return Int_t(TMath::Sqrt(Double_t(dist)));
 }
 //______________________________________________________________________________
 void TShape::Paint(Option_t *)

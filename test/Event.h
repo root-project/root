@@ -53,7 +53,7 @@ public:
    Float_t       GetPx() const { return fPx; }
    Float_t       GetPy() const { return fPy; }
    Float_t       GetPz() const { return fPz; }
-   Float_t       GetPt() const { return TMath::Sqrt(fPx*fPx + fPy*fPy); }
+   Float_t       GetPt() const { return TMath::Sqrt((Double_t)(fPx*fPx + fPy*fPy)); }
    Float_t       GetRandom() const { return fRandom; }
    Float_t       GetBx() const { return fBx; }
    Float_t       GetBy() const { return fBy; }

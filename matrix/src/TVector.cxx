@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.27 2003/05/26 03:36:11 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.28 2003/07/12 19:43:59 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -663,7 +663,7 @@ TVector &TVector::Sqrt()
    Real_t *ep;
    for (ep = fElements; ep < fElements+fNrows; ep++)
       if (*ep >= 0)
-         *ep = TMath::Sqrt(*ep);
+         *ep = TMath::Sqrt((Double_t)*ep);
       else
          Error("Sqrt", "(%d)-th element, %g, is negative, can't take the square root",
                (ep-fElements) + fRowLwb, *ep);

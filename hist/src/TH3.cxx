@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.37 2003/07/07 20:52:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.38 2003/08/11 08:27:12 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -897,9 +897,9 @@ Double_t TH3::KolmogorovTest(TH1 *h2, Option_t *option) const
    
    //    Get Kolmogorov probability
    Double_t factnm;
-   if (afunc1)      factnm = TMath::Sqrt(sum2);
-   else if (afunc2) factnm = TMath::Sqrt(sum1);
-   else             factnm = TMath::Sqrt(sum1*sum2/(sum1+sum2));
+   if (afunc1)      factnm = TMath::Sqrt((Double_t)sum2);
+   else if (afunc2) factnm = TMath::Sqrt((Double_t)sum1);
+   else             factnm = TMath::Sqrt((Double_t)sum1*sum2/(sum1+sum2));
    Double_t z  = dfmax*factnm;
    Double_t z2 = dfmax2*factnm;
    
@@ -1120,7 +1120,7 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
            if (h1->GetSumw2N()) {
               e        = GetBinError(bin);
               e1       = h1->GetBinError(binz);
-              newerror = TMath::Sqrt(e*e + e1*e1);
+              newerror = TMath::Sqrt((Double_t)(e*e + e1*e1));
            }
            if (cont) {
               h1->Fill(fZaxis.GetBinCenter(binz), cont);
@@ -1378,7 +1378,7 @@ TH1 *TH3::Project3D(Option_t *option) const
               if (cont) h1->Fill(fXaxis.GetBinCenter(ixbin), cont);
               if (computeErrors) {
                  e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
+                 newerror = TMath::Sqrt((Double_t)(e*e + e1*e1));
                  h1->SetBinError(ix,newerror);
               }
               break;
@@ -1388,7 +1388,7 @@ TH1 *TH3::Project3D(Option_t *option) const
               if (cont) h1->Fill(fYaxis.GetBinCenter(iybin), cont);
               if (computeErrors) {
                  e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
+                 newerror = TMath::Sqrt((Double_t)(e*e + e1*e1));
                  h1->SetBinError(iy,newerror);
               }
               break;
@@ -1398,7 +1398,7 @@ TH1 *TH3::Project3D(Option_t *option) const
               if (cont) h1->Fill(fZaxis.GetBinCenter(izbin), cont);
               if (computeErrors) {
                  e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
+                 newerror = TMath::Sqrt((Double_t)(e*e + e1*e1));
                  h1->SetBinError(iz,newerror);
               }
               break;
@@ -1408,7 +1408,7 @@ TH1 *TH3::Project3D(Option_t *option) const
               if (cont) h2->Fill(fYaxis.GetBinCenter(iybin),fXaxis.GetBinCenter(ixbin), cont);
               if (computeErrors) {
                  e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
+                 newerror = TMath::Sqrt((Double_t)(e*e + e1*e1));
                  h2->SetCellError(iy,ix,newerror);
               }
               break;
@@ -1418,7 +1418,7 @@ TH1 *TH3::Project3D(Option_t *option) const
               if (cont) h2->Fill(fXaxis.GetBinCenter(ixbin),fYaxis.GetBinCenter(iybin), cont);
               if (computeErrors) {
                  e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
+                 newerror = TMath::Sqrt((Double_t)(e*e + e1*e1));
                  h2->SetCellError(ix,iy,newerror);
               }
               break;
@@ -1428,7 +1428,7 @@ TH1 *TH3::Project3D(Option_t *option) const
               if (cont) h2->Fill(fZaxis.GetBinCenter(izbin),fXaxis.GetBinCenter(ixbin), cont);
               if (computeErrors) {
                  e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
+                 newerror = TMath::Sqrt((Double_t)(e*e + e1*e1));
                  h2->SetCellError(iz,ix,newerror);
               }
               break;
@@ -1438,7 +1438,7 @@ TH1 *TH3::Project3D(Option_t *option) const
               if (cont) h2->Fill(fXaxis.GetBinCenter(ixbin),fZaxis.GetBinCenter(izbin), cont);
               if (computeErrors) {
                  e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
+                 newerror = TMath::Sqrt((Double_t)(e*e + e1*e1));
                  h2->SetCellError(ix,iz,newerror);
               }
               break;
@@ -1448,7 +1448,7 @@ TH1 *TH3::Project3D(Option_t *option) const
               if (cont) h2->Fill(fZaxis.GetBinCenter(izbin),fYaxis.GetBinCenter(iybin), cont);
               if (computeErrors) {
                  e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
+                 newerror = TMath::Sqrt((Double_t)(e*e + e1*e1));
                  h2->SetCellError(iz,iy,newerror);
               }
               break;
@@ -1458,7 +1458,7 @@ TH1 *TH3::Project3D(Option_t *option) const
               if (cont) h2->Fill(fYaxis.GetBinCenter(iybin),fZaxis.GetBinCenter(izbin), cont);
               if (computeErrors) {
                  e        = GetBinError(bin);
-                 newerror = TMath::Sqrt(e*e + e1*e1);
+                 newerror = TMath::Sqrt((Double_t)(e*e + e1*e1));
                  h2->SetCellError(iy,iz,newerror);
               }
               break;
