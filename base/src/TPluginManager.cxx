@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.22 2003/11/10 17:56:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.23 2004/01/20 17:59:38 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -325,7 +325,10 @@ void TPluginManager::LoadHandlersFromEnv(TEnv *env)
    while ((er = (TEnvRec*) next())) {
       const char *s;
       if ((s = strstr(er->GetName(), "Plugin."))) {
-         const char *val = env->GetValue(er->GetName(), (const char*)0);
+         // use s, i.e. skip possible OS and application prefix to Plugin.
+         // so that GetValue() takes properly care of returning the value
+         // for the specified OS and/or application
+         const char *val = env->GetValue(s, (const char*)0);
          if (val) {
             Int_t cnt = 0;
             char *v = StrDup(val);
