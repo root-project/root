@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.38 2003/09/08 15:09:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.39 2003/09/10 06:49:14 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1979,7 +1979,7 @@ void TLatex::SavePrimitive(ofstream &out, Option_t *)
    out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<endl;
    if (TestBit(kTextNDC)) out<<"tex->SetNDC();"<<endl;
 
-   SaveTextAttributes(out,"tex",11,0,1,62,1);
+   SaveTextAttributes(out,"tex",11,0,1,62,0.05);
    SaveLineAttributes(out,"tex",1,1,1);
 
    out<<"   tex->Draw();"<<endl;

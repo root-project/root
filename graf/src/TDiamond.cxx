@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.5 2002/05/18 08:21:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.6 2002/08/05 21:12:12 brun Exp $
 // Author: Rene Brun   22/06/96
 
 /*************************************************************************
@@ -438,7 +438,7 @@ void TDiamond::SavePrimitive(ofstream &out, Option_t *)
 
    SaveFillAttributes(out,"diamond",0,1001);
    SaveLineAttributes(out,"diamond",1,1,1);
-   SaveTextAttributes(out,"diamond",11,0,1,62,1);
+   SaveTextAttributes(out,"diamond",11,0,1,62,0.05);
 
    SaveLines(out,"diamond");
    out<<"   diamond->Draw();"<<endl;
