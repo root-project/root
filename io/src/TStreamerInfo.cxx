@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.178 2003/09/15 20:30:35 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.180 2003/10/18 19:32:49 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1429,7 +1429,7 @@ void TStreamerInfo::Optimize(Bool_t opt)
 
 
 //______________________________________________________________________________
-void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t len) const
+void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t len, Int_t lenmax) const
 {
 //  print value of element i in object at pointer
 //  The function may be called in two ways:
@@ -1440,10 +1440,18 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
 //           address of variable is directly pointer.
 //           len is the number of elements to be printed starting at pointer.
 
-   printf(" %-15s = ",name);
    Int_t j;
    char *ladd;
    Int_t atype,aleng;
+   printf(" %-15s = ",name);
+
+#define PrintCR(ltype) \
+  if (j == aleng-1) printf("\n"); \
+  else { \
+     printf(", "); \
+     if (j%ltype==ltype-1) printf("\n                    "); \
+  }
+  
    if (len >= 0) {
       ladd  = pointer;
       atype = i;
@@ -1454,6 +1462,8 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       atype = fType[i];
       aleng = fLength[i];
    }
+   if (aleng > lenmax) aleng = lenmax;
+   
    TStreamerElement * aElement  = (TStreamerElement*)fElem[i];
    switch (atype) {
          // basic types
@@ -1472,32 +1482,32 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       case kBits:              {UInt_t *val    = (UInt_t*)ladd;    printf("%d",*val);   break;}
 
          // array of basic types  array[8]
-      case kOffsetL + kChar:    {Char_t *val    = (Char_t*)ladd;    for(j=0;j<aleng;j++) printf("%d", val[j]);   break; }
-      case kOffsetL + kShort:   {Short_t *val   = (Short_t*)ladd;   for(j=0;j<aleng;j++) printf("%d ",val[j]);   break;}
-      case kOffsetL + kInt:     {Int_t *val     = (Int_t*)ladd;     for(j=0;j<aleng;j++) printf("%d ",val[j]);   break;}
-      case kOffsetL + kLong:    {Long_t *val    = (Long_t*)ladd;    for(j=0;j<aleng;j++) printf("%ld ",val[j]);  break;}
-      case kOffsetL + kLong64:  {Long64_t *val  = (Long64_t*)ladd;  for(j=0;j<aleng;j++) printf("%lld ",val[j]); break;}
-      case kOffsetL + kFloat:   {Float_t *val   = (Float_t*)ladd;   for(j=0;j<aleng;j++) printf("%f ",val[j]);   break;}
-      case kOffsetL + kDouble:  {Double_t *val  = (Double_t*)ladd;  for(j=0;j<aleng;j++) printf("%g ",val[j]);   break;}
-      case kOffsetL + kUChar:   {UChar_t *val   = (UChar_t*)ladd;   for(j=0;j<aleng;j++) printf("%u ",val[j]);   break;}
-      case kOffsetL + kUShort:  {UShort_t *val  = (UShort_t*)ladd;  for(j=0;j<aleng;j++) printf("%u ",val[j]);   break;}
-      case kOffsetL + kUInt:    {UInt_t *val    = (UInt_t*)ladd;    for(j=0;j<aleng;j++) printf("%u ",val[j]);   break;}
-      case kOffsetL + kULong:   {ULong_t *val   = (ULong_t*)ladd;   for(j=0;j<aleng;j++) printf("%lu ",val[j]);  break;}
-      case kOffsetL + kULong64: {ULong64_t *val = (ULong64_t*)ladd; for(j=0;j<aleng;j++) printf("%llu ",val[j]); break;}
+      case kOffsetL + kChar:    {Char_t *val    = (Char_t*)ladd;    for(j=0;j<aleng;j++) {printf("%d", val[j]);   PrintCR(20)} break;}
+      case kOffsetL + kShort:   {Short_t *val   = (Short_t*)ladd;   for(j=0;j<aleng;j++) {printf("%d ",val[j]);   PrintCR(10)} break;}
+      case kOffsetL + kInt:     {Int_t *val     = (Int_t*)ladd;     for(j=0;j<aleng;j++) {printf("%d ",val[j]);   PrintCR(10)} break;}
+      case kOffsetL + kLong:    {Long_t *val    = (Long_t*)ladd;    for(j=0;j<aleng;j++) {printf("%ld ",val[j]);  PrintCR( 5)} break;}
+      case kOffsetL + kLong64:  {Long64_t *val  = (Long64_t*)ladd;  for(j=0;j<aleng;j++) {printf("%lld ",val[j]); PrintCR( 5)} break;}
+      case kOffsetL + kFloat:   {Float_t *val   = (Float_t*)ladd;   for(j=0;j<aleng;j++) {printf("%f ",val[j]);   PrintCR( 5)} break;}
+      case kOffsetL + kDouble:  {Double_t *val  = (Double_t*)ladd;  for(j=0;j<aleng;j++) {printf("%g ",val[j]);   PrintCR( 5)} break;}
+      case kOffsetL + kUChar:   {UChar_t *val   = (UChar_t*)ladd;   for(j=0;j<aleng;j++) {printf("%u ",val[j]);   PrintCR(20)} break;}
+      case kOffsetL + kUShort:  {UShort_t *val  = (UShort_t*)ladd;  for(j=0;j<aleng;j++) {printf("%u ",val[j]);   PrintCR(10)} break;}
+      case kOffsetL + kUInt:    {UInt_t *val    = (UInt_t*)ladd;    for(j=0;j<aleng;j++) {printf("%u ",val[j]);   PrintCR( 5)} break;}
+      case kOffsetL + kULong:   {ULong_t *val   = (ULong_t*)ladd;   for(j=0;j<aleng;j++) {printf("%lu ",val[j]);  PrintCR( 5)} break;}
+      case kOffsetL + kULong64: {ULong64_t *val = (ULong64_t*)ladd; for(j=0;j<aleng;j++) {printf("%llu ",val[j]); PrintCR( 5)} break;}
 
          // pointer to an array of basic types  array[n]
-      case kOffsetP + kChar:    {Char_t **val    = (Char_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);   break;}
-      case kOffsetP + kShort:   {Short_t **val   = (Short_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);   break;}
-      case kOffsetP + kInt:     {Int_t **val     = (Int_t**)ladd;     Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);   break;}
-      case kOffsetP + kLong:    {Long_t **val    = (Long_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]);  break;}
-      case kOffsetP + kLong64:  {Long64_t **val  = (Long64_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%lld ",(*val)[j]); break;}
-      case kOffsetP + kFloat:   {Float_t **val   = (Float_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%f ",(*val)[j]);   break;}
-      case kOffsetP + kDouble:  {Double_t **val  = (Double_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%g ",(*val)[j]);   break;}
-      case kOffsetP + kUChar:   {UChar_t **val   = (UChar_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%u ",(*val)[j]);   break;}
-      case kOffsetP + kUShort:  {UShort_t **val  = (UShort_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%u ",(*val)[j]);   break;}
-      case kOffsetP + kUInt:    {UInt_t **val    = (UInt_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%u ",(*val)[j]);   break;}
-      case kOffsetP + kULong:   {ULong_t **val   = (ULong_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%lu ",(*val)[j]);  break;}
-      case kOffsetP + kULong64: {ULong64_t **val = (ULong64_t**)ladd; Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%llu ",(*val)[j]); break;}
+      case kOffsetP + kChar:    {Char_t **val    = (Char_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%d ",(*val)[j]);   PrintCR(20)} break;}
+      case kOffsetP + kShort:   {Short_t **val   = (Short_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%d ",(*val)[j]);   PrintCR(10)} break;}
+      case kOffsetP + kInt:     {Int_t **val     = (Int_t**)ladd;     Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%d ",(*val)[j]);   PrintCR(10)} break;}
+      case kOffsetP + kLong:    {Long_t **val    = (Long_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%ld ",(*val)[j]);  PrintCR( 5)} break;}
+      case kOffsetP + kLong64:  {Long64_t **val  = (Long64_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%lld ",(*val)[j]); PrintCR( 5)} break;}
+      case kOffsetP + kFloat:   {Float_t **val   = (Float_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%f ",(*val)[j]);   PrintCR( 5)} break;}
+      case kOffsetP + kDouble:  {Double_t **val  = (Double_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%g ",(*val)[j]);   PrintCR( 5)} break;}
+      case kOffsetP + kUChar:   {UChar_t **val   = (UChar_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%u ",(*val)[j]);   PrintCR(20)} break;}
+      case kOffsetP + kUShort:  {UShort_t **val  = (UShort_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%u ",(*val)[j]);   PrintCR(10)} break;}
+      case kOffsetP + kUInt:    {UInt_t **val    = (UInt_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%u ",(*val)[j]);   PrintCR( 5)} break;}
+      case kOffsetP + kULong:   {ULong_t **val   = (ULong_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%lu ",(*val)[j]);  PrintCR( 5)} break;}
+      case kOffsetP + kULong64: {ULong64_t **val = (ULong64_t**)ladd; Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%llu ",(*val)[j]); PrintCR( 5)} break;}
          // array counter //[n]
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
          // char *
@@ -1623,37 +1633,44 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
 
 
 //______________________________________________________________________________
-void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int_t i, Int_t eoffset) const
+void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int_t i, Int_t eoffset, Int_t lenmax) const
 {
 //  print value of element i in a TClonesArray
 
    if (!clones) {printf(" %-15s = \n",name); return;}
    printf(" %-15s = ",name);
    Int_t nc = clones->GetEntriesFast();
-   const Int_t kMaxPrint = 10;
-   if (nc > kMaxPrint) nc = kMaxPrint;
+   if (nc > lenmax) nc = lenmax;
 
    Int_t offset = eoffset + fOffset[i];
    Int_t j;
+
+#define PrintCCR(ltype) \
+  if (k == nc-1) printf("\n"); \
+  else { \
+     printf(", "); \
+     if (k%ltype==ltype-1) printf("\n                 "); \
+  }
+  
    TStreamerElement *aElement  = (TStreamerElement*)fElem[i];
    for (Int_t k=0;k<nc;k++) {
       char *pointer = (char*)clones->UncheckedAt(k);
       char *ladd = pointer+offset;
       switch (fType[i]) {
          // basic types
-      case kChar:              {Char_t *val    = (Char_t*)ladd;    printf("%d",*val);  break;}
-      case kShort:             {Short_t *val   = (Short_t*)ladd;   printf("%d",*val);  break;}
-      case kInt:               {Int_t *val     = (Int_t*)ladd;     printf("%d",*val);  break;}
-      case kLong:              {Long_t *val    = (Long_t*)ladd;    printf("%ld",*val); break;}
-      case kLong64:            {Long64_t *val  = (Long64_t*)ladd;  printf("%lld",*val); break;}
-      case kFloat:             {Float_t *val   = (Float_t*)ladd;   printf("%f",*val);  break;}
-      case kDouble:            {Double_t *val  = (Double_t*)ladd;  printf("%g",*val);  break;}
-      case kUChar:             {UChar_t *val   = (UChar_t*)ladd;   printf("%u",*val);  break;}
-      case kUShort:            {UShort_t *val  = (UShort_t*)ladd;  printf("%u",*val);  break;}
-      case kUInt:              {UInt_t *val    = (UInt_t*)ladd;    printf("%u",*val);  break;}
-      case kULong:             {ULong_t *val   = (ULong_t*)ladd;   printf("%lu",*val); break;}
-      case kULong64:           {ULong64_t *val = (ULong64_t*)ladd; printf("%llu",*val); break;}
-      case kBits:              {UInt_t *val    = (UInt_t*)ladd;    printf("%d",*val);  break;}
+      case kChar:              {Char_t *val    = (Char_t*)ladd;    {printf("%d",*val);   PrintCCR(20)} break;}
+      case kShort:             {Short_t *val   = (Short_t*)ladd;   {printf("%d",*val);   PrintCCR(10)} break;}
+      case kInt:               {Int_t *val     = (Int_t*)ladd;     {printf("%d",*val);   PrintCCR(10)} break;}
+      case kLong:              {Long_t *val    = (Long_t*)ladd;    {printf("%ld",*val);  PrintCCR( 5)} break;}
+      case kLong64:            {Long64_t *val  = (Long64_t*)ladd;  {printf("%lld",*val); PrintCCR( 5)} break;}
+      case kFloat:             {Float_t *val   = (Float_t*)ladd;   {printf("%f",*val);   PrintCCR( 5)} break;}
+      case kDouble:            {Double_t *val  = (Double_t*)ladd;  {printf("%g",*val);   PrintCCR( 5)} break;}
+      case kUChar:             {UChar_t *val   = (UChar_t*)ladd;   {printf("%u",*val);   PrintCCR(20)} break;}
+      case kUShort:            {UShort_t *val  = (UShort_t*)ladd;  {printf("%u",*val);   PrintCCR(10)} break;}
+      case kUInt:              {UInt_t *val    = (UInt_t*)ladd;    {printf("%u",*val);   PrintCCR( 5)} break;}
+      case kULong:             {ULong_t *val   = (ULong_t*)ladd;   {printf("%lu",*val);  PrintCCR( 5)} break;}
+      case kULong64:           {ULong64_t *val = (ULong64_t*)ladd; {printf("%llu",*val); PrintCCR( 5)} break;}
+      case kBits:              {UInt_t *val    = (UInt_t*)ladd;    {printf("%d",*val);   PrintCCR( 5)} break;}
 
          // array of basic types  array[8]
       case kOffsetL + kChar:    {Char_t *val    = (Char_t*)ladd;    for(j=0;j<fLength[i];j++) printf("%d ",val[j]);   break;}

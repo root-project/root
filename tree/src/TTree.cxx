@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.166 2003/11/12 09:06:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.167 2003/11/12 11:09:51 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3818,33 +3818,37 @@ void TTree::SetWeight(Double_t w, Option_t *)
 }
 
 //_______________________________________________________________________
-void TTree::Show(Int_t entry)
+void TTree::Show(Int_t entry, Int_t lenmax)
 {
 //*-*-*-*-*-*Print values of all active leaves for entry*-*-*-*-*-*-*-*
 //*-*        ===========================================
 // if entry==-1, print current entry (default)
-
+// if a leaf is an array, a maximum of lenmax elements is printed.
+// 
    if (entry != -1) GetEntry(entry);
    printf("======> EVENT:%d\n",fReadEntry);
    TObjArray *leaves  = GetListOfLeaves();
    Int_t nleaves = leaves->GetEntriesFast();
+   Int_t ltype;
    for (Int_t i=0;i<nleaves;i++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(i);
       TBranch *branch = leaf->GetBranch();
       if (branch->TestBit(kDoNotProcess)) continue;
       Int_t len = leaf->GetLen();
       if (len <= 0) continue;
-      len = TMath::Min(len,10);
-      if (leaf->IsA() == TLeafElement::Class()) {leaf->PrintValue(len); continue;}
+      len = TMath::Min(len,lenmax);
+      if (leaf->IsA() == TLeafElement::Class()) {leaf->PrintValue(lenmax); continue;}
       if (branch->GetListOfBranches()->GetEntriesFast() > 0) continue;
-      if (leaf->IsA() == TLeafF::Class()) len = TMath::Min(len,5);
-      if (leaf->IsA() == TLeafD::Class()) len = TMath::Min(len,5);
-      if (leaf->IsA() == TLeafC::Class()) len = 1;
+      ltype = 10;
+      if (leaf->IsA() == TLeafF::Class()) ltype = 5;
+      if (leaf->IsA() == TLeafD::Class()) ltype = 5;
+      if (leaf->IsA() == TLeafC::Class()) ltype = 5;
       printf(" %-15s = ",leaf->GetName());
       for (Int_t l=0;l<len;l++) {
          leaf->PrintValue(l);
-         if (l == len-1) printf("\n");
-         else            printf(", ");
+         if (l == len-1) {printf("\n"); continue;}
+         printf(", ");
+         if (l%ltype==0) printf("\n                  ");
       }
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.41 2003/09/12 11:09:35 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.42 2003/09/15 20:30:35 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -112,8 +112,8 @@ public:
    Bool_t              IsOptimized() const {return fOptimized;}
    void                ls(Option_t *option="") const;
    Int_t               New(const char *p);
-   void                PrintValue(const char *name, char *pointer, Int_t i, Int_t len) const;
-   void                PrintValueClones(const char *name, TClonesArray *clones, Int_t i, Int_t eoffset) const;
+   void                PrintValue(const char *name, char *pointer, Int_t i, Int_t len, Int_t lenmax=1000) const;
+   void                PrintValueClones(const char *name, TClonesArray *clones, Int_t i, Int_t eoffset, Int_t lenmax=1000) const;
    Int_t               ReadBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               ReadBufferSkip(TBuffer &b, char *pointer, Int_t i, Int_t kase, TStreamerElement *aElement);
    Int_t               ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t kase, TStreamerElement *aElement);

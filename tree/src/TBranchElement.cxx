@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.119 2003/11/04 06:40:48 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.120 2003/11/10 17:43:31 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1156,7 +1156,7 @@ void TBranchElement::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TBranchElement::PrintValue(Int_t /*len*/) const
+void TBranchElement::PrintValue(Int_t lenmax) const
 {
 // Prints leaf value
 
@@ -1178,15 +1178,15 @@ void TBranchElement::PrintValue(Int_t /*len*/) const
           TLeafElement *leaf = (TLeafElement*)fLeaves.UncheckedAt(0);
           n *= leaf->GetLenStatic();
        }
-       if (fInfo) fInfo->PrintValue(GetName(),fAddress,atype,n);
+       if (fInfo) fInfo->PrintValue(GetName(),fAddress,atype,n,lenmax);
        return;
      } else if (fType <= 2) {     // branch in split mode
        if (fStreamerType > 40 && fStreamerType < 55) {
           Int_t atype = fStreamerType - 20;
           Int_t n = (Int_t)((TBranchElement*)fBranchCount)->GetValue(0,0);
-          if (fInfo) fInfo->PrintValue(GetName(),fAddress,atype,n);
+          if (fInfo) fInfo->PrintValue(GetName(),fAddress,atype,n,lenmax);
        } else {
-          if (fInfo) fInfo->PrintValue(GetName(),fObject,fID,-1);
+          if (fInfo) fInfo->PrintValue(GetName(),fObject,fID,-1,lenmax);
        }
        return;
      }
@@ -1196,9 +1196,9 @@ void TBranchElement::PrintValue(Int_t /*len*/) const
       printf(" %-15s = %d\n",GetName(),fNdata);
    } else if (fType == 31) {
       TClonesArray *clones = (TClonesArray*)fObject;
-      if (fInfo) fInfo->PrintValueClones(GetName(),clones,fID,fOffset);
+      if (fInfo) fInfo->PrintValueClones(GetName(),clones,fID,fOffset,lenmax);
    } else {
-      if (fInfo) fInfo->PrintValue(GetName(),fObject,fID,-1);
+      if (fInfo) fInfo->PrintValue(GetName(),fObject,fID,-1,lenmax);
    }
 }
 
