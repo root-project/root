@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayF.h,v 1.10 2002/05/16 15:14:43 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayF.h,v 1.11 2002/06/10 14:30:10 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -68,8 +68,7 @@ inline TBuffer &operator>>(TBuffer &buf, TArrayF *&obj)
 
 inline Float_t TArrayF::At(Int_t i) const
 {
-   if (!BoundsOk("TArrayF::At", i))
-      i = 0;
+   if (!BoundsOk("TArrayF::At", i)) return 0;
    return fArray[i];
 }
 
@@ -82,8 +81,7 @@ inline Float_t &TArrayF::operator[](Int_t i)
 
 inline Float_t TArrayF::operator[](Int_t i) const
 {
-   if (!BoundsOk("TArrayF::operator[]", i))
-      i = 0;
+   if (!BoundsOk("TArrayF::operator[]", i)) return 0;
    return fArray[i];
 }
 
