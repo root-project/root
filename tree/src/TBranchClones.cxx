@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.5 2000/12/09 14:30:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.6 2000/12/09 16:00:28 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -70,7 +70,7 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
    fNdataMax = 0;
    TClass *cl = fList->GetClass();
    if (!cl) return;
-   if (!cl->GetListOfRealData())  cl->BuildRealData();
+   gTree->BuildStreamerInfo(cl);
 
    fClassName = cl->GetName();
 

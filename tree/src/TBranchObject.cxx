@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.4 2000/12/04 16:45:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.5 2000/12/07 07:26:54 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -58,7 +58,8 @@ TBranchObject::TBranchObject(const char *name, const char *classname, void *addo
       Error("TBranchObject","Cannot find class:%s",classname);
       return;
    }
-   if (!cl->GetListOfRealData())  cl->BuildRealData();
+   gTree->BuildStreamerInfo(cl);
+   
    SetName(name);
    SetTitle(name);
    fCompress = compress;
