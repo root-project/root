@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.77 2004/06/15 07:56:51 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.78 2004/06/16 08:26:52 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -4386,8 +4386,8 @@ void TGWin32::MapWindow(Window_t id)
    // Map window on screen.
 
    gdk_window_show((GdkWindow *)id);
-
-   if (GetParent(id) == GetDefaultRootWindow()) {
+   if ((GDK_DRAWABLE_TYPE((GdkWindow *)id) != GDK_WINDOW_TEMP) &&
+       (GetParent(id) == GetDefaultRootWindow())) {
       HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
       ::SetForegroundWindow(window);
    }
@@ -4411,7 +4411,8 @@ void TGWin32::MapRaised(Window_t id)
    HWND hwnd = ::GetForegroundWindow();
    HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
    gdk_window_show((GdkWindow *)id);
-   ::SetForegroundWindow(window);
+   if (GDK_DRAWABLE_TYPE((GdkWindow *)id) != GDK_WINDOW_TEMP)
+      ::SetForegroundWindow(window);
 
    if (hwnd == gConsoleWindow) {
       RECT r1, r2, r3;
@@ -4453,8 +4454,14 @@ void TGWin32::RaiseWindow(Window_t id)
    // Put window on top of window stack.
 
    HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
-   ::BringWindowToTop(window);
-   ::SetForegroundWindow(window);
+   if (GDK_DRAWABLE_TYPE((GdkWindow *)id) == GDK_WINDOW_TEMP) {
+       ::SetWindowPos(window, HWND_TOPMOST,  0, 0, 0, 0, 
+                      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+   }
+   else {
+      ::BringWindowToTop(window);
+      ::SetForegroundWindow(window);
+   }
 }
 
 //______________________________________________________________________________
