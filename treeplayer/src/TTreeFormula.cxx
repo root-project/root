@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.94 2002/06/16 10:06:35 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.95 2002/07/06 06:54:35 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -951,6 +951,7 @@ public:
   }
 
   virtual Int_t GetSize(Int_t index) {
+     if (index >= fSizes.GetSize()) return 0;
      return fSizes.At(index);
   }
 
@@ -2597,15 +2598,13 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
 
             if (fIndexes[codeindex][0]<0) {
                local_index = 0;
-               if (instance) {
-                 Int_t virt_accum = 0;
-                 do {
-                   virt_accum += fManager->fCumulUsedVarDims->At(local_index);
-                   local_index++;
-                 } while( instance >= virt_accum );
-                 local_index--;
-                 instance -= (virt_accum - fManager->fCumulUsedVarDims->At(local_index));
-               }
+               Int_t virt_accum = 0;
+               do {
+                  virt_accum += fManager->fCumulUsedVarDims->At(local_index);
+                  local_index++;
+               } while( instance >= virt_accum );
+               local_index--;
+               instance -= (virt_accum - fManager->fCumulUsedVarDims->At(local_index));
                virt_dim ++;
             } else {
                local_index = fIndexes[codeindex][0];
