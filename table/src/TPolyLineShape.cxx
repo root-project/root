@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TPolyLineShape.cxx,v 1.2 2003/01/03 15:03:14 fisyak Exp $
+// @(#)root/star:$Name: v4-00-08a $:$Id: TPolyLineShape.cxx,v 1.2 2003/01/27 20:41:36 brun Exp $
 // Author: 
-// $Id: TPolyLineShape.cxx,v 1.2 2003/01/03 15:03:14 fisyak Exp $
+// $Id: TPolyLineShape.cxx,v 1.2 2003/01/27 20:41:36 brun Exp $
 // ***********************************************************************
 // *  C++ class library to define an abstract 3D shape os STAR "event" geometry
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -267,7 +267,8 @@ void TPolyLineShape::Draw(Option_t *)
 //______________________________________________________________________________
 void TPolyLineShape::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
- if (fPoints) fPoints->ExecuteEvent(event,px, py);
+   // forward the ExecuteEvent call to the decorated object
+   if (fPoints) fPoints->ExecuteEvent(event,px, py);
 }
 
 //______________________________________________________________________________
@@ -275,19 +276,37 @@ Color_t TPolyLineShape::GetColorAttribute() const
 {
   return ((TPolyLineShape *)this)->GetLineColor();
 }
-
+//______________________________________________________________________________
+const char  *TPolyLineShape::GetName()  const
+{
+   // forward the GetName call to the decorated object
+   return fPoints ? fPoints->GetName() : TShape::GetName();
+}
+//______________________________________________________________________________
+char  *TPolyLineShape::GetObjectInfo(Int_t px, Int_t py) const
+{
+   // forward the GetObjectInfo call to the decorated object
+   return fPoints ? fPoints->GetObjectInfo(px, py) : TShape::GetObjectInfo(px,py);
+}
+         
 //______________________________________________________________________________
 Size_t TPolyLineShape::GetSizeAttribute() const
 {
-  return ((TPolyLineShape *)this)->GetMarkerSize();
+   return ((TPolyLineShape *)this)->GetMarkerSize();
 }
 
 //______________________________________________________________________________
 Style_t TPolyLineShape::GetStyleAttribute() const
 {
-  return ((TPolyLineShape *)this)->GetLineStyle();
+   return ((TPolyLineShape *)this)->GetLineStyle();
 }
 
+//______________________________________________________________________________
+const char  *TPolyLineShape::GetTitle() const
+{
+   // forward the GetObjectInfo call to the decorated object
+   return fPoints ? fPoints->GetTitle() : TShape::GetTitle();
+}
 //______________________________________________________________________________
 void TPolyLineShape::PaintNode(Float_t *start,Float_t *end,Option_t *option)
 {

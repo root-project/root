@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TPolyLineShape.h,v 1.1.1.1 2002/05/28 12:32:02 fisyak Exp $
+// @(#)root/star:$Name: v4-00-08a $:$Id: TPolyLineShape.h,v 1.2 2003/01/27 20:41:36 brun Exp $
 // Author:
 
 /*************************************************************************
@@ -72,8 +72,11 @@ public:
    virtual void         ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TShape      *GetConnection() const { return fConnection;}
    virtual Color_t      GetColorAttribute() const;
+   virtual const char  *GetName()  const;
+   virtual char        *GetObjectInfo(Int_t px, Int_t py) const;
    virtual Size_t       GetSizeAttribute()  const;
    virtual Style_t      GetStyleAttribute() const;
+   virtual const char  *GetTitle() const;
    virtual TPoints3DABC *GetMarker() const { return fPoints;}
    virtual TPoints3DABC *GetPoints() const { return fPoints;}
    virtual TShape      *GetShape() const { return fShape;}
