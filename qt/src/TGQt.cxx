@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.7 2004/08/13 06:21:09 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.8 2005/02/08 07:36:08 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -9,6 +9,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -32,6 +33,8 @@
 # include <qthread.h>
 #endif
 #include <qwidget.h>
+#include <qptrvector.h>
+#include <qvaluestack.h>
 #include <qpixmap.h>
 #include <qcursor.h>
 #include <qpen.h>
@@ -75,32 +78,33 @@
 
 TGQt *gQt=0;
 TVirtualX *TGQt::fgTQt = 0; // to remember the poiner fulishing ROOT PluginManager later.
-static const int kDefault=2;
+// static const int kDefault=2;
 
 //----- Terminal Input file handler --------------------------------------------
 //______________________________________________________________________________
 class TQtEventInputHandler : public TTimer {
 protected: // singleton
-   TQtEventInputHandler() : TTimer(340,kFALSE ) { 
-      if (gSystem) {
-         gSystem->AddTimer(this);
-         Added(); // emit Added() signal
-      }
-   }
+   TQtEventInputHandler() : TTimer(340) {  }
    static TQtEventInputHandler *gfQtEventInputHandler;
 public:
 
-   static TQtEventInputHandler *Instance() { 
+   static TQtEventInputHandler *Instance() {
      if (!gfQtEventInputHandler)
        gfQtEventInputHandler =  new  TQtEventInputHandler();
+       gfQtEventInputHandler->Start(240);
        return gfQtEventInputHandler;
    }
-   Bool_t Notify()     { return gQt->processQtEvents();}
+   Bool_t Notify()     {
+      Timeout();       // emit Timeout() signal
+      Bool_t ret = gQt->processQtEvents();
+      Start(240);
+      Reset();
+      return  ret;
+   }
    Bool_t ReadNotify() { return Notify(); }
 };
 
 TQtEventInputHandler *TQtEventInputHandler::gfQtEventInputHandler = 0;
-
 //______________________________________________________________________________
 //  static methods:
 //______________________________________________________________________________
@@ -110,14 +114,96 @@ TQtEventInputHandler *TQtEventInputHandler::gfQtEventInputHandler = 0;
 // kDefault =  means default desktopwindow
 //  else the pointer to the QPaintDevice
 
+class TQWidgetCollection {
+ private:
+   QValueStack<int>         fFreeWindowsIdStack;
+   QPtrVector<QPaintDevice> fWidgetCollection;
+   Int_t                    fIDMax;
+ public:
+   //______________________________________________________________________________
+   TQWidgetCollection () : fWidgetCollection(20) , fIDMax(-1)
+   {
+       // mark the position below kNone and beteween kNone and kDefault
+       // as "free position" if any
+       int kDefault = 1;
+       assert((kNone >= 0) &&  (kDefault > 0 ));
+       Int_t firstRange  = kNone;
+       Int_t secondRange = kDefault;
+       // if (kNone > kDefault ) { firstRange = kDefault; secondRange = kNone;}
+       for (int i=0;i<secondRange;i++)  {
+             if (i == firstRange) continue; // skip it
+             fWidgetCollection.insert(i,(QPaintDevice *)(-1));
+             fFreeWindowsIdStack.push(i);
+       }
+       fIDMax = secondRange;
+       fWidgetCollection.insert(kNone,0);
+       fWidgetCollection.insert(kDefault,(QPaintDevice *)QApplication::desktop());
+   }
+
+   //______________________________________________________________________________
+   inline Int_t GetFreeId(QPaintDevice *device) {
+	
+      Int_t Id = 0;
+      if (!fFreeWindowsIdStack.isEmpty() ) {
+         Id = fFreeWindowsIdStack.pop();
+         if (Id > fIDMax )  fIDMax = Id;
+      } else {
+         Id = fWidgetCollection.count()+1;
+         if (Id >= int(fWidgetCollection.size()) )
+              fWidgetCollection.resize(2*Id);
+         assert(fIDMax <= Id  );
+         fIDMax = Id;
+      }
+      fWidgetCollection.insert(Id,device);
+      // fprintf(stderr," add %p as %d max Id = %d \n", device, Id,fIDMax);
+      return Id;
+   }
+   //______________________________________________________________________________
+   inline Int_t RemoveByPointer(QPaintDevice *device)
+   {
+       Int_t id = TGQt::iwid(device);
+       fWidgetCollection.take(id);
+       fFreeWindowsIdStack.push(id);
+       if (fIDMax == id) fIDMax--;
+       return id;
+   }
+
+   //______________________________________________________________________________
+   inline void  DeleteById(Int_t Id)
+   {
+     QPaintDevice *device = fWidgetCollection[Id];
+     if (device) {
+        delete fWidgetCollection.take(Id);
+        fFreeWindowsIdStack.push(Id);
+        if (fIDMax == Id) fIDMax--;
+     }
+   }
+   //______________________________________________________________________________
+   inline uint count() const { return fWidgetCollection.count();}
+   //______________________________________________________________________________
+   inline uint MaxId() const { return fIDMax;}
+   //______________________________________________________________________________
+   inline int find(const QPaintDevice *device, uint i=0) const
+         { return fWidgetCollection.find(device,i); }
+   //______________________________________________________________________________
+   inline QPaintDevice *operator[](int i) const {return fWidgetCollection[i];}
+};
+TQWidgetCollection *fWidgetArray = 0;
 //______________________________________________________________________________
 Int_t         TGQt::iwid(QPaintDevice *wid)
 {
    // method to provide the ROOT "cast" from (QPaintDevice*) to ROOT windows "id"
-   Int_t intWid = 0;
+   Int_t intWid = kNone;
+#ifdef OLDWIDGET	
    QPaintDevice *topDevice = (QPaintDevice *)QApplication::desktop();
    if (wid == topDevice) intWid = kDefault;
-   else if (wid)  intWid = Int_t(wid);
+   else if (wid)
+      intWid = Int_t(wid);
+#else	
+       // look up the widget
+      intWid = fWidgetArray->find(wid);
+      if (intWid == -1 )  intWid = Int_t(wid);
+#endif	
    return intWid;
 }
 
@@ -126,9 +212,17 @@ QPaintDevice *TGQt::iwid(Int_t wid)
 {
    // method to restore (cast) the QPaintDevice object pointer from  ROOT windows "id"
    QPaintDevice *topDevice = 0;
+#ifdef OLDWIDGET
    if ( wid == Int_t(kNone) )    return 0;
    if ( wid == Int_t(kDefault) ) topDevice = (QPaintDevice *)QApplication::desktop();
-   else topDevice = (QPaintDevice *)wid;
+   else
+ 	   topDevice = (QPaintDevice *)wid;
+#else	
+      if (0 <= wid && wid <= int(fWidgetArray->MaxId()) )
+         topDevice = (*fWidgetArray)[wid];
+	   else
+         topDevice = (QPaintDevice *)wid;
+#endif	
    return topDevice;
 }
 
@@ -406,7 +500,7 @@ TQtApplication *TGQt::CreateQtApplicationImp()
       //    app = new TQtApplication(gApplication->ApplicationName(),gApplication->Argc(),gApplication->Argv());
       static TString argvString ("$ROOTSYS/bin/root.exe");
       gSystem->ExpandPathName(argvString);
-      static  char *argv[] = {(char *)argvString.Data()};
+      static char *argv[] = {(char *)argvString.Data()};
       int nArg = 1;
       app = new TQtApplication("Qt",nArg,argv);
    }
@@ -476,7 +570,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.76 2005/02/04 21:26:51 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.79 2005/02/09 00:57:21 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -561,12 +655,12 @@ Bool_t TGQt::Init(void* /*display*/)
    if  ( fFontTextCode.isEmpty() ) fFontTextCode = "ISO8859-1";
 
    // Check whether "Symbol" font is available
-
     QFontDatabase fdb;
     QStringList families = fdb.families();
     Bool_t symbolFontFound = kFALSE;
     for ( QStringList::Iterator f = families.begin(); f != families.end(); ++f ) {
         if ( *f == fSymbolFontFamily) { symbolFontFound = kTRUE; break; }
+        // fprintf(stderr," TGQt::TGQt %s \n", (const char *)*f);
     }
     if (!symbolFontFound) {
         fprintf(stderr, "The font \"symbol.ttf\" was not installed yet\n");
@@ -581,7 +675,7 @@ Bool_t TGQt::Init(void* /*display*/)
    //  printf(" TGQt::Init finsihed\n");
    // Install filter for the desktop
    // QApplication::desktop()->installEventFilter(QClientFilter());
-
+   fWidgetArray =  new TQWidgetCollection();
    fDisplayOpened = kTRUE;
    TQtEventInputHandler::Instance();
    return fDisplayOpened;
@@ -612,6 +706,7 @@ Int_t TGQt::InitWindow(ULong_t window)
    wid = new TQtWidget(parent,"virtualx",Qt::WStyle_NoBorder,FALSE);
    wid->setCursor(*fCursors[kCross]);
 
+   return fWidgetArray->GetFreeId(wid);
    return iwid(wid);
 }
 
@@ -620,6 +715,7 @@ Int_t TGQt::OpenPixmap(UInt_t w, UInt_t h)
 {
    //*-*  Create a new pixmap object
    QPixmap *obj =  new QPixmap(w,h);
+   return fWidgetArray->GetFreeId(obj);
    return iwid(obj);
 }
 
@@ -740,6 +836,7 @@ void  TGQt::DeleteSelectedObj()
          ((QWidget *)fSelectedWindow)->close(true);
        }
   } else {
+     fWidgetArray->RemoveByPointer(fSelectedWindow);
      delete  fSelectedWindow;
   }
   fSelectedBuffer = fSelectedWindow = 0;
@@ -782,8 +879,10 @@ void  TGQt::CopyPixmap(int wid, int xpos, int ypos)
    // Copy the pixmap wid at the position xpos, ypos in the current window.
 
    if (!wid || (wid == -1) ) return;
-   assert(((QPaintDevice *)wid)->devType() == QInternal::Pixmap);
-   QPixmap *src = (QPixmap *)(QPaintDevice *)wid;
+   QPaintDevice *dev = iwid(wid);
+   assert(dev->devType() == QInternal::Pixmap);
+   QPixmap *src = (QPixmap *)dev;
+   //   QPixmap *src = (QPixmap *)(QPaintDevice *)wid;
    // fprintf(stderr," TGQt::CopyPixmap Selected = %p, Buffer = %p, wid = %p\n",
    //    fSelectedWindow,fSelectedBuffer,iwid(wid));
    if (fSelectedWindow )
@@ -1134,7 +1233,7 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
       // Add rotation if any
       if (TMath::Abs(angle) > 0.1 )  fQPainter->rotate(-angle);
 
- 
+
       fQPainter->drawText (0, 0, GetTextDecoder()->toUnicode (text));
 
       fQPainter->restore();
@@ -1249,9 +1348,9 @@ const QTextCodec *TGQt::GetTextDecoder()
    if (fTextFont/10 == 12 ) {
         // We expect the Greek letters and should apply the right Code
       if (!fGreekCodec) {
-         if (QString(fSymbolFontFamily).contains("Symbol")) 
+         if (QString(fSymbolFontFamily).contains("Symbol"))
             fGreekCodec  = fCodec;
-         else 
+         else
             fGreekCodec  = QTextCodec::codecForName("symbol"); // ISO8859-7
       }
       return fGreekCodec;
@@ -1303,7 +1402,7 @@ void  TGQt::MoveWindow(Int_t wid, Int_t x, Int_t y)
 
 //______________________________________________________________________________
 void  TGQt::PutByte(Byte_t )
-{   // deprecated
+{ // deprecated
 }
 
 //______________________________________________________________________________
@@ -1318,10 +1417,14 @@ Pixmap_t TGQt::ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t id)
    // If id is NULL - loads the specified gif file at position [x0,y0] in the
    // current window. Otherwise creates pixmap from gif file
 
+   Int_t thisId = 0;
    QPixmap *pix = new QPixmap( QString (file) );
    if ( pix->isNull () ) { delete pix; pix = 0;         }
-   else if (!id)         { CopyPixmap(iwid(pix),x0,y0); delete pix; pix = 0;}
-   return iwid(pix);
+   else {
+      thisId=fWidgetArray->GetFreeId(pix);
+      if (!id ) { CopyPixmap(thisId,x0,y0); fWidgetArray->DeleteById(thisId); thisId = 0;}
+   }
+   return thisId;
 }
 
 //______________________________________________________________________________
@@ -2189,7 +2292,7 @@ void  TGQt::SetTextSize(Float_t textsize)
    //*-*                      =====================
    if ( fTextSize != textsize ) {
       fTextSize = textsize;
-      if (fTextSize > 0) {
+      if (fTextSize > 0) {	
          fQFont->setPixelSize(int(FontMagicFactor(fTextSize)));
          fTextFontModified = 1;
       }
