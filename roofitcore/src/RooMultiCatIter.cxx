@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMultiCatIter.cc,v 1.5 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooMultiCatIter.cc,v 1.6 2001/08/23 23:43:43 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [AUX] --
 // RooMultiCatIter iterators over all state permutations of a list of categories.
 // It serves as the state iterator for a RooSuperCategory.
 

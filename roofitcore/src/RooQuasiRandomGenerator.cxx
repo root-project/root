@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.9 2001/08/09 01:02:14 verkerke Exp $
+ *    File: $Id: RooQuasiRandomGenerator.cc,v 1.1 2001/08/22 00:50:25 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 Stanford University
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [AUX] --
 // This class generates the quasi-random (aka "low discrepancy")
 // sequence for dimensions up to 12 using the Niederreiter base 2
 // algorithm described in Bratley, Fox, Niederreiter, ACM Trans.
@@ -28,7 +28,7 @@ ClassImp(RooQuasiRandomGenerator)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.9 2001/08/09 01:02:14 verkerke Exp $";
+"$Id: RooQuasiRandomGenerator.cc,v 1.1 2001/08/22 00:50:25 david Exp $";
 
 RooQuasiRandomGenerator::RooQuasiRandomGenerator() {
   // Perform one-time initialization of our static coefficient array if necessary

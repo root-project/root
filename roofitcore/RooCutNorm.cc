@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooCutNorm.cc,v 1.1 2001/10/06 06:19:52 verkerke Exp $
+ *    File: $Id: RooCutNorm.cc,v 1.2 2001/10/06 07:28:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,27 @@
  *
  * Copyright (C) 2000 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION [PDF] --
+//  RooNorm is a PDF with a flat likelihood distribution that introduces a 
+//  parameteric extended likelihood term into a PDF, multiplied by a 
+//  fractional term from a partial normalization of a supplied PDF.
+//
+//  The fractional term is defined as
+//                          _       _ _   _  _
+//            Int(cutRegion[x]) pdf(x,y) dx dy 
+//     frac = ---------------_-------_-_---_--_ 
+//            Int(normRegion[x]) pdf(x,y) dx dy 
+//
+//        _                                                               _
+//  where x is the set of dependents involved in the selection region and y
+//  is the set of remaining dependents.
+//            _
+//  cutRegion[x] is an limited integration range that is contained in
+//  the nominal integration range normRegion[x[]
+//
+//  Typically RooCutNorm is used to add the extended likelihood term to another 
+//  PDF by multiplying RooNorm with that PDF using RooProdPdf.
 
 #include "RooFitCore/RooCutNorm.hh"
 #include "RooFitCore/RooArgList.hh"
@@ -29,8 +50,26 @@ RooCutNorm::RooCutNorm(const char *name, const char *title, const RooAbsReal& no
   _fracIntegral(0),
   _integralCompSet(0)
 {
-  // Constructor
-
+  // Constructor. The extended likelihood is taken from 'norm' multiplied by  
+  // a normalization fraction from 'pdf'. The dimensions of the cut region 
+  // should be listed in 'depList'. The reduced integration range for each
+  // dimension in 'depList' should be expressed in the fit range of a dummy
+  // RooRealVar in each matching slot in 'cutDepList'
+  //
+  // For example, the following code 
+  //
+  //   RooRealVar x("x","x",-10,10)
+  //   RooExamplePdf pdf("pdf","pdf",x)
+  //
+  //   RooRealVar nevt("nevt","number of expected events")
+  //   RooRealVar xcut("xcut","xcut",-3,3)
+  //   RooCutNorm cutnorm("cutnorm","...",pdf,nevt,x,cut)
+  //
+  // constructs a cutnorm with the number of expected events as
+  //
+  //   nExpected = nevt * Int(-3,3)pdf(x)dx / Int(-10,10)pdf(x)dx
+  //
+  
   // Check if dependent and replacement list have same length
   if (depList.getSize() != cutDepList.getSize()) {
     cout << "RooCutNorm::ctor(" << GetName() 

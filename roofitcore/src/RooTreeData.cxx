@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.9 2001/10/03 16:16:32 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.10 2001/10/04 01:44:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -21,7 +21,7 @@
  * Copyright (C) 1999 Stanford University
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [DATA] --
 // RooTreeData is the abstract base class for data collection that
 // use a TTree as internal storage mechanism
 

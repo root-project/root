@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.cc,v 1.16 2001/09/25 01:15:59 verkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.17 2001/09/27 18:22:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,12 +11,25 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
-// RooFormulaVar is a concrete implementation of a derived real-valued object,
-// which takes a RooArgSet of servers and a string expression defining how
+// -- CLASS DESCRIPTION [REAL] --
+// RooRealVar is a generic implementation of a real valued object
+// which takes a RooArgList of servers and a C++ expression string defining how
 // its value should be calculated from the given list of servers.
-// 
-// RooFormulaVar uses a RooFormula object to perform the expression evaluation
+// RooRealVar uses a RooFormula object to perform the expression evaluation.
+//
+// If RooAbsPdf objects are supplied to RooRealVar as servers, their
+// raw (unnormalized) values will be evaluated. Use RooGenericPdf, which
+// constructs generic PDF functions, to access their properly normalized
+// values.
+//
+// The string expression can be any valid TFormula expression referring to the
+// listed servers either by name or by their ordinal list position:
+//
+//   RooRealVar("gen","x*y",RooArgList(x,y))  or
+//   RooRealVar("gen","@0*@1",RooArgList(x,y)) 
+//
+// The latter form, while slightly less readable, is more versatile because it
+// doesn't hardcode any of the variable names it expects
 
 
 #include "RooFitCore/RooFormulaVar.hh"
@@ -46,7 +59,7 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgSe
   RooAbsReal(name,title), _formula(name,title,dependents)
 {  
   Bool_t anyServers(kFALSE) ;
-  // Constructor with formula expression and list of input variables
+  // Constructor with formula expression, title and list of input variables
   TIterator* depIter = _formula.actualDependents().createIterator() ;
   RooAbsArg* server(0) ;
   while (server=(RooAbsArg*)depIter->Next()) {
@@ -152,19 +165,3 @@ void RooFormulaVar::writeToStream(ostream& os, Bool_t compact) const
   }
 }
 
-// Int_t RooFormulaVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
-// {
-//   // Determine which part (if any) of given integral can be performed analytically.
-//   // If any analytical integration is possible, return integration scenario code
-
-//   analVars.add(allVars);
-//   return 1 ;
-// }
-
-
-// Double_t RooFormulaVar::analyticalIntegral(Int_t code) const 
-// {
-//   // Return analytical integral defined by given scenario code
-
-//   return 1 ;
-// }

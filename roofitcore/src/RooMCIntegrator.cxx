@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCIntegrator.cc,v 1.4 2001/09/15 00:26:03 david Exp $
+ *    File: $Id: RooMCIntegrator.cc,v 1.5 2001/09/22 00:30:58 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 Stanford University
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [AUX] --
 // RooMCIntegrator implements an adaptive multi-dimensional Monte Carlo
 // numerical integration, following the VEGAS algorithm originally described
 // in G. P. Lepage, J. Comp. Phys. 27, 192(1978). This implementation is

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.cc,v 1.3 2001/04/22 18:15:32 david Exp $
+ *    File: $Id: RooHistError.cc,v 1.1 2001/05/02 18:09:00 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 Stanford University
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [PLOT] --
 // RooHistError is a singleton class used to calculate the error bars
 // for each bin of a RooHist object. Errors are calculated by integrating
 // a specified area of a Poisson or Binomail error distribution.
@@ -22,7 +22,7 @@
 ClassImp(RooHistError)
 
 static const char rcsid[] =
-"$Id: RooHist.cc,v 1.3 2001/04/22 18:15:32 david Exp $";
+"$Id: RooHistError.cc,v 1.1 2001/05/02 18:09:00 david Exp $";
 
 const RooHistError &RooHistError::instance() {
   // Return a reference to a singleton object that is created the

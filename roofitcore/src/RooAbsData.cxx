@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.cc,v 1.8 2001/10/04 01:44:33 verkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.9 2001/10/05 07:01:49 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [DATA] --
 // RooAbsData is the common abstract base class for binned and unbinned
 // datasets. The abstract interface defines plotting and tabulating entry
 // points for its contents and provides an iterator over its elements

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooHistPdf.cc,v 1.1 2001/09/27 18:22:29 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -9,6 +9,12 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION [PDF] --
+// RooHistPdf implements a probablity density function sample from a 
+// multidimensional histogram. The histogram distribution is explicitly
+// normalized by RooHistPdf and can have an arbitrary number of real or 
+// discrete dimensions.
 
 #include "RooFitCore/RooHistPdf.hh"
 #include "RooFitCore/RooDataHist.hh"
@@ -23,7 +29,12 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
   _depList("depList","List of dependents",this),
   _codeReg(10)
 {
-  // Constructor
+  // Constructor from a RooDataHist. The variable listed in 'vars' control the dimensionality of the
+  // PDF. Any additional dimensions present in 'dhist' will be projected out. RooDataHist dimensions
+  // can be either real or discrete. See RooDataHist::RooDataHist for details on the binning.
+  // RooHistPdf neither owns or clone 'dhist' and the user must ensure the input histogram exists
+  // for the entire life span of this PDF.
+
   _depList.add(vars) ;
 
   // Verify that vars and dhist.get() have identical contents
@@ -57,12 +68,17 @@ RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
 
 Double_t RooHistPdf::evaluate() const
 {
+  // Return the current value: The value of the bin enclosing the current coordinates
+  // of the dependents, normalized by the histograms contents
   return _dataHist->weight(_depList) ;
 }
 
 
 Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
 {
+  // Determine integration scenario. RooHistPdf can perform all integrals over 
+  // its dependents analytically via partial or complete summation of the input histogram.
+
   // Simplest scenario, integrate over all dependents
   if ((allVars.getSize()==_depList.getSize()) && 
       matchArgs(allVars,analVars,_depList)) return 1000 ;
@@ -87,6 +103,10 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars)
 
 Double_t RooHistPdf::analyticalIntegral(Int_t code) const 
 {
+  // Return integral identified by 'code'. The actual integration
+  // is deferred to RooDataHist::sum() which implements partial
+  // or complete summation over the histograms contents
+
   // Simplest scenario, integration over all dependents
   if (code==1000) return _dataHist->sum(kTRUE) ;
 

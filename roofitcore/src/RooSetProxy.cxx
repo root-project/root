@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSetProxy.cc,v 1.11 2001/09/27 18:22:30 verkerke Exp $
+ *    File: $Id: RooSetProxy.cc,v 1.12 2001/10/03 16:16:32 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [CONT] --
 // RooSetProxy is the concrete proxy for RooArgSet objects.
 // A RooSetProxy is the general mechanism to store a RooArgSet
 // with RooAbsArgs in a RooAbsArg.

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.21 2001/09/28 21:59:28 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.22 2001/10/03 16:16:31 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 Stanford University
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [PLOT] --
 // A RooCurve is a one-dimensional graphical representation of a real-valued function.
 // A curve is approximated by straight line segments with endpoints chosen to give
 // a "good" approximation to the true curve. The goodness of the approximation is
@@ -40,7 +40,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.21 2001/09/28 21:59:28 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.22 2001/10/03 16:16:31 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();

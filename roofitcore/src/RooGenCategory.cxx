@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGenCategory.cc,v 1.7 2001/10/02 21:24:37 verkerke Exp $
+ *    File: $Id: RooGenCategory.cc,v 1.8 2001/10/05 01:26:32 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [CAT] --
 // RooGenCategory provides the most flexibe mapping of a series of input categories
 // on a output category via a global function provided in the constructor
 //

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHtml.cc,v 1.2 2001/10/05 07:01:50 verkerke Exp $
+ *    File: $Id: RooHtml.cc,v 1.3 2001/10/06 06:19:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,14 +11,25 @@
  * Copyright (C) 2001 Stanford University
  *****************************************************************************/
 
+// -- CLASS DESCRIPTION [MISC] --
+
 #include "RooFitCore/RooHtml.hh"
 
 #include "TDatime.h"
+#include "TClassTable.h"
+#include "TRegexp.h"
+#include "TClass.h"
+#include "TSystem.h"
+#include "TObjString.h"
 
+#include <ctype.h>
 #include <iostream.h>
 #include <fstream.h>
 #include <string.h>
 #include <strings.h>
+
+const Int_t   kSpaceNum      = 1;
+const char   *formatStr      = "%12s %5s %s";
 
 ClassImp(RooHtml)
   ;
@@ -82,3 +93,165 @@ void RooHtml::WriteHtmlFooter(ofstream &out, const char *dir, const char *lastUp
       << "</tr></table></center>" << endl
       << "<center>Copyright &copy 2001 University of California</center>" << endl;
 }
+
+
+
+void RooHtml::MakeIndexNew(const char *filter)
+{
+  // WVE modified clone of THtml::MakeIndex that subclasses index files
+  // based on tag in 'CLASS DESCRIPTION' instead of source file subdirectory
+
+   // It makes an index files
+   // by default makes an index of all classes (if filter="*")
+   // To generate an index for all classes starting with "XX", do
+   //    html.MakeIndex("XX*");
+
+   CreateListOfTypes();
+
+   // get total number of classes
+   Int_t numberOfClasses = gClassTable->Classes();
+
+
+   // allocate memory
+   const char **classNames = new const char *[numberOfClasses];
+   char       **fileNames  = new       char *[numberOfClasses];
+
+   // start from begining
+   gClassTable->Init();
+
+   // get class names
+   Int_t len = 0;
+   Int_t maxLen = 0;
+   Int_t numberOfImpFiles = 0;
+
+   TString reg = filter;
+   TRegexp re(reg, kTRUE);
+   Int_t nOK = 0;
+   
+   for( Int_t i = 0; i < numberOfClasses; i++ ) {
+
+      // get class name
+      const char *cname = gClassTable->Next();
+      TString s = cname;
+      if (s.Index(re) == kNPOS) continue;
+      classNames[nOK] = cname;
+      len    = strlen( classNames[nOK] );
+      maxLen = maxLen > len ? maxLen : len;
+
+      // get class & filename
+      TClass *classPtr = GetClass( (const char * ) classNames[nOK] );
+      const char *impname = classPtr->GetImplFileName();
+
+      if( impname ) {
+         fileNames[numberOfImpFiles] = StrDup( impname, 64 );
+
+         char *underline = strchr( fileNames[numberOfImpFiles], '_');
+         if( underline )
+            strcpy( underline + 1, classNames[nOK] );
+         else {
+            // WVE modified to use getClassGroup instead of subdir to determine index file
+	   char* srcdir = getClassGroup(fileNames[numberOfImpFiles]) ;
+	   strcpy( fileNames[nOK], srcdir);
+	   strcat( fileNames[nOK], "_" );
+	   strcat( fileNames[nOK], classNames[nOK] );
+         }
+         numberOfImpFiles++;
+      }
+      else cout << "WARNING class:" << classNames[i] << " has no implementation file name !" << endl;
+
+      nOK++;
+   }
+   maxLen += kSpaceNum;
+
+   // quick sort
+   SortNames( classNames, nOK );
+   SortNames( (const char ** ) fileNames,  numberOfImpFiles );
+
+   // create an index
+   CreateIndex( classNames, nOK);
+   CreateIndexByTopic( fileNames, nOK, maxLen );
+
+   // free allocated memory
+   delete [] classNames;
+   delete [] fileNames;
+}
+
+
+char* RooHtml::getClassGroup(const char* fileName) 
+{
+  // Scan file for 'CLASS DESCRIPTION [<tag>]' sequence
+  // If found, return <tag>, otherwise return "USER"
+
+  // Initialize buffer to default group name
+  static char buffer[1024] = "" ;
+  strcpy(buffer,"USER") ;
+
+  // Scan file contents
+  ifstream ifs(fileName) ;
+  char line[1024] ;
+  while(ifs.good()) {
+    ifs.getline(line,sizeof(line),'\n') ;
+    
+    // Find magic word
+    char *ptr ;
+    if (ptr = strstr(line,"CLASS DESCRIPTION")) {
+      char* start = strchr(ptr,'[') ;
+      if (start) {
+	// Must have closing bracket to proceed
+	if (!strchr(start,']')) break ;
+
+	// Extract keyword between square brackets
+	char* group = strtok(start+1,"]") ;
+
+	// Group name must be non-empty
+	if (group && strlen(group)) strcpy(buffer,group) ;
+      }
+      break ;
+    }
+  }
+
+  return buffer ;
+}
+
+
+
+
+void RooHtml::addTopic(const char* tag, const char* description) 
+{
+  _topicTagList.Add(new TObjString(tag)) ;
+  _topicDescList.Add(new TObjString(description)) ;
+}
+
+
+
+
+void RooHtml::MakeIndexOfTopics() 
+{
+  TString idxFileName(fOutputDir) ;
+  idxFileName.Append("/") ;
+  idxFileName.Append("IndexByTopic.html") ;
+
+  ofstream ofs(idxFileName) ;
+  WriteHtmlHeader(ofs,"RooFit Index by Topic") ;
+
+  TIterator* tagIter = _topicTagList.MakeIterator() ;
+  TIterator* descIter = _topicDescList.MakeIterator() ;
+  TObjString* tag ;
+  TObjString* desc ;
+
+  ofs << "<H2>" << endl << "<UL>" << endl ;
+
+  while(tag=(TObjString*)tagIter->Next()) {
+    desc=(TObjString*)descIter->Next() ;
+    ofs << "<LI> <A HREF=" << tag->String() << "_Index.html>" << desc->String() << "</A>" << endl ;
+  }
+  ofs << "</UL>" << endl ;
+
+  WriteHtmlFooter(ofs,"") ;
+
+  delete tagIter ;
+  delete descIter ;
+
+  
+}
+

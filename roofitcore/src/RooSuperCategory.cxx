@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.cc,v 1.11 2001/08/23 23:43:43 david Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.12 2001/09/17 18:48:17 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [CAT] --
 // RooSuperCategory consolidates several RooAbsCategoryLValue objects into
 // a single category. The states of the super category consist of all the permutations
 // of the input categories. The super category is an lvalue itself and a modification
@@ -56,6 +56,8 @@ RooSuperCategory::RooSuperCategory(const char *name, const char *title, const Ro
 RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *name) :
   RooAbsCategoryLValue(other,name), _catSet("catSet",this,other._catSet)
 {
+  // Copy constructor
+
   updateIndexList() ;
   setIndex(other.getIndex()) ;
 }
@@ -71,7 +73,8 @@ RooSuperCategory::~RooSuperCategory()
 
 TIterator* RooSuperCategory::MakeIterator() const 
 {
-  // Make an iterator over the input categories of this supercategory
+  // Make an iterator over all state permutations of 
+  // the input categories of this supercategory
   return new RooMultiCatIter(_catSet) ;
 }
 
@@ -79,7 +82,7 @@ TIterator* RooSuperCategory::MakeIterator() const
 
 void RooSuperCategory::updateIndexList()
 {
-  // Update the list of our category states 
+  // Update the list of super-category states 
 
   clearTypes() ;
   RooArgSet* catListClone = (RooArgSet*) _catSet.snapshot(kTRUE) ;
@@ -155,7 +158,7 @@ Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t printError)
   // Set the value of the super category by specifying the state object
   // Indirectly sets the values of the input categories
 
-  // WVE: adapt parser to understand composite super categories
+  // WVE: must adapt parser to understand composite super categories
   char buf[1024] ;
   strcpy(buf,type->GetName()) ;
 

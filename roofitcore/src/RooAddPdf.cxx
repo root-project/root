@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.17 2001/10/05 07:01:49 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.18 2001/10/06 06:19:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,7 +17,7 @@
  * Copyright (C) 2000 Stanford University
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [PDF] --
 // RooAddPdf is an efficient implementation of a sum of PDFs of the form 
 //
 //  c_1*PDF_1 + c_2*PDF_2 + ... c_n*PDF_n 
@@ -27,15 +27,18 @@
 //  c_1*PDF_1 + c_2*PDF_2 + ... (1-sum(c_1...c_n-1))*PDF_n 
 //
 // The first form is for extended likelihood fits, where the
-// expected number of events is Sum(i) c_i
+// expected number of events is Sum(i) c_i. The coefficients c_i
+// can either be explicitly provided, or, if all components support
+// extended likelihood fits, they can be calculated the contribution
+// of each PDF to the total number of expected events.
 //
 // In the second form, the sum of the coefficients is enforced to be one,
 // and the coefficient of the last PDF is calculated from that condition.
 //
 // RooAddPdf relies on each component PDF to be normalized and will perform 
 // no normalization other than calculating the proper last coefficient c_n, if requested.
-// An (enforced) condition for this assuption is that each PDF(i) is independent
-// of each coefficient(i).
+// An (enforced) condition for this assuption is that each PDF_i is independent
+// of each coefficient_i.
 //
 // 
 
@@ -153,9 +156,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   _haveLastCoef(kFALSE),
   _allExtendable(kTRUE)
 { 
-  // Generic constructor from list of extended PDFs.
-  // There are no coefficients as the extended terms determine the relative weight
-  // of the components
+  // Generic constructor from list of extended PDFs. There are no coefficients as the expected
+  // number of events from each components determine the relative weight of the PDFs.
   // 
   // All PDFs must inherit from RooAbsPdf. 
 

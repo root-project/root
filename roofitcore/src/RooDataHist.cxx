@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.5 2001/09/28 21:59:28 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.6 2001/10/04 01:44:33 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [DATA] --
 // RooDataSet is a container class to hold N-dimensional binned data. Each bins central 
 // coordinates in N-dimensional space are represented by a RooArgSet of RooRealVar, RooCategory 
 // or RooStringVar objects, thus data can be binned in real and/or discrete dimensions

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStringVar.cc,v 1.9 2001/07/31 05:54:22 verkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.10 2001/08/03 02:04:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,8 +11,8 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
-// RooStringVar represents a fundamental (non-derived) string value object.
+// -- CLASS DESCRIPTION [MISC] --
+// RooStringVar represents a fundamental string valued object.
 
 #include <math.h>
 #include <stdlib.h>

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.13 2001/10/05 07:01:50 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.14 2001/10/06 06:19:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,13 +17,18 @@
  * Copyright (C) 2000 Stanford University
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [PDF] --
 // RooProdPdf is an efficient implementation of a product of PDFs of the form 
 //
 //  PDF_1 * PDF_2 * ... * PDF_N
 //
 // RooProdPdf relies on each component PDF to be normalized and will perform no 
 // explicit normalization itself. No PDF may share any dependents with any other PDF. 
+//
+// If exactly one of the component PDFs supports extended likelihood fits, the
+// product will also be usable in extended mode, returning the number of expected
+// events from the extendable component PDF. The extendable component does not
+// have to appear in any specific place in the list.
 // 
 // To construct a product of PDFs that share dependents, and thus require explicit
 // normalization of the product, use RooGenericPdf.

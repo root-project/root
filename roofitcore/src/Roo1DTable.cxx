@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: Roo1DTable.cc,v 1.7 2001/09/12 01:25:43 verkerke Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.8 2001/09/24 23:05:56 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [PLOT] --
 // Roo1DTable implements a one-dimensional table. A table is the category
 // equivalent of a plot. To create a table use the RooDataSet::table method.
 
@@ -150,6 +150,8 @@ void Roo1DTable::printToStream(ostream& os, PrintOption opt, TString indent) con
 
 Double_t Roo1DTable::get(const char* label, Bool_t silent) const 
 {
+  // Return the table entry named 'label'. Zero is returned
+  // if given label doesn't occur in table. 
   TObject* cat = _types.FindObject(label) ;
   if (!cat) {
     if (!silent) {
@@ -161,8 +163,18 @@ Double_t Roo1DTable::get(const char* label, Bool_t silent) const
 }
 
 
+Double_t Roo1DTable::getOverflow() const 
+{
+  // Return the number of overflow entries in the table.
+  return _nOverflow ;
+}
+
+
 Double_t Roo1DTable::getFrac(const char* label, Bool_t silent) const 
 {
+  // Return the fraction of entries in the table contained in the slot named 'label'. 
+  // The normalization includes the number of overflows.
+  // Zero is returned if given label doesn't occur in table.   
   if (_total) {
     return get(label,silent) / _total ;
   } else {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsFunc1D.cc,v 1.1 2001/05/02 18:08:59 david Exp $
+ *    File: $Id: RooAbsFunc.cc,v 1.1 2001/08/03 21:44:56 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 Stanford University
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [AUX] --
 // Abstract interface for evaluating a real-valued function of one real variable
 // and performing numerical algorithms on it. The purpose of this interface is
 // to decouple RooAbsArg-specific implementations from numerical algorithms that
@@ -26,4 +26,4 @@ ClassImp(RooAbsFunc)
 ;
 
 static const char rcsid[] =
-"$Id: RooAbsFunc1D.cc,v 1.1 2001/05/02 18:08:59 david Exp $";
+"$Id: RooAbsFunc.cc,v 1.1 2001/08/03 21:44:56 david Exp $";

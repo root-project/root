@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMapCatEntry.cc,v 1.2 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooMapCatEntry.cc,v 1.3 2001/08/02 22:36:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [AUX] --
 // RooMapCatEntry is an auxilary class for RooMappedCategory and defines a 
 // a mapping. A mapping consists of a wildcard regular expression, that
 // can be matched against the input category state label and an output

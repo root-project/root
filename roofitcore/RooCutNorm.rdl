@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooCutNorm.rdl,v 1.1 2001/10/06 06:19:53 verkerke Exp $
+ *    File: $Id: RooCutNorm.rdl,v 1.2 2001/10/06 07:28:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,13 +33,13 @@ public:
 
 protected:
 
-  mutable RooArgSet* _lastFracSet ;
-  mutable RooRealIntegral* _fracIntegral ;
-  mutable RooArgSet* _integralCompSet ;
-  RooRealProxy _pdf ;
-  RooRealProxy _n ;
-  RooSetProxy  _cutDepSet ;
-  RooSetProxy  _origDepSet ;
+  mutable RooArgSet* _lastFracSet ;          // Normalization set for which last fracIntegral was made
+  mutable RooRealIntegral* _fracIntegral ;   // Fractional normalization integral
+  mutable RooArgSet* _integralCompSet ;      // Owning set of components of fracIntegral and its servers
+  RooRealProxy _pdf ;        // PDF used for fractional correction factor
+  RooRealProxy _n ;          // Number of expected events
+  RooSetProxy  _cutDepSet ;  // Set of dependents with modified fit range
+  RooSetProxy  _origDepSet ; // Set of original dependents 
 
   void syncFracIntegral() const ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.cc,v 1.14 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.15 2001/07/31 05:54:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [CAT] --
 // RooCategory represents a fundamental (non-derived) discrete value object. The class
 // has a public interface to define the possible value states.
 
@@ -33,7 +33,7 @@ ClassImp(RooCategory)
 RooCategory::RooCategory(const char *name, const char *title) : 
   RooAbsCategoryLValue(name,title)
 {
-  // Constructor. Types must be defined before variable can be used
+  // Constructor. Types must be defined using defineType() before variable can be used
   setValueDirty() ;  
   setShapeDirty() ;  
 }
@@ -55,7 +55,9 @@ RooCategory::~RooCategory()
 
 Bool_t RooCategory::setIndex(Int_t index, Bool_t printError) 
 {
-  // Set value by specifying the index code of the desired state
+  // Set value by specifying the index code of the desired state.
+  // If printError is set, a message will be printed if
+  // the specified index does not represent a valid state.
 
   const RooCatType* type = lookupType(index,printError) ;
   if (!type) return kTRUE ;
@@ -69,6 +71,8 @@ Bool_t RooCategory::setIndex(Int_t index, Bool_t printError)
 Bool_t RooCategory::setLabel(const char* label, Bool_t printError) 
 {
   // Set value by specifying the name of the desired state
+  // If printError is set, a message will be printed if
+  // the specified label does not represent a valid state.
 
   const RooCatType* type = lookupType(label,printError) ;
   if (!type) return kTRUE ;
@@ -81,7 +85,11 @@ Bool_t RooCategory::setLabel(const char* label, Bool_t printError)
 
 Bool_t RooCategory::defineType(const char* label) 
 { 
-  // Define a state with given name, index code as automatically assigned
+  // Define a state with given name, the lowest available
+  // positive integer is assigned as index. Category
+  // state labels may not contain semicolons.
+  // Error status is return if state with given name
+  // is already defined
 
   if (TString(label).Contains(";")) {
   cout << "RooCategory::defineType(" << GetName() 
@@ -95,7 +103,10 @@ Bool_t RooCategory::defineType(const char* label)
 
 Bool_t RooCategory::defineType(const char* label, Int_t index) 
 {
-  // Define a state with given name and index code
+  // Define a state with given name and index. Category
+  // state labels may not contain semicolons
+  // Error status is return if state with given name
+  // or index is already defined
 
   if (TString(label).Contains(";")) {
   cout << "RooCategory::defineType(" << GetName() 

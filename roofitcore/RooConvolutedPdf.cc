@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.19 2001/09/28 21:59:28 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.20 2001/10/05 07:01:49 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [PDF] --
 // 
 //  RooConvolutedPdf is the base class of for PDFs that represents a
 //  physics model that can be convoluted with a resolution model

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooNLLBinding.cc,v 1.1 2001/10/06 06:19:53 verkerke Exp $
  * Authors:
  *   DK, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [AUX] --
 // Lightweight interface adaptor that binds an analytic integral of a
 // RooAbsReal object (specified by a code) to a set of dependent variables.
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooThresholdCategory.cc,v 1.2 2001/08/02 21:39:13 verkerke Exp $
+ *    File: $Id: RooThresholdCategory.cc,v 1.3 2001/08/02 22:36:30 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [CAT] --
 // RooThresholdCategory provides a real-to-category mapping defined
 // by a series of thresholds.
 

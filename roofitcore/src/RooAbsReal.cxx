@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.47 2001/10/03 16:16:30 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.48 2001/10/06 06:19:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -13,7 +13,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [REAL] --
 // RooAbsReal is the common abstract base class for objects that represent a
 // real value. Implementation of RooAbsReal may be derived, there no interface
 // is provided to modify the contents.
@@ -53,7 +53,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) :
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), 
   _plotMin(0), _plotMax(0)
 {
-  // Constructor
+  // Constructor with unit label
   setValueDirty() ;
   setShapeDirty() ;
 }
@@ -63,7 +63,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), 
   _plotMin(minVal), _plotMax(maxVal)
 {
-  // Constructor with plot range
+  // Constructor with plot range and unit label
   setValueDirty() ;
   setShapeDirty() ;
 }
@@ -125,7 +125,8 @@ Double_t RooAbsReal::traceEval(const RooArgSet* nset) const
 
 Int_t RooAbsReal::getAnalyticalIntegralWN(RooArgSet& allDeps, RooArgSet& analDeps, const RooArgSet* normSet) const
 {
-  // By default defer to normSet-invariant version
+  // Default implementation of getAnalyticalIntegralWN for real valued objects defers to
+  // normalization invariant getAnalyticalIntegral()
   return getAnalyticalIntegral(allDeps,analDeps) ;
 }
 
@@ -139,7 +140,10 @@ Int_t RooAbsReal::getAnalyticalIntegral(RooArgSet& allDeps, RooArgSet& analDeps)
 
 Double_t RooAbsReal::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const
 {
-  // Implement pass-through scenario, defer other codes to subclass implementations
+  // Default implementation of analyticalIntegralWN handles only the pass-through
+  // scenario (code =0). All other codes are deferred to to the normalization
+  // invariant analyticalIntegral() 
+
   if (code==0) return getVal(normSet) ;
   return analyticalIntegral(code) ;
 }
@@ -232,6 +236,8 @@ void RooAbsReal::setPlotMax(Double_t value) {
 
 
 void RooAbsReal::setPlotRange(Double_t min, Double_t max) {
+  // Set a new plot range
+
   // Check if new limit is consistent
   if (min>max) {
     cout << "RooAbsReal::setPlotMinMax(" << GetName() 
@@ -668,7 +674,17 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions, 
 			    Double_t scaleFactor, ScaleType stype, const RooArgSet* projSet) const
 {
-  // Plot ourselves on given frame with optional scale factor and an explicit list of dependents to project
+  // Plot ourselves on given frame. If frame contains a histogram, all dimensions of the plotted
+  // function that occur in the previously plotted dataset are projected via partial integration,
+  // otherwise no projections are performed,
+  //
+  // The functions value can be multiplied with an optional scale factor. The interpretation
+  // of the scale factor is unique for generic real functions, for PDFs there are various interpretations
+  // possible, which can be selection with 'stype' (see RooAbsPdf::plotOn() for details).
+  //
+  // The default projection behaviour can be overriden by supplying an optional set of dependents
+  // to project. For most cases, plotSliceOn() and plotProjOn() provide a more intuitive interface
+  // to modify the default projection behavour.
 
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
@@ -727,7 +743,11 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions, 
 				 Double_t scaleFactor, ScaleType stype) const
 {
-  // Make default set of projected variables
+  // Plot ourselves on given frame, as done in plotOn(), except that the variables 
+  // listed in 'sliceSet' are taken out from the default list of projected dimensions created
+  // by plotOn().
+
+  // Plot
   RooArgSet projectedVars ;
   makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   
@@ -755,6 +775,17 @@ RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Opti
 RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, Option_t* drawOptions, 
 				Double_t scaleFactor, const RooArgSet* projSet) const
 {
+  // Plot asymmetry of ourselves, defined as
+  //
+  //   asym = f(asymCat=-1) - f(asymCat=+1) / ( f(asymCat=-1) + f(asymCat=+1) )
+  //
+  // on frame. If frame contains a histogram, all dimensions of the plotted
+  // asymmetry function that occur in the previously plotted dataset are projected via partial integration.
+  // Otherwise no projections are performed,
+  //
+  // The asymmetry function can be multiplied with an optional scale factor. The default projection 
+  // behaviour can be overriden by supplying an optional set of dependents to project. 
+
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
 
@@ -854,6 +885,8 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
 Bool_t RooAbsReal::plotSanityChecks(RooPlot* frame) const
 {
+  // Perform general sanity check on frame to ensure safe plotting operations
+
   // check that we are passed a valid plot frame to use
   if(0 == frame) {
     cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
@@ -887,8 +920,14 @@ Bool_t RooAbsReal::plotSanityChecks(RooPlot* frame) const
 
 
 
-void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* allVars, RooArgSet& projectedVars, Bool_t silent) const
+void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* allVars, 
+				   RooArgSet& projectedVars, Bool_t silent) const
 {
+  // Construct the set of dependents to project when plotting ourselves as function
+  // of 'plotVar'. 'allVars' is the list of variables that must be projected, but
+  // may contain variables that we do not depend on. If 'silent' is cleared,
+  // warnings about inconsistent input parameters will be printed.
+
   projectedVars.removeAll() ;
   if (!allVars) return ;
 
@@ -1028,6 +1067,8 @@ RooPlot *RooAbsReal::frame() const {
   // object, but no plot contents. Use x.frame() as the first argument to a
   // y.plotOn(...) method, for example. The caller is responsible for deleting
   // the returned object.
+  //
+  // The current plot range may not be open ended or empty.
 
   // Plot range of variable may not be infinite or empty
   if (getPlotMin()==getPlotMax()) {

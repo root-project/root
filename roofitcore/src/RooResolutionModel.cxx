@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.13 2001/09/24 23:06:00 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.14 2001/10/05 07:01:50 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [PDF] --
 // 
 //  RooResolutionModel is the base class of for PDFs that represent a
 //  resolution model that can be convoluted with physics a physics model of the form

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.26 2001/08/23 01:21:48 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.27 2001/09/27 18:22:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -75,10 +75,10 @@ protected:
 
   Double_t chopAt(Double_t what, Int_t where) ;
 
-  Double_t _fitMin ;
-  Double_t _fitMax ;
-  Int_t    _fitBins ;
-  Double_t _error;
+  Double_t _fitMin ;  // Minimum of fit range
+  Double_t _fitMax ;  // Maximum of fit range
+  Int_t    _fitBins ; // Number of bins in fit range for binned fits
+  Double_t _error;    // Error associated with current value
 
   ClassDef(RooRealVar,1) // Real-valued variable 
 };

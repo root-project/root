@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.40 2001/10/05 07:01:49 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.41 2001/10/06 06:19:51 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -13,7 +13,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [PDF] --
 //
 // RooAbsPdf is the abstract interface for all probability density functions
 // The class provides hybrid analytical/numerical normalization for its implementations,

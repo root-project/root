@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.4 2001/08/24 23:55:15 david Exp $
+ *    File: $Id: RooFitResult.cc,v 1.5 2001/09/17 18:48:13 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -11,6 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
+// -- CLASS DESCRIPTION [MISC] --
 
 #include <iomanip.h>
 #include "TMinuit.h"

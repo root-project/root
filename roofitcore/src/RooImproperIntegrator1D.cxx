@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooImproperIntegrator1D.cc,v 1.3 2001/09/15 00:26:02 david Exp $
+ *    File: $Id: RooImproperIntegrator1D.cc,v 1.4 2001/09/25 01:15:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [AUX] --
 // Implementation of the abstract RooAbsIntegrator interface that can handle
 // integration limits of +/-Infinity.
 
@@ -29,7 +29,7 @@ ClassImp(RooImproperIntegrator1D)
 ;
 
 static const char rcsid[] =
-"$Id: RooImproperIntegrator1D.cc,v 1.3 2001/09/15 00:26:02 david Exp $";
+"$Id: RooImproperIntegrator1D.cc,v 1.4 2001/09/25 01:15:59 verkerke Exp $";
 
 RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function) :
   RooAbsIntegrator(function),_function(0),_integrator1(0),_integrator2(0),_integrator3(0)

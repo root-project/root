@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooComplex.cc,v 1.2 2001/06/30 01:33:12 verkerke Exp $
+ *    File: $Id: RooComplex.cc,v 1.3 2001/07/31 05:54:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,6 +11,8 @@
  *
  * Copyright (C) 2000 Stanford University
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION [MISC] --
 
 #include "RooFitCore/RooComplex.hh"
 #include <iostream.h>

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.13 2001/09/27 18:22:28 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.14 2001/09/28 21:59:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [REAL] --
 // RooAbsRealLValue is the common abstract base class for objects that represent a
 // real value that may appear on the left hand side of an equation ('lvalue')
 // Each implementation must provide a setVal() member to allow direct modification 
@@ -207,6 +207,7 @@ void RooAbsRealLValue::setFitBin(Int_t ibin)
 
 Int_t RooAbsRealLValue::getFitBin() const 
 {
+  // Return the fit bin index for the current value
   if (getVal() >= getFitMax()) return numFitBins()-1 ;
   if (getVal() < getFitMin()) return 0 ;
 
@@ -217,6 +218,7 @@ Int_t RooAbsRealLValue::getFitBin() const
 
 RooAbsBinIter* RooAbsRealLValue::createFitBinIterator() const 
 {
+  // Return an iterator over the fit bins of this object
   return new RooRealFixedBinIter(*this) ;
 }
 
@@ -225,6 +227,7 @@ RooAbsBinIter* RooAbsRealLValue::createFitBinIterator() const
 
 Double_t RooAbsRealLValue::fitBinCenter(Int_t i) const 
 {
+  // Return the central value of the 'i'-th fit bin
   if (i<0 || i>=numFitBins()) {
     cout << "RooAbsRealLValue::fitBinCenter(" << GetName() << ") ERROR: bin index " << i 
 	 << " is out of range (0," << getFitBins()-1 << ")" << endl ;
@@ -237,6 +240,7 @@ Double_t RooAbsRealLValue::fitBinCenter(Int_t i) const
 
 Double_t RooAbsRealLValue::fitBinLow(Int_t i) const 
 {
+  // Return the low edge of the 'i'-th fit bin
   if (i<0 || i>=numFitBins()) {
     cout << "RooAbsRealLValue::fitBinLow(" << GetName() << ") ERROR: bin index " << i 
 	 << " is out of range (0," << getFitBins()-1 << ")" << endl ;
@@ -249,6 +253,7 @@ Double_t RooAbsRealLValue::fitBinLow(Int_t i) const
 
 Double_t RooAbsRealLValue::fitBinHigh(Int_t i) const 
 {
+  // Return the high edge of the 'i'-th fit bin
   if (i<0 || i>=numFitBins()) {
     cout << "RooAbsRealLValue::fitBinHigh(" << GetName() << ") ERROR: bin index " << i 
 	 << " is out of range (0," << getFitBins()-1 << ")" << endl ;
@@ -261,6 +266,7 @@ Double_t RooAbsRealLValue::fitBinHigh(Int_t i) const
 
 Double_t RooAbsRealLValue::fitBinWidth() const 
 {
+  // Return the low edge of the fit bins
   return (getFitMax()-getFitMin())/getFitBins() ;
 }
 

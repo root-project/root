@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsBinIter.cc,v 1.1 2001/08/17 00:35:56 verkerke Exp $
+ *    File: $Id: RooAbsBinIter.cc,v 1.2 2001/08/23 01:21:44 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [MISC] --
 // RooAbsBinIter is the abstract base class for iterators of bins
 // of a RooAbsArg used in binned fits
 

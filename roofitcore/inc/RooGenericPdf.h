@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenericPdf.rdl,v 1.7 2001/08/23 01:21:47 verkerke Exp $
+ *    File: $Id: RooGenericPdf.rdl,v 1.8 2001/09/17 18:48:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,13 +16,14 @@
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooFormula.hh"
 
-class RooArgSet ;
+class RooArgList ;
 
 class RooGenericPdf : public RooAbsPdf {
 public:
   // Constructors, assignment etc
   inline RooGenericPdf() { }
-  RooGenericPdf(const char *name, const char *title, const RooArgSet& dependents);
+  RooGenericPdf(const char *name, const char *title, const RooArgList& dependents);
+  RooGenericPdf(const char *name, const char *title, const char* formula, const RooArgList& dependents);
   RooGenericPdf(const RooGenericPdf& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooGenericPdf(*this,newname); }
   virtual ~RooGenericPdf();
@@ -54,7 +55,7 @@ protected:
 
   mutable RooFormula _formula ; // Formula engine 
 
-  ClassDef(RooGenericPdf,1) // PDF defined by string expression
+  ClassDef(RooGenericPdf,1) // Generic PDF defined by string expression and list of variables
 };
 
 #endif

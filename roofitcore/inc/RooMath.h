@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMath.rdl,v 1.3 2001/08/08 23:11:24 david Exp $
+ *    File: $Id: RooMath.rdl,v 1.4 2001/09/24 23:05:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -66,23 +66,23 @@ private:
   static Double_t interpolate(Double_t yArr[],Int_t nOrder, Double_t x) ;
 
   // CERF lookup grid
-  static pDouble_t* _imCerfArray ;
-  static pDouble_t* _reCerfArray ;
+  static pDouble_t* _imCerfArray ; // Lookup table for Im part of complex error function
+  static pDouble_t* _reCerfArray ; // Lookup table for Re part of complex error function
 
   // CERF grid dimensions and parameters
-  static Int_t _reBins ;
-  static Double_t _reMin ;
-  static Double_t _reMax ;
-  static Double_t _reRange ;
-  static Double_t _reStep ;
+  static Int_t _reBins ;      // Number of grid points in real dimension of CERF-LUT
+  static Double_t _reMin ;    // Low edge of real dimension of CERF-LUT
+  static Double_t _reMax ;    // High edge of real dimension of CERF-LUT
+  static Double_t _reRange ;  // Range in real dimension of CERF-LUT
+  static Double_t _reStep ;   // Grid spacing in real dimension of CERF-LUT
 
-  static Int_t _imBins ;
-  static Double_t _imMin ;
-  static Double_t _imMax ;
-  static Double_t _imRange ;
-  static Double_t _imStep ;
+  static Int_t _imBins ;      // Number of grid points in imaginary dimension of CERF-LUT    
+  static Double_t _imMin ;    // Low edge of imaginary dimension of CERF-LUT
+  static Double_t _imMax ;    // High edge of imaginary dimension of CERF-LUT
+  static Double_t _imRange ;  // Range in imaginary dimension of CERF-LUT
+  static Double_t _imStep ;   // Grid spacing in imaginary dimension of CERF-LUT
 
-  static Bool_t _cacheTable ;
+  static Bool_t _cacheTable ; // Switch activating use of file cache for CERF-LUT
   
   ClassDef(RooMath,0) // math utility routines
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.47 2001/09/27 18:22:27 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.48 2001/10/06 06:19:51 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -196,7 +196,7 @@ protected:
   Int_t numProxies() const ;
 	
   // Attribute list
-  THashList _attribList ;
+  THashList _attribList ; // List of string attributes
   void printAttribList(ostream& os) const;
 
   // Hooks for RooTreeData interface
@@ -211,16 +211,16 @@ protected:
   friend istream& operator>>(istream& is, RooAbsArg &arg) ;
   
   // Debug stuff
-  static Bool_t _verboseDirty ;
+  static Bool_t _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
 
 private:
 
   // Value and Shape dirty state bits
   void setValueDirty(const RooAbsArg* source) const ; 
   void setShapeDirty(const RooAbsArg* source) const ; 
-  mutable Bool_t _valueDirty ;
-  mutable Bool_t _shapeDirty ;
-  mutable OperMode _operMode ;
+  mutable Bool_t _valueDirty ;  // Flag set if value needs recalculating because input values modified
+  mutable Bool_t _shapeDirty ;  // Flag set if value needs recalculating because input shapes modified
+  mutable OperMode _operMode ; // Dirty state propagation mode
 
   ClassDef(RooAbsArg,1) // Abstract variable
 };

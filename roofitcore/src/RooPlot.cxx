@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.18 2001/09/17 18:48:15 verkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.19 2001/09/27 18:22:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 1999 Stanford University
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [PLOT] --
 // A RooPlot is a plot frame and a container for graphics objects
 // within that frame. As a frame, it provides the TH1 public interface
 // for settting plot ranges, configuring axes, etc. As a container, it
@@ -42,7 +42,7 @@ ClassImp(RooPlot)
   ;
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.18 2001/09/17 18:48:15 verkerke Exp $";
+"$Id: RooPlot.cc,v 1.19 2001/09/27 18:22:30 verkerke Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   TH1(histName(),"A RooPlot",0,xmin,xmax), _plotVarClone(0), 

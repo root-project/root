@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.34 2001/09/27 18:22:28 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.35 2001/09/28 21:59:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -149,12 +149,12 @@ protected:
 
   friend class RooRealFixedBinIter ;
 
-  Double_t _plotMin ;
-  Double_t _plotMax ;
-  Int_t    _plotBins ;
-  mutable Double_t _value ;
-  TString  _unit ;
-  TString  _label ;
+  Double_t _plotMin ;       // Minimum of plot range
+  Double_t _plotMax ;       // Maximum of plot range
+  Int_t    _plotBins ;      // Number of plot bins
+  mutable Double_t _value ; // Cache for current value of object
+  TString  _unit ;          // Unit for objects value
+  TString  _label ;         // Plot label for objects value
 
   friend class RooAbsPdf ;
   friend class RooConvolutedPdf ;

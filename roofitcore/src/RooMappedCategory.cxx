@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.cc,v 1.14 2001/08/02 22:36:30 verkerke Exp $
+ *    File: $Id: RooMappedCategory.cc,v 1.15 2001/08/03 18:11:34 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -10,12 +10,12 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [CAT] --
 // RooMappedCategory provides a category-to-category mapping defined
-// by pattern matching.
+// by pattern matching on their state labels
 //
-// The mapping function consists of a series of wild card regular expressions,
-// which are matched to the input categories state labels, and an associated
+// The mapping function consists of a series of wild card regular expressions.
+// Each expression is matched to the input categories state labels, and an associated
 // output state label.
 
 
@@ -33,7 +33,8 @@ ClassImp(RooMappedCategory)
 RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defOut) :
   RooAbsCategory(name, title), _inputCat("inputCat","Input category",this,inputCat)
 {
-  // Constructor with input category and name of default (unmapped) output state
+  // Constructor with input category and name of default output state, which is assigned
+  // to all input category states that do not follow any mapping rule.
   _defCat = (RooCatType*) defineType(defOut) ;
 }
 
@@ -62,7 +63,11 @@ RooMappedCategory::~RooMappedCategory()
 
 Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey)
 {
-  // Map input state names matching given regular expression to given output state name
+  // Add mapping rule: any input category state label matching the 'inKeyRegExp'
+  // wildcard expression will be mapped to an output state with name 'outKey'
+  //
+  // Rules are evaluated in the order they were added. In case an input state
+  // matches more than one rule, the first rules output state will be assigned
 
   if (!inKeyRegExp || !outKey) return kTRUE ;  
 

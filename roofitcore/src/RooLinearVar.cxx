@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinearVar.cc,v 1.11 2001/10/01 22:04:20 verkerke Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.12 2001/10/03 16:16:31 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [REAL] --
 // RooLinearVar is the most general form of a derived real-valued object that can
 // be used by RooRealIntegral to integrate over. The requirements for this are
 //

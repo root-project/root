@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooList.cc,v 1.1 2001/04/21 01:13:11 david Exp $
+ *    File: $Id: RooList.cc,v 1.2 2001/04/22 18:15:32 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 1999 Stanford University
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [AUX] --
 // A RooList is a TList with extra support for working with options
 // that are associated with each node.
 
@@ -21,7 +21,7 @@
 ClassImp(RooList)
 
 static const char rcsid[] =
-"$Id: RooList.cc,v 1.1 2001/04/21 01:13:11 david Exp $";
+"$Id: RooList.cc,v 1.2 2001/04/22 18:15:32 david Exp $";
 
 TObjOptLink *RooList::findLink(const char *name, const char *caller) const {
   // Find the link corresponding to the named object in this list.

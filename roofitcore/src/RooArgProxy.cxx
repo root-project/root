@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgProxy.cc,v 1.14 2001/09/17 18:48:12 verkerke Exp $
+ *    File: $Id: RooArgProxy.cc,v 1.15 2001/10/03 16:16:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,7 +15,7 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooAbsArg.hh"
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [AUX] --
 // RooArgProxy is the abstact interface for RooAbsArg proxy classes.
 // A RooArgProxy is the general mechanism to store references
 // to other RooAbsArgs inside a RooAbsArg

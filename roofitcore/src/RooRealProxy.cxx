@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealProxy.cc,v 1.8 2001/10/01 23:55:00 verkerke Exp $
+ *    File: $Id: RooRealProxy.cc,v 1.9 2001/10/03 16:16:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [REAL] --
 // RooRealProxy is the concrete proxy for RooAbsReal objects
 // A RooRealProxy is the general mechanism to store references
 // to RooAbsReals inside a RooAbsArg

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.26 2001/09/27 18:22:30 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.27 2001/09/28 21:59:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [REAL] --
 // RooRealVar represents a fundamental (non-derived) real valued object
 // 
 // This class also holds an error and a fit range associated with the real value
@@ -89,6 +89,8 @@ void RooRealVar::setVal(Double_t value) {
 
 void RooRealVar::setFitMin(Double_t value) 
 {
+  // Set new minimum of fit range 
+
   // Check if new limit is consistent
   if (value >= _fitMax) {
     cout << "RooRealVar::setFitMin(" << GetName() 
@@ -109,6 +111,8 @@ void RooRealVar::setFitMin(Double_t value)
 
 void RooRealVar::setFitMax(Double_t value)
 {
+  // Set new maximum of fit range 
+
   // Check if new limit is consistent
   if (value < _fitMin) {
     cout << "RooRealVar::setFitMax(" << GetName() 
@@ -127,7 +131,10 @@ void RooRealVar::setFitMax(Double_t value)
   setShapeDirty() ;
 }
 
-void RooRealVar::setFitRange(Double_t min, Double_t max) {
+void RooRealVar::setFitRange(Double_t min, Double_t max) 
+{
+  // Set new fit range 
+
   // Check if new limit is consistent
   if (min>max) {
     cout << "RooRealVar::setFitRange(" << GetName() 

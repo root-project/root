@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealBinding.cc,v 1.3 2001/09/17 18:48:15 verkerke Exp $
+ *    File: $Id: RooRealBinding.cc,v 1.4 2001/09/18 02:03:45 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 Stanford University
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [AUX] --
 // Lightweight interface adaptor that binds a RooAbsReal object to a subset
 // of its servers.
 
@@ -27,7 +27,7 @@ ClassImp(RooRealBinding)
 ;
 
 static const char rcsid[] =
-"$Id: RooRealBinding.cc,v 1.3 2001/09/17 18:48:15 verkerke Exp $";
+"$Id: RooRealBinding.cc,v 1.4 2001/09/18 02:03:45 verkerke Exp $";
 
 RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset) :
   RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset) 

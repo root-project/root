@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.52 2001/10/03 16:16:29 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.53 2001/10/06 06:19:51 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [MISC] --
 // RooAbsArg is the common abstract base class for objects that represent a
 // value (of arbitrary type) and "shape" that in general depends on (is a client of)
 // other RooAbsArg subclasses. The only state information about a value that
@@ -829,9 +829,8 @@ RooAbsProxy* RooAbsArg::getProxy(Int_t index) const
   // Return the nth proxy from the proxy list.
 
   // Cross cast: proxy list returns TObject base pointer, we need
-  // a RooAbsProxy base pointer. C++ standard (apparently) requires
-  // dynamic_cast for this. NB Regular cast works fine on linux,
-  // but dies horribly on Solaris
+  // a RooAbsProxy base pointer. C++ standard requires
+  // a dynamic_cast for this. 
   return dynamic_cast<RooAbsProxy*> (_proxyList.At(index)) ;
 }
 

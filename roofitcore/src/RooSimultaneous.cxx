@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.15 2001/09/28 21:59:29 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.16 2001/10/06 06:19:53 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -9,6 +9,21 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION [PDF] --
+// RooSimultaneous facilitates simultaneous fitting of multiple PDFs
+// to subsets of a given dataset.
+//
+// The class takes an index category, which is interpreted as
+// the data subset indicator, and a list of PDFs, each associated
+// with a state of the index category. RooSimultaneous always returns
+// the value of the PDF that is associated with the current value
+// of the index category
+//
+// Extended likelihood fitting is supported if all components support
+// extended likelihood mode. As for the returned probability density,
+// the expected number of events for the PDF associated with the current
+// state of the index category is returned.
 
 #include "TObjString.h"
 #include "RooFitCore/RooSimultaneous.hh"
@@ -31,6 +46,13 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   _codeReg(10),
   _allExtendable(kTRUE)
 {
+  // Constructor from index category. PDFs associated with indexCat
+  // states can be added after construction with the addPdf() function.
+  // 
+  // RooSimultaneous can function without having a PDF associated
+  // with every single state. The normalization in such cases is taken
+  // from the number of registered PDFs, but getVal() will assert if
+  // when called for an unregistered index state.
 }
 
 
@@ -41,6 +63,13 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   _codeReg(10),
   _allExtendable(kTRUE)
 {
+  // Constructor from index category and full list of PDFs. 
+  // In this constructor form, a PDF must be supplied for each indexCat state
+  // to avoid ambiguities. The PDFS are associated in order with the state of the
+  // index category as listed by the index categories type iterator.
+  //
+  // PDFs may not overlap (i.e. share any variables) with the index category
+
   if (pdfList.getSize() != indexCat.numTypes()) {
     cout << "RooSimultaneous::ctor(" << GetName() 
 	 << " ERROR: Number PDF list entries must match number of index category states, no PDFs added" << endl ;
@@ -70,6 +99,8 @@ RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name)
   _codeReg(other._codeReg),
   _allExtendable(other._allExtendable)
 {
+  // Copy constructor
+
   // Copy proxy list 
   TIterator* pIter = other._pdfProxyList.MakeIterator() ;
   RooRealProxy* proxy ;
@@ -82,6 +113,8 @@ RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name)
 
 RooSimultaneous::~RooSimultaneous() 
 {
+  // Destructor
+
   _pdfProxyList.Delete() ;
 }
 
@@ -89,6 +122,16 @@ RooSimultaneous::~RooSimultaneous()
 
 Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 {
+  // Associate given PDF with index category state label 'catLabel'.
+  // The names state must be already defined in the index category
+  //
+  // RooSimultaneous can function without having a PDF associated
+  // with every single state. The normalization in such cases is taken
+  // from the number of registered PDFs, but getVal() will assert if
+  // when called for an unregistered index state.
+  //
+  // PDFs may not overlap (i.e. share any variables) with the index category
+
   // PDFs cannot overlap with the index category
   if (pdf.dependsOn(_indexCat.arg())) {
     cout << "RooSimultaneous::addPdf(" << GetName() << "): ERROR, PDF " << pdf.GetName() 
@@ -118,6 +161,9 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 
 Double_t RooSimultaneous::evaluate() const
 {  
+  // Return the current value: 
+  // the value of the PDF associated with the current index category state
+
   // Retrieve the proxy by index name
   RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject((const char*) _indexCat) ;
   
@@ -130,6 +176,9 @@ Double_t RooSimultaneous::evaluate() const
 
 Double_t RooSimultaneous::expectedEvents() const 
 {
+  // Return the number of expected events:
+  // the number of expected events of the PDF associated with the current index category state
+
   // Retrieve the proxy by index name
   RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject((const char*) _indexCat) ;
   
@@ -143,6 +192,9 @@ Double_t RooSimultaneous::expectedEvents() const
 
 const RooFitResult* RooSimultaneous::fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *optOpt) 
 {
+  // Overloaded fitTo() function implements additional fit optimization specific to cases
+  // where RooSimultaneous is the top-level PDF. See RooAbsPdf::fitTo() for additional information.
+
   TString opts = optOpt ;
   opts.ToLower() ;
 
@@ -162,7 +214,13 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 {
   // Determine which part (if any) of given integral can be performed analytically.
   // If any analytical integration is possible, return integration scenario code
-    // This PDF is by construction normalized
+  //
+  // RooSimultaneous queries each component PDF for its analytical integration capability of the requested
+  // set ('allVars'). It finds the largest common set of variables that can be integrated
+  // by all components. If such a set exists, it reconfirms that each component is capable of
+  // analytically integrating the common set, and combines the components individual integration
+  // codes into a single integration code valid for RooSimultaneous.
+  
   TIterator* pdfIter = _pdfProxyList.MakeIterator() ;
 
   RooAbsPdf* pdf ;
@@ -223,9 +281,8 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 
 Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
 {
-  //cout << "RooSimultaneous::aI(" << GetName() << ") code = " << code << " normSet = " << normSet << endl ;
-
   // Return analytical integral defined by given scenario code
+ 
   if (code==0) return getVal(normSet) ;
 
   const Int_t* subCode = _codeReg.retrieve(code-1) ;
@@ -247,7 +304,10 @@ Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* norm
 RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scaleFactor, 
 				 ScaleType stype, const RooArgSet* projSet) const 
 {
-  // We need a dataset for plotting...
+  // Overload RooAbsPdf::plotOn() implementation with stub function. A RooSimultaneous cannot
+  // be plotted properly without knowlegdge of a dataset which determines the relative weight
+  // of the component PDFs plotted
+
   cout << "RooSimultaneous::plotOn(" << GetName() << ") Cannot plot simultaneous PDF without data set" << endl
        << "to determine relative fractions of PDF components." << endl
        << "Please use RooSimultaneous::plot(RooPlot*,RooAbsData*,...)" << endl ;
@@ -259,6 +319,9 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooAbsData* wdata, Option_t* drawOptions, Double_t scaleFactor, 
 				 ScaleType stype, const RooArgSet* projSet) const
 {
+  // Special plotOn implementation for RooSimultaneous that weights the component PDFs with the relative
+  // abundance of their associated index category state in the supplied data set
+
   RooArgSet allComponents ;
   TIterator *iter = _pdfProxyList.MakeIterator() ;
   RooRealProxy* proxy ;
@@ -275,6 +338,10 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooAbsData* wdata, Option_t* dr
 RooPlot* RooSimultaneous::plotCompOn(RooPlot *frame, RooAbsData* wdata, const char* indexLabelList, Option_t* drawOptions,
 				     Double_t scaleFactor, ScaleType stype, const RooArgSet* projSet) const
 {
+  // Plot a selection of the defined PDF components. Components to be plotted are identified from string of
+  // comma separate labels of the index category. Supplied data set is used to weight the component PDFs with 
+  // the relative abundance of their associated index category state in that data set. 
+
   RooArgSet allComponents ;
 
   // Process comma separated index label list
@@ -304,6 +371,10 @@ RooPlot* RooSimultaneous::plotCompOn(RooPlot *frame, RooAbsData* wdata, const ch
 RooPlot* RooSimultaneous::plotCompOn(RooPlot *frame, RooAbsData* wdata, const RooArgSet& compSet, Option_t* drawOptions,
 				     Double_t scaleFactor, ScaleType stype, const RooArgSet* projSet) const
 {
+  // Plot a selection of the defined PDF components. Components to be plotted are identified from the supplied
+  // set of component PDFs. The supplied data set is used to weight the component PDFs with 
+  // the relative abundance of their associated index category state in that data set. 
+
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
 

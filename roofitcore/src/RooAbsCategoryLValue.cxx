@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.cc,v 1.9 2001/08/23 01:21:45 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.10 2001/09/27 18:22:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [CAT] --
 // RooAbsCategoryLValue is the common abstract base class for objects that represent a
 // discrete value that may appear on the left hand side of an equation ('lvalue')
 //
@@ -89,8 +89,6 @@ Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n)
 
 void RooAbsCategoryLValue::copyCache(const RooAbsArg* source) 
 {
-  // WVE 08/21/01 Probably obsolete
-  
   // copy cached value from another object
   RooAbsCategory::copyCache(source) ;
   setIndex(_value.getVal()) ; // force back-propagation
@@ -114,6 +112,7 @@ void RooAbsCategoryLValue::writeToStream(ostream& os, Bool_t compact) const
 
 
 void RooAbsCategoryLValue::randomize() {
+  // Randomize current value
   UInt_t ordinal= RooRandom::integer(numTypes());
   setOrdinal(ordinal);
 }
@@ -122,6 +121,8 @@ void RooAbsCategoryLValue::randomize() {
 
 void RooAbsCategoryLValue::setFitBin(Int_t ibin) 
 {
+  // Set category to i-th fit bin, which is the i-th registered state.
+
   // Check validity of ibin
   if (ibin<0 || ibin>=numFitBins()) {
     cout << "RooAbsCategoryLValue::setFitBin(" << GetName() << ") ERROR: bin index " << ibin
@@ -153,6 +154,7 @@ Int_t RooAbsCategoryLValue::getFitBin() const
 
 Int_t RooAbsCategoryLValue::numFitBins() const 
 {
+  // Returm the number of fit bins ( = number of types )
   return numTypes() ;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooHistPdf.rdl,v 1.1 2001/09/27 18:22:29 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -35,11 +35,11 @@ protected:
 
   Double_t evaluate() const;
 
-  RooSetProxy  _depList ;
-  RooDataHist* _dataHist ;
-  mutable RooAICRegistry _codeReg ;
+  RooSetProxy  _depList ;   // List of dependents defining dimensions of histogram
+  RooDataHist* _dataHist ;  // Unowned pointer to underlying histogram
+  mutable RooAICRegistry _codeReg ; // Auxiliary class keeping tracking of analytical integration code
 
-  ClassDef(RooHistPdf,0) // Exponential PDF
+  ClassDef(RooHistPdf,0) // Histogram based PDF
 };
 
 #endif

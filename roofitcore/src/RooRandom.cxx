@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.9 2001/08/09 01:02:14 verkerke Exp $
+ *    File: $Id: RooRandom.cc,v 1.1 2001/08/22 00:50:25 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 Stanford University
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [MISC] --
 // This class provides a static interface for generating random numbers.
 
 #include "RooFitCore/RooRandom.hh"
@@ -24,7 +24,7 @@ ClassImp(RooRandom)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.9 2001/08/09 01:02:14 verkerke Exp $";
+"$Id: RooRandom.cc,v 1.1 2001/08/22 00:50:25 david Exp $";
 
 TRandom *RooRandom::randomGenerator() {
   // Return a pointer to a singleton random-number generator

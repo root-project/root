@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgList.cc,v 1.2 2001/10/01 22:04:20 verkerke Exp $
+ *    File: $Id: RooArgList.cc,v 1.3 2001/10/03 21:53:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -12,7 +12,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [CONT] --
 // RooArgList is a container object that can hold multiple RooAbsArg objects.
 // The container has list semantics which means that:
 //

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMath.rdl,v 1.4 2001/09/24 23:05:59 verkerke Exp $
+ *    File: $Id: RooHtml.rdl,v 1.1 2001/10/04 00:37:19 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -27,9 +27,21 @@ public:
 				const char *author="", const char *copyright="");
 
   inline const char *getVersion() const { return _version.Data(); }
-
+  void MakeIndexNew(const char *filter="*");
+  
+  void addTopic(const char* tag, const char* description) ;
+  void MakeIndexOfTopics() ;
+  
 protected:
   TString _version;
+
+  TList _topicTagList ;
+  TList _topicDescList ;
+
+  char* getClassGroup(const char* fileName) ;
+
+private:
+  RooHtml(const RooHtml&) ;
 
   ClassDef(RooHtml,0) // Convert Roo classes to HTML web pages
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.rdl,v 1.12 2001/09/28 21:59:29 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.13 2001/10/06 06:19:53 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -59,13 +59,13 @@ public:
   
 protected:
 
-  mutable RooAICRegistry _codeReg ; 
-
+  mutable RooAICRegistry _codeReg ;  // Auxiliary class keeping tracking of composite analytical integration codes
+ 
   friend class RooSimFitContext ;
   RooCategoryProxy _indexCat ; // Index category
   TList    _pdfProxyList ;     // List of PDF proxies (named after applicable category state)
-  Double_t _numPdf ;
-  Bool_t   _allExtendable ; 
+  Double_t _numPdf ;           // Number of registered PDFs
+  Bool_t   _allExtendable ;    // Flag set if all component PDFs are extendable
 
   ClassDef(RooSimultaneous,1)  // Description goes here
 };

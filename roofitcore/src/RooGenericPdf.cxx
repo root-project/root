@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenericPdf.cc,v 1.9 2001/08/23 23:43:43 david Exp $
+ *    File: $Id: RooGenericPdf.cc,v 1.10 2001/09/17 18:48:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,25 +11,46 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [PDF] --
 // RooGenericPdf is a concrete implementation of a probability density function,
-// which takes a RooArgSet of servers and a string expression defining how
+// which takes a RooArgList of servers and a C++ expression string defining how
 // its value should be calculated from the given list of servers.
 // A fully numerical integration is automatically performed to normalize the given
-// expression
-// 
-// RooGenericPdf uses a RooFormula object to perform the expression evaluation
+// expression. RooGenericPdf uses a RooFormula object to perform the expression evaluation
+//
+// The string expression can be any valid TFormula expression referring to the
+// listed servers either by name or by their ordinal list position:
+//
+//   RooGenericPdf("gen","x*y",RooArgList(x,y))  or
+//   RooGenericPdf("gen","@0*@1",RooArgList(x,y)) 
+//
+// The latter form, while slightly less readable, is more versatile because it
+// doesn't hardcode any of the variable names it expects
 
 #include "RooFitCore/RooGenericPdf.hh"
 #include "RooFitCore/RooStreamParser.hh"
+#include "RooFitCore/RooArgList.hh"
 
 ClassImp(RooGenericPdf)
 
 
-RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgSet& dependents) : 
+RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgList& dependents) : 
   RooAbsPdf(name,title), _formula(name,title,dependents)
 {  
-  // Constructor with formula expression and list of variables
+  // Constructor with title used as formula expression
+  TIterator* depIter = _formula.actualDependents().createIterator() ;
+  RooAbsArg* server(0) ;
+  while (server=(RooAbsArg*)depIter->Next()) {
+    addServer(*server,kTRUE,kFALSE) ;
+  }
+}
+
+
+RooGenericPdf::RooGenericPdf(const char *name, const char *title, 
+			     const char* formula, const RooArgList& dependents) : 
+  RooAbsPdf(name,title), _formula(name,formula,dependents)
+{  
+  // Constructor with separate title and formula expression
   TIterator* depIter = _formula.actualDependents().createIterator() ;
   RooAbsArg* server(0) ;
   while (server=(RooAbsArg*)depIter->Next()) {
@@ -78,7 +99,7 @@ Bool_t RooGenericPdf::isValidReal(Double_t value, Bool_t printError) const {
 
 Bool_t RooGenericPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll)
 {
-  // Propagate server change to embedded formula objecy
+  // Propagate server changes to embedded formula objecy
   return _formula.changeDependents(newServerList,mustReplaceAll) ;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooInvTransform.cc,v 1.1 2001/08/03 21:44:57 david Exp $
+ *    File: $Id: RooInvTransform.cc,v 1.1 2001/08/08 23:11:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 Stanford University
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [AUX] --
 // Lightweight function object that applies a scale factor to a RooAbsFunc implementation.
 
 // #include "BaBar/BaBar.hh"
@@ -24,7 +24,7 @@ ClassImp(RooInvTransform)
 ;
 
 static const char rcsid[] =
-"$Id: RooInvTransform.cc,v 1.1 2001/08/03 21:44:57 david Exp $";
+"$Id: RooInvTransform.cc,v 1.1 2001/08/08 23:11:24 david Exp $";
 
 RooInvTransform::RooInvTransform(const RooAbsFunc &func) :
   RooAbsFunc(func.getDimension()), _func(&func)

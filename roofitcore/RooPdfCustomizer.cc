@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPdfCustomizer.cc,v 1.9 2001/09/20 01:40:11 verkerke Exp $
+ *    File: $Id: RooPdfCustomizer.cc,v 1.10 2001/09/28 21:59:28 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -9,6 +9,8 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION [MISC] --
 
 #include "TString.h"
 

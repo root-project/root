@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.27 2001/09/28 21:59:27 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.28 2001/10/03 16:16:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [CAT] --
 // RooAbsCategory is the common abstract base class for objects that represent a
 // discrete value with a finite number of states. Each state consist of a 
 // label/index pair, which is stored in a RooCatType object.
@@ -49,7 +49,6 @@ RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
   TIterator* iter=other._types.MakeIterator() ;
   TObject* obj ;
   while (obj=iter->Next()) {
-    //cout << "RooAbsCategory::RooAbsCategory(" << GetName() << "): cloning type " << ((RooAbsCategory*)obj)->GetName() << endl ;
     _types.Add(obj->Clone()) ;
   }
   delete iter ;
@@ -102,13 +101,15 @@ const char* RooAbsCategory::getLabel() const
 
 RooCatType RooAbsCategory::traceEval() const
 {
+  // Recalculate current value and check validity of new result.
+
   RooCatType value = evaluate() ;
   
-  //Standard tracing code goes here
+  // Standard tracing code goes here
   if (!isValid(value)) {
   }
 
-  //Call optional subclass tracing code
+  // Call optional subclass tracing code
   traceEvalHook(value) ;
 
   return value ;
@@ -151,7 +152,8 @@ Bool_t RooAbsCategory::isValidLabel(const char* label) const
 
 const RooCatType* RooAbsCategory::defineType(const char* label)
 {
-  // Define a new state with given name. Index number is automatically assigned
+  // Define a new state with given name. The lowest available
+  // integer number is assigned as index value
 
   // Find lowest unused index
   Int_t index(-1) ;
@@ -165,7 +167,7 @@ const RooCatType* RooAbsCategory::defineType(const char* label)
 
 const RooCatType* RooAbsCategory::defineType(const char* label, Int_t index) 
 {
-  // Define new state with given name and index number
+  // Define new state with given name and index number.
 
   if (isValidIndex(index)) {
     cout << "RooAbsCategory::defineType(" << GetName() << "): index " 
@@ -205,6 +207,7 @@ void RooAbsCategory::clearTypes()
 const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t printError) const 
 {
   // Find our type that matches the specified type, or return 0 for no match.
+
   RooCatType* type ;
   Int_t n= _types.GetEntries();
   for (int i=0 ; i < n; i++) {
@@ -222,6 +225,7 @@ const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t pri
 const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) const
 {
   // Find our type corresponding to the specified index, or return 0 for no match.
+
   RooCatType* type ;
   Int_t n= _types.GetEntries();
   for (int i=0 ; i < n; i++) {

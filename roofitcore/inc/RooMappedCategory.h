@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.rdl,v 1.12 2001/05/14 22:54:21 verkerke Exp $
+ *    File: $Id: RooMappedCategory.rdl,v 1.13 2001/07/31 05:54:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -38,9 +38,9 @@ public:
 
 protected:
   
-  TObjArray _mapArray ;
-  RooCatType* _defCat ;
-  RooCategoryProxy _inputCat ;
+  TObjArray _mapArray ;         // Array of mapping rules
+  RooCatType* _defCat ;         // Default (unmapped) output type
+  RooCategoryProxy _inputCat ;  // Input category
 
   virtual RooCatType evaluate() const ; 
 

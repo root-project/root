@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.27 2001/09/17 18:48:14 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.28 2001/09/18 18:36:19 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [REAL] --
 // RooFormula is the RFC extension of TFormula. It allows to use
 // the value of a given list of RooAbsArg objects in the formula
 // expression. Reference is done either by the RooAbsArgs name

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMath.cc,v 1.5 2001/09/24 23:05:59 verkerke Exp $
+ *    File: $Id: RooMath.cc,v 1.6 2001/09/25 01:15:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -12,6 +12,12 @@
  * Copyright (C) 2000 Stanford University
  *****************************************************************************/
 
+// -- CLASS DESCRIPTION [MISC] --
+// RooMath is a singleton class implementing various mathematical
+// functions not found in TMath, mostly involving complex algebra
+//
+//
+
 #include "RooFitCore/RooMath.hh"
 #include <math.h>
 #include <iostream.h>
@@ -20,10 +26,13 @@ ClassImp(RooMath)
 ;
 
 RooComplex RooMath::ComplexErrFunc(Double_t re, Double_t im) {
+  // Return CERNlib complex error function for Z(re,im)
   return ComplexErrFunc(RooComplex(re,im));
 }
 
 RooComplex RooMath::ComplexErrFunc(const RooComplex& Z) {
+  // Return CERNlib complex error function
+  //
   // This code is translated from the fortran version in the CERN mathlib.
   // (see ftp://asisftp.cern.ch/cernlib/share/pro/src/mathlib/gen/c/cwerf64.F)
 
@@ -83,6 +92,9 @@ RooComplex RooMath::ComplexErrFunc(const RooComplex& Z) {
 
 void RooMath::initFastCERF(Int_t reBins, Double_t reMin, Double_t reMax, Int_t imBins, Double_t imMin, Double_t imMax) 
 {
+  // Allocate and initialize lookup table for interpolated complex error function
+  // for given grid parameters
+
   // Store grid dimensions and related parameters
   _reBins = reBins ;
   _imBins = imBins ;
@@ -139,6 +151,10 @@ void RooMath::initFastCERF(Int_t reBins, Double_t reMin, Double_t reMax, Int_t i
 
 RooComplex RooMath::ITPComplexErrFunc(const RooComplex& z, Int_t nOrder)
 {
+  // Return complex error function interpolated from lookup tabel created
+  // by initFastCERF(). Interpolation is performed in Im and Re plane
+  // to specified order.
+
   // Initialize grid
   if (!_reCerfArray) initFastCERF() ;
 
@@ -180,6 +196,12 @@ RooComplex RooMath::ITPComplexErrFunc(const RooComplex& z, Int_t nOrder)
 
 Double_t RooMath::ITPComplexErrFuncRe(const RooComplex& z, Int_t nOrder)
 {
+  // Return real component of complex error function interpolated from 
+  // lookup table created by initFastCERF(). Interpolation is performed in 
+  // Im and Re plane to specified order. This functions is noticably faster
+  // than ITPComplexErrrFunc().re() because only the real lookup table
+  // is interpolated
+
   // Initialize grid
   if (!_reCerfArray) initFastCERF() ;
 
@@ -217,6 +239,12 @@ Double_t RooMath::ITPComplexErrFuncRe(const RooComplex& z, Int_t nOrder)
 
 Double_t RooMath::ITPComplexErrFuncIm(const RooComplex& z, Int_t nOrder)
 {
+  // Return real component of complex error function interpolated from 
+  // lookup table created by initFastCERF(). Interpolation is performed in 
+  // Im and Re plane to specified order. This functions is noticably faster
+  // than ITPComplexErrrFunc().im() because only the imaginary lookup table
+  // is interpolated
+
   // Initialize grid
   if (!_reCerfArray) initFastCERF() ;
 
@@ -253,9 +281,10 @@ Double_t RooMath::ITPComplexErrFuncIm(const RooComplex& z, Int_t nOrder)
 
 
 
-// Adapted from 'Numerical Recipes, C edition' p90-91, modified for fixed grid
 Double_t RooMath::interpolate(Double_t ya[], Int_t n, Double_t x) 
 {
+  // Interpolate array 'ya' with 'n' elements for 'x' (between 0 and 'n'-1)
+
   // Int to Double conversion is faster via array lookup than type conversion!
   static Double_t itod[20] = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
 			      10.0,11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0,19.0} ;
@@ -287,8 +316,11 @@ Double_t RooMath::interpolate(Double_t ya[], Int_t n, Double_t x)
 }
 
 
+
 Bool_t RooMath::loadCache() 
 {
+  // Load the complex error function lookup table from the cache file
+
   const char* fName = cacheFileName() ;
   // Open cache file
   ifstream ifs(fName) ;
@@ -318,6 +350,8 @@ Bool_t RooMath::loadCache()
 
 void RooMath::storeCache()
 {
+  // Store the complex error function lookup table in the cache file
+
   ofstream ofs(cacheFileName()) ;
   
   cout << "                       Writing table to cache file " << cacheFileName() << endl ;
@@ -332,6 +366,7 @@ void RooMath::storeCache()
 
 const char* RooMath::cacheFileName() 
 {
+  // Construct and return the name of the complex error function cache file
   static char fileName[1024] ;  
   sprintf(fileName,"/tmp/RooMath_CERFcache_R%04d_I%04d.dat",_reBins,_imBins) ;
   return fileName ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooListProxy.cc,v 1.1 2001/09/17 18:48:14 verkerke Exp $
+ *    File: $Id: RooListProxy.cc,v 1.2 2001/10/03 16:16:31 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [CONT] --
 // RooListProxy is the concrete proxy for RooArgSet objects.
 // A RooListProxy is the general mechanism to store a RooArgSet
 // with RooAbsArgs in a RooAbsArg.

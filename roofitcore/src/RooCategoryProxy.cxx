@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategoryProxy.cc,v 1.6 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooCategoryProxy.cc,v 1.7 2001/10/03 16:16:31 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [CAT] --
 // RooCategoryProxy is the concrete proxy for RooAbsCategory objects
 // A RooCategoryProxy is the general mechanism to store references
 // to RooAbsCategoriess inside a RooAbsArg
