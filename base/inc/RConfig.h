@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.65 2004/01/30 08:12:56 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.66 2004/01/31 08:59:09 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -50,6 +50,7 @@
 #   define R__UNIX
 #   define ANSICPP
 #   define R__SEEK64
+#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   define NEED_STRCASECMP
 #   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #endif
@@ -326,10 +327,10 @@
 #ifdef __HP_aCC
 #   define R__ACC
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
+#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
+#   define R__THROWNEWDELETE  /* new/delete throw exceptions */
 #   if __HP_aCC >= 53000
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
-#      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#      define R__THROWNEWDELETE  /* new/delete throw exceptions */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #      define R__TMPLTSTREAM     /* iostream implemented with templates */
 #   else

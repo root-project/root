@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.2 2002/12/02 18:50:04 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.3 2003/04/07 15:29:20 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -180,7 +180,11 @@ extern long G__globalvarpointer;
 #endif
 
 #ifdef R__THROWNEWDELETE
-#define R__THROW_BAD  throw(std::bad_alloc)
+# ifdef R__ACC
+# define R__THROW_BAD  throw(bad_alloc)
+# else
+# define R__THROW_BAD  throw(std::bad_alloc)
+#endif
 #define R__THROW_NULL throw()
 #else
 #define R__THROW_BAD
