@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.8 2000/10/02 11:10:51 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.9 2000/12/01 14:22:26 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -131,7 +131,7 @@
 #   endif
 #endif
 
-#if defined(__FreeBSD__)
+#if __FreeBSD__ < 4
 #include <sys/file.h>
 #define lockf(fd, op, sz)   flock((fd), (op))
 #define	F_LOCK             (LOCK_EX | LOCK_NB)
