@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.48 2002/12/17 06:59:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.49 2003/01/27 18:24:41 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1617,7 +1617,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       if (name) {
          if (gDebug>4) Info("ACLiC","including extra linkdef file: %s",name);
          linkdefFile << "#include \"" << name << "\"" << endl;
-         delete name;
+         delete [] name;
       }
    }
 
@@ -1629,7 +1629,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       name = Which(incPath,lookup);
       if (name) {
          linkdefFile << "#pragma link C++ defined_in "<<name<<";"<< endl;
-         delete name;
+         delete [] name;
       }
    }
    linkdefFile << "#pragma link C++ defined_in "<<filename_fullpath << ";" << endl;
