@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.98 2003/02/25 12:01:07 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.99 2003/03/03 08:00:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3899,6 +3899,7 @@ void TPad::RecursiveRemove(TObject *obj)
 //*-*            ====================================================
 
    if (obj == fCanvas->GetSelected()) fCanvas->SetSelected(0);
+   if (obj == fView) fView = 0;
    Int_t nold = fPrimitives->GetSize();
    fPrimitives->RecursiveRemove(obj);
    if (nold != fPrimitives->GetSize()) fModified = kTRUE;
