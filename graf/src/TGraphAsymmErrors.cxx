@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.34 2004/05/21 19:07:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.35 2004/05/21 20:39:56 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -404,53 +404,6 @@ double TGraphAsymmErrors::Beta_ab(double a, double b, int k, int N) const
    return Ibetai(c1,c2,b)-Ibetai(c1,c2,a);
 }
 
-
-//______________________________________________________________________________
-double TGraphAsymmErrors::Betacf(double a, double b, double x) const
-{
-  // Evaluates the continued fraction for the incomplete beta function
-  // calculation in Ibeta(); uses modified Lentz's method
-  // Adapted from Numerical Recipes in C, 2nd edition.
-  // Translated to C++ by by Marc Paterno
-   
-   const int    kMAXIT = 100;
-   const double kEPS   = 3.0e-7;
-   const double kFPMIN = 1.0e-30;
-   int m;
-
-   double qab=a+b;
-   double qap=a+1.0;
-   double qam=a-1.0;
-   double c=1.0;
-   double d=1.0-qab*x/qap;
-   if (TMath::Abs(d) < kFPMIN) d=kFPMIN;
-   d=1.0/d;
-   double h=d;
-   for (m=1;m<=kMAXIT;m++) {
-      int m2=2*m;
-      double aa=m*(b-m)*x/((qam+m2)*(a+m2));
-      d=1.0+aa*d;
-      if (TMath::Abs(d) < kFPMIN) d=kFPMIN;
-      c=1.0+aa/c;
-      if (TMath::Abs(c) < kFPMIN) c=kFPMIN;
-      d=1.0/d;
-      h *= d*c;
-      aa = -(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
-      d=1.0+aa*d;
-      if (TMath::Abs(d) < kFPMIN) d=kFPMIN;
-      c=1.0+aa/c;
-      if (TMath::Abs(c) < kFPMIN) c=kFPMIN;
-      d=1.0/d;
-      double del=d*c;
-      h *= del;
-      if (TMath::Abs(del-1.0) < kEPS) break;
-   }
-   if (m > kMAXIT) {
-      Error("Betacf","a or b too big, or MAXIT too small, a=%g, b=%g, kMAXIT=%d",a,b,kMAXIT);
-   }
-   return h;
-}
-
 //______________________________________________________________________________
 double TGraphAsymmErrors::Ibetai(double a, double b, double x) const
 {
@@ -468,9 +421,9 @@ double TGraphAsymmErrors::Ibetai(double a, double b, double x) const
      bt=TMath::Exp(TMath::LnGamma(a+b)-TMath::LnGamma(a)-TMath::LnGamma(b)+a*log(x)+b*log(1.0-x));
 
   if (x < (a+1.0)/(a+b+2.0))
-     return bt*Betacf(a,b,x)/a;
+     return bt*TMath::BetaCf(x,a,b)/a;
   else
-     return 1.0-bt*Betacf(b,a,1.0-x)/b;
+     return 1.0-bt*TMath::BetaCf(1-x,b,a)/b;
 }
 
 //______________________________________________________________________________

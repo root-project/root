@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.14 2004/03/19 12:35:24 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.15 2004/05/19 13:47:22 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -34,7 +34,6 @@ protected:
     Double_t    *fEYhigh;       //[fNpoints] array of Y high errors
 
         Double_t        Beta_ab(double a, double b, int k, int N) const;
-        Double_t        Betacf(double a, double b, double x) const;
         Double_t        Ibetai(double a, double b, double x) const;
         Double_t        Betai(double a, double b, double x) const;
         Double_t        Brent(double ax, double bx, double cx, double tol, double *xmin) const;
