@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.30 2001/10/19 06:56:51 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.31 2001/12/04 23:16:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -359,6 +359,11 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
       setAttribute("BOOL_TREE_BRANCH",kTRUE) ;
       return ;
     } 
+
+    if (branch->GetCompressionLevel()<0) {
+      cout << "RooAbsCategory::attachToTree(" << GetName() << ") Fixing compression level of branch " << GetName() << endl ;
+      branch->SetCompressionLevel(1) ;
+    }
   }
 
   // Native TTree: attach both index and label of category as branches  
@@ -368,23 +373,37 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
   lblName.Append("_lbl") ;
   
   // First determine if branch is taken
-  if (t.GetBranch(idxName)) {
+  if (branch = t.GetBranch(idxName)) {    
+
     t.SetBranchAddress(idxName,&((Int_t&)_value._value)) ;
+    if (branch->GetCompressionLevel()<0) {
+      cout << "RooAbsCategory::attachToTree(" << GetName() << ") Fixing compression level of branch " << idxName << endl ;
+      branch->SetCompressionLevel(1) ;
+    }
+    
   } else {    
     TString format(idxName);
     format.Append("/I");
     void* ptr = &(_value._value) ;
-    t.Branch(idxName, ptr, (const Text_t*)format, bufSize);
+    branch = t.Branch(idxName, ptr, (const Text_t*)format, bufSize);
+    branch->SetCompressionLevel(1) ;
   }
   
   // First determine if branch is taken
-  if (t.GetBranch(lblName)) {
+  if (branch = t.GetBranch(lblName)) {
+
     t.SetBranchAddress(lblName,_value._label) ;
+    if (branch->GetCompressionLevel()<0) {
+      cout << "RooAbsCategory::attachToTree(" << GetName() << ") Fixing compression level of branch " << lblName << endl ;
+      branch->SetCompressionLevel(1) ;
+    }
+
   } else {    
     TString format(lblName);
     format.Append("/C");
     void* ptr = _value._label ;
-    t.Branch(lblName, ptr, (const Text_t*)format, bufSize);
+    branch = t.Branch(lblName, ptr, (const Text_t*)format, bufSize);
+    branch->SetCompressionLevel(1) ;
   }
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.14 2001/10/19 06:56:52 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.15 2001/11/01 22:52:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -161,12 +161,18 @@ void RooAbsString::attachToTree(TTree& t, Int_t bufSize)
   // Attach object to a branch of given TTree
 
   // First determine if branch is taken
-  if (t.GetBranch(GetName())) {
+  TBranch* branch ;
+  if (branch = t.GetBranch(GetName())) {
     t.SetBranchAddress(GetName(),&_value) ;
+    if (branch->GetCompressionLevel()<0) {
+      cout << "RooAbsString::attachToTree(" << GetName() << ") Fixing compression level of branch " << GetName() << endl ;
+      branch->SetCompressionLevel(1) ;
+    }
   } else {
     TString format(GetName());
     format.Append("/C");
-    t.Branch(GetName(), &_value, (const Text_t*)format, bufSize);
+    branch = t.Branch(GetName(), &_value, (const Text_t*)format, bufSize);
+    branch->SetCompressionLevel(1) ;
   }
 }
  

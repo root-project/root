@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.70 2001/12/05 00:43:49 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.71 2001/12/19 20:06:58 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -1013,13 +1013,19 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
     } 
 
     t.SetBranchAddress(cleanName,&_value) ;
+    if (branch->GetCompressionLevel()<0) {
+      cout << "RooAbsReal::attachToTree(" << GetName() << ") Fixing compression level of branch " << cleanName << endl ;
+      branch->SetCompressionLevel(1) ;
+    }
+
 //     cout << "RooAbsReal::attachToTree(" << cleanName << "): branch already exists in tree " 
 // 	 << (void*)&t << ", changing address" << endl ;
+
   } else {
     TString format(cleanName);
     format.Append("/D");
-    t.Branch(cleanName, &_value, (const Text_t*)format, bufSize);
-
+    branch = t.Branch(cleanName, &_value, (const Text_t*)format, bufSize);
+    branch->SetCompressionLevel(1) ;
 //     cout << "RooAbsReal::attachToTree(" << cleanName << "): creating new branch in tree" 
 // 	 << (void*)&t << endl ;
   }
