@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.50 2004/08/02 08:52:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.51 2004/08/02 11:20:49 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -353,8 +353,11 @@ namespace TMath {
    Double_t BetaIncomplete(Double_t x, Double_t a, Double_t b);
    Double_t Binomial(Int_t n,Int_t k);  // Calculate the binomial coefficient n over k
    Double_t BinomialI(Double_t p, Int_t n, Int_t k);
+   Double_t CauchyDist(Double_t x, Double_t t=0, Double_t s=1);
    Double_t FDist(Double_t F, Double_t N, Double_t M);
    Double_t FDistI(Double_t F, Double_t N, Double_t M);
+   Double_t GammaDist(Double_t x, Double_t gamma, Double_t mu=0, Double_t beta=1);
+   Double_t LogNormal(Double_t x, Double_t sigma, Double_t theta=0, Double_t m=1);
    Bool_t   Permute(Int_t n, Int_t *a); // Find permutations
    Double_t Student(Double_t T, Double_t ndf);
    Double_t StudentI(Double_t T, Double_t ndf);

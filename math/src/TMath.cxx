@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.78 2004/08/02 08:52:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.79 2004/08/02 11:20:49 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -3774,6 +3774,31 @@ Double_t TMath::BinomialI(Double_t p, Int_t n, Int_t k)
 }
 
 //______________________________________________________________________________
+Double_t TMath::CauchyDist(Double_t x, Double_t t, Double_t s)
+{
+  //computes the density of Cauchy distribution at point x
+  //by default, standard Cauchy distribution is used (t=0, s=1)
+  //t is the location parameter
+  //s is the scale parameter
+  //The Cauchy distribution, also called Lorentzian distribution,
+  //is a continuous distribution describing resonance behavior
+  //The mean and standard deviation of the Cauchy distribution are undefined. 
+  //The practical meaning of this is that collecting 1,000 data points gives 
+  //no more accurate an estimate of the mean and standard deviation than does a single point. 
+  //the formula was taken from "Engineering Statistics Handbook" on site
+  //http://www.itl.nist.gov/div898/handbook/eda/section3/eda3663.htm
+  //     --implementation by Anna Kreshuk
+  // example:
+  //  TF1* fc = new TF1("fc", "TMath::CauchyDist(x, [0], [1])", -5, 5);
+  //  fc->SetParameters(0, 1);
+  //  fc->Draw();
+  
+  Double_t temp= (x-t)*(x-t)/(s*s);
+  Double_t result = 1/(s*TMath::Pi()*(1+temp));
+  return result;
+}
+
+//______________________________________________________________________________
 Double_t TMath::FDist(Double_t F, Double_t N, Double_t M)
 {
    // Computes the density function of F-distribution
@@ -3817,6 +3842,61 @@ Double_t TMath::FDistI(Double_t F, Double_t N, Double_t M)
 
    Double_t FI = 1 - BetaIncomplete((M/(M+N*F)), M*0.5, N*0.5);
    return FI;
+}
+
+//______________________________________________________________________________
+Double_t TMath::GammaDist(Double_t x, Double_t gamma, Double_t mu, Double_t beta)
+{
+  //computes the density function of Gamma distribution at point x
+  //gamma - shape parameter
+  //mu - location parameter
+  //beta - scale parameter
+  //the formula was taken from "Engineering Statistics Handbook" on site
+  //http://www.itl.nist.gov/div898/handbook/eda/section3/eda366b.htm
+  //     --implementation by Anna Kreshuk
+//Begin_Html
+/*
+<img src="gif/gammadist.gif">
+*/
+//End_Html
+
+  if ((x<mu) || (gamma<=0) || (beta <=0)) {
+     Error("GammaDist", "illegal parameter values");
+     return 0;
+  }
+  Double_t temp = (x-mu)/beta;
+  Double_t temp2 = beta * TMath::Gamma(gamma);
+  Double_t result = (TMath::Power(temp, gamma-1) * TMath::Exp(-temp))/temp2;
+  return result;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::LogNormal(Double_t x, Double_t sigma, Double_t theta, Double_t m)
+{
+  //computes the density of LogNormal distribution at point x
+  //variable X has lognormal distribution if Y=Ln(X) has normal distribution
+  //sigma is the shape parameter
+  //theta is the location parameter
+  //m is the scale parameter
+  //the formula was taken from "Engineering Statistics Handbook" on site
+  //http://www.itl.nist.gov/div898/handbook/eda/section3/eda3669.htm
+  //     --implementation by Anna Kreshuk
+//Begin_Html
+/*
+<img src="gif/lognormal.gif">
+*/
+//End_Html
+  
+  if ((x<theta) || (sigma<=0) || (m<=0)){
+     Error("Lognormal", "illegal parameter values");
+    return 0;
+  }
+  Double_t templog2 = TMath::Log((x-theta)/m)*TMath::Log((x-theta)/m);
+  Double_t temp1 = TMath::Exp(-templog2/(2*sigma*sigma));
+  Double_t temp2 = (x-theta)*sigma*TMath::Sqrt(2*TMath::Pi());
+
+  return temp1/temp2;
 }
 
 //______________________________________________________________________________
