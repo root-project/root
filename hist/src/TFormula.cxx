@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.48 2003/07/16 17:18:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.49 2003/07/23 21:48:54 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -312,7 +312,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
       method->Init(functionName,proto);
    }
 
-   if (method->GetMethod()) {
+   if (method->IsValid()) {
 
       if (method->ReturnType() == TMethodCall::kOther) {
          /*

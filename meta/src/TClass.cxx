@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.123 2003/07/11 21:32:53 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.124 2003/07/24 09:17:20 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1286,6 +1286,14 @@ TMethod *TClass::GetMethod(const char *method, const char *params)
 
    TMethod *m;
 
+#if defined(R__WIN32)
+   // On windows G__exec_bytecode can (seemingly) have several values :(
+   // So we can not easily determine whether something is interpreted or
+   // so the optimization of not looking at the mangled name can not be
+   // used
+   m = GetClassMethod(method,params);
+
+#else
    if (faddr == (Long_t)G__exec_bytecode) {
       // the method is actually interpreted, its address is
       // not a discriminant (it always point to the same
@@ -1294,6 +1302,7 @@ TMethod *TClass::GetMethod(const char *method, const char *params)
    } else {
       m = GetClassMethod(faddr);
    }
+#endif
 
    if (m) return m;
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.14 2003/06/13 16:21:21 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.15 2003/06/18 11:28:32 rdm Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -226,6 +226,15 @@ void TMethodCall::InitWithPrototype(const char *function, const char *proto)
    // every invocation TInterpreter::Execute(...).
 
    InitWithPrototype(0, function, proto);
+}
+
+//______________________________________________________________________________
+Bool_t TMethodCall::IsValid() const 
+{
+   // Return true if the method call has been properly initialized and is
+   // usable.
+
+   return fFunc ? fFunc->IsValid() : kFALSE;
 }
 
 //______________________________________________________________________________

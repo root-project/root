@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.96 2003/06/25 14:34:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.97 2003/06/25 18:06:44 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1014,6 +1014,18 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
       TFunction *f;
       TIter      next(GetListOfGlobalFunctions(load));
 
+#if defined(R__WIN32)
+      // On windows G__exec_bytecode can (seemingly) have several values :(
+      // So we can not easily determine whether something is interpreted or
+      // so the optimization of not looking at the mangled name can not be
+      // used
+
+      TString mangled = fInterpreter->GetMangledName(0, function, params);
+      while ((f = (TFunction *) next())) {
+         if (mangled == f->GetMangledName()) return f;
+      }
+
+#else 
       if (faddr == (Long_t)G__exec_bytecode) {
          // the method is actually interpreted, its address is
          // not a discriminant (it always point to the same
@@ -1024,13 +1036,13 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
             if (faddr == (Long_t) f->InterfaceMethod()
                 && mangled == f->GetMangledName()) return f;
          }
-
       } else {
          while ((f = (TFunction *) next())) {
             if (faddr == (Long_t) f->InterfaceMethod())
                return f;
          }
       }
+#endif // 
       return 0;
    }
 }
@@ -1058,6 +1070,19 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
       TFunction *f;
       TIter      next(GetListOfGlobalFunctions(load));
 
+#if defined(R__WIN32)
+      // On windows G__exec_bytecode can (seemingly) have several values :(
+      // So we can not easily determine whether something is interpreted or
+      // so the optimization of not looking at the mangled name can not be
+      // used
+
+      TString mangled = fInterpreter->GetMangledNameWithPrototype(0,
+                                                                     function,
+                                                                     proto);
+      while ((f = (TFunction *) next())) {
+         if (mangled == f->GetMangledName()) return f;
+      }
+#else 
       if (faddr == (Long_t)G__exec_bytecode) {
          // the method is actually interpreted, its address is
          // not a discriminant (it always point to the same
@@ -1077,6 +1102,7 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
                return f;
          }
       }
+#endif
       return 0;
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.8 2003/06/13 14:21:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.9 2003/06/13 16:21:21 rdm Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -70,6 +70,7 @@ public:
    void           Init(const char *function, const char *params);
    void           InitWithPrototype(TClass *cl, const char *method, const char *proto);
    void           InitWithPrototype(const char *function, const char *proto);
+   Bool_t         IsValid() const;
    TObject       *Clone(const char *newname="") const;
    void           CallDtorOnly(Bool_t set = kTRUE) { fDtorOnly = set; }
 
