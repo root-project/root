@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.15 2001/02/07 20:58:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.16 2001/02/28 07:51:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -36,7 +36,7 @@ ClassImp(TAxis)
 //______________________________________________________________________________
 TAxis::TAxis(): TNamed(), TAttAxis()
 {
-   fNbins   = 0;
+   fNbins   = 1;
    fXmin    = 0;
    fXmax    = 0;
    fFirst   = 0;
