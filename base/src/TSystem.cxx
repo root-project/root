@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.40 2002/10/18 14:58:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.41 2002/10/20 16:08:48 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -40,6 +40,8 @@
 #include "TTimer.h"
 #include "TObjString.h"
 #include "TError.h"
+#include "TPluginManager.h"
+#include "TUrl.h"
 
 #include "compiledata.h"
 
@@ -90,7 +92,7 @@ TSystem::TSystem(const char *name, const char *title) : TNamed(name, title)
 {
    // Create a new OS interface.
 
-   if (gSystem && strcmp(name, "Generic"))
+   if (gSystem && name[0] != '-' && strcmp(name, "Generic"))
       Error("TSystem", "only one instance of TSystem allowed");
 
    fOnExitList    = 0;
@@ -98,6 +100,7 @@ TSystem::TSystem(const char *name, const char *title) : TNamed(name, title)
    fFileHandler   = 0;
    fTimers        = 0;
    fCompiled      = 0;
+   fHelpers       = 0;
 }
 
 //______________________________________________________________________________
@@ -128,6 +131,11 @@ TSystem::~TSystem()
    if (fCompiled) {
       fCompiled->Delete();
       SafeDelete(fCompiled);
+   }
+
+   if (fHelpers) {
+      fHelpers->Delete();
+      SafeDelete(fHelpers);
    }
 
    if (gSystem == this)
@@ -518,6 +526,46 @@ void TSystem::StackTrace()
 
 
 //---- Directories -------------------------------------------------------------
+
+//______________________________________________________________________________
+TSystem *TSystem::FindHelper(const char *path, void *dirptr)
+{
+   // Create helper TSystem to handle file and directory operations that
+   // might be special for remote file access, like via rfiod or rootd.
+
+   if (!fHelpers)
+      fHelpers = new TOrdCollection;
+
+   TPluginHandler *h;
+   TSystem *helper = 0;
+   TUrl url(path, kTRUE);
+
+   // look for existing helper
+   TIter next(fHelpers);
+   while ((helper = (TSystem*) next()))
+      if ((path && !strcmp(url.GetProtocol(), helper->GetName()) &&
+           helper->GetDirPtr() == 0) || helper->GetDirPtr() == dirptr)
+         return helper;
+
+   if (!path)
+      return 0;
+
+   // create new helper
+   if (!strncmp(url.GetProtocol(), "root", 4)) {  // also roots and rootk
+
+   } else if (!strcmp(url.GetProtocol(), "http")) {
+
+   } else if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
+      if (h->LoadPlugin() == -1)
+         return 0;
+      helper = (TSystem*) h->ExecPlugin(0);
+   }
+
+   if (helper)
+      fHelpers->Add(helper);
+
+   return helper;
+}
 
 //______________________________________________________________________________
 int TSystem::MakeDirectory(const char*)
@@ -1693,12 +1741,12 @@ const char *TSystem::GetFlagsOpt() const
 }
 
 //______________________________________________________________________________
-TSystem::EAclicMode TSystem::GetAclicMode() const 
+TSystem::EAclicMode TSystem::GetAclicMode() const
 {
    // AclicMode indicates whether the library should be built in
    // debug mode or optimized.  The values are:
    // TSystem::kDefault : compile the same as the current ROOT
-   // TSystem::kDebug : compiled in debug mode 
+   // TSystem::kDebug : compiled in debug mode
    // TSystem::kOpt : optimized the library
 
    return fAclicMode;
@@ -1753,7 +1801,7 @@ const char *TSystem::GetObjExt() const
 }
 
 //______________________________________________________________________________
-void TSystem::SetFlagsDebug(const char *flags) 
+void TSystem::SetFlagsDebug(const char *flags)
 {
    // FlagsDebug should contain the options to pass to the C++ compiler
    // in order to compile the library in debug mode.
@@ -1762,7 +1810,7 @@ void TSystem::SetFlagsDebug(const char *flags)
 }
 
 //______________________________________________________________________________
-void TSystem::SetFlagsOpt(const char *flags) 
+void TSystem::SetFlagsOpt(const char *flags)
 {
    // FlagsOpt should contain the options to pass to the C++ compiler
    // in order to compile the library in optimized mode.
@@ -1771,12 +1819,12 @@ void TSystem::SetFlagsOpt(const char *flags)
 }
 
 //______________________________________________________________________________
-void TSystem::SetAclicMode(EAclicMode mode) 
+void TSystem::SetAclicMode(EAclicMode mode)
 {
    // AclicMode indicates whether the library should be built in
    // debug mode or optimized.  The values are:
    // TSystem::kDefault : compile the same as the current ROOT
-   // TSystem::kDebug : compiled in debug mode 
+   // TSystem::kDebug : compiled in debug mode
    // TSystem::kOpt : optimized the library
 
    fAclicMode = mode;
@@ -1817,9 +1865,9 @@ void TSystem::SetMakeSharedLib(const char *directives)
    //   $LinkedLibs         value of fLinkedLibs
    //   $ObjectFiles        Name of source files to be compiler with
    //                       their extension changed to .o or .obj
-   //   $Opt                location of the optimization/debug options  
+   //   $Opt                location of the optimization/debug options
    //                       set fFlagsDebug and fFlagsOpt
-   //  
+   //
    // e.g.:
    // gSystem->SetMakeSharedLib(
    // "KCC -n32 --strict $IncludePath -K0 \$Opt $SourceFile

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.7 2001/06/06 16:48:33 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.8 2002/02/26 17:57:20 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -130,7 +130,7 @@ public:
    const char       *GetDirEntry(void *dirp);
    Bool_t            ChangeDirectory(const char *path);
    const char       *WorkingDirectory();
-   const char       *HomeDirectory(const Char_t *userName = 0);
+   const char       *HomeDirectory(const char *userName = 0);
 
    //---- Paths & Files ----------------------------------------
    char             *ConcatFileName(const char *dir, const char *name);

@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name: v3-03-05 $:$Id: TRFIOFile.cxx,v 1.17 2002/04/09 10:42:56 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.18 2002/07/19 11:41:41 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -29,23 +29,47 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include <sys/stat.h>
+#include <sys/types.h>
 #ifndef R__WIN32
 #include <unistd.h>
+#if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) || \
+    defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) || \
+    defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
+    defined(R__MACOSX) || defined(R__HURD)
+#define HAS_DIRENT
+#endif
 #endif
 
+#ifdef HAS_DIRENT
+#include <dirent.h>
+#else
+struct dirent {
+   ino_t d_ino;
+   off_t d_reclen;
+   unsigned short d_namlen;
+   char d_name[232];  // from Castor_limits.h
+};
+#endif
+
+
 extern "C" {
-   int   rfio_open(char *filepath, int flags, int mode);
+   int   rfio_open(const char *filepath, int flags, int mode);
    int   rfio_close(int s);
-   int   rfio_read(int s, char *ptr, int size);
-   int   rfio_write(int s, char *ptr, int size);
+   int   rfio_read(int s, void *ptr, int size);
+   int   rfio_write(int s, const void *ptr, int size);
    int   rfio_lseek(int s, int offset, int how);
-   int   rfio_access(char *filepath, int mode);
-   int   rfio_unlink(char *filepath);
-   int   rfio_parse(char *name, char **host, char **path);
+   int   rfio_access(const char *filepath, int mode);
+   int   rfio_unlink(const char *filepath);
+   int   rfio_parse(const char *name, char **host, char **path);
+   int   rfio_stat(const char *path, struct stat *statbuf);
    int   rfio_fstat(int s, struct stat *statbuf);
    void  rfio_perror(const char *msg);
    char *rfio_serror();
    int   rfiosetopt(int opt, int *pval, int len);
+   int   rfio_mkdir(const char *path, int mode);
+   void *rfio_opendir(const char *dirpath);
+   int   rfio_closedir(void *dirp);
+   void *rfio_readdir(void *dirp);
 #ifdef R__WIN32
    int  *C__serrno(void);
    int  *C__rfio_errno (void);
@@ -75,6 +99,7 @@ extern int serrno;
 
 
 ClassImp(TRFIOFile)
+ClassImp(TRFIOSystem)
 
 //______________________________________________________________________________
 TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
@@ -386,4 +411,135 @@ void TRFIOFile::ResetErrno() const
    rfio_errno = 0;
    serrno = 0;
    TSystem::ResetErrno();
+}
+
+
+//______________________________________________________________________________
+TRFIOSystem::TRFIOSystem() : TSystem("-rfio", "RFIO Helper System")
+{
+   // Create helper class that allows directory access via rfiod.
+
+   // name must start with '-' to bypass the TSystem singleton check
+   SetName("rfio");
+
+   fDirp = 0;
+}
+
+//______________________________________________________________________________
+Int_t TRFIOSystem::MakeDirectory(const char *dir)
+{
+   // Make a directory via rfiod.
+
+   TUrl url(dir);
+
+   Int_t ret = ::rfio_mkdir(url.GetFile(), 0755);
+   if (ret < 0)
+      gSystem->SetErrorStr(::rfio_serror());
+   return ret;
+}
+
+//______________________________________________________________________________
+void *TRFIOSystem::OpenDirectory(const char *dir)
+{
+   // Open a directory via rfiod. Returns an opaque pointer to a dir
+   // structure. Returns 0 in case of error.
+
+   if (fDirp) {
+      Error("OpenDirectory", "invalid directory pointer (should never happen)");
+      fDirp = 0;
+   }
+
+   TUrl url(dir);
+
+   struct stat finfo;
+
+   if (::rfio_stat(url.GetFile(), &finfo) < 0)
+      return 0;
+
+   if (!S_ISDIR(finfo.st_mode))
+      return 0;
+
+   fDirp = (void*) ::rfio_opendir(url.GetFile());
+
+   if (!fDirp)
+      gSystem->SetErrorStr(::rfio_serror());
+
+   return fDirp;
+}
+
+//______________________________________________________________________________
+void TRFIOSystem::FreeDirectory(void *dirp)
+{
+   // Free directory via rfiod.
+
+   if (dirp != fDirp) {
+      Error("FreeDirectory", "invalid directory pointer (should never happen)");
+      return;
+   }
+
+   if (dirp)
+      ::rfio_closedir(dirp);
+
+   fDirp = 0;
+}
+
+//______________________________________________________________________________
+const char *TRFIOSystem::GetDirEntry(void *dirp)
+{
+   // Get directory entry via rfiod. Returns 0 in case no more entries.
+
+   if (dirp != fDirp) {
+      Error("GetDirEntry", "invalid directory pointer (should never happen)");
+      return 0;
+   }
+
+   struct dirent *dp;
+
+   if (dirp) {
+      dp = (struct dirent *) ::rfio_readdir(dirp);
+      if (!dp)
+         return 0;
+      return dp->d_name;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TRFIOSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
+                               Long_t *flags, Long_t *modtime)
+{
+   // Get info about a file: id, size, flags, modification time.
+   // Id      is 0 for RFIO file
+   // Size    is the file size
+   // Flags   is file type: 0 is regular file, bit 0 set executable,
+   //                       bit 1 set directory, bit 2 set special file
+   //                       (socket, fifo, pipe, etc.)
+   // Modtime is modification time.
+   // The function returns 0 in case of success and 1 if the file could
+   // not be stat'ed.
+
+   TUrl url(path);
+
+   struct stat statbuf;
+
+   if (path && ::rfio_stat(url.GetFile(), &statbuf) >= 0) {
+      if (id)
+         *id = 0;
+      if (size)
+         *size = statbuf.st_size;
+      if (modtime)
+         *modtime = statbuf.st_mtime;
+      if (flags) {
+         *flags = 0;
+         if (statbuf.st_mode & ((S_IEXEC)|(S_IEXEC>>3)|(S_IEXEC>>6)))
+            *flags |= 1;
+         if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
+            *flags |= 2;
+         if ((statbuf.st_mode & S_IFMT) != S_IFREG &&
+             (statbuf.st_mode & S_IFMT) != S_IFDIR)
+            *flags |= 4;
+      }
+      return 0;
+   }
+   return 1;
 }

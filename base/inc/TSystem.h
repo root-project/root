@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.19 2002/04/11 18:16:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.20 2002/10/18 14:58:55 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -81,10 +81,10 @@ enum ELogFacility {
 };
 
 enum ESysConstants {
-  kMAXSIGNALS       = 15,
-  kMAXPATHLEN       = 2048,
-  kBUFFERSIZE       = 8192,
-  kItimerResolution = 10      // interval-timer resolution in ms
+   kMAXSIGNALS       = 15,
+   kMAXPATHLEN       = 2048,
+   kBUFFERSIZE       = 8192,
+   kItimerResolution = 10      // interval-timer resolution in ms
 };
 
 typedef void* Func_t;
@@ -141,8 +141,9 @@ public:
 
 
 class TSystem : public TNamed {
+
 public:
-   typedef enum { kDefault, kDebug, kOpt } EAclicMode;
+   enum EAclicMode { kDefault, kDebug, kOpt };
 
 protected:
    TFdSet           fReadmask;         //!Files that should be checked for read events
@@ -179,13 +180,15 @@ protected:
    TString          fLinkedLibs;       //Used to expand $LinkedLibs in the directives given to SetMakeSharedLib and SetMakeExe
    TString          fSoExt;            //Extension of shared library (.so, .sl, .a, .dll, etc.)
    TString          fObjExt;           //Extension of object files (.o, .obj, etc.)
-   EAclicMode       fAclicMode;         //Whether the compilation should be done debug or opt
+   EAclicMode       fAclicMode;        //Whether the compilation should be done debug or opt
    TString          fMakeSharedLib;    //Directive used to build a shared library
    TString          fMakeExe;          //Directive used to build an executable
    TString          fLinkdefSuffix;    //Default suffix for linkdef files to be used by ACLiC
    TSeqCollection  *fCompiled;         //List of shared libs from compiled macros to be deleted
+   TSeqCollection  *fHelpers;          //List of helper classes for alternative file/directory access
 
    virtual const char    *ExpandFileName(const char *fname);
+   TSystem               *FindHelper(const char *path, void *dirptr = 0);
 
 public:
    TSystem(const char *name = "Generic", const char *title = "Generic System");
@@ -243,9 +246,10 @@ public:
    virtual void           *OpenDirectory(const char *name);
    virtual void            FreeDirectory(void *dirp);
    virtual const char     *GetDirEntry(void *dirp);
+   virtual void           *GetDirPtr() const { return 0; }
    virtual Bool_t          ChangeDirectory(const char *path);
    virtual const char     *WorkingDirectory();
-   virtual const char     *HomeDirectory(const Char_t *userName = 0);
+   virtual const char     *HomeDirectory(const char *userName = 0);
    int                     mkdir(const char *name) { return MakeDirectory(name); }
    Bool_t                  cd(const char *path) { return ChangeDirectory(path); }
    const char             *pwd() { return WorkingDirectory(); }

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.40 2002/05/09 20:22:01 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.41 2002/08/20 10:51:50 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -44,6 +44,9 @@
     defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) || \
     defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
     defined(R__MACOSX) || defined(R__HURD)
+#define HAS_DIRENT
+#endif
+#ifdef HAS_DIRENT
 #   include <dirent.h>
 #else
 #   include <sys/dir.h>
@@ -675,6 +678,10 @@ int TUnixSystem::MakeDirectory(const char *name)
    // Make a Unix file system directory. Returns 0 in case of success and
    // -1 if the directory could not be created.
 
+   TSystem *helper = FindHelper(name);
+   if (helper)
+      return helper->MakeDirectory(name);
+
    return UnixMakedir(name);
 }
 
@@ -683,6 +690,10 @@ void *TUnixSystem::OpenDirectory(const char *name)
 {
    // Open a Unix file system directory. Returns 0 if directory does not exist.
 
+   TSystem *helper = FindHelper(name);
+   if (helper)
+      return helper->OpenDirectory(name);
+
    return UnixOpendir(name);
 }
 
@@ -690,6 +701,12 @@ void *TUnixSystem::OpenDirectory(const char *name)
 void TUnixSystem::FreeDirectory(void *dirp)
 {
    // Close a Unix file system directory.
+
+   TSystem *helper = FindHelper(0, dirp);
+   if (helper) {
+      helper->FreeDirectory(dirp);
+      return;
+   }
 
    if (dirp)
       ::closedir((DIR*)dirp);
@@ -700,8 +717,13 @@ const char *TUnixSystem::GetDirEntry(void *dirp)
 {
    // Get next Unix file system directory entry. Returns 0 if no more entries.
 
+   TSystem *helper = FindHelper(0, dirp);
+   if (helper)
+      return helper->GetDirEntry(dirp);
+
    if (dirp)
       return UnixGetdirentry(dirp);
+
    return 0;
 }
 
@@ -799,6 +821,10 @@ int TUnixSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
    // Modtime is modification time.
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
+
+   TSystem *helper = FindHelper(path);
+   if (helper)
+      return helper->GetPathInfo(path, id, size, flags, modtime);
 
    return UnixFilestat(path, id,  size, flags, modtime);
 }
@@ -2227,10 +2253,7 @@ const char *TUnixSystem::UnixGetdirentry(void *dirp1)
    // Returns the next directory entry.
 
    DIR *dirp = (DIR*)dirp1;
-#if defined(R__SUN) || defined(R__SGI) || defined(R__AIX) || \
-    defined(R__HPUX) || defined(R__LINUX) || defined(R__SOLARIS) || \
-    defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__MACOSX) || defined(R__HURD)
+#ifdef HAS_DIRENT
    struct dirent *dp;
 #else
    struct direct *dp;

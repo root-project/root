@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.33 2002/09/16 10:57:57 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.34 2002/09/16 14:03:13 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -133,6 +133,7 @@ Proofd.Authentication:  0
 # Plugin library handlers
 Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^dcache:  TDCacheFile   DCache  "TDCacheFile(const char*,Option_t*,const char*,Int_t)"
+Plugin.TSystem:      ^rfio:    TRFIOSystem   RFIO    "TRFIOSystem()"
 Plugin.TSQLServer:   ^mysql:   TMySQLServer  MySQL   "TMySQLServer(const char*,const char*,const char*)"
 +Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL   "TPgSQLServer(const char*,const char*,const char*)"
 +Plugin.TSQLServer:  ^sapdb:   TSapDBServer  SapDB   "TSapDBServer(const char*,const char*,const char*)"

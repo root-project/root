@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.5 2001/01/23 19:16:31 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.6 2002/01/27 17:23:19 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -27,6 +27,9 @@
 #endif
 #ifndef ROOT_TUrl
 #include "TUrl.h"
+#endif
+#ifndef ROOT_TSystem
+#include "TSystem.h"
 #endif
 
 
@@ -59,6 +62,28 @@ public:
    void    ResetErrno() const;
 
    ClassDef(TRFIOFile,1)  //A ROOT file that reads/writes via a rfiod server
+};
+
+
+class TRFIOSystem : public TSystem {
+
+private:
+   void    *fDirp;   // directory handler
+
+   void    *GetDirPtr() const { return fDirp; }
+
+public:
+   TRFIOSystem();
+   virtual ~TRFIOSystem() { }
+
+   Int_t       MakeDirectory(const char *name);
+   void       *OpenDirectory(const char *name);
+   void        FreeDirectory(void *dirp);
+   const char *GetDirEntry(void *dirp);
+   Int_t       GetPathInfo(const char *path, Long_t *id, Long_t *size,
+                           Long_t *flags, Long_t *modtime);
+
+   ClassDef(TRFIOSystem,0)  // Directory handler for RFIO
 };
 
 #endif
