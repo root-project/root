@@ -1,6 +1,6 @@
 /***************************************************************************** * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: Roo2DHistPdf.cc,v 1.1.2.3 2002/04/30 17:47:40 zhanglei Exp $
+ *    File: $Id: Roo2DHistPdf.cc,v 1.8 2002/04/30 17:51:43 zhanglei Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -292,8 +292,8 @@ void Roo2DHistPdf::generateEvent(Int_t code)
     r=RooRandom::uniform();
     rx=RooRandom::uniform()*(_hix-_lox);
     ry=RooRandom::uniform()*(_hiy-_loy);
-    Int_t xBin=rx/_xbinWidth;
-    Int_t yBin=ry/_ybinWidth;
+    Int_t xBin=(Int_t)(rx/_xbinWidth);
+    Int_t yBin=(Int_t)(ry/_ybinWidth);
     if ((xBin<0)||(yBin<0)) continue;
     if (r*_MaxP<=_p[xBin][yBin]) break;
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- * File: $Id: RooDircShape.cc,v 1.1.2.5 2002/04/18 23:56:22 zhanglei Exp $
+ * File: $Id: RooDircShape.cc,v 1.1 2002/04/30 18:33:19 zhanglei Exp $
  * Authors:
  *   Lei Zhang, University of Colorado, zhanglei@slac.stanford.edu
  * History:
@@ -78,7 +78,7 @@ Double_t RooDircShape::evaluate() const
   return dircCubic()*mrFactor*(0==coreTail?1.:3.);
 }
 
-Int_t RooDircShape::getCosThetaBin() {
+Int_t RooDircShape::getCosThetaBin() const {
 
   Int_t number(0);
   Double_t cosTheta(cos(trkTheta));
@@ -148,7 +148,7 @@ Int_t RooDircShape::getCosThetaBin() {
   return number;
 }
 
-Double_t RooDircShape::dircCubic() {
+Double_t RooDircShape::dircCubic() const{
 
   Double_t cosTheta(cos(trkTheta));
   

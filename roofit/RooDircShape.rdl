@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- * File: $Id: RooDircShape.rdl,v 1.1.2.5 2002/04/18 23:56:24 zhanglei Exp $
+ * File: $Id: RooDircShape.rdl,v 1.1 2002/04/30 18:33:19 zhanglei Exp $
  * Authors:
  *   Lei Zhang, University of Colorado, zhanglei@slac.stanford.edu
  * History:
@@ -43,8 +43,8 @@ protected:
   virtual void formParams(TString shapefile);
   virtual void formParams(const RooDircShape &other);
   
-  virtual Int_t getCosThetaBin();
-  virtual Double_t dircCubic();
+  Int_t getCosThetaBin() const;
+  Double_t dircCubic() const;
 
   //
   RooRealProxy trkTheta;
