@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32Canvas.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32Canvas.h,v 1.2 2001/05/10 14:31:48 rdm Exp $
 // Author: Valery Fine   05/01/96
 
 /*************************************************************************
@@ -62,7 +62,7 @@ public:
    void   FitCanvas();
    void   Close() { }
    void   ForceUpdate();
-   void   GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
+   UInt_t GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    TGWin32Object *GetWin32Obj(){ return ((TGWin32 *)gVirtualX)->GetMasterObjectbyId(fCanvasImpID);}
    void   Iconify();
    Int_t  InitWindow();

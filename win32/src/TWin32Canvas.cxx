@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32Canvas.cxx,v 1.5 2001/11/08 07:21:04 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32Canvas.cxx,v 1.6 2002/09/10 13:17:42 brun Exp $
 // Author: Valery Fine   05/01/96
 
 #include "TWin32Canvas.h"
@@ -241,9 +241,10 @@ void TWin32Canvas::FitCanvas()
 //______________________________________________________________________________
 void   TWin32Canvas::ForceUpdate(){};
 //______________________________________________________________________________
-void   TWin32Canvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
+UInt_t   TWin32Canvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 {
    W32_GetGeometry(x, y, w, h);
+   return 0;
 }
 
 //______________________________________________________________________________
