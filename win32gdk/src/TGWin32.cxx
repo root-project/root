@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.25 2003/08/20 14:14:22 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.27 2003/08/24 19:44:11 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -684,7 +684,7 @@ static DWORD WINAPI HandleSplashThread(void *p)
 {
    // thread for handling Splash Screen
 
-   CreateSplash(6);
+   CreateSplash(2);
    ::ExitThread(0);
    if (gSplash) delete gSplash;
    gSplash = 0;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.15 2003/02/03 00:58:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.16 2003/10/10 14:24:33 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -170,7 +170,7 @@ Bool_t TRootContainer::HandleButton(Event_t *event)
 
    TGViewPort *vp = (TGViewPort*)fParent;
    Int_t y = vp->GetVPos();
-   UInt_t page = vp->GetHeight();
+   UInt_t page = vp->GetHeight()/4;
    Int_t newpos;
 
    if (event->fCode == kButton4) {

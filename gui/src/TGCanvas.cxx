@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.18 2003/08/11 15:55:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.19 2003/10/10 11:20:23 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -742,7 +742,7 @@ Bool_t TGContainer::HandleButton(Event_t *event)
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
    Int_t newpos;
-   page = dim.fHeight;
+   page = dim.fHeight/4;
 
    if (event->fCode == kButton4) {
       //scroll up
