@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.39 2001/06/05 14:51:07 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.40 2001/06/25 12:54:33 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4098,11 +4098,10 @@ void TPad::Streamer(TBuffer &b)
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 5) {
          if (!gPad) gPad = new TCanvas(GetName());
-         if (readLevel == 0) fMother = (TPad*)gROOT->GetSelectedPad();
-         else                fMother = (TPad*)gPad;
-         if (!fMother) fMother = (TPad*)gPad;
+         TPad *padsave = (TPad*)gPad;
+         fMother = (TPad*)gPad;
          if (fMother)  fCanvas = fMother->GetCanvas();
-         gPad      = fMother;
+         gPad      = this;
          fPixmapID = -1;      // -1 means pixmap will be created by ResizePad()
          readLevel++;
          gROOT->SetReadingObject(kTRUE);
@@ -4114,6 +4113,7 @@ void TPad::Streamer(TBuffer &b)
          readLevel--;
          if (readLevel == 0 && IsA() == TPad::Class()) ResizePad();
          gROOT->SetReadingObject(kFALSE);
+         gPad = padsave;
          return;
       }
 
