@@ -1487,8 +1487,8 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
       t.SetTextSize(fTextSize);
       t.SetTextFont(fTextFont);
       t.GetTextExtent(w, h, chars);
-      if(txalh == 2) x = x - gPad->AbsPixeltoX(w/2);
-      if(txalh == 3) x = x - gPad->AbsPixeltoX(w);
+      if(txalh == 2) x = x - (gPad->AbsPixeltoX(w)-gPad->AbsPixeltoX(0))/2;
+      if(txalh == 3) x = x - (gPad->AbsPixeltoX(w)-gPad->AbsPixeltoX(0));
    }
 
    // Text angle
