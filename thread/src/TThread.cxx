@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.17 2002/06/06 15:12:50 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.18 2002/12/03 16:44:25 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -185,6 +185,7 @@ TThread::TThread(Int_t id)
    fNamed     = kFALSE;
    fId = (id ? id : SelfId());
    fState = kRunningState;
+
    if (gDebug) printf("Thread %s.%ld is running\n",GetName(),fId);
 }
 
@@ -201,6 +202,7 @@ TThread::TThread(const char *thname, void *(*fn)(void*), void *arg,
    // to be executed by the thread, and a pointer to the argument structure.
 
    //if G__p2f2funcname-method recognizes true name of fn (call by interpreter)
+
    fDetached  = kFALSE;
    fFcnVoid   = 0;
    fFcnRetn   = fn;
@@ -220,6 +222,7 @@ TThread::TThread(const char *thname, void (*fn)(void*), void *arg,
    // to be executed by the thread, and a pointer to the argument structure.
 
    //if G__p2f2funcname-method recognizes true name of fn (call by interpreter)
+
    fDetached  = kTRUE;
    fFcnRetn   = 0;
    fFcnVoid   = fn;
@@ -237,6 +240,7 @@ TThread::TThread(const char *thname, void (*fn)(void*), void *arg,
 void TThread::Constructor()
 {
    // Common thread constructor.
+
 
    fHolder = 0;
    fClean  = 0;
@@ -562,9 +566,11 @@ void *TThread::Fun(void *ptr)
    SetCancelDeferred();
    CleanUpPush((void *)&AfterCancel,th);  // Enable standard cancelling function
 
-   sprintf(cbuf,"Thread %s.%ld is running",th->GetName(),th->fId);
-   TThread::Printf("\n %s\n\n",cbuf);
-
+   if (gDebug) {
+      sprintf(cbuf,"Thread %s.%ld is running",th->GetName(),th->fId);
+      TThread::Printf("\n %s\n\n",cbuf);
+   }
+   
    arg = th->fThreadArg;
    th->fState = kRunningState;
 
@@ -581,9 +587,11 @@ void *TThread::Fun(void *ptr)
    //CleanUpPop(0);     // Disable standard cancelling function
    CleanUpPop(1);     // Disable standard cancelling function
 
-   sprintf(cbuf,"Thread %s.%ld finished",th->GetName(),th->fId);
-   TThread::Printf("\n %s\n\n",cbuf);
-
+   if (gDebug) {
+      sprintf(cbuf,"Thread %s.%ld finished",th->GetName(),th->fId);
+      TThread::Printf("\n %s\n\n",cbuf);
+   }
+   
    TThread::Exit(ret);
 
    return ret;
