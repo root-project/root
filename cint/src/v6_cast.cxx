@@ -436,7 +436,7 @@ G__value result3;
      *********************************************************/
 #ifdef G__ASM_DBG
     if(G__asm_dbg&&G__asm_noverflow) {
-      fprintf(G__serr,"%3x: CAST to %c\n",G__asm_cp,type);
+      G__fprinterr("%3x: CAST to %c\n",G__asm_cp,type);
     }
 #endif
     G__asm_inst[G__asm_cp]=G__CAST;

@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5014075
-#define G__CINTVERSIONSTR  "5.14.75, Feb 9 2001"
+#define G__CINTVERSION      5014076
+#define G__CINTVERSIONSTR  "5.14.76, Feb 10 2001"
 
 
 /**********************************************************************
@@ -1544,6 +1544,9 @@ int G__compile_bytecode G__P((struct G__ifunc_table* ifunc,int index));
 extern G__EXPORT void G__set_p2fsetup G__P((void (*p2f)()));
 extern G__EXPORT void G__free_p2fsetup G__P((void));
 extern G__EXPORT int G__printlinenum G__P((void));
+#ifndef G__OLDIMPLEMENTATION1485
+extern G__EXPORT void G__set_errmsgcallback G__P((void *p));
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1473
 /**************************************************************************

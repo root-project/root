@@ -173,7 +173,7 @@ int num;
     }
   }
   if(fail!=0) {
-    fprintf(G__serr,"G__cmparray() failcount=%d from [%d] , %d != %d\n",
+    G__fprinterr("G__cmparray() failcount=%d from [%d] , %d != %d\n",
 	    fail,firstfail,fail1,fail2);
   }
   return(fail);
@@ -418,9 +418,9 @@ G__value *buf1,*buf2;
     G__genericerror(
 	    "Error:G__storeobject buf1,buf2 different type or non struct"
 		    );
-    fprintf(G__serr,"buf1->type = %c , buf2->type = %c\n"
+    G__fprinterr("buf1->type = %c , buf2->type = %c\n"
 	    ,buf1->type,buf2->type);
-    fprintf(G__serr,"buf1->tagnum = %d , buf2->tagnum = %d\n"
+    G__fprinterr("buf1->tagnum = %d , buf2->tagnum = %d\n"
 	    ,buf1->tagnum,buf2->tagnum);
     return(1);
   }

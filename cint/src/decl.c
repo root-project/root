@@ -330,13 +330,13 @@ char *new_name;
 	case '\0':
 	  cin=G__fgetstream(temp1,")");
 	  if(strcmp(temp1,"")!=0 || cin!=')') {
-	    fprintf(G__serr,"Error: Syntax error '%s(%s%c' "
+	    G__fprinterr("Error: Syntax error '%s(%s%c' "
 		    ,new_name,temp1,cin);
 	    G__genericerror((char*)NULL);
 	  }
 	  cin=G__fgetstream(temp1,"(");
 	  if(strcmp(temp1,"")!=0 || cin!='(') {
-	    fprintf(G__serr,"Error: Syntax error '%s()%s%c' "
+	    G__fprinterr("Error: Syntax error '%s()%s%c' "
 		    ,new_name,temp1,cin);
 	    G__genericerror((char*)NULL);
 	  }
@@ -368,7 +368,7 @@ char *new_name;
 #ifndef G__OLDIMPLEMENTATION1149
       if(store_len>1&&isalnum(new_name[store_len])&&
 	 isalnum(new_name[store_len-1])) {
-	fprintf(G__serr,"Warning: %s  Syntax error??",new_name);
+	G__fprinterr("Warning: %s  Syntax error??",new_name);
 	G__printlinenum();
       }
 #endif
@@ -556,7 +556,7 @@ char *new_name;
     G__fsetcomment(&var->comment[ig15]);
   }
   else {
-    fprintf(G__serr,"Internal warning: %s comment can not set",new_name);
+    G__fprinterr("Internal warning: %s comment can not set",new_name);
     G__printlinenum();
   }
 #endif
@@ -838,8 +838,8 @@ int tagnum,typenum;      /* overrides global variables */
 	G__var_type = store_var_type;
 #ifdef G__OLDOMPLEMENTATION183
 	if(G__reftype /* == G__PARAREFERENCE */) {
-	  fprintf(G__serr
-		,"Error: Can't use default parameter for reference type %s FILE:%s LINE:%d\n"
+	  G__fprinterr(
+		"Error: Can't use default parameter for reference type %s FILE:%s LINE:%d\n"
 		,new_name,G__ifile.name,G__ifile.line_number);
 	}
 #endif
@@ -971,7 +971,7 @@ int tagnum,typenum;      /* overrides global variables */
 #ifdef G__ASM
       if(0==new_name[0]) {
 #ifdef G__ASM_DBG
-        if(G__asm_dbg) fprintf(G__serr,"%3x: POP\n",G__asm_cp);
+        if(G__asm_dbg) G__fprinterr("%3x: POP\n",G__asm_cp);
 #endif
 	G__asm_inst[G__asm_cp] = G__POP;
 	G__inc_cp_asm(1,0);
@@ -1292,8 +1292,8 @@ int tagnum,typenum;      /* overrides global variables */
 	}
 	
 	if(G__dispsource) {
-	  fprintf(G__serr
-		  ,"\n!!!Calling constructor 0x%lx.%s for declaration of %s"
+	  G__fprinterr(
+		  "\n!!!Calling constructor 0x%lx.%s for declaration of %s"
 		  ,G__store_struct_offset,temp1,new_name);
 	}
 	
@@ -1347,7 +1347,7 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1073
 	  if(G__asm_wholefunction&&G__no_exec_compile) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr ,"%3x: SETGVP -1\n",G__asm_cp);
+	    if(G__asm_dbg) G__fprinterr("%3x: SETGVP -1\n",G__asm_cp);
 #endif
 	    G__asm_inst[G__asm_cp]=G__SETGVP;
 	    G__asm_inst[G__asm_cp+1] = -1;
@@ -1361,7 +1361,7 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1073
 	    if(G__asm_wholefunction && G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	      if(G__asm_dbg) fprintf(G__serr ,"%3x: POPSTROS\n",G__asm_cp);
+	      if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp);
 #endif
 	      G__asm_inst[G__asm_cp]=G__POPSTROS;
 	      G__inc_cp_asm(1,0);
@@ -1376,13 +1376,13 @@ int tagnum,typenum;      /* overrides global variables */
 	  {
 #ifndef G__OLDIMPLEMENTATION1164
 	    if(0==G__xrefflag) {
-	      fprintf(G__serr
-		      ,"Error: %s not allocated(1), maybe duplicate declaration "
+	      G__fprinterr(
+		      "Error: %s not allocated(1), maybe duplicate declaration "
 		      ,new_name);
 	    }
 #else
-	    fprintf(G__serr
-		    ,"Error: %s not allocated(1), maybe duplicate declaration "
+	    G__fprinterr(
+		    "Error: %s not allocated(1), maybe duplicate declaration "
 		    ,new_name);
 #endif
 	    G__genericerror((char*)NULL);
@@ -1604,7 +1604,7 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION894
 	if(0==bitfieldwarn) {
 #endif
-	  fprintf(G__serr ,"Note: Bit-field not accessible from interpreter");
+	  G__fprinterr("Note: Bit-field not accessible from interpreter");
 	  G__printlinenum();
 #ifndef G__OLDIMPLEMENTATION894
 	  bitfieldwarn=1;
@@ -1648,7 +1648,7 @@ int tagnum,typenum;      /* overrides global variables */
 	 -1!=G__tagdefining && 
 	 ('c'==G__struct.type[G__tagdefining]||
 	  's'==G__struct.type[G__tagdefining])) {
-	fprintf(G__serr,"Warning: In-class initialization of non-const static member not allowed in C++ standard");
+	G__fprinterr("Warning: In-class initialization of non-const static member not allowed in C++ standard");
 	G__printlinenum();
       }
 #endif
@@ -1826,7 +1826,7 @@ int tagnum,typenum;      /* overrides global variables */
 	 G__NOLINK==G__globalcomp &&
 #endif
 	 G__reftype== G__PARAREFERENCE && 0==G__def_struct_member) {
-	fprintf(G__serr ,"Error: reference type %s with no initialization "
+	G__fprinterr("Error: reference type %s with no initialization "
 		,new_name);
 	G__genericerror((char*)NULL);
       }
@@ -1962,8 +1962,8 @@ int tagnum,typenum;      /* overrides global variables */
 	     ********************************************/
 	    sprintf(temp,"%s()",G__struct.name[G__tagnum]);
 	    if(G__dispsource){
-		fprintf(G__serr
-	    ,"\n!!!Calling default constructor 0x%lx.%s for declaration of %s"
+		G__fprinterr(
+	    "\n!!!Calling default constructor 0x%lx.%s for declaration of %s"
 			,G__store_struct_offset
 			,temp,new_name);
 	    }
@@ -1979,7 +1979,7 @@ int tagnum,typenum;      /* overrides global variables */
 #ifdef G__ASM
 		if(G__asm_noverflow && p_inc>1) {
 #ifdef G__ASM_DBG
-		  if(G__asm_dbg) fprintf(G__serr,"%3x: SETARYINDEX\n" ,G__asm_cp);
+		  if(G__asm_dbg) G__fprinterr("%3x: SETARYINDEX\n" ,G__asm_cp);
 #endif
 		  G__asm_inst[G__asm_cp]=G__SETARYINDEX;
 		  G__asm_inst[G__asm_cp+1]= 0;
@@ -2001,7 +2001,7 @@ int tagnum,typenum;      /* overrides global variables */
 		if(G__asm_wholefunction&&G__no_exec_compile) {
 #ifdef G__ASM_DBG
 		  if(G__asm_dbg) 
-		    fprintf(G__serr ,"%3x: SETGVP -1\n",G__asm_cp);
+		    G__fprinterr("%3x: SETGVP -1\n",G__asm_cp);
 #endif
 		  G__asm_inst[G__asm_cp]=G__SETGVP;
 		  G__asm_inst[G__asm_cp+1] = -1;
@@ -2025,7 +2025,7 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1444
 		  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-		    if(G__asm_dbg) fprintf(G__serr ,"%3x: ADDSTROS %d\n"
+		    if(G__asm_dbg) G__fprinterr("%3x: ADDSTROS %d\n"
 					   ,G__asm_cp
 					   ,G__struct.size[G__tagnum]);
 #endif
@@ -2037,7 +2037,7 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1073
 		  if(G__asm_wholefunction && G__asm_noverflow) {
 #ifdef G__ASM_DBG
-		    if(G__asm_dbg) fprintf(G__serr ,"%3x: ADDSTROS %d\n"
+		    if(G__asm_dbg) G__fprinterr("%3x: ADDSTROS %d\n"
 			              ,G__asm_cp,G__struct.size[G__tagnum]);
 #endif
 		    G__asm_inst[G__asm_cp]=G__POPSTROS; /* ??? ADDSTROS */
@@ -2049,7 +2049,7 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1073
 		if(G__asm_wholefunction && G__asm_noverflow) {
 #ifdef G__ASM_DBG
-		  if(G__asm_dbg) fprintf(G__serr ,"%3x: POPSTROS\n",G__asm_cp);
+		  if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp);
 #endif
 		  G__asm_inst[G__asm_cp]=G__POPSTROS;
 		  G__inc_cp_asm(1,0);
@@ -2085,9 +2085,9 @@ int tagnum,typenum;      /* overrides global variables */
 		  if(0==G__xrefflag) {
 #ifndef G__OLDIMPLEMENTATION1180
 		    if(G__ASM_FUNC_NOP==G__asm_wholefunction)
-		      fprintf(G__serr,"Error: %s no default constructor",temp);
+		      G__fprinterr("Error: %s no default constructor",temp);
 #else
-		    fprintf(G__serr,"Error: %s no default constructor",temp);
+		    G__fprinterr("Error: %s no default constructor",temp);
 #endif
 		    G__genericerror((char*)NULL);
 		  }
@@ -2095,7 +2095,7 @@ int tagnum,typenum;      /* overrides global variables */
 		    G__letvariable(new_name,G__null,&G__global,G__p_local);
 		  }
 #else
-		  fprintf(G__serr,"Error: %s no default constructor",temp);
+		  G__fprinterr("Error: %s no default constructor",temp);
 		  G__genericerror((char*)NULL);
 #endif
 		}
@@ -2108,7 +2108,7 @@ int tagnum,typenum;      /* overrides global variables */
 		if(G__asm_wholefunction&&G__no_exec_compile) {
 #ifdef G__ASM_DBG
 		  if(G__asm_dbg) 
-		    fprintf(G__serr ,"%3x: SETGVP -1\n",G__asm_cp);
+		    G__fprinterr("%3x: SETGVP -1\n",G__asm_cp);
 #endif
 		  G__asm_inst[G__asm_cp]=G__SETGVP;
 		  G__asm_inst[G__asm_cp+1] = -1;
@@ -2129,7 +2129,7 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1073
 		if(G__asm_wholefunction && G__asm_noverflow) {
 #ifdef G__ASM_DBG
-		  if(G__asm_dbg) fprintf(G__serr ,"%3x: POPSTROS\n",G__asm_cp);
+		  if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp);
 #endif
 		  G__asm_inst[G__asm_cp]=G__POPSTROS;
 		  G__inc_cp_asm(1,0);
@@ -2156,8 +2156,8 @@ int tagnum,typenum;      /* overrides global variables */
 	    /* struct class initialization ={x,y,z} */
 	    if(initary) {
 	      if(known) {
-		fprintf(G__serr
-		,"Error: Illegal initialization of %s. Constructor exists "
+		G__fprinterr(
+		"Error: Illegal initialization of %s. Constructor exists "
 			,new_name);
 		G__genericerror((char*)NULL);
 		cin=G__fignorestream("}");
@@ -2211,8 +2211,8 @@ int tagnum,typenum;      /* overrides global variables */
 	    if( flag ) {
 	      /* call explicit constructor, error if no constructor */
 	      if(G__dispsource){
-		fprintf(G__serr
-		   ,"\n!!!Calling constructor 0x%lx.%s for declaration of %s"
+		G__fprinterr(
+		   "\n!!!Calling constructor 0x%lx.%s for declaration of %s"
 			,G__store_struct_offset
 			,temp,new_name);
 	      }
@@ -2279,7 +2279,7 @@ int tagnum,typenum;      /* overrides global variables */
 	      if(G__asm_noverflow&&G__asm_wholefunction) {
 #ifdef G__ASM_DBG
 		if(G__asm_dbg) 
-		  fprintf(G__serr,"%3x: SETMEMFUNCENV\n",G__asm_cp);
+		  G__fprinterr("%3x: SETMEMFUNCENV\n",G__asm_cp);
 #endif
 		G__asm_inst[G__asm_cp]=G__SETMEMFUNCENV;
 		G__inc_cp_asm(1,0);
@@ -2293,7 +2293,7 @@ int tagnum,typenum;      /* overrides global variables */
 	      if(G__asm_noverflow&&G__asm_wholefunction) {
 #ifdef G__ASM_DBG
 		if(G__asm_dbg) 
-		  fprintf(G__serr,"%3x: RECMEMFUNCENV\n",G__asm_cp);
+		  G__fprinterr("%3x: RECMEMFUNCENV\n",G__asm_cp);
 #endif
 		G__asm_inst[G__asm_cp]=G__RECMEMFUNCENV;
 		G__inc_cp_asm(1,0);
@@ -2360,7 +2360,7 @@ int tagnum,typenum;      /* overrides global variables */
 		  G__oprovld=0;
 #ifdef G__ASM_DBG
 		  if(G__asm_dbg) 
-		    fprintf(G__serr ,"%3x: SETGVP -1\n",G__asm_cp);
+		    G__fprinterr("%3x: SETGVP -1\n",G__asm_cp);
 #endif
 		  G__asm_inst[G__asm_cp]=G__SETGVP;
 		  G__asm_inst[G__asm_cp+1] = -1;
@@ -2379,7 +2379,7 @@ int tagnum,typenum;      /* overrides global variables */
 		if(G__asm_wholefunction) {
 		  G__oprovld=0;
 #ifdef G__ASM_DBG
-		  if(G__asm_dbg) fprintf(G__serr ,"%3x: POPSTROS\n",G__asm_cp);
+		  if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp);
 #endif
 		  G__asm_inst[G__asm_cp]=G__POPSTROS;
 		  G__inc_cp_asm(1,0);
@@ -2409,8 +2409,8 @@ int tagnum,typenum;      /* overrides global variables */
 	}
 	else { /* of if(G__store_struct_offset */
 	  if(G__var_type=='u') {
-	    fprintf(G__serr
-		    ,"Error: %s not allocated(2), maybe duplicate declaration "
+	    G__fprinterr(
+		    "Error: %s not allocated(2), maybe duplicate declaration "
 		    ,new_name );
 	    G__genericerror((char*)NULL);
 	  }
@@ -2442,7 +2442,7 @@ int tagnum,typenum;      /* overrides global variables */
 #ifdef G__ASM
 	if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROSx\n",G__asm_cp);
+	  if(G__asm_dbg) G__fprinterr("%3x: POPSTROSx\n",G__asm_cp);
 #endif
 	  G__asm_inst[G__asm_cp] = G__POPSTROS;
 	  G__inc_cp_asm(1,0);
@@ -2591,7 +2591,7 @@ int tagnum,typenum;      /* overrides global variables */
 	var_type = tolower(var_type);
 	G__var_type = var_type;
 	if(G__asm_dbg) {
-	  fprintf(G__serr,"Note: type* a,b,... declaration");
+	  G__fprinterr("Note: type* a,b,... declaration");
 	  G__printlinenum();
 	}
       }
@@ -2789,8 +2789,8 @@ char *new_name;
 #ifndef G__OLDIMPLEMENTATION1103
 	    if(0==G__const_noerror) {
 #endif
-	      fprintf(G__serr
-		 ,"Error: Array initialization out of range *(%s+%d), upto %d "
+	      G__fprinterr(
+		 "Error: Array initialization out of range *(%s+%d), upto %d "
 		 ,name,pinc ,var->varlabel[ig15][1]);
 #ifndef G__OLDIMPLEMENTATION1103
 	    }
@@ -2876,8 +2876,8 @@ char *new_name;
 {
   int c;
   if(G__NOLINK==G__globalcomp) {
-    fprintf(G__serr
-    ,"Limitation: Initialization of class,struct %s ignored FILE:%s LINE:%d\n"
+    G__fprinterr(
+    "Limitation: Initialization of class,struct %s ignored FILE:%s LINE:%d\n"
 	    ,new_name,G__ifile.name,G__ifile.line_number);
   }
 
@@ -3051,7 +3051,7 @@ char *new_name;
 
 #ifndef G__OLDIMPLEMENTATION871
   if(!var) {
-    fprintf(G__serr,"Limitation: %s initialization ignored",name);
+    G__fprinterr("Limitation: %s initialization ignored",name);
     G__printlinenum();
     c=G__fignorestream("},;");
     if('}'==c) c=G__fignorestream(",;");
@@ -3060,7 +3060,7 @@ char *new_name;
 #endif
 
   if(G__struct.baseclass[var->p_tagtable[ig15]]->basen) {
-    fprintf(G__serr,"Error: %s must be initialized by a constructor",name);
+    G__fprinterr("Error: %s must be initialized by a constructor",name);
     G__genericerror(NULL);
     c=G__fignorestream("}");
     /*  type var1[N] = { 0, 1, 2.. }  , ... ;
@@ -3164,8 +3164,8 @@ char *new_name;
 #ifndef G__OLDIMPLEMENTATION1103
 	    if(0==G__const_noerror) {
 #endif
-	      fprintf(G__serr
-		 ,"Error: Array initialization out of range *(%s+%d), upto %d "
+	      G__fprinterr(
+		 "Error: Array initialization out of range *(%s+%d), upto %d "
 		    ,name,pinc ,var->varlabel[ig15][1]);
 #ifndef G__OLDIMPLEMENTATION1103
 	    }

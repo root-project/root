@@ -159,7 +159,7 @@ char *prompt;
     }
     pchar=readline(prompt);
     while(pchar&&strlen(pchar)>G__ONELINE-5) {
-      fprintf(G__serr,"!!! User command too long !!!\n");
+      G__fprinterr("!!! User command too long !!!\n");
       pchar=readline(prompt);
     }
     if(pchar) strcpy(line,pchar);

@@ -68,7 +68,7 @@ char *optlist;
 	}
 	++p;
       }
-      fprintf(G__serr,"Error: Unknown option %s\n",argv[optind]);
+      G__fprinterr("Error: Unknown option %s\n",argv[optind]);
       ++optind;
       return(0);
     }

@@ -299,21 +299,21 @@ char *oldtype,*newtype;
   if(type) {
 #ifndef G__OLDIMPLEMENTATION734
     if(strcmp(newtype,"bool")!=0) {
-      fprintf(G__serr,"Limitation: macro handled as typedef %s %s;"
+      G__fprinterr("Limitation: macro handled as typedef %s %s;"
 	      ,oldtype,newtype);
       G__printlinenum();
     }
     G__search_typename(newtype,type,tagnum,0);
 #else
-    fprintf(G__serr,"Limitation: macro handled as typedef %s %s;"
+    G__fprinterr("Limitation: macro handled as typedef %s %s;"
 	    ,oldtype,newtype);
     G__search_typename(newtype,type,tagnum,0);
     G__printlinenum();
 #endif
   }
   else {
-    fprintf(G__serr,"Limitation: can not handle macro %s %s" ,newtype,oldtype);
-    if(0==G__cpp) fprintf(G__serr," Use +P or -p option\n");
+    G__fprinterr("Limitation: can not handle macro %s %s" ,newtype,oldtype);
+    if(0==G__cpp) G__fprinterr(" Use +P or -p option\n");
     G__genericerror((char*)NULL);
   }
 
@@ -347,7 +347,7 @@ char *initvalue;
   
   if(G__mfp==NULL) {
 #ifdef G__DEBUG
-    fprintf(G__serr,"Limitation: This form of macro may not be expanded. Use +P or -p option");
+    G__fprinterr("Limitation: This form of macro may not be expanded. Use +P or -p option");
     G__printlinenum();
 #endif
     G__openmfp();
@@ -408,8 +408,8 @@ char *initvalue;
       c='\\';
     }
     if(G__dispsource) {
-      fprintf(G__serr,"\\\n%-5d",G__ifile.line_number);
-      fprintf(G__serr,"%s",line);
+      G__fprinterr("\\\n%-5d",G__ifile.line_number);
+      G__fprinterr("%s",line);
     }
     ++G__mline;
     fprintf(G__mfp,"%s\n",line);
@@ -674,7 +674,7 @@ int nosemic;
   
   if(G__mfp==NULL) {
 #ifdef G__DEBUG
-    fprintf(G__serr,"Limitation: This form of macro may not be expanded. Use +P or -p option");
+    G__fprinterr("Limitation: This form of macro may not be expanded. Use +P or -p option");
     G__printlinenum();
 #endif
     G__openmfp();
@@ -855,7 +855,7 @@ int G__execfuncmacro_noexec (char* macroname)
 #ifndef G__OLDIMPLEMENTATION1152
   if(p) *p='\0';
   else {
-    fprintf(G__serr,"Warning: %s  Syntax error???",macroname);
+    G__fprinterr("Warning: %s  Syntax error???",macroname);
     G__printlinenum();
   }
 #else
@@ -1078,9 +1078,9 @@ char *new_name;
 
 #ifndef G__OLDIMPLEMENTATION1412
   if(G__MAXFILE-1==G__ifile.filenum) {
-    fprintf(G__serr,"Limitation: Macro function can not be defined in a command line or a tempfile\n");
+    G__fprinterr("Limitation: Macro function can not be defined in a command line or a tempfile\n");
     G__genericerror("You need to write it in a source file");
-    fprintf(G__serr,"Besides, it is recommended to use function template instead\n");
+    G__fprinterr("Besides, it is recommended to use function template instead\n");
     return (-1);
   }
 #endif
@@ -1092,7 +1092,7 @@ char *new_name;
   /* Search for the end of list */
   deffuncmacro = &G__deffuncmacro;
   /*
-    fprintf(G__serr ,"Limitation: Macro %s() may not work well" ,new_name);
+    G__fprinterr("Limitation: Macro %s() may not work well" ,new_name);
     G__printlinenum();
   */
   while(deffuncmacro->next) deffuncmacro=deffuncmacro->next;

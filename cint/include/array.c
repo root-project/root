@@ -263,7 +263,6 @@ void G__ary_diff(double *c,double *a,double *b,int n)
 void G__ary_max(double *c,double *a,double *b,int n)
 {
   int i;
-  double k,m;
   for(i=0;i<n;i++) {
     if(a[i]<b[i]) c[i] = b[i];
     else          c[i] = a[i];
@@ -273,7 +272,6 @@ void G__ary_max(double *c,double *a,double *b,int n)
 void G__ary_min(double *c,double *a,double *b,int n)
 {
   int i;
-  double k,m;
   for(i=0;i<n;i++) {
     if(a[i]>b[i]) c[i] = b[i];
     else          c[i] = a[i];

@@ -90,7 +90,7 @@ struct G__param *libp; /* argument buffer */
      0!=libp->para[itemp].obj.i &&
      G__VARIABLE==p_ifunc->para_isconst[ifn][itemp]) {
 #ifdef G__OLDIMPLEMENTATION1167
-    fprintf(G__serr,"Warning: implicit type conversion of non-const reference arg %d",itemp);
+    G__fprinterr("Warning: implicit type conversion of non-const reference arg %d",itemp);
     G__printlinenum();
 #endif
   }
@@ -224,13 +224,13 @@ int hash; /* not use */
 #ifdef G__ASM_DBG
   if(G__asm_dbg||G__dispsource) {
     if(bytecode->ifunc->tagnum>=0) 
-      fprintf(G__serr,"Running bytecode function %s::%s inst=%lx->%lx stack=%lx->%lx\n"
+      G__fprinterr("Running bytecode function %s::%s inst=%lx->%lx stack=%lx->%lx\n"
 	      ,G__struct.name[bytecode->ifunc->tagnum]
 	      ,bytecode->ifunc->funcname[bytecode->ifn]
 	      ,(long)G__asm_inst,(long)bytecode->pinst
 	      ,(long)G__asm_stack,(long)asm_stack_g);
     else
-      fprintf(G__serr,"Running bytecode function %s inst=%lx->%lx stack=%lx->%lx\n"
+      G__fprinterr("Running bytecode function %s inst=%lx->%lx stack=%lx->%lx\n"
 	      ,bytecode->ifunc->funcname[bytecode->ifn]
 	      ,(long)G__asm_inst,(long)bytecode->pinst
 	      ,(long)G__asm_stack,(long)asm_stack_g);
@@ -366,7 +366,7 @@ int hash; /* not use */
 #ifdef G__ASM_DBG
   if(G__asm_dbg) {
     char temp[G__ONELINE];
-    fprintf(G__serr,"returns %s\n",G__valuemonitor(*result7,temp));
+    G__fprinterr("returns %s\n",G__valuemonitor(*result7,temp));
   }
 #endif
   if(G__RETURN_IMMEDIATE>=G__return) G__return=G__RETURN_NON;
@@ -381,12 +381,12 @@ int hash; /* not use */
 #ifdef G__ASM_DBG
   if(G__asm_dbg||G__dispsource) {
     if(bytecode->ifunc->tagnum>=0) 
-      fprintf(G__serr,"Exit bytecode function %s::%s restore inst=%lx stack=%lx\n"
+      G__fprinterr("Exit bytecode function %s::%s restore inst=%lx stack=%lx\n"
 	      ,G__struct.name[bytecode->ifunc->tagnum]
 	      ,bytecode->ifunc->funcname[bytecode->ifn]
 	      ,(long)store_asm_inst,(long)store_asm_stack);
     else
-      fprintf(G__serr,"Exit bytecode function %s restore inst=%lx stack=%lx\n"
+      G__fprinterr("Exit bytecode function %s restore inst=%lx stack=%lx\n"
 	      ,bytecode->ifunc->funcname[bytecode->ifn]
 	      ,(long)store_asm_inst,(long)store_asm_stack);
   }
@@ -522,12 +522,12 @@ int iexist;
   }
 #ifndef G__OLDIMPLEMENTATION841
   else if(G__asm_dbg) {
-    fprintf(G__serr,"!!!bytecode compilation %s not tried either because\n"
+    G__fprinterr("!!!bytecode compilation %s not tried either because\n"
 	    ,ifunc->funcname[iexist]);
-    fprintf(G__serr,"    function is longer than %d lines\n"
+    G__fprinterr("    function is longer than %d lines\n"
 	    ,G__ASM_BYTECODE_FUNC_LIMIT);
-    fprintf(G__serr,"    function returns class object or reference type\n");
-    fprintf(G__serr,"    function is K&R style\n");
+    G__fprinterr("    function returns class object or reference type\n");
+    G__fprinterr("    function is K&R style\n");
     G__printlinenum();
   }
 #endif
@@ -803,8 +803,8 @@ char *funcheader;   /* funcheader = 'funcname(' */
 #endif
 #ifndef G__OLDIMPLEMENTATION853
       if(strlen(funcheader+2)>G__MAXNAME-1) {
-	fprintf(G__serr
-		,"Limitation: Function name length overflow strlen(%s)>%d"
+	G__fprinterr(
+		"Limitation: Function name length overflow strlen(%s)>%d"
 		,funcheader+2,G__MAXNAME-1);
 	G__genericerror((char*)NULL);
 	funcheader[G__MAXNAME+1]=0;
@@ -845,8 +845,8 @@ char *funcheader;   /* funcheader = 'funcname(' */
     else {
 #ifndef G__OLDIMPLEMENTATION853
       if(strlen(funcheader+1)>G__MAXNAME-1) {
-	fprintf(G__serr
-		,"Limitation: Function name length overflow strlen(%s)>%d"
+	G__fprinterr(
+		"Limitation: Function name length overflow strlen(%s)>%d"
 		,funcheader+1,G__MAXNAME-1);
 	G__genericerror((char*)NULL);
 	funcheader[G__MAXNAME]=0;
@@ -873,8 +873,8 @@ char *funcheader;   /* funcheader = 'funcname(' */
     char *pt1;
 #ifndef G__OLDIMPLEMENTATION853
     if(strlen(funcheader)>G__MAXNAME-1) {
-      fprintf(G__serr
-	      ,"Limitation: Function name length overflow strlen(%s)>%d"
+      G__fprinterr(
+	      "Limitation: Function name length overflow strlen(%s)>%d"
 	      ,funcheader,G__MAXNAME-1);
       G__genericerror((char*)NULL);
       funcheader[G__MAXNAME-1]=0;
@@ -1159,7 +1159,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	 && strncmp(funcheader,"ClassDef",8)!=0
 #endif
 	 ) {
-	fprintf(G__serr,"Warning: Unknown type %s in function argument"
+	G__fprinterr("Warning: Unknown type %s in function argument"
 		,paraname);
 	G__printlinenum();
       }
@@ -1348,7 +1348,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
     if(G__tagdefining>=0) ++G__struct.isabstract[G__tagdefining];
 #ifndef G__OLDIMPLEMENTATION1232
     if('~'==G__p_ifunc->funcname[func_now][0]) {
-      fprintf(G__serr,"Warning: Pure virtual destructor may cause problem. Define as 'virtual %s() { }'"
+      G__fprinterr("Warning: Pure virtual destructor may cause problem. Define as 'virtual %s() { }'"
 	      ,G__p_ifunc->funcname[func_now]
 	      );
       G__printlinenum();
@@ -1674,7 +1674,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
 
   } /* of G__ifile.filenum<G__nfile */
   else {
-    fprintf(G__serr,"Limitation: Function can not be defined in a command line or a tempfile\n");
+    G__fprinterr("Limitation: Function can not be defined in a command line or a tempfile\n");
     G__genericerror("You need to write it in a source file");
   }
   
@@ -1796,8 +1796,8 @@ int func_now;
   while(')'!=c) {
 #ifndef G__OLDIMPLEMENTATION824
     if(G__MAXFUNCPARA==iin) {
-      fprintf(G__serr
-	     ,"Limitation: cint can not accept more than %d function arguments"
+      G__fprinterr(
+	     "Limitation: cint can not accept more than %d function arguments"
 	      ,G__MAXFUNCPARA);
       G__printlinenum();
       G__fignorestream(")");
@@ -1967,8 +1967,8 @@ int func_now;
 	    type='i'+isunsigned;
 #ifndef G__OLDIMPLEMENTATION1126
 	    if(!isdigit(paraname[0]) && 0==isunsigned) {
-	      fprintf(G__serr
-            ,"Warning: Unknown type '%s' in function argument handled as int"
+	      G__fprinterr(
+            "Warning: Unknown type '%s' in function argument handled as int"
 		      ,paraname);
 	      G__printlinenum();
 	    }
@@ -2768,9 +2768,9 @@ int formal_isconst;
 	if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
 	  if(G__asm_dbg) {
-	    fprintf(G__serr,"%3x: ALLOCTEMP %s\n"
+	    G__fprinterr("%3x: ALLOCTEMP %s\n"
 		    ,G__asm_cp,G__struct.name[formal_tagnum]);
-	    fprintf(G__serr,"%3x: SETTEMP\n",G__asm_cp+2);
+	    G__fprinterr("%3x: SETTEMP\n",G__asm_cp+2);
 	  }
 #endif
 	  G__asm_inst[G__asm_cp] = G__ALLOCTEMP;
@@ -2803,7 +2803,7 @@ int formal_isconst;
       sprintf(conv,"%s(%s)",G__struct.name[formal_tagnum],arg1);
 
       if(G__dispsource) {
-	fprintf(G__serr, "!!!Trying implicit conversion %s,%d\n"
+	G__fprinterr( "!!!Trying implicit conversion %s,%d\n"
 		,conv,G__templevel);
       }
 
@@ -2821,7 +2821,7 @@ int formal_isconst;
       if(G__asm_noverflow && rewind_arg) {
 	rewindflag=1;
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) fprintf(G__serr,"%3x: REWINDSTACK %d\n"
+	if(G__asm_dbg) G__fprinterr("%3x: REWINDSTACK %d\n"
 			       ,G__asm_cp,rewind_arg);
 #endif
 	G__asm_inst[G__asm_cp] = G__REWINDSTACK;
@@ -2843,7 +2843,7 @@ int formal_isconst;
 #ifdef G__ASM
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr,"%3x: STORETEMP\n",G__asm_cp);
+	    if(G__asm_dbg) G__fprinterr("%3x: STORETEMP\n",G__asm_cp);
 #endif
 	    G__asm_inst[G__asm_cp]=G__STORETEMP;
 	    G__inc_cp_asm(1,0);
@@ -2873,7 +2873,7 @@ int formal_isconst;
 	if(match) {
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr,"%3x: POPTEMP\n",G__asm_cp);
+	    if(G__asm_dbg) G__fprinterr("%3x: POPTEMP\n",G__asm_cp);
 #endif
 	    G__asm_inst[G__asm_cp] = G__POPTEMP;
 	    G__asm_inst[G__asm_cp+1] = formal_tagnum;
@@ -2894,7 +2894,7 @@ int formal_isconst;
 	      }
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) 
-		fprintf(G__serr,"ALLOCTEMP,SETTEMP Cancelled %x\n",G__asm_cp);
+		G__fprinterr("ALLOCTEMP,SETTEMP Cancelled %x\n",G__asm_cp);
 #endif
 	    }
 	  }
@@ -2904,7 +2904,7 @@ int formal_isconst;
 	if(G__asm_noverflow) {
 	  if(match) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr,"%3x: POPTEMP\n",G__asm_cp);
+	    if(G__asm_dbg) G__fprinterr("%3x: POPTEMP\n",G__asm_cp);
 #endif
 	    G__asm_inst[G__asm_cp] = G__POPTEMP;
 	    G__asm_inst[G__asm_cp+1] = formal_tagnum;
@@ -2918,7 +2918,7 @@ int formal_isconst;
 	    }
 #ifdef G__ASM_DBG
 	    if(G__asm_dbg) 
-	      fprintf(G__serr,"ALLOCTEMP,SETTEMP Cancelled %x\n",G__asm_cp);
+	      G__fprinterr("ALLOCTEMP,SETTEMP Cancelled %x\n",G__asm_cp);
 #endif
 	  }
 	}
@@ -2944,7 +2944,7 @@ int formal_isconst;
 	   -1 != (baseoffset=G__ispublicbase(formal_tagnum,param_tagnum))) {
 #endif
 	  if(G__dispsource) {
-	    fprintf(G__serr, "!!!Implicit conversion from %s to base %s\n"
+	    G__fprinterr( "!!!Implicit conversion from %s to base %s\n"
 		    ,G__struct.name[param_tagnum]
 		    ,G__struct.name[formal_tagnum]);
 	  }
@@ -2955,7 +2955,7 @@ int formal_isconst;
 #ifdef G__ASM
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr,"%3x: BASECONV %d %d\n"
+	    if(G__asm_dbg) G__fprinterr("%3x: BASECONV %d %d\n"
 				   ,G__asm_cp,formal_tagnum,baseoffset);
 #endif
 	    G__asm_inst[G__asm_cp] = G__BASECONV;
@@ -2965,7 +2965,7 @@ int formal_isconst;
 	    if(rewind_arg) {
 	      rewindflag=1;
 #ifdef G__ASM_DBG
-	      if(G__asm_dbg) fprintf(G__serr,"%3x: REWINDSTACK %d\n"
+	      if(G__asm_dbg) G__fprinterr("%3x: REWINDSTACK %d\n"
 				     ,G__asm_cp,-rewind_arg);
 #endif
 	      G__asm_inst[G__asm_cp] = G__REWINDSTACK;
@@ -2985,7 +2985,7 @@ int formal_isconst;
 	}
 	else { /* all conversion failed */
 	  if(G__dispsource) {
-	    fprintf(G__serr,
+	    G__fprinterr(
 		    "!!!Implicit conversion %s,%d tried, but failed\n"
 		    ,conv,G__templevel);
 	  }
@@ -2993,7 +2993,7 @@ int formal_isconst;
 #ifdef G__ASM
 	  if(rewindflag) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr,"REWINDSTACK cancelled\n");
+	    if(G__asm_dbg) G__fprinterr("REWINDSTACK cancelled\n");
 #endif
 	    G__inc_cp_asm(-2,0);
 	  }
@@ -3003,7 +3003,7 @@ int formal_isconst;
 
 	/* all conversion failed */
 	if(G__dispsource) {
-	  fprintf(G__serr,
+	  G__fprinterr(
 		  "!!!Implicit conversion %s,%d tried, but failed\n"
 		  ,conv,G__templevel);
 	}
@@ -3011,7 +3011,7 @@ int formal_isconst;
 #ifdef G__ASM
 	if(rewindflag) {
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) fprintf(G__serr,"REWINDSTACK cancelled\n");
+	  if(G__asm_dbg) G__fprinterr("REWINDSTACK cancelled\n");
 #endif
 	  G__inc_cp_asm(-2,0);
 	}
@@ -3022,11 +3022,11 @@ int formal_isconst;
       else { /* match==1, conversion successful */
 	if(G__dispsource) {
 	  if(G__p_tempbuf->obj.obj.i<0) 
-	    fprintf(G__serr,
+	    G__fprinterr(
 	      "!!!Create temp object (%s)(%ld),%d for implicit conversion\n"
 		    ,conv ,G__p_tempbuf->obj.obj.i ,G__templevel);
 	  else
-	    fprintf(G__serr,
+	    G__fprinterr(
 		  "!!!Create temp object (%s)%ld,%d for implicit conversion\n"
 		    ,conv ,G__p_tempbuf->obj.obj.i ,G__templevel);
 	}
@@ -3034,7 +3034,7 @@ int formal_isconst;
 	if(G__asm_noverflow && rewind_arg) {
 	  rewindflag=1;
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) fprintf(G__serr,"%3x: REWINDSTACK %d\n"
+	  if(G__asm_dbg) G__fprinterr("%3x: REWINDSTACK %d\n"
 				 ,G__asm_cp,-rewind_arg);
 #endif
 	  G__asm_inst[G__asm_cp] = G__REWINDSTACK;
@@ -3062,7 +3062,7 @@ int formal_isconst;
 	if(rewind_arg) {
 	  rewindflag=1;
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) fprintf(G__serr,"%3x: REWINDSTACK %d\n"
+	  if(G__asm_dbg) G__fprinterr("%3x: REWINDSTACK %d\n"
 			         ,G__asm_cp,rewind_arg);
 #endif
 	  G__asm_inst[G__asm_cp] = G__REWINDSTACK;
@@ -3074,8 +3074,8 @@ int formal_isconst;
         G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
         if(G__asm_dbg) {
-          fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-          fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+          G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp-2);
+          G__fprinterr("%3x: SETSTROS\n",G__asm_cp-1);
         }
 #endif
       }
@@ -3103,7 +3103,7 @@ int formal_isconst;
         if(rewind_arg) {
 	  rewindflag=1;
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) fprintf(G__serr,"%3x: REWINDSTACK %d\n"
+	  if(G__asm_dbg) G__fprinterr("%3x: REWINDSTACK %d\n"
 	 		         ,G__asm_cp,-rewind_arg);
 #endif
 	  G__asm_inst[G__asm_cp] = G__REWINDSTACK;
@@ -3113,7 +3113,7 @@ int formal_isconst;
         G__asm_inst[G__asm_cp] = G__POPSTROS;
         G__inc_cp_asm(1,0);
 #ifdef G__ASM_DBG
-        if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp-1);
+        if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp-1);
 #endif
       }
 #endif
@@ -3124,13 +3124,13 @@ int formal_isconst;
       if(match) *param = reg;
       else if(rewindflag) {
 #ifdef G__ASM_DBG
-        if(G__asm_dbg) fprintf(G__serr,"REWINDSTACK~ cancelled\n");
+        if(G__asm_dbg) G__fprinterr("REWINDSTACK~ cancelled\n");
 #endif
         G__inc_cp_asm(-7,0);
       }
       else {
 #ifdef G__ASM_DBG
-        if(G__asm_dbg) fprintf(G__serr,"PUSHSTROS~ cancelled\n");
+        if(G__asm_dbg) G__fprinterr("PUSHSTROS~ cancelled\n");
 #endif
         G__inc_cp_asm(-3,0);
       }
@@ -3142,7 +3142,7 @@ int formal_isconst;
 /* #ifdef G__DEBUG */
       if(recursive&&G__dispsource) {
 	G__valuemonitor(*param,arg1);
-	fprintf(G__serr ,"!!!Recursive implicit conversion %s(%s) rejected\n"
+	G__fprinterr("!!!Recursive implicit conversion %s(%s) rejected\n"
 		,G__struct.name[formal_tagnum],arg1);
       }
 /* #endif */
@@ -3786,9 +3786,9 @@ struct G__funclist *pmatch;
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
 	    if(G__asm_dbg) {
-	      fprintf(G__serr,"%3x: ALLOCTEMP %s\n"
+	      G__fprinterr("%3x: ALLOCTEMP %s\n"
 		      ,G__asm_cp,G__struct.name[formal_tagnum]);
-	      fprintf(G__serr,"%3x: SETTEMP\n",G__asm_cp+2);
+	      G__fprinterr("%3x: SETTEMP\n",G__asm_cp+2);
 	    }
 #endif
 	    G__asm_inst[G__asm_cp] = G__ALLOCTEMP;
@@ -3821,7 +3821,7 @@ struct G__funclist *pmatch;
 	sprintf(conv,"%s(%s)",G__struct.name[formal_tagnum],arg1);
 	
 	if(G__dispsource) {
-	  fprintf(G__serr, "!!!Trying implicit conversion %s,%d\n"
+	  G__fprinterr( "!!!Trying implicit conversion %s,%d\n"
 		  ,conv,G__templevel);
 	}
 	
@@ -3839,7 +3839,7 @@ struct G__funclist *pmatch;
 	if(G__asm_noverflow && rewind_arg) {
 	  rewindflag=1;
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) fprintf(G__serr,"%3x: REWINDSTACK %d\n"
+	  if(G__asm_dbg) G__fprinterr("%3x: REWINDSTACK %d\n"
 				 ,G__asm_cp,rewind_arg);
 #endif
 	  G__asm_inst[G__asm_cp] = G__REWINDSTACK;
@@ -3861,7 +3861,7 @@ struct G__funclist *pmatch;
 #ifdef G__ASM
 	    if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	      if(G__asm_dbg) fprintf(G__serr,"%3x: STORETEMP\n",G__asm_cp);
+	      if(G__asm_dbg) G__fprinterr("%3x: STORETEMP\n",G__asm_cp);
 #endif
 	      G__asm_inst[G__asm_cp]=G__STORETEMP;
 	      G__inc_cp_asm(1,0);
@@ -3894,7 +3894,7 @@ struct G__funclist *pmatch;
 	  if(match) {
 	    if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	      if(G__asm_dbg) fprintf(G__serr,"%3x: POPTEMP\n",G__asm_cp);
+	      if(G__asm_dbg) G__fprinterr("%3x: POPTEMP\n",G__asm_cp);
 #endif
 	      G__asm_inst[G__asm_cp] = G__POPTEMP;
 	      G__asm_inst[G__asm_cp+1] = formal_tagnum;
@@ -3917,8 +3917,8 @@ struct G__funclist *pmatch;
 	      G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) {
-		fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-		fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+		G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp-2);
+		G__fprinterr("%3x: SETSTROS\n",G__asm_cp-1);
 	      }
 #endif
 	    }
@@ -3936,7 +3936,7 @@ struct G__funclist *pmatch;
 		}
 #ifdef G__ASM_DBG
 		if(G__asm_dbg) 
-		  fprintf(G__serr,"ALLOCTEMP,SETTEMP Cancelled %x\n",G__asm_cp);
+		  G__fprinterr("ALLOCTEMP,SETTEMP Cancelled %x\n",G__asm_cp);
 #endif
 	      }
 	    }
@@ -3946,7 +3946,7 @@ struct G__funclist *pmatch;
 	      G__asm_inst[G__asm_cp] = G__POPSTROS;
 	      G__inc_cp_asm(1,0);
 #ifdef G__ASM_DBG
-	      if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp-1);
+	      if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp-1);
 #endif
 	    }
 #endif
@@ -3957,7 +3957,7 @@ struct G__funclist *pmatch;
 	  if(G__asm_noverflow) {
 	    if(match) {
 #ifdef G__ASM_DBG
-	      if(G__asm_dbg) fprintf(G__serr,"%3x: POPTEMP\n",G__asm_cp);
+	      if(G__asm_dbg) G__fprinterr("%3x: POPTEMP\n",G__asm_cp);
 #endif
 	      G__asm_inst[G__asm_cp] = G__POPTEMP;
 	      G__asm_inst[G__asm_cp+1] = formal_tagnum;
@@ -3971,7 +3971,7 @@ struct G__funclist *pmatch;
 	      }
 #ifdef G__ASM_DBG
 	    if(G__asm_dbg) 
-	      fprintf(G__serr,"ALLOCTEMP,SETTEMP Cancelled %x\n",G__asm_cp);
+	      G__fprinterr("ALLOCTEMP,SETTEMP Cancelled %x\n",G__asm_cp);
 #endif
 	    }
 	  }
@@ -3997,7 +3997,7 @@ struct G__funclist *pmatch;
 	     -1 != (baseoffset=G__ispublicbase(formal_tagnum,param_tagnum))) {
 #endif
 	    if(G__dispsource) {
-	      fprintf(G__serr, "!!!Implicit conversion from %s to base %s\n"
+	      G__fprinterr( "!!!Implicit conversion from %s to base %s\n"
 		      ,G__struct.name[param_tagnum]
 		      ,G__struct.name[formal_tagnum]);
 	    }
@@ -4008,7 +4008,7 @@ struct G__funclist *pmatch;
 #ifdef G__ASM
 	    if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	      if(G__asm_dbg) fprintf(G__serr,"%3x: BASECONV %d %d\n"
+	      if(G__asm_dbg) G__fprinterr("%3x: BASECONV %d %d\n"
 				   ,G__asm_cp,formal_tagnum,baseoffset);
 #endif
 	      G__asm_inst[G__asm_cp] = G__BASECONV;
@@ -4018,7 +4018,7 @@ struct G__funclist *pmatch;
 	      if(rewind_arg) {
 		rewindflag=1;
 #ifdef G__ASM_DBG
-		if(G__asm_dbg) fprintf(G__serr,"%3x: REWINDSTACK %d\n"
+		if(G__asm_dbg) G__fprinterr("%3x: REWINDSTACK %d\n"
 				       ,G__asm_cp,-rewind_arg);
 #endif
 		G__asm_inst[G__asm_cp] = G__REWINDSTACK;
@@ -4038,7 +4038,7 @@ struct G__funclist *pmatch;
 					       }
 	  else { /* all conversion failed */
 	    if(G__dispsource) {
-	      fprintf(G__serr,
+	      G__fprinterr(
 		      "!!!Implicit conversion %s,%d tried, but failed\n"
 		      ,conv,G__templevel);
 	    }
@@ -4046,7 +4046,7 @@ struct G__funclist *pmatch;
 #ifdef G__ASM
 	    if(rewindflag) {
 #ifdef G__ASM_DBG
-	      if(G__asm_dbg) fprintf(G__serr,"REWINDSTACK cancelled\n");
+	      if(G__asm_dbg) G__fprinterr("REWINDSTACK cancelled\n");
 #endif
 	      G__inc_cp_asm(-2,0);
 	    }
@@ -4056,7 +4056,7 @@ struct G__funclist *pmatch;
 	  
 	  /* all conversion failed */
 	  if(G__dispsource) {
-	    fprintf(G__serr,
+	    G__fprinterr(
 		    "!!!Implicit conversion %s,%d tried, but failed\n"
 		    ,conv,G__templevel);
 	  }
@@ -4064,7 +4064,7 @@ struct G__funclist *pmatch;
 #ifdef G__ASM
 	  if(rewindflag) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr,"REWINDSTACK cancelled\n");
+	    if(G__asm_dbg) G__fprinterr("REWINDSTACK cancelled\n");
 #endif
 	    G__inc_cp_asm(-2,0);
 	  }
@@ -4075,11 +4075,11 @@ struct G__funclist *pmatch;
 	else { /* match==1, conversion successful */
 	  if(G__dispsource) {
 	    if(G__p_tempbuf->obj.obj.i<0) 
-	      fprintf(G__serr,
+	      G__fprinterr(
 		      "!!!Create temp object (%s)(%ld),%d for implicit conversion\n"
 		      ,conv ,G__p_tempbuf->obj.obj.i ,G__templevel);
 	    else
-	      fprintf(G__serr,
+	      G__fprinterr(
 		      "!!!Create temp object (%s)%ld,%d for implicit conversion\n"
 		      ,conv ,G__p_tempbuf->obj.obj.i ,G__templevel);
 	  }
@@ -4087,7 +4087,7 @@ struct G__funclist *pmatch;
 	  if(G__asm_noverflow && rewind_arg) {
 	    rewindflag=1;
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr,"%3x: REWINDSTACK %d\n"
+	    if(G__asm_dbg) G__fprinterr("%3x: REWINDSTACK %d\n"
 				   ,G__asm_cp,-rewind_arg);
 #endif
 	    G__asm_inst[G__asm_cp] = G__REWINDSTACK;
@@ -4115,7 +4115,7 @@ struct G__funclist *pmatch;
 	  if(rewind_arg) {
 	    rewindflag=1;
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr,"%3x: REWINDSTACK %d\n"
+	    if(G__asm_dbg) G__fprinterr("%3x: REWINDSTACK %d\n"
 				   ,G__asm_cp,rewind_arg);
 #endif
 	    G__asm_inst[G__asm_cp] = G__REWINDSTACK;
@@ -4127,8 +4127,8 @@ struct G__funclist *pmatch;
 	  G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
 	  if(G__asm_dbg) {
-	    fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	    fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+	    G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp-2);
+	    G__fprinterr("%3x: SETSTROS\n",G__asm_cp-1);
 	  }
 #endif
 	}
@@ -4156,7 +4156,7 @@ struct G__funclist *pmatch;
 	  if(rewind_arg) {
 	    rewindflag=1;
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr,"%3x: REWINDSTACK %d\n"
+	    if(G__asm_dbg) G__fprinterr("%3x: REWINDSTACK %d\n"
 				   ,G__asm_cp,-rewind_arg);
 #endif
 	    G__asm_inst[G__asm_cp] = G__REWINDSTACK;
@@ -4166,7 +4166,7 @@ struct G__funclist *pmatch;
 	  G__asm_inst[G__asm_cp] = G__POPSTROS;
 	  G__inc_cp_asm(1,0);
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp-1);
+	  if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp-1);
 #endif
 	}
 #endif
@@ -4177,13 +4177,13 @@ struct G__funclist *pmatch;
 	if(match) *param = reg;
 	else if(rewindflag) {
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) fprintf(G__serr,"REWINDSTACK~ cancelled\n");
+	  if(G__asm_dbg) G__fprinterr("REWINDSTACK~ cancelled\n");
 #endif
 	  G__inc_cp_asm(-7,0);
 	}
 	else {
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) fprintf(G__serr,"PUSHSTROS~ cancelled\n");
+	  if(G__asm_dbg) G__fprinterr("PUSHSTROS~ cancelled\n");
 #endif
 	  G__inc_cp_asm(-3,0);
       }
@@ -4195,7 +4195,7 @@ struct G__funclist *pmatch;
 	/* #ifdef G__DEBUG */
 	if(recursive&&G__dispsource) {
 	  G__valuemonitor(*param,arg1);
-	  fprintf(G__serr ,"!!!Recursive implicit conversion %s(%s) rejected\n"
+	  G__fprinterr("!!!Recursive implicit conversion %s(%s) rejected\n"
 		  ,G__struct.name[formal_tagnum],arg1);
 	}
 	/* #endif */
@@ -4263,7 +4263,7 @@ struct G__funclist *pmatch;
 	    if(G__asm_noverflow) {
 	      if(rewind_arg && baseoffset) {
 #ifdef G__ASM_DBG
-		if(G__asm_dbg) fprintf(G__serr,"%3x: REWINDSTACK %d\n"
+		if(G__asm_dbg) G__fprinterr("%3x: REWINDSTACK %d\n"
 				       ,G__asm_cp,rewind_arg);
 #endif
 		G__asm_inst[G__asm_cp]=G__REWINDSTACK; 
@@ -4271,7 +4271,7 @@ struct G__funclist *pmatch;
 		G__inc_cp_asm(2,0);
 	      }
 #ifdef G__ASM_DBG
-	      if(G__asm_dbg) fprintf(G__serr,"%3x: BASECONV %d %d\n"
+	      if(G__asm_dbg) G__fprinterr("%3x: BASECONV %d %d\n"
 				     ,G__asm_cp,formal_tagnum,baseoffset);
 #endif
 	      G__asm_inst[G__asm_cp] = G__BASECONV;
@@ -4280,7 +4280,7 @@ struct G__funclist *pmatch;
 	      G__inc_cp_asm(3,0);
 	      if(rewind_arg && baseoffset) {
 #ifdef G__ASM_DBG
-		if(G__asm_dbg) fprintf(G__serr,"%3x: REWINDSTACK %d\n"
+		if(G__asm_dbg) G__fprinterr("%3x: REWINDSTACK %d\n"
 				       ,G__asm_cp,-rewind_arg);
 #endif
 		G__asm_inst[G__asm_cp] = G__REWINDSTACK;
@@ -4315,7 +4315,7 @@ struct G__funclist *pmatch;
 	  if(G__asm_noverflow) {
 	    if(rewind_arg && baseoffset) {
 #ifdef G__ASM_DBG
-	      if(G__asm_dbg) fprintf(G__serr,"%3x: REWINDSTACK %d\n"
+	      if(G__asm_dbg) G__fprinterr("%3x: REWINDSTACK %d\n"
 				     ,G__asm_cp,rewind_arg);
 #endif
 	      G__asm_inst[G__asm_cp]=G__REWINDSTACK; 
@@ -4323,7 +4323,7 @@ struct G__funclist *pmatch;
 	      G__inc_cp_asm(2,0);
 	    }
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr,"%3x: BASECONV %d %d\n"
+	    if(G__asm_dbg) G__fprinterr("%3x: BASECONV %d %d\n"
 				   ,G__asm_cp,formal_tagnum,baseoffset);
 #endif
 	    G__asm_inst[G__asm_cp] = G__BASECONV;
@@ -4332,7 +4332,7 @@ struct G__funclist *pmatch;
 	    G__inc_cp_asm(3,0);
 	    if(rewind_arg && baseoffset) {
 #ifdef G__ASM_DBG
-	      if(G__asm_dbg) fprintf(G__serr,"%3x: REWINDSTACK %d\n"
+	      if(G__asm_dbg) G__fprinterr("%3x: REWINDSTACK %d\n"
 				     ,G__asm_cp,-rewind_arg);
 #endif
 	      G__asm_inst[G__asm_cp] = G__REWINDSTACK;
@@ -4369,29 +4369,60 @@ char *funcname;
 struct G__param *libp;
 {
   int i;
-  if(-1!=scopetagnum) fprintf(fp,"%s::",G__fulltagname(scopetagnum,1));
-  fprintf(fp,"%s(",funcname);
-  for(i=0;i<libp->paran;i++) {
-    switch(libp->para[i].type) {
-    case 'd':
-    case 'f':
-      fprintf(fp,"%s",G__type2string(libp->para[i].type
-				     ,libp->para[i].tagnum
-				     ,libp->para[i].typenum
-				     ,0
-				     ,0));
-      break;
-    default:
-      fprintf(fp,"%s",G__type2string(libp->para[i].type
-				     ,libp->para[i].tagnum
-				     ,libp->para[i].typenum
-				     ,libp->para[i].obj.reftype.reftype
-				     ,0));
-      break;
+#ifndef G__OLDIMPLEMENTATION1485
+  if(G__serr==fp) {
+    if(-1!=scopetagnum) G__fprinterr("%s::",G__fulltagname(scopetagnum,1));
+    G__fprinterr("%s(",funcname);
+    for(i=0;i<libp->paran;i++) {
+      switch(libp->para[i].type) {
+      case 'd':
+      case 'f':
+	G__fprinterr("%s",G__type2string(libp->para[i].type
+				       ,libp->para[i].tagnum
+				       ,libp->para[i].typenum
+				       ,0
+				       ,0));
+	break;
+      default:
+	G__fprinterr("%s",G__type2string(libp->para[i].type
+				       ,libp->para[i].tagnum
+				       ,libp->para[i].typenum
+				       ,libp->para[i].obj.reftype.reftype
+				       ,0));
+	break;
+      }
+      if(i!=libp->paran-1) G__fprinterr(",");
     }
-    if(i!=libp->paran-1) fprintf(fp,",");
+    G__fprinterr(");\n");
   }
-  fprintf(fp,");\n");
+  else {
+#endif
+    if(-1!=scopetagnum) fprintf(fp,"%s::",G__fulltagname(scopetagnum,1));
+    fprintf(fp,"%s(",funcname);
+    for(i=0;i<libp->paran;i++) {
+      switch(libp->para[i].type) {
+      case 'd':
+      case 'f':
+	fprintf(fp,"%s",G__type2string(libp->para[i].type
+				       ,libp->para[i].tagnum
+				       ,libp->para[i].typenum
+				       ,0
+				       ,0));
+	break;
+      default:
+	fprintf(fp,"%s",G__type2string(libp->para[i].type
+				       ,libp->para[i].tagnum
+				       ,libp->para[i].typenum
+				       ,libp->para[i].obj.reftype.reftype
+				       ,0));
+	break;
+      }
+      if(i!=libp->paran-1) fprintf(fp,",");
+    }
+    fprintf(fp,");\n");
+#ifndef G__OLDIMPLEMENTATION1485
+  }
+#endif
 }
 
 /***********************************************************************
@@ -4406,30 +4437,62 @@ int ifn;
   int store_iscpp = G__iscpp;
   G__iscpp = 1;
   
-  if(ifunc->pentry[ifn]->filenum>=0) {
-    fprintf(fp,"%-10s%4d "
-		  ,G__stripfilename(G__srcfile[ifunc->pentry[ifn]->filenum].filename)
-		  ,ifunc->pentry[ifn]->line_number);
-  }
+#ifndef G__OLDIMPLEMENTATION1485
+  if(G__serr==fp) {
+    if(ifunc->pentry[ifn]->filenum>=0) {
+      G__fprinterr("%-10s%4d "
+	    ,G__stripfilename(G__srcfile[ifunc->pentry[ifn]->filenum].filename)
+	      ,ifunc->pentry[ifn]->line_number);
+    }
+    else {
+      G__fprinterr("%-10s%4d ","(compiled)",0);
+    }
+    G__fprinterr("%s ",G__type2string(ifunc->type[ifn]
+				    ,ifunc->p_tagtable[ifn]
+				    ,ifunc->p_typetable[ifn]
+				    ,ifunc->reftype[ifn]
+				    ,ifunc->isconst[ifn]));
+    if(-1!=ifunc->tagnum) G__fprinterr("%s::",G__fulltagname(ifunc->tagnum,1));
+    G__fprinterr("%s(",ifunc->funcname[ifn]);
+    for(i=0;i<ifunc->para_nu[ifn];i++) {
+      G__fprinterr("%s",G__type2string(ifunc->para_type[ifn][i]
+				     ,ifunc->para_p_tagtable[ifn][i]
+				     ,ifunc->para_p_typetable[ifn][i]
+				     ,ifunc->para_reftype[ifn][i]
+				     ,ifunc->para_isconst[ifn][i]));
+      if(i!=ifunc->para_nu[ifn]-1) G__fprinterr(",");
+    }
+    G__fprinterr(");\n");
+  } 
   else {
-    fprintf(fp,"%-10s%4d ","(compiled)",0);
+#endif
+    if(ifunc->pentry[ifn]->filenum>=0) {
+      fprintf(fp,"%-10s%4d "
+	    ,G__stripfilename(G__srcfile[ifunc->pentry[ifn]->filenum].filename)
+	      ,ifunc->pentry[ifn]->line_number);
+    }
+    else {
+      fprintf(fp,"%-10s%4d ","(compiled)",0);
+    }
+    fprintf(fp,"%s ",G__type2string(ifunc->type[ifn]
+				    ,ifunc->p_tagtable[ifn]
+				    ,ifunc->p_typetable[ifn]
+				    ,ifunc->reftype[ifn]
+				    ,ifunc->isconst[ifn]));
+    if(-1!=ifunc->tagnum) fprintf(fp,"%s::",G__fulltagname(ifunc->tagnum,1));
+    fprintf(fp,"%s(",ifunc->funcname[ifn]);
+    for(i=0;i<ifunc->para_nu[ifn];i++) {
+      fprintf(fp,"%s",G__type2string(ifunc->para_type[ifn][i]
+				     ,ifunc->para_p_tagtable[ifn][i]
+				     ,ifunc->para_p_typetable[ifn][i]
+				     ,ifunc->para_reftype[ifn][i]
+				     ,ifunc->para_isconst[ifn][i]));
+      if(i!=ifunc->para_nu[ifn]-1) fprintf(fp,",");
+    }
+    fprintf(fp,");\n");
+#ifndef G__OLDIMPLEMENTATION1485
   }
-  fprintf(fp,"%s ",G__type2string(ifunc->type[ifn]
-				  ,ifunc->p_tagtable[ifn]
-				  ,ifunc->p_typetable[ifn]
-				  ,ifunc->reftype[ifn]
-				  ,ifunc->isconst[ifn]));
-  if(-1!=ifunc->tagnum) fprintf(fp,"%s::",G__fulltagname(ifunc->tagnum,1));
-  fprintf(fp,"%s(",ifunc->funcname[ifn]);
-  for(i=0;i<ifunc->para_nu[ifn];i++) {
-    fprintf(fp,"%s",G__type2string(ifunc->para_type[ifn][i]
-				   ,ifunc->para_p_tagtable[ifn][i]
-				   ,ifunc->para_p_typetable[ifn][i]
-				   ,ifunc->para_reftype[ifn][i]
-				   ,ifunc->para_isconst[ifn][i]));
-    if(i!=ifunc->para_nu[ifn]-1) fprintf(fp,",");
-  }
-  fprintf(fp,");\n");
+#endif
 
   G__iscpp = store_iscpp;
 }
@@ -4444,14 +4507,14 @@ struct G__param *libp;
 struct G__funclist *funclist;
 int bestmatch;
 {
-  fprintf(G__serr,"Calling : ");
+  G__fprinterr("Calling : ");
   G__display_param(G__serr,scopetagnum,funcname,libp);
-  fprintf(G__serr,"Match rank: file     line  signature\n");
+  G__fprinterr("Match rank: file     line  signature\n");
   while(funclist) {
     struct G__ifunc_table *ifunc = funclist->ifunc; 
     int ifn = funclist->ifn;
-    if(bestmatch==funclist->rate) fprintf(G__serr,"* %8x ",funclist->rate);
-    else                          fprintf(G__serr,"  %8x ",funclist->rate);
+    if(bestmatch==funclist->rate) G__fprinterr("* %8x ",funclist->rate);
+    else                          G__fprinterr("  %8x ",funclist->rate);
     G__display_func(G__serr,ifunc,ifn);
     funclist = funclist->prev;
   }
@@ -4790,7 +4853,7 @@ int recursive;
 #endif
      ) {
     /* error, ambiguous overloading resolution */
-    fprintf(G__serr,"Error: Ambiguous overload resolution (%x,%d)"
+    G__fprinterr("Error: Ambiguous overload resolution (%x,%d)"
 	    ,bestmatch,ambiguous+1);
     G__genericerror((char*)NULL);
     G__display_ambiguous(scopetagnum,funcname,libp,funclist,bestmatch);
@@ -4815,9 +4878,9 @@ int recursive;
 #endif
      ) {
     /* no access right */
-    fprintf(G__serr,"Error: can not call private or protected function");
+    G__fprinterr("Error: can not call private or protected function");
     G__genericerror((char*)NULL);
-    fprintf(G__serr,"  ");
+    G__fprinterr("  ");
     G__display_func(G__serr,p_ifunc,*pifn);
     G__display_ambiguous(scopetagnum,funcname,libp,funclist,bestmatch);
     *pifn = -1;
@@ -5093,7 +5156,7 @@ int memfunc_flag;
 	    case 2: /* default parameter */
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) {
-		fprintf(G__serr," default%d %c tagnum%d %d : %c tagnum%d %d\n"
+		G__fprinterr(" default%d %c tagnum%d %d : %c tagnum%d %d\n"
 			,itemp
 			,p_ifunc->para_type[ifn][itemp]
 			,p_ifunc->para_p_tagtable[ifn][itemp]
@@ -5108,7 +5171,7 @@ int memfunc_flag;
 	    case 1: /* match this one, next parameter */
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) {
-		fprintf(G__serr," match%d %c tagnum%d %d : %c tagnum%d %d\n"
+		G__fprinterr(" match%d %c tagnum%d %d : %c tagnum%d %d\n"
 			,itemp
 			,p_ifunc->para_type[ifn][itemp]
 			,p_ifunc->para_p_tagtable[ifn][itemp]
@@ -5127,7 +5190,7 @@ int memfunc_flag;
 	    case 0: /* unmatch, next function */
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) {
-		fprintf(G__serr," unmatch%d %c tagnum%d %d : %c tagnum%d %d\n"
+		G__fprinterr(" unmatch%d %c tagnum%d %d : %c tagnum%d %d\n"
 			,itemp
 			,p_ifunc->para_type[ifn][itemp]
 			,p_ifunc->para_p_tagtable[ifn][itemp]
@@ -5221,9 +5284,9 @@ int memfunc_flag;
 #endif
      ) {
     if(-1==store_p_ifunc->tagnum) 
-      fprintf(G__serr,"Error: %s is private or protected",funcname);
+      G__fprinterr("Error: %s is private or protected",funcname);
     else
-      fprintf(G__serr,"Error: %s::%s is private or protected"
+      G__fprinterr("Error: %s::%s is private or protected"
 	      ,G__fulltagname(store_p_ifunc->tagnum,1),funcname);
     G__genericerror((char*)NULL);
     return(1);
@@ -5414,7 +5477,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifndef G__OLDIMPLEMENTATION851
       if(0==G__templatefunc(result7,funcname,libp,hash,funcmatch)) {
 	if(G__USERCONV==funcmatch) {
-	  fprintf(G__serr,"Error: %s() header declared but not defined"
+	  G__fprinterr("Error: %s() header declared but not defined"
 		  ,funcname);
 	  G__genericerror((char*)NULL);
 	  return(1);
@@ -5423,7 +5486,7 @@ asm_ifunc_start:   /* loop compilation execution label */
       }
       return(1);
 #else
-      fprintf(G__serr,"Error: %s() header declared but not defined",funcname);
+      G__fprinterr("Error: %s() header declared but not defined",funcname);
       G__genericerror((char*)NULL);
       return(1);
 #endif
@@ -5453,7 +5516,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifndef G__OLDIMPLEMENTATION1101
   if(memfunc_flag==G__CALLSTATICMEMFUNC && 0==G__store_struct_offset &&
      -1!=G__tagnum && 0==p_ifunc->staticalloc[ifn] && 0==G__no_exec) {
-    fprintf(G__serr,"Error: %s() Illegal non-static member function call"
+    G__fprinterr("Error: %s() Illegal non-static member function call"
 	    ,funcname);
     G__genericerror((char*)NULL);
     *result7 = G__null;
@@ -5470,7 +5533,7 @@ asm_ifunc_start:   /* loop compilation execution label */
      G__store_struct_offset!=store_inherit_offset) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      fprintf(G__serr,"%3x: ADDSTROS %ld\n"
+      G__fprinterr("%3x: ADDSTROS %ld\n"
 	      ,G__asm_cp,G__store_struct_offset-store_inherit_offset);
     }
 #endif
@@ -5497,7 +5560,7 @@ asm_ifunc_start:   /* loop compilation execution label */
        G__store_struct_offset!=store_inherit_offset) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg) 
-	fprintf(G__serr,"%3x: ADDSTROS %ld\n"
+	G__fprinterr("%3x: ADDSTROS %ld\n"
 		,G__asm_cp, -G__store_struct_offset+store_inherit_offset);
 #endif
       G__asm_inst[G__asm_cp]=G__ADDSTROS;
@@ -5516,7 +5579,7 @@ asm_ifunc_start:   /* loop compilation execution label */
    *******************************************************************/
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr ,"%3x: LD_IFUNC %s paran=%d\n"
+    if(G__asm_dbg) G__fprinterr("%3x: LD_IFUNC %s paran=%d\n"
 			   ,G__asm_cp,funcname,libp->paran);
 #endif
     G__asm_inst[G__asm_cp]=G__LD_IFUNC;
@@ -5531,7 +5594,7 @@ asm_ifunc_start:   /* loop compilation execution label */
     if(G__store_struct_offset && G__store_struct_offset!=store_inherit_offset){
 #ifdef G__ASM_DBG
       if(G__asm_dbg) 
-	fprintf(G__serr,"%3x: ADDSTROS %ld\n"
+	G__fprinterr("%3x: ADDSTROS %ld\n"
 		,G__asm_cp, -G__store_struct_offset+store_inherit_offset);
 #endif
       G__asm_inst[G__asm_cp]=G__ADDSTROS;
@@ -5642,7 +5705,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 #endif
       if(ifunc) {
 	if((FILE*)NULL==(FILE*)ifunc->pentry[iexist]->p) {
-	  fprintf(G__serr,"Error: virtual %s() header found but not defined",funcname);
+	  G__fprinterr("Error: virtual %s() header found but not defined",funcname);
 	  G__genericerror((char*)NULL);
 	  G__exec_memberfunc=store_exec_memberfunc;
 	  return(1);
@@ -5657,7 +5720,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 	}
       }
       else if(p_ifunc->ispurevirtual[ifn]) {
-	fprintf(G__serr,"Error: pure virtual %s() not defined",funcname);
+	G__fprinterr("Error: pure virtual %s() not defined",funcname);
 	G__genericerror((char*)NULL);
 	G__exec_memberfunc=store_exec_memberfunc;
 	return(1);
@@ -5755,7 +5818,7 @@ asm_ifunc_start:   /* loop compilation execution label */
    *******************************************************************/
   if(G__ASM_FUNC_COMPILE&G__asm_wholefunction) {
     if(G__asm_dbg) {
-      fprintf(G__serr,"!!!bytecode compilation %s start"
+      G__fprinterr("!!!bytecode compilation %s start"
 	      ,p_ifunc->funcname[ifn]);
       G__printlinenum();
     }
@@ -5821,7 +5884,7 @@ asm_ifunc_start:   /* loop compilation execution label */
       } 
       if(ifunc) {
 	if((FILE*)NULL==(FILE*)ifunc->pentry[iexist]->p) {
-	  fprintf(G__serr,"Error: virtual %s() header found but not defined",funcname);
+	  G__fprinterr("Error: virtual %s() header found but not defined",funcname);
 	  G__genericerror((char*)NULL);
 	  G__exec_memberfunc=store_exec_memberfunc;
 	  return(1);
@@ -5836,7 +5899,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 	}
       }
       else if(p_ifunc->ispurevirtual[ifn]) {
-	fprintf(G__serr,"Error: pure virtual %s() not defined",funcname);
+	G__fprinterr("Error: pure virtual %s() not defined",funcname);
 	G__genericerror((char*)NULL);
 	G__exec_memberfunc=store_exec_memberfunc;
 	return(1);
@@ -5879,11 +5942,11 @@ asm_ifunc_start:   /* loop compilation execution label */
     
     if(G__dispsource) {
 #ifndef G__FONS31
-      fprintf(G__serr,"!!!Create temp object (%s)0x%lx,%d for %s() return\n"
+      G__fprinterr("!!!Create temp object (%s)0x%lx,%d for %s() return\n"
 	      ,G__struct.name[p_ifunc->p_tagtable[ifn]]
 	      ,G__p_tempbuf->obj.obj.i ,G__templevel ,p_ifunc->funcname[ifn]);
 #else
-      fprintf(G__serr,"!!!Create temp object (%s)0x%x,%d for %s() return\n"
+      G__fprinterr("!!!Create temp object (%s)0x%x,%d for %s() return\n"
 	      ,G__struct.name[p_ifunc->p_tagtable[ifn]]
 	      ,G__p_tempbuf->obj.obj.i ,G__templevel ,p_ifunc->funcname[ifn]);
 #endif
@@ -5991,7 +6054,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 	||(strcmp(G__breakfile,G__ifile.name)==0)||(strcmp(G__breakfile,"")==0)
 	)&&((G__prerun!=0)||(G__no_exec==0))) {
       if(G__ifile.name&&G__ifile.name[0]) 
-	fprintf(G__serr,"\n# %s",G__ifile.name);
+	G__fprinterr("\n# %s",G__ifile.name);
 #else
     if((G__debug||G__break||G__step
 	||(strcmp(G__breakfile,G__ifile.name)==0)||(strcmp(G__breakfile,"")==0)
@@ -5999,11 +6062,11 @@ asm_ifunc_start:   /* loop compilation execution label */
        (G__disp_mask==0)){
 #endif
       if(-1!=p_ifunc->tagnum) {
-	fprintf(G__serr ,"\n%-5d%s::%s(" ,G__ifile.line_number
+	G__fprinterr("\n%-5d%s::%s(" ,G__ifile.line_number
 		,G__struct.name[p_ifunc->tagnum] ,funcname);
       }
       else {
-	fprintf(G__serr ,"\n%-5d%s(" ,G__ifile.line_number,funcname);
+	G__fprinterr("\n%-5d%s(" ,G__ifile.line_number,funcname);
       }
     }
   }
@@ -6166,8 +6229,8 @@ asm_ifunc_start:   /* loop compilation execution label */
 	 p_ifunc->para_default[ifn][ipara]) {
 #ifdef G__ASM_DBG
 	if(G__asm_dbg) {
-	  fprintf(G__serr,"%3x: ISDEFAULTPARA %x\n",G__asm_cp,G__asm_cp+4);
-	  fprintf(G__serr,"%3x: LD %ld %g\n",G__asm_cp+2
+	  G__fprinterr("%3x: ISDEFAULTPARA %x\n",G__asm_cp,G__asm_cp+4);
+	  G__fprinterr("%3x: LD %ld %g\n",G__asm_cp+2
 		  ,p_ifunc->para_default[ifn][ipara]->obj.i
 		  ,p_ifunc->para_default[ifn][ipara]->obj.d
 		  );
@@ -6226,7 +6289,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifdef G__SECURITY
   if((G__security&G__SECURE_STACK_DEPTH)&&
      G__max_stack_depth && G__templevel>G__max_stack_depth) {
-    fprintf(G__serr,"Error: Stack depth exceed %d",G__max_stack_depth);
+    G__fprinterr("Error: Stack depth exceed %d",G__max_stack_depth);
     G__genericerror((char*)NULL);
     G__return=G__RETURN_EXIT1;
   }
@@ -6301,7 +6364,7 @@ asm_ifunc_start:   /* loop compilation execution label */
    * Error if goto label not found
    **************************************************************/
   if(G__gotolabel[0]) {
-    fprintf(G__serr,"Error: Goto label '%s' not found in %s()"
+    G__fprinterr("Error: Goto label '%s' not found in %s()"
 	    ,G__gotolabel,funcname);
     G__genericerror((char*)NULL);
     G__gotolabel[0]='\0';
@@ -6347,7 +6410,7 @@ asm_ifunc_start:   /* loop compilation execution label */
        ***************************************************/
     case 'y': /* void */
       if(G__RETURN_NORMAL==G__return) {
-	fprintf(G__serr,"Warning: Return value of void %s() ignored"
+	G__fprinterr("Warning: Return value of void %s() ignored"
 		,p_ifunc->funcname[ifn]);
 	G__genericerror((char*)NULL);
       }
@@ -6431,8 +6494,8 @@ asm_ifunc_start:   /* loop compilation execution label */
 	  G__store_struct_offset=G__p_tempbuf->obj.obj.i;
 #endif
 	  if(G__dispsource) {
-	    fprintf(G__serr
-	    ,"\n!!!Calling copy/conversion constructor for return temp object 0x%lx.%s"
+	    G__fprinterr(
+	    "\n!!!Calling copy/conversion constructor for return temp object 0x%lx.%s"
 		    ,G__store_struct_offset
 		    ,temp);
 	  }
@@ -6446,8 +6509,8 @@ asm_ifunc_start:   /* loop compilation execution label */
 #endif
 	  G__store_struct_offset=0xffff;
 	  if(G__dispsource) {
-	    fprintf(G__serr
-	    ,"\n!!!Calling copy/conversion constructor for return temp object 0x%lx.%s"
+	    G__fprinterr(
+	    "\n!!!Calling copy/conversion constructor for return temp object 0x%lx.%s"
 		    ,G__store_struct_offset
 		    ,temp);
 	  }
@@ -6466,8 +6529,8 @@ asm_ifunc_start:   /* loop compilation execution label */
 	   * interface */
 #endif
 	  if(G__dispsource) {
-	    fprintf(G__serr
-		    ,"!!!Create temp object (%s)0x%lx,%d for %s() return\n"
+	    G__fprinterr(
+		    "!!!Create temp object (%s)0x%lx,%d for %s() return\n"
 		    ,G__struct.name[G__tagnum] ,G__p_tempbuf->obj.obj.i
 		    ,G__templevel ,p_ifunc->funcname[ifn]);
 	  }
@@ -6547,7 +6610,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 	
       }
       else {
-	fprintf(G__serr,"Error: Return type mismatch %s()"
+	G__fprinterr("Error: Return type mismatch %s()"
 		,p_ifunc->funcname[ifn]);
 	G__genericerror((char*)NULL);
       }
@@ -6592,7 +6655,7 @@ asm_ifunc_start:   /* loop compilation execution label */
          && 0==G__asm_wholefunction
 #endif
 	 ) {
-	fprintf(G__serr,"Error: Return type mismatch %s()"
+	G__fprinterr("Error: Return type mismatch %s()"
 		,p_ifunc->funcname[ifn]);
 	G__genericerror((char*)NULL);
 	break;
@@ -6663,9 +6726,9 @@ asm_ifunc_start:   /* loop compilation execution label */
       int pc=0;
       if(G__asm_dbg) {
 #ifdef G__ASM_DBG
-	fprintf(G__serr,"%x : RTN_FUNC",G__asm_cp);
+	G__fprinterr("%x : RTN_FUNC",G__asm_cp);
 #endif
-	fprintf(G__serr,"Bytecode compilation of %s successful"
+	G__fprinterr("Bytecode compilation of %s successful"
 		,p_ifunc->funcname[ifn]);
 	G__printlinenum();
       }
@@ -6706,8 +6769,8 @@ asm_ifunc_start:   /* loop compilation execution label */
       G__destroy(localvar,G__BYTECODELOCAL_VAR) ;
       free((void*)localvar);
       if(G__asm_dbg) {
-	fprintf(G__serr
-		,"Warning: Bytecode compilation of %s failed. Maybe slow"
+	G__fprinterr(
+		"Warning: Bytecode compilation of %s failed. Maybe slow"
 		,p_ifunc->funcname[ifn]);
 	G__printlinenum();
       }
@@ -6756,7 +6819,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 
 #ifndef G__OLDIMPLEMENTATION854
   if(G__dispsource && G__ifile.name && G__ifile.name[0]) 
-    fprintf(G__serr,"\n# %s   ",G__ifile.name);
+    G__fprinterr("\n# %s   ",G__ifile.name);
 #endif
   
   /* recover file pointer and fpos */
@@ -6765,7 +6828,7 @@ asm_ifunc_start:   /* loop compilation execution label */
   if(G__dispsource) {
     if((G__debug||G__break)&& ((G__prerun!=0)||(G__no_exec==0))&&
        (G__disp_mask==0)){
-      fprintf(G__serr,"\n");
+      G__fprinterr("\n");
     }
   }
   
@@ -7018,7 +7081,7 @@ int funcmatch;
 	    case 2: /* default parameter */
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) {
-		fprintf(G__serr," default%d %c tagnum%d %ld : %c tagnum%d %ld\n"
+		G__fprinterr(" default%d %c tagnum%d %ld : %c tagnum%d %ld\n"
 			,itemp
 			,p_ifunc->para_type[ifn][itemp]
 			,p_ifunc->para_p_tagtable[ifn][itemp]
@@ -7033,7 +7096,7 @@ int funcmatch;
 	    case 1: /* match this one, next parameter */
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) {
-		fprintf(G__serr," match%d %c tagnum%d %ld : %c tagnum%d %ld\n"
+		G__fprinterr(" match%d %c tagnum%d %ld : %c tagnum%d %ld\n"
 			,itemp
 			,p_ifunc->para_type[ifn][itemp]
 			,p_ifunc->para_p_tagtable[ifn][itemp]
@@ -7052,7 +7115,7 @@ int funcmatch;
 	    case 0: /* unmatch, next function */
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) {
-		fprintf(G__serr," unmatch%d %c tagnum%d %ld : %c tagnum%d %ld\n"
+		G__fprinterr(" unmatch%d %c tagnum%d %ld : %c tagnum%d %ld\n"
 			,itemp
 			,p_ifunc->para_type[ifn][itemp]
 			,p_ifunc->para_p_tagtable[ifn][itemp]

@@ -158,7 +158,7 @@ int var_type;
 #ifdef G__ASM
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) fprintf(G__serr,"%3x: TOPVALUE\n",G__asm_cp);
+      if(G__asm_dbg) G__fprinterr("%3x: TOPVALUE\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp]=G__TOPVALUE;
       G__inc_cp_asm(1,0);
@@ -218,7 +218,7 @@ G__value p;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr,"%3x: TOVALUE\n",G__asm_cp);
+    if(G__asm_dbg) G__fprinterr("%3x: TOVALUE\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__TOVALUE;
 #ifndef G__OLDIMPLEMENTATION1401
@@ -408,9 +408,9 @@ G__value p;
 	G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
 	if(G__asm_dbg) {
-	  fprintf(G__serr,"TOVALUE cancelled\n");
-	  fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	  fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+	  G__fprinterr("TOVALUE cancelled\n");
+	  G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp-2);
+	  G__fprinterr("%3x: SETSTROS\n",G__asm_cp-1);
 	}
 #endif
       }
@@ -427,7 +427,7 @@ G__value p;
 	G__asm_inst[G__asm_cp] = G__POPSTROS;
 	G__inc_cp_asm(1,0);
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp-1);
+	if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp-1);
 #endif
       }
 #endif
@@ -457,7 +457,7 @@ G__value *p,result;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr,"%3x: LETVVAL\n",G__asm_cp);
+    if(G__asm_dbg) G__fprinterr("%3x: LETVVAL\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__LETVVAL;
     G__inc_cp_asm(1,0);
@@ -499,7 +499,7 @@ G__value *p,result;
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
-      fprintf(G__serr,"%3x: LETPVAL\n",G__asm_cp);
+      G__fprinterr("%3x: LETPVAL\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__LETPVAL;
     G__inc_cp_asm(1,0);

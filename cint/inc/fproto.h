@@ -738,11 +738,17 @@ struct G__ConstStringList* G__AddConstStringList G__P((struct G__ConstStringList
 void G__DeleteConstStringList G__P((struct G__ConstStringList* current));
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1485
+int G__fprinterr G__P((char* fmt,...));
+int G__fputerr G__P((int c));
+#endif
+
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* __CINT__ */
+
 
 #endif /* G__FPROTO_H */
 

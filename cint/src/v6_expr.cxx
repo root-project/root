@@ -248,7 +248,7 @@ char *ebuf;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp);
+    if(G__asm_dbg) G__fprinterr("%3x: CNDJMP assigned later\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__CNDJMP;
     ppointer = G__asm_cp+1;
@@ -266,8 +266,8 @@ char *ebuf;
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	fprintf(G__serr,"%3x: JMP assigned later\n" ,G__asm_cp);
-	fprintf(G__serr,"  CNDJMP assigned %x\n" ,G__asm_cp+2);
+	G__fprinterr("%3x: JMP assigned later\n" ,G__asm_cp);
+	G__fprinterr("  CNDJMP assigned %x\n" ,G__asm_cp+2);
       }
 #endif
       G__asm_inst[G__asm_cp]=G__JMP;
@@ -294,8 +294,8 @@ char *ebuf;
       G__no_exec_compile=store_no_exec_compile;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	fprintf(G__serr,"%3x: JMP assigned later\n" ,G__asm_cp);
-	fprintf(G__serr,"  CNDJMP assigned %x\n" ,G__asm_cp+2);
+	G__fprinterr("%3x: JMP assigned later\n" ,G__asm_cp);
+	G__fprinterr("  CNDJMP assigned %x\n" ,G__asm_cp+2);
       }
 #endif
       G__asm_inst[G__asm_cp]=G__JMP;
@@ -314,7 +314,7 @@ char *ebuf;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr,"  JMP assigned %x\n" ,G__asm_cp);
+    if(G__asm_dbg) G__fprinterr("  JMP assigned %x\n" ,G__asm_cp);
 #endif
     G__asm_inst[ppointer] = G__asm_cp;
 #ifndef G__OLDIMPLEMENTATION599
@@ -660,14 +660,14 @@ int lenbuf;
         if('u'!=vstack[sp-1].type) {                                  \
 	  store_no_exec_compile_and[pp_and] = G__no_exec_compile;     \
 	  if(!G__no_exec_compile && !G__int(vstack[sp-1])) {          \
-            if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile set\n"); \
+            if(G__asm_dbg) G__fprinterr("    G__no_exec_compile set\n"); \
             G__no_exec_compile = 1;                                   \
             vtmp_and = vstack[sp-1];                                  \
 	  }                                                           \
 	  if(G__asm_noverflow) {                                      \
 	    if(G__asm_dbg) {                                          \
-	      fprintf(G__serr,"%3x: PUSHCPY\n",G__asm_cp);            \
-	      fprintf(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp+1); \
+	      G__fprinterr("%3x: PUSHCPY\n",G__asm_cp);            \
+	      G__fprinterr("%3x: CNDJMP assigned later\n",G__asm_cp+1); \
 	    }                                                         \
 	    G__asm_inst[G__asm_cp]=G__PUSHCPY;                        \
 	    G__asm_inst[G__asm_cp+1]=G__CNDJMP;                       \
@@ -681,16 +681,16 @@ int lenbuf;
         if('u'!=vstack[sp-1].type) {                                  \
 	  store_no_exec_compile_or[pp_or] = G__no_exec_compile;       \
 	  if(!G__no_exec_compile && G__int(vstack[sp-1])) {           \
-            if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile set\n"); \
+            if(G__asm_dbg) G__fprinterr("    G__no_exec_compile set\n"); \
             G__no_exec_compile = 1;                                   \
             vstack[sp-1] = G__one;                                    \
             vtmp_or = vstack[sp-1];                                   \
 	  }                                                           \
 	  if(G__asm_noverflow) {                                      \
 	    if(G__asm_dbg) {                                          \
-	      fprintf(G__serr,"%3x: BOOL\n",G__asm_cp);               \
-	      fprintf(G__serr,"%3x: PUSHCPY\n",G__asm_cp+1);          \
-	      fprintf(G__serr,"%3x: CND1JMP assigned later\n",G__asm_cp+2); \
+	      G__fprinterr("%3x: BOOL\n",G__asm_cp);               \
+	      G__fprinterr("%3x: PUSHCPY\n",G__asm_cp+1);          \
+	      G__fprinterr("%3x: CND1JMP assigned later\n",G__asm_cp+2); \
 	    }                                                         \
 	    G__asm_inst[G__asm_cp]=G__BOOL;                           \
 	    G__asm_inst[G__asm_cp+1]=G__PUSHCPY;                      \
@@ -706,14 +706,14 @@ int lenbuf;
 #define G__SUSPEND_ANDOPR                                             \
 	  store_no_exec_compile_and[pp_and] = G__no_exec_compile;     \
 	  if(!G__no_exec_compile && !G__int(vstack[sp-1])) {          \
-            if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile set\n"); \
+            if(G__asm_dbg) G__fprinterr("    G__no_exec_compile set\n"); \
             G__no_exec_compile = 1;                                   \
             vtmp_and = vstack[sp-1];                                  \
 	  }                                                           \
 	  if(G__asm_noverflow) {                                      \
 	    if(G__asm_dbg) {                                          \
-	      fprintf(G__serr,"%3x: PUSHCPY\n",G__asm_cp);            \
-	      fprintf(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp+1); \
+	      G__fprinterr("%3x: PUSHCPY\n",G__asm_cp);            \
+	      G__fprinterr("%3x: CNDJMP assigned later\n",G__asm_cp+1); \
 	    }                                                         \
 	    G__asm_inst[G__asm_cp]=G__PUSHCPY;                        \
 	    G__asm_inst[G__asm_cp+1]=G__CNDJMP;                       \
@@ -725,14 +725,14 @@ int lenbuf;
 #define G__SUSPEND_OROPR                                              \
 	  store_no_exec_compile_or[pp_or] = G__no_exec_compile;       \
 	  if(!G__no_exec_compile && G__int(vstack[sp-1])) {           \
-            if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile set\n"); \
+            if(G__asm_dbg) G__fprinterr("    G__no_exec_compile set\n"); \
             G__no_exec_compile = 1;                                   \
             vtmp_or = vstack[sp-1];                                   \
 	  }                                                           \
 	  if(G__asm_noverflow) {                                      \
 	    if(G__asm_dbg) {                                          \
-	      fprintf(G__serr,"%3x: PUSHCPY\n",G__asm_cp);            \
-	      fprintf(G__serr,"%3x: CND1JMP assigned later\n",G__asm_cp+1); \
+	      G__fprinterr("%3x: PUSHCPY\n",G__asm_cp);            \
+	      G__fprinterr("%3x: CND1JMP assigned later\n",G__asm_cp+1); \
 	    }                                                         \
 	    G__asm_inst[G__asm_cp]=G__PUSHCPY;                        \
 	    G__asm_inst[G__asm_cp+1]=G__CND1JMP;                      \
@@ -745,7 +745,7 @@ int lenbuf;
 
 #define G__RESTORE_NOEXEC_ANDOPR                                      \
   if(pp_and) {                                                        \
-    if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile reset %d\n"\
+    if(G__asm_dbg) G__fprinterr("    G__no_exec_compile reset %d\n"\
                      ,store_no_exec_compile_and[0]);                  \
     if(!store_no_exec_compile_and[0]&&G__no_exec_compile)             \
       vstack[sp-1] = vtmp_and;                                        \
@@ -756,14 +756,14 @@ int lenbuf;
   if(G__asm_noverflow) {                                              \
     while(pp_and) {                                                   \
       if(G__asm_dbg)                                                  \
-          fprintf(G__serr,"     CNDJMP assigned %x\n",G__asm_cp);     \
+          G__fprinterr("     CNDJMP assigned %x\n",G__asm_cp);     \
       G__asm_inst[ppointer_and[--pp_and]] = G__asm_cp;                \
     }                                                                 \
   }
 
 #define G__RESTORE_NOEXEC_OROPR                                       \
   if(pp_or) {                                                         \
-    if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile reset %d\n"\
+    if(G__asm_dbg) G__fprinterr("    G__no_exec_compile reset %d\n"\
                      ,store_no_exec_compile_or[0]);                   \
     if(!store_no_exec_compile_or[0]&&G__no_exec_compile)              \
       vstack[sp-1] = vtmp_or;                                         \
@@ -774,7 +774,7 @@ int lenbuf;
   if(G__asm_noverflow) {                                              \
     while(pp_or) {                                                    \
       if(G__asm_dbg)                                                  \
-          fprintf(G__serr,"     CND1JMP assigned %x\n",G__asm_cp);    \
+          G__fprinterr("     CND1JMP assigned %x\n",G__asm_cp);    \
       G__asm_inst[ppointer_or[--pp_or]] = G__asm_cp;                  \
     }                                                                 \
   }
@@ -1566,10 +1566,10 @@ char *expression2;
       }
       else {
 #ifndef G__FONS31
-	fprintf(G__serr ,"Error: G__power() expression %s ",expression2 );
+	G__fprinterr("Error: G__power() expression %s ",expression2 );
 	G__genericerror((char*)NULL);
 #else
-	fprintf(G__serr ,"Error: G__power() expression %s FILE:%s LINE:%d\n"
+	G__fprinterr("Error: G__power() expression %s FILE:%s LINE:%d\n"
 		,expression2 ,G__ifile.name,G__ifile.line_number);
 #endif
 	return(G__null);
@@ -1716,11 +1716,11 @@ char *item;
 	 **************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-	if(G__asm_dbg) fprintf(G__serr,"%3x: LD %ld from %x\n"
+	if(G__asm_dbg) G__fprinterr("%3x: LD %ld from %x\n"
 			       ,G__asm_cp,G__int(result3)
 			       ,G__asm_dt);
 #else
-	if(G__asm_dbg) fprintf(G__serr,"%3x: LD %d from %x\n"
+	if(G__asm_dbg) G__fprinterr("%3x: LD %d from %x\n"
 			       ,G__asm_cp,G__int(result3)
 			       ,G__asm_dt);
 #endif
@@ -1789,7 +1789,7 @@ char *item;
        * put result3
        **************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) fprintf(G__serr,"%3x: LD %g from %x\n"
+      if(G__asm_dbg) G__fprinterr("%3x: LD %g from %x\n"
 			     ,G__asm_cp,G__double(result3)
 			     ,G__asm_dt);
 #endif
@@ -1819,7 +1819,7 @@ char *item;
        * put result3
        **************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) fprintf(G__serr,"%3x: LD '%c' from %lx\n"
+      if(G__asm_dbg) G__fprinterr("%3x: LD '%c' from %lx\n"
 			     ,G__asm_cp,(char)G__int(result3)
 			     ,G__asm_dt);
 #endif
@@ -1937,7 +1937,7 @@ char *item;
 #ifndef G__OLDIMPLEMENTATION1103
 		if(0==G__const_noerror&&!G__asm_wholefunction) {
 #endif
-		  fprintf(G__serr,"Possible candidates are...\n");
+		  G__fprinterr("Possible candidates are...\n");
 		  if('$'==item[0]) G__display_proto(G__serr,item+1);
 		  else             G__display_proto(G__serr,item);
 #ifndef G__OLDIMPLEMENTATION1103
@@ -2272,9 +2272,9 @@ int operator2;
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	fprintf(G__serr,"%3x: PUSHCPY\n",G__asm_cp);
-	fprintf(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp+1);
-	fprintf(G__serr,"%3x: POP\n",G__asm_cp+3);
+	G__fprinterr("%3x: PUSHCPY\n",G__asm_cp);
+	G__fprinterr("%3x: CNDJMP assigned later\n",G__asm_cp+1);
+	G__fprinterr("%3x: POP\n",G__asm_cp+3);
       }
 #endif
       G__asm_inst[G__asm_cp]=G__PUSHCPY;
@@ -2293,9 +2293,9 @@ int operator2;
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	fprintf(G__serr,"%3x: PUSHCPY\n",G__asm_cp);
-	fprintf(G__serr,"%3x: CND1JMP assigned later\n",G__asm_cp+1);
-	fprintf(G__serr,"%3x: POP\n",G__asm_cp+2);
+	G__fprinterr("%3x: PUSHCPY\n",G__asm_cp);
+	G__fprinterr("%3x: CND1JMP assigned later\n",G__asm_cp+1);
+	G__fprinterr("%3x: POP\n",G__asm_cp+2);
       }
 #endif
       G__asm_inst[G__asm_cp]=G__PUSHCPY;
@@ -2315,13 +2315,13 @@ int operator2;
       store_no_exec_compile=G__no_exec_compile;
       G__no_exec_compile=1;
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr
-			   ,"    G__no_exec_compile set(G__testandor) %d\n"
+    if(G__asm_dbg) G__fprinterr(
+			   "    G__no_exec_compile set(G__testandor) %d\n"
 			   ,store_no_exec_compile);
 #endif
       result=G__test(rexpression);
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile %d(G__testandor)\n"
+    if(G__asm_dbg) G__fprinterr("    G__no_exec_compile %d(G__testandor)\n"
 			   ,store_no_exec_compile);
 #endif
       G__no_exec_compile=store_no_exec_compile;
@@ -2332,7 +2332,7 @@ int operator2;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr,"     CNDJMP/CND1JMP assigned %x\n"
+    if(G__asm_dbg) G__fprinterr("     CNDJMP/CND1JMP assigned %x\n"
 			   ,G__asm_cp);
 #endif
     G__asm_inst[ppointer] = G__asm_cp;
@@ -2413,7 +2413,7 @@ char *expression2;
 #ifdef G__ASM
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr,"%3x: NOT\n" ,G__asm_cp);
+	    if(G__asm_dbg) G__fprinterr("%3x: NOT\n" ,G__asm_cp);
 #endif
 	    G__asm_inst[G__asm_cp]=G__NOT;
 	    G__inc_cp_asm(1,0);
@@ -2470,7 +2470,7 @@ char *expression2;
 #ifdef G__ASM
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr,"%3x: NOT\n" ,G__asm_cp);
+	    if(G__asm_dbg) G__fprinterr("%3x: NOT\n" ,G__asm_cp);
 #endif
 	    G__asm_inst[G__asm_cp]=G__NOT;
 	    G__inc_cp_asm(1,0);
@@ -2718,7 +2718,7 @@ char *expression2;
 #ifdef G__ASM
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) fprintf(G__serr,"%3x: NOT  '%c'\n"
+	if(G__asm_dbg) G__fprinterr("%3x: NOT  '%c'\n"
 			       ,G__asm_cp,operator2);
 #endif
 	G__asm_inst[G__asm_cp]=G__NOT;
@@ -2777,7 +2777,7 @@ G__value lresult,rresult;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr,"%3x: CMP2  '%c'\n" ,G__asm_cp,operator2);
+    if(G__asm_dbg) G__fprinterr("%3x: CMP2  '%c'\n" ,G__asm_cp,operator2);
 #endif
     G__asm_inst[G__asm_cp]=G__CMP2;
     G__asm_inst[G__asm_cp+1]=(long)operator2;

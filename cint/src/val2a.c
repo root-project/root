@@ -665,7 +665,7 @@ int type,tagnum,typenum,reftype,isconst;
     case 'e': strcpy(string,"FILE"); break;
     case 'u': strcpy(string,"enum");
 #ifdef G__OLDIMPLEMENTATION1055
-      fprintf(G__serr,"%c %d %d %d\n",type,tagnum,typenum,reftype);
+      G__fprinterr("%c %d %d %d\n",type,tagnum,typenum,reftype);
       /* Must be redundant */
       G__genericerror("Internal error: G__type2string()");
 #endif
@@ -760,7 +760,7 @@ G__value *result7;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    fprintf(G__serr,"%3x: TOPNTR\n",G__asm_cp);
+    G__fprinterr("%3x: TOPNTR\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__TOPNTR;
     G__inc_cp_asm(1,0);
@@ -1010,10 +1010,10 @@ int *known4;
      ********************************************/
     if(string[0]!='0') {
 #ifndef G__FONS31
-      fprintf(G__serr,"Error: G__checkBase(%s) " ,string);
+      G__fprinterr("Error: G__checkBase(%s) " ,string);
       G__genericerror((char*)NULL);
 #else
-      fprintf(G__serr,"Error: G__checkBase(%s) FILE:%s LINE:%d\n"
+      G__fprinterr("Error: G__checkBase(%s) FILE:%s LINE:%d\n"
 	      ,string,G__ifile.name,G__ifile.line_number);
 #endif
       return(G__null);
@@ -1210,11 +1210,11 @@ int *known4;
 	  default:
 	    value=value*base;
 #ifndef G__FONS31
-	    fprintf(G__serr, "Error: unexpected character in expression %s "
+	    G__fprinterr( "Error: unexpected character in expression %s "
 		    ,string);
 	    G__genericerror((char*)NULL);
 #else
-	    fprintf(G__serr,
+	    G__fprinterr(
 	    "Error: unexpected character in expression %s FILE:%s LINE:%d\n"
 		    ,string ,G__ifile.name,G__ifile.line_number);
 #endif
@@ -1332,7 +1332,7 @@ int *type;
     case '-':
       break;
     default:
-      fprintf(G__serr,"Warning: Illegal numerical expression %s",string);
+      G__fprinterr("Warning: Illegal numerical expression %s",string);
       G__printlinenum();
       break;
 #endif
@@ -1347,12 +1347,12 @@ int *type;
     case 'd':
     case 'f':
 #ifndef G__FONS31
-      fprintf(G__serr
-	      ,"Error: unsigned can not be specified for float or double %s "
+      G__fprinterr(
+	      "Error: unsigned can not be specified for float or double %s "
 	      ,string );
       G__genericerror((char*)NULL);
 #else
-      fprintf(G__serr,"Error: unsigned can not be specified for float or double %s FILE:%s LINE:%d\n"
+      G__fprinterr("Error: unsigned can not be specified for float or double %s FILE:%s LINE:%d\n"
 	      ,string ,G__ifile.name ,G__ifile.line_number);
 #endif
       break;

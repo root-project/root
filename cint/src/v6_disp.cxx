@@ -135,7 +135,13 @@ int G__more(fp,msg)
 FILE* fp;
 char* msg;
 {
+#ifndef G__OLDIMPLEMENTATION1485
+  if(fp==G__serr) G__fprinterr(msg);
+  else fprintf(fp,msg);
+    
+#else
   fprintf(fp,msg);
+#endif
   if(strchr(msg,'\n')) {
     return(G__more_pause(fp,strlen(msg)));
   }
@@ -497,7 +503,7 @@ char *fname;
     return(0);
   }
 
-  fprintf(G__serr,"File %s not loaded\n",fname);
+  G__fprinterr("File %s is not loaded\n",fname);
   return(1);
 }
 #endif
@@ -879,7 +885,7 @@ int startin;
   if(name[i]) {
     start = G__defined_typename(name+i);
     if(-1==start) {
-      fprintf(G__serr,"!!!Type %s not defined\n",name+i);
+      G__fprinterr("!!!Type %s is not defined\n",name+i);
       return(0);
     }
     stop = start+1;
@@ -1629,7 +1635,7 @@ long offset;
   }
   else {
     if(isdigit(index[0])) {
-      fprintf(G__serr,"variable name must be specified\n");
+      G__fprinterr("variable name must be specified\n");
       return(0);
     }
     else {
@@ -1943,6 +1949,69 @@ long offset;
   }
   return(0);
 }
+
+#ifndef G__OLDIMPLEMENTATION1485
+#include <stdarg.h>
+
+typedef void (*G__ErrMsgCallback_t) G__P((char* msg));
+static G__ErrMsgCallback_t G__ErrMsgCallback;
+
+/**************************************************************************
+* G__set_errmsgcallback()
+**************************************************************************/
+void G__set_errmsgcallback(p)
+void *p;
+{
+  G__ErrMsgCallback = (G__ErrMsgCallback_t)p;
+}
+
+#ifndef G__TESTMAIN
+/**************************************************************************
+* G__fprinterr()
+**************************************************************************/
+#if defined(G__ANSI) || defined(G__WIN32)
+int G__fprinterr(char* fmt,...)
+#else
+int G__fprinterr(fmt)
+char* fmt;
+...
+#endif
+{
+  int result;
+  va_list argptr;
+  va_start(argptr,fmt);
+  if(G__ErrMsgCallback && G__serr==G__stderr) {
+    char buf[G__LONGLINE];
+    result = vsprintf(buf,fmt,argptr);
+    (*G__ErrMsgCallback)(buf);
+  }
+  else {
+    result = vfprintf(G__serr,fmt,argptr);
+  }
+  va_end(argptr);
+  return(result);
+}
+#endif
+
+/**************************************************************************
+* G__fputerr()
+**************************************************************************/
+int G__fputerr(c)
+int c;
+{
+  int result;
+  if(G__ErrMsgCallback && G__serr==G__stderr) {
+    char buf[2]={0,0};
+    buf[0] = c;
+    (*G__ErrMsgCallback)(buf);
+    result = c;
+  }
+  else {
+    result = fputc(c,G__serr);
+  }
+  return(result);
+}
+#endif
 
 
 #ifndef G__OLDIMPLEMENTATION562

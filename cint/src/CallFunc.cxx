@@ -96,7 +96,7 @@ void G__CallFunc::SetBytecode(struct G__bytecodefunc* bc)
   else {
     pfunc = (G__InterfaceMethod)NULL;
 #ifndef G__ROOT
-    fprintf(G__serr,"Warning: Bytecode compilation of %s failed. G__CallFunc::Exec may be slow\n",method.Name());
+    G__fprinterr("Warning: Bytecode compilation of %s failed. G__CallFunc::Exec may be slow\n",method.Name());
 #endif
   }
   para.paran=0;
@@ -129,7 +129,7 @@ void G__CallFunc::SetArgArray(long *p)
     para.paran=n;
   }
   else {
-    fprintf(G__serr,"Error: G__CallFunc::SetArgArray() must be initialized with 'G__CallFunc::SetFunc(G__ClassInfo* cls,char* fname,char* args,long* poffset)' first\n");
+    G__fprinterr("Error: G__CallFunc::SetArgArray() must be initialized with 'G__CallFunc::SetFunc(G__ClassInfo* cls,char* fname,char* args,long* poffset)' first\n");
   }
 }
 #endif

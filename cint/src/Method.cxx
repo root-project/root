@@ -308,10 +308,10 @@ G__DataMemberInfo G__MethodInfo::GetLocalVariable()
 #endif
     if(!pbc) {
       if(Property()&G__BIT_ISCOMPILED) {
-	fprintf(G__serr,"Limitation: can not get local variable information for compiled function %s\n",Name());
+	G__fprinterr("Limitation: can not get local variable information for compiled function %s\n",Name());
       }
       else {
-	fprintf(G__serr,"Limitation: function %s , failed to get local variable information\n",Name());
+	G__fprinterr("Limitation: function %s , failed to get local variable information\n",Name());
       }
       return(localvar);
     }
@@ -587,7 +587,7 @@ extern "C" int G__SetGlobalcomp(char *funcname,char *param,int globalcomp)
     return(0);
   }
   else {
-    fprintf(G__serr,"Warning: #pragma link, function %s(%s) not found"
+    G__fprinterr("Warning: #pragma link, function %s(%s) not found"
 #ifndef G__OLDIMPLEMENTATION912
 	    ,fname,param);
 #else
@@ -637,7 +637,7 @@ extern "C" int G__SetGlobalcomp(char *funcname,char *param,int globalcomp)
     return(0);
   }
   else {
-    fprintf(G__serr,"Warning: #pragma link, function %s(%s) not found"
+    G__fprinterr("Warning: #pragma link, function %s(%s) not found"
 #ifndef G__OLDIMPLEMENTATION912
 	    ,fname,param);
 #else

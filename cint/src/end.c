@@ -170,7 +170,7 @@ void G__scratch_all()
   if(G__mfp) {
 #ifdef G__MEMTEST
     fprintf(G__memhist,"Ignore this error:");
-    fprintf(G__serr,"Ignore this error:");
+    G__fprinterr("Ignore this error:");
 #endif
     G__closemfp();
     G__mfp=NULL;
@@ -452,12 +452,11 @@ int isglobal;
 	sprintf(temp,"~%s()",G__struct.name[G__tagnum]);
 	if(G__dispsource) {
 #ifndef G__FONS31
-	  fprintf(G__serr
-		  ,"\n!!!Calling destructor 0x%lx.%s for %s ary%d:link%d"
+	  G__fprinterr("\n!!!Calling destructor 0x%lx.%s for %s ary%d:link%d"
 		  ,G__store_struct_offset ,temp ,var->varnamebuf[itemp]
 		  ,var->varlabel[itemp][1],G__struct.iscpplink[G__tagnum]);
 #else
-	  fprintf(G__serr,"\n!!!Calling destructor 0x%x.%s for %s ary%d:link%d"
+	  G__fprinterr("\n!!!Calling destructor 0x%x.%s for %s ary%d:link%d"
 		  ,G__store_struct_offset ,temp ,var->varnamebuf[itemp]
 		  ,var->varlabel[itemp][1],G__struct.iscpplink[G__tagnum]);
 #endif
@@ -482,9 +481,9 @@ int isglobal;
 	    G__store_struct_offset = var->p[itemp]+size*i;
 	    if(G__dispsource) {
 #ifndef G__FONS31
-	      fprintf(G__serr,"\n0x%lx.%s",G__store_struct_offset,temp);
+	      G__fprinterr("\n0x%lx.%s",G__store_struct_offset,temp);
 #else
-	      fprintf(G__serr,"\n0x%x.%s",G__store_struct_offset,temp);
+	      G__fprinterr("\n0x%x.%s",G__store_struct_offset,temp);
 #endif
 	    }
 	    G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
@@ -580,7 +579,7 @@ int rtn;
 int G__call_atexit()
 {
   char temp[G__ONELINE];
-  if(G__breaksignal) fprintf(G__serr,"!!! atexit() call\n");
+  if(G__breaksignal) G__fprinterr("!!! atexit() call\n");
   G__ASSERT(G__atexit);
   sprintf(temp,"%s()",G__atexit);
   G__atexit=NULL;
@@ -687,7 +686,7 @@ int G__interpretexit()
 {
   if(G__atexit) G__call_atexit();
   G__scratch_all();
-  if(G__breaksignal) fprintf(G__serr,"\nEND OF EXECUTION\n");
+  if(G__breaksignal) G__fprinterr("\nEND OF EXECUTION\n");
   return(0);
 }
 

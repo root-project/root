@@ -321,6 +321,9 @@ int G__getcintsysdir()
 # endif
 #else
     env=getenv("CINTSYSDIR");
+# ifdef CINTSYSDIR
+    if(!env || !env[0]) env = CINTSYSDIR;
+# endif
 #endif
     if(env) {
 #ifdef G__ROOT
@@ -378,7 +381,7 @@ void G__readMAKEINFO()
   /* Open MAKEINFO file */
   fp = fopen(makeinfo,"r");
   if(!fp) {
-    fprintf(stderr,"Error: %s can not open. Makecint aborted\n",makeinfo);
+    fprintf(stderr,"Error: can not open %s. Makecint aborted\n",makeinfo);
     fprintf(stderr
 ,"!!!Advice. There are examples of MAKEINFO files under %s/platform/ directory.\n"
 	    ,G__cintsysdir);
@@ -1227,7 +1230,9 @@ char **argv;
 #endif
     fprintf(fp,"\n");
     fprintf(fp,"# Create C Interface routine #############################\n");
-#ifdef G__DJGPP
+#if defined(CINTSYSDIR)
+    fprintf(fp,"$(CIFC) : $(CHEADER) $(CSTUB)\n");
+#elif defined(G__DJGPP)
     fprintf(fp,"$(CIFC) : $(CHEADER) $(CSTUB) $(CINTSYSDIR)/cint.exe\n");
 #else
     fprintf(fp,"$(CIFC) : $(CHEADER) $(CSTUB) $(CINTSYSDIR)/cint\n");
@@ -1237,11 +1242,11 @@ char **argv;
      * it will set G__clock flags so that it will create K&R compatible 
      * function headers. This is not a good manner but -K -c-2 and -c-2 -K
      * has different meaning. */
-#ifndef G__OLDIMPLEMENTATION783
-    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CINTOPT) $(CHEADERCINT)" 
+#ifdef CINTSYSDIR
+    fprintf(fp,"\tcint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CINTOPT) $(CHEADERCINT)" 
 	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
 #else
-    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CHEADERCINT)" 
+    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CINTOPT) $(CHEADERCINT)" 
 	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
 #endif
     if(G__CSTUB) fprintf(fp," +STUB $(CSTUBCINT) -STUB\n");
@@ -1258,16 +1263,18 @@ char **argv;
 #endif
     fprintf(fp,"\n");
     fprintf(fp,"# Create C++ Interface routine ###########################\n");
-#ifdef G__DJGPP
+#if defined(CINTSYSDIR)
+    fprintf(fp,"$(CPPIFC) : $(CPPHEADER) $(CPPSTUB)\n");
+#elif defined(G__DJGPP)
     fprintf(fp,"$(CPPIFC) : $(CPPHEADER) $(CPPSTUB) $(CINTSYSDIR)/cint.exe\n");
 #else
     fprintf(fp,"$(CPPIFC) : $(CPPHEADER) $(CPPSTUB) $(CINTSYSDIR)/cint\n");
 #endif
-#ifndef G__OLDIMPLEMENTATION783
-    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)"
+#ifdef CINTSYSDIR
+    fprintf(fp,"\tcint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)"
 	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
 #else
-    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-1 -A $(IPATH) $(MACRO) $(CPPHEADERCINT)"
+    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)"
 	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
 #endif
     if(G__CPPSTUB) fprintf(fp," +STUB $(CPPSTUBCINT) -STUB\n");

@@ -292,10 +292,10 @@ G__value *defined;
 #ifdef G__ASM_DBG
 	  if(G__asm_dbg) {
 	    if(isprint(operator)) 
-	      fprintf(G__serr,"%3x: OP1  '%c' %d\n"
+	      G__fprinterr("%3x: OP1  '%c' %d\n"
 		      ,G__asm_cp,operator,operator);
 	    else
-	      fprintf(G__serr,"%3x: OP1  %d\n"
+	      G__fprinterr("%3x: OP1  %d\n"
 		      ,G__asm_cp,operator);
 	  }
 #endif
@@ -313,10 +313,10 @@ G__value *defined;
 #ifdef G__ASM_DBG
 	if(G__asm_dbg) {
 	  if(isprint(operator)) 
-	    fprintf(G__serr,"%3x: OP2  '%c' %d\n"
+	    G__fprinterr("%3x: OP2  '%c' %d\n"
 		    ,G__asm_cp,operator,operator);
 	  else
-	    fprintf(G__serr,"%3x: OP2  %d\n"
+	    G__fprinterr("%3x: OP2  %d\n"
 		    ,G__asm_cp,operator);
 	}
 #endif
@@ -445,7 +445,7 @@ G__value *defined;
     case '@': /* power */
 #ifndef G__OLDIMPLEMENTATION1123
       if(G__asm_dbg) {
-	fprintf(G__serr,"Warning: Power operator, Cint special extension");
+	G__fprinterr("Warning: Power operator, Cint special extension");
 	G__printlinenum();
       }
 #endif
@@ -561,9 +561,9 @@ G__value *defined;
 #endif
     default:
 #ifndef G__OLDIMPLEMENTATION999
-	fprintf(G__serr,"Error: %s ",G__getoperatorstring(operator));
+	G__fprinterr("Error: %s ",G__getoperatorstring(operator));
 #else
-	fprintf(G__serr,"Error: %c ",operator);
+	G__fprinterr("Error: %c ",operator);
 #endif
 	G__genericerror("Illegal operator for real number");
 	break;
@@ -651,9 +651,9 @@ G__value *defined;
 #endif
 	default:
 #ifndef G__OLDIMPLEMENTATION999
-	  fprintf(G__serr,"Error: %s ",G__getoperatorstring(operator));
+	  G__fprinterr("Error: %s ",G__getoperatorstring(operator));
 #else
-	  fprintf(G__serr,"Error: %c ",operator);
+	  G__fprinterr("Error: %c ",operator);
 #endif
 	  G__genericerror("Illegal operator for pointer 1");
 	  break;
@@ -729,9 +729,9 @@ G__value *defined;
 #endif
 	default:
 #ifndef G__OLDIMPLEMENTATION999
-	  fprintf(G__serr,"Error: %s ",G__getoperatorstring(operator));
+	  G__fprinterr("Error: %s ",G__getoperatorstring(operator));
 #else
-	  fprintf(G__serr,"Error: %c ",operator);
+	  G__fprinterr("Error: %c ",operator);
 #endif
 	  G__genericerror("Illegal operator for pointer 2");
 	  break;
@@ -844,9 +844,9 @@ G__value *defined;
 #endif
       default:
 #ifndef G__OLDIMPLEMENTATION999
-	fprintf(G__serr,"Error: %s ",G__getoperatorstring(operator));
+	G__fprinterr("Error: %s ",G__getoperatorstring(operator));
 #else
-	fprintf(G__serr,"Error: %c ",operator);
+	G__fprinterr("Error: %c ",operator);
 #endif
 	G__genericerror("Illegal operator for pointer 3");
 	break;
@@ -985,7 +985,7 @@ G__value *defined;
     case '@': /* power */
 #ifndef G__OLDIMPLEMENTATION1123
       if(G__asm_dbg) {
-	fprintf(G__serr,"Warning: Power operator, Cint special extension");
+	G__fprinterr("Warning: Power operator, Cint special extension");
 	G__printlinenum();
       }
 #endif
@@ -1107,9 +1107,9 @@ G__value *defined;
 #endif
     default:
 #ifndef G__OLDIMPLEMENTATION999
-	fprintf(G__serr,"Error: %s ",G__getoperatorstring(operator));
+	G__fprinterr("Error: %s ",G__getoperatorstring(operator));
 #else
-	fprintf(G__serr,"Error: %c ",operator);
+	G__fprinterr("Error: %c ",operator);
 #endif
 	G__genericerror("Illegal operator for integer");
 	break;
@@ -1250,7 +1250,7 @@ int *ptagnum;
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) 
-      fprintf(G__serr ,"%3x: ADDSTROS %d\n" ,G__asm_cp,offset_sum);
+      G__fprinterr("%3x: ADDSTROS %d\n" ,G__asm_cp,offset_sum);
 #endif
     G__asm_inst[G__asm_cp]=G__ADDSTROS;
     G__asm_inst[G__asm_cp+1]=offset_sum;
@@ -1409,7 +1409,7 @@ int *piout,*pspaceflag,*pmparen;
         int itmp=0,ctmp;
 	ctmp = G__getstream(statement,&itmp,temp,"+-*%/&|<>=^!");
         if(ctmp && 0!=strncmp(statement,"case",4)) {
-          fprintf(G__serr,"Error: illegal label name %s",statement) ;
+          G__fprinterr("Error: illegal label name %s",statement) ;
           G__genericerror((char*)NULL);
         }
 #endif
@@ -1558,8 +1558,8 @@ G__value *pios;
     G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-      fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+      G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp-2);
+      G__fprinterr("%3x: SETSTROS\n",G__asm_cp-1);
     }
 #endif
   }
@@ -1604,8 +1604,8 @@ G__value *pios;
 #endif
      ) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
-    if(G__asm_dbg) fprintf(G__serr,"%3x: OP1 '!'\n",G__asm_cp+1);
+    if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp);
+    if(G__asm_dbg) G__fprinterr("%3x: OP1 '!'\n",G__asm_cp+1);
 #endif
     G__asm_inst[G__asm_cp] = G__POPSTROS;
     G__inc_cp_asm(1,0); 
@@ -1782,8 +1782,8 @@ G__value *defined;
       G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+	G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp-2);
+	G__fprinterr("%3x: SETSTROS\n",G__asm_cp-1);
       }
 #endif
     }
@@ -1805,7 +1805,7 @@ G__value *defined;
 	G__inc_cp_asm(2,1);
 	postfixflag=1;
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) fprintf(G__serr,"%3x: LD 0x%lx from %lx\n"
+	if(G__asm_dbg) G__fprinterr("%3x: LD 0x%lx from %lx\n"
 			       ,G__asm_cp ,1 ,G__asm_dt);
 #endif
       }
@@ -1841,12 +1841,12 @@ G__value *defined;
 	  G__inc_cp_asm(-2,-1);
 	  postfixflag=0;
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) fprintf(G__serr,"LD cancelled\n");
+	  if(G__asm_dbg) G__fprinterr("LD cancelled\n");
 #endif
 	}
 	G__inc_cp_asm(-2,0); 
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) fprintf(G__serr,"PUSHSTROS,SETSTROS cancelled\n");
+	if(G__asm_dbg) G__fprinterr("PUSHSTROS,SETSTROS cancelled\n");
 #endif
       }
 #endif /* G__ASM */
@@ -1875,7 +1875,7 @@ G__value *defined;
 	  G__asm_stack[G__asm_dt]=G__one;
 	  G__inc_cp_asm(2,1);
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) fprintf(G__serr,"%3x: LD 0x%lx from %lx\n"
+	  if(G__asm_dbg) G__fprinterr("%3x: LD 0x%lx from %lx\n"
 				 ,G__asm_cp ,1 ,G__asm_dt);
 #endif
 	}
@@ -1904,7 +1904,7 @@ G__value *defined;
 #ifdef G__ASM
     else if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+      if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp] = G__POPSTROS;
       G__inc_cp_asm(1,0); 
@@ -1925,7 +1925,7 @@ G__value *defined;
     if(G__asm_noverflow) {
 #ifdef G__ASM_IFUNC
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) fprintf(G__serr,"%3x: SWAP\n",G__asm_cp);
+      if(G__asm_dbg) G__fprinterr("%3x: SWAP\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp] = G__SWAP;
       G__inc_cp_asm(1,0);
@@ -1935,8 +1935,8 @@ G__value *defined;
       G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+	G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp-2);
+	G__fprinterr("%3x: SETSTROS\n",G__asm_cp-1);
       }
 #endif
     }
@@ -2013,7 +2013,7 @@ G__value *defined;
 	G__inc_cp_asm(-2,0); 
 #endif
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) fprintf(G__serr,"PUSHSTROS,SETSTROS cancelled\n");
+	if(G__asm_dbg) G__fprinterr("PUSHSTROS,SETSTROS cancelled\n");
 #endif
       }
 #endif /* of G__ASM */
@@ -2080,7 +2080,7 @@ G__value *defined;
 	if('u'==defined->type) {
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr,"%3x: SWAP\n",G__asm_cp);
+	    if(G__asm_dbg) G__fprinterr("%3x: SWAP\n",G__asm_cp);
 #endif
 	    G__asm_inst[G__asm_cp] = G__SWAP;
 	    G__inc_cp_asm(1,0);
@@ -2088,7 +2088,7 @@ G__value *defined;
 	  lval = G__iosrdstate(defined);
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) fprintf(G__serr,"%3x: SWAP\n",G__asm_cp);
+	    if(G__asm_dbg) G__fprinterr("%3x: SWAP\n",G__asm_cp);
 #endif
 	    G__asm_inst[G__asm_cp] = G__SWAP;
 	    G__inc_cp_asm(1,0);
@@ -2112,10 +2112,10 @@ G__value *defined;
 #ifdef G__ASM_DBG
 	  if(G__asm_dbg) {
 	    if(isprint(operator)) 
-	      fprintf(G__serr,"%3x: OP2  '%c' %d\n"
+	      G__fprinterr("%3x: OP2  '%c' %d\n"
 		      ,G__asm_cp,operator,operator);
 	    else
-	      fprintf(G__serr,"%3x: OP2  %d\n"
+	      G__fprinterr("%3x: OP2  %d\n"
 		      ,G__asm_cp,operator);
 	  }
 #endif
@@ -2131,14 +2131,14 @@ G__value *defined;
       if(0==ig2) {
 #ifndef G__OLDIMPLEMENTATION1252
 	if(-1!=defined->tagnum) {
-	  fprintf(G__serr,"Error: %s not defined for %s"
+	  G__fprinterr("Error: %s not defined for %s"
 		  ,opr,G__fulltagname(defined->tagnum,1));
 	}
 	else {
-	  fprintf(G__serr,"Error: %s not defined",expr);
+	  G__fprinterr("Error: %s not defined",expr);
 	}
 #else
-	fprintf(G__serr,"Error: %s not defined for %s"
+	G__fprinterr("Error: %s not defined for %s"
 		,opr,G__fulltagname(defined->tagnum,1));
 #endif
 	G__genericerror((char*)NULL);
@@ -2148,7 +2148,7 @@ G__value *defined;
 #ifdef G__ASM
     else if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+      if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp] = G__POPSTROS;
       G__inc_cp_asm(1,0); 
@@ -2212,8 +2212,8 @@ int flag;
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
-      fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp+1);
+      G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp);
+      G__fprinterr("%3x: SETSTROS\n",G__asm_cp+1);
     }
 #endif
     G__asm_inst[G__asm_cp] = G__PUSHSTROS;
@@ -2238,7 +2238,7 @@ int flag;
 #ifdef G__ASM
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+	if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp);
 #endif
 	G__asm_inst[G__asm_cp] = G__POPSTROS;
 	G__inc_cp_asm(1,0);
@@ -2258,7 +2258,7 @@ int flag;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+    if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp] = G__POPSTROS;
     G__inc_cp_asm(1,0);
@@ -2307,7 +2307,7 @@ int paran,ig25;
     if(paran>1 && paran>ig25) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	fprintf(G__serr,"%x: REORDER inserted before ST_VAR/MSTR/LD_VAR/MSTR\n"
+	G__fprinterr("%x: REORDER inserted before ST_VAR/MSTR/LD_VAR/MSTR\n"
 		,G__asm_cp-5);
 #endif
       for(i=1;i<=5;i++) G__asm_inst[G__asm_cp-i+3]=G__asm_inst[G__asm_cp-i];
@@ -2329,7 +2329,7 @@ int paran,ig25;
     G__asm_inst[G__asm_cp-3]=ig25;
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
-      fprintf(G__serr,"ST_VAR/MSTR replaced to LD_VAR/MSTR, paran=%d -> %d\n"
+      G__fprinterr("ST_VAR/MSTR replaced to LD_VAR/MSTR, paran=%d -> %d\n"
 	      ,paran,ig25);
 #endif
   }
@@ -2341,7 +2341,7 @@ int paran,ig25;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
+    if(G__asm_dbg) G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp] = G__PUSHSTROS;
     G__inc_cp_asm(1,0);
@@ -2366,7 +2366,7 @@ int paran,ig25;
 #ifdef G__ASM
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp);
+	if(G__asm_dbg) G__fprinterr("%3x: SETSTROS\n",G__asm_cp);
 #endif
 	G__asm_inst[G__asm_cp] = G__SETSTROS;
 	G__inc_cp_asm(1,0);
@@ -2422,7 +2422,7 @@ int paran,ig25;
 #ifdef G__ASM
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) fprintf(G__serr,"%3x: OP2 +\n",G__asm_cp);
+	if(G__asm_dbg) G__fprinterr("%3x: OP2 +\n",G__asm_cp);
 #endif
 	G__asm_inst[G__asm_cp] = G__OP2;
 	G__asm_inst[G__asm_cp+1] = '+';
@@ -2444,7 +2444,7 @@ int paran,ig25;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+    if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp] = G__POPSTROS;
     G__inc_cp_asm(1,0);

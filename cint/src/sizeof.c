@@ -55,7 +55,7 @@ G__value *object;
     case G__PARAP2P2P:
       break;
     default:
-      fprintf(G__serr,"Internal error: G__sizeof() illegal reftype ID %d\n"
+      G__fprinterr("Internal error: G__sizeof() illegal reftype ID %d\n"
 	     ,object->obj.reftype.reftype);
       break;
     }
@@ -119,7 +119,7 @@ char *memname;
     var=var->next;
   }
 
-  fprintf(G__serr,"Error: member %s not found in %s ",memname,tagname);
+  G__fprinterr("Error: member %s not found in %s ",memname,tagname);
   G__genericerror((char*)NULL);
   return(-1);
 }
