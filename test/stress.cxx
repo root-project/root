@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.31 2002/01/02 21:51:11 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.32 2002/02/03 16:14:46 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -1104,7 +1104,6 @@ void stress9()
    stress9tree(tree);
 
    // Save test9 histograms
-   delete tree;
    TFile f("stress_test9.root","recreate");
    gROOT->GetList()->Write();
    gROOT->GetList()->Delete();
