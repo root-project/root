@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.213 2004/11/19 20:38:36 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.214 2004/12/10 07:42:28 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1139,21 +1139,13 @@ void TStreamerInfo::Compile()
          fType[keep] = element->GetType() + kRegrouped;
          fOptimized = kTRUE;
       } else {
-/*          
-         if (fType[fNdata] != kCounter) {
-            if (fNewType[fNdata] != fType[fNdata]) {
-               if (fNewType[fNdata] > 0) fType[fNdata] += kConv;
-               else                      fType[fNdata] += kSkip;
-            }
-         }
-*/
          if (fNewType[fNdata] != fType[fNdata]) {
             if (fNewType[fNdata] > 0) {
               if (fType[fNdata] != kCounter) 
                  fType[fNdata] += kConv;
-              else
-                 Error("Compile","Cannot convert counter %s to other type",element->GetName());   
             } else {
+               if (fType[fNdata] == kCounter) 
+                  Warning("Compile","Counter %s should not be skipped from class %s", element->GetName(), GetName());
                fType[fNdata] += kSkip;   
             }
          }

@@ -96,12 +96,9 @@
    {                                                                      \
       Int_t addCounter = -111;                                            \
       if ((imethod>0) && (fMethod[i]>0)) addCounter = -1;                 \
-      if((addCounter<-1) && dynamic_cast<TStreamerBasicPointer*>(aElement)) { \
-         TStreamerElement* elemCounter = (TStreamerElement*) GetElements()->FindObject((dynamic_cast<TStreamerBasicPointer*>(aElement))->GetCountName()); \
-         if (elemCounter) {                                               \
-            addCounter = elemCounter->GetTObjectOffset();                 \
-            Warning("ReadBufferSkip","Counter %s = %d for data member %s should not be skipped, trying to survive", aElement->GetTitle(), addCounter, aElement->GetName()); \
-         }                                                                \
+      if((addCounter<-1) && (aElement!=0) && (aElement->IsA()==TStreamerBasicPointer::Class())) { \
+         TStreamerElement* elemCounter = (TStreamerElement*) This->GetElements()->FindObject(((TStreamerBasicPointer*)aElement)->GetCountName()); \
+         if (elemCounter) addCounter = elemCounter->GetTObjectOffset();   \
       }                                                                   \
       if (addCounter>=-1) {                                               \
          int len = aElement->GetArrayDim()?aElement->GetArrayLength():1;  \
@@ -116,8 +113,6 @@
                delete[] readbuf;                                          \
             }                                                             \
          }                                                                \
-      } else {                                                            \
-         Error("ReadBufferSkip","Counter: %s for data member: %s should not be skipped", aElement->GetTitle(), aElement->GetName()); \
       }                                                                   \
       break;                                                              \
    }
@@ -126,21 +121,24 @@
 #ifdef R__BROKEN_FUNCTION_TEMPLATES
 // Support for non standard compilers
 template <class T>
-Int_t TStreamerInfo__ReadBufferSkipImp(TBuffer &b, const T &arr, Int_t i, Int_t kase,
+Int_t TStreamerInfo__ReadBufferSkipImp(TStreamerInfo* This,
+                                       TBuffer &b, const T &arr, Int_t i, Int_t kase,
                                        TStreamerElement *aElement, Int_t narr,
                                        Int_t eoffset,
                                        ULong_t *fMethod, ULong_t * /*fElem*/,Int_t *fLength,
                                        TClass *fClass, Int_t * /*fOffset*/, Int_t * /*fNewType*/,
                                        Int_t /*fNdata*/, Int_t * /*fType*/, TStreamerElement *& /*fgElement*/,
                                        TStreamerInfo::CompInfo * fComp,
-                                       Version_t &fOldVersion)
+                                       Version_t &fOldVersion) 
+{
 #else
 template <class T>
 Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kase,
                                     TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
-#endif
 {
+  TStreamerInfo* This = this;  
+#endif
    //  Skip elements in a TClonesArray
    
    TClass* cle = fComp[i].fClass;
@@ -1088,7 +1086,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, char** const &arr, Int_t i, Int_
                                     TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 {
-  return TStreamerInfo__ReadBufferSkipImp(b,arr,i,kase,aElement,narr,eoffset,
+  return TStreamerInfo__ReadBufferSkipImp(this,b,arr,i,kase,aElement,narr,eoffset,
                                           fMethod,fElem,fLength,fClass,fOffset,fNewType,
                                           fNdata,fType,fgElement,fComp,fOldVersion);
 }
@@ -1097,7 +1095,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const TVirtualCollectionProxy &a
                                     TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 {
-  return TStreamerInfo__ReadBufferSkipImp(b,arr,i,kase,aElement,narr,eoffset,fMethod,
+  return TStreamerInfo__ReadBufferSkipImp(this, b,arr,i,kase,aElement,narr,eoffset,fMethod,
                                           fElem,fLength,fClass,fOffset,fNewType,
                                           fNdata,fType,fgElement,fComp,fOldVersion);
 }
