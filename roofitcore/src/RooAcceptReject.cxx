@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.15 2001/10/13 00:38:53 david Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.16 2001/10/17 05:03:58 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,10 +31,10 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.15 2001/10/13 00:38:53 david Exp $";
+"$Id: RooAcceptReject.cc,v 1.16 2001/10/17 05:03:58 verkerke Exp $";
 
-RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose) :
-  TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose)
+RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooAbsReal* maxFuncVal, Bool_t verbose) :
+  TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose), _funcMaxVal(maxFuncVal)
 {
   // Initialize an accept-reject generator for the specified distribution function,
   // which must be non-negative but does not need to be normalized over the
@@ -109,13 +109,18 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   }
 
   // calculate the minimum number of trials needed to estimate our integral and max value
-  if(_realSampleDim > _maxSampleDim) {
-    _minTrials= _minTrialsArray[_maxSampleDim]*_catSampleMult;
-    cout << fName << "::" << ClassName() << ": WARNING: generating " << _realSampleDim
-	 << " variables with accept-reject may not be accurate" << endl;
-  }
-  else {
-    _minTrials= _minTrialsArray[_realSampleDim]*_catSampleMult;
+  if (!_funcMaxVal) {
+    if(_realSampleDim > _maxSampleDim) {
+      _minTrials= _minTrialsArray[_maxSampleDim]*_catSampleMult;
+      cout << fName << "::" << ClassName() << ": WARNING: generating " << _realSampleDim
+	   << " variables with accept-reject may not be accurate" << endl;
+    }
+    else {
+      _minTrials= _minTrialsArray[_realSampleDim]*_catSampleMult;
+    }
+  } else {
+    // No trials needed if we know the maximum a priori
+    _minTrials=0 ;
   }
 
   // print a verbose summary of our configuration, if requested
@@ -123,9 +128,13 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
     cout << fName << "::" << ClassName() << ":" << endl
 	 << "  Initializing accept-reject generator for" << endl << "    ";
     _funcClone->Print();
-    cout << "  Real sampling dimension is " << _realSampleDim << endl;
-    cout << "  Category sampling multiplier is " << _catSampleMult << endl ;
-    cout << "  Min sampling trials is " << _minTrials << endl;
+    if (_funcMaxVal) {
+      cout << "  Function maximum provided, no trial sampling performed" << endl ;
+    } else {
+      cout << "  Real sampling dimension is " << _realSampleDim << endl;
+      cout << "  Category sampling multiplier is " << _catSampleMult << endl ;
+      cout << "  Min sampling trials is " << _minTrials << endl;
+    }
     cout << "  Will generate category vars ";
     TString indent("  ");
     _catVars.printToStream(cout,Standard,indent);
@@ -191,35 +200,55 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining) {
   const RooArgSet *event= _cache->get();
   if(event->getSize() == 1) return event;
 
-  // first generate enough events to get reasonable estimates for the integral and
-  // maximum function value
-  while(_totalEvents < _minTrials) addEventToCache();
+  if (!_funcMaxVal) {
+    // Generation with empirical maximum determination
 
-  event= 0;
-  while(0 == event) {
-    // Use any cached events first
-    event= nextAcceptedEvent();
-    if(event) break;
-    // When we have used up the cache, start a new cache and add
-    // some more events to it.      
-    _cache->reset();
-    _eventsUsed= 0;
-    // Calculate how many more events to generate using our best estimate of our efficiency.
-    // Always generate at least one more event so we don't get stuck.
-    if(_totalEvents*_maxFuncVal <= 0) {
-      cout << "RooAcceptReject::generateEvent: cannot estimate efficiency...giving up" << endl;
-      return 0;
+    // first generate enough events to get reasonable estimates for the integral and
+    // maximum function value
+    while(_totalEvents < _minTrials) addEventToCache();
+    
+    event= 0;
+    while(0 == event) {
+      // Use any cached events first
+      event= nextAcceptedEvent();
+      if(event) break;
+      // When we have used up the cache, start a new cache and add
+      // some more events to it.      
+      _cache->reset();
+      _eventsUsed= 0;
+      // Calculate how many more events to generate using our best estimate of our efficiency.
+      // Always generate at least one more event so we don't get stuck.
+      if(_totalEvents*_maxFuncVal <= 0) {
+	cout << "RooAcceptReject::generateEvent: cannot estimate efficiency...giving up" << endl;
+	return 0;
+      }
+      Double_t eff= _funcSum/(_totalEvents*_maxFuncVal);
+      Int_t extra= 1 + (Int_t)(1.05*remaining/eff);
+      if(_verbose) {
+	cout << "RooAcceptReject::generateEvent: adding " << extra << " events to the cache" << endl;
+      }
+      Double_t oldMax(_maxFuncVal);
+      while(extra--) addEventToCache();
+      if(_verbose && (_maxFuncVal > oldMax)) {
+	cout << "RooAcceptReject::generateEvent: estimated function maximum increased from "
+	     << oldMax << " to " << _maxFuncVal << endl;
+      }
     }
-    Double_t eff= _funcSum/(_totalEvents*_maxFuncVal);
-    Int_t extra= 1 + (Int_t)(1.05*remaining/eff);
-    if(_verbose) {
-      cout << "RooAcceptReject::generateEvent: adding " << extra << " events to the cache" << endl;
+  } else {
+    // Generation with a priori maximum knowledge
+    _maxFuncVal = _funcMaxVal->getVal() ;
+    
+    // Generate enough trials to produce a single accepted event
+    event = 0 ;
+    while(0==event) {
+      addEventToCache() ;
+      event = nextAcceptedEvent() ;
     }
-    Double_t oldMax(_maxFuncVal);
-    while(extra--) addEventToCache();
-    if(_verbose && (_maxFuncVal > oldMax)) {
-      cout << "RooAcceptReject::generateEvent: estimated function maximum increased from "
-	   << oldMax << " to " << _maxFuncVal << endl;
+
+    // Reset cache every 100K events
+    if (_eventsUsed>100000) {
+      _cache->reset() ;
+      _eventsUsed = 0 ;
     }
   }
   return event;
@@ -232,8 +261,9 @@ const RooArgSet *RooAcceptReject::nextAcceptedEvent() {
   // if we use up the cache before we accept an event. The caller does
   // not own the event and it will be overwritten by a subsequent call.
 
+  
   const RooArgSet *event(0);
-  while(event= _cache->get(++_eventsUsed)) {    
+  while(event= _cache->get(_eventsUsed++)) {    
     // accept this cached event?
     Double_t r= RooRandom::uniform();
     if(r*_maxFuncVal > _funcValPtr->getVal()) continue;

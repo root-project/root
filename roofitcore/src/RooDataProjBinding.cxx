@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooDataProjBinding.cc,v 1.1 2001/10/27 22:28:20 verkerke Exp $
  * Authors:
  *   DK, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -50,7 +50,7 @@ RooDataProjBinding::RooDataProjBinding(const RooAbsReal &real, const RooAbsData&
   delete iter ;
 
   // Determine weights of various super categories fractions
-  allCat = kFALSE ;
+  //allCat = kFALSE ;
   if (allCat) {
      _superCat = new RooSuperCategory("superCat","superCat",*data.get()) ;
      _catTable = data.table(*_superCat) ;
