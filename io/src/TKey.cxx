@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.37 2003/12/30 13:16:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.38 2004/01/22 14:44:20 rdm Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -57,6 +57,7 @@
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
 const Int_t kMAXBUF = 0xffffff;
+const Int_t kTitleMax = 32000;
 #if 0
 const Int_t kMAXFILEBUFFER = 262144;
 #endif
@@ -107,6 +108,7 @@ TKey::TKey(Long64_t pointer, Int_t nbytes) : TNamed()
 TKey::TKey(const char *name, const char *title, TClass *cl, Int_t nbytes)
       : TNamed(name,title)
 {
+   if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
    fVersion    = TKey::Class_Version();
    if (gFile && gFile->GetEND() > TFile::kStartBigFile) fVersion += 1000;
    fClassName  = cl->GetName();
@@ -123,6 +125,7 @@ TKey::TKey(const char *name, const char *title, TClass *cl, Int_t nbytes)
 TKey::TKey(const TString &name, const TString &title, TClass *cl, Int_t nbytes)
       : TNamed(name,title)
 {
+   if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
    fVersion    = TKey::Class_Version();
    if (gFile && gFile->GetEND() > TFile::kStartBigFile) fVersion += 1000;
    fClassName  = cl->GetName();
@@ -149,6 +152,7 @@ TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
               "\tadd a default constructor before attempting to read it.",
               obj->ClassName());
    }
+   if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
    Int_t lbuf, nout, noutot, bufmax, nzip;
    fClassName = obj->ClassName();
    fNbytes    = 0;
