@@ -36,6 +36,13 @@ BASEO        := $(BASES:.cxx=.o)
 
 BASEDEP      := $(BASEO:.o=.d) $(BASEDO:.o=.d)
 
+# ManualBase4 only need to be regenerated (and then changed manualy) when
+# the dictionary interface changes
+BASEL4       := $(MODDIRI)/LinkDef4.h
+BASEDS4      := $(MODDIRS)/ManualBase4.cxx
+BASEDO4      := $(BASEDS4:.cxx=.o)
+BASEH4       := TDirectory.h
+
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(BASEH))
 
@@ -55,6 +62,9 @@ $(BASEDS2):     $(BASEH1) $(BASEL2) $(ROOTCINTTMP)
 $(BASEDS3):     $(BASEH3) $(BASEL3) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(BASEH3) $(BASEL3)
+$(BASEDS4):     # intentionally left empty .. should be called only on demand after deleting the file
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(BASEH4) $(BASEL4)
 
 $(BASEDO1):     $(BASEDS1)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
@@ -67,6 +77,8 @@ else
 $(BASEDO3):     $(BASEDS3)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 endif
+$(BASEDO4):     $(BASEDS4)
+		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
 all-base:       $(BASEO) $(BASEDO)
 
