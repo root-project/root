@@ -19,11 +19,18 @@ void rose_image()
    img->SetConstRatio(0);
    img->SetImageQuality(TAttImage::kImgBest);
 
+   TString fp = gEnv->GetValue("Root.TTFontPath", "");
+   TString bc = fp + "/BlackChancery.ttf";
+   TString ar = fp + "/arial.ttf";
+
    // draw text over image with funny font
-   img->DrawText(120, 160, "Hello World!", 32, gROOT->GetColor(4)->AsHexString(), "test.ttf", TImage::kShadeBelow);
+   img->DrawText(120, 160, "Hello World!", 32, 
+                 gROOT->GetColor(4)->AsHexString(), 
+                 bc, TImage::kShadeBelow);
 
    // draw text over image with foreground specified by pixmap
-   img->DrawText(250, 350, "goodbye cruel world ...", 24, 0, "$ROOTSYS/fonts/arial.ttf", TImage::kPlain, "fore.xpm");
+   img->DrawText(250, 350, "goodbye cruel world ...", 24, 0, 
+                 ar, TImage::kPlain, "fore.xpm");
 
    TImage *img2 = TImage::Open("mditestbg.xpm");
 
