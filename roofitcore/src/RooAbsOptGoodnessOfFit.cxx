@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.9 2003/01/14 00:07:43 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.10 2003/02/26 02:18:33 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -95,7 +95,10 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
   // Copy data and strip entries lost by adjusted fit range
   _dataClone = ((RooAbsData&)data).reduce(*pdfDepSet) ;  
   delete pdfDepSet ;
-  
+
+  setEventCount(_dataClone->numEntries()) ;
+ 
+ 
   // Clone all PDF compents by copying all branch nodes
   RooArgSet tmp("PdfBranchNodeList") ;
   pdf.branchNodeServerList(&tmp) ;

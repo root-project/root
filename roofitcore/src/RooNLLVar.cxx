@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNLLVar.cc,v 1.4 2002/09/05 04:33:44 verkerke Exp $
+ *    File: $Id: RooNLLVar.cc,v 1.5 2002/10/25 16:28:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -64,14 +64,20 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const
   Int_t i ;
   Double_t result(0) ;
   
+  Double_t sumWeight(0) ;
   for (i=firstEvent ; i<lastEvent ; i++) {
     
     // get the data values for this event
     _dataClone->get(i);
+    if (_dataClone->weight()==0) continue ;
+
+    //cout << "RooNLLVar(" << GetName() << ") wgt[" << i << "] = " << _dataClone->weight() << endl ;
+
     Double_t term = _dataClone->weight() * _pdfClone->getLogVal(_normSet);
+    sumWeight += _dataClone->weight() ;
 
     // If any event evaluates with zero probability, abort calculation
-    if(term == 0 && (_dataClone->weight()!=0.)) {
+    if(term == 0) {
       cout << "RooNLLVar::evaluatePartition(" << GetName() 
 	   << "): WARNING: event " << i << " has zero or negative probability" << endl ;
       return 0 ;
@@ -88,7 +94,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const
   // If part of simultaneous PDF normalize probability over 
   // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n) 
   if (_simCount>1) {
-    result += (lastEvent-firstEvent)*log(1.0*_simCount) ;
+    result += sumWeight*log(1.0*_simCount) ;
   }
 
   return result ;

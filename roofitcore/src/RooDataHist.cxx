@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooDataHist.cc,v 1.29 2002/09/05 04:33:22 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -41,7 +41,8 @@ RooDataHist::RooDataHist()
   _wgt = 0 ;
   _errLo = 0 ;
   _errHi = 0 ;
-  _idxMult = 0 ;
+  _binv = 0 ;
+  _idxMult = 0 ;  
   _curWeight = 0 ;
   _curIndex = -1 ;
 }
@@ -327,6 +328,7 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
   // For most uses the RooAbsData::reduce() wrapper function, which uses this constructor, 
   // is the most convenient way to create a subset of an existing data
 
+  initialize() ;
   appendToDir(this,kTRUE) ;
 }
 
@@ -346,6 +348,7 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
 {
   // Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
   checkInit() ;
+
 
   RooDataHist *rdh = new RooDataHist(GetName(), GetTitle(), varSubset) ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooMCStudy.cc,v 1.15 2002/09/05 04:33:40 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -384,13 +384,14 @@ void RooMCStudy::calcPulls()
     TString name(par->GetName()), title(par->GetTitle()) ;
     name.Append("pull") ;
     title.Append(" Pull") ;
-    RooAbsReal* genPar = (RooAbsReal*) _genParams->find(par->GetName())->Clone("truth") ;
-    RooFormulaVar pull(name,title,"(@0-@1)/@2",RooArgList(*par,*genPar,*err)) ;
+    RooAbsReal* genParOrig = (RooAbsReal*)_genParams->find(par->GetName()) ;
+    if (genParOrig) {
+      RooAbsReal* genPar = (RooAbsReal*) genParOrig->Clone("truth") ;
+      RooFormulaVar pull(name,title,"(@0-@1)/@2",RooArgList(*par,*genPar,*err)) ;
 
-    _fitParData->addColumn(pull) ;
-
-    delete genPar ;
-    
+      _fitParData->addColumn(pull) ;
+      delete genPar ;
+    }    
   }
   delete iter ;
 

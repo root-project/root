@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.rdl,v 1.3 2002/09/05 04:33:05 verkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.rdl,v 1.4 2003/01/14 00:07:42 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -54,7 +54,8 @@ protected:
 
   void setMPSet(Int_t setNum, Int_t numSets) ; 
   void setSimCount(Int_t simCount) { _simCount = simCount ; }
-
+  void setEventCount(Int_t nEvents) { _nEvents = nEvents ; }
+  
   RooSetProxy _paramSet ;
 
   enum GOFOpMode { SimMaster,MPMaster,Slave } ;
