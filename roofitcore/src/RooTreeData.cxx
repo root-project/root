@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.19 2001/10/27 22:28:23 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.20 2001/10/31 07:19:31 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -693,9 +693,11 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
     return 0;
   }
 
-  // create a temporary histogram of this variable
-  TH1F *hist= createHistogram(*var, cuts, "plot");
-  if(0 == hist) {
+  // create and fill a temporary histogram of this variable
+  TString histName(GetName());
+  histName.Append("_plot");
+  TH1F *hist= var->createHistogram(histName.Data(), "Events");
+  if(0 == fillHistogram(hist,RooArgList(*var),cuts)) {
     cout << ClassName() << "::" << GetName()
 	 << ":plotOn: createHistogram() failed" << endl;
     return 0;
@@ -857,71 +859,6 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
   if(0 != select) delete select;
 
   return hist;
-}
-
-
-
-TH1F* RooTreeData::createHistogram(const RooAbsReal& var, const char* cuts, const char *name) const
-{
-  // Create a TH1F histogram of the distribution of the specified variable
-  // using this dataset. Apply any cuts to select which events are used.
-  // The variable being plotted can either be contained directly in this
-  // dataset, or else be a function of the variables in this dataset.
-  // The histogram will be created using RooAbsReal::createHistogram() with
-  // the name provided (with our dataset name prepended).
-
-  Bool_t ownPlotVar(kFALSE) ;
-  // Is this variable in our dataset?
-  RooAbsReal* plotVar= (RooAbsReal*)_vars.find(var.GetName());
-  if(0 == plotVar) {
-    // Is this variable a client of our dataset?
-    if (!var.dependsOn(_vars)) {
-      cout << GetName() << "::createHistogram: Argument " << var.GetName() 
-	   << " is not in dataset and is also not dependent on data set" << endl ;
-      return 0 ; 
-    }
-
-    // Clone derived variable 
-    plotVar = (RooAbsReal*) var.Clone()  ;
-    ownPlotVar = kTRUE ;
-
-    //Redirect servers of derived clone to internal ArgSet representing the data in this set
-    plotVar->recursiveRedirectServers(_vars) ;
-  }
-
-  // Create selection formula if selection cuts are specified
-  RooFormula* select(0) ;
-  if(0 != cuts && strlen(cuts)) {
-    select=new RooFormula(cuts,cuts,_vars);
-    if (!select || !select->ok()) {
-      delete select;
-      return 0 ;
-    }
-  }
-  
-  TString histName(name);
-  histName.Prepend("_");
-  histName.Prepend(fName);
-
-  // WVE use var instead of plotVar, otherwise binning properties
-  // of data set copy of plot var are always used.
-  TH1F *histo= var.createHistogram(histName.Data(), "Events");
-
-  // Dump contents   
-  Int_t nevent= (Int_t)_tree->GetEntries();
-  for(Int_t i=0; i < nevent; ++i) {
-    Int_t entryNumber=_tree->GetEntryNumber(i);
-    if (entryNumber<0) break;
-    get(entryNumber);
-
-    if (select && select->eval()==0) continue ;
-    histo->Fill(plotVar->getVal(),weight()) ;
-  }
-
-  if (ownPlotVar) delete plotVar ;
-  if (select) delete select ;
-
-  return histo ;
 }
 
 
