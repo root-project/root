@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.4 2000/06/13 10:56:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.5 2000/08/25 13:10:20 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1114,6 +1114,8 @@ L110:
                   IF2++;
                }
                CODED = &CHCODED[0];
+               if (IF1 > 15) IF1=15;
+               if (IF2 > 15) IF2=15;
                if (IF2) sprintf(CODED,"%%%d.%df",IF1,IF2);
                else     sprintf(CODED,"%%%d.%df",IF1+1,1);
             }
@@ -1573,7 +1575,7 @@ L20:
 //*-*-      Get nominal bin width in exponential form
 
    jlog   = Int_t(TMath::Log10(awidth));
-   if (jlog <-30 || jlog > 30) {
+   if (jlog <-200 || jlog > 200) {
       BinLow   = 0;
       BinHigh  = 1;
       BinWidth = 0.01;
