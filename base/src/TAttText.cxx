@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.13 2002/09/14 11:12:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.14 2003/01/22 11:23:02 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -173,7 +173,6 @@ void TAttText::Modify()
       else          tsize = fTextSize*hh;
       if (fTextFont%10 > 2) tsize = fTextSize;
 
-#ifndef WIN32
 again:
       if (gVirtualX->HasTTFonts()) {
          if (gVirtualX->GetTextFont() != fTextFont) {
@@ -263,10 +262,6 @@ again:
          gVirtualX->SetTextFont(fTextFont);
          gVirtualX->SetTextSize(tsize);
       }
-#else
-      if (gVirtualX->GetTextFont() != fTextFont)   gVirtualX->SetTextFont(fTextFont);
-      if (gVirtualX->GetTextSize() != tsize)       gVirtualX->SetTextSize(tsize);
-#endif
       gVirtualX->SetTextAlign(fTextAlign);
       gVirtualX->SetTextColor(fTextColor);
    }
