@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.87 2001/08/17 07:49:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.88 2001/08/17 09:58:35 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1015,6 +1015,7 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
       ladd  = pointer;
       atype = i;
    } else {
+      if (i < 0) return 0;
       ladd  = pointer + fOffset[i];
       atype = fType[i];
    }
