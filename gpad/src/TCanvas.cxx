@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.55 2004/02/18 20:13:42 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.56 2004/02/27 01:03:58 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -796,33 +796,28 @@ void TCanvas::EnterLeave(TPad *prevSelPad, TObject *prevSelObj)
 
    if (prevSelObj == fSelected) return;
 
-   TPad *padsav  = (TPad *)gPad;
-   Int_t sevent  = fEvent;
-   Int_t seventx = fEventX;
-   Int_t seventy = fEventY;
-   fEventX = fEventY = 0;
+   TPad *padsav = (TPad *)gPad;
+   Int_t sevent = fEvent;
 
    if (prevSelObj) {
       gPad = prevSelPad;
-      prevSelObj->ExecuteEvent(kMouseLeave, 0, 0);
+      prevSelObj->ExecuteEvent(kMouseLeave, fEventX, fEventY);
       fEvent = kMouseLeave;
       if (fAutoExec) RunAutoExec();
-      ProcessedEvent(kMouseLeave, 0, 0, prevSelObj);  // emit signal
+      ProcessedEvent(kMouseLeave, fEventX, fEventY, prevSelObj);  // emit signal
    }
 
    gPad = fSelectedPad;
 
    if (fSelected) {
-      fSelected->ExecuteEvent(kMouseEnter, 0, 0);
+      fSelected->ExecuteEvent(kMouseEnter, fEventX, fEventY);
       fEvent = kMouseEnter;
       if (fAutoExec) RunAutoExec();
-      ProcessedEvent(kMouseEnter, 0, 0, fSelected);  // emit signal
+      ProcessedEvent(kMouseEnter, fEventX, fEventY, fSelected);  // emit signal
    }
 
-   fEvent  = sevent;
-   fEventX = seventx;
-   fEventY = seventy;
-   gPad    = padsav;
+   fEvent = sevent;
+   gPad   = padsav;
 }
 
 //______________________________________________________________________________
@@ -1220,7 +1215,7 @@ TPad *TCanvas::Pick(Int_t px, Int_t py, TObject *prevSelObj)
    if (fSelected != prevSelObj)
       Picked(fSelectedPad, fSelected, fEvent);  // emit signal
 
-   if ((fEvent == kButton1Down) || (fEvent == kButton2Down) || 
+   if ((fEvent == kButton1Down) || (fEvent == kButton2Down) ||
        (fEvent == kButton3Down) || (fEvent == kKeyPress)) {
       if (fSelected) Selected(fSelectedPad, fSelected, fEvent);  // emit signal
    }

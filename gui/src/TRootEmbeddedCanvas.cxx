@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.7 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.8 2003/11/07 22:47:53 brun Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -246,8 +246,13 @@ Bool_t TRootEmbeddedCanvas::HandleContainerCrossing(Event_t *event)
 
    if (!fCanvas) return kTRUE;
 
-   if (event->fType == kLeaveNotify)
-      fCanvas->HandleInput(kMouseLeave, 0, 0);
+   Int_t x = event->fX;
+   Int_t y = event->fY;
+
+   // pointer grabs create also an enter and leave event but with fCode
+   // either kNotifyGrab or kNotifyUngrab, don't propagate these events
+   if (event->fType == kLeaveNotify && event->fCode == kNotifyNormal)
+      fCanvas->HandleInput(kMouseLeave, x, y);
 
    return kTRUE;
 }
@@ -263,7 +268,7 @@ void TRootEmbeddedCanvas::SavePrimitive(ofstream &out, Option_t *option)
 
    char quote ='"';
 
-   out << endl << "   // embedded canvas" << endl;   
+   out << endl << "   // embedded canvas" << endl;
    out << "   TRootEmbeddedCanvas *";
    out << GetName() << " = new TRootEmbeddedCanvas(0" << "," << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight();
