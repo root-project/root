@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.9 2002/03/28 09:22:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.10 2002/05/07 06:38:20 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -532,8 +532,8 @@ void TRandom::Rannor(Float_t &a, Float_t &b)
    z = Rndm();
    x = z * 6.283185;
    r = TMath::Sqrt(-2*TMath::Log(y));
-   a = r * TMath::Sin(x);
-   b = r * TMath::Cos(x);
+   a = (Float_t)(r * TMath::Sin(x));
+   b = (Float_t)(r * TMath::Cos(x));
 }
 
 //______________________________________________________________________________
