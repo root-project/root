@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.64 2003/06/13 06:16:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.65 2003/06/17 15:24:00 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -480,13 +480,13 @@ void TCint::UpdateListOfTypes()
    R__LOCKGUARD(gCINTMutex);
    G__TypedefInfo t;
    while (t.Next()) {
-      if (t.IsValid() && t.Name()) {
+      if (gROOT && gROOT->fTypes && t.IsValid() && t.Name()) {
          TDataType *d = (TDataType *)gROOT->fTypes->FindObject(t.Name());
          // only add new types, don't delete old ones with the same name
-         // (as is done in UpdateListOfGlobals())
-         // This 'feature' is being used in TROOT::GetType.
+         // (as is done in UpdateListOfGlobals()),
+         // this 'feature' is being used in TROOT::GetType().
          if (!d) {
-            gROOT->fTypes->Add(new TDataType( new G__TypedefInfo(t) ));
+            gROOT->fTypes->Add(new TDataType(new G__TypedefInfo(t)));
          }
       }
    }
