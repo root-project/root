@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.156 2004/11/17 17:56:53 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.157 2004/11/18 06:13:14 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -777,6 +777,7 @@ void TBranchElement::Browse(TBrowser *b)
 {
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches > 0) {
+#ifdef AXELNEWCODE
       TList persistentBranches;
       TBranch* branch=0;
       TIter iB(&fBranches);
@@ -812,8 +813,10 @@ void TBranchElement::Browse(TBrowser *b)
                if (!m || m->IsPersistent()) persistentBranches.Add(branch);
             } else persistentBranches.Add(branch);
          } // branch if not a folder
-      
-      persistentBranches.Browse(b);
+      persistentBranches.Browse(b);      
+#else
+      fBranches.Browse(b);
+#endif
       // add all public const methods without params
       if (GetBrowsableMethods())
          GetBrowsableMethods()->Browse(b);
