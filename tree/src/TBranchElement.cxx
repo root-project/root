@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.110 2003/04/18 16:42:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.111 2003/05/07 08:33:45 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -904,6 +904,7 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
    // if branch address is not yet set, must set all addresses starting
    // with the top level parent branch
    if (fAddress == 0 && fTree->GetMakeClass() == 0) {
+      if (TestBit(kDoNotProcess) && !getall) return 0;
       TBranchElement *mother = (TBranchElement*)GetMother();
 //printf("GetEntry, branch=%s, mother=%s\n",GetName(),mother->GetName());
       TClass *cl = gROOT->GetClass(mother->GetClassName());
