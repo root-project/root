@@ -1644,7 +1644,7 @@ if test ! "x$enable_asimage" = "xno" ; then
         asextralibdir="$asextralibdir $found_dirz"
     fi
 fi
-   message "Checking whether to build libAfterImage"
+   message "Checking whether to build included libAfterImage"
    echo "$enable_builtin_afterimage"
 fi
 
