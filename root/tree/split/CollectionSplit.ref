@@ -10,7 +10,11 @@
 *Br    7 :fCol      :                                                        *
 *Br    8 :fCol.fUniqueID :                                                   *
 *Br    9 :fCol.fBits :                                                       *
-*Br   10 :fCol.fMyClArr :                                                    *
-*Br   11 :fCol.fMyObjArr :                                                   *
-*Br   12 :fCol.fValid :                                                      *
-*Br   13 :fEventNum :                                                        *
+*Br   10 :fCol.fMyClArr : fCol.fMyClArr_                                     *
+*Br   11 :fCol.fMyClArr.fUniqueID : fUniqueID[fCol.fMyClArr_]                *
+*Br   12 :fCol.fMyClArr.fBits : fBits[fCol.fMyClArr_]                        *
+*Br   13 :fCol.fMyClArr.fName : fName[fCol.fMyClArr_]                        *
+*Br   14 :fCol.fMyClArr.fTitle : fTitle[fCol.fMyClArr_]                      *
+*Br   15 :fCol.fMyObjArr :                                                   *
+*Br   16 :fCol.fValid :                                                      *
+*Br   17 :fEventNum :                                                        *
