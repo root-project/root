@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.1 2000/10/12 13:27:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.2 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -167,9 +167,11 @@ void TMultiGraph::Paint(Option_t *option)
   char *l;
   static char chopt[33];
   Int_t nch = strlen(option);
-  for (Int_t i=0;i<nch;i++) chopt[i] = toupper(option[i]);
+  Int_t i;
+  for (i=0;i<nch;i++) chopt[i] = toupper(option[i]);
   chopt[nch] = 0;
-
+  Double_t *x, *y;
+   
   l = strstr(chopt,"A");
   if (l) {
      *l = ' ';
@@ -194,6 +196,15 @@ void TMultiGraph::Paint(Option_t *option)
         rwymin = rwxmin;
         rwymax = -rwymin;
         while ((g = (TGraph*) next())) {
+           Int_t npoints = g->GetN();
+           x = g->GetX();
+           y = g->GetY();
+           for (i=0;i<npoints;i++) {
+              if (x[i] < rwxmin) rwxmin = x[i];
+              if (x[i] > rwxmax) rwxmax = x[i];
+              if (y[i] < rwymin) rwymin = y[i];
+              if (y[i] > rwymax) rwymax = y[i];
+           }
            g->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
            if (g->GetN() > npt) npt = g->GetN();
         }
