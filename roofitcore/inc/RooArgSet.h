@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.rdl,v 1.5 2001/03/27 01:20:19 verkerke Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.6 2001/04/05 01:49:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,10 +17,9 @@
 #include "TString.h"
 #include "TClass.h"
 #include "RooFitCore/RooAbsArg.hh"
+#include "RooFitCore/RooPrintable.hh"
 
-class RooAbsArg ;
-
-class RooArgSet : public THashList {
+class RooArgSet : public THashList, public RooPrintable {
 public:
 
   // Constructors, assignment etc.
@@ -68,8 +67,10 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) ;
   
   // Printing interface (human readable)
-  virtual void printToStream(ostream& os, RooAbsArg::PrintOption opt=RooAbsArg::Standard) const ;
-  inline void Print(Option_t * = 0) const ;
+  virtual void printToStream(ostream& os, PrintOption opt= Standard, const char *indent= "") const;
+  inline virtual void Print(Option_t *options= 0) const {
+    printToStream(defaultStream(),parseOptions(options));
+  }
 
   const char* GetName() { return _name.Data() ; }
 

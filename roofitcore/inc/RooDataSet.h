@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.5 2001/03/17 03:47:39 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.6 2001/03/29 01:06:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,6 +17,7 @@
 
 #include "TTree.h"
 
+#include "RooFitCore/RooPrintable.hh"
 #include "RooFitCore/RooArgSet.hh"
 
 class RooAbsArg;
@@ -29,7 +30,7 @@ class TPaveText;
 class Roo1DTable ;
 class RooAbsCategory ;
 
-class RooDataSet : public TTree {
+class RooDataSet : public TTree, public RooPrintable {
 public:
 
   // Constructors, factory methods etc.
@@ -46,7 +47,7 @@ public:
   // Read data from a text file and create a dataset from it.
   // The possible options are: (D)ebug, (Q)uiet.
   static RooDataSet *read(const char *filename, RooArgSet &variables,
-			  const char *opts, const char* commonPath="",
+			  const char *opts= "", const char* commonPath="",
 			  const char *indexCatName=0) ;
 
   // Add one ore more rows of data
@@ -61,11 +62,12 @@ public:
   Roo1DTable* Table(RooAbsCategory& cat, const char* cuts="", const char* opts="") ;
  
   // Printing interface (human readable)
-  enum PrintOption { Standard=0 } ;
-  virtual void printToStream(ostream& os, PrintOption opt=Standard) ;
-  void print(PrintOption opt=Standard) { printToStream(cout,opt) ; }
+  virtual void printToStream(ostream& os, PrintOption opt= Standard, const char *indent= "") const;
+  inline virtual void Print(Option_t *options= 0) const {
+    printToStream(defaultStream(),parseOptions(options));
+  }
 
-  // Debug
+  // Output to an ASCII file
   void dump() ;
 
 protected:
@@ -92,4 +94,3 @@ private:
 };
 
 #endif
-

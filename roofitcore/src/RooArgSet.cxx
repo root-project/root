@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.9 2001/04/05 01:49:10 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.10 2001/04/08 00:06:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -12,6 +12,7 @@
  *****************************************************************************/
 
 #include <iostream.h>
+#include <iomanip.h>
 #include <fstream.h>
 #include "TClass.h"
 #include "RooFitCore/RooArgSet.hh"
@@ -231,27 +232,6 @@ RooAbsArg *RooArgSet::find(const char *name) const {
 }
 
 
-void RooArgSet::Print(Option_t* options) const
-{
-  // Print the state of this object using printToStream() with the
-  // following PrintOption mapping:
-  //
-  //  "1" - OneLine
-  //  "S" - Shape
-  //  "V" - Verbose
-  //
-  // The default is Standard.
-
-  TString opts(options);
-  opts.ToLower();
-  RooAbsArg::PrintOption popt(RooAbsArg::Standard);
-  if(opts.Contains("1")) { popt= RooAbsArg::OneLine ; }
-  if(opts.Contains("s")) { popt= RooAbsArg::Shape; }
-  if(opts.Contains("v")) { popt= RooAbsArg::Verbose;}
-  printToStream(cout,popt);
-}
-
-
 Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   if (compact) {
@@ -456,19 +436,17 @@ void RooArgSet::writeToStream(ostream& os, Bool_t compact)
   if (compact) os << endl ;
 }
 
-
-
-void RooArgSet::printToStream(ostream& os, RooAbsArg::PrintOption opt) const {
+void RooArgSet::printToStream(ostream& os, PrintOption opt, const char *indent) const {
   // Print content of list
-  os << "RooArgSet \"" << _name << "\":" << endl;
-  TIterator *iterator= MakeIterator();
-  int index= 0;
-  RooAbsArg *next(0);
-  while(0 != (next= (RooAbsArg*)iterator->Next())) {
-    os << " (" << ++index << ") ";
-    next->printToStream(os,opt);
+  os << ClassName() << "::" << _name << endl;
+  if(opt >= Standard) {
+    TIterator *iterator= MakeIterator();
+    int index= 0;
+    RooAbsArg *next(0);
+    while(0 != (next= (RooAbsArg*)iterator->Next())) {
+      os << " (" << setwidth(3) << ++index << ") ";
+      next->printToStream(os,opt);
+    }
+    delete iterator;
   }
-  delete iterator;
 }
-
-

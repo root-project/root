@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.9 2001/03/29 01:06:44 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.10 2001/04/05 01:49:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -312,16 +312,19 @@ Roo1DTable* RooDataSet::Table(RooAbsCategory& cat, const char* cuts, const char*
   return table ;
 }
 
-
-void RooDataSet::printToStream(ostream& os, PrintOption opt) 
+void RooDataSet::printToStream(ostream& os, PrintOption opt, const char *indent) const
 {
-  // Print structure of this data set
-  cout << "RooDataSet \"" << GetTitle() << "\" contains" << endl
-       << GetEntries() << " values for ";
-  _vars.printToStream(os,RooAbsArg::Shape);
-  if(_truth.GetSize() > 0) {
-    cout << "and was generated with ";
-    _truth.printToStream(cout);
+  oneLinePrint(os,*this);
+  if(opt >= Standard) {
+    os << indent << "  Contains " << GetEntries() << " entries" << endl;
+    if(opt >= Shape) {
+      os << indent << "  Defines the following variables:" << endl;
+      _vars.printToStream(os,RooAbsArg::Shape);
+      if(_truth.GetSize() > 0) {
+	os << indent << "  Generated with ";
+	_truth.printToStream(os);
+      }
+    }
   }
 }
 
@@ -345,8 +348,11 @@ const RooArgSet* RooDataSet::get(Int_t index) const {
 RooDataSet *RooDataSet::read(const char *fileList, RooArgSet &variables,
 			     const char *options, const char* commonPath, 
 			     const char* indexCatName) {
-  //Read given ascii file, and construct a data set, using the given
-  //ArgSet as structure definition
+  //Read given ascii file(s), and construct a data set, using the given
+  //ArgSet as structure definition. The possible options are:
+  //  Q : be quiet about non-fatal parsing errors
+  //  D : print extra debugging info
+  // Need to document arguments and "blindState" more here...
 
   // Append blinding state category to variable list if not already there
   Bool_t ownIsBlind(kTRUE) ;
