@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.35 2004/06/11 13:34:34 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.36 2004/08/09 15:35:52 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -164,8 +164,15 @@ static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err)
 
    char msg[80];
    XGetErrorText(disp, err->error_code, msg, 80);
-   ::Error("RootX11ErrorHandler", "%s (XID: %u, XREQ: %u)", msg,
-           err->resourceid, err->request_code);
+   TObject *w = (TObject *)gROOT->ProcessLineFast(Form("gClient->GetWindowById(%d)", err->resourceid));
+
+   if (!w) {
+      ::Error("RootX11ErrorHandler", "%s (XID: %u, XREQ: %u)", msg,
+               err->resourceid, err->request_code);
+   } else {
+      ::Error("RootX11ErrorHandler", "%s (%s XID: %u, XREQ: %u)", msg, w->ClassName(),
+               err->resourceid, err->request_code);
+   }
    if (TROOT::Initialized()) {
       //Getlinem(kInit, "Root > ");
       Throw(2);
