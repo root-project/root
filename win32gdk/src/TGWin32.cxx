@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.62 2004/04/22 13:30:31 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.63 2004/05/05 15:36:21 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -747,6 +747,33 @@ static char *EventMask2String(UInt_t evmask)
    return bfr;
 }
 
+//______________________________________________________________________________
+static Bool_t MessageProcessingFunc(MSG *msg)
+{
+   //
+
+   Bool_t ret = kFALSE;
+
+   if (msg->message == TGWin32ProxyBase::fgPostMessageId) {
+      if (msg->wParam) {
+         TGWin32ProxyBase *proxy = (TGWin32ProxyBase*)msg->wParam;
+         proxy->ExecuteCallBack(kTRUE);
+      } else {
+         ret = kTRUE;
+      }
+   } else if (msg->message == TGWin32ProxyBase::fgPingMessageId) {
+         TGWin32ProxyBase::GlobalUnlock();
+   } else {
+      if ( (msg->message >= WM_NCMOUSEMOVE) &&
+            (msg->message <= WM_NCMBUTTONDBLCLK) ) {
+         TGWin32ProxyBase::GlobalLock();
+      }
+      TranslateMessage(msg);
+      DispatchMessage(msg);
+   }
+   return ret;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 class TGWin32RefreshTimer : public TTimer {
 
@@ -758,10 +785,9 @@ public:
       Reset();
       MSG msg;
 
-      while (::PeekMessage(&msg, NULL, WM_PAINT, WM_PAINT, PM_NOREMOVE)) {
-         ::PeekMessage(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE);
-         ::TranslateMessage (&msg);
-         ::DispatchMessage (&msg);
+      while (::PeekMessage(&msg, NULL, 0, WM_USER, PM_NOREMOVE)) {
+         ::PeekMessage(&msg, NULL, 0, WM_USER, PM_REMOVE);
+         MessageProcessingFunc(&msg);
       }
       return kFALSE;
    }
@@ -774,17 +800,13 @@ public:
    void     *fHandle;      // handle of GUI thread
    DWORD    fId;           // id of GUI thread
    static LPCRITICAL_SECTION  fCritSec; // general mutex
-   static LPCRITICAL_SECTION  fMessageMutex; // message queue mutex
 
    TGWin32MainThread();
    ~TGWin32MainThread();
-   static void LockMSG();
-   static void UnlockMSG();
 };
 
 TGWin32MainThread* gMainThread = 0;
 LPCRITICAL_SECTION TGWin32MainThread::fCritSec = 0;
-LPCRITICAL_SECTION TGWin32MainThread::fMessageMutex = 0;
 
 //______________________________________________________________________________
 static DWORD WINAPI MessageProcessingLoop(void *p)
@@ -794,40 +816,17 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
    MSG msg;
    Int_t erret;
    Bool_t endLoop = kFALSE;
-   Int_t last_message = 0;
 
    // force to create message queue
    ::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
 
    // periodically we refresh windows
-   TGWin32RefreshTimer *refersh = new TGWin32RefreshTimer;
+   TGWin32RefreshTimer *refersh = new TGWin32RefreshTimer();
 
    while (!endLoop) {
       erret = ::GetMessage(&msg, NULL, NULL, NULL);
       if (erret <= 0) endLoop = kTRUE;
-
-      if (msg.message == TGWin32ProxyBase::fgPostMessageId) {
-         if (msg.wParam) {
-            TGWin32ProxyBase *proxy = (TGWin32ProxyBase*)msg.wParam;
-            proxy->ExecuteCallBack(msg.wParam);
-         } else {
-            endLoop = kTRUE;
-         }
-      } else if (msg.message == TGWin32ProxyBase::fgPingMessageId) {
-         TGWin32ProxyBase::GlobalUnlock();
-         continue;
-      } else {
-         if ( (msg.message > WM_NCMOUSEMOVE) &&
-              (msg.message <= WM_NCMBUTTONDBLCLK) ) {
-            TGWin32ProxyBase::GlobalLock();
-         }
-
-         TGWin32MainThread::LockMSG();
-         TranslateMessage (&msg);
-         DispatchMessage (&msg);
-         TGWin32MainThread::UnlockMSG();
-      }
-      last_message = msg.message;
+      endLoop = MessageProcessingFunc(&msg);
    }
 
    TGWin32::Instance()->CloseDisplay();
@@ -851,9 +850,7 @@ TGWin32MainThread::TGWin32MainThread()
 
    fHandle = ::CreateThread( NULL, 0, &MessageProcessingLoop, 0, 0, &fId );
    fCritSec = new CRITICAL_SECTION;
-   fMessageMutex = new CRITICAL_SECTION;
    ::InitializeCriticalSection(fCritSec);
-   ::InitializeCriticalSection(fMessageMutex);
 }
 
 //______________________________________________________________________________
@@ -867,35 +864,12 @@ TGWin32MainThread::~TGWin32MainThread()
    }
    fCritSec = 0;
 
-   if (fMessageMutex) {
-      ::LeaveCriticalSection(fMessageMutex);
-      ::DeleteCriticalSection(fMessageMutex);
-   }
-   fMessageMutex = 0;
-
    if(fHandle) {
       ::PostThreadMessage(fId, WM_QUIT, 0, 0);
       ::CloseHandle(fHandle);
    }
    fHandle = 0;
 }
-
-//______________________________________________________________________________
-void TGWin32MainThread::LockMSG()
-{
-   // lock message queue
-
-   if (fMessageMutex) ::EnterCriticalSection(fMessageMutex);
-}
-
-//______________________________________________________________________________
-void TGWin32MainThread::UnlockMSG()
-{
-   // unlock message queue
-
-   if (fMessageMutex) ::LeaveCriticalSection(fMessageMutex);
-}
-
 
 ///////////////////////// TGWin32 implementation ///////////////////////////////
 ClassImp(TGWin32)
@@ -956,6 +930,14 @@ TGWin32::~TGWin32()
    // destructor.
 
    CloseDisplay();
+}
+
+//______________________________________________________________________________
+Bool_t TGWin32::IsCmdThread() const
+{
+   // returns kTRUE if we are inside cmd/server thread
+
+   return (::GetCurrentThreadId() == TGWin32ProxyBase::fgMainThreadId);
 }
 
 //______________________________________________________________________________
@@ -5460,13 +5442,11 @@ Bool_t TGWin32::CheckEvent(Window_t id, EGEventType type, Event_t & ev)
    Event_t tev;
    GdkEvent xev;
 
-   TGWin32MainThread::LockMSG();
    tev.fType = type;
    MapEvent(tev, xev, kTRUE);
    Bool_t r = gdk_check_typed_window_event((GdkWindow *) id, xev.type, &xev);
 
    if (r) MapEvent(ev, xev, kFALSE);
-   TGWin32MainThread::UnlockMSG();
    return r ? kTRUE : kFALSE;
 }
 
@@ -5477,11 +5457,9 @@ void TGWin32::SendEvent(Window_t id, Event_t * ev)
 
    if (!ev) return;
 
-   TGWin32MainThread::LockMSG();
    GdkEvent xev;
    MapEvent(*ev, xev, kTRUE);
    gdk_event_put(&xev);
-   TGWin32MainThread::UnlockMSG();
 }
 
 //______________________________________________________________________________
@@ -5490,9 +5468,7 @@ Int_t TGWin32::EventsPending()
     // Returns number of pending events.
 
    Int_t ret;
-   TGWin32MainThread::LockMSG();
    ret = (Int_t)gdk_event_queue_find_first();
-   TGWin32MainThread::UnlockMSG();
    return ret;
 }
 
@@ -5503,7 +5479,6 @@ void TGWin32::NextEvent(Event_t & event)
    // and removes event from queue. Not all of the event fields are valid
    // for each event type, except fType and fWindow.
 
-   TGWin32MainThread::LockMSG();
    GdkEvent *xev = gdk_event_unqueue();
 
    // fill in Event_t
@@ -5513,7 +5488,6 @@ void TGWin32::NextEvent(Event_t & event)
    }
    MapEvent(event, *xev, kFALSE);
    gdk_event_free (xev);
-   TGWin32MainThread::UnlockMSG();
 }
 
 //______________________________________________________________________________

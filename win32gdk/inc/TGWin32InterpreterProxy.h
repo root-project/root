@@ -1,4 +1,4 @@
-// $Id: TGWin32InterpreterProxy.h,v 1.4 2004/01/21 23:15:52 brun Exp $
+// $Id: TGWin32InterpreterProxy.h,v 1.5 2004/01/27 20:46:28 brun Exp $
 // Author: Valeriy Onuchin  15/11/03
 
 /*************************************************************************
@@ -38,7 +38,7 @@ protected:
 
 public:
 
-   TGWin32InterpreterProxy() { fMaxResponseTime=1000000; }
+   TGWin32InterpreterProxy() { fMaxResponseTime = 1000000; }
    TGWin32InterpreterProxy(const char *name, const char *title = "Generic Interpreter") {}
    virtual ~TGWin32InterpreterProxy() {}
 

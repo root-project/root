@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.86 2004/05/04 15:24:55 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.87 2004/05/05 08:59:52 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -484,7 +484,11 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
             gSplash = 0;
          }
          ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE), ENABLE_PROCESSED_OUTPUT);
-         if (gConsoleEvent) ::ResetEvent(gConsoleEvent);
+         if (gConsoleEvent) {
+            ::ResetEvent(gConsoleEvent);
+            ::CloseHandle(gConsoleEvent);
+            gConsoleEvent = 0;
+         }
       } else {
          static int i = 0;
          ::SleepEx(100, 1);

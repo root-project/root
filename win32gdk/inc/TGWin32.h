@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.18 2004/03/09 14:01:51 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.19 2004/04/06 16:40:32 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -422,6 +422,7 @@ public:
    void         glLoadMatrixd(const Double_t *matrix);
    void         glShadeModel(UInt_t mode);
    void         glNormal3fv(const Float_t *norm);
+   Bool_t       IsCmdThread() const;
 
    static void Lock();
    static void Unlock();
