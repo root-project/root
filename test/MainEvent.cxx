@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.25 2002/11/13 17:35:50 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.26 2003/12/30 18:16:43 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
    //   Create a timer object to benchmark this loop
    TStopwatch timer;
    timer.Start();
-   Int_t nb = 0;
+   Long64_t nb = 0;
    Int_t ev;
    Int_t bufsize;
    Double_t told = 0;
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
    Double_t ctime = timer.CpuTime();
 
 
-   printf("\n%d events and %d bytes processed.\n",nevent,nb);
+   printf("\n%d events and %lld bytes processed.\n",nevent,nb);
    printf("RealTime=%f seconds, CpuTime=%f seconds\n",rtime,ctime);
    if (read) {
       printf("You read %f Mbytes/Realtime seconds\n",mbytes/rtime);
