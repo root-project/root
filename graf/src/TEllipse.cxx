@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.13 2002/10/31 07:27:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.14 2002/12/10 14:00:09 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -34,7 +34,8 @@ ClassImp(TEllipse)
 //
 //  When an ellipse sector only is drawn, the lines connecting the center
 //  of the ellipse to the edges are drawn by default. One can specify
-//  the drawing option "only" to not draw these lines.
+//  the drawing option "only" to not draw these lines or alternatively
+//  call the function SetNoEdges().
 //
 //Begin_Html
 /*
@@ -476,8 +477,8 @@ void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phi
       y[n+2] = y[0];
       if (GetFillColor()) gPad->PaintFillArea(n+2,x,y);
       if (GetLineStyle()) {
-         if (opt.Contains("only")) gPad->PaintPolyLine(n+1,x,y);
-         else                      gPad->PaintPolyLine(n+3,x,y);
+         if (TestBit(kNoEdges) || opt.Contains("only")) gPad->PaintPolyLine(n+1,x,y);
+         else                                           gPad->PaintPolyLine(n+3,x,y);
       }
    }
 }
@@ -514,6 +515,17 @@ void TEllipse::SavePrimitive(ofstream &out, Option_t *)
    SaveLineAttributes(out,"ellipse",1,1,1);
 
    out<<"   ellipse->Draw();"<<endl;
+}
+
+//______________________________________________________________________________
+void TEllipse::SetNoEdges(Bool_t noEdges)
+{
+//   if  noEdges = kTRUE the lines connecting the center to the edges
+//   will not be drawn.
+//   default is to draw the edges.
+   
+   if (noEdges) SetBit(kNoEdges);
+   else         ResetBit(kNoEdges);
 }
 
 //______________________________________________________________________________

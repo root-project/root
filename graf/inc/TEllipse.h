@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.h,v 1.4 2001/02/15 21:14:56 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.h,v 1.5 2002/10/31 07:27:34 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -44,6 +44,10 @@ protected:
         Double_t    fTheta;     //Rotation angle (degrees)
 
 public:
+    // TEllipse status bits
+    enum {
+       kNoEdges     = BIT(9)   // don't draw lines connecting center to edges
+    };
         TEllipse();
         TEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2=0,Double_t phimin=0, Double_t phimax=360,Double_t theta=0);
         TEllipse(const TEllipse &ellipse);
@@ -65,6 +69,7 @@ public:
         virtual void   PaintEllipse(Double_t x1, Double_t y1, Double_t r1,Double_t r2,Double_t phimin, Double_t phimax,Double_t theta,Option_t *option="");
         virtual void   Print(Option_t *option="") const;
         virtual void   SavePrimitive(ofstream &out, Option_t *option);
+        virtual void   SetNoEdges(Bool_t noEdges=kTRUE); // *MENU*
         virtual void   SetPhimin(Double_t phi=0)   {fPhimin=phi;} // *MENU*
         virtual void   SetPhimax(Double_t phi=360) {fPhimax=phi;} // *MENU*
         virtual void   SetR1(Double_t r1) {fR1=r1;} // *MENU*
