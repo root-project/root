@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.2 2000/11/27 10:46:50 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -42,19 +42,20 @@ private:
    TSocket   *fSocket;    //socket being handled
 
 public:
-   TSocketHandler(TMonitor *m, TSocket *s);
+   TSocketHandler(TMonitor *m, TSocket *s, Int_t interest);
    Bool_t   Notify();
    Bool_t   ReadNotify() { return Notify(); }
+   Bool_t   WriteNotify() { return Notify(); }
    TSocket *GetSocket() const { return fSocket; }
 };
 
-TSocketHandler::TSocketHandler(TMonitor *m, TSocket *s)
-               : TFileHandler(s->GetDescriptor(), 1)
+TSocketHandler::TSocketHandler(TMonitor *m, TSocket *s, Int_t interest)
+               : TFileHandler(s->GetDescriptor(), interest)
 {
    fMonitor = m;
    fSocket  = s;
 
-   gSystem->AddFileHandler(this);
+   Add();
 }
 
 Bool_t TSocketHandler::Notify()
@@ -119,11 +120,13 @@ TMonitor::~TMonitor()
 }
 
 //______________________________________________________________________________
-void TMonitor::Add(TSocket *sock)
+void TMonitor::Add(TSocket *sock, EInterest interest)
 {
-   // Add socket to the monitor's active list.
+   // Add socket to the monitor's active list. If interest=kRead then we
+   // want to monitor the socket for read readiness, if interest=kWrite
+   // then we monitor the socket for write readiness.
 
-   fActive->Add(new TSocketHandler(this, sock));
+   fActive->Add(new TSocketHandler(this, sock, (Int_t)interest));
 }
 
 //______________________________________________________________________________
@@ -174,7 +177,7 @@ void TMonitor::Activate(TSocket *sock)
       if (sock == s->GetSocket()) {
          fDeActive->Remove(s);
          fActive->Add(s);
-         gSystem->AddFileHandler(s);
+         s->Add();
          return;
       }
    }
@@ -190,7 +193,7 @@ void TMonitor::ActivateAll()
 
    while ((s = (TSocketHandler *) next())) {
       fActive->Add(s);
-      gSystem->AddFileHandler(s);
+      s->Add();
    }
    fDeActive->Clear();
 }
