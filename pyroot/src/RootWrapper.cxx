@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.11 2004/08/04 20:46:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.12 2004/08/12 20:55:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -34,11 +34,6 @@
 #include <string>
 #include <algorithm>
 #include <vector>
-
-// Special for Unixes
-#if defined(linux) || defined(sun)
-  #include "dlfcn.h"
-#endif
 
 
 //- data _______________________________________________________________________
@@ -117,15 +112,6 @@ namespace {
 void PyROOT::initRoot() {
 // setup interpreter locks to allow for threading in ROOT
    PyEval_InitThreads();
-
-#if defined(linux) || defined(sun)
-   dlopen( "libGpad.so",   RTLD_GLOBAL | RTLD_LAZY );
-   dlopen( "libGraf.so",   RTLD_GLOBAL | RTLD_LAZY );
-   dlopen( "libMatrix.so", RTLD_GLOBAL | RTLD_LAZY );
-   dlopen( "libHist.so",   RTLD_GLOBAL | RTLD_LAZY );
-   dlopen( "libTree.so",   RTLD_GLOBAL | RTLD_LAZY );
-   dlopen( "libGraf3d.so", RTLD_GLOBAL | RTLD_LAZY );
-#endif
 
 // setup root globals (bind later)
    if ( !gBenchmark ) gBenchmark = new TBenchmark();
