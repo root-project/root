@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.78 2004/09/13 09:10:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.79 2004/09/13 12:49:42 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2016,7 +2016,7 @@ void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
          out << ");" << endl;
       }
 
-      if (!el->fFrame->IsMapped() || !(el->fState & kIsVisible)) {
+      if (!el->fState & kIsVisible) {
          gListOfHiddenFrames->Add(el->fFrame);
       }
    }
