@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.5 2002/09/18 12:22:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.6 2002/12/02 18:50:03 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -1190,10 +1190,6 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 
    MapWindow();
    fClient->WaitFor(this);
-
-   // save user set colors
-   for (i = 0; i < 24; ++i)
-      ucolor[i] = fCpalette->GetColorByIndex(i);
 }
 
 //________________________________________________________________________________
@@ -1206,6 +1202,10 @@ TGColorDialog::~TGColorDialog()
 void TGColorDialog::CloseWindow()
 {
    // Called when window is closed via window manager.
+
+   // save user set colors
+   for (Int_t i = 0; i < 24; ++i)
+      ucolor[i] = fCpalette->GetColorByIndex(i);
 
    DeleteWindow();
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.1 2002/09/14 00:35:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.2 2002/12/02 18:50:03 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -33,7 +33,7 @@
 //                                                                      //
 // TGColorFrame, TG16ColorSelector, TGColorPopup and TGColorSelect.     //
 //                                                                      //
-// The TGColorFrame is a small framw with border showing a specific     //
+// The TGColorFrame is a small frame with border showing a specific     //
 // color.                                                               //
 //                                                                      //
 // The TG16ColorSelector is a composite frame with 16 TGColorFrames.    //
@@ -505,6 +505,9 @@ void TGColorSelect::DrawTriangle(GContext_t gc, Int_t x, Int_t y)
 //________________________________________________________________________________
 void TGColorSelect::SetColor(ULong_t color)
 {
+   // Set color.
+
+   fColor = color;
    fDrawGC.SetForeground(color);
    gClient->NeedRedraw(this);
 }
