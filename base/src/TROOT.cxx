@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.81 2002/09/16 10:57:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.82 2002/09/19 13:54:58 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -700,8 +700,18 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
 TObject *TROOT::FindObjectAny(const char *name) const
 {
    // Return a pointer to the first object with name starting at //root.
+   // This function scans the list of all folders.
+   // if no object found in folders, it scans the memory list of all files.
 
-   return fRootFolder->FindObjectAny(name);
+   TObject *obj = fRootFolder->FindObjectAny(name);
+   if (obj) return obj;
+   TFile *f;
+   TIter next(fFiles);
+   while ((f = (TFile*)next())) {
+      obj = f->GetList()->FindObject(name);
+      if (obj) return obj;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
