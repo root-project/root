@@ -287,11 +287,17 @@ class __normal_iterator
 public:
   typedef __normal_iterator<_Iterator, _Container> normal_iterator_type;
   typedef std::iterator_traits<_Iterator> 		__traits_type;
-  typedef typename __traits_type::iterator_category 	iterator_category;
-  typedef typename __traits_type::value_type 		value_type;
-  typedef typename __traits_type::difference_type 	difference_type;
-  typedef typename __traits_type::pointer          	pointer;
-  typedef typename __traits_type::reference 		reference;
+  typedef typename _Iterator::iterator_category 	iterator_category;
+  typedef typename _Iterator::value_type 		value_type;
+  typedef typename _Iterator::difference_type 	difference_type;
+  typedef typename _Iterator::pointer          	pointer;
+  typedef typename _Iterator::reference 		reference;
+
+  //typedef typename __traits_type::iterator_category 	iterator_category;
+  //typedef typename __traits_type::value_type 		value_type;
+  //typedef typename __traits_type::difference_type 	difference_type;
+  //typedef typename __traits_type::pointer          	pointer;
+  //typedef typename __traits_type::reference 		reference;
 
   __normal_iterator() ;
 
@@ -334,6 +340,19 @@ public:
   difference_type operator-(const normal_iterator_type& __i) const;
 
   const _Iterator& base() const ;
+
+  friend bool operator==(const __normal_iterator<_Iterator,_Container>&,
+		const __normal_iterator<_Iterator,_Container>&);
+  friend bool operator!=(const __normal_iterator<_Iterator,_Container>&,
+		const __normal_iterator<_Iterator,_Container>&);
+  friend bool operator<(const __normal_iterator<_Iterator,_Container>&,
+		const __normal_iterator<_Iterator,_Container>&);
+  friend bool operator>(const __normal_iterator<_Iterator,_Container>&,
+		const __normal_iterator<_Iterator,_Container>&);
+  friend bool operator<=(const __normal_iterator<_Iterator,_Container>&,
+		const __normal_iterator<_Iterator,_Container>&);
+  friend bool operator>=(const __normal_iterator<_Iterator,_Container>&,
+		const __normal_iterator<_Iterator,_Container>&);
 };
 
 // forward iterator requirements

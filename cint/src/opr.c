@@ -2342,7 +2342,8 @@ G__value *defined;
       }
       sprintf(expr,"%s(%s,%s)" ,opr ,arg1 ,arg2);
       buffer = G__getfunction(expr,&ig2,G__TRYNORMAL);
-#ifdef G__OLDIMPLEMENTATION1286_YET
+      /* #ifdef G__OLDIMPLEMENTATION1286_YET */
+#ifndef G__OLDIMPLEMENTATION1862
       /* Need to check ANSI/ISO standard. What happens if operator 
        * function defined in a namespace is used in other namespace */
       if(0==ig2 && -1!=expressionin.tagnum && 

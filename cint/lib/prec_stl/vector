@@ -122,13 +122,13 @@ class vector {
                                                         const_iterator;
 #endif /* 1703 */
 
-#elif !(G__GNUC>=3 && G__GNUC_MINOR<1)
-  typedef T* iterator;
-  typedef const T* const_iterator;
-#else
+#elif (G__GNUC>=3 && G__GNUC_MINOR==0)
   typedef vector<T, Allocator> vector_type;
   typedef std::__normal_iterator<T*, vector_type> iterator;
   typedef std::__normal_iterator<T*, vector_type> const_iterator;
+#else
+  typedef T* iterator;
+  typedef const T* const_iterator;
 #endif
 
 
