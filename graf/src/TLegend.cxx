@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.2 2000/06/13 11:02:25 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -394,16 +394,16 @@ void TLegend::PaintPrimitives()
       Color_t fcolor = entry->GetFillColor();
       Style_t fstyle = entry->GetFillStyle();
       char cmd[50];
-      if ( fcolor == 0 ) {
+//      if ( fcolor == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetFillColor();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetFillColor",cmd);
-      }
-      if ( fstyle == 0 ) {
+//      }
+//      if ( fstyle == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetFillStyle();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetFillStyle",cmd);
-      }
+//      }
 
       // box total height is yspace*0.7
       Double_t boxwidth = yspace*
@@ -425,21 +425,21 @@ void TLegend::PaintPrimitives()
       Style_t lstyle = entry->GetLineStyle();
       Width_t lwidth = entry->GetLineWidth();
       char cmd[50];
-      if ( lcolor == 0 ) {
+//      if ( lcolor == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetLineColor();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetLineColor",cmd);
-      }
-      if ( lstyle == 0 ) {
+//      }
+//      if ( lstyle == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetLineStyle();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetLineStyle",cmd);
-      }
-      if ( lwidth == 0 ) {
+//      }
+//      if ( lwidth == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetLineWidth();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetLineWidth",cmd);
-      }
+//      }
 
       // line total length (in x) is margin*0.8
       TLine entryline( xsym - margin*0.4, ysym, xsym + margin*0.4, ysym );
@@ -473,21 +473,21 @@ void TLegend::PaintPrimitives()
       Style_t mstyle = entry->GetMarkerStyle();
       Size_t msize = entry->GetMarkerSize();
       char cmd[50];
-      if ( mcolor == 0 ) {
+//      if ( mcolor == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetMarkerColor();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetMarkerColor",cmd);
-      }
-      if ( mstyle == 0 ) {
+//      }
+//      if ( mstyle == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetMarkerStyle();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetMarkerStyle",cmd);
-      }
-      if ( msize == 0 ) {
+//      }
+//      if ( msize == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetMarkerSize();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetMarkerSize",cmd);
-      }
+//      }
 
       TMarker entrymarker( xsym, ysym, 0 );
       entry->TAttMarker::Copy(entrymarker);

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.8 2000/07/10 06:07:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.9 2000/07/21 13:10:53 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 #include "TVirtualPad.h"
 #include "TVirtualHistPainter.h"
 
-const Int_t NPMAX = 204;
+const Int_t NPMAX = 2052;
 
 static Double_t xwork[NPMAX];
 static Double_t ywork[NPMAX];
@@ -2054,7 +2054,122 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
   OptionMarker = 0;
   if ((OptionStar) || (OptionMark))OptionMarker=1;
   if ((OptionMarker) || (OptionLine)) {
-     wminstep = wmin + 0.5*delta;
+    wminstep = wmin + 0.5*delta;
+    Axis_t ax1,ax2,ay1,ay2;
+    gPad->GetRangeAxis(ax1,ay1,ax2,ay2);
+
+    Int_t ax1Pix = gPad->XtoAbsPixel(ax1);
+    Int_t ax2Pix = gPad->XtoAbsPixel(ax2);
+    Int_t ay1Pix = gPad->YtoAbsPixel(ay1);
+    Int_t ay2Pix = gPad->YtoAbsPixel(ay2);
+
+    Int_t nrPix;
+    if (!OptionRot)
+      nrPix = ax2Pix-ax1Pix+1;
+    else
+      nrPix = ay2Pix-ay1Pix+1;
+
+    // Make here decision whether it should be painted in high or low resolution
+    Int_t lowRes = 0;
+    if (3*nrPix < last-first+1) {
+      lowRes = 1;
+    }
+    if (lowRes) {
+      Double_t *minPix   = new Double_t[nrPix];
+      Double_t *maxPix   = new Double_t[nrPix];
+      Double_t *centrPix = new Double_t[nrPix];
+      Int_t *nrEntries   = new Int_t[nrPix];
+
+      for (Int_t ip = 0; ip < nrPix; ip++) {
+        minPix[ip] = 1e100;
+        maxPix[ip] = -1e100;
+      }
+
+      for (Int_t ip = first; ip < last; ip++) {
+        Double_t xw;
+        if ((ip == last) && OptionBins) continue;
+        if (!OptionBins) xw = wminstep + (ip-first)*delta;
+        else             xw = x[ip-1];
+
+        if (!OptionRot) {
+          Int_t ix = gPad->XtoAbsPixel(xw)-ax1Pix;
+          Int_t yPixel = gPad->YtoAbsPixel(y[ip]);
+          if (minPix[ix] > yPixel) minPix[ix] = yPixel;
+          if (maxPix[ix] < yPixel) maxPix[ix] = yPixel;
+          (nrEntries[ix])++;
+        } else {
+          Int_t iy = gPad->YtoAbsPixel(y[ip])-ay1Pix;
+          Int_t xPixel = gPad->XtoAbsPixel(xw);
+          if (minPix[iy] > xPixel) minPix[iy] = xPixel;
+          if (maxPix[iy] < xPixel) maxPix[iy] = xPixel;
+          (nrEntries[iy])++;
+        }
+      }
+
+      for (Int_t ipix = 0; ipix < nrPix; ipix++) {
+        if (nrEntries[ipix] > 0)
+          centrPix[ipix] = (minPix[ipix]+maxPix[ipix])/2.0;
+        else
+          centrPix[ipix] = 2*TMath::Max(TMath::Abs(minPix[ipix]),
+                                         TMath::Abs(maxPix[ipix]));
+      }
+
+      Double_t *xc = new Double_t[nrPix];
+      Double_t *yc = new Double_t[nrPix];
+
+      Int_t nrLine = 0;
+      for (Int_t ipix = 0; ipix < nrPix; ipix++) {
+        if (minPix[ipix] <= maxPix[ipix]) {
+          Double_t xl[2]; Double_t yl[2];
+          if (!OptionRot) {
+            xc[nrLine] = gPad->AbsPixeltoX(ax1Pix+ipix);
+            yc[nrLine] = gPad->AbsPixeltoY(centrPix[ipix]);
+
+            xl[0]      = xc[nrLine];
+            yl[0]      = gPad->AbsPixeltoY(minPix[ipix]);
+            xl[1]      = xc[nrLine];
+            yl[1]      = gPad->AbsPixeltoY(maxPix[ipix]);
+          } else {
+            yc[nrLine] = gPad->AbsPixeltoY(ay1Pix+ipix);
+            xc[nrLine] = gPad->AbsPixeltoX(centrPix[ipix]);
+
+            xl[0]      = gPad->AbsPixeltoX(minPix[ipix]);
+            yl[0]      = yc[nrLine];
+            xl[1]      = gPad->AbsPixeltoX(maxPix[ipix]);
+            yl[1]      = yc[nrLine];
+          }
+          if (!OptionZ && gPad->GetLogx()) {
+            if (xc[nrLine] > 0) xc[nrLine] = TMath::Log10(xc[nrLine]);
+            else                xc[nrLine] = gPad->GetX1();
+            for (Int_t il = 0; il < 2; il++) {
+              if (xl[il] > 0) xl[il] = TMath::Log10(xl[il]);
+              else            xl[il] = gPad->GetX1();
+            }
+          }
+          if (!OptionZ && gPad->GetLogy()) {
+            if (yc[nrLine] > 0) yc[nrLine] = TMath::Log10(yc[nrLine]);
+            else                yc[nrLine] = gPad->GetY1();
+            for (Int_t il = 0; il < 2; il++) {
+              if (yl[il] > 0) yl[il] = TMath::Log10(yl[il]);
+              else            yl[il] = gPad->GetY1();
+            }
+          }
+
+          gPad->PaintPolyLine(2,xl,yl);
+          nrLine++;
+        }
+      }
+
+      gPad->PaintPolyLine(nrLine,xc,yc);
+
+      delete [] xc;
+      delete [] yc;
+
+      delete [] minPix;
+      delete [] maxPix;
+      delete [] centrPix;
+      delete [] nrEntries;
+    } else {
      if (!OptionRot) {
         npt = 0;
         for (i=first; i<=last;i++) {
@@ -2069,7 +2184,6 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
                  return;
               }
               xwork[npt-1] = x[i-1];      xwork[npt] = x[i];
-//              xwork[npt-1] = x[i-1] + 0.5*(x[i]-x[i-1]);
            }
            if (xwork[npt-1] < uxmin || xwork[npt-1] > uxmax) { npt--; continue;}
            ywork[npt-1] = y[i-1];
@@ -2169,6 +2283,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
            gPad->PaintPolyLine(npt,xworkl,yworkl);
         }
      }
+   }
   }
 
 //*-*-              Draw the histogram as a bar chart
