@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.191 2004/06/04 16:40:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.192 2004/06/05 05:19:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3233,21 +3233,29 @@ TTree *TTree::MergeTrees(TList *list)
    TIter next(list);
    TTree *newtree = 0;
    TObject *obj;
+
    while ((obj=next())) {
       if (!obj->InheritsFrom(TTree::Class())) continue;
       TTree *tree = (TTree*)obj;
-      Int_t nentries = (Int_t)tree->GetEntries();
+      Long64_t nentries = (Long64_t)tree->GetEntries();
       if (nentries == 0) continue;
       if (!newtree) {
          newtree = (TTree*)tree->CloneTree();
+
+         // Once the cloning is done, separate the trees,
+         // to avoid as many side-effects as possible
+         tree->GetListOfClones()->Remove(newtree);
+         tree->ResetBranchAddresses();
+         newtree->ResetBranchAddresses();
          continue;
-      } else {
-         tree->CopyAddresses(newtree);
-      }
-      for (Int_t i=0;i<nentries;i++) {
+      } 
+      
+      newtree->CopyAddresses(tree);
+      for (Long64_t i=0;i<nentries;i++) {
          tree->GetEntry(i);
          newtree->Fill();
       }
+      tree->ResetBranchAddresses(); // Disconnect from new tree.
    }
    return newtree;
 }
@@ -3261,6 +3269,7 @@ Int_t TTree::Merge(TCollection *list)
    TIter next(list);
    TTree *tree;
    while ((tree = (TTree*)next())) {
+      if (tree==this) continue;
       if (!tree->InheritsFrom(TTree::Class())) {
          Error("Add","Attempt to add object of class: %s to a %s",
                tree->ClassName(), ClassName());
@@ -3270,11 +3279,12 @@ Int_t TTree::Merge(TCollection *list)
       Long64_t nentries = (Long64_t)tree->GetEntries();
       if (nentries == 0) continue;
 
-      tree->CopyAddresses(this);
+      CopyAddresses(tree);
       for (Long64_t i=0; i<nentries ; i++) {
          tree->GetEntry(i);
          Fill();
       }
+      tree->ResetBranchAddresses();
    }
 
    return (Int_t) GetEntries();

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.147 2004/05/28 18:14:38 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.148 2004/05/28 20:32:45 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -566,6 +566,10 @@ void TClass::Init(const char *name, Version_t cversion,
       while ((info = (TStreamerInfo*)next())) {
          info->SetClass(this);
          fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
+         if (info->GetClassVersion()==cversion) {
+            // We need to force a recall to BuildOld
+            
+         }
       }
       oldcl->GetStreamerInfos()->Clear();
 
@@ -972,6 +976,7 @@ Bool_t TClass::CanSplit() const
    if (InheritsFrom("TRef"))      return kFALSE;
    if (InheritsFrom("TRefArray")) return kFALSE;
    if (InheritsFrom("TArray"))    return kFALSE;
+   if (InheritsFrom("TCollection") && !InheritsFrom("TClonesArray")) return kFALSE;
 
    // If we do not have a showMembers and we have a streamer,
    // we are in the case of class that can never be split since it is
@@ -982,6 +987,24 @@ Bool_t TClass::CanSplit() const
       if (GetCollectionProxy()==0) {
          // We do NOT have a collection.  The class is true opaque
          return kFALSE;
+
+      } else {
+
+         // However we do not split collections of collections 
+         // nor collections of strings
+         // nor collections of pointers 
+         // (actually we __could__ split collection of pointers to non-virtual class,
+         //  but we dont for now).
+ 
+         if (GetCollectionProxy()->HasPointers()) return kFALSE;
+         
+         TClass *valueClass = GetCollectionProxy()->GetValueClass();
+         if (valueClass == 0) return kFALSE;
+         if (valueClass==TString::Class() || valueClass==gROOT->GetClass("string"))
+            return kFALSE;
+         if (!valueClass->CanSplit()) return kFALSE;
+         if (valueClass->GetCollectionProxy() != 0) return kFALSE;
+
       }
    }
 
