@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.2 2002/05/28 16:41:46 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.3 2002/05/30 13:28:57 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -35,26 +35,33 @@
 ClassImp(TGrid)
 
 //______________________________________________________________________________
-TGrid *TGrid::Connect(const char *grid, const char *uid, const char *pw)
+TGrid *TGrid::Connect(const char *grid, const char *uid, const char *pw,
+                      const char *options)
 {
    // The grid should be of the form:  <grid>://<host>[:<port>],
    // e.g.:  alien://alice.cern.ch, globus://glsrv1.cern.ch, ...
    // The uid is the username and pw the password that should be used for
    // the connection. Depending on the <grid> the shared library (plugin)
    // for the selected system will be loaded. When the connection could not
-   // be opened 0 is returned.
+   // be opened 0 is returned. For AliEn the supported options are:
+   // -domain=<domain name>
+   // -debug=<debug level from 1 to 10>
+   // Example: "-domain=cern.ch -debug=5"
+
 
    TPluginHandler *h;
    TGrid *g = 0;
 
-   if (!uid) uid = "";
-   if (!pw)  pw = "";
+   if (!uid)     uid = "";
+   if (!pw)      pw = "";
+   if (!options) options = "";
 
    if ((h = gROOT->GetPluginManager()->FindHandler("TGrid", grid))) {
       if (h->LoadPlugin() == -1)
          return 0;
       g = (TGrid *) gROOT->ProcessLineFast(Form(
-           "new %s(\"%s\", \"%s\", \"%s\")", h->GetClass(), grid, uid, pw));
+           "new %s(\"%s\", \"%s\", \"%s\", \"%s\")", h->GetClass(),
+           grid, uid, pw, options));
    }
 
    return g;

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.3 2002/05/28 16:41:46 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.4 2002/05/30 13:28:57 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -93,7 +93,7 @@ public:
 
    //--- load desired plugin and setup conection to GRID
    static TGrid *Connect(const char *grid, const char *uid = 0,
-                         const char *pw = 0);
+                         const char *pw = 0, const char *options = 0);
 
    ClassDef(TGrid,0)  // ABC defining interface to GRID services
 };

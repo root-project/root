@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.4 2002/05/28 16:41:45 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.5 2002/05/30 13:28:57 rdm Exp $
 // Author: Fons Rademakers   13/5/2002
 
 /*************************************************************************
@@ -45,7 +45,8 @@ private:
    TString    MakeLfn(const char *lfn) const;
 
 public:
-   TAlien(const char *grid, const char *uid = 0, const char *pw = 0);
+   TAlien(const char *grid, const char *uid = 0, const char *pw = 0,
+          const char *options = 0);
    ~TAlien();
    void         Close(Option_t *option="");
 

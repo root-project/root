@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.5 2002/05/28 16:41:46 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.6 2002/05/30 13:28:57 rdm Exp $
 // Author: Fons Rademakers   13/5/2002
 
 /*************************************************************************
@@ -34,14 +34,18 @@
 ClassImp(TAlien)
 
 //______________________________________________________________________________
-TAlien::TAlien(const char *grid, const char *uid, const char *pw)
+TAlien::TAlien(const char *grid, const char *uid, const char *pw,
+               const char *options)
 {
    // Open a connection to the AliEn GRID. The grid argument should be
    // of the form "alien[://<host>][:<port>], e.g.: "alien" or
    // "alien://alice.cern.ch". The uid is the username and the pw the
    // password that should be used for the connection. In general the
    // uid and password will be taken from the AliEn client setup and
-   // don't need to be specified.
+   // don't need to be specified. Supported options are:
+   // -domain=<domain name>
+   // -debug=<debug level from 1 to 10>
+   // Example: "-domain=cern.ch -debug=5"
 
    fAlien = 0;     // should be set as return code from AlienConnect()
 
@@ -76,7 +80,11 @@ TAlien::TAlien(const char *grid, const char *uid, const char *pw)
    if (uid)
       user = uid;
 
-   if (AlienConnect(user, pw) == -1) {
+   const char *opt = "";
+   if (options)
+      opt = options;
+
+   if (AlienConnect(user, pw, opt) == -1) {
       if (host.IsNull())
          Error("TAlien", "connection to AliEn failed");
       else
@@ -398,7 +406,7 @@ TGridResult *TAlien::Ls(const char *dir, const char *options) const
    //  "d": list only directories
 
    const char *d = Pwd();
-   if (dir)
+   if (dir && strlen(dir) > 0)
       d = dir;
 
    TString sdir = MakeLfn(d);
