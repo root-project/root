@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.44 2002/03/28 15:34:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.45 2002/04/09 15:29:13 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -96,8 +96,8 @@ TChain::TChain(const char *name, const char *title)
    fFiles          = new TObjArray(fTreeOffsetLen );
    fStatus         = new TList();
    fTreeOffset[0]  = 0;
-   TChainElement *element = new TChainElement("*","");
-   fStatus->Add(element);
+   //TChainElement *element = new TChainElement("*","");
+   //fStatus->Add(element);
    gDirectory->GetList()->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
    fDirectory = 0;
@@ -695,9 +695,9 @@ Int_t TChain::LoadTree(Int_t entry)
    Int_t status;
    while ((element = (TChainElement*)next())) {
       status = element->GetStatus();
-      if (status >=0) fTree->SetBranchStatus(element->GetName(),status);
       void *add = element->GetBaddress();
-      if (add) fTree->SetBranchAddress(element->GetName(),add);
+      if (add)        fTree->SetBranchAddress(element->GetName(),add);
+      if (status >=0) fTree->SetBranchStatus(element->GetName(),status);
    }
 
    if (cursav) cursav->cd();
