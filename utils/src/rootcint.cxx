@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.153 2004/01/27 19:52:48 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.154 2004/02/11 17:00:07 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -265,31 +265,30 @@ enum ESTLType {kNone, kVector, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 FILE *fp;
 char *StrDup(const char *str);
 
-char FunNames[10000]={0};
+char FunNames[10000] = { 0 };
+
 // static int check = 0;
 //______________________________________________________________________________
 void SetFun (const char *fname)
 {
-   
-//    fprintf(stderr,"registering fun %s\n",fname);
-
    strcat(FunNames," ");
    strcat(FunNames,fname);
    strcat(FunNames," ");
 }
+
 //______________________________________________________________________________
 const char *GetFun(const char *fname)
 {
-  char buf[100];
-  buf[0]=0;
-  
+   char buf[100];
+   buf[0]=0;
+
 //   if (!check) fprintf(stderr,"%s\n",FunNames);
-  strcat(buf," ");
-  strcat(buf,fname);
-  strcat(buf," ");
+   strcat(buf," ");
+   strcat(buf,fname);
+   strcat(buf," ");
 //   fprintf(stderr,"look for function for %s and will find %p\n",
 //           fname,strstr(FunNames,buf));
-  return strstr(FunNames,buf);
+   return strstr(FunNames,buf);
 }
 
 //______________________________________________________________________________
@@ -297,6 +296,7 @@ const char *GetFun(const char *fname)
 #ifndef ROOT_Varargs
 #include "Varargs.h"
 #endif
+
 const int kInfo     =      0;
 const int kNote     =    500;
 const int kWarning  =   1000;
@@ -304,7 +304,9 @@ const int kError    =   2000;
 const int kSysError =   3000;
 const int kFatal    =   4000;
 const int kMaxLen   =   1024;
+
 static int gErrorIgnoreLevel = kError;
+
 void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName);
 void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName);
 void GetFullyQualifiedName(const char *originalName, string &fullyQualifiedName);
@@ -406,15 +408,15 @@ string R__tmpnam()
    static char filename[L_tmpnam+2];
    static string tmpdir;
 
-   if (tmpdir.length()==0 && strlen(P_tmpdir)<=2) {
+   if (tmpdir.length() == 0 && strlen(P_tmpdir) <= 2) {
       // P_tmpdir will be prepended to the result of tmpnam
       // if it is less that 2 character it is likely to
       // just be '/' or '\\'.
       // Let's add the temp directory.
       char *tmp;
-      if((tmp=getenv("CINTTMPDIR"))) tmpdir = tmp;
-      else if((tmp=getenv("TEMP"))) tmpdir = tmp;
-      else if((tmp=getenv("TMP"))) tmpdir = tmp;
+      if ((tmp = getenv("CINTTMPDIR"))) tmpdir = tmp;
+      else if ((tmp=getenv("TEMP")))    tmpdir = tmp;
+      else if ((tmp=getenv("TMP")))     tmpdir = tmp;
       else tmpdir = ".";
       tmpdir += '/';
    }
@@ -958,23 +960,22 @@ bool CheckConstructor(G__ClassInfo& cl)
 //______________________________________________________________________________
 bool NeedDestructor(G__ClassInfo& cl)
 {
+   long offset;
+   const char *proto = "";
+   string name = "~";
+   name += cl.TmpltName();
 
-  long offset;
-  const char *proto = "";
-  string name = "~";
-  name += cl.TmpltName();
+   G__MethodInfo methodinfo = cl.GetMethod(name.c_str(),proto,&offset);
 
-  G__MethodInfo methodinfo = cl.GetMethod(name.c_str(),proto,&offset);
-
-  // fprintf(stderr,"testing %s and has %d",name.c_str(),methodinfo.IsValid());
-  if (methodinfo.IsValid() && !(methodinfo.Property() & G__BIT_ISPUBLIC) ) {
-     return false;
-  }
-  return true;
-  /* (GetClassVersion(cl)>0
-     || (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
-     && strncmp(cl.FileName(),"prec_stl",8)!=0 ) );
-  */
+   // fprintf(stderr,"testing %s and has %d",name.c_str(),methodinfo.IsValid());
+   if (methodinfo.IsValid() && !(methodinfo.Property() & G__BIT_ISPUBLIC) ) {
+      return false;
+   }
+   return true;
+   /* (GetClassVersion(cl)>0
+      || (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
+      && strncmp(cl.FileName(),"prec_stl",8)!=0 ) );
+   */
 }
 
 //______________________________________________________________________________
@@ -1036,12 +1037,12 @@ const char *GetFullShadowName(G__ClassInfo &cl)
 
 //   static const char stls[] = {
 //   " vector   list     deque    map      multimap set      multiset "};
-// // 12345678 12345678 12345678 12345678 12345678 12345678 12345678  // 
+// // 12345678 12345678 12345678 12345678 12345678 12345678 12345678  //
 //   static const char alls[] =
 //   {" alloc __default_alloc_template<true,0> __malloc_alloc_template<0>"};
 // //  0 = start
 // //  1 = in class
-// //  
+// //
 
 //   char *c,buf[512]; buf[0] = ' ';
 //   int qwe=-1;
@@ -1052,7 +1053,7 @@ const char *GetFullShadowName(G__ClassInfo &cl)
 
 //   while(ty[++pos]) {
 //      switch(ty[pos]+kase) {
-     
+
 //         case ' ':
 // 	case ' '+1000: break;
 
@@ -1060,20 +1061,20 @@ const char *GetFullShadowName(G__ClassInfo &cl)
 //            if (++levl>1) break;
 //            for(i=sta,j=1;i<pos;i++){if (ty[i]!=' ') buf[j++]=ty[i];}
 //            buf[j]=' '; buf[j+1]=0;
-//            c = strstr(stls,buf);        
+//            c = strstr(stls,buf);
 //            if (!c) { kase = 1000; pos--; break;}
 //            stl = (c-stls)/9+1;
 //            if (stl > 2) 	return -stl;
 //            ztl = IsSTLCont(ty,testAlloc,ppos);
 //            if (ztl < 0) 	return -stl;
 //            if (!ty[pos])       	return  stl;
-//            kase = 1000; 
+//            kase = 1000;
 //            break;
 
 //         case ',':
 //            kase = 1000; pos--;	break;
 
-//         case '>': 
+//         case '>':
 //            if (--levl>=0) 	break;
 //            pos--;		return stl;
 
@@ -1089,16 +1090,16 @@ const char *GetFullShadowName(G__ClassInfo &cl)
 //            if (++cnt==2 && testAlloc) {
 //              for(i=sta,j=1;i<pos;i++){if (ty[i]!=' ') buf[j++]=ty[i];}
 //              buf[j]=' '; buf[j+1]=0;
-//              c = strstr(alls,buf);        
+//              c = strstr(alls,buf);
 //              if (!c) stl = -1000;
 //            }
 //            pos--; 		return stl;
 //         default:;
 //      }// end switch
-          
+
 //   } // end loop
 //   				return stl;
-// }   
+// }
 
 
 //______________________________________________________________________________
@@ -1113,7 +1114,7 @@ int IsSTLContainer(G__DataMemberInfo &m)
    int k = (-TClassEdit::IsSTLCont(type.c_str(),1));
 
 //    if (k) printf(" %s==%d\n",type.c_str(),k);
-   
+
    return k;
 }
 
@@ -1365,7 +1366,7 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
 
 //    if (strcmp(objType,"string")==0) RStl::inst().GenerateTClassFor( "string"  );
 
-   if (rwmode == 0 ) {  //Read mode
+   if (rwmode == 0) {  //Read mode
 
       if (R__t) fprintf(fp, "            %s %s;\n",tiName,R__t);
       switch (kase) {
@@ -1501,7 +1502,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
       for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
    }
 
-   // string stlType( RStl::DropDefaultArg( m.Type()->Name() ) ); 
+   // string stlType( RStl::DropDefaultArg( m.Type()->Name() ) );
 //    string stlType( TClassEdit::ShortType(m.Type()->Name(),
 //                                          TClassEdit::kDropTrailStar|
 //                                          TClassEdit::kDropStlDefault) );
@@ -2073,7 +2074,7 @@ void WriteClassInit(G__ClassInfo &cl)
            classname.c_str(), classname.c_str() );
    fprintf(fp, "#endif\n");
 #endif
-   if (stl) 
+   if (stl)
       fprintf(fp, "   static // The GenerateInitInstance for STL are not unique and should not be externally accessible\n");
 
    fprintf(fp, "   TGenericClassInfo *GenerateInitInstance(const %s*)\n   {\n",
@@ -2703,7 +2704,7 @@ void WritePointersSTL(G__ClassInfo &cl)
 
       // Check whether we need a streamer function.
       // For now we use it only for variable size array of objects (well maybe ... it is not really tested!)
-      if (!pCounter) continue;      
+      if (!pCounter) continue;
 
       sprintf(fun,"R__%s_%s",clName,m.Name());
       SetFun(fun);
@@ -3173,9 +3174,9 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
        ||!strncmp(qual, "::allocator", strlen("::allocator"))
        ||!strncmp(qual, "::pair", strlen("::pair"))
        ) {
-      
+
       fullyQualifiedName.erase(0,2);
-      
+
    }
 
 }
@@ -4129,7 +4130,7 @@ int main(int argc, char **argv)
    //     WriteClassFunctions (declared in ClassDef)
    //     WriteClassCode (Streamer,ShowMembers,Auxiliary functions)
    //
-   
+
    //
    // Loop over all classes and write the Shadow class if needed
    //
@@ -4217,7 +4218,7 @@ int main(int argc, char **argv)
       if (ifl) remove(argv[ifl]);
       exit(1);
    }
-   
+
    //
    // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
    // first to allow template specialisation to occur before template
@@ -4264,10 +4265,10 @@ int main(int argc, char **argv)
       } else if ((strcmp(strtok(cline, " "), "#pragma") == 0) &&
                  (strcmp(strtok(0, " "), "create") == 0) &&
                  (strcmp(strtok(0, " "), "TClass") == 0)) {
- 
+
          skip = false;
          force = true;
- 
+
       }
 
       if (!skip) {
