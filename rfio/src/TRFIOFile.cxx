@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.7 2001/01/19 17:10:55 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.8 2001/01/23 19:04:12 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -311,9 +311,9 @@ Bool_t TRFIOFile::WriteBuffer(const char *buf, Int_t len)
 }
 
 //______________________________________________________________________________
-Int_t TRFIOFile::GetErrno()
+Int_t TRFIOFile::GetErrno() const
 {
-   // Static function returning rfio_errno. For RFIO files must use this
+   // Method returning rfio_errno. For RFIO files must use this
    // function since we need to check rfio_errno then serrno and finally errno.
 
    if (!rfio_errno)
@@ -324,9 +324,9 @@ Int_t TRFIOFile::GetErrno()
 }
 
 //______________________________________________________________________________
-void TRFIOFile::ResetErrno()
+void TRFIOFile::ResetErrno() const
 {
-   // Static function resetting the rfio_errno, serrno and errno.
+   // Method resetting the rfio_errno, serrno and errno.
 
    rfio_errno = 0;
    serrno = 0;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.9 2001/01/16 17:22:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.10 2001/01/17 11:21:18 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -93,6 +93,8 @@ public:
    Int_t             GetCompressionLevel() const { return fCompress; }
    Float_t           GetCompressionFactor();
    virtual Seek_t    GetEND() const { return fEND; }
+   virtual Int_t     GetErrno() const;
+   virtual void      ResetErrno() const;
    Int_t             GetFd() const { return fD; }
    TList            *GetListOfFree() const { return fFree; }
    virtual Int_t     GetNfree() const { return fFree->GetSize(); }

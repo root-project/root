@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.27 2001/01/18 07:23:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.28 2001/01/18 10:50:31 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -622,6 +622,22 @@ Float_t TFile::GetCompressionFactor()
    }
    delete [] header;
    return uncomp/comp;
+}
+
+//______________________________________________________________________________
+Int_t TFile::GetErrno() const
+{
+   // Method returning errno. Is overriden in TRFIOFile.
+
+   return TSystem::GetErrno();
+}
+
+//______________________________________________________________________________
+void TFile::ResetErrno() const
+{
+   // Method resetting the errno. Is overridden in TRFIOFile.
+
+   TSystem::ResetErrno();
 }
 
 //______________________________________________________________________________
