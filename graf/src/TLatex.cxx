@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.46 2004/11/24 15:50:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.47 2005/01/12 18:48:36 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -972,7 +972,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          if (!fShow) {
             fs1 = Anal1(NewSpec,&letter,1);
             if (OpSpec == 79 || OpSpec == 66)
-                 fs1.Set(fs1.Width(),fs1.Dessus()*0.4,fs1.Dessus()*0.40);
+                 fs1.Set(fs1.Width(),fs1.Dessus()*0.45,fs1.Dessus()*0.45);
 
             fs2 = Anal1(spec,text+strlen(tab2[OpSpec])+1,length-strlen(tab2[OpSpec])-1);
             Savefs(&fs1);
@@ -1376,10 +1376,10 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          }
 */
          GetTextExtent(w,h,text);
-         Double_t hy    = h;
          Double_t width = w;
-
-         fs1.Set(width,hy,0);
+         UInt_t a,d;
+         GetTextAscentDescent(a, d, text);
+         fs1.Set(width,a,d);
 
          if (fShow) {
             // paint the Latex sub-expression per sub-expression

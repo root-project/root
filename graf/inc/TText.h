@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.h,v 1.4 2002/10/31 07:27:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.h,v 1.5 2003/01/22 11:23:03 rdm Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -55,6 +55,7 @@ public:
                                   Int_t cBoxX[4], Int_t cBoxY[4]);
    Double_t         GetX() const  { return fX; }
    virtual void     GetBoundingBox(UInt_t &w, UInt_t &h);
+   virtual void     GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const;
    virtual void     GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const;
    Double_t         GetY() const  { return fY; }
 

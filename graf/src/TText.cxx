@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.16 2003/09/29 12:37:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.17 2003/10/23 09:36:25 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -360,6 +360,32 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h)
       TTF::GetTextExtent(w, h, (char*)GetTitle());
    } else {
       gVirtualX->GetTextExtent(w, h, (char*)GetTitle());
+   }
+}
+
+//______________________________________________________________________________
+void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
+{
+   // Return text ascent and descent for string text
+   //  in a return total text ascent
+   //  in d return text descent
+
+   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
+   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t tsize;
+   if (wh < hh)  tsize = fTextSize*wh;
+   else          tsize = fTextSize*hh;
+
+   if (gVirtualX->HasTTFonts() || gPad->IsBatch()) {
+      TTF::SetTextFont(fTextFont);
+      TTF::SetTextSize(tsize);
+      a = TTF::GetBox().yMax;
+      d = TMath::Abs(TTF::GetBox().yMin);
+   } else {
+      UInt_t w;
+      gVirtualX->SetTextSize((int)tsize);
+      gVirtualX->GetTextExtent(w, a, (char*)text);
+      d = 0;
    }
 }
 
