@@ -125,7 +125,7 @@ void dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
    }
 
    TFile *hfile = 0;
-   TTree *tree;
+   TTree *tree = 0;
    if (mode <3) {
       hfile = new TFile(from);
       tree = (TTree*)hfile->Get("T");
