@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.3 2000/09/13 07:03:01 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.4 2000/09/13 10:40:30 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -28,6 +28,15 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <errno.h>
+
+#if defined(__linux)
+#   include <features.h>
+#   if __GNU_LIBRARY__ == 6
+#      ifndef R__GLIBC
+#         define R__GLIBC
+#      endif
+#   endif
+#endif
 
 #include "rootdp.h"
 

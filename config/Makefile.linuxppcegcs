@@ -13,9 +13,9 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -Wall -fsigned-char -fPIC -DR__GLIBC \
+CXXFLAGS      = -pipe -Wall -fsigned-char -fPIC \
                 -I/usr/X11/include $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -Wall -fPIC -fsigned-char -DR__GLIBC \
+CFLAGS        = -pipe -Wall -fPIC -fsigned-char \
                 -I/usr/X11/include $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -pipe -Wall -fPIC -fsigned-char -DG__REGEXP -DG__UNIX \
                 -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.6 2000/09/13 07:03:01 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.7 2000/09/13 10:38:15 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -121,6 +121,15 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <errno.h>
+
+#if defined(__linux)
+#   include <features.h>
+#   if __GNU_LIBRARY__ == 6
+#      ifndef R__GLIBC
+#         define R__GLIBC
+#      endif
+#   endif
+#endif
 
 #if defined(__FreeBSD__)
 #include <sys/file.h>

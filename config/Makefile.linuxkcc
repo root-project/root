@@ -34,8 +34,8 @@ CXX           = KCC
 CC            = gcc
 CXXFLAGS      = $(EXCEPTION) --signed_chars -D_EXTERN_INLINE=inline \
                 --display_error_number --diag_suppress 191 --diag_suppress 830 \
-                -fPIC -DR__GLIBC $(CXXOPT) $(EXTRA_CXXFLAGS)
-CFLAGS        = $(COPT) -fPIC -DR__GLIBC $(EXTRA_CFLAGS)
+                -fPIC $(CXXOPT) $(EXTRA_CXXFLAGS)
+CFLAGS        = $(COPT) -fPIC $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = $(EXCEPTION) --signed_chars -D_EXTERN_INLINE=inline \
                 --display_error_number --diag_suppress 191 --diag_suppress 830 \
                 -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \

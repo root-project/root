@@ -16,9 +16,11 @@ CC            = gcc
 CXXFLAGS      = -pipe -Wall -fPIC $(EXTRA_CXXFLAGS)
 CFLAGS        = -pipe -Wall -fPIC $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -pipe -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__TMPFILE -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
+                -DG__TMPFILE -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                $(EXTRA_CXXFLAGS)
 CINTCFLAGS    = -pipe -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__TMPFILE -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+                -DG__TMPFILE -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                $(EXTRA_CFLAGS)
 
 # Linker:
 LD            = g++

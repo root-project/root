@@ -16,8 +16,8 @@ endif
 # Compiler:
 CXX           = g++
 CC            = egcc
-CXXFLAGS      = -pipe -Wall -fPIC -fsigned-char -DR__GLIBC $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -Wall -fPIC -fsigned-char -DR__GLIBC $(EXTRA_CFLAGS)
+CXXFLAGS      = -pipe -Wall -fPIC -fsigned-char $(EXTRA_CXXFLAGS)
+CFLAGS        = -pipe -Wall -fPIC -fsigned-char $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -pipe -Wall -fPIC -fsigned-char $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.3 2000/08/18 06:27:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.4 2000/08/18 14:58:14 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1538,7 +1538,7 @@ void TSystem::SetMakeExe(const char *directives)
    // a list of unresolved symbols, when loading a shared library has failed.
    // The required variable is $ExeName rather than $SharedLib, e.g.:
    // gSystem->SetMakeExe(
-   // "g++ -Wall -fPIC -DR__GLIBC $IncludePath $SourceFiles
+   // "g++ -Wall -fPIC $IncludePath $SourceFiles
    //  -o $ExeName $LinkedLibs -L/usr/X11R6/lib -lX11 -lm -ldl -rdynamic");
 
    fMakeExe = directives;
@@ -1577,7 +1577,7 @@ void TSystem::SetMakeSharedLib(const char *directives)
    //  -o $SharedLib $ObjectFile -lcxxstd -lcxx -lexc -lots -lc"
    //
    // gSystem->SetMakeSharedLib(
-   // "$HOME/mygcc/bin/g++ -Wall -fPIC -DR__GLIBC $IncludePath $SourceFile
+   // "$HOME/mygcc/bin/g++ -Wall -fPIC $IncludePath $SourceFile
    //  -shared -o $SharedLib");
    //
    // gSystem->SetMakeSharedLib(

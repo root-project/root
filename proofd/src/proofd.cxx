@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.6 2000/09/13 07:03:01 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.7 2000/09/13 10:38:15 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -38,6 +38,15 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+
+#if defined(__linux)
+#   include <features.h>
+#   if __GNU_LIBRARY__ == 6
+#      ifndef R__GLIBC
+#         define R__GLIBC
+#      endif
+#   endif
+#endif
 
 #if defined(__linux) || defined(__linux__) || defined(__sun) || defined(__sgi) || defined(_AIX)
 #include <grp.h>
