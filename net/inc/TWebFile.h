@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.2 2001/01/04 13:24:49 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -44,6 +44,7 @@ public:
    TWebFile(TUrl url);
    virtual ~TWebFile() { }
 
+   Seek_t  GetSize() const;
    Bool_t  IsOpen() const;
    Bool_t  ReadBuffer(char *buf, Int_t len);
    void    Seek(Seek_t offset, ERelativeTo pos = kBeg);

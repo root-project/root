@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.2 2000/05/30 17:17:10 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.3 2001/01/04 13:24:49 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -140,4 +140,12 @@ void TWebFile::Seek(Seek_t offset, ERelativeTo pos)
       fOffset = fEND - offset;  // is fEND really EOF or logical EOF?
       break;
    }
+}
+
+//______________________________________________________________________________
+Seek_t TWebFile::GetSize() const
+{
+   // Return maximum file size to by-pass truncation checking.
+
+   return kMaxInt;
 }
