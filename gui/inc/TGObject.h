@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGObject.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGObject.h,v 1.2 2000/12/13 15:13:50 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -43,9 +43,10 @@ public:
    TGObject() { fId = 0; fClient = 0; }
    virtual ~TGObject() { }
 
-   Handle_t GetId() const { return fId; }
-   ULong_t  Hash() const { return (ULong_t) fId >> 0; }
-   Bool_t   IsEqual(const TObject *obj) const { return fId == ((TGObject *) obj)->fId; }
+   Handle_t  GetId() const { return fId; }
+   TGClient *GetClient() const { return fClient; }
+   ULong_t   Hash() const { return (ULong_t) fId >> 0; }
+   Bool_t    IsEqual(const TObject *obj) const { return fId == ((TGObject *) obj)->fId; }
 
    ClassDef(TGObject,0)  //ROOT GUI base class
 };

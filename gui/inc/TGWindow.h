@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.13 2004/06/04 15:57:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.14 2004/06/11 13:35:38 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #endif
 
 class TGClient;
+class TGIdleHandler;
 
 
 class TGWindow : public TGObject {
@@ -84,6 +85,7 @@ public:
         { if (event->fCount == 0) fClient->NeedRedraw(this); return kTRUE; }
    virtual Bool_t HandleEvent(Event_t *) { return kFALSE; }
    virtual Bool_t HandleTimer(TTimer *) { return kFALSE; }
+   virtual Bool_t HandleIdleEvent(TGIdleHandler *) { return kFALSE; }
 
    virtual void   Move(Int_t x, Int_t y);
    virtual void   Resize(UInt_t w, UInt_t h);

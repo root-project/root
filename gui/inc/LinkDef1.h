@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.12 2003/10/29 11:51:41 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.13 2004/07/14 11:46:33 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -43,6 +43,7 @@
 #pragma link C++ class TGClient;
 #pragma link C++ class TGWindow;
 #pragma link C++ class TGUnknownWindowHandler;
+#pragma link C++ class TGIdleHandler;
 #pragma link C++ class TGPicture;
 #pragma link C++ class TGSelectedPicture;
 #pragma link C++ class TGPicturePool;

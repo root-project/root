@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.14 2004/07/08 08:07:22 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.15 2004/07/08 08:17:52 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -44,6 +44,7 @@ class TGFontPool;
 class TGFont;
 class TGMimeTypes;
 class TGUnknownWindowHandler;
+class TGIdleHandler;
 
 
 class TGClient : public TObject {
@@ -71,10 +72,12 @@ protected:
    THashList      *fWlist;            // list of frames
    TList          *fPlist;            // list of popup windows used in HandleMaskEvent()
    TList          *fUWHandlers;       // list of event handlers for unknown windows
+   TList          *fIdleHandlers;     // list of idle handlers
    EGEventType     fWaitForEvent;     // event to wait for
    Window_t        fWaitForWindow;    // window in which to wait for event
 
    Bool_t  ProcessOneEvent();
+   Bool_t  ProcessIdleEvent();
    Bool_t  HandleEvent(Event_t *event);
    Bool_t  HandleMaskEvent(Event_t *event, Window_t wid);
    Bool_t  DoRedraw();
@@ -102,6 +105,8 @@ public:
    void    UnregisterPopup(TGWindow *w);
    void    AddUnknownWindowHandler(TGUnknownWindowHandler *h);
    void    RemoveUnknownWindowHandler(TGUnknownWindowHandler *h);
+   void    AddIdleHandler(TGIdleHandler *h);
+   void    RemoveIdleHandler(TGIdleHandler *h);
    Bool_t  HandleInput();
    void    ProcessLine(TString cmd, Long_t msg, Long_t parm1, Long_t parm2);
    void    WaitFor(TGWindow *w);

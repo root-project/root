@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.35 2004/06/16 16:45:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.36 2004/06/17 10:54:05 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -46,6 +46,7 @@
 #include "TGFont.h"
 #include "TGMimeTypes.h"
 #include "TGFrame.h"
+#include "TGIdleHandler.h"
 
 
 // Global pointer to the TGClient object
@@ -85,6 +86,8 @@ TGClient::TGClient(const char *dpyName)
    fWlist        = 0;
    fPlist        = 0;
    fUWHandlers   = 0;
+   fIdleHandlers = 0;
+
    if (gClient) {
       Error("TGClient", "only one instance of TGClient allowed");
       return;
@@ -100,6 +103,7 @@ TGClient::TGClient(const char *dpyName)
       MakeZombie();
       return;
    }
+
    if (fXfd >= 0) {
       TGInputHandler *xi = new TGInputHandler(this, fXfd);
       if (fXfd) gSystem->AddFileHandler(xi);
@@ -117,7 +121,6 @@ TGClient::TGClient(const char *dpyName)
 
    fWlist = new THashList(200);
    fPlist = new TList;
-   fUWHandlers = 0;
 
    // Create root window
 
@@ -436,8 +439,10 @@ void TGClient::AddUnknownWindowHandler(TGUnknownWindowHandler *h)
 {
    // Add handler for unknown (i.e. unregistered) windows.
 
-   if (!fUWHandlers)
+   if (!fUWHandlers) {
       fUWHandlers = new TList;
+      fUWHandlers->SetOwner();
+   }
 
    fUWHandlers->Add(h);
 }
@@ -448,6 +453,27 @@ void TGClient::RemoveUnknownWindowHandler(TGUnknownWindowHandler *h)
    // Remove handler for unknown (i.e. unregistered) windows.
 
    fUWHandlers->Remove(h);
+}
+
+//______________________________________________________________________________
+void TGClient::AddIdleHandler(TGIdleHandler *h)
+{
+   // Add handler for idle events.
+
+   if (!fIdleHandlers) {
+      fIdleHandlers = new TList;
+      fIdleHandlers->SetOwner();
+   }
+
+   fIdleHandlers->Add(h);
+}
+
+//______________________________________________________________________________
+void TGClient::RemoveIdleHandler(TGIdleHandler *h)
+{
+   // Remove handler for idle events.
+
+   fIdleHandlers->Remove(h);
 }
 
 //______________________________________________________________________________
@@ -472,9 +498,8 @@ TGClient::~TGClient()
       fWlist->Delete("slow");
    delete fWlist;
    delete fPlist;
-   if (fUWHandlers)
-      fUWHandlers->Delete();
    delete fUWHandlers;
+   delete fIdleHandlers;
    delete fResourcePool;
 
    gVirtualX->CloseDisplay(); // this should do a cleanup of the remaining
@@ -513,6 +538,25 @@ Bool_t TGClient::ProcessOneEvent()
    // if nothing else to do redraw windows that need redrawing
    if (DoRedraw()) return kTRUE;
 
+   // process one idle event if there is nothing else to do
+   if (ProcessIdleEvent()) return kTRUE;
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGClient::ProcessIdleEvent()
+{
+   // Process one idle event.
+
+   if (fIdleHandlers) {
+      TGIdleHandler *ih = (TGIdleHandler *) fIdleHandlers->First();
+      if (ih) {
+         RemoveIdleHandler(ih);
+         ih->HandleEvent();
+         return kTRUE;
+      }
+   }
    return kFALSE;
 }
 
@@ -612,7 +656,6 @@ Bool_t TGClient::DoRedraw()
 
    return kTRUE;
 }
-
 
 //______________________________________________________________________________
 Bool_t TGClient::HandleEvent(Event_t *event)
