@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.7 2002/04/06 18:10:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.8 2002/06/05 10:53:48 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -273,7 +273,7 @@ Int_t TTimeStamp::GetZoneOffset()
    // ?? should tzset (_tzset) be called?
 #ifndef R__WIN32
    tzset();
-#ifndef R__MACOSX
+#if !defined(R__MACOSX) && !defined(R__FBSD)
    return  timezone;   /* unix has extern long int */
 #else
    time_t *tp;
