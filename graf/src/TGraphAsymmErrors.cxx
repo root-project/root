@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.31 2004/03/25 07:26:42 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.32 2004/05/19 13:47:22 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -457,9 +457,9 @@ double TGraphAsymmErrors::Brent(double ax, double bx, double cx, double tol, dou
 // Adapted from Numerical Recipes in C, 2nd edition.
 // Translated to C++ by Marc Paterno
    
-   const int kITMAX = 100;
-   const double kCGOLD =  0.3819660;
-   const double kZEPS = 1.0e-10;
+   const int    kITMAX = 100;
+   const double kCGOLD = 0.3819660;
+   const double kZEPS  = 1.0e-10;
 
    int iter;
    double a,b,d=0.,etemp,fu,fv,fw,fx,p,q,r,tol1,tol2,u,v,w,x,xm;
@@ -471,21 +471,21 @@ double TGraphAsymmErrors::Brent(double ax, double bx, double cx, double tol, dou
    fw=fv=fx=Interval(x);
    for (iter=1;iter<=kITMAX;iter++) {
       xm=0.5*(a+b);
-      tol2=2.0*(tol1=tol*fabs(x)+kZEPS);
-      if (fabs(x-xm) <= (tol2-0.5*(b-a))) {
+      tol2=2.0*(tol1=tol*TMath::Abs(x)+kZEPS);
+      if (TMath::Abs(x-xm) <= (tol2-0.5*(b-a))) {
          *xmin=x;
          return fx;
       }
-      if (fabs(e) > tol1) {
+      if (TMath::Abs(e) > tol1) {
          r=(x-w)*(fx-fv);
          q=(x-v)*(fx-fw);
          p=(x-v)*q-(x-w)*r;
          q=2.0*(q-r);
          if (q > 0.0) p = -p;
-         q=fabs(q);
+         q=TMath::Abs(q);
          etemp=e;
          e=d;
-         if (fabs(p) >= fabs(0.5*q*etemp) || p <= q*(a-x) || p >= q*(b-x))
+         if (TMath::Abs(p) >= TMath::Abs(0.5*q*etemp) || p <= q*(a-x) || p >= q*(b-x))
 	    d=kCGOLD*(e=(x >= xm ? a-x : b-x));
          else {
 	    d=p/q;
@@ -496,7 +496,7 @@ double TGraphAsymmErrors::Brent(double ax, double bx, double cx, double tol, dou
      } else {
         d=kCGOLD*(e=(x >= xm ? a-x : b-x));
      }
-     u=(fabs(d) >= tol1 ? x+d : x+TMath::Sign(tol1,d));
+     u=(TMath::Abs(d) >= tol1 ? x+d : x+TMath::Sign(tol1,d));
      fu=Interval(u);
      if (fu <= fx) {
         if (u >= x) a=x; else b=x;
