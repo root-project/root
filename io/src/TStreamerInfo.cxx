@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.11 2000/11/27 10:45:39 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.12 2000/11/28 09:07:21 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -519,6 +519,7 @@ void TStreamerInfo::Compile()
       if (keep>=0 && (element->GetType() < kRegrouped)
                   && (fType[fNdata] == fNewType[fNdata])
                   && (element->GetType() > 0)
+                  && (element->GetType() != kCounter)
                   && (element->GetArrayDim() == 0)
                   && (element->GetType() == (fType[keep]%kRegrouped))
                   && ((element->GetOffset()-fOffset[keep]) == (fLength[keep])*element->GetSize())) {
@@ -608,8 +609,9 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
       if (strstr(inclist,include)) continue;
       ninc++;
       strcat(inclist,include);
-      if (strstr(include,"include/")) fprintf(fp,"#include \"%s\n",include+9);
-      else                            fprintf(fp,"#include %s\n",include);
+      if (strstr(include,"include/") || strstr(include,"include\\"))
+           fprintf(fp,"#include \"%s\n",include+9);
+      else fprintf(fp,"#include %s\n",include);
    }
    ltype += 2;
    ldata++; // to take into account the semi colon
@@ -879,12 +881,12 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer)
 
    //loop on all active members
    for (Int_t i=0;i<fNdata;i++) {
-#ifdef DEBUG
+//#ifdef DEBUG
       if (gDebug > 1) {
          TStreamerElement *element = (TStreamerElement*)fElem[i];
-         printf("StreamerInfo, class:%s, name=%s, fType[%d]=%d, %s\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName());
+         printf("StreamerInfo, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length());
       }
-#endif
+//#endif
       switch (fType[i]) {
          // read basic types
          case kChar:              ReadBasicType(Char_t)
@@ -1546,7 +1548,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer)
    for (Int_t i=0;i<fNdata;i++) {
       if (gDebug > 1) {
          TStreamerElement *element = (TStreamerElement*)fElem[i];
-         printf("StreamerInfo, class:%s, name=%s, fType[%d]=%d, %s\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName());
+         printf("StreamerInfo, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length());
       }
       switch (fType[i]) {
          // write basic types
@@ -1587,7 +1589,12 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer)
 
          // Class *  Class derived from TObject and with comment field //->
          case kObjectp: { TObject **obj = (TObject**)(pointer+fOffset[i]);
-                          (*obj)->Streamer(b);
+                          if (*obj) (*obj)->Streamer(b);
+                          else {
+                             Error("WriteBuffer","-> specified but pointer is null");
+                             TStreamerElement *element = (TStreamerElement*)fElem[i];
+                             element->ls();
+                          }
                           break;
                         }
 
