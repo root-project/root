@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.68 2004/12/09 10:12:53 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.69 2004/12/14 13:06:47 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2066,6 +2066,10 @@ ofstream indexFile;
 
          // get class
          TClass *classPtr = GetClass((const char *) classNames[i]);
+         if (classPtr == 0) {
+            Warning("THtml::CreateIndex", "skipping class %s\n", classNames[i]);
+            continue;
+         }
 
          indexFile << "<li><tt>";
          char *htmlFile = GetHtmlFileName(classPtr);
@@ -2319,6 +2323,10 @@ void THtml::CreateHierarchy(const char **classNames, Int_t numberOfClasses)
 
         // get class
         TClass *basePtr = GetClass((const char *) classNames[i]);
+        if (basePtr == 0) {
+           Warning("THtml::CreateHierarchy", "skipping class %s\n", classNames[i]);
+           continue;
+        }
         
         // Find basic base classes
 	TList *bases = basePtr->GetListOfBases();
