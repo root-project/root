@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.44 2002/08/20 16:00:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.45 2002/09/15 19:48:00 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1778,7 +1778,7 @@ void TF1::SavePrimitive(ofstream &out, Option_t *option)
       }
    } else {
       out<<"   TF1 *"<<GetName()<<" = new TF1("<<quote<<"*"<<GetName()<<quote<<","<<fXmin<<","<<fXmax<<","<<GetNpar()<<");"<<endl;
-      out<<"    //The original function : "<<GetTitle()<<" had originally been created created by:" <<endl;
+      out<<"    //The original function : "<<GetTitle()<<" had originally been created by:" <<endl;
       out<<"    //TF1 *"<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<GetNpar()<<");"<<endl;
       out<<"   "<<GetName()<<"->SetRange("<<fXmin<<","<<fXmax<<");"<<endl;
       out<<"   "<<GetName()<<"->SetName("<<quote<<GetName()<<quote<<");"<<endl;
