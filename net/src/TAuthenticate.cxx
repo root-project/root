@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.14 2003/09/03 15:28:51 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.15 2003/09/07 18:25:46 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -141,7 +141,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    TIter next(GetAuthInfo());
    THostAuth *ai;
    while ((ai = (THostAuth *) next())) {
-      if (gDebug > 4) {
+      if (gDebug > 3) {
          ai->Print();
          ai->PrintEstablished();
       }
@@ -173,7 +173,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
             det[i] = 0;
          }
       }
-      if (gDebug > 4) {
+      if (gDebug > 3) {
          Info("TAuthenticate", "got %d methods", nmeth[0]);
          for (i = 0; i < nmeth[0]; i++) {
             Info("TAuthenticate", "got (%d,0) security:%d details:%s", i,
@@ -184,7 +184,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
       fHostAuth = new THostAuth(fqdn, fUser, nm, am, det);
       // ... and add it to the list
       GetAuthInfo()->Add(fHostAuth);
-      if (gDebug > 4)
+      if (gDebug > 3)
          fHostAuth->Print();
       for (i = 0; i < nmeth[0]; i++) {   // what if nu > 0? (rdm)
          SafeDelete(security[i]);
@@ -1351,7 +1351,7 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
             }
          }
       }
-      if (gDebug > 4) {
+      if (gDebug > 3) {
          ::Info("GetAuthMeth", "found %d users", nu);
          for (j = 0; j < nu; j++) {
             ::Info("GetAuthMeth", "returning %d ", nh[j]);
@@ -1428,8 +1428,9 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
 
    // Check if file can be read ...
    if (gSystem->AccessPathName(net, kReadPermission)) {
-      ::Info("TAuthenticate::CheckRootAuthrc",
-             "file %s cannot be read (errno: %d)", net, errno);
+      if (gDebug > 1)
+         ::Info("TAuthenticate::CheckRootAuthrc",
+                "file %s cannot be read (errno: %d)", net, errno);
       return 0;
    }
    // Variables for scan ...
@@ -1550,7 +1551,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
          continue;
 
       // Notify
-      if (gDebug > 4)
+      if (gDebug > 3)
          ::Info("CheckRootAuthrc", "found line ... %s ", line);
 
       // The list of data servers for proof is analyzed elsewhere (TProof ...)
@@ -1799,7 +1800,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
       }
    }
 
-   if (gDebug > 4) {
+   if (gDebug > 3) {
       rewind(fd);
       ::Info("CheckRootAuthrc",
              "+----------- temporary file: %s -------------------------+",
@@ -3337,7 +3338,7 @@ Int_t TAuthenticate::SecureSend(TSocket *Socket, Int_t Key, char *Str)
       sprintf(BufLen, "%d", Ttmp);
       Socket->Send(BufLen, kROOTD_ENCRYPT);
       Nsen = Socket->SendRaw(BufTmp, Ttmp);
-      if (gDebug > 4)
+      if (gDebug > 3)
          ::Info("SecureSend",
                 "local: sent %d bytes (expected: %d) (buffer '%s')", Nsen,
                 Ttmp, BufTmp);
@@ -3364,7 +3365,7 @@ Int_t TAuthenticate::SecureRecv(TSocket *Socket, Int_t Key, char **Str)
    Int_t kind;
    Socket->Recv(BufLen, 20, kind);
    Int_t Len = atoi(BufLen);
-   if (gDebug > 4)
+   if (gDebug > 3)
       ::Info("SecureRecv", "got len '%s' %d (msg kind: %d)", BufLen, Len,
              kind);
    if (!strncmp(BufLen, "-1", 2))
@@ -3374,7 +3375,7 @@ Int_t TAuthenticate::SecureRecv(TSocket *Socket, Int_t Key, char **Str)
    if (Key == 1) {
       Nrec = Socket->RecvRaw(BufTmp, Len);
       rsa_fun::fg_rsa_decode(BufTmp, Len, fgRSAPriKey.n, fgRSAPriKey.e);
-      if (gDebug > 4)
+      if (gDebug > 3)
          ::Info("SecureRecv", "local: decoded string: '%s' ", BufTmp);
    } else {
       ::Info("SecureRecv", "unknown key option (%d) - return", Key);
