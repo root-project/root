@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.5 2001/03/05 15:29:51 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.6 2001/03/14 10:09:09 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -228,6 +228,11 @@ void TRint::Run(Bool_t retrn)
       ClearInputFiles();
 
       Getlinem(kInit, GetPrompt());
+   }
+
+   if (QuitOpt()) {
+      printf("\n");
+      Terminate(0);
    }
 
    TApplication::Run(retrn);
