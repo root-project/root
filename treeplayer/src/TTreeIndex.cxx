@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.5 2004/07/09 16:19:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.6 2004/07/19 19:48:47 brun Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -126,11 +126,12 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
       Error("TreeIndex","Cannot build the index with major=%s, minor=%s",fMajorName.Data(), fMinorName.Data());
       return;
    }
-   if ((fMajorFormula->GetMultiplicity() != 0) || (fMinorFormula->GetMultiplicity() != 0)) {
-      MakeZombie();
-      Error("TreeIndex","Cannot build the index with major=%s, minor=%s that cannot be arrays",fMajorName.Data(), fMinorName.Data());
-      return;
-   }
+   // accessing array elements should be OK
+   //if ((fMajorFormula->GetMultiplicity() != 0) || (fMinorFormula->GetMultiplicity() != 0)) {
+   //   MakeZombie();
+   //   Error("TreeIndex","Cannot build the index with major=%s, minor=%s that cannot be arrays",fMajorName.Data(), fMinorName.Data());
+   //   return;
+   //}
 
    Long64_t *w = new Long64_t[fN];
    Long64_t i;
