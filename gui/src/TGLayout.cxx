@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.7 2003/12/05 01:17:03 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.8 2003/12/10 15:33:39 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -97,7 +97,7 @@ void TGVerticalLayout::Layout()
    TGDimension size, csize;
    TGDimension msize = fMain->GetSize();
    UInt_t pad_left, pad_top, pad_right, pad_bottom;
-   Int_t size_expand, esize_expand, rem_expand, tmp_expand = 0;
+   Int_t size_expand=0, esize_expand=0, rem_expand=0, tmp_expand = 0;
 
    if (!fList) return;
 
@@ -249,7 +249,7 @@ void TGHorizontalLayout::Layout()
    TGDimension size, csize;
    TGDimension msize = fMain->GetSize();
    UInt_t pad_left, pad_top, pad_right, pad_bottom;
-   Int_t size_expand, esize_expand, rem_expand, tmp_expand = 0;
+   Int_t size_expand=0, esize_expand=0, rem_expand=0, tmp_expand = 0;
 
    if (!fList) return;
 
