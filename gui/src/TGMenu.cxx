@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.24 2003/12/11 16:26:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.25 2003/12/12 18:21:07 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -274,13 +274,13 @@ Bool_t TGMenuBar::HandleMotion(Event_t *event)
 
    Int_t        dummy;
    Window_t     wtarget;
-   TGMenuTitle *target;
+   TGMenuTitle *target=0;
 
    fStick = kFALSE; // use some threshold!
 
    gVirtualX->TranslateCoordinates(fId, fId, event->fX, event->fY,
                                    dummy, dummy, wtarget);
-   target = (TGMenuTitle*) fClient->GetWindowById(wtarget);
+   if (wtarget) target = (TGMenuTitle*) fClient->GetWindowById(wtarget);
 
    if (target != 0 && target != fCurrent) {
       // deactivate all others
