@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.6 2000/09/11 06:19:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.7 2000/09/14 19:53:45 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -144,7 +144,7 @@ TFolder *TFolder::AddFolder(const char *name, const char *title, TCollection *co
 // if (collection is non NULL, the pointer fFolders is set to the existing
 // collection, otherwise a default collection (Tlist) is created
 // Note that the folder name cannot contain slashes.
-   
+
    if (strchr(name,'/')) {
       ::Error("TFolder::TFolder","folder name cannot contain a slash", name);
       return 0;
@@ -168,7 +168,7 @@ TFolder *TFolder::AddFolder(const char *name, const char *title, TCollection *co
 void TFolder::Browse(TBrowser *b)
 {
 // Browse this folder
-   
+
    if (fFolders) fFolders->Browse(b);
 }
 
@@ -187,7 +187,7 @@ const char *TFolder::FindFullPathName(const char *name) const
 {
 // return the full pathname corresponding to subpath name
 // The returned path will be re-used by the next call to GetPath().
-   
+
    TObject *obj = FindObject(name);
    if (obj || !fFolders) {
       level++;
@@ -211,7 +211,7 @@ const char *TFolder::FindFullPathName(const char *name) const
    d[level] = GetName();
    while ((obj=next())) {
       if (!obj->InheritsFrom(TFolder::Class())) continue;
-      if (obj->IsA() == TClass::Class()) continue;
+      if (obj->InheritsFrom(TClass::Class())) continue;
       folder = (TFolder*)obj;
       found = folder->FindFullPathName(name);
       if (found) return found;
@@ -226,7 +226,7 @@ const char *TFolder::FindFullPathName(TObject *obj) const
 {
 // return the full pathname corresponding to subpath name
 // The returned path will be re-used by the next call to GetPath().
-   
+
    Error("FindFullPathname","Not yet implemented");
    return 0;
 }
@@ -235,7 +235,7 @@ const char *TFolder::FindFullPathName(TObject *obj) const
 TObject *TFolder::FindObject(TObject *) const
 {
 // find object in an folder
-   
+
    Error("FindObject","Not yet implemented");
    return 0;
 }
@@ -255,7 +255,7 @@ TObject *TFolder::FindObject(const char *name) const
 //   C, Specify a pathname relative to this folder
 //     xxx/yyy/name
 //     name
-   
+
    if (name == 0) return 0;
    if (name[0] == '/') {
       if (name[1] == '/') {
@@ -284,7 +284,7 @@ TObject *TFolder::FindObject(const char *name) const
 TObject *TFolder::FindObjectAny(const char *name) const
 {
 // return a pointer to the first object with name starting at this folder
-   
+
    TObject *obj = FindObject(name);
    if (obj || !fFolders) return obj;
 
@@ -296,7 +296,7 @@ TObject *TFolder::FindObjectAny(const char *name) const
    d[level] = GetName();
    while ((obj=next())) {
       if (!obj->InheritsFrom(TFolder::Class())) continue;
-      if (obj->IsA() == TClass::Class()) continue;
+      if (obj->InheritsFrom(TClass::Class())) continue;
       folder = (TFolder*)obj;
       found = folder->FindObjectAny(name);
       if (found) return found;
