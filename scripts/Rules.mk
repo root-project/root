@@ -25,6 +25,8 @@ CLEAN_TARGETS +=
 
 ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def *.ilk
 
+.PHONY : clean tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR)
+
 export CURDIR=$(shell basename `pwd`)
 #debug:=$(shell echo CALLDIR=$(CALLDIR) CURDIR=$(CURDIR) PWD=`pwd` 1>&2 ) 
 ifeq ($(CALLDIR),)
