@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.4 2003/06/10 20:51:46 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.5 2003/11/13 15:15:11 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -54,14 +54,14 @@ class TCut;
 
 class TDSetElementPfn : public TObject {
 
-protected:
+private:
    TString    fPfn;    // Physical File Name
    TString    fMsn;    // Mass Storage Name
    TString    fCen;    // Computing Element Name
    Long64_t   fSize;   // Size in bytes
 
 public:
-   TDSetElementPfn(const char* pfn = 0, const char *msn = 0, Long64_t size = -1)
+   TDSetElementPfn(const char *pfn = 0, const char *msn = 0, Long64_t size = -1)
    {
       fPfn  = pfn; fMsn  = msn; fSize = size;
    }
@@ -74,9 +74,7 @@ public:
    void        SetCen(const char *cen) { fCen = cen; }
    void        SetCen(const TString& cen) { fCen = cen; }
    Long64_t    GetSize() const { return fSize; }
-   void        Print(Option_t * /*option*/ = "") const { List(); }
-   void        List() const { printf("\tPFN: %-40s MSN: %-25s SIZE: %9lld CEN: %25s\n",
-                              GetPfn(), GetMsn(), GetSize(), GetCen()); }
+   void        Print(Option_t *option = "") const;
 
    ClassDef(TDSetElementPfn,1)  // Describing physical locations of LFNs
 };
@@ -84,7 +82,7 @@ public:
 
 class TDSetElementMsn : public TObject {
 
-protected:
+private:
    TString       fMsn;                   // Mass Storage Name
    Int_t         fNfiles;                // Number of files
    Long64_t      fDataSize;              // Size of file on mass storage
@@ -111,8 +109,7 @@ public:
    void        SetMaxSiteDaemons(Int_t maxdaemons) { fMaxSiteDaemons = maxdaemons; }
    Int_t       Increment() { if (fNfiles == -1) fNfiles = 1; else fNfiles++; return fNfiles; }
    Long64_t    AddData(Long64_t datasize) { fDataSize += datasize; return fDataSize; }
-   void        Print(Option_t * /*option*/ ="") const { printf("msn: %-32s nfiles: %-8d ndaemon: %-8d data[bytes]: %16lld\n",
-                       GetMsn(), GetNfiles(), GetNSiteDaemons(), GetDataSize()); }
+   void        Print(Option_t *option ="") const;
 
    ClassDef(TDSetElementMsn,1)  // Describing the files to be processed in a mass storage system
 };
@@ -121,17 +118,15 @@ public:
 class TDSetElement : public TObject {
 
 private:
-   TString      fFileName;   // physical or logical file name
-   TString      fObjName;    // name of objects to be analyzed in this file
-   TString      fDirectory;  // directory in file where to look for objects
-   Long64_t     fFirst;      // first entry to process
-   Long64_t     fNum;        // number of entries to process
-   const TDSet *fSet;        // set to which element belongs
-   TList       *fPfnList;    // physical location information for Grid files
-   TIter       *fIterator;   //! iterator on fPfnList
-
-protected:
-   TDSetElementPfn  *fCurrent;  //! current element of fPfnList
+   TString          fFileName;   // physical or logical file name
+   TString          fObjName;    // name of objects to be analyzed in this file
+   TString          fDirectory;  // directory in file where to look for objects
+   Long64_t         fFirst;      // first entry to process
+   Long64_t         fNum;        // number of entries to process
+   const TDSet     *fSet;        // set to which element belongs
+   TList           *fPfnList;    // physical location information for Grid files
+   TIter           *fIterator;   //! iterator on fPfnList
+   TDSetElementPfn *fCurrent;    //! current element of fPfnList
 
 public:
    TDSetElement() { fSet = 0;  fPfnList = 0; fIterator = 0; fCurrent  = 0; }
@@ -153,7 +148,6 @@ public:
    void             Reset();
    TDSetElementPfn *Next();
    void             Print(Option_t *options="") const;
-   void             List() const;
 
    ClassDef(TDSetElement,1)  // A TDSet element
 };
@@ -205,7 +199,6 @@ public:
                               Long64_t firstentry = 0); // *MENU*
 
    void                  Print(Option_t *option="") const;
-   void                  List() const;
 
    void                  SetObjName(const char *objname);
    void                  SetDirectory(const char *dir);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.7 2003/10/30 10:50:34 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.8 2003/11/13 15:15:11 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -55,18 +55,21 @@
 #include "TGridProof.h"
 #include "TUrl.h"
 
-#ifndef R__WIN32
-#include <unistd.h>
-#endif
-
-#include <sys/types.h>
-#include <sys/stat.h>
-
 
 ClassImp(TDSetElementPfn)
 ClassImp(TDSetElementMsn)
 ClassImp(TDSetElement)
 ClassImp(TDSet)
+
+//______________________________________________________________________________
+void TDSetElementPfn::Print(Option_t *) const
+{
+   // Print contents of a physical file element.
+
+   printf("\tPFN: %-40s MSN: %-25s SIZE: %9lld CEN: %25s\n",
+          GetPfn(), GetMsn(), GetSize(), GetCen());
+}
+
 
 //______________________________________________________________________________
 TDSetElementMsn::TDSetElementMsn(TDSetElementPfn *dse)
@@ -80,6 +83,15 @@ TDSetElementMsn::TDSetElementMsn(TDSetElementPfn *dse)
    fMaxSiteDaemons       = 50;
    fDataPerSiteDaemon    = -1;
    fMaxDataPerSiteDaemon = 5000000000; // heuristic 5 GByte
+}
+
+//______________________________________________________________________________
+void TDSetElementMsn::Print(Option_t *) const
+{
+   // Print contents of a Mass Storage element.
+
+   printf("MSN: %-32s nfiles: %-8d ndaemon: %-8d data[bytes]: %16lld\n",
+          GetMsn(), GetNfiles(), GetNSiteDaemons(), GetDataSize());
 }
 
 
@@ -170,37 +182,25 @@ TDSetElementPfn *TDSetElement::Next()
 }
 
 //______________________________________________________________________________
-void TDSetElement::Print(Option_t *) const
+void TDSetElement::Print(Option_t *opt) const
 {
-   // Print a TDSetElement.
+   // Print a TDSetElement. When option="a" print full data.
 
-   cout << IsA()->GetName()
-        << " file='" << fFileName
-        << "' dir='" << fDirectory
-        << "' obj='" << fObjName
-        << "' first=" << fFirst
-        << " num=" << fNum
-        << endl;
+   if (opt && opt[0] == 'a') {
+      cout << IsA()->GetName()
+           << " file='" << fFileName
+           << "' dir='" << fDirectory
+           << "' obj='" << fObjName
+           << "' first=" << fFirst
+           << " num=" << fNum
+           << endl;
+   } else
+      cout << "\tLFN: " << fFileName << endl;
 
-   const_cast<TDSetElement*>(this)->Reset();
+   TIter next(fPfnList);
 
-   while (TDSetElementPfn *tdIter = const_cast<TDSetElement*>(this)->Next()) {
-     tdIter->Print();
-   }
-   cout << "---------------------------------------------------------------" << endl;
-}
-
-//______________________________________________________________________________
-void TDSetElement::List() const
-{
-   // Short print of a TDSetlement.
-
-   cout << "\tLFN: " << GetFileName() << endl;
-
-   const_cast<TDSetElement*>(this)->Reset();
-
-   while (TDSetElementPfn *tdIter = const_cast<TDSetElement*>(this)->Next())
-      tdIter->List();
+   while (TDSetElementPfn *pfn = (TDSetElementPfn *) next())
+      pfn->Print(opt);
 }
 
 //______________________________________________________________________________
@@ -380,7 +380,7 @@ TList *TDSet::GetOutputList()
 }
 
 //______________________________________________________________________________
-void TDSet::Print(const Option_t *option) const
+void TDSet::Print(const Option_t *opt) const
 {
    // Print TDSet basic or full data. When option="a" print full data.
 
@@ -388,11 +388,11 @@ void TDSet::Print(const Option_t *option) const
         << fObjName << "\tin " << GetTitle()
         << "\telements " << GetListOfElements()->GetSize() << endl;
 
-   if (option && *option) {
+   if (opt && opt[0] == 'a') {
       TIter next(GetListOfElements());
       TObject *obj;
       while ((obj = next())) {
-         obj->Print(option);
+         obj->Print(opt);
       }
    }
 }
@@ -690,20 +690,6 @@ Bool_t TDSet::AddQuery(const char *path, const char *file,
    }
    cout << "--------------------------------------------------------" << endl;
    return kTRUE;
-}
-
-//______________________________________________________________________________
-void TDSet::List() const
-{
-   // List all elements and subelements of a data set.
-
-   const_cast<TDSet*>(this)->Reset();
-   Int_t cnt = 0;
-   while (TDSetElement *tdIter = const_cast<TDSet*>(this)->Next()) {
-      cnt++;
-      printf(" %4d", cnt);
-      tdIter->List();
-   }
 }
 
 //______________________________________________________________________________
