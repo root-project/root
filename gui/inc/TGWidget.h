@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWidget.h,v 1.2 2000/10/17 12:34:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWidget.h,v 1.3 2000/10/22 19:28:58 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -74,13 +74,13 @@ public:
    TGWidget(Int_t id) { fWidgetId = id; }
    virtual ~TGWidget() { }
 
-   Int_t       WidgetId() const { return fWidgetId; }
-   Bool_t      IsEnabled() const { return (Bool_t)((fWidgetFlags & kWidgetIsEnabled) != 0); }
-   Bool_t      HasFocus() const { return (Bool_t)((fWidgetFlags & kWidgetHasFocus) != 0); }
-   Bool_t      WantFocus() const { return (Bool_t)((fWidgetFlags & kWidgetWantFocus) != 0); }
-   void        Associate(const TGWindow *w) { fMsgWindow = w; }
-   void        SetCommand(const char *command) { fCommand = command; }
-   const char *GetCommand() const { return fCommand.Data(); }
+   Int_t         WidgetId() const { return fWidgetId; }
+   Bool_t        IsEnabled() const { return (Bool_t)((fWidgetFlags & kWidgetIsEnabled) != 0); }
+   Bool_t        HasFocus() const { return (Bool_t)((fWidgetFlags & kWidgetHasFocus) != 0); }
+   Bool_t        WantFocus() const { return (Bool_t)((fWidgetFlags & kWidgetWantFocus) != 0); }
+   virtual void  Associate(const TGWindow *w) { fMsgWindow = w; }
+   virtual void  SetCommand(const char *command) { fCommand = command; }
+   const char   *GetCommand() const { return fCommand.Data(); }
 
    ClassDef(TGWidget,0)  // Widget base class
 };
