@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.2 2003/11/07 03:29:42 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -17,6 +17,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "RConfig.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -29,26 +31,16 @@
 #include <netdb.h>
 #include <errno.h>
 
-#if defined(linux)
-#   include <features.h>
-#   if __GNU_LIBRARY__ == 6
-#      ifndef R__GLIBC
-#         define R__GLIBC
-#      endif
-#   endif
-#endif
-#if defined(__MACH__) && !defined(__APPLE__)
-#   define R__GLIBC
+#if defined(R__AIX) || (defined(R__FBSD) && !defined(R__ALPHA)) || \
+    (defined(R__SUNGCC3) && !defined(__arch64__))
+#   define USE_SIZE_T
+#elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA)) || \
+     (defined(R__SUNGCC3) && defined(__arch64__))
+#   define USE_SOCKLEN_T
 #endif
 
 #include "rpdp.h"
 #include "rpderr.h"
-
-#if defined(_AIX) || (defined(__FreeBSD__) && !defined(__alpha__))
-#   define USE_SIZE_T
-#elif defined(R__GLIBC) || (defined(__FreeBSD__) && defined(__alpha__))
-#   define USE_SOCKLEN_T
-#endif
 
 
 namespace ROOT {

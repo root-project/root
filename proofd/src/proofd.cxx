@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.57 2004/01/29 12:36:31 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.58 2004/02/19 00:11:19 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -152,6 +152,7 @@
 
 
 #include "config.h"
+#include "RConfig.h"
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -173,7 +174,6 @@
 #if defined(__CYGWIN__) && defined(__GNUC__)
 #   define cygwingcc
 #endif
-
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
     defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
     defined(__MACH__) || defined(cygwingcc)

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: netpar.cxx,v 1.8 2003/04/06 21:30:13 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: netpar.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
 // Author: Fons Rademakers   06/02/2001
 
 /*************************************************************************
@@ -18,6 +18,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "RConfig.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -34,27 +36,16 @@
 #include <strings.h>
 #endif
 
-#if defined(linux)
-#   include <features.h>
-#   if __GNU_LIBRARY__ == 6
-#      ifndef R__GLIBC
-#         define R__GLIBC
-#      endif
-#   endif
-#endif
-#if defined(__MACH__) && !defined(__APPLE__)
-#   define R__GLIBC
-#endif
-
-#include "RConfig.h"
-#include "rootdp.h"
-
-#if defined(_AIX) || (defined(__FreeBSD__) && !defined(__alpha__)) || \
-    defined(R__SUNGCC3)
+#if defined(R__AIX) || (defined(R__FBSD) && !defined(R__ALPHA)) || \
+    (defined(R__SUNGCC3) && !defined(__arch64__))
 #   define USE_SIZE_T
-#elif defined(R__GLIBC) || (defined(__FreeBSD__) && defined(__alpha__))
+#elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA)) || \
+     (defined(R__SUNGCC3) && defined(__arch64__))
 #   define USE_SOCKLEN_T
 #endif
+
+#include "rootdp.h"
+
 
 namespace ROOT {
 

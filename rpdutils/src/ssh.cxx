@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.5 2003/10/07 14:03:03 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.6 2004/02/19 00:11:19 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -14,6 +14,8 @@
 // Set of utilities for rootd/proofd daemon SSH authentication.         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#include "RConfig.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -31,25 +33,16 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#if defined(linux)
-#   include <features.h>
-#   if __GNU_LIBRARY__ == 6
-#      ifndef R__GLIBC
-#         define R__GLIBC
-#      endif
-#   endif
-#endif
-#if defined(__MACH__) && !defined(__APPLE__)
-#   define R__GLIBC
-#endif
-
-#if defined(_AIX) || (defined(__FreeBSD__) && !defined(__alpha__))
+#if defined(R__AIX) || (defined(R__FBSD) && !defined(R__ALPHA)) || \
+    (defined(R__SUNGCC3) && !defined(__arch64__))
 #   define USE_SIZE_T
-#elif defined(R__GLIBC) || (defined(__FreeBSD__) && defined(__alpha__))
+#elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA)) || \
+     (defined(R__SUNGCC3) && defined(__arch64__))
 #   define USE_SOCKLEN_T
 #endif
 
 #include "rpdp.h"
+
 
 namespace ROOT {
 
@@ -278,7 +271,7 @@ int SshToolGetAuth(int UnixFd, const char *User)
             SshAuth[len-1] = 0;
          if (gDebug > 2)
             ErrorInfo("SshToolGetAuth: got: %s",SshAuth);
-         
+
          // Check authentication and notify to client
          if (strncmp(SshAuth, "OK", 2) != 0) {
             ErrorInfo("SshToolGetAuth: user did not authenticate to sshd: %s (%d)",
