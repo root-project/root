@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.68 2001/05/11 08:28:36 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.69 2001/05/15 07:51:45 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2517,8 +2517,31 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                          TStreamerElement *element = (TStreamerElement*)fElem[i];
                          Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
-                            printf("ERROR, Streamer is null\n");
-                            element->ls();
+                            if (gDebug > 0) printf("WARNING, Streamer is null\n");
+                            //Note that this does not work if the class has a custom Streamer
+                            //with no bytecount
+                            TClass *cle = element->GetClassPointer();
+                            if (cle->InheritsFrom(TArray::Class())) {
+                               //special case (frequent) with TArray classes
+                               //The TArray Streamers not compatible with WriteBuffer
+                               // (no byte count)
+                               if (strchr(element->GetTypeName(),'*')) {
+                                  if (cle == TArrayI::Class()) {TArrayI **ar = (TArrayI**)(pointer+fOffset[i]); b << *ar; break;}
+                                  if (cle == TArrayF::Class()) {TArrayF **ar = (TArrayF**)(pointer+fOffset[i]); b << *ar; break;}
+                                  if (cle == TArrayC::Class()) {TArrayC **ar = (TArrayC**)(pointer+fOffset[i]); b << *ar; break;}
+                                  if (cle == TArrayD::Class()) {TArrayD **ar = (TArrayD**)(pointer+fOffset[i]); b << *ar; break;}
+                                  if (cle == TArrayS::Class()) {TArrayS **ar = (TArrayS**)(pointer+fOffset[i]); b << *ar; break;}
+                                  if (cle == TArrayL::Class()) {TArrayL **ar = (TArrayL**)(pointer+fOffset[i]); b << *ar; break;}
+                               } else {
+                                  if (cle == TArrayI::Class()) {TArrayI *ar = (TArrayI*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                  if (cle == TArrayF::Class()) {TArrayF *ar = (TArrayF*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                  if (cle == TArrayC::Class()) {TArrayC *ar = (TArrayC*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                  if (cle == TArrayD::Class()) {TArrayD *ar = (TArrayD*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                  if (cle == TArrayS::Class()) {TArrayS *ar = (TArrayS*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                  if (cle == TArrayL::Class()) {TArrayL *ar = (TArrayL*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                               }
+                            }
+                            cle->WriteBuffer(b,pointer+fOffset[i],"");
                             break;
                          }
                          (*pstreamer)(b,pointer+fOffset[i],0);
