@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.69 2002/02/14 08:30:04 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.70 2002/02/24 18:05:34 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4438,11 +4438,6 @@ void THistPainter::PaintTitle()
       if (title) delete title;
       return;
    }
-   if (title) {
-      TText *t0 = (TText*)title->GetLine(0);
-      if (t0) t0->SetTitle(fH->GetTitle());
-      return;
-   }
    Double_t ht = gStyle->GetTitleH();
    Double_t wt = gStyle->GetTitleW();
    if (ht <= 0) ht = 0.05;
@@ -4452,6 +4447,15 @@ void THistPainter::PaintTitle()
       l.SetTitle(fH->GetTitle());
       Double_t wndc = l.GetXsize()/(gPad->GetX2() - gPad->GetX1());
       wt = TMath::Min(0.6, 0.02+wndc);
+   }
+   if (title) {
+      TText *t0 = (TText*)title->GetLine(0);
+      if (t0) {
+         if (!strcmp(t0->GetTitle(),fH->GetTitle())) return;
+         t0->SetTitle(fH->GetTitle());
+         if (wt > 0) title->SetX2NDC(title->GetX1NDC()+wt);
+      }
+      return;
    }
 
    TPaveText *ptitle = new TPaveText(
