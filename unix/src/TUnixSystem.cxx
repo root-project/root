@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.48 2002/12/09 17:39:21 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.49 2002/12/10 02:52:43 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -203,7 +203,9 @@ extern "C" {
 // #   define HAVE_XL_TRBK   // does not work as expected
 #endif
 #if (defined(R__LINUX) && !defined(R__MKLINUX)) || defined(R__HURD)
-#   define HAVE_BACKTRACE_SYMBOLS_FD
+#   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 1
+#      define HAVE_BACKTRACE_SYMBOLS_FD
+#   endif
 #   define HAVE_DLADDR
 #endif
 
@@ -1258,9 +1260,10 @@ void TUnixSystem::StackTrace()
    fflush (stderr);
 
    int fd = STDERR_FILENO;
-   if (fd) { }  // remove unused warning (remove later)
 
    const char *message = " Generating stack trace...\n";
+
+   if (fd && message) { }  // remove unused warning (remove later)
 
 #if defined(HAVE_U_STACK_TRACE) || defined(HAVE_XL_TRBK)   // hp-ux, aix
 /*
