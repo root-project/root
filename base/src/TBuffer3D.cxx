@@ -114,6 +114,7 @@ void TBuffer3D::Paint(Option_t *option)
          if (fTransparency > 50) return;  //do not show semi transparent objects
          if ( fType==kMARKER ) {
             view = gPad->GetView();
+            if (!view) return;
             Double_t pndc[3], temp[3];
             for (i=0; i<fNbPnts; i++) {
                for ( i0=0; i0<3; i0++ ) temp[i0] = fPnts[3*i+i0];
