@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.12 2001/07/20 21:05:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.13 2001/10/12 07:49:41 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -413,6 +413,15 @@ void TGraphAsymmErrors::SavePrimitive(ofstream &out, Option_t *option)
       out<<"   grae->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
       out<<"   grae->SetPointError("<<i<<","<<fEXlow[i]<<","<<fEXhigh[i]<<","<<fEYlow[i]<<","<<fEYhigh[i]<<");"<<endl;
    }
+
+   // save list of functions
+   TIter next(fFunctions);
+   TObject *obj;
+   while ((obj=next())) {
+      obj->SavePrimitive(out,"nodraw");
+      out<<"   grae->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
+   }
+
    if (strstr(option,"multigraph")) {
       out<<"   multigraph->Add(grae);"<<endl;
       return;

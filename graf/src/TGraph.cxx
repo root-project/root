@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.51 2001/11/30 15:46:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.52 2001/12/09 17:30:29 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2707,6 +2707,14 @@ void TGraph::SavePrimitive(ofstream &out, Option_t *option)
       fHistogram->SavePrimitive(out,"nodraw");
       out<<"   graph->SetHistogram("<<fHistogram->GetName()<<");"<<endl;
       out<<"   "<<endl;
+   }
+
+   // save list of functions
+   TIter next(fFunctions);
+   TObject *obj;
+   while ((obj=next())) {
+      obj->SavePrimitive(out,"nodraw");
+      out<<"   graph->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
    }
 
    if (!strstr(option,"multigraph")) {
