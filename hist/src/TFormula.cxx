@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.72 2004/02/27 14:30:28 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.73 2004/03/12 21:43:32 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2383,7 +2383,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
         #define R__EXPO(var)                                                 \
         {                                                                    \
            pos++; int param = (oper & kTFOperMask);                          \
-           tab[pos-1] = TMath::Exp(fParams[param-1]+fParams[param]*x[var]);  \
+           tab[pos-1] = TMath::Exp(fParams[param]+fParams[param+1]*x[var]);  \
            continue;                                                         \
         }
         // case kexpo: 
