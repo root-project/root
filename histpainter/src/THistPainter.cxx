@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.203 2005/01/04 10:25:26 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.204 2005/02/08 16:33:38 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1974,7 +1974,7 @@ void THistPainter::PaintBoxes(Option_t *)
 
    // Define the dark and light colors the "button style" boxes.
    Color_t color = fH->GetFillColor();
-   Color_t light, dark;
+   Color_t light=0, dark=0;
    if (Hoption.Box == 11) {
       if (color == 0) {
          light = 0;
