@@ -9,12 +9,15 @@ int permuteSimple ()
 {
   printf("\nTMath::Permute simple test\n");
   printf("==========================\n");
+  char aa='a';
   Int_t a[4];
   Bool_t start=kTRUE;
-  for(Int_t k=0;k<24;k++) {
-    TMath::Permute(a,4,start);
-    for(Int_t i=0;i<4;printf("%c",97+a[i++])); printf("\n");
+  Int_t icount=0;
+  while(TMath::Permute(a,4,start)) {
+    icount++;
+    for(Int_t i=0;i<4;printf("%c",static_cast<char>(aa+a[i++]))); printf("\n");
   }
+  printf("Found %d permutations = 4!\n",icount);
   return 0;
 }
 
