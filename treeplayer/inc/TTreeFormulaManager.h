@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.h,v 1.3 2002/04/04 17:28:52 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.h,v 1.4 2003/01/31 08:23:39 brun Exp $
 // Author: Philippe Canal   20/03/02
 
 /*************************************************************************
@@ -55,6 +55,11 @@ private:
    TTreeFormulaManager(const TTreeFormulaManager&);
    TTreeFormulaManager& operator=(const TTreeFormulaManager&);
 
+#if !defined(_MSC_VER) || (_MSC_VER < 1300)
+   // Deletion is the sole responsability of the TTreeFormulas
+   ~TTreeFormulaManager();
+#endif
+
 protected:
 
    virtual void       AddVarDims(Int_t virt_dim);
@@ -65,8 +70,10 @@ protected:
 
 public:
    TTreeFormulaManager();
-   ~TTreeFormulaManager(); // Deletion is the sole responsability of the TTreeFormulas
-                           // cannot be private due to a bug in VC++7
+#if _MSC_VER >= 1300
+   // cannot be private due to a bug in VC++7
+   ~TTreeFormulaManager();
+#endif
    
    virtual void       Add(TTreeFormula*);
    virtual Int_t      GetMultiplicity() const {return fMultiplicity;}
