@@ -275,7 +275,6 @@ TTreePlayer::TTreePlayer()
    fVar4           = 0;
    fSelect         = 0;
    fDraw           = 0;
-   fSelector       = 0;
    fPacketGen      = 0;
    fPacketSize     = 100;
    fHistogram      = 0;
@@ -1338,39 +1337,12 @@ void TTreePlayer::GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry,
 }
 
 //______________________________________________________________________________
-TSelector *TTreePlayer::GetSelector()
-{
-//*-*-*-*-*-*Return current selector or create default selector
-//*-*        ==================================================
-
-   if (fSelector) return fSelector;
-   fSelector = new TSelector("selector.C","The default macro selector");
-   fSelector->Init(fTree);
-   return fSelector;
-}
-
-//______________________________________________________________________________
 void TTreePlayer::Loop(Option_t *option, Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Loop on nentries of this tree starting at firstentry
 //*-*              ===================================================
 
-   GetSelector();
-
-//*-* Do not process more than fMaxEntryLoop entries
-   if (nentries > fTree->GetMaxEntryLoop()) nentries = fTree->GetMaxEntryLoop();
-   Int_t lastentry = firstentry + nentries -1;
-   if (lastentry > fTree->GetEntries()-1) {
-      lastentry = (Int_t)fTree->GetEntries() -1;
-   }
-
-   fSelector->Start(option);
-
-   for (Int_t entry = firstentry;entry<=lastentry;entry++) {
-      fSelector->Execute(fTree, entry);
-   }
-
-   fSelector->Finish(option);
+   Warning("Loop","Obsolete function");
 }
 
 //______________________________________________________________________________
@@ -2026,19 +1998,19 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option,Int_t nentries,
 //*-*              ================================================
 //
 //   The code in filename is loaded (interpreted or compiled , see below)
-//   filename must contain a valid class implementation derived from TTreeProcess.
-//   where TTreeProcess has the following member functions:
-//     void TTreeProcess::Begin(). This function is called before looping on the
+//   filename must contain a valid class implementation derived from TSelector.
+//   where TSelector has the following member functions:
+//     void TSelector::Begin(). This function is called before looping on the
 //          events in the Tree. The user can create his histograms in this function.
 //   
-//     Bool_t TTreeProcess::Select(Int_t entry). This function is called
+//     Bool_t TSelector::Select(Int_t entry). This function is called
 //          before processing entry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
 //          The function returns kTRUE if the entry must be processed,
 //          kFALSE otherwise.
-//     void TTreeProcess::Analyze(Int_t entry). This function is called for
+//     void TSelector::Analyze(Int_t entry). This function is called for
 //          all selected events. User fills histograms in this function.
-//     void TTreeProcess::Finish(). This function is called at the end of
+//     void TSelector::Finish(). This function is called at the end of
 //          the loop on all events. 
 //
 //   if filename is of the form file.C, the file will be interpreted.
@@ -2082,7 +2054,8 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option,Int_t nentries,
    // we can now create an instance of the class
    printf("Creating an instance of :%s\n",cl.Name());
    TObject *selector = (TObject*)cl.New();
-   
+   delete selector;
+      
    printf("NOT YET IMPLEMENTED\n");
    return -1;
 }
@@ -2323,26 +2296,6 @@ void TTreePlayer::SetPacketSize(Int_t size)
 //*-*              =================================================
 
    fPacketSize = size;
-}
-
-//_______________________________________________________________________
-void TTreePlayer::SetSelector(TSelector *selector)
-{
-//*-*-*-*-*-*-*-*-*Set current selector to user selector*-*-*-*-*-*-*-*
-//*-*              =====================================
-//
-   fSelector = selector;
-   if (selector) selector->Init(fTree);
-}
-
-//_______________________________________________________________________
-void TTreePlayer::SetSelector(const char *macroname)
-{
-//*-*-*-*-*-*-*-*-*Set current selector to macroname*-*-*-*-*-*-*-*
-//*-*              =================================
-//
-   fSelector = new TSelector(macroname);
-   if (fSelector) fSelector->Init(fTree);
 }
 
 //_______________________________________________________________________

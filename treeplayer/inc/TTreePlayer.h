@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.3 2000/06/13 09:18:46 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.4 2000/07/03 10:11:04 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -34,7 +34,6 @@
 #include "TVirtualTreePlayer.h"
 #endif
 
-class TSelector;
 class TTreeFormula;
 class TH1;
 class TSlave;
@@ -63,7 +62,6 @@ protected:
     Double_t      *fV2;             //Local buffer for variable 2
     Double_t      *fV3;             //Local buffer for variable 3
     Double_t      *fW;              //Local buffer for weights
-    TSelector     *fSelector;       //Pointer to current selector
     TPacketGenerator *fPacketGen;   //Packet generator
     Int_t          fNfill;          //Local for EntryLoop
     TH1           *fHistogram;      //Pointer to histogram used for the projection
@@ -99,7 +97,6 @@ public:
     virtual Int_t     GetPacketSize() const {return fPacketSize;}
     TTreeFormula     *GetSelect()    {return fSelect;}
     virtual Int_t     GetSelectedRows() {return fSelectedRows;}
-    TSelector        *GetSelector();
     TTreeFormula     *GetVar1() {return fVar1;}
     TTreeFormula     *GetVar2() {return fVar2;}
     TTreeFormula     *GetVar3() {return fVar3;}
@@ -119,8 +116,6 @@ public:
                          ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      SetEstimate(Int_t n);
     virtual void      SetPacketSize(Int_t size = 100);
-    virtual void      SetSelector(TSelector *selector=0);
-    virtual void      SetSelector(const char *macroname);
     virtual void      SetTree(TTree *t) {fTree = t;}
     virtual void      StartViewer(Int_t ww, Int_t wh);
 
