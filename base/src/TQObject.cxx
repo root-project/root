@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.4 2000/10/26 14:26:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.5 2000/11/13 19:46:55 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -363,8 +363,8 @@ public:
    virtual ~TQConnectionList();
 
    Bool_t Disconnect(void *receiver=0, const char *slot_name=0);
-   void  ls(Option_t *option = "");
-   void  Print(Option_t *option = "");
+   void  ls(Option_t *option = "") const;
+   void  Print(Option_t *option = "") const ;
 };
 
 //______________________________________________________________________________
@@ -418,16 +418,16 @@ Bool_t TQConnectionList::Disconnect(void *receiver, const char *slot_name)
 }
 
 //______________________________________________________________________________
-void TQConnectionList::ls(Option_t *option)
+void TQConnectionList::ls(Option_t *option) const
 {
    // List signal name and list all connections in this signal list.
 
    cout <<  "TQConnectionList:" << "\t" << GetName() << endl;
-   this->ForEach(TQConnection,Print)(option);
+   ((TQConnectionList*)this)->ForEach(TQConnection,Print)(option);
 }
 
 //______________________________________________________________________________
-void TQConnectionList::Print(Option_t *option)
+void TQConnectionList::Print(Option_t *option) const
 {
    // Print signal name.
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.3 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.4 2000/12/13 16:45:36 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -56,7 +56,7 @@ public:
    TGFileContainer  *fContainer;
 
    Bool_t IsSortable() const { return kTRUE; }
-   Int_t  Compare(TObject *obj);
+   Int_t  Compare(const TObject *obj) const;
 };
 
 //______________________________________________________________________________
