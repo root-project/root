@@ -12,7 +12,7 @@
 #include <TGLabel.h>
 #include <TGPicture.h>
 #include <TGIcon.h>
-//#include <TGResourcePool.h>
+#include <TGResourcePool.h>
 
 #include "GTitleFrame.h"
 
@@ -30,19 +30,13 @@ GTitleFrame::GTitleFrame(const TGWindow *p,
 {
     // Create GTitleFrame object, with TGWindow parent 'p', text 'mainText'
     // with sub text 'subText'.
-/*    
     const TGFont *font = fClient->GetFont("-*-times-bold-r-*-*-24-*-*-*-*-*-*-*");
     if (!font)
        font = fClient->GetResourcePool()->GetDefaultFont();
     FontStruct_t labelfont = font->GetFontStruct();
-*/
-    FontStruct_t labelfont;
-    labelfont = gClient->GetFontByName("-*-times-bold-r-*-*-24-*-*-*-*-*-*-*");
-
     GCValues_t   gval;
     gval.fMask = kGCForeground | kGCFont;
-//    gval.fFont = font->GetFontHandle();
-    gval.fFont = gVirtualX->GetFontHandle(labelfont);
+    gval.fFont = font->GetFontHandle();
     gClient->GetColorByName("red", gval.fForeground);
     fTextGC.SetAttributes(&gval);
 
