@@ -14,12 +14,7 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 # adjust the location of Rules.mk as needed.
-ifeq "x$(wildcard CVS)" "xCVS"
-PACKAGEABLE=yes
 RULES_DIR=$(ROOTTEST_HOME)/scripts
-else
-RULES_DIR=.
-endif
 
 VERSION := $(subst .,-,$(subst /,-,$(shell root-config --version)))
 ifeq ($(PLATFORM),win32)
@@ -146,24 +141,6 @@ stlNoLibTest: stlNoLibTest.log
 testWithFailure:
 ifeq ($(FAIL),)
 	$(WarnFailTest)
-endif
-
-ifneq "x$(PACKAGEABLE)" "x"
-package:
-	rm -rf stltest
-	mkdir -p stltest
-	cp *.C *.h Makefile *.ref ../../Rules.mk ../../build.C stltest
-	( \
-	   tar_name=stlioTest; \
-	   inc=0; \
-	   tar_file=~/Transfer/$$tar_name.$$inc.tar.gz; \
-	   while test -e $$tar_file; do \
-		   inc=$$(($$inc+1)); \
-		   tar_file=~/Transfer/$$tar_name.$$inc.tar.gz; \
-	   done; \
-	   tar cfz $$tar_file stltest; \
-      echo generated $$tar_file; \
-   )
 endif
 
 samplerootfile.root: directories $(LIBDIR)sample_bx_classes_C.$(DllSuf)
