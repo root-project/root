@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.13 2001/02/22 14:45:18 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.14 2001/02/22 15:15:52 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1245,7 +1245,7 @@ void TTreeViewer::ExecuteDraw()
       axis[0] = hist->GetXaxis();
       axis[1] = hist->GetYaxis();
       axis[2] = hist->GetZaxis();
-      for (i=0; i<3; i++) axis[i]->SetTitle(alias[i].Data());
+      for (Int_t ind=0; ind<3; ind++) axis[ind]->SetTitle(alias[ind].Data());
    }
    gPad->Update();
 }
@@ -1503,7 +1503,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       case kC_COMMAND:
          switch (GET_SUBMSG(msg)){
             case kCM_COMBOBOX:
-               fSession->Show(fSession->GetRecord(parm2));            
+               fSession->Show(fSession->GetRecord((Int_t)parm2));            
             break;
             case kCM_BUTTON:
                switch (parm1) {
@@ -1602,10 +1602,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         if (!gInterpreter->IsLoaded(info.fFilename)) gInterpreter->LoadMacro(info.fFilename);
                         char command[100];
                         command[0] = 0;
-//                        sprintf(command, "if (!gInterpreter->IsLoaded(\"%s\")) gInterpreter->LoadMacro(\"%s\");", 
-//                        info.fFilename, info.fFilename);
-//                        ExecuteCommand(command);
-                        sprintf(command,"open_session((void*)0x%x);", (UInt_t)this);
+                        sprintf(command,"open_session((void*)0x%lx);", (Long_t)this);
                         ExecuteCommand(command);
                         delete[] info.fFilename;
                      }
@@ -1888,13 +1885,13 @@ void TTreeViewer::MapOptions(Long_t parm1)
 //*-*              ==========================================
    Int_t ind;
    if (parm1 < kOptions1D) {
-      if (fOptionsGen->IsEntryChecked(parm1)) {
-         fOptionsGen->UnCheckEntry(parm1);
+      if (fOptionsGen->IsEntryChecked((Int_t)parm1)) {
+         fOptionsGen->UnCheckEntry((Int_t)parm1);
       } else {
-         fOptionsGen->CheckEntry(parm1);
-         if (parm1 != kOptionsGeneral) fOptionsGen->UnCheckEntry(kOptionsGeneral);
+         fOptionsGen->CheckEntry((Int_t)parm1);
+         if ((Int_t)parm1 != kOptionsGeneral) fOptionsGen->UnCheckEntry((Int_t)kOptionsGeneral);
       }
-      if (fOptionsGen->IsEntryChecked(kOptionsGeneral)) {
+      if (fOptionsGen->IsEntryChecked((Int_t)kOptionsGeneral)) {
       // uncheck all in this menu
          for (ind=kOptionsGeneral+1; ind<kOptionsGeneral+16; ind++) {
             fOptionsGen->UnCheckEntry(ind);
@@ -1903,13 +1900,13 @@ void TTreeViewer::MapOptions(Long_t parm1)
    }
 
    if (parm1 < kOptions2D) {
-      if (fOptions1D->IsEntryChecked(parm1)) {
-         fOptions1D->UnCheckEntry(parm1);
+      if (fOptions1D->IsEntryChecked((Int_t)parm1)) {
+         fOptions1D->UnCheckEntry((Int_t)parm1);
       } else {
-         fOptions1D->CheckEntry(parm1);
-         if (parm1 != kOptions1D) fOptions1D->UnCheckEntry(kOptions1D);
+         fOptions1D->CheckEntry((Int_t)parm1);
+         if ((Int_t)parm1 != kOptions1D) fOptions1D->UnCheckEntry((Int_t)kOptions1D);
       }
-      if (fOptions1D->IsEntryChecked(kOptions1D)) {
+      if (fOptions1D->IsEntryChecked((Int_t)kOptions1D)) {
       // uncheck all in this menu
          for (ind=kOptions1D+1; ind<kOptions1D+12; ind++) {
             fOptions1D->UnCheckEntry(ind);
@@ -1918,13 +1915,13 @@ void TTreeViewer::MapOptions(Long_t parm1)
    }
 
    if (parm1 >= kOptions2D) {
-      if (fOptions2D->IsEntryChecked(parm1)) {
-         fOptions2D->UnCheckEntry(parm1);
+      if (fOptions2D->IsEntryChecked((Int_t)parm1)) {
+         fOptions2D->UnCheckEntry((Int_t)parm1);
       } else {
-         fOptions2D->CheckEntry(parm1);
-         if (parm1 != kOptions2D) fOptions2D->UnCheckEntry(kOptions2D);
+         fOptions2D->CheckEntry((Int_t)parm1);
+         if ((Int_t)parm1 != kOptions2D) fOptions2D->UnCheckEntry((Int_t)kOptions2D);
       }
-      if (fOptions2D->IsEntryChecked(kOptions2D)) {
+      if (fOptions2D->IsEntryChecked((Int_t)kOptions2D)) {
       // uncheck all in this menu
          for (ind=kOptions2D+1; ind<kOptions1D+14; ind++) {
             fOptions2D->UnCheckEntry(ind);
@@ -2354,3 +2351,4 @@ void TTreeViewer::UpdateRecord(const char *name)
 //*-*              ===========================================
    fSession->UpdateRecord(name);
 }
+

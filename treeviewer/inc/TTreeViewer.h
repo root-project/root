@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.6 2000/12/14 15:23:47 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.7 2001/02/22 14:45:17 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -179,7 +179,7 @@ public:
    void          ActivateButtons(Bool_t first, Bool_t previous,
                                  Bool_t next , Bool_t last);
    virtual void  CloseWindow();
-   virtual void  Delete(Option_t *option = "") {}                // *MENU*
+   virtual void  Delete(Option_t *option) {}                     // *MENU*
    void          EditExpression();
    void          Empty();
    void          EmptyAll();                                     // *MENU*

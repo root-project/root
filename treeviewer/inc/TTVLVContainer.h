@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.h,v 1.1 2001/02/22 14:45:17 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.h,v 1.2 2001/02/22 15:15:52 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -43,7 +43,7 @@ public:
                 TGItemContext();
    virtual     ~TGItemContext() {}
    void         Associate(TTVLVEntry *item) {fItem = item;}
-   virtual void Delete(Option_t *option = "") {} // *MENU*
+   virtual void Delete(Option_t *option) {}      // *MENU*
    void         Draw(Option_t *option="");       // *MENU*
    void         EditExpression();                // *MENU*
    void         Empty();                         // *MENU*

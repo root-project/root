@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.1 2001/02/22 14:45:18 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.2 2001/02/22 15:15:52 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -771,6 +771,7 @@ Bool_t TGSelectBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          }
          break;
       default:
+         if (parm2) break;       // just to avoid warning on CC compiler
          break;
    }
    return kTRUE;
