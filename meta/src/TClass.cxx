@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.94 2002/11/15 16:02:02 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.95 2002/11/24 13:59:57 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -904,7 +904,7 @@ TDataMember *TClass::GetDataMember(const char *datamember) const
    if ((s = strchr(memb, '['))) *s = 0;
 
    TDataMember *dm;
-   TIter   next(GetListOfDataMembers());
+   TIter   next(((TClass*)this)->GetListOfDataMembers());
 
    while ((dm = (TDataMember *) next()))
       if (strcmp(memb, dm->GetName()) == 0)
