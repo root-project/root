@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.12 2000/06/15 11:10:39 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.13 2000/06/15 16:57:55 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -769,8 +769,10 @@ Double_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf)
 //*-*-*-*-*-*-*-*Return result of a leafobject method*-*-*-*-*-*-*-*
 //*-*            ====================================
 //
+
+   if (i>=0) return 0; // case where we do NOT have a method defined   
    TMethodCall *m = GetMethodCall(i);
-   if (!m) return 0;
+   if (!m)   return 0;
 
    void *thisobj = leaf->GetObject();
 
