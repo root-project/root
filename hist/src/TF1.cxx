@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.61 2003/05/06 13:14:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.62 2003/05/15 13:56:29 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1946,6 +1946,15 @@ void TF1::Paint(Option_t *option)
          minimum = fHistogram->GetYaxis()->GetXmin();
       } else {
          minimum = fMinimum;
+         if (minimum == -1111) {
+            Double_t hmin = fHistogram->GetMinimum();
+            if (hmin > 0) {
+               Double_t hmax = fHistogram->GetMaximum();
+               hmin -= 0.05*(hmax-hmin);
+               if (hmin < 0) hmin = 0;
+               minimum = hmin;
+            }
+         }
       }
       fHistogram->SetMinimum(minimum);
    }
