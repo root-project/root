@@ -454,13 +454,21 @@ STRESSO       = stress.$(ObjSuf)
 STRESSS       = stress.$(SrcSuf)
 STRESS        = stress$(ExeSuf)
 
+TBENCHO       = TBench.$(ObjSuf) TBenchDict.$(ObjSuf)
+TBENCHS       = TBench.$(SrcSuf) TBenchDict.$(SrcSuf)
+TBENCHSO      = TBench.$(DllSuf)
+
+BENCHO        = bench.$(ObjSuf)
+BENCHS        = bench.$(SrcSuf)
+BENCH         = bench$(ExeSuf)
+
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
-                $(HELLOO) $(ACLOCKO) $(STRESSO)
+                $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(VVECTOR) $(VMATRIX) $(VLAZY) \
-                $(HELLOSO) $(ACLOCKSO) $(STRESS)
+                $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH)
 ifneq ($(ARCH),win32)
 OBJS         += $(GUITESTO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(TETRISSO)
@@ -549,6 +557,10 @@ $(STRESS):      $(STRESSO) $(EVENT)
 		$(LD) $(LDFLAGS) $(STRESSO) $(EVENTLIB) $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
+$(BENCH):       $(BENCHO) $(TBENCH)
+		$(LD) $(LDFLAGS) $(BENCHO) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
 Hello:          $(HELLOSO)
 $(HELLOSO):     $(HELLOO)
 ifeq ($(ARCH),aix)
@@ -609,6 +621,26 @@ endif
 endif
 endif
 
+TBench:         $(TBENCHSO)
+$(TBENCHSO):    $(TBENCHO)
+ifeq ($(ARCH),aix)
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(TBENCHSO) $(GLIBS) -p 0 $(TBENCHO)
+else
+ifeq ($(ARCH),alphacxx)
+# due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
+# a shared library. One must use ld instead.
+		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx -expect_unresolved "*" \
+ -g0 -O1 -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
+ -o TBench.so TBench.o TBenchDict.o -lcxxstd -lcxx -lexc -lots -lc
+else
+ifeq ($(ARCH),win32)
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+else
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
+endif
+endif
+endif
+
 clean:
 		@rm -f $(OBJS) core
 
@@ -641,6 +673,11 @@ Tetris.$(ObjSuf): Tetris.h
 TetrisDict.$(SrcSuf): Tetris.h
 	@echo "Generating dictionary TetrisDict..."
 	@rootcint -f TetrisDict.$(SrcSuf) -c Tetris.h
+
+TBench.$(ObjSuf): TBench.h
+TBenchDict.$(SrcSuf): TBench.h
+	@echo "Generating dictionary TBenchDict..."
+	@rootcint -f TBenchDict.$(SrcSuf) -c TBench.h benchLinkDef.h
 
 .$(SrcSuf).$(ObjSuf):
 	$(CXX) $(CXXFLAGS) -c $<
