@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDecay.cc,v 1.2 2001/06/09 05:14:11 verkerke Exp $
+ *    File: $Id: RooDecay.cc,v 1.3 2001/10/08 05:21:16 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -27,18 +27,23 @@ RooDecay::RooDecay(const char *name, const char *title,
   RooConvolutedPdf(name,title,model,t)
 {
   // Constructor
-  if (type==SingleSided || type==DoubleSided) 
-    _basisIdxPlus  = declareBasis("exp(-abs(@0)/@1)",tau) ;
-
-  if (type==Flipped || type==DoubleSided)
-    _basisIdxMinus = declareBasis("exp(-abs(-@0)/@1)",tau) ;
+  switch(type) {
+  case SingleSided:
+    _basisExp = declareBasis("exp(-@0/@1)",tau) ;
+    break ;
+  case Flipped:
+    _basisExp = declareBasis("exp(@0)/@1)",tau) ;
+    break ;
+  case DoubleSided:
+    _basisExp = declareBasis("exp(-abs(@0)/@1)",tau) ;
+    break ;
+  }
 }
 
 
 RooDecay::RooDecay(const RooDecay& other, const char* name) : 
   RooConvolutedPdf(other,name), 
-  _basisIdxPlus(other._basisIdxPlus),
-  _basisIdxMinus(other._basisIdxMinus)
+  _basisExp(other._basisExp)
 {
   // Copy constructor
 }

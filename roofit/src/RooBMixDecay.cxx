@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBMixDecay.cc,v 1.5 2001/10/27 22:32:28 verkerke Exp $
+ *    File: $Id: RooBMixDecay.cc,v 1.6 2001/10/30 07:38:53 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -128,12 +128,15 @@ Int_t RooBMixDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generat
 
 
 
+
 void RooBMixDecay::generateEvent(Int_t code)
 {
   // Generate mix-state dependent
   if (code==2) {
+    Double_t taudm2 = _tau*_tau*_dm*_dm ;
+    Double_t mixedFrac = 0.5 * ( 1 - (1-2*_mistag)/(1+taudm2)) ;
     Double_t rand = RooRandom::uniform() ;
-    _tag = (rand<=0.5) ? -1 : 1 ;
+    _tag = (rand<=mixedFrac) ? -1 : 1 ;
   }
 
   // Generate delta-t dependent
