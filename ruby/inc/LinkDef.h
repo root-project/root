@@ -4,9 +4,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ function TRuby::Exec;
-#pragma link C++ function TRuby::Eval;
-#pragma link C++ function TRuby::Bind;
-#pragma link C++ function TRuby::Prompt;
+#pragma link C++ class TRuby;
 
 #endif

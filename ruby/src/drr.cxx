@@ -1,4 +1,4 @@
-// @(#)root/ruby:$Name:  $:$Id: drr.cxx,v 1.0 2004/04/27 14:44:02 brun Exp $
+// @(#)root/ruby:$Name:  $:$Id: drr.cxx,v 1.1 2004/05/30 18:17:00 brun Exp $
 // Author:  Elias Athanasopoulos, May 2004
 
 /*  dynamic ruby-root
@@ -15,9 +15,6 @@
  *  (c) 2003, 2004
 */
 
-#include "ruby.h"
-
-#include "rrcommon.h"
 
 #include "TApplication.h"
 #include "TFunction.h"
@@ -35,6 +32,10 @@
 
 #include "CallFunc.h"
 #include "Class.h"
+
+#include "ruby.h"
+
+#include "rrcommon.h"
 
 /* ROOT's global enums.  */
 #include "rrenums.h"

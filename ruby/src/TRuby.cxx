@@ -1,4 +1,4 @@
-// @(#)root/ruby:$Name:  $:$Id: TRuby.cxx,v 1.0 2004/04/27 14:44:02 brun Exp $
+// @(#)root/ruby:$Name:  $:$Id: TRuby.cxx,v 1.1 2004/05/30 18:17:00 brun Exp $
 // Author:  Elias Athanasopoulos, May 2004
 //
 // Interface for the Ruby shell. 
@@ -7,13 +7,12 @@
 //
 //
 
-#include "ruby.h"
-
 #include "TRuby.h"
 
 #include "TROOT.h"
-#include "TObject.h"
 #include "TSystem.h"
+
+#include "ruby.h"
 
 extern VALUE cTObject;
 

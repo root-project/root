@@ -88,6 +88,8 @@ QTROOTLIBEXTRA      = lib/libGQt.lib lib/libGui.lib $(QTLIB)
 QTGUILIBDEP         = $(GRAFLIB) $(GPADLIB) $(GQTLIB) $(GUILIB)
 QTGUILIBEXTRA       = lib/libGraf.lib lib/libGpad.lib lib/libGQt.lib \
                       lib/libGui.lib $(QTLIB)
+RUBYLIBDEP	        = $(HISTLIB)
+RUBYLIBEXTRA		= lib/libHist.lib
 
 else
 
@@ -159,5 +161,7 @@ QTGUILIBDEP         = $(GRAFLIB) $(GPADLIB) $(GQTLIB) $(GUILIB)
 QTGUILIBEXTRA       = -Llib -lGraf -lGpad -lGQt -lGui $(QTLIB)
 QUADPDEP            = $(MATRIXLIB) 
 QUADPLIBEXTRA       = -Llib -lMatrix
+RUBYLIBDEP	        = $(HISTLIB)
+RUBYLIBEXTRA		= -Llib -lHist
 
 endif

@@ -1554,7 +1554,7 @@ if test ! "x$enable_ruby" = "xno" ; then
     rubyinc=$found_hdr
     rubyincdir=$found_dir
 
-    check_library "libruby-static" "$enable_shared" "$rubylibdir" \
+    check_library "libruby-static msvcrt-ruby18.lib msvcrt-ruby18-static.lib" "$enable_shared" "$rubylibdir" \
         `ruby -rrbconfig -e 'puts Config::CONFIG["libdir"]'`
     rubylib=$found_lib
     rubylibdir=$found_dir

@@ -39,7 +39,7 @@ include/%.h:    $(RUBYROOTDIRI)/%.h
 $(RUBYROOTLIB): $(RUBYROOTO) $(RUBYROOTDO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRuby.$(SOEXT) $@ \
-		   "$(RUBYROOTO) $(RUBYROOTDO)" "$(RUBYLIBDIR) $(RUBYLIB)"
+		   "$(RUBYROOTO) $(RUBYROOTDO)" "$(RUBYLIBEXTRA) $(RUBYLIBDIR) $(RUBYLIB)" 
 
 $(RUBYROOTDS):  $(RUBYROOTH) $(RUBYROOTL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
