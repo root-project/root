@@ -21,7 +21,7 @@ X11TTFH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 X11TTFS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 X11TTFO      := $(X11TTFS:.cxx=.o)
 
-X11TTFDEP    := $(X11TTFO:.o=.d)
+X11TTFDEP    := $(X11TTFO:.o=.d) $(X11TTFDO:.o=.d)
 
 X11TTFLIB    := $(LPATH)/libGX11TTF.$(SOEXT)
 
@@ -36,10 +36,11 @@ INCLUDEFILES += $(X11TTFDEP)
 include/%.h:    $(X11TTFDIRI)/%.h
 		cp $< $@
 
-$(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(MAINLIBS) $(X11LIB)
+$(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(MAINLIBS) $(X11TTFLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGX11TTF.$(SOEXT) $@ \
-		   "$(X11TTFO) $(X11TTFDO)" "$(X11TTFLIBEXTRA)"
+		   "$(X11TTFO) $(X11TTFDO)" \
+		   "$(X11TTFLIBEXTRA) $(TTFLIBDIR)/libttf.a"
 
 $(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."

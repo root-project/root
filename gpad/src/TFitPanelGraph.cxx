@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TFitPanelGraph.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   28/11/96
 
 /*************************************************************************
@@ -90,7 +90,7 @@ void TFitPanelGraph::Apply(const char *action)
 
    TGraph *gr    = (TGraph*)fObjectFit;
    Int_t npoints = gr->GetN();
-   Float_t *gx   = gr->GetX();
+   Double_t *gx  = gr->GetX();
 
    TF1 *f1 = (TF1*)gROOT->GetFunction(fFunction.Data());
    if (!f1) return;

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.4 2000/09/08 07:41:00 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -42,7 +42,7 @@ TLegend::TLegend(): TPave(), TAttText()
 }
 
 //____________________________________________________________________________
-TLegend::TLegend( Coord_t x1, Coord_t y1,Coord_t x2, Coord_t y2, const char *header, Option_t *option)
+TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2, const char *header, Option_t *option)
         :TPave(x1,y1,x2,y2,4,option), TAttText(12,0,1,42,0)
 {
   //___________________________________
@@ -85,7 +85,7 @@ TLegend::TLegend( Coord_t x1, Coord_t y1,Coord_t x2, Coord_t y2, const char *hea
   //
   // You can edit the TLegend by right-clicking on it.
   //
-  fPrimitives = new TList(this);
+  fPrimitives = new TList;
   if ( header && strlen(header) > 0) {
     TLegendEntry *headerEntry = new TLegendEntry( 0, header, "h" );
     headerEntry->SetTextAlign(0);
@@ -126,7 +126,7 @@ TLegendEntry *TLegend::AddEntry(TObject *obj, const char *label, Option_t *optio
   //    F draw a box with fill associated w/ TAttFill if obj inherits TAttFill
   //
   TLegendEntry *newentry = new TLegendEntry( obj, label, option );
-  if ( !fPrimitives ) fPrimitives = new TList(this);
+  if ( !fPrimitives ) fPrimitives = new TList;
   fPrimitives->Add(newentry);
   return newentry;
 }
@@ -142,7 +142,7 @@ TLegendEntry *TLegend::AddEntry(const char *name, const char *label, Option_t *o
   //    P draw polymarker assoc. w/ TAttMarker if obj inherits from TAttMarker
   //    F draw a box with fill associated w/ TAttFill if obj inherits TAttFill
   //
-  TObject *obj = gPad->GetPrimitive(name);
+  TObject *obj = gPad->FindObject(name);
   return AddEntry( obj, label, option );
 }
 
@@ -231,10 +231,10 @@ TLegendEntry *TLegend::GetEntry()
   if ( fPrimitives ) nEntries = fPrimitives->GetSize();
   if ( nEntries == 0 ) return 0;
 
-  Float_t ymouse = gPad->AbsPixeltoY(gPad->GetEventY());
-  Float_t yspace = (fY2 - fY1)/nEntries;
+  Double_t ymouse = gPad->AbsPixeltoY(gPad->GetEventY());
+  Double_t yspace = (fY2 - fY1)/nEntries;
 
-  Float_t ybottomOfEntry = fY2;  // y-location of bottom of 0th entry
+  Double_t ybottomOfEntry = fY2;  // y-location of bottom of 0th entry
   TIter next(fPrimitives);
   TLegendEntry *entry;
   while (( entry = (TLegendEntry *)next() )) {
@@ -266,13 +266,13 @@ void TLegend::InsertEntry( const char* objectName, const char* label, Option_t* 
   // Add a new entry before the entry at the mouse position
 
   TLegendEntry* beforeEntry = GetEntry();   // get entry pointed to be mouse
-  TObject *obj = gPad->GetPrimitive( objectName );
+  TObject *obj = gPad->FindObject( objectName );
 
   // note either obj OR beforeEntry may be zero at this point
 
   TLegendEntry *newentry = new TLegendEntry( obj, label, option );
 
-  if ( !fPrimitives ) fPrimitives = new TList(this);
+  if ( !fPrimitives ) fPrimitives = new TList;
   if ( beforeEntry ) {
     fPrimitives->AddBefore( (TObject*)beforeEntry, (TObject*)newentry );
   } else {
@@ -306,16 +306,16 @@ void TLegend::PaintPrimitives()
   // Note: in pixel coords y1 > y2=0, but x2 > x1=0
   //       in NDC          y2 > y1,   and x2 > x1
   //
-  Float_t margin = fMargin*( fX2 - fX1 );
-  Float_t yspace = (fY2 - fY1)/nEntries;
-  Float_t textsize = GetTextSize();
-  Float_t save_textsize = textsize;
+  Double_t margin = fMargin*( fX2 - fX1 );
+  Double_t yspace = (fY2 - fY1)/nEntries;
+  Double_t textsize = GetTextSize();
+  Double_t save_textsize = textsize;
 
   if ( textsize == 0 ) {
     textsize = ( 1. - fEntrySeparation ) * yspace;
 
     // find the max width and height (in pad coords) of one latex entry label
-    Float_t maxentrywidth = 0, maxentryheight = 0;
+    Double_t maxentrywidth = 0, maxentryheight = 0;
     TIter nextsize(fPrimitives);
     TLegendEntry *entrysize;
     while (( entrysize = (TLegendEntry *)nextsize() )) {
@@ -329,13 +329,13 @@ void TLegend::PaintPrimitives()
       }
     }
     // make sure all labels fit in the allotted space
-    Float_t tmpsize_h = textsize * ( textsize/maxentryheight );
-    Float_t tmpsize_w = textsize * ( (fX2 - (fX1+margin))/maxentrywidth);
+    Double_t tmpsize_h = textsize * ( textsize/maxentryheight );
+    Double_t tmpsize_w = textsize * ( (fX2 - (fX1+margin))/maxentrywidth);
     textsize = TMath::Min( textsize, TMath::Min(tmpsize_h,tmpsize_w) );
     SetTextSize( textsize );
   }
 
-  Float_t ytext = fY2 + 0.5*yspace;  // y-location of 0th entry
+  Double_t ytext = fY2 + 0.5*yspace;  // y-location of 0th entry
 
   // iterate over and paint all the TLegendEntries
   TIter next(fPrimitives);
@@ -357,9 +357,9 @@ void TLegend::PaintPrimitives()
     if (tfont  == 0) entry->SetTextFont(GetTextFont());
     if (tsize  == 0) entry->SetTextSize(GetTextSize());
     // set x,y according to the requested alignment
-    Float_t x=0,y=0;
+    Double_t x=0,y=0;
     Int_t halign = entry->GetTextAlign()/10;
-    Float_t entrymargin = margin;
+    Double_t entrymargin = margin;
     // for the header the margin is near zero
     TString opt = entry->GetOption();
     opt.ToLower();
@@ -383,8 +383,8 @@ void TLegend::PaintPrimitives()
     entry->SetTextSize(tsize);
 
     // define x,y as the center of the symbol for this entry
-    Float_t xsym = fX1 + margin/2.;
-    Float_t ysym = ytext;
+    Double_t xsym = fX1 + margin/2.;
+    Double_t ysym = ytext;
 
     if ( entry->GetObject() == 0 ) continue;
 
@@ -394,19 +394,19 @@ void TLegend::PaintPrimitives()
       Color_t fcolor = entry->GetFillColor();
       Style_t fstyle = entry->GetFillStyle();
       char cmd[50];
-      if ( fcolor == 0 ) {
+//      if ( fcolor == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetFillColor();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetFillColor",cmd);
-      }
-      if ( fstyle == 0 ) {
+//      }
+//      if ( fstyle == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetFillStyle();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetFillStyle",cmd);
-      }
+//      }
 
       // box total height is yspace*0.7
-      Float_t boxwidth = yspace*
+      Double_t boxwidth = yspace*
         (gPad->GetX2()-gPad->GetX1())/(gPad->GetY2()-gPad->GetY1());
       if ( boxwidth > margin ) boxwidth = margin;
       TBox entrybox(xsym - boxwidth*0.35, ysym - yspace*0.35,
@@ -425,21 +425,21 @@ void TLegend::PaintPrimitives()
       Style_t lstyle = entry->GetLineStyle();
       Width_t lwidth = entry->GetLineWidth();
       char cmd[50];
-      if ( lcolor == 0 ) {
+//      if ( lcolor == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetLineColor();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetLineColor",cmd);
-      }
-      if ( lstyle == 0 ) {
+//      }
+//      if ( lstyle == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetLineStyle();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetLineStyle",cmd);
-      }
-      if ( lwidth == 0 ) {
+//      }
+//      if ( lwidth == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetLineWidth();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetLineWidth",cmd);
-      }
+//      }
 
       // line total length (in x) is margin*0.8
       TLine entryline( xsym - margin*0.4, ysym, xsym + margin*0.4, ysym );
@@ -447,7 +447,7 @@ void TLegend::PaintPrimitives()
       // if the entry is filled, then surround the box with the line instead
       if ( opt.Contains("f") && !opt.Contains("l") && entry->GetObject()->InheritsFrom(TAttFill::Class())) {
         // box total height is yspace*0.7
-        Float_t boxwidth = yspace*
+        Double_t boxwidth = yspace*
           (gPad->GetX2()-gPad->GetX1())/(gPad->GetY2()-gPad->GetY1());
 
         entryline.PaintLine( xsym - boxwidth*0.35, ysym + yspace*0.35,
@@ -473,21 +473,21 @@ void TLegend::PaintPrimitives()
       Style_t mstyle = entry->GetMarkerStyle();
       Size_t msize = entry->GetMarkerSize();
       char cmd[50];
-      if ( mcolor == 0 ) {
+//      if ( mcolor == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetMarkerColor();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetMarkerColor",cmd);
-      }
-      if ( mstyle == 0 ) {
+//      }
+//      if ( mstyle == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetMarkerStyle();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetMarkerStyle",cmd);
-      }
-      if ( msize == 0 ) {
+//      }
+//      if ( msize == 0 ) {
         sprintf(cmd,"((%s*)0x%lx)->GetMarkerSize();",
                 entry->GetObject()->ClassName(),(Long_t)entry->GetObject());
         entry->Execute("SetMarkerSize",cmd);
-      }
+//      }
 
       TMarker entrymarker( xsym, ysym, 0 );
       entry->TAttMarker::Copy(entrymarker);
@@ -557,7 +557,7 @@ void TLegend::SetHeader( const char *header )
 {
   // Sets the header, which is the "title" that appears at the top of the
   //  TLegend
-  if ( !fPrimitives ) new TList(this);
+  if ( !fPrimitives ) new TList;
   TIter next(fPrimitives);
   TLegendEntry *first;   // header is always the first entry
   if ((  first = (TLegendEntry*)next() )) {

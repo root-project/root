@@ -1,0 +1,6 @@
+namespace std {
+#include <wctype.h>
+}
+
+
+

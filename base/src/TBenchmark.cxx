@@ -173,18 +173,18 @@ void TBenchmark::Stop(const char *name)
 }
 
 //______________________________________________________________________________
-void TBenchmark::Summary()
+void TBenchmark::Summary(Float_t &rt, Float_t &cp)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*Prints a summary of all benchmarks*-*-*-*-*-*-*-*
 //*-*                        ==================================
 
-   Float_t rt = 0;
-   Float_t ct = 0;
+   rt = 0;
+   cp = 0;
    for (Int_t i=0;i<fNbench;i++) {
       Printf("%-10s: Real Time = %6.2f seconds Cpu Time = %6.2f seconds",(const char*)fNames[i],fRealTime[i],fCpuTime[i]);
       rt += fRealTime[i];
-      ct += fCpuTime[i];
+      cp += fCpuTime[i];
    }
-   Printf("%-10s: Real Time = %6.2f seconds Cpu Time = %6.2f seconds","TOTAL",rt,ct);
+   Printf("%-10s: Real Time = %6.2f seconds Cpu Time = %6.2f seconds","TOTAL",rt,cp);
 
 }

@@ -1,4 +1,4 @@
-// @(#)root/html:$Name$:$Id$
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -85,7 +85,6 @@ public:
           void   SetSourceDir(const char *dir) { fSourceDir = dir; }
           void   SetOutputDir(const char *dir) { fOutputDir = dir; }
           void   SetXwho(const char *xwho) { fXwho = xwho; }
-          Bool_t IsModified() { return TObject::IsModified(); }
    virtual void  WriteHtmlHeader(ofstream &out, const char *title);
    virtual void  WriteHtmlFooter(ofstream &out, const char *dir="", const char *lastUpdate="",
                                  const char *author="", const char *copyright="");

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TLink.cxx,v 1.4 2000/09/13 12:04:15 brun Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TLink::TLink() : TText()
 }
 
 //______________________________________________________________________________
-TLink::TLink(Float_t x, Float_t y, void *pointer)
+TLink::TLink(Double_t x, Double_t y, void *pointer)
            : TText(x, y, "")
 {
 //*-*-*-*-*-*-*-*-*-*Constructor to define a link object*-*-*-*-*-*-*-*
@@ -83,17 +83,17 @@ void TLink::ExecuteEvent(Int_t event, Int_t, Int_t)
   TClass *cl = gROOT->GetClass(GetName());
   if (!cl) return;
 
-//*-*- make a special case for top of Collections
+  //*-*- make a special case for top of Collections
 //*-*-    if status word is 0 take first member
 //*-*-    otherwise go back to parent of linked list
-  if (cl->InheritsFrom(TCollection::Class())) {
-     TList *lh = (TList*)idcur;
-     if (!TestBit(kObjIsParent))  idcur = lh->First();
-     else                         idcur = lh->GetParent();
-     if (!idcur) return;
-     idcur->Inspect();
-     return;
-  }
+//  if (cl->InheritsFrom(TCollection::Class())) {
+//     TList *lh = (TList*)idcur;
+//     if (!TestBit(kObjIsParent))  idcur = lh->First();
+////     else                         idcur = lh->GetParent();
+//     if (!idcur) return;
+//     idcur->Inspect();
+//     return;
+//  }
 
 //*-*- check if link points to a TObject
    TClass *c1 = (TClass*)cl->GetBaseClass("TObject");

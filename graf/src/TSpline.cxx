@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -64,7 +64,7 @@ void TSpline::Paint(Option_t *option)
 
    TString opt = option;
    opt.ToLower();
-   Float_t xmin, xmax, pmin, pmax;
+   Double_t xmin, xmax, pmin, pmax;
    pmin = gPad->PadtoX(gPad->GetUxmin());
    pmax = gPad->PadtoX(gPad->GetUxmax());
    xmin = fXmin;
@@ -91,10 +91,10 @@ void TSpline::Paint(Option_t *option)
 //      if logx, we must bin in logx and not in x !!!
 //      otherwise if several decades, one gets crazy results
      if (xmin > 0 && gPad->GetLogx()) {
-       Float_t *xbins  = new Float_t[fNpx+1];
-       Float_t xlogmin = TMath::Log10(xmin);
-       Float_t xlogmax = TMath::Log10(xmax);
-       Float_t dlogx   = (xlogmax-xlogmin)/((Float_t)fNpx);
+       Double_t *xbins  = new Double_t[fNpx+1];
+       Double_t xlogmin = TMath::Log10(xmin);
+       Double_t xlogmax = TMath::Log10(xmax);
+       Double_t dlogx   = (xlogmax-xlogmin)/((Double_t)fNpx);
        for (i=0;i<=fNpx;i++) {
 	 xbins[i] = gPad->PadtoX(xlogmin+ i*dlogx);
        }
@@ -317,7 +317,7 @@ TSpline3::TSpline3(Text_t *title,
   // them with node information
   fPoly = new TSplinePoly3[fNp];
   for (Int_t i=0; i<fNp; ++i) {
-    Float_t xx, yy;
+    Double_t xx, yy;
     g->GetPoint(i,xx,yy);
     fPoly[i].X()=xx;
     fPoly[i].Y()=yy;
@@ -899,7 +899,7 @@ TSpline5::TSpline5(Text_t *title,
   // them with node information
   fPoly = new TSplinePoly5[fNp];
   for (Int_t i=0; i<fNp-end; ++i) {
-    Float_t xx, yy;
+    Double_t xx, yy;
     g->GetPoint(i,xx,yy);
     fPoly[i+beg].X()=xx;
     fPoly[i+beg].Y()=yy;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.2 2000/05/24 10:31:47 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -51,7 +51,7 @@ protected:
     TBuffer     *fBufferRef;     //Pointer to the TBuffer object
 
     virtual void     Create(Int_t nbytes);
-    virtual void     Read(const char *name) { TObject::Read(name); }
+    virtual Int_t    Read(const char *name) { return TObject::Read(name); }
 
 public:
     TKey();
@@ -75,17 +75,17 @@ public:
            Int_t      GetVersion() {return fVersion;}
     virtual Seek_t    GetSeekKey()   {return fSeekKey;}
     virtual Seek_t    GetSeekPdir()  {return fSeekPdir;}
-    Bool_t            IsFolder();
+    Bool_t            IsFolder() const;
     virtual void      Keep();
     virtual void      ls(Option_t *option="");
     virtual void      Print(Option_t *option="");
-    virtual void      Read(TObject *obj);
+    virtual Int_t     Read(TObject *obj);
     virtual TObject  *ReadObj();
     virtual void      ReadBuffer(char *&buffer);
     virtual void      ReadFile();
     virtual void      SetBuffer() { fBuffer = new char[fNbytes];}
     virtual Int_t     Sizeof() const;
-    virtual void      WriteFile(Int_t cycle=1);
+    virtual Int_t     WriteFile(Int_t cycle=1);
 
     ClassDef(TKey,2)  //Header description of a logical record on file
 };

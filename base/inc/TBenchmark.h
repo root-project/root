@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TBenchmark.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -52,7 +52,7 @@ public:
    virtual void       Show(const char *name);
    virtual void       Start(const char *name);
    virtual void       Stop(const char *name);
-   virtual void       Summary();
+   virtual void       Summary(Float_t &rt, Float_t &cp);
 
    ClassDef(TBenchmark,0)  //ROOT utility to help benchmarking applications
 };

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name$:$Id$
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.7 2000/09/13 07:03:01 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -57,8 +57,10 @@
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
-#if defined(R__LINUX) && !defined(R__MKLINUX)
-#   define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
+#if defined(R__LINUX) && !defined(R__MKLINUX) && !defined(__alpha)
+#   ifndef SIGSYS
+#      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
+#   endif
 #   include <dlfcn.h>
 #endif
 #include <syslog.h>
@@ -130,11 +132,17 @@ extern "C" {
 #endif
 
 #if defined(R__SGI) || defined(R__SOLARIS)
-#define HAVE_UTMPX_H
-#define UTMP_NO_ADDR
+#   define HAVE_UTMPX_H
+#   define UTMP_NO_ADDR
 #endif
 #if defined(R__ALPHA) || defined(R__AIX) || defined(R__FBSD) || defined(R__LYNXOS)
-#define UTMP_NO_ADDR
+#   define UTMP_NO_ADDR
+#endif
+
+#if defined(R__AIX) || (defined(R__FBSD) && !defined(R__ALPHA))
+#   define USE_SIZE_T
+#elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA))
+#   define USE_SOCKLEN_T
 #endif
 
 #if defined(R__LYNXOS)
@@ -423,9 +431,15 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       // check for file descriptors ready for reading/writing
       if (fNfd > 0 && fFileHandler->GetSize() > 0) {
          TFileHandler *fh;
+#if defined(R__LINUX) && defined(__alpha__)
+         // TOrdCollectionIter it(...) causes segv ?!?!? Also TIter fails.
+         int cursor = 0;
+         while (cursor < fFileHandler->GetSize()) {
+            fh = (TFileHandler*) fFileHandler->At(cursor++);
+#else
          TOrdCollectionIter it((TOrdCollection*)fFileHandler);
-
          while ((fh = (TFileHandler*) it.Next())) {
+#endif
             int fd = fh->GetFd();
             if (fd <= fMaxrfd && fReadready.IsSet(fd)) {
                fReadready.Clr(fd);
@@ -1311,14 +1325,12 @@ TInetAddress TUnixSystem::GetHostByName(const char *hostname)
    if (inet_aton(hostname, &ad)) {
       memcpy(&addr, &ad.s_addr, sizeof(ad.s_addr));
 #endif
+      type = AF_INET;
       if ((host_ptr = gethostbyaddr((const char *)&addr,
-                                    sizeof(addr), AF_INET))) {
+                                    sizeof(addr), AF_INET)))
          host = host_ptr->h_name;
-         type = AF_INET;
-      } else {
-         if (gDebug > 0) Error("GetHostByName", "unknown host %s", hostname);
-         return TInetAddress("UnknownHost", ntohl(addr), -1);
-      }
+      else
+         host = "UnNamedHost";
    } else if ((host_ptr = gethostbyname(hostname))) {
       // Check the address type for an internet host
       if (host_ptr->h_addrtype != AF_INET) {
@@ -1342,9 +1354,9 @@ TInetAddress TUnixSystem::GetSockName(int sock)
    // Get Internet Protocol (IP) address of host and port #.
 
    struct sockaddr_in addr;
-#if defined(R__AIX) || defined(R__FBSD)
+#if defined(USE_SIZE_T)
    size_t len = sizeof(addr);
-#elif defined(R__GLIBC)
+#elif defined(USE_SOCKLEN_T)
    socklen_t len = sizeof(addr);
 #else
    int len = sizeof(addr);
@@ -1380,9 +1392,9 @@ TInetAddress TUnixSystem::GetPeerName(int sock)
    // Get Internet Protocol (IP) address of remote host and port #.
 
    struct sockaddr_in addr;
-#if defined(R__AIX) || defined(R__FBSD)
+#if defined(USE_SIZE_T)
    size_t len = sizeof(addr);
-#elif defined(R__GLIBC)
+#elif defined(USE_SOCKLEN_T)
    socklen_t len = sizeof(addr);
 #else
    int len = sizeof(addr);
@@ -1508,14 +1520,15 @@ int TUnixSystem::AcceptConnection(int sock)
 }
 
 //______________________________________________________________________________
-void TUnixSystem::CloseConnection(int sock)
+void TUnixSystem::CloseConnection(int sock, Bool_t force)
 {
    // Close socket.
 
    if (sock < 0) return;
 
 #if !defined(R__AIX) || defined(_AIX41) || defined(_AIX43)
-   //::shutdown(sock, 2);   // will also close connection of parent
+   if (force)
+      ::shutdown(sock, 2);   // will also close connection of parent
 #endif
 
    while (::close(sock) == -1 && GetErrno() == EINTR)
@@ -1707,9 +1720,9 @@ int TUnixSystem::GetSockOpt(int sock, int opt, int *val)
 
    if (sock < 0) return -1;
 
-#if defined(R__GLIBC) || defined(_AIX43)
+#if defined(USE_SOCKLEN_T) || defined(_AIX43)
    socklen_t optlen = sizeof(*val);
-#elif defined(R__FBSD)
+#elif defined(USE_SIZE_T)
    size_t optlen = sizeof(*val);
 #else
    int optlen = sizeof(*val);

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.4 2000/09/12 06:42:06 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -62,6 +62,7 @@ private:
 
    TMethod          *GetClassMethod(Long_t faddr);
 
+   static Bool_t     fgCallingNew;     //True when TClass:New is executing
    static Int_t      fgClassCount;     //provides unique id for a each class
                                        //stored in TObject::fUniqueID
 public:
@@ -111,16 +112,17 @@ public:
    const char   *GetStreamerInfo();
    Int_t         Compare(TObject *obj);
    ULong_t       Hash() { return fName.Hash(); }
-   Bool_t        InheritsFrom(const char *cl);
-   Bool_t        InheritsFrom(const TClass *cl);
-   Bool_t        IsFolder() {return kTRUE;}
-   void         *New();
+   Bool_t        InheritsFrom(const char *cl) const;
+   Bool_t        InheritsFrom(const TClass *cl) const;
+   Bool_t        IsFolder() const {return kTRUE;}
+   void         *New(Bool_t defConstructor = kTRUE);
    void          Destructor(void *obj, Bool_t dtorOnly = kFALSE);
    void          ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
    Int_t         Size() const;
    void          SetStreamerInfo(const char *info="");
    Long_t        Property() const;
 
+   static Bool_t IsCallingNew();
    static TClass *Load(TBuffer &b);
    void           Store(TBuffer &b) const;
 

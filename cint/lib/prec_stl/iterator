@@ -1,0 +1,232 @@
+// lib/prec_stl/iterator
+
+#pragma ifndef PREC_STL_ITERATOR
+#pragma define PREC_STL_ITERATOR
+#pragma link off global PREC_STL_ITERATOR;
+#pragma link C++ nestedtypedef;
+#pragma link C++ nestedclass;
+
+// Imported from STL HP implementation 1994
+// Imported from STL SGI implementation 1997 
+// Imported from ANSI/ISO C++ draft Nov 1997
+// Modified by Masaharu Goto
+// May need to improve for the latest standard
+
+#ifndef G__VISUAL
+////////////////////////////////////////////////////////////////////////
+// iterator_tag
+////////////////////////////////////////////////////////////////////////
+struct input_iterator_tag {};
+struct output_iterator_tag {};
+struct forward_iterator_tag {};
+struct bidirectional_iterator_tag {};
+struct random_access_iterator_tag {};
+
+////////////////////////////////////////////////////////////////////////
+// iterator template
+////////////////////////////////////////////////////////////////////////
+template <class T, class Distance> struct input_iterator {};
+struct output_iterator {};
+template <class T, class Distance> struct forward_iterator {};
+template <class T, class Distance> struct bidirectional_iterator {};
+template <class T, class Distance> struct random_access_iterator {};
+#else
+struct output_iterator;
+#endif
+
+////////////////////////////////////////////////////////////////////////
+// iterator_category overloaded function
+////////////////////////////////////////////////////////////////////////
+template <class T, class Distance> 
+inline input_iterator_tag 
+iterator_category(const input_iterator<T, Distance>&) {
+    return input_iterator_tag();
+}
+
+inline output_iterator_tag iterator_category(const output_iterator&) {
+    return output_iterator_tag();
+}
+
+template <class T, class Distance> 
+inline forward_iterator_tag
+iterator_category(const forward_iterator<T, Distance>&) {
+    return forward_iterator_tag();
+}
+
+template <class T, class Distance> 
+inline bidirectional_iterator_tag
+iterator_category(const bidirectional_iterator<T, Distance>&) {
+    return bidirectional_iterator_tag();
+}
+
+template <class T, class Distance> 
+inline random_access_iterator_tag
+iterator_category(const random_access_iterator<T, Distance>&) {
+    return random_access_iterator_tag();
+}
+
+template <class T>
+inline random_access_iterator_tag 
+iterator_category(const T*) {
+    return random_access_iterator_tag();
+}
+
+
+// iterator_traits, iterator and reverse_iterator template may not be
+// needed for precompiled library interface 
+
+////////////////////////////////////////////////////////////////////////
+// iterator_traits
+////////////////////////////////////////////////////////////////////////
+
+template <class Iterator>
+struct iterator_traits {
+  typedef typename Iterator::iterator_category iterator_category;
+  typedef typename Iterator::value_type        value_type;
+  typedef typename Iterator::difference_type   difference_type;
+  typedef typename Iterator::pointer           pointer;
+  typedef typename Iterator::reference         reference;
+};
+
+// template partial specialization, need to implement in CINT
+template <class T>
+struct iterator_traits<T*> {
+  typedef random_access_iterator_tag iterator_category;
+  typedef T                          value_type;
+  typedef ptrdiff_t                  difference_type;
+  typedef T*                         pointer;
+  typedef T&                         reference;
+};
+
+template <class T>
+struct iterator_traits<const T*> {
+  typedef random_access_iterator_tag iterator_category;
+  typedef T                          value_type;
+  typedef ptrdiff_t                  difference_type;
+  typedef const T*                   pointer;
+  typedef const T&                   reference;
+};
+
+////////////////////////////////////////////////////////////////////////
+// iterator
+////////////////////////////////////////////////////////////////////////
+template<class Category, class T, class Distance = ptrdiff_t,
+         class Pointer = T*, class Reference = T&>
+struct iterator {
+  typedef T         value_type;
+  typedef Distance  difference_type;
+  typedef Pointer   pointer;
+  typedef Reference reference;
+  typedef Category  iterator_category;
+};
+
+
+////////////////////////////////////////////////////////////////////////
+// reverse_iterator
+////////////////////////////////////////////////////////////////////////
+template <class Iterator>
+class reverse_iterator 
+  //: public iterator<iterator_traits<Iterator>::iterator_category,
+  //                  iterator_traits<Iterator>::value_type,
+  //                  iterator_traits<Iterator>::difference_type,
+  //                  iterator_traits<Iterator>::pointer,
+  //                  iterator_traits<Iterator>::reference> 
+{
+#if 0
+ protected:
+  Iterator current;
+#endif
+ public:
+#if 0
+   typedef Iterator iterator_type;
+   typedef typename iterator_traits<Iterator>::difference_type difference_type;
+   typedef typename iterator_traits<Iterator>::reference reference;
+   typedef typename iterator_traits<Iterator>::pointer pointer;
+#else
+   typedef Iterator::pointer   pointer;
+   typedef Iterator::reference reference;
+   typedef ptrdiff_t difference_type;
+#endif
+
+   reverse_iterator();
+   //reverse_iterator(Iterator x);
+#if 0
+   template <class U> reverse_iterator(const reverse_iterator<U>& u);
+#endif
+   Iterator base() const;      // explicit
+   reference operator*() const;
+   pointer   operator->() const;
+   reverse_iterator& operator++();
+   reverse_iterator  operator++(int);
+   reverse_iterator& operator--();
+   reverse_iterator  operator--(int);
+   reverse_iterator  operator+ (difference_type n) const;
+   reverse_iterator& operator+=(difference_type n);
+   reverse_iterator  operator- (difference_type n) const;
+   reverse_iterator& operator-=(difference_type n);
+   reference operator[](difference_type n) const;
+}; 
+
+#ifdef G__VISUAL
+// VC++5.0 has different symbol names
+
+////////////////////////////////////////////////////////////////////////
+// iterator_tag
+////////////////////////////////////////////////////////////////////////
+struct input_iterator_tag {};
+struct output_iterator_tag {};
+struct forward_iterator_tag
+	: public input_iterator_tag {};
+struct bidirectional_iterator_tag
+	: public forward_iterator_tag {};
+struct random_access_iterator_tag
+	: public bidirectional_iterator_tag  {};
+
+////////////////////////////////////////////////////////////////////////
+// iterator template
+////////////////////////////////////////////////////////////////////////
+template <class T, class Distance> struct input_iterator {};
+struct output_iterator {};
+template <class T, class Distance> struct forward_iterator {};
+template <class T, class Distance> struct _Bidit {};
+template <class T, class Distance> struct _Ranit {};
+
+////////////////////////////////////////////////////////////////////////
+// _Iter_cat overloaded function
+////////////////////////////////////////////////////////////////////////
+template <class T, class Distance> 
+inline input_iterator_tag 
+_Iter_cat(const input_iterator<T, Distance>&) {
+    return input_iterator_tag();
+}
+
+inline output_iterator_tag _Iter_cat(const output_iterator&) {
+    return output_iterator_tag();
+}
+
+template <class T, class Distance> 
+inline forward_iterator_tag
+_Iter_cat(const forward_iterator<T, Distance>&) {
+    return forward_iterator_tag();
+}
+
+template <class T, class Distance> 
+inline bidirectional_iterator_tag
+_Iter_cat(const _Bidit<T, Distance>&) {
+    return bidirectional_iterator_tag();
+}
+
+template <class T, class Distance> 
+inline random_access_iterator_tag
+_Iter_cat(const _Ranit<T, Distance>&) {
+    return random_access_iterator_tag();
+}
+
+template <class T>
+inline random_access_iterator_tag 
+_Iter_cat(const T*) {
+    return random_access_iterator_tag();
+}
+#endif
+
+#pragma endif

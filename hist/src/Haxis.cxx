@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: Haxis.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   18/05/95
 // ---------------------------------- haxis.C
 
@@ -128,7 +128,7 @@ void TH1::SetAxisColor(Color_t color, Option_t *axis)
 }
 
 //______________________________________________________________________________
-void TH1::SetAxisRange(Float_t xmin, Float_t xmax, Option_t *axis)
+void TH1::SetAxisRange(Axis_t xmin, Axis_t xmax, Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    TAxis *theAxis = 0;

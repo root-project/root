@@ -1,9 +1,5 @@
-//*CMZ :  2.23/08 30/10/99  22.44.17  by  Rene Brun
-//*CMZ :  2.21/06 17/02/99  19.02.12  by  Rene Brun
-//*CMZ :  2.20/00 06/11/98  15.21.16  by  Rene Brun
-//*CMZ :  2.00/13 28/10/98  12.53.06  by  Fons Rademakers
-//*CMZ :  1.03/09 11/12/97  11.00.17  by  Rene Brun
-//*-- Author :    Rene Brun   19/08/96
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.5 2000/07/11 18:05:26 rdm Exp $
+// Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -47,6 +43,7 @@
 //        Float_t      fZfirst;       //Z coordinate of the first point
 //        Float_t      fZlast;        //Z coordinate of the last point
 //        Float_t      fCharge;       //Charge of this track
+//        Float_t      fVertex[3];    //Track vertex position
 //        Int_t        fNpoint;       //Number of points for this track
 //        Short_t      fValid;        //Validity criterion
 //
@@ -87,12 +84,20 @@ Event::Event()
    fTracks = fgTracks;
    fNtrack = 0;
    fH      = 0;
+   Int_t i0,i1;
+   for (i0 = 0; i0 < 4; i0++) {
+      for (i1 = 0; i1 < 4; i1++) {
+         fMatrix[i0][i1] = 0.0;
+      }
+   }
+   for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
 }
 
 //______________________________________________________________________________
 Event::~Event()
 {
    Clear();
+   if (fH == fgHist) fgHist = 0;
    delete fH;
    fH = 0;
 }
@@ -135,6 +140,10 @@ void Event::SetHeader(Int_t i, Int_t run, Int_t date, Float_t random)
    fH->Fill(random);
 }
 
+void Event::SetMeasure(UChar_t which, Int_t what) {
+   if (which<10) fMeasures[which] = what;
+}
+
 //______________________________________________________________________________
 void Event::Streamer(TBuffer &R__b)
 {
@@ -143,6 +152,7 @@ void Event::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       TObject::Streamer(R__b);
+      R__b.ReadFastArray(fType,20);
       R__b >> fNtrack;
       R__b >> fNseg;
       R__b >> fNvertex;
@@ -153,9 +163,12 @@ void Event::Streamer(TBuffer &R__b)
       fTracks->Streamer(R__b);
       if (!fH) fH = new TH1F();
       fH->Streamer(R__b);
+      R__b.ReadFastArray(fMeasures,10);
+      R__b.ReadFastArray((float*)fMatrix,16);
    } else {
       R__b.WriteVersion(Event::IsA());
       TObject::Streamer(R__b);
+      R__b.WriteFastArray(fType,20);
       R__b << fNtrack;
       R__b << fNseg;
       R__b << fNvertex;
@@ -164,6 +177,8 @@ void Event::Streamer(TBuffer &R__b)
       fEvtHdr.Streamer(R__b);
       fTracks->Streamer(R__b);
       fH->Streamer(R__b);
+      R__b.WriteFastArray(fMeasures,10);
+      R__b.WriteFastArray((float*)fMatrix,16);
    }
 }
 
@@ -198,6 +213,9 @@ Track::Track(Float_t random) : TObject()
    fZfirst = 50 + 5*a;
    fZlast  = 200 + 10*b;
    fCharge = Float_t(Int_t(3*gRandom->Rndm(1)) - 1);
+   fVertex[0] = gRandom->Gaus(0,0.1);
+   fVertex[1] = gRandom->Gaus(0,0.2);
+   fVertex[2] = gRandom->Gaus(0,10);
    fNpoint = Int_t(60+10*gRandom->Rndm(1));
    fValid  = Int_t(0.6+gRandom->Rndm(1));
 }

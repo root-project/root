@@ -1,7 +1,7 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TPoints3D.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
-// $Id: TPoints3D.cxx,v 1.4 1999/12/17 23:28:40 fine Exp $
+// $Id: TPoints3D.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // ***********************************************************************
 // *  C++ class to define the abstract array of 3D points
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -24,6 +24,7 @@
 #include <fstream.h>
 #include <iostream.h>
 
+#include "TROOT.h"
 #include "TClass.h"
 #include "TPoints3D.h"
 #include "TPointsArray3D.h"
@@ -172,7 +173,7 @@ void TPoints3D::ls(Option_t *option)
 //*-*-*-*-*-*-*-*-*-*List this 3-D polyline with its attributes*-*-*-*-*-*-*
 //*-*                ==========================================
 
-   IndentLevel();
+   TROOT::IndentLevel();
    cout << IsA()->GetName() << " N=" <<GetN()<<" Option="<<option<<endl;
 //   IsOwner()?"Owner":"Not owner" << endl;
 }

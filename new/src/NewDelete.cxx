@@ -1,4 +1,4 @@
-// @(#)root/new:$Name$:$Id$
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.3 2000/09/14 17:11:44 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -59,7 +59,6 @@
 
 #include <stdlib.h>
 
-#include "G__ci.h"
 #include "TObjectTable.h"
 #include "TError.h"
 #include "TMath.h"
@@ -92,21 +91,30 @@ static ReAllocInit realloc_init;
 
 #ifdef MEM_DEBUG
 #   define MEM_MAGIC ((unsigned char)0xAB)
+#ifdef R__B64
+#   define storage_size(p) ((size_t)(((size_t*)p)[-1]))
+#   define RealStart(p) ((char*)(p) - sizeof(size_t))
+#   define StoreSize(p, sz) (*((size_t*)(p)) = (sz))
+#   define ExtStart(p) ((char*)(p) + sizeof(size_t))
+#   define RealSize(sz) ((sz) + sizeof(size_t) + sizeof(char))
+#   define StoreMagic(p, sz) *((unsigned char*)(p)+sz+sizeof(size_t)) = MEM_MAGIC
+#else
 #   define storage_size(p) ((size_t)(((int*)p)[-2]))
 #   define RealStart(p) ((char*)(p) - 2*sizeof(int))
 #   define StoreSize(p, sz) (*((int*)(p)) = (sz))
 #   define ExtStart(p) ((char*)(p) + 2*sizeof(int))
-#   define MemClear(p, start, len) \
-      if ((len) > 0) memset(&((char*)(p))[(start)], 0, (len))
 #   define RealSize(sz) ((sz) + 2*sizeof(int) + sizeof(char))
 #   define StoreMagic(p, sz) *((unsigned char*)(p)+sz+2*sizeof(int)) = MEM_MAGIC
+#endif
+#   define MemClear(p, start, len) \
+      if ((len) > 0) memset(&((char*)(p))[(start)], 0, (len))
 #   define TestMagic(p, sz) (*((unsigned char*)(p)+sz) != MEM_MAGIC)
 #   define CheckMagic(p, s, where) \
       if (TestMagic(p, s))    \
          Fatal(where, "storage area overwritten");
 #   define CheckFreeSize(p, where) \
       if (storage_size((p)) > TStorage::GetMaxBlockSize()) \
-         Fatal(where, "unreasonable size (%d)", storage_size(p));
+         Fatal(where, "unreasonable size (%ld)", storage_size(p));
 #   define RemoveStatMagic(p, where) \
       CheckFreeSize(p, where); \
       RemoveStat(p); \
@@ -160,10 +168,12 @@ static ReAllocInit realloc_init;
 
 //------------------------------------------------------------------------------
 
-#ifndef G__GOTOM1
+#ifndef NOCINT
 #define G__PVOID (-1)
 #ifndef WIN32
 extern long G__globalvarpointer;
+#else
+#include "G__ci.h"
 #endif
 #endif
 
@@ -182,18 +192,18 @@ void *operator new(size_t size)
       newInit++;
    }
 
-#ifndef G__GOTOM1
+#ifndef NOCINT
 #ifndef WIN32
    if (G__globalvarpointer != G__PVOID) {
       long temp = G__globalvarpointer;
       G__globalvarpointer = G__PVOID;
-      return((void*)temp);
+      return (void*)temp;
    }
 #else
    long gvp = G__getgvp();
    if (gvp != G__PVOID) {
       G__setgvp(G__PVOID);
-      return((void*)gvp);
+      return (void*)gvp;
    }
 #endif
 #endif
@@ -221,12 +231,14 @@ void *operator new(size_t size, void *vp)
       newInit++;
    }
 
-#ifndef G__GOTOM1
+#ifndef NOCINT
 #ifndef WIN32
-   if ((long)vp==G__globalvarpointer && G__globalvarpointer!=G__PVOID) return(vp);
+   if ((long)vp == G__globalvarpointer && G__globalvarpointer != G__PVOID)
+      return(vp);
 #else
    long gvp = G__getgvp();
-   if ((long)vp == gvp && gvp != G__PVOID) return(vp);
+   if ((long)vp == gvp && gvp != G__PVOID)
+      return(vp);
 #endif
 #endif
    if (vp == 0) {
@@ -254,12 +266,14 @@ void operator delete(void *ptr)
    if (!newInit)
       Fatal(where, "space was not allocated via custom new");
 
-#ifndef G__GOTOM1
+#ifndef NOCINT
 #ifndef WIN32
-   if ((long)ptr==G__globalvarpointer && G__globalvarpointer!=G__PVOID) return;
+   if ((long)ptr == G__globalvarpointer && G__globalvarpointer!=G__PVOID)
+      return;
 #else
    long gvp = G__getgvp();
-   if ((long)ptr == gvp && gvp != G__PVOID) return;
+   if ((long)ptr == gvp && gvp != G__PVOID)
+      return;
 #endif
 #endif
    if (ptr) {

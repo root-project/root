@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TArc.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -30,13 +30,13 @@ class TArc : public TEllipse {
 
 public:
         TArc();
-        TArc(Float_t x1, Float_t y1,Float_t radius
-           , Float_t phimin=0,Float_t phimax=360);
+        TArc(Double_t x1, Double_t y1,Double_t radius
+           , Double_t phimin=0,Double_t phimax=360);
         TArc(const TArc &arc);
         virtual ~TArc();
                 void Copy(TObject &arc);
-        virtual void DrawArc(Float_t x1, Float_t y1, Float_t radius
-                            ,Float_t  phimin=0, Float_t  phimax=360);
+        virtual void DrawArc(Double_t x1, Double_t y1, Double_t radius
+                            ,Double_t  phimin=0, Double_t  phimax=360);
         virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
         ClassDef(TArc,1)  //Arc of a circle

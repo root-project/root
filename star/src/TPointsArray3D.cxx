@@ -1,6 +1,6 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TPointsArray3D.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
-// $Id: TPointsArray3D.cxx,v 1.6 2000/01/12 18:07:24 fine Exp $
+// $Id: TPointsArray3D.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 #include <fstream.h>
 #include <iostream.h>
 
@@ -8,6 +8,7 @@
 #include "TVirtualPad.h"
 #include "TView.h"
 #include "TClass.h"
+#include "TROOT.h"
 
 ClassImp(TPointsArray3D)
 
@@ -223,7 +224,7 @@ void TPointsArray3D::ls(Option_t *option)
 //*-*-*-*-*-*-*-*-*-*List this 3-D polyline with its attributes*-*-*-*-*-*-*
 //*-*                ==========================================
 
-   IndentLevel();
+   TROOT::IndentLevel();
    cout << IsA()->GetName() << " N=" <<fN<<" Option="<<option<<endl;
 
 }

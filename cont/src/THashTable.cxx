@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -69,8 +69,8 @@ THashTable::THashTable(Int_t capacity, Int_t rehashlevel)
 //______________________________________________________________________________
 THashTable::~THashTable()
 {
-   // Delete a hashtable. All objects will be removed from the table before the
-   // table will be deleted.
+   // Delete a hashtable. Objects are not deleted unless the THashTable is the
+   // owner (set via SetOwner()).
 
    if (fCont) Clear();
    delete [] fCont;
@@ -101,12 +101,17 @@ void THashTable::Add(TObject *obj)
 //______________________________________________________________________________
 void THashTable::Clear(Option_t *option)
 {
-   // Remove all objects from the table. Does not delete the objects.
+   // Remove all objects from the table. Does not delete the objects
+   // unless the THashTable is the owner (set via SetOwner()).
 
    for (int i = 0; i < fSize; i++) {
       // option "nodelete" is passed when Clear is called from
       // THashList::Clear() or THashList::Delete() or Rehash().
-      if (fCont[i]) fCont[i]->Clear(option);
+      if (fCont[i]) {
+         if (IsOwner())
+            fCont[i]->SetOwner();
+         fCont[i]->Clear(option);
+      }
       SafeDelete(fCont[i]);
    }
 
@@ -150,7 +155,8 @@ void THashTable::Delete(Option_t *)
          SafeDelete(fCont[i]);
       }
 
-   Clear();
+   fEntries   = 0;
+   fUsedSlots = 0;
 }
 
 //______________________________________________________________________________
@@ -214,7 +220,6 @@ void THashTable::Rehash(Int_t newCapacity, Bool_t checkObjValidity)
    fCont = ht->fCont;
    ht->fCont = 0;
 
-   fParent    = ht->fParent;   // TCollection part
    fSize      = ht->fSize;     // idem
    fEntries   = ht->fEntries;
    fUsedSlots = ht->fUsedSlots;

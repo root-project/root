@@ -1,7 +1,5 @@
-//*CMZ :  2.21/02 14/01/99  19.04.59  by  Fons Rademakers
-//*CMZ :  2.00/10 06/07/98  09.32.08  by  Rene Brun
-//*CMZ :  1.03/08 14/11/97  17.23.48  by  Fons Rademakers
-//*-- Author :    Fons Rademakers   14/11/97
+// @(#)root/test:$Name$:$Id$
+// Author: Fons Rademakers   14/11/97
 
 //
 // Sample code showing off a few advanced features
@@ -117,4 +115,4 @@ int main()
            << " sec to complete the test" << endl;
    }
    return 0;
-}	
+}

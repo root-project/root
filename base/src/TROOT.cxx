@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.15 2000/09/08 16:05:20 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 //       gROOT->GetListOfSpecials (for example graphical cuts)
 //       gROOT->GetListOfGeometries
 //       gROOT->GetListOfBrowsers
+//       gROOT->GetListOfCleanups
 //       gROOT->GetListOfMessageHandlers
 //
 //   The TROOT class provides also many useful services:
@@ -94,6 +95,7 @@
 #include "TRandom.h"
 #include "TMessageHandler.h"
 #include "TVirtualGL.h"
+#include "TFolder.h"
 
 #if defined(R__UNIX)
 #include "TUnixSystem.h"
@@ -162,6 +164,7 @@ TRandom    *gRandom;       // Global pointer to random generator
 Int_t       gDebug;
 
 
+Int_t         TROOT::fgDirLevel = 0;
 Bool_t        TROOT::fgRootInit = kFALSE;
 VoidFuncPtr_t TROOT::fgMakeDefCanvas = 0;
 
@@ -235,26 +238,52 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fVersionDate = IDATQQ();
    fVersionTime = ITIMQQ();
    fApplication = 0;
-   fClasses     = new THashList(this,300,2);
+   fClasses     = new THashList(300,2);
    fColors      = new TObjArray(1000);
    fTypes       = 0;
    fGlobals     = 0;
    fGlobalFunctions = 0;
-   fFiles       = new TList(this);
-   fMappedFiles = new TList(this);
-   fSockets     = new TList(this);
-   fCanvases    = new TList(this);
-   fStyles      = new TList(this);
-   fFunctions   = new TList(this);
-   fProcesses   = new TList(this);
-   fGeometries  = new TList(this);
-   fBrowsers    = new TList(this);
-   fSpecials    = new TList(this);
-   fBrowsables  = new TList(this);
-   fMessageHandlers = new TList(this);
+   fList        = new TList;
+   fFiles       = new TList;
+   fMappedFiles = new TList;
+   fSockets     = new TList;
+   fCanvases    = new TList;
+   fStyles      = new TList;
+   fFunctions   = new TList;
+   fTasks       = new TList;
+   fGeometries  = new TList;
+   fBrowsers    = new TList;
+   fSpecials    = new TList;
+   fBrowsables  = new TList;
+   fCleanups    = new TList;
+   fMessageHandlers = new TList;
+
+   fRootFolder = new TFolder();
+   fRootFolder->SetName("root");
+   fRootFolder->SetTitle("root of all folders");
+   fRootFolder->AddFolder("Classes",   "List of active classes",fClasses);
+   fRootFolder->AddFolder("Colors",    "List of active colors",fColors);
+   fRootFolder->AddFolder("MapFiles",  "List of MapFiles",fMappedFiles);
+   fRootFolder->AddFolder("Sockets",   "List of Socket connections",fSockets);
+   fRootFolder->AddFolder("Canvases",  "List of Canvases",fCanvases);
+   fRootFolder->AddFolder("Styles",    "List of Styles",fStyles);
+   fRootFolder->AddFolder("Functions", "List of Functions",fFunctions);
+   fRootFolder->AddFolder("Tasks",     "List of Tasks",fTasks);
+   fRootFolder->AddFolder("Geometries","List of Geometries",fGeometries);
+   fRootFolder->AddFolder("Browsers",  "List of Browsers",fBrowsers);
+   fRootFolder->AddFolder("Specials",  "List of Special objects",fSpecials);
+   fRootFolder->AddFolder("Handlers",  "List of Message Handlers",fMessageHandlers);
+   fRootFolder->AddFolder("Cleanups",  "List of RecursiveRemove collections",fCleanups);
+   fRootFolder->AddFolder("ROOT Files","List of connected root files",fFiles);
+
+   // by default, add the list of tasks, canvases and browsers in the Cleanups list
+   fCleanups->Add(fCanvases);
+   fCleanups->Add(fBrowsers);
+   fCleanups->Add(fTasks);
+
    fForceStyle    = kFALSE;
    fFromPopUp     = kFALSE;
-   fReadingBasket = kFALSE;
+   fReadingObject = kFALSE;
    fInterrupt     = kFALSE;
    fMustClean     = kTRUE;
    fPrimitive     = 0;
@@ -266,6 +295,11 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    gDirectory     = this;
    gPad           = 0;
    gRandom        = new TRandom;
+
+   //set name of graphical cut class for the graphics editor
+   //cannot call SetCutClassName at this point because the TClass of TCutG
+   //is not yet build
+   fCutClassName = "TCutG";
 
    // Create a default MessageHandler
    new TMessageHandler((TClass*)0);
@@ -300,16 +334,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    InitThreads();
 
    // Set initial/default list of browsable objects
-   fBrowsables->Add(fClasses, "Classes");
-   fBrowsables->Add(GetListOfGlobals(), "Global Variables");
-// fBrowsables->Add(GetListOfGlobalFunctions(), "Global Functions");
-   fBrowsables->Add(fCanvases, "Canvases");
-   fBrowsables->Add(fGeometries, "Geometries");
-   fBrowsables->Add(fColors, "Colors");
-   fBrowsables->Add(fStyles, "Styles");
-   fBrowsables->Add(fFunctions, "Functions");
-   fBrowsables->Add(fSockets, "Network Connections");
-   fBrowsables->Add(fMappedFiles, "Memory Mapped Files");
+   fBrowsables->Add(fRootFolder, "root");
    fBrowsables->Add(workdir, gSystem->WorkingDirectory());
    fBrowsables->Add(fFiles, "ROOT Files");
 
@@ -339,7 +364,7 @@ TROOT::~TROOT()
 #endif
       fFiles->Delete();       SafeDelete(fFiles);       // and files
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
-      fMappedFiles->Delete();                           // and mapped files
+      fMappedFiles->Delete("slow");                     // and mapped files
       TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
 
 //      fProcesses->Delete();  SafeDelete(fProcesses);   // then terminate processes
@@ -359,15 +384,16 @@ TROOT::~TROOT()
 //      SafeDelete(fGlobalFunctions);
 //      fClasses->Delete();    SafeDelete(fClasses);     // TClass'es must be deleted last
 
-      // Problem deleting the interpreter. Want's to delete objects already
-      // deleted in the dtor's above. Crash.
-      //SafeDelete(fInterpreter);
-
       // Remove shared libraries produced by the TSystem::CompileMacro() call
       gSystem->CleanCompiledMacros();
 
       // Cleanup system class
       delete gSystem;
+
+      // Problem deleting the interpreter. Want's to delete objects already
+      // deleted in the dtor's above. Crash.
+      // It should only close the files and NOT delete.
+      SafeDelete(fInterpreter);
 
       // Prints memory stats
       TStorage::PrintStatistics();
@@ -379,11 +405,18 @@ TROOT::~TROOT()
 //______________________________________________________________________________
 void TROOT::Browse(TBrowser *b)
 {
+   // Add browsable objects to TBrowser.
+
    TObject *obj;
    TIter next(fBrowsables);
 
-   while ((obj = (TObject *) next()))
-      b->Add( obj, (char *) next.GetOption() );
+   while ((obj = (TObject *) next())) {
+      const char *opt = next.GetOption();
+      if (opt && strlen(opt))
+         b->Add(obj, opt);
+      else
+         b->Add(obj, obj->GetName());
+   }
 }
 
 //______________________________________________________________________________
@@ -400,11 +433,68 @@ Bool_t TROOT::ClassSaved(TClass *cl)
 }
 
 //______________________________________________________________________________
-TObject *TROOT::FindObject(const char *name, void *&where)
+TObject *TROOT::FindObject(TObject *) const
+{
+// Find an object in one Root folder
+
+   Error("FindObject","Not yet implemented");
+   return 0;
+}
+
+//______________________________________________________________________________
+TObject *TROOT::FindObject(const char *name) const
 {
 //*-*-*-*-*Returns address of a ROOT object if it exists*-*-*-*-*-*-*-*-*-*
 //*-*      =============================================
 //*-*
+//*-*  This function looks in the following order in the ROOT lists:
+//*-*     - List of files
+//*-*     - List of memory mapped files
+//*-*     - List of functions
+//*-*     - List of geometries
+//*-*     - List of canvases
+//*-*     - List of styles
+//*-*     - List of specials
+//*-*     - List of materials in current geometry
+//*-*     - List of shapes in current geometry
+//*-*     - List of matrices in current geometry
+//*-*     - List of Nodes in current geometry
+//*-*     - Current Directory in memory
+//*-*     - Current Directory on file
+//*-*-
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   TObject *temp = 0;
+
+   temp   = fFiles->FindObject(name);       if (temp) return temp;
+   temp   = fMappedFiles->FindObject(name); if (temp) return temp;
+   temp   = fFunctions->FindObject(name);   if (temp) return temp;
+   temp   = fGeometries->FindObject(name);  if (temp) return temp;
+   temp   = fCanvases->FindObject(name);    if (temp) return temp;
+   temp   = fStyles->FindObject(name);      if (temp) return temp;
+   temp   = fSpecials->FindObject(name);    if (temp) return temp;
+   TIter next(fGeometries);
+   TObject *obj;
+   while ((obj=next())) {
+      temp = obj->FindObject(name);         if (temp) return temp;
+   }
+   if (gDirectory) temp = gDirectory->Get(name); if (temp) return temp;
+   if (gPad) {
+      TVirtualPad *canvas = gPad->GetVirtCanvas();
+      if (fCanvases->FindObject(canvas)) {  //this check in case call from TCanvas ctor
+         temp   = canvas->FindObject(name);
+         if (!temp && canvas != gPad) temp  = gPad->FindObject(name);
+      }
+   }
+   return temp;
+}
+
+//______________________________________________________________________________
+TObject *TROOT::FindSpecialObject(const char *name, void *&where)
+{
+// Returns address and folder of a ROOT object if it exists
+//
+//
 //*-*  This function looks in the following order in the ROOT lists:
 //*-*     - List of files
 //*-*     - List of memory mapped files
@@ -435,51 +525,51 @@ TObject *TROOT::FindObject(const char *name, void *&where)
       }
    }
    if (!temp) {
-      temp  = fFiles->FindObject(name);
+      temp   = fFiles->FindObject(name);
       where = fFiles;
    }
    if (!temp) {
-      temp  = fMappedFiles->FindObject(name);
+      temp   = fMappedFiles->FindObject(name);
       where = fMappedFiles;
    }
    if (!temp) {
-      temp  = fFunctions->FindObject(name);
+      temp   = fFunctions->FindObject(name);
       where = fFunctions;
    }
    if (!temp) {
-      temp  = fGeometries->FindObject(name);
-      where = fGeometries;
+//      temp   = fGeometries->FindObject(name);
+//      where = fGeometries;
    }
    if (!temp) {
-      temp  = fCanvases->FindObject(name);
+      temp   = fCanvases->FindObject(name);
       where = fCanvases;
    }
    if (!temp) {
-      temp  = fStyles->FindObject(name);
+      temp   = fStyles->FindObject(name);
       where = fStyles;
    }
    if (!temp) {
-      temp  = fSpecials->FindObject(name);
+      temp   = fSpecials->FindObject(name);
       where = fSpecials;
    }
    if (!temp && TClassTable::GetDict("TGeometry")) {
       TObjArray *loc = (TObjArray*)ProcessLineFast(Form("TGeometry::Get(\"%s\")",name));
       if (loc) {
-         temp  = loc->At(0);
+         temp   = loc->At(0);
          where = loc->At(1);
       }
    }
    if (!temp && gDirectory) {
-      temp  = gDirectory->Get(name);
+      temp   = gDirectory->Get(name);
       where = gDirectory;
    }
    if (!temp && gPad) {
       TVirtualPad *canvas = gPad->GetVirtCanvas();
       if (fCanvases->FindObject(canvas)) {  //this check in case call from TCanvas ctor
-         temp  = canvas->GetPrimitive(name);
+         temp   = canvas->FindObject(name);
          where = canvas;
          if (!temp && canvas != gPad) {
-            temp  = gPad->GetPrimitive(name);
+            temp  = gPad->FindObject(name);
             where = gPad;
          }
       }
@@ -487,6 +577,14 @@ TObject *TROOT::FindObject(const char *name, void *&where)
    if (!temp) return 0;
    if (temp->TestBit(kNotDeleted)) return temp;
    return 0;
+}
+
+//______________________________________________________________________________
+TObject *TROOT::FindObjectAny(const char *name) const
+{
+// return a pointer to the first object with name starting at //root
+
+   return fRootFolder->FindObjectAny(name);
 }
 
 //______________________________________________________________________________
@@ -504,6 +602,19 @@ const char *TROOT::FindObjectClassName(const char *name) const
    if (g) return g->GetTypeName();
 
    return 0;
+}
+
+//______________________________________________________________________________
+const char *TROOT::FindObjectPathName(TObject *obj) const
+{
+// Return path name of obj somewhere in the //root/.. path
+// The function returns the first occurence of the object in the list of folders
+// The returned string points to a static char array in TROOT.
+// If this function is called in a loop or recursively, it is the
+// user's responsability to copy this string in his area.
+
+   Error("FindObjectPathName","Not yet implemented");
+   return "??";
 }
 
 //______________________________________________________________________________
@@ -735,7 +846,7 @@ TSeqCollection *TROOT::GetListOfGlobals(Bool_t load)
    // you can set load=kFALSE (default).
 
    if (!fGlobals) {
-      fGlobals = new THashList(this, 100, 3);
+      fGlobals = new THashList(100, 3);
       load = kTRUE;
    }
 
@@ -759,7 +870,7 @@ TSeqCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
    // you can set load=kFALSE (default).
 
    if (!fGlobalFunctions) {
-      fGlobalFunctions = new THashList(this, 100, 3);
+      fGlobalFunctions = new THashList(100, 3);
       load = kTRUE;
    }
 
@@ -783,7 +894,7 @@ TSeqCollection *TROOT::GetListOfTypes(Bool_t load)
    // you can set load=kFALSE (default).
 
    if (!fTypes) {
-      fTypes = new THashList(this, 100, 3);
+      fTypes = new THashList(100, 3);
       load = kTRUE;
 
       // Add also basic types (like a identity typedef "typedef int int"
@@ -920,7 +1031,7 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname)
       // special case for ROOT classes Txxx
       char *lib, *path;
 #ifdef WIN32
-      lib = Form("lib%s", libname);
+      lib = Form("lib%s", libname);       // used to be Root_%s
 #else
       lib = Form("lib%s", libname);
 #endif
@@ -1117,6 +1228,30 @@ void TROOT::SaveContext()
 }
 
 //______________________________________________________________________________
+void TROOT::SetCutClassName(const char *name)
+{
+   // Set the default graphical cut class name for the graphics editor
+   // By default the graphics editor creates an instance of a class TCutG.
+   // This function may be called to specify a different class that MUST
+   // derive from TCutG
+
+   if (!name) {
+      Error("SetCutClassName","Invalid class name");
+      return;
+   }
+   TClass *cl = gROOT->GetClass(name);
+   if (!cl) {
+      Error("SetCutClassName","Unknown class:%s",name);
+      return;
+   }
+   if (!cl->InheritsFrom("TCutG")) {
+      Error("SetCutClassName","Class:%s does not derive from TCutG",name);
+      return;
+   }
+   fCutClassName = name;
+}
+
+//______________________________________________________________________________
 void TROOT::SetEditorMode(const char *mode)
 {
    // Set editor mode
@@ -1147,16 +1282,6 @@ void TROOT::SetEditorMode(const char *mode)
 }
 
 //______________________________________________________________________________
-void TROOT::SetMakeDefCanvas(VoidFuncPtr_t makecanvas)
-{
-   // Static function used to set the address of the default make canvas method.
-   // This address is by default initialized to 0.
-   // It is set as soon as the library containing the TCanvas class is loaded.
-
-   fgMakeDefCanvas = makecanvas;
-}
-
-//______________________________________________________________________________
 void TROOT::SetStyle(const char *stylename)
 {
    // Change current style to style with name stylename
@@ -1169,10 +1294,17 @@ void TROOT::SetStyle(const char *stylename)
 
 //-------- Static Member Functions ---------------------------------------------
 
+
 //______________________________________________________________________________
-Bool_t  TROOT::Initialized()
+Int_t TROOT::DecreaseDirLevel()
 {
-   return fgRootInit;
+   return --fgDirLevel;
+}
+
+//______________________________________________________________________________
+Int_t TROOT::GetDirLevel()
+{
+   return fgDirLevel;
 }
 
 //______________________________________________________________________________
@@ -1204,5 +1336,41 @@ const char *TROOT::GetMacroPath()
 #endif
    }
    return macropath;
+}
+
+//______________________________________________________________________________
+Int_t TROOT::IncreaseDirLevel()
+{
+   return ++fgDirLevel;
+}
+
+//______________________________________________________________________________
+void TROOT::IndentLevel()
+{
+   // Functions used by ls() to indent an object hierarchy.
+
+   for (int i = 0; i < fgDirLevel; i++) cout.put(' ');
+}
+
+//______________________________________________________________________________
+Bool_t  TROOT::Initialized()
+{
+   return fgRootInit;
+}
+
+//______________________________________________________________________________
+void TROOT::SetDirLevel(Int_t level)
+{
+   fgDirLevel = level;
+}
+
+//______________________________________________________________________________
+void TROOT::SetMakeDefCanvas(VoidFuncPtr_t makecanvas)
+{
+   // Static function used to set the address of the default make canvas method.
+   // This address is by default initialized to 0.
+   // It is set as soon as the library containing the TCanvas class is loaded.
+
+   fgMakeDefCanvas = makecanvas;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.3 2000/06/30 12:10:55 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -99,6 +99,31 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Marker_t marker, Option_t *option)
 
 //______________________________________________________________________________
 TPolyMarker3D::TPolyMarker3D(Int_t n, Float_t *p, Marker_t marker, Option_t *option)
+  : TObject(), TAttMarker()
+{
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*PolyMarker3D constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                        ========================
+
+   fLastPoint = -1;
+   fN = 0;
+   fP = 0;
+   if (n > 0) {
+     fN = n;
+     fP = new Float_t [kDimension*fN];
+     if (p) {
+         for (Int_t i = 0; i < kDimension*fN; i++)  fP[i] = p[i];
+         fLastPoint = fN-1;
+     }
+     else
+         memset(fP,0,kDimension*fN*sizeof(Float_t));
+   }
+   SetMarkerStyle(marker);
+   SetBit(kCanDelete);
+   fOption = option;
+}
+
+//______________________________________________________________________________
+TPolyMarker3D::TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker, Option_t *option)
   : TObject(), TAttMarker()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*PolyMarker3D constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -251,7 +276,7 @@ void TPolyMarker3D::ls(Option_t *option)
 //*-*-*-*-*-*-*-*-*-*-*-*-*List PolyMarker's contents*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ==========================
 
-   IndentLevel();
+   TROOT::IndentLevel();
    cout << "    TPolyMarker3D  N=" << Size() <<" Option="<<option<<endl;
 }
 
@@ -289,7 +314,7 @@ void TPolyMarker3D::Paint(Option_t *option)
 
 
     //*-* Allocate memory for points *-*
-        Float_t delta = 0.002;
+        Double_t delta = 0.002;
 
         buff->points = new Float_t[buff->numPoints*3];
         if (buff->points) {
@@ -339,6 +364,7 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
 {
 //     Paint 3-d histogram h with 3d polymarkers
 
+   const Int_t kMaxEntry = 100000;
    Int_t in, bin, binx, biny, binz;
 
    TAxis *xaxis = h->GetXaxis();
@@ -356,6 +382,12 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
       }
    }
 
+   // if histogram has too many entries, rescale it
+   // never draw more than kMaxEntry markers, otherwise this kills
+   // the X server
+   Double_t scale = 1.;
+   if (entry > kMaxEntry) scale = kMaxEntry/Double_t(entry);
+   
    //Create or modify 3-d view object
    TView *view = gPad->GetView();
    if (!view) {
@@ -370,14 +402,16 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
                   zaxis->GetBinUpEdge(zaxis->GetLast()));
 
    if (entry == 0) return;
-   TPolyMarker3D *pm3d    = new TPolyMarker3D(entry);
+   Int_t nmk = TMath::Min(kMaxEntry,entry);
+   TPolyMarker3D *pm3d    = new TPolyMarker3D(nmk);
    pm3d->SetMarkerStyle(h->GetMarkerStyle());
    pm3d->SetMarkerColor(h->GetMarkerColor());
    pm3d->SetMarkerSize(h->GetMarkerSize());
    gPad->Modified(kTRUE);
 
    entry = 0;
-   Float_t x,y,z,xw,yw,zw,xp,yp,zp;
+   Double_t x,y,z,xw,yw,zw,xp,yp,zp;
+   Int_t ncounts;
    for (binz=zaxis->GetFirst();binz<=zaxis->GetLast();binz++) {
       z  = zaxis->GetBinLowEdge(binz);
       zw = zaxis->GetBinWidth(binz);
@@ -388,7 +422,8 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
             x  = xaxis->GetBinLowEdge(binx);
             xw = xaxis->GetBinWidth(binx);
             bin = h->GetBin(binx,biny,binz);
-            for (in=0;in<h->GetBinContent(bin);in++) {
+            ncounts = Int_t(h->GetBinContent(bin)*scale+0.5);
+            for (in=0;in<ncounts;in++) {
                xp = x + xw*gRandom->Rndm(in);
                yp = y + yw*gRandom->Rndm(in);
                zp = z + zw*gRandom->Rndm(in);
@@ -412,9 +447,10 @@ void TPolyMarker3D::PaintPolyMarker(Int_t n, Float_t *p, Marker_t, Option_t *)
 
    //Create temorary storage
    TPoint *pxy = new TPoint[n];
-   Float_t *x  = new Float_t[n];
-   Float_t *y  = new Float_t[n];
-   Float_t xndc[3], *ptr = p;
+   Double_t *x  = new Double_t[n];
+   Double_t *y  = new Double_t[n];
+   Double_t xndc[3], temp[3];
+   Float_t *ptr = p;
 
    TView *view = gPad->GetView();      //Get current 3-D view
    if(!view) return;                           //Check if `view` is valid
@@ -422,7 +458,8 @@ void TPolyMarker3D::PaintPolyMarker(Int_t n, Float_t *p, Marker_t, Option_t *)
 //*-*- convert points from world to pixel coordinates
    Int_t nin = 0;
    for (Int_t i = 0; i < n; i++) {
-      view->WCtoNDC(ptr, xndc);
+      for (Int_t j=0;j<3;j++) temp[j] = ptr[j];
+      view->WCtoNDC(temp, xndc);
       ptr += 3;
       if (xndc[0] < gPad->GetX1() || xndc[0] > gPad->GetX2()) continue;
       if (xndc[1] < gPad->GetY1() || xndc[1] > gPad->GetY2()) continue;
@@ -488,7 +525,7 @@ void TPolyMarker3D::SavePrimitive(ofstream &out, Option_t *)
 }
 
 //______________________________________________________________________________
-void TPolyMarker3D::SetPoint(Int_t n, Float_t x, Float_t y, Float_t z)
+void TPolyMarker3D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*Set point n to x, y, z*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                        ======================
@@ -513,7 +550,7 @@ void TPolyMarker3D::SetPoint(Int_t n, Float_t x, Float_t y, Float_t z)
 }
 
 //______________________________________________________________________________
-Int_t TPolyMarker3D::SetNextPoint(Float_t x, Float_t y, Float_t z)
+Int_t TPolyMarker3D::SetNextPoint(Double_t x, Double_t y, Double_t z)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Set "next" point to x, y, z *-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ============================
@@ -526,6 +563,29 @@ Int_t TPolyMarker3D::SetNextPoint(Float_t x, Float_t y, Float_t z)
 
 //______________________________________________________________________________
 void TPolyMarker3D::SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option)
+{
+//*-*-*-*-*-*-*-*-*-*-*-*-*Loads n points from array p*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                      ===========================
+
+       fN = n;
+       if (fP) delete [] fP;
+       fP = new Float_t [3*fN];
+       for (Int_t i = 0; i < fN; i++) {
+          if (p) {
+             fP[3*i]   = p[3*i];
+             fP[3*i+1] = p[3*i+1];
+             fP[3*i+2] = p[3*i+2];
+          } else {
+             memset(fP,0,kDimension*fN*sizeof(Float_t));
+          }
+       }
+       SetMarkerStyle(marker);
+       fOption = option;
+       fLastPoint = n-1;
+}
+
+//______________________________________________________________________________
+void TPolyMarker3D::SetPolyMarker(Int_t n, Double_t *p, Marker_t marker, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Loads n points from array p*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ===========================

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -49,7 +49,7 @@ public:
     virtual Int_t   GetEntry(Int_t entry=0, Int_t getall = 0);
     virtual Int_t   GetN() {return fN;}
     TClonesArray    *GetList() {return fList;}
-    Bool_t          IsFolder() {return kTRUE;}
+    Bool_t          IsFolder() const {return kTRUE;}
     virtual void    Print(Option_t *option="");
     virtual void    Reset(Option_t *option="");
     virtual void    SetAddress(void *add);

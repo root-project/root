@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.2 2000/05/24 10:31:48 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 const char *gCoPyRiGhT[] = {
      "STAR dataset C++ base class library:",
@@ -19,13 +19,14 @@ const char *gCoPyRiGhT[] = {
 };
 
 const char *Id = {
-    "$Id: TDataSet.cxx,v 1.57 2000/01/12 18:07:22 fine Exp $"
+    "$Id: TDataSet.cxx,v 1.2 2000/05/24 10:31:48 brun Exp $"
 };
 #include <iostream.h>
 #include "TSystem.h"
 #include "TDataSetIter.h"
 #include "TDataSet.h"
 
+#include "TROOT.h"
 #include "TBrowser.h"
 
 #include "TSystem.h"
@@ -359,15 +360,15 @@ TDataSet *TDataSet::Find(const Char_t *path) const
 //______________________________________________________________________________
 TDataSet  *TDataSet::FindByName(const Char_t *name,const Char_t *path,Option_t *opt) const
 {
-  // Aliase for TDataSet::FindObject(const Char_t *name,const Char_t *path,Option_t *opt) method
-  return FindObject(name,path,opt);
+  // Aliase for TDataSet::FindDataSet(const Char_t *name,const Char_t *path,Option_t *opt) method
+  return FindDataSet(name,path,opt);
 }
 
 //______________________________________________________________________________
-TDataSet *TDataSet::FindObject(const Char_t *name,const Char_t *path,Option_t *opt) const
+TDataSet *TDataSet::FindDataSet(const Char_t *name,const Char_t *path,Option_t *opt) const
 {
   //
-  // Full description see: TDataSetIter::FindObject
+  // Full description see: TDataSetIter::FindDataSet
   //
   // Note. This is method is quite expansive.
   // ----- It is done to simplify the user's code when one wants to find ONLY object.
@@ -376,7 +377,7 @@ TDataSet *TDataSet::FindObject(const Char_t *name,const Char_t *path,Option_t *o
   //
 
   TDataSetIter next((TDataSet*)this);
-  return next.FindObject(name,path,opt);
+  return next.FindDataSet(name,path,opt);
 }
 
 //______________________________________________________________________________
@@ -439,16 +440,16 @@ void TDataSet::ls(Int_t depth) const
  //                                                                 //
  /////////////////////////////////////////////////////////////////////
 
-  printf("%3d - %s\t%s\n",GetDirLevel(),(const char*)Path(),(char*)GetTitle());
+  printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());
   if (!fList || depth == 1 ) return;
   if (!depth) depth = 99999;
 
   TIter next(fList);
   TDataSet *d=0;
   while ((d = (TDataSet *)next())) {
-    IncreaseDirLevel();
+    TROOT::IncreaseDirLevel();
     d->ls(depth-1);
-    DecreaseDirLevel();
+    TROOT::DecreaseDirLevel();
   }
 }
 //______________________________________________________________________________
@@ -770,7 +771,7 @@ void TDataSet::Sort()
 }
 
 //______________________________________________________________________________
-void TDataSet::Write(const Text_t *name, Int_t option, Int_t bufsize)
+Int_t TDataSet::Write(const Text_t *name, Int_t option, Int_t bufsize)
 {
  //
  // To Write object first we should temporary break the
@@ -779,8 +780,9 @@ void TDataSet::Write(const Text_t *name, Int_t option, Int_t bufsize)
  //
   TDataSet *saveParent = fParent; // GetParent();
   fParent = 0;
-  TObject::Write(name,option, bufsize);
+  Int_t nbytes = TObject::Write(name,option, bufsize);
   fParent = saveParent;
+  return nbytes;
 }
 
 

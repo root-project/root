@@ -422,6 +422,71 @@ char *file;
   }
 }
 
+#ifndef G__OLDIMPLEMENTATION1348
+/**************************************************************************
+* G__exec_text()
+**************************************************************************/
+G__value G__exec_text(text)
+char *text;
+{
+#ifndef G__TMPFILE
+  char tname[L_tmpnam+10], sname[L_tmpnam+10];
+#else
+  char tname[G__MAXFILENAME], sname[G__MAXFILENAME];
+#endif
+  int nest=0,single_quote=0,double_quote=0;
+  G__value buf;
+  FILE *fp;
+  int i;
+  int addmparen=0;
+  int addsemicolumn =0;
+
+  i=0;
+  while(text[i] && isspace(text[i])) ++i;
+  if(text[i]!='{') addmparen = 1;
+
+  i = strlen(text)-1;
+  while(i && isspace(text[i])) --i;
+  if(text[i]=='}')       addsemicolumn = 0;
+  else if(text[i]==';')  addsemicolumn = 0;
+  else                   addsemicolumn = 1;
+
+  for(i=0;i<strlen(text);i++) {
+    switch(text[i]) {
+    case '(': case '[': case '{':
+      if(!single_quote && !double_quote) ++nest; break;
+    case ')': case ']': case '}':
+      if(!single_quote && !double_quote) --nest; break;
+    case '\'': if(!double_quote) single_quote ^= 1; break;
+    case '"': if(!single_quote) double_quote ^= 1; break;
+    case '\\': ++i; break;
+    default: break;
+    }
+  }
+  if(nest!=0 || single_quote!=0 || double_quote!=0) {
+    fprintf(G__serr,"!!!Error in given statement!!! \"%s\"\n",text);
+    return(G__null);
+  }
+  
+  G__tmpnam(tname);
+  fp = fopen(tname,"w");
+  if(!fp) return G__null;
+  if(addmparen) fprintf(fp,"{\n");
+  fprintf(fp,"%s",text);
+  if(addsemicolumn) fprintf(fp,";");
+  fprintf(fp,"\n");
+  if(addmparen) fprintf(fp,"}\n");
+  fclose(fp);
+
+  strcpy(sname,tname);
+  G__storerewindposition();
+  buf=G__exec_tempfile(sname);
+  G__security_recover(G__serr);
+  remove(sname);
+
+  return(buf);
+}
+#endif
 
 /**************************************************************************
 * G__beforelargestep()

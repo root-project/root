@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TBaseClass.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************
@@ -48,7 +48,7 @@ public:
    Int_t        GetDelta() const;
    Int_t        Compare(TObject *obj);
    ULong_t      Hash();
-   Bool_t       IsFolder() {return kTRUE;}
+   Bool_t       IsFolder() const {return kTRUE;}
    Long_t       Property() const;
 
    ClassDef(TBaseClass,0)  //Description of a base class

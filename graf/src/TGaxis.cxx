@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.5 2000/08/25 13:10:20 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -112,9 +112,9 @@ TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
 }
 
 //______________________________________________________________________________
-TGaxis::TGaxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
-               Float_t wmin, Float_t wmax, Int_t ndiv,   Option_t *chopt,
-               Float_t gridlength)
+TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
+               Double_t wmin, Double_t wmax, Int_t ndiv,   Option_t *chopt,
+               Double_t gridlength)
        : TLine(xmin,ymin,xmax,ymax), TAttText(11,0,1,62,0.040)
 {
 //*-*-*-*-*-*-*-*-*-*-*Gaxis normal constructor-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -142,9 +142,9 @@ TGaxis::TGaxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
 }
 
 //______________________________________________________________________________
-TGaxis::TGaxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
+TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
                const char *funcname, Int_t ndiv,   Option_t *chopt,
-               Float_t gridlength)
+               Double_t gridlength)
        : TLine(xmin,ymin,xmax,ymax), TAttText(11,0,1,62,0.040)
 {
 //*-*-*-*-*-*-*-*-*-*-*Gaxis constructor with a TF1 to map axis values-*-*-*
@@ -231,9 +231,9 @@ void TGaxis::CenterTitle(Bool_t center)
 }
 
 //______________________________________________________________________________
-void TGaxis::DrawAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
-                      Float_t wmin, Float_t wmax, Int_t ndiv,   Option_t *chopt,
-                      Float_t gridlength)
+void TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
+                      Double_t wmin, Double_t wmax, Int_t ndiv,   Option_t *chopt,
+                      Double_t gridlength)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this axis with new attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================
@@ -264,15 +264,15 @@ void TGaxis::Paint(Option_t *)
 //*-*-*-*-*-*-*-*-*-*-*Draw this axis with its current attributes*-*-*-*-*-*-*
 //*-*                  ==========================================
 
-   Float_t wmin = fWmin;
-   Float_t wmax = fWmax;
+   Double_t wmin = fWmin;
+   Double_t wmax = fWmax;
    Int_t   ndiv = fNdiv;
    PaintAxis(fX1,fY1,fX2,fY2,wmin,wmax,ndiv,fChopt.Data(),fGridLength);
 }
 //______________________________________________________________________________
-void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
-                       Float_t &wmin, Float_t &wmax, Int_t &ndiv,   Option_t *chopt,
-                       Float_t gridlength)
+void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
+                       Double_t &wmin, Double_t &wmax, Int_t &ndiv,   Option_t *chopt,
+                       Double_t gridlength)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Control function to draw an axis*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ================================
@@ -316,6 +316,14 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
 //       chopt='-': tick mark are drawn on the negative side.
 //       i.e: '+-' --> tick marks are drawn on both sides of the axis.
 //       chopt='U': Unlabeled axis, default is labeled.
+//
+// Size of tick marks
+// ------------------
+// By default, tick marks have a length equal to 3 per cent of the
+// axis length.
+// When the option "S" is specified, the length of the tick marks
+// is equal to fTickSize*axis_length, where fTickSize may be set
+// via TGaxis::SetTickSize.
 //
 // Position of labels on axis.
 // ---------------------------
@@ -388,40 +396,40 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
 
    static const char *where = "PaintAxis";
 
-   Float_t alfa, beta, ratio1, ratio2, grid_side;
-   Float_t axis_lengthN = 0;
-   Float_t axis_length0 = 0;
-   Float_t axis_length1 = 0;
-   Float_t axis_length;
-   Float_t atick[3];
-   Float_t tick_side, label_side;
-   Float_t charheight;
-   Float_t phil, phi, sinphi, cosphi, asinphi, acosphi;
-   Float_t BinLow,  BinLow2,  BinLow3;
-   Float_t BinHigh, BinHigh2, BinHigh3;
-   Float_t BinWidth, BinWidth2, BinWidth3;
-   Float_t textsize;
-   Float_t xpl1, xpl2, ypl1, ypl2;
-   Float_t Xtick = 0;
-   Float_t Xtick0, Xtick1, DXtick;
-   Float_t Ytick, Ytick0, Ytick1;
+   Double_t alfa, beta, ratio1, ratio2, grid_side;
+   Double_t axis_lengthN = 0;
+   Double_t axis_length0 = 0;
+   Double_t axis_length1 = 0;
+   Double_t axis_length;
+   Double_t atick[3];
+   Double_t tick_side, label_side;
+   Double_t charheight;
+   Double_t phil, phi, sinphi, cosphi, asinphi, acosphi;
+   Double_t BinLow,  BinLow2,  BinLow3;
+   Double_t BinHigh, BinHigh2, BinHigh3;
+   Double_t BinWidth, BinWidth2, BinWidth3;
+   Double_t textsize;
+   Double_t xpl1, xpl2, ypl1, ypl2;
+   Double_t Xtick = 0;
+   Double_t Xtick0, Xtick1, DXtick;
+   Double_t Ytick, Ytick0, Ytick1;
    Double_t Wlabel, DWlabel;
-   Float_t Xfactor, Yfactor;
-   Float_t Xlabel, Ylabel, DXlabel;
-   Float_t Xone, Xtwo;
-   Float_t rlab;
-   Float_t X0, X1, Y0, Y1, XX0, XX1, YY0, YY1;
+   Double_t Xfactor, Yfactor;
+   Double_t Xlabel, Ylabel, DXlabel;
+   Double_t Xone, Xtwo;
+   Double_t rlab;
+   Double_t X0, X1, Y0, Y1, XX0, XX1, YY0, YY1;
    XX0 = XX1 = YY0 = YY1 = 0;
-   Float_t Xxmin, Xxmax, Yymin, Yymax;
+   Double_t Xxmin, Xxmax, Yymin, Yymax;
    Xxmin = Xxmax = Yymin = Yymax = 0;
-   Float_t XLside, XMside;
-   Float_t WW, AF, RNE;
-   Float_t XX, YY;
-   Float_t XexpT = 0;
-   Float_t YexpT = 0;
-   Float_t XMNLOG, X00, X11, H2, H2SAV, AXMUL, Y, SMALD;
+   Double_t XLside, XMside;
+   Double_t WW, AF, RNE;
+   Double_t XX, YY;
+   Double_t XexpT = 0;
+   Double_t YexpT = 0;
+   Double_t XMNLOG, X00, X11, H2, H2SAV, AXMUL, Y, SMALD;
    Float_t chupxvsav, chupyvsav;
-   Float_t rtxw, rtyw;
+   Double_t rtxw, rtyw;
    Int_t Nlabels, Nticks, Nticks0, Nticks1;
    Int_t i, j, k, l, decade, ltick;
    Int_t Mside, Lside;
@@ -455,12 +463,12 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
    struct tm* utctis;
 
    const Int_t precision = 5;
-   Float_t epsilon = 0.00001;
-   const Float_t kPI=3.141592;
+   Double_t epsilon = 0.00001;
+   const Double_t kPI=3.141592;
 //*-*-______________________________________
 
-   Float_t rwmi = wmin;
-   Float_t rwma = wmax;
+   Double_t rwmi = wmin;
+   Double_t rwma = wmax;
    CHTEMP = &kCHTEMP[0];
    LABEL  = &CHLABEL[0];
 
@@ -471,12 +479,12 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
 //*-*- the following parameters correspond to the pad range in NDC
 //*-*- and the WC coordinates in the pad
 
-   Float_t padh   = gPad->GetWh()*gPad->GetAbsHNDC();
-   Float_t padw   = gPad->GetWw()*gPad->GetAbsWNDC();
-   Float_t RWxmin = gPad->GetX1();
-   Float_t RWxmax = gPad->GetX2();
-   Float_t RWymin = gPad->GetY1();
-   Float_t RWymax = gPad->GetY2();
+   Double_t padh   = gPad->GetWh()*gPad->GetAbsHNDC();
+   Double_t padw   = gPad->GetWw()*gPad->GetAbsWNDC();
+   Double_t RWxmin = gPad->GetX1();
+   Double_t RWxmax = gPad->GetX2();
+   Double_t RWymin = gPad->GetY1();
+   Double_t RWymax = gPad->GetY2();
 
    if(strchr(chopt,'G')) OptionLog  = 1;  else OptionLog  = 0;
    if(strchr(chopt,'B')) OptionBlank= 1;  else OptionBlank= 0;
@@ -516,6 +524,12 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
 
    timeformat = fTimeFormat;
 
+// correct for time offset not being integer
+   if (OptionTime) {
+      wmin += gStyle->GetTimeOffset() - (int)(gStyle->GetTimeOffset());
+      wmax += gStyle->GetTimeOffset() - (int)(gStyle->GetTimeOffset());
+   }
+   
 //*-*-              Determine number of divisions 1, 2 and 3
    N     = ndiv;
    N3A   = N/10000;
@@ -551,7 +565,7 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
 
       Optimize(wmin,wmax,N1A,BinLow,BinHigh,nbins,BinWidth);
       if (OptionInt) {
-         if (BinLow != float(int(BinLow)) || BinWidth != float(int(BinWidth))) {
+         if (BinLow != Double_t(int(BinLow)) || BinWidth != Double_t(int(BinWidth))) {
             AdjustBinSize(wmin,wmax,N1A,BinLow,BinHigh,nbins,BinWidth);
          }
       }
@@ -673,8 +687,8 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
       Int_t py0 = gPad->VtoPixel(Y0);
       Int_t px1 = gPad->UtoPixel(X1);
       Int_t py1 = gPad->VtoPixel(Y1);
-      if (X0 < X1) phil = TMath::ATan2(Float_t(py0-py1), Float_t(px1-px0));
-      else         phil = TMath::ATan2(Float_t(py1-py0), Float_t(px0-px1));
+      if (X0 < X1) phil = TMath::ATan2(Double_t(py0-py1), Double_t(px1-px0));
+      else         phil = TMath::ATan2(Double_t(py1-py0), Double_t(px0-px1));
    }
    cosphi  = TMath::Cos(phi);
    sinphi  = TMath::Sin(phi);
@@ -720,7 +734,7 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
       rwmi = fFunction->Eval(wmin);
       rwma = fFunction->Eval(wmax);
       if(rwmi > rwma) {
-         Float_t t = rwma;
+         Double_t t = rwma;
          rwma = rwmi;
          rwmi = t;
       }
@@ -747,28 +761,45 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
    if (strlen(GetTitle())) {
       charheight = GetTitleSize();
       textaxis->SetTextSize (charheight);
-      Float_t toffset = GetTitleOffset();
+      Double_t toffset = GetTitleOffset();
       if (toffset < 0.1) toffset = 1;
       if (X1 == X0) Ylabel = XLside*1.6*charheight*toffset;
       else          Ylabel = XLside*1.3*charheight*toffset;
       if (Y1 == Y0) Ylabel = XLside*1.6*charheight*toffset;
-      Float_t axispos;
+      Double_t axispos;
       if (TestBit(kCenterTitle)) axispos = 0.5*axis_length;
       else                       axispos = axis_length;
-      if (X1 >= X0) {
-         if (TestBit(kCenterTitle)) textaxis->SetTextAlign(22);
-         else                       textaxis->SetTextAlign(32);
-         Rotate(axispos,Ylabel,cosphi,sinphi,X0,Y0,xpl1,ypl1);
+      if (TestBit(kRotateTitle)) {
+         if (X1 >= X0) {
+            if (TestBit(kCenterTitle)) textaxis->SetTextAlign(22);
+            else                       textaxis->SetTextAlign(12);
+            Rotate(axispos,Ylabel,cosphi,sinphi,X0,Y0,xpl1,ypl1);
+         } else {
+             if (TestBit(kCenterTitle)) textaxis->SetTextAlign(22);
+           else                         textaxis->SetTextAlign(32);
+            Rotate(axispos,Ylabel,cosphi,sinphi,X0,Y0,xpl1,ypl1);
+         }
+         textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
+                              gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
+                              phil=(kPI+phil)*180/kPI,
+                              charheight,
+                              GetTitle());
       } else {
-         if (TestBit(kCenterTitle)) textaxis->SetTextAlign(22);
-         else                       textaxis->SetTextAlign(12);
-         Rotate(axispos,Ylabel,cosphi,sinphi,X0,Y0,xpl1,ypl1);
+         if (X1 >= X0) {
+            if (TestBit(kCenterTitle)) textaxis->SetTextAlign(22);
+            else                       textaxis->SetTextAlign(32);
+            Rotate(axispos,Ylabel,cosphi,sinphi,X0,Y0,xpl1,ypl1);
+         } else {
+             if (TestBit(kCenterTitle)) textaxis->SetTextAlign(22);
+           else                       textaxis->SetTextAlign(12);
+            Rotate(axispos,Ylabel,cosphi,sinphi,X0,Y0,xpl1,ypl1);
+         }
+         textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
+                              gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
+                              phil*180/kPI,
+                              charheight,
+                              GetTitle());
       }
-      textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
-                           gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
-                           phil*180/kPI,
-                           charheight,
-                           GetTitle());
    }
 
 //*-*-              Labels preparation:
@@ -784,7 +815,7 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
    if (!OptionUp && !OptionDown && !OptionY) {
       if (OptionText && ymin == ymax) {
          NHILAB = 0;
-         Float_t binwdh = 0.9*(axis_length/float(N1A));
+         Double_t binwdh = 0.9*(axis_length/Double_t(N1A));
          textsize       = 0;
          for (i=0; i<NHILAB; i++) {
 //            CALL IGTEXT(0,0,HILabs(I),charheight,textsize,'S');
@@ -835,22 +866,22 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
       if (ndiv) {
          if (fFunction) {
             if (OptionNoopt && !OptionInt) {
-               DXtick=(BinHigh-BinLow)/float(Nticks-1);
+               DXtick=(BinHigh-BinLow)/Double_t(Nticks-1);
             } else {
-               DXtick=(BinHigh-BinLow)/float(Nticks-1);
+               DXtick=(BinHigh-BinLow)/Double_t(Nticks-1);
             }
          } else {
-            if (OptionNoopt && !OptionInt) DXtick=axis_length/float(Nticks-1);
-            else                           DXtick=axis_lengthN/float(Nticks-1);
+            if (OptionNoopt && !OptionInt) DXtick=axis_length/Double_t(Nticks-1);
+            else                           DXtick=axis_lengthN/Double_t(Nticks-1);
          }
          for (k=0;k<Nticks; k++) {
             ltick = 2;
             if (k%NN3 == 0) ltick = 1;
             if (k%NN2 == 0) ltick = 0;
             if (fFunction) {
-               Xtick = (fFunction->Eval(BinLow+float(k)*DXtick)-rwmi)* axis_length / TMath::Abs(rwma-rwmi);
+               Xtick = (fFunction->Eval(BinLow+Double_t(k)*DXtick)-rwmi)* axis_length / TMath::Abs(rwma-rwmi);
             } else {
-               Xtick = Float_t(k)*DXtick;
+               Xtick = Double_t(k)*DXtick;
             }
             Ytick = 0;
             if (!Mside) Ytick -= atick[ltick];
@@ -907,7 +938,7 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
                Ytick0 = 0;
                if (!Mside) Ytick0 -= atick[ltick];
                if (fFunction) {
-                  Xtick0 = (fFunction->Eval(BinLow - Float_t(k)*DXtick)-rwmi)
+                  Xtick0 = (fFunction->Eval(BinLow - Double_t(k)*DXtick)-rwmi)
 		           * axis_length / TMath::Abs(rwma-rwmi);
                }
                Rotate(Xtick0,Ytick0,cosphi,sinphi,XX0,YY0 ,xpl2,ypl2);
@@ -951,7 +982,7 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
                Ytick1 = 0;
                if (!Mside) Ytick1 -= atick[ltick];
                if (fFunction) {
-                  Xtick1 = (fFunction->Eval(BinHigh + Float_t(k)*DXtick)-rwmi)
+                  Xtick1 = (fFunction->Eval(BinHigh + Double_t(k)*DXtick)-rwmi)
 	                   * axis_length / TMath::Abs(rwma-rwmi);
                }
                Rotate(Xtick1,Ytick1,cosphi,sinphi,XX0,YY0 ,xpl2,ypl2);
@@ -995,9 +1026,9 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
                goto L210;
             }
             Wlabel  = wmin;
-            DWlabel = (wmax-wmin)/float(N1A);
-            if (OptionNoopt && !OptionInt) DXlabel = axis_length/float(N1A);
-            else                           DXlabel = axis_lengthN/float(N1A);
+            DWlabel = (wmax-wmin)/Double_t(N1A);
+            if (OptionNoopt && !OptionInt) DXlabel = axis_length/Double_t(N1A);
+            else                           DXlabel = axis_lengthN/Double_t(N1A);
 
             if (!OptionText && !OptionTime) {
 
@@ -1014,7 +1045,7 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
 //*-*-              (0.001 precision of 5 (precision) characters). Then we use x 10 n
 //*-*-              format. If AF >=0 x10 n cannot be used
 
-               if ((TMath::Abs(wmax-wmin)/float(N1A)) < 0.00099) {
+               if ((TMath::Abs(wmax-wmin)/Double_t(N1A)) < 0.00099) {
                   AF    = TMath::Log10(WW) + epsilon;
                   if (AF < 0) {
                      FLEXE   = kTRUE;
@@ -1063,7 +1094,7 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
                }
                ndyn = N1A;
                while (ndyn) {
-                  Float_t wdyn = TMath::Abs((wmax-wmin)/float(ndyn));
+                  Double_t wdyn = TMath::Abs((wmax-wmin)/ndyn);
                   if (wdyn <= 0.999 && NA < precision-2) {
                      NA++;
                      ndyn /= 10;
@@ -1083,6 +1114,8 @@ L110:
                   IF2++;
                }
                CODED = &CHCODED[0];
+               if (IF1 > 15) IF1=15;
+               if (IF2 > 15) IF2=15;
                if (IF2) sprintf(CODED,"%%%d.%df",IF1,IF2);
                else     sprintf(CODED,"%%%d.%df",IF1+1,1);
             }
@@ -1097,7 +1130,7 @@ L110:
                   Xlabel = (fFunction->Eval(Wlabel)-rwmi)
                            * axis_length / TMath::Abs(rwma-rwmi);
                } else {
-                  Xlabel = DXlabel*Float_t(k);
+                  Xlabel = DXlabel*k;
                }
                if (OptionM) Xlabel += 0.5*DXlabel;
 
@@ -1134,7 +1167,7 @@ L110:
 //*-*-              Generate the time labels
 
                if (OptionTime) {
-                  timed = Wlabel + gStyle->GetTimeOffset();
+                  timed = Wlabel + (int)(gStyle->GetTimeOffset());
                   timelabel = (time_t)((Long_t)(timed));
                   utctis = gmtime(&timelabel);
                   strftime(LABEL,36,timeformat.Data(),utctis);
@@ -1145,7 +1178,7 @@ L110:
                      double tmpdb;
                      int tmplast, tmpfirst;
                      strcpy(CHTEMP,&LABEL[first]);
-                     sprintf(LABEL,"%7.5f",modf(Wlabel,&tmpdb));
+                     sprintf(LABEL,"%7.5f",modf(timed,&tmpdb));
                      tmplast = strlen(LABEL)-1;
 
 //*-*-              Here we eliminate the non significiant 0 after '.'
@@ -1285,14 +1318,14 @@ L110:
 //*-*-              Plot decade and intermediate tick marks
       decade      = IH1-2;
       labelnumber = IH1;
-      if ( XMNLOG > 0 && (XMNLOG-float(IH1) > 0) ) labelnumber++;
+      if ( XMNLOG > 0 && (XMNLOG-Double_t(IH1) > 0) ) labelnumber++;
       for (j=1; j<=NBININ; j++) {
 
 //*-*-              Plot decade
          decade++;
          if (X0 == X1 && j == 1) Ylabel += charheight*0.33;
          if (Y0 == Y1 && j == 1) Ylabel -= charheight*0.65;
-         Xone = X00+AXMUL*(float(decade)-XMNLOG);
+         Xone = X00+AXMUL*(Double_t(decade)-XMNLOG);
          if (X00 > Xone) goto L160;
          if (Xone > X11) break;
          Xtwo = Xone;
@@ -1364,9 +1397,9 @@ L110:
                   else {
                      XX = XX-(last-first)*(charheight*0.25);
                      textaxis->PaintTextNDC(XX,YY,"10");
-                     Float_t s10 = textaxis->GetTextSize();
+                     Double_t s10 = textaxis->GetTextSize();
                      textaxis->SetTextSize (0.6*s10);
-                     Float_t pixels;
+                     Double_t pixels;
                      if (padw < padh) pixels = s10*padw;
                      else             pixels = s10*padh;
                      Int_t alig  = textaxis->GetTextAlign();
@@ -1393,7 +1426,7 @@ L160:
          for (k=2;k<10;k++) {
 
 //*-*-              Plot intermediate tick marks
-            Xone = X00+AXMUL*(TMath::Log10(float(k))+float(decade)-XMNLOG);
+            Xone = X00+AXMUL*(TMath::Log10(Double_t(k))+Double_t(decade)-XMNLOG);
             if (X00 > Xone) continue;
             if (Xone > X11) goto L200;
             Y = 0;
@@ -1423,7 +1456,7 @@ L160:
 //*-*- Draw the intermediate LOG labels if requested
 
                if (LogInteger && !OptionUnlab) {
-                  rlab = float(k)*TMath::Power(10,labelnumber-1);
+                  rlab = Double_t(k)*TMath::Power(10,labelnumber-1);
                   sprintf(CHTEMP, "%d", Int_t(rlab));
                   LNLEN = strlen(CHTEMP);
                   if (CHTEMP[LNLEN-1] == '.') LNLEN--;
@@ -1470,8 +1503,8 @@ L210:
 }
 
 //______________________________________________________________________________
-void TGaxis::Optimize(Float_t A1,  Float_t A2,  Int_t nold
-                     ,Float_t &BinLow, Float_t &BinHigh, Int_t &nbins, Float_t &BinWidth)
+void TGaxis::Optimize(Double_t A1,  Double_t A2,  Int_t nold
+                     ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BinWidth)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Reasonable Axis labels optimisation*-*-*-*-*-*-*-*-*
 //*-*                    ===================================
@@ -1489,16 +1522,16 @@ void TGaxis::Optimize(Float_t A1,  Float_t A2,  Int_t nold
    Int_t lwid, kwid;
    Int_t ntemp = 0;
    Int_t jlog  = 0;
-   Float_t siground = 0;
-   Float_t alb, awidth, sigfig;
-   Float_t timemulti = 1;
+   Double_t siground = 0;
+   Double_t alb, awidth, sigfig;
+   Double_t timemulti = 1;
    Int_t roundmode =0;
 
    Int_t OptionTime;
    if(strchr(fChopt.Data(),'t')) OptionTime = 1;  else OptionTime = 0;
 
-   Float_t AL = TMath::Min(A1,A2);
-   Float_t AH = TMath::Max(A1,A2);
+   Double_t AL = TMath::Min(A1,A2);
+   Double_t AH = TMath::Max(A1,A2);
    if (AL == AH) AH = AL+1;
 //*-*-      IF nold  ==  -1 , program uses binwidth input from calling routine
    if (nold == -1 && BinWidth > 0 ) goto L90;
@@ -1507,7 +1540,7 @@ void TGaxis::Optimize(Float_t A1,  Float_t A2,  Int_t nold
 
 
 L20:
-   awidth = (AH-AL)/float(ntemp);
+   awidth = (AH-AL)/Double_t(ntemp);
    if (awidth >= FLT_MAX) goto LOK;  //in float.h
    if (awidth <= 0)       goto LOK;
 
@@ -1542,7 +1575,7 @@ L20:
 //*-*-      Get nominal bin width in exponential form
 
    jlog   = Int_t(TMath::Log10(awidth));
-   if (jlog <-30 || jlog > 30) {
+   if (jlog <-200 || jlog > 200) {
       BinLow   = 0;
       BinHigh  = 1;
       BinWidth = 0.01;
@@ -1605,11 +1638,11 @@ L90:
    alb  = AL/BinWidth;
    lwid   = Int_t(alb);
    if (alb < 0) lwid--;
-   BinLow     = BinWidth*float(lwid);
+   BinLow     = BinWidth*Double_t(lwid);
    alb        = AH/BinWidth + 1.00001;
    kwid = Int_t(alb);
    if (alb < 0) kwid--;
-   BinHigh = BinWidth*float(kwid);
+   BinHigh = BinWidth*Double_t(kwid);
    nbins = kwid - lwid;
    if (nold == -1) goto LOK;
    if (nold <= 5) {          //*-*-    Request for one bin is difficult case
@@ -1621,11 +1654,11 @@ L90:
    if (2*nbins == nold) { ntemp++; goto L20; }
 
 LOK:
-   Float_t oldBinLow = BinLow;
-   Float_t oldBinHigh = BinHigh;
+   Double_t oldBinLow = BinLow;
+   Double_t oldBinHigh = BinHigh;
    Int_t oldnbins = nbins;
 
-   Float_t atest = BinWidth*0.0001;
+   Double_t atest = BinWidth*0.0001;
    if (TMath::Abs(BinLow-A1)  >= atest) { BinLow  += BinWidth;  nbins--; }
    if (TMath::Abs(BinHigh-A2) >= atest) { BinHigh -= BinWidth;  nbins--; }
 
@@ -1634,15 +1667,15 @@ LOK:
       BinHigh = oldBinHigh;
       BinLow = oldBinLow;
       BinWidth = (oldBinHigh - oldBinLow)/nbins;
-      Float_t atest = BinWidth*0.0001;
+      Double_t atest = BinWidth*0.0001;
       if (TMath::Abs(BinLow-A1)  >= atest) { BinLow  += BinWidth;  nbins--; }
       if (TMath::Abs(BinHigh-A2) >= atest) { BinHigh -= BinWidth;  nbins--; }
    }
 }
 
 //______________________________________________________________________________
-void TGaxis::AdjustBinSize(Float_t A1,  Float_t A2,  Int_t nold
-                          ,Float_t &BinLow, Float_t &BinHigh, Int_t &nbins, Float_t &BinWidth)
+void TGaxis::AdjustBinSize(Double_t A1,  Double_t A2,  Int_t nold
+                          ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BinWidth)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Axis labels optimisation*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ========================
@@ -1658,7 +1691,7 @@ void TGaxis::AdjustBinSize(Float_t A1,  Float_t A2,  Int_t nold
 //  nbins    : New NDIV .
 //
 
-   BinWidth = TMath::Abs(A2-A1)/float(nold);
+   BinWidth = TMath::Abs(A2-A1)/Double_t(nold);
    if (BinWidth <= 1) { BinWidth = 1; BinLow = int(A1); }
    else {
       Int_t width = int(BinWidth/5) + 1;
@@ -1670,7 +1703,7 @@ void TGaxis::AdjustBinSize(Float_t A1,  Float_t A2,  Int_t nold
 
       if (A1 < 0) {
          for (Int_t ic=0; ic<1000; ic++) {
-            Float_t rbl = BinLow/BinWidth;
+            Double_t rbl = BinLow/BinWidth;
             Int_t   ibl = int(BinLow/BinWidth);
             if ( (rbl-ibl) == 0 || ic > width) { BinLow -= 5; break;}
          }
@@ -1678,7 +1711,7 @@ void TGaxis::AdjustBinSize(Float_t A1,  Float_t A2,  Int_t nold
    }
    BinHigh     = int(A2);
    nbins       = 0;
-   Float_t XB  = BinLow;
+   Double_t XB  = BinLow;
    while (XB <= BinHigh) {
       XB += BinWidth;
       nbins++;
@@ -1700,8 +1733,8 @@ void TGaxis::LabelsLimits(char *label, Int_t &first, Int_t &last)
 }
 
 //______________________________________________________________________________
-void TGaxis::Rotate(Float_t X,  Float_t Y,  Float_t CFI, Float_t SFI
-                   ,Float_t XT, Float_t YT, Float_t &U,   Float_t &V)
+void TGaxis::Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
+                   ,Double_t XT, Double_t YT, Double_t &U,   Double_t &V)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*Rotate axis coordinates*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                        =======================

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootApplication.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -14,9 +14,9 @@
 // TRootApplication                                                     //
 //                                                                      //
 // This class create the ROOT native GUI version of the ROOT            //
-// application environment. This in contrast the Win32 version.         //
+// application environment. This in contrast to the Win32 version.      //
 // Once the native widgets work on Win32 this class can be folded into  //
-// the TApplication class (since all graphic will go via TVirtualX).         //
+// the TApplication class (since all graphic will go via TVirtualX).    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

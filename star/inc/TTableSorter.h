@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TTableSorter.h,v 1.1.1.1 2000/05/19 12:46:10 fisyak Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
-//  $Id: TTableSorter.h,v 1.24 2000/01/12 02:19:22 fine Exp $
+//  $Id: TTableSorter.h,v 1.1.1.1 2000/05/19 12:46:10 fisyak Exp $
 //
 //  TTableSorter  - Is an "observer" class to sort the TTable objects
 //                    The class provides an interface to the standard "C/C++"
@@ -39,6 +39,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////
 
+
 class table_head_st;
 class TTableSorter : public TNamed {
  private:
@@ -50,10 +51,10 @@ class TTableSorter : public TNamed {
          } fValue;
 
  protected:
-    typedef Int_t (*COMPAREMETHOD)(const void **, const void **);
-    typedef Int_t (*SEARCHMETHOD)(const void *, const void **);
-    typedef Int_t (*CALLQSORT)(const void *, const void *);
-//    enum EColumnType {kNAN, kFloat, kInt, kLong, kShort, kDouble, kUInt
+     typedef Int_t (*COMPAREMETHOD)(const void **, const void **);
+     typedef Int_t (*SEARCHMETHOD)(const void *, const void **);
+     typedef Int_t (*CALLQSORT)(const void *, const void *);
+//   enum EColumnType {kNAN, kFloat, kInt, kLong, kShort, kDouble, kUInt
 //                           ,kULong, kUShort, kUChar, kChar };
     void    **fSortIndex;    // Array of pointers to columns of the sorted table
     Int_t     fLastFound;    // The index of the last found index within fSortIndex

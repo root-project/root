@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -81,7 +81,7 @@ protected:
    virtual Double_t    GetY() {return fY;}
    virtual Double_t    GetZ() {return fZ;}
    virtual void        ImportShapeAttributes();
-   Bool_t              IsFolder();
+   Bool_t              IsFolder() const;
    virtual void        Local2Master(Double_t *local, Double_t *master);
    virtual void        Local2Master(Float_t *local, Float_t *master);
    virtual void        ls(Option_t *option="2"); // *MENU*

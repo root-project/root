@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.8 2000/06/29 10:07:02 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
 }
 
 //______________________________________________________________________________
-TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
+TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
                                      ,Int_t nbinsy,Axis_t ylow,Axis_t yup)
      :TH1(name,title,nbinsx,xbins)
 {
@@ -64,7 +64,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
 
 //______________________________________________________________________________
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t *ybins)
+                                     ,Int_t nbinsy,Double_t *ybins)
      :TH1(name,title,nbinsx,xlow,xup)
 {
    fDimension   = 2;
@@ -77,8 +77,22 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
 }
 
 //______________________________________________________________________________
-TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins)
+TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                           ,Int_t nbinsy,Double_t *ybins)
+     :TH1(name,title,nbinsx,xbins)
+{
+   fDimension   = 2;
+   fScalefactor = 1;
+   fTsumwy      = fTsumwy2 = fTsumwxy = 0;
+   if (nbinsy <= 0) nbinsy = 1;
+   if (ybins) fYaxis.Set(nbinsy,ybins);
+   else       fYaxis.Set(nbinsy,0,1);
+   fNcells      = (nbinsx+2)*(nbinsy+2);
+}
+
+//______________________________________________________________________________
+TH2::TH2(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                           ,Int_t nbinsy,Float_t *ybins)
      :TH1(name,title,nbinsx,xbins)
 {
    fDimension   = 2;
@@ -348,6 +362,8 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
 //          and only for bins in Y for which the corresponding projection
 //          along X has more than cut bins filled.
 //
+//  NOTE: To access the generated histograms in the current directory, do eg:
+//     TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
 
    Int_t nbins  = fYaxis.GetNbins();
    if (binmin < 1) binmin = 1;
@@ -369,10 +385,15 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    Int_t ipar;
    char name[80], title[80];
    TH1D *hlist[25];
+   TArrayD *bins = fYaxis.GetXbins();
    for (ipar=0;ipar<npar;ipar++) {
       sprintf(name,"%s_%d",GetName(),ipar);
       sprintf(title,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
-      hlist[ipar] = new TH1D(name,title, nbins, fYaxis.GetXmin(), fYaxis.GetXmax());
+      if (bins->fN == 0) {
+         hlist[ipar] = new TH1D(name,title, nbins, fYaxis.GetXmin(), fYaxis.GetXmax());
+      } else {
+         hlist[ipar] = new TH1D(name,title, nbins,bins->fArray);
+      }
       hlist[ipar]->GetXaxis()->SetTitle(fYaxis.GetTitle());
    }
    sprintf(name,"%s_chi2",GetName());
@@ -433,6 +454,9 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
 //          and only for bins in X for which the corresponding projection
 //          along Y has more than cut bins filled.
 //
+//  NOTE: To access the generated histograms in the current directory, do eg:
+//     TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
+//
 // A complete example of this function is given in begin_html <a href="examples/fitslicesy.C.html">tutorial:fitslicesy.C</a> end_html
 // with the following output:
 //Begin_Html
@@ -461,10 +485,15 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    Int_t ipar;
    char name[80], title[80];
    TH1D *hlist[25];
+   TArrayD *bins = fXaxis.GetXbins();
    for (ipar=0;ipar<npar;ipar++) {
       sprintf(name,"%s_%d",GetName(),ipar);
       sprintf(title,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
-      hlist[ipar] = new TH1D(name,title, nbins, fXaxis.GetXmin(), fXaxis.GetXmax());
+      if (bins->fN == 0) {
+         hlist[ipar] = new TH1D(name,title, nbins, fXaxis.GetXmin(), fXaxis.GetXmax());
+      } else {
+         hlist[ipar] = new TH1D(name,title, nbins,bins->fArray);
+      }
       hlist[ipar]->GetXaxis()->SetTitle(fXaxis.GetTitle());
    }
    sprintf(name,"%s_chi2",GetName());
@@ -627,7 +656,6 @@ Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2)
 
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
-   Int_t nbinsz = GetNbinsZ();
    if (binx1 < 0) binx1 = 0;
    if (binx2 > nbinsx+1) binx2 = nbinsx+1;
    if (binx2 < binx1)    binx2 = nbinsx;
@@ -637,18 +665,192 @@ Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2)
    Stat_t integral = 0;
 
 //*-*- Loop on bins in specified range
-   Int_t bin, binx, biny, binz;
-   for (binz=0;binz<=nbinsz+1;binz++) {
-      for (biny=biny1;biny<=biny2;biny++) {
-         for (binx=binx1;binx<=binx2;binx++) {
-            bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
-            integral += GetBinContent(bin);
-         }
+   Int_t bin, binx, biny;
+   for (biny=biny1;biny<=biny2;biny++) {
+      for (binx=binx1;binx<=binx2;binx++) {
+         bin = binx +(nbinsx+2)*biny;
+         integral += GetBinContent(bin);
       }
    }
    return integral;
 }
+        
+//______________________________________________________________________________
+Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
+{
+//  Statistical test of compatibility in shape between
+//  THIS histogram and h2, using Kolmogorov test.
+//     Default: Ignore under- and overflow bins in comparison
+//
+//     option is a character string to specify options
+//         "U" include Underflows in test
+//         "O" include Overflows 
+//         "N" include comparison of normalizations
+//         "D" Put out a line of "Debug" printout
+//
+//   The returned function value is the probability of test
+//       (much less than one means NOT compatible)
+//
+//  Code adapted by Rene Brun from original HBOOK routine HDIFF
 
+   TString opt = option;
+   opt.ToUpper();
+   
+   Double_t prb = 0;
+   TH1 *h1 = this;
+   if (h2 == 0) return 0;
+   TAxis *xaxis1 = h1->GetXaxis();
+   TAxis *xaxis2 = h2->GetXaxis();
+   TAxis *yaxis1 = h1->GetYaxis();
+   TAxis *yaxis2 = h2->GetYaxis();
+   Int_t ncx1   = xaxis1->GetNbins();
+   Int_t ncx2   = xaxis2->GetNbins();
+   Int_t ncy1   = yaxis1->GetNbins();
+   Int_t ncy2   = yaxis2->GetNbins();
+
+     // Check consistency of dimensions
+   if (h1->GetDimension() != 2 || h2->GetDimension() != 2) {
+      Error("KolmogorovTest","Histograms must be 2-D\n");
+      return 0;
+   }
+
+     // Check consistency in number of channels
+   if (ncx1 != ncx2) {
+      Error("KolmogorovTest","Number of channels in X is different, %d and %d\n",ncx1,ncx2);
+      return 0;
+   }
+   if (ncy1 != ncy2) {
+      Error("KolmogorovTest","Number of channels in Y is different, %d and %d\n",ncy1,ncy2);
+      return 0;
+   }
+    
+     // Check consistency in channel edges
+   Bool_t afunc1 = kFALSE;
+   Bool_t afunc2 = kFALSE;
+   Double_t difprec = 1e-5;
+   Double_t diff1 = TMath::Abs(xaxis1->GetXmin() - xaxis2->GetXmin());
+   Double_t diff2 = TMath::Abs(xaxis1->GetXmax() - xaxis2->GetXmax());
+   if (diff1 > difprec || diff2 > difprec) {
+      Error("KolmogorovTest","histograms with different binning along X");
+      return 0;
+   }
+   diff1 = TMath::Abs(yaxis1->GetXmin() - yaxis2->GetXmin());
+   diff2 = TMath::Abs(yaxis1->GetXmax() - yaxis2->GetXmax());
+   if (diff1 > difprec || diff2 > difprec) {
+      Error("KolmogorovTest","histograms with different binning along Y");
+      return 0;
+   }
+
+   //   Should we include Uflows, Oflows?
+   Int_t ibeg = 1, jbeg = 1;
+   Int_t iend = ncx1, jend = ncy1;
+   if (opt.Contains("U")) {ibeg = 0; jbeg = 0;}
+   if (opt.Contains("O")) {iend = ncx1+1; jend = ncy1+1;}
+   
+   Int_t i,j;
+   Double_t hsav;
+   Double_t sum1  = 0;
+   Double_t tsum1 = 0;
+   for (i=0;i<=ncx1+1;i++) {
+      for (j=0;j<=ncy1+1;j++) {
+         hsav = h1->GetCellContent(i,j);
+         tsum1 += hsav;
+         if (i >= ibeg && i <= iend && j >= jbeg && j <= jend) sum1 += hsav;
+      }
+   }
+   Double_t sum2  = 0;
+   Double_t tsum2 = 0;
+   for (i=0;i<=ncx1+1;i++) {
+      for (j=0;j<=ncy1+1;j++) {
+         hsav = h2->GetCellContent(i,j);
+         tsum2 += hsav;
+         if (i >= ibeg && i <= iend && j >= jbeg && j <= jend) sum2 += hsav;
+      }
+   }
+
+   //    Check that both scatterplots contain events
+   if (sum1 == 0) {
+      Error("KolmogorovTest","Integral is zero for h1=%s\n",h1->GetName());
+      return 0;
+   }
+   if (sum2 == 0) {
+      Error("KolmogorovTest","Integral is zero for h2=%s\n",h2->GetName());
+      return 0;
+   }
+
+   //    Check that scatterplots are not weighted or saturated
+   Double_t num1 = h1->GetEntries();
+   Double_t num2 = h2->GetEntries();
+   if (num1 != tsum1) {
+      Warning("KolmogorovTest","Saturation or weighted events for h1=%s, num1=%g, tsum1=%g\n",h1->GetName(),num1,tsum1);
+   }
+   if (num2 != tsum2) {
+      Warning("KolmogorovTest","Saturation or weighted events for h2=%s, num2=%g, tsum2=%g\n",h2->GetName(),num2,tsum2);
+   }
+
+   //   Find first Kolmogorov distance
+   Double_t s1 = 1/sum1;
+   Double_t s2 = 1/sum2;
+   Double_t dfmax = 0;
+   Double_t rsum1=0, rsum2=0;
+   for (i=ibeg;i<=iend;i++) {
+      for (j=jbeg;j<=jend;j++) {
+         rsum1 += s1*h1->GetCellContent(i,j);
+         rsum2 += s2*h2->GetCellContent(i,j);
+         dfmax  = TMath::Max(dfmax, TMath::Abs(rsum1-rsum2));
+      }
+   }
+
+   //   Find second Kolmogorov distance 
+   Double_t dfmax2 = dfmax = 0;
+   rsum1=0, rsum2=0;
+   for (j=jbeg;j<=jend;j++) {
+      for (i=ibeg;i<=iend;i++) {
+         rsum1 += s1*h1->GetCellContent(i,j);
+         rsum2 += s2*h2->GetCellContent(i,j);
+         dfmax  = TMath::Max(dfmax, TMath::Abs(rsum1-rsum2));
+      }
+   }
+
+   //    Get Kolmogorov probability
+   Double_t factnm;
+   if (afunc1)      factnm = dfmax*TMath::Sqrt(sum2);
+   else if (afunc2) factnm = dfmax*TMath::Sqrt(sum1);
+   else             factnm = TMath::Sqrt(sum1*sum2/(sum1+sum2));
+   Double_t z  = dfmax*factnm;
+   Double_t z2 = dfmax2*factnm;
+   
+   prb = TMath::KolmogorovProb(0.5*(z+z2));
+
+   Double_t prb1=0, prb2=0;
+   Double_t resum1, resum2, chi2, d12;
+   if (opt.Contains("N")) { //Combine probabilities for shape and normalization,
+      prb1   = prb;
+      resum1 = sum1; if (afunc1) resum1 = 0;
+      resum2 = sum2; if (afunc2) resum2 = 0;
+      d12    = sum1-sum2;
+      chi2   = d12*d12/(resum1+resum2);
+      prb2   = TMath::Prob(chi2,1);
+      //     see Eadie et al., section 11.6.2
+      if (prb > 0 && prb2 > 0) prb = prb*prb2*(1-TMath::Log(prb*prb2));
+      else                     prb = 0;
+   }
+
+   //    debug printout
+   if (opt.Contains("D")) {
+      printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
+      printf(" Kolmo Prob  h2 = %s, sum2=%g\n",h2->GetName(),sum2);
+      printf(" Kolmo Probabil = %f, Max Dist = %g\n",prb,dfmax);
+      if (opt.Contains("N")) 
+      printf(" Kolmo Probabil = %f for shape alone, =%f for normalisation alone\n",prb1,prb2);
+   }
+      // This numerical error condition should never occur:
+   if (TMath::Abs(rsum1-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h1=%s\n",h1->GetName());
+   if (TMath::Abs(rsum2-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h2=%s\n",h2->GetName());
+
+   return prb;
+}   
+   
 //______________________________________________________________________________
 TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Option_t *option)
 {
@@ -673,22 +875,25 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TProfile *h1 = new TProfile(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),option);
+  TProfile *h1;
+  TArrayD *bins = fYaxis.GetXbins();
+  if (bins->fN == 0) {
+     h1 = new TProfile(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),option);
+  } else {
+     h1 = new TProfile(pname,GetTitle(),nx,bins->fArray,option);
+  }
   if (pname != name)  delete [] pname;
 
 // Fill the profile histogram
   Double_t cont;
-  Double_t entries = 0;
   for (Int_t binx =0;binx<=nx+1;binx++) {
      for (Int_t biny=firstybin;biny<=lastybin;biny++) {
         cont =  GetCellContent(binx,biny);
         if (cont) {
            h1->Fill(fXaxis.GetBinCenter(binx),fYaxis.GetBinCenter(biny), cont);
-           entries += cont;
         }
      }
   }
-  h1->SetEntries(entries);
   return h1;
 }
 
@@ -716,22 +921,25 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TProfile *h1 = new TProfile(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax(),option);
+  TProfile *h1;
+  TArrayD *bins = fYaxis.GetXbins();
+  if (bins->fN == 0) {
+     h1 = new TProfile(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax(),option);
+  } else {
+     h1 = new TProfile(pname,GetTitle(),ny,bins->fArray,option);
+  }
   if (pname != name)  delete [] pname;
 
 // Fill the profile histogram
   Double_t cont;
-  Double_t entries = 0;
   for (Int_t biny =0;biny<=ny+1;biny++) {
      for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
         cont =  GetCellContent(binx,biny);
         if (cont) {
            h1->Fill(fYaxis.GetBinCenter(biny),fXaxis.GetBinCenter(binx), cont);
-           entries += cont;
         }
      }
   }
-  h1->SetEntries(entries);
   return h1;
 }
 
@@ -762,14 +970,19 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TH1D *h1 = new TH1D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax());
+  TH1D *h1;
+  TArrayD *bins = fXaxis.GetXbins();
+  if (bins->fN == 0) {
+     h1 = new TH1D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax());
+  } else {
+     h1 = new TH1D(pname,GetTitle(),nx,bins->fArray);
+  }
   Bool_t computeErrors = kFALSE;
   if (opt.Contains("e")) {h1->Sumw2(); computeErrors = kTRUE;}
   if (pname != name)  delete [] pname;
 
 // Fill the projected histogram
   Double_t cont,err,err2;
-  Double_t entries = 0;
   for (Int_t binx =0;binx<=nx+1;binx++) {
      err2 = 0;
      for (Int_t biny=firstybin;biny<=lastybin;biny++) {
@@ -778,12 +991,10 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
         err2 += err*err;
         if (cont) {
            h1->Fill(fXaxis.GetBinCenter(binx), cont);
-           entries += cont;
         }
      }
      if (computeErrors) h1->SetBinError(binx,TMath::Sqrt(err2));
   }
-  h1->SetEntries(entries);
   return h1;
 }
 
@@ -814,14 +1025,19 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TH1D *h1 = new TH1D(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
+  TH1D *h1;
+  TArrayD *bins = fYaxis.GetXbins();
+  if (bins->fN == 0) {
+     h1 = new TH1D(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
+  } else {
+     h1 = new TH1D(pname,GetTitle(),ny,bins->fArray);
+  }
   Bool_t computeErrors = kFALSE;
   if (opt.Contains("e")) {h1->Sumw2(); computeErrors = kTRUE;}
   if (pname != name)  delete [] pname;
 
 // Fill the projected histogram
   Double_t cont,err,err2;
-  Double_t entries = 0;
   for (Int_t biny =0;biny<=ny+1;biny++) {
      err2 = 0;
      for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
@@ -830,12 +1046,10 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
         err2 += err*err;
         if (cont) {
            h1->Fill(fYaxis.GetBinCenter(biny), cont);
-           entries += cont;
         }
      }
      if (computeErrors) h1->SetBinError(biny,TMath::Sqrt(err2));
   }
-  h1->SetEntries(entries);
   return h1;
 }
 
@@ -907,7 +1121,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
+TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
                                      ,Int_t nbinsy,Axis_t ylow,Axis_t yup)
      :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
@@ -916,15 +1130,23 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
 
 //______________________________________________________________________________
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t *ybins)
+                                     ,Int_t nbinsy,Double_t *ybins)
      :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
    TArrayC::Set(fNcells);
 }
 
 //______________________________________________________________________________
-TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins)
+TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins)
+     :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
+{
+   TArrayC::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins)
      :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
    TArrayC::Set(fNcells);
@@ -1102,7 +1324,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
+TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
                                      ,Int_t nbinsy,Axis_t ylow,Axis_t yup)
      :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
@@ -1111,15 +1333,23 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
 
 //______________________________________________________________________________
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t *ybins)
+                                     ,Int_t nbinsy,Double_t *ybins)
      :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
    TArrayS::Set(fNcells);
 }
 
 //______________________________________________________________________________
-TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins)
+TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins)
+     :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
+{
+   TArrayS::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins)
      :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
    TArrayS::Set(fNcells);
@@ -1296,7 +1526,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
+TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
                                      ,Int_t nbinsy,Axis_t ylow,Axis_t yup)
      :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
@@ -1306,7 +1536,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
 
 //______________________________________________________________________________
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t *ybins)
+                                     ,Int_t nbinsy,Double_t *ybins)
      :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
 
@@ -1314,8 +1544,16 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins)
+TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins)
+     :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
+{
+   TArrayF::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins)
      :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
    TArrayF::Set(fNcells);
@@ -1481,7 +1719,7 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
+TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
                                      ,Int_t nbinsy,Axis_t ylow,Axis_t yup)
      :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
@@ -1490,15 +1728,23 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
 
 //______________________________________________________________________________
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t *ybins)
+                                     ,Int_t nbinsy,Double_t *ybins)
      :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
    TArrayD::Set(fNcells);
 }
 
 //______________________________________________________________________________
-TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins)
+TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins)
+     :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
+{
+   TArrayD::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins)
      :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
    TArrayD::Set(fNcells);

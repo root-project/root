@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.4 2000/09/06 14:13:10 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -65,6 +65,7 @@ public:
    TDirectory(const char *name, const char *title, Option_t *option="");
    virtual ~TDirectory();
    virtual void        Append(TObject *obj);
+           void        Add(TObject *obj) { Append(obj); }
            Int_t       AppendKey(TKey *key);
    virtual void        Browse(TBrowser *b);
            void        Build();
@@ -76,6 +77,8 @@ public:
    virtual void        Delete(const char *namecycle="");
    virtual void        Draw(Option_t *option="");
    virtual void        FillBuffer(char *&buffer);
+   virtual TObject    *FindObject(const char *name) const;
+   virtual TObject    *FindObject(TObject *obj) const;
    virtual TObject    *Get(const char *namecycle);
    virtual TFile      *GetFile() {return fFile;}
    virtual TKey       *GetKey(const char *name, const Short_t cycle=9999);
@@ -87,9 +90,9 @@ public:
    virtual Seek_t      GetSeekParent() { return fSeekParent; }
    virtual Seek_t      GetSeekKeys() { return fSeekKeys; }
    virtual const char *GetPath() const;
-   Bool_t              IsFolder() { return kTRUE; }
-   Bool_t              IsModified() { return fModified; }
-   Bool_t              IsWritable() { return fWritable; }
+   Bool_t              IsFolder() const { return kTRUE; }
+   Bool_t              IsModified() const { return fModified; }
+   Bool_t              IsWritable() const { return fWritable; }
    virtual void        ls(Option_t *option="");
    virtual TDirectory *mkdir(const char *name, const char *title="");
    virtual void        Paint(Option_t *option="");
@@ -97,14 +100,14 @@ public:
    virtual void        Purge(Short_t nkeep=1);
    virtual void        pwd() const;
    virtual void        ReadAll(Option_t *option="");
-   virtual void        ReadKeys();
+   virtual Int_t       ReadKeys();
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        Save();
    virtual void        SaveSelf(Bool_t force = kFALSE);
    void                SetModified() {fModified = kTRUE;}
    void                SetMother(TObject *mother) {fMother = mother;}
    virtual Int_t       Sizeof() const;
-   virtual void        Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
+   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
    virtual void        WriteDirHeader();
    virtual void        WriteKeys();
 

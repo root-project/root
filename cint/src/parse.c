@@ -903,6 +903,18 @@ int *piout;
 	      G__srcfile[null_entry].fp = G__ifile.fp;
 	    }
 #endif
+#ifndef G__PHILIPPE25
+#ifndef G__OLDIMPLEMENTATION952
+            G__srcfile[null_entry].included_from=G__ifile.filenum;
+#endif
+#ifndef G__OLDIMPLEMENTATION1207
+            G__srcfile[null_entry].ispermanentsl = 0;
+            G__srcfile[null_entry].initsl = (G__DLLINIT)NULL;
+#endif
+#ifndef G__OLDIMPLEMENTATION1273
+            G__srcfile[null_entry].hasonlyfunc = (struct G__dictposition*)NULL;
+#endif
+#endif /* G__PHILIPPE25 */
 	    G__ifile.filenum = null_entry;
 	  }
 	  else {
@@ -928,7 +940,11 @@ int *piout;
 		 We need to need to carry this information on.
 		 If the previous file (G__ifile) was preprocessed, this one
 		 should also be. */
-	      if( G__cpp && G__srcfile[G__ifile.filenum].prepname[0] ) {
+	      if( G__cpp && 
+#ifndef G__OLDIMPLEMENTATION1323
+		  G__srcfile[G__ifile.filenum].prepname &&
+#endif
+		  G__srcfile[G__ifile.filenum].prepname[0] ) {
 		G__srcfile[G__nfile].prepname = 
 	       (char*)malloc(strlen(G__srcfile[G__ifile.filenum].prepname)+1);
 		strcpy(G__srcfile[G__nfile].prepname,
@@ -936,6 +952,19 @@ int *piout;
 		G__srcfile[G__nfile].fp = G__ifile.fp;
 	      }
 #endif
+#ifndef G__PHILIPPE25
+              /* Initilialize more of the data member see loadfile.c:1529 */
+#ifndef G__OLDIMPLEMENTATION952
+	      G__srcfile[G__nfile].included_from=G__ifile.filenum;
+#endif
+#ifndef G__OLDIMPLEMENTATION1207
+              G__srcfile[G__nfile].ispermanentsl = 0;
+              G__srcfile[G__nfile].initsl = (G__DLLINIT)NULL;
+#endif
+#ifndef G__OLDIMPLEMENTATION1273
+              G__srcfile[G__nfile].hasonlyfunc = (struct G__dictposition*)NULL;
+#endif
+#endif /* G__PHILIPPE25 */
 	      G__ifile.filenum = G__nfile;
 	      ++G__nfile;
 	    }
@@ -2306,32 +2335,38 @@ G__value G__exec_if()
     /* increment temp_read */
     c=G__fgetc();
     G__temp_read++;
-    if(c=='/') {
-      c=G__fgetc();
-      /*****************************
-       * new
-       *****************************/
-      switch(c) {
-      case '*':
-	if(G__skip_comment()==EOF) return(G__null);
+#ifndef G__OLDIMPLEMENTATION1375
+    while(c=='/' || c=='#') {
+#endif
+      if(c=='/') {
+	c=G__fgetc();
+	/*****************************
+	 * new
+	 *****************************/
+	switch(c) {
+	case '*':
+	  if(G__skip_comment()==EOF) return(G__null);
+	  break;
+	case '/':
+	  G__fignoreline();
 	break;
-      case '/':
-	G__fignoreline();
-	break;
-      default:
-	G__commenterror();
-	break;
+	default:
+	  G__commenterror();
+	  break;
       }
-      fgetpos(G__ifile.fp,&store_fpos);
-      store_line_number=G__ifile.line_number;
-      c=G__fgetc();
-      G__temp_read=1;
+	fgetpos(G__ifile.fp,&store_fpos);
+	store_line_number=G__ifile.line_number;
+	c=G__fgetc();
+	G__temp_read=1;
+      }
+      else if('#'==c) {
+	G__pp_command();
+	c=G__fgetc();
+	G__temp_read=1;
+      }
+#ifndef G__OLDIMPLEMENTATION1375
     }
-    else if('#'==c) {
-      G__pp_command();
-      c=G__fgetc();
-      G__temp_read=1;
-    }
+#endif
     if(c==EOF) {
       G__genericerror("Error: unexpected if() { } EOF");
       if(G__key!=0) system("key .cint_key -l execute");
@@ -2886,6 +2921,10 @@ G__value G__exec_statement()
 #ifndef G__OLDIMPLEMENTATION439
   int commentflag=0;
 #endif
+#ifndef G__PHILIPPE12
+  int add_fake_space = 0;
+  int fake_space = 0;
+#endif
 
   fgetpos(G__ifile.fp,&start_pos);
   start_line=G__ifile.line_number;
@@ -2896,7 +2935,15 @@ G__value G__exec_statement()
   result=G__null;
 
   while(1) {
-    c=G__fgetc();
+#ifndef G__PHILIPPE12
+    fake_space = 0;
+    if (add_fake_space && !double_quote && !single_quote) {
+      c = ' ';
+      add_fake_space = 0;
+      fake_space = 1;
+    } else 
+#endif
+      c=G__fgetc();
 
 /*#define G__OLDIMPLEMENTATION781*/
 #ifndef G__OLDIMPLEMENTATION781
@@ -3153,7 +3200,11 @@ G__value G__exec_statement()
 	    /* char**, char*&, int**, int*& */
 	    statement[iout-2]='\0';
 	    iout-=2;
-	    fseek(G__ifile.fp,-3,SEEK_CUR);
+#ifndef G__PHILIPPE12
+            if (fake_space) fseek(G__ifile.fp,-2,SEEK_CUR);
+            else 
+#endif
+	      fseek(G__ifile.fp,-3,SEEK_CUR);
 	    if(G__dispsource) G__disp_mask=2;
 	  }
 	  
@@ -3194,6 +3245,9 @@ G__value G__exec_statement()
 		result=G__new_operator(statement);
 		spaceflag = -1;
 		iout=0;
+#ifndef G__OLDIMPLEMENTATION698
+		if(0==mparen) return(result);
+#endif
 	      }
 #else
 	      statement[iout++] = c ;
@@ -3251,6 +3305,26 @@ G__value G__exec_statement()
 	      iout=0;
 	      break;
 	    }
+#ifndef G__OLDIMPLEMENTATION1350
+	    if(strcmp(statement,"(new")==0) {
+	      c=G__fgetspace();
+	      if('('==c) {
+		fseek(G__ifile.fp,-1,SEEK_CUR);
+		statement[iout++] = ' ' ;
+		spaceflag |= 1;
+	      }
+	      else {
+		statement[iout++] = ' ' ;
+		statement[iout++]=c;
+		if(G__dispsource) G__disp_mask=1;
+		c=G__fgetstream_template(statement+iout,")");
+		spaceflag |= 1;
+		iout = strlen(statement);
+		statement[iout++]=c;
+	      }
+	      break;
+	    }
+#endif
 	    if(strcmp(statement,"goto")==0) {
 	      G__CHECK(G__SECURE_GOTO,1,return(G__null));
 	      c=G__fgetstream(statement,";"); /* get label */
@@ -3610,6 +3684,7 @@ G__value G__exec_statement()
 	  }
 #ifndef G__OLDIMPLEMENTATION949
           else {
+            int namespace_tagnum;
 #ifdef G__NEVER 
 	    /* This part given by Scott Snyder causes problem on Redhat4.2
 	     * Linux 2.0.30  gcc -O. If optimizer is turned off, everything
@@ -3624,7 +3699,26 @@ G__value G__exec_statement()
             if (iout >= 2 &&
                 statement[iout-1] == ':' && statement[iout-2] == ':') {
               spaceflag = 0;
+            }
+            /* Allow for spaces before a scope operator. */
+#ifndef G__OLDIMPLEMENTATION1343
+	    if(!strchr(statement,'.') && !strstr(statement,"->")) {
+	      namespace_tagnum = G__defined_tagname(statement,2);
 	    }
+	    else {
+	      namespace_tagnum = -1;
+	    }
+#else
+            namespace_tagnum = G__defined_tagname(statement,2);
+#endif
+#ifndef G__PHILIPPE8
+            if (((namespace_tagnum!=-1) && (G__struct.type[namespace_tagnum]=='n'))
+		||(strcmp(statement,"std")==0)) {
+#else 
+            if ((namespace_tagnum!=-1) && (G__struct.type[namespace_tagnum]=='n')) {
+#endif
+              spaceflag = 0;	    
+            }
           }
 #endif
 	  ++spaceflag;
@@ -4119,8 +4213,19 @@ G__value G__exec_statement()
       else {
 	statement[iout++] = c ;
 	spaceflag |= 1;
+#ifndef G__PHILIPPE12
+	if(!double_quote && !single_quote) add_fake_space = 1;
+#endif
       }
       break;
+
+#ifndef G__PHILIPPE12
+    case '&' :  /* this cut a symbols! */
+      statement[iout++] = c ;
+      spaceflag |= 1;
+      if(!double_quote && !single_quote) add_fake_space = 1;
+      break;
+#endif
       
     case ':' :
       statement[iout++] = c ;
@@ -4159,6 +4264,9 @@ G__value G__exec_statement()
 	if(s) ++s;
 	else  s=statement;
 	if((1==spaceflag||2==spaceflag) && 
+#ifndef G__PHILIPPE15
+           (G__no_exec==0)&& 
+#endif
 	   (('~'==statement[0] && G__defined_templateclass(s+1)) ||
 	    G__defined_templateclass(s))) {
 #else

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -84,6 +84,7 @@ public:
    virtual void PaintPolyLine(Int_t n, Float_t *p, Option_t *option);
    virtual void PaintGLPointsObject(const TPoints3DABC *points, Option_t *option="");
    virtual void PaintBrik(Float_t vertex[24]);
+   virtual void PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz);
    virtual void PolygonGLMode(EG3D2GLmode face , EG3D2GLmode mode);
    virtual void PopGLMatrix();
    virtual void PushGLMatrix();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGDimension.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -47,7 +47,18 @@ public:
    TGPosition() { fX = fY = 0; }
    TGPosition(Int_t xc, Int_t yc) { fX = xc; fY = yc; }
    TGPosition(const TGPosition &p) { fX = p.fX; fY = p.fY; }
-   ClassDef(TGPosition,0)  // Position object (x and y)
+   ClassDef(TGPosition,0)  // Position object (x and y are Int_t)
+};
+
+class TGLongPosition {
+public:
+   Long_t  fX;         // x position
+   Long_t  fY;         // y position
+
+   TGLongPosition() { fX = fY = 0; }
+   TGLongPosition(Long_t xc, Long_t yc) { fX = xc; fY = yc; }
+   TGLongPosition(const TGLongPosition &p) { fX = p.fX; fY = p.fY; }
+   ClassDef(TGLongPosition,0)  // Position object (x and y are Long_t)
 };
 
 #endif

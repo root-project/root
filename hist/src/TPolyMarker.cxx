@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -121,7 +121,7 @@ void TPolyMarker::ExecuteEvent(Int_t, Int_t, Int_t)
 //______________________________________________________________________________
 void TPolyMarker::ls(Option_t *)
 {
-   IndentLevel();
+   TROOT::IndentLevel();
    printf("TPolyMarker  N=%d\n",fN);
 }
 

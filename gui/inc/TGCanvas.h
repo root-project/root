@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -70,13 +70,15 @@ public:
             ULong_t back = fgDefaultFrameBackground);
    virtual ~TGCanvas();
 
-   void AddFrame(TGFrame *f, TGLayoutHints *l = 0);
-   TGFrame *GetContainer() const { return fVport->GetContainer(); }
-   TGFrame *GetViewPort()  const { return fVport; }
+   TGFrame    *GetContainer() const { return fVport->GetContainer(); }
+   TGViewPort *GetViewPort() const { return fVport; }
+   virtual void AddFrame(TGFrame *f, TGLayoutHints *l = 0);
    virtual void SetContainer(TGFrame *f) { fVport->SetContainer(f); }
    virtual void MapSubwindows();
    virtual void DrawBorder();
    virtual void Layout();
+   virtual void SetHsbPosition(Int_t newPos);
+   virtual void SetVsbPosition(Int_t newPos);
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
 
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootHelpDialog.cxx,v 1.2 2000/07/03 18:55:32 rdm Exp $
 // Author: Fons Rademakers   24/02/98
 
 /*************************************************************************
@@ -33,7 +33,6 @@ TRootHelpDialog::TRootHelpDialog(const TGWindow *main,
    // Create a help text dialog.
 
    fView = new TGTextView(this, w, h, kSunkenFrame | kDoubleBorder);
-   //fView = new TGTextView(this, 10, 10, kSunkenFrame | kDoubleBorder);
    fL1 = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 3, 3, 3, 3);
    AddFrame(fView, fL1);
 
@@ -91,8 +90,9 @@ void TRootHelpDialog::AddText(const char *helpText)
 {
    // Add help text from helpText buffer to already existing text in TGTextView.
 
-   Warning("AddText", "adding text to help dialog not yet supported");
-   fView->LoadBuffer(helpText);
+   TGText tt;
+   tt.LoadBuffer(helpText);
+   fView->AddText(&tt);
 }
 
 //______________________________________________________________________________
@@ -104,12 +104,23 @@ void TRootHelpDialog::CloseWindow()
 }
 
 //______________________________________________________________________________
-Bool_t TRootHelpDialog::ProcessMessage(Long_t, Long_t, Long_t)
+Bool_t TRootHelpDialog::ProcessMessage(Long_t msg, Long_t, Long_t)
 {
    // Process OK button.
 
-   // Only one button and one action...
-   delete this;
+   switch (GET_MSG(msg)) {
+      case kC_COMMAND:
+         switch (GET_SUBMSG(msg)) {
+            case kCM_BUTTON:
+               // Only one button and one action...
+               delete this;
+               break;
+            default:
+               break;
+         }
+      default:
+         break;
+   }
 
    return kTRUE;
 }

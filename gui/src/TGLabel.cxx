@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -91,6 +91,7 @@ void TGLabel::SetText(TGString *new_text)
 {
    // Set new text in label. After calling this method one needs to call
    // the parents frame's Layout() method to force updating of the label size.
+   // The new_text is adopted by the TGLabel and will be properly deleted.
 
    if (fText) delete fText;
    fText        = new_text;

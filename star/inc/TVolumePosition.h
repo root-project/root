@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -58,7 +58,7 @@ class TVolumePosition  : public TObject {
         virtual Double_t    GetY() const {return fX[1];}
         virtual Double_t    GetZ() const {return fX[2];}
         virtual UInt_t      GetId() const {return fId;}
-        Bool_t              IsFolder() {return GetNode()?kTRUE:kFALSE;}
+        Bool_t              IsFolder() const {return GetNode()?kTRUE:kFALSE;}
         virtual Bool_t      Is3D()  {return kTRUE;}
         virtual Double_t   *Local2Master(const Double_t *local, Double_t *master,Int_t nPoints=1);
         virtual Float_t    *Local2Master(const Float_t *local, Float_t *master,Int_t nPoints=1);

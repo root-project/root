@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.2 2000/09/14 06:28:00 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -110,6 +110,7 @@ public:
    virtual void PaintPolyLine(Int_t n, Float_t *p, Option_t *option);
    virtual void PaintGLPointsObject(const TPoints3DABC *points, Option_t *option="");
    virtual void PaintBrik(Float_t vertex[24]);
+   virtual void PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz);
 
    virtual void SetRootLight(Bool_t flag=kTRUE) { fRootLight = flag; }
    virtual void SetLineAttr(Color_t color, Int_t width=1);
@@ -157,6 +158,7 @@ inline void TVirtualGL::PaintCone(Float_t *, Int_t, Int_t) { }
 inline void TVirtualGL::PaintPolyLine(Int_t, Float_t *, Option_t *) { }
 inline void TVirtualGL::PaintGLPointsObject(const TPoints3DABC *, Option_t *) { }
 inline void TVirtualGL::PaintBrik(Float_t [24]) { }
+inline void TVirtualGL::PaintXtru(Float_t *, Int_t, Int_t) { }
 inline void TVirtualGL::SetLineAttr(Color_t, Int_t) { }
 inline void TVirtualGL::UpdateMatrix(Double_t *, Double_t *, Bool_t) { }
 

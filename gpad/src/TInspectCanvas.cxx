@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.3 2000/09/08 07:41:00 brun Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -47,7 +47,7 @@ TInspectCanvas::TInspectCanvas() : TCanvas()
 
 //_____________________________________________________________________________
 TInspectCanvas::TInspectCanvas(UInt_t ww, UInt_t wh)
-            : TCanvas("inspect","The Canvas inspector",ww,wh)
+            : TCanvas("inspect","ROOT Object Inspector",ww,wh)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*InspectCanvas constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ========================
@@ -55,7 +55,7 @@ TInspectCanvas::TInspectCanvas(UInt_t ww, UInt_t wh)
    fBackward   = 0;
    fForward    = 0;
    fCurObject  = 0;
-   fObjects    = new TList(this);
+   fObjects    = new TList;
 }
 
 //______________________________________________________________________________
@@ -316,7 +316,7 @@ void TInspectCanvas::Inspector(TObject *obj)
 
   inspect->InspectObject(obj);
   inspect->GetObjects()->Add(obj);
-  obj->SetBit(kObjInCanvas);
+  obj->SetBit(kMustCleanup);
 
   if (padsav) padsav->cd();
 }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.2 2000/06/13 10:58:23 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -28,25 +28,28 @@
 class TGraphErrors : public TGraph {
 
 protected:
-    Float_t    *fEX;        //[fNpoints] array of X errors
-    Float_t    *fEY;        //[fNpoints] array of Y errors
+    Double_t    *fEX;        //[fNpoints] array of X errors
+    Double_t    *fEY;        //[fNpoints] array of Y errors
 
 public:
         TGraphErrors();
-        TGraphErrors(Int_t n, Float_t *x=0, Float_t *y=0, Float_t *ex=0, Float_t *ey=0);
+        TGraphErrors(Int_t n);
+        TGraphErrors(Int_t n, Float_t *x, Float_t *y, Float_t *ex=0, Float_t *ey=0);
+        TGraphErrors(Int_t n, Double_t *x, Double_t *y, Double_t *ex=0, Double_t *ey=0);
         virtual ~TGraphErrors();
-        virtual void    ComputeRange(Float_t &xmin, Float_t &ymin, Float_t &xmax, Float_t &ymax);
-        Float_t         GetErrorX(Int_t bin);
-        Float_t         GetErrorY(Int_t bin);
-        Float_t         *GetEX() {return fEX;}
-        Float_t         *GetEY() {return fEY;}
+        virtual void    ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
+        Double_t        GetErrorX(Int_t bin);
+        Double_t        GetErrorY(Int_t bin);
+        Double_t       *GetEX() {return fEX;}
+        Double_t       *GetEY() {return fEY;}
         virtual void    Paint(Option_t *chopt="");
         virtual void    Print(Option_t *chopt="");
         virtual void    SavePrimitive(ofstream &out, Option_t *option);
-        virtual void    SetPoint(Int_t i, Float_t x, Float_t y);
-        virtual void    SetPointError(Int_t i, Float_t ex, Float_t ey);
+        virtual void    Set(Int_t n);
+        virtual void    SetPoint(Int_t i, Double_t x, Double_t y);
+        virtual void    SetPointError(Int_t i, Double_t ex, Double_t ey);
 
-        ClassDef(TGraphErrors,1)  //a Graph with error bars
+        ClassDef(TGraphErrors,2)  //a Graph with error bars
 };
 
 #endif

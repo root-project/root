@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -42,7 +42,7 @@ TGroupButton::TGroupButton(): TButton()
 }
 
 //______________________________________________________________________________
-TGroupButton::TGroupButton(const char *groupname, const char *title, const char *method, Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2)
+TGroupButton::TGroupButton(const char *groupname, const char *title, const char *method, Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
            :TButton(title,method,x1,y1,x2,y2)
 {
 //*-*-*-*-*-*-*-*-*-*-*GroupButton normal constructor*-*-*-*-*-*-*-*-*-*-*-*
@@ -60,7 +60,7 @@ TGroupButton::~TGroupButton()
 }
 
 //______________________________________________________________________________
-void TGroupButton::DisplayColorTable(const char *action, Float_t x0, Float_t y0, Float_t wc, Float_t hc)
+void TGroupButton::DisplayColorTable(const char *action, Double_t x0, Double_t y0, Double_t wc, Double_t hc)
 {
 //*-*-*-*-*-*-*-*-*-*-*Display Color Table in an attribute canvas*-*-*-*-*-*-*
 //*-*                  ==========================================
@@ -68,7 +68,7 @@ void TGroupButton::DisplayColorTable(const char *action, Float_t x0, Float_t y0,
    TGroupButton *colorpad;
    Int_t i, j;
    Int_t color;
-   Float_t xlow, ylow, hs, ws;
+   Double_t xlow, ylow, hs, ws;
 
 //*-* draw colortable buttons
    hs = hc/5;
@@ -119,7 +119,7 @@ void TGroupButton::ExecuteAction()
    } else {
       TText *text = (TText*)GetListOfPrimitives()->First();
       Int_t npixels = Int_t((YtoPixel(0) - YtoPixel(1))*text->GetTextSize());
-      Float_t dy;
+      Double_t dy;
       pad = gROOT->GetSelectedPad();
       if (obj->InheritsFrom("TPaveLabel::Class()")) {
          TBox *pl = (TBox*)obj;

@@ -1,6 +1,6 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-// $Id: TFileSet.cxx,v 1.8 1999/10/27 23:21:27 fine Exp $
+// $Id: TFileSet.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 
 #include "TFileSet.h"
 #include "TBrowser.h"
@@ -115,11 +115,11 @@ Long_t TFileSet::HasData() const
 
    //  this must be like this:
    //  return !IsFolder() ;
-   //  Alas TObject::IsFolder() isn't defined as "const"
+   //  Alas TObject::IsFolder() isn't defined as "const" (IT IS in 2.25/03)
 }
 
 //______________________________________________________________________________
-Bool_t TFileSet::IsFolder()
+Bool_t TFileSet::IsFolder() const
 {
  // If the title of this TFileSet is "file" it is NOT folder
  // see: TFileSet(TString &dirname,const Char_t *setname,Bool_t expand)

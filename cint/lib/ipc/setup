@@ -1,0 +1,3 @@
+makecint -mk Makefile -dl $CINTSYSDIR/include/sys/ipc.dll -h ipcif.h
+make -f Makefile
+rm G__* Makefile

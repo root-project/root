@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.h,v 1.2 2000/09/05 09:21:22 brun Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -65,50 +65,52 @@ public:
 
    TGeometry();
    TGeometry(const char *name, const char *title);
-   virtual        ~TGeometry();
-   virtual void   Browse(TBrowser *b);
-   virtual void   cd(const char *path=0);
-   virtual void   Draw(Option_t *option="");
-   Float_t        GetBomb() const {return fBomb;}
-   Int_t          GeomLevel() const {return fGeomLevel;}
-   THashList      *GetListOfShapes() const  {return fShapes;}
-   TList          *GetListOfNodes()  const   {return fNodes;}
-   THashList      *GetListOfMaterials() const {return fMaterials;}
-   THashList      *GetListOfMatrices() const {return fMatrices;}
-   TNode          *GetCurrentNode()  const {return fCurrentNode;}
-   TMaterial      *GetMaterial(const char *name);
-   TMaterial      *GetMaterialByNumber(Int_t number);
-   TNode          *GetNode(const char *name);
-   TShape         *GetShape(const char *name);
-   TShape         *GetShapeByNumber(Int_t number);
-   TRotMatrix     *GetRotMatrix(const char *name);
-   TRotMatrix     *GetRotMatrixByNumber(Int_t number);
-   TRotMatrix     *GetCurrentMatrix() const;
-   TRotMatrix     *GetCurrentPosition(Double_t *x,Double_t *y,Double_t *z) const;
-   TRotMatrix     *GetCurrentPosition(Float_t *x,Float_t *y,Float_t *z) const;
-   Bool_t         GetCurrentReflection() const;
-   Bool_t         IsFolder() {return kTRUE;}
-   virtual void   Local2Master(Double_t *local, Double_t *master);
-   virtual void   Local2Master(Float_t *local, Float_t *master);
-   virtual void   ls(Option_t *option="rsn2");
-   virtual void   Master2Local(Double_t *master, Double_t *local);
-   virtual void   Master2Local(Float_t *master, Float_t *local);
-   virtual void   Node(const char *name, const char *title, const char *shapename, Double_t x=0, Double_t y=0, Double_t z=0
+   virtual           ~TGeometry();
+   virtual void      Browse(TBrowser *b);
+   virtual void      cd(const char *path=0);
+   virtual void      Draw(Option_t *option="");
+   virtual TObject  *FindObject(const char *name) const;
+   virtual TObject  *FindObject(TObject *obj) const;
+   Float_t           GetBomb() const {return fBomb;}
+   Int_t             GeomLevel() const {return fGeomLevel;}
+   THashList        *GetListOfShapes() const  {return fShapes;}
+   TList            *GetListOfNodes()  const   {return fNodes;}
+   THashList        *GetListOfMaterials() const {return fMaterials;}
+   THashList        *GetListOfMatrices() const {return fMatrices;}
+   TNode            *GetCurrentNode()  const {return fCurrentNode;}
+   TMaterial        *GetMaterial(const char *name);
+   TMaterial        *GetMaterialByNumber(Int_t number);
+   TNode            *GetNode(const char *name);
+   TShape           *GetShape(const char *name);
+   TShape           *GetShapeByNumber(Int_t number);
+   TRotMatrix       *GetRotMatrix(const char *name);
+   TRotMatrix       *GetRotMatrixByNumber(Int_t number);
+   TRotMatrix       *GetCurrentMatrix() const;
+   TRotMatrix       *GetCurrentPosition(Double_t *x,Double_t *y,Double_t *z) const;
+   TRotMatrix       *GetCurrentPosition(Float_t *x,Float_t *y,Float_t *z) const;
+   Bool_t            GetCurrentReflection() const;
+   Bool_t            IsFolder() const {return kTRUE;}
+   virtual void      Local2Master(Double_t *local, Double_t *master);
+   virtual void      Local2Master(Float_t *local, Float_t *master);
+   virtual void      ls(Option_t *option="rsn2");
+   virtual void      Master2Local(Double_t *master, Double_t *local);
+   virtual void      Master2Local(Float_t *master, Float_t *local);
+   virtual void      Node(const char *name, const char *title, const char *shapename, Double_t x=0, Double_t y=0, Double_t z=0
                         , const char *matrixname="", Option_t *option="");
-   virtual Int_t  PushLevel(){return fGeomLevel++;}
-   virtual Int_t  PopLevel(){return fGeomLevel>0?fGeomLevel--:0;}
-   virtual void   RecursiveRemove(TObject *obj);
-   virtual void   SetBomb(Float_t bomb=1.4) {fBomb = bomb;}
-   virtual void   SetCurrentNode(TNode *node) {fCurrentNode = node;}
-   virtual void   SetGeomLevel(Int_t level=0){fGeomLevel=level;}
-   virtual void   SetMatrix(TRotMatrix *matrix=0){fMatrix = matrix;}
-   virtual void   SetPosition(TRotMatrix *matrix, Double_t x=0,Double_t y=0,Double_t z=0);
-   virtual void   SetPosition(TRotMatrix *matrix, Float_t x,Float_t y,Float_t z);
-   virtual void   SetPosition(Double_t x,Double_t y,Double_t z);
-   virtual void   SetPosition(Float_t x,Float_t y,Float_t z);
-   virtual void   UpdateMatrix(TNode *node);
-   virtual void   UpdateTempMatrix(Double_t x=0, Double_t y=0, Double_t z=0, TRotMatrix *matrix=0);
-   virtual void   UpdateTempMatrix(Double_t x, Double_t y, Double_t z, Double_t *matrix,Bool_t isReflection=kFALSE);
+   virtual Int_t     PushLevel(){return fGeomLevel++;}
+   virtual Int_t     PopLevel(){return fGeomLevel>0?fGeomLevel--:0;}
+   virtual void      RecursiveRemove(TObject *obj);
+   virtual void      SetBomb(Float_t bomb=1.4) {fBomb = bomb;}
+   virtual void      SetCurrentNode(TNode *node) {fCurrentNode = node;}
+   virtual void      SetGeomLevel(Int_t level=0){fGeomLevel=level;}
+   virtual void      SetMatrix(TRotMatrix *matrix=0){fMatrix = matrix;}
+   virtual void      SetPosition(TRotMatrix *matrix, Double_t x=0,Double_t y=0,Double_t z=0);
+   virtual void      SetPosition(TRotMatrix *matrix, Float_t x,Float_t y,Float_t z);
+   virtual void      SetPosition(Double_t x,Double_t y,Double_t z);
+   virtual void      SetPosition(Float_t x,Float_t y,Float_t z);
+   virtual void      UpdateMatrix(TNode *node);
+   virtual void      UpdateTempMatrix(Double_t x=0, Double_t y=0, Double_t z=0, TRotMatrix *matrix=0);
+   virtual void      UpdateTempMatrix(Double_t x, Double_t y, Double_t z, Double_t *matrix,Bool_t isReflection=kFALSE);
 
    static TObjArray *Get(const char *name);
    static void       UpdateTempMatrix(Double_t *dx1,Double_t *rmat1,

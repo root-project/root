@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name$:$Id$ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -29,6 +29,7 @@
 #pragma link C++ function operator>=(const TTime&,const TTime&);
 
 #pragma link C++ class TExec+;
+#pragma link C++ class TFolder+;
 #pragma link C++ class TFree;
 #pragma link C++ class TKey-;
 #pragma link C++ class TKeyMapFile;
@@ -57,6 +58,7 @@
 #pragma link C++ class TSystem;
 #pragma link C++ class TSystemFile;
 #pragma link C++ class TSystemDirectory;
+#pragma link C++ class TTask+;
 #pragma link C++ class TTime;
 #pragma link C++ class TTimer;
 

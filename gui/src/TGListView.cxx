@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.2 2000/08/31 14:21:47 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -92,7 +92,7 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
       fCtw = new int[i];
       for (i = 0; fSubnames[i] != 0; ++i)
          fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
-                                   fSubnames[i]->GetLength());
+                                        fSubnames[i]->GetLength());
    } else {
       fCtw = 0;
    }
@@ -336,7 +336,7 @@ void TGLVContainer::SetColumns(Int_t *cpos, Int_t *jmode)
 //______________________________________________________________________________
 TGDimension TGLVContainer::GetMaxItemSize() const
 {
-   // Get maximum item size of all list view items in the container.
+   // Get size of largest item in container.
 
    TGDimension csize, maxsize(0,0);
 
@@ -355,6 +355,26 @@ TGDimension TGLVContainer::GetMaxItemSize() const
       maxsize.fHeight += 2;
    }
    return maxsize;
+}
+
+//______________________________________________________________________________
+Int_t TGLVContainer::GetMaxSubnameWidth(Int_t idx) const
+{
+   // Get width of largest subname in container.
+
+   if (idx == 0)
+      return GetMaxItemSize().fWidth;
+
+   Int_t width, maxwidth = 0;
+
+   TGFrameElement *el;
+   TIter next(fList);
+   while ((el = (TGFrameElement *) next())) {
+      TGLVEntry *entry = (TGLVEntry *) el->fFrame;
+      width = entry->GetSubnameWidth(idx-1);
+      maxwidth = TMath::Max(maxwidth, width);
+   }
+   return maxwidth;
 }
 
 //______________________________________________________________________________
@@ -575,6 +595,7 @@ void TGLVContainer::RemoveItem(TGLVEntry *item)
          item->DestroyWindow();
          delete item;
          fList->Remove(el);
+         delete el;
          break;
       }
    }
@@ -625,54 +646,13 @@ TGListView::TGListView(const TGWindow *p, UInt_t w, UInt_t h,
 {
    // Create a list view widget.
 
-   int i;
+   fViewMode  = kLVLargeIcons;
+   fNColumns  = 0;
+   fColumns   = 0;
+   fJmode     = 0;
+   fColHeader = 0;
 
-   fViewMode = kLVLargeIcons;
-
-   // for test only...
-   fColHeader[0] = new TGTextButton(this, new TGHotString("Name"),
-                                    1, fgDefaultGC, fgDefaultFontStruct);
-   fColHeader[1] = new TGTextButton(this, new TGHotString("Attributes"),
-                                    3, fgDefaultGC, fgDefaultFontStruct);
-   fColHeader[2] = new TGTextButton(this, new TGHotString("Size"),
-                                    2, fgDefaultGC, fgDefaultFontStruct);
-   fColHeader[3] = new TGTextButton(this, new TGHotString("Owner"),
-                                    3, fgDefaultGC, fgDefaultFontStruct);
-   fColHeader[4] = new TGTextButton(this, new TGHotString("Group"),
-                                    3, fgDefaultGC, fgDefaultFontStruct);
-   fColHeader[5] = new TGTextButton(this, new TGHotString("Modified"),
-                                    3, fgDefaultGC, fgDefaultFontStruct);
-   fColHeader[6] = new TGTextButton(this, new TGHotString(""),
-                                    4, fgDefaultGC, fgDefaultFontStruct);
-
-   fColHeader[0]->SetTextJustify(kTextLeft | kTextCenterY);
-   fColHeader[1]->SetTextJustify(kTextCenterX | kTextCenterY);
-   fColHeader[2]->SetTextJustify(kTextRight | kTextCenterY);
-   fColHeader[3]->SetTextJustify(kTextCenterX | kTextCenterY);
-   fColHeader[4]->SetTextJustify(kTextCenterX | kTextCenterY);
-   fColHeader[5]->SetTextJustify(kTextCenterX | kTextCenterY);
-   fColHeader[6]->SetTextJustify(kTextCenterX | kTextCenterY);
-
-   fColHeader[6]->SetState(kButtonDisabled);
-
-   //for (i = 0; i < 7; ++i)
-   //  TGCompositeFrame::AddFrame(fColHeader[i], 0);
-
-   int xl = fBorderWidth + fColHeader[0]->GetDefaultWidth() + 20 + 10;
-
-   for (i = 1; i < 7; ++i) {
-      fColumns[i-1] = xl;
-      xl += fColHeader[i]->GetDefaultWidth() + 20;
-   }
-   fColumns[6] = 0;
-
-   fJmode[0] = kTextCenterX;
-   fJmode[1] = kTextRight;
-   fJmode[2] = kTextCenterX;
-   fJmode[3] = kTextCenterX;
-   fJmode[4] = kTextCenterX;
-   fJmode[5] = kTextCenterX;
-   fJmode[6] = kTextCenterX;
+   SetDefaultHeaders();
 }
 
 //______________________________________________________________________________
@@ -680,29 +660,107 @@ TGListView::~TGListView()
 {
    // Delete a list view widget.
 
-   delete fColHeader[0];
-   delete fColHeader[1];
-   delete fColHeader[2];
-   delete fColHeader[3];
-   delete fColHeader[4];
-   delete fColHeader[5];
-   delete fColHeader[6];
+   if (fNColumns) {
+      delete [] fColumns;
+      delete [] fJmode;
+      for (int i = 0; i < fNColumns; i++)
+         delete fColHeader[i];
+      delete [] fColHeader;
+   }
 }
 
 //______________________________________________________________________________
-void TGListView::SetHeader(const char *s, Int_t mode, Int_t idx)
+void TGListView::SetHeaders(Int_t ncolumns)
 {
-   // Set header button idx (0-6), mode is the x text alignmode
-   // (ETextJustification).
+   // Set number of headers, i.e. columns that will be shown in detailed view.
+   // This method must be followed by exactly ncolumns SetHeader() calls,
+   // making sure that every header (i.e. idx) is set.
 
-   if (idx < 0 || idx > 6) {
-      Error("SetHeader", "header index must be between 0 - 6");
+   if (ncolumns <= 0) {
+      Error("SetHeaders", "number of columns must be > 0");
+      return;
+   }
+
+   if (fNColumns) {
+      delete [] fColumns;
+      delete [] fJmode;
+      for (int i = 0; i < fNColumns; i++) {
+         if (fColHeader[i]) fColHeader[i]->DestroyWindow();
+         delete fColHeader[i];
+      }
+      delete [] fColHeader;
+   }
+
+   fNColumns = ncolumns+1;    // one extra for the blank filler header
+   fColumns   = new int[fNColumns];
+   fJmode     = new int[fNColumns];
+   fColHeader = new TGTextButton* [fNColumns];
+   for (int i = 0; i < fNColumns; i++)
+      fColHeader[i] = 0;
+
+   // create blank filler header
+   fColHeader[fNColumns-1] = new TGTextButton(this, new TGHotString(""), -1,
+                                              fgDefaultGC, fgDefaultFontStruct);
+   fColHeader[fNColumns-1]->SetTextJustify(kTextCenterX | kTextCenterY);
+   fColHeader[fNColumns-1]->SetState(kButtonDisabled);
+   fJmode[fNColumns-1]   = kTextCenterX;
+   fColumns[fNColumns-1] = 0;
+}
+
+//______________________________________________________________________________
+void TGListView::SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
+{
+   // Set header button idx [0-fNColumns>, hmode is the x text alignmode
+   // (ETextJustification) for the header text and cmode is the x text
+   // alignmode for the item text.
+
+   if (idx < 0 || idx >= fNColumns-1) {
+      Error("SetHeader", Form("header index must be [0 - %d>", fNColumns-1));
       return;
    }
    delete fColHeader[idx];
    fColHeader[idx] = new TGTextButton(this, new TGHotString(s),
-                                      -1, fgDefaultGC, fgDefaultFontStruct);
-   fColHeader[idx]->SetTextJustify(mode | kTextCenterY);
+                                      idx, fgDefaultGC, fgDefaultFontStruct);
+   fColHeader[idx]->SetTextJustify(hmode | kTextCenterY);
+
+   // fJmode and fColumns contain values for columns idx > 0. idx==0 is
+   // the small icon with the object name
+   if (idx > 0)
+      fJmode[idx-1] = cmode;
+
+   if (!fColHeader[0]) return;
+   int xl = fBorderWidth + fColHeader[0]->GetDefaultWidth() + 20 + 10;
+   for (int i = 1; i < fNColumns; i++) {
+      fColumns[i-1] = xl;
+      if (!fColHeader[i]) break;
+      xl += fColHeader[i]->GetDefaultWidth() + 20;
+   }
+}
+
+//______________________________________________________________________________
+const char *TGListView::GetHeader(Int_t idx) const
+{
+   // Returns name of header idx. If illegal idx or header not set for idx
+   // 0 is returned.
+
+   if (idx >= 0 && idx < fNColumns-1 && fColHeader[idx])
+      return fColHeader[idx]->GetText()->GetString();
+   return 0;
+}
+
+//______________________________________________________________________________
+void TGListView::SetDefaultHeaders()
+{
+   // Default headers are: Name, Attributes, Size, Owner, Group, Modified.
+   // The default is good for file system items.
+
+   SetHeaders(6);
+   SetHeader("Name",       kTextLeft,    kTextLeft,    0);
+   SetHeader("Attributes", kTextCenterX, kTextCenterX, 1);
+   SetHeader("Size",       kTextRight,   kTextRight,   2);
+   SetHeader("Owner",      kTextCenterX, kTextCenterX, 3);
+   SetHeader("Group",      kTextCenterX, kTextCenterX, 4);
+   SetHeader("Modified",   kTextCenterX, kTextCenterX, 5);
 }
 
 //______________________________________________________________________________
@@ -750,11 +808,11 @@ void TGListView::Layout()
 
    if (fViewMode == kLVDetails) {
 
-      // for test only...
       h = fColHeader[0]->GetDefaultHeight()-4;
-      for (i = 0; i < 6; ++i) {
+      for (i = 0; i < fNColumns-1; ++i) {
          w = fColHeader[i]->GetDefaultWidth()+20;
-         if (i == 0) w = fMaxSize.fWidth + 10;
+         if (i == 0) w = TMath::Max(fMaxSize.fWidth + 10, w);
+         if (i > 0)  w = TMath::Max(container->GetMaxSubnameWidth(i) + 10, (Int_t)w);
          fColHeader[i]->MoveResize(xl, fBorderWidth, w, h);
          fColHeader[i]->MapWindow();
          xl += w;
@@ -767,7 +825,7 @@ void TGListView::Layout()
       container->SetColumns(fColumns, fJmode);
 
    } else {
-      for (i = 0; i < 7; ++i)
+      for (i = 0; i < fNColumns; ++i)
         fColHeader[i]->UnmapWindow();
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.3 2000/08/16 14:33:50 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -24,24 +24,12 @@ ClassImp(TText)
 //______________________________________________________________________________
 //
 //   TText is the base class for several text objects.
-//   See TAttText for a list of text attributes or fonts.
+//   See TAttText for a list of text attributes or fonts,
+//   and also for a discussion on text spped and font quality.
 //
 //  By default, the text is drawn in the pad coordinates system.
 //  One can draw in NDC coordinates [0,1] if the function SetNDC
 //  is called for a TText object.
-//  In case a text is drawn to a PostScript file (see TPostScript)
-//  the following characters have a special action:
-//
-//      ` : go to greek
-//      ' : go to special characters
-//      ~ : go to ZapfDingbats
-//      ? : go to subscript
-//      ^ : go to superscript
-//      ! : go to normal level of script
-//      & : backspace one character
-//      # : end of greek or of ZapfDingbats
-//
-//  This special characters have no effect on the screen.
 //
 
 //______________________________________________________________________________
@@ -51,7 +39,7 @@ TText::TText(): TNamed(), TAttText()
 //*-*                  ========================
 }
 //______________________________________________________________________________
-TText::TText(Coord_t x, Coord_t y, const char *text) : TNamed("",text), TAttText()
+TText::TText(Double_t x, Double_t y, const char *text) : TNamed("",text), TAttText()
 {
 //*-*-*-*-*-*-*-*-*-*-*Text normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =======================
@@ -104,7 +92,7 @@ Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
    }
    const char *text = GetTitle();
    Int_t len    = strlen(text);
-   Float_t fh   = (fTextSize*gPad->GetAbsHNDC())*Float_t(gPad->GetWh());
+   Double_t fh  = (fTextSize*gPad->GetAbsHNDC())*Double_t(gPad->GetWh());
    Int_t h      = Int_t(fh/2);
    Int_t w      = h*len;
    Int_t err = 1;
@@ -145,8 +133,8 @@ Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
      if (TMath::Abs(fTextAngle-270)<err) if ((px <= pxl && px >= pxt) && (py <= pyl && py >= pyt)) return 0;
      return 9999;
    }
-   Float_t co = TMath::Cos(fTextAngle*0.0175);
-   Float_t si = TMath::Sin(fTextAngle*0.0175);
+   Double_t co = TMath::Cos(fTextAngle*0.0175);
+   Double_t si = TMath::Sin(fTextAngle*0.0175);
    if (halign == 1) {
       switch (valign) {
          case 1 : Ax = ptx;                         Ay = pty; break;
@@ -187,7 +175,7 @@ Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-TText *TText::DrawText(Coord_t x, Coord_t y, const char *text)
+TText *TText::DrawText(Double_t x, Double_t y, const char *text)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this text with new coordinates*-*-*-*-*-*-*-*-*-*
 //*-*                  ===================================
@@ -200,7 +188,7 @@ TText *TText::DrawText(Coord_t x, Coord_t y, const char *text)
 }
 
 //______________________________________________________________________________
-TText *TText::DrawTextNDC(Coord_t x, Coord_t y, const char *text)
+TText *TText::DrawTextNDC(Double_t x, Double_t y, const char *text)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this text with new coordinates in NDC*-*-*-*-*-*
 //*-*                  ==========================================
@@ -224,19 +212,19 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Int_t kMaxDiff = 8;
    const char *text = GetTitle();
    Int_t len    = strlen(text);
-   Float_t sizetowin = gPad->GetAbsHNDC()*Float_t(gPad->GetWh());
-   Float_t fh   = (fTextSize*sizetowin);
+   Double_t sizetowin = gPad->GetAbsHNDC()*Double_t(gPad->GetWh());
+   Double_t fh  = (fTextSize*sizetowin);
    Int_t h      = Int_t(fh/2);
    Int_t w      = h*len;
    Short_t halign = fTextAlign/10;
    Short_t valign = fTextAlign - 10*halign;
-   Float_t co,si,dtheta,norm;
+   Double_t co,si,dtheta,norm;
    static Bool_t droite;
-   static Float_t theta;
+   static Double_t theta;
    Int_t Ax,Ay,Hx,Hy,Bx,By,Cx,Cy;
    Ax = Ay = 0;
-   Float_t lambda, x2,y2,xy;
-   Float_t dpx,dpy,xp1,yp1;
+   Double_t lambda, x2,y2,xy;
+   Double_t dpx,dpy,xp1,yp1;
 
    if (!gPad->IsEditable()) return;
 
@@ -289,10 +277,10 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       Bx = Ax-Int_t(si*h); By = Ay-Int_t(co*h);
       if (valign == 3) {Bx = Ax; By = Ay;}
       Cx = Bx+Int_t(co*w); Cy = By-Int_t(si*w);
-      lambda = Float_t(((px-Bx)*(Cx-Bx)+(py-By)*(Cy-By)))/Float_t(((Cx-Bx)*(Cx-Bx)+(Cy-By)*(Cy-By)));
-      x2 = Float_t(px) - lambda*Float_t(Cx-Bx)-Float_t(Bx);
-      y2 = Float_t(py) - lambda*Float_t(Cy-By)-Float_t(By);
-      xy = Float_t((px-Ax)*(px-Ax)+(py-Ay)*(py-Ay));
+      lambda = Double_t(((px-Bx)*(Cx-Bx)+(py-By)*(Cy-By)))/Double_t(((Cx-Bx)*(Cx-Bx)+(Cy-By)*(Cy-By)));
+      x2 = Double_t(px) - lambda*Double_t(Cx-Bx)-Double_t(Bx);
+      y2 = Double_t(py) - lambda*Double_t(Cy-By)-Double_t(By);
+      xy = Double_t((px-Ax)*(px-Ax)+(py-Ay)*(py-Ay));
       if ((TMath::Sqrt(x2*x2+y2*y2) < kMaxDiff/2) && (TMath::Sqrt(xy) <= w*0.3)) {
          if (fTextAngle == 0 || fTextAngle == 180) gPad->SetCursor(kArrowVer);
          else {
@@ -348,9 +336,9 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (hauteur == 3) {Bx = Ax-Int_t(si*h); By = Ay-Int_t(co*h);}
          else {Bx = Ax; By = Ay;}
          Cx = Bx+Int_t(co*w); Cy = By-Int_t(si*w);
-         lambda = Float_t(((px-Bx)*(Cx-Bx)+(py-By)*(Cy-By)))/Float_t(((Cx-Bx)*(Cx-Bx)+(Cy-By)*(Cy-By)));
-         x2 = Float_t(px) - lambda*Float_t(Cx-Bx)-Float_t(Bx);
-         y2 = Float_t(py) - lambda*Float_t(Cy-By)-Float_t(By);
+         lambda = Double_t(((px-Bx)*(Cx-Bx)+(py-By)*(Cy-By)))/Double_t(((Cx-Bx)*(Cx-Bx)+(Cy-By)*(Cy-By)));
+         x2 = Double_t(px) - lambda*Double_t(Cx-Bx)-Double_t(Bx);
+         y2 = Double_t(py) - lambda*Double_t(Cy-By)-Double_t(By);
          Size = Int_t(TMath::Sqrt(x2*x2+y2*y2)*2);
          if (Size<4) Size = 4;
 
@@ -405,7 +393,7 @@ void TText::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this text with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    ==================================
-   IndentLevel();
+   TROOT::IndentLevel();
    printf("Text  X=%f Y=%f Text=%s\n",fX,fY,GetTitle());
 }
 
@@ -421,7 +409,7 @@ void TText::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TText::PaintText(Coord_t x, Coord_t y, const char *text)
+void TText::PaintText(Double_t x, Double_t y, const char *text)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this text with new coordinates*-*-*-*-*-*-*-*-*-*
 //*-*                  ===================================
@@ -432,7 +420,7 @@ void TText::PaintText(Coord_t x, Coord_t y, const char *text)
 }
 
 //______________________________________________________________________________
-void TText::PaintTextNDC(Coord_t u, Coord_t v, const char *text)
+void TText::PaintTextNDC(Double_t u, Double_t v, const char *text)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this text with new coordinates in NDC*-*-*-*-*-*-*
 //*-*                  ==========================================
@@ -479,4 +467,30 @@ void TText::SetNDC(Bool_t isNDC)
     // Set NDC mode on if isNDC = kTRUE, off otherwise
    ResetBit(kTextNDC);
    if (isNDC) SetBit(kTextNDC);
+}
+
+//______________________________________________________________________________
+void TText::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TText.
+
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion();
+      TNamed::Streamer(R__b);
+      TAttText::Streamer(R__b);
+      if (R__v < 2) {
+         Float_t x,y;
+         R__b >> x; fX = x;
+         R__b >> y; fY = y;
+      } else {
+         R__b >> fX;
+         R__b >> fY;
+      }
+   } else {
+      R__b.WriteVersion(TText::IsA());
+      TNamed::Streamer(R__b);
+      TAttText::Streamer(R__b);
+      R__b << fX;
+      R__b << fY;
+   }
 }

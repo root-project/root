@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name$:$Id$
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.3 2000/08/18 06:27:31 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -185,6 +185,7 @@ public:
    void              Unload(const char *module);
    void              ListSymbols(const char *module, const char *re = "");
    void              ListLibraries(const char *regexp = "");
+   const char       *GetLibraries(const char *regexp = "", const char* option = "");
 
    //---- Time & Date
    TTime             Now();
@@ -207,7 +208,7 @@ public:
    virtual int             AnnounceTcpService(int port, Bool_t reuse, int backlog);
    virtual int             AnnounceUnixService(int port, int backlog);
    virtual int             AcceptConnection(int sock);
-   virtual void            CloseConnection(int sock);
+   virtual void            CloseConnection(int sock, Bool_t force = kFALSE);
    virtual int             RecvRaw(int sock, void *buffer, int length, int flag);
    virtual int             SendRaw(int sock, const void *buffer, int length, int flag);
    virtual int             RecvBuf(int sock, void *buffer, int length);

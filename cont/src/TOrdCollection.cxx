@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************
@@ -51,7 +51,11 @@ TOrdCollection::TOrdCollection(Int_t capacity)
 //______________________________________________________________________________
 TOrdCollection::~TOrdCollection()
 {
-   // Delete the collection. Objects are not deleted.
+   // Delete the collection. Objects are not deleted unless the TOrdCollection
+   // is the owner (set via SetOwner()).
+
+   if (IsOwner())
+      Delete();
 
    delete [] fCont;
    fCont = 0;
@@ -185,12 +189,17 @@ TObject *TOrdCollection::Before(TObject *obj) const
 //______________________________________________________________________________
 void TOrdCollection::Clear(Option_t *)
 {
-   // Remove all objects from the collection. Does not delete the objects.
+   // Remove all objects from the collection. Does not delete the objects
+   // unless the TOrdCollection is the owner (set via SetOwner()).
 
-   delete [] fCont;
-   fCont = 0;
-   Init(fCapacity);
-   fSize = 0;
+   if (IsOwner())
+      Delete();
+   else {
+      delete [] fCont;
+      fCont = 0;
+      Init(fCapacity);
+      fSize = 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -203,7 +212,10 @@ void TOrdCollection::Delete(Option_t *)
       if (obj && obj->IsOnHeap())
          TCollection::GarbageCollect(obj);
    }
-   Clear();
+   delete [] fCont;
+   fCont = 0;
+   Init(fCapacity);
+   fSize = 0;
 }
 
 //______________________________________________________________________________

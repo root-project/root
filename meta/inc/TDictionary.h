@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TDictionary.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   20/06/96
 
 /*************************************************************************
@@ -23,7 +23,7 @@
 // The dictionary is defined by the followling classes:                 //
 // TDataType                              (typedef definitions)         //
 // TGlobal                                (global variables)            //
-// TGlobalFunc                            (global functions)            //
+// TFunction                              (global functions)            //
 // TClass                                 (classes)                     //
 //    TBaseClass                          (base classes)                //
 //    TDataMember                         (class datamembers)           //

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name$:$Id$
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.3 2000/09/13 07:03:01 brun Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -30,6 +30,11 @@
 #include <errno.h>
 
 #include "rootdp.h"
+
+#if defined(R__GLIBC) || (defined(__FreeBSD__) && defined(__alpha__))
+#   define USE_SOCKLEN_T
+#endif
+
 
 double  gBytesSent = 0;
 double  gBytesRecv = 0;
@@ -170,7 +175,7 @@ int NetOpen(int inetdflag)
       if (gDebug > 0) {
 #ifdef _AIX
          size_t clilen = sizeof(tcp_cli_addr);
-#elif defined(R__GLIBC)
+#elif defined(USE_SOCKLEN_T)
          socklen_t clilen = sizeof(tcp_cli_addr);
 #else
          int clilen = sizeof(tcp_cli_addr);
@@ -180,6 +185,10 @@ int NetOpen(int inetdflag)
             if ((hp = gethostbyaddr((const char *)&tcp_cli_addr.sin_addr,
                                     sizeof(tcp_cli_addr.sin_addr), AF_INET)))
                strcpy(openhost, hp->h_name);
+            else {
+               struct in_addr *host_addr = (struct in_addr*)&tcp_cli_addr.sin_addr;
+               strcpy(openhost, inet_ntoa(*host_addr));
+            }
          }
          ErrorInfo("NetOpen: accepted connection from host %s", openhost);
 
@@ -200,7 +209,7 @@ int NetOpen(int inetdflag)
 again:
 #ifdef _AIX
    size_t clilen = sizeof(tcp_cli_addr);
-#elif defined(R__GLIBC)
+#elif defined(USE_SOCKLEN_T)
    socklen_t clilen = sizeof(tcp_cli_addr);
 #else
    int clilen = sizeof(tcp_cli_addr);
@@ -219,6 +228,10 @@ again:
       if ((hp = gethostbyaddr((const char *)&tcp_cli_addr.sin_addr,
                               sizeof(tcp_cli_addr.sin_addr), AF_INET)))
          strcpy(openhost, hp->h_name);
+      else {
+         struct in_addr *host_addr = (struct in_addr*)&tcp_cli_addr.sin_addr;
+         strcpy(openhost, inet_ntoa(*host_addr));
+      }
 
       ErrorInfo("NetOpen: accepted connection from host %s", openhost);
    }

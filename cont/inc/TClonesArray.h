@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -66,7 +66,7 @@ public:
    TObject         *AddrAt(Int_t i);
    TObject         *&operator[](Int_t i);
 
-   ClassDef(TClonesArray,2)  //An array of clone objects
+   ClassDef(TClonesArray,3)  //An array of clone objects
 };
 
 inline TObject *TClonesArray::AddrAt(Int_t i)

@@ -13,11 +13,11 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -Wall -fPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -Wall -fPIC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+CXXFLAGS      = -pipe -Wall -fPIC $(EXTRA_CXXFLAGS)
+CFLAGS        = -pipe -Wall -fPIC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -pipe -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__TMPFILE -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
-CINTCFLAGS    = -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+CINTCFLAGS    = -pipe -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__TMPFILE -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
 
 # Linker:
@@ -34,3 +34,5 @@ CILIBS        = -lm -ltermcap -lbsd -ldl -lg++ -rdynamic
 # Fortran:
 
 
+# Extras
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -L/usr/X11R6/lib -lXmu

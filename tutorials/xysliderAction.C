@@ -8,6 +8,7 @@
    Int_t binymax = ny*yslider->GetMaximum();
    hpxpy->GetYaxis()->SetRange(binymin,binymax);
    pad->cd();
-   hpxpy->Draw("lego1");
+   pad->Modified();
+   //hpxpy->Draw(hpxpy->GetDrawOption());
    c1->Update();
 }

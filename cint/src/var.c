@@ -773,11 +773,27 @@ int G__filescopeaccess(filenum,statictype)
 int filenum;
 int statictype;
 {
+#ifndef G__OLDIMPLEMENTATION1323
+  int store_filenum = filenum;
+  int store_statictype = statictype;
+#endif
   if(filenum==statictype) return(1);
   while(statictype>=0) {
     statictype = G__srcfile[statictype].included_from;
     if(filenum==statictype) return(1);
   }
+#ifndef G__OLDIMPLEMENTATION1323
+  statictype = store_statictype;
+  while(statictype>=0) {
+    filenum = store_filenum;
+    if(filenum==statictype) return(1);
+    statictype = G__srcfile[statictype].included_from;
+    while(filenum>=0) {
+      if(filenum==statictype) return(1);
+      filenum = G__srcfile[filenum].included_from;
+    }
+  }
+#endif
   return(0);
 }
 #endif
@@ -1400,7 +1416,11 @@ int isdecl;
 #endif
 	var=varlocal;
 	if(varglobal&&0==isdecl) {
+#ifndef G__OLDIMPLEMENTATION1366
+	  if(G__exec_memberfunc||(-1!=G__tagdefining&&-1!=scope_tagnum)) {
+#else
 	  if(G__exec_memberfunc) {
+#endif
 	    ilg=G__MEMBER;
 	  }
 	  else {
@@ -2379,7 +2399,11 @@ struct G__var_array *varglobal,*varlocal;
      * bytecode generation for G__letvariable()
      *******************************************************/
     G__ASSERT(0==G__decl || 1==G__decl);
-    if(G__asm_noverflow) {
+    if(G__asm_noverflow
+#ifndef G__OLDIMPLEMENTATION1349
+       && 0==G__decl_obj
+#endif
+       ) {
 #ifndef G__OLDIMPLEMENTATION1073
       if( (0==G__decl || !G__asm_wholefunction) ) { /* ??? */
 #endif
@@ -2455,10 +2479,9 @@ struct G__var_array *varglobal,*varlocal;
 	  return(result);
 	}
 #endif
-	if((0==G__prerun || G__COMPILEDGLOBAL==var->statictype[ig15])&& 
-#ifndef G__OLDIMPLEMENTATION946
-	   !G__decl &&
-#endif
+#ifndef G__OLDIMPLEMENTATION1364
+	if(((0==G__prerun && !G__decl) 
+	    || G__COMPILEDGLOBAL==var->statictype[ig15]) && 
 	   (islower(var->type[ig15])||
 	    ('p'==G__var_type&&(var->constvar[ig15]&G__PCONSTVAR))||
 	    ('v'==G__var_type&&(var->constvar[ig15]&G__CONSTVAR)))) {
@@ -2466,6 +2489,17 @@ struct G__var_array *varglobal,*varlocal;
 	  G__var_type='p';
 	  return(result);
 	}
+#else
+	if((0==G__prerun || G__COMPILEDGLOBAL==var->statictype[ig15]) && 
+	   !G__decl &&
+	   (islower(var->type[ig15])||
+	    ('p'==G__var_type&&(var->constvar[ig15]&G__PCONSTVAR))||
+	    ('v'==G__var_type&&(var->constvar[ig15]&G__CONSTVAR)))) {
+	  G__changeconsterror(var->varnamebuf[ig15],"ignored const");
+	  G__var_type='p';
+	  return(result);
+	}
+#endif
       }
       
       /*************************************************
@@ -3719,6 +3753,27 @@ struct G__var_array *varglobal,*varlocal;
 	return(result);
       }
 #endif
+
+#ifndef G__OLDIMPLEMENTATION1329
+      /* This is quite a tricky and unsophisticated way of dealing with
+       * typedef char charary[100]; access. NEED IMPROVEMENT sometime */
+      if(-1!=var->p_typetable[ig15] && 
+	 G__newtype.nindex[var->p_typetable[ig15]] && 
+	 'c'==tolower(var->type[ig15])) {
+	int typenumx = var->p_typetable[ig15];
+	char store_var_type = G__var_type;
+	int sizex = G__Lsizeof(G__newtype.name[typenumx]);
+	G__var_type = store_var_type;
+	if(p_inc>1) --p_inc; /* questionable */
+	switch(var->type[ig15]) {
+	case 'c': /* char */
+	  G__GET_VAR(sizex, char ,G__letint,'c','C')
+	case 'C': /* char */
+	  --paran;
+	  G__GET_VAR(sizex, char ,G__letint,'c','C')
+	}
+      }
+#endif
       
       switch(var->type[ig15]) {
 	
@@ -4153,7 +4208,11 @@ int objptr;  /* 1 : object , 2 : pointer */
 		   strchr(tagname,'*')|| strchr(tagname,'/')||
 		   strchr(tagname,'%')|| strchr(tagname,'&')||
 		   strchr(tagname,'|')|| strchr(tagname,'^')||
-		   strchr(tagname,'!') )) {
+		   strchr(tagname,'!')
+#ifndef G__OLDIMPLEMENTATION1351
+		   || strstr(tagname,"new ")
+#endif
+		   )) {
       result = G__getexpr(tagname);
       if(result.type) flag=1;
     }
@@ -4810,9 +4869,16 @@ long G__struct_offset; /* used to be int */
   long addr;
 
   if(G__asm_exec) {
+#ifndef G__OLDIMPLEMENTATION1340
+    void *p1 = (void*)(G__struct_offset+var->p[ig15]+p_inc*G__struct.size[var->p_tagtable[ig15]]);
+    void *p2 = (void*)result->obj.i ;
+    size_t size = (size_t)G__struct.size[var->p_tagtable[ig15]];
+    memcpy(p1,p2,size);
+#else
     memcpy((void *)(G__struct_offset+var->p[ig15]+p_inc*G__struct.size[var->p_tagtable[ig15]])
 	   ,(void *)(G__int(*result))
 	   ,(size_t)G__struct.size[var->p_tagtable[ig15]]);
+#endif
     return;
   }
   
@@ -4889,7 +4955,29 @@ long G__struct_offset; /* used to be int */
 #ifndef G__OLDIMPLEMENTATION1073
 	G__oprovld=1;
 #endif
+#ifndef G__OLDIMPLEMENTATION1373
+	{ /* rather big change, risk5, 2000/8/26 */
+	  int store_cp = G__asm_cp;
+	  int store_dt = G__asm_dt;
+	  G__getfunction(result7,&ig2 ,G__TRYCONSTRUCTOR);
+	  if(ig2 && G__asm_noverflow) {
+	    int x;
+	    G__asm_dt = store_dt;
+	    if(G__LD_FUNC==G__asm_inst[G__asm_cp-5]) {
+	      for(x=0;x<5;x++) 
+		G__asm_inst[store_cp+x] = G__asm_inst[G__asm_cp-5+x];
+	      G__asm_cp = store_cp + 5;
+	    }
+	    else if(G__LD_IFUNC==G__asm_inst[G__asm_cp-8]) {
+	      for(x=0;x<8;x++) 
+		G__asm_inst[store_cp+x] = G__asm_inst[G__asm_cp-8+x];
+	      G__asm_cp = store_cp + 8;
+	    }
+	  }
+	}
+#else
 	G__getfunction(result7,&ig2 ,G__TRYCONSTRUCTOR);
+#endif
 #ifndef G__OLDIMPLEMENTATION1073
 	G__oprovld=0;
 	if(G__asm_wholefunction && 0==ig2) {
@@ -5532,22 +5620,42 @@ int parameter00;
      ) {
     if(-1==result.tagnum) {
       G__var_type=result.type;
+#ifndef G__PHILIPPE21
+      if(0==G__const_noerror) {
+        /* to follow the example of other places .. Should printlinenum
+           be replaced by G__genericerror ? */
+#endif
       fprintf(G__serr
 	   ,"Warning: Automatic variable %s allocated in global scope",item);
       G__printlinenum();
+#ifndef G__PHILIPPE21
+      }
+#endif
     }
     else {
 #else
   if(0==G__definemacro&&G__NOLINK==G__globalcomp&&'p'==G__var_type&&
      -1!=result.tagnum) {
 #endif
-     /* undeclared variable assignment of class/struct will create 
-      * a global object of pointer or reference */
+#ifndef G__OLDIMPLEMENTATION1372
+    if(G__IsInMacro()) {
+      /* undeclared variable assignment of class/struct will create 
+       * a global object of pointer or reference */
+      autoobjectflag=1;
+      if(G__p_local) {
+	var=varglobal;
+	while(var->next) var=var->next;
+      }
+    }
+#else
+    /* undeclared variable assignment of class/struct will create 
+     * a global object of pointer or reference */
     autoobjectflag=1;
     if(G__p_local) {
       var=varglobal;
       while(var->next) var=var->next;
     }
+#endif
     store_var_type = G__var_type;
     store_tagnum = G__tagnum;
     store_typenum = G__typenum;
@@ -5789,7 +5897,7 @@ int parameter00;
     var->varlabel[var->allvar][ig25+1]=G__typedefindex[ig25];
   }
   for(i=0;i<paran;i++) {
-	 var->varlabel[var->allvar][++ig25]=G__int(para[i]);
+    var->varlabel[var->allvar][++ig25]=G__int(para[i]);
   }
   paran=ig25;
   
@@ -6382,7 +6490,7 @@ int parameter00;
     G__genericerror("Error: void type variable can not be declared");
     var->hash[ig15] = 0;
     break;
-    
+
   case 'm': /* macro file position */
     var->p[ig15] = G__malloc(1,sizeof(fpos_t),item);
     *(fpos_t *)var->p[ig15] = *(fpos_t *)result.obj.i;
@@ -6404,7 +6512,11 @@ int parameter00;
     }
     break;
     
-
+#ifndef G__OLDIMPLEMENTATION1347
+  case 'q': /* function, ???Questionable??? */
+    var->p[ig15] = G__malloc(p_inc,sizeof(long),item);
+    break;
+#endif
     
     /****************************************************
      * Automatic variable and macro
@@ -6428,8 +6540,15 @@ int parameter00;
 #endif
 #ifndef G__OLDIMPLEMENTATION1089
       /* Following code will never be used */
+#ifndef G__PHILIPPE21
+      if(0==G__const_noerror) {
+        /* the next comment seems obsolete. the code is sometimes used! */
+#endif
       fprintf(G__serr,"Error: Undeclared variable %s",item);
       G__genericerror((char*)NULL);
+#ifndef G__PHILIPPE21
+      }
+#endif
 #else
       fprintf(G__serr,"Warning: Undeclared symbol %s. Automatic variable allocated",item);
       G__printlinenum();

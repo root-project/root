@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.3 2000/07/06 16:47:54 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -57,7 +57,7 @@
 #include "TGFSComboBox.h"
 #include "TGStatusBar.h"
 #include "TGListTree.h"
-#include "TGTextView.h"
+#include "TGTextEdit.h"
 #include "TGToolTip.h"
 
 
@@ -171,6 +171,15 @@ GContext_t TGTextEntry::fgDefaultSelectedGC;
 GContext_t TGTextEntry::fgDefaultSelectedBackgroundGC;
 FontStruct_t TGTextEntry::fgDefaultFontStruct;
 Cursor_t TGTextEntry::fgDefaultCursor;
+Atom_t TGTextEntry::fgClipboard;
+
+Atom_t TGView::fgClipboard;
+GContext_t TGTextView::fgDefaultGC;
+GContext_t TGTextView::fgDefaultSelectedGC;
+GContext_t TGTextView::fgDefaultSelectedBackgroundGC;
+FontStruct_t TGTextView::fgDefaultFontStruct;
+
+Cursor_t TGTextEdit::fgDefaultCursor;
 
 GContext_t TGGroupFrame::fgDefaultGC;
 FontStruct_t TGGroupFrame::fgDefaultFontStruct;
@@ -198,8 +207,6 @@ GContext_t TGStatusBar::fgDefaultGC;
 FontStruct_t TGStatusBar::fgDefaultFontStruct;
 
 FontStruct_t TGListTree::fgDefaultFontStruct;
-
-FontStruct_t TGTextFrame::fgDefaultFontStruct;
 
 ULong_t TGToolTip::fgLightYellowPixel;
 
@@ -316,6 +323,9 @@ TGClient::TGClient(const char *dpyName)
    gMOTIF_WM_HINTS   = gVirtualX->InternAtom("_MOTIF_WM_HINTS", kFALSE);
    gROOT_MESSAGE     = gVirtualX->InternAtom("_ROOT_MESSAGE", kFALSE);
 
+   TGTextEntry::fgClipboard =
+   TGView::fgClipboard = gVirtualX->InternAtom("_ROOT_CLIPBOARD", kFALSE);
+
    // Create an object for the root window, create picture pool, etc...
 
    fGlobalNeedRedraw = kFALSE;
@@ -345,7 +355,7 @@ TGClient::TGClient(const char *dpyName)
    TGListTree::fgDefaultFontStruct =
    TGLVEntry::fgDefaultFontStruct = GetFontByName(small_font);
 
-   TGTextFrame::fgDefaultFontStruct = GetFontByName(prop_font);
+   TGTextView::fgDefaultFontStruct = GetFontByName(prop_font);
 
    GetColorByName("white", fWhite);  // white and black always exist
    GetColorByName("black", fBlack);
@@ -394,10 +404,12 @@ TGClient::TGClient(const char *dpyName)
    TGButton::fgDefaultGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
    TGTextLBEntry::fgDefaultGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
    TGTreeLBEntry::fgDefaultGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
+   TGTextView::fgDefaultGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
 
    TGFrame::fgDefaultFrameBackground = fBackColor;
    TGFrame::fgDefaultSelectedBackground = gval.fForeground = fSelBackColor;
    TGTextEntry::fgDefaultSelectedBackgroundGC =
+   TGTextView::fgDefaultSelectedBackgroundGC =
    TGPopupMenu::fgDefaultSelectedBackgroundGC =
       gVirtualX->CreateGC(fRoot->GetId(), &gval);
 
@@ -407,6 +419,7 @@ TGClient::TGClient(const char *dpyName)
    TGTextEntry::fgDefaultSelectedGC =
    TGMenuTitle::fgDefaultSelectedGC =
    TGPopupMenu::fgDefaultSelectedGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
+   TGTextView::fgDefaultSelectedGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
 
    gval.fFont = gVirtualX->GetFontHandle(TGLVEntry::fgDefaultFontStruct);
    gval.fForeground = fForeColor;
@@ -417,7 +430,8 @@ TGClient::TGClient(const char *dpyName)
    TGComboBoxPopup::fgDefaultCursor =
    TGMenuBar::fgDefaultCursor =
    TGPopupMenu::fgDefaultCursor = gVirtualX->CreateCursor(kArrowRight);
-   TGTextEntry::fgDefaultCursor = gVirtualX->CreateCursor(kCaret);
+   TGTextEntry::fgDefaultCursor =
+   TGTextEdit::fgDefaultCursor = gVirtualX->CreateCursor(kCaret);
 
    gVirtualX->GetWindowAttributes(fRoot->GetId(), root_attr);
    TGPicturePool::fgDefaultColormap = root_attr.fColormap;
@@ -435,6 +449,7 @@ TGClient::TGClient(const char *dpyName)
    gval.fBackground = fBackColor;
    gval.fFillStyle  = kFillTiled;
    gval.fTile       = checkered;
+   gval.fGraphicsExposures = kFALSE;
    TGButton::fgHibckgndGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
 
    TGRadioButton::fgR1 = gVirtualX->CreateBitmap(fRoot->GetId(),
@@ -475,6 +490,11 @@ TGClient::TGClient(const char *dpyName)
    gval.fGraphicsExposures = kFALSE;
    TGLVContainer::fgLineGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
    gVirtualX->SetDashes(TGLVContainer::fgLineGC, 0, "\x1\x1", 2);
+
+   gval.fMask = kGCFont;
+   gval.fFont = gVirtualX->GetFontHandle(TGTextView::fgDefaultFontStruct);
+   gVirtualX->ChangeGC(TGTextView::fgDefaultGC, &gval);
+   gVirtualX->ChangeGC(TGTextView::fgDefaultSelectedGC, &gval);
 
    fWaitForWindow = kNone;
 
@@ -667,7 +687,7 @@ TGClient::~TGClient()
    gVirtualX->DeleteFont(TGPopupMenu::fgDefaultFontStruct);
    gVirtualX->DeleteFont(TGPopupMenu::fgHilightFontStruct);
    gVirtualX->DeleteFont(TGLVEntry::fgDefaultFontStruct);
-   gVirtualX->DeleteFont(TGTextFrame::fgDefaultFontStruct);
+   gVirtualX->DeleteFont(TGTextView::fgDefaultFontStruct);
 
    gVirtualX->DeleteGC(TGButton::fgDefaultGC);
    gVirtualX->DeleteGC(TGButton::fgHibckgndGC);
@@ -742,7 +762,8 @@ void TGClient::WaitFor(TGWindow *w)
 {
    // Wait for window to be destroyed.
 
-   Window_t wsave = fWaitForWindow;
+   Window_t wsave    = fWaitForWindow;
+   EGEventType esave = fWaitForEvent;
 
    fWaitForWindow = w->GetId();
    fWaitForEvent  = kDestroyNotify;
@@ -751,6 +772,7 @@ void TGClient::WaitFor(TGWindow *w)
       gSystem->InnerLoop();
 
    fWaitForWindow = wsave;
+   fWaitForEvent  = esave;
 }
 
 //______________________________________________________________________________
@@ -758,7 +780,8 @@ void TGClient::WaitForUnmap(TGWindow *w)
 {
    // Wait for window to be unmapped.
 
-   Window_t wsave = fWaitForWindow;
+   Window_t wsave    = fWaitForWindow;
+   EGEventType esave = fWaitForEvent;
 
    fWaitForWindow = w->GetId();
    fWaitForEvent  = kUnmapNotify;
@@ -767,6 +790,7 @@ void TGClient::WaitForUnmap(TGWindow *w)
       gSystem->InnerLoop();
 
    fWaitForWindow = wsave;
+   fWaitForEvent  = esave;
 }
 
 //______________________________________________________________________________

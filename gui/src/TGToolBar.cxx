@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -22,11 +22,10 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGToolBar + TGHorizontal3DLine                                       //
+// TGToolBar                                                            //
 //                                                                      //
 // A toolbar is a composite frame that contains TGPictureButtons.       //
-// A horizontal 3D line is a line that typically separates a toolbar    //
-// from the menubar.                                                    //
+// Often used in combination with a TGHorizontal3DLine.                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -37,7 +36,6 @@
 
 
 ClassImp(TGToolBar)
-ClassImp(TGHorizontal3DLine)
 
 //______________________________________________________________________________
 TGToolBar::TGToolBar(const TGWindow *p, UInt_t w, UInt_t h,

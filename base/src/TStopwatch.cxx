@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.2 2000/06/22 14:34:08 brun Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -156,7 +156,8 @@ Double_t TStopwatch::GetRealTime(){
    return(Double_t)clock() / gTicks;
 #elif defined(R__UNIX)
    struct tms cpt;
-   return (Double_t)times(&cpt) / gTicks;
+   Double_t trt =  (Double_t)times(&cpt);
+   return trt / (double)gTicks;
 #elif defined(R__VMS)
   return(Double_t)clock()/gTicks;
 #elif defined(WIN32)

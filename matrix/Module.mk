@@ -21,7 +21,7 @@ MATRIXH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 MATRIXS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MATRIXO      := $(MATRIXS:.cxx=.o)
 
-MATRIXDEP    := $(MATRIXO:.o=.d)
+MATRIXDEP    := $(MATRIXO:.o=.d) $(MATRIXDO:.o=.d)
 
 MATRIXLIB    := $(LPATH)/libMatrix.$(SOEXT)
 

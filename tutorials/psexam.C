@@ -10,6 +10,7 @@
    title->Draw();
 
    pt1 = new TPaveText(.1,.5,.9,.8);
+   pt1->SetTextFont(61);
    pt1->SetFillColor(18);
    pt1->AddText("K\355nstler in den gr\345\373ten st\311dten");
    pt1->AddText("\253\265 l@'\372uvre on conna\333t l@'artisan\273");
@@ -19,6 +20,7 @@
 
 
    pt2 = new TPaveText(.1,.1,.9,.4);
+   pt2->SetTextFont(61);
    pt2->SetFillColor(18);
    pt2->SetTextSize(0.04);
    pt2->AddText("e^+!e^-! '5# Z^0! '5# ll&^-!, qq&^\261!");

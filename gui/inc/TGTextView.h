@@ -1,5 +1,5 @@
-// @(#)root/gui:$Name$:$Id$
-// Author: Fons Rademakers   23/02/98
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.5 2000/07/07 00:29:49 rdm Exp $
+// Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,85 +17,87 @@
 //                                                                      //
 // TGTextView                                                           //
 //                                                                      //
-// A TGTextView displays a file or a text buffer in a frame with a      //
-// vertical scrollbar. Internally it uses a TGTextFrame which displays  //
-// the text.                                                            //
+// A TGTextView is a text viewer widget. It is a specialization of      //
+// TGView. It uses the TGText class (which contains all text            //
+// manipulation code, i.e. loading a file in memory, changing,          //
+// removing lines, etc.). Use a TGTextView to view non-editable text.   //
+// For supported messages see TGView.                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
-#include "TGFrame.h"
+#ifndef ROOT_TGView
+#include "TGView.h"
+#endif
+#ifndef ROOT_TGText
+#include "TGText.h"
 #endif
 
 
-class TGVScrollBar;
-
-
-class TGTextFrame : public TGFrame {
+class TGTextView : public TGView {
 
 friend class TGClient;
 
 protected:
-   char       **fChars;      // lines of text
-   Int_t       *fLnlen;      // length of each line
-   Int_t        fTHeight;    // height of line of text
-   Int_t        fNlines;     // number of lines
-   Int_t        fMaxLines;   // maximum number of lines in fChars and fLnlen
-   Int_t        fTop;        // current top line
-   FontStruct_t fFont;       // font used to display text
-   GContext_t   fGC;         // graphics context to display text
+   TGText         *fText;         // text buffer
+   TGText         *fClipText;     // clipboard text buffer
+   FontStruct_t    fFont;         // text font
+   Int_t           fMaxAscent;    // maximum ascent in font
+   Int_t           fMaxDescent;   // maximum descent in font
+   Int_t           fMaxWidth;     // maximum width of character in font
+   GContext_t      fNormGC;       // graphics context for drawing text
+   GContext_t      fSelGC;        // graphics context for drawing marked text
+   GContext_t      fSelbackGC;    // graphics context for drawing marked background
+   Bool_t          fMarkedFromX;  // true if text is marked from x
+   Bool_t          fMarkedFromY;  // true if text is marker from y
+   Bool_t          fDeleteGC;     // delete widget specific contexts
 
+   static GContext_t    fgDefaultGC, fgDefaultSelectedGC,
+                        fgDefaultSelectedBackgroundGC;
    static FontStruct_t  fgDefaultFontStruct;
 
-   void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
-   void ScrollWindow(Int_t new_top);
-   void Expand(Int_t newSize);
+   void Init(ULong_t bg);
+   virtual void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   virtual void Mark(Long_t xPos, Long_t yPos);
+   virtual void UnMark();
+   virtual void Copy(TObject &) { MayNotUse("Copy(TObject &)"); }
 
 public:
-   TGTextFrame(TGWindow *parent, UInt_t w, UInt_t h, UInt_t options,
-               ULong_t back = fgDefaultFrameBackground);
-   virtual ~TGTextFrame();
+   TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id = -1,
+              UInt_t sboptions = 0, ULong_t back = fgWhitePixel);
+   TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
+              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = fgWhitePixel);
+   TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, const char *string,
+              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = fgWhitePixel);
 
-   Bool_t LoadFile(const char *fname);
-   Bool_t LoadBuffer(const char *txtbuf);
-   void   Clear(Option_t *opt = "");
-   Int_t  GetLines() const { return fNlines; }
-   Int_t  GetVisibleLines() const { return (fHeight / fTHeight); }
-   void   SetTopLine(Int_t new_top);
-
-   virtual Bool_t HandleExpose(Event_t *event) {
-       DrawRegion(event->fX, event->fY, event->fWidth, event->fHeight);
-       return kTRUE;
-   }
-
-   ClassDef(TGTextFrame,0)  //Frame containing (multi-line) text
-};
-
-
-class TGTextView : public TGCompositeFrame {
-
-protected:
-   TGTextFrame   *fTextCanvas;
-   TGVScrollBar  *fVsb;
-
-public:
-   TGTextView(TGWindow *parent, UInt_t w, UInt_t h,
-              UInt_t options = kChildFrame,
-              ULong_t back = fgDefaultFrameBackground);
    virtual ~TGTextView();
 
-   Bool_t LoadFile(const char *fname);
-   Bool_t LoadBuffer(const char *txtbuf);
-   void   Clear(Option_t *opt = "");
+   virtual Bool_t IsSaved() { fIsSaved = fText->IsSaved(); return fIsSaved;}
+   virtual Long_t ToObjXCoord(Long_t xCoord, Long_t line);
+   virtual Long_t ToObjYCoord(Long_t yCoord);
+   virtual Long_t ToScrXCoord(Long_t xCoord, Long_t line);
+   virtual Long_t ToScrYCoord(Long_t yCoord);
+   virtual void   AdjustWidth();
+   virtual Bool_t LoadFile(const char *fname, long startpos = 0, long length = -1);
+   virtual Bool_t LoadBuffer(const char *txtbuf);
+   virtual void   Clear(Option_t * = "");
+   virtual Bool_t Copy();
+   virtual Bool_t SelectAll();
+   virtual Bool_t Search(const char *string, Bool_t direction, Bool_t caseSensitive);
+   virtual void   SetFont(FontStruct_t font);
+   virtual Long_t ReturnHeighestColHeight() { return fText->RowCount()*fScrollVal.fY; }
+   virtual Long_t ReturnLongestLineWidth();
+   virtual Long_t ReturnLineLength(Long_t line) { return fText->GetLineLength(line); }
+   virtual Long_t ReturnLongestLine() { return fText->GetLongestLine(); }
+   virtual Long_t ReturnLineCount() { return fText->RowCount(); }
+   virtual Bool_t HandleButton(Event_t *event);
+   virtual Bool_t HandleSelectionRequest(Event_t *event);
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   virtual void   Layout();
-   virtual void   DrawBorder();
-   virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
+   virtual void SetText(TGText *text);
+   virtual void AddText(TGText *text);
+   virtual void AddLine(const char *string);
+   TGText      *GetText() const { return fText; }
 
-   const TGTextFrame *GetTextFrame() const { return fTextCanvas; }
-
-   ClassDef(TGTextView,0)  //Text view widget (contains a text frame and vertical scrollbar)
+   ClassDef(TGTextView,0)  // Editable text widget base class (links TGText to TGEditView)
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.2 2000/08/04 13:14:44 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #endif
 
 class TGPicture;
+class TGToolTip;
 
 
 class TGListTreeItem {
@@ -52,8 +53,8 @@ private:
    TGListTreeItem  *fNextsibling;  // pointer to next sibling
    Bool_t           fOpen;         // true if item is open
    Bool_t           fActive;       // true if item is active
-   char            *fText;         // item text
-   Int_t            fLength;       // length of item text
+   TString          fText;         // item text
+   TString          fTipText;      // tooltip text
    Int_t            fY;            // y position of item
    Int_t            fXtext;        // x position of item text
    Int_t            fYtext;        // y position of item text
@@ -76,7 +77,8 @@ public:
    TGListTreeItem *GetNextSibling() const { return fNextsibling; }
    Bool_t          IsActive() const { return fActive; }
    Bool_t          IsOpen() const { return fOpen; }
-   const char     *GetText() const { return fText; }
+   const char     *GetText() const { return fText.Data(); }
+   const char     *GetTipText() const { return fTipText.Data(); }
    void            SetUserData(void *userData) { fUserData = userData; }
    void           *GetUserData() const { return fUserData; }
    void            SetPictures(const TGPicture *opened, const TGPicture *closed);
@@ -107,6 +109,9 @@ protected:
    Int_t            fExposeTop;      // top y postion of visible region
    Int_t            fExposeBottom;   // bottom y position of visible region
    const TGWindow  *fMsgWindow;      // pointer to window handling list messages
+   TGToolTip       *fTip;            // tooltip shown when moving over list items
+   TGListTreeItem  *fTipItem;        // item for which tooltip is set
+   Bool_t           fAutoTips;       // assume item->fUserData is TObject and use GetTitle() for tip text
 
    static FontStruct_t   fgDefaultFontStruct;
 
@@ -119,6 +124,7 @@ protected:
                   UInt_t *retwidth, UInt_t *retheight);
    void  DrawItemName(TGListTreeItem *item);
    void  DrawNode(TGListTreeItem *item, Int_t x, Int_t y);
+   void  SetToolTipText(const char *text, Int_t x, Int_t y, Long_t delayms);
 
    void  HighlightItem(TGListTreeItem *item, Bool_t state, Bool_t draw);
    void  HighlightChildren(TGListTreeItem *item, Bool_t state, Bool_t draw);
@@ -140,6 +146,8 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleDoubleClick(Event_t *event);
    virtual Bool_t HandleExpose(Event_t *event);
+   virtual Bool_t HandleCrossing(Event_t *event);
+   virtual Bool_t HandleMotion(Event_t *event);
 
    virtual void Associate(const TGWindow *w) { fMsgWindow = w; }
 
@@ -154,10 +162,14 @@ public:
                            const TGPicture *closed = 0);
    void  RenameItem(TGListTreeItem *item, const char *string);
    Int_t DeleteItem(TGListTreeItem *item);
+   void  OpenItem(TGListTreeItem *item);
+   void  CloseItem(TGListTreeItem *item);
    Int_t RecursiveDeleteItem(TGListTreeItem *item, void *userData);
    Int_t DeleteChildren(TGListTreeItem *item);
    Int_t Reparent(TGListTreeItem *item, TGListTreeItem *newparent);
    Int_t ReparentChildren(TGListTreeItem *item, TGListTreeItem *newparent);
+   void  SetToolTipItem(TGListTreeItem *item, const char *string);
+   void  SetAutoTips(Bool_t on = kTRUE) { fAutoTips = on; }
 
    Int_t Sort(TGListTreeItem *item);
    Int_t SortSiblings(TGListTreeItem *item);

@@ -21,7 +21,7 @@ PROOFH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PROOFS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 PROOFO       := $(PROOFS:.cxx=.o)
 
-PROOFDEP     := $(PROOFO:.o=.d)
+PROOFDEP     := $(PROOFO:.o=.d) $(PROOFDO:.o=.d)
 
 PROOFLIB     := $(LPATH)/libProof.$(SOEXT)
 
@@ -36,7 +36,7 @@ INCLUDEFILES += $(PROOFDEP)
 include/%.h:    $(PROOFDIRI)/%.h
 		cp $< $@
 
-$(PROOFLIB):    $(PROOFO) $(PROOFDO) $(MAINLIBS) $(TREELIB) $(HISTLIB)
+$(PROOFLIB):    $(PROOFO) $(PROOFDO) $(MAINLIBS) $(PROOFLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libProof.$(SOEXT) $@ "$(PROOFO) $(PROOFDO)" \
 		   "$(PROOFLIBEXTRA)"

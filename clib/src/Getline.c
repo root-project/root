@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.3 2000/06/16 15:23:01 rdm Exp $ */
 /* Author: */
 
 /*
@@ -257,6 +257,7 @@ int             (*gl_tab_hook)(char *buf, int prompt_width, int *loc) = gl_tab;
 
 static int      gl_init_done = -1;      /* terminal mode flag  */
 static int      gl_notty = 0;           /* 1 when not a tty */
+static int      gl_eof = 0;             /* 1 when not a tty and read() == -1 */
 static int      gl_termw = 80;          /* actual terminal width */
 static int      gl_scroll = 27;         /* width of EOL scrolling region */
 static int      gl_width = 0;           /* net size available for input */
@@ -352,10 +353,14 @@ static void     search_forw(int s);     /* look forw for current string */
 #endif
 
 #if defined(__linux__) && defined(__powerpc__)
-#   define R__MKLINUX       //  MKLINUX = linux on PowerMac
+#   define R__MKLINUX       // = linux on PowerMac
+#endif
+#if defined(__linux__) && defined(__alpha__)
+#   define R__ALPHALINUX    // = linux on Alpha
 #endif
 
-#if defined(TIOCGETP) && !defined(__sgi) && !defined(R__MKLINUX)   /* use BSD interface if possible */
+#if defined(TIOCGETP) && !defined(__sgi) && !defined(R__MKLINUX) && \
+   !defined(R__ALPHALINUX)  /* use BSD interface if possible */
 #include <sgtty.h>
 struct sgttyb   new_tty, old_tty;
 struct tchars   tch;
@@ -363,7 +368,8 @@ struct ltchars  ltch;
 #else
 #ifdef SIGTSTP          /* need POSIX interface to handle SUSP */
 #include <termios.h>
-#if defined(__sun) || defined(__sgi) || defined(R__MKLINUX)
+#if defined(__sun) || defined(__sgi) || defined(R__MKLINUX) || \
+    defined(R__ALPHALINUX)
 #undef TIOCGETP         /* Solaris and SGI define TIOCGETP in <termios.h> */
 #undef TIOCSETP
 #endif
@@ -967,9 +973,20 @@ Getlinem(int mode, char *prompt)
         }
         if (mode == 1) return NULL;
     }
+    if (c == -1 && gl_notty)
+       gl_eof = 1;
+    else
+       gl_eof = 0;
+
     gl_cleanup();
     gl_buf[0] = 0;
     return gl_buf;
+}
+
+int
+Gl_eof()
+{
+   return gl_eof;
 }
 
 char *
@@ -1294,6 +1311,8 @@ Gl_histinit(char *file)
    gl_savehist = 0;
 
    hist_init();
+   
+   if (!strcmp(file, "-")) return;
 
    sprintf(gl_histfile, "%s", file);
 

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.2 2000/09/08 16:11:02 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -56,7 +56,7 @@ protected:
 
 public:
    TList() { fFirst = fLast = fCache = 0; }
-   TList(TObject *parent) : TSeqCollection(parent) { fFirst=fLast=fCache=0; }
+   TList(TObject *) { fFirst = fLast = fCache = 0; } // for backward compatibility, don't use
    virtual           ~TList();
    virtual void      Clear(Option_t *option="");
    virtual void      Delete(Option_t *option="");

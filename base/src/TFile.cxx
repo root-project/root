@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.5 2000/09/05 09:21:22 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -74,8 +74,10 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 //            = RECREATE        create a new file, if the file already
 //                              exists it will be overwritten.
 //            = UPDATE          open an existing file for writing.
+//                              if no file exists, it is created.
 //            = READ            open an existing file for reading.
-//  Use IsOpen() to check if the file is opened successfuly.
+//  If the constructor failed in any way IsZombie() will return true.
+//  Use IsOpen() to check if the file is (still) open.
 //
 //  The parameter name is used to identify the file in the current job
 //    name may be different in a job writing the file and another job
@@ -224,10 +226,10 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    }
    if (update) {
       if (gSystem->AccessPathName(fname, kFileExists)) {
-         Error("TFile", "file %s does not exist", fname);
-         goto zombie;
+         update = kFALSE;
+         create = kTRUE;
       }
-      if (gSystem->AccessPathName(fname, kWritePermission)) {
+      if (update && gSystem->AccessPathName(fname, kWritePermission)) {
          Error("TFile", "no write permission, could not open file %s", fname);
          goto zombie;
       }
@@ -313,7 +315,7 @@ void TFile::Init(Bool_t create)
 
 //*-*---------------NEW file
    if (create) {
-      fFree        = new TList(this);
+      fFree        = new TList;
       fBEGIN       = kBegin;    //First used word in file following the file header
       fEND         = fBEGIN;    //Pointer to end of file
       new TFree(fBEGIN, max_file_size);  //Create new free list
@@ -360,7 +362,7 @@ void TFile::Init(Bool_t create)
       delete [] header;
 //*-*-------------Read Free segments structure if file is writable
       if (fWritable) {
-        fFree = new TList(this);
+        fFree = new TList;
         if (fSeekFree > fBEGIN) {
            ReadFree();
         } else {
@@ -658,11 +660,11 @@ void TFile::ls(Option_t *option)
 //  then objects on the file
 //
 
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<ClassName()<<"**\t\t"<<GetName()<<"\t"<<GetTitle()<<endl;
-   TObject::IncreaseDirLevel();
+   TROOT::IncreaseDirLevel();
    TDirectory::ls(option);
-   TObject::DecreaseDirLevel();
+   TROOT::DecreaseDirLevel();
 }
 
 //______________________________________________________________________________
@@ -866,7 +868,7 @@ void TFile::Recover()
 
    fEND = (Int_t)size;
 
-   if (fWritable && !fFree) fFree  = new TList(this);
+   if (fWritable && !fFree) fFree  = new TList;
 
    TKey *key;
    Int_t nrecov = 0;
@@ -1000,7 +1002,7 @@ void TFile::SumBuffer(Int_t bufsize)
 }
 
 //______________________________________________________________________________
-void TFile::Write(const char *, Int_t opt, Int_t bufsiz)
+Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
 {
 //*-*-*-*-*-*-*-*-*-*Write memory objects to this file*-*-*-*-*-*-*-*-*-*
 //*-*                =================================
@@ -1016,7 +1018,7 @@ void TFile::Write(const char *, Int_t opt, Int_t bufsiz)
 
    if (!IsWritable()) {
       Warning("Write", "file not opened in write mode");
-      return;
+      return 0;
    }
 
    TDirectory *cursav = gDirectory;
@@ -1029,11 +1031,12 @@ void TFile::Write(const char *, Int_t opt, Int_t bufsiz)
          Printf("TFile Writing Name=%s Title=%s", GetName(), GetTitle());
    }
 
-   TDirectory::Write(0, opt, bufsiz); // Write directory tree
+   Int_t nbytes = TDirectory::Write(0, opt, bufsiz); // Write directory tree
    WriteFree();                       // Write free segments linked list
    WriteHeader();                     // Now write file header
 
    cursav->cd();
+   return nbytes;
 }
 
 //______________________________________________________________________________
@@ -1144,6 +1147,8 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle, Int_t
    // specifies a local file. If that is the case the file will be opened
    // via a normal TFile. To force the opening of a local file via a
    // TNetFile use either TNetFile directly or specify as host "localhost".
+   // For the meaning of the options and other arguments see the constructors
+   // of the individual file classes.
 
    TFile *f = 0;
 

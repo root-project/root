@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.4 2000/09/05 09:21:22 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -9,30 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #ifdef WIN32
-#if defined(__hpux) && !defined(__GNUG__)
-#pragma OPTIMIZE OFF
-#endif
-
-#if defined(_AIX) && !defined(__GNUG__)
-#endif
-
-#if defined(__alpha) && !defined(__GNUG__)
-#endif
-
-#if defined(__sun) && !defined(__GNUG__)
-#endif
-
-#if defined(__sgi) && !defined(__GNUG__)
-#endif
-
-#if defined(_linux)
-#endif
-
-#ifdef WIN32
 #pragma optimize("",off)
 #endif
 
-#endif
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TMapFile                                                             //
@@ -122,9 +101,9 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
-#if defined(R__HPUX) || defined (R__ALPHA) || defined (R__SOLARIS) || \
-    defined(R__AIX) || defined(R__HIUX) || defined (R__MKLINUX) || \
-    __GLIBC_MINOR__ > 0
+#if defined(R__HPUX) || (defined (R__ALPHA) && !defined(R__FBSD)) || \
+    defined (R__SOLARIS) || defined(R__AIX) || defined(R__HIUX) || \
+    defined (R__MKLINUX) || __GLIBC_MINOR__ > 0
 union semun {
    int val;                      // value for SETVAL
    struct semid_ds *buf;         // buffer for IPC_STAT & IPC_SET
@@ -267,10 +246,10 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
    }
    if (update) {
       if (gSystem->AccessPathName(fname, kFileExists)) {
-         Error("TMapFile", "file %s does not exist", fname);
-         goto zombie;
+         update = kFALSE;
+         create = kTRUE;
       }
-      if (gSystem->AccessPathName(fname, kWritePermission)) {
+      if (update && gSystem->AccessPathName(fname, kWritePermission)) {
          Error("TMapFile", "no write permission, could not open file %s", fname);
          goto zombie;
       }
@@ -962,7 +941,7 @@ void TMapFile::Print(Option_t *)
 }
 
 //______________________________________________________________________________
-Bool_t TMapFile::IsFolder()
+Bool_t TMapFile::IsFolder() const
 {
    // Returns kTRUE in case object is a folder (i.e. contains browsable lists).
 

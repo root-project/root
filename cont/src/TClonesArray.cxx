@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.2 2000/09/08 16:11:02 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -156,6 +156,9 @@ void TClonesArray::Clear(Option_t *)
    // Clear the clones array. Only use this routine when your objects don't
    // allocate memory since it will not call the object dtors.
 
+   // Protect against erroneously setting of owner bit
+   SetOwner(kFALSE);
+
    TObjArray::Clear();
 }
 
@@ -174,6 +177,9 @@ void TClonesArray::Delete(Option_t *)
          TObject::SetDtorOnly(fCont[i]);
          delete fCont[i];
       }
+
+   // Protect against erroneously setting of owne bit.
+   SetOwner(kFALSE);
 
    TObjArray::Clear();
 }
@@ -357,9 +363,10 @@ void TClonesArray::Streamer(TBuffer &b)
 
    if (b.IsReading()) {
       Version_t v = b.ReadVersion();
-      if (v > 1) {
+      if (v > 2)
+         TObject::Streamer(b);
+      if (v > 1)
          fName.Streamer(b);
-      }
       s.Streamer(b);
       TClass *cl = gROOT->GetClass(s.Data());
       b >> nobjects;
@@ -397,6 +404,7 @@ void TClonesArray::Streamer(TBuffer &b)
       Changed();
    } else {
       b.WriteVersion(TClonesArray::IsA());
+      TObject::Streamer(b);
       fName.Streamer(b);
       s = fClass->GetName();
       s.Streamer(b);

@@ -22,7 +22,7 @@ PYTHIAH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PYTHIAS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 PYTHIAO      := $(PYTHIAS:.cxx=.o)
 
-PYTHIADEP    := $(PYTHIAO:.o=.d)
+PYTHIADEP    := $(PYTHIAO:.o=.d) $(PYTHIADO:.o=.d)
 
 PYTHIALIB    := $(LPATH)/libEGPythia.$(SOEXT)
 
@@ -37,11 +37,11 @@ INCLUDEFILES += $(PYTHIADEP)
 include/%.h:    $(PYTHIADIRI)/%.h
 		cp $< $@
 
-$(PYTHIALIB):   $(PYTHIAO) $(PYTHIADO) $(MAINLIBS) $(EGLIB)
+$(PYTHIALIB):   $(PYTHIAO) $(PYTHIADO) $(MAINLIBS) $(PYTHIALIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libEGPythia.$(SOEXT) $@ \
 		   "$(PYTHIAO) $(PYTHIADO)" \
-		   "$(PYTHIALIBEXTRA) $(PYTHIA)"
+		   "$(PYTHIALIBEXTRA)"
 
 $(PYTHIADS):    $(PYTHIAH1) $(PYTHIAL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."

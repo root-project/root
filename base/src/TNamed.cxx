@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.2 2000/09/05 09:21:22 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -90,7 +90,7 @@ void TNamed::ls(Option_t *)
 {
    // List TNamed name and title.
 
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
         << Int_t(TestBit(kCanDelete)) << endl;
 }
@@ -113,7 +113,7 @@ void TNamed::SetName(const char *name)
    // For example the list of objects in the current directory is a THashList
 
    fName = name;
-   if (gPad && TestBit(kObjInCanvas)) gPad->Modified();
+   if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 //______________________________________________________________________________
@@ -124,7 +124,7 @@ void TNamed::SetObject(const char *name, const char *title)
 
    fName  = name;
    fTitle = title;
-   if (gPad && TestBit(kObjInCanvas)) gPad->Modified();
+   if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 //______________________________________________________________________________
@@ -133,7 +133,7 @@ void TNamed::SetTitle(const char *title)
    // Change (i.e. set) the title of the TNamed.
 
    fTitle = title;
-   if (gPad && TestBit(kObjInCanvas)) gPad->Modified();
+   if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 //______________________________________________________________________________

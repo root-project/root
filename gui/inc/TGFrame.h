@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -128,7 +128,8 @@ protected:
    static GContext_t  fgShadowGC;
    static GContext_t  fgBckgndGC;
    static Time_t      fgLastClick;
-   static UInt_t      fgLastButton, fgDbx, fgDby;
+   static UInt_t      fgLastButton;
+   static Int_t       fgDbx, fgDby;
    static Window_t    fgDbw;
 
    static ULong_t     GetDefaultFrameBackground();

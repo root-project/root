@@ -7,7 +7,8 @@ void G__set_c_environmentG__stdstrct() {
   G__add_compiledheader("stdstr.h");
   G__c_reset_tagtableG__stdstrct();
 }
-int G__c_dllrevG__stdstrct() { return(51111); }
+#include "dllrev.h"
+int G__c_dllrevG__stdstrct() { return(G__CREATEDLLREV); }
 
 /* Setting up global function */
 
@@ -148,6 +149,7 @@ void G__c_reset_tagtableG__stdstrct() {
   G__G__stdstrctLN_dAldiv_t.tagnum = -1 ;
 }
 
+
 void G__c_setup_tagtableG__stdstrct() {
 
    /* Setting up class,struct,union tag entry */
@@ -157,7 +159,7 @@ void G__c_setup_tagtableG__stdstrct() {
    G__tagtable_setup(G__get_linked_tagnum(&G__G__stdstrctLN_dAldiv_t),sizeof(ldiv_t),-2,0,(char*)NULL,G__setup_memvardAldiv_t,NULL);
 }
 void G__c_setupG__stdstrct() {
-  G__check_setup_version(51111,"G__c_setupG__stdstrct()");
+  G__check_setup_version(G__CREATEDLLREV,"G__c_setupG__stdstrct()");
   G__set_c_environmentG__stdstrct();
   G__c_setup_tagtableG__stdstrct();
 

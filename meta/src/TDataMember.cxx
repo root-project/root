@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -428,7 +428,7 @@ Int_t TDataMember::GetArrayDim() const
 }
 
 //______________________________________________________________________________
-const char    *TDataMember::GetArrayIndex() const
+const char *TDataMember::GetArrayIndex() const
 {
   // If the data member is pointer and has a valid array size in its comments
   // GetArrayIndex returns a string pointing to it;
@@ -548,7 +548,7 @@ TList *TDataMember::GetOptions()
 }
 
 //______________________________________________________________________________
-TMethodCall  *TDataMember::GetterMethod()
+TMethodCall *TDataMember::GetterMethod()
 {
    // Return a TMethodCall method responsible for getting the value of data member
 
@@ -561,18 +561,21 @@ TMethodCall  *TDataMember::GetterMethod()
 
       const char *dataname = GetName();
 
-      char gettername[64];
+      char gettername[128];
       sprintf(gettername, "Get%s", dataname+1);
-      if (strstr(gettername, "Is")) sprintf(gettername, "%s", dataname+1);
+      if (strstr(gettername, "Is")) sprintf(gettername, "Set%s", dataname+3);
       if (GetClass()->GetMethod(gettername, ""))
-         fValueGetter = new TMethodCall(fClass, gettername, "");
+         return fValueGetter = new TMethodCall(fClass, gettername, "");
+      sprintf(gettername, "Is%s", dataname+1);
+      if (GetClass()->GetMethod(gettername, ""))
+         return fValueGetter = new TMethodCall(fClass, gettername, "");
    }
 
    return fValueGetter;
 }
 
 //______________________________________________________________________________
-TMethodCall   *TDataMember::SetterMethod()
+TMethodCall *TDataMember::SetterMethod()
 {
    // Return a TMethodCall method responsible for setting the value of data member
 

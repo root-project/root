@@ -708,7 +708,7 @@ struct G__includepath {
 
 #endif /* G__SHAREDLIB */
 
-#define G__MAX_SL 50
+#define G__MAX_SL 150
 
 /*********************************************************************
 * debugging flag
@@ -809,11 +809,13 @@ struct G__AppPragma {
 /**************************************************************************
 * Flag to check global operator new/delete()
 **************************************************************************/
-#define G__IS_OPERATOR_NEW      0x01
-#define G__IS_OPERATOR_DELETE   0x02
-#define G__MASK_OPERATOR_NEW    0x04
-#define G__MASK_OPERATOR_DELETE 0x08
-#define G__NOT_USING_2ARG_NEW   0x10
+#define G__IS_OPERATOR_NEW        0x01
+#define G__IS_OPERATOR_DELETE     0x02
+#define G__MASK_OPERATOR_NEW      0x04
+#define G__MASK_OPERATOR_DELETE   0x08
+#define G__NOT_USING_2ARG_NEW     0x10
+#define G__USE_DUMMYARG_NEW      0x100
+#define G__USE_DUMMYARG_DELETE   0x200
 
 /**************************************************************************
 * Stub function mode

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.5 2000/09/06 14:11:00 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -261,9 +261,10 @@ void TCollection::Streamer(TBuffer &b)
 
    if (b.IsReading()) {
       Version_t v = b.ReadVersion();
-      if (v > 1) {
+      if (v > 2)
+         TObject::Streamer(b);
+      if (v > 1)
          fName.Streamer(b);
-      }
       b >> nobjects;
       for (Int_t i = 0; i < nobjects; i++) {
          b >> obj;
@@ -271,6 +272,7 @@ void TCollection::Streamer(TBuffer &b)
       }
    } else {
       b.WriteVersion(TCollection::IsA());
+      TObject::Streamer(b);
       fName.Streamer(b);
       nobjects = GetSize();
       b << nobjects;
@@ -284,17 +286,25 @@ void TCollection::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-void TCollection::Write(const char *name, Int_t option, Int_t bsize)
+Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize)
 {
    // Write all objects in this collection. By default all objects in
    // the collection are written individually (each object gets its
-   // own key). To write all objects using one key specify a name and
-   // set option to kSingleKey (i.e. 1).
+   // own key). Note, this is not recursive, collections in the collection
+   // are written with a single key. To write all objects using a single
+   // key specify a name and set option to TObject::kSingleKey (i.e. 1).
 
    if ((option & kSingleKey)) {
-      TObject::Write(name, option, bsize);
+      return TObject::Write(name, option, bsize);
    } else {
-      this->ForEach(TObject,Write)(name, option, bsize);
+      option &= ~kSingleKey;
+      Int_t nbytes = 0;
+      TIter next(this);
+      TObject *obj;
+      while ((obj = next())) {
+         nbytes += obj->Write(name, option, bsize);
+      }
+      return nbytes;
    }
 }
 

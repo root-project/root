@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.3 2000/06/05 08:01:03 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// $Id: TTable.h,v 1.46 2000/02/29 22:15:45 fine Exp $
+// $Id: TTable.h,v 1.3 2000/06/05 08:01:03 brun Exp $
 #ifndef ROOT_TTable
 #define ROOT_TTable
 
@@ -94,6 +94,7 @@ public:
    virtual    ~TTable();
 
    virtual     void       Adopt(Int_t n, void *array);
+   virtual     Int_t      AddAt(const void *c);
    virtual     void       AddAt(const void *c, Int_t i);
    virtual     void       AsString(void *buf, const char *name, Int_t width=0) const;
               const void *At(Int_t i) const;
@@ -117,7 +118,7 @@ public:
                               ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
 
    virtual     Long_t     HasData() const { return 1; }
-   virtual     Bool_t     IsFolder();
+   virtual     Bool_t     IsFolder() const;
    virtual     void       ls(Option_t *option="");
    virtual     void       ls(Int_t deep);
                Int_t      NaN();
@@ -149,8 +150,9 @@ public:
 
  //  ----   Table descriptor service   ------
 
+   virtual   Int_t        GetColumnIndex(const Char_t *columnName) const;
    virtual  const Char_t *GetColumnName(Int_t columnIndex)      const;
-   virtual   UInt_t      *GetIndexArray(Int_t columnIndex)      const;
+   virtual   const UInt_t *GetIndexArray(Int_t columnIndex)     const;
    virtual   UInt_t       GetNumberOfColumns()                  const;
    virtual   UInt_t       GetOffset(Int_t columnIndex)          const;
    virtual   Int_t        GetOffset(const Char_t *columnName=0) const;
@@ -168,7 +170,6 @@ public:
 
 inline  void  *TTable::GetArray() const { return (void *)fTable;}
 
-inline  Bool_t TTable::IsFolder(){ return fList && fList->Last() ? kTRUE : kFALSE;}
 inline  void   TTable::Print(Option_t *) { Print((Char_t *)0,Int_t(0)); }
 
 inline  void   TTable::SetUsedRows(Int_t n) { fMaxIndex = n;}

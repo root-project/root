@@ -2000,6 +2000,7 @@ int G__setmasksignal(masksignal)
 int masksignal;
 {
   G__masksignal=masksignal;
+  return(0);
 }
 #endif /* ON614 */
 
@@ -2168,6 +2169,90 @@ char *G__gets(char *buffer)
    result=gets(buffer);
    G__lockstdio=0;
    return(result);
+}
+
+/**************************************************************************
+* G__system()
+**************************************************************************/
+int G__system(char *com)
+{
+#if 0
+  int result;
+  BOOL fSuccess;
+  int i=0,j;
+  HANDLE hProcess;
+  DWORD dwExitCode;
+  BOOL fExist = FALSE;
+
+  char comName[G__ONELINE];
+  char comLine[G__ONELINE];
+  STARTUPINFO StartupInformation;
+  PROCESS_INFORMATION ProcessInformation;
+
+  while(isspace(com[i])) ++i;
+  j=0;
+  while(com[i] && !isspace(com[i])) comName[j++] = com[i++]; 
+  comName[j] = 0;
+  if(strstr(".exe",comName)==0 && strstr(".EXE",comName)==0) { 
+    strcat(comName,".exe");
+  }
+
+  j=0;
+  while(com[i]) comLine[j++] = com[i++]; 
+  comLine[j] = 0;
+  
+  StartupInformation.cb = sizeof(STARTUPINFO);
+  StartupInformation.lpReserved = NULL;
+  StartupInformation.lpDesktop = NULL;
+  StartupInformation.lpTitle = NULL;
+  StartupInformation.dwX = 0;
+  StartupInformation.dwY = 0;
+  StartupInformation.dwXSize = 100; 
+  StartupInformation.dwYSize = 100;
+  StartupInformation.dwXCountChars = 80;
+  StartupInformation.dwYCountChars = 24;
+  StartupInformation.dwFillAttribute = 0;
+  StartupInformation.dwFlags = STARTF_USESTDHANDLES;
+  StartupInformation.wShowWindow = 0;
+  StartupInformation.cbReserved2 = 0;
+  StartupInformation.lpReserved2 = NULL;
+  StartupInformation.hStdInput  = G__sin;
+  StartupInformation.hStdOutput = G__sout;
+  StartupInformation.hStdError  = G__serr;
+
+  fSuccess = CreateProcess(comName
+                           ,comLine
+                           ,NULL     /* lpProcessAttributes */
+                           ,NULL     /* lpThreadAttributes */
+                           ,TRUE     /* bInheritHandles */
+                           ,CREATE_DEFAULT_ERROR_MODE /* dwCreationFlags */
+                           ,NULL     /* lpEnvironment */
+                           ,NULL     /* lpCurrentDirectory */
+                           ,&StartupInformation
+                           ,&ProcessInformation);
+
+  if(!fSuccess) return(-1);
+
+  hProcess = ProcessInformation.hProcess;
+
+  CloseHandle(ProcessInformation.hThread);
+
+  if(WaitForSingleObject(hProcess,INFINITE) != WAIT_FAILED) {
+    // the process terminated
+    fExist = GetExitCodeProcess(hProcess,&dwExitCode);
+  }
+  else {
+    fExist = FALSE;
+  }
+
+  CloseHandle(hProcess);
+
+  return(fExist?-1:0);
+
+#else
+#undef system
+  return(system(com));
+#endif
 }
 
 #else /* G__WIN32 */

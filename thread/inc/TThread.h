@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name$:$Id$
+// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -128,6 +128,7 @@ public:
    static Int_t        Join(void **ret=0);
 
    static Int_t        Exit(void *ret = 0);
+   static Int_t        Exists();
    static TThread     *GetThread(Int_t id);
    static TThread     *GetThread(const Text_t *name);
 

@@ -21,7 +21,7 @@ GPADH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GPADS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 GPADO        := $(GPADS:.cxx=.o)
 
-GPADDEP      := $(GPADO:.o=.d)
+GPADDEP      := $(GPADO:.o=.d) $(GPADDO:.o=.d)
 
 GPADLIB      := $(LPATH)/libGpad.$(SOEXT)
 
@@ -36,7 +36,7 @@ INCLUDEFILES += $(GPADDEP)
 include/%.h:    $(GPADDIRI)/%.h
 		cp $< $@
 
-$(GPADLIB):     $(GPADO) $(GPADDO) $(MAINLIBS) $(GRAFLIB) $(HISTLIB)
+$(GPADLIB):     $(GPADO) $(GPADDO) $(MAINLIBS) $(GPADLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGpad.$(SOEXT) $@ "$(GPADO) $(GPADDO)" \
 		   "$(GPADLIBEXTRA)"

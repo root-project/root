@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TWin32GLKernel.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 #include "TWin32GLKernel.h"
@@ -113,7 +113,7 @@ TGLViewerImp *TWin32GLKernel::CreateGLViewerImp(TPadOpenGLView *c, const char *t
 {
 //*-* Create the OpenGL viewer imp for TGuiFactory object
     return new TWin32GLViewerImp(c,title,width,height);
-}
+} 
 //______________________________________________________________________________
 void TWin32GLKernel::DisableGL(EG3D2GLmode mode)
 {
@@ -329,7 +329,11 @@ void TWin32GLKernel::PaintBrik(Float_t vertex[24])
 {
     CallWindowMethod1(PaintBrik,vertex);
 }
-
+//______________________________________________________________________________
+void TWin32GLKernel::PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz)
+{
+    CallWindowMethod3(PaintXtru,vertex,nxy,nz);
+}
 //______________________________________________________________________________
 void TWin32GLKernel::PaintCone(Float_t *vertex,Int_t ndiv,Int_t nstacks)
 {
@@ -388,7 +392,7 @@ void TWin32GLKernel::ExecThreadCB(TWin32SendClass *command)
                 ,"FlusGL()"
                 ,"NewGLList(UInt_t ilist, EG3D2GLmode mode)"
                 ,"SetGLColor(Float_t *rgb)"
-                ,"PaintCone(Float_t vertex,Int_t ndiv,Int_t nstacks)"
+                ,"PaintCone(Float_t *vertex,Int_t ndiv,Int_t nstacks)"
                 ,"DisableGL()"
                 ,"EnableGL()"
                 ,"RotateGL()"
@@ -406,8 +410,10 @@ void TWin32GLKernel::ExecThreadCB(TWin32SendClass *command)
                                 ,"AddRotation(Double_t *rotmatrix,Double_t *extraangles)"
                                 ,"SetStack(Double_t *matrix)"
                 ,"PaintGLPointsObject(TPoints3DABC *points, Option_t *option)"
+                ,"PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz)"
+ 
     };
-
+ 
     if (gDebug) printf("TWin32GLKernel: commamd %d: %s",cmd,listcmd[cmd]);
     switch (cmd)
     {
@@ -421,7 +427,7 @@ void TWin32GLKernel::ExecThreadCB(TWin32SendClass *command)
     case kEndGLList:
         TGLKernel::EndGLList();
         break;
-
+ 
     case kBeginGLCmd:
         {
             EG3D2GLmode mode = (EG3D2GLmode)(command->GetData(1));
@@ -439,15 +445,15 @@ void TWin32GLKernel::ExecThreadCB(TWin32SendClass *command)
     case kEndGLCmd:
         TGLKernel::EndGLCmd();
         break;
-
+ 
     case kPushGLMatrix:
         TGLKernel::PushGLMatrix();
         break;
-
+ 
     case kPopGLMatrix:
         TGLKernel::PopGLMatrix();
         break;
-
+ 
     case kTranslateGL:
         {
             Double_t *xyz = (Double_t *)(command->GetData(1));
@@ -541,11 +547,11 @@ void TWin32GLKernel::ExecThreadCB(TWin32SendClass *command)
             TGLKernel::ClearGL(bits);
             break;
         }
-
+ 
     case kFlushGL:
             TGLKernel::FlushGL();
             break;
-
+ 
     case kNewGLList:
         {
             UInt_t ilist      = (UInt_t)(command->GetData(1));
@@ -559,7 +565,7 @@ void TWin32GLKernel::ExecThreadCB(TWin32SendClass *command)
             TGLKernel::SetGLColor(rgb);
             break;
         }
-
+ 
     case kPaintCone:
         {
             Float_t *vertex  = (Float_t *)(command->GetData(1));
@@ -712,6 +718,15 @@ void TWin32GLKernel::ExecThreadCB(TWin32SendClass *command)
             TGLKernel::PaintGLPointsObject(points,option);
         }
         break;
+    case kPaintXtru:
+        {
+            Float_t *vertex  = (Float_t *)(command->GetData(1));
+            Int_t nxy        = (Int_t)(command->GetData(2));
+            Int_t nz         = (Int_t)(command->GetData(3));
+            if (gDebug) printf(" %d %d", nxy, nz);
+            TGLKernel::PaintXtru(vertex,nxy,nz);
+            break;
+        }
      default:
         break;
     }
@@ -721,6 +736,3 @@ void TWin32GLKernel::ExecThreadCB(TWin32SendClass *command)
     else
         delete command;
 }
-
-
-

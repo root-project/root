@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.2 2000/06/13 10:45:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -49,7 +49,7 @@ TBox::TBox(): TObject(), TAttLine(), TAttFill()
 }
 
 //______________________________________________________________________________
-TBox::TBox(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2)
+TBox::TBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
      : TObject(), TAttLine(), TAttFill()
 {
 //*-*-*-*-*-*-*-*-*-*-*Box standard constructor-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -150,7 +150,7 @@ void TBox::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TBox::DrawBox(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2)
+void TBox::DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this box with new coordinates*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================
@@ -518,7 +518,7 @@ void TBox::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this box with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    =================================
-   IndentLevel();
+   TROOT::IndentLevel();
    printf("%s  X1= %f Y1=%f X2=%f Y2=%f\n",IsA()->GetName(),fX1,fY1,fX2,fY2);
 }
 
@@ -531,7 +531,7 @@ void TBox::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TBox::PaintBox(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2, Option_t *)
+void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this box with new coordinates*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================
@@ -595,4 +595,41 @@ void TBox::SetToolTipText(const char *text, Long_t delayms)
 
    if (text && strlen(text))
       fTip = gPad->CreateToolTip(this, text, delayms);
+}
+
+//______________________________________________________________________________
+void TBox::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TBox.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      TObject::Streamer(R__b);
+      TAttLine::Streamer(R__b);
+      TAttFill::Streamer(R__b);
+      if (R__v < 2) {
+         Float_t x1,y1,x2,y2;
+         R__b >> x1; fX1 = x1;
+         R__b >> y1; fY1 = y1;
+         R__b >> x2; fX2 = x2;
+         R__b >> y2; fY2 = y2;
+      } else {
+         R__b >> fX1;
+         R__b >> fY1;
+         R__b >> fX2;
+         R__b >> fY2;
+      }
+      R__b.CheckByteCount(R__s, R__c, TBox::IsA());
+   } else {
+      R__c = R__b.WriteVersion(TBox::IsA(), kTRUE);
+      TObject::Streamer(R__b);
+      TAttLine::Streamer(R__b);
+      TAttFill::Streamer(R__b);
+      R__b << fX1;
+      R__b << fY1;
+      R__b << fX2;
+      R__b << fY2;
+      R__b.SetByteCount(R__c, kTRUE);
+   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -15,11 +15,10 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGToolBar + TGHorizontal3DLine                                       //
+// TGToolBar                                                            //
 //                                                                      //
 // A toolbar is a composite frame that contains TGPictureButtons.       //
-// A horizontal 3D line is a line that typically separates a toolbar    //
-// from the menubar.                                                    //
+// Often used in combination with a TGHorizontal3DLine.                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -56,25 +55,6 @@ public:
    void AddButton(const TGWindow *w, ToolBarData_t *button, Int_t spacing = 0);
 
    ClassDef(TGToolBar,0)  //A bar containing picture buttons
-};
-
-
-
-class TGHorizontal3DLine : public TGFrame {
-
-public:
-   TGHorizontal3DLine(const TGWindow *p, UInt_t w = 4, UInt_t h = 2,
-                      UInt_t options = kChildFrame,
-                      ULong_t back = fgDefaultFrameBackground) :
-      TGFrame(p, w, h, options, back) { }
-
-   virtual void DrawBorder() {
-      gVirtualX->DrawLine(fId, fgShadowGC,  0, 0, fWidth-2, 0);
-      gVirtualX->DrawLine(fId, fgHilightGC, 0, 1, fWidth-1, 1);
-      gVirtualX->DrawLine(fId, fgHilightGC, fWidth-1, 0, fWidth-1, 1);
-   }
-
-   ClassDef(TGHorizontal3DLine,0)  //A horizontal 3D separator line
 };
 
 #endif

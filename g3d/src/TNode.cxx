@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.2 2000/09/05 09:21:22 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -208,7 +208,7 @@ void TNode::BuildListOfNodes()
 //*-*-*-*-*-*Create the list to support sons of this node*-*-*-*-*-*-*-*-*-*-*
 //*-*        ============================================
 
-   if (!fNodes) fNodes   = new TList(this);
+   if (!fNodes) fNodes   = new TList;
 }
 
 //______________________________________________________________________________
@@ -402,7 +402,7 @@ void TNode::ImportShapeAttributes()
 }
 
 //______________________________________________________________________________
-Bool_t TNode::IsFolder()
+Bool_t TNode::IsFolder() const
 {
 //*-*-*-*-*Return TRUE if node contains nodes, FALSE otherwise*-*
 //*-*      ======================================================
@@ -500,7 +500,7 @@ void TNode::ls(Option_t *option)
    if (opt.Contains("5")) maxlevel = 5;
    if (opt.Contains("x")) sizeX3D  = 1;
 
-   IndentLevel();
+   TROOT::IndentLevel();
 
    Int_t nsons = 0;
    if (fNodes) nsons = fNodes->GetSize();
@@ -527,11 +527,11 @@ void TNode::ls(Option_t *option)
    if(!nsons) return;
    if (gGeomLevel >= maxlevel) return;
 
-   TObject::IncreaseDirLevel();
+   TROOT::IncreaseDirLevel();
    gGeomLevel++;
    fNodes->ls(option);
    gGeomLevel--;
-   TObject::DecreaseDirLevel();
+   TROOT::DecreaseDirLevel();
 
 }
 
