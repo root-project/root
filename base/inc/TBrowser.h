@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.3 2001/09/18 21:58:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.4 2001/12/03 12:37:47 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -50,6 +50,10 @@ protected:
    Bool_t         fNeedRefresh;        //True if the browser needs refresh
 
 public:
+   enum {
+      kNoHidden     = BIT(9),  // don't show '.' files and directories
+   };
+     
    TBrowser(const char *name="Browser", const char *title="ROOT Object Browser");
    TBrowser(const char *name, const char *title, UInt_t width, UInt_t height);
    TBrowser(const char *name, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);

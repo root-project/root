@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.14 2002/06/13 16:20:16 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.15 2002/06/20 15:07:35 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -71,6 +71,7 @@ enum ERootBrowserCommands {
    kViewList,
    kViewDetails,
    kViewLineUp,
+   kViewHidden,
    kViewRefresh,
 
    kViewArrangeByName,     // Arrange submenu
@@ -493,7 +494,7 @@ TGFrameElement* TRootIconBox::FindFrame(const TString& name, Bool_t direction,
    TGFrameElement* el = 0;
    TString str;
    TString::ECaseCompare cmp = caseSensitive ? TString::kExact : TString::kIgnoreCase;
-   
+
    fLastDir = direction;
    fLastCase = caseSensitive;
    fLastName = name;
@@ -512,12 +513,12 @@ TGFrameElement* TRootIconBox::FindFrame(const TString& name, Bool_t direction,
    }
 
    TGLVEntry* lv = 0;
-   TObject* obj = 0; 
-   TList* li = 0; 
+   TObject* obj = 0;
+   TList* li = 0;
 
    while (el) {
       if (!el->fFrame->InheritsFrom(TGLVEntry::Class())) continue;
-      
+
       lv = (TGLVEntry*)el->fFrame;
       li = (TList*)lv->GetUserData();
 
@@ -525,7 +526,7 @@ TGFrameElement* TRootIconBox::FindFrame(const TString& name, Bool_t direction,
 
       while ((obj=next())) {
          str = obj->GetName();
-      
+
          idx = str.Index(name,0,cmp);
 
          if (idx!=kNPOS) {
@@ -701,6 +702,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fViewMenu->AddEntry("&List",               kViewList);
    fViewMenu->AddEntry("&Details",            kViewDetails);
    fViewMenu->AddSeparator();
+   fViewMenu->AddEntry("Show &Hidden",        kViewHidden);
    fViewMenu->AddPopup("Arrange &Icons",      fSortMenu);
    fViewMenu->AddEntry("Lin&e up Icons",      kViewLineUp);
    fViewMenu->AddEntry("&Group Icons",        kViewGroupLV);
@@ -710,6 +712,11 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    fViewMenu->CheckEntry(kViewToolBar);
    fViewMenu->CheckEntry(kViewStatusBar);
+
+   if (fBrowser->TestBit(TBrowser::kNoHidden))
+      fViewMenu->UnCheckEntry(kViewHidden);
+   else
+      fViewMenu->CheckEntry(kViewHidden);
 
    fOptionMenu = new TGPopupMenu(fClient->GetRoot());
    fOptionMenu->AddEntry("&Show Cycles",        kOptionShowCycles);
@@ -885,14 +892,18 @@ void TRootBrowser::Add(TObject *obj, const char *name)
    // by the Browse() member function of objects when they are
    // called by a browser.
 
-   if (obj) {
-      if (!name) name = obj->GetName();
+   if (!obj)
+      return;
+   if (!name) name = obj->GetName();
 
-      AddToBox(obj, name);
+   AddToBox(obj, name);
 
-      if (obj->IsFolder())
-         AddToTree(obj, name);
-   }
+   // Don't show current dir and up dir links in the tree
+   if (name[0] == '.' && (name[1] == '.' || name[1] == '\0'))
+     return;
+
+   if (obj->IsFolder())
+      AddToTree(obj, name);
 }
 
 //______________________________________________________________________________
@@ -924,7 +935,8 @@ void TRootBrowser::AddToTree(TObject *obj, const char *name)
 
    if (obj && !fTreeLock) {
       if (!name) name = obj->GetName();
-
+      if (name[0] == '.' && name[1] == '.')
+         Info("AddToTree", "up one level %s", name);
       fLt->AddItem(fListLevel, name, obj);
    }
 }
@@ -1085,6 +1097,15 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kViewList:
                   case kViewDetails:
                      SetViewMode((Int_t)parm1);
+                     break;
+                  case kViewHidden:
+                     if (fBrowser->TestBit(TBrowser::kNoHidden)) {
+                        fViewMenu->CheckEntry(kViewHidden);
+                        fBrowser->SetBit(TBrowser::kNoHidden, kFALSE);
+                     } else {
+                        fViewMenu->UnCheckEntry(kViewHidden);
+                        fBrowser->SetBit(TBrowser::kNoHidden, kTRUE);
+                     }
                      break;
                   case kViewArrangeByName:
                   case kViewArrangeByType:
@@ -1366,6 +1387,27 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
    }
 }
 
+//_____
+TGListTreeItem* FindByUserName(TGListTreeItem* item, const char* name)
+{
+  if (!item || !name || name[0] == '\0')
+    return 0;
+  TObject* o = (TObject*)item->GetUserData();
+  if (!strcmp(o->GetTitle(), name))
+    return item;
+
+  TGListTreeItem* ret = 0;
+  if (item->IsOpen() &&  item->GetFirstChild())
+    if ((ret = FindByUserName(item->GetFirstChild(), name)))
+      return ret;
+  while ((item = item->GetNextSibling()))
+    if ((ret = FindByUserName(item, name)))
+      return ret;
+
+  return 0;
+}
+
+
 //______________________________________________________________________________
 void TRootBrowser::IconBoxAction(TObject *obj)
 {
@@ -1377,7 +1419,48 @@ void TRootBrowser::IconBoxAction(TObject *obj)
       gVirtualX->SetCursor(fId, fWaitCursor);
       gVirtualX->Update();
 
-      if (obj->IsFolder()) {
+      Bool_t found = kFALSE;
+      if (obj->IsA() == TSystemDirectory::Class()) {
+         TString t(obj->GetTitle());
+         TGListTreeItem *wd = FindByUserName(fLt->GetFirstItem(),
+                                             obj->GetTitle());
+         if (wd) {
+            // found somewher on the tree already - just point there
+            found      = kTRUE;
+            fListLevel = wd;
+         } else if (t == gSystem->DirName(gSystem->WorkingDirectory()) ||
+                    (obj->GetName()[0] == '.' && obj->GetName()[1] == '.')) {
+            // Otherwise, we need to reroot the tree
+            wd = fLt->GetFirstItem();
+            while (wd) {
+               TObject *o = (TObject*)wd->GetUserData();
+               if (o->IsA() != TSystemDirectory::Class()) {
+                  wd = wd->GetNextSibling();
+                  continue;
+               }
+               // Break at the first system directory
+               found = kTRUE;
+               TSystemDirectory *old = (TSystemDirectory*)o;
+               // old->SetName(gSystem->BaseName(old->GetTitle()));
+               wd->Rename(gSystem->BaseName(old->GetTitle()));
+               TGListTreeItem *it =
+                  fLt->AddItem(wd->GetParent(), obj->GetTitle());
+               it->SetUserData((void*)obj);
+               fLt->Reparent(wd, it);
+               fListLevel = it;
+               break;
+            }
+            // found = kTRUE;
+         }
+         if (found) {
+            fIconBox->RemoveAll();
+            DisplayDirectory();
+            fLt->ClearHighlighted();
+            fLt->HighlightItem(fListLevel);
+            fClient->NeedRedraw(fLt);
+         }
+      }
+      if (!found && obj->IsFolder()) {
          fIconBox->RemoveAll();
          TGListTreeItem *itm = 0;
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.2 2002/05/13 10:40:01 rdm Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -24,10 +24,10 @@
 #include "TSystem.h"
 #include "TBrowser.h"
 #include "TOrdCollection.h"
+#include "TList.h"
 
 
-
-ClassImp(TSystemDirectory)
+ClassImp(TSystemDirectory);
 
 //______________________________________________________________________________
 TSystemDirectory::TSystemDirectory()
@@ -58,6 +58,41 @@ TSystemDirectory::~TSystemDirectory()
 }
 
 //______________________________________________________________________________
+TList *TSystemDirectory::GetListOfFiles() const
+{
+   // Returns a TList of TSystemFile objects representing the contents
+   // of the directory. It's the responsibility of the user to delete
+   // the list (the list owns the contained objects).
+   // Returns 0 in case of errors.
+
+   void *dir = gSystem->OpenDirectory(GetTitle());
+   if (!dir) return 0;
+
+   const char *file = 0;
+   TList *contents  = new TList;
+   contents->SetOwner();
+   while ((file = gSystem->GetDirEntry(dir))) {
+      if (IsDirectory(file)) {
+         TString sdirpath;
+         if (file[0] == '.' && file[1] == '\0')
+            sdirpath = GetTitle();
+         else if (file[0] == '.' && file[1] == '.' && file[2] == '.')
+            sdirpath = gSystem->DirName(GetTitle());
+         else {
+            sdirpath = GetTitle();
+            if (!sdirpath.EndsWith("/"))
+               sdirpath += "/";
+            sdirpath += file;
+         }
+         contents->Add(new TSystemDirectory(file, sdirpath.Data()));
+      } else
+         contents->Add(new TSystemFile(file, GetTitle()));
+   }
+   gSystem->FreeDirectory(dir);
+   return contents;
+}
+
+//______________________________________________________________________________
 void TSystemDirectory::SetDirectory(const char *name)
 {
    // Create a system directory object.
@@ -67,7 +102,7 @@ void TSystemDirectory::SetDirectory(const char *name)
 }
 
 //______________________________________________________________________________
-Bool_t TSystemDirectory::IsDirectory(const char* name)
+Bool_t TSystemDirectory::IsDirectory(const char *name) const
 {
    // Check if name is a directory.
 
@@ -89,9 +124,9 @@ void TSystemDirectory::Browse(TBrowser *b)
 {
    // Browse OS system directories.
 
-   // Collections to keep track of all browser objects that have been generated.
-   // It's main goal is to prevent the contineous allocations of new
-   // objects with the same names during browsing.
+   // Collections to keep track of all browser objects that have been
+   // generated. It's main goal is to prevent the contineous
+   // allocations of new objects with the same names during browsing.
    if (!fDirsInBrowser)  fDirsInBrowser  = new TOrdCollection;
    if (!fFilesInBrowser) fFilesInBrowser = new TOrdCollection(10);
 
@@ -101,37 +136,43 @@ void TSystemDirectory::Browse(TBrowser *b)
    const char *file;
 
    gSystem->ChangeDirectory(name);
-
-#ifdef WIN32
-//      gSystem->Exec("explorer .");
-#endif
+   if (GetName()[0] == '.' && GetName()[1] == '.')
+     SetName(gSystem->BaseName(name));
 
    void *dir = gSystem->OpenDirectory(name);
 
-   if (dir) {
-      while ((file = gSystem->GetDirEntry(dir))) {
-         if (!strcmp(file,".") || !strcmp(file,"..")) continue;
-         if (IsDirectory(file)) {
-            TString sdirname(name);
-            sdirname = sdirname + "/";
-            sdirname = sdirname + file;
+   if (!dir)
+     return;
 
-            if ((sdir = FindDirObj(sdirname.Data())) == 0) {
-               sdir = new TSystemDirectory(file, sdirname.Data());
-               fDirsInBrowser->Add(sdir);
-            }
-            b->Add(sdir, file);
-         } else {
-            if ((sfile = FindFileObj(file, gSystem->WorkingDirectory())) == 0) {
-               sfile = new TSystemFile(file, gSystem->WorkingDirectory());
-               fFilesInBrowser->Add(sfile);
-            }
-            b->Add(sfile, file);
+   while ((file = gSystem->GetDirEntry(dir))) {
+      if (b->TestBit(TBrowser::kNoHidden) && file[0] == '.' && file[1] != '.' )
+         continue;
+      if (IsDirectory(file)) {
+         TString sdirpath;
+         if (!strcmp(file, "."))
+            sdirpath =  name;
+         else if (!strcmp(file,".."))
+            sdirpath = gSystem->DirName(name);
+         else {
+            sdirpath =  name;
+            if (!sdirpath.EndsWith("/"))
+               sdirpath += "/";
+            sdirpath += file;
          }
+         if (!(sdir = FindDirObj(sdirpath.Data()))) {
+            sdir = new TSystemDirectory(file, sdirpath.Data());
+            fDirsInBrowser->Add(sdir);
+         }
+         b->Add(sdir, file);
+      } else {
+         if (!(sfile = FindFileObj(file, gSystem->WorkingDirectory()))) {
+            sfile = new TSystemFile(file, gSystem->WorkingDirectory());
+            fFilesInBrowser->Add(sfile);
+         }
+         b->Add(sfile, file);
       }
-      gSystem->FreeDirectory(dir);
-      return;
    }
+   gSystem->FreeDirectory(dir);
 }
 
 //______________________________________________________________________________

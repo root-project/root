@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.2 2000/09/05 09:21:22 brun Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #endif
 
 class TOrdCollection;
+class TList;
 
 
 class TSystemDirectory : public TSystemFile {
@@ -36,7 +37,7 @@ private:
    TOrdCollection *fDirsInBrowser;
    TOrdCollection *fFilesInBrowser;
 
-   Bool_t             IsDirectory(const char* name);
+   Bool_t             IsDirectory(const char *name) const;
    TSystemDirectory  *FindDirObj(const char *name);
    TSystemFile       *FindFileObj(const char *name, const char *dir);
 
@@ -50,6 +51,7 @@ public:
 
    virtual void   Browse(TBrowser *b);
    virtual void   Edit() { }
+   virtual TList *GetListOfFiles() const;
    virtual void   SetDirectory(const char *name); // *MENU*
 
    ClassDef(TSystemDirectory,0)  //A system directory
