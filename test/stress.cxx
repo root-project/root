@@ -1,13 +1,6 @@
-//*CMZ :  2.24/03 29/04/2000  11.22.48  by  Rene Brun
-//*CMZ :  2.23/12 23/01/2000  20.01.39  by  Rene Brun
-//*CMZ :  2.23/09 17/11/99  16.18.58  by  Rene Brun
-//*CMZ :  2.23/08 01/11/99  14.33.24  by  Rene Brun
-//*CMZ :  2.23/04 05/10/99  08.24.00  by  Fons Rademakers
-//*CMZ :  2.23/03 16/09/99  12.46.25  by  Rene Brun
-//*CMZ :  2.23/02 04/09/99  12.16.48  by  Rene Brun
-//*CMZ :  2.23/01 26/08/99  14.24.02  by  Rene Brun
-//*CMZ :  2.23/00 30/07/99  17.23.23  by  Rene Brun
-//*-- Author :    Rene Brun   05/11/98
+// @(#)root/test:$Name$:$Id$
+// Author: Rene Brun   05/11/98
+
 /////////////////////////////////////////////////////////////////
 //
 //    R O O T   T E S T  S U I T E  and  B E N C H M A R K S
@@ -1029,14 +1022,14 @@ void stress9tree(TTree *tree)
             bNpoint->Fill(t->GetNpoint());
             bValid->Fill(t->GetValid());
          }
-         if (i<4) { 
+         if (i<4) {
             for(i1=0;i1<3;i1++) { // 3 is the min of the 2nd dim of Matrix and Vertex
                bFullOper ->Fill( event->GetMatrix(i,i1) - t->GetVertex(i1) );
                bFullOper2->Fill( event->GetMatrix(i,i1) - t->GetVertex(i1) );
                bRowMatOper->Fill( event->GetMatrix(i,2) - t->GetVertex(i1) );
             }
-            bMatchColOper->Fill( event->GetMatrix(i,2) - t->GetVertex(1) );    
-         }  
+            bMatchColOper->Fill( event->GetMatrix(i,2) - t->GetVertex(1) );
+         }
       }
    }
 

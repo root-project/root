@@ -1,9 +1,6 @@
-//*CMZ :  2.22/06 16/06/99  16.25.01  by  Rene Brun
-//*CMZ :  2.00/10 17/07/98  14.31.02  by  Fons Rademakers
-//*CMZ :  2.00/00 14/01/98  14.33.41  by  Fons Rademakers
-//*CMZ :  1.00/00 17/02/97  16.44.11  by  Fons Rademakers
-//*-- Author :    Rene Brun   19/08/96
-//______________________________________________________________________________
+// @(#)root/test:$Name$:$Id$
+// Author: Rene Brun   19/08/96
+
 //*-*-*-*-*-*-*Simple examples with histograms created/filled and saved*-*-*-*
 //*-*          ========================================================
 //*-*

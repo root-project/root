@@ -1,7 +1,5 @@
-//*CMZ :  2.24/01 06/03/2000  09.33.10  by  Rene Brun
-//*CMZ :  2.23/02 02/09/99  15.54.29  by  Rene Brun
-//*CMZ :  2.00/12 04/10/98  18.10.08  by  Fons Rademakers
-//*-- Author :    Valeriy Onuchin & Fons Rademakers   04/10/98
+// @(#)root/test:$Name$:$Id$
+// Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
 //  Animated Text with cool wave effect.

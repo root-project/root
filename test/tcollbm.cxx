@@ -1,5 +1,6 @@
-//*CMZ :  2.00/10 16/07/98  15.27.02  by  Fons Rademakers
-//*-- Author :    Nikolay Root   05/07/98
+// @(#)root/test:$Name$:$Id$
+// Author: Nikolay Root   05/07/98
+
 #include <stdlib.h>
 #include <iostream.h>
 

@@ -1,5 +1,6 @@
-//*CMZ :  0.80/01 29/08/96  15.39.11  by  Fons Rademakers
-//*-- Author :    Fons Rademakers   19/08/96
+// @(#)root/test:$Name$:$Id$
+// Author: Fons Rademakers   19/08/96
+
 #include <stdlib.h>
 #include <iostream.h>
 

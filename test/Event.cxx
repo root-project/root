@@ -1,9 +1,5 @@
-//*CMZ :  2.23/08 30/10/99  22.44.17  by  Rene Brun
-//*CMZ :  2.21/06 17/02/99  19.02.12  by  Rene Brun
-//*CMZ :  2.20/00 06/11/98  15.21.16  by  Rene Brun
-//*CMZ :  2.00/13 28/10/98  12.53.06  by  Fons Rademakers
-//*CMZ :  1.03/09 11/12/97  11.00.17  by  Rene Brun
-//*-- Author :    Rene Brun   19/08/96
+// @(#)root/test:$Name$:$Id$
+// Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -180,8 +176,8 @@ void Event::Streamer(TBuffer &R__b)
       fEvtHdr.Streamer(R__b);
       fTracks->Streamer(R__b);
       fH->Streamer(R__b);
-      R__b.WriteFastArray(fMeasures,10);      
-      R__b.WriteFastArray((float*)fMatrix,16);      
+      R__b.WriteFastArray(fMeasures,10);
+      R__b.WriteFastArray((float*)fMatrix,16);
    }
 }
 

@@ -1,7 +1,5 @@
-//*CMZ :  2.23/04 02/10/99  15.44.39  by  Fons Rademakers
-//*CMZ :  2.00/00 05/03/98  03.56.01  by  Fons Rademakers
-//*CMZ :  1.01/05 11/06/97  18.33.43  by  Rene Brun
-//*-- Author :    Fons Rademakers   04/04/97
+// @(#)root/test:$Name$:$Id$
+// Author: Fons Rademakers   04/04/97
 
 // This small demo shows the traditional "Hello World". Its main use is
 // to show how to use ROOT graphics and how to enter the eventloop to
