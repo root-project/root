@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.106 2002/08/05 21:14:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.107 2002/08/09 22:12:42 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4966,7 +4966,11 @@ void TH1::SetStats(Bool_t stats)
 //  It has priority over the Style option.
 
    ResetBit(kNoStats);
-   if (!stats) SetBit(kNoStats);
+   if (!stats) {
+      SetBit(kNoStats);
+      //remove the "stats" object from the list of functions
+      delete fFunctions->FindObject("stats");
+   }
 }
 
 //______________________________________________________________________________
