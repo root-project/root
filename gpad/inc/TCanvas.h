@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.4 2000/09/29 07:37:43 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.5 2000/10/05 08:52:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -68,8 +68,8 @@ protected:
    TAttCanvas   fCatt;            //Canvas attributes
    TObject     *fSelected;        //Currently selected object
    TString      fSelectedOpt;     //Drawing option of selected object
-   TVirtualPad *fSelectedPad;     //Pad containing currently selected object
-   TVirtualPad *fPadSave;         //Pointer to saved pad in HandleInput
+   TPad        *fSelectedPad;     //Pad containing currently selected object
+   TPad        *fPadSave;         //Pointer to saved pad in HandleInput
    Int_t        fEvent;           //Type of current or last handled event
    Int_t        fEventX;          //Last X mouse position in canvas
    Int_t        fEventY;          //Last Y mouse position in canvas
@@ -89,7 +89,7 @@ private:
    TCanvas &operator=(const TCanvas &rhs);  // idem
    void     Build();
    void     CopyPixmaps();
-   void     DrawEventStatus(Int_t button, Int_t x, Int_t y, TObject *selected);
+   void     DrawEventStatus(Int_t event, Int_t x, Int_t y, TObject *selected);
    void     RunAutoExec();
 
 protected:
@@ -164,6 +164,10 @@ public:
    Bool_t            OpaqueMoving() const { return fMoveOpaque; }
    Bool_t            OpaqueResizing() const { return fResizeOpaque; }
    virtual void      Paint(Option_t *option="");
+   virtual TPad     *Pick(Int_t px, Int_t py, TObjLink *&pickobj) { return TPad::Pick(px, py, pickobj); }
+   virtual TPad     *Pick(Int_t px, Int_t py, TObject *prevSelObj);
+   virtual void      Picked(TPad *selpad, TObject *selected, Int_t event); //*SIGNAL*
+   virtual void      ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *selected); //*SIGNAL*
    virtual void      Resize(Option_t *option="");
    void              ResizeOpaque(Int_t set=1) { fResizeOpaque = set; }
    void              SaveSource(const char *filename="", Option_t *option="");

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.16 2000/10/05 08:52:11 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.17 2000/10/08 16:00:33 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -51,7 +51,7 @@ static TInitMakeDefCanvas makedefcanvas_init;
 
 const Size_t kDefaultCanvasSize   = 20;
 
-ClassImp(TCanvas)
+ClassImpQ(TCanvas)
 
 //______________________________________________________________________________
 //
@@ -730,7 +730,7 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
    const Int_t kTMAX=256;
    static char atext[kTMAX];
 
-   if (!selected) return;
+   if (!fShowEventStatus || !selected) return;
 
 //#ifndef WIN32
 #if 0
@@ -808,6 +808,7 @@ void TCanvas::EnterLeave(TPad *prevSelPad, TObject *prevSelObj)
       prevSelObj->ExecuteEvent(kMouseLeave, 0, 0);
       fEvent = kMouseLeave;
       if (fAutoExec) RunAutoExec();
+      ProcessedEvent(kMouseLeave, 0, 0, prevSelObj);  // emit signal
    }
 
    gPad = fSelectedPad;
@@ -816,6 +817,7 @@ void TCanvas::EnterLeave(TPad *prevSelPad, TObject *prevSelObj)
       fSelected->ExecuteEvent(kMouseEnter, 0, 0);
       fEvent = kMouseEnter;
       if (fAutoExec) RunAutoExec();
+      ProcessedEvent(kMouseEnter, 0, 0, fSelected);  // emit signal
    }
 
    fEvent  = sevent;
@@ -932,10 +934,9 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 //  Handle input events, like button up/down in current canvas.
 //
 
-   TPad         *pad;
-   TObjLink     *pickobj;
-   TObject      *prevSelObj = 0;
-   TPad         *prevSelPad = 0;
+   TPad    *pad;
+   TPad    *prevSelPad = 0;
+   TObject *prevSelObj = 0;
 
    if (fSelected && fSelected->TestBit(kNotDeleted))
       prevSelObj = fSelected;
@@ -953,23 +954,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
    case kMouseMotion:
       // highlight object tracked over
-      fSelected    = 0;
-      fSelectedOpt = "";
-      fSelectedPad = 0;
-      pickobj      = 0;
-      pad = Pick(px, py, pickobj);
+      pad = Pick(px, py, prevSelObj);
       if (!pad) return;
-
-      if (!pickobj) {
-         fSelected    = pad;
-         fSelectedOpt = "";
-      } else {
-         if (!fSelected) {
-            fSelected    = pickobj->GetObject();
-            fSelectedOpt = pickobj->GetOption();
-         }
-      }
-      fSelectedPad = pad;
 
       EnterLeave(prevSelPad, prevSelObj);
 
@@ -979,8 +965,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
       fSelected->ExecuteEvent(event, px, py);
 
-      if (fShowEventStatus) DrawEventStatus(event, px, py, fSelected);
-      if (fAutoExec)        RunAutoExec();
+      if (fAutoExec) RunAutoExec();
 
       break;
 
@@ -988,15 +973,14 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       // mouse leaves canvas
       {
          // force popdown of tooltips
-         TObject     *sobj = fSelected;
-         TVirtualPad *spad = fSelectedPad;
-         fSelected    = 0;
-         fSelectedPad = 0;
+         TObject *sobj = fSelected;
+         TPad    *spad = fSelectedPad;
+         fSelected     = 0;
+         fSelectedPad  = 0;
          EnterLeave(prevSelPad, prevSelObj);
-         fSelected    = sobj;
-         fSelectedPad = spad;
+         fSelected     = sobj;
+         fSelectedPad  = spad;
       }
-      if (fAutoExec)        RunAutoExec();
       break;
 
    case kButton1Double:
@@ -1004,25 +988,9 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       // 3x3 pixels of the first button down, button up finishes action
 
    case kButton1Down:
-
       // find pad in which input occured
-      fSelected    = 0;
-      fSelectedOpt = "";
-      fSelectedPad = 0;
-      pickobj      = 0;
-      pad = Pick(px, py, pickobj);
+      pad = Pick(px, py, prevSelObj);
       if (!pad) return;
-
-      if (!pickobj) {
-         fSelected    = pad;
-         fSelectedOpt = "";
-      } else {
-         if (!fSelected) {
-            fSelected    = pickobj->GetObject();
-            fSelectedOpt = pickobj->GetOption();
-         }
-      }
-      fSelectedPad = pad;
 
       gPad = pad;   // don't use cd() because we won't draw in pad
                     // we will only use its coordinate system
@@ -1031,8 +999,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
       fSelected->ExecuteEvent(event, px, py);
 
-      if (fShowEventStatus) DrawEventStatus(event, px, py, fSelected);
-      if (fAutoExec)        RunAutoExec();
+      if (fAutoExec) RunAutoExec();
 
       break;
 
@@ -1056,8 +1023,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
                FeedbackMode(kTRUE);
             }
          }
-         if (fShowEventStatus) DrawEventStatus(event, px, py, fSelected);
-         if (fAutoExec)        RunAutoExec();
+         if (fAutoExec) RunAutoExec();
       }
 
       break;
@@ -1069,8 +1035,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
          fSelected->ExecuteEvent(event, px, py);
 
-         if (fShowEventStatus) DrawEventStatus(event, px, py, fSelected);
-         if (fAutoExec)        RunAutoExec();
+         if (fAutoExec) RunAutoExec();
 
          if (fPadSave->TestBit(kNotDeleted))
             gPad = fPadSave;
@@ -1087,23 +1052,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
    case kButton2Down:
       // find pad in which input occured
-      fSelected    = 0;
-      fSelectedOpt = "";
-      fSelectedPad = 0;
-      pickobj      = 0;
-      pad = Pick(px, py, pickobj);
+      pad = Pick(px, py, prevSelObj);
       if (!pad) return;
-
-      if (!pickobj) {
-         fSelected    = pad;
-         fSelectedOpt = "";
-      } else {
-         if (!fSelected) {
-            fSelected    = pickobj->GetObject();
-            fSelectedOpt = pickobj->GetOption();
-         }
-      }
-      fSelectedPad = pad;
 
       gPad = pad;   // don't use cd() because we won't draw in pad
                     // we will only use its coordinate system
@@ -1123,7 +1073,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
             tc->Update();
       }
 
-      return;   // don't want fPadSave->cd() to be executed at the end
+      break;   // don't want fPadSave->cd() to be executed at the end
 
    case kButton2Motion:
       break;
@@ -1137,26 +1087,15 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 //*-*----------------------------------------------------------------------
 
    case kButton3Down:
-   {
-      pad = Pick(px, py, pickobj);
+      // popup context menu
+      pad = Pick(px, py, prevSelObj);
       if (!pad) return;
-
-      if (!pickobj) {
-         fSelected    = pad;
-         fSelectedOpt = "";
-      } else {
-         if (!fSelected) {
-            fSelected    = pickobj->GetObject();
-            fSelectedOpt = pickobj->GetOption();
-         }
-      }
-      fSelectedPad = pad;
 
       if (fContextMenu)
           fContextMenu->Popup(px, py, fSelected, this, pad);
 
       break;
-   }
+
    case kButton3Motion:
       break;
 
@@ -1169,31 +1108,15 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    case kKeyPress:
 
       // find pad in which input occured
-      fSelected    = 0;
-      fSelectedOpt = "";
-      fSelectedPad = 0;
-      pickobj      = 0;
-      pad = Pick(px, py, pickobj);
+      pad = Pick(px, py, prevSelObj);
       if (!pad) return;
-
-      if (!pickobj) {
-         fSelected    = pad;
-         fSelectedOpt = "";
-      } else {
-         if (!fSelected) {
-            fSelected    = pickobj->GetObject();
-            fSelectedOpt = pickobj->GetOption();
-         }
-      }
-      fSelectedPad = pad;
 
       gPad = pad;   // don't use cd() because we won't draw in pad
                     // we will only use its coordinate system
 
       fSelected->ExecuteEvent(event, px, py);
 
-      if (fShowEventStatus) DrawEventStatus(event, px, py, fSelected);
-      if (fAutoExec)        RunAutoExec();
+      if (fAutoExec) RunAutoExec();
 
       break;
 
@@ -1201,7 +1124,13 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       break;
    }
 
-   if (fPadSave) fPadSave->cd();
+   if (fPadSave && event != kButton2Down)
+      fPadSave->cd();
+
+   if (event != kMouseLeave) { // signal was already emitted for this event
+      ProcessedEvent(event, px, py, fSelected);  // emit signal
+      DrawEventStatus(event, px, py, fSelected);
+   }
 }
 
 //______________________________________________________________________________
@@ -1264,6 +1193,67 @@ void TCanvas::Paint(Option_t *option)
    if (fCanvas)
       TPad::Paint(option);
 
+}
+
+//______________________________________________________________________________
+TPad *TCanvas::Pick(Int_t px, Int_t py, TObject *prevSelObj)
+{
+   // Prepare for pick, call TPad::Pick() and when selected object
+   // is different from previous then emit Picked() signal.
+
+   TObjLink *pickobj = 0;
+
+   fSelected    = 0;
+   fSelectedOpt = "";
+   fSelectedPad = 0;
+
+   TPad *pad = Pick(px, py, pickobj);
+   if (!pad) return 0;
+
+   if (!pickobj) {
+      fSelected    = pad;
+      fSelectedOpt = "";
+   } else {
+      if (!fSelected) {   // can be set via TCanvas::SetSelected()
+         fSelected    = pickobj->GetObject();
+         fSelectedOpt = pickobj->GetOption();
+      }
+   }
+   fSelectedPad = pad;
+
+   if (fSelected != prevSelObj)
+      Picked(fSelectedPad, fSelected, fEvent);  // emit signal
+
+   return pad;
+}
+
+//______________________________________________________________________________
+void TCanvas::Picked(TPad *pad, TObject *obj, Int_t event)
+{
+   // Emit Picked() signal.
+
+   Long_t args[3];
+
+   args[0] = (Long_t) pad;
+   args[1] = (Long_t) obj;
+   args[2] = event;
+
+   Emit("Picked(TPad*,TObject*,Int_t)", args);
+}
+
+//______________________________________________________________________________
+void TCanvas::ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *obj)
+{
+   // Emit ProcessedEvent() signal.
+
+   Long_t args[4];
+
+   args[0] = event;
+   args[1] = x;
+   args[2] = y;
+   args[3] = (Long_t) obj;
+
+   Emit("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)", args);
 }
 
 //______________________________________________________________________________
