@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.rdl,v 1.20 2001/09/08 01:49:41 verkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.21 2001/09/17 18:48:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,7 +30,7 @@ public:
 
   // Constructors, assignment etc
   inline RooRealIntegral() : _numIntEngine(0),_numIntegrand(0),_valid(kFALSE) { }
-  RooRealIntegral(const char *name, const char *title, const RooAbsReal& function, RooArgSet& depList) ;
+  RooRealIntegral(const char *name, const char *title, const RooAbsReal& function, RooArgSet& depList, const RooArgSet* funcNormSet=0) ;
   RooRealIntegral(const RooRealIntegral& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooRealIntegral(*this,newname); }
   virtual ~RooRealIntegral();
@@ -66,6 +66,7 @@ protected:
   mutable RooSetProxy _anaList ;
   mutable RooSetProxy _jacList ;
   mutable RooSetProxy _facList ;
+  RooArgSet*      _funcNormSet ;
   
   void prepareACleanFunc() const ;
   void restoreACleanFunc() const ;

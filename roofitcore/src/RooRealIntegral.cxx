@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.34 2001/09/15 00:26:04 david Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.35 2001/09/17 18:48:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -41,7 +41,8 @@ ClassImp(RooRealIntegral)
 
 
 RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
-				 const RooAbsReal& function, RooArgSet& depList) :
+				 const RooAbsReal& function, RooArgSet& depList,
+				 const RooArgSet* funcNormSet) :
   RooAbsReal(name,title), _mode(0),
   _function("function","Function to be integrated",this,
 	    const_cast<RooAbsReal&>(function),kFALSE,kFALSE), 
@@ -52,6 +53,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _facList("facList","Variables independent of function",this,kFALSE,kTRUE),
   _numIntEngine(0), _numIntegrand(0), _operMode(Hybrid), _valid(kTRUE)
 {
+  // Save private copy of funcNormSet, if supplied
+  _funcNormSet = funcNormSet ? (RooArgSet*)funcNormSet->snapshot(kFALSE) : 0 ;
+
   // Constructor
   RooArgSet intDepList ;
   RooAbsArg *arg ;
@@ -277,7 +281,7 @@ Bool_t RooRealIntegral::initNumIntegrator() const
     _numIntegrand= new RooRealAnalytic(_function.arg(),_intList,_mode);
   }
   else {
-    _numIntegrand= new RooRealBinding(_function.arg(),_intList);
+    _numIntegrand= new RooRealBinding(_function.arg(),_intList,_funcNormSet);
   }
   if(0 == _numIntegrand || !_numIntegrand->isValid()) {
     cout << ClassName() << "::" << GetName() << ": failed to create valid integrand." << endl;
@@ -302,6 +306,7 @@ Bool_t RooRealIntegral::initNumIntegrator() const
     cout << ClassName() << "::" << GetName() << ": failed to create valid integrator." << endl;
     return kFALSE;
   }
+
   return kTRUE;
 }
 
@@ -316,6 +321,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _operMode(other._operMode), _numIntEngine(0), _numIntegrand(0), _valid(other._valid)
 {
   // Copy constructor
+ _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(kFALSE) : 0 ;
 }
 
 
@@ -324,7 +330,9 @@ RooRealIntegral::~RooRealIntegral()
 {
   if (_numIntEngine) delete _numIntEngine ;
   if (_numIntegrand) delete _numIntegrand ;
+  if (_funcNormSet) delete _funcNormSet ;
 }
+
 
 
 Double_t RooRealIntegral::evaluate() const 
@@ -376,7 +384,7 @@ Double_t RooRealIntegral::evaluate() const
 
   case PassThrough:
     {
-      retVal= _function;
+      retVal= _function.arg().getVal(_funcNormSet) ;
       break ;
     }
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.13 2001/09/11 00:30:32 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.14 2001/09/17 18:48:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,7 +28,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.13 2001/09/11 00:30:32 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.14 2001/09/17 18:48:14 verkerke Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose) :
@@ -139,7 +139,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   nname.Append("Reduced") ;
   TString ntitle(_pdfClone->GetTitle()) ;
   ntitle.Append(" (Accept/Reject)") ;
-  _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,*depList);
+  _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,*depList,&vars);
   delete depList;
   _otherVars.add(_uniformVars);
   _generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,_verbose);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealBinding.cc,v 1.2 2001/08/23 23:43:43 david Exp $
+ *    File: $Id: RooRealBinding.cc,v 1.3 2001/09/17 18:48:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -27,10 +27,10 @@ ClassImp(RooRealBinding)
 ;
 
 static const char rcsid[] =
-"$Id: RooRealBinding.cc,v 1.2 2001/08/23 23:43:43 david Exp $";
+"$Id: RooRealBinding.cc,v 1.3 2001/09/17 18:48:15 verkerke Exp $";
 
-RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars) :
-  RooAbsFunc(vars.getSize()), _func(&func), _vars(0)
+RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset) :
+  RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset) 
 {
   // allocate memory
   _vars= new RooAbsRealLValue*[getDimension()];
@@ -67,7 +67,7 @@ void RooRealBinding::loadValues(const Double_t xvector[]) const {
 Double_t RooRealBinding::operator()(const Double_t xvector[]) const {
   assert(isValid());
   loadValues(xvector);
-  return _func->getVal();
+  return _func->getVal(_nset);
 }
 
 Double_t RooRealBinding::getMinLimit(UInt_t index) const {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsFunc1D.rdl,v 1.2 2001/05/14 22:54:19 verkerke Exp $
+ *    File: $Id: RooRealBinding.rdl,v 1.1 2001/08/03 21:44:57 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -20,7 +20,7 @@ class RooArgSet;
 
 class RooRealBinding : public RooAbsFunc {
 public:
-  RooRealBinding(const RooAbsReal& func, const RooArgSet &vars);
+  RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset=0);
   virtual ~RooRealBinding();
 
   virtual Double_t operator()(const Double_t xvector[]) const;
@@ -31,6 +31,7 @@ protected:
   void loadValues(const Double_t xvector[]) const;
   const RooAbsReal *_func;
   RooAbsRealLValue **_vars;
+  const RooArgSet *_nset;
 
   ClassDef(RooRealBinding,0) // RooAbsReal interface adaptor
 };

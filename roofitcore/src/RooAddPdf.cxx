@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.7 2001/09/04 01:37:41 david Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.8 2001/09/17 18:48:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -109,7 +109,6 @@ Double_t RooAddPdf::evaluate() const
   
   Double_t value(0) ;
   Double_t lastCoef(1) ;
-
 
   // Do running sum of coef/pdf pairs, calculate lastCoef.
   _pdfIter->Reset() ;

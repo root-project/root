@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.12 2001/08/22 23:49:37 david Exp $
+ *    File: $Id: RooCurve.cc,v 1.13 2001/08/23 23:43:42 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -40,7 +40,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.12 2001/08/22 23:49:37 david Exp $";
+"$Id: RooCurve.cc,v 1.13 2001/08/23 23:43:42 david Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -78,21 +78,15 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
 
   RooAbsFunc *funcPtr(0),*rawPtr(0);
   RooRealIntegral *projected(0);
+  RooArgSet bindNormSet ;
   if(0 != normVars) {
     // calculate our normalization factor over x, if requested
     RooArgSet vars(*normVars);
     RooAbsArg *found= vars.find(x.GetName());
     if(found) {
-      // calculate our normalization factor over all vars including x
-      RooRealIntegral normFunc("normFunc","normFunc",f,vars);
-      if(!normFunc.isValid()) {
-	cout << "RooPlot: cannot normalize ";
-	f.Print("1");
-	return;
-      }
-      scaleFactor/= normFunc.getVal();
       // remove x from the set of vars to be projected
       vars.remove(*found);
+      bindNormSet.add(*found) ;
     }
     // project out any remaining normalization variables
     if(vars.getSize() > 0) {
@@ -102,10 +96,15 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
       title.Append(" (Projected)") ;
       projected= new RooRealIntegral(name.Data(),title.Data(),f,vars);
       if(!projected->isValid()) return; // can this happen if normFunc isn't valid??
-      funcPtr= projected->bindVars(x);
+      funcPtr= projected->bindVars(x,&bindNormSet);
     }
+  } else {
+    bindNormSet.add(x) ;
   }
-  if(0 == funcPtr) funcPtr= f.bindVars(x);
+
+  if(0 == funcPtr) {
+    funcPtr= f.bindVars(x,&bindNormSet);
+  }
   // apply a scale factor if necessary
   if(scaleFactor != 1) {
     rawPtr= funcPtr;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.38 2001/09/08 00:51:54 bevan Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.39 2001/09/17 18:48:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -413,13 +413,13 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scal
   return frame;
 }
 
-RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars) const {
+RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset) const {
   // Create an interface adaptor f(vars) that binds us to the specified variables
   // (in arbitrary order). For example, calling bindVars({x1,x3}) on an object
   // F(x1,x2,x3,x4) returns an object f(x1,x3) that is evaluated using the
   // current values of x2 and x4. The caller takes ownership of the returned adaptor.
 
-  RooAbsFunc *binding= new RooRealBinding(*this,vars);
+  RooAbsFunc *binding= new RooRealBinding(*this,vars,nset);
   if(binding && !binding->isValid()) {
     cout << ClassName() << "::" << GetName() << ":bindVars: cannot bind to ";
     vars.Print();

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.27 2001/08/24 23:55:15 david Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.28 2001/09/17 18:48:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -45,7 +45,7 @@ public:
   inline void setUnit(const char *unit) { _unit= unit; }
 
   // Lightweight interface adaptors (caller takes ownership)
-  RooAbsFunc *bindVars(const RooArgSet &vars) const;
+  RooAbsFunc *bindVars(const RooArgSet &vars, const RooArgSet* nset=0) const;
 
   // Create a fundamental-type object that can hold our value.
   RooAbsArg *createFundamental() const;
