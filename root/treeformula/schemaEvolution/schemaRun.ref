@@ -1,7 +1,4 @@
 
-Warning in <TClass::TClass>: no dictionary for class Event is available
-Warning in <TClass::TClass>: no dictionary for class EventHeader is available
-Warning in <TClass::TClass>: no dictionary for class Track is available
 ======> EVENT:5
  event           = NULL
  fUniqueID       = 0

@@ -25,7 +25,7 @@ EVENTSO       = libEvent.$(DllSuf)
 
 EVENTS2       = Event_2.$(SrcSuf) EventDict_2.$(SrcSuf) Event.$(ObjSuf)
 EVENT2O       = Event_2.$(ObjSuf) EventDict_2.$(ObjSuf)
-EVENT2S0      = libEvent_2.$(DllSuf)
+EVENT2SO      = libEvent_2.$(DllSuf)
 
 EVENT         = Event$(ExeSuf)
 ifeq ($(ARCH),win32)
@@ -36,35 +36,28 @@ endif
 
 schemaRun.ref: schemaRun1.C Event.root 
 	$(CMDECHO) root.exe -q -b -l schemaRun1.C 2>&1 \
-	| grep -v fType | grep -v Processing | grep -v TRefArray | grep -v TH1F \
+	| grep -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F \
 	> schemaRun.ref
 
-schemaRun1.log: schemaRun1.C Event.root 
-	$(CMDECHO) root.exe -q -b -l schemaRun1.C 2>&1 \
-	 | grep -v fType| grep -v Processing | grep -v TRefArray | grep -v TH1F \
-	> schemaRun1.log
+SCRIPTS = $(wildcard schemaRun*.C)
+LOGFILES = $(subst .C,.log,$(SCRIPTS))
+LOGFILES_TEST = $(subst .log,.test,$(LOGFILES))
 
-schemaRun2.log: schemaRun2.C Event.root 
-	$(CMDECHO) root.exe -q -b -l schemaRun2.C 2>&1 \
-	 | grep -v fType| grep -v Processing | grep -v TRefArray | grep -v TH1F \
-	> schemaRun2.log
+#debug := $(shell echo $(LOGFILES_TEST) 1>&2)
 
-schemaRun3.log: schemaRun3.C Event.root $(EVENT2S0)
-	$(CMDECHO) root.exe -q -b -l schemaRun3.C 2>&1 \
-	 | grep -v fType| grep -v Processing | grep -v TRefArray | grep -v TH1F \
-	> schemaRun3.log
+$(LOGFILES) : %.log : %.C $(EVENT2SO) $(EVENTSO) 
+	$(CMDECHO) root.exe -q -b -l  $< 2>&1 \
+	| grep -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F \
+	> $@
 
-schemaRun4.log: schemaRun4.C Event.root $(EVENT2S0)
-	$(CMDECHO) root.exe -q -b -l schemaRun4.C 2>&1 \
-	 | grep -v fType| grep -v Processing | grep -v TRefArray | grep -v TH1F \
-	> schemaRun4.log
+$(LOGFILES_TEST) : %.test : %.log
+	$(CMDECHO) diff -b schemaRun.ref $^
 
-schemaTest: schemaRun1.log schemaRun2.log schemaRun3.log schemaRun4.log
+schemaTest: $(LOGFILES_TEST)
 	$(CMDECHO) diff -b schemaRun.ref schemaRun1.log && \
 	diff -b schemaRun.ref schemaRun2.log && \
 	diff -b schemaRun.ref schemaRun3.log && \
 	diff -b schemaRun.ref schemaRun4.log
-
 
 MAINEVENTO    = MainEvent.$(ObjSuf)
 MAINEVENTS    = MainEvent.$(SrcSuf)
@@ -112,7 +105,7 @@ $(EVENT):       $(EVENTSO) $(MAINEVENTO)
 		   $(OutPutOpt)$(EVENT)
 		@echo "$@ done"
 
-$(EVENT2S0):     $(EVENT2O)
+$(EVENT2SO):     $(EVENT2O)
 ifeq ($(ARCH),aix)
 		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
