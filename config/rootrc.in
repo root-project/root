@@ -139,7 +139,7 @@ Plugin.TGrid:        ^alien    TAlien        RAliEn  "TAlien(const char*,const c
 Plugin.TVirtualFitter:      *  TFitter       Minuit       "TFitter(Int_t)"
 Plugin.TVirtualHistPainter: *  THistPainter  HistPainter  "THistPainter()"
 Plugin.TVirtualTreePlayer:  *  TTreePlayer   TreePlayer   "TTreePlayer()"
-Plugin.TVirtualTreeViewer:  *  TTreeViewer   TreeViewer   "TTreeViewer(const char*)"
+Plugin.TVirtualTreeViewer:  *  TTreeViewer   TreeViewer   "TTreeViewer(const TTree*)"
 Plugin.TVirtualGeoPainter:  *  TGeoPainter   GeomPainter  "TGeoPainter()"
 Plugin.TVirtualPS:          ps  TPostScript  Postscript   "TPostScript()"
 +Plugin.TVirtualPS:         svg TSVG         Postscript   "TSVG()"
