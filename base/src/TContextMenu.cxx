@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.4 2002/04/04 17:32:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.5 2002/04/05 11:39:21 rdm Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -242,11 +242,11 @@ void TContextMenu::Action(TObject *object, TToggle *toggle)
 }
 
 //______________________________________________________________________________
-Char_t *TContextMenu::CreateArgumentTitle(TMethodArg *argument)
+char *TContextMenu::CreateArgumentTitle(TMethodArg *argument)
 {
    // Create string describing argument (for use in dialog box).
 
-   static Char_t argTitle[128];
+   static char argTitle[128];
 
    if (argument) {
       sprintf(argTitle, "(%s)  %s", argument->GetTitle(), argument->GetName());
@@ -262,11 +262,11 @@ Char_t *TContextMenu::CreateArgumentTitle(TMethodArg *argument)
 }
 
 //______________________________________________________________________________
-Char_t *TContextMenu::CreateDialogTitle(TObject *object, TFunction *method)
+char *TContextMenu::CreateDialogTitle(TObject *object, TFunction *method)
 {
    // Create title for dialog box retrieving argument values.
 
-   static Char_t methodTitle[128];
+   static char methodTitle[128];
 
    if (object && method)
       sprintf(methodTitle, "%s::%s", object->ClassName(), method->GetName());
@@ -279,11 +279,11 @@ Char_t *TContextMenu::CreateDialogTitle(TObject *object, TFunction *method)
 }
 
 //______________________________________________________________________________
-Char_t *TContextMenu::CreatePopupTitle(TObject *object)
+char *TContextMenu::CreatePopupTitle(TObject *object)
 {
    // Create title for popup menu.
 
-   static Char_t popupTitle[128];
+   static char popupTitle[128];
 
    if (object) {
       if (!*(object->GetName()) || !strcmp(object->GetName(), object->ClassName())) {
@@ -301,7 +301,7 @@ Char_t *TContextMenu::CreatePopupTitle(TObject *object)
 }
 
 //______________________________________________________________________________
-void TContextMenu::Execute(TObject *object, TFunction *method, const Char_t *params)
+void TContextMenu::Execute(TObject *object, TFunction *method, const char *params)
 {
    // Execute method with specified arguments for specified object.
 
@@ -341,11 +341,11 @@ void TContextMenu::Execute(TObject *object, TFunction *method, const Char_t *par
 }
 
 //______________________________________________________________________________
-void TContextMenu::Execute(TObject *object, TMethod *method, TObjArray *params)
+void TContextMenu::Execute(TObject *object, TFunction *method, TObjArray *params)
 {
    // Execute method with specified arguments for specified object.
 
-   if (object && method) {
+   if (method) {
       TVirtualPad *savedPad = 0;
 
       gROOT->SetSelectedPrimitive(object);
@@ -355,8 +355,20 @@ void TContextMenu::Execute(TObject *object, TMethod *method, TObjArray *params)
       }
 
       gROOT->SetFromPopUp(kTRUE);
-      if (fSelectedCanvas) fSelectedCanvas->GetPadSave()->cd();
-      object->Execute(method, params);
+//      if (fSelectedCanvas) fSelectedCanvas->GetPadSave()->cd();
+      if (object) {
+         object->Execute((TMethod*)method, params);
+      } else {
+         TString args;
+         TIter next(params);
+         TObjString *s;
+         while ((s = (TObjString*) next())) {
+            if (!args.IsNull()) args += ",";
+            args += s->String();
+         }
+         char *cmd = Form("%s(%s);", method->GetName(), args.Data());
+         gROOT->ProcessLine(cmd);
+      }
       if (fSelectedCanvas && fSelectedCanvas->GetPadSave()->TestBit(kNotDeleted))
          fSelectedCanvas->GetPadSave()->Modified();
       gROOT->SetFromPopUp( kFALSE );

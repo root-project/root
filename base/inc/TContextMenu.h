@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.h,v 1.4 2001/12/19 07:40:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.h,v 1.5 2002/04/04 17:32:14 rdm Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -70,15 +70,15 @@ public:
    virtual void Action(TClassMenuItem *classmenuitem);
    void Action(TMethod *method) { Action(fSelectedObject, method); }
    void Action(TToggle *toggle) { Action(fSelectedObject, toggle); }
-   virtual Char_t *CreateArgumentTitle(TMethodArg *argument);
-   virtual Char_t *CreateDialogTitle(TObject *object, TFunction *method);
-   virtual Char_t *CreatePopupTitle(TObject *object );
-   virtual void Execute(const char *method,  const char *params, int* error=0) { TObject::Execute(method, params, error); }
-   virtual void Execute(TMethod *method, TObjArray *params, int* error=0) { TObject::Execute(method, params, error); }
-   virtual void Execute(TObject *object, TFunction *method, const Char_t *params);
-   virtual void Execute(TObject *object, TMethod *method, TObjArray *params);
-   void Execute(const Char_t *params) { Execute(fCalledObject, fSelectedMethod, params); }
-   void Execute(TObjArray *params) { Execute(fCalledObject, (TMethod*)fSelectedMethod, params); }
+   virtual char *CreateArgumentTitle(TMethodArg *argument);
+   virtual char *CreateDialogTitle(TObject *object, TFunction *method);
+   virtual char *CreatePopupTitle(TObject *object );
+   virtual void Execute(const char *method,  const char *params, Int_t *error=0) { TObject::Execute(method, params, error); }
+   virtual void Execute(TMethod *method, TObjArray *params, Int_t *error=0) { TObject::Execute(method, params, error); }
+   virtual void Execute(TObject *object, TFunction *method, const char *params);
+   virtual void Execute(TObject *object, TFunction *method, TObjArray *params);
+   void Execute(const char *params) { Execute(fCalledObject, fSelectedMethod, params); }
+   void Execute(TObjArray *params) { Execute(fCalledObject, fSelectedMethod, params); }
    virtual TBrowser *GetBrowser() { return fBrowser; }
    virtual TContextMenuImp *GetContextMenuImp() { return fContextMenuImp; }
    virtual TVirtualPad *GetSelectedCanvas() { return fSelectedCanvas; }
