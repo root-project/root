@@ -32,7 +32,7 @@ CLEAN_TARGETS +=
 
 ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def *.ilk
 
-.PHONY : clean tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR)
+.PHONY : clean tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils
 
 export CURDIR=$(shell basename `pwd`)
 #debug:=$(shell echo CALLDIR=$(CALLDIR) CURDIR=$(CURDIR) PWD=`pwd` 1>&2 ) 
@@ -181,8 +181,18 @@ ROOTCORELIBS_LIST = Core Cint Tree Hist
 ROOTCORELIBS = $(addprefix $(ROOT_LOC)/lib/lib,$(addsuffix .$(DllSuf),$(ROOTCORELIBS_LIST)))
 ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 
+.PHONY: utils
+
+UTILS_LIBS =  $(ROOTTEST_HOME)scripts/utils_cc.$(DllSuf)
+
+utils:  $(UTILS_LIBS)
+
+
 %.o: %.C
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_C.build.log 2>&1
+
+%.o: %.cc
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cc.build.log 2>&1
 
 %.o: %.cxx
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cxx.build.log 2>&1
@@ -195,6 +205,9 @@ ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 
 %.obj: %.C
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_C.build.log 2>&1
+
+%.obj: %.cc
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cc.build.log 2>&1
 
 %.obj: %.cxx
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cxx.build.log 2>&1
@@ -211,15 +224,18 @@ ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 %_cxx.$(DllSuf) : %.cxx $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1
 
+%_cc.$(DllSuf) : %.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cc.build.log 2>&1
+
 %_h.$(DllSuf) : %.h $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1
 
-%.log : run%.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+%.log : run%.C utils $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
 
 .PRECIOUS: %_C.$(DllSuf) 
 
-%.clog : run%_C.$(DllSuf) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+%.clog : run%_C.$(DllSuf) utils $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b run$*.C+ > $@ 2>&1
 
 define BuildWithLib
