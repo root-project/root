@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.23 2002/11/05 11:37:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.24 2003/04/09 20:38:54 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -94,6 +94,7 @@ public:
         virtual const char  *GetTicks() const;
         virtual Bool_t   GetTimeDisplay() const {return fTimeDisplay;}
         virtual const char  *GetTimeFormat() const {return fTimeFormat.Data();}
+        virtual const char  *GetTimeFormatOnly() const;
          const char     *GetTitle() const {return fTitle.Data();}
          const TArrayD  *GetXbins() const {return &fXbins;}
                  Int_t   GetFirst() const;
@@ -116,6 +117,7 @@ public:
         virtual void     SetTicks(Option_t *option="+"); // *MENU*
         virtual void     SetTimeDisplay(Int_t value) {fTimeDisplay = (value != 0);} // *TOGGLE*
         virtual void     SetTimeFormat(const char *format="");  // *MENU*
+        virtual void     SetTimeOffset(Double_t toffset);
         virtual void     UnZoom();  // *MENU*
 
         ClassDef(TAxis,7)  //Axis class

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.11 2002/10/31 07:27:34 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.12 2002/12/02 18:50:02 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 // ***********************************************************************
@@ -429,7 +429,7 @@ void TAxis3D::PaintAxis(TGaxis *axis, Float_t ang)
 //*-*-             Option time display is required ?
        if (fAxis[i].GetTimeDisplay()) {
           strcat(chopax,"t");
-          if (strlen(fAxis[i].GetTimeFormat()) == 0) {
+          if (strlen(fAxis[i].GetTimeFormatOnly()) == 0) {
              axis->SetTimeFormat(fAxis[i].ChooseTimeFormat(bmax-bmin));
           } else {
              axis->SetTimeFormat(fAxis[i].GetTimeFormat());

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.11 2002/11/05 11:37:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.12 2003/02/20 22:36:10 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -119,6 +119,7 @@ virtual const char     *GetTitle() const {return fTitle.Data();}
                 void    SetTickSize(Float_t ticksize) {fTickSize = ticksize;} // *MENU*
                 void    SetGridLength(Float_t gridlength) {fGridLength = gridlength;}
                 void    SetTimeFormat(const char *tformat);
+                void    SetTimeOffset(Double_t toffset);
         virtual void    SetTitle(const char *title=""); // *MENU*
                 void    SetTitleOffset(Float_t titleoffset=1) {fTitleOffset = titleoffset;} // *MENU*
                 void    SetTitleSize(Float_t titlesize) {fTitleSize = titlesize;} // *MENU*

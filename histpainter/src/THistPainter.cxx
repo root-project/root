@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.129 2003/03/21 16:23:59 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.130 2003/04/07 21:41:07 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1528,7 +1528,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
 //   Display axis as time
    if (fXaxis->GetTimeDisplay()) {
       strcat(chopt,"t");
-      if (strlen(fXaxis->GetTimeFormat()) == 0) {
+      if (strlen(fXaxis->GetTimeFormatOnly()) == 0) {
          axis.SetTimeFormat(fXaxis->ChooseTimeFormat(Hparam.xmax-Hparam.xmin));
       }
    }
@@ -1577,7 +1577,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
 //   Display axis as time
    if (fYaxis->GetTimeDisplay()) {
       strcat(chopt,"t");
-      if (strlen(fYaxis->GetTimeFormat()) == 0) {
+      if (strlen(fYaxis->GetTimeFormatOnly()) == 0) {
          axis.SetTimeFormat(fYaxis->ChooseTimeFormat(Hparam.ymax-Hparam.ymin));
       }
    }
@@ -3724,7 +3724,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 //                 Option time display is required ?
         if (fXaxis->GetTimeDisplay()) {
            strcat(chopax,"t");
-           if (strlen(fXaxis->GetTimeFormat()) == 0) {
+           if (strlen(fXaxis->GetTimeFormatOnly()) == 0) {
               axis->SetTimeFormat(fXaxis->ChooseTimeFormat(bmax-bmin));
            } else {
               axis->SetTimeFormat(fXaxis->GetTimeFormat());
@@ -3760,7 +3760,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 //                 Option time display is required ?
         if (fYaxis->GetTimeDisplay()) {
            strcat(chopay,"t");
-           if (strlen(fYaxis->GetTimeFormat()) == 0) {
+           if (strlen(fYaxis->GetTimeFormatOnly()) == 0) {
               axis->SetTimeFormat(fYaxis->ChooseTimeFormat(bmax-bmin));
            } else {
               axis->SetTimeFormat(fYaxis->GetTimeFormat());
@@ -3784,7 +3784,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 //                 Option time display is required ?
         if (fZaxis->GetTimeDisplay()) {
            strcat(chopaz,"t");
-           if (strlen(fZaxis->GetTimeFormat()) == 0) {
+           if (strlen(fZaxis->GetTimeFormatOnly()) == 0) {
               axis->SetTimeFormat(fZaxis->ChooseTimeFormat(bmax-bmin));
            } else {
               axis->SetTimeFormat(fZaxis->GetTimeFormat());

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.40 2003/04/08 08:16:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.41 2003/04/08 13:05:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -591,6 +591,20 @@ void TAxis::GetLowEdge(Axis_t *edge) const
 }
 
 //______________________________________________________________________________
+const char *TAxis::GetTimeFormatOnly() const
+{
+   // Return *only* the time format dorm the string fTimeFormat
+   TString timeformat;
+   Int_t IdF = fTimeFormat.Index("%F");
+   if (IdF>=0) {
+      timeformat = fTimeFormat(0,IdF);
+   } else {
+      timeformat = fTimeFormat;
+   }
+   return timeformat.Data();
+}
+
+//______________________________________________________________________________
 const char *TAxis::GetTicks() const
 {
 // return the ticks option (see SetTicks)
@@ -870,17 +884,38 @@ void TAxis::SetTimeFormat(const char *tformat)
 //          TDatime da(2003,02,28,12,00,00);
 //          gStyle->SetTimeOffset(da.Convert());
 //
-   fTimeFormat = tformat;
-   
-   // If the time offset is already defined or if the input string
-   // is empty then return
-   if (fTimeFormat.Index("%F")>=0 || fTimeFormat.IsNull()) return;
+   TString timeformat = tformat;
 
+   if (timeformat.Index("%F")>=0 || timeformat.IsNull()) {
+      fTimeFormat = timeformat;
+      return;
+   }
+
+   Int_t IdF = fTimeFormat.Index("%F");
+   if (IdF>=0) {
+      Int_t LnF = fTimeFormat.Length();
+      TString stringtimeoffset = fTimeFormat(IdF,LnF);
+      fTimeFormat = tformat;
+      fTimeFormat.Append(stringtimeoffset);
+   } else {
+      fTimeFormat = tformat;
+      SetTimeOffset(gStyle->GetTimeOffset());
+   }
+}
+
+
+//______________________________________________________________________________
+void TAxis::SetTimeOffset(Double_t toffset)
+{
+   // Change the time offset
+   TDatime TimeOffset((UInt_t)toffset);
+   Int_t IdF = fTimeFormat.Index("%F");
+   if (IdF>=0) fTimeFormat.Remove(IdF);
    // If the time offset not defined put the current one (in gStyle)
-   TDatime TimeOffset((UInt_t)gStyle->GetTimeOffset());
    fTimeFormat.Append("%F");
    fTimeFormat.Append(TimeOffset.AsSQLString());
 }
+
 
 //______________________________________________________________________________
 void TAxis::Streamer(TBuffer &R__b)

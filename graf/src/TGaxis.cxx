@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.44 2003/04/08 08:16:41 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.45 2003/04/08 13:05:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1854,19 +1854,37 @@ void TGaxis::SetTimeFormat(const char *tformat)
 //      %M minute (00-59)
 //      %S seconds (00-61)
 //      %% %
+//
+   TString timeformat = tformat;
 
-   fTimeFormat = tformat;
+   if (timeformat.Index("%F")>=0 || timeformat.IsNull()) {
+      fTimeFormat = timeformat;
+      return;
+   }
+   
+   Int_t IdF = fTimeFormat.Index("%F");
+   if (IdF>=0) {
+      Int_t LnF = fTimeFormat.Length();
+      TString stringtimeoffset = fTimeFormat(IdF,LnF);  
+      fTimeFormat = tformat;
+      fTimeFormat.Append(stringtimeoffset);        
+   } else {
+      fTimeFormat = tformat;
+      SetTimeOffset(gStyle->GetTimeOffset());
+   }
+}
 
-   // If the time offset is already defined or if the input string
-   // is empty then return     
-   if (fTimeFormat.Index("%F")>=0 || fTimeFormat.IsNull()) return;
-
+//______________________________________________________________________________
+void TGaxis::SetTimeOffset(Double_t toffset)
+{
+   // Change the time offset
+   TDatime TimeOffset((UInt_t)toffset);
+   Int_t IdF = fTimeFormat.Index("%F");
+   if (IdF>=0) fTimeFormat.Remove(IdF);
    // If the time offset not defined put the current one (in gStyle)
-   TDatime TimeOffset((UInt_t)gStyle->GetTimeOffset());
    fTimeFormat.Append("%F");
    fTimeFormat.Append(TimeOffset.AsSQLString());
 }
-
 
 //______________________________________________________________________________
 void TGaxis::Streamer(TBuffer &R__b)
