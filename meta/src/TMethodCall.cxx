@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.13 2003/06/13 14:21:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.14 2003/06/13 16:21:21 rdm Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -85,7 +85,7 @@ TMethodCall::TMethodCall(const char *function, const char *params)
 }
 
 //______________________________________________________________________________
-TMethodCall::TMethodCall(const TMethodCall &orig)
+TMethodCall::TMethodCall(const TMethodCall &orig) : TObject(orig)
 {
    // Copy ctor.
 
@@ -132,7 +132,7 @@ TMethodCall::~TMethodCall()
 }
 
 //______________________________________________________________________________
-TObject *TMethodCall::Clone(const char *newname) const
+TObject *TMethodCall::Clone(const char *) const
 {
    TObject *newobj = new TMethodCall(*this);
    return newobj;
