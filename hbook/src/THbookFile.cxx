@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.11 2002/10/22 12:10:01 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.12 2002/10/25 21:19:25 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -379,6 +379,8 @@ Bool_t THbookFile::cd(const char *dirname)
 void THbookFile::Close(Option_t *)
 {
 // Close the Hbook file
+   
+   gROOT->GetListOfBrowsables()->Remove(this);
    
    cd();
    
