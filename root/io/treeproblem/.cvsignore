@@ -1,2 +1,3 @@
 *.def *.exp *.lib *.pdb *.log *Dict.*
  *.dll 
+FooDict.h
