@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.h,v 1.1 2000/07/11 09:26:37 rdm Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -29,7 +29,8 @@
 #endif
 
 
-struct TGSearchType {
+class TGSearchType {
+public:
    Bool_t  fDirection;
    Bool_t  fCaseSensitive;
    char   *fBuffer;
