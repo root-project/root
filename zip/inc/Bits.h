@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.1 2003/08/22 10:08:27 brun Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.2 2003/09/15 08:48:13 brun Exp $ */
 /* Author: */
 /*
 
@@ -9,6 +9,10 @@
  that it is not sold for profit, and that this copyright notice is retained.
 
 */
+
+#ifdef R__ZLIB
+#include "zlib.h"
+#endif
 
 /*
  *  bits.c by Jean-loup Gailly and Kai Uwe Rommel.
@@ -373,7 +377,7 @@ local int R__mem_read(char *b, unsigned bsize)
  *           FORTRAN. Written for DELPHI collaboration (CERN)          *
  *                                                                     *
  * Input: cxlevel - compression level                                  *
- *        scrsize - size of input buffer                               *
+ *        srcsize - size of input buffer                               *
  *        src     - input buffer                                       *
  *        tgtsize - size of target buffer                              *
  *                                                                     *
@@ -390,6 +394,61 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
      /* char *tgt, *src;                  source and target buffers */
 
 {
+#ifdef R__ZLIB
+  z_stream stream;
+  int err;
+
+  *irep = 0;
+
+  error_flag   = 0;
+  if (*tgtsize <= HDRSIZE) R__error("target buffer too small");
+  if (error_flag != 0) return;
+  if (*srcsize > 0xffffff) R__error("source buffer too big");
+  if (error_flag != 0) return;
+
+  int method   = DEFLATE;
+
+  stream.next_in   = (Bytef*)src;
+  stream.avail_in  = (uInt)(*srcsize);
+
+  stream.next_out  = (Bytef*)(&tgt[HDRSIZE]);
+  stream.avail_out = (uInt)(*tgtsize);
+
+  stream.zalloc    = (alloc_func)0;
+  stream.zfree     = (free_func)0;
+  stream.opaque    = (voidpf)0;
+
+  err = deflateInit(&stream, cxlevel);
+  if (err != Z_OK) {
+     printf("error in deflateInit (zlib)\n");
+     return; 
+  }
+
+  err = deflate(&stream, Z_FINISH);
+  if (err != Z_STREAM_END) {
+     deflateEnd(&stream);
+     printf("error in deflate (zlib)\n");
+     return;
+  }
+
+  err = deflateEnd(&stream);
+
+  tgt[0] = 'Z';               /* Signature ZLib */
+  tgt[1] = 'L';
+  tgt[2] = (char) method;
+ 
+  in_size   = (unsigned) (*srcsize);
+  out_size  = stream.total_out;             /* compressed size */
+  tgt[3] = (char)(out_size & 0xff);
+  tgt[4] = (char)((out_size >> 8) & 0xff);
+  tgt[5] = (char)((out_size >> 16) & 0xff);
+ 
+  tgt[6] = (char)(in_size & 0xff);         /* decompressed size */
+  tgt[7] = (char)((in_size >> 8) & 0xff);
+  tgt[8] = (char)((in_size >> 16) & 0xff);
+
+  *irep = stream.total_out + HDRSIZE;
+#else
   ush att      = (ush)UNKNOWN;
   ush flags    = 0;
   int method   = DEFLATE;
@@ -436,6 +495,7 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
 
   *irep     = out_offset;
   return;
+#endif
 }
 
 void R__error(char *msg)

@@ -1,0 +1,25 @@
+The compression package "zlib" is part of the zip directory. The original tar 
+file can be downloaded from : http://www.zlib.org 
+
+Only the useful code as been extracted from this tar file. It consists of: 
+
+ zip/inc:
+   crc32.h deflate.h inffast.h inffixed.h inflate.h
+   inftrees.h trees.h zconf.h zlib.h zutil.h
+
+ zip/src:
+   adler32.c compress.c crc32.c deflate.c gzio.c infback.c
+   inffast.c inflate.c inftrees.c trees.c uncompr.c zutil.c
+
+To put a new zlib version in ROOT, all these files must be replaced.
+
+The zlib version number can be found in zip/inc/zlib.h
+
+zlib is now used in TPDF to compress the "stream" part of PDF files.
+
+The ROOT compress functions R__zip and R__unzip have also been modified
+in order to use zlib. Some performance tests (on a P4 2.4GHz) showed that 
+the zlib version is 7.6% slower in writing and 13.6% faster in reading.
+Because of the poor performances in writing, the zlib versions of R__zip
+and R__unzip have not been activated. To activate them it is enough to 
+define R__ZLIB in the files zip/src/Inflate.c and zip/inc/Bits.h.
