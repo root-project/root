@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.7 2002/05/18 08:43:30 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.8 2002/10/25 00:19:59 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -89,6 +89,7 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    char *u0, *u = StrDup(url);
    u0 = u;
 
+   char *t, *s2;
    if ((s = strstr(u, ":/"))) {
       if (*(s+2) != '/') {
          Error("TUrl", "malformed, URL must contain \"://\"");
@@ -131,7 +132,7 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
 
    // Find user and passwd
    u = s;
-   char *t = s;
+   t = s;
 again:
    if ((s = strchr(t, '@'))) {
       if (*(s-1) == '\\') {
@@ -140,7 +141,6 @@ again:
       }
       sav = *s;
       *s = 0;
-      char *s2;
       if ((s2 = strchr(u, ':'))) {
          *s2 = 0;
          fUser = u;
