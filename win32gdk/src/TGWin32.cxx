@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.39 2003/12/16 16:22:56 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.40 2004/01/13 21:33:43 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -853,6 +853,31 @@ TGWin32::~TGWin32()
 }
 
 //______________________________________________________________________________
+Bool_t TGWin32::NeedSplash()
+{
+   // return kFALSE if option "-l" was specified as main programm command arg
+
+   if (gROOT->IsBatch() || !gApplication) return kFALSE;
+
+   TString arg = gSystem->BaseName(gApplication->Argv(0));
+
+   if ((arg!="root") && (arg!="rootn") &&
+       (arg!="root.exe") && (arg!="rootn.exe")) return kFALSE;
+
+   if (gROOT->IsBatch()) return kFALSE;
+
+   for(int i=1; i<gApplication->Argc(); i++) {
+      arg = gApplication->Argv(i);
+      arg.Strip(TString::kBoth);
+
+      if ((arg=="-l") || (arg=="-b")) {
+         return kFALSE;
+      }
+   }
+   return TRUE;
+}
+
+//______________________________________________________________________________
 void TGWin32::CloseDisplay()
 {
    // close display (terminate server/gMainThread )
@@ -889,29 +914,6 @@ void TGWin32::Unlock()
    //
 
    if (gMainThread && gMainThread->fCritSec) ::LeaveCriticalSection(gMainThread->fCritSec);
-}
-
-//______________________________________________________________________________
-Bool_t TGWin32::NeedSplash()
-{
-   // return kFALSE if option "-l" was specified as main programm command arg
-
-   TString arg = gSystem->BaseName(gApplication->Argv(0));
-
-   if ((arg!="root") && (arg!="rootn") &&
-       (arg!="root.exe") && (arg!="rootn.exe")) return kFALSE;
-
-   if (gROOT->IsBatch()) return kFALSE;
-
-   for(int i=1; i<gApplication->Argc(); i++) {
-      arg = gApplication->Argv(i);
-      arg.Strip(TString::kBoth);
-
-      if ((arg=="-l") || (arg=="-b")) {
-         return kFALSE;
-      }
-   }
-   return TRUE;
 }
 
 //______________________________________________________________________________

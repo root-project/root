@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.60 2004/01/12 15:35:52 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.61 2004/01/13 13:48:56 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -36,7 +36,7 @@
 #include "TGWin32Command.h"
 #include "TSocket.h"
 #include "TApplication.h"
-
+#include "TWin32SplashThread.h"
 #include "Win32Constants.h"
 
 #include <stdlib.h>
@@ -267,8 +267,14 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
             ::CloseHandle(hEvent1);
             hEvent1 = 0;
          }
+
          if(!gROOT->IsLineProcessing()) {
             if(!gApplication->HandleTermInput()) break; // no terminal input
+
+            if (gSplash) {    // terminate splash window after first key press
+               delete gSplash;
+               gSplash = 0;
+            }
          }
          ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE), ENABLE_PROCESSED_OUTPUT);
          if (hEvent1) ::ResetEvent(hEvent1);

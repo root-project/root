@@ -1,3 +1,5 @@
+// @(#)root/winnt:$Name:  $:$Id: TWin32SplashThread.h,v 1.1 2004/01/14 11:42:21 rdm Exp $
+// Author: Bertrand Bellenot 14/01/04
 
 /*************************************************************************
  * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
@@ -21,7 +23,6 @@ public:
 
    TWin32SplashThread(Bool_t extended);
    ~TWin32SplashThread();
-
 };
 
 R__EXTERN TWin32SplashThread *gSplash;
