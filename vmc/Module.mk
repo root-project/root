@@ -51,6 +51,12 @@ $(VMCDO):       $(VMCDS)
 
 all-vmc:        $(VMCLIB)
 
+map-vmc:        $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(VMCLIB) \
+		   -d $(VMCLIBDEP) -c $(VMCL)
+
+map::           map-vmc
+
 clean-vmc:
 		@rm -f $(VMCO) $(VMCDO)
 

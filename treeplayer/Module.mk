@@ -50,7 +50,13 @@ $(TREEPLAYERDS): $(TREEPLAYERH) $(TREEPLAYERL) $(ROOTCINTTMP)
 $(TREEPLAYERDO): $(TREEPLAYERDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
-all-treeplayer:  $(TREEPLAYERLIB)
+all-treeplayer: $(TREEPLAYERLIB)
+
+map-treeplayer: $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(TREEPLAYERLIB) \
+		   -d $(TREEPLAYERLIBDEP) -c $(TREEPLAYERL)
+
+map::           map-treeplayer
 
 clean-treeplayer:
 		@rm -f $(TREEPLAYERO) $(TREEPLAYERDO)

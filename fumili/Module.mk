@@ -50,6 +50,12 @@ $(FUMILIDO):    $(FUMILIDS)
 
 all-fumili:     $(FUMILILIB)
 
+map-fumili:     $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(FUMILILIB) \
+		   -d $(FUMILILIBDEP) -c $(FUMILIL)
+
+map::           map-fumili
+
 clean-fumili:
 		@rm -f $(FUMILIO) $(FUMILIDO)
 

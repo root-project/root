@@ -51,6 +51,12 @@ $(WIN32DO):     $(WIN32DS)
 
 all-win32:      $(WIN32LIB)
 
+map-win32:      $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(WIN32LIB) \
+		   -d $(WIN32LIBDEP) -c $(WIN32L)
+
+map::           map-win32
+
 clean-win32:
 		@rm -f $(WIN32O) $(WIN32DO)
 

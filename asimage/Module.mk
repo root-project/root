@@ -97,6 +97,12 @@ $(ASIMAGEDO):   $(ASIMAGEDS) $(ASTEPLIB)
 
 all-asimage:    $(ASIMAGELIB)
 
+map-asimage:    $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(ASIMAGELIB) \
+		   -d $(ASIMAGELIBDEP) -c $(ASIMAGEL)
+
+map::           map-asimage
+
 clean-asimage:
 		@rm -f $(ASIMAGEO) $(ASIMAGEDO)
 		-@(if [ -d $(ASTEPDIRS) ]; then \

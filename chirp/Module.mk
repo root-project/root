@@ -49,6 +49,12 @@ $(CHIRPDO):     $(CHIRPDS)
 
 all-chirp:      $(CHIRPLIB)
 
+map-chirp:      $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(CHIRPLIB) \
+		   -d $(CHIRPLIBDEP) -c $(CHIRPL)
+
+map::           map-chirp
+
 clean-chirp:
 		@rm -f $(CHIRPO) $(CHIRPDO)
 

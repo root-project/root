@@ -54,6 +54,12 @@ $(THREADDO):    $(THREADDS)
 
 all-thread:     $(THREADLIB)
 
+map-thread:     $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(THREADLIB) \
+		   -d $(THREADLIBDEP) -c $(THREADL)
+
+map::           map-thread
+
 clean-thread:
 		@rm -f $(THREADO) $(THREADDO)
 

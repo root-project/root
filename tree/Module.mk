@@ -50,6 +50,12 @@ $(TREEDO):      $(TREEDS)
 
 all-tree:       $(TREELIB)
 
+map-tree:       $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(TREELIB) \
+		   -d $(TREELIBDEP) -c $(TREEL)
+
+map::           map-tree
+
 clean-tree:
 		@rm -f $(TREEO) $(TREEDO)
 

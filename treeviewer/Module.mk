@@ -61,7 +61,13 @@ $(TREEVIEWERDS): $(TREEVIEWERH) $(TREEVIEWERL) $(ROOTCINTTMP)
 $(TREEVIEWERDO): $(TREEVIEWERDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
-all-treeviewer:  $(TREEVIEWERLIB)
+all-treeviewer: $(TREEVIEWERLIB)
+
+map-treeviewer: $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(TREEVIEWERLIB) \
+		   -d $(TREEVIEWERLIBDEP) -c $(TREEVIEWERL)
+
+map::           map-treeviewer
 
 clean-treeviewer:
 		@rm -f $(TREEVIEWERO) $(TREEVIEWERDO)

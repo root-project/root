@@ -63,6 +63,12 @@ $(GRAFDO2):     $(GRAFDS2) $(FREETYPELIB)
 
 all-graf:       $(GRAFLIB)
 
+map-graf:       $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(GRAFLIB) \
+		   -d $(GRAFLIBDEP) -c $(GRAFL1) $(GRAFL2)
+
+map::           map-graf
+
 clean-graf:
 		@rm -f $(GRAFO) $(GRAFDO)
 

@@ -51,6 +51,12 @@ $(PYTHIA6DO):   $(PYTHIA6DS)
 
 all-pythia6:    $(PYTHIA6LIB)
 
+map-pythia6:    $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(PYTHIA6LIB) \
+		   -d $(PYTHIA6LIBDEP) -c $(PYTHIA6L)
+
+map::           map-pythia6
+
 clean-pythia6:
 		@rm -f $(PYTHIA6O) $(PYTHIA6DO)
 

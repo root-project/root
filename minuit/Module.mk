@@ -50,6 +50,12 @@ $(MINUITDO):    $(MINUITDS)
 
 all-minuit:     $(MINUITLIB)
 
+map-minuit:     $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(MINUITLIB) \
+		   -d $(MINUITLIBDEP) -c $(MINUITL)
+
+map::           map-minuit
+
 clean-minuit:
 		@rm -f $(MINUITO) $(MINUITDO)
 

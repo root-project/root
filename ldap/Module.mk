@@ -50,6 +50,12 @@ $(LDAPDO):      $(LDAPDS)
 
 all-ldap:       $(LDAPLIB)
 
+map-ldap:       $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(LDAPLIB) \
+		   -d $(LDAPLIBDEP) -c $(LDAPL)
+
+map::           map-ldap
+
 clean-ldap:
 		@rm -f $(LDAPO) $(LDAPDO)
 

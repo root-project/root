@@ -51,7 +51,13 @@ $(HISTPAINTERDS): $(HISTPAINTERH1) $(HISTPAINTERL) $(ROOTCINTTMP)
 $(HISTPAINTERDO): $(HISTPAINTERDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
-all-histpainter:  $(HISTPAINTERLIB)
+all-histpainter: $(HISTPAINTERLIB)
+
+map-histpainter: $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(HISTPAINTERLIB) \
+		   -d $(HISTPAINTERLIBDEP) -c $(HISTPAINTERL)
+
+map::           map-histpainter
 
 clean-histpainter:
 		@rm -f $(HISTPAINTERO) $(HISTPAINTERDO)

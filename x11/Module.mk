@@ -52,6 +52,12 @@ $(X11DO):       $(X11DS)
 
 all-x11:        $(X11LIB)
 
+map-x11:        $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(X11LIB) \
+		   -d $(X11LIBDEP) -c $(X11L)
+
+map::           map-x11
+
 clean-x11:
 		@rm -f $(X11O) $(X11DO)
 

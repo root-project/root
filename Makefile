@@ -50,20 +50,24 @@ MODULES       = build cint metautils utils base cont meta net zip clib matrix \
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32 gl
+SYSTEML       = $(WINNTL)
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 else
 ifeq ($(ARCH),win32gdk)
 MODULES      += winnt win32gdk gl
+SYSTEML       = $(WINNTL)
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 else
 ifeq ($(ARCH),win32gcc)
 MODULES      += unix x11 x11ttf x3d rootx rpdutils rootd proofd
+SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 else
 MODULES      += unix x11 x11ttf x3d rootx rpdutils rootd proofd
+SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 endif
@@ -248,6 +252,8 @@ ROOTMAP       = etc/system.rootmap
 
 ##### libCore #####
 
+COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(NETL) \
+                $(SYSTEML) $(CLIBL) $(METAUTILSL)
 COREO         = $(BASEO) $(CONTO) $(METAO) $(NETO) $(SYSTEMO) $(ZIPO) $(CLIBO) \
                 $(METAUTILSO)
 COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO) \
@@ -394,6 +400,9 @@ else
 	   "$(CORELIBEXTRA) $(CRYPTLIBS)"
 endif
 
+map::   $(RLIBMAP)
+	$(RLIBMAP) -r $(ROOTMAP) -l $(CORELIB) -d $(CORELIBDEP) -c $(COREL)
+
 dist:
 	@$(MAKEDIST)
 
@@ -451,7 +460,7 @@ endif
 
 distclean:: clean
 	-@mv -f include/config.h include/config.hh
-	@rm -f include/*.h $(MAKEINFO) $(CORELIB)
+	@rm -f include/*.h $(MAKEINFO) $(ROOTMAP) $(CORELIB)
 	-@mv -f include/config.hh include/config.h
 	@rm -f bin/*.dll bin/*.exp bin/*.lib bin/*.pdb \
                lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
@@ -476,7 +485,7 @@ maintainer-clean:: distclean
 	-build/package/lib/makedebclean.sh
 	-build/package/lib/makerpmclean.sh
 	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
-	   test/Makefile $(ROOTRC) $(ROOTMAP) etc/system.rootauthrc \
+	   test/Makefile $(ROOTRC) etc/system.rootauthrc \
 	   etc/system.rootdaemonrc etc/root.mimes \
 	   build/misc/root-help.el
 

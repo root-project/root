@@ -50,6 +50,12 @@ $(RFIODO):      $(RFIODS)
 
 all-rfio:       $(RFIOLIB)
 
+map-rfio:       $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(RFIOLIB) \
+		   -d $(RFIOLIBDEP) -c $(RFIOL)
+
+map::           map-rfio
+
 clean-rfio:
 		@rm -f $(RFIOO) $(RFIODO)
 

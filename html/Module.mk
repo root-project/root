@@ -50,6 +50,12 @@ $(HTMLDO):      $(HTMLDS)
 
 all-html:       $(HTMLLIB)
 
+map-html:       $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(HTMLLIB) \
+		   -d $(HTMLLIBDEP) -c $(HTMLL)
+
+map::           map-html
+
 clean-html:
 		@rm -f $(HTMLO) $(HTMLDO)
 

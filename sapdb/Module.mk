@@ -50,6 +50,12 @@ $(SAPDBDO):     $(SAPDBDS)
 
 all-sapdb:      $(SAPDBLIB)
 
+map-sapdb:      $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(SAPDBLIB) \
+		   -d $(SAPDBLIBDEP) -c $(SAPDBL)
+
+map::           map-sapdb
+
 clean-sapdb:
 		@rm -f $(SAPDBO) $(SAPDBDO)
 

@@ -50,6 +50,12 @@ $(MYSQLDO):     $(MYSQLDS)
 
 all-mysql:      $(MYSQLLIB)
 
+map-mysql:      $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(MYSQLLIB) \
+		   -d $(MYSQLLIBDEP) -c $(MYSQLL)
+
+map::           map-mysql
+
 clean-mysql:
 		@rm -f $(MYSQLO) $(MYSQLDO)
 

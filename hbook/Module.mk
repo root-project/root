@@ -54,6 +54,12 @@ $(HBOOKDO):     $(HBOOKDS)
 
 all-hbook:      $(HBOOKLIB)
 
+map-hbook:      $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(HBOOKLIB) \
+		   -d $(HBOOKLIBDEP) -c $(HBOOKL)
+
+map::           map-hbook
+
 clean-hbook:
 		@rm -f $(HBOOKO) $(HBOOKDO)
 

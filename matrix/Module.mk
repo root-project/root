@@ -50,6 +50,12 @@ $(MATRIXDO):    $(MATRIXDS)
 
 all-matrix:     $(MATRIXLIB)
 
+map-matrix:     $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(MATRIXLIB) \
+		   -d $(MATRIXLIBDEP) -c $(MATRIXL)
+
+map::           map-matrix
+
 clean-matrix:
 		@rm -f $(MATRIXO) $(MATRIXDO)
 

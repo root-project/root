@@ -26,6 +26,7 @@ PROOFDEP     := $(PROOFO:.o=.d) $(PROOFDO:.o=.d)
 PROOFLIB     := $(LPATH)/libProof.$(SOEXT)
 
 ##### libProofGui #####
+PROOFGUIL    := $(MODDIRI)/LinkDefGui.h
 PROOFGUIDS   := $(MODDIRS)/G__ProofGui.cxx
 PROOFGUIDO   := $(PROOFGUIDS:.cxx=.o)
 PROOFGUIDH   := $(PROOFGUIDS:.cxx=.h)
@@ -76,12 +77,22 @@ $(PROOFGUILIB): $(PROOFGUIO) $(PROOFGUIDO) $(MAINLIBS) $(PROOFGUILIBDEP)
 
 $(PROOFGUIDS):  $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(PROOFGUIH)
+		$(ROOTCINTTMP) -f $@ -c $(PROOFGUIH) $(PROOFGUIL)
 
 $(PROOFGUIDO):  $(PROOFGUIDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
 all-proof:      $(PROOFLIB) $(PROOFGUILIB)
+
+map-proof:      $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(PROOFLIB) \
+		   -d $(PROOFLIBDEP) -c $(PROOFL)
+
+map-proofgui:   $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(PROOFGUILIB) \
+		   -d $(PROOFGUILIBDEP) -c $(PROOFGUIL)
+
+map::           map-proof map-proofgui
 
 clean-proof:
 		@rm -f $(PROOFO) $(PROOFDO) $(PROOFGUIO) $(PROOFGUIDO)

@@ -51,6 +51,12 @@ $(EGDO):        $(EGDS)
 
 all-eg:         $(EGLIB)
 
+map-eg:         $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(EGLIB) \
+		   -d $(EGLIBDEP) -c $(EGL)
+
+map::           map-eg
+
 clean-eg:
 		@rm -f $(EGO) $(EGDO)
 

@@ -55,6 +55,12 @@ $(G3DDO):       $(G3DDS)
 
 all-g3d:        $(G3DLIB)
 
+map-g3d:        $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(G3DLIB) \
+		   -d $(G3DLIBDEP) -c $(G3DL)
+
+map::           map-g3d
+
 clean-g3d:
 		@rm -f $(G3DO) $(G3DDO)
 

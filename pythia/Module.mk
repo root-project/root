@@ -52,6 +52,12 @@ $(PYTHIADO):    $(PYTHIADS)
 
 all-pythia:     $(PYTHIALIB)
 
+map-pythia:     $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(PYTHIALIB) \
+		   -d $(PYTHIALIBDEP) -c $(PYTHIAL)
+
+map::           map-pythia
+
 clean-pythia:
 		@rm -f $(PYTHIAO) $(PYTHIADO)
 

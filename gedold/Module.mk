@@ -50,6 +50,12 @@ $(GEDOLDDO):    $(GEDOLDDS)
 
 all-gedold:     $(GEDOLDLIB)
 
+map-gedold:     $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(GEDOLDLIB) \
+		   -d $(GEDOLDLIBDEP) -c $(GEDOLDL)
+
+map::           map-gedold
+
 clean-gedold:
 		@rm -f $(GEDOLDO) $(GEDOLDDO)
 

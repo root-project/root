@@ -49,6 +49,12 @@ $(DCACHEDO):    $(DCACHEDS)
 
 all-dcache:     $(DCACHELIB)
 
+map-dcache:     $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(DCACHELIB) \
+		   -d $(DCACHELIBDEP) -c $(DCACHEL)
+
+map::           map-dcache
+
 clean-dcache:
 	@rm -f $(DCACHEO) $(DCACHEDO)
 

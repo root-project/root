@@ -50,6 +50,12 @@ $(PHYSICSDO):   $(PHYSICSDS)
 
 all-physics:    $(PHYSICSLIB)
 
+map-physics:    $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(PHYSICSLIB) \
+		   -d $(PHYSICSLIBDEP) -c $(PHYSICSL)
+
+map::           map-physics
+
 clean-physics:
 		@rm -f $(PHYSICSO) $(PHYSICSDO)
 

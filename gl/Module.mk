@@ -59,6 +59,11 @@ $(GLLIB):       $(GLO) $(MAINLIBS) $(GLLIBDEP)
 
 all-gl:         $(GLLIB)
 
+map-gl:         $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(GLLIB) -d $(GLLIBDEP) -c $(GLL)
+
+map::           map-gl
+
 clean-gl:
 		@rm -f $(GLO)
 

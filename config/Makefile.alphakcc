@@ -67,9 +67,6 @@ F77           = f77
 F77FLAGS      = -O0 -recursive -nofor_main
 F77LIBS       = /usr/lib/libfor.a -lUfor -lFutil
 
-# Extras
-CORELIBDEP    = $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
-
 # Override default in Makefile.config
 INSTALL        := cp -pR
 INSTALLDATA    := cp -pR

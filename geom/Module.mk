@@ -75,6 +75,12 @@ $(GEOMDO2):     $(GEOMDS2)
 
 all-geom:       $(GEOMLIB)
 
+map-geom:       $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(GEOMLIB) \
+		   -d $(GEOMLIBDEP) -c $(GEOML1) $(GEOML2)
+
+map::           map-geom
+
 clean-geom:
 		@rm -f $(GEOMO) $(GEOMDO)
 

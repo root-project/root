@@ -50,6 +50,12 @@ $(GPADDO):      $(GPADDS)
 
 all-gpad:       $(GPADLIB)
 
+map-gpad:       $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(GPADLIB) \
+		   -d $(GPADLIBDEP) -c $(GPADL)
+
+map::           map-gpad
+
 clean-gpad:
 		@rm -f $(GPADO) $(GPADDO)
 

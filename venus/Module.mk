@@ -52,6 +52,12 @@ $(VENUSDO):     $(VENUSDS)
 
 all-venus:      $(VENUSLIB)
 
+map-venus:      $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(VENUSLIB) \
+		   -d $(VENUSLIBDEP) -c $(VENUSL)
+
+map::           map-venus
+
 clean-venus:
 		@rm -f $(VENUSO) $(VENUSDO)
 

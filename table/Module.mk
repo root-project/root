@@ -50,6 +50,12 @@ $(TABLEDO):     $(TABLEDS)
 
 all-table:      $(TABLELIB)
 
+map-table:      $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(TABLELIB) \
+		   -d $(TABLELIBDEP) -c $(TABLEL)
+
+map::           map-table
+
 clean-table:
 		@rm -f $(TABLEO) $(TABLEDO)
 

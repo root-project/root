@@ -51,6 +51,12 @@ $(X11TTFDO):    $(X11TTFDS) $(FREETYPELIB)
 
 all-x11ttf:     $(X11TTFLIB)
 
+map-x11ttf:     $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(X11TTFLIB) \
+		   -d $(X11TTFLIBDEP) -c $(X11TTFL)
+
+map::           map-x11ttf
+
 clean-x11ttf:
 		@rm -f $(X11TTFO) $(X11TTFDO)
 

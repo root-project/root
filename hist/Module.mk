@@ -50,6 +50,12 @@ $(HISTDO):      $(HISTDS)
 
 all-hist:       $(HISTLIB)
 
+map-hist:       $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(HISTLIB) \
+		   -d $(HISTLIBDEP) -c $(HISTL)
+
+map::           map-hist
+
 clean-hist:
 		@rm -f $(HISTO) $(HISTDO)
 

@@ -50,6 +50,12 @@ $(XMLDO):       $(XMLDS)
 
 all-xml:        $(XMLLIB)
 
+map-xml:        $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(XMLLIB) \
+		   -d $(XMLLIBDEP) -c $(XMLL)
+
+map::           map-xml
+
 clean-xml:
 		@rm -f $(XMLO) $(XMLDO)
 

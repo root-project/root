@@ -49,7 +49,13 @@ $(POSTSCRIPTDS): $(POSTSCRIPTH) $(POSTSCRIPTL) $(ROOTCINTTMP)
 $(POSTSCRIPTDO): $(POSTSCRIPTDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
-all-postscript:  $(POSTSCRIPTLIB)
+all-postscript: $(POSTSCRIPTLIB)
+
+map-postscript: $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(POSTSCRIPTLIB) \
+		   -d $(POSTSCRIPTLIBDEP) -c $(POSTSCRIPTL)
+
+map::           map-postscript
 
 clean-postscript:
 		@rm -f $(POSTSCRIPTO) $(POSTSCRIPTDO)

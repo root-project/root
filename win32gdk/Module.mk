@@ -94,6 +94,12 @@ $(WIN32GDKDO):  $(WIN32GDKDS) $(FREETYPELIB)
 
 all-win32gdk:   $(WIN32GDKLIB)
 
+map-win32gdk:   $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(WIN32GDKLIB) \
+		   -d $(WIN32GDKLIBDEP) -c $(WIN32GDKL)
+
+map::           map-win32gdk
+
 clean-win32gdk:
 		@rm -f $(WIN32GDKO) $(WIN32GDKDO)
 

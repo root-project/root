@@ -50,6 +50,12 @@ $(PGSQLDO):     $(PGSQLDS)
 
 all-pgsql:      $(PGSQLLIB)
 
+map-pgsql:      $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(PGSQLLIB) \
+		   -d $(PGSQLLIBDEP) -c $(PGSQLL)
+
+map::           map-pgsql
+
 clean-pgsql:
 		@rm -f $(PGSQLO) $(PGSQLDO)
 

@@ -51,7 +51,13 @@ $(GEOMPAINTERDS): $(GEOMPAINTERH1) $(GEOMPAINTERL) $(ROOTCINTTMP)
 $(GEOMPAINTERDO): $(GEOMPAINTERDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
-all-geompainter:  $(GEOMPAINTERLIB)
+all-geompainter: $(GEOMPAINTERLIB)
+
+map-geompainter: $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(GEOMPAINTERLIB) \
+		   -d $(GEOMPAINTERLIBDEP) -c $(GEOMPAINTERL)
+
+map::           map-geompainter
 
 clean-geompainter:
 		@rm -f $(GEOMPAINTERO) $(GEOMPAINTERDO)

@@ -50,6 +50,12 @@ $(ALIENDO):     $(ALIENDS)
 
 all-alien:      $(ALIENLIB)
 
+map-alien :     $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(ALIENLIB) \
+		   -d $(ALIENLIBDEP) -c $(ALIENL)
+
+map::           map-alien
+
 clean-alien:
 		@rm -f $(ALIENO) $(ALIENDO)
 

@@ -50,6 +50,12 @@ $(MLPDO):       $(MLPDS)
 
 all-mlp:        $(MLPLIB)
 
+map-mlp:        $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(MLPLIB) \
+		   -d $(MLPLIBDEP) -c $(MLPL)
+
+map::           map-mlp
+
 clean-mlp:
 		@rm -f $(MLPO) $(MLPDO)
 

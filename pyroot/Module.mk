@@ -10,6 +10,7 @@ PYROOTDIR    := $(MODDIR)
 PYROOTDIRS   := $(PYROOTDIR)/src
 PYROOTDIRI   := $(PYROOTDIR)/inc
 
+##### libPyROOT #####
 PYROOTL      := $(MODDIRI)/LinkDef.h
 PYROOTDS     := $(MODDIRS)/G__PyROOT.cxx
 PYROOTDO     := $(PYROOTDS:.cxx=.o)
@@ -58,6 +59,12 @@ $(PYROOTDO):    $(PYROOTDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
 all-pyroot:     $(PYROOTLIB)
+
+map-pyroot:     $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(PYROOTLIB) \
+		   -d $(PYROOTLIBDEP) -c $(PYROOTL)
+
+map::           map-pyroot
 
 clean-pyroot:
 		@rm -f $(PYROOTO) $(PYROOTDO)

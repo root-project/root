@@ -53,6 +53,12 @@ $(X3DDO):       $(X3DDS)
 
 all-x3d:        $(X3DLIB)
 
+map-x3d:        $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(X3DLIB) \
+		   -d $(X3DLIBDEP) -c $(X3DL)
+
+map::           map-x3d
+
 clean-x3d:
 		@rm -f $(X3DO) $(X3DDO)
 

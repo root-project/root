@@ -36,12 +36,12 @@ GUIH2        := TGObject.h TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h \
                 TGToolBar.h TGListTree.h TGText.h TGView.h TGTextView.h \
                 TGTextEdit.h TGTextEditDialogs.h TGDoubleSlider.h TGSplitter.h \
                 TGFSComboBox.h TGImageMap.h TGApplication.h TGXYLayout.h \
-                TGResourcePool.h TGFont.h 
+                TGResourcePool.h TGFont.h
 GUIH3        := TRootGuiFactory.h TRootApplication.h TRootCanvas.h \
                 TRootBrowser.h TRootContextMenu.h TRootDialog.h \
                 TRootControlBar.h TRootHelpDialog.h TRootEmbeddedCanvas.h \
                 TGColorDialog.h TGColorSelect.h TGFontDialog.h
-                
+
 GUIH4        := HelpText.h
 GUIH1        := $(patsubst %,$(MODDIRI)/%,$(GUIH1))
 GUIH2        := $(patsubst %,$(MODDIRI)/%,$(GUIH2))
@@ -89,6 +89,12 @@ $(GUIDO3):      $(GUIDS3)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
 all-gui:        $(GUILIB)
+
+map-gui:        $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(GUILIB) \
+		   -d $(GUILIBDEP) -c $(GUIL1) $(GUIL2) $(GUIL3)
+
+map::           map-gui
 
 clean-gui:
 		@rm -f $(GUIO) $(GUIDO)

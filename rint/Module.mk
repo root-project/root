@@ -50,6 +50,12 @@ $(RINTDO):      $(RINTDS)
 
 all-rint:       $(RINTLIB)
 
+map-rint:       $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(RINTLIB) \
+		   -d $(RINTLIBDEP) -c $(RINTL)
+
+map::           map-rint
+
 clean-rint:
 		@rm -f $(RINTO) $(RINTDO)
 

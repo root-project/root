@@ -50,6 +50,12 @@ $(GEDDO):       $(GEDDS)
 
 all-ged:        $(GEDLIB)
 
+map-ged:        $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(GEDLIB) \
+		   -d $(GEDLIBDEP) -c $(GEDL)
+
+map::           map-ged
+
 clean-ged:
 		@rm -f $(GEDO) $(GEDDO)
 
