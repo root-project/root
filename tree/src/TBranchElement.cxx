@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.112 2003/06/02 10:25:22 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.113 2003/06/21 06:07:47 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1522,7 +1522,7 @@ void TBranchElement::SetAddress(void *add)
             assert(parentID>=0);  // if the ID was negative, the branch would not have been split!
             
             TStreamerInfo *parentInfo = parent->GetInfo();
-            assert(parentInfo);
+            assert(parentInfo != 0);
             
             TStreamerElement *parentElem = (TStreamerElement*)parentInfo->GetElements()->At(parentID);
             TClass *parentBranchClass = parentElem->GetClassPointer();
