@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.117 2003/02/07 09:04:53 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.118 2003/02/12 11:19:56 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1304,8 +1304,8 @@ void THistPainter::Paint(Option_t *option)
    PaintFrame();
 //    -----
 //          Paint histogram axis only
+   PaintAxis(); //    Draw the axes
    if (Hoption.Axis > 0) {
-      PaintAxis();
       delete [] fXbuf; delete [] fYbuf;
       return;
    }
@@ -1338,7 +1338,6 @@ void THistPainter::Paint(Option_t *option)
       Hparam  = hparsave;
    }
 
-   PaintAxis();     //    Draw the axes
    PaintTitle();    //    Draw histogram title
      //    Draw box with histogram statistics and/or fit parameters
    if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
@@ -1694,6 +1693,7 @@ void THistPainter::PaintBarH(Option_t *)
    }
 
    PaintFrame();
+   PaintAxis();
 
    Int_t bar = Hoption.Bar - 20;
    Double_t xmin,xmax,ymin,ymax,umin,umax,w;
@@ -1736,7 +1736,6 @@ void THistPainter::PaintBarH(Option_t *)
    }
 
    PaintTitle();
-   PaintAxis();
    fXaxis = xaxis;
    fYaxis = yaxis;
    //    Draw box with histogram statistics and/or fit parameters
