@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.24 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.25 2004/11/08 09:56:24 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoTrd2::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -183,7 +183,8 @@ Bool_t TGeoTrd2::Contains(Double_t *point) const
 //_____________________________________________________________________________
 Double_t TGeoTrd2::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from inside point to surface of the trd2
+// Compute distance from inside point to surface of the trd2
+// Boundary safe algorithm
    Double_t snxt = TGeoShape::Big();
    if (iact<3 && safe) {
    // compute safe distance
@@ -208,20 +209,33 @@ Double_t TGeoTrd2::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    } else if (dir[2]>0) {
       dist[0]=(fDz-point[2])/dir[2];
    }      
+   if (dist[0]<=0) return 0.0;     
    // now check X facettes
    cn = -dir[0]+fx*dir[2];
-   if (cn>0) dist[1] = (point[0]+distx)/cn;
+   if (cn>0) {
+      dist[1] = point[0]+distx;
+      if (dist[1]<=0) return 0.0;
+      dist[1] /= cn;
+   }   
    cn = dir[0]+fx*dir[2];
    if (cn>0) {
-      Double_t s = (distx-point[0])/cn;
+      Double_t s = distx-point[0];
+      if (s<=0) return 0.0;
+      s /= cn;
       if (s<dist[1]) dist[1] = s;
    }
    // now check Y facettes
    cn = -dir[1]+fy*dir[2];
-   if (cn>0) dist[2] = (point[1]+disty)/cn;
+   if (cn>0) {
+      dist[2] = point[1]+disty;
+      if (dist[2]<=0) return 0.0;
+      dist[2] /= cn;
+   }
    cn = dir[1]+fy*dir[2];
    if (cn>0) {
-      Double_t s = (disty-point[1])/cn;
+      Double_t s = disty-point[1];
+      if (s<=0) return 0.0;
+      s /= cn;
       if (s<dist[2]) dist[2] = s;
    }
    snxt = dist[TMath::LocMin(3,dist)];
@@ -231,7 +245,8 @@ Double_t TGeoTrd2::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 //_____________________________________________________________________________
 Double_t TGeoTrd2::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from outside point to surface of the trd2
+// Compute distance from outside point to surface of the trd2
+// Boundary safe algorithm
    Double_t snxt = TGeoShape::Big();
    if (iact<3 && safe) {
    // compute safe distance
@@ -247,11 +262,16 @@ Double_t TGeoTrd2::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    // check visibility of X faces
    Double_t distx = 0.5*(fDx1+fDx2)-fx*point[2];
    Double_t disty = 0.5*(fDy1+fDy2)-fy*point[2];
+   Bool_t in = kTRUE;
+   Double_t safx = distx-TMath::Abs(point[0]);
+   Double_t safy = disty-TMath::Abs(point[1]);
+   Double_t safz = fDz-TMath::Abs(point[2]);
    //--- Compute distance to this shape
    // first check if Z facettes are crossed
    if (point[2]<=-fDz) {
       cn = -dir[2];
       if (cn>=0) return TGeoShape::Big();
+      in = kFALSE;
       snxt = (fDz+point[2])/cn;
       // find extrapolated X and Y
       xnew = point[0]+snxt*dir[0];
@@ -262,6 +282,7 @@ Double_t TGeoTrd2::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    } else if (point[2]>=fDz) {
       cn = dir[2];
       if (cn>=0) return TGeoShape::Big();
+      in = kFALSE;
       snxt = (fDz-point[2])/cn;
       // find extrapolated X and Y
       xnew = point[0]+snxt*dir[0];
@@ -274,6 +295,7 @@ Double_t TGeoTrd2::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    if (point[0]<=-distx) {
       cn = -dir[0]+fx*dir[2];
       if (cn>=0) return TGeoShape::Big();
+      in = kFALSE;
       snxt = (point[0]+distx)/cn;
       // find extrapolated Y and Z
       znew = point[2]+snxt*dir[2];
@@ -286,6 +308,7 @@ Double_t TGeoTrd2::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    if (point[0]>=distx) {
       cn = dir[0]+fx*dir[2];
       if (cn>=0) return TGeoShape::Big();
+      in = kFALSE;
       snxt = (distx-point[0])/cn;
       // find extrapolated Y and Z
       znew = point[2]+snxt*dir[2];
@@ -298,6 +321,7 @@ Double_t TGeoTrd2::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    // finally check Y facettes
    if (point[1]<=-disty) {
       cn = -dir[1]+fy*dir[2];
+      in = kFALSE;
       if (cn>=0) return TGeoShape::Big();
       snxt = (point[1]+disty)/cn;
       // find extrapolated X and Z
@@ -311,6 +335,7 @@ Double_t TGeoTrd2::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    if (point[1]>=disty) {
       cn = dir[1]+fy*dir[2];
       if (cn>=0) return TGeoShape::Big();
+      in = kFALSE;
       snxt = (disty-point[1])/cn;
       // find extrapolated X and Z
       znew = point[2]+snxt*dir[2];
@@ -320,7 +345,20 @@ Double_t TGeoTrd2::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
          if (TMath::Abs(xnew) < dx) return snxt;
       }
    }
-   return TGeoShape::Big();
+   if (!in) return TGeoShape::Big();
+   // Point actually inside
+   if (safz<safx && safz<safy) {
+      if (point[2]*dir[2]>=0) return TGeoShape::Big();
+      return 0.0;
+   }
+   if (safy<safx) {
+      cn = TMath::Sign(1.0,point[1])*dir[1]+fy*dir[2];     
+      if (cn>=0) return TGeoShape::Big();
+      return 0.0;
+   }   
+   cn = TMath::Sign(1.0,point[0])*dir[0]+fx*dir[2];     
+   if (cn>=0) return TGeoShape::Big();
+   return 0.0;      
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.25 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.26 2004/11/25 12:10:01 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -235,14 +235,58 @@ Bool_t TGeoShape::IsCrossingSemiplane(Double_t *point, Double_t *dir, Double_t c
 // also radius at crossing point. This might be negative in case the crossing is
 // on the other side of the semiplane.
    snext = rxy = TGeoShape::Big();
-   Double_t ndot = dir[1]*cphi-dir[0]*sphi;
-   if (TMath::Abs(ndot)<1E-10) return kFALSE;
-   Double_t ndinv = 1./ndot;
-   snext = (point[0]*sphi-point[1]*cphi)*ndinv;
-   if (snext<0) return kFALSE;
-   rxy = (point[0]*dir[1]-point[1]*dir[0])*ndinv;
+   Double_t nx = -sphi;
+   Double_t ny = cphi;
+   Double_t rxy0 = point[0]*cphi+point[1]*sphi;
+   Double_t rdotn = point[0]*nx + point[1]*ny;
+   if (TMath::Abs(rdotn)<TGeoShape::Tolerance()) {
+      snext = 0.0;
+      rxy = rxy0;
+      return kTRUE;
+   }
+   if (rdotn<0) {
+      rdotn = -rdotn;
+   } else {
+      nx = -nx;
+      ny = -ny;
+   }
+   Double_t ddotn = dir[0]*nx + dir[1]*ny;
+   if (ddotn<=0) return kFALSE;
+   snext = rdotn/ddotn;
+   rxy = rxy0+snext*(dir[0]*cphi+dir[1]*sphi);
    if (rxy<0) return kFALSE;
    return kTRUE;
+}
+
+//_____________________________________________________________________________
+Double_t TGeoShape::DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Double_t c1,
+                                 Double_t s2, Double_t c2, Double_t sm, Double_t cm, Bool_t in)
+{
+// compute distance from point (inside phi) to both phi planes. Return minimum.
+   Double_t sfi1=TGeoShape::Big();
+   Double_t sfi2=TGeoShape::Big();
+   Double_t s=0;
+   Double_t un = dir[0]*s1-dir[1]*c1;
+   if (!in) un=-un;
+   if (un>0) {
+      s=-point[0]*s1+point[1]*c1;
+      if (!in) s=-s;
+      if (s>=0) {
+         s /= un;
+         if (((point[0]+s*dir[0])*sm-(point[1]+s*dir[1])*cm)>=0) sfi1=s;
+      }
+   }
+   un = -dir[0]*s2+dir[1]*c2;
+   if (!in) un=-un;
+   if (un>0) {
+      s=point[0]*s2-point[1]*c2;
+      if (!in) s=-s;
+      if (s>=0) {
+         s /= un;
+         if ((-(point[0]+s*dir[0])*sm+(point[1]+s*dir[1])*cm)>=0) sfi2=s;
+      }
+   }
+   return TMath::Min(sfi1, sfi2);
 }
 
 //_____________________________________________________________________________

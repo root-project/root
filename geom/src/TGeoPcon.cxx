@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.38 2004/12/07 14:24:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.39 2005/01/19 13:19:34 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -341,11 +341,12 @@ Double_t TGeoPcon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    Double_t s2 = TMath::Sin(phi2*TMath::DegToRad());
    Double_t cm = TMath::Cos(phim*TMath::DegToRad());
    Double_t sm = TMath::Sin(phim*TMath::DegToRad());
+   Double_t cdfi = TMath::Cos(0.5*fDphi*TMath::DegToRad());
    if (intub) {
-      if (inphi) snxt=TGeoTubeSeg::DistFromInsideS(point_new, dir, fRmin[ipl], fRmax[ipl],dz, c1,s1,c2,s2,cm,sm); 
+      if (inphi) snxt=TGeoTubeSeg::DistFromInsideS(point_new, dir, fRmin[ipl], fRmax[ipl],dz, c1,s1,c2,s2,cm,sm,cdfi); 
       else snxt=TGeoTube::DistFromInsideS(point_new, dir, fRmin[ipl], fRmax[ipl],dz);
    } else {
-      if (inphi) snxt=TGeoConeSeg::DistFromInsideS(point_new, dir, dz, fRmin[ipl], fRmax[ipl], fRmin[ipl+1], fRmax[ipl+1], phi1,phi2);
+      if (inphi) snxt=TGeoConeSeg::DistFromInsideS(point_new,dir,dz,fRmin[ipl],fRmax[ipl],fRmin[ipl+1],fRmax[ipl+1],c1,s1,c2,s2,cm,sm,cdfi);
       else snxt=TGeoCone::DistFromInsideS(point_new,dir,dz,fRmin[ipl],fRmax[ipl],fRmin[ipl+1], fRmax[ipl+1]);
    }                              
 
@@ -380,17 +381,13 @@ Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_
    Double_t rmin2=fRmin[iz+1];
    Double_t rmax2=fRmax[iz+1];
    Bool_t is_seg=(fDphi==360)?kFALSE:kTRUE;
-   
-   Double_t phi1 = fPhi1;
-   if (phi1<0) phi1+=360.;
-   Double_t phi2 = phi1+fDphi;
 
    if ((rmin1==rmin2) && (rmax1==rmax2)) {
       if (!is_seg) snxt=TGeoTube::DistFromOutsideS(local, dir, rmin1, rmax1, dz);
-      else snxt=TGeoTubeSeg::DistFromOutsideS(local, dir, rmin1, rmax1, dz, c1, s1, c2, s2, cfio, sfio, cdfi);
+      else snxt=TGeoTubeSeg::DistFromOutsideS(local,dir,rmin1,rmax1,dz,c1,s1,c2,s2,cfio,sfio,cdfi);
    } else {  
       if (!is_seg) snxt=TGeoCone::DistFromOutsideS(local,dir,dz,rmin1, rmax1,rmin2,rmax2);
-      else snxt=TGeoConeSeg::DistFromOutsideS(local,dir,rmin1, rmax1, rmin2, rmax2, dz, phi1, phi2);
+      else snxt=TGeoConeSeg::DistFromOutsideS(local,dir,dz,rmin1,rmax1,rmin2,rmax2,c1,s1,c2,s2,cfio,sfio,cdfi);
    }
    if (snxt<1E20) return snxt;
    // check next segment
@@ -703,6 +700,7 @@ TBuffer3D *TGeoPcon::MakeBuffer3D() const
 void TGeoPcon::Paint(Option_t *option)
 {
    // Paint this shape according to option
+   
    // Allocate the necessary spage in gPad->fBuffer3D to store this shape
    const Int_t n = gGeoManager->GetNsegments()+1;
    Int_t nz = GetNz();

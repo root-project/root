@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.28 2004/12/02 15:21:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.29 2004/12/07 14:24:57 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -99,6 +99,8 @@ public:
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const = 0;
    virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const = 0;
+   static Double_t       DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Double_t c1, Double_t s2, Double_t c2, 
+                                      Double_t sm, Double_t cm, Bool_t in=kTRUE);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step)   = 0; 
    virtual const char   *GetAxisName(Int_t iaxis) const = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.41 2004/12/07 14:24:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.42 2005/01/19 13:19:34 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -237,70 +237,78 @@ Bool_t TGeoCone::Contains(Double_t *point) const
 Double_t TGeoCone::DistFromInsideS(Double_t *point, Double_t *dir, Double_t dz,
                               Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2)
 {
-// compute distance from inside point to surface of the cone (static)
+// Compute distance from inside point to surface of the cone (static)
+// Boundary safe algorithm.
    if (dz<=0) return TGeoShape::Big();
    // compute distance to surface
    // Do Z
    Double_t sz = TGeoShape::Big();
-   if (dir[2]>0) {
-      sz = (dz-point[2])/dir[2];
-      if (sz<=0) return 0.;
-   } else {
-      if (dir[2]<0) {
-         sz = -(dz+point[2])/dir[2];
-         if (sz<=0) return 0.;
-      }
-   }
+   if (dir[2]) {
+      sz = (TMath::Sign(dz, dir[2])-point[2])/dir[2];
+      if (sz<=0) return 0.0;
+   }   
+   Double_t rsq=point[0]*point[0]+point[1]*point[1];
+   Double_t zinv = 1./dz;
+   Double_t rin = 0.5*(rmin1+rmin2+(rmin2-rmin1)*point[2]*zinv);
    // Do Rmin
-   Double_t sr1=TGeoShape::Big(), sr2=TGeoShape::Big();
-   Double_t b,delta, znew;
-   Bool_t found = kFALSE;
-   if ((rmin1+rmin2)>0) {
-      TGeoCone::DistToCone(point, dir, rmin1, -dz, rmin2, dz, b, delta);
-      if (delta>0) {
-         sr1 = -b-delta;
-         if (sr1>0) {
-            znew = point[2]+sr1*dir[2];
-            if (TMath::Abs(znew)<dz) found=kTRUE;
-         }
-         if (!found) {
-            sr1 = -b+delta;
-            if (sr1>0) {
-               znew = point[2]+sr1*dir[2];
-               if (TMath::Abs(znew)>=dz) sr1=TGeoShape::Big();
-            } else {
-               sr1 = TGeoShape::Big();
+   Double_t sr = TGeoShape::Big();
+   Double_t b,delta,zi;
+   if (rin>0) {
+      // Protection in case point is actually outside the cone
+      if (rsq < rin*(rin+TGeoShape::Tolerance())) {
+         Double_t ddotn = point[0]*dir[0]+point[1]*dir[1]+0.5*(rmin1-rmin2)*dir[2]*zinv*TMath::Sqrt(rsq);
+         if (ddotn<=0) return 0.0;
+      } else {         
+         TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
+         if (delta>0) {
+            sr = -b-delta;
+            if (sr>0) {
+               zi = point[2]+sr*dir[2];
+               if (TMath::Abs(zi)<=dz) return TMath::Min(sz,sr);
+            }
+            sr = -b+delta;   
+            if (sr>0) {
+               zi = point[2]+sr*dir[2];
+               if (TMath::Abs(zi)<=dz) return TMath::Min(sz,sr);
             }
          }
       }
    }
    // Do Rmax
-   found = kFALSE;
-   TGeoCone::DistToCone(point, dir, rmax1, -dz, rmax2, dz, b, delta);
+   Double_t rout = 0.5*(rmax1+rmax2+(rmax2-rmax1)*point[2]*zinv);
+   if (rsq > rout*(rout-TGeoShape::Tolerance())) {
+      Double_t ddotn = point[0]*dir[0]+point[1]*dir[1]+0.5*(rmax1-rmax2)*dir[2]*zinv*TMath::Sqrt(rsq);
+      if (ddotn>=0) return 0.0;
+      TGeoCone::DistToCone(point, dir, dz, rmax1, rmax2, b, delta);
+      if (delta<0) return 0.0;
+      sr = -b+delta;
+      if (sr<0) return sz;
+      if (TMath::Abs(-b-delta)>sr) return sz;
+      zi = point[2]+sr*dir[2];
+      if (TMath::Abs(zi)<=dz) return TMath::Min(sz,sr);
+      return sz;
+   }   
+   TGeoCone::DistToCone(point, dir, dz, rmax1, rmax2, b, delta);
    if (delta>0) {
-      sr2 = -b-delta;
-      if (sr2>0) {
-         znew = point[2]+sr2*dir[2];
-         if (TMath::Abs(znew)<dz) found=kTRUE;
+      sr = -b-delta;
+      if (sr>0) {
+         zi = point[2]+sr*dir[2];
+         if (TMath::Abs(zi)<=dz) return TMath::Min(sz,sr);
       }
-      if (!found) {
-         sr2 = -b+delta;
-         if (sr2>0) {
-            znew = point[2]+sr2*dir[2];
-            if (TMath::Abs(znew)>=dz) sr2=TGeoShape::Big();
-         } else {
-            sr2 = TGeoShape::Big();
-         }
+      sr = -b+delta;   
+      if (sr>TGeoShape::Tolerance()) {
+         zi = point[2]+sr*dir[2];
+         if (TMath::Abs(zi)<=dz) return TMath::Min(sz,sr);
       }
    }
-
-   return TMath::Min(TMath::Min(sr1, sr2), sz);
+   return sz;   
 }
 
 //_____________________________________________________________________________
 Double_t TGeoCone::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from inside point to surface of the cone
+// Compute distance from inside point to surface of the cone
+// Boundary safe algorithm.
 
    if (iact<3 && safe) {
       *safe = Safety(point, kTRUE);
@@ -315,83 +323,127 @@ Double_t TGeoCone::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 Double_t TGeoCone::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t dz,
                              Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2)
 {
-// compute distance from outside point to surface of the tube
+// Compute distance from outside point to surface of the tube
+// Boundary safe algorithm.
    // compute distance to Z planes
    if (dz<=0) return TGeoShape::Big();
-   Double_t snxt = TGeoShape::Big();
-   Double_t ro1=0.5*(rmin1+rmin2);
-   Bool_t hasrmin = (ro1>0)?kTRUE:kFALSE;
-   Double_t ro2=0.5*(rmax1+rmax2);
-   Double_t tg2=0.5*(rmax2-rmax1)/dz;
-   Double_t r2=point[0]*point[0]+point[1]*point[1];
-   Double_t r=TMath::Sqrt(r2);
-   Double_t rout=tg2*point[2]+ro2;
-   Double_t xp, yp;
+   Double_t snxt;
+   Double_t xp, yp, zp;
+   Bool_t inz = kTRUE;
 
-   if ((point[2]<=-dz) && (dir[2]>0)) {
+   if (point[2]<=-dz) {
+      if (dir[2]<=0) return TGeoShape::Big();
       snxt = (-dz-point[2])/dir[2];
       xp = point[0]+snxt*dir[0];
       yp = point[1]+snxt*dir[1];
-      r2 = xp*xp+yp*yp;
+      Double_t r2 = xp*xp+yp*yp;
       if ((r2>=rmin1*rmin1) && (r2<=rmax1*rmax1)) return snxt;
+      inz = kFALSE;
    } else {
-      if ((point[2]>=dz) && (dir[2]<0)) {
+      if (point[2]>=dz) {
+         if (dir[2]>=0) return TGeoShape::Big();
          snxt = (dz-point[2])/dir[2];
          xp = point[0]+snxt*dir[0];
          yp = point[1]+snxt*dir[1];
-         r2 = xp*xp+yp*yp;
+         Double_t r2 = xp*xp+yp*yp;
          if ((r2>=rmin2*rmin2) && (r2<=rmax2*rmax2)) return snxt;
-      }
+         inz = kFALSE;
+      }   
    }
 
-   // compute distance to inner cone
-   Double_t din=TGeoShape::Big(), dout=TGeoShape::Big();
-   Double_t b,delta,znew;
-   Bool_t found = kFALSE;
-   snxt = TGeoShape::Big();
+   Double_t rsq = point[0]*point[0]+point[1]*point[1];
+   Double_t dzinv = 1./dz;
+   Double_t ro1=0.5*(rmin1+rmin2);
+   Bool_t hasrmin = (ro1>0)?kTRUE:kFALSE;
+   Double_t tg1 = 0.;
+   Double_t rin = 0.;
+   Bool_t inrmin = kTRUE;  // r>=rmin
    if (hasrmin) {
-      TGeoCone::DistToCone(point, dir, rmin1, -dz, rmin2, dz, b, delta);
-      if (delta>0) {
-         din = -b-delta;
-         if (din>0) {
-            znew = point[2]+din*dir[2];
-            if (TMath::Abs(znew)<dz) found=kTRUE;
-         }
-         if (!found) {
-            din = -b+delta;
-            if (din>0) {
-               znew = point[2]+din*dir[2];
-               if (TMath::Abs(znew)>=dz) din=TGeoShape::Big();
-            } else {
-               din = TGeoShape::Big();
-            }
-         }
+      tg1=0.5*(rmin2-rmin1)*dzinv;
+      rin=ro1+tg1*point[2];
+      if (rin>0 && rsq<rin*(rin-TGeoShape::Tolerance())) inrmin=kFALSE;
+   }   
+   Double_t ro2=0.5*(rmax1+rmax2);
+   Double_t tg2=0.5*(rmax2-rmax1)*dzinv;
+   Double_t rout=tg2*point[2]+ro2;
+   Bool_t inrmax = kFALSE;
+   if (rout>0 && rsq<rout*(rout+TGeoShape::Tolerance())) inrmax=kTRUE;
+   Bool_t in = inz & inrmin & inrmax;
+   Double_t b,delta;
+   // If inside cone, we are most likely on a boundary within machine precision.
+   if (in) {
+      Double_t r=TMath::Sqrt(rsq);
+      Double_t safz = dz-TMath::Abs(point[2]); // positive
+      Double_t safrmin = (hasrmin)?(r-rin):TGeoShape::Big();
+      Double_t safrmax = rout - r;
+      if (safz<=safrmin && safz<=safrmax) {
+         // on Z boundary
+         if (point[2]*dir[2]<0) return 0.0;
+         return TGeoShape::Big();
       }
-   }
+      if (safrmax<safrmin) {
+         // on rmax boundary
+         Double_t ddotn = point[0]*dir[0]+point[1]*dir[1]-tg2*dir[2]*r;
+         if (ddotn<=0) return 0.0;
+         return TGeoShape::Big();
+      }   
+      // on rmin boundary
+      Double_t ddotn = point[0]*dir[0]+point[1]*dir[1]-tg1*dir[2]*r;
+      if (ddotn>=0) return 0.0;
+      // we can cross (+) solution of rmin       
+      TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
 
-   // compute distance to outer cone
-   if (r>=rout) {
-      found = kFALSE;
-      TGeoCone::DistToCone(point, dir, rmax1, -dz, rmax2, dz, b, delta);
-      if (delta>0) {
-         dout = -b-delta;
-         if (dout>0) {
-            znew = point[2]+dout*dir[2];
-            if (TMath::Abs(znew)<dz) found=kTRUE;
-         }
-         if (!found) {
-            dout = -b+delta;
-            if (dout>0) {
-               znew = point[2]+dout*dir[2];
-               if (TMath::Abs(znew)>=dz) dout=TGeoShape::Big();
-            } else {
-               dout = TGeoShape::Big();
+      if (delta<0) return 0.0;
+      snxt = -b+delta;
+      if (snxt<0) return TGeoShape::Big();
+      if (TMath::Abs(-b-delta)>snxt) return TGeoShape::Big();
+      zp = point[2]+snxt*dir[2];
+      if (TMath::Abs(zp)<=dz) return snxt;
+      return TGeoShape::Big();
+   }
+            
+   // compute distance to inner cone
+   snxt = TGeoShape::Big();
+   if (!inrmin) {
+      // ray can cross only inner cone
+      TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
+      if (delta<0) return TGeoShape::Big();
+      snxt = -b+delta;
+      if (snxt<=0) return TGeoShape::Big();
+      zp = point[2]+snxt*dir[2];
+      if (TMath::Abs(zp)<=dz) return snxt;
+      snxt = -b-delta;
+      if (snxt<=0) return TGeoShape::Big();
+      zp = point[2]+snxt*dir[2];
+      if (TMath::Abs(zp)<=dz) return snxt;      
+      return TGeoShape::Big();
+   } else {
+      if (hasrmin) {
+         TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
+         if (delta>0) {
+            Double_t din = -b+delta;
+            if (din>0) {
+               zp = point[2]+din*dir[2];
+               if (TMath::Abs(zp)<=dz) snxt = din;
             }
          }
       }
+   }   
+   
+   if (inrmax) return snxt;
+   // we can cross only outer cone, both solutions possible
+   // compute distance to outer cone
+   TGeoCone::DistToCone(point, dir, dz, rmax1, rmax2, b, delta);
+   if (delta<0) return snxt;
+   Double_t dout = -b-delta;
+   if (dout>0 && dout<snxt) {
+      zp = point[2]+dout*dir[2];
+      if (TMath::Abs(zp)<=dz) return dout;
    }
-//   printf("din=%f  dout=%f\n", din, dout);
-   snxt = TMath::Min(din, dout);
+   dout = -b+delta;  
+   if (dout<=0 || dout>snxt) return snxt;
+   zp = point[2]+dout*dir[2];
+   if (TMath::Abs(zp)<=dz) return dout;
    return snxt;
 }
 
@@ -410,25 +462,28 @@ Double_t TGeoCone::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
 }
 
 //_____________________________________________________________________________
-void TGeoCone::DistToCone(Double_t *point, Double_t *dir, Double_t r1, Double_t z1, Double_t r2, Double_t z2,
+void TGeoCone::DistToCone(Double_t *point, Double_t *dir, Double_t dz, Double_t r1, Double_t r2,
                               Double_t &b, Double_t &delta)
 {
    // Static method to compute distance to a conical surface with :
    // - r1, z1 - radius and Z position of lower base
    // - r2, z2 - radius and Z position of upper base
-   Double_t dz = z2-z1;
    delta = -1.;
    if (dz<0) return;
    Double_t ro0 = 0.5*(r1+r2);
-   Double_t fz  = (r2-r1)/dz;
-   Double_t r0sq = point[0]*point[0] + point[1]*point[1];
-   Double_t rc = ro0 + fz*(point[2]-0.5*(z1+z2));
+   Double_t tz  = 0.5*(r2-r1)/dz;
+   Double_t rsq = point[0]*point[0] + point[1]*point[1];
+   Double_t rc = ro0 + point[2]*tz;
 
-   Double_t a = dir[0]*dir[0] + dir[1]*dir[1] - fz*fz*dir[2]*dir[2];
-   b = point[0]*dir[0] + point[1]*dir[1] - fz*rc*dir[2];
-   Double_t c = r0sq - rc*rc;
+   Double_t a = dir[0]*dir[0] + dir[1]*dir[1] - tz*tz*dir[2]*dir[2];
+   b = point[0]*dir[0] + point[1]*dir[1] - tz*rc*dir[2];
+   Double_t c = rsq - rc*rc;
 
-   if (a==0) return;
+   if (a==0) {
+      if (b==0) return;
+      b = 0.5*c/b;
+      return;
+   }   
    a = 1./a;
    b *= a;
    c *= a;
@@ -1302,205 +1357,350 @@ Double_t TGeoConeSeg::DistToCons(Double_t *point, Double_t *dir, Double_t r1, Do
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Double_t c1,
-                                   Double_t s2, Double_t c2, Double_t sm, Double_t cm)
-{
-// compute distance from poin to both phi planes. Return minimum.
-   Double_t sfi1=TGeoShape::Big();
-   Double_t sfi2=TGeoShape::Big();
-   Double_t s=0;
-   Double_t un = dir[0]*s1-dir[1]*c1;
-   if (un!=0) {
-      s=(point[1]*c1-point[0]*s1)/un;
-      if (s>=0) {
-         if (((point[1]+s*dir[1])*cm-(point[0]+s*dir[0])*sm)<=0) sfi1=s;
-      }
-   }
-   un = dir[0]*s2-dir[1]*c2;
-   if (un!=0) {
-      s=(point[1]*c2-point[0]*s2)/un;
-      if (s>=0) {
-         if (((point[1]+s*dir[1])*cm-(point[0]+s*dir[0])*sm)>=0) sfi2=s;
-      }
-   }
-   return TMath::Min(sfi1, sfi2);
-}
-
-//_____________________________________________________________________________
-Double_t TGeoConeSeg::DistFromInsideS(Double_t *point, Double_t *dir, Double_t dz, Double_t rmin1, Double_t rmax1,
-                                 Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
+Double_t TGeoConeSeg::DistFromInsideS(Double_t *point, Double_t *dir, Double_t dz, 
+                       Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, 
+                       Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi)
 {
 // compute distance from inside point to surface of the tube segment
    if (dz<=0) return TGeoShape::Big();
-
-   Double_t ph1 = phi1*TMath::DegToRad();
-   Double_t ph2 = phi2*TMath::DegToRad();
-   if (ph2<ph1) ph2+=2.*TMath::Pi();
-   Double_t phim = 0.5*(ph1+ph2);
-   Double_t cm = TMath::Cos(phim);
-   Double_t sm = TMath::Sin(phim);
-   Double_t c1 = TMath::Cos(ph1);
-   Double_t c2 = TMath::Cos(ph2);
-   Double_t s1 = TMath::Sin(ph1);
-   Double_t s2 = TMath::Sin(ph2);
-
-   // compute distance to surface
    // Do Z
-   Double_t sz = TGeoShape::Big();
-   if (dir[2]>0) {
-      sz = (dz-point[2])/dir[2];
-      if (sz<=0) return 0.;
-   } else {
-      if (dir[2]<0) {
-         sz = -(dz+point[2])/dir[2];
-         if (sz<=0) return 0.;
-      }
+   Double_t scone = TGeoCone::DistFromInsideS(point,dir,dz,rmin1,rmax1,rmin2,rmax2);
+   if (scone<=0) return 0.0;
+   Double_t sfmin = TGeoShape::Big();
+   Double_t rsq = point[0]*point[0]+point[1]*point[1];
+   Double_t r = TMath::Sqrt(rsq);
+   Double_t cpsi=point[0]*cm+point[1]*sm;
+   if (cpsi>r*cdfi+TGeoShape::Tolerance())  {
+      sfmin = TGeoShape::DistToPhiMin(point, dir, s1, c1, s2, c2, sm, cm);
+      return TMath::Min(scone,sfmin);
    }
-   // check conical surfaces
-   Double_t sr1 = TGeoConeSeg::DistToCons(point, dir, rmin1, -dz, rmin2, dz, phi1, phi2);
-   Double_t sr2 = TGeoConeSeg::DistToCons(point, dir, rmax1, -dz, rmax2, dz, phi1, phi2);
-   Double_t sr = TMath::Min(sr1, sr2);
-   // phi planes
-
-   Double_t sfmin=DistToPhiMin(point, dir, s1, c1, s2, c2, sm, cm);
-   return TMath::Min(TMath::Min(sz,sr), sfmin);
+   // Point on the phi boundary or outside   
+   // which one: phi1 or phi2
+   Double_t ddotn, xi, yi;
+   if (TMath::Abs(point[1]-s1*r) < TMath::Abs(point[1]-s2*r)) {
+      ddotn = s1*dir[0]-c1*dir[1];
+      if (ddotn>=0) return 0.0;
+      ddotn = -s2*dir[0]+c2*dir[1];
+      if (ddotn<=0) return scone;
+      sfmin = s2*point[0]-c2*point[1];
+      if (sfmin<=0) return scone;
+      sfmin /= ddotn;
+      if (sfmin >= scone) return scone;
+      xi = point[0]+sfmin*dir[0];
+      yi = point[1]+sfmin*dir[1];
+      if (yi*cm-xi*sm<0) return scone;
+      return sfmin;
+   }
+   ddotn = -s2*dir[0]+c2*dir[1];
+   if (ddotn>=0) return 0.0;
+   ddotn = s1*dir[0]-c1*dir[1];
+   if (ddotn<=0) return scone;
+   sfmin = -s1*point[0]+c1*point[1];
+   if (sfmin<=0) return scone;
+   sfmin /= ddotn;
+   if (sfmin >= scone) return scone;
+   xi = point[0]+sfmin*dir[0];
+   yi = point[1]+sfmin*dir[1];
+   if (yi*cm-xi*sm>0) return scone;
+   return sfmin;
 }
 
 //_____________________________________________________________________________
 Double_t TGeoConeSeg::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the tube segment
+   if (iact<3 && safe) {
+      *safe = TGeoConeSeg::SafetyS(point, kTRUE, fDz,fRmin1,fRmax1,fRmin2,fRmax2,fPhi1,fPhi2);
+      if (iact==0) return TGeoShape::Big();
+      if ((iact==1) && (*safe>step)) return TGeoShape::Big();
+   }
    Double_t phi1 = fPhi1*TMath::DegToRad();
    Double_t phi2 = fPhi2*TMath::DegToRad();
    Double_t c1 = TMath::Cos(phi1);
    Double_t c2 = TMath::Cos(phi2);
    Double_t s1 = TMath::Sin(phi1);
    Double_t s2 = TMath::Sin(phi2);
-
-   if (iact<3 && safe) {
-      *safe = TGeoConeSeg::SafetyS(point, kTRUE, fDz,fRmin1,fRmax1,fRmin2,fRmax2,fPhi1,fPhi2);
-      if (iact==0) return TGeoShape::Big();
-      if ((iact==1) && (*safe>step)) return TGeoShape::Big();
-   }
-   // compute distance to surface
-   // Do Z
-   Double_t sz = TGeoShape::Big();
-   if (dir[2]>0) {
-      sz = (fDz-point[2])/dir[2];
-      if (sz<=0) return 0.;
-   } else {
-      if (dir[2]<0) {
-         sz = -(fDz+point[2])/dir[2];
-         if (sz<=0) return 0.;
-      }
-   }
-   // check conical surfaces
-   Double_t sr1 = TGeoConeSeg::DistToCons(point, dir, fRmin1, -fDz, fRmin2, fDz, fPhi1, fPhi2);
-   Double_t sr2 = TGeoConeSeg::DistToCons(point, dir, fRmax1, -fDz, fRmax2, fDz, fPhi1, fPhi2);
-   Double_t sr = TMath::Min(sr1, sr2);
-   // phi planes
-
    Double_t phim = 0.5*(phi1+phi2);
    Double_t cm = TMath::Cos(phim);
    Double_t sm = TMath::Sin(phim);
-   Double_t sfmin=DistToPhiMin(point, dir, s1, c1, s2, c2, sm, cm);
-   return TMath::Min(TMath::Min(sz,sr), sfmin);
+   Double_t dfi = 0.5*(phi2-phi1);
+   Double_t cdfi = TMath::Cos(dfi);
+
+   // compute distance to surface
+   return TGeoConeSeg::DistFromInsideS(point,dir,fDz,fRmin1,fRmax1,fRmin2,fRmax2,c1,s1,c2,s2,cm,sm,cdfi);
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmin1, Double_t rmax1,
-                                Double_t rmin2, Double_t rmax2, Double_t dz, Double_t phi1, Double_t phi2)
+Double_t TGeoConeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t dz, 
+                       Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, 
+                       Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi)
 {
 // compute distance from outside point to surface of arbitrary tube
-   Double_t snxt=TGeoShape::Big();
    if (dz<=0) return TGeoShape::Big();
+   Double_t r2, cpsi;
+   // check Z planes
+   Double_t xi, yi, zi;
+   Double_t b,delta;
+   zi = dz - TMath::Abs(point[2]);
+   Double_t rin,rout;
+   Double_t s = TGeoShape::Big();
+   Double_t snxt=TGeoShape::Big();
+   Bool_t in = kFALSE;
+   Bool_t inz = (zi<0)?kFALSE:kTRUE;
+   if (!inz) {
+      if (point[2]*dir[2]>=0) return TGeoShape::Big();
+      s = -zi/TMath::Abs(dir[2]);
+      xi = point[0]+s*dir[0];
+      yi = point[1]+s*dir[1];
+      r2=xi*xi+yi*yi;
+      if (dir[2]>0) {
+         rin = rmin1;
+         rout = rmax1;
+      } else {
+         rin = rmin2;
+         rout = rmax2;
+      }      
+      if ((rin*rin<=r2) && (r2<=rout*rout)) {
+         cpsi=xi*cm+yi*sm;
+         if (cpsi>=(cdfi*TMath::Sqrt(r2))) return s;
+      }
+   }
+   Double_t zinv = 1./dz;
+   Double_t rsq = point[0]*point[0]+point[1]*point[1];   
+   Double_t r = TMath::Sqrt(rsq);
    Double_t ro1=0.5*(rmin1+rmin2);
-   Double_t tg1=0.5*(rmin2-rmin1)/dz;
+   Bool_t hasrmin = (ro1>0)?kTRUE:kFALSE;
+   Double_t tg1 = 0.0;
+   Bool_t inrmin = kFALSE;
+   rin = 0.0;
+   if (hasrmin) {
+      tg1=0.5*(rmin2-rmin1)*zinv;
+      rin = ro1+tg1*point[2];
+      if (rsq > rin*(rin-TGeoShape::Tolerance())) inrmin=kTRUE;
+   } else {
+      inrmin = kTRUE;
+   }     
    Double_t ro2=0.5*(rmax1+rmax2);
-   Double_t tg2=0.5*(rmax2-rmax1)/dz;
-
-   Double_t ph1 = phi1*TMath::DegToRad();
-   Double_t ph2 = phi2*TMath::DegToRad();
-   Double_t c1 = TMath::Cos(ph1);
-   Double_t s1 = TMath::Sin(ph1);
-   Double_t c2 = TMath::Cos(ph2);
-   Double_t s2 = TMath::Sin(ph2);
-   Double_t fio = 0.5*(ph1+ph2);
-   Double_t cfio = TMath::Cos(fio);
-   Double_t sfio = TMath::Sin(fio);
-   Double_t dfi = 0.5*(ph2-ph1);
-   Double_t cdfi = TMath::Cos(dfi);
-   Double_t cpsi;
-
-   // intersection with Z planes
-   Double_t s, xi, yi, zi, riq, r1q, r2q;
-   if (TMath::Abs(point[2])>=dz) {
-      if ((point[2]*dir[2])<0) {
-         s=(TMath::Abs(point[2])-dz)/TMath::Abs(dir[2]);
-         xi=point[0]+s*dir[0];
-         yi=point[1]+s*dir[1];
-         riq=xi*xi+yi*yi;
-         if (point[2]<0) {
-            r1q=rmin1*rmin1;
-            r2q=rmax1*rmax1;
+   Double_t tg2=0.5*(rmax2-rmax1)*zinv;
+   rout = ro2+tg2*point[2];
+   Bool_t inrmax = kFALSE;
+   if (rsq < rout*(rout+TGeoShape::Tolerance())) inrmax = kTRUE;
+   Bool_t inphi = kFALSE;
+   cpsi=point[0]*cm+point[1]*sm;
+   if (cpsi>r*cdfi-TGeoShape::Tolerance())  inphi = kTRUE;
+   in = inz & inrmin & inrmax & inphi;
+   // If inside, we are most likely on a boundary within machine precision.
+   if (in) { 
+      Double_t safphi = (cpsi-r*cdfi)*TMath::Sqrt(1.-cdfi*cdfi);
+      Double_t safrmin = (hasrmin)?TMath::Abs(r-rin):(TGeoShape::Big());
+      Double_t safrmax = TMath::Abs(r-rout);
+      // check if on Z boundaries
+      if (zi<safrmax && zi<safrmin && zi<safphi) {
+         if (point[2]*dir[2]<0) return 0.0;
+         return TGeoShape::Big();
+      }   
+      // check if on Rmax boundary
+      if (safrmax<safrmin && safrmax<safphi) {
+         Double_t ddotn = point[0]*dir[0]+point[1]*dir[1]-tg2*dir[2]*r;      
+         if (ddotn<=0) return 0.0;
+         return TGeoShape::Big();
+      }
+      // check if on phi boundary
+      if (safphi<safrmin) {
+      // We may cross again a phi of rmin boundary
+      // check first if we are on phi1 or phi2
+         Double_t un;
+         if (TMath::Abs(point[1]-s1*r) < TMath::Abs(point[1]-s2*r)) {
+            un = dir[0]*s1-dir[1]*c1;
+            if (un < 0) return 0.0;
+            if (cdfi>=0) return TGeoShape::Big();
+            un = -dir[0]*s2+dir[1]*c2;
+            if (un<0) {
+               s = -point[0]*s2+point[1]*c2;
+               if (s>0) {
+                  s /= (-un);
+                  zi = point[2]+s*dir[2];
+                  if (TMath::Abs(zi)<=dz) {
+                     xi = point[0]+s*dir[0];
+                     yi = point[1]+s*dir[1];
+                     if ((yi*cm-xi*sm)>0) {
+                        r2=xi*xi+yi*yi;
+                        rin = ro1+tg1*zi;
+                        rout = ro2+tg2*zi;
+                        if ((rin*rin<=r2) && (rout*rout>=r2)) return s;
+                     }
+                  }
+               }
+            }   
          } else {
-            r1q=rmin2*rmin2;
-            r2q=rmax2*rmax2;
-         }
-         if ((r1q<=riq) && (riq<=r2q)) {
-//            gGeoManager->SetNormalChecked(TMath::Abs(dir[2]));
-            if (riq==0) return s;
-            cpsi=(xi*cfio+yi*sfio)/TMath::Sqrt(riq);
-            if (cpsi>=cdfi) return s;
-         }
-      }
-   }
-   // intersection with cones
-   Double_t sr1 = TGeoConeSeg::DistToCons(point, dir, rmin1, -dz, rmin2, dz, phi1, phi2);
-   Double_t sr2 = TGeoConeSeg::DistToCons(point, dir, rmax1, -dz, rmax2, dz, phi1, phi2);
-   snxt = TMath::Min(sr1, sr2);
-   // check phi planes
-   Double_t un;
-   un=dir[0]*s1-dir[1]*c1;
-   if (un!=0) {
-      s=(point[1]*c1-point[0]*s1)/un;
-      if ((s>=0) && (s<snxt)) {
-         zi=point[2]+s*dir[2];
-         if (TMath::Abs(zi)<=dz) {
-            xi=point[0]+s*dir[0];
-            yi=point[1]+s*dir[1];
-            riq=xi*xi+yi*yi;
-            r1q=(tg1*zi+ro1)*(tg1*zi+ro1);
-            r2q=(tg2*zi+ro2)*(tg2*zi+ro2);
-            if ((r1q<=riq) && (riq<=r2q)) {
-               if ((yi*cfio-xi*sfio)<=0) {
-                  snxt = s;
-//                  gGeoManager->SetNormalChecked(TMath::Abs(un));
+            un = -dir[0]*s2+dir[1]*c2;
+            if (un < 0) return 0.0;
+            if (cdfi>=0) return TGeoShape::Big();
+            un = dir[0]*s1-dir[1]*c1;
+            if (un<0) {
+               s = point[0]*s1-point[1]*c1;
+               if (s>0) {
+                  s /= (-un);
+                  zi = point[2]+s*dir[2];
+                  if (TMath::Abs(zi)<=dz) {
+                     xi = point[0]+s*dir[0];
+                     yi = point[1]+s*dir[1];
+                     if ((yi*cm-xi*sm)<0) {
+                        r2=xi*xi+yi*yi;
+                        rin = ro1+tg1*zi;
+                        rout = ro2+tg2*zi;
+                        if ((rin*rin<=r2) && (rout*rout>=r2)) return s;
+                     }
+                  }
                }
+            }
+         }      
+         // We may also cross rmin, second solution coming from outside
+         Double_t ddotn = point[0]*dir[0]+point[1]*dir[1]-tg1*dir[2]*r;
+         if (ddotn>=0) return TGeoShape::Big();
+         if (cdfi>=0) return TGeoShape::Big();              
+         TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta); 
+         if (delta<0) return TGeoShape::Big();
+         snxt = -b-delta;
+         if (snxt<0) return TGeoShape::Big();
+         snxt = -b+delta;
+         zi = point[2]+snxt*dir[2];           
+         if (TMath::Abs(zi)>dz) return TGeoShape::Big();
+         xi = point[0]+snxt*dir[0];
+         yi = point[1]+snxt*dir[1];
+         r2=xi*xi+yi*yi;
+         cpsi=xi*cm+yi*sm;
+         if (cpsi>=(cdfi*TMath::Sqrt(r2))) return snxt;
+         return TGeoShape::Big();
+      }
+      // We are on rmin boundary: we may cross again rmin or a phi facette   
+      Double_t ddotn = point[0]*dir[0]+point[1]*dir[1]-tg1*dir[2]*r;
+      if (ddotn>=0) return 0.0;
+      TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
+      if (delta<0) return 0.0;
+      snxt = -b+delta;
+      if (snxt<0) return TGeoShape::Big();
+      if (TMath::Abs(-b-delta)>snxt) return TGeoShape::Big();
+      zi = point[2]+snxt*dir[2];
+      if (TMath::Abs(zi)>dz) return TGeoShape::Big();
+      // OK, we cross rmin at snxt - check if within phi range
+      xi = point[0]+snxt*dir[0];
+      yi = point[1]+snxt*dir[1];
+      r2=xi*xi+yi*yi;
+      cpsi=xi*cm+yi*sm;
+      if (cpsi>=(cdfi*TMath::Sqrt(r2))) return snxt;
+      // we cross rmin in the phi gap - we may cross a phi facette
+      if (cdfi>=0) return TGeoShape::Big();
+      Double_t un=-dir[0]*s1+dir[1]*c1;
+      if (un > 0) {
+         s=point[0]*s1-point[1]*c1;
+         if (s>=0) {
+            s /= un;
+            zi=point[2]+s*dir[2];
+            if (TMath::Abs(zi)<=dz) {
+               xi=point[0]+s*dir[0];
+               yi=point[1]+s*dir[1];
+               if ((yi*cm-xi*sm)<=0) {
+                  r2=xi*xi+yi*yi;
+                  rin = ro1+tg1*zi;
+                  rout = ro2+tg2*zi;
+                  if ((rin*rin<=r2) && (rout*rout>=r2)) return s;
+               }   
+            }
+         }
+      }         
+      un=dir[0]*s2-dir[1]*c2;
+      if (un > 0) {
+         s=(point[1]*c2-point[0]*s2)/un;
+         if (s>=0) {
+            zi=point[2]+s*dir[2];
+            if (TMath::Abs(zi)<=dz) {
+               xi=point[0]+s*dir[0];
+               yi=point[1]+s*dir[1];
+               if ((yi*cm-xi*sm)>=0) {
+                  r2=xi*xi+yi*yi;
+                  rin = ro1+tg1*zi;
+                  rout = ro2+tg2*zi;
+                  if ((rin*rin<=r2) && (rout*rout>=r2)) return s;
+               }
+            }
+         }
+      }            
+      return TGeoShape::Big();
+   }   
+
+   // The point is really outside
+   Double_t sr1 = TGeoShape::Big();
+   if (!inrmax) {
+      // check crossing with outer cone
+      TGeoCone::DistToCone(point, dir, dz, rmax1, rmax2, b, delta);
+      if (delta>=0) {
+         s = -b-delta;
+         if (s>0) {
+            zi=point[2]+s*dir[2];
+            if (TMath::Abs(zi)<=dz) {
+               xi=point[0]+s*dir[0];
+               yi=point[1]+s*dir[1];
+               r2=xi*xi+yi*yi;
+               cpsi=xi*cm+yi*sm;
+               if (cpsi>=(cdfi*TMath::Sqrt(r2))) return s; // rmax crossing
+            }
+         }
+         s = -b+delta;
+         if (s>0) {
+            zi=point[2]+s*dir[2];
+            if (TMath::Abs(zi)<=dz) {
+               xi=point[0]+s*dir[0];
+               yi=point[1]+s*dir[1];
+               r2=xi*xi+yi*yi;
+               cpsi=xi*cm+yi*sm;
+               if (cpsi>=(cdfi*TMath::Sqrt(r2))) sr1=s;
             }
          }
       }
    }
-   un=dir[0]*s2-dir[1]*c2;
-   if (un!=0) {
-      s=(point[1]*c2-point[0]*s2)/un;
-      if ((s>=0) && (s<snxt)) {
+   // check crossing with inner cone
+   Double_t sr2 = TGeoShape::Big();
+   TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);      
+   if (delta>=0) {      
+      s = -b-delta;
+      if (s>0) {
          zi=point[2]+s*dir[2];
          if (TMath::Abs(zi)<=dz) {
             xi=point[0]+s*dir[0];
             yi=point[1]+s*dir[1];
-            riq=xi*xi+yi*yi;
-            r1q=(tg1*zi+ro1)*(tg1*zi+ro1);
-            r2q=(tg2*zi+ro2)*(tg2*zi+ro2);
-            if ((r1q<=riq) && (riq<=r2q)) {
-               if ((yi*cfio-xi*sfio)>=0) {
-//                  gGeoManager->SetNormalChecked(TMath::Abs(un));
-                  snxt = s;
-               }
+            r2=xi*xi+yi*yi;
+            cpsi=xi*cm+yi*sm;
+            if (cpsi>=(cdfi*TMath::Sqrt(r2))) sr2=s;
+         }
+      }
+      if (sr2>1E10) {
+         s = -b+delta;
+         if (s>0) {
+         zi=point[2]+s*dir[2];
+            if (TMath::Abs(zi)<=dz) {
+               xi=point[0]+s*dir[0];
+               yi=point[1]+s*dir[1];
+               r2=xi*xi+yi*yi;
+               cpsi=xi*cm+yi*sm;
+               if (cpsi>=(cdfi*TMath::Sqrt(r2))) sr2=s;
             }
          }
       }
    }
+   snxt = TMath::Min(sr1,sr2);   
+   // Check phi crossing   
+   s = TGeoShape::DistToPhiMin(point,dir,s1,c1,s2,c2,sm,cm,kFALSE);      
+   if (s>snxt) return snxt;
+   zi=point[2]+s*dir[2];
+   if (TMath::Abs(zi)>dz) return snxt;
+   xi=point[0]+s*dir[0];
+   yi=point[1]+s*dir[1];
+   r2=xi*xi+yi*yi;
+   rout = ro2+tg2*zi;
+   if (r2>rout*rout) return snxt;
+   rin = ro1+tg1*zi;
+   if (r2>=rin*rin) return s; // phi crossing
    return snxt;
 }
 
@@ -1514,7 +1714,18 @@ Double_t TGeoConeSeg::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
-   return TGeoConeSeg::DistFromOutsideS(point, dir,fRmin1,fRmax1,fRmin2,fRmax2,fDz, fPhi1, fPhi2);
+   Double_t phi1 = fPhi1*TMath::DegToRad();
+   Double_t phi2 = fPhi2*TMath::DegToRad();
+   Double_t c1 = TMath::Cos(phi1);
+   Double_t c2 = TMath::Cos(phi2);
+   Double_t s1 = TMath::Sin(phi1);
+   Double_t s2 = TMath::Sin(phi2);
+   Double_t phim = 0.5*(phi1+phi2);
+   Double_t cm = TMath::Cos(phim);
+   Double_t sm = TMath::Sin(phim);
+   Double_t dfi = 0.5*(phi2-phi1);
+   Double_t cdfi = TMath::Cos(dfi);
+   return TGeoConeSeg::DistFromOutsideS(point,dir,fDz,fRmin1,fRmax1,fRmin2,fRmax2,c1,s1,c2,s2,cm,sm,cdfi);
 }
 
 //_____________________________________________________________________________

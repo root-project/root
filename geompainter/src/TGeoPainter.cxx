@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.51 2004/12/03 08:14:15 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.52 2004/12/07 14:24:57 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -469,6 +469,7 @@ Int_t TGeoPainter::CountVisibleNodes()
    // we can visualize everything.
    //recompute the best visibility level
    fNVisNodes = -1;
+   Bool_t again = kFALSE;
    for (Int_t level = 1;level<20;level++) {
       vislevel = level;
       Int_t nnodes = top->CountNodes(level,2);
@@ -476,7 +477,10 @@ Int_t TGeoPainter::CountVisibleNodes()
          vislevel--;
          break;
       }
-      if (nnodes == fNVisNodes && vislevel>2) break;
+      if (nnodes == fNVisNodes) {
+         if (again) break;
+         again = kTRUE;
+      }   
       fNVisNodes = nnodes;
    }
    SetVisLevel(vislevel);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.20 2004/12/07 14:24:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.21 2005/01/19 13:19:34 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -101,8 +101,6 @@ protected:
    Double_t              fPhi1;  // first phi limit 
    Double_t              fPhi2;  // second phi limit 
 
-   static Double_t       DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Double_t c1,
-                                      Double_t s2, Double_t c2, Double_t sm, Double_t cm);   
 public:
    // constructors
    TGeoTubeSeg();
@@ -122,7 +120,7 @@ public:
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    static  Double_t      DistFromInsideS(Double_t *point, Double_t *dir,Double_t rmin, Double_t rmax, Double_t dz, 
-                                    Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm);
+                                    Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi);
    virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    static  Double_t      DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz,
@@ -195,13 +193,11 @@ public:
    virtual Int_t         GetByteCount() const {return 98;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Int_t         GetNmeshVertices() const;
-/////////////////////////////////////////////////
-   virtual void          Paint(Option_t *option);
-/////////////////////////////////////////////////
    const Double_t       *GetNlow() const {return &fNlow[0];}
    const Double_t       *GetNhigh() const {return &fNhigh[0];}
    Double_t              GetZcoord(Double_t xc, Double_t yc, Double_t zc) const;
    virtual void          InspectShape() const;
+   virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetCtubDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                                        Double_t phi1, Double_t phi2, Double_t lx, Double_t ly, Double_t lz,

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.16 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.17 2004/12/07 14:24:57 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -336,13 +336,16 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    }      
    
    // normal case   
-   Int_t incseg = (dir[2]>0)?1:-1;   
+   Int_t incseg = (dir[2]>0)?1:-1; 
+   Int_t iznext = iz;
+   Bool_t zexit = kFALSE;  
    while (iz>=0 && iz<fNz-1) {
       // find the distance  to current segment end Z surface
       ipl = iz+((incseg+1)>>1); // next plane
       inext = ipl+incseg; // next next plane
       sz = (fZ[ipl]-point[2])/dir[2];
       if (sz<stepmax) {
+         iznext += incseg;
          // we cross the next Z section before stepmax
          pt[0] = point[0]+sz*dir[0];
          pt[1] = point[1]+sz*dir[1];
@@ -351,37 +354,45 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
             // ray gets through next polygon - is it the last one?
             if (ipl==0 || ipl==fNz-1) {
                xtru->SetIz(-1);
-               return sz;
+               if (convex) return sz;
+               zexit = kTRUE;
+               snext = sz;
+               stepmax = sz;
             }   
             // maybe a Z discontinuity - check this
-            if (fZ[ipl]==fZ[inext]) {
+            if (!zexit && fZ[ipl]==fZ[inext]) {
                xtru->SetCurrentVertices(fX0[inext],fY0[inext],fScale[inext]);
                // if we do not cross the next polygone, we are out
                if (!fPoly->Contains(pt)) {
                   xtru->SetIz(-1);
-                  return sz;
+                  if (convex) return sz;
+                  zexit = kTRUE;
+                  snext = sz;
+                  stepmax = sz;
+               } else {  
+                  iznext = inext;
                }   
-               iz = inext;
-               continue;
-            }
-            iz += incseg;
-            continue;
+            } 
          }
-      }
-      // ray can cross only the lateral surfaces of section iz      
+      } else {
+         iznext = fNz-1;   // stop
+      }   
+      // ray may cross the lateral surfaces of section iz      
       xtru->SetIz(iz);
       for (iv=0; iv<fNvert; iv++) {
          dist = DistToPlane(point,dir,iz,iv,stepmax,kTRUE); 
          if (dist<stepmax) {
             xtru->SetSeg(iv);
-            stepmax = dist;
             snext = dist;
+            stepmax = dist;
             if (convex) return snext;
+            zexit = kTRUE;
          }   
       }
-      return snext;
+      if (zexit) return snext;
+      iz = iznext;
    }
-   return TGeoShape::Big();         
+   return TGeoShape::Big();  // should never happen       
 }
 
 //_____________________________________________________________________________
