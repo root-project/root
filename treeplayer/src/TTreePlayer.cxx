@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.178 2005/01/11 13:06:36 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.179 2005/01/13 20:07:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -668,7 +668,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  Iteration$: return the current iteration over this formula for this
 //                 entry (i.e. varies from 0 to Length$).
 //
-//  Length$(formula): return the total number of element of the formula given as a 
+//  Length$(formula): return the total number of element of the formula given as a
 //                    parameter.
 //
 //  Alt$(primary,alternate) : return the value of "primary" if it is available
@@ -1235,8 +1235,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             if (branch->GetListOfBranches()->GetEntriesFast()) {leafStatus[l] = 1;}
          }
          if (bre->GetStreamerType() < 0) {
-            {leafStatus[l] = 1; head = headcom;}
             fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), bre->GetName());
+            mustInit.Add(bre);
             continue;
          }
          if (bre->GetStreamerType() == 0) {
@@ -2082,7 +2082,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
    Int_t nleaves = leaves->GetEntriesFast();
    if (nleaves < ncols) ncols = nleaves;
    nch = varexp ? strlen(varexp) : 0;
-   
+
    nentries = GetEntriesToProcess(firstentry, nentries);
 
 //*-*- Compile selection expression if there is one
@@ -2350,7 +2350,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    // You can change the default number of rows to be shown before <CR>
    // via  mytree->SetScanfield(maxrows) where maxrows is 50 by default.
    // if maxrows is set to 0 all rows of the Tree are shown.
-   // This option is interesting when dumping the contents of a Tree to 
+   // This option is interesting when dumping the contents of a Tree to
    // an ascii file, eg from the command line
    //   tree->setScanField(0);
    //   tree->Scan("*"); >tree.log
@@ -2511,7 +2511,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    UInt_t nleaves = leaves->GetEntriesFast();
    if (nleaves < ncols) ncols = nleaves;
    nch = varexp ? strlen(varexp) : 0;
-   
+
    nentries = GetEntriesToProcess(firstentry, nentries);
 
 //*-*- Compile selection expression if there is one
@@ -2758,7 +2758,7 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    nch = varexp ? strlen(varexp) : 0;
 
    nentries = GetEntriesToProcess(firstentry, nentries);
-  
+
    // compile selection expression if there is one
    TTreeFormula *select = 0;
    if (strlen(selection)) {
@@ -2939,7 +2939,7 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
 //             = "V" Verbose mode (default is between Q and V)
 //             = "E" Perform better Errors estimation using Minos technique
 //             = "M" More. Improve fit results
-//             = "D" Draw the projected histogram with the fitted function 
+//             = "D" Draw the projected histogram with the fitted function
 //                   normalized to the number of selected rows
 //                   and multiplied by the bin width
 //
@@ -3099,7 +3099,7 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
 
    //reset estimate
    fTree->SetEstimate(oldEstimate);
-   
+
    //if option "D" is specified, draw the projected histogram
    //with the fitted function normalized to the number of selected rows
    //and multiplied by the bin width
