@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.18 2000/10/08 16:02:29 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.19 2000/10/09 13:58:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4454,7 +4454,7 @@ void TPad::x3d(Option_t *option)
 #ifndef WIN32
    if (gROOT->LoadClass("TViewerX3D","X3d")) return;
 
-   gROOT->ProcessLineFast(Form("TViewerX3D::View((TVirtualPad*)0x%lx,\"%s\")",
-                          (Long_t)this,option));
+   gROOT->ProcessLineFast(Form("new TViewerX3D((TVirtualPad*)0x%lx,\"%s\")",
+                          (Long_t)this, option));
 #endif
 }
