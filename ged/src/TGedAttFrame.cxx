@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.6 2004/03/22 09:37:20 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.7 2004/04/06 21:06:13 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -106,7 +106,7 @@ Float_t TGedAttFrame::ExecuteFloat(TObject *obj, const char *method,
 }
 
 //______________________________________________________________________________
-TGCompositeFrame* TGedAttFrame::MakeTitle(char *p)
+TGCompositeFrame* TGedAttFrame::MakeTitle(const char *p)
 {
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 128, 40,
                                kHorizontalFrame | kLHintsExpandX | kFixedWidth);

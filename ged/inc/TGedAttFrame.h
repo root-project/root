@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.h,v 1.3 2004/02/27 01:03:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.h,v 1.4 2004/04/06 21:06:13 rdm Exp $
 // Author: Marek Biskup, Ilka  Antcheva 28/07/03
 
 /*************************************************************************
@@ -49,7 +49,7 @@ protected:
 
    long    ExecuteInt(TObject *obj, const char *method, const char *params);
    Float_t ExecuteFloat(TObject *obj, const char *method, const char *params);
-   virtual TGCompositeFrame *MakeTitle(char *c);
+   virtual TGCompositeFrame *MakeTitle(const char *c);
 
 public:
    TGedAttFrame(const TGWindow *p, Int_t id,
