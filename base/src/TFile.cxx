@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.95 2003/07/03 11:46:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.96 2003/07/16 16:14:42 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -524,11 +524,21 @@ zombie:
 }
 
 //______________________________________________________________________________
-void TFile::Close(Option_t *)
+void TFile::Close(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Close a file*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ============
-
+// if option == "R", all TProcessIDs referenced by this file are deleted.
+// Calling TFile::Close("R") might be necessary in case one reads a long list
+// of files having TRef, writing some of the referenced objects or TRef
+// to a new file. If the TRef or referenced objects of the file being closed
+// will not be referenced again, it is possible to minimize the size
+// of the TProcessID data structures in memory by forcing a delete of 
+// the unused TProcessID.
+   
+   TString opt = option;
+   opt.ToLower();
+   
    if (!IsOpen()) return;
 
    if (IsWritable()) {
@@ -584,7 +594,7 @@ void TFile::Close(Option_t *)
    TIter next(fProcessIDs);
    TProcessID *pid;
    while ((pid = (TProcessID*)next())) {
-      if (!pid->DecrementCount()) {
+      if (!pid->DecrementCount() || opt.Contains("r")) {
          if (pid != TProcessID::GetSessionProcessID()) pidDeleted.Add(pid);
       }
    }
