@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.89 2004/05/18 09:33:19 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.90 2004/05/21 18:54:12 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2819,32 +2819,99 @@ const char *TWinNTSystem::GetLinkedLibraries()
       return 0;
    }
 
-   FILE *p = OpenPipe(Form("objdump -p %s", exe), "r");
-   if(p != 0) {
-      TString odump;
-      while (odump.Gets(p)) {
-         if (odump.Contains("DLL Name:")) {
-            TString delim(" :\t");
-            TObjArray *tok = odump.Tokenize(delim);
+   HANDLE hFile, hMapping;
+   void *basepointer;
 
-            TObjString *dllName = (TObjString*)tok->At(2);
-            if (dllName) {
-               TString dll = dllName->String();
-               if (dll.EndsWith(".dll")) {
-                  char *dllPath = DynamicPathName(dll, kTRUE);
-                  if (dllPath) {
-                     if (!linkedLibs.IsNull())
-                        linkedLibs += " ";
-                     linkedLibs += dllPath;
+   if((hFile = CreateFile(exe,GENERIC_READ,0,0,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,0))==INVALID_HANDLE_VALUE) { 
+      return 0;
+   }
+   if(!(hMapping = CreateFileMapping(hFile,0,PAGE_READONLY|SEC_COMMIT,0,0,0))) { 
+      CloseHandle(hFile); 
+      return 0;
+   }
+   if(!(basepointer = MapViewOfFile(hMapping,FILE_MAP_READ,0,0,0))) { 
+      CloseHandle(hMapping); 
+      CloseHandle(hFile); 
+      return 0;
+   }
+
+   int sect;
+   IMAGE_DOS_HEADER *dos_head = (IMAGE_DOS_HEADER *)basepointer;
+   struct header { 
+      DWORD signature;
+      IMAGE_FILE_HEADER _head;
+      IMAGE_OPTIONAL_HEADER opt_head;
+      IMAGE_SECTION_HEADER section_header[];  // actual number in NumberOfSections
+   };
+   struct header *pheader;
+   const IMAGE_SECTION_HEADER * section_header;
+
+   if(dos_head->e_magic!='ZM') { 
+      return 0;
+   }  // verify DOS-EXE-Header
+   // after end of DOS-EXE-Header: offset to PE-Header
+   pheader = (struct header *)((char*)dos_head + dos_head->e_lfanew); 
+
+   if(IsBadReadPtr(pheader,sizeof(struct header))) { // start of PE-Header
+      return 0;
+   }
+   if(pheader->signature!=IMAGE_NT_SIGNATURE) {      // verify PE format
+      switch((unsigned short)pheader->signature) {
+         case IMAGE_DOS_SIGNATURE: 
+            return 0;
+         case IMAGE_OS2_SIGNATURE: 
+            return 0;
+         case IMAGE_OS2_SIGNATURE_LE: 
+            return 0;
+         default: // unknown signature
+            return 0;
+      }
+   }
+#define isin(address,start,length) ((address)>=(start) && (address)<(start)+(length))
+   TString odump;
+   // walk through sections
+   for(sect=0,section_header=pheader->section_header;
+       sect<pheader->_head.NumberOfSections;sect++,section_header++) {
+      int directory;
+      const void * const section_data = 
+            (char*)basepointer + section_header->PointerToRawData;
+      for(directory=0;directory<IMAGE_NUMBEROF_DIRECTORY_ENTRIES;directory++) {
+         if(isin(pheader->opt_head.DataDirectory[directory].VirtualAddress,
+                 section_header->VirtualAddress,
+                 section_header->SizeOfRawData)) {
+            const IMAGE_IMPORT_DESCRIPTOR *stuff_start = 
+                 (IMAGE_IMPORT_DESCRIPTOR *)((char*)section_data + 
+                 (pheader->opt_head.DataDirectory[directory].VirtualAddress - 
+                  section_header->VirtualAddress));
+            // (virtual address of stuff - virtual address of section) = 
+            // offset of stuff in section
+            const unsigned stuff_length = 
+                  pheader->opt_head.DataDirectory[directory].Size;
+            if(directory == IMAGE_DIRECTORY_ENTRY_IMPORT) {
+               while(!IsBadReadPtr(stuff_start,sizeof(*stuff_start)) && 
+                      stuff_start->Name) {
+                  TString dll = (char*)section_data + 
+                               ((DWORD)(stuff_start->Name)) -
+                                section_header->VirtualAddress;
+                  if (dll.EndsWith(".dll")) {
+                     char *dllPath = DynamicPathName(dll, kTRUE);
+                     if (dllPath) {
+                        if (!linkedLibs.IsNull())
+                           linkedLibs += " ";
+                        linkedLibs += dllPath;
+                     }
+                     delete [] dllPath;
                   }
-                  delete [] dllPath;
+                  stuff_start++; 
                }
             }
-            delete tok;
          }
       }
-      ClosePipe(p);
    }
+   
+   UnmapViewOfFile(basepointer);
+   CloseHandle(hMapping);
+   CloseHandle(hFile);
 
    delete [] exe;
 
