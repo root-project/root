@@ -533,6 +533,7 @@ else
 endif
 endif
 endif
+endif
 		@echo "$@ done"
 
 $(EVENT):       $(EVENTSO) $(MAINEVENTO)
@@ -613,6 +614,7 @@ else
 endif
 endif
 endif
+endif
 
 Aclock:         $(ACLOCKSO)
 $(ACLOCKSO):    $(ACLOCKO)
@@ -636,6 +638,7 @@ ifeq ($(ARCH),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
+endif
 endif
 endif
 endif
@@ -665,6 +668,7 @@ else
 endif
 endif
 endif
+endif
 
 $(TBENCHSO):    $(TBENCHO)
 ifeq ($(ARCH),aix)
@@ -687,6 +691,7 @@ ifeq ($(ARCH),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
+endif
 endif
 endif
 endif
