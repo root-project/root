@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.35 2001/03/14 14:01:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.36 2001/04/04 13:56:47 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -449,7 +449,10 @@ void TFile::Close(Option_t *)
 
    if (!IsOpen()) return;
 
-   if (IsWritable()) WriteStreamerInfo();
+   if (IsWritable()) {
+      TStreamerInfo::SetCurrentFile(this);
+      WriteStreamerInfo();
+   }
    delete fClassIndex;
    fClassIndex = 0;
 
