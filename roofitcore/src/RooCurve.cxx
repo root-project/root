@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.9 2001/08/08 23:11:24 david Exp $
+ *    File: $Id: RooCurve.cc,v 1.10 2001/08/09 01:02:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.9 2001/08/08 23:11:24 david Exp $";
+"$Id: RooCurve.cc,v 1.10 2001/08/09 01:02:14 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -183,12 +183,16 @@ void RooCurve::addRange(const RooAbsFunc& func, Double_t x1, Double_t x2,
   // will be calculated so that the maximum deviation from a straight line
   // approximation is prec*(ymax-ymin).
 
+  // update the Y Axis Limits
+  updateYAxisLimits(y1);
+  updateYAxisLimits(y2);
+
   // calculate our value at the midpoint of this range
   Double_t xmid= 0.5*(x1+x2);
   Double_t ymid= func(&xmid);
   // test if the midpoint is sufficiently close to a straight line across this interval
   Double_t dy= ymid - 0.5*(y1+y2);
-  if(fabs(dy) >= prec*(getYAxisMax()-getYAxisMin())) {
+  if(fabs(dy)>0 && fabs(dy) >= prec*(getYAxisMax()-getYAxisMin())) {
     // fill in each subrange
     addRange(func,x1,xmid,y1,ymid,prec);
     addRange(func,xmid,x2,ymid,y2,prec);
