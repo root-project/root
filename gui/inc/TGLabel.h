@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.14 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.15 2004/09/10 19:02:07 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -71,6 +71,7 @@ public:
    const TGString *GetText() const { return fText; }
    virtual void SetText(TGString *newText);
    void SetText(const char *newText) { SetText(new TGString(newText)); }
+   virtual void SetTitle(const char *label) { SetText(label); }
    void SetText(Int_t number) { SetText(new TGString(number)); }
    void SetTextJustify(Int_t tmode);
    virtual void SetTextFont(TGFont *font, Bool_t global = kFALSE);

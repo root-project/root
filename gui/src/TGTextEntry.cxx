@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.24 2004/07/06 13:23:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.25 2004/09/10 16:25:03 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -273,7 +273,7 @@ TGTextEntry::TGTextEntry(const TGWindow *parent, const char *text, Int_t id) :
    fNormGC        = GetDefaultGC();
    fFontStruct    = GetDefaultFontStruct();
    fText          = new TGTextBuffer();
-   fText->AddText(0, text);
+   fText->AddText(0, !text && !parent ? GetName() : text);
 
    Init();                             // default initialization
 }

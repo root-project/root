@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.25 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.26 2004/09/10 19:02:07 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -168,6 +168,7 @@ public:
    void               SetTextJustify(Int_t tmode) { fTMode = tmode; }
    virtual void       SetText(TGHotString *new_label);
    virtual void       SetText(const TString &new_label);
+   virtual void       SetTitle(const char *label) { SetText(label); }
    virtual void       SetFont(FontStruct_t font, Bool_t global = kFALSE);
    virtual void       SetFont(const char *fontName, Bool_t global = kFALSE);
    virtual void       SetTextColor(Pixel_t color, Bool_t global = kFALSE);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.16 2004/09/10 16:25:03 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.17 2004/09/10 19:02:07 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -155,6 +155,7 @@ public:
    virtual  void        SetState(Bool_t state);
    virtual  void        SetToolTipText(const char *text, Long_t delayms = 1000);
    virtual  void        SetText(const char *text);
+   virtual  void        SetTitle(const char *label) { SetText(label); }
    virtual  void        SetFont(TGFont *font, Bool_t local = kFALSE);
    virtual  void        SetFont(FontStruct_t font, Bool_t local = kFALSE);
    virtual  void        SetFont(const char *fontName, Bool_t local = kFALSE);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.73 2004/09/10 10:17:08 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.74 2004/09/10 19:57:25 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1592,7 +1592,7 @@ TGGroupFrame::TGGroupFrame(const TGWindow *p, const char *title,
 {
    // Create a group frame.
 
-   fText       = new TGString(p && title ? title : GetName());
+   fText       = new TGString(!p && !title ? GetName() : title);
    fFontStruct = font;
    fNormGC     = norm;
    fTitlePos   = kLeft;
