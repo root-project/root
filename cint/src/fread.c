@@ -622,7 +622,7 @@ char *string,*endmark;
 	  break;
 	}
 #ifndef G__OLDIMPLEMENTATION1317
-	else if('*'==string[i-1]) {
+	else if(i&&'*'==string[i-1]) {
 	  pflag = 1;
 	}
 #endif

@@ -6,7 +6,7 @@
 #pragma link C++ nestedtypedef;
 #pragma link C++ nestedclass;
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -50,11 +50,11 @@ class multiset {
   typedef typename Allocator::difference_type   difference_type;
 #endif
 
-  class iterator 
+  class iterator
 #if defined(G__VISUAL)
-	: public _Bidit<Key,difference_type> 
+	: public _Bidit<Key,difference_type>
 #elif !defined(G__SUNPRO_C)
-  	: public bidirectional_iterator<Key,difference_type> 
+  	: public bidirectional_iterator<Key,difference_type>
 #endif
 	{
    public:
@@ -63,7 +63,7 @@ class multiset {
 #if !defined(G__BORLAND) && !defined(G__KCC)
     iterator& operator=(const iterator& x) ;
 #endif
-#if defined(G__VISUAL) || defind(G__GNUC)
+#if defined(G__VISUAL) || defined(G__GNUC)
     value_type operator*() const;
 #else
     value_type& operator*() const;
@@ -88,11 +88,11 @@ class multiset {
   friend bool operator!=(const multiset::iterator& x,const multiset::iterator& y)const;
 #endif
 
-  class reverse_iterator 
+  class reverse_iterator
 #if defined(G__VISUAL)
-	: public _Bidit<Key,difference_type> 
+	: public _Bidit<Key,difference_type>
 #elif !defined(G__SUNPRO_C)
-  	: public bidirectional_iterator<Key,difference_type> 
+  	: public bidirectional_iterator<Key,difference_type>
 #endif
 	{
    public:
@@ -100,7 +100,7 @@ class multiset {
 #if !defined(G__BORLAND) && !defined(G__KCC)
     reverse_iterator& operator=(const reverse_iterator& x) ;
 #endif
-#if defined(G__VISUAL) || defind(G__GNUC)
+#if defined(G__VISUAL) || defined(G__GNUC)
     value_type operator*() const;
 #else
     value_type& operator*() const;

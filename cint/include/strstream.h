@@ -3,7 +3,7 @@
 *
 *********************************************************************/
 
-#ifndef G__STRSTREAM_H
+#pragma ifndef G__STRSTREAM_H
 
 #pragma setstream
 
@@ -204,7 +204,7 @@ istrstream& istrstream::operator >>(double& d)
 * NOT COMPLETE
 *********************************************************************/
 class iostrstream : public istrstream , public ostrstream {
-	iostrstream(char *p,int bufsize) 
+	iostrstream(char *p,int bufsize)
 		: istrstream(p,bufsize) , ostrstream(p,bufsize) { }
 };
 
@@ -220,4 +220,4 @@ typedef istrstream istringstream;
 
 #endif
 
-#endif
+#pragma endif

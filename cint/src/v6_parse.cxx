@@ -3632,7 +3632,12 @@ G__value G__exec_statement()
             }
             /* Allow for spaces before a scope operator. */
             namespace_tagnum = G__defined_tagname(statement,2);
+#ifndef G__PHILIPPE8
+            if (((namespace_tagnum!=-1) && (G__struct.type[namespace_tagnum]=='n'))
+		||(strcmp(statement,"std")==0)) {
+#else 
             if ((namespace_tagnum!=-1) && (G__struct.type[namespace_tagnum]=='n')) {
+#endif
               spaceflag = 0;	    
             }
           }
