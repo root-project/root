@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.52 2003/03/04 22:24:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.53 2003/03/05 23:36:17 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1222,9 +1222,7 @@ void TBranch::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-printf("Before WriteBuffer for branch:%s\n",GetName());
       TBranch::Class()->WriteBuffer(b,this);
-printf("after WriteBuffer\n");
 
          // if branch is in a separate file save this branch
          // as an independent key
@@ -1235,9 +1233,7 @@ printf("after WriteBuffer\n");
          TDirectory *cursav = gDirectory;
          fDirectory->cd();
          fDirectory = 0;  // to avoid recursive calls
-printf("calling Write for branch:%s\n",GetName());
          Write();
-printf("after Write for branch:%s\n",GetName());
          fDirectory = gDirectory;
          cursav->cd();
       }
