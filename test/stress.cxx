@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.26 2001/10/01 14:15:18 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.27 2001/10/05 16:50:42 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -743,25 +743,12 @@ Int_t stress8write(Int_t nevent, Int_t comp, Int_t split)
    tree->Branch("event", "Event", &event, bufsize,split);
 
    //Fill the Tree
-   Int_t ev, t, ntrack, nb=0, meanTracks=600;
+   Int_t ev, nb=0, meanTracks=600;
+   Float_t ptmin = 1;
    for (ev = 0; ev < nevent; ev++) {
-      Float_t sigmat, sigmas;
-      gRandom->Rannor(sigmat,sigmas);
-      ntrack   = Int_t(meanTracks +meanTracks*sigmat/120.);
-      Float_t random = gRandom->Rndm(1);
-
-      event->SetHeader(ev, 200, 960312, random);
-      event->SetNseg(Int_t(10*ntrack+20*sigmas));
-      event->SetNvertex(1);
-      event->SetFlag(UInt_t(random+0.5));
-      event->SetTemperature(random+20.);
-
-      //  Create and Fill the Track objects
-      for (t = 0; t < ntrack; t++) event->AddTrack(random);
+      event->Build(ev,meanTracks,ptmin);
 
       nb += tree->Fill();  //fill the tree
-
-      event->Clear();
    }
    hfile->Write();
    ntotout += hfile->GetBytesWritten();

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.2 2001/10/01 06:55:55 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.3 2001/10/01 07:04:23 brun Exp $
 // Author: Christian Stratowa 30/09/2001
 
 /******************************************************************************
@@ -30,13 +30,13 @@
 
 ClassImp(TGraphSmooth);
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 // TGraphSmooth
 //
 // A helper class to smooth TGraph
 // see examples in $ROOTSYS/tutorials/motorcycle.C and approx.C
 //
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 TGraphSmooth::TGraphSmooth(): TNamed()
 {
 //*-*-*-*-*-*-*-*-*Default GraphSmooth constructor *-*-*-*-*-*-*-*-*-*-*
@@ -46,7 +46,7 @@ TGraphSmooth::TGraphSmooth(): TNamed()
    fGout = 0;
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 TGraphSmooth::TGraphSmooth(const char *name): TNamed(name,"")
 {
 //*-*-*-*-*-*-*-*-*GraphSmooth constructor *-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -56,7 +56,7 @@ TGraphSmooth::TGraphSmooth(const char *name): TNamed(name,"")
    fGout = 0;
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 TGraphSmooth::~TGraphSmooth()
 {
 //*-*-*-*-*-*-*-*-*GraphSmooth destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -67,7 +67,7 @@ TGraphSmooth::~TGraphSmooth()
    fGout = 0;
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 void TGraphSmooth::Smoothin(TGraph *grin)
 {
 //*-*-*-*-*-*-*-*-*Sort input data points*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -100,7 +100,7 @@ void TGraphSmooth::Smoothin(TGraph *grin)
    delete [] yin;
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 TGraph *TGraphSmooth::SmoothKern(TGraph *grin, Option_t *option, 
                       Double_t bandwidth, Int_t nout, Double_t *xout)
 {
@@ -145,7 +145,7 @@ TGraph *TGraphSmooth::SmoothKern(TGraph *grin, Option_t *option,
       else           fGout->SetPoint(i,xout[index[i]], 0);
    }
 
-   TGraphSmooth::BDRksmooth(fGin->GetX(), fGin->GetY(), fNin, fGout->GetX(),
+   BDRksmooth(fGin->GetX(), fGin->GetY(), fNin, fGout->GetX(),
                  fGout->GetY(), fNout, kernel, bandwidth);
  
    if (index) {delete [] index; index = 0;}
@@ -153,7 +153,7 @@ TGraph *TGraphSmooth::SmoothKern(TGraph *grin, Option_t *option,
    return fGout;
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 void TGraphSmooth::BDRksmooth(Double_t *x, Double_t *y, Int_t n, Double_t *xp, 
                    Double_t *yp, Int_t np, Int_t kernel, Double_t bw)
 {
@@ -203,7 +203,7 @@ void TGraphSmooth::BDRksmooth(Double_t *x, Double_t *y, Int_t n, Double_t *xp,
 }
 
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 TGraph *TGraphSmooth::SmoothLowess(TGraph *grin, Option_t *option ,
                       Double_t span, Int_t iter, Double_t delta)
 {
@@ -249,12 +249,12 @@ TGraph *TGraphSmooth::SmoothLowess(TGraph *grin, Option_t *option ,
       fGout->SetPoint(i,fGin->GetX()[i], 0);
    }
 
-   TGraphSmooth::Lowess(fGin->GetX(), fGin->GetY(), fNin, fGout->GetY(), span, iter, delta);
+   Lowess(fGin->GetX(), fGin->GetY(), fNin, fGout->GetY(), span, iter, delta);
  
    return fGout;
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys, 
                    Double_t span, Int_t iter, Double_t delta)
 {
@@ -310,7 +310,7 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
 
 	   // fitted value at x[i]
          Bool_t iterg1 = iiter>1;
-         TGraphSmooth::Lowest(&x[1], &y[1], n, x[i], ys[i], nleft, nright,
+         Lowest(&x[1], &y[1], n, x[i], ys[i], nleft, nright,
                       res, iterg1, RW, ok);
 	      if (!ok) ys[i] = y[i];
 
@@ -356,10 +356,10 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
 	// compute cmad := 6 * median(rw[], n) 
    	m1 = n/2;
 	// partial sort, for m1 & m2
-	   TGraphSmooth::Psort(RW, n, m1);
+	   Psort(RW, n, m1);
 	   if(n % 2 == 0) {
 	      m2 = n-m1-1;
-	      TGraphSmooth::Psort(RW, n, m2);
+	      Psort(RW, n, m2);
 	      cmad = 3.*(RW[m1]+RW[m2]);
 	   } else { /* n odd */
 	      cmad = 6.*RW[m1];
@@ -380,7 +380,7 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
    }
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 void TGraphSmooth::Lowest(Double_t *x, Double_t *y, Int_t n, Double_t &xs,
                    Double_t &ys, Int_t nleft, Int_t nright, Double_t *w,
                    Bool_t userw, Double_t *rw, Bool_t &ok)
@@ -458,7 +458,7 @@ void TGraphSmooth::Lowest(Double_t *x, Double_t *y, Int_t n, Double_t &xs,
    }
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *option,
         Double_t bass, Double_t span, Bool_t isPeriodic, Double_t *w)
 {
@@ -509,7 +509,7 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *option,
       return 0;
    }
    
-   TGraphSmooth::Smoothin(grin);
+   Smoothin(grin);
 
    Int_t iper = 1;
    if (isPeriodic) {
@@ -542,7 +542,7 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *option,
       Tmp[i] = 0;
    }
 
-   TGraphSmooth::BDRsupsmu(fNin, fGin->GetX(), fGin->GetY(), weight, iper, span, bass, fGout->GetY(), Tmp);
+   BDRsupsmu(fNin, fGin->GetX(), fGin->GetY(), weight, iper, span, bass, fGout->GetY(), Tmp);
 
    delete [] Tmp; 
    delete [] weight; 
@@ -550,7 +550,7 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *option,
    return fGout;
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 void TGraphSmooth::BDRsupsmu(Int_t n, Double_t *x, Double_t *y, Double_t *w,
      Int_t iper, Double_t span, Double_t alpha, Double_t *smo, Double_t *sc)
 {
@@ -659,16 +659,16 @@ void TGraphSmooth::BDRsupsmu(Int_t n, Double_t *x, Double_t *y, Double_t *w,
       jper = 1;
    }
    if (span > 0.0) {
-      TGraphSmooth::BDRsmooth(n, &x[1], &y[1], &w[1], span, jper, vsmlsq,
+      BDRsmooth(n, &x[1], &y[1], &w[1], span, jper, vsmlsq,
                       &smo[1], &sc[sc_offset]);
       return;
    }
 
    Double_t *h = new Double_t[n+1];
    for (i = 1; i <= 3; ++i) {
-      TGraphSmooth::BDRsmooth(n, &x[1], &y[1], &w[1], spans[i - 1], jper, vsmlsq, 
+      BDRsmooth(n, &x[1], &y[1], &w[1], spans[i - 1], jper, vsmlsq, 
                       &sc[((i<<1)-1)*n + 1], &sc[n*7 + 1]);
-      TGraphSmooth::BDRsmooth(n, &x[1], &sc[n*7 + 1], &w[1], spans[1], -jper, vsmlsq, 
+      BDRsmooth(n, &x[1], &sc[n*7 + 1], &w[1], spans[1], -jper, vsmlsq, 
                       &sc[(i<<1)*n + 1], &h[1]);
    }
 
@@ -689,7 +689,7 @@ void TGraphSmooth::BDRsupsmu(Int_t n, Double_t *x, Double_t *y, Double_t *w,
        }
    }
 
-   TGraphSmooth::BDRsmooth(n, &x[1], &sc[n*7 + 1], &w[1], spans[1], -jper, vsmlsq, 
+   BDRsmooth(n, &x[1], &sc[n*7 + 1], &w[1], spans[1], -jper, vsmlsq, 
                    &sc[(n<<1) + 1], &h[1]);
 
    for (j=1; j<=n; ++j) {
@@ -709,14 +709,14 @@ void TGraphSmooth::BDRsupsmu(Int_t n, Double_t *x, Double_t *y, Double_t *w,
       }
    }
 
-   TGraphSmooth::BDRsmooth(n, &x[1], &sc[(n<<2) + 1], &w[1], spans[0], -jper, vsmlsq,
+   BDRsmooth(n, &x[1], &sc[(n<<2) + 1], &w[1], spans[0], -jper, vsmlsq,
                    &smo[1], &h[1]);
 
    delete [] h;
    return;
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 void TGraphSmooth::BDRsmooth(Int_t n, Double_t *x, Double_t *y, Double_t *w,
      Double_t span, Int_t iper, Double_t vsmlsq, Double_t *smo, Double_t *acvr)
 {
@@ -887,7 +887,7 @@ void TGraphSmooth::BDRsmooth(Int_t n, Double_t *x, Double_t *y, Double_t *w,
    return;
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 void TGraphSmooth::Approxin(TGraph *grin, Int_t iKind, Double_t &Ylow,
      Double_t &Yhigh, Int_t rule, Int_t iTies)
 {
@@ -909,7 +909,7 @@ void TGraphSmooth::Approxin(TGraph *grin, Int_t iKind, Double_t &Ylow,
 // sort/rank input x, y
    Int_t *index = new Int_t[fNin];
    Int_t *rank  = new Int_t[fNin];
-   TGraphSmooth::Rank(fNin, xin, index, rank, kFALSE);
+   Rank(fNin, xin, index, rank, kFALSE);
 
 // input X, Y
    Int_t vNDup = 0;
@@ -982,7 +982,7 @@ void TGraphSmooth::Approxin(TGraph *grin, Int_t iKind, Double_t &Ylow,
    delete [] yin;
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_t *xout, 
         Double_t yleft, Double_t yright, Int_t rule, Double_t f, Option_t *ties)
 {
@@ -1081,14 +1081,14 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
    for (Int_t i=0;i<fNout;i++) {
       if (xout == 0) x = fMinX + i*delta;
       else           x = xout[i];
-      Double_t yout = TGraphSmooth::Approx1(x, f, fGin->GetX(), fGin->GetY(), fNin, iKind, Ylow, Yhigh);
+      Double_t yout = Approx1(x, f, fGin->GetX(), fGin->GetY(), fNin, iKind, Ylow, Yhigh);
       fGout->SetPoint(i,x, yout);
    }
     
    return fGout;
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 Double_t TGraphSmooth::Approx1(Double_t v, Double_t f, Double_t *x, Double_t *y,
          Int_t n, Int_t iKind, Double_t Ylow, Double_t Yhigh)
 {
@@ -1099,7 +1099,6 @@ Double_t TGraphSmooth::Approx1(Double_t v, Double_t f, Double_t *x, Double_t *y,
 //   Based on R function approx1: Translated to C++ by Christian Stratowa
 //   (R source file: approx.c by R Development Core Team (C) 1999-2001)
 //
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Int_t i = 0;
    Int_t j = n - 1;
@@ -1126,10 +1125,8 @@ Double_t TGraphSmooth::Approx1(Double_t v, Double_t f, Double_t *x, Double_t *y,
    }
 }
 
-
-//----------------------------------------------------------------------//
 // helper functions
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 Int_t TGraphSmooth::Rcmp(Double_t x, Double_t y)
 {
 //   static function
@@ -1140,14 +1137,13 @@ Int_t TGraphSmooth::Rcmp(Double_t x, Double_t y)
    return 0;
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 void TGraphSmooth::Psort(Double_t *x, Int_t n, Int_t k)
 {
 //   static function
 //   based on R function rPsort: adapted to C++ by Christian Stratowa
 //   (R source file: R_sort.c by R Development Core Team (C) 1999-2001)
 //
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Double_t v, w;
    Int_t L, R, i, j;
@@ -1164,7 +1160,7 @@ void TGraphSmooth::Psort(Double_t *x, Int_t n, Int_t k)
    }
 }
 
-//----------------------------------------------------------------------//
+//______________________________________________________________________
 void TGraphSmooth::Rank(Int_t n, Double_t *a, Int_t *index, Int_t *rank, Bool_t down)
 {
 //   static function

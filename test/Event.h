@@ -114,6 +114,7 @@ private:
 public:
    Event();
    virtual ~Event();
+   void          Build(Int_t ev, Int_t arg5=600, Float_t ptmin=1);
    void          Clear(Option_t *option ="");
    static void   Reset(Option_t *option ="");
    void          ResetHistogramPointer() {fH=0;}
@@ -124,7 +125,7 @@ public:
    void          SetTemperature(Float_t t) { fTemperature = t; }
    void          SetType(char *type) {strcpy(fType,type);}
    void          SetHeader(Int_t i, Int_t run, Int_t date, Float_t random);
-   Track        *AddTrack(Float_t random);
+   Track        *AddTrack(Float_t random, Float_t ptmin);
    void          SetMeasure(UChar_t which, Int_t what);
    void          SetMatrix(UChar_t x, UChar_t y, Float_t what) { if (x<3&&y<3) fMatrix[x][y]=what;}
    void          SetRandomVertex();

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.10 2000/11/23 10:22:10 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.11 2001/10/05 16:49:39 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -115,7 +115,40 @@ Event::~Event()
 }
 
 //______________________________________________________________________________
-Track *Event::AddTrack(Float_t random)
+void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
+  char etype[20];
+  Float_t sigmat, sigmas;
+  gRandom->Rannor(sigmat,sigmas);
+  Int_t ntrack   = Int_t(arg5 +arg5*sigmat/120.);
+  Float_t random = gRandom->Rndm(1);
+
+  Clear();
+  fHighPt->Delete();
+  fMuons->Delete();
+  
+  sprintf(etype,"type%d",ev%5);
+  SetType(etype);
+  SetHeader(ev, 200, 960312, random);
+  SetNseg(Int_t(10*ntrack+20*sigmas));
+  SetNvertex(Int_t(1+20*gRandom->Rndm()));
+  SetFlag(UInt_t(random+0.5));
+  SetTemperature(random+20.);
+
+  for(UChar_t m = 0; m < 10; m++) {
+     SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
+  }
+  for(UChar_t i0 = 0; i0 < 4; i0++) {
+    for(UChar_t i1 = 0; i1 < 4; i1++) {
+       SetMatrix(i0,i1,gRandom->Gaus(i0*i1,1));
+    }
+  }
+
+   //  Create and Fill the Track objects
+  for (Int_t t = 0; t < ntrack; t++) AddTrack(random,ptmin);
+}  
+
+//______________________________________________________________________________
+Track *Event::AddTrack(Float_t random, Float_t ptmin)
 {
    // Add a new track to the list of tracks for this event.
    // To avoid calling the very time consuming operator new for each track,
@@ -126,6 +159,8 @@ Track *Event::AddTrack(Float_t random)
    TClonesArray &tracks = *fTracks;
    Track *track = new(tracks[fNtrack++]) Track(random);
    fLastTrack = track;
+   if (track->GetPt() > ptmin) fHighPt->Add(track);
+   if (track->GetMass2() < 0.11) fMuons->Add(track);
    return track;
 }
 
