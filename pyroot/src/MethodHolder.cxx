@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.5 2004/05/07 20:47:20 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.6 2004/05/21 18:55:48 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -553,13 +553,18 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
    // scan for class name (ie. stripping const, * and &)
       std::string::size_type ifirst = std::string::npos, ilast = std::string::npos;
       for ( int i = 0; i != (int) rtname.length(); ++i ) {
-         if ( rtname[i] == 'T' && ifirst == std::string::npos )
+         if ( isalnum( rtname[i] ) && ifirst == std::string::npos )
             ifirst = i;
 
          if ( ! isalnum( rtname[i] ) &&
               ( ifirst != std::string::npos && ilast == std::string::npos ) ) {
             ilast = i;
-            break;
+
+         // may have collected "const"
+            if ( rtname.substr( ifirst, ilast ) == "const" )
+               ifirst = ilast = std::string::npos;   // reset
+            else
+               break;                        // ok, found a class name
          }
       }
 
