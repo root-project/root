@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.116 2003/06/10 19:07:04 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.117 2003/06/13 06:19:09 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3386,8 +3386,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
                        else {tab[pos-1] = 0;} //{indetermination }
                        break;
             case  31 : dexp = tab[pos-1];
-                       if (dexp < -70) {tab[pos-1] = 0; break;}
-                       if (dexp >  70) {tab[pos-1] = TMath::Exp(70); break;}
+                       if (dexp < -700) {tab[pos-1] = 0; break;}
+                       if (dexp >  700) {tab[pos-1] = TMath::Exp(70); break;}
                        tab[pos-1] = TMath::Exp(dexp); break;
             case  32 : if (tab[pos-1] > 0) tab[pos-1] = TMath::Log10(tab[pos-1]);
                        else {tab[pos-1] = 0;} //{indetermination }
