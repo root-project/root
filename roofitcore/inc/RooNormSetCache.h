@@ -30,27 +30,43 @@ public:
 
   void add(const RooArgSet* set1, const RooArgSet* set2=0) ;
 
-  inline Bool_t contains(const RooArgSet* set1, const RooArgSet* set2=0) {
+  inline Int_t index(const RooArgSet* set1, const RooArgSet* set2=0) {
     Int_t i ;
     for (i=0 ; i<_nreg ; i++) {
-      if (_asArr1[i] == set1 && _asArr2[i] == set2) return kTRUE ;
+      if (_asArr1[i] == set1 && _asArr2[i] == set2) return i ;
     }
-    return kFALSE ;
+    return -1 ;
   }
 
+  inline Bool_t contains(const RooArgSet* set1, const RooArgSet* set2=0) {
+    return (index(set1,set2)>=0) ;
+  }
+
+  const RooArgSet* lastSet1() const { return _nreg>0?_asArr1[_nreg-1]:0 ; }
+  const RooArgSet* lastSet2() const { return _nreg>0?_asArr2[_nreg-1]:0 ; }
+  const RooNameSet& nameSet1() const { return _name1 ; }
+  const RooNameSet& nameSet2() const { return _name2 ; }
+
+  Bool_t autoCache(const RooAbsArg* self, const RooArgSet* set1, const RooArgSet* set2=0, Bool_t autoRefill=kTRUE) ;
+  
+  
   void clear() ;
   Int_t entries() const { return _nreg ; }
 
 protected:
 
+  friend class RooNormListManager ;
+  friend class RooNormManager ;
+  void initialize(const RooNormSetCache& other) ;
+
   Int_t _regSize ;
   Int_t _nreg ;
   pRooArgSet* _asArr1;  //! do not persist
   pRooArgSet* _asArr2;  //! do not persist
-  RooNameSet _name1 ;
-  RooNameSet _name2 ;
+  RooNameSet _name1 ;   //!
+  RooNameSet _name2 ;   //!
 
-  ClassDef(RooNormSetCache,1) 
+  ClassDef(RooNormSetCache,1) // Manager class for a single PDF normalization integral
 } ;
 
 #endif 

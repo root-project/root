@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.18 2002/03/05 19:20:09 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.19 2002/03/07 06:22:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -81,6 +81,15 @@ Bool_t RooAbsString::operator==(TString value) const
   // Equality operator comparing with a TString
   return (getVal()==value) ;
 }
+
+
+
+Bool_t RooAbsString::operator==(const RooAbsArg& other) 
+{
+  const RooAbsString* otherString = dynamic_cast<const RooAbsString*>(&other) ;
+  return otherString ? operator==(otherString->getVal()) : kFALSE ;
+}
+
 
 
 
@@ -192,6 +201,17 @@ void RooAbsString::fillTreeBranch(TTree& t)
     assert(0) ;
   }
   branch->Fill() ;  
+}
+
+
+
+void RooAbsString::setTreeBranchStatus(TTree& t, Bool_t active) 
+{
+  // (De)Activate associate tree branch
+  TBranch* branch = t.GetBranch(GetName()) ;
+  if (branch) { 
+    t.SetBranchStatus(GetName(),active?1:0) ;
+  }
 }
 
 

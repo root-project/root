@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAICRegistry.rdl,v 1.2 2001/10/13 21:53:18 verkerke Exp $
+ *    File: $Id: RooAICRegistry.rdl,v 1.3 2001/11/21 19:36:36 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -43,7 +43,7 @@ protected:
   pRooArgSet* _asArr3;  //! do not persist
   pRooArgSet* _asArr4;  //! do not persist
 
-  ClassDef(RooAICRegistry,1) 
+  ClassDef(RooAICRegistry,1) // Registry for analytical integration codes
 } ;
 
 #endif 

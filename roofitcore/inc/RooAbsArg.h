@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.65 2002/03/22 22:43:51 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.66 2002/04/10 20:59:04 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -46,7 +46,7 @@ public:
   }
 
   // Accessors to client-server relation information 
-  virtual Bool_t isDerived() const { return _serverList.First()?kTRUE:kFALSE; }
+  virtual Bool_t isDerived() const { return _serverList.GetSize()?kTRUE:kFALSE; }
   Bool_t isCloneOf(const RooAbsArg& other) const ; 
   Bool_t dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=0) const ;
   Bool_t dependsOn(const RooAbsArg& server, const RooAbsArg* ignoreArg=0) const ;
@@ -128,10 +128,17 @@ public:
   virtual RooAbsArg& operator=(Int_t ival) ;
   virtual RooAbsArg& operator=(Double_t fval) ;
   virtual RooAbsArg& operator=(const char* cval) ;
+  virtual Bool_t operator==(const RooAbsArg& other) = 0 ;
 
   // Formatting control
   static void nameFieldLength(Int_t newLen) { _nameLength = newLen>0 ? newLen : 0 ; }
+
+  enum ConstOpCode { Activate=0, DeActivate=1, ConfigChange=2, ValueChange=3 } ;
   
+
+  friend class RooMinuit ;
+  virtual void constOptimize(ConstOpCode opcode) ;
+
 protected:
 
   friend class RooExtendPdf ;
@@ -176,7 +183,6 @@ protected:
   friend class RooArgSet ;
   friend class RooAbsCollection ;
   friend class RooCustomizer ;
-  friend class RooFitContext ;
   TList _serverList       ; //! list of server objects
   THashList _clientList       ; //! list of client objects
   THashList _clientListShape  ; //! subset of clients that requested shape dirty flag propagation
@@ -190,8 +196,9 @@ protected:
   friend class RooGenContext;
   friend class RooResolutionModel ;
   friend class RooSimultaneous ;
-  friend class RooSimGenContext ;
+  friend class RooSimGenContext ;  
   friend class RooSimPdfBuilder ;
+  friend class RooAbsOptGoodnessOfFit ;
   Bool_t redirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE) ;
   Bool_t recursiveRedirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE) ;
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) { return kFALSE ; } ;
@@ -226,9 +233,11 @@ protected:
   // Hooks for RooTreeData interface
   friend class RooTreeData ;
   friend class RooDataSet ;
+  friend class RooRealMPFE ;
   virtual void syncCache(const RooArgSet* nset=0) = 0 ;
   virtual void copyCache(const RooAbsArg* source) = 0 ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
+  virtual void setTreeBranchStatus(TTree& t, Bool_t active) = 0 ;
   virtual void fillTreeBranch(TTree& t) = 0 ;
 
   // Global   

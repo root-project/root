@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.rdl,v 1.28 2002/03/22 22:43:57 verkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.29 2002/03/29 03:19:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -65,6 +65,8 @@ protected:
   mutable RooSetProxy _anaList ;
   mutable RooSetProxy _jacList ;
   mutable RooSetProxy _facList ;
+  TIterator*          _facListIter ; //! do not persist
+  TIterator*          _jacListIter ; //! do not persist
   RooRealProxy       _function ; // must after set proxies
   RooArgSet*      _funcNormSet ;
 

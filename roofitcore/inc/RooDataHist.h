@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.rdl,v 1.15 2002/05/28 23:43:08 verkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.16 2002/06/18 22:19:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -23,7 +23,6 @@ class RooAbsReal ;
 class RooAbsCategory ;
 class Roo1DTable ;
 class RooPlot;
-class RooFitContext ;
 class RooArgSet ;
 
 class RooDataHist : public RooTreeData, public RooDirItem {
@@ -44,8 +43,12 @@ public:
 
   // Add one ore more rows of data
   virtual void add(const RooArgSet& row, Double_t weight=1.0) ;
+  void set(const RooArgSet& row, Double_t weight, Double_t wgtErr=-1) ;
+  void set(const RooArgSet& row, Double_t weight, Double_t wgtErrLo, Double_t wgtErrHi) ;
+
   void add(const RooAbsData& dset, const RooFormulaVar* cutVar=0, Double_t weight=1.0 ) ;
   void add(const RooAbsData& dset, const char* cut, Double_t weight=1.0 ) ;
+
   virtual const RooArgSet* get() const { return &_vars ; } 
   virtual const RooArgSet* get(Int_t masterIdx) const ;
   virtual const RooArgSet* get(const RooArgSet& coord) const ;
@@ -56,10 +59,16 @@ public:
   Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize) ;
 
   virtual Double_t weight() const { return _curWeight ; }
-  Double_t weight(const RooArgSet& bin, Int_t intOrder=1, Bool_t correctForBinSize=kFALSE) ; 
+  Double_t weight(const RooArgSet& bin, Int_t intOrder=1, Bool_t correctForBinSize=kFALSE) ;   
   Double_t binVolume() const { return _curVolume ; }
   Double_t binVolume(const RooArgSet& bin) ; 
+  inline Double_t weightError() const {
+    Double_t lo,hi ;
+    weightError(lo,hi) ;
+    return (lo+hi)/2 ;
+  }
 
+  void weightError(Double_t& lo, Double_t& hi) const ;
 
   virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P", const RooAbsBinning* bins=0) const;
   virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions="P", const RooAbsBinning* bins=0) const;
@@ -75,19 +84,24 @@ protected:
   virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) ;
   Double_t interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOrder, Bool_t correctForBinSize) ;
 
-//   virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) ;
+  virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) ;
 
   Int_t calcTreeIndex() const ;
 
   Int_t       _arrSize ; //  Size of the weight array
   Int_t*      _idxMult ; //! Multiplier jump table for index calculation
   Double_t*       _wgt ; //[_arrSize] Weight array
+  Double_t*    _errLo ; //[_arrSize] Low-side error on weight array
+  Double_t*    _errHi ; //[_arrSize] High-side error on weight array
   Double_t*      _binv ; //[_arrSize] Bin volume array
   RooArgSet  _realVars ; // Real dimensions of the dataset 
   TIterator* _realIter ; //! Iterator over realVars
 
   mutable Double_t _curWeight ; // Weight associated with the current coordinate
+  mutable Double_t _curWgtErrLo ; // Error on weight associated with the current coordinate
+  mutable Double_t _curWgtErrHi ; // Error on weight associated with the current coordinate
   mutable Double_t _curVolume ; // Volume of bin enclosing current coordinate
+  mutable Int_t    _curIndex ; // Current index
 
 private:
 

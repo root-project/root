@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.rdl,v 1.23 2002/05/16 00:01:36 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.24 2002/06/12 23:53:26 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -17,7 +17,6 @@
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooCategoryProxy.hh"
 #include "RooFitCore/RooSetProxy.hh"
-#include "RooFitCore/RooSimFitContext.hh"
 #include "RooFitCore/RooAICRegistry.hh"
 class RooAbsCategoryLValue ;
 class RooFitResult ;
@@ -54,8 +53,6 @@ public:
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0, 
 			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0) const ; 
   
-  virtual RooFitContext* fitContext(const RooAbsData& dset, const RooArgSet* projDeps=0) const ;
-
   RooAbsPdf* getPdf(const char* catName) const ;
   const RooAbsCategory& indexCat() const { return _indexCat.arg() ; }
   
@@ -70,7 +67,6 @@ protected:
 
   mutable RooAICRegistry _codeReg ;  // Auxiliary class keeping tracking of composite analytical integration codes
  
-  friend class RooSimFitContext ;
   RooCategoryProxy _indexCat ; // Index category
   TList    _pdfProxyList ;     // List of PDF proxies (named after applicable category state)
   Double_t _numPdf ;           // Number of registered PDFs

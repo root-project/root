@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.22 2002/04/03 23:37:26 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.23 2002/05/15 01:40:16 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -65,7 +65,7 @@ RooFormulaVar* RooResolutionModel::_identity = 0;
 
 RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooRealVar& _x) : 
   RooAbsPdf(name,title), _basis(0), _basisCode(0), x("x","Dependent or convolution variable",this,_x),
-  _ownBasis(kFALSE), _normSpecial(0), _lastNormSetSpecial(0)
+  _ownBasis(kFALSE)
 {
   // Constructor with convolution variable 'x'
   if (!_identity) _identity = new RooFormulaVar("identity","1",RooArgSet("")) ;  
@@ -74,7 +74,7 @@ RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooR
 
 RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const char* name) : 
   RooAbsPdf(other,name), _basis(0), _basisCode(other._basisCode), x("x",this,other.x),
-  _ownBasis(kFALSE), _normSpecial(0), _lastNormSetSpecial(0)
+  _ownBasis(kFALSE)
 {
   // Copy constructor
 
@@ -103,8 +103,6 @@ RooResolutionModel::~RooResolutionModel()
   if (_ownBasis && _basis) {
     delete _basis ;
   }
-
-  if (_normSpecial) delete _normSpecial ;
 }
 
 
@@ -270,40 +268,6 @@ void RooResolutionModel::normLeafServerList(RooArgSet& list) const
 
 
 
-Double_t RooResolutionModel::getNormSpecial(const RooArgSet* nset) const 
-{
-  // Replica of RooAbsPdf::getNorm that uses a separate cache to store normalization
-  // integral. Used by RooConvolutedPdf::analyticalIntegralWN(), which, for
-  // normalized integrals, must retrieve two different integrals for each convolution 
-  // object. Using RooAbsPdf::getNorm for both would lead to 100% cache misses.
-
-  if (!nset) {
-    return getVal() ;
-  }
-
-  if (nset != _lastNormSetSpecial) {
-
-    if (_verboseEval>0) {
-      cout << "RooResolutionModel::getNormSpecial(" << GetName() 
-	   << ") recreating normalization integral(" 
-	   << _lastNormSet << " -> " << nset << "=" ;
-      if (nset) nset->Print("1") ; else cout << "<none>" ;
-      cout << ")" << endl ;
-    }
-
-    if (_normSpecial) delete _normSpecial ;
-
-    TString nname(GetName()) ; nname.Append("NormSpecial") ;
-    TString ntitle(GetTitle()) ; ntitle.Append(" Integral (Special)") ;
-    _normSpecial = new RooRealIntegral(nname.Data(),ntitle.Data(),*this,*(RooArgSet*)nset) ;
-
-    _lastNormSetSpecial = (RooArgSet*)nset ;
-  }
-
-  return _normSpecial->getVal() ;
-}
-
-
 Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
 {
   // Return the integral of this PDF over all elements of 'nset'. 
@@ -311,7 +275,7 @@ Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
     return getVal() ;
   }
 
-  syncNormalization(nset) ;
+  syncNormalization(nset,kFALSE) ;
   if (_verboseEval>1) cout << IsA()->GetName() << "::getNorm(" << GetName() 
 			   << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsBinning.cc,v 1.1 2002/03/07 06:22:18 verkerke Exp $
+ *    File: $Id: RooAbsBinning.cc,v 1.2 2002/04/03 23:37:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
@@ -10,6 +10,10 @@
  *
  * Copyright (C) 2002 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION [MISC] --
+// RooAbsBinning is the abstract base class for RooRealVar binning definitions
+// This class defines the interface to retrieve bin boundaries, ranges etc.
 
 #include "RooFitCore/RooAbsBinning.hh"
 

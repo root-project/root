@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.15 2002/05/17 22:58:13 verkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.16 2002/06/14 22:37:02 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -331,8 +331,15 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
   // Standard mode only the final values of the floating parameters are printed
 
   os << endl 
-     << "  RooFitResult: minimized NLL value: " << _minNLL << ", estimated distance to minimum: " << _edm 
-     << endl 
+     << "  RooFitResult: minimized FCN value: " << _minNLL << ", estimated distance to minimum: " << _edm << endl
+     << "                coviarance matrix quality: " ;
+  switch(_covQual) {
+  case 0: os << "Not calculated at all" ;
+  case 1: os << "Approximation only, not accurate" ;
+  case 2: os << "Full matrix, but forced positive-definite" ;
+  case 3: os << "Full, accurate covariance matrix" ;  
+  }
+  os << endl 
      << endl ;
 
   Int_t i ;
@@ -352,7 +359,15 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
 
 
 
-    Bool_t doAsymErr = ((RooRealVar*)_finalPars->at(0))->hasAsymError() ;
+    // Has any parameter asymmetric errors?
+    Bool_t doAsymErr(kFALSE) ;
+    for (i=0 ; i<_finalPars->getSize() ; i++) {
+      if (((RooRealVar*)_finalPars->at(i))->hasAsymError()) {
+	doAsymErr=kTRUE ;
+	break ;
+      }
+    }
+
     if (doAsymErr) {
       os << "    Floating Parameter  InitialValue    FinalValue (+HiError,-LoError)    GblCorr." << endl
 	 << "  --------------------  ------------  ----------------------------------  --------" << endl ;
@@ -366,11 +381,12 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
       os << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_initPars->at(i))->getVal())
 	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->at(i))->getVal()) ;
       
-      if (doAsymErr) {
+      if (((RooRealVar*)_finalPars->at(i))->hasAsymError()) {
 	os << setw(21) << Form(" (+%8.2e,-%8.2e)",((RooRealVar*)_finalPars->at(i))->getAsymErrorHi(),
 	                       -1*((RooRealVar*)_finalPars->at(i))->getAsymErrorLo()) ;
       } else {
-	os << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->at(i))->getError()) ;
+	Double_t err = ((RooRealVar*)_finalPars->at(i))->getError() ;
+	os << (doAsymErr?"        ":"") << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->at(i))->getError()) ;
       }
 
       if (_globalCorr) {
@@ -387,9 +403,10 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
        << "  --------------------  --------------------------" << endl ;
 
     for (i=0 ; i<_finalPars->getSize() ; i++) {
+      Double_t err = ((RooRealVar*)_finalPars->at(i))->getError() ;
       os << "  "    << setw(20) << ((RooAbsArg*)_finalPars->at(i))->GetName()
 	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->at(i))->getVal())
-	 << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->at(i))->getError())
+	 << " +/- " << setw(9)  << Form("%9.2e",err)
 	 << endl ;
     }
   }
@@ -397,6 +414,7 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
 
   os << endl ;
 }
+
 
 
 void RooFitResult::fillCorrMatrix()
@@ -461,16 +479,18 @@ void RooFitResult::fillCorrMatrix()
   delete vIter ;
 
   TIterator *gcIter = _globalCorr->createIterator() ;
+  TIterator *parIter = _finalPars->createIterator() ;
 
   // Extract correlation information for MINUIT (code taken from TMinuit::mnmatu() )
 
   // WVE: This code directly manipulates minuit internal workspace, 
   //      if TMinuit code changes this may need updating
-  Int_t ndex, i, j, m, n, ncoef, nparm, /*id,*/ it, ix;
+  Int_t ndex, i, j, m, n, ncoef, nparm, /*id,*/ it, ix ;
   Int_t ndi, ndj /*, iso, isw2, isw5*/;
   ncoef = (gMinuit->fNpagwd - 19) / 6;
   nparm = TMath::Min(gMinuit->fNpar,ncoef);
   RooRealVar* gcVal = 0;
+  RooRealVar* par = 0 ;
   for (i = 1; i <= gMinuit->fNpar; ++i) {
     ix  = gMinuit->fNexofi[i-1];
     ndi = i*(i + 1) / 2;
@@ -483,8 +503,11 @@ void RooFitResult::fillCorrMatrix()
     }
     nparm = TMath::Min(gMinuit->fNpar,ncoef);
 
+    // Find the next global correlation slot to fill, skipping fixed parameters
     gcVal = (RooRealVar*) gcIter->Next() ;
     gcVal->setVal(gMinuit->fGlobcc[i-1]) ;
+
+    // Fill a row of the correlation matrix
     TIterator* cIter = ((RooArgList*)_corrMatrix.At(i-1))->createIterator() ;
     for (it = 1; it <= gMinuit->fNpar ; ++it) {
       RooRealVar* cVal = (RooRealVar*) cIter->Next() ;
@@ -494,6 +517,7 @@ void RooFitResult::fillCorrMatrix()
   }
 
   delete gcIter ;
+  delete parIter ;
 } 
 
 
@@ -569,12 +593,17 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
       floatPars.addOwned(*var) ;
     }
   }
+
+  Int_t icode,npari,nparx ;
+  Double_t fmin,edm,errdef ;
+  gMinuit->mnstat(fmin,edm,errdef,npari,nparx,icode) ;
   
   r->setConstParList(constPars) ;
   r->setInitParList(floatPars) ;
   r->setFinalParList(floatPars) ;
-  r->setMinNLL(gMinuit->fAmin) ;
-  r->setEDM(gMinuit->fEDM) ; 
+  r->setMinNLL(fmin) ;
+  r->setEDM(edm) ; 
+  r->setCovQual(icode) ;
   r->setStatus(gMinuit->fStatus) ;
   r->fillCorrMatrix() ;
 

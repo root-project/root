@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.rdl,v 1.21 2002/04/08 21:06:30 verkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.22 2002/04/12 19:06:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,7 +31,6 @@ class RooAbsCategory ;
 class RooAbsString ;
 class Roo1DTable ;
 class RooPlot;
-class RooFitContext ;
 class RooFormulaVar ;
 
 class RooTreeData : public RooAbsData {
@@ -95,6 +94,7 @@ public:
   }
   const TTree& tree() const { return *_tree ; }
 
+
   // WVE Debug stuff
   void dump() ;
 
@@ -104,18 +104,30 @@ public:
   RooTreeData(const char *name, const char *title, RooTreeData *ntuple, 
 	     const RooArgSet& vars, const RooFormulaVar* cutVar, Bool_t copyCache);
 
-protected:
+  //protected:
+
+  inline Int_t ScanCache(const char* varexp="", const char* selection="", Option_t* option="", 
+			 Int_t nentries = 1000000000, Int_t firstentry = 0) {
+    return _cacheTree->Scan(varexp,selection,option,nentries,firstentry) ; 
+  }
+  const TTree& cacheTree() const { return *_cacheTree ; }
 
   // Forwarded from TTree
   inline Stat_t GetEntries() const { return _tree->GetEntries() ; }
   inline void Reset(Option_t* option=0) { _tree->Reset(option) ; }
   inline Int_t Fill() { return _tree->Fill() ; }
-  inline Int_t GetEntry(Int_t entry = 0, Int_t getall = 0) { return _tree->GetEntry(entry,getall) ; }
+  inline Int_t GetEntry(Int_t entry = 0, Int_t getall = 0) { 
+    Int_t ret1 = _tree->GetEntry(entry,getall) ; 
+    if (!ret1) return 0 ;
+    _cacheTree->GetEntry(entry,getall) ; 
+    return ret1 ;
+  }
   void treePrint() { _tree->Print() ; }
 
-  // RooFitContext optimizer interface
-  friend class RooFitContext ;
+  // Constant term  optimizer interface
   virtual void cacheArgs(RooArgSet& varSet, const RooArgSet* nset=0) ;
+  void setArgStatus(const RooArgSet& set, Bool_t active) ;
+  virtual void resetCache() ;
 
   // TTree Branch buffer size contro
   void setBranchBufferSize(Int_t size) { _defTreeBufSize = size ; }
@@ -139,6 +151,7 @@ protected:
 
   void createTree(const char* name, const char* title) ; 
   TTree *_tree ;           // TTree holding the data points
+  TTree *_cacheTree ;      //! TTree holding the cached function values
   mutable Bool_t _defCtor ;//! Was object constructed with default ctor?
 
   // Column structure definition
@@ -147,10 +160,11 @@ protected:
 
   static Int_t _defTreeBufSize ;  
 
+  void initCache(const RooArgSet& cachedVars) ; 
+  
 private:
 
   void initialize();
-  void initCache(const RooArgSet& cachedVars) ; 
 
   ClassDef(RooTreeData,1) // Abstract ttree based data collection
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.rdl,v 1.27 2001/10/19 06:56:51 verkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.28 2002/04/08 20:20:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -38,6 +38,7 @@ public:
   virtual const char* getLabel() const ;
   Bool_t operator==(Int_t index) const ;
   Bool_t operator==(const char* label) const ;
+  virtual Bool_t operator==(const RooAbsArg& other) ;
   
   Bool_t isValidIndex(Int_t index) const ;
   Bool_t isValidLabel(const char* label) const ;  
@@ -79,6 +80,7 @@ protected:
   virtual void syncCache(const RooArgSet* set=0) { getIndex() ; }
   virtual void copyCache(const RooAbsArg* source) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+  virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;
   virtual void fillTreeBranch(TTree& t) ;
 
   mutable RooCatType _value ; // Current value

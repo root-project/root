@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooNameSet.rdl,v 1.5 2001/10/10 17:59:01 verkerke Exp $
+ *    File: $Id: RooNameSet.rdl,v 1.6 2001/11/08 19:59:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,6 +33,7 @@ public:
   void refill(const RooArgSet& argSet) ;
   RooArgSet* select(const RooArgSet& list) const ;
   Bool_t operator==(const RooNameSet& other) ;  
+  RooNameSet& operator=(const RooNameSet&) ;
 
   virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {

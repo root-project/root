@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegratorConfig.cc,v 1.1 2002/03/22 22:11:12 verkerke Exp $
+ *    File: $Id: RooIntegratorConfig.cc,v 1.2 2002/08/02 17:58:47 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
@@ -10,6 +10,11 @@
  *
  * Copyright (C) 2002 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION [MISC] --
+// RooIntegratorConfig holds the configuration parameters of the various
+// numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
+// use this class in the (normalization) integral configuration interface
 
 #include "RooFitCore/RooIntegratorConfig.hh"
 

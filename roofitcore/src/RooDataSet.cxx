@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.74 2002/05/09 00:55:52 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.75 2002/05/14 22:48:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -69,7 +69,18 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
   // is the most convenient way to create a subset of an existing data
   appendToDir(this,kTRUE) ;
 
-  initialize(wgtVarName) ;
+  if (wgtVarName) {
+    // Use the supplied weight column
+    initialize(wgtVarName) ;    
+  } else {
+    if (dset->_wgtVar && vars.find(dset->_wgtVar->GetName())) {
+      // Use the weight column of the source data set
+      initialize(dset->_wgtVar->GetName()) ;
+    } else {
+      initialize(0) ;
+    }
+  }
+
 }
 
 
@@ -89,7 +100,17 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t,
   // is the most convenient way to create a subset of an existing data
   appendToDir(this,kTRUE) ;
 
-  initialize(wgtVarName) ;
+  if (wgtVarName) {
+    // Use the supplied weight column
+    initialize(wgtVarName) ;    
+  } else {
+    if (t->_wgtVar && vars.find(t->_wgtVar->GetName())) {
+      // Use the weight column of the source data set
+      initialize(t->_wgtVar->GetName()) ;
+    } else {
+      initialize(0) ;
+    }
+  }
 }
 
 
@@ -189,6 +210,19 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *ntuple,
   appendToDir(this,kTRUE) ;
 
   initialize(ntuple->_wgtVar?ntuple->_wgtVar->GetName():0) ;
+}
+
+
+RooAbsData* RooDataSet::cacheClone(const RooArgSet* newCacheVars, const char* newName) 
+{
+  RooDataSet* dset = new RooDataSet(newName?newName:GetName(),GetTitle(),this,_vars,(RooFormulaVar*)0,kTRUE) ;  
+  if (_wgtVar) dset->setWeightVar(_wgtVar->GetName()) ;
+
+  RooArgSet* selCacheVars = (RooArgSet*) newCacheVars->selectCommon(dset->_cachedVars) ;
+  dset->initCache(*selCacheVars) ;
+  delete selCacheVars ;
+
+  return dset ;
 }
 
 

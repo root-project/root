@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinkedListElem.rdl,v 1.1 2001/10/17 05:03:59 verkerke Exp $
+ *    File: $Id: RooLinkedListElem.rdl,v 1.2 2001/10/19 22:19:49 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -54,7 +54,7 @@ protected:
   // Forbidden
   RooLinkedListElem(const RooLinkedListElem&) ;
 
-  ClassDef(RooLinkedListElem,0)
+  ClassDef(RooLinkedListElem,0) // Element of RooLinkedList container class
 } ;
 
 

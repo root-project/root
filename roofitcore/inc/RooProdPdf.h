@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.rdl,v 1.21 2002/06/03 22:15:53 verkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.22 2002/07/18 20:42:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -22,6 +22,7 @@
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooListProxy.hh"
 #include "RooFitCore/RooAICRegistry.hh"
+#include "RooFitCore/RooNormListManager.hh"
 
 class RooProdPdf : public RooAbsPdf {
 public:
@@ -48,21 +49,12 @@ public:
 
 protected:
 
-  void syncAnaInt(Int_t code) const ;  
-  void syncAnaInt(RooArgSet& partIntSet, Int_t code) const ;
-  mutable RooArgSet* _lastEvalNSet ;
-  mutable Int_t      _evalCode ;
-  mutable Int_t _lastAICode1 ;
-  mutable Int_t _lastAICode2 ;
-  mutable Int_t _nextSet ;
-  mutable RooArgSet _partIntSet1 ;
-  mutable RooArgSet _partIntSet2 ;
-  mutable TIterator* _intIter1 ;    //! Iterator of PDF list
-  mutable TIterator* _intIter2 ;    //! Iterator of PDF list
-  mutable TIterator* _intIter  ;    //! Iterator of PDF list
-
+  Double_t calculate(const RooArgList* partIntList, const RooArgSet* normSet) const ;
+  RooArgList* getPartIntList(const RooArgSet* nset, const RooArgSet* iset, Int_t& code) const ;
+  
+  mutable RooNormListManager _partListMgr ; // Partial normalization list manager
+  
   virtual void operModeHook() ;
-
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) ;
 
   friend class RooProdGenContext ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.rdl,v 1.15 2001/10/27 22:28:20 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.rdl,v 1.16 2001/11/21 19:36:37 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -19,6 +19,7 @@ class TIterator ;
 #include "RooFitCore/RooListProxy.hh"
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooAICRegistry.hh"
+#include "RooFitCore/RooNormListManager.hh"
 
 class RooResolutionModel ;
 class RooRealVar ;
@@ -43,7 +44,6 @@ public:
   // Coefficient normalization access
   inline Double_t getCoefNorm(Int_t coefIdx, const RooArgSet& nset) const { return getCoefNorm(coefIdx,&nset) ; }
   Double_t getCoefNorm(Int_t coefIdx, const RooArgSet* nset=0) const ;
-  Double_t getCoefNorm2(Int_t coefIdx, const RooArgSet* nset=0) const ;
 
   // Analytical integration support
   virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const ;
@@ -55,7 +55,6 @@ public:
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ; 
   
   virtual Double_t coefficient(Int_t basisIndex) const = 0 ;
-
     
 protected:
 
@@ -63,7 +62,7 @@ protected:
 
   virtual Double_t evaluate() const ;
 
-  void syncCoefNormalizations(RooArgList& coefNormList, const RooArgSet* nset) const ;
+  void makeCoefVarList() const ;
 
   friend class RooConvGenContext ;
   Bool_t changeModel(const RooResolutionModel& newModel) ;
@@ -87,10 +86,7 @@ protected:
   mutable TIterator* _convSetIter ;    //! Iterator over _convNormSet
 
   mutable RooArgList _coefVarList;           
-  mutable RooArgList _coefNormList;     //! Do not persist 
-  mutable RooArgList _coefNormList2;    //! Do not persist 
-  mutable RooArgSet* _lastCoefNormSet;  //! Do not persist
-  mutable RooArgSet* _lastCoefNormSet2; //! Do not persist
+  mutable RooNormListManager _coefNormMgr ; //! Coefficient normalization manager
 
   mutable RooAICRegistry _codeReg ; 
 

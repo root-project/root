@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.70 2002/06/19 20:59:39 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.71 2002/07/11 22:26:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -118,13 +118,13 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgProxy.hh"
 #include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooFitContext.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooGenContext.hh"
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooCurve.hh"
-#include "RooFitCore/RooNLLBinding.hh"
 #include "RooFitCore/RooIntegratorConfig.hh"
+#include "RooFitCore/RooNLLVar.hh"
+#include "RooFitCore/RooMinuit.hh"
 
 ClassImp(RooAbsPdf) 
 ;
@@ -136,7 +136,7 @@ RooIntegratorConfig* RooAbsPdf::_defaultNormIntConfig(0) ;
 
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title) : 
-  RooAbsReal(name,title), _norm(0), _lastNormSet(0), _selectComp(kTRUE), _specNormIntConfig(0)
+  RooAbsReal(name,title), _norm(0), _normSet(0), _normMgr(10), _selectComp(kTRUE), _specNormIntConfig(0)
 {
   // Constructor with name and title only
   resetErrorCounters() ;
@@ -146,7 +146,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title) :
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title, 
 		     Double_t plotMin, Double_t plotMax) :
-  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _lastNormSet(0), _selectComp(kTRUE), _specNormIntConfig(0)
+  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _normSet(0), _normMgr(10), _selectComp(kTRUE), _specNormIntConfig(0)
 {
   // Constructor with name, title, and plot range
   resetErrorCounters() ;
@@ -156,7 +156,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title,
 
 
 RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) : 
-  RooAbsReal(other,name), _norm(0), _lastNormSet(0), _selectComp(other._selectComp)
+  RooAbsReal(other,name), _norm(0), _normSet(0), _normMgr(10), _selectComp(other._selectComp)
 {
   // Copy constructor
   resetErrorCounters() ;
@@ -173,7 +173,7 @@ RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) :
 RooAbsPdf::~RooAbsPdf()
 {
   // Destructor
-  if (_norm) delete _norm ;
+  //if (_norm) delete _norm ;
   if (_specNormIntConfig) delete _specNormIntConfig ;
 }
 
@@ -194,18 +194,20 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
   if (!nset) {
     Double_t val = evaluate() ;
     Bool_t error = traceEvalPdf(val) ;
-    if (_verboseEval>1) cout << IsA()->GetName() << "::getVal(" << GetName() << "): value = " << val << " (unnormalized)" << endl ;
-
+    if (_verboseEval>1) cout << IsA()->GetName() << "::getVal(" << GetName() 
+			     << "): value = " << val << " (unnormalized)" << endl ;
     if (error) return 0 ;
     return val ;
   }
 
   // Process change in last data set used
-  Bool_t nsetChanged = (nset != _lastNormSet) ;
-  if (nsetChanged) syncNormalization(nset) ;
+  Bool_t nsetChanged(kFALSE) ;
+  if (nset!=_normSet) {
+    nsetChanged = syncNormalization(nset) ;
+  }
 
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
-  if ((isValueDirty() || _norm->isValueDirty() || nsetChanged) && operMode()!=AClean) {
+  if ((isValueDirty() || nsetChanged || _norm->isValueDirty()) && operMode()!=AClean) {
 
     // Evaluate numerator
     Double_t rawVal = evaluate() ;
@@ -309,7 +311,7 @@ Double_t RooAbsPdf::getNorm(const RooArgSet* nset) const
 
 
 
-void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
+Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies) const
 {
   // Verify that the normalization integral cached with this PDF
   // is valid for given set of normalization dependents
@@ -325,16 +327,26 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
   // For functions that declare to be self-normalized by overloading the
   // selfNormalized() function, a unit normalization is always constructed
 
+  _normSet = (RooArgSet*) nset ;
 
   // Check if data sets are identical
-  if (nset == _lastNormSet) return ;
-  if (_verboseEval>0) cout << GetName() << ":updating lastNormSet from " << _lastNormSet << " to " << nset << endl ;
-  RooArgSet* lastNormSet = _lastNormSet;
-  _lastNormSet = (RooArgSet*) nset ;
-  _lastNameSet.refill(*nset) ;
+  RooAbsReal* norm = _normMgr.getNormalization(this,nset) ;
+  if (norm) {
+    Bool_t nsetChanged = (_norm!=norm) ;
+    _norm = norm ;
 
+    if (nsetChanged && adjustProxies) {
+      // Update dataset pointers of proxies
+      ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
+    }
+  
+    return nsetChanged ;
+  }
+  
   // Update dataset pointers of proxies
-  ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
+  if (adjustProxies) {
+    ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
+  }
   
   // Allow optional post-processing
   Bool_t fullNorm = syncNormalizationPreHook(_norm,nset) ;
@@ -362,8 +374,7 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
   if (_verboseEval>0) {
     if (!selfNormalized()) {
       cout << IsA()->GetName() << "::syncNormalization(" << GetName() 
-	   << ") recreating normalization integral " 
-	   << lastNormSet << " -> " << nset << "=" ;
+	   << ") recreating normalization integral " << endl ;
       if (depList) depList->printToStream(cout,OneLine) ; else cout << "<none>" << endl ;
     } else {
       cout << IsA()->GetName() << "::syncNormalization(" << GetName() << ") selfNormalized, creating unit norm" << endl;
@@ -372,21 +383,42 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
 
 
   // Destroy old normalization & create new
-  if (_norm) delete _norm ;
     
-  TString nname(GetName()) ; nname.Append("Norm") ;
+  TString nname(GetName()) ;
   if (selfNormalized() || !dependsOn(*depList)) {
     TString ntitle(GetTitle()) ; ntitle.Append(" Unit Normalization") ;
+    nname.Append("_UnitNorm") ;
     _norm = new RooRealVar(nname.Data(),ntitle.Data(),1) ;
   } else {
     TString ntitle(GetTitle()) ; ntitle.Append(" Integral") ;
+
+    nname.Append("_Norm[") ;
+
+    Bool_t first(kTRUE); 
+    TIterator* iter  = depList->createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      if (first) {
+	first=kFALSE ;
+      } else {
+	nname.Append(",") ;
+      }
+      nname.Append(arg->GetName()) ;
+    }
+    delete iter ;
+    nname.Append("]") ;
+
     _norm = new RooRealIntegral(nname.Data(),ntitle.Data(),*this,*depList,0,getNormIntConfig()) ;
   }
+
+  // Register new normalization with manager (takes ownership)
+  _normMgr.setNormalization(this,nset,0,_norm) ;
 
   // Allow optional post-processing
   syncNormalizationPostHook(_norm,nset) ;
  
   if (!fullNorm) delete depList ;
+  return kTRUE ;
 }
 
 
@@ -581,17 +613,14 @@ Double_t RooAbsPdf::extendedTerm(UInt_t observed) const
 }
 
 
-RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooArgSet& projDeps, Option_t *fitOpt, Option_t *optOpt) 
+
+RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *optOpt) 
 {
-  RooFitContext* cx = fitContext(data,&projDeps) ;
-  RooFitResult* result =  cx->fit(fitOpt,optOpt) ;
-  delete cx ;
-  return result ;
+  return fitTo(data,RooArgSet(),fitOpt,optOpt) ;
 }
 
 
-
-RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *optOpt) 
+RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooArgSet& projDeps, Option_t *fitOpt, Option_t *optOpt) 
 {
   // Fit this PDF to given data set
   //
@@ -615,10 +644,10 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *opt
   //
   // Available optimizer options
   //
-  //  "p" = Cache and precalculate components of PDF that exclusively depend on constant parameters
-  //  "d" = Trim unused elements from data set
-  //  "c" = Streamline dirty state propagation
-  //  "s" = Calculate and update likelihood components of RooSimultaneous fit independently for each component
+  //  "c" = Cache and precalculate components of PDF that exclusively depend on constant parameters
+  //  "2" = Do NLL calculation in multi-processor mode on 2 processors
+  //  "3" = Do NLL calculation in multi-processor mode on 3 processors
+  //  "4" = Do NLL calculation in multi-processor mode on 4 processors
   //
   // The actual fit is performed to a temporary copy of both PDF and data set. Several optimization
   // algorithm are run to increase the efficiency of the likelihood calculation and may increase
@@ -630,17 +659,37 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *opt
   // The function always return null unless the "r" fit option is specified. In that case a pointer to a RooFitResult
   // is returned. The RooFitResult object contains the full fit output, including the correlation matrix.
 
-  RooFitContext* cx = fitContext(data) ;
-  RooFitResult* result =  cx->fit(fitOpt,optOpt) ;
-  delete cx ;
-  return result ;
-}
+  // Parse option strings
+  TString fopt(fitOpt) ;
+  TString oopt(optOpt) ;
+  Bool_t extended = fopt.Contains("e") ;  
+  Bool_t saveRes  = fopt.Contains("r") ;
+  Bool_t cOpt     = oopt.Contains("p") || // for backward compatibility
+                    oopt.Contains("c") ;
+  Int_t  ncpu = 1 ;
+  if (oopt.Contains("2")) ncpu=2 ;
+  if (oopt.Contains("3")) ncpu=3 ;
+  if (oopt.Contains("4")) ncpu=4 ;
+  if (oopt.Contains("5")) ncpu=5 ;
+  if (oopt.Contains("6")) ncpu=6 ;
+  if (oopt.Contains("7")) ncpu=7 ;
+  if (oopt.Contains("8")) ncpu=8 ;
+  if (oopt.Contains("9")) ncpu=9 ;
 
-
-
-RooFitContext* RooAbsPdf::fitContext(const RooAbsData& dset, const RooArgSet* projDeps) const 
-{
-  return new RooFitContext(&dset,this,kTRUE,kTRUE,kTRUE,projDeps) ;
+  // Construct NLL
+  RooNLLVar nll("nll","-log(likelihood)",*this,data,projDeps,extended,ncpu) ;
+  
+  // Minimize NLL
+  RooMinuit m(nll) ;
+  if (cOpt) m.optimizeConst(1) ;
+  m.fit(fopt) ;
+  
+  // Optionally return fit result
+  if (saveRes) {
+    return m.save() ;
+  } else {
+    return 0 ;
+  }
 }
 
 
@@ -673,7 +722,8 @@ void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) cons
       }
       os << var->GetName() ;
     }
-    os << ") = " << getVal(_lastNormSet) << endl ;
+    //os << ") = " << getVal(_lastNormSet) << endl ;
+    os << ") = " << getVal(0) << endl ;
 
     delete pIter ;
     delete paramList ;
@@ -783,6 +833,7 @@ Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
       return kFALSE ;
     }
   }
+  delete sIter ;
   return kTRUE ;
 }
 
@@ -1038,63 +1089,6 @@ RooPlot* RooAbsPdf::plotCompSliceOn(RooPlot *frame, const RooArgSet& compSet, co
 
 
 
-RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, const RooArgSet& projDeps,
-			      Option_t* drawOptions, Double_t prec, Bool_t fixMinToZero) 
-{
-  // Plot the negative log likelihood of ourself when applied on the given data set,
-  // as function of the plot variable of the frame.
-
-  // Sanity checks on frame
-  if (plotSanityChecks(frame)) return frame ;
-  RooAbsReal* plotVar = frame->getPlotVar() ;
-
-  // Plot variable may not be a dependent 
-  RooArgSet* depSet = getDependents(data) ;
-  if (depSet->find(plotVar->GetName())) {
-    cout << "RooAbsPdf::plotNLLOn(" << GetName() << ") ERROR: plot variable " 
-	 << plotVar->GetName() << " cannot not be a dependent" << endl ;
-    delete depSet ;
-    return frame ;
-  }
-
-  // Clone for plotting
-  RooArgSet *cloneList = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
-  if (!cloneList) {
-    cout << "RooAbsPdf::plotNLLOn(" << GetName() << ") Couldn't deep-clone self, abort," << endl ;
-    return frame ;
-  }
-  RooAbsPdf* clone     = (RooAbsPdf*) cloneList->find(GetName()) ;
-  RooAbsRealLValue* cloneVar = (RooAbsRealLValue*) cloneList->find(plotVar->GetName()) ;
-
-  // Create NLL binding object
-  RooNLLBinding nllVar(*clone,*data,*cloneVar,extended,projDeps) ;
-
-  // Construct name and title of curve
-  TString name("curve_NLL[") ;
-  name.Append(GetName()) ;
-  name.Append(",") ;
-  name.Append(data->GetName()) ;
-  name.Append("]") ;
-
-  TString title("NLL of PDF '") ;
-  title.Append(GetTitle()) ;
-  title.Append("' with dataset '") ;
-  title.Append(data->GetTitle()) ;
-  title.Append("'") ;
-
-  // Create curve for NLL binding object
-  RooCurve* curve= new RooCurve(name, title, nllVar, 
-				frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),frame->GetNbinsX(),
-				prec,prec,fixMinToZero) ;
-
-  // Add this new curve to the specified plot frame
-  frame->addPlotable(curve, drawOptions);
-
-  delete cloneList ;
-  return frame ;
-}
-
-
 
 RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *label,
 			    Int_t sigDigits, Option_t *options, Double_t xmin,
@@ -1160,22 +1154,6 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
 
 
 
-TH2F* RooAbsPdf::plotNLLContours(RooAbsData& data, RooRealVar& var1, RooRealVar& var2, Double_t n1, Double_t n2, Double_t n3) 
-{
-  // Make a one or more 2D contour lines at n1,n2 and n3 sigma from the minimum in the 'var1' vs 'var2' plane.
-  //
-  // plotNLLContours call MIGRAD first to verify convergence and the existence of a NLL minimum, then calls TMinuit::Contour()
-  // for each sigma level. At the end of the calculations the contour lines are plotted on the current canvas pad on
-  // top of the returned histogram. The returned TH2F does not contain the contour lines, so please save the canvas to
-  // store the results.
-
-  RooFitContext* cx = fitContext(data) ;
-  TH2F* ret = cx->plotNLLContours(var1,var2,n1,n2,n3) ;
-  delete cx ;
-  return ret ;
-}
-
-
 void RooAbsPdf::fixAddCoefNormalization(const RooArgSet& addNormSet) 
 {
   RooArgSet* compSet = getComponents() ;
@@ -1193,4 +1171,14 @@ void RooAbsPdf::fixAddCoefNormalization(const RooArgSet& addNormSet)
   }
   delete iter ;
   delete compSet ;  
+}
+
+
+RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, const RooArgSet& projDeps,
+			      Option_t* drawOptions, Double_t prec, Bool_t fixMinToZero) {
+  
+  RooNLLVar nll("nll","-log(L)",*this,*data,extended) ;
+  nll.plotOn(frame,drawOptions) ;
+
+  return frame ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.26 2002/05/16 00:20:28 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.27 2002/05/31 01:05:35 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -48,6 +48,7 @@ RooAddModel::RooAddModel(const char *name, const char *title,
   _coefProxyIter(_coefProxyList.MakeIterator()),
   _dummyProxy("dummyProxy","dummy proxy",this,(RooRealVar&)RooRealConstant::value(0)),
   _isCopy(kFALSE),
+  _nsetCache(10),
   _codeReg(10),
   _genReg(10),
   _genThresh(0)
@@ -126,6 +127,7 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
   _codeReg(other._codeReg),
   _genReg(other._genReg),
   _isCopy(kTRUE), 
+  _nsetCache(10),
   _genThresh(0)
 {
   // Copy constructor
@@ -367,58 +369,6 @@ Double_t RooAddModel::getNorm(const RooArgSet* nset) const
 }
 
 
-Double_t RooAddModel::getNormSpecial(const RooArgSet* nset) const
-{
-  // Duplicate of getNorm() function that uses a separate cache for 
-  // RooRealIntegral objects. Used in RooConvolutedPdf::analyticalIntegralWN()
-  // to avoid 100% cache misses when calculating the normalizated projection
-  // integrals of convoluted functions.
-
-  // Operate as regular PDF if we have no basis function
-  if (!_basis) return RooAbsPdf::getNorm(nset) ;
-
-  // Return sum of component normalizations
-  _coefProxyIter->Reset() ;
-  _modelProxyIter->Reset() ;
-
-  Double_t norm(0) ;
-  Double_t lastCoef(1) ;
-
-  // Do running norm of coef/model pairs, calculate lastCoef.
-  RooRealProxy* coef ;
-  RooResolutionModel* model ;
-  while(coef=(RooRealProxy*)_coefProxyIter->Next()) {
-    model = (RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg() ;
-    if (_verboseEval>1) cout << "RooAddModel::getNormSpecial(" << GetName() << "): norm x coef = " 
-			     << model->getNormSpecial(nset) << " x " << (*coef) << " = " 
-			     << model->getNormSpecial(nset)*(*coef) << endl ;
-
-    Double_t coefVal = *coef ;
-    if (coefVal) {
-      norm += model->getNormSpecial(nset)*(*coef) ;
-      lastCoef -= (*coef) ;
-    }
-  }
-
-  // Add last model with correct coefficient
-  model = (RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg() ;
-  norm += model->getNormSpecial(nset)*lastCoef ;
-  if (_verboseEval>1) cout << "RooAddModel::getNormSpecial(" << GetName() << "): norm x coef = " 
-			   << model->getNormSpecial(nset) << " x " << lastCoef << " = " 
-			   << model->getNormSpecial(nset)*lastCoef << endl ;
-
-  // Warn about coefficient degeneration
-  if ((lastCoef<0 || lastCoef>1) && ++_errorCount<=10) {
-    cout << "RooAddModel::evaluate(" << GetName() 
-	 << " WARNING: sum of model coefficients not in range [0-1], value=" 
-	 << 1-lastCoef << endl ;
-  } 
-
-  return norm ;
-}
-
-
-
 Bool_t RooAddModel::checkDependents(const RooArgSet* set) const 
 {
   // Check if model is valid with dependent configuration given by specified data set
@@ -462,15 +412,13 @@ void RooAddModel::normLeafServerList(RooArgSet& list) const
   delete pIter ;
 }
 
-void RooAddModel::syncNormalization(const RooArgSet* nset) const 
+Bool_t RooAddModel::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies) const 
 {
   // Fan out syncNormalization call to component models
-  if (nset == _lastNormSet) return ;
-  _lastNormSet = (RooArgSet*)nset ;
-
+  if (!_nsetCache.autoCache(this,nset)) return kFALSE ;
+  
   if (_verboseEval>0) cout << "RooAddModel:syncNormalization(" << GetName() 
-			 << ") forwarding sync request to components (" 
-			 << _lastNormSet << " -> " << nset << ")" << endl ;
+			   << ") forwarding sync request to components" << endl ;
 
   // Update dataset pointers of proxies
   ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
@@ -480,7 +428,7 @@ void RooAddModel::syncNormalization(const RooArgSet* nset) const
   RooResolutionModel* model ;
   while(proxy = (RooRealProxy*)pIter->Next()) {
     model = (RooResolutionModel*) proxy->absArg() ;
-    model->syncNormalization(nset) ;
+    model->syncNormalization(nset,adjustProxies) ;
   }
   delete pIter ;
 
@@ -496,7 +444,7 @@ void RooAddModel::syncNormalization(const RooArgSet* nset) const
     if (_norm) delete _norm ;
     _norm = new RooRealVar(nname.Data(),ntitle.Data(),1) ;    
   }
-  
+  return kTRUE ;
 }
 
 

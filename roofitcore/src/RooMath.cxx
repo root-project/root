@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMath.cc,v 1.8 2002/03/07 06:22:22 verkerke Exp $
+ *    File: $Id: RooMath.cc,v 1.9 2002/04/03 23:37:26 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -432,5 +432,5 @@ Double_t RooMath::_imRange(0) ;
 Double_t RooMath::_imStep(0) ;
 pDouble_t* RooMath::_reCerfArray = 0;
 pDouble_t* RooMath::_imCerfArray = 0;
-Bool_t RooMath::_cacheTable(kFALSE) ;
+Bool_t RooMath::_cacheTable(kTRUE) ;
 

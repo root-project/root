@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.rdl,v 1.14 2002/03/05 19:20:09 verkerke Exp $
+ *    File: $Id: RooAbsString.rdl,v 1.15 2002/03/07 06:22:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,6 +31,7 @@ public:
   // Return value and unit accessors
   virtual TString getVal() const ;
   Bool_t operator==(TString value) const ;
+  virtual Bool_t operator==(const RooAbsArg& other) ;
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
@@ -56,7 +57,7 @@ protected:
   void copyCache(const RooAbsArg* source) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   virtual void fillTreeBranch(TTree& t) ;
-
+  virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;
   Int_t _len ;
   mutable char *_value ; //[_len] 
 

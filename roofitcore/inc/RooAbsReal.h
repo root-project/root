@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.49 2002/03/22 22:43:53 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.50 2002/06/12 23:53:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -44,6 +44,7 @@ public:
   virtual Double_t getVal(const RooArgSet* set=0) const ;
   inline  Double_t getVal(const RooArgSet& set) const { return getVal(&set) ; }
   Bool_t operator==(Double_t value) const ;
+  virtual Bool_t operator==(const RooAbsArg& other) ;
   inline const Text_t *getUnit() const { return _unit.Data(); }
   inline void setUnit(const char *unit) { _unit= unit; }
   TString getTitle(Bool_t appendUnit= kFALSE) const;
@@ -60,7 +61,7 @@ public:
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
   virtual Double_t analyticalIntegral(Int_t code) const ;
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kFALSE ; }
-  void forceNumInt(Bool_t flag=kTRUE) { _forceNumInt = flag ; }
+  virtual void forceNumInt(Bool_t flag=kTRUE) { _forceNumInt = flag ; }
 
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset) const { return createIntegral(iset,&nset) ; }
   virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0) const ;  
@@ -76,6 +77,8 @@ public:
   void setPlotLabel(const char *label);
   const char *getPlotLabel() const;
   virtual Bool_t inPlotRange(Double_t value) const;
+
+  virtual Double_t defaultErrorLevel() const { return 1.0 ; }
 
 public:
 
@@ -100,6 +103,7 @@ public:
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
   const RooAbsReal* createProjection(const RooArgSet& depVars, const RooArgSet& projVars) const ;
+  const RooAbsReal* createProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
 
 protected:
 
@@ -144,6 +148,7 @@ protected:
   virtual void syncCache(const RooArgSet* set=0) { getVal(set) ; }
   virtual void copyCache(const RooAbsArg* source) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+  virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;
   virtual void fillTreeBranch(TTree& t) ;
   TString cleanBranchName() const ;
   UInt_t crc32(const char* data) const ;

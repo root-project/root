@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.34 2002/04/08 20:20:44 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.35 2002/06/20 01:41:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -137,6 +137,15 @@ Bool_t RooAbsCategory::operator==(const char* label) const
   // Equality operator with a string (compares with state label string)
   return !TString(label).CompareTo(getLabel()) ;
 }
+
+
+
+Bool_t RooAbsCategory::operator==(const RooAbsArg& other) 
+{
+  const RooAbsCategory* otherCat = dynamic_cast<const RooAbsCategory*>(&other) ;
+  return otherCat ? operator==(otherCat->getIndex()) : kFALSE ;
+}
+
 
 Bool_t RooAbsCategory::isValidIndex(Int_t index) const
 {
@@ -432,6 +441,18 @@ void RooAbsCategory::fillTreeBranch(TTree& t)
   idxBranch->Fill() ;
   lblBranch->Fill() ;  
 }
+
+
+void RooAbsCategory::setTreeBranchStatus(TTree& t, Bool_t active) 
+{
+  // (De)Activate associate tree branch
+  TBranch* branch = t.GetBranch(Form("%s_idx",GetName())) ;
+  if (branch) { 
+    t.SetBranchStatus(Form("%s_idx",GetName()),active?1:0) ;
+    t.SetBranchStatus(Form("%s_lbl",GetName()),active?1:0) ;
+  }
+}
+
 
 
 void RooAbsCategory::copyCache(const RooAbsArg* source) 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooNameSet.cc,v 1.8 2001/11/08 19:59:27 verkerke Exp $
+ *    File: $Id: RooNameSet.cc,v 1.9 2002/02/12 20:02:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -117,6 +117,18 @@ Bool_t RooNameSet::operator==(const RooNameSet& other)
   if (strlen(_nameList) != strlen(other._nameList)) return kFALSE ;
 
   return (!strcmp(_nameList,other._nameList)) ;
+}
+
+
+RooNameSet& RooNameSet::operator=(const RooNameSet& other) 
+{
+  delete[] _nameList ;
+
+  _len = other._len ;
+  _nameList = new char[_len] ;
+  strcpy(_nameList,other._nameList) ;  
+
+  return *this ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.44 2002/05/03 01:06:00 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.45 2002/05/09 00:55:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -62,7 +62,9 @@ RooTreeData::RooTreeData()
 {
   // Default constructor
   RooTrace::create(this) ; 
-  _defCtor = kTRUE ;
+  _defCtor = kTRUE ;  
+  _cacheTree = 0 ;
+  _tree = 0 ;
 }
 
 
@@ -72,6 +74,8 @@ RooTreeData::RooTreeData(const char *name, const char *title, const RooArgSet& v
   // Constructor of empty collection with specified dimensions
   RooTrace::create(this) ;
   
+  _tree = 0 ;
+  _cacheTree = 0 ;
   createTree(name,title) ;
 
   // Constructor with list of variables
@@ -88,6 +92,9 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   // optional string expression cut
 
   RooTrace::create(this) ;
+
+  _tree = 0 ;
+  _cacheTree = 0 ;
   createTree(name,title) ;
 
   // Constructor from existing data set with list of variables and cut expression
@@ -112,6 +119,9 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   // RooFormulaVar cut
 
   RooTrace::create(this) ;
+
+  _tree = 0 ;
+  _cacheTree = 0 ;
   createTree(name,title) ;
 
   // Constructor from existing data set with list of variables and cut expression
@@ -141,6 +151,9 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
   // RooFormulaVar cut
 
   RooTrace::create(this) ;
+
+  _tree = 0 ;
+  _cacheTree = 0 ;
   createTree(name,title) ;
 
   // Constructor from existing data set with list of variables and cut expression
@@ -169,6 +182,9 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   // Protected constructor for internal use only
 
   RooTrace::create(this) ;
+
+  _tree = 0 ;
+  _cacheTree = 0 ;
   createTree(name,title) ;
 
   // Deep clone cutVar and attach clone to this dataset
@@ -205,6 +221,9 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
   // optional string expression cut
 
   RooTrace::create(this) ;
+
+  _tree = 0 ;
+  _cacheTree = 0 ;
   createTree(name,title) ;
 
   // Constructor from existing TTree with list of variables and cut expression
@@ -230,6 +249,9 @@ RooTreeData::RooTreeData(const char *name, const char *filename,
   // with specified dimensions and optional string expression cut
 
   RooTrace::create(this) ;
+
+  _tree = 0 ;
+  _cacheTree = 0 ;
   createTree(name,name) ;
 
   // Constructor from TTree file with list of variables and cut expression
@@ -250,6 +272,9 @@ RooTreeData::RooTreeData(RooTreeData const & other, const char* newName) :
 {
   // Copy constructor
   RooTrace::create(this) ;
+
+  _tree = 0 ;
+  _cacheTree = 0 ;
   createTree(newName,other.GetTitle()) ;
 
   initialize() ;
@@ -266,7 +291,12 @@ void RooTreeData::createTree(const char* name, const char* title)
   TString memDir(gROOT->GetName()) ;
   memDir.Append(":/") ;
   gDirectory->cd(memDir) ;
-  _tree = new TTree(name, title) ;
+  if (!_tree) {
+    _tree = new TTree(name, title) ;
+  }
+  if (!_cacheTree) {
+    _cacheTree = new TTree(Form("%s_cache",name), Form("%s_cache",title)) ;
+  }
   gDirectory->RecursiveRemove(_tree) ;
   gDirectory->cd(pwd) ;
   
@@ -279,6 +309,7 @@ RooTreeData::~RooTreeData()
   RooTrace::destroy(this) ;
 
   delete _tree ;
+  delete _cacheTree ;
 }
 
 
@@ -301,10 +332,11 @@ void RooTreeData::initCache(const RooArgSet& cachedVars)
   // to the corresponding TTree branches
 
   // iterate over the cache variables for this dataset
+  _cachedVars.removeAll() ;
   TIterator* iter = cachedVars.createIterator() ;
   RooAbsArg *var;
-  while(0 != (var= (RooAbsArg*)iter->Next())) {
-    var->attachToTree(*_tree,_defTreeBufSize) ;
+  while(0 != (var= (RooAbsArg*)iter->Next())) {    
+    var->attachToTree(*_cacheTree,_defTreeBufSize) ;
     _cachedVars.add(*var) ;
   }
   delete iter ;
@@ -357,6 +389,7 @@ void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select)
   Bool_t allValid ;
   for(Int_t i=0; i < nevent; ++i) {
     t->_tree->GetEntry(i,1) ;
+    t->_cacheTree->GetEntry(i,1) ;
 
     // Does this event pass the cuts?
     if (select && select->getVal()==0) {
@@ -498,6 +531,42 @@ void RooTreeData::dump() {
 }
 
 
+void RooTreeData::resetCache() 
+{
+  // Reset the cache 
+
+  // Empty list of cached functions
+  _cachedVars.removeAll() ;
+
+  // Delete & recreate cache tree 
+  delete _cacheTree ;
+  _cacheTree = 0 ;
+  createTree(GetName(),GetTitle()) ;
+
+  return ;
+}
+
+
+
+
+void RooTreeData::setArgStatus(const RooArgSet& set, Bool_t active) 
+{
+  TIterator* iter = set.createIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    RooAbsArg* depArg = _vars.find(arg->GetName()) ;
+    if (!depArg) {
+      cout << "RooTreeData::setArgStatus(" << GetName() 
+	   << ") dataset doesn't contain variable " << arg->GetName() << endl ;
+      continue ;
+    }
+    depArg->setTreeBranchStatus(*_tree,active) ;
+  }
+  delete iter ;
+}
+
+
+
 void RooTreeData::cacheArgs(RooArgSet& newVarSet, const RooArgSet* nset) 
 {
   // Cache given RooAbsArgs with this tree: The tree is
@@ -509,29 +578,38 @@ void RooTreeData::cacheArgs(RooArgSet& newVarSet, const RooArgSet* nset)
 
   TIterator *iter = newVarSet.createIterator() ;
   RooAbsArg *arg ;
+
+  Bool_t doTreeFill = (_cachedVars.getSize()==0) ;
     
   while (arg=(RooAbsArg*)iter->Next()) {
     // Attach original newVar to this tree
-    arg->attachToTree(*_tree,_defTreeBufSize) ;
+    arg->attachToTree(*_cacheTree,_defTreeBufSize) ;
+    arg->redirectServers(_vars) ;
     _cachedVars.add(*arg) ;
   }
-
-
+  
   // Refill regular and cached variables of current tree from clone
   for (int i=0 ; i<GetEntries() ; i++) {
     get(i) ;
-
+    
     // Evaluate the cached variables and store the results
     iter->Reset() ;
     while (arg=(RooAbsArg*)iter->Next()) {
       arg->setValueDirty() ;
       arg->syncCache(nset) ;
-      arg->fillTreeBranch(*_tree) ;
+      if (!doTreeFill) {
+	arg->fillTreeBranch(*_cacheTree) ;
+      }
+    }
+
+    if (doTreeFill) {
+      _cacheTree->Fill() ;
     }
   }
 
   delete iter ;
 }
+
 
 
 const RooArgSet* RooTreeData::get(Int_t index) const 

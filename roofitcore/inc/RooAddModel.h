@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.rdl,v 1.13 2001/11/19 07:23:54 verkerke Exp $
+ *    File: $Id: RooAddModel.rdl,v 1.14 2002/05/31 01:05:35 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -35,7 +35,7 @@ public:
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
   virtual Bool_t selfNormalized() const { return kTRUE ; }
 
-  virtual void syncNormalization(const RooArgSet* nset) const ;
+  virtual Bool_t syncNormalization(const RooArgSet* nset, Bool_t adjustProxies=kTRUE) const ;
   virtual void normLeafServerList(RooArgSet& list) const ;
 
   virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
@@ -46,12 +46,11 @@ public:
 
 protected:
 
+  mutable RooNormSetCache _nsetCache; // Normalization set cache
   mutable RooAICRegistry _codeReg ;  //! Registry of component analytical integration codes
   mutable RooAICRegistry _genReg ;   //! Registry of component generator codes
   Double_t*  _genThresh ;            //! Generator fraction thresholds
   const Int_t* _genSubCode ;         //! Subgenerator code mapping (owned by _genReg) ;
-
-  virtual Double_t getNormSpecial(const RooArgSet* nset=0) const ;
 
   Bool_t _isCopy ;              // Flag set if we own our components
   RooRealProxy _dummyProxy ;    // Dummy proxy to hold current normalization set

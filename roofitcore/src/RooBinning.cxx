@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBinning.cc,v 1.1 2002/03/07 06:22:20 verkerke Exp $
+ *    File: $Id: RooBinning.cc,v 1.2 2002/04/03 23:37:24 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
@@ -10,6 +10,13 @@
  *
  * Copyright (C) 2002 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION [MISC] --
+// Class RooBinning is an implements RooAbsBinning in terms of
+// an array of boundary values, posing no constraints on the
+// choice of binning, thus allowing variable bin sizes. Various
+// methods allow the user to add single bin boundaries, mirrored pairs,
+// or sets of uniformly spaced boundaries.
 
 #include <iostream.h>
 #include "RooFitCore/RooBinning.hh"

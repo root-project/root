@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.39 2002/06/12 23:53:26 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.40 2002/07/11 22:26:30 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -188,7 +188,7 @@ Double_t RooSimultaneous::evaluate() const
   assert(proxy!=0) ;
 
   // Return the selected PDF value, normalized by the number of index states
-  return ((RooAbsPdf*)(proxy->absArg()))->getVal(_lastNormSet) ; 
+  return ((RooAbsPdf*)(proxy->absArg()))->getVal(_normMgr.lastNormSet()) ; 
 }
 
 
@@ -205,13 +205,6 @@ Double_t RooSimultaneous::expectedEvents() const
 
   // Return the selected PDF value, normalized by the number of index states
   return ((RooAbsPdf*)(proxy->absArg()))->expectedEvents() ;
-}
-
-
-
-RooFitContext* RooSimultaneous::fitContext(const RooAbsData& dset, const RooArgSet* projDeps) const 
-{
-  return new RooSimFitContext(&dset,this,projDeps) ;
 }
 
 
@@ -414,7 +407,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 	}
 	cutString.Append(Form("%s==%d",idxComp->GetName(),idxComp->getIndex())) ;
       }
-      
+      delete compIter ;
+
       // Make temporary projData without RooSim index category components
       RooArgSet projDataVars(*projData->get()) ;
       projDataVars.remove(*indexCatComps,kTRUE,kTRUE) ;
@@ -425,7 +419,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 
     // Multiply scale factor with fraction of events in current state of index
     //cout << "wTable->getFrac(" << _indexCat.arg().getLabel() << ") = " << wTable->getFrac(_indexCat.arg().getLabel()) << endl ;
-    RooPlot* retFrame =  RooAbsPdf::plotOn(frame,drawOptions,
+    RooPlot* retFrame =  getPdf(_indexCat.arg().getLabel())->plotOn(frame,drawOptions,
 					   scaleFactor*wTable->getFrac(_indexCat.arg().getLabel()),
 					   stype,projDataTmp,projSet) ;
     delete wTable ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAICRegistry.cc,v 1.8 2002/05/15 01:40:16 verkerke Exp $
+ *    File: $Id: RooAICRegistry.cc,v 1.9 2002/06/12 23:53:25 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -118,6 +118,12 @@ Int_t RooAICRegistry::store(Int_t* codeList, Int_t size, RooArgSet* set1, RooArg
       _asArr3[i] = set3 ? (RooArgSet*)set3->snapshot(kFALSE) : 0;
       _asArr4[i] = set4 ? (RooArgSet*)set4->snapshot(kFALSE) : 0;
       for (j=0 ; j<size ; j++) _clArr[i][j] = codeList[j] ;
+
+      if (set1) delete set1 ;
+      if (set2) delete set2 ;
+      if (set3) delete set3 ;
+      if (set4) delete set4 ;
+
       return i ;
     } else {
       // Existing slot, compare with current list, if matched return index

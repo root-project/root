@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.24 2002/05/28 23:43:08 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.25 2002/06/18 22:19:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -25,6 +25,7 @@
 #include "RooFitCore/RooMath.hh"
 #include "RooFitCore/RooBinning.hh"
 #include "RooFitCore/RooPlot.hh"
+#include "RooFitCore/RooHistError.hh"
 
 ClassImp(RooDataHist) 
 ;
@@ -35,8 +36,11 @@ RooDataHist::RooDataHist()
   // Default constructor
   _arrSize = 0 ;
   _wgt = 0 ;
+  _errLo = 0 ;
+  _errHi = 0 ;
   _idxMult = 0 ;
   _curWeight = 0 ;
+  _curIndex = -1 ;
 }
 
 
@@ -229,8 +233,14 @@ void RooDataHist::initialize()
 
   // Allocate and initialize weight array 
   _wgt = new Double_t[_arrSize] ;
+  _errLo = new Double_t[_arrSize] ;
+  _errHi = new Double_t[_arrSize] ;
   _binv = new Double_t[_arrSize] ;
-  for (i=0 ; i<_arrSize ; i++) _wgt[i] = 0 ;
+  for (i=0 ; i<_arrSize ; i++) {
+    _wgt[i] = 0 ;
+    _errLo[i] = -1 ;
+    _errHi[i] = -1 ;
+  }
 
 
   // Fill TTree with bin center coordinates
@@ -279,9 +289,13 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   // Allocate and initialize weight array 
   _arrSize = other._arrSize ;
   _wgt = new Double_t[_arrSize] ;
+  _errLo = new Double_t[_arrSize] ;
+  _errHi = new Double_t[_arrSize] ;
   _binv = new Double_t[_arrSize] ;
   for (i=0 ; i<_arrSize ; i++) {
     _wgt[i] = other._wgt[i] ;
+    _errLo[i] = other._errLo[i] ;
+    _errHi[i] = other._errHi[i] ;
     _binv[i] = other._binv[i] ;
   }  
 
@@ -313,16 +327,16 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
   appendToDir(this,kTRUE) ;
 }
 
-// RooAbsData* RooDataHist::cacheClone(const RooArgSet* newCacheVars, const char* newName=0) 
-// {
-//   RooDataHist* dhist = new RooDataHist(newName?newName:GetName(),GetTitle(),this,*get(),0,kTRUE) ; 
+RooAbsData* RooDataHist::cacheClone(const RooArgSet* newCacheVars, const char* newName) 
+{
+  RooDataHist* dhist = new RooDataHist(newName?newName:GetName(),GetTitle(),this,*get(),0,kTRUE) ; 
 
-//   RooArgSet* selCacheVars = (RooArgSet*) newCacheVars->selectCommon(dhist->_cachedVars) ;
-//   dhist->initCache(*selCacheVars) ;
-//   delete selCacheVars ;
+  RooArgSet* selCacheVars = (RooArgSet*) newCacheVars->selectCommon(dhist->_cachedVars) ;
+  dhist->initCache(*selCacheVars) ;
+  delete selCacheVars ;
 
-//   return dhist ;
-// }
+  return dhist ;
+}
 
 
 RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache) 
@@ -331,7 +345,32 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
   checkInit() ;
 
   RooDataHist *rdh = new RooDataHist(GetName(), GetTitle(), varSubset) ;
-  rdh->add(*this,cutVar) ;
+
+  RooFormulaVar* cloneVar = 0;
+  RooArgSet* tmp ;
+  if (cutVar) {
+    // Deep clone cutVar and attach clone to this dataset
+    tmp = (RooArgSet*) RooArgSet(*cutVar).snapshot() ;
+    if (!tmp) {
+      cout << "RooDataHist::reduceEng(" << GetName() << ") Couldn't deep-clone cut variable, abort," << endl ;
+      return 0 ;
+    }
+    cloneVar = (RooFormulaVar*) tmp->find(cutVar->GetName()) ;
+    cloneVar->attachDataSet(*this) ;
+  }
+
+  Int_t i ;
+  for (i=0 ; i<numEntries() ; i++) {
+    const RooArgSet* row = get(i) ;
+    if (!cloneVar || cloneVar->getVal()) {
+      rdh->set(*row,weight(),weightError()) ;
+    }
+  }
+
+  if (cloneVar) {
+    delete tmp ;
+  } 
+
   return rdh ;
 }
 
@@ -342,6 +381,8 @@ RooDataHist::~RooDataHist()
   // Destructor
 
   if (_wgt) delete[] _wgt ;
+  if (_errLo) delete[] _errLo ;
+  if (_errHi) delete[] _errHi ;
   if (_binv) delete[] _binv ;
   if (_idxMult) delete[] _idxMult ;
   delete _realIter ;
@@ -370,7 +411,7 @@ void RooDataHist::dump2()
   // Debug stuff, should go...
   Int_t i ;
   for (i=0 ; i<_arrSize ; i++) {
-    cout << "wgt[" << i << "] = " << _wgt[i] << " vol[" << i << "] = " << _binv[i] << endl ;
+    cout << "wgt[" << i << "] = " << _wgt[i] << "err[" << i << "] = " << _errLo[i] << " vol[" << i << "] = " << _binv[i] << endl ;
   }
 }
 
@@ -503,6 +544,31 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
 
 
 
+
+void RooDataHist::weightError(Double_t& lo, Double_t& hi) const 
+{ 
+  // Return error on current weight
+
+  if (_curWgtErrLo>=0) {
+    // Weight is preset or precalculated    
+    lo = _curWgtErrLo ;
+    hi = _curWgtErrHi ;
+    return ;
+  }
+
+  // Calculate poisson errors
+  Double_t ym,yp ;  
+  RooHistError::instance().getPoissonInterval(Int_t(weight()+0.5),ym,yp,1) ;
+  _curWgtErrLo = weight()-ym ;
+  _curWgtErrHi = yp-weight() ;
+  _errLo[_curIndex] = _curWgtErrLo ;
+  _errHi[_curIndex] = _curWgtErrHi ;
+  lo = _curWgtErrLo ;
+  hi = _curWgtErrHi ;
+}
+
+
+
 // wve adjust for variable bin sizes
 Double_t RooDataHist::interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOrder, Bool_t correctForBinSize) 
 {
@@ -554,7 +620,38 @@ void RooDataHist::add(const RooArgSet& row, Double_t weight)
   checkInit() ;
 
   _vars = row ;
-  _wgt[calcTreeIndex()] += weight ;
+  Int_t idx = calcTreeIndex() ;
+  _wgt[idx] += weight ;  
+  _errLo[idx] = -1 ;
+  _errHi[idx] = -1 ;
+}
+
+
+void RooDataHist::set(const RooArgSet& row, Double_t weight, Double_t wgtErrLo, Double_t wgtErrHi) 
+{
+  // Increment the weight of the bin enclosing the coordinates
+  // given by 'row' by the specified amount
+  checkInit() ;
+
+  _vars = row ;
+  Int_t idx = calcTreeIndex() ;
+  _wgt[idx] = weight ;  
+  _errLo[idx] = wgtErrLo ;  
+  _errHi[idx] = wgtErrHi ;  
+}
+
+
+void RooDataHist::set(const RooArgSet& row, Double_t weight, Double_t wgtErr) 
+{
+  // Increment the weight of the bin enclosing the coordinates
+  // given by 'row' by the specified amount
+  checkInit() ;
+
+  _vars = row ;
+  Int_t idx = calcTreeIndex() ;
+  _wgt[idx] = weight ;  
+  _errLo[idx] = wgtErr ;  
+  _errHi[idx] = wgtErr ;  
 }
 
 
@@ -715,8 +812,12 @@ void RooDataHist::reset()
   Int_t i ;
   for (i=0 ; i<_arrSize ; i++) {
     _wgt[i] = 0. ;
+    _errLo[i] = -1 ;
+    _errHi[i] = -1 ;
   }
   _curWeight = 0 ;
+  _curWgtErrLo = -1 ;
+  _curWgtErrHi = -1 ;
   _curVolume = 1 ;
 
 }
@@ -728,7 +829,10 @@ const RooArgSet* RooDataHist::get(Int_t masterIdx) const
   // bin sequential number 'masterIdx'. For iterative use.
 
   _curWeight = _wgt[masterIdx] ;
+  _curWgtErrLo = _errLo[masterIdx] ;
+  _curWgtErrHi = _errHi[masterIdx] ;
   _curVolume = _binv[masterIdx] ; 
+  _curIndex  = masterIdx ;
   return RooTreeData::get(masterIdx) ;  
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.32 2002/05/15 01:40:16 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.33 2002/06/08 06:24:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -71,7 +71,8 @@ RooConvolutedPdf::RooConvolutedPdf(const char *name, const char *title,
   _model((RooResolutionModel*)&model), _convVar((RooRealVar*)&convVar),
   _convSet("convSet","Set of resModel X basisFunc convolutions",this),
   _convNormSet(0), _convSetIter(_convSet.createIterator()),
-  _codeReg(10), _lastCoefNormSet(0)
+  _coefNormMgr(10),
+  _codeReg(10)
 {
   // Constructor. The supplied resolution model must be constructed with the same
   // convoluted variable as this physics model ('convVar')
@@ -86,8 +87,8 @@ RooConvolutedPdf::RooConvolutedPdf(const RooConvolutedPdf& other, const char* na
   _convSetIter(_convSet.createIterator()),
   _codeReg(other._codeReg),
   _model(other._model),
-  _basisList(other._basisList),
-  _lastCoefNormSet(0)
+  _coefNormMgr(other._coefNormMgr),
+  _basisList(other._basisList)
 {
   // Copy constructor
 
@@ -297,11 +298,11 @@ Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   RooAbsArg *arg ;
   RooResolutionModel *conv ;
 
-  RooArgSet* intSetAll = new RooArgSet(*allDeps) ;
+  RooArgSet* intSetAll = new RooArgSet(*allDeps,"intSetAll") ;
 
   // Split intSetAll in coef/conv parts
-  RooArgSet* intCoefSet = new RooArgSet ; 
-  RooArgSet* intConvSet = new RooArgSet ;
+  RooArgSet* intCoefSet = new RooArgSet("intCoefSet") ; 
+  RooArgSet* intConvSet = new RooArgSet("intConvSet") ;
   TIterator* varIter  = intSetAll->createIterator() ;
   TIterator* convIter = _convSet.createIterator() ;
 
@@ -323,9 +324,9 @@ Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
 
 
   // Split normSetAll in coef/conv parts
-  RooArgSet* normCoefSet = new RooArgSet ;  
-  RooArgSet* normConvSet = new RooArgSet ;
-  RooArgSet* normSetAll = normSet ? (new RooArgSet(*normSet)) : 0 ;
+  RooArgSet* normCoefSet = new RooArgSet("normCoefSet") ;  
+  RooArgSet* normConvSet = new RooArgSet("normConvSet") ;
+  RooArgSet* normSetAll = normSet ? (new RooArgSet(*normSet,"normSetAll")) : 0 ;
   if (normSetAll) {
     varIter  =  normSetAll->createIterator() ;
     while(arg=(RooAbsArg*) varIter->Next()) {
@@ -343,8 +344,8 @@ Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
       
     }
     delete varIter ;
-    delete convIter ;
   }
+  delete convIter ;
 
 //   cout << "allVars     = " ; allVars.Print("1") ;
 //   cout << "allDeps     = " ; allDeps->Print("1") ;
@@ -371,6 +372,7 @@ Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   // Store integration configuration in registry
   Int_t masterCode(0) ;
   Int_t tmp(0) ;
+
   masterCode = _codeReg.store(&tmp,1,intCoefSet,intConvSet,normCoefSet,normConvSet)+1 ; // takes ownership of all sets
 
   analVars.add(*allDeps) ;
@@ -448,9 +450,9 @@ Double_t RooConvolutedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
     Double_t norm(0) ;
     while(conv=(RooResolutionModel*)_convSetIter->Next()) {
 
-      Double_t coefInt = getCoefNorm2(index,intCoefSet) ;
+      Double_t coefInt = getCoefNorm(index,intCoefSet) ;
 //       cout << "coefInt[" << index << "] = " << coefInt << " " ; intCoefSet->Print("1") ;
-      if (coefInt!=0) integral += coefInt*conv->getNormSpecial(intConvSet) ;
+      if (coefInt!=0) integral += coefInt*conv->getNorm(intConvSet) ;
 
       Double_t coefNorm = getCoefNorm(index,normCoefSet) ;
 //       cout << "coefNorm[" << index << "] = " << coefNorm << " " ; normCoefSet->Print("1") ;
@@ -509,69 +511,49 @@ Double_t RooConvolutedPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset) con
 {
   if (nset==0) return coefficient(coefIdx) ;
 
-  if (nset != _lastCoefNormSet) {
-    syncCoefNormalizations(_coefNormList,nset) ;
-    _lastCoefNormSet = (RooArgSet*) nset ;
-  }
-
-  return ((RooAbsReal*)_coefNormList.at(coefIdx))->getVal() ; ;
-}
-
-
-
-
-Double_t RooConvolutedPdf::getCoefNorm2(Int_t coefIdx, const RooArgSet* nset) const 
-{
-  if (nset==0) return coefficient(coefIdx) ;
-
-  if (nset != _lastCoefNormSet2) {
-    syncCoefNormalizations(_coefNormList2,nset) ;
-    _lastCoefNormSet2 = (RooArgSet*) nset ;
-  }
-
-  return ((RooAbsReal*)_coefNormList2.at(coefIdx))->getVal() ; ;
-}
-
-
-
-
-void RooConvolutedPdf::syncCoefNormalizations(RooArgList& coefNormList, const RooArgSet* nset) const
-{
-  if (!nset) return ;
-
-  // Remove all old normalizations
-  coefNormList.removeAll() ;
-
-  if (_coefVarList.getSize()==0) {
+  RooArgList* normList = _coefNormMgr.getNormList(this,nset) ;
+  if (!normList) {
     
-    // Build complete list of coefficient variables 
-    RooArgSet* coefVars = getParameters((RooArgSet*)0) ;
-    TIterator* iter = coefVars->createIterator() ;
-    RooAbsArg* arg ;
+    // Make list of coefficient normalizations
     Int_t i ;
-    while(arg=(RooAbsArg*)iter->Next()) {
-      for (i=0 ; i<_convSet.getSize() ; i++) {
-	if (_convSet.at(i)->dependsOn(*arg)) {
-	  coefVars->remove(*arg,kTRUE) ;
-	}
+    normList = new RooArgList("coefNormList") ;
+    if (_coefVarList.getSize()==0) makeCoefVarList() ;  
+    for (i=0 ; i<_coefVarList.getSize() ; i++) {
+      RooRealIntegral* coefInt = new RooRealIntegral("coefInt","coefInt",(RooAbsReal&)(*_coefVarList.at(i)),*nset) ;
+      normList->addOwned(*coefInt) ;
+    }  
+
+    _coefNormMgr.setNormList(this,nset,0,normList) ;
+  }
+
+  return ((RooAbsReal*)normList->at(coefIdx))->getVal() ; ;
+}
+
+
+
+void RooConvolutedPdf::makeCoefVarList() const
+{
+  // Build complete list of coefficient variables 
+  RooArgSet* coefVars = getParameters((RooArgSet*)0) ;
+  TIterator* iter = coefVars->createIterator() ;
+  RooAbsArg* arg ;
+  Int_t i ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    for (i=0 ; i<_convSet.getSize() ; i++) {
+      if (_convSet.at(i)->dependsOn(*arg)) {
+	coefVars->remove(*arg,kTRUE) ;
       }
     }
-    delete iter ;
-    
-    // Instantate a coefficient variables
-    for (i=0 ; i<_convSet.getSize() ; i++) {
-      RooAbsReal* coefVar = new RooConvCoefVar("coefVar","coefVar",*this,i,coefVars) ;
-      _coefVarList.addOwned(*coefVar) ;
-    }
-
-    delete coefVars ;
+  }
+  delete iter ;
+  
+  // Instantate a coefficient variables
+  for (i=0 ; i<_convSet.getSize() ; i++) {
+    RooAbsReal* coefVar = new RooConvCoefVar("coefVar","coefVar",*this,i,coefVars) ;
+    _coefVarList.addOwned(*coefVar) ;
   }
   
-  Int_t i ;
-  for (i=0 ; i<_coefVarList.getSize() ; i++) {
-    RooRealIntegral* coefInt = new RooRealIntegral("coefInt","coefInt",(RooAbsReal&)(*_coefVarList.at(i)),*nset) ;
-    coefNormList.addOwned(*coefInt) ;
-  }  
+  delete coefVars ;
 }
 
 
@@ -658,7 +640,6 @@ void RooConvolutedPdf::syncNormalizationPostHook(RooAbsReal* norm,const RooArgSe
 
   return ;
 }
-
 
 
 void RooConvolutedPdf::printToStream(ostream& os, PrintOption opt, TString indent) const {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealConstant.cc,v 1.4 2002/04/03 23:37:26 verkerke Exp $
+ *    File: $Id: RooRealConstant.cc,v 1.5 2002/05/03 21:49:56 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -33,8 +33,9 @@ ClassImp(RooRealConstant)
 RooArgList* RooRealConstant::_constDB = 0;
 TIterator* RooRealConstant::_constDBIter = 0;
 
-const RooAbsReal& RooConst(Double_t val) { return RooRealConstant::value(val) ; }
-const RooAbsReal& RooRealConstant::value(Double_t value) 
+RooConstVar& RooConst(Double_t val) { return RooRealConstant::value(val) ; }
+
+RooConstVar& RooRealConstant::value(Double_t value) 
 {
   // Lookup existing constant
   init() ;

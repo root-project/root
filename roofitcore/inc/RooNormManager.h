@@ -1,0 +1,54 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitCore
+ *    File: $Id$
+ * Authors:
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ * History:
+ *   25-Sep-2001 WV Created initial version
+ *
+ * Copyright (C) 2002 University of California
+ *****************************************************************************/
+#ifndef ROO_NORM_MANAGER
+#define ROO_NORM_MANAGER
+
+#include "Rtypes.h"
+
+#include "RooFitCore/RooNormSetCache.hh"
+#include "RooFitCore/RooAbsReal.hh"
+#include "RooFitCore/RooArgSet.hh"
+
+class RooNameSet ;
+typedef RooArgSet* pRooArgSet ;
+typedef RooAbsReal* pRooAbsReal ;
+
+class RooNormManager {
+
+public:
+  RooNormManager(Int_t maxSize=10) ;
+  RooNormManager(const RooNormManager& other) ;
+  virtual ~RooNormManager() ;
+  
+  RooAbsReal* getNormalization(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset=0) ;
+  void setNormalization(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset, RooAbsReal* norm) ;  
+
+  inline RooAbsReal* lastNorm() const { return _lastNorm ; } 
+  inline RooArgSet* lastNormSet() const { return _lastNormSet ; } 
+  inline RooNameSet& lastNameSet() const { return *_lastNameSet ; } 
+
+protected:
+
+  Int_t _maxSize ;
+  Int_t _size ;
+
+  RooAbsReal* _lastNorm ;
+  RooArgSet* _lastNormSet ;
+  RooNameSet* _lastNameSet ;
+
+  RooNormSetCache* _nsetCache ; //!
+  pRooAbsReal* _norm ; //!
+
+  ClassDef(RooNormManager,1) // Manager class for PDF normalization integrals
+} ;
+
+#endif 

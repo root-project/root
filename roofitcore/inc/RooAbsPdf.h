@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.58 2002/06/12 23:53:25 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.59 2002/06/19 20:59:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,6 +18,8 @@
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealIntegral.hh"
 #include "RooFitCore/RooNameSet.hh"
+#include "RooFitCore/RooNormSetCache.hh"
+#include "RooFitCore/RooNormManager.hh"
 
 class RooDataSet;
 class RooArgSet ;
@@ -67,27 +69,24 @@ public:
 				   Option_t* drawOptions="L", Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
 				   const RooAbsData* projData=0) const ;
 
-  inline RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions="L", 
-			    Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) {
-    // Backward compatibility wrapper
-    return plotNLLOn(frame,data,kFALSE,RooArgSet(),drawOptions,prec,fixMinToZero) ;
-  }
-
-  virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, Option_t* drawOptions="L", 
-			     Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) {
-    // Backward compatibility wrapper
-    return plotNLLOn(frame,data,extended,RooArgSet(),drawOptions,prec,fixMinToZero) ;
-  }
-
-  virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, const RooArgSet& projDeps,
-			     Option_t* drawOptions="L", Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) ;
-
-  virtual TH2F *plotNLLContours(RooAbsData& data, RooRealVar& var1, RooRealVar& var2, 
-				Double_t n1= 1, Double_t n2= 2, Double_t n3= 0) ;
-
   virtual RooPlot* paramOn(RooPlot* frame, const RooAbsData* data, const char *label= "", Int_t sigDigits = 2,
 			   Option_t *options = "NELU", Double_t xmin=0.65,
 			   Double_t xmax= 0.99,Double_t ymax=0.95) ;
+
+
+
+  // Backward compatibility functions
+  inline RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions="L", 
+                            Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) {
+    return plotNLLOn(frame,data,kFALSE,RooArgSet(),drawOptions,prec,fixMinToZero) ;
+  }
+  virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, Option_t* drawOptions="L", 
+                             Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) {
+    return plotNLLOn(frame,data,extended,RooArgSet(),drawOptions,prec,fixMinToZero) ;
+  }
+  virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, const RooArgSet& projDeps,
+                             Option_t* drawOptions="L", Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) ;
+
 
 
   // Built-in generator support
@@ -99,9 +98,8 @@ public:
 
   // Interactions with a dataset  
   virtual RooFitResult* fitTo(RooAbsData& data, const RooArgSet& projDeps, 
-			      Option_t *fitOpt = "", Option_t *optOpt = "cpds" ) ;
-  virtual RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "cpds") ;
-  virtual RooFitContext* fitContext(const RooAbsData& dset, const RooArgSet* projDeps=0) const ;
+			      Option_t *fitOpt = "", Option_t *optOpt = "c" ) ;
+  virtual RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "c") ;
 
   // Function evaluation support
   virtual Bool_t traceEvalHook(Double_t value) const ;  
@@ -139,6 +137,8 @@ public:
   void setNormIntConfig(const RooIntegratorConfig& config) ;
 
   virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet()) ;
+
+  virtual Double_t extendedTerm(UInt_t observedEvents) const ;
   
 private:
 
@@ -147,7 +147,6 @@ private:
 
 protected:
 
-  friend class RooNLLVar ;
   friend class RooAddGenContext ;
   friend class RooProdGenContext ;
   friend class RooSimGenContext ;
@@ -161,11 +160,9 @@ protected:
   RooAbsPdf(const RooAbsPdf& other, const char* name=0);
 
   friend class RooRealIntegral ;
-  friend class RooFitContext ;
-  friend class RooNLLBinding ;
   static Int_t _verboseEval ;
 
-  virtual void syncNormalization(const RooArgSet* dset) const ;
+  virtual Bool_t syncNormalization(const RooArgSet* dset, Bool_t adjustProxies=kTRUE) const ;
   virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* dset) const { return kFALSE ; } ;
   virtual void syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* dset) const {} ;
 
@@ -175,13 +172,11 @@ protected:
 
   virtual void operModeHook() ;
 
-  virtual Double_t extendedTerm(UInt_t observedEvents) const ;
-
   friend class RooConvolutedPdf ;
   mutable Double_t _rawValue ;
-  mutable RooAbsReal* _norm   ;      // Normalization integral
-  mutable RooArgSet* _lastNormSet ;  // Normalization set pointer for which integral was constructed
-  mutable RooNameSet _lastNameSet ;
+  mutable RooAbsReal* _norm   ;      // Normalization integral (owned by _normMgr)
+  mutable RooArgSet* _normSet ;      // Normalization set with for above integral
+  mutable RooNormManager _normMgr ;  // Normalization manager
 
   mutable Int_t _errorCount ;        // Number of errors remaining to print
   mutable Int_t _traceCount ;        // Number of traces remaining to print

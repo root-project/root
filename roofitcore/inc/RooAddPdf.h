@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.28 2002/06/12 23:53:26 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.29 2002/06/19 22:37:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,6 +24,7 @@
 #include "RooFitCore/RooAICRegistry.hh"
 #include "RooFitCore/RooNormSetCache.hh"
 #include "RooFitCore/RooNameSet.hh"
+#include "RooFitCore/RooNormListManager.hh"
 
 class RooAddPdf : public RooAbsPdf {
 public:
@@ -58,14 +59,15 @@ protected:
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
 
   mutable RooSetProxy _refCoefNorm ;
-  Bool_t _projectCoefs ;
-  mutable Bool_t _doProjectCoefs ;
 
+  Bool_t _projectCoefs ;
   void syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset=0) const ;
-  mutable RooNormSetCache  _lastSetCache ;
-  mutable RooNameSet _lastCoefProjNameSet ;
-  mutable RooNameSet _lastCoefProjIntNameSet ;
-  mutable RooListProxy _pdfProjList ;
+  mutable RooNormListManager _projListMgr ;
+  mutable RooArgList* _pdfProjList ;
+
+  void syncSuppNormList(const RooArgSet* nset) const ;
+  mutable RooNormListManager _suppListMgr ;
+  mutable RooArgSet* _lastSupNormSet ;
 
   void updateCoefCache(const RooArgSet* nset) const ;
   mutable Double_t* _coefCache ;
@@ -74,17 +76,14 @@ protected:
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
 				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
 
-  void syncSuppNormList(const RooArgSet* nset) const ;
-  mutable RooArgSet* _lastSupNormSet ;
 
   mutable RooAICRegistry _codeReg ;  // Registry of component analytical integration codes
 
   RooListProxy _pdfList ;   //  List of component PDFs
   RooListProxy _coefList ;  //  List of coefficients
-  mutable RooArgList _snormList ;  //  List of supplemental normalization factors
+  mutable RooArgList* _snormList ;  //  List of supplemental normalization factors
   TIterator* _pdfIter ;     //! Iterator over PDF list
   TIterator* _coefIter ;    //! Iterator over coefficient list
-  TIterator* _snormIter ;   //! Iterator over supplemental normalizations
   
   Bool_t _haveLastCoef ;   //  Flag indicating if last PDFs coefficient was supplied in the ctor
   Bool_t _allExtendable ;   //  Flag indicating if all PDF components are extendable

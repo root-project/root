@@ -1,6 +1,9 @@
 #include "Rtypes.h"
 #include <iostream.h>
 
+// -- CLASS DESCRIPTION [AUX] --
+// Print banner message when RooFit library is loaded
+
 Int_t doBanner()
 {
   cout << endl

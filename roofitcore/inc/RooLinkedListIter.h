@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinkedListIter.rdl,v 1.1 2001/10/17 05:03:59 verkerke Exp $
+ *    File: $Id: RooLinkedListIter.rdl,v 1.2 2001/11/19 07:23:57 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -64,7 +64,7 @@ protected:
   const RooLinkedListElem* _ptr ;  //! Current link element
   const RooLinkedList* _list ;     //! Collection iterated over
 
-  ClassDef(RooLinkedListIter,0)
+  ClassDef(RooLinkedListIter,0) // Iterator for RooLinkedList container class
 } ;
 
 

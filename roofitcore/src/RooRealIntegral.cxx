@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.60 2002/05/29 23:23:21 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.61 2002/06/01 01:05:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -51,7 +51,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _anaList("anaList","Variables to be integrated analytically",this,kFALSE,kFALSE), 
   _jacList("jacList","Jacobian product term",this,kFALSE,kFALSE), 
   _facList("facList","Variables independent of function",this,kFALSE,kTRUE),
-  _numIntEngine(0), _numIntegrand(0), _operMode(Hybrid), _valid(kTRUE), _iconfig((RooIntegratorConfig*)config)
+  _numIntEngine(0), _numIntegrand(0), _operMode(Hybrid), _valid(kTRUE), _iconfig((RooIntegratorConfig*)config),
+  _facListIter(_facList.createIterator()),
+  _jacListIter(_jacList.createIterator())
 {
   // Constructor - Performs structural analysis of the integrand
 
@@ -505,7 +507,9 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _jacList("jacList",this,other._jacList),
   _facList("facList",this,other._facList),
   _operMode(other._operMode), _numIntEngine(0), _numIntegrand(0), _valid(other._valid),
-  _iconfig(other._iconfig)
+  _iconfig(other._iconfig),
+  _facListIter(_facList.createIterator()),
+  _jacListIter(_jacList.createIterator())
 {
   // Copy constructor
  _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(kFALSE) : 0 ;
@@ -518,6 +522,8 @@ RooRealIntegral::~RooRealIntegral()
   if (_numIntEngine) delete _numIntEngine ;
   if (_numIntegrand) delete _numIntegrand ;
   if (_funcNormSet) delete _funcNormSet ;
+  delete _facListIter ;
+  delete _jacListIter ;
 }
 
 
@@ -579,8 +585,8 @@ Double_t RooRealIntegral::evaluate() const
 
   // Multiply answer with integration ranges of factorized variables
   RooAbsArg *arg ;
-  TIterator* fIter = _facList.createIterator() ; // WVE persist facList iterator
-  while(arg=(RooAbsArg*)fIter->Next()) {
+  _facListIter->Reset() ;
+  while(arg=(RooAbsArg*)_facListIter->Next()) {
     // Multiply by fit range for 'real' dependents
     if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
       RooAbsRealLValue* argLV = (RooAbsRealLValue*)arg ;
@@ -591,9 +597,7 @@ Double_t RooRealIntegral::evaluate() const
       RooAbsCategoryLValue* argLV = (RooAbsCategoryLValue*)arg ;
       retVal *= argLV->numTypes() ;
     }    
-  }
-  delete fIter ;
- 
+  } 
 
   if (RooAbsPdf::_verboseEval>0)
     cout << "RooRealIntegral::evaluate(" << GetName() << ") raw*fact = " << retVal << endl ;
@@ -642,12 +646,11 @@ Double_t RooRealIntegral::jacobianProduct() const
   // Return product of jacobian terms originating from analytical integration
   Double_t jacProd(1) ;
 
-  TIterator *jIter = _jacList.createIterator() ;
+  _jacListIter->Reset() ;
   RooAbsRealLValue* arg ;
-  while (arg=(RooAbsRealLValue*)jIter->Next()) {
+  while (arg=(RooAbsRealLValue*)_jacListIter->Next()) {
     jacProd *= arg->jacobian() ;
   }
-  delete jIter ;
 
   return jacProd ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCustomizer.cc,v 1.9 2002/04/08 20:20:44 verkerke Exp $
+ *    File: $Id: RooCustomizer.cc,v 1.10 2002/04/10 20:59:04 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -186,6 +186,7 @@ void RooCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& splitC
   while(arg=(RooAbsArg*)iter->Next()){
     splitArg(*arg,splitCat) ;
   }
+  delete iter ;
 }
 
 
@@ -369,6 +370,8 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
       masterReplacementNodes.add(*substArg) ;
     }
   }
+  delete nIter ;
+
   if (!_sterile) _cloneNodeList->addOwned(clonedMasterNodes) ;
 
   // Find branches that are affected by splitting and must be cloned
@@ -432,16 +435,6 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   delete iter ;
   _cloneBranchList.addOwned(clonedMasterBranches) ;
 
-
-//   cout << "RooCustomizer::doBuild #clonedMasterBranches=" << clonedMasterBranches.getSize() 
-//        << " #clonedMasterNodes=" << clonedMasterNodes.getSize() << " #masterReplacementNodes = " 
-//        << masterReplacementNodes.getSize() << endl ;
-    
-
-//   TStopwatch t2 ;
-//   t1.Stop() ;
-//   t2.Start() ;
-
   // Reconnect cloned branches to each other and to cloned nodess
   iter = clonedMasterBranches.createIterator() ;
   while(branch=(RooAbsArg*)iter->Next()) {
@@ -451,9 +444,6 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   }
   delete iter ;  
 
-//   cout << "RooCustomizer build time = " << t1.CpuTime() << endl ;
-//   cout << "RooCustomizer redirect time = " << t2.CpuTime() << endl ;
-//   RooAbsArg::setDirtyInhibit(kFALSE) ;
   return cloneTopPdf?cloneTopPdf:_masterPdf ;
 }
 

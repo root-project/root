@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooExtendPdf.cc,v 1.4 2001/12/14 00:55:49 verkerke Exp $
+ *    File: $Id: RooExtendPdf.cc,v 1.5 2002/01/08 02:18:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -195,7 +195,7 @@ Double_t RooExtendPdf::expectedEvents() const
   // Optionally multiply with fractional normalization
   if (_useFrac) {
     // Use current PDF normalization, if defined, use cut set otherwise
-    const RooArgSet* npset = pdf._lastNormSet ;
+    const RooArgSet* npset = pdf._normSet ;
     const RooArgSet* nset = npset ? npset : (const RooArgSet*) &_origDepSet ;
 
     Double_t normInt = pdf.getNorm(nset) ;
@@ -232,9 +232,9 @@ void RooExtendPdf::syncFracIntegral() const
   RooAbsPdf& pdf = (RooAbsPdf&) _pdf.arg() ;
 
   // Check first if any changes are needed
-  if (_lastFracSet == pdf._lastNormSet) return ;
-  _lastFracSet = pdf._lastNormSet ;
-
+  if (_lastFracSet == pdf._normMgr.lastNormSet()) return ;
+  _lastFracSet = (RooArgSet*) pdf._normMgr.lastNormSet() ;
+  
   // Delete existing integral
   if (_fracIntegral) {
     delete _integralCompSet ;
@@ -247,7 +247,7 @@ void RooExtendPdf::syncFracIntegral() const
 
 
   //Check if PDF has dummy normalization 
-  if (dynamic_cast<RooRealIntegral*>(pdf._norm)) {
+  if (dynamic_cast<RooRealIntegral*>(pdf._normMgr.lastNorm())) {
 
     // If not, clone original integral and add to owned set
     pdfNodeList.add(*pdf._norm) ;
@@ -264,7 +264,7 @@ void RooExtendPdf::syncFracIntegral() const
     // Recreate a similar argset by inflating the name set
     RooArgSet pdfLeafList ;
     pdf.leafNodeServerList(&pdfLeafList) ;
-    const RooArgSet* fracNormSet = pdf._lastNameSet.select(pdfLeafList) ;
+    const RooArgSet* fracNormSet = pdf._normMgr.lastNameSet().select(pdfLeafList) ;
     
     TString fname(pdf.GetName()) ; fname.Append("FracNorm") ;
     TString ftitle(pdf.GetTitle()) ; ftitle.Append(" Fraction Integral") ;

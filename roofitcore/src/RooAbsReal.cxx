@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.80 2002/04/12 18:25:31 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.81 2002/06/20 01:41:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -96,6 +96,14 @@ Bool_t RooAbsReal::operator==(Double_t value) const
   // Equality operator comparing to a Double_t
   return (getVal()==value) ;
 }
+
+
+Bool_t RooAbsReal::operator==(const RooAbsArg& other) 
+{
+  const RooAbsReal* otherReal = dynamic_cast<const RooAbsReal*>(&other) ;
+  return otherReal ? operator==(otherReal->getVal()) : kFALSE ;
+}
+
 
 
 TString RooAbsReal::getTitle(Bool_t appendUnit) const {
@@ -343,6 +351,14 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
 
 
 
+const RooAbsReal* RooAbsReal::createProjection(const RooArgSet& depVars, const RooArgSet& projVars, 
+                                               RooArgSet*& cloneSet) const 
+{
+  return createProjection(depVars,&projVars,cloneSet) ; 
+}
+
+
+
 const RooAbsReal* RooAbsReal::createProjection(const RooArgSet& depVars, const RooArgSet& projVars) const 
 {
   RooArgSet* cloneSet = new RooArgSet() ;
@@ -447,11 +463,6 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   // are still in the cloneList and so will be cleaned up eventually.
   //cout << "redirection leafNodes : " ; leafNodes.Print("1") ;
 
-  TIterator* it = leafNodes.createIterator() ;
-  RooAbsArg* a ;
-  while(a = (RooAbsArg*) it->Next()) {
-    //cout << "redir ln = " << a << " " << a->GetName() << endl ;
-  }
   clone->recursiveRedirectServers(leafNodes);
 
   // Create the set of normalization variables to use in the projection integrand
@@ -796,7 +807,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 	}
 	delete iter ;
       }
-      
+      delete sliceDataSet ;
+
       if (!cutString.IsNull()) {
 	projDataSel = (RooDataSet*) ((RooDataSet*)projData)->reduce(*projDataNeededVars,cutString) ;
 	cout << "RooAbsReal::plotOn(" << GetName() << ") reducing given projection dataset to entries with " << cutString << endl ;
@@ -994,6 +1006,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, drawOptions);
+
   }
 
 
@@ -1200,6 +1213,18 @@ void RooAbsReal::fillTreeBranch(TTree& t)
   branch->Fill() ;
   
 }
+
+
+
+void RooAbsReal::setTreeBranchStatus(TTree& t, Bool_t active) 
+{
+  // (De)Activate associate tree branch
+  TBranch* branch = t.GetBranch(cleanBranchName()) ;
+  if (branch) { 
+    t.SetBranchStatus(cleanBranchName(),active?1:0) ;
+  }
+}
+
 
 
 TString RooAbsReal::cleanBranchName() const

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooDirItem.cc,v 1.1 2001/11/22 01:07:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -10,6 +10,11 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION [AUX] --
+// RooDirItem is a utility base class for RooFit objects that are to be attached
+// to ROOT directories. Concrete classes inherit the appendToDir and removeToDir
+// methods that can be used to safely attach and detach one self from a TDirectory
 
 #include <iostream.h>
 #include "TROOT.h"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimGenContext.cc,v 1.8 2002/02/06 01:31:38 verkerke Exp $
+ *    File: $Id: RooSimGenContext.cc,v 1.9 2002/03/22 22:43:58 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -133,6 +133,7 @@ RooSimGenContext::~RooSimGenContext()
 {
   // Destructor. Delete all owned subgenerator contexts
   delete[] _fracThresh ;
+  delete _idxCatSet ;
   _gcList.Delete() ;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.70 2002/05/03 21:49:56 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.71 2002/05/24 21:56:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -211,6 +211,7 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
   if (!_serverList.FindObject(&server)) {
     _serverList.Add(&server) ;
   } else {
+    // WVE - Increment server reference count
 //     cout << "RooAbsArg::addServer(" << GetName() << "): Server " 
 // 	 << server.GetName() << " already registered" << endl ;
     return ;
@@ -220,9 +221,10 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
     server._clientList.Add(this) ;
     if (valueProp) server._clientListValue.Add(this) ;
     if (shapeProp) server._clientListShape.Add(this) ;
-  } else {
+  } else {    
     cout << "RooAbsArg::addServer(" << GetName() 
 	 << "): Already registered as client of " << server.GetName() << endl ;
+    // WVE - Increment client reference count 
   }
 } 
 
@@ -256,6 +258,7 @@ void RooAbsArg::removeServer(RooAbsArg& server)
   if (_serverList.FindObject(&server)) {
     _serverList.Remove(&server) ;
   } else {
+    // WVE - decrement server reference count
     cout << fName << "::" << ClassName() << "(" << this << "):removeServer: Server "
 	 << server.GetName() << "(" << &server << ") is not registered" << endl;
     return ;
@@ -266,6 +269,7 @@ void RooAbsArg::removeServer(RooAbsArg& server)
     server._clientListValue.Remove(this) ;
     server._clientListShape.Remove(this) ;
   } else {
+    // WVE - decrement client reference count
     cout << "RooAbsArg::removeServer(" << GetName() 
 	 << "): Never registered as client of " << server.GetName() << endl ;
   }
@@ -426,6 +430,8 @@ RooArgSet* RooAbsArg::getDependents(const RooArgSet* dataList) const
   // for deleting the returned argset. The complement of this function 
   // is getDependents()
   
+  //cout << "RooAbsArg::getDependents(" << GetName() << ")" << endl ;
+
   RooArgSet* depList = new RooArgSet("dependents") ;
   if (!dataList) return depList ;
 
@@ -733,7 +739,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
 	 << "): ERROR, some proxies could not be adjusted" << endl ;
     ret = kTRUE ;
   }
-
+  
   // Optional subclass post-processing
   ret |= redirectServersHook(newSet,mustReplaceAll,nameChange) ;
 
@@ -1159,4 +1165,17 @@ RooAbsArg& RooAbsArg::operator=(const char* cval)
 {
   cout << "RooAbsArg::operator=(" << GetName() << ",const char*) not an lvalue of the appropriate type" << endl ;
   return *this ;
+}
+
+
+void RooAbsArg::constOptimize(ConstOpCode opcode) 
+{
+  // Default implementation -- forward to all servers
+  TIterator* sIter = serverIterator() ;
+  RooAbsArg* server ;
+  while(server=(RooAbsArg*)sIter->Next()) {
+//     cout << GetName() << " forwarding constOpt to " << server->GetName() << endl ;
+    server->constOptimize(opcode) ;
+  }
+  delete sIter ;
 }
