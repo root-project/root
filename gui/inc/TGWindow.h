@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.12 2004/05/03 10:43:51 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.13 2004/06/04 15:57:28 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -68,9 +68,13 @@ public:
    virtual void MapRaised() { gVirtualX->MapRaised(fId); }
    virtual void UnmapWindow() { gVirtualX->UnmapWindow(fId); }
    virtual void DestroyWindow() { gVirtualX->DestroyWindow(fId); }
+   virtual void DestroySubwindows() { gVirtualX->DestroySubwindows(fId); }
    virtual void RaiseWindow() { gVirtualX->RaiseWindow(fId); }
    virtual void LowerWindow() { gVirtualX->LowerWindow(fId); }
    virtual void IconifyWindow() { gVirtualX->IconifyWindow(fId); }
+   virtual void ReparentWindow(const TGWindow *p, Int_t x = 0, Int_t y = 0);
+   virtual void RequestFocus() { gVirtualX->SetInputFocus(fId); }
+
    virtual void SetBackgroundColor(Pixel_t color)
         { gVirtualX->SetWindowBackground(fId, color); }
    virtual void SetBackgroundPixmap(Pixmap_t pixmap)
@@ -80,13 +84,15 @@ public:
         { if (event->fCount == 0) fClient->NeedRedraw(this); return kTRUE; }
    virtual Bool_t HandleEvent(Event_t *) { return kFALSE; }
    virtual Bool_t HandleTimer(TTimer *) { return kFALSE; }
+
    virtual void   Move(Int_t x, Int_t y);
    virtual void   Resize(UInt_t w, UInt_t h);
    virtual void   MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual Bool_t IsMapped();
-   virtual void   Print(Option_t *option="") const;
-   virtual void   SetWindowName(const char *name = 0);
 
+   virtual void   Print(Option_t *option="") const;
+
+   virtual void        SetWindowName(const char *name = 0);
    virtual const char *GetName() const { return fName; }
    virtual void        SetName(const char *name) { fName = name; }
 
