@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.85 2004/09/16 21:22:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.86 2004/09/20 14:28:12 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1542,10 +1542,10 @@ void TGMainFrame::SetWMSizeHints(UInt_t wmin, UInt_t hmin,
 
    if (fClient->IsEditable() && (fParent == fClient->GetRoot())) return;
 
-   fMinWidth = fWMMinWidth  = wmin;
-   fMinHeight =fWMMinHeight = hmin;
-   fMaxWidth = fWMMaxWidth  = wmax;
-   fMaxHeight = fWMMaxHeight = hmax;
+   fMinWidth    = fWMMinWidth  = wmin;
+   fMinHeight   = fWMMinHeight = hmin;
+   fMaxWidth    = fWMMaxWidth  = wmax;
+   fMaxHeight   = fWMMaxHeight = hmax;
    fWMWidthInc  = winc;
    fWMHeightInc = hinc;
    gVirtualX->SetWMSizeHints(fId, wmin, hmin, wmax, hmax, winc, hinc);
