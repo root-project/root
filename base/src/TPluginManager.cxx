@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.7 2002/07/16 13:57:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.8 2002/07/17 14:53:46 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -225,20 +225,20 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
          if (arg->Property() & (kIsPointer | kIsArray | kIsReference))
             args[i] = (Long_t) va_arg(ap, void*);
          else if (type == "bool")
-            args[i] = (Long_t) va_arg(ap, bool);
+            args[i] = (Long_t) va_arg(ap, int);  // bool is promoted to int
          else if (type == "char" || type == "unsigned char")
-            args[i] = (Long_t) va_arg(ap, char);
+            args[i] = (Long_t) va_arg(ap, int);  // char is promoted to int
          else if (type == "short" || type == "unsigned short")
-            args[i] = (Long_t) va_arg(ap, short);
+            args[i] = (Long_t) va_arg(ap, int);  // short is promoted to int
          else if (type == "int" || type == "unsigned int")
             args[i] = (Long_t) va_arg(ap, int);
          else if (type == "long" || type == "unsigned long")
             args[i] = (Long_t) va_arg(ap, long);
          else if (type == "float") {
-            u.f = va_arg(ap, float);
+            u.f = (Float_t) va_arg(ap, double);  // float is promoted to double
             args[i] = (Long_t) u.l;
          } else if (type == "double") {
-            u.f = (float) va_arg(ap, double);
+            u.f = (Float_t) va_arg(ap, double);
             args[i] = (Long_t) u.l;
          }
       }
