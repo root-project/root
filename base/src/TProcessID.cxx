@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.20 2002/12/18 08:07:29 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.21 2003/04/21 11:08:08 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -134,6 +134,15 @@ void TProcessID::Cleanup()
    fgPIDs->Delete();
    gROOT->GetListOfCleanups()->Remove(fgPIDs);
    delete fgPIDs;
+}
+
+//______________________________________________________________________________
+void TProcessID::Clear(Option_t *)
+{
+// delete the TObjArray pointing to referenced objects
+// this function is called by TFile::Close("R")
+   
+   delete fObjects; fObjects = 0;
 }
 
 //______________________________________________________________________________
@@ -283,6 +292,7 @@ void TProcessID::RecursiveRemove(TObject *obj)
    // called by the object destructor
    // remove reference to obj from the current table if it is referenced
 
+   if (!fObjects) return;
    if (!obj->TestBit(kIsReferenced)) return;
    UInt_t uid = obj->GetUniqueID() & 0xffffff;
    if (obj == GetObjectWithID(uid)) fObjects->RemoveAt(uid);

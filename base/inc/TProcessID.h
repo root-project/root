@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.7 2002/12/17 10:15:39 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.8 2002/12/18 08:07:29 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -45,6 +45,7 @@ protected:
    TProcessID();
    TProcessID(const TProcessID &ref);
    virtual ~TProcessID();
+   virtual void     Clear(Option_t *option="");
    Int_t            DecrementCount();
    Int_t            IncrementCount();
    Int_t            GetCount() const {return fCount;}
