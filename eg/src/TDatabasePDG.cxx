@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.9 2001/03/08 13:44:52 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.10 2001/03/08 20:15:39 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TROOT.h"
@@ -380,7 +380,7 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
   char         default_name[1024];
   const char*  fn;
 
-  if (FileName == "") {
+  if (strlen(FileName) == 0) {
     sprintf(default_name,"%s/etc/pdg_table.txt",gSystem->Getenv("ROOTSYS"));
     fn = gEnv->GetValue("Root.DatabasePDG",default_name);
   }
