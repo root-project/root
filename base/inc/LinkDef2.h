@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.8 2001/02/22 12:23:24 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.9 2001/03/09 17:47:05 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -45,9 +45,11 @@
 #pragma link C++ class TMemberInspector;
 #pragma link C++ class TMessageHandler+;
 #pragma link C++ class TNamed+;
+#pragma link C++ class TObjectRef-;
 #pragma link C++ class TObjString+;
 #pragma link C++ class TObject-;
 #pragma link C++ class TPoint;
+#pragma link C++ class TProcessID+;
 #pragma link C++ class TProcessEventTimer;
 #pragma link C++ class TRandom+;
 #pragma link C++ class TRandom2+;
