@@ -62,7 +62,7 @@ templateMembersCode_C.$(DllSuf): templateMembersCode.C templateMembers_C.$(DllSu
 	$(BuildWithLib)
 
 operatorEqual.log: operatorEqual_C.$(DllSuf)
-	$(CMDECHO)root.exe -q -b -l runoperatorEqual.C | $(RemoveLeadingDirs) > operatorEqual.log
+	$(CMDECHO)root.exe -q -b -l runoperatorEqual.C | grep -v FILE | grep -v tagnum |  $(RemoveDirs)| $(RemoveLeadingDirs) > operatorEqual.log
 
 operatorEqual: operatorEqual.log
 	$(TestDiff)
