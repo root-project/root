@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.26 2001/01/22 11:19:56 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.27 2001/01/30 08:27:33 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2635,7 +2635,7 @@ void THistPainter::PaintLego()
    Double_t ylab2  = Hparam.ymax;
    Double_t dangle = 10*3.141592/180; //Delta angle for Rapidity option
    Double_t z1c = zmin;
-   Double_t z2c = zmax + (zmax-zmin)*kHMAX;
+   Double_t z2c = zmin + (zmax-zmin)*kHMAX;
 
 
 //*-*- Compute the lego limits and instantiate a lego object
@@ -3546,7 +3546,7 @@ void THistPainter::PaintSurface()
    Double_t ylab2  = Hparam.ymax;
    Double_t dangle = 10*3.141592/180; //Delta angle for Rapidity option
    Double_t z1c = zmin;
-   Double_t z2c = zmax + (zmax-zmin)*kHMAX;
+   Double_t z2c = zmin + (zmax-zmin)*kHMAX;
 
 
 //*-*- Compute the lego limits and instantiate a lego object
