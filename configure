@@ -447,7 +447,7 @@ if [ ! -d bin ]; then
 fi
 if [ ! -d lib ]; then
     echo $ac_n "Creating lib ... $ac_c"
-    mkdir libe
+    mkdir lib
     echo "done"
 fi
 
