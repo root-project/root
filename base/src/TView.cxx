@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.2 2000/06/13 12:28:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.3 2000/08/18 10:59:50 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1389,7 +1389,7 @@ void TView::Streamer(TBuffer &R__b)
    // Stream an object of class TView.
 
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion();
+      Version_t R__v = R__b.ReadVersion(); if (R__v) {};
       //unfortunately we forgot to increment the TView version number
       //when the class was upgraded to double precision.
       //we are force to use the file version number to recognize old files.
