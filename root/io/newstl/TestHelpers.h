@@ -3,6 +3,17 @@
 
 #include "TObject.h"
 
+class nonvirtHelper {
+public:
+   unsigned int val;
+   nonvirtHelper() : val(0) {}
+   explicit nonvirtHelper(int v) : val(v) {}
+   ~nonvirtHelper() {};
+
+   bool IsEquiv(const nonvirtHelper &rhs) const { return  val==rhs.val; }
+   bool operator<(const nonvirtHelper &rhs) const { return val<rhs.val; }
+};
+
 class Helper {
 public:
    unsigned int val;
@@ -44,5 +55,8 @@ public:
       return *lhs < *rhs;
    }
 };
+
+class TList;
+void fillListOfDir(TList &l);
 
 #endif // TEST__HELPER

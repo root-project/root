@@ -46,10 +46,18 @@ public:
    
    std::TEST_CONT<EHelper > fEnum;
 
+
+#if defined(R__CANNOT_SPLIT_STL_CONTAINER)
+   std::TEST_CONT<std::pair<float,int> >         fPairFlInt;       //||
+   std::TEST_CONT<std::pair<std::string,double> > fPairStrDb;      //||
+
+   std::TEST_CONT<GHelper<GHelper<GHelper<float> > > > fTemplates; //||
+#else
    std::TEST_CONT<std::pair<float,int> >         fPairFlInt;
    std::TEST_CONT<std::pair<std::string,double> > fPairStrDb;
 
-   std::TEST_CONT<GHelper<GHelper<GHelper<float> > > > fTemplates;
+   std::TEST_CONT<GHelper<GHelper<GHelper<float> > > > fTemplates; 
+#endif
    
    std::TEST_CONT<float >   fScalar;
    std::TEST_CONT<short >   fScalarArr[2];
@@ -62,7 +70,11 @@ public:
    std::TEST_CONT<int >    *fScalarPtrArrVar; //[fScalarPtrArrVarSize]
    
 
-   std::TEST_CONT<Helper >   fObject;
+#if defined(R__CANNOT_SPLIT_STL_CONTAINER)
+   std::TEST_CONT<Helper >   fObject;  //||
+#else
+   std::TEST_CONT<Helper >   fObject;  //||
+#endif
    std::TEST_CONT<Helper >  *fObjectPtr;
 
    std::TEST_CONT<Helper* >  fPtrObject;

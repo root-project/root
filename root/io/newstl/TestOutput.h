@@ -33,6 +33,11 @@ void Unsupported(const std::string &what) {
              << what << std::endl;
 }
 
+void Unsupported(Int_t version, const std::string &what) {
+   std::cerr << "ROOT " << version << " did not support "
+             << what << std::endl;
+}
+
 void TestError(const std::string &test, const char *msg) {
    std::cerr << "Error for '" << test << "' : " << msg << "\n";
 }
@@ -128,6 +133,13 @@ template <class Key, class T> void TestError(const std::string &test,
 
 void TestError(const std::string &test, const Helper &orig, const Helper &copy) {
    TestError(test, Form("Helper object wrote %d and read %d\n",
+                        orig.val,copy.val));
+}
+
+void TestError(const std::string &test, 
+               const nonvirtHelper &orig, 
+               const nonvirtHelper &copy) {
+   TestError(test, Form("nonvirtHelper object wrote %d and read %d\n",
                         orig.val,copy.val));
 }
 

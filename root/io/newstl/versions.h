@@ -12,7 +12,7 @@
 #define R__NO_VAR_ARRAY_OF_CONTAINERS
 #endif
 
-#define R__CAN_SPLIT_STL_CONTAINER ROOT_VERSION(3,12,0)
+#define R__CAN_SPLIT_STL_CONTAINER ROOT_VERSION(3,10,50)
 #if ROOT_VERSION_CODE < R__CAN_SPLIT_STL_CONTAINER
 #define R__CANNOT_SPLIT_STL_CONTAINER
 #endif
@@ -27,6 +27,10 @@ class OutputOneErrorMessage {
    OutputOneErrorMessage(const std::string &msg) {
       Unsupported(msg);
    }
+   OutputOneErrorMessage(TFile *file, const std::string &msg) {
+      if (file) Unsupported(file->GetVersion(), msg);
+      else Unsupported(msg);
+   }
 };
 
 Bool_t FileVersionGreaterThan(TFile *file, UInt_t comp) {
@@ -38,23 +42,35 @@ Bool_t FileVersionGreaterThan(TFile *file, UInt_t comp) {
    return cvers >= comp;
 }
 
+Bool_t FileVersionEqualCurrent(TFile *file) {
+   UInt_t fvers = file->GetVersion();
+   Int_t a = fvers / 10000;
+   Int_t b = (fvers - a*10000) / 100;
+   Int_t c = (fvers - a*10000 - b*100 );
+   UInt_t cvers = ROOT_VERSION(a,b,c);
+   return cvers == ROOT_VERSION_CODE;
+}
 
 Bool_t HasNestedContainer(TFile *file) {
    Bool_t result = FileVersionGreaterThan(file,R__NESTED_CONTAINER); // file->GetVersion() >= R__NESTED_CONTAINER;
-/*    fprintf(stderr,"nested container: %d %d %d\n", */
-/*            result,  file->GetVersion(), R__NESTED_CONTAINER); */
    if (!result) {
-      static OutputOneErrorMessage error("nested stl containers");
+      if (FileVersionEqualCurrent(file)) {
+         static OutputOneErrorMessage error("nested stl containers");
+      } else {
+         static OutputOneErrorMessage error((TFile*)gDirectory,"nested stl containers");
+      }
    }
    return result;
 }
 
 Bool_t HasNestedConstString(TFile *file) {
    Bool_t result = FileVersionGreaterThan(file,R__NESTED_CONST_STRING); // file->GetVersion() >= R__NESTED_CONST_STRING;
-/*    fprintf(stderr,"string: %d %d %d\n", */
-/*            result,  file->GetVersion(), R__NESTED_CONST_STRING); */
    if (!result) {
-      static OutputOneErrorMessage error("stl containers of const string*");
+      if (FileVersionEqualCurrent(file)) {
+         static OutputOneErrorMessage error("stl containers of const string*");
+      } else {
+         static OutputOneErrorMessage error((TFile*)gDirectory,"stl containers of const string*");
+      }
    }
    return result;
 }
@@ -62,7 +78,11 @@ Bool_t HasNestedConstString(TFile *file) {
 bool HasSplitStlContainer(TFile *file, int splitlevel) {
    Bool_t result = (splitlevel<2) || FileVersionGreaterThan(file,R__NESTED_CONTAINER); // (file->GetVersion() >= R__NESTED_CONTAINER);
    if (!result) {
-      static OutputOneErrorMessage error("splitting of stl containers");
+      if (FileVersionEqualCurrent(file)) {
+         static OutputOneErrorMessage error("splitting of stl containers");
+      } else {
+         static OutputOneErrorMessage error((TFile*)gDirectory,"splitting of stl containers");
+      }
    }
    return result;
 }
@@ -70,7 +90,11 @@ bool HasSplitStlContainer(TFile *file, int splitlevel) {
 bool HasVarArrayOfContainers(TFile *file) {
    Bool_t result = FileVersionGreaterThan(file, R__VAR_ARRAY_OF_CONTAINERS); // file->GetVersion() >= R__VAR_ARRAY_OF_CONTAINERS;
    if (!result) {
-      static OutputOneErrorMessage error("variable size array of stl containers");
+      if (FileVersionEqualCurrent(file)) {
+         static OutputOneErrorMessage error("variable size array of stl containers");
+      } else {
+         static OutputOneErrorMessage error((TFile*)gDirectory,"variable size array of stl containers");
+      }
    }
    return result;
 }

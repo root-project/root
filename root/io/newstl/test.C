@@ -132,49 +132,6 @@ template <class HolderClass> bool verifyBranch(const char *testname, TTree *chai
    }
 }
 
-void fillListOfDir(TList &l) {
-   
-   TString directory = ".";
-   void *dir = gSystem->OpenDirectory(directory);
-
-   const char *file = 0;
-   if (dir) {
-
-      //create a TList to store the file names (not yet sorted)
-      TString basename = ".-..-..";
-      TRegexp re(basename,kFALSE);
-
-      while ((file = gSystem->GetDirEntry(dir))) {
-         if (!strcmp(file,".") || !strcmp(file,"..")) continue;
-         TString s = file;
-//          cout << "found the directory " << file << endl;
-         if ( (basename!=file) && s.Index(re) == kNPOS) continue;
-
-         TString vfile = gSystem->ConcatFileName(file,"vector.root");
-         if (gSystem->GetPathInfo(vfile,0,0,0,0)==0) {
-//             cout << "found vector in " << file << endl;
-            l.Add(new TObjString(file));
-         } else {
-//             cout << "did not find vector in " << file << endl;
-         }
-
-      }
-      gSystem->FreeDirectory(dir);
-
-      //sort the files in alphanumeric order
-      l.Sort();
-
-      TIter next(&l);
-      TObjString *obj;
-      while ((obj = (TObjString*)next())) {
-         file = obj->GetName();
-//          cout << "found the directory " << obj->GetName() << endl;
-      }
-   }
-
-
-}
-
 template <class HolderClass> bool read(const char *dirname, const char *testname, int nEntry) {
    HolderClass *holder = 0;
    bool result = true;

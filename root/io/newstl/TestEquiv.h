@@ -1,5 +1,6 @@
 bool IsEquiv(const std::string &, const EHelper &orig, const EHelper &copy) { return  orig == copy; }
 bool IsEquiv(const std::string &, const Helper &orig, const Helper &copy) { return  orig.IsEquiv(copy); }
+bool IsEquiv(const std::string &, const nonvirtHelper &orig, const nonvirtHelper &copy) { return  orig.IsEquiv(copy); }
 bool IsEquiv(const std::string &, const THelper &orig, const THelper &copy) { return  orig.IsEquiv(copy); }
 
 template <class T> bool IsEquiv(const std::string &test, const GHelper<T> &orig, const GHelper<T> &copy) {

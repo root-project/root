@@ -88,7 +88,7 @@ $(LIBDIR)%_C.$(DllSuf) : %.C
 
 stlIoTest.log: directories $(TEST_DLL)
 #	$(CMDECHO) root.exe -q -l -b brun.C > stlIoTest.log 2>&1 
-	$(CMDECHO) root.exe -q -l -b brun.C 2>&1 | tee full.log | grep -v 'does not support' > stlIoTest.log && ( cat full.log | grep 'does not support'; echo )
+	$(CMDECHO) root.exe -q -l -b brun.C 2>&1 | tee full.log | grep -v 'does not support' | grep -v 'did not support' > stlIoTest.log && ( cat full.log | grep 'not support'; echo )
 
 stlIoTest: stlIoTest.log
 	$(CMDECHO) diff -b stlIoTest.log stlIoTest.ref 
