@@ -184,7 +184,7 @@
       ier = 0
       if (last.ne.0) then
          call hgnt1(id,'*',allvars,ioffset,-ivar,1,ier)
-         allvars(1) = ''
+         allvars(1) = ' '
          ivar = 0
       endif
       end
