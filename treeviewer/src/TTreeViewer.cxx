@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.19 2001/06/27 16:54:25 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.20 2001/11/28 16:05:42 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1245,10 +1245,10 @@ void TTreeViewer::ExecuteDraw()
    // send draw command
    fLastOption = fBarOption->GetText();
    if (!strlen(gopt) && dimension!=3)
-   {
-      gopt = "hist";
-      fLastOption = "hist";
-   }
+   //{
+   //   gopt = "hist";
+   //   fLastOption = "hist";
+   //}
    if (dimension == 3 && strlen(gopt)) {
       cout << "Graphics option " << gopt << " not valid for 3D histograms" << endl;
       gopt = "";
