@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.1 2001/03/14 02:45:47 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.2 2001/03/15 23:19:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,47 +29,59 @@ class TPaveText;
 
 class RooDataSet : public TTree {
 public:
+
+  // Constructors, factory methods etc.
   inline RooDataSet() { }
   RooDataSet(const char *name, const char *title, const RooArgSet& vars) ;
-
-protected:
-  void loadValues(TTree *ntuple, const char *cuts);
-  void loadValues(const char *filename, const char *treename,
-		  const char *cuts);
-public:
   RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
 	     const RooArgSet& vars, const char *cuts);
   RooDataSet(const char *name, const char *title, TTree *ntuple, 
 	     const RooArgSet& vars, const char *cuts);
   RooDataSet(const char *name, const char *filename, const char *treename, 
 	     const RooArgSet& vars, const char *cuts);
-
   inline virtual ~RooDataSet() ;
-  void add(const RooArgSet& data);
-  void append(RooDataSet& data) ;
-  const RooArgSet *get(Int_t index) const;
-
-  TH1F* Plot(RooAbsValue& var, const char* cuts="", const char* opts="") ;	
-
-  virtual void Print(Option_t* = 0);
-
   // Read data from a text file and create a dataset from it.
   // The possible options are: (D)ebug, (Q)uiet.
-
   static RooDataSet *read(const char *filename, RooArgSet &variables,
 			  const char *opts, const char* commonPath="") ;
 
+  // Add one ore more rows of data
+  void add(const RooArgSet& data);
+  void append(RooDataSet& data) ;
+
+  // Load a given row of data
+  const RooArgSet *get(Int_t index) const;
+
+  // Plot a floating value 
+  TH1F* Plot(RooAbsValue& var, const char* cuts="", const char* opts="") ;	
+  
+  // Printing interface (human readable)
+  enum PrintOption { Standard=0 } ;
+  virtual void printToStream(ostream& os, PrintOption opt=Standard) ;
+  void print(PrintOption opt=Standard) { printToStream(cout,opt) ; }
+
+  // Debug
   void dump() ;
 
 protected:
+
+  // Load data from another TTree
+  void loadValues(TTree *ntuple, const char *cuts);
+  void loadValues(const char *filename, const char *treename,
+		  const char *cuts);
+
+  // Column structure definition
   RooArgSet _vars, _truth;
+  TString _blindString ;
+
 private:
 
-  TString _blindString ;
   RooDataSet(const RooDataSet &other); // cannot be copied
+
   void initialize(const RooArgSet& vars);
   TIterator *_iterator; //! don't make this data member persistent
   TBranch *_branch; //! don't make this data member persistent
+
   enum { bufSize = 8192 };
   ClassDef(RooDataSet,1) // a data set for fitting
 };

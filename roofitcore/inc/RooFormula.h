@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooFormula.rdl,v 1.2 2001/03/15 23:19:12 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -22,24 +22,30 @@ class RooArgSet ;
 
 class RooFormula : public TFormula {
 public:
+  // Constructors etc.
   RooFormula() ;
   RooFormula(const char* name, const char* formula, RooArgSet& varList);
   RooFormula(const RooFormula& other) ;
   virtual ~RooFormula();
 	
+  // Dependent management
   RooArgSet& actualDependents() ;
-  inline Double_t Eval() { return EvalPar(0,0) ; }
   Bool_t changeDependents(RooArgSet& newDeps, Bool_t mustReplaceAll=kFALSE) ;
+
+  // Function value accessor
+  Double_t eval() ;
+
+  // Debugging
   void dump() ;
 
+protected:
+  
+  // Interface to TFormula engine
   Int_t DefinedVariable(TString &name) ;
   Double_t DefinedValue(Int_t code) ;
 
-protected:
-
-
-  RooArgSet* _origList ;
-  TObjArray _useList ;
+  RooArgSet* _origList ; // Original list of dependents
+  TObjArray _useList ;   // List of actual dependents 
   ClassDef(RooFormula,1) 
 };
 

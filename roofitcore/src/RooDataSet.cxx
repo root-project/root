@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.1 2001/03/14 02:45:47 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.2 2001/03/15 23:19:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -151,7 +151,6 @@ void RooDataSet::loadValues(TTree *t, const char *cuts)
      while (destArg = (RooAbsArg*)_iterator->Next()) {       
        sourceArg = (RooAbsArg*) sourceIter->Next() ;
        if (!sourceArg->isValid()) {
-	 cout << "RooDataSet::loadValues: skipping entry because " << sourceArg->GetName() << " is invalid" << endl ;
 	 continue ;
        }
        *destArg = *sourceArg ;
@@ -219,9 +218,7 @@ void RooDataSet::initialize(const RooArgSet& vars) {
 
 
 void RooDataSet::add(const RooArgSet& data) {
-  // Add a row of data elements
-
-  // WVE: This needs to be changed
+  // Add a row of data elements  virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
   _vars= data;
   Fill();
 }
@@ -256,7 +253,7 @@ TH1F* RooDataSet::Plot(RooAbsValue& var, const char* cuts, const char* opts)
     Int_t entryNumber=GetEntryNumber(i);
     if (entryNumber<0) break;
     get(entryNumber);
-    histo->Fill(plotVar->GetVar()) ;
+    histo->Fill(plotVar->getVal()) ;
   }
 
   if (ownPlotVar) delete plotVar ;
@@ -265,15 +262,15 @@ TH1F* RooDataSet::Plot(RooAbsValue& var, const char* cuts, const char* opts)
 
 
 
-void RooDataSet::Print(Option_t*) {
+void RooDataSet::printToStream(ostream& os, PrintOption opt) 
+{
   // Print structure of this data set
-
   cout << "RooDataSet \"" << GetTitle() << "\" contains" << endl
        << GetEntries() << " values for ";
-  _vars.Print("T");
+  _vars.print(RooAbsArg::Shape);
   if(_truth.GetSize() > 0) {
     cout << "and was generated with ";
-    _truth.Print();
+    _truth.print();
   }
 }
 
@@ -286,7 +283,7 @@ const RooArgSet* RooDataSet::get(Int_t index) const {
   _iterator->Reset() ;
   RooAbsArg* var(0) ;
   while (var=(RooAbsArg*)_iterator->Next()) {
-    var->setDirty(kTRUE) ;
+    var->setValueDirty(kTRUE) ;
   } 
   
   return &_vars;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooCat.rdl,v 1.1 2001/03/15 23:19:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,8 +28,12 @@ public:
   inline Bool_t operator==(const char* label) { return !TString(label).CompareTo(GetName()) ; }
   inline operator Int_t&() { return _value ; }
   inline operator Int_t() const { return _value ; }
-  inline Int_t GetVar() const { return _value ; }
-  void Print(Option_t* option) { cout << GetName() << ":" << _value << endl ; }
+  inline Int_t getVal() const { return _value ; }
+
+  enum PrintOption { Standard=0 } ;
+  void printToStream(ostream& os, PrintOption opt=Standard) 
+       { os << GetName() << ":" << _value << endl ; }
+  void print(PrintOption opt=Standard) { printToStream(cout,opt) ; }
 
 protected:
   Int_t _value ;

@@ -32,6 +32,7 @@ RooFormula::RooFormula(const char* name, const char* formula, RooArgSet& list) :
   }
 }
 
+
 RooFormula::RooFormula(const RooFormula& other) : 
   TFormula(other), _origList(other._origList)
 {
@@ -42,9 +43,11 @@ RooFormula::RooFormula(const RooFormula& other) :
 }
 
 
+
 RooFormula::~RooFormula() 
 {
 }
+
 
 
 RooArgSet& RooFormula::actualDependents()
@@ -66,7 +69,7 @@ void RooFormula::dump() {
   int i ;
   cout << "RooFormula::dump()" << endl ;
   for (i=0 ; i<_useList.GetEntries() ; i++) {
-    cout << "[" << i << "] = " << (void*) _useList.At(i) << " = " << ((RooAbsValue*)_useList.At(i))->GetVar() << endl ;
+    cout << "[" << i << "] = " << (void*) _useList.At(i) << " = " << ((RooAbsValue*)_useList.At(i))->getVal() << endl ;
   }
 }
 
@@ -90,10 +93,17 @@ Bool_t RooFormula::changeDependents(RooArgSet& newDeps, Bool_t mustReplaceAll)
 }
 
 
+Double_t RooFormula::eval() 
+{ 
+  // WVE sanity check should go here
+  return EvalPar(0,0) ; 
+}
+
+
 Double_t
 RooFormula::DefinedValue(Int_t code) {
   // Return current value for parameter indicated by internal reference code
-  return ((RooAbsValue*)_useList.At(code))->GetVar() ;
+  return ((RooAbsValue*)_useList.At(code))->getVal() ;
 }
 
 

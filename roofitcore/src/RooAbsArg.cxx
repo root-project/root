@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.1 2001/03/14 02:45:47 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.2 2001/03/15 23:19:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,7 +24,8 @@ RooAbsArg::RooAbsArg() : TNamed(), _attribList()
 {
 }
 
-RooAbsArg::RooAbsArg(const char *name, const char *title) : TNamed(name,title)
+RooAbsArg::RooAbsArg(const char *name, const char *title) : 
+  TNamed(name,title), _valueDirty(kTRUE), _shapeDirty(kTRUE)
 {    
   // Default constructor
 }
@@ -46,7 +47,9 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other) : TNamed(other)
   while (server = (RooAbsArg*) sIter->Next()) {
     addServer(*server) ;
   }
-  
+
+  setValueDirty() ;
+  setShapeDirty() ;
 }
 
 
@@ -108,7 +111,8 @@ RooAbsArg& RooAbsArg::operator=(RooAbsArg& other)
   }
   delete iter ;
 
-  raiseClientDirtyFlags() ;
+  raiseClientValueDirtyFlags() ;
+  raiseClientShapeDirtyFlags() ;
   return *this ;
 }
 
@@ -198,25 +202,49 @@ Bool_t RooAbsArg::dependsOn(RooAbsArg& server)
 }
 
 
-void RooAbsArg::setDirty(Bool_t flag) 
+void RooAbsArg::setValueDirty(Bool_t flag) 
 { 
-  // Set 'dirty' state for this object and propagate flag to all its clients
-  if (_verboseDirty) cout << "RooAbsArg::setDirty(" << GetName() << "): dirty flag " << (flag?"raised":"cleared") << endl ;
-  Bool_t prevStat = _dirty ;
+  // Set 'dirty' value state for this object and propagate flag to all its clients
+  if (_verboseDirty) cout << "RooAbsArg::setValueDirty(" << GetName() 
+			  << "): dirty flag " << (flag?"raised":"cleared") << endl ;
+
   if (_serverList.First()!=0) {
-    _dirty=flag ; 
+    _valueDirty=flag ; 
   }
-  if (flag==kTRUE && prevStat==kFALSE) raiseClientDirtyFlags() ; 
+  if (flag==kTRUE) raiseClientValueDirtyFlags() ; 
 } 
 
 
-void RooAbsArg::raiseClientDirtyFlags()
+void RooAbsArg::raiseClientValueDirtyFlags()
 {
   // Set 'dirty' flag for all clients of this object
   TIterator *clientIter= _clientList.MakeIterator();
   RooAbsArg* client ;
   while (client=(RooAbsArg*)clientIter->Next()) {
-    client->setDirty(kTRUE) ;
+    client->setValueDirty(kTRUE) ;
+  }
+}
+
+void RooAbsArg::setShapeDirty(Bool_t flag) 
+{ 
+  // Set 'dirty' shape state for this object and propagate flag to all its clients
+  if (_verboseDirty) cout << "RooAbsArg::setShapeDirty(" << GetName() 
+			  << "): dirty flag " << (flag?"raised":"cleared") << endl ;
+
+  if (_serverList.First()!=0) {
+    _shapeDirty=flag ; 
+  }
+  if (flag==kTRUE) raiseClientShapeDirtyFlags() ; 
+} 
+
+
+void RooAbsArg::raiseClientShapeDirtyFlags()
+{
+  // Set 'dirty' flag for all clients of this object
+  TIterator *clientIter= _clientList.MakeIterator();
+  RooAbsArg* client ;
+  while (client=(RooAbsArg*)clientIter->Next()) {
+    client->setShapeDirty(kTRUE) ;
   }
 }
 
@@ -254,6 +282,13 @@ Bool_t RooAbsArg::redirectServers(RooArgSet& newSet, Bool_t mustReplaceAll)
   }
 
   delete sIter ;
+ 
+  setValueDirty(kTRUE) ;
+  setShapeDirty(kTRUE) ;
+
+  // Optional subclass post-processing
+  ret |= redirectServersHook(newSet,mustReplaceAll) ;
+
   return ret ;
 }
 
@@ -272,7 +307,7 @@ Bool_t RooAbsArg::isValid()
 
 
 
-void RooAbsArg::PrintToStream(ostream& str, Option_t* = 0) 
+void RooAbsArg::printToStream(ostream& str, PrintOption opt) 
 {
   // Print contents
 
@@ -282,6 +317,20 @@ void RooAbsArg::PrintToStream(ostream& str, Option_t* = 0)
   str << endl ;
   
 }
+
+
+ostream& operator<<(ostream& os, RooAbsArg &arg)
+{
+  arg.writeToStream(os,kTRUE) ;
+  return os ;
+}
+
+istream& operator>>(istream& is, RooAbsArg &arg)
+{
+  arg.readFromStream(is,kTRUE,kFALSE) ;
+  return is ;
+}
+
 
 void RooAbsArg::printAttribList(ostream& os) 
 {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaValue.cc,v 1.1 2001/03/14 02:45:48 verkerke Exp $
+ *    File: $Id: RooFormulaValue.cc,v 1.2 2001/03/15 23:19:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,45 +19,47 @@ ClassImp(RooFormulaValue)
 RooFormulaValue::RooFormulaValue(const char *name, const char *title, RooArgSet& dependents) : 
   RooAbsValue(name,title), _formula(name,title,dependents)
 {  
-  _formula.actualDependents().Print() ;
+  _formula.actualDependents().print() ;
 
   TIterator* depIter = _formula.actualDependents().MakeIterator() ;
   RooAbsArg* server(0) ;
   while (server=(RooAbsArg*)depIter->Next()) {
     addServer(*server) ;
   }
-  setDirty(kTRUE) ;
+  setValueDirty(kTRUE) ;
+  setShapeDirty(kTRUE) ;
 }
+
 
 RooFormulaValue::RooFormulaValue(const RooFormulaValue& other) : 
   RooAbsValue(other), _formula(other._formula)
 {
 }
 
+
 RooFormulaValue::~RooFormulaValue() 
 {
 }
 
-Double_t RooFormulaValue::Evaluate()
+
+Double_t RooFormulaValue::evaluate()
 {
   // Evaluate embedded formula
-  return _formula.Eval() ;
+  return _formula.eval() ;
 }
 
 
-Bool_t RooFormulaValue::redirectServers(RooArgSet& newServerList, Bool_t mustReplaceAll)
+Bool_t RooFormulaValue::redirectServersHook(RooArgSet& newServerList, Bool_t mustReplaceAll)
 {
-  // Change current servers to new servers with the same name in the given list
-  RooAbsValue::redirectServers(newServerList,mustReplaceAll) ;
-  Bool_t ret =  _formula.changeDependents(newServerList,mustReplaceAll) ;
-  setDirty(kTRUE) ;
-  return ret ;
+  // Propagate server change to formula engine
+  return _formula.changeDependents(newServerList,mustReplaceAll) ;
 }
 
-void RooFormulaValue::PrintToStream(ostream& os, Option_t* opt= 0)
+
+void RooFormulaValue::printToStream(ostream& os, Option_t* opt= 0)
 {
   // Print current value and definition of formula
-  os << "RooFormulaValue: " << GetName() << " = " << GetTitle() << " = " << GetVar();
+  os << "RooFormulaValue: " << GetName() << " = " << GetTitle() << " = " << getVal();
   if(!_unit.IsNull()) os << ' ' << _unit;
   printAttribList(os) ;
   os << endl ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooArgSet.rdl,v 1.1 2001/03/14 02:45:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -21,9 +21,9 @@ class RooAbsArg ;
 
 class RooArgSet : public THashList {
 public:
-  RooArgSet();
-  virtual ~RooArgSet();
 
+  // Constructors, assignment etc.
+  RooArgSet();
   RooArgSet(const char *name);
   RooArgSet(const char *name, RooAbsArg& var1);
   RooArgSet(const char *name, RooAbsArg& var1, RooAbsArg& var2);
@@ -42,33 +42,36 @@ public:
   RooArgSet(const char *name, RooAbsArg& var1, RooAbsArg& var2,
 	     RooAbsArg& var3, RooAbsArg& var4, RooAbsArg& var5,
 	     RooAbsArg& var6, RooAbsArg& var7, RooAbsArg& var8);
-
+  virtual ~RooArgSet();
   // Create a copy of an existing list. New variables cannot be added
   // to a copied list. The variables in the copied list are independent
   // of the original variables.
   RooArgSet(const char *name, const RooArgSet& other);
+  RooArgSet& operator=(const RooArgSet& other);
+  // Deep copy operator (copies all extern dependents into list)
+  RooArgSet *snapshot() ;
 
+  // List content management
   Bool_t add(RooAbsArg& var) ;
   Bool_t add(RooArgSet& list) { return kTRUE ; }
   Bool_t remove(RooAbsArg& var) ;
+  Bool_t replace(RooAbsArg& var1, RooAbsArg& var2) { return kTRUE ; }
+
+  // List search methods
   RooAbsArg *find(const char *name) const ;
   Bool_t contains(RooAbsArg& var) const { return kTRUE ; }
-  Bool_t replace(RooAbsArg& var1, RooAbsArg& var2) { return kTRUE ; }
-  RooArgSet *snapshot() ;
 
-  // Return the number of non-constant (ie, variable) members in this list
-  Int_t GetNVar() const { return 0 ; }
-
-  // Initialize this list's values from variables with the same name in
-  // another list. Also copy const-ness of variables.
-  RooArgSet& operator=(const RooArgSet& other);
-
-  virtual void Print(Option_t* = 0) ;
+  // Printing interface (human readable)
+  enum PrintOption {Standard=0} ;
+  virtual void printToStream(ostream& os, RooAbsArg::PrintOption opt=RooAbsArg::Standard) ;
+  void print(RooAbsArg::PrintOption opt=RooAbsArg::Standard) ;
 
 protected:
-  Bool_t _isCopy;
-  TString _name;
 
+  Bool_t _isCopy; // Copied lists own contents
+  TString _name;  // THashList doesn't inherit from TNamed
+
+  // Support for snapshot method 
   void addServerClonesToList(RooAbsArg& var) ;
 
   ClassDef(RooArgSet,1) // a list of real-valued variables

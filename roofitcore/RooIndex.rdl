@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooIndex.rdl,v 1.1 2001/03/15 23:19:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,24 +18,26 @@
 
 class RooIndex : public RooAbsIndex {
 public:
+  // Constructor, assignment etc.
   RooIndex() {} ;
-  virtual ~RooIndex();
-
   RooIndex(const char *name, const char *title);
   RooIndex(const RooIndex& other) ;
-
+  virtual ~RooIndex();
   virtual RooAbsArg& operator=(RooAbsArg& other) ; 
-  virtual Bool_t isDerived() const { return kFALSE; }
 
+  // Value modifiers
   Bool_t setIndex(Int_t index) ;
   Bool_t setLabel(char* label) ;
   
-  // I/O streaming interface
+  // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) ;
-  virtual void PrintToStream(ostream& stream, Option_t* = 0) ;
+
+  // Printing interface (human readable)
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard) ;
 
 protected:
+
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
 
   ClassDef(RooIndex,1) // a real-valued variable and its value

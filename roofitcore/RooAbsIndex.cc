@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsIndex.cc,v 1.1 2001/03/15 23:19:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,8 +24,8 @@ ClassImp(RooAbsIndex)
 RooAbsIndex::RooAbsIndex(const char *name, const char *title) : 
   RooAbsArg(name,title)
 {
-  _typeIter = _types.MakeIterator() ;
-  setDirty(kTRUE) ;  
+  setValueDirty(kTRUE) ;  
+  setShapeDirty(kTRUE) ;  
 }
 
 
@@ -39,7 +39,8 @@ RooAbsIndex::RooAbsIndex(const RooAbsIndex& other) :
   }
   delete iter ;
 
-  setDirty(kTRUE) ;
+  setValueDirty(kTRUE) ;
+  setShapeDirty(kTRUE) ;
 }
 
 
@@ -65,7 +66,8 @@ RooAbsArg& RooAbsIndex::operator=(RooAbsArg& aother)
   }
   delete iter ;
 
-  setDirty(kTRUE) ;
+  setValueDirty(kTRUE) ;
+  setShapeDirty(kTRUE) ;
 }
 
 
@@ -77,20 +79,20 @@ TIterator* RooAbsIndex::typeIterator()
 
 Int_t RooAbsIndex::getIndex()
 {
-  if (isDirty()) {
-    setDirty(false) ;
-    _value = Evaluate() ;
+  if (isValueDirty()) {
+    setValueDirty(false) ;
+    _value = traceEval() ;
   } 
 
-  return _value.GetVar() ;
+  return _value.getVal() ;
 }
 
 
 const char* RooAbsIndex::getLabel()
 {
-  if (isDirty()) {
-    setDirty(false) ;
-    _value = Evaluate() ;
+  if (isValueDirty()) {
+    setValueDirty(false) ;
+    _value = traceEval() ;
   } 
 
   return _value.GetName() ;
@@ -120,9 +122,23 @@ Bool_t RooAbsIndex::isValidLabel(char* label)
 }
 
 
+RooCat RooAbsIndex::traceEval()
+{
+  RooCat value = evaluate() ;
+  
+  //Standard tracing code goes here
+
+  //Call optional subclass tracing code
+  traceEvalHook(value) ;
+
+  return value ;
+}
+
+
+
 Bool_t RooAbsIndex::isValid() 
 {
-  return isValidIndex(_value.GetVar()) ;
+  return isValidIndex(_value.getVal()) ;
 }
 
 
@@ -157,7 +173,7 @@ void RooAbsIndex::writeToStream(ostream& os, Bool_t compact)
   //Write object contents to stream (dummy for now)
 }
 
-void RooAbsIndex::PrintToStream(ostream& os, Option_t* opt= 0) 
+void RooAbsIndex::printToStream(ostream& os, PrintOption opt) 
 {
   if (_types.GetEntries()==0) {
     os << "RooAbsIndex: " << GetName() << " has no types defined" << endl ;
@@ -172,7 +188,7 @@ void RooAbsIndex::PrintToStream(ostream& os, Option_t* opt= 0)
        << endl;
     for (int i=0 ; i<_types.GetEntries() ; i++) {
       os << "  [" << i << "] \"" << ((RooCat*)_types.At(i))->GetName() << "\" (code = "
-	 << ((RooCat*)_types.At(i))->GetVar() << ")" << endl;      
+	 << ((RooCat*)_types.At(i))->getVal() << ")" << endl;      
     }
   } else {
     os << "RooAbsIndex: " << GetName() << " = " << getLabel() << "(" << getIndex() << ")" ;

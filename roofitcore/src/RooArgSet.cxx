@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooArgSet.cc,v 1.1 2001/03/14 02:45:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -226,15 +226,21 @@ RooAbsArg *RooArgSet::find(const char *name) const {
 }
 
 
-void RooArgSet::Print(Option_t* options) {
+void RooArgSet::print(RooAbsArg::PrintOption opt) 
+{
+  printToStream(cout,opt) ;
+}
+
+
+void RooArgSet::printToStream(ostream& os, RooAbsArg::PrintOption opt) {
   // Print content of list
-  cout << "RooArgSet \"" << _name << "\":" << endl;
+  os << "RooArgSet \"" << _name << "\":" << endl;
   TIterator *iterator= MakeIterator();
   int index= 0;
   RooAbsArg *next(0);
   while(0 != (next= (RooAbsArg*)iterator->Next())) {
-    cout << " (" << ++index << ") ";
-    next->Print(options);
+    os << " (" << ++index << ") ";
+    next->print(opt);
   }
   delete iterator;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsIndex.rdl,v 1.1 2001/03/15 23:19:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,36 +25,39 @@ class RooDataSet ;
 
 class RooAbsIndex : public RooAbsArg {
 public:
+  // Constructors, assignment etc.
   RooAbsIndex() {} ;
-  virtual ~RooAbsIndex();
-
   RooAbsIndex(const char *name, const char *title);
   RooAbsIndex(const RooAbsIndex& other) ;
-
+  virtual ~RooAbsIndex();
   virtual RooAbsArg& operator=(RooAbsArg& other) ; 
-  virtual Bool_t isDerived() const { return kFALSE; }
 
+  // Value accessors
   virtual Int_t getIndex() ;
   virtual const char* getLabel() ; 
+  
+  // Type definition management
   Bool_t defineType(Int_t index, char* label) ;
   Bool_t isValidIndex(Int_t index) ;
   Bool_t isValidLabel(char* label) ;
   TIterator* typeIterator() ;
-  
+
   // I/O streaming interface
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) ;
-  virtual void PrintToStream(ostream& stream, Option_t* = 0) ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard) ;
 
 protected:
 
   virtual Bool_t isValid() ;
 
-  RooCat     _value ;
-  TObjArray  _types ;
-  TIterator* _typeIter ; //! do not persist
+  RooCat     _value ; // Current value
+  TObjArray  _types ; // Array of allowed values
 
-  RooCat Evaluate() { return RooCat("",0) ; }
+  // Function evaluation and error tracing
+  RooCat traceEval() ;
+  virtual Bool_t traceEvalHook(RooCat value) {}
+  virtual RooCat evaluate() { return RooCat("",0) ; }
 
   ClassDef(RooAbsIndex,1) // a real-valued variable and its value
 };

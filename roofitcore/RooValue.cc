@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooValue.cc,v 1.1 2001/03/14 02:45:48 verkerke Exp $
+ *    File: $Id: RooValue.cc,v 1.2 2001/03/15 23:19:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,14 +11,11 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "TObjString.h"
 #include "TTree.h"
-
 #include "RooFitCore/RooValue.hh"
 
 ClassImp(RooValue)
@@ -30,7 +27,8 @@ RooValue::RooValue(const char *name, const char *title,
 {
   _value = value ;
   setConstant(kTRUE) ;
-  setDirty(kTRUE) ;
+  setValueDirty(kTRUE) ;
+  setShapeDirty(kTRUE) ;
 }  
 
 RooValue::RooValue(const char *name, const char *title,
@@ -39,8 +37,8 @@ RooValue::RooValue(const char *name, const char *title,
   RooAbsValue(name, title, minValue, maxValue, unit), _blinder(blinder)
 {
   _value= 0.5*(minValue + maxValue);
-  updateLimits();
-  setDirty(kTRUE) ;
+  setValueDirty(kTRUE) ;
+  setShapeDirty(kTRUE) ;
 }  
 
 RooValue::RooValue(const char *name, const char *title,
@@ -50,8 +48,8 @@ RooValue::RooValue(const char *name, const char *title,
 {
 //   if (_blinder) _blinder->redoBlind() ;
   _value = value ;
-  updateLimits();
-  setDirty(kTRUE) ;
+  setValueDirty(kTRUE) ;
+  setShapeDirty(kTRUE) ;
 }  
 
 RooValue::RooValue(const RooValue& other) :
@@ -60,7 +58,7 @@ RooValue::RooValue(const RooValue& other) :
   _blinder(other._blinder)
 {
   setConstant(other.isConstant()) ;
-  setLimits(other.useLimits()) ;
+  setIntegLimits(other.useIntegLimits()) ;
   setProjected(other.isProjected()) ;
 }
 
@@ -73,56 +71,107 @@ RooValue::operator Double_t&() {
 }
 
 RooValue::operator Double_t() {
-  return this->GetVar();
+  return this->getVal();
 }
 
-void RooValue::Set(Double_t value, Double_t minValue, Double_t maxValue) {
-  // Set current, minimum and maximum value
-  _value= value;
-  _minValue= minValue;
-  _maxValue= maxValue;
-  setConstant(kFALSE) ;
 
-  setDirty(kTRUE) ;
-  updateLimits();
-}
+void RooValue::setVal(Double_t value) {
 
-void RooValue::SetVar(Double_t value) {
   // Set current value
-  setDirty(kTRUE) ;
-  _value = value;
+  Double_t clipValue ;
+  inIntegRange(value,&clipValue) ;
+
+  setValueDirty(kTRUE) ;
+  _value = clipValue;
 }
 
 
-Double_t RooValue::operator=(Double_t newValue) {
-  // Assignment operator for Double_t
-  Double_t range = _maxValue - _minValue ;
-  if(isConstant ()|| (newValue >= _minValue && newValue <= _maxValue)) {
-    _value= newValue;
-    if(isConstant() && (newValue < _minValue || newValue > _maxValue)) {
-      // force limits to new value if necessary
-      _minValue= _maxValue= _value;
-    }
-  }
-  // Check which limit we exceeded and truncate. Print a warning message
-  // unless we are very close to the boundary.
-  else if(newValue > _maxValue) {
-    if(newValue - _maxValue > 1e-6*range) {
-      cout << GetName() << ": value " << newValue
-      << " rounded down to max limit " << _maxValue << endl;
-    }
-    _value= _maxValue;
-  }
-  else if(newValue < _minValue) {
-    if(_minValue - newValue > 1e-6*range) {
-      cout << GetName() << ": value " << newValue
-      << " rounded up to min limit " << _minValue << endl;
-    }
-    _value= _minValue;
+void RooValue::setIntegMin(Double_t value) 
+{
+  // Check if new limit is consistent
+  if (_integMin>_integMax) {
+    cout << "RooValue::setIntegMin(" << GetName() 
+	 << "): Proposed new integration min. larger than max., setting min. to max." << endl ;
+    _integMin = _integMax ;
+  } else {
+    _integMin = value ;
   }
 
-  setDirty(kTRUE) ;
+  // Clip current value in window if it fell out
+  Double_t clipValue ;
+  if (!inIntegRange(_value,&clipValue)) {
+    setVal(clipValue) ;
+  }
+}
+
+
+void RooValue::setIntegMax(Double_t value)
+{
+  // Check if new limit is consistent
+  if (_integMax<_integMin) {
+    cout << "RooValue::setIntegMax(" << GetName() 
+	 << "): Proposed new integration max. smaller than min., setting max. to min." << endl ;
+    _integMax = _integMax ;
+  } else {
+    _integMax = value ;
+  }
+
+  // Clip current value in window if it fell out
+  Double_t clipValue ;
+  if (!inIntegRange(_value,&clipValue)) {
+    setVal(clipValue) ;
+  }
+}
+
+
+Double_t RooValue::operator=(Double_t newValue) 
+{
+  // Clip 
+  inIntegRange(newValue,&_value) ;
+
+  setValueDirty(kTRUE) ;
   return _value;
+}
+
+
+
+Bool_t RooValue::inIntegRange(Double_t value, Double_t* clippedValPtr) const
+{
+  // Check which limit we exceeded and truncate. Print a warning message
+  // unless we are very close to the boundary.  
+  
+  Double_t range = _integMax - _integMin ;
+  Double_t clippedValue(value);
+  Bool_t inRange(kTRUE) ;
+
+  if (useIntegLimits()) {
+    if(value > _integMax) {
+      if(value - _integMax > 1e-6*range) {
+	cout << "RooValue::inIntegRange(" << GetName() << "): value " << value
+	     << " rounded down to max limit " << _integMax << endl;
+      }
+      clippedValue = _integMax;
+      inRange = kFALSE ;
+    }
+    else if(value < _integMin) {
+      if(_integMin - value > 1e-6*range) {
+	cout << "RooValue::inIntegRange(" << GetName() << "): value " << value
+	     << " rounded up to min limit " << _integMin << endl;
+      }
+      clippedValue = _integMin;
+      inRange = kFALSE ;
+    } 
+  }
+
+  if (clippedValPtr) *clippedValPtr=clippedValue ;
+  return inRange ;
+}
+
+
+
+Bool_t RooValue::isValid() 
+{
+  return inIntegRange(_value) ;
 }
 
 
@@ -165,8 +214,8 @@ Bool_t RooValue::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
     return kTRUE ;
   }
 
-  if (inRange(value)) {
-    SetVar(value) ;
+  if (inIntegRange(value)) {
+    setVal(value) ;
     return kFALSE ;  
   } else {
     if (verbose) {
@@ -184,7 +233,7 @@ void RooValue::writeToStream(ostream& os, Bool_t compact)
   // Write object contents to given stream
 
   // compact only at the moment
-  os << GetVar() ;
+  os << getVal() ;
 }
 
 
@@ -202,55 +251,41 @@ RooValue::operator=(RooAbsArg& aorig)
   return (*this) ;
 }
 
-void RooValue::PrintToStream(ostream & stream, Option_t* options) {
-  // Print contents of object
-  TString opts(options);
-  opts.ToLower();
-  Bool_t showError= opts.Contains("e");
-  if(opts.Contains("e")) {
-    stream << fName << " = " << GetVar() << " +/- " << _error;
-
-    if(!_unit.IsNull()) stream << ' ' << _unit;
-    printAttribList(stream) ;
-    stream << endl;
-  }
-  else if(opts.Contains("t")) {
-    stream << fName << ": " << fTitle;
+void RooValue::printToStream(ostream& os, PrintOption opt) {
+  switch(opt) {
+  case Verbose:
+    os << fName << " = " << getVal() << " +/- " << _error;    
+    if(!_unit.IsNull()) os << ' ' << _unit;
+    printAttribList(os) ;
+    os << endl;
+    break ;
+    
+  case Shape:
+    os << fName << ": " << fTitle;
     if(isConstant()) {
-      stream << ", fixed at " << GetVar();
+      os << ", fixed at " << getVal();
     }
     else {
-      stream << ", range is (" << _minValue << "," << _maxValue << ")";
+      os << ", range is (" << _integMin << "," << _integMax << ")";
     }
-    if(!_unit.IsNull()) stream << ' ' << _unit;
-    printAttribList(stream) ;
-    stream << endl;
-  }
-  else {
-    stream << *this << endl;
-  }
-}
-
-// Print contents of object
-ostream& operator<<(ostream& os, RooValue &var) {
-  os << "RooValue: " << var.GetName() << " = " << var.GetVar();
-  if (var._blinder) os << " (blind)" ; 
-  if(!var._unit.IsNull()) os << ' ' << var._unit;
-  os << " : \"" << var.fTitle << "\"" ;
-  if(!var.isConstant())
-    os << " (" << var._minValue << ',' << var._maxValue << ')';
-
-  TIterator *attribIter= var._attribList.MakeIterator();
-  if (attribIter) {
-    TObjString* attrib ;
-    while (attrib=(TObjString*)attribIter->Next()) {
-      os << " " << attrib->String() ;
-    }
-  }
+    if(!_unit.IsNull()) os << ' ' << _unit;
+    printAttribList(os) ;
+    os << endl;
+    break ;
     
-  return os;
+  case Standard:
+    os << "RooValue: " << GetName() << " = " << getVal();
+    if (_blinder) os << " (blind)" ; 
+    if(!_unit.IsNull()) os << ' ' << _unit;
+    os << " : " << GetTitle() ;
+    if(!isConstant() && useIntegLimits())
+      os << " (" << _integMin << ',' << _integMax << ')';
+    else if (isConstant()) 
+      os << " Constant" ;
+    os << endl ;	
+    break ;
+  }
 }
-
 
 
 TString *RooValue::format(Int_t sigDigits, const char *options) {
@@ -278,7 +313,7 @@ TString *RooValue::format(Int_t sigDigits, const char *options) {
   if(latexMode) text->Append("$");
   // begin the string with "<name> = " if requested
   if(showName) {
-    text->Append(GetLabel());
+    text->Append(getPlotLabel());
     text->Append(" = ");
   }
   // append our value if requested
