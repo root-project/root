@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.47 2004/05/19 09:43:11 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.48 2004/05/19 15:32:32 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -5222,8 +5222,6 @@ void RpdInit(EService serv, int pid, int sproto, unsigned int options,
    gSshdPort       = sshp;
 
    // Parse options
-   if (gDebug > 2)
-      ErrorInfo("RpdInit: options= 0x%x",options);
    gCheckHostsEquiv= (bool)((options & kDMN_HOSTEQ) != 0);
    gInclusiveToken = (bool)((options & kDMN_INCTKN) != 0);
    gRequireAuth    = (bool)((options & kDMN_RQAUTH) != 0);
