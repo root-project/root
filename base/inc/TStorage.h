@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.h,v 1.2 2000/08/20 14:49:20 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -73,14 +73,14 @@ public:
    ClassDef(TStorage,0)  //Storage manager class
 };
 
-inline void   TStorage::AddToHeap(ULong_t begin, ULong_t end)
+#ifndef WIN32
+inline void TStorage::AddToHeap(ULong_t begin, ULong_t end)
    { if (begin < fgHeapBegin) fgHeapBegin = begin;
      if (end   > fgHeapEnd)   fgHeapEnd   = end; }
 
 inline Bool_t TStorage::IsOnHeap(void *p)
    { return (ULong_t)p >= fgHeapBegin && (ULong_t)p < fgHeapEnd; }
 
-#ifndef WIN32
 inline size_t TStorage::GetMaxBlockSize() { return fgMaxBlockSize; }
 
 inline void TStorage::SetMaxBlockSize(size_t size) { fgMaxBlockSize = size; }

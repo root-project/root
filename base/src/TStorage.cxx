@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.4 2000/09/14 17:11:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.5 2000/09/14 17:41:44 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -378,15 +378,30 @@ void TStorage::SetCustomNewDelete()
 #ifdef WIN32
 
 //______________________________________________________________________________
+void TStorage::AddToHeap(ULong_t begin, ULong_t end)
+{
+   if (begin < fgHeapBegin) fgHeapBegin = begin;
+   if (end   > fgHeapEnd)   fgHeapEnd   = end;
+}
+
+//______________________________________________________________________________
+Bool_t TStorage::IsOnHeap(void *p)
+{
+   return (ULong_t)p >= fgHeapBegin && (ULong_t)p < fgHeapEnd;
+}
+
+//______________________________________________________________________________
 size_t TStorage::GetMaxBlockSize()
 {
    return fgMaxBlockSize;
 }
+
 //______________________________________________________________________________
 void TStorage::SetMaxBlockSize(size_t size)
 {
    fgMaxBlockSize = size;
 }
+
 //______________________________________________________________________________
 FreeHookFun_t TStorage::GetFreeHook()
 {
