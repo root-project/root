@@ -9,6 +9,8 @@
 // in a C struct. Use of C structs is strongly discouraged and one should
 // use classes instead. However support for C structs is important for 
 // legacy applications written in C or Fortran.
+//    see tree2a.C for the same example using a class instead of a C-struct.
+//
 // In this example, we are mapping a C struct to one of the Geant3
 // common blocks /gctrak/. In the real life, this common will be filled
 // by Geant3 at each step and only the Tree Fill function should be called.
