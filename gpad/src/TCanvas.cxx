@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.24 2001/06/06 07:32:34 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.25 2001/06/07 10:51:26 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -472,7 +472,7 @@ void TCanvas::Build()
       Int_t dum1, dum2;
       gVirtualX->GetGeometry(fCanvasID, dum1, dum2, fCw, fCh);
 
-      fContextMenu = new TContextMenu( "ContextMenu" );
+      fContextMenu = new TContextMenu("ContextMenu");
    }
    gROOT->GetListOfCanvases()->Add(this);
 
@@ -536,7 +536,7 @@ void TCanvas::Destructor()
 
    if (!TestBit(kNotDeleted)) return;
 
-   if (fContextMenu) { delete fContextMenu; fContextMenu = 0;}
+   if (fContextMenu) { delete fContextMenu; fContextMenu = 0; }
    if (!gPad) return;
 
    Close();
@@ -1109,7 +1109,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       pad = Pick(px, py, prevSelObj);
       if (!pad) return;
 
-      if (fContextMenu)
+      if (fContextMenu && !fSelected->TestBit(kNoContextMenu) &&
+          !pad->TestBit(kNoContextMenu) && !TestBit(kNoContextMenu))
           fContextMenu->Popup(px, py, fSelected, this, pad);
 
       break;
