@@ -1,4 +1,4 @@
-// $Id: TGWin32VirtualXProxy.h,v 1.6 2004/06/11 15:59:10 brun Exp $
+// $Id: TGWin32VirtualXProxy.h,v 1.7 2004/06/14 08:01:57 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -29,8 +29,10 @@
 #endif
 
 class TGWin32;
-////////////////////////////////////////////////////////////////////////////////
+
+
 class TGWin32VirtualXProxy: public TVirtualX , public TGWin32ProxyBase {
+
 friend class TGWin32;
 
 protected:
@@ -127,7 +129,7 @@ public:
    Font_t    GetTextFont()  const;
    Float_t   GetTextSize()  const;
    void      UpdateWindow(Int_t mode);
-   void      Warp(Int_t ix, Int_t iy);
+   void      Warp(Int_t ix, Int_t iy, Window_t id = 0);
    Int_t     WriteGIF(char *name);
    void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
    void      GetWindowAttributes(Window_t id, WindowAttributes_t &attr);

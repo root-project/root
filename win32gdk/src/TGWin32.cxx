@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.80 2004/07/08 07:23:37 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.81 2004/07/23 13:30:10 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -4060,19 +4060,25 @@ void TGWin32::UpdateWindow(int mode)
 }
 
 //______________________________________________________________________________
-void TGWin32::Warp(int ix, int iy)
+void TGWin32::Warp(int ix, int iy, Window_t id)
 {
    // Set pointer position.
    // ix       : New X coordinate of pointer
    // iy       : New Y coordinate of pointer
-   // (both coordinates are relative to the origin of the current window)
+   // Coordinates are relative to the origin of the window id
+   // or to the origin of the current window if id == 0.
 
    POINT cpt, tmp;
-   HWND dw = (HWND) GDK_DRAWABLE_XID((GdkWindow *)gCws->window);
+   HWND dw;
+   if (!id)
+      dw = (HWND) GDK_DRAWABLE_XID((GdkWindow *)gCws->window);
+   else
+      dw = (HWND) GDK_DRAWABLE_XID((GdkWindow *)id);
    GetCursorPos(&cpt);
    tmp.x = ix > 0 ? ix : cpt.x;
    tmp.y = iy > 0 ? iy : cpt.y;
    ClientToScreen(dw, &tmp);
+   SetCursorPos(tmp.x, tmp.y);
 }
 
 //______________________________________________________________________________
@@ -4489,7 +4495,7 @@ void TGWin32::RaiseWindow(Window_t id)
 
    HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
    if (GDK_DRAWABLE_TYPE((GdkWindow *)id) == GDK_WINDOW_TEMP) {
-       ::SetWindowPos(window, HWND_TOPMOST,  0, 0, 0, 0, 
+       ::SetWindowPos(window, HWND_TOPMOST,  0, 0, 0, 0,
                       SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
    }
    else {
@@ -4504,7 +4510,7 @@ void TGWin32::LowerWindow(Window_t id)
    // Lower window so it lays below all its siblings.
 
    HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
-   ::SetWindowPos(window, HWND_BOTTOM, 0, 0, 0, 0, 
+   ::SetWindowPos(window, HWND_BOTTOM, 0, 0, 0, 0,
                   SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
 }
 

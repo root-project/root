@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.26 2004/05/10 12:08:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.27 2004/06/11 13:34:34 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -146,7 +146,7 @@ public:
    virtual void      SetTextMagnitude(Float_t mgn);
    virtual void      SetTextSize(Float_t textsize);
    virtual void      UpdateWindow(Int_t mode);
-   virtual void      Warp(Int_t ix, Int_t iy);
+   virtual void      Warp(Int_t ix, Int_t iy, Window_t id = 0);
    virtual Int_t     WriteGIF(char *name);
    virtual void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
 

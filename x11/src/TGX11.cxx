@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.38 2004/03/10 14:43:10 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.39 2004/04/08 14:05:18 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -3032,15 +3032,20 @@ void TGX11::UpdateWindow(int mode)
 }
 
 //______________________________________________________________________________
-void TGX11::Warp(int /*ix*/, int /*iy*/)
+void TGX11::Warp(Int_t ix, Int_t iy, Window_t id)
 {
    // Set pointer position.
    // ix       : New X coordinate of pointer
    // iy       : New Y coordinate of pointer
-   // (both coordinates are relative to the origin of the current window)
+   // Coordinates are relative to the origin of the window id
+   // or to the origin of the current window if id == 0.
 
-   // Causes problems when calling ProcessEvents()... BadWindow
-   //XWarpPointer(fDisplay, None, gCws->window, 0, 0, 0, 0, ix, iy);
+   if (!id) {
+      // Causes problems when calling ProcessEvents()... BadWindow
+      //XWarpPointer(fDisplay, None, gCws->window, 0, 0, 0, 0, ix, iy);
+   } else {
+      XWarpPointer(fDisplay, None, (Window) id, 0, 0, 0, 0, ix, iy);
+   }
 }
 
 //______________________________________________________________________________
@@ -3057,7 +3062,7 @@ void TGX11::WritePixmap(int wid, unsigned int w, unsigned int h, char *pxname)
    hval = h;
 
    gTws = &fWindows[wid];
-   XWriteBitmapFile(fDisplay,pxname,gTws->drawing,wval,hval,-1,-1);
+   XWriteBitmapFile(fDisplay, pxname, gTws->drawing, wval, hval, -1, -1);
 }
 
 

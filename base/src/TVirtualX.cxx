@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.7 2004/04/06 16:40:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.8 2004/06/11 13:34:34 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -760,12 +760,13 @@ void TVirtualX::UpdateWindow(Int_t /*mode*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::Warp(Int_t /*ix*/, Int_t /*iy*/)
+void TVirtualX::Warp(Int_t /*ix*/, Int_t /*iy*/, Window_t /*id*/)
 {
    // Sets the pointer position.
    // ix - new X coordinate of pointer
    // iy - new Y coordinate of pointer
-   // (both coordinates are relative to the origin of the current window)
+   // Coordinates are relative to the origin of the window id
+   // or to the origin of the current window if id == 0.
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.20 2004/04/06 16:40:32 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.21 2004/06/11 13:34:34 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -233,7 +233,7 @@ public:
    virtual void SetTextSize(Float_t textsize);
    void      Sync(Int_t mode);
    void      UpdateWindow(Int_t mode);
-   void      Warp(Int_t ix, Int_t iy);
+   void      Warp(Int_t ix, Int_t iy, Window_t id = 0);
    Int_t     WriteGIF(char *name);
    void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
 

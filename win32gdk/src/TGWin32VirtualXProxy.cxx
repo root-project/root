@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.4 2004/04/06 16:40:32 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.6 2004/06/14 08:01:57 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 
@@ -136,7 +136,7 @@ VOID_METHOD_ARG1(VirtualX,glClearIndex,Float_t,param,1)
 VOID_METHOD_ARG1(VirtualX,glLoadMatrixd,const Double_t*,matrix,1)
 VOID_METHOD_ARG1(VirtualX,glMultMatrixd,const Double_t*,matrix,1)
 VOID_METHOD_ARG1(VirtualX,glColor3fv,const Float_t*,color,1)
-VOID_METHOD_ARG2(VirtualX,Warp,Int_t,ix,Int_t,iy,1)
+VOID_METHOD_ARG3(VirtualX,Warp,Int_t,ix,Int_t,iy,Window_t,id,1)
 VOID_METHOD_ARG2(VirtualX,SetCharacterUp,Float_t,chupx,Float_t,chupy,1)
 VOID_METHOD_ARG2(VirtualX,ChangeGC,GContext_t,gc,GCValues_t*,gval,1)
 VOID_METHOD_ARG2(VirtualX,SetDoubleBuffer,Int_t,wid,Int_t,mode,1)
