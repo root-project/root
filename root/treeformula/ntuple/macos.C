@@ -1,6 +1,6 @@
 void macos(char* name)
 {
-  static Char_t cHead1[9]="123456789"; 
+  static Char_t cHead1[10]="123456789"; 
   static UShort_t nCh2=33000;
 
   //open root file for output
