@@ -297,9 +297,9 @@ endif
 ifeq ($(ARCH),linux)
 # Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
 CXX           = g++
-CXXFLAGS      = -O -Wall -fPIC
+CXXFLAGS      = -g -O -Wall -fPIC
 LD            = g++
-LDFLAGS       = -O
+LDFLAGS       = -g -O
 SOFLAGS       = -shared
 endif
 

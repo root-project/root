@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.116 2003/01/29 16:49:31 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.117 2003/02/07 09:04:53 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3033,7 +3033,7 @@ Int_t THistPainter::PaintInit()
                fval = f1->Eval(xv[0],0,0);
                ymax = TMath::Max(ymax,fval);
                if (Hoption.Logy) {
-                  if (fval > 0.3*c1) ymin = TMath::Min(ymin,fval);
+                  if (c1 > 0 && fval > 0.3*c1) ymin = TMath::Min(ymin,fval);
                }
             }
          }
