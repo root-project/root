@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.4 2000/09/05 08:50:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.5 2000/09/08 07:33:29 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -59,14 +59,15 @@ class TObjArray;
 class TMethod;
 class TTimer;
 
-//----- client flags
+
+//----- Global bits (can be set for any object and should not be reused).
+//----- Bits 0 - 13 are reserved as global bits. Bits 14 - 23 can be used
+//----- in different class hierarchies (make sure there is no overlap in
+//----- any given hierarchy).
 enum EObjBits {
    kCanDelete        = BIT(0),   // if object in a list can be deleted
-   kObjIsParent      = BIT(1),   // if hyperlink is parent of linked list (TLink)
-   kObjIsPersistent  = BIT(2),   // if datamember is persistent (TDataMember)
-   kObjInCanvas      = BIT(3),   // if object has been inserted in a pad/canvas
-   kMustCleanup      = BIT(3),   // if object destructor must call Cleanups RecursiveRemove
-   kDoneByView       = BIT(5),   // if object was created by the TObjectView
+   kMustCleanup      = BIT(3),   // if object destructor must call RecursiveRemove()
+   kObjInCanvas      = BIT(3),   // for backward compatibility only, use kMustCleanup
    kCannotPick       = BIT(6),   // if object in a pad cannot be picked
    kInvalidObject    = BIT(13)   // if object ctor succeeded but object should not be used
 };
@@ -88,7 +89,7 @@ protected:
 #endif
 
 public:
-   //----- private flags, clients can only test but not change them
+   //----- Private bits, clients can only test but not change them
    enum {
       kIsOnHeap      = 0x01000000,    // object is on heap
       kNotDeleted    = 0x02000000,    // object has not been deleted
