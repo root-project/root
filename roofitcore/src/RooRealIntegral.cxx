@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.58 2002/04/12 18:25:31 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.59 2002/05/03 21:54:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -528,7 +528,7 @@ Double_t RooRealIntegral::evaluate() const
   switch (_operMode) {
     
   case Hybrid: 
-    {
+    {      
       // Find any function dependents that are AClean 
       // and switch them temporarily to ADirty
       prepareACleanFunc() ;
@@ -568,7 +568,9 @@ Double_t RooRealIntegral::evaluate() const
 
   case PassThrough:
     {
-      retVal= _function.arg().getVal(_funcNormSet) ;
+      setDirtyInhibit(kTRUE) ;
+      retVal= _function.arg().getVal(_funcNormSet) ;      
+      setDirtyInhibit(kFALSE) ;
       break ;
     }
   }
