@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.9 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.10 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -16,6 +16,8 @@
 #include "TEllipse.h"
 #include "TVirtualPad.h"
 #include "TMath.h"
+
+const Double_t kPI = 3.14159265358979323846;
 
 ClassImp(TEllipse)
 
@@ -110,15 +112,14 @@ Int_t TEllipse::DistancetoPrimitive(Int_t px, Int_t py)
 //  The distance is computed in pixels units.
 //
 
-   const Double_t PI = TMath::Pi();
     Double_t x = gPad->AbsPixeltoX(px);
     Double_t y = gPad->AbsPixeltoY(py);
 
     Double_t dxnr = x - GetX1();
     Double_t dynr = y - GetY1();
 
-    Double_t ct = TMath::Cos(PI*GetTheta()/180.0);
-    Double_t st = TMath::Sin(PI*GetTheta()/180.0);
+    Double_t ct = TMath::Cos(kPI*GetTheta()/180.0);
+    Double_t st = TMath::Sin(kPI*GetTheta()/180.0);
 
     Double_t dx =  dxnr*ct + dynr*st;
     Double_t dy = -dxnr*st + dynr*ct;
@@ -181,7 +182,6 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Int_t kMaxDiff = 10;
    const Int_t kMinSize = 25;
    const Int_t np = 40;
-   const Double_t PI = 3.141592;
    static Int_t x[np+2], y[np+2];
    static Int_t px1,py1,npe,R1,R2,sav1,sav2;
    static Int_t pxold, pyold;
@@ -198,11 +198,11 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Down:
       gVirtualX->SetLineColor(-1);
       TAttLine::Modify();
-      dphi = (fPhimax-fPhimin)*PI/(180*np);
-      ct   = TMath::Cos(PI*fTheta/180);
-      st   = TMath::Sin(PI*fTheta/180);
+      dphi = (fPhimax-fPhimin)*kPI/(180*np);
+      ct   = TMath::Cos(kPI*fTheta/180);
+      st   = TMath::Sin(kPI*fTheta/180);
       for (i=0;i<np;i++) {
-         angle = fPhimin*PI/180 + Double_t(i)*dphi;
+         angle = fPhimin*kPI/180 + Double_t(i)*dphi;
          dx    = fR1*TMath::Cos(angle);
          dy    = fR2*TMath::Sin(angle);
          x[i]  = gPad->XtoAbsPixel(fX1 + dx*ct - dy*st);
@@ -351,11 +351,11 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (T || B || L || R) {
          gVirtualX->SetLineColor(-1);
          TAttLine::Modify();
-         dphi = (fPhimax-fPhimin)*PI/(180*np);
-         ct   = TMath::Cos(PI*fTheta/180);
-         st   = TMath::Sin(PI*fTheta/180);
+         dphi = (fPhimax-fPhimin)*kPI/(180*np);
+         ct   = TMath::Cos(kPI*fTheta/180);
+         st   = TMath::Sin(kPI*fTheta/180);
          for (i=0;i<np;i++) {
-            angle = fPhimin*PI/180 + Double_t(i)*dphi;
+            angle = fPhimin*kPI/180 + Double_t(i)*dphi;
             dx    = R1*TMath::Cos(angle);
             dy    = R2*TMath::Sin(angle);
             x[i]  = px1 + Int_t(dx*ct - dy*st);
@@ -444,17 +444,16 @@ void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phi
 //*-*                  ======================================
 
    const Int_t np = 40;
-   const Double_t PI = 3.141592;
    static Double_t x[np+3], y[np+3];
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill attributes only if necessary
 
    Double_t angle,dx,dy;
-   Double_t dphi = (phimax-phimin)*PI/(180*np);
-   Double_t ct   = TMath::Cos(PI*theta/180);
-   Double_t st   = TMath::Sin(PI*theta/180);
+   Double_t dphi = (phimax-phimin)*kPI/(180*np);
+   Double_t ct   = TMath::Cos(kPI*theta/180);
+   Double_t st   = TMath::Sin(kPI*theta/180);
    for (Int_t i=0;i<=np;i++) {
-      angle = phimin*PI/180 + Double_t(i)*dphi;
+      angle = phimin*kPI/180 + Double_t(i)*dphi;
       dx    = fR1*TMath::Cos(angle);
       dy    = fR2*TMath::Sin(angle);
       x[i]  = fX1 + dx*ct - dy*st;
