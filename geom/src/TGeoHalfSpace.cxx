@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.1 2004/08/13 07:38:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.2 2004/08/24 14:04:27 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -109,6 +109,7 @@ Double_t TGeoHalfSpace::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Do
    // compute distance to plane 
    Double_t snxt = TGeoShape::Big();
    Double_t ddotn = dir[0]*fN[0]+dir[1]*fN[1]+dir[2]*fN[2];
+   if (ddotn==0) return snxt;
    snxt = rdotn/ddotn;
    if (snxt<0) return TGeoShape::Big();
    return snxt;  
@@ -131,6 +132,7 @@ Double_t TGeoHalfSpace::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Dou
    // compute distance to plane
    Double_t snxt = TGeoShape::Big();
    Double_t ddotn = dir[0]*fN[0]+dir[1]*fN[1]+dir[2]*fN[2];
+   if (ddotn==0) return snxt;
    snxt = rdotn/ddotn;
    if (snxt<0) return TGeoShape::Big();
    return snxt;  

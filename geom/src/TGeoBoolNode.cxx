@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.12 2004/06/25 11:59:55 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.13 2004/08/13 07:38:11 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -299,7 +299,8 @@ Double_t TGeoUnion::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
    Double_t local[3], master[3], ldir[3], rdir[3];
    memcpy(master, point, 3*sizeof(Double_t));
    Int_t i;
-   Double_t d1=0., d2=0., snxt=0.;
+   Double_t d1=0., d2=0., snxt=0., dd=0.;
+   Double_t epsil = 1.E-8;
    fLeftMat->MasterToLocalVect(dir, &ldir[0]);
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
    fLeftMat->MasterToLocal(point, &local[0]);
@@ -308,25 +309,17 @@ Double_t TGeoUnion::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
    fRightMat->MasterToLocal(point, &local[0]);
    Bool_t inside2 = fRight->Contains(&local[0]);
    if (inside2) d2 = fRight->DistToOut(&local[0], &rdir[0], iact, step, safe);
-   if (inside1 && inside2) {
-      snxt = TMath::Min(d1, d2);
-      for (i=0; i<3; i++) master[i] += (snxt+1E-8)*dir[i];
-      snxt += DistToOut(&master[0], dir, iact, step-snxt, safe)+1E-8;
-      return snxt;
-   }   
-   if (inside1) {
-      snxt = d1;
-      for (i=0; i<3; i++) master[i] += (snxt+1E-8)*dir[i];
-      snxt += DistToOut(&master[0], dir, iact, step-snxt, safe)+1E-8;
-      return snxt;
-   }   
-   if (inside2) {
-      snxt = d2;
-      for (i=0; i<3; i++) master[i] += (snxt+1E-8)*dir[i];
-      snxt += DistToOut(&master[0], dir, iact, step-snxt, safe)+1E-8;
-      return snxt;
-   }
-   return 0;   
+
+   if (inside1 && inside2) snxt = TMath::Min(d1, d2);
+   else if (inside1) snxt = d1;   
+   else if (inside2) snxt = d2;
+   else return 0.;
+
+   for (i=0; i<3; i++) master[i] += (snxt+epsil)*dir[i];
+   dd = DistToOut(&master[0], dir, iact, step-snxt, safe);
+   if (dd > 0.) dd += epsil;
+   snxt += dd;
+   return snxt;
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoUnion::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
@@ -547,17 +540,17 @@ Double_t TGeoSubtraction::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
    // check if inside '-'
    Bool_t inside = fRight->Contains(&local[0]);
-   Double_t epsil = 0;
+   Double_t epsil = 0.;
    while (1) {
       if (inside) {
          // propagate to outside of '-'
          d1 = fRight->DistToOut(&local[0], &rdir[0], iact, step, safe);
          snxt += d1+epsil;
          for (i=0; i<3; i++) master[i] += (d1+1E-8)*dir[i];
+         epsil = 1.E-8;
          // now master outside '-'; check if inside '+'
          fLeftMat->MasterToLocal(&master[0], &local[0]);
          if (fLeft->Contains(&local[0])) return snxt;
-         epsil = 1E-8;
       } 
       // master outside '-' and outside '+' ;  find distances to both
       fLeftMat->MasterToLocal(&master[0], &local[0]);
@@ -570,9 +563,9 @@ Double_t TGeoSubtraction::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
          return snxt;
       }   
       // propagate to '-'
-      for (i=0; i<3; i++) master[i] += (d1+1E-8)*dir[i];
-      epsil = 1E-8;
       snxt += d1+epsil;
+      for (i=0; i<3; i++) master[i] += (d1+1E-8)*dir[i];
+      epsil = 1.E-8;
       // now inside '-' and not inside '+'
       fRightMat->MasterToLocal(&master[0], &local[0]);
       inside = kTRUE;
@@ -838,8 +831,10 @@ Double_t TGeoIntersection::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    Double_t lpt[3], rpt[3], master[3], ldir[3], rdir[3];
    memcpy(master, point, 3*sizeof(Double_t));
    Int_t i;
-   Double_t d1 = 0;
-   Double_t d2 = 0;
+   Double_t d1 = 0.;
+   Double_t d2 = 0.;
+   Double_t dd = 0.;
+   Double_t epsil = 1.E-8;
    fLeftMat->MasterToLocal(point, lpt);
    fRightMat->MasterToLocal(point, rpt);
    fLeftMat->MasterToLocalVect(dir, ldir);
@@ -856,9 +851,11 @@ Double_t TGeoIntersection::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
       if (d2>1E20) return TGeoShape::Big();
    }
    Double_t snext = TMath::Max(d1,d2);   
-   for (i=0; i<3; i++) master[i] += (snext+1E-6)*dir[i];
+   for (i=0; i<3; i++) master[i] += (snext+epsil)*dir[i];
    if (Contains(master)) return snext;
-   snext += DistToIn(master,dir,iact,step,safe)+1E-6;
+   dd = DistToIn(master,dir,iact,step,safe);
+   if (dd > 0.) dd += epsil;
+   snext += dd;
    return snext;
 }      
 
