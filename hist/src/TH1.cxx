@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.91 2002/04/29 17:11:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.88 2002/02/18 23:08:57 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1218,8 +1218,7 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
                Double_t b22= b2*b2*d2;
                if (!b2) { fSumw2.fArray[bin] = 0; continue;}
                if (binomial) {
-                  //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));//this is the formula in Hbook/Hoper1
-                  fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);
+                  fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));
                } else {
                   fSumw2.fArray[bin] = d1*d2*(e1*e1*b2*b2 + e2*e2*b1*b1)/(b22*b22);
                }
@@ -1620,7 +1619,7 @@ Int_t TH1::FindBin(Axis_t x, Axis_t y, Axis_t z)
 }
 
 //______________________________________________________________________________
-Int_t TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t xxmax)
+void TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t xxmax)
 {
 //                     Fit histogram with function fname
 //                     =================================
@@ -1632,12 +1631,12 @@ Int_t TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xx
 //  and calls TH1::Fit(TF1 *f1,...)
 
    TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
-   if (!f1) { Error("Fit", "Unknown function: %s",fname); return -1; }
-   return Fit(f1,option,goption,xxmin,xxmax);
+   if (!f1) { Error("Fit", "Unknown function: %s",fname); return; }
+   Fit(f1,option,goption,xxmin,xxmax);
 }
 
 //______________________________________________________________________________
-Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t xxmax)
+void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t xxmax)
 {
 //                     Fit histogram with function f1
 //                     ==============================
@@ -1744,7 +1743,6 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   Int_t fitResult = 0;
    Int_t i, npar,nvpar,nparx;
    Double_t par, we, al, bl;
    Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
@@ -1779,19 +1777,19 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 
 //   - Get pointer to the function by searching in the list of functions in ROOT
    gF1 = f1;
-   if (!gF1) { Error("Fit", "Pointer to function is null"); return 0; }
+   if (!gF1) { Error("Fit", "Pointer to function is null"); return; }
    npar = gF1->GetNpar();
-   if (npar <=0) { Error("Fit", "Illegal number of parameters = %d",npar); return 0; }
+   if (npar <=0) { Error("Fit", "Illegal number of parameters = %d",npar); return; }
 
 //   - Check that function has same dimension as histogram
    if (gF1->GetNdim() == 1 && GetDimension() > 1) {
-      Error("Fit", "Function %s is not 2-D",f1->GetName()); return 0; }
+      Error("Fit", "Function %s is not 2-D",f1->GetName()); return; }
    if (gF1->GetNdim() == 2 && GetDimension() < 2) {
-      Error("Fit", "Function %s is not 1-D",f1->GetName()); return 0; }
+      Error("Fit", "Function %s is not 1-D",f1->GetName()); return; }
    if (xxmin != xxmax) gF1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
 
 //   - Decode list of options into Foption
-   if (!FitOptionsMake(option)) return 0;
+   if (!FitOptionsMake(option)) return;
    if (xxmin != xxmax) {
       gF1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
       Foption.Range = 1;
@@ -1885,14 +1883,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //   - Perform minimization
    arglist[0] = TVirtualFitter::GetMaxIterations();
    arglist[1] = sumw2*TVirtualFitter::GetPrecision();
-   fitResult = hFitter->ExecuteCommand("MIGRAD",arglist,2);
-   if (fitResult != 0) {
-     //   Abnormal termination, MIGRAD might not have converged on a
-     //   minimum.
-     if (!Foption.Quiet) {
-        Warning("Fit","Abnormal termination of minimization.");
-     }
-   }
+   hFitter->ExecuteCommand("MIGRAD",arglist,2);
    if (Foption.More) {
       hFitter->ExecuteCommand("IMPROVE",arglist,0);
    }
@@ -1964,10 +1955,9 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
          fnew3->SetParent(this);
          fnew3->SetBit(TFormula::kNotGlobal);
       }
-      if (TestBit(kCanDelete)) return fitResult;
+      if (TestBit(kCanDelete)) return;
       if (!Foption.Nograph && GetDimension() < 3) Draw(goption);
   }
-  return fitResult;
 }
 
 //______________________________________________________________________________

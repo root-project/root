@@ -1,7 +1,7 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.36 2002/05/03 14:30:41 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.31 2002/02/23 10:15:21 brun Exp $ */
 
 /*************************************************************************
- * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -38,7 +38,7 @@
 #   define R__HPUX
 #   define R__UNIX
 #   define ANSICPP
-#   ifdef __LP64__
+#   ifdef __ia64
 #      define R__B64
 #   endif
 #   ifndef R__HPUX11
@@ -284,7 +284,6 @@
 #   define R__BYTESWAP
 #endif
 
-
 #ifdef BORLAND
 #   define MSDOS        /* Windows will always stay MSDOS */
 #   define ANSICPP
@@ -333,18 +332,18 @@
 
 /*--- memory and object statistics -------------------------------------------*/
 
-/* #define R__NOSTATS */
+/* #define R__NOSTATS     */
 
 
 /*--- cpp --------------------------------------------------------------------*/
 
 #ifdef ANSICPP
-    /* symbol concatenation operator */
+   /* symbol concatenation operator */
 #   define _NAME1_(name) name
 #   define _NAME2_(name1,name2) name1##name2
 #   define _NAME3_(name1,name2,name3) name1##name2##name3
 
-    /* stringizing */
+   /* stringizing */
 #   define _QUOTE_(name) #name
 
 #else
@@ -357,15 +356,6 @@
 
 #endif
 
-/* produce an indentifier that is almost unique inside a file */
-#ifndef __CINT__
-#   define _R__JOIN_(X,Y) _NAME2_(X,Y)
-#   define _R__UNIQUE_(X) _R__JOIN_(X,__LINE__)
-#else
-    // Currently CINT does not really mind to have duplicates and
-    // does not work correctly as far as merging token is concerned.
-#   define _R__UNIQUE_(X) X
-#endif
 
 /*---- misc ------------------------------------------------------------------*/
 

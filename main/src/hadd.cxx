@@ -3,9 +3,9 @@
   This program will add histograms from a list of root files and write them
   to a target root file. The target file is newly created and must not be
   identical to one of the source files.
-
+  
   Syntax:
-
+  
   hadd targetfile source1 source2 ...
 
   Author: Sven A. Schmidt, sven.schmidt@cern.ch
@@ -14,9 +14,9 @@
   This code is based on the hadd.C example by Rene Brun and Dirk Geppert,
   which had a problem with directories more than one level deep.
   (see macro hadd_old.C for this previous implementation).
-
-  I have tested this macro on rootfiles with one and two dimensional
-  histograms, and two levels of subdirectories. Feel free to send comments
+  
+  I have tested this macro on rootfiles with one and two dimensional 
+  histograms, and two levels of subdirectories. Feel free to send comments 
   or bug reports to me.
 
  */
@@ -26,17 +26,16 @@
 #include "TH1.h"
 #include "TTree.h"
 #include "TKey.h"
-#include "Riostream.h"
 #include <string.h>
-
+#include <iostream.h>
 
 TList *FileList;
 TFile *Target;
 
 void MergeRootfile( TDirectory *target, TList *sourcelist );
-
+ 
 int main( int argc, char **argv ) {
-
+   
   if (argc < 4) {
      printf("******Error in invoking hadd\n");
      printf("===>  hadd targetfile source1 source2 ...\n");
@@ -57,7 +56,7 @@ int main( int argc, char **argv ) {
   }
 
   MergeRootfile( Target, FileList );
-
+  
   return 0;
 }
 
@@ -93,13 +92,13 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
       // correspondant histogram to the one pointed to by "h1"
       TFile *nextsource = (TFile*)sourcelist->After( first_source );
       while ( nextsource ) {
-
+        
         // make sure we are at the correct directory level by cd'ing to path
         nextsource->cd( path );
         TH1 *h2 = (TH1*)gDirectory->Get( h1->GetName() );
         if ( h2 ) {
           h1->Add( h2 );
-          delete h2; // don't know if this is necessary, i.e. if
+          delete h2; // don't know if this is necessary, i.e. if 
                      // h2 is created by the call to gDirectory above.
         }
 
@@ -122,7 +121,7 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
 
     } else {
       // object is of no type that we know or can handle
-      cout << "Unknown object type, name: "
+      cout << "Unknown object type, name: " 
            << obj->GetName() << " title: " << obj->GetTitle() << endl;
     }
 

@@ -48,9 +48,9 @@ endif
 ifeq ($(ARCH),hpuxia64acc)
 # HP-UX 11i 1.5 (IA-64) with aCC
 CXX           = aCC
-CXXFLAGS      = +DD64 -O +Z
+CXXFLAGS      = -O +Z
 LD            = aCC
-LDFLAGS       = +DD64 -O -z
+LDFLAGS       = -O -z
 SOFLAGS       = -b
 endif
 
@@ -196,9 +196,9 @@ endif
 
 ifeq ($(ARCH),sgikcc)
 # SGI with KCC
-CXX           = KCC -n32 --one_instantiation_per_object
+CXX           = KCC -n32 --no_exceptions --one_instantiation_per_object
 CXXFLAGS      = -O
-LD            = KCC -n32
+LD            = KCC -n32 --no_exceptions
 LDFLAGS       = -O
 SOFLAGS       =
 endif
@@ -314,7 +314,7 @@ endif
 ifeq ($(ARCH),linuxicc)
 # Linux with Intel icc compiler
 CXX           = icc
-CXXFLAGS      = -O
+CXXFLAGS      = -O -KPIC
 LD            = icc
 LDFLAGS       = -O
 SOFLAGS       = -shared
@@ -350,7 +350,7 @@ endif
 ifeq ($(ARCH),linuxia64ecc)
 # Itanium Linux with Intel ecc
 CXX           = ecc
-CXXFLAGS      = -O
+CXXFLAGS      = -O -KPIC
 LD            = ecc
 LDFLAGS       = -O -i_dynamic
 SOFLAGS       = -shared
@@ -410,7 +410,8 @@ LDFLAGS       = -O -Xlinker -bind_at_load -flat_namespace
 # The SOFLAGS will be used to create the .dylib; the .so will
 # be created separately
 DllSuf        = dylib
-SOFLAGS       = -dynamiclib -flat_namespace -undefined suppress
+SOFLAGS       = -dynamiclib -flat_namespace -undefined suppress -nostdlib \
+                $(ROOTSYS)/lib/macosx-fpsave.o
 endif
 
 ifeq ($(ARCH),hiux)

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.27 2002/02/25 16:05:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.26 2002/02/18 23:09:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1255,9 +1255,6 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 //   is set to the number of entries of the 2-D histogram, otherwise
 //   the number of entries is incremented by 1 for all non empty cells.
 //
-//   To make the projection in X of the underflow bin in Y, use firstybin=lastybin=0;
-//   To make the projection in X of the overflow bin in Y, use firstybin=lastybin=ny+1;
-//
 //   if option "e" is specified, the errors are computed.
 //   if option "d" is specified, the projection is drawn in the current pad.
 //
@@ -1267,8 +1264,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstybin < 0) firstybin = 1;
-  if (lastybin > 9000) lastybin = ny;
-  if (lastybin > ny+1) lastybin = ny;
+  if (lastybin > ny) lastybin = ny;
 
 // Create the projection histogram
   char *pname = (char*)name;
@@ -1329,9 +1325,6 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
 //   is set to the number of entries of the 2-D histogram, otherwise
 //   the number of entries is incremented by 1 for all non empty cells.
 //
-//   To make the projection in Y of the underflow bin in X, use firstxbin=lastxbin=0;
-//   To make the projection in Y of the overflow bin in X, use firstxbin=lastxbin=nx+1;
-//
 //   if option "e" is specified, the errors are computed.
 //   if option "d" is specified, the projection is drawn in the current pad.
 //
@@ -1341,8 +1334,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstxbin < 0) firstxbin = 1;
-  if (lastxbin > 9000) lastxbin = nx;
-  if (lastxbin > nx+1) lastxbin = nx;
+  if (lastxbin > nx) lastxbin = nx;
 
 // Create the projection histogram
   char *pname = (char*)name;

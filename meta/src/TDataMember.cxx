@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.10 2002/02/22 10:44:01 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.9 2002/02/21 15:40:08 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -652,9 +652,6 @@ TMethodCall *TDataMember::SetterMethod(TClass *cl)
       if (strstr(settername, "Is")) sprintf(settername, "Set%s", dataname+3);
       if (GetClass()->GetMethod(settername, "1"))
          fValueSetter = new TMethodCall(cl, settername, "1");
-      if (!fValueSetter)
-         if (GetClass()->GetMethod(settername, "true"))
-            fValueSetter = new TMethodCall(cl, settername, "true");
    }
 
    return fValueSetter;

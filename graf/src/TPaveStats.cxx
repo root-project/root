@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.11 2002/03/22 15:58:43 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.10 2002/03/16 18:41:41 rdm Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -125,7 +125,7 @@ void TPaveStats::Paint(Option_t *option)
    TIter next(fLines);
    Double_t longest = 0, titlelength = 0;
    Double_t w, wtok[2];
-   char *st, *sl=0;
+   char *st, *sl;
    if (textsize == 0)  {
       textsize = 0.85*yspace/(y2 - y1);
       titlesize = textsize;
@@ -153,7 +153,6 @@ void TPaveStats::Paint(Option_t *option)
                titlelength = latex->GetXsize()+2.*margin;
                if (titlelength > 0.98*dx) titlesize *= 0.98*dx/titlelength;
             }
-            delete [] sl; sl = 0;
          }
       }
       longest = wtok[0]+wtok[1]+2.*margin;

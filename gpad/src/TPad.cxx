@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.75 2002/04/08 10:46:31 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.73 2002/04/02 15:28:32 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3532,7 +3532,7 @@ void TPad::Print(const char *filename, Option_t *option)
 //*-*      ==============================================
 //
 //   if option  =  0   - as "ps"
-//               "ps"  - Postscript file is produced (see special cases below)
+//               "ps"  - Postscript file is produced
 //               "eps" - an Encapsulated Postscript file is produced
 //               "gif" - a GIF file is produced
 //               "cxx" - a C++ macro file is produced
@@ -3558,27 +3558,6 @@ void TPad::Print(const char *filename, Option_t *option)
 //
 //  To generate a Postscript file containing more than one picture, see
 //  class TPostScript.
-//
-//   Writing several canvases to the same Postscript file
-//   ----------------------------------------------------
-// if the Postscript file name finishes with "(", the file is not closed
-// if the Postscript file name finishes with ")" and the file has been opened
-//    with "(", the file is closed. Example:
-// {
-//    TCanvas c1("c1");
-//    h1.Draw();
-//    c1.Print("c1.ps("); //write canvas and keep the ps file open
-//    h2.Draw();
-//    c1.Print("c1.ps"); canvas is added to "c1.ps"
-//    h3.Draw();
-//    c1.Print("c1.ps)"); canvas is added to "c1.ps" and ps file is closed
-// }
-//
-//  Note that the following sequence writes the canvas to "c1.ps" and closes the ps file.:
-//    TCanvas c1("c1");
-//    h1.Draw();
-//    c1.Print("c1.ps");
-//    
 
    char psname[264];
    Int_t lenfil =  filename ? strlen(filename) : 0;
@@ -3586,7 +3565,6 @@ void TPad::Print(const char *filename, Option_t *option)
 
 //*-*   Set the default option as "Postscript" (Should be a data member of TPad)
 
-   
    const char *opt_default="ps";
    if( !opt ) opt = opt_default;
 
@@ -3596,8 +3574,7 @@ void TPad::Print(const char *filename, Option_t *option)
    // line below protected against case like c1->SaveAs( "../ps/cs.ps" );
    if ((psname[0] == '.') && (strchr(psname,'/') == 0)) sprintf(psname,"%s%s",GetName(),filename);
 
-//==============Save pad/canvas as a GIF file==================================
-      if (strstr(opt,"gif")) {
+   if (strstr(opt,"gif")) {
       if (GetCanvas()->IsBatch()) {
          Printf("Cannot create gif file in batch mode.");
          return;
@@ -3611,14 +3588,10 @@ void TPad::Print(const char *filename, Option_t *option)
       return;
    }
 
-
-//==============Save pad/canvas as a C++ script==================================
    if (strstr(opt,"cxx")) {
       GetCanvas()->SaveSource(psname,"");
       return;
    }
-
-//==============Save pad/canvas as a root file==================================
    if (strstr(opt,"root")) {
       TDirectory *dirsav = gDirectory;
       TFile *fsave = new TFile(psname,"RECREATE");
@@ -3630,23 +3603,8 @@ void TPad::Print(const char *filename, Option_t *option)
       return;
    }
 
-
-//==============Save pad/canvas as a Postscript file==================================
-
-   // check if Postscript class is in memory. If not, dynamic link
-   if (gROOT->LoadClass("TPostScript","Postscript")) return;
-   
    // in case we read directly from a Root file and the canvas
    // is not on the screen, set batch mode
-   Bool_t mustOpen  = kTRUE;
-   Bool_t mustClose = kTRUE;
-   char *copen  = strstr(psname,"("); if (copen)  *copen  = 0;
-   char *cclose = strstr(psname,")"); if (cclose) *cclose = 0;
-   gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
-   if (gVirtualPS) {mustOpen = kFALSE; mustClose = kFALSE;}
-   if (copen)  mustClose = kFALSE;
-   if (cclose) mustClose = kTRUE;
-   
    Bool_t noScreen = kFALSE;
    if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
       noScreen = kTRUE;
@@ -3663,39 +3621,17 @@ void TPad::Print(const char *filename, Option_t *option)
    TPad *padsav = (TPad*)gPad;
    cd();
    TVirtualPS *psave = gVirtualPS;
+   // check if Postscript class is in memory. If not, dynamic link
+   if (gROOT->LoadClass("TPostScript","Postscript")) return;
 
-   if (!gVirtualPS || mustOpen) {
-      // Create a new Postscript file
-      gROOT->ProcessLineFast("new TPostScript()");
-      gVirtualPS->SetName(psname);
-      gVirtualPS->Open(psname,pstype);
-      gVirtualPS->SetBit(kPrintingPS);
-      Paint();
-      if (noScreen)  GetCanvas()->SetBatch(kFALSE);
-      Info("TPad::Print", "PostScript file %s has been created", psname);
-      if (mustClose) {
-         gROOT->GetListOfSpecials()->Remove(gVirtualPS);
-         delete gVirtualPS;
-         gVirtualPS = psave;
-      } else {
-         gVirtualPS->PrintStr("@showpage gr"); //only at the end of the first picture
-         gROOT->GetListOfSpecials()->Add(gVirtualPS);
-         gVirtualPS = 0;         
-      }
-   } else {
-      // Append to existing Postscript file
-      gVirtualPS->NewPage();
-      Paint();
-      Info("TPad::Print", "Current canvas added to PostScript file %s", psname);
-      if (mustClose) {
-         gROOT->GetListOfSpecials()->Remove(gVirtualPS);
-         delete gVirtualPS;
-         gVirtualPS = 0;
-      } else {
-         gVirtualPS = 0;         
-      }
-   }
-
+   gROOT->ProcessLineFast("new TPostScript()");
+   gVirtualPS->Open(psname,pstype);
+   gVirtualPS->SetBit(kPrintingPS);
+   Paint();
+   if (noScreen)  GetCanvas()->SetBatch(kFALSE);
+   Info("TPad::Print", "PostScript file %s has been created", psname);
+   delete gVirtualPS;
+   gVirtualPS = psave;
    padsav->cd();
 }
 
@@ -4366,16 +4302,9 @@ void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font,
       gVirtualPS->SetTextColor(color);
       gVirtualPS->SetTextFont(font);
       if (font%10 > 2) {
-         Float_t wh = (Float_t)gPad->XtoPixel(gPad->GetX2());
-         Float_t hh = (Float_t)gPad->YtoPixel(gPad->GetY1());
-         Float_t dy;
-         if (wh < hh)  {
-            dy = AbsPixeltoX(Int_t(tsize)) - AbsPixeltoX(0);
-            tsize = dy/(fX2-fX1);
-         } else {
-            dy = AbsPixeltoY(0) - AbsPixeltoY(Int_t(tsize));
-            tsize = dy/(fY2-fY1);
-         }
+         gVirtualPS->SetTextSize(tsize);
+         Float_t dy = AbsPixeltoY(0) - AbsPixeltoY(Int_t(tsize));
+         tsize = dy/(fY2-fY1);
       }
       gVirtualPS->SetTextSize(tsize);
    }

@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.h,v 1.4 2002/04/19 07:39:30 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.h,v 1.2 2002/02/18 23:11:49 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -32,7 +32,6 @@ class THbookFile : public TNamed {
 
 protected:
    Int_t         fLun;     //Fortran logical unit for this file
-   Int_t         fLrecl;   //Record length in Hbook machine words
    TList        *fList;    //list of objects in memory
    TList        *fKeys;    //list of Hbook keys (Ids) on disk
    TString       fCurDir;  //name of current directory
@@ -67,7 +66,6 @@ public:
    void              InitLeaves(Int_t id, Int_t var, TTreeFormula *formula);
    Bool_t            IsFolder() const { return kTRUE; }
    virtual void      ls(const char *path="") const;
-   virtual void      SetBranchAddress(Int_t id, const char *bname, void *add);
 
    ClassDef(THbookFile,1)  //ROOT interface to Hbook/PAW files
 };

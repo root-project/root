@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.17 2002/03/14 17:32:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.16 2002/02/25 23:08:01 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -94,7 +94,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 
    gROOT->GetListOfStyles()->Add(this);
 
-   //may be a standard style to be initialized
+   //may be a standard style to be initialyzed
    if (strcmp(name,"Plain") == 0) {
       SetFrameBorderMode(0);
       SetCanvasBorderMode(0);
@@ -102,9 +102,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetPadColor(0);
       SetCanvasColor(0);
       SetTitleColor(0);
-      SetTitleBorderSize(1);
       SetStatColor(0);
-      SetStatBorderSize(1);
       return;
    }
    if (strcmp(name,"Bold") == 0) {

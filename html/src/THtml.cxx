@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.20 2002/04/17 21:14:38 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.17 2002/01/31 07:27:11 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -265,7 +265,7 @@ enum EFileType { kSource, kInclude, kTree };
 //   Root.Html.HomePage     ( default: ) - URL to the user defined home page
 //   Root.Html.Header       ( default: ) - location of user defined header
 //   Root.Html.Footer       ( default: ) - location of user defined footer
-//   Root.Html.Root         ( default: ) - URL of Root's class documentation
+//   Root.Htnl.Root         ( default: ) - URL of Root's class documentation
 //   Root.Html.SearchEngine ( default: ) - link to the search engine
 //   Root.Html.XWho         ( default: http://consult.cern.ch/xwho/people?) - URL stem of CERN's xWho system
 //
@@ -394,14 +394,11 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
    gROOT->GetListOfGlobals(kTRUE);
 
    // create a filename
-   char classname[1024];
-   strcpy(classname, classPtr->GetName());
-   NameSpace2FileName(classname);
-
    char *tmp1 = gSystem->ExpandPathName(fOutputDir);
-   char *tmp2 = gSystem->ConcatFileName(tmp1, classname);
+   char *tmp2 = gSystem->ConcatFileName(tmp1, classPtr->GetName());
 
    char *filename = StrDup(tmp2, 6);
+   NameSpace2FileName(filename);
    strcat(filename, ".html");
 
    if (tmp1)
@@ -431,8 +428,8 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
          classFile << "<center>" << endl;
          classFile << "<h1>" << classPtr->GetName() << "</h1>" << endl;
          classFile << "<hr width=300>" << endl;
-         classFile << "<!--SDL--><em><a href=\"#" << classPtr->GetName()
-             << ":description\">class description</a>";
+         classFile << "<!--SDL--><em><a href=#" << classPtr->GetName()
+             << ":description>class description</a>";
 
          // make a link to the '.cxx' file
          char *cClassFileName = StrDup(classPtr->GetName());
@@ -942,11 +939,9 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
       if (gSystem->AccessPathName(dirname))
          gSystem->MakeDirectory(dirname);
 
-      char classname[1024];
-      strcpy(classname, classPtr->GetName());
-      NameSpace2FileName(classname);
-      tmp1 = gSystem->ConcatFileName(dirname, classname);
+      tmp1 = gSystem->ConcatFileName(dirname, classPtr->GetName());
       filename = StrDup(tmp1, 16);
+      NameSpace2FileName(filename);
       strcat(filename, ".cxx.html");
 
       ofstream tempFile;
@@ -1485,15 +1480,12 @@ void THtml::ClassTree(TVirtualPad * psCanvas, TClass * classPtr,
 //
 
    if (psCanvas && classPtr) {
-      char classname[1024];
-      strcpy(classname, classPtr->GetName());
-      NameSpace2FileName(classname);
-
       char *tmp1 =
           gSystem->ConcatFileName(gSystem->ExpandPathName(fOutputDir),
-                                  classname);
+                                  classPtr->GetName());
       char *filename = StrDup(tmp1, 16);
 
+      NameSpace2FileName(filename);
 
       strcat(filename, "_Tree.ps");
 
@@ -1794,6 +1786,7 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
       }
 
       indexFile << "<hr>" << endl;
+      indexFile << "<pre>" << endl;
       indexFile << "<ul>" << endl;
 
       // loop on all classes
@@ -1802,7 +1795,7 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
          // get class
          TClass *classPtr = GetClass((const char *) classNames[i]);
 
-         indexFile << "<li><tt>";
+         indexFile << "<li>";
          char *htmlFile = GetHtmlFileName(classPtr);
          if (htmlFile) {
             indexFile << "<a name=\"";
@@ -1815,7 +1808,7 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
             delete[]htmlFile;
             htmlFile = 0;
          } else
-	    indexFile << classNames[i];
+            indexFile << classNames[i];
 
 
          // write title
@@ -1828,10 +1821,12 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
          indexFile << classPtr->GetName();
          indexFile << "\">";
          ReplaceSpecialChars(indexFile, classPtr->GetTitle());
-         indexFile << "</a></tt>" << endl;
+         indexFile << "</a>" << endl;
       }
 
       indexFile << "</ul>" << endl;
+      indexFile << "</pre>" << endl;
+
 
       // write indexFile footer
       TDatime date;
@@ -1881,12 +1876,7 @@ void THtml::CreateIndexByTopic(char **fileNames, Int_t numberOfNames,
          char *underlinePtr = strrchr(filename, '_');
          *underlinePtr = 0;
 
-	 char htmltitle[1024];
-	 strcpy(htmltitle, "Index of ");
-	 strcat(htmltitle, GetFileName(filename));
-	 strcat(htmltitle, " classes");
-         
-	 strcat(filename, "_Index.html");
+         strcat(filename, "_Index.html");
 
          // open a file
          outputFile.open(filename, ios::out);
@@ -1897,8 +1887,9 @@ void THtml::CreateIndexByTopic(char **fileNames, Int_t numberOfNames,
             Printf(formatStr, "", fCounter, filename);
 
             // write outputFile header
-            WriteHtmlHeader(outputFile, htmltitle);
-            outputFile << "<h2>" << htmltitle << "</h2><hr>" << endl;
+            WriteHtmlHeader(outputFile, "Index");
+            outputFile << "<h2>" << "Index" << "</h2><hr>" << endl;
+            outputFile << "<pre>" << endl;
             outputFile << "<ul>" << endl;
          } else
             Error("MakeIndex", "Can't open file '%s' !", filename);
@@ -1910,7 +1901,7 @@ void THtml::CreateIndexByTopic(char **fileNames, Int_t numberOfNames,
       if (classPtr) {
 
          // write a classname to an index file
-         outputFile << "<li><tt>";
+         outputFile << "<li>";
 
          char *htmlFile = GetHtmlFileName(classPtr);
 
@@ -1938,7 +1929,7 @@ void THtml::CreateIndexByTopic(char **fileNames, Int_t numberOfNames,
          outputFile << classPtr->GetName();
          outputFile << "\">";
          ReplaceSpecialChars(outputFile, classPtr->GetTitle());
-         outputFile << "</a></tt>" << endl;
+         outputFile << "</a>" << endl;
       } else
          Error("MakeIndex", "Unknown class '%s' !",
                strchr(fileNames[i], '_') + 1);
@@ -1962,6 +1953,7 @@ void THtml::CreateIndexByTopic(char **fileNames, Int_t numberOfNames,
          if (outputFile.good()) {
 
             outputFile << "</ul>" << endl;
+            outputFile << "</pre>" << endl;
 
             // write outputFile footer
             TDatime date;
@@ -2189,7 +2181,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
             ReplaceSpecialChars(out, *keyword);
          else
             // protect html code from special chars
-            if ((unsigned char)*keyword>31)
+            if (*keyword>31)
                if (*keyword=='<'){
                   if (keyword==strstr(keyword,"<pre>")
                       || keyword==strstr(keyword,"<PRE>"))
@@ -2353,9 +2345,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
 
             if (htmlFile) {
                out << "<a href=\"";
-               if (*dir  
-		  && ( strncmp(htmlFile, "http://", 7) 
-		       || strncmp(htmlFile, "https://", 8)))
+               if (*dir && strncmp(htmlFile, "http://", 7))
                   out << dir;
                out << htmlFile;
 
@@ -2455,9 +2445,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
 
                      if (htmlFile) {
                         out << "<a href=\"";
-                        if (*dir 
-			   && (strncmp(htmlFile, "http://", 7)
-			       || strncmp(htmlFile, "https://", 8)))
+                        if (*dir && strncmp(htmlFile, "http://", 7))
                            out << dir;
                         out << htmlFile;
                         if (cl->GetDataMember(keyword)) {
@@ -2488,9 +2476,8 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                               char *htmlFile2 = GetHtmlFileName(cm);
                               if (htmlFile2) {
                                  out << "<a href=\"";
-                                 if (*dir 
-                                     && (strncmp(htmlFile2, "http://", 7)
-				         || strncmp(htmlFile2, "https://", 8)))
+                                 if (*dir
+                                     && strncmp(htmlFile2, "http://", 7))
                                     out << dir;
                                  out << htmlFile2;
                                  out << "#" << cm->GetName() << ":";
@@ -2762,7 +2749,7 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
 
    Bool_t ret = kTRUE;
 
-   char sourceFile[1024], filename[1024], classname[1024];
+   char sourceFile[1024], filename[1024];
    char *strPtr, *strPtr2;
 
    switch (type) {
@@ -2781,10 +2768,9 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
 #else
       strcat(filename, "/");
 #endif
-      strcpy(classname,classPtr->GetName());
-      NameSpace2FileName(classname);
-      strcat(filename, classname);
+      strcat(filename, classPtr->GetName());
       strcat(filename, ".cxx.html");
+      NameSpace2FileName(filename);
       break;
 
    case kInclude:
@@ -2804,12 +2790,11 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
       strPtr2 = GetSourceFileName(classPtr->GetDeclFileName());
       if (strPtr2)
          strcpy(sourceFile, strPtr2);
-      strcpy(classname, classPtr->GetName());
-      NameSpace2FileName(classname);
-      strPtr = 
+      strPtr =
           gSystem->ConcatFileName(gSystem->ExpandPathName(fOutputDir),
-                                  classname);
+                                  GetFileName(classPtr->GetName()));
       strcpy(filename, strPtr);
+      NameSpace2FileName(filename);
       delete[]strPtr;
       delete[]strPtr2;
       strcat(filename, "_Tree.ps");
@@ -2940,9 +2925,7 @@ void THtml::MakeClass(const char *className, Bool_t force)
 
    if (classPtr) {
       char *htmlFile = GetHtmlFileName(classPtr);
-      if (htmlFile 
-	  && !(strncmp(htmlFile, "http://", 7)
-	       || strncmp(htmlFile, "https://", 8))) {
+      if (htmlFile && !strncmp(htmlFile, "http://", 7)) {
          delete[]htmlFile;
          htmlFile = 0;
       }
@@ -3060,9 +3043,7 @@ void THtml::MakeTree(const char *className, Bool_t force)
    if (classPtr) {
 
       char *htmlFile = GetHtmlFileName(classPtr);
-      if (htmlFile 
-	  && !(strncmp(htmlFile, "http://", 7)
-	       || strncmp(htmlFile, "https://", 8))) {
+      if (htmlFile && !strncmp(htmlFile, "http://", 7)) {
          delete[]htmlFile;
          htmlFile = 0;
       }
@@ -3545,8 +3526,7 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
       if (*userHomePage) {
          out << "<a href=\"";
          if (*dir) {
-            if (strncmp(userHomePage, "http://", 7)
-		|| strncmp(userHomePage, "https://", 8))
+            if (strncmp(userHomePage, "http://", 7))
                out << dir;
          }
          out << userHomePage;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.39 2002/04/01 17:19:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.38 2002/03/13 01:55:02 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -436,7 +436,7 @@ void TObject::Dump() const
 }
 
 //______________________________________________________________________________
-void TObject::Execute(const char *method, const char *params, Int_t *error)
+void TObject::Execute(const char *method, const char *params, int* error)
 {
    // Execute method on this object with the given parameter string, e.g.
    // "3.14,1,\"text\"".
@@ -449,7 +449,7 @@ void TObject::Execute(const char *method, const char *params, Int_t *error)
 }
 
 //______________________________________________________________________________
-void TObject::Execute(TMethod *method, TObjArray *params, Int_t *error)
+void TObject::Execute(TMethod *method, TObjArray *params, int* error)
 {
    // Execute method on this object with parameters stored in the TObjArray.
    // The TObjArray should contain an argv vector like:

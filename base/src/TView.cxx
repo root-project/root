@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.9 2002/02/02 11:56:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.8 2001/02/28 11:04:05 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1079,6 +1079,7 @@ void TView::SetRange(const Double_t *min, const Double_t *max)
 //*-*                            ==================
 //*-*
         Int_t irep;
+
         for (Int_t i = 0; i < 3; fRmax[i] = max[i], fRmin[i] = min[i], i++);
         ResetView(fLongitude, fLatitude, fPsi, irep);
         if(irep < 0)
@@ -1163,7 +1164,7 @@ void TView::ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t
 
     FindScope(scale, centre, irep);
     if (irep < 0) {
-        Error("ResetView", "Error in min-max scope");
+        Error("SetView", "Error in min-max scope");
         return;
     }
 
@@ -1299,7 +1300,7 @@ void TView::ToggleZoom(TVirtualPad *pad)
 //_______________________________________________________________________________________
  void TView::AdjustScales(TVirtualPad *pad)
 {
-  // Adjust all sides of view in respect of the biggest one
+  // Adjust all sides of view in respewct of the biggest one
   Double_t min[3],max[3];
   GetRange(min,max);
   int i;
@@ -1321,10 +1322,7 @@ void TView::Centered3DImages(TVirtualPad *pad)
   Double_t min[3],max[3];
   GetRange(min,max);
   int i;
-  for (i=0;i<3; i++) {
-     if (max[i] > 0) min[i] = -max[i];
-     else            max[i] = -min[i];
-  }
+  for (i=0;i<3; i++) min[i]=-max[i];
   SetRange(min,max);
   AdjustPad(pad);
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.3 2002/02/22 10:41:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.2 2002/02/21 15:40:08 rdm Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -44,13 +44,11 @@
 #include "TBrowser.h"
 #include "TRootCanvas.h"
 #include "TRootBrowser.h"
-#include "TClassMenuItem.h"
 
 
 enum {
-   kToggleStart       = 1000, // first id of toggle menu items
-   kToggleListStart   = 2000, // first id of toggle list menu items
-   kUserFunctionStart = 3000  // first id of user added functions/methods, etc...
+   kToggleStart     = 1000, // first id of toggle menu items
+   kToggleListStart = 2000  // first id of toggle list menu items
 };
 
 
@@ -115,124 +113,80 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
 //______________________________________________________________________________
 void TRootContextMenu::CreateMenu(TObject *object)
 {
-   // Create the context menu depending on the selected object.
+   // Create the context menu depending in the selected object.
 
    int entry = 0, toggle = kToggleStart, togglelist = kToggleListStart;
-   int userfunction = kUserFunctionStart;
 
    // Add a title
    AddLabel(fContextMenu->CreatePopupTitle(object));
    AddSeparator();
 
-   // Get list of menu items from the selected object's class
-   TList *menuItemList = object->IsA()->GetMenuList();
+   // Get linked list of objects menu items (i.e. member functions with
+   // the token *MENU in their comment fields.
+   TList *methodList = new TList;
+   object->IsA()->GetMenuItems(methodList);
 
-   TClassMenuItem *menuItem;
-   TIter nextItem(menuItemList);
+   TMethod *method;
+   TClass  *classPtr = 0;
+   TIter next(methodList);
 
-   while ((menuItem = (TClassMenuItem*) nextItem())) {
-      switch (menuItem->GetType()) {
-         case TClassMenuItem::kPopupSeparator:
-            AddSeparator();
+   while ((method = (TMethod*) next())) {
+      if (classPtr != method->GetClass()) {
+         AddSeparator();
+         classPtr = method->GetClass();
+      }
+
+      TDataMember *m;
+      EMenuItemKind menuKind = method->IsMenuItem();
+      switch (menuKind) {
+         case kMenuDialog:
+            AddEntry(method->GetName(), entry++, method);
             break;
-         case TClassMenuItem::kPopupStandardList:
-            {
-               // Standard list of class methods. Rebuild from scratch.
-               // Get linked list of objects menu items (i.e. member functions
-               // with the token *MENU in their comment fields.
-               TList *methodList = new TList;
-               object->IsA()->GetMenuItems(methodList);
+         case kMenuSubMenu:
+            if ((m = method->FindDataMember())) {
+               if (m->GetterMethod()) {
+                  TGPopupMenu *r = new TGPopupMenu(gClient->GetRoot());
+                  AddPopup(method->GetName(), r);
+                  fCleanup->Add(r);
+                  TIter nxt(m->GetOptions());
+                  TOptionListItem *it;
+                  while ((it = (TOptionListItem*) nxt())) {
+                     char  *name  = it->fOptName;
+                     Long_t val   = it->fValue;
 
-               TMethod *method;
-               TClass  *classPtr = 0;
-               TIter next(methodList);
-
-               while ((method = (TMethod*) next())) {
-                  if (classPtr != method->GetClass()) {
-                     AddSeparator();
-                     classPtr = method->GetClass();
-                  }
-
-                  TDataMember *m;
-                  EMenuItemKind menuKind = method->IsMenuItem();
-                  switch (menuKind) {
-                     case kMenuDialog:
-                        AddEntry(method->GetName(), entry++, method);
-                        break;
-                     case kMenuSubMenu:
-                        if ((m = method->FindDataMember())) {
-                           if (m->GetterMethod()) {
-                              TGPopupMenu *r = new TGPopupMenu(gClient->GetRoot());
-                              AddPopup(method->GetName(), r);
-                              fCleanup->Add(r);
-                              TIter nxt(m->GetOptions());
-                              TOptionListItem *it;
-                              while ((it = (TOptionListItem*) nxt())) {
-                                 char  *name  = it->fOptName;
-                                 Long_t val   = it->fValue;
-
-                                 TToggle *t = new TToggle;
-                                 t->SetToggledObject(object, method);
-                                 t->SetOnValue(val);
-                                 fCleanup->Add(t);
-
-                                 r->AddSeparator();
-                                 r->AddEntry(name, togglelist++, t);
-                                 if (t->GetState()) r->CheckEntry(togglelist-1);
-
-                              }
-                           } else {
-                              AddEntry(method->GetName(), entry++, method);
-                           }
-                        }
-                        break;
-
-                     case kMenuToggle:
-                        {
-                           TToggle *t = new TToggle;
-                           t->SetToggledObject(object, method);
-                           t->SetOnValue(1);
-                           fCleanup->Add(t);
-
-                           AddEntry(method->GetName(), toggle++, t);
-                           if (t->GetState()) CheckEntry(toggle-1);
-                        }
-                        break;
-
-                     default:
-                        break;
-                  }
-               }
-               delete methodList;
-            }
-            break;
-         case TClassMenuItem::kPopupUserFunction:
-            {
-               if (menuItem->IsToggle()) {
-                  if (object) {
-                     TMethod* method =
-                           object->IsA()->GetMethodWithPrototype(menuItem->GetFunctionName(),menuItem->GetArgs());
                      TToggle *t = new TToggle;
                      t->SetToggledObject(object, method);
-                     t->SetOnValue(1);
+                     t->SetOnValue(val);
                      fCleanup->Add(t);
 
-                     AddEntry(method->GetName(), toggle++, t);
-                     if (t->GetState()) CheckEntry(toggle-1);
-                  } else {
-                     Warning("Dialog","Cannot use toggle for a global function");
+                     r->AddSeparator();
+                     r->AddEntry(name, togglelist++, t);
+                     if (t->GetState()) r->CheckEntry(togglelist-1);
+
                   }
                } else {
-                  const char* menuItemTitle = menuItem->GetTitle();
-                  if (strlen(menuItemTitle)==0) menuItemTitle = menuItem->GetFunctionName();
-                  AddEntry(menuItemTitle,userfunction++,menuItem);
+                  AddEntry(method->GetName(), entry++, method);
                }
             }
             break;
+
+         case kMenuToggle:
+            {
+               TToggle *t = new TToggle;
+               t->SetToggledObject(object, method);
+               t->SetOnValue(1);
+               fCleanup->Add(t);
+
+               AddEntry(method->GetName(), toggle++, t);
+               if (t->GetState()) CheckEntry(toggle-1);
+            }
+            break;
+
          default:
             break;
       }
    }
+   delete methodList;
 }
 
 //______________________________________________________________________________
@@ -241,27 +195,7 @@ void TRootContextMenu::Dialog(TObject *object, TMethod *method)
    // Create dialog object with OK and Cancel buttons. This dialog
    // prompts for the arguments of "method".
 
-   Dialog(object,(TFunction*)method);
-}
-
-//______________________________________________________________________________
-void TRootContextMenu::Dialog(TObject *object, TFunction *function)
-{
-   // Create dialog object with OK and Cancel buttons. This dialog
-   // prompts for the arguments of "function".
-   // function may be a global function or a method
-
-   Int_t selfobjpos;
-
-   if (!function) return;
-
-   // Position, if it exists, of the argument that correspond to the object itself
-   if (fContextMenu->GetSelectedMenuItem())
-      selfobjpos =  fContextMenu->GetSelectedMenuItem()->GetSelfObjectPos();
-   else selfobjpos = -1;
-
-   TMethod* method;
-   if ((object && function)) method = (TMethod*) function;
+   if (!(object && method)) return;
 
    const TGWindow *w;
    if (fContextMenu->GetSelectedCanvas()) {
@@ -277,99 +211,95 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
    } else
       w = gClient->GetRoot();
 
-   fDialog = new TRootDialog(this, w, fContextMenu->CreateDialogTitle(object, function));
+   fDialog = new TRootDialog(this, w, fContextMenu->CreateDialogTitle(object, method));
 
    // iterate through all arguments and create apropriate input-data objects:
    // inputlines, option menus...
    TMethodArg *argument = 0;
-
-   TIter next(function->GetListOfMethodArgs());
-   Int_t argpos = 0;
+   TIter next(method->GetListOfMethodArgs());
 
    while ((argument = (TMethodArg *) next())) {
-      // Do not input argument for self object
-      if (selfobjpos != argpos) {
-         Text_t       *argname    = fContextMenu->CreateArgumentTitle(argument);
-         const Text_t *type       = argument->GetTypeName();
-         TDataType    *datatype   = gROOT->GetType(type);
-         const Text_t *charstar   = "char*";
-         Text_t        basictype[32];
+      Text_t       *argname    = fContextMenu->CreateArgumentTitle(argument);
+      const Text_t *type       = argument->GetTypeName();
+      TDataType    *datatype   = gROOT->GetType(type);
+      const Text_t *charstar   = "char*";
+      Text_t        basictype[32];
 
-         if (datatype) {
-            strcpy(basictype, datatype->GetTypeName());
-         } else {
-            TClass *cl = gROOT->GetClass(type);
-            if (strncmp(type, "enum", 4) && (cl && !(cl->Property() & kIsEnum)))
-               Warning("Dialog", "data type is not basic type, assuming (int)");
-            strcpy(basictype, "int");
+      if (datatype) {
+         strcpy(basictype, datatype->GetTypeName());
+      } else {
+         TClass *cl = gROOT->GetClass(type);
+         if (strncmp(type, "enum", 4) && (cl && !(cl->Property() & kIsEnum)))
+            Warning("Dialog", "data type is not basic type, assuming (int)");
+         strcpy(basictype, "int");
+      }
+
+      if (strchr(argname, '*')) {
+         strcat(basictype, "*");
+         type = charstar;
+      }
+
+      TDataMember *m = argument->GetDataMember();
+      if (m && m->GetterMethod(object->IsA())) {
+
+         // Get the current value and form it as a text:
+
+         Text_t val[256];
+
+         if (!strncmp(basictype, "char*", 5)) {
+            Text_t *tdefval;
+            m->GetterMethod()->Execute(object, "", &tdefval);
+            strncpy(val, tdefval, 255);
+         } else if (!strncmp(basictype, "float", 5) ||
+                    !strncmp(basictype, "double", 6)) {
+            Double_t ddefval;
+            m->GetterMethod()->Execute(object, "", ddefval);
+            sprintf(val, "%g", ddefval);
+         } else if (!strncmp(basictype, "char", 4) ||
+                    !strncmp(basictype, "int", 3)  ||
+                    !strncmp(basictype, "long", 4) ||
+                    !strncmp(basictype, "short", 5)) {
+            Long_t ldefval;
+            m->GetterMethod()->Execute(object, "", ldefval);
+            sprintf(val, "%li", ldefval);
          }
 
-         if (strchr(argname, '*')) {
-            strcat(basictype, "*");
-            type = charstar;
-         }
+         // Find out whether we have options ...
 
-         TDataMember *m = argument->GetDataMember();
-         if (m && m->GetterMethod(object->IsA())) {
-
-            // Get the current value and form it as a text:
-
-            Text_t val[256];
-
-            if (!strncmp(basictype, "char*", 5)) {
-               Text_t *tdefval;
-               m->GetterMethod()->Execute(object, "", &tdefval);
-               strncpy(val, tdefval, 255);
-            } else if (!strncmp(basictype, "float", 5) ||
-                       !strncmp(basictype, "double", 6)) {
-               Double_t ddefval;
-               m->GetterMethod()->Execute(object, "", ddefval);
-               sprintf(val, "%g", ddefval);
-            } else if (!strncmp(basictype, "char", 4) ||
-                       !strncmp(basictype, "int", 3)  ||
-                       !strncmp(basictype, "long", 4) ||
-                       !strncmp(basictype, "short", 5)) {
-               Long_t ldefval;
-               m->GetterMethod()->Execute(object, "", ldefval);
-               sprintf(val, "%li", ldefval);
-            }
-
-            // Find out whether we have options ...
-
-            TList *opt;
-            if ((opt = m->GetOptions())) {
-               Warning("Dialog", "option menu not yet implemented", opt);
+         TList *opt;
+         if ((opt = m->GetOptions())) {
+            Warning("Dialog", "option menu not yet implemented", opt);
 #if 0
-               TMotifOptionMenu *o= new TMotifOptionMenu(argname);
-               TIter nextopt(opt);
-               TOptionListItem *it = 0;
-               while ((it = (TOptionListItem*) nextopt())) {
-                  Text_t *name  = it->fOptName;
-                  Text_t *label = it->fOptLabel;
-                  Long_t value  = it->fValue;
-                  if (value != -9999) {
-                     Text_t val[256];
-                     sprintf(val, "%li", value);
-                     o->AddItem(name, val);
-                  }else
-                     o->AddItem(name, label);
-               }
-               o->SetData(val);
-               fDialog->Add(o);
-#endif
-            } else {
-               // we haven't got options - textfield ...
-               fDialog->Add(argname, val, type);
+            TMotifOptionMenu *o= new TMotifOptionMenu(argname);
+            TIter nextopt(opt);
+            TOptionListItem *it = 0;
+            while ((it = (TOptionListItem*) nextopt())) {
+               Text_t *name  = it->fOptName;
+               Text_t *label = it->fOptLabel;
+               Long_t value  = it->fValue;
+               if (value != -9999) {
+                  Text_t val[256];
+                  sprintf(val, "%li", value);
+                  o->AddItem(name, val);
+               }else
+                  o->AddItem(name, label);
             }
-         } else {    // if m not found ...
-
-            char val[256] = "";
-            const char *tval = argument->GetDefault();
-            if (tval) strncpy(val, tval, 255);
+            o->SetData(val);
+            fDialog->Add(o);
+#endif
+         } else {
+            // we haven't got options - textfield ...
             fDialog->Add(argname, val, type);
          }
+
+      } else {    // if m not found ...
+
+         char val[256] = "";
+         const char *tval = argument->GetDefault();
+         if (tval) strncpy(val, tval, 255);
+         fDialog->Add(argname, val, type);
+
       }
-      argpos++;
    }
 
    fDialog->Popup();
@@ -394,13 +324,10 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                } else if (parm1 >= kToggleStart && parm1 < kToggleListStart) {
                   TToggle *t = (TToggle *) parm2;
                   GetContextMenu()->Action(t);
-               } else if (parm1 >= kToggleListStart && parm1<kUserFunctionStart) {
+               } else {
                   TToggle *t = (TToggle *) parm2;
                   if (t->GetState() == 0)
                      t->SetState(1);
-               } else {
-                  TClassMenuItem* mi = (TClassMenuItem*)parm2;
-                  GetContextMenu()->Action(mi);
                }
                break;
 

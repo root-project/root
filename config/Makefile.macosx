@@ -1,5 +1,5 @@
 # -*- mode: makefile -*-
-#
+# 
 # Makefile of ROOT for MacOS X, using cc (Based on gcc version 2.95.2)
 
 PLATFORM      = macosx
@@ -29,8 +29,7 @@ CINTCFLAGS    = -pipe -W -Wall -fsigned-char -fno-common \
 # Linker:
 LD            = c++
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS) -Xlinker -bind_at_load -flat_namespace
-SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined suppress \
-                -install_name
+SOFLAGS       = -dynamiclib -flat_namespace -undefined suppress -nodefaultlibs -install_name
 SOEXT         = dylib
 
 # System libraries:
@@ -47,6 +46,8 @@ INSTALL      := cp -pPR
 INSTALLDATA  := cp -pPR
 
 # Extras
+CORELIBDEP    = $(ROOTSYS)/lib/macosx-fpsave.o
+CORELIBEXTRA  = $(ROOTSYS)/lib/macosx-fpsave.o
 GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 -lXmu -lXext -lX11
 X3DLIBEXTRA   = -L/usr/X11R6/lib -lX11

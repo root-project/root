@@ -11,7 +11,7 @@ PS: please let us know if you are not on this list while you should be, or
 
 -------------------
 N: Maarten Ballintijn
-E: maartenb@mit.edu
+E: maartenb@xs4all.nl
 D: initial linux port
 D: PROOF development
 
@@ -48,7 +48,6 @@ D: interface to X3D
 N: Damir Buskulic
 E: buskulic@lapp.in2p3.fr
 D: LinuxPPC support, contribution to the User's Guide
-D: Customizable context menus
 
 N: Philippe Canal
 E: pcanal@fndaub.fnal.gov

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.79 2002/04/08 06:38:41 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.77 2002/04/02 10:39:53 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1604,15 +1604,8 @@ void THistPainter::PaintBar(Option_t *)
       xmax = gPad->XtoPad(fXaxis->GetBinUpEdge(bin));
       ymin = gPad->GetUymin();
       ymax = gPad->YtoPad(fH->GetBinContent(bin));
-      if (ymax < 0) {
-         ymin = ymax;
-         ymax = TMath::Max(0.,gPad->GetUymin());
-      } else {
-         if (ymin < 0) ymin = 0;
-      }
       if (ymax < gPad->GetUymin()) continue;
       if (ymax > gPad->GetUymax()) ymax = gPad->GetUymax();
-      if (ymin < gPad->GetUymin()) ymin = gPad->GetUymin();
       w    = (xmax-xmin)*width;
       xmin += offset*(xmax-xmin);
       xmax = xmin + w;
@@ -1686,15 +1679,8 @@ void THistPainter::PaintBarH(Option_t *)
       ymax = gPad->YtoPad(fYaxis->GetBinUpEdge(bin));
       xmin = gPad->GetUxmin();
       xmax = gPad->XtoPad(fH->GetBinContent(bin));
-      if (xmax < 0) {
-         xmin = xmax;
-         xmax = TMath::Max(0.,gPad->GetUxmin());
-      } else {
-         if (xmin < 0) xmin = 0;
-      }
       if (xmax < gPad->GetUxmin()) continue;
       if (xmax > gPad->GetUxmax()) xmax = gPad->GetUxmax();
-      if (xmin < gPad->GetUxmin()) xmin = gPad->GetUxmin();
       w    = (ymax-ymin)*width;
       ymin += offset*(ymax-ymin);
       ymax = ymin + w;
@@ -3609,8 +3595,6 @@ void THistPainter::PaintPalette()
 //    *-*-*-*-*-*Paint the color palette on the right side of the pad*-*-*-*-*
 //               ====================================================
 
-   TBox box;
-   box.SetFillStyle(1001);
    Double_t xup  = gPad->GetUxmax();
    Double_t x2   = gPad->GetX2();
    Double_t ymin = gPad->GetUymin();
@@ -3622,7 +3606,6 @@ void THistPainter::PaintPalette()
    Double_t wmax = fH->GetMaximum();
    Double_t wlmin = wmin;
    Double_t wlmax = wmax;
-   Double_t y1,y2;
    static char chopt[5] = "";
    if (Hoption.Logz) {
       wlmin = Hparam.zmin;
@@ -3633,22 +3616,22 @@ void THistPainter::PaintPalette()
    if (xmax > x2) xmax = x2-0.01*xr;
    Int_t ncolors = gStyle->GetNumberOfColors();
    Int_t ndivz = TMath::Abs(fH->GetContour());
-   Int_t theColor,color;
-   Double_t scale = ndivz/(Hparam.zmax - Hparam.zmin);
+   Int_t theColor;
+   Color_t colorsav = fH->GetFillColor();
    for (Int_t i=0;i<ndivz;i++) {
       Double_t w1 = fH->GetContourLevel(i);
       if (w1 < wlmin) w1 = wlmin;
       Double_t w2 = wlmax;
       if (i < ndivz-1) w2 = fH->GetContourLevel(i+1);
       if (w2 <= wlmin) continue;
-      y1 = ymin + (w1-wlmin)*(ymax-ymin)/ws;
-      y2 = ymin + (w2-wlmin)*(ymax-ymin)/ws;
-      color = Int_t(0.01+(w1-Hparam.zmin)*scale);
-      theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
-      box.SetFillColor(gStyle->GetColorPalette(theColor));
-      box.TAttFill::Modify();
+      Double_t y1 = ymin + (w1-wlmin)*(ymax-ymin)/ws;
+      Double_t y2 = ymin + (w2-wlmin)*(ymax-ymin)/ws;
+      theColor = Int_t((i+0.99)*Float_t(ncolors)/Float_t(ndivz));
+      fH->SetFillColor(gStyle->GetColorPalette(theColor));
+      fH->TAttFill::Modify();
       gPad->PaintBox(xmin,y1,xmax,y2);
    }
+   fH->SetFillColor(colorsav);
    TAxis *zaxis = fH->GetZaxis();
    //Draw the palette axis using the Z axis parameters
    TGaxis axis;

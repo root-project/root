@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.16 2002/01/27 17:23:19 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.15 2001/09/27 17:57:25 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -45,16 +45,11 @@ extern "C" {
    int   rfio_fstat(int s, struct stat *statbuf);
    void  rfio_perror(const char *msg);
    char *rfio_serror();
-   int   rfiosetopt(int opt, int *pval, int len);
 #ifdef R__WIN32
    int  *C__serrno(void);
    int  *C__rfio_errno (void);
 #endif
 };
-
-#ifndef RFIO_READOPT
-#define RFIO_READOPT 1
-#endif
 
 #ifdef R__WIN32
 
@@ -93,10 +88,6 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
 
    fOption = option;
    fOffset = 0;
-
-   // tell RFIO to not read large buffers, ROOT does own buffering
-   Int_t readopt = 0;
-   ::rfiosetopt(RFIO_READOPT, &readopt, 4);
 
    Bool_t create = kFALSE;
    if (!fOption.CompareTo("NEW", TString::kIgnoreCase) ||

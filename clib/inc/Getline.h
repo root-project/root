@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.h,v 1.4 2001/06/22 16:10:16 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.h,v 1.3 2000/06/14 16:32:05 rdm Exp $ */
 /* Author: */
 
 /*************************************************************************
@@ -29,9 +29,11 @@ void Gl_histinit(char *file);
 void Gl_histadd(char *buf);
 int  Gl_eof();
 
-R__EXTERN int (*Gl_in_hook)(char *buf);
-R__EXTERN int (*Gl_out_hook)(char *buf);
-R__EXTERN int (*Gl_tab_hook)(char *buf, int prompt_width, int *cursor_loc);
+char *strip(char *line);
+
+R__EXTERN int (*gl_in_hook)(char *buf);
+R__EXTERN int (*gl_out_hook)(char *buf);
+R__EXTERN int (*gl_tab_hook)(char *buf, int prompt_width, int *cursor_loc);
 
 #ifndef __CINT__
 #ifdef __cplusplus

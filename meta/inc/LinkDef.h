@@ -1,4 +1,4 @@
-/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.6 2002/04/04 17:32:13 rdm Exp $ */
+/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.4 2000/12/18 07:12:58 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -13,6 +13,7 @@
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
+
 
 #pragma link C++ enum EProperty;
 
@@ -30,7 +31,6 @@
 #pragma link C++ class TMethodCall;
 #pragma link C++ class TCint;
 #pragma link C++ class TInterpreter;
-#pragma link C++ class TClassMenuItem;
 
 #pragma link C++ class TStreamerBase-;
 #pragma link C++ class TStreamerBasicPointer-;

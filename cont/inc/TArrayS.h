@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayS.h,v 1.5 2002/04/04 10:28:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayS.h,v 1.3 2001/02/08 15:31:13 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -48,7 +48,6 @@ public:
    void       Set(Int_t n);
    void       Set(Int_t n, const Short_t *array);
    Short_t   &operator[](Int_t i);
-   Short_t    operator[](Int_t i) const;
 
    ClassDef(TArrayS,1)  //Array of shorts
 };
@@ -61,13 +60,6 @@ inline Short_t TArrayS::At(Int_t i) const
 }
 
 inline Short_t &TArrayS::operator[](Int_t i)
-{
-   if (!BoundsOk("TArrayS::operator[]", i))
-      i = 0;
-   return fArray[i];
-}
-
-inline Short_t TArrayS::operator[](Int_t i) const
 {
    if (!BoundsOk("TArrayS::operator[]", i))
       i = 0;

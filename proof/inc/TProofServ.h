@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.10 2002/03/16 18:36:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.9 2002/03/13 01:52:20 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -48,16 +48,10 @@ private:
    TString     fPasswd;           //encoded passwd info for slaves
    TString     fConfDir;          //directory containing cluster config information
    TString     fConfFile;         //file containing config information
-   TString     fSessionDir;       //directory containing session dependent files
-   TString     fPackageDir;       //directory containing packages and user libs
-   TString     fCacheDir;         //directory containing cache of user files
-   TString     fPackageLock;      //package dir lock file
-   TString     fCacheLock;        //cache dir lock file
+   TString     fLogDir;           //directory containing log files
    TSocket    *fSocket;           //socket connection to client
    TProof     *fProof;            //PROOF talking to slave servers
    FILE       *fLogFile;          //log file
-   Int_t       fPackageLockId;    //file id of package dir lock
-   Int_t       fCacheLockId;      //file id of cache dir lock
    Int_t       fProtocol;         //protocol version number
    Int_t       fOrdinal;          //slave ordinal number, -1 for master
    Int_t       fGroupId;          //slave unique id in the active slave group
@@ -73,21 +67,15 @@ private:
    void        Setup();
    void        RedirectOutput();
    Int_t       CatMotd();
-   Int_t       LockDir(const TString &lock);
-   Int_t       UnlockDir(const TString &lock);
-   Int_t       LockCache() { return LockDir(fCacheLock); }
-   Int_t       UnlockCache() { return UnlockDir(fCacheLock); }
-   Int_t       LockPackage() { return LockDir(fPackageLock); }
-   Int_t       UnlockPackage() { return UnlockDir(fPackageLock); }
 
 public:
    TProofServ(int *argc, char **argv);
    virtual ~TProofServ();
 
-   const char   *GetService() const { return fService; }
-   const char   *GetConfDir() const { return fConfDir; }
-   const char   *GetConfFile() const { return fConfFile; }
-   const char   *GetUser() const { return fUser; }
+   const char   *GetService() const { return fService.Data(); }
+   const char   *GetConfDir() const { return fConfDir.Data(); }
+   const char   *GetConfFile() const { return fConfFile.Data(); }
+   const char   *GetUser() const { return fUser.Data(); }
    Int_t         GetProtocol() const { return fProtocol; }
    Int_t         GetOrdinal() const { return fOrdinal; }
    Int_t         GetGroupId() const { return fGroupId; }

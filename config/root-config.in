@@ -274,23 +274,12 @@ esac
 
 case $arch in
 *kcc)
-   ex=""
    for f in $features ; do
       if test "x$f" = "xthread" ; then
 	 auxcflags="--thread_safe $auxcflags"
 	 auxldflags="--thread_safe $auxldflags"
       fi
-      if test "x$f" = "xexceptions" ; then
-	 ex="yes"
-      fi
    done
-   if test "x$ex" = "x" ; then
-      auxcflags="--no_exceptions $auxcflags"
-      auxldflags="--no_exceptions $auxldflags"
-   else
-      auxcflags="--exceptions $auxcflags"
-      auxldflags="--exceptions $auxldflags"
-   fi
 esac
 
 ### end of machine and compiler dependent settings ###

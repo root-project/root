@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayF.h,v 1.6 2002/04/04 10:28:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayF.h,v 1.4 2001/02/28 07:51:22 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -48,7 +48,6 @@ public:
    void        Set(Int_t n);
    void        Set(Int_t n, const Float_t *array);
    Float_t    &operator[](Int_t i);
-   Float_t     operator[](Int_t i) const;
      
    ClassDef(TArrayF,1)  //Array of floats
 };
@@ -61,13 +60,6 @@ inline Float_t TArrayF::At(Int_t i) const
 }
 
 inline Float_t &TArrayF::operator[](Int_t i)
-{
-   if (!BoundsOk("TArrayF::operator[]", i))
-      i = 0;
-   return fArray[i];
-}
-
-inline Float_t TArrayF::operator[](Int_t i) const
 {
    if (!BoundsOk("TArrayF::operator[]", i))
       i = 0;

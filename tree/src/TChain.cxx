@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.45 2002/04/09 15:29:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.43 2002/02/28 17:07:07 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -96,8 +96,8 @@ TChain::TChain(const char *name, const char *title)
    fFiles          = new TObjArray(fTreeOffsetLen );
    fStatus         = new TList();
    fTreeOffset[0]  = 0;
-   //TChainElement *element = new TChainElement("*","");
-   //fStatus->Add(element);
+   TChainElement *element = new TChainElement("*","");
+   fStatus->Add(element);
    gDirectory->GetList()->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
    fDirectory = 0;
@@ -695,9 +695,9 @@ Int_t TChain::LoadTree(Int_t entry)
    Int_t status;
    while ((element = (TChainElement*)next())) {
       status = element->GetStatus();
-      void *add = element->GetBaddress();
-      if (add)        fTree->SetBranchAddress(element->GetName(),add);
       if (status >=0) fTree->SetBranchStatus(element->GetName(),status);
+      void *add = element->GetBaddress();
+      if (add) fTree->SetBranchAddress(element->GetName(),add);
    }
 
    if (cursav) cursav->cd();
@@ -936,9 +936,6 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 //______________________________________________________________________________
 void TChain::Print(Option_t *option) const
 {
-   // Print the header information of each Tree in the chain.
-   // see TTree::Print for a list of options
-   
    TIter next(fFiles);
    TChainElement *element;
    while ((element = (TChainElement*)next())) {

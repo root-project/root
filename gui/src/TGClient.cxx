@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.16 2002/04/03 16:40:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.14 2001/11/28 16:05:41 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -341,7 +341,6 @@ TGClient::TGClient(const char *dpyName)
    // finding of windows based on window id (see GetWindowById()).
 
    fWlist = new THashList(200);
-   fPlist = new TList;
    fUWHandlers = 0;
 
    // Setup some atoms (defined in TVirtualX)...
@@ -602,10 +601,12 @@ Bool_t TGClient::GetColorByName(const char *name, ULong_t &pixel) const
    if (!gVirtualX->ParseColor(attributes.fColormap, name, color)) {
       Error("GetColorByName", "couldn't parse color %s", name);
       status = kFALSE;
-   } else if (!gVirtualX->AllocColor(attributes.fColormap, color)) {
-      Warning("GetColorByName", "couldn't retrieve color %s.\n"
-              "Please close any other application, like netscape, "
-              "that might exhaust\nthe colormap and start ROOT again", name);
+   } else if(!gVirtualX->AllocColor(attributes.fColormap, color)) {
+      Warning("GetColorByName", "couldn't retrieve color %s", name);
+      Printf(" This problem typically appears when running ROOT from ");
+      Printf(" an X terminal with not enough memory and another application");
+      Printf(" like Netscape is already running");
+      Printf(" ====> Kill Netscape and start again ROOT");
       status = kFALSE;
    }
 
@@ -704,24 +705,6 @@ void TGClient::UnregisterWindow(TGWindow *w)
 }
 
 //______________________________________________________________________________
-void TGClient::RegisterPopup(TGWindow *w)
-{
-   // Add a popup menu to the list of popups. This list is used to pass
-   // events to popup menus that are popped up over a transient window which
-   // is waited for (see WaitFor()).
-
-   fPlist->Add(w);
-}
-
-//______________________________________________________________________________
-void TGClient::UnregisterPopup(TGWindow *w)
-{
-   // Remove a popup menu from the list of popups.
-
-   fPlist->Remove(w);
-}
-
-//______________________________________________________________________________
 void TGClient::AddUnknownWindowHandler(TGUnknownWindowHandler *h)
 {
    // Add handler for unknown (i.e. unregistered) windows.
@@ -757,7 +740,6 @@ TGClient::~TGClient()
 
    if (fWlist) fWlist->Delete("slow");
    delete fWlist;
-   delete fPlist;
    if (fUWHandlers) fUWHandlers->Delete();
    delete fUWHandlers;
    delete fPicturePool;
@@ -791,7 +773,7 @@ Bool_t TGClient::ProcessOneEvent()
 #ifdef GDK_WIN32
       if (event.fType == kOtherEvent)
          return kFALSE;
-#endif
+#endif      
       if (fWaitForWindow == kNone) {
          HandleEvent(&event);
          if (fForceRedraw)
@@ -948,14 +930,14 @@ Bool_t TGClient::HandleMaskEvent(Event_t *event, Window_t wid)
    // kButtonPress, kButtonRelease, kKeyPress, kKeyRelease, kEnterNotify,
    // kLeaveNotify, kMotionNotify.
 
-   TGWindow *w, *ptr, *pop;
+   TGWindow *w, *ptr;
 
    if ((w = GetWindowById(event->fWindow)) == 0) return kFALSE;
 
    // This breaks class member protection, but TGClient is a friend of all
    // classes and _should_ know what to do and what *not* to do...
 
-   for (ptr = w; ptr->fParent != 0; ptr = (TGWindow *) ptr->fParent) {
+   for (ptr = w; ptr->fParent != 0; ptr = (TGWindow *) ptr->fParent)
       if ((ptr->fId == wid) ||
           ((event->fType != kButtonPress) &&
            (event->fType != kButtonRelease) &&
@@ -967,25 +949,6 @@ Bool_t TGClient::HandleMaskEvent(Event_t *event, Window_t wid)
          w->HandleEvent(event);
          return kTRUE;
       }
-   }
-
-   // check if this is a popup menu
-   TIter next(fPlist);
-   while ((pop = (TGWindow *) next())) {
-      for (ptr = w; ptr->fParent != 0; ptr = (TGWindow *) ptr->fParent) {
-         if ((ptr->fId == pop->fId) &&
-             ((event->fType == kButtonPress) ||
-              (event->fType == kButtonRelease) ||
-              (event->fType == kGKeyPress) ||
-              (event->fType == kKeyRelease) ||
-              (event->fType == kEnterNotify) ||
-              (event->fType == kLeaveNotify) ||
-              (event->fType == kMotionNotify))) {
-            w->HandleEvent(event);
-            return kTRUE;
-         }
-      }
-   }
 
    if (event->fType == kButtonPress || event->fType == kGKeyPress)
       gVirtualX->Bell(0);

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.5 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.4 2001/02/07 20:54:01 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -82,9 +82,9 @@ public:
 //________________________________________________________________________
 class TSplinePoly3 : public TSplinePoly {
 private:
-  Double_t fB; // first order expansion coefficient :  fB*1! is the first derivative at x
-  Double_t fC; // second order expansion coefficient : fC*2! is the second derivative at x
-  Double_t fD; // third order expansion coefficient :  fD*3! is the third derivative at x
+  Double_t fB; // first derivative at x
+  Double_t fC; // second derivative at x
+  Double_t fD; // third derivative at x
 public:
   TSplinePoly3() :
     fB(0), fC(0), fD(0) {}
@@ -106,11 +106,11 @@ public:
 //________________________________________________________________________
 class TSplinePoly5 : public TSplinePoly {
 private:
-  Double_t fB; // first order expansion coefficient :  fB*1! is the first derivative at x
-  Double_t fC; // second order expansion coefficient : fC*2! is the second derivative at x
-  Double_t fD; // third order expansion coefficient :  fD*3! is the third derivative at x
-  Double_t fE; // fourth order expansion coefficient : fE*4! is the fourth derivative at x
-  Double_t fF; // fifth order expansion coefficient :  fF*5! is the fifth derivative at x
+  Double_t fB; // first derivative at x
+  Double_t fC; // second derivative at x
+  Double_t fD; // third derivative at x
+  Double_t fE; // fourth derivative at x
+  Double_t fF; // fifth derivative at x
 public:
   TSplinePoly5() :
     fB(0), fC(0), fD(0), fE(0), fF(0) {}

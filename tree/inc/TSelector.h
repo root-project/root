@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.9 2002/02/15 22:12:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.8 2002/01/18 14:24:09 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -29,8 +29,6 @@
 #include "TString.h"
 #endif
 
-typedef long Long64_t;
-
 class TTree;
 
 class TSelector : public TObject {
@@ -43,13 +41,12 @@ protected:
 public:
    TSelector();
    virtual            ~TSelector();
-   virtual void        Init(TTree *) { }
    virtual void        Begin(TTree *) { }
    virtual Bool_t      Notify() { return kTRUE; }
            const char *GetOption() const { return fOption.Data();}
-   virtual Bool_t      ProcessCut(int entry) { return kTRUE; }
-   virtual void        ProcessFill(int entry) { }
-   virtual Bool_t      Process(int entry) { return kFALSE; }
+   virtual Bool_t      ProcessCut(Int_t entry) { return kTRUE; }
+   virtual void        ProcessFill(Int_t entry) { }
+   virtual Bool_t      Process() { return kFALSE; }
            void        SetOption(const char *option) { fOption = option; }
            void        SetObject(TObject *obj) { fObject = obj; }
            void        SetInputList(TList *input) { fInput = input; }

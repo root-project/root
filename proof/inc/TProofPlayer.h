@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.4 2002/03/21 16:11:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.3 2002/03/13 01:52:20 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -23,10 +23,6 @@
 #include "TObject.h"
 #endif
 
-#include "TObjString.h"
-
-typedef long Long64_t;
-
 class TList;
 class TSelector;
 class TDSet;
@@ -42,9 +38,6 @@ class TPacketizer;
 
 class TProofPlayer : public TObject {
 
-private:
-   TList      *fAutoBins;  // Map of min/max values by name for slaves
-
 protected:
    TList      *fInput;     //-> list with input objects
    TList      *fOutput;    //   list with output objects
@@ -56,7 +49,7 @@ public:
 
    virtual Int_t     Process(TDSet *set,
                              const char *selector,
-                             Long64_t nentries = -1, Long64_t first = 0,
+                             Int_t nentries = -1, Int_t first = 0,
                              TEventList *evl = 0);
 
    virtual void      AddInput(TObject *inp);
@@ -66,10 +59,6 @@ public:
    virtual void      StoreOutput(TList *out);   // Adopts the list
 
    virtual TDSetElement *GetNextPacket(TSlave *slave);
-   void              UpdateAutoBin(const char *name,
-                        Double_t& xmin, Double_t& xmax,
-                        Double_t& ymin, Double_t& ymax,
-                        Double_t& zmin, Double_t& zmax);
 
 
    ClassDef(TProofPlayer,0)  // Abstract PROOF player
@@ -95,7 +84,13 @@ private:
    TProof        *fProof;        // Link to associated PROOF session
    TList         *fOutputLists;  // Results returned by slaves
 
-   TPacketizer   *fPacketizer;   // Transform TDSet into packets for slaves
+   // currently here -- for packet generation
+   TDSet         *fSet;          // TDSet to split in packets
+   TDSetElement  *fElem;         // Element currently being processed
+   TPacketizer   *fPacketizer;   //
+   Double_t       fFirst;        //
+   Double_t       fNum;          //
+   Double_t       fCur;          //
 
 public:
    TProofPlayerRemote() { fProof = 0; fOutputLists = 0; }
@@ -104,7 +99,7 @@ public:
 
    Int_t Process(TDSet *set,
                  const char *selector,
-                 Long64_t nentries = -1, Long64_t first = 0,
+                 Int_t nentries = -1, Int_t first = 0,
                  TEventList *evl = 0);
    void  StoreOutput(TList *out);   // Adopts the list
    void  MergeOutput();

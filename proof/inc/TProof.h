@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.19 2002/03/17 00:26:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.18 2002/03/16 18:38:27 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -39,7 +39,6 @@
 
 #include <map>
 
-typedef long Long64_t;
 
 class TList;
 class TMessage;
@@ -58,14 +57,11 @@ class TEventList;
 
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol = 1;             // protocol version number
-const Int_t       kPROOF_Port     = 1093;          // IANA registered PROOF port
-const char* const kPROOF_ConfFile = "proof.conf";  // default config file
+const Int_t       kPROOF_Protocol = 1;            // protocol version number
+const Int_t       kPROOF_Port     = 1093;         // IANA registered PROOF port
+const char* const kPROOF_ConfFile = "proof.conf"; // default config file
 const char* const kPROOF_ConfDir  = "/usr/local/root";  // default config dir
-const char* const kPROOF_WorkDir  = "~/proof";     // default working directory
-const char* const kPROOF_CacheDir = "cache";       // file cache dir, under WorkDir
-const char* const kPROOF_PackDir  = "packages";    // package dir, under WorkDir
-const char* const kPROOF_LockFile = ".cache.lock"; // lock file, under CacheDir and PackDir
+const char* const kPROOF_WorkDir  = "~/proof";    // default working directory
 
 
 class TProof : public TObject {
@@ -130,7 +126,7 @@ private:
    Int_t    Exec(const char *cmd, ESlaves list);
    Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
    Int_t    SendCurrentState(ESlaves list = kActive);
-   Long_t   CheckFile(const char *file, TSlave *sl);
+   Long_t   CheckFile(const char *file, TList *slaves, TList *sendto);
    Int_t    SendFile(const char *file, Bool_t bin = kTRUE);
    Int_t    SendObject(const TObject *obj, ESlaves list = kActive);
    Int_t    SendGroupView();
@@ -188,28 +184,17 @@ public:
 
    Int_t       Ping();
    Int_t       Exec(const char *cmd);
-   Int_t       Process(TDSet *set, const char *selector, Long64_t nentries = -1,
-                       Long64_t first = 0, TEventList *evl = 0);
-
+   Int_t       Process(TDSet *set, const char *selector, Int_t nentries = -1,
+                       Int_t first = 0, TEventList *evl = 0);
    void        AddInput(TObject *obj);
    void        ClearInput();
    TObject    *GetOutput(const char *name);
    TList      *GetOutputList();
-
    Int_t       SetParallel(Int_t nodes = 9999);
    void        SetLogLevel(Int_t level);
 
    void        Close(Option_t *option="");
    void        Print(Option_t *option="") const;
-
-   void        ShowCache(Bool_t all = kFALSE);
-   void        ClearCache();
-   void        ShowPackages(Bool_t all = kFALSE);
-   void        ShowEnabledPackages(Bool_t all = kFALSE);
-   void        ClearPackages();
-   void        ClearPackage(const char *package);
-   Int_t       EnablePackage(const char *package, Bool_t build = kFALSE);
-   Int_t       UploadPackage(const char *par, Int_t parallel = 1);
 
    const char *GetMaster() const { return fMaster; }
    const char *GetConfDir() const { return fConfDir; }

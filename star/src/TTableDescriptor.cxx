@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.10 2002/02/18 07:45:56 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.9 2001/07/11 06:46:19 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.10 2002/02/18 07:45:56 brun Exp $
+// $Id: TTableDescriptor.cxx,v 1.9 2001/07/11 06:46:19 brun Exp $
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -19,6 +19,7 @@ TableClassImp(TTableDescriptor,tableDescriptor_st)
 void TTableDescriptor::Streamer(TBuffer &R__b)
 {
   // The custom Streamer for this table
+  fSecondDescriptor = 0;
   TTable::Streamer(R__b);
 }
 

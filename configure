@@ -36,8 +36,7 @@ enable_shared=yes
 enable_soversion=no
 enable_srp=yes
 enable_star=no
-enable_thread=           # must be set explicitely via --enable-thread
-enable_exceptions=yes
+enable_thread=        # must be set explicitely via --enable-thread
 enable_ttf=yes
 enable_venus=yes
 show_pkglist=no
@@ -46,7 +45,7 @@ options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
          enable_pythia enable_pythia6 enable_rfio enable_dcache enable_rpath \
          enable_sapdb enable_shadowpw enable_shared enable_soversion \
          enable_srp enable_star enable_thread enable_ttf enable_venus \
-         enable_krb5 enable_exceptions"
+         enable_krb5"
 
 
 ######################################################################
@@ -285,7 +284,7 @@ confhelp() {
     echo "   --testdir       Tests                     (<docdir>/test)"
     echo "   --tutdir        Tutorials                 (<docdir>/tutorial)"
     echo "   --aclocaldir    Autoconf macro install dir(<prefix>/share/aclocal)"
-    echo "   --build         Build configuration [debug, exceptions, ...],"
+    echo "   --build         Build configuration [debug, exception, ...],"
     echo "                   overrides the ROOTBUILD shell variable"
     echo "enable/disable options, prefix with either --enable- or --disable-"
     echo "   shared          Use shared 3rd party libraries if possible"
@@ -540,18 +539,6 @@ fi
 
 ######################################################################
 #
-### echo %%% Exceptions - compiler feature
-#
-if test "x$EXCEPTIONS" = "xno" ; then
-    enable_exceptions=no
-fi
-e=`echo $rootbuild | sed 's/.*exceptions.*/1/'`
-if test "x$e" = "x1" ; then
-    enable_exceptions=no
-fi
-
-######################################################################
-#
 ### echo %%% Posix Thread Library
 #
 # Check for posix thread library
@@ -647,7 +634,7 @@ if test ! "x$enable_opengl" = "xno" && test ! "$platform" = "win32" ; then
 	/usr/X11R6/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
         /usr/X11/lib /usr/lib/Mesa /usr/local/lib/Mesa /usr/Mesa/lib \
 	/usr/local/Mesa/lib /usr/Mesa /usr/local/Mesa /opt/Mesa \
-	/opt/Mesa/lib /opt/graphics/OpenGL/lib/hpux64 /opt/graphics/OpenGL/lib"
+	/opt/Mesa/lib /opt/graphics/OpenGL/lib/hpux32 /opt/graphics/OpenGL/lib"
 
     keep=$opengllibdir
     check_library "libGL libMesaGL" "$enable_shared" \
@@ -703,14 +690,6 @@ if test ! "x$enable_mysql" = "xno"; then
 	/usr/mysql /usr/local/mysql /opt/mysql /opt/mysql/lib
     mysqllib=$found_lib
     mysqllibdir=$found_dir
-
-    # on linux, but maybe also other systems, explicitely add libz
-    # (formally only needed when linking against the static libmysqlclient.a)
-    if test ! "x$mysqllib" = "x" ; then
-	case $arch in
-	    linux*) mysqllib="$mysqllib -lz" ;;
-	esac
-    fi
 
     if test "x$mysqlincdir" = "x" || test "x$mysqllib" = "x"; then
         enable_mysql="no"
@@ -1328,74 +1307,72 @@ fi
 # config/Makefile.config
 #
 echo $ac_n "Writing $MAKEOUT ... $ac_c"
-sed -e "s|@architecture@|$arch|"            \
-    -e "s|@rootbuild@|$rootbuild|"          \
-    -e "s|@mkliboption@|$mkliboption|"      \
-    -e "s|@ldflags@||"                      \
-    -e "s|@bindir@|$bindir|"                \
-    -e "s|@libdir@|$libdir|"                \
-    -e "s|@incdir@|$incdir|"                \
-    -e "s|@etcdir@|$etcdir|"                \
-    -e "s|@mandir@|$mandir|"                \
-    -e "s|@datadir@|$datadir|"              \
-    -e "s|@proofdir@|$proofdir|"            \
-    -e "s|@macrodir@|$macrodir|"            \
-    -e "s|@cintincdir@|$cintincdir|"        \
-    -e "s|@iconpath@|$iconpath|"            \
-    -e "s|@docdir@|$docdir|"                \
-    -e "s|@testdir@|$testdir|"              \
-    -e "s|@tutdir@|$tutdir|"                \
-    -e "s|@aclocaldir@|$aclocaldir|"        \
-    -e "s|@srcdir@|$srcdir|"                \
-    -e "s|@xpmlibdir@|$xpmlibdir|"          \
-    -e "s|@xpmlib@|$xpmlib|"                \
-    -e "s|@enable_star@|$enable_star|"      \
-    -e "s|@enable_thread@|$enable_thread|"  \
-    -e "s|@threadlibdir@|$threadlibdir|"    \
-    -e "s|@threadlib@|$threadlib|"          \
-    -e "s|@ttfincdir@|$ttfincdir|"          \
-    -e "s|@ttflibdir@|$ttflibdir|"          \
-    -e "s|@ttflib@|$ttflib|"                \
-    -e "s|@ttffontdir@|$ttffontdir|"        \
-    -e "s|@openglincdir@|$openglincdir|"    \
-    -e "s|@opengllibdir@|$opengllibdir|"    \
-    -e "s|@openglulib@|$openglulib|"        \
-    -e "s|@opengllib@|$opengllib|"          \
-    -e "s|@mysqlincdir@|$mysqlincdir|"      \
-    -e "s|@mysqllibdir@|$mysqllibdir|"      \
-    -e "s|@mysqllib@|$mysqllib|"            \
-    -e "s|@pgsqlincdir@|$pgsqlincdir|"      \
-    -e "s|@pgsqllibdir@|$pgsqllibdir|"      \
-    -e "s|@pgsqllib@|$pgsqllib|"            \
-    -e "s|@sapdbincdir@|$sapdbincdir|"      \
-    -e "s|@sapdblibdir@|$sapdblibdir|"      \
-    -e "s|@sapdblib@|$sapdblib|"            \
-    -e "s|@cernlibdir@|$cernlibdir|"        \
-    -e "s|@cernlibs@|$cernlib|"             \
-    -e "s|@shiftlibdir@|$shiftlibdir|"      \
-    -e "s|@shiftlib@|$shiftlib|"            \
-    -e "s|@dcapincdir@|$dcapincdir|"        \
-    -e "s|@dcaplibdir@|$dcaplibdir|"        \
-    -e "s|@dcaplib@|$dcaplib|"              \
-    -e "s|@srplib@|$srplib|"                \
-    -e "s|@srpincdir@|$srpincdir|"          \
-    -e "s|@srplibdir@|$srplibdir|"          \
-    -e "s|@srputillib@|$srputillib|"        \
-    -e "s|@srputillibdir@|$srputillibdir|"  \
-    -e "s|@srputilincdir@|$srputilincdir|"  \
-    -e "s|@afslibdir@|$afslibdir|"          \
-    -e "s|@afslib@|$afslib|"                \
-    -e "s|@krb5incdir@|$krb5incdir|"        \
-    -e "s|@krb5libdir@|$krb5libdir|"        \
-    -e "s|@krb5lib@|$krb5lib|"              \
-    -e "s|@shadowpw@|$shadowpw|"            \
-    -e "s|@pythialibdir@|$pythialibdir|"    \
-    -e "s|@pythialib@|$pythialib|"          \
-    -e "s|@pythia6libdir@|$pythia6libdir|"  \
-    -e "s|@pythia6lib@|$pythia6lib|"        \
-    -e "s|@venuslibdir@|$venuslibdir|"      \
-    -e "s|@venuslib@|$venuslib|"            \
-    -e "s|@exceptions@|$enable_exceptions|" \
+sed -e "s|@architecture@|$arch|"           \
+    -e "s|@rootbuild@|$rootbuild|"         \
+    -e "s|@mkliboption@|$mkliboption|"     \
+    -e "s|@ldflags@||"                     \
+    -e "s|@bindir@|$bindir|"               \
+    -e "s|@libdir@|$libdir|"               \
+    -e "s|@incdir@|$incdir|"               \
+    -e "s|@etcdir@|$etcdir|"               \
+    -e "s|@mandir@|$mandir|"               \
+    -e "s|@datadir@|$datadir|"             \
+    -e "s|@proofdir@|$proofdir|"           \
+    -e "s|@macrodir@|$macrodir|"           \
+    -e "s|@cintincdir@|$cintincdir|"       \
+    -e "s|@iconpath@|$iconpath|"           \
+    -e "s|@docdir@|$docdir|"               \
+    -e "s|@testdir@|$testdir|"             \
+    -e "s|@tutdir@|$tutdir|"               \
+    -e "s|@aclocaldir@|$aclocaldir|"       \
+    -e "s|@srcdir@|$srcdir|"               \
+    -e "s|@xpmlibdir@|$xpmlibdir|"         \
+    -e "s|@xpmlib@|$xpmlib|"               \
+    -e "s|@enable_star@|$enable_star|"     \
+    -e "s|@threadlibdir@|$threadlibdir|"   \
+    -e "s|@threadlib@|$threadlib|"         \
+    -e "s|@ttfincdir@|$ttfincdir|"         \
+    -e "s|@ttflibdir@|$ttflibdir|"         \
+    -e "s|@ttflib@|$ttflib|"               \
+    -e "s|@ttffontdir@|$ttffontdir|"       \
+    -e "s|@openglincdir@|$openglincdir|"   \
+    -e "s|@opengllibdir@|$opengllibdir|"   \
+    -e "s|@openglulib@|$openglulib|"       \
+    -e "s|@opengllib@|$opengllib|"         \
+    -e "s|@mysqlincdir@|$mysqlincdir|"     \
+    -e "s|@mysqllibdir@|$mysqllibdir|"     \
+    -e "s|@mysqllib@|$mysqllib|"           \
+    -e "s|@pgsqlincdir@|$pgsqlincdir|"     \
+    -e "s|@pgsqllibdir@|$pgsqllibdir|"     \
+    -e "s|@pgsqllib@|$pgsqllib|"           \
+    -e "s|@sapdbincdir@|$sapdbincdir|"     \
+    -e "s|@sapdblibdir@|$sapdblibdir|"     \
+    -e "s|@sapdblib@|$sapdblib|"           \
+    -e "s|@cernlibdir@|$cernlibdir|"       \
+    -e "s|@cernlibs@|$cernlib|"            \
+    -e "s|@shiftlibdir@|$shiftlibdir|"     \
+    -e "s|@shiftlib@|$shiftlib|"           \
+    -e "s|@dcapincdir@|$dcapincdir|"       \
+    -e "s|@dcaplibdir@|$dcaplibdir|"       \
+    -e "s|@dcaplib@|$dcaplib|"             \
+    -e "s|@srplib@|$srplib|"               \
+    -e "s|@srpincdir@|$srpincdir|"         \
+    -e "s|@srplibdir@|$srplibdir|"         \
+    -e "s|@srputillib@|$srputillib|"       \
+    -e "s|@srputillibdir@|$srputillibdir|" \
+    -e "s|@srputilincdir@|$srputilincdir|" \
+    -e "s|@afslibdir@|$afslibdir|"         \
+    -e "s|@afslib@|$afslib|"               \
+    -e "s|@krb5incdir@|$krb5incdir|"       \
+    -e "s|@krb5libdir@|$krb5libdir|"       \
+    -e "s|@krb5lib@|$krb5lib|"             \
+    -e "s|@shadowpw@|$shadowpw|"           \
+    -e "s|@pythialibdir@|$pythialibdir|"   \
+    -e "s|@pythialib@|$pythialib|"         \
+    -e "s|@pythia6libdir@|$pythia6libdir|" \
+    -e "s|@pythia6lib@|$pythia6lib|"       \
+    -e "s|@venuslibdir@|$venuslibdir|"     \
+    -e "s|@venuslib@|$venuslib|"           \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 echo "done"

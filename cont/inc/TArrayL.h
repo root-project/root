@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayL.h,v 1.5 2002/04/04 10:28:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayL.h,v 1.3 2001/02/08 15:31:13 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -48,7 +48,6 @@ public:
    void       Set(Int_t n);
    void       Set(Int_t n, const Long_t *array);
    Long_t    &operator[](Int_t i);
-   Long_t     operator[](Int_t i) const;
 
    ClassDef(TArrayL,1)  //Array of longs
 };
@@ -61,13 +60,6 @@ inline Long_t TArrayL::At(Int_t i) const
 }
 
 inline Long_t &TArrayL::operator[](Int_t i)
-{
-   if (!BoundsOk("TArrayL::operator[]", i))
-      i = 0;
-   return fArray[i];
-}
-
-inline Long_t TArrayL::operator[](Int_t i) const
 {
    if (!BoundsOk("TArrayL::operator[]", i))
       i = 0;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.6 2002/02/02 11:56:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.5 2002/01/24 11:39:27 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -36,7 +36,7 @@ TAttAxis::~TAttAxis()
 }
 
 //______________________________________________________________________________
-void TAttAxis::Copy(TAttAxis &attaxis) const
+void TAttAxis::Copy(TAttAxis &attaxis)
 {
    attaxis.fNdivisions  = fNdivisions;
    attaxis.fAxisColor   = fAxisColor;

@@ -15,19 +15,18 @@ endif
 # Compiler:
 CXX           = aCC
 CC            = cc
-CXXFLAGS      = +DD64 +W740,749 -z +Z $(EXTRA_CXXFLAGS)
-CFLAGS        = +DD64 -Ae -z +Z $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = +DD64 -z +Z -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL \
-                $(EXTRA_CXXFLAGS) -DG__SHAREDLIB -D_POSIX2_SOURCE \
-                -DG__ROOT -DG__REDIRECTIO
-CINTCFLAGS    = +DD64 -Ae -z +Z -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL \
+CXXFLAGS      = +W740,749 -z +Z $(EXTRA_CXXFLAGS)
+CFLAGS        = -Ae -z +Z $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -z +Z -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL $(EXTRA_CXXFLAGS) \
+                -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO
+CINTCFLAGS    = -Ae -z +Z -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL \
                 -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO \
                 -D__STDCPP__ $(EXTRA_CFLAGS)
 CPPPREP       = /opt/langtools/lbin/cpp.ansi -Z -D__STDCPP_ -E -C
 
 # Linker:
 LD            = aCC
-LDFLAGS       = $(OPT) +DD64 -z -Wl,+s -Wl,-E $(EXTRA_LDFLAGS)
+LDFLAGS       = $(OPT) -z -Wl,+s -Wl,-E $(EXTRA_LDFLAGS)
 SOFLAGS       = -b -Wl,+vnocompatwarnings
 SOEXT         = sl
 

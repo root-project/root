@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.121 2002/04/12 19:19:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.117 2002/03/20 10:45:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1317,12 +1317,7 @@ TTree *TTree::CloneTree(Int_t nentries, Option_t *option)
 //    with   Event 1000 1 1 1
 
   // we make a full copy of this tree
-   TTree *thistree = GetTree(); //in case this is a TChain
-   if (!thistree) {
-      GetEntry(0);
-      thistree = GetTree();
-   }
-   TTree *tree = (TTree*)thistree->Clone();
+   TTree *tree = (TTree*)Clone();
    if (tree == 0) return 0;
 
    tree->Reset();
@@ -1682,17 +1677,10 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //     Special functions and variables
 //     ===============================
 //
-//  Entry$:  A TTree::Draw formula can use the special variable Entry$
+//  'ENTRY':  A TTree::Draw formula can use the special variable ENTRY
 //  to access the entry number being read.  For example to draw every 
 //  other entry use:
-//    tree.Draw("myvar","Entry$%2==0");
-//
-//  Entry$    : return the current entry number (== TTree::GetReadEntry())
-//  Entries$  : return the total number of entries (== TTree::GetEntries())
-//  Length$   : return the total number of element of this formula for this
-//  		   entry (==TTreeFormula::GetNdata())
-//  Iteration$: return the current iteration over this formula for this 
-//                 entry (i.e. varies from 0 to Length$).
+//    tree.Draw("myvar","ENTRY%2==0");
 //
 //     Making a Profile histogram
 //     ==========================
@@ -2143,8 +2131,7 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
 //     getall = 1 : get all branches
 //
 //  The function returns the number of bytes read from the input buffer.
-//  If entry does not exist  the function returns 0.
-//  If an I/O error occurs,  the function returns -1.
+//  If entry does not exist or an I/O error occurs, the function returns 0.
 //
 //  If the Tree has friends, also read the friends entry
 //
@@ -2230,13 +2217,10 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
    fReadEntry = entry;
    TBranch *branch;
 
-   Int_t nbranches = fBranches.GetEntriesFast();
-   Int_t nb;
-   for (i=0;i<nbranches;i++)  {
+   Int_t nb = fBranches.GetEntriesFast();
+   for (i=0;i<nb;i++)  {
       branch = (TBranch*)fBranches.UncheckedAt(i);
-      nb = branch->GetEntry(entry, getall);
-      if (nb < 0) return nb;
-      nbytes += nb;
+      nbytes += branch->GetEntry(entry, getall);
    }
 
    // GetEntry in list of friends
@@ -2245,11 +2229,7 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
    TFriendElement *fe;
    while ((fe = (TFriendElement*)nextf())) {
       TTree *t = fe->GetTree();
-      if (t) {
-         nb = t->GetEntry(entry, getall);
-         if (nb < 0) return nb;
-         nbytes += nb;
-      }
+        if (t) nbytes+=t->GetEntry(entry, getall);
    }
    return nbytes;
 }
@@ -2719,16 +2699,7 @@ void TTree::Print(Option_t *option) const
      TKey *key = fDirectory->GetKey(GetName());
      if (key) s = key->GetNbytes();
   }
-  Double_t total = fTotBytes;
-  Int_t nl = ((TTree*)this)->GetListOfLeaves()->GetEntries();
-  Int_t l;
-  TBranch *br;
-  TLeaf *leaf;
-  for (l=0;l<nl;l++) {
-     leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
-     br   = leaf->GetBranch();
-     total += br->GetTotalSize();
-  }
+  Double_t total = fTotBytes + s;
   Int_t file     = Int_t(fZipBytes) + s;
   Float_t cx     = 1;
   if (fZipBytes) cx = fTotBytes/fZipBytes;
@@ -2738,8 +2709,12 @@ void TTree::Print(Option_t *option) const
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
+  TBranch *br;
   if (strstr(option,"toponly")) {
+     Int_t nl = ((TTree*)this)->GetListOfLeaves()->GetEntries();
+     TLeaf *leaf;
      Int_t *count = new Int_t[nl];
+     Int_t l;
      Int_t keep =0;
      for (l=0;l<nl;l++) {
         leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);

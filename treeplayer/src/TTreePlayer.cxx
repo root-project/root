@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.96 2002/04/14 14:35:26 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.92 2002/03/19 17:05:50 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -658,17 +658,10 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //     Special functions and variables
 //     ===============================
 //
-//  Entry$:  A TTree::Draw formula can use the special variable Entry$
+//  'ENTRY':  In TTree::Draw formula can use the special variable ENTRY
 //  to access the entry number being read.  For example to draw every 
 //  other entry use:
-//    tree.Draw("myvar","Entry$%2==0");
-//
-//  Entry$    : return the current entry number (== TTree::GetReadEntry())
-//  Entries$  : return the total number of entries (== TTree::GetEntries())
-//  Length$   : return the total number of element of this formula for this
-//  		   entry (==TTreeFormula::GetNdata())
-//  Iteration$: return the current iteration over this formula for this 
-//                 entry (i.e. varies from 0 to Length$).
+//    tree.Draw("myvar","ENTRY%2==0");
 //
 //     Making a Profile histogram
 //     ==========================
@@ -1688,9 +1681,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    // pertain to the Chain itself but to the currently loaded tree.
    // So we can not rely on it.
    Bool_t ischain = fTree->InheritsFrom("TChain");
-   Bool_t isHbook = fTree->InheritsFrom("THbookTree");
-   if (isHbook) strcpy(treefile,fTree->GetTitle());
-   
+
 //======================Generate classname.h=====================
    // Print header
    TObjArray *leaves = fTree->GetListOfLeaves();
@@ -1714,7 +1705,6 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"#include <TROOT.h>\n");
    fprintf(fp,"#include <TChain.h>\n");
    fprintf(fp,"#include <TFile.h>\n");
-   if (isHbook) fprintf(fp,"#include <THbookFile.h>\n");
    if (opt.Contains("selector")) fprintf(fp,"#include <TSelector.h>\n");
 
 // First loop on all leaves to generate dimension declarations
@@ -1751,7 +1741,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"//Declaration of leaves types\n");
    TLeaf *leafcount;
    TLeafObject *leafobj;
-   TBranchElement *bre=0;
+   TBranchElement *bre;
    const char *headOK  = "   ";
    const char *headcom = " //";
    const char *head;
@@ -1782,7 +1772,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
            char *dim =  (char*)strstr(branchname,"["); if (dim) dim[0] = 0;
          }
       } else {
-         strcpy(branchname,branch->GetName());
+         if (leafcount) strcpy(branchname,branch->GetName());
+         else           strcpy(branchname,leaf->GetTitle());
       }
       char *twodim = (char*)strstr(leaf->GetTitle(),"][");
       bname = branchname;
@@ -1853,11 +1844,6 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          //Int_t kmax = 0;
          //if (blen[lenb-1] == '_') {blen[lenb-1] = 0; kmax = 1;}
          //else                     sprintf(blen,"%d",len);
-
-         const char *stars = " ";
-         if (bre && bre->GetBranchCount2()) {
-            stars = "*";
-         }
 	 // Dimensions can be in the branchname for a split Object with a fix length C array.
 	 // Theses dimensions HAVE TO be placed after the dimension explicited by leafcount
 	 char *dimensions = 0;
@@ -1873,24 +1859,15 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 	   } else dimensions[0] = 0;
 	   if (twodim) strcat(dimensions,(char*)(twodim+1));
 	 }
-         const char* leafcountName = leafcount->GetName();
-         char b2len[128];
-         if (bre && bre->GetBranchCount2()) {
-            TLeaf * l2 = (TLeaf*)bre->GetBranchCount2()->GetListOfLeaves()->At(0);
-            strcpy(b2len,l2->GetName());
-            bname = &b2len[0];
-            while (*bname) {if (*bname == '.') *bname='_'; bname++;}
-            leafcountName = b2len;
-         }
          if (dimensions) {
-            if (kmax) fprintf(fp,"   %-14s %s%s[kMax%s]%s;   //[%s]\n",leaf->GetTypeName(), stars, 
-                              branchname,blen,dimensions,leafcountName);
-            else      fprintf(fp,"   %-14s %s%s[%d]%s;   //[%s]\n",leaf->GetTypeName(), stars, 
-                              branchname,len,dimensions,leafcountName);
-            delete dimensions;
+            if (kmax) fprintf(fp,"   %-15s %s[kMax%s]%s;   //[%s]\n",leaf->GetTypeName(),
+			                                    branchname,blen,dimensions,leafcount->GetName());
+	    else      fprintf(fp,"   %-15s %s[%d]%s;   //[%s]\n",leaf->GetTypeName(),
+			                                branchname,len,dimensions,leafcount->GetName());
+	    delete dimensions;
          } else {
-            if (kmax) fprintf(fp,"   %-14s %s%s[kMax%s];   //[%s]\n",leaf->GetTypeName(), stars, branchname,blen,leafcountName);
-            else      fprintf(fp,"   %-14s %s%s[%d];   //[%s]\n",leaf->GetTypeName(), stars, branchname,len,leafcountName);
+            if (kmax) fprintf(fp,"   %-15s %s[kMax%s];   //[%s]\n",leaf->GetTypeName(), branchname,blen,leafcount->GetName());
+            else      fprintf(fp,"   %-15s %s[%d];   //[%s]\n",leaf->GetTypeName(), branchname,len,leafcount->GetName());
          }
       } else {
          if (strstr(branchname,"[")) len = 1;
@@ -1912,11 +1889,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       leafcount =leaf->GetLeafCount();
       TBranch *branch = leaf->GetBranch();
       strcpy(branchname,branch->GetName());
-      //if ( branch->GetNleaves() <= 1 ) {
-      //   if (branch->IsA() != TBranchObject::Class()) {
-      //      if (!leafcount) strcpy(branchname,leaf->GetTitle()); //<========
-      //   }
-      //}
+      if ( branch->GetNleaves() <= 1 ) {
+         if (branch->IsA() != TBranchObject::Class()) {
+            if (!leafcount) strcpy(branchname,leaf->GetTitle());
+         }
+      }
       bname = branchname;
       char *twodim = (char*)strstr(bname,"[");
       if (twodim) *twodim = 0;
@@ -1968,24 +1945,14 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
         fprintf(fp,"      // The following code should be used if you want this class to access\n");
         fprintf(fp,"      // a single tree instead of a chain\n");
       }
-      if (isHbook) {
-         fprintf(fp,"      THbookFile *f = (THbookFile*)gROOT->GetListOfBrowsables()->FindObject(\"%s\");\n",treefile);
-         fprintf(fp,"      if (!f) {\n");
-         fprintf(fp,"         f = new THbookFile(\"%s\");\n",treefile);
-         fprintf(fp,"      }\n");
-         Int_t hid;
-         sscanf(fTree->GetName(),"h%d",&hid);
-         fprintf(fp,"      tree = (TTree*)f->Get(%d);\n\n",hid);
-      } else {
-         fprintf(fp,"      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(\"%s\");\n",treefile);
-         fprintf(fp,"      if (!f) {\n");
-         fprintf(fp,"         f = new TFile(\"%s\");\n",treefile);
-         if (gDirectory != gFile) {
-           fprintf(fp,"         f->cd(\"%s\");\n",gDirectory->GetPath());
-         }
-         fprintf(fp,"      }\n");
-         fprintf(fp,"      tree = (TTree*)gDirectory->Get(\"%s\");\n\n",fTree->GetName());
+      fprintf(fp,"      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(\"%s\");\n",treefile);
+      fprintf(fp,"      if (!f) {\n");
+      fprintf(fp,"         f = new TFile(\"%s\");\n",treefile);
+      if (gDirectory != gFile) {
+        fprintf(fp,"         f->cd(\"%s\");\n",gDirectory->GetPath());
       }
+      fprintf(fp,"      }\n");
+      fprintf(fp,"      tree = (TTree*)gDirectory->Get(\"%s\");\n\n",fTree->GetName());
       if (ischain) {
          fprintf(fp,"#else // SINGLE_TREE\n\n");
          fprintf(fp,"      // The following code should be used if you want this class to access a chain\n");
@@ -2011,11 +1978,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"%s::~%s()\n",classname,classname);
       fprintf(fp,"{\n");
       fprintf(fp,"   if (!fChain) return;\n");
-      if (isHbook) {
-         //fprintf(fp,"   delete fChain->GetCurrentFile();\n");
-      } else {
-         fprintf(fp,"   delete fChain->GetCurrentFile();\n");
-      }
+      fprintf(fp,"   delete fChain->GetCurrentFile();\n");
       fprintf(fp,"}\n");
       fprintf(fp,"\n");
    }
@@ -2087,7 +2050,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
            char *dim =  (char*)strstr(branchname,"["); if (dim) dim[0] = 0;
          }
       } else {
-         strcpy(branchname,branch->GetName());
+         if (leafcount) strcpy(branchname,branch->GetName());
+         else           strcpy(branchname,leaf->GetTitle());
       }
       bname = branchname;
       char *brak = strstr(branchname,"[");     if (brak) *brak = 0;

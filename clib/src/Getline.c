@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.8 2001/06/22 16:10:16 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.7 2001/04/06 14:17:42 rdm Exp $ */
 /* Author: */
 
 /*
@@ -188,8 +188,8 @@ main()
 In order to allow the main program to have additional access to the buffer,
 to implement things such as completion or auto-indent modes, three
 function pointers can be bound to user functions to modify the buffer as
-described below.  By default Gl_in_hook and Gl_out_hook are set to NULL,
-and Gl_tab_hook is bound to a function that inserts spaces until the next
+described below.  By default gl_in_hook and gl_out_hook are set to NULL,
+and gl_tab_hook is bound to a function that inserts spaces until the next
 logical tab stop is reached.  The user can reassign any of these pointers
 to other functions.  Each of the functions bound to these hooks receives
 the current buffer as the first argument, and must return the location of
@@ -197,26 +197,26 @@ the leftmost change made in the buffer.  If the buffer isn't modified the
 functions should return -1.  When the hook function returns the screen is
 updated to reflect any changes made by the user function.
 
-int (*Gl_in_hook)(char *buf)
+int (*gl_in_hook)(char *buf)
 
-        If Gl_in_hook is non-NULL the function is called each time a new
+        If gl_in_hook is non-NULL the function is called each time a new
         buffer is loaded. It is called when getline is entered, with an
         empty buffer, it is called each time a new buffer is loaded from
         the history with ^P or ^N, and it is called when an incremental
         search string is accepted (when the search is terminated). The
         buffer can be modified and will be redrawn upon return to Getline().
 
-int (*Gl_out_hook)(char *buf)
+int (*gl_out_hook)(char *buf)
 
-        If Gl_out_hook is non-NULL it is called when a line has been
+        If gl_out_hook is non-NULL it is called when a line has been
         completed by the user entering a newline or return. The buffer
         handed to the hook does not yet have the newline appended. If the
         buffer is modified the screen is redrawn before getline returns the
         buffer to the caller.
 
-int (*Gl_tab_hook)(char *buf, int prompt_width, int *cursor_loc)
+int (*gl_tab_hook)(char *buf, int prompt_width, int *cursor_loc)
 
-        If Gl_tab_hook is non-NULL, it is called whenever a tab is typed.
+        If gl_tab_hook is non-NULL, it is called whenever a tab is typed.
         In addition to receiving the buffer, the current prompt width is
         given (needed to do tabbing right) and a pointer to the cursor
         offset is given, where a 0 offset means the first character in the
@@ -225,7 +225,7 @@ int (*Gl_tab_hook)(char *buf, int prompt_width, int *cursor_loc)
         up at the specified location after the screen is redrawn.
 */
 
-/* forward reference needed for Gl_tab_hook */
+/* forward reference needed for gl_tab_hook */
 static int gl_tab(char *buf, int offset, int *loc);
 
 /********************* exported interface ********************************/
@@ -238,9 +238,9 @@ void    Gl_windowchanged();          /* call after SIGWINCH signal */
 void    Gl_histinit(char *file);     /* read entries from old histfile */
 void    Gl_histadd(char *buf);       /* adds entries to hist */
 
-int             (*Gl_in_hook)(char *buf) = 0;
-int             (*Gl_out_hook)(char *buf) = 0;
-int             (*Gl_tab_hook)(char *buf, int prompt_width, int *loc) = gl_tab;
+int             (*gl_in_hook)(char *buf) = 0;
+int             (*gl_out_hook)(char *buf) = 0;
+int             (*gl_tab_hook)(char *buf, int prompt_width, int *loc) = gl_tab;
 
 /******************** imported interface *********************************/
 
@@ -785,8 +785,8 @@ Getlinem(int mode, const char *prompt)
        gl_init();
        gl_prompt = (prompt) ? prompt : "";
        gl_buf[0] = 0;
-       if (Gl_in_hook)
-           Gl_in_hook(gl_buf);
+       if (gl_in_hook)
+           gl_in_hook(gl_buf);
        gl_fixup(gl_prompt, -2, BUF_SIZE);
        if (mode == -1) return NULL;
     }
@@ -869,9 +869,9 @@ Getlinem(int mode, const char *prompt)
             case '\010': case '\177': gl_del(-1);     /* ^H and DEL */
                  break;
             case '\t':                                        /* TAB */
-                 if (Gl_tab_hook) {
+                 if (gl_tab_hook) {
                       tmp = gl_pos;
-                      loc = Gl_tab_hook(gl_buf, strlen(gl_prompt), &tmp);
+                      loc = gl_tab_hook(gl_buf, strlen(gl_prompt), &tmp);
                       if (loc >= 0 || tmp != gl_pos || loc == -2)
                            gl_fixup(gl_prompt, loc, tmp);
                  }
@@ -882,16 +882,16 @@ Getlinem(int mode, const char *prompt)
                  break;
             case '\016':                                      /* ^N */
                  strcpy(gl_buf, hist_next());
-                 if (Gl_in_hook)
-                      Gl_in_hook(gl_buf);
+                 if (gl_in_hook)
+                      gl_in_hook(gl_buf);
                  gl_fixup(gl_prompt, 0, BUF_SIZE);
                  break;
             case '\017': gl_overwrite = !gl_overwrite;        /* ^O */
                  break;
             case '\020':                                      /* ^P */
                  strcpy(gl_buf, hist_prev());
-                 if (Gl_in_hook)
-                      Gl_in_hook(gl_buf);
+                 if (gl_in_hook)
+                      gl_in_hook(gl_buf);
                  gl_fixup(gl_prompt, 0, BUF_SIZE);
                  break;
             case '\022': search_back(1);                      /* ^R */
@@ -925,14 +925,14 @@ Getlinem(int mode, const char *prompt)
                       {
                       case 'A':                           /* up */
                            strcpy(gl_buf, hist_prev());
-                           if (Gl_in_hook)
-                                Gl_in_hook(gl_buf);
+                           if (gl_in_hook)
+                                gl_in_hook(gl_buf);
                            gl_fixup(gl_prompt, 0, BUF_SIZE);
                            break;
                       case 'B':                          /* down */
                            strcpy(gl_buf, hist_next());
-                           if (Gl_in_hook)
-                                Gl_in_hook(gl_buf);
+                           if (gl_in_hook)
+                                gl_in_hook(gl_buf);
                            gl_fixup(gl_prompt, 0, BUF_SIZE);
                            break;
                       case 'C': gl_fixup(gl_prompt, -1, gl_pos+1);  /* right */
@@ -1090,8 +1090,8 @@ gl_newline()
 
     if (gl_cnt >= BUF_SIZE - 1)
         gl_error("\n*** Error: Getline(): input buffer overflow\n");
-    if (Gl_out_hook) {
-        change = Gl_out_hook(gl_buf);
+    if (gl_out_hook) {
+        change = gl_out_hook(gl_buf);
         len = strlen(gl_buf);
     }
     if (gl_erase_line) {
@@ -1548,8 +1548,8 @@ search_term()
     gl_search_mode = 0;
     if (gl_buf[0] == 0)         /* not found, reset hist list */
         hist_pos = hist_last;
-    if (Gl_in_hook)
-        Gl_in_hook(gl_buf);
+    if (gl_in_hook)
+        gl_in_hook(gl_buf);
     gl_fixup(gl_prompt, 0, gl_pos);
 }
 
@@ -1625,7 +1625,7 @@ search_forw(int new_search)
  *   string is allocated and a pointer to it is returned.              *
  *                                                                     *
  ***********************************************************************/
-static char *strip(char *s)
+char *strip(char *s)
 {
    char *r, *t1, *t2;
    int   l;

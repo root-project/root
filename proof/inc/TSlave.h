@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.6 2001/04/11 14:24:16 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.5 2000/12/19 14:34:31 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -73,7 +73,7 @@ public:
 
    const char   *GetName() const { return fName.Data(); }
    const char   *GetImage() const { return fImage.Data(); }
-   const char   *GetWorkDir() const { return fWorkDir.Data(); }
+   const char   *GetWorkingDirectory() const { return fWorkDir.Data(); }
    const char   *GetUser() const { return fUser.Data(); }
    Int_t         GetPort() const { return fPort; }
    Int_t         GetOrdinal() const { return fOrdinal; }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.65 2002/04/26 10:20:01 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.63 2002/04/02 07:59:02 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -530,7 +530,6 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t dpx, dpy;
    static Int_t *x=0, *y=0;
 
-   if (!IsEditable()) {gPad->SetCursor(kHand); return;}
    if (!gPad->IsEditable()) return;
 
    switch (event) {
@@ -712,19 +711,19 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-Int_t TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
+void TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
 {
 //*-*-*-*-*-*Fit this graph with function with name fname*-*-*-*-*-*-*-*-*-*
 //*-*        ============================================
 //  interface to TF1::Fit(TF1 *f1...
 
    TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
-   if (!f1) { Printf("Unknown function: %s",fname); return -1; }
-   return Fit(f1,option,"",xmin,xmax);
+   if (!f1) { Printf("Unknown function: %s",fname); return; }
+   Fit(f1,option,"",xmin,xmax);
 }
 
 //______________________________________________________________________________
-Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rxmax)
+void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rxmax)
 {
 //*-*-*-*-*-*-*-*-*-*-*Fit this graph with function f1*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================
@@ -809,7 +808,6 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //    Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
 //    Double_t err0 = myfunc->GetParError(0);  //error on first parameter
 
-   Int_t fitResult = 0;
    Double_t xmin, xmax, ymin, ymax;
    Int_t i, npar,nvpar,nparx;
    Double_t par, we, al, bl;
@@ -866,13 +864,13 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 
 //*-*- Get pointer to the function by searching in the list of functions in ROOT
    grF1 = f1;
-   if (!grF1) { Printf("Function is a null pointer"); return 0; }
+   if (!grF1) { Printf("Function is a null pointer"); return; }
    npar = grF1->GetNpar();
-   if (npar <=0) { Printf("Illegal number of parameters = %d",npar); return 0; }
+   if (npar <=0) { Printf("Illegal number of parameters = %d",npar); return; }
 
 //*-*- Check that function has same dimension as histogram
    if (grF1->GetNdim() > 1) {
-      Printf("Error function %s is not 1-D",f1->GetName()); return 0; }
+      Printf("Error function %s is not 1-D",f1->GetName()); return; }
 
 //*-*- Is a Fit range specified?
    Int_t gxfirst, gxlast;
@@ -900,15 +898,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //*-*- Set error criterion for chisquare
    arglist[0] = 1;
    if (!fitOption.User) grFitter->SetFCN(GraphFitChisquare);
-   fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
-   if (fitResult != 0) {
-     //   Abnormal termination, MIGRAD might not have converged on a
-     //   minimum.
-     if (!fitOption.Quiet) {
-        Warning("Fit","Abnormal termination of minimization.");
-     }
-     return fitResult;
-   }
+   grFitter->ExecuteCommand("SET ERR",arglist,1);
 
 //*-*- Some initialisations
    if (!fitOption.Verbose) {
@@ -998,10 +988,9 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       if (fitOption.Nograph) fnew1->SetBit(TF1::kNotDraw);
       fnew1->SetBit(TFormula::kNotGlobal);
 
-      if (TestBit(kCanDelete)) return fitResult;
+      if (TestBit(kCanDelete)) return;
       if (gPad) gPad->Modified();
    }
-   return fitResult;
 }
 
 //______________________________________________________________________________
@@ -2965,16 +2954,6 @@ void TGraph::Set(Int_t n)
    fNpoints =n;
    fX = xx;
    fY = yy;
-}
-
-//______________________________________________________________________________
-void TGraph::SetEditable(Bool_t editable)
-{
-// if editable=kFALSE, the graph cannot be modified with the mouse
-//  by default a TGraph is editable
-   
-   if (editable) ResetBit(kNotEditable);
-   else          SetBit(kNotEditable);
 }
 
 //______________________________________________________________________________

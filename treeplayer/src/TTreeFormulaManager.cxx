@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.cxx,v 1.1 2002/03/26 08:24:01 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: $
 // Author: Philippe Canal   20/03/02
 
 /*************************************************************************
@@ -33,11 +33,11 @@ TTreeFormulaManager::TTreeFormulaManager() : TObject()
 {
 //*-*-*-*-*-*-*-*-*-*-*Tree FormulaManger default constructor*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================================
-
+  
    fMultiplicity = 0;
    fMultiVarDim  = kFALSE;
    fNeedSync     = kFALSE;
-
+   
    for(Int_t i=0; i<kMAXFORMDIM+1; i++) {
       fVarDims[i] = 0;
       fCumulUsedSizes[i] = 1;
@@ -79,7 +79,7 @@ void TTreeFormulaManager::Add(TTreeFormula* adding)
   TTreeFormulaManager * old = adding->fManager;
 
   if (old) {
-
+    
      if (old==this) {
         if (fFormulas.FindObject(adding)) return;
      } else {
@@ -94,7 +94,7 @@ void TTreeFormulaManager::Add(TTreeFormula* adding)
 }
 
 //______________________________________________________________________________
-void TTreeFormulaManager::AddVarDims(Int_t virt_dim)
+void TTreeFormulaManager::AddVarDims(Int_t virt_dim) 
 {
    // Add a variable dimension
 
@@ -102,7 +102,7 @@ void TTreeFormulaManager::AddVarDims(Int_t virt_dim)
 }
 
 //______________________________________________________________________________
-void TTreeFormulaManager::CancelDimension(Int_t virt_dim)
+void TTreeFormulaManager::CancelDimension(Int_t virt_dim) 
 {
    // Cancel a dimension.  This is usually called when an out-of-bounds index
    // is used.
@@ -112,9 +112,9 @@ void TTreeFormulaManager::CancelDimension(Int_t virt_dim)
 }
 
 //______________________________________________________________________________
-void TTreeFormulaManager::EnableMultiVarDims()
+void TTreeFormulaManager::EnableMultiVarDims() 
 {
-
+  
    fMultiVarDim = kTRUE;
    if (!fCumulUsedVarDims) fCumulUsedVarDims = new TArrayI;
 
@@ -136,7 +136,7 @@ Int_t TTreeFormulaManager::GetNdata()
    if (fMultiplicity==2) return fNdata; // CumulUsedSizes[0];
 
    // We have at least one leaf with a variable size:
-
+   
    // Reset the registers.
    for(k=0; k<=kMAXFORMDIM; k++) {
       fUsedSizes[k] = TMath::Abs(fVirtUsedSizes[k]);
@@ -168,7 +168,7 @@ Int_t TTreeFormulaManager::GetNdata()
            overall *= fUsedSizes[k];
            fCumulUsedSizes[k] = overall;
         } else {
-           Error("GetNdata","a dimension is still negative!");
+           Error("TTreeFormula::GetNdata","GetNdata: a dimension is still negative!");
         }
       }
    } else {
@@ -201,7 +201,7 @@ Int_t TTreeFormulaManager::GetNdata()
 }
 
 //______________________________________________________________________________
-Bool_t TTreeFormulaManager::Sync() {
+bool TTreeFormulaManager::Sync() {
 
    if (!fNeedSync) return true;
 
@@ -213,7 +213,7 @@ Bool_t TTreeFormulaManager::Sync() {
    // might add more formulas (TCutG).
    for(Int_t i=0; i<fFormulas.GetLast()+1; i++) {
       current = (TTreeFormula*)fFormulas.UncheckedAt(i);
-
+     
       hasCast |= current->fHasCast;
 
       // We probably need to reset the formula's dimension
@@ -230,7 +230,7 @@ Bool_t TTreeFormulaManager::Sync() {
         if (fMultiplicity!=1) fMultiplicity = 2;
         break;
       default:
-        Error("Sync","Unexpected case!");
+        ::Error("TTreeFormulaManager::Sync","Unexpected case!");
       }
 
 
@@ -267,13 +267,13 @@ Bool_t TTreeFormulaManager::Sync() {
       default: fNdata = 0;
    }
    fNeedSync = kFALSE;
-
+    
    return true;
 }
 
 //______________________________________________________________________________
 void TTreeFormulaManager::UpdateFormulaLeaves()
-{
+{   
    // this function could be called TTreePlayer::UpdateFormulaLeaves, itself
    // called by TChain::LoadTree when a new Tree is loaded.
    // Because Trees in a TChain may have a different list of leaves, one

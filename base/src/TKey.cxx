@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.20 2002/04/04 08:58:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.18 2002/01/25 18:24:19 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -61,8 +61,6 @@ const Int_t kMAXBUF = 0xffffff;
 const Int_t kMAXFILEBUFFER = 262144;
 #endif
 
-UInt_t keyAbsNumber = 0;
-
 ClassImp(TKey)
 
 //______________________________________________________________________________
@@ -78,7 +76,6 @@ TKey::TKey() : TNamed(), fDatime((UInt_t)0)
    fBufferRef  = 0;
    fCycle      = 0;
    fSeekPdir   = 0;
-   keyAbsNumber++; SetUniqueID(keyAbsNumber);
 }
 
 //______________________________________________________________________________
@@ -97,7 +94,6 @@ TKey::TKey(Seek_t pointer, Int_t nbytes) : TNamed()
    fBufferRef  = 0;
    fCycle      = 0;
    fSeekPdir   = 0;
-   keyAbsNumber++; SetUniqueID(keyAbsNumber);
 }
 
 //______________________________________________________________________________
@@ -231,7 +227,6 @@ void TKey::Create(Int_t nbytes)
 
 //*-*-------------------find free segment
 //*-*                    =================
-   keyAbsNumber++; SetUniqueID(keyAbsNumber);
    Int_t nsize      = nbytes + fKeylen;
    TList *lfree = gFile->GetListOfFree();
    TFree *f1        = (TFree*)lfree->First();
@@ -351,13 +346,6 @@ void TKey::FillBuffer(char *&buffer)
   fClassName.FillBuffer(buffer);
   fName.FillBuffer(buffer);
   fTitle.FillBuffer(buffer);
-}
-
-//______________________________________________________________________________
-ULong_t TKey::Hash() const
-{
-// This Hash function should redefine the default from TNamed
-   return TNamed::Hash();
 }
 
 //______________________________________________________________________________

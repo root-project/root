@@ -30,9 +30,6 @@ ACLOCALDIR     := @aclocaldir@
 XPMLIBDIR      := @xpmlibdir@
 XPMLIB         := @xpmlib@
 
-EXCEPTIONS     := @exceptions@
-
-ENABLETHREAD   := @enable_thread@
 OSTHREADLIBDIR := @threadlibdir@
 OSTHREADLIB    := @threadlib@
 

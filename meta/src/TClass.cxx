@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.72 2002/04/04 17:32:13 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.70 2002/02/22 09:37:29 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -44,7 +44,6 @@
 #include "TMapFile.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
-#include "TClassMenuItem.h"
 #include "Api.h"
 #include "TVirtualMutex.h"
 
@@ -205,9 +204,6 @@ TClass::TClass() : TDictionary()
    fStreamerInfo   = 0;
 
    ResetInstanceCount();
-
-   fClassMenuList  = new TList();
-   fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList, this));
 }
 
 //______________________________________________________________________________
@@ -240,9 +236,6 @@ TClass::TClass(const char *name) : TDictionary()
    fStreamerInfo   = 0;
 
    ResetInstanceCount();
-
-   fClassMenuList  = new TList();
-   fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList,this));
 
    if (!fClassInfo) {
       if (!gInterpreter)
@@ -368,9 +361,6 @@ TClass::TClass(const char *name, Version_t cversion,
       if (cursav) cursav->cd();
    }
    ResetBit(kLoading);
-
-   fClassMenuList = new TList();
-   fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList,this));
 }
 
 //______________________________________________________________________________
@@ -408,10 +398,6 @@ TClass::~TClass()
       gROOT->GetListOfClasses()->Remove(this);
 
    delete fClassInfo;
-
-   if (fClassMenuList)
-      fClassMenuList->Delete();
-   delete fClassMenuList;
 }
 
 //______________________________________________________________________________
@@ -478,12 +464,12 @@ void TClass::BuildRealData(void *pointer)
       char parent[256];
       parent[0] = 0;
       TBuildRealData brd(realDataObject, this);
-
+      
       //Force a call to InheritsFrom. This function indirectly calls gROOT->GetClass
       //It forces the loading of new typedefs in case some of them were not
       //yet loaded.
       InheritsFrom(TObject::Class());
-
+      
       //Always call ShowMembers via the interpreter. A direct call like
       //      realDataObject->ShowMembers(brd, parent);
       //will not work if the class derives from TObject but not as primary
@@ -881,63 +867,6 @@ void TClass::GetMenuItems(TList *list)
             list->Remove(m);
       }
    }
-}
-
-//______________________________________________________________________________
-void TClass::ResetMenuList()
-{
-   // Resets the menu list to it's standard value.
-
-   if (fClassMenuList)
-      fClassMenuList->Delete();
-   else
-      fClassMenuList = new TList();
-   fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList, this));
-}
-
-//______________________________________________________________________________
-void TClass::MakeCustomMenuList()
-{
-   // Makes a customizable version of the popup menu list, i.e. makes a list
-   // of TClassMenuItem objects of methods accessible by context menu.
-   // The standard (and different) way consists in having just one element
-   // in this list, corresponding to the whole standard list.
-   // Once the customizable version is done, one can remove or add elements.
-
-   TClassMenuItem *menuItem;
-
-   fClassMenuList->Delete();
-
-   TList* methodList = new TList;
-   GetMenuItems(methodList);
-
-   TMethod *method;
-   TMethodArg *methodArg;
-   TClass  *classPtr = 0;
-   TIter next(methodList);
-
-   while ((method = (TMethod*) next())) {
-      // if go to a mother class method, add separator
-      if (classPtr != method->GetClass()) {
-         menuItem = new TClassMenuItem(TClassMenuItem::kPopupSeparator, this);
-         fClassMenuList->AddLast(menuItem);
-         classPtr = method->GetClass();
-      }
-      // Build the signature of the method
-      TString sig;
-      TList* margsList = method->GetListOfMethodArgs();
-      TIter nextarg(margsList);
-      while ((methodArg = (TMethodArg*)nextarg())) {
-         sig = sig+","+methodArg->GetFullTypeName();
-      }
-      if (sig.Length()!=0) sig.Remove(0,1);  // remove first comma
-      menuItem = new TClassMenuItem(TClassMenuItem::kPopupUserFunction, this,
-                      method->GetName(), method->GetName(),0,
-                      sig.Data(),-1,TClassMenuItem::kIsSelf);
-      if (method->IsMenuItem() == kMenuToggle) menuItem->SetToggle();
-      fClassMenuList->Add(menuItem);
-   }
-   delete methodList;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.h,v 1.2 2002/03/26 09:06:34 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.h,v 1.1 2002/03/26 08:24:01 brun Exp $
 // Author: Philippe Canal   20/03/02
 
 /*************************************************************************
@@ -34,10 +34,10 @@ class TArrayI;
 class TTreeFormulaManager : public TObject {
 private:
    TObjArray   fFormulas;
-   Int_t       fMultiplicity;     // Indicator of the variability of the formula
+   Int_t       fMultiplicity;     // Indicator of the variability of the formula    
    Bool_t      fMultiVarDim;      // True if one of the variable has 2 variable size dimensions.
    Int_t       fNdata;            //! Last value calculated by GetNdata
-
+   
    //the next line should be: mutable Int_t fCumulUsedSizes[kMAXFORMDIM+1]; See GetNdata()
    Int_t       fCumulUsedSizes[kMAXFORMDIM+1];      //Accumulated size of lower dimensions as seen for this entry
    TArrayI    *fCumulUsedVarDims;                   //fCumulUsedSizes(1) for multi variable dimensions case
@@ -50,7 +50,7 @@ private:
 
    friend class TTreeFormula;
 
-private:
+private:   
    // Not implemented yet
    TTreeFormulaManager(const TTreeFormulaManager&);
    TTreeFormulaManager& operator=(const TTreeFormulaManager&);
@@ -73,7 +73,7 @@ public:
    virtual Int_t      GetMultiplicity() const {return fMultiplicity;}
    virtual Int_t      GetNdata();
    virtual void       Remove(TTreeFormula*);
-   virtual Bool_t     Sync();
+   virtual bool       Sync();
 
    ClassDef(TTreeFormulaManager,0) // A class coordinating several TTreeFormula objects.
 };

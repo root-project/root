@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.8 2002/04/04 11:03:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.6 2001/03/11 23:10:00 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -44,7 +44,6 @@ public:
 
    TClonesArray();
    TClonesArray(const char *classname, Int_t size = 1000, Bool_t call_dtor = kFALSE);
-   TClonesArray(const TClass *cl, Int_t size = 1000, Bool_t call_dtor = kFALSE);
    virtual         ~TClonesArray();
    virtual void     Compress();
    virtual void     Clear(Option_t *option="");
@@ -71,7 +70,6 @@ public:
    TObject         *New(Int_t idx);
    TObject         *AddrAt(Int_t idx);
    TObject         *&operator[](Int_t idx);
-   TObject         *operator[](Int_t idx) const;
 
    ClassDef(TClonesArray,4)  //An array of clone objects
 };

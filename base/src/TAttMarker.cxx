@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.5 2002/03/20 10:39:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.4 2002/01/24 11:39:27 rdm Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -110,7 +110,7 @@ TAttMarker::~TAttMarker()
 }
 
 //______________________________________________________________________________
-void TAttMarker::Copy(TAttMarker &attmarker) const
+void TAttMarker::Copy(TAttMarker &attmarker)
 {
 //*-*-*-*-*-*-*-*-*Copy this marker attributes to a new atttext*-*-*-*-*-*-*-*
 //*-*              ============================================

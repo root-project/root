@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.14 2002/02/27 08:39:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.13 2002/01/04 08:14:30 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -979,11 +979,7 @@ TMatrix &TMatrix::Invert(Double_t *determ_ptr)
                   if (!was_pivoted[k] && (curr_value = TMath::Abs(*cp)) > max_value)
                      max_value = curr_value, prow = k, pcol = j;
              }
-         if (max_value < singularity_tolerance) {
-            // free allocated heap memory before returning
-            if (symmetric) delete [] diag;
-            delete [] pivots;
-            delete [] was_pivoted;
+         if (max_value < singularity_tolerance)
             if (determ_ptr) {
                *determ_ptr = 0;
                return *this;
@@ -991,7 +987,6 @@ TMatrix &TMatrix::Invert(Double_t *determ_ptr)
                Error("Invert(Double_t*)", "matrix turns out to be singular: can't invert");
                return *this;
             }
-         }
          pivotp->row = prow;
          pivotp->col = pcol;
      }
@@ -1059,7 +1054,6 @@ TMatrix &TMatrix::Invert(Double_t *determ_ptr)
 
    delete [] was_pivoted;
    delete [] pivots;
-
    return *this;
 }
 

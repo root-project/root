@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.3 2002/03/13 01:52:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.2 2002/02/12 17:53:18 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -25,11 +25,7 @@
 #include "TString.h"
 #endif
 
-typedef long Long64_t;
-
 class TDSet;
-class TDSetElement;
-class TFile;
 class TDirectory;
 class TSelector;
 class TList;
@@ -42,35 +38,24 @@ class TTree;
 class TEventIter : public TObject {
 
 protected:
-   TDSet         *fDSet;      // data set over which to iterate
-
-   TDSetElement  *fElem;      // Current Element
-
-   TString        fFilename;  // Name of the current file
-   TFile         *fFile;      // Current file
-   TString        fPath;      // Path to current TDirectory
-   TDirectory    *fDir;       // directory containing the objects or the TTree
-   Long64_t       fElemFirst; // first entry to process for this element
-   Long64_t       fElemNum;   // number of entries to process for this element
-   Long64_t       fElemCur;   // current entry for this element
-
-   TSelector     *fSel;       // selector to be used
-   Long64_t       fFirst;     // first entry to process
-   Long64_t       fNum;       // number of entries to process
-   Long64_t       fCur;       // current entry
-
-   Int_t    LoadDir();        // Load the directory pointed to by fElem
+   TDSet       *fDSet;      // data set over which to iterate
+   TDirectory  *fDir;       // directory containing the objects
+   TSelector   *fSel;       // selector to by used
+   Double_t     fFirst;     // first entry to process
+   Double_t     fNum;       // number of entries to process
+   Double_t     fCur;       // current entry
 
 public:
    TEventIter();
-   TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
+   TEventIter(TDSet *dset, TDirectory *dir, TSelector *sel);
    virtual ~TEventIter();
 
-   virtual Long64_t  GetNextEvent() = 0;
+   virtual Bool_t GetNextEvent() = 0;
+   virtual Bool_t InitRange(Double_t first, Double_t num) = 0;
 
-   static TEventIter *Create(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
+   static TEventIter *Create(TDSet *dset, TDirectory *dir, TSelector *sel);
 
-   ClassDef(TEventIter,0)  // Event iterator used by TProofPlayer's
+   ClassDef(TEventIter,1)  // Event iterator used by TProofPlayer's
 };
 
 
@@ -86,12 +71,13 @@ private:
 
 public:
    TEventIterObj();
-   TEventIterObj(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
+   TEventIterObj(TDSet *dset, TDirectory *dir, TSelector *sel);
    ~TEventIterObj();
 
-   Long64_t GetNextEvent();
+   Bool_t GetNextEvent();
+   Bool_t InitRange(Double_t first, Double_t num);
 
-   ClassDef(TEventIterObj,0)  // Event iterator for objects
+   ClassDef(TEventIterObj,1)  // Event iterator for objects
 };
 
 
@@ -105,12 +91,13 @@ private:
 
 public:
    TEventIterTree();
-   TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
+   TEventIterTree(TDSet *dset, TDirectory *dir, TSelector *sel);
    ~TEventIterTree();
 
-   Long64_t GetNextEvent();
+   Bool_t GetNextEvent();
+   Bool_t InitRange(Double_t first, Double_t num);
 
-   ClassDef(TEventIterTree,0)  // Event iterator for Trees
+   ClassDef(TEventIterTree,1)  // Event iterator for Trees
 };
 
 #endif
