@@ -59,25 +59,23 @@ static int G__ManualTree2_165_7_17(G__value *result7,G__CONST char *funcname,str
    } else {
       TTree *t = (TTree*)(G__getstructoffset());
       switch(libp->paran) {
-      case 5:
+      case 4:
          G__letint(result7,85,(long)t->Branch(branchname,
                                               realClass->GetName(),
                                               (void*)G__int(libp->para[1]),
                                               (Int_t)G__int(libp->para[2]),
                                               (Int_t)G__int(libp->para[3])));
-         break;
-      case 4:
-         G__letint(result7,85,(long)t->Branch(branchname,
-                                              realClass->GetName(),
-                                              (void*)G__int(libp->para[1]),
-                                              (Int_t)G__int(libp->para[2])));
          break;
       case 3:
          G__letint(result7,85,(long)t->Branch(branchname,
                                               realClass->GetName(),
                                               (void*)G__int(libp->para[1]),
-                                              (Int_t)G__int(libp->para[2]),
-                                              (Int_t)G__int(libp->para[3])));
+                                              (Int_t)G__int(libp->para[2])));
+         break;
+      case 2:
+         G__letint(result7,85,(long)t->Branch(branchname,
+                                              realClass->GetName(),
+                                              (void*)G__int(libp->para[1])));
          break;
       }         
    }
