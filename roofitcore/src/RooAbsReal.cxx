@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.88 2002/09/30 00:57:28 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.89 2002/11/19 02:42:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1095,12 +1095,13 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   
   // Make list of variables to be projected
   RooArgSet projectedVars ;
+  RooArgSet sliceSet ;
   if (projSet) {
     makeProjectionSet(frame->getPlotVar(),projSet,projectedVars,kFALSE) ;
 
     // Print list of non-projected variables
     if (frame->getNormVars()) {
-      RooArgSet sliceSet(*frame->getNormVars()) ;
+      sliceSet.add(*frame->getNormVars()) ;
       sliceSet.remove(projectedVars,kTRUE) ;
       sliceSet.remove(*sliceSet.find(frame->getPlotVar()->GetName())) ;
       if (sliceSet.getSize()) {
@@ -1114,7 +1115,9 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   }
 
   // Take out data-projected dependens from projectedVars
+  RooArgSet* projDataNeededVars = 0 ;
   if (projData) {
+    projDataNeededVars = (RooArgSet*) projectedVars.selectCommon(projDataVars) ;
     projectedVars.remove(projDataVars,kTRUE,kTRUE) ;
   }
 
@@ -1166,9 +1169,52 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
   if (projData) {
     
-    RooDataProjBinding projBind(*funcAsym,*projData,*plotVar) ;
-    ((RooAbsReal*)posProj)->attachDataSet(*projData) ;
-    ((RooAbsReal*)negProj)->attachDataSet(*projData) ;
+    // If data set contains more rows than needed, make reduced copy first
+    RooAbsData* projDataSel = (RooAbsData*)projData;
+    if (projDataNeededVars->getSize()<projData->get()->getSize()) {
+      
+      // Determine if there are any slice variables in the projection set
+      RooArgSet* sliceDataSet = (RooArgSet*) sliceSet.selectCommon(*projData->get()) ;
+      TString cutString ;
+      if (sliceDataSet->getSize()>0) {
+	TIterator* iter = sliceDataSet->createIterator() ;
+	RooAbsArg* sliceVar ; 
+	Bool_t first(kTRUE) ;
+ 	while(sliceVar=(RooAbsArg*)iter->Next()) {
+	  if (!first) {
+	    cutString.Append("&&") ;
+ 	  } else {
+	    first=kFALSE ;	    
+ 	  }
+
+ 	  RooAbsRealLValue* real ;
+	  RooAbsCategoryLValue* cat ;	  
+ 	  if (real = dynamic_cast<RooAbsRealLValue*>(sliceVar)) {
+	    cutString.Append(Form("%s==%f",real->GetName(),real->getVal())) ;
+	  } else if (cat = dynamic_cast<RooAbsCategoryLValue*>(sliceVar)) {
+	    cutString.Append(Form("%s==%d",cat->GetName(),cat->getIndex())) ;	    
+	  }
+ 	}
+	delete iter ;
+      }
+      delete sliceDataSet ;
+
+      if (!cutString.IsNull()) {
+	projDataSel = ((RooAbsData*)projData)->reduce(*projDataNeededVars,cutString) ;
+ 	cout << "RooAbsReal::plotAsymOn(" << GetName() 
+	     << ") reducing given projection dataset to entries with " << cutString << endl ;
+      } else {
+	projDataSel = ((RooAbsData*)projData)->reduce(*projDataNeededVars) ;
+      }
+      cout << "RooAbsReal::plotAsymOn(" << GetName() 
+	   << ") only the following components of the projection data will be used: " ; 
+      projDataNeededVars->Print("1") ;
+    }
+    
+    RooDataProjBinding projBind(*funcAsym,*projDataSel,*plotVar) ;
+    ((RooAbsReal*)posProj)->attachDataSet(*projDataSel) ;
+    ((RooAbsReal*)negProj)->attachDataSet(*projDataSel) ;
+
     RooScaledFunc scaleBind(projBind,scaleFactor);
 
     // Set default range, if not specified
@@ -1182,6 +1228,10 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, drawOptions);
+
+    cout << endl ;
+
+    if (projDataSel!=projData) delete projDataSel ;
        
   } else {
 
