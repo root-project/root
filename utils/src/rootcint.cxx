@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.128 2003/01/22 17:49:01 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.129 2003/01/31 08:10:18 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -13,11 +13,11 @@
 //                                                                      //
 // rootcint                                                             //
 //                                                                      //
-// This program generates the Streamer(), TBuffer &operator>>() and     //
-// ShowMembers() methods for ROOT classes, i.e. classes using the       //
-// ClassDef and ClassImp macros.                                        //
-// In addition rootcint can also generate the CINT dictionaries         //
-// needed in order to get access to ones classes via the interpreter.   //
+// This program generates the CINT dictionaries needed in order to      //
+// get access to your classes via the interpreter.                      //
+// In addition rootcint can generate the Streamer(),                    //
+// TBuffer &operator>>() and ShowMembers() methods for ROOT classes,    //
+// i.e. classes using the ClassDef and ClassImp macros.                 //
 //                                                                      //
 // Rootcint can be used like:                                           //
 //                                                                      //
@@ -138,11 +138,11 @@ const char *ShortTypeName(const char *typeDesc);
 
 const char *help =
 "\n"
-"This program generates the Streamer(), TBuffer &operator>>() and\n"
-"ShowMembers() methods for ROOT classes, i.e. classes using the\n"
+"This program generates the CINT dictionaries needed in order to\n"
+"get access to your classes via the interpreter.\n"
+"In addition rootcint can generate the Streamer(), TBuffer &operator>>()\n"
+"and ShowMembers() methods for ROOT classes, i.e. classes using the\n"
 "ClassDef and ClassImp macros.\n"
-"In addition rootcint can also generate the CINT dictionaries\n"
-"needed in order to get access to ones classes via the interpreter.\n"
 "\n"
 "Rootcint can be used like:\n"
 "\n"
@@ -177,7 +177,7 @@ const char *help =
 "\n"
 "Before specifying the first header file one can also add include\n"
 "file directories to be searched and preprocessor defines, like:\n"
-"   -I$../include -DDebug\n"
+"   -I../include -DDebug\n"
 "\n"
 "The (optional) file LinkDef.h looks like:\n"
 "\n"
@@ -427,9 +427,9 @@ string FixSTLName(const string& cintName) {
    char type[kMaxLen];
    strcpy(type, s);
 
-#if 0 // (G__GNUC<3) && !defined (G__KCC) 
+#if 0 // (G__GNUC<3) && !defined (G__KCC)
    if (!strncmp(type, "vector",6)   ||
-       !strncmp(type, "list",4)     || 
+       !strncmp(type, "list",4)     ||
        !strncmp(type, "deque",5)    ||
        !strncmp(type, "map",3)      ||
        !strncmp(type, "multimap",8) ||
@@ -483,10 +483,10 @@ string FixSTLName(const string& cintName) {
                  result += replacement;
               } else {
                  result += FixSTLName(param);
-              }             
+              }
               result += ',';
            }
-        }          
+        }
       }
       return result;
    }
@@ -634,7 +634,7 @@ int NeedTemplateKeyword(G__ClassInfo &cl)
          //        fileinfo.Name());
          if (abs(templ->line-cl.LineNumber())<=3 &&
              strcmp(cl.FileName(), fileinfo.Name())==0) {
-           
+
             delete [] templatename;
             // This is an automatically instantiated templated class.
 #ifdef __KCC
@@ -2795,7 +2795,7 @@ void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName)
 
       fullyQualifiedName = type.TrueName();
 
-   } else if (!strcmp(typeName, "vector") 
+   } else if (!strcmp(typeName, "vector")
        ||!strcmp(typeName, "list")
        ||!strcmp(typeName, "deque")
        ||!strcmp(typeName, "map")
@@ -2806,7 +2806,7 @@ void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName)
 
       GetFullyQualifiedName(type.Name(),fullyQualifiedName);
       const char *qual = fullyQualifiedName.c_str();
-      if (!strncmp(qual, "::vector", strlen("::vector")) 
+      if (!strncmp(qual, "::vector", strlen("::vector"))
        ||!strncmp(qual, "::list", strlen("::list"))
        ||!strncmp(qual, "::deque", strlen("::deque"))
        ||!strncmp(qual, "::map", strlen("::map"))
@@ -2839,7 +2839,7 @@ void GetFullyQualifiedName(const char *originalName, string &fullyQualifiedName)
 
    fullyQualifiedName = "::";
 
-   string name = originalName; 
+   string name = originalName;
    G__ClassInfo arg;
 
    int len = name.length();
@@ -2904,7 +2904,7 @@ void GetFullyQualifiedName(const char *originalName, string &fullyQualifiedName)
          break;
       case ' ':
       case '&':
-      case '*': 
+      case '*':
          if (nesting==1) {
             char keep = name[c];
             name[c] = 0;
@@ -2960,10 +2960,10 @@ void WriteShadowClass(G__ClassInfo &cl)
 
   } else {
 
-      if (cl.HasMethod("Class_Name") && !cl.IsTmplt()) 
+      if (cl.HasMethod("Class_Name") && !cl.IsTmplt())
          Info(0, "Class %s: Generating Shadow Class [*** templated instrumented class ***]\n",
               cl.Fullname());
-      else 
+      else
          Info(0, "Class %s: Generating Shadow Class [*** non-instrumented class ***]\n",
               cl.Fullname());
 
@@ -3025,7 +3025,7 @@ void WriteShadowClass(G__ClassInfo &cl)
          string type_name = GetNonConstTypeName(d,true); // .Type()->Name();
 
          if ((d.Type()->Property() & G__BIT_ISENUM) &&
-             (type_name.length()==0 || type_name=="enum") || 
+             (type_name.length()==0 || type_name=="enum") ||
               type_name.find("::")==type_name.length()-2 ) {
             // We have unamed enums, let's fake it:
             fprintf(fp,"         enum {kDummy} %s", d.Name());
