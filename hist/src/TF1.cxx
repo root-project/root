@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.83 2004/07/20 07:23:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.84 2004/07/23 14:04:19 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 Bool_t TF1::fgAbsValue    = kFALSE;
 Bool_t TF1::fgRejectPoint = kFALSE;
 static TF1 *gHelper = 0;
+static Double_t ErrorTF1 = 0;
 
 ClassImp(TF1)
 
@@ -631,29 +632,192 @@ void TF1::Copy(TObject &obj) const
 }
 
 //______________________________________________________________________________
-Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t epsilon)
+Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
 {
-//*-*-*-*-*-*-*-*-*Return derivative of function at point x*-*-*-*-*-*-*-*
-//
-//    The derivative is computed by computing the value of the function
-//   at points x-epsilon*range and x+epsilon*range (range=fXmax-fXmin).
-//   if params is NULL, use the current values of parameters
+  // returns the first derivative of the function at point x, 
+  // computed by Richardson's extrapolation method (use 2 derivative estimates 
+  // to compute a third, more accurate estimation)
+  // first, derivatives with steps h and h/2 are computed by central difference formulas
+  // D(h) = (f(x+h) - f(x-h))/2h
+  // the final estimate D = (4*D(h/2) - D(h))/3
+  //
+  // if the argument params is null, the current function parameters are used,
+  // otherwise the parameters in params are used.
+  //
+  // the argument eps may be specified to control the step size (precision).
+  // the step size is taken as eps*(xmax-xmin).
+  // the default value (0.001) should be good enough for the vast majority
+  // of functions. Give a smaller value if your function has many changes
+  // of the second derivative in the function range.
+  //
+  // Getting the error via TF1::DerivativeError
+  // -----------------
+  //   (total error = roundoff error + interpolation error)
+  // the estimate of the roundoff error is taken as follows:
+  //    err = k*Sqrt(f(x)*f(x) + x*x*deriv*deriv)*Sqrt(Sum(ai)*(ai)),
+  // where k is the double precision, ai are coefficients used in
+  // central difference formulas
+  // interpolation error is decreased by making the step size h smaller.
+  //
+  // Author: Anna Kreshuk
+  
+  const Double_t C1 = 1e-15;
+   
+  if(eps< 1e-10 || eps > 1e-2) {
+     Warning("Derivative","parameter esp=%g out of allowed range[1e-10,1e-2], reset to 0.001",eps);
+     eps = 0.001;
+  }
+  Double_t xmin, xmax;
+  GetRange(xmin, xmax);
+  Double_t h = eps*(xmax-xmin);
 
-   Double_t xx[2];
-   if (epsilon <= 0) epsilon = 0.001;
-   epsilon *= fXmax-fXmin;
-   xx[0] = x - epsilon;
-   xx[1] = x + epsilon;
-   if (xx[0] < fXmin) xx[0] = fXmin;
-   if (xx[1] > fXmax) xx[1] = fXmax;
+  Double_t xx[1];
+  TF1 *func = (TF1*)this;
+  func->InitArgs(xx, params);
+  xx[0] = x+h;     Double_t f1 = func->EvalPar(xx, params);
+  xx[0] = x;       Double_t fx = func->EvalPar(xx, params);
+  xx[0] = x-h;     Double_t f2 = func->EvalPar(xx, params);
 
-   Double_t f1,f2,deriv;
-   InitArgs(&xx[0],params);
-   f1    = EvalPar(&xx[0],params);
-   InitArgs(&xx[1],params);
-   f2    = EvalPar(&xx[1],params);
-   deriv = (f2-f1)/(xx[1]-xx[0]);
-   return deriv;
+  xx[0] = x+h/2;   Double_t g1 = func->EvalPar(xx, params);
+  xx[0] = x-h/2;   Double_t g2 = func->EvalPar(xx, params);
+
+  //compute the central differences
+  Double_t h2    = 1/(2.*h);
+  Double_t D0    = f1 - f2;
+  Double_t D2    = 2*(g1 - g2);
+  ErrorTF1       = C1*h2*fx;  //compute the error
+  Double_t deriv = h2*(4*D2 - D0)/3.;  
+  return deriv;
+}
+
+
+//______________________________________________________________________________
+Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
+{
+  // returns the first derivative of the function at point x, 
+  // computed by Richardson's extrapolation method (use 2 derivative estimates 
+  // to compute a third, more accurate estimation)
+  // first, derivatives with steps h and h/2 are computed by central difference formulas
+  //    D(h) = (f(x+h) - 2*f(x) + f(x-h))/(h*h)
+  //    the final estimate D = (4*D(h/2) - D(h))/3
+  //
+  // if the argument params is null, the current function parameters are used,
+  // otherwise the parameters in params are used.
+  //
+  // the argument eps may be specified to control the step size (precision).
+  // the step size is taken as eps*(xmax-xmin).
+  // the default value (0.001) should be good enough for the vast majority
+  // of functions. Give a smaller value if your function has many changes
+  // of the second derivative in the function range.
+  //
+  // Getting the error via TF1::DerivativeError
+  // -----------------
+  //   (total error = roundoff error + interpolation error)
+  // the estimate of the roundoff error is taken as follows:
+  //    err = k*Sqrt(f(x)*f(x) + x*x*deriv*deriv)*Sqrt(Sum(ai)*(ai)),
+  // where k is the double precision, ai are coefficients used in
+  // central difference formulas
+  // interpolation error is decreased by making the step size h smaller.
+  //
+  // Author: Anna Kreshuk
+
+  const Double_t C1 = 2*1e-15;
+   
+  if(eps< 1e-6 || eps > 1e-2) {
+     Warning("Derivative2","parameter esp=%g out of allowed range[1e-6,1e-2], reset to 0.001",eps);
+     eps = 0.001;
+  }
+  Double_t xmin, xmax;
+  GetRange(xmin, xmax);
+  Double_t h = eps*(xmax-xmin);
+
+  Double_t xx[1];
+  TF1 *func = (TF1*)this;
+  func->InitArgs(xx, params);
+  xx[0] = x+h;     Double_t f1 = func->EvalPar(xx, params);
+  xx[0] = x;       Double_t f2 = func->EvalPar(xx, params);
+  xx[0] = x-h;     Double_t f3 = func->EvalPar(xx, params);
+
+  xx[0] = x+h/2;   Double_t g1 = func->EvalPar(xx, params);
+  xx[0] = x-h/2;   Double_t g3 = func->EvalPar(xx, params);
+
+  //compute the central differences
+  Double_t hh    = 1/(h*h);
+  Double_t D0    = f3 - 2*f2 + f1;
+  Double_t D2    = 4*g3 - 8*f2 +4*g1;
+  ErrorTF1       = C1*hh*f2;  //compute the error
+  Double_t deriv = hh*(4*D2 - D0)/3.;
+  return deriv;
+}
+
+
+//______________________________________________________________________________
+Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
+{
+  // returns the first derivative of the function at point x, 
+  // computed by Richardson's extrapolation method (use 2 derivative estimates 
+  // to compute a third, more accurate estimation)
+  // first, derivatives with steps h and h/2 are computed by central difference formulas
+  //    D(h) = (f(x+2h) - 2*f(x+h) + 2*f(x-h) - f(x-2h))/(2*h*h*h)
+  //    the final estimate D = (4*D(h/2) - D(h))/3
+  //
+  // if the argument params is null, the current function parameters are used,
+  // otherwise the parameters in params are used.
+  //
+  // the argument eps may be specified to control the step size (precision).
+  // the step size is taken as eps*(xmax-xmin).
+  // the default value (0.001) should be good enough for the vast majority
+  // of functions. Give a smaller value if your function has many changes
+  // of the second derivative in the function range.
+  //
+  // Getting the error via TF1::DerivativeError
+  // -----------------
+  //   (total error = roundoff error + interpolation error)
+  // the estimate of the roundoff error is taken as follows:
+  //    err = k*Sqrt(f(x)*f(x) + x*x*deriv*deriv)*Sqrt(Sum(ai)*(ai)),
+  // where k is the double precision, ai are coefficients used in
+  // central difference formulas
+  // interpolation error is decreased by making the step size h smaller.
+  //
+  // Author: Anna Kreshuk
+
+  //const Double_t C1 = (1e-16)*TMath::Sqrt(5./2.)*TMath::Sqrt(16*64 + 1.)/3;
+  const Double_t C1 = 1e-15;
+
+  if(eps< 1e-4 || eps > 1e-2) {
+     Warning("Derivative3","parameter esp=%g out of allowed range[1e-4,1e-2], reset to 0.001",eps);
+     eps = 0.001;
+  }
+  Double_t xmin, xmax;
+  GetRange(xmin, xmax);
+  Double_t h = eps*(xmax-xmin);
+
+  Double_t xx[1];
+  TF1 *func = (TF1*)this;
+  func->InitArgs(xx, params);
+  xx[0] = x+2*h;   Double_t f1 = func->EvalPar(xx, params);
+  xx[0] = x+h;     Double_t f2 = func->EvalPar(xx, params);
+  xx[0] = x-h;     Double_t f3 = func->EvalPar(xx, params);
+  xx[0] = x-2*h;   Double_t f4 = func->EvalPar(xx, params);
+  xx[0] = x;       Double_t fx = func->EvalPar(xx, params);
+  xx[0] = x+h/2;   Double_t g2 = func->EvalPar(xx, params);
+  xx[0] = x-h/2;   Double_t g3 = func->EvalPar(xx, params);
+
+  //compute the central differences
+  Double_t hhh  = 1/(h*h*h);
+  Double_t D0   = 0.5*f1 - f2 +f3 - 0.5*f4;
+  Double_t D2   = 4*f2 - 8*g2 +8*g3 - 4*f3;
+  ErrorTF1      = C1*hhh*fx;   //compute the error
+  Double_t deriv = hhh*(4*D2 - D0)/3.;
+  return deriv;
+}
+
+//______________________________________________________________________________
+Double_t TF1::DerivativeError()
+{
+   //static function returning the error of the last call to the Derivative functions
+   
+   return ErrorTF1;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.41 2003/11/07 16:27:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.42 2003/12/11 13:27:27 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -88,7 +88,10 @@ public:
    virtual   ~TF1();
    virtual void     Browse(TBrowser *b);
    virtual void     Copy(TObject &f1) const;
-   virtual Double_t Derivative(Double_t x, Double_t *params=0, Double_t epsilon=0);
+   virtual Double_t Derivative (Double_t x, Double_t *params=0, Double_t epsilon=0.001) const;
+   virtual Double_t Derivative2(Double_t x, Double_t *params=0, Double_t epsilon=0.001) const;
+   virtual Double_t Derivative3(Double_t x, Double_t *params=0, Double_t epsilon=0.001) const;
+   static  Double_t DerivativeError();
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Draw(Option_t *option="");
    virtual TF1     *DrawCopy(Option_t *option="") const;
