@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.32 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.33 2002/01/26 10:06:12 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -298,6 +298,8 @@ void TGaxis::ImportAxisAttributes(TAxis *axis)
    SetBit(kCenterTitle, axis->TestBit(kCenterTitle));
    SetBit(kRotateTitle, axis->TestBit(kRotateTitle));
    SetBit(TAxis::kNoExponent,   axis->TestBit(TAxis::kNoExponent));
+   SetBit(TAxis::kTickPlus,     axis->TestBit(TAxis::kTickPlus));
+   SetBit(TAxis::kTickMinus,    axis->TestBit(TAxis::kTickMinus));
    SetTimeFormat(axis->GetTimeFormat());
 }
 
@@ -448,7 +450,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t axis_length1 = 0;
    Double_t axis_length;
    Double_t atick[3];
-   Double_t tick_side, label_side;
+   Double_t tick_side;
    Double_t charheight;
    Double_t phil, phi, sinphi, cosphi, asinphi, acosphi;
    Double_t BinLow,  BinLow2,  BinLow3;
@@ -556,6 +558,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if(strchr(chopt,'0')) OptionUp   = 1;  else OptionUp   = 0;
    if(strchr(chopt,'X')) OptionX    = 1;  else OptionX    = 0;
    if(strchr(chopt,'t')) OptionTime = 1;  else OptionTime = 0;
+   if (TestBit(TAxis::kTickPlus))  OptionPlus  = 2;
+   if (TestBit(TAxis::kTickMinus)) OptionMinus = 2;
    if (fAxis) {
       if (fAxis->GetLabels()) {
          OptionM    = 1;
@@ -767,14 +771,15 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if (OptionPlus)                Mside = 1;
    if (OptionMinus)               Mside = -1;
    if (OptionPlus && OptionMinus) Mside = 0;
+   XMside = Mside;
    Lside = -Mside;
    if (OptionEqual) Lside = Mside;
    if (OptionPlus && OptionMinus) {
       Lside = -1;
       if (OptionEqual) Lside=1;
    }
-   XLside = Lside;
-   XMside = Mside;
+   XLside = 1;
+   //printf("OptionPlus=%d, OptionMinus=%d, OptionEqual=%d, Mside=%d, Lside=%d\n",OptionPlus, OptionMinus,OptionEqual,Mside,Lside);
 
 //*-*-              Tick marks size
    if(XMside >= 0) tick_side = 1;
@@ -951,9 +956,16 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    textaxis->SetTextAlign(10*Xalign+Yalign);
 
 //*-*-              Position of labels in Y
-   if(XLside >= 0) label_side = 1;
-   else            label_side = -1;
-   Ylabel = label_side*fLabelOffset;
+   if (X0 == X1) {
+      Ylabel = fLabelOffset;
+      if (Lside < 0) Ylabel += atick[0];
+   } else if (Y0 == Y1) {
+      Ylabel = -fLabelOffset;
+      if (Mside <= 0) Ylabel -= TMath::Abs(atick[0]);
+   } else {
+      if (Mside+Lside >= 0) Ylabel =  fLabelOffset;
+      else                  Ylabel = -fLabelOffset;
+   }
    if (OptionText) Ylabel /= 2;
 
 //*-*-              Draw the linear tick marks if needed...
@@ -1318,7 +1330,7 @@ L110:
                         Rotate (Xlabel,Ylabel,cosphi,sinphi,X0,Y0,XX,YY);
                else     Rotate (Xlabel,Ylabel,cosphi,sinphi,XX0,YY0,XX,YY);
                if (Y0 == Y1 && !OptionDown && !OptionUp) {
-                  if (Lside < 0) YY -= charheight;
+                  YY -= 0.80*charheight;
                }
                if (OptionVert) {
                   if (X0 != X1 && Y0 != Y1) {
@@ -1496,7 +1508,7 @@ L110:
                if (noExponent) XX += 0.25*charheight;
             }
             if ((Y0 == Y1) && !OptionDown && !OptionUp) {
-               if (Lside < 0) YY  -= charheight;
+               //if (Lside < 0) YY  -= charheight;
                if (noExponent) YY += 0.5*charheight;
             }
             if (N1A == 0)goto L210;
