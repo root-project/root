@@ -13,7 +13,7 @@ ObjSuf        = o
 SrcSuf        = cxx
 ExeSuf        =
 DllSuf        = so
-OutPutOpt     = -o 
+OutPutOpt     = -o # keep whitespace after "-o"
 
 ROOTCFLAGS   := $(shell root-config --cflags)
 ROOTLIBS     := $(shell root-config --libs)
@@ -456,6 +456,19 @@ SYSLIBS       = msvcrt.lib oldnames.lib kernel32.lib ws2_32.lib mswsock.lib \
 
 ROOTLIBS     := $(shell root-config --nonew --libs)
 ROOTGLIBS    := $(shell root-config --nonew --glibs)
+EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
+endif
+ 
+ifeq ($(ARCH),win32gcc)
+# Windows with gcc
+DllSuf        = dll
+ExeSuf        = .exe
+CXX           = g++
+CXXFLAGS      = -O -Wall -Woverloaded-virtual -I/usr/X11R6/include
+LD            = g++
+LDFLAGS       = -O -Wl,--enable-auto-import 
+SOFLAGS       = -shared -D_DLL -Wl,--export-all-symbols 
+EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
 endif
 
 ifeq ($(CXX),)
@@ -593,7 +606,7 @@ ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
 		   $(OutPutOpt)$@
 else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
 endif
 endif
 endif
@@ -679,11 +692,7 @@ ifeq ($(ARCH),macosx)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
-ifeq ($(PLATFORM),win32)
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
-else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
-endif
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@ 
 endif
 endif
 endif
@@ -702,11 +711,7 @@ ifeq ($(ARCH),macosx)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
-ifeq ($(PLATFORM),win32)
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
-else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
-endif
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@ 
 endif
 endif
 endif
@@ -725,11 +730,7 @@ ifeq ($(ARCH),macosx)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 	 	   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
-ifeq ($(PLATFORM),win32)
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@
-else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
-endif
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@ 
 endif
 endif
 endif
@@ -747,11 +748,7 @@ ifeq ($(ARCH),macosx)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
-ifeq ($(PLATFORM),win32)
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
-else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
-endif
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@ 
 endif
 endif
 endif
