@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.15 2001/04/20 17:56:50 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.16 2001/04/24 14:32:46 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -27,7 +27,8 @@
 //
 //  if split = 0 only one single branch is created and the complete event
 //  is serialized in one single buffer.
-//  if split = -1 the event is split using the old TBranchObject mechanism
+//  if split = -2 the event is split using the old TBranchObject mechanism
+//  if split = -1 the event is streamed using the old TBranchObject mechanism
 //  if split > 0  the event is split ising the new TBranchElement mechanism.
 //
 //  if comp = 0 no compression at all.
@@ -117,7 +118,7 @@ int main(int argc, char **argv)
    if (arg4 == 35) { write = 0; read  = 2;}  //netfile + read random
    if (arg4 == 36) { write = 1; }            //netfile + write sequential
    Int_t branchStyle = 1; //new style by default
-   if (split < 0) {branchStyle = 0; split = -split;}
+   if (split < 0) {branchStyle = 0; split = 1-split;}
    
    TFile *hfile;
    TTree *tree;
