@@ -38,7 +38,11 @@ $(ROOTCINTTMP): $(CINTTMPO) $(ROOTCINTTMPO) $(METAUTILSO) $(MAKEINFO) $(IOSENUM)
 		   $(ROOTCINTTMPO) $(METAUTILSO) $(CINTTMPO) $(CILIBS)
 
 $(RLIBMAP):     $(RLIBMAPO)
+ifneq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) -o $@ $<
+else
+		$(LD) $(LDFLAGS) -o $@ $< imagehlp.lib
+endif
 
 all-utils:      $(ROOTCINTTMP) $(ROOTCINT) $(RLIBMAP)
 
