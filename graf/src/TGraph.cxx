@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.135 2004/08/23 09:28:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.136 2004/09/02 13:57:37 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -677,7 +677,11 @@ void TGraph::DrawGraph(Int_t n, const Double_t *x, const Double_t *y, Option_t *
 //*-*-*-*-*-*-*-*-*-*-*Draw this graph with new attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ===================================
 
-   TGraph *newgraph = new TGraph(n, x, y);
+   const Double_t *xx = x;
+   const Double_t *yy = y;
+   if (!xx) xx = fX;
+   if (!yy) yy = fY;
+   TGraph *newgraph = new TGraph(n, xx, yy);
    TAttLine::Copy(*newgraph);
    TAttFill::Copy(*newgraph);
    TAttMarker::Copy(*newgraph);

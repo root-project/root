@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.35 2004/03/22 15:56:53 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.36 2004/09/02 13:57:37 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -81,7 +81,7 @@ public:
         virtual void     Draw(Option_t *chopt="");
         virtual void     DrawGraph(Int_t n, const Int_t *x, const Int_t *y, Option_t *option="");
         virtual void     DrawGraph(Int_t n, const Float_t *x, const Float_t *y, Option_t *option="");
-        virtual void     DrawGraph(Int_t n, const Double_t *x, const Double_t *y, Option_t *option="");
+        virtual void     DrawGraph(Int_t n, const Double_t *x=0, const Double_t *y=0, Option_t *option="");
         virtual void     DrawPanel(); // *MENU*
         virtual Double_t Eval(Double_t x, TSpline *spline=0, Option_t *option="") const;
         virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
