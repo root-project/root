@@ -102,24 +102,20 @@
 #if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA)
    // Support for non standard compilers
 template <class T>
-Int_t TStreamerInfo__ReadBufferSkipImp(TStreamerInfo *This, 
-                                       TBuffer &b, const T &arr, Int_t i, Int_t kase, 
+Int_t TStreamerInfo__ReadBufferSkipImp(TBuffer &b, const T &arr, Int_t i, Int_t kase, 
                                        TStreamerElement *aElement, Int_t narr,
                                        Int_t eoffset,
                                        ULong_t *fMethod, ULong_t *fElem,Int_t *fLength,
                                        TClass *fClass, Int_t *fOffset, Int_t *fNewType,
                                        Int_t fNdata, Int_t *fType, TStreamerElement *&fgElement,
                                        TStreamerInfo::CompInfo *fComp)
-{
 #else
 template <class T>
 Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kase, 
                                     TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
-{
-  TStreamerInfo *This = this;
 #endif
- 
+{ 
    //  Skip elements in a TClonesArray
    UInt_t start, count;
 
@@ -307,23 +303,20 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
 #if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA)
    // Support for non standard compilers
 template <class T>
-Int_t TStreamerInfo__ReadBufferConvImp(TStreamerInfo *This, 
-                                       TBuffer &b, const T &arr,  Int_t i, Int_t kase, 
+Int_t TStreamerInfo__ReadBufferConvImp(TBuffer &b, const T &arr,  Int_t i, Int_t kase, 
                                        TStreamerElement *aElement, Int_t narr, 
                                        Int_t eoffset,
                                        ULong_t *fMethod, ULong_t *fElem,Int_t *fLength,
                                        TClass *fClass, Int_t *fOffset, Int_t *fNewType,
                                        Int_t fNdata, Int_t *fType, TStreamerElement *&fgElement,
                                        TStreamerInfo::CompInfo *fComp)
-{
 #else
 template <class T>
 Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t kase, 
                                     TStreamerElement *aElement, Int_t narr, 
                                     Int_t eoffset)
-{
-  TStreamerInfo *This = this;
 #endif
+{
    //  Convert elements of a TClonesArray
 
    Int_t ioffset = eoffset+fOffset[i];
@@ -1089,7 +1082,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, char** const &arr, Int_t i, Int_
                                     TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 {
-  return TStreamerInfo__ReadBufferSkipImp(this,b,arr,i,kase,aElement,narr,eoffset,
+  return TStreamerInfo__ReadBufferSkipImp(b,arr,i,kase,aElement,narr,eoffset,
                                           fMethod,fElem,fLength,fClass,fOffset,fNewType,
                                           fNdata,fType,fgElement,fComp);
 }
@@ -1098,7 +1091,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const TVirtualCollectionProxy &a
                                     TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 {
-  return TStreamerInfo__ReadBufferSkipImp(this,b,arr,i,kase,aElement,narr,eoffset,fMethod,
+  return TStreamerInfo__ReadBufferSkipImp(b,arr,i,kase,aElement,narr,eoffset,fMethod,
                                           fElem,fLength,fClass,fOffset,fNewType,fNdata,fType,fgElement,fComp);
 }
 
@@ -1106,7 +1099,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char** const &arr,  Int_t i, Int
                                     TStreamerElement *aElement, Int_t narr, 
                                     Int_t eoffset)
 {
-  return TStreamerInfo__ReadBufferConvImp(this,b,arr,i,kase,aElement,narr,eoffset,fMethod,
+  return TStreamerInfo__ReadBufferConvImp(b,arr,i,kase,aElement,narr,eoffset,fMethod,
                                           fElem,fLength,fClass,fOffset,fNewType,fNdata,fType,fgElement,fComp);
 }
 
@@ -1114,7 +1107,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const TVirtualCollectionProxy &a
                                     TStreamerElement *aElement, Int_t narr, 
                                     Int_t eoffset)
 {
-  return TStreamerInfo__ReadBufferConvImp(this,b,arr,i,kase,aElement,narr,eoffset,fMethod,
+  return TStreamerInfo__ReadBufferConvImp(b,arr,i,kase,aElement,narr,eoffset,fMethod,
                                           fElem,fLength,fClass,fOffset,fNewType,fNdata,fType,fgElement,fComp);
 }
 
