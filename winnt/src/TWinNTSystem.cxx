@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.13 2001/02/12 14:30:02 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.14 2001/02/17 11:44:16 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1100,7 +1100,7 @@ void TWinNTSystem::Rename(const char *f, const char *t)
 
 //______________________________________________________________________________
 int TWinNTSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
-                             Long_t *flags, Long_t *modtime)
+                              Long_t *flags, Long_t *modtime)
 {
    // Get info about a file: id, size, flags, modification time.
    // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
@@ -1113,6 +1113,21 @@ int TWinNTSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
    // not be stat'ed.
 
    return WinNTFilestat(path, id,  size, flags, modtime);
+}
+
+//______________________________________________________________________________
+int TWinNTSystem::GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
+                            Long_t *blocks, Long_t *bfree)
+{
+   // Get info about a file system: id, bsize, bfree, blocks.
+   // Id      is file system type (machine dependend, see statfs())
+   // Bsize   is block size of file system
+   // Blocks  is total number of blocks in file system
+   // Bfree   is number of free blocks in file system
+   // The function returns 0 in case of success and 1 if the file system could
+   // not be stat'ed.
+
+   return WinNTFSstat(path, id,  bsize, blocks, bfree);
 }
 
 //______________________________________________________________________________
@@ -2506,6 +2521,67 @@ int TWinNTSystem::WinNTFilestat(const char *path, Long_t *id, Long_t *size,
       return 0;
    }
    return 1;
+}
+
+//____________________________________________________________________________
+int TWinNTSystem::WinNTFSstat(const char *path, Long_t *id, Long_t *bsize,
+                              Long_t *blocks, Long_t *bfree)
+{
+   // Get info about a file system: id, bsize, bfree, blocks.
+   // Id      is file system type (machine dependend, see statfs())
+   // Bsize   is block size of file system
+   // Blocks  is total number of blocks in file system
+   // Bfree   is number of free blocks in file system
+   // The function returns 0 in case of success and 1 if the file system could
+   // not be stat'ed.
+
+   // address of root directory of the file system
+   LPCTSTR lpRootPathName = path;
+
+   // address of name of the volume
+   LPTSTR  lpVolumeNameBuffer = 0;
+   DWORD   nVolumeNameSize= 0;
+
+   DWORD   VolumeSerialNumber;     // volume serial number
+   DWORD   MaximumComponentLength; // system's maximum filename length
+
+   // file system flags
+   DWORD FileSystemFlags;
+
+   // address of name of file system
+   char  FileSystemNameBuffer[512];
+   DWORD nFileSystemNameSize = sizeof(FileSystemNameBuffer);
+
+   if (!GetVolumeInformation(lpRootPathName,
+                             lpVolumeNameBuffer, nVolumeNameSize,
+                             &VolumeSerialNumber,
+                             &MaximumComponentLength,
+                             &FileSystemFlags,
+                             FileSystemNameBuffer, nFileSystemNameSize))
+      return 1;
+
+   const char *fsNames[] = { "FAT", "NTFS" };
+   int i;
+   for (i = 0; i < 2; i++)
+      strncmp(FileSystemNameBuffer, fsNames[i], nFileSystemNameSize);
+   *id = i;
+
+   DWORD SectorsPerCluster;      // # sectors per cluster
+   DWORD BytesPerSector;         // # bytes per sector
+   DWORD NumberOfFreeClusters;   // # free clusters
+   DWORD TotalNumberOfClusters;  // # total of clusters
+
+   if (!GetDiskFreeSpace(lpRootPathName,
+                         &SectorsPerCluster,
+                         &BytesPerSector,
+                         &NumberOfFreeClusters,
+                         &TotalNumberOfClusters))
+      return 1;
+
+   *bsize  = SectorsPerCluster * BytesPerSector;
+   *blocks = TotalNumberOfClusters;
+   *bfree  = NumberOfFreeClusters;
+   return 0;
 }
 
 //______________________________________________________________________________
