@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.141 2004/08/12 10:47:45 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.142 2004/08/12 14:22:44 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4108,9 +4108,9 @@ void TPad::ResizePad(Option_t *option)
          //without this protection, the OpenPixmap or ResizePixmap crashes with
          //the message "Error in <RootX11ErrorHandler>: BadValue (integer parameter out of range for operation)"
          //resulting in a frozen xterm
-	 if (!(TMath::Finite(fX1)) || !(TMath::Finite(fX2))
-	     || !(TMath::Finite(fY1)) || !(TMath::Finite(fY2)))
-	    Warning("ResizePad", "Inf/NaN propagated to the pad. Check drawn objects.");
+         if (!(TMath::Finite(fX1)) || !(TMath::Finite(fX2))
+             || !(TMath::Finite(fY1)) || !(TMath::Finite(fY2)))
+            Warning("ResizePad", "Inf/NaN propagated to the pad. Check drawn objects.");
          if (w <= 0 || w > 10000) {
             Warning("ResizePad", "%s width changed from %d to %d\n",GetName(),w,10);
             w = 10;
@@ -4163,15 +4163,15 @@ void TPad::SaveAs(const char *filename)
    else            psname = filename;
 
    // lines below protected against case like c1->SaveAs( "../ps/cs.ps" );
-   if (psname.BeginsWith('.') && (psname.Contains('/') == 0)) { 
-      psname = GetName(); 
-      psname.Append(filename); 
+   if (psname.BeginsWith('.') && (psname.Contains('/') == 0)) {
+      psname = GetName();
+      psname.Append(filename);
    }
 
-   if (psname.EndsWith(".gif")) 
+   if (psname.EndsWith(".gif"))
                 Print(psname,"gif");
-   else if (psname.EndsWith(".C") || psname.EndsWith(".cxx") || psname.EndsWith(".cpp")) 
-                Print(psname,"cxx"); 
+   else if (psname.EndsWith(".C") || psname.EndsWith(".cxx") || psname.EndsWith(".cpp"))
+                Print(psname,"cxx");
    else if (psname.EndsWith(".root"))
                 Print(psname,"root");
    else if (psname.EndsWith(".xml"))
@@ -4524,8 +4524,7 @@ void TPad::SetAttMarkerPS(Color_t color, Style_t style, Size_t msize)
 //______________________________________________________________________________
 void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize)
 {
-//*-*-*-*-*-*-*-*-*Set postscript text attributes*-*-*-*-*-*-*-*-*-*-*
-//*-*              ==============================
+   // Set postscript text attributes.
 
    if (gVirtualPS) {
       gVirtualPS->SetTextAlign(align);
@@ -4551,7 +4550,7 @@ void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font,
 //______________________________________________________________________________
 Bool_t TPad::HasCrosshair() const
 {
-   // return kTRUE if the crosshair has been activated (via SetCrosshair)
+   // Return kTRUE if the crosshair has been activated (via SetCrosshair).
 
    return (Bool_t)GetCrosshair();
 }
@@ -4559,21 +4558,21 @@ Bool_t TPad::HasCrosshair() const
 //______________________________________________________________________________
 Int_t TPad::GetCrosshair() const
 {
-   // return the crosshair type (from the mother canvas)
-   // crosshair type = o means no crosshair
+   // Return the crosshair type (from the mother canvas)
+   // crosshair type = 0 means no crosshair.
 
-   if (this == (TPad*)fCanvas) return fCrosshair;
-   return fCanvas->GetCrosshair();
+   if (this == (TPad*)fCanvas)
+      return fCrosshair;
+   return fCanvas ? fCanvas->GetCrosshair() : 0;
 }
 
 //______________________________________________________________________________
 void TPad::SetCrosshair(Int_t crhair)
 {
-   // set crosshair active/inactive
-   // if crhair != 0, a crosshair will be drawn in the pad and its subpads
-   //
-   // if the canvas crhair = 1 , the crosshair spans the full canvas
-   // if the canvas crhair > 1 , the crosshair spans only the pad
+   // Set crosshair active/inactive.
+   // If crhair != 0, a crosshair will be drawn in the pad and its subpads.
+   // If the canvas crhair = 1 , the crosshair spans the full canvas.
+   // If the canvas crhair > 1 , the crosshair spans only the pad.
 
    fCrosshair = crhair;
    fCrosshairPos = 0;
