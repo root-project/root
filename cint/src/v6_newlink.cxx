@@ -3526,6 +3526,9 @@ int isnonpublicnew;
 	    ,G__map_cpp_funcname(tagnum ,funcname ,ifn,page));
 #endif /* G__CPPIF_STATIC */
     fprintf(fp," {\n");
+#ifndef G__OLDIMPLEMENTATION1602
+    fprintf(fp,"   if(0==G__getstructoffset()) return(1);\n");
+#endif
     fprintf(fp,"   if(G__getaryconstruct())\n");
     fprintf(fp,"     if(G__PVOID==G__getgvp())\n");
     fprintf(fp,"       delete[] (%s *)(G__getstructoffset());\n" ,G__fulltagname(tagnum,1));
