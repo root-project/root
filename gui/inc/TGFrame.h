@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.48 2004/09/08 23:15:00 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.49 2004/09/10 19:02:07 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -227,7 +227,7 @@ public:
    virtual void    ChangeBackground(Pixel_t back);
    virtual void    SetBackgroundColor(Pixel_t back);
    virtual Pixel_t GetForeground() const { return fgBlackPixel; }
-   virtual void    SetForegroundColor(Pixel_t fore) {}
+   virtual void    SetForegroundColor(Pixel_t /*fore*/) {}
    virtual UInt_t  GetOptions() const { return fOptions; }
    virtual void    ChangeOptions(UInt_t options);
    virtual void    Layout() { }
