@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.95 2002/05/14 15:31:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.96 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5135,7 +5135,7 @@ TH1C::~TH1C()
 }
 
 //______________________________________________________________________________
-TH1C::TH1C(const TH1C &h1c) : TH1(h1c), TArrayC(h1c)
+TH1C::TH1C(const TH1C &h1c) : TH1(), TArrayC()
 {
    ((TH1C&)h1c).Copy(*this);
 }
@@ -5340,7 +5340,7 @@ TH1S::~TH1S()
 }
 
 //______________________________________________________________________________
-TH1S::TH1S(const TH1S &h1s) : TH1(h1s), TArrayS(h1s)
+TH1S::TH1S(const TH1S &h1s) : TH1(), TArrayS()
 {
    ((TH1S&)h1s).Copy(*this);
 }
@@ -5552,7 +5552,7 @@ TH1F::TH1F(const TVector &v)
 }
 
 //______________________________________________________________________________
-TH1F::TH1F(const TH1F &h) : TH1(h), TArrayF(h)
+TH1F::TH1F(const TH1F &h) : TH1(), TArrayF()
 {
    ((TH1F&)h).Copy(*this);
 }
@@ -5756,7 +5756,7 @@ TH1D::~TH1D()
 }
 
 //______________________________________________________________________________
-TH1D::TH1D(const TH1D &h1d) : TH1(h1d), TArrayD(h1d)
+TH1D::TH1D(const TH1D &h1d) : TH1(), TArrayD()
 {
    ((TH1D&)h1d).Copy(*this);
 }
