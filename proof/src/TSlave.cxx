@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.34 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.35 2005/02/08 22:40:36 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -194,24 +194,74 @@ TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
 
          }
 
+         // Send ordinal (and config) info to slave (or master)
+         // If there is a protocol mismatch between the master and
+         // client just send a bogus config file so it doesn't try
+         // to start slaves
          TMessage mess;
          if (stype == kMaster)
-            mess << fUser << pwhash << srppwd << fOrdinal << TString(conffile);
+            if (fProtocol < 4)
+               mess << fUser << pwhash << srppwd << TString(" ");
+            else
+               mess << fUser << pwhash << srppwd << fOrdinal << TString(conffile);
          else
-            mess << fUser << pwhash << srppwd << fOrdinal << fProofWorkDir;
+            if (fProtocol < 4)
+               mess << fUser << pwhash << srppwd << 0;
+            else
+               mess << fUser << pwhash << srppwd << fOrdinal << fProofWorkDir;
 
          fSocket->Send(mess);
 
          if (ProofdProto > 6) {
-            // Now we send authentication details to access, eg, data servers
+            // Now we send authentication details to access, e.g., data servers
             // not in the proof cluster and to be propagated to slaves.
             // This is triggered by the 'proofserv <dserv1> <dserv2> ...'
-            // card in .rootauthrc
+            // line in .rootauthrc
             fSocket->SendHostAuth();
          }
 
          // set some socket options
          fSocket->SetOption(kNoDelay, 1);
+
+         if (fProtocol < 4) {
+            if (stype == kMaster) {
+               //wait for master to reply
+               TMessage* mess;
+               fSocket->Recv(mess); // receive kPROOF_LOGFILE message
+               Int_t what = mess->What();
+               if (what == kPROOF_LOGFILE) {
+                  //flush log file buffer
+                  Int_t size;
+                  (*mess) >> size;
+                  const Int_t kBUFSIZE = 16384;
+                  char buf[kBUFSIZE];
+                  while (size > 0) {
+                     Int_t readsize = (size > kBUFSIZE) ? kBUFSIZE : size;
+                     fSocket->RecvRaw(&buf, readsize);
+                     size -= readsize;
+                  }
+               } else {
+                  Error("TSlave", "kPROOF_LOGFILE message (%d) expected but"
+                                  " received message type (%d)",
+                                  kPROOF_LOGFILE, what);
+               }
+               delete mess;
+               fSocket->Recv(mess); // receive kPROOF_LOGDONE message
+               what = mess->What();
+               if (what != kPROOF_LOGDONE) {
+                  Error("TSlave", "kPROOF_LOGDONE message (%d) expected but"
+                                  " received message type (%d)",
+                                  kPROOF_LOGDONE, what);
+               }
+               delete mess;
+            }
+            //issue shutdown signal
+            char oobc = (char) TProof::kShutdownInterrupt;
+            if (fSocket->SendRaw(&oobc, 1, kOob) <= 0)
+               Error("Interrupt", "error sending oobc to slave");
+            Error("TSlave", "incompatible PROOF versions (remote version must be >= 4, is %d)", fProtocol);
+            SafeDelete(fSocket);
+         }
       }
    } else
       SafeDelete(fSocket);
