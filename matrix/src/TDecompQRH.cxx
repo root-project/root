@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.4 2004/02/04 17:12:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.5 2004/02/06 16:25:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -35,7 +35,7 @@ TDecompQRH::TDecompQRH(const TMatrixD &a,Double_t tol)
 {
   Assert(a.IsValid());
   if (a.GetNrows() < a.GetNcols()) {
-    Error("TDecompSVD(const TMatrixD &","matrix rows should be >= columns");
+    Error("TDecompQRH(const TMatrixD &","matrix rows should be >= columns");
     return;
   }
 
@@ -44,30 +44,10 @@ TDecompQRH::TDecompQRH(const TMatrixD &a,Double_t tol)
   if (tol > 0.0)
     fTol = tol;
 
-  Decompose(a);
-}
-
-//______________________________________________________________________________
-TDecompQRH::TDecompQRH(const TDecompQRH &another) : TDecompBase(another)
-{
-  *this = another;
-}
-
-//______________________________________________________________________________
-Int_t TDecompQRH::Decompose(const TMatrixDBase &a)
-{
-// QR decomposition of matrix a by Householder transformations,
-//  see Golub & Loan first edition p41 & Sec 6.2.
-// First fR is returned in upper triang of fQ and diagR. fQ returned in
-// 'u-form' in lower triang of fQ and fW, the latter containing the
-//  "Householder betas".
-
-  Assert(a.IsValid());
-
-  const Int_t nRow   = a.GetNrows();
-  const Int_t nCol   = a.GetNcols();
-  const Int_t rowLwb = a.GetRowLwb();
-  const Int_t colLwb = a.GetColLwb();
+  fRowLwb = a.GetRowLwb();
+  fColLwb = a.GetColLwb();
+  const Int_t nRow = a.GetNrows();
+  const Int_t nCol = a.GetNcols();
 
   fQ.ResizeTo(nRow,nCol);
   memcpy(fQ.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
@@ -79,6 +59,27 @@ Int_t TDecompQRH::Decompose(const TMatrixDBase &a)
     fW.ResizeTo(nCol);
     fUp.ResizeTo(nCol);
   }
+}
+
+//______________________________________________________________________________
+TDecompQRH::TDecompQRH(const TDecompQRH &another) : TDecompBase(another)
+{
+  *this = another;
+}
+
+//______________________________________________________________________________
+Int_t TDecompQRH::Decompose()
+{
+// QR decomposition of matrix a by Householder transformations,
+//  see Golub & Loan first edition p41 & Sec 6.2.
+// First fR is returned in upper triang of fQ and diagR. fQ returned in
+// 'u-form' in lower triang of fQ and fW, the latter containing the
+//  "Householder betas".
+
+  const Int_t nRow   = this->GetNrows();
+  const Int_t nCol   = this->GetNcols();
+  const Int_t rowLwb = this->GetRowLwb();
+  const Int_t colLwb = this->GetColLwb();
 
   TVectorD diagR;
   Double_t work[kWorkMax];
@@ -140,7 +141,12 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
 // has *not* been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  Assert(fStatus & kDecomposed);
+  if (fStatus & kSingular)
+    return kFALSE;
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return kFALSE;
+  }
 
   if (fQ.GetNrows() != b.GetNrows() || fQ.GetRowLwb() != b.GetLwb()) { 
     Error("Solve(TVectorD &","vector and matrix incompatible");
@@ -199,7 +205,12 @@ Bool_t TDecompQRH::Solve(TMatrixDColumn &cb)
 { 
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  Assert(fStatus & kDecomposed);
+  if (fStatus & kSingular)
+    return kFALSE;
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return kFALSE;
+  }
 
   if (fQ.GetNrows() != b->GetNrows() || fQ.GetRowLwb() != b->GetRowLwb())
   {
@@ -248,7 +259,12 @@ Bool_t TDecompQRH::TransSolve(TVectorD &b)
 // has *not* been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  Assert(fStatus & kDecomposed);
+  if (fStatus & kSingular)
+    return kFALSE;
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return kFALSE;
+  }
 
   if (fQ.GetNrows() != fQ.GetNcols() || fQ.GetRowLwb() != fQ.GetColLwb()) {
     Error("TransSolve(TVectorD &","matrix should be square");
@@ -311,7 +327,12 @@ Bool_t TDecompQRH::TransSolve(TMatrixDColumn &cb)
 {
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  Assert(fStatus & kDecomposed);
+  if (fStatus & kSingular)
+    return kFALSE;
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return kFALSE;
+  }
 
   if (fQ.GetNrows() != fQ.GetNcols() || fQ.GetRowLwb() != fQ.GetColLwb()) {
     Error("TransSolve(TMatrixDColumn &","matrix should be square");
@@ -363,6 +384,8 @@ void TDecompQRH::Det(Double_t &d1,Double_t &d2)
   // This routine calculates the absolute (!) value of the determinant
 
   if ( !( fStatus & kDetermined ) ) {
+    if ( !( fStatus & kDecomposed ) )
+      Decompose();
     if ( fStatus & kSingular ) {
       fDet1 = 0.0;
       fDet2 = 0.0;

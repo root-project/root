@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.3 2004/02/03 16:50:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.4 2004/02/04 17:12:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -36,6 +36,8 @@ TDecompChol::TDecompChol(const TMatrixDSym &a,Double_t tol)
   if (tol > 0)
     fTol = tol;
 
+  fRowLwb = a.GetRowLwb();
+  fColLwb = a.GetColLwb();
   Decompose(a);
 }
 
@@ -54,6 +56,8 @@ TDecompChol::TDecompChol(const TMatrixD &a,Double_t tol)
   if (tol > 0)
     fTol = tol;
 
+  fRowLwb = a.GetRowLwb();
+  fColLwb = a.GetColLwb();
   Decompose(a);
 }
 
@@ -64,7 +68,7 @@ TDecompChol::TDecompChol(const TDecompChol &another) : TDecompBase(another)
 }
 
 //______________________________________________________________________________
-Int_t TDecompChol::Decompose(const TMatrixDBase &a)
+Int_t TDecompChol::Decompose(const TMatrixD &a)
 {
   fU.ResizeTo(a);
   const Int_t     n  = a.GetNrows();
@@ -105,6 +109,11 @@ Int_t TDecompChol::Decompose(const TMatrixDBase &a)
 //______________________________________________________________________________
 const TMatrixD TDecompChol::GetMatrix() const
 {
+  if (fStatus & kSingular)
+    return TMatrixD();
+  if ( !( fStatus & kDecomposed ) )
+      return TMatrixD();
+
   const TMatrixD ut(TMatrixDBase::kTransposed,fU);
   return ut * fU;
 }

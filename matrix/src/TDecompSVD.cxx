@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.7 2004/02/04 17:12:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.8 2004/02/06 16:25:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -50,7 +50,17 @@ TDecompSVD::TDecompSVD(const TMatrixD &a,Double_t tol)
   if (tol > 0)
     fTol = tol;
 
-  Decompose(a);
+  fRowLwb = a.GetRowLwb();
+  fColLwb = a.GetColLwb();
+  const Int_t nRow = a.GetNrows();
+  const Int_t nCol = a.GetNcols();
+
+  fU.ResizeTo(nRow,nRow);
+  fSig.ResizeTo(nCol);
+  fV.ResizeTo(nRow,nCol); // In the end we only need the nColxnCol part
+
+  fU.UnitMatrix();
+  memcpy(fV.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
 }
 
 //______________________________________________________________________________
@@ -60,19 +70,11 @@ TDecompSVD::TDecompSVD(const TDecompSVD &another): TDecompBase(another)
 }
 
 //______________________________________________________________________________
-Int_t TDecompSVD::Decompose(const TMatrixDBase &a)
+Int_t TDecompSVD::Decompose()
 {
-  const Int_t nRow   = a.GetNrows();
-  const Int_t nCol   = a.GetNcols();
-  const Int_t rowLwb = a.GetRowLwb();
-  const Int_t colLwb = a.GetColLwb();
-
-  fU.ResizeTo(nRow,nRow);
-  fSig.ResizeTo(nCol);
-  fV.ResizeTo(nRow,nCol); // In the end we only need the nColxnCol part
-
-  fU.UnitMatrix();
-  memcpy(fV.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
+  const Int_t nCol   = this->GetNcols();
+  const Int_t rowLwb = this->GetRowLwb();
+  const Int_t colLwb = this->GetColLwb();
 
   TVectorD offDiag;
   Double_t work[kWorkMax];
@@ -467,8 +469,15 @@ void TDecompSVD::SortSingular(TMatrixD &v,TMatrixD &u,TVectorD &sDiag)
 }
 
 //______________________________________________________________________________
-const TMatrixD TDecompSVD::GetMatrix() const
+const TMatrixD TDecompSVD::GetMatrix()
 {
+  if (fStatus & kSingular)
+    return TMatrixD();
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return TMatrixD();
+  }
+
   const Int_t nRows = fU.GetNrows();
   const Int_t nCols = fV.GetNcols();
   TMatrixD s(nRows,nCols);
@@ -487,7 +496,12 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
 // For m > n , x  is the least-squares solution of min(A . x - b)
 
   Assert(b.IsValid());
-  Assert(fStatus & kDecomposed);
+  if (fStatus & kSingular)
+    return kFALSE;
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return kFALSE;
+  }
 
   if (fU.GetNrows() != b.GetNrows() || fU.GetRowLwb() != b.GetLwb())
   {
@@ -546,8 +560,13 @@ Bool_t TDecompSVD::Solve(TMatrixDColumn &cb)
 { 
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());    
-  Assert(fStatus & kDecomposed);
-  
+  if (fStatus & kSingular)
+    return kFALSE;
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return kFALSE;
+  }
+
   if (fU.GetNrows() != b->GetNrows() || fU.GetRowLwb() != b->GetRowLwb())
   { 
     Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
@@ -591,7 +610,12 @@ Bool_t TDecompSVD::TransSolve(TVectorD &b)
 // Solve A^T x=b assuming the SVD form of A is stored . Solution returned in b.
 
   Assert(b.IsValid());
-  Assert(fStatus & kDecomposed);
+  if (fStatus & kSingular)
+    return kFALSE;
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return kFALSE;
+  }
 
   if (fU.GetNcols() != fU.GetNrows()) {
     Error("TransSolve(TVectorD &","matrix should be square");
@@ -644,7 +668,12 @@ Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
 {
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  Assert(fStatus & kDecomposed);
+  if (fStatus & kSingular)
+    return kFALSE;
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return kFALSE;
+  }
 
   if (fU.GetNcols() != fU.GetNrows()) {
     Error("TransSolve(TMatrixDColumn &","matrix should be square");
@@ -684,6 +713,13 @@ Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
 Double_t TDecompSVD::Condition()
 {
   if ( !(fStatus & kCondition) ) {
+    fCondition = -1;
+    if (fStatus & kSingular)
+      return fCondition;
+    if ( !( fStatus & kDecomposed ) ) {
+      if (!Decompose())
+        return fCondition;
+    }
     const Double_t max = fSig(0);
     const Double_t min = fSig(fSig.GetNrows()-1);
     fCondition = (min > 0.0) ? max/min : -1.0;
@@ -696,6 +732,8 @@ Double_t TDecompSVD::Condition()
 void TDecompSVD::Det(Double_t &d1,Double_t &d2)
 {
   if ( !(fStatus & kDetermined) ) {
+    if ( !( fStatus & kDecomposed ) )
+      Decompose();
     if ( fStatus & kSingular ) {
       fDet1 = 0.0;
       fDet2 = 0.0;

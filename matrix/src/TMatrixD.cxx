@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.54 2004/01/28 07:39:18 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.55 2004/02/05 18:18:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -872,7 +872,7 @@ TMatrixD &TMatrixD::Invert(Double_t *det)
 
   Double_t sign = 1.0;
   Int_t nrZeros = 0;
-  TDecompLU::DecomposeLU(*this,index,sign,fTol,nrZeros);
+  TDecompLU::DecomposeLUCrout(*this,index,sign,fTol,nrZeros);
   if (det) {
     Double_t d1;
     Double_t d2;
@@ -959,7 +959,7 @@ TMatrixD &TMatrixD::InvertFast(Double_t *det)
 
       Double_t sign = 1.0;
       Int_t nrZeros;
-      TDecompLU::DecomposeLU(*this,index,sign,fTol,nrZeros);
+      TDecompLU::DecomposeLUCrout(*this,index,sign,fTol,nrZeros);
       if (det) {
         Double_t d1;
         Double_t d2;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.3 2004/02/04 17:12:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.4 2004/02/06 16:25:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -49,14 +49,17 @@ public :
   TDecompSVD(const TDecompSVD &another);
   virtual ~TDecompSVD() {}
 
-          const TMatrixD  GetMatrix () const;
+          const TMatrixD  GetMatrix ();
   virtual       Int_t     GetNrows  () const { return fU.GetNrows(); }
   virtual       Int_t     GetNcols  () const { return fV.GetNcols(); }
-          const TMatrixD &GetU      () const { return fU; }
-          const TMatrixD &GetV      () const { return fV; }
-          const TVectorD &GetSig    () const { return fSig; }
+          const TMatrixD &GetU      ()       { if ( !( fStatus & kDecomposed ) ) Decompose();
+                                               return fU; }
+          const TMatrixD &GetV      ()       { if ( !( fStatus & kDecomposed ) ) Decompose();
+                                               return fV; }
+          const TVectorD &GetSig    ()       { if ( !( fStatus & kDecomposed ) ) Decompose();
+                                               return fSig; }
 
-  virtual Int_t    Decompose  (const TMatrixDBase &a);
+  virtual Int_t    Decompose  ();
   virtual Bool_t   Solve      (      TVectorD &b);
   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok);
   virtual Bool_t   Solve      (      TMatrixDColumn &b);

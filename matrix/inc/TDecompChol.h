@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.h,v 1.2 2004/02/03 16:50:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.h,v 1.3 2004/02/04 17:12:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -43,7 +43,8 @@ public :
   virtual       Int_t     GetNcols  () const { return fU.GetNcols(); }
           const TMatrixD &GetU      () const { return fU; }
 
-  virtual Int_t    Decompose  (const TMatrixDBase &a);
+  virtual Int_t    Decompose  () { Error("Decompose","Use Decompose(const TMatrixD&)"); return kFALSE; }
+          Int_t    Decompose  (const TMatrixD &a);
   virtual Bool_t   Solve      (      TVectorD &b);
   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok);
   virtual Bool_t   Solve      (      TMatrixDColumn &b);

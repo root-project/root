@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.6 2004/02/04 17:12:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.7 2004/02/05 18:18:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -61,10 +61,10 @@
 //   Expressing the determinant this way makes under/over-flow very      //
 //   unlikely .                                                          //
 //                                                                       //
-// Decompose(const TMatrixDBase &A)                                      //
-//   Here the actually decomposition is performed . This method is       //
-//   called by each constructor, one can changed the matrix A afterwards //
-//   without effecting the decomposition                                 //
+// Decompose()                                                           //
+//   Here the actually decomposition is performed . One can change the   //
+//   matrix A after the decomposition constructor has been called        //
+//   without effecting the decomposition result                          //
 //                                                                       //
 // Solve(TVectorD &b)                                                    //
 //  Solve A x = b . x is supplied through the argument and replaced with //
@@ -157,14 +157,16 @@ Int_t TDecompBase::Hager(Double_t &est,Int_t iter)
 // This routine uses Hager's Convex Optimisation Algorithm.
 // See Applied Numerical Linear Algebra, p139 & SIAM J Sci Stat Comp 1984 pp 311-16
 
+  est = -1.0;
+
   const TMatrixD &m = GetDecompMatrix();
-  Assert(m.IsValid());
+  if (!m.IsValid())
+    return iter;
 
   const Int_t n = m.GetNrows();
 
   TVectorD b(n); TVectorD y(n); TVectorD z(n);
   b = Double_t(1.0/n);
-  est = -1.0;
   Double_t inv_norm1 = 0.0;
   Bool_t stop = kFALSE;
   do {
@@ -248,13 +250,18 @@ void TDecompBase::DiagProd(const TVectorD &diag,Double_t tol,Double_t &d1,Double
 Double_t TDecompBase::Condition()
 {
   if ( !(fStatus & kCondition) ) {
+    fCondition = -1;
+    if (fStatus & kSingular)
+      return fCondition; 
+    if ( !( fStatus & kDecomposed ) ) {
+      if (!Decompose())
+        return fCondition;
+    }
     Double_t invNorm;
     if (Hager(invNorm))
       fCondition *= invNorm;
-    else {// no convergence in Hager
+    else // no convergence in Hager
       Error("Condition()","Hager procedure did NOT converge");
-      fCondition = -1;
-    }
     fStatus |= kCondition;
   }
   return fCondition;
@@ -319,6 +326,8 @@ TMatrixD TDecompBase::Invert()
 void TDecompBase::Det(Double_t &d1,Double_t &d2)
 {
   if ( !(fStatus & kDetermined) ) {
+    if ( !(fStatus & kDecomposed) )
+      Decompose();
     if ( fStatus & kSingular ) {
       fDet1 = 0.0;
       fDet2 = 0.0;
@@ -344,10 +353,11 @@ TDecompBase &TDecompBase::operator=(const TDecompBase &source)
     fDet1      = source.fDet1;
     fDet2      = source.fDet2;
     fCondition = source.fCondition;
+    fRowLwb    = source.fRowLwb;
+    fColLwb    = source.fColLwb;
   }
   return *this;
 }
-
 
 //______________________________________________________________________________
 Bool_t DefHouseHolder(const TVectorD &vc,Int_t lp,Int_t l,Double_t &up,Double_t &beta,

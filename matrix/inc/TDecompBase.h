@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.2 2004/02/03 16:50:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.3 2004/02/04 17:12:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -35,6 +35,8 @@ protected :
   Double_t fDet1;      // determinant mantissa
   Double_t fDet2;      // determinant exponent for powers of 2
   Double_t fCondition; // matrix condition number
+  Int_t    fRowLwb;    // Row    lower bound of decomposed matrix
+  Int_t    fColLwb;    // Column lower bound of decomposed matrix
 
   Int_t Hager(Double_t& est,Int_t iter=5);
 
@@ -55,11 +57,13 @@ public :
           inline Double_t GetCondition () const { return fCondition; }
   virtual        Int_t    GetNrows     () const = 0;
   virtual        Int_t    GetNcols     () const = 0;
+                 Int_t    GetRowLwb    () const { return fRowLwb; }
+                 Int_t    GetColLwb    () const { return fColLwb; }
           inline Double_t SetTol       (Double_t tol);
 
   virtual Double_t Condition  ();
   virtual void     Det        (Double_t &d1,Double_t &d2);
-  virtual Int_t    Decompose  (const TMatrixDBase &a)  = 0;
+  virtual Int_t    Decompose  ()                             = 0;
   virtual Bool_t   Solve      (      TVectorD &b)            = 0;
   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok) = 0;
   virtual Bool_t   Solve      (      TMatrixDColumn& b)      = 0;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.3 2004/02/03 16:50:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.4 2004/02/04 17:12:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -26,27 +26,30 @@ class TDecompLU : public TDecompBase
 {
 protected :
 
-  Int_t     fNIndex;    // size of row permutation index
-  Int_t    *fIndex;     //[fNIndex] row permutation index
-  Double_t  fSign;      // = +/- 1 reflecting even/odd row permutations, resp.
-  TMatrixD  fLU;        // decomposed matrix so that a = l u where
-                        // l is stored lower left and u upper right side
+  Int_t     fImplicitPivot; // control to determine implicit row scale before
+                            //  deciding on the pivot (Crout method)
+  Int_t     fNIndex;        // size of row permutation index
+  Int_t    *fIndex;         //[fNIndex] row permutation index
+  Double_t  fSign;          // = +/- 1 reflecting even/odd row permutations, resp.
+  TMatrixD  fLU;            // decomposed matrix so that a = l u where
+                            // l is stored lower left and u upper right side
 
   virtual const TMatrixD &GetDecompMatrix() const { return fLU; }
 
 public :
 
   TDecompLU() {fSign = 0; fIndex = 0; fNIndex = 0;}
-  TDecompLU(const TMatrixD &m,Double_t tol = 0.0);
+  TDecompLU(const TMatrixD &m,Double_t tol = 0.0,Int_t implicit = 1);
   TDecompLU(const TDecompLU &another);
   virtual ~TDecompLU() {if (fIndex) delete [] fIndex; fIndex = 0; }
 
-          const TMatrixD  GetMatrix () const;
+          const TMatrixD  GetMatrix ();
   virtual       Int_t     GetNrows  () const { return fLU.GetNrows(); }
   virtual       Int_t     GetNcols  () const { return fLU.GetNcols(); }
-          const TMatrixD &GetLU     () const { return fLU; }
+          const TMatrixD &GetLU     ()       { if ( !( fStatus & kDecomposed ) ) Decompose();
+                                               return fLU; }
 
-  virtual Int_t    Decompose  (const TMatrixDBase &a);
+  virtual Int_t    Decompose  ();
   virtual Bool_t   Solve      (      TVectorD &b);
   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok);
   virtual Bool_t   Solve      (      TMatrixDColumn &b);
@@ -57,9 +60,11 @@ public :
   virtual Double_t Condition ();
   virtual void     Det       (Double_t &d1,Double_t &d2);
 
-  static  Int_t  DecomposeLU(TMatrixD &lu,Int_t *index,Double_t &sign,
-                             Double_t tol,Int_t &nrZeros);
-  static  Int_t  InvertLU   (TMatrixD &lu,Int_t *index,Double_t tol);
+  static  Int_t  DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
+                                  Double_t tol,Int_t &nrZeros);
+  static  Int_t  DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
+                                  Double_t tol,Int_t &nrZeros);
+  static  Int_t  InvertLU        (TMatrixD &lu,Int_t *index,Double_t tol);
 
   TDecompLU &operator= (const TDecompLU &source);
 

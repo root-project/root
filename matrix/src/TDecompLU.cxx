@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.4 2004/02/03 16:50:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.5 2004/02/04 17:12:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -37,7 +37,7 @@ ClassImp(TDecompLU)
 ///////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol)
+TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol,Int_t implicit)
 {
   Assert(a.IsValid());
 
@@ -46,14 +46,20 @@ TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol)
     return;
   }
 
+  fImplicitPivot = implicit;
   fCondition = -1.0;
   fTol = a.GetTol();
   if (tol > 0)
     fTol = tol;
+
+  fSign = 1.0;
+  fNIndex = a.GetNcols(); 
+  fIndex = new Int_t[fNIndex]; 
   
+  fRowLwb = a.GetRowLwb();
+  fColLwb = a.GetColLwb();
   fLU.ResizeTo(a);
   fLU = a;
-  Decompose(a);
 }
 
 //______________________________________________________________________________
@@ -65,16 +71,14 @@ TDecompLU::TDecompLU(const TDecompLU &another) : TDecompBase(another)
 }
 
 //______________________________________________________________________________
-Int_t TDecompLU::Decompose(const TMatrixDBase &/*a*/)
+Int_t TDecompLU::Decompose()
 {
-  const Int_t n = fLU.GetNcols();
-
-  fSign = 1.0;
-  fNIndex = n; 
-  fIndex = new Int_t[fNIndex]; 
-
   Int_t nrZeros = 0;
-  const Int_t ok = DecomposeLU(fLU,fIndex,fSign,fTol,nrZeros);
+  Int_t ok;
+  if (fImplicitPivot)
+    ok = DecomposeLUCrout(fLU,fIndex,fSign,fTol,nrZeros);
+  else
+    ok = DecomposeLUGauss(fLU,fIndex,fSign,fTol,nrZeros);
 
   if (!ok) {
     fLU.Invalidate();
@@ -86,8 +90,15 @@ Int_t TDecompLU::Decompose(const TMatrixDBase &/*a*/)
 }
 
 //______________________________________________________________________________
-const TMatrixD TDecompLU::GetMatrix() const
+const TMatrixD TDecompLU::GetMatrix()
 {
+  if (fStatus & kSingular)
+    return TMatrixD();
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return TMatrixD();
+  }
+
   TMatrixD L = fLU;
   TMatrixD U = fLU;
   Double_t * const pU = U.GetMatrixArray();
@@ -130,7 +141,12 @@ Bool_t TDecompLU::Solve(TVectorD &b)
 // been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  Assert(fStatus & kDecomposed);
+  if (fStatus & kSingular)
+    return kFALSE;
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return kFALSE;
+  }
 
   if (fLU.GetNrows() != b.GetNrows() || fLU.GetRowLwb() != b.GetLwb()) {
     Error("Solve(TVectorD &","vector and matrix incompatible");
@@ -201,7 +217,12 @@ Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
     
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  Assert(fStatus & kDecomposed);
+  if (fStatus & kSingular)
+    return kFALSE;
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return kFALSE;
+  }
     
   if (fLU.GetNrows() != b->GetNrows() || fLU.GetRowLwb() != b->GetRowLwb()) {
     Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
@@ -263,7 +284,12 @@ Bool_t TDecompLU::TransSolve(TVectorD &b)
 // been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  Assert(fStatus & kDecomposed);
+  if (fStatus & kSingular)
+    return kFALSE;
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return kFALSE;
+  }
 
   if (fLU.GetNrows() != b.GetNrows() || fLU.GetRowLwb() != b.GetLwb()) {
     Error("TransSolve(TVectorD &","vector and matrix incompatible");
@@ -337,7 +363,12 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
 
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  Assert(fStatus & kDecomposed);
+  if (fStatus & kSingular)
+    return kFALSE;
+  if ( !( fStatus & kDecomposed ) ) {
+    if (!Decompose())
+      return kFALSE;
+  }
 
   if (fLU.GetNrows() != b->GetNrows() || fLU.GetRowLwb() != b->GetRowLwb()) {
     Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");
@@ -393,15 +424,20 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
 //______________________________________________________________________________
 Double_t TDecompLU::Condition()
 {
-  if ( !(fStatus & kCondition) ) {
+  if ( !( fStatus & kCondition ) ) {
+    fCondition = -1;
+    if (fStatus & kSingular)
+      return fCondition;
+    if ( !( fStatus & kDecomposed ) ) {
+      if (!Decompose())
+        return fCondition;
+    }
     const Double_t norm = (GetMatrix()).Norm1();
     Double_t invNorm;
     if (Hager(invNorm))
       fCondition = norm*invNorm;
-    else {// no convergence in Hager
+    else // no convergence in Hager
       Error("Condition()","Hager procedure did NOT converge");
-      fCondition = -1;
-    }
     fStatus |= kCondition;
   }
   return fCondition;
@@ -411,6 +447,8 @@ Double_t TDecompLU::Condition()
 void TDecompLU::Det(Double_t &d1,Double_t &d2)
 {
   if ( !( fStatus & kDetermined ) ) {
+    if ( !( fStatus & kDecomposed ) )
+      Decompose();
     TDecompBase::Det(d1,d2);
     fDet1 *= fSign;
     fStatus |= kDetermined;
@@ -427,6 +465,7 @@ TDecompLU &TDecompLU::operator=(const TDecompLU &source)
     fLU.ResizeTo(source.fLU);
     fLU   = source.fLU;
     fSign = source.fSign;
+    fImplicitPivot = source.fImplicitPivot;
     if (fNIndex != source.fNIndex) {
       if (fIndex)
         delete [] fIndex;
@@ -439,8 +478,8 @@ TDecompLU &TDecompLU::operator=(const TDecompLU &source)
 }
 
 //______________________________________________________________________________
-Int_t TDecompLU::DecomposeLU(TMatrixD &lu,Int_t *index,Double_t &sign,
-                             Double_t tol,Int_t &nrZeros)
+Int_t TDecompLU::DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
+                                  Double_t tol,Int_t &nrZeros)
 {
 // Crout/Doolittle algorithm of LU decomposing a square matrix, with implicit partial
 // pivoting.  The decomposition is stored in fLU: U is explicit in the upper triag
@@ -543,10 +582,9 @@ Int_t TDecompLU::DecomposeLU(TMatrixD &lu,Int_t *index,Double_t &sign,
   return kTRUE;
 }
 
-/*
 //______________________________________________________________________________
-Int_t TDecompLU::DecomposeLU(TMatrixD &lu,Int_t *index,Double_t &sign,
-                             Double_t tol,Int_t &nrZeros)
+Int_t TDecompLU::DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
+                                  Double_t tol,Int_t &nrZeros)
 {
 // LU decomposition using Gaussain Elimination with partial pivoting (See Golub &
 // Van Loan, Matrix Computations, Algorithm 3.4.1) of a square matrix .
@@ -609,19 +647,17 @@ Int_t TDecompLU::DecomposeLU(TMatrixD &lu,Int_t *index,Double_t &sign,
         }
       }
     } else
-      fLU.Invalidate();
+      return kFALSE;
   }
       
   return kTRUE;
 }
-*/
 
 //______________________________________________________________________________
 Int_t TDecompLU::InvertLU(TMatrixD &lu,Int_t *index,Double_t tol)
 {
   // Calculate matrix inversion through in place forward/backward substitution
 
-  //Assert(lu.IsValid());
   const Int_t     n   = lu.GetNcols();
         Double_t *pLU = lu.GetMatrixArray();
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.h,v 1.3 2004/02/04 17:12:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.h,v 1.4 2004/02/06 16:25:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -47,12 +47,16 @@ public :
 
   virtual       Int_t     GetNrows () const { return fQ.GetNrows(); }
   virtual       Int_t     GetNcols () const { return fQ.GetNcols(); }
-  virtual const TMatrixD &GetQ     () const { return fQ; }
-  virtual const TMatrixD &GetR     () const { return fR; }
-  virtual const TVectorD &GetUp    () const { return fUp; }
-  virtual const TVectorD &GetW     () const { return fW; }
+  virtual const TMatrixD &GetQ     ()       { if ( !( fStatus & kDecomposed ) ) Decompose();
+                                              return fQ; }
+  virtual const TMatrixD &GetR     ()       { if ( !( fStatus & kDecomposed ) ) Decompose();
+                                              return fR; }
+  virtual const TVectorD &GetUp    ()       { if ( !( fStatus & kDecomposed ) ) Decompose();
+                                              return fUp; }
+  virtual const TVectorD &GetW     ()       { if ( !( fStatus & kDecomposed ) ) Decompose();
+                                              return fW; }
 
-  virtual Int_t    Decompose  (const TMatrixDBase &a);
+  virtual Int_t    Decompose  ();
   virtual Bool_t   Solve      (      TVectorD &b);
   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok);
   virtual Bool_t   Solve      (      TMatrixDColumn &b);

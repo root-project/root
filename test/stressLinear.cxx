@@ -2977,7 +2977,7 @@ void astress_eigen(Int_t msize)
 
   const TMatrixD m = THilbertMatrixD(msize,msize);
 
-  const TDecompSVD svd(m);
+  TDecompSVD svd(m);
   TVectorD sig = svd.GetSig(); sig.Sqr();
 
   // Symmetric matrix EigenVector algorithm
