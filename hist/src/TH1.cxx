@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.173 2004/03/26 07:19:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.174 2004/03/29 16:12:21 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5010,17 +5010,7 @@ Double_t TH1::GetContourLevelPad(Int_t level) const
   // in case of equidistant contours.
   if (gPad && gPad->GetLogz() && TestBit(kUserContour)) {
      if (zlevel <= 0) return 0;
-     Double_t zmin = GetMinimum();
-     Double_t zmax = GetMaximum();
-     if ((zmin == zmax) && (zmin != 0)) {
-        zmax += 0.01*TMath::Abs(zmax);
-        zmin -= 0.01*TMath::Abs(zmin);
-     }
-     if (zmax <= 0) return 0;
-     if (zmin <= 0) zmin = 0.001*zmax;
-     Double_t lzmin = TMath::Log10(zmin);
-     Double_t lzmax = TMath::Log10(zmax);
-     zlevel = (((zlevel-zmin)/(zmax-zmin))*(lzmax-lzmin))+lzmin;
+     zlevel = TMath::Log10(zlevel);
   }
   return zlevel;
 }
