@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include "TTree.h"
 #include "TFile.h"
+#include "TRandom.h"
 
 #include "Data.h"
-
 
 int fillTree() {
 
@@ -18,11 +18,11 @@ int fillTree() {
          pData->ns[ins].orient = ins;
          for(Int_t isubs; isubs<2; isubs++) {
             for(Int_t iefg=0;iefg<5;iefg++) {
-               (pData->ns[ins]).subs[isubs].efg[iefg] = random() / 10000;
+               (pData->ns[ins]).subs[isubs].efg[iefg] = gRandom->Rndm() * 20000; // random()/ 10000;
             }
          }
 			for(Int_t ich=0; ich<49; ich++) {
-				(pData->ns[ins]).adc[ich] = random() / 1000 ;
+				(pData->ns[ins]).adc[ich] = gRandom->Rndm() * 2000000; // random() / 1000 ;
 			}
 		}
 

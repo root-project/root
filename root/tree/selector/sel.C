@@ -36,8 +36,8 @@ void sel::Begin(TTree *tree)
 
    TString option = GetOption();
    MyNameIs = GetOption();
-   cout << "My option are " << option << endl;
-   cout << "My name is " << MyNameIs << endl;
+   cout << "My option are " << option.Data() << endl;
+   cout << "My name is " << MyNameIs.Data() << endl;
 
 }
 

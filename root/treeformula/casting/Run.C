@@ -1,4 +1,4 @@
-int Run(bool debug = false) {
+int SimpleRun(bool debug = false) {
   gSystem->Load("libTreePlayer"); 
   gROOT->ProcessLine(".L Simple.cxx+");
   gROOT->ProcessLine(".L Create.C");
@@ -6,5 +6,8 @@ int Run(bool debug = false) {
   
   Create(debug);
   return Read(debug);
+}
 
+int Run(bool debug = false) {
+   gSystem->Exit(!SimpleRun(debug));
 }

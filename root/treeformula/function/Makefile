@@ -13,7 +13,7 @@ testFormulaFuncCall.output: func.C testcl.C
 	$(CMDECHO) root.exe -q -l -b func.C	> testFormulaFuncCall.output 2>&1
 
 testFormulaFuncCall: testFormulaFuncCall.output
-	$(CMDECHO) diff testFormulaFuncCall.good testFormulaFuncCall.output
+	$(CMDECHO) diff -b testFormulaFuncCall.good testFormulaFuncCall.output
 	$(CMDECHO) echo mytest > /dev/null
 
 testWithFailure:

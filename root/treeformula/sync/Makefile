@@ -1,18 +1,18 @@
-CLEAN_TARGETS += main *Dict* Event.root *~ Event createfile.out readfile.out
+CLEAN_TARGETS += main *Dict* Event.root *~ Event$(ExeSuf) createfile.out readfile.out
 TEST_TARGETS += Simple
 
 include ../../Rules.mk
 
-$(ROOTSYS)/test/Event:
-	(cd $(ROOTSYS)/test; gmake Event)
+$(ROOTSYS)/test/Event$(ExeSuf):
+	(cd $(ROOTSYS)/test; gmake Event$(ExeSuf))
 
-libEvent.so: $(ROOTSYS)/test/libEvent.so
-	$(CMDECHO) cp $(ROOTSYS)/test/Event $(ROOTSYS)/test/libEvent.so $(ROOTSYS)/test/Event.h .
+libEvent.$(DllSuf): $(ROOTSYS)/test/libEvent.$(DllSuf)
+	$(CMDECHO) cp $(ROOTSYS)/test/Event$(ExeSuf) $(ROOTSYS)/test/libEvent.$(DllSuf) $(ROOTSYS)/test/Event.h .
 
-Event: $(ROOTSYS)/test/Event
-	$(CMDECHO)cp $(ROOTSYS)/test/Event $(ROOTSYS)/test/libEvent.so $(ROOTSYS)/test/Event.h .
+Event$(ExeSuf): $(ROOTSYS)/test/Event$(ExeSuf)
+	$(CMDECHO)cp $(ROOTSYS)/test/Event$(ExeSuf) $(ROOTSYS)/test/libEvent.$(DllSuf) $(ROOTSYS)/test/Event.h .
 
-Event.root: ./Event ./libEvent.so
+Event.root: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 	$(CMDECHO) ./Event 20 1 9 1 > createfile.out
 
 Simple: Event.root

@@ -2,26 +2,21 @@ all: tests
 test: tests
 
 SUBDIRS =  
+TEST_TARGETS += ArraySyntax
+CLEAN_TARGETS += *Dict* *.root main$(ExeSuf)
 
-TEST_TARGETS = $(SUBDIRS:%=%.test) 
-
-tests: $(TEST_TARGETS) ArraySyntax
-	@echo "All test succeeded in `pwd`"
-
-$(TEST_TARGETS): %.test:
-	@(cd $*; gmake test)
+include ../../Rules.mk
 
 #ArraySyntax: Event.root
 #	@echo built
 
-ArraySyntax: main $(ROOTSYS)/lib/libTreePlayer.so
+ArraySyntax: main$(ExeSuf) $(ROOTSYS)/lib/libTreePlayer.$(DllSuf)
 	./main
 
-main: main.C fooDict.C barDict.C foo.C bar.C
-	g++ -o $@ $^ -I. `root-config --cflags --libs`
+main$(ExeSuf): main.C fooDict.C barDict.C foo.C bar.C
+	$(CXX) -o$@ $(CXXFLAGS) $^ -I. $(LDSTARTOPT) $(shell eval root-config --libs)
 
 %Dict.C: %.h
 	rootcint -f $@ -c $^
 
-clean:
-	rm -f main *Dict* Event.root *~
+

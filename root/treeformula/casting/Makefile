@@ -1,12 +1,8 @@
-all: tests
-test: tests
-
 SUBDIRS =  
+TEST_TARGETS = Simple 
+CLEAN_TARGETS += main *Dict* Event.root *~ *.$(DllSuf) *.exp *.pdb *.d
 
-TEST_TARGETS = $(SUBDIRS:%=%.test) 
-
-tests: $(TEST_TARGETS) Simple
-	@echo "All test succeeded in `pwd`"
+include ../../Rules.mk
 
 $(ROOTSYS)/test/Event:
 	(cd $ROOTSYS/test; gmake Event)
@@ -17,12 +13,10 @@ Event: $(ROOTSYS)/test/Event
 Event.root:
 	./Event 20 1 9 1
 
-Simple_cxx.so : Simple.h Simple.cxx
-	@echo 'gROOT->ProcessLine(".L Simple.cxx++");' | root.exe -l -b 
+Simple_cxx.$(DllSuf) : Simple.h Simple.cxx
+	$(CMDECHO) root.exe -l -b buildSimple.C 
 
-Simple: Simple_cxx.so
-	@echo 'gROOT->ProcessLine(".L Run.C");gSystem->Exit(!Run());'  | root.exe -l -b
+Simple: Simple_cxx.$(DllSuf)
+	$(CMDECHO) root.exe -l -b -q Run.C
 
 
-clean:
-	rm -f main *Dict* Event.root *~ *.so

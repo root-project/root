@@ -6,7 +6,7 @@ include ../../Rules.mk
 
 LIBS = $(ROOTLIBS)
 
-#all:	Foo.$(DllSuf) reader writer 
+#all:	Foo.$(DllSuf) reader$(ExeSuf) writer$(ExeSuf)
 #test: check
 
 Foo.$(DllSuf): Foo.h Foo.cxx
@@ -40,16 +40,20 @@ endif
 
 #	g++ -shared -Wl,-soname,Foo.$(DllSuf) -o Foo.$(DllSuf) Foo.$(ObjSuf) FooDict.$(ObjSuf)
 
-reader:reader.C
+reader$(ExeSuf) :reader.C
 	$(CXX) $(CXXFLAGS) -c $<  
 	$(LD) reader.$(ObjSuf) $(LDFLAGS) $(LIBS) $(OutPutOpt)$@
 
 	#g++ -o $@ reader.$(ObjSuf) `root-config --libs` \
 	#	-Wl,-rpath,`root-config --libdir`
 
-writer:writer.C Foo.$(DllSuf) 
+writer$(ExeSuf):writer.C Foo.$(DllSuf) 
 	$(CXX) $(CXXFLAGS) -c $< 
+ifeq ($(PLATFORM),win32)
+	$(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.lib $(OutPutOpt)$@
+else
 	$(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.so $(OutPutOpt)$@
+endif
 
 #	g++ -o $@ writer.$(ObjSuf) Foo.$(DllSuf) `root-config --libs` \
 #		-Wl,-rpath,`root-config --libdir` -Wl,-rpath,.
@@ -61,7 +65,7 @@ dist:
 	tar -czvf treeproblem.tar.gz treeproblem 
 	rm -rf treeproblem 
 
-check:Foo.$(DllSuf) reader writer 
+check:Foo.$(DllSuf) reader$(ExeSuf) writer$(ExeSuf) 
 	root -b -l -q writer.C > write.out
 ifeq ($(FAIL),) 
 	@echo Test known to fail in `pwd`

@@ -1,6 +1,7 @@
 {
    if (!gSystem->CompileMacro("Data.cxx","k")) gApplication->Terminate(1);
    TFile *f = new TFile("myTree.root");
+   cerr << "We expect an error about the dimension size:\n";
    int n1 = tr->Draw("ns[40].adc[2]","");
    if (n1>=0) {
       cerr << "We should not have been able to draw: tr->Draw(\"ns[40].adc[2]\",\"\");\n";
