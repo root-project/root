@@ -2235,6 +2235,13 @@ char *item;
       result3=G__getstaticobject(item,&known);
     }
 #endif
+#ifndef G__OLDIMPLEMENTATION1935
+#ifdef G__PTR2MEMFUNC
+    if(known==0&&result3.obj.i==0) {
+      known=G__getpointer2memberfunc(item,&result3);
+    }
+#endif
+#endif /* 1935 */
     /* undefined */
     if(known==0) {
 #ifndef G__OLDIMPLEMENTATION1173
@@ -2299,11 +2306,13 @@ char *item;
 	result3=G__getreserved(item+1,(void**)NULL,(void**)NULL);
       }
 #endif
+#ifdef G__OLDIMPLEMENTATION1935
 #ifdef G__PTR2MEMFUNC
       if(known==0&&result3.obj.i==0) {
 	known=G__getpointer2memberfunc(item,&result3);
       }
 #endif
+#endif /* 1935 */
       if (known == 0 && result3.obj.i == 0) {
 	result3=G__null;
 	if(G__noerr_defined==0) {
