@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.cc,v 1.10 2002/05/14 18:30:29 verkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.11 2002/05/30 18:41:26 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -55,7 +55,8 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   _projDeps(projDeps),
   _dependents(dependents), 
   _fitOptions(fitOptions),
-  _genProtoData(genProtoData)
+  _genProtoData(genProtoData),
+  _canAddFitResults(kTRUE)
 {
   // Constructor with a generator and fit model. Both models may point
   // to the same object. The 'dependents' set of variables is generated 
@@ -188,6 +189,7 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
     }
   }
 
+  _canAddFitResults = kFALSE ;
   if (fit) calcPulls() ;
   return kFALSE ;
 }
@@ -329,6 +331,33 @@ Bool_t RooMCStudy::fitSample(RooAbsData* genSample)
 }
 
 
+Bool_t RooMCStudy::addFitResult(const RooFitResult& fr) 
+{  
+  if (!_canAddFitResults) {
+    cout << "RooMCStudy::addFitResult: ERROR cannot add fit results in current state" << endl ;
+    return kTRUE ;
+  }
+
+  // Transfer contents of fit result to fitParams ;
+  *_fitParams = RooArgSet(fr.floatParsFinal()) ;
+  
+  // If fit converged, store parameters and NLL
+  Bool_t ok = (fr.status()==0) ;
+  if (ok) {
+    _nllVar->setVal(fr.minNll()) ;
+    RooArgSet tmp(*_fitParams) ;
+    tmp.add(*_nllVar) ;
+    _fitParData->add(tmp) ;
+  }
+
+  // Store fit result if requested by user
+  if (_fitOptions.Contains("r")) {
+    _fitResList.Add((TObject*)&fr) ;
+  }  
+
+  return kFALSE ;
+}
+
 
 
 void RooMCStudy::calcPulls() 
@@ -361,9 +390,14 @@ void RooMCStudy::calcPulls()
 
 
 
-const RooDataSet& RooMCStudy::fitParDataSet() const 
+const RooDataSet& RooMCStudy::fitParDataSet()
 {
   // Return the fit parameter dataset
+  if (_canAddFitResults) {
+    calcPulls() ;  
+    _canAddFitResults = kFALSE ; 
+  }
+  
   return *_fitParData ;
 }
 
@@ -429,7 +463,6 @@ RooPlot* RooMCStudy::plotParamOn(RooPlot* frame)
 {
   // Plot the distribution of the fitted value
   // of the given parameter. 
-
   _fitParData->plotOn(frame) ;
   return frame ;
 }
@@ -465,6 +498,10 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, Double_t lo, Double_t hi
 {
   // Create a RooPlot of the distribution of the fitted errors of the given parameter. 
   // The range lo-hi is plotted in nbins bins
+  if (_canAddFitResults) {
+    calcPulls() ;
+    _canAddFitResults=kFALSE ;
+  }
 
   RooErrorVar* evar = param.errorVar() ;
   RooPlot* frame = evar->frame(lo,hi,nbins) ;
@@ -483,6 +520,12 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, Double_t lo, Double_t hi,
   // If fitGauss is set, an unbinned max. likelihood fit of the distribution to a Gaussian model 
   // is performed. The fit result is overlaid on the returned RooPlot and a box with the fitted
   // mean and sigma is added.
+
+  if (_canAddFitResults) {
+    calcPulls() ;
+    _canAddFitResults=kFALSE ;
+  }
+
 
   TString name(param.GetName()), title(param.GetTitle()) ;
   name.Append("pull") ; title.Append(" Pull") ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.rdl,v 1.6 2002/02/04 18:10:13 verkerke Exp $
+ *    File: $Id: RooMCStudy.rdl,v 1.7 2002/05/14 18:30:29 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -37,12 +37,13 @@ public:
   Bool_t generate(Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData=kFALSE, const char* asciiFilePat=0) ;
   Bool_t fit(Int_t nSamples, const char* asciiFilePat) ;
   Bool_t fit(Int_t nSamples, TList& dataSetList) ;
+  Bool_t addFitResult(const RooFitResult& fr) ;
 
   // Result accessors
   const RooArgSet* fitParams(Int_t sampleNum) const ;
   const RooFitResult* fitResult(Int_t sampleNum) const ;
   const RooDataSet* genData(Int_t sampleNum) const ;
-  const RooDataSet& fitParDataSet() const ;
+  const RooDataSet& fitParDataSet() ;
 
   // Plot methods
   RooPlot* plotNLL(Double_t lo, Double_t hi, Int_t nBins=100) ;
@@ -68,13 +69,15 @@ protected:
   RooArgSet*   _fitInitParams ; // List of initial values of fit parameters
   RooArgSet*   _fitParams ;     // List of fit parameters
   RooRealVar*  _nllVar ;
-
+  
   TList       _genDataList ;    // List of generated data sample
   TList       _fitResList ;     // List of RooFitResult fit output objects
   RooDataSet* _fitParData ;     // Data set of fit parameters of each sample
   TString     _fitOptions ;     // Fit options string
   Bool_t      _extendedGen ;    // Add poisson term to number of events to generate?
   Bool_t      _binGenData ;     // Bin data between generating and fitting
+
+  Bool_t      _canAddFitResults ; // Allow adding of external fit results?
 
 private:
   RooMCStudy(const RooMCStudy&) ;
