@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.22 2002/08/16 13:43:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.23 2002/09/10 12:13:54 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -222,6 +222,11 @@ public:
    // Hashing
    static ULong_t Hash(const void *txt, Int_t ntxt);
    static ULong_t Hash(const char *str);
+
+   // IsInside
+   static Bool_t IsInside(Double_t xp, Double_t yp, Int_t np, Double_t *x, Double_t *y);
+   static Bool_t IsInside(Float_t xp, Float_t yp, Int_t np, Float_t *x, Float_t *y);
+   static Bool_t IsInside(Int_t xp, Int_t yp, Int_t np, Int_t *x, Int_t *y);
 
    // Sorting
    static void Sort(Int_t n, const Short_t *a,  Int_t *index, Bool_t down=kTRUE);

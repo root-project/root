@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.27 2002/08/16 20:03:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.28 2002/08/17 18:42:27 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1349,6 +1349,63 @@ Int_t TMath::BinarySearch(Int_t n, const Long_t **array, Long_t value)
       else                           nbelow = middle;
    }
    return nbelow-1;
+}
+
+//_____________________________________________________________________________
+Bool_t TMath::IsInside(Double_t xp, Double_t yp, Int_t np, Double_t *x, Double_t *y)
+{
+   // Function which returns kTRUE if point xp,yp lies inside the
+   // polygon defined by the np points in arrays x and y, kFALSE otherwise
+   Double_t xint;
+   Int_t i;
+   Int_t inter = 0;
+   for (i=0;i<np-1;i++) {
+      if (y[i] == y[i+1]) continue;
+      if (yp <= y[i] && yp <= y[i+1]) continue;
+      if (y[i] < yp && y[i+1] < yp) continue;
+      xint = x[i] + (yp-y[i])*(x[i+1]-x[i])/(y[i+1]-y[i]);
+      if (xp < xint) inter++;
+   }
+   if (inter%2) return kTRUE;
+   return kFALSE;
+}
+
+//_____________________________________________________________________________
+Bool_t TMath::IsInside(Float_t xp, Float_t yp, Int_t np, Float_t *x, Float_t *y)
+{
+   // Function which returns kTRUE if point xp,yp lies inside the
+   // polygon defined by the np points in arrays x and y, kFALSE otherwise
+   Double_t xint;
+   Int_t i;
+   Int_t inter = 0;
+   for (i=0;i<np-1;i++) {
+      if (y[i] == y[i+1]) continue;
+      if (yp <= y[i] && yp <= y[i+1]) continue;
+      if (y[i] < yp && y[i+1] < yp) continue;
+      xint = x[i] + (yp-y[i])*(x[i+1]-x[i])/(y[i+1]-y[i]);
+      if ((Double_t)xp < xint) inter++;
+   }
+   if (inter%2) return kTRUE;
+   return kFALSE;
+}
+
+//_____________________________________________________________________________
+Bool_t TMath::IsInside(Int_t xp, Int_t yp, Int_t np, Int_t *x, Int_t *y)
+{
+   // Function which returns kTRUE if point xp,yp lies inside the
+   // polygon defined by the np points in arrays x and y, kFALSE otherwise
+   Double_t xint;
+   Int_t i;
+   Int_t inter = 0;
+   for (i=0;i<np-1;i++) {
+      if (y[i] == y[i+1]) continue;
+      if (yp <= y[i] && yp <= y[i+1]) continue;
+      if (y[i] < yp && y[i+1] < yp) continue;
+      xint = x[i] + (yp-y[i])*(x[i+1]-x[i])/(y[i+1]-y[i]);
+      if ((Double_t)xp < xint) inter++;
+   }
+   if (inter%2) return kTRUE;
+   return kFALSE;
 }
 
 //_____________________________________________________________________________
