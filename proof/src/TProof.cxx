@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.26 2002/07/18 09:48:21 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.27 2002/09/16 10:57:58 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -47,7 +47,6 @@
 #include "TProofPlayer.h"
 #include "TDSet.h"
 #include "TEnv.h"
-#include "TProofDebug.h"
 
 
 //----- PROOF Interrupt signal handler -----------------------------------------------
@@ -186,6 +185,10 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
    delete u;
 
+   // global logging
+   gProofDebugLevel = fLogLevel;
+   gProofDebugMask  = TProofDebug::kAll;
+
    // sort slaves by descending performance index
    fSlaves        = new TSortedList(kSortDescending);
    fActiveSlaves  = new TList;
@@ -212,6 +215,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             return 0;
          }
       }
+
       PDB(kGlobal,1) Info("Init", "using PROOF config file: %s", fconf);
 
       FILE *pconf;
@@ -1435,7 +1439,7 @@ Int_t TProof::SendInitialState()
 
    if (!IsValid()) return 0;
 
-   SetLogLevel(fLogLevel);
+   SetLogLevel(fLogLevel, gProofDebugMask);
    if (IsMaster())
       ConnectFiles();
 
@@ -1572,11 +1576,12 @@ Int_t TProof::SendFile(const char *file, Bool_t bin)
       if (IsMaster() && size == 0)
          continue;
 
-      if (fLogLevel > 2 && size > 0) {
-         if (!nsl)
-            Info("SendFile", "sending file to:");
-         printf("   slave = %s:%d\n", sl->GetName(), sl->GetOrdinal());
-      }
+      PDB(kPackage,2)
+         if (size > 0) {
+            if (!nsl)
+               Info("SendFile", "sending file %s to:", file);
+            printf("   slave = %s:%d\n", sl->GetName(), sl->GetOrdinal());
+         }
 
       sprintf(buf, "%s %d %ld", gSystem->BaseName(file), bin, size);
       if (sl->GetSocket()->Send(buf, kPROOF_SENDFILE) == -1) {
@@ -1642,13 +1647,15 @@ Int_t TProof::SendPrint()
 }
 
 //______________________________________________________________________________
-void TProof::SetLogLevel(Int_t level)
+void TProof::SetLogLevel(Int_t level, UInt_t mask)
 {
    // Set server logging level.
 
-   char str[10];
-   fLogLevel = level;
-   sprintf(str, "%d", fLogLevel);
+   char str[32];
+   fLogLevel        = level;
+   gProofDebugLevel = level;
+   gProofDebugMask  = (TProofDebug::EProofDebugMask) mask;
+   sprintf(str, "%d %u", level, mask);
    Broadcast(str, kPROOF_LOGLEVEL, kAll);
 }
 

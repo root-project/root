@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.1 2002/09/16 10:57:57 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -40,7 +40,7 @@ protected:
 
 public:
    TVirtualProof(const char *masterurl, const char *conffile = 0,
-                 const char *confdir = 0, Int_t loglevel = 1) { }
+                 const char *confdir = 0, Int_t loglevel = 0) { }
    virtual ~TVirtualProof() { }
 
    virtual Int_t       Ping() = 0;
@@ -55,7 +55,7 @@ public:
    virtual TList      *GetOutputList() = 0;
 
    virtual Int_t       SetParallel(Int_t nodes = 9999) = 0;
-   virtual void        SetLogLevel(Int_t level) = 0;
+   virtual void        SetLogLevel(Int_t level, UInt_t mask = 0xFFFFFFFF) = 0;
 
    virtual void        Close(Option_t *option="") = 0;
    virtual void        Print(Option_t *option="") const = 0;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.23 2002/08/09 13:12:23 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.24 2002/09/16 10:57:57 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -26,6 +26,9 @@
 
 #ifndef ROOT_TVirtualProof
 #include "TVirtualProof.h"
+#endif
+#ifndef ROOT_TProofDebug
+#include "TProofDebug.h"
 #endif
 #ifndef ROOT_TString
 #include "TString.h"
@@ -180,7 +183,7 @@ private:
 
 public:
    TProof(const char *masterurl, const char *conffile = kPROOF_ConfFile,
-          const char *confdir = kPROOF_ConfDir, Int_t loglevel = 1);
+          const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0);
    virtual ~TProof();
 
    Int_t       Ping();
@@ -194,7 +197,7 @@ public:
    TList      *GetOutputList();
 
    Int_t       SetParallel(Int_t nodes = 9999);
-   void        SetLogLevel(Int_t level);
+   void        SetLogLevel(Int_t level, UInt_t mask = TProofDebug::kAll);
 
    void        Close(Option_t *option="");
    void        Print(Option_t *option="") const;

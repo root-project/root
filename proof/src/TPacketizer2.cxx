@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:$:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.3 2002/09/16 10:57:58 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -184,7 +184,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
    // Setup the communication infrastructure
    si.Reset();
    for (TSlave *s = (TSlave*) si.Next(); s ; s = (TSlave*) si.Next()) {
-Info("TPacketizer2","Socket added to monitor: %p", s->GetSocket());
+      PDB(kPacketizer,3) Info("TPacketizer2","Socket added to monitor: %p", s->GetSocket());
       mon.Add(s->GetSocket());
       slaves_by_sock.Add(s->GetSocket(),s);
    }
@@ -241,9 +241,9 @@ Info("TPacketizer2","Socket added to monitor: %p", s->GetSocket());
 
             s->GetSocket()->Send( m );
             mon.Activate(s->GetSocket());
-Info("TPacketizer2","sent via %p (%s) reportsize on %s %s %s %s", s->GetSocket(),
-      s->GetName(), dset->IsTree() ? "tree" : "not tree", elem->GetFileName(),
-       elem->GetDirectory(), elem->GetObjName() );
+            PDB(kPacketizer,2) Info("TPacketizer2","sent via %p (%s) reportsize on %s %s %s %s",
+                s->GetSocket(), s->GetName(), dset->IsTree() ? "tree" : "not tree",
+                elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
          } else {
             // Done
             done = kTRUE;
@@ -257,7 +257,7 @@ Info("TPacketizer2","sent via %p (%s) reportsize on %s %s %s %s", s->GetSocket()
       TSocket *sock = mon.Select();
       mon.DeActivate(sock);
 
-Info("TPacketizer2","Select returned: %p", sock);
+      PDB(kPacketizer,3) Info("TPacketizer2","Select returned: %p", sock);
 
       TMessage *reply;
 
@@ -356,7 +356,7 @@ Info("TPacketizer2","Select returned: %p", sock);
    }
 
    PDB(kGlobal,1) Info("TPacketizer2","Processing %ld entries in %d files on %d hosts",
-         fTotalEntries, files, fFileNodes->GetSize() );
+                       fTotalEntries, files, fFileNodes->GetSize() );
 
    fUnAllocated->Clear();
    fUnAllocated->AddAll(fFileNodes);
@@ -379,7 +379,7 @@ Info("TPacketizer2","Select returned: %p", sock);
       slstat->fCurFile = 0;
    }
 
-   PDB(kPacketizer,1) Info("TPacketizer2", "return");
+   PDB(kPacketizer,1) Info("TPacketizer2", "Return");
 }
 
 

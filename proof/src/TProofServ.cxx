@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.27 2002/07/18 09:48:21 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.28 2002/08/09 13:12:24 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -227,7 +227,7 @@ TProofServ::TProofServ(int *argc, char **argv)
    fOrdinal     = -1;
    fGroupId     = -1;
    fGroupSize   = 0;
-   fLogLevel    = 1;
+   fLogLevel    = 0;
    fRealTime    = 0.0;
    fCpuTime     = 0.0;
    fProof       = 0;
@@ -449,10 +449,11 @@ TDSetElement *TProofServ::GetNextPacket()
       e = 0;
    }
    if (e != 0) {
-      PDB(kLoop,2) Info("GetNextPacket", "'%s' '%s' '%s' %d %d", e->GetFileName(),
-            e->GetDirectory(), e->GetObjName(),e->GetFirst(),e->GetNum());
+      PDB(kLoop, 2) Info("GetNextPacket", "'%s' '%s' '%s' %d %d",
+                         e->GetFileName(), e->GetDirectory(),
+                         e->GetObjName(), e->GetFirst(),e->GetNum());
    } else {
-      PDB(kLoop,2) Info("GetNextPacket", "Done");
+      PDB(kLoop, 2) Info("GetNextPacket", "Done");
    }
 
    return e;
@@ -499,7 +500,7 @@ void TProofServ::HandleSocketInput()
          if (IsMaster() && IsParallel()) {
             fProof->SendCommand(str);
          } else {
-            PDB(kGlobal,1) Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
+            PDB(kGlobal, 1) Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
             ProcessLine(str);
          }
          SendLogFile();
@@ -519,10 +520,15 @@ void TProofServ::HandleSocketInput()
          break;
 
       case kPROOF_LOGLEVEL:
-         mess->ReadString(str, sizeof(str));
-         sscanf(str, "%d", &fLogLevel);
-         if (IsMaster())
-            fProof->SetLogLevel(fLogLevel);
+         {
+            UInt_t mask;
+            mess->ReadString(str, sizeof(str));
+            sscanf(str, "%d %u", &fLogLevel, &mask);
+            gProofDebugLevel = fLogLevel;
+            gProofDebugMask  = (TProofDebug::EProofDebugMask) mask;
+            if (IsMaster())
+               fProof->SetLogLevel(fLogLevel, mask);
+         }
          break;
 
       case kPROOF_PING:
@@ -570,7 +576,7 @@ void TProofServ::HandleSocketInput()
             TList *input;
             Long64_t nentries, first;
 
-            PDB(kGlobal,1) Info("HandleSocketInput:kPROOF_PROCESS", "Enter");
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS", "Enter");
 
             (*mess) >> dset >> filename >> input >> nentries >> first;
 
@@ -588,7 +594,7 @@ void TProofServ::HandleSocketInput()
 
             TIter next(input);
             for (TObject *obj; (obj = next()); ) {
-               PDB(kGlobal,2) Info("HandleSocketInput:kPROOF_PROCESS", "Adding: %s", obj->GetName());
+               PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_PROCESS", "Adding: %s", obj->GetName());
                p->AddInput(obj);
             }
             delete input;
@@ -597,23 +603,23 @@ void TProofServ::HandleSocketInput()
 
             // return output!
 
-            PDB(kGlobal,2) Info("HandleSocketInput:kPROOF_PROCESS","Send Output");
+            PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_PROCESS","Send Output");
             fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
 
-            PDB(kGlobal,2) Info("HandleSocketInput:kPROOF_PROCESS","Send LogFile");
+            PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_PROCESS","Send LogFile");
 
             SendLogFile();
 
             delete dset;
             delete p;
 
-            PDB(kGlobal,1) Info("HandleSocketInput:kPROOF_PROCESS","Done");
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS","Done");
          }
          break;
 
       case kPROOF_REPORTSIZE:
          {
-            PDB(kGlobal,1) Info("HandleSocketInput:kPROOF_REPORTSIZE", "Enter");
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_REPORTSIZE", "Enter");
             Bool_t         isTree;
             TString        filename;
             TString        dir;
@@ -628,7 +634,7 @@ void TProofServ::HandleSocketInput()
             TMessage answ(kPROOF_REPORTSIZE);
             answ << r << entries;
             fSocket->Send(answ);
-            PDB(kGlobal,1) Info("HandleSocketInput:kPROOF_REPORTSIZE", "Done");
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_REPORTSIZE", "Done");
          }
          break;
 
@@ -665,7 +671,7 @@ void TProofServ::HandleSocketInput()
                      // par file did not unpack itself in the expected directory, failure
                      fSocket->Send(kPROOF_FATAL);
                      err = kTRUE;
-                     if (fLogLevel > 1)
+                     PDB(kPackage, 1)
                         Info("HandleSocketInput:kPROOF_CHECKFILE",
                              "package %s did not unpack into %s", filenam.Data(),
                              packnam.Data());
@@ -674,7 +680,7 @@ void TProofServ::HandleSocketInput()
                      TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
                      TMD5::WriteChecksum(md5f, md5local);
                      fSocket->Send(kPROOF_CHECKFILE);
-                     if (fLogLevel > 1)
+                     PDB(kPackage, 1)
                         Info("HandleSocketInput:kPROOF_CHECKFILE",
                              "package %s installed on node", filenam.Data());
                   }
@@ -703,14 +709,14 @@ void TProofServ::HandleSocketInput()
                   // package already on server, unlock directory
                   UnlockPackage();
                   fSocket->Send(kPROOF_CHECKFILE);
-                  if (fLogLevel > 1)
+                  PDB(kPackage, 1)
                      Info("HandleSocketInput:kPROOF_CHECKFILE",
                           "package %s already on node", filenam.Data());
                   if (IsMaster())
                      fProof->UploadPackage(fPackageDir + "/" + filenam);
                } else {
                   fSocket->Send(kPROOF_FATAL);
-                  if (fLogLevel > 1)
+                  PDB(kPackage, 1)
                      Info("HandleSocketInput:kPROOF_CHECKFILE",
                           "package %s not yet on node", filenam.Data());
                }
@@ -724,11 +730,11 @@ void TProofServ::HandleSocketInput()
                   // copy file from cache to working directory
                   gSystem->Exec(Form("%s %s .", kCP, cachef.Data()));
                   fSocket->Send(kPROOF_CHECKFILE);
-                  if (fLogLevel > 1)
+                  PDB(kPackage, 1)
                      Info("HandleSocketInput:kPROOF_CHECKFILE", "file %s already on node", filenam.Data());
                } else {
                   fSocket->Send(kPROOF_FATAL);
-                  if (fLogLevel > 1)
+                  PDB(kPackage, 1)
                      Info("HandleSocketInput:kPROOF_CHECKFILE", "file %s not yet on node", filenam.Data());
                }
                delete md5local;
@@ -881,7 +887,7 @@ void TProofServ::HandleUrgentData()
    const int kBufSize = 1024;
    char waste[kBufSize];
 
-   if (fLogLevel > 5)
+   PDB(kGlobal, 5)
       Info("HandleUrgentData", "handling oob...");
 
    // Receive the OOB byte
@@ -916,7 +922,7 @@ void TProofServ::HandleUrgentData()
       }
    }
 
-   if (fLogLevel > 5)
+   PDB(kGlobal, 5)
       Info("HandleUrgentData", "got OOB byte: %d\n", oob_byte);
 
    switch (oob_byte) {
@@ -1065,7 +1071,7 @@ Int_t TProofServ::LockDir(const TString &lock)
    }
 #endif
 
-   if (fLogLevel > 2)
+   PDB(kPackage, 2)
       Info("LockDir", "file %s locked", lfile);
 
    return 0;
@@ -1100,7 +1106,7 @@ Int_t TProofServ::UnlockDir(const TString &lock)
    }
 #endif
 
-   if (fLogLevel > 2)
+   PDB(kPackage, 2)
       Info("UnlockDir", "file %s unlocked", lock.Data());
 
    close(*fid);
