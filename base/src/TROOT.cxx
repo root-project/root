@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.56 2001/12/14 21:04:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.57 2001/12/19 07:15:19 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -286,7 +286,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fMessageHandlers = new TList;
 
    TProcessID::AddProcessID();
-   
+
    fRootFolder = new TFolder();
    fRootFolder->SetName("root");
    fRootFolder->SetTitle("root of all folders");
@@ -339,7 +339,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    gStyle = 0;
    TStyle::BuildStyles();
    SetStyle("Default");
-   
+
    // Setup default (batch) graphics and GUI environment
    gBatchGuiFactory = new TGuiFactory;
    gGuiFactory      = gBatchGuiFactory;
@@ -749,7 +749,7 @@ TDataType *TROOT::GetType(const char *name, Bool_t load)
    }
    size_t nch = strlen(tname);
    while (tname[nch-1] == ' ') nch--;
-  
+
    // First try without loading.  We can do that because nothing is
    // ever removed from the list of types. (See TCint::UpdateListOfTypes).
    TDataType* type = (TDataType*)GetListOfTypes(kFALSE)->FindObject(name);
@@ -1144,17 +1144,18 @@ void TROOT::LoadMacro(const char *filename, int *error)
    // The possible error codes are defined by TInterpreter::EErrorCode.
 
    if (fInterpreter) {
-      char *fn1  = Strip(filename);
-      char *fn2  = Strip(fn1,'+');
+      char *fn1 = Strip(filename);
+      char *fn2 = Strip(fn1,'+');
       char *mac = gSystem->Which(GetMacroPath(), fn2, kReadPermission);
-      if (!mac)
+      if (!mac) {
          Error("LoadMacro", "macro %s not found in path %s", fn2, GetMacroPath());
-      else
-         fInterpreter->LoadMacro(filename,(TInterpreter::EErrorCode*)error);
+         if (error)
+            *error = TInterpreter::kFatal;
+      } else
+         fInterpreter->LoadMacro(mac, (TInterpreter::EErrorCode*)error);
       delete [] fn1;
       delete [] fn2;
       delete [] mac;
-
    }
 }
 
@@ -1210,7 +1211,7 @@ void TROOT::ProcessLine(const char *line, int *error)
    // use ProcessLineSync(). On non-Win32 platforms there is not difference
    // between ProcessLine() and ProcessLineSync().
    // The possible error codes are defined by TInterpreter::EErrorCode.  In
-   // particular, error will equal to TInterpreter::kProcessing until the 
+   // particular, error will equal to TInterpreter::kProcessing until the
    // CINT interpreted thread has finished executing the line.
 
    if (!fApplication) {
