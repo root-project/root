@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooValue.cc,v 1.2 2001/03/15 23:19:13 verkerke Exp $
+ *    File: $Id: RooValue.cc,v 1.3 2001/03/16 07:59:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,7 +23,8 @@ ClassImp(RooValue)
 
 RooValue::RooValue(const char *name, const char *title,
 		       Double_t value, const char *unit, RooBlindBase* blinder) :
-  RooAbsValue(name, title, 0, 0, unit), _error(0), _blinder(blinder)
+  RooAbsValue(name, title, 0, 0, unit), _error(0), _blinder(blinder),
+  _integMin(-1e10), _integMax(1e10)
 {
   _value = value ;
   setConstant(kTRUE) ;
@@ -34,7 +35,9 @@ RooValue::RooValue(const char *name, const char *title,
 RooValue::RooValue(const char *name, const char *title,
 		       Double_t minValue, Double_t maxValue,
 		       const char *unit, RooBlindBase* blinder) :
-  RooAbsValue(name, title, minValue, maxValue, unit), _blinder(blinder)
+  RooAbsValue(name, title, minValue, maxValue, unit), _blinder(blinder),
+  _integMin(minValue), _integMax(maxValue)
+
 {
   _value= 0.5*(minValue + maxValue);
   setValueDirty(kTRUE) ;
@@ -44,7 +47,8 @@ RooValue::RooValue(const char *name, const char *title,
 RooValue::RooValue(const char *name, const char *title,
 		       Double_t value, Double_t minValue, Double_t maxValue,
 		       const char *unit, RooBlindBase* blinder) :
-  RooAbsValue(name, title, minValue, maxValue, unit), _error(0), _blinder(blinder)
+  RooAbsValue(name, title, minValue, maxValue, unit), _error(0), _blinder(blinder),
+  _integMin(minValue), _integMax(maxValue)
 {
 //   if (_blinder) _blinder->redoBlind() ;
   _value = value ;
@@ -55,10 +59,11 @@ RooValue::RooValue(const char *name, const char *title,
 RooValue::RooValue(const RooValue& other) :
   RooAbsValue(other), 
   _error(other._error),
-  _blinder(other._blinder)
+  _blinder(other._blinder),
+  _integMin(other._integMin),
+  _integMax(other._integMax)
 {
   setConstant(other.isConstant()) ;
-  setIntegLimits(other.useIntegLimits()) ;
   setProjected(other.isProjected()) ;
 }
 
@@ -144,19 +149,21 @@ Bool_t RooValue::inIntegRange(Double_t value, Double_t* clippedValPtr) const
   Double_t clippedValue(value);
   Bool_t inRange(kTRUE) ;
 
-  if (useIntegLimits()) {
+  if (hasIntegLimits()) {
     if(value > _integMax) {
       if(value - _integMax > 1e-6*range) {
-	cout << "RooValue::inIntegRange(" << GetName() << "): value " << value
-	     << " rounded down to max limit " << _integMax << endl;
+	if (clippedValPtr)
+	  cout << "RooValue::inIntegRange(" << GetName() << "): value " << value
+	       << " rounded down to max limit " << _integMax << endl;
       }
       clippedValue = _integMax;
       inRange = kFALSE ;
     }
     else if(value < _integMin) {
       if(_integMin - value > 1e-6*range) {
-	cout << "RooValue::inIntegRange(" << GetName() << "): value " << value
-	     << " rounded up to min limit " << _integMin << endl;
+	if (clippedValPtr)
+	  cout << "RooValue::inIntegRange(" << GetName() << "): value " << value
+	       << " rounded up to min limit " << _integMin << endl;
       }
       clippedValue = _integMin;
       inRange = kFALSE ;
@@ -169,9 +176,15 @@ Bool_t RooValue::inIntegRange(Double_t value, Double_t* clippedValPtr) const
 
 
 
+
 Bool_t RooValue::isValid() 
 {
-  return inIntegRange(_value) ;
+  return isValid(getVal()) ;
+}
+
+
+Bool_t RooValue::isValid(Double_t value) {
+  return inIntegRange(value) ;
 }
 
 
@@ -247,6 +260,8 @@ RooValue::operator=(RooAbsArg& aorig)
   RooValue& orig = (RooValue&)aorig ;
   _error = orig._error ;
   _blinder = orig._blinder ;
+  _integMin = orig._integMin ;
+  _integMax = orig._integMax ;
 
   return (*this) ;
 }
@@ -278,7 +293,7 @@ void RooValue::printToStream(ostream& os, PrintOption opt) {
     if (_blinder) os << " (blind)" ; 
     if(!_unit.IsNull()) os << ' ' << _unit;
     os << " : " << GetTitle() ;
-    if(!isConstant() && useIntegLimits())
+    if(!isConstant() && hasIntegLimits())
       os << " (" << _integMin << ',' << _integMax << ')';
     else if (isConstant()) 
       os << " Constant" ;

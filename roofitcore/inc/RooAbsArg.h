@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.2 2001/03/15 23:19:11 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.3 2001/03/16 07:59:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,6 +14,7 @@
 #define ROO_ABS_ARG
 
 #include <iostream.h>
+#include <assert.h>
 #include "TNamed.h"
 #include "THashList.h"
 
@@ -75,12 +76,12 @@ protected:
   // Value and Shape dirty state information mananagement
   Bool_t _valueDirty ;
   Bool_t _shapeDirty ;
-  void setValueDirty(Bool_t flag=kTRUE) ; 
-  void setShapeDirty(Bool_t flag=kTRUE) ; 
+  void setValueDirty(Bool_t flag=kTRUE, RooAbsArg* source=0) ; 
+  void setShapeDirty(Bool_t flag=kTRUE, RooAbsArg* source=0) ; 
   virtual Bool_t isValueDirty() const { return _valueDirty ; } 
   virtual Bool_t isShapeDirty() const { return _shapeDirty ; } 
-  void raiseClientValueDirtyFlags() ;
-  void raiseClientShapeDirtyFlags() ;
+  void raiseClientValueDirtyFlags(RooAbsArg* source=0) ;
+  void raiseClientShapeDirtyFlags(RooAbsArg* source=0) ;
 
   // Hooks for RooDataSet interface
   friend class RooDataSet ;

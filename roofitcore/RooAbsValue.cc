@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsValue.cc,v 1.1 2001/03/15 23:19:11 verkerke Exp $
+ *    File: $Id: RooAbsValue.cc,v 1.2 2001/03/16 07:59:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -157,9 +157,16 @@ Bool_t RooAbsValue::inPlotRange(Double_t value) const {
 }
 
 
+
 Bool_t RooAbsValue::isValid() {
+  return isValid(getVal()) ;
+}
+
+
+Bool_t RooAbsValue::isValid(Double_t value) {
   return kTRUE ;
 }
+
 
 
 Double_t RooAbsValue::traceEval()
@@ -167,6 +174,9 @@ Double_t RooAbsValue::traceEval()
   Double_t value = evaluate() ;
   
   //Standard tracing code goes here
+  if (!isValid(value)) {
+    cout << "RooAbsValue::traceEval(" << GetName() << "): validation failed: " << value << endl ;
+  }
 
   //Call optional subclass tracing code
   traceEvalHook(value) ;

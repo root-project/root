@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsIndex.cc,v 1.1 2001/03/15 23:19:11 verkerke Exp $
+ *    File: $Id: RooAbsIndex.cc,v 1.2 2001/03/16 07:59:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -127,6 +127,9 @@ RooCat RooAbsIndex::traceEval()
   RooCat value = evaluate() ;
   
   //Standard tracing code goes here
+  if (!isValid(value)) {
+    cout << "RooAbsIndex::traceEval(" << GetName() << "): validation failed: " << value << endl ;
+  }
 
   //Call optional subclass tracing code
   traceEvalHook(value) ;
@@ -135,10 +138,27 @@ RooCat RooAbsIndex::traceEval()
 }
 
 
-
-Bool_t RooAbsIndex::isValid() 
+Int_t RooAbsIndex::getOrdinalIndex() 
 {
-  return isValidIndex(_value.getVal()) ;
+  for (int i=0 ; i<_types.GetEntries() ; i++) {
+    if (*(RooCat*)_types.At(i) == _value) return i ;
+  }
+  // This should never happen
+  cout << "RooAbsIndex::getOrdinalIndex(" << GetName() << "): Internal error: current type is illegal" << endl ;
+  return -1 ;
+}
+
+
+
+Bool_t RooAbsIndex::setOrdinalIndex(Int_t newIndex) 
+{
+  if (newIndex<0 || newIndex>=_types.GetEntries()) {
+    cout << "RooAbsIndex::setOrdinalIndex(" << GetName() << "): ordinal index out of range: " 
+	 << newIndex << " (0," << _types.GetEntries() << ")" << endl ;
+    return kTRUE ;
+  }
+  _value = *(RooCat*)_types.At(newIndex) ;
+  return kFALSE ;
 }
 
 
@@ -161,6 +181,18 @@ Bool_t RooAbsIndex::defineType(Int_t index, char* label)
   return kFALSE ;
 }
 
+
+
+Bool_t RooAbsIndex::isValid()
+{
+  return isValid(_value) ;
+}
+
+
+Bool_t RooAbsIndex::isValid(RooCat value) 
+{
+  return isValidIndex(value.getVal()) ;
+}
 
 
 Bool_t RooAbsIndex::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 

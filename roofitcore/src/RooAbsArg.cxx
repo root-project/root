@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.2 2001/03/15 23:19:11 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.3 2001/03/16 07:59:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -66,10 +66,15 @@ RooAbsArg::~RooAbsArg()
 
   //Notify all client that they are in limbo
   TIterator* clientIter = _clientList.MakeIterator() ;
+  Bool_t fatalError(kFALSE) ;
   RooAbsArg* client ;
   while (client=(RooAbsArg*)clientIter->Next()) {
     client->setAttribute("FATAL:ServerDied") ;
+    cout << "RooAbsArg::~RooAbsArg(" << GetName() << "): Fatal error: dependent RooAbsArg " 
+	 << client->GetName() << " should have been deleted before" << endl ;
+    fatalError=kTRUE ;
   }
+  assert(!fatalError) ;
 }
 
 
@@ -202,49 +207,67 @@ Bool_t RooAbsArg::dependsOn(RooAbsArg& server)
 }
 
 
-void RooAbsArg::setValueDirty(Bool_t flag) 
+void RooAbsArg::setValueDirty(Bool_t flag, RooAbsArg* source) 
 { 
   // Set 'dirty' value state for this object and propagate flag to all its clients
+  if (source==0) {
+    source=this ; 
+  } else if (source==this) {
+    // Cyclical dependency, abort
+    cout << "RooAbsArg::setValueDirty(" << GetName() 
+	 << "): cyclical dependency detected" << endl ;
+    return ;
+  }
+
   if (_verboseDirty) cout << "RooAbsArg::setValueDirty(" << GetName() 
 			  << "): dirty flag " << (flag?"raised":"cleared") << endl ;
-
   if (_serverList.First()!=0) {
     _valueDirty=flag ; 
   }
-  if (flag==kTRUE) raiseClientValueDirtyFlags() ; 
+  if (flag==kTRUE) raiseClientValueDirtyFlags(source) ; 
 } 
 
 
-void RooAbsArg::raiseClientValueDirtyFlags()
+void RooAbsArg::raiseClientValueDirtyFlags(RooAbsArg* source)
 {
   // Set 'dirty' flag for all clients of this object
+  if (source==0) source=this ;
   TIterator *clientIter= _clientList.MakeIterator();
   RooAbsArg* client ;
   while (client=(RooAbsArg*)clientIter->Next()) {
-    client->setValueDirty(kTRUE) ;
+    client->setValueDirty(kTRUE,source) ;
   }
 }
 
-void RooAbsArg::setShapeDirty(Bool_t flag) 
+void RooAbsArg::setShapeDirty(Bool_t flag, RooAbsArg* source) 
 { 
   // Set 'dirty' shape state for this object and propagate flag to all its clients
+  if (source==0) {
+    source=this ; 
+  } else if (source==this) {
+    // Cyclical dependency, abort
+    cout << "RooAbsArg::setShapeDirty(" << GetName() 
+	 << "): cyclical dependency detected" << endl ;
+    return ;
+  }
+
   if (_verboseDirty) cout << "RooAbsArg::setShapeDirty(" << GetName() 
 			  << "): dirty flag " << (flag?"raised":"cleared") << endl ;
-
   if (_serverList.First()!=0) {
     _shapeDirty=flag ; 
   }
-  if (flag==kTRUE) raiseClientShapeDirtyFlags() ; 
+  if (flag==kTRUE) raiseClientShapeDirtyFlags(source) ; 
 } 
 
 
-void RooAbsArg::raiseClientShapeDirtyFlags()
-{
+void RooAbsArg::raiseClientShapeDirtyFlags(RooAbsArg* source)
+{  
   // Set 'dirty' flag for all clients of this object
+  if (source==0) source=this ;
   TIterator *clientIter= _clientList.MakeIterator();
   RooAbsArg* client ;
   while (client=(RooAbsArg*)clientIter->Next()) {
-    client->setShapeDirty(kTRUE) ;
+    client->setShapeDirty(kTRUE,source) ;
   }
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsValue.rdl,v 1.1 2001/03/15 23:19:12 verkerke Exp $
+ *    File: $Id: RooAbsValue.rdl,v 1.2 2001/03/16 07:59:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -62,7 +62,8 @@ protected:
   virtual Double_t evaluate() { return 0 ; }
 
   // Internal consistency checking (needed by RooDataSet)
-  Bool_t isValid() ;
+  virtual Bool_t isValid() ;
+  virtual Bool_t isValid(Double_t value) ;
 
   Double_t _plotMin ;
   Double_t _plotMax ;

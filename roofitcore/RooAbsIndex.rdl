@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsIndex.rdl,v 1.1 2001/03/15 23:19:11 verkerke Exp $
+ *    File: $Id: RooAbsIndex.rdl,v 1.2 2001/03/16 07:59:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -49,7 +49,9 @@ public:
 
 protected:
 
-  virtual Bool_t isValid() ;
+  // Ordinal index representation is strictly for internal use
+  Int_t getOrdinalIndex() ;
+  Bool_t setOrdinalIndex(Int_t newIndex) ;
 
   RooCat     _value ; // Current value
   TObjArray  _types ; // Array of allowed values
@@ -58,6 +60,9 @@ protected:
   RooCat traceEval() ;
   virtual Bool_t traceEvalHook(RooCat value) {}
   virtual RooCat evaluate() { return RooCat("",0) ; }
+
+  virtual Bool_t isValid() ;
+  virtual Bool_t isValid(RooCat value) ;
 
   ClassDef(RooAbsIndex,1) // a real-valued variable and its value
 };
