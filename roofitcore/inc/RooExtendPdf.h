@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooCutNorm.rdl,v 1.3 2001/10/08 05:20:14 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,23 +10,34 @@
  *
  * Copyright (C) 2000 University of California
  *****************************************************************************/
-#ifndef ROO_CUT_NORM
-#define ROO_CUT_NORM
+#ifndef ROO_EXTEND_PDF
+#define ROO_EXTEND_PDF
 
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooSetProxy.hh"
 
-class RooCutNorm : public RooAbsPdf {
+class RooExtendPdf : public RooAbsPdf {
 public:
 
-  RooCutNorm(const char *name, const char *title, const RooAbsReal& norm, 
-	     const RooAbsPdf& pdf, const RooArgList& depList, const RooArgList& cutDepList) ;
-  RooCutNorm(const RooCutNorm& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooCutNorm(*this,newname) ; }
-  virtual ~RooCutNorm() ;
+  RooExtendPdf(const char *name, const char *title, const RooAbsPdf& pdf, 
+	       const RooAbsReal& norm) ;
+  RooExtendPdf(const char *name, const char *title, const RooAbsPdf& pdf, 
+	       const RooAbsReal& norm, const RooArgList& depList, const RooArgList& cutDepList) ;
+  RooExtendPdf(const RooExtendPdf& other, const char* name=0) ;
+  virtual TObject* clone(const char* newname) const { return new RooExtendPdf(*this,newname) ; }
+  virtual ~RooExtendPdf() ;
 
-  Double_t evaluate() const { return 1.0 ; }
+  Double_t evaluate() const { return _pdf ; }
+
+  Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kTRUE ; }
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const {
+    return ((RooAbsPdf&)_pdf.arg()).getAnalyticalIntegralWN(allVars, analVars, normSet) ;
+  }
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const {
+    return ((RooAbsPdf&)_pdf.arg()).analyticalIntegralWN(code, normSet) ;
+  }
+  
   virtual Bool_t selfNormalized() const { return kTRUE ; }
   virtual Bool_t canBeExtended() const { return kTRUE ; }
   virtual Double_t expectedEvents() const ;
@@ -36,8 +47,9 @@ protected:
   virtual void getParametersHook(const RooArgSet* nset, RooArgSet* list) const ;
   virtual void getDependentsHook(const RooArgSet* nset, RooArgSet* list) const ;
 
+  Bool_t _useFrac ; 
   mutable RooArgSet* _lastFracSet ;          // Normalization set for which last fracIntegral was made
-  mutable RooRealIntegral* _fracIntegral ;   // Fractional normalization integral
+  mutable RooAbsReal* _fracIntegral ;        // Fractional normalization integral
   mutable RooArgSet* _integralCompSet ;      // Owning set of components of fracIntegral and its servers
   RooRealProxy _pdf ;        // PDF used for fractional correction factor
   RooRealProxy _n ;          // Number of expected events
@@ -46,7 +58,7 @@ protected:
 
   void syncFracIntegral() const ;
 
-  ClassDef(RooCutNorm,0) // Flat PDF introducing an extended likelihood term
+  ClassDef(RooExtendPdf,0) // Flat PDF introducing an extended likelihood term
 };
 
 #endif

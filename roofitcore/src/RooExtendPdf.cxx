@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooCutNorm.cc,v 1.4 2001/10/08 21:22:51 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -12,10 +12,13 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PDF] --
-//  RooNorm is a PDF with a flat likelihood distribution that introduces a 
-//  parameteric extended likelihood term into a PDF, multiplied by a 
-//  fractional term from a partial normalization of a supplied PDF.
+//  RooExtendPdf is a wrappper around an existing PDF that adds a 
+//  parameteric extended likelihood term to the PDF, optionally multiplied by a 
+//  fractional term from a partial normalization of the PDF:
 //
+//  nExpected = N   _or Expected = N * frac 
+//
+//  where N is supplied as a RooAbsReal to RooExtendPdf.
 //  The fractional term is defined as
 //                          _       _ _   _  _
 //            Int(cutRegion[x]) pdf(x,y) dx dy 
@@ -29,18 +32,18 @@
 //  cutRegion[x] is an limited integration range that is contained in
 //  the nominal integration range normRegion[x[]
 //
-//  Typically RooCutNorm is used to add the extended likelihood term to another 
-//  PDF by multiplying RooNorm with that PDF using RooProdPdf.
 
-#include "RooFitCore/RooCutNorm.hh"
+#include "RooFitCore/RooExtendPdf.hh"
 #include "RooFitCore/RooArgList.hh"
+#include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooFormulaVar.hh"
 
-ClassImp(RooCutNorm)
+ClassImp(RooExtendPdf)
 ;
 
 
-RooCutNorm::RooCutNorm(const char *name, const char *title, const RooAbsReal& norm, 
-		       const RooAbsPdf& pdf, const RooArgList& depList, const RooArgList& cutDepList) :
+RooExtendPdf::RooExtendPdf(const char *name, const char *title, const RooAbsPdf& pdf,
+			   const RooAbsReal& norm) :
   RooAbsPdf(name,title),
   _pdf("pdf","PDF",this,(RooAbsReal&)pdf),
   _n("n","Normalization",this,(RooAbsReal&)norm),
@@ -48,13 +51,42 @@ RooCutNorm::RooCutNorm(const char *name, const char *title, const RooAbsReal& no
   _origDepSet("origDepSet","Set of dependent with full integration range",this),
   _lastFracSet(0),
   _fracIntegral(0),
-  _integralCompSet(0)
+  _integralCompSet(0),
+  _useFrac(kFALSE)
 {
-  // Constructor. The extended likelihood is taken from 'norm' multiplied by  
-  // a normalization fraction from 'pdf'. The dimensions of the cut region 
-  // should be listed in 'depList'. The reduced integration range for each
-  // dimension in 'depList' should be expressed in the fit range of a dummy
-  // RooRealVar in each matching slot in 'cutDepList'
+  // Constructor. The ExtendedPdf behaves identical to the supplied input pdf,
+  // but adds an extended likelihood term. The expected number of events return
+  // is 'norm'
+
+  // Copy various setting from pdf
+  setPlotRange(_pdf.arg().getPlotMin(),_pdf.arg().getPlotMax()) ;
+  setPlotBins(_pdf.arg().getPlotBins()) ;
+  setUnit(_pdf.arg().getUnit()) ;
+  setPlotLabel(_pdf.arg().getPlotLabel()) ;
+}
+
+
+
+RooExtendPdf::RooExtendPdf(const char *name, const char *title, const RooAbsPdf& pdf,
+			   const RooAbsReal& norm, const RooArgList& depList, 
+			   const RooArgList& cutDepList) :
+  RooAbsPdf(name,title),
+  _pdf("pdf","PDF",this,(RooAbsReal&)pdf),
+  _n("n","Normalization",this,(RooAbsReal&)norm),
+  _cutDepSet("cutDepSet","Set of dependent with fractional range",this),
+  _origDepSet("origDepSet","Set of dependent with full integration range",this),
+  _lastFracSet(0),
+  _fracIntegral(0),
+  _integralCompSet(0),
+  _useFrac(kTRUE)
+{
+  // Constructor. The ExtendedPdf behaves identical to the supplied input pdf,
+  // but adds an extended likelihood term. The expected number of events return
+  // is 'norm' multiplied by a normalization fraction from the pdf. 
+  //
+  // The dimensions of the cut region should be listed in 'depList'. 
+  // The reduced integration range for each dimension in 'depList' should be expressed 
+  // in the fit range of a dummy RooRealVar in each matching slot in 'cutDepList'
   //
   // For example, the following code 
   //
@@ -63,20 +95,26 @@ RooCutNorm::RooCutNorm(const char *name, const char *title, const RooAbsReal& no
   //
   //   RooRealVar nevt("nevt","number of expected events")
   //   RooRealVar xcut("xcut","xcut",-3,3)
-  //   RooCutNorm cutnorm("cutnorm","...",pdf,nevt,x,cut)
+  //   RooExtendPdf epdf("epdf","...",pdf,nevt,x,cut)
   //
-  // constructs a cutnorm with the number of expected events as
+  // constructs an extended pdf with the number of expected events as
   //
   //   nExpected = nevt * Int(-3,3)pdf(x)dx / Int(-10,10)pdf(x)dx
   //
-  
+
   // Check if dependent and replacement list have same length
   if (depList.getSize() != cutDepList.getSize()) {
-    cout << "RooCutNorm::ctor(" << GetName() 
+    cout << "RooExtendPdf::ctor(" << GetName() 
 	 << ") list of cut dependents and their replacements must have equal length" << endl ;
     assert(0) ;
   }
   
+  // Copy various setting from pdf
+  setPlotRange(_pdf.arg().getPlotMin(),_pdf.arg().getPlotMax()) ;
+  setPlotBins(_pdf.arg().getPlotBins()) ;
+  setUnit(_pdf.arg().getUnit()) ;
+  setPlotLabel(_pdf.arg().getPlotLabel()) ;
+
   // Loop over all dependents to be cut on
   TIterator* dIter = depList.createIterator() ;
   TIterator* cIter = cutDepList.createIterator() ;
@@ -88,14 +126,14 @@ RooCutNorm::RooCutNorm(const char *name, const char *title, const RooAbsReal& no
     RooAbsRealLValue* orig = dynamic_cast<RooAbsRealLValue*>(dep) ;
     RooAbsRealLValue* repl = dynamic_cast<RooAbsRealLValue*>(cutDep) ;
     if (!orig || !repl) {
-      cout << "RooCutNorm::ctor(" << GetName() << "): ERROR: " << dep->GetName() << " and " 
+      cout << "RooExtendPdf::ctor(" << GetName() << "): ERROR: " << dep->GetName() << " and " 
 	   << cutDep->GetName() << " must be both RooAbsRealLValues, this pair ignored" << endl ;
       continue ;
     }
     
     // Check if fraction range is fully contained in integration range
     if (repl->getFitMin()<orig->getFitMin() || repl->getFitMax()>orig->getFitMax()) {
-      cout << "RooCutNorm::ctor(" << GetName() << "): WARNING: fit range of " 
+      cout << "RooExtendPdf::ctor(" << GetName() << "): WARNING: fit range of " 
 	   << repl->GetName() << " is not fully contained in " << orig->GetName() << endl ;
     }
     
@@ -112,7 +150,7 @@ RooCutNorm::RooCutNorm(const char *name, const char *title, const RooAbsReal& no
 
 
 
-RooCutNorm::RooCutNorm(const RooCutNorm& other, const char* name) :
+RooExtendPdf::RooExtendPdf(const RooExtendPdf& other, const char* name) :
   RooAbsPdf(other,name),
   _pdf("pdf",this,other._pdf),
   _n("n",this,other._n),
@@ -120,13 +158,14 @@ RooCutNorm::RooCutNorm(const RooCutNorm& other, const char* name) :
   _origDepSet("origDepSet",this,other._origDepSet),
   _lastFracSet(0),
   _fracIntegral(0),
-  _integralCompSet(0)
+  _integralCompSet(0),
+  _useFrac(other._useFrac)
 {
   // Copy constructor
 }
 
 
-RooCutNorm::~RooCutNorm() 
+RooExtendPdf::~RooExtendPdf() 
 {
   // Destructor
 
@@ -138,7 +177,7 @@ RooCutNorm::~RooCutNorm()
 
 
 
-Double_t RooCutNorm::expectedEvents() const 
+Double_t RooExtendPdf::expectedEvents() const 
 {
   // Return the number of expected events, which is
   //
@@ -150,7 +189,9 @@ Double_t RooCutNorm::expectedEvents() const
   // x over the full range.
 
   // Use current PDF normalization, if defined, use cut set otherwise
-  const RooArgSet* nset = _lastNormSet ? _lastNormSet : (const RooArgSet*) &_origDepSet ;
+  const RooArgSet* npset = ((RooAbsPdf&)_pdf.arg())._lastNormSet ;
+  const RooArgSet* nset = npset ? npset : (const RooArgSet*) &_origDepSet ;
+
   Double_t normInt = ((RooAbsPdf&)_pdf.arg()).getNorm(nset) ;
 
   // Update fraction integral
@@ -159,7 +200,7 @@ Double_t RooCutNorm::expectedEvents() const
   // Evaluate fraction integral and return normalized by full integral
   Double_t fracInt = _fracIntegral->getVal() ;
   if ( fracInt == 0. || normInt == 0. || _n == 0.) {
-    cout << "RooCutNorm(" << GetName() << ") WARNING: nExpected = " << _n << " / ( " 
+    cout << "RooExtendPdf(" << GetName() << ") WARNING: nExpected = " << _n << " / ( " 
 	 << fracInt << " / " << normInt << " ), for nset = " ;
     if (nset) nset->Print("1") ; else cout << "<none>" << endl ;
   }
@@ -167,7 +208,7 @@ Double_t RooCutNorm::expectedEvents() const
 }
 
 
-void RooCutNorm::syncFracIntegral() const
+void RooExtendPdf::syncFracIntegral() const
 {
   // Create the fraction integral by clone the
   // PDFs normalization integral and replacing
@@ -186,26 +227,57 @@ void RooCutNorm::syncFracIntegral() const
     delete _integralCompSet ;
   }
 
-  // Clone integral (including PDF) from present PDF normalization object
-
   // Make list of all nodes that need to be cloned:
   // All PDF branch nodes, and the RooRealIntegral object itself
   RooArgSet pdfNodeList ;
   pdf.branchNodeServerList(&pdfNodeList) ;
-  pdfNodeList.add(*pdf._norm) ;
 
-  // Shallow-clone list of nodes 
-  _integralCompSet = (RooArgSet*) pdfNodeList.snapshot(kFALSE) ;
-  _fracIntegral = (RooRealIntegral*) _integralCompSet->find(pdf._norm->GetName()) ;
 
-  // Replace dependents involved in cut with internal set
-  _fracIntegral->recursiveRedirectServers(_cutDepSet,kFALSE,kTRUE) ;
+  //Check if PDF has dummy normalization 
+  if (dynamic_cast<RooRealIntegral*>(pdf._norm)) {
+
+    // If not, clone original integral and add to owned set
+    pdfNodeList.add(*pdf._norm) ;
+    _integralCompSet = (RooArgSet*) pdfNodeList.snapshot(kFALSE) ;
+    _fracIntegral = (RooRealIntegral*) _integralCompSet->find(pdf._norm->GetName()) ;
+
+    // Replace dependents involved in cut with internal set
+    _fracIntegral->recursiveRedirectServers(_cutDepSet,kFALSE,kTRUE) ;
+
+  } else {
+    // If dummy, make both normalization and fraction integral here
+
+    TString fname(pdf.GetName()) ; fname.Append("FracNorm") ;
+    TString ftitle(pdf.GetTitle()) ; ftitle.Append(" Fraction Integral") ;
+
+    // Create fractional integral from PDF clone
+    _integralCompSet = (RooArgSet*) pdfNodeList.snapshot(kFALSE) ;
+    RooAbsPdf* pdfClone = (RooAbsPdf*) _integralCompSet->find(pdf.GetName()) ;
+    _fracIntegral = new RooRealIntegral(fname,ftitle,*pdfClone,*_lastFracSet) ;
+    _integralCompSet->addOwned(*_fracIntegral) ;
+
+    // Replace dependents involved in fractional with internal set
+    _fracIntegral->recursiveRedirectServers(_cutDepSet,kFALSE,kTRUE) ;
+
+    TString nname(pdf.GetName()) ; nname.Append("Norm") ;
+    TString ntitle(pdf.GetTitle()) ; ntitle.Append(" Integral") ;
+
+    TString rname(pdf.GetName()) ; rname.Append("FracRatio") ;
+    TString rtitle(pdf.GetTitle()) ; rtitle.Append(" Integral Ratio") ;
+    
+    // Create full normalization integral
+    RooRealIntegral* normIntegral = new RooRealIntegral(nname,ntitle,pdf,*_lastFracSet) ;
+    RooFormulaVar* ratio= new RooFormulaVar(rname,rtitle,"@0/@1",RooArgList(*_fracIntegral,*normIntegral)) ;
+    _integralCompSet->addOwned(*normIntegral) ;
+    _integralCompSet->addOwned(*ratio) ;
+    _fracIntegral = ratio ;
+  }
 }
 
 
 
 
-void RooCutNorm::getParametersHook(const RooArgSet* nset, RooArgSet* list) const 
+void RooExtendPdf::getParametersHook(const RooArgSet* nset, RooArgSet* list) const 
 {
   // Remove fake dependents from list
   list->remove(_cutDepSet,kTRUE,kTRUE) ;
@@ -213,7 +285,7 @@ void RooCutNorm::getParametersHook(const RooArgSet* nset, RooArgSet* list) const
 
 
 
-void RooCutNorm::getDependentsHook(const RooArgSet* nset, RooArgSet* list) const 
+void RooExtendPdf::getDependentsHook(const RooArgSet* nset, RooArgSet* list) const 
 {
   // Remove fake dependents from list
   list->remove(_cutDepSet,kTRUE,kTRUE) ;
