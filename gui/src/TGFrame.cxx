@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.86 2004/09/20 14:28:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.87 2004/09/29 10:42:36 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2227,7 +2227,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    // if filename is given, open this file, otherwise create a file Rootappl.C
 
    if (lenfile) {
-      fname = filename;
+      fname = gSystem->BaseName(filename);
    } else {
       fname = "Rootappl.C";
       lenfile = 10;
@@ -2273,7 +2273,6 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    delete bc;
 
    // writes the macro entry point equal to the filename
-   fname = gSystem->BaseName(filename);
    char *sname = new char[strlen(fname)];
 
    Int_t i=0;
@@ -2630,7 +2629,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    // if filename is given, open this file, otherwise create a file Rootappl.C
 
    if (lenfile) {
-      fname = filename;
+      fname = gSystem->BaseName(filename);
    } else {
       fname = "Rootdlog.C";
       lenfile = 10;
@@ -2676,7 +2675,6 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    delete bc;
 
    // writes the macro entry point equal to the filename
-   fname = gSystem->BaseName(filename);
    char *sname = new char[strlen(fname)];
 
    Int_t i=0;
