@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.49 2001/09/27 09:53:24 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.50 2001/10/15 09:46:33 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3150,9 +3150,9 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
         axis->SetBit(TGaxis::kCenterTitle, fYaxis->TestBit(TGaxis::kCenterTitle));
         axis->SetBit(TGaxis::kRotateTitle, fYaxis->TestBit(TGaxis::kRotateTitle));
 
-	if (TMath::Abs(z1[0] - z2[0]) < epsil && TMath::Abs(z1[1] - z2[1]) < epsil) {
-	    strcpy(chopay, "SDH+=N");
-	}
+	//if (TMath::Abs(z1[0] - z2[0]) < epsil && TMath::Abs(z1[1] - z2[1]) < epsil) {
+	//    strcpy(chopay, "SDH+=N");
+	//}
 	if (fH->GetDimension() < 2) {
 	    strcpy(chopay, "V=+UN");
 	    ndivy = 0;
@@ -3182,7 +3182,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 
 //*-*-          Z axis drawing
 
-    if (TMath::Abs(z1[0] - z2[0]) >= epsil || TMath::Abs(z1[1] - z2[1]) > epsil) {
+    if (TMath::Abs(z1[0] - z2[0]) >= 100*epsil || TMath::Abs(z1[1] - z2[1]) > 100*epsil) {
         axis->SetLineColor(fZaxis->GetAxisColor());
         axis->SetTextFont(fZaxis->GetTitleFont());
 	axis->SetTextColor(fZaxis->GetTitleColor());
