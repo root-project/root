@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.39 2003/01/12 11:52:38 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.40 2003/01/24 07:58:18 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -56,13 +56,13 @@
 // Test 15 : Divert Tree branches to separate files................ OK
 // Test 16 : CINT test (3 nested loops) with LHCb trigger.......... OK
 // ******************************************************************
-//*  Linux pcbrun3.cern.ch 2.4.20 #1 Thu Jan 9 12:21:02 MET 2003
+//*  Linux pcbrun.cern.ch 2.4.20 #1 Thu Jan 9 12:21:02 MET 2003
 //******************************************************************
-//stress    : Total I/O =  623.5 Mbytes, I =  478.6, O = 144.9
-//stress    : Compr I/O =  524.8 Mbytes, I =  404.5, O = 120.3
-//stress    : Real Time =  55.12 seconds Cpu Time =  51.97 seconds
+//stress    : Total I/O =  699.0 Mbytes, I =  532.0, O = 167.0
+//stress    : Compr I/O =  549.5 Mbytes, I =  419.9, O = 129.7
+//stress    : Real Time =  63.53 seconds Cpu Time =  59.80 seconds
 //******************************************************************
-//*  ROOTMARKS = 600.1   *  Root3.05/00   20030109/1722
+//*  ROOTMARKS = 600.1   *  Root3.05/02   20030131/1208
 //******************************************************************
 //
 //_____________________________batch only_____________________
@@ -197,11 +197,11 @@ void stress(Int_t nevent, Int_t style = 1)
    printf("stress    : Compr I/O =%7.1f Mbytes, I =%7.1f, O =%6.1f\n",mbtot1,mbin1,mbout1);
    gBenchmark->Print("stress");
 #ifndef __CINT__
-   Float_t cp_brun_30   = 11.09;
-   Float_t cp_brun_1000 = 51.74;
+   Float_t cp_brun_30   = 12.76;
+   Float_t cp_brun_1000 = 59.80;
 #else
-   Float_t cp_brun_30   = 29.35;  //The difference is essentially coming from stress16
-   Float_t cp_brun_1000 = 75.14;
+   Float_t cp_brun_30   = 31.11;  //The difference is essentially coming from stress16
+   Float_t cp_brun_1000 = 83.24;
 #endif
    Float_t cp_brun = cp_brun_1000 - (cp_brun_1000 - cp_brun_30)*(1000-nevent)/(1000-30);
    Float_t ct = gBenchmark->GetCpuTime("stress");
