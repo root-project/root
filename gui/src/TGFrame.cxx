@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.52 2004/03/26 18:00:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.53 2004/04/07 15:10:03 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2237,7 +2237,8 @@ void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
    GetLayoutManager()->SavePrimitive(out, option);
    out << ");"<< endl;
 
-   out << "   " << GetName() <<"->Resize();" << endl;
+   out << "   " << GetName() <<"->Resize(" << GetWidth() << "," 
+       << GetHeight() << ");" << endl;
 }
 
 
