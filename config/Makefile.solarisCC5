@@ -57,4 +57,4 @@ INSTALL      := cp -pR
 INSTALLDATA  := cp -pR
 
 # Extras
-
+XMLLIBEXTRA    := -liconv
