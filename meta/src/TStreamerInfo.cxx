@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.55 2001/04/18 10:24:50 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.56 2001/04/19 08:38:50 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -49,7 +49,7 @@ TStreamerInfo::TStreamerInfo()
    fElem     = 0;
    fMethod   = 0;
    fCheckSum = 0;
-   fNdata    = 0;
+   fNdata    = 0; 
    fSize     = 0;
    fClassVersion = 0;
    fOptimized = kFALSE;
@@ -1644,8 +1644,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                          TStreamerElement *element = (TStreamerElement*)fElem[i];
                          Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
+                            element->GetClassPointer()->ReadBuffer(b,pointer+fOffset[i]);
                             if (gDebug > 0) {
-                               printf("ERROR, Streamer is null\n");
+                               printf("WARNING, Streamer is null\n");
                                element->ls(); 
                             }
                             break;
