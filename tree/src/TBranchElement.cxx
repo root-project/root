@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.59 2001/08/24 16:43:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.60 2001/08/24 16:45:42 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -583,7 +583,7 @@ TStreamerInfo *TBranchElement::GetInfo()
    TClass *cl = gROOT->GetClass(fClassName.Data());
    if (cl) {
       TStreamerInfo::Optimize(kFALSE);
-      fInfo = cl->GetStreamerInfo();
+      fInfo = cl->GetStreamerInfo(fClassVersion);
       if (fInfo && !fInfo->GetOffsets()) {
          fInfo->Compile();
       }
