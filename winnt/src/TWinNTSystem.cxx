@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.9 2001/01/22 09:43:06 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.10 2001/01/23 19:01:55 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -558,6 +558,8 @@ TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
    if (oh) {       // found
       TFileHandler *th;
       TIter next(fFileHandler);
+      fMaxrfd = 0;
+      fMaxwfd = 0;
       fReadmask.Zero();
       fWritemask.Zero();
       while ((th = (TFileHandler *) next())) {
@@ -678,13 +680,13 @@ void TWinNTSystem::DispatchOneEvent(Bool_t)
               }
           }
           if (fWritemask.IsSet(fd)) {
-              rc = WinNTSelect(fd+1, &t, 0, 0);
+              rc = WinNTSelect(fd+1, 0, &t, 0);
               if (rc < 0 && rc != -2) {
                   fprintf(stderr, "select: write error on %d\n", fd);
                   fWritemask.Clr(fd);
               }
           }
- x         t.Clr(fd);
+          t.Clr(fd);
       }
   }
 #endif
@@ -1977,7 +1979,7 @@ int TWinNTSystem::SendRaw(int sock, const void *buf, int length, int opt)
    }
 
    int n;
-   if ((n = WinNTSend(sock, buf, length, flag) < 0)) {
+   if ((n = WinNTSend(sock, buf, length, flag)) < 0) {
       Error("SendRaw", "cannot send buffer");
       return -1;
    }

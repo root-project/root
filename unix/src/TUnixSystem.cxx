@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.13 2001/01/22 09:43:05 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.14 2001/01/23 19:01:55 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -357,6 +357,8 @@ TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
    if (oh) {       // found
       TFileHandler *th;
       TIter next(fFileHandler);
+      fMaxrfd = 0;
+      fMaxwfd = 0;
       fReadmask.Zero();
       fWritemask.Zero();
       while ((th = (TFileHandler *) next())) {
@@ -503,7 +505,7 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
                }
             }
             if (fWritemask.IsSet(fd)) {
-               rc = UnixSelect(fd+1, &t, 0, 0);
+               rc = UnixSelect(fd+1, 0, &t, 0);
                if (rc < 0 && rc != -2) {
                   SysError("DispatchOneEvent", "select: write error on %d\n", fd);
                   fWritemask.Clr(fd);
@@ -1675,7 +1677,7 @@ int TUnixSystem::SendRaw(int sock, const void *buf, int length, int opt)
    }
 
    int n;
-   if ((n = UnixSend(sock, buf, length, flag) < 0)) {
+   if ((n = UnixSend(sock, buf, length, flag)) < 0) {
       Error("SendRaw", "cannot send buffer");
       return -1;
    }

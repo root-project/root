@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.3 2001/01/22 09:43:05 rdm Exp $
+// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.4 2001/01/23 19:01:55 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -195,10 +195,23 @@ TFileHandler *TVmsSystem::RemoveFileHandler(TFileHandler *h)
 
    TFileHandler *oh = TSystem::RemoveFileHandler(h);
    if (oh) {       // found
-      fReadmask.Clr(oh->GetFd());
-      fWritemask.Clr(oh->GetFd());
-
-      // need to reset fMaxrfd and fMaxwfd
+      TFileHandler *th;
+      TIter next(fFileHandler);
+      fMaxrfd = 0;
+      fMaxwfd = 0;
+      fReadmask.Zero();
+      fWritemask.Zero();
+      while ((th = (TFileHandler *) next())) {
+         int fd = th->GetFd();
+         if (th->HasReadInterest()) {
+            fReadmask.Set(fd);
+            fMaxrfd = TMath::Max(fMaxrfd, fd);
+         }
+         if (th->HasWriteInterest()) {
+            fWritemask.Set(fd);
+            fMaxwfd = TMath::Max(fMaxwfd, fd);
+         }
+      }
    }
    return oh;
 }
@@ -296,7 +309,7 @@ void TVmsSystem::DispatchOneEvent()
                }
             }
             if (fWritemask.IsSet(fd)) {
-               rc = VmsSelect(fd+1, &t, 0, 0);
+               rc = VmsSelect(fd+1, 0, &t, 0);
                if (rc < 0 && rc != -2) {
                   fprintf(stderr, "select: write error on %d\n", fd);
                   fWritemask.Clr(fd);
@@ -1338,7 +1351,7 @@ int TVmsSystem::SendRaw(int sock, const void *buf, int length, int opt)
    }
 
    int n;
-   if ((n = VmsSend(sock, buf, length, flag) < 0)) {
+   if ((n = VmsSend(sock, buf, length, flag)) < 0) {
       Error("SendRaw", "cannot send buffer");
       return -1;
    }
