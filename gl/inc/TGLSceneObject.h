@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.8 2004/10/04 07:38:37 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.9 2004/11/02 16:55:20 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -169,6 +169,8 @@ class TGLSphere : public TGLSceneObject {
 public:
    TGLSphere(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
    void GLDraw()const;
+   void Shift(Double_t x, Double_t y, Double_t z);
+
 private:
    Float_t fX;      // Sphere X center position
    Float_t fY;      // Sphere Y center position

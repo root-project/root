@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.11 2004/10/18 09:10:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.12 2004/11/02 16:55:20 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -608,6 +608,14 @@ void TGLSphere::GLDraw()const
    glPopMatrix();
 
    glDisable(GL_BLEND);
+}
+
+//______________________________________________________________________________
+void TGLSphere::Shift(Double_t x, Double_t y, Double_t z)
+{
+   fX += x;
+   fY += y;
+   fZ += z;
 }
 
 //______________________________________________________________________________
