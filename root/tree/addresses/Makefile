@@ -45,7 +45,7 @@ relations_load_C.$(DllSuf) : relations.h
 relations_write_C.$(DllSuf) : relations.h
 
 relations_read_C.$(DllSuf) : relations.h
- 
+
 EmbeddedTest.log: Embedded_load_C.$(DllSuf) Embedded.root embread.C
 	$(CMDECHO) root.exe -q -b -l embread.C > EmbeddedTest.log
 
@@ -59,13 +59,9 @@ relations_write_C.$(DllSuf) : relations.h
 relations_read_C.$(DllSuf) : relations.h
 
 relationsTest.log: relations_load_C.$(DllSuf)  relations_write_C.$(DllSuf)  relations_read_C.$(DllSuf) 
-	$(CMDECHO)  root.exe -q -b -l relationsRun.C > relationsTest.log
+	$(CMDECHO)  root.exe -q -b -l relationsRun.C | sed 's|File  Size =.*\*||g' > relationsTest.log
 
-remove_relations_fs:
-	$(CMDECHO)sed 's|File  Size =.*\*||g' relationsTest.log > tempfile
-	$(CMDECHO)mv tempfile relationsTest.log
-	
-relationsTest: relationsTest.log remove_relations_fs
+relationsTest: relationsTest.log 
 	$(CMDECHO) diff -b relationsTest.log relationsTest.ref
 
 mytest:
