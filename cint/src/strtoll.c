@@ -36,7 +36,7 @@
    painful.  These macros should at least be more portable than hardwired hex
    constants. */
 
-#if defined(__WIN32)
+#if defined(_WIN32)
 typedef __int64            G__int64;
 typedef unsigned __int64   G__uint64;
 #else
