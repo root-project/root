@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.35 2003/11/25 11:34:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.36 2003/11/25 15:57:34 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1788,7 +1788,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    out <<"// By ROOT version "<< gROOT->GetVersion() <<" on "<<t.AsSQLString()<< endl;
    out << endl;
 
-   out << "#ifndef __CINT__" << endl << endl;
+   out << "#if !defined( __CINT__) || defined (__MAKECINT__)" << endl << endl;
 
    TIter nexti(ilist);
    while((inc = (TObjString *)nexti())) {
@@ -2105,16 +2105,9 @@ void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
       out << "TGGroupFrame::kRight);" << endl;
 
    // setting layout manager if different from frame type
-   TGLayoutManager * lm = GetLayoutManager();
-   if (GetOptions() & kHorizontalFrame) {
-      if (lm->InheritsFrom(TGHorizontalLayout::Class())) { }
-   } else if (GetOptions() & kVerticalFrame) {
-      if (lm->InheritsFrom(TGVerticalLayout::Class())) { }
-   } else {
-      out << "   " << GetName() <<"->SetLayoutManager(";
-      GetLayoutManager()->SavePrimitive(out, option);
-      out << ");"<< endl;
-   }
+   out << "   " << GetName() <<"->SetLayoutManager(";
+   GetLayoutManager()->SavePrimitive(out, option);
+   out << ");"<< endl;
 
    out << "   " << GetName() <<"->Resize();" << endl;
 }
@@ -2222,7 +2215,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    out <<"// By ROOT version "<< gROOT->GetVersion() <<" on "<<t.AsSQLString()<< endl;
    out << endl;
 
-   out <<"#ifndef __CINT__" << endl << endl;
+   out << "#if !defined( __CINT__) || defined (__MAKECINT__)" << endl << endl;
 
    TIter nexti(ilist);
    while((inc = (TObjString *)nexti())) {

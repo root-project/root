@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.6 2003/10/14 15:08:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.7 2003/11/05 13:08:26 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -160,6 +160,11 @@ void TGToolBar::SavePrimitive(ofstream &out, Option_t *option)
    const char *picname, *rootname, *pos;
 
    rootname = gSystem->Getenv("ROOTSYS");
+#ifdef R__WIN32
+   TString dirname = TString(rootname);
+   dirname.ReplaceAll("/","\\");
+   rootname = dirname.Data();
+#endif
    len = strlen(rootname);
 
    TGFrameElement *f;

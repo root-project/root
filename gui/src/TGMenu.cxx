@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.17 2003/07/24 19:36:31 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.18 2003/11/05 13:08:26 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -1532,7 +1532,14 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                i++; text++; lentext--;
             }
             outext[i]=0;
-
+            
+#ifdef R__WIN32
+            if (strchr(outext, '/')) {
+               TString name = TString(outext);
+               name.ReplaceAll("/","\\");
+               outext = name.Data();
+            }
+#endif
             out << "   " << GetName() << "->AddEntry(" << quote
                 << outext << quote << "," << mentry->GetEntryId();
             if (mentry->fUserData) {
@@ -1562,7 +1569,13 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                i++; text++; lentext--;
             }
             outext[i]=0;
-
+#ifdef R__WIN32
+            if (strchr(outext, '/')) {
+               TString name = TString(outext);
+               name.ReplaceAll("/","\\");
+               outext = name.Data();
+            }
+#endif
             out << "   " << GetName() << "->AddPopup(" << quote
                 << outext << quote << "," << mentry->fPopup->GetName();
             delete [] outext;
