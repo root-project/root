@@ -36,7 +36,7 @@ INCLUDEFILES += $(MINUITDEP)
 include/%.h:    $(MINUITDIRI)/%.h
 		cp $< $@
 
-$(MINUITLIB):   $(MINUITO) $(MINUITDO) $(MAINLIBS)
+$(MINUITLIB):   $(MINUITO) $(MINUITDO) $(MAINLIBS) $(MINUITLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libMinuit.$(SOEXT) $@ "$(MINUITO) $(MINUITDO)" \
 		   "$(MINUITLIBEXTRA)"

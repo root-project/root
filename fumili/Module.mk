@@ -36,7 +36,7 @@ INCLUDEFILES += $(FUMILIDEP)
 include/%.h:    $(FUMILIDIRI)/%.h
 		cp $< $@
 
-$(FUMILILIB):   $(FUMILIO) $(FUMILIDO) $(MAINLIBS)
+$(FUMILILIB):   $(FUMILIO) $(FUMILIDO) $(MAINLIBS) $(FUMILILIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libFumili.$(SOEXT) $@ "$(FUMILIO) $(FUMILIDO)" \
 		   "$(FUMILILIBEXTRA)"
