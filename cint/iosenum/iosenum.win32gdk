@@ -1,0 +1,4 @@
+/* include/platform/iosenum.h
+ *  This file contains platform dependent ios enum value.
+ *  Run 'cint iosenum.cxx' to create this file. It is done
+ *  only once at installation. */
