@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.9 2003/01/31 17:00:11 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.10 2003/02/15 05:41:04 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -475,7 +475,7 @@ public:
           void   SetSourceDir(const char *dir) { fSourceDir = dir; }
           void   SetOutputDir(const char *dir) { fOutputDir = dir; }
           void   SetXwho(const char *xwho) { fXwho = xwho; }
-   virtual void  WriteHtmlHeader(ofstream &out, const char *title);
+   virtual void  WriteHtmlHeader(ofstream & out, const char *title, TClass *cls=0);
    virtual void  WriteHtmlFooter(ofstream &out, const char *dir="", const char *lastUpdate="",
                                  const char *author="", const char *copyright="");
 

@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.49 2004/01/13 14:30:25 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.50 2004/01/14 07:48:56 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -148,16 +148,20 @@ enum EFileType { kSource, kInclude, kTree };
 // If you want to replace root's header you have to write a file containing
 // all HTML elements necessary starting with the <DOCTYPE> tag and ending with
 // (and including) the <BODY> tag. If you add your header it will be added
-// directly after Root's <BODY> tag. Any occurence of the string "%TITLE%"
+// directly after Root's <BODY> tag. Any occurrence of the string "%TITLE%"
 // (without the quotation marks) in the user's header file will be replaced by
-// a sensible, automatically generated title.
+// a sensible, automatically generated title. If the header is generated for a
+// class, occurrences of %CLASS% will be replaced by the current class's name, 
+// %SRCFILE% and %INCFILE% by the name of the source and header file, resp. 
+// (as given by TClass::GetImplFileName(), TClass::GetDeclFiuleName()).
+// If the header is not generated for a class, they will be relpaced by "". 
 //
 // Root's footer starts with the tag "<!--SIGNATURE-->". It includes the
 // author(s), last update, copyright, the links to the Root home page, to the
 // user home page, to the index file (ClassIndex.html), to the top of the page
 // and "this page is automatically generated" infomation. It ends with the
 // tags "</body></html>. If you want to replace it, THtml will search for some
-// tags in your footer: Occurences of the strings "%AUTHOR%", "%UPDATE%", and
+// tags in your footer: Occurrences of the strings "%AUTHOR%", "%UPDATE%", and
 // "%COPYRIGHT%" (without the quotation marks) are replaced by their
 // corresponding values before writing the html file. The %AUTHOR% tag will be
 // replaced by the exact string that follows Root.Html.Author, no link
@@ -178,7 +182,7 @@ enum EFileType { kSource, kInclude, kTree };
 // (vii) HTML Charset
 //
 // HTML 4.01 transitional recommends the specification of the charset in the 
-// content type meta tag (see e.g. BEGIN_HTML<a href="http://www.w3.org/TR/REC-html40/charset.html">http://www.w3.org/TR/REC-html40/charset.html</a>END_HTML). 
+// content type meta tag, see e.g. BEGIN_HTML<a href="http://www.w3.org/TR/REC-html40/charset.html">http://www.w3.org/TR/REC-html40/charset.html</a>END_HTML
 // THtml generates it for the HTML output files. It defaults to ISO-8859-1, and 
 // can be changed using Root.Html.Charset.
 // 
@@ -443,7 +447,7 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
    if (IsModified(classPtr, kSource) || force) {
 
       // open class file
-ofstream classFile;
+      ofstream classFile;
       classFile.open(filename, ios::out);
 
       Bool_t classFlag = kFALSE;
@@ -454,7 +458,7 @@ ofstream classFile;
          Printf(formatStr, "", fCounter, filename);
 
          // write a HTML header for the classFile file
-         WriteHtmlHeader(classFile, classPtr->GetName());
+         WriteHtmlHeader(classFile, classPtr->GetName(), classPtr);
 
          // make a link to the description
          classFile << "<!--BEGIN-->" << endl;
@@ -606,13 +610,13 @@ ofstream classFile;
             num[mtype]++;
          }
 
-	 const char* tab4nbsp="&nbsp;&nbsp;&nbsp;&nbsp;";
-	 if (classPtr->Property() & kIsAbstract) 
-	    classFile << "&nbsp;<br><b>" 
-		      << tab4nbsp << "This is an abstract class, constructors will not be documented.<br>" << endl
-		      << tab4nbsp << "Look at the <a href=\""
-		      << GetFileName((const char *) classPtr->GetDeclFileName())
-		      << "\">header</a> to check for available constructors.</b><br>" << endl;
+         const char* tab4nbsp="&nbsp;&nbsp;&nbsp;&nbsp;";
+         if (classPtr->Property() & kIsAbstract) 
+            classFile << "&nbsp;<br><b>" 
+                      << tab4nbsp << "This is an abstract class, constructors will not be documented.<br>" << endl
+                      << tab4nbsp << "Look at the <a href=\""
+                      << GetFileName((const char *) classPtr->GetDeclFileName())
+                      << "\">header</a> to check for available constructors.</b><br>" << endl;
 
          classFile << "<pre>" << endl;
 
@@ -897,7 +901,7 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
 //
 // Input: out      - output file stream
 //        classPtr - pointer to the class
-//        flag     - this is a 'begin_html/end_html' flag
+//        flag     - this is a 'begin _html/end _html' flag
 //
 
    char *ptr, *key;
@@ -1039,7 +1043,7 @@ ofstream tempFile;
          // write a HTML header
          char *sourceTitle = StrDup(classPtr->GetName(), 16);
          strcat(sourceTitle, " - source file");
-         WriteHtmlHeader(tempFile, sourceTitle);
+         WriteHtmlHeader(tempFile, sourceTitle, classPtr);
          if (sourceTitle)
             delete[]sourceTitle;
 
@@ -2243,7 +2247,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
 // Input: out       - output file stream
 //        text      - pointer to the array of the characters to process
 //        ptr2class - pointer to the class
-//        flag      - this is a 'html_begin/html_end' flag
+//        flag      - this is a 'begin _html/end _html' flag
 //        dir       - usually "" or "../", depends of current file
 //                    directory position
 //
@@ -3348,7 +3352,7 @@ char *THtml::StrDup(const char *s1, Int_t n)
 }
 
 //______________________________________________________________________________
-void THtml::WriteHtmlHeader(ofstream & out, const char *title)
+void THtml::WriteHtmlHeader(ofstream & out, const char *title, TClass *cls/*=0*/)
 {
 // Write HTML header
 //
@@ -3361,8 +3365,11 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title)
 // * if set, and ends with a "+", the standard header is written and this file included afterwards. (ROOT, USER)
 // * if set but doesn't end on "+" the file specified will be written instead of the standard header (USER)
 //
-// Any occurence of "%TITLE%" (without the quotation marks) in the user provided header file
-// will be replaced by the value of this method's parameter "title" before written to the output file
+// Any occurrence of "%TITLE%" (without the quotation marks) in the user provided header file
+// will be replaced by the value of this method's parameter "title" before written to the output file.
+// %CLASS% is replaced by the class name ("" if not a class), %INCFILE% by the header file name as 
+// given by TClass::GetDeclFileName() and %SRCFILE% by the source file name as given by 
+// TClass::GetImplFileName() (both "" if not a class).
 
    const char *addHeader = gEnv->GetValue("Root.Html.Header", "");
    const char *charset = gEnv->GetValue("Root.Html.Charset", "ISO-8859-1");
@@ -3426,12 +3433,12 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title)
                break;
 
             if (fLine) {
-               char *titlePos = strstr(fLine, "%TITLE%");
-               if (titlePos != 0) {
-                  *titlePos = 0;
-                  out << fLine << title << titlePos + 7 << endl;
-               } else
-                  out << fLine << endl;
+	       TString txt(fLine);
+               txt.ReplaceAll("%TITLE%", title);
+               txt.ReplaceAll("%CLASS%", cls?cls->GetName():"");
+               txt.ReplaceAll("%INCFILE%", cls?cls->GetDeclFileName():"");
+               txt.ReplaceAll("%SRCFILE%", cls?cls->GetImplFileName():"");
+               out << txt << endl;
             }
          }
       } else
