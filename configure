@@ -1,4 +1,4 @@
-t#! /bin/sh
+#! /bin/sh
 
 # A (not so) simple configure script.
 #
