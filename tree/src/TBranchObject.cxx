@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.11 2001/02/20 08:15:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.12 2001/03/12 07:19:03 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -202,7 +202,7 @@ Bool_t TBranchObject::IsFolder() const
 //*-*      ==================================================
 
    Int_t nbranches = fBranches.GetEntriesFast();
-   if (nbranches >= 1) return kTRUE;
+   if (nbranches >= 1) return kTRUE; 
    else                return kFALSE;
 }
 
@@ -220,7 +220,7 @@ void TBranchObject::Print(Option_t *option) const
       Printf("*............................................................................*");
       for (i=0;i<nbranches;i++)  {
          TBranch *branch = (TBranch*)fBranches.At(i);
-         branch->Print(option);
+         if (branch) branch->Print(option);
       }
    } else {
       TBranch::Print(option);
