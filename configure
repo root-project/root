@@ -685,10 +685,10 @@ fi
 #
 # (see http://oss.sgi.com/projects/inventor/)
 #
-if test "x$enable_opengl" = "no" ; then
+if test "x$enable_opengl" = "xno" ; then
     enable_openiv="no"
 fi
-if test ! "x$enable_openiv" = "no" && test ! "$platform" = "win32" ; then
+if test ! "x$enable_openiv" = "xno" && test ! "$platform" = "win32" ; then
     # Check for OpenInventor compatible include and library
     check_header "Inventor/SoType.h" "$openivincdir" $IVROOT $IVROOT/include \
 	$IVROOT/usr/include /usr/include /usr/include/X11 /usr/X11/include \
