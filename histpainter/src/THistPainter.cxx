@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.75 2002/03/13 17:00:33 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.76 2002/03/21 16:15:43 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -637,6 +637,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (strstr(chopt,"C")) { Hoption.Curve =1; Hoption.Hist = -1;}
    if (strstr(chopt,"E")) Hoption.Error =1;
    if (strstr(chopt,"F")) Hoption.Fill =1;
+   if (strstr(chopt,"F2"))Hoption.Fill =2;
    if (strstr(chopt,"L")) { Hoption.Line =1; Hoption.Hist = -1;}
    if (strstr(chopt,"P")) { Hoption.Mark =1; Hoption.Hist = -1;}
    if (strstr(chopt,"Z")) Hoption.Zscale =1;
@@ -796,6 +797,9 @@ void THistPainter::Paint(Option_t *option)
 //    "L"      : Draw a line througth the bin contents
 //    "P"      : Draw current marker at each bin
 //    "*H"     : Draw histogram with a * at each bin
+//    "LF2"    : Draw histogram like with option "L" but with a fill area.
+//             : Note that "L" draws also a fill area if the hist fillcolor is set
+//             : but the fill area corresponds to the histogram contour.
 //
 //
 //  The following options are supported for 2-D types:
@@ -2703,7 +2707,7 @@ void THistPainter::PaintHist(Option_t *)
    if (Hoption.Line) chopth[0] = 'L';
    if (Hoption.Star) chopth[1] = '*';
    if (Hoption.Mark) chopth[2] = 'P';
-   if (Hoption.Curve || Hoption.Hist || Hoption.Bar) {
+   if (Hoption.Line || Hoption.Curve || Hoption.Hist || Hoption.Bar) {
       if (Hoption.Curve)      chopth[3] = 'C';
       if (Hoption.Hist > 0) { chopth[4] = 'H';  strcpy(choptg,"H"); }
       else if (Hoption.Bar) { chopth[5] = 'B';  strcpy(choptg,"B"); }
@@ -2716,7 +2720,7 @@ void THistPainter::PaintHist(Option_t *)
                strncpy(choptg, chtemp,4);
             }
          }
-         if (Hoption.Hist > 0 || Hoption.Curve) {
+         if (Hoption.Hist > 0 || Hoption.Curve || Hoption.Line) {
             chopth[7] = 'F';
             if (strlen(choptg)) {
                strcpy(chtemp,"F");
@@ -2763,7 +2767,8 @@ void THistPainter::PaintHist(Option_t *)
          else        { strcpy(chopth,"HN");  strcpy(choptg,"HN  "); }
       }
    }
-
+   if (Hoption.Fill == 2) strcat(chopth,"2");
+   
 //         Option LOGX
 
    if (Hoption.Logx) {

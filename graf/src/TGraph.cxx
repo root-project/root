@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.62 2002/03/31 16:33:56 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.63 2002/04/02 07:59:02 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1580,7 +1580,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
    Int_t OptionBar  , OptionR    , OptionOne;
    Int_t OptionFill , OptionZ    ,OptionCurveFill;
    Int_t i, npt, nloop;
-   Int_t drawtype;
+   Int_t drawtype=0;
    Double_t xlow, xhigh, ylow, yhigh;
    Double_t barxmin, barxmax, barymin, barymax;
    Double_t uxmin, uxmax;
@@ -2014,6 +2014,8 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 //  chopt='F1':  Idem as 'F' except that fill area is no more
 //               reparted arround axis X=0 or Y=0 .
 //
+//  chopt='F2':  Draw a Fill area polyline connecting the center of bins
+//
 //  chopt='C' :  A smooth Curve is drawn.
 //
 //  chopt='*' :  A Star is plotted at the center of each bin.
@@ -2033,7 +2035,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
    Int_t OptionFill , OptionZ;
    Int_t OptionHist , OptionBins , OptionMarker;
    Int_t i, j, npt;
-   Int_t drawtype, drawborder, drawbordersav;
+   Int_t drawtype=0, drawborder, drawbordersav;
    Double_t xlow, xhigh, ylow, yhigh;
    Double_t wmin, wmax;
    Double_t dbar, offset, wminstep;
@@ -2063,6 +2065,11 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
    if(opt.Contains("L")) OptionLine = 1;  else OptionLine = 0;
    if(opt.Contains("P")) OptionMark = 1;  else OptionMark = 0;
    if(opt.Contains("A")) OptionAxis = 1;  else OptionAxis = 0;
+   
+   Int_t OptionFill2 = 0;
+   if(opt.Contains("F") && opt.Contains("2")) {
+      OptionFill = 0; OptionFill2 = 1;
+   }
 
 
 //*-*  Set Clipping option
@@ -2364,10 +2371,13 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               }
               gxwork[npt-1] = x[i-1] + 0.5*(x[i]-x[i-1]);
            }
-           if (gxwork[npt-1] < uxmin || gxwork[npt-1] > uxmax) { npt--; continue;}
+           if (gxwork[npt-1] < uxmin || gxwork[npt-1] > uxmax) { 
+              npt--;
+              continue;
+           }
            gywork[npt-1] = y[i-1];
            ComputeLogs(npt, OptionZ);
-           if ((gyworkl[npt] < rwymin) || (gyworkl[npt] > rwymax)) {
+           if ((gyworkl[npt-1] < rwymin) || (gyworkl[npt-1] > rwymax)) {
               if (npt > 2) {
                  ComputeLogs(npt, OptionZ);
                  Smooth(npt,gxworkl,gyworkl,drawtype);
@@ -2457,6 +2467,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
     if (3*nrPix < last-first+1) {
       lowRes = 1;
     }
+    if (OptionFill2) lowRes = 0;
     if (lowRes) {
       Double_t *minPix   = new Double_t[nrPix];
       Double_t *maxPix   = new Double_t[nrPix];
@@ -2582,6 +2593,11 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
                  }
                  if (OptionLine) {
                     if (!OptionMarker) ComputeLogs(npt, OptionZ);
+                    if (OptionFill2) {
+                       gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
+                       gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
+                       gPad->PaintFillArea(npt+2,gxworkl,gyworkl);
+                    }
                     gPad->PaintPolyLine(npt,gxworkl,gyworkl);
                  }
               }
@@ -2597,6 +2613,11 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               }
               if (OptionLine) {
                  if (!OptionMarker) ComputeLogs(50, OptionZ);
+                 if (OptionFill2) {
+                    gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
+                    gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
+                    gPad->PaintFillArea(52,gxworkl,gyworkl);
+                 }
                  gPad->PaintPolyLine(50,gxworkl,gyworkl);
               }
               gxwork[0] = gxwork[npt-1];
@@ -2610,6 +2631,11 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
         }
         if (OptionLine && npt > 1) {
            if (!OptionMarker) ComputeLogs(npt, OptionZ);
+           if (OptionFill2) {
+              gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
+              gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
+              gPad->PaintFillArea(npt+2,gxworkl,gyworkl);
+           }
            gPad->PaintPolyLine(npt,gxworkl,gyworkl);
         }
      }
