@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGTRA.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGTRA.cxx,v 1.2 2004/08/03 16:01:18 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -121,13 +121,13 @@ void TGTRA::SetPoints (Double_t *buff)
 
    if (buff) {
       buff[ 0] = -fBl1;        buff[ 1] = -fH1;    buff[ 2] = -dz;
-      buff[ 3] =  fBl1;        buff[ 4] = -fH1;    buff[ 5] = -dz;
+      buff[ 9] =  fBl1;        buff[ 10] = -fH1;    buff[ 11] = -dz;
       buff[ 6] =  fTl1+dx1;    buff[ 7] =  fH1;    buff[ 8] = -dz;
-      buff[ 9] = -fTl1+dx1;    buff[10] =  fH1;    buff[11] = -dz;
+      buff[ 3] = -fTl1+dx1;    buff[4] =  fH1;    buff[5] = -dz;
       buff[12] = -fBl2+dx;     buff[13] = -fH2+dy; buff[14] = dz;
-      buff[15] =  fBl2+dx;     buff[16] = -fH2+dy; buff[17] = dz;
+      buff[21] =  fBl2+dx;     buff[22] = -fH2+dy; buff[23] = dz;
       buff[18] =  fTl2+dx+dx2; buff[19] =  fH2+dy; buff[20] = dz;
-      buff[21] = -fTl2+dx+dx2; buff[22] =  fH2+dy; buff[23] = dz;
+      buff[15] = -fTl2+dx+dx2; buff[16] =  fH2+dy; buff[17] = dz;
       for (Int_t i = 12; i < 24; i+=3) {
          x = buff[i];
          y = buff[i+1];

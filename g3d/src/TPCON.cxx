@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.3 2002/11/11 11:21:16 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.4 2004/08/03 16:01:18 brun Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -14,7 +14,6 @@
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TGeometry.h"
-
 
 ClassImp(TPCON)
 
@@ -278,65 +277,90 @@ void TPCON::Paint(Option_t *option)
 
    //bottom & top, number of polygons: 2*(n-1)
    // special case number of polygons: 2*n
-   for (i = 0; i < 2; i++) {
-      for (j = 0; j < n-1; j++) {
-         buff->fPols[indx++] = c+3;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = 2*fNz*m+i*n+j;
-         buff->fPols[indx++] = i*(fNz*2-2)*m+m+j;
-         buff->fPols[indx++] = 2*fNz*m+i*n+j+1;
-         buff->fPols[indx++] = i*(fNz*2-2)*m+j;
-      }
-      if (specialCase) {
-         buff->fPols[indx++] = c+3;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = 2*fNz*m+i*n+j;
-         buff->fPols[indx++] = i*(fNz*2-2)*m+m+j;
-         buff->fPols[indx++] = 2*fNz*m+i*n;
-         buff->fPols[indx++] = i*(fNz*2-2)*m+j;
-      }
+   for (j = 0; j < n-1; j++) {
+      buff->fPols[indx++] = c+3;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = 2*fNz*m+j;
+      buff->fPols[indx++] = m+j;
+      buff->fPols[indx++] = 2*fNz*m+j+1;
+      buff->fPols[indx++] = j;
    }
-
-   //inside & outside, number of polygons: (fNz-1)*2*(n-1)
+   for (j = 0; j < n-1; j++) {
+      buff->fPols[indx++] = c+3;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = 2*fNz*m+n+j;
+      buff->fPols[indx++] = (fNz*2-2)*m+j;
+      buff->fPols[indx++] = 2*fNz*m+n+j+1;
+      buff->fPols[indx++] = (fNz*2-2)*m+m+j;
+   }
+   if (specialCase) {
+      buff->fPols[indx++] = c+3;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = 2*fNz*m+j;
+      buff->fPols[indx++] = m+j;
+      buff->fPols[indx++] = 2*fNz*m;
+      buff->fPols[indx++] = j;
+	 
+      buff->fPols[indx++] = 2*fNz*m+n+j;
+      buff->fPols[indx++] = (fNz*2-2)*m+j;
+      buff->fPols[indx++] = 2*fNz*m+n;
+      buff->fPols[indx++] = (fNz*2-2)*m+m+j;
+   }
    for (k = 0; k < (fNz-1); k++) {
-      for (i = 0; i < 2; i++) {
-         for (j = 0; j < n-1; j++) {
-            buff->fPols[indx++] = c+i;
-            buff->fPols[indx++] = 4;
-            buff->fPols[indx++] = (2*k+i*1)*m+j;
-            buff->fPols[indx++] = fNz*2*m+(2*k+i*1+2)*n+j;
-            buff->fPols[indx++] = (2*k+i*1+2)*m+j;
-            buff->fPols[indx++] = fNz*2*m+(2*k+i*1+2)*n+j+1;
-         }
-         if (specialCase) {
-            buff->fPols[indx++] = c+i;
-            buff->fPols[indx++] = 4;
-            buff->fPols[indx++] = (2*k+i*1)*m+j;
-            buff->fPols[indx++] = fNz*2*m+(2*k+i*1+2)*n+j;
-            buff->fPols[indx++] = (2*k+i*1+2)*m+j;
-            buff->fPols[indx++] = fNz*2*m+(2*k+i*1+2)*n;
-         }
+      for (j = 0; j < n-1; j++) {
+         buff->fPols[indx++] = c;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = 2*k*m+j;
+         buff->fPols[indx++] = fNz*2*m+(2*k+2)*n+j+1;
+         buff->fPols[indx++] = (2*k+2)*m+j;
+         buff->fPols[indx++] = fNz*2*m+(2*k+2)*n+j;
+      }
+      for (j = 0; j < n-1; j++) {
+         buff->fPols[indx++] = c+1;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = (2*k+1)*m+j;
+         buff->fPols[indx++] = fNz*2*m+(2*k+3)*n+j;
+         buff->fPols[indx++] = (2*k+3)*m+j;
+         buff->fPols[indx++] = fNz*2*m+(2*k+3)*n+j+1;
+      }
+
+      if (specialCase) {
+         buff->fPols[indx++] = c;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = 2*k*m+j;
+         buff->fPols[indx++] = fNz*2*m+(2*k+2)*n;
+         buff->fPols[indx++] = (2*k+2)*m+j;
+         buff->fPols[indx++] = fNz*2*m+(2*k+2)*n+j;
+	    
+         buff->fPols[indx++] = c+1;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = (2*k+1)*m+j;
+         buff->fPols[indx++] = fNz*2*m+(2*k+3)*n+j;
+         buff->fPols[indx++] = (2*k+3)*m+j;
+         buff->fPols[indx++] = fNz*2*m+(2*k+3)*n;
       }
    }
 
-   //left & right sections, number of polygons: 2*(fNz-1)
-   //          special case number of polygons: 0
-   if (!specialCase) {
+  if (!specialCase) {
       indx2 = fNz*2*(n-1);
       for (k = 0; k < (fNz-1); k++) {
-         for (i = 0; i < 2; i++) {
-            buff->fPols[indx++] = c+2;
-            buff->fPols[indx++] = 4;
-            buff->fPols[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*fNz*n+2*(k-1)+i;
-            buff->fPols[indx++] = indx2+2*(k+1)*n+i*(n-1);
-            buff->fPols[indx++] = indx2+2*fNz*n+2*k+i;
-            buff->fPols[indx++] = indx2+(2*k+3)*n+i*(n-1);
-         }
+         buff->fPols[indx++] = c+2;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = k==0 ? indx2 : indx2+2*fNz*n+2*(k-1);
+         buff->fPols[indx++] = indx2+2*(k+1)*n;
+         buff->fPols[indx++] = indx2+2*fNz*n+2*k;
+         buff->fPols[indx++] = indx2+(2*k+3)*n;
+	    
+         buff->fPols[indx++] = c+2;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = k==0 ? indx2+n-1 : indx2+2*fNz*n+2*(k-1)+1;
+         buff->fPols[indx++] = indx2+(2*k+3)*n+n-1;
+         buff->fPols[indx++] = indx2+2*fNz*n+2*k+1;
+         buff->fPols[indx++] = indx2+2*(k+1)*n+n-1;
       }
       buff->fPols[indx-8] = indx2+n;
       buff->fPols[indx-2] = indx2+2*n-1;
    }
-
    // Paint gPad->fBuffer3D
    buff->Paint(option);
 }

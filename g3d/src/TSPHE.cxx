@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.7 2004/03/05 17:48:30 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.8 2004/08/03 16:01:18 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -242,44 +242,71 @@ void TSPHE::Paint(Option_t *option)
 
    //bottom & top, number of polygons: 2*(n-1)
    // special case number of polygons: 2*n
-   for (i = 0; i < 2; i++) {
-      for (j = 0; j < n-1; j++) {
-         buff->fPols[indx++] = c+3;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = 2*nz*m+i*n+j;
-         buff->fPols[indx++] = i*(nz*2-2)*m+m+j;
-         buff->fPols[indx++] = 2*nz*m+i*n+j+1;
-         buff->fPols[indx++] = i*(nz*2-2)*m+j;
-      }
-      if (specialCase) {
-         buff->fPols[indx++] = c+3;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = 2*nz*m+i*n+j;
-         buff->fPols[indx++] = i*(nz*2-2)*m+m+j;
-         buff->fPols[indx++] = 2*nz*m+i*n;
-         buff->fPols[indx++] = i*(nz*2-2)*m+j;
-      }
+   for (j = 0; j < n-1; j++) {
+      buff->fPols[indx++] = c+3;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = 2*nz*m+j;
+      buff->fPols[indx++] = m+j;
+      buff->fPols[indx++] = 2*nz*m+j+1;
+      buff->fPols[indx++] = j;
+   }
+   for (j = 0; j < n-1; j++) {
+      buff->fPols[indx++] = c+3;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = 2*nz*m+n+j;
+      buff->fPols[indx++] = (nz*2-2)*m+j;
+      buff->fPols[indx++] = 2*nz*m+n+j+1;
+      buff->fPols[indx++] = (nz*2-2)*m+m+j;
+   }
+   if (specialCase) {
+      buff->fPols[indx++] = c+3;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = 2*nz*m+j;
+      buff->fPols[indx++] = m+j;
+      buff->fPols[indx++] = 2*nz*m;
+      buff->fPols[indx++] = j;
+      
+      buff->fPols[indx++] = c+3;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = 2*nz*m+n+j;
+      buff->fPols[indx++] = (nz*2-2)*m+j;
+      buff->fPols[indx++] = 2*nz*m+n;
+      buff->fPols[indx++] = (nz*2-2)*m+m+j;
    }
 
    //inside & outside, number of polygons: (nz-1)*2*(n-1)
    for (k = 0; k < (nz-1); k++) {
-      for (i = 0; i < 2; i++) {
-         for (j = 0; j < n-1; j++) {
-            buff->fPols[indx++] = c+i;
-            buff->fPols[indx++] = 4;
-            buff->fPols[indx++] = (2*k+i*1)*m+j;
-            buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-            buff->fPols[indx++] = (2*k+i*1+2)*m+j;
-            buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j+1;
-         }
-         if (specialCase) {
-            buff->fPols[indx++] = c+i;
-            buff->fPols[indx++] = 4;
-            buff->fPols[indx++] = (2*k+i*1)*m+j;
-            buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-            buff->fPols[indx++] = (2*k+i*1+2)*m+j;
-            buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n;
-         }
+     for (j = 0; j < n-1; j++) {
+        buff->fPols[indx++] = c;
+        buff->fPols[indx++] = 4;
+        buff->fPols[indx++] = 2*k*m+j;
+        buff->fPols[indx++] = nz*2*m+(2*k+2)*n+j+1;
+        buff->fPols[indx++] = (2*k+2)*m+j;
+        buff->fPols[indx++] = nz*2*m+(2*k+2)*n+j;
+     }
+     for (j = 0; j < n-1; j++) {
+        buff->fPols[indx++] = c+1;
+        buff->fPols[indx++] = 4;
+        buff->fPols[indx++] = (2*k+1)*m+j;
+        buff->fPols[indx++] = nz*2*m+(2*k + 3)*n+j;
+        buff->fPols[indx++] = (2*k+ 3)*m+j;
+        buff->fPols[indx++] = nz*2*m+(2*k+3)*n+j+1;
+     }
+    	 
+     if (specialCase) {
+         buff->fPols[indx++] = c;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = 2*k*m+j;
+         buff->fPols[indx++] = nz*2*m+(2*k+2)*n+j;
+         buff->fPols[indx++] = (2*k+2)*m+j;
+         buff->fPols[indx++] = nz*2*m+(2*k+2)*n;
+	    
+         buff->fPols[indx++] = c+1;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = (2*k+1)*m+j;
+         buff->fPols[indx++] = nz*2*m+(2*k+3)*n+j;
+         buff->fPols[indx++] = (2*k+3)*m+j;
+         buff->fPols[indx++] = nz*2*m+(2*k+3)*n;
       }
    }
 
@@ -288,15 +315,21 @@ void TSPHE::Paint(Option_t *option)
    if (!specialCase) {
       indx2 = nz*2*(n-1);
       for (k = 0; k < (nz-1); k++) {
-         for (i = 0; i < 2; i++) {
-            buff->fPols[indx++] = c+2;
-            buff->fPols[indx++] = 4;
-            buff->fPols[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
-            buff->fPols[indx++] = indx2+2*(k+1)*n+i*(n-1);
-            buff->fPols[indx++] = indx2+2*nz*n+2*k+i;
-            buff->fPols[indx++] = indx2+(2*k+3)*n+i*(n-1);
-         }
+         buff->fPols[indx++] = c+2;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = k==0 ? indx2 : indx2+2*nz*n+2*(k-1);
+         buff->fPols[indx++] = indx2+2*(k+1)*n;
+         buff->fPols[indx++] = indx2+2*nz*n+2*k;
+         buff->fPols[indx++] = indx2+(2*k+3)*n;
+	    
+	 buff->fPols[indx++] = c+2;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = k==0 ? indx2+n-1 : indx2+2*nz*n+2*(k-1)+1;
+         buff->fPols[indx++] = indx2+(2*k+3)*n+n-1;
+         buff->fPols[indx++] = indx2+2*nz*n+2*k+1;
+         buff->fPols[indx++] = indx2+2*(k+1)*n+n-1;
       }
+
       buff->fPols[indx-8] = indx2+n;
       buff->fPols[indx-2] = indx2+2*n-1;
    }

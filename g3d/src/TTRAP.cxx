@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTRAP.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTRAP.cxx,v 1.2 2004/08/03 16:01:18 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -95,13 +95,14 @@ void TTRAP::SetPoints(Double_t *buff)
    Float_t tth2   = TMath::Tan(alpha2);
 
    if (buff) {
-      buff[ 0] = -fDz*tx+tth1*fH1+fTl1 ; buff[ 1] =  fH1-fDz*ty ; buff[ 2] = -fDz;
+      buff[ 0] = -fDz*tx-tth1*fH1-fBl1 ; buff[ 1] = -fH1-fDz*ty ; buff[ 2] = -fDz;
       buff[ 3] = -fDz*tx+tth1*fH1-fTl1 ; buff[ 4] =  fH1-fDz*ty ; buff[ 5] = -fDz;
-      buff[ 6] = -fDz*tx-tth1*fH1-fBl1 ; buff[ 7] = -fH1-fDz*ty ; buff[ 8] = -fDz;
+      buff[ 6] = -fDz*tx+tth1*fH1+fTl1 ; buff[ 7] =  fH1-fDz*ty ; buff[ 8] = -fDz;
       buff[ 9] = -fDz*tx-tth1*fH1+fBl1 ; buff[10] = -fH1-fDz*ty ; buff[11] = -fDz;
-      buff[12] =  fDz*tx+tth2*fH2+fTl2 ; buff[13] =  fH2+fDz*ty ; buff[14] = fDz;
+      buff[12] =  fDz*tx-tth2*fH2-fBl2 ; buff[13] = -fH2+fDz*ty ; buff[14] = fDz;
       buff[15] =  fDz*tx+tth2*fH2-fTl2 ; buff[16] =  fH2+fDz*ty ; buff[17] = fDz;
-      buff[18] =  fDz*tx-tth2*fH2-fBl2 ; buff[19] = -fH2+fDz*ty ; buff[20] = fDz;
+      buff[18] =  fDz*tx+tth2*fH2+fTl2 ; buff[19] =  fH2+fDz*ty ; buff[20] = fDz;
       buff[21] =  fDz*tx-tth2*fH2+fBl2 ; buff[22] = -fH2+fDz*ty ; buff[23] = fDz;
    }
+   
 }

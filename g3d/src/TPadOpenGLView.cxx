@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.11 2003/11/10 14:45:29 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.12 2004/07/09 12:34:45 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -50,7 +50,7 @@
 //____________________________________________________________________________
 TPadOpenGLView::TPadOpenGLView(TVirtualPad *pad) : TPadView3D(pad), fGLViewerImp(0)
 {
-   fGLViewerImp = gVirtualGL->CreateGLViewerImp(this,pad->GetTitle(), pad->GetWw(), pad->GetWh());
+/*   fGLViewerImp = gVirtualGL->CreateGLViewerImp(this,pad->GetTitle(), pad->GetWw(), pad->GetWh());
    fGLViewerImp->CreateContext();
    fGLViewerImp->MakeCurrent();
 
@@ -73,9 +73,10 @@ TPadOpenGLView::TPadOpenGLView(TVirtualPad *pad) : TPadView3D(pad), fGLViewerImp
 
     MapOpenGL();
 
-//*-* Set the indentity matrix as a extra rotations
+// *-* Set the indentity matrix as a extra rotations
     for (i=1;i<15;i++)  fExtraRotMatrix[i] = 0;
     for (i=0;i<16;i+=5) fExtraRotMatrix[i] = 1.0;
+*/
 }
 
 //____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.3 2002/11/11 11:21:16 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.4 2004/08/03 16:01:18 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -201,32 +201,6 @@ void TTUBE::Paint(Option_t *option)
    }
 
    indx = 0;
-   /*
-   for (i = 0; i < 2; i++) {
-      for (j = 0; j < n; j++) {
-         indx = 6*(i*n+j);
-         buff->fPols[indx  ] = c;
-         buff->fPols[indx+1] = 4;
-         buff->fPols[indx+2] = i*n+j;
-         buff->fPols[indx+3] = (4+i)*n+j;
-         buff->fPols[indx+4] = (2+i)*n+j;
-         buff->fPols[indx+5] = (4+i)*n+j+1;
-      }
-      buff->fPols[indx+5] = (4+i)*n;
-   }
-   for (i = 2; i < 4; i++) {
-      for (j = 0; j < n; j++) {
-         indx = 6*(i*n+j);
-         buff->fPols[indx  ] = c+(i-2)*2+1;
-         buff->fPols[indx+1] = 4;
-         buff->fPols[indx+2] = (i-2)*2*n+j;
-         buff->fPols[indx+3] = (4+i)*n+j;
-         buff->fPols[indx+4] = ((i-2)*2+1)*n+j;
-         buff->fPols[indx+5] = (4+i)*n+j+1;
-      }
-      buff->fPols[indx+5] = (4+i)*n;
-   }
-   */
    i=0;
    for (j = 0; j < n; j++) {
       indx = 6*(i*n+j);

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTRD2.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTRD2.cxx,v 1.2 2004/08/03 16:01:18 brun Exp $
 // Author: Nenad Buncic   13/09/95
 
 /*************************************************************************
@@ -69,12 +69,12 @@ void TTRD2::SetPoints(Double_t *buff)
 
    if (buff) {
       buff[ 0] = -dx1 ; buff[ 1] = -dy1 ; buff[ 2] = -dz;
-      buff[ 3] =  dx1 ; buff[ 4] = -dy1 ; buff[ 5] = -dz;
+      buff[ 3] =  -dx1 ; buff[ 4] = dy1 ; buff[ 5] = -dz;
       buff[ 6] =  dx1 ; buff[ 7] =  dy1 ; buff[ 8] = -dz;
-      buff[ 9] = -dx1 ; buff[10] =  dy1 ; buff[11] = -dz;
+      buff[ 9] = dx1 ; buff[10] =  -dy1 ; buff[11] = -dz;
       buff[12] = -dx2 ; buff[13] = -dy2 ; buff[14] =  dz;
-      buff[15] =  dx2 ; buff[16] = -dy2 ; buff[17] =  dz;
+      buff[15] =  -dx2 ; buff[16] = dy2 ; buff[17] =  dz;
       buff[18] =  dx2 ; buff[19] =  dy2 ; buff[20] =  dz;
-      buff[21] = -dx2 ; buff[22] =  dy2 ; buff[23] =  dz;
+      buff[21] = dx2 ; buff[22] =  -dy2 ; buff[23] =  dz;
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPARA.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPARA.cxx,v 1.2 2004/08/03 16:01:18 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -81,13 +81,14 @@ void TPARA::SetPoints(Double_t *buff)
    Double_t TTH = TMath::Tan(theta);
    Double_t TXZ = TTH*TMath::Cos(phi);
    Double_t TYZ = TTH*TMath::Sin(phi);
+   Double_t * rep = buff;
 
    *buff++ = -dz*TXZ-TXY*dy-dx ; *buff++ = -dy-dz*TYZ ; *buff++ = -dz;
-   *buff++ = -dz*TXZ-TXY*dy+dx ; *buff++ = -dy-dz*TYZ ; *buff++ = -dz;
+   *buff++ = -dz*TXZ+TXY*dy-dx ; *buff++ = +dy-dz*TYZ ; *buff++ = -dz; //3
    *buff++ = -dz*TXZ+TXY*dy+dx ; *buff++ = +dy-dz*TYZ ; *buff++ = -dz;
-   *buff++ = -dz*TXZ+TXY*dy-dx ; *buff++ = +dy-dz*TYZ ; *buff++ = -dz;
+   *buff++ = -dz*TXZ-TXY*dy+dx ; *buff++ = -dy-dz*TYZ ; *buff++ = -dz;//1
    *buff++ = +dz*TXZ-TXY*dy-dx ; *buff++ = -dy+dz*TYZ ; *buff++ = +dz;
-   *buff++ = +dz*TXZ-TXY*dy+dx ; *buff++ = -dy+dz*TYZ ; *buff++ = +dz;
+   *buff++ = +dz*TXZ+TXY*dy-dx ; *buff++ = +dy+dz*TYZ ; *buff++ = +dz;//7
    *buff++ = +dz*TXZ+TXY*dy+dx ; *buff++ = +dy+dz*TYZ ; *buff++ = +dz;
-   *buff++ = +dz*TXZ+TXY*dy-dx ; *buff++ = +dy+dz*TYZ ; *buff++ = +dz;
+   *buff++ = +dz*TXZ-TXY*dy+dx ; *buff++ = -dy+dz*TYZ ; *buff++ = +dz;//5
 }
