@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.9 2001/02/28 07:22:46 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.10 2001/03/22 16:47:01 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TGraphErrors.h"
 #include "TStyle.h"
 #include "TMath.h"
+#include "TArrow.h"
 #include "TVirtualPad.h"
 
 ClassImp(TGraphErrors)
@@ -194,6 +195,10 @@ void TGraphErrors::Paint(Option_t *option)
    // the end of the error bars. if option "z" or "Z" is specified,
    // these lines are not drawn.
    //
+   // if option contains ">" an arrow is drawn at the end of the error bars
+   // if option contains "|>" a full arrow is drawn at the end of the error bars
+   // the size of the arrow is set to 2/3 of the marker size.
+   //
    // By default, error bars are drawn. If option "X" is specified,
    // the errors are not drawn (TGraph::Paint equivalent).
    
@@ -206,13 +211,21 @@ void TGraphErrors::Paint(Option_t *option)
 
    TGraph::Paint(option);
 
+   if (strchr(option,'X')) return;
    Bool_t endLines = kTRUE;
    if (strchr(option,'z')) endLines = kFALSE;
    if (strchr(option,'Z')) endLines = kFALSE;
-   if (strchr(option,'X')) return;
+   const char *arrowOpt = 0;
+   if (strchr(option,'>'))  arrowOpt = ">";
+   if (strstr(option,"|>")) arrowOpt = "|>";
    
    TAttLine::Modify();
 
+   TArrow arrow;
+   arrow.SetLineWidth(GetLineWidth());
+   arrow.SetLineColor(GetLineColor());
+   arrow.SetFillColor(GetFillColor());
+         
    symbolsize  = GetMarkerSize();
    Int_t mark  = GetMarkerStyle();
    Double_t cx  = 0;
@@ -227,6 +240,7 @@ void TGraphErrors::Paint(Option_t *option)
    s2y  =-gPad->PixeltoY(Int_t(0.5*symbolsize*BASEMARKER)) + gPad->PixeltoY(0);
    tx   = 0.50*s2x;
    ty   = 0.50*s2y;
+   Float_t asize = 0.6*symbolsize*BASEMARKER/gPad->GetWh();
 
    gPad->SetBit(kClipFrame, TestBit(kClipFrame));
    for (Int_t i=0;i<fNpoints;i++) {
@@ -241,28 +255,44 @@ void TGraphErrors::Paint(Option_t *option)
       xl1 = x - s2x*cx;
       xl2 = gPad->XtoPad(fX[i] - ex);
       if (xl1 > xl2) {
-         gPad->PaintLine(xl1,y,xl2,y);
-         if (endLines) gPad->PaintLine(xl2,y-ty,xl2,y+ty);
+         if (arrowOpt) {
+            arrow.PaintArrow(xl1,y,xl2,y,asize,arrowOpt);
+         } else {
+            gPad->PaintLine(xl1,y,xl2,y);
+            if (endLines) gPad->PaintLine(xl2,y-ty,xl2,y+ty);
+         }
       }
       xr1 = x + s2x*cx;
       xr2 = gPad->XtoPad(fX[i] + ex);
-      if (xr1 < xr2) {
-         gPad->PaintLine(xr1,y,xr2,y);
-         if (endLines) gPad->PaintLine(xr2,y-ty,xr2,y+ty);
+      if (xr1 < xr2) { 
+         if (arrowOpt) {
+            arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
+         } else {
+            gPad->PaintLine(xr1,y,xr2,y);
+            if (endLines) gPad->PaintLine(xr2,y-ty,xr2,y+ty);
+         }
       }
       yup1 = y + s2y*cy;
       yup2 = gPad->YtoPad(fY[i] + ey);
       if (yup2 > gPad->GetUymax()) yup2 =  gPad->GetUymax();
       if (yup2 > yup1) {
-         gPad->PaintLine(x,yup1,x,yup2);
-         if (endLines) gPad->PaintLine(x-tx,yup2,x+tx,yup2);
+         if (arrowOpt) {
+            arrow.PaintArrow(x,yup1,x,yup2,asize,arrowOpt);
+         } else {
+            gPad->PaintLine(x,yup1,x,yup2);
+            if (endLines) gPad->PaintLine(x-tx,yup2,x+tx,yup2);
+         }
       }
       ylow1 = y - s2y*cy;
       ylow2 = gPad->YtoPad(fY[i] - ey);
       if (ylow2 < gPad->GetUymin()) ylow2 =  gPad->GetUymin();
       if (ylow2 < ylow1) {
-         gPad->PaintLine(x,ylow1,x,ylow2);
-         if (endLines) gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
+         if (arrowOpt) {
+            arrow.PaintArrow(x,ylow1,x,ylow2,asize,arrowOpt);
+         } else {
+            gPad->PaintLine(x,ylow1,x,ylow2);
+            if (endLines) gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
+         }
       }
    }
    gPad->ResetBit(kClipFrame);
