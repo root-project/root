@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.8 2004/04/06 21:24:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.9 2004/09/06 08:19:51 brun Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -920,7 +920,7 @@ void TGGCPool::FreeGC(const TGGC *gct)
    TGGC *gc = (TGGC *) fList->FindObject(gct);
 
    if (gc) {
-      if (gc->RemoveReference() == 0) {
+      if (!gc->RemoveReference() == 0) {
          fList->Remove(gc);
          delete gc;
       }
