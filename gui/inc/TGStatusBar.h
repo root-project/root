@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.2 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -37,6 +37,7 @@ protected:
    Int_t             fNpart;      // number of parts
    Int_t             fYt;         // y drawing position (depending on font)
    Int_t            *fXt;         // x position for each part
+   Bool_t            f3DCorner;   // draw 3D corner (drawn by default)
 
    static TGGC          fgDefaultGC;
    static FontStruct_t  fgDefaultFontStruct;
@@ -54,6 +55,7 @@ public:
    virtual void SetText(const char *text, Int_t partidx = 0);
    virtual void SetParts(Int_t *parts, Int_t npart);
    virtual void SetParts(Int_t npart);
+   void         Draw3DCorner(Bool_t corner) { f3DCorner = corner; }
 
    ClassDef(TGStatusBar,0)  // Status bar widget
 };
