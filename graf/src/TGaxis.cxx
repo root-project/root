@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.26 2001/12/23 09:09:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.27 2002/01/02 21:42:48 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1274,7 +1274,7 @@ L110:
                if (OptionTime) {
                   timed = Wlabel + (int)(gStyle->GetTimeOffset());
                   timelabel = (time_t)((Long_t)(timed));
-                  utctis = gmtime(&timelabel);
+                  utctis = localtime(&timelabel);
                   strftime(LABEL,36,timeformat.Data(),utctis);
                   first = 0; last=strlen(LABEL)-1;
 
