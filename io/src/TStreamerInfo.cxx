@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.7 2000/11/23 10:39:44 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.8 2000/11/24 10:28:07 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -515,12 +515,12 @@ void TStreamerInfo::Compile()
       fLength[fNdata] = element->GetArrayLength();
       fElem[fNdata]   = (ULong_t)element;
       fMethod[fNdata] = element->GetMethod();
-      if (keep>=0 && (element->GetType() < kRegrouped)
+         if (keep>=0 && (element->GetType() < kRegrouped)
                   && (fType[fNdata] == fNewType[fNdata])
                   && (element->GetType() > 0)
                   && (element->GetArrayDim() == 0)
                   && (element->GetType() == (fType[keep]%kRegrouped))
-                  && ((element->GetOffset()-fOffset[keep]) == (i-keep)*element->GetSize())) {
+                  && ((element->GetOffset()-fOffset[keep]) == (fLength[keep])*element->GetSize())) {
          if (fLength[keep] == 0) fLength[keep]++;
          fLength[keep]++;
          fType[keep] = element->GetType() + kRegrouped;
@@ -532,6 +532,7 @@ void TStreamerInfo::Compile()
             }
          }
          keep = fNdata;
+         if (fLength[keep] == 0) fLength[keep] = 1;
          fNdata++;
       }
    }
