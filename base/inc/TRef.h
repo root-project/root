@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.2 2001/10/05 16:25:53 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.3 2001/11/23 18:00:21 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -28,22 +28,38 @@
 
 class TProcessID;
 class TFile;
+class TExec;
+class TObjArray;
 
 class TRef : public TObject {
 
 protected:
-   TProcessID     *fPID;   //!Pointer to ProcessID when TRef was written
+   TProcessID       *fPID;     //!Pointer to ProcessID when TRef was written
 
+   static TObjArray  *fgExecs;  //List of execs
+   static UInt_t      fgNumber; //Referenced objects count
+   static TProcessID *fgPID;    //Pointer to current session ProcessID
+   static TObject    *fgObject; //Pointer to object (set in Action on Demand)
+      
 public:
+   //status bits
+   enum { kNotComputed = BIT(12)};
+
    TRef() {fPID = 0;}
    TRef(TObject *obj);
    TRef(const TRef &ref);
    void operator=(TObject *obj);
    virtual ~TRef() {;}
-         TObject *GetObject() const;
-   
-   static  void   ReadRef(TObject *obj, TBuffer &R__b, TFile *file);
-   static  void   SaveRef(TObject *obj, TBuffer &R__b, TFile *file);
+   static Int_t       AddExec(const char *name);
+   static UInt_t      AssignID(TObject *obj);
+          TObject    *GetObject() const;
+   static  UInt_t     GetObjectCount();
+   static TObjArray  *GetListOfExecs();
+   virtual void       SetAction(const char *name);
+   virtual void       SetAction(TObject *parent);
+   static  void       SetCurrentPID(TProcessID *pid);
+   static  void       SetObject(TObject *obj);
+   static  void       SetObjectCount(UInt_t number);
 
    ClassDef(TRef,1)  //Persistent Reference link to a TObject
 };

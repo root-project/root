@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.4 2001/11/22 18:10:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.5 2001/11/23 18:00:21 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -44,31 +44,48 @@
 // How does it work
 // ----------------
 // A TRef is itself a TObject with an additional transient pointer fPID.
-// When the statement fRef = robj is executed, the fRef::fUniqueID is set
-// to the value "obj-gSystem". This uid is in general a small integer, even
-// on a 64 bit system.
+// When the statement fRef = robj is executed, the following actions happen:
+//   - The pointer fPID is set to the current TProcessID.
+//   - The current ObjectNumber (see below) is incremented by one.
+//   - robj::fUniqueID is set to ObjectNumber.
+//   - In the fPID object, the element fObjects[ObjectNumber] is set to robj
+//   - ref::fUniqueID is also set to ObjectNumber.
 // After having set fRef, one can immediatly return the value of robj
-// with "gSystem + uid" using fRef.GetObject().
+// using fRef.GetObject(). This function returns directly fObjects[fUniqueID]
+// from the fPID object.
 //
-// When the TRef is written, the process id number pidf  (see TProcessID)
-// is written as well as the uid.
+// When the TRef is written, the process id number pidf of fPID is written
+// in addition to the TObject part of TRef (fBits,fUniqueID).
 // When the TRef is read, its pointer fPID is set to the value
 // stored in the TObjArray of TFile::fProcessIDs (fProcessIDs[pidf]).
 //
 // When a referenced object robj is written, TObject::Streamer writes
-// in addition to the standard (fBits,fUniqueID) the pair uid,pidf.
-// When this robj is read by TObject::Streamer, the pair uid,pidf is read.
-// At this point, robj is entered into the TExmap of the TProcessID
+// in addition to the standard (fBits,fUniqueID) the pidf.
+// When this robj is read by TObject::Streamer, the pidf is read.
+// At this point, robj is entered into the table of objects of the TProcessID
 // corresponding to pidf. 
-//
-// Once the referenced object robj is in memory, TRef::GetObject will 
-// store the object pointer robj-gSystem  into the fUniqueID such that
-// the next access to the pointer will be fast (no need to search in
-// the TExMap of the TProcessID anymore).
 //
 // WARNING: If MyClass is the class of the referenced object, The TObject
 //          part of MyClass must be Streamed. One should not
 //          call MyClass::Class()->IgnoreTObjectStreamer()
+//
+// ObjectNumber
+// ------------
+// When an object is referenced (see TRef assignement operator or TRefArray::Add)
+// a unique identifier is computed and stored in both the fUniqueID of the
+// referenced and referencing object. This uniqueID is computed by incrementing 
+// by one the static global in TRef::fgNumber. fUniqueID is some sort of
+// serial object number in the current session. One can retrieve at any time
+// the current value of fgNumber by calling the static function TRef::GetObjectCount
+// or set this number via TRef::SetObjectCount.
+// To avoid a growing table of fObjects in TProcessID, in case, for example,
+// one processes many events in a loop, it might be necessary to reset the
+// ObjectNumber at the end of processing of one event. See an example
+// in $ROOTSYS/test/Event.cxx (look at function Build).
+// The value of ObjectNumber (say saveNumber=TRef::GetObjectCount()) may be
+// saved at the beginning of one event and reset to this original value
+// at the end of the event via TRef::SetObjectCount(saveNumber). These
+// actions may be stacked.
 //
 // Action on Demand
 // ----------------
@@ -94,12 +111,9 @@
 //    - a call to the TExec constructor, if the constructor is called before
 //      opening the file.
 //    - a call to TExec::SetAction at any time.
-// One can compute a pointer to an existing TExec with a name with:
-//    TObjArray *listExecs = (TObjArray*)gROOT->FindObjectAny("Execs");
-//    TExec *myExec = (TExec*)listExecs->FindObject(execName);
-//    myExec->SetAction(actionCommand); where 
-//      - listExecs points to to the array of TExecs. Up to 256 TExecs
-//        can be specified in a process.
+//      One can compute a pointer to an existing TExec with a name with:
+//        TExec *myExec = gROOT->GetExec(execName);
+//      myExec->SetAction(actionCommand); where 
 //      - actionCommand is a string containing a CINT instruction. Examples:
 //          myExec->SetAction("LoadHits()");
 //          myExec->SetAction(".x script.C");
@@ -111,14 +125,40 @@
 //    looks in the file catalog (GRID).
 //  - compute a pointer to the referenced object and communicate this pointer
 //    back to the calling function TRef::GetObject via:
-//      gROOT->SetSelectedPrimitive(theObject);
-// As soon as an object is returned to GetObject, a bit is set in the TRef
-// and the address of the referenced object stored. At the next call to GetRef,
-// the address of the referenced object will be returned immediatly.
+//      TRef::SetObject(object).
+// As soon as an object is returned to GetObject, the fUniqueID of the TRef is set
+// to the fUniqueID of the referenced object. At the next call to GetObject,
+// the pointer stored in fPid:fObjects[fUniqueID] will be returned directly.
+//
+// An example of action on demand is shown in $ROOTSYS/test/Event.h with
+// the member:
+//      TRef    fWebHistogram;   //EXEC:GetWebHistogram
+// When calling fWebHistogram.GetObject(), the function GetObject
+// will automatically invoke a script GetWebHistogram.C via the interpreter.
+// An example of a GetWebHistogram.C script is shown below
+//    void GetWebHistogram() {
+//       TFile *f= TFile::Open("http://root.cern.ch/files/pippa.root");
+//       f->cd("DM/CJ");
+//       TH1 *h6 = (TH1*)gDirectory->Get("h6");
+//       h6->SetDirectory(0);
+//       delete f;
+//       TRef::SetObject(h6);
+//    }
+// In the above example, a call to fWebHistogram.GetObject() executes the
+// script with the function GetWebHistogram. This script connects a file
+// with histograms: pippa.root on the ROOT Web site and returns the object h6
+// to TRef::GetObject.
+// Note that, if the definition of the TRef fWebHistogram had been:
+//      TRef    fWebHistogram;   //EXEC:GetWebHistogram()
+// then, the compiled or interpreted function GetWebHistogram() would have
+// been called instead of the CINT script GetWebHistogram.C
 //
 // Array of TRef
 // -------------
 // The special class TRefArray should be used to store multiple references.
+// A TRefArray has one single pointer fPID for all objects in the array.
+// It has a dynamic compact table of fUniqueIDs. Use a TRefArray rather
+// then a collection of TRefs.
 //
 // Example:
 // Suppose a TObjArray *mytracks containing a list of Track objects
@@ -138,6 +178,11 @@
 #include "TSystem.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
+
+TObjArray  *TRef::fgExecs  = 0;
+TProcessID *TRef::fgPID    = 0;
+UInt_t      TRef::fgNumber = 0;
+TObject    *TRef::fgObject = 0;
 
 ClassImp(TRef)
 
@@ -160,97 +205,174 @@ void TRef::operator=(TObject *obj)
 {
    // TRef assignment operator.
 
-   Long_t uid;
+   UInt_t uid = 0;
    if (obj) {
       if (obj->IsA()->CanIgnoreTObjectStreamer()) {
          Error("operator= ","Class: %s IgnoreTObjectStreamer. Cannot reference object",obj->ClassName());
          return;
       }
-      obj->SetBit(kIsReferenced);
-      uid = (Long_t)obj - (Long_t)gSystem;
-   } else {
-      uid = 0;
+      uid = TRef::AssignID(obj);
    }
-   SetUniqueID((UInt_t)uid);
+   SetUniqueID(uid);
 }
 
+//______________________________________________________________________________
+Int_t TRef::AddExec(const char *name)
+{
+   //if Exec with name does not exist in the list of Execs, it is created.
+   //returns the index of the Exec in the list
+
+   if (!fgExecs) fgExecs = new TObjArray(10);
+   
+   TExec *exec = (TExec*)fgExecs->FindObject(name);
+   if (!exec) {
+       //we register this Exec to the list of Execs.
+       exec = new TExec(name,"");
+       fgExecs->Add(exec);
+   }
+   return fgExecs->IndexOf(exec);
+}
+
+//______________________________________________________________________________
+UInt_t TRef::AssignID(TObject *obj)
+{
+// static function returning the ID assigned to obj
+// If the object is not yet referenced, its kIsReferenced bit is set
+// and its fUniqueID set to the current number of referenced objects so far
+
+   UInt_t uid = obj->GetUniqueID();
+   if (obj == fgPID->GetObjectWithID(uid)) return uid;
+   fgNumber++;
+   obj->SetBit(kIsReferenced);
+   uid = fgNumber;
+   obj->SetUniqueID(uid);
+   fgPID->PutObjectWithID(obj,uid);
+   return uid;
+}
+   
+//______________________________________________________________________________
+TObjArray *TRef::GetListOfExecs()
+{
+// Return a pointer to the static TObjArray holding the list of Execs
+   
+   if (!fgExecs) fgExecs = new TObjArray(10);
+   
+   return fgExecs;
+}
+   
+//______________________________________________________________________________
+UInt_t TRef::GetObjectCount()
+{
+// Return the current referenced object count 
+// fgNumber is incremented everytime a new object is referenced
+   
+   return fgNumber;
+}
+  
+   
 //______________________________________________________________________________
 TObject *TRef::GetObject() const
 {
    // Return a pointer to the referenced object.
 
    TObject *obj = 0;
-   Long_t uid = (Long_t)GetUniqueID();
-   if (uid == 0) return obj;
-   if (!TestBit(1)) return (TObject*)(uid + (Long_t)gSystem);
-   
-   //Try to find the object from the map of the corresponding PID
-   if (fPID) obj = fPID->GetObjectWithID(uid);
+   UInt_t uid = GetUniqueID();
+   //Try to find the object from the table of the corresponding PID
+   if (!fPID) ((TRef*)this)->fPID = fgPID;
+   if (fPID && uid) obj = fPID->GetObjectWithID(uid);
    
    //if object not found, then exec action if an action has been defined
    if (!obj) {
-      //execid starts at bit 8 on 8 bits
-      Int_t execid = TestBits(0xff00) >> 8;
+      //execid in the first 8 bits
+      Int_t execid = TestBits(0xff);
       if (execid > 0) {
-         TObjArray *lexecs = (TObjArray*)gROOT->FindObjectAny("Execs");
-         if (lexecs) {
-            TExec *exec = (TExec*)lexecs->At(execid-1);
-            if (exec) {
-               //store this object in gROOT just in case it is needed by the Exec
-               TObject *ref = (TObject*)this;
-               gROOT->SetSelectedPrimitive(ref);
-               exec->Exec();
-               //if the Exec has redefined the selectedPrimitive, we assume
-               //that it contains the pointer to our requested object
-               if (gROOT->GetSelectedPrimitive() != ref) {
-                  obj = gROOT->GetSelectedPrimitive();
-                  if (obj) obj->SetBit(kIsReferenced);
-               } else {
-                  //well may be the Exec has loaded the object
-                  if (fPID) obj = fPID->GetObjectWithID(uid);
-               }  
+         TExec *exec = (TExec*)fgExecs->At(execid-1);
+         if (exec) {
+            //we expect the object to be returned via TRef::setObject
+            fgObject = 0;
+            exec->Exec();
+            obj = fgObject;
+            if (obj){
+               uid = TRef::AssignID(obj);
+               ((TRef*)this)->SetUniqueID(uid);
+            } else {
+               //well may be the Exec has loaded the object
+               obj = fPID->GetObjectWithID(uid);
             }  
          }  
       }
    }
    
-   //if object is found, mark the bit to speed up next calls
-   if (obj) {
-      ((TRef*)this)->ResetBit(1);
-      uid = (Long_t)obj - (Long_t)gSystem;
-      ((TRef*)this)->SetUniqueID((UInt_t)uid);
-   }
    return obj;
 }
 
 //______________________________________________________________________________
-void TRef::ReadRef(TObject *obj, TBuffer &R__b, TFile *file)
+void TRef::SetAction(const char *name)
 {
-// static function
-
-   Long_t uid;
-   Int_t pidf = 0;
-   R__b >> uid; 
-   R__b >> pidf;
+// Store the exec number (in the ROOT list of Execs)
+// into the fBits of this TRef
    
-   TProcessID *pid = TProcessID::ReadProcessID(pidf,file);
-   
-   if (pid) pid->PutObjectWithID(uid,obj);
+   TExec *exec = (TExec*)fgExecs->FindObject(name);
+   if (!exec) {
+      Error("SetAction","Unknow TExec: %s",name);
+      return;
+   }
+   Int_t execid = 1 + fgExecs->IndexOf(exec);
+   SetBit(execid << 8);
 }
 
 //______________________________________________________________________________
-void TRef::SaveRef(TObject *obj, TBuffer &R__b, TFile *file)
+void TRef::SetAction(TObject *parent)
 {
-// static function
-
-   Long_t uid = (Long_t)obj - (Long_t)gSystem;
-   Int_t pidf = 0;
-   if (file) {
-      pidf = file->GetProcessCount();
-      file->SetBit(TFile::kHasReferences);
+// Find the action to be executed in the dictionary of the parent class
+// and store the corresponding exec number into fBits
+// This function searches a data member in the class of parent with an offset
+// corresponding to this.
+// If a comment "TEXEC:" is found in the comment field of the data member,
+// the function stores the exec identifier of the exec statement
+// following this keyword.
+      
+   if (!parent) return;
+   Int_t offset = (char*)this - (char*)parent;
+   TClass *cl = parent->IsA();
+   cl->BuildRealData(parent);
+   TStreamerInfo *info = cl->GetStreamerInfo();
+   TIter next(info->GetElements());
+   TStreamerElement *element;
+   while((element = (TStreamerElement*)next())) {
+      if (element->GetOffset() != offset) continue;
+      Int_t execid = element->GetExecID();
+      if (execid > 0) SetBit(execid << 8);
+      return;
    }
-   R__b << uid;
-   R__b << pidf;
+}
+   
+//______________________________________________________________________________
+void TRef::SetCurrentPID(TProcessID *pid)
+{
+// static function to set the current session processid.
+   
+   fgPID = pid;
+}
+   
+//______________________________________________________________________________
+void TRef::SetObject(TObject *obj)
+{
+// static function to set the object found on the Action on Demand function. 
+// This function may be called by the user in the function called 
+// when a "EXEC:" keyword is specified in the data member field of the TRef.
+   
+   fgObject = obj;
+}
+  
+   
+//______________________________________________________________________________
+void TRef::SetObjectCount(UInt_t number)
+{
+// static function to set the current referenced object count 
+// fgNumber is incremented everytime a new object is referenced
+   
+   fgNumber = number;
 }
 
 //______________________________________________________________________________
@@ -258,24 +380,24 @@ void TRef::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TRef.
 
-   Long_t uid;
-   Int_t pidf;
+   UShort_t pidf;
    if (R__b.IsReading()) {
+      TObject::Streamer(R__b);
       R__b >> pidf;
-      R__b >> uid;
-      SetBit(1,1);
-      SetUniqueID((UInt_t)uid);
       fPID = TProcessID::ReadProcessID(pidf,gFile);
+      //The execid has been saved in the unique id of the TStreamerElement
+      //being read by TStreamerElement::Streamer
+      //The current element (fgElement) is set as a static global
+      //by TStreamerInfo::ReadBuffer (Clones) when reading this TRef
       Int_t execid = TStreamerInfo::GetCurrentElement()->GetUniqueID();
-      if (execid) SetBit(execid << 8);
+      if (execid) SetBit(execid);
    } else {
+      TObject::Streamer(R__b);
       pidf = 0;
-      uid = (Long_t)GetUniqueID();
       if (gFile) {
-         pidf = gFile->GetProcessCount();
+         pidf = (UShort_t)gFile->GetProcessCount();
          gFile->SetBit(TFile::kHasReferences);
       }
       R__b << pidf;
-      R__b << uid;
    }
 }
