@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.1 2003/07/31 20:46:40 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -134,9 +134,45 @@ void TGeoTorus::ComputeBBox()
 }
 
 //-----------------------------------------------------------------------------   
-void TGeoTorus::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+void TGeoTorus::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
+   Double_t phi = TMath::ATan2(point[1],point[0]);
+   if (phi<0) phi+=2*TMath::Pi();
+   if (fDphi<360) {
+      Double_t phi1 = fPhi1*kDegRad;
+      Double_t phi2 = (fPhi1+fDphi)*kDegRad;
+      Double_t c1 = TMath::Cos(phi1);
+      Double_t s1 = TMath::Sin(phi1);
+      Double_t c2 = TMath::Cos(phi2);
+      Double_t s2 = TMath::Sin(phi2);
+
+      Double_t daxis = Daxis(point,dir,0);
+      if ((fRmax-daxis)>1E-5) {
+         if (fRmin==0 || (daxis-fRmin)>1E-5) {
+            TGeoShape::NormalPhi(point,dir,norm,c1,s1,c2,s2);
+            return;
+         }
+      }
+   }   
+   Double_t r0[3];
+   r0[0] = fR*TMath::Cos(phi);
+   r0[1] = fR*TMath::Sin(phi);           
+   r0[2] = 0;
+   Double_t normsq = 0;
+   for (Int_t i=0; i<3; i++) {
+      norm[i] = point[i] - r0[i];
+      normsq += norm[i]*norm[i];
+   }
+   normsq = TMath::Sqrt(normsq);
+   norm[0] /= normsq;
+   norm[1] /= normsq;
+   norm[2] /= normsq;
+   if (dir[0]*norm[0]+dir[1]*norm[1]+dir[2]*norm[2] < 0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+      norm[2] = -norm[2];
+   }      
 }
 
 //_____________________________________________________________________________
@@ -195,6 +231,23 @@ Double_t TGeoTorus::DDaxis(Double_t *pt, Double_t *dir, Double_t t) const
 }   
 
 //_____________________________________________________________________________
+Double_t TGeoTorus::DDDaxis(Double_t *pt, Double_t *dir, Double_t t) const
+{
+// Second derivative of distance to torus axis w.r.t t.
+   Double_t p[3];
+   for (Int_t i=0; i<3; i++) p[i] = pt[i]+t*dir[i];
+   Double_t rxy = TMath::Sqrt(p[0]*p[0]+p[1]*p[1]);
+   if (rxy<1E-6) return 0;
+   Double_t daxis = TMath::Sqrt((rxy-fR)*(rxy-fR)+p[2]*p[2]);
+   if (daxis==0) return 0;
+   Double_t ddaxis = (p[0]*dir[0]+p[1]*dir[1]+p[2]*dir[2] - (p[0]*dir[0]+p[1]*dir[1])*fR/rxy)/daxis;
+   Double_t dddaxis = 1 - ddaxis*ddaxis - (1-dir[2]*dir[2])*fR/rxy +
+                      fR*(p[0]*dir[0]+p[1]*dir[1])*(p[0]*dir[0]+p[1]*dir[1])/(rxy*rxy*rxy);
+   dddaxis /= daxis;
+   return dddaxis;
+}
+   
+//_____________________________________________________________________________
 Double_t TGeoTorus::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from inside point to surface of the torus.
@@ -203,18 +256,26 @@ Double_t TGeoTorus::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double
       if (iact==0) return kBig;
       if ((iact==1) && (step<=*safe)) return kBig;
    }
-   Double_t daxis, rxy2, dd;
+   Double_t snext = kBig;
    Bool_t hasphi = (fDphi<360)?kTRUE:kFALSE;
    Bool_t hasrmin = (fRmin>0)?kTRUE:kFALSE;
-   Double_t c1,s1,c2,s2,cm,sm,cdfi;
-   Double_t pt[3];
-   Double_t invdir[3];
-   Double_t din = kBig;
-   Double_t dout = kBig;
-   Int_t i;
-   for (i=0; i<3; i++) invdir[i] = -dir[i];
+   Double_t dout = ToBoundary(point,dir,fRmax);
+   if (dout>1E10) {
+      Double_t pt[3];
+      for (Int_t i=0; i<3; i++) pt[i] = point[i]-1E-4*dir[i];
+      dout = ToBoundary(pt,dir,fRmax)-1E-4;
+      if (dout<1E10) return dout;
+      Error("DistToOut", "cannot get outside");
+      printf("point (%f,%f,%f) daxis=%f contains=%i\n", point[0],point[1],point[2],
+             Daxis(point,dir,0), Contains(point));
+      return kBig;
+   }
+   Double_t din = (hasrmin)?ToBoundary(point,dir,fRmin):kBig;
+   snext = TMath::Min(dout,din);
+   Double_t dphi = kBig;
    if (hasphi) {
       // Torus segment case.
+      Double_t c1,s1,c2,s2,cm,sm,cdfi;
       Double_t phi1=fPhi1*kDegRad;
       Double_t phi2=(fPhi1+fDphi)*kDegRad;
       c1=TMath::Cos(phi1);
@@ -225,87 +286,20 @@ Double_t TGeoTorus::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double
       cm=TMath::Cos(fio);
       sm=TMath::Sin(fio);
       cdfi=TMath::Cos(0.5*(phi2-phi1));
-      while (hasrmin) {
-         // We are in between the two torus surfaces, within phi range.
-         // Check if we cross the inner bounding ring
-         rxy2 = point[0]*point[0]+point[1]*point[1];
-         if (TMath::Abs(point[2])>fRmin || rxy2<(fR-fRmin)*(fR-fRmin) || rxy2>(fR+fRmin)*(fR+fRmin)) {
-         // we are outside the inner bounding ring
-            din = TGeoTubeSeg::DistToInS(point,dir,fR-fRmin,fR+fRmin, fRmin, c1,s1,c2,s2,cm,sm,cdfi);
-            if (din>1E10) break;
-            for (i=0; i<3; i++) pt[i] = point[i]+(din-1E-6)*dir[i];
-            dd = ToBoundary(pt, dir, fRmin);
-            if (dd<1E10) {
-               din += dd - 1E-6;
-               break;
-            }
-            // propagate inside the bounding ring
-            din += 1E-6;
-            for (i=0; i<3; i++) pt[i] = point[i]+din*dir[i];
-         } else {
-            din = 0;
-            dd = ToBoundary(point, dir, fRmin);
-            if (dd<1E10) {
-               din += dd;
-               break;
-            }   
-            memcpy(pt, point, 3*sizeof(Double_t));
-         }
-         // propagate to exit of bounding ring
-         dd = TGeoTubeSeg::DistToOutS(point,dir,fR-fRmin,fR+fRmin, fRmin, c1,s1,c2,s2,cm,sm);
-         dd += 1E-6;
-         for (i=0; i<3; i++) pt[i] += dd*dir[i];
-         // we have exited the ring again
-         din += dd;
-         dd = TGeoTubeSeg::DistToInS(point,dir,fR-fRmin,fR+fRmin, fRmin, c1,s1,c2,s2,cm,sm,cdfi);
-         if (dd>1E10) {
-            din = kBig;
-            break;
+      dphi = TGeoTubeSeg::DistToOutS(point,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm);
+      if (dphi>1E10) {
+         Double_t pt[3];
+         for (Int_t i=0; i<3; i++) pt[i] = point[i]-1E-4*dir[i];
+         dphi = TGeoTubeSeg::DistToOutS(pt,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm)-1E-4;
+         if (dphi>1E10) {
+            Error("DistToOut", "cannot get outside");
+            return kBig;
          }   
-         dd -= 1E-6;
-         din += dd;
-         for (i=0; i<3; i++) pt[i] += dd*dir[i];
-         dd = ToBoundary(pt, dir, fRmin);
-         if (dd<1E10) {
-            din += dd;
-            break;
-         }   
-         din = kBig;
-         break;
-      }   
-      // Compute the distance to exiting outer torus.
-      dout = TGeoTubeSeg::DistToOutS(point,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm); 
-      for (i=0; i<3; i++) pt[i] = point[i]+dout*dir[i];
-      daxis = Daxis(pt,dir,0);
-      if (daxis-fRmax>0) {
-         // We have crossed the outer torus on the way
-         // -> compute distance from new point back
-         dout -= ToBoundary(pt, invdir, fRmax);
-      } else {
-         // We have just crossed an endcap -> do nothing
-      }         
-      return TMath::Min(din,dout);
-   }            
-   // Case with full phi range
-   if (hasrmin) {
-      // We are in between the two torus surfaces.
-      // Check if we cross the inner bounding ring
-      rxy2 = point[0]*point[0]+point[1]*point[1];
-      if (TMath::Abs(point[2])>fRmin || rxy2<(fR-fRmin)*(fR-fRmin) || rxy2>(fR+fRmin)*(fR+fRmin)) {
-         din = TGeoTube::DistToInS(point,dir,fR-fRmin,fR+fRmin, fRmin);
-         daxis = Daxis(pt,dir,0);
-         if (din<1E10 && daxis>=fRmin) {
-            for (i=0; i<3; i++) pt[i] = point[i]+din*dir[i];
-            din += ToBoundary(pt,dir,fRmin);
-         }
-      } else {
-         din = ToBoundary(point,dir,fRmin);
       }
-   }
-   dout = TGeoTube::DistToOutS(point,dir,fR-fRmax,fR+fRmax, fRmax); 
-   for (i=0; i<3; i++) pt[i] = point[i]+dout*dir[i];
-   dout -= ToBoundary(pt, invdir, fRmax);
-   return TMath::Min(din,dout);
+      Double_t daxis = Daxis(point,dir,dphi+1E-8);
+      if (daxis>=fRmin && daxis<=fRmax) snext=TMath::Min(snext,dphi);
+   }      
+   return snext;
 }
 
 //_____________________________________________________________________________
@@ -319,223 +313,99 @@ Double_t TGeoTorus::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_
    }
    Double_t daxis;
    Bool_t hasphi = (fDphi<360)?kTRUE:kFALSE;
-   Bool_t hasrmin = (fRmin>0)?kTRUE:kFALSE;
-   Double_t c1,s1,c2,s2,cm,sm,cdfi;
+//   Bool_t hasrmin = (fRmin>0)?kTRUE:kFALSE;
+   Double_t c1=0,s1=0,c2=0,s2=0,cm=0,sm=0,cdfi=0;
+   Bool_t inphi = kFALSE;
+   Double_t phi, ddp, phi1,phi2,fio;
    Double_t rxy2,dd;
    Double_t snext;
    Double_t pt[3];
    Double_t invdir[3];
    Int_t i;
    for (i=0; i<3; i++) invdir[i] = -dir[i];
+      
    if (hasphi) {
       // Torus segment case.
-      Bool_t inphi = kFALSE;
-      Double_t phi=TMath::ATan2(point[1], point[0])*kRadDeg;;
+      phi=TMath::ATan2(point[1], point[0])*kRadDeg;;
       if (phi<0) phi+=360;
-      Double_t ddp = phi-fPhi1;
+      ddp = phi-fPhi1;
       if (ddp<0) ddp+=360;;
       if (ddp<=fDphi) inphi=kTRUE;
-      Double_t phi1=fPhi1*kDegRad;
-      Double_t phi2=(fPhi1+fDphi)*kDegRad;
+      phi1=fPhi1*kDegRad;
+      phi2=(fPhi1+fDphi)*kDegRad;
       c1=TMath::Cos(phi1);
       s1=TMath::Sin(phi1);
       c2=TMath::Cos(phi2);
       s2=TMath::Sin(phi2);
-      Double_t fio=0.5*(phi1+phi2);
+      fio=0.5*(phi1+phi2);
       cm=TMath::Cos(fio);
       sm=TMath::Sin(fio);
       cdfi=TMath::Cos(0.5*(phi2-phi1));
-      
-      // check if we are inside the hole of the torus
-      if (hasrmin) {
-         daxis = Daxis(point, dir, 0);
-         if (inphi) {
-            if (daxis<fRmax) {
-               // We are inside the outer torus, in the phi range.
-               if (daxis>=fRmin) {
-                  Warning("DistToIn", "point is actually inside - returning 0");
-                  return 0.;
-               }   
-               // We are inside the hole -> we will maybe cross the inner surface 
-               // of the torus. Propagate until exiting the bounding ring of inner torus.
-               snext = TGeoTubeSeg::DistToOutS(point,dir,fR-fRmin,fR+fRmin, fRmin, c1,s1,c2,s2,cm,sm);
-               for (i=0; i<3; i++) pt[i] = point[i]+snext*dir[i];
-               daxis = Daxis(pt,dir,0);
-               if (daxis-fRmin>0) {
-                  // We have crossed the inner torus on the way
-                  // -> compute distance from new point back
-                  snext -= ToBoundary(pt, invdir, fRmin);
-                  return snext;
-               } else {
-                  // We have just crossed an endcap -> check if we cross the torus from
-                  // the new point.
-                  for (i=0; i<3; i++) pt[i] += 1E-6*dir[i];
-                  snext += DistToIn(pt, dir, 3) + 1E-6;
-                  return snext;
-               }
-            } else {
-               // We are outside Rmax within phi range and we can only cross the 
-               // outer surface;
-               rxy2 = point[0]*point[0]+point[1]*point[1];
-               if (TMath::Abs(point[2])>fRmax || rxy2<(fR-fRmax)*(fR-fRmax) || rxy2>(fR+fRmax)*(fR+fRmax)) {
-                  // we are outside the bounding ring
-                  snext = TGeoTubeSeg::DistToInS(point,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm,cdfi);
-                  if (snext>1E10) return kBig;
-                  for (i=0; i<3; i++) pt[i] = point[i]+(snext-1E-6)*dir[i];
-                  dd = ToBoundary(pt, dir, fRmax);
-                  if (dd<1E10) {
-                     snext += dd - 1E-6;
-                     return snext;
-                  }
-                  // propagate inside the bounding ring
-                  snext += 1E-6;
-                  for (i=0; i<3; i++) pt[i] = point[i]+snext*dir[i];
-               } else {
-                  snext = 0;
-                  dd = ToBoundary(point, dir, fRmax);
-                  if (dd<1E10) {
-                     snext += dd;
-                     return snext;
-                  }   
-                  memcpy(pt, point, 3*sizeof(Double_t));
-               }
-               // propagate to exit of bounding ring
-               dd = TGeoTubeSeg::DistToOutS(point,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm);
-               dd += 1E-6;
-               for (i=0; i<3; i++) pt[i] += dd*dir[i];
-               // we have exited the ring again
-               snext += dd;
-               dd = TGeoTubeSeg::DistToInS(point,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm,cdfi);
-               if (dd>1E10) return kBig;
-               dd -= 1E-6;
-               snext += dd;
-               for (i=0; i<3; i++) pt[i] += dd*dir[i];
-               dd = ToBoundary(pt, dir, fRmax);
-               if (dd<1E10) {
-                  snext += dd;
-                  return snext;
-               }   
-               return kBig;
-            }
-         } else {
-            // We are in the empty space between the 2 caps. We might cross the caps
-            // the outer torus or enter trough the hole and cross the inner one. 
-            // -> check crossing with bounding ring of outer torus
-            snext = TGeoTubeSeg::DistToInS(point,dir,fR-fRmax,fR+fRmax, fRmax,c1,s1,c2,s2,cm,sm,cdfi);
-            if (snext>1E10) return kBig;
-            snext -= 1E-6;
-            for (i=0; i<3; i++) pt[i] = point[i]+snext*dir[i];
-            daxis = Daxis(pt,dir,0);
-            if (daxis<=fRmax) {
-               // we have entered an endcap
-               if (daxis>=fRmin) return (snext+1E-6);
-               // we are entering a hole
-               snext += 2E-6;
-               for (i=0; i<3; i++) pt[i] += 2E-6*dir[i];
-               // we are now inside the inner part
-               dd = TGeoTubeSeg::DistToOutS(pt,dir,fR-fRmin,fR+fRmin, fRmin, c1,s1,c2,s2,cm,sm);
-               if (dd>1E10) {
-                  Error("DistToIn", "we entered the hole and cannot exit");
-                  return kBig;
-               }   
-               for (i=0; i<3; i++) pt[i] += dd*dir[i];
-               snext += dd;
-               daxis = Daxis(pt,dir,0);
-               if (daxis-fRmin>0) {
-                  // We have crossed the inner torus on the way
-                  // -> compute distance from new point back
-                  snext -= ToBoundary(pt, invdir, fRmin);
-                  return snext;
-               } 
-               // we have crossed the hole not touching anything
-               return kBig;
-            } else {
-               dd = ToBoundary(pt, dir, fRmax);
-               if (dd<1E10) return (snext+dd);
-               snext += 2E-6;
-               // make sure pt is inside bounding ring
-               for (i=0; i<3; i++) pt[i] = point[i]+snext*dir[i];
-               dd = TGeoTubeSeg::DistToOutS(pt,dir,fR-fRmax,fR+fRmax, fRmax,c1,s1,c2,s2,cm,sm) + 1E-6;
-               snext += dd;
-               for (i=0; i<3; i++) pt[i] += dd*dir[i];
-               // --> propagate again 
-               dd = TGeoTubeSeg::DistToInS(pt,dir,fR-fRmax,fR+fRmax, fRmax,c1,s1,c2,s2,cm,sm,cdfi);
-               if (dd>1E10) return kBig;
-               dd -= 1E-6;
-               snext += dd;
-               for (i=0; i<3; i++) pt[i] += dd*dir[i];
-               dd = ToBoundary(pt, dir, fRmax);
-               if (dd>1E10) return kBig;
-               snext += dd;
-               return snext;
-            }   
-         }
-      } else {
-         // No inner radius -> check the bounding ring
-         rxy2 = point[0]*point[0]+point[1]*point[1];
-         if (TMath::Abs(point[2])>fRmax || rxy2<(fR-fRmax)*(fR-fRmax) || rxy2>(fR+fRmax)*(fR+fRmax)) {
-            // we are outside the bounding ring
-            snext = TGeoTubeSeg::DistToInS(point,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm,cdfi);
-            if (snext>1E10) return kBig;
-            for (i=0; i<3; i++) pt[i] = point[i]+(snext-1E-6)*dir[i];
-            snext += ToBoundary(pt, dir, fRmax) - 1E-6;
-            return snext;
-         } else {
-            snext = ToBoundary(point, dir, fRmax);
-            return snext;
-         }      
-      }
-   }     
-   // Full torus case.
-   if (hasrmin) {
-      // Check if we are in the hole.            
-      daxis = Daxis(point, dir, 0);
-      if (daxis<fRmax) {
-         if (daxis>=fRmin) {
-            Warning("DistToIn", "point is actually inside - returning 0");
-            return 0.;
-         }   
-         // Point is in the hole -> we will cross for sure the inner torus.
-         snext = TGeoTube::DistToOutS(point,dir,fR-fRmin,fR+fRmin, fRmin);
-         for (i=0; i<3; i++) pt[i] = point[i]+snext*dir[i];
-         // We have crossed the inner torus on the way
-         // -> compute distance from new point back
-         snext -= ToBoundary(pt, invdir, fRmin);
-         return snext;         
-      }
    }
-   // We are fully outside a complete torus -> propagate to bounding ring.
-   rxy2 = point[0]*point[0]+point[1]*point[1];
-   if (TMath::Abs(point[2])>fRmax || rxy2<(fR-fRmax)*(fR-fRmax) || rxy2>(fR+fRmax)*(fR+fRmax)) {
-      // we are outside the bounding ring
-      snext = TGeoTube::DistToInS(point,dir,fR-fRmax,fR+fRmax, fRmax);
-      if (snext>1E10) return kBig;
-      snext -= 1E-6;
-      for (i=0; i<3; i++) pt[i] = point[i]+snext*dir[i];
-      dd = ToBoundary(pt, dir, fRmax);
-      if (dd<1E10) return (snext+dd);
-      snext += 2E-6;
-      // make sure pt is inside bounding ring
-      for (i=0; i<3; i++) pt[i] = point[i]+snext*dir[i];
-   } else {
-      snext = ToBoundary(pt,dir,fRmax);
-      if (snext<1E10) return snext;
-      snext = 0;
-      memcpy(pt, point, 3*sizeof(Double_t));
+   // Check if we are inside or outside the bounding ring.
+   Bool_t inbring = kFALSE;
+   if (TMath::Abs(point[2]) <= fRmax) {
+      rxy2 = point[0]*point[0]+point[1]*point[1];
+      if ((rxy2>=(fR-fRmax)*(fR-fRmax)) && (rxy2<=(fR+fRmax)*(fR+fRmax))) {
+         if (inphi) inbring=kTRUE;
+      }
+   }   
+   
+   // If outside the ring, compute distance to it.
+   Double_t dring = kBig;
+   snext = 0;
+   daxis = -1;
+   memcpy(pt,point,3*sizeof(Double_t));
+   if (!inbring) {
+      if (hasphi) dring = TGeoTubeSeg::DistToInS(point,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm,cdfi);            
+      else        dring = TGeoTube::DistToInS(point,dir,fR-fRmax,fR+fRmax, fRmax);
+      // If not crossing it, return BIG.
+      if (dring>1E10) return kBig;
+      snext = dring;
+      // Check if the crossing is due to phi.
+      daxis = Daxis(point,dir,snext);
+      if (daxis>=fRmin && daxis<fRmax) return snext;
+      // Not a phi crossing -> propagate until we cross the ring.
+      for (i=0; i<3; i++) pt[i] = point[i]+snext*dir[i];      
    }
-   // We are now in the bounding ring, but not in the torus.
-   // --> propagate to the exit of the bounding ring
-   dd = TGeoTube::DistToOutS(pt,dir,fR-fRmax,fR+fRmax, fRmax) + 1E-6;
-   snext += dd;
-   for (i=0; i<3; i++) pt[i] += dd*dir[i];
-   // --> propagate again 
-   dd = TGeoTube::DistToInS(pt,dir,fR-fRmax,fR+fRmax, fRmax);
-   snext += dd;
-   if (dd>1E10) return kBig;
-   for (i=0; i<3; i++) pt[i] += (dd-1E-6)*dir[i];
-   dd = ToBoundary(pt, dir, fRmax)-1E-6;
-   if (dd>1E10) return kBig;
-   snext += dd;
+   // Point pt is inside the bounding ring, no phi crossing so far.
+   // Check if we are in the hole.
+   if (daxis<0) daxis = Daxis(pt,dir,0);
+   if (daxis<fRmin) {
+      // We are in the hole. Check if we came from outside.
+      if (snext>0) {
+         // we can cross either the inner torus or exit the other hole.
+         snext += 1E-6;
+         for (i=0; i<3; i++) pt[i] += 1E-6*dir[i];
+      }
+      // We are in the hole from the begining.   
+      // find first crossing with inner torus
+      dd = ToBoundary(pt,dir, fRmin);
+      // find exit distance from inner bounding ring
+      dring = TGeoTubeSeg::DistToOutS(pt,dir, fR-fRmin, fR+fRmin, fRmin,c1,s1,c2,s2,cm,sm);
+      if (dd<dring) return (snext+dd);
+      // we were exiting a hole
+      return kBig;
+   }    
+   // We are inside the outer ring, having daxis>fRmax
+   // Check intersection with outer torus
+   dd = ToBoundary(pt, dir, fRmax);
+   // Compute distance to exit the bounding ring (again)
+   if (snext>0) {
+      // we can cross either the inner torus or exit the other hole.
+      snext += 1E-6;
+      for (i=0; i<3; i++) pt[i] += 1E-6*dir[i];
+   }
+   if (hasphi) dring = TGeoTubeSeg::DistToOutS(pt,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm);            
+   else        dring = TGeoTube::DistToOutS(pt,dir,fR-fRmax,fR+fRmax, fRmax);
+   if (dd<dring) {
+      snext += dd;
+      return snext;
+   }
+   // We are exiting the bounding ring before crossing the torus -> propagate
+   snext += dring+1E-6;   
+   for (i=0; i<3; i++) pt[i] = point[i] + snext*dir[i];
+   snext += DistToIn(pt,dir,3);
    return snext;
 }      
 
@@ -841,33 +711,158 @@ void TGeoTorus::Sizeof3D() const
 }
 
 //_____________________________________________________________________________
+Int_t TGeoTorus::SolveCubic(Double_t a, Double_t b, Double_t c, Double_t *x) const
+{
+// Find real solutions of the cubic equation : x^3 + a*x^2 + b*x + c = 0
+// Input: a,b,c
+// Output: x[3] real solutions
+// Returns number of real solutions (1 or 3)
+   const Double_t ott = 1./3.;
+   const Double_t sq3 = TMath::Sqrt(3.);
+   Int_t ireal = 1;
+   Double_t p = b-a*a*ott;
+   Double_t q = c-a*b*ott+2.*a*a*a*ott*ott*ott;
+   Double_t delta = 4*p*p*p+27*q*q;
+//   Double_t y1r, y1i, y2r, y2i;
+   Double_t t,u;
+   if (delta>=0) {
+      delta = TMath::Sqrt(delta);
+      t = (-3*q*sq3+delta)/(6*sq3);
+      u = (3*q*sq3+delta)/(6*sq3);
+      x[0] = TMath::Sign(1.,t)*TMath::Power(TMath::Abs(t),ott)-
+             TMath::Sign(1.,u)*TMath::Power(TMath::Abs(u),ott)-a*ott;
+   } else {
+      delta = TMath::Sqrt(-delta);
+      t = -0.5*q;
+      u = delta/(6*sq3);
+      x[0] = 2.*TMath::Power(t*t+u*u,0.5*ott) * TMath::Cos(ott*TMath::ATan2(u,t));
+      x[0] -= a*ott;
+   }   
+         
+   t = x[0]*x[0]+a*x[0]+b;
+   u = a+x[0];
+   delta = u*u-4.*t;
+   if (delta>=0) {
+      ireal = 3;
+      delta = TMath::Sqrt(delta);
+      x[1] = 0.5*(-u-delta);
+      x[2] = 0.5*(-u+delta);
+   }
+   return ireal;
+}
+
+//_____________________________________________________________________________
+Int_t TGeoTorus::SolveQuartic(Double_t a, Double_t b, Double_t c, Double_t d, Double_t *x) const
+{
+// Find real solutions of the quartic equation : x^3 + a*x^2 + b*x + c = 0
+// Input: a,b,c,d
+// Output: x[4] - real solutions
+// Returns number of real solutions (0 to 4)
+   Double_t e = b-3.*a*a/8.;
+   Double_t f = c+a*a*a/8.-0.5*a*b;
+   Double_t g = d-3.*a*a*a*a/256. + a*a*b/16. - a*c/4.;
+   Double_t xx[3];
+   Int_t    ind[4];
+   Double_t delta;
+   Double_t h=0;
+   Int_t ireal = 0;
+   Int_t i;
+   if (f==0) {
+      delta = e*e-4.*g;
+      if (delta<0) return 0;
+      delta = TMath::Sqrt(delta);
+      h = 0.5*(-e-delta);
+      if (h>=0) {
+         h = TMath::Sqrt(h);
+         x[ireal++] = -h-0.25*a;
+         x[ireal++] = h-0.25*a;
+      }
+      h = 0.5*(-e+delta);
+      if (h>=0) {
+         h = TMath::Sqrt(h);
+         x[ireal++] = -h-0.25*a;
+         x[ireal++] = h-0.25*a;
+      }
+      if (ireal>0) {
+         TMath::Sort(ireal, x, ind,kFALSE);
+         for (i=0; i<ireal; i++) xx[i] = x[ind[i]];
+         memcpy(x,xx,ireal*sizeof(Double_t));
+      }
+      return ireal; 
+   }     
+   
+   if (g==0) {
+      x[ireal++] = -0.25*a;
+      ind[0] = SolveCubic(0,e,f,xx);
+      for (i=0; i<ind[0]; i++) x[ireal++] = xx[i]-0.25*a;      
+      if (ireal>0) {
+         TMath::Sort(ireal, x, ind,kFALSE);
+         for (i=0; i<ireal; i++) xx[i] = x[ind[i]];
+         memcpy(x,xx,ireal*sizeof(Double_t));
+      }
+      return ireal;
+   }    
+      
+      
+   ireal = SolveCubic(2.*e, e*e-4.*g, -f*f, xx);
+   if (ireal==1) {
+      if (xx[0]<=0) return 0;
+      h = TMath::Sqrt(xx[0]);   
+   } else {
+      // 3 real solutions of the cubic
+      for (Int_t i=0; i<3; i++) {
+         h = xx[i];
+         if (h>=0) break;
+      }
+      if (h<=0) return 0;
+      h = TMath::Sqrt(h);
+   }
+   Double_t j = 0.5*(e+h*h-f/h);      
+   ireal = 0;
+   delta = h*h-4.*j;
+   if (delta>=0) {
+      delta = TMath::Sqrt(delta);
+      x[ireal++] = 0.5*(-h-delta)-0.25*a;
+      x[ireal++] = 0.5*(-h+delta)-0.25*a;
+   }
+   delta = h*h-4.*g/j;
+   if (delta>=0) {
+      delta = TMath::Sqrt(delta);
+      x[ireal++] = 0.5*(h-delta)-0.25*a;
+      x[ireal++] = 0.5*(h+delta)-0.25*a;
+   }
+   if (ireal>0) {
+      TMath::Sort(ireal, x, ind,kFALSE);
+      for (i=0; i<ireal; i++) xx[i] = x[ind[i]];
+      memcpy(x,xx,ireal*sizeof(Double_t));
+   }
+   return ireal;
+}
+
+//_____________________________________________________________________________
 Double_t TGeoTorus::ToBoundary(Double_t *pt, Double_t *dir, Double_t r) const
 {
 // Returns distance to the surface or the torus (fR,r) from a point, along
 // a direction. Point is close enough to the boundary so that the distance 
 // to the torus is decreasing while moving along the given direction.
-   Double_t step, daxis, ddaxis, snext, epsil;
    
-   ddaxis = DDaxis(pt, dir, 0); 
-   if (ddaxis>=0) {
-//      Error("ToBoundary", "derivative from point (%f, %f, %f) positive", pt[0],pt[1],pt[2]);
-      return kBig;
-   }   
-   daxis = Daxis(pt, dir, 0);
-   epsil = daxis - r;
-   if (epsil<0) return kBig;
-   snext = 0;
-   Int_t istep = 0;
-   while (epsil > 1E-12) {
-      istep++;
-      step = -epsil/ddaxis;
-      snext += step;
-      ddaxis = DDaxis(pt, dir, snext);
-      if (ddaxis>=0) return kBig;
-      daxis = Daxis(pt, dir, snext);
-      epsil = daxis - r;
+   // Compute coeficients of the quartic
+   Double_t r0sq  = pt[0]*pt[0]+pt[1]*pt[1]+pt[2]*pt[2];
+   Double_t rdotn = pt[0]*dir[0]+pt[1]*dir[1]+pt[2]*dir[2];
+   Double_t rsumsq = fR*fR+r*r;
+   Double_t a = 4.*rdotn;
+   Double_t b = 2.*(r0sq+2.*rdotn*rdotn-rsumsq+2.*fR*fR*dir[2]*dir[2]);
+   Double_t c = 4.*(r0sq*rdotn-rsumsq*rdotn+2.*fR*fR*pt[2]*dir[2]);
+   Double_t d = r0sq*r0sq-2.*r0sq*rsumsq+4.*fR*fR*pt[2]*pt[2]+(fR*fR-r*r)*(fR*fR-r*r);
+   
+   Double_t x[4];
+   Int_t nsol = SolveQuartic(a,b,c,d,x);
+   if (!nsol) return kBig;
+   // look for first positive solution
+   for (Int_t i=0; i<nsol; i++) {
+      if (x[i]>=0) return x[i];
    }
-   return snext;   
+   return kBig;   
 }      
 
       

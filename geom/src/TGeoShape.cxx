@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.9 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.10 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -208,221 +208,43 @@ Int_t TGeoShape::ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) c
 }
 
 //_____________________________________________________________________________
-Double_t TGeoShape::ClosenessToCorner(Double_t *point, Bool_t in,
-                                 Double_t *vertex, Double_t *normals, Double_t *cldir)
+Bool_t TGeoShape::IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
-// Static method returning distance to closest point of a corner. The corner is 
-// defined by vertex and normals to the 3 planes (in order X, Y, Z - norm[9]).
-// also return unit vector pointing to this
-  
-   Double_t safe[3];  // closest distances to the 3 planes
-   Double_t dvert[3]; // vector from vertex to point
-   Int_t snorm = -1;
-   Double_t close = 0;                                 
-   memset(&safe[0], 0, 3*sizeof(Double_t));
-   memset(cldir, 0, 3*sizeof(Double_t));
-   Int_t i, j;
-   for (i=0; i<3; i++)
-      dvert[i]=point[i]-vertex[i];
-   for (i=0; i<3; i++) {
-      for (j=0; j<3; j++)
-         safe[i]+=dvert[j]*normals[3*i+j];
-   }   
-   // point is inside
-   if (in) {
-      snorm = TMath::LocMax(3, &safe[0]);
-      close = -safe[snorm];
-      // check if point was outside corner
-      if (close<0) return kBig;
-      memcpy(cldir, &normals[3*snorm], 3*sizeof(Double_t));
-      return close;   
-   }
-   // point is outside
-   UInt_t nout=0;
-   for (i=0; i<3; i++) {
-      if (safe[i]>0) { 
-         snorm = i;
-         close = safe[i];
-         nout++;
-      }   
-   }   
-   // check if point is actually inside the corner (no visible plane)
-   if (!nout) return kBig;
-   if (nout==1) {
-      // only one visible plane
-      memcpy(cldir, &normals[3*snorm], 3*sizeof(Double_t));
-      return close;
-   }   
-   if (nout==2) {
-   // two faces visible
-      Double_t calf = 0;
-      Double_t s1=0;
-      Double_t s2=0;
-      for (j=0; j<3; j++) {
-         if (safe[j]>0) {
-            if (s1==0) s1=safe[j];
-            else       s2=safe[j];
-            continue;
-         }   
-         for (Int_t k=0; k<3; k++) 
-            calf += normals[3*((j+1)%3)+k]*normals[3*((j+2)%3)+k]; 
-      }
-      close=TMath::Sqrt((s1*s1 + s2*s2 + 2.*s1*s2*calf)/(1. - calf*calf));
-      return close;
-   }   
-   
-   if (nout==3) {
-   // an edge or even vertex more close than any of the planes
-   // recompute closest distance
-      close=0;
-      for (i=0; i<3; i++) {
-         if (safe[i]>0) close+=dvert[i]*dvert[i];
-      } 
-      close = TMath::Sqrt(close);
-      for (i=0; i<3; i++)
-         cldir[i] = dvert[i]/close;
-      return close;           
-   }
-   return close; // never happens
+// True if point is closer than epsil to one of the phi planes defined by c1,s1 or c2,s2
+   Double_t saf1 = kBig;
+   Double_t saf2 = kBig;
+   if (point[0]*c1+point[1]*s1 >= 0) saf1 = TMath::Abs(-point[0]*s1 + point[1]*c1);
+   if (point[0]*c2+point[1]*s2 >= 0) saf2 =  TMath::Abs(point[0]*s2 - point[1]*c2);
+   Double_t saf = TMath::Min(saf1,saf2);
+   if (saf<epsil) return kTRUE;
+   return kFALSE;
 }   
-
-//_____________________________________________________________________________
-Double_t TGeoShape::DistToCorner(Double_t *point, Double_t *dir, Bool_t in, 
-                                 Double_t *vertex, Double_t *norm, Int_t &inorm)
-{
-// Static method to compute distance along a direction from inside/outside point to a corner.
-// The corner is  defined by its normals to planes n1, n2, n3, and its vertex. 
-// Also compute distance to closest plane belonging to corner, normal to this plane and
-// normal to shape at intersection point.
-
-// iact=0 :
- 
-//   printf("checking corner : %f %f %f\n", vertex[0], vertex[1], vertex[2]);
-//   printf("normx : %f %f %f\n", norm[0], norm[1], norm[2]);
-//   printf("normy : %f %f %f\n", norm[3], norm[4], norm[5]);
-//   printf("normz : %f %f %f\n", norm[6], norm[7], norm[8]);
-   Double_t safe[3];  // closest distances to the 3 planes
-   Double_t dist[3];  // distances from point to each of the 3 planes along direction
-   Double_t dvert[3]; // vector from vertex to point
-   Double_t cosa[3];  // cosines of anles between direction and each normal
-   Double_t snxt = kBig;
-   inorm = -1;
-   memset(&safe[0], 0, 3*sizeof(Double_t));
-   memset(&cosa[0], 0, 3*sizeof(Double_t));
-   Int_t i, j;
    
-   for (i=0; i<3; i++) {
-      dvert[i]=point[i]-vertex[i];
-      dist[i] = kBig;
-   }   
-//   printf("dvert : %f %f %f\n", dvert[0], dvert[1], dvert[2]);
-   for (i=0; i<3; i++) {
-      for (j=0; j<3; j++) {
-         safe[i]+=dvert[j]*norm[3*i+j];
-         cosa[i]+=dir[j]*norm[3*i+j];
-      }   
-   }   
-   // point is inside
-   if (in) {
-      if (safe[0]>0) return kBig;
-      if (safe[1]>0) return kBig;
-      if (safe[2]>0) return kBig;
-      for (i=0; i<3; i++) 
-         if (cosa[i]>0) dist[i]=-safe[i]/cosa[i];
-      inorm = TMath::LocMin(3, &dist[0]);
-      snxt = dist[inorm];
-      return snxt;
-   }
-   // point is outside
-   UInt_t npos=0;
-   UInt_t nout=0;
-   UInt_t npp=0;
-   Double_t dvirt = kBig;
-   snxt = 0;
-   
-   for (i=0; i<3; i++) {
-      if (safe[i]>0) nout++;
-      if (cosa[i]!=0) 
-         dist[i]=-safe[i]/cosa[i];
-      if (dist[i] < 0) continue;   
-      npos++;
-      if (safe[i]>0) {
-      // crossing with visible plane
-         npp++;
-         if (snxt<dist[i]) {
-         // most distant intersection point is the real one
-            inorm = i;
-            snxt = dist[i];
-         }
-      } else {
-      // crossing with invisible plane      
-            // compute distance to closest virtual intersection
-            dvirt=TMath::Min(dvirt, dist[i]);
-      }   
-   }
-//   printf("  safe : %f %f %f nout=%i\n", safe[0], safe[1], safe[2], nout);
-//   printf("  dist : %f %f %f\n", dist[0], dist[1], dist[2]);
-//   printf("  dist to next : %f\n", snxt);
-//   printf("  closest virtual : %f\n", dvirt); 
-//   printf("  inorm=%i snorm=%i\n", inorm, snorm);
-//   printf("  nout=%i npos=%i npp=%i\n", nout, npos, npp);
-   // select distance to closest plane
-   if (!nout) {
-   // point is actually inside the corner (no visible plane)
-      inorm = -1;
-      return kBig;
-   }
-   if (nout==1) {
-   // only one face visible
-      if (npp!=1 || snxt>dvirt)  {
-         inorm = -1;
-         return kBig;
-      }
-      return snxt;
-   }      
-   if (!npos) {
-   // ray does not intersect any plane
-      inorm = -1;
-      return kBig;
-   }   
-   if (npp!=nout) {
-   // ray ray does not intersect all visible faces
-      inorm = -1;
-      return kBig;
-   }   
-   if (snxt>dvirt) {
-   // intersection with invisible plane closer than with real one -> no real intersection
-//      close=kBig;
-      inorm = -1;
-      return kBig;
-   }   
-   return snxt;
-}
-
 //_____________________________________________________________________________
-Int_t TGeoShape::GetVertexNumber(Bool_t vx, Bool_t vy, Bool_t vz)
+void TGeoShape::NormalPhi(Double_t *point, Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
-// get visible vertex number for : box, trd1, trd2, trap, gtra, para shapes   
-   Int_t imin, imax;
-   if (!vz) {
-      imin = 0;
-      imax = 3;
+// Static method to compute normal to phi planes.
+   Double_t saf1 = kBig;
+   Double_t saf2 = kBig;
+   if (point[0]*c1+point[1]*s1 >= 0) saf1 = TMath::Abs(-point[0]*s1 + point[1]*c1);
+   if (point[0]*c2+point[1]*s2 >= 0) saf2 =  TMath::Abs(point[0]*s2 - point[1]*c2);
+   Double_t c,s;
+   if (saf1<saf2) {
+      c=c1;
+      s=s1;
    } else {
-      imin = 4;
-      imax = 7;
-   }   
-   if (!vx)
-      imax=imin+1;
-   else
-      imin = imax-1;
-   if(!vy) {
-      if (!vx) return imin;
-      return imax;
+      c=c2;
+      s=s2;
    }
-   if (!vx) return imax;
-   return imin;
-}               
-
+   norm[2] = 0;
+   norm[0] = -s;
+   norm[1] = c;
+   if (dir[0]*norm[0]+dir[1]*norm[1] < 0) { 
+      norm[0] = s;
+      norm[1] = -c;
+   }
+}           
+ 
 //_____________________________________________________________________________
 Double_t TGeoShape::SafetyPhi(Double_t *point, Bool_t in, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {

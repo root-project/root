@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.17 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.18 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -169,9 +169,59 @@ void TGeoSphere::ComputeBBox()
 }   
 
 //_____________________________________________________________________________   
-void TGeoSphere::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+void TGeoSphere::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
+   Double_t rxy2 = point[0]*point[0]+point[1]*point[1];
+   Double_t r2 = rxy2+point[2]*point[2];
+   Double_t r=TMath::Sqrt(r2);
+   Bool_t rzero=kFALSE;
+   if (r<=1E-20) rzero=kTRUE;
+   //localize theta
+   Double_t phi=0;
+   Double_t th=0.;
+   if (!rzero) th = TMath::ACos(point[2]/r);
+ 
+   //localize phi
+   phi=TMath::ATan2(point[1], point[0]);
+
+   Double_t saf[4];
+   saf[0]=(fRmin==0 && !TestBit(kGeoThetaSeg) && !TestBit(kGeoPhiSeg))?kBig:TMath::Abs(r-fRmin);
+   saf[1]=TMath::Abs(fRmax-r);
+   saf[2]=saf[3]= kBig;
+   if (TestBit(kGeoThetaSeg)) {
+      if (fTheta1>0) {
+         saf[2] = r*TMath::Abs(TMath::Sin(th-fTheta1*kDegRad));
+      }
+	    if (fTheta2<180) {
+         saf[3] = r*TMath::Abs(TMath::Sin(fTheta2*kDegRad-th));
+	    }    
+   }
+   Int_t i = TMath::LocMin(4,saf);
+   if (TestBit(kGeoPhiSeg)) {
+      Double_t c1 = TMath::Cos(fPhi1*kDegRad);
+      Double_t s1 = TMath::Sin(fPhi1*kDegRad);
+      Double_t c2 = TMath::Cos(fPhi2*kDegRad);
+      Double_t s2 = TMath::Sin(fPhi2*kDegRad);
+      if (TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
+         TGeoShape::NormalPhi(point,dir,norm,c1,s1,c2,s2);
+         return;
+      }   
+   }  
+   if (i>1) {
+      if (i==2) th=(fTheta1<90)?(fTheta1+90):(fTheta1-90);
+      else      th=(fTheta2<90)?(fTheta2+90):(fTheta2-90);
+      th *= kDegRad;
+   }
+      
+   norm[0] = TMath::Sin(th)*TMath::Cos(phi);
+   norm[1] = TMath::Sin(th)*TMath::Sin(phi);
+   norm[2] = TMath::Cos(th);
+   if (norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2]<0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+      norm[2] = -norm[2];
+   }             
 }
 
 //_____________________________________________________________________________
@@ -305,12 +355,14 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
          snxt = DistToSphere(point, dir, fRmax, kTRUE);
          if (snxt<1E20) return snxt;
          // now check first crossing of rmin
-         snxt = DistToSphere(point, dir, fRmin, kTRUE);
-         // if this is outside range, check second crossing of rmin
-         if (snxt>1E20) {
-            snxt = DistToSphere(point, dir, fRmin, kTRUE, kFALSE);
-            if (snxt<1E20) return snxt;
-         }    
+         if (fRmin>0) {
+            snxt = DistToSphere(point, dir, fRmin, kTRUE);
+            // if this is outside range, check second crossing of rmin
+            if (snxt>1E20) {
+               snxt = DistToSphere(point, dir, fRmin, kTRUE, kFALSE);
+               if (snxt<1E20) return snxt;
+            }
+         }       
       } else {
          // point between rmin and rmax, check first cross of rmin
          snxt = DistToSphere(point, dir, fRmin, kTRUE);
@@ -413,7 +465,7 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
 	    }
    }
    snxt = TMath::Min(st1, st2);
-   if (snxt<1E20) return snxt;      	 
+//   if (snxt<1E20) return snxt;      	 
    if (TestBit(kGeoPhiSeg)) {
       Double_t s1 = TMath::Sin(fPhi1*kDegRad);
       Double_t c1 = TMath::Cos(fPhi1*kDegRad);
@@ -436,7 +488,7 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
             ptnew[2] = point[2]+s*dir[2];
             if ((ptnew[1]*cm-ptnew[0]*sm)<=0) {
 	             sfi1=s;
-               if (IsPointInside(&ptnew[0], kTRUE, kTRUE, kFALSE)) return sfi1;
+               if (IsPointInside(&ptnew[0], kTRUE, kTRUE, kFALSE) && sfi1<snxt) return sfi1;
 	          }
 	       }       
       }
@@ -450,12 +502,12 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
             ptnew[2] = point[2]+s*dir[2];
             if ((ptnew[1]*cm-ptnew[0]*sm)>=0) {
 	             sfi2=s;
-               if (IsPointInside(&ptnew[0], kTRUE, kTRUE, kFALSE)) return sfi2;
+               if (IsPointInside(&ptnew[0], kTRUE, kTRUE, kFALSE) && sfi2<snxt) return sfi2;
 	          }   
          }   
       }
    }      
-   return kBig;            
+   return snxt;            
 }   
 
 //_____________________________________________________________________________

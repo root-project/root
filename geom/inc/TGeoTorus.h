@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: $
+// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.1 2003/07/31 20:46:40 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -38,11 +38,13 @@ protected :
    Double_t              fDphi; // phi extent
 // methods
 
-protected:
+public:
    Double_t              Daxis(Double_t *pt, Double_t *dir, Double_t t) const;
    Double_t              DDaxis(Double_t *pt, Double_t *dir, Double_t t) const;
+   Double_t              DDDaxis(Double_t *pt, Double_t *dir, Double_t t) const;
    Double_t              ToBoundary(Double_t *pt, Double_t *dir, Double_t r) const;
-
+   Int_t                 SolveCubic(Double_t a, Double_t b, Double_t c, Double_t *x) const;
+   Int_t                 SolveQuartic(Double_t a, Double_t b, Double_t c, Double_t d, Double_t *x) const;
 public:
    // constructors
    TGeoTorus();

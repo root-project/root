@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.19 2003/07/07 21:04:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.20 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -80,6 +80,7 @@ public:
    virtual void       DrawPath(const char *path) = 0;
    virtual void       EstimateCameraMove(Double_t /*tmin*/, Double_t /*tmax*/, Double_t *, Double_t * ) {;}
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py) = 0;
+   virtual Int_t      GetColor(Int_t base, Float_t light) const = 0;
    virtual Int_t      GetNsegments() const = 0; 
    virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const = 0;
    virtual Int_t      GetBombMode() const = 0; 
@@ -115,11 +116,14 @@ public:
    virtual void       PrintOverlaps() const = 0;
    virtual void       RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option="") = 0;
    virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) = 0;
+   virtual void       Raytrace(Option_t *option="") = 0;
    virtual TGeoNode  *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path) = 0;
    virtual void       SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,
                                      Double_t bombr=1.3) = 0;
+   virtual void       SetClippingShape(TGeoShape *shape) = 0;
    virtual void       SetExplodedView(Int_t iopt=0) = 0;
    virtual void       SetNsegments(Int_t nseg=20) = 0;    
+   virtual void       SetRaytracing(Bool_t flag=kTRUE) = 0;
    static  TVirtualGeoPainter *GeoPainter();
    static void        SetPainter(const TVirtualGeoPainter *painter);
    virtual void       SetTopVisible(Bool_t vis=kTRUE) = 0;

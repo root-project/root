@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.19 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.20 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -168,12 +168,74 @@ void TGeoPcon::ComputeBBox()
    fDX = (xmax-xmin)/2;
    fDY = (ymax-ymin)/2;
    fDZ = (zmax-zmin)/2;
+   TObject::SetBit(kGeoClosedShape);
 }   
 
 //_____________________________________________________________________________   
-void TGeoPcon::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+void TGeoPcon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
+   memset(norm,0,3*sizeof(Double_t));
+   Double_t r;
+   Double_t ptnew[3];
+   Double_t dz, rmin1, rmax1, rmin2, rmax2;
+   Bool_t is_tube, is_seg;
+   Double_t phi1=0, phi2=0, c1=0, s1=0, c2=0, s2=0;
+   Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
+   if (ipl==(fNz-1) || ipl<0) {
+      // point outside Z range
+      norm[2] = TMath::Sign(1., norm[2]);
+      return;
+   }
+   Int_t iplclose = ipl;
+   if ((fZ[ipl+1]-point[2])<(point[2]-fZ[ipl])) iplclose++;
+   dz = TMath::Abs(fZ[iplclose]-point[2]);
+   if (dz<1E-5) {
+      if (iplclose==0 || iplclose==(fNz-1)) {
+         norm[2] = TMath::Sign(1., norm[2]);
+         return;
+      }
+      if (iplclose==ipl && fZ[ipl]==fZ[ipl-1]) {
+         r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+         if (r<TMath::Max(fRmin[ipl],fRmin[ipl-1]) || r>TMath::Min(fRmax[ipl],fRmax[ipl-1])) {
+            norm[2] = TMath::Sign(1., norm[2]);
+            return;
+         }
+      } else {
+         if (fZ[iplclose]==fZ[iplclose+1]) {
+            r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+            if (r<TMath::Max(fRmin[iplclose],fRmin[iplclose+1]) || r>TMath::Min(fRmax[iplclose],fRmax[iplclose+1])) {
+               norm[2] = TMath::Sign(1., norm[2]);
+               return;
+            }
+         }
+      }
+   } //-> Z done
+   memcpy(ptnew, point, 3*sizeof(Double_t));
+   dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
+   ptnew[2] -= 0.5*(fZ[ipl]+fZ[ipl+1]);
+   rmin1 = fRmin[ipl];
+   rmax1 = fRmax[ipl];
+   rmin2 = fRmin[ipl+1];
+   rmax2 = fRmax[ipl+1];
+   is_tube = ((rmin1==rmin2) && (rmax1==rmax2))?kTRUE:kFALSE;
+   is_seg  = (fDphi<360)?kTRUE:kFALSE;
+   if (is_seg) {
+      phi1 = fPhi1;
+      if (phi1<0) phi1+=360;
+      phi2 = phi1 + fDphi;
+      phi1 *= kDegRad;
+      phi2 *= kDegRad;
+      c1 = TMath::Cos(phi1);
+      s1 = TMath::Sin(phi1);
+      c2 = TMath::Cos(phi2);
+      s2 = TMath::Sin(phi2);
+      if (is_tube) TGeoTubeSeg::ComputeNormalS(ptnew,dir,norm,rmin1,rmax1,dz,c1,s1,c2,s2);
+      else         TGeoConeSeg::ComputeNormalS(ptnew,dir,norm,dz,rmin1,rmax1,rmin2,rmax2,c1,s1,c2,s2);
+   } else {
+      if (is_tube) TGeoTube::ComputeNormalS(ptnew,dir,norm,rmin1,rmax1,dz);
+      else         TGeoCone::ComputeNormalS(ptnew,dir,norm,dz,rmin1,rmax1,rmin2,rmax2);
+   }
 }
 
 //_____________________________________________________________________________
@@ -546,6 +608,36 @@ void TGeoPcon::GetBoundingCylinder(Double_t *param) const
    param[2] = (fPhi1<0)?(fPhi1+360.):fPhi1;     // Phi1
    param[3] = param[2]+fDphi;                   // Phi2
 }   
+
+//_____________________________________________________________________________
+Double_t TGeoPcon::GetRmin(Int_t ipl) const
+{
+   if (ipl<0 || ipl>(fNz-1)) {
+      Error("GetRmin","ipl=%i out of range (0,%i)",ipl,0,fNz-1);
+      return 0.;
+   }
+   return fRmin[ipl];
+}      
+
+//_____________________________________________________________________________
+Double_t TGeoPcon::GetRmax(Int_t ipl) const
+{
+   if (ipl<0 || ipl>(fNz-1)) {
+      Error("GetRmax","ipl=%i out of range (0,%i)",ipl,0,fNz-1);
+      return 0.;
+   }
+   return fRmax[ipl];
+}      
+
+//_____________________________________________________________________________
+Double_t TGeoPcon::GetZ(Int_t ipl) const
+{
+   if (ipl<0 || ipl>(fNz-1)) {
+      Error("GetZ","ipl=%i out of range (0,%i)",ipl,0,fNz-1);
+      return 0.;
+   }
+   return fZ[ipl];
+}      
 
 //_____________________________________________________________________________
 void TGeoPcon::InspectShape() const

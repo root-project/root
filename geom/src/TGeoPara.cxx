@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.15 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.16 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -148,9 +148,45 @@ void TGeoPara::ComputeBBox()
 }   
 
 //_____________________________________________________________________________   
-void TGeoPara::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+void TGeoPara::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
+   Double_t saf[3];
+   // distance from point to higher Z face
+   saf[0] = TMath::Abs(fZ-TMath::Abs(point[2])); // Z
+
+   Double_t yt = point[1]-fTyz*point[2];      
+   saf[1] = TMath::Abs(fY-TMath::Abs(yt));       // Y
+   // cos of angle YZ
+   Double_t cty = 1.0/TMath::Sqrt(1.0+fTyz*fTyz);
+
+   Double_t xt = point[0]-fTxz*point[2]-fTxy*yt;      
+   saf[2] = TMath::Abs(fX-TMath::Abs(xt));       // X
+   // cos of angle XZ
+   Double_t ctx = 1.0/TMath::Sqrt(1.0+fTxy*fTxy+fTxz*fTxz);
+   saf[2] *= ctx;
+   saf[1] *= cty;
+   Int_t i = TMath::LocMin(3,saf);
+   switch (i) {
+      case 0:
+         norm[0] = norm[1] = 0;
+         norm[2] = TMath::Sign(1.,dir[2]);
+         return;
+      case 1:
+         norm[0] = 0;   
+         norm[1] = cty;
+         norm[2] = - fTyz*cty;
+         break;
+      case 2:
+         norm[0] = TMath::Cos(fTheta*kDegRad)*TMath::Cos(fAlpha*kDegRad);
+         norm[1] = - TMath::Cos(fTheta*kDegRad)*TMath::Sin(fAlpha*kDegRad);
+         norm[2] = -TMath::Sin(fTheta*kDegRad);
+   }
+   if (norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2]<0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+      norm[2] = -norm[2];
+   }         
 }
 
 //_____________________________________________________________________________

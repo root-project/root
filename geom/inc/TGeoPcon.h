@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.8 2003/03/14 11:49:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.9 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -68,14 +68,22 @@ public:
    Int_t                 GetNz() const   {return fNz;}
    virtual Int_t         GetNsegments() const;
    Double_t             *GetRmin() const {return fRmin;}
+   Double_t              GetRmin(Int_t ipl) const;
    Double_t             *GetRmax() const {return fRmax;}
+   Double_t              GetRmax(Int_t ipl) const;
    Double_t             *GetZ() const    {return fZ;}
+   Double_t              GetZ(Int_t ipl) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
+   Double_t             &Phi1()          {return fPhi1;}
+   Double_t             &Dphi()          {return fDphi;}
+   Double_t             &Rmin(Int_t ipl) {return fRmin[ipl];}
+   Double_t             &Rmax(Int_t ipl) {return fRmax[ipl];}
+   Double_t             &Z(Int_t ipl) {return fZ[ipl];}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.10 2003/03/14 11:49:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.11 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -46,6 +46,8 @@ public:
 
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
+   static  void          ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
+                                        Double_t rmin, Double_t rmax, Double_t dz);
    virtual Bool_t        Contains(Double_t *point) const;
    static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
@@ -112,6 +114,9 @@ public:
    // methods
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
+   static  void          ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
+                                        Double_t rmin, Double_t rmax, Double_t dz,
+                                        Double_t c1, Double_t s1, Double_t c2, Double_t s2);
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    static  Double_t      DistToOutS(Double_t *point, Double_t *dir,Double_t rmin, Double_t rmax, Double_t dz, 

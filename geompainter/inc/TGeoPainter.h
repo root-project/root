@@ -47,6 +47,7 @@ private:
    Double_t           fBombZ;            // bomb factor on Z
    Double_t           fBombR;            // bomb factor on radius (cyl or sph)
    Double_t           fCheckedBox[6];    // bounding box of checked node
+   Double_t           fMat[9];           // view rotation matrix
    Int_t              fNsegments;        // number of segments approximating circles
    Int_t              fVisLevel;         // depth for drawing
    Int_t              fVisOption;        // global visualization option
@@ -54,14 +55,19 @@ private:
    Bool_t             fVisLock;          // lock for adding visible volumes
    Bool_t             fTopVisible;       // set top volume visible
    Bool_t             fPaintingOverlaps; // lock overlaps painting
+   Bool_t             fIsRaytracing;     // raytracing flag
    const char        *fVisBranch;        // drawn branch
    TGeoNode          *fCheckedNode;      // checked node
    TGeoOverlap       *fOverlap;          // current overlap
    TGeoMatrix        *fMatrix;           // current local matrix in case of overlaps
    TGeoManager       *fGeom;             // geometry to which applies
    TGeoChecker       *fChecker;          // geometry checker
+   TGeoShape         *fClippingShape;    // clipping shape
    TObjArray         *fVisVolumes;       // list of visible volumes
    
+   void               DefineColors() const;
+   void               LocalToMasterVect(const Double_t *local, Double_t *master) const;
+
 public:
    TGeoPainter();
    virtual ~TGeoPainter();
@@ -89,6 +95,7 @@ public:
    virtual Int_t      GetBombMode() const      {return fExplodedView;}
    virtual TGeoNode  *GetCheckedNode() {return fCheckedNode;}
    TGeoChecker       *GetChecker();
+   virtual Int_t      GetColor(Int_t base, Float_t light) const;
    virtual const char *GetDrawPath() const     {return fVisBranch;}
    virtual Int_t      GetVisLevel() const      {return fVisLevel;}
    virtual Int_t      GetVisOption() const     {return fVisOption;}
@@ -122,11 +129,14 @@ public:
    virtual void       PrintOverlaps() const;
    virtual void       RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option="");
    virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
+   virtual void       Raytrace(Option_t *option="");
    virtual TGeoNode  *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
    virtual void       SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3, Double_t bombr=1.3);
+   virtual void       SetClippingShape(TGeoShape *shape) {fClippingShape = shape;}
    virtual void       SetExplodedView(Int_t iopt=0);
    virtual void       SetNsegments(Int_t nseg=20);
    virtual void       SetGeoManager(TGeoManager *geom) {fGeom=geom;}
+   virtual void       SetRaytracing(Bool_t flag=kTRUE) {fIsRaytracing = flag;}
    virtual void       SetTopVisible(Bool_t vis=kTRUE);
    virtual void       SetVisLevel(Int_t level=3);
    virtual void       SetVisOption(Int_t option=0);

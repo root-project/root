@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.34 2003/08/08 09:22:18 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.35 2003/08/08 09:31:26 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -787,7 +787,7 @@ void TGeoVolume::Draw(Option_t *option)
    else old_vol=0;
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
-   //painter->SetRaytracing(kFALSE);
+   painter->SetRaytracing(kFALSE);
    painter->Draw(option);   
 }
 
@@ -877,9 +877,9 @@ void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doubl
 void TGeoVolume::Raytrace(Option_t * /*option*/)
 {
 // Draw this volume with current settings and perform raytracing in the pad.
-//   Draw();
-//   gGeoManager->GetGeomPainter()->SetRaytracing();
-//   gGeoManager->GetGeomPainter()->ModifiedPad();
+   if (gGeoManager->GetTopVolume() != this) Draw();
+   gGeoManager->GetGeomPainter()->SetRaytracing();
+   gGeoManager->GetGeomPainter()->ModifiedPad();
 }   
 
 //_____________________________________________________________________________

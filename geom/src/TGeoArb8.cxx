@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.23 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.24 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -107,7 +107,8 @@ TGeoArb8::TGeoArb8()
    for (Int_t i=0; i<8; i++) {
       fXY[i][0] = 0.0;
       fXY[i][1] = 0.0;
-   }   
+   }  
+   TObject::SetBit(kGeoArb8); 
 }
 
 //_____________________________________________________________________________
@@ -118,6 +119,7 @@ TGeoArb8::TGeoArb8(Double_t dz, Double_t *vertices)
 // in the format : (x0, y0, x1, y1, ... , x7, y7) 
    fDz = dz;
    fTwist = 0;
+   TObject::SetBit(kGeoArb8); 
    if (vertices) {
       for (Int_t i=0; i<8; i++) {
          fXY[i][0] = vertices[2*i];
@@ -141,6 +143,7 @@ TGeoArb8::TGeoArb8(const char *name, Double_t dz, Double_t *vertices)
 // in the format : (x0, y0, x1, y1, ... , x7, y7) 
    fDz = dz;
    fTwist = 0;
+   TObject::SetBit(kGeoArb8); 
    if (vertices) {
       for (Int_t i=0; i<8; i++) {
          fXY[i][0] = vertices[2*i];
@@ -183,6 +186,7 @@ void TGeoArb8::ComputeBBox()
    fOrigin[0] = 0.5*(xmax+xmin);
    fOrigin[1] = 0.5*(ymax+ymin);
    fOrigin[2] = 0;
+   TObject::SetBit(kGeoClosedShape);
 }   
 
 //_____________________________________________________________________________
@@ -229,52 +233,51 @@ void TGeoArb8::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    Double_t x0, y0, z0, x1, y1, z1, x2, y2;
    Double_t ax, ay, az, bx, by;
    Double_t fn;
+   safc = fDz-TMath::Abs(point[2]);
+   if (safc<1E-4) {
+      memset(norm,0,3*sizeof(Double_t));
+      norm[2] = (dir[2]>0)?1:(-1);
+      return;
+   }   
+   Double_t vert[8], lnorm[3];
+   SetPlaneVertices(point[2], vert);
    //---> compute safety for lateral planes
    for (i=0; i<4; i++) {
-      x0 = fXY[i][0];
-      y0 = fXY[i][1];
-      z0 = -fDz;
+      x0 = vert[2*i];
+      y0 = vert[2*i+1];
+      z0 = point[2];
       x1 = fXY[i+4][0];
       y1 = fXY[i+4][1];
       z1 = fDz;
       ax = x1-x0;
       ay = y1-y0;
       az = z1-z0;
-      x2 = fXY[(i+1)%4][0];
-      y2 = fXY[(i+1)%4][1];
+      x2 = vert[2*((i+1)%4)];
+      y2 = vert[2*((i+1)%4)+1];
       bx = x2-x0;
       by = y2-y0;
-      if (bx==0 && by==0) {
-         x2 = fXY[4+((i+1)%4)][0];
-         y2 = fXY[4+((i+1)%4)][1];
-         bx = x2-x1;
-         by = y2-y1;
-         if (bx==0 && by==0) continue;
-      }
-      norm[0] = -az*by;
-      norm[1] = az*bx;
-      norm[2] = ax*by-ay*bx;
-      fn = TMath::Sqrt(norm[0]*norm[0]+norm[1]*norm[1]+norm[2]*norm[2]);
+
+      lnorm[0] = -az*by;
+      lnorm[1] = az*bx;
+      lnorm[2] = ax*by-ay*bx;
+      fn = TMath::Sqrt(lnorm[0]*lnorm[0]+lnorm[1]*lnorm[1]+lnorm[2]*lnorm[2]);
       if (fn<1E-10) continue;
-      norm[0] /= fn;
-      norm[1] /= fn;
-      norm[2] /= fn;
-      safc = (x0-point[0])*norm[0]+(y0-point[1])*norm[1]+(-fDz-point[2])*norm[2];
+      lnorm[0] /= fn;
+      lnorm[1] /= fn;
+      lnorm[2] /= fn;
+      safc = (x0-point[0])*lnorm[0]+(y0-point[1])*lnorm[1]+(z0-point[2])*lnorm[2];
       safc = TMath::Abs(safc);
+//      printf("plane %i : (%g, %g, %g) safe=%g\n", i, lnorm[0],lnorm[1],lnorm[2],safc);
       if (safc<safe) {
          safe = safc;
-         if (dir[0]*norm[0]+dir[1]*norm[1]+dir[2]*norm[2] < 0) {
-            norm[0] = -norm[0];
-            norm[1] = -norm[1];
-            norm[2] = -norm[2];
-         }
+         memcpy(norm,lnorm,3*sizeof(Double_t));
       }      
    }
-   safc = TMath::Abs(fDz-TMath::Abs(point[2]));
-   if (safc<safe) {
-      memset(norm,0,3*sizeof(Double_t));
-      norm[2] = (dir[2]>0)?1:(-1);
-   }   
+   if (dir[0]*norm[0]+dir[1]*norm[1]+dir[2]*norm[2] < 0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+      norm[2] = -norm[2];
+   }
 }
 
 //_____________________________________________________________________________

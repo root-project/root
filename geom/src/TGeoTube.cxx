@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.23 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.24 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -170,9 +170,44 @@ void TGeoTube::ComputeBBox()
 }   
 
 //_____________________________________________________________________________   
-void TGeoTube::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+void TGeoTube::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
+   Double_t saf[3];
+   Double_t rsq = point[0]*point[0]+point[1]*point[1];
+   Double_t r = TMath::Sqrt(rsq);
+   saf[0] = TMath::Abs(fDz-TMath::Abs(point[2])); 
+   saf[1] = (fRmin>1E-10)?TMath::Abs(r-fRmin):kBig;
+   saf[2] = TMath::Abs(fRmax-r);
+   Int_t i = TMath::LocMin(3,saf);
+   if (i==0) {
+      norm[0] = norm[1] = 0.;
+      norm[2] = TMath::Sign(1.,dir[2]);
+      return;
+   }
+   norm[2] = 0;
+   Double_t phi = TMath::ATan2(point[1], point[0]);
+   norm[0] = TMath::Cos(phi);
+   norm[1] = TMath::Sin(phi);
+   if (norm[0]*dir[0]+norm[1]*dir[1]<0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+   }   
+}
+
+//_____________________________________________________________________________   
+void TGeoTube::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm, 
+                              Double_t rmin, Double_t rmax, Double_t dz)
+{
+// Compute normal to closest surface from POINT. 
+   norm[2] = 0;
+   Double_t phi = TMath::ATan2(point[1], point[0]);
+   norm[0] = TMath::Cos(phi);
+   norm[1] = TMath::Sin(phi);
+   if (norm[0]*dir[0]+norm[1]*dir[1]<0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+   }   
 }
 
 //_____________________________________________________________________________
@@ -600,6 +635,8 @@ void TGeoTube::SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz)
    fRmin = rmin;
    fRmax = rmax;
    fDz   = dz;
+   if (fRmin>0 && fRmax>0 && fRmin>=fRmax) 
+      Error("SetTubeDimensions", "wrong rmin=%g rmax=%g", rmin,rmax);
 }   
 
 //_____________________________________________________________________________
@@ -804,9 +841,63 @@ void TGeoTubeSeg::ComputeBBox()
 }   
 
 //_____________________________________________________________________________   
-void TGeoTubeSeg::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+void TGeoTubeSeg::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
+   Double_t saf[3];
+   Double_t rsq = point[0]*point[0]+point[1]*point[1];
+   Double_t r = TMath::Sqrt(rsq);
+   Double_t c1 = TMath::Cos(fPhi1*kDegRad);
+   Double_t s1 = TMath::Sin(fPhi1*kDegRad);
+   Double_t c2 = TMath::Cos(fPhi2*kDegRad);
+   Double_t s2 = TMath::Sin(fPhi2*kDegRad);
+   saf[0] = TMath::Abs(fDz-TMath::Abs(point[2])); 
+   saf[1] = (fRmin>1E-10)?TMath::Abs(r-fRmin):kBig;
+   saf[2] = TMath::Abs(fRmax-r);
+   Int_t i = TMath::LocMin(3,saf);
+   if (TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
+      TGeoShape::NormalPhi(point,dir,norm,c1,s1,c2,s2);
+      return;
+   }   
+   if (i==0) {
+      norm[0] = norm[1] = 0.;
+      norm[2] = TMath::Sign(1.,dir[2]);
+      return;
+   }
+   norm[2] = 0;
+   Double_t phi = TMath::ATan2(point[1], point[0]);
+   norm[0] = TMath::Cos(phi);
+   norm[1] = TMath::Sin(phi);
+   if (norm[0]*dir[0]+norm[1]*dir[1]<0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+   }   
+}
+
+//_____________________________________________________________________________   
+void TGeoTubeSeg::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
+                                 Double_t rmin, Double_t rmax, Double_t dz,
+                                 Double_t c1, Double_t s1, Double_t c2, Double_t s2)
+{
+// Compute normal to closest surface from POINT. 
+   Double_t saf[2];
+   Double_t rsq = point[0]*point[0]+point[1]*point[1];
+   Double_t r = TMath::Sqrt(rsq);
+   saf[0] = (rmin>1E-10)?TMath::Abs(r-rmin):kBig;
+   saf[1] = TMath::Abs(rmax-r);
+   Int_t i = TMath::LocMin(2,saf);
+   if (TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
+      TGeoShape::NormalPhi(point,dir,norm,c1,s1,c2,s2);
+      return;
+   }   
+   norm[2] = 0;
+   Double_t phi = TMath::ATan2(point[1], point[0]);
+   norm[0] = TMath::Cos(phi);
+   norm[1] = TMath::Sin(phi);
+   if (norm[0]*dir[0]+norm[1]*dir[1]<0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+   }   
 }
 
 //_____________________________________________________________________________
@@ -1567,9 +1658,57 @@ void TGeoCtub::ComputeBBox()
 }
 
 //_____________________________________________________________________________   
-void TGeoCtub::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+void TGeoCtub::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
+   Double_t saf[4];
+   Bool_t isseg = kTRUE;
+   if (TMath::Abs(fPhi2-fPhi1-360.)<1E-8) isseg=kFALSE;
+   Double_t rsq = point[0]*point[0]+point[1]*point[1];
+   Double_t r = TMath::Sqrt(rsq);
+   
+   saf[0] = TMath::Abs(point[0]*fNlow[0] + point[1]*fNlow[1] + (fDz+point[2])*fNlow[2]);
+   saf[1] = TMath::Abs(point[0]*fNhigh[0] + point[1]*fNhigh[1] - (fDz-point[2])*fNhigh[2]);
+   saf[2] = (fRmin>1E-10)?TMath::Abs(r-fRmin):kBig;
+   saf[3] = TMath::Abs(fRmax-r);
+   Int_t i = TMath::LocMin(4,saf);
+   if (isseg) {
+      Double_t c1 = TMath::Cos(fPhi1*kDegRad);
+      Double_t s1 = TMath::Sin(fPhi1*kDegRad);
+      Double_t c2 = TMath::Cos(fPhi2*kDegRad);
+      Double_t s2 = TMath::Sin(fPhi2*kDegRad);   
+      if (TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
+         TGeoShape::NormalPhi(point,dir,norm,c1,s1,c2,s2);
+         return;
+      }
+   }      
+   if (i==0) {
+      memcpy(norm, fNlow, 3*sizeof(Double_t));
+      if (norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2]<0) {
+         norm[0] = -norm[0];
+         norm[1] = -norm[1];
+         norm[2] = -norm[2];
+      }   
+      return;
+   }
+   if (i==1) {
+      memcpy(norm, fNhigh, 3*sizeof(Double_t));
+      if (norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2]<0) {
+         norm[0] = -norm[0];
+         norm[1] = -norm[1];
+         norm[2] = -norm[2];
+      }   
+      return;
+   }
+   
+   norm[2] = 0;
+   Double_t phi = TMath::ATan2(point[1], point[0]);
+   norm[0] = TMath::Cos(phi);
+   norm[1] = TMath::Sin(phi);
+   if (norm[0]*dir[0]+norm[1]*dir[1]<0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+   }   
 }
 
 //_____________________________________________________________________________

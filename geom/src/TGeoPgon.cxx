@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.23 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.24 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -141,12 +141,102 @@ void TGeoPgon::ComputeBBox()
    fDX = (xmax-xmin)/2;
    fDY = (ymax-ymin)/2;
    fDZ = (zmax-zmin)/2;
+   TObject::SetBit(kGeoClosedShape);
 }
 
 //_____________________________________________________________________________   
-void TGeoPgon::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+void TGeoPgon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
+   memset(norm,0,3*sizeof(Double_t));
+   Double_t phi1=0, phi2=0, c1=0, s1=0, c2=0, s2=0;
+   Double_t dz, rmin1, rmax1, rmin2, rmax2;
+   Bool_t is_seg  = (fDphi<360)?kTRUE:kFALSE;
+   if (is_seg) {
+      phi1 = fPhi1;
+      if (phi1<0) phi1+=360;
+      phi2 = phi1 + fDphi;
+      phi1 *= kDegRad;
+      phi2 *= kDegRad;
+      c1 = TMath::Cos(phi1);
+      s1 = TMath::Sin(phi1);
+      c2 = TMath::Cos(phi2);
+      s2 = TMath::Sin(phi2);
+      if (TGeoShape::IsCloseToPhi(1E-5, point, c1,s1,c2,s2)) {
+         TGeoShape::NormalPhi(point,dir,norm,c1,s1,c2,s2);
+         return;
+      }
+   } // Phi done   
+
+   Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
+   if (ipl==(fNz-1) || ipl<0) {
+      // point outside Z range
+      norm[2] = TMath::Sign(1., norm[2]);
+      return;
+   }
+   Int_t iplclose = ipl;
+   if ((fZ[ipl+1]-point[2])<(point[2]-fZ[ipl])) iplclose++;
+   dz = TMath::Abs(fZ[iplclose]-point[2]);
+
+   Double_t divphi = fDphi/fNedges;
+   Double_t phi = TMath::ATan2(point[1], point[0])*kRadDeg;
+   if (phi<0) phi+=360.;
+   Double_t ddp = phi-fPhi1;
+   if (ddp<0) ddp+=360.;
+   Int_t ipsec = Int_t(ddp/divphi);
+   Double_t ph0 = (fPhi1+divphi*(ipsec+0.5))*kDegRad;
+   // compute projected distance
+   Double_t r, rsum, rpgon, ta, calf;
+   r = TMath::Abs(point[0]*TMath::Cos(ph0)+point[1]*TMath::Sin(ph0));
+   if (dz<1E-5) {
+      if (iplclose==0 || iplclose==(fNz-1)) {
+         norm[2] = TMath::Sign(1., norm[2]);
+         return;
+      }
+      if (iplclose==ipl && fZ[ipl]==fZ[ipl-1]) {
+         if (r<TMath::Max(fRmin[ipl],fRmin[ipl-1]) || r>TMath::Min(fRmax[ipl],fRmax[ipl-1])) {
+            norm[2] = TMath::Sign(1., norm[2]);
+            return;
+         }
+      } else {
+         if (fZ[iplclose]==fZ[iplclose+1]) {
+            if (r<TMath::Max(fRmin[iplclose],fRmin[iplclose+1]) || r>TMath::Min(fRmax[iplclose],fRmax[iplclose+1])) {
+               norm[2] = TMath::Sign(1., norm[2]);
+               return;
+            }
+         }
+      }
+   } //-> Z done
+
+   dz = fZ[ipl+1]-fZ[ipl];
+   rmin1 = fRmin[ipl];
+   rmax1 = fRmax[ipl];
+   rmin2 = fRmin[ipl+1];
+   rmax2 = fRmax[ipl+1];
+   rsum = rmin1+rmin2;
+   Double_t safe = kBig;
+   if (rsum>1E-10) {
+      ta = (rmin2-rmin1)/dz;
+      calf = 1./TMath::Sqrt(1+ta*ta);
+      rpgon = rmin1 + (point[2]-fZ[ipl])*ta;
+      safe = TMath::Abs((r-rpgon)*calf);
+      norm[0] = calf*TMath::Cos(ph0);
+      norm[1] = calf*TMath::Sin(ph0);
+      norm[2] = calf*ta;
+   }
+   ta = (fRmax[ipl+1]-fRmax[ipl])/dz;
+   calf = 1./TMath::Sqrt(1+ta*ta);
+   rpgon = fRmax[ipl] + (point[2]-fZ[ipl])*ta;
+   if (safe>TMath::Abs((rpgon-r)*calf)) {
+      norm[0] = calf*TMath::Cos(ph0);
+      norm[1] = calf*TMath::Sin(ph0);
+      norm[2] = calf*ta;
+   }   
+   if (norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2]<0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+      norm[2] = -norm[2];
+   }   
 }
 
 //_____________________________________________________________________________

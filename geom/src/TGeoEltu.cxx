@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.10 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.11 2003/07/31 20:19:32 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -84,9 +84,28 @@ void TGeoEltu::ComputeBBox()
 }   
 
 //_____________________________________________________________________________   
-void TGeoEltu::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+void TGeoEltu::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT. 
+// Compute normal to closest surface from POINT.
+   Double_t a = fRmin;
+   Double_t b = fRmax;
+   Double_t eps = TMath::Sqrt(point[0]*point[0]/(a*a)+point[1]*point[1]/(b*b))-1.;
+   if (eps<1E-4 && TMath::Abs(fDz-TMath::Abs(point[2]))<1E-5) {
+      norm[0] = norm[1] = 0;
+      norm[2] = TMath::Sign(1.,dir[2]);
+      return;
+   }   
+   norm[2] = 0.;
+   Double_t r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+   Double_t st = point[1]/r;
+   Double_t ct = point[0]/r;
+   Double_t rr = TMath::Sqrt(b*b*ct*ct+a*a*st*st);
+   norm[0] = b*ct/rr;
+   norm[1] = a*st/rr;
+   if (norm[0]*dir[0]+norm[1]*dir[1]<0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+   }   
 }
 
 //_____________________________________________________________________________

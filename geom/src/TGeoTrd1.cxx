@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.18 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.19 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -124,9 +124,38 @@ void TGeoTrd1::ComputeBBox()
 }
 
 //_____________________________________________________________________________   
-void TGeoTrd1::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+void TGeoTrd1::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
+   Double_t safe, safemin;
+   //--- Compute safety first
+   Double_t fx = 0.5*(fDx1-fDx2)/fDz;
+   Double_t calf = 1./TMath::Sqrt(1.0+fx*fx);
+   // check Z facettes
+   safe = safemin = TMath::Abs(fDz-TMath::Abs(point[2]));
+   norm[0] = norm[1] = 0;
+   norm[2] = (dir[2]>=0)?1:-1;
+   if (safe<1E-6) return;
+   // check X facettes
+   Double_t distx = 0.5*(fDx1+fDx2)-fx*point[2];
+   if (distx>=0) {
+      safe=TMath::Abs(distx-TMath::Abs(point[0]))*calf;
+      if (safe<safemin) {
+         safemin = safe;
+         norm[0] = calf;
+         norm[1] = 0;
+         norm[2] = calf*fx;
+         Double_t dot = norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2];
+         if (dot<0) norm[0]=-norm[0];
+         if (safe<1E-6) return;
+      }
+   }      
+   // check Y facettes
+   safe = TMath::Abs(fDy-TMath::Abs(point[1]));
+   if (safe<safemin) {
+      norm[0] = norm[2] = 0;
+      norm[1] = (dir[1]>=0)?1:-1;
+   }
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.57 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.58 2003/08/08 09:22:18 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -527,12 +527,13 @@ void TGeoManager::Init()
    fIsOnBoundary = kFALSE;
    fIsNullStep = kFALSE;
    fVisLevel = 3;
-   fVisOption = 0;
+   fVisOption = 1;
    fExplodedView = 0;
    fNsegments = 20;
    fCurrentMatrix = 0;
    fUniqueVolumes = new TObjArray(256);
    fNodeIdArray = 0;
+   fClippingShape = 0;
    printf("===> %s, %s created\n", GetName(), GetTitle());
 }
 
@@ -2012,6 +2013,19 @@ void TGeoManager::SetBombFactors(Double_t bombx, Double_t bomby, Double_t bombz,
 // Set factors that will "bomb" all translations in cartesian and cylindrical coordinates.
    if (fPainter) fPainter->SetBombFactors(bombx, bomby, bombz, bombr);
 }
+
+//_____________________________________________________________________________
+void TGeoManager::SetClippingShape(TGeoShape *shape)
+{
+// Set a user-defined shape as clipping for ray tracing.
+   TVirtualGeoPainter *painter = GetGeomPainter();
+   if (shape) {
+      if (fClippingShape && (fClippingShape!=shape)) ClearShape(fClippingShape);
+      fClippingShape = shape;
+   }   
+   painter->SetClippingShape(shape);
+}
+
 //_____________________________________________________________________________
 void TGeoManager::SetTopVisible(Bool_t vis) {
 // make top volume visible on screen
@@ -2638,6 +2652,7 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
 // crossed when propagating on a straight line from a given point/direction.
 // Returns the normal vector cosines in the MASTER coordinate system. The dot 
 // product of the normal and the current direction is positive defined.
+//   printf("Current node: %s forward=%i\n", GetPath(), forward);
    Double_t saved_point[3];
    Double_t saved_direction[3];
    Double_t saved_step = fStep;
@@ -2660,6 +2675,7 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
          fStep = saved_step;
          fIsEntering = is_entering;
          PopPath();
+         printf("woops : nothing back...\n");
          return 0;
       }   
       // try to cross the boundary
@@ -2680,7 +2696,7 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
             PopPath();
             return 0;
          }     
-         fStep = 1E-3;
+         fStep = 1E-2;
          Step();
       }
       if (!fIsStepEntering) PopPath(start);
@@ -2694,17 +2710,18 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
          fStep = saved_step;
          fIsEntering = is_entering;
          PopPath();
+         printf("woops : nothing forward...\n");
          return 0;
       }   
       // try to cross the boundary
       istep = 0;
       Step();
-      // if this fails, do extra small steps (up to a total of 1cm)
+      // if this fails, do extra small steps (up to a total of 10cm)
       while (!fIsEntering) {
          istep++;
          if (istep>1E3) {
             // we have a big problem not being able to reach the boundary
-            Error("FindNormal", "cannot reach backward boundary");
+            Error("FindNormal", "cannot reach forward boundary");
             printf("   starting point was : (%f, %f, %f)\n", saved_point[0], saved_point[1], saved_point[2]);
             printf("   direction was      : (%f, %f, %f)\n", fDirection[0], fDirection[1], fDirection[2]);
             memcpy(fPoint, saved_point, 3*sizeof(Double_t));
@@ -2714,7 +2731,7 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
             PopPath();
             return 0;
          }     
-         fStep = 1E-3;
+         fStep = 1E-2;
          Step();
       }
       if (!fIsStepEntering) PopPath(start);
@@ -3446,8 +3463,9 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
    while ((shape = (TGeoShape*)next())) {
       if (shape->IsRunTimeShape()) {
          has_runtime = kTRUE;
-         break;
       }
+      if (shape->TestBit(TGeoShape::kGeoPcon) || shape->TestBit(TGeoShape::kGeoArb8))
+         if (!shape->TestBit(TGeoShape::kGeoClosedShape)) shape->ComputeBBox();
    }      
    if (has_runtime) fTopNode->CheckShapes();
 }

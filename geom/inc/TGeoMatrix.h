@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.7 2003/05/07 13:32:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.8 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -50,8 +50,6 @@ const Double_t kUnitScale[3]        =       {1.0,  1.0,  1.0};
 
 class TGeoMatrix : public TNamed
 {
-protected:
-   void                 SetDefaultName();
 public :
    TGeoMatrix();
    TGeoMatrix(const char *name);
@@ -83,6 +81,7 @@ public :
    virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const;
    void                 Print(Option_t *option="") const;
    virtual void         RegisterYourself();
+   void                 SetDefaultName();
    
   ClassDef(TGeoMatrix, 1)                 // base geometrical transformation class
 };

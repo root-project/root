@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.20 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.21 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -172,6 +172,42 @@ void TGeoCone::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    }      
    safr = TMath::Abs((rout-r)*cr2);
    if (safr<safe) {
+      norm[0] = cr2*cphi;
+      norm[1] = cr2*sphi;
+      norm[2] = tg2*cr2;
+   }      
+   if (norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2]<0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+      norm[2] = -norm[2];
+   }
+}
+
+//_____________________________________________________________________________
+void TGeoCone::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
+                              Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2)
+{
+// Compute normal to closest surface from POINT. 
+   Double_t safe,phi;
+   memset(norm,0,3*sizeof(Double_t));
+   phi = TMath::ATan2(point[1],point[0]);
+   Double_t cphi = TMath::Cos(phi);
+   Double_t sphi = TMath::Sin(phi);
+   Double_t ro1 = 0.5*(rmin1+rmin2);
+   Double_t tg1 = 0.5*(rmin2-rmin1)/dz;
+   Double_t cr1 = 1./TMath::Sqrt(1.+tg1*tg1);
+   Double_t ro2 = 0.5*(rmax1+rmax2);
+   Double_t tg2 = 0.5*(rmax2-rmax1)/dz;
+   Double_t cr2 = 1./TMath::Sqrt(1.+tg2*tg2);
+   
+   Double_t r=TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+   Double_t rin = tg1*point[2]+ro1;
+   Double_t rout = tg2*point[2]+ro2;
+   safe = (ro1>0)?(TMath::Abs((r-rin)*cr1)):kBig;
+   norm[0] = cr1*cphi;
+   norm[1] = cr1*sphi;
+   norm[2] = tg1*cr1;
+   if (TMath::Abs((rout-r)*cr2)<safe) {
       norm[0] = cr2*cphi;
       norm[1] = cr2*sphi;
       norm[2] = tg2*cr2;
@@ -910,9 +946,104 @@ void TGeoConeSeg::ComputeBBox()
 }   
 
 //_____________________________________________________________________________
-void TGeoConeSeg::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+void TGeoConeSeg::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
+   Double_t saf[3];
+   Double_t ro1 = 0.5*(fRmin1+fRmin2);
+   Double_t tg1 = 0.5*(fRmin2-fRmin1)/fDz;
+   Double_t cr1 = 1./TMath::Sqrt(1.+tg1*tg1);
+   Double_t ro2 = 0.5*(fRmax1+fRmax2);
+   Double_t tg2 = 0.5*(fRmax2-fRmax1)/fDz;
+   Double_t cr2 = 1./TMath::Sqrt(1.+tg2*tg2);
+   
+   Double_t c1 = TMath::Cos(fPhi1*kDegRad);
+   Double_t s1 = TMath::Sin(fPhi1*kDegRad);
+   Double_t c2 = TMath::Cos(fPhi2*kDegRad);
+   Double_t s2 = TMath::Sin(fPhi2*kDegRad);
+
+   Double_t r=TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+   Double_t rin = tg1*point[2]+ro1;
+   Double_t rout = tg2*point[2]+ro2;
+   saf[0] = TMath::Abs(fDz-TMath::Abs(point[2]));
+   saf[1] = (ro1>0)?(TMath::Abs((r-rin)*cr1)):kBig;
+   saf[2] = TMath::Abs((rout-r)*cr2);
+   Int_t i = TMath::LocMin(3,saf);
+   if (TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
+      TGeoShape::NormalPhi(point,dir,norm,c1,s1,c2,s2);
+      return;
+   }   
+   if (i==0) {
+      norm[0] = norm[1] = 0.;
+      norm[2] = TMath::Sign(1.,dir[2]);
+      return;
+   }
+
+   Double_t phi = TMath::ATan2(point[1],point[0]);
+   Double_t cphi = TMath::Cos(phi);
+   Double_t sphi = TMath::Sin(phi);
+   
+   if (i==1) {
+      norm[0] = cr1*cphi;
+      norm[1] = cr1*sphi;
+      norm[2] = tg1*cr1;
+   } else {   
+      norm[0] = cr2*cphi;
+      norm[1] = cr2*sphi;
+      norm[2] = tg2*cr2;
+   }
+        
+   if (norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2]<0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+      norm[2] = -norm[2];
+   }
+}
+
+//_____________________________________________________________________________
+void TGeoConeSeg::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
+                                 Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2,
+                                 Double_t c1, Double_t s1, Double_t c2, Double_t s2)
+{
+// Compute normal to closest surface from POINT. 
+   Double_t saf[2];
+   Double_t ro1 = 0.5*(rmin1+rmin2);
+   Double_t tg1 = 0.5*(rmin2-rmin1)/dz;
+   Double_t cr1 = 1./TMath::Sqrt(1.+tg1*tg1);
+   Double_t ro2 = 0.5*(rmax1+rmax2);
+   Double_t tg2 = 0.5*(rmax2-rmax1)/dz;
+   Double_t cr2 = 1./TMath::Sqrt(1.+tg2*tg2);
+   
+   Double_t r=TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+   Double_t rin = tg1*point[2]+ro1;
+   Double_t rout = tg2*point[2]+ro2;
+   saf[0] = (ro1>0)?(TMath::Abs((r-rin)*cr1)):kBig;
+   saf[1] = TMath::Abs((rout-r)*cr2);
+   Int_t i = TMath::LocMin(2,saf);
+   if (TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
+      TGeoShape::NormalPhi(point,dir,norm,c1,s1,c2,s2);
+      return;
+   }   
+
+   Double_t phi = TMath::ATan2(point[1],point[0]);
+   Double_t cphi = TMath::Cos(phi);
+   Double_t sphi = TMath::Sin(phi);
+   
+   if (i==0) {
+      norm[0] = cr1*cphi;
+      norm[1] = cr1*sphi;
+      norm[2] = tg1*cr1;
+   } else {   
+      norm[0] = cr2*cphi;
+      norm[1] = cr2*sphi;
+      norm[2] = tg2*cr2;
+   }
+        
+   if (norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2]<0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+      norm[2] = -norm[2];
+   }
 }
 
 //_____________________________________________________________________________

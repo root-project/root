@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.34 2003/06/24 12:37:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.35 2003/07/31 20:19:31 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -104,6 +104,7 @@ private :
    TGeoVolume           *fMasterVolume;     // master volume
    TGeoHMatrix          *fCurrentMatrix;    //! current global matrix
    TObjArray            *fUniqueVolumes;    //-> list of unique volumes
+   TGeoShape            *fClippingShape;    //! clipping shape for raytracing
 
    Int_t                *fNodeIdArray;      //! array of node id's
 
@@ -153,6 +154,7 @@ public:
    void                   ClearAttributes(); // *MENU*
    void                   DefaultAngles();   // *MENU*
    void                   DefaultColors();   // *MENU*
+   TGeoShape             *GetClippingShape() const {return fClippingShape;}
    Int_t                  GetNsegments() const;
    TVirtualGeoPainter    *GetGeomPainter();
    Int_t                  GetBombMode() const  {return fExplodedView;}
@@ -164,6 +166,8 @@ public:
    Bool_t                 IsInPhiRange() const;
    void                   ModifiedPad() const;
    void                   OptimizeVoxels(const char *filename="tgeovox.C"); // *MENU*
+   void                   SetClipping(Bool_t flag=kTRUE) {SetClippingShape(((flag)?fClippingShape:0));} // *MENU*
+   void                   SetClippingShape(TGeoShape *clip);
    void                   SetExplodedView(Int_t iopt=0); // *MENU*
    void                   SetPhiRange(Double_t phimin=0., Double_t phimax=360.); // *MENU*
    void                   SetNsegments(Int_t nseg); // *MENU*

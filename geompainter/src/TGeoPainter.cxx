@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.22 2003/06/17 09:13:56 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.23 2003/07/31 20:19:33 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,6 +9,8 @@
  *************************************************************************/
 
 #include "TROOT.h"
+#include "TColor.h"
+#include "TPoint.h"
 #include "TView.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
@@ -47,17 +49,20 @@ TGeoPainter::TGeoPainter()
    fExplodedView = 0;
    fVisBranch = "";
    fVisLock = kFALSE;
+   fIsRaytracing = kFALSE;
    fTopVisible = kFALSE;
    fPaintingOverlaps = kFALSE;
    fVisVolumes = new TObjArray();
    fOverlap = 0;
    fMatrix = 0;
+   fClippingShape = 0;
    memset(&fCheckedBox[0], 0, 6*sizeof(Double_t));
    
    if (gGeoManager) fGeom = gGeoManager;
    else Error("ctor", "No geometry loaded");
    fCheckedNode = fGeom->GetTopNode();
    fChecker = new TGeoChecker(fGeom);
+   DefineColors();
 }
 //______________________________________________________________________________
 TGeoPainter::~TGeoPainter()
@@ -157,6 +162,43 @@ void TGeoPainter::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *optio
 // check current point in the geometry
    fChecker->CheckPoint(x,y,z,option);
 }   
+//______________________________________________________________________________
+void TGeoPainter::DefineColors() const
+{
+// Define 100 colors with increasing light intensities for each basic color (1-7)
+// Register these colors at indexes starting with 300.
+   TColor *color, *newcolor;
+   Int_t i,j;
+   Float_t r,g,b,h,l,s;
+   
+   for (i=1; i<8; i++) {
+      color = (TColor*)gROOT->GetListOfColors()->At(i);
+      color->GetHLS(h,l,s);
+      for (j=0; j<100; j++) {
+         l = 0.8*j/99.;
+         TColor::HLS2RGB(h,l,s,r,g,b);
+         newcolor = new TColor(300+(i-1)*100+j, r,g,b);
+      }
+   }           
+}
+
+//______________________________________________________________________________
+Int_t TGeoPainter::GetColor(Int_t base, Float_t light) const
+{
+// Get index of a base color with given light intensity (0,1)
+   Int_t color, j;
+   Int_t c = base%8;
+   if (c==0) return c;
+   if (light<0) {
+      j=0;
+   } else {
+      if (light>0.8) j=99;
+      else j = Int_t(99*light/0.8);
+   }   
+   color = 300 + (c-1)*100+j;
+   return color;
+}
+
 //______________________________________________________________________________
 Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
 {
@@ -528,8 +570,9 @@ void TGeoPainter::ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t /*px
 {
 // Execute mouse actions on a given volume.
    if (!gPad) return;
-   static Int_t width, color;
    gPad->SetCursor(kHand);
+   if (fIsRaytracing) return;
+   static Int_t width, color;
    switch (event) {
    case kMouseEnter:
       width = volume->GetLineWidth();
@@ -646,11 +689,21 @@ TH2F *TGeoPainter::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
    return fChecker->LegoPlot(ntheta, themin, themax, nphi, phimin, phimax, rmin, rmax, option);   
 }
 //______________________________________________________________________________
+void TGeoPainter::LocalToMasterVect(const Double_t *local, Double_t *master) const
+{
+// Convert a local vector according view rotation matrix
+   for (Int_t i=0; i<3; i++)
+      master[i] = -local[0]*fMat[i]-local[1]*fMat[i+3]-local[2]*fMat[i+6];
+}
+
+//______________________________________________________________________________
 void TGeoPainter::ModifiedPad() const
 {
 // Check if a pad and view are present and send signal "Modified" to pad.
    if (!gPad) return;
-   if (!gPad->GetView()) return;
+   TView *view = gPad->GetView();
+   if (!view) return;
+   view->SetViewChanged();
    gPad->Modified();
    gPad->Update();
 }   
@@ -658,6 +711,7 @@ void TGeoPainter::ModifiedPad() const
 void TGeoPainter::Paint(Option_t *option)
 {
 // Paint current geometry according to option.
+//   printf("PaintNode(%s)\n", option);
    if (!fGeom) return;
    if (fVisOption==kGeoVisOnly) {
       fGeom->GetCurrentNode()->Paint(option);
@@ -667,6 +721,9 @@ void TGeoPainter::Paint(Option_t *option)
    TGeoNode *top = fGeom->GetTopNode();
    top->Paint(option);
    fVisLock = kTRUE;
+   TString opt(option);
+   opt.ToLower();
+   if (strcmp(opt.Data(),"range") && fIsRaytracing) Raytrace();
 }
 //______________________________________________________________________________
 void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
@@ -1978,7 +2035,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
    switch (fVisOption) {
       case kGeoVisDefault:
          if (vis && (level<=fVisLevel)) {
-            vol->GetShape()->Paint(option);
+            if (!fIsRaytracing) vol->GetShape()->Paint(option);
             if (!fVisLock) fVisVolumes->Add(vol);
          }   
             // draw daughters
@@ -1996,7 +2053,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
          if (level>fVisLevel) return;
          last = ((nd==0) || (level==fVisLevel))?kTRUE:kFALSE;
          if (vis && (last || (!node->IsVisDaughters()))) {
-            vol->GetShape()->Paint(option);
+            if (!fIsRaytracing) vol->GetShape()->Paint(option);
             if (!fVisLock) fVisVolumes->Add(vol);
          }            
          if (last || (!node->IsVisDaughters())) return;
@@ -2008,14 +2065,14 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
          }
          break;
       case kGeoVisOnly:
-         vol->GetShape()->Paint(option);
+         if (!fIsRaytracing) vol->GetShape()->Paint(option);
          if (!fVisLock) fVisVolumes->Add(vol);
          break;
       case kGeoVisBranch:
          fGeom->cd(fVisBranch);
          while (fGeom->GetLevel()) {
             if (fGeom->GetCurrentVolume()->IsVisible()) {
-               fGeom->GetCurrentVolume()->GetShape()->Paint(option);
+               if (!fIsRaytracing) fGeom->GetCurrentVolume()->GetShape()->Paint(option);
                if (!fVisLock) fVisVolumes->Add(fGeom->GetCurrentVolume());
             }   
             fGeom->CdUp();
@@ -2041,9 +2098,242 @@ void TGeoPainter::RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *o
 //______________________________________________________________________________
 void TGeoPainter::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz)
 {
-// Raytrace nrays in the current drawn geometry
+// Shoot nrays in the current drawn geometry
    fChecker->RandomRays(nrays, startx, starty, startz);
 }   
+//______________________________________________________________________________
+void TGeoPainter::Raytrace(Option_t * /*option*/)
+{
+// Raytrace current drawn geometry
+   if (!gPad || gPad->IsBatch()) return;
+   TView *view = gPad->GetView();
+   if (!view || ! view->IsPerspective()) return;
+   gVirtualX->SetMarkerSize(1);
+   gVirtualX->SetMarkerStyle(1);
+   Int_t i;
+   Bool_t inclipst=kFALSE, inclip=kFALSE;
+   Double_t krad = TGeoShape::kDegRad;
+   Double_t lat = view->GetLatitude();
+   Double_t longit = view->GetLongitude();
+   Double_t psi = view->GetPsi();
+   Double_t c1 = TMath::Cos(psi*krad);
+   Double_t s1 = TMath::Sin(psi*krad);
+   Double_t c2 = TMath::Cos(lat*krad);
+   Double_t s2 = TMath::Sin(lat*krad);
+   Double_t s3 = TMath::Cos(longit*krad);
+   Double_t c3 = -TMath::Sin(longit*krad);
+   fMat[0] =  c1*c3 - s1*c2*s3;
+   fMat[1] =  c1*s3 + s1*c2*c3;
+   fMat[2] =  s1*s2;
+      
+   fMat[3] =  -s1*c3 - c1*c2*s3;
+   fMat[4] = -s1*s3 + c1*c2*c3;
+   fMat[5] =  c1*s2;
+   
+   fMat[6] =  s2*s3;
+   fMat[7] =  -s2*c3;
+   fMat[8] = c2; 
+   Double_t u0, v0, du, dv;
+   view->GetWindow(u0,v0,du,dv);
+   Double_t dview = view->GetDview();
+   Double_t dproj = view->GetDproj();
+   Double_t local[3] = {0,0,1};
+   Double_t dir[3], normal[3];   
+   LocalToMasterVect(local,dir);
+   Double_t min[3], max[3];
+   view->GetRange(min, max);
+   Double_t cov[3];
+   for (i=0; i<3; i++) cov[i] = 0.5*(min[i]+max[i]);
+   Double_t cop[3]; 
+   for (i=0; i<3; i++) cop[i] = cov[i] - dir[i]*dview;
+   fGeom->InitTrack(cop, dir);
+   if (fClippingShape) inclipst = inclip = fClippingShape->Contains(cop);
+   Int_t px, py;
+   Double_t xloc, yloc, modloc;
+   Int_t pxmin,pxmax, pymin,pymax;
+   pxmin = gPad->UtoAbsPixel(0);
+   pxmax = gPad->UtoAbsPixel(1);
+   pymin = gPad->VtoAbsPixel(1);
+   pymax = gPad->VtoAbsPixel(0);
+   TGeoNode *next;
+   Double_t step,steptot;
+//   Double_t dotni;
+   Double_t *norm;
+   Double_t *point = fGeom->GetCurrentPoint();
+//   Double_t ndc[3];
+//   Int_t ppx,ppy;
+//   Double_t refl[3];
+   Double_t tosource[3];
+   Double_t calf;
+   Double_t phi = 0*krad;
+   tosource[0] = -dir[0]*TMath::Cos(phi)+dir[1]*TMath::Sin(phi);
+   tosource[1] = -dir[0]*TMath::Sin(phi)-dir[1]*TMath::Cos(phi);
+   tosource[2] = -dir[2];
+   
+   Bool_t done;
+   Int_t istep;
+   Int_t base_color, color;
+   Double_t light;
+   Double_t stemin=0, stemax=TGeoShape::kBig;
+   TPoint *pxy = new TPoint[1];
+   Int_t npoints = (pxmax-pxmin)*(pymax-pymin);
+   Int_t n10 = npoints/10;
+   Int_t ipoint = 0;
+   for (px=pxmin; px<pxmax; px++) {
+      for (py=pymin; py<pymax; py++) {         
+         ipoint++;
+         if (n10) {
+            if ((ipoint%n10) == 0) printf("%i percent\n", 10*Int_t(Double_t(ipoint)/Double_t(n10)));
+         }
+         base_color = 1;
+         steptot = 0;
+         inclip = inclipst;
+         xloc = gPad->AbsPixeltoX(pxmin+pxmax-px);
+         xloc = xloc*du-u0;
+         yloc = gPad->AbsPixeltoY(pymin+pymax-py);
+         yloc = yloc*dv-v0;
+         modloc = TMath::Sqrt(xloc*xloc+yloc*yloc+dproj*dproj);  
+         local[0] = xloc/modloc;
+         local[1] = yloc/modloc;
+         local[2] = dproj/modloc;
+         LocalToMasterVect(local,dir);
+         fGeom->InitTrack(cop,dir);
+//         fGeom->CdTop();
+//         fGeom->SetCurrentPoint(cop);
+//         fGeom->SetCurrentDirection(dir);
+         // current ray pointing to pixel (px,py)
+         done = kFALSE;
+         norm = 0;
+         // propagate to the clipping shape if any
+         if (fClippingShape) {
+            if (inclip) {
+               stemin = fClippingShape->DistToOut(cop,dir,3);
+               stemax = TGeoShape::kBig;
+            } else {
+               stemax = fClippingShape->DistToIn(cop,dir,3);
+               stemin = 0;
+            }
+         }         
+               
+         while (!done) {
+            if (fClippingShape) {
+               if (stemin>1E10) break;
+               if (stemin>0) {
+                  gGeoManager->SetStep(stemin);
+                  next = gGeoManager->Step();
+                  steptot = 0;
+                  stemin = 0;
+                  if (next && next->IsOnScreen()) {
+                     done = kTRUE;
+                     base_color = next->GetVolume()->GetLineColor();
+                     fClippingShape->ComputeNormal(point, dir, normal);
+                     norm = normal;
+                     break;
+                  }
+                  inclip = kTRUE;
+                  stemax = fClippingShape->DistToOut(point,dir,3);
+               }
+            }              
+            fGeom->FindNextBoundary();
+            step = fGeom->GetStep();
+            if (step>1E10) {
+//               printf("pixels :%i,%i  (%f, %f, %f, %f, %f, %f)\n",px,py,
+//                      cop[0],cop[1],cop[2],dir[0],dir[1],dir[2]);
+               break;
+            }   
+            steptot += step;
+            next = fGeom->Step();
+            istep = 0;
+            if (!fGeom->IsEntering()) fGeom->SetStep(1E-3);
+            while (!fGeom->IsEntering()) {
+               istep++;
+               if (istep>1E2) break;
+               steptot += 1E-3+1E-6;
+               next = fGeom->Step();
+            }
+            if (istep>1E2) {
+//               printf("Woops: Wrong dist from: (%f, %f, %f, %f, %f, %f)\n",
+//                      cop[0],cop[1],cop[2],dir[0],dir[1],dir[2]);
+//               return;
+               break; 
+            }     
+            if (fClippingShape) {
+               if (steptot>stemax) {
+                  steptot = 0;
+                  inclip = fClippingShape->Contains(point);
+                  if (inclip) {
+                     stemin = fClippingShape->DistToOut(point,dir,3);
+                     stemax = TGeoShape::kBig;
+                     continue;
+                  } else {
+                     stemin = 0;
+                     stemax = fClippingShape->DistToIn(point,dir,3);  
+                  }
+               }
+            }      
+            if (next && next->IsOnScreen()) {
+               done = kTRUE;
+               base_color = next->GetVolume()->GetLineColor();
+               break;
+            }
+         }
+         if (!done) continue;
+         // current ray intersect a visible volume having color=base_color
+//         view->WCtoNDC(point,ndc);
+//         ppx = gPad->XtoPixel(ndc[0]);
+//         ppy = gPad->YtoPixel(ndc[1]);
+         if (!norm) norm = fGeom->FindNormal(kFALSE);
+         if (!norm) {
+            printf("Woops: Wrong norm from: (%f, %f, %f, %f, %f, %f)\n",
+                   cop[0],cop[1],cop[2],dir[0],dir[1],dir[2]);
+            break;       
+         }
+//         dotni = dir[0]*norm[0]+dir[1]*norm[1]+dir[2]*norm[2];
+//         for (i=0; i<3; i++) refl[i] = dir[i] - 2.*dotni*norm[i];
+//         calf = refl[0]*tosource[0]+refl[1]*tosource[1]+refl[2]*tosource[2];
+         calf = norm[0]*tosource[0]+norm[1]*tosource[1]+norm[2]*tosource[2];
+         light = 0.8*TMath::Abs(calf);
+         color = GetColor(base_color, light);
+
+         // Go back to cross again the boundary
+
+/*         
+         fGeom->SetCurrentDirection(-dir[0], -dir[1], -dir[2]);
+         fGeom->FindNextBoundary();
+         fGeom->Step();
+         
+         // Now shoot the ray according to light direction
+         
+         fGeom->SetCurrentDirection(tosource);
+         done = kFALSE;
+         while (!done) {
+            fGeom->FindNextBoundary();
+            step = fGeom->GetStep();
+            if (step>1E10) break;
+            next = fGeom->Step();
+            istep = 0;
+            if (!fGeom->IsEntering()) fGeom->SetStep(1E-3);
+            while (!fGeom->IsEntering()) {
+               istep++;
+               if (istep>1E3) break;
+               next = fGeom->Step();
+            }
+            if (istep>1E3) break;   
+            if (next && next->IsOnScreen()) done = kTRUE;
+         }
+         if (done) color = GetColor(base_color,0);         
+*/
+         // Now we know the color of the pixel, just draw it
+         gVirtualX->SetMarkerColor(color);         
+         pxy[0].fX = px;
+         pxy[0].fY = py;
+//         printf("current pix: (%i, %i) real pix: (%i, %i)\n", px,py,ppx,ppy);
+         gVirtualX->DrawPolyMarker(1,pxy);
+      }
+   } 
+   delete [] pxy;      
+}
+
 //-----------------------------------------------------------------------------
 TGeoNode *TGeoPainter::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil,
                                     const char* g3path)
