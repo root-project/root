@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.90 2004/06/05 05:19:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.91 2004/06/14 09:38:35 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1165,7 +1165,11 @@ void TChain::SetBranchAddress(const char *bname, void *add)
 //
 //      bname is the name of a branch.
 //      add is the address of the branch.
-
+//
+// IMPORTANT REMARK:
+// In case TChain::SetBranchStatus is called, it must be called
+// BEFORE calling this function.
+   
    //Check if bname is already in the Status list
    //Otherwise create a TChainElement object and set its address
    TChainElement *element = (TChainElement*)fStatus->FindObject(bname);
@@ -1206,7 +1210,7 @@ void TChain::SetBranchStatus(const char *bname, Bool_t status, UInt_t *found)
 //      bname is the name of a branch. if bname="*", apply to all branches.
 //      status = 1  branch will be processed
 //             = 0  branch will not be processed
-//  See IMPORTANT REMARKS in TTree::SetBranchStatus
+//  See IMPORTANT REMARKS in TTree::SetBranchStatus and TChain::SetBranchAddress
 //
 //  If found is not 0, the number of branch(es) found matching the regular
 //  expression is returned in *found AND the error message 'unknown branch'
