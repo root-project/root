@@ -248,19 +248,25 @@ freebsd4)
    ;;
 macosx)
    # MacOS X with gcc (GNU cc v3.1) and possible fink (fink.sf.net)
+   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
    auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
-   forcelibs=$rootulibs
-   forceglibs=$rootuglibs
+   if [ $macosx_minor -le 3 ]; then
+      forcelibs=$rootulibs
+      forceglibs=$rootuglibs
+   fi
    ;;
 macosxxlc)
    # MacOS X with IBM xl compiler and possible fink (fink.sf.net)
+   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
    auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
-   forcelibs=$rootulibs
-   forceglibs=$rootuglibs
+   if [ $macosx_minor -le 3 ]; then
+      forcelibs=$rootulibs
+      forceglibs=$rootuglibs
+   fi
    ;;
 hiux)
    # Hitachi HIUX

@@ -389,13 +389,17 @@ endif
 
 ifeq ($(ARCH),macosx)
 # MacOS X with cc (GNU cc 2.95.2 and gcc 3.3)
-MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion:[[:blank:]]*[0-9]*.\([0-9]*\).[0-9]*/\1/p')
+MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 CXX           = c++
 CXXFLAGS      = -O2 -pipe -Wall -W -Woverloaded-virtual
-LDFLAGS       = -O2 -Xlinker -bind_at_load -flat_namespace
+LDFLAGS       = -O2 -bind_at_load -flat_namespace
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately
 DllSuf        = dylib
+ifeq ($(MACOSX_MINOR),4)
+UNDEFOPT      = dynamic_lookup
+LD            = MACOSX_DEPLOYMENT_TARGET=10.4 c++
+else
 ifeq ($(MACOSX_MINOR),3)
 UNDEFOPT      = dynamic_lookup
 LD            = MACOSX_DEPLOYMENT_TARGET=10.3 c++
@@ -403,24 +407,30 @@ else
 UNDEFOPT      = suppress
 LD            = c++
 endif
+endif
 SOFLAGS       = -dynamiclib -single_module -flat_namespace -undefined $(UNDEFOPT)
 endif
 
 ifeq ($(ARCH),macosxxlc)
 # MacOS X with IBM xlC compiler
-MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion:[[:blank:]]*[0-9]*.\([0-9]*\).[0-9]*/\1/p')
+MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 CXX           = xlC
 CXXFLAGS      = -O
-LDFLAGS       = -O -Xlinker -bind_at_load -flat_namespace
+LDFLAGS       = -O -bind_at_load -flat_namespace
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately
 DllSuf        = dylib
+ifeq ($(MACOSX_MINOR),4)
+UNDEFOPT      = dynamic_lookup
+LD            = MACOSX_DEPLOYMENT_TARGET=10.4 g++
+else
 ifeq ($(MACOSX_MINOR),3)
 UNDEFOPT      = dynamic_lookup
 LD            = MACOSX_DEPLOYMENT_TARGET=10.3 g++
 else
 UNDEFOPT      = suppress
 LD            = g++
+endif
 endif
 SOFLAGS       = -dynamiclib -single_module -flat_namespace -undefined $(UNDEFOPT)
 endif

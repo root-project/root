@@ -29,7 +29,7 @@ endif
 $(FREETYPELIB): $(FREETYPELIBA)
 ifeq ($(PLATFORM),macosx)
 		$(MACOSXTARGET) $(CC) $(SOFLAGS)libfreetype.dylib -o $@ \
-		   -all_load $<
+		   $(MODDIRS)/$(FREETYPEVERS)/objs/*.o
 else
 		cp $< $@
 endif
