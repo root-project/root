@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.4 2004/10/05 23:00:04 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.5 2004/10/06 10:03:31 brun Exp $ */
 /* Author: Tomi Salo & Fons Rademakers */
 
 /*
@@ -477,8 +477,25 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
                      else
                         ulong_val = (ULong64_t) va_arg(ap, unsigned int);
 
-                     *str++ = (unsigned char) ulong_val;
-                     left--;
+                     if (width==0) {
+                        *str++ = (unsigned char) ulong_val;
+                        --left;
+                     } else {
+                        if (width > left)
+                           width = left;
+                        i = width - 1;
+
+                        if (flags & MINUS_FLAG) {
+                           *str = (unsigned char) ulong_val;
+                           memset(str + 1,
+                                  (flags & ZERO_PADDING) ? '0' : ' ', i);
+                        } else {
+                           memset(str, (flags & ZERO_PADDING) ? '0' : ' ', i);
+                           *(str+i) = (unsigned char) ulong_val;
+                        }
+                        str += width;
+                        left -= width;
+                     }
                      break;
 
                   case 's':
