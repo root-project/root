@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.3 2000/12/13 15:13:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.4 2000/12/26 14:23:05 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -51,7 +51,7 @@ public:
         virtual void     SetPacketSize(Int_t size = 100);
         virtual void     SetStatus(Int_t status) {fStatus = status;}
 
-        ClassDef(TChainElement,0)  //A chain element
+        ClassDef(TChainElement,1)  //A chain element
 };
 
 #endif

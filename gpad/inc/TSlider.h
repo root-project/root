@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TSlider.h,v 1.2 2000/06/13 12:13:48 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TSlider.h,v 1.3 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -33,7 +33,7 @@ class TSlider : public TPad {
 protected:
    Double_t      fMinimum;      //Slider minimum value in [0,1]
    Double_t      fMaximum;      //Slider maximum value in [0,1]
-   TObject      *fObject;       //Pointer to associated object
+   TObject      *fObject;       //!Pointer to associated object
    TString       fMethod;       //command to be executed when slider is changed
 
 private:
@@ -56,7 +56,7 @@ public:
    virtual void  SetMaximum(Double_t max=1) {fMaximum=max;}
    virtual void  SetRange(Double_t xmin=0, Double_t xmax=1);
 
-   ClassDef(TSlider,0)  //A user interface slider.
+   ClassDef(TSlider,1)  //A user interface slider.
 };
 
 #endif
