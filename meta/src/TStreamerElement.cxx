@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.75 2005/02/05 07:27:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.76 2005/02/14 16:43:59 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1261,16 +1261,14 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
       if (isPointer) fCtype += TStreamerInfo::kOffsetP;
    } else {
      // this could also be a nested enums ... which should work ... be let's see.
-      G__ClassInfo info(sopen);
-      if (info.IsValid() && info.Property()&G__BIT_ISENUM) {
-           if (isPointer) fCtype += TStreamerInfo::kOffsetP;
-
+      TClass *cl = gROOT->GetClass(sopen);
+      if (cl) {
+         if (isPointer) fCtype = TStreamerInfo::kObjectp;
+         else           fCtype = TStreamerInfo::kObject;
       } else {
-
-         TClass *cl = gROOT->GetClass(sopen);
-         if (cl) {
-            if (isPointer) fCtype = TStreamerInfo::kObjectp;
-            else           fCtype = TStreamerInfo::kObject;
+         G__ClassInfo info(sopen);
+         if (info.IsValid() && info.Property()&G__BIT_ISENUM) {
+            if (isPointer) fCtype += TStreamerInfo::kOffsetP;
          } else {
             if(strcmp(sopen,"string")) printf ("UNKNOW type, sopen=%s\n",sopen);
          }
