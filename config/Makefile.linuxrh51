@@ -1,0 +1,42 @@
+# Makefile of ROOT for Linux gcc 2.7.x.x with glibc
+
+PLATFORM      = linux
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O2
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = g++
+CC            = gcc
+CXXFLAGS      = -pipe -Wall -fPIC $(EXTRA_CXXFLAGS)
+CFLAGS        = -pipe -Wall -fPIC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -pipe -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -pipe -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+
+# Linker:
+LD            = g++
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       = -shared -Wl,-soname,
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lg++ -lm -ldl -rdynamic
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11 -lg++
+CILIBS        = -lm -ltermcap -lbsd -ldl -lg++ -rdynamic
+CRYPTLIBS     =
+
+# Fortran:
+F77           = fort77
+F77FLAGS      = $(OPT) -Nx800 -NC200
+F77LIBS       =
+
+# Extras
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+                -L/usr/X11R6/lib -lXmu
