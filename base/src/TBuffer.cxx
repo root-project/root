@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.32 2002/06/18 07:00:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.33 2002/06/18 17:58:26 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -507,17 +507,17 @@ Int_t TBuffer::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss)
    Long_t endpos = Long_t(fBuffer) + startpos + bcnt + sizeof(UInt_t);
 
    if (Long_t(fBufCur) != endpos) {
+      offset = Int_t(Long_t(fBufCur) - endpos);
       if (clss) {
-         if (Long_t(fBufCur) < endpos)
-            Error("CheckByteCount", "object of class %s read too few bytes",
-                  clss->GetName());
-         if (Long_t(fBufCur) > endpos)
-            Error("CheckByteCount", "object of class %s read too many bytes",
-                  clss->GetName());
+         if (offset < 0)
+            Error("CheckByteCount", "object of class %s read too few bytes: %d instead of %d",
+                  clss->GetName(),bcnt+offset,bcnt);
+         if (offset > 0)
+            Error("CheckByteCount", "object of class %s read too many bytes: %d instead of %d",
+                  clss->GetName(),bcnt+offset,bcnt);
             Warning("CheckByteCount","%s::Streamer() not in sync with data on file, fix Streamer()",
                     clss->GetName());
       }
-      offset = Int_t(Long_t(fBufCur) - endpos);
       //gROOT->Message(1005, this);
 
       fBufCur = (char *) endpos;
