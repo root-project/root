@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.46 2002/09/27 12:14:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.47 2002/10/12 14:03:08 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1644,8 +1644,6 @@ void TF1::Paint(Option_t *option)
       if (xmin > pmax) return;
       if (xmin < pmin) xmin = pmin;
       if (xmax > pmax) xmax = pmax;
-   } else {
-      gPad->Clear();
    }
 
 //*-*-  Create a temporary histogram and fill each channel with the function value
