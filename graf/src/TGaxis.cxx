@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.27 2002/01/02 21:42:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.28 2002/01/04 13:07:15 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TMath.h"
 
 Int_t TGaxis::fgMaxDigits = 5;
+const Int_t kHori = BIT(9); //defined in TPad
 
 ClassImp(TGaxis)
 
@@ -890,7 +891,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             break;
          }
          for (i=fAxis->GetFirst(); i<=fAxis->GetLast(); i++) {
-            if (!strcmp(fAxis->GetName(),"xaxis")) {
+            if ((!strcmp(fAxis->GetName(),"xaxis") && !gPad->TestBit(kHori))
+              ||(!strcmp(fAxis->GetName(),"yaxis") &&  gPad->TestBit(kHori))) {
                if (nl > 50) angle = 90;
                if (fAxis->TestBit(TAxis::kLabelsHori)) angle = 0;
                if (fAxis->TestBit(TAxis::kLabelsVert)) angle = 90;
@@ -903,7 +905,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                                     angle,
                                     charheight,
                                     fAxis->GetBinLabel(i));
-            } else if (!strcmp(fAxis->GetName(),"yaxis")) {
+            } else if ((!strcmp(fAxis->GetName(),"yaxis") && !gPad->TestBit(kHori))
+                    || (!strcmp(fAxis->GetName(),"xaxis") &&  gPad->TestBit(kHori))) {
                textaxis->PaintLatex(gPad->GetUxmin() - 3*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
                                     fAxis->GetBinCenter(i),
                                     0,
