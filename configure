@@ -60,6 +60,7 @@ confhelp() {
     echo "   opengl          OpenGL support, requires libGL and libGLU"
     echo "   cern            CERNLIB usage, build h2root and g2root"
     echo "   mysql           MySQL support, requires libmysqlclient"
+    echo "   pgsql           PostgreSQL support, requires libpq"
     echo "   rfio            SHIFT support, requires libshift.a from CERN"
     echo "   srp             SRP support, requires SRP source tree"
     echo "   afs             AFS support, requires AFS libs and objects"
@@ -77,6 +78,8 @@ confhelp() {
     echo "   opengl-libdir   OpenGL support, location of libGL"
     echo "   mysql-incdir    MySQL support, location of mysql.h"
     echo "   mysql-libdir    MySQL support, location of libmysqlclient"
+    echo "   pgsql-incdir    PostgreSQL support, location of libpq-fe.h"
+    echo "   pgsql-libdir    PostgreSQL support, location of libpq"
     echo "   pythia-libdir   PYHTIA support, location of libPythia"
     echo "   pythia6-libdir  PYHTIA6 support, location of libPythia6"
     echo "   venus-libdir    VENUS support, location of libVenus"
@@ -138,6 +141,8 @@ if [ $# -gt 0 ]; then
       --with-opengl-libdir=*)  opengllibdir=$optarg  ; enable_opengl="yes"  ;;
       --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
       --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
+      --with-pgsql-incdir=*)   pgsqlincdir=$optarg   ; enable_pgsql="yes"   ;;
+      --with-pgsql-libdir=*)   pgsqllibdir=$optarg   ; enable_pgsql="yes"   ;;
       --with-pythia-libdir=*)  pythialibdir=$optarg  ; enable_pythia="yes"  ;;
       --with-pythia6-libdir=*) pythia6libdir=$optarg ; enable_pythia6="yes" ;;
       --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
@@ -165,6 +170,8 @@ if [ $# -gt 0 ]; then
       --disable-cern)         enable_cern=no        ;;
       --enable-mysql)         enable_mysql=yes      ;;
       --disable-mysql)        enable_mysql=no       ;;
+      --enable-pgsql)         enable_pgsql=yes      ;;
+      --disable-pgsql)        enable_pgsql=no       ;;
       --enable-rfio)          enable_rfio=yes       ;;
       --disable-rfio)         enable_rfio=no        ;;
       --enable-thread)        enable_thread=yes     ;;
@@ -646,6 +653,96 @@ if [ "x$enable_mysql" != "xno" ]; then
         else
             mysqllib=`echo $mysqllib | sed 's|lib\(.*\)\..*|-l\1|'`
             mysqllibdir=-L${mysqllibdir}
+        fi
+    fi
+fi
+
+######################################################################
+#
+# PostgreSQL Support (Third party libraries)
+#
+# (See postgresql.org)
+#
+# If the user has set the flags "--disable-pgsql", we don't check for
+# PostgreSQL in at all.
+#
+if [ "x$enable_pgsql" != "xno" ]; then
+# Check for PgSQL include and library
+    echo $ac_n "Checking for libpq-fe.h ... $ac_c"
+    if [ "x$pgsqlincdir" != "x" ]; then
+        # If the user has given an explict path, then we check to see if
+        # the libpq-fe.h header file really is where it's supposed to be.
+        pgsqlincdirs=$pgsqlincdir
+    else
+        # Othewise, search canonical paths
+        pgsqlincdirs="$PGSQL $PGSQL/include /usr/include \
+                    /usr/local/include /usr/local/pgsql/include \
+                    /usr/include/pgsql /usr/pgsql/include \
+                    /usr/local/include/pgsql /usr/pgsql \
+                    /usr/local/pgsql /opt/pgsql /opt/pgsql/include"
+    fi
+    pgsqlheaders="libpq-fe.h"
+    pgsqlincdir=no
+    for i in ${pgsqlincdirs}; do
+        for j in ${pgsqlheaders}; do
+            if [ -r "$i/$j" ]; then
+                 pgsqlincdir=$i
+                 break 2
+             fi
+        done
+    done
+    echo $pgsqlincdir
+    unset pgsqlincdirs
+    unset pgsqlheaders
+
+    echo $ac_n "Checking for libpq ... $ac_c"
+    if [ "x$pgsqllibdir" != "x" ]; then
+        # If the user gave an explicit path, check to see if the client
+        # library really is where it's supposed to be
+        libdirs=$pgsqllibdir
+    else
+        libdirs="$PGSQL $PGSQL/lib /usr/local/pgsql/lib /usr/local/lib \
+                    /usr/lib/pgsql /usr/local/lib/pgsql /usr/pgsql/lib \
+                    /usr/lib /usr/pgsql /usr/local/pgsql \
+                    /opt/pgsql /opt/pgsql/lib"
+    fi
+    # If the "--enable-shared" flag is set, we first look for the
+    # shared library then the static one.
+    if [ "x$enable_shared" != "xno" ]; then
+        libs="libpq.so libpq.sl libpq.a \
+              libpq.lib"
+    else
+        libs="libpq.a libpq.lib"
+    fi
+    pgsqllibdir=no
+    for i in $libdirs; do
+        for j in ${libs} ; do
+            if [ -r "$i/$j" ]; then
+                pgsqllibdir=$i
+                pgsqllib=$j
+                break 2
+            fi
+        done
+    done
+    echo ${pgsqllibdir}
+    unset libdirss
+    unset libs
+
+    if [ "x$pgsqlincdir" = "xno" -o "x$pgsqllibdir" = "xno" ]; then
+        unset pgsqllib
+        unset pgsqlincdir
+        unset pgsqllibdir
+        enable_pgsql="no"
+    else
+        if [ "$arch" = "win32" ];then
+            pgsqllib=${pgsqllibdir}/${pgsqllib}
+            unset pgsqllibdir
+        elif [ "x$enable_shared" = "xno" ]; then
+            pgsqllib=${pgsqllibdir}/${pgsqllib}
+            unset pgsqllibdir
+        else
+            pgsqllib=`echo $pgsqllib | sed 's|lib\(.*\)\..*|-l\1|'`
+            pgsqllibdir=-L${pgsqllibdir}
         fi
     fi
 fi
@@ -1167,6 +1264,9 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@mysqlincdir@|$mysqlincdir|"     \
     -e "s|@mysqllibdir@|$mysqllibdir|"     \
     -e "s|@mysqllib@|$mysqllib|"           \
+    -e "s|@pgsqlincdir@|$pgsqlincdir|"     \
+    -e "s|@pgsqllibdir@|$pgsqllibdir|"     \
+    -e "s|@pgsqllib@|$pgsqllib|"           \
     -e "s|@cernlibdir@|$cernlibdir|"       \
     -e "s|@cernlibs@|$cernlib|"            \
     -e "s|@shiftlibdir@|$shiftlibdir|"     \

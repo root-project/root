@@ -47,6 +47,10 @@ MYSQLLIBDIR    := @mysqllibdir@
 MYSQLCLILIB    := @mysqllib@
 MYSQLINCDIR    := @mysqlincdir@
 
+PGSQLLIBDIR    := @pgsqllibdir@
+PGSQLCLILIB    := @pgsqllib@
+PGSQLINCDIR    := @pgsqlincdir@
+
 SHIFTLIBDIR    := @shiftlibdir@
 SHIFTLIB       := @shiftlib@
 

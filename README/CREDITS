@@ -45,6 +45,10 @@ E: Federico.Carminati@cern.ch
 D: updates in PDG codes and eventgenerator interface classes
 D: TSpline classes
 
+N: Gian Paolo Ciceri
+E: gp.ciceri@acm.org
+D: PostgreSQL interface
+
 N: Ben Cowan
 E: benc@SLAC.Stanford.EDU
 D: port to MacOS X
