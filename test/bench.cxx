@@ -99,6 +99,8 @@ int main(int argc, char** argv) {
   int nevents     = 400;
   Float_t cx;
   
+  TTree::SetBranchStyle(1); // use the new Bronch style
+  
   //testing STL vector of THit
   Double_t cptot = 0;
   TStopwatch timer;

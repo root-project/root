@@ -109,7 +109,7 @@ Int_t TSTLhit::MakeTree(int mode, int nevents, int compression, int split, float
   if (mode > 0) {
      f = new TFile(demofile,"recreate","STLhit",compression);  
      T = new TTree("T","Demo tree");
-     T->Bronch("event","TSTLhit",&top,64000,split);
+     T->Branch("event","TSTLhit",&top,64000,split);
   }
   for (int ievent=0; ievent<nevents; ievent++) {
      MakeEvent(ievent);
@@ -183,7 +183,7 @@ Int_t TSTLhitStar::MakeTree(int mode, int nevents, int compression, int split, f
   if (mode > 0) {
      f = new TFile(demofile,"recreate","STLhitStar",compression);  
      T = new TTree("T","Demo tree");
-     T->Bronch("event","TSTLhitStar",&top,64000,split);
+     T->Branch("event","TSTLhitStar",&top,64000,split);
   }
   for (int ievent=0; ievent<nevents; ievent++) {
      MakeEvent(ievent);
@@ -257,7 +257,7 @@ Int_t TCloneshit::MakeTree(int mode, int nevents, int compression, int split, fl
   if (mode > 0) {
      f = new TFile(demofile,"recreate","Cloneshit",compression);  
      T = new TTree("T","Demo tree");
-     T->Bronch("event","TCloneshit",&top,64000,split);
+     T->Branch("event","TCloneshit",&top,64000,split);
   }
   for (int ievent=0; ievent<nevents; ievent++) {
      MakeEvent(ievent);
