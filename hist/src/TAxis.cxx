@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.62 2004/09/08 08:41:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.63 2004/12/10 22:22:38 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -335,10 +335,20 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             if (axisNumber == 3 && hobj && hobj->GetDimension() != 3) {
                Float_t zmin = hobj->GetMinimum();
                Float_t zmax = hobj->GetMaximum();
+               if(gPad->GetLogz()){
+                  if (zmin <= 0 && zmax > 0) zmin = TMath::Min((Double_t)1,
+                                                               (Double_t)0.001*zmax);
+                  zmin = TMath::Log10(zmin);
+                  zmax = TMath::Log10(zmax);
+               }
                Float_t newmin = zmin + (zmax-zmin)*ratio1;
                Float_t newmax = zmin + (zmax-zmin)*ratio2;
                if(newmin < zmin)newmin = hobj->GetBinContent(hobj->GetMinimumBin());
                if(newmax > zmax)newmax = hobj->GetBinContent(hobj->GetMaximumBin());
+               if(gPad->GetLogz()){
+                  newmin = TMath::Exp(2.302585092994*newmin);
+                  newmax = TMath::Exp(2.302585092994*newmax);
+               }
                hobj->SetMinimum(newmin);
                hobj->SetMaximum(newmax);
                hobj->SetBit(TH1::kIsZoomed);

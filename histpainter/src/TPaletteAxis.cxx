@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.8 2004/11/26 07:55:13 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.9 2005/02/15 15:39:28 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -162,10 +162,20 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (fH->GetDimension() == 2) {
             Double_t zmin = fH->GetMinimum();
             Double_t zmax = fH->GetMaximum();
+            if(gPad->GetLogz()){
+               if (zmin <= 0 && zmax > 0) zmin = TMath::Min((Double_t)1,
+                                                            (Double_t)0.001*zmax);
+               zmin = TMath::Log10(zmin);
+               zmax = TMath::Log10(zmax);
+            }
             Double_t newmin = zmin + (zmax-zmin)*ratio1;
             Double_t newmax = zmin + (zmax-zmin)*ratio2;
             if(newmin < zmin)newmin = fH->GetBinContent(fH->GetMinimumBin());
             if(newmax > zmax)newmax = fH->GetBinContent(fH->GetMaximumBin());
+            if(gPad->GetLogz()){
+               newmin = TMath::Exp(2.302585092994*newmin);
+               newmax = TMath::Exp(2.302585092994*newmax);
+            }
             fH->SetMinimum(newmin);
             fH->SetMaximum(newmax);
             fH->SetBit(TH1::kIsZoomed);
