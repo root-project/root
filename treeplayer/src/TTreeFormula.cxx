@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.67 2001/10/04 05:50:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.68 2001/10/06 07:30:15 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -587,7 +587,7 @@ Double_t TFormLeafInfoClones::GetValue(TLeaf *leaf, Int_t instance) {
 }
 
 //______________________________________________________________________________
-void * TFormLeafInfoClones::GetValuePointer(TLeaf *leaf, Int_t instance = 0) {
+void * TFormLeafInfoClones::GetValuePointer(TLeaf *leaf, Int_t instance) {
    // Return the pointer to the clonesArray
   
    TClonesArray * clones;
