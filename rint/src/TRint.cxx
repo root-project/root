@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.6 2001/03/14 10:09:09 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.7 2001/05/08 23:44:45 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -193,7 +193,9 @@ TRint::~TRint()
 void TRint::Run(Bool_t retrn)
 {
    // Main application eventloop. First process files given on the command
-   // line and then go into the main application event loop.
+   // line and then go into the main application event loop, unless the -q
+   // command line option was specfied in which case the program terminates.
+   // When retrn is true this method returns even when -q was specified.
 
    Getlinem(kInit, GetPrompt());
 
@@ -222,8 +224,10 @@ void TRint::Run(Bool_t retrn)
          }
       } ENDTRY;
 
-      if (QuitOpt())
+      if (QuitOpt()) {
+         if (retrn) return;
          Terminate(0);
+      }
 
       ClearInputFiles();
 
@@ -232,6 +236,7 @@ void TRint::Run(Bool_t retrn)
 
    if (QuitOpt()) {
       printf("\n");
+      if (retrn) return;
       Terminate(0);
    }
 
