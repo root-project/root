@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.cxx,v 1.3 2000/11/21 16:39:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.cxx,v 1.4 2003/04/03 13:46:49 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -19,7 +19,7 @@ void **(*gThreadTsd)(void*,Int_t) = 0;
 Int_t (*gThreadXAR)(const char *xact, Int_t nb, void **ar, Int_t *iret) = 0;
 
 //______________________________________________________________________________
-TVirtualPad *&gPad
+TVirtualPad *&TVirtualPad::Pad()
 {
    static TVirtualPad *currentPad = 0;
    if (!gThreadTsd)
@@ -82,7 +82,7 @@ void TVirtualPad::Streamer(TBuffer &R__b)
       TAttFill::Streamer(R__b);
       TAttPad::Streamer(R__b);
       //====end of old versions
-      
+
    } else {
       TVirtualPad::Class()->WriteBuffer(R__b,this);
    }
