@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.16 2002/02/05 22:51:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.17 2002/02/18 10:06:34 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1477,7 +1477,7 @@ void TMath::BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2)
         localArr1[iEl2-1] = localArr1[iEl2];
         localArr1[iEl2]   = tmp;
 
-        double tmp2       = localArr2[iEl2-1];
+        int    tmp2       = localArr2[iEl2-1];
         localArr2[iEl2-1] = localArr2[iEl2];
         localArr2[iEl2]   = tmp2;
       }
@@ -1503,31 +1503,26 @@ void TMath::BubbleLow(Int_t Narr, Double_t *arr1, Int_t *arr2)
   int iEl;
   int iEl2;
 
-  for(iEl = 0; iEl < Narr; iEl++)
-  {
+  for(iEl = 0; iEl < Narr; iEl++) {
     localArr1[iEl] = arr1[iEl];
     localArr2[iEl] = iEl;
   }
 
-  for(iEl = 0; iEl < Narr; iEl++)
-  {
-    for(iEl2 = Narr-1; iEl2 > iEl; --iEl2)
-    {
-      if(localArr1[iEl2-1] > localArr1[iEl2])
-      {
+  for(iEl = 0; iEl < Narr; iEl++) {
+    for(iEl2 = Narr-1; iEl2 > iEl; --iEl2) {
+      if(localArr1[iEl2-1] > localArr1[iEl2]) {
         double tmp        = localArr1[iEl2-1];
         localArr1[iEl2-1] = localArr1[iEl2];
         localArr1[iEl2]   = tmp;
 
-        double tmp2       = localArr2[iEl2-1];
+        int    tmp2       = localArr2[iEl2-1];
         localArr2[iEl2-1] = localArr2[iEl2];
         localArr2[iEl2]   = tmp2;
       }
     }
   }
 
-  for(iEl = 0; iEl < Narr; iEl++)
-  {
+  for(iEl = 0; iEl < Narr; iEl++) {
     arr2[iEl] = localArr2[iEl];
   }
 }
