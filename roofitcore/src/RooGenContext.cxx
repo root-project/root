@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenContext.cc,v 1.36 2004/03/19 06:09:46 wverkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.37 2004/04/05 22:44:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,7 +40,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     Bool_t verbose, const RooArgSet* forceDirect) :  
   RooAbsGenContext(model,vars,prototype,auxProto,verbose),
   _cloneSet(0), _pdfClone(0), _acceptRejectFunc(0), _generator(0),
-  _maxVar(0), _uniIter(0) 
+  _maxVar(0), _uniIter(0), _updateFMaxPerEvent(0) 
 {
   // Initialize a new context for generating events with the specified
   // variables, using the specified PDF model. A prototype dataset (if provided)
@@ -145,6 +145,22 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   if (_protoVars.getSize()==0) {
 
     // No prototype variables
+    
+    if(depList->getSize()==0) {
+      // All variable are generated with accept-reject
+      
+      // Check if PDF supports maximum finding
+      Int_t maxFindCode = _pdfClone->getMaxVal(_otherVars) ;
+      if (maxFindCode != 0) {
+	if (verbose) {
+	  cout << "RooGenContext::ctor(" << model.GetName() 
+	       << ") PDF supports maximum finding, initial sampling phase skipped" << endl ;
+	}
+	Double_t maxVal = _pdfClone->maxVal(maxFindCode) / _pdfClone->getNorm(_theEvent) ;
+	_maxVar = new RooRealVar("funcMax","function maximum",maxVal) ;
+      }
+    } 
+
     _pdfClone->getVal(&vars) ; // WVE debug
     _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,*depList,&vars);
 
@@ -154,20 +170,40 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     depList->remove(_protoVars,kTRUE,kTRUE) ;
     _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,*depList,&vars);
 
-    // First find maximum in other+proto space
-    RooArgSet otherAndProto(_otherVars) ;
+    if (_directVars.getSize()==0)  {
 
-    RooArgSet* protoDeps = model.getDependents(_protoVars) ;
-    otherAndProto.add(*protoDeps) ;
-    delete protoDeps ;
+      // Check if PDF supports maximum finding
+      Int_t maxFindCode = _pdfClone->getMaxVal(_otherVars) ;
+      if (maxFindCode != 0) {
 
-    if (_otherVars.getSize()>0) {      
-      // Calculate maximum in other+proto space if there are any accept/reject generated observables
-      RooAcceptReject maxFinder(*_acceptRejectFunc,otherAndProto,0,_verbose) ;
-      Double_t max = maxFinder.getFuncMax() ;
-      _maxVar = new RooRealVar("funcMax","function maximum",max) ;
+	// Special case: PDF supports max-finding in otherVars, no need to scan other+proto space for maximum
+	if (verbose) {
+	  cout << "RooGenContext::ctor(" << model.GetName() 
+	       << ") PDF supports maximum finding, initial sampling phase skipped" << endl ;
+	}
+	_maxVar = new RooRealVar("funcMax","function maximum",1) ;
+	_updateFMaxPerEvent = maxFindCode ;
+      }
     }
-    
+
+
+    if (!_maxVar) {
+
+      // Regular case: First find maximum in other+proto space
+      RooArgSet otherAndProto(_otherVars) ;
+      
+      RooArgSet* protoDeps = model.getDependents(_protoVars) ;
+      otherAndProto.add(*protoDeps) ;
+      delete protoDeps ;
+      
+      if (_otherVars.getSize()>0) {      
+	// Calculate maximum in other+proto space if there are any accept/reject generated observables
+	RooAcceptReject maxFinder(*_acceptRejectFunc,otherAndProto,0,_verbose) ;
+	Double_t max = maxFinder.getFuncMax() ;
+	_maxVar = new RooRealVar("funcMax","function maximum",max) ;
+      }
+    }
+      
   }
 
   _generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,_maxVar,_verbose);
@@ -217,6 +253,12 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining) {
 
   if(_otherVars.getSize() > 0) {
     // call the accept-reject generator to generate its variables
+
+
+    if (_updateFMaxPerEvent!=0) {
+      _maxVar->setVal(_pdfClone->maxVal(_updateFMaxPerEvent)/_pdfClone->getNorm(_otherVars)) ;
+    }
+
     const RooArgSet *subEvent= _generator->generateEvent(remaining);
     if(0 == subEvent) {
       cout << ClassName() << "::" << GetName() << ":generate: accept/reject generator failed." << endl;

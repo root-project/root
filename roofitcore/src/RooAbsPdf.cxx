@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.84 2004/03/19 06:09:45 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.85 2004/04/05 22:43:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -160,6 +160,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title,
 
 RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) : 
   RooAbsReal(other,name), _norm(0), _normSet(0), _normMgr(10), _selectComp(other._selectComp)
+
 {
   // Copy constructor
   resetErrorCounters() ;
@@ -765,8 +766,10 @@ Int_t RooAbsPdf::getGenerator(const RooArgSet &directVars, RooArgSet &generatedV
   // this method returns zero. Subclasses will usually implement this method using the
   // matchArgs() methods to advertise the algorithms they provide.
 
-  return 0;
+
+  return 0 ;
 }
+
 
 void RooAbsPdf::initGenerator(Int_t code) 
 {  
@@ -801,6 +804,31 @@ Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
   delete sIter ;
   return kTRUE ;
 }
+
+
+Int_t RooAbsPdf::getMaxVal(const RooArgSet& vars) const 
+  // Advertise capability to determine maximum value of function for given set of 
+  // observables. If no direct generator method is provided, this information
+  // will assist the accept/reject generator to operate more efficiently as
+  // it can skip the initial trial sampling phase to empirically find the function
+  // maximum
+{
+  return 0 ;
+}
+
+
+Double_t RooAbsPdf::maxVal(Int_t code) 
+{
+  // Return maximum value for set of observables identified by code assigned
+  // in getMaxVal
+
+  assert(1) ;
+  return 0 ;
+}
+
+
+
+
 
 
 

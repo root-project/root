@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenContext.rdl,v 1.13 2004/03/19 06:09:46 wverkerke Exp $
+ *    File: $Id: RooGenContext.rdl,v 1.14 2004/04/05 22:44:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,6 +24,7 @@ class RooDataSet;
 class RooRealIntegral;
 class RooAcceptReject;
 class TRandom;
+class RooRealVar ;
 
 class RooGenContext : public RooAbsGenContext {
 public:
@@ -45,8 +46,9 @@ protected:
   Double_t _maxProb, _area, _norm;
   RooRealIntegral *_acceptRejectFunc;
   RooAcceptReject *_generator;
-  RooAbsReal *_maxVar ;
+  RooRealVar *_maxVar ;
   TIterator *_uniIter ;
+  Int_t _updateFMaxPerEvent ;
 
   ClassDef(RooGenContext,0) // Context for generating a dataset from a PDF
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.70 2004/04/05 21:38:47 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.71 2004/04/05 22:43:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -106,6 +106,10 @@ public:
   virtual void initGenerator(Int_t code) ;
   virtual void generateEvent(Int_t code);  
 
+  // Optimized accept/reject generator support
+  virtual Int_t getMaxVal(const RooArgSet& vars) const ;
+  virtual Double_t maxVal(Int_t code) ;
+
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ; 
 
   // Interactions with a dataset  
@@ -195,7 +199,6 @@ protected:
   mutable Int_t _errorCount ;        // Number of errors remaining to print
   mutable Int_t _traceCount ;        // Number of traces remaining to print
   mutable Int_t _negCount ;          // Number of negative probablities remaining to print
-
 
   friend class RooAddPdf ;
   void selectComp(Bool_t flag) { _selectComp = flag ; }
