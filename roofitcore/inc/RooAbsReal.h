@@ -1,12 +1,14 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.24 2001/08/17 01:18:43 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.25 2001/08/23 01:21:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  * History:
  *   07-Mar-2001 WV Created initial version
+ *   24-Aug-2001 AB Added TH2F * createHistogram methods
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
@@ -23,6 +25,7 @@ class RooRealFunc1D;
 class RooAbsFunc;
 class RooRealFixedBinIter ;
 class TH1F;
+class TH2F;
 
 class RooAbsReal : public RooAbsArg {
 public:
@@ -80,6 +83,9 @@ public:
   // Create histograms
   TH1F *createHistogram(const char *label, const char *axis, Int_t bins= 0) const;
   TH1F *createHistogram(const char *label, const char *axis, Double_t lo, Double_t hi, Int_t bins) const;
+  TH2F *createHistogram(const char *label, const RooAbsReal & var2) const;
+  TH2F *createHistogram(const char *label, const char *axis1, const char *axis2, Double_t lo1,
+                         Double_t hi1, Int_t bins1, Double_t lo2, Double_t hi2, Int_t bins2) const;
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;

@@ -1,10 +1,11 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.40 2001/08/23 23:43:42 david Exp $
+ *    File: $Id: RooDataSet.cc,v 1.41 2001/08/24 17:28:40 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  * History:
  *   01-Nov-1999 DK Created initial version
  *   19-Apr-2000 DK Bug fix to read() method which caused an error on EOF
@@ -15,6 +16,7 @@
  *   29-Nov-2000 WV Add support for reading hex numbers from ascii files
  *   30-Nov-2000 WV Add support for multiple file reading with optional common path
  *   09-Mar-2001 WV Migrate from RooFitTools and adapt to RooFitCore
+ *   24-Aug-2001 AB Added TH2F * createHistogram method
  *
  * Copyright (C) 1999 Stanford University
  *****************************************************************************/
@@ -583,6 +585,93 @@ TH1F* RooDataSet::createHistogram(const RooAbsReal& var, const char* cuts, const
   return histo ;
 }
 
+TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2, const char* cuts, const char *name) const
+{
+  // Create a TH2F histogram of the distribution of the specified variable
+  // using this dataset. Apply any cuts to select which events are used.
+  // The variable being plotted can either be contained directly in this
+  // dataset, or else be a function of the variables in this dataset.
+  // The histogram will be created using RooAbsReal::createHistogram() with
+  // the name provided (with our dataset name prepended).
+
+  Bool_t ownPlotVarX(kFALSE) ;
+  // Is this variable in our dataset?
+  RooAbsReal* plotVarX= (RooAbsReal*)_vars.find(var1.GetName());
+  if(0 == plotVarX) {
+    // Is this variable a client of our dataset?
+    if (!var1.dependsOn(_vars)) {
+      cout << GetName() << "::createHistogram: Argument " << var1.GetName() 
+	   << " is not in dataset and is also not dependent on data set" << endl ;
+      return 0 ; 
+    }
+
+    // Clone derived variable 
+    plotVarX = (RooAbsReal*) var1.Clone()  ;
+    ownPlotVarX = kTRUE ;
+
+    //Redirect servers of derived clone to internal ArgSet representing the data in this set
+    plotVarX->redirectServers(const_cast<RooArgSet&>(_vars)) ;
+  }
+
+  Bool_t ownPlotVarY(kFALSE) ;
+  // Is this variable in our dataset?
+  RooAbsReal* plotVarY= (RooAbsReal*)_vars.find(var2.GetName());
+  if(0 == plotVarY) {
+    // Is this variable a client of our dataset?
+    if (!var2.dependsOn(_vars)) {
+      cout << GetName() << "::createHistogram: Argument " << var2.GetName() 
+	   << " is not in dataset and is also not dependent on data set" << endl ;
+      return 0 ; 
+    }
+
+    // Clone derived variable 
+    plotVarY = (RooAbsReal*) var2.Clone()  ;
+    ownPlotVarY = kTRUE ;
+
+    //Redirect servers of derived clone to internal ArgSet representing the data in this set
+    plotVarY->redirectServers(const_cast<RooArgSet&>(_vars)) ;
+  }
+
+  // Create selection formula if selection cuts are specified
+  RooFormula* select(0) ;
+  if(0 != cuts && strlen(cuts)) {
+    select=new RooFormula(cuts,cuts,_vars);
+    if (!select || !select->ok()) {
+      delete select;
+      return 0 ;
+    }
+  }
+  
+  TString histName(name);
+  histName.Prepend("_");
+  histName.Prepend(fName);
+
+  // create the histogram
+  TH2F* histogram= var1.createHistogram(histName.Data(), var2);
+
+  if(!histogram) {
+    cout << fName << "::createHistogram: unable to create a new histogram" << endl;
+    return 0;
+  }
+
+  // Dump contents   
+  Int_t nevent= (Int_t)_tree->GetEntries();
+  for(Int_t i=0; i < nevent; ++i) 
+  {
+    Int_t entryNumber=_tree->GetEntryNumber(i);
+    if (entryNumber<0) break;
+    get(entryNumber);
+
+    if (select && select->eval()==0) continue ;
+    histogram->Fill(plotVarX->getVal(), plotVarY->getVal()) ;
+  }
+
+  if (ownPlotVarX) delete plotVarX ;
+  if (ownPlotVarY) delete plotVarY ;
+  if (select) delete select ;
+
+  return histogram ;
+}
 
 Roo1DTable* RooDataSet::table(RooAbsCategory& cat, const char* cuts, const char* opts) const
 {

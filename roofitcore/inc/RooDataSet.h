@@ -1,14 +1,16 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.25 2001/08/17 01:18:44 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.26 2001/08/23 01:21:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  * History:
  *   01-Nov-1999 DK Created initial version
  *   30-Nov-2000 WV Add support for multiple file reading with optional common path
  *   09-Mar-2001 WV Migrate from RooFitTools and adapt to RooFitCore
+ *   24-Aug-2001 AB Added TH2F * createHistogram method
  *
  * Copyright (C) 1999 Stanford University
  *****************************************************************************/
@@ -73,7 +75,9 @@ public:
   virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P") const;
   TH1F* createHistogram(const RooAbsReal& var, const char* cuts="", 
 			const char *name= "hist") const;	 
- 
+  TH2F* createHistogram(const RooAbsReal& var1, const RooAbsReal& var2, const char* cuts="", 
+			const char *name= "hist") const;	 
+
   // Printing interface (human readable)
   virtual void printToStream(ostream& os, PrintOption opt= Standard, 
 			     TString indent= "") const;

@@ -1,12 +1,14 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.33 2001/08/17 15:51:58 david Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.34 2001/08/23 01:21:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  * History:
  *   07-Mar-2001 WV Created initial version
+ *   24-Aug-2001 AB Added TH2F * createHistogram methods
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
@@ -34,6 +36,7 @@
 #include "TObjString.h"
 #include "TTree.h"
 #include "TH1.h"
+#include "TH2.h"
 #include "TBranch.h"
 #include "TLeaf.h"
 
@@ -299,6 +302,58 @@ TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
     }
     histogram->SetYTitle(yTitle.Data());
   }
+  return histogram;
+}
+
+TH2F *RooAbsReal::createHistogram(const char *label, const RooAbsReal & var2) const 
+{
+  return createHistogram(label, this->GetName(), var2.GetName(),
+                        this->getPlotMin(), this->getPlotMax(), this->getPlotBins(),  
+                        var2.getPlotMin(), var2.getPlotMax(), var2.getPlotBins() );
+}
+
+TH2F *RooAbsReal::createHistogram(const char *label, const char *axis1, const char *axis2, 
+                                  Double_t lo1, Double_t hi1, Int_t bins1,
+                                  Double_t lo2, Double_t hi2, Int_t bins2 ) const 
+{
+  // Create a 2D-histogram with appropriate scale and labels for this variable.
+  // Binning must be specified with this method since the default binning is associated
+  // with the default plot ranges, but you have asked for a non-default range.
+  TString histName(label);
+  if(!histName.IsNull()) histName.Append("_");
+  histName.Append(GetName());
+
+  // create the histogram
+  TH2F* histogram= new TH2F(histName.Data(), fTitle, bins1, lo1, hi1, bins2, lo2, hi2);
+  if(!histogram) {
+    cout << fName << "::createHistogram: unable to create a new histogram" << endl;
+    return 0;
+  }
+
+  // Set the x-axis title if given one
+  if(strlen(axis1)) {
+    TString xTitle(axis1);
+    Double_t delta= (_plotMax-_plotMin)/bins1;
+    xTitle.Append(Form(" / %g",delta));
+    if(strlen(getUnit())) {
+      xTitle.Append(" ");
+      xTitle.Append(getUnit());
+    }
+    histogram->SetXTitle(xTitle.Data());
+  }
+
+  // Set the y-axis title if given one
+  if(strlen(axis2)) {
+    TString yTitle(axis2);
+    Double_t delta= (_plotMax-_plotMin)/bins2;
+    yTitle.Append(Form(" / %g",delta));
+    if(strlen(getUnit())) {
+      yTitle.Append(" ");
+      yTitle.Append(getUnit());
+    }
+    histogram->SetYTitle(yTitle.Data());
+  }
+
   return histogram;
 }
 
