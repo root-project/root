@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TBRIK.cxx,v 1.3 2004/08/03 16:01:18 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TBRIK.cxx,v 1.4 2004/09/14 15:15:46 brun Exp $
 // Author: Nenad Buncic 17/09/95 
 
 /*************************************************************************
@@ -98,9 +98,9 @@ void TBRIK::Paint(Option_t *option)
    TransformPoints(buff);
 
    // Basic colors: 0, 1, ... 7
-   Int_t c = GetLineColor();
+   buff->fColor = GetLineColor();
+   Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
-   buff->fColor = c;
 
    buff->fSegs[ 0] = c   ; buff->fSegs[ 1] = 0   ; buff->fSegs[ 2] = 1   ;
    buff->fSegs[ 3] = c+1 ; buff->fSegs[ 4] = 1   ; buff->fSegs[ 5] = 2   ;

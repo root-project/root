@@ -182,9 +182,9 @@ void TMarker3DBox::Paint(Option_t *option)
    }
 
    // Basic colors: 0, 1, ... 7
-   Int_t c = GetLineColor();
+   buff->fColor = GetLineColor();
+   Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
-   buff->fColor = c;
 
    buff->fSegs[ 0] = c   ; buff->fSegs[ 1] = 0 ; buff->fSegs[ 2] = 1;
    buff->fSegs[ 3] = c+1 ; buff->fSegs[ 4] = 1 ; buff->fSegs[ 5] = 2;

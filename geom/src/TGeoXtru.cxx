@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.11 2004/09/06 16:42:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.12 2004/09/14 15:15:46 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -683,9 +683,9 @@ void TGeoXtru::Paint(Option_t *option)
    TransformPoints(buff);
 
    // Basic colors: 0, 1, ... 7
-   Int_t c = gGeoManager->GetCurrentVolume()->GetLineColor();
+   buff->fColor = gGeoManager->GetCurrentVolume()->GetLineColor();
+   Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
-   buff->fColor = c;
 
    Int_t i,j;
    Int_t indx, indx2, k;

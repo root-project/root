@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.31 2004/09/06 16:42:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.32 2004/09/14 15:15:46 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -644,9 +644,9 @@ void TGeoCone::Paint(Option_t *option)
    TransformPoints(buff);
 
    // Basic colors: 0, 1, ... 7
-   Int_t c = gGeoManager->GetCurrentVolume()->GetLineColor();
+   buff->fColor = gGeoManager->GetCurrentVolume()->GetLineColor();
+   Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
-   buff->fColor = c;
 
    for (i = 0; i < 4; i++) {
       for (j = 0; j < n; j++) {

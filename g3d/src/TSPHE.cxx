@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.9 2004/08/09 15:22:28 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.10 2004/09/14 15:15:46 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -175,9 +175,9 @@ void TSPHE::Paint(Option_t *option)
    TransformPoints(buff);
 
    // Basic colors: 0, 1, ... 7
-   Int_t c = GetLineColor();
+   buff->fColor = GetLineColor();
+   Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
-   buff->fColor = c;
 
    Int_t indx, indx2, k;
    indx = indx2 = 0;

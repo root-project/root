@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.5 2004/08/09 15:22:28 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.6 2004/09/14 15:15:46 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -174,9 +174,9 @@ void TTUBE::Paint(Option_t *option)
    TransformPoints(buff);
 
    // Basic colors: 0, 1, ... 7
-   Int_t c = GetLineColor();
+   buff->fColor = GetLineColor();
+   Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
-   buff->fColor = c;
 
    for (i = 0; i < 4; i++) {
       for (j = 0; j < n; j++) {
