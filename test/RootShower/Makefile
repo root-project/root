@@ -458,6 +458,18 @@ SYSLIBS       = msvcrt.lib oldnames.lib kernel32.lib ws2_32.lib mswsock.lib \
 ROOTLIBS     := $(shell root-config --libs)
 ROOTGLIBS    := $(shell root-config --glibs)
 endif
+ 
+ifeq ($(ARCH),win32gcc)
+# Windows with gcc
+DllSuf        = dll
+ExeSuf        = .exe
+CXX           = g++
+CXXFLAGS      = -O -Wall -Woverloaded-virtual -I/usr/X11R6/include
+LD            = g++
+LDFLAGS       = -O -Wl,--enable-auto-import 
+SOFLAGS       = -shared -D_DLL -Wl,--export-all-symbols 
+EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
+endif
 
 ifeq ($(CXX),)
 $(error $(ARCH) invalid architecture)
