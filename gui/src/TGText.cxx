@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.7 2000/07/11 09:29:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.8 2000/07/12 17:58:05 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -776,7 +776,7 @@ Bool_t TGText::InsLine(ULong_t pos, const char *string)
    // Returns false if insertion failed.
 
    TGTextLine *previous, *newline;
-   if ((Long_t)pos >= fRowCount)
+   if ((Long_t)pos > fRowCount)
       return kFALSE;
    if ((Long_t)pos < fRowCount)
       SetCurrentRow(pos);

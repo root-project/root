@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.7 2000/07/11 09:29:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.8 2000/07/12 17:58:05 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -144,7 +144,10 @@ void TGTextView::AddLine(const char *string)
 {
    // Add a line of text to the view widget.
 
-   fText->InsLine(fText->RowCount(), string);
+   TGLongPosition pos;
+   pos.fX = 0;
+   pos.fY = fText->RowCount();
+   fText->InsText(pos, string);
    Layout();
    DrawRegion(0, 0, fCanvas->GetWidth(), fCanvas->GetHeight());
 }
