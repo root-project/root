@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedToolBox.cxx,v 1.1 2004/02/18 20:13:42 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedToolBox.cxx,v 1.2 2004/02/18 22:42:25 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 17/07/2003
 
 /*************************************************************************
@@ -23,8 +23,10 @@
 #include "TList.h"
 #include "TGButton.h"
 #include "TGPicture.h"
+#include "TGToolBar.h"
 #include "TROOT.h"
 #include "TCanvas.h"
+#include "Riostream.h"
 
 ClassImp(TGedToolBox)
 
@@ -179,3 +181,19 @@ Bool_t TGedToolBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    } // GET_MSG
    return kTRUE;
 }
+
+//______________________________________________________________________________
+void TGedToolBox::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save the tool box widget as a C++ statement(s) on output stream out
+   
+   TGToolBar::SavePrimitive(out, option);
+   
+   // setting layout manager
+   out << "   " << GetName() <<"->SetLayoutManager(";
+   GetLayoutManager()->SavePrimitive(out,option);
+   out << ");"<< endl;
+
+   out << "   " << GetName() <<"->Resize();" << endl;
+}
+ 

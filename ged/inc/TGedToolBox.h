@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGedToolBox.h,v 1.0 2003/06/24 13:41:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGedToolBox.h,v 1.1 2004/02/18 20:13:42 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   21/07/2003
 
 /*************************************************************************
@@ -36,6 +36,8 @@ public:
                UInt_t options = kHorizontalFrame,
                Pixel_t back = GetDefaultFrameBackground());
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t);
+
+   virtual void   SavePrimitive(ofstream &out, Option_t *option);
         
    ClassDef(TGedToolBox,0)  //a bar with picture buttons
 };

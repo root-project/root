@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.2 2004/02/18 20:31:36 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.3 2004/02/19 14:52:29 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 // ****It needs more fixes*****
 /*************************************************************************
@@ -43,6 +43,7 @@
 #include "TGResourcePool.h"
 #include "TGToolTip.h"
 #include "TGButton.h"
+#include "Riostream.h"
 #include <snprintf.h>
 
 ClassImp(TGedPopup)
@@ -728,3 +729,13 @@ void TGedPatternSelect::SetPattern(Style_t pattern)
    fPattern = pattern;
    gClient->NeedRedraw(this);
 }
+
+//______________________________________________________________________________
+void TGedPatternSelect::SavePrimitive(ofstream &out, Option_t *)
+{
+   // Save the pattern select widget as a C++ statement(s) on output stream out
+   
+   out <<"   TGedPatternSelect *";
+   out << GetName() << " = new TGedPatternSelect(" << fParent->GetName()
+       << "," << fPattern << "," << WidgetId() << ");" << endl;
+} 

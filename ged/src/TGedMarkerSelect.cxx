@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.2 2004/02/19 15:36:45 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.3 2004/02/19 16:53:51 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 // ****It needs more fixes*****
 /*************************************************************************
@@ -34,7 +34,7 @@
 #include "TGPicture.h"
 #include "TGToolTip.h"
 #include "TGButton.h"
-
+#include "Riostream.h"
 
 ClassImp(TGedMarkerSelect)
 ClassImp(TGedMarkerPopup)
@@ -196,3 +196,13 @@ void TGedMarkerSelect::SetMarkerStyle(Style_t markerStyle)
 
    if (md)  fPicture = gClient->GetPicture(md->filename);
 }
+
+//______________________________________________________________________________
+void TGedMarkerSelect::SavePrimitive(ofstream &out, Option_t *)
+{
+   // Save the pattern select widget as a C++ statement(s) on output stream out
+   
+   out <<"   TGedMarkerSelect *";
+   out << GetName() << " = new TGedMarkerSelect(" << fParent->GetName()
+       << "," << fMarkerStyle << "," << WidgetId() << ");" << endl;
+} 

@@ -28,8 +28,7 @@ class TVirtualPadEditor {
 
 protected:
    static TVirtualPadEditor *fgPadEditor;    // singleton editor dialog
-   static TString            fgEditorName;   // name of the default pad editor
-                                             // ("PadEditor","PadEditorOld",etc)
+   static TString            fgEditorName;   // name of the default pad editor "Ged"
 
 public:
    TVirtualPadEditor();
