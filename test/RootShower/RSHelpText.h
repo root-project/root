@@ -10,8 +10,8 @@
 #ifndef RSHELPTEXT_H
 #define RSHELPTEXT_H
 
-extern const char physics_txt[];
-extern const char simulation_txt[];
+extern const char gPhysicsHelpText[];
+extern const char gSimulationHelpText[];
 extern const char gRSHelpMsgBox[];
 extern const char gSettingsHelp[];
 extern const char gHelpLicense[];

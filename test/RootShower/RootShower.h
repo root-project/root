@@ -44,12 +44,13 @@ class TH1F;
 class TGToolBar;
 
 
-extern TGListTree       *gEventListTree; // event selection TGListTree
-extern TGListTreeItem   *gBaseLTI;
-extern TGListTreeItem   *gTmpLTI;
-extern TGListTreeItem   *gLTI[];
+extern TGListTree       *gEventListTree;    // Event selection TGListTree
+extern TGListTreeItem   *gBaseLTI;          // First ListTree item
+extern TGListTreeItem   *gTmpLTI;           // Temporary ListTree item
+extern TGListTreeItem   *gLTI[];            // Array of ListTree items (particles)
 
-extern Int_t            gColIndex;
+extern Int_t            gColIndex;          // Global gradient color table used 
+                                            // for tracks color
 
 class RootShower: public TGMainFrame {
 
@@ -61,31 +62,31 @@ private:
     static Int_t        fgDefaultXPosition; // default X position of top left corner
     static Int_t        fgDefaultYPosition; // default Y position of top left corner
 
-    Bool_t              fOk;
-    Bool_t              fModified;
-    Bool_t              fSettingsModified;
-    Bool_t              fIsRunning;
-    Bool_t              fInterrupted;
-    Bool_t              fShowProcess;
-    Bool_t              fCreateGIFs;
+    Bool_t              fOk;                // Return code from settings dialog
+    Bool_t              fModified;          // kTRUE if setting mods not saved
+    Bool_t              fSettingsModified;  // kTRUE if settings have been modified
+    Bool_t              fIsRunning;         // Simulation running flag
+    Bool_t              fInterrupted;       // Interrupts current simulation
+    Bool_t              fShowProcess;       // Display process details
+    Bool_t              fCreateGIFs;        // GIFs creation of current event
 
-    ULong_t             fEventNr;   // Event number
-    UInt_t              fNRun;      // Run number
-    TDatime             fEventTime; // Event generation date
+    ULong_t             fEventNr;           // Event number
+    UInt_t              fNRun;              // Run number
+    TDatime             fEventTime;         // Event generation date
 
-    Int_t               fPicIndex;
-    Int_t               fPicNumber;
-    Int_t               fPicDelay;
-    Int_t               fPicReset;
+    Int_t               fPicIndex;          // Index of animation images
+    Int_t               fPicNumber;         // Number of images used for animation
+    Int_t               fPicDelay;          // Delay between animation images
+    Int_t               fPicReset;          // kTRUE to display first anim picture
 
-    TEnv               *fRootShowerEnv;
+    TEnv               *fRootShowerEnv;     // RootShower environment variables
     // MenuBar Frame
-    TGMenuBar          *fMenuBar;
-    TGPopupMenu        *fMenuFile;
-    TGPopupMenu        *fMenuTest;
-    TGPopupMenu        *fMenuInspect;
-    TGPopupMenu        *fMenuView;
-    TGPopupMenu        *fMenuHelp;
+    TGMenuBar          *fMenuBar;           // Main menu bar
+    TGPopupMenu        *fMenuFile;          // "File" popup menu
+    TGPopupMenu        *fMenuEvent;         // "Event" popup menu
+    TGPopupMenu        *fMenuTools;         // "Tools" popup menu
+    TGPopupMenu        *fMenuView;          // "View" popup menu
+    TGPopupMenu        *fMenuHelp;          // "Help" popup menu
     TGLayoutHints      *fMenuBarLayout;
     TGLayoutHints      *fMenuBarItemLayout;
     TGLayoutHints      *fMenuBarHelpLayout;
@@ -107,51 +108,51 @@ private:
     TGLayoutHints      *fL8;
 
     // Title Frame
-    GTitleFrame        *fTitleFrame;
+    GTitleFrame        *fTitleFrame;        // Title frame
 
     // Main Frame
-    TGCompositeFrame   *fMainFrame;
+    TGCompositeFrame   *fMainFrame;         // Main frame
 
     // Selection frame
-    TGCompositeFrame   *fSelectionFrame;
-    GButtonFrame       *fButtonFrame; // button frame
+    TGCompositeFrame   *fSelectionFrame;    // Frame containing list tree and button frame
+    GButtonFrame       *fButtonFrame;       // Frame containing control buttons
     TGListTreeItem     *AddToTree(const Text_t *name = 0);
     void                BuildEventTree();
-    TGCanvas           *fTreeView; // why do we need this?
-    TGListTree         *fEventListTree; // event selection TGListTree
-    TGListTreeItem     *fCurListItem; // current TGlistTreeItem (level) in TGListTree
+    TGCanvas           *fTreeView;          // Canvas containing event selection list tree
+    TGListTree         *fEventListTree;     // Event selection TGListTree
+    TGListTreeItem     *fCurListItem;       // Current TGlistTreeItem (level) in TGListTree
 
     // Display frame
-    TGTab              *fDisplayFrame; // TGTab for graphical and text display
-    TRootEmbeddedCanvas *fEmbeddedCanvas; // the actual frame which displays event
-    TRootEmbeddedCanvas *fEmbeddedCanvas2; // the actual frame which displays event
-    TRootEmbeddedCanvas *fEmbeddedCanvas3; // the actual frame which displays histo
-    TGTextEdit         *fTextView;
+    TGTab              *fDisplayFrame;      // TGTab for graphical and text display
+    TRootEmbeddedCanvas *fEmbeddedCanvas;   // Events frame
+    TRootEmbeddedCanvas *fEmbeddedCanvas2;  // Selected event frame
+    TRootEmbeddedCanvas *fEmbeddedCanvas3;  // Statistics frame
+    TGTextEdit         *fTextView;          // PDG infos frame
 
     // Zooming stuff...
-    TGHorizontalFrame  *fHFrame,*fHFrame2;
-    TGLayoutHints      *fZoomButtonsLayout;
-    TGButton           *fZoomPlusButton,*fZoomMoinsButton;
-    TGButton           *fZoomPlusButton2,*fZoomMoinsButton2;
+    TGHorizontalFrame  *fHFrame,*fHFrame2;  // Frame containing zoom buttons
+    TGLayoutHints      *fZoomButtonsLayout; // Layout of zoom buttons
+    TGButton           *fZoomPlusButton,*fZoomMoinsButton;  // Zoom buttons
+    TGButton           *fZoomPlusButton2,*fZoomMoinsButton2;// Zoom buttons
 
     // Statusbar
-    TGStatusBar        *fStatusBar;        // status bar reporting event info
+    TGStatusBar        *fStatusBar;         // Status bar reporting event info
 
-    TTimer             *fTimer;
-    TCanvas            *cA;
-    TCanvas            *cB;
-    TCanvas            *cC;
+    TTimer             *fTimer;             // Timer used for animation
+    TCanvas            *fCA;                // Events view
+    TCanvas            *fCB;                // Selected event view
+    TCanvas            *fCC;                // Statistics
     
-    MyEvent            *fEvent;
-    TPad               *padC;
+    MyEvent            *fEvent;             // Pointer on actual event
+    TPad               *fPadC;              // TPad of statistics histo
     
-    TH1F               *fHisto_dEdX;       // histogram of particle's energy loss
+    TH1F               *fHisto_dEdX;        // histogram of particle's energy loss
 
 protected:
 
-    Int_t               fFirstParticle;
-    Double_t            fE0;
-    Double_t            fB;
+    Int_t               fFirstParticle;     // Primary particle type
+    Double_t            fE0;                // Initial particle energy
+    Double_t            fB;                 // Magnetic field
 
 public:
     // statics

@@ -304,8 +304,8 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     fEmbeddedCanvas = new TRootEmbeddedCanvas("fEmbeddedCanvas", tFrame, 580, 360);
     tFrame->AddFrame(fEmbeddedCanvas, fL5);
     fEmbeddedCanvas->GetCanvas()->SetBorderMode(0);
-    cA = fEmbeddedCanvas->GetCanvas();
-    cA->SetFillColor(1);
+    fCA = fEmbeddedCanvas->GetCanvas();
+    fCA->SetFillColor(1);
 
     // Create Display Canvas Tab (where the selected event is displayed)
     TGCompositeFrame *tFrame2 = fDisplayFrame->AddTab("Selected Track");
@@ -325,8 +325,8 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     fEmbeddedCanvas2 = new TRootEmbeddedCanvas("fEmbeddedCanvas2", tFrame2, 580, 360);
     tFrame2->AddFrame(fEmbeddedCanvas2, fL5);
     fEmbeddedCanvas2->GetCanvas()->SetBorderMode(0);
-    cB = fEmbeddedCanvas2->GetCanvas();
-    cB->SetFillColor(1);
+    fCB = fEmbeddedCanvas2->GetCanvas();
+    fCB->SetFillColor(1);
 
     // Create Display Canvas Tab (where the histogram is displayed)
     TGCompositeFrame *tFrame3 = fDisplayFrame->AddTab("Statistics");
@@ -334,14 +334,14 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     fEmbeddedCanvas3 = new TRootEmbeddedCanvas("fEmbeddedCanvas3", tFrame3, 580, 360);
     tFrame3->AddFrame(fEmbeddedCanvas3, fL5);
     fEmbeddedCanvas3->GetCanvas()->SetBorderMode(0);
-    cC = fEmbeddedCanvas3->GetCanvas();
-    cC->SetFillColor(10);
-    cC->cd();
-    padC = new TPad("padC","Histogram",0.0,0.0,1.0,1.0,10,3,1);
-    padC->SetFillColor(10);
-    padC->SetBorderMode(0);
-    padC->SetBorderSize(0);
-    padC->Draw();
+    fCC = fEmbeddedCanvas3->GetCanvas();
+    fCC->SetFillColor(10);
+    fCC->cd();
+    fPadC = new TPad("fPadC","Histogram",0.0,0.0,1.0,1.0,10,3,1);
+    fPadC->SetFillColor(10);
+    fPadC->SetBorderMode(0);
+    fPadC->SetBorderSize(0);
+    fPadC->Draw();
     // Creation of histogram for particle's energy loss
     fHisto_dEdX = new TH1F("Statistics","Energy loss for each particle",100,0,0.025); // Max at 25 MeV
     fHisto_dEdX->SetFillColor(38);
@@ -355,7 +355,7 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     fHisto_dEdX->SetLabelSize(0.03f, "Y");
     fHisto_dEdX->GetYaxis()->SetTitleFont(42);
 
-    cC->Update();
+    fCC->Update();
 
     // Create text display Tab
     tFrame = fDisplayFrame->AddTab("PDG Table");
@@ -422,32 +422,32 @@ void RootShower::MakeMenuBarFrame()
     fMenuFile->DisableEntry(M_FILE_SAVEAS);
     fMenuFile->Associate(this);
 
-    fMenuTest = new TGPopupMenu(gClient->GetRoot());
-    fMenuTest->AddLabel("Simulation Settings...");
-    fMenuTest->AddSeparator();
-    fMenuTest->AddEntry("&Settings...", M_SETTINGS_DLG);
-    fMenuTest->AddEntry("Save &Parameters", M_SETTINGS_SAVE);
-    fMenuTest->AddEntry("Show &Process", M_SHOW_PROCESS);
-    fMenuTest->AddEntry("Animated &GIF", M_ANIMATE_GIF);
-    fMenuTest->AddEntry("&Infos...                   Ctrl+I", M_SHOW_INFOS);
-    fMenuTest->AddSeparator();
-    fMenuTest->AddEntry("&3D View", M_SHOW_3D);
-    fMenuTest->AddEntry("&Show Selected  Track", M_SHOW_TRACK);
-    fMenuTest->DisableEntry(M_SHOW_INFOS);
-    fMenuTest->DisableEntry(M_SHOW_3D);
-    fMenuTest->DisableEntry(M_SHOW_TRACK);
+    fMenuEvent = new TGPopupMenu(gClient->GetRoot());
+    fMenuEvent->AddLabel("Simulation Settings...");
+    fMenuEvent->AddSeparator();
+    fMenuEvent->AddEntry("&Settings...", M_SETTINGS_DLG);
+    fMenuEvent->AddEntry("Save &Parameters", M_SETTINGS_SAVE);
+    fMenuEvent->AddEntry("Show &Process", M_SHOW_PROCESS);
+    fMenuEvent->AddEntry("Animated &GIF", M_ANIMATE_GIF);
+    fMenuEvent->AddEntry("&Infos...                   Ctrl+I", M_SHOW_INFOS);
+    fMenuEvent->AddSeparator();
+    fMenuEvent->AddEntry("&3D View", M_SHOW_3D);
+    fMenuEvent->AddEntry("&Show Selected  Track", M_SHOW_TRACK);
+    fMenuEvent->DisableEntry(M_SHOW_INFOS);
+    fMenuEvent->DisableEntry(M_SHOW_3D);
+    fMenuEvent->DisableEntry(M_SHOW_TRACK);
 
-    fMenuTest->DisableEntry(M_SHOW_PROCESS);
-    fMenuTest->DisableEntry(M_ANIMATE_GIF);
+    fMenuEvent->DisableEntry(M_SHOW_PROCESS);
+    fMenuEvent->DisableEntry(M_ANIMATE_GIF);
 
-    fMenuTest->Associate(this);
+    fMenuEvent->Associate(this);
 
-    fMenuInspect = new TGPopupMenu(gClient->GetRoot());
-    fMenuInspect->AddLabel("Simulation Tools...");
-    fMenuInspect->AddSeparator();
-    fMenuInspect->AddEntry("Start &Browser          Ctrl+B", M_INSPECT_BROWSER);
-    fMenuInspect->AddEntry("&Create Html Doc", M_FILE_HTML);
-    fMenuInspect->Associate(this);
+    fMenuTools = new TGPopupMenu(gClient->GetRoot());
+    fMenuTools->AddLabel("Simulation Tools...");
+    fMenuTools->AddSeparator();
+    fMenuTools->AddEntry("Start &Browser          Ctrl+B", M_INSPECT_BROWSER);
+    fMenuTools->AddEntry("&Create Html Doc", M_FILE_HTML);
+    fMenuTools->Associate(this);
 
     fMenuView = new TGPopupMenu(gClient->GetRoot());
     fMenuView->AddEntry("&Toolbar", M_VIEW_TOOLBAR);
@@ -463,8 +463,8 @@ void RootShower::MakeMenuBarFrame()
     fMenuHelp->Associate(this);
 
     fMenuBar->AddPopup("&File", fMenuFile, fMenuBarItemLayout);
-    fMenuBar->AddPopup("&Event", fMenuTest, fMenuBarItemLayout);
-    fMenuBar->AddPopup("&Tools", fMenuInspect, fMenuBarItemLayout);
+    fMenuBar->AddPopup("&Event", fMenuEvent, fMenuBarItemLayout);
+    fMenuBar->AddPopup("&Tools", fMenuTools, fMenuBarItemLayout);
     fMenuBar->AddPopup("&View", fMenuView, fMenuBarItemLayout);
     fMenuBar->AddPopup("&Help", fMenuHelp, fMenuBarHelpLayout);
 
@@ -477,8 +477,8 @@ void RootShower::CloseMenuBarFrame()
 {
     // Destroy menubar and popup menus.
     delete fMenuHelp;
-    delete fMenuTest;
-    delete fMenuInspect;
+    delete fMenuEvent;
+    delete fMenuTools;
     delete fMenuFile;
 
     delete fMenuBarItemLayout;
@@ -618,11 +618,11 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         Initialize(0);
                         fStatusBar->SetText("Simulation running, please wait...",0);
                         fButtonFrame->SetState(GButtonFrame::kNoneActive);
-                        fMenuTest->DisableEntry(M_SETTINGS_DLG);
+                        fMenuEvent->DisableEntry(M_SETTINGS_DLG);
                         OnShowerProduce();
                         fClient->NeedRedraw(fEventListTree);
                         fButtonFrame->SetState(GButtonFrame::kAllActive);
-                        fMenuTest->EnableEntry(M_SETTINGS_DLG);
+                        fMenuEvent->EnableEntry(M_SETTINGS_DLG);
                         sprintf(strtmp,"Done - Total particles : %d - Waiting for next simulation",
                             fEvent->GetTotal());
                         fStatusBar->SetText(strtmp,0);
@@ -638,31 +638,31 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
 
                     case M_ZOOM_PLUS:
-                            cA->cd();
-                            cA->GetView()->ZoomView(0, 1.25);
-                            cA->Modified();
-                            cA->Update();
+                            fCA->cd();
+                            fCA->GetView()->ZoomView(0, 1.25);
+                            fCA->Modified();
+                            fCA->Update();
                         break;
 
                     case M_ZOOM_MOINS:
-                            cA->cd();
-                            cA->GetView()->UnzoomView(0, 1.25);
-                            cA->Modified();
-                            cA->Update();
+                            fCA->cd();
+                            fCA->GetView()->UnzoomView(0, 1.25);
+                            fCA->Modified();
+                            fCA->Update();
                         break;
 
                     case M_ZOOM_PLUS2:
-                            cB->cd();
-                            cB->GetView()->ZoomView(0, 1.25);
-                            cB->Modified();
-                            cB->Update();
+                            fCB->cd();
+                            fCB->GetView()->ZoomView(0, 1.25);
+                            fCB->Modified();
+                            fCB->Update();
                         break;
 
                     case M_ZOOM_MOINS2:
-                            cB->cd();
-                            cB->GetView()->UnzoomView(0, 1.25);
-                            cB->Modified();
-                            cB->Update();
+                            fCB->cd();
+                            fCB->GetView()->UnzoomView(0, 1.25);
+                            fCB->Modified();
+                            fCB->Update();
                         break;
 
                     case M_FILE_OPEN:
@@ -699,22 +699,22 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
                     case M_SHOW_PROCESS:
                         if(fShowProcess) {
-                            fMenuTest->UnCheckEntry(M_SHOW_PROCESS);
+                            fMenuEvent->UnCheckEntry(M_SHOW_PROCESS);
                             fShowProcess = kFALSE;
                         }
                         else {
-                            fMenuTest->CheckEntry(M_SHOW_PROCESS);
+                            fMenuEvent->CheckEntry(M_SHOW_PROCESS);
                             fShowProcess = kTRUE;
                         }
                         break;
 
                     case M_ANIMATE_GIF:
                         if(fCreateGIFs) {
-                            fMenuTest->UnCheckEntry(M_ANIMATE_GIF);
+                            fMenuEvent->UnCheckEntry(M_ANIMATE_GIF);
                             fCreateGIFs = kFALSE;
                         }
                         else {
-                            fMenuTest->CheckEntry(M_ANIMATE_GIF);
+                            fMenuEvent->CheckEntry(M_ANIMATE_GIF);
                             fCreateGIFs = kTRUE;
                         }
                         break;
@@ -765,7 +765,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 #else
                         sprintf(strtmp, "Help on Physics");
                         hd = new TRootHelpDialog(this, strtmp, 620, 350);
-                        hd->SetText(physics_txt);
+                        hd->SetText(gPhysicsHelpText);
                         gVirtualX->TranslateCoordinates( GetId(), GetParent()->GetId(),
                                     (Int_t)(GetWidth() - 620) >> 1,
                                     (Int_t)(GetHeight() - 350) >> 1,
@@ -779,7 +779,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                     case M_HELP_SIMULATION:
                         sprintf(strtmp, "Help on Simulation");
                         hd = new TRootHelpDialog(this, strtmp, 620, 350);
-                        hd->SetText(simulation_txt);
+                        hd->SetText(gSimulationHelpText);
                         gVirtualX->TranslateCoordinates( GetId(), GetParent()->GetId(),
                                     (Int_t)(GetWidth() - 620) >> 1,
                                     (Int_t)(GetHeight() - 350) >> 1,
@@ -808,8 +808,8 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
                     case M_SHOW_3D:
                         if(fIsRunning) break;
-                        cA->cd();
-                        cA->x3d("ogl");
+                        fCA->cd();
+                        fCA->x3d("ogl");
                         break;
 
                     case M_SHOW_TRACK:
@@ -874,26 +874,26 @@ void RootShower::Initialize(Int_t set_angles)
     fEventListTree->DeleteChildren(fCurListItem);
     fClient->NeedRedraw(fEventListTree);
 
-    cB->cd();
-    cB->SetFillColor(1);
-    cB->Clear();
+    fCB->cd();
+    fCB->SetFillColor(1);
+    fCB->Clear();
     gGeoManager->GetTopVolume()->Draw();
 
-    cB->GetView()->SetPerspective();
+    fCB->GetView()->SetPerspective();
     if(set_angles)
-        cB->GetView()->SideView();
-    cB->cd();
-    cB->Update();
+        fCB->GetView()->SideView();
+    fCB->cd();
+    fCB->Update();
 
-    cA->cd();
-    cA->SetFillColor(1);
-    cA->Clear();
+    fCA->cd();
+    fCA->SetFillColor(1);
+    fCA->Clear();
     gGeoManager->GetTopVolume()->Draw();
-    cA->GetView()->SetPerspective();
+    fCA->GetView()->SetPerspective();
     if(set_angles)
-        cA->GetView()->SideView();
-    cA->cd();
-    cA->Update();
+        fCA->GetView()->SideView();
+    fCA->cd();
+    fCA->Update();
     fStatusBar->SetText("",1);
 }
 
@@ -949,8 +949,8 @@ void RootShower::produce()
             local_num ++;
         }
     }
-    fMenuTest->EnableEntry(M_SHOW_INFOS);
-    fMenuTest->EnableEntry(M_SHOW_3D);
+    fMenuEvent->EnableEntry(M_SHOW_INFOS);
+    fMenuEvent->EnableEntry(M_SHOW_3D);
     fMenuFile->EnableEntry(M_FILE_SAVEAS);
 }
 
@@ -1004,24 +1004,24 @@ void RootShower::OnShowerProduce()
             // show track by track if "show process" has been choosen
             // into the menu
             if(fShowProcess) {
-                cA->Modified();
-                cA->Update();
+                fCA->Modified();
+                fCA->Update();
                 // create one gif image by step if "Animated GIF"
                 // has been choosen into the menu
                 if(fCreateGIFs) {
                     sprintf(gifname,"event_%04d.gif",gifindex);
-                    cA->SaveAs(gifname);
+                    fCA->SaveAs(gifname);
                     gifindex++;
                 }
             }
         }
     }
     AppendPad();
-    cA->GetView()->SetPerspective();
-    cA->cd();
-    cA->Modified();
-    cA->Update();
-    padC->cd();
+    fCA->GetView()->SetPerspective();
+    fCA->cd();
+    fCA->Modified();
+    fCA->Update();
+    fPadC->cd();
     // do not fit if not enough particles
     if(fHisto_dEdX->GetEntries() > 10) {
        fHisto_dEdX->Fit("landau","L");
@@ -1035,14 +1035,14 @@ void RootShower::OnShowerProduce()
        }
     }
     fHisto_dEdX->Draw();
-    padC->Modified();
-    padC->Update();
-    cC->Update();
-    padC->cd();
-    padC->SetFillColor(16);
-    padC->GetFrame()->SetFillColor(10);
-    padC->Draw();
-    padC->Update();
+    fPadC->Modified();
+    fPadC->Update();
+    fCC->Update();
+    fPadC->cd();
+    fPadC->SetFillColor(16);
+    fPadC->GetFrame()->SetFillColor(10);
+    fPadC->Draw();
+    fPadC->Update();
 
     // Open first list tree items
     fEventListTree->OpenItem(gBaseLTI);
@@ -1064,17 +1064,17 @@ void RootShower::OnShowSelected(TGListTreeItem *item)
     // Shows track which has been selected into the list tree
     Int_t i,retval;
 
-    cB->cd();
-    cB->SetFillColor(1);
-    cB->SetBorderMode(0);
-    cB->SetBorderSize(0);
-    cB->Clear();
-    cB->cd();
+    fCB->cd();
+    fCB->SetFillColor(1);
+    fCB->SetBorderMode(0);
+    fCB->SetBorderSize(0);
+    fCB->Clear();
+    fCB->cd();
     // draw geometry
     gGeoManager->GetTopVolume()->Draw();
-    cB->GetView()->SetPerspective();
-    cB->cd();
-    cB->Update();
+    fCB->GetView()->SetPerspective();
+    fCB->cd();
+    fCB->Update();
     retval = -1;
     for(i=0;i<=fEvent->GetTotal();i++) {
         if(gLTI[i] == item) {
@@ -1092,10 +1092,10 @@ void RootShower::OnShowSelected(TGListTreeItem *item)
        (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_TAU) ) {
         fEvent->GetTrack(retval)->Draw();
     }
-    cB->GetView()->SetPerspective();
-    cB->cd();
-    cB->Modified();
-    cB->Update();
+    fCB->GetView()->SetPerspective();
+    fCB->cd();
+    fCB->Modified();
+    fCB->Update();
 }
 
 //______________________________________________________________________________
@@ -1166,7 +1166,7 @@ void RootShower::OnOpenFile(const Char_t *filename)
     sprintf(strtmp,"Done - Total particles : %d - Waiting for next simulation",
                     fEvent->GetTotal());
     fStatusBar->SetText(strtmp,0);
-    padC->cd();
+    fPadC->cd();
     // do not fit if not enough particles
     if(fHisto_dEdX->GetEntries() > 10) {
        fHisto_dEdX->Fit("landau","L");
@@ -1180,20 +1180,20 @@ void RootShower::OnOpenFile(const Char_t *filename)
        }
     }
     fHisto_dEdX->Draw();
-    padC->Modified();
-    padC->Update();
-    cC->Update();
-    padC->cd();
-    padC->SetFillColor(16);
-    padC->GetFrame()->SetFillColor(10);
-    padC->Draw();
-    padC->Update();
+    fPadC->Modified();
+    fPadC->Update();
+    fCC->Update();
+    fPadC->cd();
+    fPadC->SetFillColor(16);
+    fPadC->GetFrame()->SetFillColor(10);
+    fPadC->Draw();
+    fPadC->Update();
 
-    cA->cd();
-    cA->Modified();
-    cA->Update();
-    fMenuTest->EnableEntry(M_SHOW_INFOS);
-    fMenuTest->EnableEntry(M_SHOW_3D);
+    fCA->cd();
+    fCA->Modified();
+    fCA->Update();
+    fMenuEvent->EnableEntry(M_SHOW_INFOS);
+    fMenuEvent->EnableEntry(M_SHOW_3D);
     fMenuFile->EnableEntry(M_FILE_SAVEAS);
     fButtonFrame->SetState(GButtonFrame::kAllActive);
     sprintf(strtmp,"Root Shower Event Display - %s",filename);

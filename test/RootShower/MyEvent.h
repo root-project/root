@@ -37,11 +37,11 @@ class EventHeader {
 
 private:
 
-    Int_t       fEvtNum;
-    Int_t       fRun;
-    TDatime     fDate;
-    Int_t       fPrimary;   // Type of primary particle
-    Double_t    fEnergy;    // Energy of primary particle
+    Int_t       fEvtNum;    // Event Identification
+    Int_t       fRun;       // Run Identification
+    TDatime     fDate;      // Date of the simulation
+    Int_t       fPrimary;   // Type of the primary particle (PDG code)
+    Double_t    fEnergy;    // Primary particle's energy
 
 public:
     EventHeader() : fEvtNum(0), fRun(0), fPrimary(0), fEnergy(0.0) { }
@@ -68,18 +68,18 @@ private:
     Int_t           fNtrack;            // Number of tracks
     Int_t           fNparticles;        // Number of particles
     Int_t           fNseg;              // Number of track segments
-    Int_t           fMatter;
+    Int_t           fMatter;            // Material index
     EventHeader     fEvtHdr;            // Event header
     Double_t        fB;                 // Magnetic field
-    Double_t        E_thresh[10];       // Energy threshold for coloring tracks
+    Double_t        fEThreshold[10];    // Energy threshold for coloring tracks
     TObjArray      *fTracks;            // ->array with all tracks
     TClonesArray   *fParticles;         // ->array with all particles
-    TRef            fLastTrack;         // reference pointer to last track
-    TRef            fLastParticle;      // reference pointer to last particle
+    TRef            fLastTrack;         // Reference pointer to last track
+    TRef            fLastParticle;      // Reference pointer to last particle
     MyDetector      fDetector;          // Detector
 
-    static TObjArray    *fgTracks;
-    static TClonesArray *fgParticles;
+    static TObjArray    *fgTracks;      // Pointer on tracks array
+    static TClonesArray *fgParticles;   // Pointer on particles array
 
 public :
 

@@ -30,10 +30,10 @@ class GButtonFrame: public TGCompositeFrame {
 
 private:
 
-    TGLayoutHints *fButtonLayout;
-    TGButton *fNextEventButton;
-    TGButton *fShowTrackButton;
-    TGButton *fStopSimButton;
+    TGLayoutHints *fButtonLayout;           // Buttons layout
+    TGButton *fNextEventButton;             // "Start New Event" button
+    TGButton *fShowTrackButton;             // "Show Selection" button
+    TGButton *fStopSimButton;               // "Interrupt Simulation" button
 
 public:
     

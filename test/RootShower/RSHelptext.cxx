@@ -11,7 +11,7 @@
 #include "RSHelpText.h"
 #endif
 
-const char physics_txt[] =
+const char gPhysicsHelpText[] =
 "\n                    Some physics recalls...\n\n"
 "Radiation length:\n"
 "High-energy electrons predominantly lose energy in matter by\n"
@@ -60,7 +60,7 @@ const char physics_txt[] =
 "of energy loss as a uniform and continuous process is for many\n"
 "purposes inadequate.\n";
 
-const char simulation_txt[] =
+const char gSimulationHelpText[] =
 "\n                     How to use this software...\n\n"
 "Choose Parameters into the menu Event to access to the parameters\n"
 "setting dialog.\n"

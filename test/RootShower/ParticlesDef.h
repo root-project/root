@@ -19,9 +19,9 @@ typedef struct {
     Char_t   name[40];
     Int_t    code;
     Double_t lifetime;
-} str_particle_def;
+} particle_def_t;
 
-const str_particle_def particle_def[] = {
+const particle_def_t particle_def[] = {
       { "down"              ,     1,       1.0e-20    },
       { "down bar"          ,    -1,       1.0e-20    },
       { "up"                ,     2,       1.0e-20    },

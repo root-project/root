@@ -29,20 +29,20 @@ MyParticle::MyParticle() : TParticle()
 {
     // MyParticle constructor
     // initialize members to zero
-    fstatus = 0;
-    fnChildren = 0;
-    fdecay_type = UNDEFINE;
-    flocation = new TVector3();
-    fpassed = 0.0;
+    fStatus = 0;
+    fNChildren = 0;
+    fDecayType = UNDEFINE;
+    fLocation = new TVector3();
+    fPassed = 0.0;
     fEloss = 0.0;
-    fdecay_length = 0.0;
+    fDecayLength = 0.0;
     fChild[0] = 0;
     fChild[1] = 0;
     fChild[2] = 0;
     fChild[3] = 0;
     fChild[4] = 0;
     fChild[5] = 0;
-    ftimeOfDecay = 0.0;
+    fTimeOfDecay = 0.0;
 }
 
 //______________________________________________________________________________
@@ -56,19 +56,19 @@ MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const 
     // MyParticle constructor
     // initialize members with parameters passed in argument
     fId = id;
-    fstatus = pStat;
-    fnChildren = 0;
-    fdecay_type = pDecayType;
-    flocation = new TVector3(pLocation);
-    fpassed = pPassed;
-    fdecay_length = pDecayLen;
+    fStatus = pStat;
+    fNChildren = 0;
+    fDecayType = pDecayType;
+    fLocation = new TVector3(pLocation);
+    fPassed = pPassed;
+    fDecayLength = pDecayLen;
     fChild[0] = 0;
     fChild[1] = 0;
     fChild[2] = 0;
     fChild[3] = 0;
     fChild[4] = 0;
     fChild[5] = 0;
-    ftimeOfDecay = 0.0;
+    fTimeOfDecay = 0.0;
 }
 
 //______________________________________________________________________________
@@ -82,13 +82,13 @@ MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const 
     // initialize members with parameters passed in argument
     fId = id;
     Double_t energy;
-    fstatus = pStat;
-    fnChildren = 0;
-    fdecay_type = pDecayType;
-    flocation = new TVector3(pLocation);
-    fpassed = 0.0;
+    fStatus = pStat;
+    fNChildren = 0;
+    fDecayType = pDecayType;
+    fLocation = new TVector3(pLocation);
+    fPassed = 0.0;
     fEloss = 0.0;
-    fdecay_length = 0.0;
+    fDecayLength = 0.0;
     fChild[0] = 0;
     fChild[1] = 0;
     fChild[2] = 0;
@@ -101,7 +101,7 @@ MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const 
         energy = TMath::Sqrt((pMomentum * pMomentum)
                  +  (GetMass() * GetMass()));
     TParticle::SetMomentum(pMomentum.x(),pMomentum.y(),pMomentum.z(),energy);
-    ftimeOfDecay = 0.0;
+    fTimeOfDecay = 0.0;
 }
 
 //______________________________________________________________________________
@@ -127,27 +127,26 @@ void MyParticle::GenerateTimeOfDecay()
 {
     // Generates time of decay for this type of particle.
     Int_t i;
-    ftimeOfDecay = (GetPDG()->Lifetime() > 0 && GetPDG()->Lifetime() < 1e8)
+    fTimeOfDecay = (GetPDG()->Lifetime() > 0 && GetPDG()->Lifetime() < 1e8)
 	  ? gRandom->Exp(GetPDG()->Lifetime())
 	  : GetPDG()->Lifetime();
-    if(ftimeOfDecay == 0.0) {
+    if(fTimeOfDecay == 0.0) {
         Int_t my_code = GetPdgCode();
-        ftimeOfDecay = 1.0e-20;
+        fTimeOfDecay = 1.0e-20;
         for(i=0;i<total_defs;i++) {
             if(particle_def[i].code == my_code) {
-                ftimeOfDecay = particle_def[i].lifetime;
+                fTimeOfDecay = particle_def[i].lifetime;
                 break;
             }
         }
-//        ftimeOfDecay *= 1.0e3;
-        if (ftimeOfDecay <= 1.0e-20) {
-            ftimeOfDecay = gRandom->Exp(1.0e-8);
+        if (fTimeOfDecay <= 1.0e-20) {
+            fTimeOfDecay = gRandom->Exp(1.0e-8);
         }
-        else if (ftimeOfDecay > 0 && ftimeOfDecay < 1e8)
-            ftimeOfDecay = gRandom->Exp(ftimeOfDecay);
+        else if (fTimeOfDecay > 0 && fTimeOfDecay < 1e8)
+            fTimeOfDecay = gRandom->Exp(fTimeOfDecay);
     }
     // Apply Lorentz transformation for time dilatation
-    ftimeOfDecay /= TMath::Sqrt(1.0 - (0.996 * 0.996));
+    fTimeOfDecay /= TMath::Sqrt(1.0 - (0.996 * 0.996));
 }
 
 //______________________________________________________________________________
@@ -173,6 +172,6 @@ const Char_t *MyParticle::GetName() const
 MyParticle::~MyParticle()
 {
     // destructor
-    delete   flocation;
+    delete   fLocation;
 }
 

@@ -33,20 +33,19 @@ class GTitleFrame: public TGCompositeFrame {
 
 private:
 
-    TGLayoutHints *fRightLogoLayout;
-    TGLayoutHints *fLeftLogoLayout;
+    TGLayoutHints *fRightLogoLayout;        // Right logo layout
+    TGLayoutHints *fLeftLogoLayout;         // Left logo layout
 
-    TGPicture *fRightIconPicture;
-    TGIcon *fRightIcon;
-    TGPicture *fLeftIconPicture;
-    TGIcon *fLeftIcon;
+    TGPicture *fRightIconPicture;           // Right icon's picture
+    TGIcon *fRightIcon;                     // Right icon (logo)
+    TGPicture *fLeftIconPicture;            // Left icon's picture
+    TGIcon *fLeftIcon;                      // Right icon (logo)
 
     TGLayoutHints *fTextFrameLayout;
     TGCompositeFrame *fTextFrame;
     TGLayoutHints *fTextLabelLayout;
-    TGLabel *fTextLabel1;
-
-    TGLabel *fTextLabel2;
+    TGLabel *fTextLabel1;                   // First line title's label
+    TGLabel *fTextLabel2;                   // Second line title's label
 
     TGGC fTextGC;
 

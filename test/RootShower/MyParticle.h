@@ -27,14 +27,14 @@ class MyParticle : public TParticle {
 private:
 
     Int_t       fId;            // Index of particle in array
-    Int_t       fstatus;        // Particle's status (CREATED,ALIVE,DEAD)
-    Int_t       fdecay_type;    // Particle's decay type (bremstrahlung,pair production,decay)
-    Int_t       fnChildren;     // Number of children
-    TVector3    *flocation;     // Particle's current location
-    Double_t    fpassed;        // Distance actually covered
+    Int_t       fStatus;        // Particle's status (CREATED,ALIVE,DEAD)
+    Int_t       fDecayType;     // Particle's decay type (bremstrahlung,pair production,decay)
+    Int_t       fNChildren;     // Number of children
+    TVector3    *fLocation;     // Particle's current location
+    Double_t    fPassed;        // Distance actually covered
     Double_t    fEloss;         // Total Energy loss into the detector
-    Double_t    fdecay_length;  // Calculated interaction length
-    Double_t    ftimeOfDecay;   // Generated decay time
+    Double_t    fDecayLength;   // Calculated interaction length
+    Double_t    fTimeOfDecay;   // Generated decay time
     Int_t       fChild[6];      // Array of children indexes
 
 public :
@@ -44,35 +44,35 @@ public :
     MyParticle(Int_t, Int_t, Int_t, Int_t, const TVector3 &, const TVector3 &, Double_t, Double_t, Double_t);
     MyParticle(Int_t, Int_t, Int_t, Int_t, const TVector3 &, const TVector3 &);
     Int_t       GetId() { return fId; }
-    Int_t       GetStatus() { return fstatus; }
-    Int_t       GetDecayType() { return fdecay_type; }
-    TVector3    *GetpLocation() { return flocation; }
-    TVector3    GetvLocation() { return *flocation; }
+    Int_t       GetStatus() { return fStatus; }
+    Int_t       GetDecayType() { return fDecayType; }
+    TVector3    *GetpLocation() { return fLocation; }
+    TVector3    GetvLocation() { return *fLocation; }
     TVector3    GetvMoment() { return TVector3(Px(),Py(),Pz()); }
-    Double_t    GetPassed() { return fpassed; }
+    Double_t    GetPassed() { return fPassed; }
     Double_t    GetELoss() { return fEloss; }
-    Double_t    GetDecayLength() { return fdecay_length; }
+    Double_t    GetDecayLength() { return fDecayLength; }
     Int_t       GetChildId(Int_t id) { return fChild[id]; }
-    Double_t    GetTimeOfDecay() { return ftimeOfDecay; }
-    Int_t       GetNChildren() { return fnChildren; }
+    Double_t    GetTimeOfDecay() { return fTimeOfDecay; }
+    Int_t       GetNChildren() { return fNChildren; }
     Char_t     *GetObjectInfo(Int_t px, Int_t py) const;
     const Char_t *GetName() const;
 
     void        SetId(Int_t id) { fId = id; }
-    void        SetNChildren(Int_t nb) { fnChildren = nb; }
-    void        SetStatus(Int_t stat) { fstatus = stat; }
-    void        SetDecayType(Int_t decay) { fdecay_type = decay; }
-    void        SetTimeOfDecay(Double_t time) { ftimeOfDecay = time; }
-    void        SetLocation(const TVector3 &loc) { flocation->SetX(loc.x());
-                    flocation->SetY(loc.y()); flocation->SetZ(loc.z()); }
+    void        SetNChildren(Int_t nb) { fNChildren = nb; }
+    void        SetStatus(Int_t stat) { fStatus = stat; }
+    void        SetDecayType(Int_t decay) { fDecayType = decay; }
+    void        SetTimeOfDecay(Double_t time) { fTimeOfDecay = time; }
+    void        SetLocation(const TVector3 &loc) { fLocation->SetX(loc.x());
+                    fLocation->SetY(loc.y()); fLocation->SetZ(loc.z()); }
     void        SetLocation(Double_t lx, Double_t ly, Double_t lz) {
-                    flocation->SetX(lx); flocation->SetY(ly); flocation->SetZ(lz); }
+                    fLocation->SetX(lx); fLocation->SetY(ly); fLocation->SetZ(lz); }
     void        SetMoment(const TVector3 &mom);
     void        SetMoment(const TVector3 &mom, Double_t energy) {
                     SetMomentum(mom.x(), mom.y(), mom.z(), energy); }
-    void        SetPassed(Double_t pass) { fpassed = pass; }
+    void        SetPassed(Double_t pass) { fPassed = pass; }
     void        AddELoss(Double_t eloss) { fEloss += eloss; }
-    void        SetDecayLength(Double_t len) { fdecay_length = len; }
+    void        SetDecayLength(Double_t len) { fDecayLength = len; }
     void        SetChild(Int_t id, Int_t child_id) { fChild[id] = child_id; }
     void        GenerateTimeOfDecay();
 

@@ -70,7 +70,7 @@ void MyEvent::Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0)
    // to give a track color related to the particle
    // energy
    for(i=0;i<10;i++)
-      E_thresh[i] = E_0/(2<<i);
+      fEThreshold[i] = E_0/(2<<i);
 
    Clear();
    Reset();
@@ -390,8 +390,6 @@ Int_t MyEvent::Decay(Int_t id)
    Double_t sumBR = 0.0;
    MyParticle *Particle[5];
    MyParticle *part;
-
-   MyParticle *mother = GetParticle(id);
 
    // compute total branching ratio
    for(i=0;i<GetParticle(id)->GetPDG()->NDecayChannels();i++) {
@@ -747,10 +745,10 @@ Int_t MyEvent::PairCreation(Int_t id)
 Int_t MyEvent::ParticleColor(Int_t id)
 {
    // return color index related to particle's energy
-   Int_t ctable[11] = {2,50,46,45,44,43,42,41,21,19,5};
+   //Int_t ctable[11] = {2,50,46,45,44,43,42,41,21,19,5};
    Int_t i;
    for(i=0;i<10;i++)
-      if(GetParticle(id)->Energy() > E_thresh[i]) break;
+      if(GetParticle(id)->Energy() > fEThreshold[i]) break;
    if(i > 10) i = 10;
    return(gColIndex + i);
    //return ctable[i];
