@@ -507,8 +507,8 @@ all:            $(PROGRAMS)
 
 $(ROOTSHOWER):  $(ROOTSHOWERO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(GLIBS) ../root/lib/libEG.lib \
-		   ../root/lib/libHtml.lib ../root/lib/libGeom.lib $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(GLIBS) '$(ROOTSYS)\lib\libEG.lib' \
+		   '$(ROOTSYS)\lib\libHtml.lib' '$(ROOTSYS)\lib\libGeom.lib' $(OutPutOpt)$@
 else
 		$(LD) $(LDFLAGS) $^ $(GLIBS) -lEG -lHtml -lGeom $(OutPutOpt)$@
 endif
