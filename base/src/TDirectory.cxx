@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.22 2002/02/25 11:26:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.23 2002/04/01 17:08:30 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -937,12 +937,17 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
 {
    // Create a sub-directory and return a pointer to the created directory.
    // Returns 0 in case of error.
+   // Returns 0 if a directory with the same name already exists.
    // Note that the directory name cannot contain slashes.
 
    if (!name || !title || !strlen(name)) return 0;
    if (!strlen(title)) title = name;
    if (strchr(name,'/')) {
       ::Error("TDirectory::mkdir","directory name cannot contain a slash", name);
+      return 0;
+   }
+   if (GetKey(name)) {
+      Error("mkdir","Directory %s exists already",name);
       return 0;
    }
 
