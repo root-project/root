@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.73 2003/09/23 22:06:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.74 2003/09/27 18:00:11 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -863,6 +863,8 @@ char *TSystem::ExpandPathName(const char *)
 Bool_t TSystem::AccessPathName(const char *, EAccessMode)
 {
    // Returns FALSE if one can access a file using the specified access mode.
+   // The file name must not contain any special shell characters line ~ or $,
+   // in those cases first call ExpandPathName().
    // Attention, bizarre convention of return value!!
 
    return kFALSE;
