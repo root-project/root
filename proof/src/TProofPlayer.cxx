@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.39 2004/07/29 10:54:54 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.40 2004/11/24 07:41:32 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -566,26 +566,13 @@ TList *TProofPlayerRemote::MergeFeedback()
 {
    PDB(kFeedback,1) Info("MergeFeedback","Enter");
 
-   if ( gProof->IsMaster() ) {
-      // process local feedback objects
-
-      TList *fb = new TList;
-      TIter next(fFeedback);
-      while( TObjString *name = (TObjString*) next() ) {
-         TObject *o = fOutput->FindObject(name->GetName());
-         if (o != 0) fb->Add(o->Clone());
-      }
-
-      StoreFeedback(this, fb); // adopts fb
-   }
-
-
    if ( fFeedbackLists == 0 ) {
       PDB(kFeedback,1) Info("MergeFeedback","Leave (no output)");
       return 0;
    }
 
-   TList *fb = new TList;   // collection of feedback object
+   TList *fb = new TList;   // collection of feedback objects
+   fb->SetOwner();
 
    TIter next(fFeedbackLists);
 
@@ -674,12 +661,13 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
       TMap *map = (TMap*) fFeedbackLists->FindObject(obj->GetName());
       if ( map == 0 ) {
          PDB(kFeedback,2) Info("StoreFeedback","Map not Found (creating)", obj->GetName() );
+         // map must not be owner (ownership is with regards to the keys (only))
          map = new TMap;
-         map->SetName( obj->GetName() );
-         // TODO: needed? allowed? map->SetOwner();
+         map->SetName(obj->GetName());
          fFeedbackLists->Add(map);
       }
 
+      delete map->GetValue(slave);
       map->Remove(slave);
       map->Add(slave, obj);
    }
@@ -704,7 +692,7 @@ void TProofPlayerRemote::SetupFeedback()
 
    fFeedbackTimer = new TTimer;
    fFeedbackTimer->SetObject(this);
-   fFeedbackTimer->Start(500,kFALSE);
+   fFeedbackTimer->Start(500,kTRUE);
 }
 
 //______________________________________________________________________________
@@ -724,7 +712,25 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
 
    if ( fFeedbackTimer == 0 ) return kFALSE; // timer already switched off
 
-   if ( fFeedbackLists == 0 ) return kFALSE;
+   if ( gProof->IsMaster() ) {
+      // process local feedback objects
+
+      TList *fb = new TList;
+      fb->SetOwner();
+
+      TIter next(fFeedback);
+      while( TObjString *name = (TObjString*) next() ) {
+         TObject *o = fOutput->FindObject(name->GetName());
+         if (o != 0) fb->Add(o->Clone());
+      }
+
+      if (fb->GetSize() > 0) StoreFeedback(this, fb); // adopts fb
+   }
+
+   if ( fFeedbackLists == 0 ) {
+      fFeedbackTimer->Start(500,kTRUE);   // maybe next time
+      return kFALSE;
+   }
 
    TList *fb = MergeFeedback();
 
@@ -737,6 +743,9 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
    gProofServ->GetSocket()->Send(m);
 
    delete fb;
+
+   fFeedbackTimer->Start(500,kTRUE);
+
    return kFALSE; // ignored?
 }
 

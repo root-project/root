@@ -28,6 +28,14 @@ Bool_t make_event_trees(const Char_t* basedir, Int_t events_per_file, Int_t file
 
    ofstream slavemacro("build_trees.C");
 
+   slavemacro << "#include \"TSystem.h\""                                                 << endl;
+   slavemacro << "#include \"TProof.h\""                                                  << endl;
+   slavemacro << "#include \"TProofServ.h\""                                              << endl;
+   slavemacro << "#include \"TRandom.h\""                                                 << endl;
+   slavemacro << "#include \"TFile.h\""                                                   << endl;
+   slavemacro << "#include \"TTree.h\""                                                   << endl;
+   slavemacro << "#include \"Riostream.h\""                                               << endl;
+   slavemacro << "#include \"Event.h\""                                                   << endl;
    slavemacro << "void build_trees(const Char_t* basedir, Int_t nevents, Int_t nfiles) {" << endl;
    slavemacro << "   Int_t slave_number = -1;"                                            << endl;
    slavemacro << "   Int_t nslaves = 0;"                                                  << endl;
@@ -93,7 +101,7 @@ Bool_t make_event_trees(const Char_t* basedir, Int_t events_per_file, Int_t file
 
    slavemacro.close();
 
-   TString cmd = ".x build_trees.C(\"";
+   TString cmd = ".x build_trees.C+(\"";
    cmd += basedir;
    cmd += "\",";
    cmd += events_per_file;
