@@ -38,6 +38,7 @@ $TAR $TARFILE $EXCLUDE $dir/LICENSE $dir/README $dir/bin \
    $dir/tutorials/*.h $dir/tutorials/*.dat $dir/tutorials/mlpHiggs.root \
    $dir/tutorials/galaxy.pal.root $dir/tutorials/galaxy.root \
    $dir/tutorials/stock.root $dir/tutorials/worldmap.xpm \
+   $dir/tutorials/mditestbg.xpm $dir/tutorials/fore.xpm \
    $dir/tutorials/runcatalog.sql $dir/tutorials/*.py $dir/tutorials/*.rb \
    $dir/test/*.cxx $dir/test/*.h $dir/test/Makefile* $dir/test/README \
    $dir/test/RootShower/*.h $dir/test/RootShower/*.cxx \
