@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.106 2003/07/22 16:03:08 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.107 2003/08/20 15:40:29 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2433,10 +2433,10 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
   TFrame *frame = gPad->GetFrame();
   if (frame) fwidth = frame->GetLineWidth();
   Double_t dxframe = 0.5*(gPad->AbsPixeltoX(fwidth) - gPad->AbsPixeltoX(0));
-  Double_t vxmin = gPad->GetUxmin() + dxframe;
-  Double_t vxmax = gPad->GetUxmax() - dxframe;
+  Double_t vxmin = gPad->PadtoX(gPad->GetUxmin() + dxframe);
+  Double_t vxmax = gPad->PadtoX(gPad->GetUxmax() - dxframe);
   Double_t dyframe = 0.5*(-gPad->AbsPixeltoY(fwidth) + gPad->AbsPixeltoY(0));
-  Double_t vymin = gPad->GetUymin() + dyframe;
+  Double_t vymin = gPad->PadtoY(gPad->GetUymin() + dyframe);
 
 //*-*-           Draw the histogram with a fill area
 
