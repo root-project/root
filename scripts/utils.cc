@@ -11,6 +11,8 @@
 #include "TError.h"
 #include "TSystem.h"
 
+#include "Riostream.h"
+
 // This redirect the root warning to be on stdout instead of stderr.
 
 //______________________________________________________________________________
@@ -90,4 +92,41 @@ void StdoutErrorHandler(int level, Bool_t abort, const char *location, const cha
 
 void SetROOTMessageToStdout() {
    SetErrorHandler(StdoutErrorHandler);
+}
+
+Bool_t ComparePostscript(const char *from, const char *to)
+{
+   FILE *left = fopen(from,"r");
+   FILE *right = fopen(to,"r");
+   
+   if (left==0) std::cout << "Could not open " << from << std::endl;
+   if (right==0) std::cout << "Could not open " << to << std::endl;
+   if (left==0 || right==0) return false;
+
+   char leftbuffer[256];
+   char rightbuffer[256];
+   
+   char *lvalue,*rvalue;
+   
+   Bool_t areEqual = kTRUE;
+   do {
+      lvalue = fgets(leftbuffer, sizeof(leftbuffer), left);
+      rvalue = fgets(rightbuffer, sizeof(rightbuffer), right);
+      
+      if (lvalue&&rvalue) {
+         if (strstr(lvalue,"%%CreationDate")) {
+            // skip the comment line with the time and date
+         } else {
+            areEqual = areEqual && (0 == strncmp(lvalue,rvalue,sizeof(leftbuffer)));
+         }
+      }
+      if (lvalue&&!rvalue) areEqual = kFALSE;
+      if (rvalue&&!lvalue) areEqual = kFALSE;
+      
+   } while(areEqual && lvalue && rvalue);
+   
+   fclose(left);
+   fclose(right);
+   
+   return areEqual;
 }
