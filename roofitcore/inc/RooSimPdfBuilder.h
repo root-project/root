@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooSimPdfBuilder.rdl,v 1.2 2001/11/01 22:52:22 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.rdl,v 1.3 2001/11/21 21:35:05 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -25,10 +25,12 @@ public:
   ~RooSimPdfBuilder() ;
 
   RooArgSet* createProtoBuildConfig() ;
-  const RooAbsPdf* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, const RooArgSet& auxSplitCats) {
-    return buildPdf(buildConfig,dataSet,&auxSplitCats) ;
+  const RooAbsPdf* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, 
+			    const RooArgSet& auxSplitCats, Bool_t verbose=kFALSE) {
+    return buildPdf(buildConfig,dataSet,&auxSplitCats,verbose) ;
   }
-  const RooAbsPdf* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, const RooArgSet* auxSplitCats=0) ;
+  const RooAbsPdf* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, 
+			    const RooArgSet* auxSplitCats=0, Bool_t verbose=kFALSE) ;
   
   const RooArgSet& splitLeafList() { return _splitLeafList; }
  
