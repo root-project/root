@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.109 2002/11/11 11:27:47 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.110 2002/11/11 16:23:16 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -439,11 +439,14 @@ bool CheckClassDef(G__ClassInfo &cl)
    */
    
    bool inheritsFromTObject = cl.IsBase("TObject");
+   bool inheritsFromTSelector = cl.IsBase("TSelector");
 
    bool result = true;
-   if (inheritsFromTObject && !hasClassDef) {
+   if (!inheritsFromTSelector && inheritsFromTObject && !hasClassDef) {
       Error(cl.Name(),"%s inherits from TObject but does not have its own ClassDef\n",cl.Name());
-      result = false;
+      // We do want to always output the message (hence the Error level)
+      // but still want rootcint to succeed.
+      result = true;
    }
 
    // This check is disabled for now.

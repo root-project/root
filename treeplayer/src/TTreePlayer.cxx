@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.109 2002/10/04 20:14:52 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.110 2002/10/21 16:13:06 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1937,6 +1937,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"   void    SetInputList(TList *input) {fInput = input;}\n");
       fprintf(fp,"   TList  *GetOutputList() const { return fOutput; }\n");
       fprintf(fp,"   void    Terminate();\n");
+      fprintf(fp,"   ClassDef(%s,0);\n",classname);
       fprintf(fp,"};\n");
       fprintf(fp,"\n");
       fprintf(fp,"#endif\n");
