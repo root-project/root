@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.83 2002/09/10 14:58:12 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.84 2002/09/14 11:12:47 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2707,7 +2707,9 @@ void TPad::PaintModified()
           tdate->Draw();
        }
    }
-   TObjOptLink *lnk = (TObjOptLink*)GetListOfPrimitives()->FirstLink();
+   TList *pList = GetListOfPrimitives();
+   TObjOptLink *lnk = 0;
+   if (pList) lnk = (TObjOptLink*)pList->FirstLink();
    TObject *obj;
 
    while (lnk) {
