@@ -30,7 +30,7 @@ SOEXT         = a
 
 # System libraries:
 SYSLIBS       = -lm -lld
-XLIBS         = -L/usr/local/lib -lXpm -lX11
+XLIBS         = $(XPMLIB) -lX11
 CILIBS        = -lm -lld
 
 # Fortran:
