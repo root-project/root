@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooNameSet.cc,v 1.6 2001/10/08 05:20:18 verkerke Exp $
+ *    File: $Id: RooNameSet.cc,v 1.7 2001/10/10 17:59:01 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -49,17 +49,36 @@ RooNameSet::RooNameSet(const RooNameSet& other) : _nameList()
 }
 
 
+void RooNameSet::extendBuffer(Int_t inc)
+{
+  char * newbuf = new char[_len+inc] ;
+  strncpy(newbuf,_nameList,_len) ;
+  delete[] _nameList ;
+  _nameList = newbuf ;
+  _len += inc ;
+}
+
+
 void RooNameSet::refill(const RooArgSet& argSet) 
 {
   TIterator* iter = argSet.createIterator() ;
   RooAbsArg* arg ;
   char *ptr=_nameList ;
+  char *end=_nameList+_len-2 ;
   while(arg=(RooAbsArg*)iter->Next()) {    
     const char* argName = arg->GetName() ;
-    while(*ptr++ = *argName++) ;
-    *ptr++ = ':' ;
+    while(*ptr++ = *argName++) {
+      if (ptr>=end) {
+	// Extend buffer
+	Int_t offset = ptr-_nameList ;
+	extendBuffer(1024) ;
+	ptr = _nameList + offset ;
+	end = _nameList + _len - 2;
+      }
+    }
+    *(ptr-1) = ':' ;
   }
-  *ptr= 0 ;
+  *(ptr-1)= 0 ;
   delete iter ;
 }
 
@@ -102,7 +121,6 @@ Bool_t RooNameSet::operator==(const RooNameSet& other)
 
 
 void RooNameSet::printToStream(ostream &os, PrintOption opt, TString indent) const{
-  TObjString* str ;
-  Bool_t first(kTRUE) ;
+  os << strlen(_nameList) << endl ;
   os << indent << _nameList << endl ;
 }

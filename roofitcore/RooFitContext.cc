@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.36 2001/11/05 19:54:59 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.37 2001/11/05 21:34:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -84,14 +84,15 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, Bool_
       RooRealVar* datReal = dynamic_cast<RooRealVar*>(dataDepSet->find(pdfReal->GetName())) ;
       if (!datReal) continue ;
 
-      if (pdfReal->getFitMin()<datReal->getFitMin()) {
+      if (pdfReal->getFitMin()<(datReal->getFitMin()-1e-6)) {
 	cout << "RooFitContxt: ERROR minimum of PDF variable " << arg->GetName() 
-	     << " is smaller than that of " << arg->GetName() << " in the dataset" << endl ;
+	     << "(" << pdfReal->getFitMin() << ") is smaller than that of " 
+	     << arg->GetName() << " in the dataset (" << datReal->getFitMin() << ")" << endl ;
 	_zombie=kTRUE ;
 	return ;
       }
 
-      if (pdfReal->getFitMax()>datReal->getFitMax()) {
+      if (pdfReal->getFitMax()>(datReal->getFitMax()+1e-6)) {
 	cout << "RooFitContxt: ERROR maximum of PDF variable " << arg->GetName() 
 	     << " is smaller than that of " << arg->GetName() << " in the dataset" << endl ;
 	_zombie=kTRUE ;
