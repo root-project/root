@@ -24,22 +24,22 @@ public:
   Float_t  vect[7]; 
   Float_t  getot; 
   Float_t  gekin; 
-  Float_t  vout[7]; 
+  Float_t  vout[7];   //! not persistent
   Int_t    nmec; 
   Int_t   *lmec;      //[nmec]
   Int_t   *namec;     //[nmec]
-  Int_t    nstep; 
+  Int_t    nstep;     //! not persistent
   Int_t    pid; 
   Float_t  destep; 
-  Float_t  destel; 
-  Float_t  safety; 
-  Float_t  sleng; 
-  Float_t  step; 
-  Float_t  snext; 
-  Float_t  sfield; 
-  Float_t  tofg; 
-  Float_t  gekrat; 
-  Float_t  upwght; 
+  Float_t  destel;    //! not persistent
+  Float_t  safety;    //! not persistent
+  Float_t  sleng;     //! not persistent
+  Float_t  step;      //! not persistent
+  Float_t  snext;     //! not persistent
+  Float_t  sfield;    //! not persistent 
+  Float_t  tofg;      //! not persistent
+  Float_t  gekrat;    //! not persistent 
+  Float_t  upwght;    //! not persistent 
   
   Gctrak() {lmec=0; namec=0;}
   
@@ -83,7 +83,7 @@ void tree2aw()
    TFile f("tree2.root","recreate");
    TTree t2("t2","a Tree with data from a fake Geant3");
    Gctrak *gstep = new Gctrak;
-   t2.Branch("track","Gctrak",&gstep);
+   t2.Branch("track","Gctrak",&gstep,8000,1);
    
    //Initialize particle parameters at first point
    Float_t px,py,pz,p,charge=0;
@@ -137,7 +137,10 @@ void tree2aw()
       gstep->vect[4] = vout[4];
       gstep->vect[5] = vout[5];
       gstep->nmec    = (Int_t)(5*gRandom->Rndm());
-      for (Int_t l=0;l<gstep->nmec;l++) gstep->lmec[l] = l;
+      for (Int_t l=0;l<gstep->nmec;l++) {
+         gstep->lmec[l] = l;
+         gstep->namec[l] = l+100;
+      }
       if (gstep->gekin < 0.001)            newParticle = kTRUE;
       if (TMath::Abs(gstep->vect[2]) > 30) newParticle = kTRUE;
    }
