@@ -71,6 +71,8 @@ class basic_stringbuf : public basic_streambuf<charT, traits>
 
   virtual basic_streambuf<charT,traits>* setbuf(char_type* s, streamsize n);
   virtual streamsize xsputn(const char_type *s, streamsize n);
+ private:
+  basic_stringbuf& operator=(const basic_stringbuf& x);
 };
 
 

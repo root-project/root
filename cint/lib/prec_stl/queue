@@ -15,7 +15,7 @@
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 
-#include <deque>
+#include <_deque>
 
 template <class T, class Container = deque<T> >
 class queue {

@@ -27,6 +27,7 @@ extern void G__set_cpp_environmentG__stream();
 #include "iostrm.h"
 #include "fstrm.h"
 #include "sstrm.h"
+#include "linkdef.h"
 
 #ifndef G__MEMFUNCBODY
 #endif

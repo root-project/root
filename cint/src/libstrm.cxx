@@ -194,6 +194,15 @@ static int G__streambuf_wAstreambuf_1_2(G__value *result7,G__CONST char *funcnam
    return(1 || funcname || hash || result7 || libp) ;
 }
 
+// automatic assignment operator
+static int G__streambuf_operatoreQ_2_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   streambuf *dest = (streambuf*)(G__getstructoffset());
+   *dest = (*(streambuf*)libp->para[0].ref);
+   const streambuf& obj = *dest;
+   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
 
 /* ostream */
 static int G__ostream_ostream_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
@@ -1026,6 +1035,15 @@ static int G__filebuf_wAfilebuf_4_1(G__value *result7,G__CONST char *funcname,st
    return(1 || funcname || hash || result7 || libp) ;
 }
 
+// automatic assignment operator
+static int G__filebuf_operatoreQ_5_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   filebuf *dest = (filebuf*)(G__getstructoffset());
+   *dest = (*(filebuf*)libp->para[0].ref);
+   const filebuf& obj = *dest;
+   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
 
 /* fstreambase */
 static int G__fstreambase_fstreambase_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
@@ -1505,6 +1523,15 @@ static int G__strstreambuf_wAstrstreambuf_1_1(G__value *result7,G__CONST char *f
      G__operator_delete((void*)G__getstructoffset());
    }
       G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+// automatic assignment operator
+static int G__strstreambuf_operatoreQ_2_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   strstreambuf *dest = (strstreambuf*)(G__getstructoffset());
+   *dest = (*(strstreambuf*)libp->para[0].ref);
+   const strstreambuf& obj = *dest;
+   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -2351,6 +2378,8 @@ static void G__setup_memfuncstreambuf(void) {
 "C - - 0 - s i - - 0 - n",(char*)NULL,(void*)NULL,0);
    // automatic destructor
    G__memfunc_setup("~streambuf",1095,G__streambuf_wAstreambuf_1_2,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,1);
+   // automatic assignment operator
+   G__memfunc_setup("operator=",937,G__streambuf_operatoreQ_2_2,(int)('u'),G__get_linked_tagnum(&G__G__streamLN_streambuf),-1,1,1,1,1,0,"u 'streambuf' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2505,6 +2534,8 @@ static void G__setup_memfuncfilebuf(void) {
 "C - - 0 - p i - - 0 - len",(char*)NULL,(void*)NULL,1);
    // automatic destructor
    G__memfunc_setup("~filebuf",859,G__filebuf_wAfilebuf_4_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,1);
+   // automatic assignment operator
+   G__memfunc_setup("operator=",937,G__filebuf_operatoreQ_5_1,(int)('u'),G__get_linked_tagnum(&G__G__streamLN_filebuf),-1,1,1,1,1,0,"u 'filebuf' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2609,6 +2640,8 @@ static void G__setup_memfuncstrstreambuf(void) {
 "i - - 0 - -",(char*)NULL,(void*)NULL,1);
    // automatic destructor
    G__memfunc_setup("~strstreambuf",1440,G__strstreambuf_wAstrstreambuf_1_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,1);
+   // automatic assignment operator
+   G__memfunc_setup("operator=",937,G__strstreambuf_operatoreQ_2_1,(int)('u'),G__get_linked_tagnum(&G__G__streamLN_strstreambuf),-1,1,1,1,1,0,"u 'strstreambuf' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 

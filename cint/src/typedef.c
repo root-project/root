@@ -180,7 +180,15 @@ void G__define_type()
    */
 
 #ifndef G__PHILIPPE8
+#ifndef G__OLDIMPLEMENTATION1685
+  c=G__fgetname_template(type1,"*{");
+  if('*'==c) { 
+    strcat(type1,"*");
+    c=' ';
+  }
+#else
   c=G__fgetname_template(type1,"{");
+#endif
   /* just ignore the following 4 keywords as long as they are
      followed by a space */
   while(isspace(c) &&

@@ -2,8 +2,8 @@
 #define PREC_STL_STDEXCEPT
 #pragma link off global PREC_STL_STDEXCEPT;
 
-#include <exception>
-#include <string>
+#include <_exception>
+#include <_string>
 
 //namespace std {
 

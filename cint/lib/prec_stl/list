@@ -16,17 +16,17 @@
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
 
-#include <iterator>
-#include <memory>
+#include <_iterator>
+#include <_memory>
 
-#if defined(G__ANSIISOLIB)
-template<class T,class Allocator=allocator<T> >
+#if defined(G__ANSIISOLIB) || (G__GNUC>=3)
+template<class T,class Allocator=std::allocator<T> >
 #elif defined(G__GNUC) && !defined(G__KCC)
 template<class T,class Allocator=alloc>
 #elif defined(G__HPUX)
 template<class T,class Allocator=allocator>
 #else
-template<class T,class Allocator=allocator<T> >
+template<class T,class Allocator=std::allocator<T> >
 #endif
 class list {
  public:

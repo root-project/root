@@ -30,6 +30,7 @@
 
 #define G__MACROLINK  (-5)
 
+
 #define G__OLDIMPLEMENTATION1336
 #ifndef G__OLDIMPLEMENTATION1336
 void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,struct G__ifunc_table *ifunc,int flag);
@@ -46,12 +47,14 @@ static int G__privateaccess = 0;
 *  Following macro G__BUILTIN must not be defined at normal cint
 * installation. This macro must be deleted only when you generate following
 * source files. 
-*     src/libstrm.cxx in lib/stream    'make'
-*     src/vcstrm.cxx  in lib/vcstream  'make' , 'make -f Makefileold'
-*     src/bcstrm.cxx  in lib/bcstream  'make'
-*     src/cbstrm.cpp  in lib/cbstream  'make'
-*     src/sunstrm.cxx in lib/snstream  'make'
-*     src/kccstrm.cxx (lib/kcc_work not included in the package)
+*     src/libstrm.cxx  in lib/stream    'make'
+*     src/gcc3strm.cxx in lib/gcc3strm  'make'
+*     src/iccstrm.cxx  in lib/iccstrm   'make'
+*     src/vcstrm.cxx   in lib/vcstream  'make' , 'make -f Makefileold'
+*     src/bcstrm.cxx   in lib/bcstream  'make'
+*     src/cbstrm.cpp   in lib/cbstream  'make'
+*     src/sunstrm.cxx  in lib/snstream  'make'
+*     src/kccstrm.cxx  (lib/kcc_work not included in the package)
 *     src/stdstrct.c  in lib/stdstrct  'make'
 *     src/Apiif.cxx   in src           'make -f Makeapi' , 'make -f Makeapiold'
 * g++ has a bug of distinguishing 'static operator delete(void* p)' in
@@ -2448,7 +2451,7 @@ FILE *hfp;
 	      continue;
 	    }
 	    else {
-/* #define G__DEFAULTASSIGNOPR */
+#define G__DEFAULTASSIGNOPR
 #ifdef G__DEFAULTASSIGNOPR
 	      if(strcmp(ifunc->funcname[j],"operator=")==0) {
 		++isassignmentoperator;
@@ -3368,6 +3371,12 @@ int tagnum;
 	 ) {
 	if(G__isprivateassignoprclass(memtagnum)) return(1);
       }
+#ifndef G__OLDIMPLEMENTATION1682
+      if(G__PARAREFERENCE==var->reftype[ig15] && 
+	 G__LOCALSTATIC!=var->statictype[ig15]) {
+	return(1);
+      }
+#endif
     }
     var=var->next;
   }
@@ -3812,8 +3821,19 @@ int isnonpublicnew;
 #endif /* G__CPPIF_STATIC */
     fprintf(fp," {\n");
     strcpy(temp,G__type2string('u',tagnum,-1,0,0));
+#ifndef G__OLDIMPLEMENTATION1680
+    fprintf(fp,"   %s *dest = (%s*)(G__getstructoffset());\n",temp,temp);
+#ifndef G__OLDIMPLEMENTATION1684
+    if(1>=G__struct.size[tagnum] && 0==G__struct.memvar[tagnum]->allvar) {}
+    else fprintf(fp,"   *dest = (*(%s*)libp->para[0].ref);\n",temp);
+#else
+    fprintf(fp,"   *dest = (*(%s*)libp->para[0].ref);\n",temp);
+#endif
+    fprintf(fp,"   const %s& obj = *dest;\n",temp);
+#else
     fprintf(fp,"   const %s& obj=((%s *)(G__getstructoffset()))->operator=(*(%s*)libp->para[0].ref);\n"
 	    ,temp,temp,temp);
+#endif
     fprintf(fp,"   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);\n");
 #ifdef G__OLDIMPLEMENTATION579
     /* This was my mistake. ifn is out of bound and must not call 
@@ -4676,7 +4696,8 @@ FILE *hfp;
 #endif
 
       if(-1==G__struct.line_number[i]) { 
-	if(G__dispmsg>=G__DISPNOTE) {
+	/* Philippe and Fons's request to display this */
+	if(G__dispmsg>= G__DISPERR /*G__DISPNOTE*/) {
 	  if(G__NOLINK==G__struct.iscpplink[i]) {
 	    G__fprinterr(G__serr,"Note: Link requested for undefined class %s (ignore this message)"
 			 ,G__fulltagname(i,1));

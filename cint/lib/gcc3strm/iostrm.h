@@ -268,6 +268,7 @@ class ios_base {
 #if (G__GNUC>=3)
   private:
     ios_base(const ios_base& x); 
+    ios_base& operator=(const ios_base& x);
 #endif
 };
 
@@ -357,6 +358,7 @@ class basic_streambuf {
 #if (G__GNUC>=3)
   private:
     basic_streambuf(const basic_streambuf& x);
+    basic_streambuf& operator=(const basic_streambuf& x);
 #endif
 };
 
@@ -588,7 +590,7 @@ ostream& operator<< ( ostream&, long );
 ostream& operator<< ( ostream&, unsigned long);
 ostream& operator<< ( ostream&, float );
 ostream& operator<< ( ostream&, double );
-ostream& operator<< ( ostream&, long double );
+//ostream& operator<< ( ostream&, long double );
 ostream& operator<< ( ostream&, bool );
 
 istream& operator>> ( istream&, char& );
@@ -601,7 +603,7 @@ istream& operator>> ( istream&, long& );
 istream& operator>> ( istream&, unsigned long& );
 istream& operator>> ( istream&, float& );
 istream& operator>> ( istream&, double& );
-istream& operator>> ( istream&, long double& );
+//istream& operator>> ( istream&, long double& );
 istream& operator>> ( istream&, bool& );
 istream& operator>> ( istream&, char* );
 istream& operator>> ( istream&, void*& );

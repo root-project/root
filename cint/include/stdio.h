@@ -22,7 +22,7 @@ typedef unsigned int size_t;
 #define 	SEEK_SET (0)
 #endif
 #ifdef __cplusplus
-#include <bool.h>
+//#include <bool.h>
 #endif
 #pragma include_noerr <stdfunc.dll>
 #endif

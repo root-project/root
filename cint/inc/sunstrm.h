@@ -31,7 +31,6 @@ extern void G__set_cpp_environmentG__stream();
 #ifndef G__MEMFUNCBODY
 #endif
 
-extern G__linked_taginfo G__G__streamLN_bool;
 extern G__linked_taginfo G__G__streamLN_ios_base;
 extern G__linked_taginfo G__G__streamLN_ios_basecLcLio_state;
 extern G__linked_taginfo G__G__streamLN_ios_basecLcLopen_mode;

@@ -4418,6 +4418,9 @@ int objptr;  /* 1 : object , 2 : pointer */
 #ifndef G__OLDIMPLEMENTATION1259
   G__SIGNEDCHAR_T store_isconst;
 #endif
+#ifndef G__OLDIMPLEMENTATION1681
+  char *px;
+#endif
   
   /****************************************************
    * pointer access operators are removed at the
@@ -4465,11 +4468,17 @@ int objptr;  /* 1 : object , 2 : pointer */
   flag = 0;
   
 #ifndef G__OLDIMPLEMENTATION1065
-  if(strchr(tagname,'.') && (strchr(tagname,'+')|| strchr(tagname,'-')||
-			     strchr(tagname,'*')|| strchr(tagname,'/')||
-			     strchr(tagname,'%')|| strchr(tagname,'&')||
-			     strchr(tagname,'|')|| strchr(tagname,'^')||
-			     strchr(tagname,'!') )) {
+  if(
+#ifndef G__OLDIMPLEMENTATION1681
+     ((px=strchr(tagname,'.')) && isalpha(*(px+1)))
+#else
+     strchr(tagname,'.') 
+#endif
+     && (strchr(tagname,'+')|| strchr(tagname,'-')||
+	 strchr(tagname,'*')|| strchr(tagname,'/')||
+	 strchr(tagname,'%')|| strchr(tagname,'&')||
+	 strchr(tagname,'|')|| strchr(tagname,'^')||
+	 strchr(tagname,'!') )) {
     result = G__getexpr(tagname);
     if(result.type) flag=1;
   }

@@ -1099,7 +1099,7 @@ char *argv[] ;
 #ifndef G__OLDIMPLEMENTATION1525
       G__more(G__sout,"* -j [0|1]: Create multi-thread safe DLL(experimental)\n");
 #endif
-      G__more(G__sout,"  -J0 : Do not display Note & warning messages\n");
+      G__more(G__sout,"  -J[0-4] : Display nothing(0)/error(1)/warning(2)/note(3)/all(4) messages\n");
       /* G__more(G__sout,"  -k : function key on\n"); */
       G__more(G__sout,"  -K : C mode\n");
 #ifdef G__SHAREDLIB
