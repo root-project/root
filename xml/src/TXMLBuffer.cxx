@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.2 2004/05/10 23:50:27 rdm Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.4 2004/05/11 18:52:17 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -1647,14 +1647,17 @@ void* TXMLBuffer::XmlReadObject(void* obj) {
 
    if (!VerifyNode(objnode, xmlNames_Object, "XmlReadObjectNew")) return obj;
 
-   if (ExtractPointer(objnode, obj))
+   if (ExtractPointer(objnode, obj)) {
+      ShiftStack("readobjptr");
       return obj;
+   }
 
    TString clname = gXML->GetProp(objnode, xmlNames_ObjClass);
    TClass* objClass = XmlDefineClass(clname);
 
    if (objClass==0) {
       cerr << "Cannot find class " << clname << endl;
+      ShiftStack("readobjerr");
       return obj;
    }
 
