@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.rdl,v 1.20 2002/09/05 04:33:22 verkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.21 2002/09/17 06:39:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,7 +36,7 @@ public:
   RooDataHist() ; 
   RooDataHist(const char *name, const char *title, const RooArgSet& vars) ;
   RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t initWgt=1.0) ;
-  RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t initWgt=1.0) ;
+  RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t initWgt=1.0, Bool_t importErrors=kFALSE) ;
   RooDataHist(const RooDataHist& other, const char* newname = 0) ;
   virtual TObject* Clone(const char* newname=0) const { return new RooDataHist(*this,newname?newname:GetName()) ; }
   virtual ~RooDataHist() ;

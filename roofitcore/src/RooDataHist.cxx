@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.29 2002/09/05 04:33:22 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.30 2003/04/01 22:34:43 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -103,7 +103,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 
 
 // wve --- adjust for variable bin size histograms
-RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t weight) :
+RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t weight, Bool_t importErrors) :
   RooTreeData(name,title,vars), _curWeight(0), _curVolume(1)
 {
   // Constructor of a data hist from an TH1,TH2 or TH3
@@ -182,6 +182,17 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   initialize() ;
   appendToDir(this,kTRUE) ;
 
+  // WVE --- How do we know if a TH1 has the sumW2 options set???
+
+  Double_t* sumw2 = 0 ;
+
+  // Allocate and initialize sumw2 array
+  if (importErrors) {
+    Int_t i ;
+    sumw2 = new Double_t[_arrSize] ;
+    for (i=0 ; i<_arrSize ; i++) sumw2[i] = 0 ;
+  }
+
   // Transfer contents
   RooArgSet set(*xvar) ;
   if (yvar) set.add(*yvar) ;
@@ -197,15 +208,28 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 	  for (iz=0 ; iz < zvar->getFitBins() ; iz++) {
 	    zvar->setFitBin(iz) ;
 	    add(set,histo->GetBinContent(ix+1,iy+1,iz+1)*weight) ;
+	    if (sumw2) sumw2[calcTreeIndex()] += pow(histo->GetBinError(ix+1,iy+1,iz+1)*weight,2) ;
 	  }
 	} else {
 	  add(set,histo->GetBinContent(ix+1,iy+1)*weight) ;	    
+	  if (sumw2) sumw2[calcTreeIndex()] += pow(histo->GetBinError(ix+1,iy+1)*weight,2) ;
 	}
       }
     } else {
       add(set,histo->GetBinContent(ix+1)*weight) ;	    
+      if (sumw2) sumw2[calcTreeIndex()] += pow(histo->GetBinError(ix+1)*weight,2) ;
     }
   }  
+
+  // Translate sumw2 into errors 
+  if (sumw2) {
+    Int_t i ;
+    for (i=0 ; i<_arrSize ; i++) {
+      _errLo[i] = sqrt(sumw2[i]) ;
+      _errHi[i] = _errLo[i] ;
+    }
+    delete[] sumw2 ;
+  }
 }
 
 
