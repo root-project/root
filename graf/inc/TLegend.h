@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.4 2002/03/20 09:01:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.5 2002/10/31 07:27:34 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -61,7 +61,7 @@ class TLegend : public TPave , public TAttText {
   virtual void    Print( Option_t* option = "" ) const;
   virtual void    RecursiveRemove(TObject *obj);
   virtual void    SavePrimitive(ofstream &out, Option_t *option );
-  void            SetDefaults() { fEntrySeparation = 0.1; fMargin = 0.25; }
+  void            SetDefaults() { fEntrySeparation = 0.1f; fMargin = 0.25f; }
   virtual void    SetEntryLabel( const char* label ); // *MENU*
   virtual void    SetEntryOption( Option_t* option ); // *MENU*
   void            SetEntrySeparation( Float_t entryseparation )
