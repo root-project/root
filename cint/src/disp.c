@@ -139,10 +139,10 @@ char* msg;
 {
 #ifndef G__OLDIMPLEMENTATION1485
   if(fp==G__serr) G__fprinterr(G__serr,msg);
-  else fprintf(fp,msg);
+  else fprintf(fp,"%s",msg);
     
 #else
-  fprintf(fp,msg);
+  fprintf(fp,"%s",msg);
 #endif
   if(strchr(msg,'\n')) {
     return(G__more_pause(fp,strlen(msg)));
