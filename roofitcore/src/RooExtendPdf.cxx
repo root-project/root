@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooExtendPdf.cc,v 1.1 2001/10/09 18:16:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -247,13 +247,19 @@ void RooExtendPdf::syncFracIntegral() const
   } else {
     // If dummy, make both normalization and fraction integral here
 
+    // Cannot dereference _lastFracSet since it may be a dangling ptr
+    // Recreate a similar argset by inflating the name set
+    RooArgSet pdfLeafList ;
+    pdf.leafNodeServerList(&pdfLeafList) ;
+    const RooArgSet* fracNormSet = pdf._lastNameSet.select(pdfLeafList) ;
+    
     TString fname(pdf.GetName()) ; fname.Append("FracNorm") ;
     TString ftitle(pdf.GetTitle()) ; ftitle.Append(" Fraction Integral") ;
 
     // Create fractional integral from PDF clone
     _integralCompSet = (RooArgSet*) pdfNodeList.snapshot(kFALSE) ;
     RooAbsPdf* pdfClone = (RooAbsPdf*) _integralCompSet->find(pdf.GetName()) ;
-    _fracIntegral = new RooRealIntegral(fname,ftitle,*pdfClone,*_lastFracSet) ;
+    _fracIntegral = new RooRealIntegral(fname,ftitle,*pdfClone,*fracNormSet) ;
     _integralCompSet->addOwned(*_fracIntegral) ;
 
     // Replace dependents involved in fractional with internal set
@@ -266,11 +272,13 @@ void RooExtendPdf::syncFracIntegral() const
     TString rtitle(pdf.GetTitle()) ; rtitle.Append(" Integral Ratio") ;
     
     // Create full normalization integral
-    RooRealIntegral* normIntegral = new RooRealIntegral(nname,ntitle,pdf,*_lastFracSet) ;
+    RooRealIntegral* normIntegral = new RooRealIntegral(nname,ntitle,pdf,*fracNormSet) ;
     RooFormulaVar* ratio= new RooFormulaVar(rname,rtitle,"@0/@1",RooArgList(*_fracIntegral,*normIntegral)) ;
     _integralCompSet->addOwned(*normIntegral) ;
     _integralCompSet->addOwned(*ratio) ;
     _fracIntegral = ratio ;
+
+    delete fracNormSet ;
   }
 }
 

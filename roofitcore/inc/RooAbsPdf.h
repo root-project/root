@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.36 2001/10/09 18:16:28 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.37 2001/10/10 00:22:23 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -114,6 +114,7 @@ protected:
   mutable Double_t _rawValue ;
   mutable RooAbsReal* _norm   ;      // Normalization integral
   mutable RooArgSet* _lastNormSet ;  // Normalization set pointer for which integral was constructed
+  mutable RooNameSet _lastNameSet ;
 
   mutable Int_t _errorCount ;        // Number of errors remaining to print
   mutable Int_t _traceCount ;        // Number of traces remaining to print

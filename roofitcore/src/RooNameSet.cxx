@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooNameSet.cc,v 1.5 2001/09/26 18:29:33 verkerke Exp $
+ *    File: $Id: RooNameSet.cc,v 1.6 2001/10/08 05:20:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -51,10 +51,6 @@ RooNameSet::RooNameSet(const RooNameSet& other) : _nameList()
 
 void RooNameSet::refill(const RooArgSet& argSet) 
 {
-  //Make sorted copy of set
-//   RooArgSet tmp(argSet) ;
-//   tmp.Sort() ;
-
   TIterator* iter = argSet.createIterator() ;
   RooAbsArg* arg ;
   char *ptr=_nameList ;
@@ -66,6 +62,25 @@ void RooNameSet::refill(const RooArgSet& argSet)
   *ptr= 0 ;
   delete iter ;
 }
+
+
+RooArgSet* RooNameSet::select(const RooArgSet& list) const 
+{
+  RooArgSet* output = new RooArgSet ;
+
+  char buffer[1024] ;
+  strcpy(buffer,_nameList) ;
+  char* token = strtok(buffer,":") ;
+  
+  while(token) {
+    RooAbsArg* arg =  list.find(token) ;
+    if (arg) output->add(*arg) ;
+    token = strtok(0,":") ;
+  }
+
+  return output ;
+}
+
 
 
 RooNameSet::~RooNameSet() 

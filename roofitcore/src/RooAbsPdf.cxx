@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.45 2001/10/09 01:41:18 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.46 2001/10/10 00:22:22 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -298,6 +298,7 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
   // Check if data sets are identical
   if (nset == _lastNormSet) return ;
   _lastNormSet = (RooArgSet*) nset ;
+  _lastNameSet.refill(*nset) ;
 
   // Update dataset pointers of proxies
   ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
@@ -746,7 +747,6 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
   // calculate the box's size, adjusting for constant parameters
   RooArgSet* params = getParameters(data) ;
   TIterator* pIter = params->createIterator() ;
-  params->Print("v") ;
 
   Int_t nPar= params->getSize();
   Real_t ymin(ymax), dy(0.06);
