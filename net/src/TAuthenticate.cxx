@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.30 2003/11/18 19:28:25 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.31 2003/11/20 23:00:46 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -1126,7 +1126,7 @@ void TAuthenticate::AuthError(const char *where, Int_t err)
 {
    // Print error string depending on error code.
 
-   ::Error(where, gRootdErrStr[err]);
+   ::Error(Form("TAuthenticate::%s", where), gRootdErrStr[err]);
 }
 
 //______________________________________________________________________________
@@ -1498,7 +1498,7 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
    Int_t i;
 
    if (gDebug > 2)
-      ::Info("GetAuthMeth", "enter: h:%s p:%s u:%s (0x%lx 0x%lx) ",
+      ::Info("TAuthenticate::GetAuthMeth", "enter: h:%s p:%s u:%s (0x%lx 0x%lx) ",
               Host, Proto, *User[0], (Long_t) (*User), (Long_t) (*User[0]));
 
    if (*User[0] == 0)
@@ -1510,7 +1510,7 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
    char **det[kMAXSEC];
    if ((nu = CheckRootAuthrc(Host, User, &nh, am, det)) > 0) {
       if (gDebug > 3)
-         ::Info("GetAuthMeth", "found %d users - nh: %d 0x%lx %s ", nu,
+         ::Info("TAuthenticate::GetAuthMeth", "found %d users - nh: %d 0x%lx %s ", nu,
                 nh[0], (Long_t) (*User[0]), *User[0]);
       *NumMeth = new int[nu];
       for (i = 0; i < kMAXSEC; i++) {
@@ -1536,11 +1536,11 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
          }
       }
       if (gDebug > 3) {
-         ::Info("GetAuthMeth", "found %d users", nu);
+         ::Info("TAuthenticate::GetAuthMeth", "found %d users", nu);
          for (j = 0; j < nu; j++) {
-            ::Info("GetAuthMeth", "returning %d ", nh[j]);
+            ::Info("TAuthenticate::GetAuthMeth", "returning %d ", nh[j]);
             for (i = 0; i < nh[j]; i++) {
-               ::Info("GetAuthMeth", "method[%d]: %d - details[%d]: %s ",
+               ::Info("TAuthenticate::GetAuthMeth", "method[%d]: %d - details[%d]: %s ",
                       i, AuthMeth[i][j], i, Details[i][j]);
             }
          }
@@ -1555,7 +1555,7 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
       sprintf(auth, "%s", gEnv->GetValue("Rootd.Authentication", "4"));
    }
    if (gDebug > 3)
-      ::Info("GetAuthMeth",
+      ::Info("TAuthenticate::GetAuthMeth",
              "Found method(s) '%s' from globals in .rootrc (User[0]=%s)",
               auth,(*User)[0]);
    nh = new int;
@@ -1586,10 +1586,10 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
       }
    }
    if (gDebug > 2) {
-      ::Info("GetAuthMeth", "for user '%s' returning %d methods",
+      ::Info("TAuthenticate::GetAuthMeth", "for user '%s' returning %d methods",
              (*User)[0], nh[0]);
       for (i = 0; i < nh[0]; i++) {
-         ::Info("GetAuthMeth", "   method[%d]: %d - details[%d]: %s ", i,
+         ::Info("TAuthenticate::GetAuthMeth", "   method[%d]: %d - details[%d]: %s ", i,
                 AuthMeth[i][0], i, Details[i][0]);
       }
    }
@@ -1613,7 +1613,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
       net = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".rootauthrc");
    }
    if (gDebug > 2)
-      ::Info("CheckRootAuthrc", "enter: host:%s user:%s file:%s", Host,
+      ::Info("TAuthenticate::CheckRootAuthrc", "enter: host:%s user:%s file:%s", Host,
              (*user)[0], net);
 
    // Check if file can be read ...
@@ -1708,7 +1708,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
       }
       if (Temp) delete[] Temp;
       if (gDebug > 3)
-         ::Info("CheckRootAuthrc",
+         ::Info("TAuthenticate::CheckRootAuthrc",
                 "found %d different entries for host %s", Nuser, Host);
 
       if (Nuser) {
@@ -1772,7 +1772,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
 
       // Notify
       if (gDebug > 3)
-         ::Info("CheckRootAuthrc", "found line ... %s ", line);
+         ::Info("TAuthenticate::CheckRootAuthrc", "found line ... %s ", line);
 
       // The list of data servers for proof is analyzed elsewhere (TProof ...)
       if (!strcmp(host, "proofserv"))
@@ -1797,7 +1797,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
          char *usr = new char[strlen(rest) + 5];
          sscanf(rest, "%s %s", usr, rest);
          if (gDebug > 3)
-            ::Info("CheckRootAuthrc",
+            ::Info("TAuthenticate::CheckRootAuthrc",
                    "found 'user': %s requested: \"%s\" (%d,%d) (rest:%s)",
                    usr, UserRq, CheckUser, nu, rest);
 
@@ -1867,7 +1867,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
       strcpy(rest, strstr(line, opt) + strlen(opt) + 1);
       if (!strcmp(opt, "list")) {
          if (gDebug > 3)
-            ::Info("CheckRootAuthrc", "found 'list': rest:%s", rest);
+            ::Info("TAuthenticate::CheckRootAuthrc", "found 'list': rest:%s", rest);
          char cmth[kMAXSEC][20];
          int nw =
              sscanf(rest, "%s %s %s %s %s %s", cmth[0], cmth[1], cmth[2],
@@ -1879,7 +1879,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
                // Method passed as string: translate it to number
                met = GetAuthMethodIdx(cmth[i]);
                if (met == -1 && gDebug > 2)
-                  ::Info("CheckRootAuthrc",
+                  ::Info("TAuthenticate::CheckRootAuthrc",
                          "unrecognized method (%s): ", cmth[i]);
             } else {
                met = atoi(cmth[i]);
@@ -1888,7 +1888,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
                mth[nmeth] = met;
                nmeth++;
             } else if (gDebug > 2)
-               ::Info("CheckRootAuthrc", "unrecognized method (%d): ",
+               ::Info("TAuthenticate::CheckRootAuthrc", "unrecognized method (%d): ",
                       met);
          }
          int *tmp_am = 0;
@@ -1933,7 +1933,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
 
          if (!strcmp(opt, "method")) {
             if (gDebug > 3)
-               ::Info("CheckRootAuthrc", "found 'method': rest:%s", rest);
+               ::Info("TAuthenticate::CheckRootAuthrc", "found 'method': rest:%s", rest);
 
             //         nw= sscanf(rest,"%d %s",&meth,info);
             char cmeth[20];
@@ -1943,14 +1943,14 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
                // Method passed as string: translate it to number
                meth = GetAuthMethodIdx(cmeth);
                if (meth == -1 && gDebug > 2)
-                  ::Info("CheckRootAuthrc",
+                  ::Info("TAuthenticate::CheckRootAuthrc",
                          "unrecognized method (%s): ", cmeth);
             } else {
                meth = atoi(cmeth);
             }
             if (meth < 0 || meth > (kMAXSEC - 1)) {
                if (gDebug > 2)
-                  ::Info("CheckRootAuthrc", "unrecognized method (%d): ",
+                  ::Info("TAuthenticate::CheckRootAuthrc", "unrecognized method (%d): ",
                          meth);
                continue;
             }
@@ -1987,17 +1987,17 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
                      sprintf(ostr, "%s %d", ostr, am[i][ju]);
                   }
                   if (gDebug > 0)
-                     ::Warning("CheckRootAuthrc",
+                     ::Warning("TAuthenticate::CheckRootAuthrc",
                                "output am badly filled: %s", ostr);
                   if (ostr) delete[] ostr;
                }
             }
             if (gDebug > 3)
-               ::Info("CheckRootAuthrc",
+               ::Info("TAuthenticate::CheckRootAuthrc",
                       "method with info : %s has been recorded (ju:%d, nh:%d)",
                       info, ju, (*nh)[ju]);
          } else {               // Unknown option
-            ::Warning("CheckRootAuthrc", "found unknown option: %s", opt);
+            ::Warning("TAuthenticate::CheckRootAuthrc", "found unknown option: %s", opt);
             continue;
          }
       }
@@ -2015,36 +2015,36 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
 
    if (gDebug > 3) {
       rewind(fd);
-      ::Info("CheckRootAuthrc",
+      ::Info("TAuthenticate::CheckRootAuthrc",
              "+----------- temporary file: %s -------------------------+",
              filetmp.Data());
-      ::Info("CheckRootAuthrc", "+");
+      ::Info("TAuthenticate::CheckRootAuthrc", "+");
       while (fgets(line, sizeof(line), fd) != 0) {
          if (line[strlen(line) - 1] == '\n')
             line[strlen(line) - 1] = '\0';
-         ::Info("CheckRootAuthrc", "+ %s", line);
+         ::Info("TAuthenticate::CheckRootAuthrc", "+ %s", line);
       }
-      ::Info("CheckRootAuthrc", "+");
-      ::Info("CheckRootAuthrc",
+      ::Info("TAuthenticate::CheckRootAuthrc", "+");
+      ::Info("TAuthenticate::CheckRootAuthrc",
              "+---------------------------------------------------------------------+");
-      ::Info("CheckRootAuthrc",
+      ::Info("TAuthenticate::CheckRootAuthrc",
              "+----------- Valid info fetched for this call ------------------------+");
-      ::Info("CheckRootAuthrc", "+");
-      ::Info("CheckRootAuthrc", "+   Host: %s - Number of users found: %d",
+      ::Info("TAuthenticate::CheckRootAuthrc", "+");
+      ::Info("TAuthenticate::CheckRootAuthrc", "+   Host: %s - Number of users found: %d",
              Host, nu);
       for (ju = 0; ju < nu; ju++) {
-         ::Info("CheckRootAuthrc", "+");
-         ::Info("CheckRootAuthrc",
+         ::Info("TAuthenticate::CheckRootAuthrc", "+");
+         ::Info("TAuthenticate::CheckRootAuthrc",
                 "+      Dumping user: %s ( %d methods found)", (*user)[ju],
                 (*nh)[ju]);
          int i;
          for (i = 0; i < (*nh)[ju]; i++) {
-            ::Info("CheckRootAuthrc", "+        %d: method: %d  det:'%s'",
+            ::Info("TAuthenticate::CheckRootAuthrc", "+        %d: method: %d  det:'%s'",
                    i, am[i][ju], det[i][ju]);
          }
       }
-      ::Info("CheckRootAuthrc", "+");
-      ::Info("CheckRootAuthrc",
+      ::Info("TAuthenticate::CheckRootAuthrc", "+");
+      ::Info("TAuthenticate::CheckRootAuthrc",
              "+---------------------------------------------------------------------+");
    }
 
@@ -2098,7 +2098,7 @@ Bool_t TAuthenticate::CheckHost(const char *Host, const char *host)
       TInetAddress addr = gSystem->GetHostByName(Host);
       theHost = addr.GetHostAddress();
       if (gDebug > 2)
-         ::Info("CheckHost", "checking host IP: %s", theHost.Data());
+         ::Info("TAuthenticate::CheckHost", "checking host IP: %s", theHost.Data());
    }
 
    // Check 'Host' against 'rehost'
@@ -2599,7 +2599,7 @@ Int_t TAuthenticate::GetOffSet(TAuthenticate * Auth, Int_t Method,
    Int_t OffSet = -1;
 
    if (gDebug > 2)
-      ::Info("GetOffSet", "analyzing: Method:%d, Details:%s", Method,
+      ::Info("TAuthenticate::GetOffSet", "analyzing: Method:%d, Details:%s", Method,
              Details.Data());
 
    THostAuth *HostAuth = Auth->GetHostAuth();
@@ -2623,11 +2623,11 @@ Int_t TAuthenticate::GetOffSet(TAuthenticate * Auth, Int_t Method,
          Nw++;
    }
    if (gDebug > 3)
-      ::Info("GetOffSet", "found Nw: %d, Wd: %s %s %s %s", Nw, Wd[0],
+      ::Info("TAuthenticate::GetOffSet", "found Nw: %d, Wd: %s %s %s %s", Nw, Wd[0],
              Wd[1], Wd[2], Wd[3]);
    if (Nw == 0) {
       if (gDebug > 3)
-         ::Info("GetOffSet", "nothing to compare: return");
+         ::Info("TAuthenticate::GetOffSet", "nothing to compare: return");
       return OffSet;
    }
    // Check we already authenticated
@@ -2635,7 +2635,7 @@ Int_t TAuthenticate::GetOffSet(TAuthenticate * Auth, Int_t Method,
    TAuthDetails *ai;
    while ((ai = (TAuthDetails *) next())) {
       if (gDebug > 3)
-         ::Info("GetOffSet", "found entry: met:%d det:%s off:%d",
+         ::Info("TAuthenticate::GetOffSet", "found entry: met:%d det:%s off:%d",
                 ai->GetMethod(), ai->GetDetails(), ai->GetOffSet());
       if (ai->GetMethod() == Method) {
          int match = 1;
@@ -2654,7 +2654,7 @@ Int_t TAuthenticate::GetOffSet(TAuthenticate * Auth, Int_t Method,
       }
    }
    if (gDebug > 2)
-      ::Info("GetOffSet", "returning: %d", OffSet);
+      ::Info("TAuthenticate::GetOffSet", "returning: %d", OffSet);
    for (i = 0; i < Nw; i++) {
       if (Wd[i] != 0)
          delete[] Wd[i];
@@ -2711,7 +2711,7 @@ char *TAuthenticate::GetRemoteLogin(THostAuth * HostAuth, Int_t Method,
          Nw++;
    }
    if (gDebug > 2)
-      ::Info("GetRemoteLogin", "details:%s", Details);
+      ::Info("TAuthenticate::GetRemoteLogin", "details:%s", Details);
 
    // Check we already authenticated
    TIter next(HostAuth->Established());
@@ -2729,7 +2729,7 @@ char *TAuthenticate::GetRemoteLogin(THostAuth * HostAuth, Int_t Method,
       }
    }
    if (gDebug > 2)
-      ::Info("GetRemoteLogin", "returning: %s", rlogin);
+      ::Info("TAuthenticate::GetRemoteLogin", "returning: %s", rlogin);
 
    for (i = 0; i < Nw; i++) {
       if (Wd[i] != 0)
@@ -2789,12 +2789,12 @@ void TAuthenticate::DecodeDetails(char *details, char *Pt, char *Ru,
    // Parse details looking for user info
 
    if (gDebug > 2)
-      ::Info("DecodeDetails", "analyzing ... %s", details);
+      ::Info("TAuthenticate::DecodeDetails", "analyzing ... %s", details);
 
    *Us = 0;
 
    if (Pt == 0 || Ru == 0) {
-      ::Error("DecodeDetails",
+      ::Error("TAuthenticate::DecodeDetails",
               "memory for Pt and Ru must be allocated elsewhere (Pt:0x%lx, Ru:0x%lx)",
               (Long_t) Pt, (Long_t) Ru);
       return;
@@ -2813,7 +2813,7 @@ void TAuthenticate::DecodeDetails(char *details, char *Pt, char *Ru,
          sscanf(ptr + 3, "%s %s", *Us, Temp);
       }
       if (gDebug > 3)
-         ::Info("DecodeDetails", "Pt:%s, Ru:%s, Us:%s", Pt, Ru, *Us);
+         ::Info("TAuthenticate::DecodeDetails", "Pt:%s, Ru:%s, Us:%s", Pt, Ru, *Us);
       if (Temp) delete[] Temp;
    }
 }
@@ -2826,12 +2826,12 @@ void TAuthenticate::DecodeDetailsGlobus(char *details, char *Pt, char *Ru,
    // Parse details looking for globus authentication info
 
    if (gDebug > 2)
-      ::Info("DecodeDetailsGlobus", "analyzing ... %s", details);
+      ::Info("TAuthenticate::DecodeDetailsGlobus", "analyzing ... %s", details);
 
    *Cd = 0, *Cf = 0, *Kf = 0, *Ad = 0;
 
    if (Pt == 0 || Ru == 0) {
-      ::Error("DecodeDetailsGlobus",
+      ::Error("TAuthenticate::DecodeDetailsGlobus",
               "memory for Pt and Ru must be allocated elsewhere (Pt:0x%lx, Ru:0x%lx)",
               (Long_t) Pt, (Long_t) Ru);
       return;
@@ -2866,7 +2866,7 @@ void TAuthenticate::DecodeDetailsGlobus(char *details, char *Pt, char *Ru,
       }
 
       if (gDebug > 3)
-         ::Info("DecodeDetailsGlobus", "Pt:%s, Ru:%s, %s, %s, %s, %s", Pt,
+         ::Info("TAuthenticate::DecodeDetailsGlobus", "Pt:%s, Ru:%s, %s, %s, %s, %s", Pt,
                 Ru, *Cd, *Cf, *Kf, *Ad);
 
       if (Temp) delete[] Temp;
@@ -2907,7 +2907,7 @@ THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user)
    // If no entry is found fHostAuth is not changed
 
    if (gDebug > 2)
-      ::Info("GetHostAuth", "enter ... %s ... %s", host, user);
+      ::Info("TAuthenticate::GetHostAuth", "enter ... %s ... %s", host, user);
    int ulen = strlen(user);
    THostAuth *rHA = 0;
 
@@ -2972,7 +2972,7 @@ void TAuthenticate::FileExpand(const char *fexp, FILE * ftmp)
    char cinc[20], fileinc[kMAXPATHLEN];
 
    if (gDebug > 2)
-     ::Info("FileExpand", "enter ... '%s' ... 0x%lx", fexp, (Long_t)ftmp);
+     ::Info("TAuthenticate::FileExpand", "enter ... '%s' ... 0x%lx", fexp, (Long_t)ftmp);
 
    fin = fopen(fexp, "r");
    if (fin == 0)
@@ -2985,7 +2985,7 @@ void TAuthenticate::FileExpand(const char *fexp, FILE * ftmp)
       if (line[strlen(line) - 1] == '\n')
          line[strlen(line) - 1] = '\0';
       if (gDebug > 2)
-         ::Info("FileExpand", "read line ... '%s'", line);
+         ::Info("TAuthenticate::FileExpand", "read line ... '%s'", line);
       int nw = sscanf(line, "%s %s", cinc, fileinc);
       if (nw < 2)
          continue;              // Not enough info in this line
@@ -3006,7 +3006,7 @@ void TAuthenticate::FileExpand(const char *fexp, FILE * ftmp)
          if (!gSystem->AccessPathName(fileinc, kReadPermission)) {
             FileExpand(fileinc, ftmp);
          } else {
-            ::Warning("FileExpand",
+            ::Warning("TAuthenticate::FileExpand",
                       "file specified by 'include' cannot be open or read (%s)",
                       fileinc);
          }
@@ -3025,7 +3025,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
    const char copt[2][5] = { "no", "yes" };
 
    if (gDebug > 2)
-      ::Info("GetDefaultDetails", "enter ... %d ...pt:%d ... '%s'", sec,
+      ::Info("TAuthenticate::GetDefaultDetails", "enter ... %d ...pt:%d ... '%s'", sec,
              opt, usr);
 
    if (opt < 0 || opt > 1)
@@ -3079,7 +3079,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
               gEnv->GetValue("UidGid.LoginPrompt", copt[opt]), usr);
    }
    if (gDebug > 2)
-      ::Info("GetDefaultDetails", "returning ... %s", temp);
+      ::Info("TAuthenticate::GetDefaultDetails", "returning ... %s", temp);
 
    return StrDup(temp);
 }
@@ -3102,7 +3102,7 @@ void TAuthenticate::ReadAuthRc(const char *host, const char *user)
    // Read methods for a given host (and user) from .rootauthrc
 
    if (gDebug > 2)
-      ::Info("ReadAuthRc", "enter: host: '%s', user: '%s'", host, user);
+      ::Info("TAuthenticate::ReadAuthRc", "enter: host: '%s', user: '%s'", host, user);
 
    // Check and save the host FQDN ...
    TString fqdn;
@@ -3113,7 +3113,7 @@ void TAuthenticate::ReadAuthRc(const char *host, const char *user)
          fqdn = addr.GetHostAddress();
    }
    if (gDebug > 3)
-      ::Info("ReadAuthRc",
+      ::Info("TAuthenticate::ReadAuthRc",
              "number of HostAuth Instantiations in memory: %d",
              GetAuthInfo()->GetSize());
 
@@ -3129,7 +3129,7 @@ void TAuthenticate::ReadAuthRc(const char *host, const char *user)
    int nu =
        GetAuthMeth(fqdn.Data(), "rootd", &usr, &nmeth, security, details);
    if (gDebug > 3)
-      ::Info("ReadAuthRc", "found %d users", nu);
+      ::Info("TAuthenticate::ReadAuthRc", "found %d users", nu);
 
    int ju = 0, i, j;
    for (ju = 0; ju < nu; ju++) {
@@ -3147,9 +3147,9 @@ void TAuthenticate::ReadAuthRc(const char *host, const char *user)
          }
       }
       if (gDebug > 3) {
-         ::Info("ReadAuthRc", "got %d methods (ju: %d)", nm, ju);
+         ::Info("TAuthenticate::ReadAuthRc", "got %d methods (ju: %d)", nm, ju);
          for (i = 0; i < nm; i++) {
-            ::Info("ReadAuthRc", "got (%d,0) security:%d details:%s", i,
+            ::Info("TAuthenticate::ReadAuthRc", "got (%d,0) security:%d details:%s", i,
                    am[i], det[i]);
          }
       }
@@ -3243,7 +3243,7 @@ Int_t TAuthenticate::AuthExists(TAuthenticate *Auth, Int_t Sec,
    TSocket *Socket = Auth->GetSocket();
 
    if (gDebug > 2)
-      ::Info("AuthExists", "%d: enter: msg: %d options: '%s'", Sec,
+      ::Info("TAuthenticate::AuthExists", "%d: enter: msg: %d options: '%s'", Sec,
              *Message, Options);
 
 
@@ -3258,7 +3258,7 @@ Int_t TAuthenticate::AuthExists(TAuthenticate *Auth, Int_t Sec,
       // Get OffSet and token, if any ...
       OffSet = GetOffSet(Auth, Sec, Details, &Token);
       if (gDebug > 3)
-         ::Info("AuthExists", "%d: offset in memory is: %d ('%s')", Sec,
+         ::Info("TAuthenticate::AuthExists", "%d: offset in memory is: %d ('%s')", Sec,
                 OffSet, Token);
    }
    // Prepare string to be sent to the server
@@ -3272,12 +3272,12 @@ Int_t TAuthenticate::AuthExists(TAuthenticate *Auth, Int_t Sec,
 
       Int_t RSAKey = Auth->GetRSAKey();
       if (gDebug > 2)
-         ::Info("AuthExists", "key type: %d", RSAKey);
+         ::Info("TAuthenticate::AuthExists", "key type: %d", RSAKey);
 
       if (RSAKey > 0) {
          // Send Token encrypted
          if (SecureSend(Socket, 1, Token) == -1) {
-            ::Warning("AuthExists",
+            ::Warning("TAuthenticate::AuthExists",
                       "problems secure-sending Token - may trigger problems in proofing Id ");
          }
       } else {
@@ -3296,7 +3296,7 @@ Int_t TAuthenticate::AuthExists(TAuthenticate *Auth, Int_t Sec,
    Int_t stat, kind;
    Socket->Recv(stat, kind);
    if (gDebug > 3)
-      ::Info("AuthExists", "%d: after msg %d: kind= %d, stat= %d", Sec,
+      ::Info("TAuthenticate::AuthExists", "%d: after msg %d: kind= %d, stat= %d", Sec,
              *Message, kind, stat);
 
    // Return flags
@@ -3310,14 +3310,14 @@ Int_t TAuthenticate::AuthExists(TAuthenticate *Auth, Int_t Sec,
       if (strstr(Auth->GetProtocol(),"proof"))
          Server = "proofd";
       if (stat == kErrConnectionRefused) {
-         ::Error("AuthExists",
+         ::Error("TAuthenticate::AuthExists",
                  "%s@%s does not accept connections from %s@%s",
                  Server.Data(),Auth->GetRemoteHost(),
                  Auth->GetUser(),gSystem->HostName());
          return -2;
       } else if (stat == kErrNotAllowed) {
          if (gDebug > 0)
-            ::Info("AuthExists",
+            ::Info("TAuthenticate::AuthExists",
                    "%s@%s does not accept %s authentication from %s@%s",
                    Server.Data(),Auth->GetRemoteHost(),
                    TAuthenticate::fgAuthMeth[Sec].Data(),
@@ -3629,7 +3629,7 @@ Int_t TAuthenticate::SecureSend(TSocket *Socket, Int_t Key, const char *Str)
    char BufLen[20];
 
    if (gDebug > 2)
-      ::Info("SecureSend", "local: enter ... (key: %d)", Key);
+      ::Info("TAuthenticate::SecureSend", "local: enter ... (key: %d)", Key);
 
    Int_t sLen = strlen(Str) + 1;
    Int_t Ttmp = 0;
@@ -3645,7 +3645,7 @@ Int_t TAuthenticate::SecureSend(TSocket *Socket, Int_t Key, const char *Str)
       Socket->Send(BufLen, kROOTD_ENCRYPT);
       Nsen = Socket->SendRaw(BufTmp, Ttmp);
       if (gDebug > 3)
-         ::Info("SecureSend",
+         ::Info("TAuthenticate::SecureSend",
                 "local: sent %d bytes (expected: %d)", Nsen,Ttmp);
    } else if (Key == 2) {
       strncpy(BufTmp, Str, sLen);
@@ -3657,10 +3657,10 @@ Int_t TAuthenticate::SecureSend(TSocket *Socket, Int_t Key, const char *Str)
       Socket->Send(BufLen, kROOTD_ENCRYPT);
       Nsen = Socket->SendRaw(BufTmp, Ttmp);
       if (gDebug > 3)
-         ::Info("SecureSend",
+         ::Info("TAuthenticate::SecureSend",
                 "local: sent %d bytes (expected: %d)", Nsen,Ttmp);
    } else {
-      ::Info("SecureSend", "unknown key option (%d) - return", Key);
+      ::Info("TAuthenticate::SecureSend", "unknown key option (%d) - return", Key);
    }
    return Nsen;
 }
@@ -3684,8 +3684,8 @@ Int_t TAuthenticate::SecureRecv(TSocket *Socket, Int_t Key, char **Str)
    Socket->Recv(BufLen, 20, kind);
    Int_t Len = atoi(BufLen);
    if (gDebug > 3)
-      ::Info("SecureRecv", "got len '%s' %d (msg kind: %d)", BufLen, Len,
-             kind);
+      ::Info("TAuthenticate::SecureRecv", "got len '%s' %d (msg kind: %d)",
+             BufLen, Len, kind);
    if (!strncmp(BufLen, "-1", 2))
       return Nrec;
 
@@ -3694,14 +3694,14 @@ Int_t TAuthenticate::SecureRecv(TSocket *Socket, Int_t Key, char **Str)
       Nrec = Socket->RecvRaw(BufTmp, Len);
       rsa_fun::fg_rsa_decode(BufTmp, Len, fgRSAPriKey.n, fgRSAPriKey.e);
       if (gDebug > 3)
-         ::Info("SecureRecv", "local: decoded string is %d bytes long ", strlen(BufTmp));
+         ::Info("TAuthenticate::SecureRecv", "local: decoded string is %d bytes long ", strlen(BufTmp));
    } else if (Key == 2) {
       Nrec = Socket->RecvRaw(BufTmp, Len);
       rsa_fun::fg_rsa_decode(BufTmp, Len, fgRSAPubKey.n, fgRSAPubKey.e);
       if (gDebug > 3)
-         ::Info("SecureRecv", "local: decoded string is %d bytes long ", strlen(BufTmp));
+         ::Info("TAuthenticate::SecureRecv", "local: decoded string is %d bytes long ", strlen(BufTmp));
    } else {
-      ::Info("SecureRecv", "unknown key option (%d) - return", Key);
+      ::Info("TAuthenticate::SecureRecv", "unknown key option (%d) - return", Key);
    }
 
    *Str = new char[strlen(BufTmp) + 1];
@@ -3719,7 +3719,7 @@ void TAuthenticate::DecodeRSAPublic(const char *RSAPubExport, rsa_NUMBER &RSA_n,
       return;
 
    if (gDebug > 2)
-      ::Info("DecodeRSAPublic","enter: string length: %d bytes", strlen(RSAPubExport));
+      ::Info("TAuthenticate::DecodeRSAPublic","enter: string length: %d bytes", strlen(RSAPubExport));
 
    char Str[kMAXPATHLEN] = { 0 };
    strcpy(Str, RSAPubExport);
@@ -3736,14 +3736,14 @@ void TAuthenticate::DecodeRSAPublic(const char *RSAPubExport, rsa_NUMBER &RSA_n,
          strncpy(RSA_n_exp, pd1 + 1, l1);
          RSA_n_exp[l1] = 0;
          if (gDebug > 2)
-            ::Info("DecodeRSAPublic","got %d bytes for RSA_n_exp", strlen(RSA_n_exp));
+            ::Info("TAuthenticate::DecodeRSAPublic","got %d bytes for RSA_n_exp", strlen(RSA_n_exp));
          // Now <hex_d>
          int l2 = (int) (pd3 - pd2 - 1);
          char *RSA_d_exp = new char[l2 + 1];
          strncpy(RSA_d_exp, pd2 + 1, l2);
          RSA_d_exp[l2] = 0;
          if (gDebug > 2)
-            ::Info("DecodeRSAPublic","got %d bytes for RSA_d_exp", strlen(RSA_d_exp));
+            ::Info("TAuthenticate::DecodeRSAPublic","got %d bytes for RSA_d_exp", strlen(RSA_d_exp));
 
          rsa_fun::fg_rsa_num_sget(&RSA_n, RSA_n_exp);
          rsa_fun::fg_rsa_num_sget(&RSA_d, RSA_d_exp);
@@ -3754,7 +3754,7 @@ void TAuthenticate::DecodeRSAPublic(const char *RSAPubExport, rsa_NUMBER &RSA_n,
             if (RSA_d_exp) delete[] RSA_d_exp;
 
       } else
-         ::Info("DecodeRSAPublic","bad format for input string");
+         ::Info("TAuthenticate::DecodeRSAPublic","bad format for input string");
    }
 }
 
@@ -3764,7 +3764,7 @@ void TAuthenticate::SetRSAPublic(const char *RSAPubExport)
    // Store RSA public keys from export string RSAPubExport.
 
    if (gDebug > 2)
-      ::Info("SetRSAPublic","enter: string length %d bytes", strlen(RSAPubExport));
+      ::Info("TAuthenticate::SetRSAPublic","enter: string length %d bytes", strlen(RSAPubExport));
 
    if (!RSAPubExport)
       return;
@@ -3789,7 +3789,7 @@ void TAuthenticate::SendRSAPublicKey(TSocket *Socket)
    int kind;
    Socket->Recv(ServerPubKey, kMAXSECBUF, kind);
    if (gDebug > 3)
-      ::Info("SendRSAPublicKey", "received key from server %d bytes",
+      ::Info("TAuthenticate::SendRSAPublicKey", "received key from server %d bytes",
             strlen(ServerPubKey));
 
    // Decode it
@@ -3811,6 +3811,6 @@ void TAuthenticate::SendRSAPublicKey(TSocket *Socket)
    // Send Key. second ...
    Int_t Nsen = Socket->SendRaw(BufTmp, Ttmp);
    if (gDebug > 3)
-         ::Info("SendRSAPublicKey",
+         ::Info("TAuthenticate::SendRSAPublicKey",
                 "local: sent %d bytes (expected: %d)", Nsen,Ttmp);
 }
