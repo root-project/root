@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.2 2000/06/13 09:15:33 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.3 2000/06/14 09:06:44 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -61,7 +61,7 @@ protected:
    Int_t       fCumulUsedSize[kMAXFORMDIM+1];      //Accumulated size of lower dimensions as seen for this formula
    Int_t       fIndexes[kMAXCODES][kMAXFORMDIM];   //Index of array selected by user for each leaf
 
-   void        DefineDimensions(const char *size, Int_t code);
+   void        DefineDimensions(const char *size, Int_t code, Int_t& virt_dim);
 public:
              TTreeFormula();
              TTreeFormula(const char *name,const char *formula, TTree *tree);
