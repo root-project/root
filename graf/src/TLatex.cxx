@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.29 2002/05/03 09:34:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.30 2002/05/18 08:21:59 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -775,7 +775,9 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
             fs1 = Readfs();
             Int_t pos = 0;
             if (!AbovePlace){
-               Analyse(x+fs1.Width()+xfpos,y-fs1.Dessus()*fFactorPos-fs2.Dessous(),specNewSize,text+OpPower+1,length-OpPower-1);
+               Double_t dessus = fs1.Dessus();
+               if (dessus <= 0) dessus = fs2.Dessus();
+               Analyse(x+fs1.Width()+xfpos,y-dessus*fFactorPos-fs2.Dessous(),specNewSize,text+OpPower+1,length-OpPower-1);
             } else {
                Int_t pos2=0;
                if (fs2.Width()>fs1.Width())
