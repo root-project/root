@@ -147,10 +147,8 @@ endif
 ##### gcc version #####
 
 ifneq ($(findstring g++,$(CXX)),)
-GCC_MAJOR    := $(shell $(CXX) -v 2>&1 | \
-                        grep version | cut -d' ' -f3  | cut -d'.' -f1)
-GCC_MINOR    := $(shell $(CXX) -v 2>&1 | \
-                        grep version | cut -d' ' -f3  | cut -d'.' -f2)
+GCC_MAJOR    := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f1)
+GCC_MINOR    := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f2)
 endif
 
 ##### f77 options #####
