@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.2 2000/06/13 10:37:30 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1632,5 +1632,10 @@ void TF1::Update()
 
    delete fHistogram;
    fHistogram = 0;
-   if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
+   if (fIntegral) {
+      delete [] fIntegral; fIntegral = 0;
+      delete [] fAlpha;    fAlpha    = 0;
+      delete [] fBeta;     fBeta     = 0;
+      delete [] fGamma;    fGamma    = 0;
+   }
 }
