@@ -35,7 +35,7 @@ endif
 EventDict.cxx: Event.h EventLinkDef.h $(ROOTSYS)/bin/rootcint $(ROOTSYS)/lib/libCint.$(DllSuf)
 	$(CMDECHO) rootcint -f EventDict.cxx -c Event.h EventLinkDef.h
 
-local_clean = Event$(ExeSuf) libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.log *.$(DllSuf) *.root
+local_clean = Event$(ExeSuf) libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.log *.$(DllSuf) *.root $(ALL_LIBRARIES)
 
 
 EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)

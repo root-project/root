@@ -3,7 +3,7 @@ test: tests
 
 
 TEST_TARGETS += ArraySyntax
-CLEAN_TARGETS += *Dict* *.root main$(ExeSuf)
+CLEAN_TARGETS += *Dict* *.root main$(ExeSuf) $(ALL_LIBRARIES)
 
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
