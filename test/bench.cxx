@@ -100,6 +100,7 @@ int main(int argc, char** argv) {
   Float_t cx;
   
   //testing STL vector of THit
+  Double_t cptot = 0;
   TStopwatch timer;
   timer.Start();
   TSTLhit *STLhit = new TSTLhit(nhits);
@@ -107,18 +108,21 @@ int main(int argc, char** argv) {
   timer.Stop();
   Double_t rt1 = timer.RealTime();
   Double_t cp1 = timer.CpuTime();
+  cptot += cp1;
   printf("1  STLhit :  RT=%6.2f s  Cpu=%6.2f s\n",rt1,cp1);
   timer.Start(kTRUE);
   Int_t nbytes1 = STLhit->MakeTree(1,nevents,0,0,cx);
   timer.Stop();
   Double_t rt2w = timer.RealTime();
   Double_t cp2w = timer.CpuTime();
+  cptot += cp2w;
   printf("2  STLhitw:  RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2w-rt1,cp2w-cp1,nbytes1,cx);
   timer.Start(kTRUE);
   STLhit->ReadTree();
   timer.Stop();
   Double_t rt2r = timer.RealTime();
   Double_t cp2r = timer.CpuTime();
+  cptot += cp2r;
   printf("3  STLhitr:  RT=%6.2f s  Cpu=%6.2f s\n",rt2r,cp2r);
   timer.Start(kTRUE);
   Float_t cx3;
@@ -126,12 +130,14 @@ int main(int argc, char** argv) {
   timer.Stop();
   Double_t rt3w = timer.RealTime();
   Double_t cp3w = timer.CpuTime();
+  cptot += cp3w;
   printf("4  STLhitw:  RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3w-rt1,cp3w-cp1,nbytes3,cx3);
   timer.Start(kTRUE);
   STLhit->ReadTree();
   timer.Stop();
   Double_t rt3r = timer.RealTime();
   Double_t cp3r = timer.CpuTime();
+  cptot += cp3r;
   printf("5  STLhitr:  RT=%6.2f s  Cpu=%6.2f s\n",rt3r,cp3r);
   
   //testing STL vector of pointers to THit
@@ -141,18 +147,21 @@ int main(int argc, char** argv) {
   timer.Stop();
   Double_t rt4 = timer.RealTime();
   Double_t cp4 = timer.CpuTime();
+  cptot += cp4;
   printf("6  STLhit* : RT=%6.2f s  Cpu=%6.2f s\n",rt4,cp4);
   timer.Start(kTRUE);
   Int_t nbytes5 = STLhitStar->MakeTree(1,nevents,0,1,cx);
   timer.Stop();
   Double_t rt5w = timer.RealTime();
   Double_t cp5w = timer.CpuTime();
+  cptot += cp5w;
   printf("7  STLhit*w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt5w-rt4,cp5w-cp4,nbytes5,cx);
   timer.Start(kTRUE);
   STLhitStar->ReadTree();
   timer.Stop();
   Double_t rt5r = timer.RealTime();
   Double_t cp5r = timer.CpuTime();
+  cptot += cp5r;
   printf("8  STLhit*r: RT=%6.2f s  Cpu=%6.2f s\n",rt5r,cp5r);
   timer.Start(kTRUE);
   Float_t cx6;
@@ -160,12 +169,14 @@ int main(int argc, char** argv) {
   timer.Stop();
   Double_t rt6w = timer.RealTime();
   Double_t cp6w = timer.CpuTime();
+  cptot += cp6w;
   printf("9  STLhit*w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt6w-rt4,cp6w-cp4,nbytes6,cx6);
   timer.Start(kTRUE);
   STLhitStar->ReadTree();
   timer.Stop();
   Double_t rt6r = timer.RealTime();
   Double_t cp6r = timer.CpuTime();
+  cptot += cp6r;
   printf("10 STLhit*r: RT=%6.2f s  Cpu=%6.2f s\n",rt6r,cp6r);
   
   //testing TClonesArray of TObjHit deriving from THit
@@ -175,18 +186,21 @@ int main(int argc, char** argv) {
   timer.Stop();
   Double_t rt7 = timer.RealTime();
   Double_t cp7 = timer.CpuTime();
+  cptot += cp7;
   printf("11 Clones1 : RT=%6.2f s  Cpu=%6.2f s\n",rt7,cp7);
   timer.Start(kTRUE);
   Int_t nbytes8 = Cloneshit->MakeTree(1,nevents,0,1,cx);
   timer.Stop();
   Double_t rt8w = timer.RealTime();
   Double_t cp8w = timer.CpuTime();
+  cptot += cp8w;
   printf("12 Clones1w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt8w-rt7,cp8w-cp7,nbytes8,cx);
   timer.Start(kTRUE);
   Cloneshit->ReadTree();
   timer.Stop();
   Double_t rt8r = timer.RealTime();
   Double_t cp8r = timer.CpuTime();
+  cptot += cp8r;
   printf("13 Clones1r: RT=%6.2f s  Cpu=%6.2f s\n",rt8r,cp8r);
   timer.Start(kTRUE);
   Float_t cx9;
@@ -194,24 +208,28 @@ int main(int argc, char** argv) {
   timer.Stop();
   Double_t rt9w = timer.RealTime();
   Double_t cp9w = timer.CpuTime();
+  cptot += cp9w;
   printf("14 Clones1w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt9w-rt7,cp9w-cp7,nbytes9,cx9);
   timer.Start(kTRUE);
   Cloneshit->ReadTree();
   timer.Stop();
   Double_t rt9r = timer.RealTime();
   Double_t cp9r = timer.CpuTime();
+  cptot += cp9r;
   printf("15 Clones1r: RT=%6.2f s  Cpu=%6.2f s\n",rt9r,cp9r);
   timer.Start(kTRUE);
   Int_t nbytes10 = Cloneshit->MakeTree(1,nevents,0,2,cx);
   timer.Stop();
   Double_t rt10w = timer.RealTime();
   Double_t cp10w = timer.CpuTime();
+  cptot += cp10w;
   printf("16 Clones2w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt10w-rt7,cp10w-cp7,nbytes10,cx);
   timer.Start(kTRUE);
   Cloneshit->ReadTree();
   timer.Stop();
   Double_t rt10r = timer.RealTime();
   Double_t cp10r = timer.CpuTime();
+  cptot += cp10r;
   printf("17 Clones2r: RT=%6.2f s  Cpu=%6.2f s\n",rt10r,cp10r);
   timer.Start(kTRUE);
   Float_t cx11;
@@ -219,14 +237,18 @@ int main(int argc, char** argv) {
   timer.Stop();
   Double_t rt11w = timer.RealTime();
   Double_t cp11w = timer.CpuTime();
+  cptot += cp11w;
   printf("18 Clones2w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt11w-rt7,cp11w-cp7,nbytes11,cx11);
   timer.Start(kTRUE);
   Cloneshit->ReadTree();
   timer.Stop();
   Double_t rt11r = timer.RealTime();
   Double_t cp11r = timer.CpuTime();
+  cptot += cp11r;
   printf("19 Clones2r: RT=%6.2f s  Cpu=%6.2f s\n",rt11r,cp11r);
-  
+  Double_t cpref = 76.33;
+  Double_t rootmarks = cpref*200/cptot;
+   
   //delete temp file used for the benchmark
   gSystem->Exec("rm -f /tmp/bench.root");
   
@@ -281,6 +303,9 @@ int main(int argc, char** argv) {
   printf("* vector<THit*>                 %6.2f        2.10    %6.2f        3.27     *\n",cp5r,cp6r);
   printf("* TClonesArray(TObjHit)         %6.2f        1.53    %6.2f        2.14     *\n",cp8r,cp9r);
   printf("* TClonesArray(TObjHit) split   %6.2f        1.35    %6.2f        1.94     *\n",cp10r,cp11r);
+  printf("******************************************************************************\n");
+  printf("* Total CPU time              %8.2f    %8.2f                           *\n",cptot,cpref);
+  printf("* Estimated ROOTMARKS         %8.2f      200.00                           *\n",rootmarks);
   printf("******************************************************************************\n");
 
   // show results with graphics
