@@ -81,11 +81,11 @@
    node1->Draw();
    c1->Update();
    //
-   //  Draw the geometry using the x3d viewver.
+   //  Draw the geometry using the OpenGL viewver.
    //  Note that this viewver may also be invoked from the "View" menu in
    //  the canvas tool bar
-   c1->x3d();
+   c1->x3d("ogl");
    //
-   // once in x3d viewer, type m to see the menu.
+   // once in the viewer, select the Help button
    // For example typing r will show a solid model of this geometry.
 }
