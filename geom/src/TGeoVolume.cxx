@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.51 2005/02/03 11:40:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.52 2005/02/09 13:30:27 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -998,7 +998,6 @@ void TGeoVolume::SaveAs(const char *filename)
       return;
    }
    if (gGeoManager->GetTopVolume() != this) gGeoManager->SetTopVolume(this);
-   gGeoManager->SetAllIndex();
    
    char fname[1000];
    strcpy(fname,filename);
@@ -1006,43 +1005,7 @@ void TGeoVolume::SaveAs(const char *filename)
    if (dot) *dot = 0;  
    out << "void "<<fname<<"() {" << endl;
    out << "   gSystem->Load(\"libGeom\");" << endl;
-   out << "   new TGeoManager(\"" << gGeoManager->GetName() << "\", \"" << gGeoManager->GetTitle() << "\");" << endl << endl;
-   out << "   Double_t dx,dy,dz;" << endl;
-   out << "   Double_t dx1, dx2, dy1, dy2;" << endl;
-   out << "   Double_t vert[20], par[20];" << endl;
-   out << "   Double_t theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2;" << endl;
-   out << "   Double_t twist;" << endl;
-   out << "   Double_t origin[3];" << endl;
-   out << "   TString bool_name;" << endl;
-   out << "   Double_t rmin, rmax, rmin1, rmax1, rmin2, rmax2;" << endl;
-   out << "   Double_t r, rlo, rhi;" << endl;
-   out << "   Double_t phi1, phi2;" << endl;
-   out << "   Double_t a,b;" << endl;
-   out << "   Double_t point[3], norm[3];" << endl;
-   out << "   Double_t rin, stin, rout, stout;" << endl;
-   out << "   Double_t thx, phx, thy, phy, thz, phz;" << endl;
-   out << "   Double_t alpha, theta1, theta2, phi1, phi2, dphi;" << endl;
-   out << "   Double_t tr[3], rot[9];" << endl;
-   out << "   Double_t z, density, radl, absl, w;" << endl;
-   out << "   Double_t lx,ly,lz,tx,ty,tz;" << endl;
-   out << "   Double_t zsect,x0,y0,scale;" << endl;
-   out << "   Int_t nel, numed, nz, nedges, nvert;" << endl;
-   out << "   TGeoShape *pShape;" << endl << endl;
-   // first save materials/media
-   out << "   // MATERIALS, MIXTURES AND TRACKING MEDIA" << endl;
-   SavePrimitive(out, "m");
-   // then, save matrices
-   out << endl << "   // TRANSFORMATION MATRICES" << endl;
-   SavePrimitive(out, "x");
-   // save this volume and shape
-   SavePrimitive(out, "s");
-   out << endl << "   // SET TOP VOLUME OF GEOMETRY" << endl;
-   out << "   gGeoManager->SetTopVolume(" << GetPointerName() << ");" << endl;
-   // save daughters
-   out << endl << "   // SHAPES, VOLUMES AND GEOMETRICAL HIERARCHY" << endl;
-   SavePrimitive(out, "d");
-   out << endl << "   // CLOSE GEOMETRY" << endl;
-   out << "   gGeoManager->CloseGeometry();" << endl;
+   SavePrimitive(out,"");
    out << "}" << endl;
 }   
 
@@ -1057,6 +1020,54 @@ void TGeoVolume::SavePrimitive(ofstream &out, Option_t *option)
    TGeoVolume *dvol;
    TGeoNode *dnode;
    TGeoMatrix *matrix;
+
+   // check if we need to save shape/volume
+   Bool_t mustDraw = kFALSE;
+   if (strstr(option,"ogl") || strstr(option,"x3d")) mustDraw = kTRUE;
+   if (!strlen(option) || mustDraw) {
+      gGeoManager->SetAllIndex();
+      out << "   new TGeoManager(\"" << gGeoManager->GetName() << "\", \"" << gGeoManager->GetTitle() << "\");" << endl << endl;
+      if (mustDraw) out << "   Bool_t mustDraw = kTRUE;" << endl;
+      else          out << "   Bool_t mustDraw = kFALSE;" << endl;
+      out << "   Double_t dx,dy,dz;" << endl;
+      out << "   Double_t dx1, dx2, dy1, dy2;" << endl;
+      out << "   Double_t vert[20], par[20];" << endl;
+      out << "   Double_t theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2;" << endl;
+      out << "   Double_t twist;" << endl;
+      out << "   Double_t origin[3];" << endl;
+      out << "   TString bool_name;" << endl;
+      out << "   Double_t rmin, rmax, rmin1, rmax1, rmin2, rmax2;" << endl;
+      out << "   Double_t r, rlo, rhi;" << endl;
+      out << "   Double_t phi1, phi2;" << endl;
+      out << "   Double_t a,b;" << endl;
+      out << "   Double_t point[3], norm[3];" << endl;
+      out << "   Double_t rin, stin, rout, stout;" << endl;
+      out << "   Double_t thx, phx, thy, phy, thz, phz;" << endl;
+      out << "   Double_t alpha, theta1, theta2, phi1, phi2, dphi;" << endl;
+      out << "   Double_t tr[3], rot[9];" << endl;
+      out << "   Double_t z, density, radl, absl, w;" << endl;
+      out << "   Double_t lx,ly,lz,tx,ty,tz;" << endl;
+      out << "   Double_t zsect,x0,y0,scale;" << endl;
+      out << "   Int_t nel, numed, nz, nedges, nvert;" << endl;
+      out << "   TGeoShape *pShape;" << endl << endl;
+      // first save materials/media
+      out << "   // MATERIALS, MIXTURES AND TRACKING MEDIA" << endl;
+      SavePrimitive(out, "m");
+      // then, save matrices
+      out << endl << "   // TRANSFORMATION MATRICES" << endl;
+      SavePrimitive(out, "x");
+      // save this volume and shape
+      SavePrimitive(out, "s");
+      out << endl << "   // SET TOP VOLUME OF GEOMETRY" << endl;
+      out << "   gGeoManager->SetTopVolume(" << GetPointerName() << ");" << endl;
+      // save daughters
+      out << endl << "   // SHAPES, VOLUMES AND GEOMETRICAL HIERARCHY" << endl;
+      SavePrimitive(out, "d");
+      out << endl << "   // CLOSE GEOMETRY" << endl;
+      out << "   gGeoManager->CloseGeometry();" << endl;
+      out << "   if (mustDraw) gGeoManager->GetTopVolume()->Draw();" << endl;
+      return;
+   }
    // check if we need to save shape/volume
    if (!strcmp(option, "s")) {
       // create the shape for this volume (pShape)
