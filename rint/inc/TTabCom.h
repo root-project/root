@@ -1,5 +1,8 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.3 2001/02/03 15:39:14 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.4 2001/09/29 13:00:59 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
+
+// Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
+//   Added support for namespaces.
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -201,11 +204,13 @@ private: // member functions
    TString    ExtendPath( const char originalPath[], TString newBase ) const;
    void       InitPatterns();
    TClass*    MakeClassFromClassName( const char className[] ) const;
+   TClass*    TryMakeClassFromClassName( const char className[] ) const;
    TClass*    MakeClassFromVarName( const char varName[], EContext_t& context );
    void       SetPattern( EContext_t handle, const char regexp[] );
 
 private: // data members
    TSeqCol* fpClasses;
+   TSeqCol* fpNamespaces;  // Contains the names of namespaces registered in CINT.
    TSeqCol* fpDirectives;
    TSeqCol* fpEnvVars;
    TSeqCol* fpFiles;
