@@ -893,8 +893,16 @@ linux|linuxdeb|linuxicc|linuxia64*|linuxx8664*|win32gcc|macosx)
         enable_thread="yes"
     fi
     ;;
+freebsd*)
+    if test "x$enable_thread" = "xyes"; then
+       threadlib="-pthread"
+       threadlibdir=
+    fi
+    ;;
 esac
-if test "x$enable_thread" = "xyes" && test ! "$platform" = "win32" ; then
+if test "x$enable_thread" = "xyes" && \
+   test ! "$platform" = "win32"    && \
+   test ! "$platform" = "freebsd4" ; then
     check_library "libpthread" "$enable_shared" "$threadlibdir" \
 	$THREAD $THREAD/lib /usr/lib /usr/local/lib /usr/lib/X11 \
 	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \

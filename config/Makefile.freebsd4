@@ -25,6 +25,11 @@ CINTCFLAGS    = -pipe -W -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL $(EXTRA_CFLAGS)
 COMPILER      = gnu
 
+ifeq ($(ENABLETHREAD),yes)
+CXXFLAGS     += -pthread
+CINTCXXFLAGS += -pthread
+endif
+
 # Linker:
 LD            = g++
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
@@ -32,7 +37,7 @@ SOFLAGS       = -shared -Wl,-x -Wl,-soname,
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lstdc++ -lm $(OSTHREADLIBDIR) $(OSTHREADLIB)
+SYSLIBS       = -lstdc++ -lm
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11 -lstdc++
 CILIBS        = -lm -ltermcap -lstdc++
 CRYPTLIBS     = -lcrypt

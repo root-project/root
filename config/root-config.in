@@ -328,6 +328,14 @@ case $arch in
       auxldflags="--exceptions $auxldflags"
    fi
    ;;
+freebsd*)
+   for f in $features ; do
+      if test "x$f" = "xthread" ; then
+         auxcflags="-pthread $auxcflags"
+         auxlibs="-pthread $auxlibs"
+      fi
+   done
+   ;;
 *)
    for f in $features ; do
       if test "x$f" = "xthread" ; then
