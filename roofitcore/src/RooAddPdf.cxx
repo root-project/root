@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.46 2002/07/18 20:42:57 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.47 2002/08/21 23:05:58 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -284,8 +284,8 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset) c
   RooArgSet* nset2 = nset ? getDependents(nset) : new RooArgSet() ;
   RooArgSet* iset2 = iset ? getDependents(iset) : new RooArgSet() ;
 
-  projList = new RooListProxy("projList","Coe`fficient projection list",(RooAbsArg*)this,kFALSE,kFALSE) ;
-
+  projList = new RooListProxy("projList","Coefficient projection list",(RooAbsArg*)this,kFALSE,kFALSE) ;
+  
   // Check if requested transformation is not identity 
   if (!nset2->equals(_refCoefNorm)) {
 
@@ -297,10 +297,12 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset) c
     _pdfIter->Reset() ;
     RooAbsPdf* pdf ;
     while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
-      RooAbsReal* pdfProj = pdf->createIntegral(*nset2,_refCoefNorm) ;
-      pdfProj->setOperMode(operMode()) ;
-      projList->addOwned(*pdfProj) ;
-      
+      RooAbsReal* pdfProj1 = pdf->createIntegral(*nset2) ;
+      RooAbsReal* pdfProj2 = pdf->createIntegral(_refCoefNorm) ;
+      pdfProj1->setOperMode(operMode()) ;
+      pdfProj2->setOperMode(operMode()) ;
+      projList->addOwned(*pdfProj1) ;
+      projList->addOwned(*pdfProj2) ;      
     }           
   }
 
@@ -438,12 +440,15 @@ void RooAddPdf::updateCoefCache(const RooArgSet* nset) const
   for (i=0 ; i<_pdfList.getSize() ; i++) {
     RooAbsPdf::globalSelectComp(kTRUE) ;    
 
-    RooAbsReal* pp = ((RooAbsReal*)_pdfProjList->at(i)) ; 
-    Double_t proj = pp->getVal() ;    
-    //cout << "RooAddPdf::updateCoefCache:: coef[" << i << "]proj = " << proj << " (" << pp->GetName() << ")" << endl ;
+    RooAbsReal* pp1 = ((RooAbsReal*)_pdfProjList->at(2*i)) ; 
+    RooAbsReal* pp2 = ((RooAbsReal*)_pdfProjList->at(2*i+1)) ; 
+    Double_t proj1 = pp1->getVal() ;    
+    Double_t proj2 = pp2->getVal() ;    
+//     cout << "RooAddPdf::updateCoefCache:: coef[" << i << "] proj1 = " << proj1 << " (" << pp1->GetName() << ")" << endl ;
+//     cout << "                                               proj2 = " << proj2 << " (" << pp2->GetName() << ")" << endl ;
     
     RooAbsPdf::globalSelectComp(kFALSE) ;
-    _coefCache[i] *= proj ;
+    _coefCache[i] *= (proj1/proj2) ;
     coefSum += _coefCache[i] ;
   }
   for (i=0 ; i<_pdfList.getSize() ; i++) {
