@@ -625,7 +625,7 @@ int type,tagnum,typenum,reftype,isconst;
   string=stringbuf;
   if(isconst&G__CONSTVAR
 #ifndef G__OLDIMPLEMENTATION1988
-     && !(isconst&G__newtype.isconst[typenum])
+     && (-1==typenum || !(isconst&G__newtype.isconst[typenum]))
 #endif
      ) {
     strcpy(string,"const ");
