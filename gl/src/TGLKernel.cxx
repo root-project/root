@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.19 2004/08/19 12:36:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.20 2004/09/03 12:52:42 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 // The TGLKernel implementation of TVirtualGL class.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+#include <TError.h>
 #include "TGLKernel.h"
 #include "TView.h"
 #include "TGeometry.h"
@@ -1468,4 +1469,45 @@ void TGLKernel::EndMovement(TGLRender *render)
 void TGLKernel::Invalidate(TGLRender *render)
 {
    render->Invalidate();
+}
+
+static GLUquadric *GetQuadric1()
+{
+   static struct Init {
+      Init()
+      {
+         fQuad = gluNewQuadric();
+         if (!fQuad) {
+            Error("GetQuadric::Init", "could not create quadric object");
+         } else {
+            gluQuadricOrientation(fQuad, (GLenum)GLU_OUTSIDE);
+            gluQuadricDrawStyle(fQuad,   (GLenum)GLU_FILL);
+            gluQuadricNormals(fQuad,     (GLenum)GLU_FLAT);
+         }
+      }
+      ~Init()
+      {
+         if(fQuad)
+            gluDeleteQuadric(fQuad);
+      }
+      GLUquadric *fQuad;
+   }singleton;
+
+   return singleton.fQuad;
+}
+
+void TGLKernel::DrawSphere(Color_t *rgba)
+{
+   Float_t mat[] = {rgba[0] / 100.f, rgba[1] / 100.f, rgba[2] / 100.f, rgba[3] / 100.f};
+   glMaterialfv(GL_FRONT, GL_SPECULAR, mat);
+   glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
+   glMaterialf(GL_FRONT, GL_SHININESS, 60.f);   
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   GLUquadric * quad = GetQuadric1();
+   if (quad) {
+      glRotated(-90., 1., 0., 0.);
+      gluSphere(quad, 1., 100, 100);
+   }
+   glDisable(GL_BLEND);
 }

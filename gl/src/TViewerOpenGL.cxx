@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.15 2004/09/06 13:03:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.16 2004/09/08 09:54:47 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -25,7 +25,11 @@
 #include <TPoint.h>
 #include <TROOT.h>
 #include <TMath.h>
-
+///////////////////////////
+#include <TGSplitter.h>
+#include <TGButton.h>
+#include "TGLEditor.h"
+/////////////////////////////
 #include "TGLSceneObject.h"
 #include "TViewerOpenGL.h"
 #include "TGLRenderArea.h"
@@ -85,7 +89,6 @@ enum EGLViewerCommands {
    kGLHelpOnViewer,
    kGLNavMode,
    kGLPickMode,
-   kGLMatPropMode,
    kGLXOY,
    kGLXOZ,
    kGLYOZ,
@@ -97,14 +100,17 @@ ClassImp(TViewerOpenGL)
 
 //______________________________________________________________________________
 TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
-                  :TVirtualViewer3D(vp), TGMainFrame(gClient->GetRoot(), 600, 600),
+                  :TVirtualViewer3D(vp), TGMainFrame(gClient->GetRoot(), 750, 600),
                    fCanvasWindow(0), fCanvasContainer(0), fCanvasLayout(0),
-	                fMenuBar(0), fFileMenu(0), fModeMenu(0), fViewMenu(0), fHelpMenu(0),
+                   fMenuBar(0), fFileMenu(0), fModeMenu(0), fViewMenu(0), fHelpMenu(0),
                    fMenuBarLayout(0), fMenuBarItemLayout(0), fMenuBarHelpLayout(0),
-                   fContextMenu(0), fCamera(), fViewVolume(), fZoom(),
-                   fActiveViewport(), fFakeHeight(0), fXc(0.), fYc(0.),
+                   fCamera(), fViewVolume(), fZoom(),
+                   fActiveViewport(), fXc(0.), fYc(0.),
                    fZc(0.), fRad(0.), fPressed(kFALSE), fArcBall(0),
-                   fSelected(0), fNbShapes(0), fConf(kPERSP), fMode(kNav)
+                   fSelected(0), fNbShapes(0), fConf(kPERSP), fMode(kNav),
+		             fMainFrame(0), fEdFrame(0), fEditor(0),
+                   fSelectedObj(0), fRGBA(), fV1(0), fV2(0),
+                   fSplitter(0)
 {
    static struct Init {
       Init()
@@ -118,7 +124,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
    }initGL;
 
    CreateViewer();
-   Resize(600, 600);
+   Resize(750, 600);
    fArcBall = new TArcBall(600, 600);
    CalculateViewports();
 }
@@ -126,6 +132,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
 //______________________________________________________________________________
 void TViewerOpenGL::CreateViewer()
 {
+/////////////////////////////////////Menu Creation//////////////////////////////////////////////
    fFileMenu = new TGPopupMenu(fClient->GetRoot());
    fFileMenu->AddEntry("&Exit", kGLExit);
    fFileMenu->Associate(this);
@@ -133,8 +140,6 @@ void TViewerOpenGL::CreateViewer()
    fModeMenu = new TGPopupMenu(fClient->GetRoot());
    fModeMenu->AddEntry("&Navigation", kGLNavMode);
    fModeMenu->AddEntry("P&icking", kGLPickMode);
-   fModeMenu->AddSeparator();
-   fModeMenu->AddEntry("&Materials", kGLMatPropMode);
    fModeMenu->Associate(this);
 
    fViewMenu = new TGPopupMenu(fClient->GetRoot());
@@ -156,17 +161,35 @@ void TViewerOpenGL::CreateViewer()
    fMenuBarHelpLayout = new TGLayoutHints(kLHintsTop | kLHintsRight);
 
    // Create menubar
-   fMenuBar = new TGMenuBar(this, 1, 1, kHorizontalFrame);
-   fMenuBar->AddPopup("&File", fFileMenu, fMenuBarItemLayout);   
+   fMenuBar = new TGMenuBar(this, 1, 1, kHorizontalFrame | kRaisedFrame);
+   fMenuBar->AddPopup("&File", fFileMenu, fMenuBarItemLayout);  
    fMenuBar->AddPopup("&Mode", fModeMenu, fMenuBarItemLayout);   
-   fMenuBar->AddPopup("&View", fViewMenu, fMenuBarItemLayout);   
+   fMenuBar->AddPopup("&View", fViewMenu, fMenuBarItemLayout);  
    fMenuBar->AddPopup("&Help",    fHelpMenu,    fMenuBarHelpLayout);
    AddFrame(fMenuBar, fMenuBarLayout);
 
-   fCanvasWindow = new TGCanvas(this, GetWidth()+4, GetHeight()+4, kSunkenFrame | kDoubleBorder);
+   fMainFrame = new TGCompositeFrame(this, 100, 100, kHorizontalFrame | kRaisedFrame);   
+   fV1 = new TGVerticalFrame(fMainFrame, 150, 10, kSunkenFrame | kFixedWidth);
+   fV2 = new TGVerticalFrame(fMainFrame, 10, 10, kSunkenFrame);
+   fL1 = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 0, 2, 2);
+   fMainFrame->AddFrame(fV1, fL1);
+   fSplitter = new TGVSplitter(fMainFrame, 5);
+   fSplitter->SetFrame(fV1, kTRUE);
+   fL2 = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 0, 0 ,0, 0);
+   fMainFrame->AddFrame(fSplitter, fL2);
+   fL3 = new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2);
+   fMainFrame->AddFrame(fV2, fL3);
+   //////////////////////////////////////////////////////////////////////////////////////
+   fEditor = new TGLEditor(fV1, 25, 50, 75, 100);
+   fL4 = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX | kLHintsExpandY, 2, 5, 1, 2);
+   fV1->AddFrame(fEditor, fL4);
+   fEditor->GetButton()->Connect("Pressed()", "TViewerOpenGL", this, "ModifySelected()");
+   /////////////////////////create view part/////////////////////////////////////////////
+   fCanvasWindow = new TGCanvas(fV2, 10, 10, kSunkenFrame | kDoubleBorder); 
    fCanvasContainer = new TGLRenderArea(fCanvasWindow->GetViewPort()->GetId(), fCanvasWindow->GetViewPort());
 
    TGLWindow * glWin = fCanvasContainer->GetGLWindow();
+
    glWin->Connect("HandleButton(Event_t*)", "TViewerOpenGL", this, "HandleContainerButton(Event_t*)");
    glWin->Connect("HandleKey(Event_t*)", "TViewerOpenGL", this, "HandleContainerKey(Event_t*)");
    glWin->Connect("HandleMotion(Event_t*)", "TViewerOpenGL", this, "HandleContainerMotion(Event_t*)");
@@ -175,18 +198,15 @@ void TViewerOpenGL::CreateViewer()
 
    fCanvasWindow->SetContainer(glWin);
    fCanvasLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
-   AddFrame(fCanvasWindow, fCanvasLayout);
-
+   fV2->AddFrame(fCanvasWindow, fCanvasLayout);
+   AddFrame(fMainFrame, fCanvasLayout);
+   ///////////////////////////////////////////////////////////////////////////////////////
    SetWindowName("OpenGL experimental viewer");
    SetClassHints("GLViewer", "GLViewer");
    SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
    MapSubwindows();
    Resize(GetDefaultSize());
    Show();
-
-   fFakeHeight = fMenuBar->GetHeight() + fMenuBarLayout->GetPadTop()
-                  + fMenuBarLayout->GetPadBottom() + fMenuBarHelpLayout->GetPadTop()
-                  + fMenuBarHelpLayout->GetPadBottom();
    fZoom[0] = fZoom[1] = fZoom[2] = fZoom[3] = 1.;
 }
 
@@ -205,7 +225,14 @@ TViewerOpenGL::~TViewerOpenGL()
    delete fCanvasContainer;
    delete fCanvasWindow;
    delete fCanvasLayout;
-   delete fContextMenu;
+   delete fV1;
+   delete fV2;
+   delete fMainFrame;
+   delete fSplitter;
+   delete fL1;
+   delete fL2;
+   delete fL3;
+   delete fL4;
 }
 
 //______________________________________________________________________________
@@ -224,35 +251,31 @@ void TViewerOpenGL::SwapBuffers()const
 Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
 {
    if (event->fType == kButtonPress && event->fCode == kButton1) {
-      if(fMode == kNav || fMode == kMat) {
+      if(fMode == kNav) {
          TPoint pnt(event->fX, event->fY);
          fArcBall->Click(pnt);
          fPressed = kTRUE;
-      } else if (fMode == kPick || fMode == kMat) {
-         if (TGLSceneObject *scObj = TestSelection(event)) {
-            if (fMode == kPick && fConf != kPERSP) {
+      } else {
+         if ((fSelectedObj = TestSelection(event))) {
+            fSelectedObj->GetColor(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
+            fEditor->SetRGBA(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
+            if (fConf != kPERSP) {
                fPressed = kTRUE;
                fLastPos.fX = event->fX;
                fLastPos.fY = event->fY;
-            } else if (fMode == kMat) {
-               scObj->ResetTransparency(50);
-               gVirtualGL->Invalidate(&fRender);
-               DrawObjects();
             }
+         } else {
+            fEditor->GetButton()->SetState(kButtonDisabled);
+            fEditor->Stop();
          }
       } 
-   } else if (event->fType == kButtonPress && event->fCode == kButton3 && (fMode == kNav || fMode == kMat)) {
-      if (TGLSceneObject *scObj = TestSelection(event)) {
-         if(fMode == kNav)
-	 {
-            if (!fContextMenu)
-               fContextMenu = new TContextMenu("glcm", "glcm");
-            fContextMenu->Popup(event->fXRoot, event->fYRoot, scObj->GetRealObject());
-	 } else {
-            scObj->ResetTransparency(50);
-            gVirtualGL->Invalidate(&fRender);
-            DrawObjects();
-	 }
+   } else if (event->fType == kButtonPress && event->fCode == kButton3 && fMode == kNav) {
+      if ((fSelectedObj = TestSelection(event))) {
+         fSelectedObj->GetColor(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
+         fEditor->SetRGBA(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
+      } else {
+         fEditor->GetButton()->SetState(kButtonDisabled);
+         fEditor->Stop();
       }
    } else if (event->fType == kButtonRelease) {
       if (event->fCode == kButton1) {
@@ -262,10 +285,6 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
             gVirtualGL->EndMovement(&fRender);
             DrawObjects();
          }
-      }
-      else if(event->fCode == kButton3 && fContextMenu) {
-         delete fContextMenu;
-         fContextMenu = 0;
       }
    }
 
@@ -319,9 +338,6 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
       gVirtualGL->SetGLLineWidth(1.5f);
       DrawObjects();
       break;
-   case kKey_T:
-   case kKey_t:
-      fMode = kMat;
    }
 
    return kTRUE;
@@ -330,8 +346,8 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
 {
-   if (fPressed)
-      if (fMode == kNav || fMode == kMat) {
+   if (fPressed) {
+      if (fMode == kNav) {
          TPoint pnt(event->fX, event->fY);
          fArcBall->Drag(pnt);
          DrawObjects();
@@ -346,21 +362,22 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
          switch (fConf) {
          case kXOY:
             gVirtualGL->MoveSelected(&fRender, xshift, yshift, 0.);
-         break;
+            break;
          case kXOZ:
             gVirtualGL->MoveSelected(&fRender, xshift, 0., -yshift);
-         break;
+            break;
          case kYOZ:
             gVirtualGL->MoveSelected(&fRender, 0., -xshift, -yshift);
-         break;
+            break;
 	 default:
-	 break;
+	    break;
          }
          
          DrawObjects();
          fLastPos.fX = event->fX;
          fLastPos.fY = event->fY;
       }
+   }
 
    return kTRUE;
 }
@@ -554,9 +571,6 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                DrawObjects();
             }
             break;
-         case kGLMatPropMode:
-            fMode = kMat;
-            break;
          case kGLXOY:
 
             if (fConf != kXOY) {
@@ -588,7 +602,7 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                fConf = kPERSP;
                fRender.SetActive(fConf);
                DrawObjects();
-               if(fMode != kMat && fMode != kNav)
+               if(fMode != kNav)
                   fMode = kNav;
             }
             break;
@@ -622,8 +636,8 @@ void TViewerOpenGL::CalculateViewports()
 {
    fActiveViewport[0] = 0;
    fActiveViewport[1] = 0;
-   fActiveViewport[2] = GetWidth();
-   fActiveViewport[3] = GetHeight() - fFakeHeight;
+   fActiveViewport[2] = fCanvasWindow->GetWidth();
+   fActiveViewport[3] = fCanvasWindow->GetHeight();
 }
 
 void TViewerOpenGL::CalculateViewvolumes()
@@ -634,8 +648,8 @@ void TViewerOpenGL::CalculateViewvolumes()
       Double_t zdiff = fRangeZ.second - fRangeZ.first;
       Double_t max = xdiff > ydiff ? xdiff > zdiff ? xdiff : zdiff : ydiff > zdiff ? ydiff : zdiff;
 
-      Int_t w = GetWidth() / 2;
-      Int_t h = (GetHeight() - fFakeHeight) / 2;
+      Int_t w = fCanvasWindow->GetWidth() / 2;
+      Int_t h = (fCanvasWindow->GetHeight()) / 2;
       Double_t frx = 1., fry = 1.;
 
       if (w > h)
@@ -674,4 +688,14 @@ void TViewerOpenGL::CreateCameras()
    fRender.AddNewCamera(fCamera[kXOZ]);
    fRender.AddNewCamera(fCamera[kYOZ]);
    fRender.AddNewCamera(fCamera[kPERSP]);
+}
+
+void TViewerOpenGL::ModifySelected()
+{
+   fEditor->GetButton()->SetState(kButtonDisabled);
+   fEditor->GetRGBA(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
+   fSelectedObj->SetColor(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
+   MakeCurrent();
+   gVirtualGL->Invalidate(&fRender);
+   DrawObjects();
 }

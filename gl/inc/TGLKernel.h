@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.12 2004/09/03 12:52:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.13 2004/09/03 14:35:20 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -140,7 +140,9 @@ public:
    TGLSceneObject *SelectObject(TGLRender *graph, Int_t x, Int_t y, Int_t camera);
    void MoveSelected(TGLRender *render, Double_t x, Double_t y, Double_t z);
    void EndMovement(TGLRender *render);
-   void Invalidate(TGLRender *);
+   void Invalidate(TGLRender *render);
+   void DrawSphere(Color_t *rgba);
+
 private:
    void DrawStars(const Double_t * vertex, Style_t marker_style, UInt_t size);
 };

@@ -109,6 +109,24 @@ TObject *TGLSceneObject::GetRealObject()const
 }
 
 //______________________________________________________________________________
+void TGLSceneObject::GetColor(Color_t &r, Color_t &g, Color_t &b, Color_t &a)const
+{
+   r = Color_t(fColor[0] * 100.f);
+   g = Color_t(fColor[1] * 100.f);
+   b = Color_t(fColor[2] * 100.f);
+   a = Color_t(fColor[3] * 100.f);
+}
+
+//______________________________________________________________________________
+void TGLSceneObject::SetColor(Color_t r, Color_t g, Color_t b, Color_t a)
+{
+   fColor[0] = r / 100.f;
+   fColor[1] = g / 100.f;
+   fColor[2] = b / 100.f;
+   fColor[3] = a / 100.f;
+}
+
+//______________________________________________________________________________
 TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color,
                        UInt_t glname, TObject *realobj)
                :TGLSceneObject(color, glname),

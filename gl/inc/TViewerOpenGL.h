@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.8 2004/08/19 12:06:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.9 2004/09/03 12:52:42 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -18,13 +18,15 @@
 #include <RQ_OBJECT.h>
 #include <TGFrame.h>
 #include <TPoint.h>
+#include <Gtypes.h>
 
 #include "TGLRender.h"
 
 class TGLRenderArea;
-class TContextMenu;
 class TGLSelection;
+class TGVSplitter;
 class TGPopupMenu;
+class TGLEditor;
 class TGLCamera;
 class TGLRender;
 class TBuffer3D;
@@ -33,12 +35,9 @@ class TGCanvas;
 class TArcBall;
 
 class TViewerOpenGL : public TVirtualViewer3D, public TGMainFrame {
-
-RQ_OBJECT("TViewerOpenGL")
-
 private:
    typedef std::pair<Double_t, Double_t> PDD_t;
-   enum EMode{kNav, kPick, kMat};
+   enum EMode{kNav, kPick};
    enum EViews{kXOY, kXOZ, kYOZ, kPERSP};
 
    TGCanvas      *fCanvasWindow;
@@ -51,13 +50,10 @@ private:
    TGLayoutHints *fMenuBarItemLayout;
    TGLayoutHints *fMenuBarHelpLayout;
 
-   TContextMenu  *fContextMenu;
-
    TGLCamera     *fCamera[4];
    Double_t      fViewVolume[4];
    Double_t      fZoom[4];
    Int_t         fActiveViewport[4];
-   UInt_t        fFakeHeight;
 
    Double_t      fXc, fYc, fZc;
    PDD_t         fRangeX, fRangeY, fRangeZ;
@@ -73,7 +69,18 @@ private:
 
    EViews        fConf;
    EMode         fMode;
+////////////XXX//////////////////////////////
+   TGCompositeFrame *fMainFrame;
+   TGCompositeFrame *fEdFrame;
+   TGLEditor        *fEditor;
 
+   TGLSceneObject *fSelectedObj;
+   Color_t fRGBA[4];
+   TGVerticalFrame *fV1;
+   TGVerticalFrame *fV2;
+   TGVSplitter *fSplitter;
+   TGLayoutHints *fL1, *fL2, *fL3, *fL4;
+/////////////////////////////////////////////
 public:
    TViewerOpenGL(TVirtualPad * pad);
    ~TViewerOpenGL();
@@ -86,7 +93,8 @@ public:
    Bool_t HandleContainerKey(Event_t *ev);
    Bool_t HandleContainerMotion(Event_t *ev);
    Bool_t HandleContainerExpose(Event_t *ev);
-
+   void ModifySelected();
+   
 private:
    void CreateViewer();
    void DrawObjects()const;

@@ -17,6 +17,7 @@
 #pragma link C++ class TViewerOpenGL;
 #pragma link C++ class TGLRenderArea;
 #pragma link C++ class TGLWindow;
+#pragma link C++ class TGLEditor;
 
 #ifndef _WIN32
 #pragma link C++ class TX11GL;

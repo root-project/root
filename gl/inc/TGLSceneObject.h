@@ -4,6 +4,7 @@
 #include <utility>
 
 #include <TObject.h>
+#include <Gtypes.h>
 
 class TBuffer3D;
 /////////////////////////////////////////////////////////////
@@ -37,7 +38,8 @@ public:
       return fGLName;
    }
    virtual TObject *GetRealObject()const;
-
+   void GetColor(Color_t &r, Color_t &g, Color_t &b, Color_t &a)const;
+   void SetColor(Color_t r, Color_t g, Color_t b, Color_t a);
 private:
    TGLSceneObject(const TGLSceneObject &);
    TGLSceneObject & operator = (const TGLSceneObject &);

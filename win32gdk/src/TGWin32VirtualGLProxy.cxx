@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.4 2004/08/19 12:06:36 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.5 2004/09/03 12:52:42 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -119,3 +119,4 @@ RETURN_METHOD_ARG4(VirtualGL, TGLSceneObject *, SelectObject, TGLRender *, rende
 VOID_METHOD_ARG4(VirtualGL, MoveSelected, TGLRender *, render, Double_t, x, Double_t, y, Double_t, z, 1)
 VOID_METHOD_ARG1(VirtualGL, EndMovement, TGLRender *, render, 1)
 VOID_METHOD_ARG1(VirtualGL, Invalidate, TGLRender *, render, 1)
+VOID_METHOD_ARG1(VirtualGL, DrawSphere, Color_t *, color, 1)
