@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.2 2000/07/12 15:20:55 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 
 class TContextMenu;
 class TControlBar;
+class TBrowser;
 
 class TCanvas : public TPad {
 
@@ -112,6 +113,7 @@ public:
    virtual ~TCanvas();
 
    void              cd(Int_t subpadnumber=0);
+   virtual void      Browse(TBrowser *b);
    void              Clear(Option_t *option="");
    void              Close(Option_t *option="");
    virtual void      Draw(Option_t *option="");

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.8 2000/09/08 07:41:00 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.9 2000/09/08 16:05:21 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -483,6 +483,15 @@ TCanvas::~TCanvas()
 }
 
 //______________________________________________________________________________
+void TCanvas::Browse(TBrowser *b)
+{
+    Draw();
+    cd();
+    fPrimitives->Browse(b);
+}
+
+
+//______________________________________________________________________________
 void TCanvas::Destructor()
 {
    // Actual canvas destructor.
@@ -632,6 +641,7 @@ void TCanvas::DrawClone(Option_t *option)
    newCanvas->SetName(cdef);
 
    newCanvas->Draw(option);
+   newCanvas->Update();
 }
 
 
@@ -644,6 +654,11 @@ void TCanvas::DrawClonePad()
    // the canvas context menu item DrawClonePad.
    // Note that the original canvas may have subpads.
 
+   
+  if (gPad == 0 || gPad == this) {
+     DrawClone();
+     return;
+  }
   TPad *padsav = (TPad*)gPad;
   TPad *pad = (TPad*)gROOT->GetSelectedPad();
   this->cd();
