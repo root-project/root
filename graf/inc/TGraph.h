@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.2 2000/06/13 10:57:48 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -72,6 +72,7 @@ public:
         virtual void     ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
         virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
         virtual void     Draw(Option_t *chopt="");
+        virtual void     DrawGraph(Int_t n, Float_t *x, Float_t *y, Option_t *option="");
         virtual void     DrawGraph(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
         virtual void     DrawPanel(); // *MENU*
         virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);

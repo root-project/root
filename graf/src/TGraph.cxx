@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.6 2000/06/13 10:57:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.7 2000/07/03 10:04:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -280,6 +280,21 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
       if (dist < kMaxDiff) {gPad->SetSelected(f); return dist;}
    }
    return distance;
+}
+
+
+//______________________________________________________________________________
+void TGraph::DrawGraph(Int_t n, Float_t *x, Float_t *y, Option_t *option)
+{
+//*-*-*-*-*-*-*-*-*-*-*Draw this graph with new attributes*-*-*-*-*-*-*-*-*-*
+//*-*                  ===================================
+
+   TGraph *newgraph = new TGraph(n, x, y);
+   TAttLine::Copy(*newgraph);
+   TAttFill::Copy(*newgraph);
+   TAttMarker::Copy(*newgraph);
+   newgraph->SetBit(kCanDelete);
+   newgraph->AppendPad(option);
 }
 
 
