@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.45 2002/10/02 19:14:39 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.46 2002/10/10 09:01:15 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -188,6 +188,7 @@ TObject::TObject(const TObject &obj)
       fBits &= ~kIsOnHeap;
 
    fBits &= ~kIsReferenced;
+   fBits &= ~kCanDelete;
 
    if (fgObjectStat) TObjectTable::AddObj(this);
 }
@@ -207,6 +208,7 @@ TObject& TObject::operator=(const TObject &rhs)
          fBits &= ~kIsOnHeap;
       }
       fBits &= ~kIsReferenced;
+      fBits &= ~kCanDelete;
    }
    return *this;
 }
@@ -225,6 +227,7 @@ void TObject::Copy(TObject &obj)
       obj.fBits &= ~kIsOnHeap;
    }
    obj.fBits &= ~kIsReferenced;
+   obj.fBits &= ~kCanDelete;
 }
 
 //______________________________________________________________________________
