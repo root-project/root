@@ -17,6 +17,6 @@ Event.new.split0.root: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 #	$(CMDECHO)echo creating Event.new.split0.root
 	$(CMDECHO)./Event 10 1 0 1 >/dev/null 2>&1  && cp Event.root Event.new.split0.root 
 
-local_clean = Event libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.root result
+local_clean = Event libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.root result $(ALL_LIBRARIES)
 
 

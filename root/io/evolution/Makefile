@@ -35,3 +35,4 @@ ClassConvReadOld.log: ClassConvOld_cxx.$(DllSuf) ClassConv.root
 
 ClassConv.log: ClassConv.root ClassConvNew_cxx.$(DllSuf) ClassConvReadOld.log
 	$(CMDECHO) root.exe -q -b -l ClassConvReadNew.cxx > ClassConv.log 2>&1 
+
