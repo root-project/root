@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.3 2001/01/25 18:39:42 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.4 2002/02/06 11:51:00 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -33,7 +33,7 @@
 
 //---- Socket event handler ----------------------------------------------------
 //
-// This utility class is only used via TMonitor.
+// This utility class is only used by TMonitor.
 //
 
 class TSocketHandler : public TFileHandler {
@@ -286,4 +286,38 @@ Int_t TMonitor::GetDeActive() const
    // Return number of sockets in the de-active list.
 
    return fDeActive->GetSize();
+}
+
+//______________________________________________________________________________
+TList *TMonitor::GetListOfActives() const
+{
+   // Returns a list with all active sockets. This list must be deleted
+   // by the user. DO NOT call Delete() on this list as it will delete
+   // the sockets that are still being used by the monitor.
+
+   TList *list = new TList;
+
+   TIter next(fActive);
+
+   while (TSocketHandler *h = (TSocketHandler*) next())
+      list->Add(h->GetSocket());
+
+   return list;
+}
+
+//______________________________________________________________________________
+TList *TMonitor::GetListOfDeActives() const
+{
+   // Returns a list with all de-active sockets. This list must be deleted
+   // by the user. DO NOT call Delete() on this list as it will delete
+   // the sockets that are still being used by the monitor.
+
+   TList *list = new TList;
+
+   TIter next(fDeActive);
+
+   while (TSocketHandler *h = (TSocketHandler*) next())
+      list->Add(h->GetSocket());
+
+   return list;
 }

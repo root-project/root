@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.3 2001/01/25 18:39:42 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.4 2002/10/02 13:05:02 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -64,10 +64,10 @@ public:
    TSocket *Select();
    TSocket *Select(Long_t timeout);
 
-   Int_t        GetActive() const;
-   Int_t        GetDeActive() const;
-   const TList *GetListOfActives() const { return fActive; }
-   const TList *GetListOfDeActives() const { return fDeActive; }
+   Int_t  GetActive() const;
+   Int_t  GetDeActive() const;
+   TList *GetListOfActives() const;
+   TList *GetListOfDeActives() const;
 
    ClassDef(TMonitor,0)  //Monitor activity on a set of TSocket objects
 };
