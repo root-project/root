@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.19 2003/08/21 08:26:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.20 2004/03/19 11:03:30 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -53,6 +53,9 @@ TView::TView()
    fAutoRange      = kFALSE;
    fChanged = kFALSE;
    SetBit(kMustCleanup);
+   for (Int_t i=0;i<3;i++) {
+      fX1[i] = fX2[i] = fY1[i] = fY2[i] = fZ1[i] = fZ2[i] = 0;
+   }
 }
 
 //____________________________________________________________________________
@@ -113,7 +116,11 @@ TView::TView(Int_t system)
    if (gPad) {
       gPad->Range(-1, -1, 1, 1);
 
-      for (Int_t i = 0; i < 3; fRmin[i] = 0, fRmax[i] = 1, i++);
+      Int_t i;
+      for (i = 0; i < 3; fRmin[i] = 0, fRmax[i] = 1, i++);
+      for (i=0;i<3;i++) {
+         fX1[i] = fX2[i] = fY1[i] = fY2[i] = fZ1[i] = fZ2[i] = 0;
+      }
 
       fLongitude = -90 - gPad->GetPhi();
       fLatitude  =  90 - gPad->GetTheta();
@@ -171,7 +178,11 @@ TView::TView(const Float_t *rmin, const Float_t *rmax, Int_t system)
    //By default pad range in 3-D view is (-1,-1,1,1), so ...
    gPad->Range(-1, -1, 1, 1);
 
-   for (Int_t i = 0; i < 3; fRmin[i] = rmin[i], fRmax[i] = rmax[i], i++);
+   Int_t i;
+   for (i = 0; i < 3; fRmin[i] = rmin[i], fRmax[i] = rmax[i], i++);
+   for (i=0;i<3;i++) {
+      fX1[i] = fX2[i] = fY1[i] = fY2[i] = fZ1[i] = fZ2[i] = 0;
+   }
 
         fLongitude = -90 - gPad->GetPhi();
         fLatitude  =  90 - gPad->GetTheta();
@@ -229,7 +240,11 @@ TView::TView(const Double_t *rmin, const Double_t *rmax, Int_t system)
    //By default pad range in 3-D view is (-1,-1,1,1), so ...
    gPad->Range(-1, -1, 1, 1);
 
-   for (Int_t i = 0; i < 3; fRmin[i] = rmin[i], fRmax[i] = rmax[i], i++);
+   Int_t i;
+   for (i = 0; i < 3; fRmin[i] = rmin[i], fRmax[i] = rmax[i], i++);
+   for (i=0;i<3;i++) {
+      fX1[i] = fX2[i] = fY1[i] = fY2[i] = fZ1[i] = fZ2[i] = 0;
+   }
 
         fLongitude = -90 - gPad->GetPhi();
         fLatitude  =  90 - gPad->GetTheta();

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:$:$Id:$
+// @(#)root/physics:$Name:  $:$Id: TFeldmanCousins.cxx,v 1.7 2004/02/13 14:27:00 rdm Exp $
 // Author: Adrian Bevan  2001
 
 /*************************************************************************
@@ -184,11 +184,11 @@ Int_t TFeldmanCousins::FindLimitsFromTable( Double_t mu )
     if(sum >= fCL) break;
   }
 
-  delete P;
-  delete R;
-  delete rank;
-  delete MuBest;
-  delete ProbMuBest;
+  delete [] P;
+  delete [] R;
+  delete [] rank;
+  delete [] MuBest;
+  delete [] ProbMuBest;
 
   if((fNobserved <= iMax) && (fNobserved >= iMin)) return 1;
   else return 0;
