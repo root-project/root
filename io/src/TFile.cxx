@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.37 2001/05/31 08:48:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.38 2001/06/02 10:01:50 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -614,6 +614,7 @@ Float_t TFile::GetCompressionFactor()
          Seek(idcur);
          continue;
       }
+      if (nbytes == 0) break; //this may happen when the file is corrupted
       Version_t versionkey;
       frombuf(buffer, &versionkey);
       frombuf(buffer, &objlen);
