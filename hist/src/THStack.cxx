@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:$:$Id:$
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.5 2001/12/10 15:03:18 rdm Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -325,8 +325,13 @@ void THStack::Paint(Option_t *option)
    // drawn in stack mode!
    //if (nostack && fStack) {fStack->Delete(); delete fStack; fStack = 0;}
 
-   Double_t themax = GetMaximum(option);
-   Double_t themin = GetMinimum(option);
+   if (!opt.Contains("nostack")) BuildStack();
+   
+   Double_t themax,themin;
+   if (fMaximum == -1111) themax = GetMaximum(option);
+   else                   themax = fMaximum;
+   if (fMinimum == -1111) themin = GetMinimum(option);
+   else                   themin = fMinimum;
    if (!fHistogram) {
       Bool_t add = TH1::AddDirectoryStatus();
       TH1::AddDirectory(kFALSE);
