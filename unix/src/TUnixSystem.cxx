@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.75 2003/11/19 15:45:43 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.76 2003/11/20 23:00:46 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -609,7 +609,7 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       }
 
       // check for file descriptors ready for reading/writing
-      if (fNfd > 0 && fFileHandler->GetSize() > 0)
+      if (fNfd > 0 && fFileHandler && fFileHandler->GetSize() > 0)
          if (CheckDescriptors())
             if (!pendingOnly) return;
       fNfd = 0;
