@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.27 2001/10/14 15:47:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.28 2001/10/15 06:59:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TMessage.h"
 #include "TClonesArray.h"
 #include "TVirtualPad.h"
+#include "TSystem.h"
 
 TBranch *gBranch;
 
@@ -279,7 +280,7 @@ void TBranch::Browse(TBrowser *b)
       fLeaves.Browse(b);
    } else {
       // Get the name and strip any extra brackets
-      // in order to get the full arrays. 
+      // in order to get the full arrays.
       TString name = GetName();
       Int_t pos = name.First('[');
       if (pos!=kNPOS) name.Remove(pos);
@@ -467,15 +468,15 @@ void TBranch::FillLeaves(TBuffer &b)
 }
 
 //______________________________________________________________________________
-TBranch *TBranch::FindBranch(const char* searchname) 
+TBranch *TBranch::FindBranch(const char* searchname)
 {
    char brname[kMaxLen];
    char longsearchname[kMaxLen];
    TIter next(GetListOfBranches());
-   
+
    // For branches we allow for one level up to be prefixed to the
    // name
-   
+
    strcpy(longsearchname,GetName());
    char *dim = (char*)strstr(longsearchname,"[");
    if (dim) dim[0]='\0';
@@ -491,37 +492,37 @@ TBranch *TBranch::FindBranch(const char* searchname)
 
       if (!strcmp(longsearchname,brname)) return branch;
    }
-   
+
    //search in list of friends
    return 0;
 }
 
 //______________________________________________________________________________
-TLeaf *TBranch::FindLeaf(const char* searchname) 
+TLeaf *TBranch::FindLeaf(const char* searchname)
 {
    char leafname[kMaxLen];
    char leaftitle[kMaxLen];
    char longname[kMaxLen];
    char longtitle[kMaxLen];
-   
+
    // For leaves we allow for one level up to be prefixed to the
    // name
-   
+
    TIter next (GetListOfLeaves());
    TLeaf *leaf;
    while ((leaf = (TLeaf*)next())) {
       strcpy(leafname,leaf->GetName());
       char *dim = (char*)strstr(leafname,"[");
       if (dim) dim[0]='\0';
-      
+
       if (!strcmp(searchname,leafname)) return leaf;
-      
+
       // The TLeafElement contains the branch name in its name,
       // let's use the title....
       strcpy(leaftitle,leaf->GetTitle());
       dim = (char*)strstr(leaftitle,"[");
       if (dim) dim[0]='\0';
-      
+
       if (!strcmp(searchname,leaftitle)) return leaf;
 
       TBranch * branch = leaf->GetBranch();
@@ -544,13 +545,13 @@ TLeaf *TBranch::FindLeaf(const char* searchname)
          // a sub-branch.  Since we do not see it through
          // TTree::GetListOfBranches, we need to see it indirectly.
          // This is the less sturdy part of this search ... it may
-         // need refining ... 
+         // need refining ...
          if (strstr(searchname,".")
-             && !strcmp(searchname,branch->GetName())) return leaf;                
+             && !strcmp(searchname,branch->GetName())) return leaf;
          //printf("found leaf3=%s/%s, branch=%s, i=%d\n",leaf->GetName(),leaf->GetTitle(),branch->GetName(),i);
       }
    }
-   
+
    //search in list of friends
    return 0;
 }
@@ -740,18 +741,39 @@ TFile *TBranch::GetFile(Int_t mode)
 //  Return pointer to the file where branch buffers reside
 
    if (fDirectory) return fDirectory->GetFile();
-   TFile *file;
 
    // check if a file with this name is in the list of Root files
-   file = (TFile*)gROOT->GetListOfFiles()->FindObject(fFileName.Data());
+   TFile *file = (TFile*)gROOT->GetListOfFiles()->FindObject(fFileName.Data());
    if (file) {
       fDirectory = (TDirectory*)file;
       return file;
    }
 
+   TString bFileName = fFileName;
+
+   // check if branch file name is absolute or a URL (e.g. /castor/...,
+   // root://host/...)
+   char *bname = gSystem->ExpandPathName(fFileName.Data());
+   if (!gSystem->IsAbsoluteFileName(bname) && !strstr(bname, "://")) {
+
+      // if not, get filename where tree header is stored
+      const char *tfn = fTree->GetCurrentFile()->GetName();
+
+      // if this is an absolute path or a URL then prepend this path
+      // to the branch file name
+      char *tname = gSystem->ExpandPathName(tfn);
+      if (gSystem->IsAbsoluteFileName(tname) || strstr(tname, "://")) {
+         bFileName = gSystem->DirName(tname);
+         bFileName += "/";
+         bFileName += fFileName;
+      }
+      delete [] tname;
+   }
+   delete [] bname;
+
    // Open file (new file if mode = 1)
-   if (mode) file = TFile::Open(fFileName.Data(),"recreate");
-   else      file = TFile::Open(fFileName.Data());
+   if (mode) file = TFile::Open(bFileName, "recreate");
+   else      file = TFile::Open(bFileName);
    if (file->IsZombie()) {delete file; return 0;}
    fDirectory = (TDirectory*)file;
    return file;
@@ -986,8 +1008,24 @@ void TBranch::SetCompressionLevel(Int_t level)
 //______________________________________________________________________________
 void TBranch::SetFile(TFile *file)
 {
-//  Set file where this branch writes/reads its buffers
-//
+   // Set file where this branch writes/reads its buffers.
+   // By default the branch buffers reside in the file where the
+   // Tree was created.
+   // If the file name where the tree was created is an absolute
+   // path name or an URL (e.g. /castor/... or root://host/...)
+   // and if the fname is not an absolute path name or an URL then
+   // the path of the tree file is prepended to fname to make the
+   // branch file relative to the tree file. In this case one can
+   // move the tree + all branch files to a different location in
+   // the file system and still access the branch files.
+   // The ROOT file will be connected only when necessary.
+   // If called by TBranch::Fill (via TBasket::WriteFile), the file
+   // will be created with the option "recreate".
+   // If called by TBranch::GetEntry (via TBranch::GetBasket), the file
+   // will be opened in read mode.
+   // To open a file in "update" mode or with a certain compression
+   // level, use TBranch::SetFile(TFile *file).
+
    if (file == 0) file = fTree->GetCurrentFile();
    fDirectory = (TDirectory*)file;
    if (file == fTree->GetCurrentFile()) fFileName = "";
@@ -997,17 +1035,23 @@ void TBranch::SetFile(TFile *file)
 //______________________________________________________________________________
 void TBranch::SetFile(const char *fname)
 {
-//  Set file where this branch writes/reads its buffers
-//  By default the branch buffers reside in the file where the Tree was created.
-//  Branches of the same Tree may be on different files.
-//
-//  The Root file will be connected only when necessary.
-//  If called by TBranch::Fill (via TBasket::WriteFile), the file
-//  will be created with the option "recreate".
-//  If called by TBranch::GetEntry (via TBranch::GetBasket), the file
-//  will be open in read mode.
-//
-//  To open a file in "update" mode, use TBranch::SetFile(TFile *file).
+   // Set file where this branch writes/reads its buffers.
+   // By default the branch buffers reside in the file where the
+   // Tree was created.
+   // If the file name where the tree was created is an absolute
+   // path name or an URL (e.g. /castor/... or root://host/...)
+   // and if the fname is not an absolute path name or an URL then
+   // the path of the tree file is prepended to fname to make the
+   // branch file relative to the tree file. In this case one can
+   // move the tree + all branch files to a different location in
+   // the file system and still access the branch files.
+   // The ROOT file will be connected only when necessary.
+   // If called by TBranch::Fill (via TBasket::WriteFile), the file
+   // will be created with the option "recreate".
+   // If called by TBranch::GetEntry (via TBranch::GetBasket), the file
+   // will be opened in read mode.
+   // To open a file in "update" mode or with a certain compression
+   // level, use TBranch::SetFile(TFile *file).
 
    fFileName  = fname;
    fDirectory = 0;
