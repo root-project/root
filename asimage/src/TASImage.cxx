@@ -3079,7 +3079,7 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
       }
    } else {
 
-      double as = sin(atan2(dy, dx));
+      double as = sin(TMath::ATan2(dy, dx));
       wid = as != 0 ? int(thick/as) : 1;
       wid = wid ? wid : 1;
 
@@ -3308,13 +3308,13 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    int q;
    UInt_t iDash = 0;    // index of current dash
 
-   dx = abs(x2 - x1);
-   dy = abs(y2 - y1);
+   dx = TMath::Abs(Int_t(x2) - Int_t(x1));
+   dy = TMath::Abs(Int_t(y2) - Int_t(y1));
 
    char *pDash = new char[nDash];
 
    if (dy <= dx) {
-      double ac = cos(atan2(dy, dx));
+      double ac = cos(TMath::ATan2(dy, dx));
 
       for (i = 0; i < (int)nDash; i++) {
          pDash[i] = int(tDash[i] * ac);
@@ -3397,7 +3397,7 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
          }
       }
    } else {
-      double as = sin(atan2(dy, dx));
+      double as = sin(TMath::ATan2(dy, dx));
 
       for (i = 0; i < (int)nDash; i++) {
          pDash[i] = int(tDash[i] * as);
@@ -4089,9 +4089,9 @@ void TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
    int dr = 0;                   // decision variables 
    int ml = 0;                   // left edge slope
    int m1l = 0;                  // left edge slope+1
-   int mr, m1r;                  // right edge slope and slope+1
-   int incr1l, incr2l;           // left edge error increments
-   int incr1r, incr2r;           // right edge error increments
+   int mr = 0, m1r = 0;          // right edge slope and slope+1
+   int incr1l = 0, incr2l = 0;   // left edge error increments
+   int incr1r = 0, incr2r = 0;   // right edge error increments
    int dy;                       // delta y
    int y;                        // current scanline
    int left, right;              // indices to first endpoints
@@ -4299,23 +4299,13 @@ public:
 };
 
 //______________________________________________________________________________
-void TASImage::GetFillAreaSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans, 
-                                TPoint **firstPoint, UInt_t **firstWidth)
+void TASImage::GetFillAreaSpans(UInt_t npt, TPoint *ppt, UInt_t * /*nspans*/, 
+                                TPoint ** /*firstPoint*/, UInt_t ** /*firstWidth*/)
 {
    // fill a polygon (any type convex, non-convex)
    //
    // The code is based on Xserver/mi
    //    "Copyright 1987, 1998  The Open Group"
-
-   TPoint *curr;
-   TPoint *pts;
-   TPoint *top;
-   TPoint *bottom;
-   int dy;
-   int y; // the current scanline
-
-     Warning("GetFillAreaSpans", "under construction ...");
-   return;
 
    if (!InitVisual()) {
       Warning("GetFillAreaSpans", "Visual not initiated");
@@ -4341,6 +4331,14 @@ void TASImage::GetFillAreaSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
       return;
    }
 /*
+   TPoint *curr;
+   TPoint *pts;
+   TPoint *top;
+   TPoint *bottom;
+   int dy;
+   int y; // the current scanline
+
+
    while (npt--)  {
       curr = pts++;
 
