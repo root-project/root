@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.62 2004/01/14 21:08:23 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.63 2004/01/19 18:32:45 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -69,6 +69,37 @@ unsigned thread1ID;
 
 #ifdef GDK_WIN32
 
+//////////////////// Windows TFdSet ////////////////////////////////////////////////
+class TWinFdSet : public TFdSet {
+private:
+   fd_set *fds_bits;     // file descriptors (maximum is 64)
+public:
+   TWinFdSet() { fds_bits = new fd_set; fds_bits->fd_count = 0; }
+   virtual ~TWinFdSet() { delete fds_bits; }
+   void  Copy(TFdSet &fd) const { memcpy((void*)((TWinFdSet&)fd).fds_bits, fds_bits, sizeof(fd_set)); }
+   void  Zero() { fds_bits->fd_count = 0; }
+   void  Set(Int_t fd) { fds_bits->fd_array[fds_bits->fd_count++] = (SOCKET)fd; }
+   void  Clr(Int_t fd) 
+   { 
+      int i; 
+      for (i=0; i<fds_bits->fd_count; i++) {
+         if (fds_bits->fd_array[i]==(SOCKET)fd) {
+            while (i<fds_bits->fd_count-1) {
+               fds_bits->fd_array[i] = fds_bits->fd_array[i+1];
+               i++;
+            }
+            fds_bits->fd_count--;
+            break;
+         }
+      }
+   }
+   Int_t IsSet(Int_t fd) { return __WSAFDIsSet((SOCKET)fd, fds_bits); }
+   Int_t *GetBits() { return fds_bits->fd_count ? (Int_t*)fds_bits : 0; }
+   UInt_t GetCount() { return (UInt_t)fds_bits->fd_count; }
+   Int_t GetFd(Int_t i) { return i<fds_bits->fd_count ? fds_bits->fd_array[i] : 0; } 
+};
+
+
 struct  itimerval {
    struct  timeval it_interval;
    struct  timeval it_value;
@@ -82,7 +113,8 @@ static DWORD  start_time;
 #define ITIMER_VIRTUAL  1
 #define ITIMER_PROF     2
 
-int setitimer (int which, const struct itimerval *value, struct itimerval *oldvalue)
+//______________________________________________________________________________
+int setitimer(int which, const struct itimerval *value, struct itimerval *oldvalue)
 {
    //
 
@@ -92,7 +124,7 @@ int setitimer (int which, const struct itimerval *value, struct itimerval *oldva
       return -1;
    }
    /* Check if we will wrap */
-   if (itv.it_value.tv_sec >= (long) (UINT_MAX / 1000)) {
+   if (itv.it_value.tv_sec >= (long) (UINT_MAX/1000)) {
       return -1;
    }
    if (timer_active) {
@@ -101,6 +133,7 @@ int setitimer (int which, const struct itimerval *value, struct itimerval *oldva
    }
    if (oldvalue)
       *oldvalue = itv;
+
    if (value == NULL) {
       return -1;
    }
@@ -112,10 +145,10 @@ int setitimer (int which, const struct itimerval *value, struct itimerval *oldva
       else
          return 0;
    }
-   if (!(timer_active = SetTimer (NULL, 1, elapse, NULL))) {
+   if (!(timer_active = ::SetTimer(NULL, 1, elapse, NULL))) {
       return -1;
    }
-   start_time = GetTickCount ();
+   start_time = ::GetTickCount();
    return 0;
 }
 #endif
@@ -141,11 +174,12 @@ BOOL ConsoleSigHandler(DWORD sig)
 //______________________________________________________________________________
 void SigHandler(ESignals sig)
 {
-   if (gSystem)
+   if (gSystem) {
       ((TWinNTSystem*)gSystem)->DispatchSignals(sig);
+   }
 }
 
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 class TTermInputLine :  public  TWin32HookViaThread
 {
@@ -176,10 +210,45 @@ void TTermInputLine::ExecThreadCB(TWin32SendClass *code)
 
 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 ClassImp(TWinNTSystem)
 
+#ifdef GDK_WIN32
+//______________________________________________________________________________
+unsigned __stdcall HandleConsoleThread(void *pArg )
+{
+   //
+
+   while (1) {
+      if(gROOT->GetApplication()) {
+         if (hEvent1) {
+            ::WaitForSingleObject(hEvent1, INFINITE);
+         }
+
+         if(!gROOT->IsLineProcessing()) {
+            if(!gApplication->HandleTermInput()) break; // no terminal input
+
+            if (gSplash) {    // terminate splash window after first key press
+               delete gSplash;
+               gSplash = 0;
+            }
+         }
+         ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE), ENABLE_PROCESSED_OUTPUT);
+         if (hEvent1) ::ResetEvent(hEvent1);
+      } else {
+         static int i = 0;
+         ::SleepEx(100,1);
+         i++;
+         if (i>20) break; // TApplication object doesn't exist
+      }
+   }
+
+   ::CloseHandle(hThread1);
+   hThread1 = 0;
+   _endthreadex( 0 );
+   return 0;
+}
+#endif
 
 //______________________________________________________________________________
 BOOL TWinNTSystem::HandleConsoleEvent()
@@ -213,24 +282,22 @@ TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
    fhSmallIconList = 0;
    fhNormalIconList = 0;
 
-   WSADATA  WSAData;
+   WSADATA WSAData;
    int initwinsock= 0;
-   if (initwinsock = WSAStartup(MAKEWORD(2,0),&WSAData)) {
+   if (initwinsock = ::WSAStartup(MAKEWORD(2, 0), &WSAData)) {
       Error("TWinNTSystem()","Starting sockets failed");
-      // printf(" exit code = %d \n", 1);
-      // return -1;
    }
 }
 
 //______________________________________________________________________________
 TWinNTSystem::~TWinNTSystem()
 {
-   //
+   // dtor
 
    SafeDelete(fWin32Timer);
 
    // Clean up the WinSocket connectios
-   WSACleanup();
+   ::WSACleanup();
 
    if (fDirNameBuffer) {
       delete [] fDirNameBuffer;
@@ -249,49 +316,9 @@ TWinNTSystem::~TWinNTSystem()
 #ifdef GDK_WIN32
    if (hThread1) ::CloseHandle(hThread1);
 #else
-
    ::CloseHandle(fhTermInputEvent);
 #endif
 }
-
-#ifdef GDK_WIN32
-//______________________________________________________________________________
-unsigned __stdcall HandleConsoleThread(void *pArg )
-{
-   //
-
-   while (1) {
-      if(gROOT->GetApplication()) {
-         if (hEvent1) {
-            ::WaitForSingleObject(hEvent1, INFINITE);
-            ::CloseHandle(hEvent1);
-            hEvent1 = 0;
-         }
-
-         if(!gROOT->IsLineProcessing()) {
-            if(!gApplication->HandleTermInput()) break; // no terminal input
-
-            if (gSplash) {    // terminate splash window after first key press
-               delete gSplash;
-               gSplash = 0;
-            }
-         }
-         ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE), ENABLE_PROCESSED_OUTPUT);
-         if (hEvent1) ::ResetEvent(hEvent1);
-      } else {
-         static int i = 0;
-         ::SleepEx(100,1);
-         i++;
-         if (i>20) break; // TApplication object doesn't exist
-      }
-   }
-
-   ::CloseHandle(hThread1);
-   hThread1 = 0;
-   _endthreadex( 0 );
-   return 0;
-}
-#endif
 
 //______________________________________________________________________________
 Bool_t TWinNTSystem::Init()
@@ -302,6 +329,15 @@ Bool_t TWinNTSystem::Init()
 
    if (TSystem::Init())
       return kTRUE;
+
+   fReadmask = new TWinFdSet;
+   fWritemask = new TWinFdSet;
+   fReadready = new TWinFdSet;
+   fWriteready = new TWinFdSet;
+   fSignals = new TWinFdSet;
+   fNfd    = 0;
+   fMaxrfd = 0;
+   fMaxwfd = 0;
 
    //--- install default handlers
    WinNTSignal(kSigChild,                 SigHandler);
@@ -315,17 +351,11 @@ Bool_t TWinNTSystem::Init()
 
    fSigcnt = 0;
 
-   fNfd    = 0;
-   fMaxrfd = 0;
-   fMaxwfd = 0;
-   fReadmask.Zero();
-   fWritemask.Zero();
-
 #ifndef ROOTPREFIX
    gRootDir = Getenv("ROOTSYS");
    if (gRootDir == 0) {
      static char lpFilename[MAX_PATH];
-     if (GetModuleFileName(NULL,                 // handle to module to find filename for
+     if (::GetModuleFileName(NULL,               // handle to module to find filename for
                            lpFilename,           // pointer to buffer to receive module path
                            sizeof(lpFilename)))  // size of buffer, in characters
      {
@@ -339,23 +369,22 @@ Bool_t TWinNTSystem::Init()
    gRootDir= ROOTPREFIX;
 #endif
 
-#ifndef GDK_WIN32
+#ifdef GDK_WIN32
+    if (!gROOT->IsBatch()) {
+        hEvent1 = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+        hThread1 = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread,
+                                          0, 0, &thread1ID );
+    }
+#else
    // The the name of the DLL to be used as a stock of the icon
    SetShellName();
    CreateIcons();
-#endif
 
-
-#ifdef GDK_WIN32
-   hEvent1 = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-   hThread1 = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread, fhTermInputEvent, 0,
-                                      &thread1ID );
-#else
    // Create Event HANDLE for stand-alone ROOT-based applications
-   fhTermInputEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
+   fhTermInputEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
 #endif
 
-    return kFALSE;
+   return kFALSE;
 }
 
 //---- Misc --------------------------------------------------------------------
@@ -418,50 +447,50 @@ void TWinNTSystem::CreateIcons()
       HICON hDummyIcon =  ::LoadIcon(NULL, IDI_APPLICATION);
 
 //*-*  Add "ROOT" main icon
-      hicon = LoadIcon(GetModuleHandle(NULL),MAKEINTRESOURCE(101));
+      hicon = ::LoadIcon(::GetModuleHandle(NULL), MAKEINTRESOURCE(101));
       if (!hicon)
-           hicon = LoadIcon(hShellInstance,MAKEINTRESOURCE(101));
+           hicon = ::LoadIcon(hShellInstance, MAKEINTRESOURCE(101));
       if (!hicon) hicon = hDummyIcon;
-      ImageList_AddIcon(fhSmallIconList,hicon);
-      ImageList_AddIcon(fhNormalIconList,hicon);
-      if (hicon != hDummyIcon) DeleteObject(hicon);
+      ImageList_AddIcon(fhSmallIconList, hicon);
+      ImageList_AddIcon(fhNormalIconList, hicon);
+      if (hicon != hDummyIcon) ::DeleteObject(hicon);
 
 //*-*  Add "Canvas" icon
-      hicon = LoadIcon(hShellInstance,MAKEINTRESOURCE(16));
+      hicon = ::LoadIcon(hShellInstance, MAKEINTRESOURCE(16));
       if (!hicon) hicon = hDummyIcon;
-      ImageList_AddIcon(fhSmallIconList,hicon);
-      ImageList_AddIcon(fhNormalIconList,hicon);
-      if (hicon != hDummyIcon) DeleteObject(hicon);
+      ImageList_AddIcon(fhSmallIconList, hicon);
+      ImageList_AddIcon(fhNormalIconList, hicon);
+      if (hicon != hDummyIcon) ::DeleteObject(hicon);
 
 //*-*  Add "Browser" icon
-      hicon = LoadIcon(hShellInstance,MAKEINTRESOURCE(171));
+      hicon = ::LoadIcon(hShellInstance,MAKEINTRESOURCE(171));
       if (!hicon) hicon = hDummyIcon;
       ImageList_AddIcon(fhSmallIconList,hicon);
       ImageList_AddIcon(fhNormalIconList,hicon);
-      if (hicon != hDummyIcon) DeleteObject(hicon);
+      if (hicon != hDummyIcon) ::DeleteObject(hicon);
 
 //*-*  Add "Closed Folder" icon
-      hicon = LoadIcon(hShellInstance,MAKEINTRESOURCE(4));
+      hicon = ::LoadIcon(hShellInstance, MAKEINTRESOURCE(4));
       if (!hicon) hicon = hDummyIcon;
-      ImageList_AddIcon(fhSmallIconList,hicon);
-      ImageList_AddIcon(fhNormalIconList,hicon);
-      if (hicon != hDummyIcon) DeleteObject(hicon);
+      ImageList_AddIcon(fhSmallIconList, hicon);
+      ImageList_AddIcon(fhNormalIconList, hicon);
+      if (hicon != hDummyIcon) ::DeleteObject(hicon);
 
 //*-*  Add the "Open Folder" icon
-      hicon = LoadIcon(hShellInstance,MAKEINTRESOURCE(5));
+      hicon = LoadIcon(hShellInstance, MAKEINTRESOURCE(5));
       if (!hicon) hicon = hDummyIcon;
-      ImageList_AddIcon(fhSmallIconList,hicon);
-      ImageList_AddIcon(fhNormalIconList,hicon);
-      if (hicon != hDummyIcon) DeleteObject(hicon);
+      ImageList_AddIcon(fhSmallIconList, hicon);
+      ImageList_AddIcon(fhNormalIconList, hicon);
+      if (hicon != hDummyIcon) ::DeleteObject(hicon);
 
 //*-*  Add the "Document" icon
-      hicon = LoadIcon(hShellInstance,MAKEINTRESOURCE(152));
+      hicon = ::LoadIcon(hShellInstance,MAKEINTRESOURCE(152));
       if (!hicon) hicon = hDummyIcon;
-      ImageList_AddIcon(fhSmallIconList,hicon);
-      ImageList_AddIcon(fhNormalIconList,hicon);
-      if (hicon != hDummyIcon) DeleteObject(hicon);
+      ImageList_AddIcon(fhSmallIconList, hicon);
+      ImageList_AddIcon(fhNormalIconList, hicon);
+      if (hicon != hDummyIcon) ::DeleteObject(hicon);
 
-      FreeLibrary((HMODULE)hShellInstance);
+      ::FreeLibrary((HMODULE)hShellInstance);
    }
 }
 
@@ -536,19 +565,22 @@ void TWinNTSystem::SetProgname(const char *name)
       progname = StrDup(BaseName(fullname));
       char *which = 0;
 
-      if ( IsAbsoluteFileName(fullname) && !AccessPathName(fullname))
+      if ( IsAbsoluteFileName(fullname) && !AccessPathName(fullname)) {
           which = StrDup(fullname);
-      else
+      } else {
           which = Which(Form("%s;%s",WorkingDirectory(),Getenv("PATH")), progname);
+      }
 
       if (which) {
          const char *dirname;
          char driveletter = DriveName(which);
          const char *d = DirName(which);
-         if (driveletter)
+
+         if (driveletter) {
             dirname = Form("%c:%s",driveletter,d);
-         else
+         } else {
             dirname = Form("%s",d);
+         }
 
          gProgPath = StrDup(dirname);
       } else {
@@ -583,7 +615,7 @@ const char *TWinNTSystem::HostName()
    if (fHostname == "") {
       char hn[64];
       DWORD il = sizeof(hn);
-      GetComputerName(hn, &il);
+      ::GetComputerName(hn, &il);
       fHostname = hn;
    }
    return fHostname;
@@ -599,13 +631,13 @@ void TWinNTSystem::AddFileHandler(TFileHandler *h)
    TSystem::AddFileHandler(h);
    if (h) {
       int fd = h->GetFd();
+      if (!fd) return;
+
       if (h->HasReadInterest()) {
-         fReadmask.Set(fd);
-         fMaxrfd = TMath::Max(fMaxrfd, fd);
+         fReadmask->Set(fd);
       }
       if (h->HasWriteInterest()) {
-         fWritemask.Set(fd);
-         fMaxwfd = TMath::Max(fMaxwfd, fd);
+         fWritemask->Set(fd);
       }
    }
 }
@@ -619,19 +651,18 @@ TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
    if (oh) {       // found
       TFileHandler *th;
       TIter next(fFileHandler);
-      fMaxrfd = 0;
-      fMaxwfd = 0;
-      fReadmask.Zero();
-      fWritemask.Zero();
+      fReadmask->Zero();
+      fWritemask->Zero();
+
       while ((th = (TFileHandler *) next())) {
          int fd = th->GetFd();
+         if (!fd) return oh;
+
          if (th->HasReadInterest()) {
-            fReadmask.Set(fd);
-            fMaxrfd = TMath::Max(fMaxrfd, fd);
+            fReadmask->Set(fd);
          }
          if (th->HasWriteInterest()) {
-            fWritemask.Set(fd);
-            fMaxwfd = TMath::Max(fMaxwfd, fd);
+            fWritemask->Set(fd);
          }
       }
    }
@@ -645,9 +676,11 @@ void TWinNTSystem::AddSignalHandler(TSignalHandler *h)
 
    TSystem::AddSignalHandler(h);
    ESignals  sig = h->GetSignal();
-//*-*  Add a new handler to the list of the console handlers
-   if (sig == kSigInterrupt)
-                     SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleSigHandler,TRUE);
+
+   // Add a new handler to the list of the console handlers
+   if (sig == kSigInterrupt) {
+      SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleSigHandler, TRUE);
+   }
    WinNTSignal(h->GetSignal(), SigHandler);
 }
 
@@ -657,9 +690,10 @@ TSignalHandler *TWinNTSystem::RemoveSignalHandler(TSignalHandler *h)
    // Remove a signal handler from list of signal handlers.
 
    int sig = h->GetSignal();
+
    if (sig = kSigInterrupt) {
-//*-*  Remove a  handler to the list of the console handlers
-        SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleSigHandler,FALSE);
+   // Remove a  handler to the list of the console handlers
+      SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleSigHandler, FALSE);
    }
    return TSystem::RemoveSignalHandler(h);
 }
@@ -718,6 +752,7 @@ Int_t TWinNTSystem::SetFPEMask(Int_t mask)
 }
 
 #ifndef GDK_WIN32
+
 //______________________________________________________________________________
 Bool_t TWinNTSystem::ProcessEvents()
 {
@@ -740,7 +775,8 @@ void TWinNTSystem::DispatchOneEvent(Bool_t)
      ResetEvent(fhTermInputEvent);
   }
 }
-#else
+
+#else // GDK_WIN32
 
 //______________________________________________________________________________
 Bool_t TWinNTSystem::ProcessEvents()
@@ -755,9 +791,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
    // Dispatch a single event in TApplication::Run() loop
 
-   // We do not use blocking (like MsgWaitForMultipleObjects or unix select).
-   // calling ::SleepEx(1, 1) on return does the same dirty work ;-)
-   // i.e. prevents from 100% CPU time occupation.
+   // ::SleepEx(1, 1) prevents from 100% CPU time occupation.
    class ThreadSwitch {
       Bool_t fSwitch; // do no call SleepEx on return for pendingOnly events
    public:
@@ -765,11 +799,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       ~ThreadSwitch() { if (fSwitch) ::SleepEx(1, 1); }
    } switcher(!pendingOnly);
 
-   if (gROOT->IsLineProcessing()) {
-      return;   // might block, but rarely
-   }
-
-   // used once at startup for syncronization with HandleConsoleThread
+   // used for syncronization with HandleConsoleThread
    if (hEvent1) ::SetEvent(hEvent1);
 
    // first handle any GUI events
@@ -786,7 +816,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       }
    }
    fSigcnt = 0;
-   fSignals.Zero();
+   fSignals->Zero();
 
    // handle past due timers
    if (fTimers && fTimers->GetSize() > 0) {
@@ -799,30 +829,61 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       }
    }
 
-   // handle all(not masked) file descriptors ready for reading/writing
-   if (fNfd > 0 && fFileHandler->GetSize() > 0) {
-      TFileHandler *fh;
-      TIter next(fFileHandler);
+   // check for file descriptors ready for reading/writing
+   if ((fNfd > 0) && fFileHandler && (fFileHandler->GetSize() > 0)) {
+      if (CheckDescriptors()) {
+         if (!pendingOnly) return;
+      }
+      fNfd = 0;
+      fReadready->Zero();
+      fWriteready->Zero();
+   }
 
-      while (fh = (TFileHandler*) next()) {
-         int fd = fh->GetFd();
+   if (pendingOnly) return;
 
-         if (fd <= fMaxrfd && fReadready.IsSet(fd)) {
-            fReadready.Clr(fd);
-            fh->ReadNotify();
-         }
-         if (fd <= fMaxwfd && fWriteready.IsSet(fd)) {
-            fWriteready.Clr(fd);
-            fh->WriteNotify();
+   // nothing ready, so setup select call
+   if (!fReadmask->GetBits() && !fWritemask->GetBits()) return; // no fds
+
+   fReadmask->Copy(*fReadready);
+   fWritemask->Copy(*fWriteready);
+
+   fNfd = WinNTSelect(fReadready, fWriteready, NextTimeOut(kTRUE));
+
+   // serious error has happened -> reset all file descrptors  
+   if ((fNfd < 0) && (fNfd != -2)) {
+      int fd, rc, i;
+
+      for (i = 0; i < fReadmask->GetCount(); i++) {
+         TWinFdSet t;
+         Int_t fd = fReadmask->GetFd(i);
+         t.Set(fd);
+         if (fReadmask->IsSet(fd)) {
+            rc = WinNTSelect(&t, 0, 0);
+            if (rc < 0 && rc != -2) {
+               ::SysError("DispatchOneEvent", "select: read error on %d\n", fd);
+               fReadmask->Clr(fd);
+            }
          }
       }
+
+      for (i = 0; i < fWritemask->GetCount(); i++) {
+         TWinFdSet t;
+         Int_t fd = fWritemask->GetFd(i);
+         t.Set(fd);
+
+         if (fWritemask->IsSet(fd)) {
+            rc = WinNTSelect(0, &t, 0);
+            if (rc < 0 && rc != -2) {
+               ::SysError("DispatchOneEvent", "select: write error on %d\n", fd);
+               fWritemask->Clr(fd);
+            }
+         }
+         t.Clr(fd);
+      }
    }
-   fNfd = 0;
-   fReadready.Zero();
-   fWriteready.Zero();
 }
 
-#endif
+#endif  // GDK_WIN32
 
 //______________________________________________________________________________
 void TWinNTSystem::ExitLoop()
@@ -830,13 +891,7 @@ void TWinNTSystem::ExitLoop()
    TSystem::ExitLoop();
 
    // Release Dispatch one event
-   SetEvent(fhTermInputEvent);
-}
-
-//______________________________________________________________________________
-void TWinNTSystem::InnerLoop()
-{
-   TSystem::InnerLoop();
+   ::SetEvent(fhTermInputEvent);
 }
 
 //---- handling of system events -----------------------------------------------
@@ -862,9 +917,9 @@ Bool_t TWinNTSystem::CheckSignals(Bool_t sync)
       while (sh = (TSignalHandler*)next()) {
          if (sync == sh->IsSync()) {
             ESignals sig = sh->GetSignal();
-            if ((fSignals.IsSet(sig) && sigdone == -1) || sigdone == sig) {
+            if ((fSignals->IsSet(sig) && sigdone == -1) || sigdone == sig) {
                if (sigdone == -1) {
-                  fSignals.Clr(sig);
+                  fSignals->Clr(sig);
                   sigdone = sig;
                   fSigcnt--;
                }
@@ -895,6 +950,47 @@ void TWinNTSystem::CheckChilds()
          }
    }
 #endif
+}
+
+//______________________________________________________________________________
+Bool_t TWinNTSystem::CheckDescriptors()
+{
+   // Check if there is activity on some file descriptors and call their
+   // Notify() member.
+
+   TFileHandler *fh;
+   Int_t  fddone = -1;
+   Bool_t read   = kFALSE;
+
+   TOrdCollectionIter it((TOrdCollection*)fFileHandler);
+   while ((fh = (TFileHandler*) it.Next())) {
+      Int_t fd = fh->GetFd();
+      if (!fd) continue; // ignore TTermInputHandler
+
+      if ((fReadready->IsSet(fd) && fddone == -1) ||
+          (fddone == fd && read)) {
+         if (fddone == -1) {
+            fReadready->Clr(fd);
+            fddone = fd;
+            read = kTRUE;
+            fNfd--;
+         }
+         fh->ReadNotify();
+      }
+      if ((fWriteready->IsSet(fd) && fddone == -1) ||
+          (fddone == fd && !read)) {
+         if (fddone == -1) {
+            fWriteready->Clr(fd);
+            fddone = fd;
+            read = kFALSE;
+            fNfd--;
+         }
+         fh->WriteNotify();
+      }
+   }
+   if (fddone != -1) return kTRUE;
+
+   return kFALSE;
 }
 
 //---- Directories -------------------------------------------------------------
@@ -1041,16 +1137,15 @@ void *TWinNTSystem::OpenDirectory(const char *dir)
 //______________________________________________________________________________
 const char *TWinNTSystem::WorkingDirectory()
 {
-// Return the working directory for the default drive
+   // Return the working directory for the default drive
+
   return WorkingDirectory('\0');
 }
 //______________________________________________________________________________
 const char *TWinNTSystem::WorkingDirectory(char driveletter)
 {
-////////////////////////////////////////////////////////////////////////////////
-//  Return working directory for the selected drive                           //
-//  driveletter == 0 means return the working durectory for the default drive //
-////////////////////////////////////////////////////////////////////////////////
+   //  Return working directory for the selected drive
+   //  driveletter == 0 means return the working durectory for the default drive
 
    char *wdpath = 0;
    char drive = driveletter ? toupper( driveletter ) - 'A' + 1 : 0;
@@ -1112,7 +1207,7 @@ FILE *TWinNTSystem::TempFileName(TString &base, const char *dir)
 
    FILE *fp = fopen(tmpName, "w+");
 
-   if (!fp) SysError("TempFileName", "error opening %s", tmpName);
+   if (!fp) ::SysError("TempFileName", "error opening %s", tmpName);
 
    return fp;
 }
@@ -1181,6 +1276,7 @@ const char TWinNTSystem::DriveName(const char *pathname)
    //      It doesn't chech whether pathname presents the 'real filename     //
    //      This subroutine looks for 'single letter' is follows with a ':'   //
    ////////////////////////////////////////////////////////////////////////////
+
    if (!pathname)    return 0;
    if (!pathname[0]) return 0;
 
@@ -1393,7 +1489,10 @@ int TWinNTSystem::SetNonBlock(int fd)
 {
    // Make descriptor fd non-blocking.
 
-   WinNTNonblock(fd);
+   if (::ioctlsocket(fd, FIONBIO, (u_long *)1) == SOCKET_ERROR) {
+      ::SysError("SetNonBlock", "ioctlsocket");
+      return -1;
+   }
    return 0;
 }
 
@@ -1442,10 +1541,11 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
    }
 
    // any shell meta characters ?
-   for (p = patbuf; *p; p++)
-      if (strchr(shellMeta, *p))
+   for (p = patbuf; *p; p++) {
+      if (strchr(shellMeta, *p)) {
          goto needshell;
-
+      }
+   }
    return kFALSE;
 
 needshell:
@@ -1551,7 +1651,7 @@ char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mo
 
       // Check access
       struct stat finfo;
-      if (SearchPath(exsearch,exinfile,NULL,kMAXPATHLEN,name,&lpFilePart) &&
+      if (::SearchPath(exsearch, exinfile, NULL, kMAXPATHLEN, name, &lpFilePart) &&
           access(name, mode) == 0 && stat(name, &finfo) == 0 &&
           finfo.st_mode & S_IFREG) {
          if (gEnv->GetValue("Root.ShowPath", 0))
@@ -1633,16 +1733,18 @@ HANDLE TWinNTSystem::GetProcess()
   // Get current process handle
   return fhProcess;
 }
+
 //______________________________________________________________________________
 void TWinNTSystem::Exit(int code, Bool_t mode)
 {
    // Exit the application.
 
    gVirtualX->CloseDisplay();
-   if (mode)
+   if (mode) {
       ::exit(code);
-   else
+   } else {
       ::_exit(code);
+   }
 }
 
 //______________________________________________________________________________
@@ -1664,8 +1766,9 @@ const char *TWinNTSystem::GetDynamicPath()
 
    if (dynpath == 0) {
       dynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
-      if (dynpath == 0)
+      if (dynpath == 0) {
          dynpath = StrDup(Form("%s;%s/bin;%s,", gProgPath,gRootDir,gSystem->Getenv("PATH")));
+      }
    }
    return dynpath;
 }
@@ -1816,37 +1919,43 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
 //______________________________________________________________________________
 void TWinNTSystem::AddTimer(TTimer *ti)
 {
+   //
+
 #ifndef GDK_WIN32
-    if (ti)
-    {
-        TSystem::AddTimer(ti);
-        // if (ti->IsAsync())
-        {
-          if (!fWin32Timer) fWin32Timer = new TWin32Timer;
-          fWin32Timer->CreateTimer(ti);
-          if (!ti->GetTimerID())
-                RemoveTimer(ti);
-        }
-    }
+   if (ti) {
+      TSystem::AddTimer(ti);
+      // if (ti->IsAsync())
+      {
+      if (!fWin32Timer) fWin32Timer = new TWin32Timer;
+      fWin32Timer->CreateTimer(ti);
+      if (!ti->GetTimerID())
+         RemoveTimer(ti);
+      }
+   }
 #else
    TSystem::AddTimer(ti);
-   if (!fInsideNotify && ti->IsAsync())
+   if (!fInsideNotify && ti->IsAsync()) {
       WinNTSetitimer(NextTimeOut(kFALSE));
+   }
 #endif
 }
+
 //______________________________________________________________________________
 TTimer *TWinNTSystem::RemoveTimer(TTimer *ti)
 {
+   //
+
 #ifndef GDK_WIN32
-    if (ti && fWin32Timer ) {
-       fWin32Timer->KillTimer(ti);
-       return TSystem::RemoveTimer(ti);
-    }
-    return 0;
+   if (ti && fWin32Timer ) {
+      fWin32Timer->KillTimer(ti);
+      return TSystem::RemoveTimer(ti);
+   }
+   return 0;
 #else
    TTimer *t = TSystem::RemoveTimer(ti);
-   if (ti->IsAsync())
+   if (ti->IsAsync()) {
       WinNTSetitimer(NextTimeOut(kFALSE));
+   }
    return t;
 #endif
 }
@@ -1889,6 +1998,7 @@ Bool_t TWinNTSystem::DispatchSynchTimers()
 {
    // Handle and dispatch timers. If mode = kTRUE dispatch synchronous
    // timers else a-synchronous timers.
+
    if (!fTimers) return kFALSE;
 
    fInsideNotify = kTRUE;
@@ -1911,13 +2021,17 @@ const Double_t gTicks = 1.0e-7;
 //______________________________________________________________________________
 Double_t TWinNTSystem::GetRealTime()
 {
+   //
+
    union {
       FILETIME ftFileTime;
       __int64  ftInt64;
    } ftRealTime; // time the process has spent in kernel mode
+
    SYSTEMTIME st;
-   GetSystemTime(&st);
-   SystemTimeToFileTime(&st,&ftRealTime.ftFileTime);
+   ::GetSystemTime(&st);
+   ::SystemTimeToFileTime(&st,&ftRealTime.ftFileTime);
+   
    return (Double_t)ftRealTime.ftInt64 * gTicks;
 }
 
@@ -2021,6 +2135,7 @@ char *TWinNTSystem::GetServiceByPort(int port)
    }
    return sp->s_name;
 }
+
 //______________________________________________________________________________
 TInetAddress TWinNTSystem::GetHostByName(const char *hostname)
 {
@@ -2060,6 +2175,7 @@ TInetAddress TWinNTSystem::GetHostByName(const char *hostname)
 TInetAddress TWinNTSystem::GetPeerName(int socket)
 {
    // Get Internet Protocol (IP) address of remote host and port #.
+
    SOCKET sock = socket;
    struct sockaddr_in addr;
 #if defined(R__AIX) && defined(_AIX41)
@@ -2068,8 +2184,8 @@ TInetAddress TWinNTSystem::GetPeerName(int socket)
    int len = sizeof(addr);
 #endif
 
-   if (getpeername(sock, (struct sockaddr *)&addr, &len) == SOCKET_ERROR) {
-      SysError("GetPeerName", "getpeername");
+   if (::getpeername(sock, (struct sockaddr *)&addr, &len) == SOCKET_ERROR) {
+      ::SysError("GetPeerName", "getpeername");
       return TInetAddress();
    }
 
@@ -2078,7 +2194,7 @@ TInetAddress TWinNTSystem::GetPeerName(int socket)
    int         family;
    UInt_t      iaddr;
 
-   if ((host_ptr = gethostbyaddr((const char *)&addr.sin_addr,
+   if ((host_ptr = ::gethostbyaddr((const char *)&addr.sin_addr,
                                  sizeof(addr.sin_addr), AF_INET))) {
       memcpy(&iaddr, host_ptr->h_addr, host_ptr->h_length);
       hostname = host_ptr->h_name;
@@ -2091,6 +2207,7 @@ TInetAddress TWinNTSystem::GetPeerName(int socket)
 
    return TInetAddress(hostname, ntohl(iaddr), family, ntohs(addr.sin_port));
 }
+
 //______________________________________________________________________________
 TInetAddress TWinNTSystem::GetSockName(int socket)
 {
@@ -2104,8 +2221,8 @@ TInetAddress TWinNTSystem::GetSockName(int socket)
    int len = sizeof(addr);
 #endif
 
-   if (getsockname(sock, (struct sockaddr *)&addr, &len) == SOCKET_ERROR) {
-      SysError("GetSockName", "getsockname");
+   if (::getsockname(sock, (struct sockaddr *)&addr, &len) == SOCKET_ERROR) {
+      ::SysError("GetSockName", "getsockname");
       return TInetAddress();
    }
 
@@ -2114,7 +2231,7 @@ TInetAddress TWinNTSystem::GetSockName(int socket)
    int         family;
    UInt_t      iaddr;
 
-   if ((host_ptr = gethostbyaddr((const char *)&addr.sin_addr,
+   if ((host_ptr = ::gethostbyaddr((const char *)&addr.sin_addr,
                                  sizeof(addr.sin_addr), AF_INET))) {
       memcpy(&iaddr, host_ptr->h_addr, host_ptr->h_length);
       hostname = host_ptr->h_name;
@@ -2128,14 +2245,17 @@ TInetAddress TWinNTSystem::GetSockName(int socket)
    return TInetAddress(hostname, ntohl(iaddr), family, ntohs(addr.sin_port));
 
 }
+
 //______________________________________________________________________________
-int          TWinNTSystem::AnnounceUnixService(int port, int backlog)
+int TWinNTSystem::AnnounceUnixService(int port, int backlog)
 {
    // Announce unix domain service.
+
    return WinNTWinNTService(port, backlog);
- }
+}
+
 //______________________________________________________________________________
-void      TWinNTSystem::CloseConnection(int socket, Bool_t force)
+void TWinNTSystem::CloseConnection(int socket, Bool_t force)
 {
    // Close socket.
 
@@ -2148,6 +2268,7 @@ void      TWinNTSystem::CloseConnection(int socket, Bool_t force)
    while (::closesocket(sock) == SOCKET_ERROR && WSAGetLastError() == WSAEINTR)
    ResetErrno();
 }
+
 //______________________________________________________________________________
 int TWinNTSystem::RecvBuf(int sock, void *buf, int length)
 {
@@ -2280,52 +2401,52 @@ int  TWinNTSystem::SetSockOpt(int socket, int opt, int value)
 
    switch (opt) {
    case kSendBuffer:
-      if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&val, sizeof(val)) == SOCKET_ERROR) {
-         SysError("SetSockOpt", "setsockopt(SO_SNDBUF)");
+      if (::setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&val, sizeof(val)) == SOCKET_ERROR) {
+         ::SysError("SetSockOpt", "setsockopt(SO_SNDBUF)");
          return -1;
       }
       break;
    case kRecvBuffer:
-      if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*)&val, sizeof(val)) == SOCKET_ERROR) {
-         SysError("SetSockOpt", "setsockopt(SO_RCVBUF)");
+      if (::setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*)&val, sizeof(val)) == SOCKET_ERROR) {
+         ::SysError("SetSockOpt", "setsockopt(SO_RCVBUF)");
          return -1;
       }
       break;
    case kOobInline:
-      if (setsockopt(sock, SOL_SOCKET, SO_OOBINLINE, (char*)&val, sizeof(val)) == SOCKET_ERROR) {
+      if (::setsockopt(sock, SOL_SOCKET, SO_OOBINLINE, (char*)&val, sizeof(val)) == SOCKET_ERROR) {
          SysError("SetSockOpt", "setsockopt(SO_OOBINLINE)");
          return -1;
       }
       break;
    case kKeepAlive:
-      if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*)&val, sizeof(val)) == SOCKET_ERROR) {
-         SysError("SetSockOpt", "setsockopt(SO_KEEPALIVE)");
+      if (::setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*)&val, sizeof(val)) == SOCKET_ERROR) {
+         ::SysError("SetSockOpt", "setsockopt(SO_KEEPALIVE)");
          return -1;
       }
       break;
    case kReuseAddr:
-      if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&val, sizeof(val)) == SOCKET_ERROR) {
-         SysError("SetSockOpt", "setsockopt(SO_REUSEADDR)");
+      if (::setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&val, sizeof(val)) == SOCKET_ERROR) {
+         ::SysError("SetSockOpt", "setsockopt(SO_REUSEADDR)");
          return -1;
       }
       break;
    case kNoDelay:
-      if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&val, sizeof(val)) == SOCKET_ERROR) {
-         SysError("SetSockOpt", "setsockopt(TCP_NODELAY)");
+      if (::setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&val, sizeof(val)) == SOCKET_ERROR) {
+         ::SysError("SetSockOpt", "setsockopt(TCP_NODELAY)");
          return -1;
       }
       break;
 //*-*  Must be checked
    case kNoBlock:
-      if (ioctlsocket(sock, FIONBIO, &val) == SOCKET_ERROR) {
-         SysError("SetSockOpt", "ioctl(FIONBIO)");
+      if (::ioctlsocket(sock, FIONBIO, &val) == SOCKET_ERROR) {
+         ::SysError("SetSockOpt", "ioctl(FIONBIO)");
          return -1;
       }
       break;
 #if 0
    case kProcessGroup:
-      if (ioctl(sock, SIOCSPGRP, &val) == -1) {
-         SysError("SetSockOpt", "ioctl(SIOCSPGRP)");
+      if (::ioctl(sock, SIOCSPGRP, &val) == -1) {
+         ::SysError("SetSockOpt", "ioctl(SIOCSPGRP)");
          return -1;
       }
       break;
@@ -2339,10 +2460,12 @@ int  TWinNTSystem::SetSockOpt(int socket, int opt, int value)
    }
    return 0;
 }
+
 //______________________________________________________________________________
 int TWinNTSystem::GetSockOpt(int socket, int opt, int *val)
 {
    // Get socket option.
+
    if (socket == -1) return -1;
    SOCKET sock = socket;
 
@@ -2350,69 +2473,68 @@ int TWinNTSystem::GetSockOpt(int socket, int opt, int *val)
 
    switch (opt) {
    case kSendBuffer:
-      if (getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)val, &optlen) == SOCKET_ERROR) {
-         SysError("GetSockOpt", "getsockopt(SO_SNDBUF)");
+      if (::getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)val, &optlen) == SOCKET_ERROR) {
+         ::SysError("GetSockOpt", "getsockopt(SO_SNDBUF)");
          return -1;
       }
       break;
    case kRecvBuffer:
-      if (getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*)val, &optlen) == SOCKET_ERROR) {
-         SysError("GetSockOpt", "getsockopt(SO_RCVBUF)");
+      if (::getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*)val, &optlen) == SOCKET_ERROR) {
+         ::SysError("GetSockOpt", "getsockopt(SO_RCVBUF)");
          return -1;
       }
       break;
    case kOobInline:
-      if (getsockopt(sock, SOL_SOCKET, SO_OOBINLINE, (char*)val, &optlen) == SOCKET_ERROR) {
-         SysError("GetSockOpt", "getsockopt(SO_OOBINLINE)");
+      if (::getsockopt(sock, SOL_SOCKET, SO_OOBINLINE, (char*)val, &optlen) == SOCKET_ERROR) {
+         ::SysError("GetSockOpt", "getsockopt(SO_OOBINLINE)");
          return -1;
       }
       break;
    case kKeepAlive:
-      if (getsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*)val, &optlen) == SOCKET_ERROR) {
-         SysError("GetSockOpt", "getsockopt(SO_KEEPALIVE)");
+      if (::getsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*)val, &optlen) == SOCKET_ERROR) {
+         ::SysError("GetSockOpt", "getsockopt(SO_KEEPALIVE)");
          return -1;
       }
       break;
    case kReuseAddr:
-      if (getsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)val, &optlen) == SOCKET_ERROR) {
-         SysError("GetSockOpt", "getsockopt(SO_REUSEADDR)");
+      if (::getsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)val, &optlen) == SOCKET_ERROR) {
+         ::SysError("GetSockOpt", "getsockopt(SO_REUSEADDR)");
          return -1;
       }
       break;
    case kNoDelay:
-      if (getsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)val, &optlen) == SOCKET_ERROR) {
-         SysError("GetSockOpt", "getsockopt(TCP_NODELAY)");
+      if (::getsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)val, &optlen) == SOCKET_ERROR) {
+         ::SysError("GetSockOpt", "getsockopt(TCP_NODELAY)");
          return -1;
       }
       break;
    case kNoBlock:
-       {
-           int flg = 0;
-//*-*  Get file status flags and access modes
-//      if ((flg = fcntl(sock, F_GETFL, 0)) == SOCKET_ERROR) {NVALID_SOCKET
-           if (sock == INVALID_SOCKET)
-               SysError("GetSockOpt", "INVALID_SOCKET");
-           return -1;
-           *val = flg; //  & O_NDELAY;  It is not been defined for WIN32
-       }
+      {
+         int flg = 0;
+         if (sock == INVALID_SOCKET) {
+            ::SysError("GetSockOpt", "INVALID_SOCKET");
+         }
+         return -1;
+         *val = flg; //  & O_NDELAY;  It is not been defined for WIN32
+      }
       break;
 #if 0
    case kProcessGroup:
-      if (ioctlsocket(sock, SIOCGPGRP, (u_long*)val) == SOCKET_ERROR) {
-         SysError("GetSockOpt", "ioctl(SIOCGPGRP)");
+      if (::ioctlsocket(sock, SIOCGPGRP, (u_long*)val) == SOCKET_ERROR) {
+         ::SysError("GetSockOpt", "ioctl(SIOCGPGRP)");
          return -1;
       }
       break;
 #endif
    case kAtMark:
-      if (ioctlsocket(sock, SIOCATMARK, (u_long*)val) == SOCKET_ERROR) {
-         SysError("GetSockOpt", "ioctl(SIOCATMARK)");
+      if (::ioctlsocket(sock, SIOCATMARK, (u_long*)val) == SOCKET_ERROR) {
+         ::SysError("GetSockOpt", "ioctl(SIOCATMARK)");
          return -1;
       }
       break;
    case kBytesToRead:
-      if (ioctlsocket(sock, FIONREAD, (u_long*)val) == SOCKET_ERROR) {
-         SysError("GetSockOpt", "ioctl(FIONREAD)");
+      if (::ioctlsocket(sock, FIONREAD, (u_long*)val) == SOCKET_ERROR) {
+         ::SysError("GetSockOpt", "ioctl(FIONREAD)");
          return -1;
       }
       break;
@@ -2430,11 +2552,10 @@ int TWinNTSystem::ConnectService(const char *servername, int port,
                                  int tcpwindowsize)
 {
    // Connect to service servicename on server servername.
-   if (!strcmp(servername, "unix"))
-   {
-       printf(" Error don't know how to do UnixUnixConnact under WIN32 \n");
+
+   if (!strcmp(servername, "unix")) {
+       printf(" Error don't know how to do UnixUnixConnect under WIN32 \n");
        return -1;
-       // return UnixUnixConnect(port);
    }
    return WinNTTcpConnect(servername, port, tcpwindowsize);
 }
@@ -2479,14 +2600,16 @@ int TWinNTSystem::AcceptConnection(int socket)
    int soc = -1;
    SOCKET sock = socket;
 
-   while ((soc = ::accept(sock, 0, 0)) == INVALID_SOCKET && WSAGetLastError() == WSAEINTR)
+   while ((soc = ::accept(sock, 0, 0)) == INVALID_SOCKET && 
+          (::WSAGetLastError() == WSAEINTR)) {
       ResetErrno();
+   }
 
    if (soc == -1) {
-      if (WSAGetLastError() == WSAEWOULDBLOCK)
+      if (::WSAGetLastError() == WSAEWOULDBLOCK) {
          return -2;
-      else {
-         SysError("AcceptConnection", "accept");
+      } else {
+         ::SysError("AcceptConnection", "accept");
          return -1;
       }
    }
@@ -2559,28 +2682,22 @@ char *TWinNTSystem::WinNTSigname(ESignals sig)
 //______________________________________________________________________________
 long TWinNTSystem::WinNTNow()
 {
-
    // Get current time in milliseconds since 0:00 Jan 1 1995.
 
    SYSTEMTIME  t; // SYSTEMTIME structure to receive the current system date and time.
-   GetSystemTime(&t);
+   ::GetSystemTime(&t);
+
    return (t.wMinute*60 + t.wSecond) * 1000 + t.wMilliseconds;
 }
 
-#ifndef GDK_WIN32
-//______________________________________________________________________________
-int TWinNTSystem::WinNTSetitimer(TTimer *ti)
-{
-   // Set interval timer to time-out in ms milliseconds.
-
-   return 0;
-}
-
-#else
 //______________________________________________________________________________
 int TWinNTSystem::WinNTSetitimer(Long_t ms)
 {
    // Set interval timer to time-out in ms milliseconds.
+
+#ifndef GDK_WIN32
+   return 0;
+#endif
 
    struct itimerval itval;
    itval.it_interval.tv_sec = itval.it_interval.tv_usec = 0;
@@ -2589,94 +2706,44 @@ int TWinNTSystem::WinNTSetitimer(Long_t ms)
       itval.it_value.tv_sec  = ms / 1000;
       itval.it_value.tv_usec = (ms % 1000) * 1000;
    }
-   return setitimer(ITIMER_REAL, &itval, 0);
+   return ::setitimer(ITIMER_REAL, &itval, 0);
 }
-#endif
 
 //---- file descriptors --------------------------------------------------------
 
 //______________________________________________________________________________
-int TWinNTSystem::WinNTSelect(UInt_t nfds, TFdSet *readready, TFdSet *writeready,
-                            Long_t timeout)
+int TWinNTSystem::WinNTSelect(TFdSet *readready, TFdSet *writeready, Long_t timeout)
 {
    // Wait for events on the file descriptors specified in the readready and
    // writeready masks or for timeout (in milliseconds) to occur.
 
-//*-*  nfds  !!!!
-//*-*  This argument is ignored and included only for the sake of compatibility.
-
    int retcode;
 
    if (timeout >= 0) {
-      struct timeval tv;
+      timeval tv;
       tv.tv_sec  = timeout / 1000;
       tv.tv_usec = (timeout % 1000) * 1000;
-#if (defined(R__HPUX) && !defined(_XPG4_EXTENDED)) || defined(R__AIX)
-      retcode = select(nfds, readready->GetBits(), writeready->GetBits(), 0, &tv);
-#else
-      retcode = select(nfds, (fd_set*)readready->GetBits(), (fd_set*)writeready->GetBits(), 0, &tv);
-#endif
+
+      retcode = ::select(0, (fd_set*)readready->GetBits(), (fd_set*)writeready->GetBits(), 0, &tv);
    } else {
-#if (defined(R__HPUX) && !defined(_XPG4_EXTENDED)) || defined(R__AIX)
-      retcode = select(nfds, readready->GetBits(), writeready->GetBits(), 0, 0);
-#else
-      retcode = select(nfds, (fd_set*)readready->GetBits(), (fd_set*)writeready->GetBits(), 0, 0);
-#endif
+      retcode = ::select(0, (fd_set*)readready->GetBits(), (fd_set*)writeready->GetBits(), 0, 0);
    }
+
    if (retcode == SOCKET_ERROR) {
-      if (WSAGetLastError() == WSAEINTR) {
+      int errcode = ::WSAGetLastError();
+
+      if ( errcode == WSAEINTR) {
          ResetErrno();  // errno is not self reseting
          return -2;
       }
-      if (WSAGetLastError() == EBADF)
+      if (errcode == EBADF) {
          return -3;
+      }
       return -1;
    }
    return retcode;
 }
 
-//______________________________________________________________________________
-int TWinNTSystem::WinNTNonblock(int fd)
-{
-   // Make a descriptor non-blocking.
-
-   int val;
-
-   if (fd < 0)
-      return -1;
-
-//   if ((val = fcntl(fd, F_GETFL, 0)) < 0) {
-//      ::SysError("TWinNTSystem::WinNTNonblock", "fcntl F_GETFL");
-//      return val;
-//   }
-//#if 1 || defined(R__SUN)
-//   val |= O_NDELAY;
-//#else
-//   val |= O_NONBLOCK;
-//#endif
-//   if ((val = fcntl(fd, F_SETFL, val)) < 0) {
-//     // ::SysError("TWinNTSystem::WinNTNonblock:", "fcntl F_SETFL");
-//      return val;
-//   }
-   return 0;
-}
-
-//______________________________________________________________________________
-int TWinNTSystem::WinNTIoctl(int fd, int code, void *vp)
-{
-   // Wrapper for ioctl function.
-
-   int rc;
-   if (fd < 0)
-      return -1;
-   return -1;
-#if 0
-//   rc = ioctl(fd, code, vp);
-   if (rc == -1)
-      ::SysError("TWinNTSystem::WinNTIoctl", "ioctl");
-   return rc;
-#endif
-}
 
 //---- directories -------------------------------------------------------------
 
@@ -2690,21 +2757,21 @@ const char *TWinNTSystem::WinNTHomedirectory(const char *name)
    const char *h = 0;
    if (!(h = ::getenv("home"))) h = ::getenv("HOME");
 
-   if (h) strcpy(mydir,h);
-   else {
+   if (h) {
+      strcpy(mydir,h);
+   } else {
       // for Windows NT HOME might be defined as either $(HOMESHARE)/$(HOMEPATH)
       //                                         or     $(HOMEDRIVE)/$(HOMEPATH)
      h = ::getenv("HOMESHARE");
      if (!h)  h = ::getenv("HOMEDRIVE");
      if (h) {
-         strcpy(mydir,h);
+         strcpy(mydir, h);
          h=::getenv("HOMEPATH");
-         if(h) strcat(mydir,h);
+         if(h) strcat(mydir, h);
      }
    }
    return mydir;
 }
-
 
 //---- files -------------------------------------------------------------------
 
@@ -2852,14 +2919,15 @@ int TWinNTSystem::WinNTTcpConnect(const char *hostname, int port,
    short  sport;
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = ::getservbyport(htons(port), kProtocolName))) {
       sport = sp->s_port;
-   else
-      sport = htons(port);
+   } else {
+      sport = ::htons(port);
+   }
 
    TInetAddress addr = gSystem->GetHostByName(hostname);
    if (!addr.IsValid()) return -1;
-   UInt_t adr = htonl(addr.GetAddress());
+   UInt_t adr = ::htonl(addr.GetAddress());
 
    struct sockaddr_in server;
    memset(&server, 0, sizeof(server));
@@ -2869,7 +2937,7 @@ int TWinNTSystem::WinNTTcpConnect(const char *hostname, int port,
 
    // Create socket
    SOCKET sock;
-   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
+   if ((sock = ::socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
       ::SysError("TWinNTSystem::WinNTConnectTcp", "socket");
       return -1;
    }
@@ -2879,9 +2947,9 @@ int TWinNTSystem::WinNTTcpConnect(const char *hostname, int port,
       gSystem->SetSockOpt((int)sock, kSendBuffer, tcpwindowsize);
    }
 
-   if (connect(sock, (struct sockaddr*) &server, sizeof(server)) == INVALID_SOCKET) {
+   if (::connect(sock, (struct sockaddr*) &server, sizeof(server)) == INVALID_SOCKET) {
       //::SysError("TWinNTSystem::UnixConnectTcp", "connect");
-      closesocket(sock);
+      ::closesocket(sock);
       return -1;
    }
    return (int) sock;
@@ -2903,14 +2971,14 @@ int TWinNTSystem::WinNTWinNTConnect(int port)
    strcpy(unserver.sun_path, buf);
 
    // Open socket
-   if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+   if ((sock = ::socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
       ::SysError("UnixUnixConnect", "socket");
       return -1;
    }
 
-   if (connect(sock, (struct sockaddr*) &unserver, strlen(unserver.sun_path)+2) < 0) {
+   if (::connect(sock, (struct sockaddr*) &unserver, strlen(unserver.sun_path)+2) < 0) {
       // ::SysError("TWinNTSystem::UnixUnixConnect", "connect");
-      close(sock);
+      ::close(sock);
       return -1;
    }
    return sock;
@@ -2941,20 +3009,22 @@ int TWinNTSystem::WinNTTcpService(int port, Bool_t reuse, int backlog,
       return -1;
    }
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = ::getservbyport(htons(port), kProtocolName))) {
       sport = sp->s_port;
-   else
-      sport = htons(port);
+   } else {
+      sport = ::htons(port);
+   }
 
    // Create tcp socket
    SOCKET sock;
-   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+   if ((sock = ::socket(AF_INET, SOCK_STREAM, 0)) < 0) {
       ::SysError("TWinNTSystem::WinNTTcpService", "socket");
       return -1;
    }
 
-   if (reuse)
+   if (reuse) {
       gSystem->SetSockOpt((int)sock, kReuseAddr, 1);
+   }
 
    if (tcpwindowsize > 0) {
       gSystem->SetSockOpt((int)sock, kRecvBuffer, tcpwindowsize);
@@ -2969,7 +3039,7 @@ int TWinNTSystem::WinNTTcpService(int port, Bool_t reuse, int backlog,
 
    // Bind socket
    if (port > 0) {
-      if (bind(sock, (struct sockaddr*) &inserver, sizeof(inserver)) == SOCKET_ERROR) {
+      if (::bind(sock, (struct sockaddr*) &inserver, sizeof(inserver)) == SOCKET_ERROR) {
          ::SysError("TWinNTSystem::WinNTTcpService", "bind");
          return -2;
       }
@@ -2977,7 +3047,7 @@ int TWinNTSystem::WinNTTcpService(int port, Bool_t reuse, int backlog,
       int bret;
       do {
          inserver.sin_port = htons(tryport++);
-         bret = bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
+         bret = ::bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
       } while (bret == SOCKET_ERROR && WSAGetLastError() == WSAEADDRINUSE &&
                tryport < kSOCKET_MAXPORT);
       if (bret == SOCKET_ERROR) {
@@ -3019,27 +3089,28 @@ int TWinNTSystem::WinNTWinNTService(int port, int backlog)
    unlink(unserver.sun_path);
 #endif
    // Create socket
-   if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) == INVALID_SOCKET) {
+   if ((sock = ::socket(AF_UNIX, SOCK_STREAM, 0)) == INVALID_SOCKET) {
       ::SysError("TWinNTSystem::WinNTWinNTService", "socket");
       return -1;
    }
 #if 0
    //*-* Winsocket defines the sockaddr_in type sockaddr
 
-   if (bind(sock, (struct sockaddr*) &unserver, strlen(unserver.sun_path)+2)) {
+   if (::bind(sock, (struct sockaddr*) &unserver, strlen(unserver.sun_path)+2)) {
       ::SysError("TWinNTSystem::WinNTWinNTService", "bind");
       return -1;
    }
 #endif
 
    // Start accepting connections
-   if (listen(sock, backlog)) {
+   if (::listen(sock, backlog)) {
       ::SysError("TWinNTSystem::WinNTWInNTService", "listen");
       return -1;
    }
 
    return (int) sock;
 }
+
 //______________________________________________________________________________
 int TWinNTSystem::WinNTRecv(int socket, void *buffer, int length, int flag)
 {
@@ -3062,24 +3133,26 @@ int TWinNTSystem::WinNTRecv(int socket, void *buffer, int length, int flag)
    char *buf = (char *)buffer;
 
    for (n = 0; n < length; n += nrecv) {
-      if ((nrecv = recv(sock, buf+n, length-n, flag)) <= 0) {
+      if ((nrecv = ::recv(sock, buf+n, length-n, flag)) <= 0) {
          if (nrecv == 0)
             break;        // EOF
          if (flag == MSG_OOB) {
-            if (WSAGetLastError() == WSAEWOULDBLOCK)
+            if (::WSAGetLastError() == WSAEWOULDBLOCK) {
                return -2;
-            else if (WSAGetLastError() == WSAEINVAL)
+            } else if (WSAGetLastError() == WSAEINVAL) {
                return -3;
+            }
          }
-         if (WSAGetLastError() == WSAEWOULDBLOCK)
+         if (::WSAGetLastError() == WSAEWOULDBLOCK) {
             return -4;
-         else {
+         } else {
             ::SysError("TWinNTSystem::WinNTRecv", "recv");
             return -1;
          }
       }
-      if (once)
+      if (once) {
          return nrecv;
+      }
    }
    return n;
 }
@@ -3104,18 +3177,20 @@ int TWinNTSystem::WinNTSend(int socket, const void *buffer, int length, int flag
    const char *buf = (const char *)buffer;
 
    for (n = 0; n < length; n += nsent) {
-      if ((nsent = send(sock, buf+n, length-n, flag)) <= 0) {
-         if (nsent == 0)
+      if ((nsent = ::send(sock, buf+n, length-n, flag)) <= 0) {
+         if (nsent == 0) {
             break;
-         if (WSAGetLastError() == WSAEWOULDBLOCK)
+         }
+         if (::WSAGetLastError() == WSAEWOULDBLOCK) {
             return -4;
-         else {
+         } else {
             ::SysError("TWinNTSystem::WinNTSend", "send");
             return -1;
          }
       }
-      if (once)
+      if (once) {
          return nsent;
+      }
    }
    return n;
 }

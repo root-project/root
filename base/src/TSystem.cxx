@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.77 2003/12/30 13:16:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.78 2004/01/10 10:52:29 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -52,6 +52,7 @@ const char *gProgPath;
 
 TSystem      *gSystem   = 0;
 TFileHandler *gXDisplay = 0;  // Display server event handler, set in TGClient
+
 
 ClassImp(TProcessEventTimer)
 
@@ -139,6 +140,12 @@ TSystem::~TSystem()
       SafeDelete(fHelpers);
    }
 
+   delete fReadmask;
+   delete fWritemask;
+   delete fReadready;
+   delete fWriteready;
+   delete fSignals;
+
    if (gSystem == this)
       gSystem = 0;
 }
@@ -151,8 +158,6 @@ Bool_t TSystem::Init()
    fNfd    = 0;
    fMaxrfd = 0;
    fMaxwfd = 0;
-   fReadmask.Zero();
-   fWritemask.Zero();
 
    fSigcnt = 0;
    fLevel  = 0;

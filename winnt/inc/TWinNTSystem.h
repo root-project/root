@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.20 2003/12/30 13:16:51 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.21 2003/12/30 14:58:20 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -76,7 +76,7 @@ protected:
    HIMAGELIST fhNormalIconList; // List of the normal icons
 
    void       CreateIcons();    // Create a list of the icons for ROOT appl
-
+ 
    // static functions providing semi-low level interface to raw WinNT
    static const char  *WinNTHomedirectory(const char *user = 0);
    static int          WinNTWaitchild();
@@ -85,8 +85,7 @@ protected:
 #else
    static int          WinNTSetitimer(Long_t ms);
 #endif
-   static int          WinNTSelect(UInt_t nfds, TFdSet *readready, TFdSet *writeready,
-                                  Long_t timeout);
+   static int          WinNTSelect(TFdSet *readready, TFdSet *writeready, Long_t timeout);
    static void         WinNTSignal(ESignals sig, SigHandler_t h);
    static char        *WinNTSigname(ESignals sig);
    static int          WinNTFilestat(const char *path, Long_t *id, Long64_t *size,
@@ -99,17 +98,12 @@ protected:
    static int          WinNTWinNTService(int port, int backlog);
    static int          WinNTSend(int socket, const void *buffer, int length, int flag);
    static int          WinNTRecv(int socket, void *buffer, int length, int flag);
-
-   static int          WinNTIoctl(int fd, int code, void *vp);
-   static int          WinNTNonblock(int fd);
    static long         WinNTNow();
-
    static int          WinNTDynLoad(const char *lib);
    static Func_t       WinNTDynFindSymbol(const char *lib, const char *entry);
    static void         WinNTDynUnload(const char *lib);
    static void         WinNTDynListSymbols(const char *lib, const char *re = "");
    static void         WinNTDynListLibs(const char *lib = "");
-   //----> static HANDLE       WinNTGetCurrentProcess();
 
 public:
    TWinNTSystem();
@@ -123,8 +117,8 @@ public:
    const char       *HostName();
 
    HIMAGELIST GetSmallIconList() { return fhSmallIconList; }
-   HICON   GetSmallIcon(Int_t IconIdx) {return fhSmallIconList  ? ImageList_GetIcon(fhSmallIconList,IconIdx,ILD_NORMAL):0; }
-   HICON   GetNormalIcon(Int_t IconIdx){return fhNormalIconList ? ImageList_GetIcon(fhNormalIconList,IconIdx,ILD_NORMAL):0; }
+   HICON   GetSmallIcon(Int_t IconIdx) { return fhSmallIconList  ? ImageList_GetIcon(fhSmallIconList,IconIdx,ILD_NORMAL):0; }
+   HICON   GetNormalIcon(Int_t IconIdx){ return fhNormalIconList ? ImageList_GetIcon(fhNormalIconList,IconIdx,ILD_NORMAL):0; }
    HIMAGELIST GetNormalIconList(){ return fhNormalIconList; }
 
    const char       *GetShellName(){return fShellName;}
@@ -134,11 +128,11 @@ public:
    Bool_t            ProcessEvents();
    void              DispatchOneEvent(Bool_t pendingOnly = kFALSE);
    void              ExitLoop();
-   void              InnerLoop();
 
    //---- Handling of system events
    void              CheckChilds();
    Bool_t            CheckSignals(Bool_t sync);
+   Bool_t            CheckDescriptors();
    void              DispatchSignals(ESignals sig);
    void              AddSignalHandler(TSignalHandler *sh);
    TSignalHandler   *RemoveSignalHandler(TSignalHandler *sh);
@@ -246,7 +240,7 @@ public:
    //---- Static utility functions ------------------------------
    static const char  *GetDynamicPath();
 
-   ClassDef(TWinNTSystem,0)
+   ClassDef(TWinNTSystem, 0)
 };
 
 #endif
