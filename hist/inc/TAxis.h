@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.24 2003/04/09 20:38:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.25 2003/04/10 09:00:21 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -51,19 +51,20 @@ private:
    
 public:
         // TAxis status bits
-        enum { kAxisRange   = BIT(11),
-               kCenterTitle = BIT(12),
-               kCenterLabels= BIT(14),
-               kRotateTitle = BIT(15),
-               kPalette     = BIT(16),
-               kNoExponent  = BIT(17),
-               kLabelsHori  = BIT(18),
-               kLabelsVert  = BIT(19),
-               kLabelsDown  = BIT(20),
-               kLabelsUp    = BIT(21),
-               kIsInteger   = BIT(22),
-               kTickPlus    = BIT(9),
-               kTickMinus   = BIT(10)};
+        enum { kAxisRange     = BIT(11),
+               kCenterTitle   = BIT(12),
+               kCenterLabels  = BIT(14),
+               kRotateTitle   = BIT(15),
+               kPalette       = BIT(16),
+               kNoExponent    = BIT(17),
+               kLabelsHori    = BIT(18),
+               kLabelsVert    = BIT(19),
+               kLabelsDown    = BIT(20),
+               kLabelsUp      = BIT(21),
+               kIsInteger     = BIT(22),
+               kMoreLogLabels = BIT(23),
+               kTickPlus      = BIT(9),
+               kTickMinus     = BIT(10)};
 
         TAxis();
         TAxis(Int_t nbins, Axis_t xmin, Axis_t xmax);
@@ -110,6 +111,7 @@ public:
         virtual void     SetBinLabel(Int_t bin, const char *label);
         virtual void     SetDrawOption(Option_t * /*option*/ ="") { }
         virtual void     SetLimits(Axis_t xmin, Axis_t xmax);
+        virtual void     SetMoreLogLabels(Bool_t more=kTRUE);  // *MENU*
         virtual void     SetNoExponent(Bool_t noExponent=kTRUE);  // *MENU*
         virtual void     SetParent(TObject *obj) {fParent = obj;}
         virtual void     SetRange(Int_t first=0, Int_t last=0);  // *MENU*

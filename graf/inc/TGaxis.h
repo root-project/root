@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.12 2003/02/20 22:36:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.13 2003/04/10 09:00:20 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -61,12 +61,7 @@ protected:
   static Int_t fgMaxDigits;          //!Number of digits above which the 10>N notation is used
 
 public:
-        // TGaxis status bits
-        enum { kCenterTitle = BIT(12), 
-               kCenterLabels= BIT(14),
-               kRotateTitle = BIT(15),
-               kNoExponent  = BIT(17)};
-
+   
         TGaxis();
         TGaxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                Double_t wmin,Double_t wmax,Int_t ndiv=510, Option_t *chopt="",
@@ -115,6 +110,7 @@ virtual const char     *GetTitle() const {return fTitle.Data();}
                 void    SetLabelSize(Float_t labelsize) {fLabelSize = labelsize;} // *MENU*
          static void    SetMaxDigits(Int_t maxd=5);
         virtual void    SetName(const char *name); // *MENU*
+        virtual void    SetMoreLogLabels(Bool_t more=kTRUE);  // *MENU*
         virtual void    SetNoExponent(Bool_t noExponent=kTRUE);  // *MENU*
                 void    SetTickSize(Float_t ticksize) {fTickSize = ticksize;} // *MENU*
                 void    SetGridLength(Float_t gridlength) {fGridLength = gridlength;}

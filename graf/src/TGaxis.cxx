@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.52 2003/09/02 17:09:53 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.53 2003/09/08 15:26:53 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -238,8 +238,8 @@ void TGaxis::CenterLabels(Bool_t center)
 //   default is to center on the primary tick marks
 //   This option does not make sense if there are more bins than tick marks.
    
-   if (center) SetBit(kCenterLabels);
-   else        ResetBit(kCenterLabels);
+   if (center) SetBit(TAxis::kCenterLabels);
+   else        ResetBit(TAxis::kCenterLabels);
 }
 
 //______________________________________________________________________________
@@ -247,8 +247,8 @@ void TGaxis::CenterTitle(Bool_t center)
 {
 //   if center = kTRUE axis title will be centered
 //   default is right adjusted
-   if (center) SetBit(kCenterTitle);
-   else        ResetBit(kCenterTitle);
+   if (center) SetBit(TAxis::kCenterTitle);
+   else        ResetBit(TAxis::kCenterTitle);
 }
 
 //______________________________________________________________________________
@@ -277,7 +277,7 @@ void TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
    newaxis->SetTickSize(fTickSize);
    newaxis->SetBit(kCanDelete);
    newaxis->SetTitle(GetTitle());
-   newaxis->SetBit(kCenterTitle,TestBit(kCenterTitle));
+   newaxis->SetBit(TAxis::kCenterTitle,TestBit(TAxis::kCenterTitle));
    newaxis->AppendPad();
 }
 
@@ -306,9 +306,9 @@ void TGaxis::ImportAxisAttributes(TAxis *axis)
    SetTitle(axis->GetTitle());
    SetTitleOffset(axis->GetTitleOffset());
    SetTitleSize(axis->GetTitleSize());
-   SetBit(kCenterTitle, axis->TestBit(kCenterTitle));
-   SetBit(kCenterLabels,axis->TestBit(kCenterLabels));
-   SetBit(kRotateTitle, axis->TestBit(kRotateTitle));
+   SetBit(TAxis::kCenterTitle,  axis->TestBit(TAxis::kCenterTitle));
+   SetBit(TAxis::kCenterLabels, axis->TestBit(TAxis::kCenterLabels));
+   SetBit(TAxis::kRotateTitle,  axis->TestBit(TAxis::kRotateTitle));
    SetBit(TAxis::kNoExponent,   axis->TestBit(TAxis::kNoExponent));
    SetBit(TAxis::kTickPlus,     axis->TestBit(TAxis::kTickPlus));
    SetBit(TAxis::kTickMinus,    axis->TestBit(TAxis::kTickMinus));
@@ -513,7 +513,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Int_t NHILAB = 0;
    Int_t IDN;
    Bool_t FLEXE = 0;
-   Bool_t FLEXPO,FLEXNE, LogInteger;
+   Bool_t FLEXPO,FLEXNE;
    char *LABEL;
    char *CHTEMP;
    char *CODED;
@@ -539,10 +539,13 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
    fFunction = (TF1*)gROOT->GetFunction(fFunctionName.Data());
 
+   Bool_t noExponent = TestBit(TAxis::kNoExponent);
+
+//*-*- If MoreLogLabels = kTRUE more Log Intermediate Labels are drawn.
+   Bool_t MoreLogLabels = fAxis->TestBit(TAxis::kMoreLogLabels);
+
 //*-*- the following parameters correspond to the pad range in NDC
 //*-*- and the WC coordinates in the pad
-
-   Bool_t noExponent = TestBit(TAxis::kNoExponent);
 
    Double_t padh   = gPad->GetWh()*gPad->GetAbsHNDC();
    Double_t padw   = gPad->GetWw()*gPad->GetAbsWNDC();
@@ -875,16 +878,16 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       else          Ylabel = XLside*1.3*charheight*toffset;
       if (Y1 == Y0) Ylabel = XLside*1.6*charheight*toffset;
       Double_t axispos;
-      if (TestBit(kCenterTitle)) axispos = 0.5*axis_length;
+      if (TestBit(TAxis::kCenterTitle)) axispos = 0.5*axis_length;
       else                       axispos = axis_length;
-      if (TestBit(kRotateTitle)) {
+      if (TestBit(TAxis::kRotateTitle)) {
          if (X1 >= X0) {
-            if (TestBit(kCenterTitle)) textaxis->SetTextAlign(22);
-            else                       textaxis->SetTextAlign(12);
+            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
+            else                              textaxis->SetTextAlign(12);
             Rotate(axispos,Ylabel,cosphi,sinphi,X0,Y0,xpl1,ypl1);
          } else {
-             if (TestBit(kCenterTitle)) textaxis->SetTextAlign(22);
-           else                         textaxis->SetTextAlign(32);
+             if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
+           else                                textaxis->SetTextAlign(32);
             Rotate(axispos,Ylabel,cosphi,sinphi,X0,Y0,xpl1,ypl1);
          }
          textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
@@ -894,12 +897,12 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                               GetTitle());
       } else {
          if (X1 >= X0) {
-            if (TestBit(kCenterTitle)) textaxis->SetTextAlign(22);
-            else                       textaxis->SetTextAlign(32);
+            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
+            else                              textaxis->SetTextAlign(32);
             Rotate(axispos,Ylabel,cosphi,sinphi,X0,Y0,xpl1,ypl1);
          } else {
-             if (TestBit(kCenterTitle)) textaxis->SetTextAlign(22);
-           else                       textaxis->SetTextAlign(12);
+             if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
+           else                                textaxis->SetTextAlign(12);
             Rotate(axispos,Ylabel,cosphi,sinphi,X0,Y0,xpl1,ypl1);
          }
          textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
@@ -1475,23 +1478,6 @@ L110:
       NBININ = IH2-IH1+1;
       AXMUL  = (X11-X00)/(H2SAV-XMNLOG);
 
-//*-*-              If:
-//*-*-                  a) The number of decades is less than two.
-//*-*-                  b) and 1 =< wmin and wmax =<10000
-//*-*-                  c) and there is no labels overlap.
-//*-*-              then some intermediate label is drawn (LogInteger=kTRUE).
-
-      LogInteger = kFALSE;
-      //Temporarely disable the LogInteger feature. The following histogram
-      //does not work (TH1F *h = new TH1F("h","h",100,2,100);)
-      //if (TMath::Log10(wmax/wmin) < 2 && wmin >= 1 && wmax <= 10000) LogInteger = kTRUE;
-      //Double_t SMALD = (TMath::Log10(1./0.9)/TMath::Log10(wmax/wmin))*axis_length;
-      //if (xmin == xmax && SMALD <= charheight) LogInteger = kFALSE;
-      if (ymin == ymax) {
-         //Double_t textsize  = 0;
-         //if (0.5*textsize > SMALD) LogInteger = kFALSE;
-      }
-
 //*-*-              Plot decade and intermediate tick marks
       decade      = IH1-2;
       labelnumber = IH1;
@@ -1538,7 +1524,7 @@ L110:
          if (!drawGridOnly && !OptionUnlab)  {
 
 //*-*-              We generate labels (numeric only).
-            if (LogInteger || noExponent) {
+            if (MoreLogLabels || noExponent) {
                rlab = TMath::Power(10,labelnumber);
                sprintf(LABEL, "%f", rlab);
                LabelsLimits(LABEL,first,last);
@@ -1576,7 +1562,7 @@ L110:
             if ((NBININ <= N1A) || (j == 1) || (j == NBININ) || ((NBININ > N1A)
             && (j%KMOD == 0))) {
                if ((labelnumber != 0) && (labelnumber != 1)) {
-                  if (LogInteger || noExponent) {
+                  if (MoreLogLabels || noExponent) {
                      textaxis->PaintTextNDC(XX,YY,&LABEL[first]);
                   }
                   else {
@@ -1644,21 +1630,21 @@ L160:
 
 //*-*- Draw the intermediate LOG labels if requested
 
-               if (LogInteger && !OptionUnlab) {
+               if (MoreLogLabels && !OptionUnlab) {
                   rlab = Double_t(k)*TMath::Power(10,labelnumber-1);
                   sprintf(CHTEMP, "%d", Int_t(rlab));
                   LNLEN = strlen(CHTEMP);
                   if (CHTEMP[LNLEN-1] == '.') LNLEN--;
                   Rotate (Xone,Ylabel,cosphi,sinphi,X0,Y0,XX,YY);
-                  if ((X0 == X1) && !OptionPara) {
-                     if (Lside < 0) {
-                        if (labelnumber == 0) NCH=1;
-                        else                  NCH=2;
-                        XX += NCH*charheight;
-                     }
-                  }
+//                  if ((X0 == X1) && !OptionPara) {
+//                     if (Lside < 0) {
+//                        if (labelnumber == 0) NCH=1;
+//                        else                  NCH=2;
+//                        XX += NCH*charheight;
+//                     }
+//                  }
                   if ((Y0 == Y1) && !OptionDown && !OptionUp) {
-                     if (Lside < 0) YY -= charheight;
+				 if (noExponent) YY += 0.5*charheight;
                   }
                   if (OptionVert) {
                      if ((X0 != X1) && (Y0 != Y1)) {
@@ -1846,6 +1832,18 @@ void TGaxis::SetName(const char *name)
 }
 
 //______________________________________________________________________________
+void TGaxis::SetMoreLogLabels(Bool_t more)
+{
+// Set the kMoreLogLabels bit flag
+// When this option is selected more labels are drawn when in log scale
+// and there is a small number of decades  (<3).
+// Note that this option is automatically inherited from TAxis
+
+   if (more) SetBit(TAxis::kMoreLogLabels);
+   else      ResetBit(TAxis::kMoreLogLabels);
+}
+
+//______________________________________________________________________________
 void TGaxis::SetNoExponent(Bool_t noExponent)
 {
 // Set the NoExponent flag
@@ -1853,8 +1851,8 @@ void TGaxis::SetNoExponent(Bool_t noExponent)
 // are either all very small or very large.
 // One can disable the exponent by calling axis.SetNoExponent(kTRUE).
 
-   if (noExponent) SetBit(kNoExponent);
-   else            ResetBit(kNoExponent);
+   if (noExponent) SetBit(TAxis::kNoExponent);
+   else            ResetBit(TAxis::kNoExponent);
 }
 
 //______________________________________________________________________________
