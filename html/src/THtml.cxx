@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.66 2004/07/30 19:09:51 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.67 2004/08/12 14:23:41 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -3524,7 +3524,7 @@ void THtml::MakeTree(const char *className, Bool_t force)
           util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
       }
    }
-   util->MakeCanvas("","psCanvas",0,0,1000,750);
+   util->MakeCanvas("","psCanvas",0,0,1000,1200);
 
    psCanvas = gPad->GetVirtCanvas();
 
