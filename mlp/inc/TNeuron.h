@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.00 2003/08/27 13:52:36 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.1 2003/08/27 15:31:13 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 #ifndef ROOT_TNeuron
@@ -39,8 +39,9 @@ class TNeuron : public TObject {
 
  public:
    enum NeuronType { kOff, kLinear, kSigmoid, kTanh, kGauss };
-                    TNeuron(TNeuron::NeuronType type = TNeuron::kSigmoid);
-   virtual ~ TNeuron() { delete[]fNorm; } 
+
+   TNeuron(NeuronType type = kSigmoid);
+   virtual ~ TNeuron() { delete[] fNorm; } 
    inline TSynapse* GetPre(Int_t n) { return (TSynapse*) fpre.At(n); }
    inline TSynapse* GetPost(Int_t n) { return (TSynapse*) fpost.At(n); }
    void UseBranch(TBranch*, char);
