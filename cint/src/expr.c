@@ -54,6 +54,9 @@ char *str;
 	  ,result->tagnum
 	  ,(result->obj.i<0)?'M':'P'
 #ifndef G__OLDIMPLEMENTATION1981
+#ifndef G__PHILIPPE36
+          ,labs(result->obj.i)
+#else
 	  ,abs(result->obj.i)
 #else
 	  ,result->obj.i
