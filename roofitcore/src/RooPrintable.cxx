@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.6 2001/03/29 01:06:44 verkerke Exp $
+ *    File: $Id: RooPrintable.cc,v 1.1 2001/04/11 00:57:09 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,15 +16,14 @@
 
 #include <iostream.h>
 #include <iomanip.h>
-#include "TString.h"
 #include "TNamed.h"
 
 ClassImp(RooPrintable)
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.1 2001/03/28 19:21:48 davidk Exp $";
+"$Id: RooPrintable.cc,v 1.1 2001/04/11 00:57:09 davidk Exp $";
 
-void RooPrintable::printToStream(ostream& os, PrintOption opt, const char *indent) const {
+void RooPrintable::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print information about this object to the specified stream. The possible
   // PrintOptions are:
   //
@@ -57,6 +56,13 @@ RooPrintable::PrintOption RooPrintable::parseOptions(Option_t *options) const {
   if(opts.Contains("V")) { popt= Verbose; }
 
   return popt;
+}
+
+RooPrintable::PrintOption RooPrintable::lessVerbose(PrintOption opt) const {
+  // Return a PrintOption that is one degree less verbose than the input option.
+  // Useful for being less verbose when printing info about sub-objects.
+
+  return (opt == OneLine) ? OneLine : (PrintOption)(opt - 1);
 }
 
 void RooPrintable::oneLinePrint(ostream& os, const TNamed &named) {

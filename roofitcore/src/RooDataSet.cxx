@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.10 2001/04/05 01:49:10 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.11 2001/04/11 00:54:37 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -312,17 +312,23 @@ Roo1DTable* RooDataSet::Table(RooAbsCategory& cat, const char* cuts, const char*
   return table ;
 }
 
-void RooDataSet::printToStream(ostream& os, PrintOption opt, const char *indent) const
-{
+void RooDataSet::printToStream(ostream& os, PrintOption opt, TString indent) const {
+  // Print info about this dataset to the specified output stream.
+  //
+  //   Standard: number of entries
+  //      Shape: list of variables we define & were generated with
+
   oneLinePrint(os,*this);
   if(opt >= Standard) {
     os << indent << "  Contains " << GetEntries() << " entries" << endl;
     if(opt >= Shape) {
-      os << indent << "  Defines the following variables:" << endl;
-      _vars.printToStream(os,RooAbsArg::Shape);
+      os << indent << "  Defines ";
+      TString deeper(indent);
+      deeper.Append("  ");
+      _vars.printToStream(os,Standard,deeper);
       if(_truth.GetSize() > 0) {
 	os << indent << "  Generated with ";
-	_truth.printToStream(os);
+	_truth.printToStream(os,Shape,deeper);
       }
     }
   }

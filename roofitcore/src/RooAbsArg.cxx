@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.13 2001/04/08 00:06:48 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.14 2001/04/11 15:42:04 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -425,7 +425,7 @@ void RooAbsArg::copyList(TList& dest, const TList& source) const
   delete sIter ;
 }
 
-void RooAbsArg::printToStream(ostream& os, PrintOption opt, const char *indent)  const
+void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  const
 {
   // Print the state of this object to the specified output stream.
   // With PrintOption=Verbose, print out lists of attributes, clients,
@@ -433,6 +433,7 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, const char *indent) 
 
   oneLinePrint(os,*this);
   if(opt == Verbose) {
+    os << indent << "--- RooAbsArg ---" << endl;
     // attribute list
     os << indent << "  Attributes: " ;
     printAttribList(os) ;

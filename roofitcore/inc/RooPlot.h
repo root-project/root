@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.1 2001/03/28 19:21:48 davidk Exp $
+ *    File: $Id: RooPlot.rdl,v 1.2 2001/04/11 00:54:37 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,7 +28,7 @@ public:
   TObject *addObject(const TObject *obj, const char *drawOptions= "");
   RooHist *addHistogram(const TH1 *data, const char *drawOptions= "E",
 			Bool_t adjustRange= kTRUE);
-  virtual void printToStream(ostream& os, PrintOption opt= Standard, const char *indent= "") const;
+  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.9 2001/04/05 01:49:11 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.10 2001/04/08 00:06:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -64,7 +64,7 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) const ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
   TString* format(Int_t sigDigits, const char *options) ;
 
 protected:

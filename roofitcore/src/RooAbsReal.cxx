@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.5 2001/04/05 01:49:10 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.6 2001/04/08 00:06:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -104,17 +104,33 @@ void RooAbsReal::writeToStream(ostream& os, Bool_t compact) const
   //Write object contents to stream (dummy for now)
 }
 
-void RooAbsReal::printToStream(ostream& os, PrintOption opt) const
+void RooAbsReal::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
-  //Print object contents
-  os << "RooAbsReal: " << GetName() << " = " << getVal();
-  if(!_unit.IsNull()) os << ' ' << _unit;
-  os << " : \"" << fTitle << "\"" ;
+  // Print info about this object to the specified stream. In addition to the info
+  // from RooAbsArg::printToStream() we add:
+  //
+  //  Standard : value and units
+  //     Shape : range
+  //   Verbose : default binning and print label
 
-  printAttribList(os) ;
-  os << endl ;
+  RooAbsArg::printToStream(os,opt,indent);
+  if(opt >= Standard) {
+    os << indent << "--- RooAbsReal ---" << endl;
+    TString unit(_unit);
+    if(!unit.IsNull()) unit.Prepend(' ');
+    os << indent << "  Value = " << getVal() << unit << endl;
+    if(opt >= Shape) {
+      os << indent << "  Plot range is [ " << getPlotMin() << unit << " , "
+	 << getPlotMax() << unit << " ]" << endl;
+      if(opt >= Verbose) {
+	os << indent << "  Plot bins = " << getPlotBins();
+	Double_t range= getPlotMax()-getPlotMin();
+	if(range > 0) os << " (" << range/getPlotBins() << unit << "/bin)";
+	os << endl << indent << "  Plot label is \"" << getPlotLabel() << "\"" << endl;
+      }
+    }
+  }
 }
-
 
 void RooAbsReal::setPlotMin(Double_t value) {
   // Set minimum value of output associated with this object

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.9 2001/04/05 01:49:11 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.10 2001/04/08 00:06:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -352,38 +352,25 @@ RooAbsArg& RooRealVar::operator=(const RooAbsArg& aorig)
 }
 
 
-void RooRealVar::printToStream(ostream& os, PrintOption opt) const {
-  switch(opt) {
-  case Verbose:
-    RooAbsArg::printToStream(os,opt) ;
-    break ;
-    
-  case Shape:
-    os << fName << ": " << fTitle;
-    if(isConstant()) {
-      os << ", fixed at " << getVal();
-    }
-    else {
-      os << ", range is (" << _fitMin << "," << _fitMax << ")";
-    }
-    if(!_unit.IsNull()) os << ' ' << _unit;
-    printAttribList(os) ;
-    os << endl;
-    break ;
-    
-  case Standard:
-    os << "RooRealVar: " << GetName() << " = " << getVal();
-    if(!_unit.IsNull()) os << ' ' << _unit;
-    os << " : " << GetTitle() ;
-    if(!isConstant() && hasFitLimits())
-      os << " (" << _fitMin << ',' << _fitMax << ')';
+void RooRealVar::printToStream(ostream& os, PrintOption opt, TString indent) const {
+  // Print info about this object to the specified stream. In addition to the info
+  // from RooAbsReal::printToStream() we add:
+  //
+  //  Standard : error
+  //   Verbose : fit range
 
-    printAttribList(os) ;
-    os << endl ;	
-    break ;
+  RooAbsReal::printToStream(os,opt,indent);
+  if(opt >= Standard) {
+    os << indent << "--- RooRealVar ---" << endl;
+    TString unit(_unit);
+    if(!unit.IsNull()) unit.Prepend(' ');
+    os << indent << "  Error = " << unit << endl;
+    if(opt >= Verbose) {
+      os << indent << "  Fit range is [ " << getFitMin() << unit << " , "
+	 << getFitMax() << unit << " ]" << endl;
+    }
   }
 }
-
 
 TString *RooRealVar::format(Int_t sigDigits, const char *options) {
   // Format numeric value in a variety of ways
