@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.23 2001/11/26 15:37:46 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.24 2001/11/28 16:05:42 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1562,9 +1562,7 @@ void TWinNTSystem::Unload(const char *module)
 #ifdef NOCINT
    WinNTDynUnload(module);
 #else
-   if (module) { }
-   // should call CINT unload file here, but does not work for sl's yet.
-   Warning("Unload", "CINT does not support unloading shared libs");
+   if (module) { TSystem::Unload(module); }
 #endif
 }
 
