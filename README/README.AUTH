@@ -11,17 +11,19 @@ generated, which allows to avoid direct exchange of passwords.
  +---------------------------------------------------------------------+
  | Method              | code | short name | in .rootrc | Secure | Sfx |
  |---------------------------------------------------------------------|
- | (user,password)     |  0   | usrpwd     | UsrPwd     | Yes/No | up  |
- | (user,password) SRP |  1   | srp        | SRP        |  Yes   | s   |
- |  Kerberos V         |  2   | krb5       | Krb5       |  Yes   | k   |
- | Globus GSSAPI       |  3   | globus     | Globus     |  Yes   | g   |
+ | (user,password)     |  0   | usrpwd     | UsrPwd     |  Yes   | up  |
+ | SRP                 |  1   | srp        | SRP        |  Yes   | s   |
+ | Kerberos V          |  2   | krb5       | Krb5       |  Yes   | k   |
+ | Globus GSI          |  3   | globus     | Globus     |  Yes   | g   |
  | SSH                 |  4   | ssh        | SSH        |  Yes   | h   |
  | (uid,gid)           |  5   | uidgid     | UidGid     |  No    | ug  |
  +---------------------------------------------------------------------+
 
-By default method 0 (UsrPwd) is used. A specific method can be forced by 
-adding the suffix shown in the table (column Sfx) to the specified protocol:
-for example
+By default method 0 (UsrPwd) is used; host equivalence via /etc/hosts.deny
+and/or $HOME/.rhosts is tested (by default; it can be disabled).
+
+A specific method can be given priority by adding the suffix shown in the
+table (column Sfx) to the specified protocol: for example
 
   TFile *f = TFile::Open("roots://host.doma.in/~fserv/TheFile.root","read")
 
@@ -49,14 +51,20 @@ is explained at the end of this file.
 Controlling access
 ==================
 
-Upon request of access, rootd/proofd build a list of secure methods available
-locally; the list always comprises UsrPwd; SRP, Kerberos and Globus, are added
-if ROOT has been compiled with support for them; SSH is added if the 'sshd'
-daemon is running. By default the two daemons accept authentications only via
-the methods in such a list. The administrator of the daemons can, however,
-grant access via other authentication methods (or deny any access) by defining
-a host specific list in etc/system.rootdaemonrc or $HOME/.rootdaemonrc
-(see the example for this file under etc for more details).
+Directives defining the authentication protocols accepted from a given host
+are defined in the active <rootdaemonrc> file; this file is by default 
+$ROOTSYS/etc/system.rootdaemonrc; if existing, $HOME/.rootdaemonrc has
+priority; it is also possible to use a generic filename and location.
+The two last solutions have the advantage that the file do not get 
+reset if the ROOT distribution needs to be re-configured. 
+
+By default the ROOT daemons accept authentications only via the methods
+defined by the directive more closely matching the requesting hosts.
+The file $ROOTSYS/etc/system.rootdaemonrc is automatically generated
+upon configuration with the list of available secure methods enabled
+by default from all the hosts.
+The administrator of the daemons has the responsibility to add the relevant
+entries to fit the site access policy.
 
 
 Negotiation
@@ -513,7 +521,7 @@ is not the case you can pass the port number as the first argument to
 the macro.
 
 The macro assumes that you are trying to login as yourself to rootd,
-ie with the username your are logged in. You may change this passing
+i.e. with the username your are logged in. You may change this passing
 a different username "newuser" as second argument. In this case you
 have to start rootd from the "newuser" account or as supersuser,
 to avoid access problems. Also, for SSH, make sure that "newuser"
@@ -548,4 +556,4 @@ This is a summary of the arguments to TestAuth.C:
                                 cf:usercert.pem kf:userkey.pem )
 
 --------------------------------------------------------------------------------------
-Last update: January 9, 2004
+Last update: September 23, 2004

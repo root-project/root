@@ -11,9 +11,10 @@ Globus Authentication has been tested for the moment only on Linux.
 1) Globus Tool Kit (GTK) Version
 
    The interface has been developed using GTK version 2.2.3 and tested on
-   machines with version 2.0, 2.0.21b and 2.4.3; it should work with versions
-   2.x ; however, vanilla versions 2.2.3 - 2.4.3 contain a bug which does not 
-   allow to overload at the same time the defaults for the user certificate
+   machines with version 2.0, 2.0.21b, 2.4.3 and 3.2.1; it should work with
+   versions 2.x and 3.x, at least until the C API's are kept ; however,
+   vanilla versions 2.2.3 - 2.4.3 contain a bug which does not allow to 
+   overload at the same time the defaults for the user certificate
    and key files. A patch has been provided by the Globus team (see Globus
    bugzilla #892) which is shipped with ROOT.
 
@@ -22,8 +23,8 @@ Globus Authentication has been tested for the moment only on Linux.
 
         globus-gsi-<GTK_version>-src_bundle.tar.gz
 
-   Versions older than 2.1.2 do not have a separate bundle for GSI: in such
-   a case you need to install the 
+   Versions older than 2.1.2 and 3.x versions do not have a separate bundle
+   for GSI: in such a case you need to install the 
 
         globus-resource-management-client-<GTK_version>-src_bundle.tar.gz
 
@@ -38,13 +39,13 @@ Globus Authentication has been tested for the moment only on Linux.
 
 2) Compiling ROOT with Globus support
 
-   To compile ROOT with Globus support run the 'configure' script with the flag
-   '--enable-globus'; the script expects the variable GLOBUS_LOCATION to be
-   defined and pointing to the location with the 'bin', 'lib' and 'include'
-   dirs for the  GTK . It is definitely better to have this variable defined
-   correctly (especially on the client side); however, for compilation purposes
-   it is possible to force a specific directory for the GTK running configure
-   with
+   To compile ROOT with Globus support make sure, *before* running 'configure',
+   that the environment variable GLOBUS_LOCATION is defined and points to the
+   location with the 'bin', 'lib' and 'include' dirs for the GTK; 'configure'
+   should then pickup the correct paths. While it is definitely better to have
+   GLOBUS_LOCATION defined correctly (especially on the client side), for
+   compilation purposes only it is possible to force a specific directory for
+   GTK running 'configure' with
 
        --with-globus-dir=<GTK_path>
 
@@ -237,7 +238,8 @@ cd ../..
             There is, however, the possibility to grant access to the local user 
             area; this can be done via valid user proxies, to be initialized 
             before the authentication is attempted.
-            Is is advised to initialize the user proxies for a very long time, eg. 
+            Is is advised to initialize the user proxies for a very long time,
+            e.g. 
              
                        grid-proxy-init -valid 999999:0
 
@@ -367,5 +369,4 @@ May 27 12:49:46 pcepsft43 rootd[24031]: RootdLoop: kind:2004 -- buf:'/test.root 
    .6) mailto: gerardo.ganis@cern.ch.
 
 --------------------------------------------------------------------------------------
-Last update: March 24, 2004
-
+Last update: September 23, 2004
