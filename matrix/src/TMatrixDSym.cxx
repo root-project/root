@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.6 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.7 2004/04/15 09:21:50 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -559,7 +559,29 @@ TMatrixDSym &TMatrixDSym::operator=(const TMatrixDSym &source)
   if (this != &source) {
     TObject::operator=(source);
     memcpy(this->GetMatrixArray(),source.fElements,fNelems*sizeof(Double_t));
+    fTol = source.GetTol();
   }
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixDSym &TMatrixDSym::operator=(const TMatrixFSym &source)
+{
+  if (!AreCompatible(*this,source)) {
+    Error("operator=","matrices not compatible");
+    Invalidate();
+    return *this;
+  }
+
+  if (dynamic_cast<TMatrixFSym *>(this) != &source) {
+    TObject::operator=(source);
+    const Float_t  * const ps = source.GetMatrixArray();
+          Double_t * const pt = GetMatrixArray();
+    for (Int_t i = 0; i < fNelems; i++)
+      pt[i] = (Double_t) ps[i];
+    fTol = (Double_t)source.GetTol();
+  }
+
   return *this;
 }
 

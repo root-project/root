@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.5 2004/03/21 10:52:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.6 2004/04/15 09:21:50 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -92,6 +92,7 @@ public:
   inline       TMatrixDRow        operator[](Int_t rown)       { return TMatrixDRow      (*this,rown); }
 
   TMatrixDSym &operator= (const TMatrixDSym     &source);
+  TMatrixDSym &operator= (const TMatrixFSym     &source);
   TMatrixDSym &operator= (const TMatrixDSymLazy &source);
   TMatrixDSym &operator= (Double_t val);
   TMatrixDSym &operator-=(Double_t val);

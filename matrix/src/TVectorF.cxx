@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.14 2004/03/24 15:56:39 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.15 2004/04/15 09:21:51 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -231,9 +231,9 @@ void TVectorF::ResizeTo(Int_t lwb,Int_t upb)
     Allocate(new_nrows,lwb);
     Assert(IsValid());
     if (fNrows > kSizeMax || nrows_old > kSizeMax)
-      memset(GetMatrixArray(),0,fNrows*sizeof(Double_t));
+      memset(GetMatrixArray(),0,fNrows*sizeof(Float_t));
     else if (fNrows > nrows_old)
-      memset(GetMatrixArray()+nrows_old,0,(fNrows-nrows_old)*sizeof(Double_t));
+      memset(GetMatrixArray()+nrows_old,0,(fNrows-nrows_old)*sizeof(Float_t));
 
     // Copy overlap
     const Int_t rowLwb_copy = TMath::Max(fRowLwb,rowLwb_old);
@@ -1249,7 +1249,7 @@ TVectorF &AddElemMult(TVectorF &target,Float_t scalar,
 
   if (!( AreCompatible(target,source1) && AreCompatible(target,source1) &&
          AreCompatible(target,select) )) {
-    Error("AddElemMult(TVectorF &,Double_t,const TVectorF &,const TVectorF &,onst TVectorF &)",
+    Error("AddElemMult(TVectorF &,Float_t,const TVectorF &,const TVectorF &,const TVectorF &)",
            "vector's are incompatible"); 
     target.Invalidate(); 
     return target;
@@ -1322,7 +1322,7 @@ TVectorF &AddElemDiv(TVectorF &target,Float_t scalar,
 
   if (!( AreCompatible(target,source1) && AreCompatible(target,source1) &&
          AreCompatible(target,select) )) {
-    Error("AddElemDiv(TVectorF &,Double_t,const TVectorF &,const TVectorF &,onst TVectorF &)",
+    Error("AddElemDiv(TVectorF &,Float_t,const TVectorF &,const TVectorF &,const TVectorF &)",
            "vector's are incompatible"); 
     target.Invalidate(); 
     return target;
