@@ -1,10 +1,10 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.84 2004/11/04 10:34:04 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.85 2004/11/19 06:46:19 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
 # which values are active do: gEnv->Print().
 
-# Path used by dynamic loader to find shared libraries and macros
+# Path used by dynamic loader to find shared libraries and macros.
 # Paths are different for Unix and Windows. The example shows the defaults
 # for all ROOT applications for either Unix or Windows.
 Unix.*.Root.DynamicPath:    .:@libdir@
@@ -12,24 +12,24 @@ Unix.*.Root.MacroPath:      .:@macrodir@
 WinNT.*.Root.DynamicPath:   .;@bindir@;$(PATH)
 WinNT.*.Root.MacroPath:     .;@macrodir@
 
-# Path where to look for TrueType fonts
+# Path where to look for TrueType fonts.
 Unix.*.Root.UseTTFonts:     true
 Unix.*.Root.TTFontPath:     @ttffontdir@
 
-# Use thread library (if exists)
+# Use thread library (if exists).
 Unix.*.Root.UseThreads:     false
 
-# Show where item is found in the specified path
+# Show where item is found in the specified path.
 Root.ShowPath:           false
 
 # Activate memory statistics (size and cnt is used to trap allocation of
-# blocks of a certain size after cnt times)
+# blocks of a certain size after cnt times).
 Root.MemStat:            0
 Root.MemStat.size:      -1
 Root.MemStat.cnt:       -1
 Root.ObjectStat:         0
 
-# Activate memory leak checker (use in conjunction with $ROOTSYS/bin/memprobe)
+# Activate memory leak checker (use in conjunction with $ROOTSYS/bin/memprobe).
 # Currently only works on Linux with gcc.
 Root.MemCheck:           0
 Root.MemCheckFile:       memcheck.out
@@ -42,16 +42,16 @@ Root.Stacktrace:         yes
 X11.Sync:                no
 X11.FindBestVisual:      yes
 
-# Default editor
+# Default editor.
 Unix.*.Editor:           vi
 WinNT.*.Editor:          notepad
 
-# Default 3d Viewer
-# by default 3-D views are shown in the pad.
-# if the next line is activated, the default viewer will be OpenGL
+# Default 3d Viewer.
+# By default 3-D views are shown in the pad,
+# if the next line is activated, the default viewer will be OpenGL.
 #Viewer3D.DefaultDrawOption:   ogl
 
-# Default Fitter (current choices are Minuit and Fumili)
+# Default Fitter (current choices are Minuit and Fumili).
 Root.Fitter:             Minuit
 
 # Specify list of file endings which TTabCom (TAB completion) should ignore.
@@ -75,7 +75,7 @@ Canvas.ShowEditor:          false
 Canvas.AutoExec:            true
 Canvas.PrintDirectory       .
 
-# Default histogram binnings for TTree::Draw()
+# Default histogram binnings for TTree::Draw().
 Hist.Binning.1D.x:          100
 
 Hist.Binning.2D.x:           40
@@ -88,7 +88,7 @@ Hist.Binning.3D.z:           20
 Hist.Binning.3D.Profx:      100
 Hist.Binning.3D.Profy:      100
 
-# THtml specific settings (for more see doc of THtml class)
+# THtml specific settings (for more see doc of THtml class).
 Unix.*.Root.Html.SourceDir:  .:src:include
 WinNT.*.Root.Html.SourceDir: .;src;include
 Root.Html.Root:              http://root.cern.ch/root/html
@@ -101,7 +101,7 @@ Root.Html.Root:              http://root.cern.ch/root/html
 #Root.Html.LastUpdate:       // @(#)
 #Root.Html.Copyright:        * Copyright
 
-# GUI specific settings
+# GUI specific settings.
 Gui.Backend:                native
 Gui.Factory:                native
 Unix.*.Gui.DefaultFont:     -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
@@ -137,34 +137,34 @@ Browser.SortBy:              name
 Browser.GroupView:           1000
 Browser.ShowHidden:          no
 
-# Rint (interactive ROOT executable) specific alias, logon and logoff macros
+# Rint (interactive ROOT executable) specific alias, logon and logoff macros.
 Rint.Load:               rootalias.C
 Rint.Logon:              rootlogon.C
 Rint.Logoff:             rootlogoff.C
-# Record session commands, set to "-" to turn off command recording
+# Record session commands, set to "-" to turn off command recording.
 Rint.History:            $(HOME)/.root_hist
 
 # ACLiC customization.
 # ACLiC.Linkdef specifies the suffix that will be added to the script name to
 # try to locate a custom linkdef file when generating the dictionary.
 ACLiC.Linkdef:          _linkdef
-# Set a top directory for storing the libraries produced by ACLiC
+# Set a top directory for storing the libraries produced by ACLiC.
 #ACLiC.BuildDir:        /where/I/would/like/my/compiled/scripts
-# Add additional include directives for ACLiC compilations
+# Add additional include directives for ACLiC compilations.
 #ACLiC.IncludePaths:     -I/where/the/includes/are
 
-# PROOF debug options
+# PROOF debug options.
 # Proof.DebugLevel:	0
 # Proof.DebugMask:	-1
 # Proof.StatsHist:	no
 # Proof.StatsTrace:	no
 
-# PROOF related variables
+# PROOF related variables.
 Proofd.StaticSlaves:    yes
 
-# Variables related to authentication to rootd and proofd
+# Variables related to authentication to rootd and proofd.
 #
-# Default authentication method for rootd and proofd
+# Default authentication method for rootd and proofd.
 # These are supported for backward compatibility but have a very
 # low priority. System defaults are generated by configure as a list
 # in system.rootauthrc in $ROOTSYS/etc/ or /etc/root; the file
@@ -173,11 +173,11 @@ Proofd.StaticSlaves:    yes
 Rootd.Authentication:   0
 Proofd.Authentication:  0
 
-# Set this to 1 if you want full SRP authentication in Proof
-# (Client-to-Master and Master-to-Slave)
+# Set this to 1 if you want full SRP authentication in PROOF
+# (Client-to-Master and Master-to-Slave).
 Proofd.SendSRPPwd:      0
 
-# Default login name (if not defined is taken from $(HOME))
+# Default login name (if not defined is taken from $(HOME)).
 # UsrPwd.Login:           qwerty
 # SRP.Login:              qwerty
 # Krb5.Login:             qwerty@LOCAL.DOM.AIN
@@ -185,7 +185,7 @@ Proofd.SendSRPPwd:      0
 # SSH.Login:              qwerty
 # UidGid.Login:           qwerty
 
-# To be prompted for login information
+# To be prompted for login information.
 # UsrPwd.LoginPrompt:     yes
 # SRP.LoginPrompt:        yes
 # Krb5.LoginPrompt:       yes
@@ -193,31 +193,31 @@ Proofd.SendSRPPwd:      0
 # SSH.LoginPrompt:        yes
 # UidGid.LoginPrompt:     yes
 
-# To reuse established security context
+# To reuse established security context.
 UsrPwd.ReUse:         yes
 SRP.ReUse:            no
 Krb5.ReUse:           no
 Globus.ReUse:         yes
 SSH.ReUse:            yes
 
-# Duration validity of the sec context for UsrPwd, SRP and SSH
-# format:  <hours>:<minutes>  (default 24:00)
+# Duration validity of the sec context for UsrPwd, SRP and SSH.
+# Format:  <hours>:<minutes>  (default 24:00)
 # UsrPwd.Valid:     24:00
 # SRP.Valid:        24:00
 # SSH.Valid:        24:00
 
-# To control password encryption for UsrPwd authentication
+# To control password encryption for UsrPwd authentication.
 UsrPwd.Crypt:         yes
 
-# Globus miscellanea
+# Globus miscellanea.
 # Globus Proxy duration: HH:MM (ex 12:15 for 12 hours and 15 min)
-# 'default' for system default
+# 'default' for system default.
 Globus.ProxyDuration:    default
 # Globus.ProxyDuration:    14
-# Number of bits for the initial key
+# Number of bits for the initial key.
 Globus.ProxyKeyBits:     1024
 
-# Path to alternative 'ssh' (to override $PATH if ever needed)
+# Path to alternative 'ssh' (to override $PATH if ever needed).
 # SSH.ExecDir:      /usr/bin
 
 # In case of error, SSH returns 1 (or 256 = 0x100).
@@ -230,11 +230,11 @@ Globus.ProxyKeyBits:     1024
 # number of sshd daemons (defined by MaxStartups in sshd_config);
 # this is a typical case in which one should retry.
 SSH.ErrorRetry:   "Connection closed by remote host"
-# Max number of retries for SSH in case of retry error (see above)
+# Max number of retries for SSH in case of retry error (see above).
 SSH.MaxRetry:     100
 
 # Type of key to be used for RSA encryption:
-# 0 = local; 1 = SSL (default if openssl available)
+# 0 = local; 1 = SSL (default if openssl available).
 RSA.KeyType:  1
 
 # In case of 'RSA.KeyType: 1' this specifies the number of bits to
@@ -242,23 +242,23 @@ RSA.KeyType:  1
 # Default 256, minimum 128, maximum 15912.
 # SSL.BFBits:   256
 
-# Server authentication in TServerSocket:
+# Server authentication in TServerSocket.
 #
 # General: file with server access rules
 #SrvAuth.DaemonRc /etc/root/system.daemonrc
 #
-# UsrPwd: Enable check of host equivalence via /etc/hosts.equiv or $HOME/.rhosts
+# UsrPwd: check of host equivalence via /etc/hosts.equiv or $HOME/.rhosts.
 #SrvAuth.CheckHostsEquivalence 1
 #
-# SRP: pass file (default $HOME/.srootdpass)
+# SRP: pass file (default $HOME/.srootdpass).
 #SrvAuth.SRPpassfile  <home>/.srootdpass
 #
-# Globus/GSI: hostcert configuration file  
+# Globus/GSI: hostcert configuration file.
 #SrvAuth.HostCert /etc/root/hostcert.conf
-# Globus/GSI: gridmap file
+# Globus/GSI: gridmap file.
 #SrvAuth.GridMap /etc/grid-security/grid-mapfile
 #
-# SSH: port for the sshd daemon
+# SSH: port for the sshd daemon.
 #SrvAuth.SshdPort 22
 
 # Force file opening via TNetFile (TXNetFile) if a hostname is specified
@@ -272,7 +272,7 @@ RSA.KeyType:  1
 Url.Special:         file: rfio: hpss: castor: dcache: dcap:
 
 # The following env vars are handled by TXNetFile and related classes
-# (module netx, libNetx.so)
+# (module netx, libNetx.so).
 #
 # XNet.ConnectTimeout   - maximum time to wait before server's
 #                         response on a connect [10 s]
@@ -340,7 +340,7 @@ Url.Special:         file: rfio: hpss: castor: dcache: dcap:
 #                         can choose to quickly recognize the
 #                         version at run time [0]
 
-# Plugin library handlers
+# Plugin library handlers.
 Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^castor:  TCastorFile   RFIO    "TCastorFile(const char*,Option_t*,const char*,Int_t,Int_t)"
 +Plugin.TFile:       ^dcache:  TDCacheFile   DCache  "TDCacheFile(const char*,Option_t*,const char*,Int_t)"

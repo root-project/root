@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.90 2004/11/15 22:28:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.91 2004/11/16 17:15:34 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1487,14 +1487,14 @@ Double_t TMath::Mean(Long64_t n, const Short_t *a, const Double_t *w)
    if (w) {
      for (Long64_t i = 0; i < n; i++) {
        if (w[i] < 0) {
-         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+         ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
          return 0;
        }
        sum  += w[i]*a[i];
        sumw += w[i];
      }
      if (sumw <= 0) {
-       ::Error("Mean","sum of weights == 0 ?!");
+       ::Error("TMath::Mean","sum of weights == 0 ?!");
        return 0;
      }
    } else {
@@ -1518,14 +1518,14 @@ Double_t TMath::Mean(Long64_t n, const Int_t *a, const Double_t *w)
    if (w) {
      for (Long64_t i = 0; i < n; i++) {
        if (w[i] < 0) {
-         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+         ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
          return 0;
        }
        sum  += w[i]*a[i];
        sumw += w[i];
      }
      if (sumw <= 0) {
-       ::Error("Mean","sum of weights == 0 ?!");
+       ::Error("TMath::Mean","sum of weights == 0 ?!");
        return 0;
      }
    } else {
@@ -1549,14 +1549,14 @@ Double_t TMath::Mean(Long64_t n, const Float_t *a, const Double_t *w)
    if (w) {
      for (Long64_t i = 0; i < n; i++) {
        if (w[i] < 0) {
-         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+         ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
          return 0;
        }
        sum  += w[i]*a[i];
        sumw += w[i];
      }
      if (sumw <= 0) {
-       ::Error("Mean","sum of weights == 0 ?!");
+       ::Error("TMath::Mean","sum of weights == 0 ?!");
        return 0;
      }
    } else {
@@ -1580,14 +1580,14 @@ Double_t TMath::Mean(Long64_t n, const Double_t *a, const Double_t *w)
    if (w) {
      for (Long64_t i = 0; i < n; i++) {
        if (w[i] < 0) {
-         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+         ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
          return 0;
        }
        sum  += w[i]*a[i];
        sumw += w[i];
      }
      if (sumw <= 0) {
-       ::Error("Mean","sum of weights == 0 ?!");
+       ::Error("TMath::Mean","sum of weights == 0 ?!");
        return 0;
      }
    } else {
@@ -1611,14 +1611,14 @@ Double_t TMath::Mean(Long64_t n, const Long_t *a, const Double_t *w)
    if (w) {
      for (Long64_t i = 0; i < n; i++) {
        if (w[i] < 0) {
-         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+         ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
          return 0;
        }
        sum  += w[i]*a[i];
        sumw += w[i];
      }
      if (sumw <= 0) {
-       ::Error("Mean","sum of weights == 0 ?!");
+       ::Error("TMath::Mean","sum of weights == 0 ?!");
        return 0;
      }
    } else {
@@ -1642,14 +1642,14 @@ Double_t TMath::Mean(Long64_t n, const Long64_t *a, const Double_t *w)
    if (w) {
      for (Long64_t i = 0; i < n; i++) {
        if (w[i] < 0) {
-         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+         ::Error("TMath::Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
          return 0;
        }
        sum  += w[i]*a[i];
        sumw += w[i];
      }
      if (sumw <= 0) {
-       ::Error("Mean","sum of weights == 0 ?!");
+       ::Error("TMath::Mean","sum of weights == 0 ?!");
        return 0;
      }
    } else {
@@ -1819,8 +1819,8 @@ Double_t TMath::MedianImp(Size n, const Element *a,const Double_t *w, Index *wor
       Double_t sumTot2 = 0;
       for (Int_t j = 0; j < n; j++) {
          if (w[j] < 0) {
-	   ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
-	   return 0;
+            ::Error("TMath::Median","w[%d] = %.4e < 0 ?!",j,w[j]);
+            return 0;
          }
          sumTot2 += w[j];
       }
@@ -2059,7 +2059,7 @@ Element TMath::KOrdStatImp(Size n, const Element *a, Size k, Index *work)
    for(;;) {
       if (ir<=l+1) { //active partition contains 1 or 2 elements
          if (ir == l+1 && a[ind[ir]]<a[ind[l]])
-	    {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
+            {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
          Element tmp = a[ind[rk]];
          if (isAllocated)
             delete [] ind;
@@ -2068,22 +2068,22 @@ Element TMath::KOrdStatImp(Size n, const Element *a, Size k, Index *work)
          mid = (l+ir) >> 1; //choose median of left, center and right
          {temp = ind[mid]; ind[mid]=ind[l+1]; ind[l+1]=temp;}//elements as partitioning element arr.
          if (a[ind[l]]>a[ind[ir]])  //also rearrange so that a[l]<=a[l+1]
-	    {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
+            {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
 
          if (a[ind[l+1]]>a[ind[ir]])
-	    {temp=ind[l+1]; ind[l+1]=ind[ir]; ind[ir]=temp;}
+            {temp=ind[l+1]; ind[l+1]=ind[ir]; ind[ir]=temp;}
 
          if (a[ind[l]]>a[ind[l+1]])
-    	    {temp = ind[l]; ind[l]=ind[l+1]; ind[l+1]=temp;}
+            {temp = ind[l]; ind[l]=ind[l+1]; ind[l+1]=temp;}
 
          i=l+1;        //initialize pointers for partitioning
          j=ir;
          arr = ind[l+1];
          for (;;){
-	    do i++; while (a[ind[i]]<a[arr]);
-	    do j--; while (a[ind[j]]>a[arr]);
-	    if (j<i) break;  //pointers crossed, partitioning complete
-	       {temp=ind[i]; ind[i]=ind[j]; ind[j]=temp;}
+            do i++; while (a[ind[i]]<a[arr]);
+            do j--; while (a[ind[j]]>a[arr]);
+            if (j<i) break;  //pointers crossed, partitioning complete
+               {temp=ind[i]; ind[i]=ind[j]; ind[j]=temp;}
          }
          ind[l+1]=ind[j];
          ind[j]=arr;
@@ -3674,7 +3674,7 @@ Double_t TMath::StruveL1(Double_t x)
 //______________________________________________________________________________
 Double_t TMath::Beta(Double_t p, Double_t q)
 {
-   // Calculates Beta-function Gamma(p)*Gamma(q)/Gamma(p+q) .
+   // Calculates Beta-function Gamma(p)*Gamma(q)/Gamma(p+q).
 
    return TMath::Exp(TMath::LnGamma(p)+TMath::LnGamma(q)-TMath::LnGamma(p+q));
 }
@@ -3720,7 +3720,7 @@ Double_t TMath::BetaCf(Double_t x, Double_t a, Double_t b)
       if (TMath::Abs(del-1)<=eps) break;
    }
    if (m>itmax) {
-      Info("BetaCf", "a or b too big, or itmax too small, a=%g, b=%g, x=%g, h=%g, itmax=%d",
+      Info("TMath::BetaCf", "a or b too big, or itmax too small, a=%g, b=%g, x=%g, h=%g, itmax=%d",
            a,b,x,h,itmax);
    }
    return h;
@@ -3729,49 +3729,48 @@ Double_t TMath::BetaCf(Double_t x, Double_t a, Double_t b)
 //______________________________________________________________________________
 Double_t TMath::BetaDist(Double_t x, Double_t p, Double_t q)
 {
-  // Computes the probability density function of the Beta distribution.
-  //   (the distribution function is computed in BetaDistI)
-  // The first argument is the point, where the function will be
-  // computed, second and third are the function parameters
-  // Since the Beta distribution is bounded on both sides, it's often
-  // used to represent processes with natural lower and upper limits.
+   // Computes the probability density function of the Beta distribution
+   // (the distribution function is computed in BetaDistI).
+   // The first argument is the point, where the function will be
+   // computed, second and third are the function parameters.
+   // Since the Beta distribution is bounded on both sides, it's often
+   // used to represent processes with natural lower and upper limits.
 
-  if ((x<0) || (x>1) || (p<=0) || (q<=0)){
-     Error("BetaDist", "parameter value outside allowed range");
-     return 0;
-  }
-  Double_t beta = TMath::Beta(p, q);
-  Double_t r = TMath::Power(x, p-1)*TMath::Power(1-x, q-1)/beta;
-  return r;
+   if ((x<0) || (x>1) || (p<=0) || (q<=0)){
+      Error("TMath::BetaDist", "parameter value outside allowed range");
+      return 0;
+   }
+   Double_t beta = TMath::Beta(p, q);
+   Double_t r = TMath::Power(x, p-1)*TMath::Power(1-x, q-1)/beta;
+   return r;
 }
 
 //______________________________________________________________________________
 Double_t TMath::BetaDistI(Double_t x, Double_t p, Double_t q)
 {
-  // Computes the distribution function of the Beta distribution.
-  // The first argument is the point, where the function will be
-  // computed, second and third are the function parameters
-  // Since the Beta distribution is bounded on both sides, it's often
-  // used to represent processes with natural lower and upper limits
+   // Computes the distribution function of the Beta distribution.
+   // The first argument is the point, where the function will be
+   // computed, second and third are the function parameters.
+   // Since the Beta distribution is bounded on both sides, it's often
+   // used to represent processes with natural lower and upper limits.
 
-
-  if ((x<0) || (x>1) || (p<=0) || (q<=0)){
-     Error("BetaDistI", "parameter value outside allowed range");
-     return 0;
-  }
-  Double_t betai = TMath::BetaIncomplete(x, p, q);
-  return betai;
+   if ((x<0) || (x>1) || (p<=0) || (q<=0)){
+      Error("TMath::BetaDistI", "parameter value outside allowed range");
+      return 0;
+   }
+   Double_t betai = TMath::BetaIncomplete(x, p, q);
+   return betai;
 }
 
 //______________________________________________________________________________
 Double_t TMath::BetaIncomplete(Double_t x, Double_t a, Double_t b)
 {
    // Calculates the incomplete Beta-function.
-   //     --implementation by Anna Kreshuk
+   //  -- implementation by Anna Kreshuk
 
    Double_t bt;
    if ((x<0.0)||(x>1.0)) {
-      Error("BetaIncomplete", "X must between 0 and 1");
+      Error("TMath::BetaIncomplete", "X must between 0 and 1");
       return 0.0;
    }
    if ((x==0.0)||(x==1.0)) {
@@ -3792,13 +3791,13 @@ Double_t TMath::Binomial(Int_t n,Int_t k)
 {
    // Calculate the binomial coefficient n over k.
 
-   if(k==0 || n==k) return 1;
-   if(n<=0 || k<0 || n<k) return 0;
+   if (k==0 || n==k) return 1;
+   if (n<=0 || k<0 || n<k) return 0;
 
    Int_t k1=TMath::Min(k,n-k);
    Int_t k2=n-k1;
    Double_t fact=k2+1;
-   for(Int_t i=k1;i>1;i--)
+   for (Int_t i=k1;i>1;i--)
       fact*=static_cast<Double_t>(k2+i)/i;
    return fact;
 }
@@ -3911,7 +3910,7 @@ Double_t TMath::GammaDist(Double_t x, Double_t gamma, Double_t mu, Double_t beta
    //End_Html
 
    if ((x<mu) || (gamma<=0) || (beta <=0)) {
-      Error("GammaDist", "illegal parameter values");
+      Error("TMath::GammaDist", "illegal parameter values");
       return 0;
    }
    Double_t temp   = (x-mu)/beta;
@@ -3972,7 +3971,7 @@ Double_t TMath::LogNormal(Double_t x, Double_t sigma, Double_t theta, Double_t m
    //End_Html
 
    if ((x<theta) || (sigma<=0) || (m<=0)) {
-      Error("Lognormal", "illegal parameter values");
+      Error("TMath::Lognormal", "illegal parameter values");
       return 0;
    }
    Double_t templog2 = TMath::Log((x-theta)/m)*TMath::Log((x-theta)/m);
@@ -3985,99 +3984,99 @@ Double_t TMath::LogNormal(Double_t x, Double_t sigma, Double_t theta, Double_t m
 //______________________________________________________________________________
 Double_t TMath::NormQuantile(Double_t p)
 {
-  // Computes quantiles for standard normal distribution N(0, 1)
-  // at probability p
-  // ALGORITHM AS241  APPL. STATIST. (1988) VOL. 37, NO. 3, 477-484.
+   // Computes quantiles for standard normal distribution N(0, 1)
+   // at probability p
+   // ALGORITHM AS241  APPL. STATIST. (1988) VOL. 37, NO. 3, 477-484.
 
-  if ((p<=0)||(p>=1)) {
-     Error("NormQuantile", "probability outside (0, 1)");
-     return 0;
-  }
+   if ((p<=0)||(p>=1)) {
+       Error("TMath::NormQuantile", "probability outside (0, 1)");
+       return 0;
+   }
 
-  Double_t  A0 = 3.3871328727963666080e0;
-  Double_t  A1 = 1.3314166789178437745e+2;
-  Double_t  A2 = 1.9715909503065514427e+3;
-  Double_t  A3 = 1.3731693765509461125e+4;
-  Double_t  A4 = 4.5921953931549871457e+4;
-  Double_t  A5 = 6.7265770927008700853e+4;
-  Double_t  A6 = 3.3430575583588128105e+4;
-  Double_t  A7 = 2.5090809287301226727e+3;
-  Double_t  B1 = 4.2313330701600911252e+1;
-  Double_t  B2 = 6.8718700749205790830e+2;
-  Double_t  B3 = 5.3941960214247511077e+3;
-  Double_t  B4 = 2.1213794301586595867e+4;
-  Double_t  B5 = 3.9307895800092710610e+4;
-  Double_t  B6 = 2.8729085735721942674e+4;
-  Double_t  B7 = 5.2264952788528545610e+3;
-  Double_t  C0 = 1.42343711074968357734e0;
-  Double_t  C1 = 4.63033784615654529590e0;
-  Double_t  C2 = 5.76949722146069140550e0;
-  Double_t  C3 = 3.64784832476320460504e0;
-  Double_t  C4 = 1.27045825245236838258e0;
-  Double_t  C5 = 2.41780725177450611770e-1;
-  Double_t  C6 = 2.27238449892691845833e-2;
-  Double_t  C7 = 7.74545014278341407640e-4;
-  Double_t  D1 = 2.05319162663775882187e0;
-  Double_t  D2 = 1.67638483018380384940e0;
-  Double_t  D3 = 6.89767334985100004550e-1;
-  Double_t  D4 = 1.48103976427480074590e-1;
-  Double_t  D5 = 1.51986665636164571966e-2;
-  Double_t  D6 = 5.47593808499534494600e-4;
-  Double_t  D7 = 1.05075007164441684324e-9; 
-  Double_t  E0 = 6.65790464350110377720e0;
-  Double_t  E1 = 5.46378491116411436990e0;
-  Double_t  E2 = 1.78482653991729133580e0;
-  Double_t  E3 = 2.96560571828504891230e-1;
-  Double_t  E4 = 2.65321895265761230930e-2;
-  Double_t  E5 = 1.24266094738807843860e-3;
-  Double_t  E6 = 2.71155556874348757815e-5;
-  Double_t  E7 = 2.01033439929228813265e-7;
-  Double_t  F1 = 5.99832206555887937690e-1;
-  Double_t  F2 = 1.36929880922735805310e-1;
-  Double_t  F3 = 1.48753612908506148525e-2;
-  Double_t  F4 = 7.86869131145613259100e-4;
-  Double_t  F5 = 1.84631831751005468180e-5;
-  Double_t  F6 = 1.42151175831644588870e-7;
-  Double_t  F7 = 2.04426310338993978564e-15;
+   Double_t  A0 = 3.3871328727963666080e0;
+   Double_t  A1 = 1.3314166789178437745e+2;
+   Double_t  A2 = 1.9715909503065514427e+3;
+   Double_t  A3 = 1.3731693765509461125e+4;
+   Double_t  A4 = 4.5921953931549871457e+4;
+   Double_t  A5 = 6.7265770927008700853e+4;
+   Double_t  A6 = 3.3430575583588128105e+4;
+   Double_t  A7 = 2.5090809287301226727e+3;
+   Double_t  B1 = 4.2313330701600911252e+1;
+   Double_t  B2 = 6.8718700749205790830e+2;
+   Double_t  B3 = 5.3941960214247511077e+3;
+   Double_t  B4 = 2.1213794301586595867e+4;
+   Double_t  B5 = 3.9307895800092710610e+4;
+   Double_t  B6 = 2.8729085735721942674e+4;
+   Double_t  B7 = 5.2264952788528545610e+3;
+   Double_t  C0 = 1.42343711074968357734e0;
+   Double_t  C1 = 4.63033784615654529590e0;
+   Double_t  C2 = 5.76949722146069140550e0;
+   Double_t  C3 = 3.64784832476320460504e0;
+   Double_t  C4 = 1.27045825245236838258e0;
+   Double_t  C5 = 2.41780725177450611770e-1;
+   Double_t  C6 = 2.27238449892691845833e-2;
+   Double_t  C7 = 7.74545014278341407640e-4;
+   Double_t  D1 = 2.05319162663775882187e0;
+   Double_t  D2 = 1.67638483018380384940e0;
+   Double_t  D3 = 6.89767334985100004550e-1;
+   Double_t  D4 = 1.48103976427480074590e-1;
+   Double_t  D5 = 1.51986665636164571966e-2;
+   Double_t  D6 = 5.47593808499534494600e-4;
+   Double_t  D7 = 1.05075007164441684324e-9;
+   Double_t  E0 = 6.65790464350110377720e0;
+   Double_t  E1 = 5.46378491116411436990e0;
+   Double_t  E2 = 1.78482653991729133580e0;
+   Double_t  E3 = 2.96560571828504891230e-1;
+   Double_t  E4 = 2.65321895265761230930e-2;
+   Double_t  E5 = 1.24266094738807843860e-3;
+   Double_t  E6 = 2.71155556874348757815e-5;
+   Double_t  E7 = 2.01033439929228813265e-7;
+   Double_t  F1 = 5.99832206555887937690e-1;
+   Double_t  F2 = 1.36929880922735805310e-1;
+   Double_t  F3 = 1.48753612908506148525e-2;
+   Double_t  F4 = 7.86869131145613259100e-4;
+   Double_t  F5 = 1.84631831751005468180e-5;
+   Double_t  F6 = 1.42151175831644588870e-7;
+   Double_t  F7 = 2.04426310338993978564e-15;
 
-  Double_t split1 = 0.425;
-  Double_t split2=5.;
-  Double_t konst1=0.180625;
-  Double_t konst2=1.6;
+   Double_t split1 = 0.425;
+   Double_t split2=5.;
+   Double_t konst1=0.180625;
+   Double_t konst2=1.6;
 
-
-  Double_t q, r, quantile;
-  q=p-0.5;
-  if(TMath::Abs(q)<split1) {
-    r=konst1-q*q;
-    quantile = q* (((((((A7 * r + A6) * r + A5) * r + A4) * r + A3)
-		     * r + A2) * r + A1) * r + A0) /
-      (((((((B7 * r + B6) * r + B5) * r + B4) * r + B3)
-	 * r + B2) * r + B1) * r + 1.);
-  } else {
-    if(q<0) r=p;
-    else    r=1-p;
-    //error case
-    if (r<=0) quantile=0;
-    else {
-      r=TMath::Sqrt(-TMath::Log(r));
-      if (r<=split2){
-	r=r-konst2;
-	quantile=(((((((C7 * r + C6) * r + C5) * r + C4) * r + C3)
-		    * r + C2) * r + C1) * r + C0) /
-	  (((((((D7 * r + D6) * r + D5) * r + D4) * r + D3)
-	     * r + D2) * r + D1) * r + 1);
-      } else{
-	r=r-split2;
-	quantile=(((((((E7 * r + E6) * r + E5) * r + E4) * r + E3)
-		    * r + E2) * r + E1) * r + E0) /
-	  (((((((F7 * r + F6) * r + F5) * r + F4) * r + F3)
-	     * r + F2) * r + F1) * r + 1);
+   Double_t q, r, quantile;
+   q=p-0.5;
+   if (TMath::Abs(q)<split1) {
+      r=konst1-q*q;
+      quantile = q* (((((((A7 * r + A6) * r + A5) * r + A4) * r + A3)
+                 * r + A2) * r + A1) * r + A0) /
+                 (((((((B7 * r + B6) * r + B5) * r + B4) * r + B3)
+                 * r + B2) * r + B1) * r + 1.);
+   } else {
+      if(q<0) r=p;
+      else    r=1-p;
+      //error case
+      if (r<=0)
+         quantile=0;
+      else {
+         r=TMath::Sqrt(-TMath::Log(r));
+         if (r<=split2) {
+            r=r-konst2;
+            quantile=(((((((C7 * r + C6) * r + C5) * r + C4) * r + C3)
+                     * r + C2) * r + C1) * r + C0) /
+                     (((((((D7 * r + D6) * r + D5) * r + D4) * r + D3)
+                     * r + D2) * r + D1) * r + 1);
+         } else{
+            r=r-split2;
+            quantile=(((((((E7 * r + E6) * r + E5) * r + E4) * r + E3)
+                     * r + E2) * r + E1) * r + E0) /
+                     (((((((F7 * r + F6) * r + F5) * r + F4) * r + F3)
+                     * r + F2) * r + F1) * r + 1);
+         }
+         if (q<0) quantile=-quantile;
       }
-      if (q<0) quantile=-quantile;
-    }
-  }
-  return quantile;
+   }
+   return quantile;
 }
 
 //______________________________________________________________________________
@@ -4187,66 +4186,65 @@ Double_t TMath::StudentI(Double_t T, Double_t ndf)
 //______________________________________________________________________________
 Double_t TMath::StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail)
 {
-  // Computes quantiles of the Student's t-distribution
-  // 1st argument is the probability, at which the quantile is computed
-  // 2nd argument - the number of degrees of freedom of the 
-  // Student distribution
-  // When the 3rd argument lower_tail is kTRUE (default)- 
-  // the algorithm returns such x0, that
-  //   P(x < x0)=p
-  // upper tail (lower_tail is kFALSE)- the algorithm returns such x0, that
-  //   P(x > x0)=p
-  // the algorithm was taken from 
-  //   G.W.Hill, "Algorithm 396, Student's t-quantiles"
-  //             "Communications of the ACM", 13(10), October 1970
+   // Computes quantiles of the Student's t-distribution
+   // 1st argument is the probability, at which the quantile is computed
+   // 2nd argument - the number of degrees of freedom of the
+   // Student distribution
+   // When the 3rd argument lower_tail is kTRUE (default)-
+   // the algorithm returns such x0, that
+   //   P(x < x0)=p
+   // upper tail (lower_tail is kFALSE)- the algorithm returns such x0, that
+   //   P(x > x0)=p
+   // the algorithm was taken from
+   //   G.W.Hill, "Algorithm 396, Student's t-quantiles"
+   //             "Communications of the ACM", 13(10), October 1970
 
-  Double_t quantile;
-  Double_t temp;
-  Bool_t neg;
-  Double_t P;
-  if (ndf<1 || p>=1 || p<=0) {
-    Error("StudentQuantile:", "illegal parameter values");
-    return 0;
-  }
-  if ((lower_tail && p>0.5)||(!lower_tail && p<0.5)){
-    neg=kFALSE;
-    P=2*(lower_tail ? (1-p) : p);
-  } else {
-    neg=kTRUE;
-    P=2*(lower_tail? p : (1-p));
-  }
+   Double_t quantile;
+   Double_t temp;
+   Bool_t neg;
+   Double_t P;
+   if (ndf<1 || p>=1 || p<=0) {
+      Error("TMath::StudentQuantile", "illegal parameter values");
+      return 0;
+   }
+   if ((lower_tail && p>0.5)||(!lower_tail && p<0.5)){
+      neg=kFALSE;
+      P=2*(lower_tail ? (1-p) : p);
+   } else {
+      neg=kTRUE;
+      P=2*(lower_tail? p : (1-p));
+   }
 
-  if ((ndf-2)<1e-8) {
-    quantile = TMath::Sqrt(2./(P*(2-P))-2);
-  } else {
-    if ((ndf-1)<1e-8) {
-      temp=TMath::PiOver2()*P;
-      quantile = TMath::Cos(temp)/TMath::Sin(temp);
-    } else {
-      Double_t a=1./(ndf-0.5);
-      Double_t b=48./(a*a);
-      Double_t c=((20700*a/b -98)*a-16)*a+96.36;
-      Double_t d=((94.5/(b+c)-3.)/b+1)*TMath::Sqrt(a*TMath::PiOver2())*ndf;
-      Double_t x=P*d;
-      Double_t y=TMath::Power(x, (2./ndf));
-      if (y>0.05+a){
-	//asymptotic inverse expansion about normal
-	x=NormQuantile(P*0.5);
-	y=x*x;
-	if (ndf<5) c+=0.3*(ndf-4.5)*(x+0.6);
-	c+=(((0.05*d*x-5.)*x-7.)*x-2.)*x +b;
-	y=(((((0.4*y+6.3)*y+36.)*y+94.5)/c - y-3.)/b+1)*x;
-	y=a*y*y;
-	if(y>0.002) y  = TMath::Exp(y)-1;
-	else        y += 0.5*y*y;
+   if ((ndf-2)<1e-8) {
+      quantile = TMath::Sqrt(2./(P*(2-P))-2);
+   } else {
+      if ((ndf-1)<1e-8) {
+         temp=TMath::PiOver2()*P;
+         quantile = TMath::Cos(temp)/TMath::Sin(temp);
       } else {
-	y=((1./(((ndf+6.)/(ndf*y)-0.089*d-0.822)*(ndf+2.)*3)+0.5/(ndf+4.))*y-1.)*
-	  (ndf+1.)/(ndf+2.)+1/y;
+         Double_t a=1./(ndf-0.5);
+         Double_t b=48./(a*a);
+         Double_t c=((20700*a/b -98)*a-16)*a+96.36;
+         Double_t d=((94.5/(b+c)-3.)/b+1)*TMath::Sqrt(a*TMath::PiOver2())*ndf;
+         Double_t x=P*d;
+         Double_t y=TMath::Power(x, (2./ndf));
+         if (y>0.05+a){
+            //asymptotic inverse expansion about normal
+            x=NormQuantile(P*0.5);
+            y=x*x;
+            if (ndf<5) c+=0.3*(ndf-4.5)*(x+0.6);
+            c+=(((0.05*d*x-5.)*x-7.)*x-2.)*x +b;
+            y=(((((0.4*y+6.3)*y+36.)*y+94.5)/c - y-3.)/b+1)*x;
+            y=a*y*y;
+            if(y>0.002) y  = TMath::Exp(y)-1;
+            else        y += 0.5*y*y;
+         } else {
+            y=((1./(((ndf+6.)/(ndf*y)-0.089*d-0.822)*(ndf+2.)*3)+0.5/(ndf+4.))*y-1.)*
+              (ndf+1.)/(ndf+2.)+1/y;
+         }
+         quantile = TMath::Sqrt(ndf*y);
       }
-      quantile = TMath::Sqrt(ndf*y);
-    }
-  }
-  if(neg) quantile=-quantile;
-  return quantile;
+   }
+   if(neg) quantile=-quantile;
+   return quantile;
 }
-

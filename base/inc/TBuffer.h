@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.40 2004/10/29 16:07:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.41 2004/11/17 06:02:51 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -58,8 +58,8 @@ protected:
    TExMap         *fMap;           //Map containing object,offset pairs for reading/writing
    TExMap         *fClassMap;      //Map containing object,class pairs for reading
    TObject        *fParent;        //Pointer to the buffer parent (file) where buffer is read/written
-   TStreamerInfo  *fInfo;          //pointer to TStreamerInfo object writing/reading the buffer
-   InfoList_t      fInfos;         //stack of pointers to the TStreamerInfos.
+   TStreamerInfo  *fInfo;          //Pointer to TStreamerInfo object writing/reading the buffer
+   InfoList_t      fInfos;         //Stack of pointers to the TStreamerInfos
 
    enum { kIsOwner = BIT(14) };  //If set TBuffer owns fBuffer
 
@@ -79,7 +79,7 @@ protected:
    void Expand(Int_t newsize);  //Expand buffer to newsize
 
    Int_t Read(const char *name) { return TObject::Read(name); }
-   Int_t Write(const char *name, Int_t opt, Int_t bufs) 
+   Int_t Write(const char *name, Int_t opt, Int_t bufs)
                                 { return TObject::Write(name, opt, bufs); }
    Int_t Write(const char *name, Int_t opt, Int_t bufs) const
                                 { return TObject::Write(name, opt, bufs); }
@@ -128,7 +128,7 @@ public:
 
    virtual void      *ReadObjectAny(const TClass* cast);
 
-   virtual void       IncrementLevel(TStreamerInfo* info); 
+   virtual void       IncrementLevel(TStreamerInfo* info);
    virtual void       SetStreamerElementNumber(Int_t) {}
    virtual void       DecrementLevel(TStreamerInfo*);
    TStreamerInfo     *GetInfo() {return fInfo;}
@@ -202,7 +202,7 @@ public:
    virtual   void     ReadFastArrayDouble32(Double_t  *d, Int_t n);
    virtual   void     ReadFastArray(void  *start , const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
    virtual   void     ReadFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
-   
+
    virtual   void     WriteArray(const Bool_t    *b, Int_t n);
    virtual   void     WriteArray(const Char_t    *c, Int_t n);
    virtual   void     WriteArray(const UChar_t   *c, Int_t n);
@@ -268,7 +268,7 @@ public:
    virtual   TBuffer  &operator<<(Float_t   f);
    virtual   TBuffer  &operator<<(Double_t  d);
    virtual   TBuffer  &operator<<(const Char_t *c);
-   
+
    //friend TBuffer  &operator>>(TBuffer &b, TObject *&obj);
    //friend TBuffer  &operator>>(TBuffer &b, const TObject *&obj);
    //friend TBuffer  &operator<<(TBuffer &b, const TObject *obj);
