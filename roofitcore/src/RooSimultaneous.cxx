@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.11 2001/09/11 00:30:32 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.12 2001/09/24 23:06:01 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -118,7 +118,7 @@ Double_t RooSimultaneous::evaluate() const
 
 
 
-Int_t RooSimultaneous::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
+Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
 {
   // Determine which part (if any) of given integral can be performed analytically.
   // If any analytical integration is possible, return integration scenario code
@@ -134,8 +134,7 @@ Int_t RooSimultaneous::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& anal
   // First iteration, determine what each component can integrate analytically
   while(proxy=(RooRealProxy*)pdfIter->Next()) {
     RooArgSet subAnalVars ;
-    Int_t subCode = proxy->arg().getAnalyticalIntegral(allVars,subAnalVars,normSet) ;
-    cout << "RooSimultaneous::getAI(" << GetName() << ") ITER1 subCode(" << n << "," << pdf->GetName() << ") = " << subCode << endl ;
+    Int_t subCode = proxy->arg().getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;
     
     // If a dependent is not supported by any of the components, 
     // it is dropped from the combined analytic list
@@ -161,8 +160,7 @@ Int_t RooSimultaneous::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& anal
   Bool_t allOK(kTRUE) ;
   while(proxy=(RooRealProxy*)pdfIter->Next()) {
     RooArgSet subAnalVars ;
-    subCode[n] = proxy->arg().getAnalyticalIntegral(allAnalVars,subAnalVars,normSet) ;
-    cout << "RooSimultaneous::getAI(" << GetName() << ") ITER2 subCode(" << n << "," << pdf->GetName() << ") = " << subCode << endl ;
+    subCode[n] = proxy->arg().getAnalyticalIntegralWN(allAnalVars,subAnalVars,normSet) ;
     if (subCode[n]==0) {
       cout << "RooSimultaneous::getAnalyticalIntegral(" << GetName() << ") WARNING: component PDF " << proxy->arg().GetName() 
 	   << "   advertises inconsistent set of integrals (e.g. (X,Y) but not X or Y individually.)"
@@ -183,7 +181,7 @@ Int_t RooSimultaneous::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& anal
 }
 
 
-Double_t RooSimultaneous::analyticalIntegral(Int_t code, const RooArgSet* normSet) const 
+Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
 {
   //cout << "RooSimultaneous::aI(" << GetName() << ") code = " << code << " normSet = " << normSet << endl ;
 
@@ -200,7 +198,7 @@ Double_t RooSimultaneous::analyticalIntegral(Int_t code, const RooArgSet* normSe
   RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject((const char*) _indexCat) ;
   Int_t idx = _pdfProxyList.IndexOf(proxy) ;
 
-  return proxy->arg().analyticalIntegral(subCode[idx],normSet) ;
+  return proxy->arg().analyticalIntegralWN(subCode[idx],normSet) ;
 }
 
 

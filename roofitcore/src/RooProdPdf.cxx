@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.10 2001/09/20 01:40:11 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.11 2001/09/24 23:05:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -129,7 +129,7 @@ Double_t RooProdPdf::evaluate() const
 }
 
 
-Int_t RooProdPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
+Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
 {
   // Determine which part (if any) of given integral can be performed analytically.
   // If any analytical integration is possible, return integration scenario code
@@ -157,14 +157,14 @@ Int_t RooProdPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
     if (fact) {
       // Factorize, i.e. drop this component pdf
       analVars.add(*pdfDepList) ;
-      cout << "RooProdPdf::getAI(" << GetName() << ") dropping pdf #" << n << " " << pdf->GetName() << endl ;
+//       cout << "RooProdPdf::getAI(" << GetName() << ") dropping pdf #" << n << " " << pdf->GetName() << endl ;
       subCode[n] = -1 ;
     } else {
       // Determine partial integration code
       RooArgSet subAnalVars ;
-      subCode[n] = pdf->getAnalyticalIntegral(allVars,subAnalVars,normSet) ;      
+      subCode[n] = pdf->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;      
       analVars.add(subAnalVars) ;
-      cout << "RooProdPdf::getAI(" << GetName() << ") subCode(" << n << "," << pdf->GetName() << ") = " << subCode[n] << endl ;
+//       cout << "RooProdPdf::getAI(" << GetName() << ") subCode(" << n << "," << pdf->GetName() << ") = " << subCode[n] << endl ;
     }
     delete depIter ;
     delete pdfDepList ;
@@ -179,7 +179,7 @@ Int_t RooProdPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 }
 
 
-Double_t RooProdPdf::analyticalIntegral(Int_t code, const RooArgSet* normSet) const 
+Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
 {
   // Return analytical integral defined by given scenario code
   //cout << "RooProdPdf::aI(" << GetName() << ") code = " << code << " normSet = " << normSet << endl ;
@@ -204,7 +204,7 @@ Double_t RooProdPdf::analyticalIntegral(Int_t code, const RooArgSet* normSet) co
   // Calculate running product of pdfs, skipping factorized components
   while(pdf=(RooAbsReal*)_pdfIter->Next()) {    
     if (subCode[n]>=0) {
-      value *= pdf->analyticalIntegral(subCode[n],normSet) ;
+      value *= pdf->analyticalIntegralWN(subCode[n],normSet) ;
     }
     if (value<_cutOff) break ;
     n++ ;

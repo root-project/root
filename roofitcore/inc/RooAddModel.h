@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.rdl,v 1.7 2001/09/20 01:40:10 verkerke Exp $
+ *    File: $Id: RooAddModel.rdl,v 1.8 2001/09/24 23:05:58 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -39,8 +39,8 @@ public:
   virtual Double_t getNorm(const RooArgSet* nset=0) const ;
   virtual Bool_t checkDependents(const RooArgSet* nset) const ;	
 
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet=0) const ;
-  virtual Double_t analyticalIntegral(Int_t code, const RooArgSet* normSet=0) const ;
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const ;
+  virtual Double_t analyticalIntegral(Int_t code) const ;
   virtual Int_t basisCode(const char* name) const ;
 
   virtual Bool_t selfNormalized() const { return kTRUE ; }

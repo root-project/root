@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.38 2001/09/22 00:30:59 david Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.39 2001/09/24 23:06:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -178,7 +178,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   RooArgSet anIntDepList ;
-  _mode = ((RooAbsReal&)_function.arg()).getAnalyticalIntegral(anIntOKDepList,_anaList,_funcNormSet) ;    
+  _mode = ((RooAbsReal&)_function.arg()).getAnalyticalIntegralWN(anIntOKDepList,_anaList,_funcNormSet) ;    
 
   // WVE kludge: synchronize dset for use in analyticalIntegral
   function.getVal(funcNormSet) ;
@@ -394,7 +394,7 @@ Double_t RooRealIntegral::evaluate() const
     }
   case Analytic:
     {
-      retVal =  ((RooAbsReal&)_function.arg()).analyticalIntegral(_mode,_funcNormSet) ;
+      retVal =  ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet) ;
       break ;
     }
 
@@ -512,7 +512,7 @@ Double_t RooRealIntegral::integrate() const
 
   if (!_numIntEngine) {
     // Trivial case, fully analytical integration
-    return ((RooAbsReal&)_function.arg()).analyticalIntegral(_mode,_funcNormSet) ;
+    return ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet) ;
   }
   else {
     // Partial or complete numerical integration

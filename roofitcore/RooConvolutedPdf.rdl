@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.rdl,v 1.9 2001/09/20 01:40:10 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.rdl,v 1.10 2001/09/24 23:05:59 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -40,8 +40,8 @@ public:
 
 
   // Analytical integration support
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const ;
-  virtual Double_t analyticalIntegral(Int_t code, const RooArgSet* normSet) const ;
+  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const ;
+  virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
   
   // Coefficient Analytical integration support
   virtual Int_t getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
@@ -62,7 +62,6 @@ protected:
   RooRealVar* _convVar ;         // Convolution variable
 
   RooArgSet* parseIntegrationRequest(const RooArgSet& intSet, Int_t& coefCode, RooArgSet* analVars=0) const ;
-
   virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const ;
   virtual void syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* nset) const ;
 

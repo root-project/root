@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMath.cc,v 1.4 2001/08/08 23:11:24 david Exp $
+ *    File: $Id: RooMath.cc,v 1.5 2001/09/24 23:05:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -302,9 +302,9 @@ Bool_t RooMath::loadCache()
   Bool_t ok(kTRUE) ;
   Int_t i ;
   for (i=0 ; i<_imBins ; i++) {
-    ifs.read(_imCerfArray[i],_reBins*sizeof(Double_t)) ;
+    ifs.read((char*)_imCerfArray[i],_reBins*sizeof(Double_t)) ;
     if (ifs.fail()) ok=kFALSE ;
-    ifs.read(_reCerfArray[i],_reBins*sizeof(Double_t)) ;
+    ifs.read((char*)_reCerfArray[i],_reBins*sizeof(Double_t)) ;
     if (ifs.fail()) ok=kFALSE ;
   }  
 
@@ -323,8 +323,8 @@ void RooMath::storeCache()
   cout << "                       Writing table to cache file " << cacheFileName() << endl ;
   Int_t i ;
   for (i=0 ; i<_imBins ; i++) {
-    ofs.write(_imCerfArray[i],_reBins*sizeof(Double_t)) ;
-    ofs.write(_reCerfArray[i],_reBins*sizeof(Double_t)) ;
+    ofs.write((char*)_imCerfArray[i],_reBins*sizeof(Double_t)) ;
+    ofs.write((char*)_reCerfArray[i],_reBins*sizeof(Double_t)) ;
   }
 }
 

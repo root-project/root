@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.10 2001/09/20 01:40:10 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.11 2001/09/24 23:05:58 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -213,7 +213,7 @@ Bool_t RooAddPdf::checkDependents(const RooArgSet* nset) const
 }
 
 
-Int_t RooAddPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
+Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
 {
   // Determine which part (if any) of given integral can be performed analytically.
   // If any analytical integration is possible, return integration scenario code
@@ -227,8 +227,8 @@ Int_t RooAddPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, 
   // First iteration, determine what each component can integrate analytically
   while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
     RooArgSet subAnalVars ;
-    Int_t subCode = pdf->getAnalyticalIntegral(allVars,subAnalVars,normSet) ;
-    cout << "RooAddPdf::getAI(" << GetName() << ") ITER1 subCode(" << n << "," << pdf->GetName() << ") = " << subCode << endl ;
+    Int_t subCode = pdf->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;
+//     cout << "RooAddPdf::getAI(" << GetName() << ") ITER1 subCode(" << n << "," << pdf->GetName() << ") = " << subCode << endl ;
 
     // If a dependent is not supported by any of the components, 
     // it is dropped from the combined analytic list
@@ -254,8 +254,8 @@ Int_t RooAddPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, 
   Bool_t allOK(kTRUE) ;
   while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
     RooArgSet subAnalVars ;
-    subCode[n] = pdf->getAnalyticalIntegral(allAnalVars,subAnalVars,normSet) ;
-    cout << "RooAddPdf::getAI(" << GetName() << ") ITER2 subCode(" << n << "," << pdf->GetName() << ") = " << subCode[n] << endl ;
+    subCode[n] = pdf->getAnalyticalIntegralWN(allAnalVars,subAnalVars,normSet) ;
+//     cout << "RooAddPdf::getAI(" << GetName() << ") ITER2 subCode(" << n << "," << pdf->GetName() << ") = " << subCode[n] << endl ;
     if (subCode[n]==0) {
       cout << "RooAddPdf::getAnalyticalIntegral(" << GetName() << ") WARNING: component PDF " << pdf->GetName() 
 	   << "   advertises inconsistent set of integrals (e.g. (X,Y) but not X or Y individually."
@@ -275,7 +275,7 @@ Int_t RooAddPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, 
 }
 
 
-Double_t RooAddPdf::analyticalIntegral(Int_t code, const RooArgSet* normSet) const 
+Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
 {
   //cout << "RooAddPdf::aI(" << GetName() << ") code = " << code << " normSet = " << normSet << endl ;
   // Return analytical integral defined by given scenario code
@@ -299,7 +299,7 @@ Double_t RooAddPdf::analyticalIntegral(Int_t code, const RooArgSet* normSet) con
   Int_t i(0) ;
   while(coef=(RooAbsReal*)_coefIter->Next()) {
     pdf = (RooAbsReal*)_pdfIter->Next() ;
-    value += pdf->analyticalIntegral(subCode[i],normSet)*coef->getVal(normSet) ;
+    value += pdf->analyticalIntegralWN(subCode[i],normSet)*coef->getVal(normSet) ;
 //     cout << "RooAddPdf::aI(" << GetName() << ") value += pdf->aI(" << subCode[i] << "," 
 // 	 << normSet << ")[" << pdf->analyticalIntegral(subCode[i],normSet) << "] * " << coef->getVal(normSet) << endl  ;
     lastCoef -= coef->getVal(normSet) ;
@@ -310,7 +310,7 @@ Double_t RooAddPdf::analyticalIntegral(Int_t code, const RooArgSet* normSet) con
   pdf = (RooAbsReal*) _pdfIter->Next() ;
 //   cout << "RooAddPdf::aI(" << GetName() << ") value += pdf->aI(" << subCode[i] << "," 
 //        << normSet << ")[" << pdf->analyticalIntegral(subCode[i],normSet) << "] * " << lastCoef << endl  ;
-  value += pdf->analyticalIntegral(subCode[i],normSet)*lastCoef;
+  value += pdf->analyticalIntegralWN(subCode[i],normSet)*lastCoef;
 
   // Warn about coefficient degeneration
   if (lastCoef<0 || lastCoef>1) {

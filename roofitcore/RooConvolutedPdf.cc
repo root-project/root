@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.16 2001/09/20 01:40:10 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.17 2001/09/24 23:05:58 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -180,7 +180,7 @@ RooArgSet* RooConvolutedPdf::parseIntegrationRequest(const RooArgSet& intSet, In
 
 
 
-Int_t RooConvolutedPdf::getAnalyticalIntegral(RooArgSet& allVars, 
+Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, 
 					      RooArgSet& analVars, const RooArgSet* normSet) const 
 {
   // Handle trivial no-integration scenario
@@ -227,7 +227,7 @@ Int_t RooConvolutedPdf::getAnalyticalIntegral(RooArgSet& allVars,
 
 
 
-Double_t RooConvolutedPdf::analyticalIntegral(Int_t code, const RooArgSet* normSet) const 
+Double_t RooConvolutedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
 {
   // Handle trivial passthrough scenario
   if (code==0) return getVal(normSet) ;
