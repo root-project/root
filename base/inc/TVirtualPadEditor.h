@@ -53,11 +53,12 @@ public:
 
    //static methods for both interfaces
    static const char        *GetEditorName();
-   static TVirtualPadEditor *GetPadEditor();
+   static TVirtualPadEditor *GetPadEditor(Bool_t load = kTRUE);
    static TVirtualPadEditor *LoadEditor();
    static void      HideEditor();
    static void      ShowEditor();
    static void      SetPadEditorName(const char *name);
+   static void      Terminate();
    static void      UpdateFillAttributes(Int_t col, Int_t sty);
    static void      UpdateLineAttributes(Int_t col, Int_t sty, Int_t width);
    static void      UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz);

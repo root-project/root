@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.45 2004/09/14 10:51:33 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.46 2004/10/15 17:10:32 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -13,6 +13,7 @@
 #include <TROOT.h>
 #include <TApplication.h>
 #include <TVirtualX.h>
+#include <TVirtualPadEditor.h>
 #include <TGResourcePool.h>
 #include <TGListBox.h>
 #include <TGListTree.h>
@@ -1162,8 +1163,10 @@ TestDialog::~TestDialog()
 {
    // Delete test dialog widgets.
 
-   fCleanup->Delete();
-   delete fCleanup;
+   if (fCleanup) {
+      fCleanup->Delete();
+      delete fCleanup;
+   }
    delete fOkButton;
    delete fCancelButton;
    delete fStartB; delete fStopB;
@@ -1246,6 +1249,9 @@ void TestDialog::DoOK()
 
    // The same effect can be obtained by using a singleshot timer:
    TTimer::SingleShot(150, "TestDialog", this, "CloseWindow()");
+   // Close the Ged editor if it was activated.
+   if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
+      TVirtualPadEditor::Terminate();
 }
 
 
@@ -1254,6 +1260,9 @@ void TestDialog::DoCancel()
    fFillHistos = kFALSE;
    printf("\nTerminating dialog: Cancel pressed\n");
    TTimer::SingleShot(150, "TestDialog", this, "CloseWindow()");
+   // Close the Ged editor if it was activated.
+   if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
+      TVirtualPadEditor::Terminate();
 }
 
 void TestDialog::HandleButtons(Int_t id)

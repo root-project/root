@@ -63,11 +63,11 @@ const char *TVirtualPadEditor::GetEditorName()
 }
 
 //______________________________________________________________________________
-TVirtualPadEditor *TVirtualPadEditor::GetPadEditor()
+TVirtualPadEditor *TVirtualPadEditor::GetPadEditor(Bool_t load)
 {
    // Returns the pad editor dialog. Static method.
 
-   if (!fgPadEditor)
+   if (!fgPadEditor && load)
       fgPadEditor = LoadEditor();
 
    return fgPadEditor;
@@ -101,6 +101,18 @@ void TVirtualPadEditor::HideEditor()
 
    if (fgPadEditor)
       fgPadEditor->Hide();
+}
+
+//______________________________________________________________________________
+void TVirtualPadEditor::Terminate()
+{
+   // Close the global pad editor. Static method.
+
+   if (!fgPadEditor) return;
+
+   fgPadEditor->DeleteEditors();
+   delete fgPadEditor;
+   fgPadEditor = 0;
 }
 
 //______________________________________________________________________________

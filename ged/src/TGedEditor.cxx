@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.12 2004/11/09 16:08:52 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.13 2004/11/18 15:52:17 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -84,7 +84,6 @@ void TGedEditor::CloseWindow()
    // for later use.
 
    Hide();
-   gROOT->GetListOfCleanups()->Remove(this);
 }
 
 //______________________________________________________________________________
@@ -283,7 +282,7 @@ TGedEditor::~TGedEditor()
    // Deactivate attribute frames if they point to obj.
 
 
-   if (fModel != obj) return;
+   if ((fModel != obj) || (obj == fCanvas)) return;
    if (obj == fPad) 
       SetModel(fCanvas, fCanvas, kButton1Down);
    else

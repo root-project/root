@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.61 2004/10/25 12:06:50 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.62 2004/11/18 15:52:17 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -571,13 +571,14 @@ TRootCanvas::~TRootCanvas()
    // Delete ROOT basic canvas. Order is significant. Delete in reverse
    // order of creation.
 
+   if (fEditor) delete fEditor;
+
    if (!MustCleanup()) {
       delete fStatusBar;
       delete fStatusBarLayout;
       delete fCanvasContainer;
       delete fCanvasWindow;
 
-      delete fEditor;
       delete fEditorFrame;
       delete fEditorLayout;
       delete fMainFrame;
@@ -630,6 +631,9 @@ void TRootCanvas::ReallyDelete()
    gInterpreter->DeleteGlobal(fCanvas);
    gPad = savepad;  // restore gPad for ROOT
    delete fCanvas;  // will in turn delete this object
+
+   if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)) 
+      TVirtualPadEditor::Terminate();
 }
 
 //______________________________________________________________________________
@@ -829,11 +833,14 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      fCanvas->Print();
                      break;
                   case kFileCloseCanvas:
-                     if (fEditor) fEditor->DeleteEditors();
+                     if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0))
+                        TVirtualPadEditor::Terminate();
                      SendCloseMessage();
                      break;
                   case kFileQuit:
                      if (fEditor) fEditor->DeleteEditors();
+                     if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)) 
+                        TVirtualPadEditor::Terminate();
                      delete this;
                      gApplication->Terminate(0);
                      break;
