@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.34 2002/11/26 17:33:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.35 2003/02/10 08:58:02 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -294,7 +294,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 
-   Int_t valeur,find,n,i,j,k,lchain,nomb,virgule,inter;
+   Int_t valeur,find,n,i,j,k,lchain,nomb,virgule,inter,nest;
    Int_t compt,compt2,compt3,compt4,hexa;
    Double_t vafConst;
    ULong_t vafConst2;
@@ -1142,11 +1142,15 @@ if (err==0) {
 //*-*- Look for pow,atan2,etc
 //*-*  ======================
           } else if (chaine(0,4) == "pow(") {
-            compt = 4; nomb = 0; virgule = 0;
+            compt = 4; nomb = 0; virgule = 0; nest=0;
             while(compt != lchain) {
               compt++;
-              if (chaine(compt-1,1) == ",") nomb++;
-              if (nomb == 1 && virgule == 0) virgule = compt;
+              if (chaine(compt-1,1) == "(") nest++;
+              else if (chaine(compt-1,1) == ")") nest--;
+              else if (chaine(compt-1,1) == "," && nest==0) {
+                nomb++;
+                if (nomb == 1 && virgule == 0) virgule = compt;
+              }
             }
             if (nomb != 1) err = 22; // There are plus or minus than 2 arguments for pow
             else {
@@ -1159,11 +1163,15 @@ if (err==0) {
               fNoper++;
             }
 	 } else if (chaine(0,7) == "strstr(") {
-            compt = 7; nomb = 0; virgule = 0;
+            compt = 7; nomb = 0; virgule = 0; nest=0;
             while(compt != lchain) {
               compt++;
-              if (chaine(compt-1,1) == ",") nomb++;
-              if (nomb == 1 && virgule == 0) virgule = compt;
+              if (chaine(compt-1,1) == "(") nest++;
+              else if (chaine(compt-1,1) == ")") nest--;
+              else if (chaine(compt-1,1) == "," && nest==0) {
+                nomb++;
+                if (nomb == 1 && virgule == 0) virgule = compt;
+              }
             }
             if (nomb != 1) err = 28; // There are plus or minus than 2 arguments for strstr
             else {
@@ -1176,11 +1184,15 @@ if (err==0) {
               fNoper++;
             }
           } else if (chaine(0,4) == "min(") {
-            compt = 4; nomb = 0; virgule = 0;
+            compt = 4; nomb = 0; virgule = 0; nest=0;
             while(compt != lchain) {
               compt++;
-              if (chaine(compt-1,1) == ",") nomb++;
-              if (nomb == 1 && virgule == 0) virgule = compt;
+              if (chaine(compt-1,1) == "(") nest++;
+              else if (chaine(compt-1,1) == ")") nest--;
+              else if (chaine(compt-1,1) == "," && nest==0) {
+                nomb++;
+                if (nomb == 1 && virgule == 0) virgule = compt;
+              }
             }
             if (nomb != 1) err = 22; // There are plus or minus than 2 arguments for pow
             else {
@@ -1193,11 +1205,15 @@ if (err==0) {
               fNoper++;
             }
           } else if (chaine(0,4) == "max(") {
-            compt = 4; nomb = 0; virgule = 0;
+            compt = 4; nomb = 0; virgule = 0; nest=0;
             while(compt != lchain) {
               compt++;
-              if (chaine(compt-1,1) == ",") nomb++;
-              if (nomb == 1 && virgule == 0) virgule = compt;
+              if (chaine(compt-1,1) == "(") nest++;
+              else if (chaine(compt-1,1) == ")") nest--;
+              else if (chaine(compt-1,1) == "," && nest==0) {
+                nomb++;
+                if (nomb == 1 && virgule == 0) virgule = compt;
+              }
             }
             if (nomb != 1) err = 22; // There are plus or minus than 2 arguments for pow
             else {
@@ -1211,11 +1227,15 @@ if (err==0) {
             }
 
           } else if (chaine(0,6) == "atan2(") {
-            compt = 6; nomb = 0; virgule = 0;
+            compt = 6; nomb = 0; virgule = 0; nest=0;
             while(compt != lchain) {
               compt++;
-              if (chaine(compt-1,1) == ",") nomb++;
-              if (nomb == 1 && virgule == 0) virgule = compt;
+              if (chaine(compt-1,1) == "(") nest++;
+              else if (chaine(compt-1,1) == ")") nest--;
+              else if (chaine(compt-1,1) == "," && nest==0) {
+                nomb++;
+                if (nomb == 1 && virgule == 0) virgule = compt;
+              }
             }
             if (nomb != 1) err = 21;  //{ There are plus or minus than 2 arguments for atan2
             else {
@@ -1228,11 +1248,15 @@ if (err==0) {
               fNoper++;
             }
           } else if (chaine(0,5) == "fmod(") {
-            compt = 5; nomb = 0; virgule = 0;
+            compt = 5; nomb = 0; virgule = 0; nest=0;
             while(compt != lchain) {
               compt++;
-              if (chaine(compt-1,1) == ",") nomb++;
-              if (nomb == 1 && virgule == 0) virgule = compt;
+              if (chaine(compt-1,1) == "(") nest++;
+              else if (chaine(compt-1,1) == ")") nest--;
+              else if (chaine(compt-1,1) == "," && nest==0) {
+                nomb++;
+                if (nomb == 1 && virgule == 0) virgule = compt;
+              }
             }
             if (nomb != 1) err = 21;  //{ There are plus or minus than 2 arguments for atan2
             else {
