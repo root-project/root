@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.10 2004/11/11 06:06:41 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.11 2004/11/23 13:55:13 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -706,7 +706,7 @@ void TGenCollectionProxy::PopProxy() {
     }
     fProxyList.pop_back();
   }
-  fEnv = 0;
+  fEnv = fProxyList.empty() ? 0 : fProxyList.back();
 }
 
 //______________________________________________________________________________
