@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.89 2004/06/05 05:22:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.90 2004/06/08 10:43:07 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -731,6 +731,39 @@ Bool_t TSystem::IsAbsoluteFileName(const char *dir)
    if (dir)
       return dir[0] == '/';
    return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TSystem::IsFileInIncludePath(const char *name)
+{
+   // Return true if 'name' is a file that can be found in the ROOT include 
+   // path or the current directory.  
+   // If 'name' contains any ACLiC style information (aka trailing +[+][g|O]),
+   // it is first strip of 'name'.
+
+   if (name==0) return kFALSE;
+   if (strlen(name)==0) return kFALSE;
+                                                                                            
+   TString aclicMode;
+   TString arguments;
+   TString io;
+   TString realname = SplitAclicMode(name, aclicMode, arguments, io);
+                                                                                            
+   TString fileLocation = DirName(realname);
+
+   TString incPath = gSystem->GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
+   incPath.Append(":").Prepend(" ");
+   incPath.ReplaceAll(" -I",":");       // of form :dir1 :dir2:dir3
+   while ( incPath.Index(" :") != -1 ) {
+      incPath.ReplaceAll(" :",":");
+   }
+   incPath.Prepend(fileLocation+":.:");
+                                                                                            
+   const char *actual = Which(incPath,realname);
+                                                                                            
+   if (actual==0) return kFALSE;
+   else return kTRUE;
+
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.40 2004/05/10 17:31:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.41 2004/05/17 12:13:40 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -264,6 +264,7 @@ public:
    virtual const char     *DirName(const char *pathname);
    virtual char           *ConcatFileName(const char *dir, const char *name);
    virtual Bool_t          IsAbsoluteFileName(const char *dir);
+   virtual Bool_t          IsFileInIncludePath(const char *name);
    virtual Bool_t          ExpandPathName(TString &path);
    virtual char           *ExpandPathName(const char *path);
    virtual Bool_t          AccessPathName(const char *path, EAccessMode mode = kFileExists);
