@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.31 2001/08/24 21:49:26 chcheng Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.32 2001/08/24 23:55:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -258,7 +258,7 @@ Bool_t RooRealIntegral::initNumIntegrator() const
 
   // if we already have an engine, check if it still works for the present limits.
   if(0 != _numIntEngine) {
-    cout << "checking the existing engine..." << endl;
+    //cout << "checking the existing engine..." << endl;
     if(_numIntEngine->checkLimits() && _numIntEngine->isValid()) return kTRUE;
     // otherwise, cleanup the old engine
     delete _numIntEngine ;
@@ -344,6 +344,10 @@ Double_t RooRealIntegral::evaluate() const
     
   case Hybrid: 
     {
+      // Find any function dependents that are AClean 
+      // and switch them temporarily to ADirty
+      prepareACleanFunc() ;
+
       // create a new numerical integration engine
       _valid= initNumIntegrator() ;
 
@@ -359,6 +363,8 @@ Double_t RooRealIntegral::evaluate() const
       _sumList=*saveSum ;
       delete saveInt ;
       delete saveSum ;
+
+      restoreACleanFunc() ;
       break ;
     }
   case Analytic:
@@ -395,6 +401,41 @@ Double_t RooRealIntegral::evaluate() const
     cout << "RooRealIntegral::evaluate(" << GetName() << ") = " << retVal << endl ;
 
   return retVal ;
+}
+
+
+void RooRealIntegral::prepareACleanFunc() const
+{
+  // Clear previous list contents
+  _funcACleanBranchList.removeAll() ;
+
+  // Get all function branch nodes
+  _function.arg().branchNodeServerList(&_funcACleanBranchList) ;
+
+  // Remove non-AClean branches from list 
+  TIterator* iter = _funcACleanBranchList.createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (arg->operMode()!=RooAbsArg::AClean) {
+      _funcACleanBranchList.remove(*arg) ;
+    } else {
+      arg->setOperMode(RooAbsArg::ADirty) ;
+    }
+  }
+  delete iter ;
+}
+
+
+
+void RooRealIntegral::restoreACleanFunc() const
+{
+  // Restore formerly AClean branches to their AClean state
+  TIterator* iter = _funcACleanBranchList.createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+      arg->setOperMode(RooAbsArg::AClean) ;
+  }
+  delete iter ;
 }
 
 

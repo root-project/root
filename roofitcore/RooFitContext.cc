@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.21 2001/08/23 23:43:43 david Exp $
+ *    File: $Id: RooFitContext.cc,v 1.22 2001/08/24 21:49:26 chcheng Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -118,6 +118,9 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_
 
   // Store the original leaf node list
   pdf->leafNodeServerList(&_origLeafNodeList) ;  
+
+  // Store normalization set
+  _normSet = (RooArgSet*) data->get()->Clone() ;
 }
 
 
@@ -131,6 +134,7 @@ RooFitContext::~RooFitContext()
   }
   delete _floatParamList ;
   delete _constParamList ;
+  delete _normSet ;
 }
 
 
@@ -194,7 +198,7 @@ void RooFitContext::setPdfParamErr(Int_t index, Double_t value)
 Double_t RooFitContext::getVal(Int_t evt) const 
 {
   _dataClone->get(evt) ;
-  return _pdfClone->getVal(_dataClone->get()) ;
+  return _pdfClone->getVal(_normSet) ; // WVE modified
 }
 
 
@@ -254,15 +258,20 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
       
       // Reattach PDF clone to newly trimmed dataset
       _pdfClone->attachDataSet(*trimData) ;
+
+      // Update normSet with components from trimData
+      _normSet->replace(*trimData->get()) ;
       
+      // WVE --- Is this still necessary now that we use RooNameSets? --------
       // Make sure PDF releases all handles to old data set before deleting it
       TIterator* pcIter = _pdfCompList->createIterator() ;
       while(arg=(RooAbsArg*)pcIter->Next()){
-	if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
-	  ((RooAbsReal*)arg)->getVal(trimData->get()) ;
+	if (arg->IsA()->InheritsFrom(RooAbsPdf::Class())) {	  
+	  ((RooAbsPdf*)arg)->syncNormalization(_normSet) ; 
 	}
       }
       delete pcIter ;
+      //----------------------------------------------------------------------
 
       // Substitute new data for old data 
       if (_ownData) delete _dataClone ;
@@ -274,7 +283,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
 	TIterator* cIter = cacheList.createIterator() ;
 	RooAbsArg *cacheArg ;
 	while(cacheArg=(RooAbsArg*)cIter->Next()){
-	  ((RooAbsReal*)cacheArg)->getVal(_dataClone->get()) ;
+	  ((RooAbsReal*)cacheArg)->getVal(_normSet) ;
 	}
 	delete cIter ;
 
@@ -284,6 +293,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
     }
   }
 
+  // WVE --- Is this still necessary to do this last, now that we a fixed RooRealIntegral --------
   // This must be done last, otherwise the normalization of cached PDFs will not be calculated correctly
   if (doCache && doPdf) {
     TIterator* cIter = cacheList.createIterator() ;
@@ -293,6 +303,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
     }
     delete cIter ;
   }    
+  //-----------------------------------------------------------------------------
 
   return kFALSE ;
 }
@@ -630,7 +641,7 @@ Double_t RooFitContext::nLogLikelihood(Bool_t dummy) const
     // get the data values for this event
     _dataClone->get(index);
 
-    Double_t term = _pdfClone->getLogVal(_dataClone->get());
+    Double_t term = _pdfClone->getLogVal(_normSet); // WVE modified
     if(term == 0) return 0;
     result-= term;
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.27 2001/08/24 22:11:57 bevan Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.28 2001/08/29 19:14:20 bevan Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -92,6 +92,11 @@ public:
   inline void Reset(Option_t* option=0) { _tree->Reset(option) ; }
   inline Int_t Fill() { return _tree->Fill() ; }
   inline Int_t GetEntry(Int_t entry = 0, Int_t getall = 0) { return _tree->GetEntry(entry,getall) ; }
+  inline Int_t Scan(const char* varexp="", const char* selection="", Option_t* option="", 
+		    Int_t nentries = 1000000000, Int_t firstentry = 0) {
+    _tree->Scan(varexp,selection,option,nentries,firstentry) ; 
+  }
+
 
   // WVE Debug stuff
   void dump() ;

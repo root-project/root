@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.cc,v 1.8 2001/08/08 23:11:24 david Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.9 2001/08/24 23:55:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -114,7 +114,7 @@ Double_t RooIntegrator1D::integral()
     _h[j+1]= (_rule == Trapezoid) ? _h[j]/4. : _h[j]/9.;
   }
 
-  cout << "RooIntegrator1D::integral: did not converge after " 
+  cout << "RooIntegrator1D::integral: integral over range (" << _xmin << "," << _xmax << ") did not converge after " 
        << _maxSteps << " steps" << endl;
   for(j= 1; j <= _maxSteps; j++) {
     cout << "   [" << j << "] h = " << _h[j] << " , s = " << _s[j] << endl;
