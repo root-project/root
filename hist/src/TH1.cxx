@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.222 2005/02/15 13:45:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.223 2005/02/23 20:00:05 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3548,7 +3548,8 @@ Int_t TH1::Merge(TCollection *list)
 
    Stat_t stats[kNstat], totstats[kNstat];
    TH1 *h, *hclone=0;
-   Int_t i, nentries=(Int_t)fEntries;
+   Int_t i;
+   Long64_t nentries=(Long64_t)fEntries;
    for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
    GetStats(totstats);
    TList inlist;
@@ -3582,7 +3583,7 @@ Int_t TH1::Merge(TCollection *list)
       //import statistics
       h->GetStats(stats);
       for (i=0;i<kNstat;i++) totstats[i] += stats[i];
-      nentries += (Int_t)h->GetEntries();
+      nentries += (Long64_t)h->GetEntries();
 
       // find min/max of the axes
       umin = h->GetXaxis()->GetXmin();
