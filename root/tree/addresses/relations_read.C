@@ -10,6 +10,8 @@ void Read(bool /*read*/=true) {
    TFile *f    = new TFile("RootRelations.root");
    TTree *tree = (TTree*)f->Get("T");
  
+   tree->Scan("m_direct.m_entries.first:m_direct.m_tentries.i:m_direct.m_ptentries.i");
+
    Relation1D<int,float>* obj = new Relation1D<int,float>();
 
    TBranch *branch  = tree->GetBranch("B");
@@ -22,10 +24,16 @@ void Read(bool /*read*/=true) {
    for (Int_t i=0;i<nevent;i++) {
       Int_t val = tree->GetEntry(i);
       if (gDebug>0) printf("%d %p\n", val, obj); 
-      printf("%d: %d, %f\n", i,
-             obj->m_direct.m_entries[0].first,
-             obj->m_direct.m_entries[0].second); 
+      printf("values read for entry #%d: %d, %f, %d, %f, %d, %f\n", i,
+                obj->m_direct.m_entries[0].first,
+                obj->m_direct.m_entries[0].second,
+                ((DataTObject*)obj->m_direct.m_tentries.At(0))->i,
+                ((DataTObject*)obj->m_direct.m_tentries.At(0))->j,
+                ((DataTObject*)obj->m_direct.m_ptentries->At(0))->i,
+                ((DataTObject*)obj->m_direct.m_ptentries->At(0))->j
+                ); 
    }
+   tree->Scan("m_direct.m_entries.first:m_direct.m_tentries.i:m_direct.m_ptentries.i");
    delete f;
 
 }

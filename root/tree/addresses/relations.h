@@ -5,6 +5,21 @@
 #include <vector>
 #include <map>
 #include <functional>
+#include "TClonesArray.h"
+
+class DataTObject : public TObject {
+public:
+  int i;    //
+  float j;  //
+  int k;    //!
+  int l;    //!
+  int m;    //!
+  DataTObject() {}
+  DataTObject(int ii,float ij) : i(ii),j(ij) {}
+  virtual ~DataTObject() {}
+  virtual void release() {}
+  ClassDef(DataTObject,1);
+};
 
 struct DataObject  {
 public:
@@ -30,9 +45,11 @@ public:
 
 template<class FROM,class TO> struct RelationBase  {  
 public:
-  RelationBase()    {}
-  virtual ~RelationBase() {};
-  std::vector<std::pair<int,float> > m_entries;
+   RelationBase() : m_tentries("DataTObject"),m_ptentries(new TClonesArray("DataTObject")) {}
+   virtual ~RelationBase() {};
+   std::vector<std::pair<int,float> > m_entries;
+   TClonesArray  m_tentries;
+   TClonesArray *m_ptentries;
 };
 
 template<class FROM,class TO> struct Relation : public IRelation<FROM,TO> {  

@@ -18,26 +18,39 @@ void Write(bool write=false)
    }
 
    TBranch *b = tree->Branch("B", "Relation1D<int,float>", &obj);
-   //   tree->Print();
 
    
    if (write) {
       
       printf("relations' write\n");
       for(int i=0; i < 10; ++i) {
+
          obj->m_direct.m_entries.push_back(std::pair<int,float>(10*i,i));
-         printf("%d: %d\n",i,tree->Fill());
+         DataTObject *dobj = new ( obj->m_direct.m_tentries[0] ) DataTObject(i*22,i*22/3.0);
+         DataTObject *dobj2 = new ( (*(obj->m_direct.m_ptentries))[0] ) DataTObject(i*44,i*44/3.0);
+
+         printf("byte written for entry   #%d: %d\n",i,tree->Fill());
 
          if (gDebug>0) {
-            printf("%d %p\n", tree->GetEvent(i), obj); 
+            printf("byte re-read for the same entry: %d %p\n", tree->GetEvent(i), obj); 
          }
-         printf("%d: %d, %f\n", i,
+//          fprintf(stderr,"the pointer are %p and %p\n",
+//                 dobj,obj->m_direct.m_tentries.At(0));
+         printf("values written for entry #%d: %d, %f, %d, %f, %d, %f\n", i,
                 obj->m_direct.m_entries[0].first,
-                obj->m_direct.m_entries[0].second); 
+                obj->m_direct.m_entries[0].second,
+                ((DataTObject*)obj->m_direct.m_tentries.At(0))->i,
+                ((DataTObject*)obj->m_direct.m_tentries.At(0))->j,
+                ((DataTObject*)obj->m_direct.m_ptentries->At(0))->i,
+                ((DataTObject*)obj->m_direct.m_ptentries->At(0))->j
+                ); 
+
          obj->m_direct.m_entries.clear();
+         obj->m_direct.m_tentries.Clear();
       }
       b->Write();
       tree->Write();
+      tree->Print();
       f->Write();
    }
    delete f;
