@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.2 2000/09/08 16:11:03 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -47,6 +47,14 @@ THashList::THashList(Int_t capacity, Int_t rehash)
    // WARNING !!!
    // If the name of an object in the HashList is modified, The hashlist
    // must be Rehashed
+
+   fTable = new THashTable(capacity, rehash);
+}
+
+//______________________________________________________________________________
+THashList::THashList(TObject *, Int_t capacity, Int_t rehash)
+{
+   // For backward compatibility only. Use other ctor.
 
    fTable = new THashTable(capacity, rehash);
 }
