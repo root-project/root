@@ -191,7 +191,7 @@ F77LDFLAGS   := $(LDFLAGS)
 endif
 
 ifeq ($(GCC_MAJOR),3)
-ifneq ($(findstring $(GCC_MINOR),1 2),)
+ifneq ($(GCC_MINOR),0)
 F77LDFLAGS   += -lfrtbegin
 endif
 endif
