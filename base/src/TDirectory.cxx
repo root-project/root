@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.19 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.20 2002/01/25 16:40:08 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1146,20 +1146,21 @@ Int_t TDirectory::ReadKeys()
    frombuf(buffer, &fSeekKeys);
    delete [] header;
 
-   TKey *headerkey    = new TKey(fSeekKeys,fNbytesKeys);
-   headerkey->ReadFile();
-   buffer = headerkey->GetBuffer();
-   headerkey->ReadBuffer(buffer);
-   Int_t nkeys;
-   TKey *key;
-   frombuf(buffer, &nkeys);
-   for (Int_t i = 0; i < nkeys; i++) {
-      key = new TKey();
-      key->ReadBuffer(buffer);
-      fKeys->Add(key);
+   Int_t nkeys = 0;
+   if ( fSeekKeys >  0) {
+      TKey *headerkey    = new TKey(fSeekKeys,fNbytesKeys);
+      headerkey->ReadFile();
+      buffer = headerkey->GetBuffer();
+      headerkey->ReadBuffer(buffer);
+      TKey *key;
+      frombuf(buffer, &nkeys);
+      for (Int_t i = 0; i < nkeys; i++) {
+         key = new TKey();
+         key->ReadBuffer(buffer);
+         fKeys->Add(key);
+      }
+      delete headerkey;
    }
-
-   delete headerkey;
 
    cursav->cd();
    return nkeys;

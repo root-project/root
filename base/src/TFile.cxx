@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.51 2002/02/03 16:13:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.52 2002/02/09 20:07:51 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -423,15 +423,11 @@ void TFile::Init(Bool_t create)
          goto zombie;
       }
 //*-* -------------Read keys of the top directory
-      if (fSeekKeys > fBEGIN && fEND <= size) {
+      if (fEND <= size) {
          TDirectory::ReadKeys();
          gDirectory = this;
       } else {
-         if (fEND > size) {
-            Error("TFile","file %s is truncated at %d bytes: should be %d, trying to recover",GetName(),size,fEND);
-         } else {
-            Warning("TFile","file %s probably not closed, trying to recover",GetName());
-         }
+         Error("TFile","file %s is truncated at %d bytes: should be %d, trying to recover",GetName(),size,fEND);
          if (!Recover()) goto zombie;
       }
    }
