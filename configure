@@ -2364,6 +2364,7 @@ sed \
     -e "s|@bindir@|$bindir|"               \
     -e "s|@cintincdir@|$cintincdir|"       \
     -e "s|@datadir@|$datadir|"             \
+    -e "s|@docdir@|$docdir|"               \
     -e "s|@etcdir@|$etcdir|"               \
     -e "s|@extraiconpath@|$extraiconpath|" \
     -e "s|@iconpath@|$iconpath|"           \
