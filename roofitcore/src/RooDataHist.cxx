@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.17 2002/03/07 06:22:20 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.18 2002/03/07 23:26:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -121,9 +121,15 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
     assert(0) ;
   }
 
-  RooBinning xbins(histo->GetNbinsX(),histo->GetXaxis()->GetXbins()->GetArray()) ;
-  xvar->setBinning(xbins) ;
-  ((RooRealVar*)vars.at(0))->setBinning(xbins) ;
+  if (histo->GetXaxis()->GetXbins()->GetArray()) {
+    RooBinning xbins(histo->GetNbinsX(),histo->GetXaxis()->GetXbins()->GetArray()) ;
+    xvar->setBinning(xbins) ;
+    ((RooRealVar*)vars.at(0))->setBinning(xbins) ;
+  } else {
+    RooUniformBinning xbins(histo->GetXaxis()->GetXmin(),histo->GetXaxis()->GetXmax(),histo->GetNbinsX()) ;
+    xvar->setBinning(xbins) ;
+    ((RooRealVar*)vars.at(0))->setBinning(xbins) ;
+  }
 
   // Y
   RooRealVar* yvar = (RooRealVar*) (vars.at(1) ? _vars.find(vars.at(1)->GetName()) : 0 ) ;
@@ -133,9 +139,15 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       assert(0) ;
     }
 
-    RooBinning ybins(histo->GetNbinsY(),histo->GetYaxis()->GetXbins()->GetArray()) ;
-    yvar->setBinning(ybins) ;
-    ((RooRealVar*)vars.at(1))->setBinning(ybins) ;
+    if (histo->GetYaxis()->GetXbins()->GetArray()) {
+      RooBinning ybins(histo->GetNbinsY(),histo->GetYaxis()->GetXbins()->GetArray()) ;
+      yvar->setBinning(ybins) ;
+      ((RooRealVar*)vars.at(1))->setBinning(ybins) ;
+    } else {
+      RooUniformBinning ybins(histo->GetYaxis()->GetXmin(),histo->GetYaxis()->GetXmax(),histo->GetNbinsY()) ;
+      yvar->setBinning(ybins) ;
+      ((RooRealVar*)vars.at(1))->setBinning(ybins) ;
+    }    
   }
   
   // Z
@@ -146,9 +158,15 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       assert(0) ;
     }
 
-    RooBinning zbins(histo->GetNbinsZ(),histo->GetZaxis()->GetXbins()->GetArray()) ;
-    zvar->setBinning(zbins) ;
-    ((RooRealVar*)vars.at(2))->setBinning(zbins) ;
+    if (histo->GetZaxis()->GetXbins()->GetArray()) {
+      RooBinning zbins(histo->GetNbinsZ(),histo->GetZaxis()->GetXbins()->GetArray()) ;
+      zvar->setBinning(zbins) ;
+      ((RooRealVar*)vars.at(2))->setBinning(zbins) ;
+    } else {
+      RooUniformBinning zbins(histo->GetZaxis()->GetXmin(),histo->GetZaxis()->GetXmax(),histo->GetNbinsZ()) ;
+      zvar->setBinning(zbins) ;
+      ((RooRealVar*)vars.at(2))->setBinning(zbins) ;
+    }
   }
   
 
