@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.122 2003/06/25 20:30:36 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.123 2003/07/11 21:32:53 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1483,7 +1483,8 @@ void TClass::IgnoreTObjectStreamer(Bool_t ignore)
 Bool_t TClass::InheritsFrom(const char *classname) const
 {
    // Return kTRUE if this class inherits from a class with name "classname".
-
+   // note that the function returns KTRUE in case classname is the class itself
+      
    if (strcmp(GetName(), classname) == 0) return kTRUE;
 
    if (!fClassInfo) return kFALSE;
@@ -1497,6 +1498,7 @@ Bool_t TClass::InheritsFrom(const char *classname) const
 Bool_t TClass::InheritsFrom(const TClass *cl) const
 {
    // Return kTRUE if this class inherits from class cl.
+   // note that the function returns KTRUE in case cl is the class itself
 
    if (cl == this) return kTRUE;
 
