@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.27 2003/07/04 13:05:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.28 2003/12/11 13:39:22 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -398,7 +398,7 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 
 #include <float.h>
 
-#ifdef R__WIN32
+#if defined(R__WIN32) && !defined(__CINT__)
 #   ifndef finite
 #      define finite _finite
 #      define isnan  _isnan

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Windows4Root.h,v 1.4 2003/02/27 21:55:08 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Windows4Root.h,v 1.5 2003/08/06 20:25:04 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -118,7 +118,7 @@
 #endif
 
 #else
-   typedef HANDLE void *
+    typedef void * HANDLE;
 #endif
 
 #endif
