@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.36 2003/03/01 22:29:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.37 2003/06/02 09:53:15 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1164,6 +1164,7 @@ Int_t TDirectory::ReadKeys()
    delete [] header;
 
    Int_t nkeys = 0;
+   Long_t fsize = fFile->GetSize();
    if ( fSeekKeys >  0) {
       TKey *headerkey    = new TKey(fSeekKeys,fNbytesKeys);
       headerkey->ReadFile();
@@ -1174,13 +1175,13 @@ Int_t TDirectory::ReadKeys()
       for (Int_t i = 0; i < nkeys; i++) {
          key = new TKey();
          key->ReadBuffer(buffer);
-         if (key->GetSeekKey() < 64 || key->GetSeekKey() > fFile->GetEND()) {
+         if (key->GetSeekKey() < 64 || key->GetSeekKey() > fsize) {
             Error("ReadKeys","reading illegal key, exiting after %d keys",i);
             fKeys->Remove(key);
             nkeys = i;
             break;
          }
-         if (key->GetSeekPdir() < 64 || key->GetSeekPdir() > fFile->GetEND()) {
+         if (key->GetSeekPdir() < 64 || key->GetSeekPdir() > fsize) {
             Error("ReadKeys","reading illegal key, exiting after %d keys",i);
             fKeys->Remove(key);
             nkeys = i;
