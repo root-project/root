@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.11 2001/01/16 17:40:25 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.12 2001/01/18 09:37:27 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -80,6 +80,7 @@ public:
    void                BuildCheck();
    void                BuildOld();
    Bool_t              CanBypassStreamer() { return TestBit(kBypassStreamer);}
+   void                ForceWriteInfo();
    Int_t               GenerateHeaderFile(const char *dirname);
    TClass             *GetClass() const {return fClass;}
    UInt_t              GetCheckSum() const {return fCheckSum;}
