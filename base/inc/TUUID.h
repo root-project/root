@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.1 2001/10/01 14:39:14 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -59,6 +59,7 @@ private:
 
 public:
    TUUID();
+   TUUID(const char *uuid);
 
    const char  *AsString() const;
    Int_t        Compare(const TUUID &u) const;

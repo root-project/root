@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.1 2001/10/01 14:39:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.2 2001/10/01 16:03:30 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -171,6 +171,52 @@ Int_t TUUID::CmpTime(uuid_time_t *t1, uuid_time_t *t2)
    if (t1->low  < t2->low)  return -1;
    if (t1->low  > t2->low)  return 1;
    return 0;
+}
+
+//______________________________________________________________________________
+TUUID::TUUID(const char *uuid)
+{
+   // Initialize a TUUID with uuid (which must be in TUUID::AsString() format).
+
+   fTimeLow               = 0;
+   fTimeMid               = 0;
+   fTimeHiAndVersion      = 0;
+   fClockSeqHiAndReserved = 0;
+   fClockSeqLow           = 0;
+   fNode[0]               = 0;
+
+   if (!uuid || !*uuid)
+      Error("TUUID", "null string not allowed");
+
+   // Format is tttttttt-tttt-cccc-cccc-nnnnnnnnnnnn.
+   long    timeLo;
+   int     timeMid;
+   int     timeHiAndVersion;
+   int     clockSeqHiAndRes;
+   int     clockSeqLo;
+   int     node[6];
+
+   sscanf(uuid, "%8lx-%4x-%4x-%2x%2x-%2x%2x%2x%2x%2x%2x",
+          &timeLo,
+          &timeMid,
+          &timeHiAndVersion,
+          &clockSeqHiAndRes,
+          &clockSeqLo,
+          &node[0], &node[1], &node[2], &node[3], &node[4], &node[5]);
+
+   // Note that we're going through this agony because scanf is
+   // defined to know only to scan into "int"s or "long"s.
+   fTimeLow               = (UInt_t) timeLo;
+   fTimeMid               = (UShort_t) timeMid;
+   fTimeHiAndVersion      = (UShort_t) timeHiAndVersion;
+   fClockSeqHiAndReserved = (UChar_t) clockSeqHiAndRes;
+   fClockSeqLow           = (UChar_t) clockSeqLo;
+   fNode[0]               = (UChar_t) node[0];
+   fNode[1]               = (UChar_t) node[1];
+   fNode[2]               = (UChar_t) node[2];
+   fNode[3]               = (UChar_t) node[3];
+   fNode[4]               = (UChar_t) node[4];
+   fNode[5]               = (UChar_t) node[5];
 }
 
 //______________________________________________________________________________
