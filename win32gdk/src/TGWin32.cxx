@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.27 2003/08/24 19:44:11 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.28 2003/10/13 20:21:32 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -606,7 +606,7 @@ static void W32ChangeProperty(HWND w, Atom_t property, Atom_t type,
    char buffer[256];
    char *p, *s;
    int len;
-   char propName[8];
+   char propName[32];
 
    if (mode == GDK_PROP_MODE_REPLACE || mode == GDK_PROP_MODE_PREPEND) {
       len = (int) GlobalGetAtomName(property, buffer, sizeof(buffer));
