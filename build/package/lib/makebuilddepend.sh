@@ -78,7 +78,7 @@ for i in $* ; do
 	*oracle)    	echo -n ", oracle-instantclient-devel"		;;
 	*minuit)							;;
 	*mlp)								;;
-	*mysql)		echo -n ", libmysqlclient-dev"			;;
+	*mysql)		echo -n ", libmysqlclient-dev | libmysqlclient12-dev | libmysqlclient14-dev" ;;
 	*netx)								;;
 	*peac)								;;
 	*pgsql)		echo -n ", postgresql-dev"			;;
