@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.12 2003/09/16 00:39:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.14 2003/10/07 21:09:55 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -127,6 +127,7 @@ public:
    Bool_t             GetPwHash() const { return fPwHash; }
    Bool_t             GetSRPPwd() const { return fSRPPwd; }
    const char        *GetProtocol() const { return fProtocol; }
+   const char        *GetRemoteHost() const { return fRemote; }
    const char        *GetSshUser() const;
    void               SetUser(const char *user) { fUser = user; }
    void               SetPwHash(Bool_t pwhash) { fPwHash = pwhash; }

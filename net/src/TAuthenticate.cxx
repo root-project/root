@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.28 2003/11/09 16:09:50 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.29 2003/11/10 14:40:07 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #include "TEnv.h"
 #include "TList.h"
 #include "NetErrors.h"
+#include "TRegexp.h"
 
 #ifndef R__LYNXOS
 #include <sys/stat.h>
@@ -74,7 +75,6 @@ Bool_t TAuthenticate::fgUsrPwdCrypt;
 TList *TAuthenticate::fgAuthInfo = 0;
 
 TString TAuthenticate::fgAuthMeth[] = { "UsrPwd", "SRP", "Krb5", "Globus", "SSH", "UidGid" };
-
 
 ClassImp(TAuthenticate)
 
@@ -2072,160 +2072,53 @@ Bool_t TAuthenticate::CheckHost(const char *Host, const char *host)
 
    Bool_t retval = kTRUE;
 
-   // Get IP of the host in form of a string
-   TInetAddress addr = gSystem->GetHostByName(Host);
-   char *IP = StrDup(addr.GetHostAddress());
-   if (gDebug > 2)
-      ::Info("CheckHost", "host: %s --> IP: %s", Host, IP);
+   // Both strings should have been defined
+   if (!Host || !host) 
+      return kFALSE;
 
-   // now check validity of 'host' format
-   // Try first to understand whether it is an address or a name ...
-   int i, name = 0, namew = 0, nd = 0, nn = 0, nnmx = 0,
-       nnmi = strlen(host);
-   for (i = 0; i < (int) strlen(host); i++) {
-      if (host[i] == '.') {
-         nd++;
-         if (nn > nnmx)
-            nnmx = nn;
-         if (nn < nnmi)
-            nnmi = nn;
-         nn = 0;
-         continue;
-      }
-      int j = (int) host[i];
-      if (j < 48 || j > 57)
-         name = 1;
-      if (host[i] == '*') {
-         namew = 1;
-         if (nd > 0) {
-            retval = kFALSE;
-            goto exit;
-         }
-      }
-      nn++;
-    }
+   // 'host' == '*' indicates any 'Host' ...
+   if (!strcmp(host,"*")) 
+      return kTRUE;
 
-   // Act accordingly ...
-   if (name == 0) {
-      if (nd < 4) {
-         if (strlen(host) < 16) {
-            if (nnmx < 4) {
-               if (nd == 3 || host[strlen(host) - 1] == '.') {
-                  char *sp = strstr(IP, host);
-                  if (sp == 0 || sp != IP) {
-                     retval = kFALSE;
-                     goto exit;
-                  }
-               }
-            }
-         }
-      }
-   } else {
-      if (namew == 0) {
-         if (nd > 0) {
-            if (nd > 1 || nnmi > 0) {
-               const char *sp = strstr(Host, host);
-               if (sp == 0 || sp != Host) {
-                  retval = kFALSE;
-                  goto exit;
-               }
-            }
-         } else {
-            retval = kFALSE;
-            goto exit;
-         }
-      } else {
-         if (!CheckHostWild(Host, host)) {
-            retval = kFALSE;
-            goto exit;
-         }
-      }
+   // If 'host' contains at a letter or an hyphen it is assumed to be
+   // a host name. Otherwise a name.
+   // Check also for wild cards
+   Bool_t name = kFALSE;
+   TRegexp rename("[+a-zA-Z]");
+   Int_t len;
+   if (rename.Index(host,&len) != -1 || strstr(host,"-"))
+      name = kTRUE;
+
+   // Check also for wild cards
+   Bool_t wild = kFALSE;
+   if (strstr(host,"*"))
+      wild = kTRUE; 
+
+   // Now build the regular expression for final checking
+   TRegexp rehost(host,wild);
+
+   // Host to check
+   TString theHost(Host);
+   if (!name) {
+      TInetAddress addr = gSystem->GetHostByName(Host);
+      theHost = addr.GetHostAddress();
+      if (gDebug > 2)
+         ::Info("CheckHost", "checking host IP: %s", theHost.Data());
    }
 
-   if (gDebug > 2)
-      ::Info("CheckHost", "info for host found in table ");
+   // Check 'Host' against 'rehost'
+   Ssiz_t pos = rehost.Index(theHost,&len);
+   if (pos == -1)
+      retval = kFALSE;
 
- exit:
-   if (IP) delete[] IP;
+   // If IP and no wilds, it should match either 
+   // the beginning or the end of the string
+   if (!wild) {
+      if (pos > 0 && pos != (Ssiz_t)(theHost.Length()-strlen(host)))
+         retval = kFALSE;
+   }
+
    return retval;
-}
-
-//______________________________________________________________________________
-Bool_t TAuthenticate::CheckHostWild(const char *Host, const char *host)
-{
-   // Checks if 'host' is compatible with 'Host' taking into account
-   // wild cards in the machine name (first field of FQDN) ...
-   // Returns 0 if successful, 1 otherwise ...
-
-   Bool_t rc = kTRUE;
-   char *fH, *sH, *dum, *sp, *k;
-   int i, j, lmax;
-
-   if (gDebug > 2)
-      ::Info("CheckHostWild", "enter: H: '%s' h: '%s'", Host, host);
-
-   // Max length for dinamic allocation
-   lmax = strlen(Host) > strlen(host) ? strlen(Host) : strlen(host);
-
-   // allocate
-   fH = new char[lmax];
-   sH = new char[lmax];
-   dum = new char[lmax];
-
-   // Determine 'Host' first field (the name) ...
-   for (i = 0; i < (int) strlen(Host); i++) {
-      if (Host[i] == '.')
-         break;
-   }
-   strncpy(fH, Host, i);
-   fH[i] = '\0';
-   // ... and also the second one (the domain)
-   strcpy(sH, Host + i);
-   if (gDebug > 3)
-      ::Info("CheckHostWild", "fH:%s sH:%s", fH, sH);
-
-   // Now check the first field ...
-   j = 0;
-   k = fH;
-   for (i = 0; i < (int) strlen(host); i++) {
-      if (host[i] == '.')
-         break;
-      if (host[i] == '*') {
-         if (i > 0) {
-            // this is the part of name before the '*' ....
-            strncpy(dum, host + j, i - j);
-            dum[i - j] = '\0';
-            if (gDebug > 3)
-               ::Info("CheckHostWild", "k:%s dum:%s", k, dum);
-            sp = strstr(k, dum);
-            if (sp == 0) {
-               rc = kFALSE;
-               goto exit;
-            }
-            j = i + 1;
-            k = sp + strlen(dum) + 1;
-         } else
-            j++;
-      }
-   }
-   // Now check the domain name (if the name matches ...)
-   if (rc) {
-      strcpy(dum, host + i);
-      if (gDebug > 3)
-         ::Info("CheckHostWild", "sH:%s dum:%s", sH, dum);
-      sp = strstr(sH, dum);
-      if (sp == 0) {
-         rc = kFALSE;
-         goto exit;
-      }
-   }
-
- exit:
-   // Release allocated memory ...
-   if (fH) delete[] fH;
-   if (sH) delete[] sH;
-   if (dum) delete[] dum;
-   return rc;
 }
 
 //______________________________________________________________________________
