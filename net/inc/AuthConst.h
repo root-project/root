@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: rpddefs.h,v 1.1 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: AuthConst.h,v 1.3 2004/10/11 21:50:06 rdm Exp $
 // Author: Gerardo Ganis   3/12/2003
 
 /*************************************************************************
@@ -28,5 +28,7 @@ const Int_t       kAUTH_CRYPT_MSK = 0x2;
 const Int_t       kAUTH_SSALT_MSK = 0x4;
 const Int_t       kAUTH_RSATY_MSK = 0x8;
 const Int_t       kMAXRSATRIES    = 100;
+const Int_t       kPRIMELENGTH    = 20;
+const Int_t       kPRIMEEXP       = 40;
 
 #endif

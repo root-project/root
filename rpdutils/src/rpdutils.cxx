@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.62 2004/11/05 13:55:13 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.63 2004/11/19 12:33:51 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -5285,8 +5285,8 @@ int RpdGenRSAKeys(int setrndinit)
    char buf_n[rsa_STRLEN], buf_e[rsa_STRLEN], buf_d[rsa_STRLEN];
 
    int NAttempts = 0;
-   int thePrimeLen = 20;
-   int thePrimeExp = 45;   // Prime probability = 1-0.5^thePrimeExp
+   int thePrimeLen = kPRIMELENGTH;
+   int thePrimeExp = kPRIMEEXP + 5;   // Prime probability = 1-0.5^thePrimeExp
    while (NotOk && NAttempts < kMAXRSATRIES) {
 
       NAttempts++;

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.65 2004/11/05 13:55:13 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.66 2004/11/11 18:56:18 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -311,7 +311,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
          TString det(dtmp);
          fHostAuth->AddFirst(sec, det);
          if (dtmp)
-            delete[] dtmp;
+            delete [] dtmp;
       }
    }
 
@@ -426,7 +426,7 @@ Bool_t TAuthenticate::Authenticate()
          char *p;
          TString lib = RootDir + "/libSRPAuth";
          if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
-            delete[]p;
+            delete [] p;
             gSystem->Load(lib);
          }
       }
@@ -457,7 +457,7 @@ Bool_t TAuthenticate::Authenticate()
             char *p;
             TString lib = RootDir + "/libKrb5Auth";
             if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
-               delete[]p;
+               delete [] p;
                gSystem->Load(lib);
             }
          }
@@ -486,7 +486,7 @@ Bool_t TAuthenticate::Authenticate()
             char *p;
             TString lib = RootDir + "/libGlobusAuth";
             if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
-               delete[]p;
+               delete [] p;
                gSystem->Load(lib);
             }
          }
@@ -546,7 +546,7 @@ Bool_t TAuthenticate::Authenticate()
    Bool_t rc = kFALSE;
    // Type of action after the analysis:
    // 0 = return, 1 = negotiation, 2 = send kROOTD_BYE + 3, 3 = print failure and return
-   Int_t action = 0; 
+   Int_t action = 0;
    Int_t nmet = fHostAuth->NumMethods();
    Int_t remloc = nmet - meth - 1;
    Int_t kind, stat;
@@ -582,7 +582,7 @@ Bool_t TAuthenticate::Authenticate()
             rc = kFALSE;
             break;
          }
-         // 
+         //
          // Attempt negotiation ...
          if (fSocket->Recv(stat, kind) < 0) {
             action = 0;
@@ -690,7 +690,7 @@ Bool_t TAuthenticate::Authenticate()
             Info("Authenticate", "unknown status code: %d - assume failure",st);
          rc = kFALSE;
          action = 0;
-         break; 
+         break;
    }
 
    switch (action) {
@@ -865,25 +865,25 @@ void TAuthenticate::SetEnvironment()
          if (Cd != 0) {
             strcat(UsDef," ");
             strcat(UsDef,Cd);
-            delete[] Cd;
+            delete [] Cd;
             Cd = 0;
          }
          if (Cf != 0) {
             strcat(UsDef," ");
             strcat(UsDef,Cf);
-            delete[] Cf;
+            delete [] Cf;
             Cf = 0;
          }
          if (Kf != 0) {
             strcat(UsDef," ");
             strcat(UsDef,Kf);
-            delete[] Kf;
+            delete [] Kf;
             Kf = 0;
          }
          if (Ad != 0) {
             strcat(UsDef," ");
             strcat(UsDef,Ad);
-            delete[] Ad;
+            delete [] Ad;
             Ad = 0;
          }
       } else {
@@ -891,13 +891,13 @@ void TAuthenticate::SetEnvironment()
             // Collect info about principal, if any
             if (Pp && strlen(Pp) > 0) {
                fgKrb5Principal = TString(Pp);
-               delete[] Pp;
+               delete [] Pp;
                Pp = 0;
             } else {
                // Allow specification via 'us:' key
                if (Us && strlen(Us) > 0 && strstr(Us,"@")) {
                   fgKrb5Principal = TString(Us);
-                  delete[] Us;
+                  delete [] Us;
                   Us = 0;
                }
             }
@@ -907,16 +907,16 @@ void TAuthenticate::SetEnvironment()
             } else {
                if (Us && strlen(Us) > 0 && !strstr(Us,"@")) {
                   sprintf(UsDef, "%s", Us);
-                  delete[] Us;
+                  delete [] Us;
                   Us = 0;
                }
             }
             if (Us != 0) {
-               delete[] Us;
+               delete [] Us;
                Us = 0;
             }
             if (Pp != 0) {
-               delete[] Pp;
+               delete [] Pp;
                Pp = 0;
             }
          } else {
@@ -924,7 +924,7 @@ void TAuthenticate::SetEnvironment()
             if (fUser == "") {
                if (Us != 0) {
                   sprintf(UsDef, "%s", Us);
-                  delete[] Us;
+                  delete [] Us;
                   Us = 0;
                }
             } else
@@ -951,13 +951,13 @@ void TAuthenticate::SetEnvironment()
       if (gDebug > 2)
          Info("SetEnvironment", "UsDef:%s", fgDefaultUser.Data());
 
-      if (Us) delete[] Us;
-      if (Cd) delete[] Cd;
-      if (Cf) delete[] Cf;
-      if (Kf) delete[] Kf;
-      if (Ad) delete[] Ad;
-      if (Cp) delete[] Cp;
-      if (Pp) delete[] Pp;
+      if (Us) delete [] Us;
+      if (Cd) delete [] Cd;
+      if (Cf) delete [] Cf;
+      if (Kf) delete [] Kf;
+      if (Ad) delete [] Ad;
+      if (Cp) delete [] Cp;
+      if (Pp) delete [] Pp;
    }
 }
 
@@ -1151,7 +1151,7 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd,
          Warning("CheckNetrc",
                  "file %s exists but has not 0600 permission", net);
    }
-   delete[]net;
+   delete [] net;
 
    if (first && !srppwd && !result) {
       net = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".netrc");
@@ -1396,10 +1396,10 @@ void TAuthenticate::AuthError(const char *where, Int_t err)
    if (erc > -1)
       if (gDebug > 0 || forceprint)
          if (gRootdErrStr[erc])
-            ::Error(Form("TAuthenticate::%s", where), "%s %s", 
+            ::Error(Form("TAuthenticate::%s", where), "%s %s",
                     gRootdErrStr[erc], lasterr.Data());
          else
-            ::Error(Form("TAuthenticate::%s", where), 
+            ::Error(Form("TAuthenticate::%s", where),
                "unknown error code: server must be running a newer ROOT version %s",
                lasterr.Data());
 
@@ -1565,7 +1565,7 @@ Int_t TAuthenticate::SshError(const char *errorfile)
          // Close file
          fclose(ferr);
          // Free allocated memory
-         if (serr) delete[] serr;
+         if (serr) delete [] serr;
       }
    }
    return error;
@@ -1601,7 +1601,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
          if (strcmp(gEnv->GetValue("SSH.ExecDir", "-1"), "-1")) {
             if (gDebug > 2)
                Info("SshAuth", "searching user defined path ...");
-            if (gSshExe) delete[] gSshExe;
+            if (gSshExe) delete [] gSshExe;
             gSshExe = StrDup(Form("%s/%s",
                             (char *)gEnv->GetValue("SSH.ExecDir", ""), scmd));
             if (gSystem->AccessPathName(gSshExe, kExecutePermission)) {
@@ -1617,7 +1617,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
 
    // Check if the command was found
    if (notfound) {
-      if (gSshExe) delete[] gSshExe;
+      if (gSshExe) delete [] gSshExe;
       return -1;
    }
    if (gDebug > 2)
@@ -1885,7 +1885,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
                   }
                }
                if (Buf)
-                  delete[] Buf;
+                  delete [] Buf;
             }
          }
          SafeDelete(newsock);
@@ -1986,7 +1986,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
                  (const char *)Token, fgExpDate, 0, fRSAKey);
 
    // Release allocated memory ...
-   if (Token) delete[] Token;
+   if (Token) delete [] Token;
 
    // Get and Analyse the reply
    if (fSocket->Recv(retval, kind) < 0)
@@ -2317,23 +2317,22 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
                }
                if (Slen)
                   Salt = TString(TmpSalt);
-               delete[] TmpSalt;
+               delete [] TmpSalt;
             }
             if (gDebug > 2)
                Info("ClearAuth", "got salt: '%s' (len: %d)", Salt.Data(), Slen);
          } else {
             if (gDebug > 2)
                Info("ClearAuth", "Salt not required");
-            if (fSocket->Recv(stat, kind) < 0)
-               return 0;
-            if (kind != kMESS_ANY) {
-               Warning("ClearAuth","Potential problems: got msg type:"
-                       " %d (expecting: %d 0)",
-                       kind,(Int_t)kMESS_ANY);
+            char *TmpTag = 0;
+            if (SecureRecv(fSocket, 1, fRSAKey, &TmpTag) == -1) {
+               Warning("ClearAuth", "problems secure-receiving rndmtag -"
+                       " may result in corrupted rndmtag");
             }
-
-            // Extract rtag
-            sprintf(ctag,"#%08x#",stat);
+            if (TmpTag) {
+               strncpy(ctag, TmpTag, 10);
+               delete [] TmpTag;
+            }
          }
          // We may not have got a salt (if the server may not access it
          // or if it needs the full password, like for AFS ...)
@@ -2377,7 +2376,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
                char *pwd = PromptPasswd(Form("%s@%s password: ",
                                         User.Data(),fRemote.Data()));
                Passwd = TString(pwd);
-               delete[] pwd;
+               delete [] pwd;
                if (Passwd == "") {
                   Error("ClearAuth", "password not set");
                   fSocket->Send("-1", kROOTD_PASS);  // Needs this for consistency
@@ -2497,7 +2496,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
             Int_t Tlen = 9;
             Token = new char[Tlen];
             if (fSocket->Recv(Token, Tlen, kind) < 0) {
-               delete[] Token;
+               delete [] Token;
                return 0;
             }
             if (kind != kMESS_STRING)
@@ -2520,7 +2519,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
                     fgExpDate, (void *)pwdctx, fRSAKey);
 
       // Release allocated memory ...
-      if (Token) delete[] Token;
+      if (Token) delete [] Token;
 
       // This from remote login
       if (fSocket->Recv(stat, kind) < 0)
@@ -3223,7 +3222,7 @@ Int_t TAuthenticate::GenRSAKeys()
    if (!rsa_fun::fg_rsa_genprim) {
       char *p;
       if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
-         delete[]p;
+         delete [] p;
          gSystem->Load(lib);
       }
    }
@@ -3276,8 +3275,8 @@ Int_t TAuthenticate::GenRSAKeys()
 #endif
 
    Int_t NAttempts = 0;
-   Int_t thePrimeLen = 20;
-   Int_t thePrimeExp = 40;   // Prime probability = 1-0.5^thePrimeExp
+   Int_t thePrimeLen = kPRIMELENGTH;
+   Int_t thePrimeExp = kPRIMEEXP;   // Prime probability = 1-0.5^thePrimeExp
    while (NotOk && NAttempts < kMAXRSATRIES) {
 
       NAttempts++;
@@ -3341,7 +3340,7 @@ Int_t TAuthenticate::GenRSAKeys()
       Int_t lTes = 31;
       char *Tdum = GetRandString(0, lTes - 1);
       strncpy(Test, Tdum, lTes);
-      delete[]Tdum;
+      delete [] Tdum;
       char buf[2 * rsa_STRLEN];
       if (gDebug > 3)
          Info("GenRSAKeys", "local: test string: '%s' ", Test);
@@ -3406,7 +3405,7 @@ Int_t TAuthenticate::GenRSAKeys()
 #endif
    // Export form
    if (fgRSAPubExport[0].keys) {
-      delete[] fgRSAPubExport[0].keys;
+      delete [] fgRSAPubExport[0].keys;
       fgRSAPubExport[0].len = 0;
    }
    fgRSAPubExport[0].len = l_n + l_d + 4;
@@ -3740,10 +3739,41 @@ Int_t TAuthenticate::SetRSAPublic(const char *RSAPubExport, Int_t klen)
    if (klen > 0) {
 
       // Skip spaces at beginning, if any
-      int k = 0;
-      while (RSAPubExport[k] == 32) k++;
+      int k0 = 0;
+      while (RSAPubExport[k0] == 32) k0++;
+      int k2 = klen - 1;
 
-      if (RSAPubExport[k] == '#') {
+      // Parse RSAPubExport
+      // Type 0 is in the form
+      //
+      //   #< gt 10 exa chars >#< gt 10 exa chars >#
+      //
+      RSAKey = 1;
+      if (RSAPubExport[k0] == '#' && RSAPubExport[k2] == '#') {
+         char *p0 = (char *)&RSAPubExport[k0];
+         char *p2 = (char *)&RSAPubExport[k2];
+         char *p1 = strchr(p0+1,'#');
+         if (p1 > p0 && p1 < p2) {
+            Int_t l01 = (Int_t)(p1-p0)-1;
+            Int_t l12 = (Int_t)(p2-p1)-1;
+            if (l01 >= kPRIMELENGTH*2 && l12 >= kPRIMELENGTH*2) {
+               // Require exadecimal chars in between
+               char *c = p0+1;
+               while (c < p1 && ((*c < 58 && *c > 47) || (*c < 91 && *c > 64)))
+                  c++;
+               if (c == p1) {
+                  c++;
+                  while (c < p2 && ((*c < 58 && *c > 47) || (*c < 91 && *c > 64)))
+                     c++;
+                  if (c == p2)
+                     RSAKey = 0;
+               }
+            }
+         }
+      }
+      if (gDebug > 3)
+         ::Info("TAuthenticate::SetRSAPublic"," Key type: %d",RSAKey);
+      if (RSAKey == 0) {
 
          // Decode input string
          rsa_NUMBER RSA_n, RSA_d;
@@ -4224,14 +4254,14 @@ Int_t TAuthenticate::ReadRootAuthrc(const char *proofconf)
             }
          }
       }
-      if (tmp) delete[] tmp;
+      if (tmp) delete [] tmp;
    }
    // Close file and remove it if temporary
    fclose(fd);
    if (expand == 1)
       gSystem->Unlink(filetmp);
    // Cleanup allocated memory
-   if (authrc) delete[] authrc;
+   if (authrc) delete [] authrc;
 
    // Update AuthInfo with new info found
    TAuthenticate::MergeHostAuthList(AuthInfo,&TmpAuthInfo);
@@ -4314,7 +4344,7 @@ Int_t TAuthenticate::ReadRootAuthrc(const char *proofconf)
          // Go to next
          nxt = strtok(0," ");
       }
-      if (tmp) delete[] tmp;
+      if (tmp) delete [] tmp;
    }
 
    // Update ProofAuthInfo with new info found
@@ -4445,7 +4475,7 @@ void TAuthenticate::ReadProofConf(const char *conffile)
                // Get next
                mth = strtok(0," ");
             }
-            if (mth) delete[] mth;
+            if (mth) delete [] mth;
 
             // Check if a HostAuth object for this (host,user) pair already exists
             TString SlaveSrv(Form("%s:%d",SlaveHost.Data(),TSocket::kPROOFD));
@@ -4480,7 +4510,7 @@ void TAuthenticate::ReadProofConf(const char *conffile)
             for(; i > 0; i--)
                ha->AddFirst(me[i-1],det[i-1]);
 
-            if (tmp) delete[] tmp;
+            if (tmp) delete [] tmp;
 
          } // fgets
 
