@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.13 2004/09/22 05:01:12 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.14 2004/09/22 09:28:47 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -63,6 +63,8 @@ const char gHelpBuilder[] = "\
 \n\
                Selection, grabbing, dropping\n\
      ************************************************\n\
+  It is possible to select, drag any frame and drop to any frame\n\
+\n\
  o Press left mouse button Click or Ctrl-Click to select an object to edit.\n\
  o Press right mouse button to activate context menu\n\
  o Mutilple selection (grabbing):\n\
@@ -77,18 +79,20 @@ const char gHelpBuilder[] = "\
 \n\
                     Key shortcuts\n\
      ************************************************\n\
- o Ctrl-X - cut\n\
- o Ctrl-C - copy\n\
- o Ctrl-V - paste\n\
- o Ctrl-R - replace\n\
- o Ctrl-L - compact Layout\n\
- o Ctrl-B - break Layout\n\
- o Ctrl-H - switch Horizontal-Vertical Layout\n\
- o Ctrl-G - switch ON/OFF Grid\n\
- o Ctrl-S - save\n\
- o Ctrl-O - open ROOT macro file\n\
- o Ctrl-N - create new main frame\n\
- o Ctrl-Z - undo last action (not implemented)\n\
+ o Del       - delete selected frame\n\
+ o Shift-Del - crop\n\
+ o Ctrl-X    - cut\n\
+ o Ctrl-C    - copy\n\
+ o Ctrl-V    - paste\n\
+ o Ctrl-R    - replace\n\
+ o Ctrl-L    - compact layout\n\
+ o Ctrl-B    - break layout\n\
+ o Ctrl-H    - switch Horizontal-Vertical layout\n\
+ o Ctrl-G    - switch ON/OFF grid\n\
+ o Ctrl-S    - save\n\
+ o Ctrl-O    - open and execute ROOT macro file\n\
+ o Ctrl-N    - create new main frame\n\
+ o Ctrl-Z    - undo last action (not implemented)\n\
  o Shift-Ctrl-Z - redo (not implemented)\n\
 ";
 
@@ -141,6 +145,7 @@ public:
    }
    virtual ~TGuiBuilderContainer() {}
    void SetEditable(Bool_t) {}
+   Bool_t HandleEvent(Event_t*) { return kFALSE; }
 }; 
 
 ////////////////////////////////////////////////////////////////////////////////

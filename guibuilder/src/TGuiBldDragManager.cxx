@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.11 2004/09/22 05:01:12 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.12 2004/09/22 09:28:47 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -373,6 +373,7 @@ private:
    TGFrameElement    *fGrabListPosition;
    Bool_t             fButtonPressed;
    Bool_t             fCompacted;
+   TGFrame           *fPlane;
 
 public:
    TGuiBldDragManagerPimpl(TGuiBldDragManager *m) {
@@ -387,6 +388,7 @@ public:
          fAroundFrame[i] = new TGAroundFrame();
       }
 
+      fPlane = 0;
       ResetParams();
    }
    void ResetParams() {
@@ -404,6 +406,11 @@ public:
       fGrabListPosition = 0;
       fButtonPressed = kFALSE;
       fCompacted = kFALSE;
+
+      if (fPlane) {
+         fPlane->ChangeOptions(fPlane->GetOptions() & ~kRaisedFrame);
+         gClient->NeedRedraw(fPlane, kTRUE);
+      }
    }
    ~TGuiBldDragManagerPimpl() {
       int i;
@@ -416,6 +423,12 @@ public:
   
       delete fRepeatTimer;
       delete fGrab;
+
+      if (fPlane) {
+         fPlane->ChangeOptions(fPlane->GetOptions() & ~kRaisedFrame);
+         gClient->NeedRedraw(fPlane, kTRUE);
+         fPlane = 0;
+      }
    }
 };
 
@@ -866,26 +879,35 @@ void TGuiBldDragManager::HighlightCompositeFrame(Window_t win)
 {
    //
 
-   if (!win) return;
+   static Window_t gw = 0;
+  
+   if (!win || (win == gw)) return;
 
-   TGCompositeFrame *frame = FindCompositeFrame(win);
+   TGWindow *w = fClient->GetWindowById(win);
 
-   if (!frame) return;
-/*
-   const TGGC *gc = fClient->GetResourcePool()->GetSelectedBckgndGC();
-   Window_t id = frame->GetParent()->GetId();
+   if (!w || (w == fPimpl->fPlane) || w->IsEditDisabled() || w->IsEditable() ||
+       !w->InheritsFrom(TGCompositeFrame::Class())) return;
 
-   if (!fDragging) {
-      if (inedit) {
-         DoRedraw();
-      } else {
-         ((TGWindow*)frame->GetParent())->DoRedraw();
-      }
+   TGFrame *frame = (TGFrame*)w;
+   UInt_t opt = frame->GetOptions();
 
-      gVirtualX->DrawRectangle(id, gc->GetGC(), frame->GetX() - 3,
-                               frame->GetY() - 3, frame->GetWidth() + 6,
-                               frame->GetHeight() + 6);
-*/
+   if ((opt & kRaisedFrame) || (opt & kSunkenFrame)) return; 
+
+   gw = win;
+   if (fPimpl->fPlane) {
+      fPimpl->fPlane->ChangeOptions(fPimpl->fPlane->GetOptions() & ~kRaisedFrame);
+      fClient->NeedRedraw(fPimpl->fPlane, kTRUE);
+   }
+   fPimpl->fPlane = frame;
+   fPimpl->fPlane->ChangeOptions(opt | kRaisedFrame);
+   fClient->NeedRedraw(fPimpl->fPlane, kTRUE);
+
+   if (fBuilder) {
+      TString str = frame->ClassName();
+      str += "::";
+      str += frame->GetName();
+      fBuilder->UpdateStatusBar(str.Data());
+   }
 }
 
 //______________________________________________________________________________
@@ -944,6 +966,11 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
 
       ev.fType = kButtonPress;
       t->SetTime(40);
+
+      if (fPimpl->fPlane) {
+         fPimpl->fPlane->ChangeOptions(fPimpl->fPlane->GetOptions() & ~kRaisedFrame);
+         fClient->NeedRedraw(fPimpl->fPlane, kTRUE);
+      }
 
       return HandleButtonPress(&ev);
    }
@@ -1193,6 +1220,9 @@ Bool_t TGuiBldDragManager::HandleEvent(Event_t *event)
                   TGWindow *root = (TGWindow *)fClient->GetRoot();
                   root->SetEditable(kFALSE);
                   SetEditable(kFALSE);
+                  if (fBuilder) {
+                     fBuilder->UpdateStatusBar("Edit is OFF");
+                  }
                   return kTRUE;
                } else if (!(event->fState & 0xFF)) {
                   ExecuteQuickAction(event);
@@ -1316,6 +1346,11 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
    const char *fname;
 
    if (event->fType != kGKeyPress) return kFALSE;
+
+   if (fPimpl->fPlane) {
+      fPimpl->fPlane->ChangeOptions(fPimpl->fPlane->GetOptions() & ~kRaisedFrame);
+      fClient->NeedRedraw(fPimpl->fPlane, kTRUE);
+   }
 
    CloseMenus();
 
@@ -1911,6 +1946,10 @@ void TGuiBldDragManager::HandlePaste()
       }
    }
    fPasting = kFALSE;
+
+   if (fBuilder) {
+      fBuilder->UpdateStatusBar("Paste action performed");
+   }
 }
 
 //______________________________________________________________________________
@@ -1924,6 +1963,17 @@ void TGuiBldDragManager::DoReplace(TGFrame *frame)
    Int_t h = fPimpl->fGrab->GetHeight();
    Int_t x = fPimpl->fGrab->GetX();
    Int_t y = fPimpl->fGrab->GetY();
+
+   if (fBuilder) {
+      TString str = fPimpl->fGrab->ClassName();
+      str += "::";
+      str += fPimpl->fGrab->GetName();
+      str += " replaced by ";
+      str += frame->ClassName();
+      str += "::";
+      str += frame->GetName();
+      fBuilder->UpdateStatusBar(str.Data());
+   }
 
    TGFrameElement *fe = fPimpl->fGrab->GetFrameElement();
 
@@ -2441,6 +2491,9 @@ Bool_t TGuiBldDragManager::EndDrag()
    if (fBuilder) {
       fBuilder->SetAction(0);
       fBuilder->Update();
+      if (fLassoDrawn) {
+         fBuilder->UpdateStatusBar("Lasso Drawn");
+      }
    }
 
    return ret;
@@ -2513,6 +2566,16 @@ Bool_t TGuiBldDragManager::Drop()
    }
 
    if (fDropStatus) {
+      if (fBuilder) {
+         TString str = frame->ClassName();
+         str += "::";
+         str += frame->GetName();
+         str += " dropped into ";
+         str += parent->ClassName();
+         str += "::";
+         str += parent->GetName();
+         fBuilder->UpdateStatusBar(str.Data());
+      }
       fTarget = 0;
       fTargetId = 0;
 
@@ -2653,6 +2716,11 @@ void TGuiBldDragManager::HandleAction(Int_t act)
    //
 
    fPimpl->fLastPopupAction = act;
+
+   if (fPimpl->fPlane) {
+      fPimpl->fPlane->ChangeOptions(fPimpl->fPlane->GetOptions() & ~kRaisedFrame);
+      fClient->NeedRedraw(fPimpl->fPlane, kTRUE);
+   }
 
    switch ((EActionType)act) {
       case kPropertyAct:
