@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.h,v 1.1 2004/09/03 00:25:47 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.h,v 1.2 2004/09/08 16:03:57 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -72,6 +72,8 @@ public:
    virtual ~TGMdiMenuBar();
 
    void AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l);
+   TGMenuBar *GetMenuBar() const { return fBar;}
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGMdiMenuBar, 0)
 };

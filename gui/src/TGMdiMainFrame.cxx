@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.5 2004/09/03 16:19:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.6 2004/09/08 16:03:57 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -38,9 +38,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "KeySymbols.h"
 #include "TGFrame.h"
 #include "TGMdiMainFrame.h"
@@ -49,7 +46,7 @@
 #include "TGMdiMenu.h"
 #include "TGGC.h"
 #include "TGResourcePool.h"
-
+#include "Riostream.h"
 
 ClassImp(TGMdiMainFrame)
 ClassImp(TGMdiContainer)
@@ -72,6 +69,7 @@ TGMdiMainFrame::TGMdiMainFrame(const TGWindow *p, TGMdiMenuBar *menuBar,
    fMenuBar = menuBar;
    fChildren = 0;
    fCurrent = 0;
+   fArrangementMode = 0;
 
    const TGResourcePool *res = GetResourcePool();
    fBackCurrent = res->GetSelectedBgndColor();
@@ -504,6 +502,8 @@ void TGMdiMainFrame::ArrangeFrames(Int_t mode)
    Int_t y = 0;
    Int_t w = fWidth - 2 * fBorderWidth;  //GetContainer()->GetWidth();
    Int_t h = fHeight - 2 * fBorderWidth;  //GetContainer()->GetHeight();
+   
+   fArrangementMode = mode;
 
    TGMdiFrameList *tmp, *travel;
 
@@ -1072,4 +1072,57 @@ Bool_t TGMdiContainer::HandleConfigureNotify(Event_t *event)
       }
    }
    return kFALSE;
+}
+
+//______________________________________________________________________________
+void TGMdiMainFrame::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a MDI main frame as a C++ statement(s) on output stream out
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out << endl << "   // MDI main frame" << endl;
+   out << "   TGMdiMainFrame *";
+   out << GetName() << " = new TGMdiMainFrame(" << fParent->GetName()
+       << "," << GetMenu()->GetName() << "," << GetWidth() << "," << GetHeight();
+
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (!GetOptions()) {
+         out << ");" << endl;
+      } else {
+         out << "," << GetOptionString() <<");" << endl;
+      }
+   } else {
+      out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   TGMdiFrameList *travel;
+   travel->SetCycleNext(travel);
+   for (travel = fChildren; travel; travel = travel->GetNext()) {
+      TGMdiFrame *mf = travel->GetDecorFrame()->GetMdiFrame();
+      if (mf) mf->SavePrimitive(out, option);
+   } 
+   if (fArrangementMode) {
+      out << "   " << GetName() << "->ArrangeFrames(";
+      switch (fArrangementMode) {
+      
+         case kMdiTileHorizontal:
+            out << "kMdiTileHorizontal);" << endl;
+         break;
+
+         case kMdiTileVertical:
+            out << "kMdiTileVertical);" << endl;
+         break;
+
+         case kMdiCascade:
+            out << "kMdiCascade);" << endl;
+         break;
+      }
+   }
+   if (fResizeMode != kMdiOpaque)
+      out << "   " << GetName() << "->SetResizeMode(kMdiNonOpaque);" << endl;
+
+   if (fCurrent)
+      out << "   " << GetName() << "->SetCurrent(" << GetCurrent()->GetName() 
+          << ");" << endl;
 }

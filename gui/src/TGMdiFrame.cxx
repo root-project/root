@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.cxx,v 1.2 2004/09/03 16:19:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.cxx,v 1.3 2004/09/08 16:03:57 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -38,13 +38,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <TGFrame.h>
-
+#include "TGFrame.h"
 #include "TGMdiFrame.h"
 #include "TGMdiMainFrame.h"
 #include "TGMdiDecorFrame.h"
+#include "Riostream.h"
 
 
 ClassImp(TGMdiFrame)
@@ -57,6 +55,7 @@ TGMdiFrame::TGMdiFrame(TGMdiMainFrame *main, Int_t w, Int_t h, UInt_t options,
 {
    fMain = main;
    fMain->AddMdiFrame(this);  // this reparents the window
+   fMdiHints = kMdiDefaultHints;
 }
 
 //______________________________________________________________________________
@@ -119,4 +118,91 @@ const TGPicture *TGMdiFrame::GetWindowIcon()
 void TGMdiFrame::Move(Int_t x, Int_t y)
 {
    ((TGMdiDecorFrame *)fParent)->Move(x, y);
+   fX = x; fY = y;
+}
+
+//______________________________________________________________________________
+TString TGMdiFrame::GetMdiHintsString() const
+{
+   // Returns a MDI option string - used in SavePrimitive().
+
+   TString hints;
+   if (fMdiHints == kMdiDefaultHints)
+      hints = "kMdiDefaultHints";
+   else {
+      if (fMdiHints & kMdiClose) {
+         if (hints.Length() == 0) hints = "kMdiClose";
+         else                     hints += " | kMdiClose";
+      }
+      if (fMdiHints & kMdiRestore) {
+         if (hints.Length() == 0) hints = "kMdiRestore";
+         else                     hints += " | kMdiRestore";
+      }
+      if (fMdiHints & kMdiMove) {
+         if (hints.Length() == 0) hints = "kMdiMove";
+         else                     hints += " | kMdiMove";
+      }
+      if (fMdiHints & kMdiSize) {
+         if (hints.Length() == 0) hints = "kMdiSize";
+         else                     hints += " | kMdiSize";
+      }
+      if (fMdiHints & kMdiMinimize) {
+         if (hints.Length() == 0) hints = "kMdiMinimize";
+         else                     hints += " | kMdiMinimize";
+      }
+      if (fMdiHints & kMdiMaximize) {
+         if (hints.Length() == 0) hints = "kMdiMaximize";
+         else                     hints += " | kMdiMaximize";
+      }
+      if (fMdiHints & kMdiHelp) {
+         if (hints.Length() == 0) hints = "kMdiHelp";
+         else                     hints += " | kMdiHelp";
+      }
+      if (fMdiHints & kMdiMenu) {
+         if (hints.Length() == 0) hints = "kMdiMenu";
+         else                     hints += " | kMdiMenu";
+      }
+   }
+   return hints;
+}
+
+//______________________________________________________________________________
+void TGMdiFrame::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a MDIframe as a C++ statement(s) on output stream out
+
+   char quote = '"';
+   
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   
+   TGMdiTitleBar *tb = fMain->GetWindowList()->GetDecorFrame()->GetTitleBar();
+   
+   out << endl <<"   // MDI frame "<< quote << GetWindowName() << quote << endl;
+   out << "   TGMdiFrame *";
+   out << GetName() << " = new TGMdiFrame(" << fMain->GetName()
+       << "," << GetWidth() + GetBorderWidth()*2 
+       << "," << GetHeight() + tb->GetHeight() + GetBorderWidth()*2;
+
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (!GetOptions()) {
+         out << ");" << endl;
+      } else {
+         out << "," << GetOptionString() <<");" << endl;
+      }
+   } else {
+      out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   SavePrimitiveSubframes(out, option);
+   
+   out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
+       << quote << ");" << endl;
+   out << "   " << GetName() << "->SetMdiHints(" << GetMdiHintsString()
+       << ");" << endl;
+   if ((GetX() != 5) && (GetY() != 23))
+      out << "   " << GetName() << "->Move(" << GetX() << "," << GetY() 
+          << ");" << endl;
+          
+   out << "   " << GetName() << "->MapSubwindows();" << endl;
+   out << "   " << GetName() << "->Layout();" << endl;
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.h,v 1.2 2004/09/03 16:19:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.h,v 1.3 2004/09/08 16:03:57 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -61,6 +61,8 @@ protected:
    TGMdiMainFrame  *fMain;
    ULong_t          fMdiHints;
 
+   TString GetMdiHintsString() const;
+   
 public:
    TGMdiFrame(TGMdiMainFrame *main, Int_t w, Int_t h,
               UInt_t options = 0,
@@ -79,6 +81,8 @@ public:
    void              SetWindowIcon(const TGPicture *pic);
    const char       *GetWindowName();
    const TGPicture  *GetWindowIcon();
+
+   virtual void      SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGMdiFrame, 0)
 };

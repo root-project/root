@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.h,v 1.2 2004/09/03 16:19:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.h,v 1.3 2004/09/08 16:03:57 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -69,7 +69,7 @@ enum EMdiHints {
    kMdiMaximize      = 128,
    kMdiHelp          = 256,
    kMdiMenu          = 512,
-   kMdiDefaultHints  = kMdiMenu | kMdiMinimize | kMdiRestore |
+   kMdiDefaultHints  = kMdiMenu | kMdiMinimize | kMdiRestore | 
                        kMdiMaximize | kMdiSize | kMdiClose
 };
 
@@ -150,6 +150,7 @@ protected:
    };
 
    Int_t            fCurrentX, fCurrentY, fResizeMode;
+   Int_t            fArrangementMode;
    TGFont          *fFontCurrent, *fFontNotCurrent;
    Pixel_t          fBackCurrent, fForeCurrent;
    Pixel_t          fBackNotCurrent, fForeNotCurrent;
@@ -230,6 +231,8 @@ public:
    virtual void     FrameMinimized(Int_t id) { Emit("FrameMinimized(Int_t)", id); } //*SIGNAL*
    virtual void     FrameRestored(Int_t id) { Emit("FrameRestored(Int_t)", id); } //*SIGNAL*
    virtual void     FramesArranged(Int_t mode) { Emit("FramesArranged(Int_t)", mode); } //*SIGNAL*
+
+   virtual void     SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGMdiMainFrame, 0)
 };

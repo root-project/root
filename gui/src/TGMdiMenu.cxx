@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.cxx,v 1.1 2004/09/03 00:25:47 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.cxx,v 1.2 2004/09/08 16:03:57 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -38,11 +38,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "TGMdi.h"
 #include "TGMdiMenu.h"
+#include "Riostream.h"
 
 
 ClassImp(TGMdiMenuBar)
@@ -99,4 +97,31 @@ void TGMdiMenuBar::RemoveFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
 
    fLeft->RemoveFrame(icon);
    fRight->RemoveFrame(buttons);
+}
+
+//______________________________________________________________________________
+void TGMdiMenuBar::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a MDI menu as a C++ statement(s) on output stream out
+
+   out << endl;
+   out << "   // MDI menu bar" << endl;
+
+   out << "   TGMdiMenuBar *";
+   out << GetName() << " = new TGMdiMenuBar(" << fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight() << ");" << endl;
+
+   if (!fList) return;
+
+   out << "   TGMenuBar *" << fBar->GetName() << " = " << GetName()
+       << "->GetMenuBar();" << endl;
+
+   TGFrameElement *el;
+   TIter next(fBar->GetList());
+
+   while ((el = (TGFrameElement *)next())) {
+	     el->fFrame->SavePrimitive(out, option);
+      el->fLayout->SavePrimitive(out, option);
+      out << ");" << endl;
+   }
 }
