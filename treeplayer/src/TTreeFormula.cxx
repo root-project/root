@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.36 2001/04/28 11:42:05 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.37 2001/04/30 15:08:51 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -746,8 +746,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       TTree *tleaf = leaf->GetBranch()->GetTree();
       fCodes[code] = tleaf->GetListOfLeaves()->IndexOf(leaf);
       TNamed *named = new TNamed(leaf->GetName(),tleaf->GetName());
-      fNames.AddAt(named,code);
-      fLeaves.AddAt(leaf,code);
+      fNames.AddAtAndExpand(named,code);
+      fLeaves.AddAtAndExpand(leaf,code);
       
       // Analyze the content of 'right'
       
@@ -779,8 +779,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          }
       }
       if (cl==0) {
-         fMethods.AddAt(0,code);
-         fDataMembers.AddAt(0,code);
+         fMethods.AddAtAndExpand(0,code);
+         fDataMembers.AddAtAndExpand(0,code);
       } else {     
          if (!strstr(right,"(")) {
             // There is no function calls so it has to be a 
@@ -924,7 +924,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                } else 
                   *current++ = right[i];
             }
-            fDataMembers.AddAt(maininfo,code);
+            fDataMembers.AddAtAndExpand(maininfo,code);
             fLookupType[code] = kDataMember; 
             
          } else {
@@ -941,8 +941,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             TMethodCall *method = new TMethodCall(cl, namecpy, params);
             delete [] namecpy;
             if (method->GetMethod()) {
-               fMethods.AddAt(method,code);
-               fDataMembers.AddAt(0,code);
+               fMethods.AddAtAndExpand(method,code);
+               fDataMembers.AddAtAndExpand(0,code);
                fLookupType[code] = kMethod; 
             } else {          
                Error("TTreeFormula","Unknown method:%s",right);
@@ -994,7 +994,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       Int_t muly = ((TTreeFormula*)gcut->GetObjectY())->GetMultiplicity();
       if(mulx || muly) fMultiplicity = -1;
 
-      fMethods.AddAt(gcut,0);
+      fMethods.AddAtAndExpand(gcut,0);
       Int_t code = fNcodes;
       fCodes[code] = -1;
       fNcodes++;
