@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.9 2000/12/18 07:12:58 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.10 2000/12/22 10:44:44 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -53,6 +53,7 @@ public:
    virtual         ~TStreamerElement();
    Int_t            GetArrayDim() const {return fArrayDim;}
    Int_t            GetArrayLength() const {return fArrayLength;}
+   TClass          *GetClassPointer() const;
    virtual const char *GetInclude() const {return "";}
    Int_t            GetMaxIndex(Int_t i) const {return fMaxIndex[i];}
    virtual ULong_t  GetMethod() const {return ULong_t(fStreamer);}
@@ -64,6 +65,7 @@ public:
    const char      *GetTypeName() const {return fTypeName.Data();}
    virtual void     Init(TObject *obj=0);
    virtual Bool_t   IsaPointer() const {return kFALSE;}
+   virtual Bool_t   IsOldFormat(const char *newTypeName);
    virtual void     ls(Option_t *option="") const;
    virtual void     SetArrayDim(Int_t dim);
    virtual void     SetMaxIndex(Int_t dim, Int_t max);
@@ -243,7 +245,7 @@ class TStreamerSTLstring : public TStreamerSTL {
 public:
 
    TStreamerSTLstring();
-   TStreamerSTLstring(const char *name, const char *title, Int_t offset);
+   TStreamerSTLstring(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerSTLstring();
    const char    *GetInclude() const;
    

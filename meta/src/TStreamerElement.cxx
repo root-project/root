@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.9 2000/12/22 10:44:44 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.10 2001/01/13 17:05:37 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -70,8 +70,32 @@ TStreamerElement::~TStreamerElement()
 
 
 //______________________________________________________________________________
+TClass *TStreamerElement::GetClassPointer() const
+{
+   //returns a pointer to the TClass of this element
+   char className[128];
+   sprintf(className,fTypeName.Data());
+   char *star = strchr(className,'*');
+   if (star) *star = 0;
+   return gROOT->GetClass(className);
+}
+
+//______________________________________________________________________________
 void TStreamerElement::Init(TObject *)
 {
+}
+
+//______________________________________________________________________________
+Bool_t TStreamerElement::IsOldFormat(const char *newTypeName)
+{
+   //The early 3.00/00 and 3.01/01 versions used to store
+   //dm->GetTypeName instead of dm->GetFullTypename
+   //if this case is detected, the element type name is modified
+   
+   if (!IsaPointer()) return kFALSE;
+   if (!strstr(newTypeName,fTypeName.Data())) return kFALSE;
+   fTypeName = newTypeName;
+   return kTRUE;   
 }
 
 //______________________________________________________________________________
@@ -84,6 +108,7 @@ void TStreamerElement::ls(Option_t *) const
       sprintf(cdim,"[%d]",fMaxIndex[i]);
       strcat(name,cdim);
    }
+   if (IsaPointer() && !fTypeName.Contains("*")) fTypeName.Append("*");
    printf("  %-14s%-15s offset=%3d type=%2d %-20s\n",GetTypeName(),name,fOffset,fType,GetTitle());
 }
 
@@ -167,7 +192,7 @@ void TStreamerBase::Init(TObject *)
 //______________________________________________________________________________
 const char *TStreamerBase::GetInclude() const
 {
-   TClass *cl = gROOT->GetClass(GetTypeName());
+   TClass *cl = GetClassPointer();
    if (cl && cl->GetClassInfo()) sprintf(includeName,"\"%s\"",cl->GetDeclFileName());
    else                          sprintf(includeName,"\"%s.h\"",GetName());
    return includeName;
@@ -375,13 +400,13 @@ TStreamerObject::~TStreamerObject()
 //______________________________________________________________________________
 void TStreamerObject::Init(TObject *)
 {
-   fClassObject = gROOT->GetClass(fTypeName.Data());
+   fClassObject = GetClassPointer();
 }
 
 //______________________________________________________________________________
 const char *TStreamerObject::GetInclude() const
 {
-   TClass *cl = gROOT->GetClass(GetTypeName());
+   TClass *cl = GetClassPointer();
    if (cl && cl->GetClassInfo()) sprintf(includeName,"\"%s\"",cl->GetDeclFileName());
    else                          sprintf(includeName,"\"%s.h\"",GetTypeName());
    return includeName;
@@ -423,13 +448,13 @@ TStreamerObjectAny::~TStreamerObjectAny()
 //______________________________________________________________________________
 void TStreamerObjectAny::Init(TObject *)
 {
-   fClassObject = gROOT->GetClass(fTypeName.Data());
+   fClassObject = GetClassPointer();
 }
 
 //______________________________________________________________________________
 const char *TStreamerObjectAny::GetInclude() const
 {
-   TClass *cl = gROOT->GetClass(GetTypeName());
+   TClass *cl = GetClassPointer();
    if (cl && cl->GetClassInfo()) sprintf(includeName,"\"%s\"",cl->GetDeclFileName());
    else                          sprintf(includeName,"\"%s.h\"",GetTypeName());
    return includeName;
@@ -474,15 +499,17 @@ TStreamerObjectPointer::~TStreamerObjectPointer()
 //______________________________________________________________________________
 void TStreamerObjectPointer::Init(TObject *)
 {
-   fClassObject = gROOT->GetClass(fTypeName.Data());
+   fClassObject = GetClassPointer();
 }
 
 //______________________________________________________________________________
 const char *TStreamerObjectPointer::GetInclude() const
 {
-   TClass *cl = gROOT->GetClass(GetTypeName());
+   TClass *cl = GetClassPointer();
    if (cl && cl->GetClassInfo()) sprintf(includeName,"\"%s\"",cl->GetDeclFileName());
    else                          sprintf(includeName,"\"%s.h\"",GetTypeName());
+   char *star = strchr(includeName,'*');
+   if (star) strcpy(star,star+1);
    return includeName;
 }
 
@@ -636,7 +663,7 @@ TStreamerSTLstring::TStreamerSTLstring()
 }
 
 //______________________________________________________________________________
-TStreamerSTLstring::TStreamerSTLstring(const char *name, const char *title, Int_t offset)
+TStreamerSTLstring::TStreamerSTLstring(const char *name, const char *title, Int_t offset, const char *typeName)
         : TStreamerSTL()
 {
    // Create a TStreamerSTLstring object.
@@ -648,7 +675,7 @@ TStreamerSTLstring::TStreamerSTLstring(const char *name, const char *title, Int_
    fOffset  = offset;
    fSTLtype = kSTLstring;
    fCtype   = kSTLstring;
-   fTypeName= "string";
+   fTypeName= typeName;
 }
 
 //______________________________________________________________________________
