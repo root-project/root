@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.17 2001/02/10 07:13:49 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.18 2001/03/12 07:34:19 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -145,6 +145,10 @@ void stress(Int_t nevent)
    printf("******************************************************************\n");
    printf("*  Starting  R O O T - S T R E S S test suite with %d events\n",nevent);
    printf("******************************************************************\n");
+   // select the branch style
+   TTree::SetBranchStyle(0); //use old style branch
+   //TTree::SetBranchStyle(1); //use new style branch
+   
    //Run the standard test suite
    gBenchmark->Start("stress");
    stress1();
@@ -801,7 +805,7 @@ void stress8(Int_t nevent)
 
    // Create the file compressed, in split mode and read it back
    gRandom->SetSeed();
-   Int_t nbw2 = stress8write(nevent,1,1);
+   Int_t nbw2 = stress8write(nevent,1,9);
    Int_t nbr2 = stress8read(0);
    Event::Reset();
 
