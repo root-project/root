@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.8 2003/01/06 17:05:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.9 2003/01/12 14:49:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoTrd2::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -455,6 +455,10 @@ TGeoVolume *TGeoTrd2::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // are supported. For Z divisions just return the pointer to the volume to be 
 // divided. In case a wrong division axis is supplied, returns pointer to 
 // volume that was divided.
+   if (ndiv<=0) {
+      Error("Divide", "cannot divide %s with ndiv=%i", voldiv->GetName(), ndiv);
+      return 0;
+   }   
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
@@ -462,6 +466,7 @@ TGeoVolume *TGeoTrd2::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    TString opt = "";           //--- option to be attached
    Double_t zmin, zmax, dx1n, dx2n, dy1n, dy2n;
    Int_t id;
+   Double_t end = start+ndiv*step;
    switch (iaxis) {
       case 1:
          Warning("Divide", "dividing a Trd2 on X not implemented");
@@ -470,12 +475,11 @@ TGeoVolume *TGeoTrd2::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          Warning("Divide", "dividing a Trd2 on Y not implemented");
          return voldiv;
       case 3:
-         if (step<=0) {step=2*fDz/ndiv; start=-fDz;}
-         if (((start+fDz)<-1E-4) || ((start+ndiv*step-fDz)>1E-4)) {
-            Warning("Divide", "trd2 Z division exceed shape range");
-            printf("   volume was %s\n", voldiv->GetName());
+         if (step<=0) {step=2*fDz/ndiv; start=-fDz; end=start+ndiv*step;}
+         if (((start+fDz)<-1E-3) || ((end-fDz)>1E-3)) {
+            Warning("Divide", "z division of %s exceed shape range", voldiv->GetName());
          }
-         finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
+         finder = new TGeoPatternZ(voldiv, ndiv, start, end);
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            

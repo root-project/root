@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.17 2003/01/12 14:49:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.18 2003/01/13 20:52:45 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -184,7 +184,7 @@ public:
    void                   SetVolumeAttribute(const char *name, const char *att, Int_t val);
    //--- geometry building
    void                   BuildDefaultMaterials();
-   void                   CloseGeometry(Option_t *option="");
+   void                   CloseGeometry(Option_t *option="d");
    Bool_t                 IsClosed() const {return ((fCache==0)?kFALSE:kTRUE);}
    TGeoVolume            *MakeArb8(const char *name, const TGeoMedium *medium,
                                      Double_t dz, Double_t *vertices=0);
@@ -295,6 +295,7 @@ public:
    TGeoHMatrix           *GetCurrentMatrix() const    {return fCache->GetCurrentMatrix();}
    TGeoNode              *GetCurrentNode() const      {return fCurrentNode;}
    Double_t              *GetCurrentPoint() const     {return fPoint;}
+   Double_t              *GetCurrentDirection() const {return fDirection;}
    TGeoVolume            *GetCurrentVolume() const {return fCurrentNode->GetVolume();}
    Double_t              *GetCldirChecked() const  {return fCldirChecked;}
    Double_t              *GetCldir() const         {return fCldir;}

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.30 2003/01/13 20:52:45 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.31 2003/01/15 18:43:44 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1327,7 +1327,7 @@ void TGeoManager::CdDown(Int_t index)
    TGeoNode *node = fCurrentNode->GetDaughter(index);
    Bool_t is_offset = node->IsOffset();
    if (is_offset)
-      node->GetFinder()->cd(node->GetIndex());
+      node->cd();
    else
       fCurrentOverlapping = node->IsOverlapping();
    fCache->CdDown(index);

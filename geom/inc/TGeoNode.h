@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.10 2002/10/21 15:21:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.11 2003/01/06 17:05:43 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -175,7 +175,7 @@ public:
    Double_t          GetOffset() const {return fOffset;}
    virtual Int_t     GetIndex() const;
    virtual TGeoPatternFinder *GetFinder() const {return fFinder;}
-   virtual TGeoMatrix *GetMatrix() const {return fFinder->GetMatrix();}
+   virtual TGeoMatrix *GetMatrix() const {cd(); return fFinder->GetMatrix();}
    virtual TGeoNode *MakeCopyNode() const;
    void              SetFinder(const TGeoPatternFinder *finder) {fFinder = (TGeoPatternFinder*)finder;}
 

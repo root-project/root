@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.18 2003/01/13 16:01:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.19 2003/01/15 18:43:44 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -142,7 +142,7 @@ TGeoVolume::~TGeoVolume()
       }   
       delete fNodes;
    }
-   if (fFinder) delete fFinder;
+   if (fFinder && !TObject::TestBit(kVolumeImportNodes)) delete fFinder;
    if (fVoxels) delete fVoxels;
 }
 //-----------------------------------------------------------------------------
@@ -188,7 +188,7 @@ void TGeoVolume::CheckShapes()
 {
 // check for negative parameters in shapes.
 // THIS METHOD LEAVES SOME GARBAGE NODES -> memory leak, to be fixed
-//   printf("Checking %s\n", GetName());
+//   printf("---Checking daughters of volume %s\n", GetName());
    if (!fNodes) return;
    Int_t nd=fNodes->GetEntriesFast();
    TGeoNode *node = 0;
@@ -203,15 +203,15 @@ void TGeoVolume::CheckShapes()
       old_vol = node->GetVolume();
       shape = old_vol->GetShape();
       if (shape->IsRunTimeShape()) {
-//         printf("Node %s/%s has shape with negative parameters. \n", 
+//         printf("   Node %s/%s has shape with negative parameters. \n", 
 //                 GetName(), node->GetName());
 //         old_vol->InspectShape();
          // make a copy of the node
          new_node = node->MakeCopyNode();
          TGeoShape *new_shape = shape->GetMakeRuntimeShape(fShape);
          if (!new_shape) {
-            printf("***ERROR - could not resolve runtime shape for volume %s\n",
-                   old_vol->GetName());
+            Error("CheckShapes","cannot resolve runtime shape for volume %s/%s\n",
+                   GetName(),old_vol->GetName());
             continue;
          }         
          TGeoVolume *new_volume = old_vol->MakeCopyVolume();
@@ -221,7 +221,7 @@ void TGeoVolume::CheckShapes()
          new_node->SetVolume(new_volume);
          // decouple the old node and put the new one instead
          fNodes->AddAt(new_node, i);
-         new_volume->CheckShapes();
+//         new_volume->CheckShapes();
       }
    }
 }     
@@ -609,7 +609,8 @@ void TGeoVolume::GrabFocus()
 TGeoVolume *TGeoVolume::MakeCopyVolume()
 {
     // make a copy of this volume
-    char *name = new char[strlen(GetName())];
+//    printf("   Making a copy of %s\n", GetName());
+    char *name = new char[strlen(GetName())+1];
     sprintf(name, "%s", GetName());
     // build a volume with same name, shape and medium
     Bool_t is_runtime = fShape->IsRunTimeShape();
@@ -628,7 +629,7 @@ TGeoVolume *TGeoVolume::MakeCopyVolume()
     vol->SetField(fField);
     // if divided, copy division object
     if (fFinder) {
-       Error("MakeCopyVolume", "volume divided");
+//       Error("MakeCopyVolume", "volume %s divided", GetName());
        vol->SetFinder(fFinder);
     }   
     if (!fNodes) return vol;

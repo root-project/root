@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.13 2003/01/06 17:05:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.14 2003/01/07 09:48:42 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -442,8 +442,9 @@ Int_t TGeoNodeMatrix::GetOptimalVoxels() const
 TGeoNode *TGeoNodeMatrix::MakeCopyNode() const
 {
 // make a copy of this node
+//   printf("      Making a copy of node %s\n", GetName());
    TGeoNodeMatrix *node = new TGeoNodeMatrix(fVolume, fMatrix);
-   char *name = new char[strlen(GetName())];
+   char *name = new char[strlen(GetName())+1];
    sprintf(name, "%s", GetName());
    node->SetName(name);
    // set the mother
@@ -504,6 +505,9 @@ TGeoNode *TGeoNodeOffset::MakeCopyNode() const
 {
 // make a copy of this node
    TGeoNodeOffset *node = new TGeoNodeOffset(fVolume, GetIndex(), fOffset);
+   char *name = new char[strlen(GetName())+1];
+   sprintf(name, "%s", GetName());
+   node->SetName(name);
    // set the mother
    node->SetMotherVolume(fMother);
    if (IsVirtual()) node->SetVirtual();

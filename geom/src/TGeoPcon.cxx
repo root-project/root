@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.10 2003/01/13 17:45:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.11 2003/01/13 18:00:59 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -443,6 +443,10 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // performed if the divided range is in between two consecutive Z planes.
 //  In case a wrong division axis is supplied, returns pointer to 
 // volume that was divided.
+   if (ndiv<=0) {
+      Error("Divide", "cannot divide %s with ndiv=%i", voldiv->GetName(), ndiv);
+      return 0;
+   }   
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume

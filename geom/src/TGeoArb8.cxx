@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.14 2003/01/06 17:05:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.15 2003/01/12 14:49:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -642,6 +642,11 @@ TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // are supported. For Z divisions just return the pointer to the volume to be 
 // divided. In case a wrong division axis is supplied, returns pointer to 
 // volume that was divided.
+   if (ndiv<=0) {
+      Error("Divide", "cannot divide %s with ndiv=%i", voldiv->GetName(), ndiv);
+      return 0;
+   }   
+   if (step<=0) {step=2*fDz/ndiv; start=-fDz;} 
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
@@ -651,9 +656,13 @@ TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
       Error("Divide", "cannot divide trapezoids on other axis than Z");
       return voldiv;
    }
+   Double_t end = start+ndiv*step;
+   if (((start+fDz)<-1E-3) || ((end-fDz)>1E-3)) {
+      Warning("Divide", "z division of %s exceed shape range", voldiv->GetName());
+   }
    Double_t points_lo[8];
    Double_t points_hi[8];
-   finder = new TGeoPatternTrapZ(voldiv, ndiv, start, start+ndiv*step);
+   finder = new TGeoPatternTrapZ(voldiv, ndiv, start, end);
    voldiv->SetFinder(finder);
    finder->SetDivIndex(voldiv->GetNdaughters());
    opt = "Z";

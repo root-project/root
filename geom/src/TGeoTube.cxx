@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.10 2003/01/13 14:53:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.11 2003/01/13 22:06:35 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -341,21 +341,24 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // creates all volumes with different shapes and returns pointer to volume that
 // was divided. In case a wrong division axis is supplied, returns pointer to 
 // volume that was divided.
+   if (ndiv<=0) {
+      Error("Divide", "cannot divide %s with ndiv=%i", voldiv->GetName(), ndiv);
+      return 0;
+   }   
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
    TGeoPatternFinder *finder;  //--- finder to be attached 
    TString opt = "";           //--- option to be attached
    Int_t id;
+   Double_t end = start+ndiv*step;
    switch (iaxis) {
       case 1:  //---                R division
-         if (step<=0) {step=(fRmax-fRmin)/ndiv; start=fRmin;}
-         if (((start-fRmin)<-1E-4) || ((start-fRmax)>1E-4) || 
-            ((start+ndiv*step-fRmin)<-1E-4) ||((start+ndiv*step-fRmax)>1E-4)) {
-            Warning("Divide", "cyl R division exceed shape range");
-            printf("   volume was %s\n", voldiv->GetName());
+         if (step<=0) {step=(fRmax-fRmin)/ndiv; start=fRmin;end=fRmax;}
+         if (((start-fRmin)<-1E-3) || ((end-fRmax)>1E-3)) {
+            Warning("Divide", "R division of %s exceed shape range", voldiv->GetName());
          }
-         finder = new TGeoPatternCylR(voldiv, ndiv, start, start+ndiv*step);
+         finder = new TGeoPatternCylR(voldiv, ndiv, start, end);
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());
@@ -369,8 +372,8 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          }
          return vmulti;
       case 2:  //---                Phi division
-         if (step<=0) step=360./ndiv;
-         finder = new TGeoPatternCylPhi(voldiv, ndiv, start, start+ndiv*step);
+         if (step<=0) {step=360./ndiv; end=start+ndiv*step;}
+         finder = new TGeoPatternCylPhi(voldiv, ndiv, start, end);
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoTubeSeg(fRmin, fRmax, fDz, -step/2, step/2);
@@ -384,10 +387,9 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          }
          return vmulti;
       case 3: //---                  Z division
-         if (step<=0) {step=2*fDz/ndiv; start=-fDz;}
-         if (((start+fDz)<-1E-4) || ((start+ndiv*step-fDz)>1E-4)) {
-            Warning("Divide", "cyl z division exceed shape range");
-            printf("   volume was %s\n", voldiv->GetName());
+         if (step<=0) {step=2*fDz/ndiv; start=-fDz; end=fDz;}
+         if (((start+fDz)<-1E-3) || ((end-fDz)>1E-3)) {
+            Warning("Divide", "x division of %s exceed shape range", voldiv->GetName());
          }
          finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
          voldiv->SetFinder(finder);
@@ -1080,15 +1082,14 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
    TString opt = "";           //--- option to be attached
    Double_t dphi;
    Int_t id;
+   Double_t end = start+ndiv*step;
    switch (iaxis) {
       case 1:  //---                 R division
-         if (step<=0) {step=(fRmax-fRmin)/ndiv; start=fRmin;}
-         if (((start-fRmin)<-1E-4) || ((start-fRmax)>1E-4) || 
-             ((start+ndiv*step-fRmin)<-1E-4) ||((start+ndiv*step-fRmax)>1E-4)) {
-            Warning("Divide", "cyl seg R division exceed shape range");
-            printf("   volume was %s\n", voldiv->GetName());
+         if (step<=0) {step=(fRmax-fRmin)/ndiv; start=fRmin;end=fRmax;}
+         if (((start-fRmin)<-1E-4) || ((end-fRmax)>1E-4)) {
+            Warning("Divide", "R division of %s exceed shape range", voldiv->GetName());
          }
-         finder = new TGeoPatternCylR(voldiv, ndiv, start, start+ndiv*step);
+         finder = new TGeoPatternCylR(voldiv, ndiv, start, end);
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());
@@ -1104,8 +1105,8 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
       case 2:  //---                 Phi division
          dphi = fPhi2-fPhi1;
          if (dphi<0) dphi+=360.;
-         if (step<=0) {step=dphi/ndiv; start=fPhi1;}
-         finder = new TGeoPatternCylPhi(voldiv, ndiv, start, start+ndiv*step);
+         if (step<=0) {step=dphi/ndiv; start=fPhi1; end=fPhi2;}
+         finder = new TGeoPatternCylPhi(voldiv, ndiv, start, end);
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoTubeSeg(fRmin, fRmax, fDz, -step/2, step/2);
@@ -1119,12 +1120,11 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
          }
          return vmulti;
       case 3: //---                  Z division
-         if (step<=0) {step=2*fDz/ndiv; start=-fDz;}
-         if (((start+fDz)<-1E-4) || ((start+ndiv*step-fDz)>1E-4)) {
-            Warning("Divide", "cyl seg Z division exceed shape range"); 
-            printf("   volume was %s\n", voldiv->GetName());
+         if (step<=0) {step=2*fDz/ndiv; start=-fDz; end=fDz;}
+         if (((start+fDz)<-1E-3) || ((end-fDz)>1E-3)) {
+            Warning("Divide", "z division of %s exceed shape range", voldiv->GetName());
          }
-         finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
+         finder = new TGeoPatternZ(voldiv, ndiv, start, end);
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoTubeSeg(fRmin, fRmax, step/2, fPhi1, fPhi2);
@@ -1198,7 +1198,7 @@ TGeoShape *TGeoTubeSeg::GetMakeRuntimeShape(TGeoShape *mother) const
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
    if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (mother->IsRunTimeShape() || !mother->TestBit(kGeoTubeSeg)) {
+   if (mother->IsRunTimeShape() || !mother->TestBit(kGeoTube)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.9 2003/01/06 17:05:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.10 2003/01/12 14:49:32 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -432,6 +432,10 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // to created division cell volume in case of Y divisions. For Z divisions just
 // return the pointer to the volume to be divided. In case a wrong 
 // division axis is supplied, returns pointer to volume that was divided.
+   if (ndiv<=0) {
+      Error("Divide", "cannot divide %s with ndiv=%i", voldiv->GetName(), ndiv);
+      return 0;
+   }   
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
@@ -439,18 +443,17 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    TString opt = "";           //--- option to be attached
    Double_t zmin, zmax, dx1n, dx2n;
    Int_t id;
+   Double_t end = start+ndiv*step;
    switch (iaxis) {
       case 1:
          Warning("Divide", "dividing a Trd1 on X not implemented");
          return voldiv;
       case 2:
-         if (step<=0) {step=2*fDy/ndiv; start=-fDy;}
-         if (((start+fDy)<-1E-4) || ((start+ndiv*step-fDy)>1E-4)) {
-            Warning("Divide", "trd1 Y division exceed shape range");
-            printf("   volume was %s\n", voldiv->GetName());
-            printf("start=%f end=%f, dy=%f\n", start, start+ndiv*step, fDy);
+         if (step<=0) {step=2*fDy/ndiv; start=-fDy; end=start+ndiv*step;}
+         if (((start+fDy)<-1E-3) || ((end-fDy)>1E-3)) {
+            Warning("Divide", "y division of %s exceed shape range", voldiv->GetName());
          }
-         finder = new TGeoPatternY(voldiv, ndiv, start, start+ndiv*step);
+         finder = new TGeoPatternY(voldiv, ndiv, start, end);
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoTrd1(fDx1, fDx2, step/2, fDz);
@@ -464,12 +467,11 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          }
          return vmulti;
       case 3:
-         if (step<=0) {step=2*fDz/ndiv; start=-fDz;}
-         if (((start+fDz)<-1E-4) || ((start+ndiv*step-fDz)>1E-4)) {
-            Warning("Divide", "trd1 Z division exceed shape range");
-            printf("   volume was %s\n", voldiv->GetName());
+         if (step<=0) {step=2*fDz/ndiv; start=-fDz; end=start+ndiv*step;}
+         if (((start+fDz)<-1E-3) || ((end-fDz)>1E-3)) {
+            Warning("Divide", "z division of %s exceed shape range", voldiv->GetName());
          }
-         finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
+         finder = new TGeoPatternZ(voldiv, ndiv, start, end);
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.11 2003/01/12 14:49:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.12 2003/01/15 18:43:44 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -127,40 +127,42 @@ TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // called divname, from start position with the given step. Returns pointer
 // to created division cell volume. In case a wrong division axis is supplied,
 // returns pointer to volume to be divided.
+   if (ndiv<=0) {
+      Error("Divide", "cannot divide %s with ndiv=%i", voldiv->GetName(), ndiv);
+      return 0;
+   }   
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
    TGeoPatternFinder *finder;  //--- finder to be attached
    TString opt = "";           //--- option to be attached
+   Double_t end = start+ndiv*step;
    switch (iaxis) {
       case 1:                  //--- divide on X
-         if (step<=0) {step=2*fDX/ndiv; start=-fDX;}
-         if (((start+fDX)<-1E-4) || ((start+ndiv*step-fDX)>1E-4)) {
-            Warning("Divide", "box x division exceed shape range");
-            printf("   volume was %s\n", voldiv->GetName());
+         if (step<=0) {step=2*fDX/ndiv; start=-fDX; end=start+ndiv*step;}
+         if (((start+fDX)<-1E-3) || ((end-fDX)>1E-3)) {
+            Warning("Divide", "x division of %s exceed shape range", voldiv->GetName());
          }
          shape = new TGeoBBox(step/2., fDY, fDZ); 
-         finder = new TGeoPatternX(voldiv, ndiv, start, start+ndiv*step);
+         finder = new TGeoPatternX(voldiv, ndiv, start, end);
          opt = "X";
          break;
       case 2:                  //--- divide on Y
-         if (step<=0) {step=2*fDY/ndiv; start=-fDY;}
-         if (((start+fDY)<-1E-4) || ((start+ndiv*step-fDY)>1E-4)) {
-            Warning("Divide", "box y division exceed shape range");
-            printf("   volume was %s\n", voldiv->GetName());
+         if (step<=0) {step=2*fDY/ndiv; start=-fDY; end=start+ndiv*step;}
+         if (((start+fDY)<-1E-3) || ((end-fDY)>1E-3)) {
+            Warning("Divide", "y division of %s exceed shape range", voldiv->GetName());
          }
          shape = new TGeoBBox(fDX, step/2., fDZ); 
-         finder = new TGeoPatternY(voldiv, ndiv, start, start+ndiv*step);
+         finder = new TGeoPatternY(voldiv, ndiv, start, end);
          opt = "Y";
          break;
       case 3:                  //--- divide on Z
-         if (step<=0) {step=2*fDZ/ndiv; start=-fDZ;}
-         if (((start+fDZ)<-1E-4) || ((start+ndiv*step-fDZ)>1E-4)) {
-            Warning("Divide", "box z division exceed shape range");
-            printf("   volume was %s\n", voldiv->GetName());
+         if (step<=0) {step=2*fDZ/ndiv; start=-fDZ; end=start+ndiv*step;}
+         if (((start+fDZ)<-1E-3) || ((end-fDZ)>1E-3)) {
+            Warning("Divide", "z division of %s exceed shape range", voldiv->GetName());
          }
          shape = new TGeoBBox(fDX, fDY, step/2.); 
-         finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
+         finder = new TGeoPatternZ(voldiv, ndiv, start, end);
          opt = "Z";
          break;
       default:
