@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.5 2003/01/31 08:24:18 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.6 2004/02/09 21:12:10 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
  
 /*************************************************************************
@@ -186,13 +186,13 @@ public:
 
    // Table index iterator:
    class iterator {
+      public:
+         typedef vector<Long_t>::iterator vec_iterator;
+         typedef vector<Long_t>::const_iterator vec_const_iterator; 
       private:
          Long_t        fRowSize;
          const TTable *fThisTable;
-         typedef vector<Long_t>::iterator vec_iterator;
-         typedef vector<Long_t>::const_iterator vec_const_iterator; 
-
-         vec_iterator fCurrentRow;
+         vec_iterator  fCurrentRow;
       public:
 	     iterator(): fRowSize(0), fThisTable(0) {;}
         iterator(const TTable &table, vec_iterator &rowPtr) : fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(rowPtr) {;}
