@@ -147,7 +147,7 @@ endif
 endif
 ifneq ($(XMLINCDIR),)
 ifneq ($(XMLCLILIB),)
-MODULES      += xmlparser
+#MODULES      += xmlparser
 endif
 endif
 ifneq ($(QTINCDIR),)
