@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.10 2004/08/20 22:15:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.11 2004/08/21 07:05:35 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -145,9 +145,10 @@ void TGLabel::DoRedraw()
 
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   if (!fDisabled)
+   if (!fDisabled) {
+      fText->Draw(fId, GetBckgndGC()(), x +1, y +1 + max_ascent);
       fText->Draw(fId, fNormGC, x, y + max_ascent);
-   else {
+   } else {
       fText->Draw(fId, GetHilightGC()(), x + 1, y + 1 + max_ascent);
       fText->Draw(fId, GetShadowGC()(), x, y + max_ascent);
    }
@@ -310,6 +311,9 @@ void TGLabel::SavePrimitive(ofstream &out, Option_t *option)
    } else {
       out << "," << ParGC << "," << ParFont << "," << GetOptionString() << ",ucolor);" << endl;
    }
+
+   if (fDisabled)
+      out << "   " << GetName() << "->Disable();" << endl;
 }
 
 //______________________________________________________________________________
