@@ -51,3 +51,9 @@ distclean-meta: clean-meta
 		@rm -f $(METADEP) $(METADS) $(METADH)
 
 distclean::     distclean-meta
+
+##### extra rules ######
+ifeq ($(VC_MAJOR),13)
+$(METADIRS)/TStreamerInfo.o: $(METADIRS)/TStreamerInfo.cxx 
+	$(CXX) -O $(CXXFLAGS) -o $@ -c $< 
+endif
