@@ -116,38 +116,42 @@ void TVirtualPadEditor::UpdateFillAttributes(Int_t color, Int_t style)
 
    if (!fgPadEditor) GetPadEditor();
    
-   fgPadEditor->FillAttributes(color, style);
+   if (fgEditorName == "Ged") return;
+   else fgPadEditor->FillAttributes(color, style);
 }
 
 //______________________________________________________________________________
 void TVirtualPadEditor::UpdateTextAttributes(Int_t align, Float_t angle,
                                              Int_t col, Int_t font, Float_t tsize)
 {
-   // Update fill attributes via the pad editor
+   // Update text attributes via the pad editor
 
    if (!fgPadEditor) GetPadEditor();
    
-   fgPadEditor->TextAttributes(align, angle, col, font, tsize);
+   if (fgEditorName == "Ged") return;
+   else fgPadEditor->TextAttributes(align, angle, col, font, tsize);
 }
 
 //______________________________________________________________________________
 void TVirtualPadEditor::UpdateLineAttributes(Int_t color, Int_t style, 
                                              Int_t width)
 {
-   // Update fill attributes via the pad editor
+   // Update line attributes via the pad editor
 
    if (!fgPadEditor) GetPadEditor();
-   
-   fgPadEditor->LineAttributes(color, style, width);
+
+   if (fgEditorName == "Ged") return;
+   else fgPadEditor->LineAttributes(color, style, width);
 }
 
 //______________________________________________________________________________
 void TVirtualPadEditor::UpdateMarkerAttributes(Int_t color, Int_t style, 
                                                Float_t msize)
 {
-   // Update fill attributes via the pad editor
+   // Update marker attributes via the pad editor
 
    if (!fgPadEditor) GetPadEditor();
    
-   fgPadEditor->MarkerAttributes(color, style, msize);
+   if (fgEditorName == "Ged") return;
+   else fgPadEditor->MarkerAttributes(color, style, msize);
 }
