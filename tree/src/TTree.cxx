@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.197 2004/06/25 18:42:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.198 2004/07/08 08:08:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -560,7 +560,7 @@ TFriendElement *TTree::AddFriend(const char *treename, const char *filename)
       fFriends->Add(fe);
       TTree *t = fe->GetTree();
       if (t) {
-         if (t->GetEntries() < fEntries) {
+         if (!t->GetTreeIndex() && t->GetEntries() < fEntries) {
             Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent Tree: %g",
                      treename,filename,t->GetEntries(),fEntries);
          }
@@ -589,7 +589,7 @@ TFriendElement *TTree::AddFriend(const char *treename, TFile *file)
       fFriends->Add(fe);
       TTree *t = fe->GetTree();
       if (t) {
-         if (t->GetEntries() < fEntries) {
+         if (!t->GetTreeIndex() && t->GetEntries() < fEntries) {
             Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent tree: %g",
                      treename,file->GetName(),t->GetEntries(),fEntries);
          }
