@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.85 2002/03/08 08:09:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.86 2002/03/12 07:20:03 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1192,6 +1192,21 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
       // NOTE: We assume that the inside variable dimensions are dictated by the
       // first index.
       if (fCumulSizes[i][0]>0) fNdata[i] = fCumulSizes[i][0];
+   }
+
+   // Let's verify the indexes and dies if we need to.
+   Int_t k0,k1;
+   for(k0 = 0; k0 < fNcodes; k0++) {
+      for(k1 = 0; k1 < fNdimensions[k0]; k1++ ) {
+         // fprintf(stderr,"Saw %d dim %d and index %d\n",k1, fFixedSizes[k0][k1], fIndexes[k0][k1]);
+         if ( fIndexes[k0][k1]>=0 && fFixedSizes[k0][k1]>=0 
+              && fIndexes[k0][k1]>=fFixedSizes[k0][k1]) {
+            ::Error("TTreeFormula",
+                    "Index %d for dimension #%d in %s is too high (max is %d)",
+                    fIndexes[k0][k1],k1+1, expression,fFixedSizes[k0][k1]-1);
+            fTree = 0; fNdim = 0; return;
+         }
+      }
    }
 
    // For here we keep fCumulUsedSizes sign aware.
