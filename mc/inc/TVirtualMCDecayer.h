@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name: v3-03-05 $:$Id: TVirtualMCDecayer.h,v 1.2 2002/04/26 08:46:10 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TVirtualMCDecayer.h,v 1.3 2002/06/13 10:32:01 brun Exp $
 // Author: Andreas Morsch  13/04/2002
    
 #ifndef ROOT_TVirtualMCDecayer
@@ -13,13 +13,6 @@
 class TClonesArray;
 class TLorentzVector;
 
-typedef enum
-{ kSemiElectronic, kDiElectron, kSemiMuonic, kDiMuon,
-  kBJpsiDiMuon, kBJpsiDiElectron, 
-  kBPsiPrimeDiMuon, kBPsiPrimeDiElectron, kPiToMu, kKaToMu, kNoDecay, 
-  kHadronicD, kOmega, kPhiKK, kAll, kNoDecayHeavy}
-Decay_t;
-
 class TVirtualMCDecayer : public TObject {
  public:
 //
@@ -27,7 +20,7 @@ class TVirtualMCDecayer : public TObject {
     virtual void    Init()                                     =0;
     virtual void    Decay(Int_t idpart, TLorentzVector* p)     =0;
     virtual Int_t   ImportParticles(TClonesArray *particles)   =0;
-    virtual void    SetForceDecay(Decay_t type)                =0;
+    virtual void    SetForceDecay(Int_t type)                  =0;
     virtual void    ForceDecay()                               =0;
     virtual Float_t GetPartialBranchingRatio(Int_t ipart)      =0;
     virtual Float_t GetLifetime(Int_t kf)                      =0;
