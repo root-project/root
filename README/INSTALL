@@ -8,6 +8,10 @@ ROOT download area (ftp://root.cern.ch/root).
 An alternative approach is to use our public CVS repository to get
 the latest version. See URL: http://root.cern.ch/root/CVS.html.
 
+If you are using Windows make sure you've installed Cygwin 
+(http://sources.redhat.com/cygwin/) and that it is setup
+correctly (see: http://root.cern.ch/root/Cygwin.html).
+
 Before proceeding read the complete document.
 
 There are two main methods of installing ROOT from source.
