@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.45 2001/12/01 08:12:47 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.46 2001/12/13 22:05:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -358,7 +358,17 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
 	}
 	delete cIter ;
 
-	_dataClone->setDirtyProp(kFALSE) ;
+	// Set all non-projection dependents in ADirty mode to 
+	// deactivate dirty-state propagation
+	TIterator* dIter = _dataClone->get()->createIterator() ;
+	RooAbsArg* depArg ;
+	while(depArg=(RooAbsArg*)dIter->Next()) {
+	  if (_projDeps && _projDeps->find(depArg->GetName())) continue ;
+	  depArg->setOperMode(RooAbsArg::ADirty) ;
+	}
+	delete dIter ;
+	
+	//_dataClone->setDirtyProp(kFALSE) ;
       }    
 
     }
