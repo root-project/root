@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.14 2001/11/28 16:05:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.15 2003/05/28 11:55:32 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1082,8 +1082,8 @@ void TGTextEntry::DoRedraw()
 //______________________________________________________________________________
 Bool_t TGTextEntry::HandleKey(Event_t* event)
 {
-   //  The key press event handler converts a key press to some line editor action.
-   //  Here are the default key bindings:
+   // The key press event handler converts a key press to some line editor
+   // action. Here are the default key bindings:
    //Begin_Html
    //  <ul>
    //  <li><i> Left Arrow </i>
@@ -1159,11 +1159,8 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
 
    if (fTip && event->fType == kGKeyPress) fTip->Hide();
 
-   if (!IsEnabled()) return kTRUE;
+   if (!IsEnabled() || event->fType != kGKeyPress) return kTRUE;
 
-#ifdef GDK_WIN32
-   if (event->fType == kGKeyPress) {
-#endif
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
    n = strlen(tmp);
    Int_t unknown = 0;
@@ -1270,9 +1267,7 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
 
    UpdateOffset();
    fClient->NeedRedraw(this);
-#ifdef GDK_WIN32
-   }
-#endif
+
    return kTRUE;
 }
 
