@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.49 2002/02/22 09:37:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.50 2002/02/23 16:04:54 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -245,7 +245,7 @@ Int_t TCint::ProcessLine(const char *line, EErrorCode *error)
             ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, 0);
             if (error) {
                *error = (EErrorCode)local_error;
-               if (*error == 0 && G__return == G__RETURN_EXIT2)
+               if (*error == 0 && G__get_return(0) == G__RETURN_EXIT2)
                   *error = kExit;
             }
          }
