@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverDens.cxx,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverDens.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -60,20 +60,21 @@ TQpLinSolverDens::TQpLinSolverDens(TQpProbDens *factory,TQpDataDens *data) :
 {
   const Int_t n = factory->fNx+factory->fMy+factory->fMz;
   fKkt.ResizeTo(n,n);
+
+  data->PutQIntoAt(fKkt,0,      0);
+  data->PutAIntoAt(fKkt,fNx,    0);
+  data->PutCIntoAt(fKkt,fNx+fMy,0);
+  for (Int_t ix = fNx; ix < fNx+fMy+fMz; ix++) {
+    for (Int_t iy = fNx; iy < fNx+fMy+fMz; iy++)
+      fKkt(ix,iy) = 0.0;
+  }
+
   fSolveLU = TDecompLU(n);
 }
 
 //______________________________________________________________________________
 void TQpLinSolverDens::Factor(TQpDataBase *prob,TQpVar *vars)
 {
-  prob->PutQIntoAt(fKkt,0,      0);
-  prob->PutAIntoAt(fKkt,fNx,    0);
-  prob->PutCIntoAt(fKkt,fNx+fMy,0);
-  for (Int_t ix = fNx; ix < fNx+fMy+fMz; ix++) {
-    for (Int_t iy = fNx; iy < fNx+fMy+fMz; iy++)
-      fKkt(ix,iy) = 0.0;
-  }
-
   TQpLinSolverBase::Factor(prob,vars);
   fSolveLU.SetMatrix(fKkt);
 }

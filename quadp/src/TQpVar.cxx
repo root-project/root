@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -46,6 +46,7 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
+#include "Riostream.h"
 #include "TQpVar.h"
 #include "TMatrixD.h"
 
@@ -563,6 +564,35 @@ void TQpVar::ShiftBoundVariables(Double_t alpha,Double_t beta)
 //______________________________________________________________________________
 void TQpVar::Print(Option_t * /*option*/) const
 {
+  cout << "fNx  : " << fNx   << endl;
+  cout << "fMy  : " << fMy   << endl;
+  cout << "fMz  : " << fMz   << endl;
+  cout << "fNxup: " << fNxup << endl;
+  cout << "fNxlo: " << fNxlo << endl;
+  cout << "fMcup: " << fMcup << endl;
+  cout << "fMclo: " << fMclo << endl;
+
+  fXloIndex.Print("fXloIndex");
+  fXupIndex.Print("fXupIndex");
+  fCupIndex.Print("fCupIndex");
+  fCloIndex.Print("fCloIndex");
+
+  fX.Print("fX");
+  fS.Print("fS");
+  fY.Print("fY");
+  fZ.Print("fZ");
+
+  fV.Print("fV");
+  fPhi.Print("fPhi");
+
+  fW.Print("fW");
+  fGamma.Print("fGamma");
+
+  fT.Print("fT");
+  fLambda.Print("fLambda");
+
+  fU.Print("fU");
+  fPi.Print("fPi");
 }
 
 //______________________________________________________________________________

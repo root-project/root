@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverSparse.cxx,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverSparse.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -60,17 +60,20 @@ TQpLinSolverSparse::TQpLinSolverSparse(TQpProbSparse *factory,TQpDataSparse *dat
 {
   const Int_t n = factory->fNx+factory->fMy+factory->fMz;
   fKkt.ResizeTo(n,n);
-// Not necessary for sparse matrix
-//  fSolveSparse = TDecompSparse(n,0,0);
+
+  data->PutAIntoAt(fKkt,fNx,    0);
+  data->PutCIntoAt(fKkt,fNx+fMy,0);                                     
+
+  // trick to makesure that A and C are inserted symmetrically
+  TMatrixDSparse tmp(TMatrixDSparse::kTransposed,fKkt);                 
+  fKkt += tmp;
+
+  data->PutQIntoAt(fKkt,0,0); 
 }
 
 //______________________________________________________________________________
 void TQpLinSolverSparse::Factor(TQpDataBase *prob,TQpVar *vars)
 {
-  prob->PutQIntoAt(fKkt,0,      0);
-  prob->PutAIntoAt(fKkt,fNx,    0);
-  prob->PutCIntoAt(fKkt,fNx+fMy,0);
-
   TQpLinSolverBase::Factor(prob,vars);
   fSolveSparse.SetMatrix(fKkt);
 }

@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.cxx,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -191,50 +191,24 @@ Double_t TQpDataSparse::DataNorm()
 //______________________________________________________________________________
 void TQpDataSparse::Print(Option_t * /*opt*/) const
 {
-  cout << "begin Q\n";
-  fQ.Print();
-  cout << "end fQ\n";
-  cout << "begin c\n";
-  fG.Print();
-  cout << "end c\n";
+  fQ.Print("Q");
+  fG.Print("c");
 
-  cout << "begin xlow\n";
-  fXloBound.Print();
-  cout << "end xlow\n";
-  cout << "begin ixlow\n";
-  fXloIndex.Print();
-  cout << "end ixlow\n";
+  fXloBound.Print("xlow");
+  fXloIndex.Print("ixlow");
 
-  cout << "begin xupp\n";
-  fXupBound.Print();
-  cout << "end xupp\n";
-  cout << "begin ixupp\n";
-  fXupIndex.Print();
-  cout << "end ixupp\n";
+  fXupBound.Print("xupp");
+  fXupIndex.Print("ixupp");
 
-  cout << "begin A\n";
-  fA.Print();
-  cout << "end A\n";
-  cout << "begin b\n";
-  fBa.Print();
-  cout << "end b\n";
-  cout << "begin C\n";
-  fC.Print();
-  cout << "end C\n";
+  fA.Print("A");
+  fBa.Print("b");
+  fC.Print("C");
 
-  cout << "begin clow\n";
-  fCloBound.Print();
-  cout << "end clow\n";
-  cout << "begin iclow\n";
-  fCloIndex.Print();
-  cout << "end iclow\n";
+  fCloBound.Print("clow");
+  fCloIndex.Print("iclow");
 
-  cout << "begin cupp\n";
-  fCupBound.Print();
-  cout << "end cupp\n";
-  cout << "begin icupp\n";
-  fCupIndex.Print();
-  cout << "end icupp\n";
+  fCupBound.Print("cupp");
+  fCupIndex.Print("icupp");
 }
 
 //______________________________________________________________________________

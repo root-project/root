@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -128,7 +128,6 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
   do
     {
       fIter++;
-      cout << "fIter:" << fIter << endl;
       // evaluate residuals and update algorithm status:
       resid->CalcResids(prob,iterate);
 
@@ -244,9 +243,6 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
   resid->CalcResids(prob,iterate);
   if (fPrintlevel >= 10)
     this->DoMonitor(prob,iterate,resid,alpha,sigma,fIter,mu,status_code,1);
-
-  // print the results, if you really want to..
-  // iterate->Print();
 
   return status_code;
 }
