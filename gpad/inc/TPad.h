@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.3 2000/09/05 09:21:23 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.4 2000/09/08 07:36:18 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -87,7 +87,8 @@ protected:
    Int_t         fLogy;            //(=0 if Y linear scale, =1 if log scale)
    Int_t         fLogz;            //(=0 if Z linear scale, =1 if log scale)
    Int_t         fPadPaint;        //Set to 1 while painting the pad
-
+   Int_t         fCrosshair;       //Crosshair type (0 if no crosshair requested)
+   Int_t         fCrosshairPos;    //Position of crosshair
    Short_t       fBorderSize;      //pad bordersize in pixels
    Short_t       fBorderMode;      //Bordermode (-1=down, 0 = no border, 1=up)
    Bool_t        fModified;        //Set to true when pad is modified
@@ -159,6 +160,7 @@ public:
    virtual void      Draw(Option_t *option="");
    virtual void      DrawClassObject(TObject *obj, Option_t *option="");
    static  void      DrawColorTable();
+   virtual void      DrawCrosshair();
    TH1F             *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="");
    void              DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
    void              DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2);
@@ -169,6 +171,7 @@ public:
    virtual void      UseCurrentStyle();  // *MENU*
    virtual Short_t   GetBorderMode() { return fBorderMode;}
    virtual Short_t   GetBorderSize() { return fBorderSize;}
+   Int_t             GetCrosshair()  {return fCrosshair;}
    virtual Int_t     GetCanvasID() const;
    TFrame           *GetFrame();
    virtual Int_t     GetEvent() const;
@@ -223,6 +226,7 @@ public:
    virtual TVirtualPad *GetVirtCanvas();
    Int_t             GetPadPaint() {return fPadPaint;}
    Int_t             GetPixmapID() {return fPixmapID;}
+   virtual Bool_t    HasCrosshair() {return (Bool_t)fCrosshair;}
    void              HighLight(Color_t col=kRed, Bool_t set=kTRUE);
    virtual Bool_t    IsBatch();
    virtual Bool_t    IsEditable() {return fIsEditable;}
@@ -270,6 +274,7 @@ public:
    virtual void      SetBorderMode(Short_t bordermode) {fBorderMode = bordermode;} // *MENU*
    virtual void      SetBorderSize(Short_t bordersize) {fBorderSize = bordersize;} // *MENU*
    virtual void      SetCanvasSize(UInt_t ww, UInt_t wh);
+   virtual void      SetCrosshair(Int_t crhair=1); // *TOGGLE*
    virtual void      SetCursor(ECursor cursor);
    virtual void      SetDoubleBuffer(Int_t mode=1);
    virtual void      SetDrawOption(Option_t *option="");

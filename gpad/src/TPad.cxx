@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.15 2000/09/08 16:05:21 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.16 2000/09/11 09:59:26 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -136,6 +136,8 @@ TPad::TPad(): TVirtualPad()
    fNumber     = 0;
    fAbsCoord   = kFALSE;
    fIsEditable = kTRUE;
+   fCrosshair  = 0;
+   fCrosshairPos = 0;
    fPadView3D  = 0;
 
    fLogx  = 0;
@@ -212,7 +214,9 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fAbsCoord   = kFALSE;
    fIsEditable = kTRUE;
    fPadView3D  = 0;
-
+   fCrosshair  = 0;
+   fCrosshairPos = 0;
+   
 //*-*- Set default world coordinates to NDC [0,1]
    fX1 = 0;
    fX2 = 1;
@@ -312,6 +316,8 @@ void TPad::AutoExec()
 {
 // Execute the list of Execs when a pad event occurs.
 
+   if (fCrosshair) DrawCrosshair();
+   
    if (!fExecs) fExecs = new TList;
    TIter next(fExecs);
    TExec *exec;
@@ -387,6 +393,7 @@ void TPad::Clear(Option_t *option)
    if (gVirtualPS && gPad == gPad->GetCanvas()) gVirtualPS->NewPage();
 
    PaintBorder(GetFillColor(), kTRUE);
+   fCrosshairPos = 0;
 }
 
 //___________________________________________________________
@@ -1429,6 +1436,43 @@ void TPad::DrawClassObject(TObject *classobj, Option_t *option)
       } while (cll);
    }
    Update();
+}
+
+//______________________________________________________________________________
+void TPad::DrawCrosshair()
+{
+   //Function called to draw a crosshair in the canvas
+   // Example:
+   // Root > TFile f("hsimple.root");
+   // Root > hpxpy.Draw();
+   // Root > c1.SetCrosshair();
+   // When moving the mouse in the canvas, a crosshair is drawn
+
+   TPad *cpad = (TPad*)gPad;
+   TCanvas *can = cpad->GetCanvas();
+   can->FeedbackMode(kTRUE);
+
+   //erase old position and draw a line at current position
+   int pxold = fCrosshairPos%10000;
+   int pyold = fCrosshairPos/10000;
+   int px    = cpad->GetEventX();
+   int py    = cpad->GetEventY()+1;
+   int pxmin = cpad->XtoAbsPixel(fX1);
+   int pxmax = cpad->XtoAbsPixel(fX2);
+   int pymin = cpad->YtoAbsPixel(fY1);
+   int pymax = cpad->YtoAbsPixel(fY2);
+//printf("event=%d, pxold=%d, pyold=%d, px=%d, py=%d, pxmin=%d, pymin=%d, pxmax=%d, pymax=%d\n",gPad->GetEvent(),pxold,pyold,px,py,pxmin,pymin,pxmax,pymax);
+   if(pxold) gVirtualX->DrawLine(pxold,pymin,pxold,pymax);
+   if(pyold) gVirtualX->DrawLine(pxmin,pyold,pxmax,pyold);
+   if (cpad->GetEvent() == kButton1Down ||
+       cpad->GetEvent() == kButton1Up   ||
+       cpad->GetEvent() == kMouseLeave) {
+      fCrosshairPos = 0;
+      return;
+   }
+   gVirtualX->DrawLine(px,pymin,px,pymax);
+   gVirtualX->DrawLine(pxmin,py,pxmax,py);
+   fCrosshairPos = px + 10000*py;
 }
 
 //______________________________________________________________________________
@@ -3918,6 +3962,25 @@ void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font,
       gVirtualPS->SetTextSize(tsize);
    }
 }
+
+//______________________________________________________________________________
+void TPad::SetCrosshair(Int_t crhair)
+{
+   // set crosshair active/inactive
+   // if crhair != 0, a crosshair will be drawn in the pad and its subpads
+   
+   fCrosshair = crhair;
+   fCrosshairPos = 0;
+
+   TObject *obj;
+   TIter    next(GetListOfPrimitives());
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TPad::Class())) {
+         TPad *pad = (TPad*)obj;
+         pad->SetCrosshair(crhair);
+      }
+   }
+}   
 
 //______________________________________________________________________________
 void TPad::SetToolTipText(const char *text, Long_t delayms)
