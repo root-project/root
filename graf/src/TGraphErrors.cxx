@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.23 2002/04/02 07:59:02 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.24 2002/05/23 08:46:15 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -550,6 +550,10 @@ void TGraphErrors::SetPoint(Int_t i, Double_t x, Double_t y)
    }
    fX[i] = x;
    fY[i] = y;
+   if (fHistogram) {
+      delete fHistogram;
+      fHistogram = 0;
+   }
 }
 
 //______________________________________________________________________________
