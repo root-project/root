@@ -7,7 +7,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 ARCH         := $(shell root-config --arch)
-PLATFORM      = $(ARCH)
+PLATFORM     := $(shell root-config --platform)
 
 CXX           =
 ObjSuf        = o
@@ -435,7 +435,6 @@ endif
 
 ifeq ($(ARCH),macosx)
 # MacOS X with cc (GNU cc 2.95.2 and gcc 3.3)
-PLATFORM      = macosx
 MACOSX_MINOR := $(shell sw_vers -productVersion | cut -d'.' -f2)
 CXX           = c++
 CXXFLAGS      = -O -pipe -Wall -W -Woverloaded-virtual
@@ -455,10 +454,9 @@ endif
 
 ifeq ($(ARCH),macosxxlc)
 # MacOS X with IBM xlC compiler
-PLATFORM      = macosx
 MACOSX_MINOR := $(shell sw_vers -productVersion | cut -d'.' -f2)
 CXX           = xlC
-CXXFLAGS      = 
+CXXFLAGS      =
 LDFLAGS       = -O -Xlinker -bind_at_load -flat_namespace
 # The SOFLAGS will be used to create the .dylib; the .so will
 # be created separately
@@ -484,6 +482,29 @@ DllSuf        = sl
 endif
 
 ifeq ($(ARCH),win32)
+# Windows with the VC++ compiler
+ObjSuf        = obj
+SrcSuf        = cxx
+ExeSuf        = .exe
+DllSuf        = dll
+OutPutOpt     = -out:
+CXX           = cl
+CXXOPT        = -O2
+#CXXOPT        = -Z7
+CXXFLAGS      = $(CXXOPT) -G5 -GR -GX -MD -DWIN32 -D_WINDOWS -nologo \
+                -DVISUAL_CPLUSPLUS -D_X86_=1 -D_DLL
+LD            = link
+LDOPT         = -opt:ref
+#LDOPT         = -debug
+LDFLAGS       = $(LDOPT) -pdb:none -nologo
+SOFLAGS       = -DLL
+
+ROOTLIBS     := $(shell root-config --nonew --libs)
+ROOTGLIBS    := $(shell root-config --nonew --glibs)
+EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
+endif
+
+ifeq ($(ARCH),win32old)
 # Windows with the VC++ compiler
 ObjSuf        = obj
 SrcSuf        = cxx

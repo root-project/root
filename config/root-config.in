@@ -6,14 +6,13 @@
 # Author: Fons Rademakers, 06/06/99
 
 arch=@architecture@
+platform=@platform@
 bindir=@bindir@
 libdir=@libdir@
 incdir=@incdir@
 features="@features@"
-if test "$arch" = "win32gdk"; then
-   arch="win32"
-fi
-if test "$arch" = "win32"; then
+
+if test "$platform" = "win32"; then
    bindir=`cygpath -u $bindir`
    libdir=`cygpath -u $libdir`
    incdir=`cygpath -u $incdir`
@@ -36,7 +35,7 @@ rootulibs="-u _G__cpp_setupG__Hist       \
            -u _G__cpp_setupG__Quadp      \
            -u _G__cpp_setupG__Physics"
 rootuglibs="-u _G__cpp_setupG__Gui1"
-if test "$arch" = "win32"; then
+if test "$platform" = "win32"; then
    rootulibs="-include:_G__cpp_setupG__Hist       \
               -include:_G__cpp_setupG__Graf1      \
               -include:_G__cpp_setupG__G3D        \
@@ -336,7 +335,7 @@ esac
 
 
 prefix=@prefix@
-if test "$arch" = "win32"; then
+if test "$platform" = "win32"; then
    prefix=`cygpath -u ${prefix}`
 fi
 exec_prefix=${prefix}
@@ -349,7 +348,7 @@ noauxcflags=no
 noldflags=no
 
 usage="\
-Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--new] [--nonew] [--libs] [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--help]"
+Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--new] [--nonew] [--libs] [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--platform] [--help]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -366,8 +365,12 @@ while test $# -gt 0; do
 
   case $1 in
     --arch)
-      ### Output the arcitecture
+      ### Output the arcitecture (compiler/OS combination)
       out="$out $arch"
+      ;;
+    --platform)
+      ### Output the platform (OS)
+      out="$out $platform"
       ;;
     --has-*)
       ### Check for feature
@@ -385,7 +388,7 @@ while test $# -gt 0; do
       ;;
     --prefix=*)
       ### Set the prefix
-      if test "$arch" = "win32"; then
+      if test "$platform" = "win32"; then
          optarg=`cygpath -u $optarg`
       fi
       prefix=$optarg
@@ -393,7 +396,7 @@ while test $# -gt 0; do
       libdir=${prefix}/lib
       incdir=${prefix}/include
       ### We need to expand the path to backslash seperated path
-      if test "$arch" = "win32"; then
+      if test "$platform" = "win32"; then
          bindir=`cygpath -u $bindir`
          libdir=`cygpath -u $libdir`
          incdir=`cygpath -u $incdir`
@@ -408,7 +411,7 @@ while test $# -gt 0; do
       ;;
     --exec-prefix=*)
       ### Set the exec-prefix
-      if test "$arch" = "win32"; then
+      if test "$platform" = "win32"; then
          optarg=`cygpath -u $optarg`
       fi
       exec_prefix=$optarg
@@ -416,7 +419,7 @@ while test $# -gt 0; do
       bindir=${exec_prefix}/bin
       libdir=${exec_prefix}/lib
       ### We need to expand the path to backslash seperated path
-      if test "$arch" = "win32"; then
+      if test "$platform" = "win32"; then
          bindir=`cygpath -u $bindir`
          libdir=`cygpath -u $libdir`
       fi
@@ -456,7 +459,7 @@ while test $# -gt 0; do
       if test ${incdir} != /usr/include; then
          ### In case we're on a Win32 system, we need to expand the
          ### path to a backslash seperated path
-         if test "$arch" = "win32"; then
+         if test "$platform" = "win32"; then
             includes=-I\'`cygpath -w ${incdir}`\'
          else
             includes=-I${incdir}
@@ -490,7 +493,7 @@ while test $# -gt 0; do
       ### If we're on a win32 system, we need to change the -l prefix
       ### into a .lib suffix, and expand the paths to a backslash
       ### separated path.
-      if test "$arch" = "win32"; then
+      if test "$platform" = "win32"; then
          nlibs=`echo $libs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
          libs=
          for i in $nlibs; do
@@ -523,7 +526,7 @@ while test $# -gt 0; do
       ### If we're on a win32 system, we need to change the -l prefix
       ### into a .lib suffix, and expand the paths to a backslash
       ### separated path.
-      if test "$arch" = "win32"; then
+      if test "$platform" = "win32"; then
          nlibs=`echo $glibs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
          glibs=
          for i in $nlibs; do
@@ -560,7 +563,8 @@ while test $# -gt 0; do
       ### Print a help message
       echo "Usage: `basename $0` [options]"
       echo ""
-      echo "  --arch                Print the architecture"
+      echo "  --arch                Print the architecture (compiler/OS)"
+      echo "  --platform            Print the platform (OS)"
       echo "  --prefix[=dir]        Print or set prefix"
       echo "  --exec-prefix[=dir]   Print or set execution prefix"
       echo "  --libs                Print regular ROOT libraries"

@@ -452,9 +452,9 @@ guess_architecture () {
         sunos:sun*:6*)         arch=solarisCC5      ;;
         sunos:sun*:5*)         arch=solarisCC5      ;;
         sunos:sun*:4*)         arch=solaris         ;;
-        cygwin_*:*86:*)        arch=win32gdk        ;;
-        cygwin_*:pentium:*)    arch=win32gdk        ;;
-        cygwin_*:ia64)         arch=win32gdk        ;;
+        cygwin_*:*86:*)        arch=win32           ;;
+        cygwin_*:pentium:*)    arch=win32           ;;
+        cygwin_*:ia64)         arch=win32           ;;
         *)
             echo "Attempts at guessing your architecture failed."
             echo "Please specify the architecture as the first argument."
@@ -657,6 +657,9 @@ fi
 if test "$arch" = "linuxegcs" ; then
     arch="linux"
 fi
+if test "$arch" = "win32gdk" ; then
+    arch="win32"
+fi
 
 if `awk '{ print $1 }' $ARCHS | grep "^$arch$" > /dev/null  2>&1` ; then
    echo "Configuring for $arch"
@@ -665,11 +668,8 @@ else
    exit 1
 fi
 
-if test "x$arch" = "xwin32" || test "x$arch" = "xwin32gdk" ; then
-   platform="win32"
-else
-   platform=$arch
-fi
+platform=`grep "^PLATFORM *=" config/Makefile.$arch | awk '{ print $3 }'`
+
 if test "x$arch" = "xsgicc" ; then
    checklib32="yes"
 fi
@@ -898,12 +898,12 @@ fi
 # Check for posix thread library
 #
 case $platform in
-linux|linuxdeb|linuxicc|linuxia64*|linuxx8664*|win32gcc|macosx*)
+linux|macosx)
     if test "x$enable_thread" = "x"; then
         enable_thread="yes"
     fi
     ;;
-freebsd*)
+fbsd)
     if test "x$enable_thread" = "xyes"; then
        threadlib="-pthread"
        threadlibdir=
@@ -912,7 +912,7 @@ freebsd*)
 esac
 if test "x$enable_thread" = "xyes" && \
    test ! "$platform" = "win32"    && \
-   test ! "$platform" = "freebsd4" ; then
+   test ! "$platform" = "fbsd" ; then
     check_library "libpthread" "$enable_shared" "$threadlibdir" \
 	$THREAD $THREAD/lib /usr/lib /usr/local/lib /usr/lib/X11 \
 	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
@@ -1054,8 +1054,8 @@ if test ! "x$enable_mysql" = "xno"; then
     # on linux, but maybe also other systems, explicitely add libz
     # (formally only needed when linking against the static libmysqlclient.a)
     if test ! "x$mysqllib" = "x" ; then
-	case $arch in
-	    linux*|win32gcc) mysqllib="$mysqllib -lz" ;;
+	case $platform in
+	    linux) mysqllib="$mysqllib -lz" ;;
 	esac
     fi
 
@@ -1198,8 +1198,8 @@ if test ! "x$enable_rfio" = "xno" ; then
         enable_rfio="no"
     else
         case $platform in
-           linux*)     shiftlib="$shiftlib -lnsl" ;;
-           solarisCC5) shiftlib="$shiftlib -lposix4" ;;
+           linux)      shiftlib="$shiftlib -lnsl" ;;
+           solaris)    shiftlib="$shiftlib -lposix4" ;;
            win32)      shiftincdir="$shiftincdir -I$shiftincdir/../win32"
                        shiftlib="$shiftlib WSock32.lib Ws2_32.lib" ;;
         esac
@@ -1614,10 +1614,10 @@ if test ! "x$enable_xml" = "xno" ; then
         enable_xml="no"
     else
         case $platform in
-            linux*|win32gcc) xmllib="$xmllib -lpthread"            ;;
-            solaris*)        xmllib="$xmllib -liconv"              ;;
-            win32)           xmlincdir="$xmlincdir -I$iconvincdir"
-                             xmllib="$xmllib $iconvlib Ws2_32.lib" ;;
+            linux)     xmllib="$xmllib -lpthread"            ;;
+            solaris)   xmllib="$xmllib -liconv"              ;;
+            win32)     xmlincdir="$xmlincdir -I$iconvincdir"
+                       xmllib="$xmllib $iconvlib Ws2_32.lib" ;;
         esac
     fi
 fi
@@ -2007,8 +2007,8 @@ if test ! "x$enable_srp" = "xno" ; then
         cryptolib=$found_lib
         cryptolibdir=$found_dir
         if test -r $cryptolib && test "x$enable_shared" = "xno" ; then
-           case $arch in
-               linux*) cryptolib="$cryptolib -ldl"
+           case $platform in
+               linux) cryptolib="$cryptolib -ldl"
            esac
         fi
     fi
@@ -2170,8 +2170,8 @@ if test ! "x$enable_krb5" = "xno" ; then
             cryptolib=$found_lib
             cryptolibdir=$found_dir
             if test -r $cryptolib && test "x$enable_shared" = "xno" ; then
-               case $arch in
-                   linux*) cryptolib="$cryptolib -ldl"
+               case $platform in
+                   linux) cryptolib="$cryptolib -ldl"
                esac
             fi
 	    if test "x$cryptolib" = "x" ; then
@@ -2246,8 +2246,8 @@ if test "x$enable_afs" = "xyes" || test "x$enable_krb5" = "xyes" ; then
 	comerrlibdir=$found_dir
     fi
 
-    case $arch in
-	linux*|solarisCC5) # Resolver lives in separate library
+    case $platform in
+	linux|solaris) # Resolver lives in separate library
 	    resolvlib="-lresolv"
 	    ;;
     esac
@@ -2322,8 +2322,8 @@ fi
 ### echo %%% check for setresuid and setresgid
 #
 setresuid="undef"
-case $arch in
-    linux*)
+case $platform in
+    linux)
         message "Checking whether setresuid declared in /usr/include/unistd.h"
         if `grep setresuid /usr/include/unistd.h > /dev/null 2>&1` ; then
             setresuid="define"
@@ -2337,7 +2337,7 @@ esac
 #
 ### echo %%% Explicitlink - explicitly link with all dependent libraries
 #
-case $platform in
+case $arch in
 freebsd*|aix*|win32*)
     enable_explicitlink="yes"
     ;;
@@ -2431,7 +2431,7 @@ if test ! "x$haveconfig" = "x" ; then
     if test "x$elispdir" = "x";     then elispdir=$prefix/share/emacs/site-lisp; fi
 
     if test "x$enable_rpath" = "xyes" ; then
-        if test "$platform" = "solarisCC5"; then
+        if test "$arch" = "solarisCC5"; then
             sed -e "s|@ldflags@|-R$libdir @ldflags@|" \
                     < Makefile.tmp > Makefile.tmpp
         else
@@ -2476,7 +2476,7 @@ else
 
     # when using rpath in this case build product is not relocatable
     if test "x$enable_rpath" = "xyes" ; then
-        if test "$platform" = "solarisCC5"; then
+        if test "$arch" = "solarisCC5"; then
             sed -e "s|@ldflags@|-R$libdir @ldflags@|" \
                     < Makefile.tmp > Makefile.tmpp
         else
@@ -2677,6 +2677,7 @@ for f in $options ; do
     fi
 done
 sed -e "s|@architecture@|$arch|"           \
+    -e "s|@platform@|$platform|"           \
     -e "s|@prefix@|$prefix2|"              \
     -e "s|@bindir@|$bindir2|"              \
     -e "s|@libdir@|$libdir2|"              \
@@ -2813,7 +2814,8 @@ fi
 
 echo "To build ROOT type:"
 echo ""
-if test "x$platform" = "xwin32" || test "x$platform" = "xwin32gcc" ; then
+if test "x$platform" = "xwin32" || test "x$platform" = "xlinux" ||
+   test "x$platform" = "xmacosx" ; then
     echo "   make"
     if test ! "x$haveconfig" = "x" ; then
         echo "   make install"

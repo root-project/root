@@ -25,7 +25,7 @@ PROGRAMS      = $(ROOTSHOWER)
 all:            $(PROGRAMS)
 
 $(ROOTSHOWER):  $(ROOTSHOWERO)
-ifeq ($(ARCH),win32)
+ifeq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) $^ $(GLIBS) '$(ROOTSYS)\lib\libEG.lib' \
 		   '$(ROOTSYS)\lib\libHtml.lib' '$(ROOTSYS)\lib\libGeom.lib' $(OutPutOpt)$@
 else
