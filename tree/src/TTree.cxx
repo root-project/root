@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.104 2001/11/22 07:45:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.105 2001/12/04 14:40:20 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2119,7 +2119,83 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
 //  If entry does not exist or an I/O error occurs, the function returns 0.
 //
 //  If the Tree has friends, also read the friends entry
-   
+//
+//  To activate/deactivate one or more branches, use TBranch::SetBranchStatus
+//  For example, if you have a Tree with several hundred branches, and you
+//  are interested only by branches named "u" and "v", do
+//     mytree.SetBranchStatus("*",0); //disable all branches
+//     mytree.SetBranchStatus("a",1);
+//     mytree.SetBranchStatus("b",1);
+//  when calling mytree.GetEntry(i); only branches "a" and "b" will be read.
+//
+//  An alternative is to call directly
+//     brancha.GetEntry(i)
+//     branchb.GetEntry(i);
+//
+//  IMPORTANT NOTE
+//  ==============
+// By default, GetEntry reuses the space allocated by the previous object
+// for each branch. You can force the previous object to be automatically
+// deleted if you call mybranch.SetAutoDelete(kTRUE) (default is kFALSE).
+// Example:
+// Consider the example in $ROOTSYS/test/Event.h
+// The top level branch in the tree T is declared with:
+//    Event *event = 0;  //event must be null or point to a valid object
+//                       //it must be initialized
+//    T.SetBranchAddress("event",&event);
+// When reading the Tree, one can choose one of these 3 options:
+//
+//   OPTION 1
+//   --------
+//
+//    for (Int_t i=0;i<nentries;i++) {
+//       T.GetEntry(i);
+//       // the objrect event has been filled at this point
+//    }
+//   The default (recommended). At the first entry an object of the 
+//   class Event will be created and pointed by event.
+//   At the following entries, event will be overwritten by the new data.
+//   All internal members that are TObject* are automatically deleted.
+//   It is important that these members be in a valid state when GetEntry
+//   is called. Pointers must be correctly initialized.
+//   However these internal members will not be deleted if the characters "->"
+//   are specified as the first characters in the comment field of the data 
+//   member declaration.
+//   If "->" is specified, the pointer member is read via pointer->Streamer(buf).
+//   In this case, it is assumed that the pointer is never null (case
+//   of pointer TClonesArray *fTracks in the Event example).
+//   If "->" is not specified, the pointer member is read via buf >> pointer.
+//   In this case the pointer may be null. Note that the option with "->"
+//   is faster to read or write and it also consumes less space in the file.
+//
+//   OPTION 2
+//   --------
+//  The option AutoDelete is set
+//   TBranch *branch = T.GetBranch("event");
+//   branch->SetAddress(&event);
+//   branch->SetAutoDelete(kTRUE);
+//    for (Int_t i=0;i<nentries;i++) {
+//       T.GetEntry(i);
+//       // the objrect event has been filled at this point
+//    }
+//   In this case, at each iteration, the object event is deleted by GetEntry
+//   and a new instance of Event is created and filled.
+//
+//   OPTION 3
+//   --------
+//   Same as option 1, but you delete yourself the event.
+//    for (Int_t i=0;i<nentries;i++) {
+//       delete event;
+//       event = 0;  // EXTREMELY IMPORTANT
+//       T.GetEntry(i);
+//       // the objrect event has been filled at this point
+//    }
+//
+//  It is strongly recommended to use the default option 1. It has the 
+//  additional advantage that functions like TTree::Draw (internally
+//  calling TTree::GetEntry) will be functional even when the classes in the
+//  file are not available.
+  
    if (entry < 0 || entry >= fEntries) return 0;
    Int_t i;
    Int_t nbytes = 0;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.70 2001/11/30 14:15:14 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.71 2001/12/03 13:32:53 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -539,6 +539,8 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
 //
 //  The function returns the number of bytes read from the input buffer.
 //  If entry does not exist or an I/O error occurs, the function returns 0.
+//
+//  See IMPORTANT REMARKS in TTree::GetEntry
 
    Int_t nbranches = fBranches.GetEntriesFast();
 

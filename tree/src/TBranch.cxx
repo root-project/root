@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.30 2001/11/09 14:17:33 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.31 2001/11/16 02:44:33 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -631,6 +631,8 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
 //
 //  The function returns the number of bytes read from the input buffer.
 //  If entry does not exist or an I/O error occurs, the function returns 0.
+//
+//  See IMPORTANT REMARKS in TTree::GetEntry
 
    if (TestBit(kDoNotProcess) && !getall) return 0;
    //if (fReadEntry == entry) return 1;  //side effects in case user Clear his structures
