@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.165 2005/02/25 19:13:24 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.166 2005/02/25 21:49:04 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3021,7 +3021,11 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             case kDivide     : pos--; if (tab[pos] == 0) tab[pos-1] = 0; //  division by 0
                                       else               tab[pos-1] /= tab[pos];
                                       continue;
-            case kModulo     : {pos--; Int_t int1((Int_t)tab[pos-1]); Int_t int2((Int_t)tab[pos]); tab[pos-1] = Double_t(int1%int2); continue;}
+            case kModulo     : {pos--; 
+                                Long64_t int1((Long64_t)tab[pos-1]); 
+                                Long64_t int2((Long64_t)tab[pos]); 
+                                tab[pos-1] = Double_t(int1%int2); 
+                                continue;}
 
             case kcos  : tab[pos-1] = TMath::Cos(tab[pos-1]); continue;
             case ksin  : tab[pos-1] = TMath::Sin(tab[pos-1]); continue;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.89 2005/03/04 09:32:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.90 2005/03/04 18:38:52 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2329,7 +2329,11 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
         case kDivide     : pos--; if (tab[pos] == 0) tab[pos-1] = 0; //  division by 0
                                   else               tab[pos-1] /= tab[pos];
                            continue;
-        case kModulo     : {pos--; Int_t int1=Int_t(tab[pos-1]); Int_t int2=Int_t(tab[pos]); tab[pos-1] = Double_t(int1%int2); continue;}
+        case kModulo     : {pos--; 
+                            Long64_t int1((Long64_t)tab[pos-1]); 
+                            Long64_t int2((Long64_t)tab[pos]); 
+                            tab[pos-1] = Double_t(int1%int2); 
+                            continue;}
 
         case kcos  : tab[pos-1] = TMath::Cos(tab[pos-1]); continue;
         case ksin  : tab[pos-1] = TMath::Sin(tab[pos-1]); continue;
