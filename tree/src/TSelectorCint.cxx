@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.10 2003/04/03 16:55:12 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.11 2003/04/04 00:55:49 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -88,7 +88,7 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
    // Initialize the CallFunc objects when selector is interpreted
    Assert(cl);
 
-   // The G__MethodInfo created by SetFuncProto will remember the address 
+   // The G__MethodInfo created by SetFuncProto will remember the address
    // of cl, so we need to keep it around.
    fClass       = new G__ClassInfo(*cl);
 
@@ -109,9 +109,9 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
    SetFuncProto(fFuncBegin,fClass,"Begin","TTree*");
    SetFuncProto(fFuncNotif,fClass,"Notify","");
    SetFuncProto(fFuncTerm,fClass,"Terminate","");
-   SetFuncProto(fFuncCut,fClass,"ProcessCut","int");
-   SetFuncProto(fFuncFill,fClass,"ProcessFill","int");
-   SetFuncProto(fFuncProc,fClass,"Process","int");
+   SetFuncProto(fFuncCut,fClass,"ProcessCut","Int_t");
+   SetFuncProto(fFuncFill,fClass,"ProcessFill","Int_t");
+   SetFuncProto(fFuncProc,fClass,"Process","Int_t");
    SetFuncProto(fFuncOption,fClass,"SetOption","const char*");
    SetFuncProto(fFuncObj,fClass,"SetObject","TObject*");
    SetFuncProto(fFuncInp,fClass,"SetInputList","TList*");
