@@ -32,7 +32,7 @@ int reader()
   tree->SetBranchAddress("foo", (void*)&foo_);
   tree->SetBranchAddress("foo.fFoo", &foo_fFoo);
   
-  Int_t  n = Int_t(tree->GetEntries());
+  Int_t  n = (Int_t)tree->GetEntries();
 
   for (Int_t i = 0; i < n; i++) {
     tree->GetEntry(i);
