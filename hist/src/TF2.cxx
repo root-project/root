@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.22 2003/07/08 06:56:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.23 2003/07/14 12:58:22 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -60,12 +60,17 @@ TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   fYmin   = ymin;
-   fYmax   = ymax;
+   if (ymin < ymax) {
+      fYmin   = ymin;
+      fYmax   = ymax;
+   } else {
+      fYmin = ymax;
+      fYmax = ymin;
+   }
    fNpx    = 30;
    fNpy    = 30;
    fContour.Set(0);
-   if (fNdim != 2 && xmin < xmax) {
+   if (fNdim != 2 && xmin < xmax && ymin < ymax) {
       Error("TF2","function: %s/%s has %d parameters instead of 2",name,formula,fNdim);
       MakeZombie();
    }

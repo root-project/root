@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.12 2003/07/08 06:56:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.13 2003/07/14 12:58:22 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -36,7 +36,7 @@ TF3::TF3(): TF2()
 
 //______________________________________________________________________________
 TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax)
-      :TF2(name,formula,xmax,xmin,ymin,ymax)
+      :TF2(name,formula,xmin,xmax,ymax,ymin)
 {
 //*-*-*-*-*-*-*F3 constructor using a formula definition*-*-*-*-*-*-*-*-*-*-*
 //*-*          =========================================
