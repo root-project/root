@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.30 2001/10/25 19:17:01 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.31 2001/10/26 14:01:15 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -166,8 +166,8 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    // which is placed in a TGFrame. This ctor is only called via the
    // TRootEmbeddedCanvas class.
 
-   fSelected     = 0;
-   fSelectedPad  = 0;
+   Init();
+   
    fCanvasID     = winid;
    fWindowTopX   = 0;
    fWindowTopY   = 0;
@@ -176,11 +176,6 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    fCw           = ww;
    fCh           = wh;
    fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
-   fBatch        = kFALSE;
-
-   fMenuBar      = kFALSE;
-   fContextMenu  = 0;
-   fEditorBar    = 0;
 
    SetName(name);
    Build();
@@ -220,6 +215,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
       if ((*gThreadXAR)("CANV", 6, arr, NULL)) return;
    }
+
    Init();
    fMenuBar = kTRUE;
    if (form < 0) {
@@ -288,6 +284,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
        arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
        if ((*gThreadXAR)("CANV", 6, arr, NULL)) return;
    }
+
    Init();
    fMenuBar = kTRUE;
    if (ww < 0) {
@@ -350,6 +347,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       arr[4] = &wtopx; arr[5] = &wtopy; arr[6] = &ww; arr[7] = &wh;
       if ((*gThreadXAR)("CANV", 8, arr, NULL)) return;
    }
+
 
    Init();
    fMenuBar = kTRUE;
@@ -415,7 +413,6 @@ void TCanvas::Init()
    fEvent           = -1;
    fEventX          = -1;
    fEventY          = -1;
-
    SetBit(kMustCleanup);
 }
 
