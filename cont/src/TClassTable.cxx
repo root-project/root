@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.27 2004/02/13 11:25:37 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.28 2004/07/08 00:28:39 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -217,6 +217,7 @@ int   TClassTable::Classes() { return fgTally; }
 //______________________________________________________________________________
 void  TClassTable::Init() { fgCursor = 0; SortTable(); }
 
+namespace ROOT { class fornamespace {}; } // Dummy class to give a typeid to namespace 
 
 //______________________________________________________________________________
 void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
@@ -230,6 +231,12 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
   // check if already in table, if so return
    ClassRec_t *r = FindElement(cname, kTRUE);
    if (r->name) {
+      if ( strcmp(r->info->name(),typeid(ROOT::fornamespace).name())==0
+           && strcmp(info.name(),typeid(ROOT::fornamespace).name())==0 ) {
+         // We have a namespace being reloaded.
+         // This okay we just keep the old one.
+         return;
+      }
       if (TClassEdit::IsSTLCont(cname)==0) {
          // Warn only for class that are not STL containers.
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
