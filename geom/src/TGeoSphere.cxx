@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.14 2003/01/31 16:38:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.15 2003/02/07 13:46:47 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -277,7 +277,7 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
       }
       *safe = saf[TMath::LocMin(6, &saf[0])];
       if (iact==0) return kBig;
-//      if (iact==1 && (step<*safe)) return kBig;
+      if (iact==1 && step<*safe) return kBig;
    }
    // compute distance to shape
    Double_t snxt = kBig;
