@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.25 2002/11/15 13:24:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.26 2002/11/15 14:41:40 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -996,8 +996,6 @@ void TRootBrowser::CloseWindow()
    // In case window is closed via WM we get here.
 
    DeleteWindow();
-   gInterpreter->DeleteGlobal(fBrowser);
-   delete fBrowser;  // this in turn will delete this object
 }
 
 //______________________________________________________________________________
