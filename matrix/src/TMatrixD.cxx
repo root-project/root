@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.12 2002/01/04 08:07:38 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.13 2002/01/04 08:14:30 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -1967,7 +1967,6 @@ void TMatrixD::Streamer(TBuffer &R__b)
          return;
       }
       //====process old versions before automatic schema evolution
-      R__b.ReadVersion(&R__s, &R__c);
       TObject::Streamer(R__b);
       R__b >> fNrows;
       R__b >> fNcols;
