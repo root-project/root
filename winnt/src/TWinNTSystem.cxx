@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.90 2004/05/21 18:54:12 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.91 2004/05/28 20:21:38 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1078,6 +1078,12 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    if (gConsoleEvent) ::SetEvent(gConsoleEvent);
 
    while (1) {
+      if (gROOT->IsLineProcessing()) {
+         if (!pendingOnly) {
+            SleepEx(1, TRUE);
+            return;
+         }
+      }
       // first handle any GUI events
       if (gXDisplay && !gROOT->IsBatch()) {
          if (gXDisplay->Notify()) {
