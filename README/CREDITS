@@ -105,6 +105,10 @@ N: Masaharu Goto
 E: MXJ02154@niftyserve.or.jp
 D: CINT C/C++ interpreter
 
+N: Oleksandr Grebenyuk
+E: Oleksandr.Grebenyuk@gsi.de
+D: OpenLDAP interface
+
 N: Robert Hatcher
 E: rhatcher@slac.stanford.edu
 D: class TXTRU and tutorials xtruDraw.C and xtruSamples.C
@@ -229,6 +233,10 @@ D: Improvements in TTreePlayer::DrawSelect
 N: Daniel Sigg
 E: sigg_d@ligo.caltech.edu
 D: TGNumberEntry GUI widget
+
+N: Evgenia Smirnova
+E: Evgenia.Smirnova@gsi.de
+D: OpenLDAP interface
 
 N: Christian Stratowa
 E: cstrato@EUnet.at
