@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.42 2001/12/19 15:35:43 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.43 2001/12/19 17:22:23 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -243,8 +243,8 @@ Int_t TCint::ProcessLine(const char *line, EErrorCode* error)
              int local_error = 0;
              ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, 0);
              if (error) *error = (EErrorCode)local_error;
+             gROOT->SetLineHasBeenProcessed();
          }
-         gROOT->SetLineHasBeenProcessed();
       } else
          ret = ProcessLineAsynch(line, error);
    }
@@ -730,7 +730,8 @@ Int_t TCint::ExecuteMacro(const char *filename, EErrorCode* error)
 {
    // Execute a CINT macro.
 
-   ProcessLine(Form(".X %s", filename), error);
+   G__value result = G__exec_tempfile((char*)filename);
+   //ProcessLine(Form(".X %s", filename), error);
    return 0;  // could get return value from result, but what about return type?
 }
 
