@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: HelpTextTV.cxx,v 1.11 2002/01/21 18:08:35 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: HelpTextTV.cxx,v 1.12 2003/11/25 13:17:33 brun Exp $
 // Author: Andrei Gheata   02/10/00
 
 /*************************************************************************
@@ -54,8 +54,7 @@ const char gTVHelpStart[] = "\
          root [2] TreeViewer *tv = new TTreeViewer();\n\
          root [3] tv->SetTreeName(\"Mytree\");\n\n\
    NOTE: Once a TTreeViewer is started, one can access it from the interpreter\n\
-         using the global identifier gTV
-   
+         using the global identifier gTV\n\n\
 ";
 
 const char gTVHelpLayout[] = "\
