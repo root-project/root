@@ -40,7 +40,7 @@ include/%.h:    $(VENUSDIRI)/%.h
 $(VENUSLIB):    $(VENUSO) $(VENUSDO) $(MAINLIBS) $(VENUSLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libEGVenus.$(SOEXT) $@ "$(VENUSO) $(VENUSDO)" \
-		   "$(VENUSLIBEXTRA) $(FVENUSLIBDIR) $(FVENUSLIB)"
+		   "$(VENUSLIBEXTRA)"
 
 $(VENUSDS):     $(VENUSH1) $(VENUSL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
