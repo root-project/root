@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.2 2000/05/24 10:31:47 brun Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -137,6 +137,7 @@ public:
                                   { return Getvalue(name) != 0; }
 
    virtual Int_t       GetValue(const char *name, Int_t dflt);
+   virtual Double_t    GetValue(const char *name, Double_t dflt);
    virtual const char *GetValue(const char *name, const char *dflt);
    virtual TObject    *GetValue(const char *name, TObject *dflt);
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -524,6 +524,23 @@ Int_t TEnv::GetValue(const char *name, Int_t dflt)
             if (strcmp(buf2, bt->fName) == 0)
                return bt->fValue;
       }
+   }
+   return dflt;
+}
+
+//______________________________________________________________________________
+Double_t TEnv::GetValue(const char *name, Double_t dflt)
+{
+   // Returns the dobule value for a resource. If the resource is not found
+   // return the dflt value.
+   
+   const char *cp = TEnv::Getvalue(name);
+   if (cp) {
+      char *endptr;
+      Double_t val = strtod(cp, &endptr);
+      if (val == 0.0 && cp == endptr)
+         return dflt;
+      return val;
    }
    return dflt;
 }
