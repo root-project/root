@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.126 2003/09/05 15:50:50 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.127 2003/10/20 18:19:58 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3479,6 +3479,36 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          
          continue;
       }
+//*-*- boolean operation optimizer
+      if (action >= kBoolOptimize) {
+         Bool_t skip = kFALSE;
+         int op = (action-kBoolOptimize) % 10; // 1 is && , 2 is ||
+
+         if (op == 1 && (!tab[pos-1]) ) { 
+            // &&: skip the right part if the left part is already false
+
+            skip = kTRUE;
+
+            // Preserve the existing behavior (i.e. the result of a&&b is
+            // either 0 or 1)
+            tab[pos-1] = 0;
+            
+         } else if (op == 2 && tab[pos-1] ) {  
+            // ||: skip the right part if the left part is already true
+            
+            skip = kTRUE;
+
+            // Preserve the existing behavior (i.e. the result of a||b is
+            // either 0 or 1)
+            tab[pos-1] = 1;
+         }
+         
+         if (skip) {
+            int toskip = (action-kBoolOptimize) / 10;
+            i += toskip;
+         }
+         continue;
+    }
 //*-*- a TTree Variable Alias (i.e. a sub-TTreeFormula)
       if (action == kAlias) {
          int aliasN = i;
@@ -3520,8 +3550,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          continue;
       }
 //*-*- a tree variable
-      if (action >= 100000) {
-         Int_t code = action-100000;
+      if (action >= kVariable) {
+         Int_t code = action-kVariable;
          Double_t param;
 
          switch (fCodes[code]) {
@@ -3578,8 +3608,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          continue;
       }
 //*-*- numerical value
-      if (action >= 50000) {
-         pos++; tab[pos-1] = fConst[action-50000];
+      if (action >= kConstants) {
+         pos++; tab[pos-1] = fConst[action-kConstants];
          continue;
       }
       if (action == 0) {
@@ -4305,7 +4335,11 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             if (readentry==-1) readentry=0;
             if (!branchcount->GetAddress()) branchcount->GetEntry(readentry);
             else branchcount->TBranch::GetEntry(readentry);
+
             size = ((TBranchElement*)branchcount)->GetNdata();
+            // Reading the size as above is correct only when the branchcount
+            // is of streamer type kCounter which require the underlying data
+            // member to be signed integral type.
 
             TBranchElement* branch = (TBranchElement*) leaf->GetBranch();
 
