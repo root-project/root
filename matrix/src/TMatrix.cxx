@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.44 2003/07/16 21:22:19 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.45 2003/07/17 10:10:24 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -302,7 +302,7 @@ void TMatrix::ResizeTo(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_up
           fRowLwb == row_lwb && fColLwb == col_lwb)
          return;
 
-      const Real_t  *elements_old = fElements;
+      Real_t        *elements_old = fElements;
       Real_t       **index_old    = fIndex;
       const Int_t    nrows_old    = fNrows;
       const Int_t    ncols_old    = fNcols;
