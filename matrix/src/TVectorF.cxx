@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.2 2004/01/25 23:28:44 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1126,7 +1126,7 @@ void Compare(const TVectorF &v1,const TVectorF &v2)
 
 //______________________________________________________________________________
 Bool_t VerifyVectorValue(const TVectorF &v,Float_t val,
-                         const Int_t verbose,Float_t maxDevAllow)
+                         Int_t verbose,Float_t maxDevAllow)
 {
   // Validate that all elements of vector have value val within maxDevAllow .
 
@@ -1157,7 +1157,7 @@ Bool_t VerifyVectorValue(const TVectorF &v,Float_t val,
 
 //______________________________________________________________________________
 Bool_t VerifyVectorIdentity(const TVectorF &v1,const TVectorF &v2,
-                            const Int_t verbose,const Float_t maxDevAllow)
+                            Int_t verbose, Float_t maxDevAllow)
 {
   // Verify that elements of the two vectors are equal within maxDevAllow .
 
