@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.79 2002/01/10 07:19:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.80 2002/01/10 20:19:27 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -773,7 +773,7 @@ class TFormLeafInfoMethod : public TFormLeafInfo {
    TMethodCall *fMethod;
    TString fMethodName;
    TString fParams;
-   Double_t result;
+   Double_t fResult;
 public:
 
    TFormLeafInfoMethod(TClass* classptr = 0, TMethodCall *method = 0) :
@@ -815,23 +815,23 @@ public:
       if (!thisobj) return 0;
 
       TMethodCall::EReturnType r = fMethod->ReturnType();
-      result = 0;
+      fResult = 0;
 
       if (r == TMethodCall::kLong) {
          Long_t l;
          fMethod->Execute(thisobj, l);
-         result = (Double_t) l;
+         fResult = (Double_t) l;
          // Get rid of temporary return object.
          gInterpreter->ClearStack();
-         return &result;
+         return &fResult;
 
       } else if (r == TMethodCall::kDouble) {
          Double_t d;
          fMethod->Execute(thisobj, d);
-         result = (Double_t) d;
+         fResult = (Double_t) d;
          // Get rid of temporary return object.
          gInterpreter->ClearStack();
-         return &result;
+         return &fResult;
 
       } else if (r == TMethodCall::kString) {
          char *returntext = 0;
@@ -845,6 +845,7 @@ public:
          gInterpreter->ClearStack();
          Warning("TTreeFormula","Temporary object have been deleted before possible usage!");
          return char_result;
+
       }
       return 0;
     }
@@ -871,7 +872,7 @@ public:
       } else if (r == TMethodCall::kString) {
          char *returntext = 0;
          fMethod->Execute(thisobj,&returntext);
-         result = (Int_t) returntext;
+         result = (long) returntext;
 
       } else if (fNext) {
          char * char_result = 0;
