@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.49 2003/09/23 22:06:16 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.50 2003/10/07 14:00:59 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -255,14 +255,15 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
 
    while (1) {
       if(gROOT->GetApplication()) {
-         WaitForSingleObject(hEvent1, INFINITE);
+         ::WaitForSingleObject(hEvent1, INFINITE);
          if(!gROOT->IsLineProcessing()) {
             gApplication->HandleTermInput();
          }
-        ResetEvent(hEvent1);
+         ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE), ENABLE_PROCESSED_OUTPUT);
+         ::ResetEvent(hEvent1);
       } else {
          static int i = 0;
-         SleepEx(100,1);
+         ::SleepEx(100,1);
          i++;
          if (i>20) break; // TApplication object doesn't exist
       }
