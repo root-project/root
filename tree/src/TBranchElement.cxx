@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.66 2001/10/15 16:04:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.67 2001/11/01 11:46:51 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -958,9 +958,12 @@ void TBranchElement::SetAddress(void *add)
          }
          if (!fObject) fAddress = 0;
       }
+      TClass *clm = gROOT->GetClass(fClonesName.Data());
+      if (clm) {
+			clm->BuildRealData(); //just in case clm derives from an abstract class
+			clm->GetStreamerInfo();
+		}
       if (!fAddress) {
-         TClass *clm = gROOT->GetClass(fClonesName.Data());
-         if (clm) clm->GetStreamerInfo();
          //SetBit(kDeleteObject);
          fObject = (char*)new TClonesArray(fClonesName.Data());
          fAddress = (char*)&fObject;
