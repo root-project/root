@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.5 2003/09/11 23:12:18 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.6 2003/09/23 23:19:12 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -48,6 +48,9 @@
 
 extern "C" {
    #define KRB5_PRIVATE 1
+#if defined(__sun) && !defined(linux)
+   #include <com_err.h>
+#endif
    #include <krb5.h>
    int krb5_net_read(krb5_context, int, char *, int); // ow ow ow!
 }

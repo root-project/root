@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.43 2003/09/23 23:45:29 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.44 2003/09/24 13:24:30 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -208,6 +208,9 @@ extern "C" int gethostname(char *, int);
 
 #ifdef R__KRB5
 extern "C" {
+#if defined(__sun) && !defined(linux)
+   #include <com_err.h>
+#endif
    #include <krb5.h>
 }
 #endif

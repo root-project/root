@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.11 2003/09/23 23:45:29 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.12 2003/09/24 13:24:31 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -134,6 +134,9 @@ extern "C" {
 
 #ifdef R__KRB5
 extern "C" {
+#if defined(__sun) && !defined(linux)
+   #include <com_err.h>
+#endif
    #include <krb5.h>
    int krb5_net_write(krb5_context, int, const char *, int);
 }
