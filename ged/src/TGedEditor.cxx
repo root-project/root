@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.5 2004/04/22 16:28:28 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.6 2004/06/18 15:50:43 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -171,7 +171,6 @@ void TGedEditor::GetClassEditor(TClass *cl)
          while ((ge = (TGedElement *)next3())) {
             if (!strcmp(ge->fGedFrame->ClassName(), class2->GetName()) && (ge->fCanvas == 0)) {
                ge->fCanvas = fCanvas;
-               printf("PL: %s, canvas:%s\n", ge->fGedFrame->ClassName(), ge->fCanvas->GetName());
             }
          }
       }
@@ -228,7 +227,6 @@ void TGedEditor::DeleteEditors()
          TGedElement *ge;
          while ((ge = (TGedElement *)next1())) {
             if (ge->fCanvas == fCanvas) {
-               printf("Remove: %s, %s\n", ge->fGedFrame->ClassName(), ge->fCanvas->GetName());
                editors->Remove(ge);
             }
          }
