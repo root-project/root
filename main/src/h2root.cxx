@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.5 2001/04/27 06:32:45 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.6 2001/05/04 17:27:01 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -672,8 +672,12 @@ int main(int argc, char **argv)
      
      for (j=62;j>0;j--) {
         if(golower && fullname[j-1] != '[') fullname[j] = tolower(fullname[j]);
+        // convert also character after [, if golower == 2
+        if (golower == 2) fullname[j] = tolower(fullname[j]);
         if (fullname[j] == ' ') fullname[j] = 0;
      }
+     // convert also first character, if golower == 2
+     if (golower == 2) fullname[0] = tolower(fullname[0]);
      for (j=30;j>0;j--) {
         if (block[j] == ' ') block[j] = 0;
         else break;
