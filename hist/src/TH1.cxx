@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.44 2001/03/02 17:07:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.45 2001/03/05 10:44:31 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2984,7 +2984,7 @@ void TH1::Streamer(TBuffer &b)
          fXaxis.SetParent(this);
          fYaxis.SetParent(this);
          fZaxis.SetParent(this);
-         if (!gROOT->ReadingObject()) {
+         if (fgAddDirectory && !gROOT->ReadingObject()) {
             fDirectory = gDirectory;
             if (!gDirectory->GetList()->FindObject(this)) gDirectory->Append(this);
          }
