@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.20 2001/11/07 01:56:06 verkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.21 2001/11/27 23:19:04 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.20 2001/11/07 01:56:06 verkerke Exp $";
+"$Id: RooAcceptReject.cc,v 1.21 2001/11/27 23:19:04 verkerke Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooAbsReal* maxFuncVal, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose), _funcMaxVal(maxFuncVal)
@@ -353,4 +353,4 @@ Double_t RooAcceptReject::getFuncMax()
 
 
 const int RooAcceptReject::_maxSampleDim= 3,
-  RooAcceptReject::_minTrialsArray[]= { 0,1000,100000,10000000 };
+  RooAcceptReject::_minTrialsArray[]= { 100,1000,100000,10000000 };
