@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.3 2000/11/21 20:41:56 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.4 2000/12/13 07:28:11 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -110,7 +110,7 @@ void TVector::Draw(Option_t *option)
 {
    // Draw this vector using an intermediate histogram
    // The histogram is named "TVector" by default and no title
-   
+
    gROOT->ProcessLine(Form("TH1F *R__TV = new TH1F((TVector&)((TVector*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
       (Long_t)this,option));
 }
@@ -146,8 +146,8 @@ void TVector::ResizeTo(Int_t lwb, Int_t upb)
                                               fNmem*sizeof(Real_t));
       memset(fElements+old_nrows, 0, (fNrows-old_nrows)*sizeof(Real_t));
       fNmem = fNrows;
-   } else if (old_nrows - fNrows > (old_nrows>>3)) {
-      // Vector is to shrink a lot (more than 7/8 of the original size), reallocate
+   } else if (old_nrows - fNrows > (old_nrows>>2)) {
+      // Vector is to shrink a lot (more than 1/4 of the original size), reallocate
       fElements = (Real_t *)TStorage::ReAlloc(fElements, fNrows*sizeof(Real_t));
       fNmem = fNrows;
    }
@@ -767,7 +767,7 @@ void TVector::Streamer(TBuffer &R__b)
       fNrows = R__b.ReadArray(fElements);
       R__b.CheckByteCount(R__s, R__c, TVector::IsA());
       //====end of old versions
-      
+
    } else {
       TVector::Class()->WriteBuffer(R__b,this);
    }
