@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.44 2004/06/18 15:47:34 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.45 2004/10/29 16:07:32 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -216,6 +216,7 @@ public:
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t              ReadBuffer(TBuffer &b, void *pointer);
    void               ReplaceWith(TClass *newcl, Bool_t recurse = kTRUE) const;
+   void               ResetClassInfo(Long_t tagnum);
    void               ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
    void               ResetMenuList();
    Int_t              Size() const;

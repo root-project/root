@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.139 2004/11/23 16:26:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.140 2004/12/09 15:40:46 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -864,6 +864,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
    if (cl) {
 
       if (cl->IsLoaded()) return cl;
+
       //we may pass here in case of a dummy class created by TStreamerInfo
       load = kTRUE;
 
@@ -872,6 +873,9 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
          const char *altname = gInterpreter->GetInterpreterTypeName(name);
          if (altname && strcmp(altname,name)!=0) {
 
+            // Remove the existing (soon to be invalid) TClass object to
+            // avoid an infinite recursion.
+            GetListOfClasses()->Remove(cl);
             TClass *newcl = GetClass(altname,load);
 
             // since the name are different but we got a TClass, we assume
@@ -949,6 +953,12 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
    if (gInterpreter->CheckClassInfo(name)) {
+      const char *altname = gInterpreter->GetInterpreterTypeName(name,kTRUE);
+      if (strcmp(altname,name)!=0) {
+         // altname now contains the full name of the class including a possible
+         // namespace if there has been a using namespace statement.
+         return GetClass(altname,load);
+      }
       TClass *ncl = new TClass(name, 1, 0, 0, -1, -1);
       if (!ncl->IsZombie()) return ncl;
       delete ncl;

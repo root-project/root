@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.20 2004/07/16 23:06:23 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.21 2004/08/13 17:00:29 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -99,7 +99,7 @@ public:
    virtual void     CreateListOfMethodArgs(TFunction *m) = 0;
    virtual TString  GetMangledName(TClass *cl, const char *method, const char *params) = 0;
    virtual TString  GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto) = 0;
-   virtual const char *GetInterpreterTypeName(const char*) = 0;
+   virtual const char *GetInterpreterTypeName(const char *name,Bool_t full = kFALSE) = 0;
    virtual void    *GetInterfaceMethod(TClass *cl, const char *method, const char *params) = 0;
    virtual void    *GetInterfaceMethodWithPrototype(TClass *cl, const char *method, const char *proto) = 0;
    virtual void     Execute(const char *function, const char *params, int *error = 0) = 0;

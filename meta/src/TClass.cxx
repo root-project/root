@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.160 2005/01/18 11:06:11 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.161 2005/01/18 17:59:52 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1708,6 +1708,20 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
       delete acl;
    }
 
+}
+
+//______________________________________________________________________________
+void TClass::ResetClassInfo(Long_t tagnum)
+{
+   // Make sure that the current G__ClassInfo is up to date.
+
+   if (fClassInfo && fClassInfo->Tagnum() != tagnum) {
+      fClassInfo->Init((Int_t)tagnum);
+      if (fBase) {
+         fBase->Delete();
+         delete fBase; fBase = 0;
+      }
+   }
 }
 
 //______________________________________________________________________________

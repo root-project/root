@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.96 2005/01/06 21:27:46 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.97 2005/01/14 18:12:39 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -815,7 +815,7 @@ void *TCint::GetInterfaceMethodWithPrototype(TClass *cl, const char *method,
 }
 
 //______________________________________________________________________________
-const char *TCint::GetInterpreterTypeName(const char *name)
+const char *TCint::GetInterpreterTypeName(const char *name, Bool_t full)
 {
    // The 'name' is known to the interpreter, this function returns
    // the internal version of this name (usually just resolving typedefs)
@@ -825,7 +825,10 @@ const char *TCint::GetInterpreterTypeName(const char *name)
 
    if (!gInterpreter->CheckClassInfo(name)) return 0;
    G__ClassInfo cl(name);
-   if (cl.IsValid()) return cl.Name();
+   if (cl.IsValid()) {
+      if (full) return cl.Fullname();
+      else return cl.Name();
+   }
    else return 0;
 }
 
@@ -1134,6 +1137,51 @@ void *TCint::FindSpecialObject(const char *item, G__ClassInfo *type,
    return *prevObj;
 }
 
+namespace {
+   //______________________________________________________________________________
+   // Helper class for UpdateClassInfo
+   class TInfoNode {
+   private:
+      string fName;
+      Long_t fTagnum;
+   public:
+      TInfoNode(const char *item, Long_t tagnum)
+         : fName(item),fTagnum(tagnum) 
+      {}
+      void Update() {
+         Update(fName.c_str(),fTagnum);
+      }
+      static void Update(const char *item, Long_t tagnum) 
+      {
+         Bool_t load = kFALSE;
+         if (strchr(item,'<')) {
+            // We have a template which may have duplicates.
+
+            TIter next( gROOT->GetListOfClasses() );
+            TClass *cl;
+
+            TString resolvedItem(
+               TClassEdit::ResolveTypedef(TClassEdit::ShortType(item,TClassEdit::kDropStlDefault).c_str()
+               ,kTRUE) );
+            TString resolved;
+            while ( (cl = (TClass*)next()) ) {
+               resolved = TClassEdit::ResolveTypedef(TClassEdit::ShortType(cl->GetName(),
+                  TClassEdit::kDropStlDefault).c_str()
+                  ,kTRUE);
+               if (resolved==resolvedItem) {
+                  // we found at least one equivalent.
+                  // let's force a reload
+                  load = kTRUE;
+               }
+            }
+         }
+
+         TClass *cl = gROOT->GetClass(item, load);
+         if (cl) cl->ResetClassInfo(tagnum);
+      }
+   };
+}
+
 //______________________________________________________________________________
 void TCint::UpdateClassInfo(char *item, Long_t tagnum)
 {
@@ -1144,40 +1192,34 @@ void TCint::UpdateClassInfo(char *item, Long_t tagnum)
 
    if (gROOT && gROOT->GetListOfClasses()) {
 
-      Bool_t load = kFALSE;
+      static Bool_t entered = kFALSE;
+      static vector<TInfoNode> updateList;
+      Bool_t topLevel;
 
-      if (strchr(item,'<')) {
-         // We have a template which may have duplicates.
-
-         TIter next( gROOT->GetListOfClasses() );
-         TClass *cl;
-
-         TString resolvedItem(
-            TClassEdit::ResolveTypedef(TClassEdit::ShortType(item,TClassEdit::kDropStlDefault).c_str()
-                                       ,kTRUE) );
-         TString resolved;
-         while ( (cl = (TClass*)next()) ) {
-            resolved = TClassEdit::ResolveTypedef(TClassEdit::ShortType(cl->GetName(),
-                                                                        TClassEdit::kDropStlDefault).c_str()
-                                                  ,kTRUE);
-            if (resolved==resolvedItem) {
-               // we found at least one equivalent.
-               // let's force a reload
-               load = kTRUE;
-            }
-         }
+      if (entered) topLevel = kFALSE;
+      else {
+         entered = kTRUE;
+         topLevel = kTRUE;
       }
-
-      TClass *cl = gROOT->GetClass(item, load);
-      if (cl) {
-         G__ClassInfo *info = cl->GetClassInfo();
-         if (info && info->Tagnum() != tagnum) {
-            info->Init((int)tagnum);
-            if (cl->fBase)
-               cl->fBase->Delete();
-            delete cl->fBase;
-            cl->fBase = 0;
+      if (topLevel) {
+         TInfoNode::Update(item,tagnum);
+      } else {
+         // If we are called indirectly from within another call to 
+         // TCint::UpdateClassInfo, we delay the update until the dictionary loading 
+         // is finished (i.e. when we return to the top level TCint::UpdateClassInfo).
+         // This allows for the dictionary to be fully populated when we actually 
+         // update the TClass object.   The updating of the TClass sometimes 
+         // (STL containers and when there is an emulated class) forces the building 
+         // of the TClass object's real data (which needs the dictionary info).
+         updateList.push_back(TInfoNode(item,tagnum));
+      }
+      if (topLevel) {
+         while (!updateList.empty()) {
+            TInfoNode current( updateList.back() );
+            updateList.pop_back();
+            current.Update();
          }
+         entered = kFALSE;
       }
    }
 }

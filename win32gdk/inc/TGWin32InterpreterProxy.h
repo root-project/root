@@ -1,4 +1,4 @@
-// $Id: TGWin32InterpreterProxy.h,v 1.9 2004/07/17 11:36:40 rdm Exp $
+// $Id: TGWin32InterpreterProxy.h,v 1.10 2004/08/13 17:00:29 rdm Exp $
 // Author: Valeriy Onuchin  15/11/03
 
 /*************************************************************************
@@ -83,7 +83,7 @@ public:
    char    *GetPrompt();
    void    *GetInterfaceMethod(TClass *cl, const char *method, const char *params);
    void    *GetInterfaceMethodWithPrototype(TClass *cl, const char *method, const char *proto);
-   const char *GetInterpreterTypeName(const char*);
+   const char *GetInterpreterTypeName(const char*,Bool_t=kFALSE);
    void     Execute(const char *function, const char *params, int *error = 0);
    void     Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0);
    void     Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0);

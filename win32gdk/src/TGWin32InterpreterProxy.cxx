@@ -75,7 +75,7 @@ RETURN_METHOD_ARG3(Interpreter,void*,GetInterfaceMethod,TClass*,cl,const char*,m
 RETURN_METHOD_ARG3(Interpreter,void*,GetInterfaceMethodWithPrototype,TClass*,cl,const char*,method,const char*,proto)
 RETURN_METHOD_ARG1(Interpreter,const char*,GetClassSharedLibs,const char*,s)
 RETURN_METHOD_ARG1(Interpreter,const char*,GetSharedLibDeps,const char*,s)
-RETURN_METHOD_ARG1(Interpreter,const char*,GetInterpreterTypeName,const char*,s)
+RETURN_METHOD_ARG2(Interpreter,const char*,GetInterpreterTypeName,const char*,s,Bool_t,full)
 VOID_METHOD_ARG3(Interpreter,Execute,const char*,function,const char*,params,int*,error,1)
 VOID_METHOD_ARG5(Interpreter,Execute,TObject*,obj,TClass*,cl,const char*,method,const char*,params,int*,error,1)
 VOID_METHOD_ARG5(Interpreter,Execute,TObject*,object,TClass*,cl,TMethod*,method,TObjArray*,params,int*,error,1)
