@@ -7788,6 +7788,13 @@ int link_stub;
 	    for(i=0;i<G__struct.alltag;i++) {
 	      if(G__struct.filenum[i]==ifile) {
 		G__struct.globalcomp[i]=globalcomp;
+#ifndef G__OLDIMPLEMENTATION1597
+                /* Note this make the equivalent of '+' the
+		   default for defined_in type of linking */
+                if ( 0 == (G__struct.rootflag[i] & G__NOSTREAMER) ) {
+                  G__struct.rootflag[i] |= G__USEBYTECOUNT;
+                }
+#endif
 	      }
 	    }
 	    /* link global function */
@@ -7841,7 +7848,18 @@ int link_stub;
 	    if(G__struct.parent_tagnum[j]==parent_tagnum) flag=1;
 	    j = G__struct.parent_tagnum[j];
 	  }
+#ifndef G__OLDIMPLEMENTATION1597
+	  if(flag) {
+	    G__struct.globalcomp[i]=globalcomp;
+	    /* Note this make the equivalent of '+' the
+	       default for defined_in type of linking */
+	    if ( (G__struct.rootflag[i] & G__NOSTREAMER) == 0 ) {
+	      G__struct.rootflag[i] |= G__USEBYTECOUNT;
+	    }
+          }
+#else
 	  if(flag) G__struct.globalcomp[i]=globalcomp;
+#endif
 	}
 #ifndef G__OLDIMPLEMENTATION1537
 	for(i=0;i<G__newtype.alltype;i++) {
@@ -7851,7 +7869,18 @@ int link_stub;
 	    if(j == parent_tagnum) flag = 1;
 	    j = G__struct.parent_tagnum[j];
 	  } while(-1 != j);
+#ifndef G__OLDIMPLEMENTATION1597
+	  if(flag) {
+	    G__struct.globalcomp[i]=globalcomp;
+	    /* Note this make the equivalent of '+' the
+	       default for defined_in type of linking */
+	    if ( 0 == (G__struct.rootflag[i] & G__NOSTREAMER) ) {
+	      G__struct.rootflag[i] |= G__USEBYTECOUNT;
+	    }
+          }
+#else
 	  if(flag) G__newtype.globalcomp[i] = globalcomp;
+#endif
 	}
 #endif
       }
