@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.159 2003/02/28 20:26:51 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.160 2003/03/02 11:39:46 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -795,7 +795,7 @@ void TStreamerInfo::ComputeSize()
 }
 
 //______________________________________________________________________________
-void TStreamerInfo::ForceWriteInfo(TFile *file)
+void TStreamerInfo::ForceWriteInfo(TFile *file, Bool_t force)
 {
    // will force this TStreamerInfo to the file and also
    // all the dependencies.
@@ -803,11 +803,13 @@ void TStreamerInfo::ForceWriteInfo(TFile *file)
    // a null pointer. In this case, the TStreamerInfo for the class
    // with the null pointer must be written to the file and also all the
    // TStreamerInfo of all the classes referenced by the class.
-
+   //
+   // if argument force > 0 the loop on class dependencies is forced
+   
    // flag this class
    if (!file) return;
    TArrayC *cindex = file->GetClassIndex();
-   if (cindex->fArray[fNumber]) return;
+   if (cindex->fArray[fNumber] && !force) return;
    cindex->fArray[fNumber] = 1;
    cindex->fArray[0] = 1;
 
@@ -818,7 +820,7 @@ void TStreamerInfo::ForceWriteInfo(TFile *file)
       TClass *cl = element->GetClassPointer();
       if (cl) {
          cl->BuildRealData();
-         cl->GetStreamerInfo()->ForceWriteInfo(file);
+         cl->GetStreamerInfo()->ForceWriteInfo(file, force);
       }
    }
 }

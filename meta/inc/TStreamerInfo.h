@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.36 2002/07/04 16:15:56 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.37 2003/02/11 18:22:25 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -84,7 +84,7 @@ public:
    void                BuildOld();
    void                Compile();
    void                ComputeSize();
-   void                ForceWriteInfo(TFile *file);
+   void                ForceWriteInfo(TFile *file, Bool_t force=kFALSE);
    Int_t               GenerateHeaderFile(const char *dirname);
    TClass             *GetClass() const {return fClass;}
    UInt_t              GetCheckSum() const {return fCheckSum;}
