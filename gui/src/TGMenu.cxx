@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.33 2004/04/29 14:35:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.34 2004/06/15 10:30:05 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -101,6 +101,10 @@ TGMenuBar::TGMenuBar(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
    main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Up), kAnyModifier);
    main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Down), kAnyModifier);
+   main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Enter), kAnyModifier);
+   main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Return), kAnyModifier);
+   main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Escape), kAnyModifier);
+
    fKeyNavigate = kFALSE;
 }
 
@@ -130,6 +134,9 @@ TGMenuBar::~TGMenuBar()
    main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
    main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Up), kAnyModifier);
    main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Down), kAnyModifier);
+   main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Enter), kAnyModifier);
+   main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Return), kAnyModifier);
+   main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Escape), kAnyModifier);
 
    // delete TGMenuTitles
    if (fTitles) fTitles->Delete();
@@ -403,6 +410,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
 
    TGMenuTitle *target = 0;
    TGFrameElement *el;
+   void *dummy;
    TIter next(fList);
 
    if (event->fType == kGKeyPress) {
@@ -417,10 +425,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
             if ((Int_t)event->fCode == target->GetHotKeyCode()) break;
          }
          if (el == 0) target = 0;
-      } else if (((EKeySym)keysym == kKey_Left) || 
-                 ((EKeySym)keysym == kKey_Right) ||
-                 ((EKeySym)keysym == kKey_Up) ||
-                 ((EKeySym)keysym == kKey_Down)) { // arrow keys
+      } else {
          fKeyNavigate = kTRUE;
 
          if (fCurrent) {
@@ -437,18 +442,64 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
             }
 
             TGMenuEntry *ce = menu->GetCurrent();
-            if ((EKeySym)keysym == kKey_Left) {
-               el = (TGFrameElement*)fList->Before(cur);
-               if (!el) el = (TGFrameElement*)fList->Last();
-            } else if ((EKeySym)keysym == kKey_Right) {
-               el = (TGFrameElement*)fList->After(cur);
-               if (!el) el = (TGFrameElement*)fList->First();
-            } else if ((EKeySym)keysym == kKey_Up) {
-               if (ce) ce = (TGMenuEntry*)menu->GetListOfEntries()->Before(ce);
-            } else if ((EKeySym)keysym == kKey_Down) {
-               if (ce) ce = (TGMenuEntry*)menu->GetListOfEntries()->After(ce);
+            TGPopupMenu *submenu = 0;
+
+            while (ce && (ce->GetType() == kMenuPopup)) {
+               submenu = ce->GetPopup();
+               if (!submenu->fPoppedUp) break;
+               ce =  submenu->GetCurrent();
+               menu = submenu;
             }
-            if (!ce)  ce = (TGMenuEntry*)menu->GetListOfEntries()->First();
+            switch ((EKeySym)keysym) {
+               case kKey_Left:
+                  if (submenu) {
+                     submenu->EndMenu(dummy);
+                     break;
+                  }
+                  el = (TGFrameElement*)fList->Before(cur);
+                  if (!el) el = (TGFrameElement*)fList->Last();
+                  break;
+               case kKey_Right:
+                  if (submenu) {
+                     if (!submenu->GetCurrent()) {
+                        ce = (TGMenuEntry*)submenu->GetListOfEntries()->First();
+                     } else {
+                        submenu->EndMenu(dummy);
+                     }
+                     break;
+                  }
+                  el = (TGFrameElement*)fList->After(cur);
+                  if (!el) el = (TGFrameElement*)fList->First();
+                  break;
+               case kKey_Up:
+                  if (ce) ce = (TGMenuEntry*)menu->GetListOfEntries()->Before(ce);
+                  while (ce && ((ce->GetType() == kMenuSeparator) ||
+                         (ce->GetType() == kMenuLabel))) {
+                     ce = (TGMenuEntry*)menu->GetListOfEntries()->Before(ce);
+                  }
+                  if (!ce) ce = (TGMenuEntry*)menu->GetListOfEntries()->Last();
+                  break;
+               case kKey_Down:
+                  if (ce) ce = (TGMenuEntry*)menu->GetListOfEntries()->After(ce);
+                  while (ce && ((ce->GetType() == kMenuSeparator) ||
+                         (ce->GetType() == kMenuLabel))) {
+                     ce = (TGMenuEntry*)menu->GetListOfEntries()->After(ce);
+                  }
+                  if (!ce) ce = (TGMenuEntry*)menu->GetListOfEntries()->First();
+                  break;
+               case kKey_Enter:
+               case kKey_Return:
+                  Event_t ev;
+                  ev.fType = kButtonRelease;
+                  ev.fWindow = menu->GetId();
+                  menu->fStick = kFALSE;
+                  menu->HandleButton(&ev);
+                  break;
+               case kKey_Escape:
+                  menu->EndMenu(dummy);
+               default:
+                  break;
+            }
             if (ce) menu->Activate(ce);
 
             el = el ? el : cur;
@@ -820,7 +871,7 @@ void TGPopupMenu::PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_poi
    fPoppedUp = kTRUE;
    PoppedUp();
 
-   gClient->RegisterPopup(this);
+   fClient->RegisterPopup(this);
 }
 
 //______________________________________________________________________________

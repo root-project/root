@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.21 2004/01/19 14:00:47 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.22 2004/06/15 10:30:04 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -96,6 +96,7 @@ public:
    const char    *GetName() const { return fLabel ? fLabel->GetString() : 0; }
    virtual Int_t  GetStatus() const { return fStatus; }
    EMenuEntryType GetType() const { return fType; }
+   TGPopupMenu   *GetPopup() const { return fPopup; }  
 
    ClassDef(TGMenuEntry,0);
 };
@@ -113,6 +114,7 @@ public:
 class TGPopupMenu : public TGFrame {
 
 friend class TGMenuTitle;
+friend class TGMenuBar;
 
 protected:
    TList             *fEntryList;     // list of menu entries
