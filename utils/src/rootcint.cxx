@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.48 2001/07/31 13:08:19 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.49 2001/07/31 14:55:13 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1648,7 +1648,7 @@ int main(int argc, char **argv)
       fprintf(stderr,
       "Usage: %s [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
-      fprintf(stderr, "For more extensive help type: %s -?\n", argv[0]);
+      fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
       return 1;
    }
 
@@ -1690,7 +1690,7 @@ int main(int argc, char **argv)
       else
          p++;
       strcpy(dictname, p);
-   } else if (!strcmp(argv[1], "-?")) {
+   } else if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
       fprintf(stderr, "%s\n", help);
       return 1;
    } else {
