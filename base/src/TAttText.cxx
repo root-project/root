@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.10 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.11 2002/01/24 11:39:27 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -145,7 +145,7 @@ TAttText::~TAttText()
 }
 
 //______________________________________________________________________________
-void TAttText::Copy(TAttText &atttext)
+void TAttText::Copy(TAttText &atttext) const
 {
 //*-*-*-*-*-*-*-*-*Copy this text attributes to a new atttext*-*-*-*-*-*-*-*-*
 //*-*              ==========================================

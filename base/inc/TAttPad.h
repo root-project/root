@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttPad.h,v 1.3 2000/11/21 16:02:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttPad.h,v 1.4 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   04/01/95
 
 /*************************************************************************
@@ -53,7 +53,7 @@ protected:
 public:
         TAttPad();
         virtual ~TAttPad();
-        virtual void     Copy(TAttPad &attpad);
+        virtual void     Copy(TAttPad &attpad) const;
         Float_t          GetBottomMargin() const { return fBottomMargin;}
         Float_t          GetLeftMargin() const { return fLeftMargin;}
         Float_t          GetRightMargin() const { return fRightMargin;}

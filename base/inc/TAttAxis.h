@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.5 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.6 2002/01/24 11:39:26 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -46,7 +46,7 @@ protected:
 public:
         TAttAxis();
         virtual          ~TAttAxis();
-                void     Copy(TAttAxis &attaxis);
+                void     Copy(TAttAxis &attaxis) const;
         virtual Int_t    GetNdivisions()  const {return fNdivisions;}
         virtual Color_t  GetAxisColor()   const {return fAxisColor;}
         virtual Color_t  GetLabelColor()  const {return fLabelColor;}

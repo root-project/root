@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttPad.cxx,v 1.3 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttPad.cxx,v 1.4 2001/03/04 08:50:24 brun Exp $
 // Author: Rene Brun   04/01/95
 
 /*************************************************************************
@@ -35,7 +35,7 @@ TAttPad::~TAttPad()
 }
 
 //______________________________________________________________________________
-void TAttPad::Copy(TAttPad &attpad)
+void TAttPad::Copy(TAttPad &attpad) const
 {
    attpad.fLeftMargin   = fLeftMargin;
    attpad.fRightMargin  = fRightMargin;

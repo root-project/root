@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.h,v 1.2 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.h,v 1.3 2000/12/26 14:24:20 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -42,7 +42,7 @@ public:
    TAttText();
    TAttText(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize);
    virtual ~TAttText();
-           void     Copy(TAttText &atttext);
+           void     Copy(TAttText &atttext) const;
    Short_t          GetTextAlign() const {return fTextAlign;}
    Float_t          GetTextAngle() const {return fTextAngle;}
    Color_t          GetTextColor() const {return fTextColor;}
