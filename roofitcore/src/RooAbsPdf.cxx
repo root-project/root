@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.19 2001/07/31 05:54:16 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.20 2001/08/01 01:24:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -541,7 +541,7 @@ void RooAbsPdf::generateEvent(const RooArgSet &vars, Int_t maxTrials) {
   // algorithm with at most maxTrials trials.
 
   // loop over accept/reject trials
-  Int_t trial;
+  Int_t trial(0);
   while(trial++ < maxTrials) {
     // generate an event according to an envelope function
     Double_t envelopeProb= generateEnvelope(vars);

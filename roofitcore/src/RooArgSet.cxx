@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.23 2001/05/31 21:21:36 david Exp $
+ *    File: $Id: RooArgSet.cc,v 1.24 2001/07/31 05:54:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -217,9 +217,42 @@ RooArgSet &RooArgSet::operator=(const RooArgSet& other) {
   return *this;
 }
 
+RooAbsArg *RooArgSet::addClone(const RooAbsArg& var, Bool_t silent) {
+  // Add a clone of the specified argument to list. Returns a pointer to
+  // the clone if successful, or else zero if a variable of the same name
+  // is already in the list or the list does *not* own its variables (in
+  // this case, try add() instead.)
+
+  const char *name= var.GetName();
+  // check that this *is* a copy of a list
+  if(!_isCopy) {
+    cout << "RooArgSet(" << _name << "): can only add clones to a copied list" << endl;
+    return 0;
+  }
+
+  // is this variable name already in this list?
+  RooAbsArg *other(0);
+  if(other= find(name)) {
+    if(other != &var) {
+      if (!silent)
+	// print a warning if this variable is not the same one we
+	// already have
+	cout << "RooArgSet(" << _name << "): cannot add clone of second variable \"" << name
+	     << "\"" << endl;
+    }
+    // don't add duplicates
+    return 0;
+  }
+  // add a pointer to a clone of this variable to our list (we now own it!)
+  RooAbsArg *clone= (RooAbsArg*)var.Clone();
+  Add((TObject*)clone);
+  return clone;
+}
 
 Bool_t RooArgSet::add(const RooAbsArg& var, Bool_t silent) {
-  // Add argument to list
+  // Add the specified argument to list. Returns kTRUE if successful, or
+  // else kFALSE if a variable of the same name is already in the list
+  // or the list owns its variables (in this case, try addClone() instead).
 
   const char *name= var.GetName();
   // check that this isn't a copy of a list
@@ -318,25 +351,22 @@ Bool_t RooArgSet::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 
 
 Bool_t RooArgSet::remove(const RooAbsArg& var, Bool_t silent) {
-  // Remove the specified argument from our list. Return kFALSE if we
-  // a copy of a list, or if the specified argument is not found in
-  // our list (an exact pointer match is required, not just a match
-  // by name.)
+  // Remove the specified argument from our list. Return kFALSE if
+  // the specified argument is not found in our list. An exact pointer
+  // match is required, not just a match by name. A variable can be
+  // removed from a copied list and will be deleted at the same time.
 
-  // check that this isn't a copy of a list
-  if(_isCopy) {
-    cout << "RooArgSet: cannot remove variables in a copied list" << endl;
-    return kFALSE;
-  }
   // is var already in this list?
   const char *name= var.GetName();
-  RooAbsArg *other= find(name);
-  if(other != &var) {    
+  RooAbsArg *found= find(name);
+  if(found != &var) {    
     if (!silent) cout << "RooArgSet: variable \"" << name << "\" is not in the list"
 		      << " and cannot be removed" << endl;
     return kFALSE;
   }
-  Remove((TObject*)&var);
+  Remove(found);
+  if(_isCopy) delete found;
+
   return kTRUE;
 }
 

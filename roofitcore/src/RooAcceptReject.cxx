@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.3 2001/06/30 01:33:11 verkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.4 2001/07/31 20:54:06 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -25,11 +25,13 @@
 #include "TString.h"
 #include "TIterator.h"
 
+#include <assert.h>
+
 ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.3 2001/06/30 01:33:11 verkerke Exp $";
+"$Id: RooAcceptReject.cc,v 1.4 2001/07/31 20:54:06 david Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose)
@@ -69,9 +71,9 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
     }
     else {
       // clone any variables we generate that we haven't cloned already
-      arg= (RooAbsArg*)arg->Clone();
-      _cloneSet->add(*arg);
+      arg= _cloneSet->addClone(*arg);
     }
+    assert(0 != arg);
     // is this argument a category or a real?
     const RooCategory *catVar= dynamic_cast<const RooCategory*>(arg);
     const RooRealVar *realVar= dynamic_cast<const RooRealVar*>(arg);

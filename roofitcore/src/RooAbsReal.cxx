@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.25 2001/06/30 01:33:11 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.26 2001/07/31 05:54:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -303,10 +303,10 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scal
     return 0;
   }
 
-  // check that we actually depend on the plot variable
+  // check if we actually depend on the plot variable
   if(!this->dependsOn(*realVar)) {
-    cout << GetName() << "::plotOn: variable is not a dependent: " << realVar->GetName() << endl;
-    return 0;
+    cout << GetName() << "::plotOn:WARNING: variable is not an explicit dependent: "
+	 << realVar->GetName() << endl;
   }
 
   // deep-clone ourselves so that the plotting process will not disturb
@@ -314,7 +314,7 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scal
   RooArgSet *cloneList = RooArgSet(*this).snapshot() ;
   RooAbsReal *clone= (RooAbsReal*) cloneList->find(GetName()) ;
 
-  // redirect our clone to use the plot variable !!! WVE Check!
+  // redirect our clone to use the plot variable
   RooArgSet args(*realVar);
   clone->recursiveRedirectServers(args);
 
@@ -325,7 +325,7 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scal
   // create a new curve of our function using the clone to do the evaluations
   RooCurve* curve= new RooCurve(*clone,*realVar,scaleFactor,frame->getNormVars());
 
-  // add a copy of the temporary curve to the specified plot frame
+  // add this new curve to the specified plot frame
   frame->addPlotable(curve, drawOptions);
 
   // cleanup 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.4 2001/06/30 01:33:13 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.5 2001/07/31 20:54:07 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -29,12 +29,12 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.4 2001/06/30 01:33:13 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.5 2001/07/31 20:54:07 david Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
-			     const RooDataSet *prototype) :
+			     const RooDataSet *prototype, Bool_t verbose) :
   TNamed(model), _origVars(&vars), _prototype(prototype), _cloneSet(0), _pdfClone(0),
-  _acceptRejectFunc(0), _generator(0), _maxTrials(1000)
+  _acceptRejectFunc(0), _generator(0), _verbose(verbose)
 {
   // Initialize a new context for generating events with the specified
   // variables, using the specified PDF model. A prototype dataset (if provided)
@@ -67,8 +67,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     arg= (const RooAbsArg*)_cloneSet->FindObject(tmp->GetName());
     if(0 == arg) {
       cout << fName << "::" << ClassName() << ":WARNING: model does not depend on \""
-	   << arg->GetName() << "\" and will have uniform distribution" << endl;
-      _otherVars.add(*tmp);
+	   << tmp->GetName() << "\" which will have uniform distribution" << endl;
+      _uniformVars.add(*tmp);
     }
     else {
       // does the model depend on this variable directly, ie, like "x" in
@@ -110,7 +110,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     const RooAbsArg *proto(0);
     while(proto= (const RooAbsArg*)iterator->Next()) {
       // is this variable being generated or taken from the prototype?
-      if(!_directVars.contains(*proto) && !_otherVars.contains(*proto)) {
+      if(!_directVars.contains(*proto) && !_otherVars.contains(*proto) && !_uniformVars.contains(*proto)) {
 	_protoVars.add(*proto);
       }
     }
@@ -129,6 +129,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   // create a list of all variables that will appear in generated datasets
   _datasetVars.add(_directVars);
   _datasetVars.add(_otherVars);
+  _datasetVars.add(_uniformVars);
   _datasetVars.add(_protoVars);
 
   // initialize the accept-reject generator
@@ -138,7 +139,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 					 TString(_pdfClone->GetTitle()).Append(" (Accept/Reject)"),
 					 *_pdfClone,*depList);
   delete depList;
-  _generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars);
+  _otherVars.add(_uniformVars);
+  _generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,_verbose);
 }
 
 RooGenContext::~RooGenContext() {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.rdl,v 1.16 2001/06/06 00:06:38 verkerke Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.17 2001/07/31 05:54:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -72,6 +72,7 @@ public:
 
   // List content management
   virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) ;
+  virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) ;
   virtual Bool_t replace(const RooAbsArg& var1, const RooAbsArg& var2) ;
   virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE) ;
   virtual void removeAll() ;

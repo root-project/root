@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFunc1D.cc,v 1.2 2001/06/16 20:28:21 david Exp $
+ *    File: $Id: RooRealFunc1D.cc,v 1.3 2001/06/30 01:33:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -21,25 +21,55 @@
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooDataSet.hh"
+#include "RooFitCore/RooRealIntegral.hh"
+
+#include "TString.h"
 
 ClassImp(RooRealFunc1D)
 ;
 
 static const char rcsid[] =
-"$Id: RooRealFunc1D.cc,v 1.2 2001/06/16 20:28:21 david Exp $";
+"$Id: RooRealFunc1D.cc,v 1.3 2001/06/30 01:33:14 verkerke Exp $";
 
 RooRealFunc1D::RooRealFunc1D(const RooAbsReal &func, RooRealVar &x, Double_t scaleFactor,
 			     const RooArgSet *normVars) :
-  _funcPtr(&func), _xPtr(&x), _scale(scaleFactor), _dset(0)
+  _funcPtr(&func), _xPtr(&x), _scale(scaleFactor), _dset(0), _projected(0)
 {
   // Create a new binding object. The input objects are not cloned so the
   // lifetime of the newly created object is limited by their lifetimes.
 
-  if(0 != normVars) _dset= new RooDataSet("normVars","Normalization Variables",*normVars);
+  if(0 != normVars) {
+    RooArgSet vars(*normVars);
+    RooAbsArg *found= vars.find(x.GetName());
+    if(found) {
+      // if requested, normalize ourselves wrt to the dependent x
+      vars.remove(*found);
+      _dset= new RooDataSet("xVar","Self-Normalization Set",*found);
+    }
+    if(vars.GetSize() > 0) {
+      // project out any other variables if possible
+      const RooAbsPdf *pdfPtr= dynamic_cast<const RooAbsPdf*>(&func);
+      if(0 == pdfPtr) {
+	cout << "RooRealFunc1D::WARNING: cannot integrate non-PDF \""
+	     << func.GetName() << "\" over";
+	vars.Print();
+	cout << "  (will calculate along a slice instead)" << endl;
+      }
+      else {
+	cout << "RooRealFunc1D: integrating out ";
+	vars.Print();
+        _projected= new RooRealIntegral(TString(func.GetName()).Append("Projected"),
+					TString(func.GetTitle()).Append(" (Projected)"),
+					*pdfPtr,vars);
+        _funcPtr= _projected;
+      }
+    }
+  }
 }
 
 RooRealFunc1D::~RooRealFunc1D() {
   if(_dset) delete _dset;
+  if(_projected) delete _projected;
 }
 
 Double_t RooRealFunc1D::operator()(Double_t x) const {
