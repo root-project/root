@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSetProxy.cc,v 1.16 2002/03/22 22:43:57 verkerke Exp $
+ *    File: $Id: RooSetProxy.cc,v 1.17 2002/04/10 20:59:05 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -126,7 +126,9 @@ void RooSetProxy::removeAll()
     TIterator* iter = createIterator() ;
     RooAbsArg* arg ;
     while (arg=(RooAbsArg*)iter->Next()) {
-      _owner->removeServer(*arg) ;
+      if (!isOwning()) {
+	_owner->removeServer(*arg) ;
+      }
     }
     delete iter ;
   }

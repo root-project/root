@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.38 2002/05/03 21:49:56 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.39 2002/05/14 22:48:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -285,12 +285,19 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset) c
     _lastCoefProjSet = (RooArgSet*)nset ;
     _lastCoefProjIntSet = (RooArgSet*)iset ;
 
+    // Get list of dependent observables from nset
+    RooArgSet* nset2 = getDependents(*nset) ;
+
     // Check if null-transformation is requested
-    _doProjectCoefs = !nset->equals(_refCoefNorm) ;
-    if (!_doProjectCoefs) return ;
-    
+    _doProjectCoefs = !nset2->equals(_refCoefNorm) ;
+
+    if (!_doProjectCoefs) {
+      delete nset2 ;
+      return ;
+    }
+
     cout << "RooAddPdf::syncCoefProjList(" << GetName() << ") updating PDF projection integrals" << endl ;
-    cout << "  current normalization  : "  ; nset->Print("1") ;
+    cout << "  current normalization  : "  ; nset2->Print("1") ;
     cout << "  reference normalization: "  ; _refCoefNorm.Print("1") ; 
 
     // Recalculate projection integrals of PDFs 
@@ -298,10 +305,11 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset) c
     _pdfIter->Reset() ;
     RooAbsPdf* pdf ;
     while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
-      RooAbsReal* pdfProj = pdf->createIntegral(*nset,_refCoefNorm) ;
+      RooAbsReal* pdfProj = pdf->createIntegral(*nset2,_refCoefNorm) ;
       pdfProj->setOperMode(operMode()) ;
       _pdfProjList.addOwned(*pdfProj) ;
     }
+    delete nset2 ;
   }
 }
 
@@ -464,6 +472,8 @@ Double_t RooAddPdf::evaluate() const
       Double_t pdfVal = pdf->getVal(nset) ;
       if (pdf->isSelectedComp()) {
 	value += pdfVal*_coefCache[i]/snormVal ;
+// 	cout << "RAP::e(" << GetName() << ") v += [" 
+// 	     << pdf->GetName() << "] " << pdfVal << " * " << _coefCache[i] << " / " << snormVal << endl ;
       }
     }
     i++ ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.22 2002/05/03 21:49:56 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.23 2002/05/31 22:48:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -46,8 +46,8 @@ RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
   RooAbsPdf(name,title), 
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
-  _partIntSet1("partIntSet1","Primary set of partial integrals",this,kFALSE,kFALSE),
-  _partIntSet2("partIntSet2","Alternate set of partial integrals",this,kFALSE,kFALSE),
+//   _partIntSet1("partIntSet1","Primary set of partial integrals",this,kFALSE,kFALSE),
+//   _partIntSet2("partIntSet2","Alternate set of partial integrals",this,kFALSE,kFALSE),
   _intIter1(_partIntSet1.createIterator()),
   _intIter2(_partIntSet2.createIterator()),
   _lastAICode1(-1),
@@ -69,8 +69,8 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
   RooAbsPdf(name,title), 
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
-  _partIntSet1("partIntSet1","Primary set of partial integrals",this,kFALSE,kFALSE),
-  _partIntSet2("partIntSet2","Alternate set of partial integrals",this,kFALSE,kFALSE),
+//   _partIntSet1("partIntSet1","Primary set of partial integrals",this,kFALSE,kFALSE),
+//   _partIntSet2("partIntSet2","Alternate set of partial integrals",this,kFALSE,kFALSE),
   _intIter1(_partIntSet1.createIterator()),
   _intIter2(_partIntSet2.createIterator()),
   _lastAICode1(-1),
@@ -124,8 +124,8 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pd
   RooAbsPdf(name,title), 
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
-  _partIntSet1("partIntSet1","Primary set of partial integrals",this,kFALSE,kFALSE),
-  _partIntSet2("partIntSet2","Alternate set of partial integrals",this,kFALSE,kFALSE),
+//   _partIntSet1("partIntSet1","Primary set of partial integrals",this,kFALSE,kFALSE),
+//   _partIntSet2("partIntSet2","Alternate set of partial integrals",this,kFALSE,kFALSE),
   _intIter1(_partIntSet1.createIterator()),
   _intIter2(_partIntSet2.createIterator()),
   _lastAICode1(-1),
@@ -186,8 +186,8 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   RooAbsPdf(other,name), 
   _pdfList("_pdfList",this,other._pdfList),
   _pdfIter(_pdfList.createIterator()), 
-  _partIntSet1("partIntSet1","Primary set of partial integrals",this,kFALSE,kFALSE),
-  _partIntSet2("partIntSet2","Alternate set of partial integrals",this,kFALSE,kFALSE),
+//   _partIntSet1("partIntSet1","Primary set of partial integrals",this,kFALSE,kFALSE),
+//   _partIntSet2("partIntSet2","Alternate set of partial integrals",this,kFALSE,kFALSE),
   _intIter1(_partIntSet1.createIterator()),
   _intIter2(_partIntSet2.createIterator()),
   _lastAICode1(-1),
@@ -458,3 +458,21 @@ RooAbsGenContext* RooProdPdf::genContext(const RooArgSet &vars, const RooDataSet
   return new RooProdGenContext(*this,vars,prototype,verbose) ;
 }
 
+
+Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) 
+{
+  Bool_t ret(kFALSE) ;
+
+  _intIter1->Reset() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)_intIter1->Next()) {
+    ret |= arg->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
+  }
+
+  _intIter2->Reset() ;
+  while(arg=(RooAbsArg*)_intIter2->Next()) {
+    ret |= arg->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
+  }
+
+  return ret ;
+}
