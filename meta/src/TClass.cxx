@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.105 2002/12/20 08:11:38 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.106 2003/01/17 10:40:18 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -956,7 +956,17 @@ TRealData *TClass::GetRealData(const char *name) const
    rd = (TRealData*)fRealData->FindObject(dot+1);
    if (rd) return rd;
    rd = (TRealData*)fRealData->FindObject(Form("*%s",dot+1));
+   if (rd) return rd;
+   
+   //last attempt in case a member has been changed from a static array to a pointer
+   //for example the member was arr[20] and is now *arr
+   char *bracket = strchr(starname,'[');
+   if (!bracket) return 0;
+   *bracket = 0;
+   rd = (TRealData*)fRealData->FindObject(starname);
    return rd;
+   //in principle, one could also take into account the opposite situation
+   //where a member like *arr has been converted to arr[20]
 }
 
 //______________________________________________________________________________
