@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.17 2004/09/12 10:55:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.18 2004/09/13 09:12:48 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -73,7 +73,7 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
       fName = "frame";
       fName += fgCounter;
    }
-   fEditDisabled = (fId != gVirtualX->GetDefaultRootWindow()) && fParent ?  
+   fEditDisabled = (fId != gVirtualX->GetDefaultRootWindow()) && fParent ?
                     fParent->fEditDisabled : kFALSE;
 
    SetWindowName();
@@ -89,7 +89,7 @@ TGWindow::TGWindow(TGClient *c, Window_t id, const TGWindow *parent)
    fParent = parent;
    fClient->RegisterWindow(this);
    fNeedRedraw = kFALSE;
-   fEditDisabled = (fId != gVirtualX->GetDefaultRootWindow()) && fParent ?  
+   fEditDisabled = (fId != gVirtualX->GetDefaultRootWindow()) && fParent ?
                     fParent->fEditDisabled : kFALSE;
 
    // name used in SavePrimitive methods
@@ -114,16 +114,14 @@ void TGWindow::SetWindowName(const char *name)
 {
    // Set window name.
 
-   TString wname;
-
-   if (!name) {
-      wname = ClassName();
+   if (!name && gDebug > 0) {
+      // set default frame names only when in debug mode
+      TString wname = ClassName();
       wname += "::" + fName;
+      gVirtualX->SetWindowName(fId, (char *)wname.Data());
    } else {
-      wname = name;
+      gVirtualX->SetWindowName(fId, (char *)name);
    }
-
-   gVirtualX->SetWindowName(fId, (char *)wname.Data());
 }
 
 //______________________________________________________________________________
