@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.19 2002/04/04 07:04:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.20 2002/04/06 14:55:36 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -292,6 +292,20 @@ void TBranchObject::SetAddress(void *add)
       return;
    }
    if (!cl->GetListOfRealData())  cl->BuildRealData(obj);
+   if (cl->InheritsFrom("TClonesArray")) {
+      char **clpointer = (char**)add;
+      char *objadd = *clpointer;
+      TClonesArray *clones = (TClonesArray*)objadd;
+      if (!clones) {
+         Error("SetAddress","Pointer to TClonesArray is null");
+         return;
+      }
+      TClass *clm = clones->GetClass();
+      if (clm) {
+			clm->BuildRealData(); //just in case clm derives from an abstract class
+			clm->GetStreamerInfo();
+		}
+   }
    char *fullname = new char[200];
    const char *bname = GetName();
    Int_t lenName = strlen(bname);
