@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.7 2004/03/17 07:52:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.8 2004/04/26 13:45:33 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -53,7 +53,7 @@ public:
   virtual Int_t     GetNpx() const {return fNpx;}
   virtual  void     Paint(Option_t *option="");
   virtual Double_t  Eval(Double_t x) const=0;
-  virtual  void     SaveAs(const char *filename) const {;}
+  virtual  void     SaveAs(const char * /*filename*/) const {;}
            void     SetNpx(Int_t n) {fNpx=n;}
 
   ClassDef (TSpline,2) // Spline base class
