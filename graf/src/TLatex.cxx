@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.13 2001/02/06 14:40:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.14 2001/02/21 11:50:43 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1442,8 +1442,11 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       Double_t saveSize = size;
       Int_t saveFont = fTextFont;
       if (fTextFont%10 > 2) {
-         size = size/gPad->GetWh();
-         SetTextFont(10*(saveFont/10) +2);
+         if (gPad->GetWw() < gPad->GetWh())
+            size = size/gPad->GetWw();
+         else
+            size = size/gPad->GetWh();
+         SetTextFont(10*(saveFont/10) + 2);
       }
       if (gVirtualPS) gVirtualPS->SetBit(kLatex);
 
