@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.5 2003/11/28 08:48:51 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.6 2003/11/28 12:09:50 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -88,7 +88,7 @@ void TGIcon::SavePrimitive(ofstream &out, Option_t *option)
    int len = 0;
    const char *picname, *rootname, *pos;
 
-   rootname = gSystem->WorkingDirectory();
+   rootname = gSystem->Getenv("ROOTSYS");
 #ifdef R__WIN32
    TString dirname = TString(rootname);
    dirname.ReplaceAll('\\','/');

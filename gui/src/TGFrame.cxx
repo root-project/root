@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.36 2003/11/25 15:57:34 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.37 2003/11/28 08:48:51 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1471,12 +1471,12 @@ void TGFrame::SaveUserColor(ofstream &out, Option_t *)
       out << "   ULong_t ucolor;        // will reflect user color changes" << endl;
    }
    ULong_t ucolor = GetBackground();
-   if (ucolor != fgUserColor) {
+   if ((ucolor != fgUserColor) || (ucolor == GetWhitePixel())) {
       const char *ucolorname = TColor::PixelAsHexString(ucolor);
       out << "   gClient->GetColorByName(" << quote << ucolorname << quote
           << ",ucolor);" << endl;
       fgUserColor = ucolor;
-   }
+   } 
 }
 
 //______________________________________________________________________________

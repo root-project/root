@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.18 2003/11/28 08:48:51 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.19 2003/11/28 12:09:51 brun Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -1626,7 +1626,7 @@ void TGTextEdit::SavePrimitive(ofstream &out, Option_t *)
    if (fromfile) {
       int len = 0;
       const char *filename, *rootname, *pos;
-      rootname = gSystem->WorkingDirectory();
+      rootname = gSystem->Getenv("ROOTSYS");
 #ifdef R__WIN32
       TString dirname = TString(rootname);
       dirname.ReplaceAll('\\','/');

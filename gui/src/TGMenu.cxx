@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.20 2003/11/28 12:09:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.21 2003/12/04 02:59:46 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -1532,7 +1532,6 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                i++; text++; lentext--;
             }
             outext[i]=0;
-            
 #ifdef R__WIN32
             if (strchr(outext,'\\')) {
                TString name = TString(outext);
@@ -1544,7 +1543,7 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
 #else
             out << "   " << GetName() << "->AddEntry(" << quote
                 << outext << quote << "," << mentry->GetEntryId();
-
+#endif
             if (mentry->fUserData) {
                out << "," << mentry->fUserData;
             }
@@ -1552,7 +1551,7 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                out << ",gClient->GetPicture(" << quote
                    << mentry->fPic->GetName() << quote << ")";
             }
-#endif
+            out << ");" << endl;
             delete [] outext;
             break;
          case kMenuPopup:
@@ -1573,7 +1572,6 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                i++; text++; lentext--;
             }
             outext[i]=0;
-            
 #ifdef R__WIN32
             if (strchr(outext,'\\')) {
                TString name = TString(outext);
@@ -1581,11 +1579,15 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                text = name.Data();
                out << "   " << GetName() << "->AddPopup(" << quote
                    << text << quote << "," << mentry->fPopup->GetName();
+            } else {
+               out << "   " << GetName() << "->AddPopup(" << quote
+                   << outext << quote << "," << mentry->fPopup->GetName();
             }
 #else			
             out << "   " << GetName() << "->AddPopup(" << quote
                 << outext << quote << "," << mentry->fPopup->GetName();
 #endif
+            out << ");" << endl;
             delete [] outext;
             break;
          case kMenuLabel:
@@ -1596,12 +1598,12 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                    << mentry->fPic->GetName()
                    << quote << ")";
             }
+            out << ");" << endl;
             break;
          case kMenuSeparator:
-            out << "   " << GetName() << "->AddSeparator(";
+            out << "   " << GetName() << "->AddSeparator();" << endl;
             break;
       }
-      out << ");" << endl;
 
       if (!(mentry->GetStatus() & kMenuEnableMask)) {
           out << "   " << GetName() << "->DisableEntry(" << mentry->GetEntryId()
@@ -1620,9 +1622,7 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
               << ");" << endl;
       }
       if (mentry->GetStatus() & kMenuRadioMask) {
-     // Need to specify IDfirst IDLast of
-			  // RCheckEntry(Int_t id, Int_t IDfirst, Int_t IDlast)
-			  // IsEntryRChecked(Int_t id)
+         out << "   " << GetName() << "->GetStatus() =| kMenuRadioMask;" << endl; 
       }	      
    }
 }
