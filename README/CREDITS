@@ -29,15 +29,17 @@ D: interface to X3D
 
 N: Damir Buskulic
 E: buskulic@lapp.in2p3.fr
-D: LinuxPPC support, large part of the User's Guide
+D: LinuxPPC support, contribution to the User's Guide
 
 N: Philippe Canal
 E: pcanal@fndaub.fnal.gov
 D: interface from ROOT/CINT to native compiler, FNAL support coordinator
+D: support and development of TTreeFormula and TTree query mechanism
 
 N: Federico Carminati
 E: Federico.Carminati@cern.ch
 D: updates in PDG codes and eventgenerator interface classes
+D: TSpline classes
 
 N: Ben Cowan
 E: benc@SLAC.Stanford.EDU
@@ -79,6 +81,7 @@ N: Jacek M. Holeczek
 E: holeczek@us.edu.pl
 D: dynamic linker interface for IBM/AIX, contributions to MakeTree code
 D: generator
+D: many comments on the Users Guide
 
 N: Christian Holm Christensen
 E: cholm@nbi.dk
@@ -102,6 +105,10 @@ N: Pasha Murat
 E: murat@cdfsga.fnal.gov
 D: Lorentz vector classes, PDG interface
 
+N: John Odonnell
+E: odonnell@lanl.gov
+D: contributed to TFormula: support for recursive functions definitions.
+
 N: Valeriy Onuchin
 E: onuchin@sirius.ihep.su
 D: various contributions to GUI classes (scrolled text in TGTextEntry)
@@ -115,6 +122,7 @@ D: editor of the User's Guide
 N: Victor Perevoztchikov
 E: perev@bnl.gov
 D: optimized hash function, filename expander
+D: testing and comments of the Automatic Schema Evolution system
 
 N: Art Poskanzer
 E: AMPoskanzer@lbl.gov
@@ -139,3 +147,8 @@ D: byteswapping assembler code for the i486 and up
 N: Brett Viren
 E: bv@bnl.gov
 D: contributed the GUI TGTableLayout manager and the Viewer example program
+
+N: Andreas Zoglauer
+E: zog@mpe.mpg.de
+D: contributed to TStyle::CreateGradientColorTable
+
