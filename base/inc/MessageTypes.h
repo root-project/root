@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.11 2002/03/20 18:47:30 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.12 2002/04/19 18:23:57 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -58,6 +58,7 @@ enum EMessageTypes {
    kPROOF_OUTPUTLIST,                    //return the output list from Process()
    kPROOF_AUTOBIN,                       //callback for auto binning
    kPROOF_CACHE,                         //cache and package handling messages
+   kPROOF_REPORTSIZE,                    //report back number of events to master
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows

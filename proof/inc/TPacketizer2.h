@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.4 2002/07/17 12:29:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.4 2002/07/17 12:29:37 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TPacketizer
-#define ROOT_TPacketizer
+#ifndef ROOT_TPacketizer2
+#define ROOT_TPacketizer2
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TPacketizer                                                          //
+// TPacketizer2                                                         //
 //                                                                      //
 // This class generates packets to be processed on PROOF slave servers. //
 // A packet is an event range (begin entry and number of entries) or    //
@@ -31,7 +31,10 @@
 #endif
 
 
-class TPacketizer : public TVirtualPacketizer {
+class TMap;
+
+
+class TPacketizer2 : public TVirtualPacketizer {
 
 private:
    Int_t    fProcessed;       // number of entries processed
@@ -42,21 +45,21 @@ private:
    TObject *fUnAllocNext;     // cursor in fUnAllocated
    TList   *fActive;          // nodes with unfinished files
    TObject *fActiveNext;      // cursor in fActive
-   TList   *fSlaves;          // slaves processing
+   TMap    *fSlaveStats;      // slave status, keyed by correspondig TSlave
 
-   TPacketizer();
-   TPacketizer(const TPacketizer &);     // no implementation, will generate
-   void operator=(const TPacketizer &);  // error on accidental usage
+   TPacketizer2();
+   TPacketizer2(const TPacketizer2 &);    // no implementation, will generate
+   void operator=(const TPacketizer2 &);  // error on accidental usage
 
 public:
-   TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num);
-   virtual ~TPacketizer();
+   TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t num);
+   virtual ~TPacketizer2();
 
    Long64_t      GetEntriesProcessed() const { return fProcessed; }
    Long64_t      GetEntriesProcessed(TSlave *sl) const;
    TDSetElement *GetNextPacket(TSlave *sl);
 
-   ClassDef(TPacketizer,0)  //Generate work packets for parallel processing
+   ClassDef(TPacketizer2,0)  //Generate work packets for parallel processing
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.10 2002/06/16 01:40:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.11 2002/06/25 23:51:32 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -44,6 +44,10 @@
 #include "TClass.h"
 #include "TClassTable.h"
 #include "Riostream.h"
+#include "TFile.h"
+#include "TTree.h"
+#include "TKey.h"
+#include "TError.h"
 
 
 ClassImp(TDSetElement)
@@ -76,7 +80,6 @@ const char *TDSetElement::GetObjName() const
       return fSet->GetObjName();
    return fObjName;
 }
-
 
 //______________________________________________________________________________
 const char *TDSetElement::GetDirectory() const
@@ -279,7 +282,6 @@ void TDSet::AddFriend(TDSet *friendset)
    // to be implemented
 }
 
-
 //______________________________________________________________________________
 void TDSet::Reset()
 {
@@ -303,4 +305,51 @@ TDSetElement *TDSet::Next()
 
    fCurrent = (TDSetElement *) fIterator->Next();
    return fCurrent;
+}
+
+//______________________________________________________________________________
+Int_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path,
+                        const char *objname, Long64_t &entries)
+{
+   TFile *file = TFile::Open(filename);
+
+   if (file->IsZombie()) {
+      ::SysError("GetEntries","cannot open file %s", filename);
+      return -1;
+   }
+
+   TDirectory *dirsave = gDirectory;
+   if ( ! file->cd(path) ) {
+      ::Error("GetEntries","cannot cd to %s", path);
+      delete file;
+      return -1;
+   }
+   TDirectory *dir = gDirectory;
+   dirsave->cd();
+
+   if (isTree) {
+      TKey *key = dir->GetKey(objname);
+      if (key == 0) {
+         ::Error("GetEntries","cannot find tree \"%s\" in %s",
+                 objname, filename);
+         delete file;
+         return -1;
+      }
+      TTree *tree = (TTree *) key->ReadObj();
+      if (tree == 0) {
+         // Error always reported?
+         delete file;
+         return -1;
+      }
+      entries = (Long64_t) tree->GetEntries();
+      delete tree;
+
+   } else {
+      TList *keys = dir->GetListOfKeys();
+      entries = keys->GetSize();
+   }
+
+   delete file;
+
+   return 0;
 }

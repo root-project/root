@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.8 2002/06/14 15:14:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.9 2002/07/17 12:29:37 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -19,7 +19,9 @@
 
 #include "THashList.h"
 #include "TEventIter.h"
+#include "TVirtualPacketizer.h"
 #include "TPacketizer.h"
+#include "TPacketizer2.h"
 #include "TSelector.h"
 #include "TProof.h"
 #include "TROOT.h"
@@ -111,7 +113,7 @@ TList *TProofPlayer::GetOutputList() const
 //______________________________________________________________________________
 void TProofPlayer::StoreOutput(TList *out)
 {
-   Fatal("StoreOutput", "this method must be overridden!");
+   MayNotUse("StoreOutput");
 }
 
 
@@ -156,7 +158,7 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    // Finalize
    PDB(kLoop,1) Info("Process","Call Terminate");
-   
+
    fSelector->Terminate();
 
    fOutput = fSelector->GetOutputList();
@@ -233,7 +235,7 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
    TString filename = selector_file;
    filename = filename.Strip(TString::kTrailing,'+');
-   
+
    PDB(kSelector,1) Info("Process", "Sendfile: %s", filename.Data() );
    fProof->SendFile(filename);
 
@@ -254,9 +256,11 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                         dset->GetDirectory() );
 
       delete fPacketizer;
-      fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),
+//      fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),
+//                                 first, nentries);
+      fPacketizer = new TPacketizer2(dset, fProof->GetListOfActiveSlaves(),
                                  first, nentries);
-      
+
       if ( !fPacketizer->IsValid() ) {
          return -1;
       }
@@ -361,7 +365,6 @@ void TProofPlayerRemote::StoreOutput(TList *out)
    delete out;
    PDB(kOutput,1) Info("StoreOutput","Leave");
 }
-
 
 
 //______________________________________________________________________________

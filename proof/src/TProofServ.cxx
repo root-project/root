@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.26 2002/07/17 12:29:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.27 2002/07/18 09:48:21 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -570,7 +570,7 @@ void TProofServ::HandleSocketInput()
             TList *input;
             Long64_t nentries, first;
 
-            PDB(kGlobal,1) Info("HandleSocketInput:kPROOF_PROCESS", "enter");
+            PDB(kGlobal,1) Info("HandleSocketInput:kPROOF_PROCESS", "Enter");
 
             (*mess) >> dset >> filename >> input >> nentries >> first;
 
@@ -608,6 +608,27 @@ void TProofServ::HandleSocketInput()
             delete p;
 
             PDB(kGlobal,1) Info("HandleSocketInput:kPROOF_PROCESS","Done");
+         }
+         break;
+
+      case kPROOF_REPORTSIZE:
+         {
+            PDB(kGlobal,1) Info("HandleSocketInput:kPROOF_REPORTSIZE", "Enter");
+            Bool_t         isTree;
+            TString        filename;
+            TString        dir;
+            TString        objname;
+            Long64_t       entries;
+            Int_t          r;
+
+            (*mess) >> isTree >> filename >> dir >> objname;
+
+            r = TDSet::GetEntries(isTree, filename, dir, objname, entries);
+
+            TMessage answ(kPROOF_REPORTSIZE);
+            answ << r << entries;
+            fSocket->Send(answ);
+            PDB(kGlobal,1) Info("HandleSocketInput:kPROOF_REPORTSIZE", "Done");
          }
          break;
 

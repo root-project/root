@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.3 2002/06/14 15:14:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.4 2002/07/17 12:29:37 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
 
    Long64_t      GetEntriesProcessed() const { return fProcessed; }
    Long64_t      GetEntriesProcessed(TSlave *sl) const;
-   TDSetElement  *GetNextPacket(TSlave *sl);
+   TDSetElement *GetNextPacket(TSlave *sl);
 
    ClassDef(TPacketizer,0)  //Generate work packets for parallel processing
 };

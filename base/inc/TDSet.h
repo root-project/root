@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.8 2002/06/11 15:47:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.9 2002/06/14 10:29:05 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -120,9 +120,13 @@ public:
    virtual Bool_t        IsValid() const { return !fName.IsNull(); }
    virtual TList        *GetListOfElements() const { return fElements; }
 
-   virtual void           Reset();
-   virtual TDSetElement  *Next();
-   TDSetElement          *Current() const { return fCurrent; };
+   virtual void          Reset();
+   virtual TDSetElement *Next();
+   TDSetElement         *Current() const { return fCurrent; };
+
+   static Int_t          GetEntries(Bool_t isTree, const char *filename,
+                                    const char *path, const char *objname,
+                                    Long64_t &entries);
 
    ClassDef(TDSet,1)  // Data set for remote processing (PROOF)
 };

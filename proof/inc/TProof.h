@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.21 2002/05/10 11:07:22 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.22 2002/07/18 09:48:21 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -55,6 +55,7 @@ class TProofPlayer;
 class TProofPlayerRemote;
 class TDSet;
 class TEventList;
+class TPacketizer2;
 
 
 // PROOF magic constants
@@ -76,6 +77,7 @@ friend class TProofInterruptHandler;
 friend class TProofPlayer;
 friend class TProofPlayerRemote;
 friend class TSlave;
+friend class TPacketizer2;
 
 private:
    TString   fMaster;        //name of master server (use "" if this is a master)
