@@ -24,6 +24,7 @@ CINTCXXFLAGS  = -tlocal $(EXTRA_CXXFLAGS) \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
 CINTCFLAGS    = -DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__64BIT \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+EXTRA_CXXFLAGS := -Iinclude -long_double_size 64
 
 # Linker:
 LD            = cxx 
