@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.114 2003/09/26 16:30:35 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.115 2003/11/03 14:51:21 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3620,7 +3620,7 @@ void TPad::Print(const char *filename) const
 }
 
 //______________________________________________________________________________
-void TPad::Print(const char *filename, Option_t *option)
+void TPad::Print(const char *filenam, Option_t *option)
 {
 //*-*-*-*-*Save Pad contents on a file in various formats*-*-*-*-*-*
 //*-*      ==============================================
@@ -3692,6 +3692,7 @@ void TPad::Print(const char *filename, Option_t *option)
 //    c1.Print("file.ps]");   // No actual print, just close.
 
    char psname[264];
+   char *filename = gSystem->ExpandPathName(filenam);
    Int_t lenfil =  filename ? strlen(filename) : 0;
    const char *opt = option;
 
@@ -3706,7 +3707,8 @@ void TPad::Print(const char *filename, Option_t *option)
 
    // line below protected against case like c1->SaveAs( "../ps/cs.ps" );
    if ((psname[0] == '.') && (strchr(psname,'/') == 0)) sprintf(psname,"%s%s",GetName(),filename);
-
+   delete [] filename;
+   
 //==============Save pad/canvas as a GIF file==================================
       if (strstr(opt,"gif")) {
       if (GetCanvas()->IsBatch()) {
