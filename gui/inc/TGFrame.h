@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.37 2004/03/04 11:29:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.38 2004/04/06 21:24:06 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -38,7 +38,7 @@
 #include "TGFont.h"
 #endif
 #ifndef ROOT_TGLayout
-#include "TGLayout.h"
+#include "TGLayout.h"s
 #endif
 #ifndef ROOT_TGString
 #include "TGString.h"
@@ -415,7 +415,7 @@ public:
    virtual void   CloseWindow();   //*SIGNAL*
 
    void DontCallClose();
-   void SetWindowName(const char *name);
+   void SetWindowName(const char *name = 0);
    void SetIconName(const char *name);
    void SetIconPixmap(const char *iconName);
    void SetClassHints(const char *className, const char *resourceName);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.54 2004/05/17 07:53:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.55 2004/05/28 16:39:37 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1108,7 +1108,6 @@ TGMainFrame::~TGMainFrame()
       fBindList->Delete();
       delete fBindList;
    }
-   DestroyWindow();
 }
 
 //______________________________________________________________________________
@@ -1267,8 +1266,12 @@ void TGMainFrame::SetWindowName(const char *name)
 {
    // Set window name. This is typically done via the window manager.
 
-   fWindowName = name;
-   gVirtualX->SetWindowName(fId, (char *)name);
+   if (!name) {
+      TGWindow::SetWindowName();
+   } else {
+      fWindowName = name;
+      gVirtualX->SetWindowName(fId, (char *)name);
+   }
 }
 
 //______________________________________________________________________________
@@ -1799,7 +1802,7 @@ void TGCompositeFrame::SavePrimitive(ofstream &out, Option_t *option)
 
    // setting layout manager if it differs from the composite frame type
    TGLayoutManager * lm = GetLayoutManager();
-   if ((GetOptions() & kHorizontalFrame) && 
+   if ((GetOptions() & kHorizontalFrame) &&
        (lm->InheritsFrom(TGHorizontalLayout::Class()))) {
       ;
    } else if ((GetOptions() & kVerticalFrame) &&
@@ -2046,7 +2049,7 @@ void TGMainFrame::SavePrimitive(ofstream &out, Option_t *option)
 
    // setting layout manager if it differs from the main frame type
    TGLayoutManager * lm = GetLayoutManager();
-   if ((GetOptions() & kHorizontalFrame) && 
+   if ((GetOptions() & kHorizontalFrame) &&
        (lm->InheritsFrom(TGHorizontalLayout::Class()))) {
       ;
    } else if ((GetOptions() & kVerticalFrame) &&
@@ -2234,12 +2237,12 @@ void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
    if (GetTitlePos() == 1)
       out << "TGGroupFrame::kRight);" << endl;
 
-   // setting layout manager 
+   // setting layout manager
    out << "   " << GetName() <<"->SetLayoutManager(";
    GetLayoutManager()->SavePrimitive(out, option);
    out << ");"<< endl;
 
-   out << "   " << GetName() <<"->Resize(" << GetWidth() << "," 
+   out << "   " << GetName() <<"->Resize(" << GetWidth() << ","
        << GetHeight() << ");" << endl;
 }
 
@@ -2469,7 +2472,7 @@ void TGTransientFrame::SavePrimitive(ofstream &out, Option_t *option)
 
    // setting layout manager if it differs from transient frame type
    TGLayoutManager * lm = GetLayoutManager();
-   if ((GetOptions() & kHorizontalFrame) && 
+   if ((GetOptions() & kHorizontalFrame) &&
        (lm->InheritsFrom(TGHorizontalLayout::Class()))) {
       ;
    } else if ((GetOptions() & kVerticalFrame) &&

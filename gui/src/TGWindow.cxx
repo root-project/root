@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.9 2004/02/23 23:49:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.10 2004/03/04 11:29:43 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -64,7 +64,6 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
       fgCounter++;
       fName = "frame";
       fName += fgCounter;
-
    } else {
       Error("TGWindow", "no parent specified");
    }
@@ -92,7 +91,24 @@ TGWindow::~TGWindow()
 {
    // Window destructor. Unregisters the window.
 
-   if (fClient) fClient->UnregisterWindow(this);
+   if (fClient) {
+      if (fParent == fClient->GetDefaultRoot()) DestroyWindow();
+      fClient->UnregisterWindow(this);
+   }
+}
+
+//______________________________________________________________________________
+void TGWindow::SetWindowName(const char *name)
+{
+   // Set window name.
+
+   TString wname = name;
+
+   if (!name) {
+      wname = ClassName();
+      wname += "::" + fName;
+   }
+   gVirtualX->SetWindowName(fId, (char *)wname.Data());
 }
 
 //______________________________________________________________________________
@@ -143,7 +159,7 @@ void TGWindow::Print(Option_t *) const
 {
    // Print window id.
 
-   cout << ClassName() << ":t" << fId << endl;
+   cout << ClassName() << ":\t" << fId << endl;
 }
 
 //______________________________________________________________________________

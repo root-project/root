@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.11 2004/02/23 23:49:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.12 2004/05/03 10:43:51 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -85,6 +85,7 @@ public:
    virtual void   MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual Bool_t IsMapped();
    virtual void   Print(Option_t *option="") const;
+   virtual void   SetWindowName(const char *name = 0);
 
    virtual const char *GetName() const { return fName; }
    virtual void        SetName(const char *name) { fName = name; }
