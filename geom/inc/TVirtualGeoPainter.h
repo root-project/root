@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.20 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.21 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -92,7 +92,6 @@ public:
    virtual void       GrabFocus(Int_t nfr=0, Double_t dlong=0, Double_t dlat=0, Double_t dpsi=0) =0;
    virtual Double_t  *GetViewBox() = 0;
    virtual Bool_t     IsExplodedView() const = 0;
-   virtual Bool_t     IsOnScreen(const TGeoNode *node) const = 0;
    virtual TH2F      *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,
                             Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="") = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.27 2003/08/28 14:09:08 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.28 2003/08/29 07:03:25 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -162,6 +162,23 @@ void TGeoPainter::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *optio
 // check current point in the geometry
    fChecker->CheckPoint(x,y,z,option);
 }   
+
+//______________________________________________________________________________
+void TGeoPainter::ClearVisibleVolumes()
+{
+   //Clear the list of visible volumes
+   //reset the kVisOnScreen bit for volumes previously in the list
+   
+   if (!fVisVolumes) return;
+   TIter next(fVisVolumes);
+   TGeoVolume *vol;
+   while ((vol = (TGeoVolume*)next())) {
+      vol->TGeoAtt::ResetBit(TGeoAtt::kVisOnScreen);
+   }
+   fVisVolumes->Clear();
+}
+      
+      
 //______________________________________________________________________________
 void TGeoPainter::DefineColors() const
 {
@@ -412,7 +429,7 @@ void TGeoPainter::Draw(Option_t *option)
    if (fVisOption==kGeoVisOnly) fGeom->SetVisOption(kGeoVisDefault);
    
    if (fVisLock) {
-      fVisVolumes->Clear();
+      ClearVisibleVolumes();
       fVisLock = kFALSE;
    }   
    Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
@@ -436,6 +453,12 @@ void TGeoPainter::Draw(Option_t *option)
    }
    if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
+   //mark visible volumes
+   TIter next(fVisVolumes);
+   TGeoVolume *vol;
+   while ((vol = (TGeoVolume*)next())) {
+      vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
+   }
    printf("--- number of nodes on screen : %i\n", fVisVolumes->GetEntriesFast());
 }
 //______________________________________________________________________________
@@ -449,7 +472,7 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    fOverlap = overlap;
    opt.ToLower();
    if (fVisLock) {
-      fVisVolumes->Clear();
+      ClearVisibleVolumes();
       fVisLock = kFALSE;
    }   
    Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
@@ -474,6 +497,12 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    }
    if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
+   //mark visible volumes
+   TIter next(fVisVolumes);
+   TGeoVolume *vol;
+   while ((vol = (TGeoVolume*)next())) {
+      vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
+   }
    printf("--- number of nodes on screen : %i\n", fVisVolumes->GetEntriesFast());
 }
 //______________________________________________________________________________
@@ -482,7 +511,7 @@ void TGeoPainter::DrawOnly(Option_t *option)
    TString opt = option;
    opt.ToLower();
    if (fVisLock) {
-      fVisVolumes->Clear();
+      ClearVisibleVolumes();
       fVisLock = kFALSE;
    }   
    fPaintingOverlaps = kFALSE;
@@ -670,16 +699,7 @@ void TGeoPainter::GrabFocus(Int_t nfr, Double_t dlong, Double_t dlat, Double_t d
    }   
    view->MoveFocus(&fCheckedBox[0], fCheckedBox[3], fCheckedBox[4], fCheckedBox[5], nframes, dlong, dlat, dpsi);
 }
-//______________________________________________________________________________
-Bool_t TGeoPainter::IsOnScreen(const TGeoNode *node) const
-{
-// check if this node is drawn. Assumes that this node is current
-   
-   //the following algorithm loops on all visible volumes: not very efficient
-   //the solution is to build a sorted table of pointers and do a binary search
-   if (fVisVolumes->IndexOf(node->GetVolume()) < 0) return kFALSE;
-   return kTRUE;      
-}   
+
 //______________________________________________________________________________
 TH2F *TGeoPainter::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
                             Int_t nphi,   Double_t phimin, Double_t phimax,
@@ -2225,7 +2245,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                   stemin = 0;
                   if (next) {
                      TGeoVolume *nextvol = next->GetVolume();
-                     if (fVisVolumes->IndexOf(nextvol) >= 0) {
+                     if (nextvol->TGeoAtt::TestBit(TGeoAtt::kVisOnScreen)) {
                         done = kTRUE;
                         base_color = nextvol->GetLineColor();
                         fClippingShape->ComputeNormal(point, dir, normal);
@@ -2276,7 +2296,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
             }      
             if (next) {
                TGeoVolume *nextvol = next->GetVolume();
-               if (fVisVolumes->IndexOf(nextvol) >= 0) {
+               if (nextvol->TGeoAtt::TestBit(TGeoAtt::kVisOnScreen)) {
                   done = kTRUE;
                   base_color = next->GetVolume()->GetLineColor();
                   break;
@@ -2473,7 +2493,7 @@ void TGeoPainter::SetVisLevel(Int_t level) {
    if (level==fVisLevel) return;
    fVisLevel=level;
    if (fVisLock) {
-      fVisVolumes->Clear();
+      ClearVisibleVolumes();
       fVisLock = kFALSE;
    }   
    if (!gPad) return;
@@ -2507,7 +2527,7 @@ void TGeoPainter::SetVisOption(Int_t option) {
    if (fVisOption==option) return;   
    fVisOption=option;
    if (fVisLock) {
-      fVisVolumes->Clear();
+      ClearVisibleVolumes();
       fVisLock = kFALSE;
    }   
    if (!gPad) return;

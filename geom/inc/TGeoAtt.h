@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoAtt.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoAtt.h,v 1.3 2002/10/21 15:21:13 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -37,7 +37,8 @@ public:
       kVisDaughters     = BIT(3),           // all leaves are visible
       kVisOneLevel      = BIT(4),           // first level daughters are visible
       kVisStreamed      = BIT(5),           // true if attributes have been streamed
-      kVisTouched       = BIT(6)            // true if attributes are changed after closing geom
+      kVisTouched       = BIT(6),           // true if attributes are changed after closing geom
+      kVisOnScreen      = BIT(7)            // true if volume is visible on screen
    };                          // visibility attributes
 
    enum EGeoActivityAtt   {
