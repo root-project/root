@@ -35,12 +35,35 @@ else
 	export CALLDIR:=$(CALLDIR)/$(CURDIR)
 endif
 
-tests: $(TEST_TARGETS)
-	@echo "All test succeeded in $(CALLDIR)"
+DOTS="................................................................................"
+SUCCESS_FILE = .success.log
+
+# Force the removal of the sucess file ANY time the make is run
+REMOVE_SUCCESS := $(shell rm  -f $(SUCCESS_FILE) )
+
+$(SUCCESS_FILE): $(TEST_TARGETS)
+	@touch $(SUCCESS_FILE)
+
+tests: $(SUCCESS_FILE) 
+	@len=`echo Tests in $(CALLDIR) | wc -m `;end=`expr 68 - $$len`;printf 'Tests in %s %.*s ' $(CALLDIR) $$end $(DOTS)
+	@if [ -f .success ] ; then printf 'OK\n' ; else printf 'FAIL\n' ; fi
+
+#@echo "All test succeeded in $(CALLDIR)"
 
 $(TEST_TARGETS_DIR): %.test:
 	@(echo Running test in $(CALLDIR)/$*)
-	@(cd $*; gmake --no-print-directory test)
+	@(cd $*; gmake --no-print-directory test; \
+     result=$$?; \
+     if [ $$result -ne 0 ] ; then \
+         len=`echo Tests in $(CALLDIR)/$* | wc -m `;end=`expr 68 - $$len`;printf 'Test in %s %.*s ' $(CALLDIR)/$* $$end $(DOTS); \
+	      printf 'FAIL\n' ; \
+         false ; \
+     fi )
+
+#     result=$$?; \
+#     len=`echo Test in $(CALLDIR)/$* | wc -m `;end=`expr 68 - $$len`;printf 'Test in %s %.*s ' $(CALLDIR)/$* $$end $(DOTS); \
+#	  if [ -f $*/.success ] ; then printf 'OK\n' ; else printf 'FAIL\n' ; fi; \
+#     if [ $$result -ne 0 ] ; then false ; fi )
 
 $(CLEAN_TARGETS_DIR): %.clean:
 	@(cd $*; gmake --no-print-directory clean)
@@ -161,7 +184,7 @@ endif
 
 %.obj: %.cpp
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cpp.build.log 2>&1
-	
+
 %_cpp.$(DllSuf) : %.cpp
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1
 
@@ -180,13 +203,17 @@ endif
 define BuildWithLib
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\,\"$(filter %.$(DllSuf),$^)\",\"\"\) > $*.build.log 2>&1
 endef
-    
+
 define WarnFailTest
 	$(CMDECHO)echo Warning $@ has some known skipped failures "(in ./$(CURDIR))"
 endef
 
 define TestDiff
 	$(CMDECHO) diff -b $@.ref $<
+endef
+
+define TestDiffW
+	$(CMDECHO) diff -b -w $@.ref $<
 endef
 
 define BuildFromObj
@@ -205,5 +232,4 @@ endef
 
 RemoveLeadingDirs := sed -e 's?^[A-z/\].*[/\]??' -e 's/.dll/.so/'
 RemoveDirs := sed -e 's?([A-z]:|[/]).*[/\]??'
-
 
