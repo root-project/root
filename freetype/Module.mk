@@ -45,8 +45,7 @@ else
 			echo "*** Building $@..."; \
 			cd $(FREETYPEDIRS); \
 			if [ ! -d $(FREETYPEVERS) ]; then \
-				TAR=`which gtar 2>/dev/null`; \
-				if [ $$? -eq 0 ]; then \
+				if [ "x`which gtar 2>/dev/null`" != "x" ]; then \
 					gtar zxf $(FREETYPEVERS).tar.gz; \
 				else \
 					gunzip -c $(FREETYPEVERS).tar.gz | tar xf -; \

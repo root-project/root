@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.10 2002/10/31 07:27:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.11 2002/12/02 18:50:01 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -273,12 +273,16 @@ Int_t TTimeStamp::GetZoneOffset()
    // ?? should tzset (_tzset) be called?
 #ifndef R__WIN32
    tzset();
+#if defined(R__WINGCC)
+   return _timezone;
+#else
 #if !defined(R__MACOSX) && !defined(R__FBSD)
    return  timezone;   /* unix has extern long int */
 #else
    time_t *tp = 0;
    time(tp);
    return localtime(tp)->tm_gmtoff;
+#endif
 #endif
 #else
    _tzset();
@@ -562,7 +566,7 @@ void TTimeStamp::DumpTMStruct(const tm_t &tmstruct)
           tmstruct.tm_wday,
           tmstruct.tm_yday,
           tmstruct.tm_isdst);
-#ifdef linux
+#if defined(linux) && !defined(R__WINGCC)
    printf(",\n      tm_gmtoff %7ld,  tm_zone \"%s\"",
 #ifdef __USE_BSD
           tmstruct.tm_gmtoff,tmstruct.tm_zone);

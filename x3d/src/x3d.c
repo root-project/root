@@ -1,4 +1,4 @@
-/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.7 2002/01/16 13:51:43 brun Exp $ */
+/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.8 2002/12/02 18:50:12 rdm Exp $ */
 /* Author: Mark Spychalla*/
 /*
   Copyright 1992 Mark Spychalla
@@ -109,7 +109,6 @@ void x3d_update() { }
 #include <X11/X.h>
 
 
-extern Size3D  gSize3D;
 extern Color   *colors;
 extern point   *points;
 extern segment *segs;

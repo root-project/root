@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.36 2003/03/05 16:07:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.37 2003/03/18 14:29:59 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1096,7 +1096,7 @@ Int_t TProofServ::LockDir(const TString &lock)
    }
 
    // lock the file
-#ifndef R__WIN32
+#if !defined(R__WIN32) && !defined(R__WINGCC)
    if (lockf(*fid, F_LOCK, (off_t) 1) == -1) {
       SysError("LockDir", "error locking %s", lfile);
       close(*fid);
@@ -1131,7 +1131,7 @@ Int_t TProofServ::UnlockDir(const TString &lock)
 
    // unlock the file
    lseek(*fid, 0, SEEK_SET);
-#ifndef R__WIN32
+#if !defined(R__WIN32) && !defined(R__WINGCC)
    if (lockf(*fid, F_ULOCK, (off_t)1) == -1) {
       SysError("UnlockDir", "error unlocking %s", lock.Data());
       close(*fid);

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.7 2002/08/23 14:49:23 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.1 2003/01/22 11:07:26 rdm Exp $
 // Author: Olivier Couet     01/10/02
 
 /*************************************************************************
@@ -47,7 +47,7 @@ Int_t       TTF::fgNumGlyphs  = 0;
 char       *TTF::fgFontName[kTTMaxFonts];
 FT_Matrix  *TTF::fgRotMatrix;
 FT_Library  TTF::fgLibrary;
-FT_BBox     TTF::fgCBox;
+FT_BBox     TTF::fgVarCBox;
 FT_Face     TTF::fgFace[kTTMaxFonts];
 FT_CharMap  TTF::fgCharMap[kTTMaxFonts];
 TTGlyph     TTF::fgGlyphs[kMaxGlyphs];
@@ -529,6 +529,13 @@ FT_Matrix *TTF::GetRotMatrix()
 {
     return fgRotMatrix;
 }
+
+//______________________________________________________________________________
+FT_BBox& TTF::fgFuncCBox() 
+{
+   return fgVarCBox;
+}
+
 
 //______________________________________________________________________________
 const FT_BBox &TTF::GetBox()

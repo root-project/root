@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.54 2003/02/12 14:15:18 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.55 2003/02/27 18:48:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2185,10 +2185,15 @@ int TUnixSystem::SetSockOpt(int sock, int opt, int val)
       }
       break;
    case kProcessGroup:
+#ifndef R__WINGCC
       if (ioctl(sock, SIOCSPGRP, (char*)&val) == -1) {
          SysError("SetSockOpt", "ioctl(SIOCSPGRP)");
          return -1;
       }
+#else 
+      Error("GetSockOpt", "ioctl(SIOCGPGRP) not supported on cygwin/gcc");
+      return -1;
+#endif
       break;
    case kAtMark:       // read-only option (see GetSockOpt)
    case kBytesToRead:  // read-only option
@@ -2260,13 +2265,13 @@ int TUnixSystem::GetSockOpt(int sock, int opt, int *val)
       *val = flg & O_NDELAY;
       break;
    case kProcessGroup:
-#if !defined(R__LYNXOS)
+#if !defined(R__LYNXOS) && !defined(R__WINGCC)
       if (ioctl(sock, SIOCGPGRP, (char*)val) == -1) {
          SysError("GetSockOpt", "ioctl(SIOCGPGRP)");
          return -1;
       }
 #else
-      Error("GetSockOpt", "ioctl(SIOCGPGRP) not supported on LynxOS");
+      Error("GetSockOpt", "ioctl(SIOCGPGRP) not supported on LynxOS and cygwin/gcc");
       return -1;
 #endif
       break;
@@ -3044,24 +3049,35 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
    int ext = 0, len = strlen(lib);
    if (len > 3 && (!strcmp(lib+len-3, ".sl") ||
                    !strcmp(lib+len-3, ".dl") ||
+#ifdef R__WINGCC
+                   !strcmp(lib+len-4, ".dll")||
+#endif
                    !strcmp(lib+len-3, ".so") ||
                    !strcmp(lib+len-2, ".a"))) {
       name = gSystem->Which(GetDynamicPath(), lib, kReadPermission);
       ext  = 1;
    } else {
-      name = Form("%s.so", lib);
+#ifdef R__WINGCC
+      name = Form("%s.dll", lib);
       name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
       if (!name) {
-         name = Form("%s.sl", lib);
+#endif
+         name = Form("%s.so", lib);
          name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
          if (!name) {
-             name = Form("%s.dl", lib);
-             name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
-             if (!name) {
-                name = Form("%s.a", lib);
+            name = Form("%s.sl", lib);
+            name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
+            if (!name) {
+                name = Form("%s.dl", lib);
                 name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
-             }
+                if (!name) {
+                   name = Form("%s.a", lib);
+                   name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
+                }
+            }
+#ifdef R__WINGCC
          }
+#endif
       }
    }
 
@@ -3070,8 +3086,13 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
          Error("DynamicPathName",
                "%s does not exist in %s", lib, GetDynamicPath());
       else
+#ifdef R__WINGCC
+         Error("DynamicPathName",
+               "%s[.so | .sl | .dl | .a | .dll] does not exist in %s", lib, GetDynamicPath());
+#else
          Error("DynamicPathName",
                "%s[.so | .sl | .dl | .a] does not exist in %s", lib, GetDynamicPath());
+#endif
    }
 
    return name;

@@ -48,9 +48,15 @@ MODULES      += winnt win32gdk gl
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 else
+ifeq ($(ARCH),win32gcc)
+MODULES      += unix x11 x11ttf x3d rootx
+SYSTEMO       = $(UNIXO)
+SYSTEMDO      = $(UNIXDO)
+else
 MODULES      += unix x11 x11ttf x3d rootx rootd proofd
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
+endif
 endif
 endif
 ifneq ($(OPENGLINCDIR),)

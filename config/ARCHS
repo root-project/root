@@ -41,3 +41,4 @@ solarisgcc           for Solaris gcc
 solariskcc           for Solaris KCC
 win32                for Win32 with VC++
 win32gdk             for Win32 with VC++ and gdk based GUI
+win32gcc             for Win32 with gcc

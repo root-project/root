@@ -16,7 +16,11 @@ ROOTXH       := $(wildcard $(MODDIRI)/*.h)
 ROOTXS       := $(wildcard $(MODDIRS)/*.cxx)
 ROOTXO       := $(ROOTXS:.cxx=.o)
 ROOTXDEP     := $(ROOTXO:.o=.d)
+ifeq ($(ARCH),win32gcc)
+ROOTX        := bin/rootx.exe
+else
 ROOTX        := bin/root
+endif
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ROOTXH))

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.50 2003/01/31 11:06:32 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.51 2003/02/28 11:09:37 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -57,6 +57,16 @@
 #      define linux
 #   endif
 #endif
+
+#if defined(__CYGWIN__) && defined(__GNUC__)
+#   ifndef linux
+#      define linux
+#   endif
+#   ifndef R__WINGCC
+#      define R__WINGCC
+#   endif
+#endif
+
 
 #if defined(__alpha) && !defined(linux)
 #   include <standards.h>

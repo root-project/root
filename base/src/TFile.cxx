@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.87 2003/03/06 21:49:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.88 2003/03/14 19:21:19 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1673,7 +1673,11 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 #else
    sprintf(path,"%s/MAKE",dirname);
 #endif
+#ifdef R__WINGCC
+   FILE *fpMAKE = fopen(path,"wb");
+#else
    FILE *fpMAKE = fopen(path,"w");
+#endif
    if (!fpMAKE) {
       Error("MakeProject", "cannot open file %s", path);
       delete [] path;
@@ -1686,7 +1690,11 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    // create the LinkDef.h file by looping on all *.h files
    // delete LinkDef.h if it already exists
    sprintf(path,"%s/LinkDef.h",dirname);
+#ifdef R__WINGCC
+   FILE *fp = fopen(path,"wb");
+#else
    FILE *fp = fopen(path,"w");
+#endif
    if (!fp) {
       Error("MakeProject", "cannot open path file %s", path);
       delete [] path;
@@ -1921,8 +1929,13 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
 Int_t TFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
    // Interface to system open. All arguments like in POSIX open().
-
+#ifdef R__WINGCC
+   // ALWAYS use binary mode - even cygwin text should be in unix format
+   // although this is posix default it has to be set explicitly
+   return ::open(pathname, flags | O_BINARY, mode);
+#else
    return ::open(pathname, flags, mode);
+#endif
 }
 
 //______________________________________________________________________________

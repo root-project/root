@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.7 2002/01/20 11:47:48 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.8 2002/10/31 07:27:34 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -81,7 +81,5 @@ public:
 
    ClassDef(TPolyMarker3D,1)  //An array of 3-D points with the same marker
 };
-
-R__EXTERN Size3D gSize3D;
 
 #endif

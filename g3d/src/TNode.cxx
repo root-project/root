@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.16 2002/02/07 10:47:33 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.17 2003/01/20 08:44:46 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -33,8 +33,6 @@ static Double_t gRotMatrix[kMAXLEVELS][kMatrixSize];
 static Int_t gGeomLevel = 0;
 
 TNode *gNode;
-
-R__EXTERN  Size3D gSize3D;
 
 
 ClassImp(TNode)

@@ -54,7 +54,7 @@ $(GRAFDS1):     $(GRAFHD) $(GRAFL1) $(ROOTCINTTMP)
 		$(ROOTCINTTMP) -f $@ -c $(GRAFHD) $(GRAFL1)
 $(GRAFDS2):     $(GRAFH) $(GRAFL2) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GRAFH) $(GRAFL2)
+		$(ROOTCINTTMP) -f $@ -c -p $(GRAFH) $(GRAFL2)
 
 $(GRAFDO1):     $(GRAFDS1)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

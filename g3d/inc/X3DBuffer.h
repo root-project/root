@@ -1,4 +1,4 @@
-/* @(#)root/g3d:$Name$:$Id$ */
+/* @(#)root/g3d:$Name:  $:$Id: X3DBuffer.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
 /* Author: Nenad Buncic   13/12/95*/
 
 /*************************************************************************
@@ -33,11 +33,13 @@ typedef struct _x3d_sizeof_ {
 #ifdef __cplusplus
 extern "C" int AllocateX3DBuffer ();
 extern "C" void FillX3DBuffer (X3DBuffer *buff);
+extern "C" Size3D* gFuncSize3D();
 #else
 extern int AllocateX3DBuffer ();
 extern void FillX3DBuffer (X3DBuffer *buff);
+extern Size3D* gFuncSize3D();
 #endif
 
-R__EXTERN Size3D gSize3D;
+#define gSize3D (*gFuncSize3D())
 
 #endif

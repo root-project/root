@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.cxx,v 1.2 2000/06/13 12:32:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.cxx,v 1.3 2000/11/21 16:39:33 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -12,7 +12,8 @@
 #include "TVirtualPad.h"
 #include "X3DBuffer.h"
 
-Size3D gSize3D;
+Size3D gVarSize3D;
+Size3D* gFuncSize3D(){ return &gVarSize3D; }
 
 void **(*gThreadTsd)(void*,Int_t) = 0;
 Int_t (*gThreadXAR)(const char *xact, Int_t nb, void **ar, Int_t *iret) = 0;

@@ -77,6 +77,18 @@ elif [ $PLATFORM = "macosx" ]; then
 elif [ $LD = "KCC" ]; then
    echo $LD $LDFLAGS -o $LIB $OBJS $EXTRA
    $LD $LDFLAGS -o $LIB $OBJS $EXTRA
+elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
+   if [ $SONAME != "libCint.dll" ]; then 
+      if [ $SONAME != "libCore.dll" ]; then
+         EXPLLNKCORE="-lCore -lCint"
+      else 
+         EXPLLNKCORE=-lCint
+      fi
+   fi
+   line="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB -Wl,--whole-archive $OBJS \
+         -Wl,--no-whole-archive -Llib/ $EXTRA $EXPLLNKCORE"
+   echo $line
+   $line
 else
    if [ "x$MAJOR" = "x" ] ; then
       echo $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA
