@@ -72,6 +72,7 @@ RETURN_METHOD_ARG3(Interpreter,TString,GetMangledName,TClass*,cl,const char*,met
 RETURN_METHOD_ARG3(Interpreter,TString,GetMangledNameWithPrototype,TClass*,cl,const char*,method,const char*,proto)
 RETURN_METHOD_ARG3(Interpreter,void*,GetInterfaceMethod,TClass*,cl,const char*,method,const char*,params)
 RETURN_METHOD_ARG3(Interpreter,void*,GetInterfaceMethodWithPrototype,TClass*,cl,const char*,method,const char*,proto)
+RETURN_METHOD_ARG1(Interpreter,const char*,GetClassSharedLibs,const char*,s)
 RETURN_METHOD_ARG1(Interpreter,const char*,GetInterpreterTypeName,const char*,s)
 VOID_METHOD_ARG3(Interpreter,Execute,const char*,function,const char*,params,int*,error,1)
 VOID_METHOD_ARG5(Interpreter,Execute,TObject*,obj,TClass*,cl,const char*,method,const char*,params,int*,error,1)
