@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.21 2004/10/12 20:30:11 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.22 2004/10/13 12:24:08 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -164,6 +164,17 @@ const char gHelpBuilder[] = "\
  o Shift-Ctrl-Z - redo (not implemented)\n\
 ";
 
+const char gHelpAboutBuilder[] = "\
+                  ROOT Gui Builder\n\
+\n\
+************************************************************\n\
+* Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.  *\n\
+* All rights reserved.                                     *\n\
+*                                                          *\n\
+* For the licensing terms see $ROOTSYS/LICENSE.            *\n\
+* For the list of contributors see $ROOTSYS/README/CREDITS.*\n\
+************************************************************\n\
+";
 
 //----- Toolbar stuff...
 
@@ -987,11 +998,9 @@ void TGuiBuilder::HandleMenu(Int_t id)
          break;
       case  M_HELP_ABOUT:
          root->SetEditable(kFALSE);
-         hd = new TRootHelpDialog(this, "About Gui Builder...", 400, 100);
+         hd = new TRootHelpDialog(this, "About Gui Builder...", 520, 160);
          hd->SetEditDisabled();
-         hd->SetText("         ROOT Gui Builder\n\
-\n\
-Author: Valeriy Onuchin (Valeri.Onoutchine@cern.ch)");
+         hd->SetText(gHelpAboutBuilder);
          hd->Popup();
          root->SetEditable(kTRUE);
          break;
