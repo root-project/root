@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.27 2003/01/07 09:48:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.29 2003/01/12 14:49:32 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -647,11 +647,11 @@ void TGeoManager::UnbombTranslation(const Double_t *tr, Double_t *bombtr)
 }
 
 //-----------------------------------------------------------------------------
-void TGeoManager::BuildCache()
+void TGeoManager::BuildCache(Bool_t dummy)
 {
 // Builds the cache for physical nodes and global matrices.
    if (!fCache) {
-      if (fNNodes>5000000)  // temporary - works without
+      if (fNNodes>5000000 || dummy)  // temporary - works without
          // build dummy cache
          fCache = new TGeoCacheDummy(fTopNode);
       else
@@ -1224,7 +1224,7 @@ void TGeoManager::ClearAttributes()
    }
 }
 //-----------------------------------------------------------------------------
-void TGeoManager::CloseGeometry(Option_t *)
+void TGeoManager::CloseGeometry(Option_t *option)
 {
 // Closing geometry implies checking the geometry validity, fixing shapes
 // with negative parameters (run-time shapes)building the cache manager,
@@ -1238,6 +1238,9 @@ void TGeoManager::CloseGeometry(Option_t *)
       browser->Refresh();
       printf("%s added to browser\n", GetName());
    }
+   TString opt(option);
+   opt.ToLower();
+   Bool_t dummy = opt.Contains("d");
    if (fIsGeomReading) {
       printf("### Geometry loaded from file...\n");
       gGeoIdentity=(TGeoIdentity *)fMatrices->At(0);
@@ -1249,11 +1252,11 @@ void TGeoManager::CloseGeometry(Option_t *)
          SetTopVolume(fMasterVolume);
          if (fStreamVoxels) printf("### Voxelization retrieved from file\n");
          Voxelize("ALL");
-         if (!fCache) BuildCache();
+         if (!fCache) BuildCache(dummy);
       } else {
          Warning("CloseGeometry", "top node was streamed!");
          Voxelize("ALL");
-         if (!fCache) BuildCache();
+         if (!fCache) BuildCache(dummy);
       }
       printf("### nodes in %s : %i\n", GetTitle(), fNNodes);
       printf("----------------modeler ready----------------\n");
@@ -1267,7 +1270,7 @@ void TGeoManager::CloseGeometry(Option_t *)
    fNNodes = CountNodes();
    Voxelize("ALL");
    printf("Building caches for nodes and matrices...\n");
-   BuildCache();
+   BuildCache(dummy);
    printf("### nodes in %s : %i\n", GetTitle(), fNNodes);
    printf("----------------modeler ready----------------\n");
 }
@@ -2694,9 +2697,10 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
    fNodes->AddAt(fTopNode, 0);
    fLevel = 0;
    if (fCache) {
+      Bool_t dummy=fCache->IsDummy();
       delete fCache;
       fCache = 0;
-      BuildCache();
+      BuildCache(dummy);
    }
    printf("Top volume is %s. Master volume is %s\n", fTopVolume->GetName(),
            fMasterVolume->GetName());

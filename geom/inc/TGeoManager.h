@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.15 2003/01/07 09:48:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.17 2003/01/12 14:49:31 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -92,7 +92,7 @@ private :
    TGeoHMatrix          *fCurrentMatrix;    //! current global matrix
 
 //--- private methods
-   void                   BuildCache();
+   void                   BuildCache(Bool_t dummy=kFALSE);
    TGeoNode              *FindInCluster(Int_t *cluster, Int_t nc);
    Int_t                  GetTouchedCluster(Int_t start, Double_t *point, Int_t *check_list,
                                             Int_t ncheck, Int_t *result);

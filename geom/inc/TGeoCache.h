@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.9 2002/12/11 17:10:19 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.10 2003/01/07 11:24:55 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -161,6 +161,7 @@ public:
    virtual void         IncreasePool(Int_t size) {fSize+=size;}
    virtual void         IncrementUsageCount();
    Int_t                Index(Int_t nindex) const {return (nindex & 0xFFFFFF);}
+   virtual Bool_t       IsDummy() const {return kFALSE;}
    virtual void         LocalToMaster(Double_t *local, Double_t *master) const;
    virtual void         MasterToLocal(Double_t *master, Double_t *local) const;
    virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const;
@@ -224,6 +225,7 @@ public:
    virtual Int_t        GetUsageCount() const {return 0;}
    virtual void         IncreasePool(Int_t /*size*/) {;}
    virtual void         IncrementUsageCount() {;}
+   virtual Bool_t       IsDummy() const {return kTRUE;}
    virtual void         LocalToMaster(Double_t *local, Double_t *master) const;
    virtual void         MasterToLocal(Double_t *master, Double_t *local) const;
    virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const;
