@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.50 2003/01/20 08:44:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.51 2003/02/05 15:07:29 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -823,6 +823,35 @@ Int_t TBranch::GetRow(Int_t)
 
 
 //______________________________________________________________________________
+TBranch *TBranch::GetMother() const
+{
+// Get top level branch parent of this branch
+// A top level branch has its fID negative.
+
+   TIter next(fTree->GetListOfBranches());
+   TBranch *branch;
+   while ((branch=(TBranch*)next())) {
+      if (branch->GetSubBranch(this)); return branch;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TBranch *TBranch::GetSubBranch(const TBranch *br) const
+{
+// recursively find branch br in the list of branches of this branch.
+// return null if br is not in this branch hierarchy.
+
+   if (br == this) return (TBranch*)this;
+   TIter next(((TBranch*)this)->GetListOfBranches());
+   TBranch *branch;
+   while ((branch = (TBranch*)next())) {
+      if (branch->GetSubBranch(br)) return branch;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 Stat_t TBranch::GetTotalSize() const
 {
 // Return total number of bytes in the branch (including current buffer)
@@ -1197,7 +1226,10 @@ void TBranch::Streamer(TBuffer &b)
 
          // if branch is in a separate file save this branch
          // as an independent key
-      if (fDirectory && fDirectory != fTree->GetDirectory()) {
+      TBranch *mother = GetMother();
+      TDirectory *pdirectory = fTree->GetDirectory();
+      if (mother) pdirectory = mother->GetDirectory();
+      if (fDirectory && fDirectory != pdirectory) {
          TDirectory *cursav = gDirectory;
          fDirectory->cd();
          fDirectory = 0;  // to avoid recursive calls

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.102 2003/02/20 14:09:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.103 2003/02/22 13:27:44 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -867,7 +867,7 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
    // if branch address is not yet set, must set all addresses starting
    // with the top level parent branch
    if (fAddress == 0 && fTree->GetMakeClass() == 0) {
-      TBranchElement *mother = GetMother();
+      TBranchElement *mother = (TBranchElement*)GetMother();
       TClass *cl = gROOT->GetClass(mother->GetClassName());
       if (fInfo && fInfo->GetOffsets()) fInfo->BuildOld();
       if (!mother || !cl) return 0;
@@ -953,40 +953,6 @@ Int_t TBranchElement::GetMaximum() const
 
    if (fBranchCount) return fBranchCount->GetMaximum();
    return fMaximum;
-}
-
-//______________________________________________________________________________
-TBranchElement *TBranchElement::GetMother() const
-{
-// Get top level branch parent of this branch
-// A top level branch has its fID negative.
-
-   TIter next(fTree->GetListOfBranches());
-   TBranch *branch;
-   TBranchElement *bre, *br;
-   while ((branch=(TBranch*)next())) {
-      if (branch->IsA() != TBranchElement::Class()) continue;
-      bre = (TBranchElement*)branch;
-      br = bre->GetSubBranch(this);
-      if (br) return bre;
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
-TBranchElement *TBranchElement::GetSubBranch(const TBranchElement *br) const
-{
-// recursively find branch br in the list of branches of this branch.
-// return null if br is not in this branch hierarchy.
-
-   if (br == this) return (TBranchElement*)this;
-   TIter next(((TBranchElement*)this)->GetListOfBranches());
-   TBranchElement *branch, *br2;
-   while ((branch = (TBranchElement*)next())) {
-      br2 = branch->GetSubBranch(br);
-      if (br2) return br2;
-   }
-   return 0;
 }
 
 //______________________________________________________________________________
