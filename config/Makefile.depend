@@ -1,0 +1,112 @@
+# -*- mode: makefile -*-
+#
+# Makefile containing library dependencies
+
+ifeq ($(PLATFORM),win32)
+
+HISTLIBDEP          = $(MATRIXLIB)
+HISTLIBEXTRA        = lib/libMatrix.lib
+GRAFLIBDEP          = $(HISTLIB) $(MATRIXLIB)
+GRAFLIBEXTRA        = lib/libHist.lib lib/libMatrix.lib
+GPADLIBDEP          = $(GRAFLIB) $(HISTLIB)
+GPADLIBEXTRA        = lib/libGraf.lib lib/libHist.lib
+G3DLIBDEP           = $(GRAFLIB) $(HISTLIB)
+G3DLIBEXTRA         = lib/libGraf.lib lib/libHist.lib
+WIN32GDKLIBDEP      = $(GPADLIB) $(GRAFLIB) $(GDKDLLS) $(GDKLIBS)
+WIN32GDKLIBEXTRA    = lib/libGpad.lib lib/libGraf.lib $(GDKLIBS) Glu32.lib \
+                      Opengl32.lib
+GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
+GUILIBEXTRA         = lib/libGpad.lib lib/libGraf.lib
+HISTPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
+HISTPAINTERLIBEXTRA = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib
+HTMLLIBDEP          = $(GRAFLIB)
+HTMLLIBEXTRA        = lib/libGraf.lib
+PROOFLIBDEP         = $(TREELIB) $(HISTLIB)
+PROOFLIBEXTRA       = lib/libTree.lib lib/libHist.lib
+PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB)
+PROOFGUILIBEXTRA    = lib/libProof.lib lib/libGui.lib
+TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
+TREEPLAYERLIBEXTRA  = lib/libTree.lib lib/libGraf3d.lib \
+                      lib/libGraf.lib lib/libHist.lib
+TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
+TREEVIEWERLIBEXTRA  = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
+                      lib/libHist.lib lib/libGui.lib
+EGLIBDEP            = $(G3DLIB) $(GRAFLIB)
+EGLIBEXTRA          = lib/libGraf3d.lib lib/libGraf.lib
+MCLIBDEP            = $(EGLIB)
+MCLIBEXTRA          = lib/libEG.lib
+PHYSICSLIBDEP       = $(MATRIXLIB)
+PHYSICSLIBEXTRA     = lib/libMatrix.lib
+PYTHIALIBDEP        = $(EGLIB) $(GRAFLIB)
+PYTHIALIBEXTRA      = lib/libEG.lib lib/libGraf.lib \
+                      $(FPYTHIALIBDIR) $(FPYTHIALIB)
+PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB)
+PYTHIA6LIBEXTRA     = lib/libEG.lib lib/libGraf.lib \
+                      $(FPYTHIA6LIBDIR) $(FPYTHIA6LIB)
+VENUSLIBDEP         = $(EGLIB)
+VENUSLIBEXTRA       = lib/libEG.lib $(FVENUSLIBDIR) $(FVENUSLIB)
+TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
+TABLELIBEXTRA       = lib/libTree.lib lib/libGpad.lib \
+                      lib/libGraf3d.lib lib/libGraf.lib lib/libHist.lib
+GLLIBDEP            = $(G3DLIB) $(GUILIB)
+GLLIBEXTRA          = lib/libGraf3d.lib lib/libGui.lib
+HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
+                      $(TREEPLAYERLIB)
+HBOOKLIBEXTRA       = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
+                      lib/libGraf.lib lib/libTreePlayer.lib
+GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
+GEOMPAINTERLIBEXTRA = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib \
+                      lib/libHist.lib
+RFIOLIBEXTRA        = WSock32.lib Ws2_32.lib
+
+else
+
+HISTLIBDEP          = $(MATRIXLIB)
+HISTLIBEXTRA        = -Llib -lMatrix
+GRAFLIBDEP          = $(HISTLIB) $(MATRIXLIB)
+GRAFLIBEXTRA        = -Llib -lHist -lMatrix
+GPADLIBDEP          = $(GRAFLIB) $(HISTLIB)
+GPADLIBEXTRA        = -Llib -lGraf -lHist
+G3DLIBDEP           = $(GRAFLIB) $(HISTLIB)
+G3DLIBEXTRA         = -Llib -lGraf -lHist
+GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
+GUILIBEXTRA        := -Llib -lGpad -lGraf $(GUILIBEXTRA)
+HISTPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
+HISTPAINTERLIBEXTRA = -Llib -lGraf -lHist -lMatrix
+HTMLLIBDEP          = $(GRAFLIB)
+HTMLLIBEXTRA        = -Llib -lGraf
+PROOFLIBDEP         = $(TREELIB) $(HISTLIB)
+PROOFLIBEXTRA       = -Llib -lTree -lHist
+PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB)
+PROOFGUILIBEXTRA    = -Llib -lProof -lGui
+TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
+TREEPLAYERLIBEXTRA  = -Llib -lTree -lGraf3d -lGraf -lHist
+TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
+TREEVIEWERLIBEXTRA  = -Llib -lTree -lGpad -lGraf -lHist -lGui
+X3DLIBDEP           = $(G3DLIB) $(GUILIB)
+X3DLIBEXTRA         = -Llib -lGraf3d -lGui
+EGLIBDEP            = $(G3DLIB) $(GRAFLIB)
+EGLIBEXTRA          = -Llib -lGraf3d -lGraf
+MCLIBDEP            = $(EGLIB)
+MCLIBEXTRA          = -Llib -lEG
+PHYSICSLIBDEP       = $(MATRIXLIB)
+PHYSICSLIBEXTRA     = -Llib -lMatrix
+PYTHIALIBDEP        = $(EGLIB) $(GRAFLIB)
+PYTHIALIBEXTRA      = -Llib -lEG -lGraf $(FPYTHIALIBDIR) $(FPYTHIALIB)
+PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB)
+PYTHIA6LIBEXTRA     = -Llib -lEG -lGraf $(FPYTHIA6LIBDIR) $(FPYTHIA6LIB)
+VENUSLIBDEP         = $(EGLIB)
+VENUSLIBEXTRA       = -Llib -lEG $(FVENUSLIBDIR) $(FVENUSLIB)
+X11TTFLIBDEP        = $(X11LIB) $(GRAFLIB)
+X11TTFLIBEXTRA      = -Llib -lGX11 -lGraf
+TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
+TABLELIBEXTRA       = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist
+GLLIBDEP            = $(GPADLIB) $(G3DLIB) $(GUILIB)
+GLLIBEXTRA         := -Llib -lGpad -lGraf3d -lGui $(GLLIBEXTRA)
+HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
+                      $(TREEPLAYERLIB)
+HBOOKLIBEXTRA       = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer
+GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
+GEOMPAINTERLIBEXTRA = -Llib -lGeom -lTree -lGraf3d -lHist
+
+endif
