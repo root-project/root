@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TZIPFile.h,v 1.1 2004/07/07 23:25:33 rdm Exp $
 // Author: Fons Rademakers   30/6/04
 
 /*************************************************************************
@@ -110,7 +110,7 @@ protected:
 
       // - Compression method and strategy
       kSTORED              = 0,            // Stored as is
-      kDEFLATED            = 8,            // Stored using deflate
+      kDEFLATED            = 8             // Stored using deflate
    };
 
 public:
