@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.187 2004/08/13 16:41:16 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.188 2004/10/07 17:07:56 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -4294,9 +4294,13 @@ int main(int argc, char **argv)
    fprintf(fp, "#define private public\n");
    fprintf(fp, "#define protected public\n");
    fprintf(fp, "#endif\n\n");
+#ifndef R__SOLARIS
    fprintf(fp, "// Since CINT ignores the std namespace, we need to do so in this file.\n");
    fprintf(fp, "namespace std {} using namespace std;\n\n");
    int linesToSkip = 15; // number of lines up to here.
+#else
+   int linesToSkip = 12; // number of lines up to here.
+#endif
 
    fprintf(fp, "#include \"TClass.h\"\n");
    fprintf(fp, "#include \"TBuffer.h\"\n");
@@ -4308,6 +4312,10 @@ int main(int argc, char **argv)
    fprintf(fp, "#endif\n\n");
    fprintf(fp, "#include \"RtypesImp.h\"\n\n");
    fprintf(fp, "#include \"TVectorProxy.h\"\n\n");
+#ifdef R__SOLARIS
+   fprintf(fp, "// Since CINT ignores the std namespace, we need to do so in this file.\n");
+   fprintf(fp, "namespace std {} using namespace std;\n\n");
+#endif
 
    // Loop over all command line arguments and write include statements.
    // Skip options and any LinkDef.h.
