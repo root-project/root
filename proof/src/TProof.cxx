@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.63 2004/04/20 15:23:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.64 2004/04/29 23:43:38 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -952,7 +952,7 @@ Int_t TProof::Collect(TMonitor *mon)
 
          case kPROOF_LOGDONE:
             (*mess) >> fStatus >> fParallel;
-            PDB(kGlobal,2) Info("Collect","kPROOF_PROGRESS: status %d parallel %d",
+            PDB(kGlobal,2) Info("Collect","kPROOF_PROGRESS: status %d  parallel %d",
                fStatus, fParallel);
             mon->DeActivate(s);
             if (!mon->GetActive()) loop = 0;
