@@ -94,6 +94,10 @@ N: Valerio Filippini
 E: Valerio.Filippini@pv.infn.it
 D: contribution of TGenPhaseSpace class
 
+N: Kirill Filimonov
+E: KVFilimonov@lbl.gov
+D: Modified Struve functions in TMath
+
 N: Frank Filthaut
 E: filthaut@hef.kun.nl
 D: contribution of TFractionFitter class
