@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.4 2004/04/29 16:04:29 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.5 2004/05/07 20:47:20 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -98,7 +98,7 @@ namespace {
 
 
 // traits for python's array type codes
- #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
+#ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
    template< class aType > struct tct {};
    template<> struct tct< int > { static const char tc; };
    template<> struct tct< long > { static const char tc; };
@@ -188,16 +188,16 @@ namespace {
    }
 
    bool carray_convert_int( PyObject* obj, G__CallFunc* func, void*& ref) {
-     return carray_convert<int>(obj,func,ref);
+      return carray_convert< int >(obj,func,ref);
    }
    bool carray_convert_long( PyObject* obj, G__CallFunc* func, void*& ref) {
-     return carray_convert<int>(obj,func,ref);
+      return carray_convert< long >(obj,func,ref);
    }
    bool carray_convert_float( PyObject* obj, G__CallFunc* func, void*& ref) {
-     return carray_convert<int>(obj,func,ref);
+      return carray_convert< float >(obj,func,ref);
    }
    bool carray_convert_double( PyObject* obj, G__CallFunc* func, void*& ref) {
-     return carray_convert<int>(obj,func,ref);
+      return carray_convert< double >(obj,func,ref);
    }
  
 
