@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.6 2000/07/10 01:07:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.7 2000/07/11 09:29:10 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -391,7 +391,7 @@ Bool_t TGTextView::SelectAll()
    fMarkedStart.fY = 0;
    fMarkedStart.fX = 0;
    fMarkedEnd.fY = fText->RowCount()-1;
-   fMarkedEnd.fX = fText->GetLineLength(fMarkedEnd.fY)-1;
+   fMarkedEnd.fX = fText->GetLineLength(fMarkedEnd.fY);
    if (fMarkedEnd.fX < 0)
       fMarkedEnd.fX = 0;
    DrawRegion(0, 0, fCanvas->GetWidth(), fCanvas->GetHeight());

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.6 2000/07/10 01:07:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.7 2000/07/11 09:29:10 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -503,6 +503,7 @@ Bool_t TGText::Save(const char *fn)
       travel = travel->fNext;
    }
    fIsSaved = kTRUE;
+   fFilename = fn;
    fclose(fp);
 
    return kTRUE;
@@ -978,14 +979,16 @@ Bool_t TGText::Search(TGLongPosition *foundPos, TGLongPosition start,
    if (!SetCurrentRow(start.fY))
       return kFALSE;
 
+   Ssiz_t x;
+
    if (direction) {
       while(1) {
-         foundPos->fX = DownSearchBM(fCurrent->fString+start.fX,
-                                     searchString, fCurrent->fLength - start.fX,
-                                     caseSensitive);
-         if (foundPos->fX != -1) {
-            foundPos->fX += start.fX;
-            foundPos->fY  = fCurrentRow;
+         TString s = fCurrent->fString;
+         x = s.Index(searchString, (Ssiz_t)start.fX,
+                     caseSensitive ? TString::kExact : TString::kIgnoreCase);
+         if (x != kNPOS) {
+            foundPos->fX = x;
+            foundPos->fY = fCurrentRow;
             return kTRUE;
          }
          if (!SetCurrentRow(fCurrentRow+1))
@@ -994,9 +997,19 @@ Bool_t TGText::Search(TGLongPosition *foundPos, TGLongPosition start,
       }
    } else {
       while(1) {
-         foundPos->fX = UpSearchBM(fCurrent->fString, searchString, start.fX,
-                                   caseSensitive);
-         if (foundPos->fX != -1) {
+         TString s = fCurrent->fString;
+         for (int i = (int)start.fX; i >= 0; i--) {
+            x = s.Index(searchString, (Ssiz_t)i,
+                        caseSensitive ? TString::kExact : TString::kIgnoreCase);
+            if (x >= start.fX) {
+               x = kNPOS;
+               continue;
+            }
+            if (x != kNPOS)
+               break;
+         }
+         if (x != kNPOS) {
+            foundPos->fX = x;
             foundPos->fY = fCurrentRow;
             return kTRUE;
          }
@@ -1009,132 +1022,23 @@ Bool_t TGText::Search(TGLongPosition *foundPos, TGLongPosition start,
 }
 
 //______________________________________________________________________________
-Long_t TGText::DownSearchBM(const char *actualLine, const char *searchPattern,
-                            Long_t len, Bool_t cs)
-{
-   // Search down in string for pattern. If cs is true be case sensitive.
-   // Returns x position in string or -1 if not found.
-
-   Long_t d[95], i, j, k, m, n;
-
-   m = strlen(searchPattern);
-   n = len;
-   if ((len <= 0) || (m > n))
-      return -1;
-
-   for (i = 0; i < 95; i++)
-      d[i] = m;
-   for (i = 0; i < m - 1; i++) {
-      d[searchPattern[i]-32] = m - i - 1;
-      if (!cs) {
-         if ((searchPattern[i] >= 65) && (searchPattern[i] <= 90))
-            d[searchPattern[i]] = m - i - 1;
-      } else {
-         if ((searchPattern[i] >= 97) && (searchPattern[i] <= 122))
-            d[searchPattern[i]-64] = m - i - 1;
-      }
-   }
-   i = m;
-   do {
-      j = m;
-      k = i;
-      do {
-         k--;
-         j--;
-      } while ((j >= 0) && CharEqual(searchPattern[j], actualLine[k], cs));
-      i = i + d[actualLine[i-1]-32];
-   } while ((j >= 0) && (i <= n));
-
-   if (j < 0)
-      return i - m - d[searchPattern[m-1] - 32];
-
-   return -1;
-}
-
-//______________________________________________________________________________
-Long_t TGText::UpSearchBM(const char *actualLine, const char *searchPattern,
-                          Long_t len, Bool_t cs)
-{
-   // Search up in string for pattern. If cs is true be case sensitive.
-   // Returns x position in string or -1 if not found.
-
-   Long_t d[95], i, j, k, m, n;
-
-   m = strlen(searchPattern);
-   n = len;
-   if ((len <= 0) || (m > n))
-      return -1;
-   for (i = 0; i < 95; i++)
-      d[i] = m;
-   for (i = m - 1; i > 0; i--) {
-      d[searchPattern[i]-32] = i;
-      if (!cs) {
-         if ((searchPattern[i] >= 65) && (searchPattern[i] <= 90))
-            d[searchPattern[i]] = i;
-      } else {
-         if ((searchPattern[i] >= 97) && (searchPattern[i] <= 122))
-            d[searchPattern[i]-64] = i;
-      }
-   }
-   i = n - m-1;
-   do {
-      j = -1;
-      k = i;
-      do {
-         k++;
-         j++;
-      } while ((j < m) && CharEqual(searchPattern[j], actualLine[k], cs));
-      i = i - d[actualLine[i+1]-32];
-   } while ((j < m) && (i >= 0));
-
-   if (j >= m)
-      return i + m + d[searchPattern[1] - 32];
-
-  return -1;
-}
-
-//______________________________________________________________________________
-Bool_t TGText::CharEqual(char first, char second, Bool_t cs)
-{
-   // Check if two characters are equal. If cs is true be case sensitive.
-
-   if (first == second)
-      return kTRUE;
-
-   if (!cs) {
-      if ((first >= 65) && (first <= 90))
-         if (first+32 == second)
-            return kTRUE;
-
-      if ((first >= 97) && (first <= 122))
-         if (first-32 == second)
-            return kTRUE;
-   }
-
-   return kFALSE;
-}
-
-//______________________________________________________________________________
-Bool_t TGText::Replace(TGLongPosition pos, const char *oldText, const char *newText,
+Bool_t TGText::Replace(TGLongPosition start, const char *oldText, const char *newText,
                        Bool_t direction, Bool_t caseSensitive)
 {
    // Replace oldText by newText. Returns false if nothing replaced.
 
-   TGLongPosition delEnd;
-   if (!SetCurrentRow(pos.fY))
+   if (!SetCurrentRow(start.fY))
       return kFALSE;
-   if (direction) {
-      if (!DownSearchBM(fCurrent->fString+pos.fX, oldText, fCurrent->fLength-pos.fX, caseSensitive))
-         return kFALSE;
-   } else {
-      if (!UpSearchBM(fCurrent->fString+pos.fX, oldText, fCurrent->fLength-pos.fX, caseSensitive))
-         return kFALSE;
-      pos.fX = pos.fX - strlen(oldText) - 1;
-   }
-   delEnd.fY = pos.fY;
-   delEnd.fX = pos.fX + strlen(oldText) - 1;
-   DelText(pos, delEnd);
-   InsText(pos, newText);
+
+   TGLongPosition foundPos;
+   if (!Search(&foundPos, start, oldText, direction, caseSensitive))
+      return kFALSE;
+
+   TGLongPosition delEnd;
+   delEnd.fY = foundPos.fY;
+   delEnd.fX = foundPos.fX + strlen(oldText) - 1;
+   DelText(foundPos, delEnd);
+   InsText(foundPos, newText);
    return kTRUE;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.4 2000/07/07 00:29:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.5 2000/07/10 01:07:19 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -36,6 +36,9 @@
 // kC_TEXTVIEW, kTXT_CLICK2, widget id, position (y << 16) | x)         //
 // kC_TEXTVIEW, kTXT_CLICK3, widget id, position (y << 16) | x)         //
 // kC_TEXTVIEW, kTXT_F3, widget id, true                                //
+// kC_TEXTVIEW, kTXT_OPEN, widget id, 0                                 //
+// kC_TEXTVIEW, kTXT_CLOSE, widget id, 0                                //
+// kC_TEXTVIEW, kTXT_SAVE, widget id, 0                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -540,7 +543,7 @@ void TGView::SetHsbPosition(Long_t newPos)
 {
    // Set position of horizontal scrollbar.
 
-   if (fHsb)
+   if (fHsb && fHsb->IsMapped())
      fHsb->SetPosition(Int_t(newPos));
    else
      SetVisibleStart(Int_t(newPos * fScrollVal.fX), kHorizontal);
@@ -551,7 +554,7 @@ void TGView::SetVsbPosition(Long_t newPos)
 {
    // Set position of vertical scrollbar.
 
-   if (fVsb)
+   if (fVsb && fVsb->IsMapped())
       fVsb->SetPosition(Int_t(newPos));
    else
       SetVisibleStart(Int_t(newPos * fScrollVal.fY), kVertical);

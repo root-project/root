@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.3 2000/07/07 17:30:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.4 2000/07/11 09:29:10 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -78,9 +78,6 @@ protected:
    void     Init();
    Bool_t   SetCurrentRow(Long_t row);
    void     LongestLine();
-   Long_t   UpSearchBM(const char *actualLine, const char *searchPattern, Long_t len, Bool_t cs);
-   Long_t   DownSearchBM(const char *actualLine, const char *searchPattern, Long_t len, Bool_t cs);
-   Bool_t   CharEqual(char first, char second, Bool_t cs);
 
 public:
    TGText();
@@ -120,7 +117,7 @@ public:
 
    Bool_t  Search(TGLongPosition *foundPos, TGLongPosition start, const char *searchString,
                   Bool_t direction, Bool_t caseSensitive);
-   Bool_t  Replace(TGLongPosition pos, const char *oldText, const char *newText,
+   Bool_t  Replace(TGLongPosition start, const char *oldText, const char *newText,
                    Bool_t direction, Bool_t caseSensitive);
 
    //void    SetLineColor(Long_t row, ULong_t color);

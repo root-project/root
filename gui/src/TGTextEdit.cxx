@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.6 2000/07/11 09:29:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.7 2000/07/11 18:03:59 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -368,6 +368,14 @@ void TGTextEdit::Delete(Option_t *)
    SetCurrent(fMarkedStart);
 
    SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_ISMARKED), fWidgetId, kFALSE);
+
+   // only to make sure that IsSaved() returns true in case everything has
+   // been deleted
+   if (fText->RowCount() == 1 && fText->GetLineLength(0) == 0) {
+      delete fText;
+      fText = new TGText();
+      fText->Clear();
+   }
 }
 
 //______________________________________________________________________________
@@ -873,8 +881,13 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
 
          switch ((EKeySym)keysym) {
             case kKey_F3:
+               // typically FindAgain action
                SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_F3), fWidgetId,
                            kTRUE);
+               SetMenuState();
+               if (fMenu->IsEntryEnabled(kM_SEARCH_FINDAGAIN))
+                  SendMessage(this, MK_MSG(kC_COMMAND, kCM_MENU),
+                              kM_SEARCH_FINDAGAIN, 0);
                break;
             case kKey_Delete:
                if (fIsMarked)
@@ -1019,19 +1032,30 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                               return kTRUE;
                      }
                      Clear();
+                     if (parm1 == kM_FILE_CLOSE) {
+                        SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_CLOSE),
+                                    fWidgetId, 0);
+                     }
                      if (parm1 == kM_FILE_OPEN) {
                         TGFileInfo fi;
                         fi.fFileTypes = (char **)gFiletypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
-                        if (fi.fFilename && strlen(fi.fFilename))
+                        if (fi.fFilename && strlen(fi.fFilename)) {
                            LoadFile(fi.fFilename);
+                           SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_OPEN),
+                                       fWidgetId, 0);
+                        }
                      }
                      break;
                   case kM_FILE_SAVE:
-                     SaveFile(0);
+                     if (SaveFile(0))
+                        SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_SAVE),
+                                    fWidgetId, 0);
                      break;
                   case kM_FILE_SAVEAS:
-                     SaveFile(0, kTRUE);
+                     if (SaveFile(0, kTRUE))
+                        SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_SAVE),
+                                    fWidgetId, 0);
                      break;
                   case kM_FILE_PRINT:
                      {
