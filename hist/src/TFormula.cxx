@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.60 2003/12/11 23:30:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.61 2003/12/18 13:21:33 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2455,7 +2455,8 @@ TString TFormula::GetExpFormula() const
             continue;
          }
       }
-      TString ret = spos ? tab[spos-1] : "";
+      TString ret = "";
+      if (spos > 0) ret = tab[spos-1];
       delete[] tab;
       delete[] ismulti;
       return ret;
