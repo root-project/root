@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.39 2004/05/03 10:42:55 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.40 2004/05/04 14:41:52 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -779,6 +779,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      SendCloseMessage();
                      break;
                   case kFileQuit:
+                     delete this;
                      gApplication->Terminate(0);
                      break;
 
