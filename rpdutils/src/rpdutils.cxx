@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.35 2004/04/20 15:21:50 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.36 2004/04/20 21:32:02 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -218,7 +218,7 @@ extern int gDebug;
 namespace ROOT {
 
 //
-// rpdutils module globals 
+// rpdutils module globals
 ErrorHandler_t gErrSys   = 0;
 ErrorHandler_t gErrFatal = 0;
 ErrorHandler_t gErr      = 0;
@@ -233,14 +233,14 @@ static const int kAUTH_KRB_MSK = 0x4;
 static const int kAUTH_GLB_MSK = 0x8;
 static const int kAUTH_SSH_MSK = 0x10;
 static const int kMAXTABSIZE = 1000000000;
-static const std::string kAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5", 
+static const std::string kAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5",
                                                 "Globus", "SSH", "UidGid" };
 static const std::string kAuthTab    = "/rpdauthtab";   // auth table
 static const std::string kDaemonRc   = ".rootdaemonrc"; // daemon access rules
 static const std::string kRootdPass  = ".rootdpass";    // special rootd passwd
 static const std::string kSRootdPass = "/.srootdpass";  // SRP passwd
 
-// 
+//
 // RW dir for temporary files (needed by gRpdAuthTab: do not move)
 static std::string gTmpDir = "/tmp";
 
@@ -362,7 +362,7 @@ void RpdSetKeytabFile(const char *keytabfile)
 }
 
 //______________________________________________________________________________
-void RpdFreeKrb5Vars(krb5_context context, krb5_principal principal, 
+void RpdFreeKrb5Vars(krb5_context context, krb5_principal principal,
                      krb5_ticket *ticket, krb5_auth_context auth_context,
                      krb5_creds **creds)
 {
@@ -376,15 +376,15 @@ void RpdFreeKrb5Vars(krb5_context context, krb5_principal principal,
       // free auth_context
       if (auth_context)
          krb5_auth_con_free(context, auth_context);
-      
+
       // free ticket
       if (ticket)
          krb5_free_ticket(context,ticket);
-      
+
       // free principal
       if (principal)
          krb5_free_principal(context, principal);
-      
+
       // free context
       krb5_free_context(context);
    }
@@ -471,7 +471,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token)
          ErrorInfo("RpdUpdateAuthTab: opt=%d: lseek error (errno: %d)",
               opt, GetErrno());
          if (lockf(itab, F_ULOCK, (off_t) 1) == -1) {
-            ErrorInfo("RpdUpdateAuthTab: error unlocking %s", 
+            ErrorInfo("RpdUpdateAuthTab: error unlocking %s",
                       gRpdAuthTab.c_str());
          }
          fclose(ftab);
@@ -568,7 +568,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token)
    // unlock the file
    lseek(itab, 0, SEEK_SET);
    if (lockf(itab, F_ULOCK, (off_t) 1) == -1) {
-      ErrorInfo("RpdUpdateAuthTab: error unlocking %s", 
+      ErrorInfo("RpdUpdateAuthTab: error unlocking %s",
                 gRpdAuthTab.c_str());
    }
    // closing file ...
@@ -942,7 +942,7 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
    // unlock the file
    lseek(itab, 0, SEEK_SET);
    if (lockf(itab, F_ULOCK, (off_t) 1) == -1) {
-      ErrorInfo("RpcCheckOffSet: error unlocking %s", 
+      ErrorInfo("RpcCheckOffSet: error unlocking %s",
                 gRpdAuthTab.c_str());
    }
    // closing file ...
@@ -1673,12 +1673,12 @@ void RpdSendAuthList()
 //______________________________________________________________________________
 void RpdSshAuth(const char *sstr)
 {
-   // Reset global variable.
+   // Authenitcation via ssh.
 
    gAuth = 0;
 
    if (gDebug > 2)
-      ErrorInfo("RpdSshAuth: contacted by host: %s for user %s", 
+      ErrorInfo("RpdSshAuth: contacted by host: %s for user %s",
                 gOpenHost.c_str(),sstr);
 
    // Decode subject string
@@ -1701,7 +1701,7 @@ void RpdSshAuth(const char *sstr)
 
       struct passwd *pw = getpwnam(User);
       if (pw) {
-         std::string PipeFile = 
+         std::string PipeFile =
             std::string(pw->pw_dir) + std::string("/RootSshPipe.") + PipeId;
          if (access(PipeFile.c_str(),R_OK) && GetErrno() == ENOENT)
             PipeFile= gTmpDir + std::string("/RootSshPipe.") + PipeId;
@@ -1879,7 +1879,7 @@ void RpdSshAuth(const char *sstr)
    NetSend(CmdInfo.length(), kROOTD_SSH);
    NetSend(CmdInfo.c_str(), CmdInfo.length(), kROOTD_SSH);
 
-   // Wait for verdict form sshd (via ssh2rpd ...)
+   // Wait for verdict from sshd (via ssh2rpd ...)
    // Additional check on the username ...
    gAuth = SshToolGetAuth(UnixFd, User);
 
@@ -2013,7 +2013,7 @@ void RpdKrb5Auth(const char *sstr)
                                          KRB5_NT_SRV_HST, &server))) {
       ErrorInfo("RpdKrb5Auth: while generating service name (%s): %d %s",
                 service, retval, error_message(retval));
-      RpdFreeKrb5Vars(gKcontext, 0, 0, 0, 0); 
+      RpdFreeKrb5Vars(gKcontext, 0, 0, 0, 0);
       return;
    }
 
@@ -2031,7 +2031,7 @@ void RpdKrb5Auth(const char *sstr)
                                0, gKeytab,   // default gKeytab is 0
                                &ticket))) {
       ErrorInfo("RpdKrb5Auth: recvauth failed--%s", error_message(retval));
-      RpdFreeKrb5Vars(gKcontext, server, 0, 0, 0); 
+      RpdFreeKrb5Vars(gKcontext, server, 0, 0, 0);
       return;
    }
 
@@ -2040,7 +2040,7 @@ void RpdKrb5Auth(const char *sstr)
    if ((retval =
         krb5_unparse_name(gKcontext, ticket->enc_part2->client, &cname))) {
       ErrorInfo("RpdKrb5Auth: unparse failed: %s", error_message(retval));
-      RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, 0); 
+      RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, 0);
       return;
    }
    if (gDebug > 2)
@@ -2058,7 +2058,7 @@ void RpdKrb5Auth(const char *sstr)
    if (pos != string::npos)
       user = user.erase(pos);   // drop the instance
    strncpy(gUser, user.c_str(), 64);
-#else 
+#else
    // avoid using 'erase' (it is buggy with some compilers)
    snprintf(gUser,64,"%s",user.c_str());
    char *pc = 0;
@@ -2159,7 +2159,7 @@ void RpdKrb5Auth(const char *sstr)
       if ((retval = krb5_rd_cred(gKcontext, auth_context,
                                  &forwardCreds, &creds, 0))) {
          ErrorInfo("RpdKrb5Auth: rd_cred failed--%s", error_message(retval));
-         RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, 0); 
+         RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, 0);
          return;
       }
       if (data) delete[] data;
@@ -2171,7 +2171,7 @@ void RpdKrb5Auth(const char *sstr)
          if (setresuid(pw->pw_uid, pw->pw_uid, fromUid) == -1) {
             ErrorInfo("RpdKrb5Auth: can't setuid for user %s", gUser);
             NetSend(kErrNotAllowed, kROOTD_ERR);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds); 
+            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
             return;
          }
 
@@ -2185,7 +2185,7 @@ void RpdKrb5Auth(const char *sstr)
             ErrorInfo("RpdKrb5Auth: %s while initializing second krb5",
                 error_message(retval));
             NetSend(kErrNotAllowed, kROOTD_ERR);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds); 
+            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
             return;
          }
 
@@ -2195,7 +2195,7 @@ void RpdKrb5Auth(const char *sstr)
                       error_message(retval));
             NetSend(kErrNotAllowed, kROOTD_ERR);
             krb5_free_context(context);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds); 
+            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
             return;
          }
 
@@ -2222,7 +2222,7 @@ void RpdKrb5Auth(const char *sstr)
                                           ticket->enc_part2->client))) {
             ErrorInfo("RpdKrb5Auth: cc_initialize failed--%s",
                       error_message(retval));
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds); 
+            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
             krb5_free_context(context);
             NetSend(kErrNotAllowed, kROOTD_ERR);
             return;
@@ -2233,7 +2233,7 @@ void RpdKrb5Auth(const char *sstr)
                        error_message(retval));
             NetSend(kErrNotAllowed, kROOTD_ERR);
             krb5_free_context(context);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds); 
+            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
             return;
          }
 
@@ -2242,7 +2242,7 @@ void RpdKrb5Auth(const char *sstr)
                        error_message(retval));
             NetSend(kErrNotAllowed, kROOTD_ERR);
             krb5_free_context(context);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds); 
+            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
             return;
          }
 
@@ -2273,7 +2273,7 @@ void RpdKrb5Auth(const char *sstr)
    NetSend(reply.c_str(), kMESS_STRING);
 
    // free allocated stuff
-   RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, (krb5_creds **)0); 
+   RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, (krb5_creds **)0);
 
    // Authentication was successfull
    gAuth = 1;
@@ -3708,7 +3708,7 @@ void RpdUser(const char *sstr)
               "may result in authentication failure");
       }
       // If we required an hash check that we got it
-      // (the client sends the passwd if the crypt version is different) 
+      // (the client sends the passwd if the crypt version is different)
       if (gSaltRequired) {
          if (strncmp(passwd,Salt,strlen(Salt)))
             gSaltRequired = 0;
@@ -4636,7 +4636,7 @@ void RpdLogin(int ServType)
 }
 
 //______________________________________________________________________________
-int RpdInitSession(int ServType, std::string &User, 
+int RpdInitSession(int ServType, std::string &User,
                    int &Cproto, int &Anon, std::string &Passwd)
 {
    // Perform the action needed to commence the new session:
@@ -4648,7 +4648,7 @@ int RpdInitSession(int ServType, std::string &User,
    // Returns 1 for a PROOF master server, 0 otherwise
    // Returns logged-in User, the remote client procotol Cproto, the
    // client kind of user Anon and, if anonymous user, the client Passwd.
-   // Called just after opening the connection 
+   // Called just after opening the connection
 
    if (gDebug > 2)
       ErrorInfo("RpdInitSession: %s", gServName[ServType].c_str());
@@ -4705,7 +4705,7 @@ int RpdInitSession(int ServType, std::string &User, int &Rid)
    //   - login the client
    // Returns 1 for a PROOF master server, 0 otherwise
    // Returns logged-in User and remote process id in Rid
-   // Called just after opening the connection 
+   // Called just after opening the connection
 
    int Dum1 = 0, Dum2 = 0;
    std::string Dum3;
@@ -4774,7 +4774,7 @@ void RpdInit(EService serv, int pid, int sproto, int inctok, int rumsk,
    if (asrpp && strlen(asrpp))
       gAltSRPPass  = asrpp;
 
-   if (gDebug > 0) { 
+   if (gDebug > 0) {
       ErrorInfo("RpdSetOptions: gService= %s, gRootLog= %d, gSshdPort= %d",
                  gServName[gService].c_str(), gRootLog, gSshdPort);
       ErrorInfo("RpdSetOptions: gParentId= %d, gInclusiveToken= %d",
@@ -4801,14 +4801,14 @@ int SPrintf(char *buf, size_t size, const char *va_(fmt), ...)
    if (!buf) {
       if (gDebug > 0)
          ErrorInfo("SPrintf: buffer not allocated: do nothing");
-      return 0; 
+      return 0;
    }
 
    // Check size
    if (size < 1) {
       if (gDebug > 0)
          ErrorInfo("SPrintf: cannot determine buffer size (%d): do nothing",size);
-      return 0; 
+      return 0;
    }
 
    // Now fill buf
@@ -4827,8 +4827,8 @@ int SPrintf(char *buf, size_t size, const char *va_(fmt), ...)
 //______________________________________________________________________________
 char *ItoA(int i)
 {
-   // Return pointer to a static string containing the string 
-   // version of integer 'i', up to a max of kMAXCHR (=30) 
+   // Return pointer to a static string containing the string
+   // version of integer 'i', up to a max of kMAXCHR (=30)
    // characters; returns "-1" if more chars are needed.
    const int kMAXCHR = 30;
    static char str[kMAXCHR];
