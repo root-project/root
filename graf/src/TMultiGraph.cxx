@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.9 2002/02/24 18:01:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.10 2002/07/15 15:03:38 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -70,6 +70,11 @@ TMultiGraph::~TMultiGraph()
 
 
    if (!fGraphs) return;
+   TGraph *g;
+   TIter   next(fGraphs);
+   while ((g = (TGraph*) next())) {
+     g->ResetBit(kMustCleanup);
+   }
    fGraphs->Delete();
    delete fGraphs;
    fGraphs = 0;
@@ -83,6 +88,7 @@ void TMultiGraph::Add(TGraph *graph, Option_t *chopt)
    // add a new graph to the list of graphs
 
    if (!fGraphs) fGraphs = new TList();
+   graph->SetBit(kMustCleanup);
    fGraphs->Add(graph,chopt);
 }
 
@@ -181,6 +187,8 @@ void TMultiGraph::Paint(Option_t *option)
 {
 // paint all the graphs of this multigraph
 
+  if (fGraphs->GetSize() == 0) return;
+  
   char *l;
   static char chopt[33];
   Int_t nch = strlen(option);
@@ -331,6 +339,19 @@ void TMultiGraph::Print(Option_t *option) const
        g->Print(option);
      }
    }
+}
+
+//______________________________________________________________________________
+void TMultiGraph::RecursiveRemove(TObject *obj)
+{
+   // Recursively remove this object from a list. Typically implemented
+   // by classes that can contain mulitple references to a same object.
+
+   if (!fGraphs) return;
+   TObject *objr = fGraphs->Remove(obj);
+   if (!objr) return;
+   delete fHistogram; fHistogram = 0;
+   if (gPad) gPad->Modified();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.h,v 1.2 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.h,v 1.3 2002/02/19 17:43:41 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -54,6 +54,7 @@ public:
         TAxis           *GetYaxis() const;
         virtual void     Paint(Option_t *chopt="");
         virtual void     Print(Option_t *chopt="") const;
+        virtual void     RecursiveRemove(TObject *obj);
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
         virtual void     SetMaximum(Double_t maximum=-1111);
         virtual void     SetMinimum(Double_t minimum=-1111);
