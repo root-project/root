@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.108 2001/12/03 15:04:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.109 2001/12/07 09:27:43 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1380,6 +1380,7 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
 {
 //  print value of element i in a TClonesArray
 
+   if (!clones) {printf(" %-15s = \n",name); return;}
    printf(" %-15s = ",name);
    Int_t nc = clones->GetEntriesFast();
    const Int_t kMaxPrint = 10;
