@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.203 2004/09/15 10:05:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.204 2004/10/01 16:30:58 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4455,17 +4455,19 @@ void TH1::Print(Option_t *option) const
 //   -*-*-*-*-*Print some global quantities for this histogram*-*-*-*-*-*-*-*
 //             ===============================================
 //
+//  If option "base" is given, number of bins and ranges are also printed
 //  If option "range" is given, bin contents and errors are also printed
 //                     for all bins in the current range (default 1-->nbins)
 //  If option "all" is given, bin contents and errors are also printed
 //                     for all bins including under and overflows.
 //
-   printf( "TH1.Print Name= %s, Entries= %d, Total sum= %g\n",GetName(),Int_t(fEntries),GetSumOfWeights());
+   printf( "TH1.Print Name  = %s, Entries= %d, Total sum= %g\n",GetName(),Int_t(fEntries),GetSumOfWeights());
    TString opt = option;
    opt.ToLower();
    Int_t all;
    if      (opt.Contains("all"))   all = 0;
    else if (opt.Contains("range")) all = 1;
+   else if (opt.Contains("base"))  all = 2;
    else                            return;
 
    Int_t bin, binx, biny, binz;
@@ -4479,6 +4481,16 @@ void TH1::Print(Option_t *option) const
       if (fDimension > 1) {firsty = fYaxis.GetFirst(); lasty = fYaxis.GetLast();}
       if (fDimension > 2) {firstz = fZaxis.GetFirst(); lastz = fZaxis.GetLast();}
    }
+
+   if (all== 2) {
+       printf("          Title = %s\n", GetTitle());
+       printf("          NbinsX= %d, xmin= %g, xmax=%g", fXaxis.GetNbins(), fXaxis.GetXmin(), fXaxis.GetXmax());
+       if( fDimension > 1) printf(", NbinsY= %d, ymin= %g, ymax=%g", fYaxis.GetNbins(), fYaxis.GetXmin(), fYaxis.GetXmax());
+       if( fDimension > 2) printf(", NbinsZ= %d, zmin= %g, zmax=%g", fZaxis.GetNbins(), fZaxis.GetXmin(), fZaxis.GetXmax());
+       printf("\n");
+       return;
+   }
+
    Stat_t w,e;
    Axis_t x,y,z;
    if (fDimension == 1) {
