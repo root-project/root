@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.13 2002/02/22 09:37:29 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.14 2002/02/23 16:01:44 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -185,7 +185,7 @@ TThread::TThread(Int_t id)
    fNamed     = kFALSE;
    fId = (id ? id : SelfId());
    fState = kRunningState;
-   printf("Thread %s.%ld is running\n",GetName(),fId);
+   if (gDebug) printf("Thread %s.%ld is running\n",GetName(),fId);
 }
 
 ////////// begin changes (J.A.):
