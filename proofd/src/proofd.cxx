@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.31 2003/06/20 17:54:00 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.32 2003/07/27 10:45:58 brun Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -134,8 +134,8 @@
 #      endif
 #   endif
 #endif
-#if defined(__MACH__) && !defined(__APPLE__) \
-|| ( defined(__CYGWIN__) && defined(__GNUC__) ) 
+#if defined(__MACH__) && !defined(__APPLE__) || \
+    (defined(__CYGWIN__) && defined(__GNUC__))
 #   define R__GLIBC
 #endif
 
@@ -248,8 +248,8 @@ krb5_context gKcontext;
 
 //--- Machine specific routines ------------------------------------------------
 
-#if !defined(__hpux) && !defined(linux) && !defined(__FreeBSD__) \
-  || defined(R__WINGCC)
+#if !defined(__hpux) && !defined(linux) && !defined(__FreeBSD__) || \
+    defined(R__WINGCC)
 static int setresgid(gid_t r, gid_t e, gid_t)
 {
    if (setgid(r) == -1)
@@ -264,7 +264,7 @@ static int setresuid(uid_t r, uid_t e, uid_t)
    return seteuid(e);
 }
 #endif
-#if defined(linux) && !defined(HAS_SETRESUID) && !defined(R__WINGCC)
+#if defined(linux) && !defined(R__WINGCC) && !defined(HAS_SETRESUID)
 extern "C" {
    int setresgid(gid_t r, gid_t e, gid_t s);
    int setresuid(uid_t r, uid_t e, uid_t s);
@@ -900,7 +900,6 @@ void ProofdExec()
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
-   printf("DEBUG: proofd started\n");
    char *s;
    int   tcpwindowsize = 65535;
 
