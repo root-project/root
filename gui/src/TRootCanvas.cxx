@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.66 2004/12/15 09:27:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.67 2004/12/16 19:42:26 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -609,6 +609,8 @@ TRootCanvas::~TRootCanvas()
 void TRootCanvas::Close()
 {
    // Called via TCanvasImp interface by TCanvas.
+
+   if (fEditor) fEditor->DeleteEditors();
 
    gVirtualX->CloseWindow();
 }
