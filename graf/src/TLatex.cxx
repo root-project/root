@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.28 2002/02/07 10:56:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.27 2002/01/24 11:39:28 rdm Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -43,7 +43,7 @@ ClassImp(TLatex)
 //   Subscripts and superscripts are made with the _ and ^ commands.  These commands
 //   can be combined to make complicated subscript and superscript expressions.
 //   You may choose how to display subscripts and superscripts using the 2 functions
-//   SetIndiceSize(Double_t) and SetLimitIndiceSize(Int_t).
+//   SetIndiceSize(Float_t) and SetLimitIndiceSize(Int_t).
 //Begin_Html
 /*p
 <img src="gif/latex_subscripts.gif">
@@ -407,7 +407,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
       text[length] = 0;
 
       // compute size of subscripts and superscripts
-      Double_t IndiceSize = spec.size/fFactorSize;
+      Float_t IndiceSize = spec.size/fFactorSize;
       if(IndiceSize<fOriginSize/TMath::Exp(fLimitFactorSize*TMath::Log(fFactorSize))-0.001f)
          IndiceSize = spec.size;
       // substract 0.001 because of rounding errors
@@ -730,21 +730,21 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
 
          if (!AbovePlace) {
             if (OpPower<OpUnder) {
-               result.Set(fs1.Width()+xfpos+TMath::Max(fs2.Width(),fs3.Width()),
-                          fs1.Dessus()*fFactorPos+fs2.Height(),
-                          fs1.Dessous()+fs3.Height()-fs3.Dessus()*(1-fFactorPos));
+               result = FormSize(fs1.Width()+xfpos+TMath::Max(fs2.Width(),fs3.Width()),
+                                 fs1.Dessus()*fFactorPos+fs2.Height(),
+                                 fs1.Dessous()+fs3.Height()-fs3.Dessus()*(1-fFactorPos));
             } else {
-               result.Set(fs1.Width()+xfpos+TMath::Max(fs2.Width(),fs3.Width()),
-                          fs1.Dessus()*fFactorPos+fs3.Height(),
-                          fs1.Dessous()+fs2.Height()-fs2.Dessus()*(1-fFactorPos));
+               result = FormSize(fs1.Width()+xfpos+TMath::Max(fs2.Width(),fs3.Width()),
+                                 fs1.Dessus()*fFactorPos+fs3.Height(),
+                                 fs1.Dessous()+fs2.Height()-fs2.Dessus()*(1-fFactorPos));
             }
          } else {
             if (OpPower<OpUnder) {
-               result.Set(TMath::Max(fs1.Width(),TMath::Max(fs2.Width(),fs3.Width())),
-                          fs1.Dessus()*propU+fs2.Height(),fs1.Dessous()*prop+fs3.Height());
+               result = FormSize(TMath::Max(fs1.Width(),TMath::Max(fs2.Width(),fs3.Width())),
+                                 fs1.Dessus()*propU+fs2.Height(),fs1.Dessous()*prop+fs3.Height());
             } else {
-               result.Set(TMath::Max(fs1.Width(),TMath::Max(fs2.Width(),fs3.Width())),
-                          fs1.Dessus()*propU+fs3.Height(),fs1.Dessous()*prop+fs2.Height());
+               result = FormSize(TMath::Max(fs1.Width(),TMath::Max(fs2.Width(),fs3.Width())),
+                                 fs1.Dessus()*propU+fs3.Height(),fs1.Dessous()*prop+fs2.Height());
             }
          }
       }
@@ -794,10 +794,10 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          }
 
          if (!AbovePlace)
-             result.Set(fs1.Width()+xfpos+fs2.Width(),
-                        fs1.Dessus()*fFactorPos+fs2.Dessus(),fs1.Dessous());
+             result = FormSize(fs1.Width()+xfpos+fs2.Width(),
+                               fs1.Dessus()*fFactorPos+fs2.Dessus(),fs1.Dessous());
          else
-             result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Dessus()*prop+fs2.Height(),fs1.Dessous());
+             result = FormSize(TMath::Max(fs1.Width(),fs2.Width()),fs1.Dessus()*prop+fs2.Height(),fs1.Dessous());
 
       }
       else if (OpUnder>-1) { // _ found
@@ -840,10 +840,10 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
             }
          }
          if (!AbovePlace)
-             result.Set(fs1.Width()+xfpos+fs2.Width(),fs1.Dessus(),
-                        fs1.Dessous()+fs2.Dessous()+fs2.Dessus()*fpos);
+             result = FormSize(fs1.Width()+xfpos+fs2.Width(),fs1.Dessus(),
+                               fs1.Dessous()+fs2.Dessous()+fs2.Dessus()*fpos);
          else
-            result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Dessus(),fs1.Dessous()*prop+fs2.Height());
+            result = FormSize(TMath::Max(fs1.Width(),fs2.Width()),fs1.Dessus(),fs1.Dessous()*prop+fs2.Height());
       }
       else if (OpBox) {
          Double_t square = GetHeight()*spec.size/2;
@@ -1062,7 +1062,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          }
          Double_t div = 3;
          if (OpAbove==1) div=4;
-         result.Set(fs1.Width(),fs1.Dessus()+GetHeight()*spec.size/div,fs1.Dessous());
+         result = FormSize(fs1.Width(),fs1.Dessus()+GetHeight()*spec.size/div,fs1.Dessous());
 
       }
       else if (OpSquareBracket) { // operator #[]{arg}
@@ -1081,7 +1081,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
             DrawLine(x+l2+fs1.Width()+2*l,y-fs1.Dessus(),x+l2+fs1.Width()+l,y-fs1.Dessus(),spec);
             DrawLine(x+l2+fs1.Width()+2*l,y+fs1.Dessous(),x+l2+fs1.Width()+l,y+fs1.Dessous(),spec);
          }
-         result.Set(fs1.Width()+3*l,fs1.Dessus(),fs1.Dessous());
+         result = FormSize(fs1.Width()+3*l,fs1.Dessus(),fs1.Dessous());
       }
       else if (OpParen) {  // operator #(){arg}
          Double_t l = GetHeight()*spec.size/4;
@@ -1106,7 +1106,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
             Analyse(x+3*l2+dw,y,spec,text+3,length-3);
          }
         // result = FormSize(fs1.Width()+3*l,fs1.Dessus(),fs1.Dessous());
-         result.Set(fs1.Width()+3*l+2*dw,fs1.Dessus(),fs1.Dessous());
+         result = FormSize(fs1.Width()+3*l+2*dw,fs1.Dessus(),fs1.Dessous());
       }
       else if (OpAbs) {  // operator #||{arg}
          Double_t l = GetHeight()*spec.size/4;
@@ -1120,7 +1120,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
             DrawLine(x+l2,y-fs1.Dessus(),x+l2,y+fs1.Dessous(),spec);
             DrawLine(x+l2+fs1.Width()+2*l,y-fs1.Dessus(),x+l2+fs1.Width()+2*l,y+fs1.Dessous(),spec);
          }
-         result.Set(fs1.Width()+3*l,fs1.Dessus(),fs1.Dessous());
+         result = FormSize(fs1.Width()+3*l,fs1.Dessus(),fs1.Dessous());
       }
       else if (OpBigCurly) { // big curly bracket  #{}{arg}
          Double_t l = GetHeight()*spec.size/4;
@@ -1162,7 +1162,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
             DrawLine(x+l2+ltip+2*l+fs1.Width(),y2-ltip,x+l2+2*l+2*ltip+fs1.Width(),y2,spec);
             DrawLine(x+l2+ltip+2*l+fs1.Width(),y2+ltip,x+l2+2*l+2*ltip+fs1.Width(),y2,spec);
          }
-         result.Set(fs1.Width()+3*l+2*ltip,fs1.Dessus(),fs1.Dessous()) ;;
+         result = FormSize(fs1.Width()+3*l+2*ltip,fs1.Dessus(),fs1.Dessous()) ;;
       }
       else if (OpFrac>-1) { // \frac found
          if (OpCurlyCurly==-1) { // }{ not found
@@ -1193,7 +1193,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
             DrawLine(x,y-2*height,x+TMath::Max(fs1.Width(),fs2.Width()),y-2*height,spec);
          }
 
-         result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Height()+3*height,fs2.Height()-height);
+         result = FormSize(TMath::Max(fs1.Width(),fs2.Width()),fs1.Height()+3*height,fs2.Height()-height);
 
       }
       else if (OpSqrt>-1) { // \sqrt found
@@ -1204,12 +1204,12 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                fs2 = Anal1(spec,text+OpSquareCurly+1,length-OpSquareCurly-1);
                Savefs(&fs1);
                Savefs(&fs2);
-               result.Set(fs2.Width()+ GetHeight()*spec.size/10+TMath::Max(GetHeight()*spec.size/2,(Double_t)fs1.Width()),
-                          fs2.Dessus()+fs1.Height()+GetHeight()*spec.size/4,fs2.Dessous());
+               result = FormSize(fs2.Width()+ GetHeight()*spec.size/10+TMath::Max(GetHeight()*spec.size/2,(Double_t)fs1.Width()),
+                                 fs2.Dessus()+fs1.Height()+GetHeight()*spec.size/4,fs2.Dessous());
             } else {
                fs1 = Anal1(spec,text+OpSqrt+5,length-OpSqrt-5);
                Savefs(&fs1);
-               result.Set(fs1.Width()+GetHeight()*spec.size/2,fs1.Dessus()+GetHeight()*spec.size/4,fs1.Dessous());
+               result = FormSize(fs1.Width()+GetHeight()*spec.size/2,fs1.Dessus()+GetHeight()*spec.size/4,fs1.Dessous());
             }
          } else {
             if (OpSquareCurly>-1) { // ]{
@@ -1331,8 +1331,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          Double_t hy    = h;
          Double_t width = w;
 
-         fs1.Set(width,hy,0);
-         
+         fs1 = FormSize(width,hy,0);
          if (fShow) {
             // paint the Latex sub-expression per sub-expression
             Double_t Xorigin = (Double_t)gPad->XtoAbsPixel(fX);
@@ -1794,6 +1793,7 @@ FormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *text) {
       Short_t halign = fTextAlign/10;
       Short_t valign = fTextAlign - 10*halign;
 
+
       FormSize fs = Anal1(spec,text,strlen(text));
 
       SetTextSize(size);
@@ -1912,7 +1912,7 @@ void TLatex::SavePrimitive(ofstream &out, Option_t *)
 }
 
 //______________________________________________________________________________
-void TLatex::SetIndiceSize(Double_t factorSize)
+void TLatex::SetIndiceSize(Float_t factorSize)
 {
 // set relative size of subscripts and superscripts
       fFactorSize = factorSize;

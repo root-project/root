@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.6 2002/03/21 16:11:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.5 2002/03/13 01:52:21 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -65,14 +65,12 @@ private:
 public:
    TDSetElement() { fSet = 0; }
    TDSetElement(const TDSet *set, const char *file, const char *objname = 0,
-                const char *dir = 0, Long64_t first = 0, Long64_t num = -1);
+                const char *dir = 0, Long64_t first = 0, Long64_t num = 9999999);
    virtual ~TDSetElement() { }
 
    const char *GetFileName() const { return fFileName; }
    Long64_t    GetFirst() const { return fFirst; }
-   void        SetFirst(Long64_t first) { fFirst = first; }
    Long64_t    GetNum() const { return fNum ; }
-   void        SetNum(Long64_t num) { fNum = num; }
    const char *GetObjName() const;
    const char *GetDirectory() const;
    void        Print(Option_t *option="") const;
@@ -107,7 +105,7 @@ public:
 
    virtual void        Add(const char *file, const char *objname = 0,
                            const char *dir = 0, Long64_t first = 0,
-                           Long64_t num = -1);
+                           Long64_t num = 9999999);
    virtual void        Add(TDSet *set);
    virtual void        AddFriend(TDSet *friendset);
 

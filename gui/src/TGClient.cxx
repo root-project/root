@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.16 2002/04/03 16:40:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.15 2002/04/03 10:41:40 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -341,7 +341,6 @@ TGClient::TGClient(const char *dpyName)
    // finding of windows based on window id (see GetWindowById()).
 
    fWlist = new THashList(200);
-   fPlist = new TList;
    fUWHandlers = 0;
 
    // Setup some atoms (defined in TVirtualX)...
@@ -704,24 +703,6 @@ void TGClient::UnregisterWindow(TGWindow *w)
 }
 
 //______________________________________________________________________________
-void TGClient::RegisterPopup(TGWindow *w)
-{
-   // Add a popup menu to the list of popups. This list is used to pass
-   // events to popup menus that are popped up over a transient window which
-   // is waited for (see WaitFor()).
-
-   fPlist->Add(w);
-}
-
-//______________________________________________________________________________
-void TGClient::UnregisterPopup(TGWindow *w)
-{
-   // Remove a popup menu from the list of popups.
-
-   fPlist->Remove(w);
-}
-
-//______________________________________________________________________________
 void TGClient::AddUnknownWindowHandler(TGUnknownWindowHandler *h)
 {
    // Add handler for unknown (i.e. unregistered) windows.
@@ -757,7 +738,6 @@ TGClient::~TGClient()
 
    if (fWlist) fWlist->Delete("slow");
    delete fWlist;
-   delete fPlist;
    if (fUWHandlers) fUWHandlers->Delete();
    delete fUWHandlers;
    delete fPicturePool;
@@ -948,14 +928,14 @@ Bool_t TGClient::HandleMaskEvent(Event_t *event, Window_t wid)
    // kButtonPress, kButtonRelease, kKeyPress, kKeyRelease, kEnterNotify,
    // kLeaveNotify, kMotionNotify.
 
-   TGWindow *w, *ptr, *pop;
+   TGWindow *w, *ptr;
 
    if ((w = GetWindowById(event->fWindow)) == 0) return kFALSE;
 
    // This breaks class member protection, but TGClient is a friend of all
    // classes and _should_ know what to do and what *not* to do...
 
-   for (ptr = w; ptr->fParent != 0; ptr = (TGWindow *) ptr->fParent) {
+   for (ptr = w; ptr->fParent != 0; ptr = (TGWindow *) ptr->fParent)
       if ((ptr->fId == wid) ||
           ((event->fType != kButtonPress) &&
            (event->fType != kButtonRelease) &&
@@ -967,25 +947,6 @@ Bool_t TGClient::HandleMaskEvent(Event_t *event, Window_t wid)
          w->HandleEvent(event);
          return kTRUE;
       }
-   }
-
-   // check if this is a popup menu
-   TIter next(fPlist);
-   while ((pop = (TGWindow *) next())) {
-      for (ptr = w; ptr->fParent != 0; ptr = (TGWindow *) ptr->fParent) {
-         if ((ptr->fId == pop->fId) &&
-             ((event->fType == kButtonPress) ||
-              (event->fType == kButtonRelease) ||
-              (event->fType == kGKeyPress) ||
-              (event->fType == kKeyRelease) ||
-              (event->fType == kEnterNotify) ||
-              (event->fType == kLeaveNotify) ||
-              (event->fType == kMotionNotify))) {
-            w->HandleEvent(event);
-            return kTRUE;
-         }
-      }
-   }
 
    if (event->fType == kButtonPress || event->fType == kGKeyPress)
       gVirtualX->Bell(0);

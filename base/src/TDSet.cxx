@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.6 2002/03/21 16:11:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.5 2002/03/13 01:52:21 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -76,7 +76,6 @@ const char *TDSetElement::GetObjName() const
    return fObjName;
 }
 
-
 //______________________________________________________________________________
 const char *TDSetElement::GetDirectory() const
 {
@@ -86,7 +85,6 @@ const char *TDSetElement::GetDirectory() const
       return fSet->GetDirectory();
    return fDirectory;
 }
-
 
 //______________________________________________________________________________
 void TDSetElement::Print(Option_t *option) const

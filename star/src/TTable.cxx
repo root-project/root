@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.27 2002/02/14 08:30:24 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.26 2002/01/24 11:39:30 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -97,9 +97,6 @@
 //  -----------------------                                               //
 //                                                                        //
 // $Log: TTable.cxx,v $
-// Revision 1.27  2002/02/14 08:30:24  brun
-// Remove dependencies on TPad.
-//
 // Revision 1.26  2002/01/24 11:39:30  rdm
 // rename IOSFwd.h and IOStream.h to Riosfwd.h and Riostream.h. The change
 // is necessary because on Windows which is case insensitive IOStream.h
@@ -2184,26 +2181,29 @@ void TTable::Streamer(TBuffer &R__b)
       R__v = R__b.ReadVersion();
       Bool_t evolutionOn = kFALSE;
       if (R__v>=2) {
-        if (IsA() != TTableDescriptor::Class()) {
-          if (R__v>3) {
-            R__b >> ioDescriptor;
-          } else {  // backward compatibility
-            ioDescriptor =  new TTableDescriptor();
-            ioDescriptor->Streamer(R__b);
-          }
-          
-          if (!currentDescriptor) {
-            currentDescriptor = ioDescriptor;
-            SetDescriptorPointer(currentDescriptor);
-          }
-          if (currentDescriptor->fSecondDescriptor != ioDescriptor) {
-            // Protection against of memory leak.
-            delete currentDescriptor->fSecondDescriptor;
-            currentDescriptor->fSecondDescriptor = ioDescriptor;
-          }          
-          // compare two descriptors
-          evolutionOn = (Bool_t)ioDescriptor->UpdateOffsets(currentDescriptor);
-        }
+         if (IsA() != TTableDescriptor::Class()) {
+	       if (R__v>3) {
+  	          R__b >> ioDescriptor;
+		   } else {  // backward compatibility
+              ioDescriptor =  new TTableDescriptor();
+              ioDescriptor->Streamer(R__b);
+		   }
+
+		   if (!currentDescriptor) {
+			  currentDescriptor = ioDescriptor;
+			  SetDescriptorPointer(currentDescriptor);
+		   }
+		   if (currentDescriptor->fSecondDescriptor) {
+             if (currentDescriptor->fSecondDescriptor != ioDescriptor) {
+                // Protection against of memory leak.
+                delete currentDescriptor->fSecondDescriptor;
+                currentDescriptor->fSecondDescriptor = ioDescriptor;
+			 }
+
+             // compare two descriptors
+             evolutionOn = (Bool_t)ioDescriptor->UpdateOffsets(currentDescriptor);
+		   }
+         }
       }
       TTable::StreamerTable(R__b,R__v);
       if (fMaxIndex <= 0) return;

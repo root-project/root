@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.1 2002/03/21 16:11:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -30,21 +30,16 @@
 #include "TObject.h"
 #endif
 
-#include "Rtypes.h"
-
 
 class TDSet;
 class TDSetElement;
 class TSlave;
 
-typedef long Long64_t;
 
 class TPacketizer : public TObject {
 
 private:
    Int_t    fProcessed;       // number of entries processed
-   Bool_t   fValid;           // Constructed properly ?
-   Long64_t fTotalEntries;    // Total number of entries to be distributed
 
    TList   *fFileNodes;       // nodes with files
    TList   *fUnAllocated;     // nodes with unallocated files
@@ -56,14 +51,13 @@ private:
    TPacketizer();
    TPacketizer(const TPacketizer &);     // no implementation, will generate
    void operator=(const TPacketizer &);  // error on accidental usage
-   Long64_t GetEntries(Bool_t tree, TDSetElement *e); // Num of entries or objects
 
 public:
-   TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num);
+   TPacketizer(TDSet *dset, TList *slaves);
    virtual ~TPacketizer();
 
-   Long64_t      GetEntriesProcessed() const { return fProcessed; }
-   Long64_t      GetEntriesProcessed(TSlave *sl) const;
+   Int_t         GetEntriesProcessed() const { return fProcessed; }
+   Int_t         GetEntriesProcessed(TSlave *sl) const;
    TDSetElement  *GetNextPacket(TSlave *sl);
 
    ClassDef(TPacketizer,0)  //Generate work packets for parallel processing

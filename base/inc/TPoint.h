@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: TPoint.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
+/* @(#)root/base:$Name$:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

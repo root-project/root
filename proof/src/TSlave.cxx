@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.9 2002/03/20 18:54:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.8 2001/01/26 16:41:27 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -209,7 +209,7 @@ void TSlave::Print(Option_t *) const
    Printf("    Port number:          %d", GetPort());
    Printf("    User:                 %s", GetUser());
    Printf("    Image name:           %s", GetImage());
-   Printf("    Working directory:    %s", GetWorkDir());
+   Printf("    Working directory:    %s", GetWorkingDirectory());
    Printf("    Performance index:    %d", GetPerfIdx());
    Printf("    MB's processed:       %.2f", float(GetBytesRead())/(1024*1024));
    Printf("    MB's sent:            %.2f", fSocket ? float(fSocket->GetBytesRecv())/(1024*1024) : 0.0);

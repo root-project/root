@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.7 2001/07/11 06:46:19 brun Exp $ */
+/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.6 2001/02/07 08:18:15 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Stypes                                                               //
-// $Id: Ttypes.h,v 1.7 2001/07/11 06:46:19 brun Exp $
+// $Id: Ttypes.h,v 1.6 2001/02/07 08:18:15 brun Exp $
 // Basic types used by STAF - ROOT interface.                           //
 //                                                                      //
 // This header file contains the set of the macro definitions           //

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.15 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.14 2002/01/24 11:39:30 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.4 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.3 2002/01/23 17:52:46 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -84,7 +84,7 @@ TAttFill::~TAttFill()
 }
 
 //______________________________________________________________________________
-void TAttFill::Copy(TAttFill &attfill) const
+void TAttFill::Copy(TAttFill &attfill)
 {
 //*-*-*-*-*-*-*-*-*Copy this fill attributes to a new attfill*-*-*-*-*-*-*-*-*
 //*-*              ==========================================

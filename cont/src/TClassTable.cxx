@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.12 2002/01/27 16:49:43 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.11 2001/12/02 16:50:08 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.87 2002/04/14 14:38:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.84 2002/04/04 07:04:43 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -20,14 +20,12 @@
 #include "TROOT.h"
 #include "TFile.h"
 #include "TBranchElement.h"
-#include "TBranchObject.h"
 #include "TClonesArray.h"
 #include "TTree.h"
 #include "TBasket.h"
 #include "TLeafElement.h"
 #include "TVirtualPad.h"
 #include "TClass.h"
-#include "TBaseClass.h"
 #include "TRealData.h"
 #include "TDataType.h"
 #include "TDataMember.h"
@@ -35,7 +33,6 @@
 #include "TStreamerElement.h"
 #include "TBrowser.h"
 #include "TFolder.h"
-#include "Api.h"
 
 const Int_t kMaxLen = 1024;
 R__EXTERN  TTree *gTree;
@@ -388,230 +385,6 @@ TBranchElement::~TBranchElement()
    }
 }
 
-//______________________________________________________________________________
-TBranch *TBranchElement::Branch(const char *subname, void *address, const char *leaflist,Int_t bufsize)
-{
-//  Create a sub-branch of this branch (simple variable case)
-//  ==================================
-//
-//     This Branch constructor is provided to support non-objects in
-//     a Tree. The variables described in leaflist may be simple variables
-//     or structures.
-//    See the two following constructors for writing objects in a Tree.
-//
-//    By default the branch buffers are stored in the same file as the Tree.
-//    use TBranch::SetFile to specify a different file
-
-   gTree = fTree;
-   char *name = new char[1000];
-   sprintf(name,"%s.%s",GetName(),subname);
-   TBranch *branch = new TBranch(name,address,leaflist,bufsize);
-   if (branch->IsZombie()) {
-      delete branch;
-      delete [] name;
-      return 0;
-   }
-   TLeaf *leaf;
-   TIter next(branch->GetListOfLeaves());
-   while ((leaf = (TLeaf*)next())) {
-      sprintf(name,"%s.%s",GetName(),leaf->GetName());
-      leaf->SetName(name);
-   }
-   delete [] name;
-   fBranches.Add(branch);
-   return branch;
-}
-
-
-//______________________________________________________________________________
-Int_t TBranchElement::Branch(const char *foldername, Int_t bufsize, Int_t splitlevel)
-{
-//   This function creates one sub-branch for each element in the folder.
-//   The function returns the total number of branches created.
-
-   TObject *ob = gROOT->FindObjectAny(foldername);
-   if (!ob) return 0;
-   if (ob->IsA() != TFolder::Class()) return 0;
-   Int_t nbranches = GetListOfBranches()->GetEntries();
-   TFolder *folder = (TFolder*)ob;
-   TIter next(folder->GetListOfFolders());
-   TObject *obj;
-   char *curname = new char[1000];
-   char occur[20];
-   while ((obj=next())) {
-      sprintf(curname,"%s/%s",foldername,obj->GetName());
-      if (obj->IsA() == TFolder::Class()) {
-        Branch(curname, bufsize, splitlevel-1);
-      } else {
-        void *add = (void*)folder->GetListOfFolders()->GetObjectRef(obj);
-        for (Int_t i=0;i<1000;i++) {
-           if (curname[i] == 0) break;
-           if (curname[i] == '/') curname[i] = '.';
-        }
-        Int_t noccur = folder->Occurence(obj);
-        if (noccur > 0) {
-           sprintf(occur,"_%d",noccur);
-           strcat(curname,occur);
-        }
-        TBranchElement *br;
-        br = (TBranchElement*)Branch(curname,obj->ClassName(), add, bufsize, splitlevel-1);
-        br->SetBranchFolder();
-      }
-   }
-   delete [] curname;
-   return GetListOfBranches()->GetEntries() - nbranches;
-}
-
-
-//______________________________________________________________________________
-TBranch *TBranchElement::Branch(const char *subname, const char *classname, void *add, Int_t bufsize, Int_t splitlevel)
-{
-//  Create a sub-branch of this branch (with a class)
-//  ==================================
-//
-//    Build a TBranchElement for an object of class classname.
-//    addobj is the address of a pointer to an object of class classname.
-//    The class dictionary must be available (ClassDef in class header).
-//
-//    This option requires access to the library where the corresponding class
-//    is defined. Accessing one single data member in the object implies
-//    reading the full object.
-//
-//    By default the branch buffers are stored in the same file as the parent branch.
-//    use TBranch::SetFile to specify a different file
-//
-//    see IMPORTANT NOTE about branch names in TTree::Bronch
-//
-//   Use splitlevel < 0 instead of splitlevel=0 when the class
-//   has a custom Streamer
-
-   gTree = fTree;
-   TClass *cl = gROOT->GetClass(classname);
-   if (!cl) {
-      Error("Branch","Cannot find class:%s",classname);
-      return 0;
-   }
- 
-   //if splitlevel <= 0 and class has a custom Streamer, we must create
-   //a TBranchObject. We cannot assume that TClass::ReadBuffer is consistent
-   //with the custom Streamer. The penalty is that one cannot process
-   //this Tree without the class library containing the class.
-   //The following convention is used for the RootFlag
-   // #pragma link C++ class TExMap;     rootflag = 0
-   // #pragma link C++ class TList-;     rootflag = 1
-   // #pragma link C++ class TArray!;    rootflag = 2
-   // #pragma link C++ class TArrayC-!;  rootflag = 3
-   // #pragma link C++ class TBits+;     rootflag = 4
-   // #pragma link C++ class Txxxx+!;    rootflag = 6
-
-   char **ppointer = (char**)add;
-   char *objadd = *ppointer;
-   char *name = new char[1000];
-   sprintf(name,"%s.%s",GetName(),subname);
-   if (cl == TClonesArray::Class()) {
-      TClonesArray *clones = (TClonesArray *)objadd;
-      if (!clones) {
-         Error("Branch","Pointer to TClonesArray is null");
-         delete [] name;
-         return 0;
-      }
-      if (!clones->GetClass()) {
-         Error("Branch","TClonesArray with no class defined in branch: %s",name);
-         delete [] name;
-         return 0;
-      }
-      if (splitlevel > 0) {
-         if (clones->GetClass()->GetClassInfo()->RootFlag() & 1)
-            Warning("Branch","Using split mode on a class: %s with a custom Streamer",clones->GetClass()->GetName());
-      } else {
-         if (clones->GetClass()->GetClassInfo()->RootFlag() & 1) clones->BypassStreamer(kFALSE);
-         TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
-         fBranches.Add(branch);
-         delete [] name;
-         return branch;
-      }
-   }
-
-   Bool_t hasCustomStreamer = kFALSE;
-   if (cl->GetClassInfo()->RootFlag() & 1)  hasCustomStreamer = kTRUE;
-   if (splitlevel < 0 || (splitlevel == 0 && hasCustomStreamer)) {
-      TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
-      fBranches.Add(branch);
-      delete [] name;
-      return branch;
-   }
-
-   //hopefully normal case
-   Bool_t delobj = kFALSE;
-   //====> special case of TClonesArray
-   if(cl == TClonesArray::Class()) {
-      TBranchElement *branch = new TBranchElement(name,(TClonesArray*)objadd,bufsize,splitlevel);
-      fBranches.Add(branch);
-      branch->SetAddress(add);
-      delete [] name;
-      return branch;
-   }
-   //====>
-
-   if (!objadd) {
-      objadd = (char*)cl->New();
-      *ppointer = objadd;
-      delobj = kTRUE;
-   }
-   //build the StreamerInfo if first time for the class
-   Bool_t optim = TStreamerInfo::CanOptimize();
-   if (splitlevel > 0) TStreamerInfo::Optimize(kFALSE);
-   TStreamerInfo *sinfo = fTree->BuildStreamerInfo(cl,objadd);
-   TStreamerInfo::Optimize(optim);
-
-   // create a dummy top level  branch object
-   Int_t id = -1;
-   if (splitlevel > 0) id = -2;
-   char *dot = (char*)strchr(name,'.');
-   Int_t nch = strlen(name);
-   Bool_t dotlast = kFALSE;
-   if (nch && name[nch-1] == '.') dotlast = kTRUE;
-   TBranchElement *branch = new TBranchElement(name,sinfo,id,objadd,bufsize,splitlevel);
-   fBranches.Add(branch);
-   if (splitlevel > 0) {
-
-      // Loop on all public data members of the class and its base classes
-      TObjArray *blist = branch->GetListOfBranches();
-      TIter next(sinfo->GetElements());
-      TStreamerElement *element;
-      id = 0;
-      char *bname = new char[1000];
-      while ((element = (TStreamerElement*)next())) {
-         char *pointer = (char*)objadd + element->GetOffset();
-         Bool_t isBase = element->IsA() == TStreamerBase::Class();
-         if (isBase) {
-            TClass *clbase = element->GetClassPointer();
-            if (clbase == TObject::Class() && cl->CanIgnoreTObjectStreamer()) continue;
-         }
-         if (dot) {
-            if (dotlast) {
-               sprintf(bname,"%s%s",name,element->GetFullName());
-            } else {
-               if (isBase) sprintf(bname,"%s",name);
-               else        sprintf(bname,"%s.%s",name,element->GetFullName());
-            }
-         } else {
-            sprintf(bname,"%s",element->GetFullName());
-         }
-         TBranchElement *bre = new TBranchElement(bname,sinfo,id,pointer,bufsize,splitlevel-1);
-         blist->Add(bre);
-         id++;
-      }
-      delete [] bname;
-   }
-   delete [] name;
-
-   branch->SetAddress(add);
-
-   if (delobj) {delete objadd; *ppointer=0;}
-   return branch;
-}
-
 
 //______________________________________________________________________________
 void TBranchElement::Browse(TBrowser *b)
@@ -635,31 +408,11 @@ void TBranchElement::Browse(TBrowser *b)
          Int_t len = mothername.Length();
          if (len) {
             if (mothername(len-1)!='.') {
-               // We do not know for sure whether the mother's name is
-               // already preprended.  So we need to check:
-               //    a) it is prepended
-               //    b) it is NOT the name of a daugher (i.e. mothername.mothername exist)
-               TString doublename = mothername;
-               doublename.Append(".");
-               Int_t isthere = (name.Index(doublename)==0);
-               if (!isthere) {
-                  name.Prepend(doublename);
-               } else {
-                  if (GetMother()->FindBranch(mothername)) {
-                     doublename.Append(mothername);
-                     isthere = (name.Index(doublename)==0);
-                     if (!isthere) {
-                        mothername.Append(".");
-                        name.Prepend(mothername);
-                     }
-                  } else {
-                     // Nothing to do because the mother's name is
-                     // already in the name.
-                  }
-               }
+               mothername.Append(".");
+               name.Prepend(mothername);
             } else {
                // If the mother's name end with a dot then 
-               // the daughter probably already contains the mother's name
+               // the daughter probabley already contains the mother's name
                if (name.Index(mothername)==kNPOS) {
                   name.Prepend(mothername);
                }
@@ -1071,7 +824,7 @@ void TBranchElement::Print(Option_t *option) const
 void TBranchElement::PrintValue(Int_t len) const
 {
 // Prints leaf value
- 
+
   if (fTree->GetMakeClass()) {
      if (!fAddress) return;
      if (fType == 3) {    //top level branch of a TClonesArray
@@ -1080,11 +833,6 @@ void TBranchElement::PrintValue(Int_t len) const
      } else if (fType == 31) {    // sub branch of a TClonesArray
        Int_t n = TMath::Min(10,fNdata);
        Int_t atype = fStreamerType+20;
-       if (atype > 54) {
-          //more logic required here (like in ReadLeaves)
-          printf(" %-15s = %d\n",GetName(),fNdata);
-          return;
-       }
        if (fStreamerType > 20) {
           atype -= 20;
           TLeafElement *leaf = (TLeafElement*)fLeaves.UncheckedAt(0);
@@ -1128,56 +876,9 @@ void TBranchElement::ReadLeaves(TBuffer &b)
      } else if (fType == 31) {    // sub branch of a TClonesArray
        fNdata = fBranchCount->GetNdata();
        Int_t atype = fStreamerType;
-       if (atype > 54) return;
+       if (atype > 34) return;
        if (!fAddress) return;
        Int_t n = fNdata;
-       if (atype>40) {
-          atype -= 40;
-          if (!fBranchCount2) return;
-          const char *len_where = (char*)fBranchCount2->fAddress;
-          if (!len_where) return; 
-          Int_t len_atype = fBranchCount2->fStreamerType;
-          Int_t length;
-          Int_t k;
-          Char_t isArray;
-          for( k=0; k<n; k++) {
-             char **where = &(((char**)fAddress)[k]);
-             delete [] *where;
-             *where = 0; 
-             switch(len_atype) {
-                case  1:  {length = ((Char_t*)len_where)[k]; break;}
-                case  2:  {length = ((Short_t*) len_where)[k]; break;}
-                case  3:  {length = ((Int_t*)   len_where)[k]; break;}
-                case  4:  {length = ((Long_t*)  len_where)[k]; break;}
-                   //case  5:  {length = ((Float_t*) len_where)[k]; break;}
-                case  6:  {length = ((Int_t*)   len_where)[k]; break;}
-                   //case  8:  {length = ((Double_t*)len_where)[k]; break;}
-                case 11:  {length = ((UChar_t*) len_where)[k]; break;}
-                case 12:  {length = ((UShort_t*)len_where)[k]; break;}
-                case 13:  {length = ((UInt_t*)  len_where)[k]; break;}
-                case 14:  {length = ((ULong_t*) len_where)[k]; break;}
-                default: continue;
-             }
-             if (length<=0) continue;
-             b >> isArray; 
-             if (isArray == 0) continue; 
-             switch (atype) {
-                case  1:  {*where=new char[sizeof(Char_t)*length]; b.ReadFastArray((Char_t*) *where, length); break;}
-                case  2:  {*where=new char[sizeof(Short_t)*length]; b.ReadFastArray((Short_t*) *where, length); break;}
-                case  3:  {*where=new char[sizeof(Int_t)*length]; b.ReadFastArray((Int_t*)   *where, length); break;}
-                case  4:  {*where=new char[sizeof(Long_t)*length]; b.ReadFastArray((Long_t*)  *where, length); break;}
-                case  5:  {*where=new char[sizeof(Float_t)*length]; b.ReadFastArray((Float_t*) *where, length); break;}
-                case  6:  {*where=new char[sizeof(Int_t)*length]; b.ReadFastArray((Int_t*)   *where, length); break;}
-                case  8:  {*where=new char[sizeof(Double_t)*length]; b.ReadFastArray((Double_t*)*where, length); break;}
-                case 11:  {*where=new char[sizeof(UChar_t)*length]; b.ReadFastArray((UChar_t*) *where, length); break;}
-                case 12:  {*where=new char[sizeof(UShort_t)*length]; b.ReadFastArray((UShort_t*)*where, length); break;}
-                case 13:  {*where=new char[sizeof(UInt_t)*length]; b.ReadFastArray((UInt_t*)  *where, length); break;}
-                case 14:  {*where=new char[sizeof(ULong_t)*length]; b.ReadFastArray((ULong_t*) *where, length); break;}
-                case 15:  {*where=new char[sizeof(UInt_t)*length]; b.ReadFastArray((UInt_t*)  *where, length); break;}
-             }
-          }
-          return;
-       }
        if (atype > 20) {
           atype -= 20;
           TLeafElement *leaf = (TLeafElement*)fLeaves.UncheckedAt(0);
@@ -1399,13 +1100,7 @@ void TBranchElement::SetAddress(void *add)
    }
    if (nbranches == 0) return;
    for (Int_t i=0;i<nbranches;i++)  {
-      TBranch *abranch = (TBranch*)fBranches[i];
-      //just in case a TBranch had been added to a TBranchElement!
-      if (!abranch->InheritsFrom(TBranchElement::Class())) {
-         abranch->SetAddress(fObject);
-         continue;
-      }
-      TBranchElement *branch = (TBranchElement*)abranch;
+      TBranchElement *branch = (TBranchElement*)fBranches[i];
       Int_t nb2 = branch->GetListOfBranches()->GetEntries();
       Int_t id = branch->GetID();
       Int_t mOffset = 0;

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.79 2002/04/08 06:38:41 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.78 2002/04/02 15:58:42 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1604,15 +1604,8 @@ void THistPainter::PaintBar(Option_t *)
       xmax = gPad->XtoPad(fXaxis->GetBinUpEdge(bin));
       ymin = gPad->GetUymin();
       ymax = gPad->YtoPad(fH->GetBinContent(bin));
-      if (ymax < 0) {
-         ymin = ymax;
-         ymax = TMath::Max(0.,gPad->GetUymin());
-      } else {
-         if (ymin < 0) ymin = 0;
-      }
       if (ymax < gPad->GetUymin()) continue;
       if (ymax > gPad->GetUymax()) ymax = gPad->GetUymax();
-      if (ymin < gPad->GetUymin()) ymin = gPad->GetUymin();
       w    = (xmax-xmin)*width;
       xmin += offset*(xmax-xmin);
       xmax = xmin + w;
@@ -1686,15 +1679,8 @@ void THistPainter::PaintBarH(Option_t *)
       ymax = gPad->YtoPad(fYaxis->GetBinUpEdge(bin));
       xmin = gPad->GetUxmin();
       xmax = gPad->XtoPad(fH->GetBinContent(bin));
-      if (xmax < 0) {
-         xmin = xmax;
-         xmax = TMath::Max(0.,gPad->GetUxmin());
-      } else {
-         if (xmin < 0) xmin = 0;
-      }
       if (xmax < gPad->GetUxmin()) continue;
       if (xmax > gPad->GetUxmax()) xmax = gPad->GetUxmax();
-      if (xmin < gPad->GetUxmin()) xmin = gPad->GetUxmin();
       w    = (ymax-ymin)*width;
       ymin += offset*(ymax-ymin);
       ymax = ymin + w;

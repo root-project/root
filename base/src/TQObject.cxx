@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.18 2002/04/19 12:52:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.16 2002/01/23 17:52:47 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -1467,10 +1467,7 @@ void TQObject::LoadRQ_OBJECT()
 # else
    sprintf(rqh, "%s/include/RQ_OBJECT.h", gSystem->Getenv("ROOTSYS"));
 # endif
-   if (!gSystem->AccessPathName(rqh, kReadPermission))
-      G__loadfile(rqh);
-   else
-      Warning("TQObject::LoadRQ_OBJECT", "%s not found", rqh);
+   G__loadfile(rqh);
 }
 
 // Global function which simplifies making connection in interpreted

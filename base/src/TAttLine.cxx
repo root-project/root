@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.5 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.4 2002/01/23 17:52:46 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -69,7 +69,7 @@ TAttLine::~TAttLine()
 }
 
 //______________________________________________________________________________
-void TAttLine::Copy(TAttLine &attline) const
+void TAttLine::Copy(TAttLine &attline)
 {
 //*-*-*-*-*-*-*-*-*Copy this line attributes to a new attline*-*-*-*-*-*-*-*-*
 //*-*              ==========================================

@@ -647,7 +647,7 @@ if test ! "x$enable_opengl" = "xno" && test ! "$platform" = "win32" ; then
 	/usr/X11R6/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
         /usr/X11/lib /usr/lib/Mesa /usr/local/lib/Mesa /usr/Mesa/lib \
 	/usr/local/Mesa/lib /usr/Mesa /usr/local/Mesa /opt/Mesa \
-	/opt/Mesa/lib /opt/graphics/OpenGL/lib/hpux64 /opt/graphics/OpenGL/lib"
+	/opt/Mesa/lib /opt/graphics/OpenGL/lib/hpux32 /opt/graphics/OpenGL/lib"
 
     keep=$opengllibdir
     check_library "libGL libMesaGL" "$enable_shared" \
@@ -1350,7 +1350,6 @@ sed -e "s|@architecture@|$arch|"            \
     -e "s|@xpmlibdir@|$xpmlibdir|"          \
     -e "s|@xpmlib@|$xpmlib|"                \
     -e "s|@enable_star@|$enable_star|"      \
-    -e "s|@enable_thread@|$enable_thread|"  \
     -e "s|@threadlibdir@|$threadlibdir|"    \
     -e "s|@threadlib@|$threadlib|"          \
     -e "s|@ttfincdir@|$ttfincdir|"          \

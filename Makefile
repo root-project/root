@@ -29,7 +29,7 @@ endif
 
 MODULES       = build cint utils base cont meta net zip clib matrix newdelete \
                 hist tree graf g3d gpad gui minuit histpainter proof \
-                treeplayer treeviewer physics postscript rint html eg mc
+                treeplayer treeviewer physics postscript rint html eg
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32 gl
@@ -294,6 +294,11 @@ $(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(CORELIBDEP)
 	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
 	   "$(CORELIBEXTRA)"
 
+ifeq ($(PLATFORM),macosx)
+$(CORELIBDEP): /usr/lib/libcc_dynamic.a
+	ar -x /usr/lib/libcc_dynamic.a $@
+endif
+
 dist:
 	@$(MAKEDIST)
 
@@ -355,7 +360,7 @@ distclean:: clean
 	-@mv -f include/config.hh include/config.h
 	@rm -f build/dummy.d bin/*.dll lib/*.def lib/*.exp lib/*.lib .def
 	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
-	@rm -f tutorials/pca.C tutorials/*.so work.pc work.pcl
+	@rm -f tutorials/pca.C tutorials/*.so
 	@rm -f bin/roota lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog

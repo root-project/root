@@ -1,5 +1,5 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.11 2002/05/03 10:24:06 brun Exp $
-// Authors: Oleg E. Kiselyov, Fons Rademakers   05/11/97
+// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.9 2001/12/07 21:58:59 brun Exp $
+// Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -41,7 +41,6 @@
 //                                                                      //
 // The implementation is based on original code by                      //
 // Oleg E. Kiselyov (oleg@pobox.com).                                   //
-// Several additions/optimisations by  Eddy Offermann <eddy@rentec.com> //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -53,9 +52,6 @@
 #endif
 #ifndef ROOT_TError
 #include "TError.h"
-#endif
-#ifndef ROOT_TString
-#include "TString.h"
 #endif
 
 
@@ -98,8 +94,6 @@ public:
    TVector() { Invalidate(); }
    TVector(Int_t n);
    TVector(Int_t lwb, Int_t upb);
-   TVector(Int_t n, const Float_t *elements);
-   TVector(Int_t lwb, Int_t upb, const Float_t *elements);
    TVector(const TVector &another);
 #ifndef __CINT__
    TVector(Int_t lwb, Int_t upb, Double_t iv1, ...);
@@ -117,12 +111,10 @@ public:
    Real_t &operator()(Int_t index) const;
    Real_t &operator()(Int_t index);
 
-   Int_t    GetLwb()        const { return fRowLwb; }
-   Int_t    GetUpb()        const { return fNrows + fRowLwb - 1; }
-   Int_t    GetNrows()      const { return fNrows; }
-   Int_t    GetNoElements() const { return fNrows; }
-   Float_t* GetElements()         { return fElements; }
-   void     SetElements(const Float_t *elements);
+   Int_t GetLwb() const            { return fRowLwb; }
+   Int_t GetUpb() const            { return fNrows + fRowLwb - 1; }
+   Int_t GetNrows() const          { return fNrows; }
+   Int_t GetNoElements() const     { return fNrows; }
 
    TVector &operator=(const TVector &source);
    TVector &operator=(Real_t val);
@@ -197,27 +189,6 @@ inline Bool_t TVector::IsValid() const
    if (fNrows == -1)
       return kFALSE;
    return kTRUE;
-}
-
-inline void TVector::SetElements(const Float_t *elements)
-{
-  if (!IsValid()) {
-    Error("SetElements", "vector is not initialized");
-    return;
-  }
-  memcpy(fElements,elements,fNrows*sizeof(Float_t));
-}
-
-inline TVector::TVector(Int_t n, const Float_t *elements)
-{
-   Allocate(n);
-   SetElements(elements);
-}
-
-inline TVector::TVector(Int_t lwb, Int_t upb, const Float_t *elements)
-{
-   Allocate(upb-lwb+1, lwb);
-   SetElements(elements);
 }
 
 inline Bool_t AreCompatible(const TVector &v1, const TVector &v2)

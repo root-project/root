@@ -20,7 +20,7 @@ OPT           = -O2
 NOOPT         =
 endif
 
-ifeq ($(EXCEPTIONS),yes)
+ifeq (EXCEPTIONS,yes)
 EXCEPTION     = --exceptions -DG__EXCEPTIONWRAPPER
 else
 EXCEPTION     = --no_exceptions
@@ -32,7 +32,7 @@ else
 ABI           = -32 -mips2
 endif
 
-ifeq ($(ENABLETHREAD),yes)
+ifneq ($(OSTHREADLIB),)
 CXXOPT        += --thread_safe
 endif
 
@@ -53,7 +53,7 @@ CINTCFLAGS    = $(ABI) -signed -w -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO \
                 -D__KCC $(EXTRA_CFLAGS)
 
-ifeq ($(EXCEPTIONS),yes)
+ifeq (exception,$(findstring exception,$(ROOTBUILD)))
 CINTCFLAGS   += -DG__EXCEPTIONWRAPPER
 endif
 

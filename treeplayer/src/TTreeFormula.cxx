@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.92 2002/04/24 16:50:12 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.89 2002/03/26 07:05:57 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1221,7 +1221,6 @@ void TTreeFormula::DefineDimensions(Int_t code, Int_t size,
    // This method is used internally to decode the dimensions of the variables
 
    if (info) {
-      fManager->EnableMultiVarDims();
       if (fIndexes[code][info->fDim]<0) {
          info->fVirtDim = virt_dim;
          fManager->AddVarDims(virt_dim); // if (!fVarDims[virt_dim]) fVarDims[virt_dim] = new TArrayI;
@@ -1381,13 +1380,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 
    const char *cname = name.Data();
 
-   char    first[kMaxLen];  first[0] = '\0';
-   char   second[kMaxLen]; second[0] = '\0';
-   char    right[kMaxLen];  right[0] = '\0';
-   char     dims[kMaxLen];   dims[0] = '\0';
-   char     work[kMaxLen];   work[0] = '\0';
-   char  scratch[kMaxLen];
-   char scratch2[kMaxLen];
+   char   first[kMaxLen];  first[0] = '\0';
+   char  second[kMaxLen]; second[0] = '\0';
+   char   right[kMaxLen];  right[0] = '\0';
+   char    dims[kMaxLen];   dims[0] = '\0';
+   char    work[kMaxLen];   work[0] = '\0';
+   char scratch[kMaxLen];
    char *current;
 
    TLeaf *leaf=0, *tmp_leaf=0;
@@ -1613,16 +1611,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             // we always remove it in the present case.
             if (cname[i]) work[strlen(work)-1] = '\0';
             sprintf(scratch,"%s.%s",first,work);
-            sprintf(scratch2,"%s.%s.%s",first,second,work);
-
-
 
             // First look for the current 'word' in the list of
             // leaf of the
             if (branch) {
                tmp_leaf = branch->FindLeaf(work);
                if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
-               if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch2);
             }
             if (tmp_leaf && tmp_leaf->IsOnTerminalBranch() ) {
                // This is a non-object leaf, it should NOT be specified more except for
@@ -1633,7 +1627,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             if (branch) {
                tmp_branch = branch->FindBranch(work);
                if (!tmp_branch) tmp_branch = branch->FindBranch(scratch);
-               if (!tmp_branch) tmp_branch = branch->FindBranch(scratch2);
             }
             if (tmp_branch) {
                branch=tmp_branch;
@@ -1642,7 +1635,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                if (!final) {
                   tmp_leaf = branch->FindLeaf(work);
                   if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
-                  if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch2);
                   if (tmp_leaf && tmp_leaf->IsOnTerminalBranch() ) {
                      // This is a non-object leaf, it should NOT be specified
                      // more except for dimensions.
@@ -2033,7 +2025,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                }
                leafinfo = 0;
                current = &(work[0]);
-               *current = 0;
                continue;
             } else if (right[i] == ')') {
                // We should have the end of a cast operator.  Let's introduce a TFormLeafCast
@@ -2054,7 +2045,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   }
                   leafinfo = 0;
                   current = &(work[0]);
-                  *current = 0;
 
                   cl = casted;
                   continue;
@@ -2212,7 +2202,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   cl = element->GetClassPointer();
                }
                current = &(work[0]);
-               *current = 0;
 
                if (right[i] == '[') {
                  int bracket = i;
@@ -2239,11 +2228,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             fDataMembers.AddAtAndExpand(maininfo,code);
             fLookupType[code] = kDataMember;
          }
-      }
-
-      if (strlen(work)!=0) {
-         // We have something left to analyze.  Let's make this an error case!
-         return -1;
       }
 
       // Let see if we can understand the structure of this branch.

@@ -25,9 +25,6 @@ ifeq ($(PLATFORM),win32)
 BINDEXPS     := $(wildcard $(BINDEXPDIR)/*.cxx)
 BINDEXPO     := $(BINDEXPS:.cxx=.o)
 BINDEXP      := bin/bindexplib$(EXEEXT)
-
-W32PRAGMA    := build/win/w32pragma.h
-ALLHDRS      += include/w32pragma.h
 endif
 
 ##### local rules #####
@@ -35,9 +32,6 @@ $(RMKDEP):      $(RMKDEPO)
 		$(LD) $(LDFLAGS) -o $@ $(RMKDEPO)
 
 ifeq ($(PLATFORM),win32)
-include/%.h:    build/win/%.h
-		cp $< $@
-
 $(BINDEXP):     $(BINDEXPO)
 		$(LD) $(LDFLAGS) -o $@ $(BINDEXPO)
 
@@ -68,7 +62,3 @@ $(RMKDEPDIR)/pr.o:       $(RMKDEPDIR)/def.h
 ##### local rules #####
 $(RMKDEPO): %.o: %.c
 	$(CC) $(OPT) $(CFLAGS) $(RMKDEPCFLAGS) -o $@ -c $<
-
-$(BINDEXPO): %.o: %.cxx
-	cp build/win/w32pragma.h include/w32pragma.h
-	$(CXX) $(OPT) $(CXXFLAGS) -o $@ -c $<

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.23 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.22 2002/01/23 17:52:52 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -986,6 +986,7 @@ TTreeViewer::~TTreeViewer()
    fWidgets->Delete();
    delete fWidgets;
    if (fTreeList) {
+      fTreeList->Delete();
       delete fTreeList;
    }
    delete fTimer;

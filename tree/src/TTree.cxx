@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.121 2002/04/12 19:19:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.119 2002/04/06 14:55:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1682,17 +1682,10 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //     Special functions and variables
 //     ===============================
 //
-//  Entry$:  A TTree::Draw formula can use the special variable Entry$
+//  'ENTRY':  A TTree::Draw formula can use the special variable ENTRY
 //  to access the entry number being read.  For example to draw every 
 //  other entry use:
-//    tree.Draw("myvar","Entry$%2==0");
-//
-//  Entry$    : return the current entry number (== TTree::GetReadEntry())
-//  Entries$  : return the total number of entries (== TTree::GetEntries())
-//  Length$   : return the total number of element of this formula for this
-//  		   entry (==TTreeFormula::GetNdata())
-//  Iteration$: return the current iteration over this formula for this 
-//                 entry (i.e. varies from 0 to Length$).
+//    tree.Draw("myvar","ENTRY%2==0");
 //
 //     Making a Profile histogram
 //     ==========================
@@ -2719,16 +2712,7 @@ void TTree::Print(Option_t *option) const
      TKey *key = fDirectory->GetKey(GetName());
      if (key) s = key->GetNbytes();
   }
-  Double_t total = fTotBytes;
-  Int_t nl = ((TTree*)this)->GetListOfLeaves()->GetEntries();
-  Int_t l;
-  TBranch *br;
-  TLeaf *leaf;
-  for (l=0;l<nl;l++) {
-     leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
-     br   = leaf->GetBranch();
-     total += br->GetTotalSize();
-  }
+  Double_t total = fTotBytes + s;
   Int_t file     = Int_t(fZipBytes) + s;
   Float_t cx     = 1;
   if (fZipBytes) cx = fTotBytes/fZipBytes;
@@ -2738,8 +2722,12 @@ void TTree::Print(Option_t *option) const
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
+  TBranch *br;
   if (strstr(option,"toponly")) {
+     Int_t nl = ((TTree*)this)->GetListOfLeaves()->GetEntries();
+     TLeaf *leaf;
      Int_t *count = new Int_t[nl];
+     Int_t l;
      Int_t keep =0;
      for (l=0;l<nl;l++) {
         leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);

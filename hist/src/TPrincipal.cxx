@@ -657,8 +657,8 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.21 2002/01/24 11:39:29 rdm Exp $
-// $Date: 2002/01/24 11:39:29 $
+// $Id: TPrincipal.cxx,v 1.20 2002/01/23 17:52:50 rdm Exp $
+// $Date: 2002/01/23 17:52:50 $
 // $Author: rdm $
 
 #include "TPrincipal.h"
@@ -706,8 +706,7 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
 
   SetName("principal");
 
-  fTrace              = 0;
-  fHistograms         = 0;
+  fHistograms = 0;
   fIsNormalised       = kFALSE;
   fNumberOfDataPoints = 0;
   fNumberOfVariables  = nVariables;

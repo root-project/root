@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.22 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.21 2001/12/07 09:27:43 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************

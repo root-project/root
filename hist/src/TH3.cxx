@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.21 2002/04/12 09:18:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.19 2002/02/18 23:09:41 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1042,12 +1042,10 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
   Int_t nx = GetNbinsX();
   Int_t ny = GetNbinsY();
   Int_t nz = GetNbinsZ();
-  if (ixmin < 0)    ixmin = 1;
-  if (ixmax > 9000) ixmax = nx;
-  if (ixmax > nx+1) ixmax = nx;
-  if (iymin < 0)    iymin = 1;
-  if (iymax > 9000) iymax = ny;
-  if (iymax > ny+1) iymax = ny;
+  if (ixmin < 0)  ixmin = 1;
+  if (ixmax > nx) ixmax = nx;
+  if (iymin < 0)  iymin = 1;
+  if (iymax > ny) iymax = ny;
 
 // Create the projection histogram
   char *pname = (char*)name;
@@ -1152,7 +1150,6 @@ TH1 *TH3::Project3D(Option_t *option) const
   const TArrayD *zbins;
   switch (pcase) {
      case 1:
-        // "x"
         bins = fXaxis.GetXbins();
         if (bins->fN == 0) {
            h1 = new TH1D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
@@ -1162,7 +1159,6 @@ TH1 *TH3::Project3D(Option_t *option) const
         break;
 
      case 2:
-        // "y"
         bins = fYaxis.GetXbins();
         if (bins->fN == 0) {
            h1 = new TH1D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
@@ -1172,7 +1168,6 @@ TH1 *TH3::Project3D(Option_t *option) const
         break;
 
      case 3:
-        // "z"
         bins = fZaxis.GetXbins();
         if (bins->fN == 0) {
            h1 = new TH1D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
@@ -1180,8 +1175,8 @@ TH1 *TH3::Project3D(Option_t *option) const
            h1 = new TH1D(name,title,nz,&bins->fArray[izmin-1]);
         }
         break;
+          //variable bin size axis not supported yet for 2-d projections
      case 4:
-        // "xy"
         xbins = fXaxis.GetXbins();
         ybins = fYaxis.GetXbins();
         if (xbins->fN == 0 && ybins->fN == 0) {
@@ -1199,7 +1194,6 @@ TH1 *TH3::Project3D(Option_t *option) const
         break;
 
      case 5:
-        // "yx"
         xbins = fXaxis.GetXbins();
         ybins = fYaxis.GetXbins();
         if (xbins->fN == 0 && ybins->fN == 0) {
@@ -1217,7 +1211,6 @@ TH1 *TH3::Project3D(Option_t *option) const
         break;
 
      case 6:
-        // "xz"
         xbins = fXaxis.GetXbins();
         zbins = fZaxis.GetXbins();
         if (xbins->fN == 0 && zbins->fN == 0) {
@@ -1235,7 +1228,6 @@ TH1 *TH3::Project3D(Option_t *option) const
         break;
 
      case 7:
-        // "zx"
         xbins = fXaxis.GetXbins();
         zbins = fZaxis.GetXbins();
         if (xbins->fN == 0 && zbins->fN == 0) {
@@ -1253,7 +1245,6 @@ TH1 *TH3::Project3D(Option_t *option) const
         break;
 
      case 8:
-        // "yz"
         ybins = fYaxis.GetXbins();
         zbins = fZaxis.GetXbins();
         if (ybins->fN == 0 && zbins->fN == 0) {
@@ -1271,7 +1262,6 @@ TH1 *TH3::Project3D(Option_t *option) const
         break;
 
      case 9:
-        // "zy"
         ybins = fYaxis.GetXbins();
         zbins = fZaxis.GetXbins();
         if (ybins->fN == 0 && zbins->fN == 0) {

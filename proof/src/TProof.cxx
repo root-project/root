@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.21 2002/03/21 16:11:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.20 2002/03/20 18:54:57 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -40,7 +40,6 @@
 #include "TSystem.h"
 #include "TError.h"
 #include "TUrl.h"
-#include "TFTP.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TH1.h"
@@ -956,29 +955,10 @@ Int_t TProof::Collect(TMonitor *mon)
 
          case kPROOF_OUTPUTLIST:
             {
-Info("Collect","Got kPROOF_OUTPUTLIST");
+::Info("TProof::Collect","Got kPROOF_OUTPUTLIST");
                TList *out = (TList *) mess->ReadObject(THashList::Class());
                fPlayer->StoreOutput(out); // Adopts the list
-Info("Collect","Done kPROOF_OUTPUTLIST");
-            }
-            break;
-
-         case kPROOF_AUTOBIN:
-            {
-               TString name;
-               Double_t xmin, xmax, ymin, ymax, zmin, zmax;
-
-               (*mess) >> name >> xmin >> xmax >> ymin >> ymax >> zmin >> zmax;
-
-               if (fPlayer != 0 ) {
-                  fPlayer->UpdateAutoBin(name,xmin,xmax,ymin,ymax,zmin,zmax);
-               }
-
-               TMessage answ(kPROOF_AUTOBIN);
-
-               answ << name << xmin << xmax << ymin << ymax << zmin << zmax;
-
-               s->Send(answ);
+::Info("TProof::Collect","Done kPROOF_OUTPUTLIST");
             }
             break;
 
@@ -1036,7 +1016,7 @@ void TProof::HandleAsyncInput(TSocket *sl)
    TMessage *mess;
    Int_t     what;
 
-   if (sl->Recv(mess) <= 0)
+   if (sl->Recv(mess) < 0)
       return;                // do something more intelligent here
 
    what = mess->What();
@@ -1207,8 +1187,8 @@ void TProof::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Int_t TProof::Process(TDSet *set, const char *selector, Long64_t nentries,
-                      Long64_t first, TEventList *evl)
+Int_t TProof::Process(TDSet *set, const char *selector, Int_t nentries,
+                      Int_t first, TEventList *evl)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
 
@@ -1443,19 +1423,21 @@ Int_t TProof::SendInitialState()
 }
 
 //______________________________________________________________________________
-Long_t TProof::CheckFile(const char *file, TSlave *slave)
+Long_t TProof::CheckFile(const char *file, TList *slaves, TList *sendto)
 {
-   // Check if a file needs to be send to the slave. Use the following
+   // Check if a file needs to be send to the slaves. Use the following
    // algorithm:
    //   - check if file appears in file map
-   //     - if yes, get file's modtime and check against time in map,
+   //     - if yes get file's modtime and check against time in map,
    //       if modtime not same get md5 and compare against md5 in map,
    //       if not same return size
-   //     - if no, get file's md5 and modtime and store in file map, ask
+   //     - if no get file's md5 and modtime and store in file map, ask
    //       slave if file exists with specific md5, if yes return 0,
    //       if no return file's size
    // Returns size of file in case file needs to be send, returns 0 in case
    // file is already on remote and -1 in case of error.
+   // The nodes to which the file needs to be send will be added to the
+   // sendto list (if it exists, !=0).
 
    Long_t id, size, flags, modtime;
    if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 1) {
@@ -1467,83 +1449,87 @@ Long_t TProof::CheckFile(const char *file, TSlave *slave)
       return -1;
    }
 
-   Bool_t sendto = kFALSE;
+   if (sendto) sendto->Clear();
 
-   // create slave based filename
-   TString sn = slave->GetName();
-   sn += ":";
-   sn += slave->GetOrdinal();
-   sn += ":";
-   sn += gSystem->BaseName(file);
+   // loop over all slaves and check if file appears in the map
+   TIter next(slaves);
+   TSlave *slave;
+   while ((slave = (TSlave*) next())) {
+      // create slave based filename
+      TString sn = slave->GetImage();
+      sn += ":";
+      sn += gSystem->BaseName(file);
 
-   // check if file is in map
-   FileMap_t::const_iterator it;
-   if ((it = fFileMap.find(sn)) != fFileMap.end()) {
-      // file in map
-      MD5Mod_t md = (*it).second;
-      if (md.fModtime != modtime) {
-         TMD5 *md5 = TMD5::FileChecksum(file);
-         if ((*md5) != md.fMD5) {
-            sendto       = kTRUE;
-            md.fMD5      = *md5;
-            md.fModtime  = modtime;
-            fFileMap[sn] = md;
-            // When on the master, the master and/or slaves may share
-            // their file systems and cache. Therefore always make a
-            // check for the file. If the file already exists with the
-            // expected md5 the kPROOF_CHECKFILE command will cause the
-            // file to be copied from cache to slave sandbox.
-            if (IsMaster()) {
-               sendto = kFALSE;
-               TMessage mess(kPROOF_CHECKFILE);
-               mess << TString(gSystem->BaseName(file)) << md.fMD5;
-               slave->GetSocket()->Send(mess);
-
-               TMessage *reply;
-               slave->GetSocket()->Recv(reply);
-               if (reply->What() != kPROOF_CHECKFILE)
-                  sendto = kTRUE;
-               delete reply;
+      // check if file is in map
+      FileMap_t::const_iterator it;
+      if ((it = fFileMap.find(sn)) != fFileMap.end()) {
+         // file in map
+         MD5Mod_t md = (*it).second;
+         if (md.fModtime != modtime) {
+            TMD5 *md5 = TMD5::FileChecksum(file);
+            if ((*md5) != md.fMD5) {
+               if (sendto) sendto->Add(slave);
+               md.fMD5      = *md5;
+               md.fModtime  = modtime;
+               fFileMap[sn] = md;
             }
+            delete md5;
          }
+      } else {
+         // file not in map
+         TMD5 *md5 = TMD5::FileChecksum(file);
+         MD5Mod_t md;
+         md.fMD5      = *md5;
+         md.fModtime  = modtime;
+         fFileMap[sn] = md;
          delete md5;
+         TMessage mess(kPROOF_CHECKFILE);
+         mess << TString(gSystem->BaseName(file)) << md.fMD5;
+         slave->GetSocket()->Send(mess);
+
+         TMessage *reply;
+         slave->GetSocket()->Recv(reply);
+         if (reply->What() != kPROOF_CHECKFILE)
+            if (sendto) sendto->Add(slave);
+         delete reply;
       }
-   } else {
-      // file not in map
-      TMD5 *md5 = TMD5::FileChecksum(file);
-      MD5Mod_t md;
-      md.fMD5      = *md5;
-      md.fModtime  = modtime;
-      fFileMap[sn] = md;
-      delete md5;
-      TMessage mess(kPROOF_CHECKFILE);
-      mess << TString(gSystem->BaseName(file)) << md.fMD5;
-      slave->GetSocket()->Send(mess);
-
-      TMessage *reply;
-      slave->GetSocket()->Recv(reply);
-      if (reply->What() != kPROOF_CHECKFILE)
-         sendto = kTRUE;
-      delete reply;
    }
-
-   if (sendto)
+   if (sendto && sendto->GetSize() > 0)
       return size;
-
    return 0;
 }
 
 //______________________________________________________________________________
 Int_t TProof::SendFile(const char *file, Bool_t bin)
 {
-   // Send a file to master or slave servers. Returns number of slaves
+   // Send a file to master or unique slave servers. Returns number of slaves
    // the file was sent to, maybe 0 in case master and slaves have the same
    // file system image, -1 in case of error. If bin is true binary
    // file transfer is used, otherwise ASCII mode.
 
-   TList *slaves = fActiveSlaves;
+   TList *slaves = fUniqueSlaves;
 
    if (slaves->GetSize() == 0) return 0;
+
+   TList sendto;
+   Long_t size = CheckFile(file, slaves, &sendto);
+   if (size < 0)
+      return size;
+   if (IsMaster() && size == 0)
+      return 0;
+   // if on client and size==0 broadcast anyway the kPROOF_SENDFILE command
+   // to the master so that the master can propagate the file to possibly
+   // newly added unique slaves
+   if (size == 0)
+      sendto.AddAll(slaves);
+
+   if (fLogLevel > 2 && size > 0) {
+      Info("SendFile", "sending file to:");
+      TIter next(&sendto);
+      TSlave *sl;
+      while ((sl = (TSlave*) next()))
+         Printf("   image = %s\n", sl->GetImage());
+   }
 
 #ifndef R__WIN32
    Int_t fd = open(file, O_RDONLY);
@@ -1557,63 +1543,40 @@ Int_t TProof::SendFile(const char *file, Bool_t bin)
 
    const Int_t kMAXBUF = 32768;  //16384  //65536;
    char buf[kMAXBUF];
-   Int_t nsl = 0;
 
-   TIter next(slaves);
-   TSlave *sl;
-   while ((sl = (TSlave *)next())) {
-      if (!sl->IsValid())
-         continue;
-
-      Long_t size = CheckFile(file, sl);
-      // if on client and size==0 broadcast anyway the kPROOF_SENDFILE command
-      // to the master so that the master can propagate the file to possibly
-      // newly added slaves
-      if (IsMaster() && size == 0)
-         continue;
-
-      if (fLogLevel > 2 && size > 0) {
-         if (!nsl)
-            Info("SendFile", "sending file to:");
-         printf("   slave = %s:%d\n", sl->GetName(), sl->GetOrdinal());
-      }
-
-      sprintf(buf, "%s %d %ld", gSystem->BaseName(file), bin, size);
-      if (sl->GetSocket()->Send(buf, kPROOF_SENDFILE) == -1) {
-         MarkBad(sl);
-         continue;
-      }
-
-      if (size == 0)
-         continue;
-
-      lseek(fd, 0, SEEK_SET);
-
-      Int_t len;
-      do {
-         while ((len = read(fd, buf, kMAXBUF)) < 0 && TSystem::GetErrno() == EINTR)
-            TSystem::ResetErrno();
-
-         if (len < 0) {
-            SysError("SendFile", "error reading from file %s", file);
-            Interrupt(kSoftInterrupt, kActive);
-            close(fd);
-            return -1;
-         }
-
-         if (sl->GetSocket()->SendRaw(buf, len) == -1) {
-            MarkBad(sl);
-            break;
-         }
-
-      } while (len > 0);
-
-      nsl++;
+   sprintf(buf, "%s %d %ld", gSystem->BaseName(file), bin, size);
+   if (!Broadcast(buf, kPROOF_SENDFILE, &sendto)) {
+      close(fd);
+      return -1;
    }
+   if (size == 0) {
+      close(fd);
+      return 0;
+   }
+
+   Int_t len, n;
+   do {
+      while ((len = read(fd, buf, kMAXBUF)) < 0 && TSystem::GetErrno() == EINTR)
+         TSystem::ResetErrno();
+
+      if (len < 0) {
+         SysError("SendFile", "error reading from file %s", file);
+         Interrupt(kSoftInterrupt, kUnique);
+         close(fd);
+         return -1;
+      }
+
+      if (!(n = BroadcastRaw(buf, len, &sendto))) {
+         SysError("SendFile", "error broadcasting, no more active slaves");
+         close(fd);
+         return -1;
+      }
+
+   } while (len > 0);
 
    close(fd);
 
-   return nsl;
+   return n;
 }
 
 //______________________________________________________________________________
@@ -1717,162 +1680,6 @@ Int_t TProof::GoParallel(Int_t nodes)
    }
 
    return n;
-}
-
-//______________________________________________________________________________
-void TProof::ShowCache(Bool_t all)
-{
-   // List contents of file cache. If all is true show all caches also on
-   // slaves. If everything is ok all caches are to be the same.
-
-   if (!IsValid()) return;
-
-   TMessage mess(kPROOF_CACHE);
-   mess << Int_t(1) << all;
-   Broadcast(mess, kUnique);
-   Collect(kUnique);
-}
-
-//______________________________________________________________________________
-void TProof::ClearCache()
-{
-    // Remove files from all file caches.
-
-   if (!IsValid()) return;
-
-   TMessage mess(kPROOF_CACHE);
-   mess << Int_t(2);
-   Broadcast(mess, kUnique);
-   Collect(kUnique);
-   // clear file map so files get send again to remote nodes
-   fFileMap.clear();
-}
-
-//______________________________________________________________________________
-void TProof::ShowPackages(Bool_t all)
-{
-   // List contents of package directory. If all is true show all package
-   // directries also on slaves. If everything is ok all package directories
-   // are to be the same.
-
-   if (!IsValid()) return;
-
-   TMessage mess(kPROOF_CACHE);
-   mess << Int_t(3) << all;
-   Broadcast(mess, kUnique);
-   Collect(kUnique);
-}
-
-//______________________________________________________________________________
-void TProof::ShowEnabledPackages(Bool_t all)
-{
-   // List which packages are enabled. If all is true show enabled packages
-   // for all slaves. If everything is ok all package directories
-   // are to be the same.
-
-   if (!IsValid()) return;
-
-   TMessage mess(kPROOF_CACHE);
-   mess << Int_t(7) << all;
-   Broadcast(mess, kUnique);
-   Collect(kUnique);
-}
-
-//______________________________________________________________________________
-void TProof::ClearPackages()
-{
-   // Remove all packages.
-
-   if (!IsValid()) return;
-
-   TMessage mess(kPROOF_CACHE);
-   mess << Int_t(4);
-   Broadcast(mess, kUnique);
-   Collect(kUnique);
-}
-
-//______________________________________________________________________________
-void TProof::ClearPackage(const char *package)
-{
-   // Remove a specific package.
-
-   if (!IsValid()) return;
-
-   TMessage mess(kPROOF_CACHE);
-   mess << Int_t(5) << TString(package);
-   Broadcast(mess, kUnique);
-   Collect(kUnique);
-}
-
-//______________________________________________________________________________
-Int_t TProof::EnablePackage(const char *package, Bool_t build)
-{
-
-   return 0;
-}
-
-//______________________________________________________________________________
-Int_t TProof::UploadPackage(const char *par, Int_t parallel)
-{
-   // Upload a PROOF archive (PAR file). A PAR file is a compressed
-   // tar file with one special additional directory, PROOF-INF
-   // (blatantly copied from Java's jar format). It must have the extension
-   // .par. A PAR file can be directly a binary or a source with a build
-   // procedure. In the PROOF-INF directory there can be a build script:
-   // BUILD.C or BUILD.sh to be called to build the package (.C is tried
-   // before .sh), in case of a binary PAR file don't specify a BUILD
-   // script or make it a no-op. Then there is SETUP.C which sets the
-   // right environment variables to use the package, like LD_LIBRARY_PATH,
-   // etc. Parallel is the number of parallel streams that can be used to
-   // upload the package to the master server. Returns 0 in case of success
-   // and -1 in case of error.
-
-   if (!IsValid()) return -1;
-
-   TString spar = par;
-   if (!spar.EndsWith(".par")) {
-      Error("UploadPackage", "package %s has not correct extension,"
-            " must be .par", par);
-      return -1;
-   }
-
-   // Strategy: get md5 of package and check if it is different from the
-   // one stored on the remote node. If it is different lock the remote
-   // package directory and use TFTP to ftp the package to the remote node,
-   // unlock the directory.
-
-   TMD5 *md5 = TMD5::FileChecksum(par);
-   TMessage mess(kPROOF_CHECKFILE);
-   mess << TString("+")+TString(gSystem->BaseName(par)) << (*md5);
-   TMessage mess2(kPROOF_CHECKFILE);
-   mess2 << TString("-")+TString(gSystem->BaseName(par)) << (*md5);
-   delete md5;
-
-   // loop over all unique nodes
-   TIter next(fUniqueSlaves);
-   TSlave *sl;
-   while ((sl = (TSlave *) next())) {
-      sl->GetSocket()->Send(mess);
-
-      TMessage *reply;
-      sl->GetSocket()->Recv(reply);
-      if (reply->What() != kPROOF_CHECKFILE) {
-         // remote directory is locked, upload file via TFTP
-         if (IsMaster()) parallel = 1;
-         {
-            TFTP ftp(TString("root://")+sl->GetName(), parallel);
-            if (!ftp.IsZombie()) {
-               ftp.cd(Form("%s/%s", kPROOF_WorkDir, kPROOF_PackDir));
-               ftp.put(par, gSystem->BaseName(par));
-            }
-         }
-         // unlock dir
-         sl->GetSocket()->Send(mess2);
-      }
-      delete reply;
-   }
-
-   return 0;
 }
 
 //______________________________________________________________________________

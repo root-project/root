@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookBranch.cxx,v 1.2 2002/02/20 16:57:31 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookBranch.cxx,v 1.1 2002/02/18 18:02:57 rdm Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -49,20 +49,5 @@ Int_t THbookBranch::GetEntry(Int_t entry, Int_t getall)
    } else {
       tree->InitBranches();
       return file->GetEntryBranch(entry,tree->GetID());
-   }
-}
-
-//______________________________________________________________________________
-void THbookBranch::SetAddress(void *add)
-{
-// Set address of this branch
-
-   TBranch::SetAddress(add);
-   
-   if (GetUniqueID() != 0) return; //only for first variable of the block
-   THbookTree *tree = (THbookTree*)GetTree();
-   THbookFile *file = tree->GetHbookFile();
-   if (tree->GetType() != 0) {
-      file->SetBranchAddress(tree->GetID(),GetBlockName(),add);
    }
 }

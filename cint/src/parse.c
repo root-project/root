@@ -4542,9 +4542,7 @@ G__value G__exec_statement()
 #ifndef G__PHILIPPE33
        /* Make sure that the delimiters that have not been treated
         * in the switch statement do drop the discarded_space */
-      /* if (c!='[' && c!=']' && discarded_space && iout) { */
-      if (c!='[' && c!=']' && discarded_space && iout 
-          && statement[iout-1]!=':') {
+      if (c!='[' && c!=']' && discarded_space && iout) {
 	/* since the character following a discarded space is NOT a
 	   separator, we have to keep the space */
 	statement[iout++] = ' ';

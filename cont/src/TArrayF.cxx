@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayF.cxx,v 1.5 2002/01/09 15:18:05 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayF.cxx,v 1.4 2002/01/08 22:13:00 rdm Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************

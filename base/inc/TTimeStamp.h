@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.6 2002/02/23 15:45:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.5 2002/02/08 17:50:52 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -47,11 +47,8 @@
 #endif
 
 #include <time.h>
-#if !defined(__CINT__) && defined(R__MACOSX)
-#include <sys/time.h>
-#endif
-#if defined(__CINT__) || defined(R__WIN32) || \
-    (defined(R__LINUX) && defined(R__KCC) && !defined(__timespec_defined))
+#if defined(__CINT__) || defined(R__WIN32) || defined(R__MACOSX) || \
+    (defined(linux) && defined(R__KCC) && !defined(__timespec_defined))
 // Explicit definition of timespec 'cause "rootcint" won't look in
 // appropriate <time.h>. time_t appears to be defined as "typedef long time_t;"
 // in CINT version of <time.h>.  This isn't required by the standard:

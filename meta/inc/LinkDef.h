@@ -1,4 +1,4 @@
-/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.6 2002/04/04 17:32:13 rdm Exp $ */
+/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.5 2001/01/27 20:43:57 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.11 2002/04/22 20:12:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.9 2002/01/24 11:39:29 rdm Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -92,7 +92,9 @@ THStack::~THStack()
 void THStack::Add(TH1 *h1)
 {
    // add a new histogram to the list
-   // Only 1-d and 2-d histograms currently supported.
+   // Only 1-d histograms currently supported.
+   // Note that all histograms in the list must have the same number
+   // of channels and the same X axis.
 
    if (!h1) return;
    if (h1->GetDimension() > 2) {
@@ -348,20 +350,6 @@ void THStack::Paint(Option_t *option)
       return;
    }
    
-   // compute the min/max of each axis
-   TH1 *h;
-   TIter next(fHists);
-   Double_t xmin = 1e100;
-   Double_t xmax = -xmin;
-   Double_t ymin = 1e100;
-   Double_t ymax = -xmin;
-   while ((h=(TH1*)next())) {
-      if (h->GetXaxis()->GetXmin() < xmin) xmin = h->GetXaxis()->GetXmin();
-      if (h->GetXaxis()->GetXmax() > xmax) xmax = h->GetXaxis()->GetXmax();
-      if (h->GetYaxis()->GetXmin() < ymin) ymin = h->GetYaxis()->GetXmin();
-      if (h->GetYaxis()->GetXmax() > ymax) ymax = h->GetYaxis()->GetXmax();
-   }
-   
    char loption[32];
    sprintf(loption,"%s",opt.Data());
    char *nostack = strstr(loption,"nostack");
@@ -385,10 +373,10 @@ void THStack::Paint(Option_t *option)
       if (h->GetDimension() > 1) {
          if (strlen(option) == 0) strcpy(loption,"lego1");
          fHistogram = new TH2F(GetName(),GetTitle(),
-                               xaxis->GetNbins(),xmin, xmax,
-                               yaxis->GetNbins(),ymin, ymax);
+                               xaxis->GetNbins(),xaxis->GetXmin(),xaxis->GetXmax(),
+                               yaxis->GetNbins(),yaxis->GetXmin(),yaxis->GetXmax());
       } else {
-         fHistogram = new TH1F(GetName(),GetTitle(),xaxis->GetNbins(),xmin, xmax);
+         fHistogram = new TH1F(GetName(),GetTitle(),xaxis->GetNbins(),xaxis->GetXmin(),xaxis->GetXmax());
       }
       fHistogram->SetStats(0);
       TH1::AddDirectory(add);
@@ -397,10 +385,8 @@ void THStack::Paint(Option_t *option)
    if (nostack) {*nostack = 0; strcat(nostack,nostack+7);}
    else fHistogram->GetPainter()->SetStack(fHists);
 
-   if (!fHistogram->TestBit(TH1::kIsZoomed)) {
-      fHistogram->SetMaximum(1.05*themax);
-      fHistogram->SetMinimum(themin);
-   }
+   fHistogram->SetMaximum(1.05*themax);
+   fHistogram->SetMinimum(themin);
    fHistogram->Paint(loption);
 
    if (fHistogram->GetDimension() > 1) SetDrawOption(loption);

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.8 2002/02/12 17:53:18 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.7 2002/01/18 14:24:09 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -16,8 +16,7 @@
 //  selections.                                                           //
 //                                                                        //
 //  The following members functions are called by the TTree functions.    //
-//    Init:        Attach a new TTree during the loop                     //
-//    Begin:       called everytime a loop on the tree(s) starts.         //
+//    Begin:       called everytime a loop on the tree starts.            //
 //                 a convenient place to create your histograms.          //
 //                                                                        //
 //    Notify():    This function is called at the first entry of a new    //
@@ -67,7 +66,6 @@ TSelector *TSelector::GetSelector(const char *filename)
 //   filename must contain a valid class implementation derived from TSelector.
 //   where TSelector has the following member functions:
 //
-//     void TSelector::Init(TTree *t). Called every time a new TTree is attached.
 //     void TSelector::Begin(). This function is called before looping on the
 //          events in the Tree. The user can create his histograms in this function.
 //

@@ -3038,14 +3038,6 @@ int iscopy;
 	  if((0==ifunc->para_nu[ifn]||ifunc->para_default[ifn][0])&&
 	     G__PRIVATE==ifunc->access[ifn])
 	    return(1);
-#ifndef G__OLDIMPLEMENTATION1652
-	  /* Following solution may not be perfect */
-	  if((1<=ifunc->para_nu[ifn]&&'u'==ifunc->para_type[ifn][0]&&
-	      tagnum==ifunc->para_p_tagtable[ifn][0]) &&
-	     (1==ifunc->para_nu[ifn]||ifunc->para_default[ifn][1])
-	     &&G__PRIVATE==ifunc->access[ifn])
-	    return(1);
-#endif
 	}
       }
 #ifndef G__OLDIMPLEMENTATION598

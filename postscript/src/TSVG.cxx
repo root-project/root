@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.4 2002/03/16 08:37:51 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.3 2002/02/22 16:57:16 rdm Exp $
 // Author: Olivier Couet
 
 /*************************************************************************
@@ -24,8 +24,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <fstream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
@@ -39,23 +39,23 @@ ClassImp(TSVG)
 //______________________________________________________________________________
 //Begin_Html
 /*
-<a href="http://www.w3.org/Graphics/SVG/Overview.htm8"><b>SVG</b></a> is a
+<a href="http://www.w3.org/Graphics/SVG/Overview.htm8"><b>SVG</b></a> is a 
 language for describing two-dimensional graphics in XML. <b>SVG</b> allows for
-three types of graphic objects: vector graphic shapes, images and text.
-Graphical objects can be grouped, styled, transformed and composed into
+three types of graphic objects: vector graphic shapes, images and text. 
+Graphical objects can be grouped, styled, transformed and composed into 
 previously rendered objects. The feature set includes nested transformations,
-clipping paths, alpha masks, filter effects and template objects. <b>SVG</b>
-drawings can be interactive and dynamic. Animations can be defined and
+clipping paths, alpha masks, filter effects and template objects. <b>SVG</b> 
+drawings can be interactive and dynamic. Animations can be defined and 
 triggered either declaratively or via scripting.
 <p>
-The way to access <b>SVG</b> in <b>ROOT</b> (in my private version only) is the
+The way to access <b>SVG</b> in <b>ROOT</b> (in my private version only) is the 
 following:
 <PRE>
    <A HREF="html/TSVG.html">TSVG</A> mysvg(&quot;myfile.svg&quot;)
    object-&gt;Draw();
    mysvg.Close();
 </PRE>
-The result is the ASCII file <tt>myfile.svg</tt>, it is best viewed with
+The result is the ASCII file <tt>myfile.svg</tt>, it is best viewed with 
 Internet Explorer and you need the
 <a href="http://www.adobe.com/svg/viewer/install/main.html">Adobe <b>SVG</b>
 Viewer</a>. To zoom using the Adobe <b>SVG</b> Viewer, position the mouse over
@@ -88,7 +88,7 @@ TSVG::TSVG(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    //
    //  fname : SVG file name
    //  wtype : SVG workstation type. Not used in the SVG driver. But as TSVG
-   //          inherits from TVirtualPS it should be kept. Anyway it is not
+   //          inherits from TVirtualPS it should be kept. Anyway it is not 
    //          necessary to specify this parameter at creation time because it
    //          a default value (which is ignore in the SVG case).
 
@@ -105,7 +105,7 @@ void TSVG::Open(const char *fname, Int_t wtype)
       Warning("Open", "SVG file already open");
       return;
    }
-
+ 
    fType = abs(wtype);
    SetLineScale(gStyle->GetLineScalePS());
    gStyle->GetPaperSize(fXsize, fYsize);
@@ -124,7 +124,7 @@ void TSVG::Open(const char *fname, Int_t wtype)
 
    // Open OS file
    fStream   = new ofstream(fname,ios::out);
-   if (fStream == 0) {
+   if (fStream == 0) { 
       printf("ERROR in TSVG::Open: Cannot open file:%s\n",fname);
       return;
    }
@@ -267,8 +267,8 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    //
    // mode = -1  the box looks as it is behind the screen
    // mode =  1  the box looks as it is in front of the screen
-   // border is the border size in already precomputed SVG units dark is the
-   // color for the dark part of the frame light is the color for the light
+   // border is the border size in already precomputed SVG units dark is the 
+   // color for the dark part of the frame light is the color for the light 
    // part of the frame
 
    static Int_t xps[7], yps[7];
@@ -311,9 +311,9 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
          if( !idx ) { idx = ix; continue;}
          if( ix*idx > 0 ) {
             idx += ix;
-         } else {
+         } else { 
             MovePS(idx,0);
-            idx  = ix;
+            idx  = ix; 
          }
          continue;
       }
@@ -322,7 +322,7 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
          if( !idy) { idy = iy; continue;}
          if( iy*idy > 0 ) {
             idy += iy;
-         } else {
+         } else { 
             MovePS(0,idy);
             idy  = iy;
          }
@@ -459,7 +459,7 @@ void TSVG::DrawPolyLine(Int_t nn, TPoints *xy)
          if( !idx ) { idx = ix; continue;}
          if( ix*idx > 0 ) {
             idx += ix;
-         } else {
+         } else { 
             MovePS(idx,0);
             idx  = ix;
          }
@@ -470,7 +470,7 @@ void TSVG::DrawPolyLine(Int_t nn, TPoints *xy)
          if( !idy) { idy = iy; continue;}
          if( iy*idy > 0 ) {
             idy += iy;
-         } else {
+         } else { 
             MovePS(0,idy);
             idy  = iy;
          }
@@ -544,7 +544,7 @@ void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
          if( !idx ) { idx = ix; continue;}
          if( ix*idx > 0 ) {
             idx += ix;
-         } else {
+         } else { 
             MovePS(idx,0);
             idx  = ix;
          }
@@ -555,7 +555,7 @@ void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
          if( !idy) { idy = iy; continue;}
          if( iy*idy > 0 ) {
             idy += iy;
-         } else {
+         } else { 
             MovePS(0,idy);
             idy  = iy;
          }
@@ -575,8 +575,8 @@ void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 //______________________________________________________________________________
 void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 {
-   // This function defines a path with xw and yw and draw it according the
-   // value of nn:
+   // This function defines a path with xw and yw and draw it according the 
+   // value of nn: 
    //
    //  If nn>0 a line is drawn.
    //  If nn<0 a closed polygon is drawn.
@@ -646,7 +646,7 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
     }
     if (idx) MovePS(idx,0);
     if (idy) MovePS(0,idy);
-
+ 
     if (nn > 0 ) {
        if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(1,"z");
        PrintFast(21,"\" fill=\"none\" stroke=");
@@ -682,7 +682,7 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 //______________________________________________________________________________
 void TSVG::Initialize()
 {
-   // Initialize the SVG file. The main task of the function is to ouput the
+   // Initialize the SVG file. The main task of the function is to ouput the 
    // SVG header file which constist in <title>, <desc> and <defs>. The
    // HeaderPS porvided by the user program is written in the <defs> part.
 
@@ -722,7 +722,7 @@ void TSVG::MovePS(Int_t ix, Int_t iy)
    // Move to a new position (ix, iy). The move is done in relative coordinates
    // which allows to have short numbers which decraese the sive of the file.
    // This function use the full power of the SVG's paths by using the
-   // horizontal and vertical move whenever it is possible.
+   // horizontal and vertical move whenever it is possible.  
 
    if (ix != 0 && iy != 0)  {
       PrintFast(1,"l");
@@ -741,7 +741,7 @@ void TSVG::MovePS(Int_t ix, Int_t iy)
 //______________________________________________________________________________
 void TSVG::NewPage()
 {
-   // Start the SVG page. This function initialize the pad conversion
+   // Start the SVG page. This function initialize the pad conversion 
    // coefficients and ouput the <svg> directive which is close later in the
    // the function Close.
 
@@ -753,7 +753,7 @@ void TSVG::NewPage()
    } else {
       fYsize = 27;
    }
-
+ 
    // <svg> directive. It defines the viewBox.
    if(!fBoundingBox) {
       PrintStr("@<svg viewBox=\"0 0");
@@ -792,7 +792,7 @@ void TSVG::Range(Float_t xsize, Float_t ysize)
       else             xwkwn = 1;
       if (yps/xps < 1) ywkwn = yps/xps;
       else             ywkwn = 1;
-
+ 
       if (xsize < ysize)  {
          xncm = ywkwn*xsize/ysize;
          yncm = ywkwn;
@@ -884,7 +884,7 @@ void TSVG::SetColor(Int_t color)
 void TSVG::SetColor(Float_t r, Float_t g, Float_t b)
 {
    // Set color with its R G B components
-   //
+   // 
    //  r: % of red in [0,1]
    //  g: % of green in [0,1]
    //  b: % of blue in [0,1]
@@ -937,7 +937,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    "normal", "oblique", "normal", "oblique",
    "normal","normal", "normal"};
 
-   Int_t ix    = XtoSVG(xx);
+   Int_t ix    = XtoSVG(xx); 
    Int_t iy    = YtoSVG(yy);
    Int_t txalh = fTextAlign/10;
    if (txalh <1) txalh = 1; if (txalh > 3) txalh = 3;
@@ -945,10 +945,10 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    if (txalv <1) txalv = 1; if (txalv > 3) txalv = 3;
 
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1()); 
    Float_t fontrap = 1.09; //scale down compared to X11
    Float_t ftsize;
-
+   
    Int_t font  = abs(fTextFont)/10;
    Int_t ifont = font-1;
    if (font > 42 || font < 1) font = 1;
@@ -957,7 +957,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    } else {
       ftsize = fTextSize*fYsize*gPad->GetAbsHNDC();
    }
-
+				             
    Int_t fontsize = CMtoSVG(ftsize/fontrap);
    if( fontsize <= 0) return;
 
