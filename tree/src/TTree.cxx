@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.150 2003/07/04 13:27:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.151 2003/07/06 19:41:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2419,6 +2419,12 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
 //     mytree.SetBranchStatus("a",1);
 //     mytree.SetBranchStatus("b",1);
 //  when calling mytree.GetEntry(i); only branches "a" and "b" will be read.
+//
+//  WARNING!!
+//  If your Tree has been created in split mode with a parent branch "parent",
+//     mytree.SetBranchStatus("parent",1);
+//  will not activate the sub-branches of "parent". You should do:
+//     mytree.SetBranchStatus("parent*",1);
 //
 //  An alternative is to call directly
 //     brancha.GetEntry(i)

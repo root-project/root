@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.72 2003/07/06 19:44:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.73 2003/07/07 21:08:24 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1132,7 +1132,8 @@ void TChain::SetBranchStatus(const char *bname, Bool_t status)
 //      bname is the name of a branch. if bname="*", apply to all branches.
 //      status = 1  branch will be processed
 //             = 0  branch will not be processed
-
+//  See IMPORTANT REMARKS in TTree::SetBranchStatus
+   
    //Check if bname is already in the Status list
    //Otherwise create a TChainElement object and set its status
    TChainElement *element = (TChainElement*)fStatus->FindObject(bname);
