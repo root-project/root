@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.104 2003/06/17 08:40:39 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.105 2003/07/08 15:42:25 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3223,32 +3223,37 @@ void TPad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *)
 }
 
 //______________________________________________________________________________
-void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *)
+void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*Paint polyline in CurrentPad World coordinates*-*-*-*-*-*-*
 //*-*              ==============================================
-
+//  If option[0] == 'C' no clipping
+   
    if (n < 2) return;
    TPoint *pxy = &gPXY[0];
    if (!gPad->IsBatch()) {
       if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
    }
    Double_t xmin,xmax,ymin,ymax;
+   Bool_t mustClip = kTRUE;
    if (TestBit(TGraph::kClipFrame)) {
       xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
    } else {
       xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
+      if (option && (option[0] == 'C')) mustClip = kFALSE;
    }
-   Int_t i,j,i1=-1,np=1;
+   Int_t i,j,i1=-1,np=1,iclip=0;
    for (i=0; i<n-1; i++) {
       Double_t x1=x[i];
       Double_t y1=y[i];
       Double_t x2=x[i+1];
       Double_t y2=y[i+1];
-      Int_t iclip = Clip(&x[i],&y[i],xmin,ymin,xmax,ymax);
-      if (iclip == 2) {
-         i1 = -1;
-         continue;
+      if (mustClip) {
+         iclip = Clip(&x[i],&y[i],xmin,ymin,xmax,ymax);
+         if (iclip == 2) {
+            i1 = -1;
+            continue;
+         }
       }
       np++;
       if (i1 < 0) i1 = i;
