@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.22 2004/06/25 17:27:09 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.23 2004/07/29 11:16:51 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -707,6 +707,9 @@ Bool_t TSocket::Authenticate(const char *user)
    TString SProtocol = TUrl(fUrl).GetProtocol();
    if (SProtocol == "") {
       SProtocol = "root";
+   } else if (SProtocol.Contains("sockd")) {
+      SProtocol.ReplaceAll("d",1,"",0);
+      fServType = kSOCKD;
    } else if (SProtocol.Contains("rootd")) {
       SProtocol.ReplaceAll("d",1,"",0);
       fServType = kROOTD;
@@ -863,13 +866,14 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    // Creates a socket or a parallel socket and authenticates to the
    // remote server.
    //
-   // url: [proto[p][auth]://][user@]host[:port][/service][?options]
+   // url: [[proto][p][auth]://][user@]host[:port][/service][?options]
    //
    // where  proto = "sockd", "rootd", "proofd"
-   //                indicates the type of remote server
-   //                ("sockd" not operational yet)
+   //                indicates the type of remote server;
+   //                if missing "sockd" is assumed ("sockd" indicates
+   //                any remote server session using TServerSocket)
    //          [p] = for parallel sockets (forced internally for
-   //                rootd)
+   //                rootd; ignored for proofd)
    //       [auth] = "up", "s", "k", "g", "h", "ug" to force UsrPwd,
    //                SRP, Krb5, Globus, SSH or UidGid authentication
    //       [port] = is the remote port number
@@ -888,7 +892,18 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    //   on remote machine machine.fq.dn on port 5051; "parallel" sockets
    //   are forced internally because rootd expects
    //   parallel sockets; however a simple socket will be created
-   //   in this case because the size is 0 (the default).
+   //   in this case because the size is 0 (the default);
+   //   authentication will attempt protocol SRP first.
+   //
+   //   TSocket::CreateAuthSocket("pk://qwerty@machine.fq.dn:5052",3)
+   //
+   //   creates an authenticated parallel socket of size 3 to a sockd
+   //   server running on remote machine machine.fq.dn on port 5052;
+   //   authentication will attempt protocol Kerberos first.
+   //
+   // NB: may hang if the remote server is not of the correct type;
+   //     at present TSocket has no way to find out the type of the
+   //     remote server automatically
    //
    // Returns pointer to an authenticated socket or 0 if creation or
    // authentication is unsuccessful.
@@ -896,18 +911,41 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    // Url to be passed to choosen constructor
    TString eurl(url);
 
-   // Check if parallel
+   // Parse protocol, if any
    Bool_t parallel = kFALSE;
    TString proto(TUrl(url).GetProtocol());
-   if (proto.Contains("sockd")) {
-      if (proto.Index("dp",1) > 1 || size > 1)
-         parallel = kTRUE;
-      eurl.ReplaceAll("dp",2,"d",1);
+   TString protosave = proto;
+
+   // Get rid of authentication suffix
+   TString asfx = proto;
+   if (proto.EndsWith("up") || proto.EndsWith("ug")) {
+      asfx.Remove(0,proto.Length()-2);
+      proto.Resize(proto.Length()-2);
+   } else if (proto.EndsWith("s") || proto.EndsWith("k") ||
+              proto.EndsWith("g") || proto.EndsWith("h")) {
+      asfx.Remove(0,proto.Length()-1);
+      proto.Resize(proto.Length()-1);
    }
-   if (proto.Contains("rootd")) {
+
+   // Find out if parallel (ignore if proofd, force if rootd)
+   if (((proto.EndsWith("p") || size > 1) &&
+               !proto.BeginsWith("proof")) ||
+         proto.BeginsWith("root") ) {
       parallel = kTRUE;
-      eurl.ReplaceAll("dp",2,"d",1);
+      if (proto.EndsWith("p"))
+         proto.Resize(proto.Length()-1);
    }
+
+   // Force "sockd" if the rest is not recognized
+   if (!proto.BeginsWith("sock") && !proto.BeginsWith("proof") &&
+       !proto.BeginsWith("root"))
+      proto = "sockd";
+ 
+   // Substitute this for original proto in eurl
+   protosave += "://";
+   proto += asfx;
+   proto += "://";
+   eurl.ReplaceAll(protosave,proto);
 
    // Create the socket now
 
@@ -960,11 +998,12 @@ TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
    // Creates a socket or a parallel socket and authenticates to the
    // remote server specified in 'url' on remote 'port' as 'user'.
    //
-   // url: [proto[p][auth]://]host[/?options]
+   // url: [[proto][p][auth]://]host[/?options]
    //
    // where  proto = "sockd", "rootd", "proofd"
    //                indicates the type of remote server
-   //                ("sockd" not operational yet)
+   //                if missing "sockd" is assumed ("sockd" indicates
+   //                any remote server session using TServerSocket)
    //          [p] = for parallel sockets (forced internally for
    //                rootd)
    //       [auth] = "up", "s", "k", "g", "h", "ug" to force UsrPwd,
@@ -977,10 +1016,21 @@ TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
    //   TSocket::CreateAuthSocket("qwerty","rootdps://machine.fq.dn",5051)
    //
    //   creates an authenticated socket to a rootd server running
-   //   on remote machine machine.fq.dn on port 5051, authenticating
-   //   as 'qwerty'; "parallel" sockets are forced internally because
-   //   rootd expects parallel sockets; however a simple socket will
-   //   be created in this case because the size is 0 (the default).
+   //   on remote machine machine.fq.dn on port 5051; "parallel"
+   //   sockets are forced internally because rootd expects
+   //   parallel sockets; however a simple socket will be created
+   //   in this case because the size is 0 (the default);
+   //   authentication will attempt protocol SRP first.
+   //
+   //   TSocket::CreateAuthSocket("qwerty","pk://machine.fq.dn:5052",3)
+   //
+   //   creates an authenticated parallel socket of size 3 to a sockd
+   //   server running on remote machine machine.fq.dn on port 5052;
+   //   authentication will attempt protocol Kerberos first.
+   //
+   // NB: may hang if the remote server is not of the correct type;
+   //     at present TSocket has no way to find out the type of the
+   //     remote server automatically
    //
    // Returns pointer to an authenticated socket or 0 if creation or
    // authentication is unsuccessful.

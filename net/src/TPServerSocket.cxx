@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPServerSocket.cxx,v 1.2 2001/01/29 00:03:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPServerSocket.cxx,v 1.3 2004/02/19 00:11:18 rdm Exp $
 // Author: Fons Rademakers   19/1/2001
 
 /*************************************************************************
@@ -84,7 +84,7 @@ TPServerSocket::TPServerSocket(const char *service, Bool_t reuse, Int_t backlog,
 }
 
 //______________________________________________________________________________
-TSocket *TPServerSocket::Accept()
+TSocket *TPServerSocket::Accept(UChar_t Opt)
 {
    // Accept a connection on a parallel server socket. Returns a full-duplex
    // parallel communication TPSocket object. If no pending connections are
@@ -96,14 +96,16 @@ TSocket *TPServerSocket::Accept()
    // In case of error 0 is returned and in case non-blocking I/O is
    // enabled and no connections are available -1 is returned.
 
-   TSocket  *setupSocket;
+   TSocket  *setupSocket = 0;
    TSocket  **pSockets;
-   TPSocket *newPSocket;
+   TPSocket *newPSocket = 0;
 
    Int_t size, port;
 
    // wait for the incoming connections to the server and accept them
-   setupSocket = TServerSocket::Accept();
+   setupSocket = TServerSocket::Accept(Opt);
+
+   if (setupSocket <= 0) return 0;
 
    // receive the port number and number of parallel sockets from the
    // client and establish 'n' connections
@@ -122,17 +124,23 @@ TSocket *TPServerSocket::Accept()
       pSockets = new TSocket*[size];
       
       for (int i = 0; i < size; i++) {
-         pSockets[i] = new TSocket(setupSocket->GetInetAddress(), port, fTcpWindowSize);
+         pSockets[i] = new TSocket(setupSocket->GetInetAddress(),
+                                           port, fTcpWindowSize);
          gROOT->GetListOfSockets()->Remove(pSockets[i]);
       }
       
       // create TPSocket object with all the accepted sockets
       newPSocket = new TPSocket(pSockets, size);
-      
-      // clean up
-      delete setupSocket;
 
    }
+
+   // Transmit authentication information, if any
+   if (setupSocket->IsAuthenticated())
+      newPSocket->SetSecContext(setupSocket->GetSecContext());
+      
+   // clean up, if needed
+   if (size > 0)
+      delete setupSocket;
 
    // return the TSocket object
    return newPSocket;

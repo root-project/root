@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPServerSocket.h,v 1.2 2001/01/26 17:11:25 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPServerSocket.h,v 1.3 2001/01/29 00:03:55 rdm Exp $
 // Author: Fons Rademakers   19/1/2001
 
 /*************************************************************************
@@ -51,7 +51,7 @@ public:
 
    virtual ~TPServerSocket() { }
 
-   virtual TSocket *Accept();
+   virtual TSocket *Accept(UChar_t Opt = kSrvNoAuth);
 
    ClassDef(TPServerSocket,0)  // Parallel server socket
 };

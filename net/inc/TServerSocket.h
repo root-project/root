@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.4 2001/01/22 09:43:05 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.5 2001/01/23 19:01:55 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -28,14 +28,28 @@
 #ifndef ROOT_TSocket
 #include "TSocket.h"
 #endif
+#include <string>
 
+typedef Int_t (*SrvAuth_t)(TSocket *sock, const char *, const char *, 
+                           std::string&, Int_t &, Int_t &, std::string &);
+typedef Int_t (*SrvClup_t)(const char *);
+
+// These mask are globally available to manipulate the option to Accept
+const UChar_t kSrvAuth   = 0x1;            // Require client authentication
+const UChar_t kSrvNoAuth = (kSrvAuth<<4);  // Force no client authentication
 
 class TServerSocket : public TSocket {
 
 private:
+   TSeqCollection  *fSecContexts; // List of TSecContext with cleanup info
+   static SrvAuth_t fgSrvAuthHook;
+   static SrvClup_t fgSrvAuthClupHook;
+   static UChar_t fgAcceptOpt;     // Default accept options 
+
    TServerSocket() { }
    TServerSocket(const TServerSocket &);
    void operator=(const TServerSocket &);
+   Bool_t Authenticate(TSocket *);
 
 public:
    enum { kDefaultBacklog = 10 };
@@ -44,9 +58,9 @@ public:
                  Int_t tcpwindowsize = -1);
    TServerSocket(const char *service, Bool_t reuse = kFALSE,
                  Int_t backlog = kDefaultBacklog, Int_t tcpwindowsize = -1);
-   virtual ~TServerSocket() { Close(); }
+   virtual ~TServerSocket();
 
-   virtual TSocket      *Accept();
+   virtual TSocket      *Accept(UChar_t Opt = 0);
    virtual TInetAddress  GetLocalInetAddress();
    virtual Int_t         GetLocalPort();
 
@@ -72,6 +86,10 @@ public:
                     { MayNotUse("Recv(char *, Int_t, Int_t &)"); return 0; }
    Int_t         RecvRaw(void *, Int_t, ESendRecvOptions = kDefault)
                     { MayNotUse("RecvRaw(void *, Int_t, ESendRecvOptions)"); return 0; }
+
+   static UChar_t     GetAcceptOptions();
+   static void        SetAcceptOptions(UChar_t Opt);
+   static void        ShowAcceptOptions();
 
    ClassDef(TServerSocket,1)  //This class implements server sockets
 };

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: NetErrors.h,v 1.3 2004/03/17 17:52:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: NetErrors.h,v 1.4 2004/05/19 15:32:32 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -53,7 +53,8 @@ enum ERootdErrors {
    kErrAuthNotOK,
    kErrWrongUser,
    kErrNoPipeInfo,
-   kErrNoChangePermission
+   kErrNoChangePermission,
+   kErrBadRtag
 };
 
 R__EXTERN const char *gRootdErrStr[];

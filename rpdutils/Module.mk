@@ -18,6 +18,12 @@ RPDUTILO     := $(RPDUTILS:.cxx=.o)
 
 RPDUTILDEP   := $(RPDUTILO:.o=.d)
 
+##### for libSrvAuth #####
+SRVAUTHS     := $(MODDIRS)/rpdutils.cxx $(MODDIRS)/ssh.cxx
+SRVAUTHO     := $(SRVAUTHS:.cxx=.o)
+
+SRVAUTHLIB   := $(LPATH)/libSrvAuth.$(SOEXT)
+
 ##### Flags used in rootd amd proofd Module.mk #####
 # use shadow passwords for authentication
 ifneq ($(SHADOWFLAGS),)
@@ -46,6 +52,8 @@ endif
 ifneq ($(GLOBUSLIB),)
 GLBSFLAGS     := -I$(GLOBUSINCDIR)
 GLBSLIBS      := $(GLOBUSLIBDIR) $(GLOBUSLIB)
+SRVAUTHS      += $(MODDIRS)/globus.cxx
+SRVAUTHO      += $(MODDIRS)/globus.o
 else
 RPDUTILS      := $(filter-out $(MODDIRS)/globus.cxx,$(RPDUTILS))
 RPDUTILO      := $(filter-out $(MODDIRS)/globus.o,$(RPDUTILO))
@@ -60,6 +68,7 @@ AUTHLIBS      := $(SHADOWLIBS) $(AFSLIBS) $(SRPLIBS) $(KRB5LIBS) $(GLBSLIBS) \
 
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RPDUTILH))
+ALLLIBS       += $(SRVAUTHLIB)
 
 # include all dependency files
 INCLUDEFILES  += $(RPDUTILDEP)
@@ -68,7 +77,12 @@ INCLUDEFILES  += $(RPDUTILDEP)
 include/%.h:    $(RPDUTILDIRI)/%.h
 		cp $< $@
 
-all-rpdutils:   $(RPDUTILO)
+$(SRVAUTHLIB):  $(SRVAUTHO) $(DAEMONUTILSO) $(MAINLIBS) $(SRVAUTHLIBDEP)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libSrvAuth.$(SOEXT) $@ "$(SRVAUTHO)" \
+		   "$(DAEMONUTILSO) $(CRYPTLIBS) $(AUTHLIBS)"
+
+all-rpdutils:   $(RPDUTILO) $(SRVAUTHLIB)
 
 clean-rpdutils:
 		@rm -f $(RPDUTILO)
@@ -76,10 +90,13 @@ clean-rpdutils:
 clean::         clean-rpdutils
 
 distclean-rpdutils: clean-rpdutils
-		@rm -f $(RPDUTILDEP)
+		@rm -f $(RPDUTILDEP) $(SRVAUTHLIB)
 
 distclean::     distclean-rpdutils
 
 ##### extra rules ######
 $(RPDUTILO): %.o: %.cxx
+	$(CXX) $(OPT) $(CXXFLAGS) $(AUTHFLAGS) -o $@ -c $<
+
+$(DAEMONUTILSO): %.o: %.cxx
 	$(CXX) $(OPT) $(CXXFLAGS) $(AUTHFLAGS) -o $@ -c $<

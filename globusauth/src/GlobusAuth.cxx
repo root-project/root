@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.14 2004/05/30 16:15:52 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.15 2004/06/25 16:49:09 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -533,18 +533,22 @@ int GlobusGetLocalEnv(int *LocalEnv, TString protocol)
                Info("GlobusGetLocalEnv",
                     " PROOF environment, called by the CLIENT");
             *LocalEnv = 1;
-         } else if (strstr(protocol.Data(), "root") != 0) {
+         } else if (strstr(protocol.Data(), "root") != 0 ||
+                    strstr(protocol.Data(), "sock") != 0) {
             if (gDebug > 3)
-               Info("GlobusGetLocalEnv", " ROOT environment");
+               Info("GlobusGetLocalEnv",
+                    "ROOT environment (%s)", protocol.Data());
          } else {
-            Warning("GlobusGetLocalEnv",
-                    " Unable to recognize the environment"
+            if (gDebug > 0)
+               Info("GlobusGetLocalEnv",
+                    "unable to recognize the environment"
                     " (protocol: %s)-> assume ROOT",protocol.Data());
          }
       }
    } else {
-      Warning("GlobusGetLocalEnv",
-              " Unable to get pointer to current application"
+      if (gDebug > 0)
+         Info("GlobusGetLocalEnv",
+              "unable to get pointer to current application"
               " -> assume ROOT environment");
    }
 

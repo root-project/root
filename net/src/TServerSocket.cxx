@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.3 2001/01/23 19:01:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.4 2004/02/19 00:11:18 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -26,8 +26,28 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TError.h"
+#include <string>
+
+// Hook to server authentication wrapper
+SrvAuth_t TServerSocket::fgSrvAuthHook = 0;
+SrvClup_t TServerSocket::fgSrvAuthClupHook = 0;
+
+// Defaul options for accept
+UChar_t TServerSocket::fgAcceptOpt = kSrvNoAuth;
 
 ClassImp(TServerSocket)
+
+//______________________________________________________________________________
+static void setaccopt(UChar_t &Opt, UChar_t Mod)
+{
+   // Kind of macro to parse input options
+   // Modify Opt according to modifier Mod
+
+   if (!Mod) return;
+
+   if ((Mod & kSrvAuth))      Opt |= kSrvAuth;
+   if ((Mod & kSrvNoAuth))    Opt &= ~kSrvAuth;
+}
 
 //______________________________________________________________________________
 TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
@@ -57,6 +77,7 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
    SetName("ServerSocket");
 
    fSecContext = 0;
+   fSecContexts = new TList;
    int port = gSystem->GetServiceByName(service);
    fService = service;
 
@@ -96,6 +117,7 @@ TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
    SetName("ServerSocket");
 
    fSecContext = 0;
+   fSecContexts = new TList;
    fService = gSystem->GetServiceByPort(port);
    SetTitle(fService);
 
@@ -104,7 +126,28 @@ TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
 }
 
 //______________________________________________________________________________
-TSocket *TServerSocket::Accept()
+TServerSocket::~TServerSocket()
+{
+   // Destructor: cleanup authentication stuff (if any) and close
+
+   if (fSecContexts && fgSrvAuthClupHook) {
+      TIter next(fSecContexts);
+      TSecContext *nsc ;
+      while ((nsc = (TSecContext *)next())) {
+         if (!strncmp(nsc->GetDetails(),"server",6))
+            (*fgSrvAuthClupHook)(nsc->GetToken());
+      }
+      // Remove the list
+      fSecContexts->Delete();
+      SafeDelete(fSecContexts);
+      fSecContexts = 0;
+   }
+
+   Close();
+}
+
+//______________________________________________________________________________
+TSocket *TServerSocket::Accept(UChar_t Opt)
 {
    // Accept a connection on a server socket. Returns a full-duplex
    // communication TSocket object. If no pending connections are
@@ -115,6 +158,20 @@ TSocket *TServerSocket::Accept()
    // any open sockets are properly closed on program termination.
    // In case of error 0 is returned and in case non-blocking I/O is
    // enabled and no connections are available -1 is returned.
+   //
+   // Opt can be used to require client authentication; valid options are 
+   //       
+   //    kSrvAuth   =   require client authentication
+   //    kSrvNoAuth =   force no client authentication
+   //
+   // Example: use Opt = kSrvAuth to require client authentication. 
+   //
+   // Default options are taken from fgAcceptOpt and are initially
+   // equivalent to kSrvNoAuth; they can be changed with the static
+   // method TServerSocket::SetAcceptOptions(Opt).
+   // The active defaults can be visualized using the static method
+   // TServerSocket::ShowAcceptOptions().
+   //
 
    if (fSocket == -1) { return 0; }
 
@@ -124,11 +181,25 @@ TSocket *TServerSocket::Accept()
    if (soc == -1) { delete socket; return 0; }
    if (soc == -2) { delete socket; return (TSocket*) -1; }
 
+   // Parse Opt
+   UChar_t AcceptOpt = fgAcceptOpt;
+   setaccopt(AcceptOpt,Opt);
+   Bool_t Auth = (Bool_t)(AcceptOpt & kSrvAuth);
+
    socket->fSocket  = soc;
    socket->fSecContext = 0;
    socket->fService = fService;
    socket->fAddress = gSystem->GetPeerName(socket->fSocket);
    if (socket->fSocket >= 0) gROOT->GetListOfSockets()->Add(socket);
+
+
+   // Perform authentication, if required
+   if (Auth) {
+      if (!Authenticate(socket)) {
+         delete socket;
+         socket = 0;
+      }
+   }
 
    return socket;
 }
@@ -159,4 +230,134 @@ Int_t TServerSocket::GetLocalPort()
       return fAddress.GetPort();
    }
    return -1;
+}
+
+
+//______________________________________________________________________________
+UChar_t TServerSocket::GetAcceptOptions()
+{
+   // Return default options for Accept
+
+   return fgAcceptOpt;
+}
+
+//______________________________________________________________________________
+void TServerSocket::SetAcceptOptions(UChar_t mod)
+{
+   // Set default options for Accept according to modifier 'mod'.
+   // Use:
+   //   kSrvAuth                 require client authentication
+   //   kSrvNoAuth               do not require client authentication
+
+   setaccopt(fgAcceptOpt,mod);
+}
+
+//______________________________________________________________________________
+void TServerSocket::ShowAcceptOptions()
+{
+   // Print default options for Accept
+
+   ::Info("ShowAcceptOptions","    Auth: %d",(Bool_t)(fgAcceptOpt & kSrvAuth));
+}
+
+//______________________________________________________________________________
+Bool_t TServerSocket::Authenticate(TSocket *sock) 
+{
+   // Check authentication request from the client on new 
+   // open connection
+
+   // Load libraries needed for (server) authentication ...
+#ifdef ROOTLIBDIR
+   TString srvlib = TString(ROOTLIBDIR) + "/libSrvAuth";
+#else
+   TString srvlib = TString(gRootDir) + "/lib/libSrvAuth";
+#endif
+   char *p = 0;
+   // The generic one
+   if ((p = gSystem->DynamicPathName(srvlib, kTRUE))) {
+      delete[] p;
+      if (gSystem->Load(srvlib) == -1) {
+         Error("Authenticate", "can't load %s",srvlib.Data());
+         return kFALSE;
+      }
+   } else {
+      Error("Authenticate", "can't locate %s",srvlib.Data());
+      return kFALSE;
+   }
+   //   
+   // Locate SrvAuthenticate
+   Func_t f = gSystem->DynFindSymbol(srvlib,"SrvAuthenticate");
+   if (f)
+      fgSrvAuthHook = (SrvAuth_t)(f);
+   else {
+      Error("Authenticate", "can't find SrvAuthenticate");
+      return kFALSE;
+   }
+   //   
+   // Locate SrvAuthCleanup
+   f = gSystem->DynFindSymbol(srvlib,"SrvAuthCleanup");
+   if (f)
+      fgSrvAuthClupHook = (SrvClup_t)(f);
+   else {
+      Warning("Authenticate", "can't find SrvAuthCleanup");
+   }
+
+   TString confdir;
+#ifndef ROOTPREFIX
+   // try to guess the config directory...
+   if (gSystem->Getenv("ROOTSYS")) {
+      confdir = TString(gSystem->Getenv("ROOTSYS"));
+   } else {
+      // Try to guess it from 'root.exe' path
+      confdir = TString(gSystem->Which(gSystem->Getenv("PATH"), 
+                        "root.exe", kExecutePermission));
+      confdir.Resize(confdir.Last('/'));
+   }
+#else
+   confdir = TString(ROOTPREFIX);
+#endif
+   if (!confdir.Length()) {
+      Error("Authenticate", "config dir undefined");
+      return kFALSE;
+   }
+
+   // dir for temporary files
+   TString tmpdir = TString(gSystem->TempDirectory());
+   if (gSystem->AccessPathName(tmpdir, kWritePermission))
+      tmpdir = TString("/tmp");
+
+   // Get Host name
+   TString openhost(sock->GetInetAddress().GetHostName());
+   if (gDebug > 2)
+      Info("Authenticate","OpenHost = %s", openhost.Data());
+
+   // Run Authentication now
+   std::string user;
+   Int_t meth = -1;
+   Int_t auth = 0;
+   Int_t type = 0;
+   std::string ctkn = "";
+   if (fgSrvAuthHook)
+      auth = (*fgSrvAuthHook)(sock,confdir,tmpdir,user,meth,type,ctkn);
+
+   if (gDebug > 2)
+      Info("Authenticate","auth = %d, type= %d, ctkn= %s",
+            auth, type, ctkn.c_str());
+
+   TSecContext *seccontext = 0;
+   if (auth > 0 && type == 0) {
+      // New authentication: Fill a SecContext for cleanup
+      // in case of interrupt
+      seccontext = new TSecContext(user.c_str(), openhost, meth, -1,
+                                   "server", ctkn.c_str());
+      fSecContexts->Add(seccontext);
+   }
+   
+   if (seccontext) {
+      // Store SecContext
+      sock->SetSecContext(seccontext);
+      return kTRUE;
+   }
+
+   return kFALSE;
 }

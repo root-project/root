@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.91 2004/07/02 18:36:57 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.92 2004/09/13 22:49:10 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -2404,7 +2404,13 @@ int main(int argc, char **argv)
       if (NetOpen(gInetdFlag, gService) == 0) {
 
          // Init Session (get protocol, run authentication, login, ...)
-         RpdInitSession(gService, gUser, gClientProtocol, gAnon, gPasswd);
+         int rci = RpdInitSession(gService, gUser, 
+                                  gClientProtocol, gAnon, gPasswd);
+         if (rci == -1)
+            Error(ErrFatal, -1, "rootd: failure initializing session");
+         else if (rci == -2)
+            // Special session (eg. cleanup): just exit
+            exit(0);
 
          ErrorInfo("main: rootdparentid = %d (%d)", rootdparentid, getppid());
 

@@ -44,10 +44,11 @@ include/%.h:    $(GLBSAUTHDIRI)/%.h
 
 $(GLBSAUTHLIB): $(GLBSAUTHO) $(GLBPATCHO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libGlobusAuth.$(SOEXT) $@ "$(GLBSAUTHO) $(GLBPATCHO)" \
+		   "$(SOFLAGS)" libGlobusAuth.$(SOEXT) $@ \
+		   "$(GLBSAUTHO) $(GLBPATCHO)" \
 		   "$(GLBSAUTHLIBEXTRA) $(GLOBUSLIBDIR) $(GLOBUSLIB)"
 
-all-globusauth:   $(GLBSAUTHLIB)
+all-globusauth: $(GLBSAUTHLIB)
 
 clean-globusauth:
 		@rm -f $(GLBSAUTHO)

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: NetErrors.cxx,v 1.3 2004/03/17 17:52:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: NetErrors.cxx,v 1.4 2004/05/19 15:32:32 rdm Exp $
 // Author: Fons Rademakers   28/08/2003
 
 /*************************************************************************
@@ -49,5 +49,6 @@ const char *gRootdErrStr[] = {
    "authentication attempt unsuccessful",
    "failure: authenticated user not the same as requested login username",
    "remote host cannot create file to store internal socket address",
-   "cannot change remote file permissions"
+   "cannot change remote file permissions",
+   "Unique random tag missing, incomplete or wrong"
 };

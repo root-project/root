@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.61 2004/09/16 20:18:10 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.62 2004/09/22 16:29:48 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -107,7 +107,8 @@ Bool_t         TAuthenticate::fgUsrPwdCrypt;
 // 8 -> 9: added new authentication features (see README.AUTH)
 // 9 -> 10: added support for authenticated socket via TSocket::CreateAuthSocket(...)
 // 10 -> 11: modified SSH protocol + support for server 'no authentication' mode
-Int_t TAuthenticate::fgClientProtocol = 11;  // increase when client protocol changes
+// 11 -> 12: add random tags to avoid reply attacks (password+token)
+Int_t TAuthenticate::fgClientProtocol = 12;  // increase when client protocol changes
 
 // Standar version of Sec Context match checking
 Int_t StdCheckSecCtx(const char *, TSecContext *);
@@ -288,6 +289,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    TString tmp = fProtocol;
    tmp.ReplaceAll("root",4,"",0);
    tmp.ReplaceAll("proof",5,"",0);
+   tmp.ReplaceAll("sock",4,"",0);
    if (!strncmp(tmp.Data(),"up",2))
       sec = 0;
    else if (!strncmp(tmp.Data(),"s",1))
@@ -576,6 +578,7 @@ Bool_t TAuthenticate::Authenticate()
                  NoSupport);
          Info("Authenticate",
               "failure: list of attempted methods: %s", TriedMeth);
+         fSocket->Send("0", kROOTD_BYE);
          return kFALSE;
       } else {
          if (fVersion < 2) {
@@ -591,6 +594,7 @@ Bool_t TAuthenticate::Authenticate()
                     NoSupport);
             Info("Authenticate",
                  "failure: list of attempted methods: %s", TriedMeth);
+            fSocket->Send("0", kROOTD_BYE);
             return kFALSE;
          }
          // Attempt negotiation ...
@@ -604,6 +608,7 @@ Bool_t TAuthenticate::Authenticate()
                AuthError("Authenticate", stat);
             Info("Authenticate",
                  "failure: list of attempted methods: %s", TriedMeth);
+            fSocket->Send("0", kROOTD_BYE);
             return kFALSE;
          } else if (kind == kROOTD_NEGOTIA) {
             if (stat > 0) {
@@ -642,6 +647,7 @@ Bool_t TAuthenticate::Authenticate()
                        " by remote server version",NoSupport);
                Info("Authenticate",
                     "failure: list of attempted methods: %s", TriedMeth);
+               fSocket->Send("0", kROOTD_BYE);
                return kFALSE;
             }
             // Look if a non tried method matches
@@ -667,6 +673,7 @@ Bool_t TAuthenticate::Authenticate()
                     " remote server version",NoSupport);
             Info("Authenticate",
                  "failure: list of attempted methods: %s", TriedMeth);
+            fSocket->Send("0", kROOTD_BYE);
             return kFALSE;
          } else                 // unknown message code at this stage
          if (strlen(NoSupport) > 0)
@@ -2209,6 +2216,9 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
          NeedSalt = 0;
       }
 
+      // The random tag in hex representation
+      // Protection against reply attacks
+      char ctag[11] = {0};
       if (Anon == 0 && Crypt == 1) {
 
          // Check that we got the right thing ..
@@ -2245,7 +2255,29 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
                return 0;
             }
             if (Slen) {
-               Salt = TString(TmpSalt);
+               // Extract random tag, if there
+               if (Slen > 9) {
+                  int ltmp = Slen;
+                  while (ltmp && TmpSalt[ltmp-1] != '#') ltmp--;
+                  if (ltmp) {
+                     if (TmpSalt[ltmp-1] == '#' && 
+                         TmpSalt[ltmp-10] == '#') {
+                        strncpy(ctag,&TmpSalt[ltmp-10],10);
+                        // We drop the random tag
+                        ltmp -= 10;
+                        TmpSalt[ltmp] = 0;
+                        // Update salt length
+                        Slen -= 10;
+                     }
+                  }
+                  if (!strlen(TmpSalt)) {
+                     // No salt left
+                     NeedSalt = 0;
+                     Slen = 0;
+                  }
+               }
+               if (Slen)
+                  Salt = TString(TmpSalt);
                delete[] TmpSalt;
             }
             if (gDebug > 2)
@@ -2255,11 +2287,14 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
                Info("ClearAuth", "Salt not required");
             if (fSocket->Recv(stat, kind) < 0)
                return 0;
-            if (kind != kMESS_ANY || stat != 0) {
+            if (kind != kMESS_ANY) {
                Warning("ClearAuth","Potential problems: got msg type:"
-                       " %d value: %d (expecting: %d 0)",
-                       kind,stat,(Int_t)kMESS_ANY);
+                       " %d (expecting: %d 0)",
+                       kind,(Int_t)kMESS_ANY);
             }
+
+            // Extract rtag
+            sprintf(ctag,"#%08x#",stat);
          }
          // We may not have got a salt (if the server may not access it
          // or if it needs the full password, like for AFS ...)
@@ -2343,6 +2378,12 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
          // Needs to send this for consistency
          if (fSocket->Send("\0", kROOTD_PASS) < 0)
             return 0;
+
+         // Add the random tag received from the server
+         // (if any); makes packets non re-usable
+         if (strlen(ctag))
+            PasHash += ctag;
+
          if (SecureSend(fSocket, 1, fRSAKey, PasHash.Data()) == -1) {
             Warning("ClearAuth", "problems secure-sending pass hash"
                     " - may result in authentication failure");
@@ -2962,13 +3003,15 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
 
    // Send Message
    if (fSocket->Send(sstr, *Message) < 0)
-      return -2;;
+      return -2;
 
    Int_t ReUse = *Rflag;
    if (ReUse == 1 && OffSet > -1) {
 
       // Receive result of checking offset
       // But only for recent servers
+      // NB: not backward compatible with dev version 4.00.02: switch
+      // off 'reuse' for such servers to avoid hanging at this point.
       Int_t rproto = fSocket->GetRemoteProtocol();
       Bool_t oldsrv = ((fProtocol.BeginsWith("root") && rproto == 9) ||
                        (fProtocol.BeginsWith("proof") && rproto == 8));
@@ -2981,7 +3024,7 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
                     " (value: %d)",kROOTD_AUTH,kind,stat);
       }
 
-      if (stat == 1) {
+      if (stat > 0) {
          if (gDebug > 2)
             Info("AuthExists","OffSet OK");
 
@@ -2990,6 +3033,17 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
             Info("AuthExists", "key type: %d", RSAKey);
 
          if (RSAKey > -1) {
+
+            // Recent servers send a random tag in stat
+            // It has to be signed too
+            if (stat > 1) {
+               // Create hex from tag
+               char tag[9] = {0};
+               sprintf(tag,"%08x",stat);
+               // Add to token
+               Token += tag;
+            }
+
             // Send Token encrypted
             if (SecureSend(fSocket, 1, RSAKey, Token) == -1) {
                Warning("AuthExists", "problems secure-sending Token %s",

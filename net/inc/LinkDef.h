@@ -1,4 +1,4 @@
-/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.11 2004/07/17 23:21:50 rdm Exp $ */
+/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.12 2004/07/22 07:17:32 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -19,6 +19,9 @@
 #pragma link C++ enum ESendRecvOptions;
 
 #pragma link C++ global gGrid;
+
+#pragma link C++ global kSrvAuth;
+#pragma link C++ global kSrvNoAuth;
 
 #pragma link C++ struct Grid_Result_t;
 

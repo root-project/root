@@ -23,6 +23,13 @@ NETO         := $(NETS:.cxx=.o)
 
 NETDEP       := $(NETO:.o=.d) $(NETDO:.o=.d)
 
+#### DaemonUtils goes into libSrvAuth ####
+NETH         := $(filter-out $(MODDIRI)/DaemonUtils.h,$(NETH))
+NETS         := $(filter-out $(MODDIRS)/DaemonUtils.cxx,$(NETS))
+NETO         := $(filter-out $(MODDIRS)/DaemonUtils.o,$(NETO))
+
+DAEMONUTILSO := $(MODDIRS)/DaemonUtils.o
+
 # Add SSL flags, if required
 ifneq ($(SSLLIB),)
 SSLFLAGS     := -I$(SSLINCDIR)
@@ -57,7 +64,7 @@ $(NETDO):       $(NETDS)
 all-net:        $(NETO) $(NETDO)
 
 clean-net:
-		@rm -f $(NETO) $(NETDO)
+		@rm -f $(NETO) $(NETDO) $(DAEMONUTILSO)
 
 clean::         clean-net
 

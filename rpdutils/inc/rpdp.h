@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.20 2004/08/16 14:28:34 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.21 2004/09/13 22:49:10 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -38,29 +38,19 @@ namespace std { using ::string; }
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
-// Definition and prototypes used by rootd and proofd              //
+// Definition used by daemons                                      //
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-//
-// Typedefs
-typedef void (*SigPipe_t)(int);
+#ifndef ROOT_rpddefs
+#include "rpddefs.h"
+#endif
 
-//
-// Global consts
-#include "AuthConst.h"
-const int  kMAXRECVBUF       = 1024;
-const int  kMAXPATHLEN       = kMAXSECBUF;
-const int  kMAXUSERLEN       = 128;
-
-// Masks for initialization options
-const unsigned int kDMN_RQAUTH = 0x1;  // Require authentication
-const unsigned int kDMN_HOSTEQ = 0x2;  // Allow host equivalence 
-const unsigned int kDMN_SYSLOG = 0x4;  // Log messages to syslog i.o. stderr 
-
-//
-// type of service
-enum  EService  { kSOCKD = 0, kROOTD, kPROOFD };
+/////////////////////////////////////////////////////////////////////
+//                                                                 //
+// Prototypes used by daemons                                      //
+//                                                                 //
+/////////////////////////////////////////////////////////////////////
 
 //
 // rpdutils globals
@@ -107,6 +97,7 @@ int  RpdGetShmIdCred();
 #endif
 int  RpdInitSession(int, std::string &, int &);
 int  RpdInitSession(int, std::string &, int &, int &, std::string &);
+int  RpdInitSession(int, std::string &, int &, int &, int &, std::string &);
 void RpdInit(EService serv, int pid, int sproto, 
              unsigned int opts, int rumsk, int sshp, 
              const char *tmpd, const char *asrpp);
@@ -116,6 +107,7 @@ void RpdSetErrorHandler(ErrorHandler_t Err, ErrorHandler_t Sys,
 void RpdSetKeytabFile(const char *keytabfile);
 #endif
 void RpdSetSysLogFlag(int syslog);
+void RpdSetMethInitFlag(int methinit);
 int  RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck = 0);
 
 } // namespace ROOT
@@ -156,7 +148,7 @@ int  NetParSend(const void *buf, int len);
 
 //
 // rpdutils.cxx
-void RpdAuthenticate();
+int  RpdAuthenticate();
 int  RpdCheckAuthAllow(int Sec, const char *Host);
 int  RpdCheckAuthTab(int Sec, const char *User, const char *Host,
                      int RemId, int *OffSet);
@@ -167,6 +159,7 @@ int  RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
 int  RpdCheckSpecialPass(const char *passwd);
 int  RpdCheckSshd(int opt);
 bool RpdCheckToken(char *tknin, char *tknref);
+int  RpdCleanupAuthTab(const char *crypttoken);
 int  RpdCleanupAuthTab(const char *Host, int RemId, int OffSet);
 void RpdDefaultAuthAllow();
 int  RpdDeleteKeyFile(int ofs);
@@ -175,27 +168,27 @@ int  RpdGetAuthMethod(int kind);
 char *RpdGetIP(const char *host);
 char *RpdGetRandString(int Opt, int Len);
 int  RpdGetRSAKeys(const char *PubKey, int Opt);
-void RpdGlobusAuth(const char *sstr);
+int RpdGlobusAuth(const char *sstr);
 int  RpdGuessClientProt(const char *buf, EMessageTypes kind);
 void RpdInitAuth();
 void RpdInitRand();
-void RpdKrb5Auth(const char *sstr);
-void RpdLogin(int);
-void RpdNoAuth(int);
-void RpdPass(const char *pass);
-void RpdProtocol(int);
+int RpdKrb5Auth(const char *sstr);
+int RpdLogin(int,int);
+int RpdNoAuth(int);
+int RpdPass(const char *pass);
+int RpdProtocol(int);
 int  RpdRecvClientRSAKey();
 int  RpdRenameKeyFile(int oofs, int nofs);
-bool RpdReUseAuth(const char *sstr, int kind);
-void RpdRfioAuth(const char *sstr);
+int RpdReUseAuth(const char *sstr, int kind);
+int RpdRfioAuth(const char *sstr);
 int  RpdSavePubKey(const char *PubKey, int OffSet, char *User);
 int  RpdSecureRecv(char **Str);
 int  RpdSecureSend(char *Str);
 void RpdSendAuthList();
-void RpdSetUid(int uid);
-void RpdSRPUser(const char *user);
-void RpdSshAuth(const char *sstr);
-void RpdUser(const char *sstr);
+int RpdSetUid(int uid);
+int RpdSRPUser(const char *user);
+int RpdSshAuth(const char *sstr);
+int RpdUser(const char *sstr);
 
 //
 // Ssh Utility Function prototypes ...

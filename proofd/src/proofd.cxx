@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.69 2004/07/04 17:48:43 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.70 2004/09/13 22:49:10 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -918,7 +918,12 @@ int main(int argc, char **argv)
       if (NetOpen(gInetdFlag, gService) == 0) {
 
          // Init Session (get protocol, run authentication, login, ...)
-         gMaster = RpdInitSession(gService, gUser, gRemPid);
+         if ((gMaster = RpdInitSession(gService, gUser, gRemPid)) < 0)
+            if (gMaster == -1)
+               Error(ErrFatal, -1, "proofd: failure initializing session");
+            else if (gMaster == -2)
+               // special session (eg. cleanup): just exit
+               exit(0);
 
          ProofdExec();     // child processes client's requests
          NetClose();       // then we are done

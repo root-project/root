@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.15 2004/05/10 16:00:02 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.16 2004/05/18 22:20:49 rdm Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -128,7 +128,7 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
    if (authreq) {
       if (valid) {
          if (!Authenticate(TUrl(host).GetUser())) {
-            if (fRemoteProtocol < 10) {
+            if (rootdSrv && fRemoteProtocol < 10) {
                // We failed because we are talking to an old
                // server: we need to re-open the connection 
                // and communicate the size first

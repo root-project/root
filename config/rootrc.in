@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.79 2004/09/13 12:47:36 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.80 2004/09/15 17:09:51 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -223,7 +223,7 @@ Globus.ProxyKeyBits:     1024
 # This is what one usually gets if the server has reached the maximum
 # number of sshd daemons (defined by MaxStartups in sshd_config);
 # this is a typical case in which one should retry.
-SSH.ErrorRetry:     "Connection closed by remote host"
+SSH.ErrorRetry:   "Connection closed by remote host"
 # Max number of retries for SSH in case of retry error (see above)
 SSH.MaxRetry:     100
 
@@ -236,9 +236,28 @@ RSA.KeyType:  1
 # Default 256, minimum 128, maximum 15912.
 # SSL.BFBits:   256
 
+# Server authentication in TServerSocket:
+#
+# General: file with server access rules
+#SrvAuth.DaemonRc /etc/root/system.daemonrc
+#
+# UsrPwd: Enable check of host equivalence via /etc/hosts.equiv or $HOME/.rhosts
+#SrvAuth.CheckHostsEquivalence 1
+#
+# SRP: pass file (default $HOME/.srootdpass)
+#SrvAuth.SRPpassfile  <home>/.srootdpass
+#
+# Globus/GSI: hostcert configuration file  
+#SrvAuth.HostCert /etc/root/hostcert.conf
+# Globus/GSI: gridmap file
+#SrvAuth.GridMap /etc/grid-security/grid-mapfile
+#
+# SSH: port for the sshd daemon
+#SrvAuth.SshdPort 22
+
 # Force file opening via TNetFile (TXNetFile) if a hostname is specified
 # in the Url.
-# By default, for local files TFile::Open invokes directly TFile 
+# By default, for local files TFile::Open() invokes directly TFile 
 # TFile.ForceRemote 1
 
 # Special cases for the TUrl parser, where the special cases are parsed
