@@ -28,8 +28,6 @@
 #include "TKey.h"
 #include "Riostream.h"
 
-using std::string;
-
 TList *FileList;
 TFile *Target;
 
