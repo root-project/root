@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.19 2005/02/03 11:40:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.20 2005/02/03 16:58:57 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -890,7 +890,7 @@ void TGeoXtru::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   nz       = " << fNz << ";" << endl;
    out << "   nvert    = " << fNvert << ";" << endl;
-   out << "   xtru = new TGeoXtru(nz);" << endl;
+   out << "   TGeoXtru *xtru = new TGeoXtru(nz);" << endl;
    out << "   xtru->SetName(\"" << GetName() << "\");" << endl;
    Int_t i;
    for (i=0; i<fNvert; i++) {

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.105 2004/12/14 19:46:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.106 2005/01/14 12:10:14 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1414,6 +1414,36 @@ TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
       return 0;
    }
    return volume;
+}
+
+//_____________________________________________________________________________
+void TGeoManager::SetAllIndex()
+{
+// Assigns uid's for all materials,media and matrices.
+   Int_t index = 1;
+   TIter next(fMaterials);
+   TGeoMaterial *mater;
+   while ((mater=(TGeoMaterial*)next())) {
+      mater->SetUniqueID(index++);
+      mater->ResetBit(TGeoMaterial::kMatSavePrimitive);
+   }   
+   index = 1;
+   TIter next1(fMedia);
+   TGeoMedium *med;
+   while ((med=(TGeoMedium*)next1())) {
+      med->SetUniqueID(index++);
+      med->ResetBit(TGeoMedium::kMedSavePrimitive);
+   }   
+   index = 1;
+   TIter next2(fMatrices);
+   TGeoMatrix *matrix;
+   while ((matrix=(TGeoMatrix*)next2())) {
+      matrix->SetUniqueID(index++);   
+      matrix->ResetBit(TGeoMatrix::kGeoSavePrimitive);
+   }
+   TIter next3(fVolumes);
+   TGeoVolume *vol;
+   while ((vol=(TGeoVolume*)next3())) vol->UnmarkSaved();
 }
 
 //_____________________________________________________________________________

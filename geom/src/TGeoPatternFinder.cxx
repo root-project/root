@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.9 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.10 2004/02/10 08:56:20 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -6,6 +6,7 @@
  *   a division type
  *************************************************************************/
 
+#include "Riostream.h"
 #include "TObject.h"
 #include "TGeoMatrix.h"
 #include "TGeoPara.h"
@@ -126,6 +127,14 @@ TGeoNode *TGeoPatternX::FindNode(Double_t *point)
    return node;
 }
 
+//______________________________________________________________________________
+void TGeoPatternX::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+   // Save a primitive as a C++ statement(s) on output stream "out".
+   Int_t iaxis = 1;
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+}
+
 /*************************************************************************
  * TGeoPatternY - a Y axis divison pattern
  *   
@@ -187,6 +196,14 @@ TGeoNode *TGeoPatternY::FindNode(Double_t *point)
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
+}
+
+//______________________________________________________________________________
+void TGeoPatternY::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+   // Save a primitive as a C++ statement(s) on output stream "out".
+   Int_t iaxis = 2;
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep;
 }
 
 /*************************************************************************
@@ -256,6 +273,14 @@ TGeoNode *TGeoPatternZ::FindNode(Double_t *point)
    return node;
 }
 
+//______________________________________________________________________________
+void TGeoPatternZ::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+   // Save a primitive as a C++ statement(s) on output stream "out".
+   Int_t iaxis = 3;
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+}
+
 /*************************************************************************
  * TGeoPatternParaX - a X axis divison pattern for PARA shape
  *   
@@ -321,6 +346,14 @@ TGeoNode *TGeoPatternParaX::FindNode(Double_t *point)
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
+}
+
+//______________________________________________________________________________
+void TGeoPatternParaX::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+   // Save a primitive as a C++ statement(s) on output stream "out".
+   Int_t iaxis = 1;
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
 /*************************************************************************
@@ -398,6 +431,14 @@ TGeoNode *TGeoPatternParaY::FindNode(Double_t *point)
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
+}
+
+//______________________________________________________________________________
+void TGeoPatternParaY::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+   // Save a primitive as a C++ statement(s) on output stream "out".
+   Int_t iaxis = 2;
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
 /*************************************************************************
@@ -479,6 +520,14 @@ TGeoNode *TGeoPatternParaZ::FindNode(Double_t *point)
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
+}
+
+//______________________________________________________________________________
+void TGeoPatternParaZ::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+   // Save a primitive as a C++ statement(s) on output stream "out".
+   Int_t iaxis = 3;
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
 /*************************************************************************
@@ -568,6 +617,14 @@ TGeoNode *TGeoPatternTrapZ::FindNode(Double_t *point)
    return node;
 }
 
+//______________________________________________________________________________
+void TGeoPatternTrapZ::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+   // Save a primitive as a C++ statement(s) on output stream "out".
+   Int_t iaxis = 3;
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+}
+
 
 /*************************************************************************
  * TGeoPatternCylR - a cylindrical R divison pattern
@@ -627,6 +684,15 @@ TGeoNode *TGeoPatternCylR::FindNode(Double_t *point)
    cd(ind);
    return node;
 }
+
+//______________________________________________________________________________
+void TGeoPatternCylR::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+   // Save a primitive as a C++ statement(s) on output stream "out".
+   Int_t iaxis = 1;
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+}
+
 /*************************************************************************
  * TGeoPatternCylPhi - a cylindrical phi divison pattern
  *   
@@ -720,6 +786,14 @@ TGeoNode *TGeoPatternCylPhi::FindNode(Double_t *point)
    return node;
 }
 
+//______________________________________________________________________________
+void TGeoPatternCylPhi::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+   // Save a primitive as a C++ statement(s) on output stream "out".
+   Int_t iaxis = 2;
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+}
+
 /*************************************************************************
  * TGeoPatternSphR - a spherical R divison pattern
  *   
@@ -767,6 +841,14 @@ TGeoNode *TGeoPatternSphR::FindNode(Double_t * /*point*/)
 {
 // find the node containing the query point
    return 0;
+}
+
+//______________________________________________________________________________
+void TGeoPatternSphR::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+   // Save a primitive as a C++ statement(s) on output stream "out".
+   Int_t iaxis = 1;
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
 /*************************************************************************
@@ -818,13 +900,18 @@ TGeoNode *TGeoPatternSphTheta::FindNode(Double_t * /*point*/)
    return 0;
 }
 
+//______________________________________________________________________________
+void TGeoPatternSphTheta::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+   // Save a primitive as a C++ statement(s) on output stream "out".
+   Int_t iaxis = 2;
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+}
+
 /*************************************************************************
  * TGeoPatternSphPhi - a spherical phi divison pattern
  *   
  *************************************************************************/
-
-
-
 
 //-----------------------------------------------------------------------------
 TGeoPatternSphPhi::TGeoPatternSphPhi()
@@ -865,6 +952,14 @@ TGeoNode *TGeoPatternSphPhi::FindNode(Double_t * /*point*/)
 {
 // find the node containing the query point
    return 0;
+}
+
+//______________________________________________________________________________
+void TGeoPatternSphPhi::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+   // Save a primitive as a C++ statement(s) on output stream "out".
+   Int_t iaxis = 3;
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.44 2005/02/03 11:40:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.45 2005/02/03 16:58:57 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -642,7 +642,7 @@ TGeoShape *TGeoCone::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
    if (fRmax2<0)
       rmax2 = ((TGeoCone*)mother)->GetRmax2();
 
-   return (new TGeoCone(rmin1, rmax1, rmin2, rmax2, dz));
+   return (new TGeoCone(GetName(), dz, rmin1, rmax1, rmin2, rmax2));
 }
 
 //_____________________________________________________________________________
@@ -1879,7 +1879,7 @@ TGeoShape *TGeoConeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*ma
    if ((fRmax2<0) || (fRmax2<fRmin2))
       rmax2 = ((TGeoCone*)mother)->GetRmax2();
 
-   return (new TGeoConeSeg(rmin1, rmax1, rmin2, rmax2, dz, fPhi1, fPhi2));
+   return (new TGeoConeSeg(GetName(), dz, rmin1, rmax1, rmin2, rmax2, fPhi1, fPhi2));
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.50 2004/11/19 06:39:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.51 2005/02/03 11:40:39 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -987,17 +987,163 @@ void TGeoVolume::Raytrace(Bool_t flag)
 }   
 
 //______________________________________________________________________________
+void TGeoVolume::SaveAs(const char *filename)
+{
+//  Save geometry having this as top volume as a C++ macro.
+   if (!filename) return;
+   ofstream out;
+   out.open(filename, ios::out);
+   if (out.bad()) {
+      Error("SavePrimitive", "Bad file name: %s", filename);
+      return;
+   }
+   if (gGeoManager->GetTopVolume() != this) gGeoManager->SetTopVolume(this);
+   gGeoManager->SetAllIndex();
+   
+   char fname[1000];
+   strcpy(fname,filename);
+   char *dot = strstr(fname,".");
+   if (dot) *dot = 0;  
+   out << "void "<<fname<<"() {" << endl;
+   out << "   gSystem->Load(\"libGeom\");" << endl;
+   out << "   new TGeoManager(\"" << gGeoManager->GetName() << "\", \"" << gGeoManager->GetTitle() << "\");" << endl << endl;
+   out << "   Double_t dx,dy,dz;" << endl;
+   out << "   Double_t dx1, dx2, dy1, dy2;" << endl;
+   out << "   Double_t vert[20], par[20];" << endl;
+   out << "   Double_t theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2;" << endl;
+   out << "   Double_t twist;" << endl;
+   out << "   Double_t origin[3];" << endl;
+   out << "   TString bool_name;" << endl;
+   out << "   Double_t rmin, rmax, rmin1, rmax1, rmin2, rmax2;" << endl;
+   out << "   Double_t r, rlo, rhi;" << endl;
+   out << "   Double_t phi1, phi2;" << endl;
+   out << "   Double_t a,b;" << endl;
+   out << "   Double_t point[3], norm[3];" << endl;
+   out << "   Double_t rin, stin, rout, stout;" << endl;
+   out << "   Double_t thx, phx, thy, phy, thz, phz;" << endl;
+   out << "   Double_t alpha, theta1, theta2, phi1, phi2, dphi;" << endl;
+   out << "   Double_t tr[3], rot[9];" << endl;
+   out << "   Double_t z, density, radl, absl, w;" << endl;
+   out << "   Double_t lx,ly,lz,tx,ty,tz;" << endl;
+   out << "   Double_t zsect,x0,y0,scale;" << endl;
+   out << "   Int_t nel, numed, nz, nedges, nvert;" << endl;
+   out << "   TGeoShape *pShape;" << endl << endl;
+   // first save materials/media
+   out << "   // MATERIALS, MIXTURES AND TRACKING MEDIA" << endl;
+   SavePrimitive(out, "m");
+   // then, save matrices
+   out << endl << "   // TRANSFORMATION MATRICES" << endl;
+   SavePrimitive(out, "x");
+   // save this volume and shape
+   SavePrimitive(out, "s");
+   out << endl << "   // SET TOP VOLUME OF GEOMETRY" << endl;
+   out << "   gGeoManager->SetTopVolume(" << GetPointerName() << ");" << endl;
+   // save daughters
+   out << endl << "   // SHAPES, VOLUMES AND GEOMETRICAL HIERARCHY" << endl;
+   SavePrimitive(out, "d");
+   out << endl << "   // CLOSE GEOMETRY" << endl;
+   out << "   gGeoManager->CloseGeometry();" << endl;
+   out << "}" << endl;
+}   
+
+//______________________________________________________________________________
 void TGeoVolume::SavePrimitive(ofstream &out, Option_t *option)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TObject::TestBit(TGeoVolume::kVolumeSavePrimitive)) return;
-   // create the shape for this volume (pShape)
-   fShape->SavePrimitive(out,option);
-   // create a medium pMed
-   fMedium->SavePrimitive(out,option);
-   out << "   // Volume: " << GetName() << endl;
-   out << "   pVol = new TGeoVolume(\"" << GetName() << "\", pShape, pMed);" << endl;
+   out.precision(6);
+   out.setf(ios::fixed);
+   Int_t i,icopy;
+   Int_t nd = GetNdaughters();
+   TGeoVolume *dvol;
+   TGeoNode *dnode;
+   TGeoMatrix *matrix;
+   // check if we need to save shape/volume
+   if (!strcmp(option, "s")) {
+      // create the shape for this volume (pShape)
+      if (TestAttBit(TGeoAtt::kSavePrimitiveAtt)) return;
+      fShape->SavePrimitive(out,option);
+      out << "   // Volume: " << GetName() << endl;
+      out << "   " << GetPointerName() << " = new TGeoVolume(\"" << GetName() << "\", pShape, "<< fMedium->GetPointerName() << ");" << endl;
+      if (fLineColor != 1) out << "   " << GetPointerName() << "->SetLineColor(" << fLineColor << ");" << endl;
+      if (fLineWidth != 1) out << "   " << GetPointerName() << "->SetLineWidth(" << fLineWidth << ");" << endl;
+      if (fLineStyle != 1) out << "   " << GetPointerName() << "->SetLineStyle(" << fLineStyle << ");" << endl;
+      if (!IsVisible()) out << "   " << GetPointerName() << "->SetVisibility(kFALSE);" << endl;
+      if (!IsVisibleDaughters()) out << "   " << GetPointerName() << "->VisibleDaughters(kFALSE);" << endl;
+      SetAttBit(TGeoAtt::kSavePrimitiveAtt);
+   }   
+   // check if we need to save the media
+   if (!strcmp(option, "m")) {
+      fMedium->SavePrimitive(out,option);
+      for (i=0; i<nd; i++) {
+         dvol = GetNode(i)->GetVolume();
+         dvol->SavePrimitive(out,option);
+      }
+      return;      
+   }   
+   // check if we need to save the matrices
+   if (!strcmp(option, "x")) {
+      if (fFinder) {
+         dvol = GetNode(0)->GetVolume();
+         dvol->SavePrimitive(out,option);
+         return;
+      }
+      for (i=0; i<nd; i++) {
+         dnode = GetNode(i);
+         matrix = dnode->GetMatrix();
+         if (!matrix->IsIdentity()) matrix->SavePrimitive(out,option);
+         dnode->GetVolume()->SavePrimitive(out,option);
+      }
+      return;      
+   } 
+   // check if we need to save volume daughters
+   if (!strcmp(option, "d")) {
+      if (!nd) return;
+      if (TestAttBit(TGeoAtt::kSaveNodesAtt)) return;
+      SetAttBit(TGeoAtt::kSaveNodesAtt);     
+      if (fFinder) {
+         // volume divided: generate volume->Divide()
+         dnode = GetNode(0);
+         dvol = dnode->GetVolume();
+         out << "   TGeoVolume *" << dvol->GetPointerName() << " = ";
+         out << GetPointerName() << "->Divide(\"" << dvol->GetName() << "\", ";
+         fFinder->SavePrimitive(out,option);
+         if (fMedium != dvol->GetMedium()) {
+            out << ", " << dvol->GetMedium()->GetId();
+         }
+         out << ");" << endl;   
+         dvol->SavePrimitive(out,"d");   
+         return;
+      }
+      for (i=0; i<nd; i++) {
+         dnode = GetNode(i);
+         dvol = dnode->GetVolume();
+         dvol->SavePrimitive(out,"s");
+         matrix = dnode->GetMatrix();
+         icopy = dnode->GetNumber();
+         // generate AddNode()
+         out << "   " << GetPointerName() << "->AddNode";
+         if (dnode->IsOverlapping()) out << "Overlap";
+         out << "(" << dvol->GetPointerName() << ", " << icopy;
+         if (!matrix->IsIdentity()) out << ", " << matrix->GetPointerName();
+         out << ");" << endl;
+      }
+      // Recursive loop to daughters
+      for (i=0; i<nd; i++) {
+         dnode = GetNode(i);
+         dvol = dnode->GetVolume();
+         dvol->SavePrimitive(out,"d");
+      } 
+   }   
 }
+
+//_____________________________________________________________________________
+void TGeoVolume::UnmarkSaved()
+{
+// Reset SavePrimitive bits.
+   ResetAttBit(TGeoAtt::kSavePrimitiveAtt);
+   ResetAttBit(TGeoAtt::kSaveNodesAtt);
+   if (fShape) fShape->ResetBit(TGeoShape::kGeoSavePrimitive);
+}   
 
 //_____________________________________________________________________________
 void TGeoVolume::ExecuteEvent(Int_t event, Int_t px, Int_t py)
@@ -1067,6 +1213,15 @@ Bool_t TGeoVolume::GetOptimalVoxels() const
 }      
 
 //_____________________________________________________________________________
+char *TGeoVolume::GetPointerName() const
+{
+// Provide a pointer name containing uid.
+   static char name[20];
+   sprintf(name,"%s", GetName());
+   return name;
+}
+
+//_____________________________________________________________________________
 void TGeoVolume::GrabFocus()
 {
 // Move perspective view focus to this volume
@@ -1081,8 +1236,6 @@ TGeoVolume *TGeoVolume::CloneVolume() const
    sprintf(name, "%s", GetName());
    // build a volume with same name, shape and medium
    TGeoVolume *vol = new TGeoVolume(name, fShape, fMedium);
-   TObject *vobj = (TObject*)vol;
-   TGeoAtt *vatt = (TGeoAtt*)vol;
    Int_t i;
    // copy volume attributes
    vol->SetLineColor(GetLineColor());
@@ -1093,14 +1246,14 @@ TGeoVolume *TGeoVolume::CloneVolume() const
    // copy other attributes
    Int_t nbits = 8*sizeof(UInt_t);
    for (i=0; i<nbits; i++) 
-      vatt->SetBit(1<<i, TGeoAtt::TestBit(1<<i));
+      vol->SetAttBit(1<<i, TGeoAtt::TestAttBit(1<<i));
    
    // copy field
    vol->SetField(fField);
    // Set bits
    for (i=0; i<nbits; i++) 
-      vobj->SetBit(1<<i, TObject::TestBit(1<<i));
-   vobj->SetBit(kVolumeClone);   
+      vol->SetBit(1<<i, TObject::TestBit(1<<i));
+   vol->SetBit(kVolumeClone);   
    // copy nodes
    vol->MakeCopyNodes(this);
    // if volume is divided, copy finder

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.36 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.37 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -79,8 +79,7 @@ public:
       kVolumeMulti   =     BIT(19),
       kVoxelsXYZ     =     BIT(20),
       kVoxelsCyl     =     BIT(21),
-      kVolumeClone   =     BIT(22),
-      kVolumeSavePrimitive = BIT(23)
+      kVolumeClone   =     BIT(22)
    };
    // constructors
    TGeoVolume();
@@ -144,10 +143,11 @@ public:
    TGeoNode       *GetNode(const char *name) const;
    TGeoNode       *GetNode(Int_t i) const {return (TGeoNode*)fNodes->UncheckedAt(i);}
    Int_t           GetNodeIndex(const TGeoNode *node, Int_t *check_list, Int_t ncheck) const;
-   Int_t           GetNumber() {return fNumber;}
+   Int_t           GetNumber() const {return fNumber;}
    virtual char   *GetObjectInfo(Int_t px, Int_t py) const;
    Bool_t          GetOptimalVoxels() const;
    Option_t       *GetOption() const { return fOption.Data(); }
+   char           *GetPointerName() const;
    Char_t          GetTransparency() const {return (fMedium==0)?0:(fMedium->GetMaterial()->GetTransparency());}
    TGeoShape      *GetShape() const                  {return fShape;}
    void            GrabFocus(); // *MENU*
@@ -161,6 +161,7 @@ public:
    void            RandomPoints(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0); // *MENU*
    void            Raytrace(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsRaytracing
+   void            SaveAs(const char *filename); // *MENU*
    virtual void    SavePrimitive(ofstream &out, Option_t *option);
    void            SetAsTopVolume(); // *TOGGLE* *GETTER=IsTopVolume
    void            SetCurrentPoint(Double_t x, Double_t y, Double_t z);
@@ -181,6 +182,7 @@ public:
    void            SetNumber(Int_t number) {fNumber = number;}
    void            SetNtotal(Int_t ntotal) {fNtotal = ntotal;}
    void            SortNodes();
+   void            UnmarkSaved();
    Bool_t          Valid() const;
    void            VisibleDaughters(Bool_t vis=kTRUE); // *TOGGLE* *GETTER=IsVisibleDaughters
    void            InvisibleAll(Bool_t flag=kTRUE) {SetVisibility(!flag); VisibleDaughters(!flag);} // *TOGGLE* *GETTER=IsAllInvisible

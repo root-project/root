@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.h,v 1.4 2004/07/09 08:10:21 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMedium.h,v 1.5 2005/02/03 11:40:38 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************
@@ -46,6 +46,7 @@ public:
    virtual Int_t            GetByteCount() const {return sizeof(this);}
    Int_t                    GetId()   const     {return fId;}
    Double_t                 GetParam(Int_t i) const {return fParams[i];}
+   char                    *GetPointerName() const;
    TGeoMaterial            *GetMaterial() const {return fMaterial;}
    virtual void             SavePrimitive(ofstream &out, Option_t *option);
    void                     SetId(Int_t id)     {fId = id;}

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.34 2005/01/14 15:10:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.35 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -283,6 +283,15 @@ Int_t TGeoMatrix::GetByteCount() const
    if (IsCombi() || IsGeneral()) count += 4 + 36;
    return count;
 }
+
+//_____________________________________________________________________________
+char *TGeoMatrix::GetPointerName() const
+{
+// Provide a pointer name containing uid.
+   static char name[20];
+   sprintf(name,"pMatrix%d", GetUniqueID());
+   return name;
+}    
 
 //_____________________________________________________________________________
 void TGeoMatrix::GetHomogenousMatrix(Double_t *hmat) const
@@ -691,7 +700,7 @@ void TGeoTranslation::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   dx = " << fTranslation[0] << ";" << endl;
    out << "   dy = " << fTranslation[1] << ";" << endl;
    out << "   dz = " << fTranslation[2] << ";" << endl;
-   out << "   pMatrix = new TGeoTranslation(\"" << GetName() << "\",dx,dy,dz);" << endl;
+   out << "   TGeoTranslation *" << GetPointerName() << " = new TGeoTranslation(\"" << GetName() << "\",dx,dy,dz);" << endl;
    TObject::SetBit(kGeoSavePrimitive);
 }
 
@@ -937,7 +946,7 @@ void TGeoRotation::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   thx = " << th1 << ";    phx = " << ph1 << ";" << endl;
    out << "   thy = " << th2 << ";    phy = " << ph2 << ";" << endl;
    out << "   thz = " << th3 << ";    phz = " << ph3 << ";" << endl;
-   out << "   pMatrix = new TGeoRotation(\"" << GetName() << "\",thx,phx,thy,phy,thz,phz);" << endl;
+   out << "   TGeoRotation *" << GetPointerName() << " = new TGeoRotation(\"" << GetName() << "\",thx,phx,thy,phy,thz,phz);" << endl;
    TObject::SetBit(kGeoSavePrimitive);
 }
 
@@ -1191,6 +1200,7 @@ TGeoCombiTrans::TGeoCombiTrans(const TGeoCombiTrans &other)
    if (other.IsRotation()) {   
       const TGeoRotation rot = *other.GetRotation();
       fRotation = new TGeoRotation(rot); 
+      SetBit(kGeoMatrixOwned);
    } 
    else fRotation = 0;  
 }   
@@ -1208,6 +1218,7 @@ TGeoCombiTrans::TGeoCombiTrans(const TGeoMatrix &other)
    }
    if (other.IsRotation()) {
       SetBit(kGeoRotation);
+      SetBit(kGeoMatrixOwned);
       fRotation = new TGeoRotation(other);
    }
    else fRotation = 0;
@@ -1225,6 +1236,7 @@ TGeoCombiTrans::TGeoCombiTrans(const TGeoTranslation &tr, const TGeoRotation &ro
    }   
    if (rot.IsRotation()) {
       SetBit(kGeoRotation);   
+      SetBit(kGeoMatrixOwned);
       fRotation = new TGeoRotation(rot);
       SetBit(kGeoReflection, rot.TestBit(kGeoReflection));
    }
@@ -1274,10 +1286,23 @@ TGeoCombiTrans &TGeoCombiTrans::operator=(const TGeoMatrix &matrix)
    }
    if (matrix.IsRotation()) {
       SetBit(kGeoRotation);
-      if (!fRotation) fRotation = new TGeoRotation();
+      if (!fRotation) {
+         fRotation = new TGeoRotation();
+         SetBit(kGeoMatrixOwned);
+      } else {
+         if (!TestBit(kGeoMatrixOwned)) {
+            fRotation = new TGeoRotation(); 
+            SetBit(kGeoMatrixOwned);
+         }
+      }        
       fRotation->SetMatrix(matrix.GetRotationMatrix());
-   }
-   else fRotation = 0;
+      fRotation->SetBit(kGeoReflection, matrix.TestBit(kGeoReflection));
+      fRotation->SetBit(kGeoRotation);
+   } else {
+      if (fRotation && TestBit(kGeoMatrixOwned)) delete fRotation;
+      ResetBit(kGeoMatrixOwned);
+      fRotation = 0;
+   }   
    return *this;
 }
 
@@ -1285,7 +1310,7 @@ TGeoCombiTrans &TGeoCombiTrans::operator=(const TGeoMatrix &matrix)
 TGeoCombiTrans::~TGeoCombiTrans()
 {
 // destructor
-   if (fRotation) delete fRotation;
+   if (fRotation && TestBit(TGeoMatrix::kGeoMatrixOwned)) delete fRotation;
 }
 
 //_____________________________________________________________________________
@@ -1296,10 +1321,13 @@ void TGeoCombiTrans::Clear(Option_t *)
       ResetBit(kGeoTranslation);
       memset(fTranslation, 0, kN3);
    }
-   if (IsRotation()) {
-      ResetBit(kGeoRotation);
-      fRotation->Clear();
+   if (fRotation) {
+      if (TestBit(kGeoMatrixOwned)) delete fRotation;
+      fRotation = 0;
    }
+   ResetBit(kGeoRotation);
+   ResetBit(kGeoReflection);
+   ResetBit(kGeoMatrixOwned);
 }         
 
 //_____________________________________________________________________________
@@ -1343,7 +1371,10 @@ void TGeoCombiTrans::RegisterYourself()
 void TGeoCombiTrans::RotateX(Double_t angle)
 {
 // Rotate about X axis with angle expressed in degrees.
-   if (!fRotation) fRotation = new TGeoRotation();
+   if (!fRotation || !TestBit(kGeoMatrixOwned)) {
+      fRotation = new TGeoRotation();
+      SetBit(kGeoMatrixOwned);
+   }   
    SetBit(kGeoRotation);
    const Double_t *rot = fRotation->GetRotationMatrix();
    Double_t phi = angle*TMath::DegToRad();
@@ -1372,7 +1403,10 @@ void TGeoCombiTrans::RotateX(Double_t angle)
 void TGeoCombiTrans::RotateY(Double_t angle)
 {
 // Rotate about Y axis with angle expressed in degrees.
-   if (!fRotation) fRotation = new TGeoRotation();
+   if (!fRotation || !TestBit(kGeoMatrixOwned)) {
+      fRotation = new TGeoRotation();
+      SetBit(kGeoMatrixOwned);
+   }   
    SetBit(kGeoRotation);
    const Double_t *rot = fRotation->GetRotationMatrix();
    Double_t phi = angle*TMath::DegToRad();
@@ -1401,7 +1435,10 @@ void TGeoCombiTrans::RotateY(Double_t angle)
 void TGeoCombiTrans::RotateZ(Double_t angle)
 {
 // Rotate about Z axis with angle expressed in degrees.
-   if (!fRotation) fRotation = new TGeoRotation();
+   if (!fRotation || !TestBit(kGeoMatrixOwned)) {
+      fRotation = new TGeoRotation();
+      SetBit(kGeoMatrixOwned);
+   }   
    SetBit(kGeoRotation);
    const Double_t *rot = fRotation->GetRotationMatrix();
    Double_t phi = angle*TMath::DegToRad();
@@ -1432,28 +1469,39 @@ void TGeoCombiTrans::SavePrimitive(ofstream &out, Option_t *option)
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(kGeoSavePrimitive)) return;
    out << "   // Combi transformation: " << GetName() << endl;
-   if (fRotation) fRotation->SavePrimitive(out,option);
-   out << "   pRotation = pMatrix;" << endl;
    out << "   dx = " << fTranslation[0] << ";" << endl;
    out << "   dy = " << fTranslation[1] << ";" << endl;
    out << "   dz = " << fTranslation[2] << ";" << endl;
-   out << "   pMatrix = new TGeoCombiTrans(\"" << GetName() << "\",dx,dy,dz,pRotation);" << endl;
+   if (fRotation && fRotation->IsRotation()) {
+      fRotation->SavePrimitive(out,option);
+      out << "   " << GetPointerName() << " = new TGeoCombiTrans(\"" << GetName() << "\", dx,dy,dz,";
+      out << fRotation->GetPointerName() << ");" << endl;
+   } else {   
+      out << "   " << GetPointerName() << " = new TGeoCombiTrans(\"" << GetName() << "\");" << endl;
+      out << "   " << GetPointerName() << "->SetTranslation(dx,dy,dz);" << endl;
+   }   
    TObject::SetBit(kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________
 void TGeoCombiTrans::SetRotation(const TGeoRotation *rot)
 {
-// Copy the rotation from another one.
+// Assign a foreign rotation to the combi. The rotation is NOT owned by this.
    if (rot->IsRotation()) {
       SetBit(kGeoRotation);
       SetBit(kGeoReflection, rot->TestBit(kGeoReflection));
-      const TGeoRotation &r = *rot;
-      if (!fRotation) fRotation = new TGeoRotation(r);
+//      const TGeoRotation &r = *rot;
+      if (fRotation && TestBit(kGeoMatrixOwned)) delete fRotation;
+      TGeoRotation *rr = (TGeoRotation*)rot;
+      fRotation = rr;
+      fRotation->RegisterYourself();
+      ResetBit(TGeoMatrix::kGeoMatrixOwned);      
    } else {   
-      if (!IsRotation()) return;
+      if (!IsRotation() || !fRotation) return;
       ResetBit(kGeoRotation);
-      fRotation->Clear();
+      ResetBit(kGeoReflection);
+      if (TestBit(kGeoMatrixOwned)) fRotation->Clear();
+      else fRotation = 0;
    }   
 }
 
@@ -1464,11 +1512,18 @@ void TGeoCombiTrans::SetRotation(const TGeoRotation &rot)
    if (rot.IsRotation()) {
       SetBit(kGeoRotation);
       SetBit(kGeoReflection, rot.TestBit(kGeoReflection));
-      if (!fRotation) fRotation = new TGeoRotation(rot);
+      if (!fRotation || !TestBit(kGeoMatrixOwned)) {
+         fRotation = new TGeoRotation(rot);
+      } else {
+         delete fRotation;
+         fRotation = new TGeoRotation(rot);
+      }   
+      SetBit(kGeoMatrixOwned);
    } else {
-      if (!IsRotation()) return;
+      if (!IsRotation() || !fRotation) return;
       ResetBit(kGeoRotation);
-      fRotation->Clear();
+      if (TestBit(kGeoMatrixOwned)) fRotation->Clear();
+      else fRotation = 0;
    }   
 }
 
@@ -2022,11 +2077,12 @@ void TGeoHMatrix::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   rot[0] =" << rot[0] << ";    " << "rot[1] = " << rot[1] << ";    " << "rot[2] = " << rot[2] << ";" << endl; 
    out << "   rot[3] =" << rot[3] << ";    " << "rot[4] = " << rot[4] << ";    " << "rot[5] = " << rot[5] << ";" << endl; 
    out << "   rot[6] =" << rot[6] << ";    " << "rot[7] = " << rot[7] << ";    " << "rot[8] = " << rot[8] << ";" << endl; 
-   out << "   pMatrix = new TGeoHMatrix(\"" << GetName() << "\"" << endl;
-   out << "   pMatrix->SetTranslation(tr);" << endl;
-   out << "   pMatrix->SetRotation(rot);" << endl;
-   if (IsTranslation()) out << "   pMatrix->SetBit(TGeoMatrix::kGeoTranslation);" << endl;
-   if (IsRotation()) out << "   pMatrix->SetBit(TGeoMatrix::kGeoRotation);" << endl;
-   if (IsReflection()) out << "   pMatrix->SetBit(TGeoMatrix::kGeoReflection);" << endl;
+   char *name = GetPointerName();
+   out << "   TGeoHMatrix *" << name << " = new TGeoHMatrix(\"" << GetName() << "\"" << endl;
+   out << "   " << name << "->SetTranslation(tr);" << endl;
+   out << "   " << name << "->SetRotation(rot);" << endl;
+   if (IsTranslation()) out << "   " << name << "->SetBit(TGeoMatrix::kGeoTranslation);" << endl;
+   if (IsRotation()) out << "   " << name << "->SetBit(TGeoMatrix::kGeoRotation);" << endl;
+   if (IsReflection()) out << "   " << name << "->SetBit(TGeoMatrix::kGeoReflection);" << endl;
    TObject::SetBit(kGeoSavePrimitive);
 }

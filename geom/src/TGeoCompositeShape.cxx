@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.25 2005/02/03 11:40:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.26 2005/02/03 16:58:57 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -341,7 +341,7 @@ void TGeoCompositeShape::SavePrimitive(ofstream &out, Option_t *option)
    }
    SavePrimitive(out,"s");
    out << "   bool_name = \"" << GetTitle() << "\";" << endl;
-   out << "   pShape = new TGeoCompositeShape(\"" << GetName() << "\", bool_name);" << endl;
+   out << "   pShape = new TGeoCompositeShape(\"" << GetName() << "\", bool_name.Data());" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 

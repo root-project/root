@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoAtt.cxx,v 1.4 2003/01/20 10:25:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoAtt.cxx,v 1.5 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -51,31 +51,31 @@ TGeoAtt::~TGeoAtt()
 void TGeoAtt::SetVisibility(Bool_t vis)
 {
 // set visibility for this object
-   if (vis)  SetBit(kVisThis);
-   else      ResetBit(kVisThis);
+   if (vis)  SetAttBit(kVisThis);
+   else      ResetAttBit(kVisThis);
    if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }
 //-----------------------------------------------------------------------------
 void TGeoAtt::SetVisDaughters(Bool_t vis)
 {
 // set visibility for this object
-   if (vis)  SetBit(kVisDaughters);
-   else      ResetBit(kVisDaughters);
+   if (vis)  SetAttBit(kVisDaughters);
+   else      ResetAttBit(kVisDaughters);
    if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }
 //-----------------------------------------------------------------------------
 void TGeoAtt::SetVisStreamed(Bool_t vis)
 {
 // set visibility for this object
-   if (vis)  SetBit(kVisStreamed);
-   else      ResetBit(kVisStreamed);
+   if (vis)  SetAttBit(kVisStreamed);
+   else      ResetAttBit(kVisStreamed);
 }
 //-----------------------------------------------------------------------------
 void TGeoAtt::SetVisTouched(Bool_t vis)
 {
 // set visibility for this object
-   if (vis)  SetBit(kVisTouched);
-   else      ResetBit(kVisTouched);
+   if (vis)  SetAttBit(kVisTouched);
+   else      ResetAttBit(kVisTouched);
 }
 //-----------------------------------------------------------------------------
 void TGeoAtt::SetOptimization(Option_t * /*option*/)

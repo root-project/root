@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.41 2005/02/03 11:40:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.42 2005/02/03 16:58:57 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -82,6 +82,9 @@ TGeoPcon::TGeoPcon(Double_t phi, Double_t dphi, Int_t nz)
    fRmin = new Double_t [nz];
    fRmax = new Double_t [nz];
    fZ    = new Double_t [nz];
+   memset(fRmin, 0, nz*sizeof(Double_t));
+   memset(fRmax, 0, nz*sizeof(Double_t));
+   memset(fZ, 0, nz*sizeof(Double_t));
 }
 
 //_____________________________________________________________________________
@@ -97,6 +100,9 @@ TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
    fRmin = new Double_t [nz];
    fRmax = new Double_t [nz];
    fZ    = new Double_t [nz];
+   memset(fRmin, 0, nz*sizeof(Double_t));
+   memset(fRmax, 0, nz*sizeof(Double_t));
+   memset(fZ, 0, nz*sizeof(Double_t));
 }
 
 //_____________________________________________________________________________
@@ -1031,14 +1037,14 @@ void TGeoPcon::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   phi1  = " << fPhi1 << ";" << endl;
    out << "   dphi  = " << fDphi << ";" << endl;
    out << "   nz    = " << fNz << ";" << endl;
-   out << "   pPcon = new TGeoPcon(\"" << GetName() << "\",phi1,dphi,nz);" << endl;
+   out << "   TGeoPcon *pcon = new TGeoPcon(\"" << GetName() << "\",phi1,dphi,nz);" << endl;
    for (Int_t i=0; i<fNz; i++) {
       out << "      z     = " << fZ[i] << ";" << endl;
       out << "      rmin  = " << fRmin[i] << ";" << endl;
       out << "      rmax  = " << fRmax[i] << ";" << endl;
-      out << "   pPcon->DefineSection(" << i << ", z,rmin,rmax);" << endl;
+      out << "   pcon->DefineSection(" << i << ", z,rmin,rmax);" << endl;
    }
-   out << "   pShape = pPcon;" << endl;
+   out << "   pShape = pcon;" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
          
@@ -1051,6 +1057,9 @@ void TGeoPcon::SetDimensions(Double_t *param)
    if (!fRmin) fRmin = new Double_t [fNz];
    if (!fRmax) fRmax = new Double_t [fNz];
    if (!fZ)    fZ    = new Double_t [fNz];
+   memset(fRmin, 0, fNz*sizeof(Double_t));
+   memset(fRmax, 0, fNz*sizeof(Double_t));
+   memset(fZ, 0, fNz*sizeof(Double_t));
    for (Int_t i=0; i<fNz; i++) 
       DefineSection(i, param[3+3*i], param[4+3*i], param[5+3*i]);
 }   

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoAtt.h,v 1.4 2003/08/29 09:55:29 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoAtt.h,v 1.5 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -52,8 +52,11 @@ public:
       kUseBoundingBox   = BIT(16),           // use bounding box for tracking
       kUseVoxels        = BIT(17),           // compute and use voxels
       kUseGsord         = BIT(18)            // use slicing in G3 style     
-   };
-                          // tracking optimization attributes
+   };                          // tracking optimization attributes
+   enum EGeoSavePrimitiveAtt {
+      kSavePrimitiveAtt = BIT(19),
+      kSaveNodesAtt     = BIT(20)
+   };                          // save primitive bits                          
 protected :
 // data members
    UInt_t                fGeoAtt;            // option flags
@@ -64,27 +67,27 @@ public:
    // destructor
    virtual ~TGeoAtt();
    // methods
-   void                SetBit(UInt_t f)   {fGeoAtt |= f & kBitMask;}
-   void                SetBit(UInt_t f, Bool_t set) {(set)?SetBit(f):ResetBit(f);};
-   void                ResetBit(UInt_t f) {fGeoAtt &= ~(f & kBitMask);}
-   Bool_t              TestBit(UInt_t f) const {return (Bool_t)((fGeoAtt & f) != 0);}
+   void                SetAttBit(UInt_t f)   {fGeoAtt |= f & kBitMask;}
+   void                SetAttBit(UInt_t f, Bool_t set) {(set)?SetAttBit(f):ResetAttBit(f);};
+   void                ResetAttBit(UInt_t f) {fGeoAtt &= ~(f & kBitMask);}
+   Bool_t              TestAttBit(UInt_t f) const {return (Bool_t)((fGeoAtt & f) != 0);}
 
    virtual void        SetVisibility(Bool_t vis=kTRUE);
    void                SetVisDaughters(Bool_t vis=kTRUE);
    void                SetVisStreamed(Bool_t vis=kTRUE);
    void                SetVisTouched(Bool_t vis=kTRUE);
-   void                SetActivity(Bool_t flag=kTRUE) {SetBit(kActThis, flag);}
-   void                SetActiveDaughters(Bool_t flag=kTRUE) {SetBit(kActDaughters,flag);}
+   void                SetActivity(Bool_t flag=kTRUE) {SetAttBit(kActThis, flag);}
+   void                SetActiveDaughters(Bool_t flag=kTRUE) {SetAttBit(kActDaughters,flag);}
    
    void                SetOptimization(Option_t *option);
 
    
-   Bool_t              IsActive() const {return TestBit(kActThis);}
-   Bool_t              IsActiveDaughters() const {return TestBit(kActDaughters);}
-   Bool_t              IsVisible() const {return TestBit(kVisThis);}
-   Bool_t              IsVisDaughters() const {return TestBit(kVisDaughters);}
-   Bool_t              IsVisStreamed() const {return TestBit(kVisStreamed);}
-   Bool_t              IsVisTouched() const {return TestBit(kVisTouched);}
+   Bool_t              IsActive() const {return TestAttBit(kActThis);}
+   Bool_t              IsActiveDaughters() const {return TestAttBit(kActDaughters);}
+   Bool_t              IsVisible() const {return TestAttBit(kVisThis);}
+   Bool_t              IsVisDaughters() const {return TestAttBit(kVisDaughters);}
+   Bool_t              IsVisStreamed() const {return TestAttBit(kVisStreamed);}
+   Bool_t              IsVisTouched() const {return TestAttBit(kVisTouched);}
 //   EGeoVisibilityAtt   GetVisAttributes();
 //   EGeoActivityAtt     GetActivityAtt();
 //   EGeoOptimizationAtt GetOptimizationAtt();

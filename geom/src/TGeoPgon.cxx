@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.46 2005/02/03 11:40:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.47 2005/02/03 16:58:57 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -1688,16 +1688,16 @@ void TGeoPgon::SavePrimitive(ofstream &out, Option_t */*option*/)
    out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   phi1    = " << fPhi1 << ";" << endl;
    out << "   dphi    = " << fDphi << ";" << endl;
-   out << "   dnedges = " << fNedges << ";" << endl;
+   out << "   nedges = " << fNedges << ";" << endl;
    out << "   nz      = " << fNz << ";" << endl;
-   out << "   pPgon = new TGeoPgon(\"" << GetName() << "\",phi1,dphi,nedges,nz);" << endl;
+   out << "   TGeoPgon *pgon = new TGeoPgon(\"" << GetName() << "\",phi1,dphi,nedges,nz);" << endl;
    for (Int_t i=0; i<fNz; i++) {
       out << "      z     = " << fZ[i] << ";" << endl;
       out << "      rmin  = " << fRmin[i] << ";" << endl;
       out << "      rmax  = " << fRmax[i] << ";" << endl;
-      out << "   pPgon->DefineSection(" << i << ", z,rmin,rmax);" << endl;
+      out << "   pgon->DefineSection(" << i << ", z,rmin,rmax);" << endl;
    }
-   out << "   pShape = pPgon;" << endl;
+   out << "   pShape = pgon;" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 

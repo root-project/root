@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.52 2004/12/07 14:24:57 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.53 2005/01/28 10:01:04 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -183,7 +183,7 @@ void TGeoPainter::ClearVisibleVolumes()
    TIter next(fVisVolumes);
    TGeoVolume *vol;
    while ((vol = (TGeoVolume*)next())) {
-      vol->TGeoAtt::ResetBit(TGeoAtt::kVisOnScreen);
+      vol->ResetAttBit(TGeoAtt::kVisOnScreen);
    }
    fVisVolumes->Clear();
 }
@@ -942,7 +942,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
             vol->GetShape()->Paint(option);
             if (!fVisLock && !node->IsOnScreen()) {
                fVisVolumes->Add(vol);
-               vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
+               vol->SetAttBit(TGeoAtt::kVisOnScreen);
             }   
          }   
             // draw daughters
@@ -963,7 +963,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
             vol->GetShape()->Paint(option);
             if (!fVisLock && !node->IsOnScreen()) {
                fVisVolumes->Add(vol);
-               vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
+               vol->SetAttBit(TGeoAtt::kVisOnScreen);
             }   
          }            
          if (last) return;
@@ -978,7 +978,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
          vol->GetShape()->Paint(option);
          if (!fVisLock && !node->IsOnScreen()) {
             fVisVolumes->Add(vol);
-            vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
+            vol->SetAttBit(TGeoAtt::kVisOnScreen);
          }   
          break;
       case kGeoVisBranch:
@@ -989,7 +989,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
                vol->GetShape()->Paint(option);
                if (!fVisLock && !fGeom->GetCurrentNode()->IsOnScreen()) {
                   fVisVolumes->Add(fGeom->GetCurrentVolume());
-                  vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
+                  vol->SetAttBit(TGeoAtt::kVisOnScreen);
                }   
             }   
             fGeom->CdUp();
@@ -1196,7 +1196,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                   while (next) {
                      // we found something after clipping region
                      nextvol = next->GetVolume();
-                     if (nextvol->TGeoAtt::TestBit(TGeoAtt::kVisOnScreen)) {
+                     if (nextvol->TestAttBit(TGeoAtt::kVisOnScreen)) {
                         done = kTRUE;
                         base_color = nextvol->GetLineColor();
                         fClippingShape->ComputeNormal(point, dir, normal);
@@ -1238,7 +1238,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
             }      
             // Check if next node is visible
             nextvol = nextnode->GetVolume();
-            if (nextvol->TGeoAtt::TestBit(TGeoAtt::kVisOnScreen)) {
+            if (nextvol->TestAttBit(TGeoAtt::kVisOnScreen)) {
                done = kTRUE;
                base_color = nextvol->GetLineColor();
                next = nextnode;
@@ -1277,7 +1277,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
             }      
             if (next) {
                nextvol = next->GetVolume();
-               if (nextvol->TGeoAtt::TestBit(TGeoAtt::kVisOnScreen)) {
+               if (nextvol->TestAttBit(TGeoAtt::kVisOnScreen)) {
                   done = kTRUE;
                   base_color = nextvol->GetLineColor();
                   break;

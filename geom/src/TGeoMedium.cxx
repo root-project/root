@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.1 2003/01/06 17:06:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.2 2005/02/03 11:40:39 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************
@@ -78,19 +78,20 @@ TGeoMedium::~TGeoMedium()
 }
 
 //_____________________________________________________________________________
+char *TGeoMedium::GetPointerName() const
+{
+// Provide a pointer name containing uid.
+   static char name[20];
+   sprintf(name,"pMed%d", GetUniqueID());
+   return name;
+}    
+
+//_____________________________________________________________________________
 void TGeoMedium::SavePrimitive(ofstream &out, Option_t *option)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(TGeoMedium::kMedSavePrimitive)) return;
-   Bool_t ispmat = kTRUE;
-   if (fMaterial->TestBit(TGeoMaterial::kMatSavePrimitive)) {
-      out << "   // retrieve material #" << fMaterial->GetIndex() << endl;
-      out << "   idmat = " << fMaterial->GetIndex() << "; // material id" <<  endl;
-      out << "   pMat = gGeoManager->GetMaterial(idmat);" << endl;
-   } else {
-      fMaterial->SavePrimitive(out,option);
-      if (fMaterial->IsMixture()) ispmat=kFALSE;
-   }      
+   fMaterial->SavePrimitive(out,option);
    out << "// Medium: " << GetName() << endl;
    out << "   numed   = " << fId << ";  // medium number" << endl;
    out << "   par[0]  = " << fParams[0] << "; // isvol" << endl;
@@ -102,8 +103,6 @@ void TGeoMedium::SavePrimitive(ofstream &out, Option_t *option)
    out << "   par[6]  = " << fParams[6] << "; // epsil" << endl;
    out << "   par[7]  = " << fParams[7] << "; // stmin" << endl;
    
-   out << "   pMed = new TGeoMedium(\"" << GetName() << "\", numed,";
-   if (ispmat) out << " pMat, par);" << endl;
-   else         out << " pMix, par);" << endl;
+   out << "   " << GetPointerName() << " = new TGeoMedium(\"" << GetName() << "\", numed," << fMaterial->GetPointerName() << ", par);" << endl;
    SetBit(TGeoMedium::kMedSavePrimitive);
 }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.18 2005/01/13 12:07:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.19 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -22,18 +22,6 @@
 #include "TNamed.h"
 #endif
 
-enum EGeoTransfTypes {
-   kGeoIdentity  = 0,
-   kGeoTranslation  = BIT(17),
-   kGeoRotation     = BIT(18),
-   kGeoScale        = BIT(19),
-   kGeoReflection   = BIT(20),
-   kGeoRegistered   = BIT(21),
-   kGeoSavePrimitive = BIT(22),
-   kGeoCombiTrans   = kGeoTranslation | kGeoRotation,
-   kGeoGenTrans     = kGeoTranslation | kGeoRotation | kGeoScale
-};
-
 //--- globals 
 const Double_t kNullVector[3]       =       {0.0,  0.0,  0.0};
 
@@ -51,6 +39,20 @@ const Double_t kUnitScale[3]        =       {1.0,  1.0,  1.0};
 
 class TGeoMatrix : public TNamed
 {
+public:
+enum EGeoTransfTypes {
+   kGeoIdentity  = 0,
+   kGeoTranslation  = BIT(17),
+   kGeoRotation     = BIT(18),
+   kGeoScale        = BIT(19),
+   kGeoReflection   = BIT(20),
+   kGeoRegistered   = BIT(21),
+   kGeoSavePrimitive = BIT(22),
+   kGeoMatrixOwned   = BIT(23),
+   kGeoCombiTrans   = kGeoTranslation | kGeoRotation,
+   kGeoGenTrans     = kGeoTranslation | kGeoRotation | kGeoScale
+};
+
 protected:
    TGeoMatrix(const TGeoMatrix &other);
 
@@ -75,6 +77,7 @@ public :
    Bool_t               IsRegistered()  const {return TestBit(kGeoRegistered);}
    Bool_t               IsRotAboutZ()   const;
    void                 GetHomogenousMatrix(Double_t *hmat) const;
+   char                *GetPointerName() const;
 
    virtual Int_t              GetByteCount() const;
    virtual const Double_t    *GetTranslation()    const = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.8 2003/01/12 14:49:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.9 2003/07/31 20:19:31 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -90,6 +90,7 @@ public:
    virtual void        cd(Int_t idiv) {fCurrent=idiv; 
                            ((TGeoTranslation*)fMatrix)->SetDx(fStart+idiv*fStep+fStep/2);}
    virtual TGeoNode   *FindNode(Double_t *point);
+   virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
   ClassDef(TGeoPatternX, 1)              // X division pattern
 };
@@ -113,6 +114,7 @@ public:
    virtual void        cd(Int_t idiv) {fCurrent=idiv; 
                           ((TGeoTranslation*)fMatrix)->SetDy(fStart+idiv*fStep+fStep/2);}
    virtual TGeoNode   *FindNode(Double_t *point); 
+   virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
   ClassDef(TGeoPatternY, 1)              // Y division pattern
 };
@@ -136,7 +138,7 @@ public:
    virtual void        cd(Int_t idiv) {fCurrent=idiv; 
                           ((TGeoTranslation*)fMatrix)->SetDz(fStart+idiv*fStep+fStep/2);}
    virtual TGeoNode   *FindNode(Double_t *point); 
-//   virtual void        Paint(Option_t *option);
+   virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
   ClassDef(TGeoPatternZ, 1)              // Z division pattern
 };
@@ -161,6 +163,7 @@ public:
    virtual void        cd(Int_t idiv) {fCurrent=idiv; 
                            ((TGeoTranslation*)fMatrix)->SetDx(fStart+idiv*fStep+fStep/2);}
    virtual TGeoNode   *FindNode(Double_t *point);
+   virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
   ClassDef(TGeoPatternParaX, 1)              // Para X division pattern
 };
@@ -187,6 +190,7 @@ public:
    // methods
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point);
+   virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
   ClassDef(TGeoPatternParaY, 1)              // Para Y division pattern
 };
@@ -214,6 +218,7 @@ public:
    // methods
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point);
+   virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
   ClassDef(TGeoPatternParaZ, 1)              // Para Z division pattern
 };
@@ -243,6 +248,7 @@ public:
    Double_t            GetTyz() const {return fTyz;}
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point);
+   virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
   ClassDef(TGeoPatternTrapZ, 1)              // Trap od Gtra Z division pattern
 };
@@ -266,6 +272,7 @@ public:
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
    virtual TGeoNode   *FindNode(Double_t *point); 
+   virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
   ClassDef(TGeoPatternCylR, 1)              // Cylindrical R division pattern
 };
@@ -291,6 +298,7 @@ public:
    // methods
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point); 
+   virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
   ClassDef(TGeoPatternCylPhi, 1)              // Cylindrical phi division pattern
 };
@@ -313,6 +321,7 @@ public:
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
    virtual TGeoNode   *FindNode(Double_t *point); 
+   virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
   ClassDef(TGeoPatternSphR, 1)              // spherical R division pattern
 };
@@ -338,6 +347,7 @@ public:
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
    virtual TGeoNode   *FindNode(Double_t *point); 
+   virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
   ClassDef(TGeoPatternSphTheta, 1)              // spherical theta division pattern
 
@@ -362,6 +372,7 @@ public:
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
    virtual TGeoNode   *FindNode(Double_t *point); 
+   virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
   ClassDef(TGeoPatternSphPhi, 1)              // Spherical phi division pattern
 };

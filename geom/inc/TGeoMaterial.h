@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.16 2004/11/04 10:38:21 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.17 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -79,6 +79,7 @@ public:
    virtual Int_t            GetDefaultColor() const;
    virtual Double_t         GetDensity() const {return fDensity;}
    virtual TGeoElement     *GetElement(Int_t i=0) const;
+   char                    *GetPointerName() const;
    virtual Double_t         GetRadLen() const  {return fRadLen;}
    virtual Double_t         GetIntLen() const  {return fIntLen;}
    Int_t                    GetIndex();

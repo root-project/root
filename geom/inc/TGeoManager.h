@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.56 2004/11/25 12:10:00 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.57 2004/12/07 14:24:57 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -382,7 +382,7 @@ public:
    virtual Int_t          GetByteCount(Option_t *option=0);
    Int_t                 *GetIntBuffer(Int_t length);
    Double_t              *GetDblBuffer(Int_t length);
-   
+   void                   SetAllIndex();   
    
    //--- I/O
    virtual Int_t          Export(const char *filename, const char *name="", Option_t *option="v");

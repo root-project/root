@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.31 2004/10/05 13:27:46 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.32 2004/12/02 07:22:06 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -1677,7 +1677,7 @@ void TGeoMatHandlerX::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    fLocation = from;
    Double_t *translation = matrix->GetTranslation();
    translation[0] = *from;
-   matrix->SetBit(kGeoTranslation);
+   matrix->SetBit(TGeoMatrix::kGeoTranslation);
 }
 
 //_____________________________________________________________________________
@@ -1731,7 +1731,7 @@ void TGeoMatHandlerY::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    fLocation = from;
    Double_t *translation = matrix->GetTranslation();
    translation[1] = *from;
-   matrix->SetBit(kGeoTranslation);
+   matrix->SetBit(TGeoMatrix::kGeoTranslation);
 }
 
 //_____________________________________________________________________________
@@ -1785,7 +1785,7 @@ void TGeoMatHandlerZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    fLocation = from;
    Double_t *translation = matrix->GetTranslation();
    translation[2] = *from;
-   matrix->SetBit(kGeoTranslation);
+   matrix->SetBit(TGeoMatrix::kGeoTranslation);
 }
 
 //_____________________________________________________________________________
@@ -1840,7 +1840,7 @@ void TGeoMatHandlerXY::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    Double_t *translation = matrix->GetTranslation();
    translation[0] = from[0];
    translation[1] = from[1];
-   matrix->SetBit(kGeoTranslation);
+   matrix->SetBit(TGeoMatrix::kGeoTranslation);
 }
 
 //_____________________________________________________________________________
@@ -1902,7 +1902,7 @@ void TGeoMatHandlerXZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    Double_t *translation = matrix->GetTranslation();
    translation[0] = from[0];
    translation[2] = from[1];
-   matrix->SetBit(kGeoTranslation);
+   matrix->SetBit(TGeoMatrix::kGeoTranslation);
 }
 
 //_____________________________________________________________________________
@@ -1964,7 +1964,7 @@ void TGeoMatHandlerYZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    Double_t *translation = matrix->GetTranslation();
    translation[1] = from[0];
    translation[2] = from[1];
-   matrix->SetBit(kGeoTranslation);
+   matrix->SetBit(TGeoMatrix::kGeoTranslation);
 }
 
 //_____________________________________________________________________________
@@ -2025,7 +2025,7 @@ void TGeoMatHandlerXYZ::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    fLocation = from;
    memcpy(matrix->GetTranslation(), from, 3*sizeof(Double_t));
-   matrix->SetBit(kGeoTranslation);
+   matrix->SetBit(TGeoMatrix::kGeoTranslation);
 }
 
 //_____________________________________________________________________________
@@ -2090,7 +2090,7 @@ void TGeoMatHandlerRot::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    fLocation = from;
    memcpy(matrix->GetRotationMatrix(), from, 9*sizeof(Double_t));
-   matrix->SetBit(kGeoRotation);
+   matrix->SetBit(TGeoMatrix::kGeoRotation);
 }
 
 //_____________________________________________________________________________
@@ -2124,8 +2124,8 @@ void TGeoMatHandlerRotTr::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    fLocation = from;
    memcpy(matrix->GetRotationMatrix(), from, 9*sizeof(Double_t));
    memcpy(matrix->GetTranslation(), from+9, 3*sizeof(Double_t));
-   matrix->SetBit(kGeoTranslation);
-   matrix->SetBit(kGeoRotation);
+   matrix->SetBit(TGeoMatrix::kGeoTranslation);
+   matrix->SetBit(TGeoMatrix::kGeoRotation);
 }
 
 //_____________________________________________________________________________
@@ -2212,7 +2212,7 @@ ClassImp(TGeoMatHandlerScl)
 void TGeoMatHandlerScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    memcpy(matrix->GetScale(), from, 3*sizeof(Double_t));
-   matrix->SetBit(kGeoScale);
+   matrix->SetBit(TGeoMatrix::kGeoScale);
 }
 
 //_____________________________________________________________________________
@@ -2228,8 +2228,8 @@ void TGeoMatHandlerTrScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    memcpy(matrix->GetTranslation(), from, 3*sizeof(Double_t));
    memcpy(matrix->GetScale(), from+3, 3*sizeof(Double_t));
-   matrix->SetBit(kGeoTranslation);
-   matrix->SetBit(kGeoScale);
+   matrix->SetBit(TGeoMatrix::kGeoTranslation);
+   matrix->SetBit(TGeoMatrix::kGeoScale);
 }
 
 //_____________________________________________________________________________
@@ -2246,8 +2246,8 @@ void TGeoMatHandlerRotScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
 {
    memcpy(matrix->GetRotationMatrix(), from, 9*sizeof(Double_t));
    memcpy(matrix->GetScale(), from+9, 3*sizeof(Double_t));
-   matrix->SetBit(kGeoRotation);
-   matrix->SetBit(kGeoScale);
+   matrix->SetBit(TGeoMatrix::kGeoRotation);
+   matrix->SetBit(TGeoMatrix::kGeoScale);
 }
 
 //_____________________________________________________________________________
@@ -2265,9 +2265,9 @@ void TGeoMatHandlerRotTrScl::GetMatrix(Double_t *from, TGeoHMatrix *matrix)
    memcpy(matrix->GetRotationMatrix(), from, 9*sizeof(Double_t));
    memcpy(matrix->GetTranslation(), from+9, 3*sizeof(Double_t));
    memcpy(matrix->GetScale(), from+12, 3*sizeof(Double_t));
-   matrix->SetBit(kGeoTranslation);
-   matrix->SetBit(kGeoRotation);
-   matrix->SetBit(kGeoScale);
+   matrix->SetBit(TGeoMatrix::kGeoTranslation);
+   matrix->SetBit(TGeoMatrix::kGeoRotation);
+   matrix->SetBit(TGeoMatrix::kGeoScale);
 }
 
 //_____________________________________________________________________________

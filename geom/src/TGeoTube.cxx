@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.53 2005/02/03 11:40:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.54 2005/02/03 16:58:57 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -567,7 +567,7 @@ TGeoShape *TGeoTube::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
       rmax = xmax;
    }
 
-   return (new TGeoTube(rmin, rmax, dz));
+   return (new TGeoTube(GetName(), rmin, rmax, dz));
 }
 
 //_____________________________________________________________________________
@@ -1626,7 +1626,7 @@ TGeoShape *TGeoTubeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*ma
    if ((fRmax<0) || (fRmax<=fRmin))
       rmax = ((TGeoTube*)mother)->GetRmax();
 
-   return (new TGeoTubeSeg(rmin, rmax, dz, fPhi1, fPhi2));
+   return (new TGeoTubeSeg(GetName(),rmin, rmax, dz, fPhi1, fPhi2));
 }
 
 //_____________________________________________________________________________

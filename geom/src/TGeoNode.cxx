@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.20 2003/10/06 15:15:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.21 2004/01/18 12:31:55 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -129,7 +129,7 @@ Bool_t TGeoNode::IsOnScreen() const
 {
 // check if this node is drawn. Assumes that this node is current
    
-   if (fVolume->TGeoAtt::TestBit(TGeoAtt::kVisOnScreen)) return kTRUE;
+   if (fVolume->TestAttBit(TGeoAtt::kVisOnScreen)) return kTRUE;
    return kFALSE;
 }
 
