@@ -198,6 +198,9 @@ ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
 RINTLIBS     := $(LPATH)/libRint.lib
 PROOFLIBS    := $(LPATH)/libProof.lib $(LPATH)/libTreePlayer.lib
 endif
+# ROOTLIBSDEP is intended to match the content of ROOTLIBS
+ROOTLIBSDEP   = $(CORELIB) $(CINTLIB) $(HISTLIB) \
+                $(GRAFLIB) $(G3DLIB) $(GPADLIB) $(TREELIB) $(MATRIXLIB)
 ifeq ($(FORCELINK),yes)
 # Force linking of not referenced libraries
 ROOTULIBS    := -u _G__cpp_setupG__Hist    \
