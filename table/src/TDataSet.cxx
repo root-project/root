@@ -1,8 +1,8 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.2 2002/12/02 18:50:05 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.4 2003/01/15 16:48:42 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-const char *gCoPyRiGhT[] = {
-     "STAR dataset C++ base class library:",
-     "Copyright(c) 1997~2000  [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
+static const char *gCoPyRiGhT[] = {
+     "Dataset C++ base class library:",
+     "Copyright(c) 1997~2002  [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
      "************************************************************************",
      "This program is distributed in the hope that it will be useful,",
      "but WITHOUT ANY WARRANTY; without even the implied warranty of",
@@ -18,8 +18,8 @@ const char *gCoPyRiGhT[] = {
      "************************************************************************"
 };
 
-const char *Id = {
-    "$Id: TDataSet.cxx,v 1.2 2002/12/02 18:50:05 rdm Exp $"
+static const char *Id = {
+    "$Id: TDataSet.cxx,v 1.4 2003/01/15 16:48:42 fisyak Exp $"
 };
 #include "Riostream.h"
 #include "TSystem.h"
@@ -157,7 +157,7 @@ ClassImp(TDataSet)
 
 //______________________________________________________________________________
 TDataSet::TDataSet(const Char_t *name, TDataSet *parent, Bool_t arrayFlag)
-           : TNamed(name,"TDataSet")
+           : TNamed(name,"TDataSet"),fParent(0),fList(0)
 {
   //  cout << "ctor for " << GetName() << " - " << GetTitle() << endl;
    if (name && strchr(name,'/')) {
@@ -177,7 +177,8 @@ TDataSet *TDataSet::GetRealParent(){
   return p;
 }
 //______________________________________________________________________________
-TDataSet::TDataSet(const TDataSet &pattern,EDataSetPass iopt) : TNamed(pattern)
+TDataSet::TDataSet(const TDataSet &pattern,EDataSetPass iopt):TNamed(pattern.GetName(),pattern.GetTitle()),
+fParent(0),fList(0)
 {
   //
   // Creates TDataSet (clone) with a topology similar with TDataSet *pattern
@@ -369,6 +370,21 @@ TDataSet *TDataSet::FindByName(const Char_t *name,const Char_t *path,Option_t *o
   return next.FindByName(name,path,opt);
 }
 
+ //______________________________________________________________________________
+TDataSet *TDataSet::FindByTitle(const Char_t *title,const Char_t *path,Option_t *opt) const
+{
+  //
+  // Full description see: TDataSetIter::Find
+  //
+  // Note. This method is quite expansive.
+  // ----- It is done to simplify the user's code when one wants to find ONLY object.
+  //       If you need to find more then 1 object in this dataset,
+  //       regard using TDataSetIter class yourself.
+  //
+  TDataSetIter next((TDataSet*)this);
+  return next.FindByTitle(title,path,opt);
+}
+
 //______________________________________________________________________________
 TDataSet *TDataSet::First() const
 {
@@ -383,6 +399,39 @@ TDataSet *TDataSet::Last() const
  // Return the last object in the list. Returns 0 when list is empty.
  if (fList) return (TDataSet *)(fList->Last());
  return 0;
+}
+
+//______________________________________________________________________________
+TDataSet *TDataSet::Next() const
+{
+   // Return the object next to this one in the parent structure
+   // This convinient but time-consuming. Don't use it in the inner loops
+   TDataSet *set = 0;
+   TDataSet *parent = GetParent();
+   if (parent) {
+      TIter next(parent->GetCollection());
+      // Find this object
+      while ( (set = (TDataSet *)next()) && (set != this) ){}
+      if (set) set = (TDataSet *)next();
+   }
+   return set;
+}
+
+//______________________________________________________________________________
+TDataSet *TDataSet::Prev() const
+{
+   // Return the object that is previous to this one in the parent structure
+   // This convinient but time-consuming. Don't use it in the inner loops
+   TDataSet *prev = 0;
+   TDataSet *set  = 0;
+   TDataSet *parent = GetParent();
+   if (parent) {
+      TIter next(parent->GetCollection());
+      // Find this object
+      while ( (set = (TDataSet *)next()) && (set != this) ){prev = set;}
+      if (!set) prev = 0;
+   }
+   return prev;
 }
 
 //______________________________________________________________________________
@@ -443,9 +492,9 @@ void TDataSet::ls(Int_t depth) const
 }
 //______________________________________________________________________________
 TDataSet *TDataSet::Instance() const
-{
+{ 
  // apply the class default ctor to instantiate a new object of the same kind.
- // This is a base method to be overriden by the classes
+ // This is a base method to be overriden by the classes 
  // derived from TDataSet (to support TDataSetIter::Mkdir for example)
  return instance();
 }
@@ -511,7 +560,7 @@ void TDataSet::PrintContents(Option_t *opt) const {
   // This is to allow to sepoarate navigation and the custom invormation
   // in the derived classes (see; TTable::PrintContents for example
   if (opt) { /* no used */ }
-  printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());
+  printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());  
 }
 
 //______________________________________________________________________________
@@ -555,7 +604,7 @@ TDataSet  *TDataSet::RemoveAt(Int_t idx)
 }
 
 //______________________________________________________________________________
-EDataSetPass TDataSet::Pass(EDataSetPass ( *callback)(TDataSet *),Int_t depth)
+TDataSet::EDataSetPass TDataSet::Pass(EDataSetPass ( *callback)(TDataSet *),Int_t depth)
 {
  /////////////////////////////////////////////////////////////////////
  //                                                                 //
@@ -596,7 +645,7 @@ EDataSetPass TDataSet::Pass(EDataSetPass ( *callback)(TDataSet *),Int_t depth)
 }
 
 //______________________________________________________________________________
-EDataSetPass TDataSet::Pass(EDataSetPass ( *callback)(TDataSet *,void*),void *user,Int_t depth)
+TDataSet::EDataSetPass TDataSet::Pass(EDataSetPass ( *callback)(TDataSet *,void*),void *user,Int_t depth)
 {
  /////////////////////////////////////////////////////////////////////
  //                                                                 //
@@ -726,7 +775,7 @@ void TDataSet::Update(TDataSet* set,UInt_t opt)
       while ( ((oldset = (TDataSet *)nextold())!=0) && !found) {
         // if the "new" set does contain the dataset
         // with the same name as ours update it too
-        // (We do not update itself (oldset == newset)
+        // (We do not update itself (oldset == newset) 
         if ( (oldset != newset) && oldset->IsThisDir(newname) ) {
            oldset->Update(newset);
            found = kTRUE;

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TCL.h,v 1.2 2001/05/29 19:08:08 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TCL.h,v 1.2 2003/01/14 14:26:13 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/09/99
 
 /*************************************************************************
@@ -14,8 +14,17 @@
 // The set of methods to work with the plain matrix / vector
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f110/top.html
 //
-// $Id: TCL.h,v 1.2 2001/05/29 19:08:08 brun Exp $
+// $Id: TCL.h,v 1.2 2003/01/14 14:26:13 fisyak Exp $
 // $Log: TCL.h,v $
+// Revision 1.2  2003/01/14 14:26:13  fisyak
+// Valeri's corrections
+//
+// Revision 1.1.1.1  2002/05/28 12:32:02  fisyak
+//
+//
+// Revision 1.1  2002/05/27 16:26:59  rdm
+// rename star to table.
+//
 // Revision 1.2  2001/05/29 19:08:08  brun
 // New version of some STAR classes from Valery.
 //
@@ -72,8 +81,11 @@ class TCL  {
     static float   vdot(const float  *b, const float  *a, int n);
     static double  vdot(const double *b, const double *a, int n);
 
-    static float  *vsub(const float *a, const float  *b, float *x, int n);
+    static float  *vsub(const float  *a, const float  *b, float  *x, int n);
     static double *vsub(const double *a, const double *b, double *x, int n);
+    static float  *vsub(const float  *b,  const double*c, float  *a, int n);
+    static double *vsub(const double *b, const float  *c, double *a, int n);
+ 
 
     static float  *vcopyn(const float *a,  float *x, int n);
     static double *vcopyn(const double *a, double *x, int n);
@@ -458,7 +470,21 @@ inline double *TCL::vsub(const double *a, const double *b, double *x, int n)
   for (int i=0;i<n;i++) x[i] = a[i]-b[i];
   return x;
 }
+//________________________________________________________
+inline float  *TCL::vsub(const float *b, const double *c,  float *a, const int n)
+{
+   if (n <= 0)  return 0;
+   for (int i=0;i<n;i++) a[i] = b[i] - c[i];
+   return a;
+}
 
+//________________________________________________________
+inline double *TCL::vsub(const double *b, const float *c,  double *a, const int n)
+{
+   if (n <= 0)  return 0;
+   for (int i=0;i<n;i++) a[i] = b[i] - c[i];
+   return a;
+}
 //________________________________________________________
 inline float *TCL::vcopyn(const float *a, float *x, int n)
 {

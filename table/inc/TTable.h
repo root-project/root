@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.2 2002/07/25 18:03:46 rdm Exp $
+// @(#)root/star:$Name: v3-04-02qt $:$Id: TTable.h,v 1.8 2003/01/17 16:10:48 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-
+ 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -29,11 +29,14 @@
 #include "TDataSet.h"
 #include "tableDescriptor.h"
 #ifndef ROOT_TCut
-#include "TCut.h"
+# include "TCut.h"
 #endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
+
+//#if ROOT_VERSION_CODE >= ROOT_VERSION(3,03,5)
+# ifndef ROOT_Riosfwd
+#  include "Riosfwd.h"
+# endif
+// #endif
 
 
 #ifndef __CINT__
@@ -41,12 +44,12 @@
 #  include <assert.h>
 #endif
 
-enum ETableBits {
-    kIsNotOwn         = BIT(23)   // if the TTable wrapper doesn't own the STAF table
-		                  // As result of the Update() method for example
-};
+#include <vector>
+
 class TTableDescriptor;
 class TH1;
+class TTableMap;
+typedef TTableMap*  Ptr_t;
 
 class TTable : public TDataSet {
    friend class TDataSet;
@@ -71,21 +74,25 @@ protected:
    Int_t      SetfN(Long_t len);
    void       SetTablePointer(void *table);
    void       SetUsedRows(Int_t n);
-   void       SetType(const Text_t *const type);
+   virtual void SetType(const Text_t *const type);
    void       StreamerHeader(TBuffer &b,Version_t version=3);
    void       StreamerTable(TBuffer &b,Version_t version=3);
    virtual TTableDescriptor *GetDescriptorPointer() const;
    virtual void  SetDescriptorPointer(TTableDescriptor *list);
 
    void       ReAlloc(Int_t newsize);
-
    static const char *TableDictionary(const char *className,const char *structName,TTableDescriptor *&ColDescriptors);
 
 public:
 
    enum EColumnType {kNAN, kFloat, kInt, kLong, kShort, kDouble, kUInt
-                          ,kULong, kUShort, kUChar, kChar };
-   static const char *fgTypeName[kChar+1];
+                          ,kULong, kUShort, kUChar, kChar, kPtr
+                    , kEndColumnType };
+   enum ETableBits {
+      kIsNotOwn      = BIT(23)   // if the TTable wrapper doesn't own the STAF table
+		                 // As result of the Update() method for example
+   };   
+   static const char *fgTypeName[kEndColumnType]; 
    TTable(const Text_t *name=0, Int_t size=0);
    TTable(const Text_t *name, Int_t n,Int_t size);
    TTable(const Text_t *name, Int_t n, Char_t *array,Int_t size);
@@ -145,6 +152,7 @@ public:
    virtual     void       Set(Int_t n, Char_t *array);
    virtual     void       SetNRows(Int_t n);
    virtual     void       Reset(Int_t c=0);
+   virtual     void       ResetMap(Bool_t wipe=kTRUE);
    virtual     void       Update();
    virtual     void       Update(TDataSet *set,UInt_t opt=0);
                void      *operator[](Int_t i);
@@ -156,23 +164,100 @@ public:
    virtual   Int_t        GetColumnIndex(const Char_t *columnName) const;
    virtual  const Char_t *GetColumnName(Int_t columnIndex)      const;
    virtual  const UInt_t *GetIndexArray(Int_t columnIndex)      const;
-   virtual   UInt_t       GetNumberOfColumns()                  const;
-   virtual   UInt_t       GetOffset(Int_t columnIndex)          const;
-   virtual   Int_t        GetOffset(const Char_t *columnName=0) const;
-   virtual   UInt_t       GetColumnSize(Int_t columnIndex)      const;
-   virtual   Int_t        GetColumnSize(const Char_t *columnName=0) const;
-   virtual   UInt_t       GetTypeSize(Int_t columnIndex)        const;
-   virtual   Int_t        GetTypeSize(const Char_t *columnName=0) const ;
-   virtual   UInt_t       GetDimensions(Int_t columnIndex)      const;
-   virtual   Int_t        GetDimensions(const Char_t *columnName=0) const ;
-   virtual   EColumnType  GetColumnType(Int_t columnIndex)      const;
-   virtual   EColumnType  GetColumnType(const Char_t *columnName=0) const;
+   virtual  UInt_t        GetNumberOfColumns()                  const;
+   virtual  UInt_t        GetOffset(Int_t columnIndex)          const;
+   virtual  Int_t         GetOffset(const Char_t *columnName=0) const;
+   virtual  UInt_t        GetColumnSize(Int_t columnIndex)      const;
+   virtual  Int_t         GetColumnSize(const Char_t *columnName=0) const;
+   virtual  UInt_t        GetTypeSize(Int_t columnIndex)        const;
+   virtual  Int_t         GetTypeSize(const Char_t *columnName=0) const ;
+   virtual  UInt_t        GetDimensions(Int_t columnIndex)      const;
+   virtual  Int_t         GetDimensions(const Char_t *columnName=0) const ;
+   virtual  EColumnType   GetColumnType(Int_t columnIndex)      const;
+   virtual  EColumnType   GetColumnType(const Char_t *columnName=0) const;
+   virtual  const Char_t *GetColumnComment(Int_t columnIndex) const;
 
    static const char *GetTypeName(EColumnType type);
    static EColumnType GetTypeId(const char *typeName);
 
+   // Table index iterator:
+   class iterator {
+      private:
+	       Long_t        fRowSize;
+         const TTable *fThisTable;
+		     std::vector<Long_t>::iterator fCurrentRow;
+      public:
+	      iterator(): fRowSize(0), fThisTable(0) {;}
+        iterator(const TTable &table,std::vector<Long_t>::iterator rowPtr) : fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(rowPtr) {;}
+        iterator(const TTable &table,std::vector<Long_t>::const_iterator rowPtr) : fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(*(std::vector<Long_t>::iterator *)(void *)&rowPtr) {;}
+        iterator(const iterator& iter) : fRowSize (iter.fRowSize), fThisTable(iter.fThisTable),fCurrentRow(iter.fCurrentRow){}
+        void operator=(const iterator& iter)   { fRowSize = iter.fRowSize; fThisTable = iter.fThisTable; fCurrentRow=iter.fCurrentRow; }
+        void operator++()    { ++fCurrentRow;   }
+        void operator++(int) {   fCurrentRow++; }
+        void operator--()    { --fCurrentRow;   }
+        void operator--(int) {   fCurrentRow--; }
+        iterator operator+(Int_t idx)   { return  iterator(*fThisTable,fCurrentRow+idx); }
+        iterator operator-(Int_t idx)   { return  iterator(*fThisTable,fCurrentRow-idx); }
+        void operator+=(Int_t idx)  {  fCurrentRow+=idx; }
+        void operator-=(Int_t idx)  {  fCurrentRow-=idx; }
+        void *rowPtr() const { return  (void *)(((const char *)fThisTable->GetArray()) + (*fCurrentRow)*fRowSize ); }
+        operator void *() const { return rowPtr(); }
+        Int_t operator-(const iterator &it) const { return (*fCurrentRow)-(*(it.fCurrentRow)); }
+        Long_t operator *() const { return  *fCurrentRow; } 
+        Bool_t operator==(const iterator &t) const { return  ( (fCurrentRow == t.fCurrentRow) && (fThisTable == t.fThisTable) ); }
+        Bool_t operator!=(const iterator &t) const { return !operator==(t); }
+
+        const TTable &Table()   const { return *fThisTable;}
+        const Long_t &RowSize() const { return fRowSize;}
+        const std::vector<Long_t>::iterator &Row() const { return fCurrentRow;}
+    };                
+
+#ifndef __CINT__
+    //  pointer iterator
+    // This create an iterator to iterate over all table column of the
+    // type provided.
+    // For example" piterator(table,kPtr) is to iterate over
+    // all cells of (TTableMap *) type
+    
+    class piterator {
+      private:
+		std::vector<ULong_t>  fPtrs;
+        UInt_t           fCurrentRowIndex;
+        UInt_t           fCurrentColIndex;
+        UInt_t           fRowSize;
+        const Char_t    *fCurrentRowPtr;
+        void           **fCurrentColPtr;
+        
+      protected:
+      	void **column() {return  fCurrentColPtr = (void **)(fCurrentRowPtr + fPtrs[fCurrentColIndex]);}
+      	
+      public:
+        piterator(const TTable *t=0,EColumnType type=kPtr);
+        piterator(const piterator& iter);
+    	  void operator=(const piterator& iter);
+    	
+    	  void operator++();
+    	  void operator++(int);
+    	  void operator--();
+    	  void operator--(int);
+       
+//        operator const char *() const;
+        void **operator *();
+        
+ 	      Bool_t operator==(const piterator &t) const;
+	      Bool_t operator!=(const piterator &t) const;
+
+	      UInt_t Row()    const;
+	      UInt_t Column() const;
+
+	      void  MakeEnd(UInt_t lastRowIndex);
+    }; // class iterator over pointers
+
+    piterator pbegin(){ return piterator(this); }
+    piterator pend(){ piterator pLast(this); pLast.MakeEnd(GetNRows()); return pLast; }
+#endif
    static const char *TableDictionary() { return 0; };
-   ClassDef(TTable,4)  // Vector of the C structures
+   ClassDef(TTable,4)  // vector of the C structures
 };
 
 //________________________________________________________________________
@@ -236,6 +321,73 @@ inline const void *TTable::operator[](Int_t i) const
 inline void TTable::Draw(Option_t *opt)
 { Draw(opt, "", "", 1000000000, 0); }
 
+#ifndef __CINT__
+    //________________________________________________________________________________________________________________
+    inline TTable::piterator::piterator(const piterator& iter) :
+           fPtrs (iter.fPtrs),
+           fCurrentRowIndex(iter.fCurrentRowIndex),
+           fCurrentColIndex(iter.fCurrentColIndex),
+           fCurrentRowPtr(iter.fCurrentRowPtr),
+           fCurrentColPtr(iter.fCurrentColPtr)
+    {}   
+    //________________________________________________________________________________________________________________
+    inline void TTable::piterator::operator=(const piterator& iter){
+        fPtrs            = iter.fPtrs;
+        fCurrentRowIndex = iter.fCurrentRowIndex;
+        fCurrentColIndex = iter.fCurrentColIndex;
+        fCurrentRowPtr   = iter.fCurrentRowPtr;
+        fCurrentColPtr   = iter.fCurrentColPtr;
+    }
+    //________________________________________________________________________________________________________________
+    inline void TTable::piterator::operator++()
+    {
+       ++fCurrentColIndex;
+         if (fCurrentColIndex >= fPtrs.size()) {
+           fCurrentColIndex = 0;
+         ++fCurrentRowIndex;
+           fCurrentRowPtr += fRowSize;
+         }
+         column();
+    }	
+    //________________________________________________________________________________________________________________
+    inline void TTable::piterator::operator++(int) {  operator++(); }
+    //________________________________________________________________________________________________________________
+    inline void TTable::piterator::operator--()
+    {
+       if (fCurrentColIndex > 0) {
+          fCurrentColIndex--;
+          fCurrentColIndex = fPtrs.size()-1;
+        --fCurrentRowIndex;
+          fCurrentRowPtr -= fRowSize;
+       } else {
+          fCurrentColIndex--;
+       }
+       column();
+    }
+    //________________________________________________________________________________________________________________
+    inline void TTable::piterator::operator--(int) {  operator--();  }    
+    //________________________________________________________________________________________________________________
+    // inline TTable::piterator::operator const char *() const { return fCurrentColPtr; }    
+    //________________________________________________________________________________________________________________
+    inline void **TTable::piterator::operator *()            { return fCurrentColPtr; }
+    //________________________________________________________________________________________________________________
+    inline Bool_t TTable::piterator::operator==(const piterator &t) const {
+        return  (
+                 (fCurrentRowIndex== t.fCurrentRowIndex)
+              && (fCurrentColIndex == t.fCurrentColIndex)
+//              && (fCurrentRowPtr == t.fCurrentRowPtr )
+//              && (fCurrentColPtr == t.fCurrentColPtr )
+                );
+    }
+    //________________________________________________________________________________________________________________
+    inline Bool_t TTable::piterator::operator!=(const piterator &t) const { return !operator==(t); }
+    //________________________________________________________________________________________________________________
+    inline void  TTable::piterator::MakeEnd(UInt_t lastRowIndex){fCurrentColIndex = 0; fCurrentRowIndex = lastRowIndex;} 
+    //________________________________________________________________________________________________________________
+    inline UInt_t TTable::piterator::Row()    const { return fCurrentRowIndex;}
+    //________________________________________________________________________________________________________________
+    inline UInt_t TTable::piterator::Column() const { return fCurrentColIndex;}
+#endif
 #include "TTableDescriptor.h"
 
 #endif

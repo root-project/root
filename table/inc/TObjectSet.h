@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TObjectSet.h,v 1.3 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TObjectSet.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -38,7 +38,7 @@ public:
   virtual void     Delete(Option_t *opt="");
   virtual Bool_t   DoOwner(Bool_t done=kTRUE);
   virtual Long_t   HasData() const;
-  virtual TObject *GetObject() const;
+  virtual TObject *GetObject() const; 
   virtual TDataSet *Instance() const;
   virtual Bool_t   IsOwner() const;
   virtual void     SetObject(TObject *obj);
@@ -46,11 +46,11 @@ public:
 
   static TObjectSet *instance();
 
-  ClassDef(TObjectSet,1)  // Set of objects
+  ClassDef(TObjectSet,1) // TDataSet wrapper for TObject class objects
 };
 
 inline TObjectSet *TObjectSet::instance()
-{ return new TObjectSet(); }
+{ return new TObjectSet();}
 
 inline Long_t   TObjectSet::HasData()   const {return fObj ? 1 : 0;}
 inline TObject *TObjectSet::GetObject() const {return fObj;}

@@ -1,8 +1,9 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.5 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.4 2003/01/14 14:26:14 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TVolumePosition.cxx,v 1.5 2002/01/24 11:39:31 rdm Exp $
+// $Id: TVolumePosition.cxx,v 1.4 2003/01/14 14:26:14 fisyak Exp $
 
 #include "Riostream.h"
+
 #include "TCL.h"
 #include "TVolumePosition.h"
 #include "TVolume.h"
@@ -54,6 +55,7 @@ TVolumePosition::TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t 
 //*-*
 //*-*    This new node is added into the list of sons of the current node
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   SetMatrixOwner(kFALSE);
    fX[0] = x; fX[1] =y; fX[2] = z;
    if (!node) return;
    static Int_t counter = 0;
@@ -80,11 +82,29 @@ TVolumePosition::TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t 
 //*-*
 //*-*    This new node is added into the list of sons of the current node
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   SetMatrixOwner(kFALSE);
    if (!gGeometry) new TGeometry;
    fX[0] = x; fX[1] = y; fX[2] = z;
    if (!fMatrix) fMatrix = TVolume::GetIdentity();
 }
+//______________________________________________________________________________
+TVolumePosition::TVolumePosition(const TVolumePosition&pos): TObject()
+      , fMatrix(((TVolumePosition &)pos).GetMatrix()),fNode(pos.GetNode()),fId(pos.GetId())
+{
+  for (int i=0;i<3;i++) fX[i] = pos.GetX(i);
+  // Transferring the ownership. 
+  // The last created object owns the matrix if any.
+  // The source object gives up its ownership in favour of the destination object
 
+  SetMatrixOwner(pos.IsMatrixOwner());
+  // !!! We have to break the "const'ness" at this point to take the ownerships
+  ((TVolumePosition &)pos).SetMatrixOwner(kFALSE);
+}
+
+//______________________________________________________________________________
+TVolumePosition::~TVolumePosition(){
+   DeleteOwnMatrix();
+}
 //______________________________________________________________________________
 void TVolumePosition::Browse(TBrowser *b)
 {
@@ -151,7 +171,7 @@ Text_t *TVolumePosition::GetObjectInfo(Int_t, Int_t) const
 }
 
 //______________________________________________________________________________
-Double_t *TVolumePosition::Errmx2Master(const Double_t *localError, Double_t *masterError)
+Double_t *TVolumePosition::Errmx2Master(const Double_t *localError, Double_t *masterError) const
 {
   Double_t error[6];
   TCL::vzero(&error[1],4);
@@ -160,7 +180,7 @@ Double_t *TVolumePosition::Errmx2Master(const Double_t *localError, Double_t *ma
 }
 
 //______________________________________________________________________________
-Float_t *TVolumePosition::Errmx2Master(const Float_t *localError, Float_t *masterError)
+Float_t *TVolumePosition::Errmx2Master(const Float_t *localError, Float_t *masterError) const
 {
   Float_t error[6];
   TCL::vzero(&error[1],4);
@@ -169,12 +189,12 @@ Float_t *TVolumePosition::Errmx2Master(const Float_t *localError, Float_t *maste
 }
 
 //______________________________________________________________________________
-Double_t *TVolumePosition::Cormx2Master(const Double_t *localCorr, Double_t *masterCorr)
+Double_t *TVolumePosition::Cormx2Master(const Double_t *localCorr, Double_t *masterCorr)const
 {
   Double_t *res = 0;
-  TRotMatrix *rm = GetMatrix();
+  const TRotMatrix *rm = GetMatrix();
   double *m = 0;
-  if (rm && ( m = rm->GetMatrix()) )
+  if (rm && ( m = ((TRotMatrix *)rm)->GetMatrix()) )
     res = TCL::trasat(m,(Double_t *)localCorr,masterCorr,3,3);
   else
     res = TCL::ucopy(localCorr,masterCorr,6);
@@ -182,12 +202,12 @@ Double_t *TVolumePosition::Cormx2Master(const Double_t *localCorr, Double_t *mas
 }
 
 //______________________________________________________________________________
-Float_t *TVolumePosition::Cormx2Master(const Float_t *localCorr, Float_t *masterCorr)
+Float_t *TVolumePosition::Cormx2Master(const Float_t *localCorr, Float_t *masterCorr) const
 {
  Float_t *res = 0;
- TRotMatrix *rm = GetMatrix();
+ const TRotMatrix *rm = GetMatrix();
  Double_t *m = 0;
- if (rm && (m = rm->GetMatrix()) ) {
+ if (rm && (m = ((TRotMatrix *)rm)->GetMatrix()) ) {
     double corLocal[6], corGlobal[6];
     TCL::ucopy(localCorr,corLocal,6);
     TCL::trasat(m,corLocal,corGlobal,3,3);
@@ -197,10 +217,54 @@ Float_t *TVolumePosition::Cormx2Master(const Float_t *localCorr, Float_t *master
     res =  TCL::ucopy(localCorr,masterCorr,6);
  return res;
 }
-
+//______________________________________________________________________________
+Double_t *TVolumePosition::Errmx2Local(const Double_t *masterError, Double_t *localError) const
+{
+   Double_t error[6];
+   TCL::vzero(&error[1],4);
+   error[0] = masterError[0]; error[2] = masterError[1]; error[5] = masterError[2];
+   return Cormx2Local(error, localError);
+}
+//______________________________________________________________________________
+Float_t *TVolumePosition::Errmx2Local(const Float_t *masterError, Float_t *localError) const
+{
+   Float_t error[6];
+   TCL::vzero(&error[1],4);
+   error[0] = masterError[0]; error[2] = masterError[1]; error[5] = masterError[2];
+   return Cormx2Local(error, localError);
+}
+//______________________________________________________________________________
+Double_t *TVolumePosition::Cormx2Local(const Double_t *localCorr, Double_t *masterCorr) const
+{
+   Double_t *res = 0;
+   TRotMatrix *rm = (TRotMatrix *) GetMatrix();
+   double *m = 0;
+   if (rm && ( m = rm->GetMatrix()) )
+      res = TCL::tratsa(m,(Double_t *)localCorr,masterCorr,3,3);
+   else
+      res = TCL::ucopy(localCorr,masterCorr,6);
+   return res;
+}
 
 //______________________________________________________________________________
-Double_t *TVolumePosition::Local2Master(const Double_t *local, Double_t *master, Int_t nPoints)
+Float_t *TVolumePosition::Cormx2Local(const Float_t *localCorr, Float_t *masterCorr) const
+{
+   Float_t *res = 0;
+   TRotMatrix *rm = (TRotMatrix *) GetMatrix();
+   Double_t *m = 0;
+   if (rm && (m = rm->GetMatrix()) ) {
+      double corLocal[6], corGlobal[6];
+      TCL::ucopy(localCorr,corLocal,6);
+      TCL::tratsa(m,corLocal,corGlobal,3,3);
+      res =  TCL::ucopy(corGlobal,masterCorr,6);
+   }
+   else
+      res =  TCL::ucopy(localCorr,masterCorr,6);
+   return res;
+}
+
+//______________________________________________________________________________
+Double_t *TVolumePosition::Local2Master(const Double_t *local, Double_t *master, Int_t nPoints) const
 {
 //*-*-*-*-*Convert one point from local system to master reference system*-*-*
 //*-*      ==============================================================
@@ -211,7 +275,7 @@ Double_t *TVolumePosition::Local2Master(const Double_t *local, Double_t *master,
 //  Otherwise TVolumePosition::UpdateMatrix should be called before.
   Double_t *matrix = 0;
   Double_t *trans = 0;
-  if (!fMatrix ||  fMatrix == TVolume::GetIdentity() || !(matrix = fMatrix->GetMatrix()) )
+  if (!fMatrix ||  fMatrix == TVolume::GetIdentity() || !(matrix = ((TRotMatrix *)fMatrix)->GetMatrix()) )
   {
     trans = master;
     for (int i =0; i < nPoints; i++,local += 3, master += 3) TCL::vadd(local,fX,master,3);
@@ -220,7 +284,7 @@ Double_t *TVolumePosition::Local2Master(const Double_t *local, Double_t *master,
   {
     trans = master;
     for (int i =0; i < nPoints; i++, local += 3, master += 3) {
-      TCL::mxmpy(matrix,local,master,3,3,1);
+      TCL::mxmpy2(matrix,local,master,3,3,1);
       TCL::vadd(master,fX,master,3);
     }
   }
@@ -228,37 +292,96 @@ Double_t *TVolumePosition::Local2Master(const Double_t *local, Double_t *master,
 }
 
 //______________________________________________________________________________
-Float_t *TVolumePosition::Local2Master(const Float_t *local, Float_t *master, Int_t nPoints)
+Float_t *TVolumePosition::Local2Master(const Float_t *local, Float_t *master, Int_t nPoints) const
 {
-//*-*-*-*Convert nPoints points from local system to master reference system*-*-*
-//*-*      ==============================================================
-//
-//  Note that before invoking this function, the global rotation matrix
-//  and translation vector for this node must have been computed.
-//  This is automatically done by the Paint functions.
-//  Otherwise TVolumePosition::UpdateMatrix should be called before.
-//
-  Double_t *matrix = 0;
-  Float_t *trans = 0;
-  if (!fMatrix ||  fMatrix == TVolume::GetIdentity() || !(matrix = fMatrix->GetMatrix()) )
-  {
-    trans = master;
-    for (int i =0; i < nPoints; i++,local += 3, master += 3) TCL::vadd(local,fX,master,3);
-  }
-  else
-  {
-    trans = master;
-    for (int i =0; i < nPoints; i++, local += 3, master += 3) {
-      Double_t dlocal[3];   Double_t dmaster[3];
-      TCL::ucopy(local,dlocal,3);
-      TCL::mxmpy(matrix,dlocal,dmaster,3,3,1);
-      TCL::vadd(dmaster,fX,dmaster,3);
-      TCL::ucopy(dmaster,master,3);
-    }
-  }
-  return trans;
+   //*-*-*-*Convert nPoints points from local system to master reference system*-*-*
+   //*-*      ==============================================================
+   //
+   //  Note that before invoking this function, the global rotation matrix
+   //  and translation vector for this node must have been computed.
+   //  This is automatically done by the Paint functions.
+   //  Otherwise TVolumePosition::UpdateMatrix should be called before.
+   //
+   Double_t *matrix = 0;
+   Float_t *trans = 0;
+   if (!fMatrix ||  fMatrix == TVolume::GetIdentity() || !(matrix = ((TRotMatrix *)fMatrix)->GetMatrix()) )
+   {
+      trans = master;
+      for (int i =0; i < nPoints; i++,local += 3, master += 3) TCL::vadd(local,fX,master,3);
+   }
+   else
+   {
+      trans = master;
+      for (int i =0; i < nPoints; i++, local += 3, master += 3) {
+         Double_t dlocal[3];   Double_t dmaster[3];
+         TCL::ucopy(local,dlocal,3);
+         TCL::mxmpy2(matrix,dlocal,dmaster,3,3,1);
+         TCL::vadd(dmaster,fX,dmaster,3);
+         TCL::ucopy(dmaster,master,3);
+      }
+   }
+   return trans;
+}
+//______________________________________________________________________________
+Double_t *TVolumePosition::Master2Local(const Double_t *master, Double_t *local, Int_t nPoints) const
+{
+   //*-*-*-*-*Convert one point from master system to local reference system*-*-*
+   //*-*      ==============================================================
+   //
+   //  Note that before invoking this function, the global rotation matrix
+   //  and translation vector for this node must have been computed.
+   //  This is automatically done by the Paint functions.
+   //  Otherwise TVolumePosition::UpdateMatrix should be called before.
+   Double_t *matrix = 0;
+   Double_t *trans = 0;
+   if (!fMatrix ||  fMatrix == TVolume::GetIdentity() || !(matrix = ((TRotMatrix *)fMatrix)->GetMatrix()) )
+   {
+      trans = local;
+      for (int i =0; i < nPoints; i++,master += 3, local += 3) TCL::vsub(master,fX,local,3);
+   }
+   else
+   {
+      trans = local;
+      for (int i =0; i < nPoints; i++, master += 3, local += 3) {
+         Double_t dlocal[3];
+         TCL::vsub(master,fX,dlocal,3);
+         TCL::mxmpy(matrix,dlocal,local,3,3,1);
+      }
+   }
+   return trans;
 }
 
+//______________________________________________________________________________
+Float_t *TVolumePosition::Master2Local(const Float_t *master, Float_t *local, Int_t nPoints) const
+{
+   //*-*-*-*Convert nPoints points from master system to local reference system*-*-*
+   //*-*      ==============================================================
+   //
+   //  Note that before invoking this function, the global rotation matrix
+   //  and translation vector for this node must have been computed.
+   //  This is automatically done by the Paint functions.
+   //  Otherwise TVolumePosition::UpdateMatrix should be called before.
+   //
+   Double_t *matrix = 0;
+   Float_t *trans = 0;
+   if (!fMatrix ||  fMatrix == TVolume::GetIdentity() || !(matrix = ((TRotMatrix *)fMatrix)->GetMatrix()) )
+   {
+      trans = local;
+      for (int i =0; i < nPoints; i++,master += 3, local += 3) TCL::vsub(master,fX,local,3);
+   }
+   else
+   {
+      trans = local;
+      for (int i =0; i < nPoints; i++, master += 3, local += 3) {
+         Double_t dmaster[3];   Double_t dlocal[3];
+         TCL::ucopy(master,dmaster,3);
+         TCL::vsub(dmaster,fX,dmaster,3);
+         TCL::mxmpy(matrix,dmaster,dlocal,3,3,1);
+         TCL::ucopy(dlocal,local,3);
+      }
+   }
+   return trans;
+}
 //______________________________________________________________________________
 void TVolumePosition::Paint(Option_t *)
 {
@@ -279,7 +402,7 @@ void TVolumePosition::Print(Option_t *) const
 
   if (fMatrix){
       fMatrix->Print();
-      Double_t *matrix = fMatrix->GetMatrix();
+      Double_t *matrix = ((TRotMatrix *)fMatrix)->GetMatrix();
       Int_t i = 0;
       cout << setw(4) <<" " ;
       for (i=0;i<3;i++) cout << setw(3) << i+1 << setw(3) << ":" ;
@@ -303,6 +426,9 @@ TVolumePosition *TVolumePosition::Reset(TVolume *node,Double_t x, Double_t y, Do
 //*-*
 //*-*    This method is to re-use the memory this object without delete/create steps
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+// This method has to be protected since it doesn't set properly kIsOwn bit.
+
    fNode = node;
    SetPosition(x,y,z);
    SetMatrix(matrix);
@@ -335,7 +461,14 @@ void   TVolumePosition::SetLineAttributes()
   TVolume *thisNode = GetNode();
   if (thisNode) thisNode->SetLineAttributes();
 }
-
+//_______________________________________________________________________
+void TVolumePosition::SetMatrix(TRotMatrix *matrix)
+{
+   if (matrix != fMatrix) {
+      DeleteOwnMatrix();
+      fMatrix = matrix;
+   }
+}
 //_______________________________________________________________________
 void TVolumePosition::UpdatePosition(Option_t *)
 {
@@ -343,10 +476,10 @@ void TVolumePosition::UpdatePosition(Option_t *)
 //*-*- Update translation vector and rotation matrix for new level
   if (gGeometry->GeomLevel() && fMatrix) {
      gGeometry->UpdateTempMatrix(fX[0],fX[1],fX[2]
-                                ,fMatrix->GetMatrix()
+                                ,((TRotMatrix *)fMatrix)->GetMatrix()
                                 ,fMatrix->IsReflection());
      if (view3D)
-        view3D->UpdatePosition(fX[0],fX[1],fX[2],fMatrix);
+        view3D->UpdatePosition(fX[0],fX[1],fX[2],((TRotMatrix *)fMatrix));
   }
 }
 
@@ -355,4 +488,68 @@ void TVolumePosition::SetVisibility(Int_t vis)
 {
  TVolume *node = GetNode();
  if (node) node->SetVisibility(TVolume::ENodeSEEN(vis));
+}
+//______________________________________________________________________________
+TVolumePosition &TVolumePosition::Mult(const TVolumePosition &curPosition) {
+
+   // This method mupltiply the position of this object to the position of the
+   // curPosition object.
+   // It doesn't change Id of either object involved.
+
+
+   // Pick the "old" position by pieces
+   TVolume *curNode = 0;
+ //  UInt_t curPositionId    = 0;
+      curNode       = curPosition.GetNode();
+ //     curPositionId = curPosition.GetId();
+   const TRotMatrix *oldMatrix = 0;
+   Double_t oldTranslation[] = { 0, 0, 0 };
+          oldMatrix         = GetMatrix();
+          oldTranslation[0] = GetX();
+          oldTranslation[1] = GetY();
+          oldTranslation[2] = GetZ();
+ 
+   // Pick the "current" position by pieces
+   const TRotMatrix *curMatrix        = curPosition.GetMatrix();
+
+   // Create a new position
+   Double_t newTranslation[3];
+   Double_t newMatrix[9];
+   if(oldMatrix){
+      TGeometry::UpdateTempMatrix(oldTranslation,((TRotMatrix *)oldMatrix)->GetMatrix()
+                       ,curPosition.GetX(),curPosition.GetY(),curPosition.GetZ(),
+                       ((TRotMatrix *)curMatrix)->GetMatrix()
+                       ,newTranslation,newMatrix);
+      Int_t num = gGeometry->GetListOfMatrices()->GetSize();
+      Char_t anum[100];
+      sprintf(anum,"%d",num+1);
+      SetMatrixOwner();
+      Reset(curNode
+                           ,newTranslation[0],newTranslation[1],newTranslation[2]
+                           ,new TRotMatrix(anum,"NodeView",newMatrix));
+
+   } else {
+      newTranslation[0] = oldTranslation[0] + curPosition.GetX();
+      newTranslation[1] = oldTranslation[1] + curPosition.GetY();
+      newTranslation[2] = oldTranslation[2] + curPosition.GetZ();
+      Reset(curNode,newTranslation[0],newTranslation[1],newTranslation[2]);
+   }
+//    SetId(curPositionId);
+   return *this;
+}
+
+//______________________________________________________________________________
+void TVolumePosition::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TVolumePosition.
+   TRotMatrix     *save = fMatrix;
+   if (R__b.IsReading()) {
+      fMatrix = 0;
+      TVolumePosition::Class()->ReadBuffer(R__b, this);
+      if (!fMatrix) fMatrix = save;
+   } else {
+      if (save == TVolume::GetIdentity() ) fMatrix = 0;
+      TVolumePosition::Class()->WriteBuffer(R__b, this);
+      fMatrix = save;
+   }
 }

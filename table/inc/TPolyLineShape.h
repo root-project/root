@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TPolyLineShape.h,v 1.2 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TPolyLineShape.h,v 1.1.1.1 2002/05/28 12:32:02 fisyak Exp $
 // Author:
 
 /*************************************************************************

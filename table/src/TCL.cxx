@@ -1,14 +1,20 @@
-// @(#)root/star:$Name:  $:$Id: TCL.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TCL.cxx,v 1.3 2003/01/03 20:17:13 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/09/99
 //
 // The set of methods to work with the plain matrix / vector
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f110/top.html
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f112/top.html
 //
-// $Id: TCL.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// $Id: TCL.cxx,v 1.3 2003/01/03 20:17:13 fisyak Exp $
 // $Log: TCL.cxx,v $
-// Revision 1.1  2002/05/27 16:26:59  rdm
-// rename star to table.
+// Revision 1.3  2003/01/03 20:17:13  fisyak
+// *** empty log message ***
+//
+// Revision 1.2  2002/11/11 12:02:40  brun
+// Remove unused variable mn in several functions.
+//
+// Revision 1.1  2002/04/15 20:23:39  fine
+// NEw naming schema for RootKErnel classes and a set of classes to back geometry OO
 //
 // Revision 1.2  2001/05/29 19:08:08  brun
 // New version of some STAR classes from Valery.

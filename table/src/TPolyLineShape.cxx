@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TPolyLineShape.cxx,v 1.3 2002/05/11 14:49:54 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TPolyLineShape.cxx,v 1.2 2003/01/03 15:03:14 fisyak Exp $
 // Author: 
-// $Id: TPolyLineShape.cxx,v 1.3 2002/05/11 14:49:54 brun Exp $
+// $Id: TPolyLineShape.cxx,v 1.2 2003/01/03 15:03:14 fisyak Exp $
 // ***********************************************************************
 // *  C++ class library to define an abstract 3D shape os STAR "event" geometry
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved

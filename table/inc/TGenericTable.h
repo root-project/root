@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $Id: TGenericTable.h,v 1.6 2002/05/09 20:22:00 brun Exp $
+// @(#)root/star:$Name:  $Id: TGenericTable.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   30/06/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
 
@@ -33,14 +33,17 @@ class TGenericTable : public TTable {
 	     iterator(const TTable &t, char &rowPtr): fRowSize(t.GetRowSize()), fCurrentRow(&rowPtr){}
 	     iterator(const TTable &t): fRowSize(t.GetRowSize()), fCurrentRow(0){}
              iterator(const iterator& iter) : fRowSize (iter.fRowSize), fCurrentRow(iter.fCurrentRow){}
-             iterator &operator++() { if (fCurrentRow) fCurrentRow+=fRowSize; return *this;}
-	     iterator &operator--() { if (fCurrentRow) fCurrentRow-=fRowSize; return *this;}
+	     iterator &operator=(const iterator& iter) { fRowSize = iter.fRowSize; fCurrentRow = iter.fCurrentRow; return *this;}
+	     iterator &operator++()    { if (fCurrentRow) fCurrentRow+=fRowSize; return *this;}
+ 	     void     operator++(int) { if (fCurrentRow) fCurrentRow+=fRowSize;}
+	     iterator &operator--()    { if (fCurrentRow) fCurrentRow-=fRowSize; return *this;}
+	     void      operator--(int) { if (fCurrentRow) fCurrentRow-=fRowSize;}
 	     iterator &operator+(Int_t idx) { if (fCurrentRow) fCurrentRow+=idx*fRowSize; return *this;}
 	     iterator &operator-(Int_t idx) { if (fCurrentRow) fCurrentRow-=idx*fRowSize; return *this;}
 	     Int_t operator-(const iterator &it) const { return (fCurrentRow-it.fCurrentRow)/fRowSize; }
              char *operator *(){ return fCurrentRow;}
              Bool_t operator==(const iterator &t) const { return (fCurrentRow == t.fCurrentRow); }
-             Bool_t operator!=(const iterator &t) const { return !operator==(t); }
+	     Bool_t operator!=(const iterator &t) const { return !operator==(t); }
 	};                                        
     TGenericTable() : TTable("TGenericTable",-1), fColDescriptors(0) {SetType("generic");}      
 
@@ -58,13 +61,14 @@ class TGenericTable : public TTable {
 
                 char  *GetTable(Int_t i=0)   const { return ((char *)GetArray())+i*GetRowSize();}     
     TTableDescriptor  *GetTableDescriptors() const { return GetDescriptorPointer();}
-        TTableDescriptor  *GetRowDescriptors()   const { return GetDescriptorPointer();}
+    TTableDescriptor  *GetRowDescriptors()   const { return GetDescriptorPointer();}
     char &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }             
     const char &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const char *)(GetTable(i))); } 
+    iterator begin()        { return ((const TGenericTable *)this)->begin();}
     iterator begin() const  {                      return GetNRows() ? iterator(*this, *GetTable(0)):end();}
     iterator end()   { return ((const TGenericTable *)this)->end(); }
     iterator end()   const  {Long_t i = GetNRows(); return i? iterator(*this, *GetTable(i)):iterator(*this);}
-	ClassDef(TGenericTable,3) // Generic array of C-structure (a'la STL vector)
+    ClassDef(TGenericTable,4) // Generic array of C-structure (a'la STL vector)
 };
  
 #endif

@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.4 2002/11/26 18:39:17 brun Exp $ */
+/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Stypes                                                               //
-// $Id: Ttypes.h,v 1.4 2002/11/26 18:39:17 brun Exp $
+// $Id: Ttypes.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
 // Basic types used by STAF - ROOT interface.                           //
 //                                                                      //
 // This header file contains the set of the macro definitions           //
@@ -22,7 +22,6 @@
 // does it for the "normal" C++ classes                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
 
 #include "Rtypes.h"
 
@@ -32,6 +31,8 @@
 #   define _QUOTE2_(name1,name2) _QUOTE_(_NAME1_(name1)name2)
 #endif
 
+// #if ROOT_VERSION_CODE >= ROOT_VERSION(3,03,5)
+
 //___________________________________________________________________
 #define _TableClassImp_(className,structName)
 
@@ -40,20 +41,9 @@
 void className::Streamer(TBuffer &R__b) {                           \
    TTable::Streamer(R__b); }
 
-#if 0
-   void className::Dictionary()                                     \
-   {                                                                \
-      TClass *c = CreateClass(_QUOTE_(className), Class_Version(),  \
-                              DeclFileName(), ImplFileName(),       \
-                              DeclFileLine(), ImplFileLine());      \
-      className::TableDictionary();                                 \
-   }                                                                \
-
-#endif
-
 //___________________________________________________________________
 #define TableClassImp(className,structName)                         \
-   const char* className::TableDictionary()\
+   const char* className::TableDictionary()                         \
    {return TTable::TableDictionary(_QUOTE_(className),_QUOTE_(structName),fgColDescriptors);}\
    _TableClassImp_(className,structName)
 
@@ -142,10 +132,10 @@ namespace ROOT {
 class TTable;
 namespace ROOT {
    template <class RootClass>
-      const TTableInitBehavior<RootClass> *DefineBehavior(TTable*, RootClass*)
+      const ROOT::TTableInitBehavior<RootClass> *DefineBehavior(TTable*, RootClass*)
       {
-         TTableInitBehavior<RootClass> *behave = new TTableInitBehavior<RootClass>;
-         return behave;
+         static ROOT::TTableInitBehavior<RootClass> behave;
+         return &behave;
       }
 }
 

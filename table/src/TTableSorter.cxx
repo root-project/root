@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.11 2002/02/18 07:45:56 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.3 2003/01/03 20:17:13 fisyak Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
-// $Id: TTableSorter.cxx,v 1.11 2002/02/18 07:45:56 brun Exp $
+// $Id: TTableSorter.cxx,v 1.3 2003/01/03 20:17:13 fisyak Exp $
 
 #include <stdlib.h>
 #include "TTableSorter.h"
@@ -904,8 +904,8 @@ void TTableSorter::LearnTable()
         }
       }
       fColSize   = memberType->Size();
-      fColOffset = member->GetOffsetCint() + memberType->Size() * globalIndex;
-    }
+      fColOffset = member->GetOffset() + memberType->Size() * globalIndex;
+   }
     break;
   }
 }

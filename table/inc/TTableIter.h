@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTableIter.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTableIter.h,v 1.1.1.2 2002/12/02 21:57:32 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/12/99
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TTableIter
 #define ROOT_TTableIter
-// $Id: TTableIter.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// $Id: TTableIter.h,v 1.1.1.2 2002/12/02 21:57:32 fisyak Exp $
 // Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
 // Author                  Valerie Fine  (fine@bnl.gov)
 // Copyright(c) 1997~1999  Valerie Fine  (fine@bnl.gov)

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTablePoints.h,v 1.2 2000/08/09 08:41:22 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTablePoints.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
 // Author: Valery Fine   14/05/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// $Id: TTablePoints.h,v 1.2 2000/08/09 08:41:22 brun Exp $
+// $Id: TTablePoints.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
 
 #ifndef ROOT_TTablePoints
 #define ROOT_TTablePoints
@@ -36,33 +36,33 @@
 
 class TTablePoints : public TPoints3DABC
 {
-  protected:
-    TTableSorter   *fTableSorter;
-    const void     *fKey;            // pointer to key value to select rows
-    Int_t           fFirstRow;       // The first row to take in account
-    Int_t           fSize;
-    void           *fRows;           // Pointer the first row of the STAF table
+protected:
+   TTableSorter   *fTableSorter;
+   const void     *fKey;            // pointer to key value to select rows
+   Int_t           fFirstRow;       // The first row to take in account
+   Int_t           fSize;
+   void           *fRows;           // Pointer the first row of the STAF table
 
-    virtual void SetTablePointer(void *table);
-    TTablePoints();
-  public:
-    TTablePoints(TTableSorter *sorter,const void *key,Option_t *opt="");
-    TTablePoints(TTableSorter *sorter, Int_t keyIndex,Option_t *opt="");
+   virtual void SetTablePointer(void *table);
+   TTablePoints();
+public:
+   TTablePoints(TTableSorter *sorter,const void *key,Option_t *opt="");
+   TTablePoints(TTableSorter *sorter, Int_t keyIndex,Option_t *opt="");
    ~TTablePoints(){}
-    virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
-    virtual Int_t     GetLastPosition()const;
-    virtual Float_t   GetX(Int_t idx)  const = 0;
-    virtual Float_t   GetY(Int_t idx)  const = 0;
-    virtual Float_t   GetZ(Int_t idx)  const = 0;
-    virtual void     *GetTable();
-    virtual Option_t *GetOption()      const { return 0;}
-    virtual Int_t     Indx(Int_t sortedIndx) const;
-    virtual Int_t     SetLastPosition(Int_t idx);
-    virtual void      SetOption(Option_t *){;}
-    virtual Int_t     SetPoint(Int_t, Float_t, Float_t, Float_t ){return -1;}
-    virtual Int_t     SetPoints(Int_t , Float_t *, Option_t *){return -1;}
-    virtual Int_t     Size() const;
-    ClassDef(TTablePoints,0)  // Defines the TTable as an element of "event" geometry
+   virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
+   virtual Int_t     GetLastPosition()const;
+   virtual Float_t   GetX(Int_t idx)  const = 0;
+   virtual Float_t   GetY(Int_t idx)  const = 0;
+   virtual Float_t   GetZ(Int_t idx)  const = 0;
+   virtual void     *GetTable();
+   virtual Option_t *GetOption()      const { return 0;}
+   virtual Int_t     Indx(Int_t sortedIndx) const;
+   virtual Int_t     SetLastPosition(Int_t idx);
+   virtual void      SetOption(Option_t *){;}
+   virtual Int_t     SetPoint(Int_t, Float_t, Float_t, Float_t ){return -1;}
+   virtual Int_t     SetPoints(Int_t , Float_t *, Option_t *){return -1;}
+   virtual Int_t     Size() const;
+   ClassDef(TTablePoints,0)  // Defines the TTable as an element of "event" geometry
 };
 
 //____________________________________________________________________________
@@ -70,30 +70,30 @@ inline void TTablePoints::SetTablePointer(void *table){ fRows = table;}
 
 //____________________________________________________________________________
 // return the index of the origial row by its index from the sorted table
-   inline Int_t TTablePoints::Indx(Int_t sortedIndx) const
-     {return fTableSorter?fTableSorter->GetIndex(fFirstRow+sortedIndx):-1;}
+inline Int_t TTablePoints::Indx(Int_t sortedIndx) const
+{return fTableSorter?fTableSorter->GetIndex(fFirstRow+sortedIndx):-1;}
 //____________________________________________________________________________
 // return the pointer to the original table object
-  inline void *TTablePoints::GetTable(){
-    void *ret = 0;
-    if (fTableSorter) {
+inline void *TTablePoints::GetTable(){
+   void *ret = 0;
+   if (fTableSorter) {
       TTable *t = fTableSorter->GetTable();
       if (t) ret = t->GetArray();
-    }
-    return ret;
-  }
+   }
+   return ret;
+}
 //____________________________________________________________________________
-  inline Int_t TTablePoints::Size() const { return fSize;}
+inline Int_t TTablePoints::Size() const { return fSize;}
 //____________________________________________________________________________
-  inline Int_t TTablePoints::GetLastPosition() const {return Size()-1;}
+inline Int_t TTablePoints::GetLastPosition() const {return Size()-1;}
 
 //____________________________________________________________________________
-  inline Int_t TTablePoints::SetLastPosition(Int_t idx)
-  {
-     Int_t pos = GetLastPosition();
-     fSize = TMath::Min(pos,idx)+1;
-     return pos;
-  }
+inline Int_t TTablePoints::SetLastPosition(Int_t idx)
+{
+   Int_t pos = GetLastPosition();
+   fSize = TMath::Min(pos,idx)+1;
+   return pos;
+}
 
 #endif
 

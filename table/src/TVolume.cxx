@@ -1,13 +1,13 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.1 2002/05/27 16:27:00 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.2 2003/01/03 15:03:14 fisyak Exp $
 // Author: Valery Fine   10/12/98
 //
 /*************************************************************************
  * Copyright(c) 1998, FineSoft, All rights reserved. Valery Fine (Faine) *
  *************************************************************************/
 
+#include "Riostream.h"
 #include <stdlib.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TVirtualPad.h"
@@ -26,7 +26,7 @@
 #include "TVolumePosition.h"
 
 //const Int_t kMAXLEVELS = 20;
-//const Int_t kSonsInvisible = BIT(17);
+const Int_t kSonsInvisible = BIT(17);
 
 #if 0
 const Int_t kVectorSize = 3;
@@ -203,7 +203,7 @@ TNode *TVolume::CreateTNode(const TVolumePosition *position)
   Double_t x=0;
   Double_t y=0;
   Double_t z=0;
-  TRotMatrix* matrix = 0;
+  const TRotMatrix* matrix = 0;
   if (position) {
      x=position->GetX();
      y=position->GetY();
@@ -212,7 +212,7 @@ TNode *TVolume::CreateTNode(const TVolumePosition *position)
   }
 //  const Char_t  *path = Path();
 //  printf("%s: %s/%s, shape=%s/%s\n",path,GetName(),GetTitle(),GetShape()->GetName(),GetShape()->ClassName());
-  TNode *newNode  = new TNode(GetName(),GetTitle(),GetShape(),x,y,z,matrix,GetOption());
+  TNode *newNode  = new TNode(GetName(),GetTitle(),GetShape(),x,y,z,(TRotMatrix* )matrix,GetOption());
   newNode->SetVisibility(MapStNode2GEANTVis(GetVisibility()));
 
   newNode->SetLineColor(GetLineColor());
@@ -267,7 +267,8 @@ TVolumePosition *TVolume::Add(TVolume *node, TVolumePosition *nodePosition)
   TVolumePosition *position = nodePosition;
   if (!node) return 0;
   if (!position) position = new TVolumePosition(node);  // Create default position
-  TDataSet::Add(node);
+  // The object must be placed at once. Check it:
+  if (!(GetCollection() && GetCollection()->FindObject(node)) ) TDataSet::Add(node);
   Add(position);
   return position;
 }
@@ -327,13 +328,7 @@ void TVolume::Browse(TBrowser *b)
          b->Add(nodePosition,posName.Data());
        }
    }
-   else {
-#ifndef WIN32
-      Inspect();
-#endif
-    }
 }
-
 //______________________________________________________________________________
 Int_t TVolume::DistancetoPrimitive(Int_t px, Int_t py)
 {

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable3Points.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable3Points.cxx,v 1.2 2003/01/03 15:03:14 fisyak Exp $
 // Author: Valery Fine   10/05/99  (E-mail: fine@bnl.gov)
 
 #include "TTable3Points.h"

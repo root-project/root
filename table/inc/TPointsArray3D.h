@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TPointsArray3D.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TPointsArray3D.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 /*************************************************************************

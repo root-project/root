@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: tableDescriptor.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $ */
+/* @(#)root/star:$Name:  $:$Id: tableDescriptor.h,v 1.1.1.1 2002/05/28 12:32:02 fisyak Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -10,7 +10,7 @@
 /* tableDescriptor.h */
 #ifndef TABLEDESCRIPTOR_H
 #define TABLEDESCRIPTOR_H
-// $Id: tableDescriptor.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $"
+// $Id: tableDescriptor.h,v 1.1.1.1 2002/05/28 12:32:02 fisyak Exp $"
 #ifdef NORESTRICTIONS
 # define TABLEDESCRIPTOR_SPEC   \
  "struct tableDescriptor {      \
@@ -63,6 +63,12 @@ typedef struct tableDescriptor_st {
     Int_t        fType;        /* The data type of the selected column                                  */
 } TABLEDESCRIPTOR_ST;
 // $Log: tableDescriptor.h,v $
+// Revision 1.1.1.1  2002/05/28 12:32:02  fisyak
+//
+//
+// Revision 1.1  2002/05/27 16:26:59  rdm
+// rename star to table.
+//
 // Revision 1.1.1.1  2000/05/16 17:00:49  rdm
 // Initial import of ROOT into CVS
 //

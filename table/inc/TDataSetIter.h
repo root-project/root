@@ -1,13 +1,13 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.h,v 1.5 2001/02/07 08:18:15 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.h,v 1.2 2003/01/03 15:03:11 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
-/*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
+// ***********************************************************************
+// * C++ class library to create and manipulate the datasets hierarchy
+// * Copyright(c) 1997~2001  [BNL] Brookhaven National Laboratory
+// * All rights reserved
+// * Author                  Valery Fine  (fine.gov)
+// * Copyright(c) 1997~2001  Valery Fine  (fine.gov)
+// ***********************************************************************
 
 #ifndef ROOT_TDataSetIter
 #define ROOT_TDataSetIter
@@ -15,7 +15,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// $Id: TDataSetIter.h,v 1.5 2001/02/07 08:18:15 brun Exp $
+// $Id: TDataSetIter.h,v 1.2 2003/01/03 15:03:11 fisyak Exp $
 //
 // TDataSetIter                                                         //
 //                                                                      //
@@ -59,7 +59,7 @@ public:
 
   virtual TDataSet    *Cd(const Char_t *dirname);
   virtual TDataSet    *Cd(TDataSet *ds);
-  virtual TDataSet    *operator()( EDataSetPass mode=kContinue ) {return  Next(mode);}
+  virtual TDataSet    *operator()( TDataSet::EDataSetPass mode=TDataSet::kContinue ) {return  Next(mode);}
   virtual TDataSet    *operator()(const Char_t *path) { return Find(path); }
   virtual TDataSet    *operator[](const Char_t *path);
   virtual Int_t        GetDepth() const {return fDepth;}
@@ -68,18 +68,19 @@ public:
   virtual Int_t        Du() const;            // summarize dataset usage
   virtual Int_t        Df() const {return 0;} // report number of free "table" blocks.
 
-  virtual TDataSet    *Find(const Char_t *path, TDataSet *rootset=0,Bool_t mkdir=kFALSE);
+  virtual TDataSet    *Find(const Char_t *path, TDataSet *rootset=0,Bool_t mkdir=kFALSE,Bool_t titleFlag=kFALSE);
   virtual TDataSet    *FindByPath(const Char_t *path, TDataSet *rootset=0,Bool_t mkdir=kFALSE);
   virtual TDataSet    *FindDataSet(const Char_t *name,const Char_t *path="",Option_t *opt="");
   virtual TDataSet    *FindByName(const Char_t *name,const Char_t *path="",Option_t *opt="");
+  virtual TDataSet    *FindByTitle(const Char_t *title,const Char_t *path="",Option_t *opt="");
   virtual TDataSet    *FindDataSet(TDataSet *set,const Char_t *path,Option_t *opt="");
   virtual TDataSet    *FindByPointer(TDataSet *set,const Char_t *path=0,Option_t *opt="");
   virtual TObject     *FindObject(const Char_t *name) const;
   virtual TObject     *FindObject(const TObject *obj) const;
 
-  virtual Int_t        Flag(UInt_t flag=kMark,EBitOpt reset=kSet){return Flag((TDataSet *)0,flag,reset);}
-  virtual Int_t        Flag(const Char_t *path,UInt_t flag=kMark,EBitOpt reset=kSet);
-  virtual Int_t        Flag(TDataSet *dataset,UInt_t flag=kMark,EBitOpt reset=kSet);
+  virtual Int_t        Flag(UInt_t flag=TDataSet::kMark,TDataSet::EBitOpt reset=TDataSet::kSet){return Flag((TDataSet *)0,flag,reset);}
+  virtual Int_t        Flag(const Char_t *path,UInt_t flag=TDataSet::kMark,TDataSet::EBitOpt reset=TDataSet::kSet);
+  virtual Int_t        Flag(TDataSet *dataset,UInt_t flag=TDataSet::kMark,TDataSet::EBitOpt reset=TDataSet::kSet);
 
   virtual TDataSet    *Ls(const Char_t *dirname="",Option_t *opt="") const;
   virtual TDataSet    *Ls(const Char_t *dirname,Int_t depth) const;
@@ -99,7 +100,7 @@ public:
   virtual TDataSet    *Shunt(TDataSet *set, const Char_t *path);
   virtual TDataSet    *Shunt(TDataSet *set, TDataSet *dataset);
 
-  virtual TDataSet    *Next( EDataSetPass mode=kContinue);
+  virtual TDataSet    *Next( TDataSet::EDataSetPass mode=TDataSet::kContinue);
   virtual TDataSet    *Next(const Char_t *path, TDataSet *rootset=0,Bool_t mkdir=kFALSE){return Find(path,rootset,mkdir);}
   virtual Bool_t      Notify() { return TObject::Notify();}
   virtual void         Notify(TDataSet *dataset);

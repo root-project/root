@@ -1,10 +1,12 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.4 2002/12/02 18:50:05 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.3 2003/01/03 20:17:13 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
+// $Id:
+// $Log:
 
+#include "Riostream.h"
 #include <assert.h>
 #include <stdlib.h>
 
-#include "Riostream.h"
 #include "TCanvas.h"
 #include "TPad.h"
 #include "TCL.h"
@@ -224,6 +226,11 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
   //
   //  cout << "ctor for " << GetName() << " - " << GetTitle() << endl;
   if (!gGeometry) new TGeometry;
+  if (!nodePosition) {
+     // Create the trivial position if any
+     nodePosition = new TVolumePosition(&pattern);
+     SetObject((TObject*)nodePosition);
+  }
   if (!rootVolume) {
      rootVolume   = this;
      nodePosition = 0;
@@ -239,7 +246,7 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
 //  Bool_t optAll    = (iopt == kAll);
   Bool_t optMarked = (iopt == kMarked);
 
-  TRotMatrix *thisMatrix = 0;
+  const TRotMatrix *thisMatrix = 0;
   Double_t thisTranslation[3] = {0,0,0};
   if (nodePosition ) {
      thisMatrix = nodePosition->GetMatrix();
@@ -248,24 +255,26 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
   while ( (position = (TVolumePosition *)nextPosition()) ) {
      // define the the related TVolume
      TVolume *node     = position->GetNode();
+     Double_t *positionMatrix = ((TRotMatrix *)position->GetMatrix())->GetMatrix();
      if (node) {
         UInt_t positionId = position->GetId();
         Double_t newTranslation[3] = {position->GetX(),position->GetY(),position->GetZ()};
         Double_t newMatrix[9];
         TRotMatrix currentMatrix;
+        
         if (nodePosition) {
-          if (position->GetMatrix()->GetMatrix()) {
-            TGeometry::UpdateTempMatrix(thisTranslation,thisMatrix?thisMatrix->GetMatrix():0
-                         ,position->GetX(),position->GetY(),position->GetZ(),position->GetMatrix()->GetMatrix()
+          if (positionMatrix) {
+            TGeometry::UpdateTempMatrix(thisTranslation,thisMatrix?((TRotMatrix *)thisMatrix)->GetMatrix():0
+                         ,position->GetX(),position->GetY(),position->GetZ(),positionMatrix
                          ,newTranslation,newMatrix);
             currentMatrix.SetMatrix(newMatrix);
           } else {
             TCL::vadd(thisTranslation, newTranslation,newTranslation,3);
-            currentMatrix.SetMatrix(thisMatrix->GetMatrix());
+            currentMatrix.SetMatrix(((TRotMatrix *)thisMatrix)->GetMatrix());
           }
         } else {
-          if (position->GetMatrix()->GetMatrix())
-            currentMatrix.SetMatrix(position->GetMatrix()->GetMatrix());
+          if (positionMatrix)
+            currentMatrix.SetMatrix(positionMatrix);
           else {
             TCL::ucopy(thisTranslation,newTranslation,3);
             currentMatrix.SetMatrix(TVolume::GetIdentity()->GetMatrix());
@@ -297,14 +306,15 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
   }
 }
 //_____________________________________________________________________________
-TVolumeView::TVolumeView(TVolumeView &viewNode) :
-             TObjectSet(viewNode.GetName(), (TObject *)viewNode.GetPosition()),
-             TAtt3D(viewNode), fListOfShapes(viewNode.GetListOfShapes())
+TVolumeView::TVolumeView(TVolumeView &viewNode): 
+             TObjectSet(viewNode.GetName(),(TObject *)viewNode.GetPosition())
+            ,TAtt3D()
+            ,fListOfShapes(viewNode.GetListOfShapes())
 { if (viewNode.IsOwner()) { viewNode.DoOwner(kFALSE); DoOwner(); } }
 
 //_____________________________________________________________________________
 TVolumeView::TVolumeView(Double_t *translate, Double_t *rotate, UInt_t positionId, TVolume *topNode,
-                         const Char_t *thisNodePath, const Char_t *matrixName, Int_t matrixType)
+                         const Char_t *thisNodePath, const Char_t *matrixName, const Int_t matrixType)
             // : fListOfAttributes(0)
 {
   // Special ctor to back TVolumeView::SavePrimitive() method
@@ -788,9 +798,11 @@ TString TVolumeView::PathP() const
        str += "/";
    }
    str +=  GetName();
+   UInt_t positionId = 0;
    TVolumePosition *p = GetPosition();
    if (p) {
       char buffer[10];
+      positionId = p->GetId();
       sprintf(buffer,";%d",p->GetId());
       str +=  buffer;
    }
@@ -827,13 +839,13 @@ const Char_t *sceleton[] = {
   Double_t thisY  = thisPosition ? thisPosition->GetY():0;
   Double_t thisZ  = thisPosition ? thisPosition->GetZ():0;
 
-  TRotMatrix *matrix = thisPosition ? thisPosition->GetMatrix():0;
+  const TRotMatrix *matrix = thisPosition ? thisPosition->GetMatrix():0;
   Int_t matrixType = 2;
   TString matrixName = " ";
   Double_t thisMatrix[] = { 0,0,0, 0,0,0, 0,0,0 };
   if (matrix) {
      matrixName = matrix->GetName();
-     memcpy(thisMatrix,matrix->GetMatrix(),9*sizeof(Double_t));
+     memcpy(thisMatrix,((TRotMatrix *)matrix)->GetMatrix(),9*sizeof(Double_t));
      matrixType = matrix->GetType();
   }
   Int_t im = 0;

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTablePoints.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTablePoints.cxx,v 1.1.1.2 2002/12/02 21:57:35 fisyak Exp $
 // Author: Valery Fine   14/05/99  (E-mail: fine@bnl.gov)
 
 // ***********************************************************************

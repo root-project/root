@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.14 2001/05/13 11:10:06 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -49,34 +49,24 @@
 class TDataSetIter;
 class TBrowser;
 
-//----- dataset flags
-enum ESetBits {
-     kMark        = BIT(22)   // if object is marked
-    ,kArray       = BIT(20)   // if object has TObjArray inside
-};
-
-enum EBitOpt {
-               kSet   = kTRUE,
-               kReset = kFALSE
-             };
-
-// The control codes to navigate the TDataSet structure via TDataSet::Pass method
-
-typedef enum {
-      kContinue,  // continue passing
-      kPrune,     // stop passing of the current branch but continue with the next one if any
-      kStop,      // break passing
-      kUp,        // break passing, return to the previous level, then continue
-      kStruct,    // work with structural links only
-      kAll,       // work with all links
-      kRefs,      // work with refs links only
-      kMarked     // work with marked links only
-     } EDataSetPass;
-
 class TDataSet : public TNamed
 {
- friend class TDataSetIter;
- private:
+  friend class TDataSetIter;
+  public:
+   // The control codes to navigate the TDataSet structure via TDataSet::Pass method
+
+    typedef enum {
+         kContinue,  // continue passing
+         kPrune,     // stop passing of the current branch but continue with the next one if any
+         kStop,      // break passing
+         kUp,        // break passing, return to the previous level, then continue
+         kStruct,    // work with structural links only
+         kAll,       // work with all links
+         kRefs,      // work with refs links only
+         kMarked     // work with marked links only
+     } EDataSetPass;
+
+  private:
     void operator=(const TDataSet &){}
 // --   Int_t IncCnt(){ fCnt++; return fCnt;}
 // --   Int_t DecCnt(){ fCnt--; return fCnt;}
@@ -97,6 +87,17 @@ class TDataSet : public TNamed
 
 
  public:
+ 
+   //----- dataset flags
+   enum ESetBits {
+      kMark        = BIT(22)   // if object is marked
+     ,kArray       = BIT(20)   // if object has TObjArray inside
+   };
+
+   enum EBitOpt {
+               kSet   = kTRUE,
+               kReset = kFALSE
+             };
 
     TDataSet(const char *name="", TDataSet *parent=0,  Bool_t arrayFlag = kFALSE);
     TDataSet(const TDataSet &src,EDataSetPass iopt=kAll);
@@ -112,8 +113,9 @@ class TDataSet : public TNamed
     virtual TObject     *Clone(const char *newname="") const;
     virtual void         Delete(Option_t *opt="");
     virtual TDataSet    *Find(const char *path) const;
-    virtual TDataSet    *FindByPath(const char *path) const;
     virtual TDataSet    *FindByName(const char *name,const char *path="",Option_t *opt="") const;
+    virtual TDataSet    *FindByPath(const char *path) const;
+    virtual TDataSet    *FindByTitle(const char *title,const char *path="",Option_t *opt="") const;
             TObject     *FindObject(const char *name) const {return FindByName(name);}
             TObject     *FindObject(const TObject *o)  const { return TObject::FindObject(o);}
     virtual TDataSet    *First() const;
@@ -154,6 +156,8 @@ class TDataSet : public TNamed
             void         UnMarkAll();                         // *MENU*
             void         InvertAllMarks();                    // *MENU*
             void         Mark(UInt_t flag,EBitOpt reset=kSet);
+    virtual TDataSet    *Next() const;
+    virtual TDataSet    *Prev() const;
     virtual void         Update();                            // Update dataset
     virtual void         Update(TDataSet *set,UInt_t opt=0);// Update this dataset with the new one
     virtual Int_t        Write(const Text_t *name=0, Int_t option=0, Int_t bufsize=0);

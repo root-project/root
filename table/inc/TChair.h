@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.1.1.2 2002/12/02 21:57:31 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// $Id: TChair.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// $Id: TChair.h,v 1.1.1.2 2002/12/02 21:57:31 fisyak Exp $
 #ifndef ROOT_TChair
 #define ROOT_TChair
 
@@ -119,6 +119,19 @@ inline const void *TChair::operator[](Int_t i) const
 }
 
 // $Log: TChair.h,v $
+// Revision 1.1.1.2  2002/12/02 21:57:31  fisyak
+// *** empty log message ***
+//
+// Revision 1.2  2002/12/02 18:50:05  rdm
+// mega patch to remove almost all compiler warnings on MacOS X where the
+// compiler is by default in pedantic mode (LHCb also like to use this option).
+// The following issues have been fixed:
+// - removal of unused arguments
+// - comparison between signed and unsigned integers
+// - not calling of base class copy ctor in copy ctor's
+// To be done, the TGeo classes where we get still many hundred warnings of
+// the above nature. List forwarded to Andrei.
+//
 // Revision 1.1  2002/05/27 16:26:59  rdm
 // rename star to table.
 //

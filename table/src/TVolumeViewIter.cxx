@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeViewIter.cxx,v 1.2 2001/05/30 06:03:43 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeViewIter.cxx,v 1.2 2003/01/03 15:03:14 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/01/99
 
 #include "TVolumeViewIter.h"
@@ -80,7 +80,7 @@ TVolumePosition *TVolumeViewIter::UpdateTempMatrix(TVolumePosition *curPosition)
   }
   if (fDepth-1) {
     TVolumePosition *oldPosition = 0;
-    TRotMatrix *oldMatrix = 0;
+    const TRotMatrix *oldMatrix = 0;
     oldPosition = fPositions ? (TVolumePosition *)fPositions->At(fDepth-1):0;
     Double_t oldTranslation[] = { 0, 0, 0 };
     if (oldPosition)
@@ -92,7 +92,7 @@ TVolumePosition *TVolumeViewIter::UpdateTempMatrix(TVolumePosition *curPosition)
     }
 
     // Pick the "current" position by pieces
-    TRotMatrix *curMatrix        = curPosition->GetMatrix();
+    const TRotMatrix *curMatrix        = curPosition->GetMatrix();
 
     // Create a new position
     Double_t newTranslation[3];
@@ -100,8 +100,9 @@ TVolumePosition *TVolumeViewIter::UpdateTempMatrix(TVolumePosition *curPosition)
 
     if(oldMatrix)
     {
-      TGeometry::UpdateTempMatrix(oldTranslation,oldMatrix->GetMatrix()
-                       ,curPosition->GetX(),curPosition->GetY(),curPosition->GetZ(),curMatrix->GetMatrix()
+      TGeometry::UpdateTempMatrix(oldTranslation,((TRotMatrix *)oldMatrix)->GetMatrix()
+                       ,curPosition->GetX(),curPosition->GetY(),curPosition->GetZ()
+                       ,((TRotMatrix *)curMatrix)->GetMatrix()
                        ,newTranslation,newMatrix);
       Int_t num = gGeometry->GetListOfMatrices()->GetSize();
       Char_t anum[100];

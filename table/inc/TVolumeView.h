@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.2 2002/05/27 16:46:21 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.1.1.2 2002/12/02 21:57:31 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// $Id: TFileIter.cxx,v 1.5 2001/08/03 11:24:10 brun Exp $
+// $Id: TFileIter.cxx,v 1.3 2003/01/03 20:17:13 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine (fine@bnl.gov). All right reserved",
 //
@@ -15,7 +15,7 @@
 // 
 // void TestFileIter(){
 // // This macros tests the various methods of TFileIter class.
-//   gSystem->Load("libStar");
+//   gSystem->Load("libTable");
 // 
 //   //First create simple ROOT file
 //   TDataSet *ds = new TDataSet("event");
@@ -45,7 +45,7 @@
 //   // Loop over all objects, read them in to memory one by one
 // 
 //   printf(" -- > Loop over all objects, read them in to memory one by one < -- \n");
-//   for( readObj = 0; int(readObj) < size; readObj.SkipObjects()){ 
+//   for( readObj = 0; int(readObj) < size; ++readObj){ 
 //       nextObject = *readObj; 
 //       printf(" %d bytes of the object \"%s\" of class \"%s\" written with TKey \"%s\"  has been read from file\n"
 //                ,readObj.GetObjlen()
@@ -58,7 +58,7 @@
 // //-----------------------------------------------------------------------
 // //  Now loop over all objects in inverse order
 //  printf(" -- > Now loop over all objects in inverse order < -- \n");
-//  for( readObj = size-1; (int)readObj >= 0; readObj.SkipObjects(-1))
+//  for( readObj = size-1; (int)readObj >= 0; --readObj)
 //  { 
 //       nextObject = *readObj; 
 //       if (nextObject) {
@@ -86,7 +86,7 @@
 //   }
 // 
 //   printf(" -- > Loop over the objects starting from the 86-th object" < -- \n");
-//   for( readObj = (const char *)(readObj = 86); (const char *)readObj != 0; readObj.SkipObjects()){ 
+//   for( readObj = (const char *)(readObj = 86); (const char *)readObj != 0; ++readObj){ 
 //       nextObject = *readObj; 
 //       printf(" Object \"%s\" of class \"%s\" written with Tkey \"%s\"  has been read from file\n"
 //               , nextObject->GetName()
@@ -101,6 +101,10 @@
 ///////////////////////////////////////////////////////////////////////////
 
 
+#include <assert.h>
+
+#include "TEnv.h"
+#include "TSystem.h"
 #include "TFile.h"
 #include "TKey.h"
 
@@ -116,17 +120,41 @@ TFileIter::TFileIter(TFile *file) : fRootFile(file),
 { Initialize(); }
 //__________________________________________________________________________
 TFileIter::TFileIter(const char *name, Option_t *option, const char *ftitle
-                   , Int_t compress, Int_t /*netopt*/) : fRootFile (0)
+                     , Int_t compress, Int_t /*netopt*/) : fRootFile (0)
 { 
-  // Open ROOT TFile by the name provided;
-  // This TFile is to be deleted by the TFileIter alone
-  if (name && name[0]) {
-    fOwnTFile = kTRUE;
-    fRootFile = TFile::Open(name,option,ftitle,compress);
-    Initialize();
-  }
+   // Open ROOT TFile by the name provided;
+   // This TFile is to be deleted by the TFileIter alone
+   if (name && name[0]) {
+      fOwnTFile = kTRUE;
+      // Map a special file system to rfio
+      //   /hpss/in2p3.fr/group/atlas/cppm/data/genz
+      //   #setenv HPSSIN bnlhpss:/home/atlasgen/evgen
+      // #example for castor:   /castor/cern.ch/user/p/paniccia/evgen
+      fRootFile = TFile::Open(MapName(name),option,ftitle,compress);
+      Initialize();
+   }
 }
+//__________________________________________________________________________
+TFileIter::TFileIter(const TFileIter &dst) : TListIter()
+          ,fRootFile(dst.fRootFile)
+          ,fEventName(dst.fEventName), fRunNumber(dst.fRunNumber)
+          ,fEventNumber(dst.fRunNumber),
+           fCursorPosition(-1),  fOwnTFile(dst.fOwnTFile)
+{
+ // Copy stor can be used with the "read only" files only.
+  assert(!fRootFile->IsWritable());
+  if (fRootFile && fOwnTFile && !fRootFile->IsWritable()) {
+     // Reopen the file
+     fRootFile = TFile::Open(MapName(fRootFile->GetName())
+                            ,fRootFile->GetOption()
+                            ,fRootFile->GetTitle()
+                            ,fRootFile->GetCompressionLevel());
+  }
 
+  Initialize();
+  // Adjust this iterator position
+  SkipObjects(dst.fCursorPosition); 
+}
 //__________________________________________________________________________
 TFileIter::~TFileIter() 
 { 
@@ -208,12 +236,14 @@ Int_t TFileIter::Copy(TFile *destFile)
 //__________________________________________________________________________
 void TFileIter::Initialize() 
 { 
-  fDirection =  kIterForward;
-  if (fRootFile &&  fRootFile->IsOpen() ) Reset();
-  else  {
-    if (fRootFile) delete fRootFile;
-    fRootFile = 0;
-  }      
+   if (fRootFile) {
+      fDirection =  kIterForward;
+      if (fRootFile &&  fRootFile->IsOpen() && !fRootFile->IsZombie() ) Reset();
+      else  {
+         if (fRootFile && fOwnTFile ) delete fRootFile;
+         fRootFile = 0;
+      }      
+   }
 }
 //__________________________________________________________________________
 TKey *TFileIter::GetCurrentKey() const 
@@ -444,4 +474,48 @@ Int_t  TFileIter::NextEventPut(TObject *obj, UInt_t eventNum,  UInt_t runNumber
     }
   }
   return wBytes;
+}
+//__________________________________________________________________________
+TString TFileIter::MapName(const char *name, const char *localSystemKey,const char *mountedFileSystemKey)
+{
+   // Substitute the logical name with the real one if any
+   // 1. add a line into system.rootrc or ~/.rootrc or ./.rootrc 
+   //
+   //  TFileIter.ForeignFileMap  mapFile // the name of the file
+   // to map the local name
+   // to the global file service
+   //
+   //  If this line is omitted then TFileIter class seeks for 
+   //  the default mapping file in the current directory "io.config"
+
+   // 2. If the "io.config" file found then it defines the mapping as follows:
+   //
+   //  TFileIter.LocalFileSystem   /castor
+   //  TFileIter.MountedFileSystem rfio:/castor
+
+   // If "io.config" doesn't exist then no mapping is to be performed
+   // and all file names are treated "as is"
+
+   if ( !localSystemKey)       localSystemKey       = GetLocalFileNameKey();
+   if ( !mountedFileSystemKey) mountedFileSystemKey = GetForeignFileSystemKey();
+   TString newName = name;
+   TString fileMap = gEnv->GetValue(GetResourceName(),GetDefaultMapFileName());
+   const char *localName    = 0;
+   const char *foreignName  = 0;
+   if ( gSystem->AccessPathName(fileMap) == 0 ){
+      TEnv myMapResource(fileMap);
+      localName    = myMapResource.Defined(localSystemKey) ? 
+         myMapResource.GetValue(localSystemKey,"") : 0; 
+      foreignName  = myMapResource.Defined(mountedFileSystemKey) ? 
+         myMapResource.GetValue(mountedFileSystemKey,""):0; 
+   } else {
+      localName    = "/castor";      // This is the default CERN name
+      foreignName  = "rfio:/castor"; // and it needs "RFIO"
+   }
+   if (localName && localName[0] 
+   && foreignName 
+      && foreignName[0]
+      && newName.BeginsWith(localName) )
+         newName.Replace(0,strlen(localName),foreignName);
+      return newName;   
 }

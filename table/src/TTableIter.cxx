@@ -1,9 +1,9 @@
-// @(#)root/star:$Name:  $:$Id: TTableIter.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTableIter.cxx,v 1.2 2003/01/03 15:03:14 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/12/99
 // Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
 // Author                  Valerie Fine  (fine@bnl.gov)
 // Copyright(c) 1997~1999  Valerie Fine  (fine@bnl.gov)
-// $Id: TTableIter.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// $Id: TTableIter.cxx,v 1.2 2003/01/03 15:03:14 fisyak Exp $
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TTableIter - class iterator to loop over sorted TTable's             //

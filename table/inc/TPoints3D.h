@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TPoints3D.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TPoints3D.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TPoints3D
 #define ROOT_TPoints3D
-// $Id: TPoints3D.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// $Id: TPoints3D.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
 // ***********************************************************************
 // *  C++ class to define the abstract array of 3D points
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
