@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.27 2002/06/16 08:37:27 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.28 2002/06/17 15:38:46 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -282,7 +282,7 @@ namespace ROOT { \
 #define ClassDefT2(name,Tmpl)
 
 #if defined(__CINT__)
-#define templateClassImp(name) 
+#define templateClassImp(name)
 #else
 #define templateClassImp(name) \
 static TNamed *_R__UNIQUE_(R__dummyholder) = \
