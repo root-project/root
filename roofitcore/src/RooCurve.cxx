@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.13 2001/08/23 23:43:42 david Exp $
+ *    File: $Id: RooCurve.cc,v 1.14 2001/09/18 02:03:45 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -40,7 +40,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.13 2001/08/23 23:43:42 david Exp $";
+"$Id: RooCurve.cc,v 1.14 2001/09/18 02:03:45 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -80,22 +80,23 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
   RooRealIntegral *projected(0);
   RooArgSet bindNormSet ;
   if(0 != normVars) {
-    // calculate our normalization factor over x, if requested
     RooArgSet vars(*normVars);
+    bindNormSet.add(*normVars) ;
+
     RooAbsArg *found= vars.find(x.GetName());
     if(found) {
       // remove x from the set of vars to be projected
       vars.remove(*found);
-      bindNormSet.add(*found) ;
     }
+
     // project out any remaining normalization variables
     if(vars.getSize() > 0) {
       TString name(f.GetName()) ;
       name.Append("Projected") ;
       TString title(f.GetTitle()) ;
       title.Append(" (Projected)") ;
-      projected= new RooRealIntegral(name.Data(),title.Data(),f,vars);
-      if(!projected->isValid()) return; // can this happen if normFunc isn't valid??
+      projected= new RooRealIntegral(name.Data(),title.Data(),f,vars,&bindNormSet);
+      if(!projected->isValid()) return; 
       funcPtr= projected->bindVars(x,&bindNormSet);
     }
   } else {
