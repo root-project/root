@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.167 2004/08/20 21:02:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.168 2004/09/10 16:44:04 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2882,15 +2882,14 @@ void TreeUnbinnedFitLikelihood(Int_t & /*npar*/, Double_t * /*gin*/,
   Double_t *weight = gTree->GetW();
   Double_t logEpsilon = -230;   // protect against negative probabilities
   Double_t logL = 0.0, prob;
-  Double_t sum = fitfunc->GetChisquare();
 
   for(Long64_t i = 0; i < n; i++) {
     x[0] = data1[i];
     if (data2) x[1] = data2[i];
     if (data3) x[2] = data3[i];
     prob = fitfunc->EvalPar(x,par);
-    if(prob > 0) logL += TMath::Log(prob) * weight[i]/sum;
-    else         logL += logEpsilon * weight[i]/sum;
+    if(prob > 0) logL += TMath::Log(prob) * weight[i];
+    else         logL += logEpsilon * weight[i];
   }
 
   r = -2*logL;
@@ -2981,14 +2980,6 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
      return 0;
   }
 
-  //Compute total sum of weights to set the normalization factor
-  Double_t sum = 0;
-  Double_t *w = GetW();
-  for (i=0;i<nrows;i++) {
-     sum += w[i];
-  }
-  fitfunc->SetChisquare(sum); //this info can be used in fitfunc
-
   // Create and set up the fitter
   gTree = fTree;
   tFitter = TVirtualFitter::Fitter(fTree);
@@ -3053,7 +3044,6 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
      tFitter->ExecuteCommand("HESSE",arglist,0);
      tFitter->ExecuteCommand("MINOS",arglist,0);
   }
-  fitfunc->SetChisquare(0); //to not confuse user with the stored sum of w**2
   fitfunc->SetNDF(fitfunc->GetNumberFitPoints()-npar);
 
    // Get return status into function
