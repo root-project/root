@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.167 2005/03/11 15:02:43 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.168 2005/03/16 17:18:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1007,20 +1007,18 @@ void TPad::CreateNewPolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
 //*-*-*-*-*-*-*-*-*-*Create a new PolyLine*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                ======================
 //  Click left button to indicate a new point
-//  Click right button to close the polyline
+//  Click left button at same place or double click to close the polyline
 //  mode = 0 normal polyline
 //  mode = 0 smooth polyline
 // This function is called when the item NewPolyLine is selected in the
 // canvas pulldown menu.
 //
-   const Int_t kMAX=100;
-   static Double_t xline[kMAX], yline[kMAX];
 
    static Int_t pxold, pyold, px1old, py1old;
    static Int_t npoints = 0;
-   static Int_t linedrawn;
+   static Int_t linedrawn = 0;
    Int_t dp;
-   TGraph *gr;
+   static TGraph *gr = NULL;
 
    switch (event) {
 
@@ -1040,47 +1038,58 @@ void TPad::CreateNewPolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
       dp = TMath::Abs(px-px1old) +TMath::Abs(py-py1old);
       if (npoints && dp < 5) {
          gPad->Modified(kTRUE);
-         if (mode == kPolyLine) {
-            gr = new TGraph(npoints,xline,yline);
-            gr->ResetBit(TGraph::kClipFrame);
-            gr->Draw("L");
-            gPad->GetCanvas()->Selected((TPad*)gPad, gr, event);
-         } else {
-            xline[npoints] = xline[0];
-            yline[npoints] = yline[0];
-            npoints++;
-            gr = (TGraph*)gROOT->ProcessLineFast(
-                 Form("new %s(\"CUTG\",%d,(Double_t*)0x%lx,(Double_t*)0x%lx)",
-                      gROOT->GetCutClassName(),npoints,(Long_t)xline,(Long_t)yline));
-            if (gr) {
-               gr->Draw("L");
-               gPad->GetCanvas()->Selected((TPad*)gPad, gr, event);
-            }
+         if (mode == kCutG) {
+            gr->Set(gr->GetN() + 1);
+            Double_t x0, y0;
+            gr->GetPoint(0, x0, y0);
+            gr->SetPoint(npoints, x0, y0);
          }
          npoints = 0;
          linedrawn = 0;
+         gr = NULL;
          gROOT->SetEditorMode();
          break;
       }
-      xline[npoints] = gPad->PadtoX(gPad->AbsPixeltoX(px));
-      yline[npoints] = gPad->PadtoY(gPad->AbsPixeltoY(py));
+      if (npoints == 1 && gr == 0) {
+         if (mode == kPolyLine) {
+            gr = new TGraph(2);
+            gr->ResetBit(TGraph::kClipFrame);
+      
+         } else {
+            gr = (TGraph*)gROOT->ProcessLineFast(
+                 Form("new %s(\"CUTG\",%d",
+                      gROOT->GetCutClassName(),2));
+         }
+         gr->SetPoint(0, gPad->PadtoX(gPad->AbsPixeltoX(px1old)),
+                         gPad->PadtoY(gPad->AbsPixeltoY(py1old)));
+         gr->SetPoint(1, gPad->PadtoX(gPad->AbsPixeltoX(px)),
+                         gPad->PadtoY(gPad->AbsPixeltoY(py)));
+         npoints = 2;
+         gr->Draw("L");
+         gPad->GetCanvas()->Selected((TPad*)gPad, gr, event);
+      } else if (npoints > 1) {
+         gr->Set(gr->GetN() + 1);
+         gr->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(px)),
+                         gPad->PadtoY(gPad->AbsPixeltoY(py)));
+         npoints ++;
+         gPad->Modified();
+         gPad->Update();
+      } else {
+         npoints = 1;
+      }
       px1old = px; py1old = py;
       pxold  = px; pyold  = py;
       linedrawn = 0;
-      npoints++;
-
-      if (npoints >= kMAX) {
-         Error("CreateNewPolyLine", "too many points (more than %d)", kMAX);
-         npoints = kMAX;
-      }
       break;
 
    case kMouseMotion:
    case kButton1Motion:
    case kButton1Up:
-      if (npoints == 0) return;
+      if (npoints < 1) return;
       gPad->GetCanvas()->FeedbackMode(kTRUE);
-      if (linedrawn) gVirtualX->DrawLine(px1old, py1old, pxold, pyold);
+      if (linedrawn) {
+         gVirtualX->DrawLine(px1old, py1old, pxold, pyold);
+      }
       pxold = px;
       pyold = py;
       linedrawn = 1;
