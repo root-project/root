@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.91 2002/11/20 08:55:11 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.92 2002/11/24 14:06:02 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -371,6 +371,8 @@ void TPad::cd(Int_t subpadnumber)
 //  Note2:  after a statement like c1.cd(6), the global variable gPad
 //          points to the current pad. One can use gPad to set attributes
 //          of the current pad.
+//  Note3:  One can get a pointer to one of the sub-pads of pad with:
+//          TPad *subpad = (TPad*)pad->GetPad(subpadnumber);
 
    if (!subpadnumber) {
       gPad = this;
@@ -2388,6 +2390,27 @@ TObject *TPad::GetPrimitive(const char *name) const
       if (obj->InheritsFrom(TPad::Class())) continue;
       found = obj->FindObject(name);
       if (found) return found;
+   }
+   return 0;
+}
+
+
+//______________________________________________________________________________
+TVirtualPad *TPad::GetPad(Int_t subpadnumber) const
+{
+//  Get a pointer to subpadnumber of this pad
+
+   if (!subpadnumber) {
+      return (TVirtualPad*)this;
+   }
+
+   TObject *obj;
+   TIter    next(GetListOfPrimitives());
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TVirtualPad::Class())) {
+         TVirtualPad *pad = (TVirtualPad*)obj;
+         if (pad->GetNumber() == subpadnumber) return pad;
+      }
    }
    return 0;
 }

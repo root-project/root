@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.20 2002/07/23 09:43:26 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.21 2002/09/14 11:12:47 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -219,6 +219,7 @@ public:
    TList            *GetListOfExecs() const {return fExecs;}
    virtual TObject  *GetPrimitive(const char *name) const;  //obsolete, use FindObject instead
    virtual TObject  *GetSelected() const;
+   virtual TVirtualPad  *GetPad(Int_t subpadnumber) const;
    virtual TObject  *GetPadPointer() const {return fPadPointer;}
    TVirtualPad      *GetPadSave() const;
    TVirtualPad      *GetSelectedPad() const;

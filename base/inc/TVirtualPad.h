@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.11 2002/01/07 18:02:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.12 2002/09/14 11:12:47 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -94,6 +94,7 @@ public:
    virtual Int_t    GetEventY() const = 0;
    virtual TFrame   *GetFrame() = 0;
    virtual Color_t  GetHighLightColor() const = 0;
+   virtual Int_t    GetNumber() const = 0;
    virtual void     GetRange(Double_t &x1, Double_t &y1, Double_t &x2, Double_t &y2) = 0;
    virtual void     GetRangeAxis(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) = 0;
    virtual void     GetPadPar(Double_t &xlow, Double_t &ylow, Double_t &xup, Double_t &yup) = 0;
@@ -126,6 +127,7 @@ public:
    virtual TList    *GetListOfExecs() const = 0;
    virtual TObject  *GetPrimitive(const char *name) const = 0;
    virtual TObject  *GetSelected() const = 0;
+   virtual TVirtualPad  *GetPad(Int_t subpadnumber) const = 0;
    virtual TObject  *GetPadPointer() const = 0;
    virtual TVirtualPad  *GetPadSave() const = 0;
    virtual TVirtualPad  *GetSelectedPad() const = 0;
