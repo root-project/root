@@ -2654,10 +2654,12 @@ echo "done"
 #
 message "Writing $RCONFOUT"
 prefix2=$prefix
-incdir2=$incdir
+bindir2=$bindir
 libdir2=$libdir
+incdir2=$incdir
 if test "$prefix2" = "\$(ROOTSYS)" ; then
     prefix2=\$ROOTSYS
+    bindir2=\$ROOTSYS/bin
     libdir2=\$ROOTSYS/lib
     incdir2=\$ROOTSYS/include
 fi
@@ -2671,8 +2673,9 @@ for f in $options ; do
 done
 sed -e "s|@architecture@|$arch|"           \
     -e "s|@prefix@|$prefix2|"              \
-    -e "s|@incdir@|$incdir2|"              \
+    -e "s|@bindir@|$bindir2|"              \
     -e "s|@libdir@|$libdir2|"              \
+    -e "s|@incdir@|$incdir2|"              \
     -e "s|@features@|$features|"           \
    < root-config.tmp > $RCONFOUT
 rm -f root-config.tmp

@@ -6,6 +6,7 @@
 # Author: Fons Rademakers, 06/06/99
 
 arch=@architecture@
+bindir=@bindir@
 libdir=@libdir@
 incdir=@incdir@
 features="@features@"
@@ -13,8 +14,9 @@ if test "$arch" = "win32gdk"; then
    arch="win32"
 fi
 if test "$arch" = "win32"; then
-   incdir=`cygpath -u $incdir`
+   bindir=`cygpath -u $bindir`
    libdir=`cygpath -u $libdir`
+   incdir=`cygpath -u $incdir`
 fi
 
 ### ROOT libraries ###
@@ -347,7 +349,7 @@ noauxcflags=no
 noldflags=no
 
 usage="\
-Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--new] [--nonew] [--libs] [--glibs] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--help]"
+Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--new] [--nonew] [--libs] [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--help]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -387,12 +389,14 @@ while test $# -gt 0; do
          optarg=`cygpath -u $optarg`
       fi
       prefix=$optarg
-      incdir=${prefix}/include
+      bindir=${prefix}/bin
       libdir=${prefix}/lib
+      incdir=${prefix}/include
       ### We need to expand the path to backslash seperated path
       if test "$arch" = "win32"; then
-         incdir=`cygpath -u $incdir`
+         bindir=`cygpath -u $bindir`
          libdir=`cygpath -u $libdir`
+         incdir=`cygpath -u $incdir`
       fi
       if test $exec_prefix_set = no ; then
          exec_prefix=$optarg
@@ -409,9 +413,11 @@ while test $# -gt 0; do
       fi
       exec_prefix=$optarg
       exec_prefix_set=yes
+      bindir=${exec_prefix}/bin
       libdir=${exec_prefix}/lib
       ### We need to expand the path to backslash seperated path
       if test "$arch" = "win32"; then
+         bindir=`cygpath -u $bindir`
          libdir=`cygpath -u $libdir`
       fi
       ;;
@@ -538,6 +544,10 @@ while test $# -gt 0; do
       ### output the auxiliary libraries
       out="$out $auxlibs"
       ;;
+    --bindir)
+      ### output the executable directory
+      out="$out $bindir"
+      ;;
     --libdir)
       ### output the library directory
       out="$out $libdir"
@@ -556,6 +566,7 @@ while test $# -gt 0; do
       echo "  --libs                Print regular ROOT libraries"
       echo "  --glibs               Print regular + GUI ROOT libraries"
       echo "  --cflags              Print compiler flags and header path"
+      echo "  --bindir              Print the executable directory"
       echo "  --libdir              Print the library directory"
       echo "  --incdir              Print the header directory"
       echo "  --auxlibs             Print auxiliary libraries"
