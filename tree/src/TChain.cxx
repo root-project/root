@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.82 2003/08/25 17:31:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.83 2003/09/12 15:54:16 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -841,7 +841,7 @@ Int_t TChain::LoadTree(Int_t entry)
       //below, we must test >= in case the Tree has no entries
       if (entry >= fTreeOffset[fTreeNumber+1]) {
          cursav->cd();
-         if (fTreeNumber < fNtrees && entry < fTreeOffset[fTreeNumber+2]) return LoadTree(entry);
+         if (fTreeNumber < fNtrees-1 && entry < fTreeOffset[fTreeNumber+2]) return LoadTree(entry);
          else  fReadEntry = -2;
       }
    }
