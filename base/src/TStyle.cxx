@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.4 2000/10/19 20:09:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.5 2000/12/13 15:13:46 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -781,7 +781,8 @@ void TStyle::SetPaperSize(Float_t xsize, Float_t ysize)
 {
    // Set paper size for PostScript output.
    // The paper size is specified in centimeters. Default is 20x26.
-
+   // See also TPad::Print
+   
    fPaperSizeX = xsize;
    fPaperSizeY = ysize;
 }

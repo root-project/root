@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.5 2000/06/30 12:57:04 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.6 2000/08/20 10:03:29 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -73,6 +73,138 @@ TPostScript::TPostScript(const char *fname, Int_t wtype)
 //*-*     112 ps  Landscape
 //*-*     113 eps
 //*-*
+//BEGIN_HTML
+/*
+
+<P>To generate a Postscript (or encapsulated ps) file corresponding to
+a single image in a canvas, you can: </P>
+
+<UL>
+<LI>Select the <B>Print PostScript</B> item in the canvas <B>File</B> menu.
+By default, a Postscript file with the name of the canvas.ps is generated.
+</LI>
+<br>
+<LI>Click in the canvas area, near the edges, with the right mouse button
+and select the <B>Print</B> item. You can select the name of the Postscript
+file. If the file name is xxx.ps, you will generate a Postscript file named
+xxx.ps. If the file name is xxx.eps, you generate an encapsulated Postscript
+file instead.  </LI>
+<br>
+
+<LI>In your program (or macro), you can type:
+
+<PRE> <B>c1-&gt;Print(&quot;xxx.ps&quot;)</B> or <B>c1-&gt;Print(&quot;xxx.eps&quot;)</B></PRE>
+
+<P>This will generate a file corresponding to the picture in the canvas
+pointed by <B>c1</B>. </P> </LI>
+
+<PRE> <B>pad1-&gt;Print(&quot;xxx.ps&quot;)</B></PRE>
+
+<P>prints only the picture in the pad pointed by <B>pad1</B>. The size
+of the Postcript picture, by default, is computed to keep the aspect ratio
+of the picture on the screen, where the size along x is always 20cm. You
+can set the size of the PostScript picture before generating the picture
+with a command such as: </P>
+
+<PRE>
+   <A HREF="html/TPostScript.html">TPostScript</A> myps(&quot;myfile.ps&quot;,111)
+   myps.Range(xsize,ysize);
+   object-&gt;Draw();
+   myps.Close();
+</PRE>
+
+<P>You can set the default paper size with:
+<PRE>
+   <A HREF="html/TStyle.html">gStyle</A>-&gt;<A HREF="html/TStyle.html#TStyle:SetPaperSize">SetPaperSize</A>(xsize,ysize);
+</PRE>
+<P>You can resume writing again in this file with <B>myps.Open();</B>.
+Note that you may have several Postscript files opened simultaneously.
+</P>
+</UL>
+
+<H2>Special characters</H2>
+The following characters have a special action on the Postscript file:
+<PRE>
+       `   : go to greek
+       '   : go to special
+       ~   : go to ZapfDingbats
+       ?   : go to subscript
+       ^   : go to superscript
+       !   : go to normal level of script
+       &   : backspace one character
+       #   : end of greek or of ZapfDingbats
+</PRE>
+<P>These special characters are printed as such on the screen.
+To generate one of these characters on the Postscript file, you must escape it
+with the escape character "@".
+<P>
+The use of these special characters is illustrated in several macros
+referenced by the <A HREF="html/TPostScript.html#TPostScript:TPostScript">TPostScript constructor</A>.
+
+<H2>Making several pictures in the same Postscript file: case 1</H2>
+<P>The following macro is an example illustrating how to open a Postscript
+file and draw several pictures. The generation of a new Postscript page
+is automatic when <B>TCanvas::Clear</B> is called by <b>object-&gt;Draw()</b>.
+<PRE>
+{
+   TFile f(&quot;hsimple.root&quot;);
+   TCanvas c1(&quot;c1&quot;,&quot;canvas&quot;,800,600);
+
+     //select postscript output type
+   Int_t type = 111;   //portrait  ps
+// Int_t type = 112;   //landscape ps
+// Int_t type = 113;   //eps
+
+    //create a postscript file and set the paper size
+   <A HREF="html/TPostScript.html">TPostScript</A> ps(&quot;test.ps&quot;,type);
+   ps.Range(16,24);  //set x,y of printed page
+
+    //draw 3 histograms from file hsimple.root on separate pages
+   hpx-&gt;Draw();
+   c1.Update();      //force drawing in a macro
+   hprof-&gt;Draw();
+   c1.Update();
+   hpx-&gt;Draw(&quot;lego1&quot;);
+   c1.Update();
+   ps.Close();
+}
+</PRE>
+
+<H2>Making several pictures in the same Postscript file: case 2</H2>
+<P>This example shows 2 pages. The canvas is divided.
+<B>TPostScript::NewPage</B> must be called before starting a new picture.
+<b>object-&gt;Draw</b> does not clear the canvas in this case
+because we clear only the pads and not the main canvas.
+Note that <b>c1-&gt;Update</b> must be called at the end of the first picture
+<pre>
+{
+   TFile *f1 = new TFile("hsimple.root");
+   TCanvas *c1 = new TCanvas("c1");
+   TPostScript *ps = new TPostScript("file.ps",112);
+   c1-&gt;Divide(2,1);
+<b>// picture 1</b>
+   ps-&gt;NewPage();
+   c1-&gt;cd(1);
+   hpx-&gt;Draw();
+   c1-&gt;cd(2);
+   hprof-&gt;Draw();
+   c1-&gt;Update();
+
+<b>// picture 2</b>
+   ps-&gt;NewPage();
+   c1-&gt;cd(1);
+   hpxpy-&gt;Draw();
+   c1-&gt;cd(2);
+   ntuple-&gt;Draw("px");
+   c1-&gt;Update();
+   ps-&gt;Close();
+
+<b>// invoke Postscript viewer</b>
+   gSystem-&gt;Exec("gs file.ps");
+}   
+</pre>
+*/
+//END_HTML
 //*-*  The picture below shows fancy text with national accents or
 //*-*  subscripts and superscripts. This picture has been generated by
 //*-*  the macro Begin_Html <a href=examples/psexam.C.html>psexam</a>. End_Html
@@ -960,13 +1092,13 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.5 2000/06/30 12:57:04 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.6 2000/08/20 10:03:29 brun Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.5 2000/06/30 12:57:04 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.6 2000/08/20 10:03:29 brun Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -1663,7 +1795,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.5 2000/06/30 12:57:04 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.6 2000/08/20 10:03:29 brun Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from

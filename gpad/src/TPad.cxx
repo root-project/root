@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.23 2000/12/02 16:36:33 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.24 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3312,8 +3312,18 @@ void TPad::Pop()
 //______________________________________________________________________________
 void TPad::Print(const char *filename) const
 {
-//*-*-*-*-*Old interface. Use SaveAs instead*-*-*-*-*-*
-//*-*      =================================
+//  Save Pad contents on a  file in various formats
+//  ===============================================
+//
+//   if filename is "", the file produced is padname.ps
+//   if filename starts with a dot, the padname is added in front
+//   if filename contains .eps, an Encapsulated Postscript file is produced
+//   if filename contains .gif, a GIF file is produced
+//   if filename contains .C or .cxx, a C++ macro file is produced
+//   if filename contains .root, a Root file is produced
+//
+//  See comments in TPad::SaveAs or the TPad::Print function below
+//
 //
 
    ((TPad*)this)->SaveAs(filename);
@@ -3335,12 +3345,30 @@ void TPad::Print(const char *filename, Option_t *option)
 //     filename = 0 - filename  is defined by the GetName and its
 //                    extension is defined with the option
 //
+//   When Postscript output is selected (ps, eps), the pad is saved
+//   to filename.ps or filename.eps. The aspect ratio of the pad is preserved
+//   on the Postscript file. When the "ps" option is selected, the Postscript
+//   page will be landscape format if the pad is in landscape format, otherwise
+//   portrait format is selected.
+//   The physical size of the Postscript page is the one selected in the
+//   current style. This size can be modified via TStyle::SetPaperSize.
+//   Examples:
+//        gStyle->SetPaperSize(kA4);  //default
+//        gStyle->SetPaperSize(kUSLetter);
+//     where kA4 and kUSLetter are defined in the enum EPaperSize in TStyle.h
+//    An alternative is to call:
+//        gStyle->SetPaperSize(20,26);  same as kA4
+// or     gStyle->SetPaperSize(20,24);  same as kUSLetter
+//   The above numbers take into account some margins and are in centimeters.
+//
+//  To generate a Postscript file containing more than one picture, see
+//  class TPostScript.
 
    char psname[264];
    Int_t lenfil =  filename ? strlen(filename) : 0;
    const char *opt = option;
 
-//*-*   Set the default option as "Postscript" (Should be a data member of Tpad)
+//*-*   Set the default option as "Postscript" (Should be a data member of TPad)
 
    const char *opt_default="ps";
    if( !opt ) opt = opt_default;
@@ -3689,6 +3717,7 @@ void TPad::SaveAs(const char *filename)
 //   if filename contains .C or .cxx, a C++ macro file is produced
 //   if filename contains .root, a Root file is produced
 //
+//   See comments in TPad::Print for the Postscript formats
 
    char psname[264];
    Int_t lenfil =  filename ? strlen(filename) : 0;
