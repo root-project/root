@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.79 2004/10/11 16:27:13 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.80 2004/10/26 08:08:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1749,10 +1749,12 @@ void TCanvas::Streamer(TBuffer &b)
       b.CheckByteCount(R__s, R__c, TCanvas::IsA());
    } else {
       //save list of colors
-      fPrimitives->Add(gROOT->GetListOfColors());
+      TObjArray *colors = (TObjArray*)gROOT->GetListOfColors();
+      fPrimitives->Add(colors);
       
       R__c = b.WriteVersion(TCanvas::IsA(), kTRUE);
       TPad::Streamer(b);
+      fPrimitives->Remove(colors);
       fDISPLAY.Streamer(b);
       b << fDoubleBuffer;
       b << fRetained;
