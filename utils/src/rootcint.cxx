@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.66 2002/05/10 21:32:09 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.67 2002/05/15 17:59:26 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -325,11 +325,13 @@ int NeedTemplateKeyword(G__ClassInfo &cl) {
    return 0;
 }
 
+//______________________________________________________________________________
 bool NeedShadowClass(G__ClassInfo& cl) {
 
-  return (!cl.HasMethod("ShowMembers") || cl.IsTmplt()) 
-    && cl.RootFlag() & G__USEBYTECOUNT;
+  return (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT))
+         || (cl.HasMethod("ShowMembers") && cl.IsTmplt()); 
 }
+
 //______________________________________________________________________________
 void AddShadowClassName(string& buffer, G__ClassInfo &cl) {
   
