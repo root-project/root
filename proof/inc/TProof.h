@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.39 2003/10/07 14:03:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.40 2003/10/07 21:09:55 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -147,7 +147,7 @@ private:
    Int_t    SendObject(const TObject *obj, ESlaves list = kActive);
    Int_t    SendGroupView();
    Int_t    SendInitialState();
-   Int_t    SendPrint();
+   Int_t    SendPrint(Option_t *option="");
    Int_t    Ping(ESlaves list);
    void     Interrupt(EUrgent type, ESlaves list = kActive);
    void     AskStatus();
