@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.221 2005/02/04 13:07:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.222 2005/02/15 13:45:30 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1187,6 +1187,13 @@ void TH1::Copy(TObject &obj) const
 // Note that this function does not copy the list of associated functions.
 // Use TObJect::Clone to make a full copy of an histogram.
 
+   if (((TH1&)obj).fDirectory) {
+      // We are likely to change the hash value of this object
+      // with TNamed::Copy, to keep things correct, we need to 
+      // clean up its existing entries.
+      ((TH1&)obj).fDirectory->GetList()->Remove(&obj);
+      ((TH1&)obj).fDirectory = 0;
+   }
    TNamed::Copy(obj);
    ((TH1&)obj).fDimension = fDimension;
    ((TH1&)obj).fNormFactor= fNormFactor;
@@ -1221,7 +1228,6 @@ void TH1::Copy(TObject &obj) const
    fContour.Copy(((TH1&)obj).fContour);
    fSumw2.Copy(((TH1&)obj).fSumw2);
 //   fFunctions->Copy(((TH1&)obj).fFunctions);
-   ((TH1&)obj).fDirectory = 0;
    if (fgAddDirectory && gDirectory) {
       gDirectory->Append(&obj);
       ((TH1&)obj).fDirectory = gDirectory;
