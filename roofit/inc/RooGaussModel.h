@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.rdl,v 1.11 2002/03/27 08:07:06 mwilson Exp $
+ *    File: $Id: RooGaussModel.rdl,v 1.12 2002/05/31 01:07:41 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -48,6 +48,8 @@ public:
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
   void generateEvent(Int_t code);
 
+  void advertiseFlatScaleFactorIntegral(Bool_t flag) { _flatSFInt = flag ; }
+
 protected:
 
   virtual Double_t evaluate() const ;
@@ -70,7 +72,8 @@ protected:
     RooComplex z(swt*c,u+c);
     return (z.im()>-4.0) ? RooMath::FastComplexErrFuncIm(z)*exp(-u*u) : evalCerfApprox(swt,u,c).im() ;
   }
-  
+
+  Bool_t _flatSFInt ;
   
   RooRealProxy mean ;
   RooRealProxy sigma ;

@@ -29,8 +29,8 @@ RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
 			       RooAbsReal& delMistag,
 			       const RooResolutionModel& model, DecayType type) :
   RooConvolutedPdf(name,title,model,t), 
-  _C("C","Coefficient of cos term",this,a),
-  _S("S","Coefficient of cos term",this,b),
+  _avgC("C","Coefficient of cos term",this,a),
+  _avgS("S","Coefficient of cos term",this,b),
   _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
   _delMistag("delMistag","Delta mistag rate",this,delMistag),  
   _tag("tag","CP state",this,tag),
@@ -63,8 +63,8 @@ RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
 
 RooBCPGenDecay::RooBCPGenDecay(const RooBCPGenDecay& other, const char* name) : 
   RooConvolutedPdf(other,name), 
-  _C("C",this,other._C),
-  _S("S",this,other._S),
+  _avgC("C",this,other._avgC),
+  _avgS("S",this,other._avgS),
   _avgMistag("avgMistag",this,other._avgMistag),
   _delMistag("delMistag",this,other._delMistag),
   _tag("tag",this,other._tag),
@@ -101,13 +101,13 @@ Double_t RooBCPGenDecay::coefficient(Int_t basisIndex) const
 
   if (basisIndex==_basisSin) {
     //sin term: +/- (1-2w)*S
-    return _tag*(1-2*_avgMistag)*_S ;
+    return _tag*(1-2*_avgMistag)*_avgS ;
     // =   _tag*avgDil * S
   }
   
   if (basisIndex==_basisCos) {
     //cos term: +/- (1-2w)*C
-    return -1*_tag*(1-2*_avgMistag)*_C ;
+    return -1*_tag*(1-2*_avgMistag)*_avgC ;
     // =   -_tag*avgDil * C
   } 
   
@@ -200,10 +200,10 @@ void RooBCPGenDecay::generateEvent(Int_t code)
     // Accept event if T is in generated range
     Double_t maxDil = 1.0 ;
 // 2 in next line is conservative and inefficient - allows for delMistag=1!
-    Double_t maxAcceptProb = 2 + fabs(maxDil*_S) + fabs(maxDil*_C);        
+    Double_t maxAcceptProb = 2 + fabs(maxDil*_avgS) + fabs(maxDil*_avgC);        
     Double_t acceptProb    = (1-_tag*_delMistag) 
-                           + (_tag*(1-2*_avgMistag))*_S*sin(_dm*tval) 
-                           - (_tag*(1-2*_avgMistag))*_C*cos(_dm*tval);
+                           + (_tag*(1-2*_avgMistag))*_avgS*sin(_dm*tval) 
+                           - (_tag*(1-2*_avgMistag))*_avgC*cos(_dm*tval);
 
     Bool_t accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
     

@@ -47,8 +47,8 @@ public:
   
 protected:
 
-  RooRealProxy _C ;
-  RooRealProxy _S ;
+  RooRealProxy _avgC ;
+  RooRealProxy _avgS ;
   RooRealProxy _avgMistag ;
   RooRealProxy _delMistag ;
   RooRealProxy _t ;

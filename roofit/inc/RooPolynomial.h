@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooPolynomial.rdl,v 1.1 2001/09/26 20:47:50 verkerke Exp $
+ *    File: $Id: RooPolynomial.rdl,v 1.2 2001/09/26 21:44:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -29,7 +29,7 @@ public:
 
   RooPolynomial(const RooPolynomial& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooPolynomial(*this, newname); }
-  inline virtual ~RooPolynomial() { }
+  virtual ~RooPolynomial() ;
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
   Double_t analyticalIntegral(Int_t code) const ;
