@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.11 2001/02/06 14:40:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.12 2001/02/12 16:59:21 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1648,6 +1648,7 @@ L90:
    if (TMath::Abs(alb) > 1e9) {
       BinLow  = AL;
       BinHigh = AH;
+      if (nbins > 10*nold && nbins > 10000) nbins = nold;
       return;
    }
    lwid   = Int_t(alb);
