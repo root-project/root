@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.5 2000/12/26 14:20:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.6 2001/05/07 18:41:49 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -274,7 +274,7 @@ TMatrixD::TMatrixD(EMatrixCreatorsOp1 op, const TMatrixD &prototype)
 {
    // Create a matrix applying a specific operation to the prototype.
    // Example: TMatrixD a(10,12); ...; TMatrixD b(TMatrixD::kTransposed, a);
-   // Supported operations are: kZero, kUnit, kTransposed and kInverted.
+   // Supported operations are: kZero, kUnit, kTransposed, kInverted and kInvertedPosDef.
 
    Invalidate();
 
@@ -303,6 +303,10 @@ TMatrixD::TMatrixD(EMatrixCreatorsOp1 op, const TMatrixD &prototype)
          Invert(prototype);
          break;
 
+      case kInvertedPosDef:
+         InvertPosDef(prototype);
+         break;
+
       default:
          Error("TMatrixD(EMatrixCreatorOp1)", "operation %d not yet implemented", op);
    }
@@ -314,7 +318,7 @@ TMatrixD::TMatrixD(const TMatrixD &a, EMatrixCreatorsOp2 op, const TMatrixD &b)
    // Create a matrix applying a specific operation to two prototypes.
    // Example: TMatrixD a(10,12), b(12,5); ...; TMatrixD c(a, TMatrixD::kMult, b);
    // Supported operations are: kMult (a*b), kTransposeMult (a'*b),
-   // kInvMult (a^(-1)*b) and kAtBA (a'*b*a).
+   // kInvMult,kInvPosDefMult (a^(-1)*b) and kAtBA (a'*b*a).
 
    Invalidate();
 
@@ -937,6 +941,23 @@ TMatrixD &TMatrixD::Invert(Double_t *determ_ptr)
    Double_t determinant = 1;
    const Double_t singularity_tolerance = 1e-35;
 
+   // store matrix diagonal
+   Double_t *diag = new Double_t[fNrows];
+   {
+     for (Int_t idiag = 0; idiag < fNrows; idiag++)
+       diag[idiag] = fElements[idiag*(1+fNrows)];
+   }
+
+   // condition the matrix
+   for (Int_t irow = 0; irow < fNrows; irow++)
+   {
+     for (Int_t icol = 0; icol < fNcols; icol++)
+     {
+       Double_t val = TMath::Sqrt(TMath::Abs(diag[irow]*diag[icol]));
+       if (val != 0.0) fElements[irow*fNcols+icol] /= val;
+     }
+   }
+
    // Locations of pivots (indices start with 0)
    struct Pivot_t { int row, col; } *const pivots = new Pivot_t[fNcols];
    Bool_t *const was_pivoted = new Bool_t[fNrows];
@@ -1015,8 +1036,19 @@ TMatrixD &TMatrixD::Invert(Double_t *determ_ptr)
    if (determ_ptr)
       *determ_ptr = (no_swaps & 1 ? -determinant : determinant);
 
+   // revert our scaling
+   for (Int_t irow = 0; irow < fNrows; irow++)
+   {
+     for (Int_t icol = 0; icol < fNcols; icol++)
+     {
+       Double_t val = TMath::Sqrt(TMath::Abs(diag[irow]*diag[icol]));
+       if (val != 0.0) fElements[irow*fNcols+icol] /= val;
+     }
+   }
+
    delete [] was_pivoted;
    delete [] pivots;
+   delete [] diag;
    return *this;
 }
 
@@ -1035,6 +1067,144 @@ void TMatrixD::Invert(const TMatrixD &m)
    *this = m;    // assignment operator
 
    Invert(0);
+}
+
+//______________________________________________________________________________
+TMatrixD &TMatrixD::InvertPosDef()
+{
+   if (!IsValid()) {
+      Error("InvertPosDef(Double_t*)", "matrix not initialized");
+      return *this;
+   }
+
+   if (fNrows != fNcols) {
+      Error("InvertPosDef(Double_t*)", "matrix to invert must be square");
+      return *this;
+   }
+
+   Int_t     n  = fNrows;
+   Double_t *pa = fElements;
+   Double_t *pu = new Double_t[n*n];
+
+   // step 1: Cholesky decomposition
+   if (Pdcholesky(pa,pu,n))
+   {
+     Error("InverPosDef","matrix not positive definite");
+     delete [] pu;
+     return *this;
+   }
+
+   Int_t off_n = (n-1)*n;
+   for (Int_t i = 0; i < n; i++)
+   {
+     Int_t off_i = i*n;
+
+   // step 2: Forward substitution
+     for (Int_t l = i; l < n; l++)
+     {
+       if (l == i)
+         pa[off_n+l] = 1./pu[l*n+l];
+       else
+       {
+         pa[off_n+l] = 0.;
+         for (Int_t k = i; k <= l-1; k++)
+           pa[off_n+l] = pa[off_n+l]-pu[k*n+l]*pa[off_n+k];
+         pa[off_n+l] = pa[off_n+l]/pu[l*n+l];
+       }
+     }
+
+   // step 3: Back substitution
+     for (Int_t l = n-1; l >= i; l--)
+     {
+       Int_t off_l = l*n;
+       if (l == n-1)
+         pa[off_i+l] = pa[off_n+l]/pu[off_l+l];
+       else
+       {
+         pa[off_i+l] = pa[off_n+l];
+         for (Int_t k = n-1; k >= l+1; k--)
+           pa[off_i+l] = pa[off_i+l]-pu[off_l+k]*pa[off_i+k];
+         pa[off_i+l] = pa[off_i+l]/pu[off_l+l];
+       }
+     }
+   }
+
+   // Fill lower triangle symmetrically
+   if (n > 1)
+   {
+     for (Int_t i = 0; i < n; i++)
+     {
+       for (Int_t l = 0; l <= i-1; l++)
+         pa[i*n+l] = pa[l*n+i];
+     }
+   }
+
+   delete [] pu;
+   return *this;
+}
+
+//______________________________________________________________________________
+Int_t TMatrixD::Pdcholesky(
+const Double_t *a,
+      Double_t *u,
+const Int_t     n)
+{
+  //  Program Pdcholesky inverts a positiv definite (n x n) - matrix A,
+  //  using the Cholesky decomposition
+  //
+  //  Input:	a	- (n x n)- Matrix A
+  //  		n	- dimensions n of matrices
+  //
+  //  Output:	u	- (n x n)- Matrix U so that U^T . U = A
+  //		return	- 0 decomposition succesful
+  //			- 1 decomposition failed
+
+  memset(u,0,n*n*sizeof(Double_t));
+
+  for (Int_t k = 0; k < n; k++)
+  {
+    Double_t s = 0.;
+    Int_t off_k = k*n;
+    for (Int_t j = k; j < n; j++)
+    {
+      if (k > 0)
+      {
+        s = 0.;
+        for (Int_t l = 0; l <= k-1; l++)
+        {
+          Int_t off_l = l*n;
+          s += u[off_l+k]*u[off_l+j];
+        }
+      }
+      u[off_k+j] = a[off_k+j]-s;
+      if (k == j)
+      {
+        if (u[off_k+j] <= 0)
+          return 1;
+        u[off_k+j] = TMath::Sqrt(u[off_k+j]);
+      }
+      else
+        u[off_k+j] = u[off_k+j]/u[off_k+k];
+    }
+  }
+  return 0;
+}
+
+//______________________________________________________________________________
+void TMatrixD::InvertPosDef(const TMatrixD &m)
+{
+   // Allocate new matrix and set it to inv(m).
+
+   if (!m.IsValid()) {
+      Error("InvertPosDef(const TMatrixD&)", "matrix m not initialized");
+      return;
+   }
+
+   ResizeTo(m);
+
+   *this = m;    // assignment operator
+
+   InvertPosDef();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.7 2001/06/29 17:28:06 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.8 2001/06/30 13:09:14 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -86,17 +86,20 @@ protected:
    void Allocate(Int_t nrows, Int_t ncols, Int_t row_lwb = 0, Int_t col_lwb = 0);
    void Invalidate() { fNrows = fNcols = fNelems = -1; fElements = 0; fIndex = 0; }
 
+   Int_t Pdcholesky(const Real_t *a, Real_t *u, const Int_t n);
+
    // Elementary constructors
    void Transpose(const TMatrix &m);
    void Invert(const TMatrix &m);
+   void InvertPosDef(const TMatrix &m);
    void AMultB(const TMatrix &a, const TMatrix &b);
    void AtMultB(const TMatrix &a, const TMatrix &b);
 
    friend void MakeHaarMatrix(TMatrix &m);
 
 public:
-   enum EMatrixCreatorsOp1 { kZero, kUnit, kTransposed, kInverted };
-   enum EMatrixCreatorsOp2 { kMult, kTransposeMult, kInvMult, kAtBA };
+   enum EMatrixCreatorsOp1 { kZero, kUnit, kTransposed, kInverted, kInvertedPosDef };
+   enum EMatrixCreatorsOp2 { kMult, kTransposeMult, kInvMult, kInvPosDefMult, kAtBA };
 
    TMatrix() { Invalidate(); }
    TMatrix(Int_t nrows, Int_t ncols);
@@ -149,6 +152,7 @@ public:
    TMatrix &Apply(TElementPosAction &action);
 
    TMatrix &Invert(Double_t *determ_ptr = 0);
+   TMatrix &InvertPosDef();
 
    TMatrix &UnitMatrix();
    TMatrix &HilbertMatrix();
