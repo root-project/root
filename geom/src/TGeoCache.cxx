@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.21 2003/08/08 09:22:18 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.22 2003/10/01 17:53:11 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -147,7 +147,8 @@ void TGeoNodeCache::BuildIdArray()
 {
 // Builds node id array.
    Int_t nnodes = gGeoManager->GetNNodes();
-   if (nnodes>3E7) return;
+   //if (nnodes>3E7) return;
+   if (nnodes>7) return;
    if (fNodeIdArray) delete [] fNodeIdArray;
    fNodeIdArray = new Int_t[2*nnodes+1];
    fNodeIdArray[0] = 0;
