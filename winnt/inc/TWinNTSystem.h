@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.25 2004/01/28 02:41:42 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.26 2004/01/28 11:28:28 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -55,6 +55,8 @@ private:
    const char       *fShellName;        // the name of the "shell" file to pool the icons
    void              CreateIcons();     // Create a list of the icons for ROOT appl
 
+   Bool_t            DispatchTimers(Bool_t mode);
+   Bool_t            DispatchSynchTimers();
    Bool_t            CheckDescriptors();
    Bool_t            CheckSignals(Bool_t sync);
 
@@ -147,8 +149,6 @@ public:
    TTime             Now();
    void              AddTimer(TTimer *ti);
    TTimer           *RemoveTimer(TTimer *ti);
-   Bool_t            DispatchTimers(Bool_t mode);
-   Bool_t            DispatchSynchTimers();
    void              Sleep(UInt_t milliSec);
    Double_t          GetRealTime();
    Double_t          GetCPUTime();

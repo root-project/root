@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.68 2004/01/27 13:17:49 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.69 2004/01/28 11:28:28 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1005,94 +1005,89 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
    // Dispatch a single event in TApplication::Run() loop
 
-   // ::SleepEx(1, 1) prevents from 100% CPU time occupation.
-   class ThreadSwitch {
-      Bool_t fSwitch; // do not call SleepEx on return for pendingOnly events
-   public:
-      ThreadSwitch(Bool_t on) { fSwitch = on; }
-      ~ThreadSwitch() { if (fSwitch) ::SleepEx(1, 1); }
-   } switcher(!pendingOnly);
-
-   // used for syncronization with HandleConsoleThread
    if (gConsoleEvent) ::SetEvent(gConsoleEvent);
 
-   // first handle any GUI events
-   if (gXDisplay) {
-      if (gXDisplay->Notify()) {
-         if (!pendingOnly) return;
-      }
-   }
-
-   // check synchronous signals
-   if (fSigcnt > 0 && fSignalHandler->GetSize() > 0) {
-      if (CheckSignals(kTRUE)) {
-         if (!pendingOnly) return;
-      }
-   }
-   fSigcnt = 0;
-   fSignals->Zero();
-
-   // handle past due timers
-   if (fTimers && fTimers->GetSize() > 0) {
-      if (DispatchTimers(kTRUE)) {
-         // prevent timers from blocking the rest types of events
-         Long_t to = NextTimeOut(kTRUE);
-         if (to > kItimerResolution || to == -1) {
-            return;
+   while (1) {
+      // first handle any GUI events
+      if (gXDisplay) {
+         if (gXDisplay->Notify()) {
+            if (!pendingOnly) return;
+         } else {
+            if (!pendingOnly) SleepEx(1, 1);
          }
       }
-   }
 
-   // check for file descriptors ready for reading/writing
-   if ((fNfd > 0) && fFileHandler && (fFileHandler->GetSize() > 0)) {
-      if (CheckDescriptors()) {
-         if (!pendingOnly) return;
+      // check synchronous signals
+      if (fSigcnt > 0 && fSignalHandler->GetSize() > 0) {
+         if (CheckSignals(kTRUE)) {
+            if (!pendingOnly) return;
+         }
       }
-      fNfd = 0;
-      fReadready->Zero();
-      fWriteready->Zero();
-   }
+      fSigcnt = 0;
+      fSignals->Zero();
 
-   if (pendingOnly) return;
-
-   // nothing ready, so setup select call
-   if (!fReadmask->GetBits() && !fWritemask->GetBits()) return; // no fds
-
-   *fReadready = *fReadmask;
-   *fWriteready = *fWritemask;
-
-   fNfd = WinNTSelect(fReadready, fWriteready, NextTimeOut(kTRUE));
-
-   // serious error has happened -> reset all file descrptors  
-   if ((fNfd < 0) && (fNfd != -2)) {
-      int fd, rc, i;
-
-      for (i = 0; i < fReadmask->GetCount(); i++) {
-         TFdSet t;
-         Int_t fd = fReadmask->GetFd(i);
-         t.Set(fd);
-         if (fReadmask->IsSet(fd)) {
-            rc = WinNTSelect(&t, 0, 0);
-            if (rc < 0 && rc != -2) {
-               ::SysError("DispatchOneEvent", "select: read error on %d\n", fd);
-               fReadmask->Clr(fd);
+      // handle past due timers
+      if (fTimers && fTimers->GetSize() > 0) {
+         if (DispatchTimers(kTRUE)) {
+            // prevent timers from blocking the rest types of events
+            Long_t to = NextTimeOut(kTRUE);
+            if (to > kItimerResolution || to == -1) {
+               return;
             }
          }
       }
 
-      for (i = 0; i < fWritemask->GetCount(); i++) {
-         TFdSet t;
-         Int_t fd = fWritemask->GetFd(i);
-         t.Set(fd);
+      // check for file descriptors ready for reading/writing
+      if ((fNfd > 0) && fFileHandler && (fFileHandler->GetSize() > 0)) {
+         if (CheckDescriptors()) {
+            if (!pendingOnly) return;
+         }
+         fNfd = 0;
+         fReadready->Zero();
+         fWriteready->Zero();
+      }
 
-         if (fWritemask->IsSet(fd)) {
-            rc = WinNTSelect(0, &t, 0);
-            if (rc < 0 && rc != -2) {
-               ::SysError("DispatchOneEvent", "select: write error on %d\n", fd);
-               fWritemask->Clr(fd);
+      if (pendingOnly) return;
+
+      // nothing ready, so setup select call
+      if (!fReadmask->GetBits() && !fWritemask->GetBits()) return; // no fds
+
+      *fReadready = *fReadmask;
+      *fWriteready = *fWritemask;
+
+      fNfd = WinNTSelect(fReadready, fWriteready, NextTimeOut(kTRUE));
+
+      // serious error has happened -> reset all file descrptors  
+      if ((fNfd < 0) && (fNfd != -2)) {
+         int fd, rc, i;
+
+         for (i = 0; i < fReadmask->GetCount(); i++) {
+            TFdSet t;
+            Int_t fd = fReadmask->GetFd(i);
+            t.Set(fd);
+            if (fReadmask->IsSet(fd)) {
+               rc = WinNTSelect(&t, 0, 0);
+               if (rc < 0 && rc != -2) {
+                  ::SysError("DispatchOneEvent", "select: read error on %d\n", fd);
+                  fReadmask->Clr(fd);
+               }
             }
          }
-         t.Clr(fd);
+
+         for (i = 0; i < fWritemask->GetCount(); i++) {
+            TFdSet t;
+            Int_t fd = fWritemask->GetFd(i);
+            t.Set(fd);
+
+            if (fWritemask->IsSet(fd)) {
+               rc = WinNTSelect(0, &t, 0);
+               if (rc < 0 && rc != -2) {
+                  ::SysError("DispatchOneEvent", "select: write error on %d\n", fd);
+                  fWritemask->Clr(fd);
+               }
+            }
+            t.Clr(fd);
+         }
       }
    }
 }
