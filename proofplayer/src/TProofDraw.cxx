@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.7 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.8 2005/03/10 18:25:19 rdm Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -315,7 +315,7 @@ void TProofDrawHist::Begin1D(TTree *)
       else
          Error("Begin", "Cannot find varexp on the fInput");
       if (fDrawInfo.GetNoParameters() != 3)
-         fInput->Add(new TNamed("__PROOF_OPTIONS", "rebin"));
+         fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
    }
 }
 
@@ -370,7 +370,7 @@ void TProofDrawHist::Begin2D(TTree *)
       else
          Error("Begin", "Cannot find varexp on the fInput");
       if (fDrawInfo.GetNoParameters() != 6)
-         fInput->Add(new TNamed("__PROOF_OPTIONS", "rebin"));
+         fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
    }
 }
 
@@ -437,7 +437,7 @@ void TProofDrawHist::Begin3D(TTree *)
       else
          Error("Begin", "Cannot find varexp on the fInput");
       if (fDrawInfo.GetNoParameters() != 9)
-         fInput->Add(new TNamed("__PROOF_OPTIONS", "rebin"));
+         fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
    }
 }
 
@@ -564,7 +564,7 @@ void TProofDrawHist::SlaveBegin(TTree *tree)
    }
    if (minx >= maxx)
       fHistogram->SetBuffer(TH1::GetDefaultBufferSize());
-   if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("__PROOF_OPTIONS"))) {
+   if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
       if (strstr(opt->GetTitle(), "rebin"))
          fHistogram->SetBit(TH1::kCanRebin);
    }
@@ -670,7 +670,7 @@ void TProofDrawEventList::SlaveBegin(TTree *tree)
    fDimension = 0;
    fTree = 0;
    fEventLists = new TList();
-   fEventLists->SetName("_PROOF_EventListsList");
+   fEventLists->SetName("PROOF_EventListsList");
    fOutput->Add(fEventLists);
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
@@ -710,7 +710,7 @@ void TProofDrawEventList::Terminate(void)
 
    fDrawInfo.Parse(fInitialExp, fSelection, fOption);
 
-   TEventList *el = dynamic_cast<TEventList*> (fOutput->FindObject("_PROOF_EventList"));
+   TEventList *el = dynamic_cast<TEventList*> (fOutput->FindObject("PROOF_EventList"));
    if (el) {
       el->SetName(fInitialExp.Data()+2);
       SetStatus(el->GetN());
@@ -803,7 +803,7 @@ void TProofDrawProfile::Begin(TTree *tree)
       else
          Error("Begin", "Cannot find varexp on the fInput");
       if (fDrawInfo.GetNoParameters() != 3)
-         fInput->Add(new TNamed("__PROOF_OPTIONS", "rebin"));
+         fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
    }
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
@@ -857,7 +857,7 @@ void TProofDrawProfile::SlaveBegin(TTree *tree)
    if (minx >= maxx)
       fProfile->SetBuffer(TH1::GetDefaultBufferSize());
 
-   if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("__PROOF_OPTIONS"))) {
+   if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
       if (strstr(opt->GetTitle(), "rebin"))
          fProfile->SetBit(TH1::kCanRebin);
    }
@@ -996,7 +996,7 @@ void TProofDrawProfile2D::Begin(TTree *tree)
       else
          Error("Begin", "Cannot find varexp on the fInput");
       if (fDrawInfo.GetNoParameters() != 6)
-         fInput->Add(new TNamed("__PROOF_OPTIONS", "rebin"));
+         fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
    }
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
@@ -1052,7 +1052,7 @@ void TProofDrawProfile2D::SlaveBegin(TTree *tree)
    if (minx >= maxx)
       fProfile->SetBuffer(TH1::GetDefaultBufferSize());
 
-   if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("__PROOF_OPTIONS"))) {
+   if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
       if (strstr(opt->GetTitle(), "rebin"))
          fProfile->SetBit(TH1::kCanRebin);
    }
@@ -1122,7 +1122,7 @@ void TProofDrawGraph::SlaveBegin(TTree *tree)
    fDimension = 2;
 
    fScatterPlot = new TProofNTuple(2);
-   fScatterPlot->SetName("__PROOF_SCATTERPLOT");
+   fScatterPlot->SetName("PROOF_SCATTERPLOT");
    fOutput->Add(fScatterPlot);      // release ownership
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
@@ -1149,7 +1149,7 @@ void TProofDrawGraph::Terminate(void)
    if (!fStatus)
       return;
 
-   fScatterPlot = (TProofNTuple*) fOutput->FindObject("__PROOF_SCATTERPLOT");
+   fScatterPlot = (TProofNTuple*) fOutput->FindObject("PROOF_SCATTERPLOT");
    if (fScatterPlot) {
       SetStatus((Int_t) fScatterPlot->GetEntries());
       TH2F* hist;
@@ -1240,7 +1240,7 @@ void TProofDrawPolyMarker3D::SlaveBegin(TTree *tree)
    fDimension = 3;
 
    fScatterPlot = new TProofNTuple(3);
-   fScatterPlot->SetName("__PROOF_SCATTERPLOT");
+   fScatterPlot->SetName("PROOF_SCATTERPLOT");
    fOutput->Add(fScatterPlot);      // release ownership
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
@@ -1267,7 +1267,7 @@ void TProofDrawPolyMarker3D::Terminate(void)
    if (!fStatus)
       return;
 
-   fScatterPlot = (TProofNTuple*) fOutput->FindObject("__PROOF_SCATTERPLOT");
+   fScatterPlot = (TProofNTuple*) fOutput->FindObject("PROOF_SCATTERPLOT");
    if (fScatterPlot) {
       SetStatus((Int_t) fScatterPlot->GetEntries());
       TH3F* hist;
@@ -1369,7 +1369,7 @@ void TProofDrawListOfGraphs::SlaveBegin(TTree *tree)
    fDimension = 3;
 
    fScatterPlot = new TProofNTuple(3);
-   fScatterPlot->SetName("__PROOF_SCATTERPLOT");
+   fScatterPlot->SetName("PROOF_SCATTERPLOT");
    fOutput->Add(fScatterPlot);      // release ownership
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
@@ -1396,7 +1396,7 @@ void TProofDrawListOfGraphs::Terminate(void)
    if (!fStatus)
       return;
 
-   fScatterPlot = (TProofNTuple*) fOutput->FindObject("__PROOF_SCATTERPLOT");
+   fScatterPlot = (TProofNTuple*) fOutput->FindObject("PROOF_SCATTERPLOT");
    if (fScatterPlot) {
       SetStatus((Int_t) fScatterPlot->GetEntries());
       TH2F* hist;
@@ -1500,7 +1500,7 @@ void TProofDrawListOfPolyMarkers3D::SlaveBegin(TTree *tree)
    fDimension = 4;
 
    fScatterPlot = new TProofNTuple(4);
-   fScatterPlot->SetName("__PROOF_SCATTERPLOT");
+   fScatterPlot->SetName("PROOF_SCATTERPLOT");
    fOutput->Add(fScatterPlot);      // release ownership
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
@@ -1527,7 +1527,7 @@ void TProofDrawListOfPolyMarkers3D::Terminate(void)
    if (!fStatus)
       return;
 
-   fScatterPlot = (TProofNTuple*) fOutput->FindObject("__PROOF_SCATTERPLOT");
+   fScatterPlot = (TProofNTuple*) fOutput->FindObject("PROOF_SCATTERPLOT");
    if (fScatterPlot) {
       SetStatus((Int_t) fScatterPlot->GetEntries());
       TH3F* hist;

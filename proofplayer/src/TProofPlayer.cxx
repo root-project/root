@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.50 2005/03/10 23:53:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.51 2005/03/13 15:06:50 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -352,7 +352,7 @@ Long64_t TProofPlayer::DrawSelect(TDSet *set, const char *varexp,
 
    fInput->Remove(varexpobj);
    fInput->Remove(selectionobj);
-   if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("__PROOF_OPTIONS"))) {
+   if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
       fInput->Remove(opt);
       delete opt;
    }
@@ -616,10 +616,10 @@ void TProofPlayerRemote::StoreOutput(TList *out)
       fOutputLists->SetOwner();
    }
    // process eventlists first
-   TList* lists = dynamic_cast<TList*> (out->FindObject("_PROOF_EventListsList"));
+   TList* lists = dynamic_cast<TList*> (out->FindObject("PROOF_EventListsList"));
    if (lists) {
       out->Remove(lists);
-      TEventList *mainList = new TEventList("_PROOF_EventList");
+      TEventList *mainList = new TEventList("PROOF_EventList");
       out->Add(mainList);
       TIter it(lists);
       TEventList *aList;
