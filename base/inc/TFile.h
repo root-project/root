@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.11 2001/01/23 19:16:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.12 2001/01/26 16:37:51 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -49,12 +49,14 @@ protected:
    Int_t       fNbytesFree;       //Number of bytes for free segments structure
    Int_t       fNbytesInfo;       //Number of bytes for StreamerInfo record
    Int_t       fWritten;          //Number of objects written so far
+   Int_t       fProcessCount;     //Number of TProcessIDs in the file
    TString     fOption;           //File options
    Char_t      fUnits;            //Number of bytes for file pointers
    TList      *fFree;             //Free segments linked list table
    TArrayC    *fClassIndex;       //!Index of TStreamerInfo classes written to this file
    TCache     *fCache;            //!Page cache used to reduce number of small I/O's
-
+   TObjArray  *fProcessIDs;       //!Array of pointers to TProcessIDs
+   
    static Double_t fgBytesWrite;    //Number of bytes written by all TFile objects
    static Double_t fgBytesRead;     //Number of bytes read by all TFile objects
 
@@ -96,6 +98,7 @@ public:
    virtual Int_t     GetErrno() const;
    virtual void      ResetErrno() const;
    Int_t             GetFd() const { return fD; }
+   TObjArray        *GetListOfProcessIDs() const {return fProcessIDs;}
    TList            *GetListOfFree() const { return fFree; }
    virtual Int_t     GetNfree() const { return fFree->GetSize(); }
    Option_t         *GetOption() const { return fOption.Data(); }
@@ -103,6 +106,7 @@ public:
    Double_t          GetBytesWritten() const { return fBytesWrite; }
    Int_t             GetVersion() const { return fVersion; }
    Int_t             GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
+   Int_t             GetProcessCount() const {return fProcessCount;}
    Seek_t            GetSize() const;
    virtual Bool_t    IsOpen() const;
    virtual void      ls(Option_t *option="") const;
@@ -139,7 +143,7 @@ public:
    static void       SetFileBytesRead(Double_t bytes=0);
    static void       SetFileBytesWritten(Double_t bytes=0);
 
-   ClassDef(TFile,1)  //ROOT file
+   ClassDef(TFile,2)  //ROOT file
 };
 
 R__EXTERN TFile   *gFile;
