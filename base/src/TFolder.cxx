@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.12 2001/04/04 13:59:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.13 2001/07/06 13:22:42 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -97,6 +97,9 @@ TFolder::TFolder() : TNamed()
 {
 // default constructor used by the Input functions
 //
+// This constructor should not be called by a user directly.
+// The normal way to create a folder is by calling TFolder::AddFolder
+   
    fFolders = 0;
    fIsOwner = kFALSE;
 }
@@ -258,6 +261,7 @@ TObject *TFolder::FindObject(const char *name) const
 //     xxx/yyy/name
 //     name
 
+   if (!fFolders) return 0;
    if (name == 0) return 0;
    if (name[0] == '/') {
       if (name[1] == '/') {
@@ -317,6 +321,7 @@ void TFolder::ls(Option_t *option) const
 //
 //  The <regexp> will be used to match the name of the objects.
 //
+   if (!fFolders) return;
    TROOT::IndentLevel();
    cout <<ClassName()<<"*\t\t"<<GetName()<<"\t"<<GetTitle()<<endl;
    TROOT::IncreaseDirLevel();
@@ -349,6 +354,7 @@ Int_t TFolder::Occurence(const TObject *object) const
 // found in the list of objects in this folder before object itself.
 // If only one object is found, return 0;
    Int_t n = 0;
+   if (!fFolders) return 0;
    TIter next(fFolders);
    TObject *obj;
    while ((obj=next())) {
@@ -369,7 +375,7 @@ void TFolder::RecursiveRemove(TObject *obj)
 {
 // Recursively remove object from a Folder
 
-   fFolders->RecursiveRemove(obj);
+   if (fFolders) fFolders->RecursiveRemove(obj);
 }
 
 //______________________________________________________________________________
@@ -390,6 +396,6 @@ void TFolder::SaveAs(const char *filename)
 
    TFile f(filename,"recreate");
    if (f.IsZombie()) return;
-   fFolders->Write();
+   if (fFolders) fFolders->Write();
    printf("Folder: %s saved to file: %s\n",GetName(),filename);
 }
