@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.63 2004/08/20 14:52:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.64 2004/08/24 10:41:58 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -68,7 +68,7 @@ Bool_t TObject::fgObjectStat = kTRUE;
 ClassImp(TObject)
 
 //______________________________________________________________________________
-TObject::TObject()
+TObject::TObject() :   fUniqueID(0), fBits(kNotDeleted)
 {
    // TObject constructor. It sets the two data words of TObject to their
    // initial values. The unique ID is set to 0 and the status word is
@@ -78,8 +78,6 @@ TObject::TObject()
    // the ROOT environment variable "Root.MemStat" (see TEnv.h) the object
    // is added to the global TObjectTable for bookkeeping.
 
-   fUniqueID = 0;
-   fBits     = kNotDeleted;
    if (TStorage::IsOnHeap(this))
       fBits |= kIsOnHeap;
 

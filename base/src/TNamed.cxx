@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.14 2002/11/26 07:58:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.15 2002/11/27 15:23:39 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -34,12 +34,9 @@ ClassImp(TNamed)
 
 
 //______________________________________________________________________________
-TNamed::TNamed(const TNamed &named) : TObject(named)
+TNamed::TNamed(const TNamed &named) : TObject(named),fName(named.fName),fTitle(named.fTitle)
 {
    // TNamed copy ctor.
-
-   fName = named.fName;
-   fTitle = named.fTitle;
 }
 
 //______________________________________________________________________________
