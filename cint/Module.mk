@@ -146,7 +146,11 @@ else
 CINTS2       += $(MODDIRS)/iccstrm.cxx
 endif
 else
+ifeq ($(ICC_MAJOR),9)
+CINTS2       += $(MODDIRS)/gcc3strm.cxx
+else
 CINTS2       += $(MODDIRS)/iccstrm.cxx
+endif
 endif
 CINTS2       += $(MODDIRS)/longif3.cxx
 endif

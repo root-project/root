@@ -40,6 +40,12 @@ CINTCXXFLAGS += -wd1572
 CINTCFLAGS   += -wd1572
 endif
 endif
+ifeq ($(ICC_MAJOR),9)
+CXXFLAGS     += -wd1572
+CFLAGS       += -wd1572
+CINTCXXFLAGS += -wd1572
+CINTCFLAGS   += -wd1572
+endif
 
 # Linker:
 LD            = icpc
