@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.14 2004/06/14 10:28:51 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.15 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -72,6 +72,7 @@ protected:
    EEchoMode         fEchoMode;          // echo mode (kNormal(default), kNoEcho, kPassword)
    EInsertMode       fInsertMode;        // text insertion mode (kInsert(default) , kReplace)
    ETextJustification fAlignment;        // alignment mode available (kTextLeft(default), kTextRight, kTextCenterX defined in TGWidget.h)
+   Bool_t            fHasOwnFont;        // kTRUE - font defined locally,  kFALSE - globally
 
             void        CopyText() const;
    virtual  void        DoRedraw();
@@ -148,14 +149,19 @@ public:
             void        SetEdited(Bool_t flag = kTRUE) { fEdited = flag; }
             void        SetEnabled(Bool_t flag = kTRUE) { SetState( flag ); }
    virtual  void        SetFocus() { RequestFocus(); }
-   virtual  void        SetFont(FontStruct_t font);
-            void        SetFont(const char* fontName);
    virtual  void        SetFrameDrawn(Bool_t flag = kTRUE);
    virtual  void        SetInsertMode(EInsertMode mode = kInsert);
    virtual  void        SetMaxLength(Int_t maxlen);
    virtual  void        SetState(Bool_t state);
-   virtual  void        SetText(const char *text);
    virtual  void        SetToolTipText(const char *text, Long_t delayms = 1000);
+   virtual  void        SetText(const char *text);
+   virtual  void        SetFont(TGFont *font, Bool_t local = kFALSE);
+   virtual  void        SetFont(FontStruct_t font, Bool_t local = kFALSE);
+   virtual  void        SetFont(const char *fontName, Bool_t local = kFALSE);
+   virtual  void        SetTextColor(Pixel_t color, Bool_t local = kFALSE);
+   virtual  void        SetTextColor(TColor *color, Bool_t local = kFALSE);
+   Bool_t HasOwnFont() const { return fHasOwnFont; }
+
    virtual  void        SavePrimitive(ofstream &out, Option_t *option);
 
    virtual  Bool_t      HandleButton(Event_t *event);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.23 2004/06/22 15:36:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.24 2004/07/06 13:23:27 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -207,6 +207,7 @@ All other keys with valid ASCII codes insert themselves into the line.
 #include "TSystem.h"
 #include "TMath.h"
 #include "TTimer.h"
+#include "TColor.h"
 #include "KeySymbols.h"
 #include "Riostream.h"
 
@@ -348,6 +349,9 @@ void TGTextEntry::Init()
 
    AddInput(kKeyPressMask | kFocusChangeMask |
             kEnterWindowMask | kLeaveWindowMask);
+
+   SetWindowName();
+   fHasOwnFont = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -445,29 +449,6 @@ TString TGTextEntry::GetDisplayText() const
          break;
     }
     return res;
-}
-
-//______________________________________________________________________________
-void TGTextEntry::SetFont(FontStruct_t font)
-{
-   // Changes text entry font.
-
-   if (font != fFontStruct) {
-      fFontStruct = font;
-      fNormGC.SetFont(gVirtualX->GetFontHandle(fFontStruct));
-      fSelGC.SetFont(gVirtualX->GetFontHandle(fFontStruct));
-      fClient->NeedRedraw(this);
-   }
-}
-
-//______________________________________________________________________________
-void TGTextEntry::SetFont(const char *fontName)
-{
-   // Changes text entry font specified by name.
-
-   TGFont *font = fClient->GetFont(fontName);
-   if (font)
-      SetFont(font->GetFontStruct());
 }
 
 //______________________________________________________________________________
@@ -1603,6 +1584,86 @@ void TGTextEntry::RemoveText(Int_t start, Int_t end)
    TString newText(GetText());
    newText.Remove(pos, len);
    SetText(newText.Data());
+}
+
+
+//______________________________________________________________________________
+void TGTextEntry::SetFont(FontStruct_t font, Bool_t local)
+{
+   // Changes text font.
+   // If global is true font is changed locally.
+
+   FontH_t v = gVirtualX->GetFontHandle(font);
+   if (!v) return;
+
+   if (local) {
+      TGGC *gc = new TGGC(fNormGC); // copy
+      fHasOwnFont = kTRUE;
+      fNormGC = *gc;
+   }
+   fNormGC.SetFont(v);
+   fFontStruct = font;
+
+   int max_ascent, max_descent;
+
+   UInt_t tWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(),
+                                         fText->GetTextLength());
+   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
+   UInt_t tHeight = max_ascent + max_descent;
+
+   // Resize is done when parent's is Layout() is called
+   Resize(tWidth, tHeight + 1);
+   fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TGTextEntry::SetFont(const char *fontName, Bool_t local)
+{
+   // Changes text font specified by name.
+   // If global is true font is changed locally.
+
+   TGFont *font = fClient->GetFont(fontName);
+   if (font) {
+      SetFont(font->GetFontStruct(), local);
+   }
+}
+
+//______________________________________________________________________________
+void TGTextEntry::SetFont(TGFont *font, Bool_t local)
+{
+   // Changes text font specified by pointer to TGFont object.
+   // If global is true font is changed locally.
+
+   if (font) {
+      SetFont(font->GetFontStruct(), local);
+   }
+}
+
+//______________________________________________________________________________
+void TGTextEntry::SetTextColor(Pixel_t color, Bool_t local)
+{
+   // Changes text color.
+   // If local is true color is changed locally
+
+   if (local) {
+      TGGC *gc = new TGGC(fNormGC); // copy
+      fHasOwnFont = kTRUE;
+      fNormGC = *gc;
+   }
+
+   fNormGC.SetForeground(color);
+   fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TGTextEntry::SetTextColor(TColor *color, Bool_t global)
+{
+   // Changes text color.
+   // If global is true color is changed globally
+
+   if (color) {
+      SetTextColor(color->GetPixel(), global);
+   }
 }
 
 //______________________________________________________________________________
