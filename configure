@@ -1083,7 +1083,7 @@ if test ! "x$enable_mysql" = "xno"; then
     mysqlinc=$found_hdr
     mysqlincdir=$found_dir
 
-    check_library "libmysqlclient" "$enable_shared" "$mysqllibdir" \
+    check_library "libmysqlclient mysqlclient" "$enable_shared" "$mysqllibdir" \
 	$MYSQL $MYSQL/lib /usr/local/lib /usr/local/lib/mysql \
         /usr/local/mysql /usr/local/mysql/lib /opt/mysql /opt/mysql/lib \
         /usr/lib /usr/lib/mysql /usr/mysql /usr/mysql/lib
