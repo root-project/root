@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayS.h,v 1.6 2002/05/03 14:30:42 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayS.h,v 1.8 2002/05/09 20:22:00 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -38,17 +38,18 @@ public:
    TArrayS    &operator=(const TArrayS &rhs);
    virtual    ~TArrayS();
 
-   void       Adopt(Int_t n, Short_t *array);
-   void       AddAt(Short_t c, Int_t idx);
-   Short_t    At(Int_t i) const ;
-   void       Copy(TArrayS &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
-   Short_t   *GetArray() const { return fArray; }
-   Stat_t     GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
-   void       Reset(Short_t val=0)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
-   void       Set(Int_t n);
-   void       Set(Int_t n, const Short_t *array);
-   Short_t   &operator[](Int_t i);
-   Short_t    operator[](Int_t i) const;
+   void           Adopt(Int_t n, Short_t *array);
+   void           AddAt(Short_t c, Int_t idx);
+   Short_t        At(Int_t i) const ;
+   void           Copy(TArrayS &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
+   const Short_t *GetArray() const { return fArray; }
+   Short_t       *GetArray() { return fArray; }
+   Stat_t         GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
+   void           Reset(Short_t val=0)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
+   void           Set(Int_t n);
+   void           Set(Int_t n, const Short_t *array);
+   Short_t       &operator[](Int_t i);
+   Short_t        operator[](Int_t i) const;
 
    ClassDef(TArrayS,1)  //Array of shorts
 };

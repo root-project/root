@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayD.h,v 1.6 2002/05/03 14:30:42 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayD.h,v 1.8 2002/05/09 20:21:59 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -38,17 +38,18 @@ public:
    TArrayD    &operator=(const TArrayD &rhs);
    virtual    ~TArrayD();
 
-   void       Adopt(Int_t n, Double_t *array);
-   void       AddAt(Double_t c, Int_t i);
-   Double_t   At(Int_t i) const ;
-   void       Copy(TArrayD &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
-   Double_t  *GetArray() const { return fArray; }
-   Stat_t     GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
-   void       Reset(Double_t val=0)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
-   void       Set(Int_t n);
-   void       Set(Int_t n, const Double_t *array);
-   Double_t  &operator[](Int_t i);
-   Double_t   operator[](Int_t i) const;
+   void            Adopt(Int_t n, Double_t *array);
+   void            AddAt(Double_t c, Int_t i);
+   Double_t        At(Int_t i) const ;
+   void            Copy(TArrayD &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
+   const Double_t *GetArray() const { return fArray; }
+   Double_t       *GetArray() { return fArray; }
+   Stat_t          GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
+   void            Reset(Double_t val=0)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
+   void            Set(Int_t n);
+   void            Set(Int_t n, const Double_t *array);
+   Double_t       &operator[](Int_t i);
+   Double_t        operator[](Int_t i) const;
 
    ClassDef(TArrayD,1)  //Array of doubles
 };
