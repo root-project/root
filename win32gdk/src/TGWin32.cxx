@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.38 2003/12/15 16:37:49 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.39 2003/12/16 16:22:56 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -52,7 +52,7 @@
 
 #include "TGLKernel.h"
 #include <wchar.h>
-
+#include "TWin32SplashThread.h"
 
 extern "C" {
 void gdk_win32_draw_rectangle (GdkDrawable    *drawable,
@@ -669,51 +669,6 @@ static int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offse
    return 1;
 }
 
-
-extern void CreateSplash(DWORD time);
-///////////////////////////////////////////////////////////////////////////////
-class TGWin32SplashThread {
-public:
-   void     *fHandle;   // splash thread handle
-
-   TGWin32SplashThread();
-   ~TGWin32SplashThread();
-};
-
-TGWin32SplashThread *gSplash = 0;
-
-//______________________________________________________________________________
-static DWORD WINAPI HandleSplashThread(void *p)
-{
-   // thread for handling Splash Screen
-
-   CreateSplash(2);
-   ::ExitThread(0);
-   if (gSplash) delete gSplash;
-   gSplash = 0;
-   return 0;
-}
-
-//______________________________________________________________________________
-TGWin32SplashThread::TGWin32SplashThread()
-{
-   //
-
-   fHandle = 0;
-   DWORD splashId = 0;
-   fHandle = ::CreateThread( NULL, 0,&HandleSplashThread, 0, 0, &splashId );
-}
-
-//______________________________________________________________________________
-TGWin32SplashThread::~TGWin32SplashThread()
-{
-   // dtor
-
-   if (fHandle) ::CloseHandle(fHandle);
-   fHandle = 0;
-}
-
-
 ///////////////////////////////////////////////////////////////////////////////
 class TGWin32MainThread {
 public:
@@ -876,7 +831,7 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title)
    for (int i = 0; i < fMaxNumberOfWindows; i++) fWindows[i].open = 0;
 
    if (NeedSplash()) {
-      gSplash = new TGWin32SplashThread();
+      new TWin32SplashThread(FALSE);
    }
 
    // initialize GUI thread and proxy objects
