@@ -17,7 +17,7 @@ if [ "x`which gtar 2>/dev/null | awk '{if ($1~/gtar/) print $1;}'`" != "x" ]
 then
    TAR="gtar zcvf"
    TARFILE=$TARFILE".gz"
-   EXCLUDE="--exclude CVS"
+   EXCLUDE="--exclude CVS --exclude .cvsignore"
 else
    TAR="tar cvf"
    EXCLUDE=
@@ -37,8 +37,9 @@ $TAR $TARFILE $EXCLUDE $dir/LICENSE $dir/README $dir/bin \
    $dir/tutorials/runcatalog.sql $dir/tutorials/*.py $dir/tutorials/*.rb \
    $dir/test/*.cxx $dir/test/*.h $dir/test/Makefile* $dir/test/README \
    $dir/test/RootShower/*.h $dir/test/RootShower/*.cxx \
-   $dir/test/RootShower/Makefile* $dir/test/RootShower/anim \
-   $dir/test/RootShower/icons \
+   $dir/test/RootShower/*.rc $dir/test/RootShower/*.ico \
+   $dir/test/RootShower/*.png $dir/test/RootShower/Makefile \
+   $dir/test/RootShower/anim $dir/test/RootShower/icons $dir/test/ProofBench \
    $dir/macros $dir/icons $dir/fonts $dir/etc $dir/proof/etc $dir/proof/utils
 if [ "x$DOGZIP" = "xy" ]; then
    gzip $TARFILE
