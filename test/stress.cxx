@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.10 2000/08/14 17:09:53 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.11 2000/08/15 12:49:34 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -319,8 +319,8 @@ void stress2()
    Float_t comp = f.GetCompressionFactor();
 
    Bool_t OK = kTRUE;
-   Int_t lastgood = 4913;
-   if (last <lastgood-200 || last > lastgood+200 || comp <1.35 || comp > 1.41) OK = kFALSE;
+   Int_t lastgood = 8241;
+   if (last <lastgood-200 || last > lastgood+200 || comp <1.9 || comp > 2.5) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
@@ -349,8 +349,8 @@ void stress3()
    Int_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
-   Int_t lastgood = 43375;
-   if (last <lastgood-900 || last > lastgood+900 || comp <1.37 || comp > 1.46) OK = kFALSE;
+   Int_t lastgood = 47516;
+   if (last <lastgood-900 || last > lastgood+900 || comp <1.8 || comp > 2.4) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
@@ -1231,6 +1231,7 @@ void stress12(Int_t testid)
    TH1F *h9, *h11;
    Int_t comp, ngood = 0;
    while ((key=(TKey*)next())) {
+      if (strcmp(key->GetClassName(),"TH1F")) continue; //may be a TList of TStreamerInfo
       h9  = (TH1F*)f9.Get(key->GetName());
       h11 = (TH1F*)f11.Get(key->GetName());
       if (h9 == 0 || h11 == 0) continue;
