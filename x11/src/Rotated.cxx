@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name$:$Id$
+// @(#)root/x11:$Name:  $:$Id: Rotated.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: O.Couet   17/11/93
 
 #ifndef _XVERTEXT_INCLUDED_
@@ -135,7 +135,7 @@ typedef struct rotated_text_item_template {
     struct rotated_text_item_template *next;
 } RotatedTextItem;
 
-RotatedTextItem *first_text_item=0;
+static RotatedTextItem *first_text_item=0;
 
 /* ---------------------------------------------------------------------- */
 
@@ -447,10 +447,10 @@ static int XRotPaintAlignedString(Display *dpy, XFontStruct *font, float angle, 
 
         XSetStipple(dpy, my_gc, empty_stipple);
         XSetFillStyle(dpy, my_gc, FillOpaqueStippled);
-	
+
         XFillPolygon(dpy, drawable, my_gc, xpoints, 4*item->nl, Nonconvex,
 		     CoordModeOrigin);
-	
+
         /* free our resources */
         free((char *)xpoints);
         XFreeGC(dpy, depth_one_gc);
@@ -470,7 +470,7 @@ static int XRotPaintAlignedString(Display *dpy, XFontStruct *font, float angle, 
         GC depth_one_gc;
         XGCValues values;
         Pixmap new_bitmap, inverse;
-	
+
         /* try and get some GC properties */
         if(XGetGCValues(dpy, gc,
 			GCStipple|GCFillStyle|GCForeground|GCBackground|
@@ -595,7 +595,7 @@ static int XRotDrawHorizontalString(Display *dpy, XFontStruct *font, Drawable dr
 	    GCForeground|GCBackground|GCFunction|GCStipple|GCFillStyle|
 	    GCTileStipXOrigin|GCTileStipYOrigin|GCPlaneMask, my_gc);
     XSetFont(dpy, my_gc, font->fid);
-	
+
     /* count number of sections in string */
     if(align!=NONE)
 	for(i=0; i<(int)strlen(text)-1; i++)
@@ -646,16 +646,16 @@ static int XRotDrawHorizontalString(Display *dpy, XFontStruct *font, Drawable dr
 	    xp=x-overall.rbearing/2;
 	else
 	    xp=x-overall.rbearing;
-	
+
 	/* draw string onto bitmap */
 	if(!bg)
 	    XDrawString(dpy, drawable, my_gc, xp, yp, str3, strlen(str3));
 	else
 	    XDrawImageString(dpy, drawable, my_gc, xp, yp, str3, strlen(str3));
-	
+
 	/* move to next line */
 	yp+=height;
-	
+
 	str3=my_strtok((char *)0, str2);
     }
     while(str3!=0);
@@ -791,7 +791,7 @@ static RotatedTextItem *XRotRetrieveFromCache(Display *dpy, XFontStruct *font, f
 	/* create bitmap to hold rotated text */
 	item->bitmap=XCreatePixmap(dpy, DefaultRootWindow(dpy),
 				   item->cols_out, item->rows_out, 1);
-	
+
 	/* depth one gc */
 	depth_one_gc=XCreateGC(dpy, item->bitmap, 0, 0);
 	XSetBackground(dpy, depth_one_gc, 0);
@@ -839,7 +839,7 @@ static RotatedTextItem *XRotCreateTextItem(Display *dpy, XFontStruct *font, floa
     item=(RotatedTextItem *)malloc((unsigned)sizeof(RotatedTextItem));
     if(!item)
 	return 0;
-	
+
     /* count number of sections in string */
     item->nl=1;
     if(align!=NONE)
@@ -941,7 +941,7 @@ static RotatedTextItem *XRotCreateTextItem(Display *dpy, XFontStruct *font, floa
 
 	/* draw string onto bitmap */
 	XDrawString(dpy, canvas, font_gc, xp, yp, str3, strlen(str3));
-	
+
 	/* keep a note of corner positions of this string */
 	item->corners_x[ic]=((float)xp-(float)item->cols_in/2)*style.magnify;
 	item->corners_y[ic]=((float)(yp-font->ascent)-(float)item->rows_in/2)
@@ -954,12 +954,12 @@ static RotatedTextItem *XRotCreateTextItem(Display *dpy, XFontStruct *font, floa
 	item->corners_x[item->nl*4-2-ic]=
 	    item->corners_x[item->nl*4-1-ic];
 	item->corners_y[item->nl*4-2-ic]=item->corners_y[ic+1];
-	
+
 	ic+=2;
-	
+
 	/* move to next line */
 	yp+=height;
-	
+
 	str3=my_strtok((char *)0, str2);
     }
     while(str3!=0);
@@ -1036,30 +1036,30 @@ static RotatedTextItem *XRotCreateTextItem(Display *dpy, XFontStruct *font, floa
 	xr=(float)item->cols_out/2+
 	    (dj-(float)item->rows_in/(2*cos_angle))/
 		TMath::Tan(angle)+2;
-	
+
 	xinc=1./TMath::Tan(angle);
     }
 
     /* loop through all relevent bits in rotated image */
     for(j=0; j<item->rows_out; j++) {
-	
+
 	/* no point re-calculating these every pass */
 	di=(float)((xl<0)?0:(int)xl)+0.5-(float)item->cols_out/2;
 	byte_out=(item->rows_out-j-1)*byte_w_out;
-	
+
 	/* loop through meaningful columns */
 	for(i=((xl<0)?0:(int)xl);
 	    i<((xr>=item->cols_out)?item->cols_out:(int)xr); i++) {
-	
+
 	    /* rotate coordinates */
 	    it=int((float)item->cols_in/2 + ( di*cos_angle + dj*sin_angle));
 	    jt=int((float)item->rows_in/2 - (-di*sin_angle + dj*cos_angle));
-	
+
             /* set pixel if required */
             if(it>=0 && it<item->cols_in && jt>=0 && jt<item->rows_in)
                 if((I_in->data[jt*byte_w_in+it/8] & 128>>(it%8))>0)
                     item->ximage->data[byte_out+i/8]|=128>>i%8;
-	
+
 	    di+=1;
 	}
 	dj+=1;
@@ -1448,7 +1448,7 @@ XPoint *XRotTextExtents(Display *, XFontStruct *font, float angle, int x, int y,
     xp_in[3].y=(short int)(-(float)rows_in*style.magnify/2-style.bbx_padl);
     xp_in[4].x=xp_in[0].x;
     xp_in[4].y=xp_in[0].y;
-	
+
     /* rotate and translate bounding box */
     for(i=0; i<5; i++) {
 	xp_out[i].x=(short int)((float)x + ( ((float)xp_in[i].x-hot_x)*cos_angle +

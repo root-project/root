@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.10 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.11 2002/01/24 11:39:30 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -191,7 +191,7 @@ TTabCom::TTabCom()
 
    InitPatterns();
 
-   gl_tab_hook = gl_root_tab_hook;
+   Gl_tab_hook = gl_root_tab_hook;
 }
 
 //
