@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.14 2003/01/22 11:23:02 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.15 2003/03/20 22:33:36 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #include "TStyle.h"
 #include "TVirtualX.h"
 #include "TError.h"
+#include "TVirtualPadEditor.h"
 
 ClassImp(TAttText)
 
@@ -310,7 +311,10 @@ void TAttText::SetTextAttributes()
 //*-*-*-*-*-*-*-*-*Invoke the DialogCanvas Text attributes*-*-*-*-*-*-*
 //*-*              =======================================
 
-   if (gPad) gPad->UpdateTextAttributes(fTextAlign,fTextAngle,fTextColor,fTextFont,fTextSize);
+   //if (gPad) gPad->UpdateTextAttributes(fTextAlign,fTextAngle,fTextColor,fTextFont,fTextSize);
+   
+   TVirtualPadEditor::UpdateTextAttributes(fTextAlign,fTextAngle,fTextColor,
+                                           fTextFont,fTextSize);
 }
 
 //______________________________________________________________________________

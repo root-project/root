@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.4 2002/06/12 16:46:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.5 2002/09/18 12:22:14 rdm Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -150,7 +150,7 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
                         ax, ay, wdum);
    } else {
       UInt_t root_w, root_h;
-      gVirtualX->GetWindowSize(fClient->GetRoot()->GetId(), ax, ay, root_w, root_h);
+      gVirtualX->GetWindowSize(fClient->GetDefaultRoot()->GetId(), ax, ay, root_w, root_h);
       ax = (root_w - fWidth) >> 1;
       ay = (root_h - fHeight) >> 1;
    }
@@ -362,7 +362,7 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
                         ax, ay, wdum);
    } else {
       UInt_t root_w, root_h;
-      gVirtualX->GetWindowSize(fClient->GetRoot()->GetId(), ax, ay, root_w, root_h);
+      gVirtualX->GetWindowSize(fClient->GetDefaultRoot()->GetId(), ax, ay, root_w, root_h);
       ax = (root_w - fWidth) >> 1;
       ay = (root_h - fHeight) >> 1;
    }
@@ -513,7 +513,7 @@ TGGotoDialog::TGGotoDialog(const TGWindow *p, const TGWindow *main,
                         ax, ay, wdum);
    } else {
       UInt_t root_w, root_h;
-      gVirtualX->GetWindowSize(fClient->GetRoot()->GetId(), ax, ay, root_w, root_h);
+      gVirtualX->GetWindowSize(fClient->GetDefaultRoot()->GetId(), ax, ay, root_w, root_h);
       ax = (root_w - fWidth) >> 1;
       ay = (root_h - fHeight) >> 1;
    }

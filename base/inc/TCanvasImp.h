@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TCanvasImp.h,v 1.3 2001/12/20 08:44:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TCanvasImp.h,v 1.4 2003/11/24 10:51:54 brun Exp $
 // Author: Fons Rademakers   16/11/95
 
 /*************************************************************************
@@ -56,9 +56,12 @@ public:
    virtual void   SetWindowSize(UInt_t w, UInt_t h);
    virtual void   SetWindowTitle(const char *newTitle);
    virtual void   SetCanvasSize(UInt_t w, UInt_t h);
+   virtual void   Show() { }
    virtual void   ShowMenuBar(Bool_t show = kTRUE);
    virtual void   ShowStatusBar(Bool_t show = kTRUE);
-   virtual void   Show() { }
+
+   virtual void   ShowEditor(Bool_t show = kTRUE);
+   virtual void   ShowToolBar(Bool_t show = kTRUE);
 
    ClassDef(TCanvasImp,0)  //ABC describing main window protocol
 };
@@ -74,5 +77,8 @@ inline void TCanvasImp::SetWindowTitle(const char *) { }
 inline void TCanvasImp::SetCanvasSize(UInt_t, UInt_t) { }
 inline void TCanvasImp::ShowMenuBar(Bool_t) { }
 inline void TCanvasImp::ShowStatusBar(Bool_t) { }
+
+inline void TCanvasImp::ShowEditor(Bool_t) { }
+inline void TCanvasImp::ShowToolBar(Bool_t) { }
 
 #endif

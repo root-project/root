@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.5 2002/05/03 10:48:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.6 2002/09/14 11:12:47 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -14,6 +14,7 @@
 #include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TVirtualX.h"
+#include "TVirtualPadEditor.h"
 
 ClassImp(TAttFill)
 
@@ -134,5 +135,7 @@ void TAttFill::SetFillAttributes()
 //*-*-*-*-*-*-*-*-*Invoke the DialogCanvas Fill attributes*-*-*-*-*-*-*
 //*-*              =======================================
 
-   if (gPad) gPad->UpdateFillAttributes(fFillColor,fFillStyle);
+   //if (gPad) gPad->UpdateFillAttributes(fFillColor,fFillStyle);
+   
+   TVirtualPadEditor::UpdateFillAttributes(fFillColor,fFillStyle);
 }

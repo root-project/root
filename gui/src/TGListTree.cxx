@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.29 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.30 2003/12/12 18:21:06 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -779,14 +779,14 @@ void TGListTree::Search()
    fSearch->fBuffer = (char*)buf.Data();
 
    TGListTreeItem *item;
-   new TGSearchDialog(fClient->GetRoot(), fCanvas, 400, 150, fSearch, &ret);
+   new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, fSearch, &ret);
 
    if (ret) {
       item = FindItemByPathname(fSearch->fBuffer);
       if (!item) {
          sprintf(msg, "Couldn't find \"%s\"", fSearch->fBuffer);
          gVirtualX->Bell(50);
-         new TGMsgBox(fClient->GetRoot(), fCanvas, "Container", msg,
+         new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg,
                       kMBIconExclamation, kMBOk, 0);
       } else {
          ClearHighlighted();
@@ -1048,7 +1048,7 @@ void TGListTree::SetToolTipText(const char *text, Int_t x, Int_t y, Long_t delay
 
    if (text && strlen(text)) {
       if (!fTip)
-         fTip = new TGToolTip(fClient->GetRoot(), this, text, delayms);
+         fTip = new TGToolTip(fClient->GetDefaultRoot(), this, text, delayms);
       else
          fTip->SetText(text);
       fTip->SetPosition(x, y);

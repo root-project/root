@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.6 2002/05/03 10:48:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.7 2002/09/14 11:12:47 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -15,6 +15,8 @@
 #include "TStyle.h"
 #include "TVirtualX.h"
 #include "TMath.h"
+#include "TVirtualPadEditor.h"
+
 
 ClassImp(TAttLine)
 
@@ -188,5 +190,7 @@ void TAttLine::SetLineAttributes()
 //*-*-*-*-*-*-*-*-*Invoke the DialogCanvas Line attributes*-*-*-*-*-*-*
 //*-*              =======================================
 
-   if (gPad) gPad->UpdateLineAttributes(fLineColor,fLineStyle,fLineWidth);
+   //if (gPad) gPad->UpdateLineAttributes(fLineColor,fLineStyle,fLineWidth);
+
+   TVirtualPadEditor::UpdateLineAttributes(fLineColor,fLineStyle,fLineWidth);
 }

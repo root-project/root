@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.33 2003/11/25 06:18:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.34 2004/02/13 17:04:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -335,6 +335,8 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fFitFormat      = fFitFormat;
    ((TStyle&)obj).fPaintTextFormat= fPaintTextFormat;
    ((TStyle&)obj).fShowEventStatus= fShowEventStatus;
+   ((TStyle&)obj).fShowEditor     = fShowEditor;
+   ((TStyle&)obj).fShowToolBar    = fShowToolBar;
    ((TStyle&)obj).fLegoInnerR     = fLegoInnerR;
    ((TStyle&)obj).fStripDecimals  = fStripDecimals;
    ((TStyle&)obj).fNumberContours = fNumberContours;
@@ -440,6 +442,8 @@ void TStyle::Reset(Option_t *)
    fTitleX         = 0.01;
    fTitleY         = 0.995;
    fShowEventStatus= 0;
+   fShowEditor     = 0;
+   fShowToolBar    = 0;
    fLegoInnerR     = 0.5;
    fHeaderPS       = "";
    fTitlePS        = "";

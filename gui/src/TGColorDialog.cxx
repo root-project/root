@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.9 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.10 2004/02/18 16:17:33 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -104,7 +104,7 @@ enum {
    kIMG_L
 };
 
-
+/*
 // "Basic" colors:
 
 static UChar_t bcolor[48][3] = {
@@ -137,7 +137,7 @@ static UChar_t bcolor[48][3] = {
    { 0x80, 0x80, 0x40 }, { 0x80, 0x80, 0x80 },
    { 0x40, 0x80, 0x80 }, { 0xc0, 0xc0, 0xc0 },
    { 0x40, 0x00, 0x40 }, { 0xff, 0xff, 0xff }
-};
+}; */
 
 // "User" defined colors
 
@@ -1042,7 +1042,9 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    fPalette->Associate(this);
 
    for (i = 0; i < 48; ++i)
-      fPalette->SetColor(i, TColor::RGB2Pixel(bcolor[i][0], bcolor[i][1], bcolor[i][2]));
+      fPalette->SetColor(i, TColor::Number2Pixel(i));  // root colors
+      // the basic colors were set via bcolor 
+      //fPalette->SetColor(i, TColor::GetPixel(bcolor[i][0], bcolor[i][1], bcolor[i][2]));
 
    // custom colors
 

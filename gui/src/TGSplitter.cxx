@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.5 2003/03/14 11:34:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.6 2003/11/05 13:08:26 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -103,7 +103,7 @@ Bool_t TGVSplitter::HandleButton(Event_t *event)
       Window_t wdum;
       gVirtualX->GetWindowSize(fParent->GetId(), x, y, w, h);
       gVirtualX->TranslateCoordinates(fParent->GetParent()->GetId(),
-                                      fClient->GetRoot()->GetId(),
+                                      fClient->GetDefaultRoot()->GetId(),
                                       x, y, xroot, yroot, wdum);
       fMin = xroot;
       fMax = xroot + w - 2;
@@ -236,7 +236,7 @@ Bool_t TGHSplitter::HandleButton(Event_t *event)
       Window_t wdum;
       gVirtualX->GetWindowSize(fParent->GetId(), x, y, w, h);
       gVirtualX->TranslateCoordinates(fParent->GetParent()->GetId(),
-                                      fClient->GetRoot()->GetId(),
+                                      fClient->GetDefaultRoot()->GetId(),
                                       x, y, xroot, yroot, wdum);
       fMin = yroot;
       fMax = yroot + h - 2;

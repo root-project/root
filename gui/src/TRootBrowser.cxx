@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.50 2004/01/13 21:02:14 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.51 2004/02/05 12:49:24 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -698,7 +698,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fWidgets = new TList;
 
    // Create menus
-   fFileMenu = new TGPopupMenu(fClient->GetRoot());
+   fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fFileMenu->AddEntry("&New Browser",        kFileNewBrowser);
    fFileMenu->AddEntry("New Canvas",          kFileNewCanvas);
    fFileMenu->AddEntry("&Open...",            kFileOpen);
@@ -717,7 +717,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fFileMenu->DisableEntry(kFileSaveAs);
    fFileMenu->DisableEntry(kFilePrint);
 
-   fSortMenu = new TGPopupMenu(fClient->GetRoot());
+   fSortMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fSortMenu->AddEntry("By &Name",            kViewArrangeByName);
    fSortMenu->AddEntry("By &Type",            kViewArrangeByType);
    fSortMenu->AddEntry("By &Size",            kViewArrangeBySize);
@@ -727,7 +727,7 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    fSortMenu->CheckEntry(kViewArrangeAuto);
 
-   fViewMenu = new TGPopupMenu(fClient->GetRoot());
+   fViewMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fViewMenu->AddEntry("&Toolbar",            kViewToolBar);
    fViewMenu->AddEntry("Status &Bar",         kViewStatusBar);
    fViewMenu->AddSeparator();
@@ -755,10 +755,10 @@ void TRootBrowser::CreateBrowser(const char *name)
       fBrowser->SetBit(TBrowser::kNoHidden, kTRUE);
    }
 
-   fOptionMenu = new TGPopupMenu(fClient->GetRoot());
+   fOptionMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fOptionMenu->AddEntry("&Show Cycles",        kOptionShowCycles);
 
-   fHelpMenu = new TGPopupMenu(fClient->GetRoot());
+   fHelpMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fHelpMenu->AddEntry("&About ROOT...",        kHelpAbout);
    fHelpMenu->AddSeparator();
    fHelpMenu->AddEntry("Help On Browser...",    kHelpOnBrowser);
@@ -1112,7 +1112,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         TGFileInfo fi;
                         fi.fFileTypes = gOpenTypes;
                         fi.fIniDir    = StrDup(dir);
-                        new TGFileDialog(fClient->GetRoot(), this, kFDOpen,&fi);
+                        new TGFileDialog(fClient->GetDefaultRoot(), this, kFDOpen,&fi);
                         if (!fi.fFilename) return kTRUE;
                         dir = fi.fIniDir;
                         new TFile(fi.fFilename, "update");

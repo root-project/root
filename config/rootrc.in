@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.62 2004/02/13 20:26:51 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.63 2004/02/16 22:49:18 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -65,6 +65,8 @@ Canvas.ResizeOpaque:        false
 Canvas.UseScreenFactor:     true
 Canvas.HighLightColor:      2
 Canvas.ShowEventStatus:     false
+Canvas.ShowToolBar:         false
+Canvas.ShowEditor:          false
 Canvas.AutoExec:            true
 
 # Default histogram binnings for TTree::Draw()
@@ -249,6 +251,8 @@ Plugin.TGuiFactory:  root      TRootGuiFactory Gui        "TRootGuiFactory()"
 +Plugin.TGuiFactory: qt        TQtRootGuiFactory QtRoot   "TQtRootGuiFactory()"
 Plugin.TVirtualProof:        * TProof        Proof        "TProof(const char*,const char*,const char*,Int_t)"
 Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui  "TProofProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t,Long64_t)"
+Plugin.TVirtualPadEditor:  GedOld  TPadEditorOld  GedOld  "TPadEditorOld()"
++Plugin.TVirtualPadEditor: Ged     TGedPadEditor  Ged     "TGedPadEditor(TCanvas *canvas)"
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.

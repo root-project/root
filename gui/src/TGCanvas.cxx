@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.23 2003/11/10 10:50:47 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.24 2003/12/05 01:17:03 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -1153,7 +1153,7 @@ void TGContainer::Search()
    TGFrameElement* fe = 0;
    fSearch = new TGSearchType;
 
-   new TGSearchDialog(fClient->GetRoot(), fCanvas, 400, 150, fSearch, &ret);
+   new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, fSearch, &ret);
 
    if (ret) {
          fe = (TGFrameElement*)FindItem(fSearch->fBuffer, fSearch->fDirection,
@@ -1167,7 +1167,7 @@ void TGContainer::Search()
          if (!fe) {
             sprintf(msg, "Couldn't find \"%s\"", fLastName.Data());
             gVirtualX->Bell(50);
-            new TGMsgBox(fClient->GetRoot(), fCanvas, "Container", msg,
+            new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg,
                          kMBIconExclamation, kMBOk, 0);
          } else {
             if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
@@ -1319,7 +1319,7 @@ void TGContainer::RepeatSearch()
       if (!fe) {
          sprintf(msg, "Couldn't find \"%s\"", fLastName.Data());
          gVirtualX->Bell(50);
-         new TGMsgBox(fClient->GetRoot(), fCanvas, "Container", msg,
+         new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg,
                         kMBIconExclamation, kMBOk, 0);
       } else {
          if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.7 2003/10/08 09:50:47 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.8 2003/11/24 10:51:55 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -35,7 +35,9 @@ class TGPopupMenu;
 class TGLayoutHints;
 class TGStatusBar;
 class TRootContainer;
-
+class TGToolBar;
+class TGHorizontal3DLine;
+class TVirtualPadEditor;
 
 class TRootCanvas : public TGMainFrame, public TCanvasImp {
 
@@ -58,8 +60,17 @@ private:
    TGLayoutHints       *fCanvasLayout;       // layout for canvas widget
    TGStatusBar         *fStatusBar;          // statusbar widget
    TGLayoutHints       *fStatusBarLayout;    // layout hints for statusbar
-   //TGToolBar           *fToolBar;            // icon button toolbar
-
+   
+   TGCompositeFrame    *fEditorFrame;        // side farme for current pad editor 
+   TGLayoutHints       *fEditorLayout;       // layout for editor frame
+   TGCompositeFrame    *fMainFrame;          // main frame containing canvas and side frame
+   TGLayoutHints       *fToolBarLayout;      // layout for toolbar widget
+   TGToolBar           *fToolBar;            // icon button toolbar
+   TGHorizontal3DLine  *fToolBarSep;         // toolbar separator
+   TGLayoutHints       *fMainFrameLayout;    // layout for main frame
+   
+   TVirtualPadEditor   *fEditor;     // pointer to currently loaded pad editor
+      
    Int_t                fCanvasID;   // index in fWindows array of TGX11
    Bool_t               fAutoFit;    // when true canvas container keeps same size as canvas
    Int_t                fButton;     // currently pressed button
@@ -97,9 +108,13 @@ public:
    void     SetWindowTitle(const char *newTitle);
    void     SetCanvasSize(UInt_t w, UInt_t h);
    void     SetStatusText(const char *txt = 0, Int_t partidx = 0);
+
+   void     Show() { MapRaised(); }
    void     ShowMenuBar(Bool_t show = kTRUE);
    void     ShowStatusBar(Bool_t show = kTRUE);
-   void     Show() { MapRaised(); }
+
+   void     ShowEditor(Bool_t show = kTRUE);
+   void     ShowToolBar(Bool_t show = kTRUE);
 
    TGMenuBar     *GetMenuBar() const { return fMenuBar; }
    TGLayoutHints *GetMenuBarItemLayout() const { return fMenuBarItemLayout; }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.6 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.7 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -110,6 +110,71 @@ public:
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGComboBox,0)  // Combo box widget
+};
+
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// The TGLineStyleComboBox user callable and it creates                 //
+// a combobox for selecting the line style.                             //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TGLineStyleComboBox : public TGComboBox {
+
+public:
+   TGLineStyleComboBox(const TGWindow *p, Int_t id,
+              UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
+              Pixel_t back = GetWhitePixel());
+   
+   virtual Bool_t HandleButton(Event_t *event);
+      
+   ClassDef(TGLineStyleComboBox, 0)  // Line style combobox widget
+    
+};
+
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// The TGLineWidthComboBox user callable and it creates                 //
+// a combobox for selecting the line width.                             //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+
+class TGLineWidthComboBox : public TGComboBox {
+
+public:
+   TGLineWidthComboBox(const TGWindow *p, Int_t id,
+              UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
+              Pixel_t back = GetWhitePixel());
+   
+   ClassDef(TGLineWidthComboBox, 0)  // Line width combobox widget
+
+     
+};
+
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// The TGFontTypeComboBox is user callable and it creates               //
+// a combobox for selecting the font.                                   //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TGFontTypeComboBox : public TGComboBox { 
+
+protected:
+   static const int maxFonts = 20;
+   FontStruct_t fFonts[maxFonts];      
+
+public:
+   TGFontTypeComboBox(const TGWindow*p, Int_t id, 
+            UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
+            Pixel_t bask = GetWhitePixel());
+   virtual ~TGFontTypeComboBox();
+
+   ClassDef(TGFontTypeComboBox, 0)  // Font type combobox widget
 };
 
 #endif

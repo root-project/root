@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.53 2003/11/08 12:55:41 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.54 2003/11/24 10:51:55 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -29,6 +29,8 @@
 #include "TControlBar.h"
 #include "TInterpreter.h"
 #include "TApplication.h"
+
+#include "TVirtualPadEditor.h"
 
 
 // This small class and the static object makedefcanvas_init make sure that
@@ -149,11 +151,12 @@ void TCanvas::Constructor()
    fBatch     = kTRUE;
 
    fContextMenu = 0;
-   fEditorBar   = 0;
    fSelected    = 0;
    fSelectedPad = 0;
    fPadSave     = 0;
    fAutoExec    = kTRUE;
+   
+   fEdited      = 0;   
 }
 
 //______________________________________________________________________________
@@ -402,6 +405,8 @@ void TCanvas::Init()
    fResizeOpaque    = gEnv->GetValue("Canvas.ResizeOpaque", 0);
    fHighLightColor  = gEnv->GetValue("Canvas.HighLightColor", kRed);
    fShowEventStatus = gEnv->GetValue("Canvas.ShowEventStatus", kFALSE);
+   fShowToolBar     = gEnv->GetValue("Canvas.ShowToolBar", kFALSE);
+   fShowEditor      = gEnv->GetValue("Canvas.ShowEditor", kFALSE);
    fAutoExec        = gEnv->GetValue("Canvas.AutoExec", kTRUE);
 
    // Fill canvas ROOT data structure
@@ -415,12 +420,13 @@ void TCanvas::Init()
    fSelected        = 0;
    fSelectedPad     = 0;
    fPadSave         = 0;
-   fEditorBar       = 0;
    fEvent           = -1;
    fEventX          = -1;
    fEventY          = -1;
    fContextMenu     = 0;
    SetBit(kMustCleanup);
+
+   fEdited          = 0;   
 }
 
 //_____________________________________________________________________________
@@ -440,6 +446,11 @@ void TCanvas::Build()
    // by default the event status bar (if set by default)
    if (fShowEventStatus && fMenuBar && fCanvasImp)
       fCanvasImp->ShowStatusBar(fShowEventStatus);
+   // ... and toolbar + editor
+   if (fShowToolBar && fMenuBar && fCanvasImp)
+      fCanvasImp->ShowToolBar(fShowToolBar);
+   if (fShowEditor && fMenuBar && fCanvasImp)
+      fCanvasImp->ShowEditor(fShowEditor);
 
    if (!IsBatch()) {    //normal mode with a screen window
       // Set default physical canvas attributes
@@ -589,6 +600,8 @@ void TCanvas::Clear(Option_t *option)
 
    fSelected    = 0;
    fSelectedPad = 0;
+
+   fEdited      = 0;   
 }
 
 //______________________________________________________________________________
@@ -775,29 +788,9 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
 //______________________________________________________________________________
 void TCanvas::EditorBar()
 {
-//*-*-*-*-*-*-*-*-*-*-*Create the Editor Controlbar*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
+//   TVirtualPadEditor::GetPadEditor()->LoadEditor();
 
-   TControlBar *ed = new TControlBar("vertical", "Editor");
-   ed->AddButton("Arc",       "gROOT->SetEditorMode(\"Arc\")",       "Create an arc of circle");
-   ed->AddButton("Line",      "gROOT->SetEditorMode(\"Line\")",      "Create a line segment");
-   ed->AddButton("Arrow",     "gROOT->SetEditorMode(\"Arrow\")",     "Create an Arrow");
-   ed->AddButton("Button",    "gROOT->SetEditorMode(\"Button\")",    "Create a user interface Button");
-   ed->AddButton("Diamond",   "gROOT->SetEditorMode(\"Diamond\")",   "Create a diamond");
-   ed->AddButton("Ellipse",   "gROOT->SetEditorMode(\"Ellipse\")",   "Create an Ellipse");
-   ed->AddButton("Pad",       "gROOT->SetEditorMode(\"Pad\")",       "Create a pad");
-   ed->AddButton("Pave",      "gROOT->SetEditorMode(\"Pave\")",      "Create a Pave");
-   ed->AddButton("PaveLabel", "gROOT->SetEditorMode(\"PaveLabel\")", "Create a PaveLabel (prompt for label)");
-   ed->AddButton("PaveText",  "gROOT->SetEditorMode(\"PaveText\")",  "Create a PaveText");
-   ed->AddButton("PavesText", "gROOT->SetEditorMode(\"PavesText\")", "Create a PavesText");
-   ed->AddButton("PolyLine",  "gROOT->SetEditorMode(\"PolyLine\")",  "Create a PolyLine (TGraph)");
-   ed->AddButton("CurlyLine", "gROOT->SetEditorMode(\"CurlyLine\")", "Create a Curly/WavyLine");
-   ed->AddButton("CurlyArc",  "gROOT->SetEditorMode(\"CurlyArc\")",  "Create a Curly/WavyArc");
-   ed->AddButton("Text/Latex","gROOT->SetEditorMode(\"Text\")",      "Create a Text/Latex string");
-   ed->AddButton("Marker",    "gROOT->SetEditorMode(\"Marker\")",    "Create a marker");
-   ed->AddButton("<...Graphical Cut...>",  "gROOT->SetEditorMode(\"CutG\")","Create a Graphical Cut");
-   ed->Show();
-   fEditorBar = ed;
+   TVirtualPadEditor::GetPadEditor();
 }
 
 //______________________________________________________________________________
@@ -1000,6 +993,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
                     // we will only use its coordinate system
 
       FeedbackMode(kTRUE);   // to draw in rubberband mode
+      
+      if (gROOT->GetEditorMode() == 0) SetEdited(fSelected, fSelectedPad);  
 
       fSelected->ExecuteEvent(event, px, py);
 
@@ -1195,6 +1190,19 @@ void TCanvas::MoveOpaque(Int_t set)
 }
 
 //______________________________________________________________________________
+void TCanvas::ObjectEdited(TObject *o, TVirtualPad *pad)
+{
+   // Emit ObjectEdited() signal.
+
+   Long_t args[22];
+
+   args[0] = (Long_t) o;
+   args[1] = (Long_t) pad;
+
+   Emit("ObjectEdited(TObject *,TVirtualPad *)", args);
+}
+
+//______________________________________________________________________________
 void TCanvas::Paint(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*Paint canvas*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -1367,6 +1375,12 @@ void TCanvas::SavePrimitive(ofstream &out, Option_t *option)
    if (GetShowEventStatus()) {
       out<<"   "<<GetName()<<"->ToggleEventStatus();"<<endl;
    }
+   if (GetShowToolBar()) {
+      out<<"   "<<GetName()<<"->ToggleToolBar();"<<endl;
+   }
+   if (GetShowEditor()) {
+      out<<"   "<<GetName()<<"->ToggleEditor();"<<endl;
+   }
    if (GetHighLightColor() != 5) {
       out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<endl;
    }
@@ -1454,6 +1468,12 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    }
    if (GetShowEventStatus()) {
       out<<"   "<<GetName()<<"->ToggleEventStatus();"<<endl;
+   }
+   if (GetShowToolBar()) {
+      out<<"   "<<GetName()<<"->ToggleToolBar();"<<endl;
+   }
+   if (GetShowEditor()) {
+      out<<"   "<<GetName()<<"->ToggleEditor();"<<endl;
    }
    if (GetHighLightColor() != 5) {
       out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<endl;
@@ -1572,6 +1592,16 @@ void TCanvas::SetSelected(TObject *obj)
 {
    fSelected = obj;
    if (obj) obj->SetBit(kMustCleanup);
+}
+
+//______________________________________________________________________________
+void TCanvas::SetEdited(TObject *obj, TVirtualPad *pad)
+{
+   if (fEdited != obj) {
+      fEdited = obj;
+      // emits edited object signal
+      ObjectEdited(obj, pad);
+   }
 }
 
 //______________________________________________________________________________
@@ -1703,6 +1733,26 @@ void TCanvas::ToggleEventStatus()
    fShowEventStatus = fShowEventStatus ? kFALSE : kTRUE;
 
    if (fCanvasImp) fCanvasImp->ShowStatusBar(fShowEventStatus);
+}
+
+//______________________________________________________________________________
+void TCanvas::ToggleToolBar()
+{
+   // Toggle toolbar.
+
+   fShowToolBar = fShowToolBar ? kFALSE : kTRUE;
+
+   if (fCanvasImp) fCanvasImp->ShowToolBar(fShowToolBar);
+}
+
+//______________________________________________________________________________
+void TCanvas::ToggleEditor()
+{
+   // Toggle editor.
+
+   fShowEditor = fShowEditor ? kFALSE : kTRUE;
+
+   if (fCanvasImp) fCanvasImp->ShowEditor(fShowEditor);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.119 2004/02/10 10:29:09 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.120 2004/02/13 17:04:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -62,10 +62,6 @@
 
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
-const Int_t kButton    = 101;
-const Int_t kCutG      = 100;
-const Int_t kCurlyLine = 200;
-const Int_t kCurlyArc  = 201;
 
 static TPoint gPXY[kPXY];
 static Int_t readLevel = 0;
@@ -743,6 +739,7 @@ void TPad::CreateNewEllipse(Int_t event, Int_t px, Int_t py, Int_t mode)
       gPad->GetCanvas()->FeedbackMode(kFALSE);
       gPad->Modified(kTRUE);
       el->Draw();
+      gPad->GetCanvas()->SetEdited(el, gPad);
       gROOT->SetEditorMode();
       break;
    }
@@ -800,15 +797,18 @@ void TPad::CreateNewLine(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (mode == kLine) {
          line = new TLine(x0,y0,x1,y1);
          line->Draw();
+         gPad->GetCanvas()->SetEdited(line, gPad);
       }
       if (mode == kArrow) {
          arrow = new TArrow(x0,y0,x1,y1,0.03,"|>");
          arrow->SetFillColor(1);
          arrow->Draw();
+         gPad->GetCanvas()->SetEdited(arrow, gPad);
       }
       if (mode == kCurlyLine) {
          cline = new TCurlyLine(x0,y0,x1,y1);
          cline->Draw();
+         gPad->GetCanvas()->SetEdited(cline, gPad);
       }
       if (mode == kCurlyArc) {
          radius = TMath::Sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0));
@@ -816,6 +816,7 @@ void TPad::CreateNewLine(Int_t event, Int_t px, Int_t py, Int_t mode)
          phimax = 360;
          cline = new TCurlyArc(x0,y0,radius,phimin,phimax);
          cline->Draw();
+         gPad->GetCanvas()->SetEdited(cline, gPad);
       }
       gROOT->SetEditorMode();
       break;
@@ -888,6 +889,7 @@ void TPad::CreateNewPad(Int_t event, Int_t px, Int_t py, Int_t)
       if (newpad->IsZombie()) break;
       newpad->SetFillColor(gStyle->GetPadColor());
       newpad->Draw();
+      gPad->GetCanvas()->SetEdited(newpad, gPad);
       padsav->cd();
       break;
    }
@@ -977,6 +979,7 @@ void TPad::CreateNewPave(Int_t event, Int_t px, Int_t py, Int_t mode)
       gPad->GetCanvas()->FeedbackMode(kFALSE);
       gPad->Modified(kTRUE);
       pave->Draw();
+      gPad->GetCanvas()->SetEdited(pave, gPad);
       gROOT->SetEditorMode();
       break;
    }
@@ -1021,10 +1024,11 @@ void TPad::CreateNewPolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
       dp = TMath::Abs(px-px1old) +TMath::Abs(py-py1old);
       if (npoints && dp < 5) {
          gPad->Modified(kTRUE);
-         if      (mode == kPolyLine) {
+         if (mode == kPolyLine) {
             gr = new TGraph(npoints,xline,yline);
             gr->ResetBit(TGraph::kClipFrame);
             gr->Draw("L");
+            gPad->GetCanvas()->SetEdited(gr, gPad);
          } else {
             xline[npoints] = xline[0];
             yline[npoints] = yline[0];
@@ -1032,7 +1036,10 @@ void TPad::CreateNewPolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
             gr = (TGraph*)gROOT->ProcessLineFast(
                  Form("new %s(\"CUTG\",%d,(Double_t*)0x%lx,(Double_t*)0x%lx)",
                       gROOT->GetCutClassName(),npoints,(Long_t)xline,(Long_t)yline));
-            if (gr) gr->Draw("L");
+            if (gr) {
+               gr->Draw("L");
+               gPad->GetCanvas()->SetEdited(gr, gPad);
+            }
          }
          npoints = 0;
          linedrawn = 0;
@@ -1091,6 +1098,7 @@ void TPad::CreateNewText(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (mode == kMarker) {
          marker = new TMarker(x,y,gStyle->GetMarkerStyle());
          marker->Draw();
+         gPad->GetCanvas()->SetEdited(marker, gPad);
          gROOT->SetEditorMode();
          break;
       }
@@ -1112,6 +1120,7 @@ void TPad::CreateNewText(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (!lentext) break;
       newtext->DrawLatex(x, y, atext);
       gPad->Modified(kTRUE);
+      gPad->GetCanvas()->SetEdited(newtext, gPad);
       gROOT->SetEditorMode();
       break;
    }
@@ -1597,62 +1606,6 @@ void TPad::DrawColorTable()
       }
    }
 
-}
-
-//______________________________________________________________________________
-void TPad::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
-{
-//*-*-*-*-*-*-*-*-*Draw line in CurrentPad World coordinates*-*-*-*-*-*-*-*
-//*-*              =========================================
-
-   Int_t px1 = gPad->XtoPixel(x1);
-   Int_t px2 = gPad->XtoPixel(x2);
-   Int_t py1 = gPad->YtoPixel(y1);
-   Int_t py2 = gPad->YtoPixel(y2);
-
-   gVirtualX->DrawLine(px1, py1, px2, py2);
-}
-
-//______________________________________________________________________________
-void TPad::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
-{
-//*-*-*-*-*-*-*-*-*Draw line in CurrentPad NDC coordinates*-*-*-*-*-*-*-*
-//*-*              =======================================
-
-   Int_t px1 = gPad->UtoPixel(u1);
-   Int_t px2 = gPad->UtoPixel(u2);
-   Int_t py1 = gPad->VtoPixel(v1);
-   Int_t py2 = gPad->VtoPixel(v2);
-
-   gVirtualX->DrawLine(px1, py1, px2, py2);
-}
-
-//______________________________________________________________________________
-void TPad::DrawText(Double_t x, Double_t y, const char *text)
-{
-//*-*-*-*-*-*-*-*-*Draw text in CurrentPad World coordinates*-*-*-*-*-*-*-*
-//*-*              =========================================
-
-   Int_t px = gPad->XtoPixel(x);
-   Int_t py = gPad->YtoPixel(y);
-
-   Float_t angle = gVirtualX->GetTextAngle();
-   Float_t mgn   = gVirtualX->GetTextSize();
-   gVirtualX->DrawText(px, py, angle, mgn, text, TVirtualX::kClear);
-}
-
-//______________________________________________________________________________
-void TPad::DrawTextNDC(Double_t u, Double_t v, const char *text)
-{
-//*-*-*-*-*-*-*-*-*Draw text in CurrentPad NDC coordinates*-*-*-*-*-*-*-*
-//*-*              =======================================
-
-   Int_t px = gPad->UtoPixel(u);
-   Int_t py = gPad->VtoPixel(v);
-
-   Float_t angle = gVirtualX->GetTextAngle();
-   Float_t mgn   = gVirtualX->GetTextSize();
-   gVirtualX->DrawText(px, py, angle, mgn, text, TVirtualX::kClear);
 }
 
 //______________________________________________________________________________
@@ -3962,6 +3915,7 @@ void TPad::RecursiveRemove(TObject *obj)
 //*-*            ====================================================
 
    if (obj == fCanvas->GetSelected()) fCanvas->SetSelected(0);
+   if (obj == fCanvas->GetEdited()) fCanvas->SetEdited(0, 0);
    if (obj == fView) fView = 0;
    Int_t nold = fPrimitives->GetSize();
    fPrimitives->RecursiveRemove(obj);
@@ -4863,74 +4817,6 @@ void TPad::Streamer(TBuffer &b)
    } else {
       TPad::Class()->WriteBuffer(b,this);
    }
-}
-
-
-//______________________________________________________________________________
-void TPad::UpdateFillAttributes(Int_t col, Int_t sty)
-{
-// update fill area attributes via the dialog canvas
-
-   gROOT->SetSelectedPad(gPad->GetSelectedPad());
-
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   TAttFillCanvas *R__attfill = (TAttFillCanvas*)lc->FindObject("R__attfill");
-   if (!R__attfill) {
-      R__attfill = new TAttFillCanvas("R__attfill","Fill Attributes",250,400);
-   }
-   R__attfill->UpdateFillAttributes(col,sty);
-   R__attfill->Show();
-}
-
-
-//______________________________________________________________________________
-void TPad::UpdateLineAttributes(Int_t col, Int_t sty, Int_t width)
-{
-// update line attributes via the dialog canvas
-
-   gROOT->SetSelectedPad(gPad->GetSelectedPad());
-
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   TAttLineCanvas *R__attline = (TAttLineCanvas*)lc->FindObject("R__attline");
-   if (!R__attline) {
-      R__attline = new TAttLineCanvas("R__attline","Line Attributes",250,400);
-   }
-   R__attline->UpdateLineAttributes(col,sty,width);
-   R__attline->Show();
-}
-
-
-//______________________________________________________________________________
-void TPad::UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz)
-{
-// update marker attributes via the dialog canvas
-
-   gROOT->SetSelectedPad(gPad->GetSelectedPad());
-
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   TAttMarkerCanvas *R__attmarker = (TAttMarkerCanvas*)lc->FindObject("R__attmarker");
-   if (!R__attmarker) {
-      R__attmarker = new TAttMarkerCanvas("R__attmarker","Marker Attributes",250,400);
-   }
-   R__attmarker->UpdateMarkerAttributes(col,sty,msiz);
-   R__attmarker->Show();
-}
-
-
-//______________________________________________________________________________
-void TPad::UpdateTextAttributes(Int_t align,Float_t angle,Int_t col,Int_t font,Float_t tsize)
-{
-// update text attributes via the dialog canvas
-
-   gROOT->SetSelectedPad(gPad->GetSelectedPad());
-
-   TList *lc = (TList*)gROOT->GetListOfCanvases();
-   TAttTextCanvas *R__atttext = (TAttTextCanvas*)lc->FindObject("R__atttext");
-   if (!R__atttext) {
-      R__atttext = new TAttTextCanvas("R__atttext","Text Attributes",400,600);
-   }
-   R__atttext->UpdateTextAttributes(align,angle,col,font,tsize);
-   R__atttext->Show();
 }
 
 //______________________________________________________________________________

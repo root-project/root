@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.12 2002/09/14 11:12:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.13 2002/11/25 16:27:50 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -80,10 +80,10 @@ public:
    virtual void     Draw(Option_t *option="") = 0;
    virtual void     DrawClassObject(const TObject *obj, Option_t *option="") = 0;
    virtual TH1F    *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="") = 0;
-   virtual void     DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2) = 0;
-   virtual void     DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2) = 0;
-   virtual void     DrawText(Double_t x, Double_t y, const char *text) = 0;
-   virtual void     DrawTextNDC(Double_t u, Double_t v, const char *text) = 0;
+///   virtual void     DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2) = 0;
+///   virtual void     DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2) = 0;
+///   virtual void     DrawText(Double_t x, Double_t y, const char *text) = 0;
+///   virtual void     DrawTextNDC(Double_t u, Double_t v, const char *text) = 0;
    virtual Short_t  GetBorderMode() const = 0;
    virtual Short_t  GetBorderSize() const = 0;
    virtual Int_t    GetCanvasID() const = 0;
@@ -225,10 +225,10 @@ public:
    virtual void     SetView(TView *view) = 0;
    virtual TObject *WaitPrimitive(const char *pname="", const char *emode="") = 0;
    virtual void     Update() = 0;
-   virtual void     UpdateFillAttributes(Int_t col, Int_t sty) = 0;
-   virtual void     UpdateLineAttributes(Int_t col, Int_t sty, Int_t width) = 0;
-   virtual void     UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz) = 0;
-   virtual void     UpdateTextAttributes(Int_t align,Float_t angle,Int_t col,Int_t font,Float_t tsize) = 0;
+///   virtual void     UpdateFillAttributes(Int_t col, Int_t sty) = 0;
+///   virtual void     UpdateLineAttributes(Int_t col, Int_t sty, Int_t width) = 0;
+///   virtual void     UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz) = 0;
+///   virtual void     UpdateTextAttributes(Int_t align,Float_t angle,Int_t col,Int_t font,Float_t tsize) = 0;
    virtual Int_t    UtoAbsPixel(Double_t u) const = 0;
    virtual Int_t    VtoAbsPixel(Double_t v) const = 0;
    virtual Int_t    UtoPixel(Double_t u) const = 0;

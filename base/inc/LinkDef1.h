@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.20 2003/08/06 20:25:04 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.21 2003/12/26 18:38:21 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -146,5 +146,7 @@
 #pragma link C++ class TVirtualUtil3D;
 #pragma link C++ class TVirtualUtilHist;
 #pragma link C++ class TVirtualUtilPad;
+
+#pragma link C++ class TVirtualPadEditor;
 
 #endif

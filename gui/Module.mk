@@ -36,11 +36,12 @@ GUIH2        := TGObject.h TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h \
                 TGToolBar.h TGListTree.h TGText.h TGView.h TGTextView.h \
                 TGTextEdit.h TGTextEditDialogs.h TGDoubleSlider.h TGSplitter.h \
                 TGFSComboBox.h TGImageMap.h TGApplication.h TGXYLayout.h \
-                TGResourcePool.h TGFont.h
+                TGResourcePool.h TGFont.h 
 GUIH3        := TRootGuiFactory.h TRootApplication.h TRootCanvas.h \
                 TRootBrowser.h TRootContextMenu.h TRootDialog.h \
                 TRootControlBar.h TRootHelpDialog.h TRootEmbeddedCanvas.h \
-                TGColorDialog.h TGColorSelect.h
+                TGColorDialog.h TGColorSelect.h 
+                
 GUIH4        := HelpText.h
 GUIH1        := $(patsubst %,$(MODDIRI)/%,$(GUIH1))
 GUIH2        := $(patsubst %,$(MODDIRI)/%,$(GUIH2))

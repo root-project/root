@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.6 2002/05/03 10:48:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.7 2002/09/14 11:12:47 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TVirtualX.h"
+#include "TVirtualPadEditor.h"
 
 ClassImp(TAttMarker)
 
@@ -168,5 +169,7 @@ void TAttMarker::SetMarkerAttributes()
 //*-*-*-*-*-*-*-*-*Invoke the DialogCanvas Marker attributes*-*-*-*-*-*-*
 //*-*              =========================================
 
-   if (gPad) gPad->UpdateMarkerAttributes(fMarkerColor,fMarkerStyle,fMarkerSize);
+   //if (gPad) gPad->UpdateMarkerAttributes(fMarkerColor,fMarkerStyle,fMarkerSize);
+
+   TVirtualPadEditor::UpdateMarkerAttributes(fMarkerColor,fMarkerStyle,fMarkerSize);
 }

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.21 2003/07/17 06:18:38 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.22 2003/11/05 13:08:25 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -73,7 +73,6 @@ protected:
    TString       fSelectedOpt;     //!Drawing option of selected object
    TPad         *fSelectedPad;     //!Pad containing currently selected object
    TPad         *fPadSave;         //!Pointer to saved pad in HandleInput
-   TControlBar  *fEditorBar;       //!Editor control bar
    TCanvasImp   *fCanvasImp;       //!Window system specific canvas implementation
    TContextMenu   *fContextMenu;   //!Context menu pointer
    Bool_t        fBatch;           //!True when in batchmode
@@ -84,6 +83,10 @@ protected:
    Bool_t        fResizeOpaque;    //Resize objects in opaque mode
    Bool_t        fMenuBar;         //False if no menubar is displayed
    static Bool_t fgIsFolder;       //Indicates if canvas can be browsed as a folder
+
+   TObject      *fEdited;          //!Currently edited object        
+   Bool_t        fShowToolBar;     //!Show toolbar                   
+   Bool_t        fShowEditor;      //!Show side frame or old Editor  
 
 private:
    TCanvas(const TCanvas &canvas);  // cannot copy canvas, use TObject::Clone()
@@ -132,7 +135,6 @@ public:
    const char       *GetDISPLAY() const {return fDISPLAY.Data();}
    TContextMenu     *GetContextMenu() const {return fContextMenu;};
    Int_t             GetDoubleBuffer() const {return fDoubleBuffer;}
-   TControlBar      *GetEditorBar() const {return fEditorBar;}
    Int_t             GetEvent() const { return fEvent; }
    Int_t             GetEventX() const { return fEventX; }
    Int_t             GetEventY() const { return fEventY; }
@@ -194,6 +196,16 @@ public:
    virtual void      ToggleEventStatus();
    virtual void      ToggleAutoExec();
    virtual void      Update();
+
+   Bool_t            GetShowToolBar() { return fShowToolBar; }  
+   Bool_t            GetShowEditor()  { return fShowEditor; }   
+   virtual void      ToggleToolBar();                           
+   virtual void      ToggleEditor();                            
+   virtual void      ObjectEdited(TObject *selected, TVirtualPad *selpad); // *SIGNAL*                           //ia
+   TObject          *GetEdited() const { return fEdited; }      
+
+   void              SetEdited(TObject *obj, TVirtualPad *pad); 
+                              // sets edited object and pad and emits a signal
 
    static void       MakeDefCanvas();
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.15 2002/11/27 08:19:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.16 2003/02/21 15:07:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -65,6 +65,9 @@ private:
         Int_t         fOptFit;            //=1 if option Fit is selected
         Int_t         fErrorMarker;       //marker for error bars
         Int_t         fShowEventStatus;   //Show event status panel
+        Int_t         fShowEditor;        //Show pad editor
+        Int_t         fShowToolBar;       //Show toolbar
+
         Int_t         fNumberContours;    //default number of contours for 2-d plots
         TAttText      fAttDate;           //canvas date attribute
         Float_t       fDateX;             //X position of the date in the canvas (in NDC)
@@ -230,6 +233,9 @@ public:
         const char      *GetPaintTextFormat() const {return fPaintTextFormat.Data();}
         void             GetPaperSize(Float_t &xsize, Float_t &ysize);
         Int_t            GetShowEventStatus() const {return fShowEventStatus;}
+        Int_t            GetShowEditor() const {return fShowEditor;}
+        Int_t            GetShowToolBar() const {return fShowToolBar;}
+
         Float_t          GetScreenFactor() const {return fScreenFactor;}
         Color_t          GetStatColor() const {return fStatColor;}
         Color_t          GetStatTextColor() const {return fStatTextColor;}
@@ -365,6 +371,9 @@ public:
         void             SetTitleW(Float_t w=0)     {fTitleW=w;}
         void             SetTitleH(Float_t h=0)     {fTitleH=h;}
         void             ToggleEventStatus() { fShowEventStatus = fShowEventStatus ? 0 : 1; }
+        void             ToggleEditor() { fShowEditor = fShowEditor ? 0 : 1; }
+        void             ToggleToolBar() { fShowToolBar = fShowToolBar ? 0 : 1; }
+
         void             SetPalette(Int_t ncolors=0, Int_t *colors=0);
 
         ClassDef(TStyle,9)  //A collection of all graphics attributes

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.21 2002/09/14 11:12:47 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.22 2002/11/25 16:27:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -169,10 +169,10 @@ public:
    static  void      DrawColorTable();
    virtual void      DrawCrosshair();
    TH1F             *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="");
-   void              DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
-   void              DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2);
-   void              DrawText(Double_t x, Double_t y, const char *text);
-   void              DrawTextNDC(Double_t u, Double_t v, const char *text);
+///   void              DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
+///   void              DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2);
+///   void              DrawText(Double_t x, Double_t y, const char *text);
+///   void              DrawTextNDC(Double_t u, Double_t v, const char *text);
    virtual TObject  *FindObject(const char *name) const;
    virtual TObject  *FindObject(const TObject *obj) const;
    virtual void      UseCurrentStyle();  // *MENU*
@@ -325,10 +325,10 @@ public:
    virtual void      SetVertical(Bool_t vert=kTRUE);
    virtual void      SetView(TView *view) {fView = view;}
    virtual void      Update();
-   virtual void      UpdateFillAttributes(Int_t col, Int_t sty);
-   virtual void      UpdateLineAttributes(Int_t col, Int_t sty, Int_t width);
-   virtual void      UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz);
-   virtual void      UpdateTextAttributes(Int_t align,Float_t angle,Int_t col,Int_t font,Float_t tsize);
+///   virtual void      UpdateFillAttributes(Int_t col, Int_t sty);
+///   virtual void      UpdateLineAttributes(Int_t col, Int_t sty, Int_t width);
+///   virtual void      UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz);
+///   virtual void      UpdateTextAttributes(Int_t align,Float_t angle,Int_t col,Int_t font,Float_t tsize);
    Int_t             UtoAbsPixel(Double_t u) const {return Int_t(fUtoAbsPixelk + u*fUtoPixel);}
    Int_t             VtoAbsPixel(Double_t v) const {return Int_t(fVtoAbsPixelk + v*fVtoPixel);}
    Int_t             UtoPixel(Double_t u) const;

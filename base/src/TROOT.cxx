@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.114 2004/02/13 07:12:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.115 2004/02/13 16:34:41 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1753,10 +1753,6 @@ void TROOT::SetEditorMode(const char *mode)
 {
    // Set editor mode
 
-   const Int_t kButton    = 101;
-   const Int_t kCutG      = 100;
-   const Int_t kCurlyLine = 200;
-   const Int_t kCurlyArc  = 201;
    fEditorMode = 0;
    if (strlen(mode) == 0) return;
    if (!strcmp(mode,"Arc"))      {fEditorMode = kArc;        return;}

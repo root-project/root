@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.27 2004/01/30 18:44:44 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.28 2004/02/13 17:04:35 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -27,7 +27,6 @@
 #include "TGWidget.h"
 #include "TGFileDialog.h"
 #include "TGStatusBar.h"
-
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TCanvas.h"
@@ -40,6 +39,12 @@
 #include "TFile.h"
 #include "TInterpreter.h"
 #include "Riostream.h"
+
+#include "TG3DLine.h"
+#include "TGToolBar.h"
+#include "TVirtualPadEditor.h"
+#include "TRootControlBar.h"
+#include "TGLabel.h"
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"
@@ -82,6 +87,7 @@ enum ERootCanvasCommands {
    kViewOpenGL,
    kInterrupt,
 
+   kOptionToolBar,
    kOptionEventStatus,
    kOptionAutoExec,
    kOptionAutoResize,
@@ -114,6 +120,7 @@ static const char *gOpenTypes[] = { "ROOT files",   "*.root",
 
 static const char *gSaveAsTypes[] = { "PostScript",   "*.ps",
                                       "Encapsulated PostScript", "*.eps",
+                                      "PDF",          "*.pdf",
                                       "SVG",          "*.svg",
                                       "Gif files",    "*.gif",
                                       "Macro files",  "*.C",
@@ -121,6 +128,19 @@ static const char *gSaveAsTypes[] = { "PostScript",   "*.ps",
                                       "All files",    "*",
                                       0,              0 };
 
+static ToolBarData_t gToolBarData[] = {
+  // { filename,      tooltip,            staydown,  id,              button}
+  { "newcanvas.xpm",  "New",              kFALSE,    kFileNewCanvas,  NULL },
+  { "open.xpm",       "Open",             kFALSE,    kFileOpen,       NULL },
+  { "save.xpm",       "Save As",          kFALSE,    kFileSaveAs,     NULL },
+  { "",               "",                 kFALSE,    -1,              NULL },
+  { "interrupt.xpm",  "Interrupt",        kFALSE,    kInterrupt,      NULL },
+  { "refresh.xpm",    "Refresh",          kFALSE,    kOptionRefresh,  NULL },
+  { "",               "",                 kFALSE,    -1,              NULL },
+  { "inspect.xpm",    "Inspect",          kFALSE,    kInspectRoot,    NULL },
+  { "browser.xpm",    "Browser",          kFALSE,    kInspectBrowser, NULL },
+  { 0,                0,                  kFALSE,    0,               NULL }
+};
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -234,7 +254,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fLockState = 0;
 
    // Create menus
-   fFileMenu = new TGPopupMenu(fClient->GetRoot());
+   fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fFileMenu->AddEntry("&New Canvas",         kFileNewCanvas);
    fFileMenu->AddEntry("&Open...",            kFileOpen);
    fFileMenu->AddSeparator();
@@ -256,7 +276,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    //fFileMenu->DefaultEntry(kFileNewCanvas);
    //fFileMenu->DisableEntry(kFileOpen);
 
-   fEditMenu = new TGPopupMenu(fClient->GetRoot());
+   fEditMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fEditMenu->AddEntry("&Editor",             kEditEditor);
    fEditMenu->AddEntry("&Undo",               kEditUndo);
    fEditMenu->AddEntry("Clear &Pad",          kEditClearPad);
@@ -264,7 +284,7 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    fEditMenu->DisableEntry(kEditUndo);
 
-   fViewMenu = new TGPopupMenu(fClient->GetRoot());
+   fViewMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fViewMenu->AddEntry("&Colors",             kViewColors);
    fViewMenu->AddEntry("&Fonts",              kViewFonts);
    fViewMenu->AddEntry("&Markers",            kViewMarkers);
@@ -276,7 +296,8 @@ void TRootCanvas::CreateCanvas(const char *name)
    fViewMenu->AddSeparator();
    fViewMenu->AddEntry("Interrupt",           kInterrupt);
 
-   fOptionMenu = new TGPopupMenu(fClient->GetRoot());
+   fOptionMenu = new TGPopupMenu(fClient->GetDefaultRoot());
+   fOptionMenu->AddEntry("&Toolbar",              kOptionToolBar);
    fOptionMenu->AddEntry("&Event Status",         kOptionEventStatus);
    fOptionMenu->AddEntry("&Pad Auto Exec",        kOptionAutoExec);
    fOptionMenu->AddSeparator();
@@ -302,14 +323,14 @@ void TRootCanvas::CreateCanvas(const char *name)
    if (gROOT->GetEditHistograms())
       fOptionMenu->CheckEntry(kOptionCanEdit);
 
-   fInspectMenu = new TGPopupMenu(fClient->GetRoot());
+   fInspectMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fInspectMenu->AddEntry("&ROOT",              kInspectRoot);
    fInspectMenu->AddEntry("&Start Browser",     kInspectBrowser);
 
-   fClassesMenu = new TGPopupMenu(fClient->GetRoot());
+   fClassesMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fClassesMenu->AddEntry("&Class Tree",        kClassesTree);
 
-   fHelpMenu = new TGPopupMenu(fClient->GetRoot());
+   fHelpMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fHelpMenu->AddEntry("&About ROOT...",        kHelpAbout);
    fHelpMenu->AddSeparator();
    fHelpMenu->AddEntry("Help On Canvas...",     kHelpOnCanvas);
@@ -345,15 +366,46 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    AddFrame(fMenuBar, fMenuBarLayout);
 
+   // Create toolbar
+   
+   fToolBarSep = new TGHorizontal3DLine(this);
+   fToolBar = new TGToolBar(this, 60, 20, kHorizontalFrame);
+   fToolBarLayout = new TGLayoutHints(kLHintsTop |  kLHintsExpandX , 0, 0, 2, 2);
+
+   int spacing = 8;
+   for (int i = 0; gToolBarData[i].fPixmap; i++) {
+      if (strlen(gToolBarData[i].fPixmap) == 0) {
+         spacing = 8;
+         continue;
+      }
+      fToolBar->AddButton(this, &gToolBarData[i], spacing);
+      spacing = 0;
+   }
+
+   AddFrame(fToolBarSep, fToolBarLayout);
+   AddFrame(fToolBar, fToolBarLayout);
+
+   fMainFrame = new TGCompositeFrame(this, GetWidth() + 4, GetHeight() + 4, 
+                                      kHorizontalFrame);
+   fMainFrameLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
+
+   // Create editor frame that will host the pad editor
+   fEditorFrame = new TGCompositeFrame(fMainFrame, 110, 20, 0);
+   fEditorLayout = new TGLayoutHints(kLHintsExpandY | kLHintsLeft , 0, 2, 2, 2);
+   fMainFrame->AddFrame(fEditorFrame, fEditorLayout);
+
    // Create canvas and canvas container that will host the ROOT graphics
-   fCanvasWindow = new TGCanvas(this, GetWidth()+4, GetHeight()+4,
+
+   fCanvasWindow = new TGCanvas(fMainFrame, GetWidth()+4, GetHeight()+4,
                                 kSunkenFrame | kDoubleBorder);
    fCanvasID = gVirtualX->InitWindow((ULong_t)fCanvasWindow->GetViewPort()->GetId());
    Window_t win = gVirtualX->GetWindowID(fCanvasID);
    fCanvasContainer = new TRootContainer(this, win, fCanvasWindow->GetViewPort());
    fCanvasWindow->SetContainer(fCanvasContainer);
-   fCanvasLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
-   AddFrame(fCanvasWindow, fCanvasLayout);
+   fCanvasLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY | kLHintsRight);
+
+   fMainFrame->AddFrame(fCanvasWindow, fCanvasLayout);
+   AddFrame(fMainFrame, fMainFrameLayout);
 
    // Create status bar
    int parts[] = { 33, 10, 10, 47 };
@@ -374,8 +426,18 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    MapSubwindows();
 
-   // by default status bar is hidden
+   fEditorFrame->SetEditable();
+   gPad = Canvas();
+   
+   fEditor = TVirtualPadEditor::LoadEditor();
+   
+   fEditorFrame->SetEditable(0);
+ 
+   // by default status bar, tool bar and pad editor are hidden
    HideFrame(fStatusBar);
+   
+   ShowToolBar(fCanvas->GetShowToolBar());
+   ShowEditor(fCanvas->GetShowEditor());
 
    // we need to use GetDefaultSize() to initialize the layout algorithm...
    Resize(GetDefaultSize());
@@ -391,6 +453,17 @@ TRootCanvas::~TRootCanvas()
    delete fStatusBarLayout;
    delete fCanvasContainer;
    delete fCanvasWindow;
+
+   delete fEditor;
+
+   delete fEditorFrame;
+   delete fEditorLayout;
+   delete fMainFrame;
+   delete fMainFrameLayout;
+   delete fToolBarSep;
+   delete fToolBar;
+   delete fToolBarLayout;
+
    delete fFileMenu;
    delete fEditMenu;
    delete fViewMenu;
@@ -458,7 +531,7 @@ void TRootCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
    gVirtualX->GetWindowSize(fId, x, y, w, h);
 
    Window_t childdum;
-   gVirtualX->TranslateCoordinates(fId, gClient->GetRoot()->GetId(),
+   gVirtualX->TranslateCoordinates(fId, gClient->GetDefaultRoot()->GetId(),
                                    0, 0, x, y, childdum);
 }
 
@@ -498,7 +571,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         TGFileInfo fi;
                         fi.fFileTypes = gOpenTypes;
                         fi.fIniDir    = StrDup(dir);
-                        new TGFileDialog(fClient->GetRoot(), this, kFDOpen,&fi);
+                        new TGFileDialog(fClient->GetDefaultRoot(), this, kFDOpen,&fi);
                         if (!fi.fFilename) return kTRUE;
                         dir = fi.fIniDir;
                         new TFile(fi.fFilename, "update");
@@ -510,12 +583,13 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         TGFileInfo fi;
                         fi.fFileTypes = gSaveAsTypes;
                         fi.fIniDir    = StrDup(dir);
-                        new TGFileDialog(fClient->GetRoot(), this, kFDSave,&fi);
+                        new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave,&fi);
                         if (!fi.fFilename) return kTRUE;
                         dir = fi.fIniDir;
                         if (strstr(fi.fFilename, ".root") ||
                             strstr(fi.fFilename, ".ps")   ||
                             strstr(fi.fFilename, ".eps")  ||
+                            strstr(fi.fFilename, ".pdf")  ||
                             strstr(fi.fFilename, ".svg")  ||
                             strstr(fi.fFilename, ".gif"))
                            fCanvas->SaveAs(fi.fFilename);
@@ -558,7 +632,8 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   // Handle Edit menu items...
                   case kEditEditor:
-                     fCanvas->EditorBar();
+                     fCanvas->ToggleEditor();
+                     ShowEditor(fCanvas->GetShowEditor());
                      break;
                   case kEditUndo:
                      // noop
@@ -610,15 +685,13 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
 
                   // Handle Option menu items...
+                  case kOptionToolBar:
+                     fCanvas->ToggleToolBar();
+                     ShowToolBar(fCanvas->GetShowToolBar());
+                     break;
                   case kOptionEventStatus:
                      fCanvas->ToggleEventStatus();
-                     if (fCanvas->GetShowEventStatus()) {
-                        ShowFrame(fStatusBar);
-                        fOptionMenu->CheckEntry(kOptionEventStatus);
-                     } else {
-                        HideFrame(fStatusBar);
-                        fOptionMenu->UnCheckEntry(kOptionEventStatus);
-                     }
+                     ShowStatusBar(fCanvas->GetShowEventStatus());
                      break;
                   case kOptionAutoExec:
                      fCanvas->ToggleAutoExec();
@@ -908,11 +981,8 @@ void TRootCanvas::ShowMenuBar(Bool_t show)
 {
    // Show or hide menubar.
 
-   if (show) {
-      ShowFrame(fMenuBar);
-   } else {
-      HideFrame(fMenuBar);
-   }
+   if (show)  ShowFrame(fMenuBar);
+   else       HideFrame(fMenuBar);
 }
 
 //______________________________________________________________________________
@@ -926,6 +996,36 @@ void TRootCanvas::ShowStatusBar(Bool_t show)
    } else {
       HideFrame(fStatusBar);
       fOptionMenu->UnCheckEntry(kOptionEventStatus);
+   }
+}
+
+//______________________________________________________________________________
+void TRootCanvas::ShowEditor(Bool_t show)
+{
+   // Show or hide side frame.
+
+   if (show) {
+      fMainFrame->ShowFrame(fEditorFrame);
+      fEditMenu->CheckEntry(kEditEditor);
+   } else {
+      fMainFrame->HideFrame(fEditorFrame);
+      fEditMenu->UnCheckEntry(kEditEditor);
+   }
+}
+
+//______________________________________________________________________________
+void TRootCanvas::ShowToolBar(Bool_t show)
+{
+   // Show or hide toolbar.
+
+   if (show) {
+      ShowFrame(fToolBar);
+      ShowFrame(fToolBarSep);
+      fOptionMenu->CheckEntry(kOptionToolBar);
+   } else {
+      HideFrame(fToolBar);
+      HideFrame(fToolBarSep);
+      fOptionMenu->UnCheckEntry(kOptionToolBar);
    }
 }
 

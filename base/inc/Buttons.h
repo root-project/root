@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name$:$Id$ */
+/* @(#)root/base:$Name:  $:$Id: Buttons.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -32,7 +32,8 @@ enum EEditMode {
    kGraph     = 19, kMarker    = 20, kPolyMarker= 21,
    kPolyLine3D= 22, kWbox      = 23, kGaxis     = 24,
    kF1        = 25, kF2        = 26, kF3        = 27,
-   kDiamond   = 28, kPolyMarker3D = 29
+   kDiamond   = 28, kPolyMarker3D = 29, kButton = 101,
+   kCutG      =100, kCurlyLine =200, kCurlyArc  = 201
 };
 
 #endif

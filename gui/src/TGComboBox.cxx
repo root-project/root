@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.11 2003/11/07 22:47:53 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.12 2004/02/18 16:17:33 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -48,7 +48,11 @@
 
 
 ClassImp(TGComboBoxPopup)
-ClassImpQ(TGComboBox)
+ClassImp(TGComboBox)
+
+ClassImp(TGLineStyleComboBox)
+ClassImp(TGLineWidthComboBox)
+ClassImp(TGFontTypeComboBox)
 
 //______________________________________________________________________________
 TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
@@ -343,4 +347,119 @@ void TGComboBox::SavePrimitive(ofstream &out, Option_t *option)
        << GetHeight() << ");" << endl;
    out << "   " << GetName() << "->Select(" << GetSelected() << ");" << endl;
 
+}
+
+//______________________________________________________________________________
+TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
+                                         UInt_t options, Pixel_t back) 
+   : TGComboBox(p, id, options, back)
+{
+   // Create a line style combo box.
+
+   SetTopEntry(new TGLineStyleLBEntry(this, 0, 0),
+               new TGLayoutHints(kLHintsLeft | kLHintsExpandY | kLHintsExpandX));
+   fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
+
+   for (int i = 1; i <= 4; i++)
+      AddEntry(new TGLineStyleLBEntry(GetListBox()->GetContainer(), i, i), 
+               new TGLayoutHints(kLHintsTop | kLHintsExpandX));
+   fComboFrame->SetHeight(25);
+   Select(1);  // to have first entry selected
+}
+         
+//______________________________________________________________________________
+Bool_t TGLineStyleComboBox::HandleButton(Event_t *event)
+{
+   // Handle mouse button events in a line style combo box.
+
+   if (event->fType == kButtonPress) {
+      if ((Window_t)event->fUser[0] == fDDButton->GetId())   // fUser[0] = child window
+         fDDButton->SetState(kButtonDown);
+   } else {
+      int      ax, ay;
+      Window_t wdummy;
+      fDDButton->SetState(kButtonUp);
+      gVirtualX->TranslateCoordinates(fId,(fComboFrame->GetParent())->GetId(),
+                                      0, fHeight, ax, ay, wdummy);
+      fComboFrame->PlacePopup(ax, ay, fWidth-2, fSelEntry->GetDefaultHeight()*4);
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
+                                         UInt_t options, Pixel_t back) 
+   : TGComboBox(p, id, options, back)
+{
+   // Create a line width combo box.
+
+   SetTopEntry(new TGLineWidthLBEntry(this, 0, 0),
+               new TGLayoutHints(kLHintsLeft | kLHintsExpandY | kLHintsExpandX));
+   fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
+
+   for (int i = 0; i < 16; i++)
+      AddEntry(new TGLineWidthLBEntry(GetListBox()->GetContainer(), i, i), 
+               new TGLayoutHints(kLHintsTop | kLHintsExpandX));
+   Select(1);  // to have first entry selected
+}
+
+
+const char *fonts[][2] = {    //   unix name,     name
+   {"",                                            ""                         }, //not used
+   {"-*-times-medium-i-*-*-12-*-*-*-*-*-*-*",      "1. times italic"          },
+   {"-*-times-bold-r-*-*-12-*-*-*-*-*-*-*",        "2. times bold"            },
+   {"-*-times-bold-i-*-*-12-*-*-*-*-*-*-*",        "3. times bold italic"     },
+   {"-*-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*",  "4. helvetica"             },
+   {"-*-helvetica-medium-o-*-*-12-*-*-*-*-*-*-*",  "5. helvetica italic"      },
+   {"-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*",    "6. helvetica bold"        },
+   {"-*-helvetica-bold-o-*-*-12-*-*-*-*-*-*-*",    "7. helvetica bold italic" },
+   {"-*-courier-medium-r-*-*-12-*-*-*-*-*-*-*",    "8. courier"               },
+   {"-*-courier-medium-o-*-*-12-*-*-*-*-*-*-*",    "9. courier italic"        },
+   {"-*-courier-bold-r-*-*-12-*-*-*-*-*-*-*",      "10. courier bold"         },
+   {"-*-courier-bold-o-*-*-12-*-*-*-*-*-*-*",      "11. courier bold italic"  },
+   {"-*-symbol-medium-r-*-*-12-*-*-*-*-*-*-*",     "12. symbol"               },
+   {"-*-times-medium-r-*-*-12-*-*-*-*-*-*-*",      "13. times"                },
+   {NULL, NULL}
+};
+
+//______________________________________________________________________________
+TGFontTypeComboBox::TGFontTypeComboBox(const TGWindow *p, Int_t id,
+                                       UInt_t options, Pixel_t back) :
+   TGComboBox(p, id, options, back)
+{
+   // Create a text font combo box.
+
+   int noFonts = 0;
+
+   for (int i = 1; fonts[i][0] != 0 && noFonts < maxFonts; i++) {
+
+      fFonts[noFonts] = gVirtualX->LoadQueryFont(fonts[i][0]);
+
+      if (fFonts[noFonts] == 0)
+         fFonts[noFonts] = TGTextLBEntry::GetDefaultFontStruct();
+
+      GCValues_t gval;
+      gval.fMask = kGCFont;
+      gval.fFont = gVirtualX->GetFontHandle(fFonts[noFonts]);
+
+      AddEntry(new TGTextLBEntry(GetListBox()->GetContainer(), 
+               new TGString(fonts[i][1]), i, 
+               gClient->GetGC(&gval, kTRUE)->GetGC(), fFonts[noFonts]), 
+               new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX));
+      noFonts++;
+   }
+   
+   if (noFonts < maxFonts - 1)
+      ;
+   fFonts[noFonts] = 0;
+   Select(1);  // to have first entry selected
+}
+
+//______________________________________________________________________________
+TGFontTypeComboBox::~TGFontTypeComboBox()
+{
+   // Text font combo box dtor.
+
+   for (int i = 0; i < maxFonts && fFonts[i] != 0; i++)
+      gVirtualX->DeleteFont(fFonts[i]);
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.43 2004/01/21 12:34:28 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.44 2004/01/28 19:06:05 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2298,7 +2298,6 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
       fname = "Rootdialog.C";
       lenfile = 10;
    }
-   Printf("%s", fname);
 
    out.open(fname, ios::out);
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.27 2004/01/19 14:00:47 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.28 2004/01/22 14:36:54 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -189,7 +189,7 @@ TGPopupMenu *TGMenuBar::AddPopup(const TString &s, Int_t padleft, Int_t padright
                                                padtop, padbottom);
    fTrash->Add(l);
 
-   TGPopupMenu *menu = new TGPopupMenu(fClient->GetRoot());
+   TGPopupMenu *menu = new TGPopupMenu(fClient->GetDefaultRoot());
    AddPopup(new TGHotString(s), menu, l, 0);
    fTrash->Add(menu);
    return menu;

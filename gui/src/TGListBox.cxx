@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.14 2003/12/18 13:17:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.15 2003/12/18 15:14:29 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -48,10 +48,15 @@
 
 const TGFont *TGTextLBEntry::fgDefaultFont = 0;
 TGGC         *TGTextLBEntry::fgDefaultGC = 0;
+TGGC         *TGLineStyleLBEntry::fgGC = 0;
+const TGFont *TGLineStyleLBEntry::fgFont = 0;
+TGGC         *TGLineWidthLBEntry::fgGC = 0;
+const TGFont *TGLineWidthLBEntry::fgFont = 0;
 
 
 ClassImp(TGLBEntry)
 ClassImp(TGTextLBEntry)
+ClassImp(TGLineStyleLBEntry)
 ClassImp(TGLBContainer)
 ClassImpQ(TGListBox)
 
@@ -175,6 +180,213 @@ const TGGC &TGTextLBEntry::GetDefaultGC()
    if (!fgDefaultGC)
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
    return *fgDefaultGC;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLineStyleLBEntry                                                   //
+//                                                                      //
+// Line style listbox entries.                                          //
+// A TGLineStyleLBEntry is for internal use.                            //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+TGLineStyleLBEntry::TGLineStyleLBEntry(const TGWindow *p, Style_t s, Int_t id,
+                                       UInt_t options, ULong_t back) :
+   TGLBEntry(p, id, options, back)
+{
+   // Create the line style listbox entry
+
+   if (!fgFont)
+      fgFont = gClient->GetResourcePool()->GetDefaultFont();
+   if (!fgGC)
+   {
+      GCValues_t gcv;
+      gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle;
+      gcv.fLineStyle  = kLineSolid;
+      gcv.fLineWidth  = 0;
+      gcv.fFillStyle  = kFillSolid;
+      fgGC = gClient->GetGC(&gcv, kTRUE);
+   }
+   
+   fLineStyle = s;
+   int max_ascent, max_descent;
+   
+   fTWidth  = gVirtualX->TextWidth(fgFont->GetFontStruct(), "8", 1);
+   fTWidth += 15;                     // for drawing
+   gVirtualX->GetFontProperties(fgFont->GetFontStruct(), 
+                                max_ascent, max_descent);
+   fTHeight = max_ascent + max_descent;
+
+   Resize(fTWidth, fTHeight +1);
+}
+
+//______________________________________________________________________________
+TGLineStyleLBEntry::~TGLineStyleLBEntry()
+{
+   // Delete line style listbox entry.
+}
+
+//______________________________________________________________________________
+void TGLineStyleLBEntry::SetContextLineStyle(Style_t linestyle)
+{
+   // The linestyle corresponds to TPad line style
+
+   static const char* dashed = "\x5\x5";
+   static const char* dotted= "\x1\x3";
+   static const char* dasheddotted = "\x5\x3\x1\x3";
+
+   if (linestyle <= 1) 
+   {
+      fgGC->SetDashOffset(0);
+      fgGC->SetLineStyle(kLineSolid);
+   } else {
+      fgGC->SetLineStyle(kLineOnOffDash);
+      fgGC->SetDashOffset(0);
+      switch (linestyle) {
+         case 2:
+            fgGC->SetDashList(dashed, 2);
+            break;
+         case 3:
+            fgGC->SetDashList(dotted, 2);
+            break;
+         case 4:
+            fgGC->SetDashList(dasheddotted, 4);
+            break;
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TGLineStyleLBEntry::DoRedraw()
+{
+   // Redraw text listbox entry.
+
+   int x, y, max_ascent, max_descent;
+   char a[10];
+   sprintf(a, "%d", (int) fLineStyle);
+
+   x = 3;
+   y = (fHeight - fTHeight) >> 1;
+
+   gVirtualX->GetFontProperties(fgFont->GetFontStruct(), max_ascent, max_descent);
+
+   if (fActive) {
+      SetBackgroundColor(fgDefaultSelectedBackground);
+      gVirtualX->ClearWindow(fId);
+      gVirtualX->SetForeground(fgGC->GetGC(), fClient->GetResourcePool()->GetSelectedFgndColor());
+   } else {
+      SetBackgroundColor(fBkcolor);
+      gVirtualX->ClearWindow(fId);
+      gVirtualX->SetForeground(fgGC->GetGC(), fgBlackPixel);
+   }
+   if (fLineStyle != 0)
+   {
+      SetContextLineStyle(fLineStyle);
+      gVirtualX->DrawLine(fId, fgGC->GetGC(), x + 15, fHeight/2, 
+                          fWidth - 5, fHeight/2);
+      gVirtualX->DrawString(fId, fgGC->GetGC(), x ,
+                            y + max_ascent, a, strlen(a));
+   }
+}
+
+//______________________________________________________________________________
+void TGLineStyleLBEntry::SetStyle(Style_t style)
+{
+   // Set or change line style in an entry.
+
+   fLineStyle = style;
+   fClient->NeedRedraw(this);
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLineWidthLBEntry                                                   //
+//                                                                      //
+// Line Width listbox entries.                                          //
+// A TGLineWidthLBEntry is for internal use.                            //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+TGLineWidthLBEntry::TGLineWidthLBEntry(const TGWindow *p, UInt_t w, Int_t id,
+                                       UInt_t options, ULong_t back) :
+   TGLBEntry(p, id, options, back)
+{
+   // create the line style listbox entry
+
+   if (!fgFont)
+      fgFont = gClient->GetResourcePool()->GetDefaultFont();
+   if (!fgGC)
+   {
+      GCValues_t gcv;
+      gcv.fMask      = kGCLineStyle | kGCLineWidth  | kGCFillStyle;
+      gcv.fLineStyle = kLineSolid;
+      gcv.fLineWidth = 0;
+      gcv.fFillStyle = kFillSolid;
+      fgGC = gClient->GetGC(&gcv, kTRUE);
+   }
+   
+   fLineWidth   = w;
+   int max_ascent, max_descent;
+   
+   fTWidth  = gVirtualX->TextWidth(fgFont->GetFontStruct(), "88", 1);
+   fTWidth += 15;                     // for drawing
+   gVirtualX->GetFontProperties(fgFont->GetFontStruct(),max_ascent,max_descent);
+   fTHeight = max_ascent + max_descent;
+   Resize(fTWidth, fTHeight + 1);
+}
+
+//______________________________________________________________________________
+TGLineWidthLBEntry::~TGLineWidthLBEntry()
+{
+   // Delete line style listbox entry.
+}
+
+//______________________________________________________________________________
+void TGLineWidthLBEntry::DoRedraw()
+{
+   // Redraw text listbox entry.
+
+   int x, y, max_ascent, max_descent;
+   char a[10];
+   sprintf(a, "%d", (int) fLineWidth);
+
+   x = 3;
+//   y = (fHeight - fTHeight) >> 1;
+
+   gVirtualX->GetFontProperties(fgFont->GetFontStruct(), 
+                                max_ascent, max_descent);
+
+   y = (fHeight + max_ascent - max_descent) / 2;
+
+   if (fActive) {
+      SetBackgroundColor(fgDefaultSelectedBackground);
+      gVirtualX->ClearWindow(fId);
+      gVirtualX->SetForeground(fgGC->GetGC(), 
+                           fClient->GetResourcePool()->GetSelectedFgndColor());
+   } else {
+      SetBackgroundColor(fBkcolor);
+      gVirtualX->ClearWindow(fId);
+      gVirtualX->SetForeground(fgGC->GetGC(), fgBlackPixel);
+   }
+
+   fgGC->SetLineWidth(fLineWidth);
+   gVirtualX->DrawLine(fId, fgGC->GetGC(), x + 15, fHeight/2, 
+                       fWidth - 5, fHeight/2);
+   gVirtualX->DrawString(fId, fgGC->GetGC(), x , y, a, strlen(a));
+
+}
+
+//______________________________________________________________________________
+void TGLineWidthLBEntry::SetWidth(Int_t width)
+{
+   // Set or change line witdh in an entry.
+
+   fLineWidth = width;
+   fClient->NeedRedraw(this);
 }
 
 
