@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.15 2000/09/29 07:37:44 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.16 2000/10/05 08:52:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -797,19 +797,31 @@ void TCanvas::EnterLeave(TPad *prevSelPad, TObject *prevSelObj)
 
    if (prevSelObj == fSelected) return;
 
-   TPad *padsav = (TPad *)gPad;
+   TPad *padsav  = (TPad *)gPad;
+   Int_t sevent  = fEvent;
+   Int_t seventx = fEventX;
+   Int_t seventy = fEventY;
+   fEventX = fEventY = 0;
 
    if (prevSelObj) {
       gPad = prevSelPad;
       prevSelObj->ExecuteEvent(kMouseLeave, 0, 0);
+      fEvent = kMouseLeave;
+      if (fAutoExec) RunAutoExec();
    }
 
    gPad = fSelectedPad;
 
-   if (fSelected)
+   if (fSelected) {
       fSelected->ExecuteEvent(kMouseEnter, 0, 0);
+      fEvent = kMouseEnter;
+      if (fAutoExec) RunAutoExec();
+   }
 
-   gPad = padsav;
+   fEvent  = sevent;
+   fEventX = seventx;
+   fEventY = seventy;
+   gPad    = padsav;
 }
 
 //______________________________________________________________________________
