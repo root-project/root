@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.12 2001/04/25 15:46:44 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.13 2001/04/30 15:08:50 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -31,7 +31,7 @@ class TStreamerInfo;
 class TBranchElement : public TBranch {
 
 protected:
-    enum { kWarn = BIT(12) };
+    enum { kWarn = BIT(13), kBranchFolder = BIT(14) };
 
     TString             fClassName;     //Class name of referenced object
     TString             fParentName;    //Name of parent class
@@ -70,6 +70,7 @@ public:
     TBranchElement  *GetSubBranch(const TBranchElement *br) const;
     virtual const char *GetTypeName() const;
             Double_t GetValue(Int_t i, Int_t len) const;
+            Bool_t   IsBranchFolder() const {return TestBit(kBranchFolder);}
             Bool_t   IsFolder() const;
     virtual void     Print(Option_t *option="") const;
             void     PrintValue(Int_t i) const;
@@ -79,6 +80,7 @@ public:
     virtual void     SetAutoDelete(Bool_t autodel=kTRUE);
     virtual void     SetBasketSize(Int_t buffsize);
     virtual void     SetBranchCount(TBranchElement *bre);
+    virtual void     SetBranchFolder() {SetBit(kBranchFolder);}
     virtual void     SetClassName(const char *name) {fClassName=name;}
     virtual void     SetParentName(const char *name) {fParentName=name;}
     virtual void     SetType(Int_t btype) {fType=btype;}
