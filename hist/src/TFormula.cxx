@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.63 2004/01/06 07:44:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.65 2004/01/10 10:52:29 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2807,6 +2807,11 @@ void TFormula::Convert(UInt_t /* fromVersion */, Int_t *oldOper)
    // Convert the fOper of a TFormula version fromVersion to the current in memory version
 
    Assert(oldOper==fOper); // the argument is only for derived class and has to match fOper
+
+   if (fActions==0) {
+      fActions = new Short_t[fNoper];
+      fActionParams = new Short_t[fNoper];
+   }
    
    enum {
       kOldexpo         =  1000,
