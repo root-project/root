@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:$:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.1 2003/04/04 00:40:27 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -185,7 +185,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
    TTime tdiff = fEndTime - fStartTime;
    Float_t eta = 0;
    if (processed)
-      eta = (Float_t(Long_t(tdiff))*total/Float_t(processed) - Long_t(tdiff))/1000.;
+      eta = ((Float_t)((Long_t)tdiff)*total/Float_t(processed) - Long_t(tdiff))/1000.;
 
    if (processed == total) {
       fProcessed->SetText("Processed:");
