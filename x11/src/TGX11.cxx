@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.32 2003/05/28 11:25:20 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.34 2003/08/23 00:08:13 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -3220,8 +3220,8 @@ Int_t TGX11::WriteGIF(char *name)
 }
 
 //______________________________________________________________________________
-void TGX11::PutImage(int offset,int itran,int x0,int y0,int nx,int ny,
-                     int xmin,int ymin,int xmax,int ymax, unsigned char *image)
+void TGX11::PutImage(int offset,int itran,int x0,int y0,int nx,int ny,int xmin,
+                     int ymin,int xmax,int ymax, unsigned char *image,Drawable_t wid)
 {
    // Draw image.
 
@@ -3230,6 +3230,13 @@ void TGX11::PutImage(int offset,int itran,int x0,int y0,int nx,int ny,
    unsigned char *jimg, *jbase, icol;
    int           nlines[256];
    XSegment      lines[256][MAX_SEGMENT];
+   Drawable_t    id;
+
+   if (wid) {
+      id = wid;
+   } else {
+      id = gCws->drawing;
+   }
 
    for (i = 0; i < 256; i++) nlines[i] = 0;
 
@@ -3247,7 +3254,7 @@ void TGX11::PutImage(int offset,int itran,int x0,int y0,int nx,int ny,
                lines[icol][n].x2 = x-1;  lines[icol][n].y2 = y;
                if (nlines[icol] == MAX_SEGMENT) {
                   SetColor(*gGCline,(int)icol+offset);
-                  XDrawSegments(fDisplay,gCws->drawing,*gGCline,&lines[icol][0],
+                  XDrawSegments(fDisplay,id,*gGCline,&lines[icol][0],
                                 MAX_SEGMENT);
                   nlines[icol] = 0;
                }
@@ -3261,7 +3268,7 @@ void TGX11::PutImage(int offset,int itran,int x0,int y0,int nx,int ny,
          lines[icol][n].x2 = x-1;  lines[icol][n].y2 = y;
          if (nlines[icol] == MAX_SEGMENT) {
             SetColor(*gGCline,(int)icol+offset);
-            XDrawSegments(fDisplay,gCws->drawing,*gGCline,&lines[icol][0],
+            XDrawSegments(fDisplay,id,*gGCline,&lines[icol][0],
                           MAX_SEGMENT);
             nlines[icol] = 0;
          }
@@ -3271,26 +3278,28 @@ void TGX11::PutImage(int offset,int itran,int x0,int y0,int nx,int ny,
    for (i = 0; i < 256; i++) {
       if (nlines[i] != 0) {
          SetColor(*gGCline,i+offset);
-         XDrawSegments(fDisplay,gCws->drawing,*gGCline,&lines[i][0],nlines[i]);
+         XDrawSegments(fDisplay,id,*gGCline,&lines[i][0],nlines[i]);
       }
    }
 }
 
 //______________________________________________________________________________
-void TGX11::ReadGIF(int x0, int y0, const char *file)
+Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
 {
-   // Load the gif a file in the current active window.
+   // If id is NULL - loads the specified gif file at position [x0,y0] in the 
+   // current window. Otherwise creates pixmap from gif file 
 
    FILE  *fd;
    Seek_t filesize;
    unsigned char *GIFarr, *PIXarr, R[256], G[256], B[256], *j1, *j2, icol;
    int   i, j, k, width, height, ncolor, irep, offset;
    float rr, gg, bb;
+   Pixmap_t pic = 0;
 
    fd = fopen(file, "r");
    if (!fd) {
       Error("ReadGIF", "unable to open GIF file");
-      return;
+      return pic;
    }
 
    fseek(fd, 0L, 2);
@@ -3299,24 +3308,24 @@ void TGX11::ReadGIF(int x0, int y0, const char *file)
 
    if (!(GIFarr = (unsigned char *) calloc(filesize+256,1))) {
       Error("ReadGIF", "unable to allocate array for gif");
-      return;
+      return pic;
    }
 
    if (fread(GIFarr, filesize, 1, fd) != 1) {
       Error("ReadGIF", "GIF file read failed");
-      return;
+      return pic;
    }
 
    irep = GIFinfo(GIFarr, &width, &height, &ncolor);
-   if (irep != 0) return;
+   if (irep != 0) return pic;
 
    if (!(PIXarr = (unsigned char *) calloc((width*height),1))) {
       Error("ReadGIF", "unable to allocate array for image");
-      return;
+      return pic;
    }
 
    irep = GIFdecode(GIFarr, PIXarr, &width, &height, &ncolor, R, G, B);
-   if (irep != 0) return;
+   if (irep != 0) return pic;
 
    // S E T   P A L E T T E
 
@@ -3339,5 +3348,10 @@ void TGX11::ReadGIF(int x0, int y0, const char *file)
          icol = *j1; *j1++ = *j2; *j2++ = icol;
       }
    }
-   PutImage(offset,-1,x0,y0,width,height,0,0,width-1,height-1,PIXarr);
+   if (id) pic = CreatePixmap(id, width, height);
+   PutImage(offset,-1,x0,y0,width,height,0,0,width-1,height-1,PIXarr,pic);
+
+   if (pic) return pic;
+   else if (gCws->drawing) return  (Pixmap_t)gCws->drawing;
+   else return 0;
 }

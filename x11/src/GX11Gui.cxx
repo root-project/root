@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.30 2003/05/28 11:26:51 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.31 2003/05/28 13:47:07 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -1062,8 +1062,6 @@ void TGX11::MapPictureAttributes(PictureAttributes_t &attr, XpmAttributes &xpmat
       if ((xmask & XpmColormap)) {
          mask |= kPAColormap;
          attr.fColormap = (Colormap_t)xpmattr.colormap;
-      }
-      if ((xmask & XpmDepth)) {
          mask |= kPADepth;
          attr.fDepth = xpmattr.depth;
       }
@@ -1103,6 +1101,15 @@ Bool_t TGX11::CreatePictureFromFile(Drawable_t id, const char *filename,
    // Create a picture pixmap from data on file. The picture attributes
    // are used for input and output. Returns kTRUE in case of success,
    // kFALSE otherwise. If mask does not exist it is set to kNone.
+
+   if (strstr(filename, ".gif") || strstr(filename, ".GIF")) {
+      pict = ReadGIF(0, 0, filename, id);
+      pict_mask = kNone;
+      attr.fDepth = fDepth;
+      Int_t dummy;
+      GetWindowSize(pict, dummy, dummy, attr.fWidth, attr.fHeight);
+      return kTRUE;
+   }
 
 #ifdef XpmVersion
    XpmAttributes xpmattr;

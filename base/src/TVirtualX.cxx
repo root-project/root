@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.3 2003/11/14 17:34:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.4 2003/11/25 15:51:24 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -449,9 +449,13 @@ void TVirtualX::QueryPointer(Int_t &ix, Int_t &iy)
 }
 
 //______________________________________________________________________________
-void TVirtualX::ReadGIF(Int_t /*x0*/, Int_t /*y0*/, const char */*file*/)
+Pixmap_t TVirtualX::ReadGIF(Int_t /*x0*/, Int_t /*y0*/, const char */*file*/,  
+                            Window_t /*id*/)
 {
-   // Loads the specified gif file at position [x0,y0] in the current window.
+   // If id is NULL - loads the specified gif file at position [x0,y0] in the 
+   // current window. Otherwise creates pixmap from gif file
+
+   return 0;
 }
 
 //______________________________________________________________________________

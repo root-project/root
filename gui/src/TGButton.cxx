@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.22 2003/12/15 08:54:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.23 2003/12/15 18:04:27 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -653,7 +653,6 @@ void TGPictureButton::DoRedraw()
    int x = (fWidth - fTWidth) >> 1;
    int y = (fHeight - fTHeight) >> 1;
 
-   TGFrame::DoRedraw();
    if (fState == kButtonDown || fState == kButtonEngaged) { ++x; ++y; }
    if (fState == kButtonEngaged) {
       gVirtualX->FillRectangle(fId, GetHibckgndGC()(), 2, 2, fWidth-4, fHeight-4);
