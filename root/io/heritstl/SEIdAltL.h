@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-// $Id: SEIdAltL.h,v 1.12 2001/12/10 20:37:10 rhatcher Exp $
+// $Id: SEIdAltL.h,v 1.1 2004/03/25 21:20:42 pcanal Exp $
 //
 // SEIdAltL
 //
@@ -24,8 +24,8 @@ class PlexCalib;
 
 class SEIdAltL : public std::vector<SEIdAltLItem> {
   
-   friend class std::ostream& operator<<(std::ostream& os, 
-					 const SEIdAltL& alt);
+   friend std::ostream& operator<<(std::ostream& os, 
+                                   const SEIdAltL& alt);
  
 public:
 

@@ -102,12 +102,23 @@ void zmumuSelDraw(TTree* t0){
    
    zfriendtree->RemoveFriend(t0);
     
+
+   // Test a chain with a TTree as friend
    t0->AddFriend(zfriendtree);
 //    cout << "(TTree*)" << (void*)zfriendtree << endl;
+
+//    cout << "t0 has " << t0->GetEntries() << " entries\n";
+//    cout << "zfriendtree has " << zfriendtree->GetEntries() << " entries\n";
+//    t0->ls();
 
    t0->LoadTree(100);
    if (zfriendtree->GetReadEntry()!=100) {
       cerr << "friend tree not loaded properly " << zfriendtree->GetReadEntry() << " instead of 100 " << endl;
+   }
+
+   t0->LoadTree(103);
+   if (zfriendtree->GetReadEntry()!=103) {
+      cerr << "friend tree not loaded properly " << zfriendtree->GetReadEntry() << " instead of 103 " << endl;
    }
 
 //    zfriendtree->Scan("neumomcmtot");

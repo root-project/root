@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-// $Id: SEIdAltLItem.h,v 1.3 2001/12/03 00:53:37 messier Exp $
+// $Id: SEIdAltLItem.h,v 1.1 2004/03/25 21:20:42 pcanal Exp $
 //
 // SEIdAltLItem
 //
@@ -15,12 +15,12 @@
 // not inheriting from TObject so we need an explicit Rtypes
 #include "Rtypes.h"
 
-#include <iosfwd>
+#include "Riostream.h"
 
 class SEIdAltLItem {
 
-   friend class std::ostream& operator<<(std::ostream& os, const
-                                         SEIdAltLItem& item);
+   friend std::ostream& operator<<(std::ostream& os, const
+                                   SEIdAltLItem& item);
 
 public:
 

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-// $Id: SEIdAltL.cxx,v 1.19 2001/12/10 20:37:10 rhatcher Exp $
+// $Id: SEIdAltL.cxx,v 1.1 2004/03/25 21:20:42 pcanal Exp $
 //
 // SEIdAltL
 //
@@ -16,10 +16,12 @@
 #include "assert.h"
 
 #include <iostream>
-using namespace std;
 #include <iomanip>
 // this is for mem_fun_ref ... but why isn't it needed in PlexSEIdALtL?
 #include <algorithm>
+#include <functional>
+
+using namespace std;
 
 ClassImp(SEIdAltL)
 

@@ -8,7 +8,7 @@ class foobj : public TObject {
 public:
   foobj() { i = 0; f = 0; }
   foobj(Int_t I) {i = I; f = 2*i; }
-  ~foobj() {}
+  virtual ~foobj() {}
 
   Int_t i;
   Float_t f;
@@ -20,7 +20,7 @@ class foo {
 public:
   foo() { i = 0; f = 0; }
   foo(Int_t I) {i = I; f = 2*i; }
-  ~foo() {}
+  virtual ~foo() {}
 
   Int_t i;
   Float_t f;

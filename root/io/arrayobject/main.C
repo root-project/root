@@ -57,6 +57,21 @@ int run() {
 
     b->f[j].i = j+1;
     b->f[j].f = 2*b->f[j].i;
+
+
+    b->fov[j].i = j+1;
+    b->fov[j].f = 2*b->fop[j]->i;
+
+    b->fvop[j].i = j+1;
+    b->fvop[j].f = 2*b->fo[j].i;
+
+    b->fv[j].i = j+1;
+    b->fv[j].f = 2*b->fp[j]->i;
+
+    b->fvp[j].i = j+1;
+    b->fvp[j].f = 2*b->f[j].i;
+
+    
   }
 
   TTree *tree = new TTree("T","An example of a ROOT tree");
@@ -86,7 +101,7 @@ int run() {
   tree->GetEntry(2);
   b->print();
 
-  //  return 1;
+  return 1;
 
   result &= runHisto(tree, "fo.i","hist0",1.5);
   result &= runHisto(tree, "fo[].i","hist1",1.5);

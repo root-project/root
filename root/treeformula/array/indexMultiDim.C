@@ -73,9 +73,16 @@ c->Divide(1,2);
       fprintf(stderr,"mean 1 is %d while mean 2 is %d\n",m1,m2);
    }
 }
-
-// T->Draw("fPx[abs(fNpoint-65)]+fMeasures[]","","",1,0)
-// T->Draw("fPx[abs(fNpoint-65)]+fMeasures[fMeasures]","","",1,0)
+{
+   f = new TFile("shorttrack.root");
+   t2 = (TTree*)f->Get("T");
+   int v1 = t2->Draw("fPx[abs(fNpoint-65)]+fMeasures[]","","",1,0);
+   int v2 = t2->Draw("fPx[abs(fNpoint-65)]+fMeasures[fMeasures]","","",1,0);
+   if (v1!=1||v2!=1) {
+      fprintf(stderr,"For shorttrack v1 is %d and v2 is %d (both should be 1)\n",v1,v2);
+      result = false;
+   }
+}
 
 return !result; // this is used by the makefile
 }
