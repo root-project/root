@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.18 2003/10/22 18:48:36 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.19 2003/10/27 09:48:35 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -248,19 +248,20 @@ const int kAUTH_GLB_MSK = 0x8;
 const int kAUTH_SSH_MSK = 0x10;
 
 
+#ifdef R__KRB5
 namespace ROOT {
-
-void printPrincipal(krb5_principal Principal)
+void PrintPrincipal(krb5_principal principal)
 {
-   ErrorInfo("printPrincipal: realm == '%s'",
-             Principal->realm.data);
-   ErrorInfo("printPrincipal: length == %d type == %d",
-             Principal->length,Principal->type);
-   for(int i=0; i <Principal->length;  i++ ) {
-     ErrorInfo("printPrincipal: data[%d]==%s",
-               i, Principal->data[i].data);
+   ErrorInfo("PrintPrincipal: realm == '%s'",
+             principal->realm.data);
+   ErrorInfo("PrintPrincipal: length == %d type == %d",
+             principal->length, principal->type);
+   for (int i = 0; i < principal->length; i++) {
+      ErrorInfo("PrintPrincipal: data[%d]==%s",
+                i, principal->data[i].data);
    }
 }
+#endif
 
 
 //______________________________________________________________________________
