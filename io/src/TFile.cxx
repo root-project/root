@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.79 2003/01/02 22:39:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.80 2003/01/12 16:09:00 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -591,6 +591,7 @@ void TFile::Delete(const char *namecycle)
 
    TDirectory::Delete(namecycle);
 }
+
 //______________________________________________________________________________
 void TFile::Draw(Option_t *option)
 {
@@ -600,6 +601,19 @@ void TFile::Draw(Option_t *option)
 //
 
    GetList()->ForEach(TObject,Draw)(option);
+}
+
+//______________________________________________________________________________
+void TFile::DrawMap(const char *keys, Option_t *option)
+{
+// Draw map of objects in this file
+
+   TPluginHandler *h;
+   if ((h = gROOT->GetPluginManager()->FindHandler("TFileMap"))) {
+      if (h->LoadPlugin() == -1)
+         return;
+      h->ExecPlugin(3, this, keys, option);
+   }
 }
 
 //______________________________________________________________________________

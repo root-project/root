@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.24 2002/10/31 07:27:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.25 2002/12/10 02:19:46 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -94,6 +94,7 @@ public:
    virtual void      Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
    virtual void      Delete(const char *namecycle="");
    virtual void      Draw(Option_t *option="");
+   virtual void      DrawMap(const char *keys="*",Option_t *option=""); // *MENU*
    virtual void      FillBuffer(char *&buffer);
    virtual void      Flush();
    Int_t             GetBestBuffer() const;
