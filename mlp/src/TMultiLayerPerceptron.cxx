@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.14 2004/01/27 13:41:53 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.15 2004/05/03 16:30:12 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1890,7 +1890,8 @@ void TMultiLayerPerceptron::Draw(const Option_t*)
 
    Int_t nLayers = fStructure.CountChar(':')+1;
    Float_t xStep = 1./(nLayers+1.);
-   for(Int_t layer=0; layer< nLayers-1; layer++) {
+   Int_t layer;
+   for(layer=0; layer< nLayers-1; layer++) {
       Float_t nNeurons_this = 0;
       if(layer==0) {
          TString input      = TString(fStructure(0, fStructure.First(':')));
@@ -1955,7 +1956,7 @@ void TMultiLayerPerceptron::Draw(const Option_t*)
       }
       delete it;
    }
-   for(Int_t layer=0; layer< nLayers; layer++) {
+   for(layer=0; layer< nLayers; layer++) {
       Float_t nNeurons = 0;
       if(layer==0) {
          TString input      = TString(fStructure(0, fStructure.First(':')));
