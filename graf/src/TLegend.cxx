@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.19 2003/09/16 16:11:57 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.20 2003/11/17 17:18:07 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -124,6 +124,7 @@ TLegendEntry *TLegend::AddEntry(TObject *obj, const char *label, Option_t *optio
   //    L draw line associated w/ TAttLine if obj inherits from TAttLine
   //    P draw polymarker assoc. w/ TAttMarker if obj inherits from TAttMarker
   //    F draw a box with fill associated w/ TAttFill if obj inherits TAttFill
+  //    E draw vertical error bar if option "P" is also specified
   //
   TLegendEntry *newentry = new TLegendEntry( obj, label, option );
   if ( !fPrimitives ) fPrimitives = new TList;
@@ -141,6 +142,7 @@ TLegendEntry *TLegend::AddEntry(const char *name, const char *label, Option_t *o
   //    L draw line associated w/ TAttLine if obj inherits from TAttLine
   //    P draw polymarker assoc. w/ TAttMarker if obj inherits from TAttMarker
   //    F draw a box with fill associated w/ TAttFill if obj inherits TAttFill
+  //    E draw vertical error bar if option "P" is also specified
   //
   TObject *obj = gPad->FindObject(name);
   return AddEntry( obj, label, option );
@@ -469,6 +471,10 @@ void TLegend::PaintPrimitives()
                              xsym - boxw, ysym + yspace*0.35);
       } else {
          entryline.Paint();
+         if (opt.Contains("e")) {
+           entryline.PaintLineNDC( xsym, ysym - yspace*0.30,
+                                   xsym, ysym + yspace*0.30);            
+         }
       }
 
       entry->SetLineColor(lcolor);
