@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.131 2002/05/16 16:47:53 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.132 2002/05/17 07:16:43 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2379,11 +2379,13 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                      b >> pidf;
                      TFile* file = (TFile*)b.GetParent();
                      TProcessID *pid = TProcessID::ReadProcessID(pidf,file);   
-                     TObject *obj = (TObject*)pointer;
-                     UInt_t gpid = pid->GetUniqueID();
-                     UInt_t uid = (obj->GetUniqueID() & 0xffffff) + (gpid<<24);
-                     obj->SetUniqueID(uid);
-                     if (pid) pid->PutObjectWithID((TObject*)pointer);
+                     if (pid) {
+                        TObject *obj = (TObject*)pointer;
+                        UInt_t gpid = pid->GetUniqueID();
+                        UInt_t uid = (obj->GetUniqueID() & 0xffffff) + (gpid<<24);
+                        obj->SetUniqueID(uid);
+                        pid->PutObjectWithID((TObject*)pointer);
+                     }
                   }
                }
             }
