@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.174 2004/05/13 10:09:10 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.175 2004/06/02 11:00:23 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2170,13 +2170,13 @@ void THistPainter::PaintContour(Option_t *option)
 
    gPad->SetBit(TGraph::kClipFrame);
    
-   Double_t *levels  = new Double_t[kMAXCONTOUR];
-   Double_t *xarr    = new Double_t[kMAXCONTOUR];
-   Double_t *yarr    = new Double_t[kMAXCONTOUR];
-   Int_t  *itarr     = new Int_t[kMAXCONTOUR];
+   Double_t *levels  = new Double_t[2*kMAXCONTOUR];
+   Double_t *xarr    = new Double_t[2*kMAXCONTOUR];
+   Double_t *yarr    = new Double_t[2*kMAXCONTOUR];
+   Int_t  *itarr     = new Int_t[2*kMAXCONTOUR];
 
    Int_t npmax = 0;
-   for (i=0;i<kMAXCONTOUR;i++) itarr[i] = 0;
+   for (i=0;i<2*kMAXCONTOUR;i++) itarr[i] = 0;
 
    ncontour = fH->GetContour();
    if (ncontour == 0) {
