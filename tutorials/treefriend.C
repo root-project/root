@@ -118,7 +118,7 @@ void DrawFriend() {
    TFile *f  = TFile::Open("treeparent.root");
    TTree *T  = (TTree*)f->Get("T");
    T->AddFriend("TF","treefriend.root");
-   T->Draw("x:TF.x","z<10");
+   T->Draw("x:TF.x");
 }
 
 void treefriend() {
