@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.43 2001/08/29 19:14:20 bevan Exp $
+ *    File: $Id: RooDataSet.cc,v 1.44 2001/09/06 20:49:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -97,7 +97,11 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t,
   // Constructor from existing data set with list of variables and cut expression
   initialize(vars);
 
-  loadValues(t->_tree,cuts);
+  // Create a RooFormulaVar cut from given cut expression
+  // Attach formula to original data set
+  RooFormulaVar cutVar(cuts,cuts,t->_vars) ;
+
+  loadValues(t->_tree,&cutVar);
 }
 
 
@@ -155,7 +159,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t,
   // Constructor from existing data set with list of variables that preserves the cache
   initialize(vars);
   initCache(t->_cachedVars) ;
-  loadValues(t->_tree,"");
+  loadValues(t->_tree,0);
 }
 
 RooDataSet::RooDataSet(const char *name, const char *title, TTree *t, 
@@ -167,7 +171,11 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *t,
 
   // Constructor from existing TTree with list of variables and cut expression
   initialize(vars);
-  loadValues(t,cuts);
+
+  // Create a RooFormulaVar cut from given cut expression
+  RooFormulaVar cutVar(cuts,cuts,_vars) ;
+
+  loadValues(t,&cutVar);
 }
 
 RooDataSet::RooDataSet(const char *name, const char *filename,
@@ -180,7 +188,11 @@ RooDataSet::RooDataSet(const char *name, const char *filename,
 
   // Constructor from TTree file with list of variables and cut expression
   initialize(vars);
-  loadValues(filename,treename,cuts);
+
+  // Create a RooFormulaVar cut from given cut expression
+  RooFormulaVar cutVar(cuts,cuts,_vars) ;
+
+  loadValues(filename,treename,&cutVar);
 }
 
 
@@ -192,7 +204,7 @@ RooDataSet::RooDataSet(RooDataSet const & other, const char* newName) :
   _tree = new TTree(newName, other.GetTitle()) ;
 
   initialize(other._vars) ;
-  loadValues(other._tree,"") ;
+  loadValues(other._tree,0) ;
 }
 
 
@@ -235,7 +247,7 @@ void RooDataSet::initCache(const RooArgSet& cachedVars)
 
 
 void RooDataSet::loadValues(const char *filename, const char *treename,
-			    const char *cuts) {
+			    RooFormulaVar* cutVar) {
   // Load the value of a TTree stored in given file
   TFile *file= (TFile*)gROOT->GetListOfFiles()->FindObject(filename);
   if(!file) file= new TFile(filename);
@@ -244,29 +256,12 @@ void RooDataSet::loadValues(const char *filename, const char *treename,
   }
   else {
     TTree* tree= (TTree*)gDirectory->Get(treename);
-    loadValues(tree,cuts);
+    loadValues(tree,cutVar);
   }
 }
 
 
-void RooDataSet::loadValues(const TTree *t, const char *cuts) 
-{
-  RooFormulaVar* select(0) ;
-
-  if(0 != cuts && strlen(cuts)) {
-    select=new RooFormulaVar(cuts,cuts,_vars);
-    if (!select || !select->ok()) {
-      delete select;
-      return ;
-    }
-  }
-
-  loadValues(t,select) ;
-  delete select ;
-}
-
-
-void RooDataSet::loadValues(const TTree *t, const RooFormulaVar* select) 
+void RooDataSet::loadValues(const TTree *t, RooFormulaVar* select) 
 {
   // Load values of given ttree
 
@@ -283,6 +278,10 @@ void RooDataSet::loadValues(const TTree *t, const RooFormulaVar* select)
     sourceArg->attachToTree(*tClone) ;
   }
 
+  // Redirect formula servers to sourceArgSet
+  select->recursiveRedirectServers(*sourceArgSet) ;
+  select->setOperMode(RooAbsArg::ADirty) ;
+
   // Loop over events in source tree   
   RooAbsArg* destArg(0) ;
   Int_t nevent= (Int_t)tClone->GetEntries();
@@ -290,7 +289,7 @@ void RooDataSet::loadValues(const TTree *t, const RooFormulaVar* select)
     Int_t entryNumber=tClone->GetEntryNumber(i);
     if (entryNumber<0) break;
     tClone->GetEntry(entryNumber,1);
-  
+ 
     // Copy from source to destination
      _iterator->Reset() ;
      sourceIter->Reset() ;
@@ -309,18 +308,18 @@ void RooDataSet::loadValues(const TTree *t, const RooFormulaVar* select)
 
      Fill() ;
    }
+  
+  SetTitle(t->GetTitle());
 
-   SetTitle(t->GetTitle());
-
-   delete sourceIter ;
-   delete sourceArgSet ;
-   delete tClone ;
+  delete sourceIter ;
+  delete sourceArgSet ;
+  delete tClone ;
 }
 
 
 void RooDataSet::append(RooDataSet& data) {
   // Append given data set to this data set
-  loadValues(data._tree,(const RooFormulaVar*)0) ;
+  loadValues(data._tree,(RooFormulaVar*)0) ;
 }
 
 

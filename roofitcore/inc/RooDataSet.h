@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.28 2001/08/29 19:14:20 bevan Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.29 2001/09/08 01:49:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -116,10 +116,9 @@ protected:
   void fillCacheArgs() ;
 
   // Load data from another TTree
-  void loadValues(const TTree *ntuple, const char *cuts);
-  void loadValues(const TTree *t, const RooFormulaVar* cutVar) ; 
+  void loadValues(const TTree *t, RooFormulaVar* cutVar=0) ; 
   void loadValues(const char *filename, const char *treename,
-		  const char *cuts);
+		  RooFormulaVar *cutVar=0);
 
 
   TTree *_tree ; 
