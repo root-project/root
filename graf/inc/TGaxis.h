@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.2 2000/06/13 10:56:59 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -40,13 +40,13 @@ class TGaxis : public TLine, public TAttText {
 protected:
     Double_t   fWmin;                //Lowest value on the axis
     Double_t   fWmax;                //Highest value on the axis
-    Int_t      fNdiv;                //Number of divisions
     Float_t    fGridLength;          //Length of the grid in NDC
     Float_t    fTickSize;            //Size of primary tick mark in NDC
     Float_t    fLabelOffset;         //Offset of label wrt axis
     Float_t    fLabelSize;           //Size of labels in NDC
     Float_t    fTitleOffset;         //Offset of title wrt axis
     Float_t    fTitleSize;           //Size of title in NDC
+    Int_t      fNdiv;                //Number of divisions
     Int_t      fLabelColor;          //Color for labels
     Int_t      fLabelFont;           //Font for labels
     TString    fChopt;               //Axis options
@@ -89,7 +89,7 @@ virtual const char     *GetTitle() const {return fTitle.Data();}
              Double_t   GetWmin()         {return fWmin;}
              Double_t   GetWmax()         {return fWmax;}
              Float_t    GetTickSize()     {return fTickSize;}
-                void    LabelsLimits(char *label, Int_t &first, Int_t &last);
+                void    LabelsLimits(const char *label, Int_t &first, Int_t &last);
         virtual void    Optimize(Double_t A1,  Double_t A2,  Int_t nold
                        ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BWID);
         virtual void    Paint(Option_t *chopt="");
@@ -105,7 +105,7 @@ virtual const char     *GetTitle() const {return fTitle.Data();}
                 void    SetLabelFont(Int_t labelfont) {fLabelFont = labelfont;} // *MENU*
                 void    SetLabelOffset(Float_t labeloffset) {fLabelOffset = labeloffset;} // *MENU*
                 void    SetLabelSize(Float_t labelsize) {fLabelSize = labelsize;} // *MENU*
-        virtual void    SetName(char *name); // *MENU*
+        virtual void    SetName(const char *name); // *MENU*
                 void    SetTickSize(Float_t ticksize) {fTickSize = ticksize;} // *MENU*
                 void    SetGridLength(Float_t gridlength) {fGridLength = gridlength;}
                 void    SetTimeFormat(const char *tformat);
@@ -115,7 +115,7 @@ virtual const char     *GetTitle() const {return fTitle.Data();}
                 void    SetWmin(Double_t wmin) {fWmin = wmin;}
                 void    SetWmax(Double_t wmax) {fWmax = wmax;}
 
-                ClassDef(TGaxis,3)  //Graphics axis
+                ClassDef(TGaxis,4)  //Graphics axis
 };
 
 #endif
