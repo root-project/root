@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.55 2002/05/30 19:43:07 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.56 2002/05/30 21:07:34 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -531,7 +531,11 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
       // In case a class contains an external enum, the enum will be seen as a
       // class. We must detect this special case and make the class a Zombie.
       // Here we assume that a class has at least one method.
-      if (cl->Property() & (kIsClass|kIsStruct) == 0) {
+      // We can NOT call TClass::Property from here, because this method
+      // assumes that the TClass is well formed to do a lot of information
+      // caching. The method SetClassInfo (i.e. here) is usually called during
+      // the building phase of the TClass, hence it is NOT well formed yet.
+      if (cl->fClassInfo->Property()  & (kIsClass|kIsStruct) == 0) {
          cl->MakeZombie();
       }
 
