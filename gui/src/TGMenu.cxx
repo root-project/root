@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.10 2003/01/20 10:25:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.11 2003/03/15 14:19:38 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -659,7 +659,7 @@ void TGPopupMenu::PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_poi
 {
    // Popup a popup menu. If stick mode is true keep the menu up. If
    // grab_pointer is true the pointer will be grabbed, which means that
-   // all pointer events will go to the popup menu, idependent of in
+   // all pointer events will go to the popup menu, independent of in
    // which window the pointer is.
 
    Int_t  rx, ry;
