@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.3 2004/01/26 12:15:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.4 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -255,7 +255,8 @@ Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD 
     loop:
       if (k != 0) {
         // since sDiag(k) == 0 perform Givens transform with result oDiag[k] = 0
-        if ((bmx+sDiag(k))-bmx == 0.0)
+        //if ((bmx+sDiag(k))-bmx == 0.0)
+        if (TMath::Abs(sDiag(k)) < DBL_EPSILON)
           Diag_1(v,sDiag,oDiag,k);
 
         // find l (1 <= l <=k) so that either oDiag(l) = 0 or sDiag(l-1) = 0.
@@ -271,11 +272,15 @@ Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD 
             elzero = 0;
             break;
           }
-          else if ((bmx-oDiag(l))-bmx == 0.0) {
+          // This convergence criterion is not platform independent,let's
+          // rephrase it
+          //else if ((bmx-oDiag(l))-bmx == 0.0) {
+          else if (TMath::Abs(oDiag(l)) < DBL_EPSILON) {
             elzero = 1;
             break;
           }
-          else if ((bmx+sDiag(l-1))-bmx == 0.0)
+          //else if ((bmx+sDiag(l-1))-bmx == 0.0)
+          else if (TMath::Abs(sDiag(l-1)) < DBL_EPSILON)
             elzero = 0;
         }
         if (l > 0 && !elzero)
