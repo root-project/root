@@ -1,6 +1,5 @@
 // @(#)root/graf:$Name:  $:$Id: TGraph2D.cxx,v 1.00
-// Author: Olivier Couet   23/10/03
-// Author: Luke Jones (Royal Holloway, University of London) for the Delaunay algorithm. April 2002
+// Author: Olivier Couet, Luke Jones (Royal Holloway, University of London)
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -24,14 +23,19 @@ ClassImp(TGraph2D)
 
 //______________________________________________________________________________
 //
-// A Graph2D is a graphics object made of three arrays X, Y and Z
-// with the same number of points each.
+// A Graph2D is a graphics object made of three arrays X, Y and Z with the same
+// number of points each. Graph2D uses Delaunay triangulation to draw the X, Y
+// Z arrays. This triangulation code derives from an implementation done by 
+// Luke Jones (Royal Holloway, University of London) in April 2002 in the PAW
+// context.
 //
-// This class has three different constructors:
+// This class has different constructors:
 //
 // 1) With an array dimension and three arrays x, y, and z:
 //
 //    TGraph2D *g = new TGraph2D(n, x, y, z);
+//
+//    x, y, z arrays can be doubles, floats, or ints.
 //
 // 2) With an array dimension only:
 //
@@ -40,7 +44,7 @@ ClassImp(TGraph2D)
 //    The internal arrays are then filled with SetPoint. The following line
 //    fills the the internal arrays at the position "i" with the values x,y,z.
 //
-//    g->SetPoint(i,x,y,z);
+//    g->SetPoint(i, x, y, z);
 //
 // 3) Without parameters:
 //
@@ -48,14 +52,21 @@ ClassImp(TGraph2D)
 //
 //    again SetPoint must be used to fill the internal arrays.
 //
+// 4) From a file:
+//
+//    TGraph2D *g = new TGraph2D("graph.dat");
+//
+//    Arrays are read from the ASCII file "graph.dat" according to a specifies
+//    format. The format's default value is "%lg %lg %lg" 
+//
 // Note that in any of these three cases, SetPoint can be used to change a data
 // point or add a new one. If the data point index (i) is greater than the 
 // current size of the internal arrays, they are automatically extended.
 //
 // Specific drawing options can be used to paint a TGraph2D:
-//   "TRI"  : the Delaunay's triangles are drawn using filled area. 
+//   "TRI"  : the Delaunay triangles are drawn using filled area. 
 //            An hidden surface drawing technique is used
-//   "TRIW" : the Delaunay's triangles are drawn as wire frame
+//   "TRIW" : the Delaunay triangles are drawn as wire frame
 //   "P"    : draw a marker at each vertex
 //
 // A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram. 
@@ -66,8 +77,8 @@ ClassImp(TGraph2D)
 //
 // TGraph2D linearly interpolate a Z value for any (X,Y) point given some 
 // existing (X,Y,Z) points. The existing (X,Y,Z) points can be randomly 
-// scattered. The algorithm work by joining the existing points to make 
-// (Delaunay) triangles in (X,Y). These are then used to define flat planes 
+// scattered. The algorithm works by joining the existing points to make 
+// Delaunay triangles in (X,Y). These are then used to define flat planes 
 // in (X,Y,Z) over which to interpolate. The interpolated surface thus takes 
 // the form of tessellating triangles at various angles. Output can take the 
 // form of a 2D histogram or a vector. The triangles found can be drawn in 3D.
@@ -414,7 +425,7 @@ Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
          N = fOrder[J-1];
          for (I=1; I<=J-1; I++) {
             P = fOrder[I-1];
-            if (ntris_tried > fMaxTries) {
+            if (ntris_tried > fMaxIter) {
                // perhaps this point isn't in the hull after all
 ///            Warning("ComputeZ", 
 ///                    "Abandoning the effort to find a Delaunay triangle (and thus interpolated Z-value) for point %g %g"
@@ -454,7 +465,7 @@ Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
                         // point Z is nearer to (xx,yy) than M, N or P - it could be in the 
                         // triangle so call enclose to find out
 
-                        // if it is inside the triangle this can't be a Delaunay's triangle
+                        // if it is inside the triangle this can't be a Delaunay triangle
                         if (Enclose(P,N,M,Z)) goto L90;
                      } else {
                         // there's no way it could be in the triangle so there's no point 
@@ -643,7 +654,7 @@ L50:
                   FileIt(F, D, O2);
                }
             } else {
-               // this is a Delaunay's triangle, file it
+               // this is a Delaunay triangle, file it
                FileIt(P, N, M);
                T1 = P;
                T2 = N;
@@ -834,9 +845,9 @@ void TGraph2D::FindAllTriangles()
    // and calculate it's triangle
    z = ComputeZ(xcntr,ycntr);
 
-   // loop over all Delaunay's triangles (including those constantly being 
+   // loop over all Delaunay triangles (including those constantly being 
    // produced within the loop) and check to see if their 3 sides also 
-   // correspond to the sides of other Delaunay's triangles, i.e. that they 
+   // correspond to the sides of other Delaunay triangles, i.e. that they 
    // have all their neighbours.
    T1 = 1;
    while (T1 <= fNdt) {
@@ -849,7 +860,7 @@ void TGraph2D::FindAllTriangles()
       s[0]  = kFALSE;
       s[1]  = kFALSE;
       s[2]  = kFALSE;
-      // loop over all other Delaunays' triangles
+      // loop over all other Delaunay triangles
       for (T2=1; T2<=fNdt; T2++) {
          if (T2 != T1) {
             // get the points that make up this triangle
@@ -871,13 +882,13 @@ void TGraph2D::FindAllTriangles()
                s[2] = kTRUE;
             }
          }
-         // if T1 shares all its sides with other Delaunays' triangles then 
+         // if T1 shares all its sides with other Delaunay triangles then 
          // forget about it
          if (s[0] && s[1] && s[2]) continue;
       }
       // Looks like T1 is missing a neighbour on at least one side.
       // For each side, take a point a little bit beyond it and calculate 
-      // the Delaunays' triangle for that point, this should be the triangle 
+      // the Delaunay triangle for that point, this should be the triangle 
       // which shares the side.
       xc = (fXN[Pa]+fXN[Na]+fXN[Ma])/3.;
       yc = (fYN[Pa]+fYN[Na]+fYN[Ma])/3.;
@@ -926,10 +937,10 @@ void TGraph2D::FindAllTriangles()
             A  = TMath::Abs(TMath::Max(alittlebit*xm,alittlebit*ym));
             xx = xm+nx*A;
             yy = ym+ny*A;
-            // try and find a new Delaunay's triangle for this point
+            // try and find a new Delaunay triangle for this point
             z = ComputeZ(xx,yy);
             // this side of T1 should now, hopefully, if it's not part of the 
-            // hull, be shared with a new Delaunay's triangle just calculated by ComputeZ
+            // hull, be shared with a new Delaunay triangle just calculated by ComputeZ
          }
       }
       T1++;
@@ -1107,7 +1118,7 @@ void TGraph2D::Build(Int_t n)
    fNTried     = 0;
    fMTried     = 0;
 
-   SetMaxTries();
+   SetMaxIter();
 
    fX = new Double_t[fSize];
    fY = new Double_t[fSize];
@@ -1157,7 +1168,7 @@ Double_t TGraph2D::Interpolate(Double_t x, Double_t y) const
       }
    }
 
-   // If needed, creates the arrays to hold the Delaunay's triangles.
+   // If needed, creates the arrays to hold the Delaunay triangles.
    // A maximum number of 2*fNpoints is guessed. If more triangles will be
    // find, FillIt will automatically enlarge these arrays.
    if (!fPTried) {
@@ -1564,7 +1575,7 @@ TH2D *TGraph2D::GetHistogram(Option_t *option) const
    // If the "empty" option is selected, returns an empty histogram booked with
    // the limits of fX, fY and fZ. This option is used when the data set is drawn
    // with markers only. In that particular case there is no need to find the
-   // Delaunay's triangles.
+   // Delaunay triangles.
 
    TString opt = option;
    opt.ToLower();
@@ -1633,7 +1644,7 @@ TH2D *TGraph2D::GetHistogram(Option_t *option) const
       }
    }
 
-   // If needed, creates the arrays to hold the Delaunay's triangles.
+   // If needed, creates the arrays to hold the Delaunay triangles.
    // A maximum number of 2*fNpoints is guessed. If more triangles will be
    // find, FillIt will automatically enlarge these arrays.
    if (!fPTried) {
@@ -2170,12 +2181,12 @@ void TGraph2D::SetMinimum(Double_t minimum)
 
 
 //______________________________________________________________________________
-void TGraph2D::SetMaxTries(Int_t n)
+void TGraph2D::SetMaxIter(Int_t n)
 {
-   // Defines the number of triangles tested for a Delaunay's triangle 
-   // before abandoning the search
+   // Defines the number of triangles tested for a Delaunay triangle 
+   // (number of iterations) before abandoning the search
 
-   fMaxTries = n;
+   fMaxIter = n;
 }
 
 //______________________________________________________________________________

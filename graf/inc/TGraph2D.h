@@ -1,6 +1,5 @@
 // @(#)root/graf:$Name:  $:$Id: TGraph2D.h,v 1.00
-// Author: Olivier Couet   23/10/03
-// Author: Luke Jones (Royal Holloway, University of London) April 2002
+// Author: Olivier Couet, Luke Jones (Royal Holloway, University of London)
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -64,10 +63,10 @@ protected:
    Double_t    fMaximum;     // Maximum value for plotting along z
    Double_t    fZout;        // Histogram bin height for points lying outside the convex hull
    Double_t   *fDist;        //!Array used to order mass points by distance
-   Int_t       fMaxTries;    //!Maximum number of tries to find Delaunay's triangles
+   Int_t       fMaxIter;     //!Maximum number of iterations to find Delaunay triangles
    Int_t       fTriedSize;   //!Real size of the fxTried arrays
    Int_t      *fPTried;      //!
-   Int_t      *fNTried;      //!Delaunay's triangles storage
+   Int_t      *fNTried;      //!Delaunay triangles storage
    Int_t      *fMTried;      //!
    Int_t      *fHullPoints;  //!Hull points
    Int_t      *fOrder;       //!Array used to order mass points by distance
@@ -133,7 +132,7 @@ public:
    void             SetMargin(Double_t m=0.1); // *MENU*
    void             SetMaximum(Double_t maximum=-1111); // *MENU*
    void             SetMinimum(Double_t minimum=-1111); // *MENU*
-   void             SetMaxTries(Int_t n=100000);
+   void             SetMaxIter(Int_t n=100000);
    virtual void     SetName(const char *name); // *MENU*
    void             SetNpx(Int_t npx=40); // *MENU*
    void             SetNpy(Int_t npx=40); // *MENU*
