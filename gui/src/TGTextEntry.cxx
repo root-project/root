@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.29 2004/12/01 17:04:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.30 2004/12/10 10:57:54 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -305,6 +305,8 @@ TGTextEntry::~TGTextEntry()
    delete fText;
    delete fCurBlink;
    delete fTip;
+
+   if (this == gBlinkingEntry) gBlinkingEntry = 0;
 }
 
 //______________________________________________________________________________
@@ -1296,11 +1298,10 @@ Bool_t TGTextEntry::HandleCrossing(Event_t *event)
 {
    // Handle mouse crossing event.
 
-   if (fTip) {
-      if (event->fType == kEnterNotify)
-         fTip->Reset();
-      else
-         fTip->Hide();
+   if (event->fType == kEnterNotify) {
+      if (fTip) fTip->Reset();
+   } else {
+      if (fTip) fTip->Hide();
    }
 
    return kTRUE;
@@ -1368,9 +1369,10 @@ Bool_t TGTextEntry::HandleFocusChange(Event_t *event)
          gBlinkingEntry = this;
          gSystem->AddTimer(fCurBlink);
       } else {
-          fCursorOn = kFALSE;
+         fCursorOn = kFALSE;
           // fSelectionOn = kFALSE;        // "netscape location behavior"
-          if (fCurBlink) fCurBlink->Remove();
+         if (fCurBlink) fCurBlink->Remove();
+         gBlinkingEntry = 0;
       }
       fClient->NeedRedraw(this);
    }
@@ -1539,7 +1541,7 @@ void TGTextEntry::SetFocus()
 {
    // sets focus
 
-   if (gBlinkingEntry && (gBlinkingEntry != this) && gBlinkingEntry->fCurBlink) {
+   if (gBlinkingEntry && (gBlinkingEntry != this)) {
       gBlinkingEntry->fCurBlink->Remove();
    }
    RequestFocus();
