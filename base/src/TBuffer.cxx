@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.29 2002/05/09 20:21:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.30 2002/06/04 07:29:13 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 
 #include <string.h>
 
+#include "TROOT.h"
 #include "TFile.h"
 #include "TBuffer.h"
 #include "TExMap.h"
@@ -1457,8 +1458,9 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
    // Read object from I/O buffer. clReq can be used to cross check
    // if the actually read object is of the requested class.
 
-   int isTObject = (clReq && 
-   ( clReq == TObject::Class() || clReq->InheritsFrom(TObject::Class())));
+   Int_t isTObject = (clReq &&
+                      (clReq == TObject::Class() ||
+                       clReq->InheritsFrom(TObject::Class())));
    Assert(IsReading());
 
    // make sure fMap is initialized
@@ -1478,9 +1480,12 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
       obj = (void *) fMap->GetValue(startpos+kMapOffset);
       if (obj == (void*) -1) obj = 0;
       if (obj) {
-         int ibad =0;
-         if (isTObject) ibad = (!((TObject*)obj)->InheritsFrom(clReq)); 
-         else ibad = (clReq && clRef && clRef!=(TClass*)(-1) && !clRef->InheritsFrom(clReq));
+         Int_t ibad = 0;
+         if (isTObject)
+            ibad = (!((TObject*)obj)->InheritsFrom(clReq));
+         else
+            ibad = (clReq && clRef &&
+                    clRef!=(TClass*)(-1) && !clRef->InheritsFrom(clReq));
          if (ibad) {
             Error("ReadObject", "got object of wrong class");
             // exception
@@ -1525,7 +1530,8 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
       // allocate a new object based on the class found
       obj = (void *)clRef->New();
       if (!obj) {
-         Error("ReadObject", "could not create object of class %s", clRef->GetName());
+         Error("ReadObject", "could not create object of class %s",
+               clRef->GetName());
          // exception
          return 0;
       }
@@ -1541,7 +1547,9 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
          ((TObject*)obj)->Streamer(*this);
       } else {
          //fake class has no Streamer
-         if (gDebug > 0) Warning("ReadObject","%s::Streamer not available, using TClass::ReadBuffer instead",clRef->GetName());
+         if (gDebug > 0)
+            Warning("ReadObject", "%s::Streamer not available, using "
+                    "TClass::ReadBuffer instead", clRef->GetName());
          clRef->ReadBuffer(*this,obj);
       }
 
@@ -1900,33 +1908,38 @@ void TBuffer::SetWriteMode()
 
    fMode = kWrite;
 }
-#include "TROOT.h"
+
 //______________________________________________________________________________
-void     TBuffer::StreamObject(void *obj,const type_info& typeinfo)
-{ 
+void TBuffer::StreamObject(void *obj, const type_info &typeinfo)
+{
    TClass *cl = gROOT->GetClass(typeinfo);
-   StreamObject(obj,cl);
+   StreamObject(obj, cl);
 }
+
 //______________________________________________________________________________
-void     TBuffer::StreamObject(void *obj,const char *className)
-{ 
+void TBuffer::StreamObject(void *obj, const char *className)
+{
    TClass *cl = gROOT->GetClass(className);
-   StreamObject(obj,cl);
+   StreamObject(obj, cl);
 }
 //______________________________________________________________________________
-void     TBuffer::StreamObject(void *obj,TClass *cl)
-{ 
+void TBuffer::StreamObject(void *obj, TClass *cl)
+{
    if (IsReading()) {
-     cl->ReadBuffer (*this,obj);
-   } else {  
-     cl->WriteBuffer(*this,obj);
-   }  
-}      
+      cl->ReadBuffer(*this, obj);
+   } else {
+      cl->WriteBuffer(*this, obj);
+   }
+}
+
 //______________________________________________________________________________
-TClass *TBuffer::GetClass(const type_info& typeinfo)
-{ return gROOT->GetClass(typeinfo);}
+TClass *TBuffer::GetClass(const type_info &typeinfo)
+{
+   return gROOT->GetClass(typeinfo);
+}
+
 //______________________________________________________________________________
 TClass *TBuffer::GetClass(const char *className)
-{ return gROOT->GetClass(className);}
-
-
+{
+   return gROOT->GetClass(className);
+}

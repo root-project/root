@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.16 2002/05/09 20:21:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.17 2002/06/04 07:29:12 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -171,9 +171,9 @@ public:
    void     ReadFastArray(Float_t  *f, Int_t n);
    void     ReadFastArray(Double_t *d, Int_t n);
 
-   void     StreamObject(void *obj,const type_info& typeinfo);
-   void     StreamObject(void *obj,const char *className);
-   void     StreamObject(void *obj,TClass *cl);
+   void     StreamObject(void *obj, const type_info &typeinfo);
+   void     StreamObject(void *obj, const char *className);
+   void     StreamObject(void *obj, TClass *cl);
 
    void     WriteFastArray(const Bool_t   *b, Int_t n);
    void     WriteFastArray(const Char_t   *c, Int_t n);
@@ -217,11 +217,11 @@ public:
    //friend TBuffer  &operator>>(TBuffer &b, const TObject *&obj);
    friend TBuffer  &operator<<(TBuffer &b, const TObject *obj);
 
-   static void  SetGlobalReadParam(Int_t mapsize);
-   static void  SetGlobalWriteParam(Int_t mapsize);
-   static Int_t GetGlobalReadParam();
-   static Int_t GetGlobalWriteParam();
-   static TClass *GetClass(const type_info& typeinfo);
+   static void    SetGlobalReadParam(Int_t mapsize);
+   static void    SetGlobalWriteParam(Int_t mapsize);
+   static Int_t   GetGlobalReadParam();
+   static Int_t   GetGlobalWriteParam();
+   static TClass *GetClass(const type_info &typeinfo);
    static TClass *GetClass(const char *className);
 
    ClassDef(TBuffer,0)  //Buffer base class used for serializing objects
@@ -234,10 +234,10 @@ public:
 template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
 {
    // Read TObject derived classes from a TBuffer. Need to provide
-   // custom version for non-TObject derived classes. 
+   // custom version for non-TObject derived classes.
 
-   // This operator has to be a templated and/or automatically 
-   // generated if we want to be able to check the type of the 
+   // This operator has to be a templated and/or automatically
+   // generated if we want to be able to check the type of the
    // incoming object. I.e. a operator>>(TBuffer &buf, TObject *&)
    // would not be sufficient to pass the information 'which class do we want'
    // since the pointer could be zero (so typeid(*obj) is not usable).
@@ -249,10 +249,11 @@ template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
    obj = (Tmpl *) buf.ReadObject(cl);
    return buf;
 }
+
 template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj)
 {
-   TClass *cl = (obj)? TBuffer::GetClass(typeid(*obj)):0;
-   buf.WriteObject(obj,cl);
+   TClass *cl = (obj) ? TBuffer::GetClass(typeid(*obj)) : 0;
+   buf.WriteObject(obj, cl);
    return buf;
 }
 #else
