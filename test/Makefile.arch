@@ -7,6 +7,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 ARCH         := $(shell root-config --arch)
+PLATFORM      = $(ARCH)
 
 CXX           =
 ObjSuf        = o
@@ -433,7 +434,9 @@ SOFLAGS       = -shared -Wl,-x
 endif
 
 ifeq ($(ARCH),macosx)
-# MacOS X with cc (GNU cc 2.95.2)
+# MacOS X with cc (GNU cc 2.95.2 and gcc 3.3)
+PLATFORM      = macosx
+MACOSX_MINOR := $(shell sw_vers -productVersion | cut -d'.' -f2)
 CXX           = c++
 CXXFLAGS      = -O -pipe -Wall -W -Woverloaded-virtual
 LD            = c++
@@ -441,11 +444,18 @@ LDFLAGS       = -O -Xlinker -bind_at_load -flat_namespace
 # The SOFLAGS will be used to create the .dylib; the .so will
 # be created separately
 DllSuf        = dylib
-SOFLAGS       = -dynamiclib -flat_namespace -undefined suppress
+ifeq ($(MACOSX_MINOR),3)
+UNDEFOPT      = dynamic_lookup
+else
+UNDEFOPT      = suppress
+endif
+SOFLAGS       = -dynamiclib -flat_namespace -undefined $(UNDEFOPT)
 endif
 
 ifeq ($(ARCH),macosxxlc)
 # MacOS X with IBM xlC compiler
+PLATFORM      = macosx
+MACOSX_MINOR := $(shell sw_vers -productVersion | cut -d'.' -f2)
 CXX           = xlC
 CXXFLAGS      = 
 LD            = g++
@@ -453,7 +463,12 @@ LDFLAGS       = -O -Xlinker -bind_at_load -flat_namespace
 # The SOFLAGS will be used to create the .dylib; the .so will
 # be created separately
 DllSuf        = dylib
-SOFLAGS       = -dynamiclib -flat_namespace -undefined suppress
+ifeq ($(MACOSX_MINOR),3)
+UNDEFOPT      = dynamic_lookup
+else
+UNDEFOPT      = suppress
+endif
+SOFLAGS       = -dynamiclib -flat_namespace -undefined $(UNDEFOPT)
 endif
 
 ifeq ($(ARCH),hiux)

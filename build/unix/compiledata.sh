@@ -40,8 +40,13 @@ if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
 fi
 
 if [ "$ARCH" = "macosx" ]; then
+   macosx_minor=`sw_vers -productVersion | cut -d'.' -f2`
    SOEXT="so"
-   SOFLAGS="-bundle $OPT -flat_namespace -undefined suppress"
+   if [ $macosx_minor -ge 3 ]; then
+      SOFLAGS="-bundle $OPT -flat_namespace -undefined dynamic_lookup"
+   else
+      SOFLAGS="-bundle $OPT -flat_namespace -undefined suppress"
+   fi
    LDFLAGS=`echo $LDFLAGS | sed  -e "s/ -flat_namespace / /" -e "s/ -$OPT / /" `
 elif [ "x`echo $SOFLAGS | grep -- '-soname,$'`" != "x" ]; then
     # If soname is specified, add the library name.

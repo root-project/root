@@ -131,10 +131,10 @@ else
 ifeq ($(ARCH),aix5)
 		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
-ifeq ($(ARCH),macosx)
+ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
-		$(LD) -bundle -undefined suppress $(LDFLAGS) $^ \
+		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(ARCH),win32)
@@ -233,10 +233,10 @@ else
 ifeq ($(ARCH),aix5)
 		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
-ifeq ($(ARCH),macosx)
+ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
-		$(LD) -bundle -undefined suppress $(LDFLAGS) $^ \
+		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
@@ -252,10 +252,10 @@ else
 ifeq ($(ARCH),aix5)
 		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
-ifeq ($(ARCH),macosx)
+ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
-		$(LD) -bundle -undefined suppress $(LDFLAGS) $^ \
+		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
@@ -271,10 +271,10 @@ else
 ifeq ($(ARCH),aix5)
 		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(GLIBS) -p 0 $^
 else
-ifeq ($(ARCH),macosx)
+ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
-		$(LD) -bundle -undefined suppress $(LDFLAGS) $^ \
+		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
 	 	   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
@@ -289,10 +289,10 @@ else
 ifeq ($(ARCH),aix5)
 		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
-ifeq ($(ARCH),macosx)
+ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ -lstdc++ $(OutPutOpt) $@
-		$(LD) -bundle -undefined suppress $(LDFLAGS) $^ \
+		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@

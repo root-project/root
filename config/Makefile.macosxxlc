@@ -34,11 +34,19 @@ CINTCFLAGS    = -qpic -qchar=signed -D_xlc_ \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
 		$(EXTRA_CFLAGS) $(FINK_CFLAGS)
 
+# OS version
+MACOSX_MINOR := $(shell sw_vers -productVersion | cut -d'.' -f2)
+
 # Linker:
 LD            = xlC
 LDFLAGS       = $(OPT) -Wl,-bind_at_load -Wl,-flat_namespace
+ifeq ($(MACOSX_MINOR),3)
+SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined dynamic_lookup \
+                -single_module -install_name $(LIBDIR)/
+else
 SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined suppress \
                 -single_module -install_name $(LIBDIR)/
+endif
 SOEXT         = dylib
 
 # System libraries:

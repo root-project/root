@@ -36,11 +36,19 @@ CINTCFLAGS    = -pipe -W -Wall -fsigned-char -fno-common \
 		$(EXTRA_CFLAGS) $(FINK_CFLAGS)
 COMPILER      = gnu
 
+# OS version
+MACOSX_MINOR := $(shell sw_vers -productVersion | cut -d'.' -f2)
+
 # Linker:
 LD            = g++
 LDFLAGS       = $(OPT) -Xlinker -bind_at_load -flat_namespace
+ifeq ($(MACOSX_MINOR),3)
+SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined dynamic_lookup \
+                -install_name $(LIBDIR)/
+else
 SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined suppress \
                 -install_name $(LIBDIR)/
+endif
 SOEXT         = dylib
 
 # System libraries:

@@ -75,12 +75,17 @@ elif [ $PLATFORM = "fbsd" ]; then
     echo $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
     $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
 elif [ $PLATFORM = "macosx" ]; then
+   macosx_minor=`sw_vers -productVersion | cut -d'.' -f2`
    if [ $LD = "xlC" ]; then
       # if we are using xlc, then the linker for shared libs is still g++
       LD=g++
    fi
    # Look for a fink installation
    FINKDIR=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
+   if [ $macosx_minor -ge 3 ]; then
+      unset LD_PREBIND
+      export MACOSX_DEPLOYMENT_TARGET=10.3
+   fi
    # We need two library files: a .dylib to link to and a .so to load
    BUNDLE=`echo $LIB | sed s/.dylib/.so/`
    echo $LD $SOFLAGS$SONAME -o $LIB $OBJS \
@@ -92,10 +97,17 @@ elif [ $PLATFORM = "macosx" ]; then
    else
       opt=-O
    fi
-   echo $LD $opt -bundle -flat_namespace -undefined suppress -o $BUNDLE \
-	$OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
-   $LD $opt -bundle -flat_namespace -undefined suppress -o $BUNDLE \
-	$OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
+   if [ $macosx_minor -ge 3 ]; then
+      echo $LD $opt -bundle -flat_namespace -undefined dynamic_lookup -o $BUNDLE \
+	   $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
+      $LD $opt -bundle -flat_namespace -undefined dynamic_lookup -o $BUNDLE \
+	   $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
+   else
+      echo $LD $opt -bundle -flat_namespace -undefined suppress -o $BUNDLE \
+	   $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
+      $LD $opt -bundle -flat_namespace -undefined suppress -o $BUNDLE \
+	   $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
+   fi
 elif [ $LD = "KCC" ]; then
    echo $LD $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
    $LD $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
