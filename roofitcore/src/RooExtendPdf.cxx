@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooExtendPdf.cc,v 1.3 2001/11/19 07:23:56 verkerke Exp $
+ *    File: $Id: RooExtendPdf.cc,v 1.4 2001/12/14 00:55:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -211,7 +211,7 @@ Double_t RooExtendPdf::expectedEvents() const
       if (nset) nset->Print("1") ; else cout << "<none>" << endl ;
     }
 
-    nExp *= (fracInt / normInt) ;
+    nExp /= (fracInt / normInt) ;
   }
 
   // Multiply with original Nexpected, if defined

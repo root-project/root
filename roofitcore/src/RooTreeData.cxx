@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.30 2001/12/13 22:05:19 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.31 2001/12/13 23:08:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -71,7 +71,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, const RooArgSet& v
   createTree(name,title) ;
 
   // Constructor with list of variables
-  initialize(vars);
+  initialize();
 }
 
 
@@ -87,7 +87,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   createTree(name,title) ;
 
   // Constructor from existing data set with list of variables and cut expression
-  initialize(vars);
+  initialize();
 
   if (cuts && *cuts) {
     // Create a RooFormulaVar cut from given cut expression
@@ -111,7 +111,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   createTree(name,title) ;
 
   // Constructor from existing data set with list of variables and cut expression
-  initialize(vars);
+  initialize();
 
   // Deep clone cutVar and attach clone to this dataset
   RooArgSet* tmp = (RooArgSet*) RooArgSet(cutVar).snapshot() ;
@@ -135,7 +135,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
   createTree(name,title) ;
 
   // Constructor from existing data set with list of variables and cut expression
-  initialize(vars);
+  initialize();
 
   // Deep clone cutVar and attach clone to this dataset
   RooArgSet* tmp = (RooArgSet*) RooArgSet(cutVar).snapshot() ;
@@ -168,7 +168,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   }
 
   // Constructor from existing data set with list of variables that preserves the cache
-  initialize(vars);
+  initialize();
   initCache(t->_cachedVars) ;
   
   loadValues(t,cloneVar);
@@ -191,7 +191,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
   createTree(name,title) ;
 
   // Constructor from existing TTree with list of variables and cut expression
-  initialize(vars);
+  initialize();
 
   if (cuts && *cuts) {
     // Create a RooFormulaVar cut from given cut expression
@@ -216,7 +216,7 @@ RooTreeData::RooTreeData(const char *name, const char *filename,
   createTree(name,name) ;
 
   // Constructor from TTree file with list of variables and cut expression
-  initialize(vars);
+  initialize();
 
   // Create a RooFormulaVar cut from given cut expression
   if (cuts && *cuts) {
@@ -235,7 +235,7 @@ RooTreeData::RooTreeData(RooTreeData const & other, const char* newName) :
   RooTrace::create(this) ;
   createTree(newName,other.GetTitle()) ;
 
-  initialize(other._vars) ;
+  initialize() ;
   loadValues(&other,0) ;
 }
 
@@ -265,7 +265,7 @@ RooTreeData::~RooTreeData()
 }
 
 
-void RooTreeData::initialize(const RooArgSet& vars) {
+void RooTreeData::initialize() {
   // Attach variables of internal ArgSet 
   // to the corresponding TTree branches
 
@@ -514,15 +514,7 @@ const RooArgSet* RooTreeData::get(Int_t index) const
   // and return a pointer to the internal RooArgSet
   // holding its coordinates.
 
-  if (_defCtor) {
-    // Need to reattach variables to this dataset
-    _iterator->Reset() ;
-    RooAbsArg* var(0) ;
-    while(var=(RooAbsArg*)_iterator->Next()) {
-      var->attachToTree(*_tree) ;
-    }
-    _defCtor = kFALSE ;
-  }
+  checkInit() ;
 
   Int_t ret = ((RooTreeData*)this)->GetEntry(index, 1) ;
   if(!ret) return 0;
@@ -569,6 +561,8 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
   //       this function should be used. (E.g collapsing a continuous B0 flavour
   //       probability into a 2-state B0/B0bar category)
 
+  checkInit() ;
+
   // Create a fundamental object of the right type to hold newVar values
   RooAbsArg* valHolder= newVar.createFundamental();
   // Sanity check that the holder really is fundamental
@@ -606,6 +600,8 @@ RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
 {
   TIterator* vIter = varList.createIterator() ;
   RooAbsArg* var ;
+
+  checkInit() ;
 
   TList cloneSetList ;
   RooArgSet cloneSet ;

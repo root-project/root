@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.cc,v 1.13 2001/10/19 06:56:53 verkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.14 2001/11/01 22:52:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -291,18 +291,20 @@ void RooStreamParser::zapToEnd()
 void RooStreamParser::putBackToken(const TString& token) 
 {
   // Put back given token in stream buffer
-
   const char* buf=token.Data() ;
   int len=token.Length() ;
-  for (int i=len-1 ; i>=0 ; i--)
-    _is.putback(buf[i]) ;
-  
+
   // Add a space to keep the token separate
   if (buf[0]=='\n') {
   } else {
-  _is.putback(' ') ;  
+    _is.putback(' ') ;  
   }
+  
+  for (int i=len-1 ; i>=0 ; i--)
+    _is.putback(buf[i]) ;
+  
 }
+
 
 
 Bool_t RooStreamParser::expectToken(const TString& expected, Bool_t zapOnError) 

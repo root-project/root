@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.13 2001/11/22 01:07:10 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.14 2001/12/13 23:08:44 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -290,6 +290,8 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
 RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache) 
 {
   // Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
+  checkInit() ;
+
   RooDataHist *rdh = new RooDataHist(GetName(), GetTitle(), varSubset) ;
   rdh->add(*this,cutVar) ;
   return rdh ;
@@ -441,6 +443,7 @@ void RooDataHist::add(const RooArgSet& row, Double_t weight)
 {
   // Increment the weight of the bin enclosing the coordinates
   // given by 'row' by the specified amount
+  checkInit() ;
 
   _vars = row ;
   _wgt[calcTreeIndex()] += weight ;
@@ -463,6 +466,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
 {
   // Add all data points contained in 'dset' to this data set with given weight.
   // Optional RooFormulaVar pointer selects the data points to be added.
+  checkInit() ;
 
   RooFormulaVar* cloneVar(0) ;
   RooArgSet* tmp ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.61 2001/11/19 23:09:52 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.62 2001/11/22 01:07:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -170,6 +170,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *ntuple,
 RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache)
 {
   // Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
+  checkInit() ;
   return new RooDataSet(GetName(), GetTitle(), this, varSubset, cutVar, copyCache) ;
 }
 
@@ -188,6 +189,7 @@ void RooDataSet::add(const RooArgSet& data, Double_t weight)
   // Any variables present in 'data' but not in the dataset will be silently ignored
   //
   // The weight parameter is presently not supported
+  checkInit() ;
 
   _vars= data;
   Fill();
@@ -229,6 +231,7 @@ Bool_t RooDataSet::merge(const TList& dsetList)
   // Merge columns of supplied data set(s) with this data set.
   // All data sets must have equal number of entries.
   // In case of duplicate columns the column of the last dataset in the list prevails
+  checkInit() ;
   
   TIterator* iter = dsetList.MakeIterator() ;
   RooDataSet* data ;
@@ -283,6 +286,7 @@ Bool_t RooDataSet::merge(const TList& dsetList)
 void RooDataSet::append(RooDataSet& data) {
   // Add all data points of given data set to this data set.
   // Eventual extra dimensions of 'data' will be stripped in transfer
+  checkInit() ;
 
   loadValues(data._tree,(RooFormulaVar*)0) ;
 }
@@ -652,6 +656,8 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 
 Bool_t RooDataSet::write(const char* filename)
 {
+  checkInit() ;
+
   // Open file for writing 
   ofstream ofs(filename) ;
   if (ofs.fail()) {
