@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.13 2000/07/11 13:47:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.14 2000/07/11 15:47:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -822,6 +822,9 @@ void TH1::Draw(Option_t *option)
 //*-*  When using the "CONT" or "SURF" or "LEGO" options, the number
 //*-*  of contour levels can be changed via TH1::SetContour.
 //*-*  (default is 20 equidistant levels)
+//*-*
+//*-*  One can set a default drawing option via TH1::SetOption. If an option 
+//*-*  is set, it will be the default drawing option.
 //*-*
 //*-*  When option "same" is specified, the statistic box is not drawn.
 //*-*  Specify option "sames" to force painting statistics with option "same"
@@ -2115,7 +2118,10 @@ void TH1::Paint(Option_t *option)
 //  (see TH1::Draw for the list of options)
 
    if (!fPainter) fPainter = TVirtualHistPainter::HistPainter(this);
-   if (fPainter) fPainter->Paint(option);
+   if (fPainter) {
+      if (strlen(option) > 0) fPainter->Paint(option);
+      else                    fPainter->Paint(fOption.Data());
+   }
 }
 
 //______________________________________________________________________________
