@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.9 2002/07/17 15:06:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.10 2002/07/17 15:13:08 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -18,7 +18,7 @@
 // other external MC for simulation, therefore it does not contain any 
 // constraints related to physics. However, the package defines a number of 
 // hooks for tracking, such as materials, magnetic field or track state flags, 
-// in order to allow interfacing to tracking MC's. The final purpose is to be 
+// in order to allow interfacing to tracking MC's. The final goal is to be 
 // able to use the same geometry for several purposes, such as tracking, 
 // reconstruction or visualization, taking advantage of the ROOT features 
 // related to bookkeeping, I/O, histograming, browsing and GUI's.  
@@ -32,9 +32,9 @@
 // containment scheme and a normal CSG binary tree at the level of shapes. An
 // important common feature of all detector geometry descriptions is the 
 // mother-daughter concept. This is the most natural approach when tracking
-// is concerned and imposes a set of constrains to the way geometry is defined. 
+// is concerned and imposes a set of constraints to the way geometry is defined. 
 // Constructive solid geometry composition is used only in order to create more
-// complex shapes from an existing set of primitives through bolean operations. 
+// complex shapes from an existing set of primitives through boolean operations. 
 // This feature is not implemented yet but in future full definition of boolean
 // expressions will be supported. 
 //
@@ -52,9 +52,9 @@
 // the search algorithms. Finally, nodes can be regarded as bidirectional links 
 // between containers and containees objects. 
 //
-//   The structure defined in this way is a graf structure since volumes are 
+//   The structure defined in this way is a graph structure since volumes are 
 // replicable (same volume can become daughter node of several other volumes), 
-// every volume becoming a branch in this graf. Any volume in the logical graf
+// every volume becoming a branch in this graph. Any volume in the logical graph
 // can become the actual top volume at run time (see TGeoManager::SetTopVolume()).
 // All functionalities of the modeler will behave in this case as if only the
 // corresponding branch starting from this volume is the registered geometry.
@@ -73,7 +73,7 @@
 // (see TGeoVolume::Divide()).
 //
 //   The primitive shapes supported by the package are basically the GEANT3
-// shapes (see class TGeoShape), arbitrary wedges with eight vertices on two paralel 
+// shapes (see class TGeoShape), arbitrary wedges with eight vertices on two parallel 
 // planes. All basic primitives inherits from class TGeoBBox since the bounding box
 // of a solid is essential for the tracking algorithms. They also implement the
 // virtual methods defined in the virtual class TGeoShape (point and segment
@@ -230,29 +230,29 @@
 // TGeoManager - the manager class for the geometry package.
 // ---------------------------------------------------------
 //
-//   TGeoManager class is embeeding all the API needed for building and tracking
+//   TGeoManager class is embedding all the API needed for building and tracking
 // a geometry. It defines a global pointer (gGeoManager) in order to be fully
 // accessible from external code. The mechanism of handling multiple geometries
 // at the same time will be soon implemented. 
 //
 //   TGeoManager is the owner of all geometry objects defined in a session, 
-// therefore users must not try to controll their deletion. It contains lists of 
+// therefore users must not try to control their deletion. It contains lists of 
 // materials, transformations, shapes and volumes. Logical nodes (positioned 
 // volumes) are created and destroyed by the TGeoVolume class. Physical
 // nodes and their global transformations are subjected to a caching mechanism
-// due to the sometimes very large memory requirements of logical graf expansion.
+// due to the sometimes very large memory requirements of logical graph expansion.
 // The caching mechanism is triggered by the total number of physical instances 
 // of volumes and the cache manager is a client of TGeoManager. The manager class
-// also controlls the painter client. This is linked with ROOT graphical libraries 
-// is loaded on demand in order to control visualization actions.
+// also controls the painter client. This is linked with ROOT graphical libraries 
+// loaded on demand in order to control visualization actions.
 //
 // Rules for building a valid geometry
 // -----------------------------------
 //
 //   A given geometry can be built in various ways, but there are mandatory steps
-// that has to be followed in order to be validated by the modeler. There are
+// that have to be followed in order to be validated by the modeler. There are
 // general rules : volumes needs materials and shapes in order to be created,
-// both container an containee volumes must be created before linking them togeather,
+// both container an containee volumes must be created before linking them together,
 // and the relative transformation matrix must be provided. All branches must
 // have an upper link point otherwise they will not be considered as part of the 
 // geometry. Visibility or tracking properties of volumes can be provided both
@@ -354,7 +354,7 @@
 //
 //  --- Checking the geometry
 //
-//  Several checking methods are accesible from the volume context menu. They
+//  Several checking methods are accessible from the volume context menu. They
 // generally apply only to the visible parts of the drawn geometry in order to
 // ease geometry checking, and their implementation is in the TGeoChecker class
 // from the painting package.
