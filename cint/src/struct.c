@@ -242,7 +242,7 @@ int env_tagnum;
 {
   int tagnum;
 #ifndef G__OLDIMPLEMENTATION621
-  if(0>env_tagnum) return(0);
+  if(0>env_tagnum || 0>enclosingtagnum) return(0);
 #endif
   tagnum = G__struct.parent_tagnum[env_tagnum];
   while(-1!=tagnum) {
