@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.6 2001/10/08 15:05:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.7 2002/01/20 14:23:53 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -361,9 +361,13 @@ void TUUID::GetNodeIdentifier()
    // network interface try random info based on some machine parameters.
 
    if (gSystem) {
-      TInetAddress addr = gSystem->GetHostByName(gSystem->HostName());
-      if (addr.IsValid()) {
-         UInt_t adr = addr.GetAddress();
+      static UInt_t adr = 0;
+      if (!adr) {
+         TInetAddress addr = gSystem->GetHostByName(gSystem->HostName());
+         if (addr.IsValid())
+            adr = addr.GetAddress();
+      }
+      if (adr) {
          memcpy(fNode, &adr, 4);
          fNode[4] = 0xbe;
          fNode[5] = 0xef;
@@ -408,7 +412,7 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
    GetComputerName(r.hostname, &r.l);
 #else
    struct randomness {
-#if defined(R__LINUX) 
+#if defined(R__LINUX)
       struct sysinfo   s;
 #endif
       struct timeval   t;
@@ -416,7 +420,7 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
    };
    randomness r;
 
-#if defined(R__LINUX) 
+#if defined(R__LINUX)
    sysinfo(&r.s);
 #endif
    gettimeofday(&r.t, 0);
