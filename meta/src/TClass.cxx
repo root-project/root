@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.65 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.66 2002/01/24 11:39:30 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -463,19 +463,20 @@ void TClass::BuildRealData(void *pointer)
       char parent[256];
       parent[0] = 0;
       TBuildRealData brd(realDataObject, this);
-      if (InheritsFrom(TObject::Class())) {
-         realDataObject->ShowMembers(brd, parent);
-      } else {
-         G__CallFunc func;
-         void *address;
-         long  offset;
-         func.SetFunc(fClassInfo->GetMethod("ShowMembers",
-                      "TMemberInspector&,char*", &offset).InterfaceMethod());
-         func.SetArg((long)&brd);
-         func.SetArg((long)parent);
-         address = (void*)((long)realDataObject + offset);
-         func.Exec(address);
-      }
+      //Always call ShowMembers via the interpreter. A direct call like
+      //      realDataObject->ShowMembers(brd, parent);
+      //will not work if the class derives from TObject but not as primary
+      //inheritance.
+      G__CallFunc func;
+      void *address;
+      long  offset;
+      func.SetFunc(fClassInfo->GetMethod("ShowMembers",
+                   "TMemberInspector&,char*", &offset).InterfaceMethod());
+      func.SetArg((long)&brd);
+      func.SetArg((long)parent);
+      address = (void*)((long)realDataObject + offset);
+      func.Exec(address);
+
       // take this opportunity to build the real data for base classes
       // In case one base class is abstract, it would not be possible later
       // to create the list of real data for this abstract class
