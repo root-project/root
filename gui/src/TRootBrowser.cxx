@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.36 2002/12/12 12:02:04 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.37 2003/01/16 17:57:37 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1282,18 +1282,17 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
             case kCT_ITEMCLICK:
                if (parm1 == kButton1 || parm1 == kButton3) {
                   TGListTreeItem *item;
+                  TObject *obj = 0;
                   if ((item = fLt->GetSelected()) != 0 ) {
                      ListTreeHighlight(item);
-                     TObject *obj = (TObject *) item->GetUserData();
+                     obj = (TObject *) item->GetUserData();
 
-                     if (obj->IsA() == TSystemFile::Class()) {
-                        fStatusBar->SetText(obj->GetName(), 1);
-                     } else fStatusBar->SetText(obj->GetTitle(), 1);
+                     fStatusBar->SetText("", 1);   // clear
                   }
                   if (item && parm1 == kButton3) {
                      Int_t x = (Int_t)(parm2 & 0xffff);
                      Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
-                     TObject *obj = (TObject *) item->GetUserData();
+                     obj = (TObject *) item->GetUserData();
                      if (obj) fBrowser->GetContextMenu()->Popup(x, y, obj, fBrowser);
                   }
                   fClient->NeedRedraw(fLt);
@@ -1353,8 +1352,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         }
                      }
 
-                     if (obj->IsA() == TSystemFile::Class()) fStatusBar->SetText(obj->GetName(), 1);
-                     else fStatusBar->SetText(obj->GetTitle(), 1);
+                     fStatusBar->SetText(obj->GetName(), 1);
                   }
                }
                if (parm1 == kButton3) {
@@ -1427,7 +1425,7 @@ void TRootBrowser::Chdir(TGListTreeItem *item)
                dir = obj->GetName() + dir;
             }
             if (obj->IsA() == TKey::Class()) {
-               if (strcmp(((TKey*)obj)->GetClassName(), TDirectory::Class()->GetName()) == 0) {
+               if (strcmp(((TKey*)obj)->GetClassName(), "TDirectory") == 0) {
                   dir = "/" + dir;
                   dir = obj->GetName() + dir;
                }
@@ -1435,6 +1433,7 @@ void TRootBrowser::Chdir(TGListTreeItem *item)
          }
          i = i->GetParent();
       }
+
       if (gDirectory && dir.Length()) gDirectory->cd(dir.Data());
    }
 }
@@ -1450,9 +1449,8 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
 
       if (obj) {
          if (obj->IsA() == TKey::Class()) {
-            if (strcmp(((TKey*)obj)->GetClassName(), TDirectory::Class()->GetName()) == 0)
-               Chdir(item->GetParent());
 
+            Chdir(item->GetParent());
             TObject *k_obj = gROOT->FindObject(obj->GetName());
 
             if (k_obj) {
@@ -1467,7 +1465,7 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
                   item = parent;
                }
             }
-         } else if (obj->IsA() == TDirectory::Class())
+         } else if (obj->InheritsFrom(TDirectory::Class()))
             Chdir(item->GetParent());
 
         if (!fListLevel || !fListLevel->IsActive()) {
