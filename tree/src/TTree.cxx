@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.26 2000/11/21 20:51:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.27 2000/11/22 20:57:27 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2047,7 +2047,7 @@ void TTree::Show(Int_t entry)
 }
 
 //_______________________________________________________________________
-void TTree::StartViewer(Int_t ww, Int_t wh)
+void TTree::StartViewer()
 {
 //*-*-*-*-*-*-*-*-*Start the TTreeViewer on this TTree*-*-*-*-*-*-*-*-*-*
 //*-*              ===================================
@@ -2056,7 +2056,7 @@ void TTree::StartViewer(Int_t ww, Int_t wh)
 //  wh is the height of the canvas in pixels
 
    GetPlayer();
-   if (fPlayer) fPlayer->StartViewer(ww,wh);
+   if (fPlayer) fPlayer->StartViewer(600,400);
 }
 
 //_______________________________________________________________________
