@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootxx.cxx,v 1.2 2001/06/22 16:10:21 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootxx.cxx,v 1.3 2004/01/08 23:06:52 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -55,17 +55,22 @@ static const char *gConception[] = {
    0
 };
 
+static const char *gLeadDevelopers[] = {
+   "Rene Brun",
+   "Philippe Canal",
+   "Fons Rademakers",
+   0
+};
+
 static const char *gRootDevelopers[] = {
    "Ilka Antcheva",
    "Maarten Ballintijn",
    "Bertrand Bellenot",
-   "Rene Brun",
-   "Philippe Canal",
    "Olivier Couet",
+   "Valery Fine",
    "Gerardo Ganis",
    "Eddy Offermann",
    "Valeriy Onuchin",
-   "Fons Rademakers",
    0
 };
 
@@ -277,15 +282,19 @@ static int DrawCredits(bool draw, bool extended)
    // credits list.
 
    int lineSpacing = gFont->max_bounds.ascent + gFont->max_bounds.descent;
-   int y = 2*lineSpacing;
+   int y = lineSpacing;
 
    y = DrawCreditItem("Conception: ", gConception, y, draw);
 
    y += 2*lineSpacing;
 
-   y = DrawCreditItem("Engineering: ", gRootDevelopers, y, draw);
+   y = DrawCreditItem("Lead Developers: ", gLeadDevelopers, y, draw);
 
-   y += 2*lineSpacing;
+   y += 2*lineSpacing - 1;  // special layout tweak
+
+   y = DrawCreditItem("Core Engineering: ", gRootDevelopers, y, draw);
+
+   y += 2*lineSpacing - 1;  // to just not cut the bottom of the "p"
 
    y = DrawCreditItem("CINT C/C++ Intepreter: ", gCintDevelopers, y, draw);
 
@@ -296,11 +305,6 @@ static int DrawCredits(bool draw, bool extended)
    if (extended && gContributors) {
       y += 2*lineSpacing;
       y = DrawCreditItem("Contributors: ", (const char **)gContributors, y, draw);
-
-      y += 2*lineSpacing;
-      y = DrawCreditItem("Special thanks to the neglected families and friends", 0, y, draw);
-      y += lineSpacing;
-      y = DrawCreditItem("of the aforementioned persons.", 0, y, draw);
 
       y += 2*lineSpacing;
       y = DrawCreditItem("Our sincere thanks and apologies to anyone who deserves", 0, y, draw);
@@ -314,7 +318,10 @@ static int DrawCredits(bool draw, bool extended)
          char *s = strchr(name, ',');
          if (s) *s = 0;
          char line[1024];
-         sprintf(line, "Extra special thanks go to %s,", name);
+         if (strlen(name))
+            sprintf(line, "Extra special thanks go to %s,", name);
+         else
+            sprintf(line, "Extra special thanks go to %s,", pwd->pw_name);
          delete [] name;
          y += 2*lineSpacing;
          y = DrawCreditItem(line, 0, y, draw);
@@ -414,6 +421,7 @@ void WaitLogo()
    if (!gDisplay) return;
 
    int ypos = 0;
+   bool stopScroll = false;
 
    ScrollCredits(ypos);
    DrawVersion();
@@ -430,7 +438,10 @@ void WaitLogo()
                }
                break;
             case ButtonPress:
-               gDone = true;
+               if (gAbout && event.xbutton.button == 3)
+                  stopScroll = stopScroll ? false : true;
+               else
+                  gDone = true;
                break;
             default:
                break;
@@ -442,7 +453,7 @@ void WaitLogo()
       if (!gAbout && !StayUp(gStayUp) && gMayPopdown)
          gDone = true;
 
-      if (gAbout) {
+      if (gAbout && !stopScroll) {
          if (ypos == 0) Sleep(2000);
          ypos++;
          if (ypos > (int) (gCreditsHeight - gCreditsRect.height - 50))
