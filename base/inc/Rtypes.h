@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.23 2002/05/13 16:46:03 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.24 2002/05/13 17:26:26 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -245,7 +245,7 @@ namespace ROOT { \
             GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
 }
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
+#if defined(__CINT__)
 #define ClassImp(name)
 #else
 #define ClassImp(name) \
