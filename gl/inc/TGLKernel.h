@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.9 2004/08/16 10:00:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.10 2004/08/19 12:06:36 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -27,6 +27,10 @@
 
 #ifndef ROOT_TMath
 #include "TMath.h"
+#endif
+
+#ifdef WIN32
+#include "Windows4root.h"
 #endif
 
 #include <GL/glu.h>

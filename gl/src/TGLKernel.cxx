@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.17 2004/08/16 10:13:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.18 2004/08/19 12:06:36 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -17,11 +17,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 #include "TGLKernel.h"
-
-#ifdef WIN32
-#include "Windows4root.h"
-#endif
-
 #include "TView.h"
 #include "TGeometry.h"
 #include "TROOT.h"
