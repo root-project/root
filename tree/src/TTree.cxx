@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.158 2003/08/04 21:35:26 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.159 2003/08/14 04:44:20 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1329,7 +1329,13 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
 
    if (n > fEstimate) SetEstimate(n);
 
-   Draw(varexp,"","goff");
+   Int_t res = Draw(varexp,"","goff");
+   if (res!=n) {
+      Error("BuildIndex",
+            Form("Badly formed index because the expression %s has %d values while the tree has %d entries\n",
+                 varexp,res,n));
+      return;
+   }
 
    // Sort array fV1 (contains  majorname +minorname*1e-9) into fIndex
    Double_t *w = GetPlayer()->GetV1();

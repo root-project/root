@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.173 2003/06/21 06:07:46 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.174 2003/08/14 19:09:41 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1368,6 +1368,29 @@ Int_t TStreamerInfo::New(const char *p)
          TClass *cle = element->GetClassPointer();
          if (!cle) continue;
          cle->New((char*)p + element->GetOffset());
+      }
+      if (etype == kObject +kOffsetL || etype == kAny+kOffsetL || 
+          etype == kTObject+kOffsetL || etype == kTString+kOffsetL || 
+          etype == kTNamed +kOffsetL) {
+         TClass *cle = element->GetClassPointer();
+         if (!cle) continue;
+ 
+         Int_t size = cle->Size();
+         char *start= (char*)p + element->GetOffset();
+         Int_t len = element->GetArrayLength();
+
+         for (Int_t j=0;j<len;j++) {
+            cle->New(start);
+            start += size;
+         }
+      }
+      if (etype == kAnyP || etype == kObjectP) {
+         // Initialize to zero
+         void **where = (void**)((char*)p + element->GetOffset());
+         Int_t len = element->GetArrayLength();
+         for (Int_t j=0;j<len;j++) {         
+            where[j] = 0; 
+         }
       }
    }
    return 0;

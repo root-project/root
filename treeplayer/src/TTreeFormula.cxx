@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.123 2003/07/07 19:34:04 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.124 2003/08/19 16:32:35 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2853,11 +2853,12 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
 
    TClass * cl = 0;
    TIter next (fTree->GetIteratorOnAllLeaves());
+   TFormLeafInfo* clonesinfo = 0;
    TLeaf *leafcur;
    while ((leafcur = (TLeaf*)next())) {
       // The following code is used somewhere else, we need to factor it out.
 
-      // Here since we are interested in data member, we want to consider on
+      // Here since we are interested in data member, we want to consider only
       // 'terminal' branch and leaf.
       if (leafcur->InheritsFrom("TLeafObject") &&
           leafcur->GetBranch()->GetListOfBranches()->Last()==0) {
@@ -2882,15 +2883,15 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
          }
 
       }
+      if (clonesinfo) { delete clonesinfo; clonesinfo = 0; }
       if (cl ==  TClonesArray::Class()) {
          // We have a unsplit TClonesArray leaves
          // In this case we assume that cl is the class in which the TClonesArray
          // belongs.
-         TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0);
+         clonesinfo = new TFormLeafInfoClones(cl, 0);
          leafcur->GetBranch()->GetEntry(readentry);
          TClonesArray * clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leafcur,0);
          cl = clones->GetClass();
-         delete clonesinfo;
       }
       if (cl) {
          // Now that we have the class, let's check if the topchoice is of its datamember
@@ -2909,8 +2910,10 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
                   // itself but only in the object inside.
                   TBranch *branch = leafcur->GetBranch();
                   TFormLeafInfo *leafinfo = 0;
-                  if (branch->IsA()==TBranchElement::Class()
-                      && ((TBranchElement*)branch)->GetType()==31) {
+                  if (clonesinfo) { 
+                     leafinfo = clonesinfo; 
+                  } else if (branch->IsA()==TBranchElement::Class()
+                             && ((TBranchElement*)branch)->GetType()==31) {
                      // Case of a sub branch of a TClonesArray
                      TBranchElement *BranchEl = (TBranchElement*)branch;
                      TStreamerInfo *info = BranchEl->GetInfo();
@@ -2922,12 +2925,15 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
 
                   Int_t clones_offset;
                   cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),clones_offset);
-                  TFormLeafInfo* clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
-                  if (leafinfo) leafinfo->fNext = clonesinfo;
-                  else leafinfo = clonesinfo;
+                  TFormLeafInfo* sub_clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
+                  if (leafinfo) leafinfo->fNext = sub_clonesinfo;
+                  else leafinfo = sub_clonesinfo;
+
                   branch->GetEntry(readentry);
-                  TClonesArray * clones = (TClonesArray*)leafinfo->GetLocalValuePointer(leafcur,0);
-                  delete leafinfo;
+
+                  TClonesArray * clones = (TClonesArray*)leafinfo->GetValuePointer(leafcur,0);
+
+                  delete leafinfo; clonesinfo = 0;
                   // If TClonesArray object does not exist we have no information, so let go
                   // on.  This is a weakish test since the TClonesArray object might exist in
                   // the next entry ... In other word, we ONLY rely on the information available
@@ -2945,6 +2951,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
          else cl = 0;
       }
    }
+   delete clonesinfo;
    if (cl) {
       return leafcur;
    } else {
