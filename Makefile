@@ -125,6 +125,7 @@ MAKEMAKEINFO  = build/unix/makeinfo.sh
 MAKECHANGELOG = build/unix/makechangelog.sh
 MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
+MAKECINTDLLS  = build/unix/makecintdlls.sh
 ifeq ($(ARCH),win32)
 MAKELIB       = build/win/makelib.sh
 MAKEDIST      = build/win/makedist.sh
@@ -189,7 +190,7 @@ endif
 
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean compiledata importcint version html \
-                changelog install showbuild \
+                changelog install showbuild cintdlls \
                 $(patsubst %,all-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
@@ -269,11 +270,17 @@ distclean:: clean
 	@mv -f include/config.hh include/config.h
 	@rm -f build/dummy.d bin/*.dll lib/*.def lib/*.exp lib/*.lib .def
 	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
-	@rm -rf htmldoc README/ChangeLog
+	@rm -f $(CINTDIR)/include/*.dl* $(CINTDIR)/stl/*.dll README/ChangeLog
+	@rm -rf htmldoc
 	@cd test && $(MAKE) distclean
 
 version: $(CINTTMP)
 	@$(MAKEVERSION)
+
+cintdlls: $(CINTTMP)
+	@$(MAKECINTDLLS) $(PLATFORM) $(CINTTMP) $(MAKELIB) $(CXX) \
+	   $(CC) $(LD) "$(OPT)" "$(CINTCXXFLAGS)" "$(CINTCFLAGS)" \
+	   "$(LDFLAGS)" "$(SOFLAGS)"
 
 importcint: distclean-cint
 	@$(IMPORTCINT)
