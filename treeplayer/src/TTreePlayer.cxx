@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.62 2001/10/19 16:10:43 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.63 2001/10/22 14:26:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -438,6 +438,7 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *option, Int_t nent
    }
 
    // Compile selection expression if there is one
+   ClearFormula();
    if (strlen(selection)) {
       fSelect = new TTreeFormula("Selection",selection,fTree);
       if (!fSelect || !fSelect->GetNdim()) { delete fSelect; fSelect = 0; }
