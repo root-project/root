@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.16 2003/03/07 08:36:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.18 2003/05/07 13:31:09 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -51,6 +51,7 @@ TView::TView()
    fOutline = 0;
    fDefaultOutline = kFALSE;
    fAutoRange      = kFALSE;
+   fChanged = kFALSE;
    SetBit(kMustCleanup);
 }
 
@@ -103,6 +104,7 @@ TView::TView(Int_t system)
    fOutline = 0;
    fDefaultOutline = kFALSE;
    fAutoRange      = kFALSE;
+   fChanged        = kFALSE;
 
    if (system == kCARTESIAN || system == kPOLAR || system == 11) fPsi = 0;
    else fPsi = 90;
@@ -161,6 +163,7 @@ TView::TView(const Float_t *rmin, const Float_t *rmax, Int_t system)
    fSystem = system;
    fOutline = 0;
    fDefaultOutline = kFALSE;
+   fChanged        = kFALSE;
 
    if (system == kCARTESIAN || system == kPOLAR || system == 11) fPsi = 0;
    else fPsi = 90;
@@ -218,6 +221,7 @@ TView::TView(const Double_t *rmin, const Double_t *rmax, Int_t system)
    fSystem = system;
    fOutline = 0;
    fDefaultOutline = kFALSE;
+   fChanged        = kFALSE;
 
    if (system == kCARTESIAN || system == kPOLAR || system == 11) fPsi = 0;
    else fPsi = 90;
@@ -389,25 +393,24 @@ void TView::DefinePerspectiveView()
 //      bcut, fcut - backward/forward range w.r.t projection plane (fcut<=0)
 //   Output :
 //      nper[16] - normalizing transformation
-
-   // compute tr+rot to get COV in origin, view vector parallel to -Z axis, up vector
-   // parralel to Y.
-   //                      ^Yv      UP ^  proj. plane
-   //                      |           |   /|
-   //                      |           | /  |
-   //                      |   dproj   /  x--- center of window (COW)
-   //                  COV |----------|--x--|------------> Zv
-   //		          /           | VRP'z 
-   //			/   --->      |  /
-   //                 /     VPN       |/
-   //                Xv
-   //
-   //   1 - translate COP to origin of MARS : Tper = T(-copx, -copy, -copz)
-   //   2 - rotate VPN : R = Rz(-psi)*Rx(-theta)*Rz(-phi) (inverse Euler)
-   //   3 - left-handed screen reference to right-handed one of MARS : Trl
-   //   
-   //   T12 = Tper*R*Trl
-   //
+// compute tr+rot to get COV in origin, view vector parallel to -Z axis, up vector
+// parralel to Y.
+//                      ^Yv   UP ^  proj. plane
+//                     |        |   /|
+//                    |        |  /  |
+//                   |   dproj  /  x--- center of window (COW)
+//              COV |----------|--x--|------------> Zv
+//		             /           | VRP'z 
+//	              /   --->      |  /
+//             /     VPN       |/
+//            Xv
+//
+//   1 - translate COP to origin of MARS : Tper = T(-copx, -copy, -copz)
+//   2 - rotate VPN : R = Rz(-psi)*Rx(-theta)*Rz(-phi) (inverse Euler)
+//   3 - left-handed screen reference to right-handed one of MARS : Trl
+//   
+//   T12 = Tper*R*Trl
+//
    Double_t t12[16];
    Double_t cov[3];
    Int_t i;
@@ -420,22 +423,6 @@ void TView::DefinePerspectiveView()
    Double_t s3 = TMath::Cos(fLongitude*kRad);
    Double_t c3 = -TMath::Sin(fLongitude*kRad);
    
-/*
-   t12[0] =  c1*c3 - s1*c2*s3;
-   t12[1] = -c1*s3 - s1*c2*c3;
-   t12[2] =  s1*s2;
-   t12[3] =  0;
-   
-   t12[4] =  s1*c3 + c1*c2*s3;
-   t12[5] = -s1*s3 + c1*c2*c3;
-   t12[6] =  -c1*s2;
-   t12[7] =  0;
-   
-   t12[8] =  s2*s3;
-   t12[9] =  s2*c3;
-   t12[10] = c2;      // contains Trl
-   t12[11] =  0;
-*/
    t12[0] =  c1*c3 - s1*c2*s3;
    t12[4] =  c1*s3 + s1*c2*c3;
    t12[8] =  s1*s2;
@@ -466,9 +453,6 @@ void TView::DefinePerspectiveView()
    t12[6]  *= -1;
    t12[10] *= -1;
    t12[14] *= -1; 
-//   printf("Translation + rotation + reflection:\n");
-//   for (Int_t j=0; j<4; j++)   printf("   %g %g %g %g\n",t12[4*j], t12[4*j+1], t12[4*j+2], t12[4*j+3]);
-   
    
    // Now we shear the center of window from (0.5*(umin+umax), 0.5*(vmin+vmax), dproj)
    //                                     to (0, 0, dproj)
@@ -689,6 +673,7 @@ void TView::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
    switch (event) {
 
    case kKeyPress :
+       fChanged = kTRUE;
        MoveViewCommand(Char_t(px), py);
        break;
    case kMouseMotion:
@@ -726,6 +711,7 @@ void TView::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
 
 //*-*-    Draw the surrounding frame for the current mouse position
 //*-*-       First: Erase old frame
+      fChanged = kTRUE;
       if (framewasdrawn) fOutline->Paint();
       framewasdrawn = 1;
       x = gPad->PixeltoX(px);
@@ -1049,6 +1035,16 @@ void TView::GetRange(Double_t *min, Double_t *max)
 //*-*
         for (Int_t i = 0; i < 3; max[i] = fRmax[i], min[i] = fRmin[i], i++);
 }
+
+//______________________________________________________________________________
+void TView::GetWindow(Double_t &u0, Double_t &v0, Double_t &du, Double_t &dv) const
+{
+// Get current window extent.
+   u0 = fUVcoord[0];
+   v0 = fUVcoord[1];
+   du = fUVcoord[2];
+   dv = fUVcoord[3];
+}   
 
 //______________________________________________________________________________
 Bool_t TView::IsClippedNDC(Double_t *p) const
