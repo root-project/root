@@ -19,11 +19,11 @@ echo "# Unless the keyword DEFAULT is replaced by LOCAL" >> __makeinfo
 echo "# on the next line, before MAKEINFO" >> __makeinfo
 echo "# DEFAULT MAKEINFO" >> __makeinfo
 echo "" >> __makeinfo
-echo "CC          = cl" >> __makeinfo
-echo "CPP         = cl" >> __makeinfo
-echo "CPREP       = cl -E -Dexternalref=extern -D__CINT__" >> __makeinfo
+echo "CC          = cl -nologo " >> __makeinfo
+echo "CPP         = cl -nologo " >> __makeinfo
+echo "CPREP       = cl -nologo -E -Dexternalref=extern -D__CINT__" >> __makeinfo
 if [ "$CPPPREP" = "" ]; then 
-    echo "CPPPREP     = cl -E -C -D__CINT__" >> __makeinfo
+    echo "CPPPREP     = cl -nologo -E -C -D__CINT__" >> __makeinfo
 else
     echo "CPPPREP     = $CPPPREP" >> __makeinfo    
 fi;
