@@ -1,7 +1,7 @@
 # File: roottest/python/function/PyROOT_functiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/24/04
-# Last: 03/18/05
+# Last: 03/28/05
 
 """Unit tests for PyROOT python/TF1 function interactions."""
 
@@ -74,7 +74,7 @@ class FitFunctionTestCase( unittest.TestCase ):
 
       h = TH1F( "h"," test", 100, -2, 2 )
       h.FillRandom( "gaus", 1000 )
-      h.Fit( f, "0" )
+      h.Fit( f, "0Q" )
 
       self.assertEqual( f.GetNDF(), 96 )
 
