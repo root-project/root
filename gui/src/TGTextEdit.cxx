@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.8 2000/07/12 17:58:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.9 2000/08/30 16:57:20 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -368,6 +368,7 @@ void TGTextEdit::Delete(Option_t *)
    SetCurrent(fMarkedStart);
 
    SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_ISMARKED), fWidgetId, kFALSE);
+   Marked(kFALSE);
 
    // only to make sure that IsSaved() returns true in case everything has
    // been deleted
@@ -528,6 +529,7 @@ void TGTextEdit::SetCurrent(TGLongPosition new_coord)
    CursorOn();
 
    SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_DATACHANGE), fWidgetId, 0);
+   DataChanged();
 }
 
 //______________________________________________________________________________
@@ -889,9 +891,11 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
                SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_F3), fWidgetId,
                            kTRUE);
                SetMenuState();
-               if (fMenu->IsEntryEnabled(kM_SEARCH_FINDAGAIN))
+               if (fMenu->IsEntryEnabled(kM_SEARCH_FINDAGAIN)) {
                   SendMessage(this, MK_MSG(kC_COMMAND, kCM_MENU),
                               kM_SEARCH_FINDAGAIN, 0);
+                  FindAgain();
+               }
                break;
             case kKey_Delete:
                if (fIsMarked)
@@ -964,12 +968,14 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
          Copy();
          SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_ISMARKED), fWidgetId,
                      kTRUE);
+         Marked(kTRUE);
       } else {
          if (fIsMarked) {
             fIsMarked = kFALSE;
             UnMark();
             SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_ISMARKED),
                         fWidgetId, kFALSE);
+            Marked(kFALSE);
          }
          fMarkedStart.fY = fMarkedEnd.fY = fCurrent.fY;
          fMarkedStart.fX = fMarkedEnd.fX = fCurrent.fX;
@@ -1039,6 +1045,7 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      if (parm1 == kM_FILE_CLOSE) {
                         SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_CLOSE),
                                     fWidgetId, 0);
+                        Closed();
                      }
                      if (parm1 == kM_FILE_OPEN) {
                         TGFileInfo fi;
@@ -1048,18 +1055,23 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                            LoadFile(fi.fFilename);
                            SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_OPEN),
                                        fWidgetId, 0);
+                           Opened();
                         }
                      }
                      break;
                   case kM_FILE_SAVE:
-                     if (SaveFile(0))
+                     if (SaveFile(0)) {
                         SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_SAVE),
                                     fWidgetId, 0);
+                        Saved();
+                     }
                      break;
                   case kM_FILE_SAVEAS:
-                     if (SaveFile(0, kTRUE))
+                     if (SaveFile(0, kTRUE)) {
                         SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_SAVE),
                                     fWidgetId, 0);
+                        SavedAs();
+                     }
                      break;
                   case kM_FILE_PRINT:
                      {

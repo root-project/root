@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -28,6 +28,14 @@
 // Dragging the slider will generate the event:                         //
 // kC_VSLIDER, kSL_POS, slider id, position  (for vertical slider)      //
 // kC_HSLIDER, kSL_POS, slider id, position  (for horizontal slider)    //
+//                                                                      //
+// Pressing the mouse will generate the event:                          //
+// kC_VSLIDER, kSL_PRESS, slider id, 0  (for vertical slider)           //
+// kC_HSLIDER, kSL_PRESS, slider id, 0  (for horizontal slider)         //
+//                                                                      //
+// Releasing the mouse will generate the event:                         //
+// kC_VSLIDER, kSL_RELEASE, slider id, 0  (for vertical slider)         //
+// kC_HSLIDER, kSL_RELEASE, slider id, 0  (for horizontal slider)       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -86,6 +94,10 @@ public:
    virtual void  SetPosition(Int_t pos) { fPos = pos; fClient->NeedRedraw(this); }
    virtual Int_t GetPosition() const { return fPos; }
    virtual void  MapSubwindows() { TGWindow::MapSubwindows(); }
+
+   virtual void  PositionChanged(Int_t pos) { Emit("PositionChanged(Int_t)", pos); } //*SIGNAL*
+   virtual void  Pressed() { Emit("Pressed()"); }    //*SIGNAL*
+   virtual void  Released() { Emit("Released()"); }  //*SIGNAL*
 
    ClassDef(TGSlider,0)  // Slider widget abstract base class
 };

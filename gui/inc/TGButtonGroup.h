@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.1 2000/10/17 12:30:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.2 2000/10/20 12:18:06 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -23,9 +23,6 @@
 #ifndef ROOT_TGFrame
 #include "TGFrame.h"
 #endif
-#ifndef ROOT_TQObject
-#include "TQObject.h"
-#endif
 #ifndef ROOT_TMap
 #include "TMap.h"
 #endif
@@ -35,7 +32,7 @@ class TGButton;
 
 
 
-class TGButtonGroup : public TGGroupFrame, public TQObject {
+class TGButtonGroup : public TGGroupFrame {
 
 friend class TGButton;
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.4 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.5 2000/10/13 09:56:45 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -789,9 +789,14 @@ void TGMainFrame::CloseWindow()
 {
    // Close main frame. We get here in response to ALT+F4 or a window
    // manager close command. To terminate the application when this
-   // happens override this method and call gApplication->Terminate(0).
+   // happens override this method and call gApplication->Terminate(0) or
+   // make a connection to this is signal. If not the window will be just
+   // destroyed and can not be used anymore.
 
-   DestroyWindow();
+   if (HasConnection("CloseWindow()"))
+      Emit("CloseWindow()");
+   else
+      DestroyWindow();
 }
 
 //______________________________________________________________________________
@@ -892,9 +897,14 @@ TGTransientFrame::TGTransientFrame(const TGWindow *p, const TGWindow *main,
 //______________________________________________________________________________
 void TGTransientFrame::CloseWindow()
 {
-   // Close transient window. Override this to intercept close.
+   // Close transient window. Override this to intercept close or
+   // make a connection to this is signal. If not the window will
+   // be just destroyed and can not be used anymore.
 
-   DestroyWindow();
+   if (HasConnection("CloseWindow()"))
+      Emit("CloseWindow()");
+   else
+      DestroyWindow();
 }
 
 //______________________________________________________________________________

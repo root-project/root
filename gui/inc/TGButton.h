@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.3 2000/09/30 11:24:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.4 2000/10/17 12:34:52 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -85,6 +85,8 @@ protected:
 
    virtual void   SetGroup(TGButtonGroup *group);
    virtual void   SetToggleButton(Bool_t) { }
+   virtual void  *GetSender() { return this; }  //used to set gTQSender
+
 
    static TGGC fgHibckgndGC;
 #ifdef R__SUNCCBUG
@@ -116,9 +118,9 @@ public:
    virtual Bool_t       IsExclusiveToggle() const { return kFALSE; }
    virtual void         Toggle() { SetDown(IsDown() ? kFALSE : kTRUE); }
 
-   void Pressed()  { Emit("Pressed()"); }  //*SIGNAL*
-   void Released() { Emit("Released()");}  //*SIGNAL*
-   void Clicked()  { Emit("Clicked()"); }  //*SIGNAL*
+   void Pressed()  { Emit("Pressed()"); }   //*SIGNAL*
+   void Released() { Emit("Released()"); }  //*SIGNAL*
+   void Clicked()  { Emit("Clicked()"); }   //*SIGNAL*
    void Toggled(Bool_t on) { Emit("Toggled(Bool_t)", on); }  //*SIGNAL*
 
    static const TGGC   &GetDefaultGC();

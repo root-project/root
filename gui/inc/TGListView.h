@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.4 2000/10/12 16:53:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.5 2000/10/17 12:34:52 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -165,7 +165,7 @@ public:
 
 
 
-class TGListView : public TGCanvas, public TQObject {
+class TGListView : public TGCanvas {
 
 friend class TGClient;
 

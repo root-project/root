@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.4 2000/10/09 19:15:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.5 2000/10/17 12:34:52 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -99,7 +99,7 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TGPopupMenu : public TGFrame, public TQObject {
+class TGPopupMenu : public TGFrame {
 
 friend class TGClient;
 friend class TGMenuTitle;

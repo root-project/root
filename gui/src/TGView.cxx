@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.7 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.8 2000/10/04 23:40:07 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -324,9 +324,11 @@ Bool_t TGView::HandleButton(Event_t *event)
             fIsMarked = kFALSE;
             SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_ISMARKED),
                         fWidgetId, kFALSE);
+            Marked(kFALSE);
          } else {
             SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_ISMARKED),
                         fWidgetId, kTRUE);
+            Marked(kTRUE);
          }
          fIsMarking = kFALSE;
       }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.1 2000/09/29 08:54:26 rdm Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -18,7 +18,7 @@
 // TGShutter, TGShutterItem                                             //
 //                                                                      //
 // A shutter widget contains a set of shutter items that can be         //
-// open and closed ilike a shutter.                                     //
+// open and closed like a shutter.                                      //
 // This widget is usefull to group a large number of options in         //
 // a number of categories.                                              //
 //                                                                      //

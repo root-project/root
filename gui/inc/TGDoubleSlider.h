@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -55,9 +55,6 @@
 #ifndef ROOT_TGWidget
 #include "TGWidget.h"
 #endif
-
-#define  kSL_PRESS      ((EWidgetMessageTypes)3)
-#define  kSL_RELEASE    ((EWidgetMessageTypes)4)
 
 
 //--- sizes for vert. and horz. sliders
@@ -119,6 +116,10 @@ public:
    virtual void    GetPosition(Float_t *min, Float_t *max) const
                     { *min = fSmin; *max = fSmax;}
    virtual void  MapSubwindows() { TGWindow::MapSubwindows(); }
+
+   virtual void  PositionChanged() { Emit("PositionChanged()"); } //*SIGNAL*
+   virtual void  Pressed() { Emit("Pressed()"); }                 //*SIGNAL*
+   virtual void  Released() { Emit("Released()"); }               //*SIGNAL*
 
    ClassDef(TGDoubleSlider,0)  // Double slider widget abstract base class
 };

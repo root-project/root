@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.2 2000/09/29 08:57:05 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -171,10 +171,19 @@ Bool_t TGDoubleVSlider::HandleButton(Event_t *event)
 
       SendMessage(fMsgWindow, MK_MSG(kC_VSLIDER, kSL_PRESS), fWidgetId, 0);
       fClient->ProcessLine(fCommand, MK_MSG(kC_VSLIDER, kSL_PRESS), fWidgetId, 0);
+      Pressed();
+
+      // last argument kFALSE forces all specified events to this window
+      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                             kPointerMotionMask, kNone, kNone,
+                             kTRUE, kFALSE);
    } else if (event->fType == kButtonRelease && event->fCode == kButton1) {
       SendMessage(fMsgWindow, MK_MSG(kC_VSLIDER, kSL_RELEASE), fWidgetId, 0);
       fClient->ProcessLine(fCommand, MK_MSG(kC_VSLIDER, kSL_RELEASE), fWidgetId, 0);
+      Released();
       fMove = 0;
+
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    } else
       fMove = 0;
 
@@ -220,6 +229,7 @@ Bool_t TGDoubleVSlider::HandleMotion(Event_t *event)
       fClient->NeedRedraw(this);
       SendMessage(fMsgWindow, MK_MSG(kC_VSLIDER, kSL_POS), fWidgetId, 0);
       fClient->ProcessLine(fCommand, MK_MSG(kC_VSLIDER, kSL_POS), fWidgetId, 0);
+      PositionChanged();
    }
    return kTRUE;
 }
@@ -311,10 +321,19 @@ Bool_t TGDoubleHSlider::HandleButton(Event_t *event)
 
       SendMessage(fMsgWindow, MK_MSG(kC_HSLIDER, kSL_PRESS), fWidgetId, 0);
       fClient->ProcessLine(fCommand, MK_MSG(kC_HSLIDER, kSL_PRESS), fWidgetId, 0);
+      Pressed();
+
+      // last argument kFALSE forces all specified events to this window
+      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                             kPointerMotionMask, kNone, kNone,
+                             kTRUE, kFALSE);
    } else if (event->fType == kButtonRelease && event->fCode == kButton1) {
       SendMessage(fMsgWindow, MK_MSG(kC_HSLIDER, kSL_RELEASE), fWidgetId, 0);
       fClient->ProcessLine(fCommand, MK_MSG(kC_HSLIDER, kSL_RELEASE), fWidgetId, 0);
+      Released();
       fMove = 0;
+
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    } else
       fMove = 0;
 
@@ -360,6 +379,7 @@ Bool_t TGDoubleHSlider::HandleMotion(Event_t *event)
       fClient->NeedRedraw(this);
       SendMessage(fMsgWindow, MK_MSG(kC_HSLIDER, kSL_POS), fWidgetId, 0);
       fClient->ProcessLine(fCommand, MK_MSG(kC_HSLIDER, kSL_POS), fWidgetId, 0);
+      PositionChanged();
    }
    return kTRUE;
 }

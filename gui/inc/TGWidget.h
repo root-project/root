@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWidget.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWidget.h,v 1.2 2000/10/17 12:34:52 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -32,9 +32,6 @@
 #ifndef ROOT_WidgetMessageTypes
 #include "WidgetMessageTypes.h"
 #endif
-#ifndef ROOT_TQObject
-#include "TQObject.h"
-#endif
 
 
 //--- Text justification modes
@@ -61,7 +58,7 @@ enum EWidgetStatus {
 class TGWindow;
 
 
-class TGWidget : public TQObject {
+class TGWidget {
 
 protected:
    Int_t            fWidgetId;     // the widget id (used for event processing)

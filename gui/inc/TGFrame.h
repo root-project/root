@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.5 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.6 2000/10/13 09:56:45 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -24,6 +24,9 @@
 
 #ifndef ROOT_TGWindow
 #include "TGWindow.h"
+#endif
+#ifndef ROOT_TQObject
+#include "TQObject.h"
 #endif
 #ifndef ROOT_TGDimension
 #include "TGDimension.h"
@@ -110,7 +113,7 @@ enum EMWMHints {
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TGFrame : public TGWindow {
+class TGFrame : public TGWindow, public TQObject {
 
 friend class TGClient;
 
@@ -325,7 +328,7 @@ public:
 
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleClientMessage(Event_t *event);
-   virtual void   CloseWindow();
+   virtual void   CloseWindow();   //*SIGNAL*
 
    void SetWindowName(const char *name);
    void SetIconName(const char *name);
@@ -364,7 +367,7 @@ public:
                     UInt_t options = kMainFrame | kVerticalFrame);
 
    const TGWindow *GetMain() const { return fMain; }
-   virtual void CloseWindow();
+   virtual void CloseWindow();   //*SIGNAL*
 
    ClassDef(TGTransientFrame,0)  // Frame for dialog (transient) windows
 };

@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.7 2000/09/29 08:57:05 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.8 2000/10/19 10:40:52 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -19,6 +19,7 @@
 #pragma link C++ enum EListViewMode;
 #pragma link C++ enum EScrollBarMode;
 #pragma link C++ enum ESliderType;
+#pragma link C++ enum EDoubleSliderScale;
 
 #pragma link C++ global gCurrentRegion;
 

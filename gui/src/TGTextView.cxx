@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.9 2000/08/11 14:49:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.10 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -317,8 +317,10 @@ void TGTextView::Clear(Option_t *)
    fText = new TGText();
    fText->Clear();
    SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_ISMARKED), fWidgetId, kFALSE);
+   Marked(kFALSE);
    gVirtualX->ClearWindow(fCanvas->GetId());
    SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_DATACHANGE), fWidgetId, 0);
+   DataChanged();
    Layout();
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.6 2000/07/10 01:07:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.7 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -96,6 +96,8 @@ public:
    virtual void AddText(TGText *text);
    virtual void AddLine(const char *string);
    TGText      *GetText() const { return fText; }
+
+   virtual void DataChanged() { Emit("DataChanged()"); }  //*SIGNAL*
 
    ClassDef(TGTextView,0)  // Editable text widget base class (links TGText to TGEditView)
 };

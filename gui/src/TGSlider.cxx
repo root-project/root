@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.3 2000/09/08 16:11:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.4 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -35,6 +35,14 @@
 // Dragging the slider will generate the event:                         //
 // kC_VSLIDER, kSL_POS, slider id, position  (for vertical slider)      //
 // kC_HSLIDER, kSL_POS, slider id, position  (for horizontal slider)    //
+//                                                                      //
+// Pressing the mouse will generate the event:                          //
+// kC_VSLIDER, kSL_PRESS, slider id, 0  (for vertical slider)           //
+// kC_HSLIDER, kSL_PRESS, slider id, 0  (for horizontal slider)         //
+//                                                                      //
+// Releasing the mouse will generate the event:                         //
+// kC_VSLIDER, kSL_RELEASE, slider id, 0  (for vertical slider)         //
+// kC_HSLIDER, kSL_RELEASE, slider id, 0  (for horizontal slider)       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -138,6 +146,9 @@ Bool_t TGVSlider::HandleButton(Event_t *event)
          // slider selected
          fDragging = kTRUE;
          fYp = event->fY - (fRelPos-7);
+         SendMessage(fMsgWindow, MK_MSG(kC_VSLIDER, kSL_PRESS), fWidgetId, 0);
+         fClient->ProcessLine(fCommand, MK_MSG(kC_VSLIDER, kSL_PRESS), fWidgetId, 0);
+         Pressed();
       } else {
          if (event->fCode == kButton1) {
             // scroll up or down
@@ -156,6 +167,7 @@ Bool_t TGVSlider::HandleButton(Event_t *event)
                      fWidgetId, fPos);
          fClient->ProcessLine(fCommand, MK_MSG(kC_VSLIDER, kSL_POS),
                               fWidgetId, fPos);
+         PositionChanged(fPos);
       }
       fClient->NeedRedraw(this);
 
@@ -166,6 +178,10 @@ Bool_t TGVSlider::HandleButton(Event_t *event)
    } else {
       // ButtonRelease
       fDragging = kFALSE;
+      SendMessage(fMsgWindow, MK_MSG(kC_VSLIDER, kSL_RELEASE), fWidgetId, 0);
+      fClient->ProcessLine(fCommand, MK_MSG(kC_VSLIDER, kSL_RELEASE), fWidgetId, 0);
+      Released();
+
       gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    }
    return kTRUE;
@@ -189,6 +205,7 @@ Bool_t TGVSlider::HandleMotion(Event_t *event)
                      fWidgetId, fPos);
          fClient->ProcessLine(fCommand, MK_MSG(kC_VSLIDER, kSL_POS),
                               fWidgetId, fPos);
+         PositionChanged(fPos);
       }
    }
    return kTRUE;
@@ -271,6 +288,9 @@ Bool_t TGHSlider::HandleButton(Event_t *event)
          // slider selected
          fDragging = kTRUE;
          fXp = event->fX - (fRelPos-7);
+         SendMessage(fMsgWindow, MK_MSG(kC_HSLIDER, kSL_PRESS), fWidgetId, 0);
+         fClient->ProcessLine(fCommand, MK_MSG(kC_HSLIDER, kSL_PRESS), fWidgetId, 0);
+         Pressed();
       } else {
          if (event->fCode == kButton1) {
             int m = (fVmax - fVmin) / (fWidth-16);
@@ -287,6 +307,7 @@ Bool_t TGHSlider::HandleButton(Event_t *event)
                      fWidgetId, fPos);
          fClient->ProcessLine(fCommand, MK_MSG(kC_HSLIDER, kSL_POS),
                               fWidgetId, fPos);
+         PositionChanged(fPos);
       }
       fClient->NeedRedraw(this);
 
@@ -297,6 +318,10 @@ Bool_t TGHSlider::HandleButton(Event_t *event)
    } else {
       // ButtonRelease
       fDragging = kFALSE;
+      SendMessage(fMsgWindow, MK_MSG(kC_HSLIDER, kSL_RELEASE), fWidgetId, 0);
+      fClient->ProcessLine(fCommand, MK_MSG(kC_HSLIDER, kSL_RELEASE), fWidgetId, 0);
+      Released();
+
       gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    }
    return kTRUE;
@@ -320,6 +345,7 @@ Bool_t TGHSlider::HandleMotion(Event_t *event)
                      fWidgetId, fPos);
          fClient->ProcessLine(fCommand, MK_MSG(kC_HSLIDER, kSL_POS),
                               fWidgetId, fPos);
+         PositionChanged(fPos);
       }
    }
    return kTRUE;

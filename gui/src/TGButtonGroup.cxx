@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.2 2000/10/17 12:34:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.3 2000/10/20 12:18:06 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -92,8 +92,7 @@ TGButtonGroup::TGButtonGroup(TGWindow *parent,
                              GContext_t norm,
                              FontStruct_t font,
                              ULong_t back) :
-   TGGroupFrame(parent, new TGString(title), options, norm, font, back),
-   TQObject()
+   TGGroupFrame(parent, new TGString(title), options, norm, font, back)
 {
    // Constructor. Layout 1 row or 1 column.
 
@@ -115,8 +114,7 @@ TGButtonGroup::TGButtonGroup(TGWindow *parent,
                              GContext_t norm ,
                              FontStruct_t font ,
                              ULong_t back) :
-   TGGroupFrame(parent, new TGString(title), 0, norm, font, back),
-   TQObject()
+   TGGroupFrame(parent, new TGString(title), 0, norm, font, back)
 {
    // Constructor. Layout defined by TGMatrixLayout:
    //    r = number of rows
@@ -307,7 +305,11 @@ void TGButtonGroup::ButtonPressed()
    // This slot is activated when one of the buttons in the group emits the
    // Pressed() signal.
 
-   //TGButton *btn = (TGButton*)gTQSender;
+#if 0
+   // Is here for historical purposes and example. Now this is not needed
+   // anymore since TGButton has has its own GetSender() method returning
+   // the TGButton proper.
+
    // This is needed since gTQSender points to TQObject part of TGButton
 #ifdef R__RTTI
    TGButton *btn = dynamic_cast<TGButton*>((TQObject*)gTQSender);
@@ -319,6 +321,9 @@ void TGButtonGroup::ButtonPressed()
       Error("ButtonPressed", "gTQSender not a TGButton");
       return;
    }
+#else
+      TGButton *btn = (TGButton*)gTQSender;
+#endif
 
    TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
    if (a) {
@@ -333,18 +338,7 @@ void TGButtonGroup::ButtonReleased()
    // This slot is activated when one of the buttons in the group emits the
    // Released() signal.
 
-   //TGButton *btn = (TGButton*)gTQSender;
-   // This is needed since gTQSender points to TQObject part of TGButton
-#ifdef R__RTTI
-   TGButton *btn = dynamic_cast<TGButton*>((TQObject*)gTQSender);
-#else
-   TQObject *oq = (TQObject*)gTQSender;
-   TGButton *btn = (TGButton*)oq->IsA()->DynamicCast(TQObject::Class(), oq, kFALSE);
-#endif
-   if (!btn) {
-      Error("ButtonReleased", "gTQSender not a TGButton");
-      return;
-   }
+   TGButton *btn = (TGButton*)gTQSender;
 
    TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
    if (a) {
@@ -359,18 +353,7 @@ void TGButtonGroup::ButtonClicked()
    // This slot is activated when one of the buttons in the group emits the
    // Clicked() signal.
 
-   //TGButton *btn = (TGButton*)gTQSender;
-   // This is needed since gTQSender points to TQObject part of TGButton
-#ifdef R__RTTI
-   TGButton *btn = dynamic_cast<TGButton*>((TQObject*)gTQSender);
-#else
-   TQObject *oq = (TQObject*)gTQSender;
-   TGButton *btn = (TGButton*)oq->IsA()->DynamicCast(TQObject::Class(), oq, kFALSE);
-#endif
-   if (!btn) {
-      Error("ButtonClicked", "gTQSender not a TGButton");
-      return;
-   }
+   TGButton *btn = (TGButton*)gTQSender;
 
    TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
    if (a) {
@@ -387,18 +370,7 @@ void TGButtonGroup::ReleaseButtons()
 
    if (!fExclGroup && !fRadioExcl) return;
 
-   //TGButton *btn = (TGButton*)gTQSender;
-   // This is needed since gTQSender points to TQObject part of TGButton
-#ifdef R__RTTI
-   TGButton *btn = dynamic_cast<TGButton*>((TQObject*)gTQSender);
-#else
-   TQObject *oq = (TQObject*)gTQSender;
-   TGButton *btn = (TGButton*)oq->IsA()->DynamicCast(TQObject::Class(), oq, kFALSE);
-#endif
-   if (!btn) {
-      Error("ReleaseButtons", "gTQSender not a TGButton");
-      return;
-   }
+   TGButton *btn = (TGButton*)gTQSender;
 
    if (!fExclGroup && !btn->IsA()->InheritsFrom(TGRadioButton::Class()))
       return;

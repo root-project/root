@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.5 2000/07/11 18:03:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.6 2000/08/30 16:57:20 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -115,6 +115,12 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+
+   virtual void   FindAgain() { Emit("FindAgain()"); }  //*SIGNAL*
+   virtual void   Closed() { Emit("Closed()"); }        //*SIGNAL*
+   virtual void   Opened() { Emit("Opened()"); }        //*SIGNAL*
+   virtual void   Saved() { Emit("Saved()"); }          //*SIGNAL*
+   virtual void   SavedAs() { Emit("SavedAs()"); }      //*SIGNAL*
 
    ClassDef(TGTextEdit,0)  // Text edit widget
 };

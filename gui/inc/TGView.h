@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.3 2000/07/06 16:47:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.4 2000/07/07 00:29:49 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -122,6 +122,8 @@ public:
    virtual Bool_t HandleExpose(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t HandleTimer(TTimer *t);
+
+   virtual void Marked(Bool_t mark) { Emit("Marked(Bool_t)", mark); } //*SIGNAL*
 
    ClassDef(TGView,0)  // Text view widget base class
 };
