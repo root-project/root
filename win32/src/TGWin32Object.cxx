@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name$:$Id$
+// @(#)root/win32:$Name:  $:$Id: TGWin32Object.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************
@@ -591,9 +591,11 @@ LRESULT APIENTRY
                      SafeDelete(fBufferObj);
                      fDoubleBuffer = 0;
                    }
+                   SetWindowLong(hwnd,GWL_USERDATA,0);
                    DestroyWindow( hwnd );
                    return 0;
                case IX_CLSDS:  // Close an WIN32 session
+                   SetWindowLong(hwnd,GWL_USERDATA,0);
                    DestroyWindow( hwnd );
                    PostQuitMessage(0);
                    break;

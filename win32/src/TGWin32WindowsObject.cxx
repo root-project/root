@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name$:$Id$
+// @(#)root/win32:$Name:  $:$Id: TGWin32WindowsObject.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Valery Fine   11/03/96
 
 /*************************************************************************
@@ -318,15 +318,19 @@ LRESULT APIENTRY TGWin32WindowsObject::OnRootEditInput
 
 
 //______________________________________________________________________________
-TGWin32WindowsObject::TGWin32WindowsObject() : TGWin32Object() {;}
+TGWin32WindowsObject::TGWin32WindowsObject() : fCanvasImp(0), TGWin32Object() {;}
 
 //______________________________________________________________________________
-TGWin32WindowsObject::TGWin32WindowsObject(TGWin32 *lpTGWin32, Int_t x, Int_t y, UInt_t w, UInt_t h){
- CreateWindowsObject(lpTGWin32, x, y, w, h);
+TGWin32WindowsObject::TGWin32WindowsObject(TGWin32 *lpTGWin32, Int_t x, Int_t y, UInt_t w, UInt_t h)
+                     : fCanvasImp(0)
+{
+  CreateWindowsObject(lpTGWin32, x, y, w, h);
 }
 
 //______________________________________________________________________________
-TGWin32WindowsObject::TGWin32WindowsObject(TGWin32 *lpTGWin32, UInt_t w, UInt_t h){
+TGWin32WindowsObject::TGWin32WindowsObject(TGWin32 *lpTGWin32, UInt_t w, UInt_t h)
+                     : fCanvasImp(0)
+{
  CreateWindowsObject(lpTGWin32, 0, 0, w, h);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name$:$Id$
+// @(#)root/win32:$Name:  $:$Id: TWin32BrowserImp.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   21/10/96
 
 /*************************************************************************
@@ -127,6 +127,23 @@ private:
   //    Message ID: WM_SYSCOMMAND
   //                =============
   virtual LRESULT APIENTRY OnSysCommand(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+ 
+// Default actions
+ 
+   LRESULT APIENTRY OnChar       (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+   LRESULT APIENTRY OnKeyDown    (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+ 
+ 
+   LRESULT APIENTRY OnActivate          (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+   LRESULT APIENTRY OnCommandForControl (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+   LRESULT APIENTRY OnEraseBkgnd        (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+   LRESULT APIENTRY OnExitSizeMove      (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+   LRESULT APIENTRY OnGetMinMaxInfo     (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+   LRESULT APIENTRY OnMouseActivate     (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+   LRESULT APIENTRY OnPaletteChanged    (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+   LRESULT APIENTRY OnSetFocus          (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+   LRESULT APIENTRY OnKillFocus         (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+   LRESULT APIENTRY OnSizing            (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 
   void  ExecThreadCB(TWin32SendClass *command);
