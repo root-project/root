@@ -39,7 +39,7 @@ INCLUDEFILES += $(X3DDEP)
 include/%.h:    $(X3DDIRI)/%.h
 		cp $< $@
 
-$(X3DLIB):      $(X3DO) $(X3DDO) $(MAINLIBS) $(G3DLIB)
+$(X3DLIB):      $(X3DO) $(X3DDO) $(MAINLIBS) $(X3DLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libX3d.$(SOEXT) $@ "$(X3DO) $(X3DDO)" \
 		   "$(X3DLIBEXTRA)"

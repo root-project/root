@@ -37,7 +37,7 @@ INCLUDEFILES += $(EGDEP)
 include/%.h:    $(EGDIRI)/%.h
 		cp $< $@
 
-$(EGLIB):       $(EGO) $(EGDO) $(MAINLIBS) $(GRAFLIB) $(G3DLIB)
+$(EGLIB):       $(EGO) $(EGDO) $(MAINLIBS) $(EGLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libEG.$(SOEXT) $@ "$(EGO) $(EGDO)" \
 		   "$(EGLIBEXTRA)"

@@ -60,7 +60,7 @@ INCLUDEFILES += $(GUIDEP)
 include/%.h:    $(GUIDIRI)/%.h
 		cp $< $@
 
-$(GUILIB):      $(GUIO) $(GUIDO) $(MAINLIBS) $(GRAFLIB) $(GPADLIB)
+$(GUILIB):      $(GUIO) $(GUIDO) $(MAINLIBS) $(GUILIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGui.$(SOEXT) $@ "$(GUIO) $(GUIDO)" \
 		   "$(GUILIBEXTRA)"

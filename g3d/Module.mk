@@ -40,7 +40,7 @@ INCLUDEFILES += $(G3DDEP)
 include/%.h:    $(G3DDIRI)/%.h
 		cp $< $@
 
-$(G3DLIB):      $(G3DO) $(G3DDO) $(MAINLIBS) $(GRAFLIB) $(HISTLIB)
+$(G3DLIB):      $(G3DO) $(G3DDO) $(MAINLIBS) $(G3DLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGraf3d.$(SOEXT) $@ "$(G3DO) $(G3DDO)" \
 		   "$(G3DLIBEXTRA)"
