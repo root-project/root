@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.43 2003/11/18 15:36:38 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.44 2003/12/05 23:03:35 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -44,6 +44,9 @@ const Float_t kScale = 0.93376068;
 
 const char   kBackslash = '\\';
 const Int_t  kLatex = BIT(10);
+
+
+Int_t TPostScript::fgLineJoin = 0;
 
 ClassImp(TPostScript)
 
@@ -2107,6 +2110,30 @@ void TPostScript::SetLineColor( Color_t cindex )
 }
 
 //______________________________________________________________________________
+void TPostScript::SetLineJoin( Int_t linejoin )
+{
+   // Set the value of the global parameter TPostScript::fgLineJoin.
+   // This parameter determines the appearance of joining lines in a PostScript
+   // output. 
+   // It takes one argument which may be: 
+   //   - 0 (miter join)
+   //   - 1 (round join)
+   //   - 2 (bevel join) 
+   // The default value is 0 (miter join).
+   //
+   //Begin_Html
+   /*
+   <img src="gif/linejoin.gif">
+   */
+   //End_Html
+   //
+   // To change the line join behaviour just do:
+   // TPostScript::SetLineJoin(2); // Set the PS line join to bevel.
+
+   fgLineJoin = linejoin;
+}
+
+//______________________________________________________________________________
 void TPostScript::SetLineStyle(Style_t linestyle)
 {
    // Change the line style
@@ -3064,6 +3091,10 @@ void TPostScript::Zone()
 
    // Picture Initialisation
    SaveRestore(1);
+   if (fgLineJoin) {
+      WriteInteger(fgLineJoin);
+      PrintFast(12," setlinejoin");
+   }
    PrintFast(6," 0 0 t");
    fRed     = -1;
    fGreen   = -1;

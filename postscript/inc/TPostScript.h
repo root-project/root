@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.h,v 1.4 2001/11/21 15:51:50 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.h,v 1.5 2002/02/14 18:04:15 brun Exp $
 // Author: O.Couet   16/07/99
 
 /*************************************************************************
@@ -60,6 +60,7 @@ protected:
    Float_t fGreen;           //Per cent of green
    Float_t fBlue;            //Per cent of blue
    Float_t fLineScale;       //Line width scale factor
+   Int_t   fLineJoin;        //Appearance of joining lines
    Int_t   fSave;            //Number of gsave for restore
    Int_t   fNXzone;          //Number of zones along X
    Int_t   fNYzone;          //Number of zones along Y
@@ -85,6 +86,8 @@ protected:
    Int_t   fLastCellGreen;   //Last green value
    Int_t   fLastCellBlue;    //Last blue value
    Int_t   fNBSameColorCell; //Number of boxes with the same color
+
+   static Int_t fgLineJoin;  //Appearance of joining lines
 	
 public:
    TPostScript();
@@ -121,6 +124,7 @@ public:
    void  SetFillColor( Color_t cindex=1);
    void  SetFillPatterns(Int_t ipat, Int_t color);
    void  SetLineColor( Color_t cindex=1);
+   void  SetLineJoin(Int_t linejoin=0);
    void  SetLineStyle(Style_t linestyle = 1);
    void  SetLineWidth(Width_t linewidth = 1);
    void  SetLineScale(Float_t scale=3) {fLineScale = scale;}
