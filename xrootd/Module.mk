@@ -16,10 +16,8 @@ XROOTDSRCS := $(MODDIRS)/$(XROOTDVERS).src.tgz
 ##### Xrootd libs for use in netx #####
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 XRDDBG      = "--build=debug"
-XRDARCHDIR  = arch_dbg
 else	    
 XRDDBG      =
-XRDARCHDIR  = arch
 endif	    
 XRDLIBDIR   = $(XROOTDDIRD)/lib
 XRDPLUGINS  = $(wildcard $(XRDLIBDIR)/libXrd*.$(SOEXT))
