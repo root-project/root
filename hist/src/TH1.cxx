@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.109 2002/09/17 08:31:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.110 2002/09/27 12:15:38 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2061,7 +2061,7 @@ char *TH1::GetObjectInfo(Int_t px, Int_t py) const
 //   Displays the histogram info (bin number, contents, integral up to bin
 //   corresponding to cursor position px,py
 //
-   return fPainter->GetObjectInfo(px,py);
+   return ((TH1*)this)->GetPainter()->GetObjectInfo(px,py);
 }
 
 //______________________________________________________________________________
