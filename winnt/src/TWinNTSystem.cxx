@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.2 2000/06/28 15:30:44 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1674,14 +1674,12 @@ TInetAddress TWinNTSystem::GetHostByName(const char *hostname)
    UInt_t          addr;    // good for 4 byte addresses
 
    if ((addr = inet_addr(hostname)) != INADDR_NONE) {
+      type = AF_INET;
       if ((host_ptr = gethostbyaddr((const char *)&addr,
-                                    sizeof(addr), AF_INET))) {
+                                    sizeof(addr), AF_INET)))
          host = host_ptr->h_name;
-         type = AF_INET;
-      } else {
-         if (gDebug > 0) Error("GetHostByName", "unknown host %s", hostname);
-         return TInetAddress("UnknownHost", ntohl(addr), -1);
-      }
+      else
+         host = "UnNamedHost";
    } else if ((host_ptr = gethostbyname(hostname))) {
       // Check the address type for an internet host
       if (host_ptr->h_addrtype != AF_INET) {

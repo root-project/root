@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.4 2000/06/28 15:30:44 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.5 2000/07/27 12:05:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1319,14 +1319,12 @@ TInetAddress TUnixSystem::GetHostByName(const char *hostname)
    if (inet_aton(hostname, &ad)) {
       memcpy(&addr, &ad.s_addr, sizeof(ad.s_addr));
 #endif
+      type = AF_INET;
       if ((host_ptr = gethostbyaddr((const char *)&addr,
-                                    sizeof(addr), AF_INET))) {
+                                    sizeof(addr), AF_INET)))
          host = host_ptr->h_name;
-         type = AF_INET;
-      } else {
-         if (gDebug > 0) Error("GetHostByName", "unknown host %s", hostname);
-         return TInetAddress("UnknownHost", ntohl(addr), -1);
-      }
+      else
+         host = "UnNamedHost";
    } else if ((host_ptr = gethostbyname(hostname))) {
       // Check the address type for an internet host
       if (host_ptr->h_addrtype != AF_INET) {
