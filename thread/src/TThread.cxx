@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.18 2002/12/03 16:44:25 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.19 2003/05/13 10:29:07 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -27,7 +27,8 @@
 #include "TThread.h"
 #include "TThreadImp.h"
 #include "TThreadFactory.h"
-#include "TCanvas.h"
+#include "TROOT.h"
+#include "TVirtualPad.h"
 #include "TError.h"
 #include "CallFunc.h"
 #include "TMethodCall.h"
@@ -728,6 +729,7 @@ void TThread::XAction()
    char const acts[] = "PRTF CUPD CANV CDEL PDCD METH";
    enum {kPRTF=0,kCUPD=5,kCANV=10,kCDEL=15,kPDCD=20,kMETH=25};
    int iact = strstr(acts,fgXAct) - acts;
+   char *cmd = 0;
 
    switch (iact) {
 
@@ -736,7 +738,9 @@ void TThread::XAction()
          break;
 
       case kCUPD:
-         ((TCanvas *)fgXArr[1])->Update();
+         //((TCanvas *)fgXArr[1])->Update();
+         cmd = Form("((TCanvas *)0x%lx)->Update();",(Long_t)fgXArr[1]);
+         gROOT->ProcessLine(cmd);
          break;
 
       case kCANV:
@@ -744,31 +748,39 @@ void TThread::XAction()
          switch(fgXAnb) { // Over TCanvas constructors
 
             case 2:
-               ((TCanvas*)fgXArr[1])->Constructor();
+               //((TCanvas*)fgXArr[1])->Constructor();
+               cmd = Form("((TCanvas *)0x%lx)->Constructor();",(Long_t)fgXArr[1]);
+               gROOT->ProcessLine(cmd);
                break;
 
             case 5:
-               ((TCanvas*)fgXArr[1])->Constructor(
-                                (Text_t*)fgXArr[2],
-                                (Text_t*)fgXArr[3],
-                               *((Int_t*)(fgXArr[4])));
+               //((TCanvas*)fgXArr[1])->Constructor(
+               //                 (Text_t*)fgXArr[2],
+               //                 (Text_t*)fgXArr[3],
+               //                *((Int_t*)(fgXArr[4])));
+               cmd = Form("((TCanvas *)0x%lx)->Constructor((Text_t*)0x%lx,(Text_t*)0x%lx,*((Int_t*)(0x%lx)));",(Long_t)fgXArr[1],(Long_t)fgXArr[2],(Long_t)fgXArr[3],(Long_t)fgXArr[4]);
+               gROOT->ProcessLine(cmd);
                break;
             case 6:
-               ((TCanvas*)fgXArr[1])->Constructor(
-                                (char*)fgXArr[2],
-                                (char*)fgXArr[3],
-                               *((Int_t*)(fgXArr[4])),
-                               *((Int_t*)(fgXArr[5])));
+               //((TCanvas*)fgXArr[1])->Constructor(
+               //                 (char*)fgXArr[2],
+               //                 (char*)fgXArr[3],
+               //                *((Int_t*)(fgXArr[4])),
+               //                *((Int_t*)(fgXArr[5])));
+               cmd = Form("((TCanvas *)0x%lx)->Constructor((Text_t*)0x%lx,(Text_t*)0x%lx,*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)));",(Long_t)fgXArr[1],(Long_t)fgXArr[2],(Long_t)fgXArr[3],(Long_t)fgXArr[4],(Long_t)fgXArr[5]);
+               gROOT->ProcessLine(cmd);
                break;
 
             case 8:
-               ((TCanvas*)fgXArr[1])->Constructor(
-                                (char*)fgXArr[2],
-                                (char*)fgXArr[3],
-                              *((Int_t*)(fgXArr[4])),
-                              *((Int_t*)(fgXArr[5])),
-                              *((Int_t*)(fgXArr[6])),
-                              *((Int_t*)(fgXArr[7])));
+               //((TCanvas*)fgXArr[1])->Constructor(
+               //                 (char*)fgXArr[2],
+               //                 (char*)fgXArr[3],
+               //               *((Int_t*)(fgXArr[4])),
+               //               *((Int_t*)(fgXArr[5])),
+               //               *((Int_t*)(fgXArr[6])),
+               //               *((Int_t*)(fgXArr[7])));
+               cmd = Form("((TCanvas *)0x%lx)->Constructor((Text_t*)0x%lx,(Text_t*)0x%lx,*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)));",(Long_t)fgXArr[1],(Long_t)fgXArr[2],(Long_t)fgXArr[3],(Long_t)fgXArr[4],(Long_t)fgXArr[5],(Long_t)fgXArr[6],(Long_t)fgXArr[7]);
+               gROOT->ProcessLine(cmd);
                break;
 
          }
@@ -776,16 +788,17 @@ void TThread::XAction()
          break;
 
       case kCDEL:
-         ((TCanvas*)fgXArr[1])->Destructor();
+         //((TCanvas*)fgXArr[1])->Destructor();
+         cmd = Form("((TCanvas *)0x%lx)->Destructor();",(Long_t)fgXArr[1]);
+         gROOT->ProcessLine(cmd);
          break;
 
       case kPDCD:
-         ((TPad*) fgXArr[1])->Divide( *((Int_t*)(fgXArr[2])),
+         ((TVirtualPad*) fgXArr[1])->Divide( *((Int_t*)(fgXArr[2])),
                                   *((Int_t*)(fgXArr[3])),
                                   *((Float_t*)(fgXArr[4])),
                                   *((Float_t*)(fgXArr[5])),
                                   *((Int_t*)(fgXArr[6])));
-
          break;
       case kMETH:
       ((TMethodCall *) fgXArr[1])->Execute((void*)(fgXArr[2]),(const char*)(fgXArr[3]));
