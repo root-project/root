@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.5 2000/11/21 15:59:30 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.6 2000/11/27 10:39:02 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -40,11 +40,18 @@
 #pragma link C++ global gVirtualX;
 #pragma link C++ global gVirtualPS;
 
+#pragma link C++ function Form;
+#pragma link C++ function Printf;
 #pragma link C++ function Strip;
 #pragma link C++ function StrDup;
 #pragma link C++ function Compress;
 #pragma link C++ function EscChar;
 #pragma link C++ function UnEscChar;
+#pragma link C++ function Info;
+#pragma link C++ function Warning;
+#pragma link C++ function Error;
+#pragma link C++ function SysError;
+#pragma link C++ function Fatal;
 #pragma link C++ function operator+(const TString&,const TString&);
 #pragma link C++ function operator+(const TString&,const char*);
 #pragma link C++ function operator+(const char*,const TString&);
