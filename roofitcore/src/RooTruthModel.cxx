@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTruthModel.cc,v 1.13 2001/11/14 18:42:38 verkerke Exp $
+ *    File: $Id: RooTruthModel.cc,v 1.14 2001/11/19 07:24:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -14,8 +14,8 @@
 // RooTruthModel is the delta-function resolution model
 //
 // The truth model supports all basis functions because it evaluates each basis function as  
-// as a RooFormulaVar. The 6 basis functions used in B mixing and decay have been
-// hand coded for speed.
+// as a RooFormulaVar.  The 6 basis functions used in B mixing and decay and 2 basis
+// functions used in D mixing have been hand coded for speed.
 
 #include <iostream.h>
 #include "RooFitCore/RooTruthModel.hh"
@@ -57,6 +57,8 @@ Int_t RooTruthModel::basisCode(const char* name) const
   if (!TString("exp(-@0/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisPlus ;
   if (!TString("exp(@0/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisMinus ;
   if (!TString("exp(-abs(@0)/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisSum ;
+  if (!TString("(@0/@1)*exp(-@0/@1)").CompareTo(name)) return linBasisPlus ;
+  if (!TString("(@0/@1)*(@0/@1)*exp(-@0/@1)").CompareTo(name)) return quadBasisPlus ;
 
   // Truth model is delta function, i.e. convolution integral
   // is basis function, therefore we can handle any basis function
@@ -129,6 +131,14 @@ Double_t RooTruthModel::evaluate() const
     Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ; 
     return exp(-fabs(x)/tau)*cos(x*dm) ;
   }
+  case linBasis: {
+    Double_t tscaled = fabs(x)/tau;
+    return exp(-tscaled)*tscaled ;
+  }
+  case quadBasis: {
+    Double_t tscaled = fabs(x)/tau;
+    return exp(-tscaled)*tscaled*tscaled;
+  }  
   }
 
   assert(0) ;
@@ -156,6 +166,8 @@ Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
   case cosBasisPlus:
   case cosBasisMinus:
   case cosBasisSum:
+  case linBasisPlus:
+  case quadBasisPlus:
     if (matchArgs(allVars,analVars,convVar())) return 1 ;
     break ;
   }
@@ -203,6 +215,18 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
       if (basisSign != Minus) result += exp(-x.max()/tau)*(-1/tau*cos(dm*x.max()) + dm*sin(dm*x.max())) + 1/tau ;
       if (basisSign != Plus)  result += exp( x.min()/tau)*(-1/tau*cos(dm*(-x.min())) - dm*sin(dm*(-x.min()))) + 1/tau ;
       return result / (1/(tau*tau) + dm*dm) ;
+    }
+  case linBasis:
+    {
+      if (tau==0) return 0 ;
+      Double_t t_max = x.max()/tau ;
+      return tau*( 1 - (1 + t_max)*exp(-t_max) ) ;
+    }
+  case quadBasis:
+    {
+      if (tau==0) return 0 ;
+      Double_t t_max = x.max()/tau ;
+      return tau*( 2 - (2 + (2 + t_max)*t_max)*exp(-t_max) ) ;
     }
   }
 
