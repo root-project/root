@@ -1,4 +1,4 @@
-// @(#)root/sapdb:$Name:$:$Id:$
+// @(#)root/sapdb:$Name:  $:$Id: TSapDBServer.cxx,v 1.1 2001/08/24 16:41:19 rdm Exp $
 // Author: Mark Hemberger & Fons Rademakers   03/08/2001
 
 /*************************************************************************
@@ -257,7 +257,7 @@ TSQLResult *TSapDBServer::GetDataBases(const char *wild)
 }
 
 //______________________________________________________________________________
-TSQLResult *TSapDBServer::GetTables(const char *dbname, const char *wild)
+TSQLResult *TSapDBServer::GetTables(const char * /*dbname*/, const char *wild)
 {
    // List all tables in the specified database. Wild is for wildcarding
    // "t%" list all tables starting with "t".
@@ -305,7 +305,7 @@ TSQLResult *TSapDBServer::GetColumns(const char *dbname, const char *table,
 }
 
 //______________________________________________________________________________
-Int_t TSapDBServer::CreateDataBase(const char *dbname)
+Int_t TSapDBServer::CreateDataBase(const char * /*dbname*/)
 {
    // Create a database. Returns 0 if successful, non-zero otherwise.
    // For SapDB: do nothing
@@ -320,7 +320,7 @@ Int_t TSapDBServer::CreateDataBase(const char *dbname)
 }
 
 //______________________________________________________________________________
-Int_t TSapDBServer::DropDataBase(const char *dbname)
+Int_t TSapDBServer::DropDataBase(const char * /*dbname*/)
 {
    // Drop (i.e. delete) a database. Returns 0 if successful, non-zero
    // otherwise.

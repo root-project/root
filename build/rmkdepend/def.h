@@ -75,7 +75,7 @@ in this Software without prior written authorization from the X Consortium.
 extern int	_debugmask;
 /*
  * debug levels are:
- * 
+ *
  *     0	show ifn*(def)*,endif
  *     1	trace defined/!defined
  *     2	show #include

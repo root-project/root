@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.6 2002/05/30 13:28:57 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.7 2002/05/31 11:29:24 rdm Exp $
 // Author: Fons Rademakers   13/5/2002
 
 /*************************************************************************
@@ -288,6 +288,7 @@ Int_t TAlien::GetPathInfo(const char *lfn, Long_t *size, Long_t *flags,
       *modtime = buf.st_mtime;
 
 #else
+   if (lfn) { }  // use argument
    if (size)
       *size = 0;
    if (flags)

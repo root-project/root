@@ -73,6 +73,8 @@ issymbolic(dir, component)
 			fatalerr("out of .. dirs, increase MAXDIRS\n");
 		return(TRUE);
 	}
+#else
+	if (dir && component) { }  /* use arguments */
 #endif
 	return(FALSE);
 }
@@ -121,7 +123,7 @@ remove_dotdot(path)
 		    char **fp = cp + 2;
 		    char **tp = cp;
 
-		    do 
+		    do
 			*tp++ = *fp; /* move all the pointers down */
 		    while (*fp++);
 		    if (cp != components)

@@ -336,7 +336,7 @@ int main(argc, argv)
 		case 'm':
 			warn_multiple = TRUE;
 			break;
-			
+
 		/* Ignore -O, -g so we can just pass ${CFLAGS} to
 		   makedepend
 		 */
@@ -617,7 +617,7 @@ char *getline(filep)
 
 				*p++ = '\0';
 				/* punt lines with just # (yacc generated) */
-				for (cp = bol+1; 
+				for (cp = bol+1;
 				     *cp && (*cp == ' ' || *cp == '\t'); cp++);
 				if (*cp) goto done;
 			}

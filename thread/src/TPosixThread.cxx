@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TPosixThread.cxx,v 1.3 2001/04/03 13:36:46 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TPosixThread.cxx,v 1.4 2001/06/06 13:41:43 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -133,13 +133,13 @@ Long_t TPosixThread::SelfId()
 }
 
 //______________________________________________________________________________
-Int_t TPosixThread::Sleep(ULong_t secs, ULong_t nanos)
+Int_t TPosixThread::Sleep(ULong_t secs, ULong_t /*nanos*/)
 {
    return sleep(secs);
 }
 
 //______________________________________________________________________________
-Int_t TPosixThread::GetTime(ULong_t *absSec, ULong_t *absNanoSec)
+Int_t TPosixThread::GetTime(ULong_t * /*absSec*/, ULong_t * /*absNanoSec*/)
 {
    return 0;
 }

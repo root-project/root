@@ -90,8 +90,8 @@ cppsetup(line, filep, inc)
 	pend = p;
 
 	ptrtab = slotab+COFF;
-	*--inp = SALT; 
-	outp=inp; 
+	*--inp = SALT;
+	outp=inp;
 	value = yyparse();
 	*p = savec;
 	return(value);

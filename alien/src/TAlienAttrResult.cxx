@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:$:$Id:$
+// @(#)root/alien:$Name:  $:$Id: TAlienAttrResult.cxx,v 1.1 2002/05/13 10:38:10 rdm Exp $
 // Author: Fons Rademakers   8/1/2002
 
 /*************************************************************************
@@ -51,7 +51,7 @@ TAlienAttrResult::~TAlienAttrResult()
 }
 
 //______________________________________________________________________________
-void TAlienAttrResult::Close(Option_t *option)
+void TAlienAttrResult::Close(Option_t *)
 {
    // Close result object.
 

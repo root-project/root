@@ -3,7 +3,7 @@
  * $XFree86: xc/config/makedepend/ifparser.c,v 3.6 1996/12/30 13:57:55 dawes Exp $
  *
  * Copyright 1992 Network Computing Devices, Inc.
- * 
+ *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose and without fee is hereby granted, provided
  * that the above copyright notice appear in all copies and that both that
@@ -13,7 +13,7 @@
  * without specific, written prior permission.  Network Computing Devices makes
  * no representations about the suitability of this software for any purpose.
  * It is provided ``as is'' without express or implied warranty.
- * 
+ *
  * NETWORK COMPUTING DEVICES DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
  * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS,
  * IN NO EVENT SHALL NETWORK COMPUTING DEVICES BE LIABLE FOR ANY SPECIAL,
@@ -21,19 +21,19 @@
  * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  * OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
- * 
+ *
  * Author:  Jim Fulton
  *          Network Computing Devices, Inc.
- * 
+ *
  * Simple if statement processor
  *
  * This module can be used to evaluate string representations of C language
  * if constructs.  It accepts the following grammar:
- * 
+ *
  *     EXPRESSION	:=	VALUE
  * 			 |	VALUE  BINOP	EXPRESSION
  *			 |	VALUE	'?'	EXPRESSION ':'	EXPRESSION
- * 
+ *
  *     VALUE		:=	'('  EXPRESSION  ')'
  * 			 |	'!'  VALUE
  * 			 |	'-'  VALUE
@@ -43,7 +43,7 @@
  *			 |	# variable '(' variable-list ')'
  * 			 |	variable
  * 			 |	number
- * 
+ *
  *     BINOP		:=	'*'	|  '/'	|  '%'
  * 			 |	'+'	|  '-'
  * 			 |	'<<'	|  '>>'
@@ -51,12 +51,12 @@
  * 			 |	'=='	|  '!='
  * 			 |	'&'	|  '^'  |  '|'
  * 			 |	'&&'	|  '||'
- * 
+ *
  * The normal C order of precedence is supported.
- * 
- * 
+ *
+ *
  * External Entry Points:
- * 
+ *
  *     ParseIfExpression		parse a string for #if
  */
 
@@ -123,6 +123,7 @@ parse_character (g, cp, valp)
     long *valp;
 {
     char val;
+    if (g) { }   /* use argument */
 
     SKIPSPACE (cp);
     if (*cp == '\\')
@@ -166,7 +167,7 @@ parse_value (g, cp, valp)
       case '(':
 	DO (cp = ParseIfExpression (g, cp + 1, valp));
 	SKIPSPACE (cp);
-	if (*cp != ')') 
+	if (*cp != ')')
 	    return CALLFUNC(g, handle_error) (g, cp, ")");
 
 	return cp + 1;			/* skip the right paren */
@@ -236,7 +237,7 @@ parse_value (g, cp, valp)
 	DO (cp = parse_variable (g, cp, &var));
 	*valp = (*(g->funcs.eval_variable)) (g, var, cp - var);
     }
-    
+
     return cp;
 }
 

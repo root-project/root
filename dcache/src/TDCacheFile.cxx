@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.9 2003/07/11 09:01:34 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.10 2003/07/19 00:14:15 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 
 /*************************************************************************
@@ -394,7 +394,7 @@ Seek_t TDCacheFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
 }
 
 //______________________________________________________________________________
-Int_t TDCacheFile::SysSync(Int_t fd)
+Int_t TDCacheFile::SysSync(Int_t /*fd*/)
 {
    // dCache always keep it's files sync'ed, so there's no need to
    // sync() them manually.

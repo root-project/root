@@ -1,4 +1,4 @@
-/* @(#)root/srputils:$Name:  $:$Id: rtconf.c,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $ */
+/* @(#)root/srputils:$Name:  $:$Id: rtconf.c,v 1.2 2001/10/04 16:53:43 rdm Exp $ */
 /*
  * Copyright (c) 1997-1999  The Stanford SRP Authentication Project
  * All Rights Reserved.
@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
    printf("\nGenerate a (n)ew field or use a (p)redefined field? [nP] ");
    fgets(cbuf, sizeof(cbuf), stdin);
    if (*cbuf != 'n' && *cbuf != 'N') {
-      for (i = 0; i < NPARAMS; ++i) {
+      for (i = 0; i < (int)NPARAMS; ++i) {
          tcent->modulus.len = t_fromb64((char *)tcent->modulus.data,
                                         pre_params[i].pre_mod);
          printf("(%d) [%d bits]  %s\n    Modulus = %s\n  Generator = %s\n",
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
       printf("\nSelect a field (1-%d): ", NPARAMS);
       fgets(cbuf, sizeof(cbuf), stdin);
       i = atoi(cbuf);
-      if (i <= 0 || i > NPARAMS) {
+      if (i <= 0 || i > (int)NPARAMS) {
          fprintf(stderr, "Index not in range\n");
          exit(1);
       }

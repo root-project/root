@@ -32,7 +32,7 @@ in this Software without prior written authorization from the X Consortium.
 extern char	*directives[];
 extern struct inclist	maininclist;
 
-extern int deftype(char	*line, struct filepointer *filep, 
+extern int deftype(char	*line, struct filepointer *filep,
                    struct inclist *file_red, struct inclist *file,
                    int parse_it);
 extern int match(char *str, char **list);
@@ -201,7 +201,7 @@ int deftype (line, filep, file_red, file, parse_it)
 			       (*sym) -> s_name,
 			       (*sym) -> s_value));
 			/* mark file as having included a 'soft include' */
-			file->i_flags |= INCLUDED_SYM; 
+			file->i_flags |= INCLUDED_SYM;
 			sym = isdefined(p, file_red, NULL);
 		    }
 		}
@@ -260,9 +260,10 @@ struct symtab **fdefined(symbol, file, srcfile)
 	if (file->i_flags & DEFCHECKED)
 		return(NULL);
 	file->i_flags |= DEFCHECKED;
-	if ((val = slookup(symbol, file)))
+	if ((val = slookup(symbol, file))) {
 		debug(1,("%s defined in %s as %s\n",
 			 symbol, file->i_file, (*val)->s_value));
+	}
 	if (val == NULL && file->i_list)
 		{
 		for (ip = file->i_list, i=0; i < file->i_listlen; i++, ip++)
@@ -355,14 +356,14 @@ define2(name, val, file)
 	    if (s2[-1] == '\0') break;
 
 	/* If exact match, set sp and break */
-	if (*--s1 == *--s2) 
+	if (*--s1 == *--s2)
 	{
 	    sp = file->i_defs + middle;
 	    break;
 	}
 
 	/* If name > i_defs[middle] ... */
-	if (*s1 > *s2) 
+	if (*s1 > *s2)
 	{
 	    below = first;
 	    first = middle + 1;
@@ -441,13 +442,13 @@ struct symtab **slookup(symbol, file)
 	        if (s2[-1] == '\0') break;
 
 	    /* If exact match, we're done */
-	    if (*--s1 == *--s2) 
+	    if (*--s1 == *--s2)
 	    {
 	        return file->i_defs + middle;
 	    }
 
 	    /* If symbol > i_defs[middle] ... */
-	    if (*s1 > *s2) 
+	    if (*s1 > *s2)
 	    {
 	        first = middle + 1;
 	    }
@@ -464,7 +465,7 @@ int merge2defines(file1, file2)
 	struct inclist	*file1;
 	struct inclist	*file2;
 {
-	if ((file1!=NULL) && (file2!=NULL)) 
+	if ((file1!=NULL) && (file2!=NULL))
         {
 		int first1 = 0;
 		int last1 = file1->i_ndefs - 1;
@@ -477,7 +478,7 @@ int merge2defines(file1, file2)
 		int deflen=file1->i_ndefs+file2->i_ndefs;
 
                 if (deflen>0)
-                { 
+                {
                 	/* make sure deflen % SYMTABINC == 0 is still true */
                 	deflen += (SYMTABINC - deflen % SYMTABINC) % SYMTABINC;
                 	i_defs=(struct symtab**)
@@ -512,7 +513,7 @@ int merge2defines(file1, file2)
                 if (file1->i_defs) free(file1->i_defs);
                 file1->i_defs=i_defs;
                 file1->i_ndefs=first;
-                
+
 		return 1;
   	}
 	return 0;
@@ -647,7 +648,7 @@ find_includes(filep, file, file_red, recursion, failOK)
 		    	warning("%s: %d: %s\n", file_red->i_file,
 				 filep->f_line, line);
 		    	break;
-		    
+
 		case PRAGMA:
 		case IDENT:
 		case SCCS:

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.1 2003/06/27 11:02:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.2 2003/07/05 18:18:46 brun Exp $
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************
@@ -64,7 +64,7 @@ void TCondor::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-TCondorSlave *TCondor::ClaimVM(const char *vm, const char *cmd, Int_t &port)
+TCondorSlave *TCondor::ClaimVM(const char *vm, const char * /*cmd*/, Int_t &port)
 {
    // Claim a VirtualMachine for PROOF usage.
 
