@@ -53,14 +53,6 @@ public:
    ClassDef(TArrayF,1)  //Array of floats
 };
 
-inline TBuffer &operator>>(TBuffer &buf, TArrayF *&obj)
-{
-   // Read TArrayF object from buffer.
-
-   obj = (TArrayF *) TArray::ReadArray(buf, TArrayF::Class());
-   return buf;
-}
-
 inline Float_t TArrayF::At(Int_t i) const
 {
    if (!BoundsOk("TArrayF::At", i))

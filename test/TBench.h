@@ -36,8 +36,6 @@ public:
   ClassDef(THit,1) // the hit class
 };
 
-TBuffer &operator>>(TBuffer &,THit *&);
-
 //-------------------------------------------------------------
 class TObjHit : public TObject, public THit {
 

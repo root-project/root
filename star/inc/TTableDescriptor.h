@@ -59,9 +59,8 @@ class TTableDescriptor : public TTable {
     static   TTableDescriptor *MakeDescriptor(const char *structName);
 
 //    ClassDefTable(TTableDescriptor,tableDescriptor_st)
-     static const char* TableDictionary();
   protected:                                        
-     static  TTableDescriptor *fgColDescriptors;
+     static  TTableDescriptor *fgColDescriptors;     
      virtual TTableDescriptor *GetDescriptorPointer() const     { return fgColDescriptors;}                 
      virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = list;}                  
   public:                                           

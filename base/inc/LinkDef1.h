@@ -94,8 +94,6 @@
 #pragma link C++ function operator>(const TDatime&,const TDatime&);
 #pragma link C++ function operator>=(const TDatime&,const TDatime&);
 
-#pragma link C++ namespace ROOT;
-
 #pragma link C++ class TApplication;
 #pragma link C++ class TApplicationImp;
 #pragma link C++ class TAttFill+;
@@ -121,14 +119,13 @@
 #pragma link C++ class TFile-;
 #pragma link C++ class TFileHandler+;
 #pragma link C++ class TGuiFactory;
+#pragma link C++ class TPadView3D+;
 #pragma link C++ class TStyle+;
 #pragma link C++ class TView-;
 #pragma link C++ class TVirtualX+;
 #pragma link C++ class TVirtualFitter+;
 #pragma link C++ class TVirtualPad-;
-// Those are NOT going to be saved ... so no need for a +
-#pragma link C++ class TPadView3D;
-#pragma link C++ class TVirtualGL;
-#pragma link C++ class TVirtualPS;
+#pragma link C++ class TVirtualGL+;
+#pragma link C++ class TVirtualPS+;
 
 #endif

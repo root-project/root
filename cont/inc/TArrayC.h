@@ -53,14 +53,6 @@ public:
    ClassDef(TArrayC,1)  //Array of chars
 };
 
-inline TBuffer &operator>>(TBuffer &buf, TArrayC *&obj)
-{
-   // Read TArrayC object from buffer.
-
-   obj = (TArrayC *) TArray::ReadArray(buf, TArrayC::Class());
-   return buf;
-}
-
 inline Char_t TArrayC::At(Int_t i) const
 {
    if (!BoundsOk("TArrayC::At", i))

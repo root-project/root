@@ -53,14 +53,6 @@ public:
    ClassDef(TArrayD,1)  //Array of doubles
 };
 
-inline TBuffer &operator>>(TBuffer &buf, TArrayD *&obj)
-{
-   // Read TArrayD object from buffer.
-
-   obj = (TArrayD *) TArray::ReadArray(buf, TArrayD::Class());
-   return buf;
-}
-
 inline Double_t TArrayD::At(Int_t i) const
 {
    if (!BoundsOk("TArrayD::At", i))

@@ -53,14 +53,6 @@ public:
    ClassDef(TArrayL,1)  //Array of longs
 };
 
-inline TBuffer &operator>>(TBuffer &buf, TArrayL *&obj)
-{
-   // Read TArrayL object from buffer.
-
-   obj = (TArrayL *) TArray::ReadArray(buf, TArrayL::Class());
-   return buf;
-}
-
 inline Long_t TArrayL::At(Int_t i) const
 {
    if (!BoundsOk("TArrayL::At", i))

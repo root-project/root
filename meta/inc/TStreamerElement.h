@@ -223,24 +223,6 @@ public:
 };
 
 //________________________________________________________________________
-class TStreamerObjectAnyPointer : public TStreamerElement {
-   
-public:
-
-   TStreamerObjectAnyPointer();
-   TStreamerObjectAnyPointer(const char *name, const char *title, Int_t offset, const char *typeName);
-   virtual       ~TStreamerObjectAnyPointer();
-   TClass        *GetClass() const {return fClassObject;}
-   const char    *GetInclude() const;
-   Int_t          GetSize() const;
-   virtual void   Init(TObject *obj=0);
-   virtual Bool_t IsaPointer() const {return kTRUE;}
-   virtual void   SetArrayDim(Int_t dim);
-   
-   ClassDef(TStreamerObjectAnyPointer,1)  //Streamer element of type pointer to a non TObject
-};
-
-//________________________________________________________________________
 class TStreamerString : public TStreamerElement {
 
 public:

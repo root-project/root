@@ -77,7 +77,6 @@ public:
    virtual ~TBuffer();
 
    void     MapObject(const TObject *obj, UInt_t offset = 1);
-   void     MapObject(const void *obj, UInt_t offset = 1);
    virtual void Reset() { SetBufferOffset(); ResetMap(); }
    void     InitMap();
    void     ResetMap();
@@ -114,9 +113,6 @@ public:
 
    virtual TObject *ReadObject(const TClass *cl);
    virtual void     WriteObject(const TObject *obj);
-
-   //To be implemented void *ReadObjectXXXX(const TClass *cl);
-   void     WriteObject(const void *obj, TClass *actualClass);
 
    void     SetBufferDisplacement(Int_t skipped)
             { fDisplacement =  (Int_t)(Length() - skipped); }

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.1.1.1.4.2 2002/02/25 18:03:31 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   21/10/97
 
 /*************************************************************************
@@ -57,13 +57,6 @@ public:
    ClassDef(TArray,1)  //Abstract array base class
 };
 
-inline TBuffer &operator>>(TBuffer &buf, TArray *&obj)
-{
-   // Read TArray object from buffer.
-
-   obj = (TArray *) TArray::ReadArray(buf, TArray::Class());
-   return buf;
-}
 
 inline Bool_t TArray::BoundsOk(const char *where, Int_t at) const
 {

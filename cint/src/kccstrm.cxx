@@ -23,38 +23,12 @@ extern "C" void G__set_cpp_environment()
 {
    G__cpp_reset_tagtable();
 }
-
-class G__kccstrmdOcxx_tag {};
-
-/* dummy, for exception */
-#ifdef G__EH_DUMMY_DELETE
-void operator delete(void *p,G__kccstrmdOcxx_tag* x) {
-  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;
-#ifndef G__ROOT
-  free(p);
-#else
-  ::operator delete(p);
-#endif
-}
-#endif
-
-static void G__operator_delete(void *p) {
-  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;
-#ifndef G__ROOT
-  free(p);
-#else
-  ::operator delete(p);
-#endif
-}
-
-#if 0
 static void operator delete(void *p)
 {
    if ((long) p == G__getgvp() && G__PVOID != G__getgvp())
       return;
    free(p);
 }
-#endif
 
 #include "dllrev.h"
 extern "C" int G__cpp_dllrev()
@@ -188,9 +162,9 @@ static int G__char_traitslEchargR_wAchar_traitslEchargR_0_2(G__value * result7, 
          delete[](char_traits < char >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(char_traits < char >) * i));
+            delete(char_traits < char >*) ((G__getstructoffset()) + sizeof(char_traits < char >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(char_traits < char >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -365,11 +339,11 @@ static int G__basic_ioslEcharcOchar_traitslEchargRsPgR_wAbasic_ioslEcharcOchar_t
    if (G__getaryconstruct())
       if (G__PVOID == G__getgvp())
          delete[](basic_ios < char, char_traits < char > >*) (G__getstructoffset());
-      else 
+      else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_ios < char, char_traits < char > >) * i));
+            delete(basic_ios < char, char_traits < char > >*) ((G__getstructoffset()) + sizeof(basic_ios < char, char_traits < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_ios < char, char_traits < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -792,9 +766,9 @@ static int G__basic_istreamlEcharcOchar_traitslEchargRsPgR_wAbasic_istreamlEchar
          delete[](basic_istream < char, char_traits < char > >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_istream < char, char_traits < char > >) * i));
+            delete(basic_istream < char, char_traits < char > >*) ((G__getstructoffset()) + sizeof(basic_istream < char, char_traits < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_istream < char, char_traits < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -1064,9 +1038,9 @@ static int G__basic_ostreamlEcharcOchar_traitslEchargRsPgR_wAbasic_ostreamlEchar
          delete[](basic_ostream < char, char_traits < char > >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_ostream < char, char_traits < char > >) * i));
+            delete(basic_ostream < char, char_traits < char > >*) ((G__getstructoffset()) + sizeof(basic_ostream < char, char_traits < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_ostream < char, char_traits < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -1082,9 +1056,9 @@ static int G__basic_iostreamlEcharcOchar_traitslEchargRsPgR_wAbasic_iostreamlEch
          delete[](basic_iostream < char, char_traits < char > >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_iostream < char, char_traits < char > >) * i));
+            delete(basic_iostream < char, char_traits < char > >*) ((G__getstructoffset()) + sizeof(basic_iostream < char, char_traits < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_iostream < char, char_traits < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -1246,9 +1220,9 @@ static int G__basic_streambuflEcharcOchar_traitslEchargRsPgR_wAbasic_streambuflE
          delete[](basic_streambuf < char, char_traits < char > >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_streambuf < char, char_traits < char > >) * i));
+            delete(basic_streambuf < char, char_traits < char > >*) ((G__getstructoffset()) + sizeof(basic_streambuf < char, char_traits < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_streambuf < char, char_traits < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -1298,9 +1272,9 @@ static int G__basic_filebuflEcharcOchar_traitslEchargRsPgR_wAbasic_filebuflEchar
          delete[](basic_filebuf < char, char_traits < char > >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_filebuf < char, char_traits < char > >) * i));
+            delete(basic_filebuf < char, char_traits < char > >*) ((G__getstructoffset()) + sizeof(basic_filebuf < char, char_traits < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_filebuf < char, char_traits < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -1388,9 +1362,9 @@ static int G__allocatorlEchargR_wAallocatorlEchargR_9_0(G__value * result7, cons
          delete[](allocator < char >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(allocator < char >) * i));
+            delete(allocator < char >*) ((G__getstructoffset()) + sizeof(allocator < char >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(allocator < char >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -1411,9 +1385,9 @@ static int G__basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_
          delete[](basic_stringbuf < char, char_traits < char >, allocator < char > >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_stringbuf < char, char_traits < char >, allocator < char > >) * i));
+            delete(basic_stringbuf < char, char_traits < char >, allocator < char > >*) ((G__getstructoffset()) + sizeof(basic_stringbuf < char, char_traits < char >, allocator < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_stringbuf < char, char_traits < char >, allocator < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -1513,9 +1487,9 @@ static int G__basic_ifstreamlEcharcOchar_traitslEchargRsPgR_wAbasic_ifstreamlEch
          delete[](basic_ifstream < char, char_traits < char > >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_ifstream < char, char_traits < char > >) * i));
+            delete(basic_ifstream < char, char_traits < char > >*) ((G__getstructoffset()) + sizeof(basic_ifstream < char, char_traits < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_ifstream < char, char_traits < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -1616,9 +1590,9 @@ static int G__basic_ofstreamlEcharcOchar_traitslEchargRsPgR_wAbasic_ofstreamlEch
          delete[](basic_ofstream < char, char_traits < char > >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_ofstream < char, char_traits < char > >) * i));
+            delete(basic_ofstream < char, char_traits < char > >*) ((G__getstructoffset()) + sizeof(basic_ofstream < char, char_traits < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_ofstream < char, char_traits < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -1680,9 +1654,9 @@ static int G__basic_fstreamlEcharcOchar_traitslEchargRsPgR_wAbasic_fstreamlEchar
          delete[](basic_fstream < char, char_traits < char > >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_fstream < char, char_traits < char > >) * i));
+            delete(basic_fstream < char, char_traits < char > >*) ((G__getstructoffset()) + sizeof(basic_fstream < char, char_traits < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_fstream < char, char_traits < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -1749,9 +1723,9 @@ static int G__basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRs
          delete[](basic_istringstream < char, char_traits < char >, allocator < char > >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_istringstream < char, char_traits < char >, allocator < char > >) * i));
+            delete(basic_istringstream < char, char_traits < char >, allocator < char > >*) ((G__getstructoffset()) + sizeof(basic_istringstream < char, char_traits < char >, allocator < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_istringstream < char, char_traits < char >, allocator < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -1818,9 +1792,9 @@ static int G__basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRs
          delete[](basic_ostringstream < char, char_traits < char >, allocator < char > >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_ostringstream < char, char_traits < char >, allocator < char > >) * i));
+            delete(basic_ostringstream < char, char_traits < char >, allocator < char > >*) ((G__getstructoffset()) + sizeof(basic_ostringstream < char, char_traits < char >, allocator < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_ostringstream < char, char_traits < char >, allocator < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -1887,9 +1861,9 @@ static int G__basic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsP
          delete[](basic_stringstream < char, char_traits < char >, allocator < char > >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_stringstream < char, char_traits < char >, allocator < char > >) * i));
+            delete(basic_stringstream < char, char_traits < char >, allocator < char > >*) ((G__getstructoffset()) + sizeof(basic_stringstream < char, char_traits < char >, allocator < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_stringstream < char, char_traits < char >, allocator < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -3113,9 +3087,9 @@ static int G__basic_stringlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_wAb
          delete[](string*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(string) * i));
+            delete(string*) ((G__getstructoffset()) + sizeof(string) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(string*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -3158,9 +3132,9 @@ static int G__input_iterator_tag_wAinput_iterator_tag_2_0(G__value * result7, co
          delete[](input_iterator_tag *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(input_iterator_tag) * i));
+            delete(input_iterator_tag *) ((G__getstructoffset()) + sizeof(input_iterator_tag) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(input_iterator_tag *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -3204,9 +3178,9 @@ static int G__output_iterator_tag_wAoutput_iterator_tag_2_0(G__value * result7, 
          delete[](output_iterator_tag *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(output_iterator_tag) * i));
+            delete(output_iterator_tag *) ((G__getstructoffset()) + sizeof(output_iterator_tag) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(output_iterator_tag *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -3250,9 +3224,9 @@ static int G__forward_iterator_tag_wAforward_iterator_tag_2_0(G__value * result7
          delete[](forward_iterator_tag *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(forward_iterator_tag) * i));
+            delete(forward_iterator_tag *) ((G__getstructoffset()) + sizeof(forward_iterator_tag) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(forward_iterator_tag *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -3296,9 +3270,9 @@ static int G__bidirectional_iterator_tag_wAbidirectional_iterator_tag_2_0(G__val
          delete[](bidirectional_iterator_tag *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(bidirectional_iterator_tag) * i));
+            delete(bidirectional_iterator_tag *) ((G__getstructoffset()) + sizeof(bidirectional_iterator_tag) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(bidirectional_iterator_tag *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -3342,9 +3316,9 @@ static int G__random_access_iterator_tag_wArandom_access_iterator_tag_2_0(G__val
          delete[](random_access_iterator_tag *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(random_access_iterator_tag) * i));
+            delete(random_access_iterator_tag *) ((G__getstructoffset()) + sizeof(random_access_iterator_tag) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(random_access_iterator_tag *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -3403,9 +3377,9 @@ static int G__iteratorlEoutput_iterator_tagcOvoidcOvoidcOvoidcOvoidgR_wAiterator
          delete[](iterator < output_iterator_tag, void, void, void, void >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(iterator < output_iterator_tag, void, void, void, void >) * i));
+            delete(iterator < output_iterator_tag, void, void, void, void >*) ((G__getstructoffset()) + sizeof(iterator < output_iterator_tag, void, void, void, void >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(iterator < output_iterator_tag, void, void, void, void >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -3451,9 +3425,9 @@ static int G__allocatorlEvoidgR_wAallocatorlEvoidgR_2_0(G__value * result7, cons
          delete[](allocator < void >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(allocator < void >) * i));
+            delete(allocator < void >*) ((G__getstructoffset()) + sizeof(allocator < void >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(allocator < void >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -3588,9 +3562,9 @@ static int G__streampos_wAstreampos_3_1(G__value * result7, const char *funcname
          delete[](streampos *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(streampos) * i));
+            delete(streampos *) ((G__getstructoffset()) + sizeof(streampos) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(streampos *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -3760,9 +3734,9 @@ static int G__reverse_iteratorlEcharmUgR_wAreverse_iteratorlEcharmUgR_5_1(G__val
          delete[](reverse_iterator < char *>*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(reverse_iterator < char *>) * i));
+            delete(reverse_iterator < char *>*) ((G__getstructoffset()) + sizeof(reverse_iterator < char *>) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(reverse_iterator < char *>*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -3806,9 +3780,9 @@ static int G__iterator_traitslEcharmUgR_wAiterator_traitslEcharmUgR_2_0(G__value
          delete[](iterator_traits < char *>*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(iterator_traits < char *>) * i));
+            delete(iterator_traits < char *>*) ((G__getstructoffset()) + sizeof(iterator_traits < char *>) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(iterator_traits < char *>*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -3872,9 +3846,9 @@ static int G__iteratorlElongcOcharmUcOcharmUmUcOcharmUaNcOrandom_access_iterator
          delete[](iterator < long, char *, char **, char *&, random_access_iterator_tag > *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(iterator < long, char *, char **, char *&, random_access_iterator_tag >) * i));
+            delete(iterator < long, char *, char **, char *&, random_access_iterator_tag > *) ((G__getstructoffset()) + sizeof(iterator < long, char *, char **, char *&, random_access_iterator_tag >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(iterator < long, char *, char **, char *&, random_access_iterator_tag > *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -3918,9 +3892,9 @@ static int G__lconv_wAlconv_2_0(G__value * result7, const char *funcname, struct
          delete[](lconv *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(lconv) * i));
+            delete(lconv *) ((G__getstructoffset()) + sizeof(lconv) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(lconv *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -4059,9 +4033,9 @@ static int G__locale_wAlocale_5_1(G__value * result7, const char *funcname, stru
          delete[](locale *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(locale) * i));
+            delete(locale *) ((G__getstructoffset()) + sizeof(locale) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(locale *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -4092,9 +4066,9 @@ static int G__localecLcLid_wAid_7_0(G__value * result7, const char *funcname, st
        delete[](locale::id *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-          G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(locale::id) * i));
+          delete(locale:: id *) ((G__getstructoffset()) + sizeof(locale::id) * i);
    else
-    G__operator_delete( (void*) (G__getstructoffset()));
+    delete(locale::id *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -4142,9 +4116,9 @@ static int G__ctype_base_wActype_base_2_0(G__value * result7, const char *funcna
          delete[](ctype_base *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(ctype_base) * i));
+            delete(ctype_base *) ((G__getstructoffset()) + sizeof(ctype_base) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(ctype_base *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -4365,9 +4339,9 @@ static int G__ios_base_wAios_base_1_2(G__value * result7, const char *funcname, 
          delete[](ios_base *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(ios_base) * i));
+            delete(ios_base *) ((G__getstructoffset()) + sizeof(ios_base) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(ios_base *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -4409,9 +4383,9 @@ static int G__ios_basecLcLInit_wAInit_3_0(G__value * result7, const char *funcna
        delete[](ios_base::Init *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-          G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(ios_base::Init) * i));
+          delete(ios_base:: Init *) ((G__getstructoffset()) + sizeof(ios_base::Init) * i);
    else
-    G__operator_delete( (void*) (G__getstructoffset()));
+    delete(ios_base::Init *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -4455,9 +4429,9 @@ static int G__codecvt_base_wAcodecvt_base_2_0(G__value * result7, const char *fu
          delete[](codecvt_base *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(codecvt_base) * i));
+            delete(codecvt_base *) ((G__getstructoffset()) + sizeof(codecvt_base) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(codecvt_base *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -4547,9 +4521,9 @@ static int G__time_base_wAtime_base_2_0(G__value * result7, const char *funcname
          delete[](time_base *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(time_base) * i));
+            delete(time_base *) ((G__getstructoffset()) + sizeof(time_base) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(time_base *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -4660,9 +4634,9 @@ static int G__istreambuf_iteratorlEcharcOchar_traitslEchargRsPgR_wAistreambuf_it
          delete[](istreambuf_iterator < char, char_traits < char > >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(istreambuf_iterator < char, char_traits < char > >) * i));
+            delete(istreambuf_iterator < char, char_traits < char > >*) ((G__getstructoffset()) + sizeof(istreambuf_iterator < char, char_traits < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(istreambuf_iterator < char, char_traits < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -4721,9 +4695,9 @@ static int G__iteratorlEinput_iterator_tagcOcharcOlongcOcharmUcOcharaNgR_wAitera
          delete[](iterator < input_iterator_tag, char, long, char *, char &>*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(iterator < input_iterator_tag, char, long, char *, char &>) * i));
+            delete(iterator < input_iterator_tag, char, long, char *, char &>*) ((G__getstructoffset()) + sizeof(iterator < input_iterator_tag, char, long, char *, char &>) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(iterator < input_iterator_tag, char, long, char *, char &>*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -4760,9 +4734,9 @@ static int G__istreambuf_iteratorlEcharcOchar_traitslEchargRsPgRcLcLproxy_wAprox
        delete[](istreambuf_iterator < char, char_traits < char > >::proxy *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(istreambuf_iterator < char, char_traits < char > >::proxy) * i));
+            delete(istreambuf_iterator < char, char_traits < char > >::proxy *) ((G__getstructoffset()) + sizeof(istreambuf_iterator < char, char_traits < char > >::proxy) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(istreambuf_iterator < char, char_traits < char > >::proxy *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -4796,9 +4770,9 @@ static int G__basic_istreamlEcharcOchar_traitslEchargRsPgRcLcLsentry_wAsentry_6_
        delete[](basic_istream < char, char_traits < char > >::sentry *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_istream < char, char_traits < char > >::sentry) * i));
+            delete(basic_istream < char, char_traits < char > >::sentry *) ((G__getstructoffset()) + sizeof(basic_istream < char, char_traits < char > >::sentry) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_istream < char, char_traits < char > >::sentry *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -4904,9 +4878,9 @@ static int G__ostreambuf_iteratorlEcharcOchar_traitslEchargRsPgR_wAostreambuf_it
          delete[](ostreambuf_iterator < char, char_traits < char > >*) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(ostreambuf_iterator < char, char_traits < char > >) * i));
+            delete(ostreambuf_iterator < char, char_traits < char > >*) ((G__getstructoffset()) + sizeof(ostreambuf_iterator < char, char_traits < char > >) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(ostreambuf_iterator < char, char_traits < char > >*) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -4928,9 +4902,9 @@ static int G__basic_ostreamlEcharcOchar_traitslEchargRsPgRcLcLsentry_wAsentry_5_
        delete[](basic_ostream < char, char_traits < char > >::sentry *) (G__getstructoffset());
       else
          for (int i = G__getaryconstruct() - 1; i >= 0; i--)
-            G__operator_delete( (void*) ((G__getstructoffset()) + sizeof(basic_ostream < char, char_traits < char > >::sentry) * i));
+            delete(basic_ostream < char, char_traits < char > >::sentry *) ((G__getstructoffset()) + sizeof(basic_ostream < char, char_traits < char > >::sentry) * i);
    else
-      G__operator_delete( (void*) (G__getstructoffset()));
+      delete(basic_ostream < char, char_traits < char > >::sentry *) (G__getstructoffset());
    G__setnull(result7);
    return (1 || funcname || hash || result7 || libp);
 }
@@ -7624,7 +7598,6 @@ static void G__setup_memvaristreambuf_iteratorlEcharcOchar_traitslEchargRsPgR(vo
    {
       istreambuf_iterator < char, char_traits < char > >*p;
       p = (istreambuf_iterator < char, char_traits < char > >*) 0x1000;
-      p = p;
    }
    G__tag_memvar_reset();
 }

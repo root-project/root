@@ -53,14 +53,6 @@ public:
    ClassDef(TArrayS,1)  //Array of shorts
 };
 
-inline TBuffer &operator>>(TBuffer &buf, TArrayS *&obj)
-{
-   // Read TArrayS object from buffer.
-
-   obj = (TArrayS *) TArray::ReadArray(buf, TArrayS::Class());
-   return buf;
-}
-
 inline Short_t TArrayS::At(Int_t i) const
 {
    if (!BoundsOk("TArrayS::At", i))

@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.7.4.3 2002/04/11 00:05:22 rdm Exp $ */
+/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.7 2001/07/11 06:46:19 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Stypes                                                               //
-// $Id: Ttypes.h,v 1.7.4.3 2002/04/11 00:05:22 rdm Exp $
+// $Id: Ttypes.h,v 1.7 2001/07/11 06:46:19 brun Exp $
 // Basic types used by STAF - ROOT interface.                           //
 //                                                                      //
 // This header file contains the set of the macro definitions           //
@@ -51,38 +51,34 @@
 
 //___________________________________________________________________
 #define _TableClassImp_(className,structName)                       \
-
-
-//   _TableClassInit_(className,structName)
+   TClass *className::Class()                                       \
+          { if (!fgIsA) className::Dictionary(); return fgIsA; }    \
+   const char *className::ImplFileName() { return __FILE__; }       \
+   int className::ImplFileLine() { return __LINE__; }               \
+   TClass *className::fgIsA = 0;                                    \
+   _TableClassInit_(className,structName)
 
 //___________________________________________________________________
 #define TableClassStreamerImp(className)                            \
 void className::Streamer(TBuffer &R__b) {                           \
    TTable::Streamer(R__b); }
 
-#if 0
+//___________________________________________________________________
+#define TableClassImp(className,structName)                         \
    void className::Dictionary()                                     \
    {                                                                \
       TClass *c = CreateClass(_QUOTE_(className), Class_Version(),  \
                               DeclFileName(), ImplFileName(),       \
                               DeclFileLine(), ImplFileLine());      \
-      className::TableDictionary();                                 \
-   }                                                                \
-
-#endif
-
-//___________________________________________________________________
-#define TableClassImp(className,structName)                         \
-   const char* className::TableDictionary() {                       \
+                                                                    \
       char *structBuf = new char[strlen(_QUOTE2_(structName,.h))+2];\
       strcpy(structBuf,_QUOTE2_(structName,.h));                    \
       char *s = strstr(structBuf,"_st.h");                          \
       if (s) { *s = 0;  strcat(structBuf,".h"); }                   \
-      TClass *r = ROOT::CreateClass(_QUOTE_(structName),            \
-                                    Class_Version(), structBuf,     \
-                                    structBuf, 1,  1 );             \
+      TClass *r = CreateClass(_QUOTE_(structName), Class_Version(), \
+                              structBuf, structBuf, 1,  1 );        \
+      fgIsA = c;                                                    \
       fgColDescriptors = new TTableDescriptor(r);                   \
-      return _QUOTE_(structName);                                   \
    }                                                                \
    _TableClassImp_(className,structName)
 
@@ -101,8 +97,6 @@ void className::Streamer(TBuffer &R__b) {                           \
 #define TableImp(name)  TableClassImp(_NAME2_(St_,name),_QUOTE2_(St_,name))
 
 #define ClassDefTable(className,structName)         \
-  public:                                           \
-     static void TableDictionary();                 \
   protected:                                        \
      static TTableDescriptor *fgColDescriptors;     \
      virtual TTableDescriptor *GetDescriptorPointer() const { return fgColDescriptors;}                 \
@@ -142,37 +136,5 @@ virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = 
     const structName &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const structName *)(GetTable(i))); }\
     structName *begin() const  {                      return GetNRows()? GetTable(0):0;}\
     structName *end()   const  {Int_t i = GetNRows(); return          i? GetTable(i):0;}
-
-
-namespace ROOT {
-   template <class T> class TTableInitBehavior: public DefaultInitBehavior {
-   public:
-      static const char* fgStructName; // Need to be instantiated
-      virtual TClass* CreateClass(const char *cname, Version_t id,
-                                  const type_info &info, IsAFunc_t isa,
-                                  ShowMembersFunc_t show,
-                                  const char *dfil, const char *ifil,
-                                  Int_t dl, Int_t il) const {
-         TClass * cl = DefaultInitBehavior::CreateClass(cname, id, info, isa, show, 
-                                                              dfil, ifil,dl, il);
-         fgStructName = T::TableDictionary();
-         return cl;
-      }
-      virtual void Unregister(const char* classname) const {
-         DefaultInitBehavior::Unregister(classname);
-         DefaultInitBehavior::Unregister(fgStructName);
-      }
-   };
-   template <class T> const char * TTableInitBehavior<T >::fgStructName = 0;
-}
-
-class TTable;
-namespace ROOT {
-   template <class RootClass> 
-      const ROOT::TTableInitBehavior<RootClass>* DefineBehavior( TTable*, RootClass*) 
-      {
-         return new ROOT::TTableInitBehavior<RootClass>(); 
-      }
-}
 
 #endif

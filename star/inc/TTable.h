@@ -169,7 +169,6 @@ public:
    static const char *GetTypeName(EColumnType type);
    static EColumnType GetTypeId(const char *typeName);
 
-   static const char *TableDictionary() { return 0; };
    ClassDef(TTable,4)  // Vector of the C structures
 };
 

@@ -39,7 +39,6 @@
 #pragma link C++ class TStreamerObject-;
 #pragma link C++ class TStreamerObjectAny-;
 #pragma link C++ class TStreamerObjectPointer-;
-#pragma link C++ class TStreamerObjectAnyPointer-;
 #pragma link C++ class TStreamerString-;
 #pragma link C++ class TStreamerSTL-;
 #pragma link C++ class TStreamerSTLstring-;

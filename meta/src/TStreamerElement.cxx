@@ -378,8 +378,8 @@ Int_t TStreamerBase::ReadBuffer (TBuffer &b, char *pointer)
       fMethod->SetParamPtrs(args);
       fMethod->Execute((void*)(pointer+fOffset));
    } else {
-     // printf("Reading baseclass:%s via ReadBuffer\n",fBaseClass->GetName());
-      fBaseClass->ReadBuffer(b,pointer);
+      //printf("Reading baseclass:%s via ReadBuffer\n",fBaseClass->GetName());
+      if (!fBaseClass->GetClassInfo()) fBaseClass->ReadBuffer(b,pointer);
    }
    return 0;
 }
@@ -418,13 +418,7 @@ void TStreamerBase::Update(TClass *oldClass, TClass *newClass)
 //______________________________________________________________________________
 Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
 {
-   if (!fMethod) {
-      //      if (fBaseClass->GetClassInfo()) fBaseClass->WriteBuffer(b,pointer);
-      // now always write ... the previous implementation did not even match 
-      // the ReadBuffer?
-      fBaseClass->WriteBuffer(b,pointer+fOffset);
-      return 0;
-   }
+   if (!fMethod) return 0;
    ULong_t args[1];
    args[0] = (ULong_t)&b;
    fMethod->SetParamPtrs(args);
@@ -939,88 +933,6 @@ void TStreamerObjectPointer::Streamer(TBuffer &R__b)
       R__b.CheckByteCount(R__s, R__c, TStreamerObjectPointer::IsA());
    } else {
       TStreamerObjectPointer::Class()->WriteBuffer(R__b,this);
-   }
-}
-
-
-//______________________________________________________________________________
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-ClassImp(TStreamerObjectAnyPointer)
-
-//______________________________________________________________________________
-TStreamerObjectAnyPointer::TStreamerObjectAnyPointer()
-{
-   // Default ctor.
-
-}
-
-//______________________________________________________________________________
-TStreamerObjectAnyPointer::TStreamerObjectAnyPointer(const char *name, const char *title, Int_t offset, const char *typeName)
-        : TStreamerElement(name,title,offset,TStreamerInfo::kAnyP,typeName)
-{
-   // Create a TStreamerObjectAnyPointer object.
-
-   if (strncmp(title,"->",2) == 0) fType = TStreamerInfo::kAnyp;
-   fNewType = fType;
-   Init();
-}
-
-//______________________________________________________________________________
-TStreamerObjectAnyPointer::~TStreamerObjectAnyPointer()
-{
-   // TStreamerObjectAnyPointer dtor.
-}
-
-//______________________________________________________________________________
-void TStreamerObjectAnyPointer::Init(TObject *)
-{
-   fClassObject = GetClassPointer();
-}
-
-//______________________________________________________________________________
-const char *TStreamerObjectAnyPointer::GetInclude() const
-{
-   TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
-   else                          sprintf(gIncludeName,"\"%s.h\"",GetTypeName());
-   char *star = strchr(gIncludeName,'*');
-   if (star) strcpy(star,star+1);
-   return gIncludeName;
-}
-
-//______________________________________________________________________________
-Int_t TStreamerObjectAnyPointer::GetSize() const
-{
-   //returns size of objectpointer in bytes
-   
-   if (fArrayLength) return fArrayLength*sizeof(void *);
-   return sizeof(void *);
-}
-
-//______________________________________________________________________________
-void TStreamerObjectAnyPointer::SetArrayDim(Int_t dim)
-{
-   // Set number of array dimensions.
-   
-   fArrayDim = dim;
-   //if (dim) fType += TStreamerInfo::kOffsetL;
-   fNewType = fType;
-}
-
-//______________________________________________________________________________
-void TStreamerObjectAnyPointer::Streamer(TBuffer &R__b)
-{
-   // Stream an object of class TStreamerObjectAnyPointer.
-
-   if (R__b.IsReading()) {
-      TStreamerObjectAnyPointer::Class()->ReadBuffer(R__b, this);
-   } else {
-      TStreamerObjectAnyPointer::Class()->WriteBuffer(R__b,this);
    }
 }
 

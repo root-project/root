@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.3.4.2 2002/04/11 00:05:19 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.3 2000/12/13 15:56:17 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -25,22 +25,16 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
-#ifndef ROOT_TString
-#include "TString.h"
-#endif
+
 
 struct ClassRec_t {
-   char            *name;
-   Version_t        id;
-   Int_t            bits;
-   VoidFuncPtr_t    dict;
-   const type_info *info;
-   ClassRec_t      *next;
+   char          *name;
+   Version_t      id;
+   Int_t          bits;
+   VoidFuncPtr_t  dict;
+   ClassRec_t    *next;
 };
 
-namespace ROOT {
-  class MapTypeToClassRec;
-}
 
 class TClassTable : public TObject {
 
@@ -50,17 +44,12 @@ private:
    static ClassRec_t  *FindElement(const char *cname, Bool_t insert=kFALSE);
    static void         SortTable();
 
-   typedef ROOT::MapTypeToClassRec IdMap_t;
-
    static ClassRec_t **fgTable;
    static ClassRec_t **fgSortedTable;
-   static IdMap_t     *fgIdMap;
    static int          fgSize;
    static int          fgTally;
    static Bool_t       fgSorted;
    static int          fgCursor;
-
-   friend  void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
 
 public:
    // bits that can be set in pragmabits
@@ -69,13 +58,11 @@ public:
    ~TClassTable();
 
    static void          Add(const char *cname, Version_t id,
-                            const type_info &info, VoidFuncPtr_t dict,
-                            Int_t pragmabits);
+                            VoidFuncPtr_t dict, Int_t pragmabits);
    int                  Classes();
    static Version_t     GetID(const char *cname);
    static Int_t         GetPragmaBits(const char *name);
    static VoidFuncPtr_t GetDict(const char *cname);
-   static VoidFuncPtr_t GetDict(const type_info& info);
    static void          Init();
    static char         *Next();
    void                 Print(Option_t *option="") const;
@@ -88,10 +75,8 @@ public:
 
 R__EXTERN TClassTable *gClassTable;
 
-namespace ROOT {
-   extern void AddClass(const char *cname, Version_t id, VoidFuncPtr_t dict,
-                        Int_t pragmabits);
-   extern void RemoveClass(const char *cname);
-}
+extern void AddClass(const char *cname, Version_t id, VoidFuncPtr_t dict,
+                     Int_t pragmabits);
+extern void RemoveClass(const char *cname);
 
 #endif

@@ -196,12 +196,9 @@ friend class TQObject;
 
 public:
    TQClass(const char *name, Version_t cversion,
-           const type_info &info, IsAFunc_t isa,
-           ShowMembersFunc_t showmembers,
            const char *dfil = 0, const char *ifil = 0,
            Int_t dl = 0, Int_t il = 0) :
-           TQObject(), 
-           TClass(name, cversion, info,isa,showmembers, dfil, ifil, dl, il) { }
+           TQObject(), TClass(name, cversion, dfil, ifil, dl, il) { }
 
    virtual ~TQClass() { Disconnect(); }
 
@@ -220,38 +217,17 @@ extern Bool_t ConnectCINT(TQObject *sender, const char *signal,
 
 //---- ClassImpQ macro ----------------------------------------------
 //
-// This macro used to correspond to the ClassImp macro and should be used
+// This macro corresponds to the ClassImp macro and should be used
 // for classes derived from TQObject instead of the ClassImp macro.
 // This macro makes it possible to have a single connection from
 // all objects of the same class.
-// *** It is now obsolete ***
 
 #define ClassImpQ(name) \
-   ClassImp(name)
-
-
-//---- Class Initialization Behavior --------------------------------------
-//
-// This Class and Function are automatically used for class inheriting from
-// TQObject.  They makes it possible to have a single connection from all
-// objects of the same class.
-namespace ROOT {
-   class DefaultInitBehavior;
-   class TQObjectInitBehavior : public DefaultInitBehavior {
-   public:
-      virtual TClass *CreateClass(const char *cname, Version_t id,
-                                  const type_info &info, IsAFunc_t isa,
-                                  ShowMembersFunc_t show,
-                                  const char *dfil, const char *ifil,
-                                  Int_t dl, Int_t il) const {
-         return new TQClass(cname, id, info, isa, show, dfil, ifil,dl, il);
-      }
-   };
-
-   inline const TQObjectInitBehavior *DefineBehavior(TQObject *, TQObject *)
-   {
-      return new TQObjectInitBehavior();
-   }
-}
+   void name::Dictionary() { \
+      fgIsA = new TQClass(Class_Name(), Class_Version(),  \
+                          DeclFileName(), ImplFileName(),  \
+                          DeclFileLine(), ImplFileLine()); \
+   } \
+   _ClassImp_(name)
 
 #endif
