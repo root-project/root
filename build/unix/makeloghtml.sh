@@ -3,7 +3,7 @@
 ROOT=bin/root.exe
 ROOTCONFIG=bin/root-config
 
-VERS=`$ROOTCONFIG --version`
+VERS=`$ROOTCONFIG --prefix=. --version`
 
 echo ""
 echo "Generating hyperized version of README/ChangeLog in directory htmldoc/..."

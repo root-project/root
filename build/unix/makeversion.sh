@@ -10,7 +10,7 @@ SCRIPT=build/version.cxx
 
 $CINT $SCRIPT
 
-echo "New version is `bin/root-config --prefix=. --version`. Updating dependencies..."
+echo "New version is `cat build/version_number`. Updating dependencies..."
 
 # compile all files that were out-of-date prior to makeversion.sh
 make -o base/inc/RVersion.h
@@ -23,3 +23,4 @@ make -s -t; make -s -t; make -s -t
 touch base/src/TROOT.cxx
 make
 
+echo "root-config --version reports: `bin/root-config --prefix=. --version`"
