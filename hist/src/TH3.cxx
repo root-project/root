@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.32 2003/04/19 16:59:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.33 2003/05/10 15:52:01 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -170,7 +170,7 @@ Int_t TH3::BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
    fBuffer[4*nbentries+1] = w;
    fBuffer[4*nbentries+2] = x;
    fBuffer[4*nbentries+3] = y;
-   fBuffer[4*nbentries+4] = y;
+   fBuffer[4*nbentries+4] = z;
    fBuffer[0] += 1;
    return -3;
 }
