@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.45 2001/06/23 08:41:28 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.46 2001/07/03 16:15:59 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -495,7 +495,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                      fprintf(fp, "            R__b >> R__t2;\n");
                   } else {
                      if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
-                        fprintf(fp, "            static TString R__str;\n");
+                        fprintf(fp, "            TString R__str;\n");
                         fprintf(fp, "            R__str.Streamer(R__b);\n");
                         fprintf(fp, "            string R__t2 = R__str.Data();\n");
                      } else {
@@ -507,7 +507,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                   fprintf(fp, "            R__b >> R__t;\n");
                } else {
                   if (strcmp(s,"string*") == 0) {
-                     fprintf(fp, "            static TString R__str;\n");
+                     fprintf(fp, "            TString R__str;\n");
                      fprintf(fp, "            R__str.Streamer(R__b);\n");
                      fprintf(fp, "            R__t = new string(R__str.Data());\n");
                   } else {
@@ -526,7 +526,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                      fprintf(fp, "            R__b >> R__t2;\n");
                   } else {
                      if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
-                        fprintf(fp, "            static TString R__str;\n");
+                        fprintf(fp, "            TString R__str;\n");
                         fprintf(fp, "            R__str.Streamer(R__b);\n");
                         fprintf(fp, "            string R__t2 = R__str.Data();\n");
                      } else {
@@ -539,7 +539,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                }
             } else {
               if (strcmp(s,"string") == 0) {
-                 fprintf(fp,"            static TString R__str;\n");
+                 fprintf(fp,"            TString R__str;\n");
                  fprintf(fp,"            R__str.Streamer(R__b);\n");
                  fprintf(fp,"            R__t = R__str.Data();\n");
               } else {
@@ -602,7 +602,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                      fprintf(fp, "            R__b << (*R__k).second;\n");
                   } else {
                      if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
-                        fprintf(fp, "            static TString R__str = ((%s&)((*R__k).second)).c_str();\n",TemplateArg(m,1).Name());
+                        fprintf(fp, "            TString R__str = ((%s&)((*R__k).second)).c_str();\n",TemplateArg(m,1).Name());
                         fprintf(fp, "            R__str.Streamer(R__b);\n");
                      } else {
                         fprintf(fp, "            ((%s&)((*R__k).second)).Streamer(R__b);\n",TemplateArg(m,1).Name());
@@ -612,7 +612,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                   fprintf(fp, "            R__b << *R__k;\n");
                } else {
                   if (strcmp(TemplateArg(m).Name(),"string*") == 0) {
-                     fprintf(fp,"            static TString R__str = (*R__k)->c_str();\n");
+                     fprintf(fp,"            TString R__str = (*R__k)->c_str();\n");
                      fprintf(fp,"            R__str.Streamer(R__b);\n");
                   } else {
                      if (strcmp(TemplateArg(m).Name(),"(unknown)") == 0) {
@@ -634,7 +634,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                      fprintf(fp, "            R__b << (*R__k).second;\n");
                   } else {
                      if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
-                        fprintf(fp, "            static TString R__str = ((%s&)((*R__k).second)).c_str();\n",TemplateArg(m,1).Name());
+                        fprintf(fp, "            TString R__str = ((%s&)((*R__k).second)).c_str();\n",TemplateArg(m,1).Name());
                         fprintf(fp, "            R__str.Streamer(R__b);\n");
                      } else {
                         fprintf(fp, "            ((%s&)((*R__k).second)).Streamer(R__b);\n",TemplateArg(m,1).Name());
@@ -647,7 +647,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                }
             } else {
                if (strcmp(TemplateArg(m).Name(),"string") == 0) {
-                  fprintf(fp,"            static TString R__str = (*R__k).c_str();\n");
+                  fprintf(fp,"            TString R__str = (*R__k).c_str();\n");
                   fprintf(fp,"            R__str.Streamer(R__b);\n");
                } else {
                   if (strcmp(TemplateArg(m).Name(),"(unknown)") == 0) {
