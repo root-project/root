@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.17 2001/06/30 01:33:11 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.18 2001/07/31 05:54:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,6 +15,7 @@
 
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealIntegral.hh"
+#include "RooFitCore/RooNameSet.hh"
 
 class RooDataSet;
 class RooArgSet ;
@@ -48,10 +49,7 @@ public:
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
   virtual Double_t analyticalIntegral(Int_t code) const ;
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kFALSE ; }
-
-  // Data set dependent accessors (normalization & dependent/parameter interpretation)
-  virtual Bool_t selfNormalized(const RooArgSet& dependents) const ;
-  virtual Bool_t selfNormalized(const RooAbsArg& dep) const { return kFALSE ; }
+  virtual Bool_t selfNormalized() const { return kFALSE ; }
   
   // PDF-specific plotting & display
   TH1F *Scan(RooDataSet* data, RooRealVar &param, Int_t bins= 0) { return 0 ; } 
@@ -134,6 +132,7 @@ protected:
   mutable Double_t _rawValue ;
   mutable RooAbsReal* _norm   ;      // Normalization integral
   mutable RooDataSet* _lastDataSet ; // Data set for which normalization integral is valid
+  mutable RooNameSet _lastNameSet ;  // Names of variables in last normalization set
 
   mutable Int_t _errorCount ;        // Number of errors remaining to print
   mutable Int_t _traceCount ;        // Number of traces remaining to print

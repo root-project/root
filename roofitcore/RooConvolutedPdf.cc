@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.4 2001/06/30 01:33:12 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.5 2001/07/31 05:54:18 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -268,7 +268,7 @@ Bool_t RooConvolutedPdf::syncNormalizationPreHook(RooAbsReal* norm,const RooData
   delete dsIter ;
   delete cvIter ;
   _convDummyDataSet = new RooDataSet("_convDummyDataSet","Dummy data set",dummyDataArgs) ;
-
+  
   return kFALSE ;
 }
 

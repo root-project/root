@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.4 2001/06/08 05:51:05 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.5 2001/07/31 05:54:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -39,7 +39,7 @@ public:
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const ;
   Double_t analyticalIntegral(Int_t code) const ;
-  Bool_t selfNormalized(const RooArgSet& dependents) const { return kTRUE ; }
+  virtual Bool_t selfNormalized() const { return kTRUE ; }
 
 protected:
 

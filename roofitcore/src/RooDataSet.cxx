@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.30 2001/06/30 01:33:12 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.31 2001/07/31 05:54:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -149,6 +149,7 @@ RooDataSet::RooDataSet(RooDataSet const & other) :
 RooDataSet::~RooDataSet()
 {
   // Destructor
+  cout << "RooDataSet::dtor dataset " << GetName() << "(" << this << ") deleted (vars = " << &_vars << ")" << endl ;
 
   // we cloned the initial AbsArgs ourselves and own them
   _vars.Delete() ;

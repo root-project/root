@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.20 2001/07/31 05:54:20 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.21 2001/07/31 20:54:07 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -110,7 +110,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     }
 
     // If this dependent arg is self-normalized, stop here
-    if (function.selfNormalized(*arg)) continue ;
+    if (function.selfNormalized()) continue ;
     
     Bool_t depOK(kFALSE) ;
     // Check for integratable AbsRealLValue

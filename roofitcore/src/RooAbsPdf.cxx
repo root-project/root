@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.18 2001/06/30 01:33:11 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.19 2001/07/31 05:54:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -163,19 +163,6 @@ Double_t RooAbsPdf::getNorm(const RooDataSet* dset) const
 
 
 
-Bool_t RooAbsPdf::selfNormalized(const RooArgSet& dependents) const 
-{
-  // Determine if PDF is self-normalized in all dependents
-  TIterator* iter = dependents.MakeIterator() ;
-  RooAbsArg* dep ;
-  while(dep=(RooAbsArg*) iter->Next()) {
-    if (!selfNormalized(*dep)) return kFALSE ;
-  }
-  return kTRUE ;
-}
-
-
-
 void RooAbsPdf::syncNormalization(const RooDataSet* dset) const
 {
   // Check if data sets are identical
@@ -183,35 +170,20 @@ void RooAbsPdf::syncNormalization(const RooDataSet* dset) const
 
   // Check if data sets have identical contents
   if (_lastDataSet) {
-    const RooArgSet *newSet = dset->get() ;
-    const RooArgSet *oldSet = _lastDataSet->get() ;
-    
-    cout << "newSet: " ; newSet->Print("v") ;
-    cout << "oldSet: " ; oldSet->Print("v") ;
-
-    if (newSet->GetSize() == oldSet->GetSize()) {
-      Bool_t identical(kTRUE) ;
-      TIterator* nIter = newSet->MakeIterator() ;
-      RooAbsArg* nArg ;
-      while (nArg = (RooAbsArg*) nIter->Next()) {
-	if (!oldSet->find(nArg->GetName())) {
-	  identical=kFALSE ;
-	  break ;
-	}
+    RooNameSet newNames(*dset->get()) ;
+    if (newNames==_lastNameSet) {
+      if (_verboseEval>1) {
+	cout << "RooAbsPdf::syncNormalization(" << GetName() << ") new data and old data sets are identical" << endl ;
       }
-      delete nIter ;
-      if (identical) {
-	if (_verboseEval>0) 
-	  cout << "RooAbsPdf::syncNormalization(" << GetName() << ") new data and old data sets are identical" << endl ;
-	return ;
-      }
+      return ;
     }
   }
 
   if (_verboseEval>0) cout << "RooAbsPdf:syncNormalization(" << GetName() 
-			 << ") recalculating normalization (" 
+			 << ") recreating normalization integral(" 
 			 << _lastDataSet << " -> " << dset << ")" << endl ;
   _lastDataSet = (RooDataSet*) dset ;
+  _lastNameSet.refill(*dset->get()) ;
 
   // Update dataset pointers of proxies
   ((RooAbsPdf*) this)->setProxyDataSet(dset) ;
@@ -223,7 +195,7 @@ void RooAbsPdf::syncNormalization(const RooDataSet* dset) const
   // Destroy old normalization & create new
   if (_norm) delete _norm ;
   
-  if (selfNormalized(*depList)) {
+  if (selfNormalized() || !dependsOn(*depList)) {
     _norm = new RooRealVar(TString(GetName()).Append("Norm"),
 			   TString(GetTitle()).Append(" Unit Normalization"),1) ;
   } else {
