@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.2 2003/08/27 16:02:17 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.3 2003/08/27 16:06:17 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1096,6 +1096,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language)
    // a function (TF1 or TF2).
    
    TString lg = language;
+   Int_t i;
    if (lg == "C++") {
       TString classname = filename;
       TString header = filename;
@@ -1114,13 +1115,13 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language)
       sourcefile << "#include \"math.h\"" << endl << endl;
       headerfile << "   double value(int index";
       sourcefile << "double " << classname << "::value(int index";
-      for (Int_t i = 0; i < fFirstLayer.GetEntriesFast(); i++) {
+      for (i = 0; i < fFirstLayer.GetEntriesFast(); i++) {
          headerfile << ",double in" << i;
          sourcefile << ",double in" << i;
       }
       headerfile << ");" << endl;
       sourcefile << ") {" << endl;
-      for (Int_t i = 0; i < fFirstLayer.GetEntriesFast(); i++)
+      for (i = 0; i < fFirstLayer.GetEntriesFast(); i++)
          sourcefile << "   input" << i << " = (in" << i << " - "
              << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[1] << ")/"
              << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[0] << ";" 
@@ -1138,7 +1139,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language)
                  << endl;
       sourcefile << "}" << endl << endl;
       headerfile << "private:" << endl;
-      for (Int_t i = 0; i < fFirstLayer.GetEntriesFast(); i++)
+      for (i = 0; i < fFirstLayer.GetEntriesFast(); i++)
          headerfile << "   double input" << i << ";" << endl;
       it = (TObjArrayIter *) fNetwork.MakeIterator();
       idx = 0;
