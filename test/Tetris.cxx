@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.4 2000/11/10 02:32:05 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.5 2000/11/21 20:45:07 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -635,7 +635,7 @@ void TetrisBoard::PieceDropped(TetrisPiece* piece, int height)
    fIsDropped = kFALSE;
 }
 
-void TetrisBoard::Print(const Text_t *)
+void TetrisBoard::Print(const Text_t *) const
 {
    // Used for testing
 
@@ -643,7 +643,7 @@ void TetrisBoard::Print(const Text_t *)
 
    for (int j = fHeight-1; j > -1; j--) {
       for (int i = 0; i < fWidth; i++)
-         IsEmpty(i,j) ? printf("|   ") : printf("| * ") ;
+         ((TetrisBoard*)this)->IsEmpty(i,j) ? printf("|   ") : printf("| * ") ;
       printf("|\n");
    }
 }

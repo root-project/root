@@ -156,7 +156,7 @@ private:
    void   Clear(Option_t *option = "");
    void   Hide();
    void   Show();
-   void   Print(const Text_t *option = "");
+   void   Print(const Text_t *option = "") const;
    void   Print(const Text_t *, Option_t *) { }  // removes "hiding" warning
    Bool_t IsEmptyLine(int line);
    Bool_t IsFullLine(Int_t line);

@@ -56,8 +56,8 @@ public:
 
    Float_t GetWidth();
    void    Paint(Option_t* option="");
-   void    Print(Option_t * = "")   { fList->Print(); }
-   void    ls(Option_t * = "")      { fList->ls(); }
+   void    Print(Option_t * = "") const  { fList->Print(); }
+   void    ls(Option_t * = "") const     { fList->ls(); }
    TList  *GetList() { return fList; }
 
    ClassDef(Hello,0)   // animated text with cool wave effect
