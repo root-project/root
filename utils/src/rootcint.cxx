@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.115 2002/12/08 19:22:08 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.116 2002/12/09 15:12:53 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -415,6 +415,79 @@ bool CheckInputOperator(G__ClassInfo &cl)
 
    delete proto;
    return has_input_error;
+}
+
+string FixSTLName(const string& cintName) {
+
+   const char *s = cintName.c_str();
+   char type[512];
+   strcpy(type, s);
+
+#if (G__GNUC<3) && !defined (G__KCC) 
+   if (!strncmp(type, "vector",6)   ||
+       !strncmp(type, "list",4)     || 
+       !strncmp(type, "deque",5)    ||
+       !strncmp(type, "map",3)      ||
+       !strncmp(type, "multimap",8) ||
+       !strncmp(type, "set",3)      ||
+       !strncmp(type, "multiset",8) ) {
+
+      // we need to remove this type of construct ",__malloc_alloc_template<0>"
+      // in case of older gcc
+      string result;
+      unsigned int i;
+      unsigned int start;
+      unsigned int next = 0;
+      unsigned int nesting = 0;
+      unsigned int end;
+      const string toReplace = "__malloc_alloc_template<0>";
+      const string replacement = "alloc";
+      for(i=0; i<cintName.length(); i++) {
+        switch (cintName[i]) {
+        case '<':
+           if (nesting==0) {
+              start = next;
+              next = i+1;
+              end = i;
+              result += cintName.substr(start,end-start);
+              result += "< ";
+           }
+           nesting++;
+           break;
+        case '>':
+           nesting--;
+           if (nesting==0) {
+              start = next;
+              next = i+1;
+              end = i;
+              string param = cintName.substr(start,end-start-1); // the -1 removes the space we know is there
+              if (param==toReplace) {
+                 result += replacement;
+              } else {
+                 result += FixSTLName(param);
+              }
+              result += " >";
+           }
+           break;
+        case ',':
+           if (nesting==1) {
+              start = next;
+              next = i+1;
+              end = i;
+              string param = cintName.substr(start,end-start);
+              if (param==toReplace) {
+                 result += replacement;
+              } else {
+                 result += FixSTLName(param);
+              }             
+              result += ',';
+           }
+        }          
+      }
+      return result;
+   }
+#endif
+   return cintName;
 }
 
 //______________________________________________________________________________
@@ -2553,7 +2626,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
             }
          }
       } else {
-         string baseclass = b.Fullname();
+         string baseclass = FixSTLName(b.Fullname());
          if (outside) {
             fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< ::%s *>( (::%s*) obj ), R__insp, R__parent, false);\n",
                     baseclass.c_str(), baseclass.c_str(), cl.Fullname());
