@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.98 2003/04/14 16:54:31 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.99 2003/04/15 06:51:16 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3434,11 +3434,11 @@ void TGraph::Smooth(Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype)
 //*-*-  chopt of IGHIST.
 //*-*-  ('S', 'SA', 'SA1' ,'XS', 'XSA', or 'XSA1')
 
-   if (drawtype >= 1000) drawtype -= 1000;
+   //if (drawtype >= 1000) drawtype -= 1000;
    loptx = kFALSE;
-   jtype  = drawtype-10;
+   jtype  = (drawtype%1000)-10;
    if (jtype > 0) { ktype = jtype; loptx = kTRUE; }
-   else             ktype = drawtype;
+   else             ktype = drawtype%1000;
 
    Double_t ruxmin = gPad->GetUxmin();
    Double_t ruymin = gPad->GetUymin();
