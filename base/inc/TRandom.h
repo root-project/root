@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.h,v 1.4 2002/05/07 06:38:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.h,v 1.5 2003/01/26 21:03:16 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -35,6 +35,7 @@ public:
    TRandom(UInt_t seed=65539);
    virtual ~TRandom();
    virtual  Int_t    Binomial(Int_t ntot, Double_t prob);
+   virtual  Double_t BreitWigner(Double_t mean=0, Double_t gamma=1);
    virtual  Double_t Exp(Double_t tau);
    virtual  Double_t Gaus(Double_t mean=0, Double_t sigma=1);
    virtual  UInt_t   GetSeed() {return fSeed;}
