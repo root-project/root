@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.29 2003/06/13 15:12:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.30 2003/07/02 11:40:06 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -324,10 +324,11 @@ public:
 
 class TestDirList  : public TGTransientFrame {
 
-private:
-   TGListTree       *fContents;
-   TList            *fTrash;
+protected:
+   TGListTree  *fContents;
+   TList       *fTrash;
    TString DirName(TGListTreeItem* item);
+   const TGPicture *fIcon;
 
 public:
    TestDirList(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
@@ -1666,6 +1667,7 @@ TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
 
    fTrash = new TList();
    TGLayoutHints *lo;
+   fIcon = gClient->GetPicture("rootdb_t.xpm");
 
    TGCanvas* canvas = new TGCanvas(this, 500, 300);
    fTrash->Add(canvas);
@@ -1747,11 +1749,13 @@ Bool_t TestDirList::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       TString fname;
 
       while ((file=(TSystemFile*)next())) {
+         fname = file->GetName();
          if (file->IsDirectory()) {
-            fname = file->GetName();
             if ((fname!="..") && (fname!=".")) { // skip it
                fContents->AddItem(item,fname.Data());
             }
+         } else if (fname.EndsWith(".root")) {   // add root files
+            fContents->AddItem(item,fname.Data(),fIcon,fIcon);      
          }
       }
       delete files;
