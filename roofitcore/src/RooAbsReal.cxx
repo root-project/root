@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.72 2002/01/10 00:09:00 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.73 2002/02/06 01:31:37 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -97,6 +97,19 @@ Bool_t RooAbsReal::operator==(Double_t value) const
   return (getVal()==value) ;
 }
 
+
+TString RooAbsReal::getTitle(Bool_t appendUnit) const {
+  // Return this variable's title string. If appendUnit is true and
+  // this variable has units, also append a string " (<unit>)".
+
+  TString title(GetTitle());
+  if(appendUnit && 0 != strlen(getUnit())) {
+    title.Append(" (");
+    title.Append(getUnit());
+    title.Append(")");
+  }
+  return title;
+}
 
 Double_t RooAbsReal::getVal(const RooArgSet* set) const
 {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.21 2001/12/10 22:51:19 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.22 2001/12/13 23:08:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -559,12 +559,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
 
   // Set the histogram coordinate axis labels from the titles of each variable, adding units if necessary.
   for(Int_t index= 0; index < dim; index++) {
-    TString axisTitle(xyz[index]->GetTitle());
-    if(strlen(xyz[index]->getUnit())) {
-      axisTitle.Append(" (");
-      axisTitle.Append(xyz[index]->getUnit());
-      axisTitle.Append(")");
-    }
+    TString axisTitle(xyz[index]->getTitle(kTRUE));
     switch(index) {
     case 0:
       histogram->SetXTitle(axisTitle.Data());

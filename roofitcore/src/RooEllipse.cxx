@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.29 2001/12/20 01:07:53 verkerke Exp $
+ *    File: $Id: RooEllipse.cc,v 1.1 2002/02/05 01:23:07 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -25,7 +25,7 @@
 ClassImp(RooEllipse)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.29 2001/12/20 01:07:53 verkerke Exp $";
+"$Id: RooEllipse.cc,v 1.1 2002/02/05 01:23:07 davidk Exp $";
 
 RooEllipse::RooEllipse() { }
 
@@ -67,17 +67,26 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
     // handle the degenerate case of |rho|=1
     SetPoint(0,x1-s1,x2-s2);
     SetPoint(1,x1+s1,x2+s2);
+    setYAxisLimits(x2-s2,x2+s2);
   }
   else {
-    Double_t r,phi,u1,u2,dphi(2*M_PI/points);
+    Double_t r,phi,u1,u2,xx1,xx2,dphi(2*M_PI/points);
     for(Int_t index= 0; index < points; index++) {
       phi= index*dphi;
       u1= cos(phi)/s1;
       u2= sin(phi)/s2;
       r= sqrt(tmp/(u1*u1 - 2*rho*u1*u2 + u2*u2));
-      SetPoint(index, x1 + r*u1*s1, x2 + r*u2*s2);
-      // add an extra segment to close the curve
-      if(index == 0) SetPoint(points, x1 + r*u1*s1, x2 + r*u2*s2);
+      xx1= x1 + r*u1*s1;
+      xx2= x2 + r*u2*s2;
+      SetPoint(index, xx1, xx2);
+      if(index == 0) {
+	setYAxisLimits(xx2,xx2);
+	// add an extra segment to close the curve
+	SetPoint(points, xx1, xx2);
+      }
+      else {
+	updateYAxisLimits(xx2);
+      }
     }
   }
 }

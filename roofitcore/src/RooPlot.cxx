@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.24 2001/11/09 03:12:08 verkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.25 2001/11/19 07:23:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -26,6 +26,7 @@
 
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooAbsReal.hh"
+#include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooPlotable.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooCurve.hh"
@@ -44,7 +45,7 @@ ClassImp(RooPlot)
   ;
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.24 2001/11/09 03:12:08 verkerke Exp $";
+"$Id: RooPlot.cc,v 1.25 2001/11/19 07:23:57 verkerke Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 
@@ -64,6 +65,45 @@ RooPlot::RooPlot(Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax) :
   initialize();
 }
 
+RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
+  TH1(histName(),"A RooPlot",100,var1.getFitMin(),var1.getFitMax()), _plotVarClone(0), 
+  _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(0)
+{
+  // Create an empty frame with the specified x- and y-axis limits
+  // and with labels determined by the specified variables.
+
+  if(!var1.hasFitMin() || !var1.hasFitMax()) {
+    cout << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
+	 << var1.GetName() << endl;
+    return;
+  }
+  if(!var2.hasFitMin() || !var2.hasFitMax()) {
+    cout << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
+	 << var1.GetName() << endl;
+    return;
+  }
+  SetMinimum(var2.getFitMin());
+  SetMaximum(var2.getFitMax());
+  SetXTitle(var1.getTitle(kTRUE));
+  SetYTitle(var2.getTitle(kTRUE));
+  initialize();
+}
+
+RooPlot::RooPlot(const RooAbsReal &var1, const RooAbsReal &var2,
+		 Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax) :
+  TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 
+  _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(0)
+{
+  // Create an empty frame with the specified x- and y-axis limits
+  // and with labels determined by the specified variables.
+
+  SetMinimum(ymin);
+  SetMaximum(ymax);
+  SetXTitle(var1.getTitle(kTRUE));
+  SetYTitle(var2.getTitle(kTRUE));
+  initialize();
+}
+
 RooPlot::RooPlot(const RooAbsReal &var, Float_t xmin, Float_t xmax, Int_t nbins) :
   TH1(histName(),"RooPlot",nbins,xmin,xmax),
   _plotVarClone(0), _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(1)
@@ -77,16 +117,11 @@ RooPlot::RooPlot(const RooAbsReal &var, Float_t xmin, Float_t xmax, Int_t nbins)
   _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
   _plotVarClone= (RooAbsReal*)_plotVarSet->find(var.GetName()) ;
   
-  TString xtitle(var.GetTitle());
-  if(0 != strlen(var.getUnit())) {
-    xtitle.Append(" (");
-    xtitle.Append(var.getUnit());
-    xtitle.Append(")");
-  }
+  TString xtitle= var.getTitle(kTRUE);
   SetXTitle(xtitle.Data());
 
   TString title("A RooPlot of \"");
-  title.Append(var.GetTitle());
+  title.Append(var.getTitle());
   title.Append("\"");
   SetTitle(title.Data());
   initialize();

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.7 2001/10/08 21:22:51 verkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.8 2001/11/22 01:07:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -24,10 +24,16 @@
 
 #include <iomanip.h>
 #include "TMinuit.h"
+#include "TMarker.h"
+#include "TLine.h"
+#include "TBox.h"
+#include "TGaxis.h"
 #include "RooFitCore/RooFitResult.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooPlot.hh"
+#include "RooFitCore/RooEllipse.hh"
 
 ClassImp(RooFitResult) 
 ;
@@ -75,6 +81,110 @@ void RooFitResult::setFinalParList(const RooArgList& list)
   _finalPars = (RooArgList*) list.snapshot() ;
 }
 
+RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *parName2,
+			      const char *options) const {
+  // Add objects to a 2D plot that represent the fit results for the
+  // two named parameters.  The input frame with the objects added is
+  // returned, or zero in case of an error.  Which objects are added
+  // are determined by the options string which should be a concatenation
+  // of the following (not case sensitive):
+  //
+  //   M - a marker at the best fit result
+  //   E - an error ellipse calculated at 1-sigma using the error matrix at the minimum
+  //   1 - the 1-sigma error bar for parameter 1
+  //   2 - the 1-sigma error bar for parameter 2
+  //   B - the bounding box for the error ellipse
+  //   H - a line and horizontal axis for reading off the correlation coefficient
+  //   V - a line and vertical axis for reading off the correlation coefficient
+  //
+  // You can change the attributes of objects in the returned RooPlot using the
+  // various RooPlot::getAttXxx(name) member functions, e.g.
+  //
+  //   plot->getAttLine("contour")->SetLineStyle(kDashed);
+  //
+  // Use plot->Print() for a list of all objects and their names (unfortunately most
+  // of the ROOT builtin graphics objects like TLine are unnamed). Drag the left mouse
+  // button along the labels of either axis button to interactively zoom in a plot.
+
+  // lookup the input parameters by name: we require that they were floated in our fit
+  const RooRealVar *par1= dynamic_cast<const RooRealVar*>(floatParsFinal().find(parName1));
+  if(0 == par1) {
+    cout << "RooFitResult::correlationPlot: parameter not floated in fit: " << par1->GetName() << endl;
+    return 0;
+  }
+  const RooRealVar *par2= dynamic_cast<const RooRealVar*>(floatParsFinal().find(parName2));
+  if(0 == par2) {
+    cout << "RooFitResult::correlationPlot: parameter not floated in fit: " << par2->GetName() << endl;
+    return 0;
+  }
+
+  // options are not case sensitive
+  TString opt(options);
+  opt.ToUpper();
+
+  // lookup the 2x2 covariance matrix elements for these variables
+  Double_t x1= par1->getVal();
+  Double_t x2= par2->getVal();
+  Double_t s1= par1->getError();
+  Double_t s2= par2->getError();
+  Double_t rho= correlation(parName1, parName2);
+
+  // add a 1-sigma error ellipse, if requested
+  if(opt.Contains("E")) {
+    RooEllipse *contour= new RooEllipse("contour",x1,x2,s1,s2,rho);
+    frame->addPlotable(contour);
+  }
+
+  // add the error bar for parameter 1, if requested
+  if(opt.Contains("1")) {
+    TLine *hline= new TLine(x1-s1,x2,x1+s1,x2);
+    hline->SetLineColor(kRed);
+    frame->addObject(hline);
+  }
+
+  if(opt.Contains("2")) {
+    TLine *vline= new TLine(x1,x2-s2,x1,x2+s2);
+    vline->SetLineColor(kRed);
+    frame->addObject(vline);
+  }
+
+  if(opt.Contains("B")) {
+    TBox *box= new TBox(x1-s1,x2-s2,x1+s1,x2+s2);
+    box->SetLineStyle(kDashed);
+    box->SetLineColor(kRed);
+    box->SetFillStyle(0);
+    frame->addObject(box);
+  }
+
+  if(opt.Contains("H")) {
+    TLine *line= new TLine(x1-rho*s1,x2-s2,x1+rho*s1,x2+s2);
+    line->SetLineStyle(kDashed);
+    line->SetLineColor(kBlue);
+    frame->addObject(line);
+    TGaxis *axis= new TGaxis(x1-s1,x2-s2,x1+s1,x2-s2,-1.,+1.,502,"-=");
+    axis->SetLineColor(kBlue);
+    frame->addObject(axis);
+  }
+
+  if(opt.Contains("V")) {
+    TLine *line= new TLine(x1-s1,x2-rho*s2,x1+s1,x2+rho*s2);
+    line->SetLineStyle(kDashed);
+    line->SetLineColor(kBlue);
+    frame->addObject(line);
+    TGaxis *axis= new TGaxis(x1-s1,x2-s2,x1-s1,x2+s2,-1.,+1.,502,"-=");
+    axis->SetLineColor(kBlue);
+    frame->addObject(axis);
+  }
+
+  // add a marker at the fitted value, if requested
+  if(opt.Contains("M")) {
+    TMarker *marker= new TMarker(x1,x2,20);
+    marker->SetMarkerColor(kBlack);
+    frame->addObject(marker);
+  }
+
+  return frame;
+}
 
 Double_t RooFitResult::correlation(const char* parname1, const char* parname2) const 
 {
@@ -255,8 +365,5 @@ void RooFitResult::fillCorrMatrix()
     delete cIter ;
   }
 
-
   delete gcIter ;
 } 
-
-

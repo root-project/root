@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.rdl,v 1.5 2001/10/11 01:28:50 verkerke Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.6 2001/11/22 01:07:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -21,6 +21,7 @@
 
 class RooArgSet ;
 class RooArgList ;
+class RooPlot;
 typedef RooArgSet* pRooArgSet ;
 
 class RooFitResult : public TNamed, public RooPrintable, public RooDirItem {
@@ -54,6 +55,14 @@ public:
 
   Double_t correlation(const char* parname1, const char* parname2) const ;
   const RooArgList* correlation(const char* parname) const ;
+
+  // Add objects to a 2D plot
+  inline RooPlot *plotOn(RooPlot *frame, const RooAbsArg &par1, const RooAbsArg &par2,
+			 const char *options= "") const {
+    return plotOn(frame,par1.GetName(),par2.GetName(),options);
+  }
+  RooPlot *plotOn(RooPlot *plot, const char *parName1, const char *parName2,
+		  const char *options= "") const;
 
 protected:
   
