@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.31 2001/04/20 21:21:38 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.32 2001/04/27 06:59:32 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
    TFormLeafInfo    *fNext;
 
    virtual Double_t  GetCounterValue(TLeaf* leaf);
-           Double_t  GetValue(char *where, Int_t instance = 0);
+   virtual Double_t  GetValue(char *where, Int_t instance = 0);
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
    virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
 
@@ -80,6 +80,7 @@ public:
                        TStreamerElement* element = 0) :
      TFormLeafInfo(classptr,offset,element) {};
    virtual Double_t  GetCounterValue(TLeaf* leaf);
+   virtual Double_t  GetValue(char *where, Int_t instance = 0) {return TFormLeafInfo::GetValue(where,instance);}
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
 };
 
