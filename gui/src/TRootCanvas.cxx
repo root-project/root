@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.5 2000/10/30 11:00:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.6 2001/02/14 15:39:35 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -911,7 +911,7 @@ Bool_t TRootCanvas::HandleContainerKey(Event_t *event)
       gVirtualX->LookupString(event, str, sizeof(str), keysym);
       if (str[0] == 3)   // ctrl-c sets the interrupt flag
          gROOT->SetInterrupt();
-      fCanvas->HandleInput(kKeyPress, str[0], 0);
+      fCanvas->HandleInput(kKeyPress, str[0], keysym);
    } else if (event->fType == kKeyRelease)
       fButton = 0;
 
