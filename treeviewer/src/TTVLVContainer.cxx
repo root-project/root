@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.2 2001/02/22 15:15:52 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.3 2001/02/26 10:28:53 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -88,7 +88,7 @@ TTVLVEntry::TTVLVEntry(const TGWindow *p,
    fTrueName = name->GetString();
    fContext = new TGItemContext();
    fContext->Associate(this);
-      
+
    AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
 //______________________________________________________________________________
@@ -179,7 +179,7 @@ void TTVLVEntry::SetCutType(Bool_t type)
 {
       if (fIsCut && type) return;
       if (!fIsCut && !type) return;
-      if (type) { 
+      if (type) {
          SetSmallPic(fClient->GetPicture("selection_t.xpm"));
          SetToolTipText("Selection expression. Drag to scissors to activate");
       } else
@@ -194,14 +194,14 @@ void TTVLVEntry::SetExpression(const char* name, const char* alias, Bool_t cutTy
    SetAlias(alias);
    SetTrueName(name);
    ULong_t *itemType = (ULong_t *) GetUserData();
-   if (*itemType & TTreeViewer::kLTPackType) { 
+   if (*itemType & TTreeViewer::kLTPackType) {
       if (strlen(name))
          SetSmallPic(fClient->GetPicture("pack_t.xpm"));
       else
          SetSmallPic(fClient->GetPicture("pack-empty_t.xpm"));
    }
    if ((*itemType & TTreeViewer::kLTDragType) && strlen(name) && !fIsCut)
-      SetToolTipText("Double-click to draw. Drag and drop. Use Edit/Expression or context menu to edit."); 
+      SetToolTipText("Double-click to draw. Drag and drop. Use Edit/Expression or context menu to edit.");
    if (*itemType & TTreeViewer::kLTDragType) SetCutType(cutType);
 }
 //______________________________________________________________________________
@@ -222,8 +222,8 @@ void TTVLVEntry::SetToolTipText(const char *text, Long_t delayms)
       delete fTip;
       fTip = 0;
    }
-   
-   if (text && strlen(text)) 
+
+   if (text && strlen(text))
       fTip = new TGToolTip(fClient->GetRoot(), this, text, delayms);
 }
 //______________________________________________________________________________
@@ -245,11 +245,11 @@ ClassImp(TTVLVContainer)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//   TTVLVContainer                                                          //
+//   TTVLVContainer                                                     //
 //                                                                      //
-// This class represent the list view container for the                 //
+// This class represent the list view container for the.                //
 // TreeView class. It is a TGLVContainer with item dragging             //
-// capabilities for the TTVLVEntry objects inside                    //
+// capabilities for the TTVLVEntry objects inside.                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -425,7 +425,7 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
               if (!(*itemType & TTreeViewer::kLTPackType)) {
                  // dragging items to expressions
                  ((TTVLVEntry *) fLastActive)->CopyItem(f);
-                 if (*itemType & TTreeViewer::kLTDragType) 
+                 if (*itemType & TTreeViewer::kLTDragType)
                     f->SetToolTipText("Double-click to draw. Drag and drop. Use Edit/Expression or context menu to edit.");
               } else {
                  if (strlen(((TTVLVEntry *) fLastActive)->GetTrueName())) {
@@ -437,13 +437,13 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
                        TString name(2000);
                        TString dragged = ((TTVLVEntry *)fLastActive)->GetTrueName();
                        name  = f->GetTrueName();
-                       if ((name.Length()+dragged.Length()) < 228) { 
+                       if ((name.Length()+dragged.Length()) < 228) {
                           name += ":";
                           name += dragged;
                           f->SetTrueName(name.Data());
                        } else {
-                          Warning("HandleButton", 
-                                  "Name too long. Can not add any more items to scan box");    
+                          Warning("HandleButton",
+                                  "Name too long. Can not add any more items to scan box");
                        }
                     }
                  }
@@ -572,9 +572,9 @@ ClassImp(TGSelectBox)
 //   TGSelectBox                                                        //
 //                                                                      //
 // This class represent a specialized expression editor for             //
-// TTVLVEntry 'true name' and 'alias' data members.                  //
+// TTVLVEntry 'true name' and 'alias' data members.                     //
 // It is a singleton in order to be able to use it for several          //
-//  expressions                                                         //
+// expressions.                                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -702,7 +702,7 @@ void TGSelectBox::SaveText()
       cutType = name.Contains("<") || name.Contains(">") || name.Contains("=") ||
                 name.Contains("!") || name.Contains("&") || name.Contains("|");
       TString alias(fTeAlias->GetText());
-      if (!alias.BeginsWith("~") && !alias.Contains("empty")) fTeAlias->InsertText("~", 0); 
+      if (!alias.BeginsWith("~") && !alias.Contains("empty")) fTeAlias->InsertText("~", 0);
       fEntry->SetExpression(fTe->GetText(), fTeAlias->GetText(), cutType);
 
       if (fOldAlias.Contains("empty")) {
