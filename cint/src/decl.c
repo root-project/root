@@ -7,7 +7,7 @@
  * Description:
  *  Variable declaration
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -3067,6 +3067,30 @@ char *new_name;
   /* handling static declaration */
   if(G__static_alloc==1) {
     if(G__prerun==0) {
+#ifndef G__OLDIMPLEMENTATION1950
+      /* calculate hash */
+      G__hash(name,hash,i)
+      /* get variable table entry */
+      var = G__getvarentry(name,hash,&ig15,&G__global,G__p_local);
+      if(var && INT_MAX==var->varlabel[ig15][1]) {
+	struct G__var_array *varstatic;
+	char namestatic[G__ONELINE];
+	int hashstatic,ig15static;
+	if(-1!=G__memberfunc_tagnum) /* questionable */
+	  sprintf(namestatic,"%s\\%x\\%x\\%x",name,G__func_page,G__func_now
+		  ,G__memberfunc_tagnum);
+	else
+	  sprintf(namestatic,"%s\\%x\\%x" ,name,G__func_page,G__func_now);
+	
+	G__hash(namestatic,hashstatic,i)
+	  varstatic = G__getvarentry(namestatic,hashstatic,&ig15static
+				     ,&G__global,G__p_local);
+	if(varstatic) {
+          for(i=0;i<G__MAXVARDIM;i++) 
+	    var->varlabel[ig15][i] = varstatic->varlabel[ig15static][i];
+	}
+      }
+#endif
       /* ignore local static at run time */
       c=G__fignorestream("}");
       c=G__fignorestream(",;");

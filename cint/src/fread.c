@@ -7,7 +7,7 @@
  * Description:
  *  Utility to read source file
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,

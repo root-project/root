@@ -10,7 +10,7 @@
  * causes problem when running an automation script. This tool provides 
  * stable mean of running batch script.
  ************************************************************************
- * Copyright(c) 2003~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 2003~2003  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,

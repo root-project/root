@@ -32,7 +32,7 @@ extern void G__set_cpp_environmentlongif();
  * Description:
  *  Support 'long long' 64bit integer in 32bit architecture
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -727,7 +727,7 @@ int G__ateval(unsigned long x) {return(0);}
  * Description:
  *  Support 'long double' 
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,

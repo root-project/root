@@ -7,7 +7,7 @@
  * Description:
  *  Variable initialization, assignment and referencing
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -1693,7 +1693,11 @@ int isdecl;
       }
       /* next base class if searching for class member */
 #ifndef G__OLDIMPLEMENTATION1889
-      if(isbase&&'e'==G__struct.type[scope_tagnum] 
+      if(isbase &&
+#ifndef G__OLDIMPLEMENTATION1951
+	 0<=scope_tagnum &&
+#endif
+	 'e'==G__struct.type[scope_tagnum] 
 	 && G__dispmsg>=G__DISPROOTSTRICT) isbase=0;
 #endif
       if(isbase) {

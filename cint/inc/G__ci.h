@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150114
-#define G__CINTVERSIONSTR  "5.15.114, Dec 1 2003"
+#define G__CINTVERSION      50150115
+#define G__CINTVERSIONSTR  "5.15.115, Dec 9 2003"
 
 
 /**********************************************************************
