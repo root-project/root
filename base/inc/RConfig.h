@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.24 2001/07/23 17:27:51 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.25 2001/10/04 16:48:06 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -155,7 +155,7 @@
 #   define NEED_SIGJMP
 #endif
 
-#if defined(linux) && defined(__sun)
+#if defined(linux) && defined(__sparc__)
 #   define R__LINUX
 #   define R__UNIX
 #   define NEED_SIGJMP
