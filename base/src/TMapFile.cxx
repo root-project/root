@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.11 2003/04/03 13:46:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.12 2005/01/19 20:00:41 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -574,14 +574,9 @@ void TMapFile::Update(TObject *obj)
    while (mr) {
       if (all || mr->fObject == obj) {
          TBuffer *b;
-printf("mr->fName=%s\n",mr->fName);
-printf("mr->fClassName=%s\n",mr->fClassName);
-printf("mr->fObject=%x\n",mr->fObject);
-printf("mr->fBufSize=%x\n",mr->fBufSize);
          if (!mr->fBufSize) {
             b = new TBuffer(TBuffer::kWrite, GetBestBuffer());
             mr->fClassName = StrDup(mr->fObject->ClassName());
-printf("mr->fClassName2=%s\n",mr->fClassName);
          } else
             b = new TBuffer(TBuffer::kWrite, mr->fBufSize, mr->fBuffer);
          b->MapObject(mr->fObject);  //register obj in map to handle self reference
