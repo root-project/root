@@ -79,7 +79,12 @@ enum {
    kCONT_2,
    kCONT_3,
    kCONT_4,
-   kCONT_5,
+   kCONT_LEVELS,
+   kCONT_LEVELS1,
+   kSLIDERX_MIN,
+   kSLIDERX_MAX,
+   kSLIDERY_MIN,
+   kSLIDERY_MAX
 };
 
 //______________________________________________________________________________
@@ -140,7 +145,19 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    f5->AddFrame(fContCombo, new TGLayoutHints(kLHintsLeft, 18, 1, 2, 1));
    fContCombo->Resize(61, 20);
    fContCombo->Associate(this);
-   AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 0, 3));
+   AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
+   f16 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   TGLabel *fColContLbl = new TGLabel(f16, "Cont #:");  
+   f16->AddFrame(fColContLbl, new TGLayoutHints( kLHintsLeft, 11, 1, 4, 1));                            
+   fContLevels = new TGNumberEntry(f16, 20, 0, kCONT_LEVELS, 
+                                      TGNumberFormat::kNESInteger,
+                                      TGNumberFormat::kNEANonNegative, 
+                                      TGNumberFormat::kNELLimitMinMax, 1, 99);
+   fContLevels->GetNumberEntry()->SetToolTipText("Set number of contours (1..99)");
+   fContLevels->Resize(60,20);
+   f16->AddFrame(fContLevels, new TGLayoutHints(kLHintsLeft, 25, 1, 2, 1));
+   AddFrame(f16, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    f6 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
 
@@ -170,7 +187,6 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    f6->AddFrame(f8, new TGLayoutHints(kLHintsLeft, 5, 1, 0, 0));   
    AddFrame(f6, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
 
-   
    f9 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame); 
    TGCompositeFrame *f10 = new TGCompositeFrame(f9, 40, 20, kVerticalFrame);
    fAddError = new TGCheckButton(f10, "Errors", kERROR_ONOFF);
@@ -190,8 +206,20 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    
    f9->AddFrame(f10, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f9->AddFrame(f11, new TGLayoutHints(kLHintsLeft, 5, 1, 0, 0));   
-   AddFrame(f9, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
-   
+   AddFrame(f9, new TGLayoutHints(kLHintsTop, 3, 1, 0, 2));
+
+   f19 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   TGLabel *fColContLbl1 = new TGLabel(f19, "Cont #:");  
+   f19->AddFrame(fColContLbl1, new TGLayoutHints( kLHintsLeft, 29, 1, 4, 1));                            
+   fContLevels1 = new TGNumberEntry(f19, 20, 0, kCONT_LEVELS1, 
+                                      TGNumberFormat::kNESInteger,
+                                      TGNumberFormat::kNEANonNegative, 
+                                      TGNumberFormat::kNELLimitMinMax, 1, 99);
+   fContLevels1->GetNumberEntry()->SetToolTipText("Set number of contours (1..99)");
+   fContLevels1->Resize(55,20);
+   f19->AddFrame(fContLevels1, new TGLayoutHints(kLHintsLeft, 12, 1, 2, 1));
+   AddFrame(f19, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
    f12 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
    f12->AddFrame(new TGLabel(f12,"Bar"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f12->AddFrame(new TGHorizontal3DLine(f12), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
@@ -217,24 +245,54 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    fBarOffset->GetNumberEntry()->SetToolTipText("Set bar chart offset");
    fBarOffset->Resize(50,20);
    f13->AddFrame(fBarOffset, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 1));
-   AddFrame(f13, new TGLayoutHints(kLHintsTop, 1, 1, 0, 5));
+   AddFrame(f13, new TGLayoutHints(kLHintsTop, 1, 1, 0, 3));
 
 
    MakeTitle("Axis Range");
    
    TGCompositeFrame *f14 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGLabel *fSliderXLbl = new TGLabel(f14,"x:");
-   f14->AddFrame(fSliderXLbl, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 6,4, 4, 1)); 
+   f14->AddFrame(fSliderXLbl, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4,3, 4, 1)); 
    fSliderX = new TGDoubleHSlider(f14, 1, 2);
    f14->AddFrame(fSliderX, new TGLayoutHints(kLHintsExpandX));
-   AddFrame(f14, new TGLayoutHints(kLHintsExpandX, 3, 10, 0, 3));
+   AddFrame(f14, new TGLayoutHints(kLHintsExpandX, 3, 7, 3, 0));
+
+   TGCompositeFrame *f17 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   fSldXMin = new TGNumberEntryField(f17, kSLIDERX_MIN, 0.0,  
+                                      TGNumberFormat::kNESRealTwo,
+                                      TGNumberFormat::kNEAAnyNumber);
+   ((TGTextEntry*)fSldXMin)->SetToolTipText("Set the minimum value of the x-axis");
+   fSldXMin->Resize(58,20);
+   f17->AddFrame(fSldXMin, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
+   fSldXMax = new TGNumberEntryField(f17, kSLIDERX_MAX, 0.0,  
+                                      TGNumberFormat::kNESRealTwo,
+                                      TGNumberFormat::kNEAAnyNumber);
+   ((TGTextEntry*)fSldXMax)->SetToolTipText("Set the maximum value of the x-axis");
+   fSldXMax->Resize(58,20);
+   f17->AddFrame(fSldXMax, new TGLayoutHints(kLHintsLeft, 2, 0, 0, 0));
+   AddFrame(f17, new TGLayoutHints(kLHintsTop, 20, 3, 3, 3));
 
    TGCompositeFrame *f15 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGLabel *fSliderYLbl = new TGLabel(f15,"y:");
-   f15->AddFrame(fSliderYLbl, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 6,3, 4, 1)); 
+   f15->AddFrame(fSliderYLbl, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4,3, 4, 1)); 
    fSliderY = new TGDoubleHSlider(f15, 1, 2);
    f15->AddFrame(fSliderY, new TGLayoutHints(kLHintsExpandX));
-   AddFrame(f15, new TGLayoutHints(kLHintsExpandX, 3, 10, 0, 0));
+   AddFrame(f15, new TGLayoutHints(kLHintsExpandX, 3, 7, 3, 0));
+
+   TGCompositeFrame *f18 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   fSldYMin = new TGNumberEntryField(f18, kSLIDERY_MIN, 0.0,  
+                                      TGNumberFormat::kNESRealTwo,
+                                      TGNumberFormat::kNEAAnyNumber);
+   ((TGTextEntry*)fSldYMin)->SetToolTipText("Set the minimum value of the y-axis");
+   fSldYMin->Resize(58,20);
+   f18->AddFrame(fSldYMin, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
+   fSldYMax = new TGNumberEntryField(f18, kSLIDERY_MAX, 0.0,  
+                                      TGNumberFormat::kNESRealTwo,
+                                      TGNumberFormat::kNEAAnyNumber);
+   ((TGTextEntry*)fSldYMax)->SetToolTipText("Set the maximum value of the y-axis");
+   fSldYMax->Resize(58,20);
+   f18->AddFrame(fSldYMax, new TGLayoutHints(kLHintsLeft, 2, 0, 0, 0));
+   AddFrame(f18, new TGLayoutHints(kLHintsTop, 20, 3, 3, 0));
 
    MapSubwindows();
    Layout();
@@ -285,12 +343,21 @@ void TH2Editor::ConnectSignals2Slots()
    fAddPalette1->Connect("Toggled(Bool_t)", "TH2Editor", this, "DoAddPalette(Bool_t)");   
    fAddFB->Connect("Toggled(Bool_t)", "TH2Editor", this, "DoAddFB()");
    fAddBB->Connect("Toggled(Bool_t)", "TH2Editor", this, "DoAddBB()");
+   fContLevels->Connect("ValueSet(Long_t)", "TH2Editor", this, "DoContLevel()");
+   (fContLevels->GetNumberEntry())->Connect("ReturnPressed()", "TH2Editor", this,"DoContLevel()");   
+   fContLevels1->Connect("ValueSet(Long_t)", "TH2Editor", this, "DoContLevel1()");
+   (fContLevels1->GetNumberEntry())->Connect("ReturnPressed()", "TH2Editor", this,"DoContLevel1()");   
    fBarWidth->Connect("ValueSet(Long_t)", "TH2Editor", this, "DoBarWidth()");
    (fBarWidth->GetNumberEntry())->Connect("ReturnPressed()", "TH2Editor", this, "DoBarWidth()");   
    fBarOffset->Connect("ValueSet(Long_t)", "TH2Editor", this, "DoBarOffset()");
    (fBarOffset->GetNumberEntry())->Connect("ReturnPressed()", "TH2Editor", this, "DoBarOffset()");
    fSliderX->Connect("PositionChanged()","TH2Editor",this,"DoSliderX()");  
+   fSldXMin->Connect("ReturnPressed()", "TH2Editor", this, "DoXAxisRange()");
+   fSldXMax->Connect("ReturnPressed()", "TH2Editor", this, "DoXAxisRange()");   
    fSliderY->Connect("PositionChanged()","TH2Editor",this,"DoSliderY()");  
+   fSldYMin->Connect("ReturnPressed()", "TH2Editor", this, "DoYAxisRange()");
+   fSldYMax->Connect("ReturnPressed()", "TH2Editor", this, "DoYAxisRange()");   
+
    fInit = kFALSE;
 } 
 
@@ -330,6 +397,9 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       HideFrame(f9);
       HideFrame(f12);
       HideFrame(f13);          
+      ShowFrame(f16);
+      HideFrame(f19);
+      
       fdimgroup->SetButton(kDIM_SIMPLE, kTRUE);  
       fTypeCombo->Select(kTYPE_LEGO);
       fCoordsCombo->Select(kCOORDS_CAR);
@@ -352,6 +422,9 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       HideFrame(f9);
       HideFrame(f12);
       HideFrame(f13);
+      ShowFrame(f16);
+      HideFrame(f19);
+
       fdimgroup->SetButton(kDIM_SIMPLE, kTRUE);  
       fTypeCombo->Select(kTYPE_LEGO);
       fCoordsCombo->Select(kCOORDS_CAR);
@@ -360,7 +433,6 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 	 else if (str.Contains("CONT2")) fContCombo->Select(kCONT_2);
 	 else if (str.Contains("CONT3")) fContCombo->Select(kCONT_3);
 	 else if (str.Contains("CONT4")) fContCombo->Select(kCONT_4);
-	 else if (str.Contains("CONT5")) fContCombo->Select(kCONT_5);	 	 	 
 	 else if (str.Contains("CONT0") || str.Contains("CONT")) fContCombo->Select(kCONT_0);
       } else fContCombo->Select(kCONT_NONE);
 
@@ -374,8 +446,8 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       if (str.Contains("SCAT")) {
          if (str=="SCAT") fAddScat->SetState(kButtonDisabled);
 	 else fAddScat->SetState(kButtonDown);
-      } else if (!str.Contains("COL") && !str.Contains("CONT") && !str.Contains("BOX")) fAddScat->SetState(kButtonUp);            
-      else fAddScat->SetState(kButtonDisabled);
+      } else /*if (!str.Contains("COL") && !str.Contains("CONT") && !str.Contains("BOX"))*/ fAddScat->SetState(kButtonUp);            
+//      else fAddScat->SetState(kButtonDisabled);
       if (str.Contains("TEXT")) fAddText->SetState(kButtonDown);
       else fAddText->SetState(kButtonUp);
  
@@ -396,6 +468,9 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       ShowFrame(f9);
       ShowFrame(f12);
       ShowFrame(f13);
+      HideFrame(f16);
+      ShowFrame(f19);
+
       fdimgroup->SetButton(kDIM_COMPLEX, kTRUE);  
       if (str.Contains("LEGO2")) fTypeCombo->Select(kTYPE_LEGO2);
       else if (str.Contains("LEGO1")) fTypeCombo->Select(kTYPE_LEGO1);
@@ -446,14 +521,21 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fBarOffset->SetNumber(fHist->GetBarOffset());
    
    Int_t nx = fHist -> GetXaxis() -> GetNbins();
-   Int_t nxbinmin = fHist -> GetXaxis() -> GetFirst()-1;
-   Int_t nxbinmax = fHist -> GetXaxis() -> GetLast()+1;
-   fSliderX->SetPosition((Float_t)nxbinmin/nx,(Float_t)nxbinmax/nx);
+   Int_t nxbinmin = fHist -> GetXaxis() -> GetFirst();
+   Int_t nxbinmax = fHist -> GetXaxis() -> GetLast();
+   fSliderX->SetRange(1,nx);
+   fSliderX->SetPosition((Double_t)nxbinmin,(Double_t)nxbinmax);
+   fSldXMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge(nxbinmin));
+   fSldXMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge(nxbinmax));
+    
 
    Int_t ny = fHist -> GetYaxis() -> GetNbins();
-   Int_t nybinmin = fHist -> GetYaxis() -> GetFirst()-1;
-   Int_t nybinmax = fHist -> GetYaxis() -> GetLast()+1;
-   fSliderY->SetPosition((Float_t)nybinmin/ny,(Float_t)nybinmax/ny);
+   Int_t nybinmin = fHist -> GetYaxis() -> GetFirst();
+   Int_t nybinmax = fHist -> GetYaxis() -> GetLast();
+   fSliderY->SetRange(1,ny);
+   fSliderY->SetPosition((Double_t)nybinmin,(Double_t)nybinmax);
+   fSldYMin->SetNumber(fHist->GetYaxis()->GetBinLowEdge(nybinmin));
+   fSldYMax->SetNumber(fHist->GetYaxis()->GetBinUpEdge(nybinmax));
      
    Update();
    if (fInit) ConnectSignals2Slots();
@@ -484,6 +566,8 @@ void TH2Editor::DoHistSimple()
    HideFrame(f9);
    HideFrame(f12);
    HideFrame(f13);   
+   ShowFrame(f16);
+   HideFrame(f19);
    
    if (fContCombo->GetSelected()==-1) fContCombo->Select(kCONT_NONE);
    if ((fContCombo->GetSelected()!=kCONT_NONE) && fAddPalette->GetState()==kButtonDisabled) fAddPalette->SetState(kButtonUp);
@@ -491,7 +575,7 @@ void TH2Editor::DoHistSimple()
    if (str=="" || str=="SCAT") {
       fAddScat->SetState(kButtonDisabled); 
       fAddPalette->SetState(kButtonDisabled);
-   }
+   } else if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
 
    SetDrawOption(str);
    SetActive();
@@ -510,6 +594,9 @@ void TH2Editor::DoHistComplex()
    HideFrame(f5);   
    HideFrame(f6);   
    ShowFrame(f9);
+   HideFrame(f16);   
+   ShowFrame(f19);
+
    if (GetHistTypeLabel().Contains("LEGO")) {
       ShowFrame(f12);   
       ShowFrame(f13);   
@@ -544,7 +631,7 @@ void TH2Editor::DoHistChanges()
       if (str=="" || str=="SCAT") {
          fAddScat->SetState(kButtonDisabled);
 	 fAddPalette->SetState(kButtonDisabled);
-      }
+      } else if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
       str = GetHistContLabel()+GetHistAdditiveLabel();
    } else if (fDim0->GetState() == kButtonDown) {
       if (fCoordsCombo->GetSelected()!=kCOORDS_CAR) {
@@ -585,10 +672,11 @@ void TH2Editor::DoAddArr(Bool_t on)
    if (on) {
       if (!str.Contains("ARR")) {
          str += "ARR";
-	 if ((!str.Contains("COL")) && (fContCombo->GetSelected()==kCONT_NONE) && !str.Contains("BOX")) {
+	 if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);	 
+/*	 if ((!str.Contains("COL")) && (fContCombo->GetSelected()==kCONT_NONE) && !str.Contains("BOX")) {
 	    if  ((str.Contains("SCAT")) && (fAddScat->GetState()!=kButtonDown)) fAddScat->SetState(kButtonDown);
 	    else if (fAddScat->GetState()!=kButtonUp)fAddScat->SetState(kButtonUp);
-	 }
+	 }*/
 	 make=kTRUE;
       }
    } else if (fAddArr->GetState()==kButtonUp) {
@@ -617,7 +705,8 @@ void TH2Editor::DoAddBox(Bool_t on)
    if (on) {
       if (!str.Contains("BOX")) {
          str += "BOX";
-	 if (fAddScat->GetState()!=kButtonDisabled) fAddScat->SetState(kButtonDisabled);
+	 if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
+//	 if (fAddScat->GetState()!=kButtonDisabled) fAddScat->SetState(kButtonDisabled);
 	 make=kTRUE;
       }
    } else if (fAddBox->GetState()==kButtonUp) {
@@ -646,11 +735,12 @@ void TH2Editor::DoAddCol(Bool_t on)
    if (on) {
       if (!str.Contains("COL")) {
          str += "COL";
-	 if (fAddBox->GetState()!=kButtonDisabled) {
+/*	 if (fAddBox->GetState()!=kButtonDisabled) {
 	    fAddBox->SetState(kButtonDisabled);
 	    if (str.Contains("BOX")) str.Remove(strstr(str.Data(),"BOX")-str.Data(),3);
-	 }
-	 if (fAddScat->GetState()!=kButtonDisabled) fAddScat->SetState(kButtonDisabled);
+	 }*/
+	 if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
+//	 if (fAddScat->GetState()!=kButtonDisabled) fAddScat->SetState(kButtonDisabled);
 	 if (fAddPalette->GetState()==kButtonDisabled) fAddPalette->SetState(kButtonUp);
 	 make=kTRUE;
       }
@@ -662,8 +752,8 @@ void TH2Editor::DoAddCol(Bool_t on)
 	    fAddPalette->SetState(kButtonDisabled);
 	    if (str.Contains("Z")) str.Remove(strstr(str.Data(),"Z")-str.Data(),1);
 	 }
-         if (str=="" || str=="SCAT" || str.Contains("TEXT")) fAddScat->SetState(kButtonDisabled);
-	 else if ((fContCombo->GetSelected()==kCONT_NONE || fContCombo->GetSelected()==kCONT_2 || fContCombo->GetSelected()==kCONT_3 ) && (fAddScat->GetState()==kButtonDisabled)) fAddScat->SetState(kButtonUp);
+         if (str=="" || str=="SCAT" /*|| str.Contains("TEXT")*/) fAddScat->SetState(kButtonDisabled);
+//	 else if ((fContCombo->GetSelected()==kCONT_NONE || fContCombo->GetSelected()==kCONT_2 || fContCombo->GetSelected()==kCONT_3 ) && (fAddScat->GetState()==kButtonDisabled)) fAddScat->SetState(kButtonUp);
 	 make=kTRUE;
       }
    }
@@ -707,14 +797,15 @@ void TH2Editor::DoAddText(Bool_t on)
    if (on) {
       if (!str.Contains("TEXT")) {
          str += "TEXT";
-	 if (fAddScat->GetState()!=kButtonDisabled) fAddScat->SetState(kButtonDisabled);
+	 if (fAddScat->GetState()==kButtonDisabled) fAddScat->SetState(kButtonUp);
+//	 if (fAddScat->GetState()!=kButtonDisabled) fAddScat->SetState(kButtonDisabled);
 	 make=kTRUE;
       }
    } else if (fAddText->GetState()==kButtonUp) {
       if (str.Contains("TEXT")) {
          str.Remove(strstr(str.Data(),"TEXT")-str.Data(),4);
-         if (str=="" || str=="SCAT" || str.Contains("COL")) fAddScat->SetState(kButtonDisabled);
-	 else if ((fContCombo->GetSelected()==kCONT_NONE) && (fAddScat->GetState()==kButtonDisabled)) fAddScat->SetState(kButtonUp);
+         if (str=="" || str=="SCAT" /*|| str.Contains("COL")*/) fAddScat->SetState(kButtonDisabled);
+//	 else if ((fContCombo->GetSelected()==kCONT_NONE) && (fAddScat->GetState()==kButtonDisabled)) fAddScat->SetState(kButtonUp);
  	 make=kTRUE;
       }
    }
@@ -834,6 +925,26 @@ void TH2Editor::DoAddBB()
 
 //______________________________________________________________________________
 
+void TH2Editor::DoContLevel()
+{
+   // Slot connected to the Contour Level TGNumberEntry 
+   
+   fHist->SetContour((Int_t)fContLevels->GetNumber());
+   Update();
+}
+
+//______________________________________________________________________________
+
+void TH2Editor::DoContLevel1()
+{
+   // Slot connected to the Contour Level TGNumberEntry 
+   
+   fHist->SetContour((Int_t)fContLevels1->GetNumber());
+   Update();
+}
+
+//______________________________________________________________________________
+
 void TH2Editor::DoBarWidth()
 {
    // Slot connected to the Bar Width of the Bar Chart
@@ -848,8 +959,7 @@ void TH2Editor::DoBarOffset()
 {
    // Slot connected to the Bar Offset of the Bar Chart
    
-   Float_t f = fBarOffset->GetNumber();
-   fHist->SetBarOffset(f);
+   fHist->SetBarOffset((Float_t)fBarOffset->GetNumber());
    Update();
 }
 
@@ -858,14 +968,28 @@ void TH2Editor::DoBarOffset()
 void TH2Editor::DoSliderX()
 {
    // Slot connected to the x-Slider
+   // Redraws the Histogram with the new Slider Range
    
+   fHist->GetXaxis()->SetRange((Int_t)((fSliderX->GetMinPosition())+0.5),(Int_t)((fSliderX->GetMaxPosition())+0.5));
+   fSldXMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge(fHist->GetXaxis()->GetFirst()));
+   fSldXMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge(fHist->GetXaxis()->GetLast())); 
+   Update();   
+}
+
+//______________________________________________________________________________
+
+void TH2Editor::DoXAxisRange()
+{
+   // Slot connected to the TextNumberEntryFields which contain the Max/Min value of the x-axis
+
    Int_t nx = fHist->GetXaxis()->GetNbins();
-   Int_t binxmin = (Int_t)(nx*fSliderX->GetMinPosition());
-   Int_t binxmax = (Int_t)(nx*fSliderX->GetMaxPosition());
-   if (binxmin==(fHist->GetXaxis()->GetNbins())) binxmin-=1;
-   else if (binxmax==binxmin) binxmax+=1;
-   if (binxmax==1) binxmax+=1;   
-   fHist->GetXaxis()->SetRange(binxmin,binxmax);
+   Axis_t width = fHist->GetXaxis()->GetBinWidth(1);
+   if ((fSldXMin->GetNumber()+width/2) < (fHist->GetXaxis()->GetBinLowEdge(1))) fSldXMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge(1)); 
+   if ((fSldXMax->GetNumber()-width/2) > (fHist->GetXaxis()->GetBinUpEdge(nx))) fSldXMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge(nx)); 
+   fHist->GetXaxis()->SetRangeUser(fSldXMin->GetNumber()+width/2, fSldXMax->GetNumber()-width/2);
+   Int_t nxbinmin = fHist -> GetXaxis() -> GetFirst();
+   Int_t nxbinmax = fHist -> GetXaxis() -> GetLast();
+   fSliderX->SetPosition((Double_t)(nxbinmin),(Double_t)(nxbinmax));
    Update();
 }
 
@@ -874,14 +998,28 @@ void TH2Editor::DoSliderX()
 void TH2Editor::DoSliderY()
 {
    // Slot connected to the y-Slider
+   // Redraws the Histogram with the new Slider Range
    
+   fHist->GetYaxis()->SetRange((Int_t)((fSliderY->GetMinPosition())+0.5),(Int_t)((fSliderY->GetMaxPosition())+0.5));
+   fSldYMin->SetNumber(fHist->GetYaxis()->GetBinLowEdge(fHist->GetYaxis()->GetFirst()));
+   fSldYMax->SetNumber(fHist->GetYaxis()->GetBinUpEdge(fHist->GetYaxis()->GetLast())); 
+   Update();   
+}
+
+//______________________________________________________________________________
+
+void TH2Editor::DoYAxisRange()
+{
+   // Slot connected to the TextNumberEntryFields which contain the Max/Min value of the y-axis
+
    Int_t ny = fHist->GetYaxis()->GetNbins();
-   Int_t binymin = (Int_t)(ny*fSliderY->GetMinPosition());
-   Int_t binymax = (Int_t)(ny*fSliderY->GetMaxPosition());
-   if (binymin==(fHist->GetYaxis()->GetNbins())) binymin-=1;
-   else if (binymax==binymin) binymax+=1;
-   if (binymax==1) binymax+=1;
-   fHist->GetYaxis()->SetRange(binymin,binymax);
+   Axis_t width = fHist->GetYaxis()->GetBinWidth(1);
+   if ((fSldYMin->GetNumber()+width/2) < (fHist->GetYaxis()->GetBinLowEdge(1))) fSldYMin->SetNumber(fHist->GetYaxis()->GetBinLowEdge(1)); 
+   if ((fSldYMax->GetNumber()-width/2) > (fHist->GetYaxis()->GetBinUpEdge(ny))) fSldYMax->SetNumber(fHist->GetYaxis()->GetBinUpEdge(ny)); 
+   fHist->GetYaxis()->SetRangeUser(fSldYMin->GetNumber()+width/2, fSldYMax->GetNumber()-width/2);
+   Int_t nybinmin = fHist -> GetYaxis() -> GetFirst();
+   Int_t nybinmax = fHist -> GetYaxis() -> GetLast();
+   fSliderY->SetPosition((Double_t)(nybinmin),(Double_t)(nybinmax));
    Update();
 }
 
@@ -942,7 +1080,6 @@ TString TH2Editor::GetHistContLabel()
       case (kCONT_2)    : {s = "CONT2"; break;}
       case (kCONT_3)    : {s = "CONT3"; break;}
       case (kCONT_4)    : {s = "CONT4"; break;}
-      case (kCONT_5)    : {s = "CONT5"; break;}            
       default:  break;
    }
    return s;
@@ -989,7 +1126,7 @@ TGComboBox* TH2Editor::BuildHistTypeComboBox(TGFrame* parent, Int_t id)
    c->AddEntry("Surf3", kTYPE_SURF3);   
    c->AddEntry("Surf4", kTYPE_SURF4);   
    c->AddEntry("Surf5", kTYPE_SURF5); 
-   
+
    return c;
 }
 
@@ -1006,7 +1143,9 @@ TGComboBox* TH2Editor::BuildHistCoordsComboBox(TGFrame* parent, Int_t id)
    c->AddEntry("Polar", kCOORDS_POL);
    c->AddEntry("Rapidity", kCOORDS_PSR);   
    c->AddEntry("Spheric", kCOORDS_SPH);   
-   
+   TGListBox* lb = c->GetListBox();
+   lb->Resize(lb->GetWidth(), 83);
+
    return c;
 }
 
@@ -1018,14 +1157,13 @@ TGComboBox* TH2Editor::BuildHistContComboBox(TGFrame* parent, Int_t id)
 
    TGComboBox *c = new TGComboBox(parent, id);
    
-   c->AddEntry("None"    , kCONT_NONE);
+   c->AddEntry("None" , kCONT_NONE);
    c->AddEntry("Cont0", kCONT_0);
    c->AddEntry("Cont1", kCONT_1);
    c->AddEntry("Cont2", kCONT_2);
    c->AddEntry("Cont3", kCONT_3);
    c->AddEntry("Cont4", kCONT_4);
-   c->AddEntry("Cont5", kCONT_5);
-   
+ 
    return c;
 }
 
@@ -1051,6 +1189,10 @@ void TH2Editor::DisconnectAllSlots()
    Disconnect(fAddPalette1, "Toggled(Bool_t)", this, "DoAddPalette(Bool_t)");   
    Disconnect(fAddFB, "Toggled(Bool_t)", this, "DoAddFB()");
    Disconnect(fAddBB, "Toggled(Bool_t)", this, "DoAddBB()");
+   Disconnect(fContLevels, "ValueSet(Long_t)", this, "DoContLevel()");
+   Disconnect((fContLevels->GetNumberEntry()), "ReturnPressed()", this,"DoContLevel()");   
+   Disconnect(fContLevels1, "ValueSet(Long_t)", this, "DoContLevel1()");
+   Disconnect((fContLevels1->GetNumberEntry()), "ReturnPressed()", this,"DoContLevel1()");   
    Disconnect(fBarWidth, "ValueSet(Long_t)", this, "DoBarWidth()");
    Disconnect((fBarWidth->GetNumberEntry()), "ReturnPressed()", this, "DoBarWidth()");   
    Disconnect(fBarOffset, "ValueSet(Long_t)", this, "DoBarOffset()");

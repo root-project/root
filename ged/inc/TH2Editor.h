@@ -41,7 +41,7 @@ class TGNumberEntry;
 class TGButtonGroup;
 class TGHButtonGroup;
 class TGRadioButton;
-
+class TGNumberEntryField;
 
 class TH2Editor : public TGedFrame {
 
@@ -62,6 +62,8 @@ protected:
    TGCompositeFrame    *f9;            // Frame that contains the 3D CheckBox DrawOptions   
    TGCompositeFrame    *f12;           // Frame that contains the Bar-Title
    TGCompositeFrame    *f13;           // Frame that contains the Bar Width/Offset NumberEntries
+   TGCompositeFrame    *f16;           // Frame that contains the ColorLevel NumberEnrtry
+   TGCompositeFrame    *f19;           // Frame that contains the ColorLevel NumberEnrtry   
    TGCheckButton       *fAddError;     // CheckBox connected to error bars
    TGCheckButton       *fAddPalette;   // CheckBox connected to Z option (2D)
    TGCheckButton       *fAddPalette1;  // CheckBox connected to Z option (3D) 
@@ -72,10 +74,16 @@ protected:
    TGCheckButton       *fAddFB;        // Draw front box (or not)
    TGCheckButton       *fAddBB;        // Draw back box (or not)
    TGCheckButton       *fAddText;      // Draw bin contents as text
+   TGNumberEntry       *fContLevels;   // Set number of contour levels
+   TGNumberEntry       *fContLevels1;  // Set number of contour levels   
    TGNumberEntry       *fBarWidth;     // Set bar width of histogram
    TGNumberEntry       *fBarOffset;    // Set bar offset of histogram
    TGDoubleHSlider     *fSliderX;      // Slider to set x-axis range
+   TGNumberEntryField  *fSldXMin;      // Contains the minimum value of the x-Axis
+   TGNumberEntryField  *fSldXMax;      // Contains the maximum value of the x-Axis  
    TGDoubleHSlider     *fSliderY;      // Slider to set y-axis range   
+   TGNumberEntryField  *fSldYMin;      // Contains the minimum value of the y-Axis
+   TGNumberEntryField  *fSldYMax;      // Contains the maximum value of the y-Axis  
 
    static  TGComboBox *BuildHistTypeComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistCoordsComboBox(TGFrame *parent, Int_t id);
@@ -110,10 +118,14 @@ public:
    virtual void DoAddPalette(Bool_t on);
    virtual void DoAddFB();
    virtual void DoAddBB();
+   virtual void DoContLevel();
+   virtual void DoContLevel1();   
    virtual void DoBarWidth();
    virtual void DoBarOffset();
    virtual void DoSliderX();
+   virtual void DoXAxisRange();   
    virtual void DoSliderY();
+   virtual void DoYAxisRange();   
    virtual void DisconnectAllSlots();   
    ClassDef(TH2Editor,0)  // TH2 editor
 };
