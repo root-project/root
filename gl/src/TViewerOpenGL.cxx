@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.6 2004/08/10 14:11:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.7 2004/08/10 19:22:41 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -248,7 +248,7 @@ TGLPolyLine::TGLPolyLine(const TBuffer3D & ib)
 //______________________________________________________________________________
 void TGLPolyLine::GLDraw(GLUtesselator *)const
 {
-   gVirtualGL->PaintPolyLine(fVertices.size() / 3, const_cast<Double_t *>(&fVertices[0]));
+   gVirtualGL->PaintPolyLine(fVertices.size() / 3, const_cast<Double_t *>(&fVertices[0]),0);
 }
 
 class TGLWidget : public TGCompositeFrame {

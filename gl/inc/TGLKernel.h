@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.6 2004/08/09 22:11:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.7 2004/08/10 19:22:41 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -78,7 +78,7 @@ public:
    void PaintGLPoints(Int_t n, Float_t *p, Option_t *option);
    void PaintCone(Float_t *vertex,Int_t ndiv,Int_t nstacks);
    void PaintPolyLine(Int_t n, Float_t *p, Option_t *option);
-   void PaintPolyLine(Int_t n, Double_t *p);
+   void PaintPolyLine(Int_t n, Double_t *p, Option_t *option);
    void PaintGLPointsObject(const TPoints3DABC *points, Option_t *option="");
    void PaintBrik(Float_t vertex[24]);
    void PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz);

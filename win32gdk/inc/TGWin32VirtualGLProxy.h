@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.23 2004/07/27 23:02:11 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.1 2004/08/09 15:46:53 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -107,6 +107,7 @@ public:
    void NewModelView(Double_t *angles, Double_t *delta );
    void PaintCone(Float_t *vertex, Int_t ndiv, Int_t nstacks);
    void PaintPolyLine(Int_t n, Float_t *p, Option_t *option);
+   void PaintPolyLine(Int_t n, Double_t *p, Option_t *option);
    void PaintGLPointsObject(const TPoints3DABC *points, Option_t *option="");
    void PaintBrik(Float_t vertex[24]);
    void PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz);

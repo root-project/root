@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.83 2004/08/03 16:01:18 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.1 2004/08/09 15:46:53 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -67,6 +67,7 @@ VOID_METHOD_ARG2(VirtualGL,NewModelView,Double_t*,angles,Double_t*,delta,1)
 VOID_METHOD_ARG3(VirtualGL,NewProjectionView,Double_t*,viewboxmin,Double_t*,viewboxmax,Bool_t,perspective,1)
 VOID_METHOD_ARG3(VirtualGL,PaintCone,Float_t*,vertex,Int_t,ndiv,Int_t,nstacks,1)
 VOID_METHOD_ARG3(VirtualGL,PaintPolyLine,Int_t,n,Float_t*,p,Option_t*,option,1)
+VOID_METHOD_ARG3(VirtualGL,PaintPolyLine,Int_t,nd,Double_t*,pd,Option_t*,option,1)
 VOID_METHOD_ARG2(VirtualGL,PaintGLPointsObject,const TPoints3DABC*,points,Option_t*,option,1)
 VOID_METHOD_ARG1(VirtualGL,PaintBrik,Float_t*,vertex,1)
 VOID_METHOD_ARG3(VirtualGL,PaintXtru,Float_t*,vertex,Int_t,nxy,Int_t,nz,1)

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.13 2004/08/10 07:56:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.14 2004/08/10 19:22:41 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -655,7 +655,7 @@ void TGLKernel::PaintPolyLine(Int_t n, Float_t *p, Option_t *)
 }
 
 //______________________________________________________________________________
-void TGLKernel::PaintPolyLine(Int_t n, Double_t *p)
+void TGLKernel::PaintPolyLine(Int_t n, Double_t *p, Option_t *)
 {
    //
 
