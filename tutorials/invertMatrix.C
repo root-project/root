@@ -58,9 +58,10 @@ void invertMatrix(Int_t msize=6)
   // diagonal to zero .
 
   TMatrixD U1(H1,TMatrixD::kMult,H_square);
-  TMatrixDDiag(U1) = 0.0;
+  TMatrixDDiag diag1(U1); diag1 = 0.0;
   const Double_t U1_max_offdiag = (U1.Abs()).Max();
   cout << "  Maximum off-diagonal = " << U1_max_offdiag << endl;
+  cout << "  Determinant          = " << det1 <<endl;
 
 // 2. Invert(Double_t *det=0)
 //   Also only available for TMatrixD/F . Again the inversion is performed in place .
@@ -86,16 +87,17 @@ void invertMatrix(Int_t msize=6)
 //
 
   cout << "2. Use .Invert(&det)" <<endl;
-  cout << "  If the determinant is < 2^-52 (="<<TMath::Power(2,-52)<<"), an warning is generated" <<endl;
+  cout << "  If the determinant is < 2^-52 (="<<TMath::Power(2,-52)<<"), a warning is generated" <<endl;
 
   Double_t det2;
   TMatrixD H2 = H_square;
   H2.Invert(&det2);
 
   TMatrixD U2(H2,TMatrixD::kMult,H_square);
-  TMatrixDDiag(U2) = 0.0;
+  TMatrixDDiag diag2(U2); diag2 = 0.0;
   const Double_t U2_max_offdiag = (U2.Abs()).Max();
   cout << "  Maximum off-diagonal = " << U2_max_offdiag << endl;
+  cout << "  Determinant          = " << det2 <<endl;
 
 // 3. Inversion through LU decomposition
 //   The (default) algorithms used are similar to 2. (Not identical because in 2, the whole
@@ -123,9 +125,10 @@ void invertMatrix(Int_t msize=6)
   Double_t det3 = d1_lu*TMath::Power(2.,d2_lu);
 
   TMatrixD U3(H3,TMatrixD::kMult,H_square);
-  TMatrixDDiag(U3) = 0.0;
+  TMatrixDDiag diag3(U3); diag3 = 0.0;
   const Double_t U3_max_offdiag = (U3.Abs()).Max();
   cout << "  Maximum off-diagonal = " << U3_max_offdiag << endl;
+  cout << "  Determinant          = " << det3 <<endl;
 
 // 4. Inversion through SVD decomposition
 //   For SVD and QRH, the (n x m) matrix does only have to fulfill n >=m . In case n > m
@@ -142,7 +145,8 @@ void invertMatrix(Int_t msize=6)
   Double_t det4 = d1_svd*TMath::Power(2.,d2_svd);
 
   TMatrixD U4(H4,TMatrixD::kMult,H_nsquare);
-  TMatrixDDiag(U4) = 0.0;
+  TMatrixDDiag diag4(U4); diag4 = 0.0;
   const Double_t U4_max_offdiag = (U4.Abs()).Max();
   cout << "  Maximum off-diagonal = " << U4_max_offdiag << endl;
+  cout << "  Determinant          = " << det4 <<endl;
 }
