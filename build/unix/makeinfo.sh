@@ -12,7 +12,7 @@ CPPPREP=$4
 
 rm -f __makeinfo
 
-echo "Running $MAKEINFO"
+echo "Running $0"
 echo "# This file had been automatically generated" > __makeinfo
 echo "# And will be re-generated when running make" >> __makeinfo
 echo "# Unless the keyword DEFAULT is replaced by LOCAL" >> __makeinfo
