@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.34 2001/05/15 07:53:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.35 2001/05/15 17:09:02 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -205,18 +205,22 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
             if (fin == 0) continue;
             bre->SetBranchCount(this); //primary branchcount
             TLeafElement *lf = (TLeafElement*)bre->GetListOfLeaves()->At(0);
+
             //if branch name is of the form fTracks.fCovar[3][4]
-            //set the title to fCovar[fTracks_][3][4]
-            char *dim = (char*)strstr(fin+1,"[");
-            if (dim) {
-               Int_t nch = dim-fin-1;
-               strncpy(branchname,fin+1,nch);
-               sprintf(branchname+nch,"[%s_]%s",name,dim);
-            } else {
-               sprintf(branchname,"%s[%s_]",fin+1,name);
+            //set the title to fCovar[fTracks_]
+            
+            strcpy(branchname,fin+1);
+            char *dim = (char*)strstr(branchname,"[");
+            Int_t nch = strlen(branchname);
+            if (dim) { 
+               *dim = 0;
+               nch = dim-branchname;
             }
+            sprintf(branchname+nch,"[%s_]",name);
+
             bre->SetTitle(branchname);
             lf->SetTitle(branchname);
+
             // is there a secondary branchcount ?
             //fBranchCount2 points to the secondary branchcount
             //in case a TClonesArray element has itself a branchcount.
