@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.7 2004/09/02 14:22:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.8 2004/09/13 12:27:11 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -42,7 +42,7 @@ ClassImp(TGraphBentErrors)
 //   Double_t exh[n] = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
 //   Double_t eyh[n] = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
 //   Double_t exld[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
-//   Double_t eyld[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+//   Double_t eyld[n] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0};
 //   Double_t exhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
 //   Double_t eyhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
 //   gr = new TGraphBentErrors(n,x,y,exl,exh,eyl,eyh,exld,exhd,eyld,eyhd);

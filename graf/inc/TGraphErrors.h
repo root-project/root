@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name: v4-00-08-patches $:$Id: TGraphErrors.h,v 1.15 2004/05/06 09:40:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.17 2004/09/13 12:27:11 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -38,7 +38,7 @@ protected:
                                      Int_t ibegin, Int_t iend, Int_t obegin);
    virtual Bool_t     CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
                                  Int_t obegin);
-   virtual Bool_t     CtorAllocate();
+           Bool_t     CtorAllocate();
    virtual void       FillZero(Int_t begin, Int_t end,
                                Bool_t from_ctor = kTRUE);
 

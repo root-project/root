@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.37 2004/09/06 06:54:55 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.39 2004/09/13 12:27:10 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -55,7 +55,7 @@ protected:
                                  Int_t ibegin, Int_t iend, Int_t obegin);
    virtual void       CopyAndRelease(Double_t **newarrays,
                                      Int_t ibegin, Int_t iend, Int_t obegin);
-   virtual Bool_t     CtorAllocate();
+           Bool_t     CtorAllocate();
            Double_t **ExpandAndCopy(Int_t size, Int_t iend);
    virtual void       FillZero(Int_t begin, Int_t end,
                                Bool_t from_ctor = kTRUE);

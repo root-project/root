@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name: v4-00-08-patches $:$Id: TGraphBentErrors.h,v 1.3 2004/02/22 11:31:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.h,v 1.4 2004/09/13 12:27:10 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -44,7 +44,7 @@ protected:
                                      Int_t ibegin, Int_t iend, Int_t obegin);
    virtual Bool_t     CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
                                  Int_t obegin);
-   virtual Bool_t     CtorAllocate();
+           Bool_t     CtorAllocate();
    virtual void       FillZero(Int_t begin, Int_t end,
                                Bool_t from_ctor = kTRUE);
 
