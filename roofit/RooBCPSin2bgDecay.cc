@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBCPSin2bgDecay.cc,v 1.5 2002/05/31 01:07:40 verkerke Exp $
+ *    File: $Id: RooBCPSin2bgDecay.cc,v 1.6 2002/06/17 23:49:10 walkowia Exp $
  * Authors:
  *   WW, Wolfgang Walkowiak, UC Santa Cruz, walkowia@slac.stanford.edu
  * History:
@@ -41,8 +41,8 @@
 //     dw'    = dw * (1-alpha)
 //     offset = alpha * (1-2*rho)
 // 
-// For the first to constructors (A1 and A2) |lambda| == |lambda'|,
-// while the second set of constructors (B1 and B2) allow for 
+// For the first two constructors (A1 and A2) |lambda| == |lambda'|,
+// while the second set of constructors (B1 and B2) allows for 
 // and independent |lambda'| infront of the sin() term. 
 //
 
