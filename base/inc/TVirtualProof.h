@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.2 2002/09/19 13:59:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.3 2002/11/28 18:38:11 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -42,8 +42,8 @@ protected:
    TVirtualProof() { }
 
 public:
-   TVirtualProof(const char *masterurl, const char *conffile = 0,
-                 const char *confdir = 0, Int_t loglevel = 0) { }
+   TVirtualProof(const char * /*masterurl*/, const char * /*conffile*/ = 0,
+                 const char * /*confdir*/ = 0, Int_t /*loglevel*/ = 0) { }
    virtual ~TVirtualProof() { }
 
    virtual Int_t       Ping() = 0;
