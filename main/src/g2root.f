@@ -273,7 +273,7 @@ C
          ncn=lenocc(matname)
          call toint(imat,astring,nc)
          nm=abs(nmixt)
-*-*             Case of a simple matrial
+*-*             Case of a simple material
          if (nm.le.1)then
             call toreals(3,q(jma+6),creals,ncr)
             if(q(jma+6).lt.1.and.q(jma+7).lt.1)then
@@ -366,6 +366,27 @@ C
             if(cname(i:i).eq.'/')cname(i:i)='h'
             if(cname(i:i).eq.'.')cname(i:i)='d'
             if(cname(i:i).eq.'''')cname(i:i)='q'
+            if(cname(i:i).eq.';')cname(i:i)='s'
+            if(cname(i:i).eq.':')cname(i:i)='c'
+            if(cname(i:i).eq.',')cname(i:i)='v'
+            if(cname(i:i).eq.'<')cname(i:i)='l'
+            if(cname(i:i).eq.'>')cname(i:i)='g'
+            if(cname(i:i).eq.'!')cname(i:i)='e'
+            if(cname(i:i).eq.'@')cname(i:i)='a'
+            if(cname(i:i).eq.'#')cname(i:i)='d'
+            if(cname(i:i).eq.'$')cname(i:i)='d'
+            if(cname(i:i).eq.'%')cname(i:i)='p'
+            if(cname(i:i).eq.'^')cname(i:i)='e'
+            if(cname(i:i).eq.'&')cname(i:i)='a'
+            if(cname(i:i).eq.'(')cname(i:i)='l'
+            if(cname(i:i).eq.')')cname(i:i)='g'
+            if(cname(i:i).eq.'[')cname(i:i)='l'
+            if(cname(i:i).eq.']')cname(i:i)='g'
+            if(cname(i:i).eq.'{')cname(i:i)='l'
+            if(cname(i:i).eq.'}')cname(i:i)='g'
+            if(cname(i:i).eq.'=')cname(i:i)='e'
+            if(cname(i:i).eq.'~')cname(i:i)='t'
+            if(cname(i:i).eq.'|')cname(i:i)='b'
   32     continue
          call uctoh(cname,iq(jvolum+ivo),4,4)
   50  continue
