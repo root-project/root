@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.136 2002/11/06 09:11:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.137 2002/11/12 15:51:54 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1503,6 +1503,7 @@ TTree *TTree::CloneTree(Int_t nentries, Option_t *option)
    leaves->Compress();
 
   // copy branch addresses
+   tree->SetMakeClass(fMakeClass);
    CopyAddresses(tree);
 
   // may be copy some entries
