@@ -1,0 +1,6 @@
+#
+# make archived version 
+#
+makecint -mk make.arc -o ../cint -c statistics.c array.c carray.c fft.c lsm.c xgraph.c -S 
+make -f make.arc
+rm G__*

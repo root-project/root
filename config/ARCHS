@@ -1,0 +1,36 @@
+Architectures supported:
+
+linux                for Linux gcc 2.7.x.x and glibc
+linuxegcs            for Linux egcs 1.1.x and glibc
+linuxrh42            for Linux gcc 2.7.x.x and libc5
+linuxdeb             for Linux (Debian) egcs and glibc
+linuxdeb2            for Linux (Debian v2.0) egcs and glibc
+linuxkcc             for Linux KCC and glibc
+linuxsuse6           for Linux (SuSE v6.0) egcs and glibc
+linuxpgcc            for Linux pgcc and glibc
+linuxppcegcs         for PPC Linux egcs and glibc
+linuxdeb2ppc         for PPC Linux based on Debian v2.0
+mklinux              for MkLinux gcc and glibc
+freebsd              for FreeBSD
+freebsd4             for FreeBSD 4.x
+hpux                 for HP-UX 10.20 CC
+hpuxacc              for HP-UX 10.20 aCC
+hpuxegcs             for HP-UX 10.20 egcs 1.1.x
+alphacxx6            for DEC Unix cxx6
+alphaegcs            for DEC Unix egcs 1.1.x
+alphakcc             for DEC Unix KCC
+osfkcc               for DEC Unix KCC same as alphakcc
+solaris              for Solaris CC
+solarisCC5           for Solaris CC 5.0
+solarisegcs          for Solaris egcs 1.1.x
+solarisgcc           for Solaris gcc 2.8.1
+solariskcc           for Solaris KCC
+sgicc                for SGI IRIX 6.x CC
+sgikcc               for SGI IRIX 6.x KCC
+sgiegcs              for SGI IRIX 6.x egcs 1.1.x
+sgin32egcs           for SGI IRIX 6.4 egcs 1.1.x using n32 ABI
+aix                  for AIX 4.x xlC
+aixegcs              for AIX 4.x egcs 1.1.x
+lynxos               for lynxos with gcc
+win32                for Win32 with VC++
+win32egcs            for Win32 with egcs (Cygwin)

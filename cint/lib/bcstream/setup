@@ -1,0 +1,10 @@
+SUT=''
+SUT=$SUT' iostream.sut.h'
+SUT=$SUT' fstream.sut.h'
+SUT=$SUT' stdiostream.sut.h'
+SUT=$SUT' stream.sut.h'
+SUT=$SUT' strstream.sut.h'
+makecint -mk Makestream -o stream -H $SUT
+rm G__cpp*
+make
+

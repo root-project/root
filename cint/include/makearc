@@ -1,0 +1,6 @@
+#
+# make archived version 
+#
+makecint -mk make.arc -o ../cint -c statistics.c array.c carray.c fft.c lsm.c xgraph.c -H ReadF.h RegE.h -C++ ReadF.C RegE.C
+make -f make.arc
+#rm G__*

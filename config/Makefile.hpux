@@ -1,0 +1,42 @@
+# Makefile of ROOT for HP-UX 10.20 with CC
+
+PLATFORM      = hpux
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O
+NOOPT         =
+endif
+
+# if system is not HP-UX10.20 (eg, HP-UX 9.05) add -Dhpux9 to CXXFLAGS
+CXX           = CC
+CC            = cc
+CXXFLAGS      = +a1 -z +Z -I/usr/include/X11R5 $(EXTRA_CXXFLAGS)
+CFLAGS        = -Ae -z +Z -I/usr/include/X11R5 $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = +a1 -z +Z -I/opt/CC/include -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL \
+                -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -Ae -z +Z -I/opt/CC/include -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL \
+                -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+
+# Linker:
+LD            = CC
+LDFLAGS       = $(OPT) +a1 -z -Wl,+s -Wl,-E $(EXTRA_LDFLAGS)
+SOFLAGS       = -b
+SOEXT         = sl
+
+# System libraries:
+SYSLIBS       = -lm -ldld
+XLIBS         = $(XPMLIB) -L/usr/lib/X11R5 -lX11
+CILIBS        = -lm -Wl,-E -ldld -lcurses
+CRYPTLIBS     =
+
+# Fortran:
+F77           = fort77
+F77LD         = $(F77)
+F77FLAGS      = -K +ppu
+F77LDFLAGS    = -K +ppu $(OPT)
+F77LIBS       =
+
+

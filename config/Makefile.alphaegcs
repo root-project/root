@@ -1,0 +1,37 @@
+# Makefile to build ROOT for DEC unix with egcs1.1
+
+PLATFORM      = alphaegcs
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O2
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = g++
+CC            = gcc
+CXXFLAGS      = -fPIC -mcpu=ev5 -D__osf__ -D__alpha $(EXTRA_CXXFLAGS)
+CFLAGS        = -fPIC -mcpu=ev5 $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -fPIC -mcpu=ev5 \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -fPIC -mcpu=ev5 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+
+# Linker:
+LD            = g++
+LDFLAGS       = $(EXTRA_LDFLAGS)
+SOFLAGS       = -Wl,-expect_unresolved,* -shared
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lm -ltermcap
+XLIBS         = -L$(LPATH) -lXpm -lX11
+CILIBS        = -lm -ltermcap
+
+# Fortran:
+F77LIBS       = /usr/shlib/libFutil.so /usr/shlib/libfor.so /usr/shlib/libots.so
+

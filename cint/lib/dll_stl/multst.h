@@ -1,0 +1,33 @@
+// lib/dll_stl/multst.h
+
+#ifdef __CINT__
+#include <multiset>
+#else
+#include <set>
+#endif
+#include <algorithm>
+#include <string>
+#ifndef __hpux
+using namespace std;
+#endif
+
+#ifdef __MAKECINT__
+#ifndef G__MULTISET_DLL
+#define G__MULTISET_DLL
+#endif
+#pragma link C++ global G__MULTISET_DLL;
+#pragma link C++ nestedtypedef;
+#pragma link C++ nestedclass;
+
+#pragma link C++ class multiset<int>;
+#pragma link C++ class multiset<long>;
+#pragma link C++ class multiset<double>;
+#pragma link C++ class multiset<void*>;
+#pragma link C++ class multiset<char*>;
+#ifdef G__STRING_DLL
+#pragma link C++ class multiset<string>;
+#endif
+
+#endif
+
+

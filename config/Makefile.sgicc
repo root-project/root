@@ -1,0 +1,34 @@
+# Makefile of ROOT for SGI IRIX 6.x with CC compiler
+
+PLATFORM      = sgi
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = CC
+CC            = cc
+CXXFLAGS      = -n32  -signed -DSGI_REL=62 $(EXTRA_CXXFLAGS)
+CFLAGS        = -n32  -signed -DSGI_REL=62 $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -n32  -signed -DSGI_REL=62 -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
+                -DG__SHAREDLIB -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -n32  -signed -DSGI_REL=62 -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
+                -DG__SHAREDLIB -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+
+# Linker:
+LD            = $(CXX)
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       = -n32 -shared -o
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lm -lPW -ldl
+XLIBS         = $(XPMLIB) -lX11
+CILIBS        =  -lm -ltermcap -lbsd -lgen -ldl
+
+

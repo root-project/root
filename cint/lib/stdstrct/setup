@@ -1,0 +1,7 @@
+
+rm ../../include/stdfunc.dll
+makecint -mk Makestdfunc -dl stdfunc.dll -h stdfunc.h -cint -Z0
+make -f Makestdfunc
+mv stdfunc.dll ../../include/stdfunc.dll
+make -f Makestdfunc clean
+rm Makestdfunc

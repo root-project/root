@@ -1,0 +1,94 @@
+Contents
+========
+
+Directory root/ :
+
+AA_README   - this file
+AA_LICENSE  - usage terms and conditions
+AA_CREDITS  - list of contributors to the ROOT system
+AA_INSTALL  - how to install ROOT from source (comes with source dist)
+AA_ARCHS    - supported architecures (comes with source dist)
+bin         - directory containing executables
+include     - directory containing the ROOT header files
+lib         - directory containing the ROOT libraries (in shared library format)
+macros      - directory containing system macros (e.g. GL.C to load OpenGL libs)
+icons       - directory containing xpm icons
+test        - some ROOT test programs
+tutorials   - example macros that can be executed by the bin/root module
+
+
+Environment variables
+=====================
+
+Define the variable ROOTSYS pointing to the directory where you unpacked
+the ROOT distribution:
+   export ROOTSYS=<pathname>/root   (in bash or ksh)
+   setenv ROOTSYS <pathname>/root   (in csh or tcsh)
+
+
+Add ROOTSYS/bin to your PATH:
+   export PATH=$PATH:$ROOTSYS/bin        (in bash or ksh)
+   set path=($path $ROOTSYS/bin)         (in csh or tcsh)
+
+On systems using shared libraries you must specify the load path
+before you can run the root module. NOTE: with version 2.00 this
+is not necessary anymore since the front-end program sets the
+load path correctly. However, it is still needed for running
+rootcint or you'll need it when distributing your own ROOT based
+applications.
+
+On HP-UX do:
+   export SHLIB_PATH=$SHLIB_PATH:$ROOTSYS/lib       (in bash or ksh)
+   setenv SHLIB_PATH ${SHLIB_PATH}:${ROOTSYS}/lib   (in csh or tcsh)
+
+On Solaris, Linux, SGI, Alpha/OSF do:
+   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ROOTSYS/lib
+
+On AIX do:
+   [ -z "$LIBPATH" ] && export LIBPATH=/lib:/usr/lib
+   export LIBPATH=$LIBPATH:$ROOTSYS/lib
+
+
+Using TrueType fonts
+====================
+
+This version of ROOT supports TrueType fonts also on X11 based systems.
+The usage of TrueType fonts increases dramatically the readability at
+small point sizes. On how to get the TrueType fonts see:
+   http://root.cern.ch/root/TrueType.html
+
+The fonts are machines independent and the same fonts can be shared
+between different binary ROOT installations.
+
+
+Running interactive ROOT and the tutorial macros
+================================================
+
+To run the example macros, go to the root/tutorials directory and do, e.g.:
+
+$ root
+root [0] .x benchmarks.C
+  -- this will run all tutorials and will benchmark your machine.
+  -- For a rating of your machine check:
+  -- http://root.cern.ch/root/html/examples/benchmarks_v100.html.
+  -- If your machine is not in the list please mail the results to:
+  -- rootdev@root.cern.ch.
+root [1] .x demos.C
+  -- Click on any button you like to run the corresponding tutorial.
+  -- Move the objects on the canvas around using the mouse.
+root [2] .q
+
+
+
+Compiling and running ROOT test programs
+========================================
+
+To run some ROOT test programs, go to the root/test directory and do
+(after having selected the machine dependent flags in the Makefile):
+
+$ make
+$ ./Event
+$ ./hsimple
+$ ./minexam
+$ ./tcollex
+$ ./tstring

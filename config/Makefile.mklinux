@@ -1,0 +1,38 @@
+# Makefile of ROOT for MkLinux with glibc
+
+PLATFORM      = linux
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O2
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = g++
+CC            = gcc
+CXXFLAGS      = -Wall -fsigned-char -fPIC -DR__GLIBC \
+                -I/usr/X11/include/  -I/usr/include/g++/ $(EXTRA_CXXFLAGS)
+CFLAGS        = -Wall -fPIC -fsigned-char -DR__GLIBC \
+                -I/usr/X11/include/  -I/usr/include/g++/ $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -Wall -fPIC -fsigned-char -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                -I/usr/include/g++/ $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -Wall -fPIC -fsigned-char -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+
+# Linker:
+LD            = g++
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       = -shared -Wl,-soname,
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lg++ -lm -ldl
+XLIBS         = -L/usr/X11R6/lib -lX11 -lSM -lICE -lXpm -lg++
+CILIBS        = -lm -ltermcap -lbsd -ldl -lg++
+
+# Fortran:
+

@@ -1,0 +1,186 @@
+ObjSuf        = obj
+SrcSuf        = cxx
+ExeSuf        = .exe
+DllSuf        = dll
+OutPutOpt     = -out:
+
+# Win32 system with Microsoft Visual C/C++
+!include <win32.mak>
+CC            = $(cc)
+CXX           = $(cc)
+CXXFLAGS      = $(cvarsdll) -nologo -G5 -MD -DWIN32 -DVISUAL_CPLUSPLUS -D_WINDOWS -I$(ROOTSYS)/include
+CXXOPT        = -O2
+#CXXOPT       = -Z7
+
+LD            = $(link)
+LDOPT         = -opt:ref
+#LDOPT         = -debug
+LDFLAGS       = $(LDOPT) $(conlflags) -nologo -pdb:none
+SOFLAGS       = $(dlllflags:-pdb:none=)
+ROOTLIBS      = $(ROOTSYS)/lib/libCore.lib \
+                $(ROOTSYS)/lib/libCint.lib $(ROOTSYS)/lib/libHist.lib \
+                $(ROOTSYS)/lib/libGraf.lib $(ROOTSYS)/lib/libGraf3d.lib \
+                $(ROOTSYS)/lib/libGpad.lib $(ROOTSYS)/lib/libTree.lib \
+                $(ROOTSYS)/lib/libRint.lib $(ROOTSYS)/lib/libPostscript.lib \
+                $(ROOTSYS)/lib/libMatrix.lib $(ROOTSYS)/lib/libPhysics.lib
+LIBS          = $(ROOTLIBS) $(guilibsdll) MSVCIRT.LIB
+LIBSALL       = $(ROOTLIBS)
+EVENTLIB      = libEvent.lib
+
+
+#------------------------------------------------------------------------------
+
+EVENTO        = Event.$(ObjSuf) \
+                EventDict.$(ObjSuf)
+
+EVENTS        = Event.$(SrcSuf) \
+                EventDict.$(SrcSuf)
+
+MAINEVENTS    = MainEvent.$(SrcSuf)
+
+MAINEVENTO    = MainEvent.$(ObjSuf)
+
+EVENT         = Event$(ExeSuf)
+EVENTSO       = libEvent.$(DllSuf)
+
+HWORLDO       = hworld.$(ObjSuf)
+HWORLDS       = hworld.$(SrcSuf)
+HWORLD        = hworld$(ExeSuf)
+
+HSIMPLEO      = hsimple.$(ObjSuf)
+HSIMPLES      = hsimple.$(SrcSuf)
+HSIMPLE       = hsimple$(ExeSuf)
+
+MINEXAMO      = minexam.$(ObjSuf)
+MINEXAMS      = minexam.$(SrcSuf)
+MINEXAM       = minexam$(ExeSuf)
+
+HELLOO        = Hello.$(ObjSuf) HelloDict.$(ObjSuf)
+HELLOS        = Hello.$(SrcSuf) HelloDict.$(SrcSuf)
+HELLOSO       = Hello.$(DllSuf)
+
+ACLOCKO       = Aclock.$(ObjSuf) AclockDict.$(ObjSuf)
+ACLOCKS       = Aclock.$(SrcSuf) AclockDict.$(SrcSuf)
+ACLOCKSO      = Aclock.$(DllSuf)
+
+TSTRINGO      = tstring.$(ObjSuf)
+TSTRINGS      = tstring.$(SrcSuf)
+TSTRING       = tstring$(ExeSuf)
+
+TCOLLEXO      = tcollex.$(ObjSuf)
+TCOLLEXS      = tcollex.$(SrcSuf)
+TCOLLEX       = tcollex$(ExeSuf)
+
+TCOLLBMO      = tcollbm.$(ObjSuf)
+TCOLLBMS      = tcollbm.$(SrcSuf)
+TCOLLBM       = tcollbm$(ExeSuf)
+
+VVECTORO      = vvector.$(ObjSuf)
+VVECTORS      = vvector.$(SrcSuf)
+VVECTOR       = vvector$(ExeSuf)
+
+VMATRIXO      = vmatrix.$(ObjSuf)
+VMATRIXS      = vmatrix.$(SrcSuf)
+VMATRIX       = vmatrix$(ExeSuf)
+
+VLAZYO        = vlazy.$(ObjSuf)
+VLAZYS        = vlazy.$(SrcSuf)
+VLAZY         = vlazy$(ExeSuf)
+
+STRESSO       = stress.$(ObjSuf)
+STRESSS       = stress.$(SrcSuf)
+STRESS        = stress$(ExeSuf)
+
+OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
+                $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
+                $(HELLOO) $(ACLOCKO) $(STRESSO) $(EVENTSO) $(TCOLLBMO)
+
+PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
+                $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
+                $(HELLOSO) $(ACLOCKSO) $(STRESS)
+
+all:            $(PROGRAMS)
+
+$(EVENTSO):     $(EVENTO)
+                BINDEXPLIB  $* $(EVENTO) > $*.def
+                lib -nologo -MACHINE:IX86 $(EVENTO) -def:$*.def $(OutPutOpt)$(EVENTLIB)
+                $(LD) $(SOFLAGS) $(LDFLAGS) $(EVENTO) $*.exp $(LIBS) $(OutPutOpt)$(EVENTSO)
+                @echo "$(EVENTSO) done"
+
+$(EVENT):       $(EVENTSO) $(MAINEVENTO)
+                $(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTLIB) $(LIBS) $(OutPutOpt)$(EVENT)
+                @echo "$(EVENT) done"
+
+$(HWORLD):      $(HWORLDO)
+                $(LD) $(LDFLAGS) $(HWORLDO) $(LIBS) $(OutPutOpt)$(HWORLD)
+                @echo "$(HWORLD) done"
+
+$(HSIMPLE):     $(HSIMPLEO)
+                $(LD) $(LDFLAGS) $(HSIMPLEO) $(LIBS) $(OutPutOpt)$(HSIMPLE)
+                @echo "$(HSIMPLE) done"
+
+$(MINEXAM):     $(MINEXAMO)
+                $(LD) $(LDFLAGS) $(MINEXAMO) $(LIBS) $(OutPutOpt)$(MINEXAM)
+                @echo "$(MINEXAM) done"
+
+$(TSTRING):     $(TSTRINGO)
+                $(LD) $(LDFLAGS) $(TSTRINGO) $(LIBS) $(OutPutOpt)$(TSTRING)
+                @echo "$(TSTRING) done"
+
+$(TCOLLEX):     $(TCOLLEXO)
+                $(LD) $(LDFLAGS) $(TCOLLEXO) $(LIBS) $(OutPutOpt)$(TCOLLEX)
+                @echo "$(TCOLLEX) done"
+
+$(TCOLLBM):     $(TCOLLBMO)
+                $(LD) $(LDFLAGS) $(TCOLLBMO) $(LIBS) $(OutPutOpt)$(TCOLLBM)
+                @echo "$(TCOLLBM) done"
+
+$(VVECTOR):     $(VVECTORO)
+                $(LD) $(LDFLAGS) $(VVECTORO) $(LIBS) $(OutPutOpt)$(VVECTOR)
+                @echo "$(VVECTOR) done"
+
+$(VMATRIX):     $(VMATRIXO)
+                $(LD) $(LDFLAGS) $(VMATRIXO) $(LIBS) $(OutPutOpt)$(VMATRIX)
+                @echo "$(VMATRIX) done"
+
+$(VLAZY):       $(VLAZYO)
+                $(LD) $(LDFLAGS) $(VLAZYO) $(LIBS) $(OutPutOpt)$(VLAZY)
+                @echo "$(VLAZY) done"
+                @echo "$(VMATRIX) done"
+
+$(STRESS):      $(STRESSO) $(EVENT)
+                $(LD) $(LDFLAGS) $(STRESSO) $(EVENTLIB) $(LIBS) $(OutPutOpt)$(STRESS)
+                @echo "$(STRESS) done"
+
+$(HELLOSO):     $(HELLOO)
+                $(LD) $(SOFLAGS) $(HELLOO) $(LIBS) $(OutPutOpt)$(HELLOSO)
+
+$(ACLOCKSO):    $(ACLOCKO)
+                $(LD) $(SOFLAGS) $(ACLOCKO) $(LIBS) $(OutPutOpt)$(ACLOCKSO)
+
+clean:
+                @del /q $(OBJS) $(EVENTLIB)
+
+distclean:      clean
+		@del /q $(PROGRAMS) *Dict.* *.def *.exp *.root *.ps .def
+
+###
+Event.$(ObjSuf): Event.h
+MainEvent.$(ObjSuf): Event.h
+EventDict.$(SrcSuf): Event.h EventLinkDef.h
+        @echo "Generating dictionary EventDict..."
+        @$(ROOTSYS)\bin\rootcint -f EventDict.$(SrcSuf) -c Event.h EventLinkDef.h
+
+Hello.$(ObjSuf): Hello.h
+HelloDict.$(SrcSuf): Hello.h
+        @echo "Generating dictionary HelloDict..."
+        @$(ROOTSYS)\bin\rootcint -f HelloDict.$(SrcSuf) -c Hello.h
+
+Aclock.$(ObjSuf): Aclock.h
+AclockDict.$(SrcSuf): Aclock.h
+        @echo "Generating dictionary AclockDict..."
+        @$(ROOTSYS)\bin\rootcint -f AclockDict.$(SrcSuf) -c Aclock.h
+
+.$(SrcSuf).$(ObjSuf):
+        $(CXX) $(CXXFLAGS) $(CXXOPT) -c $<
+

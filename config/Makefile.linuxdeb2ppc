@@ -1,0 +1,44 @@
+# Makefile of ROOT for Linux (Debian) with glibc and egcs
+# Changes for Debian 2.0:
+# libncurses does not exist, remove -lncurses
+# problems when using gcc c-compiler, change to egcc
+
+PLATFORM      = linux
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O2
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = g++
+CC            = egcc
+CXXFLAGS      = -Wall -fPIC -fsigned-char -DR__GLIBC $(EXTRA_CXXFLAGS)
+CFLAGS        = -Wall -fPIC -fsigned-char -DR__GLIBC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -Wall -fPIC -fsigned-char $(EXTRA_CXXFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
+CINTCFLAGS    = -Wall -fPIC -fsigned-char $(EXTRA_CFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
+
+# Linker:
+LD            = g++
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       = -shared -Wl,-soname,
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lnsl -lm -ldl -rdynamic
+XLIBS         = -L/usr/X11R6/lib -lX11 -lXpm
+CILIBS        = -lm -ldl -rdynamic
+CRYPTLIBS     = -lcrypt
+
+# Fortran:
+F77           = g77
+F77FLAGS      = $(OPT)
+F77LIBS       = -lg2c
+

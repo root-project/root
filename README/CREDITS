@@ -1,0 +1,99 @@
+This file lists the most important contributors to the ROOT project.
+It is sorted by name and formatted to allow easy grepping and beautification
+by scripts. The fields are: name (N), email (E), description (D).
+
+Thanks,
+          Rene Brun & Fons Rademakers.
+
+
+PS: please let us know if you are not on this list while you should be, or
+    if something in your entry is incorrect.
+
+-------------------
+N: Maarten Ballintijn
+E: maartenb@xs4all.nl
+D: initial linux port
+
+N: Nenad Buncic
+E: Nenad.Buncic@epfl.ch
+D: HTML documentation generator, 3D shapes and geometry classes,
+D: interface to X3D
+
+N: Damir Buskulic
+E: buskulic@lapp.in2p3.fr
+D: LinuxPPC support
+
+N: Philippe Canal
+E: pcanal@fndaub.fnal.gov
+D: interface from ROOT/CINT to native compiler, FNAL support coordinator
+
+N: Federico Carminati
+E: Federico.Carminati@cern.ch
+D: updates in PDG codes and eventgenerator interface classes
+
+N: Mat Dobbs
+E: Matthew.Adam.Dobbs@cern.ch
+D: TLegend class
+
+N: Rutger v.d. Eijk
+E: r36@nikhef.nl
+D: various contributions to GUI classes
+
+N: Valery Fine
+E: fine@bnl.gov
+D: Win95/NT port, OpenGL interface
+
+N: Masaharu Goto
+E: MXJ02154@niftyserve.or.jp
+D: CINT C/C++ interpreter
+
+N: Marc Hemberger
+E: hemberg@clri6a.gsi.de
+D: contributions to the thread classes
+
+N: Jacek M. Holeczek
+E: holeczek@us.edu.pl
+D: dynamic linker interface for IBM/AIX, contributions to MakeTree code
+D: generator
+
+N: Christian Holm
+E: cholm@nbi.dk
+D: important contributions to the build system (configure, Makefile.in,
+D: config.in)
+
+N: Stephan Kluth
+E: skluth@mh1.lbl.gov
+D: changes in rootcint to handle templates
+
+N: Christian Lacunza
+E: lacunza@cdfsg5.lbl.gov
+D: TTabCom [TAB] command line extension class, #1 bug reporter
+
+N: Dave Morrison
+E: dave@bnl.gov
+D: library load path fixes, some Makefile updates
+
+N: Pasha Murat
+E: murat@cdfsga.fnal.gov
+D: Lorentz vector classes, PDG interface
+
+N: Valeriy Onuchin
+E: onuchin@sirius.ihep.su
+D: various contributions to GUI classes (scrolled text in TGTextEntry)
+
+N: Victor Perevoztchikov
+E: perev@bnl.gov
+D: optimized hash function, filename expander
+
+N: Sven Ravndal
+E: Sven.Ravndal@dresdner-bank.com
+D: initial event generator interface
+
+N: Reiner Rohlfs
+E: Reiner.Rohlfs@obs.unige.ch
+D: various contributions to GUI classes
+
+N: Otto Schaile
+E: Otto.Schaile@Physik.Uni-Muenchen.DE
+D: various contributions to GUI classes
+

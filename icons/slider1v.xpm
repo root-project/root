@@ -1,0 +1,22 @@
+/* XPM */
+const char *slider1v_xpm[] = {
+"11 14 5 1",
+"       c white",
+".      c #c0c0c0",
+"X      c #808080",
+"o      c black",
+"O      c None s None",
+"           ",
+" ........Xo",
+" ........Xo",
+" ........Xo",
+" ........Xo",
+" ........Xo",
+" ........Xo",
+" ........Xo",
+"O ......XoO",
+"OO ....XoOO",
+"OOO ..XoOOO",
+"OOOO XoOOOO",
+"OOOOOoOOOOO",
+"OOOOOOOOOOO"};

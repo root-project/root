@@ -1,0 +1,14 @@
+
+#ifndef G__NUMERIC_DLL
+namespace std {
+#pragma include_noerr <numeric.dll>
+}
+#endif
+
+#ifdef __MAKECINT__
+#include <prec_stl/numeric>
+#else
+namespace std {
+#include <numeric>
+}
+#endif

@@ -1,0 +1,36 @@
+# Makefile of ROOT for Solaris with CC 5.0
+
+PLATFORM      = solaris
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = /opt/WS5.0/bin/CC
+CC            = /opt/WS5.0/bin/cc
+CXXFLAGS      = -KPIC -I/usr/openwin/include -D__SunOS_5_6 -library=iostream,no%Cstd \
+                 $(EXTRA_CXXFLAGS)
+CFLAGS        = -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL $(EXTRA_CXXFLAGS) \
+                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -library=iostream,no%Cstd
+CINTCFLAGS    = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL $(EXTRA_CFLAGS) \
+                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO
+
+# Linker:
+LD            = $(CXX)
+LDFLAGS       = $(OPT) -library=iostream,no%Cstd $(EXTRA_LDFLAGS)
+SOFLAGS       = -G
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lm -ldl -lnsl -lsocket
+XLIBS         = ../lib/libXpm.a -L/usr/openwin/lib -lX11
+CILIBS        = -lm -ltermcap -ldl
+
+# Fortran:
+

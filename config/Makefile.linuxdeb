@@ -1,0 +1,36 @@
+# Makefile of ROOT for Linux (Debian) with glibc and egcs
+
+PLATFORM      = linux
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O2
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = g++
+CC            = gcc
+CXXFLAGS      = -Wall -fPIC -DR__GLIBC $(EXTRA_CXXFLAGS)
+CFLAGS        = -Wall -fPIC -DR__GLIBC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -Wall -fPIC -DG__REGEXP $(EXTRA_CXXFLAGS) \
+                -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
+CINTCFLAGS    = -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+
+# Linker:
+LD            = g++
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       = -shared -Wl,-soname,
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lm -ldl -rdynamic
+XLIBS         = -lXpm -L/usr/X11R6/lib -lX11
+CILIBS        = -lm -lncurses -ldl -rdynamic
+
+# Fortran:
+
+

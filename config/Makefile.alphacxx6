@@ -1,0 +1,38 @@
+# Makefile to build ROOT for DEC unix with cxx 6
+
+PLATFORM      = alpha
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O2
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = cxx
+CC            = cc
+CXXFLAGS      = -nostdnew -nortti -D__osf__ -D__alpha $(EXTRA_CXXFLAGS)
+CFLAGS        = $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -nostdnew -DG__DECCXX $(EXTRA_CXXFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
+CINTCFLAGS    = -DG__DECCXX -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+
+# Linker:
+LD            = cxx
+F77LD         = f77
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       = -shared -Wl,-expect_unresolved,*,-soname,
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lm
+XLIBS         = -L$(LPATH) -lXpm -lX11
+CILIBS        = -lm -ltermcap
+
+# Fortran:
+F77LIBS       = /usr/shlib/libFutil.so /usr/shlib/libfor.so /usr/shlib/libots.so
+

@@ -1,0 +1,39 @@
+# Makefile of ROOT for AIX 4.x with glibc and egcs1.1
+# origin Richard Dubois & Donald Benton
+
+PLATFORM      = aix
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = g++
+CC            = gcc
+CXXFLAGS      = -D_AIX41 -DR__AIXGCC -D_AIX32 -fsigned-char $(EXTRA_CXXFLAGS)
+CFLAGS        = -D_AIX41 -DR__AIXGCC -D_AIX32 -fsigned-char $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -fsigned-char -DG__REGEXP -D_POSIX2_SOURCE -DG__P2FCAST \
+                -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -fsigned-char -DG__REGEXP -D_POSIX2_SOURCE \
+                -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                $(EXTRA_CFLAGS)
+
+# Linker:
+LD            = g++
+LDFLAGS       = $(EXTRA_LDFLAGS)
+SOFLAGS       = -Xlinker -G
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lm -lld -lg++
+XLIBS         = -lXpm -lX11 -L/share/lib
+CILIBS        = -lm -L../lib -lCint -lbsd -lcurses -lld
+
+# Fortran:
+
+

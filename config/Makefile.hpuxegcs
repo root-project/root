@@ -1,0 +1,41 @@
+# Makefile of ROOT for HP-UX 10.x with egcs-1.1.1
+
+PLATFORM      = hpux
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = g++
+CC            = gcc
+CXXFLAGS      = -fPIC -I/usr/include/X11R5 $(EXTRA_CXXFLAGS)
+CFLAGS        = -fPIC -I/usr/include/X11R5 $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -fPIC -DG__REGEXP -DG__UNIX $(EXTRA_CXXFLAGS) \
+                -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO
+CINTCFLAGS    = -fPIC -DG__REGEXP -DG__UNIX $(EXTRA_CFLAGS) \
+                -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO
+
+# Linker:
+LD            = g++
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       = -shared -fPIC
+SOEXT         = sl
+
+# System libraries:
+SYSLIBS       = -lm -ldld
+XLIBS         = $(XPMLIB) -L/usr/lib/X11R5 -lX11
+CILIBS        = -L/usr/lib -lm -ldld
+
+# Fortran:
+F77           = fort77
+F77LD         = $(F77)
+F77FLAGS      = -K +ppu
+F77LDFLAGS    = -K +ppu $(OPT)
+F77LIBS       = -lf
+
+

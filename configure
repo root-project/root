@@ -1,0 +1,388 @@
+#! /bin/sh
+
+# Simple configure script.
+#
+# Authors: Christian Holm Christensen and Fons Rademakers
+
+# Still to do: need to find automatically: TTF, OpenGL, cernlib, rfio, SRP
+
+ARCHS=config/ARCHS
+MAKEIN=config/Makefile.in
+MAKEOUT=config/Makefile.config
+CONFIN=config/config.in
+CONFOUT=include/config.h
+RCONFIN=config/root-config.in
+RCONFOUT=bin/root-config
+TMAKEIN=test/Makefile.in
+TMAKEOUT=test/Makefile
+
+
+if (echo "testing\c"; echo 1,2,3) | grep c >/dev/null; then
+  if (echo -n testing; echo 1,2,3) | sed s/-n/xn/ | grep xn >/dev/null; then
+    ac_n= ac_c='
+' ac_t='	'
+  else
+    ac_n=-n ac_c= ac_t=
+  fi
+else
+  ac_n= ac_c='\c' ac_t=
+fi
+
+
+confhelp() {
+    echo "Usage:     $0 <architecture> [flag=value] "
+    echo ""
+    echo "    FLAG           DESCRIPTION              DEFAULT"
+    echo "    --prefix       Installation prefix      (/usr/local)"
+    echo "    --bindir       Binary installation dir  (<prefix>/bin)"
+    echo "    --libdir       Library installation dir (<prefix>/lib/root)"
+    echo "    --incdir       Header installation dir  (<prefix>/include/root)"
+    echo "    --etcdir       Config installation dir  (/etc/root)"
+    echo "    --datadir      Data installation dir    (<prefix>/share/root)"
+    echo "    --macrodir     Macro installation dir   (<datadir>/macros)"
+    echo "    --cintincdir   CINT interpeted headers  (<datadir>/cint)"
+    echo "    --iconpath     Icon installation dir    (<datadir>/icons)"
+    echo "    --srcdir       Sources installation dir (<datadir>/src)"
+    echo "    --docdir       Documentation            (<prefix>/doc)"
+    echo "    --testdir      Tests                    (<prefix>/doc/root/test)"
+    echo "    --tutdir       Tutorials                (<prefix>/doc/root/tutorial)"
+    echo ""
+    echo "    --with-xpm           XPM support, path of libXpm.a"
+    echo "    --with-ttf-incdir    TTF support, location of freetype.h"
+    echo "    --with-ttf-libdir    TTF support, location of libttf.so"
+    echo "    --with-ttf-fontdir   TTF support, location of TTF fonts"
+    echo "    --with-opengl-incdir OpenGL support, location of gl.h"
+    echo "    --with-opengl-libdir OpenGL support, location of libMesaGL.so"
+    echo "    --with-cern-libdir   HBOOK converter, location of CERN libs dir"
+    echo "    --with-rfio          RFIO support, path of libshift.a"
+    echo "    --with-thread        Thread support, path of libpthread.so"
+    echo "    --with-mysql-incdir  MySQL support, location of mysql.h"
+    echo "    --with-mysql-libdir  MySQL support, location of libmysqlclient.so"
+    echo "    --with-srp           Secure Remote Passwd support, location of SRP distribution"
+    echo "    --with-afs           AFS support, location of AFS distribution"
+    echo "    --with-sys-iconpath  Extra icon path"
+    echo ""
+    cat config/ARCHS
+}
+
+if [ $# -lt 1 ] ; then
+   echo "You must give architecture as first argument - try $0 --help"
+   exit 1
+else
+   case $1 in
+   -h|--help) confhelp ; exit 0 ;;
+   *) if `grep "^$1" $ARCHS >/dev/null 2>&1` ; then
+         arch=$1
+         echo "Configuring for $arch"
+         shift
+      else
+         echo "Invalid architecture. Try $0 --help"
+         exit 1
+      fi
+      ;;
+   esac
+fi
+
+cp -f $MAKEIN Makefile.tmp
+cp -f $CONFIN config.tmp
+cp -f $RCONFIN root-config.tmp
+cp -f $TMAKEIN TMakefile.tmp
+
+# check for MySQL include and library
+echo $ac_n "Checking for mysql.h... $ac_c"
+mysqlincdirs="$MYSQL $MYSQL/include /usr/include /usr/local/include \
+              /usr/include/mysql /usr/local/include/mysql /usr/mysql/lib \
+              /use/local/mysql/lib /usr/mysql /usr/local/mysql /opt/mysql \
+              /opt/mysql/include"
+
+mysqlincdir=NO
+for i in $mysqlincdirs; do
+   for j in mysql.h; do
+      if [ -r "$i/$j" ]; then
+         mysqlincdir=$i
+         break 2
+      fi
+   done
+done
+echo $mysqlincdir
+
+echo $ac_n "Checking for libmysqlclient... $ac_c"
+mysqllibdirs="$MYSQL $MYSQL/lib /usr/lib /usr/local/lib /usr/lib/mysql \
+              /usr/local/lib/mysql /usr/mysql/lib /use/local/mysql/lib \
+              /usr/mysql /usr/local/mysql /opt/mysql /opt/mysql/lib"
+
+mysqllibdir=NO
+for i in $mysqllibdirs; do
+   for j in libmysqlclient.a; do
+      if [ -r "$i/$j" ]; then
+         mysqllibdir=$i
+         break 2
+      fi
+   done
+done
+echo $mysqllibdir
+
+# check for Xpm library
+echo $ac_n "Checking for libXpm.a... $ac_c"
+xpmlibdirs="$XPM $XPM/lib /usr/lib /usr/local/lib \
+              /usr/lib/X11 /usr/local/lib/X11 /usr/X11R6/lib \
+              /use/local/X11R6/lib /usr/X11/lib"
+
+xpmlib=NO
+for i in $xpmlibdirs; do
+   for j in libXpm.a; do
+      if [ -r "$i/$j" ]; then
+         xpmlib=$i/$j
+         break 2
+      fi
+   done
+done
+echo $xpmlib
+
+if [ $# -gt 0 ] ; then
+   while [ "$1" != "" ] ; do
+      case "$1" in
+      -*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+      *) optarg= ;;
+      esac
+
+      case $1 in
+      --help|-h) confhelp ;   exit 0 ;;
+      --with-xpm=*)           xpmlib=$optarg        ;;
+      --with-ttf-incdir=*)    ttfincdir=$optarg     ;;
+      --with-ttf-libdir=*)    ttflibdir=$optarg     ;;
+      --with-ttf-fontdir=*)   ttffontdir=$optarg    ;;
+      --with-opengl-incdir=*) openglincdir=$optarg  ;;
+      --with-opengl-libdir=*) opengllibdir=$optarg  ;;
+      --with-cern-libdir=*)   cernlibdir=$optarg    ;;
+      --with-rfio=*)          rfio=$optarg          ;;
+      --with-thread=*)        thread=$optarg        ;;
+      --with-mysql-incdir=*)  mysqlincdir=$optarg   ;;
+      --with-mysql-libdir=*)  mysqllibdir=$optarg   ;;
+      --with-srp=*)           srpdir=$optarg        ;;
+      --with-afs=*)           afsdir=$optarg        ;;
+      --with-sys-iconpath=*)  extraiconpath=$optarg ;;
+      --prefix*)      haveconfig=-DHAVE_CONFIG ; prefix=$optarg      ;;
+      --bindir=*)     haveconfig=-DHAVE_CONFIG ; bindir=$optarg      ;;
+      --libdir=*)     haveconfig=-DHAVE_CONFIG ; libdir=$optarg      ;;
+      --incdir=*)     haveconfig=-DHAVE_CONFIG ; incdir=$optarg      ;;
+      --etcdir=*)     haveconfig=-DHAVE_CONFIG ; etcdir=$optarg      ;;
+      --datadir=*)    haveconfig=-DHAVE_CONFIG ; datadir=$optarg     ;;
+      --macrodir=*)   haveconfig=-DHAVE_CONFIG ; macrodir=$optarg    ;;
+      --cintincdir=*) haveconfig=-DHAVE_CONFIG ; cintincdir=$optarg  ;;
+      --iconpath=*)   haveconfig=-DHAVE_CONFIG ; iconpath=$optarg    ;;
+      --srcdir=*)     haveconfig=-DHAVE_CONFIG ; srcdir=$optarg      ;;
+      --docdir=*)     haveconfig=-DHAVE_CONFIG ; docdir=$optarg      ;;
+      --testdir=*)    haveconfig=-DHAVE_CONFIG ; testdir=$optarg     ;;
+      --tutdir=*)     haveconfig=-DHAVE_CONFIG ; tutdir=$optarg      ;;
+      *)  echo "Invalid option. Try $0 --help" ; exit 1 ;;
+      esac
+      shift
+   done
+fi
+
+# create needed directories
+if [ ! -d include ]; then
+   echo $ac_n "Creating include ... $ac_c"
+   mkdir include
+   echo "done"
+fi
+if [ ! -d bin ]; then
+    echo $ac_n "Creating bin ... $ac_c"
+    mkdir bin
+    echo "done"
+fi
+if [ ! -d lib ]; then
+    echo $ac_n "Creating lib ... $ac_c"
+    mkdir lib
+    echo "done"
+fi
+
+# On win32 we always have OpenGL available (is this true?)
+if [ "$arch" = "win32" ]; then
+   openglincdir=include
+fi
+
+if [ -n "$haveconfig" ] ; then
+    if [ -z "$prefix" ] ;       then prefix=/usr/local ; fi
+    if [ -z "$bindir" ] ;       then bindir=$prefix/bin ; fi
+    if [ -z "$libdir" ] ;       then libdir=$prefix/lib/root ; fi
+    if [ -z "$incdir" ] ;       then incdir=$prefix/include/root ; fi
+    if [ -z "$etcdir" ] ;       then etcdir=/etc/root ; fi
+    if [ -z "$datadir" ] ;      then datadir=$prefix/share/root ; fi
+    if [ -z "$macrodir" ] ;     then macrodir=$datadir/macros ; fi
+    if [ -z "$cintincdir" ] ;   then cintincdir=$datadir/cint; fi
+    if [ -z "$iconpath" ] ;     then iconpath=$datadir/icons ; fi
+    if [ -z "$srcdir" ] ;       then srcdir=$datadir/src ; fi
+    if [ -z "$ttflibdir" ] ;    then ttflibdir=$libdir ; fi
+    if [ -z "$ttffontdir" ] ;   then ttffontdir=$datadir/fonts ; fi
+    if [ -z "$docdir" ] ;       then docdir=$prefix/doc ; fi
+    if [ -z "$testdir" ] ;      then testdir=$docdir/root/test ; fi
+    if [ -z "$tutdir" ] ;       then tutdir=$docdir/root/tutorials ; fi
+
+    if [ "$xpmlib" = "NO" ]; then unset xpmlib ; fi
+    if [ -n "$TTF" ] && [ ! -h ttf ]; then ln -s $TTF ttf ; fi
+    if [ -z "$ttfincdir" ] && [ -d "$ROOTSYS/ttf/include" ]; then
+       ttfincdir=\$\(ROOTSYS\)/ttf/include ; fi
+    if [ -n "$OPENGL" ] && [ ! -h opengl ]; then ln -s $OPENGL opengl ; fi
+    if [ -z "$openglincdir" ] && [ -d "$ROOTSYS/opengl/include" ]; then
+       openglincdir=\$\(ROOTSYS\)/opengl/include ; fi
+    if [ -z "$cernlibdir" ] && [ -n "$CERNLIB" ] && [ -d "$CERNLIB" ]; then
+       cernlibdir=$CERNLIB ; fi
+    if [ -z "$rfio" ] && [ -n "$RFIO" ]; then rfio="$RFIO" ; fi
+    if [ -z "$thread" ] && [ -n "$THREAD" ]; then thread="$THREAD" ; fi
+    if [ "$mysqlincdir" = "NO" ]; then unset mysqlincdir ; fi
+    if [ "$mysqllibdir" = "NO" ]; then unset mysqllibdir ; fi
+    if [ -z "$srpdir" ] && [ -n "$SRP" ]; then srpdir="$SRP" ; fi
+    if [ -z "$afsdir" ] && [ -n "$AFS" ]; then afsdir="$AFS" ; fi
+
+    sed -e "s|@cflags|-DHAVE_CONFIG|"                  \
+        -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
+        < Makefile.tmp > Makefile.tmpp
+    mv Makefile.tmpp Makefile.tmp
+
+else
+    prefix=\$\(ROOTSYS\)
+    bindir=\$\(ROOTSYS\)/bin
+    libdir=\$\(ROOTSYS\)/lib
+    incdir=\$\(ROOTSYS\)/include
+    etcdir=\$\(ROOTSYS\)
+    datadir=\$\(ROOTSYS\)
+    macrodir=\$\(ROOTSYS\)/macros
+    cintincdir=\$\(ROOTSYS\)/cint
+    iconpath=\$\(ROOTSYS\)/icons
+    srcdir=\$\(ROOTSYS\)/src
+    docdir=\$\(ROOTSYS\)
+    testdir=\$\(ROOTSYS\)/test
+    tutdir=\$\(ROOTSYS\)/tutorials
+
+    if [ "$xpmlib" = "NO" ]; then unset xpmlib ; fi
+    if [ -n "$TTF" ] && [ ! -h ttf ]; then ln -s $TTF ttf ; fi
+    if [ -z "$ttflibdir" ] && [ -d "$ROOTSYS/ttf/lib" ]; then
+       ttflibdir=\$\(ROOTSYS\)/ttf/lib ; fi
+    if [ -z "$ttffontdir" ] && [ -d "$ROOTSYS/ttf/fonts" ]; then
+       ttffontdir=\$\(ROOTSYS\)/ttf/fonts ; fi
+    if [ -z "$ttfincdir" ] && [ -d "$ROOTSYS/ttf/include" ]; then
+       ttfincdir=\$\(ROOTSYS\)/ttf/include ; fi
+    if [ -n "$OPENGL" ] && [ ! -h opengl ]; then ln -s $OPENGL opengl ; fi
+    if [ -z "$openglincdir" ] && [ -d "$ROOTSYS/opengl/include" ]; then
+       openglincdir=\$\(ROOTSYS\)/opengl/include ; fi
+    if [ -z "$opengllibdir" ] && [ -d "$ROOTSYS/opengl/lib" ]; then
+       opengllibdir=\$\(ROOTSYS\)/opengl/lib ; fi
+    if [ -z "$cernlibdir" ] && [ -n "$CERNLIB" ] && [ -d "$CERNLIB" ]; then
+       cernlibdir=$CERNLIB ; fi
+    if [ -z "$rfio" ] && [ -n "$RFIO" ]; then rfio="$RFIO" ; fi
+    if [ -z "$thread" ] && [ -n "$THREAD" ]; then thread="$THREAD" ; fi
+    if [ "$mysqlincdir" = "NO" ]; then unset mysqlincdir ; fi
+    if [ "$mysqllibdir" = "NO" ]; then unset mysqllibdir ; fi
+    if [ -z "$srpdir" ] && [ -n "$SRP" ]; then srpdir="$SRP" ; fi
+    if [ -z "$afsdir" ] && [ -n "$AFS" ]; then afsdir="$AFS" ; fi
+
+    sed -e "s|@cflags||" \
+        -e "s|@ldflags@||" \
+        < Makefile.tmp > Makefile.tmpp
+    mv Makefile.tmpp Makefile.tmp
+fi
+
+echo $ac_n "Writing $MAKEOUT ... $ac_c"
+sed -e "s|@architecture@|$arch|"         \
+    -e "s|@ldflags@|-L$libdir|"          \
+    -e "s|@bindir@|$bindir|"             \
+    -e "s|@libdir@|$libdir|"             \
+    -e "s|@incdir@|$incdir|"             \
+    -e "s|@etcdir@|$etcdir|"             \
+    -e "s|@datadir@|$datadir|"           \
+    -e "s|@macrodir@|$macrodir|"         \
+    -e "s|@cintincdir@|$cintincdir|"     \
+    -e "s|@iconpath@|$iconpath|"         \
+    -e "s|@srcdir@|$srcdir|"             \
+    -e "s|@xpmlib@|$xpmlib|"             \
+    -e "s|@ttflibdir@|$ttflibdir|"       \
+    -e "s|@ttffontdir@|$ttffontdir|"     \
+    -e "s|@ttfincdir@|$ttfincdir|"       \
+    -e "s|@opengllibdir@|$opengllibdir|" \
+    -e "s|@openglincdir@|$openglincdir|" \
+    -e "s|@cernlibdir@|$cernlibdir|"     \
+    -e "s|@rfio@|$rfio|"                 \
+    -e "s|@thread@|$thread|"             \
+    -e "s|@mysqlincdir@|$mysqlincdir|"   \
+    -e "s|@mysqllibdir@|$mysqllibdir|"   \
+    -e "s|@srpdir@|$srpdir|"             \
+    -e "s|@afsdir@|$afsdir|"             \
+    -e "s|@docdir@|$docdir|"             \
+    -e "s|@testdir@|$testdir|"           \
+    -e "s|@tutdir@|$tutdir|"             \
+    < Makefile.tmp > $MAKEOUT
+rm -f Makefile.tmp
+echo "done"
+
+echo $ac_n "Writing $TMAKEOUT ... $ac_c"
+sed -e "s|@architecture@|$arch|"         \
+    < TMakefile.tmp > $TMAKEOUT
+rm -f TMakefile.tmp
+echo "done"
+
+echo $ac_n "Writing $CONFOUT ... $ac_c"
+sed -e "s|@architecture@|$arch|"           \
+    -e "s|@prefix@|$prefix|"               \
+    -e "s|@bindir@|$bindir|"               \
+    -e "s|@libdir@|$libdir|"               \
+    -e "s|@incdir@|$incdir|"               \
+    -e "s|@etcdir@|$etcdir|"               \
+    -e "s|@datadir@|$datadir|"             \
+    -e "s|@macrodir@|$macrodir|"           \
+    -e "s|@cintincdir@|$cintincdir|"       \
+    -e "s|@iconpath@|$iconpath|"           \
+    -e "s|@srcdir@|$srcdir|"               \
+    -e "s|@ttffontdir@|$ttffontdir|"       \
+    -e "s|@ttflibdir@|$ttflibdir|"         \
+    -e "s|@extraiconpath@|$extraiconpath|" \
+    < config.tmp > $CONFOUT
+rm -f config.tmp
+echo "done"
+
+echo $ac_n "Writing $RCONFOUT ... $ac_c"
+prefix2=$prefix
+if [ "$prefix2" = "\$(ROOTSYS)" ]; then
+   prefix2=\$ROOTSYS
+fi
+sed -e "s|@architecture@|$arch|"           \
+    -e "s|@prefix@|$prefix2|"              \
+   < root-config.tmp > $RCONFOUT
+rm -f root-config.tmp
+chmod 755 $RCONFOUT
+echo "done"
+
+# On win32 convert all files in tutorials and test to \r\n convention
+if [ "$arch" = "win32" ]; then
+   echo $ac_n "Converting files in tutorials and test to DOS format ... $ac_c"
+   for i in tutorials/*.C tutorials/*.sql test/*.cxx test/*.h \
+            test/Makefile* test/README system.rootrc
+   do
+      sed 's/$//' $i > r__tmp
+      touch -r $i r__tmp
+      mv -f r__tmp $i
+   done
+   echo "done"
+fi
+
+echo ""
+if [ -z "$ttfincdir" ] || [ -z "$openglincdir" ]; then
+   if [ -z "$ttfincdir" ] && [ "$arch" != "win32" ]; then
+      echo "To build the ROOT TrueType font add-on library see README/INSTALL."
+   fi
+   if [ -z "$openglincdir" ]; then
+      echo "To build the ROOT OpenGL add-on library see README/INSTALL."
+   fi
+   echo ""
+   echo ""
+fi
+
+# list the possible Makefiles
+echo "To build ROOT type:"
+echo ""
+echo "   gmake"
+echo "   gmake install"
+echo ""
+
+exit 0
