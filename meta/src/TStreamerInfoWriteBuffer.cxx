@@ -402,11 +402,11 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                TClass *cl                 = fComp[i].fClass;
                TMemberStreamer *pstreamer = fComp[i].fStreamer;
 
-               if (fgStreamMemberWise && aElement->GetClassPointer()->CanSplit()) {
+               if (This->GetStreamMemberWise() && cl->CanSplit()) {
                   // Let's save the collection member-wise.
 
                   UInt_t pos = b.WriteVersionMemberWise(This->IsA(),kTRUE);
-                  TVirtualCollectionProxy *proxy = aElement->GetClassPointer()->GetCollectionProxy();
+                  TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
                   TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
                   DOLOOP {
                      char **contp = (char**)(arr[k]+ioffset);
@@ -442,11 +442,11 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             {
                TClass *cl                 = fComp[i].fClass;
                TMemberStreamer *pstreamer = fComp[i].fStreamer;
-               if (fgStreamMemberWise && aElement->GetClassPointer()->CanSplit()) {
+               if (This->GetStreamMemberWise() && cl->CanSplit()) {
                   // Let's save the collection in member-wise order.
 
                   UInt_t pos = b.WriteVersionMemberWise(This->IsA(),kTRUE);
-                  TVirtualCollectionProxy *proxy = aElement->GetClassPointer()->GetCollectionProxy();
+                  TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
                   TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
                   DOLOOP {
                      char *obj = (char*)(arr[k]+ioffset);
@@ -455,7 +455,6 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                      int size = cl->Size();
 
                      for(Int_t j=0; j<n; j++,obj+=size) {
-                        //((TClass*)cl)->Streamer(obj,b);
                         TVirtualCollectionProxy::TPushPop helper( proxy, obj );
                         Int_t nobjects = proxy->Size();
                         b << nobjects;
