@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGFrame.cxx,v 1.78 2004/09/13 09:10:08 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsEditor.h,v 1.1 2004/09/13 12:47:35 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -57,7 +57,7 @@ public:
    void     ChangeSelected(TGFrame *);
    void     UpdateState();
 
-   ClassDef(TGuiBldHintsEditor,0)
+   ClassDef(TGuiBldHintsEditor,0) // layout hints editor
 };
 
 #endif

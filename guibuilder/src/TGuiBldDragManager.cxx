@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.5 2004/09/20 15:33:26 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.6 2004/09/20 21:00:40 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -2246,6 +2246,7 @@ Bool_t TGuiBldDragManager::HandleClientMessage(Event_t *event)
 
          delete fBuilder;
          fBuilder = 0;
+         gGuiBuilder = 0;
 
          delete fEditor;
          fEditor = 0;
@@ -2264,6 +2265,7 @@ Bool_t TGuiBldDragManager::HandleClientMessage(Event_t *event)
 
       if (fBuilder && (event->fWindow == fBuilder->GetId())) {
          fBuilder = 0;
+         gGuiBuilder = 0;
       }
 
       if (fEditor && (event->fWindow == fEditor->GetMainFrame()->GetId())) {
@@ -2472,7 +2474,7 @@ void TGuiBldDragManager::Compact(Bool_t global)
 
    if (global) {
       if (!fBuilder) comp = (TGCompositeFrame*)fClient->GetRoot()->GetMainFrame();
-      else comp = fBuilder->FindEditableMdiFrame(fClient->GetRoot());
+      else comp = (TGCompositeFrame*)fBuilder->FindEditableMdiFrame(fClient->GetRoot())->GetParent();
    } else {
       if (fPimpl->fGrab &&
           fPimpl->fGrab->InheritsFrom(TGCompositeFrame::Class())) {

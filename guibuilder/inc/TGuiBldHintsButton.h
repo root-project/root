@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGFrame.cxx,v 1.78 2004/09/13 09:10:08 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsButton.h,v 1.1 2004/09/13 12:47:35 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -43,7 +43,7 @@ public:
    TGuiBldHintsButton(const TGWindow *p, Int_t id);
    virtual ~TGuiBldHintsButton() {}
 
-   ClassDef(TGuiBldHintsButton,0)
+   ClassDef(TGuiBldHintsButton,0) //button used to edit layout hints
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.h,v 1.3 2004/09/20 19:07:23 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.h,v 1.4 2004/09/20 21:00:40 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -61,6 +61,7 @@ private:
    void EnableLassoButtons(Bool_t on = kTRUE);
    void EnableSelectedButtons(Bool_t on = kTRUE);
    void EnableEditButtons(Bool_t on = kTRUE);
+   void BindKeys();
 
 public:
    TGuiBuilder(const TGWindow *p = 0);

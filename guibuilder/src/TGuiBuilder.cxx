@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.5 2004/09/20 21:00:40 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.6 2004/09/21 05:16:21 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -58,12 +58,13 @@ enum EMenuIds {
 };
 
 const char gHelpBuilder[] = "\
- o Ctrl-Double-Click - Start/Stop edit mode\n\
+ o Press Ctrl-Double-Click to start/stop edit mode\n\
+ o Press Double-Click to activate quick edit action (definded in root.mimes)\n\
 \n\
                Selection, grabbing, dropping\n\
      ************************************************\n\
- o Use left mouse button Click or Ctrl-Click to select an object to edit.\n\
- o Use right mouse button to activate context menu\n\
+ o Press left mouse button Click or Ctrl-Click to select an object to edit.\n\
+ o Press right mouse button to activate context menu\n\
  o Mutilple selection (grabbing):\n\
       - draw lasso and press Return key\n\
       - press Shift key and draw lasso\n\
@@ -72,23 +73,23 @@ const char gHelpBuilder[] = "\
  o Changing layout order:\n\
       - select frame and use arrow keys to change layout order\n\
  o Alignment:\n\
-      - draw lasso and use arrow keys (or Shift-Arrow key) to align frames\n\
+      - draw lasso and press arrow keys (or Shift-Arrow key) to align frames\n\
 \n\
                     Key shortcuts\n\
      ************************************************\n\
- o Ctrl-X - Cut\n\
- o Ctrl-C - Copy\n\
- o Ctrl-V - Paste\n\
- o Ctrl-R - Replace\n\
- o Ctrl-L - Compact Layout\n\
- o Ctrl-B - Break Layout\n\
- o Ctrl-H - Switch Horizontal-Vertical Layout\n\
- o Ctrl-G - Switch ON/OFF Grid\n\
- o Ctrl-S - Save\n\
- o Ctrl-O - Open ROOT macro file\n\
- o Ctrl-N - new TGMainFrame\n\
- o Ctrl-Z - Undo (not implemented)\n\
- o Shift-Ctrl-Z - Redo (not implemented)\n\
+ o Ctrl-X - cut\n\
+ o Ctrl-C - copy\n\
+ o Ctrl-V - paste\n\
+ o Ctrl-R - replace\n\
+ o Ctrl-L - compact Layout\n\
+ o Ctrl-B - break Layout\n\
+ o Ctrl-H - switch Horizontal-Vertical Layout\n\
+ o Ctrl-G - switch ON/OFF Grid\n\
+ o Ctrl-S - save\n\
+ o Ctrl-O - open ROOT macro file\n\
+ o Ctrl-N - create new main frame\n\
+ o Ctrl-Z - undo last action (not implemented)\n\
+ o Shift-Ctrl-Z - redo (not implemented)\n\
 ";
 
 
@@ -321,12 +322,6 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
    fSelected = 0;
    Update();
 
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_n),
-                      kKeyControlMask, kTRUE);
-
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_o),
-                      kKeyControlMask, kTRUE);
-
    fMenuFile->Connect("Activated(Int_t)", "TGuiBuilder", this,
                       "HandleMenu(Int_t)");
    fMenuWindow->Connect("Activated(Int_t)", "TGuiBuilder", this,
@@ -335,6 +330,8 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
                       "HandleMenu(Int_t)");
  
    fMain->Connect("FrameClosed(Int_t)", "TGuiBuilder", this, "HandleWindowClosed(Int_t)");
+
+   BindKeys();
 
    MapRaised();
 }
@@ -668,7 +665,11 @@ Bool_t TGuiBuilder::HandleKey(Event_t *event)
          NewProject(event);
       } else if (str[0] == 15) { // ctrl-o
          OpenProject(event);
+      } else {
+         fManager->HandleKey(event);
       }
+   } else {
+      fManager->HandleKey(event);
    }
    return kTRUE;
 }
@@ -941,4 +942,97 @@ void TGuiBuilder::EraseStatusBar()
    if (!fStatusBar) return;
 
    fStatusBar->SetText("");
+}
+
+//______________________________________________________________________________
+void TGuiBuilder::BindKeys()
+{
+   //
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_n),
+                      kKeyControlMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_o),
+                      kKeyControlMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Return),
+                      kKeyControlMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Return),
+                      0, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Enter),
+                      kKeyControlMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Enter),
+                      0, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_x),
+                      kKeyControlMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_c),
+                      kKeyControlMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_v),
+                      kKeyControlMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_r),
+                      kKeyControlMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_z),
+                      kKeyControlMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_z),
+                      kKeyControlMask | kKeyShiftMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_b),
+                      kKeyControlMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_l),
+                      kKeyControlMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_g),
+                      kKeyControlMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_h),
+                      kKeyControlMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Delete),
+                      0, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Backspace),
+                      0, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Space),
+                      0, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Left),
+                      0, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Right),
+                      0, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Up),
+                      0, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Down),
+                      0, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Left),
+                      kKeyShiftMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Right),
+                      kKeyShiftMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Up),
+                      kKeyShiftMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Down),
+                      kKeyShiftMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Delete),
+                      kKeyShiftMask, kTRUE);
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Backspace),
+                      kKeyShiftMask, kTRUE);
 }
