@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.36 2004/04/20 21:32:02 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.37 2004/04/27 12:06:39 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -2094,6 +2094,9 @@ void RpdKrb5Auth(const char *sstr)
          ErrorInfo("RpdKrb5Auth: received target user %s ",buffer);
    }
 
+   if (gDebug > 2)
+     ErrorInfo("RpdKrb5Auth: using ticket file: %s ... ",getenv("KRB5CCNAME"));
+
    // const char* targetUser = gUser; // "cafuser";
    if (krb5_kuserok(gKcontext, ticket->enc_part2->client,
                                      targetUser.c_str())) {
@@ -2155,20 +2158,23 @@ void RpdKrb5Auth(const char *sstr)
                    error_message(retval));
       }
 
+      bool forwarding = true;
       krb5_creds **creds = 0;
       if ((retval = krb5_rd_cred(gKcontext, auth_context,
                                  &forwardCreds, &creds, 0))) {
          ErrorInfo("RpdKrb5Auth: rd_cred failed--%s", error_message(retval));
-         RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, 0);
-         return;
+         forwarding = false;
+//          RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, 0); 
+//          return;
       }
       if (data) delete[] data;
 
       struct passwd *pw = getpwnam(gUser);
-      if (pw) {
+      if (forwarding && pw) {
          Int_t fromUid = getuid();
+         Int_t fromEUid = geteuid();
 
-         if (setresuid(pw->pw_uid, pw->pw_uid, fromUid) == -1) {
+         if (setresuid(pw->pw_uid, pw->pw_uid, fromEUid) == -1) {
             ErrorInfo("RpdKrb5Auth: can't setuid for user %s", gUser);
             NetSend(kErrNotAllowed, kROOTD_ERR);
             RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
@@ -2190,7 +2196,9 @@ void RpdKrb5Auth(const char *sstr)
          }
 
          krb5_ccache cache = 0;
-         if ((retval = krb5_cc_default(context, &cache))) {
+         char ccacheName[256];
+         sprintf(ccacheName,"%s_root_%d",krb5_cc_default_name(context),getpid());
+         if ((retval = krb5_cc_resolve(context, ccacheName, &cache))) {
             ErrorInfo("RpdKrb5Auth: cc_default failed--%s",
                       error_message(retval));
             NetSend(kErrNotAllowed, kROOTD_ERR);
@@ -2198,6 +2206,9 @@ void RpdKrb5Auth(const char *sstr)
             RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
             return;
          }
+         char ccname[265];
+         sprintf(ccname,"%s",ccacheName);
+         setenv("KRB5CCNAME",ccname,1);
 
          if (gDebug>5)
             ErrorInfo("RpdKrb5Auth: working (1) on ticket to cache (%s) ... ",
@@ -2258,7 +2269,7 @@ void RpdKrb5Auth(const char *sstr)
             ErrorInfo("RpdKrb5Auth: done ticket to cache (%s) ... ",
                       cacheName);
 
-         if (setresuid(fromUid,fromUid, fromUid) == -1) {
+         if (setresuid(fromUid,fromEUid,pw->pw_uid) == -1) {
             ErrorInfo("RpdKrb5Auth: can't setuid back to original uid");
             NetSend(kErrNotAllowed, kROOTD_ERR);
             return;
