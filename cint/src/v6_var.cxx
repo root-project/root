@@ -2894,7 +2894,7 @@ struct G__var_array *varglobal,*varlocal;
 	  break;
 	}
 	/* 1666 G__ASSIGN_VAR(G__INTALLOC,int,G__int) */
-	G__ASSIGN_VAR(G__CHARALLOC,int,G__int)
+	G__ASSIGN_VAR(G__CHARALLOC,unsigned char,G__int)
 #endif
       case 'i': /* int */
 	G__ASSIGN_VAR(G__INTALLOC,int,G__int)
