@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.69 2001/05/15 07:51:45 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.70 2001/05/17 13:36:46 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -38,7 +38,7 @@ Bool_t  TStreamerInfo::fgOptimize = kTRUE;
 
 const Int_t kRegrouped = TStreamerInfo::kOffsetL;
 
-ClassImp(TStreamerInfo)
+ClassImp(TStreamerInfo) 
 
 //______________________________________________________________________________
 TStreamerInfo::TStreamerInfo()
@@ -1175,6 +1175,7 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       atype = i;
       aleng = len;
    } else {
+      if (i < 0) {printf("NULL\n"); return;}
       ladd  = pointer + fOffset[i];
       atype = fType[i];
       aleng = fLength[i];
