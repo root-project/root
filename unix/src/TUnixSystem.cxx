@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.60 2003/06/17 15:19:56 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.61 2003/06/17 21:05:37 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -529,7 +529,7 @@ Int_t TUnixSystem::GetFPEMask()
 #endif
 
 #if defined(R__MACOSX)
-   Ulong64_t oldmask;
+   Long64_t oldmask;
    fegetenvd(oldmask);
 
    if (oldmask & FE_ENABLE_INVALID  )   mask |= kInvalid;
