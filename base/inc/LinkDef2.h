@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.24 2003/08/21 14:31:01 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.25 2004/01/10 10:52:29 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -54,11 +54,19 @@
 #pragma link C++ function operator==(const TRef&,const TRef&);
 #pragma link C++ function operator!=(const TRef&,const TRef&);
 
+#pragma link C++ function operator*(Double_t, const TComplex&);
+#pragma link C++ function operator+(Double_t, const TComplex&);
+#pragma link C++ function operator/(Double_t, const TComplex&);
+#pragma link C++ function operator-(Double_t, const TComplex&);
+#pragma link C++ function operator>>(istream&,TComplex&);
+#pragma link C++ function operator<<(ostream&,const TComplex&);
+
 #pragma link C++ function ConnectCINT(TQObject*,char*,char*);
 
 #pragma link C++ struct UserGroup_t;
 
 #pragma link C++ class TMath;
+#pragma link C++ class TComplex+;
 #pragma link C++ class TExec+;
 #pragma link C++ class TFolder+;
 #pragma link C++ class TFree;
