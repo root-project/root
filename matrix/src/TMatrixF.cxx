@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.10 2004/03/21 21:15:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.11 2004/03/23 15:16:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TMatrixF.h"
 #include "TMatrixFCramerInv.h"
 #include "TDecompLU.h"
+#include "TMatrixDEigen.h"
 
 ClassImp(TMatrixF)
 
@@ -1748,6 +1749,18 @@ TMatrixF &TMatrixF::Apply(const TElementPosActionF &action)
   Assert(ep == this->GetMatrixArray()+fNelems);
 
   return *this;
+}
+
+//______________________________________________________________________________
+const TMatrixF TMatrixF::EigenVectors(TVectorF &eigenValues) const
+{
+  // Return a matrix containing the eigen-vectors ordered by descending eigen-values
+  // If the matrix is asymmetric, only the real part of the eigen-values is 
+  // returned . For full functionality use TMatrixDEigen .
+
+  TMatrixDEigen eigen(*this);
+  eigenValues = eigen.GetEigenValuesRe();
+  return eigen.GetEigenVectors();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.3 2004/01/27 17:26:20 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.4 2004/03/19 14:20:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -118,7 +118,7 @@ public:
                                                           return fPtr[acoln]; }
   inline const Float_t      &operator [](Int_t i) const { return (*(const TMatrixFRow_const *)this)(i); }
 
-  ClassDef(TMatrixFRow_const,0)  // One row of a matrix (double precision)
+  ClassDef(TMatrixFRow_const,0)  // One row of a matrix (single precision)
 };
 
 class TMatrixFRow : public TMatrixFRow_const {
@@ -146,7 +146,7 @@ public:
   void operator+=(const TMatrixFRow_const &r);
   void operator*=(const TMatrixFRow_const &r);
 
-  ClassDef(TMatrixFRow,0)  // One row of a matrix (double precision)
+  ClassDef(TMatrixFRow,0)  // One row of a matrix (single precision)
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -177,7 +177,7 @@ public:
                                                           return fPtr[arown*fInc]; }
   inline const Float_t  &operator [](Int_t i) const { return ((*(const TMatrixFColumn_const *)this)(i)); }
 
-  ClassDef(TMatrixFColumn_const,0)  // One column of a matrix (double precision)
+  ClassDef(TMatrixFColumn_const,0)  // One column of a matrix (single precision)
 };
 
 class TMatrixFColumn : public TMatrixFColumn_const {
@@ -205,7 +205,7 @@ public:
   void operator+=(const TMatrixFColumn_const &c);
   void operator*=(const TMatrixFColumn_const &c);
 
-  ClassDef(TMatrixFColumn,0)  // One column of a matrix (double precision)
+  ClassDef(TMatrixFColumn,0)  // One column of a matrix (single precision)
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -226,7 +226,7 @@ protected:
 
 public:
   TMatrixFDiag_const() { fMatrix = 0; fInc = 0; fNdiag = 0; fPtr = 0; }
-  TMatrixFDiag_const(const TMatrixFBase &matrix,Int_t dummy=0);
+  TMatrixFDiag_const(const TMatrixFBase &matrix);
 
   inline const TMatrixFBase *GetMatrix() const { return fMatrix; }
   inline const Float_t      *GetPtr   () const { return fPtr; }
@@ -237,14 +237,14 @@ public:
 
   Int_t GetNdiags() const { return fNdiag; }
 
-  ClassDef(TMatrixFDiag_const,0)  // Diagonal of a matrix (double  precision)
+  ClassDef(TMatrixFDiag_const,0)  // Diagonal of a matrix (single precision)
 };
 
 class TMatrixFDiag : public TMatrixFDiag_const {
 
 public:
   TMatrixFDiag() {}
-  TMatrixFDiag(TMatrixFBase &matrix,Int_t dummy=0);
+  TMatrixFDiag(TMatrixFBase &matrix);
   TMatrixFDiag(const TMatrixFDiag &md);
 
   inline Float_t  *GetPtr() const { return const_cast<Float_t  *>(fPtr); }
@@ -264,7 +264,7 @@ public:
   void operator+=(const TMatrixFDiag_const &d);
   void operator*=(const TMatrixFDiag_const &d);
 
-  ClassDef(TMatrixFDiag,0)  // Diagonal of a matrix (double  precision)
+  ClassDef(TMatrixFDiag,0)  // Diagonal of a matrix (single precision)
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -284,7 +284,7 @@ protected:
 
 public:
   TMatrixFFlat_const() { fMatrix = 0; fPtr = 0; }
-  TMatrixFFlat_const(const TMatrixFBase &matrix,Int_t dummy=0);
+  TMatrixFFlat_const(const TMatrixFBase &matrix);
 
   inline const TMatrixFBase *GetMatrix() const { return fMatrix; }
   inline const Float_t      *GetPtr   () const { return fPtr; }
@@ -298,7 +298,7 @@ class TMatrixFFlat : public TMatrixFFlat_const {
 
 public:
   TMatrixFFlat() {}
-  TMatrixFFlat(TMatrixFBase &matrix,Int_t dummy=0);
+  TMatrixFFlat(TMatrixFBase &matrix);
   TMatrixFFlat(const TMatrixFFlat &mf);
 
   inline Float_t  *GetPtr() const { return const_cast<Float_t  *>(fPtr); }
@@ -320,6 +320,43 @@ public:
   void operator*=(const TMatrixFFlat_const &f);
 
   ClassDef(TMatrixFFlat,0)  // Flat representation of a matrix
+};
+
+class TMatrixRow : public TMatrixFRow {
+public :
+  TMatrixRow() {}                                                      
+  TMatrixRow(TMatrixFBase &matrix,Int_t row) : TMatrixFRow(matrix,row) {}
+  TMatrixRow(const TMatrixFRow &mr) : TMatrixFRow(mr) {}
+  virtual ~TMatrixRow() {}
+  ClassDef(TMatrixRow,0)  // One row of a matrix (single precision)
+};
+
+class TMatrixColumn : public TMatrixFColumn {
+public :
+  TMatrixColumn() {}                                                      
+  TMatrixColumn(TMatrixFBase &matrix,Int_t column) : TMatrixFColumn(matrix,column) {}
+  TMatrixColumn(const TMatrixFColumn &mc) : TMatrixFColumn(mc) {}
+
+  virtual ~TMatrixColumn() {}
+  ClassDef(TMatrixColumn,0)  // One column of a matrix (single precision)
+};
+
+class TMatrixDiag : public TMatrixFDiag {
+public :
+  TMatrixDiag() {}
+  TMatrixDiag(TMatrixFBase &matrix) : TMatrixFDiag(matrix) {}
+  TMatrixDiag(const TMatrixFDiag &md) : TMatrixFDiag(md) {}
+  virtual ~TMatrixDiag() {}
+  ClassDef(TMatrixDiag,0)  // Diagonal of a matrix (single precision)
+};
+
+class TMatrixFlat : public TMatrixFFlat {
+public :
+  TMatrixFlat() {}
+  TMatrixFlat(TMatrixFBase &matrix) : TMatrixFFlat(matrix) {}
+  TMatrixFlat(const TMatrixFFlat &mf) : TMatrixFFlat(mf) {}
+  virtual ~TMatrixFlat() {}
+  ClassDef(TMatrixFlat,0)  // Flat representation of a matrix
 };
 
 #endif

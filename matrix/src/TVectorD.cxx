@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.39 2004/03/22 10:50:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.42 2004/03/24 15:56:39 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -133,6 +133,14 @@ TVectorD::TVectorD(Int_t lwb,Int_t upb,const Double_t *elements)
 
 //______________________________________________________________________________
 TVectorD::TVectorD(const TVectorD &another) : TObject(another)
+{
+  Assert(another.IsValid());
+  Allocate(another.GetUpb()-another.GetLwb()+1,another.GetLwb());
+  *this = another;
+}
+
+//______________________________________________________________________________
+TVectorD::TVectorD(const TVectorF &another) : TObject(another)
 {
   Assert(another.IsValid());
   Allocate(another.GetUpb()-another.GetLwb()+1,another.GetLwb());
@@ -552,13 +560,38 @@ Double_t TVectorD::Max() const
 //______________________________________________________________________________
 TVectorD &TVectorD::operator=(const TVectorD &source)
 {
-  // Notice that this assinment does NOT change the ownership :
+  // Notice that this assignment does NOT change the ownership :
   // if the storage space was adopted, source is copied to
   // this space .
 
-  if (this != &source && AreCompatible(*this,source)) {
+  if (!AreCompatible(*this,source)) {
+    Error("operator=(const TVectorD &)","vectors not compatible");
+    Invalidate();
+    return *this;
+  }
+
+  if (this != &source) {
     TObject::operator=(source);
     memcpy(fElements,source.GetMatrixArray(),fNrows*sizeof(Double_t));
+  }
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator=(const TVectorF &source)
+{
+  if (!AreCompatible(*this,source)) {
+    Error("operator=(const TVectorF &)","vectors not compatible");
+    Invalidate();
+    return *this;
+  }
+
+  if (dynamic_cast<TVectorF *>(this) != &source) {
+    TObject::operator=(source);
+    const Float_t  * const ps = source.GetMatrixArray();
+          Double_t * const pt = GetMatrixArray();
+    for (Int_t i = 0; i < fNrows; i++)
+      pt[i] = (Double_t) ps[i];
   }
   return *this;
 }
@@ -1434,6 +1467,29 @@ Bool_t AreCompatible(const TVectorD &v1,const TVectorD &v2,Int_t verbose)
 
    return kTRUE;
 }
+
+//______________________________________________________________________________
+Bool_t AreCompatible(const TVectorD &v1,const TVectorF &v2,Int_t verbose)
+{
+  if (!v1.IsValid()) {
+    if (verbose)
+      ::Error("AreCompatible", "vector 1 not initialized");
+    return kFALSE;
+  }
+  if (!v2.IsValid()) {
+    if (verbose)
+      ::Error("AreCompatible", "vector 2 not initialized");
+    return kFALSE;
+  } 
+    
+  if (v1.GetNrows() != v2.GetNrows() || v1.GetLwb() != v2.GetLwb()) {
+    if (verbose)
+      ::Error("AreCompatible", "vectors 1 and 2 not compatible");
+    return kFALSE;       
+  }
+        
+   return kTRUE; 
+} 
 
 //______________________________________________________________________________
 void Compare(const TVectorD &v1,const TVectorD &v2)

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.5 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.6 2004/03/21 10:52:27 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -31,11 +31,6 @@
 
 class TMatrixD;
 class TMatrixF : public TMatrixFBase {
-
-private:
-
-  const TMatrixF EigenVectors(TVectorF &eigenValues) const;  // This function is now obsolete (and not implemented), you
-                                                             // should use TMatrixDSymEigen or TMatrixDEigen .
 
 protected:
 
@@ -143,6 +138,8 @@ public:
 
   TMatrixF &Apply(const TElementActionF    &action);
   TMatrixF &Apply(const TElementPosActionF &action);
+
+  const TMatrixF EigenVectors(TVectorF &eigenValues) const;
 
   friend Bool_t    operator== (const TMatrixF    &m1,const TMatrixF    &m2);
 

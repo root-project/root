@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFLazy.h,v 1.3 2004/01/26 20:03:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFLazy.h,v 1.4 2004/01/26 20:57:35 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -72,8 +72,24 @@ public:
   inline Int_t GetColLwb() const { return fColLwb; }
   inline Int_t GetColUpb() const { return fColUpb; }
 
-  ClassDef(TMatrixFLazy,2)  // Lazy matrix with double precision
+  ClassDef(TMatrixFLazy,2)  // Lazy matrix with single precision
 };
+
+class TMatrixLazy : public TMatrixFLazy {
+
+friend class TMatrix;
+friend class TVector;
+
+public:
+  TMatrixLazy() : TMatrixFLazy() {}
+  TMatrixLazy(Int_t nrows, Int_t ncols) : TMatrixFLazy(nrows,ncols) {}
+  TMatrixLazy(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
+     : TMatrixFLazy(row_lwb,row_upb,col_lwb,col_upb) {}
+  virtual ~TMatrixLazy() {}
+
+  ClassDef(TMatrixLazy,2)  // Lazy matrix with single precision
+};
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -111,7 +127,7 @@ public:
   inline Int_t GetRowLwb() const { return fRowLwb; }
   inline Int_t GetRowUpb() const { return fRowUpb; }
 
-  ClassDef(TMatrixFSymLazy,1)  // Lazy symmeytric matrix with double precision
+  ClassDef(TMatrixFSymLazy,1)  // Lazy symmeytric matrix with single precision
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -130,7 +146,7 @@ public:
   THaarMatrixF(Int_t n,Int_t no_cols = 0);
   virtual ~THaarMatrixF() {}
 
-  ClassDef(THaarMatrixF,1)  // Haar matrix with double precision
+  ClassDef(THaarMatrixF,1)  // Haar matrix with single precision
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -150,7 +166,7 @@ public:
   THilbertMatrixF(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
   virtual ~THilbertMatrixF() {}
 
-  ClassDef(THilbertMatrixF,1)  // (no_rows x no_cols) Hilbert matrix with double precision
+  ClassDef(THilbertMatrixF,1)  // (no_rows x no_cols) Hilbert matrix with single precision
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -170,7 +186,7 @@ public:
   THilbertMatrixFSym(Int_t row_lwb,Int_t row_upb);
   virtual ~THilbertMatrixFSym() {}
   
-  ClassDef(THilbertMatrixFSym,1)  // (no_rows x no_rows) Hilbert matrix with double precision
+  ClassDef(THilbertMatrixFSym,1)  // (no_rows x no_rows) Hilbert matrix with single precision
 };
 
 #endif

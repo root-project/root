@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.13 2004/03/21 10:52:27 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.14 2004/03/23 15:16:58 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,10 +14,8 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class TVector-;
 #pragma link C++ class TVectorF-;
 #pragma link C++ class TMatrixFBase-;
-#pragma link C++ class TMatrix-;
 #pragma link C++ class TMatrixF-;
 #pragma link C++ class TMatrixFSym-;
 
@@ -36,6 +34,14 @@
 #pragma link C++ class TMatrixFDiag_const;
 #pragma link C++ class TMatrixFFlat_const;
 
+#pragma link C++ class TVector-;
+#pragma link C++ class TMatrix-;
+#pragma link C++ class TMatrixLazy+;
+#pragma link C++ class TMatrixRow;
+#pragma link C++ class TMatrixColumn;
+#pragma link C++ class TMatrixDiag;
+#pragma link C++ class TMatrixFlat;
+
 #pragma link C++ function operator==   (const TVectorF &,const TVectorF &);
 #pragma link C++ function operator+    (const TVectorF &,const TVectorF &);
 #pragma link C++ function operator-    (const TVectorF &,const TVectorF &);
@@ -51,6 +57,7 @@
 #pragma link C++ function ElementDiv   (      TVectorF &,const TVectorF &);
 #pragma link C++ function ElementDiv   (      TVectorF &,const TVectorF &,const TVectorF &);
 #pragma link C++ function AreCompatible(const TVectorF &,const TVectorF &,      Int_t);
+#pragma link C++ function AreCompatible(const TVectorF &,const TVectorD &,      Int_t);
 #pragma link C++ function Compare      (const TVectorF &,const TVectorF &);
 
 #pragma link C++ function AreCompatible(const TMatrixFBase &,const TMatrixFBase &,Int_t);
@@ -138,6 +145,7 @@
 #pragma link C++ function ElementDiv   (      TVectorD &,const TVectorD &);
 #pragma link C++ function ElementDiv   (      TVectorD &,const TVectorD &,const TVectorD &);
 #pragma link C++ function AreCompatible(const TVectorD &,const TVectorD &,      Int_t);
+#pragma link C++ function AreCompatible(const TVectorD &,const TVectorF &,      Int_t);
 #pragma link C++ function Compare      (const TVectorD &,const TVectorD &);
 
 #pragma link C++ function AreCompatible(const TMatrixDBase &,const TMatrixDBase &,Int_t);

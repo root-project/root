@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.13 2004/03/24 13:55:39 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.14 2004/03/24 15:56:39 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -133,6 +133,14 @@ TVectorF::TVectorF(Int_t lwb,Int_t upb,const Float_t *elements)
 
 //______________________________________________________________________________
 TVectorF::TVectorF(const TVectorF &another) : TObject(another)
+{
+  Assert(another.IsValid());
+  Allocate(another.GetUpb()-another.GetLwb()+1,another.GetLwb());
+  *this = another;
+}
+
+//______________________________________________________________________________
+TVectorF::TVectorF(const TVectorD &another) : TObject(another)
 {
   Assert(another.IsValid());
   Allocate(another.GetUpb()-another.GetLwb()+1,another.GetLwb());
@@ -555,9 +563,34 @@ TVectorF &TVectorF::operator=(const TVectorF &source)
   // if the storage space was adopted, source is copied to
   // this space .
 
-  if (this != &source && AreCompatible(*this,source)) {
+  if (!AreCompatible(*this,source)) {
+    Error("operator=(const TVectorF &)","vectors not compatible");
+    Invalidate();
+    return *this;
+  }
+
+  if (this != &source) {
     TObject::operator=(source);
     memcpy(fElements,source.GetMatrixArray(),fNrows*sizeof(Float_t));
+  }
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorF &TVectorF::operator=(const TVectorD &source)
+{
+  if (!AreCompatible(*this,source)) {
+    Error("operator=(const TVectorD &)","vectors not compatible");
+    Invalidate();
+    return *this;
+  }
+
+  if (dynamic_cast<TVectorD *>(this) != &source) {
+    TObject::operator=(source);
+    const Double_t * const ps = source.GetMatrixArray();
+          Float_t  * const pt = GetMatrixArray();
+    for (Int_t i = 0; i < fNrows; i++)
+      pt[i] = (Float_t) ps[i];
   }
   return *this;
 }
@@ -1415,6 +1448,29 @@ Bool_t AreCompatible(const TVectorF &v1,const TVectorF &v2,Int_t verbose)
       ::Error("AreCompatible", "vector 1 not initialized");
     return kFALSE;
   }
+  if (!v2.IsValid()) {
+    if (verbose)
+      ::Error("AreCompatible", "vector 2 not initialized");
+    return kFALSE;
+  }
+
+  if (v1.GetNrows() != v2.GetNrows() || v1.GetLwb() != v2.GetLwb()) {
+    if (verbose)
+      ::Error("AreCompatible", "vectors 1 and 2 not compatible");
+    return kFALSE;
+  }
+
+   return kTRUE;
+}
+//
+//______________________________________________________________________________
+Bool_t AreCompatible(const TVectorF &v1,const TVectorD &v2,Int_t verbose)
+{
+  if (!v1.IsValid()) {
+    if (verbose)
+      ::Error("AreCompatible", "vector 1 not initialized");
+    return kFALSE;
+  } 
   if (!v2.IsValid()) {
     if (verbose)
       ::Error("AreCompatible", "vector 2 not initialized");

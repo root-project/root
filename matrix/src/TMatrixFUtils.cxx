@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.cxx,v 1.2 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.cxx,v 1.3 2004/03/19 14:20:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -324,7 +324,7 @@ void TMatrixFColumn::operator*=(const TMatrixFColumn_const &mc)
 }     
 
 //______________________________________________________________________________
-TMatrixFDiag_const::TMatrixFDiag_const(const TMatrixFBase &matrix,Int_t /*dummy*/)
+TMatrixFDiag_const::TMatrixFDiag_const(const TMatrixFBase &matrix)
 {
   Assert(matrix.IsValid());
   fMatrix = &matrix;
@@ -334,8 +334,8 @@ TMatrixFDiag_const::TMatrixFDiag_const(const TMatrixFBase &matrix,Int_t /*dummy*
 }
 
 //______________________________________________________________________________
-TMatrixFDiag::TMatrixFDiag(TMatrixFBase &matrix,Int_t dummy)
-             :TMatrixFDiag_const(matrix,dummy)
+TMatrixFDiag::TMatrixFDiag(TMatrixFBase &matrix)
+             :TMatrixFDiag_const(matrix)
 {
 }
 
@@ -462,7 +462,7 @@ void TMatrixFDiag::operator*=(const TMatrixFDiag_const &d)
 }
 
 //______________________________________________________________________________
-TMatrixFFlat_const::TMatrixFFlat_const(const TMatrixFBase &matrix,Int_t /*dummy*/)
+TMatrixFFlat_const::TMatrixFFlat_const(const TMatrixFBase &matrix)
 {
   Assert(matrix.IsValid());
   fMatrix = &matrix;
@@ -471,8 +471,8 @@ TMatrixFFlat_const::TMatrixFFlat_const(const TMatrixFBase &matrix,Int_t /*dummy*
 }
 
 //______________________________________________________________________________
-TMatrixFFlat::TMatrixFFlat(TMatrixFBase &matrix,Int_t dummy)
-             :TMatrixFFlat_const(matrix,dummy)
+TMatrixFFlat::TMatrixFFlat(TMatrixFBase &matrix)
+             :TMatrixFFlat_const(matrix)
 {
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.4 2004/02/05 18:18:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.5 2004/03/19 14:20:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 
 #include "TMatrixFSym.h"
 #include "TDecompLU.h"
+#include "TMatrixDSymEigen.h"
 
 ClassImp(TMatrixFSym)
 
@@ -740,6 +741,17 @@ TMatrixFSym &TMatrixFSym::Apply(const TElementPosActionF &action)
   }
 
   return *this;
+}
+
+//______________________________________________________________________________
+const TMatrixF TMatrixFSym::EigenVectors(TVectorF &eigenValues) const
+{
+  // Return a matrix containing the eigen-vectors ordered by descending eigen-values.
+  // For full functionality use TMatrixDSymEigen .
+
+  TMatrixDSymEigen eigen(*this);
+  eigenValues = eigen.GetEigenValues();
+  return eigen.GetEigenVectors();
 }
 
 //______________________________________________________________________________

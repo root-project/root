@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.28 2004/03/21 10:52:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.29 2004/03/22 10:50:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -22,9 +22,6 @@
 
 #ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
-#endif
-#ifndef ROOT_TMatrixDSym
-#include "TMatrixDSym.h"
 #endif
 
 class TVectorD : public TObject {
@@ -52,6 +49,7 @@ public:
   TVectorD(Int_t n,const Double_t *elements);
   TVectorD(Int_t lwb,Int_t upb,const Double_t *elements);
   TVectorD(const TVectorD             &another);
+  TVectorD(const TVectorF             &another);
   TVectorD(const TMatrixDRow_const    &mr);
   TVectorD(const TMatrixDColumn_const &mc);
   TVectorD(const TMatrixDDiag_const   &md);
@@ -103,6 +101,7 @@ public:
   inline       Double_t &operator[](Int_t index)       { return (Double_t&)((*(const TVectorD *)this)(index)); }
 
   TVectorD &operator= (const TVectorD                &source);
+  TVectorD &operator= (const TVectorF                &source);
   TVectorD &operator= (const TMatrixDRow_const       &mr);
   TVectorD &operator= (const TMatrixDColumn_const    &mc);
   TVectorD &operator= (const TMatrixDDiag_const      &md);
@@ -156,6 +155,7 @@ public:
   friend TVectorD &ElementDiv (TVectorD &target,const TVectorD &source,const TVectorD &select);
 
   friend Bool_t AreCompatible(const TVectorD &v1,const TVectorD &v2,Int_t verbose);
+  friend Bool_t AreCompatible(const TVectorD &v1,const TVectorF &v2,Int_t verbose);
   friend void   Compare      (const TVectorD &v1,const TVectorD &v2);
 
   ClassDef(TVectorD,2)  // Vector class with double precision
@@ -193,6 +193,7 @@ TVectorD  &ElementMult  (      TVectorD       &target, const TVectorD &source,co
 TVectorD  &ElementDiv   (      TVectorD       &target, const TVectorD &source);
 TVectorD  &ElementDiv   (      TVectorD       &target, const TVectorD &source,const TVectorD &select);
 Bool_t     AreCompatible(const TVectorD       &source1,const TVectorD &source2,Int_t verbose=0);
+Bool_t     AreCompatible(const TVectorD       &source1,const TVectorF &source2,Int_t verbose=0);
 void       Compare      (const TVectorD       &source1,const TVectorD &source2);
 
 // Service functions (useful in the verification code).

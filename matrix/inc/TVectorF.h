@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.6 2004/03/22 10:50:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.7 2004/03/22 14:20:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -52,6 +52,7 @@ public:
   TVectorF(Int_t n,const Float_t *elements);
   TVectorF(Int_t lwb,Int_t upb,const Float_t *elements);
   TVectorF(const TVectorF             &another);
+  TVectorF(const TVectorD             &another);
   TVectorF(const TMatrixFRow_const    &mr);
   TVectorF(const TMatrixFColumn_const &mc);
   TVectorF(const TMatrixFDiag_const   &md);
@@ -103,6 +104,7 @@ public:
   inline       Float_t &operator[](Int_t index)       { return (Float_t&)((*(const TVectorF *)this)(index)); }
 
   TVectorF &operator= (const TVectorF             &source);
+  TVectorF &operator= (const TVectorD             &source);
   TVectorF &operator= (const TMatrixFRow_const    &mr);
   TVectorF &operator= (const TMatrixFColumn_const &mc);
   TVectorF &operator= (const TMatrixFDiag_const   &md);
@@ -156,6 +158,7 @@ public:
   friend TVectorF &ElementDiv (TVectorF &target,const TVectorF &source,const TVectorF &select);
 
   friend Bool_t AreCompatible(const TVectorF &v1,const TVectorF &v2,Int_t verbose);
+  friend Bool_t AreCompatible(const TVectorF &v1,const TVectorD &v2,Int_t verbose);
   friend void   Compare      (const TVectorF &v1,const TVectorF &v2);
 
   ClassDef(TVectorF,2)  // Vector class with single precision
@@ -169,6 +172,7 @@ public :
   TVector(Int_t n,const Float_t *elements)             : TVectorF(n,elements) {}
   TVector(Int_t lwb,Int_t upb,const Float_t *elements) : TVectorF(lwb,upb,elements) {}
   TVector(const TVectorF             &another)         : TVectorF(another) {}
+  TVector(const TVectorD             &another)         : TVectorF(another) {}
   TVector(const TMatrixFRow_const    &mr)              : TVectorF(mr) {}
   TVector(const TMatrixFColumn_const &mc)              : TVectorF(mc) {}
   TVector(const TMatrixFDiag_const   &md)              : TVectorF(md) {}
@@ -209,6 +213,7 @@ TVectorF  &ElementMult  (      TVectorF    &target, const TVectorF &source,const
 TVectorF  &ElementDiv   (      TVectorF    &target, const TVectorF &source);
 TVectorF  &ElementDiv   (      TVectorF    &target, const TVectorF &source,const TVectorF &select);
 Bool_t     AreCompatible(const TVectorF    &source1,const TVectorF &source2,Int_t verbose=0);
+Bool_t     AreCompatible(const TVectorF    &source1,const TVectorD &source2,Int_t verbose=0);
 void       Compare      (const TVectorF    &source1,const TVectorF &source2);
 
 // Service functions (useful in the verification code).

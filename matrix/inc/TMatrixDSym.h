@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.4 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.5 2004/03/21 10:52:27 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -103,6 +103,8 @@ public:
 
   TMatrixDSym &Apply(const TElementActionD    &action);
   TMatrixDSym &Apply(const TElementPosActionD &action);
+
+  const TMatrixD EigenVectors(TVectorD &eigenValues) const;
 
   friend Bool_t       operator== (const TMatrixDSym &m1,     const TMatrixDSym &m2);
   friend TMatrixDSym  operator+  (const TMatrixDSym &source1,const TMatrixDSym &source2);

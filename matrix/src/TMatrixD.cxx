@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.57 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.58 2004/03/21 21:15:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TMatrixD.h"
 #include "TMatrixDCramerInv.h"
 #include "TDecompLU.h"
+#include "TMatrixDEigen.h"
 
 ClassImp(TMatrixD)
 
@@ -1743,6 +1744,18 @@ TMatrixD &TMatrixD::Apply(const TElementPosActionD &action)
   Assert(ep == this->GetMatrixArray()+fNelems);
 
   return *this;
+}
+
+//______________________________________________________________________________
+const TMatrixD TMatrixD::EigenVectors(TVectorD &eigenValues) const
+{
+  // Return a matrix containing the eigen-vectors ordered by descending eigen-values
+  // If the matrix is asymmetric, only the real part of the eigen-values is 
+  // returned . For full functionality use TMatrixDEigen .
+
+  TMatrixDEigen eigen(*this);
+  eigenValues = eigen.GetEigenValuesRe();
+  return eigen.GetEigenVectors();
 }
 
 //______________________________________________________________________________
