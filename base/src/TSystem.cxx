@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.72 2003/09/23 10:03:03 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.73 2003/09/23 22:06:16 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -563,8 +563,9 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
    // look for existing helper
    TIter next(fHelpers);
    while ((helper = (TSystem*) next()))
-      if ((path && !strcmp(url.GetProtocol(), helper->GetName()) &&
-           helper->GetDirPtr() == 0) || helper->GetDirPtr() == dirptr)
+      if ((!helper->GetDirPtr() && path &&
+           !strcmp(url.GetProtocol(), helper->GetName())) ||
+          (helper->GetDirPtr() && helper->GetDirPtr() == dirptr))
          return helper;
 
    if (!path)
