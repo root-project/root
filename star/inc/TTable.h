@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.8 2001/04/06 17:32:25 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.11 2001/05/13 11:10:06 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
  
 /*************************************************************************
@@ -38,7 +38,8 @@
 #endif
 
 enum ETableBits {
-    kIsNotOwn         = BIT(23)   // if the TTable wrapper doesn't own the STAF table                                 // As result of the Update() method for example
+    kIsNotOwn         = BIT(23)   // if the TTable wrapper doesn't own the STAF table
+		                          // As result of the Update() method for example
 };
 class TTableDescriptor;
 class TH1;
@@ -46,7 +47,7 @@ class TH1;
 class TTable : public TDataSet {
    friend class TDataSet;
    friend class St_XDFFile;
-private:
+protected:
    Long_t     fSize;       // Size of the one element (row) of the table
 
 protected:
@@ -70,7 +71,7 @@ protected:
    void       StreamerHeader(TBuffer &b,Version_t version=3);
    void       StreamerTable(TBuffer &b,Version_t version=3);
    virtual TTableDescriptor *GetDescriptorPointer() const;
-   virtual void  SetDescriptorPointer(TTableDescriptor *list) const ;
+   virtual void  SetDescriptorPointer(TTableDescriptor *list);
 
    void       ReAlloc(Int_t newsize);
 
@@ -164,7 +165,7 @@ public:
    static const char *GetTypeName(EColumnType type);
    static EColumnType GetTypeId(const char *typeName);
 
-   ClassDef(TTable,4)  // Array of the C structures
+   ClassDef(TTable,4)  // vector of the C structures
 };
 
 //________________________________________________________________________

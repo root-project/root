@@ -1,14 +1,16 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.7 2001/05/13 11:10:06 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.8 2001/05/31 06:36:36 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.7 2001/05/13 11:10:06 brun Exp $
+// $Id: TTableDescriptor.cxx,v 1.8 2001/05/31 06:36:36 brun Exp $
 #include <stdlib.h>
 
+#include "TROOT.h"
 #include "TTableDescriptor.h"
 #include "TTable.h"
 #include "TClass.h"
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "Ttypes.h"
+#include "TInterpreter.h"
 
 TTableDescriptor *TTableDescriptor::fgColDescriptors = 0;
 TableClassImp(TTableDescriptor,tableDescriptor_st)
@@ -23,7 +25,7 @@ void TTableDescriptor::Streamer(TBuffer &R__b)
 
 //______________________________________________________________________________
 TTableDescriptor::TTableDescriptor(const TTable *parentTable)
- : TTable("tableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0)
+ : TTable("tableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0),fSecondDescriptor(0)
 {
   if (parentTable) {
      TClass *classPtr = parentTable->GetRowClass();
@@ -34,7 +36,7 @@ TTableDescriptor::TTableDescriptor(const TTable *parentTable)
 
 //______________________________________________________________________________
 TTableDescriptor::TTableDescriptor(TClass *classPtr)
- : TTable("tableDescriptor",sizeof(tableDescriptor_st)),fRowClass(0)
+ : TTable("tableDescriptor",sizeof(tableDescriptor_st)),fRowClass(0),fSecondDescriptor(0)
 {
   // Create a descriptor of the C-structure defined by TClass
   // TClass *classPtr must be a valid pointer to TClass object for
@@ -118,6 +120,26 @@ TString TTableDescriptor::CreateLeafList() const
   return string;
 }
 
+//______________________________________________________________________________
+TTableDescriptor *TTableDescriptor::MakeDescriptor(const char *structName)
+{
+	///////////////////////////////////////////////////////////
+	//
+	// MakeDescriptor(const char *structName) - static method
+	//                structName - the name of the C structure 
+	//                             to create descriptor of
+	// return a new instance of the TTableDescriptor or 0 
+	// if the "structName is not present with the dictionary
+	//
+	///////////////////////////////////////////////////////////
+	TTableDescriptor *dsc = 0;
+//    TClass *cl = gROOT->GetClass(structName, kFALSE);
+    TClass *cl = new TClass(structName,1,0,0);
+	assert(cl);
+	dsc = new TTableDescriptor(cl);
+	return dsc;
+}
+
 //____________________________________________________________________________
 void TTableDescriptor::LearnTable(const TTable *parentTable)
 {
@@ -149,7 +171,15 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
 
   if (!classPtr) return;
 
-  if (!classPtr->GetListOfRealData()) classPtr->BuildRealData();
+  if (!classPtr->GetListOfRealData()) {
+	  const char *name = classPtr->GetName();
+	   char buffer[512];
+	   sprintf(buffer," new %s();",name);
+ 	   void *p = (void *)gInterpreter->Calc(buffer);
+ 	   classPtr->BuildRealData(p);
+  	   sprintf(buffer,"delete ((%s *)(0x%lx);",name,(Long_t)p);
+
+  }
   if (!(classPtr->GetNdata())) return;
 
   Char_t *varname;

@@ -1,4 +1,4 @@
-// $Id: TFileIter.cxx,v 1.8 2001/05/11 16:13:56 fisyak Exp $
+// $Id: TFileIter.cxx,v 1.3 2001/05/13 11:10:06 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine (fine@bnl.gov). All right reserved",
 //
@@ -304,7 +304,7 @@ void TFileIter::SetCursorPosition(const char *keyNameToFind)
 {
   // Find the key by the name provided
   Reset();
-  while( SkipObjects() && *this != keyNameToFind);
+  while( (*this != keyNameToFind) && SkipObjects() );
 }
 //__________________________________________________________________________
 TObject *TFileIter::SkipObjects(Int_t  nSkip)

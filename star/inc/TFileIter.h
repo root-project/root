@@ -115,26 +115,40 @@ class TFileIter : public TListIter {
 
 //__________________________________________________________________________
 inline Int_t TFileIter::CurrentCursorPosition() const
-{ return fCursorPosition;}
+{ 
+	// return the current 
+	return fCursorPosition;
+}
 
 //__________________________________________________________________________
 inline const TFile *TFileIter::GetTFile() const { return fRootFile; }
 
 //__________________________________________________________________________
 inline TObject *TFileIter::Next()
-{ return Next(1); }
+{ 
+	// Make 1 step over the file objects and returns its pointer
+	// or 0, if there is no object left in the container
+	return Next(1); 
+}
 
 //__________________________________________________________________________
 inline void  TFileIter::SetCursorPosition(Int_t cursorPosition)
-{ SkipObjects(cursorPosition - fCursorPosition); }
+{ 
+	// Make <cursorPosition> steps (>0 - forward) over the file 
+	// objects to skip it
+	SkipObjects(cursorPosition - fCursorPosition); 
+}
 
 //__________________________________________________________________________
 inline TFileIter &TFileIter::operator=(const char *keyNameToFind)
-{ SetCursorPosition(keyNameToFind); return *this;}
+{ 
+	// Interate unless the name of the object matches <keyNameToFind>
+	SetCursorPosition(keyNameToFind); return *this;}
 
 //__________________________________________________________________________
 inline TFileIter &TFileIter::operator=(Int_t cursorPosition)
 { 
+  // Interate over <cursorPosition>
   SetCursorPosition(cursorPosition);
   return *this;
 }
@@ -161,7 +175,10 @@ inline TFileIter::operator int () const
 { return CurrentCursorPosition(); }
 //__________________________________________________________________________
 inline TFileIter::operator const char *() const 
-{ return GetKeyName();}
+{ 
+	// return the current key name
+	return GetKeyName();
+}
 //__________________________________________________________________________
 inline int TFileIter::operator==(const char *name) const
 { return name ? !strcmp(name,GetKeyName()):0;}

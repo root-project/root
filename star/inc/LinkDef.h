@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: LinkDef.h,v 1.2 2001/03/02 21:44:39 fine Exp $ */
+/* @(#)root/star:$Name:  $:$Id: LinkDef.h,v 1.4 2001/03/04 22:15:26 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -28,6 +28,8 @@
 #pragma link C++ class TVolumeViewIter;
 #pragma link C++ class TTableIter;
 #pragma link C++ class TTable-;
+#pragma link C++ class TGenericTable-;
+#pragma link C++ class TGenericTable::iterator!-;
 #pragma link C++ class TChair+;
 #pragma link C++ class TTableSorter!;
 #pragma link C++ class TPointsArray3D-;

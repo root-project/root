@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.18 2001/06/29 19:28:50 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.17 2001/05/29 19:10:04 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -97,9 +97,6 @@
 //  -----------------------                                               //
 //                                                                        //
 // $Log: TTable.cxx,v $
-// Revision 1.18  2001/06/29 19:28:50  brun
-// Some fixes by Valery
-//
 // Revision 1.17  2001/05/29 19:10:04  brun
 // // New methods:
 // // ------------
@@ -1373,13 +1370,19 @@ const Char_t *TTable::GetType() const
 //______________________________________________________________________________
 Bool_t TTable::IsFolder() const { 
   // return Folder flag to be used by TBrowse object
-  // The tablke is a folder if
+  // The table is a folder if
   //  - it has sub-dataset
+  //    or
   //  - GetNRows > 0 
+  return kTRUE; // to provide the "fake" folder bit to workaround TKey::Browse()
+
+#if 0
+  // this became useless due TKey::Browse new implementation
   return 
-     (fList && fList->Last() ? kTRUE : kFALSE) 
+	 (fList && fList->Last() ? kTRUE : kFALSE) 
    || 
      (GetNRows() > 0);
+#endif
 }
 
 
@@ -1388,7 +1391,7 @@ Bool_t TTable::IsFolder() const {
 #   define finite _finite
 # endif
 #else
-//extern "C" {int finite( double x );}
+//  extern "C" {int finite( double x );}
 #endif
 
 //______________________________________________________________________________
@@ -2057,6 +2060,7 @@ void TTable::StreamerHeader(TBuffer &b, Version_t version)
 #endif
    b >> fMaxIndex;         // fTableHeader->nok;          /* # rows filled */
    b >> rbytes;            /* number of bytes per row */
+   if (GetRowSize() == -1) fSize = rbytes;
    if (rbytes - GetRowSize()) {
       Warning("StreamerHeader","Wrong row size: must be %d, read %d bytes\n",GetRowSize(),rbytes);
    }
@@ -2131,7 +2135,7 @@ TTableDescriptor  *TTable::GetRowDescriptors() const
   if (!dsc) {
     Error("GetRowDescriptors()","%s has no dictionary !",GetName());
     dsc = GetTableDescriptors();
-    SetDescriptorPointer(dsc);
+    ((TTableDescriptor *)this)->SetDescriptorPointer(dsc);
   }
   return dsc;
 }
@@ -2143,7 +2147,7 @@ TTableDescriptor *TTable::GetDescriptorPointer() const
 }
 
 //______________________________________________________________________________
-void TTable::SetDescriptorPointer(TTableDescriptor *) const
+void TTable::SetDescriptorPointer(TTableDescriptor *)
 {
    assert(0);
 }
@@ -2166,21 +2170,27 @@ void TTable::Streamer(TBuffer &R__b)
       Bool_t evolutionOn = kFALSE;
       if (R__v>=2) {
          if (IsA() != TTableDescriptor::Class()) {
-	    if (R__v>3) {
-  	       R__b >> ioDescriptor;
-	    } else {  // backward compatibility 
+	       if (R__v>3) {
+  	          R__b >> ioDescriptor;
+		   } else {  // backward compatibility 
               ioDescriptor =  new TTableDescriptor();
               ioDescriptor->Streamer(R__b);
-	    }  
+		   }  
 
-            if (currentDescriptor->fSecondDescriptor != ioDescriptor) {
-               // Protection against of memory leak.
-              delete currentDescriptor->fSecondDescriptor;
-              currentDescriptor->fSecondDescriptor = ioDescriptor;
-            }
+		   if (!currentDescriptor) {
+			  currentDescriptor = ioDescriptor;
+			  SetDescriptorPointer(currentDescriptor);
+		   }
+		   if (currentDescriptor->fSecondDescriptor) {
+             if (currentDescriptor->fSecondDescriptor != ioDescriptor) {
+                // Protection against of memory leak.
+                delete currentDescriptor->fSecondDescriptor;
+                currentDescriptor->fSecondDescriptor = ioDescriptor;
+			 }
 
-            // compare two descriptors
-            evolutionOn = (Bool_t)ioDescriptor->UpdateOffsets(currentDescriptor);
+             // compare two descriptors
+             evolutionOn = (Bool_t)ioDescriptor->UpdateOffsets(currentDescriptor);
+		   }
          }
       }
       TTable::StreamerTable(R__b,R__v);
