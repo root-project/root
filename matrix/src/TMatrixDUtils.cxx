@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.21 2004/05/18 14:01:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.22 2004/05/19 15:47:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 //   TMatrixDColumn_const     TMatrixDColumn                            //
 //   TMatrixDDiag_const       TMatrixDDiag                              //
 //   TMatrixDFlat_const       TMatrixDFlat                              //
+//   TMatrixDSub_const        TMatrixDSub                               //
 //   TMatrixDSparseRow_const  TMatrixDSparseRow                         //
 //   TMatrixDSparseDiag_const TMatrixDSparseDiag                        //
 //                                                                      //
@@ -86,6 +87,7 @@ void TMatrixDRow::operator=(Double_t val)
 {
   // Assign val to every element of the matrix row.
 
+  Assert(fMatrix->IsValid());
   Double_t *rp = const_cast<Double_t *>(fPtr);
   for ( ; rp < fPtr+fMatrix->GetNcols(); rp += fInc)
     *rp = val;
@@ -96,6 +98,7 @@ void TMatrixDRow::operator+=(Double_t val)
 {
   // Add val to every element of the matrix row. 
 
+  Assert(fMatrix->IsValid());
   Double_t *rp = const_cast<Double_t *>(fPtr);
   for ( ; rp < fPtr+fMatrix->GetNcols(); rp += fInc)
     *rp += val;
@@ -106,6 +109,7 @@ void TMatrixDRow::operator*=(Double_t val)
 {
    // Multiply every element of the matrix row with val.
 
+  Assert(fMatrix->IsValid());
   Double_t *rp = const_cast<Double_t *>(fPtr);
   for ( ; rp < fPtr + fMatrix->GetNcols(); rp += fInc)
     *rp *= val;
@@ -115,27 +119,14 @@ void TMatrixDRow::operator*=(Double_t val)
 void TMatrixDRow::operator=(const TMatrixDRow_const &mr)
 {
   const TMatrixDBase *mt = mr.GetMatrix();
-  if (fMatrix == mt) return;
+  if (fMatrix == mt && fRowInd == mr.GetRowIndex()) return;
 
-  if (!AreCompatible(*fMatrix,*mt)) {
-    Error("operator=(const TMatrixDRow_const &)","matrices not compatible");
-    return;
-  }
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
 
-  Double_t *rp1 = const_cast<Double_t *>(fPtr);
-  const Double_t *rp2 = mr.GetPtr();
-  for ( ; rp1 < fPtr+fMatrix->GetNcols(); rp1 += fInc,rp2 += fInc)
-    *rp1 = *rp2;
-}
-
-//______________________________________________________________________________
-void TMatrixDRow::operator=(const TMatrixDRow &mr)
-{
-  const TMatrixDBase *mt = mr.GetMatrix();
-  if (fMatrix == mt) return;
- 
-  if (!AreCompatible(*fMatrix,*mt)) {
-    Error("operator=(const TMatrixDRow &)","matrices not compatible");
+  if (fMatrix->GetNcols() != mt->GetNcols() || fMatrix->GetColLwb() != mt->GetColLwb()) {
+    Error("operator=(const TMatrixDRow_const &)", "matrix rows not compatible");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -151,10 +142,12 @@ void TMatrixDRow::operator=(const TVectorD &vec)
    // Assign a vector to a matrix row. The vector is considered row-vector
    // to allow the assignment in the strict sense.
 
+  Assert(fMatrix->IsValid());
   Assert(vec.IsValid());
 
   if (fMatrix->GetColLwb() != vec.GetLwb() || fMatrix->GetNcols() != vec.GetNrows()) {
     Error("operator=(const TVectorD &)","vector length != matrix-row length");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -171,8 +164,12 @@ void TMatrixDRow::operator+=(const TMatrixDRow_const &r)
 
   const TMatrixDBase *mt = r.GetMatrix();
 
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
+
   if (fMatrix->GetColLwb() != mt->GetColLwb() || fMatrix->GetNcols() != mt->GetNcols()) {
     Error("operator+=(const TMatrixDRow_const &)","different row lengths");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -190,8 +187,12 @@ void TMatrixDRow::operator*=(const TMatrixDRow_const &r)
 
   const TMatrixDBase *mt = r.GetMatrix();
 
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
+
   if (fMatrix->GetColLwb() != mt->GetColLwb() || fMatrix->GetNcols() != mt->GetNcols()) {
     Error("operator*=(const TMatrixDRow_const &)","different row lengths");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -256,6 +257,7 @@ void TMatrixDColumn::operator=(Double_t val)
 {
   // Assign val to every element of the matrix column.
 
+  Assert(fMatrix->IsValid());
   Double_t *cp = const_cast<Double_t *>(fPtr);
   for ( ; cp < fPtr+fMatrix->GetNoElements(); cp += fInc)
     *cp = val;
@@ -266,6 +268,7 @@ void TMatrixDColumn::operator+=(Double_t val)
 {
   // Add val to every element of the matrix column.
 
+  Assert(fMatrix->IsValid());
   Double_t *cp = const_cast<Double_t *>(fPtr);
   for ( ; cp < fPtr+fMatrix->GetNoElements(); cp += fInc)
     *cp += val;
@@ -276,6 +279,7 @@ void TMatrixDColumn::operator*=(Double_t val)
 {
    // Multiply every element of the matrix column with val.
 
+  Assert(fMatrix->IsValid());
   Double_t *cp = const_cast<Double_t *>(fPtr);
   for ( ; cp < fPtr+fMatrix->GetNoElements(); cp += fInc)
     *cp *= val;
@@ -283,30 +287,17 @@ void TMatrixDColumn::operator*=(Double_t val)
 
 //______________________________________________________________________________
 void TMatrixDColumn::operator=(const TMatrixDColumn_const &mc) 
-{   
+{
   const TMatrixDBase *mt = mc.GetMatrix();
-  if (fMatrix == mt) return;
+  if (fMatrix == mt && fColInd == mc.GetColIndex()) return;
 
-  if (!AreCompatible(*fMatrix,*mt)) {
-    Error("operator=(const TMatrixDColumn_const &)","matrices not compatible");
-    return;
-  }
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
 
-  Double_t *cp1 = const_cast<Double_t *>(fPtr);
-  const Double_t *cp2 = mc.GetPtr();
-  for ( ; cp1 < fPtr+fMatrix->GetNoElements(); cp1 += fInc,cp2 += fInc)
-    *cp1 = *cp2;
-}
-
-//______________________________________________________________________________
-void TMatrixDColumn::operator=(const TMatrixDColumn &mc)
-{  
-  const TMatrixDBase *mt = mc.GetMatrix();
-  if (fMatrix == mt) return;
-
-  if (!AreCompatible(*fMatrix,*mt)) {
-    Error("operator=(const TMatrixDColumn &)","matrices not compatible");
-    return;
+  if (fMatrix->GetNrows() != mt->GetNrows() || fMatrix->GetRowLwb() != mt->GetRowLwb()) {
+    Error("operator=(const TMatrixDColumn_const &)", "matrix columns not compatible");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
+    return; 
   }
 
   Double_t *cp1 = const_cast<Double_t *>(fPtr);
@@ -320,11 +311,12 @@ void TMatrixDColumn::operator=(const TVectorD &vec)
 {
   // Assign a vector to a matrix column.
 
+  Assert(fMatrix->IsValid());
   Assert(vec.IsValid());
 
   if (fMatrix->GetRowLwb() != vec.GetLwb() || fMatrix->GetNrows() != vec.GetNrows()) {
     Error("operator=(const TVectorD &)","vector length != matrix-column length");
-    Assert(0);
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -341,8 +333,12 @@ void TMatrixDColumn::operator+=(const TMatrixDColumn_const &mc)
 {
   const TMatrixDBase *mt = mc.GetMatrix();
 
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
+
   if (fMatrix->GetRowLwb() != mt->GetRowLwb() || fMatrix->GetNrows() != mt->GetNrows()) {
     Error("operator+=(const TMatrixDColumn_const &)","different row lengths");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -360,8 +356,12 @@ void TMatrixDColumn::operator*=(const TMatrixDColumn_const &mc)
 
   const TMatrixDBase *mt = mc.GetMatrix();
 
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
+
   if (fMatrix->GetRowLwb() != mt->GetRowLwb() || fMatrix->GetNrows() != mt->GetNrows()) {
     Error("operator*=(const TMatrixDColumn_const &)","different row lengths");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -369,7 +369,7 @@ void TMatrixDColumn::operator*=(const TMatrixDColumn_const &mc)
   const Double_t *cp2 = mc.GetPtr();
   for ( ; cp1 < fPtr+fMatrix->GetNoElements(); cp1 += fInc,cp2 += fInc)
     *cp1 *= *cp2;
-}     
+}
 
 //______________________________________________________________________________
 TMatrixDDiag_const::TMatrixDDiag_const(const TMatrixD &matrix)
@@ -384,7 +384,7 @@ TMatrixDDiag_const::TMatrixDDiag_const(const TMatrixD &matrix)
 
 //______________________________________________________________________________
 TMatrixDDiag_const::TMatrixDDiag_const(const TMatrixDSym &matrix)
-{ 
+{
   Assert(matrix.IsValid());
   
   fMatrix = &matrix;
@@ -416,6 +416,7 @@ void TMatrixDDiag::operator=(Double_t val)
 {
   // Assign val to every element of the matrix diagonal.
 
+  Assert(fMatrix->IsValid());
   Double_t *dp = const_cast<Double_t *>(fPtr);
   for (Int_t i = 0; i < fNdiag; i++, dp += fInc)
     *dp = val;
@@ -426,6 +427,7 @@ void TMatrixDDiag::operator+=(Double_t val)
 {
   // Assign val to every element of the matrix diagonal.
 
+  Assert(fMatrix->IsValid());
   Double_t *dp = const_cast<Double_t *>(fPtr);
   for (Int_t i = 0; i < fNdiag; i++, dp += fInc)
     *dp += val;
@@ -436,6 +438,7 @@ void TMatrixDDiag::operator*=(Double_t val)
 {
   // Assign val to every element of the matrix diagonal.
 
+  Assert(fMatrix->IsValid());
   Double_t *dp = const_cast<Double_t *>(fPtr);
   for (Int_t i = 0; i < fNdiag; i++, dp += fInc)
     *dp *= val;
@@ -447,25 +450,12 @@ void TMatrixDDiag::operator=(const TMatrixDDiag_const &md)
   const TMatrixDBase *mt = md.GetMatrix();
   if (fMatrix == mt) return;
 
-  if (!AreCompatible(*fMatrix,*mt)) {
-    Error("operator=(const TMatrixDDiag_const &)","matrices not compatible");
-    return;
-  }
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
 
-  Double_t *dp1 = const_cast<Double_t *>(fPtr);
-  const Double_t *dp2 = md.GetPtr();
-  for (Int_t i = 0; i < fNdiag; i++, dp1 += fInc, dp2 += fInc)
-    *dp1 = *dp2;
-}
-
-//______________________________________________________________________________
-void TMatrixDDiag::operator=(const TMatrixDDiag &md)
-{
-  const TMatrixDBase *mt = md.GetMatrix();
-  if (fMatrix == mt) return;
-
-  if (!AreCompatible(*fMatrix,*mt)) {
-    Error("operator=(const TMatrixDDiag &)","matrices not compatible");
+  if (this->GetNdiags() != md.GetNdiags()) {
+    Error("operator=(const TMatrixDDiag_const &)","diagonals not compatible");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -480,10 +470,12 @@ void TMatrixDDiag::operator=(const TVectorD &vec)
 {
   // Assign a vector to the matrix diagonal.
 
+  Assert(fMatrix->IsValid());
   Assert(vec.IsValid());
 
   if (fNdiag != vec.GetNrows()) {
     Error("operator=(const TVectorD &)","vector length != matrix-diagonal length");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -494,36 +486,46 @@ void TMatrixDDiag::operator=(const TVectorD &vec)
 }
 
 //______________________________________________________________________________
-void TMatrixDDiag::operator+=(const TMatrixDDiag_const &d)
+void TMatrixDDiag::operator+=(const TMatrixDDiag_const &md)
 {
   // Add to every element of the matrix diagonal the
-  // corresponding element of diagonal d.
+  // corresponding element of diagonal md.
 
-  if (fNdiag != d.GetNdiags()) {
+  const TMatrixDBase *mt = md.GetMatrix();
+
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
+  if (fNdiag != md.GetNdiags()) {
     Error("operator=(const TMatrixDDiag_const &)","matrix-diagonal's different length");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
   Double_t *dp1 = const_cast<Double_t *>(fPtr);
-  const Double_t *dp2 = d.GetPtr();
-  for (Int_t i = 0; i < fNdiag; i++, dp1 += fInc, dp2 += d.GetInc())
+  const Double_t *dp2 = md.GetPtr();
+  for (Int_t i = 0; i < fNdiag; i++, dp1 += fInc, dp2 += md.GetInc())
     *dp1 += *dp2;
 }
 
 //______________________________________________________________________________
-void TMatrixDDiag::operator*=(const TMatrixDDiag_const &d)
+void TMatrixDDiag::operator*=(const TMatrixDDiag_const &md)
 {
-  // Add to every element of the matrix diagonal the
-  // corresponding element of diagonal d.
+  // Multiply every element of the matrix diagonal with the
+  // corresponding element of diagonal md.
 
-  if (fNdiag != d.GetNdiags()) {
+  const TMatrixDBase *mt = md.GetMatrix();
+
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
+  if (fNdiag != md.GetNdiags()) {
     Error("operator*=(const TMatrixDDiag_const &)","matrix-diagonal's different length");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
   Double_t *dp1 = const_cast<Double_t *>(fPtr);
-  const Double_t *dp2 = d.GetPtr();
-  for (Int_t i = 0; i < fNdiag; i++, dp1 += fInc, dp2 += d.GetInc())
+  const Double_t *dp2 = md.GetPtr();
+  for (Int_t i = 0; i < fNdiag; i++, dp1 += fInc, dp2 += md.GetInc())
     *dp1 *= *dp2;
 }
 
@@ -570,6 +572,7 @@ void TMatrixDFlat::operator=(Double_t val)
 {
   // Assign val to every element of the matrix.
 
+  Assert(fMatrix->IsValid());
   Double_t *fp = const_cast<Double_t *>(fPtr);
   while (fp < fPtr+fMatrix->GetNoElements())
     *fp++ = val;
@@ -580,6 +583,7 @@ void TMatrixDFlat::operator+=(Double_t val)
 {
   // Add val to every element of the matrix.
 
+  Assert(fMatrix->IsValid());
   Double_t *fp = const_cast<Double_t *>(fPtr);
   while (fp < fPtr+fMatrix->GetNoElements())
     *fp++ += val;
@@ -590,6 +594,7 @@ void TMatrixDFlat::operator*=(Double_t val)
 {
   // Multiply every element of the matrix with val.
 
+  Assert(fMatrix->IsValid());
   Double_t *fp = const_cast<Double_t *>(fPtr);
   while (fp < fPtr+fMatrix->GetNoElements())
     *fp++ *= val;
@@ -601,25 +606,11 @@ void TMatrixDFlat::operator=(const TMatrixDFlat_const &mf)
   const TMatrixDBase *mt = mf.GetMatrix();
   if (fMatrix == mt) return;
 
-  if (!AreCompatible(*fMatrix,*mt)) {
-    Error("operator=(const TMatrixDFlat_const &)","matrices not compatible");
-    return;
-  }
-
-  Double_t *fp1 = const_cast<Double_t *>(fPtr);
-  const Double_t *fp2 = mf.GetPtr();
-  while (fp1 < fPtr+fMatrix->GetNoElements())
-    *fp1++ = *fp2++;
-}
-
-//______________________________________________________________________________
-void TMatrixDFlat::operator=(const TMatrixDFlat &mf)
-{
-  const TMatrixDBase *mt = mf.GetMatrix();
-  if (fMatrix == mt) return;
-
-  if (!AreCompatible(*fMatrix,*mt)) {
-    Error("operator=(const TMatrixDFlat &)","matrices not compatible");
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
+  if (fMatrix->GetNoElements() != mt->GetNoElements()) {
+    Error("operator=(const TMatrixDFlat_const &)","matrix lengths different");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -635,10 +626,10 @@ void TMatrixDFlat::operator=(const TVectorD &vec)
   // Assign a vector to the matrix. The matrix is traversed row-wise
 
   Assert(vec.IsValid());
-  Assert(fMatrix->GetNoElements() == vec.GetNrows());
 
   if (fMatrix->GetNoElements() != vec.GetNrows()) {
-    Error("operator*=(const TVectorD &)","vector length != # matrix-elements");
+    Error("operator=(const TVectorD &)","vector length != # matrix-elements");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -655,8 +646,11 @@ void TMatrixDFlat::operator+=(const TMatrixDFlat_const &mf)
 
   const TMatrixDBase *mt = mf.GetMatrix();
 
-  if (!AreCompatible(*fMatrix,*mt)) {
-    Error("operator+=(const TMatrixDFlat &)","matrices not compatible");
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
+  if (fMatrix->GetNoElements() != mt->GetNoElements()) {
+    Error("operator+=(const TMatrixDFlat_const &)","matrices lengths different");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -673,8 +667,11 @@ void TMatrixDFlat::operator*=(const TMatrixDFlat_const &mf)
 
   const TMatrixDBase *mt = mf.GetMatrix();
 
-  if (!AreCompatible(*fMatrix,*mt)) {
-    Error("operator*=(const TMatrixDFlat_const &)","matrices not compatible");
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
+  if (fMatrix->GetNoElements() != mt->GetNoElements()) {
+    Error("operator*=(const TMatrixDFlat_const &)","matrices lengths different");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -682,6 +679,451 @@ void TMatrixDFlat::operator*=(const TMatrixDFlat_const &mf)
   const Double_t *fp2 = mf.GetPtr();
   while (fp1 < fPtr + fMatrix->GetNoElements())
     *fp1++ *= *fp2++;
+}
+
+//______________________________________________________________________________
+TMatrixDSub_const::TMatrixDSub_const(const TMatrixD &matrix,Int_t row_lwbs,Int_t row_upbs,
+                                     Int_t col_lwbs,Int_t col_upbs)
+{
+  // make a reference to submatrix [row_lwbs..row_upbs][col_lwbs..col_upbs];
+  // The indexing range of the reference is
+  // [0..row_upbs-row_lwbs+1][0..col_upb-col_lwbs+1] (default)
+
+  Assert(matrix.IsValid());
+
+  Assert(row_upbs >= row_lwbs && col_upbs >= col_lwbs);
+  const Int_t rowLwb = matrix.GetRowLwb();
+  const Int_t rowUpb = matrix.GetRowUpb();
+  const Int_t colLwb = matrix.GetColLwb();
+  const Int_t colUpb = matrix.GetColUpb();
+  Assert(row_lwbs >= rowLwb && row_lwbs <= rowUpb);
+  Assert(col_lwbs >= colLwb && col_lwbs <= colUpb);
+  Assert(row_upbs >= rowLwb && row_upbs <= rowUpb);
+  Assert(col_upbs >= colLwb && col_upbs <= colUpb);
+
+  fRowOff    = row_lwbs-rowLwb;
+  fColOff    = col_lwbs-colLwb;
+  fNrowsSub  = row_upbs-row_lwbs+1;
+  fNcolsSub  = col_upbs-col_lwbs+1;
+
+  fMatrix = &matrix;
+}
+
+//______________________________________________________________________________
+TMatrixDSub_const::TMatrixDSub_const(const TMatrixDSym &matrix,Int_t row_lwbs,Int_t row_upbs,
+                                     Int_t col_lwbs,Int_t col_upbs)
+{
+  // make a reference to submatrix [row_lwbs..row_upbs][col_lwbs..col_upbs];
+  // The indexing range of the reference is
+  // [0..row_upbs-row_lwbs+1][0..col_upb-col_lwbs+1] (default)
+
+  Assert(matrix.IsValid());
+
+  Assert(row_upbs >= row_lwbs && col_upbs >= col_lwbs);
+  const Int_t rowLwb = matrix.GetRowLwb();
+  const Int_t rowUpb = matrix.GetRowUpb();
+  const Int_t colLwb = matrix.GetColLwb();
+  const Int_t colUpb = matrix.GetColUpb();
+  Assert(row_lwbs >= rowLwb && row_lwbs <= rowUpb);
+  Assert(col_lwbs >= colLwb && col_lwbs <= colUpb);
+  Assert(row_upbs >= rowLwb && row_upbs <= rowUpb);
+  Assert(col_upbs >= colLwb && col_upbs <= colUpb);
+
+  fRowOff    = row_lwbs-rowLwb;
+  fColOff    = col_lwbs-colLwb;
+  fNrowsSub  = row_upbs-row_lwbs+1;
+  fNcolsSub  = col_upbs-col_lwbs+1;
+
+  fMatrix = &matrix;
+}
+
+//______________________________________________________________________________
+TMatrixDSub::TMatrixDSub(TMatrixD &matrix,Int_t row_lwbs,Int_t row_upbs,
+                         Int_t col_lwbs,Int_t col_upbs)
+            :TMatrixDSub_const(matrix,row_lwbs,row_upbs,col_lwbs,col_upbs)
+{
+}
+
+//______________________________________________________________________________
+TMatrixDSub::TMatrixDSub(TMatrixDSym &matrix,Int_t row_lwbs,Int_t row_upbs,
+                         Int_t col_lwbs,Int_t col_upbs)
+            :TMatrixDSub_const(matrix,row_lwbs,row_upbs,col_lwbs,col_upbs)
+{
+}
+
+//______________________________________________________________________________
+TMatrixDSub::TMatrixDSub(const TMatrixDSub &ms) : TMatrixDSub_const(ms)
+{
+  *this = ms;
+}
+
+//______________________________________________________________________________
+void TMatrixDSub::operator=(Double_t val)
+{
+  // Assign val to every element of the sub matrix.
+
+  Assert(fMatrix->IsValid());
+
+  Double_t *p = (const_cast<TMatrixDBase *>(fMatrix))->GetMatrixArray();
+  const Int_t ncols = fMatrix->GetNcols();
+  for (Int_t irow = 0; irow < fNrowsSub; irow++) {
+    const Int_t off = (irow+fRowOff)*ncols+fColOff;
+    for (Int_t icol = 0; icol < fNcolsSub; icol++)
+      p[off+icol] = val;
+  }
+}
+
+//______________________________________________________________________________
+void TMatrixDSub::operator+=(Double_t val)
+{
+  // Add val to every element of the sub matrix.
+
+  Assert(fMatrix->IsValid());
+
+  Double_t *p = (const_cast<TMatrixDBase *>(fMatrix))->GetMatrixArray();
+  const Int_t ncols = fMatrix->GetNcols();
+  for (Int_t irow = 0; irow < fNrowsSub; irow++) {
+    const Int_t off = (irow+fRowOff)*ncols+fColOff;
+    for (Int_t icol = 0; icol < fNcolsSub; icol++)
+      p[off+icol] = val;
+  }
+}
+
+//______________________________________________________________________________
+void TMatrixDSub::operator*=(Double_t val)
+{
+  // Multiply every element of the sub matrix by val .
+
+  Assert(fMatrix->IsValid());
+
+  Double_t *p = (const_cast<TMatrixDBase *>(fMatrix))->GetMatrixArray();
+  const Int_t ncols = fMatrix->GetNcols();
+  for (Int_t irow = 0; irow < fNrowsSub; irow++) {
+    const Int_t off = (irow+fRowOff)*ncols+fColOff;
+    for (Int_t icol = 0; icol < fNcolsSub; icol++)
+      p[off+icol] = val;
+  }
+}
+
+//______________________________________________________________________________
+void TMatrixDSub::operator=(const TMatrixDSub_const &ms)
+{
+  const TMatrixDBase *mt = ms.GetMatrix();
+
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
+
+  if (fMatrix == mt &&
+      (GetNrows()  == ms.GetNrows () && GetNcols()  == ms.GetNcols () &&
+       GetRowOff() == ms.GetRowOff() && GetColOff() == ms.GetColOff()) )
+    return;
+
+  if (GetNrows() != ms.GetNrows() || GetNcols() != ms.GetNcols()) {
+    Error("operator=(const TMatrixDSub_const &)","sub matrices have different size");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
+    return;
+  }
+
+  const Int_t rowOff2 = ms.GetRowOff();
+  const Int_t colOff2 = ms.GetColOff();
+
+  Bool_t overlap = (fMatrix == mt) &&
+                   ( (rowOff2 >= fRowOff && rowOff2 < fRowOff+fNrowsSub) ||
+                     (colOff2 >= fColOff && colOff2 < fColOff+fNcolsSub) );
+
+  Double_t *p1 = const_cast<Double_t *>(fMatrix->GetMatrixArray());
+  if (!overlap) {
+    const Double_t *p2 = mt->GetMatrixArray();
+
+    const Int_t ncols1 = fMatrix->GetNcols();
+    const Int_t ncols2 = mt->GetNcols();
+    for (Int_t irow = 0; irow < fNrowsSub; irow++) {
+      const Int_t off1 = (irow+fRowOff)*ncols1+fColOff;
+      const Int_t off2 = (irow+rowOff2)*ncols2+colOff2;
+      for (Int_t icol = 0; icol < fNcolsSub; icol++)
+        p1[off1+icol] = p2[off2+icol];
+    }
+  } else {
+    const Int_t row_lwbs = rowOff2+mt->GetRowLwb();
+    const Int_t row_upbs = row_lwbs+fNrowsSub-1;
+    const Int_t col_lwbs = colOff2+mt->GetColLwb();
+    const Int_t col_upbs = col_lwbs+fNcolsSub-1;
+    TMatrixD tmp; mt->GetSub(row_lwbs,row_upbs,col_lwbs,col_upbs,tmp);
+    const Double_t *p2 = tmp.GetMatrixArray();
+
+    const Int_t ncols1 = fMatrix->GetNcols();
+    const Int_t ncols2 = tmp.GetNcols();
+    for (Int_t irow = 0; irow < fNrowsSub; irow++) {
+      const Int_t off1 = (irow+fRowOff)*ncols1+fColOff;
+      const Int_t off2 = irow*ncols2;
+      for (Int_t icol = 0; icol < fNcolsSub; icol++)
+        p1[off1+icol] = p2[off2+icol];
+    }
+  }
+}
+
+//______________________________________________________________________________
+void TMatrixDSub::operator=(const TMatrixDBase &m)
+{
+  Assert(fMatrix->IsValid());
+  Assert(m.IsValid());
+
+  if (fMatrix == &m) return;
+
+  if (fNrowsSub != m.GetNrows() || fNcolsSub != m.GetNcols()) {
+    Error("operator=(const TMatrixDBase &)","sub matrices and matrix have different size"); 
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
+    return;
+  }
+  const Int_t row_lwbs = fRowOff+fMatrix->GetRowLwb();
+  const Int_t col_lwbs = fColOff+fMatrix->GetColLwb();
+  (const_cast<TMatrixDBase *>(fMatrix))->SetSub(row_lwbs,col_lwbs,m);
+}
+
+//______________________________________________________________________________
+void TMatrixDSub::operator+=(const TMatrixDSub_const &ms)
+{
+  const TMatrixDBase *mt = ms.GetMatrix();
+
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
+
+  if (GetNrows() != ms.GetNrows() || GetNcols() != ms.GetNcols()) {
+    Error("operator+=(const TMatrixDSub_const &)","sub matrices have different size");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
+    return;
+  }
+
+  const Int_t rowOff2 = ms.GetRowOff();
+  const Int_t colOff2 = ms.GetColOff();
+
+  Bool_t overlap = (fMatrix == mt) &&
+                   ( (rowOff2 >= fRowOff && rowOff2 < fRowOff+fNrowsSub) ||
+                     (colOff2 >= fColOff && colOff2 < fColOff+fNcolsSub) );
+
+  Double_t *p1 = const_cast<Double_t *>(fMatrix->GetMatrixArray());
+  if (!overlap) {
+    const Double_t *p2 = mt->GetMatrixArray();
+
+    const Int_t ncols1 = fMatrix->GetNcols();
+    const Int_t ncols2 = mt->GetNcols();
+    for (Int_t irow = 0; irow < fNrowsSub; irow++) {
+      const Int_t off1 = (irow+fRowOff)*ncols1+fColOff;
+      const Int_t off2 = (irow+rowOff2)*ncols2+colOff2;
+      for (Int_t icol = 0; icol < fNcolsSub; icol++)
+        p1[off1+icol] += p2[off2+icol];
+    }
+  } else {
+    const Int_t row_lwbs = rowOff2+mt->GetRowLwb();
+    const Int_t row_upbs = row_lwbs+fNrowsSub-1;
+    const Int_t col_lwbs = colOff2+mt->GetColLwb();
+    const Int_t col_upbs = col_lwbs+fNcolsSub-1;
+    TMatrixD tmp; mt->GetSub(row_lwbs,row_upbs,col_lwbs,col_upbs,tmp);
+    const Double_t *p2 = tmp.GetMatrixArray();
+
+    const Int_t ncols1 = fMatrix->GetNcols();
+    const Int_t ncols2 = tmp.GetNcols();
+    for (Int_t irow = 0; irow < fNrowsSub; irow++) {
+      const Int_t off1 = (irow+fRowOff)*ncols1+fColOff;
+      const Int_t off2 = irow*ncols2;
+      for (Int_t icol = 0; icol < fNcolsSub; icol++)
+        p1[off1+icol] += p2[off2+icol];
+    }
+  }
+}
+
+//______________________________________________________________________________
+void TMatrixDSub::operator*=(const TMatrixDSub_const &ms)
+{
+  if (fNcolsSub != ms.GetNrows() || fNcolsSub != ms.GetNcols()) {
+    Error("operator*=(const TMatrixDSub_const &)","source sub matrix has wrong shape");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
+    return;
+  }
+
+  const TMatrixDBase *source = ms.GetMatrix();
+
+  TMatrixD source_sub;
+  {
+    const Int_t row_lwbs = ms.GetRowOff()+source->GetRowLwb();
+    const Int_t row_upbs = row_lwbs+fNrowsSub-1;
+    const Int_t col_lwbs = ms.GetColOff()+source->GetColLwb();
+    const Int_t col_upbs = col_lwbs+fNcolsSub-1;
+    source->GetSub(row_lwbs,row_upbs,col_lwbs,col_upbs,source_sub);
+  }
+  
+  const Double_t *sp = source_sub.GetMatrixArray();
+  const Int_t ncols = fMatrix->GetNcols();
+
+  // One row of the old_target matrix
+  Double_t work[kWorkMax];
+  Bool_t isAllocated = kFALSE;
+  Double_t *trp = work;
+  if (fNcolsSub > kWorkMax) {
+    isAllocated = kTRUE;
+    trp = new Double_t[fNcolsSub];
+  }
+
+        Double_t *cp   = const_cast<Double_t *>(fMatrix->GetMatrixArray())+fRowOff*ncols+fColOff;
+  const Double_t *trp0 = cp; // Pointer to  target[i,0];
+  const Double_t * const trp0_last = trp0+fNrowsSub*ncols;
+  while (trp0 < trp0_last) {
+    memcpy(trp,trp0,fNcolsSub*sizeof(Double_t));         // copy the i-th row of target, Start at target[i,0]
+    for (const Double_t *scp = sp; scp < sp+fNcolsSub; ) {  // Pointer to the j-th column of source,
+                                                         // Start scp = source[0,0]
+      Double_t cij = 0;
+      for (Int_t j = 0; j < fNcolsSub; j++) {
+        cij += trp[j] * *scp;                            // the j-th col of source
+        scp += fNcolsSub;
+      }
+      *cp++ = cij;
+      scp -= source_sub.GetNoElements()-1;               // Set bcp to the (j+1)-th col
+    }
+    cp   += ncols-fNcolsSub;
+    trp0 += ncols;                                      // Set trp0 to the (i+1)-th row
+    Assert(trp0 == cp);
+  }
+
+  Assert(cp == trp0_last && trp0 == trp0_last);
+  if (isAllocated)
+    delete [] trp;
+}
+
+//______________________________________________________________________________
+void TMatrixDSub::operator+=(const TMatrixDBase &mt)
+{
+  Assert(fMatrix->IsValid());
+  Assert(mt.IsValid());
+
+  if (GetNrows() != mt.GetNrows() || GetNcols() != mt.GetNcols()) {
+    Error("operator+=(const TMatrixDBase &)","sub matrix and matrix have different size");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
+    return;
+  }
+
+  Double_t *p1 = const_cast<Double_t *>(fMatrix->GetMatrixArray());
+  const Double_t *p2 = mt.GetMatrixArray();
+
+  const Int_t ncols1 = fMatrix->GetNcols();
+  const Int_t ncols2 = mt.GetNcols();
+  for (Int_t irow = 0; irow < fNrowsSub; irow++) {
+    const Int_t off1 = (irow+fRowOff)*ncols1+fColOff;
+    const Int_t off2 = irow*ncols2;
+    for (Int_t icol = 0; icol < fNcolsSub; icol++)
+      p1[off1+icol] += p2[off2+icol];
+  }
+}
+
+//______________________________________________________________________________
+void TMatrixDSub::operator*=(const TMatrixD &source)
+{
+  if (fNcolsSub != source.GetNrows() || fNcolsSub != source.GetNcols()) {
+    Error("operator*=(const TMatrixD &)","source matrix has wrong shape");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
+    return;
+  }
+
+  // Check for A *= A;
+  const Double_t *sp;
+  TMatrixD tmp;
+  if (fMatrix == &source) {
+    tmp.ResizeTo(source);
+    tmp = source;
+    sp = tmp.GetMatrixArray();
+  }
+  else
+    sp = source.GetMatrixArray();
+
+  const Int_t ncols = fMatrix->GetNcols();
+
+  // One row of the old_target matrix
+  Double_t work[kWorkMax];
+  Bool_t isAllocated = kFALSE;
+  Double_t *trp = work;
+  if (fNcolsSub > kWorkMax) {
+    isAllocated = kTRUE;
+    trp = new Double_t[fNcolsSub];
+  }
+
+        Double_t *cp   = const_cast<Double_t *>(fMatrix->GetMatrixArray())+fRowOff*ncols+fColOff;
+  const Double_t *trp0 = cp;                               // Pointer to  target[i,0];
+  const Double_t * const trp0_last = trp0+fNrowsSub*ncols;
+  while (trp0 < trp0_last) {
+    memcpy(trp,trp0,fNcolsSub*sizeof(Double_t));           // copy the i-th row of target, Start at target[i,0]
+    for (const Double_t *scp = sp; scp < sp+fNcolsSub; ) { // Pointer to the j-th column of source,
+                                                           // Start scp = source[0,0]
+      Double_t cij = 0;
+      for (Int_t j = 0; j < fNcolsSub; j++) {
+        cij += trp[j] * *scp;                              // the j-th col of source
+        scp += fNcolsSub;
+      }
+      *cp++ = cij;
+      scp -= source.GetNoElements()-1;                    // Set bcp to the (j+1)-th col
+    }
+    cp   += ncols-fNcolsSub;
+    trp0 += ncols;                                        // Set trp0 to the (i+1)-th row
+    Assert(trp0 == cp);
+  }
+
+  Assert(cp == trp0_last && trp0 == trp0_last);
+  if (isAllocated)
+    delete [] trp;
+}
+
+//______________________________________________________________________________
+void TMatrixDSub::operator*=(const TMatrixDSym &source)
+{
+  if (fNcolsSub != source.GetNrows() || fNcolsSub != source.GetNcols()) {
+    Error("operator*=(const TMatrixDSym &)","source matrix has wrong shape");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
+    return;
+  }
+
+  // Check for A *= A;
+  const Double_t *sp;
+  TMatrixDSym tmp;
+  if ((TMatrixDSym *)fMatrix == &source) {
+    tmp.ResizeTo(source);
+    tmp = source;
+    sp = tmp.GetMatrixArray();
+  }
+  else
+    sp = source.GetMatrixArray();
+
+  const Int_t ncols = fMatrix->GetNcols();
+
+  // One row of the old_target matrix
+  Double_t work[kWorkMax];
+  Bool_t isAllocated = kFALSE;
+  Double_t *trp = work;
+  if (fNcolsSub > kWorkMax) {
+    isAllocated = kTRUE;
+    trp = new Double_t[fNcolsSub];
+  }
+
+        Double_t *cp   = const_cast<Double_t *>(fMatrix->GetMatrixArray())+fRowOff*ncols+fColOff;
+  const Double_t *trp0 = cp;                               // Pointer to  target[i,0];
+  const Double_t * const trp0_last = trp0+fNrowsSub*ncols;
+  while (trp0 < trp0_last) {
+    memcpy(trp,trp0,fNcolsSub*sizeof(Double_t));           // copy the i-th row of target, Start at target[i,0]
+    for (const Double_t *scp = sp; scp < sp+fNcolsSub; ) { // Pointer to the j-th column of source,
+                                                           // Start scp = source[0,0]
+      Double_t cij = 0;
+      for (Int_t j = 0; j < fNcolsSub; j++) {
+        cij += trp[j] * *scp;                              // the j-th col of source
+        scp += fNcolsSub;
+      }
+      *cp++ = cij;
+      scp -= source.GetNoElements()-1;                    // Set bcp to the (j+1)-th col
+    }
+    cp   += ncols-fNcolsSub;
+    trp0 += ncols;                                        // Set trp0 to the (i+1)-th row
+    Assert(trp0 == cp);
+  }
+
+  Assert(cp == trp0_last && trp0 == trp0_last);
+  if (isAllocated)
+    delete [] trp;
 }
 
 //______________________________________________________________________________
@@ -714,11 +1156,13 @@ TMatrixDSparseRow::TMatrixDSparseRow(const TMatrixDSparseRow &mr)
                                     : TMatrixDSparseRow_const(mr)
 {
   *this = mr;
-} 
+}
 
 //______________________________________________________________________________
 Double_t &TMatrixDSparseRow::operator()(Int_t i)
-{ 
+{
+  Assert(fMatrix->IsValid());
+
   const Int_t acoln = i-fMatrix->GetColLwb(); 
   Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
   Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
@@ -739,7 +1183,7 @@ Double_t &TMatrixDSparseRow::operator()(Int_t i)
       return (const_cast<Double_t*>(fDataPtr))[index];
     else {
       Error("operator()(Int_t","Insert row failed");
-      Assert(0);
+      (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
       return (const_cast<Double_t*>(fDataPtr))[0];
     }
   }
@@ -747,9 +1191,10 @@ Double_t &TMatrixDSparseRow::operator()(Int_t i)
 
 //______________________________________________________________________________
 void TMatrixDSparseRow::operator=(Double_t val)
-{   
+{
   // Assign val to every non-zero (!) element of the matrix row.
   
+  Assert(fMatrix->IsValid());
   Double_t *rp = const_cast<Double_t *>(fDataPtr);
   for ( ; rp < fDataPtr+fNindex; rp++)
     *rp = val;
@@ -757,9 +1202,10 @@ void TMatrixDSparseRow::operator=(Double_t val)
 
 //______________________________________________________________________________
 void TMatrixDSparseRow::operator+=(Double_t val)
-{   
+{
   // Add val to every non-zero (!) element of the matrix row.
   
+  Assert(fMatrix->IsValid());
   Double_t *rp = const_cast<Double_t *>(fDataPtr);
   for ( ; rp < fDataPtr+fNindex; rp++)
     *rp += val;
@@ -767,9 +1213,10 @@ void TMatrixDSparseRow::operator+=(Double_t val)
 
 //______________________________________________________________________________
 void TMatrixDSparseRow::operator*=(Double_t val)
-{   
-  // Multiply every non-zero (!) element of the matrix row by val.
+{
+  // Multiply every element of the matrix row by val.
   
+  Assert(fMatrix->IsValid());
   Double_t *rp = const_cast<Double_t *>(fDataPtr);
   for ( ; rp < fDataPtr+fNindex; rp++)
     *rp *= val;
@@ -781,32 +1228,28 @@ void TMatrixDSparseRow::operator=(const TMatrixDSparseRow_const &mr)
   const TMatrixDBase *mt = mr.GetMatrix();
   if (fMatrix == mt) return;
 
-  if (!AreCompatible(*fMatrix,*mt)) {
-    Error("operator=(const TMatrixDSparseRow_const &)","matrices not compatible");
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
+  if (fMatrix->GetColLwb() != mt->GetColLwb() || fMatrix->GetNcols() != mt->GetNcols()) {
+    Error("operator=(const TMatrixDSparseRow_const &)","matrix rows not compatible");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
-  Double_t *rp1 = const_cast<Double_t *>(fDataPtr);
-  const Double_t *rp2 = mr.GetDataPtr();
-  for ( ; rp1 < fDataPtr+fNindex; rp1++,rp2++)
-    *rp1 = *rp2;
-}
+  const Int_t ncols = fMatrix->GetNcols();
+  const Int_t row1  = fRowInd+fMatrix->GetRowLwb();
+  const Int_t row2  = mr.GetRowIndex()+mt->GetRowLwb();
+  const Int_t col   = fMatrix->GetColLwb();
 
-//______________________________________________________________________________
-void TMatrixDSparseRow::operator=(const TMatrixDSparseRow &mr)
-{
-  const TMatrixDBase *mt = mr.GetMatrix();
-  if (fMatrix == mt) return;
+  TVectorD v(ncols);
+  mt->ExtractRow(row2,col,v.GetMatrixArray());
+  const_cast<TMatrixDBase *>(fMatrix)->InsertRow(row1,col,v.GetMatrixArray());
 
-  if (!AreCompatible(*fMatrix,*mt)) {
-    Error("operator=(const TMatrixDSparseRow &)","matrices not compatible");
-    return;
-  }
-
-  Double_t *rp1 = const_cast<Double_t *>(fDataPtr);
-  const Double_t *rp2 = mr.GetDataPtr();
-  for ( ; rp1 < fDataPtr+fNindex; rp1++,rp2++)
-    *rp1 = *rp2;
+  const Int_t sIndex = fMatrix->GetRowIndexArray()[fRowInd];
+  const Int_t eIndex = fMatrix->GetRowIndexArray()[fRowInd+1];
+  fNindex  = eIndex-sIndex;
+  fColPtr  = fMatrix->GetColIndexArray()+sIndex;
+  fDataPtr = fMatrix->GetMatrixArray()+sIndex;
 }
 
 //______________________________________________________________________________
@@ -815,10 +1258,12 @@ void TMatrixDSparseRow::operator=(const TVectorD &vec)
    // Assign a vector to a matrix row. The vector is considered row-vector
    // to allow the assignment in the strict sense.
 
+  Assert(fMatrix->IsValid());
   Assert(vec.IsValid());
 
   if (fMatrix->GetColLwb() != vec.GetLwb() || fMatrix->GetNcols() != vec.GetNrows()) {
     Error("operator=(const TVectorD &)","vector length != matrix-row length");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -841,8 +1286,11 @@ void TMatrixDSparseRow::operator+=(const TMatrixDSparseRow_const &r)
 
   const TMatrixDBase *mt = r.GetMatrix();
 
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
   if (fMatrix->GetColLwb() != mt->GetColLwb() || fMatrix->GetNcols() != mt->GetNcols()) {
     Error("operator+=(const TMatrixDRow_const &)","different row lengths");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -873,8 +1321,11 @@ void TMatrixDSparseRow::operator*=(const TMatrixDSparseRow_const &r)
 
   const TMatrixDBase *mt = r.GetMatrix();
 
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
   if (fMatrix->GetColLwb() != mt->GetColLwb() || fMatrix->GetNcols() != mt->GetNcols()) {
     Error("operator+=(const TMatrixDRow_const &)","different row lengths");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -924,6 +1375,8 @@ TMatrixDSparseDiag::TMatrixDSparseDiag(const TMatrixDSparseDiag &md)
 //______________________________________________________________________________
 Double_t &TMatrixDSparseDiag::operator()(Int_t i)
 {
+  Assert(fMatrix->IsValid());
+
   Assert(i < fNdiag && i >= 0);
   TMatrixDBase *mt = const_cast<TMatrixDBase *>(fMatrix);
   const Int_t    *pR = mt->GetRowIndexArray();
@@ -948,7 +1401,7 @@ Double_t &TMatrixDSparseDiag::operator()(Int_t i)
       return (const_cast<Double_t*>(fDataPtr))[index];
     else {
       Error("operator()(Int_t","Insert row failed");
-      Assert(0);
+      (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
       return (const_cast<Double_t*>(fDataPtr))[index];
     }
   }
@@ -959,6 +1412,7 @@ void TMatrixDSparseDiag::operator=(Double_t val)
 {
   // Assign val to every element of the matrix diagonal.
 
+  Assert(fMatrix->IsValid());
   for (Int_t i = 0; i < fNdiag; i++)
     (*this)(i) = val;
 }
@@ -966,8 +1420,9 @@ void TMatrixDSparseDiag::operator=(Double_t val)
 //______________________________________________________________________________
 void TMatrixDSparseDiag::operator+=(Double_t val)
 {
-  // Assign val to every element of the matrix diagonal.
+  // Add val to every element of the matrix diagonal.
 
+  Assert(fMatrix->IsValid());
   for (Int_t i = 0; i < fNdiag; i++)
     (*this)(i) += val;
 }
@@ -975,8 +1430,9 @@ void TMatrixDSparseDiag::operator+=(Double_t val)
 //______________________________________________________________________________
 void TMatrixDSparseDiag::operator*=(Double_t val)
 {
-  // Assign val to every element of the matrix diagonal.
+  // Multiply every element of the matrix diagonal by val.
 
+  Assert(fMatrix->IsValid());
   for (Int_t i = 0; i < fNdiag; i++)
     (*this)(i) *= val;
 }
@@ -987,23 +1443,11 @@ void TMatrixDSparseDiag::operator=(const TMatrixDSparseDiag_const &md)
   const TMatrixDBase *mt = md.GetMatrix();
   if (fMatrix == mt) return;
 
-  if (!AreCompatible(*fMatrix,*mt)) {
-    Error("operator=(const TMatrixDSparseDiag_const &)","matrices not compatible");
-    return;
-  }
-
-  for (Int_t i = 0; i < fNdiag; i++)
-    (*this)(i) = md(i);
-}
-
-//______________________________________________________________________________
-void TMatrixDSparseDiag::operator=(const TMatrixDSparseDiag &md)
-{
-  const TMatrixDBase *mt = md.GetMatrix();
-  if (fMatrix == mt) return;
-
-  if (!AreCompatible(*fMatrix,*mt)) {
-    Error("operator=(const TMatrixDSparseDiag &)","matrices not compatible");
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
+  if (fNdiag != md.GetNdiags()) {
+    Error("operator=(const TMatrixDSparseDiag_const &)","matrix-diagonal's different length");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -1016,10 +1460,12 @@ void TMatrixDSparseDiag::operator=(const TVectorD &vec)
 {
   // Assign a vector to the matrix diagonal.
 
+  Assert(fMatrix->IsValid());
   Assert(vec.IsValid());
 
   if (fNdiag != vec.GetNrows()) {
     Error("operator=(const TVectorD &)","vector length != matrix-diagonal length");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -1034,8 +1480,13 @@ void TMatrixDSparseDiag::operator+=(const TMatrixDSparseDiag_const &md)
   // Add to every element of the matrix diagonal the
   // corresponding element of diagonal md.
 
+  const TMatrixDBase *mt = md.GetMatrix();
+
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
   if (fNdiag != md.GetNdiags()) {
-    Error("operator=(const TMatrixDSparseDiag_const &)","matrix-diagonal's different length");
+    Error("operator+=(const TMatrixDSparseDiag_const &)","matrix-diagonal's different length");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 
@@ -1046,11 +1497,16 @@ void TMatrixDSparseDiag::operator+=(const TMatrixDSparseDiag_const &md)
 //______________________________________________________________________________
 void TMatrixDSparseDiag::operator*=(const TMatrixDSparseDiag_const &md)
 {
-  // Add to every element of the matrix diagonal the
+  // Multiply every element of the matrix diagonal with the
   // corresponding element of diagonal md.
 
+  const TMatrixDBase *mt = md.GetMatrix();
+
+  Assert(fMatrix->IsValid());
+  Assert(mt->IsValid());
   if (fNdiag != md.GetNdiags()) {
     Error("operator*=(const TMatrixDSparseDiag_const &)","matrix-diagonal's different length");
+    (const_cast<TMatrixDBase *>(fMatrix))->Invalidate();
     return;
   }
 

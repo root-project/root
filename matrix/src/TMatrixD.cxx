@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.63 2004/06/09 09:59:31 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.64 2004/06/09 12:21:23 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -701,18 +701,20 @@ void TMatrixD::AtMultB(const TMatrixD &a,const TMatrixDSym &b,Int_t constr)
 }
 
 //______________________________________________________________________________
-void TMatrixD::Use(Int_t row_lwb,Int_t row_upb,
-                   Int_t col_lwb,Int_t col_upb,Double_t *data)
+TMatrixD &TMatrixD::Use(Int_t row_lwb,Int_t row_upb,
+                        Int_t col_lwb,Int_t col_upb,Double_t *data)
 {
   if (row_upb < row_lwb)
   {
     Error("Use","row_upb=%d < row_lwb=%d",row_upb,row_lwb);
-    return;
+    Invalidate();
+    return *this;
   }
   if (col_upb < col_lwb)
   {
     Error("Use","col_upb=%d < col_lwb=%d",col_upb,col_lwb);
-    return;
+    Invalidate();
+    return *this;
   }
 
   Clear();
@@ -723,11 +725,13 @@ void TMatrixD::Use(Int_t row_lwb,Int_t row_upb,
   fNelems   = fNrows*fNcols;
   fElements = data;
   fIsOwner  = kFALSE;
+
+  return *this;
 }
 
 //______________________________________________________________________________
-TMatrixD TMatrixD::GetSub(Int_t row_lwb,Int_t row_upb,
-                          Int_t col_lwb,Int_t col_upb,Option_t *option) const
+TMatrixDBase &TMatrixD::GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
+                               TMatrixDBase &target,Option_t *option) const
 {
   // Get submatrix [row_lwb..row_upb][col_lwb..col_upb]; The indexing range of the
   // returned matrix depends on the argument option:
@@ -738,23 +742,28 @@ TMatrixD TMatrixD::GetSub(Int_t row_lwb,Int_t row_upb,
   Assert(IsValid());
   if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
     Error("GetSub","row_lwb out of bounds");
-    return TMatrixD();
+    target.Invalidate();
+    return target;
   }
   if (col_lwb < fColLwb || col_lwb > fColLwb+fNcols-1) {
     Error("GetSub","col_lwb out of bounds");
-    return TMatrixD();
+    target.Invalidate();
+    return target;
   }
   if (row_upb < fRowLwb || row_upb > fRowLwb+fNrows-1) {
     Error("GetSub","row_upb out of bounds");
-    return TMatrixD();
+    target.Invalidate();
+    return target;
   }
   if (col_upb < fColLwb || col_upb > fColLwb+fNcols-1) {
     Error("GetSub","col_upb out of bounds");
-    return TMatrixD();
+    target.Invalidate();
+    return target;
   }
   if (row_upb < row_lwb || col_upb < col_lwb) {
     Error("GetSub","row_upb < row_lwb || col_upb < col_lwb");
-    return TMatrixD();
+    target.Invalidate();
+    return target;
   }
 
   TString opt(option);
@@ -766,26 +775,34 @@ TMatrixD TMatrixD::GetSub(Int_t row_lwb,Int_t row_upb,
   const Int_t col_lwb_sub = (shift) ? 0               : col_lwb;
   const Int_t col_upb_sub = (shift) ? col_upb-col_lwb : col_upb;
 
-  TMatrixD sub(row_lwb_sub,row_upb_sub,col_lwb_sub,col_upb_sub);
+  target.ResizeTo(row_lwb_sub,row_upb_sub,col_lwb_sub,col_upb_sub);
   const Int_t nrows_sub = row_upb_sub-row_lwb_sub+1;
   const Int_t ncols_sub = col_upb_sub-col_lwb_sub+1;
 
-  const Double_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb)*fNcols+(col_lwb-fColLwb);
-        Double_t *bp = sub.GetMatrixArray();
-
-  for (Int_t irow = 0; irow < nrows_sub; irow++) {
-    const Double_t *ap_sub = ap;
-    for (Int_t icol = 0; icol < ncols_sub; icol++) {
-      *bp++ = *ap_sub++;
+  if (target.GetRowIndexArray() && target.GetColIndexArray()) {
+    for (Int_t irow = 0; irow < nrows_sub; irow++) {
+      for (Int_t icol = 0; icol < ncols_sub; icol++) {
+        target(irow+row_lwb_sub,icol+col_lwb_sub) = (*this)(row_lwb+irow,col_lwb+icol);
+      }
     }
-    ap += fNcols;
+  } else {
+    const Double_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb)*fNcols+(col_lwb-fColLwb);
+          Double_t *bp = target.GetMatrixArray();
+
+    for (Int_t irow = 0; irow < nrows_sub; irow++) {
+      const Double_t *ap_sub = ap;
+      for (Int_t icol = 0; icol < ncols_sub; icol++) {
+        *bp++ = *ap_sub++;
+      }
+      ap += fNcols;
+    }
   }
 
-  return sub;
+  return target;
 }
 
 //______________________________________________________________________________
-void TMatrixD::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source)
+TMatrixDBase &TMatrixD::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source)
 {
   // Insert matrix source starting at [row_lwb][col_lwb], thereby overwriting the part
   // [row_lwb..row_lwb+nrows_source][col_lwb..col_lwb+ncols_source];
@@ -795,29 +812,44 @@ void TMatrixD::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source)
   
   if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
     Error("SetSub","row_lwb outof bounds");
-    return;
+    Invalidate();
+    return *this;
   }
   if (col_lwb < fColLwb || col_lwb > fColLwb+fNcols-1) {
     Error("SetSub","col_lwb outof bounds");
-    return;
+    Invalidate();
+    return *this;
   }
   const Int_t nRows_source = source.GetNrows();
   const Int_t nCols_source = source.GetNcols();
   if (row_lwb+nRows_source > fRowLwb+fNrows || col_lwb+nCols_source > fColLwb+fNcols) {
     Error("SetSub","source matrix too large");
-    return;
+    Invalidate();
+    return *this;
   }
   
-  const Double_t *bp = source.GetMatrixArray();
-        Double_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb)*fNcols+(col_lwb-fColLwb);
-  
-  for (Int_t irow = 0; irow < nRows_source; irow++) {
-    Double_t *ap_sub = ap;
-    for (Int_t icol = 0; icol < nCols_source; icol++) {
-      *ap_sub++ = *bp++;
+  if (source.GetRowIndexArray() && source.GetColIndexArray()) {
+    const Int_t rowlwb_s = source.GetRowLwb();
+    const Int_t collwb_s = source.GetColLwb();
+    for (Int_t irow = 0; irow < nRows_source; irow++) {
+      for (Int_t icol = 0; icol < nCols_source; icol++) {
+        (*this)(row_lwb+irow,col_lwb+icol) = source(rowlwb_s+irow,collwb_s+icol);
+      }
     }
-    ap += fNcols;
+  } else {
+    const Double_t *bp = source.GetMatrixArray();
+          Double_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb)*fNcols+(col_lwb-fColLwb);
+  
+    for (Int_t irow = 0; irow < nRows_source; irow++) {
+      Double_t *ap_sub = ap;
+      for (Int_t icol = 0; icol < nCols_source; icol++) {
+        *ap_sub++ = *bp++;
+      }
+      ap += fNcols;
+    }
   }
+
+  return *this;
 }
 
 //______________________________________________________________________________
@@ -973,7 +1005,7 @@ TMatrixD &TMatrixD::InvertFast(Double_t *det)
 }
 
 //______________________________________________________________________________
-TMatrixD &TMatrixD::Transpose(const TMatrixDBase &source)
+TMatrixD &TMatrixD::Transpose(const TMatrixD &source)
 {
   // Transpose a matrix.
       

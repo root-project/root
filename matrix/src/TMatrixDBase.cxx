@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.11 2004/06/02 15:42:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.12 2004/06/08 08:20:36 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -393,7 +393,7 @@ void TMatrixDBase::IndexedLexSort(Int_t n,Int_t *first,Int_t swapFirst,
 }
 
 //______________________________________________________________________________
-void TMatrixDBase::SetMatrixArray(const Double_t *data,Option_t *option) 
+TMatrixDBase &TMatrixDBase::SetMatrixArray(const Double_t *data,Option_t *option) 
 {
   // Copy array data to matrix . It is assumed that array is of size >= fNelems
   // (=)))) fNrows*fNcols
@@ -420,6 +420,8 @@ void TMatrixDBase::SetMatrixArray(const Double_t *data,Option_t *option)
   }
   else
     memcpy(elem,data,fNelems*sizeof(Double_t));
+
+  return *this;
 }
 
 //______________________________________________________________________________
@@ -473,7 +475,7 @@ void TMatrixDBase::GetMatrix2Array(Double_t *data,Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TMatrixDBase::InsertRow(Int_t rown,Int_t coln,const Double_t *v,Int_t n)
+TMatrixDBase &TMatrixDBase::InsertRow(Int_t rown,Int_t coln,const Double_t *v,Int_t n)
 {
   const Int_t arown = rown-fRowLwb;
   const Int_t acoln = coln-fColLwb;
@@ -481,22 +483,27 @@ void TMatrixDBase::InsertRow(Int_t rown,Int_t coln,const Double_t *v,Int_t n)
 
   if (arown >= fNrows || arown < 0) {
     Error("InsertRow","row %d out of matrix range",rown); 
-    return;
+    Invalidate();
+    return *this;
   }                                                                     
 
   if (acoln >= fNcols || acoln < 0) {                                     
     Error("InsertRow","column %d out of matrix range",coln);
-    return;
+    Invalidate();
+    return *this;
   }
 
   if (acoln+nr >= fNcols || nr < 0) {
     Error("InsertRow","row length %d out of range",nr);
-    return;
+    Invalidate();
+    return *this;
   }
 
   const Int_t off = arown*fNcols+acoln;
   Double_t * const elem = GetMatrixArray()+off;
   memcpy(elem,v,nr*sizeof(Double_t));
+
+  return *this;
 }
 
 //______________________________________________________________________________
@@ -529,7 +536,7 @@ void TMatrixDBase::ExtractRow(Int_t rown,Int_t coln,Double_t *v,Int_t n) const
 }
 
 //______________________________________________________________________________
-void TMatrixDBase::Shift(Int_t row_shift,Int_t col_shift)
+TMatrixDBase &TMatrixDBase::Shift(Int_t row_shift,Int_t col_shift)
 {
   // Shift the row index by adding row_shift and the column index by adding
   // col_shift, respectively. So [rowLwb..rowUpb][colLwb..colUpb] becomes
@@ -537,10 +544,12 @@ void TMatrixDBase::Shift(Int_t row_shift,Int_t col_shift)
 
   fRowLwb += row_shift;
   fColLwb += col_shift;
+
+  return *this;
 }
 
 //______________________________________________________________________________
-void TMatrixDBase::ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/)
+TMatrixDBase &TMatrixDBase::ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/)
 {
   // Set size of the matrix to nrows x ncols
   // New dynamic elements are created, the overlapping part of the old ones are
@@ -549,16 +558,17 @@ void TMatrixDBase::ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/)
   Assert(IsValid());
   if (!fIsOwner) {
     Error("ResizeTo(Int_t,Int_t)","Not owner of data array,cannot resize");
-    return;
+    Invalidate();
+    return *this;
   }
 
   if (fNelems > 0) {
     if (fNrows == nrows && fNcols == ncols)
-      return;
+      return *this;
     else if (nrows == 0 || ncols == 0) {
       fNrows = nrows; fNcols = ncols;
       Clear();
-      return;
+      return *this;
     }
 
     Double_t    *elements_old = GetMatrixArray();
@@ -596,11 +606,13 @@ void TMatrixDBase::ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/)
   } else {
     Allocate(nrows,ncols,0,0,1);
   }
+
+  return *this;
 }
 
 //______________________________________________________________________________
-void TMatrixDBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                            Int_t /*nr_nonzeros*/)
+TMatrixDBase &TMatrixDBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
+                                     Int_t /*nr_nonzeros*/)
 {
   // Set size of the matrix to [row_lwb:row_upb] x [col_lwb:col_upb]
   // New dynamic elemenst are created, the overlapping part of the old ones are
@@ -609,7 +621,8 @@ void TMatrixDBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_
   Assert(IsValid());
   if (!fIsOwner) {
     Error("ResizeTo(Int_t,Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
-    return;
+    Invalidate();
+    return *this;
   }
 
   const Int_t new_nrows = row_upb-row_lwb+1;
@@ -619,12 +632,12 @@ void TMatrixDBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_
 
     if (fNrows  == new_nrows  && fNcols  == new_ncols &&
         fRowLwb == row_lwb    && fColLwb == col_lwb)
-       return;
+       return *this;
     else if (new_nrows == 0 || new_ncols == 0) {
       fNrows = new_nrows; fNcols = new_ncols;
       fRowLwb = row_lwb; fColLwb = col_lwb;
       Clear();
-      return;
+      return *this;
     }
 
     Double_t    *elements_old = GetMatrixArray();
@@ -678,6 +691,8 @@ void TMatrixDBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_
   } else {
     Allocate(new_nrows,new_ncols,row_lwb,col_lwb,1);
   }
+
+  return *this;
 }
 
 //______________________________________________________________________________
@@ -1113,7 +1128,7 @@ TMatrixDBase &TMatrixDBase::Apply(const TElementPosActionD &action)
 }
 
 //______________________________________________________________________________
-void TMatrixDBase::Randomize(Double_t alpha,Double_t beta,Double_t &seed)
+TMatrixDBase &TMatrixDBase::Randomize(Double_t alpha,Double_t beta,Double_t &seed)
 {
   // randomize matrix element values
 
@@ -1126,6 +1141,8 @@ void TMatrixDBase::Randomize(Double_t alpha,Double_t beta,Double_t &seed)
   const Double_t * const fp = ep+fNelems;
   while (ep < fp)
     *ep++ = scale*(Drand(seed)+shift);
+
+  return *this;
 }
 
 //______________________________________________________________________________
@@ -1164,12 +1181,12 @@ Bool_t AreCompatible(const TMatrixDBase &m1,const TMatrixDBase &m2,Int_t verbose
 {
   if (!m1.IsValid()) {
     if (verbose)
-      ::Error("AreCompatible", "matrix 1 not initialized");
+      ::Error("AreCompatible", "matrix 1 invalid");
     return kFALSE;
   }
   if (!m2.IsValid()) {
     if (verbose)
-      ::Error("AreCompatible", "matrix 2 not initialized");
+      ::Error("AreCompatible", "matrix 2 invalid");
     return kFALSE;
   }
 
@@ -1188,12 +1205,12 @@ Bool_t AreCompatible(const TMatrixDBase &m1,const TMatrixFBase &m2,Int_t verbose
 {
   if (!m1.IsValid()) {
     if (verbose)
-      ::Error("AreCompatible", "matrix 1 not initialized");
+      ::Error("AreCompatible", "matrix 1 not valid");
     return kFALSE;
   }
   if (!m2.IsValid()) {
     if (verbose)
-      ::Error("AreCompatible", "matrix 2 not initialized");
+      ::Error("AreCompatible", "matrix 2 not valid");
     return kFALSE;
   }
 

@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.16 2004/05/12 10:39:29 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.17 2004/05/18 14:01:04 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -29,10 +29,12 @@
 #pragma link C++ class TMatrixFColumn;
 #pragma link C++ class TMatrixFDiag;
 #pragma link C++ class TMatrixFFlat;
+#pragma link C++ class TMatrixFSub;
 #pragma link C++ class TMatrixFRow_const;
 #pragma link C++ class TMatrixFColumn_const;
 #pragma link C++ class TMatrixFDiag_const;
 #pragma link C++ class TMatrixFFlat_const;
+#pragma link C++ class TMatrixFSub_const;
 
 #pragma link C++ class TVector-;
 #pragma link C++ class TMatrix-;
@@ -120,10 +122,12 @@
 #pragma link C++ class TMatrixDColumn;
 #pragma link C++ class TMatrixDDiag;
 #pragma link C++ class TMatrixDFlat;
+#pragma link C++ class TMatrixDSub;
 #pragma link C++ class TMatrixDRow_const;
 #pragma link C++ class TMatrixDColumn_const;
 #pragma link C++ class TMatrixDDiag_const;
 #pragma link C++ class TMatrixDFlat_const;
+#pragma link C++ class TMatrixDSub_const;
 
 #pragma link C++ class TMatrixDSparseRow_const;
 #pragma link C++ class TMatrixDSparseRow;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.10 2004/05/27 06:39:53 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.11 2004/05/27 13:17:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -76,15 +76,17 @@ public:
   inline Bool_t   IsOwner    () const { return fIsOwner; }
   inline void     SetElements(const Float_t *elements) { Assert(IsValid());
                                                           memcpy(fElements,elements,fNrows*sizeof(Float_t)); }
-  inline void     Shift      (Int_t row_shift)   { fRowLwb += row_shift; }
-         void     ResizeTo   (Int_t lwb,Int_t upb);
-  inline void     ResizeTo   (Int_t n)           { ResizeTo(0,n-1); }
-  inline void     ResizeTo   (const TVectorF &v) { ResizeTo(v.GetLwb(),v.GetUpb()); }
+  inline TVectorF &Shift     (Int_t row_shift)   { fRowLwb += row_shift; return *this; }
+         TVectorF &ResizeTo  (Int_t lwb,Int_t upb);
+  inline TVectorF &ResizeTo  (Int_t n)           { return ResizeTo(0,n-1); }
+  inline TVectorF &ResizeTo  (const TVectorF &v) { return ResizeTo(v.GetLwb(),v.GetUpb()); }
 
-         void     Use        (Int_t n,Float_t *data);
-         void     Use        (Int_t lwb,Int_t upb,Float_t *data);
-         TVectorF GetSub     (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
-         void     SetSub     (Int_t row_lwb,const TVectorF &source);
+         TVectorF &Use       (Int_t n,Float_t *data);
+         TVectorF &Use       (Int_t lwb,Int_t upb,Float_t *data);
+         TVectorF &Use       (TVectorF &v);
+         TVectorF &GetSub    (Int_t row_lwb,Int_t row_upb,TVectorF &target,Option_t *option="S") const;
+         TVectorF  GetSub    (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
+         TVectorF &SetSub    (Int_t row_lwb,const TVectorF &source);
 
   TVectorF &Zero();
   TVectorF &Abs ();
@@ -160,7 +162,20 @@ public :
   ClassDef(TVector,3)  // Vector class with single precision
 };
 
-inline const Float_t &TVectorF::operator()(Int_t ind) const
+inline       TVectorF &TVectorF::Use           (Int_t n,Float_t *data) { return Use(0,n-1,data); }
+inline       TVectorF &TVectorF::Use           (TVectorF &v)
+                                                        { 
+                                                          Assert(v.IsValid());
+                                                          return Use(v.GetLwb(),v.GetUpb(),v.GetMatrixArray());
+                                                        }
+inline       TVectorF  TVectorF::GetSub        (Int_t row_lwb,Int_t row_upb,Option_t *option) const
+                                                        { 
+                                                          TVectorF tmp;
+                                                          this->GetSub(row_lwb,row_upb,tmp,option);
+                                                          return tmp;
+                                                        }
+
+inline const Float_t  &TVectorF::operator()(Int_t ind) const
 {
   // Access a vector element.
 

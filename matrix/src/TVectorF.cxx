@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.20 2004/06/08 08:20:36 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.21 2004/06/09 12:21:23 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -202,7 +202,7 @@ TVectorF::TVectorF(Int_t lwb,Int_t upb,Float_t va_(iv1), ...)
 }
 
 //______________________________________________________________________________
-void TVectorF::ResizeTo(Int_t lwb,Int_t upb)
+TVectorF &TVectorF::ResizeTo(Int_t lwb,Int_t upb)
 {
   // Resize the vector to [lwb:upb] .
   // New dynamic elemenst are created, the overlapping part of the old ones are
@@ -211,7 +211,8 @@ void TVectorF::ResizeTo(Int_t lwb,Int_t upb)
   Assert(IsValid());
   if (!fIsOwner) {
     Error("ResizeTo(lwb,upb)","Not owner of data array,cannot resize");
-    return;
+    Invalidate();
+    return *this;
   }
 
   const Int_t new_nrows = upb-lwb+1;
@@ -219,10 +220,10 @@ void TVectorF::ResizeTo(Int_t lwb,Int_t upb)
   if (fNrows > 0) {
 
     if (fNrows == new_nrows && fRowLwb == lwb)
-      return;
+      return *this;
     else if (new_nrows == 0) {
       Clear();
-      return;
+      return *this;
     }
 
     Float_t     *elements_old = GetMatrixArray();
@@ -253,22 +254,12 @@ void TVectorF::ResizeTo(Int_t lwb,Int_t upb)
   } else {
     Allocate(upb-lwb+1,lwb,1);
   }
+
+  return *this;
 }
 
 //______________________________________________________________________________
-void TVectorF::Use(Int_t n,Float_t *data)
-{
-  Assert(n > 0);
-
-  Clear();
-  fNrows    = n;
-  fRowLwb   = 0;
-  fElements = data;
-  fIsOwner  = kFALSE;
-}
-
-//______________________________________________________________________________
-void TVectorF::Use(Int_t lwb,Int_t upb,Float_t *data)
+TVectorF &TVectorF::Use(Int_t lwb,Int_t upb,Float_t *data)
 {
   Assert(upb >= lwb);
 
@@ -277,10 +268,12 @@ void TVectorF::Use(Int_t lwb,Int_t upb,Float_t *data)
   fRowLwb   = lwb;
   fElements = data;
   fIsOwner  = kFALSE;
+
+  return *this;
 }
 
 //______________________________________________________________________________
-TVectorF TVectorF::GetSub(Int_t row_lwb,Int_t row_upb,Option_t *option) const
+TVectorF &TVectorF::GetSub(Int_t row_lwb,Int_t row_upb,TVectorF &target,Option_t *option) const
 {
   // Get subvector [row_lwb..row_upb]; The indexing range of the
   // returned vector depends on the argument option:
@@ -291,15 +284,18 @@ TVectorF TVectorF::GetSub(Int_t row_lwb,Int_t row_upb,Option_t *option) const
   Assert(IsValid());
   if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
     Error("GetSub","row_lwb out of bounds");
-    return TVectorF();
+    target.Invalidate();
+    return target;
   }
   if (row_upb < fRowLwb || row_upb > fRowLwb+fNrows-1) {
     Error("GetSub","row_upb out of bounds");
-    return TVectorF();
+    target.Invalidate();
+    return target;
   }
   if (row_upb < row_lwb) {
     Error("GetSub","row_upb < row_lwb");
-    return TVectorF();
+    target.Invalidate();
+    return target;
   }
 
   TString opt(option);
@@ -316,20 +312,20 @@ TVectorF TVectorF::GetSub(Int_t row_lwb,Int_t row_upb,Option_t *option) const
     row_upb_sub = row_upb;
   }
 
-  TVectorF sub(row_lwb_sub,row_upb_sub);
+  target.ResizeTo(row_lwb_sub,row_upb_sub);
   const Int_t nrows_sub = row_upb_sub-row_lwb_sub+1;
 
   const Float_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb);
-        Float_t *bp = sub.GetMatrixArray();
+        Float_t *bp = target.GetMatrixArray();
 
   for (Int_t irow = 0; irow < nrows_sub; irow++)
-      *bp++ = *ap++;
+    *bp++ = *ap++;
 
-  return sub;
+  return target;
 }
 
 //______________________________________________________________________________
-void TVectorF::SetSub(Int_t row_lwb,const TVectorF &source)
+TVectorF &TVectorF::SetSub(Int_t row_lwb,const TVectorF &source)
 {
   // Insert vector source starting at [row_lwb], thereby overwriting the part
   // [row_lwb..row_lwb+nrows_source];
@@ -339,12 +335,14 @@ void TVectorF::SetSub(Int_t row_lwb,const TVectorF &source)
 
   if (row_lwb < fRowLwb && row_lwb > fRowLwb+fNrows-1) {
     Error("SetSub","row_lwb outof bounds");
-    return;
+    Invalidate();
+    return *this;
   }
   const Int_t nRows_source = source.GetNrows();
   if (row_lwb+nRows_source > fRowLwb+fNrows) {
     Error("SetSub","source vector too large");
-    return;
+    Invalidate();
+    return *this;
   }
 
   const Float_t *bp = source.GetMatrixArray();
@@ -352,6 +350,8 @@ void TVectorF::SetSub(Int_t row_lwb,const TVectorF &source)
 
   for (Int_t irow = 0; irow < nRows_source; irow++)
     *ap++ = *bp++;
+
+  return *this;
 }
 
 //______________________________________________________________________________

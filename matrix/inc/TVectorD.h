@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.33 2004/05/27 06:39:53 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.34 2004/05/27 13:17:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -79,15 +79,17 @@ public:
   inline Bool_t   IsOwner    () const { return fIsOwner; }
   inline void     SetElements(const Double_t *elements) { Assert(IsValid());
                                                           memcpy(fElements,elements,fNrows*sizeof(Double_t)); }
-  inline void     Shift      (Int_t row_shift)   { fRowLwb += row_shift; }
-         void     ResizeTo   (Int_t lwb,Int_t upb);
-  inline void     ResizeTo   (Int_t n)           { ResizeTo(0,n-1); }
-  inline void     ResizeTo   (const TVectorD &v) { ResizeTo(v.GetLwb(),v.GetUpb()); }
+  inline TVectorD &Shift     (Int_t row_shift)   { fRowLwb += row_shift; return *this; }
+         TVectorD &ResizeTo  (Int_t lwb,Int_t upb);
+  inline TVectorD &ResizeTo  (Int_t n)           { return ResizeTo(0,n-1); }
+  inline TVectorD &ResizeTo  (const TVectorD &v) { return ResizeTo(v.GetLwb(),v.GetUpb()); }
 
-         void     Use        (Int_t n,Double_t *data);
-         void     Use        (Int_t lwb,Int_t upb,Double_t *data);
-         TVectorD GetSub     (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
-         void     SetSub     (Int_t row_lwb,const TVectorD &source);
+         TVectorD &Use       (Int_t n,Double_t *data);
+         TVectorD &Use       (Int_t lwb,Int_t upb,Double_t *data);
+         TVectorD &Use       (TVectorD &v);
+         TVectorD &GetSub    (Int_t row_lwb,Int_t row_upb,TVectorD &target,Option_t *option="S") const;
+         TVectorD  GetSub    (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
+         TVectorD &SetSub    (Int_t row_lwb,const TVectorD &source);
 
   TVectorD &Zero();
   TVectorD &Abs ();
@@ -148,6 +150,19 @@ public:
 
   ClassDef(TVectorD,2)  // Vector class with double precision
 };
+
+inline       TVectorD &TVectorD::Use           (Int_t n,Double_t *data) { return Use(0,n-1,data); }
+inline       TVectorD &TVectorD::Use           (TVectorD &v)
+                                                        { 
+                                                          Assert(v.IsValid());
+                                                          return Use(v.GetLwb(),v.GetUpb(),v.GetMatrixArray());
+                                                        }
+inline       TVectorD  TVectorD::GetSub        (Int_t row_lwb,Int_t row_upb,Option_t *option) const
+                                                        { 
+                                                          TVectorD tmp;
+                                                          this->GetSub(row_lwb,row_upb,tmp,option);
+                                                          return tmp;
+                                                        }
 
 inline const Double_t &TVectorD::operator()(Int_t ind) const
 {

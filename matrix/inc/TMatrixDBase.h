@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.13 2004/05/27 13:17:41 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.14 2004/06/02 15:42:48 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -110,10 +110,10 @@ public:
   virtual        const Int_t    *GetColIndexArray() const = 0;
   virtual              Int_t    *GetColIndexArray()       = 0;
 
-  virtual              void      SetRowIndexArray(Int_t *data) = 0;
-  virtual              void      SetColIndexArray(Int_t *data) = 0;
-  virtual              void      SetMatrixArray  (const Double_t *data,Option_t *option="");
-          inline       Double_t  SetTol        (Double_t tol);
+  virtual              TMatrixDBase &SetRowIndexArray(Int_t *data) = 0;
+  virtual              TMatrixDBase &SetColIndexArray(Int_t *data) = 0;
+  virtual              TMatrixDBase &SetMatrixArray  (const Double_t *data,Option_t *option="");
+          inline       Double_t      SetTol          (Double_t tol);
 
   virtual void   Clear      (Option_t *option="") = 0;
 
@@ -123,17 +123,20 @@ public:
   inline  Bool_t IsOwner    () const { return fIsOwner; }
   virtual Bool_t IsSymmetric() const;
 
-  virtual void SetSub         (Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source) = 0;
-  virtual void GetMatrix2Array(Double_t *data,Option_t *option="") const;
-  virtual void InsertRow      (Int_t row,Int_t col,const Double_t *v,Int_t n = -1);
-  virtual void ExtractRow     (Int_t row,Int_t col,      Double_t *v,Int_t n = -1) const;
+  virtual TMatrixDBase &GetSub         (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
+                                        TMatrixDBase &target,Option_t *option="S") const = 0;
+  virtual TMatrixDBase &SetSub         (Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source) = 0;
 
-  virtual void Shift   (Int_t row_shift,Int_t col_shift);
-  virtual void ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
-  virtual void ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
-  inline  void ResizeTo(const TMatrixDBase &m) {
-    ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb());
-  }
+  virtual void          GetMatrix2Array(Double_t *data,Option_t *option="") const;
+  virtual TMatrixDBase &InsertRow      (Int_t row,Int_t col,const Double_t *v,Int_t n = -1);
+  virtual void          ExtractRow     (Int_t row,Int_t col,      Double_t *v,Int_t n = -1) const;
+
+  virtual TMatrixDBase &Shift          (Int_t row_shift,Int_t col_shift);
+  virtual TMatrixDBase &ResizeTo       (Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
+  virtual TMatrixDBase &ResizeTo       (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
+  inline  TMatrixDBase &ResizeTo       (const TMatrixDBase &m) {
+                                         return ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb());
+                                       }
 
   virtual Double_t Determinant() const                          { AbstractMethod("Determinant()"); return 0.; }
   virtual void     Determinant(Double_t &d1,Double_t &d2) const { AbstractMethod("Determinant()"); d1 = 0.; d2 = 0.; }
@@ -172,7 +175,7 @@ public:
   virtual TMatrixDBase &Apply(const TElementActionD    &action);
   virtual TMatrixDBase &Apply(const TElementPosActionD &action);
 
-  virtual void Randomize(Double_t alpha,Double_t beta,Double_t &seed);
+  virtual TMatrixDBase &Randomize(Double_t alpha,Double_t beta,Double_t &seed);
 
   ClassDef(TMatrixDBase,3) // Matrix base class (double precision)
 };
