@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.82 2004/08/13 16:41:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.83 2004/08/20 09:57:03 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -431,7 +431,7 @@ Double_t TMath::GamCf(Double_t a,Double_t x)
    //--- Nve 14-nov-1998 UU-SAP Utrecht
 
    Int_t itmax    = 100;      // Maximum number of iterations
-   Double_t eps   = 3.e-7;    // Relative accuracy
+   Double_t eps   = 3.e-14;   // Relative accuracy
    Double_t fpmin = 1.e-30;   // Smallest Double_t value allowed here
 
    if (a <= 0 || x <= 0) return 0;
@@ -467,8 +467,8 @@ Double_t TMath::GamSer(Double_t a,Double_t x)
    //
    //--- Nve 14-nov-1998 UU-SAP Utrecht
 
-   Int_t itmax  = 100;   // Maximum number of iterations
-   Double_t eps = 3.e-7; // Relative accuracy
+   Int_t itmax  = 100;    // Maximum number of iterations
+   Double_t eps = 3.e-14; // Relative accuracy
 
    if (a <= 0 || x <= 0) return 0;
 
@@ -3677,7 +3677,7 @@ Double_t TMath::BetaCf(Double_t x, Double_t a, Double_t b)
    // used in calculation of incomplete Beta function.
 
    Int_t itmax = 500;
-   Double_t eps = 3.e-7;
+   Double_t eps = 3.e-14;
    Double_t fpmin = 1.e-30;
 
    Int_t m, m2;
