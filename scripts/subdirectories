@@ -1,0 +1,13 @@
+#!/bin/sh
+filelist=""
+#echo `ls $1`
+for file in `ls $1`
+do
+	#echo $file
+	if [ -d $file ] && [ -f $file/Makefile ] 
+	then
+		
+		filelist="$filelist$file "
+	fi
+done	
+echo $filelist
