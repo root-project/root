@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.12 2002/11/11 11:23:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.13 2002/11/20 08:55:10 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1406,7 +1406,7 @@ void TView::SetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &
 void TView::ResizePad()
 {
 // Recompute window for perspective view
-   printf("pad resized\n");
+
    if (!IsPerspective()) return;
    Double_t upix = fUpix;
    Double_t vpix = fVpix;
