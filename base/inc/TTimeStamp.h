@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.1 2002/01/31 14:09:25 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -47,7 +47,7 @@
 #endif
 
 #include <time.h>
-#ifdef __CINT__
+#if defined(__CINT__) || defined(R__WIN32)
 // Explicit definition of timespec 'cause "rootcint" won't look in
 // appropriate <time.h>. time_t appears to be defined as "typedef long time_t;"
 // in CINT version of <time.h>.  This isn't required by the standard:
@@ -58,7 +58,8 @@ struct timespec
    time_t   tv_sec;             // seconds
    long     tv_nsec;            // nanoseconds
 };
-
+#endif
+#if defined(__CINT__)
 struct tm
 {
   int tm_sec;                   // Seconds.     [0-60] (1 leap second)
