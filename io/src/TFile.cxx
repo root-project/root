@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.77 2002/12/16 18:25:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.78 2002/12/20 21:08:12 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -610,7 +610,7 @@ void TFile::Flush()
    if (IsOpen() && fWritable) {
       if (SysSync(fD) < 0) {
          // Write the system error only once for this file
-         SetBit(kWriteError); fWritable = kFALSE;
+         SetBit(kWriteError); SetWritable(kFALSE);
          SysError("Flush", "error flushing file %s", GetName());
       }
    }
@@ -1169,7 +1169,7 @@ Int_t TFile::ReOpen(Option_t *mode)
          SysClose(fD);
          fD = -1;
 
-         fWritable = kFALSE;
+         SetWritable(kFALSE);
       }
 
       // open in READ mode
@@ -1183,7 +1183,7 @@ Int_t TFile::ReOpen(Option_t *mode)
          SysError("ReOpen", "file %s can not be opened in read mode", GetName());
          return -1;
       }
-      fWritable = kFALSE;
+      SetWritable(kFALSE);
 
    } else {
       // switch to UPDATE mode
@@ -1205,7 +1205,7 @@ Int_t TFile::ReOpen(Option_t *mode)
          SysError("ReOpen", "file %s can not be opened in update mode", GetName());
          return -1;
       }
-      fWritable = kTRUE;
+      SetWritable(kTRUE);
 
       fFree = new TList;
       if (fSeekFree > fBEGIN)
@@ -1387,7 +1387,7 @@ Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
       gSystem->IgnoreInterrupt(kFALSE);
       if (siz < 0) {
          // Write the system error only once for this file
-         SetBit(kWriteError); fWritable = kFALSE;
+         SetBit(kWriteError); SetWritable(kFALSE);
          SysError("WriteBuffer", "error writing to file %s", GetName());
          return kTRUE;
       }
@@ -1768,7 +1768,7 @@ void TFile::WriteStreamerInfo()
       if (gDebug > 0) printf(" -class: %s info number %d saved\n",info->GetName(),uid);
    }
    if (list.GetSize() == 0) return;
-   fClassIndex->fArray[0] = 0;
+   fClassIndex->fArray[0] = 2; //to prevent adding classes in TStreamerInfo::TagFile
 
    // always write with compression on
    Int_t compress = fCompress;
@@ -1788,6 +1788,7 @@ void TFile::WriteStreamerInfo()
    SumBuffer(key.GetObjlen());
    key.WriteFile(0);
 
+   fClassIndex->fArray[0] = 0;
    gFile = fileSave;
    gDirectory = dirSave;
    fCompress = compress;
