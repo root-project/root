@@ -162,6 +162,6 @@ QTGUILIBEXTRA       = -Llib -lGraf -lGpad -lGQt -lGui $(QTLIB)
 QUADPLIBDEP         = $(MATRIXLIB) 
 QUADPLIBEXTRA       = -Llib -lMatrix
 RUBYLIBDEP          = $(HISTLIB)
-RUBYLIBEXTRA        = -Llib -lHist -lcrypt
+RUBYLIBEXTRA        = -Llib -lHist
 
 endif
