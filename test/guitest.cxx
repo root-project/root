@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.38 2003/12/16 09:03:12 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.39 2004/01/25 20:33:32 brun Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -45,6 +45,7 @@
 #include <TEnv.h>
 #include <TFile.h>
 #include <TKey.h>
+#include <TGDockableFrame.h>
 
 
 
@@ -65,6 +66,11 @@ enum ETestCommandIdentifiers {
    M_TEST_PROGRESS,
    M_TEST_NUMBERENTRY,
    M_TEST_NEWMENU,
+
+   M_VIEW_ENBL_DOCK,
+   M_VIEW_ENBL_HIDE,
+   M_VIEW_DOCK,
+   M_VIEW_UNDOCK,
 
    M_HELP_CONTENTS,
    M_HELP_SEARCH,
@@ -207,6 +213,7 @@ class TileFrame;
 class TestMainFrame : public TGMainFrame {
 
 private:
+   TGDockableFrame    *fMenuDock;
    TGCompositeFrame   *fStatusFrame;
    TGCanvas           *fCanvasWindow;
    TileFrame          *fContainer;
@@ -215,7 +222,7 @@ private:
    TGColorSelect      *fColorSel;
 
    TGMenuBar          *fMenuBar;
-   TGPopupMenu        *fMenuFile, *fMenuTest, *fMenuHelp;
+   TGPopupMenu        *fMenuFile, *fMenuTest, *fMenuView, *fMenuHelp;
    TGPopupMenu        *fCascadeMenu, *fCascade1Menu, *fCascade2Menu;
    TGPopupMenu        *fMenuNew1, *fMenuNew2;
    TGLayoutHints      *fMenuBarLayout, *fMenuBarItemLayout, *fMenuBarHelpLayout;
@@ -503,8 +510,11 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
 
    // Create menubar and popup menus. The hint objects are used to place
    // and group the different menu widgets with respect to eachother.
-   fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX,
-                                      0, 0, 1, 1);
+   fMenuDock = new TGDockableFrame(this);
+   AddFrame(fMenuDock, new TGLayoutHints(kLHintsExpandX, 0, 0, 1, 0));
+   fMenuDock->SetWindowName("Guitest Main Menu");
+
+   fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX);
    fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
    fMenuBarHelpLayout = new TGLayoutHints(kLHintsTop | kLHintsRight);
 
@@ -558,6 +568,19 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuTest->AddSeparator();
    fMenuTest->AddPopup("&Cascaded menus", fCascadeMenu);
 
+   fMenuView = new TGPopupMenu(gClient->GetRoot());
+   fMenuView->AddEntry("&Dock", M_VIEW_DOCK);
+   fMenuView->AddEntry("&Undock", M_VIEW_UNDOCK);
+   fMenuView->AddSeparator();
+   fMenuView->AddEntry("Enable U&ndock", M_VIEW_ENBL_DOCK);
+   fMenuView->AddEntry("Enable &Hide", M_VIEW_ENBL_HIDE);
+   fMenuView->DisableEntry(M_VIEW_DOCK);
+
+   fMenuDock->EnableUndock(kTRUE);
+   fMenuDock->EnableHide(kTRUE);
+   fMenuView->CheckEntry(M_VIEW_ENBL_DOCK);
+   fMenuView->CheckEntry(M_VIEW_ENBL_HIDE);
+
    fMenuHelp = new TGPopupMenu(fClient->GetRoot());
    fMenuHelp->AddEntry("&Contents", M_HELP_CONTENTS);
    fMenuHelp->AddEntry("&Search...", M_HELP_SEARCH);
@@ -574,6 +597,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    // ProcessMessage() method.
    fMenuFile->Associate(this);
    fMenuTest->Associate(this);
+   fMenuView->Associate(this);
    fMenuHelp->Associate(this);
    fCascadeMenu->Associate(this);
    fCascade1Menu->Associate(this);
@@ -581,12 +605,13 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuNew1->Associate(this);
    fMenuNew2->Associate(this);
 
-   fMenuBar = new TGMenuBar(this, 1, 1, kHorizontalFrame);
+   fMenuBar = new TGMenuBar(fMenuDock, 1, 1, kHorizontalFrame);
    fMenuBar->AddPopup("&File", fMenuFile, fMenuBarItemLayout);
    fMenuBar->AddPopup("&Test", fMenuTest, fMenuBarItemLayout);
+   fMenuBar->AddPopup("&View", fMenuView, fMenuBarItemLayout);
    fMenuBar->AddPopup("&Help", fMenuHelp, fMenuBarHelpLayout);
 
-   AddFrame(fMenuBar, fMenuBarLayout);
+   fMenuDock->AddFrame(fMenuBar, fMenuBarLayout);
 
    // Create TGCanvas and a canvas container which uses a tile layout manager
    fCanvasWindow = new TGCanvas(this, 400, 240);
@@ -654,15 +679,17 @@ TestMainFrame::~TestMainFrame()
    delete fMenuBarItemLayout;
    delete fMenuBarHelpLayout;
 
-   delete fMenuBar;
    delete fMenuFile;
    delete fMenuTest;
+   delete fMenuView;
    delete fMenuHelp;
    delete fCascadeMenu;
    delete fCascade1Menu;
    delete fCascade2Menu;
    delete fMenuNew1;
    delete fMenuNew2;
+   delete fMenuBar;
+   delete fMenuDock;
 }
 
 void TestMainFrame::CloseWindow()
@@ -793,6 +820,38 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         fMenuTest->DeleteEntry(M_NEW_REMOVEMENU);
                         fMenuTest->UnCheckEntry(M_TEST_NEWMENU);
                      }
+                     break;
+
+                  case M_VIEW_ENBL_DOCK:
+                     fMenuDock->EnableUndock(!fMenuDock->EnableUndock());
+                     if (fMenuDock->EnableUndock()) {
+                        fMenuView->CheckEntry(M_VIEW_ENBL_DOCK);
+                        fMenuView->EnableEntry(M_VIEW_UNDOCK);
+                     } else {
+                        fMenuView->UnCheckEntry(M_VIEW_ENBL_DOCK);
+                        fMenuView->DisableEntry(M_VIEW_UNDOCK);
+                     }
+                     break;
+
+                  case M_VIEW_ENBL_HIDE:
+                     fMenuDock->EnableHide(!fMenuDock->EnableHide());
+                     if (fMenuDock->EnableHide()) {
+                        fMenuView->CheckEntry(M_VIEW_ENBL_HIDE);
+                     } else {
+                        fMenuView->UnCheckEntry(M_VIEW_ENBL_HIDE);
+                     }
+                     break;
+
+                  case M_VIEW_DOCK:
+                     fMenuDock->DockContainer();
+                     fMenuView->EnableEntry(M_VIEW_UNDOCK);
+                     fMenuView->DisableEntry(M_VIEW_DOCK);
+                     break;
+
+                  case M_VIEW_UNDOCK:
+                     fMenuDock->UndockContainer();
+                     fMenuView->EnableEntry(M_VIEW_DOCK);
+                     fMenuView->DisableEntry(M_VIEW_UNDOCK);
                      break;
 
                   default:
@@ -1778,7 +1837,7 @@ Bool_t TestDirList::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                fContents->AddItem(item,fname.Data());
             }
          } else if (fname.EndsWith(".root")) {   // add root files
-            fContents->AddItem(item,fname.Data(),fIcon,fIcon);      
+            fContents->AddItem(item,fname.Data(),fIcon,fIcon);
          }
       }
       delete files;
@@ -1924,7 +1983,7 @@ void TestFileList::OnDoubleClick(TGLVEntry* f, Int_t btn)
    const char* fname = (const char*)f->GetUserData();
 
    if (fname) {
-      DisplayObject(fname,name); 
+      DisplayObject(fname,name);
    } else if (name.EndsWith(".root")) {
       DisplayFile(name);
    } else {
