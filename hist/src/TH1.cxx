@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.27 2000/10/25 07:22:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.28 2000/11/21 20:33:51 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1444,10 +1444,25 @@ void TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xxm
 {
 //*-*-*-*-*-*-*-*-*-*-*Fit histogram with function fname*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =================================
-//*-*
 //*-*   fname is the name of an already predefined function created by TF1 or TF2
 //*-*   Predefined functions such as gaus, expo and poln are automatically
 //*-*   created by ROOT.
+//*-*
+//  This function finds a pointer to the TF1 object with name fname
+//  and calls TH1::Fit(TF1 *f1,...)
+   
+   TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
+   if (!f1) { Error("Fit", "Unknown function: %s",fname); return; }
+   Fit(f1,option,goption,xxmin,xxmax);
+}
+
+//______________________________________________________________________________
+void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t xxmax)
+{
+//*-*-*-*-*-*-*-*-*-*-*Fit histogram with function f1*-*-*-*-*-*-*-*-*-*-*
+//*-*                  ==============================
+//*-*
+//*-*   Fit this histogram with function f1.
 //*-*
 //*-*   The list of fit options is given in parameter option.
 //*-*      option = "W"  Set all errors to 1
@@ -1533,16 +1548,16 @@ void TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xxm
    hFitter->Clear();
 
 //*-*- Get pointer to the function by searching in the list of functions in ROOT
-   gF1 = (TF1*)gROOT->GetFunction(fname);
-   if (!gF1) { Error("Fit", "Unknown function: %s",fname); return; }
+   gF1 = f1;
+   if (!gF1) { Error("Fit", "Pointer to function is null"); return; }
    npar = gF1->GetNpar();
    if (npar <=0) { Error("Fit", "Illegal number of parameters = %d",npar); return; }
 
 //*-*- Check that function has same dimension as histogram
    if (gF1->GetNdim() == 1 && GetDimension() > 1) {
-      Error("Fit", "Function %s is not 2-D",fname); return; }
+      Error("Fit", "Function %s is not 2-D",f1->GetName()); return; }
    if (gF1->GetNdim() == 2 && GetDimension() < 2) {
-      Error("Fit", "Function %s is not 1-D",fname); return; }
+      Error("Fit", "Function %s is not 1-D",f1->GetName()); return; }
    if (xxmin != xxmax) gF1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
 
 //*-*- Decode list of options into Foption
