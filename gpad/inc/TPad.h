@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.14 2001/12/17 08:06:17 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.15 2002/01/07 18:03:52 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -327,8 +327,8 @@ public:
    Int_t             UtoPixel(Double_t u) const;
    Int_t             VtoPixel(Double_t v) const;
    virtual TObject  *WaitPrimitive(const char *pname="", const char *emode="");
-   Int_t             XtoAbsPixel(Double_t x) const {return Int_t(fXtoAbsPixelk + x*fXtoPixel);}
-   Int_t             YtoAbsPixel(Double_t y) const {return Int_t(fYtoAbsPixelk + y*fYtoPixel);}
+   Int_t             XtoAbsPixel(Double_t x) const;
+   Int_t             YtoAbsPixel(Double_t y) const;
    Double_t          XtoPad(Double_t x) const;
    Double_t          YtoPad(Double_t y) const;
    Int_t             XtoPixel(Double_t x) const;
@@ -380,29 +380,63 @@ inline void TPad::PixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y
 //______________________________________________________________________________
 inline Int_t TPad::UtoPixel(Double_t u) const
 {
-   if (fAbsCoord) return Int_t(fUtoAbsPixelk + u*fUtoPixel);
-   else           return Int_t(u*fUtoPixel);
+   Double_t val;
+   if (fAbsCoord) val = fUtoAbsPixelk + u*fUtoPixel;
+   else           val = u*fUtoPixel;
+   if (val < 0) return -5;
+   if (val > 65000) return 65000;
+   return Int_t(val);
 }
 
 //______________________________________________________________________________
 inline Int_t TPad::VtoPixel(Double_t v) const
 {
-   if (fAbsCoord) return Int_t(fVtoAbsPixelk + v*fVtoPixel);
-   else           return Int_t(fVtoPixelk    + v*fVtoPixel);
+   Double_t val;
+   if (fAbsCoord) val = fVtoAbsPixelk + v*fVtoPixel;
+   else           val = fVtoPixelk    + v*fVtoPixel;
+   if (val < 0) return -5;
+   if (val > 65000) return 65000;
+   return Int_t(val);
+}
+
+//______________________________________________________________________________
+inline Int_t TPad::XtoAbsPixel(Double_t x) const
+{
+   Double_t val = fXtoAbsPixelk + x*fXtoPixel;
+   if (val < 0) return -5;
+   if (val > 65000) return 65000;
+   return Int_t(val);
 }
 
 //______________________________________________________________________________
 inline Int_t TPad::XtoPixel(Double_t x) const
 {
-   if (fAbsCoord) return Int_t(fXtoAbsPixelk + x*fXtoPixel);
-   else           return Int_t(fXtoPixelk    + x*fXtoPixel);
+   Double_t val;
+   if (fAbsCoord) val = fXtoAbsPixelk + x*fXtoPixel;
+   else           val = fXtoPixelk    + x*fXtoPixel;
+   if (val < 0) return -5;
+   if (val > 65000) return 65000;
+   return Int_t(val);
+}
+
+//______________________________________________________________________________
+inline Int_t TPad::YtoAbsPixel(Double_t y) const
+{
+   Double_t val = fYtoAbsPixelk + y*fYtoPixel;
+   if (val < 0) return -5;
+   if (val > 65000) return 65000;
+   return Int_t(val);
 }
 
 //______________________________________________________________________________
 inline Int_t TPad::YtoPixel(Double_t y) const
 {
-   if (fAbsCoord) return Int_t(fYtoAbsPixelk + y*fYtoPixel);
-   else           return Int_t(fYtoPixelk    + y*fYtoPixel);
+   Double_t val;
+   if (fAbsCoord) val = fYtoAbsPixelk + y*fYtoPixel;
+   else           val = fYtoPixelk    + y*fYtoPixel;
+   if (val < 0) return -5;
+   if (val > 65000) return 65000;
+   return Int_t(val);
 }
 
 //______________________________________________________________________________
