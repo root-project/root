@@ -1,8 +1,10 @@
-#ifndef ROOT_TMCProcess
-#define ROOT_TMCProcess
+// @(#)root/mc:$Name:  $:$Id: TMCProcess.h,v 1.19 2002/04/08 15:06:08 brun Exp $
+// Author: Alice collaboration  
 
 /* Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. */
 
+#ifndef ROOT_TMCProcess
+#define ROOT_TMCProcess
 // 
 // List of MonteCarlo processes
 //

@@ -1,3 +1,4 @@
+// @(#)root/mc:$Name:  $:$Id: TVirtualMC.cxx,v 1.19 2002/04/08 15:06:08 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun , Federico Carminati 13/04/2002
    
 /**************************************************************************

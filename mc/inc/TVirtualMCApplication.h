@@ -1,3 +1,4 @@
+// @(#)root/mc:$Name:  $:$Id: TVirtualMCApplication.h,v 1.19 2002/04/08 15:06:08 brun Exp $
 // Author: Ivana Hrivnacova, 23/03/2002
 
 #ifndef ROOT_TVirtualMCApplication

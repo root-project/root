@@ -1,3 +1,4 @@
+// @(#)root/mc:$Name:  $:$Id: TPDGCode.h,v 1.19 2002/04/08 15:06:08 brun Exp $
 // Author: Andreas Morsch 13/04/2002
    
 #ifndef ROOT_TPDGCode
