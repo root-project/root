@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.53 2003/11/27 15:15:48 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.54 2004/02/06 15:37:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -88,7 +88,7 @@ void TAxis::CenterLabels(Bool_t center)
 //   on the bin center
 //   default is to center on the primary tick marks
 //   This option does not make sense if there are more bins than tick marks
-   
+
    if (center) SetBit(kCenterLabels);
    else        ResetBit(kCenterLabels);
 }
@@ -152,7 +152,7 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
                      awidth /= 12; reasformat = 6;
                      if (awidth>=2) {
                         awidth /= 12; reasformat = 7;
-                     }                  
+                     }
                   }
                }
             }
@@ -609,12 +609,12 @@ const char *TAxis::GetTimeFormatOnly() const
 const char *TAxis::GetTicks() const
 {
 // return the ticks option (see SetTicks)
-   
+
    if (TestBit(kTickPlus) && TestBit(kTickMinus)) return "+-";
    if (TestBit(kTickMinus)) return "-";
    return "+";
 }
- 
+
 //______________________________________________________________________________
 void TAxis::LabelsOption(Option_t *option)
 {
@@ -639,6 +639,14 @@ void TAxis::LabelsOption(Option_t *option)
    }
 
    h->LabelsOption(option,GetName());
+}
+
+//___________________________________________________________________________
+Bool_t TAxis::GetRotateTitle() const
+{
+   // Return kTRUE if kRotateTitle bit is set, kFALSE otherwise.
+
+   return TestBit(kRotateTitle) ? kTRUE : kFALSE;
 }
 
 //___________________________________________________________________________
@@ -806,6 +814,14 @@ void TAxis::SetLimits(Axis_t xmin, Axis_t xmax)
 }
 
 //______________________________________________________________________________
+Bool_t TAxis::GetMoreLogLabels() const
+{
+   // Return kTRUE if kMoreLogLabels bit is set, kFALSE otherwise.
+
+   return TestBit(kMoreLogLabels) ? kTRUE : kFALSE;
+}
+
+//______________________________________________________________________________
 void TAxis::SetMoreLogLabels(Bool_t more)
 {
 // Set the kMoreLogLabels bit flag
@@ -815,6 +831,14 @@ void TAxis::SetMoreLogLabels(Bool_t more)
 
    if (more) SetBit(kMoreLogLabels);
    else      ResetBit(kMoreLogLabels);
+}
+
+//______________________________________________________________________________
+Bool_t TAxis::GetNoExponent() const
+{
+   // Returns kTRUE if kNoExponent bit is set, kFALSE otherwise.
+
+   return TestBit(kNoExponent) ? kTRUE : kFALSE;
 }
 
 //______________________________________________________________________________
@@ -866,15 +890,15 @@ void TAxis::SetTicks(Option_t *option)
 {
 //  set ticks orientation
 //  option = "+"  ticks drawn on the "positive side" (default)
-//  option = "-"  ticks drawn on the "negative side" 
+//  option = "-"  ticks drawn on the "negative side"
 //  option = "+-" ticks drawn on both sides
-   
+
    ResetBit(kTickPlus);
    ResetBit(kTickMinus);
    if (strchr(option,'+')) SetBit(kTickPlus);
    if (strchr(option,'-')) SetBit(kTickMinus);
 }
-   
+
 //______________________________________________________________________________
 void TAxis::SetTimeFormat(const char *tformat)
 {
@@ -897,7 +921,7 @@ void TAxis::SetTimeFormat(const char *tformat)
 //      %S seconds (00-61)
 //      %% %
 //
-//    This function allows also to define the time offset. It is done via %F 
+//    This function allows also to define the time offset. It is done via %F
 //    which should be appended at the end of the format string. The time
 //    offset has the following format: 'yyyy-mm-dd hh:mm:ss'
 //    Example:
@@ -947,7 +971,7 @@ void TAxis::SetTimeOffset(Double_t toffset, Option_t *option)
    Bool_t gmt = kFALSE;
    if (opt.Contains("gmt")) gmt = kTRUE;
 
-   char tmp[20]; 
+   char tmp[20];
    time_t timeoff;
    struct tm* utctis;
    Int_t IdF = fTimeFormat.Index("%F");
@@ -955,9 +979,9 @@ void TAxis::SetTimeOffset(Double_t toffset, Option_t *option)
    fTimeFormat.Append("%F");
 
    timeoff = (time_t)((Long_t)(toffset));
-   utctis = gmtime(&timeoff); 
+   utctis = gmtime(&timeoff);
 
-   strftime(tmp,256,"%Y-%m-%d %H:%M:%S",utctis); 
+   strftime(tmp,256,"%Y-%m-%d %H:%M:%S",utctis);
    fTimeFormat.Append(tmp);
 
    // append the decimal part of the time offset

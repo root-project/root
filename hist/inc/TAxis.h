@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.26 2003/09/12 09:18:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.27 2003/11/25 17:12:30 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -48,7 +48,7 @@ private:
         TString      fTimeFormat;     //Date&time format, ex: 09/12/99 12:34:00
         TObject     *fParent;         //!Object owning this axis
         THashList   *fLabels;         //List of labels
-   
+
 public:
         // TAxis status bits
         enum { kAxisRange     = BIT(11),
@@ -90,8 +90,11 @@ public:
         virtual void     GetCenter(Axis_t *center) const;
         THashList       *GetLabels() {return fLabels;}
         virtual void     GetLowEdge(Axis_t *edge) const;
+                Bool_t   GetMoreLogLabels() const;
                 Int_t    GetNbins() const { return fNbins; }
+                Bool_t   GetNoExponent() const;
         virtual TObject *GetParent() const {return fParent;}
+                Bool_t   GetRotateTitle() const;
         virtual const char  *GetTicks() const;
         virtual Bool_t   GetTimeDisplay() const {return fTimeDisplay;}
         virtual const char  *GetTimeFormat() const {return fTimeFormat.Data();}
@@ -103,7 +106,7 @@ public:
                 Axis_t   GetXmin() const {return fXmin;}
                 Axis_t   GetXmax() const {return fXmax;}
         virtual void     LabelsOption(Option_t *option="h");  // *MENU*
-        virtual void     RotateTitle(Bool_t rotate=kTRUE); // *MENU*
+        virtual void     RotateTitle(Bool_t rotate=kTRUE); // *TOGGLE* *GETTER=GetRotateTitle
         virtual void     SaveAttributes(ofstream &out, const char *name, const char *subname);
         virtual void     Set(Int_t nbins, Axis_t xmin, Axis_t xmax);
         virtual void     Set(Int_t nbins, const Float_t *xbins);
@@ -111,8 +114,8 @@ public:
         virtual void     SetBinLabel(Int_t bin, const char *label);
         virtual void     SetDrawOption(Option_t * /*option*/ ="") { }
         virtual void     SetLimits(Axis_t xmin, Axis_t xmax);
-        virtual void     SetMoreLogLabels(Bool_t more=kTRUE);  // *MENU*
-        virtual void     SetNoExponent(Bool_t noExponent=kTRUE);  // *MENU*
+        virtual void     SetMoreLogLabels(Bool_t more=kTRUE);  // *TOGGLE* *GETTER=GetMoreLogLabels
+        virtual void     SetNoExponent(Bool_t noExponent=kTRUE);  // *TOGGLE* *GETTER=GetNoExponent
         virtual void     SetParent(TObject *obj) {fParent = obj;}
         virtual void     SetRange(Int_t first=0, Int_t last=0);  // *MENU*
         virtual void     SetRangeUser(Axis_t ufirst, Axis_t ulast);  // *MENU*
