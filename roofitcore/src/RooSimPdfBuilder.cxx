@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooSimPdfBuilder.cc,v 1.4 2001/11/21 21:35:05 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.5 2001/11/28 19:49:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -161,10 +161,22 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
 
   // Create list of dataset categories to be used in splitting
+  TList splitStateList ;
   RooArgSet splitCatSet ;
   strcpy(buf,((RooStringVar*)buildConfig.find("splitCats"))->getVal()) ;
   char *catName = strtok(buf," ") ;
+  char *stateList(0) ;
   while(catName) {
+
+    // Chop off optional list of selected states
+    char* tokenPtr(0) ;
+    if (strchr(catName,'(')) {
+      catName = strtok_r(catName,"(",&tokenPtr) ;
+      stateList = strtok_r(0,")",&tokenPtr) ;
+    } else {
+      stateList = 0 ;
+    }
+
     RooCategory* splitCat = dynamic_cast<RooCategory*>(dataVars->find(catName)) ;
     if (!splitCat) {
       cout << "RooSimPdfBuilder::buildPdf: ERROR requested split category " << catName 
@@ -172,6 +184,32 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       return 0 ;
     }
     splitCatSet.add(*splitCat) ;
+
+    // Process optional state list
+    if (stateList) {
+      cout << "RooSimPdfBuilder::buildPdf: splitting of category " << catName 
+	   << " restricted to states (" << stateList << ")" << endl ;
+
+      // Create list named after this splitCat holding its selected states
+      TList* slist = new TList ;
+      slist->SetName(catName) ;
+      splitStateList.Add(slist) ;
+
+      char* stateLabel = strtok_r(stateList,",",&tokenPtr) ;
+      while(stateLabel) {
+	// Lookup state label and require it exists
+	const RooCatType* type = splitCat->lookupType(stateLabel) ;
+	if (!type) {
+	  cout << "RooSimPdfBuilder::buildPdf: ERROR splitCat " << splitCat->GetName() 
+	       << " doesn't have a state named " << stateLabel << endl ;
+	  splitStateList.Delete() ;
+	  return 0 ;
+	}
+	slist->Add((TObject*)type) ;
+	stateLabel = strtok_r(0,",",&tokenPtr) ;	  
+      }
+    }
+    
     catName = strtok(0," ") ;
   }
   if (physCat) splitCatSet.add(*physCat) ;
@@ -268,6 +306,7 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 		    cout << "RooSimPdfBuilder::buildPdf: ERROR " << catName
 			 << " not found in the primary or auxilary splitcat list" << endl ;
 		    customizerList.Delete() ;
+		    splitStateList.Delete() ;
 		    return 0 ;
 		  }
 		  compCatSet.add(*cat) ;
@@ -292,6 +331,7 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 		cout << "RooSimPdfBuilder::buildPdf: ERROR splitting category " 
 		     << splitCatName << " not found in the primary or auxiliary splitcat list" << endl ;
 		customizerList.Delete() ;
+		splitStateList.Delete() ;
 		return 0 ;
 	      }
 	    }
@@ -305,6 +345,7 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 	      cout << "RooSimPdfBuilder::buildPdf: ERROR in parsing, expected ':' after " 
 		   << splitCat << ", found " << token << endl ;
 	      customizerList.Delete() ;
+	      splitStateList.Delete() ;
 	      return 0 ;	    
 	    }
 	    mode = ParamList ;
@@ -326,6 +367,7 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 		     << " is not a parameter of physics model " << physModel->GetName() << endl ;
 		delete paramList ;
 		customizerList.Delete() ;
+		splitStateList.Delete() ;
 		return 0 ;
 	      }
 	      splitParamList.add(*param) ;
@@ -359,6 +401,7 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
   RooArgSet fitCatList ;
   if (physCat) fitCatList.add(*physCat) ;
   fitCatList.add(splitCatSet) ;
+  TIterator* fclIter = fitCatList.createIterator() ;
   RooSuperCategory *fitCat = new RooSuperCategory("fitCat","fitCat",fitCatList) ;
 
   // Create master PDF 
@@ -371,6 +414,22 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
   while(fcState=(RooCatType*)fcIter->Next()) {
     // Select fitCat state
     fitCat->setLabel(fcState->GetName()) ;
+
+    // Check if this fitCat state is selected
+    fclIter->Reset() ;
+    RooAbsCategory* splitCat ;
+    Bool_t select(kTRUE) ;
+    while(splitCat=(RooAbsCategory*)fclIter->Next()) {
+      // Find selected state list 
+      TList* slist = (TList*) splitStateList.FindObject(splitCat->GetName()) ;
+      if (!slist) continue ;
+      RooCatType* type = (RooCatType*) slist->FindObject(splitCat->getLabel()) ;
+      if (!type) {
+	select = kFALSE ;
+      }
+    }
+    if (!select) continue ;
+
     
     // Select appropriate PDF for this physCat state
     RooCustomizer* physCustomizer ;
@@ -392,6 +451,9 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
   // Move customizers (owning the cloned branch node components) to the attic
   _retiredCustomizerList.AddAll(&customizerList) ;
+
+  delete fclIter ;
+  splitStateList.Delete() ;
 
   if (auxSplitCloneSet) delete auxSplitCloneSet ;
   delete physIter ;
