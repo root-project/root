@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.13 2004/09/01 07:48:11 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.14 2004/10/13 17:14:16 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -282,6 +282,7 @@ void TGeoMixture:: DefineElement(Int_t i, TGeoElement *elem, Double_t weight)
 void TGeoMixture:: DefineElement(Int_t iel, Int_t z, Int_t natoms)
 {
 // Define the mixture element at index iel by number of atoms in the chemical formula.
+   Int_t i;
    if ((iel<0) || (iel>fNelements)) {
       Error("DefineElement", "wrong index iel=%i in mixture %s, max is %d", iel, GetName(), fNelements);
       return;
@@ -294,8 +295,8 @@ void TGeoMixture:: DefineElement(Int_t iel, Int_t z, Int_t natoms)
    fWeights[iel]  = natoms;
    if (iel == fNelements-1) {
       Double_t wtot = 0.;
-      for (Int_t i=0; i<fNelements; i++) wtot += fWeights[i];
-      for (Int_t i=0; i<fNelements; i++) {
+      for (i=0; i<fNelements; i++) wtot += fWeights[i];
+      for (i=0; i<fNelements; i++) {
          fWeights[i] /= wtot;
          DefineElement(i, fAmixture[i], fZmixture[i], fWeights[i]);
       }
