@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.28 2001/10/15 06:59:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.29 2001/10/18 13:06:46 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1030,6 +1030,13 @@ void TBranch::SetFile(TFile *file)
    fDirectory = (TDirectory*)file;
    if (file == fTree->GetCurrentFile()) fFileName = "";
    else                                 fFileName = file->GetName();
+   
+   //apply to sub-branches as well
+   TIter next(GetListOfBranches());
+   TBranch *branch;
+   while ((branch = (TBranch*)next())) {
+      branch->SetFile(file);
+   }
 }
 
 //______________________________________________________________________________
@@ -1055,6 +1062,13 @@ void TBranch::SetFile(const char *fname)
 
    fFileName  = fname;
    fDirectory = 0;
+   
+   //apply to sub-branches as well
+   TIter next(GetListOfBranches());
+   TBranch *branch;
+   while ((branch = (TBranch*)next())) {
+      branch->SetFile(fname);
+   }
 }
 
 //_______________________________________________________________________
