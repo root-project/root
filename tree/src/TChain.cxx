@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.47 2002/05/10 09:59:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.48 2002/05/11 09:15:27 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -695,9 +695,12 @@ Int_t TChain::LoadTree(Int_t entry)
    Int_t status;
    while ((element = (TChainElement*)next())) {
       status = element->GetStatus();
+      if (status >=0) fTree->SetBranchStatus(element->GetName(),status);
+   }
+   next.Reset();
+   while ((element = (TChainElement*)next())) {
       void *add = element->GetBaddress();
       if (add)        fTree->SetBranchAddress(element->GetName(),add);
-      if (status >=0) fTree->SetBranchStatus(element->GetName(),status);
    }
 
    if (cursav) cursav->cd();
@@ -1026,10 +1029,11 @@ void TChain::SetBranchStatus(const char *bname, Bool_t status)
    //Check if bname is already in the Status list
    //Otherwise create a TChainElement object and set its status
    TChainElement *element = (TChainElement*)fStatus->FindObject(bname);
-   if (!element) {
+   if (element)
+      fStatus->Remove (element);
+   else
       element = new TChainElement(bname,"");
-      fStatus->Add(element);
-   }
+   fStatus->Add(element);
 
    element->SetStatus(status);
 
