@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.2 2000/11/21 20:43:50 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -30,7 +30,7 @@
 #include "TMath.h"
 #include "TObject.h"
 
-Double_t const  kPI        = 3.14159265358979323846;
+Double_t const  kPI        = TMath::Pi();
 Double_t const  kTWOPI     = 2.*kPI;
 
 class TVector2 : public TObject {
