@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.1 2000/07/06 16:46:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.2 2000/07/07 00:29:49 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -612,7 +612,6 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
             case kKey_C:
                Copy();
                return kTRUE;
-               break;
             case kKey_D:
                if (fIsMarked)
                   Cut();
@@ -650,7 +649,7 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
                break;
             case kKey_V:
             case kKey_Y:
-              Paste();
+               Paste();
                return kTRUE;
             case kKey_X:
                Cut();
