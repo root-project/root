@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.52 2001/10/30 17:22:32 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.53 2001/11/03 18:13:33 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3545,7 +3545,7 @@ void TPad::Print(const char *filename, Option_t *option)
       Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
       gVirtualX->SelectWindow(wid);
       gVirtualX->WriteGIF(psname);
-      Info("TPad::Print",Form("GIF file: %s has been created.",psname));
+      Info("TPad::Print", "GIF file %s has been created", psname);
       return;
    }
 
@@ -3560,7 +3560,7 @@ void TPad::Print(const char *filename, Option_t *option)
       fsave->Close();
       delete fsave;
       if (dirsav) dirsav->cd();
-      Info("TPad::Print",Form("ROOT file: %s has been created",psname));
+      Info("TPad::Print", "ROOT file %s has been created", psname);
       return;
    }
 
@@ -3590,7 +3590,7 @@ void TPad::Print(const char *filename, Option_t *option)
    gVirtualPS->SetBit(kPrintingPS);
    Paint();
    if (noScreen)  GetCanvas()->SetBatch(kFALSE);
-   Info("TPad::Print",Form("PostScript file: %s has been created",psname));
+   Info("TPad::Print", "PostScript file %s has been created", psname);
    delete gVirtualPS;
    gVirtualPS = psave;
    padsav->cd();
