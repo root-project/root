@@ -588,7 +588,6 @@ enable/disable options, prefix with either --enable- or --disable-
    table           Build libTable contrib library
    thread          Thread support
    venus           Venus EG support, requires libVenus
-   xml             XML I/O interface
    xrootd          Build xrootd file server and its client (if supported)
 
 with options, prefix with --with-, enables corresponding support
@@ -760,8 +759,6 @@ if test $# -gt 0 ; then
       --with-sys-iconpath=*)   extraiconpath=$optarg ;;
       --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_thread="yes"  ;;
       --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
-      --with-xml-incdir=*)     xmlincdir=$optarg     ; enable_xml="yes"     ;;
-      --with-xml-libdir=*)     xmllibdir=$optarg     ; enable_xml="yes"     ;;
       --with-x11-libdir=*)     x11libdir=$optarg     ;;
       --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
       ################################################################
@@ -1571,60 +1568,6 @@ if test ! "x$enable_ruby" = "xno" ; then
     fi
 fi
 
-######################################################################
-#
-### echo %%% xml - the XML I/O interface
-#
-# (See http://www.xmlsoft.org)
-#
-# If the user has set the flags "--disable-xml", we don't check for
-# XML at all.
-#
-if test ! "x$enable_xml" = "xno" ; then
-    # Check for xml include and library
-    keepinc=$xmlincdir
-    check_header "libxml/tree.h" "$xmlincdir" $XMLDIR $XMLDIR/include \
-        /opt/libxml2/include /usr/local/include/libxml2 /usr/include/libxml2
-    xmlincdir=$found_dir
-
-    keeplib=$xmllibdir
-    check_library "libxml2_a libxml2" "$enable_shared" "$xmllibdir" $XMLDIR \
-        $XMLDIR/lib $XMLDIR/.libs /opt/libxml2/lib /usr/local/lib /usr/lib
-    xmllib=$found_lib
-    xmllibdir=$found_dir
-
-    if test "x$platform" = "xwin32"; then
-       check_header "iconv.h" "$keepinc" $ICONVDIR $ICONVDIR/include \
-           $XMLDIR $XMLDIR/include \
-           /opt/libxml2/include /usr/local/include/libxml2 /usr/include/libxml2
-       iconvincdir=$found_dir
-
-       check_library "iconv_a" "$enable_shared" "$keeplib" $ICONVDIR \
-           $ICONVDIR/lib $XMLDIR $XMLDIR/lib $XMLDIR/.libs \
-           /opt/libxml2/lib /usr/local/lib /usr/lib
-       iconvlib=$found_lib
-       iconvlibdir=$found_dir
-    else
-       iconvincdir=$xmlincdir
-       iconvlib="-liconv"
-    fi
-
-    if test "x$xmlincdir"   = "x" || test "x$xmllib"    = "x" ||
-       test "x$iconvincdir" = "x" || test "x$iconvlib"  = "x" ; then
-        xmlincdir=""
-        enable_xml="no"
-    else
-        case $arch in
-            win32gcc)  xmllib="$xmllib -liconv"              ;;
-        esac
-        case $platform in
-            linux)     xmllib="$xmllib -lpthread"            ;;
-            solaris)   xmllib="$xmllib -liconv"              ;;
-            win32)     xmlincdir="$xmlincdir -I$iconvincdir"
-                       xmllib="$xmllib $iconvlib Ws2_32.lib" ;;
-        esac
-    fi
-fi
 
 ######################################################################
 #
@@ -2748,9 +2691,6 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@tutdir@|$tutdir|"                    \
     -e "s|@venuslib@|$venuslib|"                \
     -e "s|@venuslibdir@|$venuslibdir|"          \
-    -e "s|@xmlincdir@|$xmlincdir|"              \
-    -e "s|@xmllib@|$xmllib|"                    \
-    -e "s|@xmllibdir@|$xmllibdir|"              \
     -e "s|@x11libdir@|$x11libdir|"              \
     -e "s|@xpmlib@|$xpmlib|"                    \
     -e "s|@xpmlibdir@|$xpmlibdir|"              \
