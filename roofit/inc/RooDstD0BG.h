@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDstD0BG.rdl,v 1.1 2001/08/22 06:31:35 chcheng Exp $
+ *    File: $Id: RooDstD0BG.rdl,v 1.2 2001/08/23 01:34:51 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   UE, Ulrik Egede, RAL, U.Egede@rl.ac.uk
@@ -28,7 +28,8 @@ class RooRealVar;
 class RooDstD0BG : public RooAbsPdf {
 public:
   RooDstD0BG(const char *name, const char *title,
-	     RooAbsReal& _dm, RooAbsReal& _dm0, RooAbsReal& _c);
+	     RooAbsReal& _dm, RooAbsReal& _dm0, RooAbsReal& _c,
+	     RooAbsReal& _a, RooAbsReal& _b);
 
   RooDstD0BG(const RooDstD0BG& other, const char *name=0) ;
   virtual TObject *clone(const char *newname) const { 
@@ -42,7 +43,7 @@ protected:
 
   RooRealProxy dm ;
   RooRealProxy dm0 ;
-  RooRealProxy c ;
+  RooRealProxy c,a,b ;
 
   Double_t evaluate() const;
   
