@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.2 2003/09/04 10:00:00 peters Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.3 2003/11/13 15:15:11 rdm Exp $
 // Author: Andreas Peters 04/09/2003
 
 /*************************************************************************
@@ -102,26 +102,29 @@ void TAlienResult::Reset()
 }
 
 //______________________________________________________________________________
-void TAlienResult::List(Int_t indentation)
+void TAlienResult::Print(Option_t *opt) const
 {
    // List contents of result.
 
-   Reset();
+   if (!opt) opt = "";
+
+   const_cast<TAlienResult*>(this)->Reset();
    int cnt = 0;
    Grid_Result_t *result;
-   while ((result = (Grid_Result_t *) Next())) {
+   while ((result = (Grid_Result_t *) const_cast<TAlienResult*>(this)->Next())) {
       cnt++;
-      for (int i = 0; i < indentation; i++)
-         printf("   ");
-      if (indentation)
+      printf("%s", opt);
+      if (strlen(opt))
          printf("     - %-32s %-32s\n", result->name.c_str(),
                 result->name2.c_str());
       else
          printf(" [%2d] %-32s %-32s\n", cnt, result->name.c_str(),
                 result->name2.c_str());
       if (result->data) {
+         TString indentation = opt;
+         indentation += "   ";
          TAlienResult subresult(result->data);
-         subresult.List(indentation + 1);
+         subresult.Print(indentation);
       }
    }
 }

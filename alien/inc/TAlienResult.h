@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.h,v 1.1 2002/05/13 10:38:10 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.h,v 1.2 2003/11/13 15:15:11 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -43,7 +43,7 @@ public:
    void           Close();
    const char    *GetValue() { return 0; }
    Grid_Result_t *Next();
-   void           List(Int_t indentation = 0);
+   void           Print(Option_t *option = "") const;
    void           Reset();
 
    ClassDef(TAlienResult,0)    // AliEn Grid_Result result
