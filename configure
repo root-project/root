@@ -602,7 +602,7 @@ if [ "x$enable_mysql" != "xno" ]; then
     if [ "x$mysqllibdir" != "x" ]; then
         # If the user gave an explicit path, check to see if the client
         # library really is where it's supposed to be
-        libdirs=mysqllibdir
+        libdirs=$mysqllibdir
     else
         libdirs="$MYSQL $MYSQL/lib /usr/lib /usr/local/lib \
                     /usr/lib/mysql /usr/local/lib/mysql /usr/mysql/lib \
