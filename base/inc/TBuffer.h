@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.11 2002/02/23 10:15:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.12 2002/02/25 12:36:52 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -108,11 +108,11 @@ public:
    Version_t ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0);
    UInt_t    WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
 
-   TClass  *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0);
-   void     WriteClass(const TClass *cl);
+   virtual TClass  *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0);
+   virtual void     WriteClass(const TClass *cl);
 
-   TObject *ReadObject(const TClass *cl);
-   void     WriteObject(const TObject *obj);
+   virtual TObject *ReadObject(const TClass *cl);
+   virtual void     WriteObject(const TObject *obj);
 
    void     SetBufferDisplacement(Int_t skipped)
             { fDisplacement =  (Int_t)(Length() - skipped); }
