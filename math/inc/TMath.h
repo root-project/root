@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.21 2002/07/29 11:09:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.22 2002/08/16 13:43:10 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -402,8 +402,12 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
        extern "C" { int finite(double); }
 #   endif
 #   if defined(R__GLIBC) && defined(__STRICT_ANSI__)
-#      define finite __finite
-#      define isnan  __isnan
+#      ifndef finite
+#         define finite __finite
+#      endif
+#      ifndef isnan
+#         define isnan  __isnan
+#      endif
 #   endif
 #else
 // don't want to include complete <math.h>
