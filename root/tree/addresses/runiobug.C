@@ -1,4 +1,5 @@
 {
+   SetROOTMessageToStdout();
    gROOT->ProcessLine(".x iobug.C+");
    for(int classtype = 0; classtype < 2; ++classtype) {
       for (int clonesmode = 1; clonesmode <4; ++clonesmode) {

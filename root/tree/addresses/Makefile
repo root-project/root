@@ -13,7 +13,6 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-
 inherit_C.$(DllSuf): inherit.C buildInherit.C
 
 inheritTest.log: runInherit.C inherit_C.$(DllSuf)
