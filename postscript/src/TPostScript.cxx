@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.44 2003/12/05 23:03:35 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.45 2004/01/28 15:49:07 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -2508,8 +2508,10 @@ L60:
    // 3. treat normal text
       else {
          char2[inew] = newtext[iold-1];
-         if (char2[inew] == '\345') char2[inew] = '\357';  //a Angstroem
-         if (char2[inew] == '\305') char2[inew] = '\362';  //A Angstroem
+         if (font != 12) { 
+            if (char2[inew] == '\345') char2[inew] = '\357';  //a Angstroem
+            if (char2[inew] == '\305') char2[inew] = '\362';  //A Angstroem
+	 }
          inew++;
       }
 LOOPEND:
