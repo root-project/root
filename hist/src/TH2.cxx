@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.64 2005/01/25 07:36:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.65 2005/01/31 13:40:15 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2102,7 +2102,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 {
    TArrayC::Set(fNcells);
 
-   if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
+   //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -2334,7 +2334,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 {
    TArrayS::Set(fNcells);
 
-   if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
+   //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -2566,7 +2566,7 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 {
    TArrayI::Set(fNcells);
 
-   if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
+   //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -2763,7 +2763,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 {
    TArrayF::Set(fNcells);
 
-   if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
+   //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -3001,7 +3001,7 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 {
    TArrayD::Set(fNcells);
 
-   if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
+   //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
