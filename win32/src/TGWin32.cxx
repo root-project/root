@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.10 2002/02/21 17:18:10 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.11 2002/02/21 17:36:15 brun Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -668,7 +668,7 @@ Int_t TGWin32::GetDepth() const
    else {
       nplanes=GetDeviceCaps(hDCGlobal,PLANES);
       int nBitsPixel=GetDeviceCaps(hDCGlobal,BITSPIXEL);
-      nplanes = nPlanes*nBitsPixel;
+      nplanes = nplanes*nBitsPixel;
    }
    ReleaseDC(NULL,hDCGlobal);
    return nplanes;
