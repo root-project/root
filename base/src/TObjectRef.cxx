@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjectRef.cxx,v 1.7 2001/09/28 11:10:44 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjectRef.cxx,v 1.1 2001/10/01 10:29:08 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -47,15 +47,15 @@ ClassImp(TObjectRef)
 // this TObjectRef and robj can be written with two different I/O calls
 // in the same or different files, in the same or different branches of a Tree.
 // If the TObjectRef is read and the referenced object has not yet been read,
-// the TRefObject will return a null pointer. As soon as the referenced object
-// will be read, the TRefObject will point to it.
+// the TObjectRef will return a null pointer. As soon as the referenced object
+// will be read, the TObjectRef will point to it.
 //
-// TRefObject also supports the complex situation where a TFile is updated
+// TObjectRef also supports the complex situation where a TFile is updated
 // multiple times on the same machine or a different machine.
 //
 // How does it work
 // ----------------
-// A TRefObject is itself a TObject with an additional transient pointer fPID.
+// A TObjectRef is itself a TObject with an additional transient pointer fPID.
 // When the statement fRef = robj is executed, the fRef::fUniqueID is set
 // to the value "obj-gSystem". This uid is in general a small integer, even
 // on a 64 bit system.
@@ -70,10 +70,10 @@ ClassImp(TObjectRef)
 // When a referenced object robj is written, TObject::Streamer writes
 // in addition to the standard (fBits,fUniqueID) the pair uid,pidf.
 // When this robj is read by TObject::Streamer, the pair uid,pidf is read.
-// At this point, robj is entered into teh TExmap of the TProcessID
+// At this point, robj is entered into the TExmap of the TProcessID
 // corresponding to pidf. 
 //
-// Once the referenced object robj is in memory, TRefObject::GetObject will 
+// Once the referenced object robj is in memory, TObjectRef::GetObject will 
 // store the object pointer robj-gSystem  into the fUniqueID such that
 // the next access to the pointer will be fast (no need to search in
 // the TExMap of the TProcessID anymore).
@@ -82,7 +82,7 @@ ClassImp(TObjectRef)
 // ----------------------------------------------
 // The TSeqCollection (TList, TObjArray, etc) have been modified with
 // additional member functions AddRef, AddRefAt, etc to create automatically
-// a TRefObject when doing, eg:
+// a TObjectRef when doing, eg:
 //    myArray->AddRef(robj);
 //
 // Example:
