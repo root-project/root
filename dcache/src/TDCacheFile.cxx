@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.10 2003/07/19 00:14:15 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.12 2003/12/02 02:07:44 brun Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 
@@ -59,6 +59,16 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
                          const char *ftitle, Int_t compress):
    TFile(path, "NET", ftitle, compress)
 {
+   // Create a dCache file object. A dCache file is the same as a TFile
+   // except that it is being accessed via a dCache server. The url
+   // argument must be of the form: dcache://path/file.root (where file.root
+   // is a symlink of type /shift/aaa/bbb/ccc) or dcap://path/file.root.
+   // If the file specified in the URL does not exist, is not accessable
+   // or can not be created the kZombie bit will be set in the TDCacheFile
+   // object. Use IsZombie() to see if the file is accessable.
+   // For a description of the option and other arguments see the TFile ctor.
+   // The preferred interface to this constructor is via TFile::Open().
+
    TString pathString = GetDcapPath(path);
    path = pathString.Data();
 
@@ -251,8 +261,6 @@ Bool_t TDCacheFile::Stage(const char *path, UInt_t after, const char *location)
 //______________________________________________________________________________
 Bool_t TDCacheFile::CheckFile(const char *path, const char *location)
 {
-   // Note: Name of the method was changed to avoid collision with Check
-   // macro #defined in ROOT.
    // CheckFile() returns kTRUE on success and kFALSE on failure.  In
    // case the file exists but is not cached, CheckFile() returns
    // kFALSE and errno is set to EAGAIN.
@@ -276,30 +284,40 @@ Bool_t TDCacheFile::CheckFile(const char *path, const char *location)
 //______________________________________________________________________________
 void TDCacheFile::SetOpenTimeout(UInt_t n)
 {
+   // Set file open timeout.
+
    dc_setOpenTimeout(n);
 }
 
 //______________________________________________________________________________
 void TDCacheFile::SetOnError(OnErrorAction a)
 {
+   // Set on error handler.
+
    dc_setOnError(a);
 }
 
 //______________________________________________________________________________
 void TDCacheFile::SetReplyHostName(const char *host_name)
 {
+   // Set reply host name.
+
    dc_setReplyHostName((char*)host_name);
 }
 
 //______________________________________________________________________________
 const char *TDCacheFile::GetDcapVersion()
 {
+   // Return dCache version string.
+
    return getDcapVersion();
 }
 
 //______________________________________________________________________________
 Bool_t TDCacheFile::EnableSSL()
 {
+   // Enable SSL file access.
+
 #ifdef DCAP_USE_SSL
    dc_enableSSL();
    return kTRUE;
@@ -311,6 +329,8 @@ Bool_t TDCacheFile::EnableSSL()
 //______________________________________________________________________________
 Int_t TDCacheFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
+   // Interface to system open. All arguments like in POSIX open.
+
    dc_errno = 0;
 
    Int_t rc = dc_open(pathname, flags, (Int_t) mode);
@@ -328,6 +348,8 @@ Int_t TDCacheFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 //______________________________________________________________________________
 Int_t TDCacheFile::SysClose(Int_t fd)
 {
+   // Interface to system close. All arguments like in POSIX close.
+
    dc_errno = 0;
 
    Int_t rc = dc_close(fd);
@@ -345,6 +367,8 @@ Int_t TDCacheFile::SysClose(Int_t fd)
 //______________________________________________________________________________
 Int_t TDCacheFile::SysRead(Int_t fd, void *buf, Int_t len)
 {
+   // Interface to system read. All arguments like in POSIX read.
+
    fOffset += len;
 
    dc_errno = 0;
@@ -364,6 +388,8 @@ Int_t TDCacheFile::SysRead(Int_t fd, void *buf, Int_t len)
 //______________________________________________________________________________
 Int_t TDCacheFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 {
+   // Interface to system write. All arguments like in POSIX write.
+
    fOffset += len;
 
    dc_errno = 0;
@@ -383,6 +409,8 @@ Int_t TDCacheFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 //______________________________________________________________________________
 Seek_t TDCacheFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
 {
+   // Interface to system seek. All arguments like in POSIX lseek.
+
    if (whence == SEEK_SET && offset == fOffset) return offset;
 
    dc_errno = 0;
@@ -403,6 +431,7 @@ Seek_t TDCacheFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
 //______________________________________________________________________________
 Int_t TDCacheFile::SysSync(Int_t)
 {
+   // Interface to system sync. All arguments like in POSIX fsync.
    // dCache always keep it's files sync'ed, so there's no need to
    // sync() them manually.
 
@@ -432,10 +461,9 @@ void TDCacheFile::ResetErrno() const
 //______________________________________________________________________________
 TString TDCacheFile::GetDcapPath(const char *path)
 {
-   // Transform the input path into a path usuable by 
-   // the dcap C library.
-   // i.e either dcap://nodename.org/where/filename.root
-   // either //pnfs/where/filename.root
+   // Transform the input path into a path usuable by the dcap C library,
+   // i.e either dcap://nodename.org/where/filename.root or
+   // //pnfs/where/filename.root
 
    if (!strncmp(path, DCACHE_PREFIX, DCACHE_PREFIX_LEN)) {
       path += DCACHE_PREFIX_LEN;
@@ -450,10 +478,11 @@ TString TDCacheFile::GetDcapPath(const char *path)
    return pathString;
 }
 
+
 //______________________________________________________________________________
 TDCacheSystem::TDCacheSystem() : TSystem("-DCache", "DCache Helper System")
 {
-   // Create helper class that allows directory access .
+   // Create helper class that allows directory access via dCache.
 
    // name must start with '-' to bypass the TSystem singleton check
    SetName("DCache");
@@ -461,80 +490,40 @@ TDCacheSystem::TDCacheSystem() : TSystem("-DCache", "DCache Helper System")
    fDirp = 0;
 }
 
-
-//---- Directories -------------------------------------------------------------
-
 //______________________________________________________________________________
 int TDCacheSystem::MakeDirectory(const char *name)
 {
-   // The DCache Library does not yet have a mkdir function. 
-   // For now, just invoke the standard UNIX functionality.
+   // The dCache Library does not yet have a mkdir function.
 
-   return ::mkdir(name, 0755);
+   Error("MakeDirectory", "not supported, cannot create %s", name);
+   return -1;
 }
 
 //______________________________________________________________________________
 void *TDCacheSystem::OpenDirectory(const char *name)
 {
-   // The DCache Library does not yet have a opendir function. 
-   // For now, just invoke the standard UNIX functionality.
+   // The dCache Library does not yet have a opendir function.
 
-   struct stat finfo;
-
-   if (stat(name, &finfo) < 0)
-     return 0;
-
-   if (!S_ISDIR(finfo.st_mode))
-     return 0;
-
-   return (void*) opendir(name);
-
+   Error("OpenDirectory", "not supported, cannot open directory %s", name);
+   return 0;
 }
 
 //______________________________________________________________________________
 void TDCacheSystem::FreeDirectory(void *dirp)
 {
-   // The DCache Library does not yet have a closedir function. 
-   // For now, just invoke the standard UNIX functionality.
+   // The dCache Library does not yet have a closedir function.
 
-   if (dirp)
-      ::closedir((DIR*)dirp);
+   Error("FreeDirectory", "not supported, cannot close directory");
 }
-
-#if defined(_POSIX_SOURCE)
-// Posix does not require that the d_ino field be present, and some
-// systems do not provide it.
-#   define REAL_DIR_ENTRY(dp) 1
-#else
-#   define REAL_DIR_ENTRY(dp) (dp->d_ino != 0)
-#endif
 
 //______________________________________________________________________________
 const char *TDCacheSystem::GetDirEntry(void *dirp1)
 {
-   // The DCache Library does not yet have a readdir function. 
-   // For now, just invoke the standard UNIX functionality.
+   // The dCache Library does not yet have a readdir function.
 
-   DIR *dirp = (DIR*)dirp1;
-#ifdef HAS_DIRENT
-   struct dirent *dp;
-#else
-   struct direct *dp;
-#endif
-
-   if (dirp) {
-      for (;;) {
-         dp = readdir(dirp);
-         if (dp == 0)
-            return 0;
-         if (REAL_DIR_ENTRY(dp))
-            return dp->d_name;
-      }
-   }
+   Error("GetDirEntry", "not supported, cannot get directory entry");
    return 0;
 }
-
-//---- Paths & Files -----------------------------------------------------------
 
 //______________________________________________________________________________
 Bool_t TDCacheSystem::AccessPathName(const char *path, EAccessMode mode)
@@ -543,7 +532,7 @@ Bool_t TDCacheSystem::AccessPathName(const char *path, EAccessMode mode)
    // Mode is the same as for the Unix access(2) function.
    // Attention, bizarre convention of return value!!
 
-   // The DCache Library does not yet have an access function.  Use dc_stat()
+   // The dCache Library does not yet have an access function, use dc_stat()
 
    TString pathString = TDCacheFile::GetDcapPath(path);
    path = pathString.Data();
@@ -551,19 +540,19 @@ Bool_t TDCacheSystem::AccessPathName(const char *path, EAccessMode mode)
    struct stat statbuf;
 
    if (path != 0 && dc_stat(path, &statbuf) >= 0) {
-     switch (mode) {
-       case kReadPermission:
-         if (statbuf.st_mode | S_IRUSR) return kFALSE;
-         break;
-       case kWritePermission:
-         if (statbuf.st_mode | S_IWUSR) return kFALSE;
-         break;
-       case kExecutePermission:
-         if (statbuf.st_mode | S_IXUSR) return kFALSE;
-	 break;
-       default:
-         return kFALSE;
-     }
+      switch (mode) {
+         case kReadPermission:
+            if (statbuf.st_mode | S_IRUSR) return kFALSE;
+            break;
+         case kWritePermission:
+            if (statbuf.st_mode | S_IWUSR) return kFALSE;
+            break;
+         case kExecutePermission:
+            if (statbuf.st_mode | S_IXUSR) return kFALSE;
+	    break;
+         default:
+            return kFALSE;
+      }
    }
 
    fLastErrorString = GetError();
