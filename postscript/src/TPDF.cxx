@@ -250,10 +250,10 @@ void TPDF::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    // Draw a Box
 
    static Double_t x[4], y[4];
-   Int_t ix1 = XtoPDF(x1);
-   Int_t ix2 = XtoPDF(x2);
-   Int_t iy1 = YtoPDF(y1);
-   Int_t iy2 = YtoPDF(y2);
+   Double_t ix1 = XtoPDF(x1);
+   Double_t ix2 = XtoPDF(x2);
+   Double_t iy1 = YtoPDF(y1);
+   Double_t iy2 = YtoPDF(y2);
    Int_t fillis = fFillStyle/1000;
    Int_t fillsi = fFillStyle%1000;
 
@@ -274,27 +274,27 @@ void TPDF::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       }
       if (fillsi == -3) {
          SetColor(5);
-         WriteInteger(ix1);
-         WriteInteger(iy1);
-         WriteInteger(ix2 - ix1);
-         WriteInteger(iy2 - iy1);
+         WriteReal(ix1);
+         WriteReal(iy1);
+         WriteReal(ix2 - ix1);
+         WriteReal(iy2 - iy1);
          PrintFast(6," re f*");
       }
    }
    if (fillis == 1) {
       SetColor(fFillColor);
-      WriteInteger(ix1);
-      WriteInteger(iy1);
-      WriteInteger(ix2 - ix1);
-      WriteInteger(iy2 - iy1);
+      WriteReal(ix1);
+      WriteReal(iy1);
+      WriteReal(ix2 - ix1);
+      WriteReal(iy2 - iy1);
       PrintFast(6," re f*");
    }
    if (fillis == 0) {
       SetColor(fLineColor);
-      WriteInteger(ix1);
-      WriteInteger(iy1);
-      WriteInteger(ix2 - ix1);
-      WriteInteger(iy2 - iy1);
+      WriteReal(ix1);
+      WriteReal(iy1);
+      WriteReal(ix2 - ix1);
+      WriteReal(iy2 - iy1);
       PrintFast(5," re S");
    }
 }
@@ -311,7 +311,7 @@ void TPDF::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    // dark  is the color for the dark part of the frame
    // light is the color for the light part of the frame
 
-   static Int_t xps[7], yps[7];
+   static Double_t xps[7], yps[7];
    Int_t i;
 
    // Draw top&left part of the box
@@ -325,11 +325,8 @@ void TPDF::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    xps[5] = xps[0];              yps[5] = yps[4];
    xps[6] = xps[0];              yps[6] = yps[0];
 
-   WriteInteger(xps[0]);
-   WriteInteger(yps[0]);
-   PrintFast(2," m");
-
-   for (i=1;i<7;i++) MovePS(xps[i], yps[i]);
+   MoveTo(xps[0], yps[0]);
+   for (i=1;i<7;i++) LineTo(xps[i], yps[i]);
    PrintFast(3," f*");
 
    // Draw bottom&right part of the box
@@ -343,11 +340,8 @@ void TPDF::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    xps[5] = xps[4];              yps[5] = yps[0];
    xps[6] = xps[0];              yps[6] = yps[0];
 
-   WriteInteger(xps[0]);
-   WriteInteger(yps[0]);
-   PrintFast(2," m");
-
-   for (i=1;i<7;i++) MovePS(xps[i], yps[i]);
+   MoveTo(xps[0], yps[0]);
+   for (i=1;i<7;i++) LineTo(xps[i], yps[i]);
    PrintFast(3," f*");
 }
 
@@ -356,7 +350,7 @@ void TPDF::DrawPolyLine(Int_t nn, TPoints *xy)
 {
    // Draw a PolyLine
    //
-   //  Draw a polyline through  the points  xy.
+   //  Draw a polyline through  the points xy.
    //  If NN=1 moves only to point x,y.
    //  If NN=0 the x,y are  written  in the PDF file
    //     according to the current transformation.
@@ -366,19 +360,19 @@ void TPDF::DrawPolyLine(Int_t nn, TPoints *xy)
    Int_t  n;
 
    if (nn > 0) {
-      n = nn;
+     n = nn;
      SetLineStyle(fLineStyle);
      SetLineWidth(fLineWidth);
      SetColor(Int_t(fLineColor));
    } else {
-      n = -nn;
+     n = -nn;
      SetLineStyle(1);
      SetLineWidth(1);
      SetColor(Int_t(fLineColor));
    }
 
-   WriteInteger(XtoPDF(xy[0].GetX()));
-   WriteInteger(YtoPDF(xy[0].GetY()));
+   WriteReal(XtoPDF(xy[0].GetX()));
+   WriteReal(YtoPDF(xy[0].GetY()));
    if( n <= 1) {
       if( n == 0) return;
       PrintFast(2," m");
@@ -387,7 +381,7 @@ void TPDF::DrawPolyLine(Int_t nn, TPoints *xy)
 
    PrintFast(2," m");
 
-   for (Int_t i=1;i<n;i++) MovePS(XtoPDF(xy[i].GetX()), YtoPDF(xy[i].GetY()));
+   for (Int_t i=1;i<n;i++) LineTo(XtoPDF(xy[i].GetX()), YtoPDF(xy[i].GetY()));
 
    if (nn > 0 ) {
       if (xy[0].GetX() == xy[n-1].GetX() && xy[0].GetY() == xy[n-1].GetY()) PrintFast(3," cl");
@@ -423,8 +417,8 @@ void TPDF::DrawPolyLineNDC(Int_t nn, TPoints *xy)
       SetColor(Int_t(fLineColor));
    }
 
-   WriteInteger(UtoPDF(xy[0].GetX()));
-   WriteInteger(VtoPDF(xy[0].GetY()));
+   WriteReal(UtoPDF(xy[0].GetX()));
+   WriteReal(VtoPDF(xy[0].GetY()));
    if( n <= 1) {
       if( n == 0) return;
       PrintFast(2," m");
@@ -433,7 +427,7 @@ void TPDF::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 
    PrintFast(2," m");
 
-   for (Int_t i=1;i<n;i++) MovePS(UtoPDF(xy[i].GetX()), VtoPDF(xy[i].GetY()));
+   for (Int_t i=1;i<n;i++) LineTo(UtoPDF(xy[i].GetX()), VtoPDF(xy[i].GetY()));
 
    if (nn > 0 ) {
       if (xy[0].GetX() == xy[n-1].GetX() && xy[0].GetY() == xy[n-1].GetY()) PrintFast(3," cl");
@@ -487,8 +481,8 @@ void TPDF::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
       }
    }
 
-   WriteInteger(XtoPDF(xw[0]));
-   WriteInteger(YtoPDF(yw[0]));
+   WriteReal(XtoPDF(xw[0]));
+   WriteReal(YtoPDF(yw[0]));
    if( n <= 1) {
       if( n == 0) return;
       PrintFast(2," m");
@@ -497,7 +491,7 @@ void TPDF::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
 
    PrintFast(2," m");
 
-   for (Int_t i=1;i<n;i++) MovePS(XtoPDF(xw[i]), YtoPDF(yw[i]));
+   for (Int_t i=1;i<n;i++) LineTo(XtoPDF(xw[i]), YtoPDF(yw[i]));
 
    if (nn > 0 ) {
       if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(2," h");
@@ -561,8 +555,8 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       }
    }
 
-   WriteInteger(XtoPDF(xw[0]));
-   WriteInteger(YtoPDF(yw[0]));
+   WriteReal(XtoPDF(xw[0]));
+   WriteReal(YtoPDF(yw[0]));
    if( n <= 1) {
       if( n == 0) return;
       PrintFast(2," m");
@@ -571,7 +565,7 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 
    PrintFast(2," m");
 
-   for (Int_t i=1;i<n;i++) MovePS(XtoPDF(xw[i]), YtoPDF(yw[i]));
+   for (Int_t i=1;i<n;i++) LineTo(XtoPDF(xw[i]), YtoPDF(yw[i]));
 
    if (nn > 0 ) {
       if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(2," h");
@@ -633,13 +627,23 @@ void TPDF::FontEncode()
 }
 
 //______________________________________________________________________________
-void TPDF::MovePS(Int_t ix, Int_t iy)
+void TPDF::LineTo(Double_t x, Double_t y)
+{
+   // Draw a line to a new position
+
+   WriteReal(x);
+   WriteReal(y);
+   PrintFast(2," l");
+}
+
+//______________________________________________________________________________
+void TPDF::MoveTo(Double_t x, Double_t y)
 {
    // Move to a new position
 
-   WriteInteger(ix);
-   WriteInteger(iy);
-   PrintFast(2," l");
+   WriteReal(x);
+   WriteReal(y);
+   PrintFast(2," m");
 }
 
 //______________________________________________________________________________
@@ -723,17 +727,17 @@ void TPDF::NewPage()
       yup  = ylow + gPad->GetAbsHNDC();
    }
    PrintStr("/MediaBox [");
-   WriteInteger(CMtoPDF(fXsize*xlow),0);
-   WriteInteger(CMtoPDF(fYsize*ylow));
-   WriteInteger(CMtoPDF(fXsize*xup));
-   WriteInteger(CMtoPDF(fYsize*yup));
+   WriteReal(CMtoPDF(fXsize*xlow));
+   WriteReal(CMtoPDF(fYsize*ylow));
+   WriteReal(CMtoPDF(fXsize*xup));
+   WriteReal(CMtoPDF(fYsize*yup));
    PrintStr("]");
    PrintStr("@");
    PrintStr("/CropBox [");
-   WriteInteger(CMtoPDF(fXsize*xlow),0);
-   WriteInteger(CMtoPDF(fYsize*ylow));
-   WriteInteger(CMtoPDF(fXsize*xup));
-   WriteInteger(CMtoPDF(fYsize*yup));
+   WriteReal(CMtoPDF(fXsize*xlow));
+   WriteReal(CMtoPDF(fYsize*ylow));
+   WriteReal(CMtoPDF(fXsize*xup));
+   WriteReal(CMtoPDF(fYsize*yup));
    PrintStr("]");
    PrintStr("@");
    
@@ -854,7 +858,7 @@ void TPDF::SetLineWidth(Width_t linewidth)
 
    if (linewidth == fLineWidth) return;
    fLineWidth = linewidth;
-   WriteInteger(Int_t(fLineWidth));
+   WriteReal(fLineWidth);
    PrintFast(2," w");
 }
 
@@ -997,25 +1001,25 @@ void TPDF::TextNDC(Double_t u, Double_t v, const char *chars)
 }
 
 //______________________________________________________________________________
-Int_t TPDF::UtoPDF(Double_t u)
+Double_t TPDF::UtoPDF(Double_t u)
 {
    // Convert U from NDC coordinate to PDF
 
    Double_t cm = fXsize*(gPad->GetAbsXlowNDC() + u*gPad->GetAbsWNDC());
-   return Int_t(0.5 + 72*cm/2.54);
+   return 72*cm/2.54;
 }
 
 //______________________________________________________________________________
-Int_t TPDF::VtoPDF(Double_t v)
+Double_t TPDF::VtoPDF(Double_t v)
 {
    // Convert V from NDC coordinate to PDF
 
    Double_t cm = fYsize*(gPad->GetAbsYlowNDC() + v*gPad->GetAbsHNDC());
-   return Int_t(0.5 + 72*cm/2.54);
+   return 72*cm/2.54;
 }
 
 //______________________________________________________________________________
-Int_t TPDF::XtoPDF(Double_t x)
+Double_t TPDF::XtoPDF(Double_t x)
 {
    // Convert X from world coordinate to PDF
 
@@ -1024,7 +1028,7 @@ Int_t TPDF::XtoPDF(Double_t x)
 }
 
 //______________________________________________________________________________
-Int_t TPDF::YtoPDF(Double_t y)
+Double_t TPDF::YtoPDF(Double_t y)
 {
    // Convert Y from world coordinate to PDF
 
@@ -1052,13 +1056,259 @@ void TPDF::CellArrayEnd()
 }
 
 //______________________________________________________________________________
-void TPDF::DrawPolyMarker(Int_t, Float_t *, Float_t *)
+void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 {
-   Warning("TPDF::DrawPolyMarker", "not yet implemented");
+   // Draw markers at the n WC points xw, yw
+
+   Style_t linestylesav = fLineStyle;
+   Width_t linewidthsav = fLineWidth;
+   SetLineStyle(1);
+   SetLineWidth(1);
+   SetColor(Int_t(fMarkerColor));
+   Int_t ms = abs(fMarkerStyle);
+
+   if (ms >= 6 && ms <= 19) ms = 20;
+   if (ms == 4) ms = 24;
+   
+   // Define the marker size
+   Double_t msize = 0.23*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
+   if (ms == 6) msize *= 0.2;
+   if (ms == 7) msize *= 0.3;
+   Double_t m  = CMtoPDF(msize);
+   Double_t m2 = m/2;
+   Double_t m3 = m/3;
+   Double_t m4 = m2*1.333333333333;
+   Double_t m6 = m/6;
+
+   // Draw the marker according to the type
+   Double_t ix,iy;
+   for (Int_t i=0;i<n;i++) {
+      ix = XtoPDF(xw[i]);
+      iy = YtoPDF(yw[i]);
+      // Dot (.)
+      if (ms == 1) {
+         MoveTo(ix-1, iy);
+         LineTo(ix  , iy);
+      // Plus (+)
+      } else if (ms == 2) {
+         MoveTo(ix-m2, iy);
+         LineTo(ix+m2, iy);
+         MoveTo(ix   , iy-m2);
+         LineTo(ix   , iy+m2);
+      // X shape (X)
+      } else if (ms == 5) {
+         MoveTo(ix-m2, iy-m2);
+         LineTo(ix+m2, iy+m2);
+         MoveTo(ix-m2, iy+m2);
+         LineTo(ix+m2, iy-m2);
+      // Asterisk shape (*)
+      } else if (ms == 3 || ms == 31) {
+         MoveTo(ix-m2, iy);
+         LineTo(ix+m2, iy);
+         MoveTo(ix   , iy-m2);
+         LineTo(ix   , iy+m2);
+         MoveTo(ix-m2, iy-m2);
+         LineTo(ix+m2, iy+m2);
+         MoveTo(ix-m2, iy+m2);
+         LineTo(ix+m2, iy-m2);
+      // Circle
+      } else if (ms == 24 || ms == 20) {
+         MoveTo(ix-m2, iy);
+         WriteReal(ix-m2); WriteReal(iy+m4);
+         WriteReal(ix+m2); WriteReal(iy+m4);
+         WriteReal(ix+m2); WriteReal(iy)   ; PrintFast(2," c");
+         WriteReal(ix+m2); WriteReal(iy-m4);
+         WriteReal(ix-m2); WriteReal(iy-m4);
+         WriteReal(ix-m2); WriteReal(iy)   ; PrintFast(4," c h");
+      // Square
+      } else if (ms == 25 || ms == 21) {
+         WriteReal(ix-m2); WriteReal(iy-m2);
+         WriteReal(m)    ; WriteReal(m)    ; PrintFast(3," re");
+      // Down triangle
+      } else if (ms == 23) {
+         MoveTo(ix   , iy-m2);
+         LineTo(ix+m2, iy+m2);
+         LineTo(ix-m2, iy+m2);
+         PrintFast(2," h");
+      // Up triangle
+      } else if (ms == 26 || ms == 22) {
+         MoveTo(ix-m2, iy-m2);
+         LineTo(ix+m2, iy-m2);
+         LineTo(ix   , iy+m2);
+         PrintFast(2," h");
+      } else if (ms == 27) {
+         MoveTo(ix   , iy-m2);
+         LineTo(ix+m3, iy);
+         LineTo(ix   , iy+m2);
+         LineTo(ix-m3, iy)   ;
+         PrintFast(2," h");
+      } else if (ms == 28) {
+         MoveTo(ix-m6, iy-m6);
+         LineTo(ix-m6, iy-m2);
+         LineTo(ix+m6, iy-m2);
+         LineTo(ix+m6, iy-m6);
+         LineTo(ix+m2, iy-m6);
+         LineTo(ix+m2, iy+m6);
+         LineTo(ix+m6, iy+m6);
+         LineTo(ix+m6, iy+m2);
+         LineTo(ix-m6, iy+m2);
+         LineTo(ix-m6, iy+m6);
+         LineTo(ix-m2, iy+m6);
+         LineTo(ix-m2, iy-m6);
+         PrintFast(2," h");
+      } else if (ms == 29 || ms == 30) {
+         MoveTo(ix           , iy+m2);
+         LineTo(ix+0.112255*m, iy+0.15451*m);
+         LineTo(ix+0.47552*m , iy+0.15451*m);
+         LineTo(ix+0.181635*m, iy-0.05902*m);
+         LineTo(ix+0.29389*m , iy-0.40451*m);
+         LineTo(ix           , iy-0.19098*m);
+         LineTo(ix-0.29389*m , iy-0.40451*m);
+         LineTo(ix-0.181635*m, iy-0.05902*m);
+         LineTo(ix-0.47552*m , iy+0.15451*m);
+         LineTo(ix-0.112255*m, iy+0.15451*m);
+         PrintFast(2," h");
+      } else {
+         MoveTo(ix-1, iy);
+         LineTo(ix  , iy);
+      }
+   }
+
+   if ((ms > 19 && ms < 24) || ms == 29) {
+      PrintFast(2," f");
+   } else {
+      PrintFast(2," S");
+   }
+
+   SetLineStyle(linestylesav);
+   SetLineWidth(linewidthsav);
 }
 
 //______________________________________________________________________________
-void TPDF::DrawPolyMarker(Int_t, Double_t *, Double_t *)
+void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 {
-   Warning("TPDF::DrawPolyMarker", "not yet implemented");
+   // Draw markers at the n WC points xw, yw
+
+   Style_t linestylesav = fLineStyle;
+   Width_t linewidthsav = fLineWidth;
+   SetLineStyle(1);
+   SetLineWidth(1);
+   SetColor(Int_t(fMarkerColor));
+   Int_t ms = abs(fMarkerStyle);
+
+   if (ms >= 6 && ms <= 19) ms = 20;
+   if (ms == 4) ms = 24;
+   
+   // Define the marker size
+   Double_t msize = 0.23*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
+   if (ms == 6) msize *= 0.2;
+   if (ms == 7) msize *= 0.3;
+   Double_t m  = CMtoPDF(msize);
+   Double_t m2 = m/2;
+   Double_t m3 = m/3;
+   Double_t m4 = m2*1.333333333333;
+   Double_t m6 = m/6;
+
+   // Draw the marker according to the type
+   Double_t ix,iy;
+   for (Int_t i=0;i<n;i++) {
+      ix = XtoPDF(xw[i]);
+      iy = YtoPDF(yw[i]);
+      // Dot (.)
+      if (ms == 1) {
+         MoveTo(ix-1, iy);
+         LineTo(ix  , iy);
+      // Plus (+)
+      } else if (ms == 2) {
+         MoveTo(ix-m2, iy);
+         LineTo(ix+m2, iy);
+         MoveTo(ix   , iy-m2);
+         LineTo(ix   , iy+m2);
+      // X shape (X)
+      } else if (ms == 5) {
+         MoveTo(ix-m2, iy-m2);
+         LineTo(ix+m2, iy+m2);
+         MoveTo(ix-m2, iy+m2);
+         LineTo(ix+m2, iy-m2);
+      // Asterisk shape (*)
+      } else if (ms == 3 || ms == 31) {
+         MoveTo(ix-m2, iy);
+         LineTo(ix+m2, iy);
+         MoveTo(ix   , iy-m2);
+         LineTo(ix   , iy+m2);
+         MoveTo(ix-m2, iy-m2);
+         LineTo(ix+m2, iy+m2);
+         MoveTo(ix-m2, iy+m2);
+         LineTo(ix+m2, iy-m2);
+      // Circle
+      } else if (ms == 24 || ms == 20) {
+         MoveTo(ix-m2, iy);
+         WriteReal(ix-m2); WriteReal(iy+m4);
+         WriteReal(ix+m2); WriteReal(iy+m4);
+         WriteReal(ix+m2); WriteReal(iy)   ; PrintFast(2," c");
+         WriteReal(ix+m2); WriteReal(iy-m4);
+         WriteReal(ix-m2); WriteReal(iy-m4);
+         WriteReal(ix-m2); WriteReal(iy)   ; PrintFast(4," c h");
+      // Square
+      } else if (ms == 25 || ms == 21) {
+         WriteReal(ix-m2); WriteReal(iy-m2);
+         WriteReal(m)    ; WriteReal(m)    ; PrintFast(3," re");
+      // Down triangle
+      } else if (ms == 23) {
+         MoveTo(ix   , iy-m2);
+         LineTo(ix+m2, iy+m2);
+         LineTo(ix-m2, iy+m2);
+         PrintFast(2," h");
+      // Up triangle
+      } else if (ms == 26 || ms == 22) {
+         MoveTo(ix-m2, iy-m2);
+         LineTo(ix+m2, iy-m2);
+         LineTo(ix   , iy+m2);
+         PrintFast(2," h");
+      } else if (ms == 27) {
+         MoveTo(ix   , iy-m2);
+         LineTo(ix+m3, iy);
+         LineTo(ix   , iy+m2);
+         LineTo(ix-m3, iy)   ;
+         PrintFast(2," h");
+      } else if (ms == 28) {
+         MoveTo(ix-m6, iy-m6);
+         LineTo(ix-m6, iy-m2);
+         LineTo(ix+m6, iy-m2);
+         LineTo(ix+m6, iy-m6);
+         LineTo(ix+m2, iy-m6);
+         LineTo(ix+m2, iy+m6);
+         LineTo(ix+m6, iy+m6);
+         LineTo(ix+m6, iy+m2);
+         LineTo(ix-m6, iy+m2);
+         LineTo(ix-m6, iy+m6);
+         LineTo(ix-m2, iy+m6);
+         LineTo(ix-m2, iy-m6);
+         PrintFast(2," h");
+      } else if (ms == 29 || ms == 30) {
+         MoveTo(ix           , iy+m2);
+         LineTo(ix+0.112255*m, iy+0.15451*m);
+         LineTo(ix+0.47552*m , iy+0.15451*m);
+         LineTo(ix+0.181635*m, iy-0.05902*m);
+         LineTo(ix+0.29389*m , iy-0.40451*m);
+         LineTo(ix           , iy-0.19098*m);
+         LineTo(ix-0.29389*m , iy-0.40451*m);
+         LineTo(ix-0.181635*m, iy-0.05902*m);
+         LineTo(ix-0.47552*m , iy+0.15451*m);
+         LineTo(ix-0.112255*m, iy+0.15451*m);
+         PrintFast(2," h");
+      } else {
+         MoveTo(ix-1, iy);
+         LineTo(ix  , iy);
+      }
+   }
+
+   if ((ms > 19 && ms < 24) || ms == 29) {
+      PrintFast(2," f");
+   } else {
+      PrintFast(2," S");
+   }
+
+   SetLineStyle(linestylesav);
+   SetLineWidth(linewidthsav);
 }
