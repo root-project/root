@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.106 2002/09/21 21:58:07 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.107 2002/09/25 21:06:43 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2268,7 +2268,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"   // Entry is the entry number in the current tree.\n");
       fprintf(fpc,"   // Read only the necessary branches to select entries.\n");
       fprintf(fpc,"   // To read complete event, call fChain->GetTree()->GetEntry(entry).\n");
-      fprintf(fpc,"   // Return kFALSE as stop processing.\n");
+      fprintf(fpc,"   // Return kFALSE to stop processing.\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   return kTRUE;\n");
       fprintf(fpc,"}\n");
@@ -3368,7 +3368,7 @@ void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &r, Double_t
   Double_t x[3];
   TF1 *fitfunc = (TF1*)tFitter->GetObjectFit();
   fitfunc->InitArgs(x,par);
-  
+
   Int_t n = gTree->GetSelectedRows();
   Double_t  *data1 = gTree->GetV1();
   Double_t  *data2 = gTree->GetV2();
