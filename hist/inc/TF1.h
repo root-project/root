@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.9 2001/03/08 12:01:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.10 2001/03/08 13:47:36 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -132,7 +132,7 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
    virtual void     Update();
 
-   ClassDef(TF1,5)  //The Parametric 1-D function
+   ClassDef(TF1,6)  //The Parametric 1-D function
 };
 
 inline void TF1::SetRange(Double_t xmin, Double_t,  Double_t xmax, Double_t)

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.14 2001/03/13 15:32:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.15 2001/04/10 07:10:20 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1569,6 +1569,13 @@ void TF1::Streamer(TBuffer &b)
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 4) {
          TF1::Class()->ReadBuffer(b, this, v, R__s, R__c);
+         if (v == 5 && fNsave > 0) {
+            //correct badly saved fSave in 3.00/06
+            Int_t np = fNsave - 3;
+            fSave[np]   = fSave[np-1];
+            fSave[np+1] = fXmin;
+            fSave[np+2] = fXmax;
+         }
          return;
       }
       //====process old versions before automatic schema evolution
@@ -1615,6 +1622,11 @@ void TF1::Streamer(TBuffer &b)
          if (fNsave > 0) {
             fSave = new Double_t[fNsave+10];
             b.ReadArray(fSave);
+            //correct fSave limits to match new version
+            fSave[fNsave]   = fSave[fNsave-1];
+            fSave[fNsave+1] = fSave[fNsave+2];
+            fSave[fNsave+2] = fSave[fNsave+3];
+            fNsave += 3;
          } else fSave = 0;
       }
       b.CheckByteCount(R__s, R__c, TF1::IsA());
