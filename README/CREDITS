@@ -164,6 +164,10 @@ N: Daniel Sigg
 E: sigg_d@ligo.caltech.edu
 D: TGNumberEntry GUI widget
 
+N: Christian Stratowa
+E: cstrato@EUnet.at
+D: Development of class TGraphSmooth + many suggestions
+
 N: Alexandre V. Vaniachine
 E: AVVaniachine@lbl.gov
 D: byteswapping assembler code for the i486 and up
