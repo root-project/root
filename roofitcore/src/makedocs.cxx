@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: makedocs.cc,v 1.11 2002/09/05 04:34:04 verkerke Exp $
+ *    File: $Id: makedocs.cc,v 1.12 2002/09/17 06:39:35 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -64,3 +64,4 @@ void makedocs(const char *version="Development", const char *where= "./html", Bo
   docMaker.addTopic("AUX","Auxiliary classes for internal use") ;
   docMaker.MakeIndexOfTopics() ;
 }
+ 
