@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.7 2001/12/03 12:47:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.8 2001/12/04 12:02:43 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -326,8 +326,10 @@ extern "C" {
    extern double pow(double, double);
    extern double log(double);
    extern double log10(double);
+#ifndef R__WIN32
    extern int    finite(double);
    extern int    isnan(double);
+#endif
 }
 #endif
 
