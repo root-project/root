@@ -24,6 +24,7 @@ NETO         := $(NETS:.cxx=.o)
 NETDEP       := $(NETO:.o=.d) $(NETDO:.o=.d)
 
 #### DaemonUtils goes into libSrvAuth ####
+NETH         := $(filter-out $(MODDIRS)/DaemonUtils.h,$(NETH))
 NETS         := $(filter-out $(MODDIRS)/DaemonUtils.cxx,$(NETS))
 NETO         := $(filter-out $(MODDIRS)/DaemonUtils.o,$(NETO))
 
@@ -41,7 +42,8 @@ endif
 EXTRANETFLAGS = $(SSLFLAGS) $(EXTRA_AUTHFLAGS)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETH))
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETH)) \
+                include/DaemonUtils.h
 
 # include all dependency files
 INCLUDEFILES += $(NETDEP)
