@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.22 2002/05/12 16:06:22 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.23 2002/06/28 08:40:33 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2183,6 +2183,10 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
 
    Bool_t hide;
    Bool_t mmf = 0;
+   static Bool_t pre_is_open = kFALSE;
+   Bool_t output_pre_tag = kFALSE;
+
+   Int_t ichar=0;
 
    do {
       tempEndPtr = end = funcName = funcNameEnd = funcSig = funcSigEnd = 0;
@@ -2197,13 +2201,27 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
             // protect html code from special chars
             if ((unsigned char)*keyword>31)
                if (*keyword=='<'){
-                  if (keyword==strstr(keyword,"<pre>")
-                      || keyword==strstr(keyword,"<PRE>"))
-                     keyword+=4;
+                  if (!strcasecmp(keyword,"<pre>"))
+                     if (pre_is_open) keyword+=4;
+                     else {
+                        pre_is_open = kTRUE;
+                        out << *keyword;
+                        for (ichar=0; ichar<4; ichar++) {
+                           keyword++;
+                           out << *keyword;
+                        }
+                     }
                   else
-                  if (keyword==strstr(keyword,"</pre>")
-                      || keyword==strstr(keyword,"</PRE>"))
-                     keyword+=5;
+                  if (!strcasecmp(keyword,"</pre>"))
+                     if (!pre_is_open) keyword+=5;
+                     else {
+                        pre_is_open = kFALSE;
+                        out << *keyword;
+                        for (ichar=0; ichar<5; ichar++) {
+                           keyword++;
+                           out << *keyword;
+                        }
+                     }
                   else
                      out << *keyword;
                }
@@ -2245,11 +2263,13 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
          if (!strcasecmp(keyword, "end_html") && *(keyword - 1) != '\"') {
             flag = kFALSE;
             hide = kTRUE;
+            pre_is_open = kFALSE;
          }
       } else {
          if (!strcasecmp(keyword, "begin_html") && *(keyword - 1) != '\"') {
             flag = kTRUE;
             hide = kTRUE;
+            pre_is_open = kTRUE;
          } else {
             *end = c;
             tempEndPtr = end;
