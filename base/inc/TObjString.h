@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObjString.h,v 1.2 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObjString.h,v 1.3 2001/12/07 21:58:59 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -46,7 +46,7 @@ public:
    Bool_t    IsSortable() const { return kTRUE; }
    Bool_t    IsEqual(const TObject *obj) const;
    void      ReadBuffer(char *&buffer) { fString.ReadBuffer(buffer); }
-   void      SetString(char *s) { fString = s; }
+   void      SetString(const char *s) { fString = s; }
    TString   GetString() const { return fString; }
    Int_t     Sizeof() const { return fString.Sizeof(); }
    TString  &String() { return fString; }
