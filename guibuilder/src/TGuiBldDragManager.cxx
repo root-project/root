@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.9 2004/09/21 16:23:36 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.10 2004/09/21 17:53:10 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -2215,7 +2215,7 @@ void TGuiBldDragManager::PlaceFrame(TGFrame *frame)
       TGCompositeFrame *edit = (TGCompositeFrame*)fClient->GetRoot();
       ReparentFrames(frame, edit);
       frame->MapRaised();
-      edit->SetLayoutBroken();
+      //edit->SetLayoutBroken();
       UInt_t g = GetGridStep()/2;
       edit->AddFrame(frame, new TGLayoutHints(kLHintsNormal, g, g, g, g));
    }
@@ -2562,7 +2562,7 @@ void TGuiBldDragManager::SetEditable(Bool_t on)
 
       TGFrame *fr = (TGFrame*)fClient->GetRoot();
       fEventMask = fr->GetEventMask(); //saved event mask
-      fr->AddInput(kKeyPressMask);
+      fr->AddInput(kKeyPressMask | kButtonPressMask);
 
       if (fPimpl->fRepeatTimer) {
          fPimpl->fRepeatTimer->Reset();

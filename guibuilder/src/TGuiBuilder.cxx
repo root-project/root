@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.11 2004/09/21 16:23:36 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.12 2004/09/21 17:53:10 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -316,6 +316,16 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
    act = new TGuiBldAction("TGGroupFrame", "Group Frame", kGuiBldCtor);
    act->fAct = "new TGGroupFrame()";
    act->fPic = "bld_groupframe.xpm";
+   AddAction(act, "Containers");
+
+   act = new TGuiBldAction("TGVSplitter", "Horizontal Panes", kGuiBldFunc);
+   act->fAct = "TGuiBuilder::VSplitter()";
+   act->fPic = "bld_hpaned.xpm";
+   AddAction(act, "Containers");
+
+   act = new TGuiBldAction("TGHSplitter", "Vertical Panes", kGuiBldFunc);
+   act->fAct = "TGuiBuilder::HSplitter()";
+   act->fPic = "bld_vpaned.xpm";
    AddAction(act, "Containers");
 
    fShutter->Resize(140, fShutter->GetHeight());
@@ -697,9 +707,8 @@ Bool_t TGuiBuilder::NewProject(Event_t *)
    fEditable->SetWindowName(fEditable->GetName());
    fEditable->SetEditDisabled(kFALSE);
    fEditable->MapRaised();
-   fEditable->AddInput(kButtonPressMask);
+   fEditable->AddInput(kKeyPressMask | kButtonPressMask);
    fEditable->SetEditable(kTRUE);
-   fEditable->AddInput(kKeyPressMask);
 
    return kTRUE;
 }
@@ -1048,4 +1057,54 @@ void TGuiBuilder::BindKeys()
 
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Backspace),
                       kKeyShiftMask, kTRUE);
+}
+
+//______________________________________________________________________________
+TGFrame *TGuiBuilder::VSplitter()
+{
+   //
+
+   TGHorizontalFrame *ret = new TGHorizontalFrame();
+   ret->MustCleanup();
+   TGVerticalFrame *v1 = new TGVerticalFrame(ret, 40, 10, kSunkenFrame |  kFixedWidth);
+   v1->MustCleanup();
+   ret->AddFrame(v1, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
+
+   TGVSplitter *splitter = new TGVSplitter(ret);
+   splitter->SetFrame(v1, kTRUE);
+   ret->AddFrame(splitter, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
+
+   TGVerticalFrame *v2 = new TGVerticalFrame(ret, 10, 10, kSunkenFrame);
+   v2->ChangeOptions(kSunkenFrame);
+   v2->MustCleanup();
+   ret->AddFrame(v2, new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY));
+
+   ret->MapSubwindows();
+   ret->SetLayoutBroken(kFALSE);
+   return ret;
+}
+
+//______________________________________________________________________________
+TGFrame *TGuiBuilder::HSplitter()
+{
+   //
+
+   TGVerticalFrame *ret = new TGVerticalFrame();
+   ret->MustCleanup();
+   TGHorizontalFrame *v1 = new TGHorizontalFrame(ret, 10, 40, kSunkenFrame | kFixedHeight);
+   v1->MustCleanup();
+   ret->AddFrame(v1, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
+
+   TGHSplitter *splitter = new TGHSplitter(ret);
+   splitter->SetFrame(v1, kTRUE);
+   ret->AddFrame(splitter, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
+
+   TGHorizontalFrame *v2 = new TGHorizontalFrame(ret, 10, 10);
+   v2->ChangeOptions(kSunkenFrame);
+   v2->MustCleanup();
+   ret->AddFrame(v2, new TGLayoutHints(kLHintsBottom | kLHintsExpandX | kLHintsExpandY));
+
+   ret->MapSubwindows();
+   ret->SetLayoutBroken(kFALSE);
+   return ret;
 }

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.h,v 1.4 2004/09/20 21:00:40 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.h,v 1.5 2004/09/21 10:09:18 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -88,8 +88,10 @@ public:
    virtual void      EraseStatusBar();
 
    TGMdiFrame *FindEditableMdiFrame(const TGWindow *win);
-
    TGuiBldEditor    *GetEditor() const { return fEditor; }
+
+   static TGFrame   *VSplitter();
+   static TGFrame   *HSplitter();
 
    ClassDef(TGuiBuilder,0)  // gui builder
 };
