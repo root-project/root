@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.86 2005/02/19 18:37:12 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.87 2005/03/04 09:06:37 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2854,7 +2854,7 @@ void TFormula::ProcessLinear(TString &formula)
    replacement = "[3]";
    sstring = sstring.ReplaceAll(pattern, 2, replacement, 3);
    //careful not to replace the "x" in "exp"
-   fstring=strchr(sstring.Data(), 'x');
+   fstring= (char*)strchr(sstring.Data(), 'x');
    while (fstring){
       replacement="[0]";
       Int_t offset = fstring - sstring.Data();
@@ -2862,7 +2862,7 @@ void TFormula::ProcessLinear(TString &formula)
 	 sstring.Replace(fstring-sstring.Data(), 1, replacement,3);
       else
 	 offset++;
-      fstring = strchr(sstring.Data()+offset, 'x');   
+      fstring = (char*)strchr(sstring.Data()+offset, 'x');   
    }
 
    //fill the array of functions

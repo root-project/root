@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.15 2004/12/27 15:42:36 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.16 2005/03/04 09:06:37 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -171,7 +171,7 @@ Int_t TMultiGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t x
 //  interface to TF1::Fit(TF1 *f1...
 
    char *linear;
-   linear=strstr(fname, "++");
+   linear= (char*)strstr(fname, "++");
    TF1 *f1=0;
    if (linear)
 	 f1=new TF1(fname, fname, xmin, xmax);

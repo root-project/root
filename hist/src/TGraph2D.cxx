@@ -510,7 +510,7 @@ Int_t TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
    // Fits this graph with function with name fname
 
    char *linear;
-   linear=strstr(fname, "++");
+   linear= (char*)strstr(fname, "++");
    TF2 *f2=0;
    if (linear)
       f2=new TF2(fname, fname);

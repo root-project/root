@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.150 2005/02/21 16:57:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.151 2005/03/04 09:06:37 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -957,7 +957,7 @@ Int_t TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, 
 //  interface to TF1::Fit(TF1 *f1...
 
    char *linear;
-   linear=strstr(fname, "++");
+   linear= (char*) strstr(fname, "++");
    TF1 *f1=0;
    if (linear)
 	 f1=new TF1(fname, fname, xmin, xmax);
