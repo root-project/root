@@ -1,5 +1,7 @@
 all: tests
 
+test: tests
+
 SUBDIRS = treeformula aclic tree io hist
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
