@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.72 2002/03/07 01:02:26 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.73 2002/04/02 15:28:32 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2780,6 +2780,8 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
                gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
                gVirtualX->SetFillColor(10);
             }
+#else
+            gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
 #endif
 #endif
             } else if (style >= 4000 && style <= 4100) {
