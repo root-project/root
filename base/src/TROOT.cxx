@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.42 2001/06/17 23:46:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.43 2001/06/22 16:10:16 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -661,7 +661,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
    if (cl) {
       if (cl->GetImplFileLine() >= 0) return cl;
       //we may pass here in case of a dummy class created by TStreamerInfo
-      load = 1;
+      load = kTRUE;
    } else {
       TDataType *objType = gROOT->GetType(name, load);
       if (objType) {
