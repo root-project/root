@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.4 2003/04/11 16:39:12 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.5 2003/05/06 08:23:43 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -170,7 +170,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
       return;
 
    char buf[256];
-   if (fEntries == -1) {
+   if (fEntries != total) {
       fEntries = total;
       sprintf(buf, "%d files, number of events %lld, starting event %lld",
               fFiles, fEntries, fFirst);
