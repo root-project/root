@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.116 2003/07/04 13:27:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.117 2003/07/23 12:25:42 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1475,7 +1475,7 @@ void TBranchElement::SetAddress(void *add)
       if (fClassName != fParentName) { 
          // We are in the case where we have a missing link.
          // This information is realliable here (or so it seems) 
-         // (In order cases fParentName does seems to be set correctly in all cases).
+         // (In other cases fParentName does not seems to be set correctly in all cases).
          
          if (clparent != clm) {
             if (!clparent || !clm) return;
@@ -1538,7 +1538,7 @@ void TBranchElement::SetAddress(void *add)
             TStreamerElement *parentElem = (TStreamerElement*)parentInfo->GetElems()[parentID];
             TClass *parentBranchClass = parentElem->GetClassPointer();
 
-            if ( parentBranchClass != clm ) {
+            if ( ! parentBranchClass->InheritsFrom(clm) ) {
 
                // We are in the case where there is a missing branch in the hiearchy
 
@@ -1628,7 +1628,7 @@ void TBranchElement::SetAddress(void *add)
 
             TClass *containingClass = info->GetClass();
 
-            if ( parentBranchClass != containingClass ) {
+            if ( ! parentBranchClass->InheritsFrom(containingClass) ) {
 
                // We are in the case where there is a missing branch in the hiearchy
 
