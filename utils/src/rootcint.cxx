@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.171 2004/06/24 06:17:58 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.172 2004/07/03 09:34:30 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3786,9 +3786,10 @@ int main(int argc, char **argv)
       }
       if (!p)
          p = dictname;
-      else if (p != dictname)
+      else if (p != dictname) {
          p++;
-      strcpy(dictname, p);
+         memmove(dictname, p, strlen(p)+1);
+      }
    } else if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
       fprintf(stderr, "%s\n", help);
       return 1;
