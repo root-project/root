@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.1 2000/10/21 09:12:09 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.2 2002/02/21 11:30:16 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -330,5 +330,5 @@ struct Rectangle_t {
 // Atoms used for text cut and paste between windows
 const Atom_t kPrimarySelection = 1;  // magic values, must match the ones
 const Atom_t kCutBuffer        = 9;  // in /usr/include/X11/Xatom.h
-
+const Int_t  kMaxPixel         = 32000; 
 #endif
