@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.57 2002/01/24 07:47:05 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.58 2002/01/25 11:34:50 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -316,14 +316,27 @@ G__TypeInfo &TemplateArg(G__DataMemberInfo &m, int count = 0)
    // 1 second, etc.
 
    static G__TypeInfo ti;
-   char arg[512], *s;
+   char arg[2048], *current, *next;
 
    strcpy(arg, m.Type()->TmpltArg());
-   s = strtok(arg, ",");
-   for (int i = 0; i < count; i++)
-      s = strtok(0, ",");
+   int len = strlen(arg);
+   int nesting = 0;
+   int i = 0;
+   next = &(arg[0]);
+   for (int c = 0; c<len && i<=count; c++) {
+     switch (arg[c]) {
+     case '<': nesting++; break;
+     case '>': nesting--; break;
+     case ',': if (nesting==0) { 
+                  arg[c]=0; 
+                  i++; 
+                  current = next; 
+                  next = &(arg[c+1]);
+               }; break;
+     }
 
-   ti.Init(s);
+   }
+   ti.Init(current);
 
    return ti;
 }
@@ -335,15 +348,27 @@ G__TypeInfo &TemplateArg(G__BaseClassInfo &m, int count = 0)
    // 1 second, etc.
 
    static G__TypeInfo ti;
-   char arg[512], *s;
+   char arg[2048], *current, *next;
 
    strcpy(arg, m.Name());
-   s = strtok(arg, "<");
-   s = strtok(0, ",");
-   for (int i = 0; i < count; i++)
-      s = strtok(0, ",");
+   int len = strlen(arg);
+   int nesting = 0;
+   int i = 0;
+   next = &(arg[0]);
+   for (int c = 0; c<len && i<=count; c++) {
+     switch (arg[c]) {
+     case '<': nesting++; break;
+     case '>': nesting--; break;
+     case ',': if (nesting==0) { 
+                  arg[c]=0; 
+                  i++; 
+                  current = next; 
+                  next = &(arg[c+1]);
+               }; break;
+     }
 
-   ti.Init(s);
+   }
+   ti.Init(current);
 
    return ti;
 }
@@ -546,8 +571,8 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                if (stltype == kMap || stltype == kMultimap) {
                   fprintf(fp, "            R__b >> R__t;\n");
                   if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
-                  (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
-                  (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
+                      (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
+                      (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
                      fprintf(fp, "            %s R__t2;\n",TemplateArg(m,1).Name());
                      fprintf(fp, "            R__b >> R__t2;\n");
                   } else {
@@ -573,39 +598,37 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                }
              }
           } else {
-            if (TemplateArg(m).HasMethod("Streamer")) {
-               if (stltype == kMap || stltype == kMultimap) {
-                  fprintf(fp, "            R__t.Streamer(R__b);\n");
-                  if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
-                  (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
-                  (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
-                     fprintf(fp, "            %s R__t2;\n",TemplateArg(m,1).Name());
-                     fprintf(fp, "            R__b >> R__t2;\n");
-                  } else {
-                     if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
-                        fprintf(fp, "            TString R__str;\n");
-                        fprintf(fp, "            R__str.Streamer(R__b);\n");
-                        fprintf(fp, "            string R__t2 = R__str.Data();\n");
-                     } else {
-                        fprintf(fp, "            %s R__t2;\n",TemplateArg(m,1).Name());
-                        fprintf(fp, "            R__t2.Streamer(R__b);\n");
-                     }
-                  }
-               } else {
-                  fprintf(fp, "            R__t.Streamer(R__b);\n");
-               }
-            } else {
-              if (strcmp(s,"string") == 0) {
-                 fprintf(fp,"            TString R__str;\n");
-                 fprintf(fp,"            R__str.Streamer(R__b);\n");
-                 fprintf(fp,"            R__t = R__str.Data();\n");
-              } else {
-                 fprintf(stderr, "*** Datamember %s::%s: template arg %s has no Streamer()"
-                         " method (need manual intervention)\n",
-                         m.MemberOf()->Name(), m.Name(), TemplateArg(m).Name());
-                 fprintf(fp, "            //R__t.Streamer(R__b);\n");
-              }
-            }
+             if (strcmp(s,"string") == 0) {
+                fprintf(fp,"            TString R__str;\n");
+                fprintf(fp,"            R__str.Streamer(R__b);\n");
+                fprintf(fp,"            R__t = R__str.Data();\n");
+             } else {
+                if (TemplateArg(m).HasMethod("Streamer")) {
+                   fprintf(fp, "            R__t.Streamer(R__b);\n");
+                } else {
+                   fprintf(stderr, "*** Datamember %s::%s: template arg %s has no Streamer()"
+                           " method (need manual intervention)\n",
+                           m.MemberOf()->Name(), m.Name(), TemplateArg(m).Name());
+                   fprintf(fp, "            //R__t.Streamer(R__b);\n");
+                }
+                if (stltype == kMap || stltype == kMultimap) {
+                   if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
+                       (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
+                       (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
+                      fprintf(fp, "            %s R__t2;\n",TemplateArg(m,1).Name());
+                      fprintf(fp, "            R__b >> R__t2;\n");
+                   } else {
+                      if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
+                         fprintf(fp, "            TString R__str;\n");
+                         fprintf(fp, "            R__str.Streamer(R__b);\n");
+                         fprintf(fp, "            string R__t2 = R__str.Data();\n");
+                      } else {
+                         fprintf(fp, "            %s R__t2;\n",TemplateArg(m,1).Name());
+                         fprintf(fp, "            R__t2.Streamer(R__b);\n");
+                      }
+                   }
+                }
+             }
          }
          if (m.Property() & G__BIT_ISPOINTER) {
             if (stltype == kMap || stltype == kMultimap) {
