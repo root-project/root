@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.123 2004/05/26 10:32:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.124 2004/06/13 16:26:36 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1962,28 +1962,48 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    TRegexp re("^root.*:");
    TString sname = name;
    if (sname.Index(re) != kNPOS) {
-      // If the url points to the local user on the localhost
-      // do not operate network machinery
-      Bool_t sameUser = kFALSE;
+      // If the url points to the localhost and the file will be opened in
+      // readonly mode and the current user has read access or the specified
+      // user is equal to the current user then open local TFile.
+      const char *lfname = 0;
+      Bool_t localFile = kFALSE;
       TUrl url(name);
-      UserGroup_t *u = gSystem->GetUserInfo();
-      if (u && !strcmp(u->fUser, url.GetUser())) sameUser = kTRUE;
-      delete u;
       TInetAddress a(gSystem->GetHostByName(url.GetHost()));
       TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
-      if (strcmp(a.GetHostName(), b.GetHostName()) || !sameUser) {
+      if (!strcmp(a.GetHostName(), b.GetHostName())) {
+         Bool_t read = kFALSE;
+         TString opt = option;
+         opt.ToUpper();
+         if (opt == "" || opt == "READ") read = kTRUE;
+         const char *fname = url.GetFile();
+         if (fname[1] == '/' || fname[1] == '~' || fname[1] == '$')
+            lfname = &fname[1];
+         else
+            lfname = Form("%s%s", gSystem->HomeDirectory(), fname);
+         if (read) {
+            char *fn;
+            if ((fn = gSystem->ExpandPathName(lfname))) {
+               if (gSystem->AccessPathName(fn, kReadPermission))
+                  read = kFALSE;
+               delete [] fn;
+            }
+         }
+         Bool_t sameUser = kFALSE;
+         UserGroup_t *u = gSystem->GetUserInfo();
+         if (u && !strcmp(u->fUser, url.GetUser()))
+            sameUser = kTRUE;
+         delete u;
+         if (read || sameUser)
+            localFile = kTRUE;
+      }
+      if (!localFile) {
          if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
              h->LoadPlugin() == 0)
             f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, netopt);
          else
             f = new TNetFile(name, option, ftitle, compress, netopt);
       } else {
-         const char *fname = url.GetFile();
-         if (fname[1] == '/' || fname[1] == '~' || fname[1] == '$')
-            f = new TFile(&fname[1], option, ftitle, compress);
-         else
-            f = new TFile(Form("%s%s", gSystem->HomeDirectory(), fname),
-                          option, ftitle, compress);
+         f = new TFile(lfname, option, ftitle, compress);
       }
    } else if (!strncmp(name, "http:", 5)) {
       if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
