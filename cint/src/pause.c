@@ -787,7 +787,12 @@ char *filename;
       flag=1;
 #endif
       j=i;
-      while(-1!=G__srcfile[j].included_from) j=G__srcfile[j].included_from;
+      while(-1!=G__srcfile[j].included_from
+#ifndef G__PHILIPPE18
+            /* do not take the tempfile in consideration! */
+            && ((G__MAXFILE-1)!=G__srcfile[j].included_from)
+#endif
+            ) j=G__srcfile[j].included_from;
       break;
     }
   }
