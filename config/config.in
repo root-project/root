@@ -1,4 +1,4 @@
-/* Configrations file for @architecture@ */
+/* Configurations file for @architecture@ */
 #ifdef HAVE_CONFIG
 #define ROOTPREFIX    "@prefix@"
 #define ROOTBINDIR    "@bindir@"
