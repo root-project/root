@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.14 2001/05/07 12:28:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.15 2001/06/07 08:37:04 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -256,6 +256,8 @@ void TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
    newaxis->SetLabelOffset(fLabelOffset);
    newaxis->SetTickSize(fTickSize);
    newaxis->SetBit(kCanDelete);
+   newaxis->SetTitle(GetTitle());
+   newaxis->SetBit(kCenterTitle,TestBit(kCenterTitle));
    newaxis->AppendPad();
 }
 
