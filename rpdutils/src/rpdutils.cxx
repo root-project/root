@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.39 2004/04/29 21:10:04 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.40 2004/05/04 14:06:41 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -1662,8 +1662,6 @@ void RpdSendAuthList()
            sprintf(cm," %d",gAllowMeth[i]);
            alist.append(cm);
          }
-         ErrorInfo("RpdSendAuthList: tmp list: %s", alist.c_str());
-
       }
       NetSend(alist.c_str(), alist.length(), kMESS_STRING);
       if (gDebug > 2)
@@ -2099,21 +2097,26 @@ void RpdKrb5Auth(const char *sstr)
    if (gDebug > 2)
      ErrorInfo("RpdKrb5Auth: using ticket file: %s ... ",getenv("KRB5CCNAME"));
 
-   // const char* targetUser = gUser; // "cafuser";
-   if (krb5_kuserok(gKcontext, ticket->enc_part2->client,
-                                     targetUser.c_str())) {
-      if (gDebug > 2)
-      ErrorInfo("RpdKrb5Auth: change user from %s to %s successful",
-                gUser,targetUser.c_str());
-      snprintf(gUser,64,"%s",targetUser.c_str());
-      reply =  std::string("authenticated as ").append(gUser);
-   } else {
-      ErrorInfo("RpdKrb5Auth: could not change user from %s to %s",
-                gUser,targetUser.c_str());
-      ErrorInfo("RpdKrb5Auth: continuing with user: %s",gUser);
+
+   // If the target user is not the owner of the principal
+   // check if the user is authorized by the target user
+   if (targetUser != gUser) {
+      if (krb5_kuserok(gKcontext, ticket->enc_part2->client,
+                                        targetUser.c_str())) {
+         if (gDebug > 2)
+         ErrorInfo("RpdKrb5Auth: change user from %s to %s successful",
+                   gUser,targetUser.c_str());
+         snprintf(gUser,64,"%s",targetUser.c_str());
+         reply =  std::string("authenticated as ").append(gUser);
+      } else {
+         ErrorInfo("RpdKrb5Auth: could not change user from %s to %s",
+                   gUser,targetUser.c_str());
+         ErrorInfo("RpdKrb5Auth: continuing with user: %s",gUser);
+      }
    }
 
-   if (gClientProtocol >= 9) {
+   // Get credentials if in a PROOF session
+   if (gClientProtocol >= 9 && gService == kPROOFD) {
 
       char *data = 0;
       int size = 0;
@@ -2166,8 +2169,6 @@ void RpdKrb5Auth(const char *sstr)
                                  &forwardCreds, &creds, 0))) {
          ErrorInfo("RpdKrb5Auth: rd_cred failed--%s", error_message(retval));
          forwarding = false;
-//          RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, 0); 
-//          return;
       }
       if (data) delete[] data;
 
@@ -2209,12 +2210,12 @@ void RpdKrb5Auth(const char *sstr)
             return;
          }
          {
-            char *ccname = new char[strlen("KRB5CCNAME")+strlen("ccacheName")+2];
+            char *ccname = new char[strlen("KRB5CCNAME")+strlen(ccacheName)+2];
             sprintf(ccname,"%s=%s","KRB5CCNAME",ccacheName);
             putenv(ccname);
          }
 
-         if (gDebug>5)
+         if (gDebug > 5)
             ErrorInfo("RpdKrb5Auth: working (1) on ticket to cache (%s) ... ",
                       krb5_cc_get_name(context,cache));
 
@@ -2251,6 +2252,9 @@ void RpdKrb5Auth(const char *sstr)
             RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
             return;
          }
+         if (gDebug>5)
+            ErrorInfo("RpdKrb5Auth: done ticket to cache (%s) ... ",
+                      cacheName);
 
          if ((retval = krb5_cc_close(context,cache))) {
             ErrorInfo("RpdKrb5Auth: cc_close failed--%s",
@@ -2269,20 +2273,16 @@ void RpdKrb5Auth(const char *sstr)
          //                    " ship of the cache file %s",cacheName);
          //       }
 
-         if (gDebug>5)
-            ErrorInfo("RpdKrb5Auth: done ticket to cache (%s) ... ",
-                      cacheName);
-
          if (setresuid(fromUid,fromEUid,pw->pw_uid) == -1) {
             ErrorInfo("RpdKrb5Auth: can't setuid back to original uid");
             NetSend(kErrNotAllowed, kROOTD_ERR);
+            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
             return;
          }
       }
 
       // free creds
       krb5_free_tgt_creds(gKcontext,creds);
-
    }
 
    NetSend(reply.c_str(), kMESS_STRING);

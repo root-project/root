@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.19 2004/04/20 15:25:17 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.20 2004/04/28 11:45:47 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -515,54 +515,58 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
          return 0;
       }
 
-      krb5_data outdata;
-      outdata.data = 0;
+      // If PROOF, send credentials
+      if (sock->GetServType() == TSocket::kPROOFD) {
 
-      retval = krb5_auth_con_genaddrs(context, auth_context,
-                                      sockd, KRB5_AUTH_CONTEXT_GENERATE_LOCAL_FULL_ADDR);
-
-      if (retval) {
-         Error("Krb5Authenticate","failed auth_con_genaddrs is: %s\n",
-               error_message(retval));
+         krb5_data outdata;
+         outdata.data = 0;
+         
+         retval = krb5_auth_con_genaddrs(context, auth_context,
+                       sockd, KRB5_AUTH_CONTEXT_GENERATE_LOCAL_FULL_ADDR);
+         
+         if (retval) {
+            Error("Krb5Authenticate","failed auth_con_genaddrs is: %s\n",
+                  error_message(retval));
+         }
+         
+         retval = krb5_fwd_tgt_creds(context,auth_context, 0 /*host*/,
+                                     client, server, ccdef, true,
+                                     &outdata);
+         if (retval) {
+            Error("Krb5Authenticate","fwd_tgt_creds failed: %s\n",
+                  error_message(retval));
+            return 0;
+         }
+         
+         cleanup.data = outdata.data;
+         
+         if (gDebug > 3)
+            Info("Krb5Authenticate",
+                 "Sending kerberos forward ticket to %s %p %d [%d,%d,%d,...]",
+                 serv_host.Data(),outdata.data,outdata.length,
+                 outdata.data[0],outdata.data[1],outdata.data[2]);
+         
+         // Send length first
+         char BufLen[20];
+         sprintf(BufLen, "%d",outdata.length);
+         Nsen = sock->Send(BufLen,kROOTD_KRB5);
+         if (Nsen <= 0) {
+            Error("Krb5Authenticate","Sending <BufLen>");
+            return 0;
+         }
+         
+         // Send Key. second ...
+         Nsen = sock->SendRaw(outdata.data, outdata.length);
+         if (Nsen <= 0) {
+            Error("Krb5Authenticate","Sending <Key>");
+            return 0;
+         }
+         
+         if (gDebug>3)
+            Info("Krb5Authenticate",
+                 "For kerberos forward ticket sent %d bytes (expected %d)",
+                 Nsen,outdata.length);
       }
-
-      retval = krb5_fwd_tgt_creds(context,auth_context, 0 /*host*/,
-                                  client, server, ccdef, true,
-                                  &outdata);
-      if (retval) {
-         Error("Krb5Authenticate","fwd_tgt_creds failed: %s\n",
-               error_message(retval));
-         return 0;
-      }
-
-      cleanup.data = outdata.data;
-
-      if (gDebug > 3)
-         Info("Krb5Authenticate",
-              "Sending kerberos forward ticket to %s %p %d [%d,%d,%d,...]",
-              serv_host.Data(),outdata.data,outdata.length,
-              outdata.data[0],outdata.data[1],outdata.data[2]);
-
-      // Send length first
-      char BufLen[20];
-      sprintf(BufLen, "%d",outdata.length);
-      Nsen = sock->Send(BufLen,kROOTD_KRB5);
-      if (Nsen <= 0) {
-         Error("Krb5Authenticate","Sending <BufLen>");
-         return 0;
-      }
-
-      // Send Key. second ...
-      Nsen = sock->SendRaw(outdata.data, outdata.length);
-      if (Nsen <= 0) {
-         Error("Krb5Authenticate","Sending <Key>");
-         return 0;
-      }
-
-      if (gDebug>3)
-         Info("Krb5Authenticate",
-              "For kerberos forward ticket sent %d bytes (expected %d)",
-              Nsen,outdata.length);
    }
 
    // restore attention to broken connection signal handling
