@@ -144,14 +144,14 @@ alphacxx)
    auxlibs="-lm"
    auxglibs=${auxlibs}
    ;;
-linux|linuxrh42)
+linuxrh42|linuxrh51)
    # Linux with gcc 2.7.2.x
    auxcflags=
    auxlibs="-lg++ -lm -ldl -rdynamic"
    auxglibs=${auxlibs}
    ;;
-linuxegcs)
-   # Linux with egcs
+linux)
+   # Linux with egcs, gcc 2.9x, gcc 3.x
    auxcflags="-D_REENTRANT"
    auxlibs="-lm -ldl -lpthread -rdynamic"
    auxglibs=${auxlibs}

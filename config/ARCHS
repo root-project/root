@@ -1,7 +1,7 @@
 Architectures supported:
 
-linux                for Linux gcc 2.7.x.x and glibc
-linuxegcs            for Linux egcs 1.1.x and glibc
+linux                for Linux egcs 1.1.x, gcc 2.9x, gcc 3.x and glibc
+linuxrh51            for Linux gcc 2.7.x.x and glibc
 linuxrh42            for Linux gcc 2.7.x.x and libc5
 linuxdeb             for Linux (Debian) egcs and glibc
 linuxdeb2            for Linux (Debian v2.0) egcs and glibc

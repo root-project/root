@@ -98,8 +98,12 @@ if [ $# -lt 1 ]; then
 else
    case $1 in
    -h|--help) confhelp ; exit 0 ;;
-   *) if `grep "^$1 " $ARCHS >/dev/null 2>&1` ; then
-         arch=$1
+   *) arch1=$1
+      if [ "$arch1" = "linuxegcs" ]; then
+         arch1="linux"
+      fi
+      if `grep "^$arch1 " $ARCHS >/dev/null 2>&1` ; then
+         arch=$arch1
          echo "Configuring for $arch"
          shift
       else
@@ -288,7 +292,7 @@ fi
 #
 # Check for posix thread library
 #
-if [ "$arch" = "linuxegcs" -a "x$enable_thread" = "x" ]; then
+if [ "$arch" = "linux" -a "x$enable_thread" = "x" ]; then
    enable_thread="yes"
 fi
 if [ "x$enable_thread" = "xyes" -a "$arch" != "win32" ]; then
