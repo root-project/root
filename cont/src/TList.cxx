@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.2 2000/06/27 15:09:54 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -312,7 +312,7 @@ void TList::Clear(Option_t *option)
    // marked with the kCanDelete bit, otherwise these objects will be
    // deleted.
 
-   Bool_t nodel = !strcmp(option, "nodelete") ? kTRUE : kFALSE;
+   Bool_t nodel = option ? (!strcmp(option, "nodelete") ? kTRUE : kFALSE) : kFALSE;
 
    while (fFirst) {
       TObjLink *tlk = fFirst;
@@ -338,7 +338,7 @@ void TList::Delete(Option_t *option)
    // of an object in this list one can still access the list to search for
    // other not yet deleted objects).
 
-   Bool_t slow = !strcmp(option, "slow") ? kTRUE : kFALSE;
+   Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
 
    if (slow) {
 
