@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.43 2003/07/16 19:24:03 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.44 2003/07/16 21:22:19 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -259,7 +259,7 @@ void TMatrixD::ResizeTo(Int_t nrows, Int_t ncols)
       if (fNrows == nrows && fNcols == ncols)
          return;
 
-      const Double_t  *elements_old = fElements;
+      Double_t        *elements_old = fElements;
       Double_t       **index_old    = fIndex;
       const Int_t      nrows_old    = fNrows;
       const Int_t      ncols_old    = fNcols;
