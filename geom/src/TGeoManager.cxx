@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.88 2004/09/06 16:42:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.89 2004/09/16 16:53:31 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1959,7 +1959,7 @@ void TGeoManager::DefaultColors()
    col[ 23] = 26+150;
    col[ 24] = 27;
    col[ 25] = 28;
-   col[ 26] = 29;
+   col[ 26] = 17; //29;
    col[ 27] = 30;
    col[ 28] = 30+100;
    col[ 29] = 30+150;
