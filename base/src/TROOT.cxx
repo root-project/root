@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.11 2000/09/05 09:12:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.12 2000/09/05 10:13:10 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -423,6 +423,15 @@ Bool_t TROOT::ClassSaved(TClass *cl)
    if (cl->TestBit(TClass::kClassSaved)) return kTRUE;
    cl->SetBit(TClass::kClassSaved);
    return kFALSE;
+}
+
+//______________________________________________________________________________
+TObject *TROOT::FindObject(TObject *) const
+{
+// Find an object in one Root folder
+
+   Error("FindObject","Not yet implemented");
+   return 0;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.3 2000/08/18 13:43:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.4 2000/09/05 09:12:11 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -115,6 +115,7 @@ public:
    TObject          *FindObject(const char *name) const;
    TObject          *FindSpecialObject(const char *name, void *&where);
    const char       *FindObjectClassName(const char *name) const;
+   virtual TObject  *FindObject(TObject *obj) const;
    void              ForceStyle(Bool_t force=kTRUE) {fForceStyle = force;}
    Bool_t            FromPopUp() {return fFromPopUp;}
    TApplication     *GetApplication() {return fApplication;}
