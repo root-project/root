@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.60 2004/08/24 12:59:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.61 2004/09/02 12:21:48 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -749,6 +749,10 @@ void TAxis::SaveAttributes(ofstream &out, const char *name, const char *subname)
 
    if (TestBit(kCenterTitle)) {
       out<<"   "<<name<<subname<<"->CenterTitle(true);"<<endl;
+   }
+
+   if (TestBit(kRotateTitle)) {
+      out<<"   "<<name<<subname<<"->RotateTitle(true);"<<endl;
    }
 
    if (TestBit(kMoreLogLabels)) {
