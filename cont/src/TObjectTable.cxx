@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.2 2000/12/13 15:56:17 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.3 2001/10/17 10:38:55 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -125,7 +125,7 @@ void TObjectTable::Print(Option_t *option) const
          if (!fTable[i]) continue;
          num++;
          obj = fTable[i];
-         printf("obj[%5d] at %x %s : %s\n",num,obj,obj->ClassName(),obj->GetName());
+         printf("obj[%5d] at %lx %s : %s\n",num,(Long_t)obj,obj->ClassName(),obj->GetName());
       }
    }
 
