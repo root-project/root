@@ -1,4 +1,4 @@
-// $Id$
+// $Id: TQCommand.cxx,v 1.1 2004/04/26 16:45:38 brun Exp $
 // Author: Valeriy Onuchin 04/27/2004
 
 /*************************************************************************
@@ -554,10 +554,11 @@ void TQCommand::SetArgs(Int_t narg, ...)
 
    fNRargs = fNUargs = narg;
 
-   for (int i = 0; i < fNRargs; i++) {
+   Int_t i;
+   for (i = 0; i < fNRargs; i++) {
       fRedoArgs[i] = va_arg(ap, Long_t);
    }
-   for (int i = 0; i < fNUargs; i++) {
+   for (i = 0; i < fNUargs; i++) {
       fUndoArgs[i] = va_arg(ap, Long_t);
    }
    va_end(ap);
