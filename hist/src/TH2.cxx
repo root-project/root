@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -678,17 +678,14 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 
 // Fill the profile histogram
   Double_t cont;
-  Double_t entries = 0;
   for (Int_t binx =0;binx<=nx+1;binx++) {
      for (Int_t biny=firstybin;biny<=lastybin;biny++) {
         cont =  GetCellContent(binx,biny);
         if (cont) {
            h1->Fill(fXaxis.GetBinCenter(binx),fYaxis.GetBinCenter(biny), cont);
-           entries += cont;
         }
      }
   }
-  h1->SetEntries(entries);
   return h1;
 }
 
@@ -721,17 +718,14 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
 
 // Fill the profile histogram
   Double_t cont;
-  Double_t entries = 0;
   for (Int_t biny =0;biny<=ny+1;biny++) {
      for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
         cont =  GetCellContent(binx,biny);
         if (cont) {
            h1->Fill(fYaxis.GetBinCenter(biny),fXaxis.GetBinCenter(binx), cont);
-           entries += cont;
         }
      }
   }
-  h1->SetEntries(entries);
   return h1;
 }
 
@@ -769,7 +763,6 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 
 // Fill the projected histogram
   Double_t cont,err,err2;
-  Double_t entries = 0;
   for (Int_t binx =0;binx<=nx+1;binx++) {
      err2 = 0;
      for (Int_t biny=firstybin;biny<=lastybin;biny++) {
@@ -778,12 +771,10 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
         err2 += err*err;
         if (cont) {
            h1->Fill(fXaxis.GetBinCenter(binx), cont);
-           entries += cont;
         }
      }
      if (computeErrors) h1->SetBinError(binx,TMath::Sqrt(err2));
   }
-  h1->SetEntries(entries);
   return h1;
 }
 
@@ -821,7 +812,6 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
 
 // Fill the projected histogram
   Double_t cont,err,err2;
-  Double_t entries = 0;
   for (Int_t biny =0;biny<=ny+1;biny++) {
      err2 = 0;
      for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
@@ -830,12 +820,10 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
         err2 += err*err;
         if (cont) {
            h1->Fill(fYaxis.GetBinCenter(biny), cont);
-           entries += cont;
         }
      }
      if (computeErrors) h1->SetBinError(biny,TMath::Sqrt(err2));
   }
-  h1->SetEntries(entries);
   return h1;
 }
 
