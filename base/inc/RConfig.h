@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.5 2000/09/30 11:40:18 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.6 2000/10/02 10:44:28 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -58,7 +58,7 @@
 #   endif
 #endif
 
-#ifdef __sun
+#if defined(__sun) && !defined(__linux)
 #   ifdef __SVR4
 #      define R__SOLARIS
 #      define ANSICPP
@@ -81,7 +81,7 @@
 #   endif
 #endif
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__linux)
 #   define R__SGI
 #   define R__UNIX
 #   define ANSICPP
@@ -106,7 +106,7 @@
 #endif
 
 #if defined(__linux) && !defined(__powerpc__) && !defined(__ia64__) && \
-    !defined(__alpha__)
+    !defined(__alpha__) && !defined(__sun) && !defined(__sgi)
 #   define R__LINUX
 #   define R__UNIX
 #   define R__BYTESWAP
@@ -130,6 +130,20 @@
 #   define R__BYTESWAP
 #   define R__B64
 #   define NEED_SIGJMP
+#endif
+
+#if defined(__linux) && defined(__sun)
+#   define R__LINUX
+#   define R__UNIX
+#   define NEED_SIGJMP
+/*#   define R__B64 */     /* enable when 64 bit machine */
+#endif
+
+#if defined(__linux) && defined(__sgi)
+#   define R__LINUX
+#   define R__UNIX
+#   define NEED_SIGJMP
+/*#   define R__B64 */     /* enable when 64 bit machine */
 #endif
 
 #if defined(__linux__) && defined(__powerpc__)
@@ -194,9 +208,10 @@
 #endif
 
 #ifdef _WIN32
-#ifndef WIN32
-#   define WIN32
-#endif
+#   define R__WIN32
+#   ifndef WIN32
+#      define WIN32
+#   endif
 #endif
 
 #ifdef BORLAND
@@ -208,6 +223,7 @@
 
 #ifdef __SC__
 #   define SC
+#   define R__SC
 #   if defined(macintosh)
 #      define R__MAC
 #      define NEED_STRING
@@ -222,7 +238,7 @@
 #   endif
 #endif
 
-#ifdef WIN32
+#ifdef R__WIN32
 #   define NEED_STRING
 #   define NEED_STRCASECMP
 #   define ANSICPP
