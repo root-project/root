@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.13 2001/10/03 20:59:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.14 2001/11/28 16:05:41 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -603,6 +603,10 @@ Bool_t TGClient::GetColorByName(const char *name, ULong_t &pixel) const
       status = kFALSE;
    } else if(!gVirtualX->AllocColor(attributes.fColormap, color)) {
       Warning("GetColorByName", "couldn't retrieve color %s", name);
+      Printf(" This problem typically appears when running ROOT from ");
+      Printf(" an X terminal with not enough memory and another application");
+      Printf(" like Netscape is already running");
+      Printf(" ====> Kill Netscape and start again ROOT");
       status = kFALSE;
    }
 
