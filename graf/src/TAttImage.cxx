@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:$:$Id:$
+// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.1 2002/08/09 13:56:00 rdm Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -304,11 +304,11 @@ void TAttImage::SaveImageAttributes(ofstream &out, const char *name,
 }
 
 //______________________________________________________________________________
-void TAttImage::SetConstRatio(Int_t constRatio)
+void TAttImage::SetConstRatio(Bool_t constRatio)
 {
-   // Set (constRatio = 1) or unset (constRadio = 0) the ratio flag.
+   // Set (constRatio = kTRUE) or unset (constRadio = kFALSE) the ratio flag.
    // The aspect ratio of the image on the screen is constant if the ratio
-   // flag is set. That means one image pixel is allwys a square on the screen
+   // flag is set. That means one image pixel is allways a square on the screen
    // independent of the pad size and of the size of the zoomed area.
 
    fConstRatio = constRatio;

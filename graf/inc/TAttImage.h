@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:$:$Id:$
+// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.1 2002/08/09 13:56:00 rdm Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -126,9 +126,9 @@ public:
    virtual ~TAttImage();
 
    void             Copy(TAttImage &attline) const;
-   Bool_t           GetConstRatio() const {return fConstRatio;}
-   UInt_t           GetImageCompression() const {return fImageCompression;}
-   EImageQuality    GetImageQuality() const {return fImageQuality;}
+   Bool_t           GetConstRatio() const { return fConstRatio; }
+   UInt_t           GetImageCompression() const { return fImageCompression; }
+   EImageQuality    GetImageQuality() const { return fImageQuality; }
    virtual const TImagePalette &GetPalette() const { return fPalette; }
 
    virtual void     ResetAttImage(Option_t *option="");
@@ -136,7 +136,7 @@ public:
                                         EImageQuality qualdef = kImgDefault,
                                         UInt_t comprdef = 0,
                                         Bool_t constRatiodef = kTRUE);
-   virtual void     SetConstRatio(Int_t constRatio = 1); // *TOGGLE*
+   virtual void     SetConstRatio(Bool_t constRatio = kTRUE); // *TOGGLE*
    virtual void     SetImageCompression(UInt_t lcompression)
                        { fImageCompression = (lcompression > 100) ? 100 : lcompression; } // *MENU*
    virtual void     SetImageQuality(EImageQuality lquality)

@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:$:$Id:$
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.1 2002/08/09 14:12:22 rdm Exp $
 // Author: Reiner Rohlfs   28/11/2001
 
 /*************************************************************************
@@ -653,7 +653,7 @@ void TASImage::Paint(Option_t *option)
       if (sscanf(opt.Data()+opt.Index("t"), "t%d,%d,%s", &tile_x, &tile_y,
                  stint) <= 3) {
          tile = kTRUE;
-         if (parse_argb_color(stint, &tile_tint) == stint)
+         if (parse_argb_color(stint, (CARD32*) &tile_tint) == stint)
             tile_tint = 0;
       } else
          Error("Paint", "tile option error");
@@ -672,7 +672,7 @@ void TASImage::Paint(Option_t *option)
    // keep a frame of 5 pixels
    to_w -= 2 * kFRS;
    to_h -= 2 * kFRS;
-   Int_t pal_w;
+   Int_t pal_w = 0;
 
    if (fImage->alt.vector) {
       pal_w = Int_t(to_w * 0.2);
