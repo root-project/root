@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.7 2000/09/12 15:18:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.8 2000/09/13 10:37:02 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1130,9 +1130,8 @@ void TClass::PrintStreamerInfoList(TList *list)
 //______________________________________________________________________________
 Bool_t TClass::IsCallingNew()
 {
-   //static function returning the CallingNew flag passed to TClass::New
-   //as argument.
-   //This function cannot be inline (problems with NT linker)
+   // Static method returning the defConstructor flag passed to TClass::New().
+   // This function cannot be inline (problems with NT linker).
 
    return fgCallingNew;
 }
