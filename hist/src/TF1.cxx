@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.19 2001/05/21 12:52:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.20 2001/06/05 13:49:07 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -750,6 +750,19 @@ void TF1::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (event == kMouseMotion)  gPad->SetCursor(kHand);
    }
 }
+
+//______________________________________________________________________________
+void TF1::FixParameter(Int_t ipar, Double_t value)
+{
+// Fix the value of a parameter
+//     The specified value will be used in a fit operation
+
+   if (ipar < 0 || ipar > fNpar-1) return;
+   SetParameter(ipar,value);
+   if (value != 0) SetParLimits(ipar,value,value);
+   else            SetParLimits(ipar,1,1);
+}
+
 
 //______________________________________________________________________________
 TH1 *TF1::GetHistogram() const
@@ -1600,7 +1613,8 @@ void TF1::SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax)
 //*-*        =============================
 //     The specified limits will be used in a fit operation
 //     when the option "B" is specified (Bounds).
-
+//  To fix a parameter, use TF1::FixParameter
+   
    if (ipar < 0 || ipar > fNpar-1) return;
    Int_t i;
    if (!fParMin) {fParMin = new Double_t[fNpar]; for (i=0;i<fNpar;i++) fParMin[i]=0;}

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.11 2001/04/11 07:21:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.12 2001/06/05 13:49:06 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -91,6 +91,7 @@ public:
    virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0);
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params=0);
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   virtual void     FixParameter(Int_t ipar, Double_t value);
        Double_t     GetChisquare() const {return fChisquare;}
            TH1     *GetHistogram() const;
           Int_t     GetNDF() const;
