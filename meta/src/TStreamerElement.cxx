@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.60 2003/09/05 15:50:50 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.61 2003/09/12 11:09:35 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -91,6 +91,7 @@ Bool_t TStreamerElement::CannotSplit() const
    if (cl->InheritsFrom("TRef"))      return kTRUE;
    if (cl->InheritsFrom("TRefArray")) return kTRUE;
    if (cl->InheritsFrom("TArray"))    return kTRUE;
+   if (cl->InheritsFrom("TCollection") && !cl->InheritsFrom("TClonesArray"))    return kTRUE;
 
    switch(fType) {
       case TStreamerInfo::kAny    +TStreamerInfo::kOffsetL:
