@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.27 2002/09/15 19:43:23 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.28 2002/11/11 17:45:24 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -832,7 +832,6 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
       delete[]filename;
    filename = 0;
 }
-
 
 //______________________________________________________________________________
 void THtml::ClassDescription(ofstream & out, TClass * classPtr,
@@ -3061,8 +3060,8 @@ void THtml::MakeIndex(const char *filter)
                  (t[0] = toupper(t[0])); t++);
             strcat(srcdir, classNames[nOK]);
          } else {
-            strcpy(fileNames[nOK], "USER_");
-            strcat(fileNames[nOK], classNames[nOK]);
+            strcpy(fileNames[numberOfImpFiles], "USER_");
+            strcat(fileNames[numberOfImpFiles], classNames[nOK]);
          }
          numberOfImpFiles++;
       } else
