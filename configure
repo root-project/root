@@ -1309,6 +1309,10 @@ if test ! "x$enable_alien" = "xno" ; then
 	/usr/local/include
     alienincdir=$found_dir
 
+    if test ! "x$alienincdir" = "x" ; then
+       alienincdir="$alienincdir -I$alienincdir/soap"
+    fi
+
     check_library "libAliEnAPI++" "$enable_shared" "$alienlibdir" \
 	$ALIEN $ALIEN/lib /opt/alien/lib /usr/local/alien/lib /usr/lib \
         /usr/local/lib
