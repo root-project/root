@@ -45,6 +45,7 @@ void THit::Set(int t) {
   fX = gRandom->Gaus(0,1);
   fY = gRandom->Gaus(0,1);
   fZ = gRandom->Gaus(0,10);
+  if (fPulses && fNpulses > 0) delete [] fPulses;
   fNpulses = t%20 + 1;
   fPulses = new int[fNpulses];
   for (int j=0;j<fNpulses;j++) fPulses[j] = j+1;

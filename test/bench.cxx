@@ -274,7 +274,7 @@ int main(int argc, char** argv)
      else     printf("*  %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
   }
   printf("*     Reference machine pcnotebrun.cern.ch  RedHat Linux 6.1                 *\n");
-  printf("*         (Pentium III 650 Mhz 256 Mbytes RAM, IDE disk)                     *\n");
+  printf("*         (Pentium III 600 Mhz 256 Mbytes RAM, IDE disk)                     *\n");
   printf("*           (send your results to rootdev@root.cern.ch)                      *\n");
   printf("******************************************************************************\n");
   printf("* Time to fill the structures (seconds)   Reference      cx      Reference   *\n");
@@ -293,17 +293,17 @@ int main(int argc, char** argv)
   printf("******************************************************************************\n");
   printf("* Time to write in seconds      comp 0    Reference    comp 1    Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        1.74    %6.2f        9.58     *\n",cp2w-cp1, cp3w-cp1);
-  printf("* vector<THit*>                 %6.2f        1.80    %6.2f        9.62     *\n",cp5w-cp1, cp6w-cp1);
-  printf("* TClonesArray(TObjHit)         %6.2f        1.60    %6.2f        7.32     *\n",cp8w-cp1, cp9w-cp1);
-  printf("* TClonesArray(TObjHit) split   %6.2f        1.51    %6.2f        6.18     *\n",cp10w-cp1,cp11w-cp1);
+  printf("* vector<THit>                  %6.2f        1.69    %6.2f        9.74     *\n",cp2w-cp1, cp3w-cp1);
+  printf("* vector<THit*>                 %6.2f        1.60    %6.2f        9.69     *\n",cp5w-cp1, cp6w-cp1);
+  printf("* TClonesArray(TObjHit)         %6.2f        1.10    %6.2f        6.03     *\n",cp8w-cp1, cp9w-cp1);
+  printf("* TClonesArray(TObjHit) split   %6.2f        1.13    %6.2f        5.99     *\n",cp10w-cp1,cp11w-cp1);
   printf("******************************************************************************\n");
   printf("* Time to read in seconds       comp 0    Reference    comp 1    Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        2.29    %6.2f        3.67     *\n",cp2r,cp3r);
-  printf("* vector<THit*>                 %6.2f        2.10    %6.2f        3.27     *\n",cp5r,cp6r);
-  printf("* TClonesArray(TObjHit)         %6.2f        1.53    %6.2f        2.14     *\n",cp8r,cp9r);
-  printf("* TClonesArray(TObjHit) split   %6.2f        1.35    %6.2f        1.94     *\n",cp10r,cp11r);
+  printf("* vector<THit>                  %6.2f        2.29    %6.2f        3.46     *\n",cp2r,cp3r);
+  printf("* vector<THit*>                 %6.2f        2.10    %6.2f        3.32     *\n",cp5r,cp6r);
+  printf("* TClonesArray(TObjHit)         %6.2f        1.31    %6.2f        1.92     *\n",cp8r,cp9r);
+  printf("* TClonesArray(TObjHit) split   %6.2f        1.31    %6.2f        1.93     *\n",cp10r,cp11r);
   printf("******************************************************************************\n");
   printf("* Total CPU time              %8.2f    %8.2f                           *\n",cptot,cpref);
   printf("* Estimated ROOTMARKS         %8.2f      200.00                           *\n",rootmarks);
