@@ -181,9 +181,9 @@ extern "C" void  type_of_call hgiven(const int&,DEFCHAR,const int&,DEFCHAR,
 #endif
 
 #ifndef WIN32
-extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,const int,const int, const int);
+extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,int&,const int,const int, const int);
 #else
-extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&);
+extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,int&);
 #endif
 
 #ifndef WIN32
@@ -230,17 +230,18 @@ extern void convert_rwn(Int_t id);
 
 Int_t golower  = 1;
 Int_t bufsize  = 8000;
-
+Int_t optcwn = 1;
 int main(int argc, char **argv)
 {
   if (argc < 2) {
      printf("******Error in invoking h2root\n");
-     printf("===>  h2root file.hbook  file.root [compress] [tolower] [lrecl] [bufsize]\n");
+     printf("===>  h2root file.hbook  file.root [compress] [tolower] [lrecl] [bufsize] [optcwn] \n");
      printf("      if file.root is not given  it will be = file.root\n");
      printf("      compress = 1 by default (use 0 for no compression)\n");
      printf("      tolower  = 1 by default (use 0 to keep case of column names)\n");
      printf("      lrecl =0 by default (must be specified if >8092)\n");
      printf("      bufsize = 8000 by default (branch buffer size)\n");
+     printf("      optcwn  = 1  by default convert int of <= 16 bit into short (to preserve types use 0) \n");
      return 1;
   }
   lq = &pawc[9];
@@ -251,26 +252,29 @@ int main(int argc, char **argv)
   char *file_out;
   Int_t compress = 1;
   int ier=0, record_size=0;
+  if (argc > 7) {
+    optcwn = atoi(argv[7]);
+  }
   if (argc > 6) {
-     bufsize = atoi(argv[6]);
+    bufsize = atoi(argv[6]);
   }
   if (argc > 5) {
-     record_size = atoi(argv[5]);
+    record_size = atoi(argv[5]);
   }
   if (argc > 4) {
-     golower = atoi(argv[4]);
+    golower = atoi(argv[4]);
   }
   if (argc > 3) {
-     compress = atoi(argv[3]);
+    compress = atoi(argv[3]);
   }
   if (argc > 2) {
-     file_out=argv[2];
+    file_out=argv[2];
   } else {
-     file_out= new char[2048];
-     strcpy(file_out,file_in);
-     char *dot = strrchr(file_out,'.');
-     if (dot) strcpy(dot+1,"root");
-     else     strcat(file_out,".root");
+    file_out= new char[128];
+    strcpy(file_out,file_in);
+    char *dot = strrchr(file_out,'.');
+    if (dot) strcpy(dot+1,"root");
+    else     strcat(file_out,".root");
   }
 
 #if defined(_HIUX_SOURCE) && !defined(__GNUC__)
@@ -639,6 +643,8 @@ void convert_directory(const char *dir)
 #else
   hgiven(id,chtitl,80,nvar,PASSCHAR(""),rmin[0],rmax[0]);
 #endif
+
+
   chtag_out = new char[nvar*Nchar+1];
   Int_t *charflag = new Int_t[nvar];
   Int_t *lenchar  = new Int_t[nvar];
@@ -668,6 +674,7 @@ void convert_directory(const char *dir)
   char name[32];
   char block[32];
   char oldblock[32];
+  Int_t nbits = 0;
   strcpy(oldblock,"OLDBLOCK");
   Int_t oldischar = -1;
   for (i=80;i>0;i--) {if (chtitl[i] == ' ') chtitl[i] = 0; }
@@ -680,17 +687,17 @@ void convert_directory(const char *dir)
      memset(fullname,' ',sizeof(fullname));
      fullname[sizeof(fullname)-1]=0;
 #ifndef WIN32
-     hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,ielem,32,64,32);
+     hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem,32,64,32);
 #else
-     hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,ielem);
+     hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem);
 #endif
-
+     
      for (j=30;j>0;j--) {
-        if(golower) name[j] = tolower(name[j]);
-        if (name[j] == ' ') name[j] = 0;
+       if(golower) name[j] = tolower(name[j]);
+       if (name[j] == ' ') name[j] = 0;
      }
      if (golower == 2) name[0] = tolower(name[0]);
-
+     
      for (j=62;j>0;j--) {
         if(golower && fullname[j-1] != '[') fullname[j] = tolower(fullname[j]);
         // convert also character after [, if golower == 2
@@ -703,10 +710,53 @@ void convert_directory(const char *dir)
         if (block[j] == ' ') block[j] = 0;
         else break;
      }
-     if (itype == 1 && isize == 4) strcat(fullname,"/F");
-     if (itype == 1 && isize == 8) strcat(fullname,"/D");
-     if (itype == 2) strcat(fullname,"/I");
-     if (itype == 3) strcat(fullname,"/i");
+     if (itype == 1) {
+       if( isize == 4 )     strcat(fullname,"/F");
+       else if( isize == 8) strcat(fullname,"/D");
+     }
+     
+     // add support for UShort_t   
+ 
+     if( itype == 2 )  
+       {
+	 if( optcwn == 1 ) 
+	   { 
+	     if( nbits > 16 ) 
+	       {
+		 strcat(fullname,"/I");
+	       }
+	     else 
+	       {
+		 strcat(fullname,"/S");
+	       }
+	   }
+	 else 
+	   {
+	    strcat(fullname,"/I");
+	   }
+       }
+     
+     // add support for Short_t   
+     if ( itype == 3 ) 
+       {
+	 if(  optcwn == 1 ) 
+	   { 
+	     if( nbits > 16) {
+	       strcat(fullname,"/i");
+	     }
+	     else 
+	       {
+		 strcat(fullname,"/s");
+	       }
+	   }
+	 else 
+	   {
+	     strcat(fullname,"/i");
+	   }
+     }
+
+ 
+
 //     if (itype == 4) strcat(fullname,"/i");
      if (itype == 4) strcat(fullname,"/b");
      if (itype == 5) strcat(fullname,"/C");

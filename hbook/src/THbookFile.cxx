@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.19 2003/08/23 00:08:12 rdm Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.20 2004/02/11 18:05:42 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -196,10 +196,10 @@ extern "C" void  type_of_call hgnt1(const int&,DEFCHAR,DEFCHAR,const int&,const 
 #endif
 
 #ifndef WIN32
-extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,const int,const int, const int);
+extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,int&,const int,const int, const int);
 extern "C" void  type_of_call hntvar3(const int&,const int&,DEFCHAR, const int);
 #else
-extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&);
+extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,int&);
 extern "C" void  type_of_call hntvar3(const int&,const int&,DEFCHAR);
 #endif
 
@@ -677,6 +677,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 
   UInt_t varNumber = 0;
   Int_t golower  = 1;
+  Int_t nbits = 0;
   for(i=0; i<nvar;i++) {
      memset(name,' ',sizeof(name));
      name[sizeof(name)-1] = 0;
@@ -685,9 +686,9 @@ TObject *THbookFile::ConvertCWN(Int_t id)
      memset(fullname,' ',sizeof(fullname));
      fullname[sizeof(fullname)-1]=0;
 #ifndef WIN32
-     hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,ielem,32,64,32);
+     hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem,32,64,32);
 #else
-     hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,ielem);
+     hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem);
 #endif
      TString HbookName = name;
 

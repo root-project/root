@@ -2,7 +2,7 @@
 *CMZ :  0.90/10 09/12/96  17.08.32  by  Rene Brun
 *-- Author :    Rene Brun   09/12/96
       SUBROUTINE HNTVAR2(ID1,IVAR,CHTAG,CHFULL,BLOCK,NSUB,ITYPE,ISIZE
-     +                  ,IELEM)
+     +                  ,NBITS,IELEM)
 *.==========>
 *.
 *.           Returns the tag, block, type, size and array length of the
@@ -119,6 +119,7 @@
          IF (ICNT .EQ. IVAR) THEN
 *
             CALL HNDESC(IOFF, NSUB, ITYPE, ISIZE, NBITS, LDUM)
+*	write(6,*) "NBITS = " , NBITS
 *
             LL = IQ(LNAME+IOFF+ZLNAME)
             LV = IQ(LNAME+IOFF+ZNAME)
