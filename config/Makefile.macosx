@@ -50,6 +50,7 @@ SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined suppress \
                 -install_name $(LIBDIR)/
 endif
 SOEXT         = dylib
+FORCELINK     = yes
 
 # System libraries:
 SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) $(OSTHREADLIBDIR) \

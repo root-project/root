@@ -48,6 +48,7 @@ SOFLAGS       = $(OPT) -qmkshrobj -flat_namespace -undefined suppress \
                 -single_module -Wl,-install_name -Wl,$(LIBDIR)/
 endif
 SOEXT         = dylib
+FORCELINK     = yes
 
 # System libraries:
 SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl

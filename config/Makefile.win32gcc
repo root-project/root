@@ -39,6 +39,7 @@ SOFLAGS       = -shared -Wl,-soname,
 # that's what cygwin ld looks for when searching for shared libs
 SOEXT         = dll
 EXEEXT        = .exe
+FORCELINK     = yes
 
 # System libraries:
 SYSLIBS       = -lm $(OSTHREADLIBDIR) $(OSTHREADLIB)

@@ -193,8 +193,8 @@ ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
 RINTLIBS     := $(LPATH)/libRint.lib
 PROOFLIBS    := $(LPATH)/libProof.lib $(LPATH)/libTreePlayer.lib
 endif
-ifeq ($(PLATFORM),macosx)
-# Force loading of not referenced libraries
+ifeq ($(FORCELINK),yes)
+# Force linking of not referenced libraries
 ROOTULIBS    := -u _G__cpp_setupG__Hist    \
                 -u _G__cpp_setupG__Graf1   \
                 -u _G__cpp_setupG__G3D     \
@@ -203,7 +203,7 @@ ROOTULIBS    := -u _G__cpp_setupG__Hist    \
                 -u _G__cpp_setupG__Matrix
 endif
 ifeq ($(PLATFORM),win32)
-# Force loading of not referenced libraries
+# Force linking of not referenced libraries
 ROOTULIBS    := -include:_G__cpp_setupG__Hist    \
                 -include:_G__cpp_setupG__Graf1   \
                 -include:_G__cpp_setupG__G3D     \

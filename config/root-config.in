@@ -277,6 +277,8 @@ win32gcc)
    # Win32 with cygwin gcc
    auxcflags="-MD"
    auxlibs="-lm"
+   forcelibs=$rootulibs
+   forceglibs=$rootuglibs
    ;;
 *)
    echo "root-config: \"$arch\" invalid architecture"
