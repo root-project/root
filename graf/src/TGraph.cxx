@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.134 2004/08/20 08:07:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.135 2004/08/23 09:28:13 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -80,6 +80,7 @@ TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
 //*-*-*-*-*-*-*-*-*-*-*Graph default constructor-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =========================
+   fMaxSize   = 0;
    fNpoints   = 0;
    fX         = 0;
    fY         = 0;
@@ -99,6 +100,7 @@ TGraph::TGraph(Int_t n)
 
    fFunctions = 0;
    fHistogram = 0;
+   fMaxSize   = 0;
    fNpoints   = 0;
    fX         = 0;
    fY         = 0;
@@ -109,6 +111,7 @@ TGraph::TGraph(Int_t n)
 
    fFunctions = new TList;
    fNpoints   = n;
+   fMaxSize   = n;
    fX         = new Double_t[n];
    fY         = new Double_t[n];
    fMaximum   = -1111;
@@ -129,6 +132,7 @@ TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
 
    fFunctions = 0;
    fHistogram = 0;
+   fMaxSize   = 0;
    fNpoints   = 0;
    fX         = 0;
    fY         = 0;
@@ -139,6 +143,7 @@ TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
 
    fFunctions = new TList;
    fNpoints   = n;
+   fMaxSize   = n;
    fX         = new Double_t[n];
    fY         = new Double_t[n];
    fMaximum   = -1111;
@@ -160,6 +165,7 @@ TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
 
    fFunctions = 0;
    fHistogram = 0;
+   fMaxSize   = 0;
    fNpoints   = 0;
    fX         = 0;
    fY         = 0;
@@ -170,6 +176,7 @@ TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
 
    fFunctions = new TList;
    fNpoints   = n;
+   fMaxSize   = n;
    fX         = new Double_t[n];
    fY         = new Double_t[n];
    fMaximum   = -1111;
@@ -192,6 +199,7 @@ TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
 
    fFunctions = 0;
    fHistogram = 0;
+   fMaxSize   = 0;
    fNpoints   = 0;
    fX         = 0;
    fY         = 0;
@@ -202,6 +210,7 @@ TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
 
    fFunctions = new TList;
    fNpoints   = n;
+   fMaxSize   = n;
    fX         = new Double_t[n];
    fY         = new Double_t[n];
    fMaximum   = -1111;
@@ -221,6 +230,7 @@ TGraph::TGraph(const TGraph &gr)
    // Copy constructor for this graph
 
    fNpoints = gr.fNpoints;
+   fMaxSize = gr.fMaxSize;
    if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
    else fFunctions = new TList;
    fHistogram = 0;
@@ -248,6 +258,7 @@ TGraph::TGraph(const TVector &vx, const TVector &vy)
 
    fFunctions = 0;
    fHistogram = 0;
+   fMaxSize   = 0;
    fNpoints   = 0;
    fX         = 0;
    fY         = 0;
@@ -261,6 +272,7 @@ TGraph::TGraph(const TVector &vx, const TVector &vy)
 
    fFunctions = new TList;
    fNpoints   = n;
+   fMaxSize   = n;
    fX         = new Double_t[n];
    fY         = new Double_t[n];
    fMaximum   = -1111;
@@ -283,6 +295,7 @@ TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
 
    fFunctions = 0;
    fHistogram = 0;
+   fMaxSize   = 0;
    fNpoints   = 0;
    fX         = 0;
    fY         = 0;
@@ -296,6 +309,7 @@ TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
 
    fFunctions = new TList;
    fNpoints   = n;
+   fMaxSize   = n;
    fX         = new Double_t[n];
    fY         = new Double_t[n];
    fMaximum   = -1111;
@@ -315,6 +329,7 @@ TGraph::TGraph(const TH1 *h)
 
    fFunctions = 0;
    fHistogram = 0;
+   fMaxSize   = 0;
    fNpoints   = 0;
    fX         = 0;
    fY         = 0;
@@ -329,6 +344,7 @@ TGraph::TGraph(const TH1 *h)
    TAxis *xaxis = ((TH1*)h)->GetXaxis();
    fFunctions = new TList;
    fNpoints   = xaxis->GetNbins();
+   fMaxSize   = fNpoints;
    fX         = new Double_t[fNpoints];
    fY         = new Double_t[fNpoints];
    fMaximum   = -1111;
@@ -368,6 +384,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 
    fFunctions = 0;
    fHistogram = 0;
+   fMaxSize   = 0;
    fNpoints   = 0;
    fX         = 0;
    fY         = 0;
@@ -379,6 +396,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
    if (option) coption = *option;
    fFunctions = new TList;
    fNpoints   = f->GetNpx();
+   fMaxSize   = fNpoints;
    Double_t xmin = f->GetXmin();
    Double_t xmax = f->GetXmax();
    Double_t dx   = (xmax-xmin)/fNpoints;
@@ -427,6 +445,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *)
 
    fFunctions = 0;
    fHistogram = 0;
+   fMaxSize   = 0;
    fNpoints   = 0;
    fX         = 0;
    fY         = 0;
@@ -1651,6 +1670,7 @@ Int_t TGraph::InsertPoint()
       else                      ipoint = fNpoints;
    }
    fNpoints++;
+   fMaxSize   = fNpoints;
    Double_t *newX = new Double_t[fNpoints];
    Double_t *newY = new Double_t[fNpoints];
    for (i=0;i<ipoint;i++) {
@@ -3269,6 +3289,7 @@ Int_t TGraph::RemovePoint()
    }
    if (ipoint == -2) return -1;
    fNpoints--;
+   fMaxSize   = fNpoints;
    Double_t *newX = new Double_t[fNpoints];
    Double_t *newY = new Double_t[fNpoints];
    Int_t j = -1;
@@ -3295,6 +3316,7 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
    if (ipoint >= fNpoints) return -1;
 
    fNpoints--;
+   fMaxSize   = fNpoints;
    Double_t *newX = new Double_t[fNpoints];
    Double_t *newY = new Double_t[fNpoints];
    Int_t j = -1;
@@ -3392,7 +3414,8 @@ void TGraph::Set(Int_t n)
    }
    delete [] fX;
    delete [] fY;
-   fNpoints =n;
+   fNpoints = n;
+   fMaxSize = n;
    fX = xx;
    fY = yy;
 }
@@ -3436,20 +3459,23 @@ void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
 //*-*                  =====================================
 
    if (i < 0) return;
-   if (i >= fNpoints) {
+   if (i >= fMaxSize) {
    // re-allocate the object
-      Double_t *savex = new Double_t[i+1];
-      Double_t *savey = new Double_t[i+1];
+      fMaxSize = 2*i;
+      Double_t *savex = new Double_t[fMaxSize];
+      Double_t *savey = new Double_t[fMaxSize];
       if (fNpoints > 0) {
          memcpy(savex,fX,fNpoints*sizeof(Double_t));
          memcpy(savey,fY,fNpoints*sizeof(Double_t));
       }
+      memset(&savex[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
+      memset(&savey[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
       if (fX) delete [] fX;
       if (fY) delete [] fY;
       fX = savex;
       fY = savey;
-      fNpoints = i+1;
    }
+   if (i >= fNpoints) fNpoints = i+1;
    fX[i] = x;
    fY[i] = y;
    if (fHistogram) {
@@ -4028,6 +4054,7 @@ void TGraph::Streamer(TBuffer &b)
                f1->SetParent(this);
             }
          }
+         fMaxSize = fNpoints;
          return;
       }
       //====process old versions before automatic schema evolution
@@ -4036,6 +4063,7 @@ void TGraph::Streamer(TBuffer &b)
       TAttFill::Streamer(b);
       TAttMarker::Streamer(b);
       b >> fNpoints;
+      fMaxSize = fNpoints;
       fX = new Double_t[fNpoints];
       fY = new Double_t[fNpoints];
       if (R__v < 2) {

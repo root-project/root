@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.34 2004/03/18 13:52:05 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.35 2004/03/22 15:56:53 rdm Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -37,7 +37,8 @@ class TSpline;
 class TGraph : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
 protected:
-    Int_t       fNpoints;    //Number of points
+    Int_t       fMaxSize;    //!Current dimension of arrays fX and fY
+    Int_t       fNpoints;    //Number of points <= fMaxSize
     Double_t   *fX;          //[fNpoints] array of X points
     Double_t   *fY;          //[fNpoints] array of Y points
     TList      *fFunctions;  //Pointer to list of functions (fits and user)
@@ -99,6 +100,7 @@ public:
         virtual Double_t GetCovariance() const;
         virtual Double_t GetMean(Int_t axis=1) const;
         virtual Double_t GetRMS(Int_t axis=1) const;
+        Int_t            GetMaxSize() const {return fMaxSize;}
         Int_t            GetN() const {return fNpoints;}
         Double_t        *GetX() const {return fX;}
         Double_t        *GetY() const {return fY;}
@@ -134,7 +136,7 @@ public:
                 void     Zero(Int_t &k,Double_t AZ,Double_t BZ,Double_t E2,Double_t &X,Double_t &Y
                           ,Int_t maxiterations);
 
-        ClassDef(TGraph,3)  //Graph graphics class
+        ClassDef(TGraph,4)  //Graph graphics class
 };
 
 #endif
