@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.2 2000/05/30 16:45:50 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -668,7 +668,7 @@ void THtml::ClassDescription( ofstream &out, TClass *classPtr, Bool_t &flag )
     char *nextLine    = new char [256];
     char *pattern     = new char [80];
 
-    char *lastUpdate  = new char [80];
+    char *lastUpdate  = new char [256];
     char *author      = new char [80];
     char *copyright   = new char [80];
 
