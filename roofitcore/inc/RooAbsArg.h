@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.10 2001/03/29 01:59:09 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.11 2001/03/29 22:37:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,7 +31,6 @@ public:
   RooAbsArg(const char *name, const char *title);
   RooAbsArg(const RooAbsArg& other) ;
   RooAbsArg(const char* name, const RooAbsArg& other) ;
-  virtual TObject* Clone() ;
 
   // Accessors to client-server relation information 
   Bool_t isDerived() const { return _serverList.First()?kTRUE:kFALSE; }
@@ -64,11 +63,14 @@ protected:
 
   // Client-Server relatation management 
   friend class RooArgSet ;
-  THashList _clientList ; //! do not persist (or clone)
-  THashList _serverList ; //! do not persist (or clone)
+  THashList _clientList      ; //! complete client list
+  THashList _clientListShape ; //! clients that requested shape dirty flag propagation
+  THashList _clientListValue ; //! clients that requested value dirty flag propagation
+  THashList _serverList      ; //! do not persist (or clone)
   Bool_t redirectServers(RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
   virtual Bool_t redirectServersHook(RooArgSet& newServerList, Bool_t mustReplaceAll) {} ;
-  void addServer(RooAbsArg& server) ;
+  void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kTRUE) ;
+  void changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp) ;
   void removeServer(RooAbsArg& server) ;
 	
   // Attribute list

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.5 2001/03/29 01:59:09 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.6 2001/03/29 22:37:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -53,7 +53,7 @@ void RooAbsCategory::initCopy(const RooAbsCategory& other)
   TIterator* iter=other._types.MakeIterator() ;
   TObject* obj ;
   while (obj=iter->Next()) {
-    _types.Add(obj) ;
+    _types.Add(obj->Clone()) ;
   }
   delete iter ;
 
@@ -150,11 +150,11 @@ RooCatType RooAbsCategory::traceEval() const
   
   //Standard tracing code goes here
   if (!isValid(value)) {
-    cout << "RooAbsCategory::traceEval(" << GetName() << "): validation failed: " << value << endl ;
   }
 
   //Call optional subclass tracing code
   traceEvalHook(value) ;
+
   return value ;
 }
 
@@ -165,7 +165,8 @@ Int_t RooAbsCategory::getOrdinalIndex() const
     if (*(RooCatType*)_types.At(i) == _value) return i ;
   }
   // This should never happen
-  cout << "RooAbsCategory::getOrdinalIndex(" << GetName() << "): Internal error: current type is illegal" << endl ;
+  cout << "RooAbsCategory::getOrdinalIndex(" << GetName() 
+       << "): Internal error: current type is illegal" << endl ;
   return -1 ;
 }
 
@@ -174,8 +175,9 @@ Int_t RooAbsCategory::getOrdinalIndex() const
 Bool_t RooAbsCategory::setOrdinalIndex(Int_t newIndex) 
 {
   if (newIndex<0 || newIndex>=_types.GetEntries()) {
-    cout << "RooAbsCategory::setOrdinalIndex(" << GetName() << "): ordinal index out of range: " 
-	 << newIndex << " (0," << _types.GetEntries() << ")" << endl ;
+    cout << "RooAbsCategory::setOrdinalIndex(" << GetName() 
+	 << "): ordinal index out of range: " << newIndex 
+	 << " (0," << _types.GetEntries() << ")" << endl ;
     return kTRUE ;
   }
   _value = *(RooCatType*)_types.At(newIndex) ;
@@ -187,12 +189,14 @@ Bool_t RooAbsCategory::setOrdinalIndex(Int_t newIndex)
 Bool_t RooAbsCategory::defineType(Int_t index, const char* label) 
 {
   if (isValidIndex(index)) {
-    cout << "RooAbsCategory::defineType(" << GetName() << "): index " << index << " already assigned" << endl ;
+    cout << "RooAbsCategory::defineType(" << GetName() << "): index " 
+	 << index << " already assigned" << endl ;
     return kTRUE ;
   }
 
   if (isValidLabel(label)) {
-    cout << "RooAbsCategory::defineType(" << GetName() << "): label " << label << " already assigned" << endl ;
+    cout << "RooAbsCategory::defineType(" << GetName() << "): label " 
+	 << label << " already assigned" << endl ;
     return kTRUE ;
   }
 

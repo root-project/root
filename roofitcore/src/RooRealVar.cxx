@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.7 2001/03/29 01:59:09 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.8 2001/03/29 22:37:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -190,12 +190,6 @@ Bool_t RooRealVar::inFitRange(Double_t value, Double_t* clippedValPtr) const
 
 
 
-Bool_t RooRealVar::isValid() const
-{
-  return isValid(getVal()) ;
-}
-
-
 Bool_t RooRealVar::isValid(Double_t value, Bool_t verbose) const {
   if (!inFitRange(value)) {
     if (verbose)
@@ -361,10 +355,7 @@ RooAbsArg& RooRealVar::operator=(RooAbsArg& aorig)
 void RooRealVar::printToStream(ostream& os, PrintOption opt) const {
   switch(opt) {
   case Verbose:
-    os << fName << " = " << getVal() << " +/- " << _error;    
-    if(!_unit.IsNull()) os << ' ' << _unit;
-    printAttribList(os) ;
-    os << endl;
+    RooAbsArg::printToStream(os,opt) ;
     break ;
     
   case Shape:
@@ -386,8 +377,8 @@ void RooRealVar::printToStream(ostream& os, PrintOption opt) const {
     os << " : " << GetTitle() ;
     if(!isConstant() && hasFitLimits())
       os << " (" << _fitMin << ',' << _fitMax << ')';
-    else if (isConstant()) 
-      os << " Constant" ;
+
+    printAttribList(os) ;
     os << endl ;	
     break ;
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.8 2001/03/27 01:20:19 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.9 2001/03/29 01:06:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -318,10 +318,10 @@ void RooDataSet::printToStream(ostream& os, PrintOption opt)
   // Print structure of this data set
   cout << "RooDataSet \"" << GetTitle() << "\" contains" << endl
        << GetEntries() << " values for ";
-  _vars.print(RooAbsArg::Shape);
+  _vars.printToStream(os,RooAbsArg::Shape);
   if(_truth.GetSize() > 0) {
     cout << "and was generated with ";
-    _truth.print();
+    _truth.printToStream(cout);
   }
 }
 

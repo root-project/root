@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.3 2001/03/29 01:59:09 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.4 2001/03/29 22:37:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -71,18 +71,6 @@ RooAbsReal& RooAbsReal::operator=(RooAbsReal& other)
 RooAbsArg& RooAbsReal::operator=(RooAbsArg& aother)
 {
   return operator=((RooAbsReal&)aother) ;
-}
-
-
-Double_t RooAbsReal::getVal() const
-{
-  // Return value of object. Calculated if dirty, otherwise cached value is returned.
-  if (isValueDirty()) {
-    setValueDirty(false) ;
-    _value = traceEval() ;
-  } 
-  
-  return _value ;
 }
 
 
@@ -195,23 +183,6 @@ Bool_t RooAbsReal::isValid() const {
 
 Bool_t RooAbsReal::isValid(Double_t value) const {
   return kTRUE ;
-}
-
-
-
-Double_t RooAbsReal::traceEval() const
-{
-  Double_t value = evaluate() ;
-  
-  //Standard tracing code goes here
-  if (!isValid(value)) {
-    cout << "RooAbsReal::traceEval(" << GetName() << "): validation failed: " << value << endl ;
-  }
-
-  //Call optional subclass tracing code
-  traceEvalHook(value) ;
-
-  return value ;
 }
 
 

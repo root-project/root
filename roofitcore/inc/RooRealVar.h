@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.7 2001/03/29 01:59:09 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.8 2001/03/29 22:37:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,13 +32,13 @@ public:
 	   Double_t minValue, Double_t maxValue, const char *unit= "") ;
   RooRealVar(const RooRealVar& other);
   RooRealVar(const char* name, const RooRealVar& other);
+  virtual TObject* Clone() { return new RooRealVar(*this); }
   virtual ~RooRealVar();
   RooRealVar& operator=(RooRealVar& other) ;
   
   // Parameter value and error accessors
   virtual operator Double_t&();
   virtual operator Double_t() const ;
-  virtual Double_t getVal() const { return _value ; } // overrides RooAbsReal::GetVar()
   inline Double_t getError() const { return _error; }
   virtual void setVal(Double_t value);
   inline void setError(Double_t value) { _error= value; }
@@ -74,7 +74,6 @@ protected:
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   Double_t chopAt(Double_t what, Int_t where) ;
 
-  virtual Bool_t isValid() const ;
   virtual Bool_t isValid(Double_t value, Bool_t verbose=kFALSE) const ;
 
   Double_t _fitMin ;

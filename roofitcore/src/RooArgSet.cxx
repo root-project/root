@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.7 2001/03/27 01:20:19 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.8 2001/03/29 01:06:43 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -231,9 +231,24 @@ RooAbsArg *RooArgSet::find(const char *name) const {
 }
 
 
-void RooArgSet::print(RooAbsArg::PrintOption opt) 
+void RooArgSet::Print(Option_t* options) const
 {
-  printToStream(cout,opt) ;
+  // Print the state of this object using printToStream() with the
+  // following PrintOption mapping:
+  //
+  //  "1" - OneLine
+  //  "S" - Shape
+  //  "V" - Verbose
+  //
+  // The default is Standard.
+
+  TString opts(options);
+  opts.ToLower();
+  RooAbsArg::PrintOption popt(RooAbsArg::Standard);
+  if(opts.Contains("1")) { popt= RooAbsArg::OneLine ; }
+  if(opts.Contains("s")) { popt= RooAbsArg::Shape; }
+  if(opts.Contains("v")) { popt= RooAbsArg::Verbose;}
+  printToStream(cout,popt);
 }
 
 
@@ -443,7 +458,7 @@ void RooArgSet::writeToStream(ostream& os, Bool_t compact)
 
 
 
-void RooArgSet::printToStream(ostream& os, RooAbsArg::PrintOption opt) {
+void RooArgSet::printToStream(ostream& os, RooAbsArg::PrintOption opt) const {
   // Print content of list
   os << "RooArgSet \"" << _name << "\":" << endl;
   TIterator *iterator= MakeIterator();

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.rdl,v 1.3 2001/03/19 15:57:31 verkerke Exp $
+ *    File: $Id: RooCategory.rdl,v 1.4 2001/03/29 22:37:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,6 +24,7 @@ public:
   RooCategory(const RooCategory& other) ;
   RooCategory(const char* name, const RooCategory& other) ;
   virtual ~RooCategory();
+  virtual TObject* Clone() { return new RooCategory(*this); }
   virtual RooCategory& operator=(RooCategory& other) ; 
 
   // Value modifiers

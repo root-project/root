@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStringVar.rdl,v 1.2 2001/03/29 01:59:09 verkerke Exp $
+ *    File: $Id: RooStringVar.rdl,v 1.3 2001/03/29 22:37:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,6 +26,7 @@ public:
   RooStringVar(const RooStringVar& other);
   RooStringVar(const char* name, const RooStringVar& other);
   virtual ~RooStringVar();
+  virtual TObject* Clone() { return new RooStringVar(*this); }
   RooStringVar& operator=(const RooStringVar& other) ;
   
   // Parameter value and error accessors

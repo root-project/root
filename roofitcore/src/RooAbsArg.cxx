@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.10 2001/03/29 01:59:08 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.11 2001/03/29 22:37:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -82,8 +82,11 @@ void RooAbsArg::initCopy(const RooAbsArg& other)
   // Copy server list by hand
   TIterator* sIter = other._serverList.MakeIterator() ;
   RooAbsArg* server ;
+  Bool_t valueProp, shapeProp ;
   while (server = (RooAbsArg*) sIter->Next()) {
-    addServer(*server) ;
+    valueProp = (Bool_t)server->_clientListValue.FindObject((TObject*)&other) ;
+    shapeProp = (Bool_t)server->_clientListShape.FindObject((TObject*)&other) ;
+    addServer(*server,valueProp,shapeProp) ;
   }
 
   setValueDirty() ;
@@ -118,22 +121,6 @@ RooAbsArg::~RooAbsArg()
   assert(!fatalError) ;
 }
 
-
-TObject* RooAbsArg::Clone() {
-  // Special clone function that takes care of bidirectional client-server links.
-  
-  // Streamer-based clone()
-  RooAbsArg* clone = (RooAbsArg*) TObject::Clone() ;
-  
-  // Copy server list by hand
-  TIterator* iter = _serverList.MakeIterator() ;
-  RooAbsArg* server ;
-  while (server = (RooAbsArg*) iter->Next()) {
-    clone->addServer(*server) ;
-  }
-
-  return clone ;
-}
 
 RooAbsArg& RooAbsArg::operator=(const RooAbsArg& other) 
 {  
@@ -192,7 +179,7 @@ Bool_t RooAbsArg::getAttribute(Text_t* name) const
 }
 
 
-void RooAbsArg::addServer(RooAbsArg& server) 
+void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp) 
 {
   // Register another RooAbsArg as a server to us, ie, declare that
   // we depend on its value and shape.
@@ -206,8 +193,10 @@ void RooAbsArg::addServer(RooAbsArg& server)
     return ;
   }
 
-  if (!server._clientList.FindObject(this)) {
+  if (!server._clientList.FindObject(this)) {    
     server._clientList.Add(this) ;
+    if (valueProp) server._clientListValue.Add(this) ;
+    if (shapeProp) server._clientListShape.Add(this) ;
   } else {
     cout << "RooAbsArg::addServer(" << GetName() 
 	 << "): Already registered as client of " << server.GetName() << endl ;
@@ -231,11 +220,41 @@ void RooAbsArg::removeServer(RooAbsArg& server)
 
   if (server._clientList.FindObject(this)) {
     server._clientList.Remove(this) ;
+    server._clientListValue.Remove(this) ;
+    server._clientListShape.Remove(this) ;
   } else {
     cout << "RooAbsArg::removeServer(" << GetName() 
 	 << "): Never registered as client of " << server.GetName() << endl ;
   }
 } 
+
+
+
+void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
+{
+  // Change dirty flag propagation mask for specified server
+
+  if (!_serverList.FindObject(&server)) {
+    cout << "RooAbsArg::changeServer(" << GetName() << "): Server " 
+	 << server.GetName() << " not registered" << endl ;
+    return ;
+  }
+
+  // This condition should not happen, but check anyway
+  if (!server._clientList.FindObject(this)) {    
+    cout << "RooAbsArg::changeServer(" << GetName() << "): Server " 
+	 << server.GetName() << " doesn't have us registered as client" << endl ;
+    return ;
+  }
+
+  // Remove all propagation links, then reinstall requested ones ;
+  server._clientListValue.Remove(this) ;
+  server._clientListShape.Remove(this) ;
+  if (valueProp) server._clientListValue.Add(this) ;
+  if (shapeProp) server._clientListShape.Add(this) ;
+}
+
+
 
 
 Bool_t RooAbsArg::dependsOn(const RooArgSet& serverList) const
@@ -283,7 +302,7 @@ void RooAbsArg::setValueDirty(Bool_t flag, const RooAbsArg* source) const
 
   if (flag==kTRUE) {
     // Set 'dirty' flag for all clients of this object
-    TIterator *clientIter= _clientList.MakeIterator();
+    TIterator *clientIter= _clientListValue.MakeIterator();
     RooAbsArg* client ;
     while (client=(RooAbsArg*)clientIter->Next()) {
       client->setValueDirty(kTRUE,source) ;
@@ -310,7 +329,7 @@ void RooAbsArg::setShapeDirty(Bool_t flag, const RooAbsArg* source) const
 
   if (flag==kTRUE) {
     // Set 'dirty' flag for all clients of this object
-    TIterator *clientIter= _clientList.MakeIterator();
+    TIterator *clientIter= _clientListShape.MakeIterator();
     RooAbsArg* client ;
     while (client=(RooAbsArg*)clientIter->Next()) {
       client->setShapeDirty(kTRUE,source) ;
@@ -326,17 +345,26 @@ Bool_t RooAbsArg::redirectServers(RooArgSet& newSet, Bool_t mustReplaceAll)
   Bool_t ret(kFALSE) ;
 
   //Copy original server list to not confuse the iterator while deleting
-  THashList origServerList ;
+  THashList origServerList, origServerValue, origServerShape ;
   RooAbsArg *oldServer, *newServer ;
   TIterator* sIter = _serverList.MakeIterator() ;
   while (oldServer=(RooAbsArg*)sIter->Next()) {
     origServerList.Add(oldServer) ;
+
+    // Retrieve server side link state information
+    if (oldServer->_clientListValue.FindObject(this)) {
+      origServerValue.Add(oldServer) ;
+    }
+    if (oldServer->_clientListShape.FindObject(this)) {
+      origServerShape.Add(oldServer) ;
+    }
   }
   delete sIter ;
   
-
+  
   // Delete all previously registered servers 
   sIter = origServerList.MakeIterator() ;
+  Bool_t propValue, propShape ;
   while (oldServer=(RooAbsArg*)sIter->Next()) {
     newServer = newSet.find(oldServer->GetName()) ;
     if (!newServer) {
@@ -346,9 +374,11 @@ Bool_t RooAbsArg::redirectServers(RooArgSet& newSet, Bool_t mustReplaceAll)
       }
       continue ;
     }
-
+    
+    propValue=origServerValue.FindObject(oldServer)?kTRUE:kFALSE ;
+    propShape=origServerShape.FindObject(oldServer)?kTRUE:kFALSE ;
     removeServer(*oldServer) ;
-    addServer(*newServer) ;
+    addServer(*newServer,propValue,propShape) ;
   }
 
   delete sIter ;
@@ -382,29 +412,39 @@ void RooAbsArg::printToStream(ostream& str, PrintOption opt)  const
   // Print the state of this object to the specified output stream.
   // With PrintOption=Verbose, print out lists of attributes, clients,
   // and servers. Otherwise, print our class, name and title only.
-
+ 
   cout << GetName() << ": " << GetTitle() << endl;
   if(opt == Verbose) {
     // attribute list
-    str << "  Attributes :" ;
+    str << "  Attributes: " ;
     printAttribList(str) ;
     str << endl ;
     // client list
-    str << "  Clients:";
+    str << "  Clients: ";
     TIterator *clientIter= _clientList.MakeIterator();
     RooAbsArg* client ;
     while (client=(RooAbsArg*)clientIter->Next()) {
-      client->printToStream(str,OneLine);
+      str << client->GetName() << "("
+          << (void*)client 
+	  << (_clientListValue.FindObject(client)?",V":"")
+	  << (_clientListShape.FindObject(client)?",S":"")
+	  << ") " ;
     }
+    str << endl ;
     // server list
-    str << "  Servers:";
+    str << "  Servers: ";
     TIterator *serverIter= _serverList.MakeIterator();
     RooAbsArg* server ;
     while (server=(RooAbsArg*)serverIter->Next()) {
-      server->printToStream(str,OneLine);
+      str << server->GetName() << "("
+          << (void*)server
+	  << (server->_clientListValue.FindObject((TObject*)this)?",V":"")
+	  << (server->_clientListShape.FindObject((TObject*)this)?",S":"")
+	  << ") " ;
     }
+    str << endl ;
   }
-}
+}                                                                                                                                                                          
 
 void RooAbsArg::Print(Option_t *options) const {
   // Print the state of this object using printToStream() with the

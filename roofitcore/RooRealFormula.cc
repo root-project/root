@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFormula.cc,v 1.3 2001/03/29 01:59:09 verkerke Exp $
+ *    File: $Id: RooRealFormula.cc,v 1.4 2001/03/29 22:37:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,28 +18,24 @@ ClassImp(RooRealFormula)
 
 
 RooRealFormula::RooRealFormula(const char *name, const char *title, RooArgSet& dependents) : 
-  RooAbsReal(name,title), _formula(name,title,dependents)
+  RooDerivedReal(name,title), _formula(name,title,dependents)
 {  
-  _formula.actualDependents().print() ;
-
   TIterator* depIter = _formula.actualDependents().MakeIterator() ;
   RooAbsArg* server(0) ;
   while (server=(RooAbsArg*)depIter->Next()) {
-    addServer(*server) ;
+    addServer(*server,kTRUE,kFALSE) ;
   }
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
 }
 
 
 RooRealFormula::RooRealFormula(const char* name, const RooRealFormula& other) : 
-  RooAbsReal(name, other), _formula(other._formula)
+  RooDerivedReal(name, other), _formula(other._formula)
 {
 }
 
 
 RooRealFormula::RooRealFormula(const RooRealFormula& other) : 
-  RooAbsReal(other), _formula(other._formula)
+  RooDerivedReal(other), _formula(other._formula)
 {
 }
 
@@ -100,11 +96,24 @@ Bool_t RooRealFormula::redirectServersHook(RooArgSet& newServerList, Bool_t must
 
 void RooRealFormula::printToStream(ostream& os, PrintOption opt) const
 {
-  // Print current value and definition of formula
-  os << "RooRealFormula: " << GetName() << " = " << GetTitle() << " = " << getVal();
-  if(!_unit.IsNull()) os << ' ' << _unit;
-  printAttribList(os) ;
-  os << endl ;
+  switch(opt) {
+  case OneLine:
+  case Standard:
+    // Print current value and definition of formula
+    os << "RooRealFormula: " << GetName() << " = " << GetTitle() << " = " << getVal();
+    if(!_unit.IsNull()) os << ' ' << _unit;
+    printAttribList(os) ;
+    os << endl ;
+    break ;
+
+  case Verbose:
+    RooAbsArg::printToStream(os,opt) ;
+    break ;
+
+  case Shape:
+    cout << "RooRealFormula: " << GetName() << " Shape printing not implemented yet" << endl ;
+    break ;
+  }
 } 
 
 

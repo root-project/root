@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.3 2001/03/29 01:59:09 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.4 2001/03/29 22:37:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,7 +31,7 @@ public:
   virtual ~RooAbsReal();
 
   // Return value and unit accessors
-  virtual Double_t getVal() const ;
+  virtual Double_t getVal() const { return _value ; }
   Bool_t operator==(Double_t value) const ;
   inline const Text_t *getUnit() const { return _unit.Data(); }
   inline void setUnit(const char *unit) { _unit= unit; }
@@ -60,11 +60,6 @@ public:
 protected:
   friend class RooDataSet ;
   RooAbsArg& operator=(RooAbsArg& other) ;
-
-  // Function evaluation and error tracing
-  Double_t traceEval() const ;
-  virtual Bool_t traceEvalHook(Double_t value) const {}
-  virtual Double_t evaluate() const { return 0 ; }
 
   // Internal consistency checking (needed by RooDataSet)
   virtual Bool_t isValid() const ;

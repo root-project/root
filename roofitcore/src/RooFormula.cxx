@@ -26,10 +26,17 @@ RooFormula::RooFormula() : TFormula()
 }
 
 RooFormula::RooFormula(const char* name, const char* formula, RooArgSet& list) : 
-  TFormula(), _origList(&list), _isOK(kTRUE) 
+  TFormula(), _isOK(kTRUE) 
 {
   SetName(name) ;
   SetTitle(formula) ;
+
+  TIterator* iter = list.MakeIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    _origList.Add(arg) ;
+  }
+  
 
   if (Compile()) {
     cout << "RooFormula::RooFormula(" << GetName() << "): compile error" << endl ;
@@ -57,14 +64,50 @@ Bool_t RooFormula::reCompile(const char* newFormula)
 
 
 RooFormula::RooFormula(const char* name, const RooFormula& other) : 
-  TFormula(other), _origList(other._origList), _isOK(other._isOK) 
+  TFormula(other), _isOK(other._isOK) 
 {
   SetName(name) ;
+  initCopy(other) ;
+}
 
+
+RooFormula::RooFormula(const RooFormula& other) : 
+  TFormula(other), _isOK(other._isOK) 
+{
+  initCopy(other) ;
+}
+
+
+void RooFormula::initCopy(const RooFormula& other)
+{
+  TIterator* iter = other._origList.MakeIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    _origList.Add(arg) ;
+  }
+  
   int i ;
   for (i=0 ; i<other._useList.GetEntries() ; i++) {
     _useList.Add(other._useList.At(i)) ;
   }
+}
+
+
+TObject* RooFormula::Clone() {
+  
+  // Streamer-based clone()
+  RooFormula* clone = (RooFormula*) TObject::Clone() ;
+
+  TIterator* oIter = _origList.MakeIterator() ;
+  TObject *obj ;
+  while (obj = oIter->Next()) clone->_origList.Add(obj) ;
+  delete oIter ;
+
+  TIterator* uIter = _useList.MakeIterator() ;
+  while (obj = uIter->Next()) clone->_useList.Add(obj) ;
+  delete uIter ;
+
+  return clone ;
 }
 
 
@@ -169,7 +212,7 @@ RooFormula::DefinedVariable(TString &name)
   }
 
   // Defined internal reference code for given named variable 
-  RooAbsReal* rrv= (RooAbsReal*) _origList->find(argName) ;
+  RooAbsReal* rrv= (RooAbsReal*) _origList.FindObject(argName) ;
   if (!rrv) return -1 ;
   _useList.Add(rrv) ;
 

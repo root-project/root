@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.rdl,v 1.4 2001/03/22 15:31:25 verkerke Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.5 2001/03/27 01:20:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -48,6 +48,7 @@ public:
   // to a copied list. The variables in the copied list are independent
   // of the original variables.
   RooArgSet(const char *name, const RooArgSet& other);
+  virtual TObject* Clone() { return new RooArgSet(GetName(),*this); }
   RooArgSet& operator=(const RooArgSet& other);
   // Deep copy operator (copies all extern dependents into list)
   RooArgSet *snapshot() ;
@@ -67,9 +68,8 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) ;
   
   // Printing interface (human readable)
-  enum PrintOption {Standard=0} ;
-  virtual void printToStream(ostream& os, RooAbsArg::PrintOption opt=RooAbsArg::Standard) ;
-  void print(RooAbsArg::PrintOption opt=RooAbsArg::Standard) ;
+  virtual void printToStream(ostream& os, RooAbsArg::PrintOption opt=RooAbsArg::Standard) const ;
+  inline void Print(Option_t * = 0) const ;
 
   const char* GetName() { return _name.Data() ; }
 
