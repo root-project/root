@@ -148,6 +148,10 @@ N: Dave Morrison
 E: dave@bnl.gov
 D: library load path fixes, some Makefile updates
 
+N: Johannes Muelmenstaedt
+E: jmuelmen@socrates.Berkeley.EDU
+D: kerberos5 authentication module
+
 N: Pasha Murat
 E: murat@cdfsga.fnal.gov
 D: Lorentz vector classes, PDG interface
