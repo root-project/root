@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.40 2004/05/10 12:09:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.41 2004/05/14 08:18:39 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -548,7 +548,7 @@ TObject *TKey::ReadObj()
       // in principle user should call TKey::ReadObjectAny!
       return (TObject*)ReadObjectAny();
    }
-   
+
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
    if (!fBufferRef) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
@@ -675,8 +675,8 @@ void *TKey::ReadObjectAny()
    TDirectory *cursav = gDirectory;
    TClass *cl = gROOT->GetClass(fClassName.Data());
    if (!cl) {
-       Error("ReadObjectAny", "Unknown class %s", fClassName.Data());
-       return 0;
+      Error("ReadObjectAny", "Unknown class %s", fClassName.Data());
+      return 0;
    }
    // Create an instance of this class
 
@@ -702,16 +702,16 @@ void *TKey::ReadObjectAny()
          objbuf += nout;
       }
       if (nout) {
-         ((TClass*)cl)->Streamer((void*)pobj, *fBufferRef);    //read object
+         cl->Streamer((void*)pobj, *fBufferRef);    //read object
          delete [] fBuffer;
       } else {
          delete [] fBuffer;
-         //delete pobj;  //sorry I will get a leak but I cannot delete a void*
+         cl->Destructor(pobj);
          pobj = 0;
          goto CLEAR;
       }
    } else {
-      ((TClass*)cl)->Streamer((void*)pobj, *fBufferRef);    //read object
+      cl->Streamer((void*)pobj, *fBufferRef);    //read object
    }
 
    CLEAR:
