@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.5 2002/06/12 16:46:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.6 2002/06/20 15:07:34 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -167,7 +167,7 @@ void TGViewPort::SetHPos(Int_t xpos)
    if (!diff) return;
 
    fX0 = xpos;
-    
+
    gVirtualX->ClearArea(fContainer->GetId(),0,0,fWidth,fHeight);
    ((TGContainer*)fContainer)->DrawRegion(0,0,fWidth,fHeight);
 }
@@ -473,7 +473,7 @@ void TGContainer::RemoveItem(TGFrame *item)
    TIter next(fList);
    while ((el = (TGFrameElement *) next())) {
       if (item == el->fFrame) {
-         if (item == fLastActiveEl->fFrame) fLastActiveEl = 0;
+         if (fLastActiveEl && item == fLastActiveEl->fFrame) fLastActiveEl = 0;
          item->DestroyWindow();
          delete item;
          fList->Remove(el);
@@ -894,7 +894,7 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
          }
 #ifndef WIN32
          gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kPointer));
-#endif       
+#endif
    }
 
    if (fScrolling) {
@@ -1278,7 +1278,7 @@ TGFrameElement* TGContainer::FindFrame(const TString& name, Bool_t direction,
    TGFrameElement* el = 0;
    TString str;
    TString::ECaseCompare cmp = caseSensitive ? TString::kExact : TString::kIgnoreCase;
-   
+
    fLastDir = direction;
    fLastCase = caseSensitive;
    fLastName = name;
@@ -1297,21 +1297,21 @@ TGFrameElement* TGContainer::FindFrame(const TString& name, Bool_t direction,
    }
 
    TGLVEntry* lv = 0;
-   TObject* obj = 0; 
+   TObject* obj = 0;
 
    while (el) {
       if (!el->fFrame->InheritsFrom(TGLVEntry::Class())) continue;
-      
+
       lv = (TGLVEntry*)el->fFrame;
       obj = (TObject*)lv->GetUserData();
       str = obj->GetName();
-      
+
       idx = str.Index(name,0,cmp);
 
       if (idx!=kNPOS) {
          if (beginWith) {
             if (idx==0) return el;
-         } else { 
+         } else {
             return el;
          }
       }
