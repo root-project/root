@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.104 2003/03/04 22:24:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.105 2003/03/05 23:33:29 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -868,6 +868,7 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
    // with the top level parent branch
    if (fAddress == 0 && fTree->GetMakeClass() == 0) {
       TBranchElement *mother = (TBranchElement*)GetMother();
+//printf("GetEntry, branch=%s, mother=%s\n",GetName(),mother->GetName());
       TClass *cl = gROOT->GetClass(mother->GetClassName());
       if (fInfo && fInfo->GetOffsets()) fInfo->BuildOld();
       if (!mother || !cl) return 0;
@@ -1512,6 +1513,9 @@ void TBranchElement::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       TBranchElement::Class()->ReadBuffer(R__b, this);
    } else {
+      TDirectory *dirsav = fDirectory;
+      fDirectory = 0;  // to avoid recursive calls
+      
       TBranchElement::Class()->WriteBuffer(R__b, this);
 
       // make sure that all TStreamerInfo objects referenced by
@@ -1520,17 +1524,23 @@ void TBranchElement::Streamer(TBuffer &R__b)
       
       // if branch is in a separate file save this branch
       // as an independent key
-      TBranch *mother = GetMother();
+      if (!dirsav) return;
+      if (!dirsav->IsWritable()) {fDirectory = dirsav; return;}
       TDirectory *pdirectory = fTree->GetDirectory();
-      if (mother) pdirectory = mother->GetDirectory();
-      if (fDirectory && fDirectory != pdirectory) {
+      if (!pdirectory) {fDirectory = dirsav; return;}
+      const char *treeFileName = pdirectory->GetFile()->GetName();
+      TBranch *mother = GetMother();
+      const char *motherFileName = treeFileName;
+      if (mother && mother != this) {
+         motherFileName = mother->GetFileName();
+      }
+      if (fFileName.Length() > 0 && strcmp(motherFileName,fFileName.Data())) {
          TDirectory *cursav = gDirectory;
-         fDirectory->cd();
-         fDirectory = 0;  // to avoid recursive calls
+         dirsav->cd();
          Write();
-         fDirectory = gDirectory;
          cursav->cd();
       }
+      fDirectory = dirsav;
    }
 }
 
