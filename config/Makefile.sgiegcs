@@ -1,4 +1,4 @@
-# Makefile of ROOT for SGI IRIX 6.x with EGCS compiler
+# Makefile of ROOT for SGI IRIX 6.x with GCC 2.95.2 compiler
 
 PLATFORM      = sgi
 
@@ -11,8 +11,8 @@ NOOPT         =
 endif
 
 # Compiler:
-CXX           = g++ -ansi
-CC            = gcc -ansi
+CXX           = g++
+CC            = gcc
 CXXFLAGS      = -fsigned-char -Wall -fPIC $(EXTRA_CXXFLAGS)
 CFLAGS        = -fsigned-char -fPIC $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -fsigned-char -Wall -fPIC -DG__REGEXP1 \
@@ -29,11 +29,14 @@ SOFLAGS       = -shared
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lstdc++ -lm
+SYSLIBS       = -lgen -lstdc++ -lm
 XLIBS         = $(XPMLIB) -L/usr/X11R6/lib -lX11
 CILIBS        =  -lm -lgen -lbsd -lstdc++
 
 # Extras
 GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a
+
+# Fortran:
+F77LIBS       = -lftn
 
 
