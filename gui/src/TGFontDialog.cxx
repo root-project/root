@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.1 2004/04/13 09:52:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.2 2004/04/15 09:16:49 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -483,9 +483,12 @@ Bool_t TGFontDialog::GetFontProperties(const char *fontFamily)
    Int_t  i;
    for (i = 0; i < cnt; i++) {
       if (strstr(fontList[i], "-medium-r-")) styles[0]  = kTRUE;
+      if (strstr(fontList[i], "-normal-r-")) styles[0]  = kTRUE;
       if (strstr(fontList[i], "-bold-r-"))   styles[1]  = kTRUE;
       if (strstr(fontList[i], "-medium-i-")) styles[2]  = kTRUE;
       if (strstr(fontList[i], "-medium-o-")) styles[2]  = kTRUE;
+      if (strstr(fontList[i], "-normal-i-")) styles[2]  = kTRUE;
+      if (strstr(fontList[i], "-normal-o-")) styles[2]  = kTRUE;
       if (strstr(fontList[i], "-bold-i-"))   styles[3]  = kTRUE;
       if (strstr(fontList[i], "-bold-o-"))   styles[3]  = kTRUE;
    }

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.60 2004/04/17 17:56:40 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.61 2004/04/18 18:28:01 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -6808,12 +6808,21 @@ void TGWin32::GetRegionBox(Region_t reg, Rectangle_t * rect)
 //______________________________________________________________________________
 char **TGWin32::ListFonts(const char *fontname, Int_t /*max*/, Int_t &count)
 {
-   //
+   // Return list of font names matching "fontname".
 
-   char **fontlist;
-   Int_t fontcount = 0;
+   char  foundry[32], family[100], weight[32], slant[32], font_name[256];
+   char  **fontlist;
+   Int_t n1, fontcount = 0;
 
-   fontlist = gdk_font_list_new(fontname, &fontcount);
+   sscanf(fontname, "-%30[^-]-%100[^-]-%30[^-]-%30[^-]-%n",
+          foundry, family, weight, slant, &n1);
+   // replace "medium" by "normal"
+   if(!stricmp(weight,"medium")) {
+      sprintf(weight,"normal");
+   }
+   // since all sizes are allowed with TTF, just forget it...
+   sprintf(font_name, "-%s-%s-%s-%s-*", foundry, family, weight, slant);
+   fontlist = gdk_font_list_new(font_name, &fontcount);
    count = fontcount;
 
    if (fontcount > 0) return fontlist;
