@@ -27,10 +27,10 @@ CUSTOMEXE=$9
 shift
 
 if [ "$INCDIR" = "$ROOTSYS/include" ]; then
-   INCDIR=\$ROOTSYS/include
+   INCDIR=%ROOTSYS%/include
 fi
 if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
-   LIBDIR=\$ROOTSYS/lib
+   LIBDIR=%ROOTSYS%/lib
 fi
 
 rm -f __compiledata
@@ -40,16 +40,19 @@ echo "/* This is file is automatically generated */" > __compiledata
 echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type $CXX`"\" " >> __compiledata
 if [ "$CUSTOMSHARED" == "" ]; then 
-   echo "#define MAKESHAREDLIB  \"$CXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS -o \$SharedLib\"" >> __compiledata
+   echo "#define  MAKESHAREDLIB \"cl -TP -c $CXXFLAGS \$IncludePath  \$SourceFiles && bindexplib \$LibName \$ObjectFiles > \$LibName.def && lib -nologo -MACHINE:IX86 -out:\$LibName.lib \$ObjectFiles -def:\$LibName.def && link \$ObjectFiles -DLL $LDFLAGS -out:\$LibName.dll \$LibName.exp -LIBPATH:%ROOTSYS%/lib libCore.lib libCint.lib msvcrt.lib oldnames.lib kernel32.lib advapi32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib \" " >> __compiledata
 else
    echo "#defined MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
 fi
+
 if [ "$CUSTOMEXE" == "" ]; then 
-   echo "#define MAKEEXE \"$CXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles; $CXX \$ObjectFiles $LDFLAGS -o \$ExeName \$LinkedLibs $SYSLIBS\""  >> __compiledata
+   echo "#define MAKEEXE \"cl -TP -Iinclude -I../include -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles; link -opt:ref $LDFLAGS \$ObjectFiles \$LinkedLibs $SYSLIBS -out:\$ExeName \""  >> __compiledata
 else 
    echo "#define MAKEEXE \"$CUSTOMEXE\"" >> __compiledata
 fi
-echo "#define LINKEDLIBS \"-L$LIBDIR $ROOTLIBS $RINTLIBS \""  >> __compiledata
+
+echo "#define LINKEDLIBS \"-LIBPATH:%ROOTSYS% $ROOTLIBS $RINTLIBS \""  >> __compiledata
+
 echo "#define INCLUDEPATH \"-I$INCDIR\"" >> __compiledata
 echo "#define OBJEXT \"o\" " >> __compiledata
 echo "#define SOEXT \"$SOEXT\" " >> __compiledata
