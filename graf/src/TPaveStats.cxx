@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.15 2003/03/07 10:18:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.16 2003/04/04 16:47:50 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -174,7 +174,8 @@ void TPaveStats::Paint(Option_t *option)
    Double_t w, wtok[2];
    char *st, *sl=0;
    if (textsize == 0)  {
-      textsize = 0.85*yspace/(y2 - y1);
+      //textsize = 0.85*yspace/(y2 - y1);
+      textsize = 0.92*yspace/(y2 - y1);
       titlesize = textsize;
       wtok[0] = 0; wtok[1] = 0;
       while ((line = (TObject*) next())) {
