@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.10 2001/06/05 16:42:18 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.11 2002/06/12 16:46:11 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -76,5 +76,7 @@
 #pragma link C++ class TGRegionWithId;
 #pragma link C++ class TGImageMap;
 #pragma link C++ class TGApplication;
+#pragma link C++ class TGXYLayout;
+#pragma link C++ class TGXYLayoutHints;
 
 #endif
