@@ -1,0 +1,312 @@
+// @(#)root/matrix:$Name:  $:$Id: TQpDataDens.cxx,v 1.56 2004/02/12 13:03:00 brun Exp $
+// Authors: Fons Rademakers, Eddy Offermann   Mar 2004
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+/*************************************************************************
+ * Parts of this file are copied from the OOQP distribution and          *
+ * are subject to the following license:                                 *
+ *                                                                       *
+ * COPYRIGHT 2001 UNIVERSITY OF CHICAGO                                  *
+ *                                                                       *
+ * The copyright holder hereby grants you royalty-free rights to use,    *
+ * reproduce, prepare derivative works, and to redistribute this software*
+ * to others, provided that any changes are clearly documented. This     *
+ * software was authored by:                                             *
+ *                                                                       *
+ *   E. MICHAEL GERTZ      gertz@mcs.anl.gov                             *
+ *   Mathematics and Computer Science Division                           *
+ *   Argonne National Laboratory                                         *
+ *   9700 S. Cass Avenue                                                 *
+ *   Argonne, IL 60439-4844                                              *
+ *                                                                       *
+ *   STEPHEN J. WRIGHT     swright@cs.wisc.edu                           *
+ *   Computer Sciences Department                                        *
+ *   University of Wisconsin                                             *
+ *   1210 West Dayton Street                                             *
+ *   Madison, WI 53706   FAX: (608)262-9777                              *
+ *                                                                       *
+ * Any questions or comments may be directed to one of the authors.      *
+ *                                                                       *
+ * ARGONNE NATIONAL LABORATORY (ANL), WITH FACILITIES IN THE STATES OF   *
+ * ILLINOIS AND IDAHO, IS OWNED BY THE UNITED STATES GOVERNMENT, AND     *
+ * OPERATED BY THE UNIVERSITY OF CHICAGO UNDER PROVISION OF A CONTRACT   *
+ * WITH THE DEPARTMENT OF ENERGY.                                        *
+ *************************************************************************/
+
+#include "Riostream.h"
+#include "TQpDataDens.h"
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TQpDataDens                                                          //
+//                                                                      //
+// Data for the dense QP formulation                                    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+ClassImp(TQpDataDens)
+
+//______________________________________________________________________________
+TQpDataDens::TQpDataDens(Int_t nx,Int_t my,Int_t mz)
+  : TQpDataBase(nx,my,mz)
+{
+  fQ.ResizeTo(fNx,fNx);
+  fA.ResizeTo(fMy,fNx);
+  fC.ResizeTo(fMz,fNx);
+}
+
+//______________________________________________________________________________
+TQpDataDens::TQpDataDens(TVectorD &c_in,   TMatrixDSym &Q_in,
+                         TVectorD &xlow_in,TVectorD    &ixlow_in,
+                         TVectorD &xupp_in,TVectorD    &ixupp_in,
+                         TMatrixD &A_in,   TVectorD    &bA_in,
+                         TMatrixD &C_in,
+                         TVectorD &clow_in,TVectorD    &iclow_in,
+                         TVectorD &cupp_in,TVectorD    &icupp_in)
+{
+  fG   .ResizeTo(c_in)    ; fG    = c_in;
+  fBa  .ResizeTo(bA_in)   ; fBa   = bA_in;
+  fXloBound.ResizeTo(xlow_in) ; fXloBound = xlow_in;
+  fXloIndex.ResizeTo(ixlow_in); fXloIndex = ixlow_in;
+  fXupBound.ResizeTo(xupp_in) ; fXupBound = xupp_in;
+  fXupIndex.ResizeTo(ixupp_in); fXupIndex = ixupp_in;
+  fCloBound.ResizeTo(clow_in) ; fCloBound = clow_in;
+  fCloIndex.ResizeTo(iclow_in); fCloIndex = iclow_in;
+  fCupBound.ResizeTo(cupp_in) ; fCupBound = cupp_in;
+  fCupIndex.ResizeTo(icupp_in); fCupIndex = icupp_in;
+
+  fNx = fG.GetNrows();
+  fQ.Use(Q_in.GetNrows(),Q_in.GetNcols(),Q_in.GetMatrixArray());
+
+  fA.Use(A_in.GetNrows(),A_in.GetNcols(),A_in.GetMatrixArray());
+  fMy = fA.GetNrows();
+
+  fC.Use(C_in.GetNrows(),C_in.GetNcols(),C_in.GetMatrixArray());
+  fMz = fC.GetNrows();
+}
+
+//______________________________________________________________________________
+TQpDataDens::TQpDataDens(const TQpDataDens &another) : TQpDataBase(another)
+{
+  *this = another;
+} 
+
+//______________________________________________________________________________
+void TQpDataDens::Qmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x )
+{
+  y *= beta;
+  if (fQ.GetNoElements() > 0)
+    y += alpha*(fQ*x);
+}
+
+//______________________________________________________________________________
+void TQpDataDens::Amult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
+{ 
+  y *= beta;
+  if (fA.GetNoElements() > 0)
+    y += alpha*(fA*x);
+}
+
+//______________________________________________________________________________
+void TQpDataDens::Cmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
+{ 
+  y *= beta;
+  if (fC.GetNoElements() > 0)
+    y += alpha*(fC*x);
+}
+
+//______________________________________________________________________________
+void TQpDataDens::ATransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
+{ 
+  y *= beta;
+  if (fA.GetNoElements() > 0)
+    y += alpha*(TMatrixD(TMatrixD::kTransposed,fA)*x);
+}
+
+//______________________________________________________________________________
+void TQpDataDens::CTransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
+{ 
+  y *= beta;
+  if (fC.GetNoElements() > 0)
+    y += alpha*(TMatrixD(TMatrixD::kTransposed,fC)*x);
+}
+
+//______________________________________________________________________________
+Double_t TQpDataDens::DataNorm()
+{
+  Double_t norm = 0.0;
+
+  Double_t componentNorm = fG.NormInf();
+  if (componentNorm > norm) norm = componentNorm;
+
+  TMatrixDSym fQ_abs(fQ);
+  componentNorm = (fQ_abs.Abs()).Max();
+  if (componentNorm > norm) norm = componentNorm;
+ 
+  componentNorm = fBa.NormInf();
+  if (componentNorm > norm) norm = componentNorm;
+
+  TMatrixD fA_abs(fQ);
+  componentNorm = (fA_abs.Abs()).Max();
+  if (componentNorm > norm) norm = componentNorm;
+
+  TMatrixD fC_abs(fQ);
+  componentNorm = (fC_abs.Abs()).Max();
+  if (componentNorm > norm) norm = componentNorm;
+
+  Assert(fXloBound.MatchesNonZeroPattern(fXloIndex));
+  componentNorm = fXloBound.NormInf();
+  if (componentNorm > norm) norm = componentNorm;
+
+  Assert(fXupBound.MatchesNonZeroPattern(fXupIndex));
+  componentNorm = fXupBound.NormInf();
+  if (componentNorm > norm) norm = componentNorm;
+
+  Assert(fCloBound.MatchesNonZeroPattern(fCloIndex));
+  componentNorm = fCloBound.NormInf();
+  if (componentNorm > norm) norm = componentNorm;
+
+  Assert(fCupBound.MatchesNonZeroPattern(fCupIndex));
+  componentNorm = fCupBound.NormInf();
+  if (componentNorm > norm) norm = componentNorm;
+
+  return norm;
+}
+
+//______________________________________________________________________________
+void TQpDataDens::Print(Option_t * /*opt*/) const
+{
+  cout << "begin Q\n";
+  fQ.Print();
+  cout << "end fQ\n";
+  cout << "begin c\n";
+  fG.Print();
+  cout << "end c\n";
+
+  cout << "begin xlow\n";
+  fXloBound.Print();
+  cout << "end xlow\n";
+  cout << "begin ixlow\n";
+  fXloIndex.Print();
+  cout << "end ixlow\n";
+
+  cout << "begin xupp\n";
+  fXupBound.Print();
+  cout << "end xupp\n";
+  cout << "begin ixupp\n";
+  fXupIndex.Print();
+  cout << "end ixupp\n";
+
+  cout << "begin A\n";
+  fA.Print();
+  cout << "end A\n";
+  cout << "begin b\n";
+  fBa.Print();
+  cout << "end b\n";
+  cout << "begin C\n";
+  fC.Print();
+  cout << "end C\n";
+
+  cout << "begin clow\n";
+  fCloBound.Print();
+  cout << "end clow\n";
+  cout << "begin iclow\n";
+  fCloIndex.Print();
+  cout << "end iclow\n";
+
+  cout << "begin cupp\n";
+  fCupBound.Print();
+  cout << "end cupp\n";
+  cout << "begin icupp\n";
+  fCupIndex.Print();
+  cout << "end icupp\n";
+}
+
+//______________________________________________________________________________
+void TQpDataDens::PutQIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
+{
+  m.SetSub(row,col,fQ);
+}
+
+//______________________________________________________________________________
+void TQpDataDens::PutAIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
+{
+  m.SetSub(row,col,fA);
+}
+
+//______________________________________________________________________________
+void TQpDataDens::PutCIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
+{
+  m.SetSub(row,col,fC);
+}
+
+//______________________________________________________________________________
+void TQpDataDens::GetDiagonalOfQ(TVectorD &dq)
+{
+  const Int_t n = TMath::Min(fQ.GetNrows(),fQ.GetNcols());
+  dq.ResizeTo(n);
+  dq = TMatrixDDiag(fQ);
+}
+
+//______________________________________________________________________________
+Double_t TQpDataDens::ObjectiveValue(TQpVar *vars)
+{
+  TVectorD tmp(fG);
+  this->Qmult(1.0,tmp,0.5,vars->fX);
+
+  return tmp*vars->fX;
+}
+
+//______________________________________________________________________________
+void TQpDataDens::DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s)
+{
+  Double_t ix = 3074.20374;
+
+  TVectorD xdual(fNx);
+  this->RandomlyChooseBoundedVariables(x,xdual,fXloBound,fXloIndex,fXupBound,fXupIndex,ix,.25,.25,.25);
+  TVectorD sprime(fMz);
+  this->RandomlyChooseBoundedVariables(sprime,z,fCloBound,fCloIndex,fCupBound,fCupIndex,ix,.25,.25,.5);
+
+  fQ.RandomizePD(0.0,1.0,ix);
+  fA.Randomize(-10.0,10.0,ix);
+  fC.Randomize(-10.0,10.0,ix);
+  y .Randomize(-10.0,10.0,ix);
+
+  fG = xdual;
+  fG -= fQ*x;
+
+  fG += TMatrixD(TMatrixD::kTransposed,fA)*y;
+  fG += TMatrixD(TMatrixD::kTransposed,fC)*z;
+
+  fBa = fA*x;
+  s   = fC*x;
+
+  // Now compute the real q = s-sprime
+  const TVectorD q = s-sprime;
+
+  // Adjust fCloBound and fCupBound appropriately
+  Add(fCloBound,1.0,q);
+  Add(fCupBound,1.0,q);
+
+  fCloBound.SelectNonZeros(fCloIndex);
+  fCupBound.SelectNonZeros(fCupIndex);
+}
+
+//______________________________________________________________________________
+TQpDataDens &TQpDataDens::operator=(const TQpDataDens &source)
+{                                                                        
+  if (this != &source) {
+    TQpDataBase::operator=(source);                                      
+    fQ.ResizeTo(source.fQ); fQ = source.fQ;
+    fA.ResizeTo(source.fA); fA = source.fA;
+    fC.ResizeTo(source.fC); fC = source.fC;
+  }
+  return *this;
+}
