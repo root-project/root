@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.7 2000/07/17 10:26:41 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.8 2000/07/18 16:35:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -40,6 +40,7 @@ class TSlave;
 class TPacketGenerator;
 class TSQLResult;
 class TSelector;
+class TPrincipal;
 
 class TTreePlayer : public TVirtualTreePlayer {
 
@@ -108,6 +109,8 @@ public:
     virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     MakeClass(const char *classname=0, Option_t *option="");
     virtual Int_t     MakeCode(const char *filename=0);
+    TPrincipal       *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
+                       ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     Scan(const char *varexp="", const char *selection="", Option_t *option=""

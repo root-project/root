@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.16 2000/07/19 06:55:49 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.17 2000/08/11 20:39:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -253,6 +253,7 @@
 #include "Foption.h"
 #include "TTreeResult.h"
 #include "TTreeRow.h"
+#include "TPrincipal.h"
 #include "Api.h"
 
 R__EXTERN Foption_t Foption;
@@ -2097,6 +2098,122 @@ void TTreePlayer::MakeIndex(TString &varexp, Int_t *index)
       }
    }
    index[ivar] = varexp.Length();
+}
+
+//______________________________________________________________________________
+TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
+{
+//*-*-*-*-*-*-*-*-*Interface to the Principal Components Analysis class*-*-*
+//*-*              ====================================================
+// 
+//   Create an instance of TPrincipal
+//   Fill it with the selected variables
+//   if option "n" is specified, the TPrincipal object is filled with
+//                 normalized variables.
+//   If option "p" is specified, compute the principal components
+//   If option "p" and "d" print results of analysis
+//   If option "p" and "h" generate standard histograms
+//   If option "p" and "c" generate code of conversion functions
+//   return a pointer to the TPrincipal object. It is the user responsability
+//   to delete this object.
+//   The option default value is "np"
+//
+//   see TTreePlayer::DrawSelect for explanation of the other parameters.
+   
+   TTreeFormula *select, **var;
+   TString *cnames;
+   TString onerow;
+   TString opt = option;
+   opt.ToLower();
+   TPrincipal *principal = 0;
+   Int_t entry,entryNumber,i,nch;
+   Int_t *index = 0;
+   Int_t ncols = 8;   // by default first 8 columns are printed only
+   TObjArray *leaves = fTree->GetListOfLeaves();
+   Int_t nleaves = leaves->GetEntriesFast();
+   if (nleaves < ncols) ncols = nleaves;
+   nch = varexp ? strlen(varexp) : 0;
+   Int_t lastentry = firstentry + nentries -1;
+   if (lastentry > fTree->GetEntries()-1) {
+      lastentry  = (Int_t)fTree->GetEntries() -1;
+      nentries   = lastentry - firstentry + 1;
+   }
+
+//*-*- Compile selection expression if there is one
+   select = 0;
+   if (strlen(selection)) {
+      select = new TTreeFormula("Selection",selection,fTree);
+      if (!select) return principal;
+      if (!select->GetNdim()) { delete select; return principal; }
+   }
+//*-*- if varexp is empty, take first 8 columns by default
+   int allvar = 0;
+   if (!strcmp(varexp, "*")) { ncols = nleaves; allvar = 1; }
+   if (nch == 0 || allvar) {
+      cnames = new TString[ncols];
+      for (i=0;i<ncols;i++) {
+         cnames[i] = ((TLeaf*)leaves->At(i))->GetName();
+      }
+//*-*- otherwise select only the specified columns
+   } else {
+      ncols = 1;
+      onerow = varexp;
+      for (i=0;i<onerow.Length();i++)  if (onerow[i] == ':') ncols++;
+      cnames = new TString[ncols];
+      index  = new Int_t[ncols+1];
+      MakeIndex(onerow,index);
+      for (i=0;i<ncols;i++) {
+         cnames[i] = GetNameByIndex(onerow,index,i);
+      }
+   }
+   var = new TTreeFormula* [ncols];
+   Double_t *xvars = new Double_t[ncols];
+   
+//*-*- Create the TreeFormula objects corresponding to each column
+   for (i=0;i<ncols;i++) {
+      var[i] = new TTreeFormula("Var1",cnames[i].Data(),fTree);
+   }
+
+   //*-* Build the TPrincipal object
+   if (opt.Contains("n")) principal = new TPrincipal(ncols, "n");
+   else                   principal = new TPrincipal(ncols);
+      
+//*-*- loop on all selected entries
+   fSelectedRows = 0;
+   for (entry=firstentry;entry<firstentry+nentries;entry++) {
+      entryNumber = fTree->GetEntryNumber(entry);
+      if (entryNumber < 0) break;
+      fTree->LoadTree(entryNumber);
+      if (select) {
+         select->GetNdata();
+         if (select->EvalInstance(0) == 0) continue;
+      }
+      onerow = Form("* %8d ",entryNumber);
+      for (i=0;i<ncols;i++) {
+         xvars[i] = var[i]->EvalInstance(0);
+      }
+      principal->AddRow(xvars);
+   }
+
+//*-* some actions with principal ?
+   if (opt.Contains("p")) {
+        principal->MakePrincipals(); // Do the actual analysis
+        if (opt.Contains("d")) principal->Print();
+        if (opt.Contains("h")) principal->MakeHistograms();
+        if (opt.Contains("c")) principal->MakeCode();
+   }
+   
+//*-*- delete temporary objects
+   delete select;
+   for (i=0;i<ncols;i++) {
+      delete var[i];
+   }
+   delete [] var;
+   delete [] cnames;
+   delete [] index;
+   delete [] xvars;
+   
+   return principal;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.11 2000/07/19 06:55:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.12 2000/08/10 07:01:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -81,6 +81,7 @@ class TPolyMarker;
 class TEventList;
 class TSQLResult;
 class TSelector;
+class TPrincipal;
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -202,6 +203,8 @@ public:
     virtual Int_t     MakeCode(const char *filename=0);
     virtual Int_t     MakeSelector(const char *selector=0);
     Bool_t            MemoryFull(Int_t nbytes);
+    TPrincipal       *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
+                       ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      Print(Option_t *option=""); // *MENU*
     virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual Int_t     Process(TSelector *selector, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0);

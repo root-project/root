@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.17 2000/08/10 07:01:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.18 2000/08/11 20:39:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1554,6 +1554,39 @@ Bool_t TTree::MemoryFull(Int_t nbytes)
 
    if (fTotalBuffers + nbytes < fMaxVirtualSize) return kFALSE;
    return kTRUE;
+}
+
+//______________________________________________________________________________
+TPrincipal *TTree::Principal(const char *varexp, const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
+{
+//*-*-*-*-*-*-*-*-*Interface to the Principal Components Analysis class*-*-*
+//*-*              ====================================================
+// 
+//   Create an instance of TPrincipal
+//   Fill it with the selected variables
+//   if option "n" is specified, the TPrincipal object is filled with
+//                 normalized variables.
+//   If option "p" is specified, compute the principal components
+//   If option "p" and "d" print results of analysis
+//   If option "p" and "h" generate standard histograms
+//   If option "p" and "c" generate code of conversion functions
+//   return a pointer to the TPrincipal object. It is the user responsability
+//   to delete this object.
+//   The option default value is "np"
+//
+//   see TTree::Draw for explanation of the other parameters.
+//
+//   The created object is  named "principal" and a reference to it
+//   is added to the list of specials Root objects.
+//   you can retrieve a pointer to the created object via:
+//      TPrincipal *principal = 
+//        (TPrincipal*)gROOT->GetListOfSpecials()->FindObject("principal");
+//
+
+
+   GetPlayer();
+   if (fPlayer) return fPlayer->Principal(varexp,selection,option,nentries,firstentry);
+   else         return 0;
 }
 
 //______________________________________________________________________________
