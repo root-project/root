@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.6 2000/06/15 06:51:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.7 2000/06/30 13:32:39 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -608,9 +608,9 @@ void TAxis::SetRange(Int_t first, Int_t last)
 //          Set the viewing range for the axis from bin first to last
 
    if (last == 0) last = fNbins;
-   if (last < first) return;
    if (last > fNbins) last = fNbins;
-   if (first < 1) first = 1;
+   if (last  < first) first = 1;
+   if (first < 1)     first = 1;
    if (first == 1 && last == fNbins) {
       SetBit(kAxisRange,0);
       fFirst = 0;
