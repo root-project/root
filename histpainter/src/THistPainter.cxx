@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.64 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.65 2002/01/24 11:39:29 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -135,10 +135,14 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       return big;
    }
 //     check if point is close to an axis
+   TString doption = gPad->GetPadPointer()->GetDrawOption();
+   doption.ToLower();
+   Bool_t dsame = kFALSE;
+   if (doption.Contains("same")) dsame = kTRUE;
    Int_t xyaxis = puxmin - Int_t((puxmax-puxmin)*fYaxis->GetLabelOffset());
    Int_t dyaxis = Int_t(2*(puymin-puymax)*fYaxis->GetLabelSize());
    if (px >= xyaxis-dyaxis && px <= xyaxis && py >puymax && py < puymin) {
-      if (!strstr(gPad->GetPadPointer()->GetDrawOption(),"same")) {
+      if (!dsame) {
          if (gPad->IsVertical()) gPad->SetSelected(fYaxis);
          else                    gPad->SetSelected(fXaxis);
          return 0;
@@ -148,7 +152,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    if (yxaxis < puymin) yxaxis = puymin;
    Int_t dxaxis = Int_t((puymin-puymax)*fXaxis->GetLabelSize());
    if (py <= yxaxis+dxaxis && py >= yxaxis && px <puxmax && px > puxmin) {
-      if (!strstr(gPad->GetPadPointer()->GetDrawOption(),"same")) {
+      if (!dsame) {
          if (gPad->IsVertical()) gPad->SetSelected(fXaxis);
          else                    gPad->SetSelected(fYaxis);
          return 0;
