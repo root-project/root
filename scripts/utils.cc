@@ -1,6 +1,13 @@
 // Utilities to be used by some scripts.
 // To load them up copy the rootlogon_template.C into the current directory.
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
+#include <stdio.h>
+#include "snprintf.h"
+
 #include "TError.h"
 #include "TSystem.h"
 
