@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.9 2003/04/02 06:24:32 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.10 2003/04/03 16:55:12 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -67,7 +67,8 @@ TSelectorCint::~TSelectorCint()
 
 
 //______________________________________________________________________________
-void TSelectorCint::SetFuncProto(G__CallFunc *cf, G__ClassInfo* cl, const char* fname, const char* argtype)
+void TSelectorCint::SetFuncProto(G__CallFunc *cf, G__ClassInfo* cl,
+                                 const char* fname, const char* argtype)
 {
    Long_t offset = 0;
 

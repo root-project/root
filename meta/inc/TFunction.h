@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.h,v 1.3 2002/06/26 08:04:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.h,v 1.4 2002/11/26 10:24:09 brun Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -45,16 +45,16 @@ protected:
 
 public:
    TFunction(G__MethodInfo *info = 0);
-   virtual     ~TFunction();
-   virtual const char     *GetMangledName() const; 
-   virtual const char     *GetPrototype() const; 
-   const char  *GetSignature();
-   const char  *GetReturnTypeName() const;
-   TList       *GetListOfMethodArgs();
-   Int_t        GetNargs() const;
-   Int_t        GetNargsOpt() const;
-   void        *InterfaceMethod() const;
-   Long_t       Property() const;
+   virtual            ~TFunction();
+   virtual const char *GetMangledName() const;
+   virtual const char *GetPrototype() const;
+   const char         *GetSignature();
+   const char         *GetReturnTypeName() const;
+   TList              *GetListOfMethodArgs();
+   Int_t               GetNargs() const;
+   Int_t               GetNargsOpt() const;
+   void               *InterfaceMethod() const;
+   Long_t              Property() const;
 
    ClassDef(TFunction,0)  //Dictionary for global function
 };
