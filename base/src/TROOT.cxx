@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.22 2000/12/14 09:11:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.23 2000/12/15 18:10:27 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1333,7 +1333,7 @@ const char *TROOT::GetMacroPath()
    #endif
 #elif !defined(__VMS)
    #ifdef ROOTMACRODIR
-         macropath = ".;" ROOTMACROPATH;
+         macropath = ".;" ROOTMACRODIR;
    #else
          macropath = StrDup(Form(".;%s/macros", gRootDir));
    #endif
