@@ -107,16 +107,20 @@ TESTBITSO     = testbits.$(ObjSuf)
 TESTBITSS     = testbits.$(SrcSuf)
 TESTBITS      = testbits$(ExeSuf)
 
+QPRANDOMO     = QpRandomDriver.$(ObjSuf)
+QPRANDOMS     = QpRandomDriver.$(SrcSuf)
+QPRANDOM      = QpRandomDriver$(ExeSuf)
+
 
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
-                $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO) $(TESTBITSO) $(CTORTUREO)
+                $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO) $(TESTBITSO) $(CTORTUREO) $(QPRANDOMO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
-                $(STRESSGEOM) $(STRESSL) $(TESTBITS) $(CTORTURE)
+                $(STRESSGEOM) $(STRESSL) $(TESTBITS) $(CTORTURE) $(QPRANDOM)
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(GUIVIEWER) $(TETRISSO)
@@ -205,6 +209,10 @@ $(STRESSL):     $(STRESSLO)
 		@echo "$@ done"
 
 $(TESTBITS):    $(TESTBITSO)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(QPRANDOM):    $(QPRANDOMO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
