@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.45 2003/07/01 14:18:27 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.46 2003/08/29 10:41:28 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -315,6 +315,7 @@ TProofServ::TProofServ(int *argc, char **argv)
 
    TAuthenticate::SetGlobalUser(fUser);
    TAuthenticate::SetGlobalPasswd(fPasswd);
+   TAuthenticate::SetGlobalPwHash(fPwHash);
 
    // Read info transmitted from the client ...
    ReadProofAuth();
@@ -1437,6 +1438,8 @@ void TProofServ::Setup()
    fSocket->Recv(fProtocol, what);
    fSocket->Send(kPROOF_Protocol, kROOTD_PROTOCOL);
 
+#if 0
+
    TMessage *mess;
    fSocket->Recv(mess);
 
@@ -1451,6 +1454,39 @@ void TProofServ::Setup()
    }
 
    delete mess;
+
+#else
+
+   // First receive, decode and store the public part of RSA key
+   TMessage *pubkey;
+   fSocket->Recv(pubkey);
+
+   TString PubKey;
+   (*pubkey) >> PubKey;
+
+   TAuthenticate::SetRSAPublic(PubKey.Data());
+
+   delete pubkey;
+
+   // Receive passwd
+   char *Passwd = 0;
+   TAuthenticate::SecureRecv(fSocket, 2, &Passwd);
+   fPasswd = Passwd;
+   delete[] Passwd;
+
+   // Receive user and passwd information
+   TMessage *mess;
+
+   fSocket->Recv(mess);
+
+   if (IsMaster())
+      (*mess) >> fUser >> fPwHash >> fConfFile;
+   else
+      (*mess) >> fUser >> fPwHash >> fOrdinal;
+
+   delete mess;
+
+#endif
 
    // deny write access for group and world
    gSystem->Umask(022);
@@ -1739,7 +1775,7 @@ void TProofServ::ReadProofAuth()
                        if (jm == -1) {
                           // Add a method ...
                           hostAuth->AddMethod(meth[i], det[i]);
-		       } else {
+                       } else {
                           // Set a new details string ...
                           hostAuth->SetDetails(meth[i], det[i]);
                        }
@@ -1754,7 +1790,7 @@ void TProofServ::ReadProofAuth()
                     det[i] = 0; meth[i] = -1;
                   }
                   nmet = 0;
-	       }
+               }
                // Close the file
                fclose(fpa);
                // Unlink (=delete) the file

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.2 2003/09/01 11:30:45 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -169,6 +169,15 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
                ErrorInfo
                    ("GlbsToolCheckCert: read cert key map files: %s %s %s %s",
                     dir_tmp, cert_tmp, key_tmp, map_tmp);
+            // Cleanup memory
+            if (dir_tmp)
+               delete[]dir_tmp;
+            if (cert_tmp)
+               delete[]cert_tmp;
+            if (key_tmp)
+               delete[]key_tmp;
+            if (map_tmp)
+               delete[]map_tmp;
          }
          fclose(fconf);
 
@@ -261,6 +270,15 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
    return 1;
 
  found:
+   if (dir_tmp)
+      delete[]dir_tmp;
+   if (cert_tmp)
+      delete[]cert_tmp;
+   if (key_tmp)
+      delete[]key_tmp;
+   if (map_tmp)
+      delete[]map_tmp;
+
    if (CertFound) {
       // Get the subject name
       char *subject_name =

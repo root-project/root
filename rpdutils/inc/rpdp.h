@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.2 2003/08/29 17:23:32 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.3 2003/09/07 18:25:47 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -39,7 +39,9 @@ const int  kMAXSEC           = 6;
 const int  kMAXSECBUF        = 2048;
 const int  kAUTH_REUSE_MSK   = 0x1;
 const int  kAUTH_CRYPT_MSK   = 0x2;
+const int  kAUTH_SSALT_MSK   = 0x4;
 const int  kMAXPATHLEN       = 1024;
+const int  kMAXTABSIZE       = 1000000000;
 
 // type of authentication method
 enum  ESecurity { kClear, kSRP, kKrb5, kGlobus, kSSH, kRfio };
@@ -62,6 +64,7 @@ extern int  gParallel;
 extern int  gRemPid;
 extern int  gReUseAllow;
 extern int  gReUseRequired;
+extern int  gSaltRequired;
 extern int  gSockFd;
 extern int  gSshdPort;
 
@@ -142,7 +145,7 @@ int  RpdCheckAuthAllow(int Sec, char *Host);
 int  RpdCheckHostWild(const char *Host, const char *host);
 char *RpdGetIP(const char *host);
 void RpdSendAuthList();
-void RpdCheckSession(int period);
+void RpdCheckSession();
 
 void RpdUser(const char *sstr);
 void RpdSshAuth(const char *sstr);

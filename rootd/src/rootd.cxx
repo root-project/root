@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.57 2003/09/07 16:25:53 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.58 2003/09/07 18:25:47 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -114,8 +114,6 @@
 //   -T <tmpdir>       specifies the directory path to be used to place //
 //                     temporary files; default is /usr/tmp.            //
 //                     Useful if not running as root.                   //
-//   -t period         defines the period (in hours) for cleaning of    //
-//                     the authentication table <tmpdir>/rpdauthtab     //
 //   -G gridmapfile    defines the gridmap file to be used for globus   //
 //                     authentication if different from globus default  //
 //                     (/etc/grid-security/gridmap); (re)defines the    //
@@ -330,7 +328,6 @@ enum { kBinary, kAscii };
 int     gAuthListSent            = 0;
 double  gBytesRead               = 0;
 double  gBytesWritten            = 0;
-int     gCleaningPeriod          = 24;       // period for Auth table cleanup (default 1 day = 24 hours)
 char    gConfDir[kMAXPATHLEN]    = { 0 };    // Needed to localize root stuff if not running as root
 int     gDebug                   = 0;
 int     gDownloaded              = 0;
@@ -397,7 +394,6 @@ void ErrFatal(int level,const char *msg)
 {
    Perror((char *)msg);
    if (level > -1) NetSendError((ERootdErrors)level);
-   RootdAuthCleanup("0",0);
    RootdClose();
    exit(1);
 }
@@ -1990,7 +1986,7 @@ void RootdLoop()
    RpdSetDebugFlag(gDebug);
 
    // CleanUp authentication table, if needed or required ...
-   RpdCheckSession(gCleaningPeriod);
+   RpdCheckSession();
 
    // Get Host name
    const char *OpenHost = NetRemoteHost();
@@ -2287,15 +2283,6 @@ int main(int argc, char **argv)
                   Error(ErrFatal, kErrFatal, "-T requires a dir path for temporary files [/usr/tmp]");
                }
                sprintf(gTmpDir, "%s", *++argv);
-               break;
-
-            case 't':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr, "-t requires as argument a period (in hours) of cleaning for the auth table\n");
-                  Error(ErrFatal, kErrFatal, "-t requires as argument a period (in hours) of cleaning for the auth table");
-               }
-               gCleaningPeriod = atoi(*++argv);
                break;
 
             case 's':

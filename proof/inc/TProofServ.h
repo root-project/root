@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.14 2003/06/27 11:02:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.15 2003/08/29 10:41:28 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -68,8 +68,9 @@ private:
    Int_t       fGroupId;          //slave unique id in the active slave group
    Int_t       fGroupSize;        //size of the active slave group
    Int_t       fLogLevel;         //debug logging level
-   Bool_t      fMasterServ;       //true if we are a master server
    Int_t       fNcmd;             //command history number
+   Bool_t      fPwHash;           //true if fPasswd is a passwd hash
+   Bool_t      fMasterServ;       //true if we are a master server
    Bool_t      fInterrupt;        //if true macro execution will be stopped
    Float_t     fRealTime;         //real time spent executing commands
    Float_t     fCpuTime;          //CPU time spent executing commands

@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:$:$Id:$
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -159,7 +159,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    if (gDebug > 2)
       Info("GlobusAuthenticate", " Issuer name is %s (%d)", isuj,
            strlen(isuj));
-   SafeDelete(stmp);
+   if (stmp) delete[] stmp;
 
    // Get credential handle ... either genuine or delegated
    if (GlobusGetCredHandle(gLocalCallEnv, &GlbCredHandle)) {
@@ -214,11 +214,11 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
                                   gDetails, Options, &kind,
                                   &retval)) == 1) {
       // A valid authentication exists: we are done ...
-      SafeDelete(Options);
+      if (Options) delete[] Options;
       return 1;
    }
    if (rc == -2) {
-      SafeDelete(Options);
+      if (Options) delete[] Options;
       return rc;
    }
    // If server does not support Globus authentication we can't continue ...
@@ -237,7 +237,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
             bsnd - 1, strlen(buf));
       return 0;
    }
-   SafeDelete(buf);
+   if (buf) delete[] buf;
    // Now we send it to the server daemon
    if ((bsnd = sock->Send(isuj, kMESS_STRING)) != (int) (strlen(isuj) + 1)) {
       Error("GlobusAuthenticate",
@@ -304,7 +304,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
        GSS_S_COMPLETE) {
       GlobusError("GlobusAuthenticate: gss_assist_init_sec_context",
                   MajStat, MinStat, GlbTokenStatus);
-      SafeDelete(host_subj);
+      if (host_subj) delete[] host_subj;
       return 0;
    } else {
       GlobusStoreSecContext((char *) hostFQDN, GlbContextHandle, ssuj);
@@ -318,7 +318,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    }
 
    // Now we have the subject and we can release some resources ...
-   SafeDelete(host_subj);
+   if (host_subj) delete[] host_subj;
 
    // Receive username used for login or key request info and type of key
    int nrec = sock->Recv(retval, type);	// returns user
@@ -399,11 +399,11 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
               " it looks like server did not authenticate ");
 
    // free allocated memory ...
-   SafeDelete(isuj);
-   SafeDelete(ssuj);
-   SafeDelete(rfrm);
-   SafeDelete(lUser);
-   SafeDelete(Token);
+   if (isuj) delete[] isuj;
+   if (ssuj) delete[] ssuj;
+   if (rfrm) delete[] rfrm;
+   if (lUser) delete[] lUser;
+   if (Token) delete[] Token;
 
    // return result
    return auth;
@@ -447,7 +447,7 @@ int GlobusGetDelCred()
            "Globus Credentials successfully imported (0x%x)",
            GlbDelCredHandle);
 
-   SafeDelete(credential);
+   if (credential) delete[] credential;
 
    // Detach from shared memory segment
    int rc = shmdt((const void *) databuf);
@@ -492,7 +492,7 @@ void GlobusError(char *mess, OM_uint32 majs, OM_uint32 mins, int toks)
    Error(":Error: %s (majst=%d,minst=%d,tokst:%d)", GlbErr, majs, mins,
          toks);
 
-   SafeDelete(GlbErr);
+   if (GlbErr) delete[] GlbErr;
 }
 
 //______________________________________________________________________________
@@ -529,9 +529,9 @@ int GlobusStoreSecContext(char *host, gss_ctx_id_t context_handle,
       subjGlbSecCont[NumGlbSecCont - 1] = strdup(client_name);
       sptrGlbSecCont[NumGlbSecCont - 1] = context_handle;
 
-      SafeDelete(tmph);
-      SafeDelete(tmpc);
-      SafeDelete(tmps);
+      if (tmph) delete[] tmph;
+      if (tmpc) delete[] tmpc;
+      if (tmps) delete[] tmps;
 
    } else {
 
@@ -671,13 +671,13 @@ int GlobusGetNames(int LocalEnv, char **IssuerName, char **SubjectName)
       Error("GlobusGetNames", "requested file %s does not exist",
             cert_file);
       //     retval= 2;
-      SafeDelete(cert_file);
+      if (cert_file) delete[] cert_file;
       return 2;
    } else if (access(cert_file, R_OK)) {
       Error("GlobusGetNames", "no permission to read requested file %s",
             cert_file);
       //     retval= 4;
-      SafeDelete(cert_file);
+      if (cert_file) delete[] cert_file;
       return 4;
    } else if (gDebug > 3) {
       Info("GlobusGetNames", "File with certificate: %s", cert_file);
@@ -686,7 +686,7 @@ int GlobusGetNames(int LocalEnv, char **IssuerName, char **SubjectName)
    FILE *fcert = fopen(cert_file, "r");
    if (fcert == 0 || !PEM_read_X509(fcert, &xcert, 0, 0)) {
       Error("GlobusGetNames", "Unable to load user certificate ");
-      SafeDelete(cert_file);
+      if (cert_file) delete[] cert_file;
       return 5;
    }
    fclose(fcert);
@@ -703,7 +703,7 @@ int GlobusGetNames(int LocalEnv, char **IssuerName, char **SubjectName)
       Info("GlobusGetNames", "Subject Name: %s", *SubjectName);
    }
 
-   SafeDelete(cert_file);
+   if (cert_file) delete[] cert_file;
 
    // Now check if there is a proxy file associated with this user
    int nProxy = 1;
@@ -737,8 +737,8 @@ int GlobusGetNames(int LocalEnv, char **IssuerName, char **SubjectName)
       if (strstr(ProxyIssuerName, *SubjectName) == ProxyIssuerName) {
          gNeedProxy = 0;
          setenv("X509_USER_PROXY", proxy_file, 1);
-         SafeDelete(ProxyIssuerName);
-         SafeDelete(ProxySubjectName);
+         if (ProxyIssuerName) delete[] ProxyIssuerName;
+         if (ProxySubjectName) delete[] ProxySubjectName;
          if (gDebug > 3)
             Info("GlobusGetNames", "Using Proxy file:%s (gNeedProxy:%d)",
                  getenv("X509_USER_PROXY"), gNeedProxy);
@@ -747,8 +747,8 @@ int GlobusGetNames(int LocalEnv, char **IssuerName, char **SubjectName)
       } else {
          sprintf(proxy_file, "/tmp/x509up_u%d.%d", getuid(), nProxy);
          nProxy++;
-         SafeDelete(ProxyIssuerName);
-         SafeDelete(ProxySubjectName);
+         if (ProxyIssuerName) delete[] ProxyIssuerName;
+         if (ProxySubjectName) delete[] ProxySubjectName;
          goto again;
       }
    } else {
@@ -992,9 +992,9 @@ int GlobusUpdateSecContInfo(int entry)
    }
 
    // Update reference table
-   SafeDelete(hostGlbSecCont);
-   SafeDelete(subjGlbSecCont);
-   SafeDelete(sptrGlbSecCont);
+   if (hostGlbSecCont) delete[] hostGlbSecCont;
+   if (subjGlbSecCont) delete[] subjGlbSecCont;
+   if (sptrGlbSecCont) delete[] sptrGlbSecCont;
    NumGlbSecCont = nGoodCont;
 
    if (NumGlbSecCont > 0) {
@@ -1123,32 +1123,28 @@ void GlobusSetCertificates(int LocalEnv)
                 || !strncmp(tmpvar[i], "Cd:", 3)
                 || !strncmp(tmpvar[i], "cD:", 3)
                 || !strncmp(tmpvar[i], "CD:", 3)) {
-               if (ddir != 0)
-                  SafeDelete(ddir);
+               if (ddir) delete[] ddir;
                ddir = StrDup(tmpvar[i] + 3);
             }
             if (!strncmp(tmpvar[i], "cf:", 3)
                 || !strncmp(tmpvar[i], "Cf:", 3)
                 || !strncmp(tmpvar[i], "cF:", 3)
                 || !strncmp(tmpvar[i], "CF:", 3)) {
-               if (dcer != 0)
-                  SafeDelete(dcer);
+               if (dcer) delete[] dcer;
                dcer = StrDup(tmpvar[i] + 3);
             }
             if (!strncmp(tmpvar[i], "kf:", 3)
                 || !strncmp(tmpvar[i], "Kf:", 3)
                 || !strncmp(tmpvar[i], "kF:", 3)
                 || !strncmp(tmpvar[i], "KF:", 3)) {
-               if (dkey != 0)
-                  SafeDelete(dkey);
+               if (dkey) delete[] dkey;
                dkey = StrDup(tmpvar[i] + 3);
             }
             if (!strncmp(tmpvar[i], "ad:", 3)
                 || !strncmp(tmpvar[i], "Ad:", 3)
                 || !strncmp(tmpvar[i], "aD:", 3)
                 || !strncmp(tmpvar[i], "AD:", 3)) {
-               if (dadi != 0)
-                  SafeDelete(dadi);
+               if (dadi) delete[] dadi;
                dadi = StrDup(tmpvar[i] + 3);
             }
          }
@@ -1163,53 +1159,45 @@ void GlobusSetCertificates(int LocalEnv)
       if (!strncmp(ddir, "~/", 2)) {
          temp[0] = '\0';
          sprintf(temp, "%s%s", userhome, ddir + 1);
-         if (ddir != 0)
-            SafeDelete(ddir);
+         if (ddir) delete[] ddir;
          ddir = StrDup(temp);
       } else if (strncmp(ddir, "/", 1)) {
          temp[0] = '\0';
          sprintf(temp, "%s/%s/%s", userhome, globusdef, ddir);
-         if (ddir != 0)
-            SafeDelete(ddir);
+         if (ddir) delete[] ddir;
          ddir = StrDup(temp);
       }
       if (!strncmp(dcer, "~/", 2)) {
          temp[0] = '\0';
          sprintf(temp, "%s%s", userhome, dcer + 1);
-         if (dcer != 0)
-            SafeDelete(dcer);
+         if (dcer) delete[] dcer;
          dcer = StrDup(temp);
       } else if (strncmp(dcer, "/", 1)) {
          temp[0] = '\0';
          sprintf(temp, "%s/%s", ddir, dcer);
-         if (dcer != 0)
-            SafeDelete(dcer);
+         if (dcer) delete[] dcer;
          dcer = StrDup(temp);
       }
       if (!strncmp(dkey, "~/", 2)) {
          temp[0] = '\0';
          sprintf(temp, "%s%s", userhome, dkey + 1);
-         if (dkey != 0)
-            SafeDelete(dkey);
+         if (dkey) delete[] dkey;
          dkey = StrDup(temp);
       } else if (strncmp(dkey, "/", 1)) {
          temp[0] = '\0';
          sprintf(temp, "%s/%s", ddir, dkey);
-         if (dkey != 0)
-            SafeDelete(dkey);
+         if (dkey) delete[] dkey;
          dkey = StrDup(temp);
       }
       if (!strncmp(dadi, "~/", 2)) {
          temp[0] = '\0';
          sprintf(temp, "%s%s", userhome, dadi + 1);
-         if (dadi != 0)
-            SafeDelete(dadi);
+         if (dadi) delete[] dadi;
          dadi = StrDup(temp);
       } else if (strncmp(dadi, "/", 1)) {
          temp[0] = '\0';
          sprintf(temp, "%s/%s/%s", userhome, globusdef, dadi);
-         if (dadi != 0)
-            SafeDelete(dadi);
+         if (dadi) delete[] dadi;
          dadi = StrDup(temp);
       }
       if (gDebug > 3)
@@ -1222,14 +1210,10 @@ void GlobusSetCertificates(int LocalEnv)
       setenv("X509_USER_KEY", dkey, 1);
 
       // Release allocated memory
-      if (ddir != 0)
-         SafeDelete(ddir);
-      if (dcer != 0)
-         SafeDelete(dcer);
-      if (dkey != 0)
-         SafeDelete(dkey);
-      if (dadi != 0)
-         SafeDelete(dadi);
+      if (ddir) delete[] ddir;
+      if (dcer) delete[] dcer;
+      if (dkey) delete[] dkey;
+      if (dadi) delete[] dadi;
 
    }
 
@@ -1269,9 +1253,9 @@ void GlobusCleanup()
    }
 
    // Release memory allocated for security contexts ...
-   SafeDelete(hostGlbSecCont);
-   SafeDelete(subjGlbSecCont);
-   SafeDelete(sptrGlbSecCont);
+   if (hostGlbSecCont) delete[] hostGlbSecCont;
+   if (subjGlbSecCont) delete[] subjGlbSecCont;
+   if (sptrGlbSecCont) delete[] sptrGlbSecCont;
    NumGlbSecCont = 0;
 
    // Finally check if the shm for imported stuff has not yet been destroyed ...

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.8 2003/09/03 07:46:49 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.9 2003/09/07 18:25:46 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -45,6 +45,7 @@ const Int_t       kMAXSEC         = 6;
 const Int_t       kMAXSECBUF      = 2048;
 const Int_t       kAUTH_REUSE_MSK = 0x1;
 const Int_t       kAUTH_CRYPT_MSK = 0x2;
+const Int_t       kAUTH_SSALT_MSK = 0x4;
 
 class TSocket;
 class TAuthenticate;
@@ -63,6 +64,7 @@ public:
 private:
    TString    fUser;      // user to be authenticated
    TString    fPasswd;    // user's password
+   Bool_t     fPwHash;    // kTRUE if fPasswd is a passwd hash
    TString    fProtocol;  // remote service (rootd, proofd)
    TString    fRemote;    // remote host to which we want to connect
    TSocket   *fSocket;    // connection to remote daemon
@@ -74,6 +76,7 @@ private:
 
    static TString        fgUser;
    static TString        fgPasswd;
+   static Bool_t         fgPwHash;      // kTRUE if fgPasswd is a passwd hash
    static TString        fgAuthMeth[kMAXSEC];
    static SecureAuth_t   fgSecAuthHook;
    static Krb5Auth_t     fgKrb5AuthHook;
@@ -87,13 +90,12 @@ private:
    static rsa_KEY_export fgRSAPubExport;
 
    void           SetEnvironment();
-   Bool_t         GetUserPasswd(TString &user, TString &passwd);
-   Int_t          ClearAuth(TString &user, TString &passwd);
+   Bool_t         GetUserPasswd(TString &user, TString &passwd, Bool_t &pwhash);
+   Int_t          ClearAuth(TString &user, TString &passwd, Bool_t &pwhash);
    Int_t          RfioAuth(TString &user);
    Int_t          SshAuth(TString &user);
 
    char          *GetRandString(Int_t Opt,Int_t Len);
-   Int_t          ProveId();
 
    static Int_t   CheckRootAuthrc(const char *Host, char ***user,
                                   Int_t **nmeth, Int_t **authmeth, char ***det);
@@ -110,12 +112,14 @@ public:
    virtual ~TAuthenticate() { }
 
    Bool_t             Authenticate();
-   Bool_t             CheckNetrc(TString &user, TString &passwd);
+   Bool_t             CheckNetrc(TString &user, TString &passwd, Bool_t &pwhash);
    const char        *GetUser() const { return fUser; }
    const char        *GetPasswd() const { return fPasswd; }
+   Bool_t             GetPwHash() const { return fPwHash; }
    const char        *GetProtocol() const { return fProtocol; }
    const char        *GetSshUser() const;
    void               SetUser(const char *user) { fUser = user; }
+   void               SetPwHash(Bool_t pwhash) { fPwHash = pwhash; }
    void               SetHostAuth(const char *host, const char *user);
    void               SetSecurity(Int_t fSec) { fSecurity = (ESecurity)fSec; }
    ESecurity          GetSecurity() const { return fSecurity; }
@@ -138,8 +142,10 @@ public:
 
    static const char *GetGlobalUser();
    static const char *GetGlobalPasswd();
+   static Bool_t      GetGlobalPwHash();
    static void        SetGlobalUser(const char *user);
    static void        SetGlobalPasswd(const char *passwd);
+   static void        SetGlobalPwHash(Bool_t pwhash);
    static char       *PromptUser(const char *remote);
    static char       *PromptPasswd(const char *prompt = "Password: ");
 
@@ -150,6 +156,7 @@ public:
    static void        SetGlobusAuthHook(GlobusAuth_t func);
    static GlobusAuth_t GetGlobusAuthHook();
    static const char *GetRSAPubExport();
+   static void        SetRSAPublic(const char *rsapubexport);
    static Int_t       GetRSAInit();
    static void        SetRSAInit();
 

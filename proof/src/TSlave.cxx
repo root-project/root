@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.14 2003/08/30 18:24:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.15 2003/09/07 18:25:46 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -68,7 +68,12 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
       fSocket->Send(kROOTD_PROTOCOL);
       Int_t    ProofdProto, what;
       fSocket->Recv(ProofdProto, what);
-      if (ProofdProto <= 0 || ProofdProto > 7) ProofdProto = 7;
+      if (ProofdProto <= 0) {
+         Warning("TSlave",
+                 "got negative protocol from proofd (%d) ... may indicate problems",ProofdProto);
+         ProofdProto = 7;
+         Warning("TSlave", "continuing with ProofdProto: %d)",ProofdProto);
+      }
 
       TAuthenticate *auth;
       if (security == (Int_t) TAuthenticate::kSRP) {
@@ -82,7 +87,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
       // Authenticate to proofd...
       if (!proof->IsMaster()) {
 
-         // we are remote client... need full authentication procedure, either:
+         // we are client... need full authentication procedure, either:
          // - via TAuthenticate::SetGlobalUser()/SetGlobalPasswd())
          // - ~/.rootnetrc or ~/.netrc
          // - interactive
@@ -92,14 +97,18 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
                Error("TSlave", "%s authentication failed for host %s",
                      TAuthenticate::GetAuthMethod(sec), host);
             } else {
-               Error("TSlave", "authentication failed for host %s (method: %d - unknown)", host, sec);
+               Error("TSlave",
+                     "authentication failed for host %s (method: %d - unknown)", host, sec);
             }
             delete auth;
             SafeDelete(fSocket);
             return;
          }
          proof->fUser     = auth->GetRemoteLogin(auth->GetHostAuth(),auth->GetSecurity(),auth->GetDetails());
-         proof->fPasswd   = auth->GetPasswd();
+         //         proof->fPasswd   = auth->GetPasswd();
+         //         proof->fPwHash   = auth->GetPwHash();
+         proof->fPasswd   = TAuthenticate::GetGlobalPasswd();
+         proof->fPwHash   = TAuthenticate::GetGlobalPwHash();
          proof->fSecurity = auth->GetSecurity();
          fUser            = proof->fUser;
          fSecurity        = proof->fSecurity;
@@ -112,7 +121,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          if (ProofdProto > 6) {
             // Now we send authentication details to access, eg, data servers
             // not in the proof cluster and to be propagated to slaves.
-            // This is triggered by the 'proofdserv <dserv1> <dserv2> ...'
+            // This is triggered by the 'proofserv <dserv1> <dserv2> ...'
             // card in .rootauthrc
             SendHostAuth(this, 0);
          }
@@ -141,7 +150,16 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
             SafeDelete(fSocket);
             return;
          }
-         fUser = auth->GetRemoteLogin(auth->GetHostAuth(),auth->GetSecurity(),auth->GetDetails());
+         //         fUser = auth->GetRemoteLogin(auth->GetHostAuth(),
+         //                                      auth->GetSecurity(),auth->GetDetails());
+
+         proof->fUser     = auth->GetRemoteLogin(auth->GetHostAuth(),
+                                                 auth->GetSecurity(),auth->GetDetails());
+         proof->fPasswd   = auth->GetPasswd();
+         proof->fPwHash   = auth->GetPwHash();
+         proof->fSecurity = auth->GetSecurity();
+         fUser            = proof->fUser;
+         fSecurity        = proof->fSecurity;
 
          PDB(kGlobal,3) {
             auth->GetHostAuth()->PrintEstablished();
@@ -183,6 +201,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          fSocket->Recv(fProtocol, what);
          fProof->fProtocol = fProtocol;   // on master this is the protocol
                                           // of the last slave
+#if 0
          TMessage mess;
 
          // if unsecure, send user name and passwd to remote host (use trivial
@@ -202,6 +221,39 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
             mess << fProof->fUser << passwd << fOrdinal;
 
          fSocket->Send(mess);
+
+#else
+
+         TMessage mess, pubkey;
+
+         // Send public part of RSA key to ProofServ
+         TString PubKey = TAuthenticate::GetRSAPubExport();
+         pubkey << PubKey;
+         fSocket->Send(pubkey);
+
+         // send user name to remote host
+         // for UsrPwd and SRP methods send also passwd, rsa encoded
+         TString passwd = "";
+         Bool_t  pwhash = kFALSE;
+         if (fSecurity == TAuthenticate::kClear || fSecurity == TAuthenticate::kSRP) {
+            passwd = fProof->fPasswd;
+            pwhash = fProof->fPwHash;
+         }
+
+         // Password should be encoded before sending
+         if (TAuthenticate::SecureSend(fSocket, 1, (char *)passwd.Data()) == -1) {
+            Warning("TSlave",
+                    "problems secure-sending pass hash - may result in failures");
+         }
+
+         if (!fProof->IsMaster())
+            mess << fProof->fUser << pwhash << fProof->fConfFile;
+         else
+            mess << fProof->fUser << pwhash << fOrdinal;
+
+         fSocket->Send(mess);
+
+#endif
 
          // set some socket options
          fSocket->SetOption(kNoDelay, 1);
@@ -299,130 +351,135 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
       PDB(kGlobal,3) Info("SendHostAuth","file: %s",net);
 
       // Check if file can be read ...
-      if (gSystem->AccessPathName(net, kReadPermission)) { return 0; }
+      //      if (gSystem->AccessPathName(net, kReadPermission)) { return 0; }
 
-      // Open file
-      FILE *fd = fopen(net, "r");
+      if (!gSystem->AccessPathName(net, kReadPermission)) {
 
-      // Scan it ...
-      char line[kMAXPATHLEN], host[kMAXPATHLEN], key[kMAXPATHLEN], rest[kMAXPATHLEN];
-      char *pnx = 0;
-      int  cont = 0;
-      while (fgets(line, sizeof(line), fd) != 0) {
-         // Skip comment lines
-         if (line[0] == '#') continue;
-         // Get rid of end of line '\n', if there ...
-         if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';
-         if (cont == 0) {
-            // scan line
-            int nw= sscanf(line, "%s %s", key, rest);
-            // no useful info provided for this line
-            if (nw < 2) continue;
-         }
-         // This is the list we are looking for ...
-         if (!strcmp(key, "proofserv") || cont == 1) {
-            PDB(kGlobal,3) Info("SendHostAuth","found proofserv: %s", rest);
+         // Open file
+         FILE *fd = fopen(net, "r");
 
-            if (cont == 0) {
-               pnx = strstr(line, rest);
-            } else if (cont == 1) {
-               pnx  = line;
-               cont = 0;
-            }
+         // Scan it ...
+         char line[kMAXPATHLEN], host[kMAXPATHLEN], key[kMAXPATHLEN], rest[kMAXPATHLEN];
+         char *pnx = 0;
+         int  cont = 0;
+         while (fgets(line, sizeof(line), fd) != 0) {
 
-            while (pnx != 0 && cont == 0) {
-               rest[0] = '\0';
-               sscanf(pnx, "%s %s", host, rest);
-               PDB(kGlobal,3) Info("SendHostAuth", "found host: %s %s (cont=%d)", host, rest, cont);
+           // Skip comment lines
+           if (line[0] == '#') continue;
+           // Get rid of end of line '\n', if there ...
+           if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';
+           if (cont == 0) {
+              // scan line
+              int nw= sscanf(line, "%s %s", key, rest);
+              // no useful info provided for this line
+              if (nw < 2) continue;
+           }
+           // This is the list we are looking for ...
+           if (!strcmp(key, "proofserv") || cont == 1) {
+              PDB(kGlobal,3) Info("SendHostAuth","found proofserv: %s", rest);
 
-               // Check if a protocol is requested
-               char *pd1 = 0, *pd2 = 0;
-               char  meth[10] = { "" }, usr[256] = { "" };
-               int   met = -1;
-               pd1 = strchr(host,':');
-               if (pd1 != 0) pd2 = strchr(pd1+1, ':');
-               if (pd2 != 0) {
-                  strcpy(meth, pd2+1);
-                  if (strlen(meth) > 1) {
-                     // Method passed as string: translate it to number
-                     met = TAuthenticate::GetAuthMethodIdx(meth);
-                     if (met == -1)
-                        PDB(kGlobal,2) Info("SendHostAuth", "unrecognized method (%s): ", meth);
-                  } else {
-                     met = atoi(meth);
-                  }
-                  int plen= (int)(pd2-host);
-                  host[plen]='\0';
-               }
-               if (pd1 != 0) {
-                  strcpy(usr, pd1+1);
-                  int plen = (int)(pd1-host);
-                  host[plen]='\0';
-               }
-               PDB(kGlobal,3) Info("SendHostAuth", "host user method: %s %s %d", host, usr, met);
+              if (cont == 0) {
+                 pnx = strstr(line, rest);
+              } else if (cont == 1) {
+                 pnx  = line;
+                 cont = 0;
+              }
 
-               // Get methods from file .rootauthrc
-               char **user; Int_t *nmeth,  *security[kMAXSEC]; char **details[kMAXSEC];
-               user = new char*[1]; user[0] = StrDup(usr);
-               Int_t Nuser = TAuthenticate::GetAuthMeth(host, "root", &user, &nmeth, security, details);
-               // Now copy the info to send into buffer
-               int ju = 0;
-               for (ju = 0; ju < Nuser; ju++) {
-                  int i = 0;
-                  bsiz = strlen(host)+strlen(user[ju])+2+(nmeth[ju]+1)*3;
-                  int jm = -1;
-                  for (i = 0; i < nmeth[ju]; i++) {
-                     bsiz += strlen(details[i][ju])+1;
-                     if (security[i][ju] == met) jm = i;
-                  }
-                  bsiz += 20;
-                  if (jm == -1) {
-                     // Details for the method chosen were not found in the file
-                     // Get defaults ...
-                     char *newdet = TAuthenticate::GetDefaultDetails(met, 0, user[ju]);
-                     bsiz += strlen(newdet)+1;
-                     buf = new char[bsiz];
-                     sprintf(buf,"h:%s u:%s n:%d", host, user[ju], nmeth[ju]+1);
-                     sprintf(buf,"%s '%d %s' ", buf, met, newdet);
-                     for (i = 0; i < nmeth[ju]; i++) {
-                        sprintf(buf,"%s '%d %s' ", buf, security[i][ju], details[i][ju]);
-                     }
-                     delete [] newdet;
-                  } else {
-                     // Details for the method chosen were found in the file
-                     // Put them first ...
-                     buf = new char[bsiz];
-                     sprintf(buf,"h:%s u:%s n:%d", host, user[ju], nmeth[ju]);
-                     // First the one specified, if any
-                     for (i = 0; i < nmeth[ju]; i++) {
-                        if (security[i][ju] == met)
-                           sprintf(buf,"%s '%d %s' ", buf, security[i][ju], details[i][ju]);
-                     }
-                     for (i = 0; i < nmeth[ju]; i++) {
-                        if (security[i][ju] != met)
-                           sprintf(buf,"%s '%d %s' ", buf, security[i][ju], details[i][ju]);
-                     }
-                  }
-                  sl->GetSocket()->Send(buf, kPROOF_SENDHOSTAUTH);
-                  delete [] buf;
-               }
+              while (pnx != 0 && cont == 0) {
+                 rest[0] = '\0';
+                 sscanf(pnx, "%s %s", host, rest);
+                 PDB(kGlobal,3) Info("SendHostAuth", "found host: %s %s (cont=%d)", host, rest, cont);
 
-               // Got to next, if any
-               if (strlen(rest) > 0) {
-                  // Check if there is a continuation line
-                  if ((int)rest[0] == 92) cont = 1;
-                  pnx = strstr(pnx, rest);
-               } else {
-                  pnx = 0;
-               }
-            }
-         }
+                 // Check if a protocol is requested
+                 char *pd1 = 0, *pd2 = 0;
+                 char  meth[10] = { "" }, usr[256] = { "" };
+                 int   met = -1;
+                 pd1 = strchr(host,':');
+                 if (pd1 != 0) pd2 = strchr(pd1+1, ':');
+                 if (pd2 != 0) {
+                    strcpy(meth, pd2+1);
+                    if (strlen(meth) > 1) {
+                       // Method passed as string: translate it to number
+                       met = TAuthenticate::GetAuthMethodIdx(meth);
+                       if (met == -1)
+                          PDB(kGlobal,2) Info("SendHostAuth", "unrecognized method (%s): ", meth);
+                    } else {
+                       met = atoi(meth);
+                    }
+                    int plen= (int)(pd2-host);
+                    host[plen]='\0';
+                 }
+                 if (pd1 != 0) {
+                    strcpy(usr, pd1+1);
+                    int plen = (int)(pd1-host);
+                    host[plen]='\0';
+                 }
+                 PDB(kGlobal,3) Info("SendHostAuth", "host user method: %s %s %d", host, usr, met);
+
+                 // Get methods from file .rootauthrc
+                 char **user; Int_t *nmeth,  *security[kMAXSEC]; char **details[kMAXSEC];
+                 user = new char*[1]; user[0] = StrDup(usr);
+                 Int_t Nuser = TAuthenticate::GetAuthMeth(host, "root", &user, &nmeth, security, details);
+                 // Now copy the info to send into buffer
+                 int ju = 0;
+                 for (ju = 0; ju < Nuser; ju++) {
+                    int i = 0;
+                    bsiz = strlen(host)+strlen(user[ju])+2+(nmeth[ju]+1)*3;
+                    int jm = -1;
+                    for (i = 0; i < nmeth[ju]; i++) {
+                       bsiz += strlen(details[i][ju])+1;
+                       if (security[i][ju] == met) jm = i;
+                    }
+                    bsiz += 20;
+                    if (jm == -1) {
+                       // Details for the method chosen were not found in the file
+                       // Get defaults ...
+                       char *newdet = TAuthenticate::GetDefaultDetails(met, 0, user[ju]);
+                       bsiz += strlen(newdet)+1;
+                       buf = new char[bsiz];
+                       sprintf(buf,"h:%s u:%s n:%d", host, user[ju], nmeth[ju]+1);
+                       sprintf(buf,"%s '%d %s' ", buf, met, newdet);
+                       for (i = 0; i < nmeth[ju]; i++) {
+                          sprintf(buf,"%s '%d %s' ", buf, security[i][ju], details[i][ju]);
+                       }
+                       delete [] newdet;
+                    } else {
+                       // Details for the method chosen were found in the file
+                       // Put them first ...
+                       buf = new char[bsiz];
+                       sprintf(buf,"h:%s u:%s n:%d", host, user[ju], nmeth[ju]);
+                       // First the one specified, if any
+                       for (i = 0; i < nmeth[ju]; i++) {
+                          if (security[i][ju] == met)
+                             sprintf(buf,"%s '%d %s' ", buf, security[i][ju], details[i][ju]);
+                       }
+                       for (i = 0; i < nmeth[ju]; i++) {
+                          if (security[i][ju] != met)
+                             sprintf(buf,"%s '%d %s' ", buf, security[i][ju], details[i][ju]);
+                       }
+                    }
+                    sl->GetSocket()->Send(buf, kPROOF_SENDHOSTAUTH);
+                    delete [] buf;
+                 }
+
+                 // Got to next, if any
+                 if (strlen(rest) > 0) {
+                    // Check if there is a continuation line
+                    if ((int)rest[0] == 92) cont = 1;
+                    pnx = strstr(pnx, rest);
+                 } else {
+                    pnx = 0;
+                 }
+              }
+           }
+        }
+
+        fclose(fd);
+
       }
-
       // End of transmission ...
       sl->GetSocket()->Send("END", kPROOF_SENDHOSTAUTH);
 
-      fclose(fd);
 
    } else if (opt == 1) {
       // We are a Master notifying the Slaves for nodes to be considered
@@ -457,6 +514,7 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
 
       // End of transmission ...
       sl->GetSocket()->Send("END", kPROOF_SENDHOSTAUTH);
+
    }
    return retval;
 }

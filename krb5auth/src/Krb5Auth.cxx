@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.3 2003/08/29 10:41:27 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.4 2003/09/07 22:54:13 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -161,7 +161,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
          return -1;
       }
    }
-   SafeDelete(ClientPrincipal);
+   if (ClientPrincipal) delete[] ClientPrincipal;
 
    // Get a normal string for user
    char   User[64];
@@ -203,11 +203,11 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       int rc = 0;
       if ((rc = TAuthenticate::AuthExists(auth,(Int_t)TAuthenticate::kKrb5,Details,Options,&kind,&retval)) == 1) {
          // A valid authentication exists: we are done ...
-         SafeDelete(Options);
+         if (Options) delete[] Options;
          return 1;
       }
       if (rc == -2) {
-         SafeDelete(Options);
+         if (Options) delete[] Options;
          return rc;
       }
 
@@ -374,8 +374,8 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       // Create and save AuthDetails object
       TAuthenticate::SaveAuthDetails(auth,(Int_t)TAuthenticate::kKrb5,OffSet,ReUse,Details,lUser,gRSAKey,Token);
       det  = Details;
-      SafeDelete(Token);
-      SafeDelete(lUser);
+      if (Token) delete[] Token;
+      if (lUser) delete[] lUser;
    } else {
       sock->Recv(answer, 100, type);  // returns user
       user = answer;

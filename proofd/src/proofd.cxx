@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.38 2003/09/07 16:25:53 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.39 2003/09/07 18:25:46 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -106,8 +106,6 @@
 //   -T <tmpdir>       specifies the directory path to be used to place //
 //                     temporary files; default is /usr/tmp.            //
 //                     Useful if not running as root.                   //
-//   -t period         defines the period (in hours) for cleaning of    //
-//                     the authentication table <tmpdir>/rpdauthtab     //
 //   -G gridmapfile    defines the gridmap file to be used for globus   //
 //                     authentication if different from globus default  //
 //                     (/etc/grid-security/gridmap); (re)defines the    //
@@ -229,7 +227,6 @@ const int   kMaxSlaves         = 32;
 char    gFilePA[40]              = { 0 };
 
 int     gAuthListSent            = 0;
-int     gCleaningPeriod          = 24;       // period for Auth table cleanup (default 1 day = 24 hours)
 char    gConfDir[kMAXPATHLEN]    = { 0 };
 int     gDebug                   = 0;
 int     gForegroundFlag          = 0;
@@ -490,7 +487,7 @@ void CheckGlobus(char *rcfile)
    int  sGlobus =-1, uGlobus =-1, lGlobus =-1, pGlobus=-1;
    char lRcFile[kMAXPATHLEN] = { 0 }, uRcFile[kMAXPATHLEN] = { 0 },
         sRcFile[kMAXPATHLEN] = { 0 }, ProofCf[kMAXPATHLEN] = { 0 };
-   char namenv[256], valenv[256], dummy[512];
+   char namenv[256] = {0}, valenv[256] = {0}, dummy[512] = {0};
    char sname[128] = "system";
    char s[kMAXPATHLEN] = { 0 };
 
@@ -581,7 +578,6 @@ void CheckGlobus(char *rcfile)
    if (gDebug > 2) ErrorInfo("CheckGlobus: checking system proof.conf: %s", s);
 
    if (!access(s, F_OK) && !access(s, R_OK)) {
-      pGlobus = 0;
       FILE *fs = fopen(s,"r");
       while (fgets(line, sizeof(line), fs)) {
          if (line[0] == '#') continue;   // skip comment lines
@@ -608,7 +604,7 @@ void CheckGlobus(char *rcfile)
       if (gDebug > 2) ErrorInfo("CheckGlobus: checking user proof.conf: %s", s);
 
       if (!access(s, F_OK) && !access(s, R_OK)) {
-         pGlobus = 0;
+         pGlobus = -1;
          FILE *fs = fopen(s, "r");
          while (fgets(line, sizeof(line), fs)) {
             if (line[0] == '#') continue;   // skip comment lines
@@ -928,7 +924,7 @@ void ProofdExec()
    RpdSetDebugFlag(gDebug);
 
    // CleanUp authentication table, if needed or required ...
-   RpdCheckSession(gCleaningPeriod);
+   RpdCheckSession();
 
    // Get Host name
    const char *OpenHost = NetRemoteHost();
@@ -1130,15 +1126,6 @@ int main(int argc, char **argv)
                   Error(ErrFatal, -1, "-b requires a buffersize in bytes as argument");
                }
                tcpwindowsize = atoi(*++argv);
-               break;
-
-            case 't':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr, "-t requires as argument a period (in hours) as argument of cleaning for the auth table\n");
-                  Error(ErrFatal, -1, "-t requires as argument a period (in hours) as argument of cleaning for the auth table");
-               }
-               gCleaningPeriod = atoi(*++argv);
                break;
 
             case 'T':

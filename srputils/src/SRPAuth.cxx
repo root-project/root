@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.5 2001/01/07 15:18:39 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.6 2003/08/29 10:41:28 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -93,11 +93,11 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
      int rc = 0;
      if ((rc = TAuthenticate::AuthExists(auth,(Int_t)TAuthenticate::kSRP,Details,Options,&kind,&stat)) == 1) {
        // A valid authentication exists: we are done ...
-       SafeDelete(Options);
+       if (Options) delete[] Options;
        return 1;
      }
      if (rc == -2) {
-       SafeDelete(Options);
+       if (Options) delete[] Options;
        return rc;
      }
 
@@ -166,6 +166,7 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
    }
 
    t_clientpasswd(tc, psswd);
+         if (gDebug>0) ::Info("SRPAuthenticate", "password: '%s'",psswd);
 
    // receive B from server
    sock->Recv(hexbuf, MAXHEXPARAMLEN, kind);
@@ -185,6 +186,12 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
    t_clientclose(tc);
 
    if (version > 1) {
+
+     // Save passwd for later use ...
+     TAuthenticate::SetGlobalUser(user);
+     TAuthenticate::SetGlobalPasswd(psswd);
+     TAuthenticate::SetGlobalPwHash(kFALSE);
+
 
      // Receive result of the overall process
      sock->Recv(stat, kind);
@@ -238,7 +245,7 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
        // Create and save AuthDetails object
        TAuthenticate::SaveAuthDetails(auth,(Int_t)TAuthenticate::kSRP,OffSet,ReUse,Details,lUser,gRSAKey,Token);
        det = Details;
-       SafeDelete(Token);
+       if (Token) delete[] Token;
 
        // Receive result from remote Login process
        sock->Recv(stat, kind);

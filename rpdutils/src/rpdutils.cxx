@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.8 2003/09/09 12:37:25 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.9 2003/09/09 13:58:01 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -197,6 +197,7 @@ int  gReUseRequired = -1;
 int  gRSAKey = 0;
 rsa_NUMBER gRSA_n;
 rsa_NUMBER gRSA_d;
+int  gSaltRequired = -1;
 int  gSec = -1;
 int  gTriedMeth[kMAXSEC];
 
@@ -308,7 +309,7 @@ int RpdUpdateAuthTab(int opt, char *line, char **token)
          fclose(ftab);
          // ... before deleting the original ...
          unlink(gRpdAuthTab);
-         SafeDelete(bak);
+         if (bak) delete[] bak;
       }
       return 0;
    } else if (opt == 0) {
@@ -699,8 +700,8 @@ int RpdCheckAuthTab(int Sec, char *User, char *Host, int RemId, int *OffSet)
                 && GetErrno() == EINTR)
             ResetErrno();
       }
-      SafeDelete(OldName);
-      SafeDelete(NewName);
+      if (OldName) delete[] OldName;
+      if (NewName) delete[] NewName;
    }
 
    // Receive Token
@@ -921,11 +922,11 @@ bool RpdReUseAuth(const char *sstr, int kind)
          // Fill gUser and free allocated memory
          strcpy(gUser, User);
       }
-      SafeDelete(Pipe);
+      if (Pipe) delete[] Pipe;
    }
 
-   SafeDelete(User);
-   SafeDelete(Token);
+   if (User) delete[] User;
+   if (Token) delete[] Token;
 
    // Return value
    if (gAuth >= 1) {
@@ -1264,7 +1265,7 @@ int RpdCheckAuthAllow(int Sec, char *Host)
       fclose(ftab);
 
       // Free allocated memory
-      SafeDelete(IP);
+      if (IP) delete[] IP;
 
       // Use defaults if nothing found
       if (!found) {
@@ -1371,9 +1372,9 @@ int RpdCheckHostWild(const char *Host, const char *host)
 
  exit:
    // Release allocated memory ...
-   SafeDelete(fH);
-   SafeDelete(sH);
-   SafeDelete(dum);
+   if (fH) delete[] fH;
+   if (sH) delete[] sH;
+   if (dum) delete[] dum;
 
    return rc;
 }
@@ -1435,7 +1436,7 @@ void RpdSendAuthList()
       NetSend(sdum, ldum, kMESS_STRING);
       if (gDebug > 2)
          ErrorInfo("RpdSendAuthList: sent list: %s", sdum);
-      SafeDelete(sdum);
+      if (sdum) delete[] sdum;
    }
 }
 
@@ -1470,8 +1471,8 @@ void RpdSshAuth(const char *sstr)
          ErrorInfo
              ("RpdSshAuth: failure notification perhaps unsuccessful ... ");
       }
-      SafeDelete(User);
-      SafeDelete(Pipe);
+      if (User) delete[] User;
+      if (Pipe) delete[] Pipe;
       return;
    }
    // Check user existence and get its environment
@@ -1480,16 +1481,16 @@ void RpdSshAuth(const char *sstr)
       ErrorInfo("RpdSshAuth: entry for user % not found in /etc/passwd",
                 User);
       NetSend(-2, kROOTD_SSH);
-      SafeDelete(User);
-      SafeDelete(Pipe);
+      if (User) delete[] User;
+      if (Pipe) delete[] Pipe;
       return;
    }
    // Method cannot be attempted for anonymous users ... (ie data servers )...
    if (!strcmp(pw->pw_shell, "/bin/false")) {
       ErrorInfo("RpdSshAuth: no SSH for anonymous user '%s' ", User);
       NetSend(-2, kROOTD_SSH);
-      SafeDelete(User);
-      SafeDelete(Pipe);
+      if (User) delete[] User;
+      if (Pipe) delete[] Pipe;
       return;
    }
 
@@ -1502,9 +1503,9 @@ void RpdSshAuth(const char *sstr)
       ErrorInfo
           ("RpdSshAuth: can't allocate UNIX socket for authentication");
       NetSend(0, kROOTD_SSH);
-      SafeDelete(User);
-      SafeDelete(Pipe);
-      SafeDelete(UniquePipe);
+      if (User) delete[] User;
+      if (Pipe) delete[] Pipe;
+      if (UniquePipe) delete[] UniquePipe;
       return;
    }
    // Communicate command to be executed via ssh ...
@@ -1535,9 +1536,9 @@ void RpdSshAuth(const char *sstr)
    // If failure, notify and return ...
    if (gAuth == 0) {
       NetSend(kErrAuthNotOK, kROOTD_ERR);  // Send message length first
-      SafeDelete(User);
-      SafeDelete(Pipe);
-      SafeDelete(UniquePipe);
+      if (User) delete[] User;
+      if (Pipe) delete[] Pipe;
+      if (UniquePipe) delete[] UniquePipe;
       return;
    }
    // notify the client
@@ -1585,7 +1586,7 @@ void RpdSshAuth(const char *sstr)
             ErrorInfo
                 ("RpdSshAuth: problems secure-sending token - may result in corrupted token");
          }
-         SafeDelete(token);
+         if (token) delete[] token;
 
          // Save RSA public key into file for later use by other rootd/proofd
          RpdSavePubKey(gPubKey, OffSet);
@@ -1598,10 +1599,10 @@ void RpdSshAuth(const char *sstr)
    }
 
    // Release allocated memory
-   SafeDelete(User);
-   SafeDelete(Pipe);
-   SafeDelete(UniquePipe);
-   SafeDelete(CmdInfo);
+   if (User)       delete[] User;
+   if (Pipe)       delete[] Pipe;
+   if (UniquePipe) delete[] UniquePipe;
+   if (CmdInfo)    delete[] CmdInfo;
 
    return;
 }
@@ -1624,15 +1625,11 @@ void RpdKrb5Auth(const char *sstr)
       ErrorInfo("RpdKrb5Auth: analyzing ... %s", sstr);
 
    if (gClientProtocol > 8) {
-      char *User = new char[strlen(sstr)];
       int Ulen, ofs, opt;
-      char dumm[20];
+      char dumm[256];
       // Decode subject string
-      sscanf(sstr, "%d %d %d %d %s %s", &gRemPid, &ofs, &opt, &Ulen, User,
-             dumm);
-      User[Ulen] = '\0';
+      sscanf(sstr, "%d %d %d %d %s", &gRemPid, &ofs, &opt, &Ulen, dumm);
       gReUseRequired = (opt & kAUTH_REUSE_MSK);
-      SafeDelete(User);
    }
    // get service principal
    krb5_principal server;
@@ -1727,7 +1724,7 @@ void RpdKrb5Auth(const char *sstr)
                ErrorInfo
                    ("RpdKerb5Auth: problems secure-sending token - may result in corrupted token");
             }
-            SafeDelete(token);
+            if (token) delete[] token;
 
             // Save RSA public key into file for later use by other rootd/proofd
             RpdSavePubKey(gPubKey, OffSet);
@@ -1817,7 +1814,7 @@ void RpdSRPUser(const char *sstr)
 
    strcpy(gUser, user);
 
-   SafeDelete(user);
+   if (user) delete[] user;
 
    if (!gAltSRP) {
       sprintf(srootdpass, "%s/%s", pw->pw_dir, kSRootdPass);
@@ -1978,7 +1975,7 @@ void RpdSRPUser(const char *sstr)
                   ErrorInfo
                       ("RpdKrb5Auth: problems secure-sending token - may result in corrupted token");
                }
-               SafeDelete(token);
+               if (token) delete[] token;
 
                // Save RSA public key into file for later use by other rootd/proofd
                RpdSavePubKey(gPubKey, OffSet);
@@ -2187,7 +2184,7 @@ void RpdPass(const char *pass)
             }
             NetSend(token, kMESS_STRING);
          }
-         SafeDelete(token);
+         if (token) delete[] token;
 
       } else {
          // Comunicate login user name to client
@@ -2252,7 +2249,7 @@ void RpdGlobusAuth(const char *sstr)
    if (gDebug > 2)
       ErrorInfo("RpdGlobusAuth: gRemPid: %d, Subj: %s (%d %d)", gRemPid,
                 Subj, lSubj, strlen(Subj));
-   SafeDelete(Subj);            // GlbClientName will be determined from the security context ...
+   if (Subj) delete[] Subj;            // GlbClientName will be determined from the security context ...
 
    // Now wait for client to communicate the issuer name of the certificate ...
    char *answer = new char[20];
@@ -2264,7 +2261,7 @@ void RpdGlobusAuth(const char *sstr)
       return;
    }
    int client_issuer_name_len = atoi(answer);
-   SafeDelete(answer);
+   if (answer) delete[] answer;
    char *client_issuer_name = new char[client_issuer_name_len + 1];
    NetRecv(client_issuer_name, client_issuer_name_len, kind);
    if (kind != kMESS_STRING) {
@@ -2288,7 +2285,7 @@ void RpdGlobusAuth(const char *sstr)
       return;
    } else {
       int sjlen = strlen(subject_name) + 1;
-      subject_name[sjlen] = '\0';
+      //      subject_name[sjlen] = '\0';
 
       int bsnd = NetSend(sjlen, kROOTD_GLOBUS);
       if (gDebug > 2)
@@ -2302,7 +2299,7 @@ void RpdGlobusAuth(const char *sstr)
       free(subject_name);
    }
    // not needed anymore ...
-   SafeDelete(client_issuer_name);
+   if (client_issuer_name) delete[] client_issuer_name;
 
    // Inquire Globus credentials:
    // This is looking to file X509_USER_CERT for valid a X509 cert (default
@@ -2461,7 +2458,7 @@ void RpdGlobusAuth(const char *sstr)
             ErrorInfo
                 ("RpdGlobusAuth: problems secure-sending token - may result in corrupted token");
          }
-         SafeDelete(token);
+         if (token) delete[] token;
 
          // Save RSA public key into file for later use by other rootd/proofd
          RpdSavePubKey(gPubKey, OffSet);
@@ -2574,19 +2571,23 @@ void RpdCleanup(const char *sstr)
 }
 
 //______________________________________________________________________________
-void RpdCheckSession(int period)
+void RpdCheckSession()
 {
-   // Period in seconds.
 
-   int speriod = 3600 * period;
+   // Check auth tab file size
+   struct stat st;
+   if (stat(gRpdAuthTab, &st) == 0) {
 
-   if (gDebug > 2)
-      ErrorInfo("RpdCheckSession: enter: period: %d", period);
+      // Cleanup auth tab file if too big
+      if (st.st_size > kMAXTABSIZE)
+         RpdUpdateAuthTab(0, 0, 0);
 
-   // Session file ...
-   char SessionFile[kMAXPATHLEN] = { 0 };
-   //   sprintf(SessionFile, "%s/rootd.%d", gTmpDir, getppid());
-   sprintf(SessionFile, "%s/rpd.run", gTmpDir);
+      // New file if still too big
+      if (stat(gRpdAuthTab, &st) == 0) {
+         if (st.st_size > kMAXTABSIZE)
+            RpdUpdateAuthTab(-1, 0, 0);
+      }
+   }
 
    // Reset
    int i;
@@ -2596,82 +2597,6 @@ void RpdCheckSession(int period)
       gHaveMeth[i] = 1;
    }
 
-   if (gDebug > 2)
-      ErrorInfo("RpdCheckSession: sessionfile: %s", SessionFile);
-
-   // If it already exists, update auth tab or do nothing ...
-   struct stat st;
-   if (stat(SessionFile, &st) == 0) {
-      if (gDebug > 2)
-         ErrorInfo("RpdCheckSession: stat ok: mtime: %d", st.st_mtime);
-      if ((time(0) - st.st_mtime) > speriod)
-         RpdUpdateAuthTab(0, 0, 0);
-
-      FILE *fp = fopen(SessionFile, "r");
-
-      int ctim, nw;
-      char line[1024];
-      int meth[5];
-      while (fgets(line, sizeof(line), fp)) {
-         nw = sscanf(line, "%d %d %d %d %d %d", &ctim, &meth[4], &meth[0],
-                     &meth[1], &meth[2], &meth[3]);
-         if (nw > 1) {
-            gNumAllow = meth[4];
-            if (gNumAllow != (nw - 2)) {
-               ErrorInfo
-                   ("RpdCheckSession: inconsistency found in session file ( gNumAllow:%d nw:%d) - rescan",
-                    gNumAllow, nw);
-               goto rescan;
-            } else {
-               for (i = 0; i < gNumAllow; i++) {
-                  if (meth[i] >= 0 && meth[i] <= kMAXSEC) {
-                     gAllowMeth[i] = meth[i];
-                     gHaveMeth[meth[i]] = 1;
-                  } else {
-                     ErrorInfo
-                         ("RpdCheckSession: inconsistency found in session file (meth[%d]: %d) - rescan",
-                          i, meth[i]);
-                     goto rescan;
-                  }
-               }
-               gNumLeft = gNumAllow;
-            }
-         }
-      }
-      fclose(fp);
-      return;
-    rescan:
-      fclose(fp);
-
-   } else {
-      if (errno != ENOENT)
-         ErrorInfo
-             ("RpdCheckSession: file exists but problems from stat: errno:%d - recreating the file",
-              errno);
-   }
-
-   // Remove old files first ...
-   char cmd[kMAXPATHLEN] = { 0 };
-   sprintf(cmd, "ls -1 %s/rootd.* 2>/dev/null", gTmpDir);
-   FILE *fp = popen(cmd, "r");
-   i = 0;
-   if (fp != 0) {
-      int ch;
-      for (ch = fgetc(fp); ch != EOF; ch = fgetc(fp)) {
-         if (ch != 10) {
-            cmd[i++] = ch;
-         } else {
-            cmd[i] = '\0';
-            unlink(cmd);
-            i = 0;
-         }
-      }
-      if (i > 0) {
-         cmd[i] = '\0';
-         unlink(cmd);
-      }
-      pclose(fp);
-   }
    // List of default authentication methods (to be save in the session file)
    RpdDefaultAuthAllow();
 
@@ -2681,14 +2606,6 @@ void RpdCheckSession(int period)
    for (i = 0; i < gNumAllow; i++) {
       sprintf(cmeth, "%s %d", cmeth, gAllowMeth[i]);
    }
-
-   // Create new file ...
-   fp = fopen(SessionFile, "w");
-   fprintf(fp, "%d %s\n", (int) time(0), cmeth);
-   fclose(fp);
-
-   // CleauUp Authentication Table
-   RpdUpdateAuthTab(-1, 0, 0);
 }
 
 //______________________________________________________________________________
@@ -2901,7 +2818,7 @@ void RpdUser(const char *sstr)
    const int kMaxBuf = 256;
    char recvbuf[kMaxBuf];
    char rootdpass[kMAXPATHLEN];
-   char specpass[64];
+   char specpass[64] = {0};
    EMessageTypes kind;
    struct passwd *pw;
 #ifdef R__SHADOWPW
@@ -2927,6 +2844,7 @@ void RpdUser(const char *sstr)
       user[ulen] = '\0';
       gReUseRequired = (opt & kAUTH_REUSE_MSK);
       gCryptRequired = (opt & kAUTH_CRYPT_MSK);
+      gSaltRequired  = (opt & kAUTH_SSALT_MSK);
       gOffSet = ofs;
    } else {
       strcpy(user, sstr);
@@ -2967,7 +2885,8 @@ void RpdUser(const char *sstr)
    // If not anonymous, try to get passwd
    // (if our system uses shadow passwds and we are not superuser
    // we cannot authenticate users ...)
-   char *passw = 0;
+   //   char *passw = 0;
+   char *passw = specpass;
    if (gAnon == 0) {
 
       // Try if special password is given via .rootdpass
@@ -2981,7 +2900,8 @@ void RpdUser(const char *sstr)
          close(fid);
       }
 
-      if (passw == 0 || strlen(passw) == 0 || !strcmp(passw, "x")) {
+      //      if (passw == 0 || strlen(passw) == 0 || !strcmp(passw, "x")) {
+      if (strlen(passw) == 0 || !strcmp(passw, "x")) {
 #ifdef R__SHADOWPW
          // System V Rel 4 style shadow passwords
          if ((spw = getspnam(user)) == 0) {
@@ -2997,7 +2917,8 @@ void RpdUser(const char *sstr)
 #endif
       }
       // Check if successful
-      if (passw == 0 || strlen(passw) == 0 || !strcmp(passw, "x")) {
+      //      if (passw == 0 || strlen(passw) == 0 || !strcmp(passw, "x")) {
+      if (strlen(passw) == 0 || !strcmp(passw, "x")) {
          NetSend(kErrNotAllowed, kROOTD_ERR);
          ErrorInfo("RpdUser: passwd hash not available for user %s", user);
          ErrorInfo
@@ -3025,7 +2946,7 @@ void RpdUser(const char *sstr)
    }
    // Ok: Save username and go to next steps
    strcpy(gUser, user);
-   SafeDelete(user);
+   if (user) delete[] user;
 
    if (gClientProtocol > 8) {
 
@@ -3057,7 +2978,7 @@ void RpdUser(const char *sstr)
             char Salt[20] = { 0 };
             int Slen = 0;
 
-            if (gReUseRequired) {
+            if (gSaltRequired) {
                if (!strncmp(passw, "$1$", 3)) {
                   // Shadow passwd
                   char *pd = strstr(passw + 4, "$");
@@ -3078,7 +2999,7 @@ void RpdUser(const char *sstr)
                       ("RpdUser: problems secure-sending salt - may result in corrupted salt");
                }
             } else {
-               NetSend("-1", kMESS_STRING);
+               NetSend(0, kMESS_ANY);
             }
          } else {
             // We continue the aythentication process in clear
@@ -3131,7 +3052,7 @@ void RpdUser(const char *sstr)
    // Check the passwd and login if ok ...
    RpdPass(passwd);
 
-   SafeDelete(passwd);
+   if (passwd) delete[] passwd;
 
 }
 
@@ -3300,10 +3221,8 @@ int RpdGetRSAKeys(char *PubKey, int Opt)
          rsa_num_sget(&gRSA_n, RSA_n_exp);
          rsa_num_sget(&gRSA_d, RSA_d_exp);
 
-         if (RSA_n_exp)
-            SafeDelete(RSA_n_exp);
-         if (RSA_d_exp)
-            SafeDelete(RSA_d_exp);
+         if (RSA_n_exp) delete[] RSA_n_exp;
+         if (RSA_d_exp) delete[] RSA_d_exp;
 
       } else
          return 0;
@@ -3321,7 +3240,7 @@ void RpdSavePubKey(char *PubKey, int OffSet)
 {
    // Save RSA public key into file for later use by other rootd/proofd.
 
-   if (gRSAKey == 0)
+   if (gRSAKey == 0 || OffSet < 0)
       return;
 
    char PubKeyFile[kMAXPATHLEN];

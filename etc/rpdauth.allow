@@ -71,9 +71,12 @@
 #
 # default              none
 # default              ssh 0 uidgid
-# 127.0.0.1            4 0 3 1 2 5
 # 137.138.             4 0
 # pceple19.cern.ch     4 1 3 2 5 0
 # lxplus*.cern.ch      4 1 globus 0:ganis:gganis 5  
 # pcepsft43.cern.ch    4 3 1 5 2 0
 # afal57.cern.ch       0 5 4 
+#
+# Everything allowed from the local host (for testing)
+#
+127.0.0.1            4 0 3 1 2 5
