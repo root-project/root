@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.147 2004/12/27 15:42:36 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.148 2005/02/14 15:12:18 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1183,28 +1183,19 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    grFitter->SetFitOption(fitOption);
 
 //*-*- Is a Fit range specified?
-   Int_t gxfirst, gxlast;
    if (fitOption.Range) {
       f1->GetRange(xmin, xmax);
-      gxfirst = fNpoints +1;
-      gxlast  = -1;
-      for (i=0;i<fNpoints;i++) {
-         if (fX[i] >= xmin && gxfirst > i) gxfirst = i;
-         if (fX[i] <= xmax  && gxlast < i) gxlast  = i;
-      }
    } else {
       f1->SetRange(xmin, xmax);
-      gxfirst = 0;
-      gxlast  = fNpoints-1;
    }
 
 //*-*- If case of a predefined function, then compute initial values of parameters
    Int_t special = f1->GetNumber();
    if (fitOption.Bound) special = 0;
-   if      (special == 100)      InitGaus(gxfirst,gxlast);
-   else if (special == 400)      InitGaus(gxfirst,gxlast);
-   else if (special == 200)      InitExpo(gxfirst,gxlast);
-   else if (special == 299+npar) InitPolynom(gxfirst,gxlast);
+   if      (special == 100)      InitGaus(xmin,xmax);
+   else if (special == 400)      InitGaus(xmin,xmax);
+   else if (special == 200)      InitExpo(xmin,xmax);
+   else if (special == 299+npar) InitPolynom(xmin,xmax);
 
 //*-*- Some initialisations
    if (!fitOption.Verbose) {
@@ -1253,7 +1244,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //*-*- Compute sum of squares of errors in the bin range
    Bool_t hasErrors = kFALSE;
    Double_t ex, ey, sumw2=0;
-   for (i=gxfirst;i<=gxlast;i++) {
+   for (i=0;i<fNpoints;i++) {
+      if (fX[i] < xmin || fX[i] > xmax) continue;
       ex = GetErrorX(i);
       ey = GetErrorY(i);
       if (ex > 0 || ey > 0) hasErrors = kTRUE;
@@ -1547,7 +1539,7 @@ TAxis *TGraph::GetYaxis() const
 }
 
 //______________________________________________________________________________
-void TGraph::InitGaus(Int_t first, Int_t last)
+void TGraph::InitGaus(Double_t xmin, Double_t xmax)
 {
 //*-*-*-*-*-*Compute Initial values of parameters for a gaussian*-*-*-*-*-*-*
 //*-*        ===================================================
@@ -1557,15 +1549,12 @@ void TGraph::InitGaus(Int_t first, Int_t last)
    const Double_t sqrtpi = 2.506628;
 
 //*-*- Compute mean value and RMS of the graph in the given range
-   if (last <= first) {
-      first = 0;
-      last  = fNpoints-1;
-   }
+   if (xmax <= xmin) {xmin = fX[0]; xmax = fX[fNpoints-1];}
    Int_t np = 0;
    allcha = sumx = sumx2 = 0;
-   for (bin=first;bin<=last;bin++) {
+   for (bin=0;bin<fNpoints;bin++) {
       x       = fX[bin];
-      if (x < fX[first] || x > fX[last]) continue;
+      if (x < xmin || x > xmax) continue;
       np++;
       val     = fY[bin];
       sumx   += val*x;
@@ -1575,7 +1564,7 @@ void TGraph::InitGaus(Int_t first, Int_t last)
    if (np == 0 || allcha == 0) return;
    mean = sumx/allcha;
    rms  = TMath::Sqrt(sumx2/allcha - mean*mean);
-   Double_t binwidx = TMath::Abs((fX[last] - fX[first])/np);
+   Double_t binwidx = TMath::Abs((xmax-xmin)/np);
    if (rms == 0) rms = 1;
    TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
    TF1 *f1 = (TF1*)grFitter->GetUserFunc();
@@ -1586,20 +1575,17 @@ void TGraph::InitGaus(Int_t first, Int_t last)
 }
 
 //______________________________________________________________________________
-void TGraph::InitExpo(Int_t first, Int_t last)
+void TGraph::InitExpo(Double_t xmin, Double_t xmax)
 {
 //*-*-*-*-*-*Compute Initial values of parameters for an exponential*-*-*-*-*
 //*-*        =======================================================
 
    Double_t constant, slope;
    Int_t ifail;
-   if (last <= first) {
-      first = 0;
-      last  = fNpoints-1;
-   }
-   Int_t nchanx = last - first + 1;
+   if (xmax <= xmin) {xmin = fX[0]; xmax = fX[fNpoints-1];}
+   Int_t nchanx = fNpoints;
 
-   LeastSquareLinearFit(-nchanx, constant, slope, ifail, first, last);
+   LeastSquareLinearFit(-nchanx, constant, slope, ifail, xmin, xmax);
 
    TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
    TF1 *f1 = (TF1*)grFitter->GetUserFunc();
@@ -1609,7 +1595,7 @@ void TGraph::InitExpo(Int_t first, Int_t last)
 }
 
 //______________________________________________________________________________
-void TGraph::InitPolynom(Int_t first, Int_t last)
+void TGraph::InitPolynom(Double_t xmin, Double_t xmax)
 {
 //*-*-*-*-*-*Compute Initial values of parameters for a polynom*-*-*-*-*-*-*
 //*-*        ===================================================
@@ -1619,8 +1605,9 @@ void TGraph::InitPolynom(Int_t first, Int_t last)
    TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
    TF1 *f1 = (TF1*)grFitter->GetUserFunc();
    Int_t npar   = f1->GetNpar();
+   if (xmax <= xmin) {xmin = fX[0]; xmax = fX[fNpoints-1];}
 
-   LeastSquareFit(npar, fitpar, first, last);
+   LeastSquareFit(npar, fitpar, xmin, xmax);
 
    for (Int_t i=0;i<npar;i++) f1->SetParameter(i, fitpar[i]);
 }
@@ -1668,7 +1655,7 @@ Int_t TGraph::InsertPoint()
 }
 
 //______________________________________________________________________________
-void TGraph::LeastSquareFit(Int_t m, Double_t *a, Int_t first, Int_t last)
+void TGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t xmax)
 {
 //*-*-*-*-*-*-*-*Least squares lpolynomial fitting without weights*-*-*-*-*-*-*
 //*-*            =================================================
@@ -1689,15 +1676,11 @@ void TGraph::LeastSquareFit(Int_t m, Double_t *a, Int_t first, Int_t last)
     Int_t i, k, l, ifail;
     Double_t power;
     Double_t da[20], xk, yk;
-
-    if (last <= first) {
-       first = 0;
-       last  = fNpoints-1;
-    }
-    Int_t n = last-first+1;
+    Int_t n = fNpoints;
+    if (xmax <= xmin) {xmin = fX[0]; xmax = fX[fNpoints-1];}
 
     if (m <= 2) {
-       LeastSquareLinearFit(n, a[0], a[1], ifail, first, last);
+       LeastSquareLinearFit(n, a[0], a[1], ifail, xmin, xmax);
        return;
     }
     if (m > idim || m > n) return;
@@ -1708,9 +1691,9 @@ void TGraph::LeastSquareFit(Int_t m, Double_t *a, Int_t first, Int_t last)
 	da[l-1]          = zero;
     }
     Int_t np = 0;
-    for (k = first; k <= last; ++k) {
+    for (k = 0; k < fNpoints; ++k) {
 	xk     = fX[k];
-	if (xk < fX[first] || xk > fX[last]) continue;
+	if (xk < xmin || xk > xmax) continue;
         np++;
         yk     = fY[k];
 	power  = one;
@@ -1743,7 +1726,7 @@ void TGraph::LeastSquareFit(Int_t m, Double_t *a, Int_t first, Int_t last)
 }
 
 //______________________________________________________________________________
-void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail, Int_t first, Int_t last)
+void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail, Double_t xmin, Double_t xmax)
 {
 //*-*-*-*-*-*-*-*-*-*Least square linear fit without weights*-*-*-*-*-*-*-*-*
 //*-*                =======================================
@@ -1762,13 +1745,14 @@ void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t
     Double_t xybar;
     Double_t fn, xk, yk;
     Double_t det;
+    if (xmax <= xmin) {xmin = fX[0]; xmax = fX[fNpoints-1];}
 
     ifail = -2;
     xbar  = ybar = x2bar = xybar = 0;
     Int_t np = 0;
-    for (i = first; i <= last; ++i) {
+    for (i = 0; i < fNpoints; ++i) {
 	xk = fX[i];
-	if (xk < fX[first] || xk > fX[last]) continue;
+	if (xk < xmin || xk > xmax) continue;
         np++;
 	yk = fY[i];
 	if (ndata < 0) {
